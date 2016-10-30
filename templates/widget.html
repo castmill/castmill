@@ -1,0 +1,38 @@
+<!--
+  Lodash template to generate a widget
+-->
+<html>
+
+<head>
+	<script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+	<script src='https://cdnjs.cloudflare.com/ajax/libs/bluebird/3.4.6/bluebird.min.js'></script>
+
+	<script src="<%= widgetSrc %>"></script>
+	<!--
+<script src="serviceworker.js"></script>
+-->
+	<link></link>
+
+	<style>
+		body {
+			margin: 0px;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			overflow: hidden;
+		}
+	</style>
+</head>
+
+<body>
+	<script>
+		window.Bluebird = Promise;
+
+		window.widget = $.get('<%= baseUrl %>/<%= widgetId %>').then(function(json){
+    	console.log(json)
+    	return new <%= widgetConstructor %>($('body')[0], json);
+  	});
+ </script>
+</body>
+
+</html>

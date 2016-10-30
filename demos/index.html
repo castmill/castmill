@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<head>
+<meta charset="UTF-8">
+<script
+  src="https://code.jquery.com/jquery-3.1.1.min.js">
+</script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.16.4/lodash.min.js'></script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/bluebird/3.4.6/bluebird.min.js'></script>
+<script src="castmill.js"></script>
+
+<style>
+body{
+  margin:20px;
+  background-color:#555;
+}
+
+#wrapper{
+  display: flex;
+  align-items: 'center';
+  justify-content: 'center';
+  position:relative;
+  overflow: hidden;
+  width:500px;
+  height:500px;
+  background-color:#000;
+  border: solid 1px #333;
+  margin-bottom: 12px;
+}
+</style>
+
+</head>
+
+<body>
+
+<div id="wrapper"></div>
+
+</body>
+
+<script>
+
+window.Bluebird = Promise;
+
+Promise.config({
+  cancellation: true
+});
+
+var layer0 = new Castmill.Layer({
+  widgetId: '0',
+  config: {
+    widgetBase: 'http://localhost:3000/videos'
+  },
+})
+
+var layer1 = new Castmill.Layer({
+  widgetId: '1',
+  config: {
+    widgetBase: 'http://localhost:3000'
+  },
+  _duration: 3000
+});
+
+var layer2 = new Castmill.Layer({
+  widgetId: '2',
+  config: {
+    widgetBase: 'http://localhost:3000'
+  },
+  _duration: 3000
+});
+
+var layer3 = new Castmill.Layer({
+  widgetId: '3',
+  config: {
+    widgetBase: 'http://localhost:3000'
+  },
+  _duration: 3000
+});
+
+var layer4 = new Castmill.Layer({
+  widgetId: '4',
+  config: {
+    widgetBase: 'http://localhost:3000'
+  },
+  _duration: 3000
+});
+
+var server = new Castmill.PlayServer($('#wrapper')[0]);
+
+var playlist = new Castmill.Playlist(function(){
+  console.log('Playlist ended');
+  playlist.play(server);
+});
+
+playlist.add(layer0);
+playlist.add(layer1);
+playlist.add(layer2);
+playlist.add(layer3);
+playlist.add(layer4);
+
+playlist.play(server);
+
+</script>
+
+</html>
