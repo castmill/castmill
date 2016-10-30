@@ -16,9 +16,8 @@ namespace Castmill {
     private offset: number;
     private onEnd: () => void;
     private playing: Promise<void>;
-    private server: PlayServer;
 
-    constructor(onEnd: () => void, opts: any){
+    constructor(onEnd: () => void, opts?: any){
       _.extend(this, opts);
       this.onEnd = onEnd;
     }

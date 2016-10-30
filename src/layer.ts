@@ -70,17 +70,17 @@ namespace Castmill {
       return this._duration;
     }
 
-    public play(): Promise<void>{
+    public play(): Promise<any>{
       return this.widget.play().then(() => {
         return Bluebird.delay(this._duration)
       })
     }
 
-    public stop(): Promise<void>{
+    public stop(): Promise<any>{
       return this.widget.stop();
     }
 
-    public seek(offset: number): Promise<void>{
+    public seek(offset: number): Promise<any>{
       return this.widget.seek(offset);
     }
 
@@ -97,5 +97,4 @@ namespace Castmill {
     }
 
   }
-
 }

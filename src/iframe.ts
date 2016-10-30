@@ -38,9 +38,8 @@ namespace Castmill {
       document.body.appendChild(garbageBin);
     }
 
-    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
-
     /*
+    var iframeDocument = iframe.contentDocument || iframe.contentWindow.document;
     return new Promise(function(resolve, reject){
       $.get(src).then((html)=>{
         iframeDocument.open();

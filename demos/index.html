@@ -20,8 +20,8 @@ body{
   justify-content: 'center';
   position:relative;
   overflow: hidden;
-  width:500px;
-  height:500px;
+  width:800px;
+  height:800px;
   background-color:#000;
   border: solid 1px #333;
   margin-bottom: 12px;
@@ -83,6 +83,7 @@ var layer4 = new Castmill.Layer({
   _duration: 3000
 });
 
+
 var server = new Castmill.PlayServer($('#wrapper')[0]);
 
 var playlist = new Castmill.Playlist(function(){
@@ -90,11 +91,21 @@ var playlist = new Castmill.Playlist(function(){
   playlist.play(server);
 });
 
-playlist.add(layer0);
-playlist.add(layer1);
-playlist.add(layer2);
-playlist.add(layer3);
-playlist.add(layer4);
+var layout = new Castmill.Layout();
+
+var container0 = layout.add({
+  top: '0%',
+  left: '0%',
+  width: '50%',
+  height: '50%'
+});
+
+container0.add(layer1);
+container0.add(layer2);
+container0.add(layer3);
+container0.add(layer4);
+
+playlist.add(layout);
 
 playlist.play(server);
 

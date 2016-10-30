@@ -30,7 +30,7 @@ namespace Castmill {
     private currentLayer: Layer;
     private shown: boolean;
 
-    constructor(el: HTMLElement, opts: {}) {
+    constructor(el: HTMLElement, opts?: {}) {
       _.extend(this, opts);
       this.el = el;
     }
@@ -40,7 +40,7 @@ namespace Castmill {
       //
       // Put the previous layer in front.
       //
-      if (prevLayer) {
+      if (prevLayer && prevLayer !== layer) {
         $(prevLayer.el).css({ 'z-index': 1000 });
       }
 
@@ -57,7 +57,7 @@ namespace Castmill {
         .then(() => layer.seek(offset || 0))
         .finally(() => {
           layer.el.style.display = 'block';
-          if(prevLayer){
+          if(prevLayer && prevLayer !== layer){
             prevLayer.unload();
             this.el.removeChild(prevLayer.el);
           }
