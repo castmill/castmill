@@ -31,5 +31,12 @@ content with different layouts for maximum flexibility.
 A layer server is responsible of putting and removing the layers on a given container.
 
 
+# Roadmap
+- Looping of playlists including layouts.
+- Triggers. Trigges to play a widget when some condition has been met.
+- Caching using service workers.
+- postMessage interface between widgets and layers.
+- sandboxed iframes.
+
 
 
