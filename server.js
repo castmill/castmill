@@ -62,6 +62,16 @@ app.get('/widgets/:id', function (req, res) {
         src: 'https://s-media-cache-ak0.pinimg.com/originals/ef/83/60/ef83604a2bedd8043ccc2fe56fed3bc7.jpg'
       });
       break;
+    case '5':
+      res.json({
+        src: 'http://www.html5videoplayer.net/videos/toystory.mp4'
+      });
+      break;
+    case '6':
+      res.json({
+        src: 'https://media.w3.org/2010/05/sintel/trailer.mp4'
+      });
+      break;
   }
 });
 

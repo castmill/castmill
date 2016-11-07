@@ -49,6 +49,7 @@ var layer0 = new Castmill.Layer({
   config: {
     widgetBase: 'http://localhost:3000/videos'
   },
+  volume: 0
 })
 
 var layer1 = new Castmill.Layer({
@@ -83,6 +84,23 @@ var layer4 = new Castmill.Layer({
   _duration: 3000
 });
 
+var layer5 = new Castmill.Layer({
+  widgetId: '5',
+  config: {
+    widgetBase: 'http://localhost:3000/videos'
+  },
+  _duration: 3000,
+  volume: 0
+});
+
+var layer6 = new Castmill.Layer({
+  widgetId: '6',
+  config: {
+    widgetBase: 'http://localhost:3000/videos'
+  },
+  _duration: 3000,
+  volume: 0
+});
 
 var server = new Castmill.PlayServer($('#wrapper')[0]);
 
@@ -92,6 +110,7 @@ var playlist = new Castmill.Playlist(function(){
 });
 
 var layout = new Castmill.Layout();
+playlist.add(layout);
 
 var container0 = layout.add({
   top: '0%',
@@ -105,7 +124,24 @@ container0.add(layer2);
 container0.add(layer3);
 container0.add(layer4);
 
-playlist.add(layout);
+var container1 = layout.add({
+  top: '50%',
+  left: '0%',
+  width: '100%',
+  height: '50%'
+});
+
+container1.add(layer0);
+
+var container2 = layout.add({
+  top: '0%',
+  left: '50%',
+  width: '50%',
+  height: '50%'
+});
+
+container2.add(layer5);
+container2.add(layer6);
 
 playlist.play(server);
 
