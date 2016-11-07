@@ -16,6 +16,7 @@ namespace Castmill {
 
   export class Layout extends Layer {
     private containers: Container[] = [];
+    private finished: number;
 
     constructor(opts: {}){
       super(opts);
@@ -33,7 +34,18 @@ namespace Castmill {
       $(el).css(css);
 
       this.el.appendChild(el);
-      var container = new Container(el);
+      var container = new Container(()=>{
+        if(!container.played){
+          container.played = true;
+          this.finished++;
+        }
+        if(this.finished < this.containers.length){
+          container.replay();
+        }else{
+          this.containers.forEach((container)=>container.stop());
+        }
+      }, el);
+
       this.containers.push(container);
       return container;
     }
@@ -46,6 +58,7 @@ namespace Castmill {
     }
 
     play(): Promise<any>{
+      this.finished = 0;
       return Promise.all(this.containers.map((container) => {
         return container.play();
       }));

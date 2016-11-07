@@ -40,8 +40,12 @@ namespace Castmill {
       //
       // Put the previous layer in front.
       //
-      if (prevLayer && prevLayer !== layer) {
-        $(prevLayer.el).css({ 'z-index': 1000 });
+      if (prevLayer){
+        if (prevLayer !== layer) {
+          $(prevLayer.el).css({ 'z-index': 1000 });
+        }else{
+          return Promise.resolve(void 0);
+        }
       }
 
       $(layer.el).css({ 'z-index': 0 });
