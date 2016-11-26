@@ -1,5 +1,8 @@
 
 /// <reference path="../../node_modules/@types/jquery/index.d.ts" />
+/// <reference path="../../node_modules/@types/lodash/index.d.ts" />
+/// <reference path="../../node_modules/@types/bluebird/index.d.ts" />
+
 /// <reference path="../widget.ts" />
 namespace Castmill {
   export class Video extends Widget {
@@ -23,17 +26,24 @@ namespace Castmill {
 
       var $video = $(this.video);
       this.waitLoad = new Promise<void>(function(resolve){
-        $video.one('loadedmetadata', () => resolve());
+        $video.one('loadedmetadata', <any>resolve);
       });
+
+      !_.isUndefined(opts.volume) && this.volume(opts.volume);
     }
 
     play(): Promise<void>{
       var $video = $(this.video);
       this.startPlaying = this.waitUntilItCanPlayThrough().then(() => this.video.play())
 
-      return new Promise<void>(function (resolve) {
-        $video.one('playing', function () {
-          $video.one('ended', () => resolve());
+      return new Bluebird<void>(function (resolve, reject, onCancel) {
+        var playingHandler = () => $video.one('ended', <any>resolve);
+
+        $video.one('playing', playingHandler);
+
+        onCancel(function(){
+          $video.off('playing', playingHandler);
+          $video.off('ended', <any>resolve);
         });
       });
     }
