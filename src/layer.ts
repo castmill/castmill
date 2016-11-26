@@ -29,7 +29,7 @@ namespace Castmill {
     private widget: Widget;
     private iframe: HTMLIFrameElement;
     private config: Config;
-    private _duration: number = 30000;
+    private _duration: number = 0;
 
     private loading: Promise<any>;
 
@@ -67,13 +67,11 @@ namespace Castmill {
     }
 
     public duration(): number {
-      return this._duration;
+      return this._duration || this.widget.duration();
     }
 
     public play(): Promise<any>{
-      return this.widget.play().then(() => {
-        return Bluebird.delay(this._duration)
-      })
+      return Bluebird.join(this.widget.play(), Bluebird.delay(this.duration()));
     }
 
     public stop(): Promise<any>{
