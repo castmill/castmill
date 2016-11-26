@@ -42,7 +42,7 @@ namespace Castmill {
         if(this.finished < this.containers.length){
           container.replay();
         }else{
-          this.containers.forEach((container)=>container.stop());
+          this.containers.forEach((container) => container.stop());
         }
       }, el);
 
