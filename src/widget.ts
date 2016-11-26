@@ -35,6 +35,10 @@ namespace Castmill {
       return Promise.resolve(void 0);
     }
 
+    duration(): number {
+      return 0;
+    }
+
     seek(offset: number): Promise<void>{
       return Promise.resolve(void 0);
     }
