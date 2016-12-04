@@ -27,12 +27,12 @@
 
 <body>
 	<script>
-		window.Bluebird = Promise;
-
+	document.addEventListener("DOMContentLoaded", function() {
 		window.widget = $.get('<%= baseUrl %>/<%= widgetId %>').then(function(json){
     	console.log(json)
     	return new <%= widgetConstructor %>($('body')[0], json);
   	});
+	});
  </script>
 </body>
 
