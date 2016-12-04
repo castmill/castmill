@@ -1,44 +1,43 @@
 <!DOCTYPE html>
+
 <head>
-<meta charset="UTF-8">
-<script
-  src="https://code.jquery.com/jquery-3.1.1.min.js">
+  <meta charset="UTF-8">
+  <script src="https://code.jquery.com/jquery-3.1.1.min.js">
 </script>
-<script src='https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.16.4/lodash.min.js'></script>
-<script src='https://cdnjs.cloudflare.com/ajax/libs/bluebird/3.4.6/bluebird.min.js'></script>
-<script src="castmill.js"></script>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.16.4/lodash.min.js'></script>
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/bluebird/3.4.6/bluebird.min.js'></script>
+  <script src="castmill.js"></script>
 
-<style>
-body{
-  margin:20px;
-  background-color:#555;
-}
+  <style>
+    body {
+      margin: 20px;
+      background-color: #555;
+    }
 
-#wrapper{
-  display: flex;
-  align-items: 'center';
-  justify-content: 'center';
-  position:relative;
-  overflow: hidden;
-  width:800px;
-  height:800px;
-  background-color:#000;
-  border: solid 1px #333;
-  margin-bottom: 12px;
-}
-</style>
+    #wrapper {
+      display: flex;
+      align-items: 'center';
+      justify-content: 'center';
+      position: relative;
+      overflow: hidden;
+      width: 800px;
+      height: 800px;
+      background-color: #000;
+      border: solid 1px #333;
+      margin-bottom: 12px;
+    }
+  </style>
 
 </head>
 
 <body>
 
-<div id="wrapper"></div>
+  <div id="wrapper"></div>
 
 </body>
 
 <script>
-
-window.Bluebird = Promise;
+document.addEventListener("DOMContentLoaded", function() {
 
 Promise.config({
   cancellation: true
@@ -49,7 +48,8 @@ var layer0 = new Castmill.Layer({
   config: {
     widgetBase: 'http://localhost:3000/videos'
   },
-  volume: 0
+  volume: 0,
+  _duration: 0
 })
 
 var layer1 = new Castmill.Layer({
@@ -89,7 +89,7 @@ var layer5 = new Castmill.Layer({
   config: {
     widgetBase: 'http://localhost:3000/videos'
   },
-  _duration: 3000,
+  _duration: 0,
   volume: 0
 });
 
@@ -98,7 +98,7 @@ var layer6 = new Castmill.Layer({
   config: {
     widgetBase: 'http://localhost:3000/videos'
   },
-  _duration: 3000,
+  _duration: 0,
   volume: 0
 });
 
@@ -143,7 +143,10 @@ var container2 = layout.add({
 container2.add(layer5);
 container2.add(layer6);
 
+playlist.add(layer5);
+
 playlist.play(server);
+});
 
 </script>
 
