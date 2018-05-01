@@ -1,13 +1,10 @@
-/// <reference path="../node_modules/@types/bluebird/index.d.ts" />
+/*import { Promise } from 'bluebird';
 
-namespace Castmill {
-  window['Bluebird'] = Promise;
+Promise.config({
+  cancellation: true
+});
+*/
 
-  Bluebird.config({
-    cancellation: true,
-  });
-
-  export interface Config {
-    widgetBase: string;
-  }
+export interface Config {
+  widgetBase: string;
 }

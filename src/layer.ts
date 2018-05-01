@@ -5,94 +5,92 @@
   (c) 2011-2016 Optimal Bits Sweden AB All Rights Reserved
 */
 
-/// <reference path="../node_modules/@types/es6-promise/index.d.ts" />
-/// <reference path="../node_modules/@types/bluebird/index.d.ts" />
-/// <reference path="../node_modules/@types/lodash/index.d.ts" />
+import { Widget } from "./widget";
+import { Playable } from "./playable";
+import { Config } from "./config";
+import { extend } from "lodash";
+import * as utils from "./iframe";
 
-/// <reference path="config.ts" />
-/// <reference path="playable.ts" />
-/// <reference path="widget.ts" />
-/// <reference path="iframe.ts" />
+export class Layer implements Playable {
+  id: string = "";
+  widgetId: string = "";
 
-namespace Castmill {
+  opacity: string = "1";
+  rotation: number = 0;
+  zIndex: number = 0;
 
-  export class Layer implements Playable{
-    id: string;
-    widgetId: string;
+  el: HTMLElement;
 
-    opacity: string;
-    rotation: number;
-    zIndex: number;
+  private widget!: Widget;
+  private iframe!: HTMLIFrameElement;
+  private config!: Config;
+  private _duration: number = 0;
 
-    el: HTMLElement;
 
-    private widget: Widget;
-    private iframe: HTMLIFrameElement;
-    private config: Config;
-    private _duration: number = 0;
+  constructor(opts?: {}) {
+    extend(this, opts);
+    this.el = document.createElement("div");
+    // TODO: Add css needed for this layer.
+    $(this.el).css({
+      position: "absolute",
+      width: "100%",
+      height: "100%"
+    });
+  }
 
-    private loading: Promise<any>;
+  async load() {
+    this.iframe = await utils.createIframe(this.el, this.getWidgetSrc());
+    this.widget = await utils.getIframeWidget(this.iframe);
+    return this.widget.ready();
+  }
 
-    constructor(opts: {}) {
-      _.extend(this, opts);
-      this.el =  document.createElement('div');
-      // TODO: Add css needed for this layer.
-      $(this.el).css({
-        position: 'absolute',
-        width: '100%',
-        height: '100%'
-      });
-    }
+  public unload(): Promise<void> {
+    utils.purgeIframe(this.iframe);
+    return Promise.resolve(void 0);
+  }
 
-    public load(): Promise<void>{
-      return this.loading = Castmill.createIframe(this.el, this.getWidgetSrc()).then((iframe) => {
-        this.iframe = iframe;
-        return Castmill.getIframeWidget(iframe);
-      }).then((widget) => {
-        this.widget = widget;
-        return widget.ready();
-      });
-    }
-
-    public unload(): Promise<void> {
-      Castmill.purgeIframe(this.iframe);
-      return Promise.resolve(void 0);
-    }
-
-    public toJSON(): {} {
-      return {
-        id: this.id,
-        widgetId: this.widgetId
-      };
-    }
-
-    public duration(): number {
-      return this._duration || this.widget.duration();
-    }
-
-    public play(): Promise<any>{
-      return Bluebird.join(this.widget.play(), Bluebird.delay(this.duration()));
-    }
-
-    public stop(): Promise<any>{
-      return this.widget.stop();
-    }
-
-    public seek(offset: number): Promise<any>{
-      return this.widget.seek(offset);
-    }
-
-    public show(): Promise<void> {
-      return;
-    }
-
-    public hide(): Promise<void> {
-      return;
+  public toJSON(): {} {
+    return {
+      id: this.id,
+      widgetId: this.widgetId
     };
+  }
 
-    private getWidgetSrc(): string {
-      return this.config.widgetBase + '/' + this.widgetId;
-    }
+  public duration(): number {
+    return this._duration || this.widget.duration();
+  }
 
+  public play(): Promise<any> {
+    return Promise.all([this.widget.play(), delay(this.duration())]);
+  }
+
+  public stop(): Promise<any> {
+    return this.widget.stop();
+  }
+
+  public seek(offset: number): Promise<any> {
+    return this.widget.seek(offset);
+  }
+
+  async show(): Promise<void> {
+    return;
+  }
+
+  async hide(): Promise<void> {
+    return;
+  }
+
+  private getWidgetSrc(): string {
+    return this.config.widgetBase + "/" + this.widgetId;
   }
 }
+
+function delay (duration: number) {
+	return function(){
+		return new Promise(function(resolve, reject){
+			setTimeout(function(){
+				resolve();
+			}, duration)
+		});
+	};
+};

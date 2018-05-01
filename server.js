@@ -8,6 +8,7 @@ var widgetTmpl = _.template(fs.readFileSync('./templates/widget.html'));
 
 app.use('/', express.static(__dirname + '/demos'));
 app.use('/', express.static(__dirname + '/build'));
+app.use('/', express.static(__dirname + '/built'));
 
 app.get('/videos/:id', function(req, res){
   //
@@ -39,7 +40,8 @@ app.get('/widgets/:id', function (req, res) {
   switch(req.params.id){
     case '0':
       res.json({
-        src: 'http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4'
+       // src: 'http://www.html5videoplayer.net/videos/madagascar3.mp4'
+       src: 'http://www.sample-videos.com/video/mp4/720/big_buck_bunny_720p_1mb.mp4'
       });
       break;
     case '1':

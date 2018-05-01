@@ -1,8 +1,6 @@
 
-/// <reference path="../widget.ts" />
-/**
- */
-namespace Castmill {
+  import { Widget } from "../widget";
+
   export class Image extends Widget {
     private img: HTMLElement;
     private waitLoad: Promise<void>;
@@ -40,4 +38,4 @@ namespace Castmill {
       return 'image/jpeg';
     }
   }
-}
+
