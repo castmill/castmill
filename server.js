@@ -1,22 +1,24 @@
 
-var express = require('express');
-var app = express();
-var fs = require('fs');
-var _ = require('lodash');
+const express = require('express');
+const app = express();
+const fs = require('fs');
+const _ = require('lodash');
 
-var widgetTmpl = _.template(fs.readFileSync('./templates/widget.html'));
+const CASTMILL_SRC = '/castmill-2.0.0.js';
+
+const widgetTmpl = _.template(fs.readFileSync('./templates/widget.html'));
 
 app.use('/', express.static(__dirname + '/demos'));
-app.use('/', express.static(__dirname + '/build'));
-app.use('/', express.static(__dirname + '/built'));
+app.use('/', express.static(__dirname + '/dist'));
 
 app.get('/videos/:id', function(req, res){
+
   //
   // render widget template
   //
   var result = widgetTmpl({
     widgetId: req.params.id,
-    widgetSrc: '/castmill.js',
+    widgetSrc: CASTMILL_SRC,
     baseUrl: 'http://localhost:3000/widgets',
     widgetConstructor: 'Castmill.Video'
   })
@@ -29,7 +31,7 @@ app.get('/:id', function (req, res) {
   //
   var result = widgetTmpl({
     widgetId: req.params.id,
-    widgetSrc: '/castmill.js',
+    widgetSrc: CASTMILL_SRC,
     baseUrl: 'http://localhost:3000/widgets',
     widgetConstructor: 'Castmill.Image'
   })

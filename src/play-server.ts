@@ -32,7 +32,7 @@ export class PlayServer {
     this.el = el;
   }
 
-  private async show(
+  async show(
     layer: Layer,
     offset: number,
     performTransition: boolean
@@ -62,6 +62,7 @@ export class PlayServer {
       await layer.load();
       await layer.seek(offset || 0);
     } catch (err) {
+      console.log('Error showing layer')
       throw err;
     } finally {
       layer.el.style.display = "block";
@@ -90,7 +91,6 @@ export class PlayServer {
       Stop whatever is currently being played.
     */
   stop() {
-    //this.showing && this.showing.cancel();
     this.currentLayer && this.currentLayer.stop();
   }
 

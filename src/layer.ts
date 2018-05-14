@@ -5,29 +5,36 @@
   (c) 2011-2016 Optimal Bits Sweden AB All Rights Reserved
 */
 
-import { Widget } from "./widget";
-import { Playable } from "./playable";
+import { Proxy } from "./widgets/proxy";
+import { Playable, Status } from "./playable";
 import { Config } from "./config";
-import { extend } from "lodash";
+import { extend } from "lodash";
 import * as utils from "./iframe";
+import { EventEmitter } from "eventemitter3";
 
-export class Layer implements Playable {
+export class Layer extends EventEmitter implements Playable {
   id: string = "";
   widgetId: string = "";
 
   opacity: string = "1";
+
+
+
   rotation: number = 0;
   zIndex: number = 0;
 
   el: HTMLElement;
 
-  private widget!: Widget;
+  status: Status = Status.NotReady;
+
+  private widget!: Proxy;
   private iframe!: HTMLIFrameElement;
   private config!: Config;
   private _duration: number = 0;
-
+  private proxyOffset: (position: number) => void;
 
   constructor(opts?: {}) {
+    super();
     extend(this, opts);
     this.el = document.createElement("div");
     // TODO: Add css needed for this layer.
@@ -36,17 +43,25 @@ export class Layer implements Playable {
       width: "100%",
       height: "100%"
     });
+
+    this.proxyOffset = (offset: number) => this.emit("offset", offset);
   }
 
   async load() {
-    this.iframe = await utils.createIframe(this.el, this.getWidgetSrc());
-    this.widget = await utils.getIframeWidget(this.iframe);
+    const widgetSrc = this.getWidgetSrc();
+    this.iframe = await utils.createIframe(this.el, widgetSrc);
+    this.widget = new Proxy(
+      window,
+      <Window>this.iframe.contentWindow,
+      widgetSrc
+    );
+    this.widget.on("offset", this.proxyOffset);
     return this.widget.ready();
   }
 
-  public unload(): Promise<void> {
+  public async unload() {
     utils.purgeIframe(this.iframe);
-    return Promise.resolve(void 0);
+    this.widget && this.widget.off("offset", this.proxyOffset);
   }
 
   public toJSON(): {} {
@@ -56,19 +71,21 @@ export class Layer implements Playable {
     };
   }
 
-  public duration(): number {
-    return this._duration || this.widget.duration();
+  public async duration(): Promise<number> {
+    return (
+      this._duration || (this.widget && (await this.widget.duration())) || 0
+    );
   }
 
-  public play(): Promise<any> {
-    return Promise.all([this.widget.play(), delay(this.duration())]);
+  public async play(): Promise<any> {
+    return Promise.all([this.widget.play(), delay(await this.duration())]);
   }
 
-  public stop(): Promise<any> {
+  public async stop(): Promise<any> {
     return this.widget.stop();
   }
 
-  public seek(offset: number): Promise<any> {
+  public async seek(offset: number): Promise<any> {
     return this.widget.seek(offset);
   }
 
@@ -85,12 +102,12 @@ export class Layer implements Playable {
   }
 }
 
-function delay (duration: number) {
-	return function(){
-		return new Promise(function(resolve, reject){
-			setTimeout(function(){
-				resolve();
-			}, duration)
-		});
-	};
-};
+function delay(duration: number) {
+  return function() {
+    return new Promise(function(resolve, reject) {
+      setTimeout(function() {
+        resolve();
+      }, duration);
+    });
+  };
+}

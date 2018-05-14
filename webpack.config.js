@@ -1,22 +1,70 @@
-var path = require("path");
+// webpack.config.js
+const path = require('path')
+const { VueLoaderPlugin } = require('vue-loader')
 
 module.exports = {
-  entry: "./src/index.ts",
+  mode: 'development',
   devtool: 'inline-source-map',
+  
+  entry: {
+    castmill: "./src/index.ts",
+    demos: "./demos/index.ts"
+  },
+
   module: {
     rules: [
       {
-        use: "ts-loader",
-        exclude: /node_modules/
+        test: /\.tsx?$/,
+        exclude: /node_modules/,
+        use: [
+          {
+            loader: 'ts-loader',
+            options: {
+              appendTsSuffixTo: [/\.vue$/]
+            }
+          }
+        ]
+      },
+      {
+        test: /\.vue$/,
+        loader: 'vue-loader'
+      },
+      // this will apply to both plain .css files
+      // AND <style> blocks in vue files
+      {
+        test: /\.css$/,
+        use: [
+          'vue-style-loader',
+          'css-loader'
+        ]
+      },
+      {
+        test: /\.(png|jpg|gif|svg)$/,
+        loader: 'file-loader',
+        options: {
+          name: '[name].[ext]?[hash]'
+        }
       }
     ]
   },
-  mode: 'development',
   resolve: {
-    extensions: [".ts", ".js"]
+    extensions: [".ts", ".js", ".vue", ".json"],
+    alias: {
+      vue$: "vue/dist/vue.esm.js"
+    }
   },
   output: {
-    filename: "bundle.js",
-    path: path.resolve(__dirname, "built")
+    filename: "[name]-2.0.0.js",
+    path: path.resolve(__dirname, "dist"),
+    libraryTarget: 'umd'
+  },
+  plugins: [
+    // make sure to include the plugin for the magic
+    new VueLoaderPlugin()
+  ],
+  devServer: {
+    contentBase: path.join(__dirname, "demos"),
+    compress: true,
+    port: 9000
   }
-};
+}

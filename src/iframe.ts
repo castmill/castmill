@@ -3,7 +3,7 @@
  *
  */
 
-import { Widget } from "./widget";
+import { Widget } from "./widgets";
   
 // http://www.aaronpeters.nl/blog/iframe-loading-techniques-performance?%3E
 export function createIframe(

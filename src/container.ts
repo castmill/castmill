@@ -14,8 +14,8 @@ export enum Anchor {
  *
  */
 export class Container extends Playlist {
-  el: HTMLElement;
-  server: PlayServer;
+  protected el: HTMLElement;
+  
   played: boolean = false;
 
   constructor(onEnd: () => void, el: HTMLElement) {

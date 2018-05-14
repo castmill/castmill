@@ -49,11 +49,15 @@
     return container;
   }
 
-  duration() {
-    return this.containers.reduce((prev, curr, index, arr) => {
-      var duration = curr.duration();
-      return prev > duration ? prev : duration;
-    }, 0);
+  async duration(): Promise<number> {
+    let maxDuration = 0;
+    await Promise.all( this.containers.map( async container => {
+      const duration = await container.duration();
+      if (duration > maxDuration) {
+        maxDuration = duration;
+      } 
+    } ))
+    return maxDuration;
   }
 
   play(): Promise<any> {

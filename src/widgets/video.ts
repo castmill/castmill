@@ -1,14 +1,17 @@
 import * as $ from "jquery";
-import { Widget } from "../widget";
+import { Widget } from "../widgets";
 import { isUndefined } from "lodash";
-//import * as Bluebird from "bluebird";
+import { Observable, fromEvent, of } from "rxjs";
 
 export class Video extends Widget {
   private video: HTMLVideoElement;
   private waitLoad: Promise<void>;
   private el: HTMLElement;
-  private startPlaying: Promise<void> = Promise.resolve();
-  private pausing: Promise<void> = Promise.resolve();
+  private startPlaying!: Promise<void>;
+  private stopping!: Promise<void>;
+  private cancelPlay!: () => void;
+
+  offset: number = 0;
 
   constructor(el: HTMLElement, opts: any) {
     super(el, opts);
@@ -32,46 +35,73 @@ export class Video extends Widget {
 
   async play() {
     var $video = $(this.video);
-    this.startPlaying = this.waitUntilItCanPlayThrough().then(() =>
-      this.video.play()
-    );
 
-    return new Promise<void>(function(resolve, reject/*, onCancel*/) {
-      var playingHandler = () => $video.one("ended", <any>resolve);
+    this.startPlaying = this.waitUntilItCanPlayThrough()
+    await this.startPlaying;
+
+    this.video.play()
+
+
+    const playing = new Promise<void>((resolve, reject) => {
+
+      const timeupdate = (event: any)  => {
+        const video = <HTMLVideoElement>(event.target);
+        this.offset = video.currentTime;
+        this.emit('offset', this.offset);
+      }
+
+      const playingHandler = () => {
+        $video.one("ended", <any>resolve);
+        $video.on('timeupdate', <any>timeupdate);
+      }
 
       $video.one("playing", playingHandler);
-/*
-      onCancel &&
-        onCancel(function() {
-          $video.off("playing", playingHandler);
-          $video.off("ended", <any>resolve);
-        });
-        */
+
+      this.cancelPlay = () => {
+        $video.off("playing", playingHandler);
+        $video.off("ended", <any>resolve);
+        reject(new Error('Cancelled play'));
+        delete this.startPlaying;
+      }
+    });
+
+    return playing;    
+  }
+
+  async stop(): Promise<void> {
+    if (this.stopping) {
+      return this.stopping;
+    }
+
+    if (!this.video.paused && this.startPlaying) {
+      var $video = $(this.video);
+
+      await this.startPlaying;
+
+      this.cancelPlay();
+
+      await this.pause();
+
+      delete this.stopping;
+    }
+  }
+
+  private pause(): Promise<any> {
+    const $video = $(this.video);
+
+    return this.stopping = new Promise( (resolve) => {
+      $video.one("pause", val => {
+        resolve();
+      });
+      this.video.pause();
     });
   }
 
-  stop(): Promise<void> {
-    if (this.pausing) {
-      return this.pausing;
-    }
-
-    if (this.video.paused) {
-      return Promise.resolve(void 0);
-    }
-
-    var $video = $(this.video);
-    this.startPlaying = this.startPlaying || Promise.resolve(void 0);
-    return (this.pausing = new Promise<void>(resolve => {
-      this.startPlaying.then(() => {
-        $video.one("pause", val => {
-          this.pausing = Promise.resolve();
-          resolve();
-        });
-        this.video.pause();
-      });
-    }));
+  async seek(offset: number){
+    this.video.currentTime = offset;
   }
-/*
+
+  /*
 // Try to rewite this code using RxJs
   seek(offset: number, isBrowser?: boolean) {
     var _resolve: any, _reject: any;
@@ -106,11 +136,13 @@ export class Video extends Widget {
   }
   */
 
-  volume(level: number): void {
+  async volume(level: number) {
+    await this.waitLoad;
     this.video.volume = level;
   }
 
-  duration() {
+  async duration() {
+    await this.waitLoad;
     return this.video.duration;
   }
 
@@ -126,12 +158,10 @@ export class Video extends Widget {
     return "image/jpeg";
   }
 
-  private waitUntilItCanPlayThrough(): Promise<void> {
-    if (this.video.readyState >= 4) {
-      return Promise.resolve(void 0);
-    } else {
+  private async waitUntilItCanPlayThrough(): Promise<any> {
+    if (this.video.readyState < 4) {
       return new Promise(resolve => {
-        $(this.video).on("canplaythrough", () => resolve(void 0));
+        $(this.video).on("canplaythrough", () => resolve());
       });
     }
   }

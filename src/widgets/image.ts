@@ -1,5 +1,5 @@
 
-  import { Widget } from "../widget";
+  import { Widget } from "../widgets";
 
   export class Image extends Widget {
     private img: HTMLElement;
