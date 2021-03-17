@@ -1,5 +1,12 @@
 import { Widget } from "../widgets";
 
+/**
+ * Widget Proxy
+ * This class acts as a proxy for the widgets, since widgets are instantiated
+ * inside an iframe they need this class in order to be accessible.
+ *
+ */
+
 export class Proxy extends Widget {
   private messageHandler: (event: any) => void;
   private origin!: string;
@@ -8,25 +15,40 @@ export class Proxy extends Widget {
     [index: number]: (value: any) => void;
   } = {};
 
-  constructor(private parent: Window, private child: Window, childSrc: string) {
+  constructor(
+    private parent: Window,
+    private iframe: HTMLIFrameElement,
+    childSrc: string
+  ) {
     super();
 
-    const messageHandler = (this.messageHandler = event => {
-      const data = JSON.parse(event.data);
+    const messageHandler = (this.messageHandler = (event) => {
+      let data;
 
-      if(typeof data.counter !== 'undefined'){
+      try {
+        data = JSON.parse(event.data);
+      } catch (err) {
+        // Ignore corrupt messages.
+        return;
+      }
+
+      if (typeof data.counter !== "undefined") {
         if (this.resolvers[data.counter]) {
           this.resolvers[data.counter](data.result);
           delete this.resolvers[data.counter];
         }
-      }else if(typeof data.offset !== 'undefined'){
-        this.emit('offset', data.offset);
+      } else if (typeof data.offset !== "undefined") {
+        this.emit("offset", data.offset);
       }
     });
 
     this.origin = childSrc;
 
     this.parent.addEventListener("message", messageHandler, false);
+  }
+
+  async load() {
+    return this.callMethod("prepare");
   }
 
   /**
@@ -37,7 +59,7 @@ export class Proxy extends Widget {
   /**
    * Dispose.
    */
-  dispose(): void {
+  unload(): void {
     this.parent.removeEventListener("message", this.messageHandler);
   }
 
@@ -57,7 +79,7 @@ export class Proxy extends Widget {
   }
 
   async stop() {
-    return this.callMethod("stop"); 
+    return this.callMethod("stop");
   }
 
   async duration(): Promise<number> {
@@ -77,12 +99,15 @@ export class Proxy extends Widget {
     const message = {
       counter: counter,
       method: method,
-      args: args
+      args: args,
     };
 
-    this.child.postMessage(JSON.stringify(message), this.origin);
+    this.iframe.contentWindow?.postMessage(
+      JSON.stringify(message),
+      this.origin
+    );
 
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       this.resolvers[counter] = resolve;
     });
   }

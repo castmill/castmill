@@ -1,38 +1,34 @@
-<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.16.4/lodash.min.js"></script>
+    <script type="module" src="./index.ts"></script>
 
-<head>
-  <meta charset="UTF-8">
-  <script src="https://code.jquery.com/jquery-3.1.1.min.js">
-  </script>
-  <script src='https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.16.4/lodash.min.js'></script>
-  <script src='https://cdnjs.cloudflare.com/ajax/libs/bluebird/3.4.6/bluebird.min.js'></script>
-  <script src="demos-2.0.0.js"></script>
+    <style>
+      body {
+        margin: 20px;
+        background-color: #555;
+      }
 
-  <style>
-    body {
-      margin: 20px;
-      background-color: #555;
-    }
+      #wrapper {
+        display: flex;
+        align-items: "center";
+        justify-content: "center";
+        position: relative;
+        overflow: hidden;
+        width: 800px;
+        height: 800px;
+        background-color: #000;
+        border: solid 1px #333;
+        margin-bottom: 12px;
+      }
+    </style>
+  </head>
 
-    #wrapper {
-      display: flex;
-      align-items: 'center';
-      justify-content: 'center';
-      position: relative;
-      overflow: hidden;
-      width: 800px;
-      height: 800px;
-      background-color: #000;
-      border: solid 1px #333;
-      margin-bottom: 12px;
-    }
-  </style>
-
-</head>
-
-<body>
-  <div id="wrapper"></div>
-  <div id="controls"></div>
-</body>
-
+  <body>
+    <div id="wrapper"></div>
+    <div id="controls">
+      <player :server="server" :playlist="playlist"></player>
+    </div>
+  </body>
 </html>

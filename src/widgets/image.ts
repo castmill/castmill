@@ -1,41 +1,52 @@
+import { Widget } from "../widgets";
+import { Observable, of } from "rxjs";
 
-  import { Widget } from "../widgets";
+export class Image extends Widget {
+  private img?: HTMLElement;
+  private src: string;
 
-  export class Image extends Widget {
-    private img: HTMLElement;
-    private waitLoad: Promise<void>;
+  constructor(opts: { src: string }) {
+    super(opts);
+    this.src = opts.src;
+  }
 
-    constructor(el: HTMLElement, opts: any){
-      super(el, opts);
-
-      var dummy = document.createElement('img');
-      dummy.src = opts.src;
-
-      var img = this.img = document.createElement('div');
-      img.style.background = 'url(' + opts.src + ') no-repeat center';
-      img.style.backgroundSize = 'contain';
-      img.style.width = '100%';
-      img.style.height = '100%';
-
-      el.appendChild(img);
-
-      this.waitLoad = new Promise<void>(function(resolve){
-        dummy.onload = function(){
-          resolve();
-        }
-      });
+  show(el: HTMLElement, offset: number) {
+    if (this.img) {
+      return of("loaded");
+      // throw new Error("img element exists already");
     }
+    const img = (this.img = document.createElement("div"));
+    img.style.background = "url(" + this.src + ") no-repeat center";
+    img.style.backgroundSize = "contain";
+    img.style.width = "100%";
+    img.style.height = "100%";
 
-    ready(): Promise<void>{
-      return this.waitLoad;
-    }
+    el.appendChild(img);
 
-    dispose(): void {
-      this.img.style.background = 'none';
-    }
+    return new Observable<string>((subscriber) => {
+      const dummy = document.createElement("img");
+      dummy.src = this.src;
 
-    mimeType(): string{
-      return 'image/jpeg';
+      dummy.onload = (ev: Event) => {
+        subscriber.next("loaded");
+        subscriber.complete();
+      };
+
+      return () => {
+        dummy.onload = null;
+      };
+    });
+  }
+
+  unload(): void {
+    if (this.img) {
+      this.img.style.background = "none";
+      this.img.parentElement?.removeChild(this.img);
+      this.img = void 0;
     }
   }
 
+  mimeType(): string {
+    return "image/jpeg";
+  }
+}

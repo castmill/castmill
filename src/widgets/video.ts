@@ -1,108 +1,106 @@
-import * as $ from "jquery";
 import { Widget } from "../widgets";
 import { isUndefined } from "lodash";
-import { Observable, fromEvent, of } from "rxjs";
+import { fromEvent, Observable, of } from "rxjs";
+import { map, take } from "rxjs/operators";
 
 export class Video extends Widget {
-  private video: HTMLVideoElement;
-  private waitLoad: Promise<void>;
-  private el: HTMLElement;
-  private startPlaying!: Promise<void>;
-  private stopping!: Promise<void>;
-  private cancelPlay!: () => void;
+  private video?: HTMLVideoElement;
+  private src: string;
+  private _volume: number;
 
   offset: number = 0;
 
-  constructor(el: HTMLElement, opts: any) {
-    super(el, opts);
+  constructor(opts: { src: string; volume: number }) {
+    super();
+    this.src = opts.src;
+    this._volume = opts.volume;
+  }
 
-    this.el = el;
-
-    var video = (this.video = document.createElement("video"));
+  show(el: HTMLElement, offset: number) {
+    if (this.video) {
+      // Not completely correct since we may not yet be "playthrough" ready
+      return of("loaded");
+    }
+    const video = (this.video = document.createElement(
+      "video"
+    ) as HTMLVideoElement);
     video.style.width = "100%";
     video.style.height = "100%";
 
-    video.src = opts.src;
+    video.currentTime = offset / 1000;
+
+    video.src = this.src;
     el.appendChild(video);
 
-    var $video = $(this.video);
-    this.waitLoad = new Promise<void>(function(resolve) {
-      $video.one("loadedmetadata", <any>resolve);
-    });
+    !isUndefined(this._volume) && this.volume(this._volume);
 
-    !isUndefined(opts.volume) && this.volume(opts.volume);
+    if (video.readyState < 4) {
+      return fromEvent(video, "canplaythrough")
+        .pipe(map((evt) => "loaded"))
+        .pipe(take(1));
+    } else {
+      return of("loaded");
+    }
   }
 
-  async play() {
-    var $video = $(this.video);
+  unload(): void {
+    console.log("going to dispose");
+    if (this.video) {
+      this.video.src = "";
+      this.video.parentElement?.removeChild(this.video);
+      this.video = void 0;
+    }
+  }
 
-    this.startPlaying = this.waitUntilItCanPlayThrough()
-    await this.startPlaying;
+  play(timer$: Observable<number>) {
+    if (this.video) {
+      const video = this.video;
+      video.play();
 
-    this.video.play()
+      return new Observable<string>((subscriber) => {
+        // Probably we do not need this event listener at all.
+        const handler = (ev: Event) => {
+          subscriber.next("played");
+          subscriber.complete();
+        };
 
+        video.addEventListener("ended", handler);
 
-    const playing = new Promise<void>((resolve, reject) => {
-
-      const timeupdate = (event: any)  => {
-        const video = <HTMLVideoElement>(event.target);
-        this.offset = video.currentTime;
-        this.emit('offset', this.offset);
-      }
-
-      const playingHandler = () => {
-        $video.one("ended", <any>resolve);
-        $video.on('timeupdate', <any>timeupdate);
-      }
-
-      $video.one("playing", playingHandler);
-
-      this.cancelPlay = () => {
-        $video.off("playing", playingHandler);
-        $video.off("ended", <any>resolve);
-        reject(new Error('Cancelled play'));
-        delete this.startPlaying;
-      }
-    });
-
-    return playing;    
+        return () => {
+          video.removeEventListener("ended", handler);
+          video.pause();
+        };
+      });
+    }
+    return super.play(timer$);
   }
 
   async stop(): Promise<void> {
-    if (this.stopping) {
-      return this.stopping;
-    }
-
-    if (!this.video.paused && this.startPlaying) {
-      var $video = $(this.video);
-
-      await this.startPlaying;
-
-      this.cancelPlay();
-
-      await this.pause();
-
-      delete this.stopping;
-    }
+    this.video?.pause();
   }
 
-  private pause(): Promise<any> {
-    const $video = $(this.video);
+  private pause() {
+    /*
+    const video = this.video;
 
-    return this.stopping = new Promise( (resolve) => {
-      $video.one("pause", val => {
+    return (this.stopping = new Promise((resolve) => {
+      video.addEventListener("pause", (val) => {
         resolve();
       });
       this.video.pause();
-    });
+    }));
+    */
   }
 
-  async seek(offset: number){
-    this.video.currentTime = offset;
+  seek(offset: number) {
+    // console.log("video seek", offset, !!this.video);
+    if (this.video) {
+      this.video.currentTime = offset / 1000;
+    }
   }
 
   /*
-// Try to rewite this code using RxJs
+  // Try to rewite this code using RxJs
   seek(offset: number, isBrowser?: boolean) {
     var _resolve: any, _reject: any;
     var $video = $(this.video);
@@ -136,33 +134,31 @@ export class Video extends Widget {
   }
   */
 
-  async volume(level: number) {
-    await this.waitLoad;
-    this.video.volume = level;
+  volume(volume: number) {
+    if (this.video) {
+      this._volume = this.video.volume = volume;
+    }
   }
 
-  async duration() {
-    await this.waitLoad;
-    return this.video.duration;
-  }
-
-  ready(): Promise<void> {
-    return this.waitLoad;
-  }
-
-  dispose(): void {
-    this.video.src = "";
+  duration() {
+    if (this.video) {
+      return this.video.duration;
+    }
+    return 0;
   }
 
   mimeType(): string {
-    return "image/jpeg";
+    return "video/mpeg4";
   }
 
-  private async waitUntilItCanPlayThrough(): Promise<any> {
-    if (this.video.readyState < 4) {
-      return new Promise(resolve => {
-        $(this.video).on("canplaythrough", () => resolve());
+  /*
+  private async waitUntilItCanPlayThrough(): Promise<void> {
+    if (this.video?.readyState < 4) {
+      return new Promise((resolve) => {
+        // TODO: Remove listener
+        this.video.addEventListener("canplaythrough", () => resolve());
       });
     }
   }
+  */
 }

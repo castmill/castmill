@@ -1,145 +1,173 @@
-import { Playable, Status } from "./playable";
-import { PlayServer } from "./play-server";
+import { Status } from "./playable";
 import { Layer } from "./layer";
-import { extend } from "lodash";
-import { EventEmitter } from 'eventemitter3';
+import { EventEmitter } from "eventemitter3";
+import { of, from, Observable } from "rxjs";
+import { concatMap, map, repeat, share, takeWhile, tap } from "rxjs/operators";
+import { Renderer } from "./renderer";
 
-export class Playlist extends EventEmitter implements Playable {
-  public entries: Playable[] = [];
+export class Playlist extends EventEmitter {
+  public layers: Layer[] = [];
 
-  // TODO: rename offset to time
-  offset: number = 0;
-  protected playing: Promise<void> = Promise.resolve();
-  protected server!: PlayServer;
+  time: number = 0;
 
   status: Status = Status.NotReady;
 
-  constructor(opts?: any) {
+  constructor(public name: string) {
     super();
-    extend(this, opts);
   }
 
-  load(): Promise<void> {
-    return Promise.resolve(void 0);
+  play(
+    renderer: Renderer,
+    timer$: Observable<number>,
+    opts?: { loop?: boolean }
+  ) {
+    return this.playLayers(renderer, timer$, opts ? opts : {});
   }
 
-  play(server: PlayServer): Promise<any> {
-    return (this.playing = this.playEntries(server));
-  }
+  private playLayers(
+    renderer: Renderer,
+    timer$: Observable<number>,
+    { loop = false }
+  ) {
+    const { layer, offset: relativeOffset = 0, index } = this.findLayer(
+      this.time
+    );
+    if (layer) {
+      // The first layer must be seeked at a relative offset, the rest after it with offset 0.
+      let first = 1;
 
-  private async playEntries(server: PlayServer) {
-    let offset = this.offset;
-    let prevEntry!: any;
-    this.server = server;
+      // Compute offsets for every layer
+      let end = 0;
+      const layersWithOffsets = this.layers.map((layer) => {
+        const start = end;
+        end += layer.duration();
+        const result = {
+          start,
+          end,
+          layer,
+        };
 
-    const offsetListener = (newOffset: number) => {
-      this.offset = offset + newOffset;
-      this.emit("offset", this.offset);
-    };
+        return result;
+      });
 
-    try {
-      const result = await this.findEntry(this.offset);
-      if (result) {
-        const entry = prevEntry = this.entries[result.index];
-        prevEntry.on("offset", offsetListener);
+      // Rotate array (so that we can have a complete array to loop with from current item)
+      const elements = layersWithOffsets
+        .slice(index)
+        .concat(layersWithOffsets.slice(0, index));
 
-        await entry.seek(this.offset - result.offset);
-        await this.playEntry(server, entry);        
+      // We start playing from the found layer at the current offset.
+      let current: Layer;
+      const duration = this.duration();
+      const playlistTimer$ = timer$.pipe(
+        map((value) => value % duration),
+        tap((value) => (this.time = value)),
+        share()
+      );
 
-        for (let i = result.index + 1; i < this.entries.length; i++) {
-          const entry = this.entries[i];
-          prevEntry.removeListener("offset", offsetListener);
+      const playing$ = from(elements).pipe(
+        concatMap((element) => {
+          const layerOffset = first ? relativeOffset : 0;
+          current = element.layer;
+          first = 0;
+          return this.playLayer(
+            renderer,
+            playlistTimer$,
+            element.layer,
+            layerOffset,
+            element.start,
+            element.end
+          );
+        })
+      );
 
-          prevEntry = entry;
-          prevEntry.on("offset", offsetListener);
-
-          await this.playEntry(server, entry);
-
-          const duration = await entry.duration();
-          offset += duration;
-        }
+      if (loop) {
+        return playing$.pipe(repeat());
+      } else {
+        return playing$;
       }
-    } catch (err) {}
-    finally{
-      prevEntry.removeListener("offset", offsetListener);
-    }
-
-    this.emit("end");
-  }
-
-  private async playEntry(server: PlayServer, entry: Playable) {
-    if (entry instanceof Layer && server) {
-      await server.play(entry, 0, 100, true);
-    } else if (entry instanceof Playlist) {
-      await entry.play(server);
+    } else {
+      return of("end");
     }
   }
 
-  unload(): Promise<void> {
-    return Promise.resolve();
+  private playLayer(
+    renderer: Renderer,
+    timer$: Observable<number>,
+    layer: Layer,
+    layerOffset: number,
+    start: number,
+    end: number
+  ) {
+    const volume = 100;
+    return renderer.play(
+      layer,
+      timer$.pipe(
+        takeWhile((value) => value >= start && value < end),
+        map((value) => value - start),
+        share()
+      ),
+      layerOffset,
+      volume
+    );
   }
 
-  async seek(offset: number): Promise<void> {
-    this.offset = offset;
-    const result = await this.findEntry(offset);
+  seek(offset: number) {
+    offset = offset % (this.duration() + 1);
+    this.time = offset;
+    this.emit("offset", offset);
+    const { layer, offset: relativeOffset = 0 } = this.findLayer(offset);
 
-    if (result) {
-      const entry = this.entries[result.index];
-      return entry.seek(offset - result.offset);
+    if (layer) {
+      return layer.seek(relativeOffset);
     }
   }
 
-  private async findEntry(offset: number) {
+  show(renderer: Renderer) {
+    const { layer, offset = 0 } = this.findLayer(this.time);
+    if (layer) {
+      return renderer.show(layer, offset);
+    }
+    return of("end");
+  }
+
+  unload(): void {
+    this.layers.forEach((layer) => layer.unload());
+  }
+
+  // Finds layer at given offset and relative offset within that layer.
+  private findLayer(offset: number) {
     let currOffset = 0;
-    for (let i = 0; i < this.entries.length; i++) {
-      const entry = this.entries[i];
-      const duration = await entry.duration();
-      if (currOffset + duration > offset) {
-        return { index: i, offset: currOffset, duration: duration };
+    for (let i = 0; i < this.layers.length; i++) {
+      const layer = this.layers[i];
+      const duration = layer.duration();
+      if (currOffset + duration >= offset) {
+        return { index: i, offset: offset - currOffset, duration, layer };
       }
       currOffset += duration;
     }
-    return null;
+    return {};
   }
 
-  async stop(): Promise<void> {
-    this.server.stop();
-  }
-
-  async show(server?: PlayServer): Promise<void> {
-    for (const entry of this.entries) {
-      if (entry instanceof Layer && server) {
-        await server.show(entry, 0, false);
-      } else if (entry instanceof Playlist) {
-        await entry.show(server);
-      }
-    }
-  }
-
-  async hide(): Promise<void> {}
-
-  async duration(): Promise<number> {
+  duration(): number {
     var totalDuration = 0;
 
-    await Promise.all(
-      this.entries.map(async entry => {
-        const duration = await entry.duration();
-        totalDuration += duration;
-      })
-    );
+    this.layers.map(async (entry) => {
+      const duration = entry.duration();
+      totalDuration += duration;
+    });
 
     return totalDuration;
   }
 
   public get position(): number {
-    return this.offset;
+    return this.time;
   }
 
-  add(entry: Playable, index?: number): void {
+  add(entry: Layer, index?: number): void {
     if (index) {
-      this.entries.splice(index, 0, entry);
+      this.layers.splice(index, 0, entry);
     } else {
-      this.entries.push(entry);
+      this.layers.push(entry);
     }
   }
 }

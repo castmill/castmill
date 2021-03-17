@@ -1,76 +1,133 @@
 <template>
   <div>
-    <span>{{position}}</span>
-    <button type="button" @click="playStop()">{{isPlaying ? 'Stop' : 'Play'}}</button>
-    <input type="range" step="0.1" min="0" :max="duration" v-model="position">
-    <span>{{duration}}</span>
+    <span>{{ timeFormat(position / 1000) }}</span>
+    <button type="button" @click="playStop()">
+      {{ isPlaying ? "Stop" : "Play" }}
+    </button>
+    <input
+      type="range"
+      step="0.1"
+      min="0"
+      :max="playlist.duration()"
+      v-model="position"
+    />
+    <span>{{ timeFormat(playlist.duration() / 1000) }}</span>
+    <input :disabled="isPlaying" type="checkbox" v-model="loop" />
+    <span>Loop</span>
   </div>
 </template>
 
 <script lang="ts">
-import { Vue, Component, Prop, Watch } from "vue-property-decorator";
+import { Subscription } from "rxjs";
+import * as Vue from "vue";
 import { Playlist } from "../playlist";
-import { PlayServer } from "../play-server";
+import { Renderer } from "../renderer";
+import { Player } from "../player";
 
-@Component
-export default class Player extends Vue {
-  @Prop() playlist!: Playlist;
-  @Prop() server!: PlayServer;
+export default Vue.defineComponent({
+  props: {
+    playlist: { type: Playlist, required: true },
+    renderer: { type: Renderer, required: true },
+  },
+  data() {
+    return {
+      time: 0,
+      isPlaying: false,
+      playing$: new Subscription(),
+      seeking$: new Subscription(),
+      loop: true,
+    } as {
+      time: number;
+      isPlaying: boolean;
+      playing$: Subscription;
+      seeking$: Subscription;
+      loop: boolean;
+      player?: Player;
+    };
+  },
+  created() {
+    this.player = new Player(this.playlist, this.renderer);
 
-  // Should not be properties but reactivity does not work.
-  @Prop()
-  duration: number = 0;
-  @Prop()
-  isPlaying: boolean = false;
-
-/*
-  @Watch('offset')
-  onPositionChanged(val: number){
-    this.playlist.seek(val);
-  }
-*/
-
-  constructor(){
-    super();
-    console.log("player")
-    this.playlist.show(this.server).then( () => {
-      return this.playlist.duration();
-    }).then( duration => {
-      this.duration = duration;
+    this.player.on("end", () => {
+      console.log("Playlist ended");
     });
-
-    this.playlist.on('end', () => {
+  },
+  mounted() {
+    this.player?.on("time", (time) => {
+      this.time = time;
+    });
+    this.player?.on("completed", () => {
       this.isPlaying = false;
-      this.playlist.seek(0);
-    })
-  }
+      this.position = 0;
+    });
+    this.playlist.seek(0);
+    this.playlist.show(this.renderer).subscribe(() => void 0);
 
-  get position(): string {
-    return this.playlist.offset.toString();
-  }
+    this.play();
+  },
+  computed: {
+    position: {
+      get(): number {
+        return this.time;
+      },
+      set(value: string) {
+        this.time = parseInt(value);
+        const isPlaying = this.isPlaying;
+        if (isPlaying) {
+          this.stop();
+        }
+        this.seeking$.unsubscribe();
+        this.playlist.seek(parseFloat(value));
+        this.seeking$ = this.playlist
+          .show(this.renderer)
+          .subscribe(() => void 0);
+        if (isPlaying) {
+          this.play();
+        }
+      },
+    },
+  },
+  methods: {
+    async playStop() {
+      if (this.isPlaying) {
+        return this.stop();
+      } else {
+        return this.play();
+      }
+    },
 
-  set position(value: string) {
-    this.playlist.seek(parseFloat(value));
-  }
+    play() {
+      if (!this.isPlaying) {
+        this.isPlaying = true;
+        this.player?.play({ loop: this.loop });
+      }
+    },
 
-  async playStop() {
-    if (this.isPlaying) {
-      return this.stop();
-    } else {
-      return this.play();
-    }
-  }
+    async stop() {
+      this.isPlaying = false;
+      this.player?.stop();
+    },
 
-  async play(): Promise<void> {
-    this.isPlaying = true;
-    return this.playlist.play(this.server);
-  }
+    timeFormat(value: string) {
+      let seconds = parseInt(value);
+      seconds = seconds < 0 ? 0 : seconds;
+      let s = Math.floor(seconds % 60) as any;
+      let m = Math.floor((seconds / 60) % 60) as any;
+      let h = Math.floor(seconds / 3600) as any;
 
-  async stop() {
-    this.isPlaying = false;
-    return this.playlist.stop();
-  }
-}
+      // Check if we need to show hours
+      h = h > 0 ? h + ":" : "";
+
+      // If hours are showing, we may need to add a leading zero.
+      // Always show at least one digit of minutes.
+      m = (h && m < 10 ? "0" + m : m) + ":";
+
+      // Check if leading zero is need for seconds
+      s = s < 10 ? "0" + s : s;
+      return h + m + s;
+    },
+  },
+});
 </script>
 
 <style scoped></style>

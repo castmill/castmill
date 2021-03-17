@@ -1,6 +1,15 @@
-# Castmill 2.0
+# Castmill 2.0 - Open Digital Signage Platform
 
-Open Digital Signage Platform
+In order to run the demo just run:
+```bash
+yarn dev
+```
+
+If you want to build the demo for publishing somewhere:
+
+```bash
+yarn build
+```
 
 # Widgets
 

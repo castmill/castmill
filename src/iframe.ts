@@ -4,6 +4,9 @@
  */
 
 import { Widget } from "./widgets";
+
+// We may want to use "srcdoc" instead because that would allow us to "cache" the source of the iframe and
+// make it faster.
   
 // http://www.aaronpeters.nl/blog/iframe-loading-techniques-performance?%3E
 export function createIframe(
