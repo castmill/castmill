@@ -1,6 +1,42 @@
-# Castmill 2.0
+# Castmill - Open Digital Signage Player
 
-Open Digital Signage Platform
+Castmill is an Open Source library that implements a full featured Digital Signage player.
+Some of its features:
+
+- HTML5 Lightweight and modular player.
+- Built-in widgets for playing videos, images or texts.
+- Flexible layout system allows for any kind of imaginable setup.
+- Optimized for maximul reliability, low memory and offline operation.
+
+
+## Install
+
+Use yarn or npm to install the package in your project:
+
+```
+yarn add castmill
+```
+
+Check the demos and API reference for how to use the library.
+
+
+# License
+
+This library is covered by the AGPL license. If you are in need of a different license for commercial
+purposes, please get in touch with us.
+
+# Development
+
+In order to run the demo just run:
+```bash
+yarn dev
+```
+
+If you want to build the demo for publishing somewhere:
+
+```bash
+yarn build
+```
 
 # Widgets
 

@@ -1,16 +1,26 @@
 {
   "compilerOptions": {
-    "outDir": "./built/",
-    "sourceMap": true,
-    "strict": true,
-    "noImplicitReturns": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "allowSyntheticDefaultImports": true,
-    "module": "commonjs",
+    "target": "es5",
+    "module": "es6",
+    "declaration": true,
     "moduleResolution": "node",
-    "target": "es6",
-    "lib": ["es2015", "es2016", "dom", "es2017", "es6", "es5"],
+    "strict": true,
+    "jsx": "preserve",
+    "sourceMap": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "lib": ["es2015", "dom"],
+    "types": ["vite/client"],
+    "outDir": "dist"
   },
-  "include": ["./src/**/*"]
+  "include": [
+    //  "demos/**/*.ts",
+    "src/**/*.ts",
+    "src/**/*.d.ts",
+    "src/**/*.tsx",
+    "src/**/*.vue",
+    "src/widgets/scroll/glsl.d.ts_",
+    "src/widgets/proxy.ts_",
+    "src/store/index.ts_"
+  ]
 }

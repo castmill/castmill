@@ -1,4 +1,5 @@
-import { PlayServer } from "./play-server";
+import { Observable } from "rxjs";
+import { Renderer } from "./renderer";
 
 export enum Status {
   NotReady,
@@ -8,15 +9,16 @@ export enum Status {
   Playing,
   Stopping,
   Stopped,
-  Seeking
+  Seeking,
 }
 
 export interface Playable {
-  duration(): Promise<number>;
-  load(): Promise<void>;
-  unload(): Promise<void>;
-  play(server?: PlayServer): Promise<void>;
-  stop(): Promise<void>;
-  seek(offset: number): Promise<void>;
+  duration(): number;
+
+  play(server: Renderer, opts?: { loop: boolean }): void;
+  seek(offset: number): void;
   status: Status;
+
+  show(offset: number): Observable<string>;
+  unload(): void;
 }

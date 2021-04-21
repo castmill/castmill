@@ -2,72 +2,75 @@
   Lodash template to generate a widget
 -->
 <html>
+  <head>
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.16.4/lodash.min.js"></script>
 
-<head>
-	<script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
-	<script src='https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.16.4/lodash.min.js'></script>
+   <!-- <script type="module" src="<%= widgetSrc %>"></script>--->
+    <!--<script src="serviceworker.js"></script>-->
+    <style>
+      body {
+        margin: 0px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+      }
+    </style>
+  </head>
 
-	<script type="module" src="<%= widgetSrc %>"></script>
-	<!--
-<script src="serviceworker.js"></script>
--->
-	<link></link>
+  <body id="body">
+    <script type="module">
+		import { Castmill } from '<%= widgetSrc %>';
 
-	<style>
-		body {
-			margin: 0px;
-			display: flex;
-			justify-content: center;
-			align-items: center;
-			overflow: hidden;
-		}
-	</style>
-</head>
+       console.log('Loading widget...');
+       document.addEventListener("DOMContentLoaded", function () {
+       	console.log('Loaded');
+       	var parent, origin;
 
-<body>
-	<script>
-		console.log('Loading...');
-		document.addEventListener("DOMContentLoaded", function () {
-			console.log('Loaded');
-			var parent, origin;
+       	const messageHandler = function (event) {
+			let data;
+			console.log('About to decode a message', event.data);
+			try {
+				data = JSON.parse(event.data);
+			} catch(errr){
+				console.error("Could not parse message data");
+				return;
+			}
+       		console.log('Mssage received', data);
 
-			const messageHandler = function (event) {
-				console.log('About to decode a message', event.data);
-				const data = JSON.parse(event.data);
-				console.log('Mssage received', data);
+       		parent = event.source;
+       		origin = event.origin;
 
-				parent = event.source;
-				origin = event.origin;
+       		loading.then(function (widget) {
+       			switch (data.method) {
+       				case 'play':
+       				case 'stop':
+       				case 'seek':
+       				case 'duration':
+       					return widget[data.method].apply(widget, data.args ||  []).then(function (result) {
+       						event.source.postMessage(JSON.stringify({
+       							counter: data.counter,
+       							result: result
+       						}), event.origin);
+       					});
+       				default:
+       				parent.postMessage(JSON.stringify({ counter: counter, result: 'Error: Unknown method' }), origin);
+       			}
+       		});
+       	};
+       	window.addEventListener('message', messageHandler);
 
-				loading.then(function (widget) {
-					switch (data.method) {
-						case 'play':
-						case 'stop':
-						case 'seek':
-						case 'duration':
-							return widget[data.method].apply(widget, data.args ||  []).then(function (result) {
-								event.source.postMessage(JSON.stringify({
-									counter: data.counter,
-									result: result
-								}), event.origin);
-							});
-						default:
-						parent.postMessage(JSON.stringify({ counter: counter, result: 'Error: Unknown method' }), origin);
-					}
-				});
-			};
-			window.addEventListener('message', messageHandler);
-
-			const loading = $.get('<%= baseUrl %>/<%= widgetId %>').then(function (json) {
-				return new <%= widgetConstructor %> ($('body')[0], json);
-			}).then(function (widget) {
-				widget.on('offset', function (offset) {
-					parent.postMessage(JSON.stringify({ offset: offset }), origin);
-				});
-				return widget;
-			})
-		});
-	</script>
-</body>
-
+       	const loading = $.get('<%= baseUrl %>/<%= widgetId %>').then(function (json) {
+			const bodyEl = document.getElementById('body');
+       		return new <%= widgetConstructor %> (bodyEl, json);
+       	}).then(function (widget) {
+       		widget.on('offset', function (offset) {
+       			parent.postMessage(JSON.stringify({ offset: offset }), origin);
+       		});
+       		return widget;
+       	})
+       });
+    </script>
+  </body>
 </html>

@@ -1,39 +1,46 @@
-import { EventEmitter } from 'eventemitter3';
-
+import { EventEmitter } from "eventemitter3";
+import { NEVER, Observable, of } from "rxjs";
 
 export abstract class Widget extends EventEmitter {
-  constructor(el?: HTMLElement, opts?: {}) {
+  constructor(opts?: {}) {
     super();
   }
 
   /**
-   * Widget is ready.
+   * Prepare widget. This method should do all async stuff necessary so
+   * that the widget can start playing directly after it.
    */
-  abstract ready(): Promise<void>;
+  // abstract load(el: HTMLElement): Observable<string>;
 
   /**
    * Dispose.
+   * Disposes the widget removing all resources.
    */
-  abstract dispose(): void;
+  abstract unload(): void;
 
   /**
    * Return mimetype for this widget
    */
-  abstract mimeType(): string;
+  mimeType() {}
 
   /**
    *  Starts playing the content.
-   *  It returns a promise that resolves when the content has played completely.
    */
-  async play() {}
+  play(timer$: Observable<number>): Observable<string | number> {
+    return NEVER;
+  }
 
-  async stop() {}
+  stop() {}
 
-  async seek(offset: number) {}
+  show(el: HTMLElement, offset: number): Observable<string> {
+    return of("shown");
+  }
 
-  async duration(): Promise<number> {
+  seek(offset: number) {}
+
+  duration() {
     return 0;
   }
 
-  async volume(level: number) {}
+  volume(level: number) {}
 }

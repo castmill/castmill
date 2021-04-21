@@ -5,16 +5,15 @@
 
     <style>
       body {
-        margin: 0;
+        margin: 20px;
         background-color: #555;
-        position: relative;
       }
 
       #wrapper {
         display: flex;
         align-items: center;
         justify-content: center;
-        position: absolute;
+        position: relative;
         overflow: hidden;
         width: 100%;
         height: 100%;
@@ -27,8 +26,5 @@
 
   <body>
     <div id="wrapper"></div>
-    <div id="controls">
-      <player :server="server" :playlist="playlist"></player>
-    </div>
   </body>
 </html>

@@ -4,9 +4,12 @@
  */
 
 import { Widget } from "./widgets";
-  
+
+// We may want to use "srcdoc" instead because that would allow us to "cache" the source of the iframe and
+// make it faster.
+
 // http://www.aaronpeters.nl/blog/iframe-loading-techniques-performance?%3E
-export function createIframe(
+export async function createIframe(
   parent: HTMLElement,
   src?: string
 ): Promise<HTMLIFrameElement> {
@@ -44,12 +47,17 @@ export function createIframe(
     });
     */
 
+  // TODO: Port to rxjs
+  /*
   return new Promise<HTMLIFrameElement>((resolve, reject) => {
     iframe.addEventListener("load", event => resolve(iframe));
     iframe.addEventListener("error", event =>
       reject("Error loading iframe...")
     );
   });
+  */
+
+  return iframe;
 }
 
 export function purgeIframe(iframe: HTMLIFrameElement) {
@@ -71,13 +79,13 @@ export function purgeIframe(iframe: HTMLIFrameElement) {
 }
 
 export function getIframeWidget(iframe: HTMLIFrameElement, content?: string) {
-  if(content && iframe.contentWindow){
+  if (content && iframe.contentWindow) {
     const contentWindow: any = iframe.contentWindow;
     // Think if we could use Function("") instead of eval.
     contentWindow.eval(content);
   }
-  
-  if(iframe.contentWindow){
+
+  if (iframe.contentWindow) {
     const window: any = iframe.contentWindow;
     return window.widget;
   }
