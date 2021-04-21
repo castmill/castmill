@@ -4,7 +4,7 @@ import { finalize, share, tap } from "rxjs/operators";
 import { Playlist } from "./playlist";
 import { Renderer } from "./renderer";
 
-const TIMER_RESOLUTION = 500;
+const TIMER_RESOLUTION = 50;
 
 export class Player extends EventEmitter {
   constructor(private playlist: Playlist, private renderer: Renderer) {
@@ -15,8 +15,11 @@ export class Player extends EventEmitter {
 
   show() {}
 
+  // For Video Wall / Mosaic use on wrapper: right: -100%, width: 200%
   play(opts: { loop?: boolean } = { loop: false }) {
-    let currTime = this.playlist.time;
+    let currTime =
+      /*this.playlist.time ||*/ Date.now() % this.playlist.duration();
+    this.playlist.seek(currTime);
     const timer$ = timer(
       currTime,
       TIMER_RESOLUTION,

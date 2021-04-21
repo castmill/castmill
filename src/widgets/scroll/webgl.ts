@@ -161,7 +161,6 @@ export let webgl = {
       gl.shaderProgram,
       "uSampler"
     );
-    Promise;
   },
 
   initQuad: function(

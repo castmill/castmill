@@ -1,5 +1,10 @@
 import { defineConfig } from "vite";
 const { resolve } = require("path");
+import babel from "@rollup/plugin-babel";
+import { nodeResolve } from "@rollup/plugin-node-resolve";
+const arrowFunctions = require("@babel/plugin-transform-arrow-functions");
+
+import legacy from "@vitejs/plugin-legacy";
 
 const path = require("path");
 
@@ -8,14 +13,41 @@ import vue from "@vitejs/plugin-vue";
 // https://vitejs.dev/config/
 export default defineConfig({
   build: {
-    target: "es2015",
+    sourcemap: true,
+    // target: "es6",
+
+    /*
     lib: {
       entry: path.resolve(__dirname, "src/index.ts"),
       name: "castmill",
     },
+    */
+
     rollupOptions: {
+      plugins: [
+        nodeResolve(),
+        /*
+        babel({
+          babelHelpers: "bundled",
+          plugins: [arrowFunctions],
+          presets: [
+            [
+              "@babel/preset-env",
+              {
+                corejs: 2,
+                useBuiltIns: "usage",
+                targets: {
+                  chrome: "1",
+                },
+              },
+            ],
+          ],
+        }),
+        */
+      ],
       input: {
-        demo: resolve(__dirname, "demos/index.html"),
+        // demo: resolve(__dirname, "demos/index.html"),
+        webos: resolve(__dirname, "demos/webos/index.html"),
       },
       // make sure to externalize deps that shouldn't be bundled
       // into your library
@@ -32,5 +64,10 @@ export default defineConfig({
     },
   },
   root: __dirname + "/demos",
-  plugins: [vue()],
+  plugins: [
+    vue(),
+    legacy({
+      targets: ["defaults", "not IE 11"],
+    }),
+  ],
 });

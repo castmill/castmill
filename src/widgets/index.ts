@@ -30,7 +30,7 @@ export abstract class Widget extends EventEmitter {
     return NEVER;
   }
 
-  async stop() {}
+  stop() {}
 
   show(el: HTMLElement, offset: number): Observable<string> {
     return of("shown");

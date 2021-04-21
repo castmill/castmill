@@ -1,5 +1,4 @@
 import { Widget } from "../widgets";
-import { isUndefined } from "lodash";
 import { fromEvent, Observable, of } from "rxjs";
 import { map, take } from "rxjs/operators";
 
@@ -32,7 +31,9 @@ export class Video extends Widget {
     video.src = this.src;
     el.appendChild(video);
 
-    !isUndefined(this._volume) && this.volume(this._volume);
+    if (typeof this._volume !== "undefined") {
+      this.volume(this._volume);
+    }
 
     if (video.readyState < 4) {
       return fromEvent(video, "canplaythrough")
@@ -75,7 +76,7 @@ export class Video extends Widget {
     return super.play(timer$);
   }
 
-  async stop(): Promise<void> {
+  stop() {
     this.video?.pause();
   }
 

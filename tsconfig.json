@@ -8,8 +8,16 @@
     "sourceMap": true,
     "resolveJsonModule": true,
     "esModuleInterop": true,
-    "lib": ["es5", "dom"],
+    "lib": ["es2015", "dom"],
     "types": ["vite/client"]
   },
-  "include": ["demos/**/*.ts", "src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue", "src/widgets/scroll/glsl.d.ts_"]
+  "include": [
+  //  "demos/**/*.ts",
+    "src/**/*.ts",
+    "src/**/*.d.ts",
+    "src/**/*.tsx",
+    "src/**/*.vue",
+    "src/widgets/scroll/glsl.d.ts_",
+    "src/widgets/proxy.ts_"
+, "src/store/index.ts_"  ]
 }
