@@ -14,14 +14,6 @@ import vue from "@vitejs/plugin-vue";
 export default defineConfig({
   build: {
     sourcemap: true,
-    // target: "es6",
-
-    /*
-    lib: {
-      entry: path.resolve(__dirname, "src/index.ts"),
-      name: "castmill",
-    },
-    */
 
     rollupOptions: {
       plugins: [

@@ -2,6 +2,7 @@
   "compilerOptions": {
     "target": "es5",
     "module": "es6",
+    "declaration": true,
     "moduleResolution": "node",
     "strict": true,
     "jsx": "preserve",
@@ -9,15 +10,17 @@
     "resolveJsonModule": true,
     "esModuleInterop": true,
     "lib": ["es2015", "dom"],
-    "types": ["vite/client"]
+    "types": ["vite/client"],
+    "outDir": "dist"
   },
   "include": [
-  //  "demos/**/*.ts",
+    //  "demos/**/*.ts",
     "src/**/*.ts",
     "src/**/*.d.ts",
     "src/**/*.tsx",
     "src/**/*.vue",
     "src/widgets/scroll/glsl.d.ts_",
-    "src/widgets/proxy.ts_"
-, "src/store/index.ts_"  ]
+    "src/widgets/proxy.ts_",
+    "src/store/index.ts_"
+  ]
 }
