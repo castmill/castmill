@@ -59,7 +59,7 @@ export default defineConfig({
   plugins: [
     vue(),
     legacy({
-      targets: ["defaults", "not IE 11"],
+      targets: ["chrome 39"],
     }),
   ],
 });
