@@ -1,6 +1,6 @@
 import { Widget } from "../widgets";
 import { fromEvent, Observable, of } from "rxjs";
-import { map, take } from "rxjs/operators";
+import { map, take, tap } from "rxjs/operators";
 
 export class Video extends Widget {
   private video?: HTMLVideoElement;
@@ -26,7 +26,7 @@ export class Video extends Widget {
     video.style.width = "100%";
     video.style.height = "100%";
 
-    video.currentTime = offset / 1000;
+    this.offset = offset;
 
     video.src = this.src;
     el.appendChild(video);
@@ -36,9 +36,13 @@ export class Video extends Widget {
     }
 
     if (video.readyState < 4) {
-      return fromEvent(video, "canplaythrough")
-        .pipe(map((evt) => "loaded"))
-        .pipe(take(1));
+      return fromEvent(video, "canplaythrough").pipe(
+        map((evt) => "loaded"),
+        take(1),
+        tap(() => {
+          video.currentTime = this.offset / 1000;
+        })
+      );
     } else {
       return of("loaded");
     }
@@ -95,7 +99,8 @@ export class Video extends Widget {
 
   seek(offset: number) {
     // console.log("video seek", offset, !!this.video);
-    if (this.video) {
+    this.offset = offset;
+    if (this.video && this.video.readyState > 4) {
       this.video.currentTime = offset / 1000;
     }
   }
