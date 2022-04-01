@@ -1,11 +1,12 @@
-import { Widget } from "../widgets";
-import { fromEvent, Observable, of } from "rxjs";
+import { Widget } from "./widget";
+import { fromEvent, merge, Observable, of } from "rxjs";
 import { map, take, tap } from "rxjs/operators";
 
 export class Video extends Widget {
   private video?: HTMLVideoElement;
   private src: string;
   private _volume: number;
+  private _duration: number = 0;
 
   offset: number = 0;
 
@@ -51,7 +52,7 @@ export class Video extends Widget {
   unload(): void {
     console.log("going to dispose");
     if (this.video) {
-      this.video.src = "";
+      // this.video.src = "";
       this.video.parentElement?.removeChild(this.video);
       this.video = void 0;
     }
@@ -62,20 +63,23 @@ export class Video extends Widget {
       const video = this.video;
       video.play();
 
-      return new Observable<string>((subscriber) => {
-        // Probably we do not need this event listener at all.
-        const handler = (ev: Event) => {
-          subscriber.next("played");
-          subscriber.complete();
-        };
+      return merge(
+        new Observable<string>((subscriber) => {
+          // Probably we do not need this event listener at all.
+          const handler = (ev: Event) => {
+            subscriber.next("played");
+            subscriber.complete();
+          };
 
-        video.addEventListener("ended", handler);
+          video.addEventListener("ended", handler);
 
-        return () => {
-          video.removeEventListener("ended", handler);
-          video.pause();
-        };
-      });
+          return () => {
+            video.removeEventListener("ended", handler);
+            video.pause();
+          };
+        }),
+        super.play(timer$)
+      );
     }
     return super.play(timer$);
   }
@@ -97,12 +101,13 @@ export class Video extends Widget {
     */
   }
 
-  seek(offset: number) {
-    // console.log("video seek", offset, !!this.video);
+  // TODO: Implement seek as an observable
+  seek(offset: number): Observable<[number, number]> {
     this.offset = offset;
-    if (this.video && this.video.readyState > 4) {
+    if (this.video /*&& this.video.readyState > 4*/) {
       this.video.currentTime = offset / 1000;
     }
+    return of([offset, 0]);
   }
 
   /*
@@ -146,11 +151,27 @@ export class Video extends Widget {
     }
   }
 
-  duration() {
-    if (this.video) {
-      return this.video.duration;
+  duration(): Observable<number> {
+    if (this._duration) {
+      return of(this._duration);
     }
-    return 0;
+    const video = document.createElement("video");
+    video.preload = "metadata";
+    video.src = this.src;
+
+    return new Observable<number>((subscriber) => {
+      const handler = (ev: Event) => {
+        this._duration = video.duration * 1000;
+        subscriber.next(this._duration);
+        subscriber.complete();
+      };
+
+      video.onloadedmetadata = handler;
+
+      return () => {
+        video.onloadedmetadata = null;
+      };
+    });
   }
 
   mimeType(): string {

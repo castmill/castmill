@@ -10,17 +10,31 @@
  *  playlists as any other layer.
  */
 
-import { Widget } from "./";
-import { from, Observable } from "rxjs";
-import { mergeMap } from "rxjs/operators";
-import { Playlist } from "../playlist";
-import { Renderer } from "../renderer";
+import { from, Observable, merge } from "rxjs";
+import { mergeMap, max } from "rxjs/operators";
+
+import { Playlist, Renderer, JsonLayout, Widget } from "../";
 
 export class Layout extends Widget {
   private items: { renderer: Renderer; playlist: Playlist }[] = [];
 
   constructor(public name: string, opts?: { duration: number }) {
     super(opts);
+  }
+
+  static async fromLayoutJSON(json: JsonLayout) {
+    const layout = new Layout(json.name, json.args);
+
+    const items = json.items;
+    items.forEach(async (item) => {
+      const playlist = await Playlist.fromJSON(item.playlist);
+      layout.add({
+        css: item.css,
+        playlist,
+      });
+    });
+
+    return layout;
   }
 
   show(el: HTMLElement) {
@@ -39,8 +53,14 @@ export class Layout extends Widget {
     });
   }
 
+  toggleDebug() {
+    this.items.map(({ renderer, playlist }) => {
+      renderer.toggleDebug();
+    });
+  }
+
   add(container: { css: Partial<CSSStyleDeclaration>; playlist: Playlist }) {
-    var containerElement = document.createElement("div");
+    const containerElement = document.createElement("div");
     containerElement.style.position = "absolute";
 
     const css = container.css;
@@ -56,17 +76,15 @@ export class Layout extends Widget {
     });
   }
 
-  duration(): number {
-    return this.items.reduce((maxDuration, container) => {
-      const duration = container.playlist.duration();
-      if (duration > maxDuration) {
-        return duration;
-      }
-      return maxDuration;
-    }, 0);
+  duration(): Observable<number> {
+    const durations$ = merge(
+      ...this.items.map((item) => item.playlist.duration())
+    );
+
+    return durations$.pipe(max());
   }
 
-  play(timer$: Observable<number>) {
+  play(timer$: Observable<number>): Observable<string | number> {
     return from(this.items).pipe(
       mergeMap((item) =>
         item.playlist.play(item.renderer, timer$, { loop: true })
@@ -74,9 +92,7 @@ export class Layout extends Widget {
     );
   }
 
-  seek(offset: number) {
-    this.items.forEach((item) => {
-      return item.playlist.seek(offset);
-    });
+  seek(offset: number): Observable<[number, number]> {
+    return merge(...this.items.map((item) => item.playlist.seek(offset)));
   }
 }

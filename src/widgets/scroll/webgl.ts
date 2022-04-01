@@ -1,7 +1,7 @@
 import * as glMatrix from "gl-matrix";
 
-import texmap from "./shaders/simple-text.glsl?raw";
-import transform from "./shaders/simple-transform.glsl?raw";
+import texmap from "./shaders/simple-text.glsl";
+import transform from "./shaders/simple-transform.glsl";
 
 declare global {
   interface WebGLRenderingContext {

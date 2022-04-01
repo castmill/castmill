@@ -1,7 +1,13 @@
 import { Observable, of } from "rxjs";
-import { Widget } from "./index";
+import { Widget } from "./widget";
 import { Text, Scroll } from "./scroll/scroll";
 
+/**
+ * This scroll is based on Canvas/WebGL, however it may be smarter
+ * to use GSAP or something similar. Using GSAP would reduce complexity
+ * and also may allow for calculating a duration based on the text length.
+ * Example: https://codepen.io/lelamanolio/pen/ZEYRJJJ
+ */
 export class TextScroll extends Widget {
   private canvas: HTMLCanvasElement | null = null;
   private scroll: Scroll | null = null;
