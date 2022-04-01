@@ -37,24 +37,21 @@ const layerScroll = new Layer("Scroll", {
 const layer0 = new Layer("laurie", {
   duration: 4000,
   widget: new Image({
-    src:
-      "https://i.pinimg.com/originals/75/fe/c1/75fec1c2731e49bcb1922beaa3311f80.jpg",
+    src: "https://i.pinimg.com/originals/75/fe/c1/75fec1c2731e49bcb1922beaa3311f80.jpg",
   }),
 });
 
 const layer1 = new Layer("girl", {
   duration: 2000,
   widget: new Image({
-    src:
-      "http://www.stockvault.net/blog/wp-content/uploads/2013/11/Portrait-8.jpg",
+    src: "http://www.stockvault.net/blog/wp-content/uploads/2013/11/Portrait-8.jpg",
   }),
 });
 
 const layer2 = new Layer("nicholsson", {
   duration: 2000,
   widget: new Image({
-    src:
-      "https://s-media-cache-ak0.pinimg.com/originals/ef/83/60/ef83604a2bedd8043ccc2fe56fed3bc7.jpg",
+    src: "https://s-media-cache-ak0.pinimg.com/originals/ef/83/60/ef83604a2bedd8043ccc2fe56fed3bc7.jpg",
   }),
 });
 
@@ -68,8 +65,7 @@ const layer3 = new Layer("dicaprio", {
 const layer4 = new Layer("bigunny", {
   duration: 5000,
   widget: new Video({
-    src:
-      "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+    src: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
     volume: 0,
   }),
 });
@@ -77,16 +73,14 @@ const layer4 = new Layer("bigunny", {
 const layer5 = new Layer("deniro", {
   duration: 3000,
   widget: new Image({
-    src:
-      "https://cdn.artphotolimited.com/images/5b9fc1ecac06024957be8806/300x300/portrait-de-robert-de-niro-1975.jpg",
+    src: "https://cdn.artphotolimited.com/images/5b9fc1ecac06024957be8806/300x300/portrait-de-robert-de-niro-1975.jpg",
   }),
 });
 
 const layer6 = new Layer("elephantsdream", {
   duration: 8000,
   widget: new Video({
-    src:
-      "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
+    src: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4",
     volume: 0,
   }),
 });
@@ -94,16 +88,14 @@ const layer6 = new Layer("elephantsdream", {
 const layer7 = new Layer("watts", {
   duration: 3000,
   widget: new Image({
-    src:
-      "https://i.pinimg.com/originals/b9/56/38/b95638487bc59956c40469a39996275c.jpg",
+    src: "https://i.pinimg.com/originals/b9/56/38/b95638487bc59956c40469a39996275c.jpg",
   }),
 });
 
 const layer8 = new Layer("berry", {
   duration: 3000,
   widget: new Image({
-    src:
-      "https://www.jasonbellphoto.com/wp-content/uploads/2016/05/Halle-Berry-new.jpg",
+    src: "https://www.jasonbellphoto.com/wp-content/uploads/2016/05/Halle-Berry-new.jpg",
   }),
 });
 

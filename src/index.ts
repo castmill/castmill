@@ -1,13 +1,13 @@
-/**
- * Castmill Player (c) Optimal Bits Sweden AB 2011-2020
- * This is Propietary software. 
- * Usage and distribution only allowed for approved licensees.
- */
-
-import { Video } from "./widgets/video";
-import { Image } from "./widgets/image";
-
-export class Castmill {
-  static Video = Video;
-  static Image = Image;
-}
+export * from "./components";
+export * from "./interfaces";
+export * from "./transitions";
+export * from "./widgets";
+export * from "./config";
+export * from "./debug";
+export * from "./iframe";
+export * from "./layer";
+export * from "./playable";
+export * from "./player";
+export * from "./playlist";
+export * from "./renderer";
+export * from "./utils";

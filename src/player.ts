@@ -1,6 +1,6 @@
 import EventEmitter from "eventemitter3";
 import { Observable, Subscription } from "rxjs";
-import { finalize, share, tap } from "rxjs/operators";
+import { finalize, share, tap, take, concatMap } from "rxjs/operators";
 import { Playlist } from "./playlist";
 import { Renderer } from "./renderer";
 
@@ -15,23 +15,31 @@ export class Player extends EventEmitter {
 
   show() {}
 
+  toggleDebug() {
+    this.renderer.toggleDebug();
+    this.playlist.toggleDebug();
+  }
+
   // For Video Wall / Mosaic use on wrapper: right: -100%, width: 200%
+  // use Data.now() instead of this.playlist.time
   play(opts: { loop?: boolean } = { loop: false }) {
-    let currTime =
-      /*this.playlist.time ||*/ Date.now() % this.playlist.duration();
-    this.playlist.seek(currTime);
-    const timer$ = timer(
-      currTime,
-      TIMER_RESOLUTION,
-      this.playlist.duration()
-    ).pipe(
-      tap((value) => {
-        if (value < currTime) {
-          this.emit("end");
-        }
-        currTime = value;
+    // let currTime = (this.playlist.time || 0) % this.playlist.duration();
+    /// (this.playlist.time || Date.now()) % this.playlist.duration();
+    const timer$ = this.playlist.seek(this.playlist.time || 0).pipe(
+      take(1),
+      concatMap(([time, duration]) => {
+        let currTime = time;
+        return timer(this.playlist.time || 0, TIMER_RESOLUTION, duration).pipe(
+          tap((value) => {
+            // Unsure why this is needed
+            if (value < currTime) {
+              this.emit("end");
+            }
+            currTime = value;
+          }),
+          finalize(() => console.log("Timer completed!"))
+        );
       }),
-      finalize(() => console.log("Timer completed!")),
       share()
     );
 

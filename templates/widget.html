@@ -6,7 +6,7 @@
     <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.16.4/lodash.min.js"></script>
 
-   <!-- <script type="module" src="<%= widgetSrc %>"></script>--->
+    <!--<script type="module" src="<%= widgetSrc %>"></script>--->
     <!--<script src="serviceworker.js"></script>-->
     <style>
       body {
@@ -37,7 +37,7 @@
 				console.error("Could not parse message data");
 				return;
 			}
-       		console.log('Mssage received', data);
+       		console.log('Message received', data);
 
        		parent = event.source;
        		origin = event.origin;

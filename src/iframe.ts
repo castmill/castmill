@@ -23,8 +23,18 @@ export async function createIframe(
   iframe.marginWidth = "0";
   iframe.marginHeight = "0";
 
-  iframe.src = src || "about:blank";
+  //iframe.src = src || "about:blank";
   //iframe.src = "about:blank";
+  iframe.srcdoc = `<!DOCTYPE html>
+  <html>
+    <head></head>
+    <body>
+    <script type="module">
+    ${src}
+    </script>
+    </body>
+  </html>`;
+
   parent.appendChild(iframe);
 
   if (!garbageBin) {

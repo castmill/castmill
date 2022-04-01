@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
-    "target": "es5",
-    "module": "es6",
+    "target": "es6",
+    "module": "ES2020",
     "declaration": true,
     "moduleResolution": "node",
     "strict": true,
@@ -19,8 +19,14 @@
     "src/**/*.d.ts",
     "src/**/*.tsx",
     "src/**/*.vue",
-    "src/widgets/scroll/glsl.d.ts_",
-    "src/widgets/proxy.ts_",
+    "src/widgets/scroll/glsl.d.ts",
+    "src/widgets/proxy.ts",
+    "src/store/index.ts_"
+, "glsl.d.ts"  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/widgets/proxy.ts",
     "src/store/index.ts_"
   ]
 }

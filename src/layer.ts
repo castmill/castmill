@@ -1,21 +1,22 @@
 /*
-  A Layer embedds a Widget that is always inside a iframe.
-  <iframe src='https://castmill.com/widgets/1234567890abcdef'></iframe>
+  Layer is the item that can be added to a playlist.
+  Basically it allows for transition effects and wraps a widget.
 
-  (c) 2011-2021 Optimal Bits Sweden AB All Rights Reserved
+  (c) 2011-2022 Castmill AB All Rights Reserved
 */
 import { Status } from "./playable";
 import { Config } from "./config";
-import * as utils from "./iframe";
 import { EventEmitter } from "eventemitter3";
 import { Widget } from "./widgets";
-import { of, Observable, merge, timer, race } from "rxjs";
+import { of, Observable } from "rxjs";
 import { catchError, last, map, takeUntil } from "rxjs/operators";
+import { JsonLayer } from "./interfaces";
+import { Transition, fromJSON } from "./transitions";
+import { applyCss } from "./utils";
 
 const TIMER_RESOLUTION = 50;
 
 export class Layer extends EventEmitter {
-  // implements Playable {
   id: string = "";
   widgetId: string = "";
 
@@ -29,24 +30,59 @@ export class Layer extends EventEmitter {
   status: Status = Status.NotReady;
   offset = 0;
 
+  transition?: Transition;
+
+  slack: number = 0;
+
   private widget?: Widget;
   private config!: Config;
   private proxyOffset: (position: number) => void;
   private _duration = 0;
 
+  /**
+   * Creates a new Layer from a json deserialized object.
+   *
+   * @param json
+   */
+  static async fromJSON(json: JsonLayer): Promise<Layer> {
+    const widget = await Widget.fromJSON(json.widget);
+
+    const layer = new Layer(json.name, {
+      duration: json.duration,
+      slack: json.slack,
+      transition: json.transition && (await fromJSON(json.transition)),
+      css: json.css,
+      widget,
+    });
+
+    return layer;
+  }
+
   constructor(
     public name: string,
-    opts?: { duration?: number; widget?: Widget }
+    opts?: {
+      duration?: number;
+      slack?: number; // Some extra slack over the widget duration.
+      widget?: Widget;
+      transition?: Transition;
+      css?: Partial<CSSStyleDeclaration>;
+    }
   ) {
     super();
 
     this._duration = opts?.duration || 0;
+    this.slack = opts?.slack || 0;
     this.widget = opts?.widget;
+    this.transition = opts?.transition;
 
-    // Shoulnd't we also move this el creation to load? so that it can bbe freed with unload? I think so...
     this.el = document.createElement("div");
 
     const { style, dataset } = this.el;
+
+    if (opts?.css) {
+      applyCss(this.el, opts.css);
+    }
+
     style.position = "absolute";
     style.width = "100%";
     style.height = "100%";
@@ -59,9 +95,12 @@ export class Layer extends EventEmitter {
     this.proxyOffset = (offset: number) => this.emit("offset", offset);
   }
 
+  toggleDebug() {
+    this.widget?.toggleDebug();
+  }
+
   /*
   load() {
-    
     // const widgetSrc = this.getWidgetSrc();
     // this.iframe = await utils.createIframe(this.el, widgetSrc);
     // this.widget = new Proxy(window, this.iframe, widgetSrc);
@@ -111,9 +150,12 @@ export class Layer extends EventEmitter {
     return this.widget?.stop();
   }
 
-  public seek(offset: number) {
+  public seek(offset: number): Observable<[number, number]> {
     this.offset = offset;
-    return this.widget?.seek(offset);
+    if (this.widget) {
+      return this.widget.seek(offset);
+    }
+    return of([offset, 0]);
   }
 
   show(offset: number) {
@@ -128,11 +170,18 @@ export class Layer extends EventEmitter {
     return;
   }
 
-  duration() {
-    return this._duration || this.widget?.duration() || 0;
-  }
-
-  private getWidgetSrc(): string {
-    return this.config.widgetBase + "/" + this.widgetId;
+  duration(): Observable<number> {
+    const transitionDuration = this.transition?.duration || 0;
+    if (this._duration) {
+      return of(this._duration + transitionDuration);
+    } else if (this.widget) {
+      return this.widget.duration().pipe(
+        map((duration) => {
+          return duration + this.slack + transitionDuration;
+        })
+      );
+    } else {
+      return of(this.slack);
+    }
   }
 }
