@@ -4,6 +4,11 @@ import { of } from "rxjs";
 import { TimelineWidget } from "./timeline-widget";
 import { applyCss } from "../utils";
 
+const limits = {
+  max: 100,
+  min: 0,
+};
+
 const AnimationPresets = {
   snake: {
     from: {
@@ -94,6 +99,9 @@ export class TextWidget extends TimelineWidget {
       (<any>document.fonts)["add"](this.fontFace);
     }
 
+    // TODO: Improve autofit text
+    // this.autoFitText();
+
     return of("loaded");
   }
 
@@ -109,6 +117,45 @@ export class TextWidget extends TimelineWidget {
 
   mimeType(): string {
     return "text";
+  }
+
+  autoFitText(options?: { min: number; max: number }) {
+    if (this.div && this.div.textContent) {
+      const textElement = this.div; // this.getInnerTextElement();
+      let size = 1;
+      const setSize = function (size: number) {
+        textElement["style"]["fontSize"] = size + "em";
+      };
+      setSize(size);
+      const containerRect = this.div.getBoundingClientRect();
+      // Get scaled value of borders
+      const scaleX = containerRect.width / this.div.offsetWidth;
+      const scaleY = containerRect.height / this.div.offsetHeight;
+      const padding =
+        parseInt(`${gsap.getProperty(this.div, "padding", "px")}`) || 0;
+      const borderWidth =
+        parseInt(`${gsap.getProperty(this.div, "border-width", "px")}`) || 0;
+      const borderX = padding * 1.99 * scaleX + borderWidth * 1.99 * scaleX;
+      const borderY = padding * 1.99 * scaleY + borderWidth * 1.99 * scaleY;
+
+      let l = (options && options.min) || limits.min;
+      let r = (options && options.max) || limits.max;
+      while (l <= r) {
+        let m = (l + r) / 2;
+        setSize(m);
+        const textElementRect = textElement.getBoundingClientRect();
+        if (
+          containerRect.height - borderY >= textElementRect.height &&
+          containerRect.width - borderX >= textElementRect.width
+        ) {
+          l = m + 0.01;
+          size = m;
+        } else {
+          r = m - 0.01;
+        }
+      }
+      setSize(size);
+    }
   }
 }
 
