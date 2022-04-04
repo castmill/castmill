@@ -55,7 +55,7 @@ export class PlayerUI {
   isPlaying = false;
   playing$ = new Subscription();
   seeking$ = new Subscription();
-  loop = true;
+  loop = false;
 
   player: Player;
   renderer: Renderer;
@@ -148,7 +148,7 @@ export class PlayerUI {
     if (isPlaying) {
       this.stop();
     }
-    this.seeking$.unsubscribe();
+    this.seeking$?.unsubscribe();
     this.playlist.seek(parseFloat(`${value}`));
     this.playlist.time = value;
     this.seeking$ = this.playlist.show(this.renderer).subscribe(() => void 0);
