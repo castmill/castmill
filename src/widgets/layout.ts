@@ -11,7 +11,7 @@
  */
 
 import { from, Observable, merge } from "rxjs";
-import { mergeMap, max } from "rxjs/operators";
+import { mergeMap, max, tap, first, take, last } from "rxjs/operators";
 
 import { Playlist, Renderer, JsonLayout, Widget } from "../";
 
@@ -26,13 +26,15 @@ export class Layout extends Widget {
     const layout = new Layout(json.name, json.args);
 
     const items = json.items;
-    items.forEach(async (item) => {
-      const playlist = await Playlist.fromJSON(item.playlist);
-      layout.add({
-        css: item.css,
-        playlist,
-      });
-    });
+    await Promise.all(
+      items.map(async (item) => {
+        const playlist = await Playlist.fromJSON(item.playlist);
+        layout.add({
+          css: item.css,
+          playlist,
+        });
+      })
+    );
 
     return layout;
   }
@@ -42,7 +44,9 @@ export class Layout extends Widget {
       mergeMap((item) => {
         el.appendChild(item.renderer.el);
         return item.playlist.show(item.renderer);
-      })
+      }),
+      // We need to use last to avoid emitting one event per layout item
+      last()
     );
   }
 
@@ -93,6 +97,9 @@ export class Layout extends Widget {
   }
 
   seek(offset: number): Observable<[number, number]> {
-    return merge(...this.items.map((item) => item.playlist.seek(offset)));
+    return merge(...this.items.map((item) => item.playlist.seek(offset))).pipe(
+      // We need to use last to avoid emitting one event per layout item
+      last()
+    );
   }
 }
