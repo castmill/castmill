@@ -78,7 +78,7 @@ export class Renderer {
    * @param offset
    */
   show(layer: Layer, offset: number) {
-    var prevLayer = this.currentLayer;
+    const prevLayer = this.currentLayer;
 
     return layer.seek(offset).pipe(
       switchMap(() => {
