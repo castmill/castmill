@@ -8,17 +8,15 @@ Some of its features:
 - Flexible layout system allows for any kind of imaginable setup.
 - Optimized for maximul reliability, low memory and offline operation.
 
-
 ## Install
 
 Use yarn or npm to install the package in your project:
 
 ```
-yarn add castmill
+yarn add @castmill/player
 ```
 
 Check the demos and API reference for how to use the library.
-
 
 # License
 
@@ -27,15 +25,10 @@ purposes, please get in touch with us.
 
 # Development
 
-In order to run the demo just run:
+In order to build the library for development:
+
 ```bash
 yarn dev
-```
-
-If you want to build the demo for publishing somewhere:
-
-```bash
-yarn build
 ```
 
 # Widgets
@@ -64,15 +57,13 @@ Layouts are containers for several layers or playlists. A playlist can contain l
 content with different layouts for maximum flexibility.
 
 # Layer server
+
 A layer server is responsible of putting and removing the layers on a given container.
 
-
 # Roadmap
+
 - Looping of playlists including layouts.
 - Triggers. Trigges to play a widget when some condition has been met.
 - Caching using service workers.
 - postMessage interface between widgets and layers.
 - sandboxed iframes.
-
-
-

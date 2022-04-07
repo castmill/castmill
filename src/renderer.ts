@@ -153,7 +153,10 @@ export class Renderer {
     offset: number,
     volume: number
   ) {
-    return merge(this.show(layer, offset), layer.play(timer$));
+    const show$ = this.show(layer, offset).pipe(
+      switchMap(() => layer.play(timer$))
+    );
+    return show$;
   }
 
   seek(offset: number) {

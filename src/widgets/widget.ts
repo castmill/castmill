@@ -2,7 +2,7 @@ import { EventEmitter } from "eventemitter3";
 import { NEVER, Observable, of } from "rxjs";
 import { JsonWidget } from "../";
 import { JsonLayout } from "../interfaces";
-import { Image, Video, TextWidget, TextScroll, Layout, Text } from "./";
+import { Image, Video, TextWidget, Layout } from "./";
 
 interface ProxyMethodData {
   counter: number;
@@ -39,8 +39,10 @@ export abstract class Widget extends EventEmitter {
             };
           }
         );
+      /*
       case "widget://text-scroll":
         return new TextScroll(json.args as { text: Text[]; speed: number });
+        */
       case "widget://layout":
         return Layout.fromLayoutJSON(json.args as JsonLayout);
     }
@@ -93,8 +95,8 @@ export abstract class Widget extends EventEmitter {
   // abstract load(el: HTMLElement): Observable<string>;
 
   /**
-   * Dispose.
-   * Disposes the widget removing all resources.
+   * Unload.
+   * Load the widget removing all resources.
    */
   unload() {}
 

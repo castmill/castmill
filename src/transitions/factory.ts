@@ -10,8 +10,8 @@ export interface JsonTransition {
 export const fromJSON = async (json: JsonTransition) => {
   // TODO: only allow trusted uris
   if (json.uri.startsWith("https://")) {
-    const ExternalTransition = await import(/* @vite-ignore */ `./${json.uri}`);
-    return new ExternalTransition(json.opts);
+    // const ExternalTransition = await import(/* @vite-ignore */ `./${json.uri}`);
+    // return new ExternalTransition(json.opts);
   } else {
     switch (json.uri) {
       case "transition://crossfade":

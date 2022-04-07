@@ -106,16 +106,20 @@ export class Playlist extends EventEmitter {
     const first$ = this.findLayer(this.time, layersWithOffsets$);
 
     return first$.pipe(
+      first(),
       concatMap((item) => {
         if (item) {
           const { layer, offset, index, layersWithOffsets } = item;
           // The first layer must be seeked at a relative offset, the rest after it with offset 0.
           let first = 1;
 
-          // Rotate array (so that we can have a complete array to loop with from current item)
-          const elements = layersWithOffsets
-            .slice(index)
-            .concat(layersWithOffsets.slice(0, index));
+          // Rotate array when loop is active
+          // (so that we can have a complete array to loop with from current item offset)
+          const elements = loop
+            ? layersWithOffsets
+                .slice(index)
+                .concat(layersWithOffsets.slice(0, index))
+            : layersWithOffsets.slice(index);
 
           // We start playing from the found layer at the current offset.
           let current: Layer;
@@ -125,7 +129,9 @@ export class Playlist extends EventEmitter {
           );
           const playlistTimer$ = timer$.pipe(
             map((value) => value % duration),
-            tap((value) => (this.time = value)),
+            tap((value) => {
+              this.time = value;
+            }),
             share()
           );
 
@@ -169,9 +175,7 @@ export class Playlist extends EventEmitter {
     return renderer.play(
       layer,
       timer$.pipe(
-        takeWhile((value) => {
-          return value >= start && value < end;
-        }),
+        takeWhile((value) => value >= start && value < end),
         map((value) => value - start),
         share()
       ),

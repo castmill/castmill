@@ -1,6 +1,6 @@
 import EventEmitter from "eventemitter3";
 import { Observable, Subscription } from "rxjs";
-import { finalize, share, tap, take, concatMap } from "rxjs/operators";
+import { finalize, share, tap, first, concatMap } from "rxjs/operators";
 import { Playlist } from "./playlist";
 import { Renderer } from "./renderer";
 
@@ -23,10 +23,14 @@ export class Player extends EventEmitter {
   // For Video Wall / Mosaic use on wrapper: right: -100%, width: 200%
   // use Data.now() instead of this.playlist.time
   play(opts: { loop?: boolean } = { loop: false }) {
+    this.stop();
+
     // let currTime = (this.playlist.time || 0) % this.playlist.duration();
     /// (this.playlist.time || Date.now()) % this.playlist.duration();
+
+    // Do we really need to seek here? since we also seek when doing "show"?
     const timer$ = this.playlist.seek(this.playlist.time || 0).pipe(
-      take(1),
+      first(),
       concatMap(([time, duration]) => {
         let currTime = time;
         return timer(this.playlist.time || 0, TIMER_RESOLUTION, duration).pipe(
@@ -72,6 +76,9 @@ export class Player extends EventEmitter {
   stop() {
     this.timerSubscription?.unsubscribe();
     this.playing?.unsubscribe();
+
+    this.timerSubscription = void 0;
+    this.playing = void 0;
   }
 }
 

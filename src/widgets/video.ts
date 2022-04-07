@@ -1,6 +1,22 @@
 import { Widget } from "./widget";
-import { fromEvent, merge, Observable, of } from "rxjs";
-import { map, take, tap } from "rxjs/operators";
+import { fromEvent, merge, race, Observable, of, iif } from "rxjs";
+import {
+  map,
+  take,
+  tap,
+  switchMap,
+  share,
+  timeout,
+  subscribeOn,
+} from "rxjs/operators";
+
+enum ReadyState {
+  HAVE_NOTHING = 0, // No information is available about the media resource.
+  HAVE_METADATA = 1, //	Enough of the media resource has been retrieved that the metadata attributes are initialized. Seeking will no longer raise an exception.
+  HAVE_CURRENT_DATA = 2, // Data is available for the current playback position, but not enough to actually play more than one frame.
+  HAVE_FUTURE_DATA = 3, // Data for the current playback position as well as for at least a little bit of time into the future is available (in other words, at least two frames of video, for example).
+  HAVE_ENOUGH_DATA = 4, // Enough data is available—and the download rate is high enough—that the media can be played through to the end without interruption.
+}
 
 export class Video extends Widget {
   private video?: HTMLVideoElement;
@@ -17,40 +33,46 @@ export class Video extends Widget {
   }
 
   show(el: HTMLElement, offset: number) {
-    if (this.video) {
-      // Not completely correct since we may not yet be "playthrough" ready
-      return of("loaded");
-    }
-    const video = (this.video = document.createElement(
-      "video"
-    ) as HTMLVideoElement);
+    return this.load().pipe(
+      switchMap((video) => {
+        this.offset = offset;
+        video.currentTime = offset / 1000;
+        el.appendChild(video);
+        return of("shown");
+      })
+    );
+  }
+
+  private load(): Observable<HTMLVideoElement> {
+    const video = this.video
+      ? this.video
+      : (this.video = document.createElement("video") as HTMLVideoElement);
     video.style.width = "100%";
     video.style.height = "100%";
-
-    this.offset = offset;
-
     video.src = this.src;
-    el.appendChild(video);
 
     if (typeof this._volume !== "undefined") {
       this.volume(this._volume);
     }
 
-    if (video.readyState < 4) {
-      return fromEvent(video, "canplaythrough").pipe(
-        map((evt) => "loaded"),
+    let loading$: Observable<HTMLVideoElement>;
+    if (video.readyState < ReadyState.HAVE_ENOUGH_DATA) {
+      video.load();
+
+      loading$ = fromEvent(video, "canplaythrough").pipe(
         take(1),
-        tap(() => {
-          video.currentTime = this.offset / 1000;
-        })
+        map((evt) => video)
       );
     } else {
-      return of("loaded");
+      loading$ = of(video);
     }
+
+    return loading$;
   }
 
+  // TODO: A correct unload should wait for a load before it tries to unload.
   unload(): void {
-    console.log("going to dispose");
+    console.log(`Unloading video ${this.src}`);
     if (this.video) {
       // this.video.src = "";
       this.video.parentElement?.removeChild(this.video);
@@ -59,91 +81,90 @@ export class Video extends Widget {
   }
 
   play(timer$: Observable<number>) {
-    if (this.video) {
-      const video = this.video;
-      video.play();
+    return this.load().pipe(
+      switchMap(() => {
+        if (this.video) {
+          const video = this.video;
+          const playPromise = video.play();
 
-      return merge(
-        new Observable<string>((subscriber) => {
-          // Probably we do not need this event listener at all.
-          const handler = (ev: Event) => {
-            subscriber.next("played");
-            subscriber.complete();
-          };
+          if (playPromise) {
+            playPromise.catch((err) => {
+              console.log(`Video play error: ${err}`);
+            });
+          }
 
-          video.addEventListener("ended", handler);
+          return fromEvent(video, "playing").pipe(
+            take(1),
+            switchMap(() =>
+              race(
+                //  Dummy observable that pauses if the playing observable gets
+                // unsubscribed, required for pausing the video.
+                new Observable<string>((subscriber) => {
+                  return () => {
+                    video.pause();
+                  };
+                }),
+                super.play(timer$)
+              )
+            )
 
-          return () => {
-            video.removeEventListener("ended", handler);
-            video.pause();
-          };
-        }),
-        super.play(timer$)
-      );
-    }
-    return super.play(timer$);
+            // The problem with letting the "ended" event
+            // decide that the video is over is that it could
+            // finish *before* the actual duration of the video,
+            // when this happens the timer$ gets out of sync and the
+            // content is not player correctly. This happens often when
+            // doing a seek before playing the content...
+            /*
+            switchMap(() =>
+              race(
+                new Observable<string>((subscriber) => {
+                  // Probably we do not need this event listener at all.
+                  const handler = (ev: Event) => {
+                    subscriber.next("played");
+                    subscriber.complete();
+                    console.log("Played ended");
+                  };
+
+                  video.addEventListener("ended", handler);
+
+                  return () => {
+                    video.removeEventListener("ended", handler);
+                    video.pause();
+                  };
+                }),
+                super.play(timer$)
+              ).pipe(
+                tap((value) => {
+                  console.log(`Video played: ${value}`);
+                })
+              )
+            )
+            */
+          );
+        }
+        return super.play(timer$);
+      })
+    );
   }
 
   stop() {
     this.video?.pause();
   }
 
-  private pause() {
-    /*
-    const video = this.video;
-
-    return (this.stopping = new Promise((resolve) => {
-      video.addEventListener("pause", (val) => {
-        resolve();
-      });
-      this.video.pause();
-    }));
-    */
-  }
-
-  // TODO: Implement seek as an observable
   seek(offset: number): Observable<[number, number]> {
     this.offset = offset;
-    if (this.video /*&& this.video.readyState > 4*/) {
+    if (this.video && this.video.readyState >= ReadyState.HAVE_METADATA) {
       this.video.currentTime = offset / 1000;
+
+      return fromEvent(this.video, "seeked").pipe(
+        take(1),
+        // Timeout for slow or video tags not implementing seeked event.
+        timeout(250),
+        map((evt) => [offset, 0])
+      );
     }
     return of([offset, 0]);
   }
-
-  /*
-  // Try to rewite this code using RxJs
-  seek(offset: number, isBrowser?: boolean) {
-    var _resolve: any, _reject: any;
-    var $video = $(this.video);
-
-    var seekErrorHandler = function() {
-      _reject(new Error("Seek error..."));
-    };
-
-    return new Promise((resolve, reject) => {
-      _resolve = resolve;
-      _reject = reject;
-
-      if (this.video.currentTime === offset) {
-        return resolve();
-      }
-
-      // ugly but we have to resolve even when the seeked event is never emitted
-      if (!isBrowser) {
-        resolve();
-      } else {
-        $video.one("seeked", _resolve);
-        $video.one("error", seekErrorHandler);
-      }
-      (this.pausing || Promise.resolve(void 0)).then(() => {
-        this.video.currentTime = offset;
-      });
-    }).finally(function() {
-      $video.off("seeked", _resolve);
-      $video.off("error", seekErrorHandler);
-    });
-  }
-  */
 
   volume(volume: number) {
     if (this.video) {
@@ -155,37 +176,27 @@ export class Video extends Widget {
     if (this._duration) {
       return of(this._duration);
     }
-    const video = document.createElement("video");
-    video.preload = "metadata";
-    video.src = this.src;
 
-    return new Observable<number>((subscriber) => {
-      const handler = (ev: Event) => {
-        this._duration = video.duration * 1000;
-        subscriber.next(this._duration);
-        subscriber.complete();
-      };
+    let video = this.video;
+    if (!video) {
+      video = document.createElement("video");
+      video.preload = "metadata";
+      video.src = this.src;
+    }
 
-      video.onloadedmetadata = handler;
-
-      return () => {
-        video.onloadedmetadata = null;
-      };
-    });
+    return fromEvent(video, "loadedmetadata").pipe(
+      take(1),
+      map((evt) => {
+        if (video) {
+          this._duration = (video?.duration ?? 0) * 1000;
+          video.src = "";
+        }
+        return this._duration;
+      })
+    );
   }
 
   mimeType(): string {
     return "video/mpeg4";
   }
-
-  /*
-  private async waitUntilItCanPlayThrough(): Promise<void> {
-    if (this.video?.readyState < 4) {
-      return new Promise((resolve) => {
-        // TODO: Remove listener
-        this.video.addEventListener("canplaythrough", () => resolve());
-      });
-    }
-  }
-  */
 }

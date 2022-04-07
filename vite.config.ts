@@ -1,19 +1,22 @@
 import { defineConfig } from "vite";
-const { resolve } = require("path");
+import { resolve } from "path";
 import babel from "@rollup/plugin-babel";
 import { nodeResolve } from "@rollup/plugin-node-resolve";
-const arrowFunctions = require("@babel/plugin-transform-arrow-functions");
-
+import arrowFunctions from "@babel/plugin-transform-arrow-functions";
 import legacy from "@vitejs/plugin-legacy";
-
-const path = require("path");
-
 import vue from "@vitejs/plugin-vue";
 
 // https://vitejs.dev/config/
 export default defineConfig({
   build: {
     sourcemap: true,
+
+    lib: {
+      entry: resolve(__dirname, "src/index.ts"),
+      name: "castmill-player",
+      fileName: (format) => `index.js`,
+      formats: ["es"],
+    },
 
     rollupOptions: {
       plugins: [
@@ -39,7 +42,8 @@ export default defineConfig({
       ],
       input: {
         // demo: resolve(__dirname, "demos/index.html"),
-        webos: resolve(__dirname, "demos/webos/index.html"),
+        // webos: resolve(__dirname, "demos/webos/index.html"),
+        lib: resolve(__dirname, "src/index.ts"),
       },
       // make sure to externalize deps that shouldn't be bundled
       // into your library
@@ -47,19 +51,18 @@ export default defineConfig({
       output: {
         // Provide global variables to use in the UMD build
         // for externalized deps
-        /*
-        globals: {
-          vue: "Vue",
-        },
-        */
+        dir: "dist/",
+        format: "es",
       },
     },
   },
-  root: __dirname + "/demos",
+  // root: __dirname + "/demos",
   plugins: [
-    vue(),
+    // vue(),
+    /*
     legacy({
       targets: ["chrome 39"],
     }),
+    */
   ],
 });
