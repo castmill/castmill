@@ -33,8 +33,8 @@ yarn dev
 
 # Widgets
 
-Widgets are the primitives that shows any content on a display. Widgets must be completely isolated from the rest of
-the system and other primitives. If a widgets crashes should not affect the player in any significant way. If a
+Widgets are the primitives that show any content on a display. Widgets must be completely isolated from the rest of
+the system and other primitives. If a widget crashes should not affect the player in any significant way. If a
 widget leaks memory, it will be cleaned when the widget is destroyed.
 
 Widgets should be self-contained. They must cache all the assets they need, as well as their code. They must work
@@ -43,8 +43,8 @@ online as well as offline. Service workers will be used for this.
 More than one widget can exist at the same time on the display. Widgets can be used to fill layouts. But this is outside
 the scope of the widget. The widget does just need to show, and play itself as required by the layout orchestrator.
 
-Widgets may have a server componet besides the client part. The server component may be needed to feed the widget
-with dynamic informations, such as news, real state data, etc.
+Widgets may have a server component besides the client part. The server component may be needed to feed the widget
+with dynamic information, such as news, real state data, etc.
 
 # Layers
 
@@ -63,7 +63,7 @@ A layer server is responsible of putting and removing the layers on a given cont
 # Roadmap
 
 - Looping of playlists including layouts.
-- Triggers. Trigges to play a widget when some condition has been met.
+- Triggers. Triggers to play a widget when some condition has been met.
 - Caching using service workers.
 - postMessage interface between widgets and layers.
 - sandboxed iframes.
