@@ -9,20 +9,20 @@
     "sourceMap": true,
     "resolveJsonModule": true,
     "esModuleInterop": true,
-    "lib": ["es2015", "dom"],
+    "lib": ["es2015"],
     "types": ["vite/client"],
     "outDir": "dist"
   },
   "include": [
-    //  "demos/**/*.ts",
     "src/**/*.ts",
     "src/**/*.d.ts",
     "src/**/*.tsx",
     "src/**/*.vue",
     "src/widgets/scroll/glsl.d.ts",
     "src/widgets/proxy.ts",
-    "src/store/index.ts_"
-, "glsl.d.ts"  ],
+    "src/store/index.ts_",
+    "glsl.d.ts"
+  ],
   "exclude": [
     "node_modules",
     "dist",
