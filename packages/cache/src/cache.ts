@@ -188,7 +188,7 @@ export class Cache extends Dexie {
               );
           }
         default:
-          throw new Error("Unhandled result code");
+          throw new Error(`Unhandled result code ${result.code}`);
       }
     } catch (err) {
       console.error("Error caching file", url, err);
