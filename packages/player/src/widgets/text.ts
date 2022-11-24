@@ -3,6 +3,7 @@ import { of } from "rxjs";
 
 import { TimelineWidget } from "./timeline-widget";
 import { applyCss } from "../utils";
+import { ResourceManager } from "@castmill/cache";
 
 const limits = {
   max: 100,
@@ -53,17 +54,20 @@ export class TextWidget extends TimelineWidget {
 
   private fontFace?: FontFace;
 
-  constructor(opts: {
-    text: string;
-    css: Partial<CSSStyleDeclaration>;
-    font?: { url: string; name: string };
-    animation?: {
-      from: gsap.TweenVars;
-      perspective?: number;
-      chars?: boolean;
-    };
-  }) {
-    super(opts);
+  constructor(
+    resourceManager: ResourceManager,
+    opts: {
+      text: string;
+      css: Partial<CSSStyleDeclaration>;
+      font?: { url: string; name: string };
+      animation?: {
+        from: gsap.TweenVars;
+        perspective?: number;
+        chars?: boolean;
+      };
+    }
+  ) {
+    super(resourceManager, opts);
     this.text = opts.text;
     this.css = opts.css;
     this.font = opts.font;

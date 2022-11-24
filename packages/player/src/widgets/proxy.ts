@@ -1,3 +1,4 @@
+import { ResourceManager } from "@castmill/cache";
 import { Observable, from, of } from "rxjs";
 import { JsonWidget } from "../interfaces";
 
@@ -35,7 +36,7 @@ interface ProxyNotification {
  * This class WILL act as a proxy for the widgets, since widgets are instantiated
  * inside an iframe they need this class in order to be accessible from the parent
  * window.
- *
+ * Ideas: https://github.com/mdn/dom-examples/blob/master/channel-messaging-basic/page2.html
  */
 
 export class Proxy extends Widget {
@@ -61,9 +62,10 @@ export class Proxy extends Widget {
   constructor(
     private parent: Window,
     private iframe: HTMLIFrameElement,
+    resourceManager: ResourceManager,
     childSrc: string
   ) {
-    super();
+    super(resourceManager);
 
     const messageHandler = (this.messageHandler = (event) => {
       let data: ProxyData;

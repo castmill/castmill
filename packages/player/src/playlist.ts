@@ -1,3 +1,5 @@
+import { ResourceManager } from "@castmill/cache";
+
 import { Status } from "./playable";
 import { Layer } from "./layer";
 import { EventEmitter } from "eventemitter3";
@@ -25,7 +27,7 @@ export class Playlist extends EventEmitter {
 
   private debugLayer?: HTMLElement;
 
-  constructor(public name: string) {
+  constructor(public name: string, private resourceManager: ResourceManager) {
     super();
 
     // this.toggleDebug();
@@ -37,11 +39,11 @@ export class Playlist extends EventEmitter {
    *
    * @param json
    */
-  static async fromJSON(json: JsonPlaylist) {
-    const playlist = new Playlist(json["name"]);
+  static async fromJSON(json: JsonPlaylist, resourceManager: ResourceManager) {
+    const playlist = new Playlist(json["name"], resourceManager);
 
     for (let i = 0; i < json.layers.length; i++) {
-      const layer = await Layer.fromJSON(json.layers[i]);
+      const layer = await Layer.fromJSON(json.layers[i], resourceManager);
       playlist.add(layer);
     }
     return playlist;
@@ -101,11 +103,9 @@ export class Playlist extends EventEmitter {
     timer$: Observable<number>,
     { loop = false }
   ) {
-    const layersWithOffsets$ = this.getLayersWithOffsets();
+    const layer$ = this.findLayer(this.time);
 
-    const first$ = this.findLayer(this.time, layersWithOffsets$);
-
-    return first$.pipe(
+    return layer$.pipe(
       first(),
       concatMap((item) => {
         if (item) {
@@ -216,7 +216,7 @@ export class Playlist extends EventEmitter {
         offset = offset % (duration + 1);
         this.time = offset;
 
-        return this.findLayer(offset, this.getLayersWithOffsets()).pipe(
+        return this.findLayer(offset).pipe(
           switchMap((item) => {
             let result: [number, number] = [offset, duration];
             if (item) {
@@ -236,7 +236,7 @@ export class Playlist extends EventEmitter {
   }
 
   show(renderer: Renderer) {
-    return this.findLayer(this.time, this.getLayersWithOffsets()).pipe(
+    return this.findLayer(this.time).pipe(
       switchMap((item) => {
         if (item) {
           const { layer, offset = 0 } = item;
@@ -251,18 +251,8 @@ export class Playlist extends EventEmitter {
     this.layers.forEach((layer) => layer.unload());
   }
 
-  private findLayer(
-    offset: number,
-    layersWithOffsets$: Observable<
-      {
-        start: number;
-        end: number;
-        duration: number;
-        layer: Layer;
-      }[]
-    >
-  ) {
-    return layersWithOffsets$.pipe(
+  private findLayer(offset: number) {
+    return this.getLayersWithOffsets().pipe(
       first(),
       map((layersWithOffsets) => {
         for (let i = 0; i < layersWithOffsets.length; i++) {

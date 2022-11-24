@@ -1,12 +1,12 @@
 /**
  * Castmill Cache.
  * 
- * This is a cache that is necessary for playing any content on a player. The cache is based on indexedD +
+ * This is a cache that is necessary for playing any content on a player. The cache is based on indexedDB +
  * an integration layer that is platform specific.
  *
  * Scenario 1: We request a certain item from the cache. However the item is not there.
  * So we must start caching it, which could take a lot of time. So the caller may say, ok the item
- * it not available now, and we do not want to wait for it to be cached.
+ * is not available now, and we do not want to wait for it to be cached.
 
  * Scenario 2: The cache is not large enough to cache all the items that are needed for playing all the
  * content. In this case we need to do the best possible avoinding continuos downloads of the same content.

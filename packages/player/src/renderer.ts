@@ -1,6 +1,6 @@
 /**
  * renderer.ts
- * (c) Castmill AB 2011-2022
+ * (c) Castmill AB 2022
  *
  */
 /**
@@ -19,16 +19,16 @@
  *
  */
 import { Layer } from "./layer";
-import { merge, Observable, of } from "rxjs";
-import { concatMap, finalize, switchMap } from "rxjs/operators";
+import { Transition } from "./transitions/transition";
+import { combineLatest, Observable, of } from "rxjs";
+import { finalize, switchMap, tap, map } from "rxjs/operators";
 
 export class Renderer {
   public el: HTMLElement;
   public volume: number = 0;
 
   private currentLayer?: Layer;
-
-  private loadingLayer$?: Observable<string>;
+  private currentTransition?: Transition;
 
   private debugLayer?: HTMLElement;
 
@@ -51,7 +51,6 @@ export class Renderer {
       this.debugLayer.style.color = "white";
       this.debugLayer.style.fontSize = "1.5em";
       this.el.appendChild(this.debugLayer);
-
       // Add element for displaying current layer info
       /*
       this.debugLayer.innerHTML = `
@@ -78,73 +77,76 @@ export class Renderer {
    * @param offset
    */
   show(layer: Layer, offset: number) {
-    const prevLayer = this.currentLayer;
-
+    // It is annoying that seek and show are separate methods, in this case.
+    // if the layout widget supported show with offset we could skip it.
     return layer.seek(offset).pipe(
       switchMap(() => {
-        this.updateDebug(layer.name);
-
-        //
-        // Put the previous layer on the front.
-        //
-        // Handles special case with playlists containing only 1 item.
-        if (prevLayer) {
-          if (prevLayer !== layer) {
-            prevLayer.el.style.zIndex = "1000";
-          } else {
-            // codesmell, this is needed so that the playlists in a layout are rendered
-            // return of("shown");
-            return layer.show(offset);
-          }
-        }
-
-        const displayCss = layer.el.style.display;
-        layer.el.style.zIndex = "0";
-        this.el.appendChild(layer.el);
-
-        //
-        // Load the new layer & Replace the old one
-        //
-        this.currentLayer = layer;
-
-        /*
-        if (this.debugLayer) {
-          this.debugLayer.innerHTML = `playing ${layer.name}`;
-        }
-        */
-
-        this.loadingLayer$ = layer.show(offset).pipe(
-          concatMap(() => {
-            // There is a bug if the transition is shorter than the duration of the layer.
-            // We should make sure this can never happen.
-            return this.performTransition(layer, prevLayer);
-          }),
+        return layer.show(offset).pipe(
           finalize(() => {
+            const prevLayer = this.currentLayer;
+
+            layer.el.style.zIndex = "0";
+            this.el.appendChild(layer.el);
+
             if (prevLayer) {
+              prevLayer.el.style.zIndex = "1000";
+              if (prevLayer === layer) {
+                return;
+              }
+            }
+
+            // If we have a current transition and but a new one is requested
+            // we need to reset the current transition.
+            if (this.currentTransition != layer.transition) {
+              this.currentTransition?.reset();
+              // We will only apply the transition if there is a previous layer
+              if (prevLayer) {
+                this.currentTransition = layer.transition;
+                this.currentTransition?.init(prevLayer, layer);
+              }
+            }
+
+            if (prevLayer) {
+              const transition = layer.transition;
+              if (transition) {
+                if (offset < transition.duration) {
+                  transition.seek(offset);
+                  return;
+                }
+                transition.seek(transition.duration);
+              }
               prevLayer.unload();
               prevLayer.el.parentElement?.removeChild(prevLayer.el);
             }
-            layer.el.style.display = displayCss;
+            this.currentLayer = layer;
           })
         );
-        return this.loadingLayer$;
       })
     );
   }
 
-  performTransition(layer: Layer, prevLayer?: Layer) {
-    if (prevLayer) {
-      if (layer.transition) {
-        return layer.transition?.run(prevLayer, layer);
-      } else {
-        // We set opacity to 1 since some older transition may have changed it to 0
-        // Should not be needed if the transition restores the style correctly.
-        layer.el.style.opacity = "1";
-        return of("transition:end");
+  private performTransition(layer: Layer, offset: number, prevLayer?: Layer) {
+    let observable$;
+    if (prevLayer && prevLayer != layer && layer.transition) {
+      if (this.currentTransition != layer.transition) {
+        this.currentTransition?.reset();
+        layer.transition.init(prevLayer, layer);
+        this.currentTransition = layer.transition;
       }
+      observable$ = layer.transition.run(offset);
     } else {
-      return of("end");
+      observable$ = of("play:transition:end");
     }
+    return observable$.pipe(
+      tap(() => {
+        if (prevLayer && prevLayer != layer) {
+          prevLayer.unload();
+          const prevEl = prevLayer.el;
+          prevEl.parentElement?.removeChild(prevEl);
+        }
+        this.currentLayer = layer;
+      })
+    );
   }
 
   play(
@@ -153,10 +155,26 @@ export class Renderer {
     offset: number,
     volume: number
   ) {
-    const show$ = this.show(layer, offset).pipe(
-      switchMap(() => layer.play(timer$))
+    layer.el.style.zIndex = "0";
+    const prevLayer = this.currentLayer;
+    if (prevLayer) {
+      prevLayer.el.style.zIndex = "1000";
+    }
+
+    return layer.seek(offset).pipe(
+      switchMap(() => {
+        return layer.show(offset).pipe(
+          switchMap(() => {
+            this.el.appendChild(layer.el);
+            return combineLatest([
+              layer.play(timer$),
+              this.performTransition(layer, offset, this.currentLayer),
+            ]);
+          })
+        );
+      }),
+      map(() => "play:layer:end")
     );
-    return show$;
   }
 
   seek(offset: number) {
@@ -166,6 +184,10 @@ export class Renderer {
   async clean() {
     // Note, what if we are playing when this is called?
     this.el.parentElement?.removeChild(this.el);
+    if (this.currentLayer) {
+      this.currentLayer.unload();
+      delete this.currentLayer;
+    }
     /*
     this.stop();
     if (this.currentLayer) {

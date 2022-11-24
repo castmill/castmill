@@ -1,4 +1,6 @@
 import { Observable, of } from "rxjs";
+import { ResourceManager } from "@castmill/cache";
+
 import { Widget } from "./widget";
 import { Text, Scroll } from "./scroll/scroll";
 
@@ -16,8 +18,11 @@ export class TextScroll extends Widget {
 
   offset: number = 0;
 
-  constructor(opts: { text: Text[]; speed: number }) {
-    super();
+  constructor(
+    resourceManager: ResourceManager,
+    opts: { text: Text[]; speed: number }
+  ) {
+    super(resourceManager);
     this.text = opts.text;
     this.speed = opts.speed;
   }
