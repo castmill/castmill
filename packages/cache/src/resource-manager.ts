@@ -117,6 +117,11 @@ export class ResourceManager {
   }
 
   async getMedia(url: string): Promise<string | void> {
+    // We must not cache data uris
+    if (url.startsWith("data:")) {
+      return url;
+    }
+
     const item = await this.cache.get(url);
     if (!item) {
       return this.cache.set(url, ItemType.Media, "media/*");

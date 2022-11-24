@@ -1,3 +1,4 @@
+import { ResourceManager } from "@castmill/cache";
 import { EventEmitter } from "eventemitter3";
 import { NEVER, Observable, of } from "rxjs";
 import { JsonWidget } from "../";
@@ -13,21 +14,32 @@ interface ProxyMethodData {
 export abstract class Widget extends EventEmitter {
   protected messageHandler?: (ev: MessageEvent) => void;
 
-  static async fromJSON(json: JsonWidget): Promise<Widget | undefined> {
-    // TODOO: If it is an external widget we must load it dynamically, using a Proxy so that
+  static async fromJSON(
+    json: JsonWidget,
+    resourceManager: ResourceManager
+  ): Promise<Widget | undefined> {
+    // TODO: If it is an external widget we must load it dynamically, using a Proxy so that
     // the widget is isolated inside an iframe.
     // const widget = await Proxy.fromJSON(json);
     // const widget = await import(`./${json.uri}`);
 
+    // const WidgetClass = await resourceManager.import("./image");
+    // console.log(WidgetClass);
+
     switch (json.uri) {
       case "widget://image":
         return new Image(
+          resourceManager,
           json.args as { src: string; size: "contain" | "cover" }
         );
       case "widget://video":
-        return new Video(json.args as { src: string; volume: number });
+        return new Video(
+          resourceManager,
+          json.args as { src: string; volume: number }
+        );
       case "widget://text":
         return new TextWidget(
+          resourceManager,
           json.args as {
             text: string;
             css: Partial<CSSStyleDeclaration>;
@@ -44,11 +56,11 @@ export abstract class Widget extends EventEmitter {
         return new TextScroll(json.args as { text: Text[]; speed: number });
         */
       case "widget://layout":
-        return Layout.fromLayoutJSON(json.args as JsonLayout);
+        return Layout.fromLayoutJSON(json.args as JsonLayout, resourceManager);
     }
   }
 
-  constructor(opts?: {}) {
+  constructor(protected resourceManager: ResourceManager, opts?: {}) {
     super();
 
     if (window.parent) {

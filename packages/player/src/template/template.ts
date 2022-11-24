@@ -45,6 +45,7 @@
  * - Tuple (for example, label and value)
  * - Image
  * - QRCode
+ * - Image slider (maybe more generic, an actual playlist inside the template?)
  * - Template (a nested template)
  *
  */

@@ -5,7 +5,7 @@
  *
  * (c) 2022 Castmill AB
  */
-import { fromEvent, Subscription } from "rxjs";
+import { exhaustMap, fromEvent, of, Subscription, switchMap, tap } from "rxjs";
 import { Playlist, Renderer, Player } from "../";
 import gsap from "gsap";
 import playIcon from "../icons/play.png";
@@ -21,7 +21,7 @@ const template = (id: string) => `
       cursor: pointer;
       justify-content: center;
       align-items: center;
-      z-index: 9;
+      z-index: 9999;
       ">
       <div style="
         background: url(${playIcon}) center / contain no-repeat;
@@ -29,7 +29,7 @@ const template = (id: string) => `
         height: 50%;
         "></div>
     </div>
-    <div id="playerui-controls-${id}" style="z-index: 10;
+    <div id="playerui-controls-${id}" style="z-index: 9999;
         position: absolute;
         bottom: 0;
         width: 100%;
@@ -77,7 +77,6 @@ export class PlayerUI {
   time = 0;
   isPlaying = false;
   playing$ = new Subscription();
-  seeking$ = new Subscription();
   loop = true;
 
   player: Player;
@@ -85,6 +84,7 @@ export class PlayerUI {
   ui: HTMLDivElement;
 
   elements: {
+    player: HTMLDivElement;
     play: HTMLButtonElement;
     time: HTMLSpanElement;
     seek: HTMLInputElement;
@@ -94,6 +94,7 @@ export class PlayerUI {
 
   private durationSubscription: Subscription;
   private keyboardSubscription: Subscription;
+  private seekSubscription: Subscription;
 
   constructor(private id: string, private playlist: Playlist) {
     this.ui = document.createElement("div");
@@ -101,15 +102,8 @@ export class PlayerUI {
 
     document.querySelector(`#${id}`)?.appendChild(this.ui);
 
-    const renderer = (this.renderer = new Renderer(
-      this.ui.querySelector(`#player-${id}`)!
-    ));
-
-    this.player = new Player(this.playlist, renderer);
-
-    this.mounted();
-
     this.elements = {
+      player: this.ui.querySelector(`#player-${id}`) as HTMLDivElement,
       play: this.ui.querySelector(`#play-${id}`) as HTMLButtonElement,
       time: this.ui.querySelector(`#time-${id}`) as HTMLSpanElement,
       seek: this.ui.querySelector(`#seek-${id}`) as HTMLInputElement,
@@ -117,13 +111,22 @@ export class PlayerUI {
       loop: this.ui.querySelector(`#loop-${id}`) as HTMLInputElement,
     };
 
+    const renderer = (this.renderer = new Renderer(this.elements.player));
+
+    this.player = new Player(this.playlist, renderer);
+
+    this.mounted();
+
     this.elements.play.addEventListener("click", () => this.playStop());
     this.elements.loop.addEventListener("change", () => {
       this.loop = this.elements.loop.checked;
     });
-    this.elements.seek.addEventListener("input", () => {
-      this.position = parseFloat(this.elements.seek.value);
-    });
+
+    // We should even improve it with
+    // https://stackoverflow.com/questions/51821942/operator-similar-to-exhaustmap-but-that-remembers-the-last-skipped-value-from-th
+    this.seekSubscription = fromEvent(this.elements.seek, "input")
+      .pipe(exhaustMap(() => this.seek(parseFloat(this.elements.seek.value))))
+      .subscribe();
 
     this.durationSubscription = playlist.duration().subscribe((duration) => {
       this.elements.time.textContent = this.timeFormat(this.time / 1000);
@@ -139,6 +142,14 @@ export class PlayerUI {
       if (e.key == " " || e.code == "Space" || e.keyCode == 32) {
         this.playStop();
       }
+
+      if (e.key == "ArrowRight" || e.code == "ArrowRight" || e.keyCode == 39) {
+        this.forward();
+      }
+
+      if (e.key == "ArrowLeft" || e.code == "ArrowLeft" || e.keyCode == 37) {
+        this.backward();
+      }
     });
   }
 
@@ -147,6 +158,7 @@ export class PlayerUI {
     this.ui.remove();
     this.durationSubscription.unsubscribe();
     this.keyboardSubscription.unsubscribe();
+    this.seekSubscription.unsubscribe();
   }
 
   mounted() {
@@ -156,7 +168,7 @@ export class PlayerUI {
     });
     this.player?.on("completed", () => {
       this.stop();
-      this.position = 0;
+      this.seek(0);
     });
     this.playlist.seek(0);
     this.playlist.show(this.renderer).subscribe(() => void 0);
@@ -166,23 +178,37 @@ export class PlayerUI {
     return this.time;
   }
 
-  set position(value: number) {
-    const time = (this.time = parseInt(`${value}`, 10));
+  /**
+   * Seeks to the next item in the playlist
+   */
+  forward() {}
+
+  /**
+   * Seeks to the previous item in the playlist
+   */
+  backward() {}
+
+  seek(value: number) {
+    const time = (this.time = value);
 
     this.elements.time.textContent = this.timeFormat(time / 1000);
     this.elements.seek.value = `${time}`;
 
     const isPlaying = this.isPlaying;
     if (isPlaying) {
-      this.stop();
+      this.player.stop();
     }
-    this.seeking$?.unsubscribe();
+
     this.playlist.seek(parseFloat(`${value}`));
     this.playlist.time = value;
-    this.seeking$ = this.playlist.show(this.renderer).subscribe(() => void 0);
-    if (isPlaying) {
-      this.play();
-    }
+    return this.playlist.show(this.renderer).pipe(
+      switchMap(() => {
+        if (isPlaying) {
+          this.player.play();
+        }
+        return of(null);
+      })
+    );
   }
 
   async playStop() {

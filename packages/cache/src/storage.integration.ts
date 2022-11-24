@@ -39,7 +39,7 @@ export interface StorageIntegration {
   init(): Promise<void>;
 
   /**
-   *
+   * Returns the information about the storage.
    */
   info(): Promise<StorageInfo>;
 

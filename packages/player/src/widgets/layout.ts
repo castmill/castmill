@@ -6,29 +6,38 @@
  * Every layout area has a Playlist and a Renderer that can play content independently of the
  * other areas.
  *
- *  A Layout can be part of other layouts if wrapped in a Layer.
- *  playlists as any other layer.
  */
 
-import { from, Observable, merge } from "rxjs";
-import { mergeMap, max, tap, first, take, last } from "rxjs/operators";
+import { ResourceManager } from "@castmill/cache";
+import { Observable, merge, combineLatest } from "rxjs";
+import { max, map } from "rxjs/operators";
 
 import { Playlist, Renderer, JsonLayout, Widget } from "../";
 
 export class Layout extends Widget {
   private items: { renderer: Renderer; playlist: Playlist }[] = [];
 
-  constructor(public name: string, opts?: { duration: number }) {
-    super(opts);
+  constructor(
+    public name: string,
+    resourceManager: ResourceManager,
+    opts?: { duration: number }
+  ) {
+    super(resourceManager, opts);
   }
 
-  static async fromLayoutJSON(json: JsonLayout) {
-    const layout = new Layout(json.name, json.args);
+  static async fromLayoutJSON(
+    json: JsonLayout,
+    resourceManager: ResourceManager
+  ) {
+    const layout = new Layout(json.name, resourceManager, json.args);
 
     const items = json.items;
     await Promise.all(
       items.map(async (item) => {
-        const playlist = await Playlist.fromJSON(item.playlist);
+        const playlist = await Playlist.fromJSON(
+          item.playlist,
+          resourceManager
+        );
         layout.add({
           css: item.css,
           playlist,
@@ -40,14 +49,12 @@ export class Layout extends Widget {
   }
 
   show(el: HTMLElement) {
-    return from(this.items).pipe(
-      mergeMap((item) => {
-        el.appendChild(item.renderer.el);
-        return item.playlist.show(item.renderer);
-      }),
-      // We need to use last to avoid emitting one event per layout item
-      last()
-    );
+    this.items.forEach((item) => {
+      el.appendChild(item.renderer.el);
+    });
+    return combineLatest(
+      this.items.map((item) => item.playlist.show(item.renderer))
+    ).pipe(map((values) => values[0]));
   }
 
   unload(): void {
@@ -89,17 +96,16 @@ export class Layout extends Widget {
   }
 
   play(timer$: Observable<number>): Observable<string | number> {
-    return from(this.items).pipe(
-      mergeMap((item) =>
+    return combineLatest(
+      this.items.map((item) =>
         item.playlist.play(item.renderer, timer$, { loop: true })
       )
-    );
+    ).pipe(map((values) => values[0]));
   }
 
   seek(offset: number): Observable<[number, number]> {
-    return merge(...this.items.map((item) => item.playlist.seek(offset))).pipe(
-      // We need to use last to avoid emitting one event per layout item
-      last()
-    );
+    return combineLatest(
+      this.items.map((item) => item.playlist.seek(offset))
+    ).pipe(map((values) => values[0]));
   }
 }

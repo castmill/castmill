@@ -1,14 +1,7 @@
 import { Widget } from "./widget";
-import { fromEvent, merge, race, Observable, of, iif } from "rxjs";
-import {
-  map,
-  take,
-  tap,
-  switchMap,
-  share,
-  timeout,
-  subscribeOn,
-} from "rxjs/operators";
+import { fromEvent, race, Observable, of, from } from "rxjs";
+import { map, take, switchMap, timeout } from "rxjs/operators";
+import { ResourceManager } from "@castmill/cache";
 
 enum ReadyState {
   HAVE_NOTHING = 0, // No information is available about the media resource.
@@ -26,8 +19,14 @@ export class Video extends Widget {
 
   offset: number = 0;
 
-  constructor(opts: { src: string; volume: number }) {
-    super();
+  // private $loading: Observable<HTMLVideoElement>;
+  // private lastUrl: string;
+
+  constructor(
+    resourceManager: ResourceManager,
+    opts: { src: string; volume: number }
+  ) {
+    super(resourceManager);
     this.src = opts.src;
     this._volume = opts.volume;
   }
@@ -35,46 +34,65 @@ export class Video extends Widget {
   show(el: HTMLElement, offset: number) {
     return this.load().pipe(
       switchMap((video) => {
-        this.offset = offset;
-        video.currentTime = offset / 1000;
         el.appendChild(video);
-        return of("shown");
+        return this.seek(offset).pipe(map(() => "shown"));
       })
     );
   }
 
   private load(): Observable<HTMLVideoElement> {
-    const video = this.video
-      ? this.video
-      : (this.video = document.createElement("video") as HTMLVideoElement);
-    video.style.width = "100%";
-    video.style.height = "100%";
-    video.src = this.src;
+    if (!this.video) {
+      const video = (this.video = document.createElement(
+        "video"
+      ) as HTMLVideoElement);
+      video.style.width = "100%";
+      video.style.height = "100%";
+    } else if (this.video.src) {
+      return of(this.video);
+    }
 
     if (typeof this._volume !== "undefined") {
       this.volume(this._volume);
     }
 
-    let loading$: Observable<HTMLVideoElement>;
-    if (video.readyState < ReadyState.HAVE_ENOUGH_DATA) {
-      video.load();
+    return from(this.resourceManager.getMedia(this.src)).pipe(
+      switchMap((url) => {
+        const video = this.video!;
+        url = url || this.src;
+        video.src = url;
 
-      loading$ = fromEvent(video, "canplaythrough").pipe(
-        take(1),
-        map((evt) => video)
-      );
-    } else {
-      loading$ = of(video);
-    }
+        let loading$: Observable<HTMLVideoElement>;
+        if (video.readyState < ReadyState.HAVE_ENOUGH_DATA) {
+          loading$ = new Observable<HTMLVideoElement>((subscriber) => {
+            const handler = (ev: Event) => {
+              subscriber.next(video);
+              subscriber.complete();
+            };
 
-    return loading$;
+            const errorHandler = (ev: Event) => {
+              subscriber.error("error");
+            };
+
+            video.addEventListener("canplaythrough", handler);
+            video.addEventListener("error", errorHandler);
+
+            return () => {
+              video.removeEventListener("canplaythrough", handler);
+            };
+          });
+          video.load();
+        } else {
+          loading$ = of(video);
+        }
+        return loading$;
+      })
+    );
   }
 
   // TODO: A correct unload should wait for a load before it tries to unload.
   unload(): void {
-    console.log(`Unloading video ${this.src}`);
     if (this.video) {
-      // this.video.src = "";
+      this.video.src = "";
       this.video.parentElement?.removeChild(this.video);
       this.video = void 0;
     }
@@ -82,39 +100,37 @@ export class Video extends Widget {
 
   play(timer$: Observable<number>) {
     return this.load().pipe(
-      switchMap(() => {
-        if (this.video) {
-          const video = this.video;
-          const playPromise = video.play();
+      switchMap((video) => {
+        const playPromise = video.play();
 
-          if (playPromise) {
-            playPromise.catch((err) => {
-              console.log(`Video play error: ${err}`);
-            });
-          }
+        if (playPromise) {
+          playPromise.catch((err) => {
+            console.error(`Video play error: ${err}`);
+          });
+        }
 
-          return fromEvent(video, "playing").pipe(
-            take(1),
-            switchMap(() =>
-              race(
-                //  Dummy observable that pauses if the playing observable gets
-                // unsubscribed, required for pausing the video.
-                new Observable<string>((subscriber) => {
-                  return () => {
-                    video.pause();
-                  };
-                }),
-                super.play(timer$)
-              )
+        return fromEvent(video, "playing").pipe(
+          take(1),
+          switchMap(() =>
+            race(
+              // Dummy observable that pauses if the playing observable gets
+              // unsubscribed, required for pausing the video.
+              new Observable<string>((subscriber) => {
+                return () => {
+                  video.pause();
+                };
+              }),
+              super.play(timer$)
             )
+          )
 
-            // The problem with letting the "ended" event
-            // decide that the video is over is that it could
-            // finish *before* the actual duration of the video,
-            // when this happens the timer$ gets out of sync and the
-            // content is not player correctly. This happens often when
-            // doing a seek before playing the content...
-            /*
+          // The problem with letting the "ended" event
+          // decide that the video is over is that it could
+          // finish *before* the actual duration of the video,
+          // when this happens the timer$ gets out of sync and the
+          // content is not player correctly. This happens often when
+          // doing a seek before playing the content...
+          /*
             switchMap(() =>
               race(
                 new Observable<string>((subscriber) => {
@@ -140,9 +156,7 @@ export class Video extends Widget {
               )
             )
             */
-          );
-        }
-        return super.play(timer$);
+        );
       })
     );
   }
@@ -156,10 +170,15 @@ export class Video extends Widget {
     if (this.video && this.video.readyState >= ReadyState.HAVE_METADATA) {
       this.video.currentTime = offset / 1000;
 
+      const slow$ = of([offset, 0]);
+
       return fromEvent(this.video, "seeked").pipe(
         take(1),
         // Timeout for slow or video tags not implementing seeked event.
-        timeout(250),
+        timeout({
+          each: 500,
+          with: () => slow$,
+        }),
         map((evt) => [offset, 0])
       );
     }

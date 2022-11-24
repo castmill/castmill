@@ -2,8 +2,12 @@
   Layer is the item that can be added to a playlist.
   Basically it allows for transition effects and wraps a widget.
 
+  (Rename to WidgetContainer?)
+
   (c) 2011-2022 Castmill AB All Rights Reserved
 */
+import { ResourceManager } from "@castmill/cache";
+
 import { Status } from "./playable";
 import { Config } from "./config";
 import { EventEmitter } from "eventemitter3";
@@ -44,8 +48,11 @@ export class Layer extends EventEmitter {
    *
    * @param json
    */
-  static async fromJSON(json: JsonLayer): Promise<Layer> {
-    const widget = await Widget.fromJSON(json.widget);
+  static async fromJSON(
+    json: JsonLayer,
+    resourceManager: ResourceManager
+  ): Promise<Layer> {
+    const widget = await Widget.fromJSON(json.widget, resourceManager);
 
     const layer = new Layer(json.name, {
       duration: json.duration,
@@ -135,7 +142,6 @@ export class Layer extends EventEmitter {
       throw new Error("Layer: missing widget");
     }
 
-    console.log(`Start playing layer: ${this.name}`);
     const end$ = timer$.pipe(
       last(),
       // In case the stream is empty we need to catch and end.
@@ -160,7 +166,14 @@ export class Layer extends EventEmitter {
 
   show(offset: number) {
     if (this.widget) {
-      return this.widget.show(this.el, offset);
+      return this.widget.show(this.el, offset).pipe(
+        catchError((err) => {
+          // TODO: we should show more information about this error. Which widget? and which options?
+          // for instance a common failure is a video or image that failed to be downloaded.
+          console.error(`Layer: show widget error`, err);
+          return of("error");
+        })
+      );
     } else {
       return of("shown");
     }
