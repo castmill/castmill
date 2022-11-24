@@ -37,7 +37,7 @@ interface ResourceManagerOpts {
  *
  * 3) Media resources: These resources are considered immutable, often large in size,
  * meaning that once they are cached we will never need to fetch them again as long as
- * they are still cached. Code resources are downloaded by the integration
+ * they are still cached. Media resources are downloaded by the integration
  * and stored in the integration.
  *
  */
