@@ -81,19 +81,32 @@ export class Renderer {
     // if the layout widget supported show with offset we could skip it.
     return layer.seek(offset).pipe(
       switchMap(() => {
+        const prevLayer = this.currentLayer;
+        if (prevLayer) {
+          prevLayer.el.style.zIndex = "1000";
+          if (prevLayer === layer) {
+            return of("layer:show:end");
+          }
+        }
+
+        layer.el.style.zIndex = "0";
+        layer.el.style.visibility = "hidden";
+        this.el.appendChild(layer.el);
+
         return layer.show(offset).pipe(
           finalize(() => {
-            const prevLayer = this.currentLayer;
+            layer.el.style.visibility = "visible";
+            //    const prevLayer = this.currentLayer;
 
-            layer.el.style.zIndex = "0";
-            this.el.appendChild(layer.el);
+            //    layer.el.style.zIndex = "0";
+            //    this.el.appendChild(layer.el);
 
-            if (prevLayer) {
-              prevLayer.el.style.zIndex = "1000";
-              if (prevLayer === layer) {
-                return;
-              }
-            }
+            //    if (prevLayer) {
+            //      prevLayer.el.style.zIndex = "1000";
+            //      if (prevLayer === layer) {
+            //        return;
+            //      }
+            //    }
 
             // If we have a current transition and but a new one is requested
             // we need to reset the current transition.

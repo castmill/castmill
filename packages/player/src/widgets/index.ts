@@ -7,3 +7,4 @@ export * from "./text";
 export * from "./timeline-widget";
 export * from "./video";
 export * from "./widget";
+export * from "./template/template-widget";
