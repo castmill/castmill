@@ -18,11 +18,14 @@ export class TimelineWidget extends Widget {
 
   constructor(resourceManager: ResourceManager, opts?: {}) {
     super(resourceManager, opts);
-    this.timeline = gsap.timeline({ paused: true });
+    this.timeline = gsap.timeline({ paused: true, repeat: -1 });
   }
 
   play(timer$: Observable<number>) {
     this.timeline.play(this.offset / 1000);
+    this.timeline.eventCallback("onStart", () => {
+      console.log("Started playing widget...");
+    });
 
     // We must concat with super.play(timer$) so that slack/duration is also taken into account.
     return concat(

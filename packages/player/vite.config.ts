@@ -6,6 +6,8 @@ import arrowFunctions from "@babel/plugin-transform-arrow-functions";
 import legacy from "@vitejs/plugin-legacy";
 import vue from "@vitejs/plugin-vue";
 
+import solidPlugin from "vite-plugin-solid";
+
 // https://vitejs.dev/config/
 export default defineConfig({
   build: {
@@ -59,11 +61,14 @@ export default defineConfig({
   },
   // root: __dirname + "/demos",
   plugins: [
-    // vue(),
+    solidPlugin(),
     /*
     legacy({
       targets: ["chrome 39"],
     }),
     */
   ],
+  resolve: {
+    dedupe: ["solid-js"],
+  },
 });

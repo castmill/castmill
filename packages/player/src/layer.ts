@@ -17,6 +17,7 @@ import { catchError, last, map, takeUntil } from "rxjs/operators";
 import { JsonLayer } from "./interfaces";
 import { Transition, fromJSON } from "./transitions";
 import { applyCss } from "./utils";
+import { WidgetFactory } from "./widgets/widget-factory";
 
 const TIMER_RESOLUTION = 50;
 
@@ -52,7 +53,7 @@ export class Layer extends EventEmitter {
     json: JsonLayer,
     resourceManager: ResourceManager
   ): Promise<Layer> {
-    const widget = await Widget.fromJSON(json.widget, resourceManager);
+    const widget = await WidgetFactory.fromJSON(json.widget, resourceManager);
 
     const layer = new Layer(json.name, {
       duration: json.duration,

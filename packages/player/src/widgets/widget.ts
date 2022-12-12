@@ -1,9 +1,6 @@
 import { ResourceManager } from "@castmill/cache";
 import { EventEmitter } from "eventemitter3";
 import { NEVER, Observable, of } from "rxjs";
-import { JsonWidget } from "../";
-import { JsonLayout } from "../interfaces";
-import { Image, Video, TextWidget, Layout } from "./";
 
 interface ProxyMethodData {
   counter: number;
@@ -14,51 +11,6 @@ interface ProxyMethodData {
 export abstract class Widget extends EventEmitter {
   protected messageHandler?: (ev: MessageEvent) => void;
 
-  static async fromJSON(
-    json: JsonWidget,
-    resourceManager: ResourceManager
-  ): Promise<Widget | undefined> {
-    // TODO: If it is an external widget we must load it dynamically, using a Proxy so that
-    // the widget is isolated inside an iframe.
-    // const widget = await Proxy.fromJSON(json);
-    // const widget = await import(`./${json.uri}`);
-
-    // const WidgetClass = await resourceManager.import("./image");
-    // console.log(WidgetClass);
-
-    switch (json.uri) {
-      case "widget://image":
-        return new Image(
-          resourceManager,
-          json.args as { src: string; size: "contain" | "cover" }
-        );
-      case "widget://video":
-        return new Video(
-          resourceManager,
-          json.args as { src: string; volume: number }
-        );
-      case "widget://text":
-        return new TextWidget(
-          resourceManager,
-          json.args as {
-            text: string;
-            css: Partial<CSSStyleDeclaration>;
-            font?: { url: string; name: string };
-            animation?: {
-              from: gsap.TweenVars;
-              perspective?: number;
-              chars?: boolean;
-            };
-          }
-        );
-      /*
-      case "widget://text-scroll":
-        return new TextScroll(json.args as { text: Text[]; speed: number });
-        */
-      case "widget://layout":
-        return Layout.fromLayoutJSON(json.args as JsonLayout, resourceManager);
-    }
-  }
 
   constructor(protected resourceManager: ResourceManager, opts?: {}) {
     super();
