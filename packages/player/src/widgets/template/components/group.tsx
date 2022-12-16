@@ -1,4 +1,4 @@
-import { Component, For } from "solid-js";
+import { Component, For, JSX } from "solid-js";
 import { Item, TemplateComponentTypeUnion } from "./item";
 import { Model } from "../data/model";
 
@@ -13,7 +13,7 @@ export enum TemplateComponentType {
 
 export interface TemplateComponent {
   type: TemplateComponentType;
-  style: string;
+  style: JSX.CSSProperties;
   binding?: string;
 }
 
@@ -23,7 +23,7 @@ export class GroupComponent implements TemplateComponent {
   constructor(
     public name: string,
     public model: Model,
-    public style: string,
+    public style: JSX.CSSProperties,
     public binding?: string,
     public components: TemplateComponentTypeUnion[] = []
   ) {}
@@ -33,7 +33,7 @@ export const Group: Component<{
   name: string;
   model: Model;
   components: TemplateComponentTypeUnion[];
-  style: string;
+  style: JSX.CSSProperties;
   timeline: GSAPTimeline;
   mediasMap: { [index: string]: string };
 }> = (props) => {

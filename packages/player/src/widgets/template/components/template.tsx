@@ -1,4 +1,4 @@
-import { Component } from "solid-js";
+import { Component, JSX } from "solid-js";
 
 import { Item, TemplateComponentTypeUnion } from "./item";
 import { Model } from "../data/model";
@@ -7,7 +7,7 @@ export const Template: Component<{
   name: string;
   model: Model;
   root: TemplateComponentTypeUnion;
-  style: string;
+  style: JSX.CSSProperties;
   timeline: GSAPTimeline;
   mediasMap: { [index: string]: string };
 }> = (props) => {

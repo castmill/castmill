@@ -1,4 +1,4 @@
-import { Component, mergeProps, onMount } from "solid-js";
+import { Component, JSX, mergeProps, onMount } from "solid-js";
 import { TemplateComponent, TemplateComponentType } from "./group";
 
 interface AutoFitOpts {
@@ -11,7 +11,7 @@ export class TextComponent implements TemplateComponent {
 
   constructor(
     public name: string,
-    public style: string,
+    public style: JSX.CSSProperties,
     public binding?: string,
     public text: string = "",
     public opts?: { autofit: AutoFitOpts }
@@ -35,7 +35,7 @@ export type pipeline = formatter[];
 export const Text: Component<{
   name?: string;
   text: string;
-  style: string;
+  style: JSX.CSSProperties;
   opts?: {
     autofit: AutoFitOpts;
   };

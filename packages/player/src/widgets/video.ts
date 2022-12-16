@@ -1,6 +1,6 @@
 import { Widget } from "./widget";
 import { fromEvent, race, Observable, of, from } from "rxjs";
-import { map, take, switchMap, timeout } from "rxjs/operators";
+import { map, take, switchMap, timeout, tap, first } from "rxjs/operators";
 import { ResourceManager } from "@castmill/cache";
 
 enum ReadyState {
@@ -33,22 +33,27 @@ export class Video extends Widget {
 
   show(el: HTMLElement, offset: number) {
     return this.load().pipe(
-      switchMap((video) => {
-        el.appendChild(video);
+      switchMap(() => {
+        el.appendChild(this.video!);
         return this.seek(offset).pipe(map(() => "shown"));
       })
     );
   }
 
-  private load(): Observable<HTMLVideoElement> {
+  // TODO: We need to refactor "load" as a widget method.
+  // The reason is that we need to do all the heavy stuff before we actually start
+  // playing the video, so that we can do an efficient seek before playing and
+  // compensate for drift, etc.
+  load(): Observable<string> {
     if (!this.video) {
       const video = (this.video = document.createElement(
         "video"
       ) as HTMLVideoElement);
       video.style.width = "100%";
       video.style.height = "100%";
+      video.loop = true;
     } else if (this.video.src) {
-      return of(this.video);
+      return of("video:loaded");
     }
 
     if (typeof this._volume !== "undefined") {
@@ -61,11 +66,11 @@ export class Video extends Widget {
         url = url || this.src;
         video.src = url;
 
-        let loading$: Observable<HTMLVideoElement>;
+        let loading$: Observable<string>;
         if (video.readyState < ReadyState.HAVE_ENOUGH_DATA) {
-          loading$ = new Observable<HTMLVideoElement>((subscriber) => {
+          loading$ = new Observable<string>((subscriber) => {
             const handler = (ev: Event) => {
-              subscriber.next(video);
+              subscriber.next("video:loaded");
               subscriber.complete();
             };
 
@@ -82,7 +87,7 @@ export class Video extends Widget {
           });
           video.load();
         } else {
-          loading$ = of(video);
+          loading$ = of("vide0:loaded");
         }
         return loading$;
       })
@@ -100,8 +105,24 @@ export class Video extends Widget {
 
   play(timer$: Observable<number>) {
     return this.load().pipe(
-      switchMap((video) => {
+      switchMap(() => {
+        const video = this.video;
+        if (!video) {
+          throw new Error("Video not loaded");
+        }
         const playPromise = video.play();
+
+        timer$
+          .pipe(
+            first(),
+            tap((time) => {
+              // VideoWall: resync if the timer is ahead of the video.
+              if (time > video.currentTime * 1000) {
+                this.seek(time / 1000);
+              }
+            })
+          )
+          .subscribe();
 
         if (playPromise) {
           playPromise.catch((err) => {

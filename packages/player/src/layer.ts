@@ -1,6 +1,5 @@
 /*
   Layer is the item that can be added to a playlist.
-  Basically it allows for transition effects and wraps a widget.
 
   (Rename to WidgetContainer?)
 

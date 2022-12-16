@@ -23,6 +23,17 @@ import { Transition } from "./transitions/transition";
 import { combineLatest, Observable, of } from "rxjs";
 import { finalize, switchMap, tap, map } from "rxjs/operators";
 
+/**
+ * Viewport
+ *
+ * Units must be in percentage. Where 100% means the whole element.
+ */
+export interface Viewport {
+  left: number;
+  top: number;
+  height: number;
+  width: number;
+}
 export class Renderer {
   public el: HTMLElement;
   public volume: number = 0;
@@ -34,6 +45,60 @@ export class Renderer {
 
   constructor(el: HTMLElement) {
     this.el = el;
+  }
+
+  setViewport(viewport: Viewport) {
+    const { width, height } = this.el.getBoundingClientRect();
+
+    const useTransform = false;
+    if (useTransform) {
+      const scale = 100 / viewport.width;
+      this.el.style.transform = `scale(${scale}) translate(${
+        25 - viewport.left
+      }%, ${25 - viewport.top}%)`;
+
+      this.el.style.clip = `rect(0px, ${width / scale}px, ${
+        height / scale
+      }px, 0px)`;
+      this.el.style.webkitMaskClip = `rect(0px, ${width / scale}px, ${
+        height / scale
+      }px, 0px)`;
+      this.el.style.clipPath = `inset(0px ${width / scale}px ${
+        height / scale
+      }px 0px)`;
+    } else {
+      const newWidth = 100 * (100 / viewport.width);
+      const newHeight = 100 * (100 / viewport.height);
+
+      const newLeft = -(viewport.left / 100) * newWidth;
+      const newTop = -(viewport.top / 100) * newHeight;
+
+      this.el.style.width = `${newWidth}%`;
+      this.el.style.height = `${newHeight}%`;
+      this.el.style.left = `${newLeft}%`;
+      this.el.style.top = `${newTop}%`;
+
+      const clipTop = height * (viewport.top / viewport.height);
+      const clipLeft = width * (viewport.left / viewport.width);
+      const clipRight = width + clipLeft;
+      const clipBottom = height + clipTop;
+
+      this.el.style.clip = `rect(${clipTop}px, ${clipRight}px, ${clipBottom}px, ${clipLeft}px)`;
+      this.el.style.webkitMaskClip = `rect(${clipTop}px, ${clipRight}px, ${clipBottom}px, ${clipLeft}px)`;
+
+      const clipPathBottom =
+        (height * 100) / viewport.height - (clipTop + height);
+      const clipPathRight = (width * 100) / viewport.width - (clipLeft + width);
+
+      this.el.style.clipPath = `inset(${clipTop}px ${clipPathRight}px ${clipPathBottom}px ${clipLeft}px)`;
+
+      this.el.dataset.clip = JSON.stringify({
+        x: clipLeft,
+        width,
+        y: clipTop,
+        height,
+      });
+    }
   }
 
   toggleDebug() {
