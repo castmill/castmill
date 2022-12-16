@@ -1,4 +1,4 @@
-import { Component, mergeProps } from "solid-js";
+import { Component, JSX, mergeProps } from "solid-js";
 import { TemplateComponent, TemplateComponentType } from "./group";
 
 export class ImageComponent implements TemplateComponent {
@@ -7,16 +7,16 @@ export class ImageComponent implements TemplateComponent {
   constructor(
     public name: string,
     public url: string,
-    public style: string,
+    public style: JSX.CSSProperties,
     public binding?: string,
-    public classes?: string,
+    public classes?: string
   ) {}
 }
 
 export const Image: Component<{
   name: string;
   url: string;
-  style: string;
+  style: JSX.CSSProperties;
   mediasMap: { [index: string]: string };
 }> = (props) => {
   const merged = mergeProps(

@@ -11,7 +11,6 @@ interface ProxyMethodData {
 export abstract class Widget extends EventEmitter {
   protected messageHandler?: (ev: MessageEvent) => void;
 
-
   constructor(protected resourceManager: ResourceManager, opts?: {}) {
     super();
 
@@ -53,8 +52,8 @@ export abstract class Widget extends EventEmitter {
   }
 
   /**
-   * Prepare widget. This method should do all async stuff necessary so
-   * that the widget can start playing directly after it.
+   * Prepare widget. This method should do all async and heavy stuff necessary so
+   * that the widget can start playing directly without delay after it.
    */
   // abstract load(el: HTMLElement): Observable<string>;
 

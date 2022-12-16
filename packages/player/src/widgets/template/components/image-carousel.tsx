@@ -10,7 +10,7 @@ export class ImageCarouselComponent implements TemplateComponent {
     public name: string,
     public value: string[],
     public imageDuration: number,
-    public style: string,
+    public style: JSX.CSSProperties,
     public binding?: string
   ) {}
 }

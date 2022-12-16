@@ -16,6 +16,7 @@ import { Playlist, Renderer, JsonLayout, Widget } from "../";
 
 export class Layout extends Widget {
   private items: { renderer: Renderer; playlist: Playlist }[] = [];
+  private el?: HTMLElement;
 
   constructor(
     public name: string,
@@ -46,15 +47,6 @@ export class Layout extends Widget {
     );
 
     return layout;
-  }
-
-  show(el: HTMLElement) {
-    this.items.forEach((item) => {
-      el.appendChild(item.renderer.el);
-    });
-    return combineLatest(
-      this.items.map((item) => item.playlist.show(item.renderer))
-    ).pipe(map((values) => values[0]));
   }
 
   unload(): void {
@@ -95,9 +87,19 @@ export class Layout extends Widget {
     return durations$.pipe(max());
   }
 
+  show(el: HTMLElement) {
+    this.el = el;
+    this.items.forEach((item) => {
+      el.appendChild(item.renderer.el);
+    });
+    return combineLatest(
+      this.clipLayouts().map((item) => item.playlist.show(item.renderer))
+    ).pipe(map((values) => values[0]));
+  }
+
   play(timer$: Observable<number>): Observable<string | number> {
     return combineLatest(
-      this.items.map((item) =>
+      this.clipLayouts().map((item) =>
         item.playlist.play(item.renderer, timer$, { loop: true })
       )
     ).pipe(map((values) => values[0]));
@@ -107,5 +109,53 @@ export class Layout extends Widget {
     return combineLatest(
       this.items.map((item) => item.playlist.seek(offset))
     ).pipe(map((values) => values[0]));
+  }
+
+  private findParentClip(el: HTMLElement): HTMLElement | null {
+    if (el.parentElement) {
+      const parent = el.parentElement;
+      if (parent.dataset.clip) {
+        return parent;
+      } else {
+        return this.findParentClip(parent);
+      }
+    } else {
+      return null;
+    }
+  }
+
+  private clipLayouts() {
+    const el = this.el;
+    if (!el) {
+      return this.items;
+    }
+
+    const parentClipElement = this.findParentClip(el);
+    if (parentClipElement) {
+      const parentRect = JSON.parse(parentClipElement.dataset.clip!);
+      const { x, y } = parentClipElement.getBoundingClientRect();
+
+      return this.items.filter((item) => {
+        const itemRect = item.renderer.el.getBoundingClientRect();
+        return this.areRectanglesIntersecting(itemRect, parentRect, x, y);
+      });
+    } else {
+      return this.items;
+    }
+  }
+
+  private areRectanglesIntersecting(
+    aRect: DOMRect,
+    bRect: DOMRect,
+    offsetX: number,
+    offsetY: number
+  ): boolean {
+    let { x: x0, width: w0, y: y0, height: h0 } = aRect;
+    const { x: x1, width: w1, y: y1, height: h1 } = bRect;
+
+    x0 -= offsetX;
+    y0 -= offsetY;
+
+    return !(x0 >= x1 + w1 || x0 + w0 <= x1 || y0 >= y1 + h1 || y0 + h0 <= y1);
   }
 }

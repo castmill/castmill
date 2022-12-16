@@ -24,7 +24,7 @@ export class TimelineWidget extends Widget {
   play(timer$: Observable<number>) {
     this.timeline.play(this.offset / 1000);
     this.timeline.eventCallback("onStart", () => {
-      console.log("Started playing widget...");
+      // It is possible we want to do some re-syncing here, useful for videowalls.
     });
 
     // We must concat with super.play(timer$) so that slack/duration is also taken into account.

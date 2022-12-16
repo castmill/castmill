@@ -1,3 +1,5 @@
+import { JSX } from "solid-js";
+
 import { ResourceManager } from "@castmill/cache";
 import { from, merge, of } from "rxjs";
 import { mergeMap, map, last } from "rxjs/operators";
@@ -16,6 +18,7 @@ import { TemplateComponentTypeUnion } from "./components/item";
 export class TemplateWidget extends TimelineWidget {
   private fontFaces: { [key: string]: Promise<FontFace> } = {};
   private medias: { [key: string]: string } = {};
+  private loaded: boolean = false;
 
   constructor(
     resourceManager: ResourceManager,
@@ -25,7 +28,7 @@ export class TemplateWidget extends TimelineWidget {
       model: any;
       fonts?: { url: string; name: string }[];
       medias?: string[];
-      style: string;
+      style: JSX.CSSProperties;
       classes?: string;
     }
   ) {
@@ -99,6 +102,8 @@ export class TemplateWidget extends TimelineWidget {
   show(el: HTMLElement, offset: number) {
     // Note: we need to think how data is refreshed when the model changes.
 
+    const basetime = Date.now();
+
     return this.load().pipe(
       map((x) => {
         if (el.children.length === 0) {
@@ -114,8 +119,9 @@ export class TemplateWidget extends TimelineWidget {
               }),
             el
           );
-          this.seek(offset);
         }
+        this.seek(offset + (Date.now() - basetime));
+        this.loaded = true;
         return "template-widget:shown";
       })
     );

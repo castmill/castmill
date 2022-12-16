@@ -3,6 +3,7 @@ import {
   Component,
   createSignal,
   For,
+  JSX,
   onCleanup,
   onMount,
   Setter,
@@ -18,7 +19,7 @@ export class ListComponent implements TemplateComponent {
     public name: string,
     public model: Model,
     public binding: string,
-    public style: string,
+    public style: JSX.CSSProperties,
     public component: TemplateComponentTypeUnion,
     public pageDuration: number
   ) {}
@@ -29,7 +30,7 @@ export class ListComponent implements TemplateComponent {
 export const List: Component<{
   name: string;
   value: any[];
-  style: string;
+  style: JSX.CSSProperties;
   component: TemplateComponentTypeUnion;
   pageDuration: number;
   timeline: GSAPTimeline;
@@ -62,8 +63,6 @@ export const List: Component<{
       Math.max(calcNumItemsPerPage(textRef, props.value.length), 1),
       props.value.length
     );
-
-    console.log({ itemsPerPage });
 
     if (itemsPerPage > 0) {
       const pages = [];

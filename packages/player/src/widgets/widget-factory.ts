@@ -1,4 +1,5 @@
 import { ResourceManager } from "@castmill/cache";
+import { JSX  } from "solid-js";
 import { Image, Layout, TemplateWidget, TextWidget, Video, Widget } from "..";
 import { JsonLayout, JsonWidget } from "../interfaces";
 import { TemplateComponentTypeUnion } from "./template/components/item";
@@ -50,9 +51,10 @@ export class WidgetFactory {
         return new TemplateWidget(
           resourceManager,
           json.args as {
+            name: string;
             template: TemplateComponentTypeUnion;
             model: any;
-            style: string;
+            style: JSX.CSSProperties;
             classes?: string;
           }
         );
