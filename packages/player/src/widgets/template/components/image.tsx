@@ -1,4 +1,6 @@
-import { Component, JSX, mergeProps } from "solid-js";
+import gsap from "gsap";
+
+import { Component, JSX, mergeProps, onCleanup, onMount } from "solid-js";
 import { TemplateComponent, TemplateComponentType } from "./group";
 
 export class ImageComponent implements TemplateComponent {
@@ -16,9 +18,15 @@ export class ImageComponent implements TemplateComponent {
 export const Image: Component<{
   name: string;
   url: string;
+  timeline: GSAPTimeline;
   style: JSX.CSSProperties;
   mediasMap: { [index: string]: string };
 }> = (props) => {
+  let imageRef: HTMLDivElement | undefined;
+
+  const timeline: GSAPTimeline = gsap.timeline({ repeat: -1, yoyo: true });
+  props.timeline.add(timeline);
+
   const merged = mergeProps(
     {
       width: "100%",
@@ -31,7 +39,28 @@ export const Image: Component<{
     props.style
   );
 
+  onCleanup(() => {
+    props.timeline.remove(timeline);
+    timeline.kill();
+  });
+
+  onMount(() => {
+    if (imageRef) {
+      timeline.to(imageRef, {
+        scale: 1.3,
+        duration: 10,
+        translateX: "1%",
+        translate: "1%",
+      });
+    }
+  });
+
   return (
-    <div data-component="image" data-name={props.name} style={merged}></div>
+    <div
+      ref={imageRef}
+      data-component="image"
+      data-name={props.name}
+      style={merged}
+    ></div>
   );
 };

@@ -1,6 +1,6 @@
 import gsap from "gsap";
 
-import { Component, For, JSX, mergeProps, onMount } from "solid-js";
+import { Component, For, JSX, mergeProps, onCleanup, onMount } from "solid-js";
 import { TemplateComponent, TemplateComponentType } from "./group";
 
 export class ImageCarouselComponent implements TemplateComponent {
@@ -27,6 +27,7 @@ export const ImageCarousel: Component<{
 }> = (props) => {
   let parentRef: HTMLDivElement | undefined;
   const timeline: GSAPTimeline = gsap.timeline({ repeat: -1 });
+  props.timeline.add(timeline);
 
   props = mergeProps(
     {
@@ -46,7 +47,6 @@ export const ImageCarousel: Component<{
     props
   );
 
-  props.timeline.add(timeline);
 
   const style = Object.assign(
     {
@@ -59,6 +59,11 @@ export const ImageCarousel: Component<{
     },
     props.style
   );
+
+  onCleanup(() => {
+    props.timeline.remove(timeline);
+    timeline.kill();
+  });
 
   onMount(() => {
     const images = parentRef?.children!;
