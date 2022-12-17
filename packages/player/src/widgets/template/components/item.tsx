@@ -39,6 +39,7 @@ export const Item: Component<{
           name={props.component.name}
           url={value || (props.component as ImageComponent).url}
           style={props.component.style}
+          timeline={props.timeline}
           mediasMap={props.mediasMap}
         />
       </Match>
