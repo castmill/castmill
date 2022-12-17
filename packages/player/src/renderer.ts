@@ -241,9 +241,10 @@ export class Renderer {
 
     return layer.seek(offset).pipe(
       switchMap(() => {
+        // We need to append BEFORE we show, so that Autofittext works properly.
+        this.el.appendChild(layer.el);
         return layer.show(offset).pipe(
           switchMap(() => {
-            this.el.appendChild(layer.el);
             return combineLatest([
               layer.play(timer$),
               this.performTransition(layer, offset, this.currentLayer),
