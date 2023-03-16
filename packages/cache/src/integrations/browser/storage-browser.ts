@@ -9,7 +9,7 @@ export class StorageBrowser implements StorageIntegration {
   cacheName: string;
   private cache!: Cache;
 
-  constructor(private name: string) {
+  constructor(private name: string, private serviceWorkerPath: string = "") {
     this.cacheName = `${this.prefix}:${this.name}`;
   }
 
@@ -32,7 +32,9 @@ export class StorageBrowser implements StorageIntegration {
       );
 
       try {
-        const registration = await navigator.serviceWorker.register("sw.js");
+        const registration = await navigator.serviceWorker.register(
+          `${this.serviceWorkerPath}sw.js`
+        );
         console.log(
           "ServiceWorker registration successful with scope: ",
           registration.scope

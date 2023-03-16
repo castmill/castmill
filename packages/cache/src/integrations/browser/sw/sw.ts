@@ -25,7 +25,12 @@ self.addEventListener("fetch", async function (event) {
         return response;
       } else {
         const fetchRequest = request.clone();
-        return fetch(fetchRequest);
+        try {
+          const result = await fetch(fetchRequest);
+          return result;
+        } catch (err) {
+          console.error("Error fetching", err);
+        }
       }
     })()
   );
