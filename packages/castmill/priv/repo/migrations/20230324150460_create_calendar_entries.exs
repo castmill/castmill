@@ -7,7 +7,7 @@ defmodule Castmill.Repo.Migrations.CreateCalendarEntries do
       add :end, :date
       add :repeat_weekly, :boolean, default: false, null: false
 
-      add :calendar_id, references("calendars", column: "id", type: :uuid)
+      add :calendar_id, references("calendars", column: "id", type: :integer)
 
       timestamps()
     end
