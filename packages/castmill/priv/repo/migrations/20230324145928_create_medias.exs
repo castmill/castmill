@@ -5,10 +5,12 @@ defmodule Castmill.Repo.Migrations.CreateMedias do
     create table(:medias) do
       add :name, :string
       add :uri, :string
-      add :size, :string
+      add :size, :integer
       add :mimetype, :string
 
-      add :organization_id, references("organizations", column: "id", type: :uuid)
+      add :resource_id, references(:resources, on_delete: :nilify_all), null: true
+
+      add :organization_id, references("organizations", column: "id", type: :uuid, on_delete: :delete_all), null: false
 
       timestamps()
     end
