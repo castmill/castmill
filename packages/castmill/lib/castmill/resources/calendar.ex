@@ -8,8 +8,8 @@ defmodule Castmill.Resources.Calendar do
     field :name, :string
     field :timezone, :string
 
-    belongs_to :organization, Castmill.Organization
-    has_many :calendar_entries , Castmill.CalendarEntry
+    belongs_to :organization, Castmill.Organizations.Organization
+    has_many :calendar_entries , Castmill.Resources.CalendarEntry
 
     timestamps()
   end

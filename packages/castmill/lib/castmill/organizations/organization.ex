@@ -9,12 +9,11 @@ defmodule Castmill.Organizations.Organization do
 
     belongs_to :network, Castmill.Networks.Network, foreign_key: :network_id, type: Ecto.UUID
 
-    has_many :teams, Castmill.Team
     has_many :devices, Castmill.Device
-    has_many :calendars, Castmill.Calendar
-    has_many :playlists, Castmill.Playlist
+    has_many :teams, Castmill.Resources.Team
+    has_many :calendars, Castmill.Resources.Calendar
+    has_many :playlists, Castmill.Resources.Playlist
     has_many :medias, Castmill.Resources.Media
-    has_many :widgets, Castmill.Widget
 
     many_to_many :users, Castmill.Accounts.User, join_through: "organizations_users", on_replace: :delete
 

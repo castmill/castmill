@@ -4,8 +4,9 @@ defmodule Castmill.Repo.Migrations.CreatePlaylists do
   def change do
     create table(:playlists) do
       add :name, :string
+      add :status, :string
+      add :settings, :map
 
-      add :resource_id, references(:resources, on_delete: :nilify_all), null: true
       add :organization_id, references(:organizations, column: "id", type: :uuid, on_delete: :delete_all), null: false
 
       timestamps()
