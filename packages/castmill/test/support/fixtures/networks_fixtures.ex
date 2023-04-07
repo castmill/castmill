@@ -14,7 +14,7 @@ defmodule Castmill.NetworksFixtures do
         copyright: "some copyright",
         default_language: "some default_language",
         domain: "some domain",
-        email: "some email",
+        email: "some@email.com",
         logo: "some logo",
         name: "some name"
       })
