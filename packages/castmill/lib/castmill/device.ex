@@ -17,7 +17,7 @@ defmodule Castmill.Device do
     field :version, :string
     field :volume, :integer
 
-    belongs_to :organization, Castmill.Organization
+    belongs_to :organization, Castmill.Organizations.Organization
 
     timestamps()
   end

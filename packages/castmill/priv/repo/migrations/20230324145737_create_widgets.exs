@@ -5,10 +5,10 @@ defmodule Castmill.Repo.Migrations.CreateWidgets do
     create table(:widgets) do
       add :name, :string
       add :uri, :string
-      add :data, :map
-
-      add :resource_id, references(:resources, on_delete: :nilify_all), null: true
-      add :organization_id, references("organizations", column: "id", type: :uuid, on_delete: :delete_all), null: false
+      add :icon, :string
+      add :small_icon, :string
+      add :schema, :map, required: false
+      add :is_system, :boolean, default: :false
 
       timestamps()
     end

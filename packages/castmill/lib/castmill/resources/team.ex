@@ -5,7 +5,7 @@ defmodule Castmill.Resources.Team do
   schema "teams" do
     field :name, :string
 
-    belongs_to :organization, Castmill.Organization
+    belongs_to :organization, Castmill.Organizations.Organization
 
     timestamps()
   end
