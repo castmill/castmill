@@ -240,5 +240,24 @@ defmodule Castmill.PlaylistsTest do
       playlist_items = Enum.map(Resources.get_playlist_items(playlist.id), fn item -> item.id end)
       assert playlist_items == Enum.map([item1, item2], fn item -> item.id end)
     end
+
+    test "delete_playlist/1 deletes a playlist" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+      playlist = playlist_fixture(%{organization_id: organization.id})
+      widget = Repo.get_by(Castmill.Widgets.Widget, uri: "widget://image")
+
+      {:ok, item2 } = Resources.insert_item_into_playlist(playlist.id, nil, widget.id, 0, 1231)
+      {:ok, item1 } = Resources.insert_item_into_playlist(playlist.id, nil, widget.id, 0, 8675)
+
+      Resources.delete_playlist(playlist)
+
+      playlist_items = Enum.map(Resources.get_playlist_items(playlist.id), fn item -> item.id end)
+      assert playlist_items == []
+
+      assert Repo.get_by(Resources.Playlist, id: playlist.id) == nil
+      assert Repo.get_by(Resources.PlaylistItem, id: item1.id) == nil
+      assert Repo.get_by(Resources.PlaylistItem, id: item2.id) == nil
+    end
   end
 end

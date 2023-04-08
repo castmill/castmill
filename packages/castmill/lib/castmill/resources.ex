@@ -13,8 +13,6 @@ defmodule Castmill.Resources do
   import Ecto.Query, warn: false
   alias Castmill.Repo
 
-  alias Castmill.Networks.Network
-
   alias Castmill.Resources.Media
   alias Castmill.Resources.Playlist
   alias Castmill.Resources.PlaylistItem
@@ -22,7 +20,7 @@ defmodule Castmill.Resources do
   alias Castmill.Protocol.Access
 
   @doc """
-    Can access the network.
+    Can access the media.
   """
   defimpl Access, for: Media do
     def canAccess(organization, user, action) do
@@ -57,14 +55,21 @@ defmodule Castmill.Resources do
     [%User{}, ...]
   """
   def list_playlists(organization_id) do
-    query = from playlist in Castmill.Resources.Playlist,
+    query = from playlist in Playlist,
       where: playlist.organization_id == ^organization_id,
       select: playlist
     Repo.all(query)
   end
 
   @doc """
-  Creates a Playlist item
+    Removes a playlist.
+  """
+  def delete_playlist(%Playlist{} = playlist) do
+    Repo.delete(playlist)
+  end
+
+  @doc """
+    Creates a Playlist item
   """
   def create_playlist_item(attrs \\ %{}) do
     %PlaylistItem{}
@@ -73,7 +78,7 @@ defmodule Castmill.Resources do
   end
 
   @doc """
-  Update a Playlist item
+    Update a Playlist item
   """
   def update_playlist_item(%PlaylistItem{} = playlist_item, attrs) do
     playlist_item
@@ -232,12 +237,22 @@ defmodule Castmill.Resources do
 
       iex> create_media(%{field: bad_value})
       {:error, %Ecto.Changeset{}}
-
   """
   def create_media(attrs \\ %{}) do
     %Media{}
     |> Media.changeset(attrs)
     |> Repo.insert()
+  end
+
+  @doc """
+  Removes a media. Note that this will not remove the media from the
+  storage system. It will only remove the record from the database, however
+  it will trigger a "delete" webhook event if such a webhook is configured.
+  """
+  def delete_media(%Media{} = media) do
+    # TODO: Call relevant webhooks so that the integration has a chance to
+    # clean up the media from the storage system.
+    Repo.delete(media)
   end
 end
 
