@@ -10,8 +10,6 @@ defmodule Castmill.Repo.Migrations.AddRootUser do
     |> Castmill.Accounts.User.changeset(%{})
     |> Castmill.Repo.insert!()
 
-    IO.inspect(user)
-
     token = "1234567890"
     %Castmill.Accounts.AccessToken{}
     |> Castmill.Accounts.AccessToken.changeset(%{

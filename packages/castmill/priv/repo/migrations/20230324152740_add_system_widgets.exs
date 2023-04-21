@@ -43,8 +43,6 @@ defmodule Castmill.Repo.Migrations.AddDefaultWidgets do
       widget = %Castmill.Widgets.Widget{ is_system: :true }
       |> Castmill.Widgets.Widget.changeset(attrs)
       |> Castmill.Repo.insert!()
-
-      IO.inspect(widget)
     end
 
   end

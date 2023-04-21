@@ -25,8 +25,8 @@ defmodule Castmill.OrganizationsFixtures do
     {:ok, user} =
       attrs
       |> Enum.into(%{
-        avatar: "some avatar",
-        email: "some email",
+        avatar: "https://some.url.com",
+        email: "some@email.com",
         name: "some name"
       })
       |> Castmill.Organizations.create_user()

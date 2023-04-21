@@ -8,9 +8,6 @@ defmodule Castmill.Networks do
 
   alias Castmill.Protocol.Access
 
-  @doc """
-    Can access the network.
-  """
   defimpl Access, for: Network do
     def canAccess(network, user, _action) do
       if user == nil do

@@ -9,9 +9,6 @@ defmodule Castmill.Organizations do
   alias Castmill.Organizations.Organization
   alias Castmill.Protocol.Access
 
-  @doc """
-    Can access the organization.
-  """
   defimpl Access, for: Organization do
     def canAccess(organization, user, _action) do
       if user == nil do
@@ -70,10 +67,8 @@ defmodule Castmill.Organizations do
 
   """
   def create_organization(attrs \\ %{}) do
-    IO.inspect attrs
     %Organization{}
     |> Organization.changeset(attrs)
-    |> IO.inspect()
     |> Repo.insert()
   end
 

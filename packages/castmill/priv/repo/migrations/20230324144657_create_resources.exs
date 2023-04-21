@@ -5,6 +5,8 @@ defmodule Castmill.Repo.Migrations.CreateResources do
   def change do
     create table(:resources) do
       add :type, :string, null: false # This is the type of the resource, e.g. "playlist", "calendar", "media", etc
+
+      timestamps()
     end
   end
 end

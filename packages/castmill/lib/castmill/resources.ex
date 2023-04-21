@@ -47,6 +47,15 @@ defmodule Castmill.Resources do
   end
 
   @doc """
+  Update a playlist
+  """
+  def update(%Playlist{} = playlist, attrs) do
+    playlist
+    |> Playlist.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
     Returns the list of playlists for the given organization
 
     ## Examples
@@ -242,6 +251,15 @@ defmodule Castmill.Resources do
     %Media{}
     |> Media.changeset(attrs)
     |> Repo.insert()
+  end
+
+  @doc """
+  Update a media
+  """
+  def update(%Media{} = media, attrs) do
+    media
+    |> Media.changeset(attrs)
+    |> Repo.update()
   end
 
   @doc """

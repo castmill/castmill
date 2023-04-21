@@ -9,6 +9,7 @@ defmodule Castmill.Resources.Media do
     field :uri, :string
 
     belongs_to :organization, Castmill.Organizations.Organization, foreign_key: :organization_id, type: Ecto.UUID
+    belongs_to :resource, Castmill.Resources.Resource, foreign_key: :resource_id
 
     timestamps()
   end
@@ -16,7 +17,7 @@ defmodule Castmill.Resources.Media do
   @doc false
   def changeset(media, attrs) do
     media
-    |> cast(attrs, [:name, :uri, :size, :mimetype, :organization_id])
+    |> cast(attrs, [:name, :uri, :size, :mimetype, :organization_id, :resource_id])
     |> validate_required([:name, :uri, :size, :mimetype, :organization_id])
   end
 end

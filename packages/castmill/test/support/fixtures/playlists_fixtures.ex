@@ -8,7 +8,7 @@ defmodule Castmill.PlaylistsFixtures do
   Generate a access_token.
   """
   def playlist_fixture(attrs \\ %{}) do
-    {:ok, access_token} =
+    {:ok, playlist} =
       attrs
       |> Enum.into(%{
         name: "Hangar 42",
@@ -16,6 +16,6 @@ defmodule Castmill.PlaylistsFixtures do
       })
       |> Castmill.Resources.create_playlist()
 
-    access_token
+      playlist
   end
 end

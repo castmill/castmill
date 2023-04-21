@@ -10,7 +10,7 @@ defmodule Castmill.Organizations.Organization do
     belongs_to :network, Castmill.Networks.Network, foreign_key: :network_id, type: Ecto.UUID
 
     has_many :devices, Castmill.Device
-    has_many :teams, Castmill.Resources.Team
+    has_many :teams, Castmill.Teams.Team
     has_many :calendars, Castmill.Resources.Calendar
     has_many :playlists, Castmill.Resources.Playlist
     has_many :medias, Castmill.Resources.Media

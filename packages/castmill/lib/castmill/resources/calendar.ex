@@ -9,6 +9,8 @@ defmodule Castmill.Resources.Calendar do
     field :timezone, :string
 
     belongs_to :organization, Castmill.Organizations.Organization
+    belongs_to :resource, Castmill.Resources.Resource, foreign_key: :resource_id
+
     has_many :calendar_entries , Castmill.Resources.CalendarEntry
 
     timestamps()
@@ -17,7 +19,7 @@ defmodule Castmill.Resources.Calendar do
   @doc false
   def changeset(calendar, attrs) do
     calendar
-    |> cast(attrs, [:name, :timezone, :default_playlist_id, :description])
+    |> cast(attrs, [:name, :timezone, :default_playlist_id, :description, :resource_id])
     |> validate_required([:name, :timezone])
   end
 end
