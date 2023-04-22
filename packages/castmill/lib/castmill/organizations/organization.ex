@@ -8,6 +8,7 @@ defmodule Castmill.Organizations.Organization do
     field :name, :string
 
     belongs_to :network, Castmill.Networks.Network, foreign_key: :network_id, type: Ecto.UUID
+    belongs_to :organization, Castmill.Organizations.Organization, type: Ecto.UUID
 
     has_many :devices, Castmill.Device
     has_many :teams, Castmill.Teams.Team
@@ -23,7 +24,7 @@ defmodule Castmill.Organizations.Organization do
   @doc false
   def changeset(organization, attrs) do
     organization
-    |> cast(attrs, [:name, :network_id])
+    |> cast(attrs, [:name, :organization_id, :network_id])
     |> validate_required([:name, :network_id])
     |> unique_constraint([:name, :network_id], name: :org_name_network_id_index)
   end

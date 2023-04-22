@@ -5,7 +5,7 @@ defmodule Castmill.Organizations.OrganizationsUsers do
   @primary_key(false)
 
   schema "organizations_users" do
-    field :access, {:array, :string}
+    field :role, Ecto.Enum, values: [:admin, :member, :guest]
 
     belongs_to :organization, Castmill.Organizations.Organization, type: Ecto.UUID, primary_key: true
     belongs_to :user, Castmill.Accounts.User, type: Ecto.UUID, primary_key: true
@@ -16,8 +16,8 @@ defmodule Castmill.Organizations.OrganizationsUsers do
   @doc false
   def changeset(organizations_users, attrs) do
     organizations_users
-    |> cast(attrs, [:access, :organization_id, :user_id])
-    |> validate_required([:access, :organization_id, :user_id])
+    |> cast(attrs, [:role, :organization_id, :user_id])
+    |> validate_required([:role, :organization_id, :user_id])
     |> unique_constraint([:organization_id, :user_id])
   end
 end

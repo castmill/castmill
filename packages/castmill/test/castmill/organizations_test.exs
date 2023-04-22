@@ -3,25 +3,29 @@ defmodule Castmill.OrganizationsTest do
 
   alias Castmill.Organizations
 
+  import Castmill.NetworksFixtures
+  import Castmill.OrganizationsFixtures
+
   describe "organizations" do
     alias Castmill.Organizations.Organization
-
-    import Castmill.OrganizationsFixtures
 
     @invalid_attrs %{name: nil}
 
     test "list_organizations/0 returns all organizations" do
-      organization = organization_fixture()
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
       assert Organizations.list_organizations() == [organization]
     end
 
     test "get_organization!/1 returns the organization with given id" do
-      organization = organization_fixture()
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
       assert Organizations.get_organization!(organization.id) == organization
     end
 
     test "create_organization/1 with valid data creates a organization" do
-      valid_attrs = %{name: "some name"}
+      network = network_fixture()
+      valid_attrs = %{name: "some name", network_id: network.id}
 
       assert {:ok, %Organization{} = organization} = Organizations.create_organization(valid_attrs)
       assert organization.name == "some name"
@@ -32,7 +36,8 @@ defmodule Castmill.OrganizationsTest do
     end
 
     test "update_organization/2 with valid data updates the organization" do
-      organization = organization_fixture()
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
       update_attrs = %{name: "some updated name"}
 
       assert {:ok, %Organization{} = organization} = Organizations.update_organization(organization, update_attrs)
@@ -40,19 +45,22 @@ defmodule Castmill.OrganizationsTest do
     end
 
     test "update_organization/2 with invalid data returns error changeset" do
-      organization = organization_fixture()
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
       assert {:error, %Ecto.Changeset{}} = Organizations.update_organization(organization, @invalid_attrs)
       assert organization == Organizations.get_organization!(organization.id)
     end
 
     test "delete_organization/1 deletes the organization" do
-      organization = organization_fixture()
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
       assert {:ok, %Organization{}} = Organizations.delete_organization(organization)
       assert_raise Ecto.NoResultsError, fn -> Organizations.get_organization!(organization.id) end
     end
 
     test "change_organization/1 returns a organization changeset" do
-      organization = organization_fixture()
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
       assert %Ecto.Changeset{} = Organizations.change_organization(organization)
     end
   end
@@ -62,11 +70,28 @@ defmodule Castmill.OrganizationsTest do
 
     import Castmill.OrganizationsFixtures
 
-    @invalid_attrs %{avatar: nil, email: nil, name: nil}
+    @invalid_attrs %{avatar: "wrong avatar", email: "wrong email", name: nil}
 
-    test "list_users/0 returns all users" do
+    test "list_users/1 returns all users in an organization" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
       user = user_fixture()
-      assert Organizations.list_users() == [user]
+
+      Organizations.add_user(organization.id, user.id, :admin)
+
+      result = Organizations.list_users(organization.id)
+      assert result == [[user, :admin]]
+    end
+
+    test "remove_user/2 removes the user from the organization" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+      user = user_fixture()
+
+      Organizations.add_user(organization.id, user.id, :admin)
+
+      assert {:ok, "User successfully removed."} = Organizations.remove_user(organization.id, user.id)
+      assert [] == Organizations.list_users(organization.id)
     end
 
     test "get_user!/1 returns the user with given id" do
@@ -75,11 +100,11 @@ defmodule Castmill.OrganizationsTest do
     end
 
     test "create_user/1 with valid data creates a user" do
-      valid_attrs = %{avatar: "some avatar", email: "some email", name: "some name"}
+      valid_attrs = %{avatar: "https://example.com/avatar", email: "john@doe.com", name: "some name"}
 
       assert {:ok, %User{} = user} = Organizations.create_user(valid_attrs)
-      assert user.avatar == "some avatar"
-      assert user.email == "some email"
+      assert user.avatar == "https://example.com/avatar"
+      assert user.email == "john@doe.com"
       assert user.name == "some name"
     end
 
@@ -88,12 +113,14 @@ defmodule Castmill.OrganizationsTest do
     end
 
     test "update_user/2 with valid data updates the user" do
+      avatar = "https://example.com/updated-avatar"
+      email = "updated@email.com"
       user = user_fixture()
-      update_attrs = %{avatar: "some updated avatar", email: "some updated email", name: "some updated name"}
+      update_attrs = %{avatar: avatar, email: email, name: "some updated name"}
 
       assert {:ok, %User{} = user} = Organizations.update_user(user, update_attrs)
-      assert user.avatar == "some updated avatar"
-      assert user.email == "some updated email"
+      assert user.avatar == avatar
+      assert user.email == email
       assert user.name == "some updated name"
     end
 
