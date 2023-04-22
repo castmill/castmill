@@ -3,7 +3,7 @@ defmodule Castmill.Networks.NetworksUsers do
   import Ecto.Changeset
 
   schema "networks_users" do
-    field :access, {:array, :string}
+    field :role, Ecto.Enum, values: [:admin, :member]
 
     belongs_to :network, Castmill.Networks.Network, type: Ecto.UUID
     belongs_to :user, Castmill.Accounts.User, type: Ecto.UUID
