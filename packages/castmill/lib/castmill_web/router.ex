@@ -68,7 +68,7 @@ defmodule CastmillWeb.Router do
   defp authenticate_user(conn, _opts) do
     conn
     |> get_bearer_token()
-    |> Castmill.Accounts.get_user_by_bearer_token(conn)
+    |> Castmill.Accounts.get_user_by_access_token(Utils.RemoteIp.get(conn))
     |> case do
       {:ok, user} ->
         conn

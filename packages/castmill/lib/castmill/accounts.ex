@@ -12,13 +12,13 @@ defmodule Castmill.Accounts do
   @doc """
     Returns the user with the access that has the given bearer token.
   """
-  def get_user_by_bearer_token(token, conn) do
+  def get_user_by_access_token(token, source_ip) do
     if token == nil do
       {:error, "No token provided"}
     else
       secret_hash = :crypto.hash(:sha256, token) |> Base.encode16()
       from(at in AccessToken, where: at.secret_hash == ^secret_hash, select: at)
-      |> Repo.update_all(set: [accessed_at: DateTime.utc_now(), last_ip: Utils.RemoteIp.get(conn)], inc: [accessed: 1])
+      |> Repo.update_all(set: [accessed_at: DateTime.utc_now(), last_ip: source_ip], inc: [accessed: 1])
       |> case do
         { 0, _ } -> {:error, "Invalid token"}
         { 1, [access_token] } ->
