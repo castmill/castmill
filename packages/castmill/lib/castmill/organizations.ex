@@ -1,3 +1,4 @@
+
 defmodule Castmill.Organizations do
   @moduledoc """
   The Organizations context.
@@ -7,6 +8,7 @@ defmodule Castmill.Organizations do
   alias Castmill.Repo
 
   alias Castmill.Organizations.Organization
+  alias Castmill.Organizations.OrganizationsUsersAccess
   alias Castmill.Protocol.Access
 
   defimpl Access, for: Organization do
@@ -117,6 +119,39 @@ defmodule Castmill.Organizations do
   """
   def change_organization(%Organization{} = organization, attrs \\ %{}) do
     Organization.changeset(organization, attrs)
+  end
+
+  @doc """
+    Gives access for a given resource type and action
+  """
+  def give_access(organization_id, user_id, resource_type, action) do
+    Repo.insert!(
+      %OrganizationsUsersAccess{
+        access: "#{resource_type}:#{action}",
+        organization_id: organization_id,
+        user_id: user_id
+      },
+      on_conflict: :nothing
+    )
+  end
+
+  @doc """
+    Removes access for a given resource type and action
+  """
+  def remove_access(organization_id, user_id, resource_type, action) do
+    Repo.delete_all(
+      from oua in OrganizationsUsersAccess,
+      where: oua.organization_id == ^organization_id and oua.user_id == ^user_id and oua.access == ^"#{resource_type}:#{action}"
+    )
+  end
+
+  @doc """
+    Checks if a user has access to a given resource type and action
+  """
+  def has_access?(user, organization, resource_type, action) do
+    query = from oua in OrganizationsUsersAccess,
+      where: oua.organization_id == ^organization.id and oua.user_id == ^user.id and oua.access == ^"#{resource_type}:#{action}"
+    Repo.one(query) !== nil
   end
 
   alias Castmill.Accounts.User
