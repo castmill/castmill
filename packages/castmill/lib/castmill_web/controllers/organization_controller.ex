@@ -25,8 +25,6 @@ defmodule CastmillWeb.OrganizationController do
 
     create_attrs = Map.merge(organization_params, %{"network_id" => network_id})
 
-    IO.inspect create_attrs
-
     with {:ok, %Organization{} = organization} <- Organizations.create_organization(create_attrs) do
       conn
       |> put_status(:created)

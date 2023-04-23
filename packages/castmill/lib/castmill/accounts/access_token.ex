@@ -17,8 +17,6 @@ defmodule Castmill.Accounts.AccessToken do
 
   @doc false
   def changeset(access_token, attrs) do
-    IO.inspect attrs
-
     access_token
     |> cast(attrs, [:secret, :user_id, :is_root])
     |> put_secret_hash()
@@ -31,7 +29,6 @@ defmodule Castmill.Accounts.AccessToken do
       %Ecto.Changeset{valid?: true, changes: %{ secret: secret}} ->
           changeset
           |> put_change(:secret_hash,  :crypto.hash(:sha256, secret) |> Base.encode16())
-          |> IO.inspect
       _ ->
           changeset
       end
