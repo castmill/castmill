@@ -114,16 +114,19 @@ defmodule Castmill.Resources do
   end
 
   @doc """
-    Returns the list of playlists for the given organization
+    Returns the list of playlists for the given organization. The list can be paginated by passing
+    a limit and an offset.
 
     ## Examples
 
-    iex> list_users()
-    [%User{}, ...]
+    iex> list_playlists(123, 2, 1)
+    [%Playlist{}, ...]
   """
-  def list_playlists(organization_id) do
+  def list_playlists(organization_id, limit \\ nil, offset \\ 0) do
     query = from playlist in Playlist,
       where: playlist.organization_id == ^organization_id,
+      limit: ^limit,
+      offset: ^offset,
       select: playlist
     Repo.all(query)
   end
