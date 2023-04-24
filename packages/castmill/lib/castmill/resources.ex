@@ -315,7 +315,8 @@ defmodule Castmill.Resources do
   end
 
   @doc """
-  Returns the list of medias.
+  Returns the list of medias for the given organization. The list can be paginated by passing
+  in a limit and offset.
 
   ## Examples
 
@@ -323,9 +324,11 @@ defmodule Castmill.Resources do
       [%Media{}, ...]
 
   """
-  def list_medias(organization_id) do
+  def list_medias(organization_id, limit \\ nil, offset \\ 0) do
     query = from media in Castmill.Resources.Media,
-        where: media.organization_id == ^organization_id,
+      where: media.organization_id == ^organization_id,
+      limit: ^limit,
+      offset: ^offset,
       select: media
     Repo.all(query)
   end
@@ -371,17 +374,20 @@ defmodule Castmill.Resources do
   end
 
   @doc """
-  Returns the list of calendars.
+  Returns the list of calendars for the given organization. The list can be paginated by passing
+  in a limit and offset.
 
   ## Examples
 
-      iex> list_users()
+      iex> list_users(123, 2, 1)
       [%Media{}, ...]
 
   """
-  def list_calendars(organization_id) do
+  def list_calendars(organization_id, limit \\ nil, offset \\ 0) do
     query = from calendar in Calendar,
-        where: calendar.organization_id == ^organization_id,
+      where: calendar.organization_id == ^organization_id,
+      limit: ^limit,
+      offset: ^offset,
       select: calendar
     Repo.all(query)
   end

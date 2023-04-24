@@ -4,15 +4,15 @@ defmodule Castmill.MediasTest do
   @moduletag :playlist_data_case
 
   alias Castmill.Resources
+  alias Castmill.Medias.Media
+
+  import Castmill.NetworksFixtures
+  import Castmill.OrganizationsFixtures
+  import Castmill.MediasFixtures
 
   describe "medias" do
     @describetag :medias
 
-    alias Castmill.Medias.Media
-
-    import Castmill.NetworksFixtures
-    import Castmill.OrganizationsFixtures
-    import Castmill.MediasFixtures
 
     test "list_medias/1 returns all medias" do
       network = network_fixture()
@@ -47,6 +47,52 @@ defmodule Castmill.MediasTest do
 
       assert Resources.list_medias(organization.id) == []
     end
+  end
 
+  describe "pagination" do
+    @describetag :pagination
+
+    test "list_medias/2 returns the specified number of medias" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+      media1 = media_fixture(%{organization_id: organization.id})
+      media2 = media_fixture(%{organization_id: organization.id})
+      media3 = media_fixture(%{organization_id: organization.id})
+      media4 = media_fixture(%{organization_id: organization.id})
+
+      assert Resources.list_medias(organization.id, 2) == [media1, media2]
+    end
+
+    test "list_medias/2 returns all medias when the limit is greater than the number of medias" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+      media1 = media_fixture(%{organization_id: organization.id})
+      media2 = media_fixture(%{organization_id: organization.id})
+
+      assert Resources.list_medias(organization.id, 3) == [media1, media2]
+    end
+
+    test "list_medias/3 returns the specified number of medias starting from the offset" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+      media1 = media_fixture(%{organization_id: organization.id})
+      media2 = media_fixture(%{organization_id: organization.id})
+      media3 = media_fixture(%{organization_id: organization.id})
+      media4 = media_fixture(%{organization_id: organization.id})
+      media5 = media_fixture(%{organization_id: organization.id})
+
+      assert Resources.list_medias(organization.id, 2, 2) == [media3, media4]
+    end
+
+    test "list_medias/3 returns all medias when the limit is greater than the number of medias" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+      media1 = media_fixture(%{organization_id: organization.id})
+      media2 = media_fixture(%{organization_id: organization.id})
+      media3 = media_fixture(%{organization_id: organization.id})
+      media4 = media_fixture(%{organization_id: organization.id})
+
+      assert Resources.list_medias(organization.id, 3, 2) == [media3, media4]
+    end
   end
 end
