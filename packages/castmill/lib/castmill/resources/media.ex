@@ -20,4 +20,11 @@ defmodule Castmill.Resources.Media do
     |> cast(attrs, [:name, :uri, :size, :mimetype, :organization_id, :resource_id])
     |> validate_required([:name, :uri, :size, :mimetype, :organization_id])
   end
+
+  def update_changeset(media, attrs) do
+    media
+    |> cast(attrs, [:name])
+    |> validate_required([:name])
+  end
+
 end

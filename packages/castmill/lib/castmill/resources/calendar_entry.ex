@@ -3,11 +3,14 @@ defmodule Castmill.Resources.CalendarEntry do
   import Ecto.Changeset
 
   schema "calendar_entries" do
-    field :end, :date
-    field :repeat_weekly, :boolean, default: false
     field :start, :date
+    field :end, :date
+    field :repeat_weekly_until, :date, default: nil
 
-    belongs_to :calendar, Castmill.Calendar
+    # belongs_to is not semantically correct, as what we want to express is that
+    # a calendar entry points to a playlist.
+    belongs_to :playlist, Castmill.Resources.Playlist
+    belongs_to :calendar, Castmill.Resources.Calendar
 
     timestamps()
   end
@@ -15,7 +18,7 @@ defmodule Castmill.Resources.CalendarEntry do
   @doc false
   def changeset(calendar_entry, attrs) do
     calendar_entry
-    |> cast(attrs, [:start, :end, :repeat_weekly])
-    |> validate_required([:start, :end, :repeat_weekly])
+    |> cast(attrs, [:start, :end, :repeat_weekly_until, :playlist_id, :calendar_id])
+    |> validate_required([:start, :end, :playlist_id, :calendar_id])
   end
 end

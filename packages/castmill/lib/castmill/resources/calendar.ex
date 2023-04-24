@@ -8,7 +8,7 @@ defmodule Castmill.Resources.Calendar do
     field :name, :string
     field :timezone, :string
 
-    belongs_to :organization, Castmill.Organizations.Organization
+    belongs_to :organization, Castmill.Organizations.Organization, foreign_key: :organization_id, type: Ecto.UUID
     belongs_to :resource, Castmill.Resources.Resource, foreign_key: :resource_id
 
     has_many :calendar_entries , Castmill.Resources.CalendarEntry
@@ -19,7 +19,7 @@ defmodule Castmill.Resources.Calendar do
   @doc false
   def changeset(calendar, attrs) do
     calendar
-    |> cast(attrs, [:name, :timezone, :default_playlist_id, :description, :resource_id])
-    |> validate_required([:name, :timezone])
+    |> cast(attrs, [:name, :timezone, :default_playlist_id, :description, :organization_id, :resource_id])
+    |> validate_required([:name, :timezone, :organization_id])
   end
 end

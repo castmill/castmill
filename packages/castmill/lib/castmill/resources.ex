@@ -15,6 +15,8 @@ defmodule Castmill.Resources do
   alias Castmill.Resources.Media
   alias Castmill.Resources.Playlist
   alias Castmill.Resources.PlaylistItem
+  alias Castmill.Resources.Calendar
+  alias Castmill.Resources.CalendarEntry
 
   alias Castmill.Protocol.Access
 
@@ -55,7 +57,7 @@ defmodule Castmill.Resources do
     end
   end
 
-  defimpl Access, for: Calender do
+  defimpl Access, for: Calendar do
     def canAccess(resource, user, action) do
       Castmill.Resources.canAccessResource(resource, user, action)
     end
@@ -152,8 +154,8 @@ defmodule Castmill.Resources do
   end
 
   @doc """
-   Inserts an item in a given position of a playlist. The item will be placed after the item or at the begining
-   of the list if nil is passed as the prev_item_id.
+   Inserts an item in a given position of a playlist. The item will be placed after the given item or at the
+   beginning of the list if nil is passed as the prev_item_id.
   """
   def insert_item_into_playlist(playlist_id, prev_item_id, widget_id, offset, duration, options \\ %{}) do
     # Use a transaction to create a playlist item and update the items in the linked list atomically.
@@ -180,7 +182,7 @@ defmodule Castmill.Resources do
           item
         end
       else
-        # Since we are inserting at the begining of the list, get the current first item and update
+        # Since we are inserting at the beginning of the list, get the current first item and update
         # it accordingly.
         first_item =
           from(item in PlaylistItem,
@@ -336,7 +338,6 @@ defmodule Castmill.Resources do
     |> Repo.update()
   end
 
-
   @doc """
   Removes a media. Note that this will not remove the media from the
   storage system. It will only remove the record from the database, however
@@ -346,6 +347,97 @@ defmodule Castmill.Resources do
     # TODO: Call relevant webhooks so that the integration has a chance to
     # clean up the media from the storage system.
     Repo.delete(media)
+  end
+
+
+  @doc """
+  Creates a calendar.
+
+  ## Examples
+
+      iex> create_calendar(%{field: value})
+      {:ok, %Media{}}
+
+      iex> create_calendar(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+  """
+  def create_calendar(attrs \\ %{}) do
+    %Calendar{}
+    |> Calendar.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Returns the list of calendars.
+
+  ## Examples
+
+      iex> list_users()
+      [%Media{}, ...]
+
+  """
+  def list_calendars(organization_id) do
+    query = from calendar in Calendar,
+        where: calendar.organization_id == ^organization_id,
+      select: calendar
+    Repo.all(query)
+  end
+
+  @doc """
+    Updates a calendar.
+  """
+  def update_calendar(%Calendar{} = calendar, attrs) do
+    calendar
+    |> Media.update_changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+    Add entry to calendar. Will give an error if the entry overlaps
+    with an existing entry.
+  """
+  def add_calendar_entry(calendar_id, playlist_id, entry_attrs \\ %{}) do
+    %CalendarEntry{
+      calendar_id: calendar_id,
+      playlist_id: playlist_id
+    }
+    |> CalendarEntry.changeset(entry_attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+    Update entry in calendar.
+  """
+  def update_calendar_entry(%CalendarEntry{} = entry, attrs) do
+    entry
+    |> CalendarEntry.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+    Remove entry from calendar.
+  """
+  def delete_calendar_entry(%CalendarEntry{} = entry) do
+    Repo.delete(entry)
+  end
+
+  @doc """
+    List calendar entries between two dates.
+  """
+  def list_calendar_entries(calendar_id, start_date, end_date) do
+    query = from entry in CalendarEntry,
+        where: entry.calendar_id == ^calendar_id and
+          entry.start >= ^start_date and
+          (entry.end <= ^end_date or entry.repeat_weekly_until <= ^end_date),
+      select: entry
+    Repo.all(query)
+  end
+
+  @doc """
+  Removes a calendar and all its entries.
+  """
+  def delete_calendar(%Calendar{} = calendar) do
+    Repo.delete(calendar)
   end
 end
 
