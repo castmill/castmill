@@ -67,15 +67,71 @@ defmodule Castmill.OrganizationsAccessTest do
         user_id: userId
       } = Organizations.give_access(organization.id, user.id, "some_resource", "some_action")
 
-      assert Organizations.has_access?(user, organization, "some_resource", "some_action")
+      assert Organizations.has_access(organization.id, user.id, "some_resource", "some_action")
 
       Organizations.give_access(organization.id, user.id, "some_resource", "some_action")
 
-      assert Organizations.has_access?(user, organization, "some_resource", "some_action")
+      assert Organizations.has_access(organization.id, user.id, "some_resource", "some_action")
 
       Organizations.remove_access(organization.id, user.id, "some_resource", "some_action")
 
-      refute Organizations.has_access?(user, organization, "some_resource", "some_action")
+      refute Organizations.has_access(organization.id, user.id, "some_resource", "some_action")
+    end
+
+    @tag :only
+    test "has_access/4 returns true if users has access on a parent organization" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id, name: "child organization"})
+      parent_organization = organization_fixture(%{
+        network_id: network.id,
+        organization_id: organization.id,
+        name: "parent organization"
+      })
+      user = user_fixture(%{network_id: network.id, role: "member"})
+
+      organizationId = organization.id
+      userId = user.id
+
+      assert %OrganizationsUsersAccess{
+        access: "some_resource:some_action",
+        organization_id: organizationId,
+        user_id: userId
+      } = Organizations.give_access(parent_organization.id, user.id, "some_resource", "some_action")
+
+      assert Organizations.has_access(organization.id, user.id, "some_resource", "some_action")
+    end
+
+    test "has_access/4 returns true if users has access on a grand parent organization" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id, name: "child organization"})
+      parent_organization = organization_fixture(%{
+        network_id: network.id,
+        organization_id: organization.id,
+        name: "parent organization"
+      })
+
+      grand_parent_organization = organization_fixture(%{
+        network_id: network.id,
+        organization_id: parent_organization.id,
+        name: "grand father organization"
+      })
+
+      user = user_fixture(%{network_id: network.id, role: "member"})
+
+      organizationId = organization.id
+      userId = user.id
+
+      assert %OrganizationsUsersAccess{
+        access: "some_resource:some_action",
+        organization_id: organizationId,
+        user_id: userId
+      } = Organizations.give_access(parent_organization.id, user.id, "some_resource", "some_action")
+
+      assert Organizations.has_access(organization.id, user.id, "some_resource", "some_action")
+
+      assert Organizations.has_access(parent_organization.id, user.id, "some_resource", "some_action")
+
+      assert Organizations.has_access(grand_parent_organization.id, user.id, "some_resource", "some_action")
     end
   end
 end

@@ -146,12 +146,24 @@ defmodule Castmill.Organizations do
   end
 
   @doc """
-    Checks if a user has access to a given resource type and action
+    Checks if the user has access to a fiven resource type and action in the given
+    organization or in any of its parents organizations hierarchy
   """
-  def has_access?(user, organization, resource_type, action) do
+  def has_access(organization_id, user_id, resource_type, action) do
     query = from oua in OrganizationsUsersAccess,
-      where: oua.organization_id == ^organization.id and oua.user_id == ^user.id and oua.access == ^"#{resource_type}:#{action}"
-    Repo.one(query) !== nil
+      join: o in Organization,
+      on: oua.organization_id == o.id,
+      where: oua.user_id == ^user_id and oua.access == ^"#{resource_type}:#{action}" and (o.id == ^organization_id or o.organization_id == ^organization_id),
+      select: oua
+    if Repo.one(query) == nil do
+      # Check if parent organization has access recursively
+      organization = Repo.get!(Organization, organization_id)
+      if organization.organization_id != nil do
+        has_access(organization.organization_id, user_id, resource_type, action)
+      end
+    else
+      true
+    end
   end
 
   alias Castmill.Accounts.User
