@@ -24,11 +24,11 @@ defmodule Castmill.OrganizationsAccessTest do
         user_id: userId
       } = Organizations.give_access(organization.id, user.id, "some_resource", "some_action")
 
-      assert Organizations.has_access?(user, organization, "some_resource", "some_action")
+      assert Organizations.has_access(organization.id, user.id, "some_resource", "some_action")
 
       # Test that other resource or action does not have access
-      refute Organizations.has_access?(user, organization, "some_other_resource", "some_action")
-      refute Organizations.has_access?(user, organization, "some_other", "some_other_action")
+      refute Organizations.has_access(organization.id, user.id, "some_other_resource", "some_action")
+      refute Organizations.has_access(organization.id, user.id, "some_other", "some_other_action")
 
     end
 
@@ -46,11 +46,11 @@ defmodule Castmill.OrganizationsAccessTest do
         user_id: userId
       } = Organizations.give_access(organization.id, user.id, "some_resource", "some_action")
 
-      assert Organizations.has_access?(user, organization, "some_resource", "some_action")
+      assert Organizations.has_access(organization.id, user.id, "some_resource", "some_action")
 
       Organizations.remove_access(organization.id, user.id, "some_resource", "some_action")
 
-      refute Organizations.has_access?(user, organization, "some_resource", "some_action")
+      refute Organizations.has_access(organization.id, user.id, "some_resource", "some_action")
     end
 
     test "give_access/4 does nothing if given access already exists" do
