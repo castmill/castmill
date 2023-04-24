@@ -8,7 +8,6 @@ defmodule Castmill.Resources do
   - Playlists
   - Widgets
   - Caledars
-  - Teams
   """
   import Ecto.Query, warn: false
   alias Castmill.Repo
@@ -19,22 +18,70 @@ defmodule Castmill.Resources do
 
   alias Castmill.Protocol.Access
 
-  @doc """
-    Can access the media.
-  """
-  defimpl Access, for: Media do
-    def canAccess(organization, user, action) do
-      if user == nil do
-        {:error, "No user provided"}
+  def canAccessResource(resource, user, action) do
+    if user == nil do
+      {:error, "No user provided"}
+    else
+      # Determine if the user has access to the media that belongs to the organization
+      organization_id = resource.organization_id
+      ou = Repo.get_by(Castmill.Organizations.OrganizationsUsers, organization_id: organization_id, user_id: user.id)
+      type = Castmill.Protocol.Resource.type(resource)
+      if ou !== nil && ou.access in "#{type}:#{action}" do
+        {:ok, true}
       else
-        ou = Repo.get_by(Castmill.Organizations.OrganizationsUsers, organization_id: organization.id, user_id: user.id)
-        if ou !== nil && ou.access in "media:#{action}" do
-          {:ok, true}
-        else
-          {:ok, false}
-        end
+        # Not sure yet if we should test if use has access to this media through a team
+        # or if we should have another access protocol for teams :/
+        {:ok, false}
       end
     end
+  end
+
+  @doc """
+    Can access the resource.
+    User can only access a resource if he has access to the organization that owns the resource
+    and has the right access level.
+
+    Access level is defined when adding a user to an organization via the organization_users table.
+  """
+  defimpl Access, for: Media do
+    def canAccess(resource, user, action) do
+      Castmill.Resources.canAccessResource(resource, user, action)
+    end
+  end
+
+  defimpl Access, for: Playlist do
+    def canAccess(resource, user, action) do
+      Castmill.Resources.canAccessResource(resource, user, action)
+    end
+  end
+
+  defimpl Access, for: Calender do
+    def canAccess(resource, user, action) do
+      Castmill.Resources.canAccessResource(resource, user, action)
+    end
+  end
+
+  defimpl Access, for: Device do
+    def canAccess(resource, user, action) do
+      Castmill.Resources.canAccessResource(resource, user, action)
+    end
+  end
+
+  alias Castmill.Protocol.Resource
+  defimpl Resource, for: Media do
+    def type(_value), do: "media"
+  end
+
+  defimpl Resource, for: Playlist do
+    def type(_value), do: "playlist"
+  end
+
+  defimpl Resource, for: Calendar do
+    def type(_value), do: "calendar"
+  end
+
+  defimpl Resource, for: Device do
+    def type(_value), do: "device"
   end
 
   @doc """
@@ -52,6 +99,15 @@ defmodule Castmill.Resources do
   def update(%Playlist{} = playlist, attrs) do
     playlist
     |> Playlist.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Update a media
+  """
+  def update(%Media{} = media, attrs) do
+    media
+    |> Media.changeset(attrs)
     |> Repo.update()
   end
 
@@ -254,13 +310,32 @@ defmodule Castmill.Resources do
   end
 
   @doc """
-  Update a media
+  Returns the list of medias.
+
+  ## Examples
+
+      iex> list_users()
+      [%Media{}, ...]
+
   """
-  def update(%Media{} = media, attrs) do
+  def list_medias(organization_id) do
+    query = from media in Castmill.Resources.Media,
+        where: media.organization_id == ^organization_id,
+      select: media
+    Repo.all(query)
+  end
+
+  @doc """
+    Updates a media. Note that only the name of a media can be updated, the rest
+    of the fields are immutable. If field other than name is passed in, it will
+    be ignored.
+  """
+  def update_media(%Media{} = media, attrs) do
     media
-    |> Media.changeset(attrs)
+    |> Media.update_changeset(attrs)
     |> Repo.update()
   end
+
 
   @doc """
   Removes a media. Note that this will not remove the media from the
