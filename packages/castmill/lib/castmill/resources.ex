@@ -388,7 +388,7 @@ defmodule Castmill.Resources do
   """
   def update_calendar(%Calendar{} = calendar, attrs) do
     calendar
-    |> Media.update_changeset(attrs)
+    |> Calendar.changeset(attrs)
     |> Repo.update()
   end
 

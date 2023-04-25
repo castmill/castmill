@@ -10,7 +10,7 @@ defmodule Castmill.Resources.Resource do
     has_one :media, Castmill.Resources.Media
     has_one :playlist, Castmill.Resources.Playlist
     has_one :calendar, Castmill.Resources.Calendar
-    has_one :device, Castmill.Device
+    has_one :device, Castmill.Devices.Device
 
     timestamps()
   end

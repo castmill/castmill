@@ -7,7 +7,7 @@ defmodule Castmill.Repo.Migrations.CreateDevices do
 
       add :name, :string
       add :last_ip, :string
-      add :token, :string
+      add :token_hash, :string
       add :meta, :map
       add :last_online, :date
       add :user_agent, :string
@@ -18,12 +18,16 @@ defmodule Castmill.Repo.Migrations.CreateDevices do
       add :settings, :map
       add :volume, :integer
       add :info, :map
+      add :hardware_id, :string
 
       add :resource_id, references(:resources, on_delete: :nilify_all), null: true
-
       add :organization_id, references("organizations", column: "id", type: :uuid, on_delete: :delete_all), null: false
 
       timestamps()
     end
+
+    # Device Ids must be global unique
+    create unique_index(:devices, [:hardware_id])
+    create index(:devices, [:organization_id])
   end
 end

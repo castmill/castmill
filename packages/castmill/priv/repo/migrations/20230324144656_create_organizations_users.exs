@@ -10,5 +10,7 @@ defmodule Castmill.Repo.Migrations.CreateOrganizationsUsers do
 
       timestamps()
     end
+
+    create unique_index(:organizations_users, [:organization_id, :user_id])
   end
 end

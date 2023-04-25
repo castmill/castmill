@@ -1,7 +1,7 @@
 defmodule Castmill.CalendarsFixtures do
   @moduledoc """
   This module defines test helpers for creating
-  medias related entities.
+  calendars related entities.
   """
 
   @doc """
