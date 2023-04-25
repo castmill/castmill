@@ -307,4 +307,46 @@ defmodule Castmill.PlaylistsTest do
       assert Resources.list_playlists(organization.id, 3, 2) == [playlist3, playlist4]
     end
   end
+
+  describe "filter" do
+    @describetag :filter
+
+    test "list_playlists/4 returns the playlists that match the specified filter" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+      playlist1 = playlist_fixture(%{organization_id: organization.id, name: "Apples"})
+      playlist2 = playlist_fixture(%{organization_id: organization.id, name: "Bananas"})
+      playlist3 = playlist_fixture(%{organization_id: organization.id, name: "Oranges"})
+      playlist4 = playlist_fixture(%{organization_id: organization.id, name: "Pears"})
+      playlist5 = playlist_fixture(%{organization_id: organization.id, name: "Blueberries"})
+
+      assert Resources.list_playlists(organization.id, nil, 0, "B") == [playlist2, playlist5]
+      assert Resources.list_playlists(organization.id, nil, 0, "Bl") == [playlist5]
+      assert Resources.list_playlists(organization.id, nil, 0, "Bla") == []
+    end
+
+    test "list_playlists/4 filter is case insensitive" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+      playlist1 = playlist_fixture(%{organization_id: organization.id, name: "Apples"})
+      playlist2 = playlist_fixture(%{organization_id: organization.id, name: "Bananas"})
+      playlist3 = playlist_fixture(%{organization_id: organization.id, name: "Oranges"})
+      playlist4 = playlist_fixture(%{organization_id: organization.id, name: "Pears"})
+      playlist5 = playlist_fixture(%{organization_id: organization.id, name: "Blueberries"})
+
+      assert Resources.list_playlists(organization.id, nil, 0, "or") == [playlist3]
+    end
+
+    test "list_playlists/4 is case insensitive" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+      playlist1 = playlist_fixture(%{organization_id: organization.id, name: "Apples"})
+      playlist2 = playlist_fixture(%{organization_id: organization.id, name: "Bananas"})
+      playlist3 = playlist_fixture(%{organization_id: organization.id, name: "Oranges"})
+      playlist4 = playlist_fixture(%{organization_id: organization.id, name: "Pears"})
+      playlist5 = playlist_fixture(%{organization_id: organization.id, name: "Blueberries"})
+
+      assert Resources.list_playlists(organization.id, nil, 0, "ana") == [playlist2]
+    end
+  end
 end

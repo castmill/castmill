@@ -115,13 +115,24 @@ defmodule Castmill.Resources do
 
   @doc """
     Returns the list of playlists for the given organization. The list can be paginated by passing
-    a limit and an offset.
+    a limit and an offset. An optional filter can be passed to filter the playlists by name.
 
     ## Examples
 
     iex> list_playlists(123, 2, 1)
     [%Playlist{}, ...]
   """
+  def list_playlists(organization_id, limit, offset, filter) do
+    query = from playlist in Playlist,
+      where:
+    playlist.organization_id == ^organization_id and
+    like(fragment("lower(?)", playlist.name), ^"%#{String.downcase(filter)}%"),
+      limit: ^limit,
+      offset: ^offset,
+      select: playlist
+    Repo.all(query)
+  end
+
   def list_playlists(organization_id, limit \\ nil, offset \\ 0) do
     query = from playlist in Playlist,
       where: playlist.organization_id == ^organization_id,
@@ -130,6 +141,15 @@ defmodule Castmill.Resources do
       select: playlist
     Repo.all(query)
   end
+
+  # def list_playlists(organization_id, limit \\ nil, offset \\ 0, filter) do
+  #   query = from playlist in Playlist,
+  #     where: playlist.organization_id == ^organization_id and like(playlist.name, ^"#{filter}%"),
+  #     limit: ^limit,
+  #     offset: ^offset,
+  #     select: playlist
+  #   Repo.all(query)
+  # end
 
   @doc """
     Removes a playlist.
