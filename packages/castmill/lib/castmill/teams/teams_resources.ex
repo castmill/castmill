@@ -5,7 +5,7 @@ defmodule Castmill.Teams.TeamsResources do
   @primary_key(false)
 
   schema "teams_resources" do
-    field :access, {:array, Ecto.Enum}, values: [:read, :write], default: [:read, :write]
+    field :access, {:array, Ecto.Enum}, values: [:read, :write, :delete], default: [:read, :write, :delete]
 
     belongs_to :team, Castmill.Teams.Team, foreign_key: :team_id, primary_key: true
     belongs_to :resource, Castmill.Resources.Resource, foreign_key: :resource_id, primary_key: true

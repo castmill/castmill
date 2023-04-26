@@ -191,5 +191,29 @@ defmodule Castmill.TeamsTest do
       assert Teams.list_resources(resource.team_id) == rest
     end
 
+    test "has_access_to_resource/3 (user_id, resource_id, access) checks if a user has access to a resource based on the team" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+      playlist = playlist_fixture(%{organization_id: organization.id})
+      team = team_fixture(%{organization_id: organization.id})
+      user = user_fixture(%{organization_id: organization.id})
+
+      {:ok, result} = Teams.add_user_to_team(team.id, user.id, :member)
+
+      assert Teams.has_access_to_resource(user.id, playlist.id, :read) == false
+
+      {:ok, team_resource} = Teams.add_resource_to_team(team.id, playlist.id, :playlist, [:read])
+
+      assert Teams.has_access_to_resource(user.id, team_resource.resource_id, :read) == true
+
+      assert Teams.has_access_to_resource(user.id, team_resource.resource_id, :write) == false
+
+      Teams.update_resource_access(team.id, team_resource.resource_id, [:write, :delete])
+
+      assert Teams.has_access_to_resource(user.id, team_resource.resource_id, :write) == true
+      assert Teams.has_access_to_resource(user.id, team_resource.resource_id, :delete) == true
+      assert Teams.has_access_to_resource(user.id, team_resource.resource_id, :read) == false
+    end
+
   end
 end

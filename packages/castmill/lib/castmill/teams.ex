@@ -107,20 +107,44 @@ defmodule Castmill.Teams do
     Repo.delete(team)
   end
 
+  @doc """
+    Add a user to a team with a given role.
+  """
   def add_user_to_team(team_id, user_id, role) do
     %TeamsUsers{}
     |> TeamsUsers.changeset(%{team_id: team_id, user_id: user_id, role: role})
     |> Repo.insert()
   end
 
+  @doc """
+    Add a resource to a team with a given access.
+  """
   def add_resource_to_team(team_id, child_id, type, access) do
     # We need a transaction here
     # First upsert the resource (insert only if there is no a resource for the given id and type)
-    {:ok, resource_id} = upsert_resource(child_id, type)
+    Repo.transaction(fn ->
+      with {:ok, resource_id} <- upsert_resource(child_id, type) do
+        with {:ok, team_resource} <- %TeamsResources{}
+          |> TeamsResources.changeset(%{access: access, team_id: team_id, resource_id: resource_id})
+          |> Repo.insert()
+        do
+          team_resource
+        else
+          {:error, reason} -> Repo.rollback(reason)
+        end
+      else
+        {:error, reason} -> Repo.rollback(reason)
+      end
+    end)
+  end
 
-    %TeamsResources{}
-    |> TeamsResources.changeset(%{access: access, team_id: team_id, resource_id: resource_id})
-    |> Repo.insert()
+  @doc """
+    Update access for a resource in a team.
+  """
+  def update_resource_access(team_id, resource_id, access) do
+    from(team_resource in TeamsResources,
+      where: team_resource.team_id == ^team_id and team_resource.resource_id == ^resource_id)
+    |> Repo.update_all(set: [access: access])
   end
 
   def upsert_resource(id, type) do
@@ -205,21 +229,6 @@ defmodule Castmill.Teams do
   [%User{}, ...]
   """
   def list_resources(team_id) do
-
-    # user = Blog.Repo.one from user in Blog.User,
-    #   where: user.id == ^user_id,
-    #   left_join: posts in assoc(user, :posts),
-    #   left_join: comments in assoc(posts, :comments),
-    #   preload: [posts: {posts, comments: comments}]
-
-    # query = from teams_resources in TeamsResources,
-    #   where: teams_resources.team_id == ^team_id,
-    #   join: resource in assoc(teams_resources, :resource),
-    #   #join: media in assoc(resource, :resource),
-    #   order_by: [asc: resource.updated_at],
-    #   select: {%{id: resource.id}, %{access: teams_resources.access}},
-    #   preload: [resource: [Media: :resource]]
-
     query =
       from(
         tr in Castmill.Teams.TeamsResources,
@@ -231,4 +240,28 @@ defmodule Castmill.Teams do
 
     Repo.all(query)
   end
+
+  @doc """
+    Checks if a given user has access to a given resource. A given resource can be a media, a playlist, a calendar or a device.
+    The resource belongs to the proxy table Resource, and is part of a Team through the proxy table TeamsResources, which
+    includes an access field of type array that can include accesses such as read, write or delete.
+
+    Any user belonging to a given team will have access to a given resource based on the access field of the TeamsResources table
+    for the given resource.
+  """
+  def has_access_to_resource(user_id, resource_id, access) do
+    query =
+      from(
+        tr in Castmill.Teams.TeamsResources,
+        where: tr.resource_id == ^resource_id and  ^access in tr.access,
+        join: tu in Castmill.Teams.TeamsUsers,
+        on: tu.team_id == tr.team_id,
+        where: tu.user_id == ^user_id,
+        select: tr.access
+      )
+
+    Repo.one(query) != nil
+  end
+
+
 end
