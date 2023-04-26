@@ -1,6 +1,7 @@
 defmodule Castmill.Devices.Device do
   use Ecto.Schema
   import Ecto.Changeset
+  import Ecto.Query, warn: false
 
   import Argon2
 
@@ -95,4 +96,8 @@ defmodule Castmill.Devices.Device do
   end
 
   defp put_pass_hash(changeset), do: changeset
+
+  def base_query() do
+    from device in Castmill.Devices.Device, as: :device
+  end
 end

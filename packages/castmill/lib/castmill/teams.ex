@@ -4,6 +4,7 @@ defmodule Castmill.Teams do
   """
   import Ecto.Query, warn: false
   alias Castmill.Repo
+  alias Castmill.Organizations.Organization
   alias Castmill.Teams.{Team, TeamsUsers, TeamsResources}
   alias Castmill.Resources.{Media, Playlist, Calendar}
 
@@ -25,7 +26,7 @@ defmodule Castmill.Teams do
   end
 
   @doc """
-  Returns the list of networks.
+  Returns the list of teams.
 
   ## Examples
 
@@ -34,10 +35,9 @@ defmodule Castmill.Teams do
 
   """
   def list_teams(organization_id) do
-    query = from team in Team,
-    where: team.organization_id == ^organization_id,
-    select: team
-    Repo.all(query)
+    Team.base_query()
+    |> Organization.where_org_id(organization_id)
+    |> Repo.all()
   end
 
   @doc """

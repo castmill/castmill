@@ -1,6 +1,7 @@
 defmodule Castmill.Organizations.Organization do
   use Ecto.Schema
   import Ecto.Changeset
+  import Ecto.Query, warn: false
 
   @primary_key {:id, :binary_id, autogenerate: true}
 
@@ -28,4 +29,14 @@ defmodule Castmill.Organizations.Organization do
     |> validate_required([:name, :network_id])
     |> unique_constraint([:name, :network_id], name: :org_name_network_id_index)
   end
+
+  def base_query() do
+    from e in Castmill.Organizations.Organization, as: :organization
+  end
+
+  def where_org_id(query, id) do
+    from e in query,
+      where: e.organization_id == ^id
+  end
+
 end

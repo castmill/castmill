@@ -5,6 +5,7 @@ defmodule Castmill.Devices do
   import Ecto.Query, warn: false
   import Argon2
 
+  alias Castmill.Organizations.Organization
   alias Castmill.Repo
   alias Castmill.Devices.Device
   alias Castmill.Devices.DevicesRegistrations
@@ -41,7 +42,8 @@ defmodule Castmill.Devices do
       [%Network{}, ...]
   """
   def list_devices(organization_id) do
-    from(device in Device, where: device.organization_id == ^organization_id, select: device)
+    Device.base_query()
+    |> Organization.where_org_id(organization_id)
     |> Repo.all()
     |> Enum.map(&Map.drop(&1, [:token, :token_hash]))
   end

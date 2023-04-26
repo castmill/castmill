@@ -1,6 +1,7 @@
 defmodule Castmill.Resources.Calendar do
   use Ecto.Schema
   import Ecto.Changeset
+  import Ecto.Query, warn: false
 
   schema "calendars" do
     field :default_playlist_id, :string
@@ -21,5 +22,9 @@ defmodule Castmill.Resources.Calendar do
     calendar
     |> cast(attrs, [:name, :timezone, :default_playlist_id, :description, :organization_id, :resource_id])
     |> validate_required([:name, :timezone, :organization_id])
+  end
+
+  def base_query() do
+    from calendar in Castmill.Resources.Calendar, as: :calendar
   end
 end

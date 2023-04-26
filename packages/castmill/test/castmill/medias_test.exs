@@ -1,14 +1,14 @@
 defmodule Castmill.MediasTest do
   use Castmill.DataCase
 
-  @moduletag :playlist_data_case
+  @moduletag :media_data_case
 
   alias Castmill.Resources
 
   describe "medias" do
     @describetag :medias
 
-    alias Castmill.Medias.Media
+    alias Castmill.Resources.Media
 
     import Castmill.NetworksFixtures
     import Castmill.OrganizationsFixtures
@@ -19,7 +19,7 @@ defmodule Castmill.MediasTest do
       organization = organization_fixture(%{network_id: network.id})
       media = media_fixture(%{organization_id: organization.id, uri: "https://www.youtube.com/watch?v=1"})
 
-      assert Resources.list_medias(organization.id) == [media]
+      assert Resources.list_resource(Media, organization.id) == [media]
     end
 
     test "update_media/1 updates the media but only the name" do
@@ -27,7 +27,7 @@ defmodule Castmill.MediasTest do
       organization = organization_fixture(%{network_id: network.id})
       media = media_fixture(%{organization_id: organization.id, uri: "https://www.youtube.com/watch?v=1"})
 
-      assert Resources.list_medias(organization.id) == [media]
+      assert Resources.list_resource(Media, organization.id) == [media]
 
       update_attrs = %{name: "some updated name"}
 
@@ -41,11 +41,11 @@ defmodule Castmill.MediasTest do
       organization = organization_fixture(%{network_id: network.id})
       media = media_fixture(%{organization_id: organization.id, uri: "https://www.youtube.com/watch?v=1"})
 
-      assert Resources.list_medias(organization.id) == [media]
+      assert Resources.list_resource(Media, organization.id) == [media]
 
       Resources.delete_media(media)
 
-      assert Resources.list_medias(organization.id) == []
+      assert Resources.list_resource(Media, organization.id) == []
     end
 
   end

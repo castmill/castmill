@@ -18,6 +18,8 @@ defmodule Castmill.Resources do
   alias Castmill.Resources.Calendar
   alias Castmill.Resources.CalendarEntry
 
+  alias Castmill.Organizations.Organization
+
   alias Castmill.Protocol.Access
 
   def canAccessResource(resource, user, action) do
@@ -295,6 +297,21 @@ defmodule Castmill.Resources do
   end
 
   @doc """
+  Returns the list of a given resource for a given organization.
+
+  ## Examples
+
+      iex> list_resource(Media, organization_id)
+      [%Media{}, ...]
+
+  """
+  def list_resource(resource, organization_id) do
+    resource.base_query()
+    |> Organization.where_org_id(organization_id)
+    |> Repo.all()
+  end
+
+  @doc """
   Creates a media.
 
   ## Examples
@@ -309,22 +326,6 @@ defmodule Castmill.Resources do
     %Media{}
     |> Media.changeset(attrs)
     |> Repo.insert()
-  end
-
-  @doc """
-  Returns the list of medias.
-
-  ## Examples
-
-      iex> list_users()
-      [%Media{}, ...]
-
-  """
-  def list_medias(organization_id) do
-    query = from media in Castmill.Resources.Media,
-        where: media.organization_id == ^organization_id,
-      select: media
-    Repo.all(query)
   end
 
   @doc """
@@ -365,22 +366,6 @@ defmodule Castmill.Resources do
     %Calendar{}
     |> Calendar.changeset(attrs)
     |> Repo.insert()
-  end
-
-  @doc """
-  Returns the list of calendars.
-
-  ## Examples
-
-      iex> list_users()
-      [%Media{}, ...]
-
-  """
-  def list_calendars(organization_id) do
-    query = from calendar in Calendar,
-        where: calendar.organization_id == ^organization_id,
-      select: calendar
-    Repo.all(query)
   end
 
   @doc """

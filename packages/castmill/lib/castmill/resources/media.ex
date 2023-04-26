@@ -1,6 +1,7 @@
 defmodule Castmill.Resources.Media do
   use Ecto.Schema
   import Ecto.Changeset
+  import Ecto.Query, warn: false
 
   schema "medias" do
     field :mimetype, :string
@@ -25,6 +26,10 @@ defmodule Castmill.Resources.Media do
     media
     |> cast(attrs, [:name])
     |> validate_required([:name])
+  end
+
+  def base_query() do
+    from media in Castmill.Resources.Media, as: :media
   end
 
 end

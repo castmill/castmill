@@ -10,7 +10,6 @@ defmodule CastmillWeb.ResourceController do
   plug Authorize, %{parent: :organization, resource: :not_needed, action: :index} when action in [:index]
   plug Authorize, %{parent: :organization, resource: :not_needed, action: :create} when action in [:create]
 
-
   def index(conn, %{"resources" => "medias", "organization_id" => organization_id}) do
     medias = Organizations.list_medias(organization_id)
     render(conn, :index, medias: medias)
@@ -20,7 +19,6 @@ defmodule CastmillWeb.ResourceController do
     playlists = Organizations.list_playlists(organization_id)
     render(conn, :index, playlists: playlists)
   end
-
 
   def create(conn, %{"resources" => "medias", "organization_id" => organization_id, "media" => media}) do
 

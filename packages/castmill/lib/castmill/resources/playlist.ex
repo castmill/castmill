@@ -1,6 +1,7 @@
 defmodule Castmill.Resources.Playlist do
   use Ecto.Schema
   import Ecto.Changeset
+  import Ecto.Query, warn: false
 
   schema "playlists" do
     field :name, :string
@@ -26,5 +27,9 @@ defmodule Castmill.Resources.Playlist do
     playlist
     |> cast(attrs, [:name, :settings, :organization_id, :resource_id])
     |> validate_required([:name, :organization_id])
+  end
+
+  def base_query() do
+    from playlist in Castmill.Resources.Playlist, as: :playlist
   end
 end
