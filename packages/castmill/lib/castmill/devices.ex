@@ -166,7 +166,7 @@ defmodule Castmill.Devices do
   end
 
   @doc """
-    List device calendars
+    List device calendars.
   """
   def list_calendars(device_id) do
     query = from calendar in Castmill.Resources.Calendar,
@@ -182,6 +182,32 @@ defmodule Castmill.Devices do
   """
   def delete_device(%Device{} = device) do
     Repo.delete(device)
+  end
+
+  @doc """
+    Checks if a device has access to a calendar entry
+  """
+  def has_access_to_calendar_entry(device_id, calendar_entry_id) do
+    query = from dc in Castmill.Devices.DevicesCalendars,
+      join: ce in Castmill.Resources.CalendarEntry,
+      on: dc.calendar_id == ce.calendar_id,
+      where: dc.device_id == ^device_id and ce.id == ^calendar_entry_id
+    Repo.one(query) !== nil
+  end
+
+  @doc """
+    Checks if a device has access to a playlist.
+    If a playlist is used by a calendar entry, it is considered to be accessible
+    by the device that has the calendar with the given calendar entry.
+  """
+  def has_access_to_playlist(device_id, playlist_id) do
+    query = from dc in Castmill.Devices.DevicesCalendars,
+      join: ce in Castmill.Resources.CalendarEntry,
+      on: dc.calendar_id == ce.calendar_id,
+      join: pl in Castmill.Resources.Playlist,
+      on: ce.playlist_id == pl.id,
+      where: dc.device_id == ^device_id and pl.id == ^playlist_id
+    Repo.one(query) !== nil
   end
 
 end

@@ -15,6 +15,7 @@ defmodule Castmill.DevicesTest do
     import Castmill.OrganizationsFixtures
     import Castmill.DevicesFixtures
     import Castmill.CalendarsFixtures
+    import Castmill.PlaylistsFixtures
 
     test "register_device/1 registers a device" do
       network = network_fixture()
@@ -158,5 +159,68 @@ defmodule Castmill.DevicesTest do
       assert Devices.list_calendars(device.id) == []
     end
 
+    test "has_access_to_calendar_entry/2 checks if a device has access to a given calendar entry" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+      {:ok, devices_registration } = device_registration_fixture(%{hardware_id: "some hardware id", pincode: "some pincode"})
+      assert {:ok, {device, token}} = Devices.register_device(organization.id, devices_registration.pincode, %{ name: "some device"})
+
+      assert Devices.list_calendars(device.id) == []
+
+      calendar = calendar_fixture(%{organization_id: organization.id, timezone: "America/Sao_Paulo"})
+
+      entry_attrs = %{
+        name: "some entry name",
+        start: ~D[2005-05-05],
+        end: ~D[2005-05-05],
+        timezone: "Europe/Stockholm"
+      }
+
+      playlist = playlist_fixture(%{organization_id: organization.id})
+
+      assert {:ok, entry} = Resources.add_calendar_entry(calendar.id, playlist.id, entry_attrs)
+
+      assert Devices.has_access_to_calendar_entry(device.id, entry.id) == false
+
+      Devices.add_calendar(device.id, calendar.id)
+
+      assert Devices.has_access_to_calendar_entry(device.id, entry.id)
+
+      Devices.remove_calendar(device.id, calendar.id)
+
+      assert Devices.has_access_to_calendar_entry(device.id, entry.id) == false
+    end
+
+    test "has_access_to_playlist/2 checks if a device has access to a given playlist" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+      {:ok, devices_registration } = device_registration_fixture(%{hardware_id: "some hardware id", pincode: "some pincode"})
+      assert {:ok, {device, token}} = Devices.register_device(organization.id, devices_registration.pincode, %{ name: "some device"})
+
+      assert Devices.list_calendars(device.id) == []
+
+      calendar = calendar_fixture(%{organization_id: organization.id, timezone: "America/Sao_Paulo"})
+
+      entry_attrs = %{
+        name: "some entry name",
+        start: ~D[2005-05-05],
+        end: ~D[2005-05-05],
+        timezone: "Europe/Stockholm"
+      }
+
+      playlist = playlist_fixture(%{organization_id: organization.id})
+
+      assert {:ok, entry} = Resources.add_calendar_entry(calendar.id, playlist.id, entry_attrs)
+
+      assert Devices.has_access_to_playlist(device.id, playlist.id) == false
+
+      Devices.add_calendar(device.id, calendar.id)
+
+      assert Devices.has_access_to_playlist(device.id, playlist.id)
+
+      Devices.remove_calendar(device.id, calendar.id)
+
+      assert Devices.has_access_to_playlist(device.id, playlist.id) == false
+    end
   end
 end
