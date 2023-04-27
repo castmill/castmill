@@ -11,6 +11,7 @@ defmodule Castmill.Repo.Migrations.CreateNetworksAdmins do
       timestamps()
     end
 
+    # TODO: use these unique index as primary key
     create unique_index(:networks_users, [:network_id, :user_id])
 
   end
