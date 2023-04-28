@@ -15,7 +15,7 @@ defmodule CastmillWeb.NetworkController do
     render(conn, :index, networks: networks)
   end
 
-  def create(conn, %{"network" => network_params}) do
+  def create(conn, network_params) do
     with {:ok, %Network{} = network} <- Networks.create_network(network_params) do
       conn
       |> put_status(:created)
