@@ -223,14 +223,21 @@ defmodule Castmill.Organizations do
       [%Media{}, ...]
 
   """
-  def list_medias(organization_id) do
-    query =
-      from(media in Castmill.Resources.Media,
-        where: media.organization_id == ^organization_id,
-        select: media
-      )
+  def list_medias(organization_id, limit, offset, pattern) do
+    Castmill.Resources.list_resource(Castmill.Resources.Media, organization_id, limit, offset, pattern)
+  end
 
-    Repo.all(query)
+  @doc """
+  Returns number of matching mecias.
+
+  ## Examples
+
+      iex> count_medias()
+      2
+
+  """
+  def count_medias(organization_id, pattern) do
+    Castmill.Resources.count_resource(Castmill.Resources.Media, organization_id, pattern)
   end
 
   @doc """
