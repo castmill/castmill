@@ -17,7 +17,7 @@ export function DeviceComponent(props: { device: Device }) {
       >
         <Switch>
           <Match when={loginOrRegister.error}>
-            <span>isRegistered.error</span>
+            <span>{loginOrRegister.error}</span>
           </Match>
           <Match when={loginOrRegister()?.status == Status.Login}>
             <PlayerComponent device={props.device} />
