@@ -18,7 +18,41 @@ defmodule CastmillWeb.Router do
   scope "/", CastmillWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
+    get "/admin", PageController, :home
+    get "/", DeviceController, :home
+  end
+
+  pipeline :device do
+    plug :accepts, ["json"]
+    #plug :fetch_session
+    #plug :fetch_live_flash
+    #plug :put_root_layout, {CastmillWeb.Layouts, :root}
+    #plug :protect_from_forgery
+    #plug :put_secure_browser_headers
+  end
+
+  scope "/registrations", CastmillWeb do
+    pipe_through :device
+
+    post "/", DeviceController, :start_registration
+  end
+
+  scope "/devices", CastmillWeb do
+    pipe_through :device
+
+    get "/:id", DeviceController, :show
+    get "/:id/calendars", DeviceController, :calendars
+
+    # This route can be used by a device in order to post
+    # its current status to the server. It can be called in
+    # regular intervals or triggered by a user.
+    post "/:id/info", DeviceController, :info
+
+    # post "/", DeviceController, :create
+    # get "/", DeviceController, :index
+    # get "/:id", DeviceController, :show
+    # put "/:id", DeviceController, :update
+    # delete "/:id", DeviceController, :delete
   end
 
   # Other scopes may use custom stacks.
@@ -34,6 +68,10 @@ defmodule CastmillWeb.Router do
 
     resources "/organizations", OrganizationController, except: [:new, :edit] do
       pipe_through :load_organization
+
+      resources "/devices", DeviceController, except: [:new, :edit] do
+
+      end
 
       resources "/users", UserController, except: [:new, :edit] do
       end

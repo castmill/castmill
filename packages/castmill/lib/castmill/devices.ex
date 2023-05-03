@@ -60,17 +60,41 @@ defmodule Castmill.Devices do
   @doc """
     Creates a device registration.
   """
-  def create_device_registration(%{
-    device_ip: _device_ip,
-    hardware_id: _hardware_id
-  } = attrs) do
-    symbols = 'abcdefghijklmnoprstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  def create_device_registration(
+        %{
+          device_ip: _device_ip,
+          hardware_id: _hardware_id
+          # user_agent: _user_agent,
+          # version: _version,
+          # timezone: _timezone,
+          # loc_lat: _loc_lat,
+          # loc_long: _loc_long,
+        } = attrs
+      ) do
+    symbols = '123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
     symbol_count = Enum.count(symbols)
-    pincode = for _ <- 1..10, into: "", do: <<Enum.at(symbols, :crypto.rand_uniform(0, symbol_count))>>
+
+    pincode =
+      for _ <- 1..10, into: "", do: <<Enum.at(symbols, :crypto.rand_uniform(0, symbol_count))>>
 
     %DevicesRegistrations{pincode: pincode}
     |> DevicesRegistrations.changeset(attrs)
-    |> Repo.insert()
+    |> Repo.insert(on_conflict: :replace_all, conflict_target: :hardware_id)
+  end
+
+  @doc """
+    Gets a device registration.
+  """
+  def get_devices_registration(hardware_id, pincode) do
+    DevicesRegistrations
+    |> where([d], d.hardware_id == ^hardware_id and d.pincode == ^pincode)
+    |> Repo.one()
+  end
+
+  def get_devices_registration(pincode) do
+    DevicesRegistrations
+    |> where([d], d.pincode == ^pincode)
+    |> Repo.one()
   end
 
   @doc """
@@ -85,20 +109,26 @@ defmodule Castmill.Devices do
   def register_device(organization_id, pincode, attrs \\ {}) do
     Repo.transaction(fn ->
       devices_registration = Repo.get_by(DevicesRegistrations, pincode: pincode)
+
       if devices_registration do
         if devices_registration.expires_at < DateTime.utc_now() do
           Repo.rollback(:pincode_expired)
         else
           token = generate_token()
-          params = Map.merge(%{
-            organization_id: organization_id,
-            token: token,
-            last_online: DateTime.utc_now(),
-            last_ip: devices_registration.device_ip,
-          }, Map.from_struct(devices_registration))
 
-          with {:ok, _ } <- Repo.delete(devices_registration),
-              {:ok, device} <- create_device(Map.merge(params, attrs)) do
+          params =
+            Map.merge(
+              %{
+                organization_id: organization_id,
+                token: token,
+                last_online: DateTime.utc_now(),
+                last_ip: devices_registration.device_ip
+              },
+              Map.from_struct(devices_registration)
+            )
+
+          with {:ok, _} <- Repo.delete(devices_registration),
+               {:ok, device} <- create_device(Map.merge(params, attrs)) do
             {Map.drop(device, [:token, :token_hash]), token}
           else
             {:error, changeset} -> Repo.rollback(changeset)
@@ -113,8 +143,8 @@ defmodule Castmill.Devices do
   @doc """
     Verify device token.
   """
-  def verify_device_token(hardware_id, token) do
-    Repo.get_by(Device, hardware_id: hardware_id)
+  def verify_device_token(device_id, token) do
+    Repo.get_by(Device, id: device_id)
     |> check_pass(token, hash_key: :token_hash)
   end
 
@@ -131,9 +161,8 @@ defmodule Castmill.Devices do
 
       # TODO: also check if auto_recovery is enabled
       if device !== nil and
-        device.last_ip == device_ip and
-        device.updated_at >= DateTime.from_unix(:os.system_time(:seconds) - 60*60, :second) do
-
+           device.last_ip == device_ip and
+           device.updated_at >= DateTime.from_unix(:os.system_time(:seconds) - 60 * 60, :second) do
         # Update device token
         token = generate_token()
         device = update_device(device, %{token: token})
@@ -160,8 +189,11 @@ defmodule Castmill.Devices do
     Remove calendar from device
   """
   def remove_calendar(device_id, calendar_id) do
-    query = from dc in Castmill.Devices.DevicesCalendars,
-      where: dc.device_id == ^device_id and dc.calendar_id == ^calendar_id
+    query =
+      from(dc in Castmill.Devices.DevicesCalendars,
+        where: dc.device_id == ^device_id and dc.calendar_id == ^calendar_id
+      )
+
     Repo.delete_all(query)
   end
 
@@ -169,11 +201,14 @@ defmodule Castmill.Devices do
     List device calendars.
   """
   def list_calendars(device_id) do
-    query = from calendar in Castmill.Resources.Calendar,
-      join: dc in Castmill.Devices.DevicesCalendars,
-      on: calendar.id == dc.calendar_id,
-      where: dc.device_id == ^device_id,
-      select: calendar
+    query =
+      from(calendar in Castmill.Resources.Calendar,
+        join: dc in Castmill.Devices.DevicesCalendars,
+        on: calendar.id == dc.calendar_id,
+        where: dc.device_id == ^device_id,
+        select: calendar
+      )
+
     Repo.all(query)
   end
 
@@ -188,10 +223,13 @@ defmodule Castmill.Devices do
     Checks if a device has access to a calendar entry
   """
   def has_access_to_calendar_entry(device_id, calendar_entry_id) do
-    query = from dc in Castmill.Devices.DevicesCalendars,
-      join: ce in Castmill.Resources.CalendarEntry,
-      on: dc.calendar_id == ce.calendar_id,
-      where: dc.device_id == ^device_id and ce.id == ^calendar_entry_id
+    query =
+      from(dc in Castmill.Devices.DevicesCalendars,
+        join: ce in Castmill.Resources.CalendarEntry,
+        on: dc.calendar_id == ce.calendar_id,
+        where: dc.device_id == ^device_id and ce.id == ^calendar_entry_id
+      )
+
     Repo.one(query) !== nil
   end
 
@@ -201,13 +239,15 @@ defmodule Castmill.Devices do
     by the device that has the calendar with the given calendar entry.
   """
   def has_access_to_playlist(device_id, playlist_id) do
-    query = from dc in Castmill.Devices.DevicesCalendars,
-      join: ce in Castmill.Resources.CalendarEntry,
-      on: dc.calendar_id == ce.calendar_id,
-      join: pl in Castmill.Resources.Playlist,
-      on: ce.playlist_id == pl.id,
-      where: dc.device_id == ^device_id and pl.id == ^playlist_id
+    query =
+      from(dc in Castmill.Devices.DevicesCalendars,
+        join: ce in Castmill.Resources.CalendarEntry,
+        on: dc.calendar_id == ce.calendar_id,
+        join: pl in Castmill.Resources.Playlist,
+        on: ce.playlist_id == pl.id,
+        where: dc.device_id == ^device_id and pl.id == ^playlist_id
+      )
+
     Repo.one(query) !== nil
   end
-
 end

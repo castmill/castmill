@@ -28,7 +28,8 @@ defmodule CastmillWeb.AccessTokenController do
   def update(conn, %{"id" => id, "access_token" => access_token_params}) do
     access_token = Accounts.get_access_token!(id)
 
-    with {:ok, %AccessToken{} = access_token} <- Accounts.update_access_token(access_token, access_token_params) do
+    with {:ok, %AccessToken{} = access_token} <-
+           Accounts.update_access_token(access_token, access_token_params) do
       render(conn, :show, access_token: access_token)
     end
   end

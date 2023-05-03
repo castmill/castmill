@@ -21,4 +21,18 @@ defmodule CastmillWeb.FallbackController do
     |> put_view(html: CastmillWeb.ErrorHTML, json: CastmillWeb.ErrorJSON)
     |> render(:"404")
   end
+
+  def call(conn, {:error, %{ msg: msg }}) do
+    conn
+    |> put_status(:unprocessable_entity)
+    |> put_view(json: CastmillWeb.ErrorJSON)
+    |> render(:"error", %{msg: msg})
+  end
+
+  def call(conn, {:error, type}) do
+    conn
+    |> put_status(:unprocessable_entity)
+    |> put_view(json: CastmillWeb.ErrorJSON)
+    |> render(:"error", %{msg: type})
+  end
 end

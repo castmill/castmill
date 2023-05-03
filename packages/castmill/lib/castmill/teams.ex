@@ -11,7 +11,7 @@ defmodule Castmill.Teams do
   alias Castmill.Protocol.Access
 
   defimpl Access, for: Team do
-    def canAccess(team, user, _action) do
+    def canAccess(_team, user, _action) do
       if user == nil do
         {:error, "No user provided"}
       else

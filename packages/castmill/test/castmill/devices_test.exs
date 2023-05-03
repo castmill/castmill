@@ -104,7 +104,7 @@ defmodule Castmill.DevicesTest do
       {:ok, devices_registration } = device_registration_fixture(%{hardware_id: "some hardware id", pincode: "some pincode"})
       assert {:ok, {device, token}} = Devices.register_device(organization.id, devices_registration.pincode, %{ name: "some device"})
 
-      assert {:ok, device} = Devices.verify_device_token(device.hardware_id, token)
+      assert {:ok, device} = Devices.verify_device_token(device.id, token)
     end
 
     test "recover_device/2 recovers a device that may have lost its token" do
