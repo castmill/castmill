@@ -17,9 +17,11 @@ defmodule Castmill.Quotas do
   """
   def create_plan(name, quotas) do
     plan = Repo.insert!(%Plan{name: name})
+
     Enum.each(quotas, fn quota ->
-      Repo.insert!(%PlansQuotas{plan_name: plan.name, resource: quota.resource, max: quota.max})
+      Repo.insert!(%PlansQuotas{plan_id: plan.id, resource: quota.resource, max: quota.max})
     end)
+
     plan
   end
 
@@ -33,24 +35,24 @@ defmodule Castmill.Quotas do
   @doc """
     Delete a given plan
   """
-  def delete_plan(name) do
+  def delete_plan(id) do
     Plan
-    |> where(name: ^name)
+    |> where(id: ^id)
     |> Repo.delete_all()
   end
 
   @doc """
     Assign a given plan to a given network
   """
-  def assign_plan_to_network(plan_name, network_id) do
-    Repo.insert!(%PlansNetworks{plan_name: plan_name, network_id: network_id})
+  def assign_plan_to_network(plan_id, network_id) do
+    Repo.insert!(%PlansNetworks{plan_id: plan_id, network_id: network_id})
   end
 
   @doc """
     Assign a given plan to a given organization
   """
-  def assign_plan_to_organization(plan_name, organization_id) do
-    Repo.insert!(%PlansOrganizations{plan_name: plan_name, organization_id: organization_id})
+  def assign_plan_to_organization(plan_id, organization_id) do
+    Repo.insert!(%PlansOrganizations{plan_id: plan_id, organization_id: organization_id})
   end
 
   @doc """
@@ -59,14 +61,35 @@ defmodule Castmill.Quotas do
     otherwise it's done against the organization plan.
   """
   def get_quota_for_organization(organization_id, resource) do
-    organization_quota = Repo.one(from quotas in QuotasOrganizations, where: quotas.organization_id == ^organization_id, where: quotas.resource == ^resource)
+    organization_quota =
+      Repo.one(
+        from(quotas in QuotasOrganizations,
+          where: quotas.organization_id == ^organization_id,
+          where: quotas.resource == ^resource
+        )
+      )
+
     if organization_quota do
       organization_quota.max
     else
-      po = Repo.one(from plans_organizations in PlansOrganizations, where: plans_organizations.organization_id == ^organization_id)
+      po =
+        Repo.one(
+          from(plans_organizations in PlansOrganizations,
+            where: plans_organizations.organization_id == ^organization_id
+          )
+        )
+
       if po do
-        plan_name = po.plan_name
-        plan_quotas = Repo.one(from plans_quotas in PlansQuotas, where: plans_quotas.plan_name == ^plan_name, where: plans_quotas.resource == ^resource)
+        plan_id = po.plan_id
+
+        plan_quotas =
+          Repo.one(
+            from(plans_quotas in PlansQuotas,
+              where: plans_quotas.plan_id == ^plan_id,
+              where: plans_quotas.resource == ^resource
+            )
+          )
+
         plan_quotas.max
       else
         0
@@ -80,14 +103,33 @@ defmodule Castmill.Quotas do
     otherwise it's done against the network plan.
   """
   def get_quota_for_network(network_id, resource) do
-    network_quotas = Repo.one(from quotas in QuotasNetworks, where: quotas.network_id == ^network_id, where: quotas.resource == ^resource)
+    network_quotas =
+      Repo.one(
+        from(quotas in QuotasNetworks,
+          where: quotas.network_id == ^network_id,
+          where: quotas.resource == ^resource
+        )
+      )
+
     if network_quotas do
       network_quotas.max
     else
-      pn = Repo.one(from plans_networks in PlansNetworks, where: plans_networks.network_id == ^network_id)
+      pn =
+        Repo.one(
+          from(plans_networks in PlansNetworks, where: plans_networks.network_id == ^network_id)
+        )
+
       if pn do
-        plan_name = pn.plan_name
-        plan_quotas = Repo.one(from plans_quotas in PlansQuotas, where: plans_quotas.plan_name == ^plan_name, where: plans_quotas.resource == ^resource)
+        plan_id = pn.plan_id
+
+        plan_quotas =
+          Repo.one(
+            from(plans_quotas in PlansQuotas,
+              where: plans_quotas.plan_id == ^plan_id,
+              where: plans_quotas.resource == ^resource
+            )
+          )
+
         plan_quotas.max
       else
         0
@@ -129,7 +171,6 @@ defmodule Castmill.Quotas do
     |> select(count(:id))
   end
 
-
   @doc """
     Add a quota for a network
   """
@@ -141,14 +182,20 @@ defmodule Castmill.Quotas do
     Returns the list of quotas for an organization.
   """
   def list_quotas(organization_id) do
-    Repo.all(from quotas in QuotasOrganizations, where: quotas.organization_id == ^organization_id)
+    Repo.all(
+      from(quotas in QuotasOrganizations, where: quotas.organization_id == ^organization_id)
+    )
   end
 
   @doc """
     Add a quota for an organization.
   """
   def add_quota_to_organization(organization_id, resource, max) do
-    Repo.insert!(%QuotasOrganizations{organization_id: organization_id, resource: resource, max: max})
+    Repo.insert!(%QuotasOrganizations{
+      organization_id: organization_id,
+      resource: resource,
+      max: max
+    })
   end
 
   @doc """
@@ -159,5 +206,4 @@ defmodule Castmill.Quotas do
     |> QuotasOrganizations.changeset(attrs)
     |> Repo.update()
   end
-
 end

@@ -29,7 +29,7 @@ defmodule Castmill.QuotasTest do
 
       assert Quotas.has_network_enough_quota?(network.id, :organizations, 5) == false
 
-      assert Quotas.assign_plan_to_network(plan.name, network.id)
+      assert Quotas.assign_plan_to_network(plan.id, network.id)
 
       assert Quotas.has_organization_enough_quota?(organization.id, :medias, 10) == false
       assert Quotas.has_network_enough_quota?(network.id, :organizations, 5) == true
@@ -46,7 +46,7 @@ defmodule Castmill.QuotasTest do
         %{max: 5, resource: :organizations}
       ])
 
-      assert Quotas.assign_plan_to_organization(plan.name, organization.id)
+      assert Quotas.assign_plan_to_organization(plan.id, organization.id)
       assert Quotas.has_organization_enough_quota?(organization.id, :organizations, 5) == true
 
       assert Quotas.has_network_enough_quota?(network.id, :organizations, 1) == false
@@ -63,7 +63,7 @@ defmodule Castmill.QuotasTest do
         %{max: 5, resource: :organizations}
       ])
 
-      assert Quotas.assign_plan_to_network(plan.name, network.id)
+      assert Quotas.assign_plan_to_network(plan.id, network.id)
       assert Quotas.has_network_enough_quota?(network.id, :organizations, 5) == true
       assert Quotas.has_network_enough_quota?(network.id, :organizations, 6) == false
       Quotas.add_quota_to_network(network.id, :organizations, 10)
@@ -79,7 +79,7 @@ defmodule Castmill.QuotasTest do
         %{max: 5, resource: :organizations}
       ])
 
-      assert Quotas.assign_plan_to_organization(plan.name, organization.id)
+      assert Quotas.assign_plan_to_organization(plan.id, organization.id)
       assert Quotas.has_organization_enough_quota?(organization.id, :medias, 10) == true
       assert Quotas.has_organization_enough_quota?(organization.id, :medias, 15) == false
 
@@ -102,7 +102,7 @@ defmodule Castmill.QuotasTest do
         %{max: 5, resource: :organizations}
       ])
 
-      assert Quotas.delete_plan(plan.name)
+      assert Quotas.delete_plan(plan.id)
       assert Quotas.list_plans() == []
     end
 

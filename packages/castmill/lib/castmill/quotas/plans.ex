@@ -3,13 +3,11 @@ defmodule Castmill.Quotas.Plan do
   import Ecto.Changeset
   import Ecto.Query, warn: false
 
-  @primary_key(false)
-
   @doc """
     A Plan is a set of predefined quotas that can be applied to an organization or network.
   """
   schema "plans" do
-    field :name, :string, primary_key: true
+    field :name, :string
     timestamps()
   end
 

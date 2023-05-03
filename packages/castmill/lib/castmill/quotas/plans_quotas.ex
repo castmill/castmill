@@ -18,7 +18,7 @@ defmodule Castmill.Quotas.PlansQuotas do
       :teams
     ], primary_key: true
 
-    belongs_to :plan, Castmill.Quotas.Plan, type: :string, foreign_key: :plan_name, primary_key: true
+    belongs_to :plan, Castmill.Quotas.Plan, primary_key: true
   end
 
   @doc false
