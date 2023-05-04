@@ -23,7 +23,7 @@ defmodule Castmill.Devices.DevicesRegistrations do
   def changeset(device, attrs) do
     device
     |> cast(attrs, [:pincode, :hardware_id, :device_ip, :user_agent, :version, :timezone, :loc_lat, :loc_long])
-    |> validate_required([:pincode, :hardware_id, :device_ip, :user_agent, :version, :timezone, :loc_lat, :loc_long])
+    |> validate_required([:pincode, :hardware_id, :device_ip, :user_agent, :version, :timezone])
     |> unique_constraint(:pincode)
     |> unique_constraint(:hardware_id)
     |> put_expire()

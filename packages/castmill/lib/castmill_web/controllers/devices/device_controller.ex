@@ -16,7 +16,9 @@ defmodule CastmillWeb.DeviceController do
     render(conn, :device, layout: false)
   end
 
-  def start_registration(conn, %{"hardware_id" => hardware_id, "timezone" => timezone, "location" => location}) do
+  def start_registration(conn, %{"hardware_id" => hardware_id, "timezone" => timezone} = params) do
+    location = Map.get(params, "location")
+
     device_attrs = %{
       hardware_id: hardware_id,
       device_ip: conn.remote_ip |> :inet_parse.ntoa |> to_string(),
