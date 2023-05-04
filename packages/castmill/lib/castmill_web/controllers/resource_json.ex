@@ -12,8 +12,11 @@ defmodule CastmillWeb.ResourceJSON do
     }
   end
 
-  def index(%{playlists: playlists}) do
-    %{data: for(playlist <- playlists, do: data(playlist))}
+  def index(%{playlists: playlists, count: count}) do
+    %{
+      count: count,
+      data: for(playlist <- playlists, do: data(playlist))
+    }
   end
 
   @doc """

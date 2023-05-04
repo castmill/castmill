@@ -228,7 +228,7 @@ defmodule Castmill.Organizations do
   end
 
   @doc """
-  Returns number of matching mecias.
+  Returns number of matching medias.
 
   ## Examples
 
@@ -249,14 +249,21 @@ defmodule Castmill.Organizations do
       [%Playlist{}, ...]
 
   """
-  def list_playlists(organization_id) do
-    query =
-      from(playlist in Castmill.Resources.Playlist,
-        where: playlist.organization_id == ^organization_id,
-        select: playlist
-      )
+  def list_playlists(organization_id, limit, offset, pattern) do
+    Castmill.Resources.list_resource(Castmill.Resources.Playlist, organization_id, limit, offset, pattern)
+  end
 
-    Repo.all(query)
+  @doc """
+  Returns number of matching playlists.
+
+  ## Examples
+
+      iex> count_playlists()
+      2
+
+  """
+  def count_playlists(organization_id, pattern) do
+    Castmill.Resources.count_resource(Castmill.Resources.Playlist, organization_id, pattern)
   end
 
   @doc """
@@ -268,14 +275,21 @@ defmodule Castmill.Organizations do
       [%Calendar{}, ...]
 
   """
-  def list_calendars(organization_id) do
-    query =
-      from(calendar in Castmill.Resources.Calendar,
-        where: calendar.organization_id == ^organization_id,
-        select: calendar
-      )
+  def list_calendars(organization_id, limit, offset, pattern) do
+    Castmill.Resources.list_resource(Castmill.Resources.Calendar, organization_id, limit, offset, pattern)
+  end
 
-    Repo.all(query)
+  @doc """
+  Returns number of matching calendars.
+
+  ## Examples
+
+      iex> count_calendars()
+      2
+
+  """
+  def count_calendars(organization_id, pattern) do
+    Castmill.Resources.count_resource(Castmill.Resources.Calendar, organization_id, pattern)
   end
 
   @doc """
@@ -287,14 +301,21 @@ defmodule Castmill.Organizations do
       [%Device{}, ...]
 
   """
-  def list_devices(organization_id) do
-    query =
-      from(device in Castmill.Devices.Device,
-        where: device.organization_id == ^organization_id,
-        select: device
-      )
+  def list_devices(organization_id, limit, offset, pattern) do
+    Castmill.Resources.list_resource(Castmill.Resources.Device, organization_id, limit, offset, pattern)
+  end
 
-    Repo.all(query)
+  @doc """
+  Returns number of matching devices.
+
+  ## Examples
+
+      iex> count_devices()
+      2
+
+  """
+  def count_devices(organization_id, pattern) do
+    Castmill.Resources.count_resource(Castmill.Resources.Device, organization_id, pattern)
   end
 
   @doc """

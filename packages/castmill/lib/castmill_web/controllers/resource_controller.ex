@@ -19,9 +19,13 @@ defmodule CastmillWeb.ResourceController do
     render(conn, :index, medias: medias, count: count);
   end
 
-  def index(conn, %{"resources" => "playlists", "organization_id" => organization_id}) do
-    playlists = Organizations.list_playlists(organization_id)
-    render(conn, :index, playlists: playlists)
+  def index(conn, %{"resources" => "playlists", "organization_id" => organization_id} = params) do
+    limit = Map.get(params, "limit", nil)
+    offset = Map.get(params, "offset", 0)
+    pattern = Map.get(params, "pattern", nil)
+    playlists = Organizations.list_playlists(organization_id, limit, offset, pattern)
+    count = Organizations.count_playlists(organization_id, pattern)
+    render(conn, :index, playlists: playlists, count: count);
   end
 
   def create(conn, %{"resources" => "medias", "organization_id" => organization_id, "media" => media}) do
