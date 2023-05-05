@@ -40,7 +40,7 @@ export interface Machine {
    * Returns the machine's location as a latitude and longitude
    * float numbers.
    */
-  getLocation?(): Promise<{
+  getLocation?(): Promise<undefined | {
     latitude: number;
     longitude: number;
   }>;

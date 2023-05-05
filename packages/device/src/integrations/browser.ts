@@ -27,16 +27,21 @@ export class BrowserMachine implements Machine {
     localStorage.removeItem("castmill.credentials");
   }
 
-  async getLocation(): Promise<{ latitude: number; longitude: number }> {
-    const location = await new Promise<GeolocationPosition>(
-      (resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject);
-      }
-    );
-    return {
-      latitude: location.coords.latitude,
-      longitude: location.coords.longitude,
-    };
+  async getLocation(): Promise<undefined | { latitude: number; longitude: number }> {
+    try {
+      const location = await new Promise<GeolocationPosition>(
+        (resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject);
+        }
+      );
+
+      return {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      };
+    } catch (e) {
+      return undefined;
+    }
   }
 
   async getTimezone(): Promise<string> {
