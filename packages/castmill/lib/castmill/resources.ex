@@ -28,8 +28,15 @@ defmodule Castmill.Resources do
     else
       # Determine if the user has access to the media that belongs to the organization
       organization_id = resource.organization_id
-      ou = Repo.get_by(Castmill.Organizations.OrganizationsUsers, organization_id: organization_id, user_id: user.id)
+
+      ou =
+        Repo.get_by(Castmill.Organizations.OrganizationsUsers,
+          organization_id: organization_id,
+          user_id: user.id
+        )
+
       type = Castmill.Protocol.Resource.type(resource)
+
       if ou !== nil && ou.access in "#{type}:#{action}" do
         {:ok, true}
       else
@@ -72,6 +79,7 @@ defmodule Castmill.Resources do
   end
 
   alias Castmill.Protocol.Resource
+
   defimpl Resource, for: Media do
     def type(_value), do: "media"
   end
@@ -124,10 +132,16 @@ defmodule Castmill.Resources do
     [%User{}, ...]
   """
   def list_playlists(organization_id) do
-    query = from playlist in Playlist,
-      where: playlist.organization_id == ^organization_id,
-      select: playlist
+    query =
+      from playlist in Playlist,
+        where: playlist.organization_id == ^organization_id,
+        select: playlist
+
     Repo.all(query)
+  end
+
+  def list_playlists() do
+    Repo.all(Playlist)
   end
 
   @doc """
@@ -159,28 +173,42 @@ defmodule Castmill.Resources do
    Inserts an item in a given position of a playlist. The item will be placed after the given item or at the
    beginning of the list if nil is passed as the prev_item_id.
   """
-  def insert_item_into_playlist(playlist_id, prev_item_id, widget_id, offset, duration, options \\ %{}) do
+  def insert_item_into_playlist(
+        playlist_id,
+        prev_item_id,
+        widget_id,
+        offset,
+        duration,
+        options \\ %{}
+      ) do
     # Use a transaction to create a playlist item and update the items in the linked list atomically.
     Repo.transaction(fn ->
       if prev_item_id do
-        prev_item = from(item in PlaylistItem, where: item.id == ^prev_item_id, select: item) |> Repo.one()
+        prev_item =
+          from(item in PlaylistItem, where: item.id == ^prev_item_id, select: item) |> Repo.one()
+
         next_item_id = prev_item.next_item_id
 
-        with { :ok, item } <- create_playlist_item(%{
-          playlist_id: playlist_id,
-          widget_id: widget_id,
-          offset: offset,
-          duration: duration,
-          options: options,
-          prev_item_id: prev_item.id,
-          next_item_id: next_item_id
-        }) do
+        with {:ok, item} <-
+               create_playlist_item(%{
+                 playlist_id: playlist_id,
+                 widget_id: widget_id,
+                 offset: offset,
+                 duration: duration,
+                 options: options,
+                 prev_item_id: prev_item.id,
+                 next_item_id: next_item_id
+               }) do
           update_playlist_item(prev_item, %{next_item_id: item.id})
 
           if next_item_id do
-            next_item = from(item in PlaylistItem, where: item.id == ^next_item_id, select: item) |> Repo.one()
+            next_item =
+              from(item in PlaylistItem, where: item.id == ^next_item_id, select: item)
+              |> Repo.one()
+
             update_playlist_item(next_item, %{prev_item_id: item.id})
           end
+
           item
         end
       else
@@ -189,20 +217,24 @@ defmodule Castmill.Resources do
         first_item =
           from(item in PlaylistItem,
             where: is_nil(item.prev_item_id) and item.playlist_id == ^playlist_id,
-            select: item) |> Repo.one()
+            select: item
+          )
+          |> Repo.one()
 
-        with { :ok, item } <- create_playlist_item(%{
-          playlist_id: playlist_id,
-          widget_id: widget_id,
-          offset: offset,
-          duration: duration,
-          options: options,
-          prev_item_id: nil,
-          next_item_id: first_item && first_item.id
-        }) do
+        with {:ok, item} <-
+               create_playlist_item(%{
+                 playlist_id: playlist_id,
+                 widget_id: widget_id,
+                 offset: offset,
+                 duration: duration,
+                 options: options,
+                 prev_item_id: nil,
+                 next_item_id: first_item && first_item.id
+               }) do
           if first_item do
             update_playlist_item(first_item, %{prev_item_id: item.id})
           end
+
           item
         end
       end
@@ -220,13 +252,13 @@ defmodule Castmill.Resources do
       next_item_id = item.next_item_id
 
       if prev_item_id do
-        from(item in PlaylistItem, where: item.id  == ^prev_item_id)
-          |> Repo.update_all(set: [next_item_id: next_item_id])
+        from(item in PlaylistItem, where: item.id == ^prev_item_id)
+        |> Repo.update_all(set: [next_item_id: next_item_id])
       end
 
       if next_item_id do
-        from(item in PlaylistItem, where: item.id  == ^next_item_id)
-          |> Repo.update_all(set: [prev_item_id: prev_item_id])
+        from(item in PlaylistItem, where: item.id == ^next_item_id)
+        |> Repo.update_all(set: [prev_item_id: prev_item_id])
       end
 
       Repo.delete(item)
@@ -253,32 +285,42 @@ defmodule Castmill.Resources do
 
         # Move the item out of its current position in the list
         if item.prev_item_id do
-          from(prev_item in PlaylistItem, where: prev_item.id  == ^item.prev_item_id)
-            |> Repo.update_all(set: [next_item_id: item.next_item_id])
+          from(prev_item in PlaylistItem, where: prev_item.id == ^item.prev_item_id)
+          |> Repo.update_all(set: [next_item_id: item.next_item_id])
         end
 
         if item.next_item_id do
-          from(next_item in PlaylistItem, where: next_item.id  == ^item.next_item_id)
-            |> Repo.update_all(set: [prev_item_id: item.prev_item_id])
+          from(next_item in PlaylistItem, where: next_item.id == ^item.next_item_id)
+          |> Repo.update_all(set: [prev_item_id: item.prev_item_id])
         end
 
         # Move the item to its new position in the list
         if target_item_id do
-          target_item = from(item in PlaylistItem, where: item.id == ^target_item_id, select: item) |> Repo.one()
+          target_item =
+            from(item in PlaylistItem, where: item.id == ^target_item_id, select: item)
+            |> Repo.one()
 
           update_playlist_item(target_item, %{next_item_id: item_id})
-          update_playlist_item(item, %{next_item_id: target_item.next_item_id, prev_item_id: target_item_id})
+
+          update_playlist_item(item, %{
+            next_item_id: target_item.next_item_id,
+            prev_item_id: target_item_id
+          })
 
           if target_item.next_item_id do
-            from(next_target_item in PlaylistItem, where: next_target_item.id  == ^target_item.next_item_id)
-              |> Repo.update_all(set: [prev_item_id: item_id])
+            from(next_target_item in PlaylistItem,
+              where: next_target_item.id == ^target_item.next_item_id
+            )
+            |> Repo.update_all(set: [prev_item_id: item_id])
           end
         else
+          # Move the item to the head of the list
           head_item =
-            # Move the item to the head of the list
             from(item in PlaylistItem,
               where: is_nil(item.prev_item_id) and item.playlist_id == ^item.playlist_id,
-              select: item) |> Repo.one()
+              select: item
+            )
+            |> Repo.one()
 
           update_playlist_item(item, %{next_item_id: head_item.id, prev_item_id: nil})
           update_playlist_item(head_item, %{prev_item_id: item.id})
@@ -303,12 +345,15 @@ defmodule Castmill.Resources do
 
       iex> list_resource(Media, organization_id)
       [%Media{}, ...]
-
   """
   def list_resource(resource, organization_id) do
     resource.base_query()
     |> Organization.where_org_id(organization_id)
     |> Repo.all()
+  end
+
+  def list_resource(resource) do
+    Repo.all(resource)
   end
 
   @doc """
@@ -349,7 +394,6 @@ defmodule Castmill.Resources do
     # clean up the media from the storage system.
     Repo.delete(media)
   end
-
 
   @doc """
   Creates a calendar.
@@ -410,11 +454,14 @@ defmodule Castmill.Resources do
     List calendar entries between two dates.
   """
   def list_calendar_entries(calendar_id, start_date, end_date) do
-    query = from entry in CalendarEntry,
-        where: entry.calendar_id == ^calendar_id and
-          entry.start >= ^start_date and
-          (entry.end <= ^end_date or entry.repeat_weekly_until <= ^end_date),
-      select: entry
+    query =
+      from entry in CalendarEntry,
+        where:
+          entry.calendar_id == ^calendar_id and
+            entry.start >= ^start_date and
+            (entry.end <= ^end_date or entry.repeat_weekly_until <= ^end_date),
+        select: entry
+
     Repo.all(query)
   end
 
@@ -443,10 +490,12 @@ defmodule LinkedList do
   end
 
   defp traverse_linked_list(nil, _nodes, sorted_nodes), do: sorted_nodes
+
   defp traverse_linked_list(node, nodes_map, sorted_nodes) do
     if length(sorted_nodes) > map_size(nodes_map) do
       raise "Circular dependency detected in linked list"
     end
+
     # Recursively traverse the linked list, adding each node to the sorted list.
     [node | traverse_linked_list(nodes_map[node.next_item_id], nodes_map, sorted_nodes)]
   end

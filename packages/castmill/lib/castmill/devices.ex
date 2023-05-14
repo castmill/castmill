@@ -38,13 +38,18 @@ defmodule Castmill.Devices do
 
   ## Examples
 
-      iex> list_networks()
-      [%Network{}, ...]
+      iex> list_devices()
+      [%Device{}, ...]
   """
   def list_devices(organization_id) do
     Device.base_query()
     |> Organization.where_org_id(organization_id)
     |> Repo.all()
+    |> Enum.map(&Map.drop(&1, [:token, :token_hash]))
+  end
+
+  def list_devices() do
+    Repo.all(Device)
     |> Enum.map(&Map.drop(&1, [:token, :token_hash]))
   end
 

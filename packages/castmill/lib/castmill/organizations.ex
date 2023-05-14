@@ -1,4 +1,3 @@
-
 defmodule Castmill.Organizations do
   @moduledoc """
   The Organizations context.
@@ -16,7 +15,12 @@ defmodule Castmill.Organizations do
       if user == nil do
         {:error, "No user provided"}
       else
-        network_admin = Repo.get_by(Castmill.Organizations.OrganizationsUsers, organization_id: organization.id, user_id: user.id)
+        network_admin =
+          Repo.get_by(Castmill.Organizations.OrganizationsUsers,
+            organization_id: organization.id,
+            user_id: user.id
+          )
+
         if network_admin !== nil do
           # TODO: check if the user has access for the action
           {:ok, true}
@@ -36,6 +40,15 @@ defmodule Castmill.Organizations do
       [%Organization{}, ...]
 
   """
+  def list_organizations(organization_id) do
+    query =
+      from organization in Organization,
+        where: organization.organization_id == ^organization_id,
+        select: organization
+
+    Repo.all(query)
+  end
+
   def list_organizations do
     Repo.all(Organization)
   end
@@ -141,7 +154,9 @@ defmodule Castmill.Organizations do
   def remove_access(organization_id, user_id, resource_type, action) do
     Repo.delete_all(
       from oua in OrganizationsUsersAccess,
-      where: oua.organization_id == ^organization_id and oua.user_id == ^user_id and oua.access == ^"#{resource_type}:#{action}"
+        where:
+          oua.organization_id == ^organization_id and oua.user_id == ^user_id and
+            oua.access == ^"#{resource_type}:#{action}"
     )
   end
 
@@ -150,14 +165,19 @@ defmodule Castmill.Organizations do
     organization or in any of its parents organizations hierarchy
   """
   def has_access(organization_id, user_id, resource_type, action) do
-    query = from oua in OrganizationsUsersAccess,
-      join: o in Organization,
-      on: oua.organization_id == o.id,
-      where: oua.user_id == ^user_id and oua.access == ^"#{resource_type}:#{action}" and (o.id == ^organization_id or o.organization_id == ^organization_id),
-      select: oua
+    query =
+      from oua in OrganizationsUsersAccess,
+        join: o in Organization,
+        on: oua.organization_id == o.id,
+        where:
+          oua.user_id == ^user_id and oua.access == ^"#{resource_type}:#{action}" and
+            (o.id == ^organization_id or o.organization_id == ^organization_id),
+        select: oua
+
     if Repo.one(query) == nil do
       # Check if parent organization has access recursively
       organization = Repo.get!(Organization, organization_id)
+
       if organization.organization_id != nil do
         has_access(organization.organization_id, user_id, resource_type, action)
       end
@@ -178,11 +198,13 @@ defmodule Castmill.Organizations do
 
   """
   def list_users(organization_id) do
-    query = from user in Castmill.Accounts.User,
-      join: ou in Castmill.Organizations.OrganizationsUsers,
-      on: user.id == ou.user_id,
-      where: ou.organization_id == ^organization_id,
-      select: [user, ou.role]
+    query =
+      from user in Castmill.Accounts.User,
+        join: ou in Castmill.Organizations.OrganizationsUsers,
+        on: user.id == ou.user_id,
+        where: ou.organization_id == ^organization_id,
+        select: [user, ou.role]
+
     Repo.all(query)
   end
 
@@ -196,9 +218,11 @@ defmodule Castmill.Organizations do
 
   """
   def list_medias(organization_id) do
-    query = from media in Castmill.Resources.Media,
+    query =
+      from media in Castmill.Resources.Media,
         where: media.organization_id == ^organization_id,
-      select: media
+        select: media
+
     Repo.all(query)
   end
 
@@ -212,9 +236,11 @@ defmodule Castmill.Organizations do
 
   """
   def list_playlists(organization_id) do
-    query = from playlist in Castmill.Resources.Playlist,
+    query =
+      from playlist in Castmill.Resources.Playlist,
         where: playlist.organization_id == ^organization_id,
-      select: playlist
+        select: playlist
+
     Repo.all(query)
   end
 
@@ -222,7 +248,11 @@ defmodule Castmill.Organizations do
     Update the access for a user in an organization.
   """
   def update_access(organization_id, user_id, role) do
-    %Castmill.Organizations.OrganizationsUsers{role: role, user_id: user_id, organization_id: organization_id}
+    %Castmill.Organizations.OrganizationsUsers{
+      role: role,
+      user_id: user_id,
+      organization_id: organization_id
+    }
     |> Castmill.Repo.insert(
       on_conflict: [set: [role: role]],
       conflict_target: [:organization_id, :user_id]
@@ -233,7 +263,11 @@ defmodule Castmill.Organizations do
     Add a user to an organization.
   """
   def add_user(organization_id, user_id, role) do
-    %Castmill.Organizations.OrganizationsUsers{role: role, user_id: user_id, organization_id: organization_id}
+    %Castmill.Organizations.OrganizationsUsers{
+      role: role,
+      user_id: user_id,
+      organization_id: organization_id
+    }
     |> Castmill.Repo.insert()
   end
 
@@ -242,10 +276,12 @@ defmodule Castmill.Organizations do
   """
   def remove_user(organization_id, user_id) do
     case Castmill.Repo.delete_all(
-      from ou in Castmill.Organizations.OrganizationsUsers,
-      where: ou.organization_id == ^organization_id and ou.user_id == ^user_id) do
+           from ou in Castmill.Organizations.OrganizationsUsers,
+             where: ou.organization_id == ^organization_id and ou.user_id == ^user_id
+         ) do
       {1, nil} ->
         {:ok, "User successfully removed."}
+
       _ ->
         {:error, :not_found}
     end
@@ -330,5 +366,30 @@ defmodule Castmill.Organizations do
   """
   def change_user(%User{} = user, attrs \\ %{}) do
     User.changeset(user, attrs)
+  end
+
+  @doc """
+    Subscribe to an organization.
+  """
+  def subscribe(organization_id) do
+    Phoenix.PubSub.subscribe(Castmill.PubSub, "organization:#{organization_id}")
+  end
+
+  @doc """
+    Broadcast to an organization.
+  """
+  def broadcast({:ok, payload}, organization_id, event) do
+    Phoenix.PubSub.broadcast(Castmill.PubSub, "organization:#{organization_id}", {event, payload})
+
+    {:ok, payload}
+  end
+
+  def broadcast({:error, _changeset} = error, _organization_id, _event), do: error
+
+  @doc """
+    Unsubscribe from an organization.
+  """
+  def unsubscribe(organization_id) do
+    Phoenix.PubSub.unsubscribe(Castmill.PubSub, "organization:#{organization_id}")
   end
 end

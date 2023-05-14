@@ -26,13 +26,13 @@ defmodule CastmillWeb.FallbackController do
     conn
     |> put_status(:unprocessable_entity)
     |> put_view(json: CastmillWeb.ErrorJSON)
-    |> render(:"error", %{msg: msg})
+    |> render(:error, %{msg: msg})
   end
 
   def call(conn, {:error, type}) do
     conn
     |> put_status(:unprocessable_entity)
     |> put_view(json: CastmillWeb.ErrorJSON)
-    |> render(:"error", %{msg: type})
+    |> render(:error, %{msg: type})
   end
 end

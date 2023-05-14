@@ -21,16 +21,16 @@ defmodule Castmill.Accounts.AccessToken do
     |> cast(attrs, [:secret, :user_id, :is_root])
     |> put_secret_hash()
     |> validate_required([:secret, :user_id])
-
   end
 
   defp put_secret_hash(changeset) do
     case changeset do
-      %Ecto.Changeset{valid?: true, changes: %{ secret: secret}} ->
-          changeset
-          |> put_change(:secret_hash,  :crypto.hash(:sha256, secret) |> Base.encode16())
+      %Ecto.Changeset{valid?: true, changes: %{secret: secret}} ->
+        changeset
+        |> put_change(:secret_hash, :crypto.hash(:sha256, secret) |> Base.encode16())
+
       _ ->
-          changeset
-      end
+        changeset
+    end
   end
 end

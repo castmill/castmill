@@ -16,15 +16,6 @@
 //
 import { Socket } from "phoenix";
 
-import { StorageBrowser } from "@castmill/cache";
-import { mountDevice, Device, BrowserMachine } from "@castmill/device";
-
-const machineBrowser = new BrowserMachine();
-const browserCache = new StorageBrowser("browser-cache");
-const device = new Device(machineBrowser, browserCache);
-
-mountDevice(document.getElementById("device"), device);
-
 // Include phoenix_html to handle method=PUT/DELETE in forms and buttons.
 import "phoenix_html";
 
@@ -35,7 +26,8 @@ import topbar from "../vendor/topbar";
 let csrfToken = document
   .querySelector("meta[name='csrf-token']")
   .getAttribute("content");
-let liveSocket = new LiveSocket("/live", Socket, {
+
+  let liveSocket = new LiveSocket("/live", Socket, {
   params: { _csrf_token: csrfToken },
 });
 

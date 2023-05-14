@@ -22,8 +22,8 @@ defmodule CastmillWeb.DevicesChannel do
   end
 
   @impl true
-  def handle_in("req:get:calendars", payload, socket) do
-    %{:device_id => device_id, :device_ip => device_ip, :hardware_id => _hardware_id} =
+  def handle_in("req:get:calendars", _payload, socket) do
+    %{:device_id => device_id, :device_ip => _device_ip, :hardware_id => _hardware_id} =
       socket.assigns.device
 
     calendars = Devices.list_calendars(device_id)
@@ -31,18 +31,18 @@ defmodule CastmillWeb.DevicesChannel do
     {:reply, {:ok, calendars}, socket}
   end
 
-  # Handle all messages that are not handled by the
-  # `handle_in/3` callbacks above
-  @impl true
-  def handle_in(_event, _payload, socket) do
-    {:noreply, socket}
-  end
-
   # It is also common to receive messages from the client and
   # broadcast to everyone in the current topic (resources:lobby).
   @impl true
   def handle_in("shout", payload, socket) do
     broadcast(socket, "shout", payload)
+    {:noreply, socket}
+  end
+
+  # Handle all messages that are not handled by the
+  # `handle_in/3` callbacks above
+  @impl true
+  def handle_in(_event, _payload, socket) do
     {:noreply, socket}
   end
 

@@ -40,6 +40,10 @@ defmodule Castmill.Teams do
     |> Repo.all()
   end
 
+  def list_teams() do
+    Repo.all(Team)
+  end
+
   @doc """
   Gets a single network.
 

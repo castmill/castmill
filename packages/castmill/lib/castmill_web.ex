@@ -51,8 +51,7 @@ defmodule CastmillWeb do
 
   def live_view do
     quote do
-      use Phoenix.LiveView,
-        layout: {CastmillWeb.Layouts, :app}
+      use Phoenix.LiveView
 
       unquote(html_helpers())
     end

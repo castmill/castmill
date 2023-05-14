@@ -138,7 +138,7 @@ defmodule Castmill.Networks do
   ## Examples
 
   iex> list_organizations()
-  [%User{}, ...]
+  [%Organization{}, ...]
   """
   def list_organizations(network_id) do
     query = from organization in Castmill.Organizations.Organization,
@@ -147,5 +147,36 @@ defmodule Castmill.Networks do
     Repo.all(query)
   end
 
+  @doc """
+  Returns the list of teams of the given network
+
+  ## Examples
+
+  iex> list_teams()
+  [%Team{}, ...]
+  """
+  def list_teams(network_id) do
+    query = from team in Castmill.Teams.Team,
+      join: organization in Castmill.Organizations.Organization,
+      where: organization.network_id == ^network_id,
+      select: team
+    Repo.all(query)
+  end
+
+  @doc """
+  Returns the list of devices of the given network
+
+  ## Examples
+
+  iex> list_devices()
+  [%Device{}, ...]
+  """
+  def list_devices(network_id) do
+    query = from device in Castmill.Devices.Device,
+      join: organization in Castmill.Organizations.Organization,
+      where: organization.network_id == ^network_id,
+      select: device
+    Repo.all(query)
+  end
 
 end
