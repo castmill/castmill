@@ -2,8 +2,6 @@ defmodule CastmillWeb.Live.Admin.Pagination do
   use Phoenix.Component
   import CastmillWeb.CoreComponents
 
-  alias Phoenix.LiveView.JS
-
   def pagination(assigns) do
     ~H"""
     <nav aria-label="Page navigation example">

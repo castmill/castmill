@@ -2,8 +2,6 @@ defmodule CastmillWeb.Live.Admin.Search do
   use Phoenix.Component
   import CastmillWeb.CoreComponents
 
-  alias Phoenix.LiveView.JS
-
   def search(assigns) do
     ~H"""
     <form phx-change="search" class="flex items-center">

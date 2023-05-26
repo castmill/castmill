@@ -158,6 +158,7 @@ defmodule Castmill.Networks do
   def list_teams(network_id) do
     query = from team in Castmill.Teams.Team,
       join: organization in Castmill.Organizations.Organization,
+      on: team.organization_id == organization.id,
       where: organization.network_id == ^network_id,
       select: team
     Repo.all(query)
@@ -174,6 +175,7 @@ defmodule Castmill.Networks do
   def list_devices(network_id) do
     query = from device in Castmill.Devices.Device,
       join: organization in Castmill.Organizations.Organization,
+      on: device.organization_id == organization.id,
       where: organization.network_id == ^network_id,
       select: device
     Repo.all(query)

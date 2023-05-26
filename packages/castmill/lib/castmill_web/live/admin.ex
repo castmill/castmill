@@ -16,7 +16,7 @@ defmodule CastmillWeb.Live.Admin do
     """
   end
 
-  def handle_event("ping", %{"id" => id}, socket) do
-    {:noreply, assign(socket, :devices, Castmill.Device.list_devices())}
+  def handle_event("ping", %{"id" => _id}, socket) do
+    {:noreply, assign(socket, :devices, Castmill.Devices.list_devices())}
   end
 end

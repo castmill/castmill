@@ -2,8 +2,6 @@ defmodule CastmillWeb.Live.Admin.Tabs do
   use Phoenix.Component
   import CastmillWeb.CoreComponents
 
-  alias Phoenix.LiveView.JS
-
   slot :inner_block, required: true
   attr :tabs, :list, required: true
   attr :selected_tab, :string, required: true

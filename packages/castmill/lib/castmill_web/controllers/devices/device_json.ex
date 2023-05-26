@@ -1,7 +1,6 @@
 defmodule CastmillWeb.DeviceJSON do
   alias Castmill.Devices.Device
   alias Castmill.Devices.DevicesRegistrations
-
   @doc """
   Renders a list of medias.
   """
@@ -12,7 +11,6 @@ defmodule CastmillWeb.DeviceJSON do
   def index(%{playlists: playlists}) do
     %{data: for(playlist <- playlists, do: data(playlist))}
   end
-
   @doc """
   Renders a single user.
   """

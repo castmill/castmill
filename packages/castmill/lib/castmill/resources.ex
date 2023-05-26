@@ -22,6 +22,13 @@ defmodule Castmill.Resources do
 
   alias Castmill.Protocol.Access
 
+  @doc """
+    Can access the resource.
+    User can only access a resource if he has access to the organization that owns the resource
+    and has the right access level.
+
+    Access level is defined when adding a user to an organization via the organization_users table.
+  """
   def canAccessResource(resource, user, action) do
     if user == nil do
       {:error, "No user provided"}
@@ -47,13 +54,6 @@ defmodule Castmill.Resources do
     end
   end
 
-  @doc """
-    Can access the resource.
-    User can only access a resource if he has access to the organization that owns the resource
-    and has the right access level.
-
-    Access level is defined when adding a user to an organization via the organization_users table.
-  """
   defimpl Access, for: Media do
     def canAccess(resource, user, action) do
       Castmill.Resources.canAccessResource(resource, user, action)
@@ -106,7 +106,7 @@ defmodule Castmill.Resources do
   end
 
   @doc """
-  Update a playlist
+  Update a resource
   """
   def update(%Playlist{} = playlist, attrs) do
     playlist
@@ -114,9 +114,6 @@ defmodule Castmill.Resources do
     |> Repo.update()
   end
 
-  @doc """
-  Update a media
-  """
   def update(%Media{} = media, attrs) do
     media
     |> Media.changeset(attrs)
@@ -133,9 +130,10 @@ defmodule Castmill.Resources do
   """
   def list_playlists(organization_id) do
     query =
-      from playlist in Playlist,
+      from(playlist in Playlist,
         where: playlist.organization_id == ^organization_id,
         select: playlist
+      )
 
     Repo.all(query)
   end
@@ -455,12 +453,13 @@ defmodule Castmill.Resources do
   """
   def list_calendar_entries(calendar_id, start_date, end_date) do
     query =
-      from entry in CalendarEntry,
+      from(entry in CalendarEntry,
         where:
           entry.calendar_id == ^calendar_id and
             entry.start >= ^start_date and
             (entry.end <= ^end_date or entry.repeat_weekly_until <= ^end_date),
         select: entry
+      )
 
     Repo.all(query)
   end

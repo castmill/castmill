@@ -8,9 +8,6 @@ defmodule CastmillWeb.UserJSON do
     %{data: for(user <- users, do: data(user))}
   end
 
-  @doc """
-    Renders a list of users with organization access
-  """
   def index(%{users_access: users_access}) do
     %{data: for([user, access] <- users_access, do: data(user, access))}
   end
