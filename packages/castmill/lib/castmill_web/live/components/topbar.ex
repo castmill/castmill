@@ -4,7 +4,6 @@ defmodule CastmillWeb.Live.Admin.Topbar do
 
   attr :current_user, :any, required: true
 
-  @impl true
   def topbar(assigns) do
     ~H"""
     <header

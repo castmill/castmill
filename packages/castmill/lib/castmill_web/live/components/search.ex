@@ -1,6 +1,5 @@
 defmodule CastmillWeb.Live.Admin.Search do
   use Phoenix.Component
-  import CastmillWeb.CoreComponents
 
   def search(assigns) do
     ~H"""

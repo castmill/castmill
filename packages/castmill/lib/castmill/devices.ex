@@ -12,6 +12,8 @@ defmodule Castmill.Devices do
 
   alias Castmill.Protocol.Access
 
+  alias CastmillWeb.Endpoint
+
   defimpl Access, for: Device do
     def canAccess(_device, user, _action) do
       if user == nil do
@@ -29,6 +31,19 @@ defmodule Castmill.Devices do
     %Device{}
     |> Device.changeset(attrs)
     |> Repo.insert()
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking device changes.
+
+  ## Examples
+
+      iex> change_device(user)
+      %Ecto.Changeset{data: %Device{}}
+
+  """
+  def change_device(%Device{} = device, attrs \\ %{}) do
+    Device.changeset(device, attrs)
   end
 
   @doc """
@@ -134,6 +149,15 @@ defmodule Castmill.Devices do
 
           with {:ok, _} <- Repo.delete(devices_registration),
                {:ok, device} <- create_device(Map.merge(params, attrs)) do
+
+            Endpoint.broadcast("register:#{device.hardware_id}", "device:registered", %{
+              device: %{
+                id: device.id,
+                name: device.name,
+                token: token
+              }
+            })
+
             {Map.drop(device, [:token, :token_hash]), token}
           else
             {:error, changeset} -> Repo.rollback(changeset)

@@ -50,7 +50,7 @@ defmodule CastmillWeb.Live.Admin.OrganizationForm do
      |> assign_form(changeset)}
   end
 
-  def update(assigns, socket) do
+  def update(_assigns, socket) do
     {:ok, socket}
   end
 

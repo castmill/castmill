@@ -1,8 +1,8 @@
-<main class="flex flex-col w-full h-screen">
-  <.flash_group flash={@flash} />
+<main class="flex flex-col w-full h-screen bg-gray-900">
   <div class="grow-0">
-    <.live_component module={CastmillWeb.Live.Admin.Topbar} id={:topbar} />
+    <.topbar current_user={@current_user} />
   </div>
+  <.flash_group flash={@flash} />
   <div class="grow">
     <div class="flex flex-row h-full">
       <div class="grow px-8 py-8">

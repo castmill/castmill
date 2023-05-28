@@ -42,9 +42,10 @@ defmodule Castmill.Organizations do
   """
   def list_organizations(organization_id) do
     query =
-      from organization in Organization,
+      from(organization in Organization,
         where: organization.organization_id == ^organization_id,
         select: organization
+      )
 
     Repo.all(query)
   end
@@ -153,10 +154,11 @@ defmodule Castmill.Organizations do
   """
   def remove_access(organization_id, user_id, resource_type, action) do
     Repo.delete_all(
-      from oua in OrganizationsUsersAccess,
+      from(oua in OrganizationsUsersAccess,
         where:
           oua.organization_id == ^organization_id and oua.user_id == ^user_id and
             oua.access == ^"#{resource_type}:#{action}"
+      )
     )
   end
 
@@ -166,13 +168,14 @@ defmodule Castmill.Organizations do
   """
   def has_access(organization_id, user_id, resource_type, action) do
     query =
-      from oua in OrganizationsUsersAccess,
+      from(oua in OrganizationsUsersAccess,
         join: o in Organization,
         on: oua.organization_id == o.id,
         where:
           oua.user_id == ^user_id and oua.access == ^"#{resource_type}:#{action}" and
             (o.id == ^organization_id or o.organization_id == ^organization_id),
         select: oua
+      )
 
     if Repo.one(query) == nil do
       # Check if parent organization has access recursively
@@ -199,11 +202,14 @@ defmodule Castmill.Organizations do
   """
   def list_users(organization_id) do
     query =
-      from user in Castmill.Accounts.User,
+      from(user in Castmill.Accounts.User,
         join: ou in Castmill.Organizations.OrganizationsUsers,
         on: user.id == ou.user_id,
         where: ou.organization_id == ^organization_id,
-        select: [user, ou.role]
+        select_merge: %{user | role: ou.role}
+      )
+
+    # select: [user, ou.role]
 
     Repo.all(query)
   end
@@ -213,15 +219,16 @@ defmodule Castmill.Organizations do
 
   ## Examples
 
-      iex> list_users()
+      iex> list_medias()
       [%Media{}, ...]
 
   """
   def list_medias(organization_id) do
     query =
-      from media in Castmill.Resources.Media,
+      from(media in Castmill.Resources.Media,
         where: media.organization_id == ^organization_id,
         select: media
+      )
 
     Repo.all(query)
   end
@@ -231,15 +238,54 @@ defmodule Castmill.Organizations do
 
   ## Examples
 
-      iex> list_users()
-      [%Media{}, ...]
+      iex> list_playlists()
+      [%Playlist{}, ...]
 
   """
   def list_playlists(organization_id) do
     query =
-      from playlist in Castmill.Resources.Playlist,
+      from(playlist in Castmill.Resources.Playlist,
         where: playlist.organization_id == ^organization_id,
         select: playlist
+      )
+
+    Repo.all(query)
+  end
+
+  @doc """
+  Returns the list of calendars.
+
+  ## Examples
+
+      iex> list_calendars()
+      [%Calendar{}, ...]
+
+  """
+  def list_calendars(organization_id) do
+    query =
+      from(calendar in Castmill.Resources.Calendar,
+        where: calendar.organization_id == ^organization_id,
+        select: calendar
+      )
+
+    Repo.all(query)
+  end
+
+  @doc """
+  Returns the list of devices.
+
+  ## Examples
+
+      iex> list_devices()
+      [%Device{}, ...]
+
+  """
+  def list_devices(organization_id) do
+    query =
+      from(device in Castmill.Devices.Device,
+        where: device.organization_id == ^organization_id,
+        select: device
+      )
 
     Repo.all(query)
   end
@@ -276,8 +322,9 @@ defmodule Castmill.Organizations do
   """
   def remove_user(organization_id, user_id) do
     case Castmill.Repo.delete_all(
-           from ou in Castmill.Organizations.OrganizationsUsers,
+           from(ou in Castmill.Organizations.OrganizationsUsers,
              where: ou.organization_id == ^organization_id and ou.user_id == ^user_id
+           )
          ) do
       {1, nil} ->
         {:ok, "User successfully removed."}

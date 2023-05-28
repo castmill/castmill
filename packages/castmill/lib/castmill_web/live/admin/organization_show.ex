@@ -1,17 +1,14 @@
 defmodule CastmillWeb.Live.Admin.OrganizationShow do
   use CastmillWeb, :live_view
+
   alias Castmill.Organizations
   alias Castmill.Teams
   alias Castmill.Devices
 
-  import CastmillWeb.Live.Admin.Table
-  import CastmillWeb.Live.Admin.Tabs
   import CastmillWeb.Live.Admin.Show
 
   @impl true
-  def mount(params, _session, socket) do
-    IO.inspect(params)
-
+  def mount(_params, _session, socket) do
     socket =
       socket
       |> assign(:cols, [
@@ -47,19 +44,19 @@ defmodule CastmillWeb.Live.Admin.OrganizationShow do
           name: "Teams",
           icon: "hero-user-group-solid",
           href: "teams",
-          form: nil
+          form: CastmillWeb.Live.Admin.TeamForm
         },
         %{
           name: "Users",
           icon: "hero-users-solid",
           href: "users",
-          form: nil
+          form: CastmillWeb.Live.Admin.UserForm
         },
         %{
           name: "Devices",
           icon: "hero-computer-desktop-solid",
           href: "devices",
-          form: nil
+          form: CastmillWeb.Live.Admin.DeviceForm
         },
         %{
           name: "Calendars",
@@ -141,6 +138,46 @@ defmodule CastmillWeb.Live.Admin.OrganizationShow do
      |> assign(:base_url, ~p"/admin/organizations/#{id}")}
   end
 
+  @impl true
+  def handle_event("delete", %{"id" => id, "resource" => "teams"}, socket) do
+    team = Teams.get_team(id)
+    {:ok, _} = Teams.delete_team(team)
+
+    {:noreply, stream_delete(socket, :rows, team)}
+  end
+
+  @impl true
+  def handle_event("delete", %{"id" => user_id, "resource" => "users"}, socket) do
+    # Remove user from organization
+    case Organizations.remove_user(socket.assigns.resource.id, user_id) do
+      {:ok, _} ->
+        # TODO: If user is not in any other organization, delete user
+        {:noreply, stream_delete(socket, :rows, %Castmill.Accounts.User{id: user_id})}
+
+      {:error, _} ->
+        {:noreply,
+         socket
+         |> put_flash(:error, "Error removing user from organization.")}
+    end
+  end
+
+  @impl true
+  def handle_event("delete", %{"id" => id, "resource" => "devices"}, socket) do
+    device = %Devices.Device{id: id}
+    {:ok, _} = Devices.delete_device(device)
+
+    {:noreply, stream_delete(socket, :rows, device)}
+  end
+
+  # When a child resource is created we need to update the stream for the resources.
+  @impl true
+  def handle_info({CastmillWeb.Live.Admin.TeamForm, {:created, resource}}, socket) do
+    # This handler works but the stream_insert does not for some unknown reason.
+    {:noreply, stream_insert(socket, :rows, resource)}
+  end
+
+  def handle_info(_params, socket), do: {:noreply, socket}
+
   defp page_title(:show), do: "Show Organization"
   defp page_title(:edit), do: "Edit Organization"
   defp page_title(:new), do: "New Organization"
@@ -191,6 +228,14 @@ defmodule CastmillWeb.Live.Admin.OrganizationShow do
        %{
          name: "Name",
          field: :name
+       },
+       %{
+         name: "Email",
+         field: :email
+       },
+       %{
+         name: "Role",
+         field: :role
        },
        %{
          name: "Created",

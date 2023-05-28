@@ -5,6 +5,7 @@ defmodule CastmillWeb.Live.Admin.Tabs do
   slot :inner_block, required: true
   attr :tabs, :list, required: true
   attr :selected_tab, :string, required: true
+  attr :base_url, :string, required: true
 
   def tabs(assigns) do
     ~H"""

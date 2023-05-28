@@ -4,8 +4,6 @@ defmodule CastmillWeb.Live.Admin.Show do
   use Phoenix.Component
   import CastmillWeb.CoreComponents
 
-  alias Castmill.Organizations
-
   import CastmillWeb.Live.Admin.Table
   import CastmillWeb.Live.Admin.Tabs
   import CastmillWeb.Live.Admin.Search
@@ -32,7 +30,7 @@ defmodule CastmillWeb.Live.Admin.Show do
         <div class="text-lg font-semibold leading-8 text-blue-400">
           Resources
         </div>
-        <.tabs id={:resources} tabs={@tabs} selected_tab={@selected_tab} base_url={@base_url}>
+        <.tabs tabs={@tabs} selected_tab={@selected_tab} base_url={@base_url}>
           <div :if={@selected_tab != nil} class="p-2">
             <div class="flex flex-row justify-between py-2">
               <.search placeholder="Search" phx-debounce="500" phx-target="search" phx-value="" />
@@ -50,7 +48,6 @@ defmodule CastmillWeb.Live.Admin.Show do
               cols={@resource_cols}
               base_url={@base_resource_url}
               resource={@selected_tab}
-              id={@bucket}
             />
           </div>
         </.tabs>
@@ -59,7 +56,7 @@ defmodule CastmillWeb.Live.Admin.Show do
 
       <.modal
         :if={@live_action == :edit}
-        id="network-modal"
+        id="resource-modal"
         show
         on_cancel={JS.patch(~p"/admin/#{@bucket}/#{@resource}")}
       >

@@ -1,6 +1,5 @@
 defmodule CastmillWeb.Live.Admin.Pagination do
   use Phoenix.Component
-  import CastmillWeb.CoreComponents
 
   def pagination(assigns) do
     ~H"""

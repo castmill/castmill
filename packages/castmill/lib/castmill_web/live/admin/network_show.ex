@@ -4,12 +4,10 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
 
   alias Castmill.Organizations
 
-  import CastmillWeb.Live.Admin.Table
-  import CastmillWeb.Live.Admin.Tabs
   import CastmillWeb.Live.Admin.Show
 
   @impl true
-  def mount(params, _session, socket) do
+  def mount(_params, _session, socket) do
     socket =
       socket
       |> assign(:cols, [
@@ -140,11 +138,12 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
   end
 
   # When a child resource is created we need to update the stream for the resources.
+  @impl true
   def handle_info({CastmillWeb.Live.Admin.OrganizationForm, {:created, resource}}, socket) do
     {:noreply, stream_insert(socket, :rows, resource)}
   end
 
-  def handle_info(_params, socket), do: {:noreply, socket}
+  # def handle_info(_params, socket), do: {:noreply, socket}
 
   @impl true
   def handle_event("delete", %{"id" => id, "resource" => "organizations"}, socket) do

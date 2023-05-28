@@ -1,8 +1,6 @@
 defmodule CastmillWeb.DeviceController do
   use CastmillWeb, :controller
 
-  alias CastmillWeb.Endpoint
-  alias Phoenix.Socket
   alias Castmill.Organizations
   alias Castmill.Plug.Authorize
   alias Castmill.Resources.Media
@@ -42,14 +40,6 @@ defmodule CastmillWeb.DeviceController do
   def create(conn, %{"name" => name, "pincode" => pincode, "organization_id" => organization_id}) do
 
     with {:ok, {device, token}} <- Castmill.Devices.register_device(organization_id, pincode, %{ name: name }) do
-      Endpoint.broadcast("register:#{device.hardware_id}", "device:registered", %{
-        device: %{
-          id: device.id,
-          name: device.name,
-          token: token
-        }
-      })
-
       conn
         |> put_status(:created)
         |> put_resp_header("location", ~p"/api/devices/#{device.id}")

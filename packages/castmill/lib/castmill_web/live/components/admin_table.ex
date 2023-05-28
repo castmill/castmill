@@ -4,9 +4,10 @@ defmodule CastmillWeb.Live.Admin.Table do
 
   alias Phoenix.LiveView.JS
 
-  attr :base_url, :string, required: true
-  attr :cols, :list, required: true
-  attr :resource, :string, required: true
+  attr(:base_url, :string, required: true)
+  attr(:cols, :list, required: true)
+  attr(:resource, :string, required: true)
+  attr(:rows, :list, required: true)
 
   def admin_table(assigns) do
     ~H"""

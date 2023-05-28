@@ -12,7 +12,7 @@ defmodule CastmillWeb.Live.Admin.Resources do
   import CastmillWeb.Live.Admin.Pagination
 
   @impl true
-  def mount(params, _session, socket) do
+  def mount(_params, _session, socket) do
     socket =
       socket
       |> assign(:search, "")
@@ -60,16 +60,6 @@ defmodule CastmillWeb.Live.Admin.Resources do
      |> assign(:selected_link, "networks")
      |> assign(:resource_name, "Network")
      |> assign(:form_module, CastmillWeb.Live.Admin.NetworkForm)}
-  end
-
-  # TODO: This is a hack to avoid a bug in streams until the :reset option
-  # is implemented in LiveView 0.19.0
-  defp maybe_stream(socket, key, data) do
-    with %{:assigns => %{:streams => %{^key => _data}}} <- socket do
-      socket
-    else
-      _ -> stream(socket, key, data)
-    end
   end
 
   def handle_params(%{"resource" => "organizations"} = params, _url, socket) do
@@ -270,6 +260,16 @@ defmodule CastmillWeb.Live.Admin.Resources do
     {:noreply, apply_action(socket, socket.assigns.live_action, params)}
   end
 
+  # TODO: This is a hack to avoid a bug in streams until the :reset option
+  # is implemented in LiveView 0.19.0
+  defp maybe_stream(socket, key, data) do
+    with %{:assigns => %{:streams => %{^key => _data}}} <- socket do
+      socket
+    else
+      _ -> stream(socket, key, data)
+    end
+  end
+
   @impl true
   def render(assigns) do
     ~H"""
@@ -301,7 +301,6 @@ defmodule CastmillWeb.Live.Admin.Resources do
         cols={@cols}
         resource={@selected_link}
         base_url={~p"/admin/#{@selected_link}"}
-        id={@resource_name}
       />
 
       <.pagination />
@@ -367,6 +366,19 @@ defmodule CastmillWeb.Live.Admin.Resources do
     {:noreply, stream_delete(socket, :rows, organization)}
   end
 
+  @impl true
+  def handle_event("delete", %{"id" => id, "resource" => "users"}, socket) do
+    {:ok, _} = Accounts.delete_user(id)
+    {:noreply, stream_delete(socket, :rows, %Accounts.User{id: id})}
+  end
+
+  @impl true
+  def handle_event("delete", %{"id" => id, "resource" => "devices"}, socket) do
+    device = %Devices.Device{id: id}
+    {:ok, _} = Devices.delete_device(device)
+    {:noreply, stream_delete(socket, :rows, device)}
+  end
+
   # Networks
   defp apply_action(socket, :new, %{"resource" => "networks"}) do
     socket
@@ -374,16 +386,10 @@ defmodule CastmillWeb.Live.Admin.Resources do
     |> assign(:resource, %Networks.Network{name: "test"})
   end
 
-  defp apply_action(socket, :edit, %{"id" => id, "resource" => "networks"} = params) do
+  defp apply_action(socket, :edit, %{"id" => id, "resource" => "networks"}) do
     socket
     |> assign(:page_title, "Edit Network")
     |> assign(:resource, Networks.get_network(id))
-  end
-
-  defp apply_action(socket, :index, _params) do
-    socket
-    |> assign(:page_title, "Networks")
-    |> assign(:resource, nil)
   end
 
   # Organizations
@@ -396,9 +402,15 @@ defmodule CastmillWeb.Live.Admin.Resources do
     |> assign(:resource, Organizations.get_organization!(id))
   end
 
-  defp apply_action(socket, :index, _params) do
+  defp apply_action(socket, :index, %{"resource" => "organizations"}) do
     socket
     |> assign(:page_title, "Organizations")
+    |> assign(:resource, nil)
+  end
+
+  defp apply_action(socket, :index, _params) do
+    socket
+    |> assign(:page_title, "Networks")
     |> assign(:resource, nil)
   end
 end

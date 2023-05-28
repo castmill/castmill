@@ -192,12 +192,12 @@ defmodule Castmill.Teams do
   end
 
   @doc """
-  Returns an `%Ecto.Changeset{}` for tracking network changes.
+  Returns an `%Ecto.Changeset{}` for tracking team changes.
 
   ## Examples
 
-      iex> change_network(network)
-      %Ecto.Changeset{data: %Network{}}
+      iex> change_team(team)
+      %Ecto.Changeset{data: %Team{}}
 
   """
   def change_team(%Team{} = team, attrs \\ %{}) do

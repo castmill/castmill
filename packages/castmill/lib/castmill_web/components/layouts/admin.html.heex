@@ -1,11 +1,8 @@
 <main class="flex flex-col w-full h-screen">
-  <.flash_group flash={@flash} />
   <div class="grow-0">
-    <.topbar
-      id={:topbar}
-      current_user={@current_user}
-    />
+    <.topbar current_user={@current_user} />
   </div>
+  <.flash_group flash={@flash} />
   <div class="grow">
     <div class="flex flex-row h-full">
       <.live_component

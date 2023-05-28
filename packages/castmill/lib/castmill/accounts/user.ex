@@ -5,18 +5,22 @@ defmodule Castmill.Accounts.User do
   @primary_key {:id, Ecto.UUID, autogenerate: true}
 
   schema "users" do
-    field :avatar, :string
-    field :email, :string
-    field :name, :string
+    field(:avatar, :string)
+    field(:email, :string)
+    field(:name, :string)
 
-    many_to_many :organizations,
+    field(:role, Ecto.Enum, values: [:admin, :member, :guest], virtual: true)
+
+    many_to_many(
+      :organizations,
       Castmill.Organizations.Organization,
       join_through: "organizations_users",
       on_replace: :delete
+    )
 
-    belongs_to :network, Castmill.Networks.Network, foreign_key: :network_id, type: Ecto.UUID
+    belongs_to(:network, Castmill.Networks.Network, foreign_key: :network_id, type: Ecto.UUID)
 
-    has_many :access_tokens, Castmill.Accounts.AccessToken
+    has_many(:access_tokens, Castmill.Accounts.AccessToken)
 
     timestamps()
   end
@@ -27,8 +31,41 @@ defmodule Castmill.Accounts.User do
     |> cast(attrs, [:name, :avatar, :email, :network_id])
     |> validate_required([:name, :email])
     |> validate_length(:name, min: 2, max: 20)
-    |> validate_format(:avatar, ~r/^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/)
+    |> validate_format(
+      :avatar,
+      ~r/^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/
+    )
     |> validate_format(:email, ~r/@/)
     |> unique_constraint([:email, :network_id], name: :users_name_network_id_index)
+  end
+
+  @doc """
+  A user changeset for changing the password.
+
+  ## Options
+
+    * `:hash_password` - Hashes the password so it can be stored securely
+      in the database and ensures the password field is cleared to prevent
+      leaks in the logs. If password hashing is not needed and clearing the
+      password field is not desired (like when using this changeset for
+      validations on a LiveView form), this option can be set to `false`.
+      Defaults to `true`.
+  """
+  def password_changeset(user, attrs, opts \\ []) do
+    user
+    |> cast(attrs, [:password])
+    |> validate_confirmation(:password, message: "does not match password")
+    |> validate_password(opts)
+  end
+
+  defp validate_password(changeset, _opts) do
+    changeset
+    |> validate_required([:password])
+    |> validate_length(:password, min: 12, max: 72)
+    # Examples of additional password validation:
+    # |> validate_format(:password, ~r/[a-z]/, message: "at least one lower case character")
+    # |> validate_format(:password, ~r/[A-Z]/, message: "at least one upper case character")
+    # |> validate_format(:password, ~r/[!?@#$%^&*_0-9]/, message: "at least one digit or punctuation character")
+    # |> maybe_hash_password(opts)
   end
 end

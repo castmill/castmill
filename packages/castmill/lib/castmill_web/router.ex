@@ -4,109 +4,109 @@ defmodule CastmillWeb.Router do
   import CastmillWeb.Admin.UserAuth
 
   pipeline :browser do
-    plug :accepts, ["html"]
-    plug :fetch_session
-    plug :fetch_live_flash
-    plug :put_root_layout, {CastmillWeb.Layouts, :root}
-    plug :put_layout, {CastmillWeb.Layouts, :app}
-    plug :protect_from_forgery
-    plug :put_secure_browser_headers
+    plug(:accepts, ["html"])
+    plug(:fetch_session)
+    plug(:fetch_live_flash)
+    plug(:put_root_layout, {CastmillWeb.Layouts, :root})
+    plug(:put_layout, {CastmillWeb.Layouts, :app})
+    plug(:protect_from_forgery)
+    plug(:put_secure_browser_headers)
+    plug(:fetch_current_user)
   end
 
   pipeline :device do
-    plug :accepts, ["html"]
-    plug :fetch_session
-    plug :put_root_layout, {CastmillWeb.Layouts, :device}
-    plug :protect_from_forgery
-    plug :put_secure_browser_headers
+    plug(:accepts, ["html"])
+    plug(:fetch_session)
+    plug(:put_root_layout, {CastmillWeb.Layouts, :device})
+    plug(:protect_from_forgery)
+    plug(:put_secure_browser_headers)
   end
 
   pipeline :api do
-    plug :accepts, ["json"]
-    plug :authenticate_user
+    plug(:accepts, ["json"])
+    plug(:authenticate_user)
   end
 
   scope "/", CastmillWeb do
-    pipe_through :browser
-
-    scope "/admin", Live do
-      pipe_through [:fetch_current_user, :require_authenticated_user]
-
-      live_session :admin,
-        layout: {CastmillWeb.Layouts, :admin},
-        on_mount: [{CastmillWeb.Admin.UserAuth, :ensure_authenticated}] do
-        live "/", Admin, :index
-
-        # Networks
-        live "/:resource", Admin.Resources, :index
-
-        # Note: Only networks can be created at the root level.
-        live "/:resource/new", Admin.Resources, :new
-
-        # Generic edit for all resources
-        live "/:resource/:id/edit", Admin.Resources, :edit
-
-        # Networks
-        live "/networks/:id", Admin.NetworkShow, :show
-        live "/networks/:id/:resource", Admin.NetworkShow, :show
-        live "/networks/:id/show/edit", Admin.NetworkShow, :edit
-        live "/networks/:id/:resource/new", Admin.NetworkShow, :new
-
-        # Organizations
-        live "/organizations/:id/", Admin.OrganizationShow, :show
-        live "/organizations/:id/:resource", Admin.OrganizationShow, :show
-        live "/organizations/:id/show/edit", Admin.OrganizationShow, :edit
-        live "/organizations/:id/:resource/new", Admin.OrganizationShow, :new
-
-      end
-    end
-
-    delete "/admin/logout", AdminSessionController, :delete
-  end
-
-  scope "/", CastmillWeb do
-    pipe_through [:browser, :fetch_current_user, :redirect_if_user_is_authenticated]
+    pipe_through([:browser, :redirect_if_user_is_authenticated])
 
     live_session :redirect_if_user_is_authenticated,
       layout: {CastmillWeb.Layouts, :login},
       on_mount: [{CastmillWeb.Admin.UserAuth, :redirect_if_user_is_authenticated}] do
       live("/admin/login", Live.Admin.Login, :new)
-      live "/admin/reset_password", Live.Admin.ForgotPassword, :new
+      live("/admin/reset_password", Live.Admin.ForgotPassword, :new)
 
       # TODO: Implement password reset.
       # live "/admin/reset_password/:token", UserResetPasswordLive, :edit
     end
 
-    post "/admin/login", AdminSessionController, :create
+    post("/admin/login", AdminSessionController, :create)
   end
 
   scope "/", CastmillWeb do
-    pipe_through :device
+    pipe_through(:browser)
+
+    scope "/admin", Live do
+      pipe_through([:require_authenticated_user])
+
+      live_session :admin,
+        layout: {CastmillWeb.Layouts, :admin},
+        on_mount: [{CastmillWeb.Admin.UserAuth, :ensure_authenticated}] do
+        live("/", Admin, :index)
+
+        # Networks
+        live("/:resource", Admin.Resources, :index)
+
+        # Note: Only networks can be created at the root level.
+        live("/:resource/new", Admin.Resources, :new)
+
+        # Generic edit for all resources
+        live("/:resource/:id/edit", Admin.Resources, :edit)
+
+        # Networks
+        live("/networks/:id", Admin.NetworkShow, :show)
+        live("/networks/:id/:resource", Admin.NetworkShow, :show)
+        live("/networks/:id/show/edit", Admin.NetworkShow, :edit)
+        live("/networks/:id/:resource/new", Admin.NetworkShow, :new)
+
+        # Organizations
+        live("/organizations/:id/", Admin.OrganizationShow, :show)
+        live("/organizations/:id/:resource", Admin.OrganizationShow, :show)
+        live("/organizations/:id/show/edit", Admin.OrganizationShow, :edit)
+        live("/organizations/:id/:resource/new", Admin.OrganizationShow, :new)
+      end
+    end
+
+    delete("/admin/logout", AdminSessionController, :delete)
+  end
+
+  scope "/", CastmillWeb do
+    pipe_through(:device)
 
     # Route for starting the Device
-    get "/", DeviceController, :home
+    get("/", DeviceController, :home)
   end
 
   pipeline :register do
-    plug :accepts, ["json"]
+    plug(:accepts, ["json"])
   end
 
   scope "/registrations", CastmillWeb do
-    pipe_through :register
+    pipe_through(:register)
 
-    post "/", DeviceController, :start_registration
+    post("/", DeviceController, :start_registration)
   end
 
   scope "/devices", CastmillWeb do
-    pipe_through :device
+    pipe_through(:device)
 
-    get "/:id", DeviceController, :show
-    get "/:id/calendars", DeviceController, :calendars
+    get("/:id", DeviceController, :show)
+    get("/:id/calendars", DeviceController, :calendars)
 
     # This route can be used by a device in order to post
     # its current status to the server. It can be called in
     # regular intervals or triggered by a user.
-    post "/:id/info", DeviceController, :info
+    post("/:id/info", DeviceController, :info)
 
     # post "/", DeviceController, :create
     # get "/", DeviceController, :index
@@ -117,10 +117,10 @@ defmodule CastmillWeb.Router do
 
   # Other scopes may use custom stacks.
   scope "/api", CastmillWeb do
-    pipe_through [:api, :authenticate_user]
+    pipe_through([:api, :authenticate_user])
 
     resources "/networks", NetworkController, except: [:new, :edit] do
-      pipe_through :load_network
+      pipe_through(:load_network)
 
       resources("/organizations", OrganizationController, except: [:new, :edit])
       resources("/users", UserController, except: [:new, :edit])
@@ -155,10 +155,10 @@ defmodule CastmillWeb.Router do
     import Phoenix.LiveDashboard.Router
 
     scope "/dev" do
-      pipe_through :browser
+      pipe_through(:browser)
 
       live_dashboard("/dashboard", metrics: CastmillWeb.Telemetry)
-      forward "/mailbox", Plug.Swoosh.MailboxPreview
+      forward("/mailbox", Plug.Swoosh.MailboxPreview)
     end
   end
 

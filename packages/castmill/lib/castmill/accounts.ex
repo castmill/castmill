@@ -18,6 +18,25 @@ defmodule Castmill.Accounts do
     Repo.all(User)
   end
 
+  def update_user(%User{} = user, attrs) do
+    user
+    |> User.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking user changes.
+
+  ## Examples
+
+      iex> change_user(user)
+      %Ecto.Changeset{data: %User{}}
+
+  """
+  def change_user(%User{} = user, attrs \\ %{}) do
+    User.changeset(user, attrs)
+  end
+
   @doc """
     Returns the user with the access that has the given token.
   """
@@ -53,6 +72,10 @@ defmodule Castmill.Accounts do
   """
   def get_user_by_email(email) do
     Repo.get_by(User, email: email)
+  end
+
+  def get_user(id) do
+    Repo.get(User, id)
   end
 
   @doc """
