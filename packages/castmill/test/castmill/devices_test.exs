@@ -9,7 +9,6 @@ defmodule Castmill.DevicesTest do
     @describetag :devices
 
     alias Castmill.Devices
-    alias Castmill.Devices.Device
 
     import Castmill.NetworksFixtures
     import Castmill.OrganizationsFixtures
@@ -25,7 +24,7 @@ defmodule Castmill.DevicesTest do
 
       {:ok, devices_registration } = device_registration_fixture()
 
-      assert {:ok, {device, token}} = Devices.register_device(organization.id, devices_registration.pincode, %{ name: "some device"})
+      assert {:ok, {device, _token}} = Devices.register_device(organization.id, devices_registration.pincode, %{ name: "some device"})
 
       assert Devices.list_devices(organization.id) == [device]
     end
@@ -38,7 +37,7 @@ defmodule Castmill.DevicesTest do
 
       {:ok, devices_registration } = device_registration_fixture()
 
-      assert {:ok, {device, token}} = Devices.register_device(organization.id, devices_registration.pincode, %{ name: "some device"})
+      assert {:ok, {device, _token}} = Devices.register_device(organization.id, devices_registration.pincode, %{ name: "some device"})
 
       assert Devices.list_devices(organization.id) == [device]
 
@@ -53,7 +52,7 @@ defmodule Castmill.DevicesTest do
 
       {:ok, devices_registration } = device_registration_fixture(%{hardware_id: "some hardware id", pincode: "some pincode"})
 
-      assert {:ok, {device, token}} = Devices.register_device(organization.id, devices_registration.pincode, %{ name: "some device"})
+      assert {:ok, {device, _token}} = Devices.register_device(organization.id, devices_registration.pincode, %{ name: "some device"})
 
       assert Devices.list_devices(organization.id) == [device]
 
@@ -66,7 +65,7 @@ defmodule Castmill.DevicesTest do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
       {:ok, devices_registration } = device_registration_fixture(%{hardware_id: "some hardware id", pincode: "some pincode"})
-      assert {:ok, {device, token}} = Devices.register_device(organization.id, devices_registration.pincode, %{ name: "some device"})
+      assert {:ok, {device, _token}} = Devices.register_device(organization.id, devices_registration.pincode, %{ name: "some device"})
 
       assert Devices.list_devices(organization.id) == [device]
     end
@@ -75,7 +74,7 @@ defmodule Castmill.DevicesTest do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
       {:ok, devices_registration } = device_registration_fixture(%{hardware_id: "some hardware id", pincode: "some pincode"})
-      assert {:ok, {device, token}} = Devices.register_device(organization.id, devices_registration.pincode, %{ name: "some device"})
+      assert {:ok, {device, _token}} = Devices.register_device(organization.id, devices_registration.pincode, %{ name: "some device"})
 
       assert Devices.list_devices(organization.id) == [device]
 
@@ -89,7 +88,7 @@ defmodule Castmill.DevicesTest do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
       {:ok, devices_registration } = device_registration_fixture(%{hardware_id: "some hardware id", pincode: "some pincode"})
-      assert {:ok, {device, token}} = Devices.register_device(organization.id, devices_registration.pincode, %{ name: "some device"})
+      assert {:ok, {device, _token}} = Devices.register_device(organization.id, devices_registration.pincode, %{ name: "some device"})
 
       assert Devices.list_devices(organization.id) == [device]
 
@@ -104,23 +103,23 @@ defmodule Castmill.DevicesTest do
       {:ok, devices_registration } = device_registration_fixture(%{hardware_id: "some hardware id", pincode: "some pincode"})
       assert {:ok, {device, token}} = Devices.register_device(organization.id, devices_registration.pincode, %{ name: "some device"})
 
-      assert {:ok, device} = Devices.verify_device_token(device.id, token)
+      assert {:ok, _device} = Devices.verify_device_token(device.id, token)
     end
 
     test "recover_device/2 recovers a device that may have lost its token" do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
       {:ok, devices_registration } = device_registration_fixture(%{hardware_id: "some hardware id", pincode: "some pincode"})
-      assert {:ok, {device, token}} = Devices.register_device(organization.id, devices_registration.pincode, %{ name: "some device"})
+      assert {:ok, {device, _token}} = Devices.register_device(organization.id, devices_registration.pincode, %{ name: "some device"})
 
-      assert {:ok, {device, token}} = Devices.recover_device(device.hardware_id, device.last_ip)
+      assert {:ok, {_device, _token}} = Devices.recover_device(device.hardware_id, device.last_ip)
     end
 
     test "recover_device/2 do not recover a device with different ip address" do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
       {:ok, devices_registration } = device_registration_fixture(%{hardware_id: "some hardware id", pincode: "some pincode"})
-      assert {:ok, {device, token}} = Devices.register_device(organization.id, devices_registration.pincode, %{ name: "some device"})
+      assert {:ok, {device, _token}} = Devices.register_device(organization.id, devices_registration.pincode, %{ name: "some device"})
 
       assert {:error, _} = Devices.recover_device(device.hardware_id, "128.2.3.1")
     end
@@ -129,7 +128,7 @@ defmodule Castmill.DevicesTest do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
       {:ok, devices_registration } = device_registration_fixture(%{hardware_id: "some hardware id", pincode: "some pincode"})
-      assert {:ok, {device, token}} = Devices.register_device(organization.id, devices_registration.pincode, %{ name: "some device"})
+      assert {:ok, {device, _token}} = Devices.register_device(organization.id, devices_registration.pincode, %{ name: "some device"})
 
       assert Devices.list_calendars(device.id) == []
 
@@ -144,7 +143,7 @@ defmodule Castmill.DevicesTest do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
       {:ok, devices_registration } = device_registration_fixture(%{hardware_id: "some hardware id", pincode: "some pincode"})
-      assert {:ok, {device, token}} = Devices.register_device(organization.id, devices_registration.pincode, %{ name: "some device"})
+      assert {:ok, {device, _token}} = Devices.register_device(organization.id, devices_registration.pincode, %{ name: "some device"})
 
       assert Devices.list_calendars(device.id) == []
 
@@ -163,7 +162,7 @@ defmodule Castmill.DevicesTest do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
       {:ok, devices_registration } = device_registration_fixture(%{hardware_id: "some hardware id", pincode: "some pincode"})
-      assert {:ok, {device, token}} = Devices.register_device(organization.id, devices_registration.pincode, %{ name: "some device"})
+      assert {:ok, {device, _token}} = Devices.register_device(organization.id, devices_registration.pincode, %{ name: "some device"})
 
       assert Devices.list_calendars(device.id) == []
 
@@ -195,7 +194,7 @@ defmodule Castmill.DevicesTest do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
       {:ok, devices_registration } = device_registration_fixture(%{hardware_id: "some hardware id", pincode: "some pincode"})
-      assert {:ok, {device, token}} = Devices.register_device(organization.id, devices_registration.pincode, %{ name: "some device"})
+      assert {:ok, {device, _token}} = Devices.register_device(organization.id, devices_registration.pincode, %{ name: "some device"})
 
       assert Devices.list_calendars(device.id) == []
 
@@ -210,7 +209,7 @@ defmodule Castmill.DevicesTest do
 
       playlist = playlist_fixture(%{organization_id: organization.id})
 
-      assert {:ok, entry} = Resources.add_calendar_entry(calendar.id, playlist.id, entry_attrs)
+      assert {:ok, _entry} = Resources.add_calendar_entry(calendar.id, playlist.id, entry_attrs)
 
       assert Devices.has_access_to_playlist(device.id, playlist.id) == false
 

@@ -21,7 +21,7 @@ defmodule Castmill.OrganizationsUsersTest do
       Organizations.add_user(organization.id, user.id, :admin)
 
       result = Organizations.list_users(organization.id)
-      assert result == [[user, :admin]]
+      assert result == [Map.put(user, :role, :admin)]
     end
 
     test "remove_user/2 removes the user from the organization" do
@@ -31,7 +31,9 @@ defmodule Castmill.OrganizationsUsersTest do
 
       Organizations.add_user(organization.id, user.id, :admin)
 
-      assert {:ok, "User successfully removed."} = Organizations.remove_user(organization.id, user.id)
+      assert {:ok, "User successfully removed."} =
+               Organizations.remove_user(organization.id, user.id)
+
       assert [] == Organizations.list_users(organization.id)
     end
 
@@ -41,7 +43,11 @@ defmodule Castmill.OrganizationsUsersTest do
     end
 
     test "create_user/1 with valid data creates a user" do
-      valid_attrs = %{avatar: "https://example.com/avatar", email: "john@doe.com", name: "some name"}
+      valid_attrs = %{
+        avatar: "https://example.com/avatar",
+        email: "john@doe.com",
+        name: "some name"
+      }
 
       assert {:ok, %User{} = user} = Organizations.create_user(valid_attrs)
       assert user.avatar == "https://example.com/avatar"

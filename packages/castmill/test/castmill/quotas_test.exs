@@ -12,10 +12,15 @@ defmodule Castmill.QuotasTest do
     import Castmill.OrganizationsFixtures
 
     test "create_plan/2 creates a plan for all permitted resources" do
-      assert plan = Quotas.create_plan("test plan", [
+      plan = Quotas.create_plan("test plan", [
         %{max: 10, resource: :medias},
         %{max: 5, resource: :organizations}
       ])
+
+      assert plan.name == "test plan"
+
+      # TODO: Write some asserts where the resources can be used independently
+      # of the network they belong to.
     end
 
     test "assign_plan_to_network/2 assigns a plan to a given network" do
@@ -56,7 +61,6 @@ defmodule Castmill.QuotasTest do
 
     test "add_quota_to_network/3 overrides a quota for a given network" do
       network = network_fixture()
-      organization = organization_fixture(%{network_id: network.id})
 
       plan = Quotas.create_plan("test network plan", [
         %{max: 10, resource: :users},

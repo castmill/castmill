@@ -7,7 +7,6 @@ defmodule Castmill.OrganizationsAccessTest do
   import Castmill.OrganizationsFixtures
 
   describe "organizations access" do
-    alias Castmill.Organizations.Organization
     alias Castmill.Organizations.OrganizationsUsersAccess
 
     test "give_access/4 gives access to a given resource type for a given action" do
@@ -20,8 +19,8 @@ defmodule Castmill.OrganizationsAccessTest do
 
       assert %OrganizationsUsersAccess{
         access: "some_resource:some_action",
-        organization_id: organizationId,
-        user_id: userId
+        organization_id: ^organizationId,
+        user_id: ^userId
       } = Organizations.give_access(organization.id, user.id, "some_resource", "some_action")
 
       assert Organizations.has_access(organization.id, user.id, "some_resource", "some_action")
@@ -42,8 +41,8 @@ defmodule Castmill.OrganizationsAccessTest do
 
       assert %OrganizationsUsersAccess{
         access: "some_resource:some_action",
-        organization_id: organizationId,
-        user_id: userId
+        organization_id: ^organizationId,
+        user_id: ^userId
       } = Organizations.give_access(organization.id, user.id, "some_resource", "some_action")
 
       assert Organizations.has_access(organization.id, user.id, "some_resource", "some_action")
@@ -63,8 +62,8 @@ defmodule Castmill.OrganizationsAccessTest do
 
       assert %OrganizationsUsersAccess{
         access: "some_resource:some_action",
-        organization_id: organizationId,
-        user_id: userId
+        organization_id: ^organizationId,
+        user_id: ^userId
       } = Organizations.give_access(organization.id, user.id, "some_resource", "some_action")
 
       assert Organizations.has_access(organization.id, user.id, "some_resource", "some_action")
@@ -78,7 +77,6 @@ defmodule Castmill.OrganizationsAccessTest do
       refute Organizations.has_access(organization.id, user.id, "some_resource", "some_action")
     end
 
-    @tag :only
     test "has_access/4 returns true if users has access on a parent organization" do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id, name: "child organization"})
@@ -89,13 +87,13 @@ defmodule Castmill.OrganizationsAccessTest do
       })
       user = user_fixture(%{network_id: network.id, role: "member"})
 
-      organizationId = organization.id
+      organizationId = parent_organization.id
       userId = user.id
 
       assert %OrganizationsUsersAccess{
         access: "some_resource:some_action",
-        organization_id: organizationId,
-        user_id: userId
+        organization_id: ^organizationId,
+        user_id: ^userId
       } = Organizations.give_access(parent_organization.id, user.id, "some_resource", "some_action")
 
       assert Organizations.has_access(organization.id, user.id, "some_resource", "some_action")
@@ -118,13 +116,13 @@ defmodule Castmill.OrganizationsAccessTest do
 
       user = user_fixture(%{network_id: network.id, role: "member"})
 
-      organizationId = organization.id
+      organizationId = parent_organization.id
       userId = user.id
 
       assert %OrganizationsUsersAccess{
         access: "some_resource:some_action",
-        organization_id: organizationId,
-        user_id: userId
+        organization_id: ^organizationId,
+        user_id: ^userId
       } = Organizations.give_access(parent_organization.id, user.id, "some_resource", "some_action")
 
       assert Organizations.has_access(organization.id, user.id, "some_resource", "some_action")

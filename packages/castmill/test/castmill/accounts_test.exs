@@ -38,6 +38,8 @@ defmodule Castmill.AccountsTest do
       ip =  "192.168.1.2"
       {:ok, fetched_user} = Accounts.get_user_by_access_token(access_token.secret, ip)
 
+      assert fetched_user == Map.merge(user, %{is_root: :false})
+
       fetched_access_token = Accounts.get_access_token!(access_token.id)
 
       assert fetched_access_token.last_ip == "192.168.1.2"

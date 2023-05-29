@@ -6,13 +6,9 @@ defmodule Castmill.PlaylistsTest do
   alias Castmill.Resources
 
   describe "playlists" do
-    alias Castmill.Accounts.AccessToken
-
     import Castmill.NetworksFixtures
     import Castmill.OrganizationsFixtures
     import Castmill.PlaylistsFixtures
-
-    @invalid_attrs %{accessed: nil, accessed_at: nil, last_ip: nil}
 
     test "list_playlists/1 returns all playlists" do
       network = network_fixture()
