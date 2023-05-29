@@ -367,6 +367,7 @@ defmodule Castmill.Resources do
 
   def list_resource(resource) do
     Repo.all(resource)
+  end
 
   def count_resource(resource, organization_id, pattern \\ nil) do
     resource.base_query()
