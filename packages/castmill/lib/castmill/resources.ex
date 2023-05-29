@@ -121,28 +121,6 @@ defmodule Castmill.Resources do
   end
 
   @doc """
-    Returns the list of playlists for the given organization
-
-    ## Examples
-
-    iex> list_users()
-    [%User{}, ...]
-  """
-  def list_playlists(organization_id) do
-    query =
-      from(playlist in Playlist,
-        where: playlist.organization_id == ^organization_id,
-        select: playlist
-      )
-
-    Repo.all(query)
-  end
-
-  def list_playlists() do
-    Repo.all(Playlist)
-  end
-
-  @doc """
     Removes a playlist.
   """
   def delete_playlist(%Playlist{} = playlist) do
@@ -363,10 +341,6 @@ defmodule Castmill.Resources do
     |> Ecto.Query.limit(^limit)
     |> Ecto.Query.offset(^offset)
     |> Repo.all()
-  end
-
-  def list_resource(resource) do
-    Repo.all(resource)
   end
 
   def count_resource(resource, organization_id, pattern \\ nil) do
