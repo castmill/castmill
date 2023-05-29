@@ -121,28 +121,6 @@ defmodule Castmill.Resources do
   end
 
   @doc """
-    Returns the list of playlists for the given organization
-
-    ## Examples
-
-    iex> list_users()
-    [%User{}, ...]
-  """
-  def list_playlists(organization_id) do
-    query =
-      from(playlist in Playlist,
-        where: playlist.organization_id == ^organization_id,
-        select: playlist
-      )
-
-    Repo.all(query)
-  end
-
-  def list_playlists() do
-    Repo.all(Playlist)
-  end
-
-  @doc """
     Removes a playlist.
   """
   def delete_playlist(%Playlist{} = playlist) do
@@ -337,6 +315,18 @@ defmodule Castmill.Resources do
   end
 
   @doc """
+    Query for name matching a pattern.
+  """
+  defp where_name_like(query, nil) do
+    query
+  end
+
+  defp where_name_like(query, pattern) do
+    from e in query,
+      where: ilike(e.name, ^"%#{pattern}%")
+  end
+
+  @doc """
   Returns the list of a given resource for a given organization.
 
   ## Examples
@@ -344,14 +334,20 @@ defmodule Castmill.Resources do
       iex> list_resource(Media, organization_id)
       [%Media{}, ...]
   """
-  def list_resource(resource, organization_id) do
+  def list_resource(resource, organization_id \\ nil, limit \\ nil, offset \\ 0, pattern \\ nil) do
     resource.base_query()
     |> Organization.where_org_id(organization_id)
+    |> where_name_like(pattern)
+    |> Ecto.Query.limit(^limit)
+    |> Ecto.Query.offset(^offset)
     |> Repo.all()
   end
 
-  def list_resource(resource) do
-    Repo.all(resource)
+  def count_resource(resource, organization_id, pattern \\ nil) do
+    resource.base_query()
+    |> Organization.where_org_id(organization_id)
+    |> where_name_like(pattern)
+    |> Repo.aggregate(:count, :id)
   end
 
   @doc """

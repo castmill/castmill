@@ -5,12 +5,18 @@ defmodule CastmillWeb.ResourceJSON do
   @doc """
   Renders a list of medias.
   """
-  def index(%{medias: medias}) do
-    %{data: for(media <- medias, do: data(media))}
+  def index(%{medias: medias, count: count}) do
+    %{
+      count: count,
+      data: for(media <- medias, do: data(media))
+    }
   end
 
-  def index(%{playlists: playlists}) do
-    %{data: for(playlist <- playlists, do: data(playlist))}
+  def index(%{playlists: playlists, count: count}) do
+    %{
+      count: count,
+      data: for(playlist <- playlists, do: data(playlist))
+    }
   end
 
   @doc """
