@@ -334,7 +334,7 @@ defmodule Castmill.Resources do
       iex> list_resource(Media, organization_id)
       [%Media{}, ...]
   """
-  def list_resource(resource, organization_id, limit \\ nil, offset \\ 0, pattern \\ nil) do
+  def list_resource(resource, organization_id \\ nil, limit \\ nil, offset \\ 0, pattern \\ nil) do
     resource.base_query()
     |> Organization.where_org_id(organization_id)
     |> where_name_like(pattern)

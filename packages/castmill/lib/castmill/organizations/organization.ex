@@ -34,9 +34,12 @@ defmodule Castmill.Organizations.Organization do
     from e in Castmill.Organizations.Organization, as: :organization
   end
 
+  def where_org_id(query, nil) do
+    query
+  end
+
   def where_org_id(query, id) do
     from e in query,
       where: e.organization_id == ^id
   end
-
 end
