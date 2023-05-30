@@ -11,10 +11,8 @@ jobs:
     runs-on: ubuntu-latest
 
     services:
-      # Label used to access the service container
       postgres:
         image: postgres
-        # Provide the password for postgres
         env:
           POSTGRES_PASSWORD: postgres
         # Set health checks to wait until postgres has started
@@ -48,6 +46,6 @@ jobs:
       - run: mix test --warnings-as-errors
         env:
           # The hostname used to communicate with the PostgreSQL service container
-          POSTGRES_HOST: postgres
+          POSTGRES_HOST: localhost
           # The default PostgreSQL port
           POSTGRES_PORT: 5432
