@@ -94,8 +94,7 @@ defmodule Castmill.Devices do
     symbols = '123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
     symbol_count = Enum.count(symbols)
 
-    pincode =
-      for _ <- 1..10, into: "", do: <<Enum.at(symbols, :crypto.rand_uniform(0, symbol_count))>>
+    pincode = for _ <- 1..10, into: "", do: <<Enum.at(symbols, :rand.uniform(symbol_count) - 1)>>
 
     %DevicesRegistrations{pincode: pincode}
     |> DevicesRegistrations.changeset(attrs)
@@ -149,7 +148,6 @@ defmodule Castmill.Devices do
 
           with {:ok, _} <- Repo.delete(devices_registration),
                {:ok, device} <- create_device(Map.merge(params, attrs)) do
-
             Endpoint.broadcast("register:#{device.hardware_id}", "device:registered", %{
               device: %{
                 id: device.id,

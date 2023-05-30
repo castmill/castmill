@@ -3,12 +3,18 @@ defmodule CastmillWeb.DeviceController do
 
   alias Castmill.Organizations
   alias Castmill.Plug.Authorize
-  alias Castmill.Resources.Media
 
-  action_fallback CastmillWeb.FallbackController
+  action_fallback(CastmillWeb.FallbackController)
 
-  plug Authorize, %{parent: :organization, resource: :not_needed, action: :index} when action in [:index]
-  plug Authorize, %{parent: :organization, resource: :not_needed, action: :create} when action in [:create]
+  plug(
+    Authorize,
+    %{parent: :organization, resource: :not_needed, action: :index} when action in [:index]
+  )
+
+  plug(
+    Authorize,
+    %{parent: :organization, resource: :not_needed, action: :create} when action in [:create]
+  )
 
   def home(conn, _params) do
     render(conn, :device, layout: false)
@@ -19,8 +25,8 @@ defmodule CastmillWeb.DeviceController do
 
     device_attrs = %{
       hardware_id: hardware_id,
-      device_ip: conn.remote_ip |> :inet_parse.ntoa |> to_string(),
-      user_agent: get_req_header(conn, "user-agent") |> List.first,
+      device_ip: conn.remote_ip |> :inet_parse.ntoa() |> to_string(),
+      user_agent: get_req_header(conn, "user-agent") |> List.first(),
       timezone: timezone,
       loc_lat: location["latitude"],
       loc_long: location["longitude"],
@@ -28,22 +34,9 @@ defmodule CastmillWeb.DeviceController do
     }
 
     with {:ok, device} <- Castmill.Devices.create_device_registration(device_attrs) do
-        conn
-        |> put_status(:created)
-        |> render(:show, device: device)
-    end
-  end
-
-  @doc """
-    Creates a device and adds it to an organization.
-  """
-  def create(conn, %{"name" => name, "pincode" => pincode, "organization_id" => organization_id}) do
-
-    with {:ok, {device, token}} <- Castmill.Devices.register_device(organization_id, pincode, %{ name: name }) do
       conn
-        |> put_status(:created)
-        |> put_resp_header("location", ~p"/api/devices/#{device.id}")
-        |> render(:show, device: device)
+      |> put_status(:created)
+      |> render(:show, device: device)
     end
   end
 
@@ -57,27 +50,16 @@ defmodule CastmillWeb.DeviceController do
     render(conn, :index, playlists: playlists)
   end
 
-  def create(conn, %{"resources" => "medias", "organization_id" => organization_id, "media" => media}) do
-
-    create_attrs = Map.merge(media, %{"organization_id" => organization_id})
-
-    with {:ok, %Media{} = media} <- Castmill.Resources.create_media(create_attrs) do
+  @doc """
+    Creates a device and adds it to an organization.
+  """
+  def create(conn, %{"name" => name, "pincode" => pincode, "organization_id" => organization_id}) do
+    with {:ok, {device, _token}} <-
+           Castmill.Devices.register_device(organization_id, pincode, %{name: name}) do
       conn
       |> put_status(:created)
-      |> put_resp_header("location", ~p"/api/organizations/#{organization_id}/medias/#{media.id}")
-      |> render(:show, media: media)
-    end
-  end
-
-  def create(conn, %{"resources" => "medias", "organization_id" => organization_id, "media" => media}) do
-
-    create_attrs = Map.merge(media, %{"organization_id" => organization_id})
-
-    with {:ok, %Media{} = media} <- Castmill.Resources.create_media(create_attrs) do
-      conn
-      |> put_status(:created)
-      |> put_resp_header("location", ~p"/api/organizations/#{organization_id}/medias/#{media.id}")
-      |> render(:show, media: media)
+      |> put_resp_header("location", ~p"/devices/#{device.id}")
+      |> render(:show, device: device)
     end
   end
 

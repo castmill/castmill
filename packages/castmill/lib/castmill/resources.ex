@@ -314,9 +314,6 @@ defmodule Castmill.Resources do
     LinkedList.sort_nodes(items)
   end
 
-  @doc """
-    Query for name matching a pattern.
-  """
   defp where_name_like(query, nil) do
     query
   end

@@ -78,7 +78,7 @@ defmodule CastmillWeb.Live.Admin.DeviceForm do
   end
 
   # Create a device within an organization
-  defp save(socket, :new, %{"pincode" => pincode, "name" => name} = params) do
+  defp save(socket, :new, %{"pincode" => pincode, "name" => name}) do
     case Devices.register_device(socket.assigns.resource.id, pincode, %{:name => name}) do
       {:ok, device} ->
         notify_parent({:created, device})

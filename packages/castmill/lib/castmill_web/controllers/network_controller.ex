@@ -24,8 +24,6 @@ defmodule CastmillWeb.NetworkController do
     end
   end
 
-  def create(_conn, params), do: throw params
-
   def show(conn, %{"id" => id}) do
     network = Networks.get_network(id)
     render(conn, :show, network: network)

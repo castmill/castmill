@@ -223,8 +223,14 @@ defmodule Castmill.Organizations do
       [%Media{}, ...]
 
   """
-  def list_medias(organization_id, limit, offset, pattern) do
-    Castmill.Resources.list_resource(Castmill.Resources.Media, organization_id, limit, offset, pattern)
+  def list_medias(organization_id, limit \\ nil, offset \\ 0, pattern \\ nil) do
+    Castmill.Resources.list_resource(
+      Castmill.Resources.Media,
+      organization_id,
+      limit,
+      offset,
+      pattern
+    )
   end
 
   @doc """
@@ -249,8 +255,14 @@ defmodule Castmill.Organizations do
       [%Playlist{}, ...]
 
   """
-  def list_playlists(organization_id, limit, offset, pattern) do
-    Castmill.Resources.list_resource(Castmill.Resources.Playlist, organization_id, limit, offset, pattern)
+  def list_playlists(organization_id, limit \\ nil, offset \\ 0, pattern \\ nil) do
+    Castmill.Resources.list_resource(
+      Castmill.Resources.Playlist,
+      organization_id,
+      limit,
+      offset,
+      pattern
+    )
   end
 
   @doc """
@@ -275,8 +287,14 @@ defmodule Castmill.Organizations do
       [%Calendar{}, ...]
 
   """
-  def list_calendars(organization_id, limit, offset, pattern) do
-    Castmill.Resources.list_resource(Castmill.Resources.Calendar, organization_id, limit, offset, pattern)
+  def list_calendars(organization_id, limit \\ nil, offset \\ 0, pattern \\ nil) do
+    Castmill.Resources.list_resource(
+      Castmill.Resources.Calendar,
+      organization_id,
+      limit,
+      offset,
+      pattern
+    )
   end
 
   @doc """
@@ -301,8 +319,14 @@ defmodule Castmill.Organizations do
       [%Device{}, ...]
 
   """
-  def list_devices(organization_id, limit, offset, pattern) do
-    Castmill.Resources.list_resource(Castmill.Resources.Device, organization_id, limit, offset, pattern)
+  def list_devices(organization_id, limit \\ nil, offset \\ 0, pattern \\ nil) do
+    Castmill.Resources.list_resource(
+      Castmill.Resources.Device,
+      organization_id,
+      limit,
+      offset,
+      pattern
+    )
   end
 
   @doc """

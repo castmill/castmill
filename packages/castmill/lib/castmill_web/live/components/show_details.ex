@@ -16,7 +16,7 @@ defmodule CastmillWeb.Live.Admin.Show do
         <:subtitle>Not sure what text should be here actually...</:subtitle>
 
         <:actions>
-          <.link patch={~p"/admin/#{@bucket}/#{@resource}/show/edit"} phx-click={JS.push_focus()}>
+          <.link patch={~p"/admin/#{@bucket}/#{@resource}/edit"} phx-click={JS.push_focus()}>
             <.button>Edit <%= @type %></.button>
           </.link>
         </:actions>

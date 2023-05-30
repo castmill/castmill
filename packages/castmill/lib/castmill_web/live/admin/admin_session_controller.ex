@@ -10,7 +10,7 @@ defmodule CastmillWeb.AdminSessionController do
 
   def create(conn, %{"_action" => "password_updated"} = params) do
     conn
-    |> put_session(:user_return_to, ~p"/users/settings")
+    |> put_session(:user_return_to, ~p"/admin/networks")
     |> create(params, "Password updated successfully!")
   end
 
@@ -22,10 +22,6 @@ defmodule CastmillWeb.AdminSessionController do
     %{"email" => email, "password" => password} = user_params
 
     token = email <> ":" <> password
-
-    IO.inspect(token)
-    IO.inspect(email)
-    IO.inspect(password)
 
     case Accounts.get_user_by_access_token(token, Utils.RemoteIp.get(conn)) do
       {:ok, user} ->

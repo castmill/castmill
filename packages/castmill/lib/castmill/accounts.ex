@@ -298,4 +298,17 @@ defmodule Castmill.Accounts do
       {:error, :user, changeset, _} -> {:error, changeset}
     end
   end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for changing the user password.
+
+  ## Examples
+
+      iex> change_user_password(user)
+      %Ecto.Changeset{data: %User{}}
+
+  """
+  def change_user_password(user, attrs \\ %{}) do
+    User.password_changeset(user, attrs, hash_password: false)
+  end
 end

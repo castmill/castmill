@@ -35,6 +35,7 @@ defmodule CastmillWeb.Router do
       on_mount: [{CastmillWeb.Admin.UserAuth, :redirect_if_user_is_authenticated}] do
       live("/admin/login", Live.Admin.Login, :new)
       live("/admin/reset_password", Live.Admin.ForgotPassword, :new)
+      live "/admin/reset_password/:token", UserResetPasswordLive, :edit
 
       # TODO: Implement password reset.
       # live "/admin/reset_password/:token", UserResetPasswordLive, :edit
@@ -46,6 +47,7 @@ defmodule CastmillWeb.Router do
   scope "/", CastmillWeb do
     pipe_through(:browser)
 
+    # Routes for the Admin Tool
     scope "/admin", Live do
       pipe_through([:require_authenticated_user])
 
@@ -74,6 +76,11 @@ defmodule CastmillWeb.Router do
         live("/organizations/:id/:resource", Admin.OrganizationShow, :show)
         live("/organizations/:id/show/edit", Admin.OrganizationShow, :edit)
         live("/organizations/:id/:resource/new", Admin.OrganizationShow, :new)
+
+        # Fallback route for all other resources
+        live("/:resource/:id", Admin.Resources, :show)
+        live("/:resource/:id/:tab/new", Admin.Resources, :new)
+
       end
     end
 
@@ -143,6 +150,8 @@ defmodule CastmillWeb.Router do
     end
 
     resources("/users", UserController, except: [:new, :edit, :index])
+
+    resources("/access_tokens", AccessTokenController, except: [:new, :edit])
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
