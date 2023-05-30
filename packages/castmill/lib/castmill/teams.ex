@@ -37,11 +37,14 @@ defmodule Castmill.Teams do
   def list_teams(organization_id) do
     Team.base_query()
     |> Organization.where_org_id(organization_id)
+    |> order_by([t], desc: t.id)
     |> Repo.all()
   end
 
   def list_teams() do
-    Repo.all(Team)
+    Team.base_query()
+    |> order_by([t], desc: t.id)
+    |> Repo.all()
   end
 
   @doc """
@@ -128,10 +131,14 @@ defmodule Castmill.Teams do
     # First upsert the resource (insert only if there is no a resource for the given id and type)
     Repo.transaction(fn ->
       with {:ok, resource_id} <- upsert_resource(child_id, type) do
-        with {:ok, team_resource} <- %TeamsResources{}
-          |> TeamsResources.changeset(%{access: access, team_id: team_id, resource_id: resource_id})
-          |> Repo.insert()
-        do
+        with {:ok, team_resource} <-
+               %TeamsResources{}
+               |> TeamsResources.changeset(%{
+                 access: access,
+                 team_id: team_id,
+                 resource_id: resource_id
+               })
+               |> Repo.insert() do
           team_resource
         else
           {:error, reason} -> Repo.rollback(reason)
@@ -147,7 +154,8 @@ defmodule Castmill.Teams do
   """
   def update_resource_access(team_id, resource_id, access) do
     from(team_resource in TeamsResources,
-      where: team_resource.team_id == ^team_id and team_resource.resource_id == ^resource_id)
+      where: team_resource.team_id == ^team_id and team_resource.resource_id == ^resource_id
+    )
     |> Repo.update_all(set: [access: access])
   end
 
@@ -157,12 +165,13 @@ defmodule Castmill.Teams do
     # Check if the child has a resource associated to it already.
     child = get_child_resource(id, type)
 
-    if child.resource_id  do
+    if child.resource_id do
       {:ok, child.resource_id}
     else
-      {:ok, resource} = %Castmill.Resources.Resource{}
-      |> Castmill.Resources.Resource.changeset(%{type: type})
-      |> Repo.insert()
+      {:ok, resource} =
+        %Castmill.Resources.Resource{}
+        |> Castmill.Resources.Resource.changeset(%{type: type})
+        |> Repo.insert()
 
       Castmill.Resources.update(child, %{resource_id: resource.id})
       {:ok, resource.id}
@@ -181,14 +190,16 @@ defmodule Castmill.Teams do
 
   def remove_user_from_team(team_id, user_id) do
     from(team_user in TeamsUsers,
-      where: team_user.team_id == ^team_id and team_user.user_id == ^user_id)
-    |> Repo.delete_all
+      where: team_user.team_id == ^team_id and team_user.user_id == ^user_id
+    )
+    |> Repo.delete_all()
   end
 
   def remove_resource_from_team(team_id, resource_id) do
     from(team_resource in TeamsResources,
-    where: team_resource.team_id == ^team_id and team_resource.resource_id == ^resource_id)
-    |> Repo.delete_all
+      where: team_resource.team_id == ^team_id and team_resource.resource_id == ^resource_id
+    )
+    |> Repo.delete_all()
   end
 
   @doc """
@@ -215,11 +226,16 @@ defmodule Castmill.Teams do
   def list_users(team_id) do
     # Maybe it is possible to do a query that do not requires doing a Enum.map at the end
     # to merge the role into the user, this works well for now.
-    query = from teams_users in TeamsUsers,
-      where: teams_users.team_id == ^team_id,
-      join: user in assoc(teams_users, :user),
-      order_by: [asc: user.updated_at],
-      select: {%{id: user.id, name: user.name, email: user.email, avatar: user.avatar}, %{role: teams_users.role}}
+    query =
+      from(teams_users in TeamsUsers,
+        where: teams_users.team_id == ^team_id,
+        join: user in assoc(teams_users, :user),
+        order_by: [asc: user.updated_at],
+        select:
+          {%{id: user.id, name: user.name, email: user.email, avatar: user.avatar},
+           %{role: teams_users.role}}
+      )
+
     Repo.all(query)
     |> Enum.map(fn {user, role} -> Map.put(user, :role, role.role) end)
   end
@@ -257,7 +273,7 @@ defmodule Castmill.Teams do
     query =
       from(
         tr in Castmill.Teams.TeamsResources,
-        where: tr.resource_id == ^resource_id and  ^access in tr.access,
+        where: tr.resource_id == ^resource_id and ^access in tr.access,
         join: tu in Castmill.Teams.TeamsUsers,
         on: tu.team_id == tr.team_id,
         where: tu.user_id == ^user_id,
@@ -266,6 +282,4 @@ defmodule Castmill.Teams do
 
     Repo.one(query) != nil
   end
-
-
 end
