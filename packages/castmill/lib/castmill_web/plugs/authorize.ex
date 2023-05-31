@@ -12,6 +12,8 @@ defmodule Castmill.Plug.Authorize do
       user
       network
         organization
+          team
+
           media
           playlist
           widgets

@@ -1,0 +1,18 @@
+<main class="flex flex-col w-full h-screen">
+  <.flash_group flash={@flash} />
+  <div class="grow-0">
+    <.live_component module={CastmillWeb.Live.Admin.Topbar} id={:topbar} />
+  </div>
+  <div class="grow">
+    <div class="flex flex-row h-full">
+      <.live_component
+        module={CastmillWeb.Live.Admin.Sidebar}
+        id={:sidebar}
+        selected_link={@selected_link}
+      />
+      <div class="grow px-8 py-8">
+        <%= @inner_content %>
+      </div>
+    </div>
+  </div>
+</main>

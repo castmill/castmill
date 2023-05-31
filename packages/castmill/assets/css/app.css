@@ -1,0 +1,12 @@
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+/* This file is for your main application CSS */
+.title {
+  color: white;
+}
+
+.container {
+  background-color: rgb(17 24 39);
+}
