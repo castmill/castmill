@@ -1,0 +1,28 @@
+{
+  "elixirLS.suggestSpecs": false,
+  "elixirLS.dialyzerEnabled": true,
+  "elixirLS.signatureAfterComplete": false,
+  "elixirLS.fetchDeps": false,
+
+  "files.associations": {
+    "*.heex": "phoenix-heex"
+  },
+
+  "[elixir]": {
+    "editor.formatOnSave": false,
+    "editor.defaultFormatter": "JakeBecker.elixir-ls"
+  },
+
+  "[phoenix-heex]": {
+    "editor.formatOnSave": false,
+    "editor.defaultFormatter": "JakeBecker.elixir-ls"
+  },
+
+  "typescript.check.workspaceVersion": true,
+  "typescript.tsdk": "./node_modules/typescript/lib",
+  "emmet.includeLanguages": {
+    "elixir": "html",
+    "phoenix-heex": "html"
+  },
+  "emmet.triggerExpansionOnTab": true
+}
