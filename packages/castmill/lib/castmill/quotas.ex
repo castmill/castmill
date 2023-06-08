@@ -7,7 +7,6 @@ defmodule Castmill.Quotas do
   alias Castmill.Quotas.Plan
   alias Castmill.Quotas.PlansQuotas
   alias Castmill.Quotas.PlansOrganizations
-  alias Castmill.Quotas.PlansNetworks
 
   alias Castmill.Quotas.QuotasNetworks
   alias Castmill.Quotas.QuotasOrganizations
