@@ -15,8 +15,8 @@ defmodule Castmill.Quotas do
   @doc """
     Create a plan based on a list of resource types and their max values.
   """
-  def create_plan(name, quotas) do
-    plan = Repo.insert!(%Plan{name: name})
+  def create_plan(name, network_id, quotas) do
+    plan = Repo.insert!(%Plan{name: name, network_id: network_id})
 
     Enum.each(quotas, fn quota ->
       Repo.insert!(%PlansQuotas{plan_id: plan.id, resource: quota.resource, max: quota.max})
@@ -32,6 +32,10 @@ defmodule Castmill.Quotas do
     Repo.all(Plan)
   end
 
+  def list_plans(network_id) do
+    Repo.all(from(plans in Plan, where: plans.network_id == ^network_id))
+  end
+
   @doc """
     Delete a given plan
   """
@@ -42,10 +46,23 @@ defmodule Castmill.Quotas do
   end
 
   @doc """
-    Assign a given plan to a given network
+    Assign a given quota to a given network
   """
-  def assign_plan_to_network(plan_id, network_id) do
-    Repo.insert!(%PlansNetworks{plan_id: plan_id, network_id: network_id})
+  def assign_quota_to_network(network_id, resource, max) do
+    Repo.insert!(%QuotasNetworks{network_id: network_id, resource: resource, max: max})
+  end
+
+  @doc """
+    Update a given quota for a given network
+  """
+  def update_quota_for_network(network_id, resource, max) do
+    Repo.update_all(
+      from(quotas in QuotasNetworks,
+        where: quotas.network_id == ^network_id,
+        where: quotas.resource == ^resource
+      ),
+      set: [max: max]
+    )
   end
 
   @doc """
@@ -114,27 +131,15 @@ defmodule Castmill.Quotas do
     if network_quotas do
       network_quotas.max
     else
-      pn =
-        Repo.one(
-          from(plans_networks in PlansNetworks, where: plans_networks.network_id == ^network_id)
-        )
-
-      if pn do
-        plan_id = pn.plan_id
-
-        plan_quotas =
-          Repo.one(
-            from(plans_quotas in PlansQuotas,
-              where: plans_quotas.plan_id == ^plan_id,
-              where: plans_quotas.resource == ^resource
-            )
-          )
-
-        plan_quotas.max
-      else
-        0
-      end
+      0
     end
+  end
+
+  @doc """
+    Returns the list of quotas for a given network.
+  """
+  def get_all_quotas_for_network(network_id) do
+    Repo.all(from(quotas in QuotasNetworks, where: quotas.network_id == ^network_id))
   end
 
   @doc """

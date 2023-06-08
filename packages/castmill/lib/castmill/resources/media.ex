@@ -6,8 +6,8 @@ defmodule Castmill.Resources.Media do
   schema "medias" do
     field :mimetype, :string
     field :name, :string
-    field :size, :integer
-    field :uri, :string
+
+    field :meta, :map
 
     belongs_to :organization, Castmill.Organizations.Organization, foreign_key: :organization_id, type: Ecto.UUID
     belongs_to :resource, Castmill.Resources.Resource, foreign_key: :resource_id
@@ -18,8 +18,8 @@ defmodule Castmill.Resources.Media do
   @doc false
   def changeset(media, attrs) do
     media
-    |> cast(attrs, [:name, :uri, :size, :mimetype, :organization_id, :resource_id])
-    |> validate_required([:name, :uri, :size, :mimetype, :organization_id])
+    |> cast(attrs, [:name, :mimetype, :meta, :organization_id, :resource_id])
+    |> validate_required([:name, :mimetype, :organization_id])
   end
 
   def update_changeset(media, attrs) do

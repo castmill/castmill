@@ -10,7 +10,8 @@ defmodule Castmill.Repo.Migrations.CreateNetworks do
       add :email, :string, null: false
       add :logo, :string
       add :domain, :string
-      add :default_language, :string
+
+      add :meta, :map
 
       timestamps()
     end

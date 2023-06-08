@@ -3,11 +3,12 @@ defmodule Castmill.Teams do
   The Teams context.
   """
   import Ecto.Query, warn: false
+  alias Ecto.Multi
+
   alias Castmill.Repo
   alias Castmill.Organizations.Organization
   alias Castmill.Teams.{Team, TeamsUsers, TeamsResources}
   alias Castmill.Resources.{Media, Playlist, Calendar}
-
   alias Castmill.Protocol.Access
 
   defimpl Access, for: Team do
@@ -127,26 +128,23 @@ defmodule Castmill.Teams do
     Add a resource to a team with a given access.
   """
   def add_resource_to_team(team_id, child_id, type, access) do
-    # We need a transaction here
-    # First upsert the resource (insert only if there is no a resource for the given id and type)
-    Repo.transaction(fn ->
-      with {:ok, resource_id} <- upsert_resource(child_id, type) do
-        with {:ok, team_resource} <-
-               %TeamsResources{}
-               |> TeamsResources.changeset(%{
-                 access: access,
-                 team_id: team_id,
-                 resource_id: resource_id
-               })
-               |> Repo.insert() do
-          team_resource
-        else
-          {:error, reason} -> Repo.rollback(reason)
-        end
-      else
-        {:error, reason} -> Repo.rollback(reason)
-      end
-    end)
+    {:ok, %{add_resource_to_team: team_resource}} =
+      Repo.transaction(
+        Multi.new()
+        |> Multi.run(:upsert_resource, fn _repo, _changes ->
+          upsert_resource(child_id, type)
+        end)
+        |> Multi.run(:add_resource_to_team, fn _repo, %{upsert_resource: resource_id} ->
+          %TeamsResources{}
+          |> TeamsResources.changeset(%{
+            access: access,
+            team_id: team_id,
+            resource_id: resource_id
+          })
+          |> Repo.insert()
+        end)
+      )
+    {:ok, team_resource}
   end
 
   @doc """
@@ -159,8 +157,7 @@ defmodule Castmill.Teams do
     |> Repo.update_all(set: [access: access])
   end
 
-  def upsert_resource(id, type) do
-    # We need a transaction here
+  defp upsert_resource(id, type) do
     # First upsert the resource (insert only if there is no a resource for the given id and type)
     # Check if the child has a resource associated to it already.
     child = get_child_resource(id, type)
@@ -180,10 +177,10 @@ defmodule Castmill.Teams do
 
   defp get_child_resource(id, type) do
     case type do
-      :media -> Repo.get_by(Media, id: id)
-      :playlist -> Repo.get_by(Playlist, id: id)
-      :calendar -> Repo.get_by(Calendar, id: id)
-      :device -> Repo.get_by(Device, id: id)
+      :media -> Repo.get(Media, id)
+      :playlist -> Repo.get(Playlist, id)
+      :calendar -> Repo.get(Calendar, id)
+      :device -> Repo.get(Device, id)
       _ -> {:error, "Invalid resource type"}
     end
   end
