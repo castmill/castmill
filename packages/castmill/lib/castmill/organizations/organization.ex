@@ -6,18 +6,29 @@ defmodule Castmill.Organizations.Organization do
   @primary_key {:id, :binary_id, autogenerate: true}
 
   schema "organizations" do
-    field :name, :string
+    field(:name, :string)
 
-    belongs_to :network, Castmill.Networks.Network, foreign_key: :network_id, type: Ecto.UUID
-    belongs_to :organization, Castmill.Organizations.Organization, type: Ecto.UUID
+    field(:country, :string)
+    field(:city, :string)
+    field(:address, :string)
+    field(:postal_code, :string)
+    field(:email, :string)
 
-    has_many :devices, Castmill.Devices.Device
-    has_many :teams, Castmill.Teams.Team
-    has_many :calendars, Castmill.Resources.Calendar
-    has_many :playlists, Castmill.Resources.Playlist
-    has_many :medias, Castmill.Resources.Media
+    field(:meta, :map)
 
-    many_to_many :users, Castmill.Accounts.User, join_through: "organizations_users", on_replace: :delete
+    belongs_to(:network, Castmill.Networks.Network, foreign_key: :network_id, type: Ecto.UUID)
+    belongs_to(:organization, Castmill.Organizations.Organization, type: Ecto.UUID)
+
+    has_many(:devices, Castmill.Devices.Device)
+    has_many(:teams, Castmill.Teams.Team)
+    has_many(:calendars, Castmill.Resources.Calendar)
+    has_many(:playlists, Castmill.Resources.Playlist)
+    has_many(:medias, Castmill.Resources.Media)
+
+    many_to_many(:users, Castmill.Accounts.User,
+      join_through: "organizations_users",
+      on_replace: :delete
+    )
 
     timestamps()
   end
@@ -31,7 +42,7 @@ defmodule Castmill.Organizations.Organization do
   end
 
   def base_query() do
-    from e in Castmill.Organizations.Organization, as: :organization
+    from(e in Castmill.Organizations.Organization, as: :organization)
   end
 
   def where_org_id(query, nil) do
@@ -39,7 +50,8 @@ defmodule Castmill.Organizations.Organization do
   end
 
   def where_org_id(query, id) do
-    from e in query,
+    from(e in query,
       where: e.organization_id == ^id
+    )
   end
 end

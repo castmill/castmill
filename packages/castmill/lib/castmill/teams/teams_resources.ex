@@ -18,5 +18,6 @@ defmodule Castmill.Teams.TeamsResources do
     teams_resources
     |> cast(attrs, [:access, :team_id, :resource_id])
     |> validate_required([:access, :team_id, :resource_id])
+    |> unique_constraint([:team_id, :user_id], name: :teams_resources_pkey)
   end
 end

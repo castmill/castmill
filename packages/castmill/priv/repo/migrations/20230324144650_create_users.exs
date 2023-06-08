@@ -13,6 +13,8 @@ defmodule Castmill.Repo.Migrations.CreateUsers do
       # are not part of any network. This is useful for system administrators.
       add :network_id, references("networks", column: "id", type: :uuid, on_delete: :delete_all), null: true
 
+      add :meta, :map
+
       timestamps()
     end
 

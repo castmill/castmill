@@ -13,11 +13,20 @@ defmodule Castmill.Plug.Authorize do
       network
         organization
           team
+
           media
           playlist
           widgets
           calendars
+          devices
           etc.
+          team
+            media
+            playlist
+            widgets
+            calendars
+            devices
+            etc.
   """
   import Plug.Conn
   alias Castmill.Protocol.Access

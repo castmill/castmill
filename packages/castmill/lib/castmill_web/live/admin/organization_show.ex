@@ -25,10 +25,6 @@ defmodule CastmillWeb.Live.Admin.OrganizationShow do
           field: :organization_id
         },
         %{
-          name: "Language",
-          field: :default_language
-        },
-        %{
           name: "Created",
           field: :inserted_at
         }
