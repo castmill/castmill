@@ -12,8 +12,6 @@ defmodule Castmill.MediasFixtures do
       attrs
       |> Enum.into(%{
         name: "Hangar 42",
-        uri: "https://some.url.com",
-        size: 123,
         mimetype: "video/mp4",
       })
       |> Castmill.Resources.create_media()

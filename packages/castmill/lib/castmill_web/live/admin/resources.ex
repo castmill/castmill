@@ -43,10 +43,6 @@ defmodule CastmillWeb.Live.Admin.Resources do
         field: :domain
       },
       %{
-        name: "Language",
-        field: :default_language
-      },
-      %{
         name: "Created",
         field: :inserted_at
       }

@@ -6,19 +6,21 @@ defmodule Castmill.Repo.Migrations.CreateDevices do
       add :id, :uuid, primary_key: true
 
       add :name, :string
+      add :description, :string
+      add :hardware_id, :string, null: false
       add :last_ip, :string
       add :token_hash, :string
-      add :meta, :map
       add :last_online, :date
       add :user_agent, :string
       add :timezone, :string
       add :loc_lat, :float
       add :loc_long, :float
       add :version, :string
-      add :settings, :map
       add :volume, :integer
+
+      add :meta, :map
+      add :settings, :map
       add :info, :map
-      add :hardware_id, :string
 
       add :resource_id, references(:resources, on_delete: :nilify_all), null: true
       add :organization_id, references("organizations", column: "id", type: :uuid, on_delete: :delete_all), null: false

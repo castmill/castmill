@@ -4,10 +4,11 @@ defmodule Castmill.Resources.Calendar do
   import Ecto.Query, warn: false
 
   schema "calendars" do
-    field :default_playlist_id, :string
     field :description, :string
     field :name, :string
     field :timezone, :string
+
+    belongs_to :playlist, Castmill.Resources.Playlist, foreign_key: :default_playlist_id
 
     belongs_to :organization, Castmill.Organizations.Organization, foreign_key: :organization_id, type: Ecto.UUID
     belongs_to :resource, Castmill.Resources.Resource, foreign_key: :resource_id

@@ -30,9 +30,8 @@ defmodule CastmillWeb.ResourceJSON do
     %{
       id: media.id,
       name: media.name,
-      uri: media.uri,
-      size: media.size,
-      mimetype: media.mimetype
+      mimetype: media.mimetype,
+      meta: media.meta,
     }
   end
 

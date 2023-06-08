@@ -23,7 +23,6 @@ defmodule CastmillWeb.NetworkJSON do
       email: network.email,
       logo: network.logo,
       domain: network.domain,
-      default_language: network.default_language
     }
   end
 end

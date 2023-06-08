@@ -20,7 +20,6 @@ defmodule CastmillWeb.Live.Admin.NetworkForm do
         <.input field={@form[:name]} type="text" label="Name" />
         <.input field={@form[:email]} type="text" label="Email" />
         <.input field={@form[:domain]} type="text" label="Domain" />
-        <.input field={@form[:default_language]} type="text" label="Default Language" />
         <.input field={@form[:logo]} type="text" label="Logo" />
         <.input field={@form[:copyright]} type="text" label="Copyright" />
 

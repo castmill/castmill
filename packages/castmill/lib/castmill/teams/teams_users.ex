@@ -18,5 +18,7 @@ defmodule Castmill.Teams.TeamsUsers do
     teams_users
     |> cast(attrs, [:team_id, :user_id, :role])
     |> validate_required([:team_id, :user_id, :role])
+    |> unique_constraint([:team_id, :user_id], name: :teams_users_pkey)
+
   end
 end

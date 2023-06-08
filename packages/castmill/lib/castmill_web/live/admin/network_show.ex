@@ -24,10 +24,6 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
           field: :domain
         },
         %{
-          name: "Language",
-          field: :default_language
-        },
-        %{
           name: "Created",
           field: :inserted_at
         }

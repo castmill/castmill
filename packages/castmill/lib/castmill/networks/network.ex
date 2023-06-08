@@ -1,20 +1,22 @@
 defmodule Castmill.Networks.Network do
   use Ecto.Schema
   import Ecto.Changeset
+  import Ecto.Query, warn: false
 
   @primary_key {:id, Ecto.UUID, autogenerate: true}
   @foreign_key_type Ecto.UUID
 
   schema "networks" do
-    field :copyright, :string, default: "© 2023 Castmill"
-    field :default_language, :string, default: "en"
-    field :domain, :string
-    field :email, :string
-    field :logo, :string, default: "https://castmill.com/images/logo.png"
-    field :name, :string
+    field(:copyright, :string, default: "© 2023 Castmill")
+    field(:domain, :string)
+    field(:email, :string)
+    field(:logo, :string, default: "https://castmill.com/images/logo.png")
+    field(:name, :string)
 
-    has_many :organizations, Castmill.Organizations.Organization
-    has_many :users, Castmill.Accounts.User
+    field(:meta, :map)
+
+    has_many(:organizations, Castmill.Organizations.Organization)
+    has_many(:users, Castmill.Accounts.User)
 
     timestamps()
   end
@@ -22,9 +24,23 @@ defmodule Castmill.Networks.Network do
   @doc false
   def changeset(network, attrs) do
     network
-    |> cast(attrs, [:name, :copyright, :email, :logo, :domain, :default_language])
-    |> validate_required([:name, :email, :default_language])
+    |> cast(attrs, [:name, :copyright, :email, :logo, :domain, :meta])
+    |> validate_required([:name, :email])
     |> validate_format(:email, ~r/@/)
     |> unique_constraint(:name)
+  end
+
+  def base_query() do
+    from(network in Castmill.Networks.Network, as: :network)
+  end
+
+  def where_name(query, nil) do
+    query
+  end
+
+  def where_name(query, name) do
+    from(network in query,
+      where: network.name == ^name
+    )
   end
 end

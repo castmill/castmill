@@ -7,7 +7,13 @@ defmodule Castmill.Quotas.Plan do
     A Plan is a set of predefined quotas that can be applied to an organization or network.
   """
   schema "plans" do
-    field :name, :string
+    field(:name, :string)
+
+    belongs_to(:network, Castmill.Networks.Network,
+      foreign_key: :network_id,
+      type: Ecto.UUID
+    )
+
     timestamps()
   end
 
@@ -19,6 +25,6 @@ defmodule Castmill.Quotas.Plan do
   end
 
   def base_query() do
-    from plan in Castmill.Quotas.Plan, as: :plans
+    from(plan in Castmill.Quotas.Plan, as: :plans)
   end
 end

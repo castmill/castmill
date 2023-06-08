@@ -12,7 +12,6 @@ defmodule Castmill.NetworksFixtures do
       attrs
       |> Enum.into(%{
         copyright: "some copyright",
-        default_language: "some default_language",
         domain: "some domain",
         email: "some@email.com",
         logo: "some logo",
