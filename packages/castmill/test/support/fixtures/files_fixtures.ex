@@ -8,7 +8,6 @@ defmodule Castmill.FilesFixtures do
   Create a file
   """
   def file_fixture(attrs \\ %{}) do
-    {:ok, file} =
       attrs
       |> Enum.into(%{
         name: "Hangar 42",
