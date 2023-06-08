@@ -4,15 +4,30 @@ defmodule CastmillWeb.NetworkController do
   alias Castmill.Networks
   alias Castmill.Networks.Network
 
-  action_fallback CastmillWeb.FallbackController
+  action_fallback(CastmillWeb.FallbackController)
 
   alias Castmill.Plug.Authorize
 
-  plug Authorize, %{}
+  plug(Authorize, %{})
 
-  def index(conn, _params) do
-    networks = Networks.list_networks()
-    render(conn, :index, networks: networks)
+  @index_params_schema %{
+    name: :string,
+    limit: :string,
+    offset: :string,
+    pattern: :string
+  }
+
+  def index(conn, params) do
+    with {:ok, params} <- Tarams.cast(params, @index_params_schema) do
+      networks = Networks.list_networks(params)
+      render(conn, :index, networks: networks)
+    else
+      {:error, errors} ->
+        conn
+        |> put_status(:bad_request)
+        |> Phoenix.Controller.json(%{errors: errors})
+        |> halt()
+    end
   end
 
   def create(conn, network_params) do
