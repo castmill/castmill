@@ -5,6 +5,7 @@ defmodule Castmill.TeamsTest do
 
   alias Castmill.Teams
 
+  @tag :teams
   describe "teams" do
     import Castmill.NetworksFixtures
     import Castmill.OrganizationsFixtures
@@ -77,7 +78,9 @@ defmodule Castmill.TeamsTest do
       media = media_fixture(%{organization_id: organization.id})
 
       {:ok, _result} = Teams.add_resource_to_team(team.id, media.id, :media, [:read, :write])
-      {:ok, _result} = Teams.add_resource_to_team(team.id, playlist.id, :playlist, [:read, :write])
+
+      {:ok, _result} =
+        Teams.add_resource_to_team(team.id, playlist.id, :playlist, [:read, :write])
 
       resources = Teams.list_resources(team.id)
 
@@ -85,30 +88,31 @@ defmodule Castmill.TeamsTest do
       mediaId = media.id
       playlistId = playlist.id
 
-      assert [%{access: [:read, :write],
-      resource: %{
-        type: :media,
-        media: %{
-          :id => ^mediaId,
-          mimetype: "video/mp4",
-          name: "Hangar 42",
-          size: 123,
-          uri: "https://some.url.com",
-         organization_id: ^organizationId,
-        }
-      }
-      },
-      %{access: [:read, :write],
-      resource: %{
-        type: :playlist,
-        playlist: %{
-          :id => ^playlistId,
-          name: "Hangar 42",
-          organization_id: ^organizationId,
-        }
-      }
-      }
-      ] = resources
+      assert [
+               %{
+                 access: [:read, :write],
+                 resource: %{
+                   type: :media,
+                   media: %{
+                     :id => ^mediaId,
+                     mimetype: "video/mp4",
+                     name: "Hangar 42",
+                     organization_id: ^organizationId
+                   }
+                 }
+               },
+               %{
+                 access: [:read, :write],
+                 resource: %{
+                   type: :playlist,
+                   playlist: %{
+                     :id => ^playlistId,
+                     name: "Hangar 42",
+                     organization_id: ^organizationId
+                   }
+                 }
+               }
+             ] = resources
     end
 
     test "remove_user_from_team/2 removes user from team" do
@@ -145,39 +149,42 @@ defmodule Castmill.TeamsTest do
       media = media_fixture(%{organization_id: organization.id})
 
       {:ok, _result} = Teams.add_resource_to_team(team.id, media.id, :media, [:read, :write])
-      {:ok, _result} = Teams.add_resource_to_team(team.id, playlist.id, :playlist, [:read, :write])
+
+      {:ok, _result} =
+        Teams.add_resource_to_team(team.id, playlist.id, :playlist, [:read, :write])
 
       resources = Teams.list_resources(team.id)
 
       organizationId = organization.id
       mediaId = media.id
 
-      assert [%{access: [:read, :write],
-      resource: %{
-        type: :media,
-        media: %{
-          :id => ^mediaId,
-          mimetype: "video/mp4",
-          name: "Hangar 42",
-          size: 123,
-          uri: "https://some.url.com",
-         organization_id: ^organizationId,
-        }
-      }
-      },
-      %{access: [:read, :write],
-      resource: %{
-        type: :playlist,
-        playlist: %{
-          :id => _playlistId,
-          name: "Hangar 42",
-          organization_id: ^organizationId,
-        }
-      }
-      }
-      ] = resources
+      assert [
+               %{
+                 access: [:read, :write],
+                 resource: %{
+                   type: :media,
+                   media: %{
+                     :id => ^mediaId,
+                     mimetype: "video/mp4",
+                     name: "Hangar 42",
+                     organization_id: ^organizationId
+                   }
+                 }
+               },
+               %{
+                 access: [:read, :write],
+                 resource: %{
+                   type: :playlist,
+                   playlist: %{
+                     :id => _playlistId,
+                     name: "Hangar 42",
+                     organization_id: ^organizationId
+                   }
+                 }
+               }
+             ] = resources
 
-      [resource|rest] = resources
+      [resource | rest] = resources
 
       {1, nil} = Teams.remove_resource_from_team(resource.team_id, resource.resource.id)
 
@@ -207,6 +214,5 @@ defmodule Castmill.TeamsTest do
       assert Teams.has_access_to_resource(user.id, team_resource.resource_id, :delete) == true
       assert Teams.has_access_to_resource(user.id, team_resource.resource_id, :read) == false
     end
-
   end
 end

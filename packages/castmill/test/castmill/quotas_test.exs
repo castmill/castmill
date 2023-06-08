@@ -5,40 +5,41 @@ defmodule Castmill.QuotasTest do
 
   alias Castmill.Quotas
 
+  @tag :quotas
   describe "quotas" do
     @describetag :quotas
 
     import Castmill.NetworksFixtures
     import Castmill.OrganizationsFixtures
 
-    test "create_plan/2 creates a plan for all permitted resources" do
-      plan = Quotas.create_plan("test plan", [
-        %{max: 10, resource: :medias},
-        %{max: 5, resource: :organizations}
-      ])
+    test "create_plan/3 creates a plan for a given network" do
+      network = network_fixture()
+
+      plan =
+        Quotas.create_plan("test plan", network.id, [
+          %{max: 10, resource: :medias},
+          %{max: 5, resource: :organizations}
+        ])
 
       assert plan.name == "test plan"
 
-      # TODO: Write some asserts where the resources can be used independently
-      # of the network they belong to.
+      network_plans = Quotas.list_plans(network.id)
+      assert network_plans == [plan]
     end
 
-    test "assign_plan_to_network/2 assigns a plan to a given network" do
+    test "assign_quota_to_network/2 assigns a quota to a given network" do
       network = network_fixture()
-      organization = organization_fixture(%{network_id: network.id})
-
-      plan = Quotas.create_plan("test network plan", [
-        %{max: 10, resource: :users},
-        %{max: 5, resource: :organizations}
-      ])
 
       assert Quotas.has_network_enough_quota?(network.id, :organizations, 5) == false
 
-      assert Quotas.assign_plan_to_network(plan.id, network.id)
+      Quotas.assign_quota_to_network(network.id, :organizations, 5)
+      assert Quotas.has_network_enough_quota?(network.id, :organizations, 5) == true
 
-      assert Quotas.has_organization_enough_quota?(organization.id, :medias, 10) == false
       assert Quotas.has_network_enough_quota?(network.id, :organizations, 5) == true
       assert Quotas.has_network_enough_quota?(network.id, :organizations, 6) == false
+      assert Quotas.has_network_enough_quota?(network.id, :users, 9) == false
+
+      Quotas.assign_quota_to_network(network.id, :users, 10)
       assert Quotas.has_network_enough_quota?(network.id, :users, 9) == true
     end
 
@@ -46,10 +47,11 @@ defmodule Castmill.QuotasTest do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
 
-      plan = Quotas.create_plan("test plan", [
-        %{max: 10, resource: :medias},
-        %{max: 5, resource: :organizations}
-      ])
+      plan =
+        Quotas.create_plan("test plan", network.id, [
+          %{max: 10, resource: :medias},
+          %{max: 5, resource: :organizations}
+        ])
 
       assert Quotas.assign_plan_to_organization(plan.id, organization.id)
       assert Quotas.has_organization_enough_quota?(organization.id, :organizations, 5) == true
@@ -59,29 +61,32 @@ defmodule Castmill.QuotasTest do
       assert Quotas.has_organization_enough_quota?(organization.id, :organizations, 4) == true
     end
 
-    test "add_quota_to_network/3 overrides a quota for a given network" do
+    test "update_quota_for_network/3 updates a quota for a given network" do
       network = network_fixture()
 
-      plan = Quotas.create_plan("test network plan", [
-        %{max: 10, resource: :users},
-        %{max: 5, resource: :organizations}
-      ])
+      assert Quotas.has_network_enough_quota?(network.id, :organizations, 5) == false
+      Quotas.update_quota_for_network(network.id, :organizations, 5)
+      assert Quotas.has_network_enough_quota?(network.id, :organizations, 5) == false
 
-      assert Quotas.assign_plan_to_network(plan.id, network.id)
+      Quotas.add_quota_to_network(network.id, :organizations, 5)
       assert Quotas.has_network_enough_quota?(network.id, :organizations, 5) == true
-      assert Quotas.has_network_enough_quota?(network.id, :organizations, 6) == false
-      Quotas.add_quota_to_network(network.id, :organizations, 10)
+
+      assert Quotas.has_network_enough_quota?(network.id, :organizations, 10) == false
+      Quotas.update_quota_for_network(network.id, :organizations, 10)
+      assert Quotas.has_network_enough_quota?(network.id, :organizations, 6) == true
       assert Quotas.has_network_enough_quota?(network.id, :organizations, 10) == true
+
     end
 
     test "add_quota_to_organization/3 overrides a quota for a given organization" do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
 
-      plan = Quotas.create_plan("test plan", [
-        %{max: 10, resource: :medias},
-        %{max: 5, resource: :organizations}
-      ])
+      plan =
+        Quotas.create_plan("test plan", network.id, [
+          %{max: 10, resource: :medias},
+          %{max: 5, resource: :organizations}
+        ])
 
       assert Quotas.assign_plan_to_organization(plan.id, organization.id)
       assert Quotas.has_organization_enough_quota?(organization.id, :medias, 10) == true
@@ -92,23 +97,28 @@ defmodule Castmill.QuotasTest do
     end
 
     test "list_plans/0 list plans" do
-      plan = Quotas.create_plan("test plan", [
-        %{max: 10, resource: :medias},
-        %{max: 5, resource: :organizations}
-      ])
+      network = network_fixture()
+
+      plan =
+        Quotas.create_plan("test plan", network.id, [
+          %{max: 10, resource: :medias},
+          %{max: 5, resource: :organizations}
+        ])
 
       assert Quotas.list_plans() == [plan]
     end
 
     test "delete_plan/1 deletes plan" do
-      plan = Quotas.create_plan("test plan", [
-        %{max: 10, resource: :medias},
-        %{max: 5, resource: :organizations}
-      ])
+      network = network_fixture()
+
+      plan =
+        Quotas.create_plan("test plan", network.id, [
+          %{max: 10, resource: :medias},
+          %{max: 5, resource: :organizations}
+        ])
 
       assert Quotas.delete_plan(plan.id)
       assert Quotas.list_plans() == []
     end
-
   end
 end

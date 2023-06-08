@@ -15,6 +15,7 @@ defmodule Castmill.Devices.Device do
     field :loc_long, :float
     field :meta, :map
     field :name, :string
+    field :description, :string
     field :settings, :map
     field :timezone, :string
     field :user_agent, :string
@@ -25,10 +26,15 @@ defmodule Castmill.Devices.Device do
 
     field :token, :string, virtual: true
 
-    belongs_to :organization, Castmill.Organizations.Organization, foreign_key: :organization_id, type: Ecto.UUID
+    belongs_to :organization, Castmill.Organizations.Organization,
+      foreign_key: :organization_id,
+      type: Ecto.UUID
+
     belongs_to :resource, Castmill.Resources.Resource, foreign_key: :resource_id
 
-    many_to_many :calendars, Castmill.Devices.DevicesCalendars, join_through: "devices_calendars", on_replace: :delete
+    many_to_many :calendars, Castmill.Devices.DevicesCalendars,
+      join_through: "devices_calendars",
+      on_replace: :delete
 
     timestamps()
   end
@@ -38,6 +44,7 @@ defmodule Castmill.Devices.Device do
     device
     |> cast(attrs, [
       :name,
+      :description,
       :last_ip,
       :token,
       :meta,
@@ -72,6 +79,7 @@ defmodule Castmill.Devices.Device do
     device
     |> cast(attrs, [
       :name,
+      :description,
       :last_ip,
       :token,
       :meta,

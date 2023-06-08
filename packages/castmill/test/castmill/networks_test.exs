@@ -3,12 +3,13 @@ defmodule Castmill.NetworksTest do
 
   alias Castmill.Networks
 
+  @tag :networks
   describe "networks" do
     alias Castmill.Networks.Network
 
     import Castmill.NetworksFixtures
 
-    @invalid_attrs %{copyright: nil, default_language: nil, domain: nil, email: nil, logo: nil, name: nil}
+    @invalid_attrs %{copyright: nil, domain: nil, email: nil, logo: nil, name: nil}
 
     test "list_networks/0 returns all networks" do
       network = network_fixture()
@@ -23,7 +24,6 @@ defmodule Castmill.NetworksTest do
     test "create_network/1 with valid data creates a network" do
       valid_attrs = %{
         copyright: "some copyright",
-        default_language: "some default_language",
         domain: "some.domain.com",
         email: "some@email.com",
         logo: "some logo",
@@ -32,7 +32,6 @@ defmodule Castmill.NetworksTest do
 
       assert {:ok, %Network{} = network} = Networks.create_network(valid_attrs)
       assert network.copyright ==  valid_attrs.copyright
-      assert network.default_language == valid_attrs.default_language
       assert network.domain == valid_attrs.domain
       assert network.email == valid_attrs.email
       assert network.logo == valid_attrs.logo
@@ -47,7 +46,6 @@ defmodule Castmill.NetworksTest do
       network = network_fixture()
       update_attrs = %{
         copyright: "some updated copyright",
-        default_language: "some updated default_language",
         domain: "some updated domain",
         email: "some@updated.email.com",
         logo: "some updated logo",
@@ -56,7 +54,6 @@ defmodule Castmill.NetworksTest do
 
       assert {:ok, %Network{} = network} = Networks.update_network(network, update_attrs)
       assert network.copyright == update_attrs.copyright
-      assert network.default_language == update_attrs.default_language
       assert network.domain == update_attrs.domain
       assert network.email == update_attrs.email
       assert network.logo == update_attrs.logo

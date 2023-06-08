@@ -7,7 +7,6 @@ defmodule CastmillWeb.NetworkControllerTest do
 
   @create_attrs %{
     copyright: "some copyright",
-    default_language: "some default_language",
     domain: "some domain",
     email: "some email",
     logo: "some logo",
@@ -15,13 +14,12 @@ defmodule CastmillWeb.NetworkControllerTest do
   }
   @update_attrs %{
     copyright: "some updated copyright",
-    default_language: "some updated default_language",
     domain: "some updated domain",
     email: "some updated email",
     logo: "some updated logo",
     name: "some updated name"
   }
-  @invalid_attrs %{copyright: nil, default_language: nil, domain: nil, email: nil, logo: nil, name: nil}
+  @invalid_attrs %{copyright: nil, domain: nil, email: nil, logo: nil, name: nil}
 
   setup %{conn: conn} do
     {:ok, conn: put_req_header(conn, "accept", "application/json")}
@@ -44,7 +42,6 @@ defmodule CastmillWeb.NetworkControllerTest do
       assert %{
                "id" => ^id,
                "copyright" => "some copyright",
-               "default_language" => "some default_language",
                "domain" => "some domain",
                "email" => "some email",
                "logo" => "some logo",
@@ -70,7 +67,6 @@ defmodule CastmillWeb.NetworkControllerTest do
       assert %{
                "id" => ^id,
                "copyright" => "some updated copyright",
-               "default_language" => "some updated default_language",
                "domain" => "some updated domain",
                "email" => "some updated email",
                "logo" => "some updated logo",

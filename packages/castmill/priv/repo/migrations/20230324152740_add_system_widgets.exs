@@ -41,6 +41,21 @@ defmodule Castmill.Repo.Migrations.AddDefaultWidgets do
               template_id: :integer,
               model: :object
             }
+          },
+          %{
+            name: "weather",
+            uri: "widget://weather",
+            schema: %{
+              city: :string,
+              country: :string,
+            }
+          },
+          %{
+            name: "web",
+            uri: "widget://web",
+            schema: %{
+              url: :string
+            }
           }
         ] do
       %Castmill.Widgets.Widget{is_system: true}

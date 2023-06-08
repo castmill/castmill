@@ -13,7 +13,9 @@ defmodule Castmill.Networks do
       if user == nil do
         {:error, "No user provided"}
       else
-        network_admin = Repo.get_by(Castmill.Networks.NetworksAdmins, network_id: network.id, user_id: user.id)
+        network_admin =
+          Repo.get_by(Castmill.Networks.NetworksAdmins, network_id: network.id, user_id: user.id)
+
         if network_admin !== nil do
           {:ok, true}
         else
@@ -28,12 +30,14 @@ defmodule Castmill.Networks do
 
   ## Examples
 
-      iex> list_networks()
+      iex> list_networks(params)
       [%Network{}, ...]
 
   """
-  def list_networks do
-    Repo.all(Network)
+  def list_networks(params \\ %{}) do
+    Network.base_query()
+    |> Network.where_name(params[:name])
+    |> Repo.all()
   end
 
   @doc """
@@ -126,9 +130,12 @@ defmodule Castmill.Networks do
     [%User{}, ...]
   """
   def list_users(network_id) do
-    query = from user in Castmill.Accounts.User,
-      where: user.network_id == ^network_id,
-      select: user
+    query =
+      from(user in Castmill.Accounts.User,
+        where: user.network_id == ^network_id,
+        select: user
+      )
+
     Repo.all(query)
   end
 
@@ -141,9 +148,12 @@ defmodule Castmill.Networks do
   [%Organization{}, ...]
   """
   def list_organizations(network_id) do
-    query = from organization in Castmill.Organizations.Organization,
-      where: organization.network_id == ^network_id,
-      select: organization
+    query =
+      from(organization in Castmill.Organizations.Organization,
+        where: organization.network_id == ^network_id,
+        select: organization
+      )
+
     Repo.all(query)
   end
 
@@ -156,11 +166,14 @@ defmodule Castmill.Networks do
   [%Team{}, ...]
   """
   def list_teams(network_id) do
-    query = from team in Castmill.Teams.Team,
-      join: organization in Castmill.Organizations.Organization,
-      on: team.organization_id == organization.id,
-      where: organization.network_id == ^network_id,
-      select: team
+    query =
+      from(team in Castmill.Teams.Team,
+        join: organization in Castmill.Organizations.Organization,
+        on: team.organization_id == organization.id,
+        where: organization.network_id == ^network_id,
+        select: team
+      )
+
     Repo.all(query)
   end
 
@@ -173,12 +186,14 @@ defmodule Castmill.Networks do
   [%Device{}, ...]
   """
   def list_devices(network_id) do
-    query = from device in Castmill.Devices.Device,
-      join: organization in Castmill.Organizations.Organization,
-      on: device.organization_id == organization.id,
-      where: organization.network_id == ^network_id,
-      select: device
+    query =
+      from(device in Castmill.Devices.Device,
+        join: organization in Castmill.Organizations.Organization,
+        on: device.organization_id == organization.id,
+        where: organization.network_id == ^network_id,
+        select: device
+      )
+
     Repo.all(query)
   end
-
 end
