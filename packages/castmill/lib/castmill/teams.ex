@@ -10,6 +10,7 @@ defmodule Castmill.Teams do
   alias Castmill.Teams.{Team, TeamsUsers, TeamsResources}
   alias Castmill.Resources.{Media, Playlist, Calendar}
   alias Castmill.Protocol.Access
+  alias Castmill.QueryHelpers
 
   defimpl Access, for: Team do
     def canAccess(_team, user, _action) do
@@ -35,6 +36,22 @@ defmodule Castmill.Teams do
       [%Network{}, ...]
 
   """
+  def list_teams(params) when is_map(params) do
+    organization_id = params[:organization_id]
+    pattern = params[:pattern]
+    page = params[:page]
+    page_size = params[:page_size]
+    offset = max((page - 1) * page_size, 0)
+
+    Team.base_query()
+    |> Organization.where_org_id(organization_id)
+    |> QueryHelpers.where_name_like(pattern)
+    |> order_by([t], desc: t.id)
+    |> Ecto.Query.limit(^page_size)
+    |> Ecto.Query.offset(^offset)
+    |> Repo.all()
+  end
+
   def list_teams(organization_id) do
     Team.base_query()
     |> Organization.where_org_id(organization_id)
@@ -46,6 +63,16 @@ defmodule Castmill.Teams do
     Team.base_query()
     |> order_by([t], desc: t.id)
     |> Repo.all()
+  end
+
+  def count_teams(params) when is_map(params) do
+    organization_id = params[:organization_id]
+    pattern = params[:pattern]
+
+    Team.base_query()
+    |> Organization.where_org_id(organization_id)
+    |> QueryHelpers.where_name_like(pattern)
+    |> Repo.aggregate(:count, :id)
   end
 
   @doc """

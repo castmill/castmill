@@ -7,6 +7,7 @@ defmodule Castmill.Networks do
   alias Castmill.Networks.Network
 
   alias Castmill.Protocol.Access
+  alias Castmill.QueryHelpers
 
   defimpl Access, for: Network do
     def canAccess(network, user, _action) do
@@ -35,10 +36,28 @@ defmodule Castmill.Networks do
 
   """
   def list_networks(params \\ %{}) do
+    pattern = params[:pattern]
+    page = Map.get(params, "page", "1") |> String.to_integer()
+    page_size = Map.get(params, "page_size", "10") |> String.to_integer()
+    offset = max((page - 1) * page_size, 0)
+    name = params[:name]
+
     Network.base_query()
-    |> Network.where_name(params[:name])
+    |> Network.where_name(name)
+    |> QueryHelpers.where_name_like(pattern)
+    |> Ecto.Query.limit(^page_size)
+    |> Ecto.Query.offset(^offset)
     |> Repo.all()
   end
+
+  def count_networks(params \\ %{}) do
+    pattern = params[:pattern]
+
+    Network.base_query()
+    |> QueryHelpers.where_name_like(pattern)
+    |> Repo.aggregate(:count, :id)
+  end
+
 
   @doc """
   Gets a single network.

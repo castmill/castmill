@@ -21,6 +21,7 @@ defmodule Castmill.Resources do
   alias Castmill.Organizations.Organization
 
   alias Castmill.Protocol.Access
+  alias Castmill.QueryHelpers
 
   @doc """
     Can access the resource.
@@ -338,19 +339,28 @@ defmodule Castmill.Resources do
       iex> list_resource(Media, organization_id)
       [%Media{}, ...]
   """
-  def list_resource(resource, organization_id \\ nil, limit \\ nil, offset \\ 0, pattern \\ nil) do
+  def list_resource(resource, params) when is_map(params) do
+    organization_id = params[:organization_id]
+    page = params[:page] || 0
+    page_size = params[:page_size]
+    search = params[:search]
+    offset = if page_size == nil, do: 0, else: max((page - 1) * page_size, 0)
+    
     resource.base_query()
     |> Organization.where_org_id(organization_id)
-    |> where_name_like(pattern)
-    |> Ecto.Query.limit(^limit)
+    |> QueryHelpers.where_name_like(search)
+    |> Ecto.Query.limit(^page_size)
     |> Ecto.Query.offset(^offset)
     |> Repo.all()
   end
 
-  def count_resource(resource, organization_id, pattern \\ nil) do
+  def count_resource(resource, params) when is_map(params) do
+    organization_id = params[:organization_id]
+    search = params[:search]
+
     resource.base_query()
     |> Organization.where_org_id(organization_id)
-    |> where_name_like(pattern)
+    |> QueryHelpers.where_name_like(search)
     |> Repo.aggregate(:count, :id)
   end
 
