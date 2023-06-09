@@ -15,21 +15,21 @@ defmodule CastmillWeb.Live.Admin.Table do
       <.table
         id="networks"
         rows={@rows}
-        row_click={fn {_id, row} -> JS.navigate("#{@base_url}/#{row.id}") end}
+        row_click={fn row -> JS.navigate("#{@base_url}/#{row.id}") end}
       >
-        <:col :let={{_id, row}} :for={col <- @cols} label={col.name}>
+        <:col :let={row} :for={col <- @cols} label={col.name}>
           <%= Map.get(row, col.field, "") %>
         </:col>
 
-        <:action :let={{_id, row}}>
+        <:action :let={row}>
           <div class="sr-only">
             <.link navigate={"#{@base_url}/#{row.id}"}>Show</.link>
           </div>
           <.link patch={"#{@base_url}/#{row.id}/edit"}>Edit</.link>
         </:action>
-        <:action :let={{id, row}}>
+        <:action :let={row}>
           <.link
-            phx-click={JS.push("delete", value: %{id: row.id, resource: @resource}) |> hide("##{id}")}
+            phx-click={JS.push("delete", value: %{id: row.id, resource: @resource}) |> hide("##{row.id}")}
             data-confirm="Are you sure?"
           >
             Delete

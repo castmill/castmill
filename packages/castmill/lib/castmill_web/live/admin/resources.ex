@@ -18,11 +18,15 @@ defmodule CastmillWeb.Live.Admin.Resources do
       |> assign(:search, "")
       |> assign(:page, 1)
       |> assign(:page_size, 10)
-      |> assign(:total_pages, 1)
       |> assign(:total_items, 0)
       |> assign(:sort, "name")
       |> assign(:sort_dir, "asc")
       |> assign(:loading, false)
+      |> assign(:options, %{
+        page: 1,
+        page_size: 10,
+        search: "",
+      })
       |> assign(:form_module, CastmillWeb.Live.Admin.NetworkForm)
 
     {:ok, socket}
@@ -48,13 +52,13 @@ defmodule CastmillWeb.Live.Admin.Resources do
       }
     ]
 
+    socket = handle_resource("Network", params, socket)
+
     {:noreply,
      socket
-     |> maybe_stream(:rows, Networks.list_networks())
      |> apply_action(socket.assigns.live_action, params)
      |> assign(:cols, columns)
      |> assign(:selected_link, "networks")
-     |> assign(:resource_name, "Network")
      |> assign(:form_module, CastmillWeb.Live.Admin.NetworkForm)}
   end
 
@@ -74,18 +78,18 @@ defmodule CastmillWeb.Live.Admin.Resources do
       }
     ]
 
+    socket = handle_resource("Organization", params, socket)
+
     {:noreply,
      socket
      |> apply_action(socket.assigns.live_action, params)
      |> assign(:cols, columns)
-     |> maybe_stream(:rows, Organizations.list_organizations())
      |> assign(:selected_link, "organizations")
-     |> assign(:resource_name, "Organization")
      |> assign(:page_title, "Organizations")
      |> assign(:form_module, CastmillWeb.Live.Admin.OrganizationForm)}
   end
 
-  def handle_params(%{"resource" => "teams"}, _url, socket) do
+  def handle_params(%{"resource" => "teams"} = params, _url, socket) do
     columns = [
       %{
         name: "Name",
@@ -101,16 +105,16 @@ defmodule CastmillWeb.Live.Admin.Resources do
       }
     ]
 
+    socket = handle_resource("Team", params, socket)
+
     {:noreply,
      socket
      |> assign(:cols, columns)
-     |> stream(:rows, Teams.list_teams())
      |> assign(:selected_link, "teams")
-     |> assign(:resource_name, "Team")
      |> assign(:page_title, "Teams")}
   end
 
-  def handle_params(%{"resource" => "users"}, _url, socket) do
+  def handle_params(%{"resource" => "users"} = params, _url, socket) do
     columns = [
       %{
         name: "Name",
@@ -134,16 +138,16 @@ defmodule CastmillWeb.Live.Admin.Resources do
       }
     ]
 
+    socket = handle_resource("User", params, socket)
+
     {:noreply,
      socket
      |> assign(:cols, columns)
-     |> stream(:rows, Accounts.list_users())
      |> assign(:selected_link, "users")
-     |> assign(:resource_name, "User")
      |> assign(:page_title, "Users")}
   end
 
-  def handle_params(%{"resource" => "devices"}, _url, socket) do
+  def handle_params(%{"resource" => "devices"} = params, _url, socket) do
     columns = [
       %{
         name: "Name",
@@ -167,16 +171,16 @@ defmodule CastmillWeb.Live.Admin.Resources do
       }
     ]
 
+    socket = handle_resource("Device", params, socket)
+
     {:noreply,
      socket
      |> assign(:cols, columns)
-     |> stream(:rows, Devices.list_devices())
      |> assign(:selected_link, "devices")
-     |> assign(:resource_name, "Device")
      |> assign(:page_title, "Devices")}
   end
 
-  def handle_params(%{"resource" => "calendars"}, _url, socket) do
+  def handle_params(%{"resource" => "calendars"} = params, _url, socket) do
     columns = [
       %{
         name: "Name",
@@ -192,16 +196,16 @@ defmodule CastmillWeb.Live.Admin.Resources do
       }
     ]
 
+    socket = handle_resource("Calendar", params, socket)
+
     {:noreply,
      socket
      |> assign(:cols, columns)
-     |> stream(:rows, Resources.list_resource(Castmill.Resources.Calendar))
      |> assign(:selected_link, "calendars")
-     |> assign(:resource_name, "Calendar")
      |> assign(:page_title, "Calendars")}
   end
 
-  def handle_params(%{"resource" => "playlists"}, _url, socket) do
+  def handle_params(%{"resource" => "playlists"} = params, _url, socket) do
     columns = [
       %{
         name: "Name",
@@ -217,16 +221,16 @@ defmodule CastmillWeb.Live.Admin.Resources do
       }
     ]
 
+    socket = handle_resource("Playlist", params, socket);
+
     {:noreply,
      socket
      |> assign(:cols, columns)
-     |> stream(:rows, Resources.list_resource(Castmill.Resources.Playlist))
      |> assign(:selected_link, "playlists")
-     |> assign(:resource_name, "Playlist")
      |> assign(:page_title, "Playlists")}
   end
 
-  def handle_params(%{"resource" => "medias"}, _url, socket) do
+  def handle_params(%{"resource" => "medias"} = params, _url, socket) do
     columns = [
       %{
         name: "Name",
@@ -242,12 +246,12 @@ defmodule CastmillWeb.Live.Admin.Resources do
       }
     ]
 
+    socket = handle_resource("Media", params, socket);
+
     {:noreply,
      socket
      |> assign(:cols, columns)
-     |> stream(:rows, Resources.list_resource(Castmill.Resources.Media))
      |> assign(:selected_link, "medias")
-     |> assign(:resource_name, "Media")
      |> assign(:page_title, "Medias")}
   end
 
@@ -286,20 +290,22 @@ defmodule CastmillWeb.Live.Admin.Resources do
 
       <div class="mt-8 mb-4">
         <.search
-          placeholder="Search organizations"
-          phx-debounce="500"
-          phx-target="search"
-          phx-value=""
+          placeholder="Search"
+          value={@search}
         />
       </div>
       <.admin_table
-        rows={@streams.rows}
+        rows={@rows}
         cols={@cols}
         resource={@selected_link}
         base_url={~p"/admin/#{@selected_link}"}
       />
 
-      <.pagination />
+      <.pagination
+          selected_link={@selected_link}
+          total_items={@total_items}
+          options={@options}
+      />
     </div>
     <.modal
       :if={@live_action in [:new, :edit]}
@@ -343,8 +349,7 @@ defmodule CastmillWeb.Live.Admin.Resources do
   end
 
   def handle_event("search", %{"search" => search}, socket) do
-    send(self(), {:run_search, search})
-    {:noreply, assign(socket, search: search, networks: [], loading: true)}
+    {:noreply, assign(socket, search: search)}
   end
 
   @impl true
@@ -408,5 +413,66 @@ defmodule CastmillWeb.Live.Admin.Resources do
     socket
     |> assign(:page_title, "Networks")
     |> assign(:resource, nil)
+  end
+
+  # Select rows for a given resource
+  defp select_rows(resource_name, query_params) do
+    case resource_name do
+      "Media" -> %{
+          rows: Resources.list_resource(Castmill.Resources.Media, query_params),
+          count: Resources.count_resource(Castmill.Resources.Media, query_params)
+      }
+      "Playlist" -> %{
+          rows: Resources.list_resource(Castmill.Resources.Playlist, query_params),
+          count: Resources.count_resource(Castmill.Resources.Playlist, query_params)
+      }
+      "Calendar" -> %{
+          rows: Resources.list_resource(Castmill.Resources.Calendar, query_params),
+          count: Resources.count_resource(Castmill.Resources.Calendar, query_params)
+      }
+      "Device" -> %{
+          rows: Devices.list_devices(query_params),
+          count: Devices.count_devices(query_params)
+      }
+      "User" -> %{
+          rows: Accounts.list_users(query_params),
+          count: Accounts.count_users(query_params)
+      }
+      "Team" -> %{
+          rows: Teams.list_teams(query_params),
+          count: Teams.count_teams(query_params)
+      }
+      "Organization" -> %{
+          rows: Organizations.list_organizations(query_params),
+          count: Organizations.count_organizations(query_params)
+      }
+      "Network" -> %{
+          rows: Networks.list_networks(query_params),
+          count: Networks.count_networks(query_params)
+      }
+      _ -> []
+    end
+  end
+
+  # Select the rows from the database and assign them to the socket
+  defp handle_resource(resource_name, params, socket) do
+    page = Map.get(params, "page", "1") |> String.to_integer()
+    page_size = Map.get(params, "page_size", "10") |> String.to_integer()
+    search = Map.get(params, "search")
+
+    options = %{
+      page: page,
+      page_size: page_size,
+      search: search
+    }
+    
+    # select the rows from the database depending on the resource name
+    %{rows: rows, count: total_items} = select_rows(resource_name, options)
+
+     socket
+     |> assign(:rows, rows)
+     |> assign(:total_items, total_items)
+     |> assign(:resource_name, resource_name)
+     |> assign(:options, options)
   end
 end
