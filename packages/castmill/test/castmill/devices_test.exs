@@ -20,26 +20,26 @@ defmodule Castmill.DevicesTest do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
 
-      assert Devices.list_devices(organization.id) == []
+      assert Devices.list_devices(%{organization_id: organization.id}) == []
 
       {:ok, devices_registration } = device_registration_fixture()
 
       assert {:ok, {device, _token}} = Devices.register_device(organization.id, devices_registration.pincode, %{ name: "some device"})
 
-      assert Devices.list_devices(organization.id) == [device]
+      assert Devices.list_devices(%{organization_id: organization.id}) == [device]
     end
 
     test "register_device/1 cannot register the same device twice" do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
 
-      assert Devices.list_devices(organization.id) == []
+      assert Devices.list_devices(%{organization_id: organization.id}) == []
 
       {:ok, devices_registration } = device_registration_fixture()
 
       assert {:ok, {device, _token}} = Devices.register_device(organization.id, devices_registration.pincode, %{ name: "some device"})
 
-      assert Devices.list_devices(organization.id) == [device]
+      assert Devices.list_devices(%{organization_id: organization.id}) == [device]
 
       assert {:error, :invalid_pincode} = Devices.register_device(organization.id, devices_registration.pincode, %{ name: "some device"})
     end
@@ -48,13 +48,13 @@ defmodule Castmill.DevicesTest do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
 
-      assert Devices.list_devices(organization.id) == []
+      assert Devices.list_devices(%{organization_id: organization.id}) == []
 
       {:ok, devices_registration } = device_registration_fixture(%{hardware_id: "some hardware id", pincode: "some pincode"})
 
       assert {:ok, {device, _token}} = Devices.register_device(organization.id, devices_registration.pincode, %{ name: "some device"})
 
-      assert Devices.list_devices(organization.id) == [device]
+      assert Devices.list_devices(%{organization_id: organization.id}) == [device]
 
       {:ok, devices_registration } = device_registration_fixture(%{hardware_id: "some hardware id", pincode: "another pincode"})
 
@@ -67,7 +67,7 @@ defmodule Castmill.DevicesTest do
       {:ok, devices_registration } = device_registration_fixture(%{hardware_id: "some hardware id", pincode: "some pincode"})
       assert {:ok, {device, _token}} = Devices.register_device(organization.id, devices_registration.pincode, %{ name: "some device"})
 
-      assert Devices.list_devices(organization.id) == [device]
+      assert Devices.list_devices(%{organization_id: organization.id}) == [device]
     end
 
     test "update_device/1 updates the device" do
@@ -76,7 +76,7 @@ defmodule Castmill.DevicesTest do
       {:ok, devices_registration } = device_registration_fixture(%{hardware_id: "some hardware id", pincode: "some pincode"})
       assert {:ok, {device, _token}} = Devices.register_device(organization.id, devices_registration.pincode, %{ name: "some device"})
 
-      assert Devices.list_devices(organization.id) == [device]
+      assert Devices.list_devices(%{organization_id: organization.id}) == [device]
 
       update_attrs = %{name: "some updated name"}
 
@@ -90,11 +90,11 @@ defmodule Castmill.DevicesTest do
       {:ok, devices_registration } = device_registration_fixture(%{hardware_id: "some hardware id", pincode: "some pincode"})
       assert {:ok, {device, _token}} = Devices.register_device(organization.id, devices_registration.pincode, %{ name: "some device"})
 
-      assert Devices.list_devices(organization.id) == [device]
+      assert Devices.list_devices(%{organization_id: organization.id}) == [device]
 
       Devices.delete_device(device)
 
-      assert Devices.list_devices(organization.id) == []
+      assert Devices.list_devices(%{organization_id: organization.id}) == []
     end
 
     test "verify_device_token/2 verifies if a token is correct for a given device" do
