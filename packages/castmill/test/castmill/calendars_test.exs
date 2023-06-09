@@ -20,7 +20,7 @@ defmodule Castmill.CalendarsTest do
       organization = organization_fixture(%{network_id: network.id})
 
       calendar = calendar_fixture(%{organization_id: organization.id, timezone: "Europe/Stockholm"})
-      assert Resources.list_resource(Calendar, organization.id) == [calendar]
+      assert Resources.list_resource(Calendar, %{organization_id: organization.id}) == [calendar]
     end
 
     test "update_calendar/1 updates the calendar name" do
@@ -28,7 +28,7 @@ defmodule Castmill.CalendarsTest do
       organization = organization_fixture(%{network_id: network.id})
       calendar = calendar_fixture(%{organization_id: organization.id, timezone: "Europe/Stockholm"})
 
-      assert Resources.list_resource(Calendar, organization.id) == [calendar]
+      assert Resources.list_resource(Calendar, %{organization_id: organization.id}) == [calendar]
 
       update_attrs = %{name: "some updated name"}
 
@@ -41,11 +41,11 @@ defmodule Castmill.CalendarsTest do
       organization = organization_fixture(%{network_id: network.id})
       calendar = calendar_fixture(%{organization_id: organization.id, timezone: "Europe/Stockholm"})
 
-      assert Resources.list_resource(Calendar, organization.id) == [calendar]
+      assert Resources.list_resource(Calendar, %{organization_id: organization.id}) == [calendar]
 
       Resources.delete_calendar(calendar)
 
-      assert Resources.list_resource(Calendar, organization.id) == []
+      assert Resources.list_resource(Calendar, %{organization_id: organization.id}) == []
     end
 
     test "add_calendar_entry/3 adds one entry to a given calendar" do
@@ -54,7 +54,7 @@ defmodule Castmill.CalendarsTest do
       playlist = playlist_fixture(%{organization_id: organization.id})
       calendar = calendar_fixture(%{organization_id: organization.id, timezone: "Europe/Stockholm"})
 
-      assert Resources.list_resource(Calendar, organization.id) == [calendar]
+      assert Resources.list_resource(Calendar, %{organization_id: organization.id}) == [calendar]
 
       assert Resources.list_calendar_entries(calendar.id, ~D[2005-05-05], ~D[9999-12-31]) == []
 
@@ -76,7 +76,7 @@ defmodule Castmill.CalendarsTest do
       playlist = playlist_fixture(%{organization_id: organization.id})
       calendar = calendar_fixture(%{organization_id: organization.id, timezone: "Europe/Stockholm"})
 
-      assert Resources.list_resource(Calendar, organization.id) == [calendar]
+      assert Resources.list_resource(Calendar, %{organization_id: organization.id}) == [calendar]
 
       assert Resources.list_calendar_entries(calendar.id, ~D[2005-05-05], ~D[9999-12-31]) == []
 
@@ -108,7 +108,7 @@ defmodule Castmill.CalendarsTest do
       organization = organization_fixture(%{network_id: network.id})
       calendar = calendar_fixture(%{organization_id: organization.id, timezone: "Europe/Stockholm"})
 
-      assert Resources.list_resource(Calendar, organization.id) == [calendar]
+      assert Resources.list_resource(Calendar, %{organization_id: organization.id}) == [calendar]
 
       entry_attrs = %{
         name: "some entry name",
