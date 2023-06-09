@@ -11,6 +11,7 @@ defmodule Castmill.Devices do
   alias Castmill.Devices.DevicesRegistrations
 
   alias Castmill.Protocol.Access
+  alias Castmill.QueryHelpers
 
   alias CastmillWeb.Endpoint
 
@@ -56,9 +57,18 @@ defmodule Castmill.Devices do
       iex> list_devices()
       [%Device{}, ...]
   """
-  def list_devices(organization_id) do
+  def list_devices(params) when is_map(params) do
+    organization_id = params[:organization_id]
+    page = params[:page] || 0
+    page_size = params[:page_size]
+    search = params[:search]
+    offset = if page_size == nil, do: 0, else: max((page - 1) * page_size, 0)
+
     Device.base_query()
     |> Organization.where_org_id(organization_id)
+    |> QueryHelpers.where_name_like(search)
+    |> Ecto.Query.limit(^page_size)
+    |> Ecto.Query.offset(^offset)
     |> Repo.all()
     |> Enum.map(&Map.drop(&1, [:token, :token_hash]))
   end
@@ -68,6 +78,15 @@ defmodule Castmill.Devices do
     |> Enum.map(&Map.drop(&1, [:token, :token_hash]))
   end
 
+  def count_devices(params) when is_map(params) do
+    organization_id = params[:organization_id]
+    pattern = params[:pattern]
+
+    Device.base_query()
+    |> Organization.where_org_id(organization_id)
+    |> QueryHelpers.where_name_like(pattern)
+    |> Repo.aggregate(:count, :id)
+  end
   @doc """
     Updates a device.
   """

@@ -10,12 +10,34 @@ defmodule Castmill.Accounts do
   alias Castmill.Accounts.UserToken
   alias Castmill.Accounts.UserNotifier
   alias Castmill.Accounts.User
+  alias Castmill.QueryHelpers
 
   @doc """
     List all users.
   """
+  def list_users(params) when is_map(params) do
+    pattern = params[:pattern]
+    page = params[:page]
+    page_size = params[:page_size]
+    offset = max((page - 1) * page_size, 0)
+
+    User.base_query()
+    |> QueryHelpers.where_name_like(pattern)
+    |> Ecto.Query.limit(^page_size)
+    |> Ecto.Query.offset(^offset)
+    |> Repo.all()
+  end
+
   def list_users do
     Repo.all(User)
+  end
+
+  def count_users(params) when is_map(params) do
+    pattern = params[:pattern]
+
+    User.base_query()
+    |> QueryHelpers.where_name_like(pattern)
+    |> Repo.aggregate(:count, :id)
   end
 
   def update_user(%User{} = user, attrs) do

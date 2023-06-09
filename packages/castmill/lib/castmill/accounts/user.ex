@@ -1,6 +1,7 @@
 defmodule Castmill.Accounts.User do
   use Ecto.Schema
   import Ecto.Changeset
+  import Ecto.Query, warn: false
 
   @primary_key {:id, Ecto.UUID, autogenerate: true}
 
@@ -70,5 +71,9 @@ defmodule Castmill.Accounts.User do
     # |> validate_format(:password, ~r/[A-Z]/, message: "at least one upper case character")
     # |> validate_format(:password, ~r/[!?@#$%^&*_0-9]/, message: "at least one digit or punctuation character")
     # |> maybe_hash_password(opts)
+  end
+
+  def base_query() do
+    from users in Castmill.Accounts.User, as: :user
   end
 end
