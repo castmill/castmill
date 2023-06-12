@@ -24,7 +24,7 @@ defmodule CastmillWeb.Live.Admin.Pagination do
       has_next: assigns.options.page < total_pages,
       from: assigns.options.page_size * (assigns.options.page - 1) + 1,
       to: min(assigns.options.page_size * assigns.options.page, assigns.total_items),
-      pages_to_show: pages_to_show,
+      pages_to_show: pages_to_show
     )
 
     ~H"""
