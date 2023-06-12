@@ -260,16 +260,6 @@ defmodule CastmillWeb.Live.Admin.Resources do
     {:noreply, apply_action(socket, socket.assigns.live_action, params)}
   end
 
-  # TODO: This is a hack to avoid a bug in streams until the :reset option
-  # is implemented in LiveView 0.19.0
-  defp maybe_stream(socket, key, data) do
-    with %{:assigns => %{:streams => %{^key => _data}}} <- socket do
-      socket
-    else
-      _ -> stream(socket, key, data)
-    end
-  end
-
   @impl true
   def render(assigns) do
     ~H"""
