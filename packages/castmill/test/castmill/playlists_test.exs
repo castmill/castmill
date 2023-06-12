@@ -358,7 +358,7 @@ defmodule Castmill.PlaylistsTest do
       organization = organization_fixture(%{network_id: network.id})
       _playlist1 = playlist_fixture(%{organization_id: organization.id})
       _playlist2 = playlist_fixture(%{organization_id: organization.id})
-      playlist3 = playlist_fixture(%{organization_id: organization.id})
+      _playlist3 = playlist_fixture(%{organization_id: organization.id})
       playlist4 = playlist_fixture(%{organization_id: organization.id})
 
       assert Resources.list_resource(Playlist, %{organization_id: organization.id, page_size: 3, page: 2}) == [playlist4]

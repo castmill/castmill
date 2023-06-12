@@ -303,7 +303,7 @@ defmodule Castmill.Organizations do
       [%Calendar{}, ...]
 
   """
-  def list_calendars(organization_id, params) do
+  def list_calendars(params) do
     Castmill.Resources.list_resource(
       Castmill.Resources.Calendar,
       params
@@ -319,8 +319,8 @@ defmodule Castmill.Organizations do
       2
 
   """
-  def count_calendars(organization_id, pattern) do
-    Castmill.Resources.count_resource(Castmill.Resources.Calendar, organization_id, pattern)
+  def count_calendars(params) do
+    Castmill.Resources.count_resource(Castmill.Resources.Calendar, params)
   end
 
   @doc """
@@ -332,7 +332,7 @@ defmodule Castmill.Organizations do
       [%Device{}, ...]
 
   """
-  def list_devices(organization_id, params) do
+  def list_devices(params) do
     Castmill.Resources.list_resource(
       Castmill.Resources.Device,
       params
@@ -348,8 +348,8 @@ defmodule Castmill.Organizations do
       2
 
   """
-  def count_devices(organization_id, pattern) do
-    Castmill.Resources.count_resource(Castmill.Resources.Device, organization_id, pattern)
+  def count_devices(params) do
+    Castmill.Resources.count_resource(Castmill.Resources.Device, params)
   end
 
   @doc """
