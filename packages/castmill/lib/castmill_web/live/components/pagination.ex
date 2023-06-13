@@ -1,6 +1,6 @@
 defmodule CastmillWeb.Live.Admin.Pagination do
   use Phoenix.Component
-  use CastmillWeb, :live_view
+  use CastmillWeb, :html
 
   # Get the list of pages to show in the pagination. The list will never be longer than 7 items.
   # If the total number of pages is less than 7, all pages will be shown.
