@@ -59,10 +59,10 @@ defmodule Castmill.Widgets do
 
   ## Examples
 
-      iex> new_widget("1234", %{ "foo" => "bar" })
+      iex> new_widget_data("1234", %{ "foo" => "bar" })
       %WidgetData{}
   """
-  def new_widget(widget_id, options, data \\ nil) do
+  def new_widget_data(widget_id, options, data \\ nil) do
     %WidgetData{}
     |> WidgetData.changeset(%{
       widget_id: widget_id,

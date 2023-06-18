@@ -162,7 +162,7 @@ defmodule Castmill.Resources do
       ) do
     # Use a transaction to create a playlist item and update the items in the linked list atomically.
     Repo.transaction(fn ->
-      with {:ok, widget_data} <- Castmill.Widgets.new_widget(widget_id, options) do
+      with {:ok, widget_data} <- Castmill.Widgets.new_widget_data(widget_id, options) do
         if prev_item_id do
           prev_item =
             from(item in PlaylistItem, where: item.id == ^prev_item_id, select: item)
