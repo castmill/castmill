@@ -47,6 +47,11 @@ defmodule Castmill.Widgets do
   def get_widget(id), do: Repo.get(Widget, id)
 
   @doc """
+  Gets a widget by name.
+  """
+  def get_widget_by_name(name), do: Repo.get_by(Widget, name: name)
+
+  @doc """
   Instantiate a new widget.
   A widget instance is represented by a row in the widgets_data table.
 

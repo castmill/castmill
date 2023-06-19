@@ -39,10 +39,12 @@ defmodule Castmill.Widgets.WidgetData do
 
   def validate_data(changeset, field, schema_field) when is_atom(field) do
     validate_change(changeset, field, fn field, data ->
-      widget = Castmill.Widgets.get_widget(changeset.data.widget_id)
+      widget_id = changeset.changes.widget_id || changeset.data.widget_id
 
-      case Castmill.Widgets.Schema.validate_data(widget[schema_field], data) do
-        {:ok, nil} ->
+      widget = Castmill.Widgets.get_widget(widget_id)
+
+      case Castmill.Widgets.Schema.validate_data(Map.get(widget, schema_field), data) do
+        {:ok, _} ->
           []
 
         {:error, message} ->
