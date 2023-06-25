@@ -148,6 +148,9 @@ defmodule Castmill.Resources do
   @doc """
    Inserts an item in a given position of a playlist. The item will be placed after the given item or at the
    beginning of the list if nil is passed as the prev_item_id.
+
+   The options passed must conform with the widget's schema, or an error will be returned.
+
   """
   def insert_item_into_playlist(
         playlist_id,
@@ -159,59 +162,62 @@ defmodule Castmill.Resources do
       ) do
     # Use a transaction to create a playlist item and update the items in the linked list atomically.
     Repo.transaction(fn ->
-      if prev_item_id do
-        prev_item =
-          from(item in PlaylistItem, where: item.id == ^prev_item_id, select: item) |> Repo.one()
+      with {:ok, widget_data} <- Castmill.Widgets.new_widget_data(widget_id, options) do
+        if prev_item_id do
+          prev_item =
+            from(item in PlaylistItem, where: item.id == ^prev_item_id, select: item)
+            |> Repo.one()
 
-        next_item_id = prev_item.next_item_id
+          next_item_id = prev_item.next_item_id
 
-        with {:ok, item} <-
-               create_playlist_item(%{
-                 playlist_id: playlist_id,
-                 widget_id: widget_id,
-                 offset: offset,
-                 duration: duration,
-                 options: options,
-                 prev_item_id: prev_item.id,
-                 next_item_id: next_item_id
-               }) do
-          update_playlist_item(prev_item, %{next_item_id: item.id})
+          with {:ok, item} <-
+                 create_playlist_item(%{
+                   playlist_id: playlist_id,
+                   widget_data_id: widget_data.id,
+                   offset: offset,
+                   duration: duration,
+                   options: options,
+                   prev_item_id: prev_item.id,
+                   next_item_id: next_item_id
+                 }) do
+            update_playlist_item(prev_item, %{next_item_id: item.id})
 
-          if next_item_id do
-            next_item =
-              from(item in PlaylistItem, where: item.id == ^next_item_id, select: item)
-              |> Repo.one()
+            if next_item_id do
+              next_item =
+                from(item in PlaylistItem, where: item.id == ^next_item_id, select: item)
+                |> Repo.one()
 
-            update_playlist_item(next_item, %{prev_item_id: item.id})
+              update_playlist_item(next_item, %{prev_item_id: item.id})
+            end
+
+            item
           end
+        else
+          # Since we are inserting at the beginning of the list, get the current first item and update
+          # it accordingly.
+          first_item =
+            from(item in PlaylistItem,
+              where: is_nil(item.prev_item_id) and item.playlist_id == ^playlist_id,
+              select: item
+            )
+            |> Repo.one()
 
-          item
-        end
-      else
-        # Since we are inserting at the beginning of the list, get the current first item and update
-        # it accordingly.
-        first_item =
-          from(item in PlaylistItem,
-            where: is_nil(item.prev_item_id) and item.playlist_id == ^playlist_id,
-            select: item
-          )
-          |> Repo.one()
+          with {:ok, item} <-
+                 create_playlist_item(%{
+                   playlist_id: playlist_id,
+                   widget_data_id: widget_data.id,
+                   offset: offset,
+                   duration: duration,
+                   options: options,
+                   prev_item_id: nil,
+                   next_item_id: first_item && first_item.id
+                 }) do
+            if first_item do
+              update_playlist_item(first_item, %{prev_item_id: item.id})
+            end
 
-        with {:ok, item} <-
-               create_playlist_item(%{
-                 playlist_id: playlist_id,
-                 widget_id: widget_id,
-                 offset: offset,
-                 duration: duration,
-                 options: options,
-                 prev_item_id: nil,
-                 next_item_id: first_item && first_item.id
-               }) do
-          if first_item do
-            update_playlist_item(first_item, %{prev_item_id: item.id})
+            item
           end
-
-          item
         end
       end
     end)
@@ -310,7 +316,7 @@ defmodule Castmill.Resources do
     defined by the links of the linked list they are part of.
   """
   def get_playlist_items(playlist_id) do
-    items = Repo.all(PlaylistItem, playlist_id: playlist_id) |> Repo.preload(:widget)
+    items = Repo.all(PlaylistItem, playlist_id: playlist_id) |> Repo.preload(:widget_data)
     LinkedList.sort_nodes(items)
   end
 
@@ -319,8 +325,9 @@ defmodule Castmill.Resources do
   end
 
   defp where_name_like(query, pattern) do
-    from e in query,
+    from(e in query,
       where: ilike(e.name, ^"%#{pattern}%")
+    )
   end
 
   @doc """
