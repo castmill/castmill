@@ -50,6 +50,11 @@ defmodule CastmillWeb.DeviceController do
     render(conn, :index, playlists: playlists)
   end
 
+  def index(conn, %{"resources" => "devices"} = params) do
+    devices = Organizations.list_devices(params)
+    render(conn, :index, devices: devices)
+  end
+
   @doc """
     Creates a device and adds it to an organization.
   """
