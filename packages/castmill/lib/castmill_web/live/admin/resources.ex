@@ -15,9 +15,6 @@ defmodule CastmillWeb.Live.Admin.Resources do
   def mount(_params, _session, socket) do
     socket =
       socket
-      |> assign(:search, "")
-      |> assign(:page, 1)
-      |> assign(:page_size, 10)
       |> assign(:total_items, 0)
       |> assign(:sort, "name")
       |> assign(:sort_dir, "asc")
@@ -281,7 +278,7 @@ defmodule CastmillWeb.Live.Admin.Resources do
       <div class="mt-8 mb-4">
         <.search
           placeholder="Search"
-          value={@search}
+          value={@options.search}
         />
       </div>
       <.admin_table
