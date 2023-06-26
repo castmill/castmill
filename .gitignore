@@ -44,3 +44,4 @@ dist
 .DS_Store
 dump.rdb
 .vscode/launch.json
+packages/erl_crash.dump
