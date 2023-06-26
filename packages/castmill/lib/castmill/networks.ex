@@ -36,25 +36,25 @@ defmodule Castmill.Networks do
 
   """
   def list_networks(params \\ %{}) do
-    pattern = params[:pattern]
-    page = Map.get(params, "page", "1") |> String.to_integer()
-    page_size = Map.get(params, "page_size", "10") |> String.to_integer()
-    offset = max((page - 1) * page_size, 0)
     name = params[:name]
+    page = params[:page] || 0
+    page_size = params[:page_size]
+    search = params[:search]
+    offset = if page_size == nil, do: 0, else: max((page - 1) * page_size, 0)
 
     Network.base_query()
     |> Network.where_name(name)
-    |> QueryHelpers.where_name_like(pattern)
+    |> QueryHelpers.where_name_like(search)
     |> Ecto.Query.limit(^page_size)
     |> Ecto.Query.offset(^offset)
     |> Repo.all()
   end
 
   def count_networks(params \\ %{}) do
-    pattern = params[:pattern]
+    search = params[:search]
 
     Network.base_query()
-    |> QueryHelpers.where_name_like(pattern)
+    |> QueryHelpers.where_name_like(search)
     |> Repo.aggregate(:count, :id)
   end
 
