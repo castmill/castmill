@@ -42,13 +42,13 @@ defmodule Castmill.Organizations do
 
   """
   def list_organizations(params) when is_map(params) do
-    pattern = params[:pattern]
-    page = params[:page]
+    search = params[:search]
+    page = params[:page] || 0
     page_size = params[:page_size]
-    offset = max((page - 1) * page_size, 0)
+    offset = if page_size == nil, do: 0, else: max((page - 1) * page_size, 0)
 
     Organization.base_query()
-    |> QueryHelpers.where_name_like(pattern)
+    |> QueryHelpers.where_name_like(search)
     |> Ecto.Query.limit(^page_size)
     |> Ecto.Query.offset(^offset)
     |> Repo.all()
@@ -69,10 +69,10 @@ defmodule Castmill.Organizations do
   end
 
   def count_organizations(params) when is_map(params) do
-    pattern = params[:pattern]
+    search = params[:search]
 
     Organization.base_query()
-    |> QueryHelpers.where_name_like(pattern)
+    |> QueryHelpers.where_name_like(search)
     |> Repo.aggregate(:count, :id)
   end
 
