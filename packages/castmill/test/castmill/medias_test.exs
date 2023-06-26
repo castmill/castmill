@@ -19,7 +19,7 @@ defmodule Castmill.MediasTest do
       organization = organization_fixture(%{network_id: network.id})
       media = media_fixture(%{organization_id: organization.id})
 
-      assert Resources.list_resource(Media, %{organization_id: organization.id}) == [media]
+      assert Resources.list_resources(Media, %{organization_id: organization.id}) == [media]
     end
 
     test "update_media/1 updates the media but only the name" do
@@ -27,7 +27,7 @@ defmodule Castmill.MediasTest do
       organization = organization_fixture(%{network_id: network.id})
       media = media_fixture(%{organization_id: organization.id})
 
-      assert Resources.list_resource(Media, %{organization_id: organization.id}) == [media]
+      assert Resources.list_resources(Media, %{organization_id: organization.id}) == [media]
 
       update_attrs = %{name: "some updated name"}
 
@@ -40,11 +40,11 @@ defmodule Castmill.MediasTest do
       organization = organization_fixture(%{network_id: network.id})
       media = media_fixture(%{organization_id: organization.id})
 
-      assert Resources.list_resource(Media, %{organization_id: organization.id}) == [media]
+      assert Resources.list_resources(Media, %{organization_id: organization.id}) == [media]
 
       Resources.delete_media(media)
 
-      assert Resources.list_resource(Media, %{organization_id: organization.id}) == []
+      assert Resources.list_resources(Media, %{organization_id: organization.id}) == []
     end
   end
 end
