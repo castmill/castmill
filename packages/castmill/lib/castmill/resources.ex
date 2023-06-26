@@ -336,10 +336,10 @@ defmodule Castmill.Resources do
 
   ## Examples
 
-      iex> list_resource(Media, organization_id)
+      iex> list_resources(Media, organization_id)
       [%Media{}, ...]
   """
-  def list_resource(resource, params) when is_map(params) do
+  def list_resources(resource, params) when is_map(params) do
     organization_id = params[:organization_id]
     page = params[:page] || 0
     page_size = params[:page_size]
@@ -354,7 +354,7 @@ defmodule Castmill.Resources do
     |> Repo.all()
   end
 
-  def count_resource(resource, params) when is_map(params) do
+  def count_resources(resource, params) when is_map(params) do
     organization_id = params[:organization_id]
     search = params[:search]
 

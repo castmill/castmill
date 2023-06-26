@@ -17,7 +17,7 @@ defmodule Castmill.PlaylistsTest do
       organization = organization_fixture(%{network_id: network.id})
       playlist = playlist_fixture(%{organization_id: organization.id})
 
-      assert Resources.list_resource(Playlist, %{"organization_id" => organization.id}) == [playlist]
+      assert Resources.list_resources(Playlist, %{"organization_id" => organization.id}) == [playlist]
     end
 
     test "insert_item_into_playlist/6 inserts items at the begining of the playlist" do
@@ -299,7 +299,7 @@ defmodule Castmill.PlaylistsTest do
       assert Repo.get_by(Resources.PlaylistItem, id: item2.id) == nil
     end
 
-    test "count_resource" do
+    test "count_resources" do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
       _playlist1 = playlist_fixture(%{organization_id: organization.id, name: "Apples"})
@@ -308,7 +308,7 @@ defmodule Castmill.PlaylistsTest do
       _playlist4 = playlist_fixture(%{organization_id: organization.id, name: "Pears"})
       _playlist5 = playlist_fixture(%{organization_id: organization.id, name: "Blueberries"})
 
-      assert Resources.count_resource(Playlist, %{organization_id: organization.id, search: "a"}) == 4
+      assert Resources.count_resources(Playlist, %{organization_id: organization.id, search: "a"}) == 4
     end
   end
 
@@ -324,7 +324,7 @@ defmodule Castmill.PlaylistsTest do
       _playlist3 = playlist_fixture(%{organization_id: organization.id})
       _playlist4 = playlist_fixture(%{organization_id: organization.id})
 
-      assert Resources.list_resource(Playlist, %{organization_id: organization.id, page_size: 2}) == [playlist1, playlist2]
+      assert Resources.list_resources(Playlist, %{organization_id: organization.id, page_size: 2}) == [playlist1, playlist2]
     end
 
     test "list playlists returns all playlists when the limit is greater than the number of playlists" do
@@ -333,7 +333,7 @@ defmodule Castmill.PlaylistsTest do
       playlist1 = playlist_fixture(%{organization_id: organization.id})
       playlist2 = playlist_fixture(%{organization_id: organization.id})
 
-      assert Resources.list_resource(Playlist, %{organization_id: organization.id, page_size: 5}) == [playlist1, playlist2]
+      assert Resources.list_resources(Playlist, %{organization_id: organization.id, page_size: 5}) == [playlist1, playlist2]
     end
 
     test "list playlists returns the specified number of playlists starting at the specified offset" do
@@ -346,7 +346,7 @@ defmodule Castmill.PlaylistsTest do
       playlist5 = playlist_fixture(%{organization_id: organization.id})
       playlist6 = playlist_fixture(%{organization_id: organization.id})
 
-      assert Resources.list_resource(Playlist, %{organization_id: organization.id, page_size: 3, page: 2}) == [
+      assert Resources.list_resources(Playlist, %{organization_id: organization.id, page_size: 3, page: 2}) == [
                playlist4,
                playlist5,
                playlist6
@@ -361,7 +361,7 @@ defmodule Castmill.PlaylistsTest do
       _playlist3 = playlist_fixture(%{organization_id: organization.id})
       playlist4 = playlist_fixture(%{organization_id: organization.id})
 
-      assert Resources.list_resource(Playlist, %{organization_id: organization.id, page_size: 3, page: 2}) == [playlist4]
+      assert Resources.list_resources(Playlist, %{organization_id: organization.id, page_size: 3, page: 2}) == [playlist4]
     end
   end
 
@@ -377,13 +377,13 @@ defmodule Castmill.PlaylistsTest do
       _playlist4 = playlist_fixture(%{organization_id: organization.id, name: "Pears"})
       playlist5 = playlist_fixture(%{organization_id: organization.id, name: "Blueberries"})
 
-      assert Resources.list_resource(Playlist, %{organization_id: organization.id, search: "B"}) == [
+      assert Resources.list_resources(Playlist, %{organization_id: organization.id, search: "B"}) == [
                playlist2,
                playlist5
              ]
 
-      assert Resources.list_resource(Playlist, %{organization_id: organization.id, search: "Bl"}) == [playlist5]
-      assert Resources.list_resource(Playlist, %{organization_id: organization.id, search: "Bla"}) == []
+      assert Resources.list_resources(Playlist, %{organization_id: organization.id, search: "Bl"}) == [playlist5]
+      assert Resources.list_resources(Playlist, %{organization_id: organization.id, search: "Bla"}) == []
     end
 
     test "list playlists filter is case insensitive" do
@@ -395,7 +395,7 @@ defmodule Castmill.PlaylistsTest do
       _playlist4 = playlist_fixture(%{organization_id: organization.id, name: "Pears"})
       _playlist5 = playlist_fixture(%{organization_id: organization.id, name: "Blueberries"})
 
-      assert Resources.list_resource(Playlist, %{organization_id: organization.id, search: "or"}) == [playlist3]
+      assert Resources.list_resources(Playlist, %{organization_id: organization.id, search: "or"}) == [playlist3]
     end
 
     test "list playlists matches within name" do
@@ -407,7 +407,7 @@ defmodule Castmill.PlaylistsTest do
       _playlist4 = playlist_fixture(%{organization_id: organization.id, name: "Pears"})
       _playlist5 = playlist_fixture(%{organization_id: organization.id, name: "Blueberries"})
 
-      assert Resources.list_resource(Playlist, %{organization_id: organization.id, search: "ana"}) == [playlist2]
+      assert Resources.list_resources(Playlist, %{organization_id: organization.id, search: "ana"}) == [playlist2]
     end
   end
 end

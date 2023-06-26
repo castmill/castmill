@@ -409,16 +409,16 @@ defmodule CastmillWeb.Live.Admin.Resources do
   defp select_rows(resource_name, query_params) do
     case resource_name do
       "Media" -> %{
-          rows: Resources.list_resource(Castmill.Resources.Media, query_params),
-          count: Resources.count_resource(Castmill.Resources.Media, query_params)
+          rows: Resources.list_resources(Castmill.Resources.Media, query_params),
+          count: Resources.count_resources(Castmill.Resources.Media, query_params)
       }
       "Playlist" -> %{
-          rows: Resources.list_resource(Castmill.Resources.Playlist, query_params),
-          count: Resources.count_resource(Castmill.Resources.Playlist, query_params)
+          rows: Resources.list_resources(Castmill.Resources.Playlist, query_params),
+          count: Resources.count_resources(Castmill.Resources.Playlist, query_params)
       }
       "Calendar" -> %{
-          rows: Resources.list_resource(Castmill.Resources.Calendar, query_params),
-          count: Resources.count_resource(Castmill.Resources.Calendar, query_params)
+          rows: Resources.list_resources(Castmill.Resources.Calendar, query_params),
+          count: Resources.count_resources(Castmill.Resources.Calendar, query_params)
       }
       "Device" -> %{
           rows: Devices.list_devices(query_params),

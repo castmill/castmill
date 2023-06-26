@@ -246,7 +246,7 @@ defmodule Castmill.Organizations do
 
   """
   def list_medias(params) do
-    Castmill.Resources.list_resource(
+    Castmill.Resources.list_resources(
       Castmill.Resources.Media,
       params
     )
@@ -262,7 +262,7 @@ defmodule Castmill.Organizations do
 
   """
   def count_medias(params) do
-    Castmill.Resources.count_resource(Castmill.Resources.Media, params)
+    Castmill.Resources.count_resources(Castmill.Resources.Media, params)
   end
 
   @doc """
@@ -275,7 +275,7 @@ defmodule Castmill.Organizations do
 
   """
   def list_playlists(params) do
-    Castmill.Resources.list_resource(
+    Castmill.Resources.list_resources(
       Castmill.Resources.Playlist,
       params
     )
@@ -291,7 +291,7 @@ defmodule Castmill.Organizations do
 
   """
   def count_playlists(params) do
-    Castmill.Resources.count_resource(Castmill.Resources.Playlist, params)
+    Castmill.Resources.count_resources(Castmill.Resources.Playlist, params)
   end
 
   @doc """
@@ -304,7 +304,7 @@ defmodule Castmill.Organizations do
 
   """
   def list_calendars(params) do
-    Castmill.Resources.list_resource(
+    Castmill.Resources.list_resources(
       Castmill.Resources.Calendar,
       params
     )
@@ -320,7 +320,7 @@ defmodule Castmill.Organizations do
 
   """
   def count_calendars(params) do
-    Castmill.Resources.count_resource(Castmill.Resources.Calendar, params)
+    Castmill.Resources.count_resources(Castmill.Resources.Calendar, params)
   end
 
   @doc """
@@ -333,7 +333,7 @@ defmodule Castmill.Organizations do
 
   """
   def list_devices(params) do
-    Castmill.Resources.list_resource(
+    Castmill.Resources.list_resources(
       Castmill.Resources.Device,
       params
     )
@@ -349,7 +349,7 @@ defmodule Castmill.Organizations do
 
   """
   def count_devices(params) do
-    Castmill.Resources.count_resource(Castmill.Resources.Device, params)
+    Castmill.Resources.count_resources(Castmill.Resources.Device, params)
   end
 
   @doc """
