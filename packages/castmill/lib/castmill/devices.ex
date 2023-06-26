@@ -80,11 +80,11 @@ defmodule Castmill.Devices do
 
   def count_devices(params) when is_map(params) do
     organization_id = params[:organization_id]
-    pattern = params[:pattern]
+    search = params[:search]
 
     Device.base_query()
     |> Organization.where_org_id(organization_id)
-    |> QueryHelpers.where_name_like(pattern)
+    |> QueryHelpers.where_name_like(search)
     |> Repo.aggregate(:count, :id)
   end
   @doc """
