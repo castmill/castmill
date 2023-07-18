@@ -404,6 +404,7 @@ defmodule CastmillWeb.Live.Admin.Resources do
 
   # Select rows for a given resource
   defp select_rows(resource_name, query_params) do
+
     case resource_name do
       "Media" -> %{
           rows: Resources.list_resources(Castmill.Resources.Media, query_params),
@@ -441,18 +442,16 @@ defmodule CastmillWeb.Live.Admin.Resources do
     end
   end
 
+  @index_params_schema %{
+    page: [type: :integer, number: [min: 1], default: 1],
+    page_size: [type: :integer, number: [min: 1, max: 100], default: 10],
+    search: [type: :string, default: ""]
+  }
+
   # Select the rows from the database and assign them to the socket
   defp handle_resource(resource_name, params, socket) do
-    page = Map.get(params, "page", "1") |> String.to_integer()
-    page_size = Map.get(params, "page_size", "10") |> String.to_integer()
-    search = Map.get(params, "search")
-
-    options = %{
-      page: page,
-      page_size: page_size,
-      search: search
-    }
-    
+    {:ok, options} = Tarams.cast(params, @index_params_schema)
+    #
     # select the rows from the database depending on the resource name
     %{rows: rows, count: total_items} = select_rows(resource_name, options)
 
