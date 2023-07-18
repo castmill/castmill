@@ -41,10 +41,8 @@ defmodule Castmill.Organizations do
       [%Organization{}, ...]
 
   """
-  def list_organizations(params) when is_map(params) do
-    search = params[:search]
-    page = params[:page] || 0
-    page_size = params[:page_size]
+
+  def list_organizations(%{search: search, page: page, page_size: page_size}) do
     offset = if page_size == nil, do: 0, else: max((page - 1) * page_size, 0)
 
     Organization.base_query()
@@ -68,9 +66,7 @@ defmodule Castmill.Organizations do
     Repo.all(Organization)
   end
 
-  def count_organizations(params) when is_map(params) do
-    search = params[:search]
-
+  def count_organizations(%{search: search}) do
     Organization.base_query()
     |> QueryHelpers.where_name_like(search)
     |> Repo.aggregate(:count, :id)

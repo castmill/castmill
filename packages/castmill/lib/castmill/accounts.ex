@@ -15,14 +15,11 @@ defmodule Castmill.Accounts do
   @doc """
     List all users.
   """
-  def list_users(params) when is_map(params) do
-    pattern = params[:pattern]
-    page = params[:page]
-    page_size = params[:page_size]
+  def list_users(%{search: search, page: page, page_size: page_size}) do
     offset = max((page - 1) * page_size, 0)
 
     User.base_query()
-    |> QueryHelpers.where_name_like(pattern)
+    |> QueryHelpers.where_name_like(search)
     |> Ecto.Query.limit(^page_size)
     |> Ecto.Query.offset(^offset)
     |> Repo.all()
@@ -32,11 +29,10 @@ defmodule Castmill.Accounts do
     Repo.all(User)
   end
 
-  def count_users(params) when is_map(params) do
-    pattern = params[:pattern]
+  def count_users(%{search: search}) do
 
     User.base_query()
-    |> QueryHelpers.where_name_like(pattern)
+    |> QueryHelpers.where_name_like(search)
     |> Repo.aggregate(:count, :id)
   end
 

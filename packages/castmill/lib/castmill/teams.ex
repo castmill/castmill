@@ -36,20 +36,20 @@ defmodule Castmill.Teams do
       [%Network{}, ...]
 
   """
-  def list_teams(params) when is_map(params) do
-    organization_id = params[:organization_id]
-    pattern = params[:pattern]
-    page = params[:page]
-    page_size = params[:page_size]
-    offset = max((page - 1) * page_size, 0)
+  def list_teams(%{organization_id: organization_id, search: search, page: page, page_size: page_size}) do
+    offset = if page_size == nil, do: 0, else: max((page - 1) * page_size, 0)
 
     Team.base_query()
     |> Organization.where_org_id(organization_id)
-    |> QueryHelpers.where_name_like(pattern)
+    |> QueryHelpers.where_name_like(search)
     |> order_by([t], desc: t.id)
     |> Ecto.Query.limit(^page_size)
     |> Ecto.Query.offset(^offset)
     |> Repo.all()
+  end
+
+  def list_teams(%{search: search, page: page, page_size: page_size}) do
+    list_teams(%{organization_id: nil, search: search, page: page, page_size: page_size})
   end
 
   def list_teams(organization_id) do
@@ -59,20 +59,15 @@ defmodule Castmill.Teams do
     |> Repo.all()
   end
 
-  def list_teams() do
-    Team.base_query()
-    |> order_by([t], desc: t.id)
-    |> Repo.all()
-  end
-
-  def count_teams(params) when is_map(params) do
-    organization_id = params[:organization_id]
-    pattern = params[:pattern]
-
+  def count_teams(%{organization_id: organization_id, search: search}) do
     Team.base_query()
     |> Organization.where_org_id(organization_id)
-    |> QueryHelpers.where_name_like(pattern)
+    |> QueryHelpers.where_name_like(search)
     |> Repo.aggregate(:count, :id)
+  end
+
+  def count_teams(%{search: search}) do
+    count_teams(%{organization_id: nil, search: search})
   end
 
   @doc """
