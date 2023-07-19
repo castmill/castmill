@@ -341,7 +341,7 @@ defmodule Castmill.Resources do
   end
 
   def list_resources(resource, %{page: page, page_size: page_size, search: search}) do
-    list_resources(resource, %{organization_id: nil, page: page, page_size: page_size, search: nil})
+    list_resources(resource, %{organization_id: nil, page: page, page_size: page_size, search: search})
   end
 
   def list_resources(resource, %{organization_id: organization_id}) do
