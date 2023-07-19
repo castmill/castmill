@@ -324,7 +324,7 @@ defmodule Castmill.PlaylistsTest do
       _playlist3 = playlist_fixture(%{organization_id: organization.id})
       _playlist4 = playlist_fixture(%{organization_id: organization.id})
 
-      assert Resources.list_resources(Playlist, %{organization_id: organization.id, page: 1, page_size: 2}) == [playlist1, playlist2]
+      assert Resources.list_resources(Playlist, %{organization_id: organization.id, page: 1, page_size: 2, search: nil}) == [playlist1, playlist2]
     end
 
     test "list playlists returns all playlists when the limit is greater than the number of playlists" do
