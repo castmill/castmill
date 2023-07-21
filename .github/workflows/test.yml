@@ -52,7 +52,7 @@ jobs:
   test_player:
     runs-on: ubuntu-latest
 
-    name: testing node@18
+    name: testing Player package with node@18
 
     defaults:
       run:
@@ -73,7 +73,7 @@ jobs:
   test_cache:
     runs-on: ubuntu-latest
 
-    name: testing node@18
+    name: testing Cache package with node@18
 
     defaults:
       run:
