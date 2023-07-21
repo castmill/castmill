@@ -13,6 +13,9 @@ defmodule Castmill.Resources.PlaylistItem do
     belongs_to :playlist, Castmill.Resources.Playlist, primary_key: true
     belongs_to :widget_data, Castmill.Widgets.WidgetData, type: Ecto.UUID, primary_key: true
 
+    belongs_to :transitions, Castmill.Widget.Transition, foreign_key: :transition_id
+    field :transition_opts, :map
+
     timestamps()
   end
 

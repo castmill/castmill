@@ -10,18 +10,22 @@ defmodule Castmill.Repo.Migrations.AddDefaultWidgets do
               "type" => "image",
               "name" => "image",
               "opts" => %{
-                "url" => "${data.media.url}",
+                "url" => "${options.image.url}",
                 "autozoom" => "${options.autozoom}",
                 "duration" => "${options.duration}"
               }
             },
             options_schema: %{
-              "media_id" => %{"type" => "ref", "required" => true, "collection" => "medias"},
+              "image" => %{
+                "type" => "ref",
+                "required" => true,
+                "collection" => "medias|type:image"
+              },
               "autozoom" => "string",
               "duration" => "number"
             },
             data_schema: %{
-              "media" => %{
+              "image" => %{
                 "type" => "map",
                 "schema" => %{
                   "id" => "string",
@@ -31,8 +35,7 @@ defmodule Castmill.Repo.Migrations.AddDefaultWidgets do
                 },
                 "required" => true
               }
-            },
-            webhook_url: "widgets/image"
+            }
           },
           %{
             name: "video",
@@ -40,14 +43,18 @@ defmodule Castmill.Repo.Migrations.AddDefaultWidgets do
               "type" => "video",
               "name" => "video",
               "opts" => %{
-                "url" => "${data.media.url}"
+                "url" => "${options.video.url}"
               }
             },
             options_schema: %{
-              "media_id" => %{"type" => "ref", "required" => true, "collection" => "medias"}
+              "video" => %{
+                "type" => "ref",
+                "required" => true,
+                "collection" => "medias|type:video"
+              }
             },
             data_schema: %{
-              "media" => %{
+              "video" => %{
                 "type" => "map",
                 "schema" => %{
                   "id" => "string",
@@ -57,50 +64,63 @@ defmodule Castmill.Repo.Migrations.AddDefaultWidgets do
                 },
                 "required" => true
               }
-            },
-            webhook_url: "widgets/video"
+            }
           },
           %{
-            name: "layout",
+            name: "layout-portrait-3",
+            aspect_ratio: "9:16",
             template: %{
-              "type" => "group",
+              "type" => "layout",
               "name" => "layout",
               "style" => %{
                 "background" => "${options.background}",
                 "color" => "${options.color}"
               },
-              # The number of components here would be dynamic, based on the data.
-              # we can also have different widgets, one per number of sections, for example
-              # layout_1, layout_2, layout_3, layout_4, etc.
-              components: []
-            },
-            options_schema: %{
-              "sections" => %{
-                "type" => "list",
-                "schema" => %{
-                  "playlist_id" => %{
-                    "type" => "ref",
-                    "required" => true,
-                    "collection" => "playlists"
+              "opts" => %{
+                "containers" => [
+                  %{
+                    "playlist" => "${options.playlists[0]}",
+                    "rect" => %{
+                      "width" => "100%",
+                      "height" => "33%",
+                      "top" => "0%",
+                      "left" => "0%"
+                    }
                   },
-                  "rect" => %{
-                    "type" => "map",
-                    "schema" => %{
-                      "x" => "number",
-                      "y" => "number",
-                      "w" => "number",
-                      "h" => "number"
+                  %{
+                    "playlist" => "${options.playlists[1]}",
+                    "rect" => %{
+                      "width" => "100%",
+                      "height" => "33%",
+                      "top" => "33%",
+                      "left" => "0%"
+                    }
+                  },
+                  %{
+                    "playlist" => "${options.playlists[2]}",
+                    "rect" => %{
+                      "width" => "100%",
+                      "height" => "33%",
+                      "top" => "66%",
+                      "left" => "0%"
                     }
                   }
-                }
+                ]
               }
             },
-            # data_schema:
-            #  %{
-                # This is tricky as the data would be a playlist, we would probably need to support
-                # playlists as a primitive type, in that case data would not even be needed.
-            # }
-            webhook_url: "widgets/layout"
+            options_schema: %{
+              "background" => "string",
+              "color" => "string",
+              "playlists" => %{
+                # "list|3" means a list of exact 3 items
+                "type" => "list",
+                "items" => %{
+                  "type" => "ref",
+                  "required" => true,
+                  "collection" => "playlists"
+                }
+              }
+            }
           },
           %{
             name: "weather",
@@ -120,23 +140,30 @@ defmodule Castmill.Repo.Migrations.AddDefaultWidgets do
             data_schema: %{
               "icons" => %{
                 "type" => "list",
-                "schema" => %{
-                  "id" => "string",
-                  "url" => "string"
+                "items" => %{
+                  "type" => "map",
+                  "schema" => %{
+                    "id" => "string",
+                    "url" => "string"
+                  }
                 }
               },
               "days" => %{
                 "type" => "list",
-                "schema" => %{
-                  "date" => "string",
-                  "temp" => "number",
-                  "unit" => "string",
-                  "min_temp" => "number",
-                  "max_temp" => "number",
-                  "icon" => "string"
+                "items" => %{
+                  "type" => "map",
+                  "schema" => %{
+                    "date" => "string",
+                    "temp" => "number",
+                    "unit" => "string",
+                    "min_temp" => "number",
+                    "max_temp" => "number",
+                    "icon" => "string"
+                  }
                 }
               }
-            }
+            },
+            webhook_url: "widgets/weather"
           },
           %{
             name: "web",

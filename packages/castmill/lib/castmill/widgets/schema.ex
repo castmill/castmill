@@ -1,41 +1,52 @@
 defmodule Castmill.Widgets.Schema do
   @doc """
-  This function validates the schema according to the provided specifications.
+    This function validates the schema according to the provided specifications.
 
-  ## Grammar
+    ## Grammar
 
   <schema> ::= "{" <field-list> "}"
   <field-list> ::= <field>
-               | <field> "," <field-list>
-  <field> ::= <simple-field>
-          | <complex-field>
-          | <ref-field>
-          | <map-field>
-          | <list-field>
+             | <field> "," <field-list>
 
-  <simple-field> ::= '"' <field-name> '"' ":" '"' <simple-type> '"'
-  <complex-field> ::= '"' <field-name> '"' ":" "{" <field-attributes> "}"
-  <ref-field> ::= '"' <field-name> '"' ":" "{" <field-attributes> "," "collection" ":" <field-name> "}"
-  <map-field> ::= '"' <field-name> '"' ":" "{" <field-attributes> "," "schema" ":" <schema> "}"
-  <list-field> ::= '"' <field-name> '"' ":" "{" <field-attributes> "," "schema" ":" <schema> "}"
+  <field> ::= <simple-field>
+        | <complex-field>
+        | <ref-field>
+        | <map-field>
+        | <list-field>
+
+  <field> ::= '"' <field-name> '"' ":" <field-value>
   <field-name> ::= <string>
+
+  <field-value> ::= <simple-type>
+              | "{" <field-attributes> "}"
+              | "{" <ref-field-attributes> "," "collection" ":" <field-name> "}"
+              | "{" <map-field-attributes> "," "schema" ":" <schema> "}"
+              | "{" <list-field-attributes> "," "items" ":" <field-value> "}"
+
   <field-attributes> ::= <field-type>
-                     | <field-type> "," <field-required>
-                     | <field-type> "," <field-required> "," <field-default>
+                 | <field-type> "," <field-required>
+                 | <field-type> "," <field-required> "," <field-default>
+
+  <map-field-attributes> ::= "type" ":" '"' "map" '"'
+  <list-field-attributes> ::= "type" ":" '"' "list" '"'
+  <ref-field-attributes> ::= "type" ":" '"' "ref" '"'
   <field-type> ::= "type" ":" <field-value-type>
   <field-required> ::= "required" ":" <boolean>
   <field-default> ::= "default" ":" <default-value>
+
   <field-value-type> ::= '"' <simple-type> '"'
                     |  '"' <complex-type> '"'
   <simple-type> ::= "string"
-               | "number"
+             | "number"
+             | "boolean"
   <complex-type> ::= "ref"
-                | "map"
-                | "list"
-  <boolean> ::= "true"
-            | "false"
+              | "map"
+              | "list"
+
   <default-value> ::= <string>
-                  | <number>
+                | <number>
+                | <boolean>
+
   <string> ::= "a sequence of characters"
   <number> ::= "an integer or a float"
   <boolean> ::= true | false
@@ -46,7 +57,8 @@ defmodule Castmill.Widgets.Schema do
       {field, value}, _acc when is_map(value) ->
         validate_field(value, field)
 
-      {_field, value}, _acc when is_binary(value) and (value == "string" or value == "number") ->
+      {_field, value}, _acc
+      when is_binary(value) and (value == "string" or value == "number" or value == "boolean") ->
         {:cont, {:ok, nil}}
 
       {field, value}, _acc ->
@@ -66,6 +78,9 @@ defmodule Castmill.Widgets.Schema do
       "number" ->
         validate_complex_field(map, field, &is_number/1, "number")
 
+      "boolean" ->
+        validate_complex_field(map, field, &is_boolean/1, "boolean")
+
       "ref" ->
         validate_complex_field(map, field, &is_binary/1, "binary", ["collection"])
 
@@ -79,7 +94,7 @@ defmodule Castmill.Widgets.Schema do
         )
 
       "list" ->
-        validate_complex_field(map, field, is_valid_default_for_schema, "list", ["schema"])
+        validate_complex_field(map, field, is_valid_default_for_schema, "list", ["items"])
 
       _ ->
         {:halt, {:error, "Invalid type #{inspect(type)} for field #{inspect(field)}"}}
@@ -111,6 +126,19 @@ defmodule Castmill.Widgets.Schema do
 
           Map.has_key?(map, "schema") ->
             case validate_schema(map["schema"]) do
+              {:ok, nil} -> {:cont, {:ok, nil}}
+              {:error, message} -> {:halt, {:error, message}}
+              other -> other
+            end
+
+          Map.has_key?(map, "items") and is_binary(map["items"]) ->
+            case map["items"] do
+              type when type in ["string", "number", "boolean"] -> {:cont, {:ok, nil}}
+              _ -> {:halt, {:error, "Invalid type for items in field #{inspect(field)}"}}
+            end
+
+          Map.has_key?(map, "items") and is_map(map["items"]) ->
+            case validate_field(map["items"], field) do
               {:ok, nil} -> {:cont, {:ok, nil}}
               {:error, message} -> {:halt, {:error, message}}
               other -> other
@@ -227,7 +255,7 @@ defmodule Castmill.Widgets.Schema do
     end
   end
 
-  defp validate_data_field(value, %{"type" => "list", "schema" => sub_schema}, field, acc_data)
+  defp validate_data_field(value, %{"type" => "list", "items" => sub_schema}, field, acc_data)
        when is_list(value) do
     value
     |> Enum.reduce_while({:ok, []}, fn item, {:ok, acc} ->
