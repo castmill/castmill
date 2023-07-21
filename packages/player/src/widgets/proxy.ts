@@ -39,7 +39,7 @@ interface ProxyNotification {
  * Ideas: https://github.com/mdn/dom-examples/blob/master/channel-messaging-basic/page2.html
  */
 
-export class Proxy extends Widget {
+class Proxy extends Widget {
   private static id = 0;
   protected messageHandler?: (ev: MessageEvent<string>) => void;
   private origin!: string;

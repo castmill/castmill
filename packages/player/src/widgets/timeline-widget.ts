@@ -1,11 +1,11 @@
 import { ResourceManager } from "@castmill/cache";
-import { gsap } from "gsap";
 import { of, Observable, concat } from "rxjs";
 
 import { Widget } from "./widget";
+import { Timeline } from "./template/timeline";
 
 /**
- * A Widget base class for widgets that want to use Gsap timelines for
+ * A Widget base class for widgets that want to use timelines for
  * effects and animations.
  *
  * Subclasses must instantiate a timeline and assign it to `this.timeline`
@@ -13,19 +13,17 @@ import { Widget } from "./widget";
  *
  */
 export class TimelineWidget extends Widget {
-  protected timeline: gsap.core.Timeline;
+  protected timeline: Timeline;
   protected offset: number = 0;
 
   constructor(resourceManager: ResourceManager, opts?: {}) {
     super(resourceManager, opts);
-    this.timeline = gsap.timeline({ paused: true, repeat: -1 });
+
+    this.timeline = new Timeline("root");
   }
 
   play(timer$: Observable<number>) {
-    this.timeline.play(this.offset / 1000);
-    this.timeline.eventCallback("onStart", () => {
-      // It is possible we want to do some re-syncing here, useful for videowalls.
-    });
+    this.timeline.play(this.offset);
 
     // We must concat with super.play(timer$) so that slack/duration is also taken into account.
     return concat(
@@ -35,10 +33,7 @@ export class TimelineWidget extends Widget {
           subscriber.complete();
         };
 
-        this.timeline?.eventCallback("onComplete", handler);
-
         return () => {
-          this.timeline?.eventCallback("onComplete", null);
           this.timeline?.pause();
         };
       }),
@@ -52,11 +47,11 @@ export class TimelineWidget extends Widget {
 
   seek(offset: number): Observable<[number, number]> {
     this.offset = offset;
-    this.timeline.seek(offset / 1000);
+    this.timeline.seek(offset);
     return of([offset, 0]);
   }
 
-  duration(): Observable<number> {
-    return of((this.timeline.duration() || 0) * 1000);
+  duration(): number {
+    return this.timeline.duration() || 0;
   }
 }

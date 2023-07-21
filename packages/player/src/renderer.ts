@@ -144,61 +144,47 @@ export class Renderer {
   show(layer: Layer, offset: number) {
     // It is annoying that seek and show are separate methods, in this case.
     // if the layout widget supported show with offset we could skip it.
-    return layer.seek(offset).pipe(
-      switchMap(() => {
-        const prevLayer = this.currentLayer;
-        if (prevLayer) {
-          prevLayer.el.style.zIndex = "1000";
-          if (prevLayer === layer) {
-            return of("layer:show:end");
+    const prevLayer = this.currentLayer;
+    if (prevLayer) {
+      prevLayer.el.style.zIndex = "1000";
+      if (prevLayer === layer) {
+        return of("layer:show:end");
+      }
+    }
+
+    layer.el.style.zIndex = "0";
+    layer.el.style.visibility = "hidden";
+    this.el.appendChild(layer.el);
+
+    return layer.show(offset).pipe(
+      finalize(() => {
+        layer.el.style.visibility = "visible";
+
+
+        // If we have a current transition and but a new one is requested
+        // we need to reset the current transition.
+        if (this.currentTransition != layer.transition) {
+          this.currentTransition?.reset();
+          // We will only apply the transition if there is a previous layer
+          if (prevLayer) {
+            this.currentTransition = layer.transition;
+            this.currentTransition?.init(prevLayer, layer);
           }
         }
 
-        layer.el.style.zIndex = "0";
-        layer.el.style.visibility = "hidden";
-        this.el.appendChild(layer.el);
-
-        return layer.show(offset).pipe(
-          finalize(() => {
-            layer.el.style.visibility = "visible";
-            //    const prevLayer = this.currentLayer;
-
-            //    layer.el.style.zIndex = "0";
-            //    this.el.appendChild(layer.el);
-
-            //    if (prevLayer) {
-            //      prevLayer.el.style.zIndex = "1000";
-            //      if (prevLayer === layer) {
-            //        return;
-            //      }
-            //    }
-
-            // If we have a current transition and but a new one is requested
-            // we need to reset the current transition.
-            if (this.currentTransition != layer.transition) {
-              this.currentTransition?.reset();
-              // We will only apply the transition if there is a previous layer
-              if (prevLayer) {
-                this.currentTransition = layer.transition;
-                this.currentTransition?.init(prevLayer, layer);
-              }
+        if (prevLayer) {
+          const transition = layer.transition;
+          if (transition) {
+            if (offset < transition.duration) {
+              transition.seek(offset);
+              return;
             }
-
-            if (prevLayer) {
-              const transition = layer.transition;
-              if (transition) {
-                if (offset < transition.duration) {
-                  transition.seek(offset);
-                  return;
-                }
-                transition.seek(transition.duration);
-              }
-              prevLayer.unload();
-              prevLayer.el.parentElement?.removeChild(prevLayer.el);
-            }
-            this.currentLayer = layer;
-          })
-        );
+            transition.seek(transition.duration);
+          }
+          prevLayer.unload();
+          prevLayer.el.parentElement?.removeChild(prevLayer.el);
+        }
+        this.currentLayer = layer;
       })
     );
   }
