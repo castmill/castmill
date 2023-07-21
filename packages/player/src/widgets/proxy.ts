@@ -131,9 +131,11 @@ class Proxy extends Widget {
     return this.callMethod("stop");
   }
 
+  /*
   duration(): Observable<number> {
     return this.callMethod("duration");
   }
+  */
 
   seek(offset: number) {
     return this.callMethod("seek", [offset]);
