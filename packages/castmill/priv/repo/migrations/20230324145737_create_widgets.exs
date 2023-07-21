@@ -9,9 +9,11 @@ defmodule Castmill.Repo.Migrations.CreateWidgets do
       add :options_schema, :map, required: true
       add :data_schema, :map, required: false
 
+      add :aspect_ratio, :string, required: false
+
       add :meta, :map
 
-      add :webhook_url, :string
+      add :webhook_url, :string, required: false
 
       add :icon, :string
       add :small_icon, :string
