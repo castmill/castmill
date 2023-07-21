@@ -66,6 +66,15 @@ jobs:
         with:
           node-version: 18
           cache: "yarn"
+      - name: Install workspace dependencies
+        working-directory: ./
+        run: yarn install --ignore-engines --frozen-lockfile --non-interactive
+      - name: Install @castmill/cache dependencies
+        working-directory: ./packages/cache
+        run: yarn install --ignore-engines --frozen-lockfile --non-interactive
+      - name: Build @castmill/cache
+        working-directory: ./packages/cache
+        run: yarn build
       - run: yarn install --ignore-engines --frozen-lockfile --non-interactive
       - run: yarn build
       - run: yarn test
