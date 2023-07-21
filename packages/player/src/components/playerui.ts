@@ -298,9 +298,7 @@ export class PlayerUI {
         .pipe(exhaustMap(() => this.seek(opts.controls!.seek)))
         .subscribe();
 
-      this.durationSubscription = playlist.duration().subscribe((duration) => {
-        opts.controls!.setTimeDuration(this.time, duration, this.loop);
-      });
+      opts.controls!.setTimeDuration(this.time, playlist.duration(), this.loop);
 
       this.keyboardSubscription = opts.controls
         .keyboardObservable()

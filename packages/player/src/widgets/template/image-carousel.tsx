@@ -1,33 +1,65 @@
 import gsap from "gsap";
 
 import { Component, For, JSX, mergeProps, onCleanup, onMount } from "solid-js";
-import { TemplateComponent, TemplateComponentType } from "./group";
+import { TemplateConfig, resolveOption } from "./binding";
+import { Observable, of } from "rxjs";
+import { TemplateComponent, TemplateComponentType } from "./template";
+import { Timeline } from "./timeline";
+
+export interface ImageCarouselComponentOptions {
+  images: string[];
+  imageDuration: number;
+}
 
 export class ImageCarouselComponent implements TemplateComponent {
   readonly type = TemplateComponentType.ImageCarousel;
 
   constructor(
     public name: string,
-    public value: string[],
-    public imageDuration: number,
-    public style: JSX.CSSProperties,
-    public binding?: string
+    public opts: ImageCarouselComponentOptions,
+    public style: JSX.CSSProperties
   ) {}
+
+  resolveDuration(medias: { [index: string]: string }): number {
+    return this.opts.imageDuration * this.opts.images.length;
+  }
+
+  static fromJSON(json: any): ImageCarouselComponent {
+    return new ImageCarouselComponent(json.name, json.opts, json.style);
+  }
+
+  static resolveOptions(
+    opts: any,
+    config: TemplateConfig,
+    context: any
+  ): ImageCarouselComponentOptions {
+    return {
+      images: resolveOption(opts.images, config, context),
+      imageDuration: resolveOption(opts.imageDuration, config, context),
+    };
+  }
 }
 
 export const ImageCarousel: Component<{
   name: string;
-  value: string[];
+  config: TemplateConfig;
+  context: any;
+  opts: ImageCarouselComponentOptions;
   style: JSX.CSSProperties;
-  imageDuration: number;
-  timeline: GSAPTimeline;
+  timeline: Timeline;
   startArgs?: GSAPTweenVars;
   endArgs?: GSAPTweenVars;
-  mediasMap: { [index: string]: string };
+  medias: { [index: string]: string };
+  onReady: () => void;
 }> = (props) => {
   let parentRef: HTMLDivElement | undefined;
-  const timeline: GSAPTimeline = gsap.timeline({ repeat: -1 });
-  props.timeline.add(timeline);
+  const timeline: GSAPTimeline = gsap.timeline();
+  const timelineItem = {
+    start: props.timeline.duration(),
+    child: timeline,
+  };
+
+  props.timeline.add(timelineItem);
 
   props = mergeProps(
     {
@@ -47,7 +79,6 @@ export const ImageCarousel: Component<{
     props
   );
 
-
   const style = Object.assign(
     {
       width: "100%",
@@ -61,7 +92,7 @@ export const ImageCarousel: Component<{
   );
 
   onCleanup(() => {
-    props.timeline.remove(timeline);
+    props.timeline.remove(timelineItem);
     timeline.kill();
   });
 
@@ -78,17 +109,21 @@ export const ImageCarousel: Component<{
     if (images && images.length == 1) {
       timeline.set(
         images[0],
-        { backgroundImage: `url(${props.mediasMap[props.value[0]]})` },
+        {
+          backgroundImage: `url(${props.medias[props.opts.images[0]]})`,
+        },
         "<"
       );
-      timeline.duration(props.imageDuration);
+      timeline.duration(props.opts.imageDuration);
     }
 
     if (images && images.length > 1) {
       Array.from(images || []).forEach((image, index) => {
         timeline.set(
           image,
-          { backgroundImage: `url(${props.mediasMap[props.value[index]]})` },
+          {
+            backgroundImage: `url(${props.medias[props.opts.images[index]]})`,
+          },
           "<"
         );
 
@@ -106,10 +141,10 @@ export const ImageCarousel: Component<{
           });
         }
         // When the last image fades out we need to cross-fade the first image
-        let position = `>+=${props.imageDuration}`;
+        let position = `>+=${props.opts.imageDuration}`;
         if (index === images.length - 1) {
           timeline.set(images[0], {
-            backgroundImage: `url(${props.mediasMap[props.value[0]]})`,
+            backgroundImage: `url(${props.medias[props.opts.images[0]]})`,
           });
           timeline.from(
             images[0],
@@ -121,16 +156,18 @@ export const ImageCarousel: Component<{
         timeline.to(image, Object.assign({}, props.endArgs), position);
       });
     }
+
+    props.onReady();
   });
 
   return (
     <div
       ref={parentRef}
-      data-component="image-carousell"
+      data-component="image-carousel"
       data-name={props.name}
       style="position: absolute; width: 100%; height: 100%;"
     >
-      <For each={props.value}>
+      <For each={props.opts.images}>
         {(item, i) => <div data-component="image" style={style}></div>}
       </For>
     </div>

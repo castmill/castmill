@@ -109,7 +109,7 @@ export class Player extends EventEmitter {
 }
 
 // Custom timer. Simpler than RxJS and more accurate.
-function timer(
+export function timer(
   baseline: number,
   start: number,
   interval: number,

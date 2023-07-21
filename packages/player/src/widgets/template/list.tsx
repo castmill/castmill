@@ -8,45 +8,101 @@ import {
   onMount,
   Setter,
 } from "solid-js";
-import { TemplateComponent, TemplateComponentType } from "./group";
-import { Item, TemplateComponentTypeUnion } from "./item";
-import { Model } from "../data/model";
+import { Item } from "./item";
+import { resolveOption, TemplateConfig } from "./binding";
+import {
+  TemplateComponent,
+  TemplateComponentType,
+  TemplateComponentTypeUnion,
+} from "./template";
+import { ResourceManager } from "@castmill/cache";
+import { Timeline } from "./timeline";
+
+export interface ListComponentOptions {
+  pageDuration: number;
+  pageSize: number;
+  items: any[];
+}
 
 export class ListComponent implements TemplateComponent {
   readonly type = TemplateComponentType.List;
 
   constructor(
     public name: string,
-    public model: Model,
-    public binding: string,
+    public config: TemplateConfig,
+    public opts: ListComponentOptions,
     public style: JSX.CSSProperties,
-    public component: TemplateComponentTypeUnion,
-    public pageDuration: number
+    public component: TemplateComponentTypeUnion
   ) {}
+
+  resolveDuration(medias: { [index: string]: string }): number {
+    return (
+      (this.opts.pageDuration * this.opts.items.length) / this.opts.pageSize
+    );
+  }
+
+  static fromJSON(json: any, resourceManager: ResourceManager): ListComponent {
+    return new ListComponent(
+      json.name,
+      json.config,
+      json.opts,
+      json.style,
+      TemplateComponent.fromJSON(json.component, resourceManager)
+    );
+  }
+
+  static resolveOptions(
+    opts: any,
+    config: TemplateConfig,
+    context: any
+  ): ListComponentOptions {
+    return {
+      pageDuration: resolveOption(opts.pageDuration, config, context),
+      pageSize: resolveOption(opts.pageSize, config, context),
+      items: resolveOption(opts.items, config, context),
+    };
+  }
 }
 
 // TODO: Add support for displaying a progress indicator, something like horizontal bullets,
 // one bullet per page, and the activa page should be shown in a different color: o o x o
 export const List: Component<{
   name: string;
-  value: any[];
+  config: TemplateConfig;
+  opts: ListComponentOptions;
   style: JSX.CSSProperties;
   component: TemplateComponentTypeUnion;
-  pageDuration: number;
-  timeline: GSAPTimeline;
-  mediasMap: { [index: string]: string };
+  timeline: Timeline;
+  medias: { [index: string]: string };
+  resourceManager: ResourceManager;
+  onReady: () => void;
 }> = (props) => {
-  const [pages, setPages] = createSignal<any[][]>([props.value]);
+  const [pages, setPages] = createSignal<any[][]>([props.opts.items]);
   const [pageStyle, setPageStyle] = createSignal("");
 
   let textRef: HTMLDivElement | undefined;
-  let timeline: GSAPTimeline = gsap.timeline({ repeat: -1 });
+  let gsapTimeline: GSAPTimeline = gsap.timeline({ repeat: -1 });
 
-  props.timeline.add(timeline);
+  const childTimeline = new Timeline("list");
+  const gsapTimelineItem = {
+    start: 0,
+    child: gsapTimeline,
+  };
+  childTimeline.add(gsapTimelineItem);
+
+  // Adding last here is incorrect as this component maybe is part of a group or list and then the
+  // items should be all added to the same time.
+  const timelineItem = {
+    start: props.timeline.duration(),
+    child: childTimeline,
+  };
+
+  props.timeline.add(timelineItem);
 
   onCleanup(() => {
-    props.timeline.remove(timeline);
-    timeline.kill();
+    props.timeline.remove(timelineItem);
+    childTimeline.remove(gsapTimelineItem);
+    gsapTimeline.kill();
   });
 
   onMount(() => {
@@ -60,14 +116,14 @@ export const List: Component<{
     }
 
     const itemsPerPage = Math.min(
-      Math.max(calcNumItemsPerPage(textRef, props.value.length), 1),
-      props.value.length
+      Math.max(calcNumItemsPerPage(textRef, props.opts.items.length), 1),
+      props.opts.items.length
     );
 
     if (itemsPerPage > 0) {
       const pages = [];
-      for (let i = 0; i < props.value.length; i += itemsPerPage) {
-        const page = props.value.slice(i, i + itemsPerPage);
+      for (let i = 0; i < props.opts.items.length; i += itemsPerPage) {
+        const page = props.opts.items.slice(i, i + itemsPerPage);
         pages.push(page);
       }
 
@@ -83,14 +139,18 @@ export const List: Component<{
         <For each={pages()}>
           {(page, i) => (
             <Page
+              config={props.config}
               items={page}
               component={props.component}
               style={pageStyle()}
-              timeline={timeline}
-              offset={i() * props.pageDuration}
-              duration={props.pageDuration}
-              mediasMap={props.mediasMap}
+              timeline={childTimeline}
+              gsapTimeline={gsapTimeline}
+              offset={i() * props.opts.pageDuration}
+              duration={props.opts.pageDuration}
               skipAnimation={pages().length == 1}
+              medias={props.medias}
+              resourceManager={props.resourceManager}
+              onReady={props.onReady}
             />
           )}
         </For>
@@ -100,28 +160,40 @@ export const List: Component<{
 };
 
 const Page: Component<{
+  config: TemplateConfig;
   items: any[];
   component: TemplateComponentTypeUnion;
   style: string;
-  timeline: gsap.core.Timeline;
+  gsapTimeline: gsap.core.Timeline;
+  timeline: Timeline;
   offset: number;
   duration: number;
-  mediasMap: { [index: string]: string };
   skipAnimation: boolean;
+  medias: { [index: string]: string };
+  resourceManager: ResourceManager;
+  onReady: () => void;
 }> = (props) => {
   let pageRef: HTMLDivElement | undefined;
+
+  let count = 0;
+  const onReadyAfter = () => {
+    count++;
+    if (count == props.items.length) {
+      props.onReady();
+    }
+  };
 
   onMount(() => {
     if (!pageRef) {
       return;
     }
     if (!props.skipAnimation) {
-      props.timeline.from(
+      props.gsapTimeline.from(
         pageRef.children,
         { opacity: 0, stagger: 0.1, duration: 1 },
         `>`
       );
-      props.timeline.to(
+      props.gsapTimeline.to(
         pageRef.children,
         { opacity: 0, stagger: 0.1, duration: 1 },
         `>+=${props.duration}`
@@ -134,10 +206,13 @@ const Page: Component<{
       <For each={props.items}>
         {(item, i) => (
           <Item
-            model={item}
+            config={props.config}
+            context={item}
             component={props.component}
             timeline={props.timeline}
-            mediasMap={props.mediasMap}
+            medias={props.medias}
+            resourceManager={props.resourceManager}
+            onReady={onReadyAfter}
           />
         )}
       </For>

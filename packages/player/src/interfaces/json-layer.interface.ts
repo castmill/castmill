@@ -1,11 +1,11 @@
 import { JsonTransition } from "../transitions";
-import { JsonWidget } from "./";
+import { TemplateWidgetOptions } from "../widgets/template/template-widget";
 
 export interface JsonLayer {
   name: string;
-  duration: number;
+  duration?: number;
   slack: number;
-  widget: JsonWidget;
+  widget: TemplateWidgetOptions;
   transition?: JsonTransition;
   css?: Partial<CSSStyleDeclaration>;
 }
