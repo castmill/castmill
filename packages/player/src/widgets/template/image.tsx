@@ -5,11 +5,10 @@ import { TemplateConfig, resolveOption } from "./binding";
 import { TemplateComponent, TemplateComponentType } from "./template";
 import { Timeline, TimelineItem } from "./timeline";
 
-const hackedDuration = 4000;
-
 export interface ImageComponentOptions {
   url: string;
   size: "cover" | "contain";
+  duration: number;
 }
 
 export class ImageComponent implements TemplateComponent {
@@ -22,7 +21,7 @@ export class ImageComponent implements TemplateComponent {
   ) {}
 
   resolveDuration(medias: { [index: string]: string }): number {
-    return hackedDuration;
+    return this.opts.duration;
   }
 
   static fromJSON(json: any): ImageComponent {
@@ -37,18 +36,21 @@ export class ImageComponent implements TemplateComponent {
     return {
       url: resolveOption(opts.url, config, context),
       size: resolveOption(opts.size, config, context),
+      duration: resolveOption(opts.duration, config, context),
     };
   }
 }
 
-export const Image: Component<{
+interface ImageProps {
   name: string;
   opts: ImageComponentOptions;
   timeline: Timeline;
   style: JSX.CSSProperties;
   medias: { [index: string]: string };
   onReady: () => void;
-}> = (props) => {
+}
+
+export const Image: Component<ImageProps> = (props: ImageProps) => {
   let imageRef: HTMLDivElement | undefined;
   let gsapTimeline: GSAPTimeline;
   let timelineItem: TimelineItem;
@@ -86,7 +88,7 @@ export const Image: Component<{
 
     timelineItem = {
       start: props.timeline.duration(),
-      duration: hackedDuration, // Hacked a duration.
+      duration: props.opts.duration, // Hacked a duration.
       child: gsapTimeline,
     };
 
