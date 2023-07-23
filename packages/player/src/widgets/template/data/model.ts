@@ -9,7 +9,7 @@ export class Model {
   constructor(private data: any) {}
 
   static interpolateAll(
-    source: { [index: string]: string },
+    source: Record<string, string>,
     data: object
   ): [{ [index: string]: string }, Error[]] {
     const result: { [index: string]: string } = {};
