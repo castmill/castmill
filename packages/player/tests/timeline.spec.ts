@@ -2,9 +2,16 @@
 
 import { expect } from "chai";
 import { describe, it } from "mocha";
-import * as sinon from "sinon";
 
-import { SinonSpy, spy } from "sinon";
+import {
+  SinonSpy,
+  spy,
+  createStubInstance,
+  restore,
+  useFakeTimers,
+  stub,
+  SinonFakeTimers,
+} from "sinon";
 
 // Add these interfaces for the child
 interface TimelineBasicSpy extends TimelineBasic {
@@ -29,7 +36,7 @@ describe("Timeline", () => {
   let timeline: Timeline;
 
   beforeEach(() => {
-    timeline = new Timeline();
+    timeline = new Timeline("test");
   });
 
   it("should instantiate correctly", () => {
@@ -41,9 +48,10 @@ describe("Timeline", () => {
 
     beforeEach(() => {
       const child: TimelineBasic = {
-        play: (offset: number, opts: { loop?: boolean }): void => {},
+        play: (offset: number): void => {},
         seek: (offset: number): void => {},
         pause: (): void => {},
+        duration: () => 5000,
       };
       item = { child, start: 1000, duration: 5000 };
       timeline.add(item);
@@ -66,7 +74,7 @@ describe("Timeline", () => {
   });
 
   describe("play", () => {
-    let clock: sinon.SinonFakeTimers;
+    let clock: SinonFakeTimers;
     let item1: TimelineItemSpy, item2: TimelineItemSpy;
 
     beforeEach(() => {
@@ -74,37 +82,39 @@ describe("Timeline", () => {
         start: 0,
         duration: 5000,
         child: {
-          play: sinon.spy(),
-          seek: sinon.spy(),
-          pause: sinon.spy(),
+          play: spy(),
+          seek: spy(),
+          pause: spy(),
+          duration: () => 5000, //stub().returns(5000),
         },
       };
       item2 = {
         start: 3000,
         duration: 7000,
         child: {
-          play: sinon.spy(),
-          seek: sinon.spy(),
-          pause: sinon.spy(),
+          play: spy(),
+          seek: spy(),
+          pause: spy(),
+          duration: () => 7000, //stub().returns(7000),
         },
       };
       timeline.add(item1);
       timeline.add(item2);
 
       // Stub Date.now and setInterval
-      sinon.stub(Date, "now").returns(0);
-      clock = sinon.useFakeTimers();
+      stub(Date, "now").returns(0);
+      clock = useFakeTimers();
     });
 
     afterEach(() => {
       // Restore stubs after each test
-      sinon.restore();
+      restore();
     });
 
-    it("should play items correctly", () => {
-      expect(timeline._duration).to.equal(10000);
+    it("should play items correctly", async () => {
+      expect(timeline.duration()).to.equal(10000);
 
-      timeline.play(0, {});
+      timeline.play(0);
 
       // Advance the fake timer to simulate setInterval
       clock.tick(100);
@@ -143,7 +153,9 @@ describe("Timeline", () => {
     });
 
     it("should loop correctly", () => {
-      timeline.play(0, { loop: true });
+      timeline.setLoop(true);
+
+      timeline.play(0);
 
       // Advance the fake timer to simulate setInterval
       // Assuming max duration is 7000 as per previous setup
@@ -176,32 +188,33 @@ describe("Timeline", () => {
 
   describe("pause", () => {
     let item: TimelineItemSpy;
-    let clock: sinon.SinonFakeTimers;
+    let clock: SinonFakeTimers;
 
     beforeEach(() => {
       item = {
         start: 0,
         duration: 5000,
         child: {
-          play: sinon.spy(),
-          seek: sinon.spy(),
-          pause: sinon.spy(),
+          play: spy(),
+          seek: spy(),
+          pause: spy(),
+          duration: stub().returns(5000),
         },
       };
       timeline.add(item);
 
       // Stub Date.now and setInterval
-      sinon.stub(Date, "now").returns(0);
-      clock = sinon.useFakeTimers();
+      stub(Date, "now").returns(0);
+      clock = useFakeTimers();
     });
 
     afterEach(() => {
       // Restore stubs after each test
-      sinon.restore();
+      restore();
     });
 
     it("should pause items correctly", () => {
-      timeline.play(0, {});
+      timeline.play(0);
       clock.tick(100); // Advance the clock by 100 ms
       timeline.pause();
 
@@ -217,9 +230,10 @@ describe("Timeline", () => {
         start: 0,
         duration: 5000,
         child: {
-          play: sinon.spy(),
-          seek: sinon.spy(),
-          pause: sinon.spy(),
+          play: spy(),
+          seek: spy(),
+          pause: spy(),
+          duration: stub().returns(5000),
         },
       };
       timeline.add(item);
@@ -240,29 +254,29 @@ describe("Timeline with child Timeline", () => {
   let item2: TimelineItemSpy;
   let item3: TimelineItemSpy;
 
-  let clock: sinon.SinonFakeTimers;
+  let clock: SinonFakeTimers;
 
   beforeEach(() => {
-    timeline = new Timeline();
-    childTimeline = new Timeline();
-    sinon.spy(childTimeline, "play");
-    sinon.spy(childTimeline, "seek");
-    sinon.spy(childTimeline, "pause");
+    timeline = new Timeline("test parent");
+    childTimeline = new Timeline("test child");
+    spy(childTimeline, "play");
+    spy(childTimeline, "seek");
+    spy(childTimeline, "pause");
 
     item1 = {
       start: 1000,
       duration: 2000,
-      child: sinon.createStubInstance(Timeline),
+      child: createStubInstance(Timeline),
     };
     item2 = {
       start: 4000,
       duration: 2000,
-      child: sinon.createStubInstance(Timeline),
+      child: createStubInstance(Timeline),
     };
     item3 = {
       start: 1000,
       duration: 3000,
-      child: sinon.createStubInstance(Timeline),
+      child: createStubInstance(Timeline),
     };
 
     childTimeline.add(item1);
@@ -277,22 +291,22 @@ describe("Timeline with child Timeline", () => {
 
     timeline.add(childTimelineItem);
 
-    clock = sinon.useFakeTimers();
+    clock = useFakeTimers();
   });
 
   afterEach(() => {
     // Restore stubs after each test
-    sinon.restore();
+    restore();
   });
 
   it("should add child timeline correctly", () => {
     expect(timeline.items[0].child).to.equal(childTimeline);
 
-    expect(timeline._duration).to.equal(7500);
+    expect(timeline.duration()).to.equal(7500);
   });
 
   it("should play items in child timeline correctly", () => {
-    timeline.play(0, {});
+    timeline.play(0);
 
     clock.tick(500);
     expect(item1.child.play.notCalled).to.be.true;
@@ -335,7 +349,7 @@ describe("Timeline with child Timeline", () => {
   });
 
   it("should pause items in child timeline correctly", () => {
-    timeline.play(0, {});
+    timeline.play(0);
 
     clock.tick(1500);
     timeline.pause();

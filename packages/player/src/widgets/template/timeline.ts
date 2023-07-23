@@ -1,4 +1,4 @@
-import gsap from "gsap";
+import { gsap } from "gsap";
 
 /**
  * This class represents a timeline.
@@ -28,10 +28,21 @@ export class Timeline implements TimelineBasic {
 
   intervalTimer: any;
 
+  private opts: { loop?: boolean; duration?: number };
+
   constructor(
     public name: string,
-    private opts: { loop?: boolean; duration?: number } = {}
-  ) {}
+    opts: { loop?: boolean; duration?: number } = {}
+  ) {
+    // Copy opts to prevent side effects.
+    this.opts = {
+      ...opts,
+    };
+  }
+
+  setLoop(loop: boolean) {
+    this.opts.loop = loop;
+  }
 
   play(offset: number = 0) {
     this.clearInterval();
@@ -40,40 +51,50 @@ export class Timeline implements TimelineBasic {
     this.time = offset;
     let prevPosition = 0;
 
+    const duration = this.duration();
+
+    if (!(duration > 0)) {
+      throw new Error("Timeline duration must be greater than 0");
+    }
+
     const tick = () => {
-      let time = Date.now() - basetime + offset;
-      const duration = this.duration();
-      if (time >= duration && !this.opts.loop) {
-        this.pause();
-        return;
-      }
+      try {
+        let time = Date.now() - basetime + offset;
+        if (time >= duration && !this.opts.loop) {
+          this.pause();
+          return;
+        }
 
-      const position = (this.time = time % duration);
-      // Check if we have looped around.
-      if (position < prevPosition) {
-        this.nextEndTick = 0;
-      }
+        const position = (this.time = time % duration);
+        // Check if we have looped around.
+        if (position < prevPosition) {
+          this.nextEndTick = 0;
+        }
 
-      // Pause items that should no longer be playing and move them back to the items list.
-      if (position >= this.nextEndTick) {
-        let nextEndTick = Number.MAX_SAFE_INTEGER;
-        this.playing.forEach((item) => {
-          const end = item.start + (item.duration || this.childDuration(item));
-          if (position < item.start || position >= end) {
-            this.pauseItem(item);
-          } else {
-            nextEndTick = Math.min(nextEndTick, end);
-          }
-        });
-        this.nextEndTick = nextEndTick;
-      }
+        // Pause items that should no longer be playing and move them back to the items list.
+        if (position >= this.nextEndTick) {
+          let nextEndTick = Number.MAX_SAFE_INTEGER;
+          this.playing.forEach((item) => {
+            const end =
+              item.start + (item.duration || this.childDuration(item));
+            if (position < item.start || position >= end) {
+              this.pauseItem(item);
+            } else {
+              nextEndTick = Math.min(nextEndTick, end);
+            }
+          });
+          this.nextEndTick = nextEndTick;
+        }
 
-      prevPosition = position;
-      this.playItemsFrom(position);
+        prevPosition = position;
+        this.playItemsFrom(position);
+      } catch (e) {
+        console.error(e);
+      }
     };
 
     // Every 100 ms we will check if we need to stop or start any items.
-    this.intervalTimer = setInterval(() => tick, 100);
+    this.intervalTimer = setInterval(tick, 100);
     tick();
   }
 
@@ -170,7 +191,15 @@ export class Timeline implements TimelineBasic {
             item.start + (item.duration || this.childDuration(item))
           ),
         0
-      )
+      ) +
+        [...this.playing].reduce(
+          (acc: number, item) =>
+            Math.max(
+              acc,
+              item.start + (item.duration || this.childDuration(item))
+            ),
+          0
+        )
     );
   }
 
