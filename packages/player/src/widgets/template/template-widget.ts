@@ -1,13 +1,21 @@
 import { JSX } from "solid-js";
 
 import { ResourceManager } from "@castmill/cache";
-import { from, merge, of } from "rxjs";
-import { mergeMap, map, last } from "rxjs/operators";
+import { Observable, forkJoin, from, merge, of } from "rxjs";
+import {
+  mergeMap,
+  map,
+  switchMap,
+} from "rxjs/operators";
 import { TimelineWidget } from "../timeline-widget";
 
 import { render } from "solid-js/web";
-import { Template } from "./components/template";
-import { TemplateComponentTypeUnion } from "./components/item";
+import {
+  Template,
+  TemplateComponent,
+  TemplateComponentTypeUnion,
+} from "./template";
+import { TemplateConfig } from "./binding";
 
 /**
  * Template Widget
@@ -15,24 +23,29 @@ import { TemplateComponentTypeUnion } from "./components/item";
  * This widget allows to create a custom widget using a template.
  *
  */
+
+export interface TemplateWidgetOptions {
+  name: string;
+  template: TemplateComponentTypeUnion;
+  config: TemplateConfig;
+  fonts?: { url: string; name: string }[];
+  medias: string[];
+  style: JSX.CSSProperties;
+  classes?: string;
+}
+
 export class TemplateWidget extends TimelineWidget {
   private fontFaces: { [key: string]: Promise<FontFace> } = {};
   private medias: { [key: string]: string } = {};
-  private loaded: boolean = false;
+  private template: TemplateComponent;
 
   constructor(
     resourceManager: ResourceManager,
-    private opts: {
-      name: string;
-      template: TemplateComponentTypeUnion;
-      model: any;
-      fonts?: { url: string; name: string }[];
-      medias?: string[];
-      style: JSX.CSSProperties;
-      classes?: string;
-    }
+    private opts: TemplateWidgetOptions
   ) {
     super(resourceManager, opts);
+
+    this.template = TemplateComponent.fromJSON(opts.template, resourceManager);
   }
 
   /**
@@ -43,11 +56,15 @@ export class TemplateWidget extends TimelineWidget {
    * @returns
    */
   private load() {
-    return merge(this.loadFonts(), this.loadMedias()).pipe(last());
+    return forkJoin([this.loadFonts(), this.loadMedias()]);
   }
 
   private loadFonts() {
-    return from(this.opts.fonts || []).pipe(
+    if (!this.opts.fonts) {
+      return of("no:fonts");
+    }
+
+    return from(this.opts.fonts).pipe(
       mergeMap((font) =>
         from(this.resourceManager.getMedia(font.url)).pipe(
           map((url) => {
@@ -74,7 +91,10 @@ export class TemplateWidget extends TimelineWidget {
   }
 
   private loadMedias() {
-    return from(this.opts.medias || []).pipe(
+    if (!this.opts.medias) {
+      return of("no:medias");
+    }
+    return from(this.opts.medias).pipe(
       mergeMap((url) =>
         from(this.resourceManager.getMedia(url)).pipe(
           map((cachedUrl) => {
@@ -89,6 +109,7 @@ export class TemplateWidget extends TimelineWidget {
   async unload() {
     // Note: there is a risk here that we remove a font that is still in use by another widget.
     // We would need to either keep track of the fonts in use or add a unique prefix to the font name.
+    // Probably a global font cache would be the best solution.
     const fontFaceSet = document.fonts;
     const fontFacesNames = Object.keys(this.fontFaces);
 
@@ -102,33 +123,46 @@ export class TemplateWidget extends TimelineWidget {
 
   show(el: HTMLElement, offset: number) {
     // Note: we need to think how data is refreshed when the model changes.
-
     const basetime = Date.now();
 
     return this.load().pipe(
-      map((x) => {
+      switchMap((x) => {
         if (el.children.length === 0) {
-          render(
-            () =>
-              Template({
-                name: this.opts.name,
-                root: this.opts.template,
-                model: this.opts.model,
-                style: this.opts.style,
-                timeline: this.timeline,
-                mediasMap: this.medias,
-              }),
-            el
-          );
+          // Create observable that will emit when the template is ready.
+          return new Observable<string>((subscriber) => {
+            render(
+              () =>
+                Template({
+                  name: this.opts.name,
+                  root: this.opts.template,
+                  config: this.opts.config,
+                  style: this.opts.style,
+                  timeline: this.timeline,
+                  medias: this.medias,
+                  resourceManager: this.resourceManager,
+                  onReady: () => {
+                    this.seek(offset + (Date.now() - basetime));
+                    subscriber.next("template-widget:shown");
+                    subscriber.complete();
+                  },
+                }),
+              el
+            );
+          });
         }
+
+        // Seek to compensate for the time spent loading the assets.
         this.seek(offset + (Date.now() - basetime));
-        this.loaded = true;
-        return "template-widget:shown";
+        return of("template-widget:shown");
       })
     );
   }
 
   mimeType(): string {
     return "template/widget";
+  }
+
+  duration(): number {
+    return this.template.resolveDuration(this.medias);
   }
 }

@@ -20,6 +20,9 @@ defmodule Castmill.Repo.Migrations.CreatePlaylistsItems do
         null: false
       )
 
+      add(:transition_id, references(:transitions, on_delete: :nilify_all), null: true)
+      add(:transition_opts, :map)
+
       timestamps()
     end
 

@@ -212,6 +212,7 @@ export class Video extends Widget {
     }
   }
 
+  /*
   duration(): Observable<number> {
     if (this._duration) {
       return of(this._duration);
@@ -235,6 +236,7 @@ export class Video extends Widget {
       })
     );
   }
+  */
 
   mimeType(): string {
     return "video/mpeg4";

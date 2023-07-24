@@ -40,14 +40,19 @@ defmodule CastmillWeb.DeviceController do
     end
   end
 
-  def index(conn, %{"resources" => "medias", "organization_id" => organization_id}) do
-    medias = Organizations.list_medias(organization_id)
+  def index(conn, %{"resources" => "medias"} = params) do
+    medias = Organizations.list_medias(params)
     render(conn, :index, medias: medias)
   end
 
-  def index(conn, %{"resources" => "playlists", "organization_id" => organization_id}) do
-    playlists = Organizations.list_playlists(organization_id)
+  def index(conn, %{"resources" => "playlists"} = params) do
+    playlists = Organizations.list_playlists(params)
     render(conn, :index, playlists: playlists)
+  end
+
+  def index(conn, %{"resources" => "devices"} = params) do
+    devices = Organizations.list_devices(params)
+    render(conn, :index, devices: devices)
   end
 
   @doc """

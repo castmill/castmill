@@ -49,3 +49,53 @@ jobs:
           POSTGRES_HOST: localhost
           # The default PostgreSQL port
           POSTGRES_PORT: 5432
+  test_player:
+    runs-on: ubuntu-latest
+
+    name: testing Player package with node@18
+
+    defaults:
+      run:
+        working-directory: ./packages/player
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Use Node.js current
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: "yarn"
+      - name: Install workspace dependencies
+        working-directory: ./
+        run: yarn install --ignore-engines --frozen-lockfile --non-interactive
+      - name: Install @castmill/cache dependencies
+        working-directory: ./packages/cache
+        run: yarn install --ignore-engines --frozen-lockfile --non-interactive
+      - name: Build @castmill/cache
+        working-directory: ./packages/cache
+        run: yarn build
+      - run: yarn install --ignore-engines --frozen-lockfile --non-interactive
+      - run: yarn build
+      - run: yarn test
+
+  test_cache:
+    runs-on: ubuntu-latest
+
+    name: testing Cache package with node@18
+
+    defaults:
+      run:
+        working-directory: ./packages/cache
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Use Node.js current
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: "yarn"
+      - run: yarn install --ignore-engines --frozen-lockfile --non-interactive
+      - run: yarn build
+      - run: yarn test

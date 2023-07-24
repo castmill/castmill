@@ -10,13 +10,12 @@ import { ResourceManager } from "@castmill/cache";
 import { Status } from "./playable";
 import { Config } from "./config";
 import { EventEmitter } from "eventemitter3";
-import { Widget } from "./widgets";
+import { TemplateWidget, Widget } from "./widgets";
 import { of, Observable } from "rxjs";
 import { catchError, last, map, takeUntil } from "rxjs/operators";
 import { JsonLayer } from "./interfaces";
 import { Transition, fromJSON } from "./transitions";
 import { applyCss } from "./utils";
-import { WidgetFactory } from "./widgets/widget-factory";
 
 const TIMER_RESOLUTION = 50;
 
@@ -48,16 +47,13 @@ export class Layer extends EventEmitter {
    *
    * @param json
    */
-  static async fromJSON(
-    json: JsonLayer,
-    resourceManager: ResourceManager
-  ): Promise<Layer> {
-    const widget = await WidgetFactory.fromJSON(json.widget, resourceManager);
+  static fromJSON(json: JsonLayer, resourceManager: ResourceManager): Layer {
+    const widget = new TemplateWidget(resourceManager, json.widget);
 
     const layer = new Layer(json.name, {
       duration: json.duration,
       slack: json.slack,
-      transition: json.transition && (await fromJSON(json.transition)),
+      transition: json.transition && fromJSON(json.transition),
       css: json.css,
       widget,
     });
@@ -183,18 +179,14 @@ export class Layer extends EventEmitter {
     return;
   }
 
-  duration(): Observable<number> {
+  duration(): number {
     const transitionDuration = this.transition?.duration || 0;
     if (this._duration) {
-      return of(this._duration + transitionDuration);
+      return this._duration + transitionDuration;
     } else if (this.widget) {
-      return this.widget.duration().pipe(
-        map((duration) => {
-          return duration + this.slack + transitionDuration;
-        })
-      );
+      return this.widget.duration() + this.slack + transitionDuration;
     } else {
-      return of(this.slack);
+      return this.slack;
     }
   }
 }

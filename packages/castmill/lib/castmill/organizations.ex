@@ -9,6 +9,7 @@ defmodule Castmill.Organizations do
   alias Castmill.Organizations.Organization
   alias Castmill.Organizations.OrganizationsUsersAccess
   alias Castmill.Protocol.Access
+  alias Castmill.QueryHelpers
 
   defimpl Access, for: Organization do
     def canAccess(organization, user, _action) do
@@ -40,6 +41,17 @@ defmodule Castmill.Organizations do
       [%Organization{}, ...]
 
   """
+
+  def list_organizations(%{search: search, page: page, page_size: page_size}) do
+    offset = if page_size == nil, do: 0, else: max((page - 1) * page_size, 0)
+
+    Organization.base_query()
+    |> QueryHelpers.where_name_like(search)
+    |> Ecto.Query.limit(^page_size)
+    |> Ecto.Query.offset(^offset)
+    |> Repo.all()
+  end
+
   def list_organizations(organization_id) do
     query =
       from(organization in Organization,
@@ -52,6 +64,12 @@ defmodule Castmill.Organizations do
 
   def list_organizations do
     Repo.all(Organization)
+  end
+
+  def count_organizations(%{search: search}) do
+    Organization.base_query()
+    |> QueryHelpers.where_name_like(search)
+    |> Repo.aggregate(:count, :id)
   end
 
   @doc """
@@ -223,13 +241,10 @@ defmodule Castmill.Organizations do
       [%Media{}, ...]
 
   """
-  def list_medias(organization_id, limit \\ nil, offset \\ 0, pattern \\ nil) do
-    Castmill.Resources.list_resource(
+  def list_medias(params) do
+    Castmill.Resources.list_resources(
       Castmill.Resources.Media,
-      organization_id,
-      limit,
-      offset,
-      pattern
+      params
     )
   end
 
@@ -242,8 +257,8 @@ defmodule Castmill.Organizations do
       2
 
   """
-  def count_medias(organization_id, pattern) do
-    Castmill.Resources.count_resource(Castmill.Resources.Media, organization_id, pattern)
+  def count_medias(params) do
+    Castmill.Resources.count_resources(Castmill.Resources.Media, params)
   end
 
   @doc """
@@ -255,13 +270,10 @@ defmodule Castmill.Organizations do
       [%Playlist{}, ...]
 
   """
-  def list_playlists(organization_id, limit \\ nil, offset \\ 0, pattern \\ nil) do
-    Castmill.Resources.list_resource(
+  def list_playlists(params) do
+    Castmill.Resources.list_resources(
       Castmill.Resources.Playlist,
-      organization_id,
-      limit,
-      offset,
-      pattern
+      params
     )
   end
 
@@ -274,8 +286,8 @@ defmodule Castmill.Organizations do
       2
 
   """
-  def count_playlists(organization_id, pattern) do
-    Castmill.Resources.count_resource(Castmill.Resources.Playlist, organization_id, pattern)
+  def count_playlists(params) do
+    Castmill.Resources.count_resources(Castmill.Resources.Playlist, params)
   end
 
   @doc """
@@ -287,13 +299,10 @@ defmodule Castmill.Organizations do
       [%Calendar{}, ...]
 
   """
-  def list_calendars(organization_id, limit \\ nil, offset \\ 0, pattern \\ nil) do
-    Castmill.Resources.list_resource(
+  def list_calendars(params) do
+    Castmill.Resources.list_resources(
       Castmill.Resources.Calendar,
-      organization_id,
-      limit,
-      offset,
-      pattern
+      params
     )
   end
 
@@ -306,8 +315,8 @@ defmodule Castmill.Organizations do
       2
 
   """
-  def count_calendars(organization_id, pattern) do
-    Castmill.Resources.count_resource(Castmill.Resources.Calendar, organization_id, pattern)
+  def count_calendars(params) do
+    Castmill.Resources.count_resources(Castmill.Resources.Calendar, params)
   end
 
   @doc """
@@ -319,13 +328,10 @@ defmodule Castmill.Organizations do
       [%Device{}, ...]
 
   """
-  def list_devices(organization_id, limit \\ nil, offset \\ 0, pattern \\ nil) do
-    Castmill.Resources.list_resource(
+  def list_devices(params) do
+    Castmill.Resources.list_resources(
       Castmill.Resources.Device,
-      organization_id,
-      limit,
-      offset,
-      pattern
+      params
     )
   end
 
@@ -338,8 +344,8 @@ defmodule Castmill.Organizations do
       2
 
   """
-  def count_devices(organization_id, pattern) do
-    Castmill.Resources.count_resource(Castmill.Resources.Device, organization_id, pattern)
+  def count_devices(params) do
+    Castmill.Resources.count_resources(Castmill.Resources.Device, params)
   end
 
   @doc """

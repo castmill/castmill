@@ -21,6 +21,7 @@ defmodule Castmill.Resources do
   alias Castmill.Organizations.Organization
 
   alias Castmill.Protocol.Access
+  alias Castmill.QueryHelpers
 
   @doc """
     Can access the resource.
@@ -320,38 +321,42 @@ defmodule Castmill.Resources do
     LinkedList.sort_nodes(items)
   end
 
-  defp where_name_like(query, nil) do
-    query
-  end
-
-  defp where_name_like(query, pattern) do
-    from(e in query,
-      where: ilike(e.name, ^"%#{pattern}%")
-    )
-  end
-
   @doc """
   Returns the list of a given resource for a given organization.
 
   ## Examples
 
-      iex> list_resource(Media, organization_id)
+      iex> list_resources(Media, params)
       [%Media{}, ...]
   """
-  def list_resource(resource, organization_id \\ nil, limit \\ nil, offset \\ 0, pattern \\ nil) do
+  def list_resources(resource, %{organization_id: organization_id, page: page, page_size: page_size, search: search}) do
+    offset = if page_size == nil, do: 0, else: max((page - 1) * page_size, 0)
+    
     resource.base_query()
     |> Organization.where_org_id(organization_id)
-    |> where_name_like(pattern)
-    |> Ecto.Query.limit(^limit)
+    |> QueryHelpers.where_name_like(search)
+    |> Ecto.Query.limit(^page_size)
     |> Ecto.Query.offset(^offset)
     |> Repo.all()
   end
 
-  def count_resource(resource, organization_id, pattern \\ nil) do
+  def list_resources(resource, %{page: page, page_size: page_size, search: search}) do
+    list_resources(resource, %{organization_id: nil, page: page, page_size: page_size, search: search})
+  end
+
+  def list_resources(resource, %{organization_id: organization_id}) do
+    list_resources(resource, %{organization_id: organization_id, page: 1, page_size: nil, search: nil})
+  end
+
+  def count_resources(resource, %{organization_id: organization_id, search: search}) do
     resource.base_query()
     |> Organization.where_org_id(organization_id)
-    |> where_name_like(pattern)
+    |> QueryHelpers.where_name_like(search)
     |> Repo.aggregate(:count, :id)
+  end
+
+  def count_resources(resource, %{search: search}) do
+    count_resources(resource, %{organization_id: nil, search: search})
   end
 
   @doc """

@@ -85,8 +85,12 @@ export abstract class Widget extends EventEmitter {
     return of([offset, 0]);
   }
 
-  duration(): Observable<number> {
+  duration_old(): Observable<number> {
     return of(0);
+  }
+
+  duration(): number {
+    return 0;
   }
 
   toggleDebug() {}

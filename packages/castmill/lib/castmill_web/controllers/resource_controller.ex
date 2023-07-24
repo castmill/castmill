@@ -17,22 +17,39 @@ defmodule CastmillWeb.ResourceController do
     %{parent: :organization, resource: :not_needed, action: :create} when action in [:create]
   )
 
-  def index(conn, %{"resources" => "medias", "organization_id" => organization_id} = params) do
-    limit = Map.get(params, "limit", nil)
-    offset = Map.get(params, "offset", 0)
-    pattern = Map.get(params, "pattern", nil)
-    medias = Organizations.list_medias(organization_id, limit, offset, pattern)
-    count = Organizations.count_medias(organization_id, pattern)
-    render(conn, :index, medias: medias, count: count)
+  @index_params_schema %{
+    resources: [type: :string, required: true],
+    page: [type: :integer, number: [min: 1]],
+    page_size: [type: :integer, number: [min: 1, max: 100]],
+    search: :string
+  }
+
+  def index(conn, %{"resources" => "medias"} = params) do
+    with {:ok, params} <- Tarams.cast(params, @index_params_schema) do
+      medias = Organizations.list_medias(params)
+      count = Organizations.count_medias(params)
+      render(conn, :index, medias: medias, count: count)
+    else
+      {:error, errors} ->
+        conn
+        |> put_status(:bad_request)
+        |> Phoenix.Controller.json(%{errors: errors})
+        |> halt()
+    end
   end
 
-  def index(conn, %{"resources" => "playlists", "organization_id" => organization_id} = params) do
-    limit = Map.get(params, "limit", nil)
-    offset = Map.get(params, "offset", 0)
-    pattern = Map.get(params, "pattern", nil)
-    playlists = Organizations.list_playlists(organization_id, limit, offset, pattern)
-    count = Organizations.count_playlists(organization_id, pattern)
-    render(conn, :index, playlists: playlists, count: count)
+  def index(conn, %{"resources" => "playlists"} = params) do
+    with {:ok, params} <- Tarams.cast(params, @index_params_schema) do
+      playlists = Organizations.list_playlists(params)
+      count = Organizations.count_playlists(params)
+      render(conn, :index, playlists: playlists, count: count)
+    else
+      {:error, errors} ->
+        conn
+        |> put_status(:bad_request)
+        |> Phoenix.Controller.json(%{errors: errors})
+        |> halt()
+    end
   end
 
   def create(conn, %{

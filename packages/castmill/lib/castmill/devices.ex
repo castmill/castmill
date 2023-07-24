@@ -11,6 +11,7 @@ defmodule Castmill.Devices do
   alias Castmill.Devices.DevicesRegistrations
 
   alias Castmill.Protocol.Access
+  alias Castmill.QueryHelpers
 
   alias CastmillWeb.Endpoint
 
@@ -56,16 +57,56 @@ defmodule Castmill.Devices do
       iex> list_devices()
       [%Device{}, ...]
   """
-  def list_devices(organization_id) do
+  def list_devices(%{organization_id: organization_id, search: search, page: page, page_size: page_size}) do
+    offset = if page_size == nil, do: 0, else: max((page - 1) * page_size, 0)
+
     Device.base_query()
     |> Organization.where_org_id(organization_id)
+    |> QueryHelpers.where_name_like(search)
+    |> Ecto.Query.limit(^page_size)
+    |> Ecto.Query.offset(^offset)
     |> Repo.all()
     |> Enum.map(&Map.drop(&1, [:token, :token_hash]))
+  end
+
+  def list_devices(%{organization_id: organization_id}) do
+    list_devices(%{organization_id: organization_id, search: nil, page: 1, page_size: nil})
+  end
+
+  def list_devices(%{page: page, page_size: page_size}) do
+    list_devices(%{organization_id: nil, page: page, page_size: page_size, search: nil})
+  end
+
+  def list_devices(%{search: search}) do
+    list_devices(%{organization_id: nil, search: search, page: 1, page_size: nil})
+  end
+
+  def list_devices(_params) do
+    list_devices(%{organization_id: nil, search: nil, page: 1, page_size: nil})
   end
 
   def list_devices() do
     Repo.all(Device)
     |> Enum.map(&Map.drop(&1, [:token, :token_hash]))
+  end
+
+  def count_devices(%{organization_id: organization_id, search: search}) do
+    Device.base_query()
+    |> Organization.where_org_id(organization_id)
+    |> QueryHelpers.where_name_like(search)
+    |> Repo.aggregate(:count, :id)
+  end
+
+  def count_devices(%{organization_id: organization_id}) do
+    count_devices(%{organization_id: organization_id, search: nil})
+  end
+
+  def count_devices(%{search: search}) do
+    count_devices(%{organization_id: nil, search: search})
+  end
+
+  def count_devices(_params) do
+    count_devices(%{organization_id: nil, search: nil})
   end
 
   @doc """

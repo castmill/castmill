@@ -49,6 +49,10 @@ defmodule Castmill.Organizations.Organization do
     query
   end
 
+  def where_org_id(query, "") do
+    query
+  end
+
   def where_org_id(query, id) do
     from(e in query,
       where: e.organization_id == ^id

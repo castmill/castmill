@@ -38,8 +38,8 @@ defmodule Castmill.WidgetsTest do
       schema = %{
         "field_d" => %{
           "type" => "list",
-          "schema" => %{
-            "item" => "number"
+          "items" => %{
+            "type" => "number"
           }
         }
       }
@@ -307,7 +307,7 @@ defmodule Castmill.WidgetsTest do
       schema = %{
         "field_a" => %{
           "type" => "list",
-          "schema" => "number"
+          "items" => "number"
         }
       }
 
@@ -369,7 +369,7 @@ defmodule Castmill.WidgetsTest do
       schema = %{
         "field_a" => %{
           "type" => "list",
-          "schema" => %{
+          "items" => %{
             "type" => "map",
             "schema" => %{
               "subfield_a" => "string",
@@ -399,7 +399,7 @@ defmodule Castmill.WidgetsTest do
       schema = %{
         "field_a" => %{
           "type" => "list",
-          "schema" => %{
+          "items" => %{
             "type" => "map",
             "schema" => %{
               "subfield_a" => "string",
@@ -430,7 +430,7 @@ defmodule Castmill.WidgetsTest do
       schema = %{
         "field_a" => %{
           "type" => "list",
-          "schema" => %{
+          "items" => %{
             "type" => "map",
             "schema" => %{
               "subfield_a" => "string",
@@ -481,7 +481,7 @@ defmodule Castmill.WidgetsTest do
             },
             "subfield_c" => %{
               "type" => "list",
-              "schema" => %{
+              "items" => %{
                 "type" => "map",
                 "schema" => %{
                   "subsubfield_a" => "string",
@@ -541,7 +541,7 @@ defmodule Castmill.WidgetsTest do
             },
             "subfield_c" => %{
               "type" => "list",
-              "schema" => %{
+              "items" => %{
                 "type" => "map",
                 "schema" => %{
                   "subsubfield_a" => %{"type" => "string", "required" => true},

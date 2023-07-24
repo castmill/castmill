@@ -39,7 +39,7 @@ interface ProxyNotification {
  * Ideas: https://github.com/mdn/dom-examples/blob/master/channel-messaging-basic/page2.html
  */
 
-export class Proxy extends Widget {
+class Proxy extends Widget {
   private static id = 0;
   protected messageHandler?: (ev: MessageEvent<string>) => void;
   private origin!: string;
@@ -131,9 +131,11 @@ export class Proxy extends Widget {
     return this.callMethod("stop");
   }
 
+  /*
   duration(): Observable<number> {
     return this.callMethod("duration");
   }
+  */
 
   seek(offset: number) {
     return this.callMethod("seek", [offset]);

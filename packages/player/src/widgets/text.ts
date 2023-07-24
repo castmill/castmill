@@ -76,7 +76,12 @@ export class TextWidget extends TimelineWidget {
     div.textContent = this.text;
     applyCss(div, this.css);
 
-    const tl = (this.timeline = gsap.timeline({ paused: true }));
+    const tl = gsap.timeline({ paused: true });
+    const tlItem = {
+      start: this.timeline.duration(),
+      child: tl,
+    };
+    this.timeline.add(tlItem);
 
     if (opts.animation) {
       const splittedText = splitText(div, opts.animation.chars);

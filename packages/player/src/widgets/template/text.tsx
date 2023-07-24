@@ -1,9 +1,16 @@
 import { Component, JSX, mergeProps, onMount } from "solid-js";
-import { TemplateComponent, TemplateComponentType } from "./group";
+import { TemplateConfig, resolveOption } from "./binding";
+import { Observable, of } from "rxjs";
+import { TemplateComponent, TemplateComponentType } from "./template";
 
 interface AutoFitOpts {
   maxSize?: number;
   maxLines?: number;
+}
+
+export interface TextComponentOptions {
+  text: string;
+  autofit: AutoFitOpts;
 }
 
 export class TextComponent implements TemplateComponent {
@@ -11,11 +18,31 @@ export class TextComponent implements TemplateComponent {
 
   constructor(
     public name: string,
+    public opts: TextComponentOptions,
     public style: JSX.CSSProperties,
-    public binding?: string,
-    public text: string = "",
-    public opts?: { autofit: AutoFitOpts }
   ) {}
+
+  resolveDuration(): number {
+    return 0;
+  }
+
+  static fromJSON(json: any): TextComponent {
+    return new TextComponent(json.name, json.opts, json.style);
+  }
+
+  static resolveOptions(
+    opts: any,
+    config: TemplateConfig,
+    context: any
+  ): TextComponentOptions {
+    return {
+      text: resolveOption(opts.url, config, context),
+      autofit: {
+        maxSize: resolveOption(opts.size, config, context),
+        maxLines: resolveOption(opts.size, config, context),
+      },
+    };
+  }
 }
 
 // TODO: We must support formatters and templates. For example:
@@ -34,11 +61,9 @@ export type pipeline = formatter[];
 
 export const Text: Component<{
   name?: string;
-  text: string;
+  opts: TextComponentOptions;
   style: JSX.CSSProperties;
-  opts?: {
-    autofit: AutoFitOpts;
-  };
+  onReady: () => void;
 }> = (props) => {
   let textRef: HTMLDivElement | undefined;
 
@@ -56,12 +81,13 @@ export const Text: Component<{
       return;
     }
     autoFitText(textRef, props.opts?.autofit);
+    props.onReady();
   });
 
   return (
     <div data-component="text" data-name={props.name} style={merged}>
       <span ref={textRef} style={spanStyle}>
-        {props.text}
+        {props.opts.text}
       </span>
     </div>
   );
