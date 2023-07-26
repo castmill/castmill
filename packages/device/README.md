@@ -17,3 +17,7 @@ interface for different platforms.
 
 This software is open source and is covered by the [AGPLv3 license](./LICENSE.md). If you require a different license for commercial
 purposes, please get in touch with us.
+
+## Copyright
+
+(c) 2011-2023 Castmill AB
