@@ -1,4 +1,4 @@
-import { Component, For, JSX } from "solid-js";
+import { Component, For, JSX, onCleanup, onMount } from "solid-js";
 import { Item } from "./item";
 import { TemplateConfig } from "./binding";
 import {
@@ -8,6 +8,7 @@ import {
 } from "./template";
 import { ResourceManager } from "@castmill/cache";
 import { Timeline } from "./timeline";
+import { ComponentAnimation, applyAnimations } from "./animation";
 
 export interface GroupComponentOptions {}
 
@@ -20,7 +21,8 @@ export class GroupComponent implements TemplateComponent {
     public context: any,
     public opts: GroupComponentOptions,
     public style: JSX.CSSProperties,
-    public components: TemplateComponentTypeUnion[] = []
+    public components: TemplateComponentTypeUnion[] = [],
+    public animations?: ComponentAnimation[]
   ) {}
 
   static fromJSON(json: any, resourceManager: ResourceManager): GroupComponent {
@@ -52,10 +54,14 @@ export const Group: Component<{
   components: TemplateComponentTypeUnion[];
   style: JSX.CSSProperties;
   timeline: Timeline;
+  animations?: ComponentAnimation[];
   medias: { [index: string]: string };
   resourceManager: ResourceManager;
   onReady: () => void;
 }> = (props) => {
+  let groupRef: HTMLDivElement | undefined;
+  let cleanUpAnimations: () => void;
+
   let count = 0;
   const onReadyAfter = () => {
     count++;
@@ -64,8 +70,23 @@ export const Group: Component<{
     }
   };
 
+  onCleanup(() => {
+    cleanUpAnimations && cleanUpAnimations();
+  });
+
+  onMount(() => {
+    if (groupRef && props.animations) {
+      cleanUpAnimations = applyAnimations(props.timeline, props.animations, groupRef);
+    }
+  });
+
   return (
-    <div data-component="group" data-name={props.name} style={props.style}>
+    <div
+      ref={groupRef}
+      data-component="group"
+      data-name={props.name}
+      style={props.style}
+    >
       <For each={props.components}>
         {(component, i) => (
           <Item
