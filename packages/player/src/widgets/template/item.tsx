@@ -3,7 +3,7 @@ import { Group, GroupComponent } from "./group";
 import { Image, ImageComponent } from "./image";
 import { List, ListComponent } from "./list";
 import { ImageCarousel, ImageCarouselComponent } from "./image-carousel";
-import { Text, TextComponent } from "./text";
+import { Text, TextComponent, TextComponentOptions } from "./text";
 import { TemplateConfig } from "./binding";
 import { Video, VideoComponent } from "./video";
 import { TemplateComponentType, TemplateComponentTypeUnion } from "./template";
@@ -39,6 +39,7 @@ export const Item: Component<{
             props.context
           )}
           style={props.component.style}
+          animations={(props.component as ImageComponent).animations}
           timeline={props.timeline}
           medias={props.medias}
           onReady={props.onReady}
@@ -62,11 +63,13 @@ export const Item: Component<{
         <Text
           name={props.component.name}
           opts={TextComponent.resolveOptions(
-            props.component.opts,
+            props.component.opts as TextComponentOptions,
             props.config,
             props.context
           )}
+          animations={(props.component as TextComponent).animations}
           style={props.component.style}
+          timeline={props.timeline}
           onReady={props.onReady}
         />
       </Match>
@@ -77,6 +80,7 @@ export const Item: Component<{
           context={props.context}
           components={(props.component as GroupComponent).components}
           style={props.component.style}
+          animations={(props.component as GroupComponent).animations}
           timeline={props.timeline}
           medias={props.medias}
           resourceManager={props.resourceManager}

@@ -19,7 +19,7 @@ export class TimelineWidget extends Widget {
   constructor(resourceManager: ResourceManager, opts?: {}) {
     super(resourceManager, opts);
 
-    this.timeline = new Timeline("root");
+    this.timeline = new Timeline("root", { loop: true });
   }
 
   play(timer$: Observable<number>) {

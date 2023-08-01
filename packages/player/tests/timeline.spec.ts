@@ -23,6 +23,7 @@ interface TimelineBasicSpy extends TimelineBasic {
 interface TimelineItemSpy {
   start: number;
   duration: number;
+  repeat?: boolean;
   child: TimelineBasicSpy;
 }
 
@@ -379,5 +380,60 @@ describe("Timeline with child Timeline", () => {
       6000,
     ]);
     expect((item3.child.seek as SinonSpy).getCall(0).args).to.deep.equal([0]);
+  });
+});
+
+describe("Repeat functionality", () => {
+  let timeline: Timeline;
+  let item: TimelineItemSpy;
+  let clock: SinonFakeTimers;
+
+  beforeEach(() => {
+    timeline = new Timeline("test", { duration: 6000 });
+
+    item = {
+      start: 1000,
+      duration: 2000,
+      repeat: true,
+      child: {
+        play: spy(),
+        seek: spy(),
+        pause: spy(),
+        duration: stub().returns(2000),
+      },
+    };
+    timeline.add(item);
+
+    stub(Date, "now").returns(0);
+    clock = useFakeTimers();
+  });
+
+  afterEach(() => {
+    restore();
+  });
+
+  it("should handle repeat functionality correctly", () => {
+    timeline.play(0);
+
+    clock.tick(1000); // Start time
+    expect(item.child.play.calledOnce).to.be.true;
+
+    clock.tick(2000); // Reach the end of the item's duration
+    expect(item.child.play.callCount).to.equal(1); // Still playing, but not called again
+
+    clock.tick(2000); // Complete the next iteration
+
+    expect(timeline.isPlaying(item)).to.be.true;
+    expect(item.child.play.callCount).to.equal(1); // Still playing, but not called again
+  });
+
+  it("should hadle seek with repeat correctly", () => {
+    timeline.seek(3000); // Seek into the next iteration
+    expect(item.child.seek.calledOnce).to.be.true;
+    expect(item.child.seek.getCall(0).args[0]).to.equal(0);
+
+    timeline.seek(4000); // Seek into the next iteration
+    expect(item.child.seek.callCount).to.equal(2);
+    expect(item.child.seek.getCall(1).args[0]).to.equal(1000);
   });
 });

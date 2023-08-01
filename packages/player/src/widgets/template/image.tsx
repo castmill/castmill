@@ -1,9 +1,8 @@
-import gsap from "gsap";
-
 import { Component, JSX, mergeProps, onCleanup, onMount } from "solid-js";
 import { TemplateConfig, resolveOption } from "./binding";
 import { TemplateComponent, TemplateComponentType } from "./template";
 import { Timeline, TimelineItem } from "./timeline";
+import { ComponentAnimation, applyAnimations } from "./animation";
 
 export interface ImageComponentOptions {
   url: string;
@@ -17,7 +16,8 @@ export class ImageComponent implements TemplateComponent {
   constructor(
     public name: string,
     public opts: ImageComponentOptions,
-    public style: JSX.CSSProperties
+    public style: JSX.CSSProperties,
+    public animations?: ComponentAnimation[]
   ) {}
 
   resolveDuration(medias: { [index: string]: string }): number {
@@ -45,6 +45,7 @@ interface ImageProps {
   name: string;
   opts: ImageComponentOptions;
   timeline: Timeline;
+  animations?: ComponentAnimation[];
   style: JSX.CSSProperties;
   medias: { [index: string]: string };
   onReady: () => void;
@@ -52,8 +53,7 @@ interface ImageProps {
 
 export const Image: Component<ImageProps> = (props: ImageProps) => {
   let imageRef: HTMLDivElement | undefined;
-  let gsapTimeline: GSAPTimeline;
-  let timelineItem: TimelineItem;
+  let cleanUpAnimations: () => void;
 
   const imageUrl = props.medias[props.opts.url];
 
@@ -75,36 +75,15 @@ export const Image: Component<ImageProps> = (props: ImageProps) => {
   );
 
   onCleanup(() => {
-    props.timeline.remove(timelineItem);
-    gsapTimeline?.kill();
+    cleanUpAnimations && cleanUpAnimations();
   });
 
   onMount(() => {
-    gsapTimeline = gsap.timeline({
-      repeat: -1,
-      yoyo: true,
-      paused: true,
-    });
-
-    timelineItem = {
-      start: props.timeline.duration(),
-      duration: props.opts.duration, // Hacked a duration.
-      child: gsapTimeline,
-    };
-
-    props.timeline.add(timelineItem);
-
-    if (imageRef) {
-      gsapTimeline.to(
-        imageRef,
-        {
-          scale: 1.3,
-          duration: 1,
-          translateX: "1%",
-          translate: "1%",
-          ease: "power1.inOut",
-        },
-        0
+    if (imageRef && props.animations) {
+      cleanUpAnimations = applyAnimations(
+        props.timeline,
+        props.animations,
+        imageRef
       );
     }
     props.onReady();
