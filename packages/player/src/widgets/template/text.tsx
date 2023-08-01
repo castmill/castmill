@@ -127,15 +127,14 @@ export const Text: Component<{
         });
 
         // Duration should be proportional to the length in chars of the text
-        const duration = props.opts.text.length * 0.1;
+        const duration = props.opts.text.length * 0.25;
 
-        // TODO: Compute the slack
         const slack = textRect.width * 0.1;
         scrollTimeline.to(textRef, {
           duration,
           x: -(textRect.width + slack),
           ease: "none",
-        });
+        }, 1);
 
         timelineItem = {
           start: props.timeline.duration(),
@@ -180,7 +179,6 @@ function autoFitText(div: HTMLDivElement, options: AutoFitOpts): number {
   };
 
   const parentElement = div.parentElement!;
-
 
   const containerRect = parentElement.getBoundingClientRect();
   if (containerRect.width === 0 || containerRect.height === 0) {
