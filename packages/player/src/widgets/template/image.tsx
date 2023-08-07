@@ -1,8 +1,8 @@
 import { Component, JSX, mergeProps, onCleanup, onMount } from "solid-js";
 import { TemplateConfig, resolveOption } from "./binding";
 import { TemplateComponent, TemplateComponentType } from "./template";
-import { Timeline, TimelineItem } from "./timeline";
 import { ComponentAnimation, applyAnimations } from "./animation";
+import { BaseComponentProps } from "./interfaces/base-component-props";
 
 export interface ImageComponentOptions {
   url: string;
@@ -17,7 +17,8 @@ export class ImageComponent implements TemplateComponent {
     public name: string,
     public opts: ImageComponentOptions,
     public style: JSX.CSSProperties,
-    public animations?: ComponentAnimation[]
+    public animations?: ComponentAnimation[],
+    public cond?: Record<string, any>
   ) {}
 
   resolveDuration(medias: { [index: string]: string }): number {
@@ -25,7 +26,13 @@ export class ImageComponent implements TemplateComponent {
   }
 
   static fromJSON(json: any): ImageComponent {
-    return new ImageComponent(json.name, json.opts, json.style);
+    return new ImageComponent(
+      json.name,
+      json.opts,
+      json.style,
+      json.animations,
+      json.cond
+    );
   }
 
   static resolveOptions(
@@ -41,14 +48,9 @@ export class ImageComponent implements TemplateComponent {
   }
 }
 
-interface ImageProps {
-  name: string;
+interface ImageProps extends BaseComponentProps {
   opts: ImageComponentOptions;
-  timeline: Timeline;
-  animations?: ComponentAnimation[];
-  style: JSX.CSSProperties;
   medias: { [index: string]: string };
-  onReady: () => void;
 }
 
 export const Image: Component<ImageProps> = (props: ImageProps) => {

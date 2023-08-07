@@ -2,9 +2,9 @@ import gsap from "gsap";
 
 import { Component, For, JSX, mergeProps, onCleanup, onMount } from "solid-js";
 import { TemplateConfig, resolveOption } from "./binding";
-import { Observable, of } from "rxjs";
 import { TemplateComponent, TemplateComponentType } from "./template";
-import { Timeline } from "./timeline";
+import { ComponentAnimation } from "./animation";
+import { BaseComponentProps } from "./interfaces/base-component-props";
 
 export interface ImageCarouselComponentOptions {
   images: string[];
@@ -17,7 +17,9 @@ export class ImageCarouselComponent implements TemplateComponent {
   constructor(
     public name: string,
     public opts: ImageCarouselComponentOptions,
-    public style: JSX.CSSProperties
+    public style: JSX.CSSProperties,
+    public animations?: ComponentAnimation[],
+    public cond?: Record<string, any>
   ) {}
 
   resolveDuration(medias: { [index: string]: string }): number {
@@ -25,7 +27,13 @@ export class ImageCarouselComponent implements TemplateComponent {
   }
 
   static fromJSON(json: any): ImageCarouselComponent {
-    return new ImageCarouselComponent(json.name, json.opts, json.style);
+    return new ImageCarouselComponent(
+      json.name,
+      json.opts,
+      json.style,
+      json.animations,
+      json.cond
+    );
   }
 
   static resolveOptions(
@@ -40,18 +48,18 @@ export class ImageCarouselComponent implements TemplateComponent {
   }
 }
 
-export const ImageCarousel: Component<{
-  name: string;
+interface ImageCarouselProps extends BaseComponentProps {
   config: TemplateConfig;
   context: any;
+
   opts: ImageCarouselComponentOptions;
-  style: JSX.CSSProperties;
-  timeline: Timeline;
+
   startArgs?: GSAPTweenVars;
   endArgs?: GSAPTweenVars;
   medias: { [index: string]: string };
-  onReady: () => void;
-}> = (props) => {
+}
+
+export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
   let parentRef: HTMLDivElement | undefined;
   const timeline: GSAPTimeline = gsap.timeline();
   const timelineItem = {

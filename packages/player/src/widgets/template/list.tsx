@@ -16,7 +16,9 @@ import {
   TemplateComponentTypeUnion,
 } from "./template";
 import { ResourceManager } from "@castmill/cache";
-import { Timeline } from "./timeline";
+import { Timeline, TimelineItem } from "./timeline";
+import { ComponentAnimation } from "./animation";
+import { BaseComponentProps } from "./interfaces/base-component-props";
 
 export interface ListComponentOptions {
   pageDuration: number;
@@ -32,7 +34,9 @@ export class ListComponent implements TemplateComponent {
     public config: TemplateConfig,
     public opts: ListComponentOptions,
     public style: JSX.CSSProperties,
-    public component: TemplateComponentTypeUnion
+    public component: TemplateComponentTypeUnion,
+    public animations?: ComponentAnimation[],
+    public cond?: Record<string, any>
   ) {}
 
   resolveDuration(medias: { [index: string]: string }): number {
@@ -47,7 +51,9 @@ export class ListComponent implements TemplateComponent {
       json.config,
       json.opts,
       json.style,
-      TemplateComponent.fromJSON(json.component, resourceManager)
+      TemplateComponent.fromJSON(json.component, resourceManager),
+      json.animations,
+      json.cond
     );
   }
 
@@ -64,44 +70,42 @@ export class ListComponent implements TemplateComponent {
   }
 }
 
-// TODO: Add support for displaying a progress indicator, something like horizontal bullets,
-// one bullet per page, and the activa page should be shown in a different color: o o x o
-export const List: Component<{
-  name: string;
+interface ListProps extends BaseComponentProps {
   config: TemplateConfig;
   opts: ListComponentOptions;
-  style: JSX.CSSProperties;
   component: TemplateComponentTypeUnion;
-  timeline: Timeline;
   medias: { [index: string]: string };
   resourceManager: ResourceManager;
-  onReady: () => void;
-}> = (props) => {
+}
+
+// TODO: Add support for displaying a progress indicator, something like horizontal bullets,
+// one bullet per page, and the activa page should be shown in a different color: o o x o
+export const List: Component<ListProps> = (props) => {
   const [pages, setPages] = createSignal<any[][]>([props.opts.items]);
   const [pageStyle, setPageStyle] = createSignal("");
 
   let textRef: HTMLDivElement | undefined;
-  let gsapTimeline: GSAPTimeline = gsap.timeline({ repeat: -1 });
+  let gsapTimeline: GSAPTimeline = gsap.timeline({ repeat: -1, paused: true });
+  let timelineItem: TimelineItem;
 
-  const childTimeline = new Timeline("list");
-  const gsapTimelineItem = {
-    start: 0,
-    child: gsapTimeline,
+  let count = 0;
+  const onReadyAfter = () => {
+    count++;
+    if (count == pages().length) {
+      const timelineItem = {
+        start: 0, // props.timeline.duration(),
+        duration: gsapTimeline.duration(),
+        repeat: !!gsapTimeline.repeat(),
+        child: gsapTimeline,
+      };
+      props.timeline.add(timelineItem);
+
+      props.onReady();
+    }
   };
-  childTimeline.add(gsapTimelineItem);
-
-  // Adding last here is incorrect as this component maybe is part of a group or list and then the
-  // items should be all added to the same time.
-  const timelineItem = {
-    start: props.timeline.duration(),
-    child: childTimeline,
-  };
-
-  props.timeline.add(timelineItem);
 
   onCleanup(() => {
-    props.timeline.remove(timelineItem);
-    childTimeline.remove(gsapTimelineItem);
+    timelineItem && props.timeline.remove(timelineItem);
     gsapTimeline.kill();
   });
 
@@ -143,14 +147,14 @@ export const List: Component<{
               items={page}
               component={props.component}
               style={pageStyle()}
-              timeline={childTimeline}
+              timeline={props.timeline}
               gsapTimeline={gsapTimeline}
               offset={i() * props.opts.pageDuration}
               duration={props.opts.pageDuration}
               skipAnimation={pages().length == 1}
               medias={props.medias}
               resourceManager={props.resourceManager}
-              onReady={props.onReady}
+              onReady={onReadyAfter}
             />
           )}
         </For>

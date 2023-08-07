@@ -2,11 +2,7 @@ import { JSX } from "solid-js";
 
 import { ResourceManager } from "@castmill/cache";
 import { Observable, forkJoin, from, merge, of } from "rxjs";
-import {
-  mergeMap,
-  map,
-  switchMap,
-} from "rxjs/operators";
+import { mergeMap, map, switchMap } from "rxjs/operators";
 import { TimelineWidget } from "../timeline-widget";
 
 import { render } from "solid-js/web";
@@ -60,7 +56,7 @@ export class TemplateWidget extends TimelineWidget {
   }
 
   private loadFonts() {
-    if (!this.opts.fonts) {
+    if (!this.opts.fonts || this.opts.fonts.length === 0) {
       return of("no:fonts");
     }
 
@@ -91,7 +87,7 @@ export class TemplateWidget extends TimelineWidget {
   }
 
   private loadMedias() {
-    if (!this.opts.medias) {
+    if (!this.opts.medias || this.opts.medias.length === 0) {
       return of("no:medias");
     }
     return from(this.opts.medias).pipe(

@@ -3,13 +3,18 @@ import gsap from "gsap";
 import { Component, JSX, mergeProps, onCleanup, onMount } from "solid-js";
 import { TemplateConfig, resolveOption } from "./binding";
 import { TemplateComponent, TemplateComponentType } from "./template";
-import { Timeline, TimelineItem } from "./timeline";
+import { TimelineItem } from "./timeline";
 import { ComponentAnimation, applyAnimations } from "./animation";
-
+import { BaseComponentProps } from "./interfaces/base-component-props";
 interface AutoFitOpts {
+  // Base size of the text (in em). Used if the text fits in the container.
+  baseSize?: number;
+
+  // Maximum size the text can have (in em)
   maxSize?: number;
+
+  // Minimum size the text can have (in em) before scroll is enabled.
   minSize?: number;
-  minHeight?: number; // If set, the text will automatically scroll if the height is smaller than this value
 }
 
 export interface TextComponentOptions {
@@ -30,7 +35,8 @@ export class TextComponent implements TemplateComponent {
     public name: string,
     public opts: TextComponentOptions,
     public style: JSX.CSSProperties,
-    public animations?: ComponentAnimation[]
+    public animations?: ComponentAnimation[],
+    public cond?: Record<string, any>
   ) {}
 
   resolveDuration(): number {
@@ -38,7 +44,13 @@ export class TextComponent implements TemplateComponent {
   }
 
   static fromJSON(json: any): TextComponent {
-    return new TextComponent(json.name, json.opts, json.style);
+    return new TextComponent(
+      json.name,
+      json.opts,
+      json.style,
+      json.animations,
+      json.cond
+    );
   }
 
   static resolveOptions(
@@ -49,8 +61,9 @@ export class TextComponent implements TemplateComponent {
     return {
       text: resolveOption(opts.text, config, context),
       autofit: {
-        maxSize: resolveOption(opts.autofit.maxSize, config, context),
-        minSize: resolveOption(opts.autofit.minSize, config, context),
+        maxSize: resolveOption(opts.autofit?.maxSize, config, context),
+        minSize: resolveOption(opts.autofit?.minSize, config, context),
+        baseSize: resolveOption(opts.autofit?.baseSize, config, context),
       },
     };
   }
@@ -68,14 +81,11 @@ export type pipeline = formatter[];
 // Initial formatters must include the most important ones, such as formating numbers suitable for prices and quantities.
 // TODO: rename text to value (all components that need a value should have value as prop)
 
-export const Text: Component<{
-  name?: string;
+interface TextProps extends BaseComponentProps {
   opts: TextComponentOptions;
-  style: JSX.CSSProperties;
-  animations?: ComponentAnimation[];
-  timeline: Timeline;
-  onReady: () => void;
-}> = (props) => {
+}
+
+export const Text: Component<TextProps> = (props) => {
   let textRef: HTMLDivElement | undefined;
   let timelineItem: TimelineItem;
   let scrollTimeline: gsap.core.Timeline;
@@ -100,7 +110,7 @@ export const Text: Component<{
     if (!textRef) {
       return;
     }
-    const size = autoFitText(textRef, props.opts?.autofit);
+    const size = autoFitText(textRef, props.opts?.autofit || {});
 
     if (props.animations) {
       const splittedText = splitText(textRef, props.opts.chars);
@@ -130,11 +140,15 @@ export const Text: Component<{
         const duration = props.opts.text.length * 0.25;
 
         const slack = textRect.width * 0.1;
-        scrollTimeline.to(textRef, {
-          duration,
-          x: -(textRect.width + slack),
-          ease: "none",
-        }, 1);
+        scrollTimeline.to(
+          textRef,
+          {
+            duration,
+            x: -(textRect.width + slack),
+            ease: "none",
+          },
+          1 // Wait 1 second before starting the animation
+        );
 
         timelineItem = {
           start: props.timeline.duration(),
@@ -185,16 +199,25 @@ function autoFitText(div: HTMLDivElement, options: AutoFitOpts): number {
     return 0;
   }
 
-  let l = 0;
-  let r = (options && options.maxSize) || limits.max;
+  const maxHeight = containerRect.height; // Math.ceil(containerRect.height);
+  const maxWidth = containerRect.width; //Math.ceil(containerRect.width);
 
-  const maxHeight = Math.ceil(containerRect.height);
-  const maxWidth = Math.ceil(containerRect.width);
+  if (options.baseSize) {
+    setSize(options.baseSize);
+    const { height, width } = textElement.getBoundingClientRect();
+    if (height <= maxHeight && width <= maxWidth) {
+      return options.baseSize;
+    }
+  }
+
+  let l = 0;
+  let r = options.maxSize || limits.max;
 
   let count = 0;
   let lastWidth = 0,
     lastHeight = 0,
-    lastSize = 0;
+    lastSize = 0,
+    lastSmallerSize = 0;
   while (
     (r - l > tolerance && count < maxNumIterations) ||
     lastHeight > maxHeight ||
@@ -208,14 +231,20 @@ function autoFitText(div: HTMLDivElement, options: AutoFitOpts): number {
     setSize(size);
     const { height, width } = textElement.getBoundingClientRect();
 
-    // Do not allow text to become smaller than 8px
-    if (height <= 8 || width <= 8) {
+
+    // Break if we cannot do better.
+    if (height == maxHeight && width <= maxWidth) {
+      break;
+    }
+
+    if (height <= maxHeight && width == maxWidth) {
       break;
     }
 
     if (height <= maxHeight && width <= maxWidth) {
       // Make the text larger
       l = size;
+      lastSmallerSize = size;
     } else {
       // Make the text smaller
       r = size;
@@ -223,6 +252,12 @@ function autoFitText(div: HTMLDivElement, options: AutoFitOpts): number {
 
     lastHeight = height;
     lastWidth = width;
+  }
+
+  const { height, width } = textElement.getBoundingClientRect();
+  if (height > maxHeight || width > maxWidth) {
+    lastSize = lastSmallerSize;
+    setSize(lastSmallerSize);
   }
 
   // If the height of the text is too small, we could enable scrolling (using GSAP for the animation)
