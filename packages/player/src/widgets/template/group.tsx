@@ -7,8 +7,8 @@ import {
   TemplateComponentTypeUnion,
 } from "./template";
 import { ResourceManager } from "@castmill/cache";
-import { Timeline } from "./timeline";
 import { ComponentAnimation, applyAnimations } from "./animation";
+import { BaseComponentProps } from "./interfaces/base-component-props";
 
 export interface GroupComponentOptions {}
 
@@ -22,7 +22,8 @@ export class GroupComponent implements TemplateComponent {
     public opts: GroupComponentOptions,
     public style: JSX.CSSProperties,
     public components: TemplateComponentTypeUnion[] = [],
-    public animations?: ComponentAnimation[]
+    public animations?: ComponentAnimation[],
+    public cond?: Record<string, any>
   ) {}
 
   static fromJSON(json: any, resourceManager: ResourceManager): GroupComponent {
@@ -34,7 +35,9 @@ export class GroupComponent implements TemplateComponent {
       json.style,
       json.components.map((component: any) =>
         TemplateComponent.fromJSON(component, resourceManager)
-      )
+      ),
+      json.animations,
+      json.cond
     );
   }
 
@@ -47,18 +50,16 @@ export class GroupComponent implements TemplateComponent {
   }
 }
 
-export const Group: Component<{
-  name: string;
+interface GroupProps extends BaseComponentProps {
   config: TemplateConfig;
   context: any;
   components: TemplateComponentTypeUnion[];
-  style: JSX.CSSProperties;
-  timeline: Timeline;
-  animations?: ComponentAnimation[];
+
   medias: { [index: string]: string };
   resourceManager: ResourceManager;
-  onReady: () => void;
-}> = (props) => {
+}
+
+export const Group: Component<GroupProps> = (props) => {
   let groupRef: HTMLDivElement | undefined;
   let cleanUpAnimations: () => void;
 
@@ -76,7 +77,11 @@ export const Group: Component<{
 
   onMount(() => {
     if (groupRef && props.animations) {
-      cleanUpAnimations = applyAnimations(props.timeline, props.animations, groupRef);
+      cleanUpAnimations = applyAnimations(
+        props.timeline,
+        props.animations,
+        groupRef
+      );
     }
   });
 

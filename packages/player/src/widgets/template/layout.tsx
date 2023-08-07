@@ -8,6 +8,8 @@ import { ResourceManager } from "@castmill/cache";
 import { Renderer } from "../../renderer";
 import { Timeline, TimelineItem } from "./timeline";
 import { timer } from "../../player";
+import { ComponentAnimation } from "./animation";
+import { BaseComponentProps } from "./interfaces/base-component-props";
 
 export interface LayoutContainer {
   playlist: JsonPlaylist;
@@ -26,7 +28,9 @@ export class LayoutComponent implements TemplateComponent {
   constructor(
     public name: string,
     public opts: LayoutComponentOptions,
-    public style: JSX.CSSProperties
+    public style: JSX.CSSProperties,
+    public animations?: ComponentAnimation[],
+    public cond?: Record<string, any>
   ) {}
 
   resolveDuration(medias: { [index: string]: string }): number {
@@ -41,10 +45,18 @@ export class LayoutComponent implements TemplateComponent {
       opts: LayoutComponentOptions;
       style: JSX.CSSProperties;
       name: string;
+      animations?: ComponentAnimation[];
+      cond?: Record<string, any>;
     },
     resourceManager: ResourceManager
   ): LayoutComponent {
-    const layout = new LayoutComponent(json.name, json.opts, json.style);
+    const layout = new LayoutComponent(
+      json.name,
+      json.opts,
+      json.style,
+      json.animations,
+      json.cond
+    );
     layout.playlists = json.opts.containers.map(
       (container: LayoutContainer) => {
         const playlist = Playlist.fromJSON(container.playlist, resourceManager);
@@ -65,15 +77,12 @@ export class LayoutComponent implements TemplateComponent {
     };
   }
 }
-
-export const Layout: Component<{
-  name: string;
+interface LayoutProps extends BaseComponentProps {
   opts: LayoutComponentOptions;
-  timeline: Timeline;
-  style: JSX.CSSProperties;
   resourceManager: ResourceManager;
-  onReady: () => void;
-}> = (props) => {
+}
+
+export const Layout: Component<LayoutProps> = (props) => {
   const timeline = new Timeline("layout");
   const timelineItem = {
     start: props.timeline.duration(),

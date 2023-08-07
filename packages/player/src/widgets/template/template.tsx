@@ -11,6 +11,7 @@ import { ListComponent } from "./list";
 import { ImageCarouselComponent } from "./image-carousel";
 import { LayoutComponent } from "./layout";
 import { Timeline } from "./timeline";
+import { ComponentAnimation } from "./animation";
 
 export type TemplateComponentTypeUnion =
   | TextComponent
@@ -38,7 +39,10 @@ export class TemplateComponent {
 
   constructor(
     public name: string,
-    public opts: any // public config: TemplateConfig, // public component: TemplateComponentTypeUnion
+    public opts: any, // public config: TemplateConfig, // public component: TemplateComponentTypeUnion
+    public animations?: ComponentAnimation[],
+    public cond?: Record<string, any>,
+    public $styles?: { cond: Record<string, any>; style: JSX.CSSProperties }[]
   ) {}
 
   resolveDuration(medias: { [index: string]: string }): number {

@@ -1,5 +1,3 @@
-import gsap from "gsap";
-
 import { Component, JSX, mergeProps, onCleanup, onMount } from "solid-js";
 import { TemplateConfig, resolveOption } from "./binding";
 import {
@@ -13,6 +11,8 @@ import {
 } from "rxjs";
 import { TemplateComponent, TemplateComponentType } from "./template";
 import { Timeline, TimelineItem } from "./timeline";
+import { ComponentAnimation } from "./animation";
+import { BaseComponentProps } from "./interfaces/base-component-props";
 
 enum ReadyState {
   HAVE_NOTHING = 0, // No information is available about the media resource.
@@ -33,7 +33,9 @@ export class VideoComponent implements TemplateComponent {
   constructor(
     public name: string,
     public opts: VideoComponentOptions,
-    public style: JSX.CSSProperties
+    public style: JSX.CSSProperties,
+    public animations?: ComponentAnimation[],
+    public cond?: Record<string, any>
   ) {}
 
   resolveDuration_old(medias: { [index: string]: string }): Observable<number> {
@@ -63,7 +65,13 @@ export class VideoComponent implements TemplateComponent {
   }
 
   static fromJSON(json: any): VideoComponent {
-    return new VideoComponent(json.name, json.opts, json.style);
+    return new VideoComponent(
+      json.name,
+      json.opts,
+      json.style,
+      json.animations,
+      json.cond
+    );
   }
 
   static resolveOptions(
@@ -78,14 +86,12 @@ export class VideoComponent implements TemplateComponent {
   }
 }
 
-export const Video: Component<{
-  name: string;
+interface VideoProps extends BaseComponentProps {
   opts: VideoComponentOptions;
-  timeline: Timeline;
-  style: JSX.CSSProperties;
   medias: { [index: string]: string };
-  onReady: () => void;
-}> = (props) => {
+}
+
+export const Video: Component<VideoProps> = (props) => {
   let videoRef: HTMLVideoElement | undefined;
 
   let timeline: Timeline;
