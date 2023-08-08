@@ -13,8 +13,16 @@ export interface TimelineBasic {
 }
 
 export interface TimelineItem {
+  // Start time in milliseconds.
   start: number;
-  duration?: number; // This duration overrides the duration of the child.
+
+  // Enable repeat for this child
+  repeat?: boolean;
+
+  // This duration overrides the duration of the child.
+  duration?: number;
+
+  // The child timeline.
   child: TimelineBasic;
 }
 
@@ -29,6 +37,9 @@ export class Timeline implements TimelineBasic {
   intervalTimer: any;
 
   private opts: { loop?: boolean; duration?: number };
+
+  // Any item has repeat enabled.
+  private hasRepeat: boolean = false;
 
   constructor(
     public name: string,
@@ -65,7 +76,8 @@ export class Timeline implements TimelineBasic {
           return;
         }
 
-        const position = (this.time = time % duration);
+        const position = (this.time = this.hasRepeat ? time : time % duration);
+
         // Check if we have looped around.
         if (position < prevPosition) {
           this.nextEndTick = 0;
@@ -75,9 +87,13 @@ export class Timeline implements TimelineBasic {
         if (position >= this.nextEndTick) {
           let nextEndTick = Number.MAX_SAFE_INTEGER;
           this.playing.forEach((item) => {
+            if (item.repeat) {
+              return;
+            }
+
             const end =
               item.start + (item.duration || this.childDuration(item));
-            if (position < item.start || position >= end) {
+            if (position < item.start || (position >= end)) {
               this.pauseItem(item);
             } else {
               nextEndTick = Math.min(nextEndTick, end);
@@ -100,25 +116,30 @@ export class Timeline implements TimelineBasic {
 
   private playItemsFrom(position: number) {
     const itemsToPlay = this.items.filter((item) => {
-      const duration = item.duration || this.childDuration(item);
-      const end = item.start + duration;
-      return item.start <= position && end > position;
+      if (item.repeat) {
+        return item.start <= position;
+      } else {
+        const duration = item.duration || this.childDuration(item);
+        const end = item.start + duration;
+        return item.start <= position && end > position;
+      }
     });
 
     // Play all items that are within the current position.
     itemsToPlay.forEach((item) => {
-      const end = item.start + (item.duration || this.childDuration(item));
+      const duration = item.duration || this.childDuration(item);
+      let effectivePosition = position - item.start;
+
       this.items.splice(this.items.indexOf(item), 1);
       this.playing.add(item);
+      this.nextEndTick = Math.min(this.nextEndTick, item.start + duration);
 
-      this.nextEndTick =
-        this.nextEndTick === 0 && end ? end : Math.min(this.nextEndTick, end);
-
-      const relativePosition = position - item.start;
       item.child.play(
         item.child instanceof gsap.core.Timeline
-          ? relativePosition / 1000
-          : relativePosition
+          ? effectivePosition / 1000
+          : item.repeat
+          ? effectivePosition % duration
+          : effectivePosition
       );
     });
   }
@@ -138,8 +159,16 @@ export class Timeline implements TimelineBasic {
 
     this.items.forEach((item) => {
       const end = item.start + (item.duration || this.childDuration(item));
-      if (offset >= item.start && offset <= end) {
-        const relativeOffset = offset - item.start;
+      const relativeOffset = offset - item.start;
+
+      if (offset >= end && item.repeat && item.duration) {
+        // The % item.duration is not needed on the gsap timeline
+        item.child.seek(
+          item.child instanceof gsap.core.Timeline
+            ? relativeOffset / 1000
+            : relativeOffset % item.duration
+        );
+      } else if (offset >= item.start && offset <= end) {
         item.child.seek(
           item.child instanceof gsap.core.Timeline
             ? relativeOffset / 1000
@@ -164,6 +193,9 @@ export class Timeline implements TimelineBasic {
   }
 
   add(item: TimelineItem) {
+    if (item.repeat) {
+      this.hasRepeat = true;
+    }
     this.items.push(item);
     this.items.sort((a, b) => a.start - b.start);
   }
@@ -172,6 +204,7 @@ export class Timeline implements TimelineBasic {
     const index = this.items.findIndex((_item) => item === item);
     if (index >= 0) {
       this.items.splice(index, 1);
+      this.hasRepeat = this.items.some((item) => item.repeat);
     }
   }
 

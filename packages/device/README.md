@@ -1,34 +1,23 @@
-## Usage
+# Castmill Device Package
 
-Those templates dependencies are maintained via [pnpm](https://pnpm.io) via `pnpm up -Lri`.
+This package provides a library for implementing Castmill devices for any platform. A device allows playing content
+on a given device. The device could be a TV, a tablet, a phone, a desktop computer, Raspberry Pi, etc.
 
-This is the reason you see a `pnpm-lock.yaml`. That being said, any package manager will work. This file can be safely be removed once you clone a template.
+New devices can be added by implementing the `Machine` interface. This interface provides the machine specific methods
+that are required by the device to work. You can check the integrations folder for examples on how to implement the
+interface for different platforms.
 
-```bash
-$ npm install # or pnpm install or yarn install
-```
+## Learn more
 
-### Learn more on the [Solid Website](https://solidjs.com) and come chat with us on our [Discord](https://discord.com/invite/solidjs)
+- Official website: https://castmill.com/
+- Guides: coming soon.
+- Docs: coming soon.
 
-## Available Scripts
+## License
 
-In the project directory, you can run:
+This software is open source and is covered by the [AGPLv3 license](./LICENSE.md). If you require a different license for commercial
+purposes, please get in touch with us.
 
-### `npm dev` or `npm start`
+## Copyright
 
-Runs the app in the development mode.<br>
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
-
-The page will reload if you make edits.<br>
-
-### `npm run build`
-
-Builds the app for production to the `dist` folder.<br>
-It correctly bundles Solid in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.<br>
-Your app is ready to be deployed!
-
-## Deployment
-
-You can deploy the `dist` folder to any static host provider (netlify, surge, now, etc.)
+(c) 2011-2023 Castmill AB
