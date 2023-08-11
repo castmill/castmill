@@ -98,6 +98,14 @@ defmodule Castmill.Resources do
   end
 
   @doc """
+  Gets a media by its ID.
+  """
+  def get_media(id) do
+    Media
+    |> Repo.get(id)
+  end
+
+  @doc """
   Creates a playlist
   """
   def create_playlist(attrs \\ %{}) do
