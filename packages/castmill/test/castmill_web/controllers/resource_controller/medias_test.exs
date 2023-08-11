@@ -1,9 +1,7 @@
-defmodule CastmillWeb.ResourceControllerTest do
+defmodule CastmillWeb.ResourceController.MediasTest do
 
   use CastmillWeb.ConnCase, async: true
 
-  alias Castmill.Organizations
-  alias Castmill.Resources.Media
   alias Castmill.Teams
 
   import Castmill.AccountsFixtures
@@ -165,7 +163,7 @@ defmodule CastmillWeb.ResourceControllerTest do
       assert %{
         "data" => %{
           "name" => "big bunny",
-          "id" => id,
+          "id" => _id,
           "meta" => nil,
           "mimetype" => "video/mpeg4"
         }
