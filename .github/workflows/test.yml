@@ -99,3 +99,24 @@ jobs:
       - run: yarn install --ignore-engines --frozen-lockfile --non-interactive
       - run: yarn build
       - run: yarn test
+
+  test_device:
+      runs-on: ubuntu-latest
+  
+      name: testing Cache package with node@18
+  
+      defaults:
+        run:
+          working-directory: ./packages/device
+  
+      steps:
+        - name: Checkout repository
+          uses: actions/checkout@v3
+        - name: Use Node.js current
+          uses: actions/setup-node@v3
+          with:
+            node-version: 18
+            cache: "yarn"
+        - run: yarn install --ignore-engines --frozen-lockfile --non-interactive
+        - run: yarn build
+        - run: yarn test

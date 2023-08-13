@@ -3,9 +3,11 @@
   "version": "1.0.0",
   "description": "",
   "exports": "./dist/index.js",
+  "type": "module",
   "scripts": {
     "start": "vite",
     "dev": "vite",
+    "test": "mocha tests/**/*.spec.ts",
     "serve": "vite preview",
     "build": "rimraf dist && yarn ts-types && vite build",
     "build:watch": "tsc --watch",
