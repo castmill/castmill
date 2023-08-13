@@ -2,6 +2,7 @@ import { Socket } from "phoenix";
 import { Player, Playlist, Renderer, Viewport } from "@castmill/player";
 import { Machine } from "../interfaces/machine";
 import { ResourceManager, Cache, StorageIntegration } from "@castmill/cache";
+import { getCastmillIntro } from "./intro";
 
 export enum Status {
   Registering = "registering",
@@ -40,11 +41,15 @@ export class Device {
     this.resourceManager = new ResourceManager(this.cache);
 
     this.contentQueue = new Playlist("content-queue", this.resourceManager);
+
+    const intro = getCastmillIntro(this.resourceManager);
+    this.contentQueue.add(intro);
   }
 
   async start(el: HTMLElement) {
     const renderer = new Renderer(el);
     this.player = new Player(this.contentQueue, renderer, this.opts?.viewport);
+    this.player.play({ loop: true });
 
     /**
      * Since a device can have a lot of calendars associated to it, as well as be subject to play content based on
@@ -95,14 +100,12 @@ export class Device {
   }
 
   async loginOrRegister(): Promise<{ status: Status; pincode?: string }> {
-    console.log("Login or register")
     // Get the hardware id of this device.
     const hardwareId = await this.integration.getMachineGUID();
 
     // Check if this device is registered by getting the credentials from the local storage (if they exist).
     let credentials = await this.integration.getCredentials();
 
-    console.log("Credentials", credentials)
     if (credentials) {
       this.login(credentials, hardwareId);
       return { status: Status.Login };
