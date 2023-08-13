@@ -170,9 +170,8 @@ defmodule Castmill.DevicesTest do
 
       entry_attrs = %{
         name: "some entry name",
-        start: ~D[2005-05-05],
-        end: ~D[2005-05-05],
-        timezone: "Europe/Stockholm"
+        start: DateTime.to_unix(~U[2005-05-05 19:59:03Z]),
+        end: DateTime.to_unix(~U[2005-05-05 21:59:03Z]),
       }
 
       playlist = playlist_fixture(%{organization_id: organization.id})
@@ -202,8 +201,8 @@ defmodule Castmill.DevicesTest do
 
       entry_attrs = %{
         name: "some entry name",
-        start: ~D[2005-05-05],
-        end: ~D[2005-05-05],
+        start: DateTime.to_unix(~U[2005-05-05 19:59:03Z]),
+        end: DateTime.to_unix(~U[2005-05-05 21:59:03Z]),
         timezone: "Europe/Stockholm"
       }
 

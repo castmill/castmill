@@ -329,9 +329,14 @@ defmodule Castmill.Resources do
       iex> list_resources(Media, params)
       [%Media{}, ...]
   """
-  def list_resources(resource, %{organization_id: organization_id, page: page, page_size: page_size, search: search}) do
+  def list_resources(resource, %{
+        organization_id: organization_id,
+        page: page,
+        page_size: page_size,
+        search: search
+      }) do
     offset = if page_size == nil, do: 0, else: max((page - 1) * page_size, 0)
-    
+
     resource.base_query()
     |> Organization.where_org_id(organization_id)
     |> QueryHelpers.where_name_like(search)
@@ -341,11 +346,21 @@ defmodule Castmill.Resources do
   end
 
   def list_resources(resource, %{page: page, page_size: page_size, search: search}) do
-    list_resources(resource, %{organization_id: nil, page: page, page_size: page_size, search: search})
+    list_resources(resource, %{
+      organization_id: nil,
+      page: page,
+      page_size: page_size,
+      search: search
+    })
   end
 
   def list_resources(resource, %{organization_id: organization_id}) do
-    list_resources(resource, %{organization_id: organization_id, page: 1, page_size: nil, search: nil})
+    list_resources(resource, %{
+      organization_id: organization_id,
+      page: 1,
+      page_size: nil,
+      search: nil
+    })
   end
 
   def count_resources(resource, %{organization_id: organization_id, search: search}) do
@@ -457,12 +472,14 @@ defmodule Castmill.Resources do
     List calendar entries between two dates.
   """
   def list_calendar_entries(calendar_id, start_date, end_date) do
+    repeat_weekly_until = DateTime.from_unix!(end_date) |> DateTime.to_date()
+
     query =
       from(entry in CalendarEntry,
         where:
           entry.calendar_id == ^calendar_id and
             entry.start >= ^start_date and
-            (entry.end <= ^end_date or entry.repeat_weekly_until <= ^end_date),
+            (entry.end <= ^end_date or entry.repeat_weekly_until <= ^repeat_weekly_until),
         select: entry
       )
 
