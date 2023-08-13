@@ -103,7 +103,7 @@ jobs:
   test_device:
       runs-on: ubuntu-latest
   
-      name: testing Cache package with node@18
+      name: testing Device package with node@18
   
       defaults:
         run:
