@@ -107,6 +107,12 @@ defmodule Castmill.Files do
     Repo.one(query)
   end
 
+  def get_file(file_id) do
+    File.base_query()
+    |> where([f], f.id == ^file_id)
+    |> Repo.one()
+  end
+
   def get_file_by_name(name, organization_id) do
     File.base_query()
     |> where([f], f.name == ^name and f.organization_id == ^organization_id)
@@ -123,5 +129,25 @@ defmodule Castmill.Files do
     File.base_query()
     |> where([f], f.id == ^file_id)
     |> Repo.delete_all()
+  end
+
+  def delete_file(file_id, media_id, organization_id) do
+    query =
+      from(fm in FilesMedias,
+        where: fm.file_id == ^file_id and fm.media_id == ^media_id
+      )
+
+    case Repo.all(query) do
+      [] ->
+        :error
+
+      [_ | _] ->
+        case File.base_query()
+             |> where([f], f.id == ^file_id and f.organization_id == ^organization_id)
+             |> Repo.delete_all() do
+          {count, _} when count > 0 -> {:ok, count}
+          _ -> :error
+        end
+    end
   end
 end

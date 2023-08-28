@@ -15,7 +15,7 @@ defmodule CastmillWeb.Router do
   end
 
   pipeline :device do
-    plug(:accepts, ["html"])
+    plug(:accepts, ["html", "json"])
     plug(:fetch_session)
     plug(:put_root_layout, {CastmillWeb.Layouts, :device})
     plug(:protect_from_forgery)
@@ -35,7 +35,7 @@ defmodule CastmillWeb.Router do
       on_mount: [{CastmillWeb.Admin.UserAuth, :redirect_if_user_is_authenticated}] do
       live("/admin/login", Live.Admin.Login, :new)
       live("/admin/reset_password", Live.Admin.ForgotPassword, :new)
-      live "/admin/reset_password/:token", UserResetPasswordLive, :edit
+      live("/admin/reset_password/:token", UserResetPasswordLive, :edit)
 
       # TODO: Implement password reset.
       # live "/admin/reset_password/:token", UserResetPasswordLive, :edit
@@ -80,7 +80,6 @@ defmodule CastmillWeb.Router do
         # Fallback route for all other resources
         live("/:resource/:id", Admin.Resources, :show)
         live("/:resource/:id/:tab/new", Admin.Resources, :new)
-
       end
     end
 
@@ -147,6 +146,9 @@ defmodule CastmillWeb.Router do
 
       resources "/:resources", ResourceController, except: [:new, :edit] do
       end
+
+      resources "/medias/:media_id/files", FileController, except: [:new, :edit] do
+      end
     end
 
     resources("/users", UserController, except: [:new, :edit, :index])
@@ -192,9 +194,15 @@ defmodule CastmillWeb.Router do
   defp get_bearer_token(conn) do
     auth_header = List.first(get_req_header(conn, "authorization"))
 
-    if auth_header do
-      [_, token] = String.split(auth_header, " ")
-      token
+    case String.split(auth_header || "", " ") do
+      ["Bearer", token] ->
+        token
+
+      [] ->
+        nil
+
+      _ ->
+        raise "Invalid token format"
     end
   end
 
@@ -213,7 +221,7 @@ defmodule CastmillWeb.Router do
   end
 
   defp load_organization(conn, _params) do
-    case Castmill.Organizations.get_organization!(conn.params["organization_id"]) do
+    case Castmill.Organizations.get_organization(conn.params["organization_id"]) do
       nil ->
         conn
         |> put_status(:not_found)
