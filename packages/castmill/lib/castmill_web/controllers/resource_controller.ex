@@ -108,10 +108,7 @@ defmodule CastmillWeb.ResourceController do
     with {:ok, %Playlist{} = playlist} <- Castmill.Resources.create_playlist(create_attrs) do
       conn
       |> put_status(:created)
-      |> put_resp_header(
-        "location",
-        ~p"/api/organizations/#{organization_id}/playlists/#{playlist.id}"
-      )
+      |> put_resp_header("location", ~p"/api/organizations/#{organization_id}/playlists/#{playlist.id}")
       |> render(:show, playlist: playlist)
     end
   end
@@ -188,6 +185,7 @@ defmodule CastmillWeb.ResourceController do
       nil ->
         conn
         |> put_status(:not_found)
+<<<<<<< HEAD
         |> Phoenix.Controller.json(%{message: "Playlist not found"})
         |> halt()
 
@@ -225,4 +223,16 @@ defmodule CastmillWeb.ResourceController do
         end
     end
   end
+  # def delete(conn, %{
+  #   "resources" => "playlists",
+  #   "id" => id}
+  # ) do
+  #       |> Phoenix.Controller.json(%{errors: ["Playlist not found"]})
+  #       |> halt()
+  #     playlist ->
+  #       with {:ok, %Playlist{}} <- Castmill.Resources.delete_playlist(playlist) do
+  #         send_resp(conn, :no_content, "")
+  #       else
+  #         {:error, reason} ->
+  #           send_resp(conn, 500, "Error deleting playlist: #{inspect(reason)}")
 end
