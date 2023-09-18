@@ -9,9 +9,11 @@ import { render } from "solid-js/web";
 import {
   Template,
   TemplateComponent,
-  TemplateComponentTypeUnion,
 } from "./template";
 import { TemplateConfig } from "./binding";
+import { JsonWidget } from "../../interfaces";
+import { JsonWidgetConfig } from "../../interfaces/json-widget-config.interface";
+import { PlayerGlobals } from "../../interfaces/player-globals.interface";
 
 /**
  * Template Widget
@@ -20,14 +22,23 @@ import { TemplateConfig } from "./binding";
  *
  */
 
-export interface TemplateWidgetOptions {
+export interface TemplateWidgetOptionsOld {
   name: string;
-  template: TemplateComponentTypeUnion;
+  template: any; // We specify any, but it should be JsonTemplate.
   config: TemplateConfig;
   fonts?: { url: string; name: string }[];
   medias: string[];
   style: JSX.CSSProperties;
   classes?: string;
+}
+export interface TemplateWidgetOptions {
+  widget: JsonWidget;
+  config: JsonWidgetConfig;
+  fonts?: { url: string; name: string }[];
+  medias?: string[];
+  style?: JSX.CSSProperties;
+  classes?: string;
+  globals: PlayerGlobals;
 }
 
 export class TemplateWidget extends TimelineWidget {
@@ -41,7 +52,11 @@ export class TemplateWidget extends TimelineWidget {
   ) {
     super(resourceManager, opts);
 
-    this.template = TemplateComponent.fromJSON(opts.template, resourceManager);
+    this.template = TemplateComponent.fromJSON(
+      opts.widget.template,
+      resourceManager,
+      opts.globals
+    );
   }
 
   /**
@@ -129,12 +144,12 @@ export class TemplateWidget extends TimelineWidget {
             render(
               () =>
                 Template({
-                  name: this.opts.name,
-                  root: this.opts.template,
+                  name: this.opts.widget.name,
+                  root: this.template,
                   config: this.opts.config,
-                  style: this.opts.style,
+                  style: this.opts?.style,
                   timeline: this.timeline,
-                  medias: this.medias,
+                  globals: this.opts.globals,
                   resourceManager: this.resourceManager,
                   onReady: () => {
                     this.seek(offset + (Date.now() - basetime));

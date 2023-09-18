@@ -1,3 +1,5 @@
+import { JSX } from "solid-js";
+
 import { JsonPlaylist } from "./";
 export interface JsonLayout {
   name: string;
@@ -6,6 +8,6 @@ export interface JsonLayout {
   };
   items: {
     playlist: JsonPlaylist;
-    css: Partial<CSSStyleDeclaration>;
+    style: JSX.CSSProperties;
   }[];
 }

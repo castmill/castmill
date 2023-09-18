@@ -2,7 +2,6 @@ export * from "./components";
 export * from "./interfaces";
 export * from "./transitions";
 export * from "./widgets";
-export * from "./config";
 export * from "./debug";
 export * from "./iframe";
 export * from "./layer";

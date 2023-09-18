@@ -13,6 +13,8 @@ import { TemplateComponent, TemplateComponentType } from "./template";
 import { Timeline, TimelineItem } from "./timeline";
 import { ComponentAnimation } from "./animation";
 import { BaseComponentProps } from "./interfaces/base-component-props";
+import { ResourceManager } from "@castmill/cache";
+import { PlayerGlobals } from "../../interfaces/player-globals.interface";
 
 enum ReadyState {
   HAVE_NOTHING = 0, // No information is available about the media resource.
@@ -35,7 +37,7 @@ export class VideoComponent implements TemplateComponent {
     public opts: VideoComponentOptions,
     public style: JSX.CSSProperties,
     public animations?: ComponentAnimation[],
-    public cond?: Record<string, any>
+    public filter?: Record<string, any>
   ) {}
 
   resolveDuration_old(medias: { [index: string]: string }): Observable<number> {
@@ -70,25 +72,26 @@ export class VideoComponent implements TemplateComponent {
       json.opts,
       json.style,
       json.animations,
-      json.cond
+      json.filter
     );
   }
 
   static resolveOptions(
     opts: any,
     config: TemplateConfig,
-    context: any
+    context: any,
+    globals: PlayerGlobals
   ): VideoComponentOptions {
     return {
-      url: resolveOption(opts.url, config, context),
-      size: resolveOption(opts.size, config, context),
+      url: resolveOption(opts.url, config, context, globals),
+      size: resolveOption(opts.size, config, context, globals),
     };
   }
 }
 
 interface VideoProps extends BaseComponentProps {
   opts: VideoComponentOptions;
-  medias: { [index: string]: string };
+  resourceManager: ResourceManager;
 }
 
 export const Video: Component<VideoProps> = (props) => {
@@ -96,13 +99,6 @@ export const Video: Component<VideoProps> = (props) => {
 
   let timeline: Timeline;
   let timelineItem: TimelineItem;
-
-  const videoUrl = props.medias[props.opts.url];
-
-  if (!videoUrl) {
-    // TODO: Mechanism to report errors without breaking the whole template nor the playlist.
-    throw new Error(`Video ${props.opts.url} not found in medias`);
-  }
 
   const merged = mergeProps(
     {
@@ -122,8 +118,14 @@ export const Video: Component<VideoProps> = (props) => {
     // timeline?.kill();
   });
 
-  onMount(() => {
+  onMount(async () => {
     if (videoRef) {
+
+      const videoUrl = await props.resourceManager.getMedia(props.opts.url);
+      if (!videoUrl) {
+        throw new Error(`Video ${props.opts.url} not found in medias`);
+      }
+
       videoRef.src = videoUrl;
 
       seekingVideoSubscription?.unsubscribe();
@@ -201,8 +203,6 @@ export const Video: Component<VideoProps> = (props) => {
           child,
         };
         props.timeline.add(timelineItem);
-
-        console.log(props.timeline);
 
         props.onReady();
       });

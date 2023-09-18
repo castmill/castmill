@@ -23,7 +23,9 @@ export class TimelineWidget extends Widget {
   }
 
   play(timer$: Observable<number>) {
-    this.timeline.play(this.offset);
+    if (this.timeline.duration() > 0) {
+      this.timeline.play(this.offset);
+    }
 
     // We must concat with super.play(timer$) so that slack/duration is also taken into account.
     return concat(

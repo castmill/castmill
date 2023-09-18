@@ -6,8 +6,8 @@ export interface Binding<T extends any> {
 }
 
 export interface TemplateConfig<Options = any, Data = any> {
-  options: Options; // ImageComponentOptions | etc,
-  data: Data; // ImageComponentData | etc
+  options: Options;
+  data: Data;
 }
 
 export const isBinding = (value: any) => typeof value === "object" && value.key;
@@ -15,23 +15,23 @@ export const isBinding = (value: any) => typeof value === "object" && value.key;
 export const resolveKey = (
   key: string,
   config: TemplateConfig,
-  context: any
+  context: any,
+  globals: { [index: string]: any }
 ) => {
-  // Change to $.
   if (key.startsWith("$.")) {
     // Resolve context path removing the "$." prefix
-    return Model.get(context, key.substring(2));
-  } else {
-    return Model.get(config, key);
+    return Model.get(context, key.substring(2), globals);
   }
+  return Model.get(config, key, globals);
 };
 
 export const resolveBinding = (
   binding: Binding<any>,
   config: TemplateConfig,
-  currentContext: any
+  currentContext: any,
+  globals: { [index: string]: any }
 ) => {
-  const result = resolveKey(binding.key, config, currentContext);
+  const result = resolveKey(binding.key, config, currentContext, globals);
 
   if (typeof result == "undefined" || result[1] != null) {
     return binding.default;
@@ -42,5 +42,7 @@ export const resolveBinding = (
 export const resolveOption = (
   option: any,
   config: TemplateConfig,
-  context: any
-) => (isBinding(option) ? resolveBinding(option, config, context) : option);
+  context: any,
+  globals: { [index: string]: any }
+) =>
+  isBinding(option) ? resolveBinding(option, config, context, globals) : option;

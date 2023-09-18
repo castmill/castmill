@@ -93,7 +93,7 @@ export class Timeline implements TimelineBasic {
 
             const end =
               item.start + (item.duration || this.childDuration(item));
-            if (position < item.start || (position >= end)) {
+            if (position < item.start || position >= end) {
               this.pauseItem(item);
             } else {
               nextEndTick = Math.min(nextEndTick, end);
