@@ -6,14 +6,14 @@
  */
 
 export interface JsonCalendar {
-  id: string;
+  id?: string;
   name: string;
   description: string | undefined;
   timezone: string;
   entries?: CalendarEntry[];
-  default_playlist_id: string | undefined;
-  updated_at: number;
-  inserted_at: number;
+  default_playlist_id?: string;
+  updated_at?: number;
+  inserted_at?: number;
 }
 export class Calendar {
   sortedEntries: CalendarEntry[];
