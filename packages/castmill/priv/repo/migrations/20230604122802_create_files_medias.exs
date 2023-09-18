@@ -2,11 +2,11 @@ defmodule Castmill.Repo.Migrations.CreateFilesMedias do
   use Ecto.Migration
 
   def change do
-    create table(:files_medias, primary_key: false) do
-      add :file_id, references(:files, on_delete: :delete_all), null: false, primary_key: true
-      add :media_id, references(:medias, on_delete: :delete_all), null: false, primary_key: true
-
+    create table(:files_medias) do
       add :context, :string, null: false, default: "default"
+
+      add :file_id, references("files", column: "id", on_delete: :delete_all), null: false
+      add :media_id, references("medias", column: "id", on_delete: :delete_all), null: false
 
       timestamps()
     end

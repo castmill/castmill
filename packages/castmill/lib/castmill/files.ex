@@ -87,7 +87,7 @@ defmodule Castmill.Files do
     query =
       from(files_medias in FilesMedias,
         where: files_medias.media_id == ^media_id,
-        join: file in assoc(files_medias, :files),
+        join: file in assoc(files_medias, :file),
         order_by: [asc: file.updated_at],
         select: file
       )
@@ -99,7 +99,7 @@ defmodule Castmill.Files do
     query =
       from(files_medias in FilesMedias,
         where: files_medias.media_id == ^media_id and files_medias.context == ^context,
-        join: file in assoc(files_medias, :files),
+        join: file in assoc(files_medias, :file),
         order_by: [asc: file.updated_at],
         select: file
       )

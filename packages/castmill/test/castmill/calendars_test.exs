@@ -74,10 +74,11 @@ defmodule Castmill.CalendarsTest do
         name: "some entry name",
         start: DateTime.to_unix(~U[2005-05-05 19:59:03Z]),
         end: DateTime.to_unix(~U[2005-05-06 19:59:03Z]),
-        timezone: "Europe/Stockholm"
+        timezone: "Europe/Stockholm",
+        playlist_id: playlist.id
       }
 
-      assert {:ok, entry} = Resources.add_calendar_entry(calendar.id, playlist.id, entry_attrs)
+      assert {:ok, entry} = Resources.add_calendar_entry(calendar.id, entry_attrs)
 
       assert Resources.list_calendar_entries(
                calendar.id,
@@ -108,10 +109,11 @@ defmodule Castmill.CalendarsTest do
         name: "some entry name",
         start: DateTime.to_unix(~U[2005-05-05 19:59:03Z]),
         end: DateTime.to_unix(~U[2005-05-05 21:59:03Z]),
-        timezone: "Europe/Stockholm"
+        timezone: "Europe/Stockholm",
+        playlist_id: playlist.id
       }
 
-      assert {:ok, entry} = Resources.add_calendar_entry(calendar.id, playlist.id, entry_attrs)
+      assert {:ok, entry} = Resources.add_calendar_entry(calendar.id, entry_attrs)
 
       assert Resources.list_calendar_entries(
                calendar.id,
@@ -125,10 +127,11 @@ defmodule Castmill.CalendarsTest do
         name: "some entry name",
         start: DateTime.to_unix(~U[2005-05-06 19:59:03Z]),
         end: DateTime.to_unix(~U[2005-05-06 21:59:03Z]),
-        timezone: "Europe/Stockholm"
+        timezone: "Europe/Stockholm",
+        playlist_id: playlist.id
       }
 
-      assert {:ok, entry2} = Resources.add_calendar_entry(calendar.id, playlist.id, entry_attrs)
+      assert {:ok, entry2} = Resources.add_calendar_entry(calendar.id, entry_attrs)
 
       assert Resources.list_calendar_entries(
                calendar.id,
@@ -149,16 +152,17 @@ defmodule Castmill.CalendarsTest do
 
       assert Resources.list_resources(Calendar, %{organization_id: organization.id}) == [calendar]
 
+      playlist = playlist_fixture(%{organization_id: organization.id})
+
       entry_attrs = %{
         name: "some entry name",
         start: DateTime.to_unix(~U[2005-05-05 19:59:03Z]),
         end: DateTime.to_unix(~U[2005-05-05 21:59:03Z]),
-        timezone: "Europe/Stockholm"
+        timezone: "Europe/Stockholm",
+        playlist_id: playlist.id
       }
 
-      playlist = playlist_fixture(%{organization_id: organization.id})
-
-      assert {:ok, entry} = Resources.add_calendar_entry(calendar.id, playlist.id, entry_attrs)
+      assert {:ok, entry} = Resources.add_calendar_entry(calendar.id, entry_attrs)
 
       assert Resources.list_calendar_entries(
                calendar.id,

@@ -3,6 +3,8 @@ defmodule Castmill.Resources.Calendar do
   import Ecto.Changeset
   import Ecto.Query, warn: false
 
+  @derive {Jason.Encoder,
+  only: [:id, :name, :description, :timezone, :default_playlist_id, :inserted_at, :updated_at, :entries]}
   schema "calendars" do
     field :description, :string
     field :name, :string
@@ -13,7 +15,7 @@ defmodule Castmill.Resources.Calendar do
     belongs_to :organization, Castmill.Organizations.Organization, foreign_key: :organization_id, type: Ecto.UUID
     belongs_to :resource, Castmill.Resources.Resource, foreign_key: :resource_id
 
-    has_many :calendar_entries , Castmill.Resources.CalendarEntry
+    has_many :entries, Castmill.Resources.CalendarEntry
 
     timestamps()
   end
@@ -23,6 +25,7 @@ defmodule Castmill.Resources.Calendar do
     calendar
     |> cast(attrs, [:name, :timezone, :default_playlist_id, :description, :organization_id, :resource_id])
     |> validate_required([:name, :timezone, :organization_id])
+    |> foreign_key_constraint(:default_playlist_id, name: :calendars_default_playlist_id_fkey)
   end
 
   def base_query() do

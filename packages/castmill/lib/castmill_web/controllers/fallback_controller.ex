@@ -10,8 +10,22 @@ defmodule CastmillWeb.FallbackController do
   def call(conn, {:error, %Ecto.Changeset{} = changeset}) do
     conn
     |> put_status(:unprocessable_entity)
-    |> put_view(json: CastmillWeb.ChangesetJSON)
-    |> render(:error, changeset: changeset)
+    |> put_view(CastmillWeb.ChangesetJSON)
+    |> put_resp_content_type("application/json")
+    |> render("error.json", changeset: changeset)
+  end
+
+  def call(conn, {:error, %Ecto.ChangeError{} = changeset}) do
+    conn
+    |> put_status(:bad_request)
+    |> json(%{"error" => changeset.message})
+  end
+
+  def call(conn, %Ecto.NoResultsError{}) do
+    conn
+    |> put_status(:not_found)
+    |> put_view(json: CastmillWeb.ErrorJSON)
+    |> render(:error, %{msg: "Resource not found"})
   end
 
   # This clause is an example of how to handle resources that cannot be found.
@@ -22,7 +36,7 @@ defmodule CastmillWeb.FallbackController do
     |> render(:"404")
   end
 
-  def call(conn, {:error, %{ msg: msg }}) do
+  def call(conn, {:error, %{msg: msg}}) do
     conn
     |> put_status(:unprocessable_entity)
     |> put_view(json: CastmillWeb.ErrorJSON)
@@ -34,5 +48,12 @@ defmodule CastmillWeb.FallbackController do
     |> put_status(:unprocessable_entity)
     |> put_view(json: CastmillWeb.ErrorJSON)
     |> render(:error, %{msg: type})
+  end
+
+  # Catch all fallback
+  def call(conn, _unhandled_error) do
+    conn
+    |> put_status(:internal_server_error)
+    |> render(:error, %{msg: "Unexpected error"})
   end
 end

@@ -57,7 +57,12 @@ defmodule Castmill.Devices do
       iex> list_devices()
       [%Device{}, ...]
   """
-  def list_devices(%{organization_id: organization_id, search: search, page: page, page_size: page_size}) do
+  def list_devices(%{
+        organization_id: organization_id,
+        search: search,
+        page: page,
+        page_size: page_size
+      }) do
     offset = if page_size == nil, do: 0, else: max((page - 1) * page_size, 0)
 
     Device.base_query()
@@ -249,7 +254,11 @@ defmodule Castmill.Devices do
     Add calendar to device
   """
   def add_calendar(device_id, calendar_id) do
-    %Castmill.Devices.DevicesCalendars{device_id: device_id, calendar_id: calendar_id}
+    %Castmill.Devices.DevicesCalendars{}
+    |> Castmill.Devices.DevicesCalendars.changeset(%{
+      device_id: device_id,
+      calendar_id: calendar_id
+    })
     |> Castmill.Repo.insert()
   end
 
@@ -277,7 +286,8 @@ defmodule Castmill.Devices do
         select: calendar
       )
 
-    Repo.all(query)
+    calendars = Repo.all(query)
+    Repo.preload(calendars, :entries)
   end
 
   @doc """

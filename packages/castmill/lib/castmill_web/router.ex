@@ -107,7 +107,11 @@ defmodule CastmillWeb.Router do
     pipe_through(:device)
 
     get("/:id", DeviceController, :show)
-    get("/:id/calendars", DeviceController, :calendars)
+    get("/:id/calendars", DeviceController, :get_calendars)
+    get("/:id/playlists/:playlist_id", DeviceController, :get_playlist)
+
+    put("/:id/calendars/:calendar_id", DeviceController, :add_calendar)
+    delete("/:id/calendars/:calendar_id", DeviceController, :remove_calendar)
 
     # This route can be used by a device in order to post
     # its current status to the server. It can be called in
@@ -135,25 +139,39 @@ defmodule CastmillWeb.Router do
     resources "/organizations", OrganizationController, except: [:new, :edit] do
       pipe_through(:load_organization)
 
-      resources "/devices", DeviceController, except: [:new, :edit] do
-      end
-
       resources "/users", UserController, except: [:new, :edit] do
       end
 
       resources "/teams", UserController, except: [:new, :edit] do
       end
 
+      post "/devices/", DeviceController, :create
+
       resources "/:resources", ResourceController, except: [:new, :edit] do
       end
 
       resources "/medias/:media_id/files", FileController, except: [:new, :edit] do
       end
+
+      post "/calendars/:calendar_id/entries", ResourceController, :add_calendar_entry
+      put "/calendars/:calendar_id/entries/:id", ResourceController, :update_calendar_entry
+      delete "/calendars/:calendar_id/entries/:id", ResourceController, :delete_calendar_entry
+
+      post "/playlists/:playlist_id/items", PlaylistController, :add_item
+      delete "/playlists/:playlist_id/items/:id", PlaylistController, :delete_item
     end
 
     resources("/users", UserController, except: [:new, :edit, :index])
 
     resources("/access_tokens", AccessTokenController, except: [:new, :edit])
+  end
+
+  # Proxy routes for development medias
+  scope "/", CastmillWeb do
+    pipe_through :browser
+
+    # Other routes
+    get "/proxy", ProxyController, :index
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
