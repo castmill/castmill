@@ -4,10 +4,12 @@ import {
   StoreError,
 } from "../../storage.integration";
 
+const UninitializedCacheError = "Cache has not been initialized";
+
 export class StorageBrowser implements StorageIntegration {
   prefix = "castmill:storage";
   cacheName: string;
-  private cache!: Cache;
+  private cache: Cache | undefined;
 
   constructor(private name: string, private serviceWorkerPath: string = "") {
     this.cacheName = `${this.prefix}:${this.name}`;
@@ -64,11 +66,14 @@ export class StorageBrowser implements StorageIntegration {
    * List the files of the cache, if possible support pagination.
    */
   async listFiles() {
+    if (!this.cache) {
+      throw new Error(UninitializedCacheError);
+    }
     return (
       await Promise.all(
         (
           await this.cache.keys()
-        ).map((request) => this.cache.match(request.url))
+        ).map((request) => this.cache!.match(request.url))
       )
     ).map((response) => {
       return {
@@ -86,6 +91,10 @@ export class StorageBrowser implements StorageIntegration {
    * @param url
    */
   async storeFile(url: string) {
+    if (!this.cache) {
+      throw new Error(UninitializedCacheError);
+    }
+
     try {
       const request = new Request(url, { mode: "cors", method: "GET" });
       await this.cache.add(request);
@@ -137,6 +146,10 @@ export class StorageBrowser implements StorageIntegration {
    *
    */
   async deleteFile(url: string) {
+    if (!this.cache) {
+      throw new Error(UninitializedCacheError);
+    }
+
     await this.cache.delete(url);
   }
 
