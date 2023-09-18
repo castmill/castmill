@@ -1,12 +1,22 @@
-import { Socket } from "phoenix";
-import { Player, Playlist, Renderer, Viewport } from "@castmill/player";
-import { Machine } from "../interfaces/machine";
+import { Channel, Socket } from "phoenix";
+import { Player, Playlist, Renderer, Viewport, Layer } from "@castmill/player";
 import { ResourceManager, Cache, StorageIntegration } from "@castmill/cache";
+
+import { Machine } from "../interfaces/machine";
 import { getCastmillIntro } from "./intro";
+import { Calendar, JsonCalendar } from "./calendar";
+import { Schema, JsonPlaylist, JsonPlaylistItem } from "../interfaces";
+import { JsonMedia } from "../interfaces/json-media";
 
 export enum Status {
   Registering = "registering",
-  Login = "login",
+  Login = "login", // Loggedin?
+}
+
+export interface DeviceMessage {
+  resource: "device" | "calendar" | "playlist" | "widget";
+  action: "update" | "delete";
+  data: any;
 }
 
 /**
@@ -22,6 +32,8 @@ export class Device {
   private resourceManager: ResourceManager;
   private contentQueue: Playlist;
   private player?: Player;
+  private calendars: Calendar[] = [];
+  private calendarIndex = 0;
 
   constructor(
     private integration: Machine,
@@ -31,6 +43,7 @@ export class Device {
         maxItems?: number;
       };
       viewport: Viewport;
+      baseUrl: string;
     }
   ) {
     this.cache = new Cache(
@@ -47,22 +60,74 @@ export class Device {
   }
 
   async start(el: HTMLElement) {
+    let credentials = await this.integration.getCredentials();
+    if (!credentials) {
+      throw new Error("Invalid credentials");
+    }
+
+    const { device } = JSON.parse(credentials);
+    if (!device) {
+      throw new Error("Invalid credentials");
+    }
+
     const renderer = new Renderer(el);
     this.player = new Player(this.contentQueue, renderer, this.opts?.viewport);
-    this.player.play({ loop: true });
+    // this.player.play({ loop: true });
 
     /**
      * Since a device can have a lot of calendars associated to it, as well as be subject to play content based on
      * events at any time, we will use a single player instance to play all the content, and a single playlist.
      * The playlist will be handled as a queue of content to be played. When an item of the playlist has been played
      * it will be removed from the playlist and the next item will be played. When only 1 item remains in the playlist,
-     * a new batch of items will be scheduled based on the next calendar.
+     * a new item will be scheduled based on the next calendar.
+     *
      */
 
-    // Main loop. This loop will run until the device is stopped.
+    // Main loop. This loop will run until the device is stopped.s
     while (!this.closing) {
       // Add next batch of items from the next calendar.
       // Play until only one item remains in the playlist or the device is stopped.
+      if (this.contentQueue.length < 2) {
+        if (this.calendars.length) {
+          const calendar = this.calendars[this.calendarIndex];
+          const entry = calendar.getPlaylistAt(Date.now());
+          if (entry) {
+            const jsonPlaylist: JsonPlaylist | void =
+              await this.resourceManager.getData(
+                `${this.opts?.baseUrl || ""}devices/${device.id}/playlists/${
+                  entry.playlist
+                }`,
+                1000
+              );
+
+            if (jsonPlaylist) {
+              const medias = this.getPlaylistMedias(jsonPlaylist);
+              await this.cacheMedias(medias);
+              const layer = await Layer.fromPlaylist(
+                jsonPlaylist,
+                this.resourceManager,
+                {
+                  target: "default",
+                }
+              );
+              this.contentQueue.add(layer);
+
+              this.player.play({ loop: true });
+
+              const onEnd = () => {
+                this.contentQueue.remove(layer);
+                layer.off("end", onEnd);
+              };
+
+              layer.on("end", onEnd);
+            }
+          }
+
+          // TODO: If there is no entry we should try with the next calendar instead of
+          // waiting for the next loop iteration.
+          this.calendarIndex = (this.calendarIndex + 1) % this.calendars.length;
+        }
+      }
       await new Promise((resolve) => setTimeout(resolve, 5000));
     }
   }
@@ -75,6 +140,68 @@ export class Device {
 
   async hasCredentials(): Promise<boolean> {
     return !!(await this.integration.getCredentials());
+  }
+
+  // TODO: We shall get medias both from options and from the data.
+  // TODO: If the widget includes a playlist, we shall get the medias from the playlist recursively.
+  private getWidgetMedias(
+    schema: Schema,
+    data: { [index: string]: any },
+    opts: { context: string } = { context: "default" }
+  ): string[] {
+    const str = "medias|type:image";
+    const regex = /([^|]+)\|([^|]+)/; // A regular expression to capture two groups separated by a pipe character
+
+    // Find all the keys in the schema that are references to media.
+    const mediaKeys = Object.keys(schema).filter((key) => {
+      const field = schema[key];
+      if (typeof field !== "string" && field.type === "ref") {
+        const match = field.collection.match(regex);
+        if (match) {
+          const [, collection, filter] = match;
+          return collection === "medias";
+        }
+      }
+    });
+
+    // For each media key, get the media from the data, and specifically the file url for the given context.
+    return mediaKeys
+      .map((key) => {
+        // We can assume that the data matches the schema and that the media is a valid reference.
+        const media = data[key] as JsonMedia;
+
+        const file = media?.files[opts.context];
+        return file?.uri;
+      })
+      .filter((uri) => typeof uri !== "undefined") as string[];
+  }
+
+  private getPlaylistMedias(playlist: JsonPlaylist) {
+    const medias = playlist.items.reduce(
+      (acc: string[], item: JsonPlaylistItem) => {
+        const widget = item.widget;
+        const config = item.config;
+
+        if (widget.options_schema) {
+          const widgetMedias = this.getWidgetMedias(
+            widget.options_schema,
+            config.options
+          );
+          return [...acc, ...widgetMedias];
+        } else {
+          return acc;
+        }
+      },
+      []
+    );
+
+    return medias;
+  }
+
+  private cacheMedias(medias: string[]) {
+    return Promise.all(
+      medias.map((url) => this.resourceManager.cacheMedia(url))
+    );
   }
 
   private async requestPincode(hardwareId: string) {
@@ -107,12 +234,29 @@ export class Device {
     let credentials = await this.integration.getCredentials();
 
     if (credentials) {
-      this.login(credentials, hardwareId);
+      const { device } = JSON.parse(credentials);
+
+      const channel = await this.login(credentials, hardwareId);
+      this.initListeners(channel);
+
+      const rawCalendars = await this.resourceManager.getData(
+        `${this.opts?.baseUrl || ""}/devices/${device.id}/calendars`,
+        1000
+      );
+
+      this.calendars = (rawCalendars?.data || []).map(
+        (calendar: JsonCalendar) => new Calendar(calendar)
+      );
+
       return { status: Status.Login };
     } else {
       const pincode = await this.register(hardwareId);
       return { status: Status.Registering, pincode };
     }
+  }
+
+  get socketEndpoint() {
+    return `${this.opts?.baseUrl || ""}/socket`;
   }
 
   async register(hardwareId: string) {
@@ -155,35 +299,65 @@ export class Device {
   async login(credentials: string, hardwareId: string) {
     const { device } = JSON.parse(credentials);
 
-    let socket = new Socket(`/socket`, {
+    const socket = new Socket(`/socket`, {
       params: { device_id: device.id, hardware_id: hardwareId },
     });
 
     socket.connect();
 
-    // Join the channel to listen for the device to be registered.
-    let channel = socket.channel(`devices:${device.id}`, {
+    // Join the channel to establish a communication channel between the server and this device.
+    const channel = socket.channel(`devices:${device.id}`, {
       token: device.token,
     });
-    channel
-      .join()
-      .receive("ok", (resp) => {
-        // Do not show the pincode until this is done
-        console.log("Joined successfully", resp);
-      })
-      .receive("error", (resp) => {
-        // TODO: Show error in UI.
-        console.log("Unable to join", resp);
-      });
 
-    // TODO: Implement a communication protocol to get the resources from the server.
-    // react to commands sent from the server, and send back information about the device.
-    channel.on("update:calendars", async (payload) => {
+    return new Promise<Channel>((resolve, reject) => {
+      channel
+        .join()
+        .receive("ok", (resp) => {
+          resolve(channel);
+        })
+        .receive("error", (resp) => {
+          reject(resp);
+        });
+    });
+  }
+
+  private initListeners(channel: Channel) {
+    channel.on("update", async (payload: DeviceMessage) => {
+      switch (payload.resource) {
+        case "device":
+          break;
+        case "calendar":
+          // We could just mark the calendar as dirty (in the resource manager), as we do not know
+          // when the calendar would be used.
+          break;
+        case "playlist":
+          // We could mark the playlist as dirty (in the resource manager), as we do not know
+          // when or even if the playlist will be used.
+          break;
+        case "widget":
+          break;
+      }
+
       console.log("Update calendars", payload);
     });
-
-    channel
-      .push("req:get:calendars", { device_id: device.id })
-      .receive("ok", (payload) => console.log("Calendars updated", payload));
   }
 }
+
+/*
+  private async sendCommand(
+    channel: Channel,
+    command: string,
+    payload: any = {}
+  ) {
+    return new Promise((resolve, reject) => {
+      channel
+        .push(command, {
+          device_id: this.integration.getMachineGUID(),
+          ...payload,
+        })
+        .receive("ok", (payload) => resolve(payload))
+        .receive("error", (payload) => reject(payload));
+    });
+  }
+  */
