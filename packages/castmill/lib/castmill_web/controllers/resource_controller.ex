@@ -134,6 +134,27 @@ defmodule CastmillWeb.ResourceController do
     end
   end
 
+  def delete(conn, %{
+        "resources" => "medias",
+        "id" => id
+      }) do
+    case Castmill.Resources.get_media(id) do
+      nil ->
+        conn
+        |> put_status(:not_found)
+        |> Phoenix.Controller.json(%{errors: ["Media not found"]})
+        |> halt()
+
+      media ->
+        with {:ok, %Media{}} <- Castmill.Resources.delete_media(media) do
+          send_resp(conn, :no_content, "")
+        else
+          {:error, reason} ->
+            send_resp(conn, 500, "Error deleting media: #{inspect(reason)}")
+        end
+    end
+  end
+
   def show(conn, %{"resources" => "medias", "id" => id}) do
     case Castmill.Resources.get_media(id) do
       nil ->
@@ -143,7 +164,6 @@ defmodule CastmillWeb.ResourceController do
         |> halt()
 
       media ->
-        IO.inspect(media)
         conn
         |> render(:show, media: media)
     end
