@@ -1,16 +1,27 @@
-
 /**
  * Calendar
  *
  * The calendar is responsible for scheduling the playlists to be played.
  *
- * The calendar listens to server events so that it can be updated in real time.
- *
  */
+
+export interface JsonCalendar {
+  id: string;
+  name: string;
+  description: string | undefined;
+  timezone: string;
+  entries?: CalendarEntry[];
+  default_playlist_id: string | undefined;
+  updated_at: number;
+  inserted_at: number;
+}
 export class Calendar {
-  // Assume entries are sorted by start date
-  entries: CalendarEntry[] = [];
-  defaultPlaylistId: string | undefined;
+  sortedEntries: CalendarEntry[];
+  constructor(public attrs: JsonCalendar) {
+    this.sortedEntries = attrs.entries
+      ? attrs.entries.sort((a, b) => a.start - b.start)
+      : [];
+  }
 
   /**
    *
@@ -21,8 +32,8 @@ export class Calendar {
   ):
     | { playlist: string; endTime: number; nextTime: number | undefined }
     | undefined {
-    for (let i = this.entries.length - 1; i >= 0; i--) {
-      const entry = this.entries[i];
+    for (let i = this.sortedEntries.length - 1; i >= 0; i--) {
+      const entry = this.sortedEntries[i];
       if (
         entry.start <= timestamp &&
         (timestamp < entry.end ||
@@ -59,8 +70,8 @@ export class Calendar {
               playlist: entry.playlist_id,
               endTime: entry.end,
               nextTime:
-                i + 1 < this.entries.length
-                  ? this.entries[i + 1].start
+                i + 1 < this.sortedEntries.length
+                  ? this.sortedEntries[i + 1].start
                   : undefined,
             };
           }
@@ -68,7 +79,13 @@ export class Calendar {
       }
     }
 
-    return undefined;
+    return this.attrs.default_playlist_id
+      ? {
+          playlist: this.attrs.default_playlist_id,
+          endTime: Infinity,
+          nextTime: undefined,
+        }
+      : undefined;
   }
 }
 
