@@ -348,7 +348,7 @@ defmodule Castmill.PlaylistsTest do
       assert fetched_media_id == media.id
       assert fetched_name == "Test Media"
 
-      assert %{"image" => %{files: [%{context: "default", file: %{id: file_id}}]}} = options
+      assert %{"image" => %{files: %{"default" => %{id: file_id}}}} = options
 
       assert file_id == file.id
     end
