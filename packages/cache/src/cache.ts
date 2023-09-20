@@ -289,4 +289,27 @@ export class Cache extends Dexie {
       await this.del(item.url!);
     }
   }
+
+  /**
+   * Helper to clean the whole indexedDB.
+   */
+  private cleanIndexedDB() {
+    // List all databases
+    window.indexedDB.databases().then((dbList) => {
+      dbList.forEach((dbInfo) => {
+        // Delete each database
+        if (dbInfo.name) {
+          const deleteRequest = window.indexedDB.deleteDatabase(dbInfo.name);
+
+          deleteRequest.onerror = () => {
+            console.error(`Failed to delete database ${dbInfo.name}`);
+          };
+
+          deleteRequest.onsuccess = () => {
+            console.log(`Successfully deleted database ${dbInfo.name}`);
+          };
+        }
+      });
+    });
+  }
 }
