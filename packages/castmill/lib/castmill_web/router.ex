@@ -162,8 +162,11 @@ defmodule CastmillWeb.Router do
     end
 
     resources("/users", UserController, except: [:new, :edit, :index])
-
     resources("/access_tokens", AccessTokenController, except: [:new, :edit])
+
+    # These routes are here to avoid some warnings, but not sure they are needed.
+    get "/medias/:media_id/files/:id", FileController, :show
+    get "/playlists/:playlist_id/items/:id", PlaylistController, :show_item
   end
 
   # Proxy routes for development medias

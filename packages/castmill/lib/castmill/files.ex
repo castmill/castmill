@@ -113,6 +113,18 @@ defmodule Castmill.Files do
     |> Repo.one()
   end
 
+  def get_file(media_id, file_id) do
+    query =
+      from(files_medias in FilesMedias,
+        where: files_medias.media_id == ^media_id and files_medias.file_id == ^file_id,
+        join: file in assoc(files_medias, :file),
+        order_by: [asc: file.updated_at],
+        select: file
+      )
+
+    Repo.one(query)
+  end
+
   def get_file_by_name(name, organization_id) do
     File.base_query()
     |> where([f], f.name == ^name and f.organization_id == ^organization_id)

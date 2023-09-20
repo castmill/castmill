@@ -3,8 +3,6 @@ defmodule Castmill.Devices.Device do
   import Ecto.Changeset
   import Ecto.Query, warn: false
 
-  import Argon2
-
   @primary_key {:id, :binary_id, autogenerate: true}
 
   schema "devices" do
@@ -107,5 +105,10 @@ defmodule Castmill.Devices.Device do
 
   def base_query() do
     from device in Castmill.Devices.Device, as: :device
+  end
+
+  defp add_hash(password, opts) do
+    hash_key = opts[:hash_key] || :password_hash
+    %{hash_key => Argon2.hash_pwd_salt(password, opts)}
   end
 end

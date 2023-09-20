@@ -218,7 +218,35 @@ defmodule Castmill.Devices do
   """
   def verify_device_token(device_id, token) do
     Repo.get_by(Device, id: device_id)
-    |> check_pass(token, hash_key: :token_hash)
+    |> check_password(token, hash_key: :token_hash)
+  end
+
+  # The following are helper functions that were deprecated in Argon2
+  defp check_password(nil, _password, opts) do
+    unless opts[:hide_user] == false, do: no_user_verify(opts)
+    {:error, "invalid user-identifier"}
+  end
+
+  defp check_password(user, password, opts) when is_binary(password) do
+    case get_hash(user, opts[:hash_key]) do
+      {:ok, hash} ->
+        if verify_pass(password, hash), do: {:ok, user}, else: {:error, "invalid password"}
+
+      _ ->
+        {:error, "no password hash found in the user struct"}
+    end
+  end
+
+  defp check_password(_, _, _) do
+    {:error, "password is not a string"}
+  end
+
+  defp get_hash(%{password_hash: hash}, nil), do: {:ok, hash}
+  defp get_hash(%{encrypted_password: hash}, nil), do: {:ok, hash}
+  defp get_hash(_, nil), do: nil
+
+  defp get_hash(user, hash_key) do
+    if hash = Map.get(user, hash_key), do: {:ok, hash}
   end
 
   @doc """

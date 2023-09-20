@@ -1,6 +1,5 @@
 defmodule CastmillWeb.PlaylistJSON do
   alias Castmill.Resources.Playlist
-  alias Castmill.Resources.Calendar
 
   @doc """
   Renders a single playlist.

@@ -34,9 +34,6 @@ defmodule Castmill.Plug.Authorize do
 
   def call(conn, %{:parent => parent, :resource => _, :action => action}) do
 
-    IO.inspect(conn.assigns[:current_user])
-    IO.inspect(conn.assigns[parent])
-
     # Check if user is root, and in that case, skip the authorization process
     if conn.assigns[:current_user].is_root do
       conn

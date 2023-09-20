@@ -52,7 +52,15 @@ defmodule CastmillWeb.PlaylistController do
     end
   end
 
-  def delete_item(conn, %{"playlist_id" => playlist_id, "item_id" => item_id}) do
+  def show_item(conn, %{"playlist_id" => playlist_id, "id" => id}) do
+    with {:ok, %PlaylistItem{} = item} <- Resources.get_playlist_item(playlist_id, id) do
+      conn
+      |> put_status(:ok)
+      |> render(:show, item: item)
+    end
+  end
+
+  def delete_item(conn, %{"playlist_id" => _playlist_id, "item_id" => item_id}) do
     {:ok, _} = Resources.remove_item_from_playlist(item_id)
 
     conn

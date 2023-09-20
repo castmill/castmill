@@ -64,7 +64,7 @@ defmodule CastmillWeb.DeviceController do
     TODO: Add authorization check to ensure that the device has access to the playlist.
     Basically check if the playlist is referenced by a calendar that is associated to the device.
   """
-  def get_playlist(conn, %{"id" => device_id, "playlist_id" => playlist_id}) do
+  def get_playlist(conn, %{"id" => _device_id, "playlist_id" => playlist_id}) do
     playlist = Resources.get_playlist(playlist_id)
 
     conn
@@ -88,7 +88,7 @@ defmodule CastmillWeb.DeviceController do
     Removes a calendar from a device
   """
   def remove_calendar(conn, %{"id" => device_id, "calendar_id" => calendar_id}) do
-    with {:ok, device} <- Devices.remove_calendar(device_id, calendar_id) do
+    with {:ok, _device} <- Devices.remove_calendar(device_id, calendar_id) do
       conn
       |> put_status(:ok)
       |> send_resp(200, "")

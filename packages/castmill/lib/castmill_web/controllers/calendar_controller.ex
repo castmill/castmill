@@ -1,42 +1,24 @@
 defmodule CastmillWeb.CalendarController do
   use CastmillWeb, :controller
 
-  alias Castmill.Files
-  alias Castmill.Files.File
-
   action_fallback(CastmillWeb.FallbackController)
 
-  def index(conn, %{"calendar_id" => calendar_id}) do
-    files = Files.get_media_files(calendar_id)
-    render(conn, :index, files: files)
+  def index(_conn, %{"calendar_id" => _calendar_id}) do
   end
 
-  def create(%Plug.Conn{body_params: body_params} = conn, %{"calendar_id" => calendar_id} = params) do
-    with {:ok, %File{} = file} <-
-           Files.create_file(params) do
-      Files.add_file_to_media(file.id, calendar_id, body_params["context"] || "default")
-
-      conn
-      |> put_status(:created)
-      |> put_resp_header("location", ~p"/api/medias/#{calendar_id}/files#{file.id}")
-      |> render(:create, file: file)
-    end
+  def create(
+        %Plug.Conn{body_params: _body_params} = _conn,
+        %{"calendar_id" => _calendar_id} = _params
+      ) do
   end
 
   def delete(
-        conn,
+        _conn,
         %{
-          "calendar_id" => calendar_id,
-          "id" => file_id,
-          "organization_id" => organization_id
+          "calendar_id" => _calendar_id,
+          "id" => _file_id,
+          "organization_id" => _organization_id
         }
       ) do
-    case Files.delete_file(file_id, calendar_id, organization_id) do
-      {:ok, _count} ->
-        send_resp(conn, :no_content, "")
-
-      :error ->
-        send_resp(conn, :not_found, "")
-    end
   end
 end

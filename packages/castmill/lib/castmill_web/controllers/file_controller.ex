@@ -18,8 +18,16 @@ defmodule CastmillWeb.FileController do
 
       conn
       |> put_status(:created)
-      |> put_resp_header("location", ~p"/api/medias/#{media_id}/files#{file.id}")
+      |> put_resp_header("location", ~p"/api/medias/#{media_id}/files/#{file.id}")
       |> render(:create, file: file)
+    end
+  end
+
+  def show(conn, %{"media_id" => media_id, "id" => file_id}) do
+    with {:ok, file} <- Files.get_file(file_id, media_id) do
+      conn
+      |> put_status(:ok)
+      |> render(:show, file: file)
     end
   end
 
