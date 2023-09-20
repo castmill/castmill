@@ -1,4 +1,4 @@
-defmodule Castmill.Widgets.WidgetData do
+defmodule Castmill.Widgets.WidgetConfig do
   use Ecto.Schema
   import Ecto.Changeset
   import Ecto.Query, warn: false
@@ -8,18 +8,20 @@ defmodule Castmill.Widgets.WidgetData do
   # TODO: We would possible like to encrypt this data before storing it in the database with a key that is unique
   # for every organization. This since we don't want to store any potentially sensitive data in the database in plain text.
   # Organizations could have an "encryption_key" used for this purpose.
-  schema "widgets_data" do
+
+  @derive {Jason.Encoder, only: [:id, :options, :data]}
+  schema "widgets_config" do
     field(:options, :map, default: %{})
     field(:data, :map, default: %{})
 
     # Everytime the data is updated we must update the version number.
     field(:version, :integer, default: 1)
 
+    # TODO: rename to requested_at (for consistency with updated_at and inserted_at)
     field(:last_request_at, :naive_datetime, default: nil)
 
     belongs_to(:widget, Castmill.Widgets.Widget)
-
-    has_one(:playlist_item, Castmill.Resources.PlaylistItem)
+    belongs_to :playlist_item, Castmill.Resources.PlaylistItem, foreign_key: :playlist_item_id
 
     timestamps()
   end
@@ -27,14 +29,14 @@ defmodule Castmill.Widgets.WidgetData do
   @doc false
   def changeset(widget, attrs) do
     widget
-    |> cast(attrs, [:options, :data, :last_request_at, :widget_id])
-    |> validate_required([:widget_id])
+    |> cast(attrs, [:options, :data, :last_request_at, :widget_id, :playlist_item_id])
+    |> validate_required([:widget_id, :playlist_item_id])
     |> validate_data(:data, :data_schema)
     |> validate_data(:options, :options_schema)
   end
 
   def base_query() do
-    from(widget_data in Castmill.Widgets.WidgetData, as: :widget_data)
+    from(widget_config in Castmill.Widgets.WidgetConfig, as: :widget_config)
   end
 
   def validate_data(changeset, field, schema_field) when is_atom(field) do

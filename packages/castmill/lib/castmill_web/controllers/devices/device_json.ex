@@ -1,18 +1,17 @@
 defmodule CastmillWeb.DeviceJSON do
   alias Castmill.Devices.Device
   alias Castmill.Devices.DevicesRegistrations
+  alias Castmill.Resources.Calendar
+
   @doc """
-  Renders a list of medias.
+  Renders a list of calendars
   """
-  def index(%{medias: medias}) do
-    %{data: for(media <- medias, do: data(media))}
+  def index(%{calendars: calendars}) do
+    %{data: for(calendar <- calendars, do: data(calendar))}
   end
 
-  def index(%{playlists: playlists}) do
-    %{data: for(playlist <- playlists, do: data(playlist))}
-  end
   @doc """
-  Renders a single user.
+  Renders a single device.
   """
   def show(%{device: device}) do
     %{data: data(device)}
@@ -29,14 +28,20 @@ defmodule CastmillWeb.DeviceJSON do
       updated_at: device.updated_at,
       loc_lat: device.loc_lat,
       loc_long: device.loc_long
-     }
+    }
   end
 
   defp data(%DevicesRegistrations{} = dr) do
     %{
       hardware_id: dr.hardware_id,
-      pincode: dr.pincode,
+      pincode: dr.pincode
     }
   end
 
+  defp data(%Calendar{} = calendar) do
+    %{
+      id: calendar.id,
+      name: calendar.name,
+    }
+  end
 end

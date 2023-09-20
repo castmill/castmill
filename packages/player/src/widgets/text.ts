@@ -1,3 +1,5 @@
+
+import { JSX } from "solid-js";
 import { gsap } from "gsap";
 import { of } from "rxjs";
 
@@ -46,7 +48,7 @@ export class TextWidget extends TimelineWidget {
 
   private div: HTMLElement;
   private text: string;
-  private css: Partial<CSSStyleDeclaration>;
+  private style: JSX.CSSProperties;
   private font?: {
     url: string;
     name: string;
@@ -58,7 +60,7 @@ export class TextWidget extends TimelineWidget {
     resourceManager: ResourceManager,
     opts: {
       text: string;
-      css: Partial<CSSStyleDeclaration>;
+      style: JSX.CSSProperties
       font?: { url: string; name: string };
       animation?: {
         from: gsap.TweenVars;
@@ -69,12 +71,12 @@ export class TextWidget extends TimelineWidget {
   ) {
     super(resourceManager, opts);
     this.text = opts.text;
-    this.css = opts.css;
+    this.style = opts.style;
     this.font = opts.font;
 
     const div = (this.div = this.div = document.createElement("div"));
     div.textContent = this.text;
-    applyCss(div, this.css);
+    applyCss(div, this.style);
 
     const tl = gsap.timeline({ paused: true });
     const tlItem = {

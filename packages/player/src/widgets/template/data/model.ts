@@ -58,58 +58,81 @@ export class Model {
   /**
    * Gets the value or array (or subarray) at the given key path.
    *
-   * Suported bindings:
+   * Suported keypaths:
    * - "foo.bar"
    * - "foo.bar[0][2]"
    * - "foo.bar[0]2].baz[3:4]"
    * - "foo.bar[0]2].baz[:4]"
    * - "foo.bar[0]2].baz[4:]"
+   * - "foo.bar[0]2].baz[@index]" (where index is a global variable)
+   * - "foo.bar[0]2].baz[str]" (where str is a plain string)
    *
-   * @param data object where we want to extract a value based on a binding.
+   * @param obj object where we want to extract a value based on a keypath.
    *
-   * @param binding string with the binding pointing to our value.
+   * @param keypath string with the keypath pointing to our value.
    * @returns
    */
-  static get(data: any, binding: string) {
-    const keys = binding.split(".");
+  static get(obj: any, keypath: string, globals?: { [index: string]: any }) {
+    const keys = keypath.split(".");
     let error;
 
     for (const key of keys) {
       let { variable, indexes } = getArrayIndexes(key);
       if (variable && indexes) {
-        let array = data[variable];
+        let array = obj[variable];
 
         for (let i = 0; i < indexes.length; i++) {
-          if (!Array.isArray(array)) {
-            error = new Error(`${variable} as ${binding} is not an array`);
+          if (!Array.isArray(array) && typeof array !== "object") {
+            error = new Error(`${variable} as ${keypath} is not an array`);
             break;
           }
           if (indexes[i].includes(":")) {
-            array = getSubArray(array, indexes[i]);
+            array = getSubArray(array, indexes[i], globals);
+          } else if (indexes[i].startsWith("@")) {
+            const globalKey = indexes[i].slice(1) as string | number;
+            if (globals && globalKey in globals) {
+              array = array[globals[globalKey]]; // This will work for both object and array
+              if (array === undefined) {
+                error = new Error(
+                  `Invalid global index: ${globals[globalKey]}`
+                );
+                break;
+              }
+            } else {
+              error = new Error(`Global key not found: ${globalKey}`);
+              break;
+            }
+          } else {
+            array = array[+indexes[i]];
+            if (array === undefined) {
+              error = new Error(`Invalid index: ${indexes[i]}`);
+              break;
+            }
           }
         }
 
-        data = array;
+        obj = array;
       } else {
-        if (data[key] === undefined) {
-          error = new Error(`Invalid key path: ${binding}`);
+        if (obj[key] === undefined) {
+          error = new Error(`Invalid key path: ${keypath}`);
           break;
         }
-        data = data[key];
+        obj = obj[key];
       }
     }
-    return [!error ? data : void 0, error];
+    return [!error ? obj : void 0, error];
   }
 }
-// ("foo.bar.baz[3][0:3]");
 
-// Credits: https://stackoverflow.com/questions/39182149/regex-to-extract-array-indices
 function getArrayIndexes(str: string) {
   let match;
-  if ((match = str.match(/^([^[]+)\s*(\[\s*([\d\:]+)\s*\]\s*)+\s*$/))) {
+  const rePattern = /^([^\[]+)((?:\[\s*(?:[\d:]+|@\w+)\s*\])+)$/;
+
+  if ((match = str.match(rePattern))) {
     const variable = match[1],
       indexes = [];
-    const re = /\[\s*([\d\:]+)\s*\]/g;
+    // Updated regex to capture @index correctly
+    const re = /\[\s*([\d\:]+|@\w+)\s*\]/g;
 
     while ((match = re.exec(str))) {
       indexes.push(match[1]);
@@ -120,7 +143,13 @@ function getArrayIndexes(str: string) {
   }
 }
 
-function getSubArray(arr: any[], substr: string) {
-  const [start, end] = substr.split(":");
-  return arr.slice(+start, +end);
+function getSubArray(
+  arr: any[],
+  substr: string,
+  globals?: { [index: string]: any }
+) {
+  const [start, end] = substr
+    .split(":")
+    .map((e) => (e.startsWith("@") && globals ? globals[e.slice(1)] : +e));
+  return arr.slice(start, end);
 }

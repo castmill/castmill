@@ -3,7 +3,7 @@ import { ResourceManager } from "@castmill/cache";
 import { Status } from "./playable";
 import { Layer } from "./layer";
 import { EventEmitter } from "eventemitter3";
-import { of, from, Observable, merge, concat } from "rxjs";
+import { of, from, Observable } from "rxjs";
 import {
   concatMap,
   map,
@@ -15,6 +15,7 @@ import {
 } from "rxjs/operators";
 import { Renderer } from "./renderer";
 import { JsonPlaylist } from "./";
+import { PlayerGlobals } from "./interfaces/player-globals.interface";
 
 export class Playlist extends EventEmitter {
   public layers: Layer[] = [];
@@ -27,7 +28,6 @@ export class Playlist extends EventEmitter {
 
   constructor(public name: string, private resourceManager: ResourceManager) {
     super();
-
     // this.toggleDebug();
   }
 
@@ -37,11 +37,16 @@ export class Playlist extends EventEmitter {
    *
    * @param json
    */
-  static fromJSON(json: JsonPlaylist, resourceManager: ResourceManager) {
-    const playlist = new Playlist(json["name"], resourceManager);
+  static fromJSON(
+    json: JsonPlaylist,
+    resourceManager: ResourceManager,
+    globals: PlayerGlobals
+  ) {
+    const playlist = new Playlist(json.name, resourceManager);
+    const layers = json.items || [];
 
-    for (let i = 0; i < json.layers.length; i++) {
-      const layer = Layer.fromJSON(json.layers[i], resourceManager);
+    for (let i = 0; i < layers.length; i++) {
+      const layer = Layer.fromJSON(json.items[i], resourceManager, globals);
       playlist.add(layer);
     }
     return playlist;
@@ -251,5 +256,17 @@ export class Playlist extends EventEmitter {
       this.layers.push(entry);
     }
     return this;
+  }
+
+  remove(entry: Layer): Playlist {
+    const index = this.layers.indexOf(entry);
+    if (index > -1) {
+      this.layers.splice(index, 1);
+    }
+    return this;
+  }
+
+  get length(): number {
+    return this.layers.length;
   }
 }

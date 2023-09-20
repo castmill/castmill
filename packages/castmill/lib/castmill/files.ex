@@ -87,7 +87,7 @@ defmodule Castmill.Files do
     query =
       from(files_medias in FilesMedias,
         where: files_medias.media_id == ^media_id,
-        join: file in assoc(files_medias, :files),
+        join: file in assoc(files_medias, :file),
         order_by: [asc: file.updated_at],
         select: file
       )
@@ -99,7 +99,25 @@ defmodule Castmill.Files do
     query =
       from(files_medias in FilesMedias,
         where: files_medias.media_id == ^media_id and files_medias.context == ^context,
-        join: file in assoc(files_medias, :files),
+        join: file in assoc(files_medias, :file),
+        order_by: [asc: file.updated_at],
+        select: file
+      )
+
+    Repo.one(query)
+  end
+
+  def get_file(file_id) do
+    File.base_query()
+    |> where([f], f.id == ^file_id)
+    |> Repo.one()
+  end
+
+  def get_file(media_id, file_id) do
+    query =
+      from(files_medias in FilesMedias,
+        where: files_medias.media_id == ^media_id and files_medias.file_id == ^file_id,
+        join: file in assoc(files_medias, :file),
         order_by: [asc: file.updated_at],
         select: file
       )
@@ -123,5 +141,25 @@ defmodule Castmill.Files do
     File.base_query()
     |> where([f], f.id == ^file_id)
     |> Repo.delete_all()
+  end
+
+  def delete_file(file_id, media_id, organization_id) do
+    query =
+      from(fm in FilesMedias,
+        where: fm.file_id == ^file_id and fm.media_id == ^media_id
+      )
+
+    case Repo.all(query) do
+      [] ->
+        :error
+
+      [_ | _] ->
+        case File.base_query()
+             |> where([f], f.id == ^file_id and f.organization_id == ^organization_id)
+             |> Repo.delete_all() do
+          {count, _} when count > 0 -> {:ok, count}
+          _ -> :error
+        end
+    end
   end
 end

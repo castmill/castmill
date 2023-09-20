@@ -3,21 +3,25 @@
 
   (Rename to WidgetContainer?)
 
-  (c) 2011-2022 Castmill AB All Rights Reserved
+  (c) 2011-2023 Castmill AB All Rights Reserved
 */
+import { JSX } from "solid-js";
 import { ResourceManager } from "@castmill/cache";
 
 import { Status } from "./playable";
-import { Config } from "./config";
 import { EventEmitter } from "eventemitter3";
-import { TemplateWidget, Widget } from "./widgets";
+import {
+  TemplateComponentType,
+  TemplateWidget,
+  TemplateWidgetOptions,
+  Widget,
+} from "./widgets";
 import { of, Observable } from "rxjs";
 import { catchError, last, map, takeUntil } from "rxjs/operators";
-import { JsonLayer } from "./interfaces";
+import { JsonLayer, JsonPlaylist } from "./interfaces";
 import { Transition, fromJSON } from "./transitions";
 import { applyCss } from "./utils";
-
-const TIMER_RESOLUTION = 50;
+import { PlayerGlobals } from "./interfaces/player-globals.interface";
 
 export class Layer extends EventEmitter {
   id: string = "";
@@ -38,7 +42,6 @@ export class Layer extends EventEmitter {
   slack: number = 0;
 
   private widget?: Widget;
-  private config!: Config;
   private proxyOffset: (position: number) => void;
   private _duration = 0;
 
@@ -47,18 +50,90 @@ export class Layer extends EventEmitter {
    *
    * @param json
    */
-  static fromJSON(json: JsonLayer, resourceManager: ResourceManager): Layer {
-    const widget = new TemplateWidget(resourceManager, json.widget);
+  static fromJSON(
+    json: JsonLayer,
+    resourceManager: ResourceManager,
+    globals: PlayerGlobals
+  ): Layer {
+    const widget = new TemplateWidget(resourceManager, {
+      widget: json.widget,
+      config: json.config,
+      style: json.style,
+      globals,
+    });
 
     const layer = new Layer(json.name, {
       duration: json.duration,
       slack: json.slack,
       transition: json.transition && fromJSON(json.transition),
-      css: json.css,
+      style: json.style || {
+        width: "100%",
+        height: "100%",
+      },
       widget,
     });
 
     return layer;
+  }
+
+  /**
+   *
+   * Creates a new Layer from a playlist. Useful if you want to easily add a playlist
+   * as an item in another playlist.
+   *
+   * @param playlist The playlist to create a layer from as a JsonPlaylist
+   * @param resourceManager The resource manager to use for loading the widget's assets.
+   *
+   * @param opts
+   */
+  static fromPlaylist(
+    playlist: JsonPlaylist,
+    resourceManager: ResourceManager,
+    globals: PlayerGlobals
+  ): Layer {
+    const widget: TemplateWidget = new TemplateWidget(resourceManager, {
+      name: "layout",
+      duration: 10000, // Currently a hack, the duration should be the duration of the playlist
+      widget: {
+        id: 666,
+        name: "layout-1-1",
+        template: {
+          name: "Main playlist layout",
+          type: TemplateComponentType.Layout,
+          opts: {
+            containers: [
+              {
+                playlist,
+                style: {
+                  width: "100%",
+                  height: "100%",
+                  left: "0%",
+                  top: "0%",
+                  overflow: "auto",
+                },
+              },
+            ],
+          },
+        },
+      },
+      fonts: [],
+      style: {
+        width: "100%",
+        height: "100%",
+      },
+      config: {
+        id: "layout-1-1",
+        widget_id: 666,
+        options: {},
+        data: {},
+      },
+      globals,
+    } as TemplateWidgetOptions);
+    const duration = widget.duration();
+    return new Layer(playlist.name, {
+      widget,
+      duration: 10000, // Currently a hack, the duration should be the duration of the playlist
+    });
   }
 
   constructor(
@@ -68,7 +143,7 @@ export class Layer extends EventEmitter {
       slack?: number; // Some extra slack over the widget duration.
       widget?: Widget;
       transition?: Transition;
-      css?: Partial<CSSStyleDeclaration>;
+      style?: JSX.CSSProperties;
     }
   ) {
     super();
@@ -82,8 +157,8 @@ export class Layer extends EventEmitter {
 
     const { style, dataset } = this.el;
 
-    if (opts?.css) {
-      applyCss(this.el, opts.css);
+    if (opts?.style) {
+      applyCss(this.el, opts.style);
     }
 
     style.position = "absolute";

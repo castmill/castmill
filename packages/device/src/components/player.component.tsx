@@ -9,5 +9,5 @@ export function PlayerComponent(props: { device: Device }) {
     props.device.start(playerElement!);
   });
 
-  return <div ref={playerElement}>This should be the player!</div>;
+  return <div ref={playerElement} style="background-color: black"></div>;
 }

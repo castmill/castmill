@@ -19,7 +19,6 @@ import {
   StorageIntegration,
   StoreResult,
   StoreError,
-  StorageItem,
 } from "./storage.integration";
 
 /*
@@ -105,6 +104,21 @@ export class Cache extends Dexie {
     }
   }
 
+  async hasUrl(url: string) {
+    // Check if we are caching the item.
+    if (!!this.caching[url]) {
+      return true;
+    }
+
+    // Check if the item  is not  already cached
+    const item = await this.items.get({ url });
+    if (item) {
+      return true;
+    }
+
+    return false;
+  }
+
   async set(
     url: string,
     type: ItemType,
@@ -117,11 +131,12 @@ export class Cache extends Dexie {
     }
 
     // Check if the item  is not  already cached
-    if (!force) {
-      const item = await this.items.get({ url });
-      if (item) {
+    const item = await this.items.get({ url });
+    if (item) {
+      if (!force) {
         return;
       }
+      await this.del(url);
     }
 
     // Check if we need to delete old items (based on max amount)
@@ -273,5 +288,28 @@ export class Cache extends Dexie {
     for (const item of items) {
       await this.del(item.url!);
     }
+  }
+
+  /**
+   * Helper to clean the whole indexedDB.
+   */
+  private cleanIndexedDB() {
+    // List all databases
+    window.indexedDB.databases().then((dbList) => {
+      dbList.forEach((dbInfo) => {
+        // Delete each database
+        if (dbInfo.name) {
+          const deleteRequest = window.indexedDB.deleteDatabase(dbInfo.name);
+
+          deleteRequest.onerror = () => {
+            console.error(`Failed to delete database ${dbInfo.name}`);
+          };
+
+          deleteRequest.onsuccess = () => {
+            console.log(`Successfully deleted database ${dbInfo.name}`);
+          };
+        }
+      });
+    });
   }
 }

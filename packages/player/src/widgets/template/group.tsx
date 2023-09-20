@@ -9,6 +9,7 @@ import {
 import { ResourceManager } from "@castmill/cache";
 import { ComponentAnimation, applyAnimations } from "./animation";
 import { BaseComponentProps } from "./interfaces/base-component-props";
+import { PlayerGlobals } from "../../interfaces/player-globals.interface";
 
 export interface GroupComponentOptions {}
 
@@ -23,10 +24,14 @@ export class GroupComponent implements TemplateComponent {
     public style: JSX.CSSProperties,
     public components: TemplateComponentTypeUnion[] = [],
     public animations?: ComponentAnimation[],
-    public cond?: Record<string, any>
+    public filter?: Record<string, any>
   ) {}
 
-  static fromJSON(json: any, resourceManager: ResourceManager): GroupComponent {
+  static fromJSON(
+    json: any,
+    resourceManager: ResourceManager,
+    globals: PlayerGlobals
+  ): GroupComponent {
     return new GroupComponent(
       json.name,
       json.config,
@@ -34,10 +39,10 @@ export class GroupComponent implements TemplateComponent {
       json.opts,
       json.style,
       json.components.map((component: any) =>
-        TemplateComponent.fromJSON(component, resourceManager)
+        TemplateComponent.fromJSON(component, resourceManager, globals)
       ),
       json.animations,
-      json.cond
+      json.filter
     );
   }
 
@@ -54,8 +59,7 @@ interface GroupProps extends BaseComponentProps {
   config: TemplateConfig;
   context: any;
   components: TemplateComponentTypeUnion[];
-
-  medias: { [index: string]: string };
+  globals: PlayerGlobals;
   resourceManager: ResourceManager;
 }
 
@@ -97,8 +101,8 @@ export const Group: Component<GroupProps> = (props) => {
           <Item
             config={props.config}
             context={props.context}
-            medias={props.medias}
             component={component}
+            globals={props.globals}
             timeline={props.timeline}
             resourceManager={props.resourceManager}
             onReady={onReadyAfter}

@@ -19,6 +19,7 @@ import { ResourceManager } from "@castmill/cache";
 import { Timeline, TimelineItem } from "./timeline";
 import { ComponentAnimation } from "./animation";
 import { BaseComponentProps } from "./interfaces/base-component-props";
+import { PlayerGlobals } from "../../interfaces/player-globals.interface";
 
 export interface ListComponentOptions {
   pageDuration: number;
@@ -36,7 +37,7 @@ export class ListComponent implements TemplateComponent {
     public style: JSX.CSSProperties,
     public component: TemplateComponentTypeUnion,
     public animations?: ComponentAnimation[],
-    public cond?: Record<string, any>
+    public filter?: Record<string, any>
   ) {}
 
   resolveDuration(medias: { [index: string]: string }): number {
@@ -45,27 +46,32 @@ export class ListComponent implements TemplateComponent {
     );
   }
 
-  static fromJSON(json: any, resourceManager: ResourceManager): ListComponent {
+  static fromJSON(
+    json: any,
+    resourceManager: ResourceManager,
+    globals: PlayerGlobals
+  ): ListComponent {
     return new ListComponent(
       json.name,
       json.config,
       json.opts,
       json.style,
-      TemplateComponent.fromJSON(json.component, resourceManager),
+      TemplateComponent.fromJSON(json.component, resourceManager, globals),
       json.animations,
-      json.cond
+      json.filter
     );
   }
 
   static resolveOptions(
     opts: any,
     config: TemplateConfig,
-    context: any
+    context: any,
+    globals: PlayerGlobals
   ): ListComponentOptions {
     return {
-      pageDuration: resolveOption(opts.pageDuration, config, context),
-      pageSize: resolveOption(opts.pageSize, config, context),
-      items: resolveOption(opts.items, config, context),
+      pageDuration: resolveOption(opts.pageDuration, config, context, globals),
+      pageSize: resolveOption(opts.pageSize, config, context, globals),
+      items: resolveOption(opts.items, config, context, globals),
     };
   }
 }
@@ -74,8 +80,8 @@ interface ListProps extends BaseComponentProps {
   config: TemplateConfig;
   opts: ListComponentOptions;
   component: TemplateComponentTypeUnion;
-  medias: { [index: string]: string };
   resourceManager: ResourceManager;
+  globals: PlayerGlobals;
 }
 
 // TODO: Add support for displaying a progress indicator, something like horizontal bullets,
@@ -152,8 +158,8 @@ export const List: Component<ListProps> = (props) => {
               offset={i() * props.opts.pageDuration}
               duration={props.opts.pageDuration}
               skipAnimation={pages().length == 1}
-              medias={props.medias}
               resourceManager={props.resourceManager}
+              globals={props.globals}
               onReady={onReadyAfter}
             />
           )}
@@ -173,8 +179,8 @@ const Page: Component<{
   offset: number;
   duration: number;
   skipAnimation: boolean;
-  medias: { [index: string]: string };
   resourceManager: ResourceManager;
+  globals: PlayerGlobals;
   onReady: () => void;
 }> = (props) => {
   let pageRef: HTMLDivElement | undefined;
@@ -214,9 +220,9 @@ const Page: Component<{
             context={item}
             component={props.component}
             timeline={props.timeline}
-            medias={props.medias}
             resourceManager={props.resourceManager}
             onReady={onReadyAfter}
+            globals={props.globals}
           />
         )}
       </For>
