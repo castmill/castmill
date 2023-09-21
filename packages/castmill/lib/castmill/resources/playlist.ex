@@ -3,6 +3,8 @@ defmodule Castmill.Resources.Playlist do
   import Ecto.Changeset
   import Ecto.Query, warn: false
 
+  @derive {Jason.Encoder,
+           only: [:id, :name, :status, :items, :settings, :inserted_at, :updated_at]}
   schema "playlists" do
     field :name, :string
     field :status, Ecto.Enum, values: [:draft, :live]
@@ -14,9 +16,9 @@ defmodule Castmill.Resources.Playlist do
     belongs_to :organization, Castmill.Organizations.Organization, foreign_key: :organization_id, type: Ecto.UUID
     belongs_to :resource, Castmill.Resources.Resource, foreign_key: :resource_id
 
-    many_to_many :widgets,
-      Castmill.Widgets.Widget,
-      join_through: "playlist_items",
+    many_to_many :items,
+      Castmill.Widgets.WidgetConfig,
+      join_through: "playlists_items",
       on_replace: :delete
 
     timestamps()

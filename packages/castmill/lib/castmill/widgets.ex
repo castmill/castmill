@@ -6,7 +6,7 @@ defmodule Castmill.Widgets do
   alias Castmill.Repo
   alias Castmill.Protocol.Access
   alias Castmill.Widgets.Widget
-  alias Castmill.Widgets.WidgetData
+  alias Castmill.Widgets.WidgetConfig
 
   defimpl Access, for: Widget do
     def canAccess(_team, user, _action) do
@@ -53,7 +53,7 @@ defmodule Castmill.Widgets do
 
   @doc """
   Instantiate a new widget.
-  A widget instance is represented by a row in the widgets_data table.
+  A widget instance is represented by a row in the widgets_config table.
 
   TODO:
   The data should be fetched from the widgets webhook endpoint, so a new widget instance will always have
@@ -64,13 +64,14 @@ defmodule Castmill.Widgets do
 
   ## Examples
 
-      iex> new_widget_data("1234", %{ "foo" => "bar" })
-      %WidgetData{}
+      iex> new_widget_config("w_id", "pii_id", %{ "foo" => "bar" })
+      %WidgetConfig{}
   """
-  def new_widget_data(widget_id, options, data \\ nil) do
-    %WidgetData{}
-    |> WidgetData.changeset(%{
+  def new_widget_config(widget_id, playlist_item_id, options, data \\ nil) do
+    %WidgetConfig{}
+    |> WidgetConfig.changeset(%{
       widget_id: widget_id,
+      playlist_item_id: playlist_item_id,
       options: options,
       data: data,
       version: 1,

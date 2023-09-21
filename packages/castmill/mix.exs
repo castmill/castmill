@@ -41,6 +41,7 @@ defmodule Castmill.MixProject do
       {:phoenix_live_view, "~> 0.18.16"},
       {:floki, ">= 0.30.0", only: :test},
       {:phoenix_live_dashboard, "~> 0.7.2"},
+      {:httpoison, "~> 2.0"},
       {:esbuild, "~> 0.7", runtime: Mix.env() == :dev},
       {:tailwind, "~> 0.2.0", runtime: Mix.env() == :dev},
       {:swoosh, "~> 1.3"},

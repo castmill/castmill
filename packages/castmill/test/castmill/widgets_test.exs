@@ -3,7 +3,7 @@ defmodule Castmill.WidgetsTest do
 
   alias Castmill.Widgets.Schema
 
-  @moduletag :widgets_data_case
+  @moduletag :widgets_config_case
 
   describe "widgets schemas" do
     test "validate_schema/1 returns error if empty schema" do

@@ -37,7 +37,6 @@ defmodule CastmillWeb.Live.Admin.UserForm do
 
   @impl true
   def update(%{action: :new} = assigns, socket) do
-    IO.inspect(assigns)
     # team = %Teams.Team{organization_id: socket.assigns.resource.id}
     user = %Accounts.User{}
     changeset = Accounts.change_user(user)

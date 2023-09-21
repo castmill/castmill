@@ -25,7 +25,6 @@ defmodule CastmillWeb.Admin.UserAuth do
   if you are not using LiveView.
   """
   def log_in_user(conn, user, params \\ %{}) do
-    IO.inspect(user)
     token = Accounts.generate_user_session_token(user)
     user_return_to = get_session(conn, :user_return_to)
 
@@ -200,8 +199,6 @@ defmodule CastmillWeb.Admin.UserAuth do
   they use the application at all, here would be a good place.
   """
   def require_authenticated_user(conn, _opts) do
-    IO.inspect(conn.assigns[:current_user])
-
     if conn.assigns[:current_user] do
       conn
     else

@@ -3,6 +3,18 @@ defmodule Castmill.Widgets.Widget do
   import Ecto.Changeset
   import Ecto.Query, warn: false
 
+  @derive {Jason.Encoder,
+           only: [
+             :id,
+             :name,
+             :template,
+             :options_schema,
+             :data_schema,
+             :meta,
+             :icon,
+             :small_icon,
+             :update_granularity
+           ]}
   schema "widgets" do
     field(:name, :string)
     field(:template, :map)

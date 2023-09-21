@@ -10,9 +10,9 @@ defmodule Castmill.Repo.Migrations.AddDefaultWidgets do
               "type" => "image",
               "name" => "image",
               "opts" => %{
-                "url" => "${options.image.url}",
-                "autozoom" => "${options.autozoom}",
-                "duration" => "${options.duration}"
+                "url" => %{"key" => "options.image.files[@target].uri"},
+                "autozoom" => %{"key" => "options.autozoom"},
+                "duration" => %{"key" => "options.duration"}
               }
             },
             options_schema: %{
@@ -43,7 +43,7 @@ defmodule Castmill.Repo.Migrations.AddDefaultWidgets do
               "type" => "video",
               "name" => "video",
               "opts" => %{
-                "url" => "${options.video.url}"
+                "url" => %{"key" => "options.video.files[@target].uri"}
               }
             },
             options_schema: %{
@@ -73,13 +73,13 @@ defmodule Castmill.Repo.Migrations.AddDefaultWidgets do
               "type" => "layout",
               "name" => "layout",
               "style" => %{
-                "background" => "${options.background}",
-                "color" => "${options.color}"
+                "background" => %{"key" => "options.background"},
+                "color" => %{"key" => "options.color"}
               },
               "opts" => %{
                 "containers" => [
                   %{
-                    "playlist" => "${options.playlists[0]}",
+                    "playlist" => %{"key" => "options.playlists[0]"},
                     "rect" => %{
                       "width" => "100%",
                       "height" => "33%",
@@ -88,7 +88,7 @@ defmodule Castmill.Repo.Migrations.AddDefaultWidgets do
                     }
                   },
                   %{
-                    "playlist" => "${options.playlists[1]}",
+                    "playlist" => %{"key" => "options.playlists[1]"},
                     "rect" => %{
                       "width" => "100%",
                       "height" => "33%",
@@ -97,7 +97,7 @@ defmodule Castmill.Repo.Migrations.AddDefaultWidgets do
                     }
                   },
                   %{
-                    "playlist" => "${options.playlists[2]}",
+                    "playlist" => %{"key" => "options.playlists[2]"},
                     "rect" => %{
                       "width" => "100%",
                       "height" => "33%",
@@ -128,8 +128,8 @@ defmodule Castmill.Repo.Migrations.AddDefaultWidgets do
               "type" => "group",
               "name" => "weather",
               "style" => %{
-                "background" => "${options.background}",
-                "color" => "${options.color}"
+                "background" => %{"key" => "options.background"},
+                "color" => %{"key" => "options.color"}
               },
               components: []
             },
@@ -171,7 +171,7 @@ defmodule Castmill.Repo.Migrations.AddDefaultWidgets do
               "type" => "web",
               "name" => "web",
               "opts" => %{
-                "url" => "${options.url}"
+                "url" => %{"key" => "options.url"}
               }
             },
             options_schema: %{

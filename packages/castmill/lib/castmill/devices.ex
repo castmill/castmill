@@ -57,7 +57,12 @@ defmodule Castmill.Devices do
       iex> list_devices()
       [%Device{}, ...]
   """
-  def list_devices(%{organization_id: organization_id, search: search, page: page, page_size: page_size}) do
+  def list_devices(%{
+        organization_id: organization_id,
+        search: search,
+        page: page,
+        page_size: page_size
+      }) do
     offset = if page_size == nil, do: 0, else: max((page - 1) * page_size, 0)
 
     Device.base_query()
@@ -213,7 +218,35 @@ defmodule Castmill.Devices do
   """
   def verify_device_token(device_id, token) do
     Repo.get_by(Device, id: device_id)
-    |> check_pass(token, hash_key: :token_hash)
+    |> check_password(token, hash_key: :token_hash)
+  end
+
+  # The following are helper functions that were deprecated in Argon2
+  defp check_password(nil, _password, opts) do
+    unless opts[:hide_user] == false, do: no_user_verify(opts)
+    {:error, "invalid user-identifier"}
+  end
+
+  defp check_password(user, password, opts) when is_binary(password) do
+    case get_hash(user, opts[:hash_key]) do
+      {:ok, hash} ->
+        if verify_pass(password, hash), do: {:ok, user}, else: {:error, "invalid password"}
+
+      _ ->
+        {:error, "no password hash found in the user struct"}
+    end
+  end
+
+  defp check_password(_, _, _) do
+    {:error, "password is not a string"}
+  end
+
+  defp get_hash(%{password_hash: hash}, nil), do: {:ok, hash}
+  defp get_hash(%{encrypted_password: hash}, nil), do: {:ok, hash}
+  defp get_hash(_, nil), do: nil
+
+  defp get_hash(user, hash_key) do
+    if hash = Map.get(user, hash_key), do: {:ok, hash}
   end
 
   @doc """
@@ -249,7 +282,11 @@ defmodule Castmill.Devices do
     Add calendar to device
   """
   def add_calendar(device_id, calendar_id) do
-    %Castmill.Devices.DevicesCalendars{device_id: device_id, calendar_id: calendar_id}
+    %Castmill.Devices.DevicesCalendars{}
+    |> Castmill.Devices.DevicesCalendars.changeset(%{
+      device_id: device_id,
+      calendar_id: calendar_id
+    })
     |> Castmill.Repo.insert()
   end
 
@@ -277,7 +314,8 @@ defmodule Castmill.Devices do
         select: calendar
       )
 
-    Repo.all(query)
+    calendars = Repo.all(query)
+    Repo.preload(calendars, :entries)
   end
 
   @doc """

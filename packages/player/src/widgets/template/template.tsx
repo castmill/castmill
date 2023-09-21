@@ -12,6 +12,7 @@ import { ImageCarouselComponent } from "./image-carousel";
 import { LayoutComponent } from "./layout";
 import { Timeline } from "./timeline";
 import { ComponentAnimation } from "./animation";
+import { PlayerGlobals } from "../../interfaces/player-globals.interface";
 
 export type TemplateComponentTypeUnion =
   | TextComponent
@@ -41,8 +42,8 @@ export class TemplateComponent {
     public name: string,
     public opts: any, // public config: TemplateConfig, // public component: TemplateComponentTypeUnion
     public animations?: ComponentAnimation[],
-    public cond?: Record<string, any>,
-    public $styles?: { cond: Record<string, any>; style: JSX.CSSProperties }[]
+    public filter?: Record<string, any>,
+    public $styles?: { filter: Record<string, any>; style: JSX.CSSProperties }[]
   ) {}
 
   resolveDuration(medias: { [index: string]: string }): number {
@@ -51,15 +52,16 @@ export class TemplateComponent {
 
   static fromJSON(
     json: any,
-    resourceManager: ResourceManager
+    resourceManager: ResourceManager,
+    globals: PlayerGlobals
   ): TemplateComponent {
     switch (json.type) {
       case TemplateComponentType.Group:
-        return GroupComponent.fromJSON(json, resourceManager);
+        return GroupComponent.fromJSON(json, resourceManager, globals);
       case TemplateComponentType.List:
-        return ListComponent.fromJSON(json, resourceManager);
+        return ListComponent.fromJSON(json, resourceManager, globals);
       case TemplateComponentType.Layout:
-        return LayoutComponent.fromJSON(json, resourceManager);
+        return LayoutComponent.fromJSON(json, resourceManager, globals);
       case TemplateComponentType.Text:
         return TextComponent.fromJSON(json);
       case TemplateComponentType.Image:
@@ -78,24 +80,29 @@ export const Template: Component<{
   name: string;
   root: TemplateComponentTypeUnion;
 
-  style: JSX.CSSProperties;
+  style?: JSX.CSSProperties;
   timeline: Timeline;
   resourceManager: ResourceManager;
 
   config: TemplateConfig;
-  medias: { [index: string]: string };
+  globals: PlayerGlobals;
+
   onReady: () => void;
 }> = (props) => {
   return (
-    <div data-component="template" data-name={props.name} style={props.style}>
+    <div
+      data-component="template"
+      data-name={props.name}
+      style={props.style || { width: "100%", height: "100%" }}
+    >
       <Item
         config={props.config}
         context={null}
-        medias={props.medias}
         component={props.root}
         timeline={props.timeline}
         resourceManager={props.resourceManager}
         onReady={props.onReady}
+        globals={props.globals}
       />
     </div>
   );

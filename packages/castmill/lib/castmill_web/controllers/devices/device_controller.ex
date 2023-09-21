@@ -3,6 +3,8 @@ defmodule CastmillWeb.DeviceController do
 
   alias Castmill.Organizations
   alias Castmill.Plug.Authorize
+  alias Castmill.Devices
+  alias Castmill.Resources
 
   action_fallback(CastmillWeb.FallbackController)
 
@@ -40,19 +42,57 @@ defmodule CastmillWeb.DeviceController do
     end
   end
 
-  def index(conn, %{"resources" => "medias"} = params) do
-    medias = Organizations.list_medias(params)
-    render(conn, :index, medias: medias)
-  end
-
-  def index(conn, %{"resources" => "playlists"} = params) do
-    playlists = Organizations.list_playlists(params)
-    render(conn, :index, playlists: playlists)
-  end
-
-  def index(conn, %{"resources" => "devices"} = params) do
+  def index(conn, params) do
     devices = Organizations.list_devices(params)
     render(conn, :index, devices: devices)
+  end
+
+  @doc """
+    Returns calendars associated to this player
+  """
+  def get_calendars(conn, %{"id" => device_id}) do
+    calendars = Devices.list_calendars(device_id)
+
+    conn
+    |> put_status(:ok)
+    |> put_resp_header("content-type", "application/json")
+    |> json(%{data: calendars})
+  end
+
+  @doc """
+    Returns the given playlists.
+    TODO: Add authorization check to ensure that the device has access to the playlist.
+    Basically check if the playlist is referenced by a calendar that is associated to the device.
+  """
+  def get_playlist(conn, %{"id" => _device_id, "playlist_id" => playlist_id}) do
+    playlist = Resources.get_playlist(playlist_id)
+
+    conn
+    |> put_status(:ok)
+    |> put_resp_header("content-type", "application/json")
+    |> json(playlist)
+  end
+
+  @doc """
+    Adds a calendar to a device
+  """
+  def add_calendar(conn, %{"id" => device_id, "calendar_id" => calendar_id}) do
+    with {:ok, _device} <- Devices.add_calendar(device_id, calendar_id) do
+      conn
+      |> put_status(:ok)
+      |> send_resp(200, "")
+    end
+  end
+
+  @doc """
+    Removes a calendar from a device
+  """
+  def remove_calendar(conn, %{"id" => device_id, "calendar_id" => calendar_id}) do
+    with {:ok, _device} <- Devices.remove_calendar(device_id, calendar_id) do
+      conn
+      |> put_status(:ok)
+      |> send_resp(200, "")
+    end
   end
 
   @doc """
@@ -67,5 +107,4 @@ defmodule CastmillWeb.DeviceController do
       |> render(:show, device: device)
     end
   end
-
 end

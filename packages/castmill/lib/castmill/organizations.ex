@@ -89,6 +89,21 @@ defmodule Castmill.Organizations do
   def get_organization!(id), do: Repo.get!(Organization, id)
 
   @doc """
+  Gets a single organization.
+
+  Returns nil if the Organization does not exist.
+
+  ## Examples
+
+      iex> get_organization(123)
+      %Organization{}
+
+      iex> get_organization(456)
+      nil
+  """
+  def get_organization(id), do: Repo.get(Organization, id)
+
+  @doc """
   Creates a organization.
 
   ## Examples
@@ -330,7 +345,7 @@ defmodule Castmill.Organizations do
   """
   def list_devices(params) do
     Castmill.Resources.list_resources(
-      Castmill.Resources.Device,
+      Castmill.Devices.Device,
       params
     )
   end
@@ -345,7 +360,7 @@ defmodule Castmill.Organizations do
 
   """
   def count_devices(params) do
-    Castmill.Resources.count_resources(Castmill.Resources.Device, params)
+    Castmill.Resources.count_resources(Castmill.Devices.Device, params)
   end
 
   @doc """

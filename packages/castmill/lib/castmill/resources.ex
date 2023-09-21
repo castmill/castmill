@@ -18,6 +18,8 @@ defmodule Castmill.Resources do
   alias Castmill.Resources.Calendar
   alias Castmill.Resources.CalendarEntry
 
+  alias Castmill.Devices.Device
+
   alias Castmill.Organizations.Organization
 
   alias Castmill.Protocol.Access
@@ -73,11 +75,11 @@ defmodule Castmill.Resources do
     end
   end
 
-  defimpl Access, for: Device do
-    def canAccess(resource, user, action) do
-      Castmill.Resources.canAccessResource(resource, user, action)
-    end
-  end
+  # defimpl Access, for: Device do
+  #  def canAccess(resource, user, action) do
+  #    Castmill.Resources.canAccessResource(resource, user, action)
+  #  end
+  # end
 
   alias Castmill.Protocol.Resource
 
@@ -98,20 +100,82 @@ defmodule Castmill.Resources do
   end
 
   @doc """
-  Gets a media by its ID.
-  """
-  def get_media(id) do
-    Media
-    |> Repo.get(id)
-  end
-
-  @doc """
   Creates a playlist
   """
   def create_playlist(attrs \\ %{}) do
     %Playlist{}
     |> Playlist.changeset(attrs)
     |> Repo.insert()
+  end
+
+  @doc """
+    Gets a playlist
+  """
+  def get_playlist(id) do
+    playlist =
+      Playlist
+      |> where(id: ^id)
+      |> Repo.one()
+
+    items_query =
+      from(pi in Castmill.Resources.PlaylistItem,
+        where: pi.playlist_id == ^id,
+        join: wd in assoc(pi, :widget_config),
+        join: w in assoc(wd, :widget),
+        preload: [widget_config: {wd, widget: w}]
+      )
+
+    items =
+      Repo.all(items_query)
+      |> Enum.map(&transform_item/1)
+
+    %{playlist | items: items}
+  end
+
+  defp transform_item(item) do
+    # Resolve widget references and get the updated options
+    resolved_options =
+      resolve_widget_references(
+        item.widget_config.widget.options_schema,
+        item.widget_config.options
+      )
+
+    # Drop the :widget key from widget_config
+    modified_widget_config = Map.drop(item.widget_config, [:widget])
+
+    # Merge the resolved options into modified_widget_config
+    modified_widget_config_with_resolved_options =
+      Map.put(modified_widget_config, :options, resolved_options)
+
+    # Take required fields from item and merge the modified widget data and other info
+    item
+    |> Map.take([:id, :duration, :offset, :inserted_at, :updated_at])
+    |> Map.merge(%{
+      config: modified_widget_config_with_resolved_options,
+      widget: item.widget_config.widget
+    })
+  end
+
+  defp resolve_widget_references(schema, data) do
+    Enum.reduce(schema, %{}, fn {key, value}, acc ->
+      case value do
+        %{"type" => "ref", "collection" => collection} ->
+          # Take the collection name and ignore the filter
+          [collection_name | _] = String.split(collection, "|")
+          fetched_data = fetch_widget_reference(data, key, collection_name)
+          Map.put(acc, key, fetched_data)
+
+        _ ->
+          acc
+      end
+    end)
+  end
+
+  defp fetch_widget_reference(data, key, "medias") do
+    case Map.get(data, key) do
+      nil -> nil
+      media_id -> get_media(media_id)
+    end
   end
 
   @doc """
@@ -169,64 +233,61 @@ defmodule Castmill.Resources do
         duration,
         options \\ %{}
       ) do
-    # Use a transaction to create a playlist item and update the items in the linked list atomically.
     Repo.transaction(fn ->
-      with {:ok, widget_data} <- Castmill.Widgets.new_widget_data(widget_id, options) do
-        if prev_item_id do
-          prev_item =
-            from(item in PlaylistItem, where: item.id == ^prev_item_id, select: item)
-            |> Repo.one()
+      if prev_item_id do
+        case Repo.one(from(item in PlaylistItem, where: item.id == ^prev_item_id, select: item)) do
+          nil ->
+            Repo.rollback("Invalid prev_item_id")
 
-          next_item_id = prev_item.next_item_id
+          prev_item ->
+            next_item_id = prev_item.next_item_id
 
-          with {:ok, item} <-
-                 create_playlist_item(%{
-                   playlist_id: playlist_id,
-                   widget_data_id: widget_data.id,
-                   offset: offset,
-                   duration: duration,
-                   options: options,
-                   prev_item_id: prev_item.id,
-                   next_item_id: next_item_id
-                 }) do
-            update_playlist_item(prev_item, %{next_item_id: item.id})
+            with {:ok, item} <-
+                   create_playlist_item(%{
+                     playlist_id: playlist_id,
+                     offset: offset,
+                     duration: duration,
+                     prev_item_id: prev_item.id,
+                     next_item_id: next_item_id
+                   }),
+                 {:ok, _widget_config} <-
+                   Castmill.Widgets.new_widget_config(widget_id, item.id, options) do
+              update_playlist_item(prev_item, %{next_item_id: item.id})
 
-            if next_item_id do
-              next_item =
-                from(item in PlaylistItem, where: item.id == ^next_item_id, select: item)
-                |> Repo.one()
+              if next_item_id do
+                next_item = Repo.one(from(item in PlaylistItem, where: item.id == ^next_item_id))
+                update_playlist_item(next_item, %{prev_item_id: item.id})
+              end
 
-              update_playlist_item(next_item, %{prev_item_id: item.id})
+              item
             end
-
-            item
-          end
-        else
-          # Since we are inserting at the beginning of the list, get the current first item and update
-          # it accordingly.
-          first_item =
+        end
+      else
+        first_item =
+          Repo.one(
             from(item in PlaylistItem,
-              where: is_nil(item.prev_item_id) and item.playlist_id == ^playlist_id,
-              select: item
+              where: is_nil(item.prev_item_id) and item.playlist_id == ^playlist_id
             )
-            |> Repo.one()
+          )
 
-          with {:ok, item} <-
-                 create_playlist_item(%{
-                   playlist_id: playlist_id,
-                   widget_data_id: widget_data.id,
-                   offset: offset,
-                   duration: duration,
-                   options: options,
-                   prev_item_id: nil,
-                   next_item_id: first_item && first_item.id
-                 }) do
-            if first_item do
-              update_playlist_item(first_item, %{prev_item_id: item.id})
-            end
-
-            item
+        with {:ok, item} <-
+               create_playlist_item(%{
+                 playlist_id: playlist_id,
+                 offset: offset,
+                 duration: duration,
+                 prev_item_id: nil,
+                 next_item_id: first_item && first_item.id
+               }),
+             {:ok, _widget_config} <-
+               Castmill.Widgets.new_widget_config(widget_id, item.id, options) do
+          if first_item do
+            update_playlist_item(first_item, %{prev_item_id: item.id})
           end
+
+          item
+        else
+          {:error, reason} ->
+            Repo.rollback(reason)
         end
       end
     end)
@@ -234,6 +295,7 @@ defmodule Castmill.Resources do
 
   @doc """
     Remove an item from a playlist.
+    TODO: For security we should also require the playlist_id to be passed in.
   """
   def remove_item_from_playlist(item_id) do
     # Use a transaction to remove a playlist item and update the items in the linked list atomically.
@@ -323,10 +385,31 @@ defmodule Castmill.Resources do
   @doc """
     Returns all the items belonging to a playlist in the order
     defined by the links of the linked list they are part of.
+
+    Note: this method is not used by the API, it is only used to
+    test the linked list implementation.
   """
   def get_playlist_items(playlist_id) do
-    items = Repo.all(PlaylistItem, playlist_id: playlist_id) |> Repo.preload(:widget_data)
+    items_query =
+      from(pi in Castmill.Resources.PlaylistItem,
+        where: pi.playlist_id == ^playlist_id,
+        join: wd in assoc(pi, :widget_config),
+        join: w in assoc(wd, :widget),
+        preload: [widget_config: {wd, widget: w}]
+      )
+
+    items = Repo.all(items_query)
+
     LinkedList.sort_nodes(items)
+  end
+
+  def get_playlist_item(playlist_id, item_id) do
+    items_query =
+      from(pi in Castmill.Resources.PlaylistItem,
+        where: pi.playlist_id == ^playlist_id and pi.id == ^item_id
+      )
+
+    Repo.one(items_query)
   end
 
   @doc """
@@ -337,9 +420,14 @@ defmodule Castmill.Resources do
       iex> list_resources(Media, params)
       [%Media{}, ...]
   """
-  def list_resources(resource, %{organization_id: organization_id, page: page, page_size: page_size, search: search}) do
+  def list_resources(resource, %{
+        organization_id: organization_id,
+        page: page,
+        page_size: page_size,
+        search: search
+      }) do
     offset = if page_size == nil, do: 0, else: max((page - 1) * page_size, 0)
-    
+
     resource.base_query()
     |> Organization.where_org_id(organization_id)
     |> QueryHelpers.where_name_like(search)
@@ -349,11 +437,21 @@ defmodule Castmill.Resources do
   end
 
   def list_resources(resource, %{page: page, page_size: page_size, search: search}) do
-    list_resources(resource, %{organization_id: nil, page: page, page_size: page_size, search: search})
+    list_resources(resource, %{
+      organization_id: nil,
+      page: page,
+      page_size: page_size,
+      search: search
+    })
   end
 
   def list_resources(resource, %{organization_id: organization_id}) do
-    list_resources(resource, %{organization_id: organization_id, page: 1, page_size: nil, search: nil})
+    list_resources(resource, %{
+      organization_id: organization_id,
+      page: 1,
+      page_size: nil,
+      search: nil
+    })
   end
 
   def count_resources(resource, %{organization_id: organization_id, search: search}) do
@@ -396,6 +494,28 @@ defmodule Castmill.Resources do
   end
 
   @doc """
+    Gets a media. It returns all the files associated with the media as well.
+  """
+  def get_media(id) do
+    media =
+      Media
+      |> where(id: ^id)
+      |> Repo.one()
+      |> Repo.preload(files: [:file])
+
+    if media == nil do
+      nil
+    else
+      transformed_files =
+        Enum.reduce(media.files, %{}, fn files_media, acc ->
+          Map.put(acc, files_media.context, files_media.file)
+        end)
+
+      Map.put(media, :files, transformed_files)
+    end
+  end
+
+  @doc """
   Removes a media. Note that this will not remove the media from the
   storage system. It will only remove the record from the database, however
   it will trigger a "delete" webhook event if such a webhook is configured.
@@ -412,7 +532,7 @@ defmodule Castmill.Resources do
   ## Examples
 
       iex> create_calendar(%{field: value})
-      {:ok, %Media{}}
+      {:ok, %Calendar{}}
 
       iex> create_calendar(%{field: bad_value})
       {:error, %Ecto.Changeset{}}
@@ -421,6 +541,16 @@ defmodule Castmill.Resources do
     %Calendar{}
     |> Calendar.changeset(attrs)
     |> Repo.insert()
+  end
+
+  @doc """
+    Gets a calendar.
+  """
+  def get_calendar(id) do
+    Calendar
+    |> where(id: ^id)
+    |> Repo.one()
+    |> Repo.preload(:entries)
   end
 
   @doc """
@@ -436,10 +566,9 @@ defmodule Castmill.Resources do
     Add entry to calendar. Will give an error if the entry overlaps
     with an existing entry.
   """
-  def add_calendar_entry(calendar_id, playlist_id, entry_attrs \\ %{}) do
+  def add_calendar_entry(calendar_id, entry_attrs \\ %{}) do
     %CalendarEntry{
-      calendar_id: calendar_id,
-      playlist_id: playlist_id
+      calendar_id: calendar_id
     }
     |> CalendarEntry.changeset(entry_attrs)
     |> Repo.insert()
@@ -465,12 +594,14 @@ defmodule Castmill.Resources do
     List calendar entries between two dates.
   """
   def list_calendar_entries(calendar_id, start_date, end_date) do
+    repeat_weekly_until = DateTime.from_unix!(end_date) |> DateTime.to_date()
+
     query =
       from(entry in CalendarEntry,
         where:
           entry.calendar_id == ^calendar_id and
             entry.start >= ^start_date and
-            (entry.end <= ^end_date or entry.repeat_weekly_until <= ^end_date),
+            (entry.end <= ^end_date or entry.repeat_weekly_until <= ^repeat_weekly_until),
         select: entry
       )
 

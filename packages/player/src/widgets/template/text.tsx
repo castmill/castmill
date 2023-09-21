@@ -6,6 +6,7 @@ import { TemplateComponent, TemplateComponentType } from "./template";
 import { TimelineItem } from "./timeline";
 import { ComponentAnimation, applyAnimations } from "./animation";
 import { BaseComponentProps } from "./interfaces/base-component-props";
+import { PlayerGlobals } from "../../interfaces/player-globals.interface";
 interface AutoFitOpts {
   // Base size of the text (in em). Used if the text fits in the container.
   baseSize?: number;
@@ -36,7 +37,7 @@ export class TextComponent implements TemplateComponent {
     public opts: TextComponentOptions,
     public style: JSX.CSSProperties,
     public animations?: ComponentAnimation[],
-    public cond?: Record<string, any>
+    public filter?: Record<string, any>
   ) {}
 
   resolveDuration(): number {
@@ -49,21 +50,27 @@ export class TextComponent implements TemplateComponent {
       json.opts,
       json.style,
       json.animations,
-      json.cond
+      json.filter
     );
   }
 
   static resolveOptions(
     opts: TextComponentOptions,
     config: TemplateConfig,
-    context: any
+    context: any,
+    globals: PlayerGlobals
   ): TextComponentOptions {
     return {
-      text: resolveOption(opts.text, config, context),
+      text: resolveOption(opts.text, config, context, globals),
       autofit: {
-        maxSize: resolveOption(opts.autofit?.maxSize, config, context),
-        minSize: resolveOption(opts.autofit?.minSize, config, context),
-        baseSize: resolveOption(opts.autofit?.baseSize, config, context),
+        maxSize: resolveOption(opts.autofit?.maxSize, config, context, globals),
+        minSize: resolveOption(opts.autofit?.minSize, config, context, globals),
+        baseSize: resolveOption(
+          opts.autofit?.baseSize,
+          config,
+          context,
+          globals
+        ),
       },
     };
   }
@@ -230,7 +237,6 @@ function autoFitText(div: HTMLDivElement, options: AutoFitOpts): number {
 
     setSize(size);
     const { height, width } = textElement.getBoundingClientRect();
-
 
     // Break if we cannot do better.
     if (height == maxHeight && width <= maxWidth) {

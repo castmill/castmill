@@ -5,6 +5,8 @@ import { TemplateConfig, resolveOption } from "./binding";
 import { TemplateComponent, TemplateComponentType } from "./template";
 import { ComponentAnimation } from "./animation";
 import { BaseComponentProps } from "./interfaces/base-component-props";
+import { ResourceManager } from "@castmill/cache";
+import { PlayerGlobals } from "../../interfaces/player-globals.interface";
 
 export interface ImageCarouselComponentOptions {
   images: string[];
@@ -19,7 +21,7 @@ export class ImageCarouselComponent implements TemplateComponent {
     public opts: ImageCarouselComponentOptions,
     public style: JSX.CSSProperties,
     public animations?: ComponentAnimation[],
-    public cond?: Record<string, any>
+    public filter?: Record<string, any>
   ) {}
 
   resolveDuration(medias: { [index: string]: string }): number {
@@ -32,18 +34,24 @@ export class ImageCarouselComponent implements TemplateComponent {
       json.opts,
       json.style,
       json.animations,
-      json.cond
+      json.filter
     );
   }
 
   static resolveOptions(
     opts: any,
     config: TemplateConfig,
-    context: any
+    context: any,
+    globals: PlayerGlobals
   ): ImageCarouselComponentOptions {
     return {
-      images: resolveOption(opts.images, config, context),
-      imageDuration: resolveOption(opts.imageDuration, config, context),
+      images: resolveOption(opts.images, config, context, globals),
+      imageDuration: resolveOption(
+        opts.imageDuration,
+        config,
+        context,
+        globals
+      ),
     };
   }
 }
@@ -56,7 +64,8 @@ interface ImageCarouselProps extends BaseComponentProps {
 
   startArgs?: GSAPTweenVars;
   endArgs?: GSAPTweenVars;
-  medias: { [index: string]: string };
+  resourceManager: ResourceManager;
+  globals: PlayerGlobals;
 }
 
 export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
@@ -104,7 +113,7 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
     timeline.kill();
   });
 
-  onMount(() => {
+  onMount(async () => {
     const images = parentRef?.children!;
     const targetArgs = {
       duration: 1,
@@ -115,10 +124,13 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
     };
 
     if (images && images.length == 1) {
+      const imageUrl = await props.resourceManager.getMedia(
+        props.opts.images[0]
+      );
       timeline.set(
         images[0],
         {
-          backgroundImage: `url(${props.medias[props.opts.images[0]]})`,
+          backgroundImage: `url(${imageUrl})`,
         },
         "<"
       );
@@ -126,11 +138,14 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
     }
 
     if (images && images.length > 1) {
-      Array.from(images || []).forEach((image, index) => {
+      Array.from(images || []).forEach(async (image, index) => {
+        const imageUrl = await props.resourceManager.getMedia(
+          props.opts.images[index]
+        );
         timeline.set(
           image,
           {
-            backgroundImage: `url(${props.medias[props.opts.images[index]]})`,
+            backgroundImage: `url(${imageUrl})`,
           },
           "<"
         );
@@ -151,8 +166,12 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
         // When the last image fades out we need to cross-fade the first image
         let position = `>+=${props.opts.imageDuration}`;
         if (index === images.length - 1) {
+          const imageUrl = await props.resourceManager.getMedia(
+            props.opts.images[0]
+          );
+
           timeline.set(images[0], {
-            backgroundImage: `url(${props.medias[props.opts.images[0]]})`,
+            backgroundImage: `url(${imageUrl})`,
           });
           timeline.from(
             images[0],

@@ -7,7 +7,7 @@ import { Image, ImageComponent } from "./image";
 import { List, ListComponent } from "./list";
 import { ImageCarousel, ImageCarouselComponent } from "./image-carousel";
 import { Text, TextComponent, TextComponentOptions } from "./text";
-import { TemplateConfig, resolveBinding, resolveKey } from "./binding";
+import { TemplateConfig, resolveKey } from "./binding";
 import { Video, VideoComponent } from "./video";
 import {
   TemplateComponent,
@@ -16,29 +16,31 @@ import {
 } from "./template";
 import { Layout, LayoutComponent } from "./layout";
 import { Timeline } from "./timeline";
+import { PlayerGlobals } from "../../interfaces/player-globals.interface";
 
 /**
  *
  * Checks if the condition is true or false.
  *
- * @param cond The condition to check, as an object of keypaths to data and values.
+ * @param filter The condition to check, as an object of keypaths to data and values.
  *
  *
  * @param config
  * @param context
  * @returns
  */
-function checkCondition(
-  cond: Record<string, any> | undefined,
+function checkFilter(
+  filter: Record<string, any> | undefined,
   config: TemplateConfig,
-  context: any
+  context: any,
+  globals: PlayerGlobals
 ): boolean {
-  if (!cond) {
+  if (!filter) {
     return true;
   }
 
-  return Object.keys(cond).every(
-    (key) => cond[key] === resolveKey(key, config, context)[0]
+  return Object.keys(filter).every(
+    (key) => filter[key] === resolveKey(key, config, context, globals)[0]
   );
 }
 
@@ -60,16 +62,22 @@ export const Item: Component<{
   context: any;
   component: TemplateComponentTypeUnion;
   timeline: Timeline;
-  medias: { [index: string]: string };
   resourceManager: ResourceManager;
+  globals: PlayerGlobals;
   onReady: () => void;
 }> = (props) => {
   let style = props.component.style || {};
   if ((props.component as TemplateComponent).$styles) {
     const $styles = (props.component as TemplateComponent).$styles!;
     for (let i = 0; i < $styles.length; i++) {
-      if (checkCondition($styles![i].cond, props.config, props.context)) {
-        console.log("applying style", $styles![i].style);
+      if (
+        checkFilter(
+          $styles![i].filter,
+          props.config,
+          props.context,
+          props.globals
+        )
+      ) {
         style = { ...style, ...$styles![i].style };
       }
     }
@@ -77,7 +85,12 @@ export const Item: Component<{
 
   return (
     <Show
-      when={checkCondition(props.component.cond, props.config, props.context)}
+      when={checkFilter(
+        props.component.filter,
+        props.config,
+        props.context,
+        props.globals
+      )}
       fallback={<Empty onReady={props.onReady} />}
     >
       <Switch fallback={<p>Invalid component type...</p>}>
@@ -87,12 +100,13 @@ export const Item: Component<{
             opts={ImageComponent.resolveOptions(
               props.component.opts,
               props.config,
-              props.context
+              props.context,
+              props.globals
             )}
             style={style}
             animations={props.component.animations}
             timeline={props.timeline}
-            medias={props.medias}
+            resourceManager={props.resourceManager}
             onReady={props.onReady}
           />
         </Match>
@@ -102,11 +116,12 @@ export const Item: Component<{
             opts={VideoComponent.resolveOptions(
               props.component.opts,
               props.config,
-              props.context
+              props.context,
+              props.globals
             )}
             style={style}
             timeline={props.timeline}
-            medias={props.medias}
+            resourceManager={props.resourceManager}
             onReady={props.onReady}
           />
         </Match>
@@ -116,7 +131,8 @@ export const Item: Component<{
             opts={TextComponent.resolveOptions(
               props.component.opts as TextComponentOptions,
               props.config,
-              props.context
+              props.context,
+              props.globals
             )}
             animations={(props.component as TextComponent).animations}
             style={style}
@@ -133,8 +149,8 @@ export const Item: Component<{
             style={style}
             animations={(props.component as GroupComponent).animations}
             timeline={props.timeline}
-            medias={props.medias}
             resourceManager={props.resourceManager}
+            globals={props.globals}
             onReady={props.onReady}
           />
         </Match>
@@ -144,11 +160,13 @@ export const Item: Component<{
             opts={LayoutComponent.resolveOptions(
               props.component.opts,
               props.config,
-              props.context
+              props.context,
+              props.globals
             )}
             style={style}
             timeline={props.timeline}
             resourceManager={props.resourceManager}
+            globals={props.globals}
             onReady={props.onReady}
           />
         </Match>
@@ -159,13 +177,14 @@ export const Item: Component<{
             opts={ListComponent.resolveOptions(
               props.component.opts,
               props.config,
-              props.context
+              props.context,
+              props.globals
             )}
             component={(props.component as ListComponent).component}
             style={style}
             timeline={props.timeline}
-            medias={props.medias}
             resourceManager={props.resourceManager}
+            globals={props.globals}
             onReady={props.onReady}
           />
         </Match>
@@ -179,11 +198,13 @@ export const Item: Component<{
             opts={ImageCarouselComponent.resolveOptions(
               props.component.opts,
               props.config,
-              props.context
+              props.context,
+              props.globals
             )}
             style={style}
             timeline={props.timeline}
-            medias={props.medias}
+            resourceManager={props.resourceManager}
+            globals={props.globals}
             onReady={props.onReady}
           />
         </Match>

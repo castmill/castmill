@@ -3,6 +3,7 @@ defmodule Castmill.Files.File do
   import Ecto.Changeset
   import Ecto.Query, warn: false
 
+  @derive {Jason.Encoder, only: [:id, :name, :size, :uri, :mimetype, :meta, :inserted_at, :updated_at]}
   schema "files" do
     field :name, :string
     field :size, :integer

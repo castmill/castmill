@@ -3,6 +3,8 @@ import { TemplateConfig, resolveOption } from "./binding";
 import { TemplateComponent, TemplateComponentType } from "./template";
 import { ComponentAnimation, applyAnimations } from "./animation";
 import { BaseComponentProps } from "./interfaces/base-component-props";
+import { ResourceManager } from "@castmill/cache";
+import { PlayerGlobals } from "../../interfaces/player-globals.interface";
 
 export interface ImageComponentOptions {
   url: string;
@@ -18,11 +20,11 @@ export class ImageComponent implements TemplateComponent {
     public opts: ImageComponentOptions,
     public style: JSX.CSSProperties,
     public animations?: ComponentAnimation[],
-    public cond?: Record<string, any>
+    public filter?: Record<string, any>
   ) {}
 
   resolveDuration(medias: { [index: string]: string }): number {
-    return this.opts.duration;
+    return this.opts.duration || 10000;
   }
 
   static fromJSON(json: any): ImageComponent {
@@ -31,33 +33,35 @@ export class ImageComponent implements TemplateComponent {
       json.opts,
       json.style,
       json.animations,
-      json.cond
+      json.filter
     );
   }
 
   static resolveOptions(
     opts: any,
     config: TemplateConfig,
-    context: any
+    context: any,
+    globals: PlayerGlobals
   ): ImageComponentOptions {
     return {
-      url: resolveOption(opts.url, config, context),
-      size: resolveOption(opts.size, config, context),
-      duration: resolveOption(opts.duration, config, context),
+      url: resolveOption(opts.url, config, context, globals),
+      size: resolveOption(opts.size, config, context, globals),
+      duration: resolveOption(opts.duration, config, context, globals),
     };
   }
 }
 
 interface ImageProps extends BaseComponentProps {
   opts: ImageComponentOptions;
-  medias: { [index: string]: string };
+  resourceManager: ResourceManager;
 }
 
 export const Image: Component<ImageProps> = (props: ImageProps) => {
   let imageRef: HTMLDivElement | undefined;
   let cleanUpAnimations: () => void;
 
-  const imageUrl = props.medias[props.opts.url];
+  // const imageUrl = props.medias[props.opts.url];
+  const imageUrl = props.opts.url;
 
   if (!imageUrl) {
     // TODO: Mechanism to report errors without breaking the whole template nor the playlist.
@@ -68,7 +72,6 @@ export const Image: Component<ImageProps> = (props: ImageProps) => {
     {
       width: "100%",
       height: "100%",
-      "background-image": `url(${imageUrl})`,
       "background-size": props.opts.size,
       "background-repeat": "no-repeat",
       "background-position": "center",
@@ -80,13 +83,22 @@ export const Image: Component<ImageProps> = (props: ImageProps) => {
     cleanUpAnimations && cleanUpAnimations();
   });
 
-  onMount(() => {
-    if (imageRef && props.animations) {
-      cleanUpAnimations = applyAnimations(
-        props.timeline,
-        props.animations,
-        imageRef
-      );
+  onMount(async () => {
+    if (imageRef) {
+      if (props.animations) {
+        cleanUpAnimations = applyAnimations(
+          props.timeline,
+          props.animations,
+          imageRef
+        );
+      }
+
+      let imageUrl = await props.resourceManager.getMedia(props.opts.url);
+      if (!imageUrl) {
+        // TODO: report error properly
+        console.error(`Image ${props.opts.url} not found in cached medias`);
+      }
+      imageRef.style.backgroundImage = `url(${imageUrl || props.opts.url})`;
     }
     props.onReady();
   });

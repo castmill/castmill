@@ -10,10 +10,11 @@ import { Timeline, TimelineItem } from "./timeline";
 import { timer } from "../../player";
 import { ComponentAnimation } from "./animation";
 import { BaseComponentProps } from "./interfaces/base-component-props";
+import { PlayerGlobals } from "../../interfaces/player-globals.interface";
 
 export interface LayoutContainer {
   playlist: JsonPlaylist;
-  css: JSX.CSSProperties;
+  style: JSX.CSSProperties;
 }
 
 export interface LayoutComponentOptions {
@@ -30,7 +31,7 @@ export class LayoutComponent implements TemplateComponent {
     public opts: LayoutComponentOptions,
     public style: JSX.CSSProperties,
     public animations?: ComponentAnimation[],
-    public cond?: Record<string, any>
+    public filter?: Record<string, any>
   ) {}
 
   resolveDuration(medias: { [index: string]: string }): number {
@@ -46,22 +47,20 @@ export class LayoutComponent implements TemplateComponent {
       style: JSX.CSSProperties;
       name: string;
       animations?: ComponentAnimation[];
-      cond?: Record<string, any>;
+      filter?: Record<string, any>;
     },
-    resourceManager: ResourceManager
+    resourceManager: ResourceManager,
+    globals: PlayerGlobals
   ): LayoutComponent {
     const layout = new LayoutComponent(
       json.name,
       json.opts,
       json.style,
       json.animations,
-      json.cond
+      json.filter
     );
-    layout.playlists = json.opts.containers.map(
-      (container: LayoutContainer) => {
-        const playlist = Playlist.fromJSON(container.playlist, resourceManager);
-        return playlist;
-      }
+    layout.playlists = json.opts.containers.map((container: LayoutContainer) =>
+      Playlist.fromJSON(container.playlist, resourceManager, globals)
     );
 
     return layout;
@@ -70,16 +69,18 @@ export class LayoutComponent implements TemplateComponent {
   static resolveOptions(
     opts: any,
     config: TemplateConfig,
-    context: any
+    context: any,
+    globals: PlayerGlobals
   ): LayoutComponentOptions {
     return {
-      containers: resolveOption(opts.containers, config, context),
+      containers: resolveOption(opts.containers, config, context, globals),
     };
   }
 }
 interface LayoutProps extends BaseComponentProps {
   opts: LayoutComponentOptions;
   resourceManager: ResourceManager;
+  globals: PlayerGlobals;
 }
 
 export const Layout: Component<LayoutProps> = (props) => {
@@ -111,9 +112,10 @@ export const Layout: Component<LayoutProps> = (props) => {
       {(container, i) => (
         <LayoutContainer
           container={container}
-          style={container.css}
+          style={container.style}
           timeline={timeline}
           resourceManager={props.resourceManager}
+          globals={props.globals}
         />
       )}
     </For>
@@ -123,6 +125,7 @@ export const Layout: Component<LayoutProps> = (props) => {
 const LayoutContainer: Component<{
   container: LayoutContainer;
   resourceManager: ResourceManager;
+  globals: PlayerGlobals;
   style: JSX.CSSProperties;
   timeline: Timeline;
   // onReady: () => void;
@@ -137,7 +140,8 @@ const LayoutContainer: Component<{
 
   const playlist = Playlist.fromJSON(
     props.container.playlist,
-    props.resourceManager
+    props.resourceManager,
+    props.globals
   );
 
   onCleanup(() => {

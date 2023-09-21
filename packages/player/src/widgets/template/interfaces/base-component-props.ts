@@ -4,8 +4,8 @@ import { Timeline } from "../timeline";
 
 export interface BaseComponentProps {
   name?: string;
-  cond?: Record<string, any>;
-  $styles?: { cond: Record<string, any>; style: JSX.CSSProperties }[];
+  filter?: Record<string, any>;
+  $styles?: { filter: Record<string, any>; style: JSX.CSSProperties }[];
   animations?: ComponentAnimation[];
 
   style: JSX.CSSProperties;

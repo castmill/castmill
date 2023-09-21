@@ -107,7 +107,8 @@ export class ResourceManager {
 
   async getData<T = any>(url: string, freshness: number): Promise<T | void> {
     const item = await this.cache.get(url);
-    if (item && Date.now() - item.timestamp < freshness) {
+    const age = item ? Date.now() - item.timestamp : Infinity;
+    if (item && age < freshness) {
       return this.fetchJson(item.cachedUrl) as Promise<T>;
     } else {
       return this.cache.set(url, ItemType.Data, "application/json", {
@@ -116,6 +117,17 @@ export class ResourceManager {
     }
   }
 
+  /**
+   *
+   * getMedia
+   *
+   * Returns the cached media for a given URL. If the media is not cached it will
+   * be cached but no URL will be returned.
+   *
+   * @param url of the media to get.
+   *
+   * @returns
+   */
   async getMedia(url: string): Promise<string | void> {
     // We must not cache data uris
     if (url.startsWith("data:")) {
@@ -127,6 +139,29 @@ export class ResourceManager {
       return this.cache.set(url, ItemType.Media, "media/*");
     }
     return item.cachedUrl;
+  }
+
+  /**
+   *
+   *  cacheMedia
+   *
+   *  Caches a media resource if it is not cached already.
+   *  This is useful when we just want to cache a resource
+   *  without returning it, for example when preloading media resources to be used later.
+   *
+   * @param url
+   */
+  async cacheMedia(url: string): Promise<void> {
+    // We must not cache data uris
+    if (url.startsWith("data:")) {
+      return;
+    }
+
+    if (await this.cache.hasUrl(url)) {
+      return;
+    }
+
+    return this.cache.set(url, ItemType.Media, "media/*");
   }
 
   close() {
@@ -142,7 +177,12 @@ export class ResourceManager {
     options: RequestInit = {}
   ): Promise<any> {
     try {
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      });
       if (response.ok) {
         const data = await response.json();
         return data;
