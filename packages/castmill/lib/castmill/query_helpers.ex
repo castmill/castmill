@@ -1,5 +1,6 @@
 defmodule Castmill.QueryHelpers do
   import Ecto.Query, warn: false
+
   def where_name_like(query, nil) do
     query
   end

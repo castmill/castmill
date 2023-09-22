@@ -13,13 +13,16 @@ defmodule Castmill.Resources.Playlist do
     # volume, loop, aspect ratio, auto_zoom,
     field :settings, :map
 
-    belongs_to :organization, Castmill.Organizations.Organization, foreign_key: :organization_id, type: Ecto.UUID
+    belongs_to :organization, Castmill.Organizations.Organization,
+      foreign_key: :organization_id,
+      type: Ecto.UUID
+
     belongs_to :resource, Castmill.Resources.Resource, foreign_key: :resource_id
 
     many_to_many :items,
-      Castmill.Widgets.WidgetConfig,
-      join_through: "playlists_items",
-      on_replace: :delete
+                 Castmill.Widgets.WidgetConfig,
+                 join_through: "playlists_items",
+                 on_replace: :delete
 
     timestamps()
   end

@@ -19,7 +19,7 @@ defmodule Castmill.Repo.Migrations.CreateWidgets do
       add :small_icon, :string
       add :update_granularity, :integer, default: 60
 
-      add :is_system, :boolean, default: :false
+      add :is_system, :boolean, default: false
 
       timestamps()
     end

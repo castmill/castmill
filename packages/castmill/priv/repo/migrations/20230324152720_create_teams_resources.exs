@@ -6,7 +6,10 @@ defmodule Castmill.Repo.Migrations.CreateTeamsResources do
       add :access, {:array, :string}, default: ["read", "write"], null: false
 
       add :team_id, references(:teams, on_delete: :delete_all), null: false, primary_key: true
-      add :resource_id, references(:resources, on_delete: :delete_all), null: false, primary_key: true
+
+      add :resource_id, references(:resources, on_delete: :delete_all),
+        null: false,
+        primary_key: true
 
       timestamps()
     end

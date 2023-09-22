@@ -14,9 +14,8 @@ defmodule CastmillWeb.Endpoint do
   socket "/live", Phoenix.LiveView.Socket, websocket: [connect_info: [session: @session_options]]
 
   # Socket used for real time communication with devices
-  socket "/socket", CastmillWeb.DeviceSocket, websocket: [connect_info:
-    [:peer_data, :trace_context_headers, :x_headers, :uri]
-  ]
+  socket "/socket", CastmillWeb.DeviceSocket,
+    websocket: [connect_info: [:peer_data, :trace_context_headers, :x_headers, :uri]]
 
   # Serve at "/" the static files from "priv/static" directory.
   #

@@ -11,7 +11,8 @@ defmodule Castmill.Repo.Migrations.CreateUsers do
 
       # Normally all users will belong to a network, however it is possible to have users that
       # are not part of any network. This is useful for system administrators.
-      add :network_id, references("networks", column: "id", type: :uuid, on_delete: :delete_all), null: true
+      add :network_id, references("networks", column: "id", type: :uuid, on_delete: :delete_all),
+        null: true
 
       add :meta, :map
 

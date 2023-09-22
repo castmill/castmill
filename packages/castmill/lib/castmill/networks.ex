@@ -62,7 +62,6 @@ defmodule Castmill.Networks do
     |> Repo.aggregate(:count, :id)
   end
 
-
   @doc """
   Gets a single network.
 

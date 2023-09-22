@@ -46,7 +46,10 @@ defmodule CastmillWeb.OrganizationControllerTest do
   describe "update organization" do
     setup [:create_organization]
 
-    test "renders organization when data is valid", %{conn: conn, organization: %Organization{id: id} = organization} do
+    test "renders organization when data is valid", %{
+      conn: conn,
+      organization: %Organization{id: id} = organization
+    } do
       conn = put(conn, ~p"/api/organizations/#{organization}", organization: @update_attrs)
       assert %{"id" => ^id} = json_response(conn, 200)["data"]
 

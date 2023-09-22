@@ -27,7 +27,9 @@ defmodule Castmill.OrganizationsTest do
       network = network_fixture()
       valid_attrs = %{name: "some name", network_id: network.id}
 
-      assert {:ok, %Organization{} = organization} = Organizations.create_organization(valid_attrs)
+      assert {:ok, %Organization{} = organization} =
+               Organizations.create_organization(valid_attrs)
+
       assert organization.name == "some name"
     end
 
@@ -40,14 +42,19 @@ defmodule Castmill.OrganizationsTest do
       organization = organization_fixture(%{network_id: network.id})
       update_attrs = %{name: "some updated name"}
 
-      assert {:ok, %Organization{} = organization} = Organizations.update_organization(organization, update_attrs)
+      assert {:ok, %Organization{} = organization} =
+               Organizations.update_organization(organization, update_attrs)
+
       assert organization.name == "some updated name"
     end
 
     test "update_organization/2 with invalid data returns error changeset" do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
-      assert {:error, %Ecto.Changeset{}} = Organizations.update_organization(organization, @invalid_attrs)
+
+      assert {:error, %Ecto.Changeset{}} =
+               Organizations.update_organization(organization, @invalid_attrs)
+
       assert organization == Organizations.get_organization!(organization.id)
     end
 

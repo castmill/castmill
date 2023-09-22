@@ -3,11 +3,15 @@ defmodule Castmill.Quotas.PlansOrganizations do
   import Ecto.Changeset
   import Ecto.Query, warn: false
 
-  @primary_key(false)
+  @primary_key false
 
   schema "plans_organizations" do
     belongs_to :plan, Castmill.Quotas.Plan
-    belongs_to :organization, Castmill.Organizations.Organization, foreign_key: :organization_id, type: Ecto.UUID, primary_key: true
+
+    belongs_to :organization, Castmill.Organizations.Organization,
+      foreign_key: :organization_id,
+      type: Ecto.UUID,
+      primary_key: true
   end
 
   @doc false

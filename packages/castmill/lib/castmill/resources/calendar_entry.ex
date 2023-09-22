@@ -2,7 +2,16 @@ defmodule Castmill.Resources.CalendarEntry do
   use Ecto.Schema
   import Ecto.Changeset
 
-  @derive {Jason.Encoder, only: [:id, :start, :end, :repeat_weekly_until, :playlist_id, :inserted_at, :updated_at]}
+  @derive {Jason.Encoder,
+           only: [
+             :id,
+             :start,
+             :end,
+             :repeat_weekly_until,
+             :playlist_id,
+             :inserted_at,
+             :updated_at
+           ]}
   schema "calendar_entries" do
     field(:start, :integer)
     field(:end, :integer)

@@ -97,7 +97,6 @@ defmodule CastmillWeb.Live.Admin.DeviceForm do
          |> put_flash(:error, "Pincode has expired. Please try again.")
          |> push_patch(to: socket.assigns.patch)}
 
-
       {:error, :invalid_pincode} ->
         {:noreply,
          socket

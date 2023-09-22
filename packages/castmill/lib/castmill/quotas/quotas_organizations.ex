@@ -3,22 +3,28 @@ defmodule Castmill.Quotas.QuotasOrganizations do
   import Ecto.Changeset
   import Ecto.Query, warn: false
 
-  @primary_key(false)
+  @primary_key false
 
   schema "quotas_organizations" do
     field :max, :integer
-    field :resource, Ecto.Enum, values: [
-      :organizations,
-      :medias,
-      :playlists,
-      :calendars,
-      :calendars_entries,
-      :devices,
-      :users,
-      :teams
-    ], primary_key: true
 
-    belongs_to :organization, Castmill.Organizations.Organization, foreign_key: :organization_id, type: Ecto.UUID, primary_key: true
+    field :resource, Ecto.Enum,
+      values: [
+        :organizations,
+        :medias,
+        :playlists,
+        :calendars,
+        :calendars_entries,
+        :devices,
+        :users,
+        :teams
+      ],
+      primary_key: true
+
+    belongs_to :organization, Castmill.Organizations.Organization,
+      foreign_key: :organization_id,
+      type: Ecto.UUID,
+      primary_key: true
 
     timestamps()
   end

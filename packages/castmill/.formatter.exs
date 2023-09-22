@@ -27,7 +27,7 @@ export_locals_without_parens = [
   field: 5,
   pipe_through: 1,
   live: 2,
-  live: 3,
+  live: 3
 ]
 
 [

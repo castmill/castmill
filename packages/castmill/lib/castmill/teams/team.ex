@@ -9,7 +9,10 @@ defmodule Castmill.Teams.Team do
     belongs_to :organization, Castmill.Organizations.Organization, type: Ecto.UUID
 
     many_to_many :users, Castmill.Accounts.User, join_through: "teams_users", on_replace: :delete
-    many_to_many :resources, Castmill.Accounts.User, join_through: "teams_resources", on_replace: :delete
+
+    many_to_many :resources, Castmill.Accounts.User,
+      join_through: "teams_resources",
+      on_replace: :delete
 
     timestamps()
   end

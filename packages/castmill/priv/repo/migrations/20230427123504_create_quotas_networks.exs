@@ -6,7 +6,10 @@ defmodule Castmill.Repo.Migrations.CreateQuotasNetworks do
       add :max, :integer
 
       add :resource, :string, primary_key: true
-      add :network_id, references(:networks, type: :uuid, on_delete: :delete_all), null: false, primary_key: true
+
+      add :network_id, references(:networks, type: :uuid, on_delete: :delete_all),
+        null: false,
+        primary_key: true
 
       timestamps()
     end
