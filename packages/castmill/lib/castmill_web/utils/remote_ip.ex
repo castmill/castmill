@@ -2,7 +2,8 @@
 defmodule Utils.RemoteIp do
   @spec get(Plug.Conn.t()) :: binary()
   def get(conn) do
-    forwarded_for = conn
+    forwarded_for =
+      conn
       |> Plug.Conn.get_req_header("x-forwarded-for")
       |> List.first()
 

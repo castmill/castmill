@@ -30,7 +30,6 @@ defmodule Castmill.Accounts do
   end
 
   def count_users(%{search: search}) do
-
     User.base_query()
     |> QueryHelpers.where_name_like(search)
     |> Repo.aggregate(:count, :id)

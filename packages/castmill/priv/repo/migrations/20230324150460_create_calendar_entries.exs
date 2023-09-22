@@ -7,8 +7,13 @@ defmodule Castmill.Repo.Migrations.CreateCalendarEntries do
       add :end, :bigint
       add :repeat_weekly_until, :date, null: true
 
-      add :calendar_id, references("calendars", column: "id", type: :integer, on_delete: :delete_all), null: false
-      add :playlist_id, references("playlists", column: "id", type: :integer, on_delete: :delete_all), null: false
+      add :calendar_id,
+          references("calendars", column: "id", type: :integer, on_delete: :delete_all),
+          null: false
+
+      add :playlist_id,
+          references("playlists", column: "id", type: :integer, on_delete: :delete_all),
+          null: false
 
       timestamps()
     end

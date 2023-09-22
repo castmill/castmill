@@ -29,7 +29,9 @@ defmodule CastmillWeb.Live.Admin.Table do
         </:action>
         <:action :let={row}>
           <.link
-            phx-click={JS.push("delete", value: %{id: row.id, resource: @resource}) |> hide("##{row.id}")}
+            phx-click={
+              JS.push("delete", value: %{id: row.id, resource: @resource}) |> hide("##{row.id}")
+            }
             data-confirm="Are you sure?"
           >
             Delete

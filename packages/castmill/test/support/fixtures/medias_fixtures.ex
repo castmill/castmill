@@ -12,9 +12,10 @@ defmodule Castmill.MediasFixtures do
       attrs
       |> Enum.into(%{
         name: "Hangar 42",
-        mimetype: "video/mp4",
+        mimetype: "video/mp4"
       })
       |> Castmill.Resources.create_media()
-      media
+
+    media
   end
 end

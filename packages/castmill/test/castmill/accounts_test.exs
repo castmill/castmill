@@ -17,12 +17,14 @@ defmodule Castmill.AccountsTest do
 
       {:ok, fetched_user} = Accounts.get_user_by_access_token(access_token.secret, "192.168.1.2")
 
-      assert fetched_user == Map.merge(user, %{is_root: :false})
+      assert fetched_user == Map.merge(user, %{is_root: false})
     end
 
     test "get_access_token!/1 returns the access_token with given id" do
       user = user_fixture()
-      access_token = access_token_fixture(%{secret: "some secret", user_id: user.id, is_root: :true})
+
+      access_token =
+        access_token_fixture(%{secret: "some secret", user_id: user.id, is_root: true})
 
       fetched_access_token = Accounts.get_access_token!(access_token.id)
       assert fetched_access_token.secret == nil
@@ -35,10 +37,10 @@ defmodule Castmill.AccountsTest do
       user = user_fixture()
       access_token = access_token_fixture(%{secret: "some secret", user_id: user.id})
 
-      ip =  "192.168.1.2"
+      ip = "192.168.1.2"
       {:ok, fetched_user} = Accounts.get_user_by_access_token(access_token.secret, ip)
 
-      assert fetched_user == Map.merge(user, %{is_root: :false})
+      assert fetched_user == Map.merge(user, %{is_root: false})
 
       fetched_access_token = Accounts.get_access_token!(access_token.id)
 
@@ -48,10 +50,11 @@ defmodule Castmill.AccountsTest do
 
     test "create_access_token/1 with valid data creates a access_token" do
       user = user_fixture()
+
       valid_attrs = %{
         secret: "some secret",
         user_id: user.id,
-        is_root: :true
+        is_root: true
       }
 
       assert {:ok, %AccessToken{} = access_token} = Accounts.create_access_token(valid_attrs)

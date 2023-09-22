@@ -9,9 +9,10 @@ defmodule Castmill.TeamsFixtures do
     {:ok, team} =
       attrs
       |> Enum.into(%{
-        name: "Core Team",
+        name: "Core Team"
       })
       |> Castmill.Teams.create_team()
+
     team
   end
 end

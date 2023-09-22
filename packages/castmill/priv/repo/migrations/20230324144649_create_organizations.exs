@@ -12,8 +12,11 @@ defmodule Castmill.Repo.Migrations.CreateOrganizations do
       add :postal_code, :string
       add :email, :string
 
-      add :organization_id, references("organizations", column: "id", type: :uuid, on_delete: :delete_all)
-      add :network_id, references("networks", column: "id", type: :uuid, on_delete: :delete_all), null: false
+      add :organization_id,
+          references("organizations", column: "id", type: :uuid, on_delete: :delete_all)
+
+      add :network_id, references("networks", column: "id", type: :uuid, on_delete: :delete_all),
+        null: false
 
       add :meta, :map
 

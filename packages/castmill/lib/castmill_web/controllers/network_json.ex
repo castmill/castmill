@@ -22,7 +22,7 @@ defmodule CastmillWeb.NetworkJSON do
       copyright: network.copyright,
       email: network.email,
       logo: network.logo,
-      domain: network.domain,
+      domain: network.domain
     }
   end
 end

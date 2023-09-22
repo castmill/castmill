@@ -41,7 +41,7 @@ defmodule CastmillWeb.DeviceJSON do
   defp data(%Calendar{} = calendar) do
     %{
       id: calendar.id,
-      name: calendar.name,
+      name: calendar.name
     }
   end
 end

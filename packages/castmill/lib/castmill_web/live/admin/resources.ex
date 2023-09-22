@@ -22,7 +22,7 @@ defmodule CastmillWeb.Live.Admin.Resources do
       |> assign(:options, %{
         page: 1,
         page_size: 10,
-        search: "",
+        search: ""
       })
       |> assign(:form_module, CastmillWeb.Live.Admin.NetworkForm)
 
@@ -218,7 +218,7 @@ defmodule CastmillWeb.Live.Admin.Resources do
       }
     ]
 
-    socket = handle_resource("Playlist", params, socket);
+    socket = handle_resource("Playlist", params, socket)
 
     {:noreply,
      socket
@@ -243,7 +243,7 @@ defmodule CastmillWeb.Live.Admin.Resources do
       }
     ]
 
-    socket = handle_resource("Media", params, socket);
+    socket = handle_resource("Media", params, socket)
 
     {:noreply,
      socket
@@ -276,10 +276,7 @@ defmodule CastmillWeb.Live.Admin.Resources do
       </.header>
 
       <div class="mt-8 mb-4">
-        <.search
-          placeholder="Search"
-          value={@options.search}
-        />
+        <.search placeholder="Search" value={@options.search} />
       </div>
       <.admin_table
         rows={@rows}
@@ -288,11 +285,7 @@ defmodule CastmillWeb.Live.Admin.Resources do
         base_url={~p"/admin/#{@selected_link}"}
       />
 
-      <.pagination
-          selected_link={@selected_link}
-          total_items={@total_items}
-          options={@options}
-      />
+      <.pagination selected_link={@selected_link} total_items={@total_items} options={@options} />
     </div>
     <.modal
       :if={@live_action in [:new, :edit]}
@@ -404,41 +397,57 @@ defmodule CastmillWeb.Live.Admin.Resources do
 
   # Select rows for a given resource
   defp select_rows(resource_name, query_params) do
-
     case resource_name do
-      "Media" -> %{
+      "Media" ->
+        %{
           rows: Resources.list_resources(Castmill.Resources.Media, query_params),
           count: Resources.count_resources(Castmill.Resources.Media, query_params)
-      }
-      "Playlist" -> %{
+        }
+
+      "Playlist" ->
+        %{
           rows: Resources.list_resources(Castmill.Resources.Playlist, query_params),
           count: Resources.count_resources(Castmill.Resources.Playlist, query_params)
-      }
-      "Calendar" -> %{
+        }
+
+      "Calendar" ->
+        %{
           rows: Resources.list_resources(Castmill.Resources.Calendar, query_params),
           count: Resources.count_resources(Castmill.Resources.Calendar, query_params)
-      }
-      "Device" -> %{
+        }
+
+      "Device" ->
+        %{
           rows: Devices.list_devices(query_params),
           count: Devices.count_devices(query_params)
-      }
-      "User" -> %{
+        }
+
+      "User" ->
+        %{
           rows: Accounts.list_users(query_params),
           count: Accounts.count_users(query_params)
-      }
-      "Team" -> %{
+        }
+
+      "Team" ->
+        %{
           rows: Teams.list_teams(query_params),
           count: Teams.count_teams(query_params)
-      }
-      "Organization" -> %{
+        }
+
+      "Organization" ->
+        %{
           rows: Organizations.list_organizations(query_params),
           count: Organizations.count_organizations(query_params)
-      }
-      "Network" -> %{
+        }
+
+      "Network" ->
+        %{
           rows: Networks.list_networks(query_params),
           count: Networks.count_networks(query_params)
-      }
-      _ -> []
+        }
+
+      _ ->
+        []
     end
   end
 
@@ -455,10 +464,10 @@ defmodule CastmillWeb.Live.Admin.Resources do
     # select the rows from the database depending on the resource name
     %{rows: rows, count: total_items} = select_rows(resource_name, options)
 
-     socket
-     |> assign(:rows, rows)
-     |> assign(:total_items, total_items)
-     |> assign(:resource_name, resource_name)
-     |> assign(:options, options)
+    socket
+    |> assign(:rows, rows)
+    |> assign(:total_items, total_items)
+    |> assign(:resource_name, resource_name)
+    |> assign(:options, options)
   end
 end

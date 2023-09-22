@@ -30,6 +30,7 @@ defmodule Castmill.OrganizationsFixtures do
         name: "some name"
       })
       |> Castmill.Organizations.create_user()
+
     user
   end
 end

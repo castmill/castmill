@@ -3,20 +3,23 @@ defmodule Castmill.Quotas.PlansQuotas do
   import Ecto.Changeset
   import Ecto.Query, warn: false
 
-  @primary_key(false)
+  @primary_key false
 
   schema "plans_quotas" do
     field :max, :integer
-    field :resource, Ecto.Enum, values: [
-      :organizations,
-      :medias,
-      :playlists,
-      :calendars,
-      :calendars_entries,
-      :devices,
-      :users,
-      :teams
-    ], primary_key: true
+
+    field :resource, Ecto.Enum,
+      values: [
+        :organizations,
+        :medias,
+        :playlists,
+        :calendars,
+        :calendars_entries,
+        :devices,
+        :users,
+        :teams
+      ],
+      primary_key: true
 
     belongs_to :plan, Castmill.Quotas.Plan, primary_key: true
   end
