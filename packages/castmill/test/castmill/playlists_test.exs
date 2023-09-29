@@ -331,8 +331,6 @@ defmodule Castmill.PlaylistsTest do
 
       assert Files.add_file_to_media(file.id, media.id, "default")
 
-      media = Repo.preload(media, :files)
-
       {:ok, _} =
         Resources.insert_item_into_playlist(playlist.id, nil, widget.id, 0, 1231, %{
           "image" => "#{media.id}"

@@ -31,13 +31,7 @@ defmodule Castmill.Resources.Media do
 
     belongs_to(:resource, Castmill.Resources.Resource, foreign_key: :resource_id)
 
-    many_to_many(
-      :files,
-      Castmill.Files.FilesMedias,
-      join_through: "files_medias",
-      join_keys: [media_id: :id, file_id: :id],
-      on_replace: :delete
-    )
+    has_many(:files, Castmill.Files.FilesMedias)
 
     timestamps()
   end
