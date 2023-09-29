@@ -185,7 +185,6 @@ defmodule CastmillWeb.ResourceController do
       nil ->
         conn
         |> put_status(:not_found)
-<<<<<<< HEAD
         |> Phoenix.Controller.json(%{message: "Playlist not found"})
         |> halt()
 
