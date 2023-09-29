@@ -18,22 +18,25 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
 
     team = team_fixture(%{organization_id: organization.id})
     {:ok, _result} = Teams.add_user_to_team(team.id, user.id, :member)
-    
-    access_token = access_token_fixture(%{secret: "testuser:testpass", user_id: user.id, is_root: true})
 
-    conn = conn
-           |> put_req_header("accept", "application/json")
-           |> put_req_header("authorization", "Bearer #{access_token.secret}")
+    access_token =
+      access_token_fixture(%{secret: "testuser:testpass", user_id: user.id, is_root: true})
+
+    conn =
+      conn
+      |> put_req_header("accept", "application/json")
+      |> put_req_header("authorization", "Bearer #{access_token.secret}")
 
     {:ok, conn: conn, user: user, organization: organization, team: team}
   end
 
   describe "list playlists" do
     test "lists all playlists", %{conn: conn, organization: organization, team: team} do
-      playlist1 = playlist_fixture(%{
-        organization_id: organization.id,
-        name: "playlist1"
-      })
+      playlist1 =
+        playlist_fixture(%{
+          organization_id: organization.id,
+          name: "playlist1"
+        })
 
       {:ok, _result} = Teams.add_resource_to_team(team.id, playlist1.id, :playlist, [:read])
 
@@ -41,13 +44,13 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
       response = json_response(conn, 200)
 
       assert %{
-        "data" => [
-          %{
-            "name" => "playlist1"
-          }
-        ],
-        "count" => 1
-      } = response
+               "data" => [
+                 %{
+                   "name" => "playlist1"
+                 }
+               ],
+               "count" => 1
+             } = response
     end
 
     test "lists playlists with pagination", %{conn: conn, organization: organization} do
@@ -60,18 +63,24 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
       end
 
       # Request the first page with 2 items per page
-      conn = get(conn, "/api/organizations/#{organization.id}/playlists", %{page: 1, page_size: 2})
+      conn =
+        get(conn, "/api/organizations/#{organization.id}/playlists", %{page: 1, page_size: 2})
+
       response = json_response(conn, 200)
 
       # Assert the first page contains the first 2 items
-      assert %{"data" => [%{"name" => "playlist1"}, %{"name" => "playlist2"}], "count" => 5} = response
+      assert %{"data" => [%{"name" => "playlist1"}, %{"name" => "playlist2"}], "count" => 5} =
+               response
 
       # Request the second page
-      conn = get(conn, "/api/organizations/#{organization.id}/playlists", %{page: 2, page_size: 2})
+      conn =
+        get(conn, "/api/organizations/#{organization.id}/playlists", %{page: 2, page_size: 2})
+
       response = json_response(conn, 200)
 
       # Assert the second page contains the next 2 items
-      assert %{"data" => [%{"name" => "playlist3"}, %{"name" => "playlist4"}], "count" => 5} = response
+      assert %{"data" => [%{"name" => "playlist3"}, %{"name" => "playlist4"}], "count" => 5} =
+               response
     end
 
     test "searches playlists by name", %{conn: conn, organization: organization} do
@@ -80,6 +89,7 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
         organization_id: organization.id,
         name: "rock playlist"
       })
+
       playlist_fixture(%{
         organization_id: organization.id,
         name: "pop playlist"
@@ -93,7 +103,10 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
       assert %{"data" => [%{"name" => "rock playlist"}], "count" => 1} = response
     end
 
-    test "searches playlists by name and applies pagination", %{conn: conn, organization: organization} do
+    test "searches playlists by name and applies pagination", %{
+      conn: conn,
+      organization: organization
+    } do
       # Create some playlist items with names containing "rock"
       for i <- 1..5 do
         playlist_fixture(%{
@@ -111,18 +124,36 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
       end
 
       # Search for playlists with the term "rock" and request the first page with 2 items per page
-      conn = get(conn, "/api/organizations/#{organization.id}/playlists", %{search: "rock", page: 1, page_size: 2})
+      conn =
+        get(conn, "/api/organizations/#{organization.id}/playlists", %{
+          search: "rock",
+          page: 1,
+          page_size: 2
+        })
+
       response = json_response(conn, 200)
 
       # Assert the first page contains the first 2 "rock" playlist items
-      assert %{"data" => [%{"name" => "rock playlist1"}, %{"name" => "rock playlist2"}], "count" => 5} = response
+      assert %{
+               "data" => [%{"name" => "rock playlist1"}, %{"name" => "rock playlist2"}],
+               "count" => 5
+             } = response
 
       # Request the second page with the same search term
-      conn = get(conn, "/api/organizations/#{organization.id}/playlists", %{search: "rock", page: 2, page_size: 2})
+      conn =
+        get(conn, "/api/organizations/#{organization.id}/playlists", %{
+          search: "rock",
+          page: 2,
+          page_size: 2
+        })
+
       response = json_response(conn, 200)
 
       # Assert the second page contains the next 2 "rock" playlist items
-      assert %{"data" => [%{"name" => "rock playlist3"}, %{"name" => "rock playlist4"}], "count" => 5} = response
+      assert %{
+               "data" => [%{"name" => "rock playlist3"}, %{"name" => "rock playlist4"}],
+               "count" => 5
+             } = response
     end
   end
 
@@ -138,24 +169,29 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
       response = json_response(conn, 201)
 
       assert %{
-        "data" => %{
-          "name" => "playlist name"
-        }
-      } = response
+               "data" => %{
+                 "name" => "playlist name"
+               }
+             } = response
     end
 
-    test "fails to create a new playlist when data is incomplete", %{conn: conn, organization: organization} do
-    # Assuming the name is required but missing here
+    test "fails to create a new playlist when data is incomplete", %{
+      conn: conn,
+      organization: organization
+    } do
+      # Assuming the name is required but missing here
       incomplete_playlist_params = %{
         "playlist" => %{
           "description" => "A collection of videos"
         }
       }
 
-      conn = post(conn, "/api/organizations/#{organization.id}/playlists", incomplete_playlist_params)
+      conn =
+        post(conn, "/api/organizations/#{organization.id}/playlists", incomplete_playlist_params)
+
       response = json_response(conn, 422)
 
-    # Adjust the assertion based on your error response structure
+      # Adjust the assertion based on your error response structure
       assert response["errors"] != nil
     end
   end
@@ -163,10 +199,11 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
   describe "delete playlist" do
     test "deletes an existing playlist successfully", %{conn: conn, organization: organization} do
       # Assuming the playlist object is created earlier
-      playlist = playlist_fixture(%{
-        organization_id: organization.id,
-        name: "playlist1"
-      })
+      playlist =
+        playlist_fixture(%{
+          organization_id: organization.id,
+          name: "playlist1"
+        })
 
       # Deleting the playlist object
       conn = delete(conn, "/api/organizations/#{organization.id}/playlists/#{playlist.id}")
@@ -191,7 +228,10 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
   end
 
   describe "full playlist lifecycle" do
-    test "creates and retrieves a new playlist from the list", %{conn: conn, organization: organization} do
+    test "creates and retrieves a new playlist from the list", %{
+      conn: conn,
+      organization: organization
+    } do
       # Creating a playlist object
       playlist_params = %{
         "playlist" => %{
@@ -203,25 +243,25 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
       response = json_response(conn, 201)
 
       assert %{
-        "data" => %{
-          "name" => "Top Hits",
-          "id" => id
-        }
-      } = response
+               "data" => %{
+                 "name" => "Top Hits",
+                 "id" => id
+               }
+             } = response
 
       # Retrieving the created playlist object from the list
       conn = get(conn, "/api/organizations/#{organization.id}/playlists")
       retrieval_response = json_response(conn, 200)
 
       assert %{
-        "data" => [
-          %{
-            "name" => "Top Hits",
-            "id" => ^id
-          }
-        ],
-        "count" => 1
-      } = retrieval_response
+               "data" => [
+                 %{
+                   "name" => "Top Hits",
+                   "id" => ^id
+                 }
+               ],
+               "count" => 1
+             } = retrieval_response
     end
   end
 end
