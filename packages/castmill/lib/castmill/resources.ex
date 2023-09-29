@@ -117,19 +117,23 @@ defmodule Castmill.Resources do
       |> where(id: ^id)
       |> Repo.one()
 
-    items_query =
-      from(pi in Castmill.Resources.PlaylistItem,
-        where: pi.playlist_id == ^id,
-        join: wd in assoc(pi, :widget_config),
-        join: w in assoc(wd, :widget),
-        preload: [widget_config: {wd, widget: w}]
-      )
+    if playlist == nil do
+      nil
+    else
+      items_query =
+        from(pi in Castmill.Resources.PlaylistItem,
+          where: pi.playlist_id == ^id,
+          join: wd in assoc(pi, :widget_config),
+          join: w in assoc(wd, :widget),
+          preload: [widget_config: {wd, widget: w}]
+        )
 
-    items =
-      Repo.all(items_query)
-      |> Enum.map(&transform_item/1)
+      items =
+        Repo.all(items_query)
+        |> Enum.map(&transform_item/1)
 
-    %{playlist | items: items}
+      %{playlist | items: items}
+    end
   end
 
   defp transform_item(item) do
