@@ -246,17 +246,4 @@ defmodule CastmillWeb.ResourceController do
         end
     end
   end
-
-  # def delete(conn, %{
-  #   "resources" => "playlists",
-  #   "id" => id}
-  # ) do
-  #       |> Phoenix.Controller.json(%{errors: ["Playlist not found"]})
-  #       |> halt()
-  #     playlist ->
-  #       with {:ok, %Playlist{}} <- Castmill.Resources.delete_playlist(playlist) do
-  #         send_resp(conn, :no_content, "")
-  #       else
-  #         {:error, reason} ->
-  #           send_resp(conn, 500, "Error deleting playlist: #{inspect(reason)}")
 end
