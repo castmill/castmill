@@ -176,6 +176,27 @@ defmodule CastmillWeb.ResourceController do
     end
   end
 
+  def delete(conn, %{
+        "resources" => "calendars",
+        "id" => id
+      }) do
+    case Castmill.Resources.get_calendar(id) do
+      nil ->
+        conn
+        |> put_status(:not_found)
+        |> Phoenix.Controller.json(%{errors: ["Calendar not found"]})
+        |> halt()
+
+      calendar ->
+        with {:ok, %Calendar{}} <- Castmill.Resources.delete_calendar(calendar) do
+          send_resp(conn, :no_content, "")
+        else
+          {:error, reason} ->
+            send_resp(conn, 500, "Error deleting calendar: #{inspect(reason)}")
+        end
+    end
+  end
+
   def show(conn, %{"resources" => "medias", "id" => id}) do
     case Castmill.Resources.get_media(id) do
       nil ->
