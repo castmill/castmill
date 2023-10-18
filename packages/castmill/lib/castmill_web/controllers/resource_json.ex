@@ -3,6 +3,7 @@ defmodule CastmillWeb.ResourceJSON do
   alias Castmill.Resources.Playlist
   alias Castmill.Resources.Calendar
   alias Castmill.Resources.CalendarEntry
+  alias Castmill.Devices.Device
 
   @doc """
   Renders a list of medias.
@@ -125,6 +126,16 @@ defmodule CastmillWeb.ResourceJSON do
       start: entry.start,
       end: entry.end,
       playlist_id: entry.playlist_id
+    }
+  end
+
+  defp data(%Device{} = device) do
+    %{
+      id: device.id,
+      name: device.name,
+      timezone: device.timezone,
+      hardware_id: device.hardware_id,
+      last_ip: device.last_ip
     }
   end
 end
