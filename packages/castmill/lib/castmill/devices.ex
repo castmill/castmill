@@ -48,6 +48,18 @@ defmodule Castmill.Devices do
   end
 
   @doc """
+    Gets a device
+  """
+  def get_device(id) when is_binary(id) and byte_size(id) == 36 do
+    device =
+      Device
+      |> where(id: ^id)
+      |> Repo.one()
+  end
+
+  def get_device(_), do: nil
+
+  @doc """
   Returns the list of devices for a given organization.
 
   Excludes token.

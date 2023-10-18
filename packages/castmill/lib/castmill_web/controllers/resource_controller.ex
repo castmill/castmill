@@ -7,6 +7,7 @@ defmodule CastmillWeb.ResourceController do
   alias Castmill.Resources.Calendar
   alias Castmill.Resources.Playlist
   alias Castmill.Resources.CalendarEntry
+  alias Castmill.Devices.Device
 
   action_fallback(CastmillWeb.FallbackController)
 
@@ -196,6 +197,27 @@ defmodule CastmillWeb.ResourceController do
         end
     end
   end
+
+  def delete(conn, %{
+          "resources" => "devices",
+          "id" => id
+        }) do
+      case Castmill.Devices.get_device(id) do
+        nil ->
+          conn
+          |> put_status(:not_found)
+          |> Phoenix.Controller.json(%{errors: ["Device not found"]})
+          |> halt()
+
+        device ->
+          with {:ok, %Device{}} <- Castmill.Devices.delete_device(device) do
+            send_resp(conn, :no_content, "")
+          else
+            {:error, reason} ->
+              send_resp(conn, 500, "Error deleting device: #{inspect(reason)}")
+          end
+      end
+    end
 
   def show(conn, %{"resources" => "medias", "id" => id}) do
     case Castmill.Resources.get_media(id) do
