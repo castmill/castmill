@@ -109,8 +109,8 @@ defmodule CastmillWeb.DeviceController do
   end
 
   def create(conn, %{}) do
-      conn
-      |> put_status(:bad_request)
-      |> json(%{error: "The fields 'name', 'pincode' and 'organization_id' are required"})
+    conn
+    |> put_status(:bad_request)
+    |> json(%{error: "The fields 'name', 'pincode' and 'organization_id' are required"})
   end
 end
