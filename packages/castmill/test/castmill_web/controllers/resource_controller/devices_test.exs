@@ -207,7 +207,12 @@ defmodule CastmillWeb.ResourceController.DevicesTest do
       # Create several devices to test pagination
       for i <- 1..10 do
         padded_i = String.pad_leading("#{i}", 2, "0")
-        device_registration_fixture(%{hardware_id: "hardware#{padded_i}", pincode: "DEADBEEF#{padded_i}"})
+
+        device_registration_fixture(%{
+          hardware_id: "hardware#{padded_i}",
+          pincode: "DEADBEEF#{padded_i}"
+        })
+
         device_params = %{"name" => "device#{padded_i}", "pincode" => "DEADBEEF#{padded_i}"}
         post(conn, "/api/organizations/#{organization.id}/devices", device_params)
       end
@@ -215,7 +220,12 @@ defmodule CastmillWeb.ResourceController.DevicesTest do
       # Create a few other devices that won't match the search term to test search
       for i <- 11..15 do
         padded_i = String.pad_leading("#{i}", 2, "0")
-        device_registration_fixture(%{hardware_id: "other_hardware#{padded_i}", pincode: "BEEFDEAD#{padded_i}"})
+
+        device_registration_fixture(%{
+          hardware_id: "other_hardware#{padded_i}",
+          pincode: "BEEFDEAD#{padded_i}"
+        })
+
         device_params = %{"name" => "other#{padded_i}", "pincode" => "BEEFDEAD#{padded_i}"}
         post(conn, "/api/organizations/#{organization.id}/devices", device_params)
       end
