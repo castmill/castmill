@@ -206,15 +206,17 @@ defmodule CastmillWeb.ResourceController.DevicesTest do
     } do
       # Create several devices to test pagination
       for i <- 1..10 do
-        device_registration_fixture(%{hardware_id: "hardware#{i}", pincode: "DEADBEEF#{i}"})
-        device_params = %{"name" => "device#{i}", "pincode" => "DEADBEEF#{i}"}
+        padded_i = String.pad_leading("#{i}", 2, "0")
+        device_registration_fixture(%{hardware_id: "hardware#{padded_i}", pincode: "DEADBEEF#{padded_i}"})
+        device_params = %{"name" => "device#{padded_i}", "pincode" => "DEADBEEF#{padded_i}"}
         post(conn, "/api/organizations/#{organization.id}/devices", device_params)
       end
 
       # Create a few other devices that won't match the search term to test search
       for i <- 11..15 do
-        device_registration_fixture(%{hardware_id: "other_hardware#{i}", pincode: "BEEFDEAD#{i}"})
-        device_params = %{"name" => "other#{i}", "pincode" => "BEEFDEAD#{i}"}
+        padded_i = String.pad_leading("#{i}", 2, "0")
+        device_registration_fixture(%{hardware_id: "other_hardware#{padded_i}", pincode: "BEEFDEAD#{padded_i}"})
+        device_params = %{"name" => "other#{padded_i}", "pincode" => "BEEFDEAD#{padded_i}"}
         post(conn, "/api/organizations/#{organization.id}/devices", device_params)
       end
 
@@ -231,11 +233,11 @@ defmodule CastmillWeb.ResourceController.DevicesTest do
       # Assert the first page contains the first 5 devices
       assert %{
                "data" => [
-                 %{"name" => "device1"},
-                 %{"name" => "device2"},
-                 %{"name" => "device3"},
-                 %{"name" => "device4"},
-                 %{"name" => "device5"}
+                 %{"name" => "device01"},
+                 %{"name" => "device02"},
+                 %{"name" => "device03"},
+                 %{"name" => "device04"},
+                 %{"name" => "device05"}
                ],
                # Total count of devices matching the search term
                "count" => 10
@@ -254,10 +256,10 @@ defmodule CastmillWeb.ResourceController.DevicesTest do
       # Assert the second page contains the next set of devices
       assert %{
                "data" => [
-                 %{"name" => "device6"},
-                 %{"name" => "device7"},
-                 %{"name" => "device8"},
-                 %{"name" => "device9"},
+                 %{"name" => "device06"},
+                 %{"name" => "device07"},
+                 %{"name" => "device08"},
+                 %{"name" => "device09"},
                  %{"name" => "device10"}
                ],
                # Total count of devices matching the search term remains the same
