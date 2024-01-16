@@ -20,6 +20,7 @@ defmodule Castmill.Accounts do
 
     User.base_query()
     |> QueryHelpers.where_name_like(search)
+    |> Ecto.Query.order_by([d], asc: d.name)
     |> Ecto.Query.limit(^page_size)
     |> Ecto.Query.offset(^offset)
     |> Repo.all()
@@ -30,7 +31,6 @@ defmodule Castmill.Accounts do
   end
 
   def count_users(%{search: search}) do
-
     User.base_query()
     |> QueryHelpers.where_name_like(search)
     |> Repo.aggregate(:count, :id)

@@ -23,7 +23,6 @@ defmodule CastmillWeb.UserController do
   end
 
   def create(conn, %{"user" => user_params, "network_id" => network_id}) do
-
     create_attrs = Map.merge(user_params, %{"network_id" => network_id})
 
     with {:ok, %User{} = user} <- Castmill.Accounts.create_user(create_attrs) do
@@ -46,6 +45,7 @@ defmodule CastmillWeb.UserController do
     network_id = organization.network_id
 
     create_attrs = Map.merge(user, %{"network_id" => network_id})
+
     with {:ok, user} <- Castmill.Accounts.create_user(create_attrs) do
       update(conn, %{"id" => user.id, "access" => access, "organization_id" => organization_id})
     end

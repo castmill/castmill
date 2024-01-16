@@ -3,17 +3,22 @@ defmodule Castmill.Quotas.QuotasNetworks do
   import Ecto.Changeset
   import Ecto.Query, warn: false
 
-  @primary_key(false)
+  @primary_key false
 
   schema "quotas_networks" do
     field :max, :integer
 
-    field :resource, Ecto.Enum, values: [
-      :organizations,
-      :users
-    ], primary_key: true
+    field :resource, Ecto.Enum,
+      values: [
+        :organizations,
+        :users
+      ],
+      primary_key: true
 
-    belongs_to :network, Castmill.Networks.Network, foreign_key: :network_id, type: Ecto.UUID, primary_key: true
+    belongs_to :network, Castmill.Networks.Network,
+      foreign_key: :network_id,
+      type: Ecto.UUID,
+      primary_key: true
 
     timestamps()
   end

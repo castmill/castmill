@@ -75,7 +75,6 @@ defmodule Castmill.QuotasTest do
       Quotas.update_quota_for_network(network.id, :organizations, 10)
       assert Quotas.has_network_enough_quota?(network.id, :organizations, 6) == true
       assert Quotas.has_network_enough_quota?(network.id, :organizations, 10) == true
-
     end
 
     test "add_quota_to_organization/3 overrides a quota for a given organization" do

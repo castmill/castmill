@@ -47,6 +47,7 @@ defmodule Castmill.Organizations do
 
     Organization.base_query()
     |> QueryHelpers.where_name_like(search)
+    |> Ecto.Query.order_by([d], asc: d.name)
     |> Ecto.Query.limit(^page_size)
     |> Ecto.Query.offset(^offset)
     |> Repo.all()

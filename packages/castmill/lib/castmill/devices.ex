@@ -48,6 +48,17 @@ defmodule Castmill.Devices do
   end
 
   @doc """
+    Gets a device
+  """
+  def get_device(id) when is_binary(id) and byte_size(id) == 36 do
+    Device
+    |> where(id: ^id)
+    |> Repo.one()
+  end
+
+  def get_device(_), do: nil
+
+  @doc """
   Returns the list of devices for a given organization.
 
   Excludes token.
@@ -68,6 +79,7 @@ defmodule Castmill.Devices do
     Device.base_query()
     |> Organization.where_org_id(organization_id)
     |> QueryHelpers.where_name_like(search)
+    |> Ecto.Query.order_by([d], asc: d.name)
     |> Ecto.Query.limit(^page_size)
     |> Ecto.Query.offset(^offset)
     |> Repo.all()

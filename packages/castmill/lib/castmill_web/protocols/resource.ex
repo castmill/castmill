@@ -6,5 +6,5 @@ defprotocol Castmill.Protocol.Resource do
 end
 
 defimpl Castmill.Protocol.Resource, for: Any do
-   def type(_value), do: "unknown"
+  def type(_value), do: "unknown"
 end

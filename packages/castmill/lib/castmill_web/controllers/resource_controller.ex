@@ -7,6 +7,7 @@ defmodule CastmillWeb.ResourceController do
   alias Castmill.Resources.Calendar
   alias Castmill.Resources.Playlist
   alias Castmill.Resources.CalendarEntry
+  alias Castmill.Devices.Device
 
   action_fallback(CastmillWeb.FallbackController)
 
@@ -151,6 +152,69 @@ defmodule CastmillWeb.ResourceController do
         else
           {:error, reason} ->
             send_resp(conn, 500, "Error deleting media: #{inspect(reason)}")
+        end
+    end
+  end
+
+  def delete(conn, %{
+        "resources" => "playlists",
+        "id" => id
+      }) do
+    case Castmill.Resources.get_playlist(id) do
+      nil ->
+        conn
+        |> put_status(:not_found)
+        |> Phoenix.Controller.json(%{errors: ["Playlist not found"]})
+        |> halt()
+
+      playlist ->
+        with {:ok, %Playlist{}} <- Castmill.Resources.delete_playlist(playlist) do
+          send_resp(conn, :no_content, "")
+        else
+          {:error, reason} ->
+            send_resp(conn, 500, "Error deleting playlist: #{inspect(reason)}")
+        end
+    end
+  end
+
+  def delete(conn, %{
+        "resources" => "calendars",
+        "id" => id
+      }) do
+    case Castmill.Resources.get_calendar(id) do
+      nil ->
+        conn
+        |> put_status(:not_found)
+        |> Phoenix.Controller.json(%{errors: ["Calendar not found"]})
+        |> halt()
+
+      calendar ->
+        with {:ok, %Calendar{}} <- Castmill.Resources.delete_calendar(calendar) do
+          send_resp(conn, :no_content, "")
+        else
+          {:error, reason} ->
+            send_resp(conn, 500, "Error deleting calendar: #{inspect(reason)}")
+        end
+    end
+  end
+
+  def delete(conn, %{
+        "resources" => "devices",
+        "id" => id
+      }) do
+    case Castmill.Devices.get_device(id) do
+      nil ->
+        conn
+        |> put_status(:not_found)
+        |> Phoenix.Controller.json(%{errors: ["Device not found"]})
+        |> halt()
+
+      device ->
+        with {:ok, %Device{}} <- Castmill.Devices.delete_device(device) do
+          send_resp(conn, :no_content, "")
+        else
+          {:error, reason} ->
+            send_resp(conn, 500, "Error deleting device: #{inspect(reason)}")
         end
     end
   end

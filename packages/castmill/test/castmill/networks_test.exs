@@ -31,7 +31,7 @@ defmodule Castmill.NetworksTest do
       }
 
       assert {:ok, %Network{} = network} = Networks.create_network(valid_attrs)
-      assert network.copyright ==  valid_attrs.copyright
+      assert network.copyright == valid_attrs.copyright
       assert network.domain == valid_attrs.domain
       assert network.email == valid_attrs.email
       assert network.logo == valid_attrs.logo
@@ -44,6 +44,7 @@ defmodule Castmill.NetworksTest do
 
     test "update_network/2 with valid data updates the network" do
       network = network_fixture()
+
       update_attrs = %{
         copyright: "some updated copyright",
         domain: "some updated domain",

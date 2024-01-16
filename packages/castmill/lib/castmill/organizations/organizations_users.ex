@@ -2,12 +2,15 @@ defmodule Castmill.Organizations.OrganizationsUsers do
   use Ecto.Schema
   import Ecto.Changeset
 
-  @primary_key(false)
+  @primary_key false
 
   schema "organizations_users" do
     field :role, Ecto.Enum, values: [:admin, :member, :guest]
 
-    belongs_to :organization, Castmill.Organizations.Organization, type: Ecto.UUID, primary_key: true
+    belongs_to :organization, Castmill.Organizations.Organization,
+      type: Ecto.UUID,
+      primary_key: true
+
     belongs_to :user, Castmill.Accounts.User, type: Ecto.UUID, primary_key: true
 
     timestamps()

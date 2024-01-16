@@ -65,7 +65,7 @@ defmodule CastmillWeb.Live.Admin.Sidebar do
         <div>
           <ul class="space-y-2 font-medium">
             <li :for={link <- @links}>
-            <!-- Cannot use patch here, because it will not work with streams, yet. -->
+              <!-- Cannot use patch here, because it will not work with streams, yet. -->
               <.link href={~p"/admin/#{link.href}"} class={active_link(link, @selected_link)}>
                 <.icon name={link.icon} class="h-4 w-4" />
 

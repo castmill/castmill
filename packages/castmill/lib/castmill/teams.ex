@@ -36,7 +36,12 @@ defmodule Castmill.Teams do
       [%Network{}, ...]
 
   """
-  def list_teams(%{organization_id: organization_id, search: search, page: page, page_size: page_size}) do
+  def list_teams(%{
+        organization_id: organization_id,
+        search: search,
+        page: page,
+        page_size: page_size
+      }) do
     offset = if page_size == nil, do: 0, else: max((page - 1) * page_size, 0)
 
     Team.base_query()
@@ -166,6 +171,7 @@ defmodule Castmill.Teams do
           |> Repo.insert()
         end)
       )
+
     {:ok, team_resource}
   end
 

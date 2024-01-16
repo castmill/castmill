@@ -5,7 +5,9 @@ defmodule Castmill.Resources.Resource do
   # Todo maybe change the name to "shareable-resource" to make more explicit the
   # reason we need it.
   schema "resources" do
-    field :type, Ecto.Enum, values: [:playlist, :widget, :media, :calendar, :device], default: :playlist
+    field :type, Ecto.Enum,
+      values: [:playlist, :widget, :media, :calendar, :device],
+      default: :playlist
 
     has_one :media, Castmill.Resources.Media
     has_one :playlist, Castmill.Resources.Playlist

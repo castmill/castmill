@@ -12,10 +12,10 @@ defmodule Castmill.PlaylistsFixtures do
       attrs
       |> Enum.into(%{
         name: "Hangar 42",
-        settings: %{"opts" => "test"},
+        settings: %{"opts" => "test"}
       })
       |> Castmill.Resources.create_playlist()
 
-      playlist
+    playlist
   end
 end
