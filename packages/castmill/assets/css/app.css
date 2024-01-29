@@ -1,6 +1,7 @@
 @import "tailwindcss/base";
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
+@import "@castmill/device/dist/style.css"; 
 
 /* This file is for your main application CSS */
 .title {
