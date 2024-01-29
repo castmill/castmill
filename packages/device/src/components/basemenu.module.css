@@ -1,0 +1,44 @@
+.menu {
+  background-color: #969696;
+  color: #111;
+  position: absolute;
+  width: 300px;
+  text-align: left;
+}
+
+.hidden {
+  display: none;
+}
+
+.menuHead {
+  background-color: #a7a7a7;
+  color: #111;
+  padding: 5px;
+  cursor: pointer;
+}
+
+.menu h1 {
+  text-align: center;
+  font-size: 24px;
+}
+
+.menuItem {
+  padding: 5px;
+  cursor: pointer;
+  border-bottom: 1px solid #a7a7a7;
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.selected {
+  background: #2980B9;
+  color: #eee;
+}
+
+.active {
+  background: #59B0E9;
+}
