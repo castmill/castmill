@@ -1,5 +1,12 @@
-import { createSignal, onMount, type JSX } from 'solid-js';
-import { createResource } from 'solid-js';
+import {
+  createSignal,
+  createResource,
+  onMount,
+  onCleanup,
+  Show,
+  type JSX,
+  type Component
+} from 'solid-js';
 import styles from "./basemenu.module.css";
 
 const MENU_TIMEOUT = 10 * 1000;
@@ -31,7 +38,7 @@ interface SubmenuMenuEntry {
 export type MenuEntry = ActionMenuEntry | CheckboxMenuEntry | SubmenuMenuEntry;
 
 // internal item interface
-interface IItem {
+interface MenuRowItem {
   offset: number;
   id: string;
   content: JSX.Element;
@@ -47,12 +54,12 @@ const isSubmenuMenuEntry = (entry: MenuEntry): entry is SubmenuMenuEntry =>
   entry.type === 'submenu';
 
 // BaseMenu component props
-interface IBaseMenuProps {
+interface BaseMenuProps {
   header: JSX.Element;
   entries: MenuEntry[];
 }
 
-export function BaseMenu({header, entries}: IBaseMenuProps) {
+export const BaseMenu: Component<BaseMenuProps> = ({header, entries}) => {
   // get initial checkbox states from menu entries
   const getCheckbosState = (menuEntries: MenuEntry[]) => {
     return menuEntries.reduce((acc: Record<string, boolean>, entry) => {
@@ -110,7 +117,7 @@ export function BaseMenu({header, entries}: IBaseMenuProps) {
 
   // create items from menu entries
   const getItems = (menuEntries: MenuEntry[], offset = 0) => {
-    const items: IItem[] = [];
+    const items: MenuRowItem[] = [];
 
     menuEntries.forEach((entry, i) => {
       if (isSubmenuMenuEntry(entry)) {
@@ -214,44 +221,49 @@ export function BaseMenu({header, entries}: IBaseMenuProps) {
     window.addEventListener('click', showMenu);
 
     //cleanup
-    return () => {
+    onCleanup(() => {
       window.removeEventListener('keydown', onKeyDown);
       window.removeEventListener('touchstart', showMenu);
       window.removeEventListener('click', showMenu);
-    };
+    });
   });
 
-
   return (
-    <div class={styles.menu + ' ' + (visible() ? '' : styles.hidden)} >
-      <div class={styles.menuHead}>
-        {header}
-      </div>
-      <ul>
-      {items().map((item, i) => {
-        const isSelected = selected() === i;
-        const isActive = active() === item.id;
+    <div class={styles.menu}>
+      <Show
+        when={visible()}
+      >
+        <div role="menu" >
+          <div class={styles.menuHead}>
+            {header}
+          </div>
+          <ul>
+          {items().map((item, i) => {
+            const isSelected = selected() === i;
+            const isActive = active() === item.id;
 
-        const className =
-          `${styles.menuItem} ${isSelected ? styles.selected : ''} ${isActive ? styles.active : ''}`;
-        return (
-           <li
-             onClick={() => {
-               item.action();
-             }}
-             onMouseOver={() => {
-               showMenu();
-               setSelected(i);
-             }}
-             class={className}
-           >
-             <div style={{ 'margin-left': `${item.offset * 20}px`}}>
-               {item.content ? item.content : ''}
-             </div>
-          </li>
-        );
-      })}
-      </ul>
+            const className =
+              `${styles.menuItem} ${isSelected ? styles.selected : ''} ${isActive ? styles.active : ''}`;
+            return (
+               <li
+                 onClick={() => {
+                   item.action();
+                 }}
+                 onMouseOver={() => {
+                   showMenu();
+                   setSelected(i);
+                 }}
+                 class={className}
+               >
+                 <div style={{ 'margin-left': `${item.offset * 20}px`}}>
+                   {item.content ? item.content : ''}
+                 </div>
+              </li>
+            );
+          })}
+          </ul>
+        </div>
+      </Show>
     </div>
   );
 }
