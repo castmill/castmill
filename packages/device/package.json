@@ -7,7 +7,8 @@
   "scripts": {
     "start": "vite",
     "dev": "vite",
-    "test": "mocha tests/**/*.spec.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "serve": "vite preview",
     "build": "rimraf dist && yarn ts-types && vite build",
     "build:watch": "tsc --watch",
@@ -16,15 +17,19 @@
   },
   "license": "AGPL-3.0-or-later",
   "devDependencies": {
+    "@solidjs/testing-library": "^0.8.6",
+    "@testing-library/jest-dom": "^6.4.1",
     "@types/phoenix": "^1.5.6",
+    "jsdom": "^24.0.0",
     "typescript": "^4.9.5",
     "vite": "^4.1.1",
-    "vite-plugin-solid": "^2.5.0"
+    "vite-plugin-solid": "^2.5.0",
+    "vitest": "^1.2.2"
   },
   "dependencies": {
     "@castmill/cache": "*",
     "@castmill/player": "*",
     "phoenix": "^1.7.2",
-    "solid-js": "^1.6.10"
+    "solid-js": "^1.8.12"
   }
 }
