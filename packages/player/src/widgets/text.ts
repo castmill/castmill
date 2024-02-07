@@ -1,16 +1,15 @@
+import { JSX } from 'solid-js'
+import { gsap } from 'gsap'
+import { of } from 'rxjs'
 
-import { JSX } from "solid-js";
-import { gsap } from "gsap";
-import { of } from "rxjs";
-
-import { TimelineWidget } from "./timeline-widget";
-import { applyCss } from "../utils";
-import { ResourceManager } from "@castmill/cache";
+import { TimelineWidget } from './timeline-widget'
+import { applyCss } from '../utils'
+import { ResourceManager } from '@castmill/cache'
 
 const limits = {
   max: 100,
   min: 0,
-};
+}
 
 const AnimationPresets = {
   snake: {
@@ -20,8 +19,8 @@ const AnimationPresets = {
       scale: 0,
       y: 80,
       rotationX: 180,
-      transformOrigin: "0% 50% -50",
-      ease: "back",
+      transformOrigin: '0% 50% -50',
+      ease: 'back',
       stagger: 0.05,
     },
     perspective: 400,
@@ -34,176 +33,176 @@ const AnimationPresets = {
       scale: 0,
       y: 80,
       rotationX: 180,
-      transformOrigin: "0% 50% -50",
-      ease: "back",
+      transformOrigin: '0% 50% -50',
+      ease: 'back',
       stagger: 0.01,
     },
     perspective: 400,
     chars: false,
   },
-};
+}
 
 export class TextWidget extends TimelineWidget {
-  static animationPresets = AnimationPresets;
+  static animationPresets = AnimationPresets
 
-  private div: HTMLElement;
-  private text: string;
-  private style: JSX.CSSProperties;
+  private div: HTMLElement
+  private text: string
+  private style: JSX.CSSProperties
   private font?: {
-    url: string;
-    name: string;
-  };
+    url: string
+    name: string
+  }
 
-  private fontFace?: FontFace;
+  private fontFace?: FontFace
 
   constructor(
     resourceManager: ResourceManager,
     opts: {
-      text: string;
+      text: string
       style: JSX.CSSProperties
-      font?: { url: string; name: string };
+      font?: { url: string; name: string }
       animation?: {
-        from: gsap.TweenVars;
-        perspective?: number;
-        chars?: boolean;
-      };
+        from: gsap.TweenVars
+        perspective?: number
+        chars?: boolean
+      }
     }
   ) {
-    super(resourceManager, opts);
-    this.text = opts.text;
-    this.style = opts.style;
-    this.font = opts.font;
+    super(resourceManager, opts)
+    this.text = opts.text
+    this.style = opts.style
+    this.font = opts.font
 
-    const div = (this.div = this.div = document.createElement("div"));
-    div.textContent = this.text;
-    applyCss(div, this.style);
+    const div = (this.div = this.div = document.createElement('div'))
+    div.textContent = this.text
+    applyCss(div, this.style)
 
-    const tl = gsap.timeline({ paused: true });
+    const tl = gsap.timeline({ paused: true })
     const tlItem = {
       start: this.timeline.duration(),
       child: tl,
-    };
-    this.timeline.add(tlItem);
+    }
+    this.timeline.add(tlItem)
 
     if (opts.animation) {
-      const splittedText = splitText(div, opts.animation.chars);
+      const splittedText = splitText(div, opts.animation.chars)
 
       if (opts.animation.perspective) {
-        gsap.set(div, { perspective: opts.animation.perspective });
+        gsap.set(div, { perspective: opts.animation.perspective })
       }
-      tl.from(splittedText.chars || splittedText.words, opts.animation.from);
+      tl.from(splittedText.chars || splittedText.words, opts.animation.from)
     }
   }
 
   show(el: HTMLElement, offset: number) {
-    this.offset = offset;
+    this.offset = offset
 
     if (this.div?.parentElement) {
-      return of("loaded");
+      return of('loaded')
     }
 
-    el.appendChild(this.div);
+    el.appendChild(this.div)
 
     if (this.font) {
-      this.fontFace = new FontFace(this.font.name, `url(${this.font.url})`);
+      this.fontFace = new FontFace(this.font.name, `url(${this.font.url})`)
       // add font to document
-      (<any>document.fonts)["add"](this.fontFace);
+      ;(<any>document.fonts)['add'](this.fontFace)
     }
 
     // TODO: Improve autofit text
     // this.autoFitText();
 
-    return of("loaded");
+    return of('loaded')
   }
 
   unload(): void {
     if (this.div) {
-      this.div.parentElement?.removeChild(this.div);
+      this.div.parentElement?.removeChild(this.div)
     }
 
     if (this.fontFace) {
-      (<any>document.fonts).delete(this.fontFace);
+      ;(<any>document.fonts).delete(this.fontFace)
     }
   }
 
   mimeType(): string {
-    return "text";
+    return 'text'
   }
 
   autoFitText(options?: { min: number; max: number }) {
     if (this.div && this.div.textContent) {
-      const textElement = this.div; // this.getInnerTextElement();
-      let size = 1;
+      const textElement = this.div // this.getInnerTextElement();
+      let size = 1
       const setSize = function (size: number) {
-        textElement["style"]["fontSize"] = size + "em";
-      };
-      setSize(size);
-      const containerRect = this.div.getBoundingClientRect();
+        textElement['style']['fontSize'] = size + 'em'
+      }
+      setSize(size)
+      const containerRect = this.div.getBoundingClientRect()
       // Get scaled value of borders
-      const scaleX = containerRect.width / this.div.offsetWidth;
-      const scaleY = containerRect.height / this.div.offsetHeight;
+      const scaleX = containerRect.width / this.div.offsetWidth
+      const scaleY = containerRect.height / this.div.offsetHeight
       const padding =
-        parseInt(`${gsap.getProperty(this.div, "padding", "px")}`) || 0;
+        parseInt(`${gsap.getProperty(this.div, 'padding', 'px')}`) || 0
       const borderWidth =
-        parseInt(`${gsap.getProperty(this.div, "border-width", "px")}`) || 0;
-      const borderX = padding * 1.99 * scaleX + borderWidth * 1.99 * scaleX;
-      const borderY = padding * 1.99 * scaleY + borderWidth * 1.99 * scaleY;
+        parseInt(`${gsap.getProperty(this.div, 'border-width', 'px')}`) || 0
+      const borderX = padding * 1.99 * scaleX + borderWidth * 1.99 * scaleX
+      const borderY = padding * 1.99 * scaleY + borderWidth * 1.99 * scaleY
 
-      let l = (options && options.min) || limits.min;
-      let r = (options && options.max) || limits.max;
+      let l = (options && options.min) || limits.min
+      let r = (options && options.max) || limits.max
       while (l <= r) {
-        let m = (l + r) / 2;
-        setSize(m);
-        const textElementRect = textElement.getBoundingClientRect();
+        let m = (l + r) / 2
+        setSize(m)
+        const textElementRect = textElement.getBoundingClientRect()
         if (
           containerRect.height - borderY >= textElementRect.height &&
           containerRect.width - borderX >= textElementRect.width
         ) {
-          l = m + 0.01;
-          size = m;
+          l = m + 0.01
+          size = m
         } else {
-          r = m - 0.01;
+          r = m - 0.01
         }
       }
-      setSize(size);
+      setSize(size)
     }
   }
 }
 
 function createElementFromHTML(htmlString: string) {
-  const div = document.createElement("div");
-  div.innerHTML = htmlString.trim();
-  return Array.prototype.slice.call(div.children);
+  const div = document.createElement('div')
+  div.innerHTML = htmlString.trim()
+  return Array.prototype.slice.call(div.children)
 }
 
 function splitText(div: HTMLDivElement, splitChars?: boolean) {
   if (splitChars) {
-    const chars: HTMLDivElement[] = [];
+    const chars: HTMLDivElement[] = []
     const words = div.innerHTML
-      .split(" ")
+      .split(' ')
       .map((word, index, arr) =>
         splitInChars(word, chars, index === arr.length - 1)
-      );
+      )
 
-    div.replaceChildren(...words);
+    div.replaceChildren(...words)
 
-    return { words, chars };
+    return { words, chars }
   } else {
     const wordsHTML = div.innerHTML
-      .split(" ")
+      .split(' ')
       .map(
         (word) =>
           `<div style="display: inline-block; text-align: start; position: relative;">${word}</div>`
       )
       .join(
         `<div style="display: inline-block; text-align: start; position: relative;">&nbsp;</div>`
-      );
+      )
 
-    const words = createElementFromHTML(wordsHTML);
+    const words = createElementFromHTML(wordsHTML)
 
-    div.replaceChildren(...words);
+    div.replaceChildren(...words)
 
-    return { words };
+    return { words }
   }
 }
 
@@ -212,33 +211,33 @@ function splitInChars(
   charArray: HTMLDivElement[],
   isLast: boolean
 ) {
-  const div = document.createElement("div");
-  div.style.display = "inline-block";
-  div.style.textAlign = "start";
-  div.style.position = "relative";
+  const div = document.createElement('div')
+  div.style.display = 'inline-block'
+  div.style.textAlign = 'start'
+  div.style.position = 'relative'
 
   const charElements = createElementFromHTML(
     word
-      .split("")
+      .split('')
       .map(
         (char) =>
           `<div style="display: inline-block; text-align: start; position: relative;">${char}</div>`
       )
-      .join("")
-  );
+      .join('')
+  )
 
   if (!isLast) {
-    const space = document.createElement("div");
-    space.style.display = "inline-block";
-    space.style.textAlign = "start";
-    space.style.position = "relative";
-    space.innerHTML = "&nbsp;";
-    charElements.push(space);
+    const space = document.createElement('div')
+    space.style.display = 'inline-block'
+    space.style.textAlign = 'start'
+    space.style.position = 'relative'
+    space.innerHTML = '&nbsp;'
+    charElements.push(space)
   }
 
-  div.replaceChildren(...charElements);
+  div.replaceChildren(...charElements)
 
-  charArray.push.apply(charArray, charElements);
+  charArray.push.apply(charArray, charElements)
 
-  return div;
+  return div
 }

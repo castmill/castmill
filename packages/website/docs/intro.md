@@ -29,13 +29,14 @@ Coming soon.
 #### What you'll need
 
 - [Node.js](https://nodejs.org/en/download/) version 16.14 or above:
+
   - When installing Node.js, you are recommended to check all checkboxes related to dependencies.
 
 - [Elixir](https://elixir-lang.org/install.html) version 1.12 or above:
+
   - When installing Elixir, you are recommended to check all checkboxes related to dependencies.
 
 - [PostgreSQL](https://www.postgresql.org/download/) version 13 or above:
-
 
 #### Start your Castmill server
 

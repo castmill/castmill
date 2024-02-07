@@ -1,19 +1,19 @@
-import { Component, JSX, mergeProps, onCleanup, onMount } from "solid-js";
-import { TemplateConfig, resolveOption } from "./binding";
-import { TemplateComponent, TemplateComponentType } from "./template";
-import { ComponentAnimation, applyAnimations } from "./animation";
-import { BaseComponentProps } from "./interfaces/base-component-props";
-import { ResourceManager } from "@castmill/cache";
-import { PlayerGlobals } from "../../interfaces/player-globals.interface";
+import { Component, JSX, mergeProps, onCleanup, onMount } from 'solid-js'
+import { TemplateConfig, resolveOption } from './binding'
+import { TemplateComponent, TemplateComponentType } from './template'
+import { ComponentAnimation, applyAnimations } from './animation'
+import { BaseComponentProps } from './interfaces/base-component-props'
+import { ResourceManager } from '@castmill/cache'
+import { PlayerGlobals } from '../../interfaces/player-globals.interface'
 
 export interface ImageComponentOptions {
-  url: string;
-  size: "cover" | "contain";
-  duration: number;
+  url: string
+  size: 'cover' | 'contain'
+  duration: number
 }
 
 export class ImageComponent implements TemplateComponent {
-  readonly type = TemplateComponentType.Image;
+  readonly type = TemplateComponentType.Image
 
   constructor(
     public name: string,
@@ -24,7 +24,7 @@ export class ImageComponent implements TemplateComponent {
   ) {}
 
   resolveDuration(medias: { [index: string]: string }): number {
-    return this.opts.duration || 10000;
+    return this.opts.duration || 10000
   }
 
   static fromJSON(json: any): ImageComponent {
@@ -34,7 +34,7 @@ export class ImageComponent implements TemplateComponent {
       json.style,
       json.animations,
       json.filter
-    );
+    )
   }
 
   static resolveOptions(
@@ -47,41 +47,41 @@ export class ImageComponent implements TemplateComponent {
       url: resolveOption(opts.url, config, context, globals),
       size: resolveOption(opts.size, config, context, globals),
       duration: resolveOption(opts.duration, config, context, globals),
-    };
+    }
   }
 }
 
 interface ImageProps extends BaseComponentProps {
-  opts: ImageComponentOptions;
-  resourceManager: ResourceManager;
+  opts: ImageComponentOptions
+  resourceManager: ResourceManager
 }
 
 export const Image: Component<ImageProps> = (props: ImageProps) => {
-  let imageRef: HTMLDivElement | undefined;
-  let cleanUpAnimations: () => void;
+  let imageRef: HTMLDivElement | undefined
+  let cleanUpAnimations: () => void
 
   // const imageUrl = props.medias[props.opts.url];
-  const imageUrl = props.opts.url;
+  const imageUrl = props.opts.url
 
   if (!imageUrl) {
     // TODO: Mechanism to report errors without breaking the whole template nor the playlist.
-    throw new Error(`Image ${props.opts.url} not found in medias`);
+    throw new Error(`Image ${props.opts.url} not found in medias`)
   }
 
   const merged = mergeProps(
     {
-      width: "100%",
-      height: "100%",
-      "background-size": props.opts.size,
-      "background-repeat": "no-repeat",
-      "background-position": "center",
+      width: '100%',
+      height: '100%',
+      'background-size': props.opts.size,
+      'background-repeat': 'no-repeat',
+      'background-position': 'center',
     },
     props.style
-  );
+  )
 
   onCleanup(() => {
-    cleanUpAnimations && cleanUpAnimations();
-  });
+    cleanUpAnimations && cleanUpAnimations()
+  })
 
   onMount(async () => {
     if (imageRef) {
@@ -90,18 +90,18 @@ export const Image: Component<ImageProps> = (props: ImageProps) => {
           props.timeline,
           props.animations,
           imageRef
-        );
+        )
       }
 
-      let imageUrl = await props.resourceManager.getMedia(props.opts.url);
+      let imageUrl = await props.resourceManager.getMedia(props.opts.url)
       if (!imageUrl) {
         // TODO: report error properly
-        console.error(`Image ${props.opts.url} not found in cached medias`);
+        console.error(`Image ${props.opts.url} not found in cached medias`)
       }
-      imageRef.style.backgroundImage = `url(${imageUrl || props.opts.url})`;
+      imageRef.style.backgroundImage = `url(${imageUrl || props.opts.url})`
     }
-    props.onReady();
-  });
+    props.onReady()
+  })
 
   return (
     <div
@@ -110,5 +110,5 @@ export const Image: Component<ImageProps> = (props: ImageProps) => {
       data-name={props.name}
       style={merged}
     ></div>
-  );
-};
+  )
+}

@@ -26,4 +26,3 @@ yarn add @castmill/player
 ## Usage
 
 The library is composed of several classes, please see every class page for more information on how to use them.
-

@@ -1,8 +1,8 @@
-import { ResourceManager } from "@castmill/cache";
-import { of, Observable, concat } from "rxjs";
+import { ResourceManager } from '@castmill/cache'
+import { of, Observable, concat } from 'rxjs'
 
-import { Widget } from "./widget";
-import { Timeline } from "./template/timeline";
+import { Widget } from './widget'
+import { Timeline } from './template/timeline'
 
 /**
  * A Widget base class for widgets that want to use timelines for
@@ -13,47 +13,47 @@ import { Timeline } from "./template/timeline";
  *
  */
 export class TimelineWidget extends Widget {
-  protected timeline: Timeline;
-  protected offset: number = 0;
+  protected timeline: Timeline
+  protected offset: number = 0
 
   constructor(resourceManager: ResourceManager, opts?: {}) {
-    super(resourceManager, opts);
+    super(resourceManager, opts)
 
-    this.timeline = new Timeline("root", { loop: true });
+    this.timeline = new Timeline('root', { loop: true })
   }
 
   play(timer$: Observable<number>) {
     if (this.timeline.duration() > 0) {
-      this.timeline.play(this.offset);
+      this.timeline.play(this.offset)
     }
 
     // We must concat with super.play(timer$) so that slack/duration is also taken into account.
     return concat(
       new Observable<string>((subscriber) => {
         const handler = (ev: Event) => {
-          subscriber.next("played");
-          subscriber.complete();
-        };
+          subscriber.next('played')
+          subscriber.complete()
+        }
 
         return () => {
-          this.timeline?.pause();
-        };
+          this.timeline?.pause()
+        }
       }),
       super.play(timer$)
-    );
+    )
   }
 
   stop() {
-    this.timeline.pause();
+    this.timeline.pause()
   }
 
   seek(offset: number): Observable<[number, number]> {
-    this.offset = offset;
-    this.timeline.seek(offset);
-    return of([offset, 0]);
+    this.offset = offset
+    this.timeline.seek(offset)
+    return of([offset, 0])
   }
 
   duration(): number {
-    return this.timeline.duration() || 0;
+    return this.timeline.duration() || 0
   }
 }

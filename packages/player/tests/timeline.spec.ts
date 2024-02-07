@@ -1,7 +1,7 @@
 /// <reference types="node" />
 
-import { expect } from "chai";
-import { describe, it } from "mocha";
+import { expect } from 'chai'
+import { describe, it } from 'mocha'
 
 import {
   SinonSpy,
@@ -11,41 +11,41 @@ import {
   useFakeTimers,
   stub,
   SinonFakeTimers,
-} from "sinon";
+} from 'sinon'
 
 // Add these interfaces for the child
 interface TimelineBasicSpy extends TimelineBasic {
-  play: SinonSpy;
-  seek: SinonSpy;
-  pause: SinonSpy;
+  play: SinonSpy
+  seek: SinonSpy
+  pause: SinonSpy
 }
 
 interface TimelineItemSpy {
-  start: number;
-  duration: number;
-  repeat?: boolean;
-  child: TimelineBasicSpy;
+  start: number
+  duration: number
+  repeat?: boolean
+  child: TimelineBasicSpy
 }
 
 import {
   Timeline,
   TimelineBasic,
   TimelineItem,
-} from "../src/widgets/template/timeline";
+} from '../src/widgets/template/timeline'
 
-describe("Timeline", () => {
-  let timeline: Timeline;
+describe('Timeline', () => {
+  let timeline: Timeline
 
   beforeEach(() => {
-    timeline = new Timeline("test");
-  });
+    timeline = new Timeline('test')
+  })
 
-  it("should instantiate correctly", () => {
-    expect(timeline).to.be.instanceOf(Timeline);
-  });
+  it('should instantiate correctly', () => {
+    expect(timeline).to.be.instanceOf(Timeline)
+  })
 
-  describe("add and remove", () => {
-    let item: TimelineItem;
+  describe('add and remove', () => {
+    let item: TimelineItem
 
     beforeEach(() => {
       const child: TimelineBasic = {
@@ -53,30 +53,30 @@ describe("Timeline", () => {
         seek: (offset: number): void => {},
         pause: (): void => {},
         duration: () => 5000,
-      };
-      item = { child, start: 1000, duration: 5000 };
-      timeline.add(item);
-    });
+      }
+      item = { child, start: 1000, duration: 5000 }
+      timeline.add(item)
+    })
 
-    it("should add items correctly", () => {
+    it('should add items correctly', () => {
       const addedItem = timeline.items.find(
         (i) =>
           i.child === item.child &&
           i.start === item.start &&
           i.duration === item.duration
-      );
-      expect(addedItem).to.exist;
-    });
+      )
+      expect(addedItem).to.exist
+    })
 
-    it("should remove items correctly", () => {
-      timeline.remove(item);
-      expect(timeline.items).to.not.include(item);
-    });
-  });
+    it('should remove items correctly', () => {
+      timeline.remove(item)
+      expect(timeline.items).to.not.include(item)
+    })
+  })
 
-  describe("play", () => {
-    let clock: SinonFakeTimers;
-    let item1: TimelineItemSpy, item2: TimelineItemSpy;
+  describe('play', () => {
+    let clock: SinonFakeTimers
+    let item1: TimelineItemSpy, item2: TimelineItemSpy
 
     beforeEach(() => {
       item1 = {
@@ -88,7 +88,7 @@ describe("Timeline", () => {
           pause: spy(),
           duration: () => 5000, //stub().returns(5000),
         },
-      };
+      }
       item2 = {
         start: 3000,
         duration: 7000,
@@ -98,98 +98,98 @@ describe("Timeline", () => {
           pause: spy(),
           duration: () => 7000, //stub().returns(7000),
         },
-      };
-      timeline.add(item1);
-      timeline.add(item2);
+      }
+      timeline.add(item1)
+      timeline.add(item2)
 
       // Stub Date.now and setInterval
-      stub(Date, "now").returns(0);
-      clock = useFakeTimers();
-    });
+      stub(Date, 'now').returns(0)
+      clock = useFakeTimers()
+    })
 
     afterEach(() => {
       // Restore stubs after each test
-      restore();
-    });
+      restore()
+    })
 
-    it("should play items correctly", async () => {
-      expect(timeline.duration()).to.equal(10000);
+    it('should play items correctly', async () => {
+      expect(timeline.duration()).to.equal(10000)
 
-      timeline.play(0);
+      timeline.play(0)
 
       // Advance the fake timer to simulate setInterval
-      clock.tick(100);
+      clock.tick(100)
 
-      expect(timeline.time).to.equal(100);
+      expect(timeline.time).to.equal(100)
 
-      expect(item1.child.play.calledOnce).to.be.true;
-      expect(item2.child.play.called).to.be.false;
+      expect(item1.child.play.calledOnce).to.be.true
+      expect(item2.child.play.called).to.be.false
 
-      clock.tick(2800);
+      clock.tick(2800)
 
-      expect(timeline.time).to.equal(2900);
+      expect(timeline.time).to.equal(2900)
 
-      expect(timeline.isPlaying(item1)).to.be.true;
-      expect(timeline.isPlaying(item2)).to.be.false;
+      expect(timeline.isPlaying(item1)).to.be.true
+      expect(timeline.isPlaying(item2)).to.be.false
 
-      expect(item1.child.play.calledOnce).to.be.true;
-      expect(item2.child.play.calledOnce).to.be.false;
+      expect(item1.child.play.calledOnce).to.be.true
+      expect(item2.child.play.calledOnce).to.be.false
 
-      clock.tick(100);
+      clock.tick(100)
 
-      expect(timeline.time).to.equal(3000);
+      expect(timeline.time).to.equal(3000)
 
-      expect(timeline.isPlaying(item1)).to.be.true;
-      expect(timeline.isPlaying(item2)).to.be.true;
+      expect(timeline.isPlaying(item1)).to.be.true
+      expect(timeline.isPlaying(item2)).to.be.true
 
-      expect(item1.child.play.calledOnce).to.be.true;
-      expect(item2.child.play.calledOnce).to.be.true;
+      expect(item1.child.play.calledOnce).to.be.true
+      expect(item2.child.play.calledOnce).to.be.true
 
-      clock.tick(2000);
+      clock.tick(2000)
 
-      expect(timeline.time).to.equal(5000);
+      expect(timeline.time).to.equal(5000)
 
-      expect(timeline.isPlaying(item1)).to.be.false;
-      expect(timeline.isPlaying(item2)).to.be.true;
-    });
+      expect(timeline.isPlaying(item1)).to.be.false
+      expect(timeline.isPlaying(item2)).to.be.true
+    })
 
-    it("should loop correctly", () => {
-      timeline.setLoop(true);
+    it('should loop correctly', () => {
+      timeline.setLoop(true)
 
-      timeline.play(0);
+      timeline.play(0)
 
       // Advance the fake timer to simulate setInterval
       // Assuming max duration is 7000 as per previous setup
-      clock.tick(100);
+      clock.tick(100)
 
-      expect(item1.child.play.callCount).to.equal(1);
-      expect(item2.child.play.callCount).to.equal(0);
+      expect(item1.child.play.callCount).to.equal(1)
+      expect(item2.child.play.callCount).to.equal(0)
 
-      clock.tick(5000);
+      clock.tick(5000)
 
-      expect(item1.child.play.callCount).to.equal(1);
-      expect(item2.child.play.callCount).to.equal(1);
+      expect(item1.child.play.callCount).to.equal(1)
+      expect(item2.child.play.callCount).to.equal(1)
 
-      clock.tick(4900);
+      clock.tick(4900)
 
-      expect(item1.child.play.callCount).to.equal(2);
-      expect(item2.child.play.callCount).to.equal(1);
+      expect(item1.child.play.callCount).to.equal(2)
+      expect(item2.child.play.callCount).to.equal(1)
 
-      clock.tick(100);
+      clock.tick(100)
 
-      expect(item1.child.play.callCount).to.equal(2);
-      expect(item2.child.play.callCount).to.equal(1);
+      expect(item1.child.play.callCount).to.equal(2)
+      expect(item2.child.play.callCount).to.equal(1)
 
-      clock.tick(2900);
+      clock.tick(2900)
 
-      expect(item1.child.play.callCount).to.equal(2);
-      expect(item2.child.play.callCount).to.equal(2);
-    });
-  });
+      expect(item1.child.play.callCount).to.equal(2)
+      expect(item2.child.play.callCount).to.equal(2)
+    })
+  })
 
-  describe("pause", () => {
-    let item: TimelineItemSpy;
-    let clock: SinonFakeTimers;
+  describe('pause', () => {
+    let item: TimelineItemSpy
+    let clock: SinonFakeTimers
 
     beforeEach(() => {
       item = {
@@ -201,30 +201,30 @@ describe("Timeline", () => {
           pause: spy(),
           duration: stub().returns(5000),
         },
-      };
-      timeline.add(item);
+      }
+      timeline.add(item)
 
       // Stub Date.now and setInterval
-      stub(Date, "now").returns(0);
-      clock = useFakeTimers();
-    });
+      stub(Date, 'now').returns(0)
+      clock = useFakeTimers()
+    })
 
     afterEach(() => {
       // Restore stubs after each test
-      restore();
-    });
+      restore()
+    })
 
-    it("should pause items correctly", () => {
-      timeline.play(0);
-      clock.tick(100); // Advance the clock by 100 ms
-      timeline.pause();
+    it('should pause items correctly', () => {
+      timeline.play(0)
+      clock.tick(100) // Advance the clock by 100 ms
+      timeline.pause()
 
-      expect(item.child.pause.calledOnce).to.be.true;
-    });
-  });
+      expect(item.child.pause.calledOnce).to.be.true
+    })
+  })
 
-  describe("seek", () => {
-    let item: TimelineItemSpy;
+  describe('seek', () => {
+    let item: TimelineItemSpy
 
     beforeEach(() => {
       item = {
@@ -236,160 +236,158 @@ describe("Timeline", () => {
           pause: spy(),
           duration: stub().returns(5000),
         },
-      };
-      timeline.add(item);
-      timeline.seek(1000);
-    });
+      }
+      timeline.add(item)
+      timeline.seek(1000)
+    })
 
-    it("should seek items correctly", () => {
-      expect(item.child.seek.calledWith(1000)).to.be.true;
-    });
-  });
-});
+    it('should seek items correctly', () => {
+      expect(item.child.seek.calledWith(1000)).to.be.true
+    })
+  })
+})
 
-describe("Timeline with child Timeline", () => {
-  let timeline: Timeline;
-  let childTimeline: Timeline;
-  let childTimelineItem: TimelineItem;
-  let item1: TimelineItemSpy;
-  let item2: TimelineItemSpy;
-  let item3: TimelineItemSpy;
+describe('Timeline with child Timeline', () => {
+  let timeline: Timeline
+  let childTimeline: Timeline
+  let childTimelineItem: TimelineItem
+  let item1: TimelineItemSpy
+  let item2: TimelineItemSpy
+  let item3: TimelineItemSpy
 
-  let clock: SinonFakeTimers;
+  let clock: SinonFakeTimers
 
   beforeEach(() => {
-    timeline = new Timeline("test parent");
-    childTimeline = new Timeline("test child");
-    spy(childTimeline, "play");
-    spy(childTimeline, "seek");
-    spy(childTimeline, "pause");
+    timeline = new Timeline('test parent')
+    childTimeline = new Timeline('test child')
+    spy(childTimeline, 'play')
+    spy(childTimeline, 'seek')
+    spy(childTimeline, 'pause')
 
     item1 = {
       start: 1000,
       duration: 2000,
       child: createStubInstance(Timeline),
-    };
+    }
     item2 = {
       start: 4000,
       duration: 2000,
       child: createStubInstance(Timeline),
-    };
+    }
     item3 = {
       start: 1000,
       duration: 3000,
       child: createStubInstance(Timeline),
-    };
+    }
 
-    childTimeline.add(item1);
-    childTimeline.add(item2);
-    childTimeline.add(item3);
+    childTimeline.add(item1)
+    childTimeline.add(item2)
+    childTimeline.add(item3)
 
     childTimelineItem = {
       start: 500,
       duration: 7000,
       child: childTimeline,
-    };
+    }
 
-    timeline.add(childTimelineItem);
+    timeline.add(childTimelineItem)
 
-    clock = useFakeTimers();
-  });
+    clock = useFakeTimers()
+  })
 
   afterEach(() => {
     // Restore stubs after each test
-    restore();
-  });
+    restore()
+  })
 
-  it("should add child timeline correctly", () => {
-    expect(timeline.items[0].child).to.equal(childTimeline);
+  it('should add child timeline correctly', () => {
+    expect(timeline.items[0].child).to.equal(childTimeline)
 
-    expect(timeline.duration()).to.equal(7500);
-  });
+    expect(timeline.duration()).to.equal(7500)
+  })
 
-  it("should play items in child timeline correctly", () => {
-    timeline.play(0);
+  it('should play items in child timeline correctly', () => {
+    timeline.play(0)
 
-    clock.tick(500);
-    expect(item1.child.play.notCalled).to.be.true;
-    expect(item2.child.play.notCalled).to.be.true;
-    expect(item3.child.play.notCalled).to.be.true;
+    clock.tick(500)
+    expect(item1.child.play.notCalled).to.be.true
+    expect(item2.child.play.notCalled).to.be.true
+    expect(item3.child.play.notCalled).to.be.true
 
-    expect((childTimeline.play as SinonSpy).calledOnce).to.be.true;
+    expect((childTimeline.play as SinonSpy).calledOnce).to.be.true
 
-    clock.tick(500);
-    expect(item1.child.play.notCalled).to.be.true;
-    expect(item2.child.play.notCalled).to.be.true;
-    expect(item3.child.play.notCalled).to.be.true;
+    clock.tick(500)
+    expect(item1.child.play.notCalled).to.be.true
+    expect(item2.child.play.notCalled).to.be.true
+    expect(item3.child.play.notCalled).to.be.true
 
-    clock.tick(500);
-    expect(item1.child.play.calledOnce).to.be.true;
-    expect(item2.child.play.notCalled).to.be.true;
-    expect(item3.child.play.calledOnce).to.be.true;
+    clock.tick(500)
+    expect(item1.child.play.calledOnce).to.be.true
+    expect(item2.child.play.notCalled).to.be.true
+    expect(item3.child.play.calledOnce).to.be.true
 
-    expect(childTimeline.isPlaying(item1)).to.be.true;
-    expect(childTimeline.isPlaying(item2)).to.be.false;
-    expect(childTimeline.isPlaying(item3)).to.be.true;
-    expect(timeline.isPlaying(childTimelineItem)).to.be.true;
+    expect(childTimeline.isPlaying(item1)).to.be.true
+    expect(childTimeline.isPlaying(item2)).to.be.false
+    expect(childTimeline.isPlaying(item3)).to.be.true
+    expect(timeline.isPlaying(childTimelineItem)).to.be.true
 
-    clock.tick(2000);
+    clock.tick(2000)
 
-    clock.tick(999);
-    expect(item1.child.play.calledOnce).to.be.true;
-    expect(item2.child.play.notCalled).to.be.true;
+    clock.tick(999)
+    expect(item1.child.play.calledOnce).to.be.true
+    expect(item2.child.play.notCalled).to.be.true
 
-    expect(childTimeline.isPlaying(item1)).to.be.false;
-    expect(childTimeline.isPlaying(item2)).to.be.false;
-    expect(childTimeline.isPlaying(item3)).to.be.true;
+    expect(childTimeline.isPlaying(item1)).to.be.false
+    expect(childTimeline.isPlaying(item2)).to.be.false
+    expect(childTimeline.isPlaying(item3)).to.be.true
 
-    clock.tick(1);
-    expect(item1.child.play.calledOnce).to.be.true;
-    expect(item2.child.play.calledOnce).to.be.true;
+    clock.tick(1)
+    expect(item1.child.play.calledOnce).to.be.true
+    expect(item2.child.play.calledOnce).to.be.true
 
-    expect(childTimeline.isPlaying(item2)).to.be.true;
-    expect(childTimeline.isPlaying(item3)).to.be.false;
-  });
+    expect(childTimeline.isPlaying(item2)).to.be.true
+    expect(childTimeline.isPlaying(item3)).to.be.false
+  })
 
-  it("should pause items in child timeline correctly", () => {
-    timeline.play(0);
+  it('should pause items in child timeline correctly', () => {
+    timeline.play(0)
 
-    clock.tick(1500);
-    timeline.pause();
-    expect(item1.child.pause.calledOnce).to.be.true;
-  });
+    clock.tick(1500)
+    timeline.pause()
+    expect(item1.child.pause.calledOnce).to.be.true
+  })
 
-  it("should seek items in child timeline correctly", () => {
-    timeline.seek(1500); // Seeking into childTimeline's item1
+  it('should seek items in child timeline correctly', () => {
+    timeline.seek(1500) // Seeking into childTimeline's item1
     expect((childTimeline.seek as SinonSpy).getCall(0).args).to.deep.equal([
       1000,
-    ]);
-    expect((item1.child.seek as SinonSpy).getCall(0).args).to.deep.equal([0]);
+    ])
+    expect((item1.child.seek as SinonSpy).getCall(0).args).to.deep.equal([0])
 
-    timeline.seek(3500); // Seeking into childTimeline's item2
-    expect((item1.child.seek as SinonSpy).getCall(1).args).to.deep.equal([
-      2000,
-    ]);
+    timeline.seek(3500) // Seeking into childTimeline's item2
+    expect((item1.child.seek as SinonSpy).getCall(1).args).to.deep.equal([2000])
 
-    timeline.seek(4500); // Seeking into childTimeline's item2
+    timeline.seek(4500) // Seeking into childTimeline's item2
     expect((childTimeline.seek as SinonSpy).getCall(2).args).to.deep.equal([
       4000,
-    ]);
-    expect((item2.child.seek as SinonSpy).getCall(0).args).to.deep.equal([0]);
+    ])
+    expect((item2.child.seek as SinonSpy).getCall(0).args).to.deep.equal([0])
 
-    timeline.seek(6500); // Seeking into childTimeline's item3
+    timeline.seek(6500) // Seeking into childTimeline's item3
     expect((childTimeline.seek as SinonSpy).getCall(3).args).to.deep.equal([
       6000,
-    ]);
-    expect((item3.child.seek as SinonSpy).getCall(0).args).to.deep.equal([0]);
-  });
-});
+    ])
+    expect((item3.child.seek as SinonSpy).getCall(0).args).to.deep.equal([0])
+  })
+})
 
-describe("Repeat functionality", () => {
-  let timeline: Timeline;
-  let item: TimelineItemSpy;
-  let clock: SinonFakeTimers;
+describe('Repeat functionality', () => {
+  let timeline: Timeline
+  let item: TimelineItemSpy
+  let clock: SinonFakeTimers
 
   beforeEach(() => {
-    timeline = new Timeline("test", { duration: 6000 });
+    timeline = new Timeline('test', { duration: 6000 })
 
     item = {
       start: 1000,
@@ -401,39 +399,39 @@ describe("Repeat functionality", () => {
         pause: spy(),
         duration: stub().returns(2000),
       },
-    };
-    timeline.add(item);
+    }
+    timeline.add(item)
 
-    stub(Date, "now").returns(0);
-    clock = useFakeTimers();
-  });
+    stub(Date, 'now').returns(0)
+    clock = useFakeTimers()
+  })
 
   afterEach(() => {
-    restore();
-  });
+    restore()
+  })
 
-  it("should handle repeat functionality correctly", () => {
-    timeline.play(0);
+  it('should handle repeat functionality correctly', () => {
+    timeline.play(0)
 
-    clock.tick(1000); // Start time
-    expect(item.child.play.calledOnce).to.be.true;
+    clock.tick(1000) // Start time
+    expect(item.child.play.calledOnce).to.be.true
 
-    clock.tick(2000); // Reach the end of the item's duration
-    expect(item.child.play.callCount).to.equal(1); // Still playing, but not called again
+    clock.tick(2000) // Reach the end of the item's duration
+    expect(item.child.play.callCount).to.equal(1) // Still playing, but not called again
 
-    clock.tick(2000); // Complete the next iteration
+    clock.tick(2000) // Complete the next iteration
 
-    expect(timeline.isPlaying(item)).to.be.true;
-    expect(item.child.play.callCount).to.equal(1); // Still playing, but not called again
-  });
+    expect(timeline.isPlaying(item)).to.be.true
+    expect(item.child.play.callCount).to.equal(1) // Still playing, but not called again
+  })
 
-  it("should hadle seek with repeat correctly", () => {
-    timeline.seek(3000); // Seek into the next iteration
-    expect(item.child.seek.calledOnce).to.be.true;
-    expect(item.child.seek.getCall(0).args[0]).to.equal(0);
+  it('should hadle seek with repeat correctly', () => {
+    timeline.seek(3000) // Seek into the next iteration
+    expect(item.child.seek.calledOnce).to.be.true
+    expect(item.child.seek.getCall(0).args[0]).to.equal(0)
 
-    timeline.seek(4000); // Seek into the next iteration
-    expect(item.child.seek.callCount).to.equal(2);
-    expect(item.child.seek.getCall(1).args[0]).to.equal(1000);
-  });
-});
+    timeline.seek(4000) // Seek into the next iteration
+    expect(item.child.seek.callCount).to.equal(2)
+    expect(item.child.seek.getCall(1).args[0]).to.equal(1000)
+  })
+})

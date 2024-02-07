@@ -8,13 +8,13 @@
  */
 
 export interface StorageItem {
-  url: string;
-  size: number; // Size in bytes of the item.
+  url: string
+  size: number // Size in bytes of the item.
 }
 
 export interface StorageInfo {
-  used: number; // Size in bytes of the used storage.
-  total: number; // Size in bytes of the total storage.
+  used: number // Size in bytes of the used storage.
+  total: number // Size in bytes of the total storage.
 }
 
 export enum StoreResult {
@@ -36,17 +36,17 @@ export interface StorageIntegration {
   /**
    * Perform any initialization required by the cache.
    */
-  init(): Promise<void>;
+  init(): Promise<void>
 
   /**
    * Returns the information about the storage.
    */
-  info(): Promise<StorageInfo>;
+  info(): Promise<StorageInfo>
 
   /**
    * List the files of the cache, if possible support pagination.
    */
-  listFiles(): Promise<StorageItem[]>;
+  listFiles(): Promise<StorageItem[]>
 
   /**
    * Store a file on a given key. The file must be downloaded and
@@ -60,9 +60,9 @@ export interface StorageIntegration {
     url: string,
     data?: any
   ): Promise<{
-    result: { code: StoreResult; error?: StoreError; errMsg?: string };
-    item?: StorageItem;
-  }>;
+    result: { code: StoreResult; error?: StoreError; errMsg?: string }
+    item?: StorageItem
+  }>
 
   /**
    * Retrieves a uri like string representing a file in the storage.
@@ -70,7 +70,7 @@ export interface StorageIntegration {
    * NOTE:  Maybe not needed since we are storing the uri in indexedDB.
    * @param url
    */
-  retrieveFile(url: string): Promise<string | void>;
+  retrieveFile(url: string): Promise<string | void>
 
   /**
    * Deletes a file from the storage.
@@ -78,17 +78,17 @@ export interface StorageIntegration {
    * @param url
    *
    */
-  deleteFile(url: string): Promise<void>;
+  deleteFile(url: string): Promise<void>
 
   /**
    * Deletes all the files from the storage
    */
-  deleteAllFiles(): Promise<void>;
+  deleteAllFiles(): Promise<void>
 
   /**
    * Close the storage.
    *
    * Frees any listeners and/or resources used by the storage.
    */
-  close(): Promise<void>;
+  close(): Promise<void>
 }

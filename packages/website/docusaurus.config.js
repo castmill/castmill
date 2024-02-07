@@ -1,8 +1,8 @@
 // @ts-check
 // Note: type annotations allow type checking and IDEs autocompletion
 
-const lightCodeTheme = require('prism-react-renderer/themes/github');
-const darkCodeTheme = require('prism-react-renderer/themes/dracula');
+const lightCodeTheme = require('prism-react-renderer/themes/github')
+const darkCodeTheme = require('prism-react-renderer/themes/dracula')
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
@@ -66,7 +66,7 @@ const config = {
     ({
       // Replace with your project's social card
       image: 'img/docusaurus-social-card.jpg',
-      metadata: [{name: 'keywords', content: 'digital signage, open source'}],
+      metadata: [{ name: 'keywords', content: 'digital signage, open source' }],
       navbar: {
         logo: {
           alt: 'Castmill Logo',
@@ -79,7 +79,7 @@ const config = {
             position: 'left',
             label: 'Tutorial',
           },
-         // {to: '/blog', label: 'Blog', position: 'left'},
+          // {to: '/blog', label: 'Blog', position: 'left'},
           {
             href: 'https://github.com/castmill/castmill',
             label: 'GitHub',
@@ -133,6 +133,6 @@ const config = {
         darkTheme: darkCodeTheme,
       },
     }),
-};
+}
 
-module.exports = config;
+module.exports = config

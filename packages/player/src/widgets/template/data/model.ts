@@ -12,18 +12,18 @@ export class Model {
     source: Record<string, string>,
     data: object
   ): [{ [index: string]: string }, Error[]] {
-    const result: { [index: string]: string } = {};
-    const allErrors = [];
+    const result: { [index: string]: string } = {}
+    const allErrors = []
 
     for (const key in source) {
-      const [value, errors] = Model.interpolate(source[key], data);
+      const [value, errors] = Model.interpolate(source[key], data)
       if (errors.length > 0) {
-        allErrors.push(...errors);
-        continue;
+        allErrors.push(...errors)
+        continue
       }
-      result[key] = value;
+      result[key] = value
     }
-    return [result, allErrors];
+    return [result, allErrors]
   }
 
   /**
@@ -38,21 +38,21 @@ export class Model {
    * returns a tuple with the interpolated string and/or an array of errors.
    */
   static interpolate(str: string, data: object): [string, Error[]] {
-    const regex = /\${([^}]+)}/g;
-    let match;
-    let result = str;
-    const errors = [];
+    const regex = /\${([^}]+)}/g
+    let match
+    let result = str
+    const errors = []
 
     while ((match = regex.exec(str))) {
-      const [binding, keyPath] = match;
-      const [value, error] = Model.get(data, keyPath);
+      const [binding, keyPath] = match
+      const [value, error] = Model.get(data, keyPath)
       if (error) {
-        errors.push(error);
-        continue;
+        errors.push(error)
+        continue
       }
-      result = result.replace(binding, value);
+      result = result.replace(binding, value)
     }
-    return [result, errors];
+    return [result, errors]
   }
 
   /**
@@ -73,73 +73,71 @@ export class Model {
    * @returns
    */
   static get(obj: any, keypath: string, globals?: { [index: string]: any }) {
-    const keys = keypath.split(".");
-    let error;
+    const keys = keypath.split('.')
+    let error
 
     for (const key of keys) {
-      let { variable, indexes } = getArrayIndexes(key);
+      let { variable, indexes } = getArrayIndexes(key)
       if (variable && indexes) {
-        let array = obj[variable];
+        let array = obj[variable]
 
         for (let i = 0; i < indexes.length; i++) {
-          if (!Array.isArray(array) && typeof array !== "object") {
-            error = new Error(`${variable} as ${keypath} is not an array`);
-            break;
+          if (!Array.isArray(array) && typeof array !== 'object') {
+            error = new Error(`${variable} as ${keypath} is not an array`)
+            break
           }
-          if (indexes[i].includes(":")) {
-            array = getSubArray(array, indexes[i], globals);
-          } else if (indexes[i].startsWith("@")) {
-            const globalKey = indexes[i].slice(1) as string | number;
+          if (indexes[i].includes(':')) {
+            array = getSubArray(array, indexes[i], globals)
+          } else if (indexes[i].startsWith('@')) {
+            const globalKey = indexes[i].slice(1) as string | number
             if (globals && globalKey in globals) {
-              array = array[globals[globalKey]]; // This will work for both object and array
+              array = array[globals[globalKey]] // This will work for both object and array
               if (array === undefined) {
-                error = new Error(
-                  `Invalid global index: ${globals[globalKey]}`
-                );
-                break;
+                error = new Error(`Invalid global index: ${globals[globalKey]}`)
+                break
               }
             } else {
-              error = new Error(`Global key not found: ${globalKey}`);
-              break;
+              error = new Error(`Global key not found: ${globalKey}`)
+              break
             }
           } else {
-            array = array[+indexes[i]];
+            array = array[+indexes[i]]
             if (array === undefined) {
-              error = new Error(`Invalid index: ${indexes[i]}`);
-              break;
+              error = new Error(`Invalid index: ${indexes[i]}`)
+              break
             }
           }
         }
 
-        obj = array;
+        obj = array
       } else {
         if (obj[key] === undefined) {
-          error = new Error(`Invalid key path: ${keypath}`);
-          break;
+          error = new Error(`Invalid key path: ${keypath}`)
+          break
         }
-        obj = obj[key];
+        obj = obj[key]
       }
     }
-    return [!error ? obj : void 0, error];
+    return [!error ? obj : void 0, error]
   }
 }
 
 function getArrayIndexes(str: string) {
-  let match;
-  const rePattern = /^([^\[]+)((?:\[\s*(?:[\d:]+|@\w+)\s*\])+)$/;
+  let match
+  const rePattern = /^([^\[]+)((?:\[\s*(?:[\d:]+|@\w+)\s*\])+)$/
 
   if ((match = str.match(rePattern))) {
     const variable = match[1],
-      indexes = [];
+      indexes = []
     // Updated regex to capture @index correctly
-    const re = /\[\s*([\d\:]+|@\w+)\s*\]/g;
+    const re = /\[\s*([\d\:]+|@\w+)\s*\]/g
 
     while ((match = re.exec(str))) {
-      indexes.push(match[1]);
+      indexes.push(match[1])
     }
-    return { variable, indexes };
+    return { variable, indexes }
   } else {
-    return { variable: null, indexes: null };
+    return { variable: null, indexes: null }
   }
 }
 
@@ -149,7 +147,7 @@ function getSubArray(
   globals?: { [index: string]: any }
 ) {
   const [start, end] = substr
-    .split(":")
-    .map((e) => (e.startsWith("@") && globals ? globals[e.slice(1)] : +e));
-  return arr.slice(start, end);
+    .split(':')
+    .map((e) => (e.startsWith('@') && globals ? globals[e.slice(1)] : +e))
+  return arr.slice(start, end)
 }
