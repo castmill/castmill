@@ -1,6 +1,6 @@
 export interface SWMessage {
-  cmd: "init" | "cacheFile" | "deleteFile" | "deleteAll";
-  args: { [key: string]: any };
+  cmd: 'init' | 'cacheFile' | 'deleteFile' | 'deleteAll'
+  args: { [key: string]: any }
 }
 
 function sendMessage(message: SWMessage) {
@@ -9,14 +9,14 @@ function sendMessage(message: SWMessage) {
   // controller.postMessage() and set up the onmessage handler independently of a promise, but this is
   // a convenient wrapper.
   return new Promise(function (resolve, reject) {
-    var messageChannel = new MessageChannel();
+    var messageChannel = new MessageChannel()
     messageChannel.port1.onmessage = function (event) {
       if (event.data.error) {
-        reject(event.data.error);
+        reject(event.data.error)
       } else {
-        resolve(event.data);
+        resolve(event.data)
       }
-    };
+    }
 
     // This sends the message data as well as transferring messageChannel.port2 to the service worker.
     // The service worker can then use the transferred port to reply via postMessage(), which
@@ -24,6 +24,6 @@ function sendMessage(message: SWMessage) {
     // See https://html.spec.whatwg.org/multipage/workers.html#dom-worker-postmessage
     navigator.serviceWorker.controller?.postMessage(message, [
       messageChannel.port2,
-    ]);
-  });
+    ])
+  })
 }

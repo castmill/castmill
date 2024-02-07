@@ -2,17 +2,20 @@ import {
   StorageIntegration,
   StoreResult,
   StoreError,
-} from "../../storage.integration";
+} from '../../storage.integration'
 
-const UninitializedCacheError = "Cache has not been initialized";
+const UninitializedCacheError = 'Cache has not been initialized'
 
 export class StorageBrowser implements StorageIntegration {
-  prefix = "castmill:storage";
-  cacheName: string;
-  private cache: Cache | undefined;
+  prefix = 'castmill:storage'
+  cacheName: string
+  private cache: Cache | undefined
 
-  constructor(private name: string, private serviceWorkerPath: string = "") {
-    this.cacheName = `${this.prefix}:${this.name}`;
+  constructor(
+    private name: string,
+    private serviceWorkerPath: string = ''
+  ) {
+    this.cacheName = `${this.prefix}:${this.name}`
   }
 
   /**
@@ -20,34 +23,34 @@ export class StorageBrowser implements StorageIntegration {
    */
   async init() {
     if (navigator.serviceWorker !== undefined) {
-      this.cache = await caches.open(this.cacheName);
+      this.cache = await caches.open(this.cacheName)
 
       // Delete all caches that are not the current cache.
       // Uses a prefix to avoid deleting unintended caches.
-      const keyList = await caches.keys();
+      const keyList = await caches.keys()
       await Promise.all(
         keyList.map((key) => {
           if (key.startsWith(this.prefix) && key !== this.cacheName) {
-            return caches.delete(key);
+            return caches.delete(key)
           }
         })
-      );
+      )
 
       try {
         const registration = await navigator.serviceWorker.register(
           `${this.serviceWorkerPath}sw.js`
-        );
+        )
         console.log(
-          "ServiceWorker registration successful with scope: ",
+          'ServiceWorker registration successful with scope: ',
           registration.scope
-        );
+        )
       } catch (err) {
-        console.log("ServiceWorker registration failed: ", err);
+        console.log('ServiceWorker registration failed: ', err)
       }
 
-      const registration = await navigator.serviceWorker.getRegistration("/");
+      const registration = await navigator.serviceWorker.getRegistration('/')
       if (registration) {
-        await registration.update();
+        await registration.update()
       }
     }
   }
@@ -59,7 +62,7 @@ export class StorageBrowser implements StorageIntegration {
     return {
       used: 0,
       total: 0,
-    };
+    }
   }
 
   /**
@@ -67,20 +70,20 @@ export class StorageBrowser implements StorageIntegration {
    */
   async listFiles() {
     if (!this.cache) {
-      throw new Error(UninitializedCacheError);
+      throw new Error(UninitializedCacheError)
     }
     return (
       await Promise.all(
-        (
-          await this.cache.keys()
-        ).map((request) => this.cache!.match(request.url))
+        (await this.cache.keys()).map((request) =>
+          this.cache!.match(request.url)
+        )
       )
     ).map((response) => {
       return {
         url: response!.url,
-        size: parseInt(response!.headers.get("Content-Length") || "0"),
-      };
-    });
+        size: parseInt(response!.headers.get('Content-Length') || '0'),
+      }
+    })
   }
 
   /**
@@ -92,24 +95,24 @@ export class StorageBrowser implements StorageIntegration {
    */
   async storeFile(url: string) {
     if (!this.cache) {
-      throw new Error(UninitializedCacheError);
+      throw new Error(UninitializedCacheError)
     }
 
     try {
-      const request = new Request(url, { mode: "cors", method: "GET" });
-      await this.cache.add(request);
+      const request = new Request(url, { mode: 'cors', method: 'GET' })
+      await this.cache.add(request)
 
-      const response = await this.cache.match(url);
+      const response = await this.cache.match(url)
       if (response?.ok) {
         return {
           item: {
             url,
-            size: parseInt(response.headers.get("Content-Length") || "0"),
+            size: parseInt(response.headers.get('Content-Length') || '0'),
           },
           result: {
             code: StoreResult.Success,
           },
-        };
+        }
       } else {
         return {
           result: {
@@ -117,17 +120,17 @@ export class StorageBrowser implements StorageIntegration {
             error: StoreError.Unknown,
             errMsg: response?.statusText,
           },
-        };
+        }
       }
     } catch (err) {
-      console.error(err);
+      console.error(err)
       return {
         result: {
           code: StoreResult.Failure,
           error: StoreError.NotFound,
           errMsg: (err as Error).message,
         },
-      };
+      }
     }
   }
 
@@ -147,17 +150,17 @@ export class StorageBrowser implements StorageIntegration {
    */
   async deleteFile(url: string) {
     if (!this.cache) {
-      throw new Error(UninitializedCacheError);
+      throw new Error(UninitializedCacheError)
     }
 
-    await this.cache.delete(url);
+    await this.cache.delete(url)
   }
 
   /**
    * Deletes all the files from the storage
    */
   async deleteAllFiles() {
-    await caches.delete(this.cacheName);
+    await caches.delete(this.cacheName)
   }
 
   async close() {}

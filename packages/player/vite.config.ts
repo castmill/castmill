@@ -1,12 +1,12 @@
-import { defineConfig } from "vite";
-import { resolve } from "path";
-import babel from "@rollup/plugin-babel";
-import { nodeResolve } from "@rollup/plugin-node-resolve";
-import arrowFunctions from "@babel/plugin-transform-arrow-functions";
-import legacy from "@vitejs/plugin-legacy";
-import vue from "@vitejs/plugin-vue";
+import { defineConfig } from 'vite'
+import { resolve } from 'path'
+import babel from '@rollup/plugin-babel'
+import { nodeResolve } from '@rollup/plugin-node-resolve'
+import arrowFunctions from '@babel/plugin-transform-arrow-functions'
+import legacy from '@vitejs/plugin-legacy'
+import vue from '@vitejs/plugin-vue'
 
-import solidPlugin from "vite-plugin-solid";
+import solidPlugin from 'vite-plugin-solid'
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -15,10 +15,10 @@ export default defineConfig({
     sourcemap: true,
 
     lib: {
-      entry: resolve(__dirname, "src/index.ts"),
-      name: "castmill-player",
+      entry: resolve(__dirname, 'src/index.ts'),
+      name: 'castmill-player',
       fileName: (format) => `index.js`,
-      formats: ["es"],
+      formats: ['es'],
     },
 
     rollupOptions: {
@@ -46,7 +46,7 @@ export default defineConfig({
       input: {
         // demo: resolve(__dirname, "demos/index.html"),
         // webos: resolve(__dirname, "demos/webos/index.html"),
-        lib: resolve(__dirname, "src/index.ts"),
+        lib: resolve(__dirname, 'src/index.ts'),
       },
       // make sure to externalize deps that shouldn't be bundled
       // into your library
@@ -54,8 +54,8 @@ export default defineConfig({
       output: {
         // Provide global variables to use in the UMD build
         // for externalized deps
-        dir: "dist/",
-        format: "es",
+        dir: 'dist/',
+        format: 'es',
       },
     },
   },
@@ -69,6 +69,6 @@ export default defineConfig({
     */
   ],
   resolve: {
-    dedupe: ["solid-js"],
+    dedupe: ['solid-js'],
   },
-});
+})

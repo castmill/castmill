@@ -1,41 +1,44 @@
-import { ResourceManager } from "@castmill/cache";
-import { EventEmitter } from "eventemitter3";
-import { NEVER, Observable, of } from "rxjs";
+import { ResourceManager } from '@castmill/cache'
+import { EventEmitter } from 'eventemitter3'
+import { NEVER, Observable, of } from 'rxjs'
 
 interface ProxyMethodData {
-  counter: number;
-  method: string;
-  args: any[];
+  counter: number
+  method: string
+  args: any[]
 }
 
 export abstract class Widget extends EventEmitter {
-  protected messageHandler?: (ev: MessageEvent) => void;
+  protected messageHandler?: (ev: MessageEvent) => void
 
-  constructor(protected resourceManager: ResourceManager, opts?: {}) {
-    super();
+  constructor(
+    protected resourceManager: ResourceManager,
+    opts?: {}
+  ) {
+    super()
 
     if (window.parent) {
       const messageHandler = (this.messageHandler = (ev: MessageEvent) => {
-        let data: ProxyMethodData;
+        let data: ProxyMethodData
 
         try {
-          data = JSON.parse(ev.data);
+          data = JSON.parse(ev.data)
         } catch (err) {
           // Ignore corrupt messages.
-          return;
+          return
         }
 
-        let result;
+        let result
         switch (data.method) {
-          case "unload":
-            this.unload();
-            break;
-          case "play":
+          case 'unload':
+            this.unload()
+            break
+          case 'play':
             // We need to create an observable based on the notification observable
             // filtering for the timer event.
             // result = this.play.apply(this, data.args);
-            break;
-          case "show":
+            break
+          case 'show':
           // How to deal with el and offset here?
         }
 
@@ -44,10 +47,10 @@ export abstract class Widget extends EventEmitter {
             counter: data.counter,
             result,
           })
-        );
-      });
+        )
+      })
 
-      window.addEventListener("message", messageHandler, false);
+      window.addEventListener('message', messageHandler, false)
     }
   }
 
@@ -72,25 +75,25 @@ export abstract class Widget extends EventEmitter {
    *  Starts playing the content.
    */
   play(timer$: Observable<number>): Observable<string | number> {
-    return NEVER;
+    return NEVER
   }
 
   stop() {}
 
   show(el: HTMLElement, offset: number): Observable<string> {
-    return of("shown");
+    return of('shown')
   }
 
   seek(offset: number): Observable<[number, number]> {
-    return of([offset, 0]);
+    return of([offset, 0])
   }
 
   duration_old(): Observable<number> {
-    return of(0);
+    return of(0)
   }
 
   duration(): number {
-    return 0;
+    return 0
   }
 
   toggleDebug() {}

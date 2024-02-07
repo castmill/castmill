@@ -10,7 +10,7 @@ export interface Machine {
    * being sent to the server to avoid leaking the machine's ID.
    *
    */
-  getMachineGUID(): Promise<string>;
+  getMachineGUID(): Promise<string>
 
   /**
    *
@@ -23,27 +23,30 @@ export interface Machine {
    * @param credentials
    *
    */
-  storeCredentials(credentials: string): Promise<void>;
+  storeCredentials(credentials: string): Promise<void>
 
   /**
    *  Returns the credentials stored on the device.
    *
    */
-  getCredentials(): Promise<string>;
+  getCredentials(): Promise<string>
 
   /**
    * Remove the credentials from the device.
    */
-  removeCredentials(): Promise<void>;
+  removeCredentials(): Promise<void>
 
   /**
    * Returns the machine's location as a latitude and longitude
    * float numbers.
    */
-  getLocation?(): Promise<undefined | {
-    latitude: number;
-    longitude: number;
-  }>;
+  getLocation?(): Promise<
+    | undefined
+    | {
+        latitude: number
+        longitude: number
+      }
+  >
 
   /**
    * Returns the machine's timezone identifier as a string.
@@ -54,32 +57,32 @@ export interface Machine {
    *  "Australia/Sydney"
    *  "Pacific/Auckland"
    */
-  getTimezone?(): Promise<string>;
+  getTimezone?(): Promise<string>
 
   /**
    * Reset the device application.
    */
-  reset?(): Promise<void>;
+  reset?(): Promise<void>
 
   /**
    * Reboot the device. This should perform a clean hardware reboot of the device.
    *
    */
-  reboot?(): Promise<void>;
+  reboot?(): Promise<void>
 
   /**
    * Shutdown the device. This should perform a clean hardware shutdown of the device.
    * i.e. after this method is called the device should be completely powered off.
    */
-  shutdown?(): Promise<void>;
+  shutdown?(): Promise<void>
 
   /**
    * Updates the device's application.
    */
-  update?(): Promise<void>;
+  update?(): Promise<void>
 
   /**
    * Updates the device's firmware.
    */
-  updateFirmware?(): Promise<void>;
+  updateFirmware?(): Promise<void>
 }

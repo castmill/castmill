@@ -11,6 +11,6 @@
 
 class Formatters {
   static formatNumber(input: number): string {
-    return `${input}`;
+    return `${input}`
   }
 }

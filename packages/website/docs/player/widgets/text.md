@@ -7,25 +7,24 @@ font size.
 
 ```typescript
 export interface TextComponentOptions {
-  text: string;
-  autofit: AutoFitOpts;
+  text: string
+  autofit: AutoFitOpts
 
   // Break text in chars when animating.
-  chars?: boolean;
+  chars?: boolean
 
   // Apply perspective to the text
-  perspective?: number;
+  perspective?: number
 }
 
 interface AutoFitOpts {
   // Base size of the text (in em). Used if the text fits in the container.
-  baseSize?: number;
+  baseSize?: number
 
   // Maximum size the text can have (in em)
-  maxSize?: number;
+  maxSize?: number
 
   // Minimum size the text can have (in em) before scroll is enabled.
-  minSize?: number;
+  minSize?: number
 }
-
 ```

@@ -1,4 +1,3 @@
-
 # Widgets
 
 Widgets are the core components of Castmill and what ultimately shows any content on a display. Widgets are built on top of a set of SolidJS components that currently support the following types of content:
@@ -12,7 +11,6 @@ Widgets are the core components of Castmill and what ultimately shows any conten
 - Layouts
 
 Widgets are defined as JSON objects that are then parsed by the player and rendered on the screen. The JSON format is very simple and allows for a lot of flexibility.
-
 
 For example, the following JSON object defines a group of two text components:
 
@@ -85,4 +83,3 @@ It may seem a small set of components, but since these components can be nested,
 
 All components support animations. Animations are built on top of GSAP and are defined as a sequence of keyframes, allowing for very
 complex animations if needed.
-

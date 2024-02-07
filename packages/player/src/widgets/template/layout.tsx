@@ -1,30 +1,30 @@
-import { Component, For, JSX, mergeProps, onCleanup, onMount } from "solid-js";
-import { TemplateConfig, resolveOption } from "./binding";
-import { Subscription, of, share, switchMap, take } from "rxjs";
-import { TemplateComponent, TemplateComponentType } from "./template";
-import { JsonPlaylist } from "../../interfaces";
-import { Playlist } from "../../playlist";
-import { ResourceManager } from "@castmill/cache";
-import { Renderer } from "../../renderer";
-import { Timeline, TimelineItem } from "./timeline";
-import { timer } from "../../player";
-import { ComponentAnimation } from "./animation";
-import { BaseComponentProps } from "./interfaces/base-component-props";
-import { PlayerGlobals } from "../../interfaces/player-globals.interface";
+import { Component, For, JSX, mergeProps, onCleanup, onMount } from 'solid-js'
+import { TemplateConfig, resolveOption } from './binding'
+import { Subscription, of, share, switchMap, take } from 'rxjs'
+import { TemplateComponent, TemplateComponentType } from './template'
+import { JsonPlaylist } from '../../interfaces'
+import { Playlist } from '../../playlist'
+import { ResourceManager } from '@castmill/cache'
+import { Renderer } from '../../renderer'
+import { Timeline, TimelineItem } from './timeline'
+import { timer } from '../../player'
+import { ComponentAnimation } from './animation'
+import { BaseComponentProps } from './interfaces/base-component-props'
+import { PlayerGlobals } from '../../interfaces/player-globals.interface'
 
 export interface LayoutContainer {
-  playlist: JsonPlaylist;
-  style: JSX.CSSProperties;
+  playlist: JsonPlaylist
+  style: JSX.CSSProperties
 }
 
 export interface LayoutComponentOptions {
-  containers: LayoutContainer[];
+  containers: LayoutContainer[]
 }
 
 export class LayoutComponent implements TemplateComponent {
-  private playlists: Playlist[] = [];
+  private playlists: Playlist[] = []
 
-  readonly type = TemplateComponentType.Layout;
+  readonly type = TemplateComponentType.Layout
 
   constructor(
     public name: string,
@@ -38,16 +38,16 @@ export class LayoutComponent implements TemplateComponent {
     return this.playlists.reduce(
       (acc: number, playlist: Playlist) => Math.max(acc, playlist.duration()),
       0
-    );
+    )
   }
 
   static fromJSON(
     json: {
-      opts: LayoutComponentOptions;
-      style: JSX.CSSProperties;
-      name: string;
-      animations?: ComponentAnimation[];
-      filter?: Record<string, any>;
+      opts: LayoutComponentOptions
+      style: JSX.CSSProperties
+      name: string
+      animations?: ComponentAnimation[]
+      filter?: Record<string, any>
     },
     resourceManager: ResourceManager,
     globals: PlayerGlobals
@@ -58,12 +58,12 @@ export class LayoutComponent implements TemplateComponent {
       json.style,
       json.animations,
       json.filter
-    );
+    )
     layout.playlists = json.opts.containers.map((container: LayoutContainer) =>
       Playlist.fromJSON(container.playlist, resourceManager, globals)
-    );
+    )
 
-    return layout;
+    return layout
   }
 
   static resolveOptions(
@@ -74,38 +74,38 @@ export class LayoutComponent implements TemplateComponent {
   ): LayoutComponentOptions {
     return {
       containers: resolveOption(opts.containers, config, context, globals),
-    };
+    }
   }
 }
 interface LayoutProps extends BaseComponentProps {
-  opts: LayoutComponentOptions;
-  resourceManager: ResourceManager;
-  globals: PlayerGlobals;
+  opts: LayoutComponentOptions
+  resourceManager: ResourceManager
+  globals: PlayerGlobals
 }
 
 export const Layout: Component<LayoutProps> = (props) => {
-  const timeline = new Timeline("layout");
+  const timeline = new Timeline('layout')
   const timelineItem = {
     start: props.timeline.duration(),
     child: timeline,
-  };
-  props.timeline.add(timelineItem);
+  }
+  props.timeline.add(timelineItem)
 
   const merged = mergeProps(
     {
-      width: "100%",
-      height: "100%",
+      width: '100%',
+      height: '100%',
     },
     props.style
-  );
+  )
 
   onCleanup(() => {
-    props.timeline.remove(timelineItem);
-  });
+    props.timeline.remove(timelineItem)
+  })
 
   onMount(() => {
-    props.onReady();
-  });
+    props.onReady()
+  })
 
   return (
     <For each={props.opts.containers}>
@@ -119,107 +119,107 @@ export const Layout: Component<LayoutProps> = (props) => {
         />
       )}
     </For>
-  );
-};
+  )
+}
 
 const LayoutContainer: Component<{
-  container: LayoutContainer;
-  resourceManager: ResourceManager;
-  globals: PlayerGlobals;
-  style: JSX.CSSProperties;
-  timeline: Timeline;
+  container: LayoutContainer
+  resourceManager: ResourceManager
+  globals: PlayerGlobals
+  style: JSX.CSSProperties
+  timeline: Timeline
   // onReady: () => void;
 }> = (props) => {
-  let containerRef: HTMLDivElement | undefined;
-  let renderer: Renderer | undefined;
+  let containerRef: HTMLDivElement | undefined
+  let renderer: Renderer | undefined
 
-  let timeline: Timeline;
-  let timelineItem: TimelineItem;
-  let showingSubscription: Subscription;
-  let seekinSubscription: Subscription;
+  let timeline: Timeline
+  let timelineItem: TimelineItem
+  let showingSubscription: Subscription
+  let seekinSubscription: Subscription
 
   const playlist = Playlist.fromJSON(
     props.container.playlist,
     props.resourceManager,
     props.globals
-  );
+  )
 
   onCleanup(() => {
-    showingSubscription?.unsubscribe();
-    seekinSubscription?.unsubscribe();
-    timelineItem && props.timeline.remove(timelineItem);
-    playlist.layers.forEach((item) => item.unload());
-    renderer?.clean();
-  });
+    showingSubscription?.unsubscribe()
+    seekinSubscription?.unsubscribe()
+    timelineItem && props.timeline.remove(timelineItem)
+    playlist.layers.forEach((item) => item.unload())
+    renderer?.clean()
+  })
 
   onMount(() => {
-    const playlistDuration = playlist.duration();
-    timeline = new Timeline("layout-container", {
+    const playlistDuration = playlist.duration()
+    timeline = new Timeline('layout-container', {
       loop: true,
       duration: playlistDuration,
-    });
+    })
     timelineItem = {
       start: 0,
       duration: playlistDuration,
       child: timeline,
-    };
+    }
 
-    props.timeline.add(timelineItem);
+    props.timeline.add(timelineItem)
 
     if (containerRef) {
-      containerRef.style.position = "absolute";
-      renderer = new Renderer(containerRef);
-      const seek = timeline.seek.bind(timeline);
-      (timeline as any).seek = (time: number) => {
+      containerRef.style.position = 'absolute'
+      renderer = new Renderer(containerRef)
+      const seek = timeline.seek.bind(timeline)
+      ;(timeline as any).seek = (time: number) => {
         // seekinSubscription?.unsubscribe();
         seekinSubscription = playlist
           .seek(time)
           .pipe(switchMap(() => playlist.show(renderer!)))
           .subscribe(() => {
-            seek(time);
-          });
-      };
+            seek(time)
+          })
+      }
 
-      showingSubscription = playlist.show(renderer!).subscribe((ev) => {});
+      showingSubscription = playlist.show(renderer!).subscribe((ev) => {})
 
-      let playing$: Subscription;
-      let timer$;
-      let timerSubscription: Subscription;
+      let playing$: Subscription
+      let timer$
+      let timerSubscription: Subscription
 
-      const play = timeline.play.bind(timeline);
-      (timeline as any).play = () => {
+      const play = timeline.play.bind(timeline)
+      ;(timeline as any).play = () => {
         const timer$ = timer(
           Date.now(),
           playlist.time,
           100,
           playlist.duration()
-        ).pipe(share());
+        ).pipe(share())
 
         timerSubscription = timer$.subscribe({
           error: (err) => {
-            console.log("Timer error", err);
+            console.log('Timer error', err)
           },
-        });
+        })
 
         playing$ = playlist
           .play(renderer!, timer$, { loop: true })
-          .subscribe((evt) => void 0);
-        play();
-      };
+          .subscribe((evt) => void 0)
+        play()
+      }
 
-      const pause = timeline.pause.bind(timeline);
-      (timeline as any).pause = () => {
-        playing$?.unsubscribe();
-        timerSubscription?.unsubscribe();
-        pause();
-      };
+      const pause = timeline.pause.bind(timeline)
+      ;(timeline as any).pause = () => {
+        playing$?.unsubscribe()
+        timerSubscription?.unsubscribe()
+        pause()
+      }
 
       // props.onReady();
     }
-  });
+  })
 
-  return <div ref={containerRef} style={props.style}></div>;
-};
+  return <div ref={containerRef} style={props.style}></div>
+}
 
 /*
 

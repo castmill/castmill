@@ -14,12 +14,12 @@
  * all the content. It may be possible in the future to support for "streaming", not cacheable content, but
  * this is a separate case from the general case.
  */
-import { Dexie } from "dexie";
+import { Dexie } from 'dexie'
 import {
   StorageIntegration,
   StoreResult,
   StoreError,
-} from "./storage.integration";
+} from './storage.integration'
 
 /*
 if ("storage" in navigator && "estimate" in navigator.storage) {
@@ -30,25 +30,25 @@ if ("storage" in navigator && "estimate" in navigator.storage) {
 */
 
 export enum ItemType {
-  Code = "code",
-  Data = "data",
-  Media = "media",
+  Code = 'code',
+  Data = 'data',
+  Media = 'media',
 }
 
 interface ItemMetadata {
-  cachedUrl: string;
-  url: string;
-  timestamp: number;
-  size: number;
-  accessed: number;
-  type: ItemType;
-  mimeType: string;
+  cachedUrl: string
+  url: string
+  timestamp: number
+  size: number
+  accessed: number
+  type: ItemType
+  mimeType: string
 }
 
 export class Cache extends Dexie {
-  items!: Dexie.Table<ItemMetadata, string>;
-  caching: { [index: string]: Promise<{ url: string; size: number }> } = {};
-  totalSize: number = 0;
+  items!: Dexie.Table<ItemMetadata, string>
+  caching: { [index: string]: Promise<{ url: string; size: number }> } = {}
+  totalSize: number = 0
 
   constructor(
     private integration: StorageIntegration,
@@ -56,11 +56,11 @@ export class Cache extends Dexie {
     private maxItems: number,
     version = 1
   ) {
-    super(name);
+    super(name)
 
     this.version(version).stores({
-      items: "url, timestamp, type",
-    });
+      items: 'url, timestamp, type',
+    })
   }
 
   async init() {
@@ -68,19 +68,19 @@ export class Cache extends Dexie {
 
     // TODO: Check integrity of the cache, i.e. that all files in the
     // integration have a reference in the cache, if not delete them.
-    return this.integration.init();
+    return this.integration.init()
   }
 
   async list(type: ItemType, offset: number = 0, limit: number = 10) {
     // List all the items of a given type
     const items = await this.items
-      .where("type")
+      .where('type')
       .equals(type)
       .offset(offset)
       .limit(limit)
-      .toArray();
+      .toArray()
 
-    return items;
+    return items
   }
 
   /**
@@ -92,31 +92,31 @@ export class Cache extends Dexie {
    */
   async get(url: string) {
     if (!this.caching[url]) {
-      const item = await this.items.get({ url });
+      const item = await this.items.get({ url })
       if (item) {
-        item.accessed += 1;
+        item.accessed += 1
         await this.items.update(item.url!, {
           timestamp: Date.now(),
           accessed: item.accessed,
-        });
+        })
       }
-      return item;
+      return item
     }
   }
 
   async hasUrl(url: string) {
     // Check if we are caching the item.
     if (!!this.caching[url]) {
-      return true;
+      return true
     }
 
     // Check if the item  is not  already cached
-    const item = await this.items.get({ url });
+    const item = await this.items.get({ url })
     if (item) {
-      return true;
+      return true
     }
 
-    return false;
+    return false
   }
 
   async set(
@@ -127,35 +127,35 @@ export class Cache extends Dexie {
   ) {
     // Check if we are already caching the item.
     if (!!this.caching[url]) {
-      return;
+      return
     }
 
     // Check if the item  is not  already cached
-    const item = await this.items.get({ url });
+    const item = await this.items.get({ url })
     if (item) {
       if (!force) {
-        return;
+        return
       }
-      await this.del(url);
+      await this.del(url)
     }
 
     // Check if we need to delete old items (based on max amount)
     if (this.maxItems) {
-      const count = await this.items.count();
+      const count = await this.items.count()
       if (count >= this.maxItems) {
         const items = await this.items
-          .orderBy("timestamp")
+          .orderBy('timestamp')
           .limit(count - this.maxItems + 1)
-          .toArray();
+          .toArray()
         for (const item of items) {
-          await this.items.delete(item.url!);
+          await this.items.delete(item.url!)
         }
       }
     }
 
     // TODO: We should attach an error handler, possibly emitting an error
     // event as this process will happen in the background.
-    this.caching[url] = this.storeFile(url, type, mimeType);
+    this.caching[url] = this.storeFile(url, type, mimeType)
   }
 
   private async storeFile(
@@ -164,16 +164,16 @@ export class Cache extends Dexie {
     mimeType: string
   ): Promise<any> {
     try {
-      const { result, item } = await this.integration.storeFile(url);
+      const { result, item } = await this.integration.storeFile(url)
       switch (result.code) {
         case StoreResult.Success:
           if (item) {
-            const { url: cachedUrl, size } = item;
+            const { url: cachedUrl, size } = item
             if (!cachedUrl) {
-              throw new Error("Cached url is null");
+              throw new Error('Cached url is null')
             }
-            this.totalSize += size;
-            delete this.caching[url];
+            this.totalSize += size
+            delete this.caching[url]
             return this.items.add({
               timestamp: Date.now(),
               size,
@@ -182,32 +182,32 @@ export class Cache extends Dexie {
               url,
               cachedUrl,
               mimeType,
-            });
+            })
           }
           throw new Error(
-            "Cache: Storage is missing item despite signaling success"
-          );
+            'Cache: Storage is missing item despite signaling success'
+          )
         case StoreResult.Failure:
           switch (result.error) {
             case StoreError.NotEnoughSpace:
               if (result.errMsg) {
-                const requiredSpace = parseInt(result.errMsg);
-                await this.freeSpace(requiredSpace);
-                return this.storeFile(url, type, mimeType);
+                const requiredSpace = parseInt(result.errMsg)
+                await this.freeSpace(requiredSpace)
+                return this.storeFile(url, type, mimeType)
               } else {
-                throw new Error("Not enough space, and no error message");
+                throw new Error('Not enough space, and no error message')
               }
             default:
               throw new Error(
                 `Unhandled error ${result.error} ${result.errMsg}`
-              );
+              )
           }
         default:
-          throw new Error(`Unhandled result code ${result.code}`);
+          throw new Error(`Unhandled result code ${result.code}`)
       }
     } catch (err) {
-      console.error("Error caching file", url, err);
-      throw err as Error;
+      console.error('Error caching file', url, err)
+      throw err as Error
     }
   }
 
@@ -216,66 +216,66 @@ export class Cache extends Dexie {
    * @param size The required extra size needed to make room for the new key.
    */
   private async freeSpace(size: number) {
-    const count = await this.items.count();
+    const count = await this.items.count()
 
     if (size <= 0) {
-      return;
+      return
     }
 
     // TODO: it is possible to keep a totalSize counter and
     // keep it updated so that this slow getTotalSize is not needed more than
     // when initializing the cache.
-    const totalSize = await this.getTotalSize();
+    const totalSize = await this.getTotalSize()
 
     if (totalSize < size) {
-      throw new Error("Not enough space to free");
+      throw new Error('Not enough space to free')
     }
 
     // Iterate in chunks of 10, and free as much as needed
-    const chunkSize = 10;
-    let freedSpace = 0;
-    const numChunks = Math.ceil(count / chunkSize);
+    const chunkSize = 10
+    let freedSpace = 0
+    const numChunks = Math.ceil(count / chunkSize)
     for (let chunk = 0; chunk < numChunks; chunk++) {
       const items = await this.items
-        .orderBy("timestamp")
+        .orderBy('timestamp')
         .offset(chunk * chunkSize)
         .limit(chunkSize)
-        .toArray();
+        .toArray()
       for (const item of items) {
-        freedSpace += item.size;
-        await this.del(item.url!);
+        freedSpace += item.size
+        await this.del(item.url!)
         if (freedSpace >= size) {
-          return;
+          return
         }
       }
     }
 
-    throw new Error("Could not free enough space");
+    throw new Error('Could not free enough space')
   }
 
   private async getTotalSize() {
-    let totalSize = 0;
-    const count = await this.items.count();
+    let totalSize = 0
+    const count = await this.items.count()
 
     // aggregate in chunks of 100 items
-    const chunkSize = 100;
-    const numChunks = Math.ceil(count / chunkSize);
+    const chunkSize = 100
+    const numChunks = Math.ceil(count / chunkSize)
     for (let chunk = 0; chunk < numChunks; chunk++) {
       const items = await this.items
-        .orderBy("timestamp")
+        .orderBy('timestamp')
         .offset(chunk * chunkSize)
         .limit(chunkSize)
-        .toArray();
+        .toArray()
       for (const item of items) {
-        totalSize += item.size;
+        totalSize += item.size
       }
     }
-    return totalSize;
+    return totalSize
   }
 
   async del(key: string) {
-    await this.integration.deleteFile(key);
-    return this.items.delete(key);
+    await this.integration.deleteFile(key)
+    return this.items.delete(key)
   }
 
   /**
@@ -284,9 +284,9 @@ export class Cache extends Dexie {
    * @param mimeType
    */
   async clean(mimeType?: string) {
-    const items = await this.items.toArray();
+    const items = await this.items.toArray()
     for (const item of items) {
-      await this.del(item.url!);
+      await this.del(item.url!)
     }
   }
 
@@ -299,17 +299,17 @@ export class Cache extends Dexie {
       dbList.forEach((dbInfo) => {
         // Delete each database
         if (dbInfo.name) {
-          const deleteRequest = window.indexedDB.deleteDatabase(dbInfo.name);
+          const deleteRequest = window.indexedDB.deleteDatabase(dbInfo.name)
 
           deleteRequest.onerror = () => {
-            console.error(`Failed to delete database ${dbInfo.name}`);
-          };
+            console.error(`Failed to delete database ${dbInfo.name}`)
+          }
 
           deleteRequest.onsuccess = () => {
-            console.log(`Successfully deleted database ${dbInfo.name}`);
-          };
+            console.log(`Successfully deleted database ${dbInfo.name}`)
+          }
         }
-      });
-    });
+      })
+    })
   }
 }

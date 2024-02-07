@@ -1,18 +1,18 @@
-import { Component, JSX } from "solid-js";
-import { ResourceManager } from "@castmill/cache";
+import { Component, JSX } from 'solid-js'
+import { ResourceManager } from '@castmill/cache'
 
-import { Item } from "./item";
-import { TemplateConfig } from "./binding";
-import { GroupComponent } from "./group";
-import { TextComponent } from "./text";
-import { ImageComponent } from "./image";
-import { VideoComponent } from "./video";
-import { ListComponent } from "./list";
-import { ImageCarouselComponent } from "./image-carousel";
-import { LayoutComponent } from "./layout";
-import { Timeline } from "./timeline";
-import { ComponentAnimation } from "./animation";
-import { PlayerGlobals } from "../../interfaces/player-globals.interface";
+import { Item } from './item'
+import { TemplateConfig } from './binding'
+import { GroupComponent } from './group'
+import { TextComponent } from './text'
+import { ImageComponent } from './image'
+import { VideoComponent } from './video'
+import { ListComponent } from './list'
+import { ImageCarouselComponent } from './image-carousel'
+import { LayoutComponent } from './layout'
+import { Timeline } from './timeline'
+import { ComponentAnimation } from './animation'
+import { PlayerGlobals } from '../../interfaces/player-globals.interface'
 
 export type TemplateComponentTypeUnion =
   | TextComponent
@@ -21,22 +21,22 @@ export type TemplateComponentTypeUnion =
   | ListComponent
   | GroupComponent
   | LayoutComponent
-  | ImageCarouselComponent;
+  | ImageCarouselComponent
 
 export enum TemplateComponentType {
-  Template = "template",
-  Layout = "layout",
-  Text = "text",
-  Image = "image",
-  Video = "video",
-  List = "list",
-  Group = "group",
-  ImageCarousel = "image-carousel",
+  Template = 'template',
+  Layout = 'layout',
+  Text = 'text',
+  Image = 'image',
+  Video = 'video',
+  List = 'list',
+  Group = 'group',
+  ImageCarousel = 'image-carousel',
 }
 
 export class TemplateComponent {
-  readonly type: any = TemplateComponentType.Template;
-  readonly style: JSX.CSSProperties = {};
+  readonly type: any = TemplateComponentType.Template
+  readonly style: JSX.CSSProperties = {}
 
   constructor(
     public name: string,
@@ -47,7 +47,7 @@ export class TemplateComponent {
   ) {}
 
   resolveDuration(medias: { [index: string]: string }): number {
-    return 0;
+    return 0
   }
 
   static fromJSON(
@@ -57,43 +57,43 @@ export class TemplateComponent {
   ): TemplateComponent {
     switch (json.type) {
       case TemplateComponentType.Group:
-        return GroupComponent.fromJSON(json, resourceManager, globals);
+        return GroupComponent.fromJSON(json, resourceManager, globals)
       case TemplateComponentType.List:
-        return ListComponent.fromJSON(json, resourceManager, globals);
+        return ListComponent.fromJSON(json, resourceManager, globals)
       case TemplateComponentType.Layout:
-        return LayoutComponent.fromJSON(json, resourceManager, globals);
+        return LayoutComponent.fromJSON(json, resourceManager, globals)
       case TemplateComponentType.Text:
-        return TextComponent.fromJSON(json);
+        return TextComponent.fromJSON(json)
       case TemplateComponentType.Image:
-        return ImageComponent.fromJSON(json);
+        return ImageComponent.fromJSON(json)
       case TemplateComponentType.Video:
-        return VideoComponent.fromJSON(json);
+        return VideoComponent.fromJSON(json)
       case TemplateComponentType.ImageCarousel:
-        return ImageCarouselComponent.fromJSON(json);
+        return ImageCarouselComponent.fromJSON(json)
       default:
-        throw new Error(`Unknown template component type: ${json.type}`);
+        throw new Error(`Unknown template component type: ${json.type}`)
     }
   }
 }
 
 export const Template: Component<{
-  name: string;
-  root: TemplateComponentTypeUnion;
+  name: string
+  root: TemplateComponentTypeUnion
 
-  style?: JSX.CSSProperties;
-  timeline: Timeline;
-  resourceManager: ResourceManager;
+  style?: JSX.CSSProperties
+  timeline: Timeline
+  resourceManager: ResourceManager
 
-  config: TemplateConfig;
-  globals: PlayerGlobals;
+  config: TemplateConfig
+  globals: PlayerGlobals
 
-  onReady: () => void;
+  onReady: () => void
 }> = (props) => {
   return (
     <div
       data-component="template"
       data-name={props.name}
-      style={props.style || { width: "100%", height: "100%" }}
+      style={props.style || { width: '100%', height: '100%' }}
     >
       <Item
         config={props.config}
@@ -105,5 +105,5 @@ export const Template: Component<{
         globals={props.globals}
       />
     </div>
-  );
-};
+  )
+}

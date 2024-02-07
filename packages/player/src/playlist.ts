@@ -1,9 +1,9 @@
-import { ResourceManager } from "@castmill/cache";
+import { ResourceManager } from '@castmill/cache'
 
-import { Status } from "./playable";
-import { Layer } from "./layer";
-import { EventEmitter } from "eventemitter3";
-import { of, from, Observable } from "rxjs";
+import { Status } from './playable'
+import { Layer } from './layer'
+import { EventEmitter } from 'eventemitter3'
+import { of, from, Observable } from 'rxjs'
 import {
   concatMap,
   map,
@@ -12,22 +12,25 @@ import {
   takeWhile,
   tap,
   switchMap,
-} from "rxjs/operators";
-import { Renderer } from "./renderer";
-import { JsonPlaylist } from "./";
-import { PlayerGlobals } from "./interfaces/player-globals.interface";
+} from 'rxjs/operators'
+import { Renderer } from './renderer'
+import { JsonPlaylist } from './'
+import { PlayerGlobals } from './interfaces/player-globals.interface'
 
 export class Playlist extends EventEmitter {
-  public layers: Layer[] = [];
+  public layers: Layer[] = []
 
-  time: number = 0;
+  time: number = 0
 
-  status: Status = Status.NotReady;
+  status: Status = Status.NotReady
 
-  private debugLayer?: HTMLElement;
+  private debugLayer?: HTMLElement
 
-  constructor(public name: string, private resourceManager: ResourceManager) {
-    super();
+  constructor(
+    public name: string,
+    private resourceManager: ResourceManager
+  ) {
+    super()
     // this.toggleDebug();
   }
 
@@ -42,14 +45,14 @@ export class Playlist extends EventEmitter {
     resourceManager: ResourceManager,
     globals: PlayerGlobals
   ) {
-    const playlist = new Playlist(json.name, resourceManager);
-    const layers = json.items || [];
+    const playlist = new Playlist(json.name, resourceManager)
+    const layers = json.items || []
 
     for (let i = 0; i < layers.length; i++) {
-      const layer = Layer.fromJSON(json.items[i], resourceManager, globals);
-      playlist.add(layer);
+      const layer = Layer.fromJSON(json.items[i], resourceManager, globals)
+      playlist.add(layer)
     }
-    return playlist;
+    return playlist
   }
 
   play(
@@ -57,33 +60,33 @@ export class Playlist extends EventEmitter {
     timer$: Observable<number>,
     opts?: { loop?: boolean }
   ) {
-    return this.playLayers(renderer, timer$, opts ? opts : {});
+    return this.playLayers(renderer, timer$, opts ? opts : {})
   }
 
   toggleDebug() {
-    this.layers.map((layer) => layer.toggleDebug());
+    this.layers.map((layer) => layer.toggleDebug())
   }
 
   private getLayersWithOffsets(): {
-    start: number;
-    end: number;
-    duration: number;
-    layer: Layer;
+    start: number
+    end: number
+    duration: number
+    layer: Layer
   }[] {
     // Compute offsets for every layer
-    let end = 0;
+    let end = 0
     return this.layers.map((layer) => {
-      const duration = layer.duration();
-      const start = end;
-      end += duration;
+      const duration = layer.duration()
+      const start = end
+      end += duration
       const result = {
         start,
         end,
         duration,
         layer,
-      };
-      return result;
-    });
+      }
+      return result
+    })
   }
 
   private playLayers(
@@ -91,12 +94,12 @@ export class Playlist extends EventEmitter {
     timer$: Observable<number>,
     { loop = false }
   ) {
-    const item = this.findLayer(this.time);
+    const item = this.findLayer(this.time)
 
     if (item) {
-      const { offset, index, layersWithOffsets } = item;
+      const { offset, index, layersWithOffsets } = item
       // The first layer must be seeked at a relative offset, the rest after it with offset 0.
-      let first = 1;
+      let first = 1
 
       // Rotate array when loop is active
       // (so that we can have a complete array to loop with from current item offset)
@@ -104,27 +107,27 @@ export class Playlist extends EventEmitter {
         ? layersWithOffsets
             .slice(index)
             .concat(layersWithOffsets.slice(0, index))
-        : layersWithOffsets.slice(index);
+        : layersWithOffsets.slice(index)
 
       // We start playing from the found layer at the current offset.
-      let current: Layer;
+      let current: Layer
       const duration = layersWithOffsets.reduce(
         (acc, item) => acc + item.duration,
         0
-      );
+      )
       const playlistTimer$ = timer$.pipe(
         map((value) => value % duration),
         tap((value) => {
-          this.time = value;
+          this.time = value
         }),
         share()
-      );
+      )
 
       const playing$ = from(elements).pipe(
         concatMap((element) => {
-          const layerOffset = first ? offset : 0;
-          current = element.layer;
-          first = 0;
+          const layerOffset = first ? offset : 0
+          current = element.layer
+          first = 0
           return this.playLayer(
             renderer,
             playlistTimer$,
@@ -132,17 +135,17 @@ export class Playlist extends EventEmitter {
             layerOffset,
             element.start,
             element.end
-          );
+          )
         })
-      );
+      )
 
       if (loop) {
-        return playing$.pipe(repeat());
+        return playing$.pipe(repeat())
       } else {
-        return playing$;
+        return playing$
       }
     } else {
-      return of("end");
+      return of('end')
     }
   }
 
@@ -154,7 +157,7 @@ export class Playlist extends EventEmitter {
     start: number,
     end: number
   ): Observable<string | number> {
-    const volume = 100;
+    const volume = 100
     return renderer.play(
       layer,
       timer$.pipe(
@@ -164,7 +167,7 @@ export class Playlist extends EventEmitter {
       ),
       layerOffset,
       volume
-    );
+    )
   }
 
   /**
@@ -194,41 +197,41 @@ export class Playlist extends EventEmitter {
  */
 
   seek(_offset: number) {
-    const duration = this.duration();
-    const offset = _offset % (duration + 1);
-    this.time = offset;
+    const duration = this.duration()
+    const offset = _offset % (duration + 1)
+    this.time = offset
 
-    let result: [number, number] = [offset, duration];
-    const item = this.findLayer(offset);
+    let result: [number, number] = [offset, duration]
+    const item = this.findLayer(offset)
     if (item) {
-      const { layer, offset: relativeOffset = 0 } = item;
+      const { layer, offset: relativeOffset = 0 } = item
       return layer.seek(relativeOffset).pipe(
         switchMap(() => {
-          result = [offset, duration];
-          return of(result);
+          result = [offset, duration]
+          return of(result)
         })
-      );
+      )
     }
-    return of(result);
+    return of(result)
   }
 
   show(renderer: Renderer) {
-    const item = this.findLayer(this.time);
+    const item = this.findLayer(this.time)
     if (item) {
-      const { layer, offset = 0 } = item;
-      return renderer.show(layer, offset);
+      const { layer, offset = 0 } = item
+      return renderer.show(layer, offset)
     }
-    return of("end");
+    return of('end')
   }
 
   unload(): void {
-    this.layers.forEach((layer) => layer.unload());
+    this.layers.forEach((layer) => layer.unload())
   }
 
   private findLayer(offset: number) {
-    const layersWithOffsets = this.getLayersWithOffsets();
+    const layersWithOffsets = this.getLayersWithOffsets()
     for (let i = 0; i < layersWithOffsets.length; i++) {
-      const item = layersWithOffsets[i];
+      const item = layersWithOffsets[i]
       if (offset >= item.start && offset < item.end) {
         return {
           index: i,
@@ -236,37 +239,37 @@ export class Playlist extends EventEmitter {
           duration: item.duration,
           layer: item.layer,
           layersWithOffsets,
-        };
+        }
       }
     }
   }
 
   duration(): number {
-    return this.layers.reduce((acc, entry) => acc + entry.duration(), 0);
+    return this.layers.reduce((acc, entry) => acc + entry.duration(), 0)
   }
 
   public get position(): number {
-    return this.time;
+    return this.time
   }
 
   add(entry: Layer, index?: number): Playlist {
     if (index) {
-      this.layers.splice(index, 0, entry);
+      this.layers.splice(index, 0, entry)
     } else {
-      this.layers.push(entry);
+      this.layers.push(entry)
     }
-    return this;
+    return this
   }
 
   remove(entry: Layer): Playlist {
-    const index = this.layers.indexOf(entry);
+    const index = this.layers.indexOf(entry)
     if (index > -1) {
-      this.layers.splice(index, 1);
+      this.layers.splice(index, 1)
     }
-    return this;
+    return this
   }
 
   get length(): number {
-    return this.layers.length;
+    return this.layers.length
   }
 }

@@ -1,1 +1,1 @@
-export * from './playerui';
+export * from './playerui'
