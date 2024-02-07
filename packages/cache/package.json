@@ -10,6 +10,8 @@
   "type": "module",
   "types": "dist/index.d.ts",
   "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "doc": "typedoc --out ./doc/ src/index.ts",
     "test": "mocha tests/**/*.spec.ts",
     "test:jest": "jest tests",
@@ -57,6 +59,7 @@
     "eventemitter3": "^4.0.7",
     "fake-indexeddb": "^3.1.8",
     "mocha": "^10.0.0",
+    "prettier": "^3.2.5",
     "rimraf": "^3.0.2",
     "semantic-release": "^17.4.2",
     "style-loader": "^0.21.0",
