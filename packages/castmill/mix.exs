@@ -34,6 +34,7 @@ defmodule Castmill.MixProject do
     [
       {:phoenix, "~> 1.7.2"},
       {:phoenix_ecto, "~> 4.4"},
+      {:cors_plug, "~> 3.0"},
       {:ecto_sql, "~> 3.6"},
       {:postgrex, ">= 0.0.0"},
       {:phoenix_html, "~> 3.3"},
@@ -52,7 +53,9 @@ defmodule Castmill.MixProject do
       {:jason, "~> 1.2"},
       {:plug_cowboy, "~> 2.5"},
       {:argon2_elixir, "~> 3.1.0"},
-      {:tarams, "~> 1.0.0"}
+      {:tarams, "~> 1.0.0"},
+      {:wax_, "~> 0.6.0"},
+      {:mox, "~> 1.0", only: [:test]}
     ]
   end
 

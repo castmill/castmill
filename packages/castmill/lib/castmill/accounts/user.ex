@@ -5,6 +5,16 @@ defmodule Castmill.Accounts.User do
 
   @primary_key {:id, Ecto.UUID, autogenerate: true}
 
+  @derive {Jason.Encoder,
+           only: [
+             :id,
+             :avatar,
+             :name,
+             :email,
+             :role,
+             :inserted_at,
+             :updated_at
+           ]}
   schema "users" do
     field(:avatar, :string)
     field(:email, :string)
@@ -74,6 +84,6 @@ defmodule Castmill.Accounts.User do
   end
 
   def base_query() do
-    from users in Castmill.Accounts.User, as: :user
+    from(users in Castmill.Accounts.User, as: :user)
   end
 end

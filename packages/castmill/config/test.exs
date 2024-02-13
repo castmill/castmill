@@ -31,3 +31,6 @@ config :logger, level: :warning
 
 # Initialize plugs at runtime for faster test compilation
 config :phoenix, :plug_init_mode, :runtime
+
+# Ensure we use the mocks when testing
+config :castmill, accounts: Castmill.AccountsMock
