@@ -1,0 +1,31 @@
+@use "../../colors.scss";
+
+.castmill-panel-item {
+  a {
+    text-decoration: none;
+
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    margin: 0 1em;
+
+    svg {
+      margin: 0 0.5rem;
+    }
+
+    &:link,
+    &:visited {
+      color: colors.$base-color;
+    }
+
+    &:active,
+    &:hover {
+      color: colors.$highlight-color;
+    }
+
+    &.active {
+      color: colors.$highlight-color;
+    }
+  }
+}

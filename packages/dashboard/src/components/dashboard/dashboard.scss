@@ -1,0 +1,17 @@
+@use "../../colors.scss";
+
+.castmill-dashboard {
+  height: 100%;
+  width: 100%;
+
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  background-color: colors.$background;
+  color: colors.$base-color;
+  text-align: center;
+
+  .content {
+    flex-grow: 1;
+  }
+}

@@ -1,0 +1,32 @@
+@use "../../colors.scss";
+
+.castmill-sidepanel {
+  width: 15rem;
+  height: 100%;
+
+  font-size: 1em;
+  padding: 1rem;
+
+  color: colors.$base-color;
+  background-color: colors.$background;
+  border-right: 1px solid colors.$separator-color;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+
+  .top {
+    width: 100%;
+  }
+
+  .links {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+
+    margin-top: 1rem;
+  }
+}
