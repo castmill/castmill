@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "jsx": "preserve",
+    "jsxImportSource": "solid-js",
+    "types": [
+      "vite/client",
+      "@solidjs/testing-library",
+      "@testing-library/jest-dom"
+    ],
+    "lib": ["es2015", "dom"],
+    "noEmit": true,
+    "isolatedModules": true
+  }
+}

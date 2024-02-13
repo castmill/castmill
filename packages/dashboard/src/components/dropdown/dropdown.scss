@@ -1,0 +1,24 @@
+@use "../../colors.scss";
+
+.castmill-dropdown {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+
+  .label {
+    font-size: 0.7em;
+  }
+
+  select {
+    width: 100%;
+
+    padding: 0.5em;
+    margin: 0.5em 0;
+    font-size: 1em;
+    border: 1px solid colors.$separator-color;
+    border-radius: 0.5em;
+    background-color: colors.$background;
+    color: colors.$base-color;
+  }
+}

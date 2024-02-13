@@ -1,0 +1,95 @@
+@use "../../colors.scss";
+
+.castmill-signup {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  height: 60vh;
+  padding-top: 10rem;
+
+  .login-box {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    color: colors.$base-color;
+    background: colors.$component-background-color;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    width: 30rem;
+    height: 35rem;
+  }
+
+  button {
+    width: 20em;
+    padding: 10px 20px;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: background-color 0.3s;
+    font-size: 16px;
+  }
+
+  input[type="text"] {
+    width: 20em;
+    padding: 10px 20px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    box-sizing: border-box;
+    font-size: 16px;
+    color: #bababa;
+  }
+
+  .login-box h2 {
+    margin-bottom: 20px;
+    font-size: 24px;
+  }
+
+  .login-button {
+    background-color: #4b49c7;
+    color: white;
+    border: none;
+  }
+
+  .login-button:hover {
+    background-color: #45a049;
+  }
+
+  .login-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+  }
+
+  .signup-button {
+    background-color: white;
+    color: rgb(67, 67, 67);
+    border: 1px solid #4b49c7;
+  }
+
+  .status {
+    margin-top: 15px;
+    color: #666;
+    font-size: 14px;
+  }
+
+  a {
+    text-decoration: none;
+    color: colors.$highlight-color;
+  }
+
+  .loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.7); /* Semi-transparent overlay */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10; /* Ensure it covers other content */
+  }
+}
