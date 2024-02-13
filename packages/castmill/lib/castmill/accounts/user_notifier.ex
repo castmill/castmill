@@ -76,4 +76,28 @@ defmodule Castmill.Accounts.UserNotifier do
     ==============================
     """)
   end
+
+  @doc """
+  Deliver Signup instructions.
+  """
+  def deliver_signup_instructions(signup) do
+    deliver(signup.email, "Signup instructions", """
+
+    ==============================
+
+    Hi #{signup.email},
+
+    You can signup by visiting the URL below:
+
+    #{signup_url(signup)}
+
+    If you didn't request this, please ignore this.
+
+    ==============================
+    """)
+  end
+
+  defp signup_url(%Castmill.Accounts.SignUp{id: id, email: email, challenge: challenge}) do
+    "http://localhost:3000/signup/?signup_id=#{id}&email=#{email}&challenge=#{challenge}"
+  end
 end
