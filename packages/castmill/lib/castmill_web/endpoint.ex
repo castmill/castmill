@@ -2,7 +2,7 @@ defmodule CastmillWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :castmill
 
   # Enable CORS
-  plug(CORSPlug, origin: "http://localhost:3000", credentials: true)
+  plug(CORSPlug, origin: CastmillWeb.Envs.get_dashboard_uri(), credentials: true)
 
   # The session will be stored in the cookie and signed,
   # this means its contents can be read but not tampered with.

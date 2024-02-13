@@ -129,14 +129,14 @@ defmodule CastmillWeb.Router do
   pipeline :signups do
     plug(:fetch_session)
     plug(:accepts, ["json"])
-    plug(CORSPlug, origin: "http://localhost:3000", credentials: true)
+    plug(CORSPlug, origin: CastmillWeb.Envs.get_dashboard_uri(), credentials: true)
     plug(:put_secure_browser_headers)
   end
 
   pipeline :sessions do
     plug(:fetch_session)
     plug(:accepts, ["json"])
-    plug(CORSPlug, origin: "http://localhost:3000", credentials: true)
+    plug(CORSPlug, origin: CastmillWeb.Envs.get_dashboard_uri(), credentials: true)
     plug(:put_secure_browser_headers)
   end
 

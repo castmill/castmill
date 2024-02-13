@@ -62,9 +62,13 @@ defmodule CastmillWeb.SessionUtils do
   def check_client_data_json(%{
         "type" => "webauthn.get",
         "challenge" => challenge,
-        "origin" => "http://localhost:3000"
+        "origin" => origin
       }) do
-    {:ok, challenge}
+    if origin == CastmillWeb.Envs.get_dashboard_uri() do
+      {:ok, challenge}
+    else
+      false
+    end
   end
 
   def check_client_data_json(_), do: false
