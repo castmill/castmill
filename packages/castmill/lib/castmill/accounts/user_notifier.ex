@@ -98,6 +98,7 @@ defmodule Castmill.Accounts.UserNotifier do
   end
 
   defp signup_url(%Castmill.Accounts.SignUp{id: id, email: email, challenge: challenge}) do
-    "http://localhost:3000/signup/?signup_id=#{id}&email=#{email}&challenge=#{challenge}"
+    dashboard_uri = CastmillWeb.Envs.get_dashboard_uri()
+    "http://#{dashboard_uri}/signup/?signup_id=#{id}&email=#{email}&challenge=#{challenge}"
   end
 end

@@ -8,6 +8,7 @@ defmodule CastmillWeb.SessionUtilsTest do
   import Castmill.NetworksFixtures
   import Castmill.OrganizationsFixtures
 
+
   # Setup Mox for each test
   setup :verify_on_exit!
 
@@ -50,7 +51,7 @@ defmodule CastmillWeb.SessionUtilsTest do
       valid_input = %{
         "type" => "webauthn.get",
         "challenge" => "dummy_challenge",
-        "origin" => "http://localhost:3000"
+        "origin" => CastmillWeb.Envs.get_dashboard_uri()
       }
 
       assert CastmillWeb.SessionUtils.check_client_data_json(valid_input) ==
