@@ -7,7 +7,7 @@ import { useNavigate } from "@solidjs/router";
 import SignUpEmailSent from "../signup/signup-email-sent";
 
 const baseUrl = "http://localhost:4000";
-const domain = "localhost";../signup/signup-email-sent
+const domain = "localhost";
 
 console.log("ENV:", import.meta.env);
 
