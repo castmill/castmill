@@ -42,7 +42,7 @@ defmodule CastmillWeb.SessionController do
         "authenticator_data" => authenticator_data_b64,
         "signature" => signature_b64,
         "credential_id" => credential_id,
-        "client_data_json" => client_data_json_str,
+        "client_data_json" => client_data_json_str
       }) do
     authenticator_data = authenticator_data_b64 |> Base.decode64!()
     signature = signature_b64 |> Base.decode64!()

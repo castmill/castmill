@@ -52,7 +52,7 @@ defmodule CastmillWeb.SessionControllerTest do
 
   describe "login_user/2" do
     # setup do
-      # Mock dependencies here
+    # Mock dependencies here
     # end
 
     test "successfully logs in user", %{conn: _conn} do
