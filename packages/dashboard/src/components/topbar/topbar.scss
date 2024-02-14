@@ -1,0 +1,26 @@
+@use "../../colors.scss";
+
+.castmill-header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  height: 5rem;
+
+  border-bottom: 1px solid colors.$separator-color;
+
+  nav {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin: 0 1.5em;
+  }
+
+  .main {
+    justify-content: flex-start;
+  }
+
+  .right {
+    justify-content: flex-end;
+  }
+}

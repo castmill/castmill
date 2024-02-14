@@ -1,5 +1,4 @@
-import { describe, it } from "mocha";
-import { expect } from "chai";
+import { describe, expect, it } from 'vitest';
 import { Calendar } from "../src/classes/calendar";
 
 describe("Calendar", () => {

@@ -1,0 +1,59 @@
+@use "../../colors.scss";
+
+.castmill-search {
+  border-radius: 0.4em;
+  padding: 0 1em;
+  display: flex;
+  justify-content: center;
+  flex-direction: row;
+  align-items: center;
+
+  background-color: colors.$component-background-color;
+  color: colors.$component-color;
+
+  svg {
+    margin-right: 0.5em;
+    font-size: 1.2em;
+  }
+
+  input {
+    background-color: #00000000;
+    height: 3em;
+    border: 0;
+    outline: none;
+    font-size: 0.9em;
+    color: colors.$base-color;
+    width: 10em; // Initial width
+
+    transition: width 0.5s ease-in-out; // Animate width change
+
+    &:focus {
+      width: 15em; // Larger width on focus
+    }
+  }
+
+  .keyboard-shortcut {
+    font-size: 0.8em;
+    padding: 0.25em;
+    margin-left: 1em;
+    border-radius: 0.2em;
+
+    color: colors.$base-color;
+    background-color: colors.$component-background-color-light;
+  }
+
+  .reset-icon {
+    margin-left: 1em;
+    font-size: 0.9em;
+    color: colors.$base-color;
+    cursor: pointer;
+
+    &:hover {
+      color: colors.$highlight-color;
+    }
+
+    &:active {
+      color: colors.$highlight-color;
+    }
+  }
+}

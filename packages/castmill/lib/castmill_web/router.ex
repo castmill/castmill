@@ -125,6 +125,37 @@ defmodule CastmillWeb.Router do
     # delete "/:id", DeviceController, :delete
   end
 
+  # Allows starting a signup process for Passkeys
+  pipeline :signups do
+    plug(:fetch_session)
+    plug(:accepts, ["json"])
+    plug(CORSPlug, origin: CastmillWeb.Envs.get_dashboard_uri(), credentials: true)
+    plug(:put_secure_browser_headers)
+  end
+
+  pipeline :sessions do
+    plug(:fetch_session)
+    plug(:accepts, ["json"])
+    plug(CORSPlug, origin: CastmillWeb.Envs.get_dashboard_uri(), credentials: true)
+    plug(:put_secure_browser_headers)
+  end
+
+  scope "/signups", CastmillWeb do
+    pipe_through(:signups)
+
+    post("/", SignUpController, :create)
+    post("/:id/users", SignUpController, :create_user)
+  end
+
+  scope "/sessions", CastmillWeb do
+    pipe_through(:signups)
+
+    get("/", SessionController, :get)
+    post("/", SessionController, :login_user)
+    delete("/", SessionController, :logout_user)
+    get("/challenges", SessionController, :create_challenge)
+  end
+
   # Other scopes may use custom stacks.
   scope "/api", CastmillWeb do
     pipe_through([:api, :authenticate_user])
@@ -145,7 +176,7 @@ defmodule CastmillWeb.Router do
       resources "/teams", UserController, except: [:new, :edit] do
       end
 
-      post "/devices/", DeviceController, :create
+      post("/devices/", DeviceController, :create)
 
       resources "/:resources", ResourceController, except: [:new, :edit] do
       end
@@ -153,28 +184,28 @@ defmodule CastmillWeb.Router do
       resources "/medias/:media_id/files", FileController, except: [:new, :edit] do
       end
 
-      post "/calendars/:calendar_id/entries", ResourceController, :add_calendar_entry
-      put "/calendars/:calendar_id/entries/:id", ResourceController, :update_calendar_entry
-      delete "/calendars/:calendar_id/entries/:id", ResourceController, :delete_calendar_entry
+      post("/calendars/:calendar_id/entries", ResourceController, :add_calendar_entry)
+      put("/calendars/:calendar_id/entries/:id", ResourceController, :update_calendar_entry)
+      delete("/calendars/:calendar_id/entries/:id", ResourceController, :delete_calendar_entry)
 
-      post "/playlists/:playlist_id/items", PlaylistController, :add_item
-      delete "/playlists/:playlist_id/items/:id", PlaylistController, :delete_item
+      post("/playlists/:playlist_id/items", PlaylistController, :add_item)
+      delete("/playlists/:playlist_id/items/:id", PlaylistController, :delete_item)
     end
 
     resources("/users", UserController, except: [:new, :edit, :index])
     resources("/access_tokens", AccessTokenController, except: [:new, :edit])
 
     # These routes are here to avoid some warnings, but not sure they are needed.
-    get "/medias/:media_id/files/:id", FileController, :show
-    get "/playlists/:playlist_id/items/:id", PlaylistController, :show_item
+    get("/medias/:media_id/files/:id", FileController, :show)
+    get("/playlists/:playlist_id/items/:id", PlaylistController, :show_item)
   end
 
   # Proxy routes for development medias
   scope "/", CastmillWeb do
-    pipe_through :browser
+    pipe_through(:browser)
 
     # Other routes
-    get "/proxy", ProxyController, :index
+    get("/proxy", ProxyController, :index)
   end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development

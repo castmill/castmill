@@ -3,6 +3,8 @@ defmodule Castmill.Accounts do
   The Accounts context.
   """
 
+  @behaviour Castmill.AccountsBehaviour
+
   import Ecto.Query, warn: false
   alias Castmill.Repo
 
@@ -10,6 +12,8 @@ defmodule Castmill.Accounts do
   alias Castmill.Accounts.UserToken
   alias Castmill.Accounts.UserNotifier
   alias Castmill.Accounts.User
+  alias Castmill.Accounts.SignUp
+  alias Castmill.Accounts.UserCredential
   alias Castmill.QueryHelpers
 
   @doc """
@@ -233,8 +237,8 @@ defmodule Castmill.Accounts do
   @doc """
   Generates a session token.
   """
-  def generate_user_session_token(user) do
-    {token, user_token} = UserToken.build_session_token(user)
+  def generate_user_session_token(user_id) do
+    {token, user_token} = UserToken.build_session_token(user_id)
     Repo.insert!(user_token)
     token
   end
@@ -283,7 +287,6 @@ defmodule Castmill.Accounts do
 
       iex> get_user_by_reset_password_token("invalidtoken")
       nil
-
   """
   def get_user_by_reset_password_token(token) do
     with {:ok, query} <- UserToken.verify_email_token_query(token, "reset_password"),
@@ -328,5 +331,107 @@ defmodule Castmill.Accounts do
   """
   def change_user_password(user, attrs \\ %{}) do
     User.password_changeset(user, attrs, hash_password: false)
+  end
+
+  @doc """
+    Creates a Signup and sends verification email with instructions.
+  """
+  def create_signup(attrs) do
+    %SignUp{}
+    |> SignUp.changeset(attrs)
+    |> Repo.insert()
+    |> case do
+      {:ok, signup} ->
+        {:ok, signup}
+
+      {:error, changeset} ->
+        {:error, changeset}
+    end
+  end
+
+  @doc """
+    Registers a user based on an existing Signup
+    with the given email, credential_id, and public_key_spki.
+  """
+  def create_user_from_signup(signup_id, email, credential_id, public_key_spki) do
+    Repo.transaction(fn ->
+      with {:ok, signup} <- validate_signup(signup_id, email),
+           {:ok, %{id: user_id} = user} <- create_user_for_email(email),
+           :ok <- create_user_credential(user_id, credential_id, public_key_spki),
+           :ok <- update_signup_status(signup, user_id) do
+        sanitize_user(user)
+      else
+        {:error, error} ->
+          Repo.rollback(error)
+          {:error, error}
+      end
+    end)
+  end
+
+  def get_credential(id) do
+    Repo.get(UserCredential, id)
+  end
+
+  defp validate_signup(signup_id, email) do
+    case Repo.get(SignUp, signup_id) do
+      nil ->
+        {:error, "Invalid signup"}
+
+      %SignUp{} = signup ->
+        cond do
+          signup.status != :created ->
+            {:error, "Signup status is not 'created'."}
+
+          signup.email != email ->
+            {:error, "Email does not match."}
+
+          true ->
+            {:ok, signup}
+        end
+    end
+  end
+
+  defp create_user_for_email(email) do
+    %User{}
+    |> User.changeset(%{name: email, email: email})
+    |> Repo.insert()
+    |> case do
+      {:ok, user} -> {:ok, user}
+      {:error, changeset} -> {:error, inspect(changeset)}
+    end
+  end
+
+  defp create_user_credential(user_id, credential_id, public_key_spki) do
+    %UserCredential{}
+    |> UserCredential.changeset(%{
+      id: credential_id,
+      public_key_spki: public_key_spki,
+      user_id: user_id
+    })
+    |> Repo.insert()
+    |> case do
+      {:ok, _credential} -> :ok
+      {:error, changeset} -> {:error, inspect(changeset)}
+    end
+  end
+
+  defp update_signup_status(signup, user_id) do
+    signup
+    |> SignUp.changeset(%{status: :registered, user_id: user_id})
+    |> Repo.update()
+    |> case do
+      {:ok, _signup} -> :ok
+      {:error, _changeset} -> {:error, "Failed to update signup status"}
+    end
+  end
+
+  defp sanitize_user(user) do
+    # Here, selectively choose which fields of the user to expose
+    %{
+      id: user.id,
+      email: user.email,
+      name: user.name
+      # other fields as needed
+    }
   end
 end
