@@ -20,27 +20,31 @@ vi.mock("../utils", () => ({
   arrayBufferToBase64: vi.fn(),
 }));
 
-global.fetch = vi.fn(() =>
-  Promise.resolve({
-    ok: true,
-    json: () => Promise.resolve({}),
-  })
+vi.stubGlobal(
+  "fetch",
+  vi.fn(() =>
+    Promise.resolve({
+      ok: true,
+      json: () => Promise.resolve({}),
+    })
+  )
 );
 
-global.navigator.credentials = {
-  create: vi.fn(),
-};
+vi.stubGlobal("navigator.credentials.create", vi.fn());
 
 // Utility function to mock passkey support
-const mockPasskeySupport = (supportsConditional, supportsUserVerifying) => {
-  global.PublicKeyCredential = {
+const mockPasskeySupport = (
+  supportsConditional: any,
+  supportsUserVerifying: any
+) => {
+  vi.stubGlobal("PublicKeyCredential", {
     isConditionalMediationAvailable: vi.fn(() =>
       Promise.resolve(supportsConditional)
     ),
     isUserVerifyingPlatformAuthenticatorAvailable: vi.fn(() =>
       Promise.resolve(supportsUserVerifying)
     ),
-  };
+  });
 };
 
 // Skipping as either Vitest or @solidjs/testing-library are too buggy to run this test
@@ -52,7 +56,7 @@ describe.skip("SignUp Component", () => {
 
   it("renders and checks for passkey support", async () => {
     mockPasskeySupport(true, true); // Mock that the browser supports passkeys
-    render(SignUp);
+    render(() => <SignUp />);
 
     // Assertions for initial state
     expect(screen.getByText("Status: Ready")).toBeInTheDocument();
