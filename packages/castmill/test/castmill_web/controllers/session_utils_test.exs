@@ -8,7 +8,6 @@ defmodule CastmillWeb.SessionUtilsTest do
   import Castmill.NetworksFixtures
   import Castmill.OrganizationsFixtures
 
-
   # Setup Mox for each test
   setup :verify_on_exit!
 
