@@ -1,5 +1,5 @@
-import { Component, JSX, mergeProps, onCleanup, onMount } from 'solid-js'
-import { TemplateConfig, resolveOption } from './binding'
+import { Component, JSX, mergeProps, onCleanup, onMount } from 'solid-js';
+import { TemplateConfig, resolveOption } from './binding';
 import {
   Observable,
   Subscription,
@@ -8,13 +8,13 @@ import {
   of,
   take,
   timeout,
-} from 'rxjs'
-import { TemplateComponent, TemplateComponentType } from './template'
-import { Timeline, TimelineItem } from './timeline'
-import { ComponentAnimation } from './animation'
-import { BaseComponentProps } from './interfaces/base-component-props'
-import { ResourceManager } from '@castmill/cache'
-import { PlayerGlobals } from '../../interfaces/player-globals.interface'
+} from 'rxjs';
+import { TemplateComponent, TemplateComponentType } from './template';
+import { Timeline, TimelineItem } from './timeline';
+import { ComponentAnimation } from './animation';
+import { BaseComponentProps } from './interfaces/base-component-props';
+import { ResourceManager } from '@castmill/cache';
+import { PlayerGlobals } from '../../interfaces/player-globals.interface';
 
 enum ReadyState {
   HAVE_NOTHING = 0, // No information is available about the media resource.
@@ -25,12 +25,12 @@ enum ReadyState {
 }
 
 export interface VideoComponentOptions {
-  url: string
-  size: 'cover' | 'contain'
+  url: string;
+  size: 'cover' | 'contain';
 }
 
 export class VideoComponent implements TemplateComponent {
-  readonly type = TemplateComponentType.Video
+  readonly type = TemplateComponentType.Video;
 
   constructor(
     public name: string,
@@ -41,29 +41,29 @@ export class VideoComponent implements TemplateComponent {
   ) {}
 
   resolveDuration_old(medias: { [index: string]: string }): Observable<number> {
-    const videoUrl = medias[this.opts.url]
+    const videoUrl = medias[this.opts.url];
 
     if (!videoUrl) {
-      throw new Error(`Video ${this.opts.url} not found in medias`)
+      throw new Error(`Video ${this.opts.url} not found in medias`);
     }
 
-    const video = document.createElement('video')
-    video.preload = 'metadata'
-    video.src = videoUrl
+    const video = document.createElement('video');
+    video.preload = 'metadata';
+    video.src = videoUrl;
 
     return fromEvent(video, 'durationchange').pipe(
       take(1),
       map((evt) => {
-        const duration = (video?.duration ?? 0) * 1000
-        video.src = ''
-        return duration
+        const duration = (video?.duration ?? 0) * 1000;
+        video.src = '';
+        return duration;
       })
-    )
+    );
   }
 
   resolveDuration(medias: { [index: string]: string }): number {
     // TODO: medias should include the duration of the video.
-    return 17000
+    return 17000;
   }
 
   static fromJSON(json: any): VideoComponent {
@@ -73,7 +73,7 @@ export class VideoComponent implements TemplateComponent {
       json.style,
       json.animations,
       json.filter
-    )
+    );
   }
 
   static resolveOptions(
@@ -85,20 +85,20 @@ export class VideoComponent implements TemplateComponent {
     return {
       url: resolveOption(opts.url, config, context, globals),
       size: resolveOption(opts.size, config, context, globals),
-    }
+    };
   }
 }
 
 interface VideoProps extends BaseComponentProps {
-  opts: VideoComponentOptions
-  resourceManager: ResourceManager
+  opts: VideoComponentOptions;
+  resourceManager: ResourceManager;
 }
 
 export const Video: Component<VideoProps> = (props) => {
-  let videoRef: HTMLVideoElement | undefined
+  let videoRef: HTMLVideoElement | undefined;
 
-  let timeline: Timeline
-  let timelineItem: TimelineItem
+  let timeline: Timeline;
+  let timelineItem: TimelineItem;
 
   const merged = mergeProps(
     {
@@ -106,34 +106,34 @@ export const Video: Component<VideoProps> = (props) => {
       height: '100%',
     },
     props.style
-  )
+  );
 
-  let loadingSubscription: Subscription
-  let seekingVideoSubscription: Subscription
+  let loadingSubscription: Subscription;
+  let seekingVideoSubscription: Subscription;
 
   onCleanup(() => {
-    seekingVideoSubscription?.unsubscribe()
-    loadingSubscription?.unsubscribe()
-    props.timeline.remove(timelineItem)
+    seekingVideoSubscription?.unsubscribe();
+    loadingSubscription?.unsubscribe();
+    props.timeline.remove(timelineItem);
     // timeline?.kill();
-  })
+  });
 
   onMount(async () => {
     if (videoRef) {
-      const videoUrl = await props.resourceManager.getMedia(props.opts.url)
+      const videoUrl = await props.resourceManager.getMedia(props.opts.url);
       if (!videoUrl) {
-        throw new Error(`Video ${props.opts.url} not found in medias`)
+        throw new Error(`Video ${props.opts.url} not found in medias`);
       }
 
-      videoRef.src = videoUrl
+      videoRef.src = videoUrl;
 
-      seekingVideoSubscription?.unsubscribe()
+      seekingVideoSubscription?.unsubscribe();
 
       const seekVideo = (time: number): Observable<[number, number]> => {
         if (videoRef && videoRef.readyState >= ReadyState.HAVE_METADATA) {
-          videoRef.currentTime = time
+          videoRef.currentTime = time;
 
-          const slow$ = of([time, 0])
+          const slow$ = of([time, 0]);
 
           return fromEvent(videoRef, 'seeked').pipe(
             take(1),
@@ -143,74 +143,74 @@ export const Video: Component<VideoProps> = (props) => {
               with: () => slow$,
             }),
             map((evt) => [time, 0])
-          )
+          );
         }
-        return of([time, 0])
-      }
+        return of([time, 0]);
+      };
 
-      loadingSubscription?.unsubscribe()
+      loadingSubscription?.unsubscribe();
 
-      let loading$: Observable<string>
+      let loading$: Observable<string>;
       if (videoRef.readyState < ReadyState.HAVE_ENOUGH_DATA) {
         loading$ = new Observable<string>((subscriber) => {
           const handler = (ev: Event) => {
-            subscriber.next('video:loaded')
-            subscriber.complete()
-          }
+            subscriber.next('video:loaded');
+            subscriber.complete();
+          };
 
           const errorHandler = (ev: Event) => {
-            subscriber.error('error')
-          }
+            subscriber.error('error');
+          };
 
-          videoRef!.addEventListener('canplaythrough', handler)
-          videoRef!.addEventListener('error', errorHandler)
+          videoRef!.addEventListener('canplaythrough', handler);
+          videoRef!.addEventListener('error', errorHandler);
 
           return () => {
-            videoRef!.removeEventListener('canplaythrough', handler)
-            videoRef!.removeEventListener('error', errorHandler)
-          }
-        })
-        videoRef.load()
+            videoRef!.removeEventListener('canplaythrough', handler);
+            videoRef!.removeEventListener('error', errorHandler);
+          };
+        });
+        videoRef.load();
       } else {
-        loading$ = of('vide0:loaded')
+        loading$ = of('vide0:loaded');
       }
 
       loadingSubscription = loading$.subscribe((ev) => {
-        timeline = new Timeline('video')
+        timeline = new Timeline('video');
 
         const child = {
           seek: (time: number) => {
-            seekingVideoSubscription?.unsubscribe()
+            seekingVideoSubscription?.unsubscribe();
             seekingVideoSubscription = seekVideo(time).subscribe(
               (evt) => void 0
-            )
+            );
           },
           play: () => {
-            videoRef!.play()
+            videoRef!.play();
           },
           pause: () => {
-            videoRef!.pause()
+            videoRef!.pause();
           },
           duration: () => {
-            return videoRef!.duration * 1000
+            return videoRef!.duration * 1000;
           },
-        }
+        };
 
         timelineItem = {
           start: props.timeline.duration(),
           duration: videoRef!.duration * 1000,
           child,
-        }
-        props.timeline.add(timelineItem)
+        };
+        props.timeline.add(timelineItem);
 
-        props.onReady()
-      })
+        props.onReady();
+      });
 
       videoRef.onended = () => {
-        props.timeline.pause()
-      }
+        props.timeline.pause();
+      };
     }
-  })
+  });
 
   return (
     <video
@@ -221,5 +221,5 @@ export const Video: Component<VideoProps> = (props) => {
       loop
       playsinline
     ></video>
-  )
-}
+  );
+};

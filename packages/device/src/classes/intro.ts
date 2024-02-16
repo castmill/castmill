@@ -1,7 +1,7 @@
-import { JsonLayer, Layer, TemplateComponentType } from '@castmill/player'
+import { JsonLayer, Layer, TemplateComponentType } from '@castmill/player';
 
-import castmillLogo from '../assets/logo.png'
-import { ResourceManager } from '@castmill/cache'
+import castmillLogo from '../assets/logo.png';
+import { ResourceManager } from '@castmill/cache';
 
 const createImageLayer = (imageUrl: string) =>
   ({
@@ -104,12 +104,12 @@ const createImageLayer = (imageUrl: string) =>
       width: '100%',
       height: '100%',
     },
-  }) as JsonLayer
+  }) as JsonLayer;
 
 export function getCastmillIntro(resourceManager: ResourceManager): Layer {
   return Layer.fromJSON(createImageLayer(castmillLogo), resourceManager, {
     target: 'default',
-  })
+  });
 }
 
 /*

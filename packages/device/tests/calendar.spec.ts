@@ -1,5 +1,5 @@
-import { describe, expect, it } from 'vitest'
-import { Calendar } from '../src/classes/calendar'
+import { describe, expect, it } from 'vitest';
+import { Calendar } from '../src/classes/calendar';
 
 describe('Calendar', () => {
   describe('#getPlaylistAt', () => {
@@ -17,16 +17,16 @@ describe('Calendar', () => {
             repeat_weekly_until: undefined,
           },
         ],
-      }
+      };
 
-      const calendar = new Calendar(jsonCalendar)
+      const calendar = new Calendar(jsonCalendar);
 
       const result = calendar.getPlaylistAt(
         new Date('2023-08-11T12:00:00Z').getTime()
-      )
-      expect(result).to.not.be.undefined
-      expect(result?.playlist).to.equal('playlist1')
-    })
+      );
+      expect(result).to.not.be.undefined;
+      expect(result?.playlist).to.equal('playlist1');
+    });
 
     it('should not return a playlist for a non-recurring entry outside its time frame', function () {
       const jsonCalendar = {
@@ -42,15 +42,15 @@ describe('Calendar', () => {
             repeat_weekly_until: undefined,
           },
         ],
-      }
+      };
 
-      const calendar = new Calendar(jsonCalendar)
+      const calendar = new Calendar(jsonCalendar);
 
       const result = calendar.getPlaylistAt(
         new Date('2023-08-10T10:59:59Z').getTime()
-      )
-      expect(result).to.be.undefined
-    })
+      );
+      expect(result).to.be.undefined;
+    });
 
     it('should not return a playlist for a recurring entry within its time frame but after repeat_weekly_until', function () {
       const jsonCalendar = {
@@ -66,14 +66,14 @@ describe('Calendar', () => {
             repeat_weekly_until: new Date('2023-08-24T00:00:00Z').getTime(),
           },
         ],
-      }
-      const calendar = new Calendar(jsonCalendar)
+      };
+      const calendar = new Calendar(jsonCalendar);
 
       const result = calendar.getPlaylistAt(
         new Date('2023-08-31T12:00:00Z').getTime()
-      )
-      expect(result).to.be.undefined
-    })
+      );
+      expect(result).to.be.undefined;
+    });
 
     it('should return a playlist for a recurring entry within its time frame but before repeat_weekly_until', function () {
       const jsonCalendar = {
@@ -89,16 +89,16 @@ describe('Calendar', () => {
             repeat_weekly_until: new Date('2023-09-12T00:00:00Z').getTime(),
           },
         ],
-      }
+      };
 
-      const calendar = new Calendar(jsonCalendar)
+      const calendar = new Calendar(jsonCalendar);
 
       const result = calendar.getPlaylistAt(
         new Date('2023-08-24T14:00:00Z').getTime()
-      )
-      expect(result).to.not.be.undefined
-      expect(result?.playlist).to.equal('playlist3')
-    })
+      );
+      expect(result).to.not.be.undefined;
+      expect(result?.playlist).to.equal('playlist3');
+    });
 
     it('should correctly return the nextTime field', function () {
       const jsonCalendar = {
@@ -121,19 +121,19 @@ describe('Calendar', () => {
             repeat_weekly_until: undefined,
           },
         ],
-      }
+      };
 
-      const calendar = new Calendar(jsonCalendar)
+      const calendar = new Calendar(jsonCalendar);
 
       const result = calendar.getPlaylistAt(
         new Date('2023-08-11T12:00:00Z').getTime()
-      )
-      expect(result).to.not.be.undefined
-      expect(result?.playlist).to.equal('playlist5')
+      );
+      expect(result).to.not.be.undefined;
+      expect(result?.playlist).to.equal('playlist5');
       expect(result?.nextTime).to.equal(
         new Date('2023-08-12T16:00:00Z').getTime()
-      )
-    })
+      );
+    });
 
     it('should not return a playlist for a timestamp outside the defined time range, even within repeat_weekly_until', () => {
       const jsonCalendar = {
@@ -149,15 +149,15 @@ describe('Calendar', () => {
             repeat_weekly_until: new Date('2023-08-28T00:00:00Z').getTime(),
           },
         ],
-      }
-      const calendar = new Calendar(jsonCalendar)
+      };
+      const calendar = new Calendar(jsonCalendar);
 
       const result = calendar.getPlaylistAt(
         new Date('2023-08-17T11:00:00Z').getTime()
-      )
+      );
 
-      expect(result).to.be.undefined
-    })
+      expect(result).to.be.undefined;
+    });
 
     it('should not return a playlist for a Thursday timestamp in the second week, even within repeat_weekly_until', () => {
       const jsonCalendar = {
@@ -173,16 +173,16 @@ describe('Calendar', () => {
             repeat_weekly_until: new Date('2023-09-04T00:00:00Z').getTime(), // 3 weeks later
           },
         ],
-      }
+      };
 
-      const calendar = new Calendar(jsonCalendar)
+      const calendar = new Calendar(jsonCalendar);
 
       const result = calendar.getPlaylistAt(
         new Date('2023-08-24T11:00:00Z').getTime()
-      ) // Thursday of second week
+      ); // Thursday of second week
 
-      expect(result).to.be.undefined
-    })
+      expect(result).to.be.undefined;
+    });
 
     it('should return a playlist for a Tuesday timestamp in the second week within repeat_weekly_until', () => {
       const jsonCalendar = {
@@ -198,16 +198,16 @@ describe('Calendar', () => {
             repeat_weekly_until: new Date('2023-09-04T00:00:00Z').getTime(),
           },
         ],
-      }
-      const calendar = new Calendar(jsonCalendar)
+      };
+      const calendar = new Calendar(jsonCalendar);
 
       const result = calendar.getPlaylistAt(
         new Date('2023-08-22T11:00:00Z').getTime()
-      ) // Tuesday of the second week
+      ); // Tuesday of the second week
 
-      expect(result).to.not.be.undefined
-      expect(result?.playlist).to.equal('testPlaylist3')
-    })
+      expect(result).to.not.be.undefined;
+      expect(result?.playlist).to.equal('testPlaylist3');
+    });
 
     it('should not return a playlist for a Sunday timestamp in the second week, even within repeat_weekly_until', () => {
       const jsonCalendar = {
@@ -223,15 +223,15 @@ describe('Calendar', () => {
             repeat_weekly_until: new Date('2023-09-04T00:00:00Z').getTime(),
           },
         ],
-      }
+      };
 
-      const calendar = new Calendar(jsonCalendar)
+      const calendar = new Calendar(jsonCalendar);
 
       const result = calendar.getPlaylistAt(
         new Date('2023-08-20T11:00:00Z').getTime()
-      ) // Sunday of the second week
+      ); // Sunday of the second week
 
-      expect(result).to.be.undefined
-    })
-  })
-})
+      expect(result).to.be.undefined;
+    });
+  });
+});

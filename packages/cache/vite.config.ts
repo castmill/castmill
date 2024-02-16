@@ -1,13 +1,13 @@
-import { defineConfig } from 'vite'
-import { resolve } from 'path'
-import { nodeResolve } from '@rollup/plugin-node-resolve'
+import { defineConfig } from 'vite';
+import { resolve } from 'path';
+import { nodeResolve } from '@rollup/plugin-node-resolve';
 
 const lib =
   process.env.VITE_LIB === 'sw'
     ? 'src/integrations/browser/sw/sw.ts'
-    : 'src/index.ts'
+    : 'src/index.ts';
 
-const filename = process.env.VITE_LIB === 'sw' ? 'sw.js' : 'index.js'
+const filename = process.env.VITE_LIB === 'sw' ? 'sw.js' : 'index.js';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -39,4 +39,4 @@ export default defineConfig({
       },
     },
   },
-})
+});

@@ -1,9 +1,9 @@
-import { Observable } from 'rxjs'
-import { Layer } from '../layer'
+import { Observable } from 'rxjs';
+import { Layer } from '../layer';
 
 export interface JsonEffect {
-  uri: string
-  args?: object
+  uri: string;
+  args?: object;
 }
 
 /**
@@ -23,5 +23,5 @@ export abstract class Effect {
     src: Layer,
     dst: Layer,
     opts: { duration: number }
-  ): Observable<'transition:end'>
+  ): Observable<'transition:end'>;
 }

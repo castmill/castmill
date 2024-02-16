@@ -6,5 +6,5 @@ export function PincodeComponent(props: { pincode: string }) {
       </div>
       <div>{props.pincode ? props.pincode : 'Loading pincode...'}</div>
     </div>
-  )
+  );
 }

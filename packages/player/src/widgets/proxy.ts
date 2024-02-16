@@ -1,30 +1,30 @@
-import { ResourceManager } from '@castmill/cache'
-import { Observable, from, of } from 'rxjs'
-import { JsonWidget } from '../interfaces'
+import { ResourceManager } from '@castmill/cache';
+import { Observable, from, of } from 'rxjs';
+import { JsonWidget } from '../interfaces';
 
-import { Widget } from './'
+import { Widget } from './';
 
 interface ProxyData {
-  counter: number
-  result: any
+  counter: number;
+  result: any;
 }
 
 interface ProxyRequest {
-  type: 'request'
-  id: number
-  method: string
-  args: any[]
+  type: 'request';
+  id: number;
+  method: string;
+  args: any[];
 }
 
 interface ProxyResponse {
-  type: 'response'
-  id: number
-  result: any
+  type: 'response';
+  id: number;
+  result: any;
 }
 
 interface ProxyNotification {
-  type: 'notification'
-  data: any
+  type: 'notification';
+  data: any;
 }
 
 /**
@@ -40,12 +40,12 @@ interface ProxyNotification {
  */
 
 class Proxy extends Widget {
-  private static id = 0
-  protected messageHandler?: (ev: MessageEvent<string>) => void
-  private origin!: string
+  private static id = 0;
+  protected messageHandler?: (ev: MessageEvent<string>) => void;
+  private origin!: string;
   private resolvers: {
-    [index: number]: (value: any) => void
-  } = {}
+    [index: number]: (value: any) => void;
+  } = {};
 
   static async fromJSON(json: JsonWidget): Promise<Widget | undefined> {
     // uri example: https://widgets.castmill.io/tpd/
@@ -56,7 +56,7 @@ class Proxy extends Widget {
     // templates may be loaded separatedly as part of the widget
     // initialization process and the selected options.
     // const widgetSrc = await import(`./${json.uri}`);
-    return void 0
+    return void 0;
   }
 
   constructor(
@@ -65,22 +65,22 @@ class Proxy extends Widget {
     resourceManager: ResourceManager,
     childSrc: string
   ) {
-    super(resourceManager)
+    super(resourceManager);
 
     const messageHandler = (this.messageHandler = (event) => {
-      let data: ProxyData
+      let data: ProxyData;
 
       try {
-        data = JSON.parse(event.data)
+        data = JSON.parse(event.data);
       } catch (err) {
         // Ignore corrupt messages.
-        return
+        return;
       }
 
       if (typeof data.counter !== 'undefined') {
         if (this.resolvers[data.counter]) {
-          this.resolvers[data.counter](data.result)
-          delete this.resolvers[data.counter]
+          this.resolvers[data.counter](data.result);
+          delete this.resolvers[data.counter];
         }
       }
       /*
@@ -88,15 +88,15 @@ class Proxy extends Widget {
         this.emit("offset", data.offset);
       }
       */
-    })
+    });
 
-    this.origin = childSrc
+    this.origin = childSrc;
 
-    this.parent.addEventListener('message', messageHandler, false)
+    this.parent.addEventListener('message', messageHandler, false);
   }
 
   async load() {
-    return this.callMethod('prepare')
+    return this.callMethod('prepare');
   }
 
   /**
@@ -109,7 +109,7 @@ class Proxy extends Widget {
    */
   unload(): void {
     if (this.messageHandler) {
-      this.parent.removeEventListener('message', this.messageHandler)
+      this.parent.removeEventListener('message', this.messageHandler);
     }
   }
 
@@ -117,18 +117,18 @@ class Proxy extends Widget {
    * Return mimetype for this widget
    */
   mimeType(): string {
-    return 'proxy'
+    return 'proxy';
   }
 
   /**
    *  Starts playing the content.
    */
   play(timer$: Observable<any>): Observable<string | number> {
-    return from(this.callMethod('play'))
+    return from(this.callMethod('play'));
   }
 
   stop() {
-    return this.callMethod('stop')
+    return this.callMethod('stop');
   }
 
   /*
@@ -138,24 +138,27 @@ class Proxy extends Widget {
   */
 
   seek(offset: number) {
-    return this.callMethod('seek', [offset])
+    return this.callMethod('seek', [offset]);
   }
 
   volume(level: number) {
-    return this.callMethod('volume', [level])
+    return this.callMethod('volume', [level]);
   }
 
   private callMethod(method: string, args?: any[]): Observable<any> {
-    const counter = Proxy.id++
+    const counter = Proxy.id++;
     const message = {
       counter,
       method,
       args,
-    }
+    };
 
-    this.iframe.contentWindow?.postMessage(JSON.stringify(message), this.origin)
+    this.iframe.contentWindow?.postMessage(
+      JSON.stringify(message),
+      this.origin
+    );
 
-    return of(this.resolvers[counter])
+    return of(this.resolvers[counter]);
     /*
     return new Promise((resolve) => {
       this.resolvers[counter] = resolve;

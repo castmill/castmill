@@ -1,13 +1,13 @@
-import { JSX } from 'solid-js'
+import { JSX } from 'solid-js';
 
-import { JsonPlaylist } from './'
+import { JsonPlaylist } from './';
 export interface JsonLayout {
-  name: string
+  name: string;
   args: {
-    duration: number
-  }
+    duration: number;
+  };
   items: {
-    playlist: JsonPlaylist
-    style: JSX.CSSProperties
-  }[]
+    playlist: JsonPlaylist;
+    style: JSX.CSSProperties;
+  }[];
 }

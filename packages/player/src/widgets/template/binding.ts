@@ -1,16 +1,16 @@
-import { Model } from './data/model'
+import { Model } from './data/model';
 
 export interface Binding<T extends any> {
-  key: string
-  default?: T
+  key: string;
+  default?: T;
 }
 
 export interface TemplateConfig<Options = any, Data = any> {
-  options: Options
-  data: Data
+  options: Options;
+  data: Data;
 }
 
-export const isBinding = (value: any) => typeof value === 'object' && value.key
+export const isBinding = (value: any) => typeof value === 'object' && value.key;
 
 export const resolveKey = (
   key: string,
@@ -20,10 +20,10 @@ export const resolveKey = (
 ) => {
   if (key.startsWith('$.')) {
     // Resolve context path removing the "$." prefix
-    return Model.get(context, key.substring(2), globals)
+    return Model.get(context, key.substring(2), globals);
   }
-  return Model.get(config, key, globals)
-}
+  return Model.get(config, key, globals);
+};
 
 export const resolveBinding = (
   binding: Binding<any>,
@@ -31,13 +31,13 @@ export const resolveBinding = (
   currentContext: any,
   globals: { [index: string]: any }
 ) => {
-  const result = resolveKey(binding.key, config, currentContext, globals)
+  const result = resolveKey(binding.key, config, currentContext, globals);
 
   if (typeof result == 'undefined' || result[1] != null) {
-    return binding.default
+    return binding.default;
   }
-  return result[0]
-}
+  return result[0];
+};
 
 export const resolveOption = (
   option: any,
@@ -45,4 +45,4 @@ export const resolveOption = (
   context: any,
   globals: { [index: string]: any }
 ) =>
-  isBinding(option) ? resolveBinding(option, config, context, globals) : option
+  isBinding(option) ? resolveBinding(option, config, context, globals) : option;

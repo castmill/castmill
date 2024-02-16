@@ -1,5 +1,5 @@
-import { Device } from '../classes'
-import { PincodeComponent } from './pincode.component'
+import { Device } from '../classes';
+import { PincodeComponent } from './pincode.component';
 
 export function RegisterComponent(props: { device: Device; pincode: string }) {
   return (
@@ -7,5 +7,5 @@ export function RegisterComponent(props: { device: Device; pincode: string }) {
       <h1>Register</h1>
       <PincodeComponent pincode={props.pincode} />
     </>
-  )
+  );
 }

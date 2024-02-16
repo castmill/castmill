@@ -1,8 +1,8 @@
-import { Observable, of } from 'rxjs'
-import { ResourceManager } from '@castmill/cache'
+import { Observable, of } from 'rxjs';
+import { ResourceManager } from '@castmill/cache';
 
-import { Widget } from './widget'
-import { Text, Scroll } from './scroll/scroll'
+import { Widget } from './widget';
+import { Text, Scroll } from './scroll/scroll';
 
 /**
  * This scroll is based on Canvas/WebGL, however it may be smarter
@@ -11,34 +11,34 @@ import { Text, Scroll } from './scroll/scroll'
  * Example: https://codepen.io/lelamanolio/pen/ZEYRJJJ
  */
 export class TextScroll extends Widget {
-  private canvas: HTMLCanvasElement | null = null
-  private scroll: Scroll | null = null
-  private text: Text[]
-  private speed: number
+  private canvas: HTMLCanvasElement | null = null;
+  private scroll: Scroll | null = null;
+  private text: Text[];
+  private speed: number;
 
-  offset: number = 0
+  offset: number = 0;
 
   constructor(
     resourceManager: ResourceManager,
     opts: { text: Text[]; speed: number }
   ) {
-    super(resourceManager)
-    this.text = opts.text
-    this.speed = opts.speed
+    super(resourceManager);
+    this.text = opts.text;
+    this.speed = opts.speed;
   }
 
   show(el: HTMLElement, offset: number) {
     if (!this.scroll) {
-      this.scroll = new Scroll(el, this.text)
+      this.scroll = new Scroll(el, this.text);
     }
-    return of('shown')
+    return of('shown');
   }
 
   play(timer$: Observable<number>) {
     if (this.scroll) {
-      return this.scroll.play(this.speed)
+      return this.scroll.play(this.speed);
     }
-    return super.play(timer$)
+    return super.play(timer$);
   }
 
   // TODO: Implement "duration" if possible, i.e., the time it will take to show all the text before it loops again.
@@ -55,7 +55,7 @@ export class TextScroll extends Widget {
 
   unload() {
     if (this.canvas) {
-      document.removeChild(this.canvas)
+      document.removeChild(this.canvas);
     }
   }
 }

@@ -1,9 +1,9 @@
-import type { Component } from 'solid-js'
-import Versions from './components/Versions'
-import electronLogo from './assets/electron.svg'
+import type { Component } from 'solid-js';
+import Versions from './components/Versions';
+import electronLogo from './assets/electron.svg';
 
 const App: Component = () => {
-  const ipcHandle = (): void => window.electron.ipcRenderer.send('ping')
+  const ipcHandle = (): void => window.electron.ipcRenderer.send('ping');
 
   return (
     <>
@@ -27,7 +27,7 @@ const App: Component = () => {
       </div>
       <Versions />
     </>
-  )
-}
+  );
+};
 
-export default App
+export default App;

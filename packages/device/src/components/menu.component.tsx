@@ -1,6 +1,6 @@
-import { createSignal, onMount, type JSX } from 'solid-js'
-import { createResource } from 'solid-js'
-import { BaseMenu, type MenuEntry } from './basemenu.component'
+import { createSignal, onMount, type JSX } from 'solid-js';
+import { createResource } from 'solid-js';
+import { BaseMenu, type MenuEntry } from './basemenu.component';
 
 // The menu entries. Make these talk to the host app. Also make sure to on
 // show actions and settings that are available on the current device.
@@ -91,14 +91,14 @@ const entries: MenuEntry[] = [
       },
     ],
   },
-]
+];
 
 // Test dynamic header
-const [count, setCount] = createSignal(0)
+const [count, setCount] = createSignal(0);
 
 setInterval(() => {
-  setCount((count() + 1) % 100)
-}, 1000)
+  setCount((count() + 1) % 100);
+}, 1000);
 
 const header = (
   <>
@@ -108,8 +108,8 @@ const header = (
     <p>Baz: 3</p>
     <p>Qux: {count()}</p>
   </>
-)
+);
 
 export function MenuComponent() {
-  return <BaseMenu header={header} entries={entries} />
+  return <BaseMenu header={header} entries={entries} />;
 }

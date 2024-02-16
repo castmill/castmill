@@ -1,12 +1,12 @@
-import { defineConfig } from 'vite'
-import { resolve } from 'path'
-import babel from '@rollup/plugin-babel'
-import { nodeResolve } from '@rollup/plugin-node-resolve'
-import arrowFunctions from '@babel/plugin-transform-arrow-functions'
-import legacy from '@vitejs/plugin-legacy'
-import vue from '@vitejs/plugin-vue'
+import { defineConfig } from 'vite';
+import { resolve } from 'path';
+import babel from '@rollup/plugin-babel';
+import { nodeResolve } from '@rollup/plugin-node-resolve';
+import arrowFunctions from '@babel/plugin-transform-arrow-functions';
+import legacy from '@vitejs/plugin-legacy';
+import vue from '@vitejs/plugin-vue';
 
-import solidPlugin from 'vite-plugin-solid'
+import solidPlugin from 'vite-plugin-solid';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -71,4 +71,4 @@ export default defineConfig({
   resolve: {
     dedupe: ['solid-js'],
   },
-})
+});
