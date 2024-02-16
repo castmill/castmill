@@ -1,8 +1,8 @@
-import parentConfig from '../../../.prettierrc.mjs'
+import parentConfig from '../../../.prettierrc.mjs';
 
 const config = {
   ...parentConfig,
   // Add your overrides here
-}
+};
 
-export default config
+export default config;

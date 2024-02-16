@@ -5,45 +5,45 @@
 
   (c) 2011-2023 Castmill AB All Rights Reserved
 */
-import { JSX } from 'solid-js'
-import { ResourceManager } from '@castmill/cache'
+import { JSX } from 'solid-js';
+import { ResourceManager } from '@castmill/cache';
 
-import { Status } from './playable'
-import { EventEmitter } from 'eventemitter3'
+import { Status } from './playable';
+import { EventEmitter } from 'eventemitter3';
 import {
   TemplateComponentType,
   TemplateWidget,
   TemplateWidgetOptions,
   Widget,
-} from './widgets'
-import { of, Observable } from 'rxjs'
-import { catchError, last, map, takeUntil } from 'rxjs/operators'
-import { JsonLayer, JsonPlaylist } from './interfaces'
-import { Transition, fromJSON } from './transitions'
-import { applyCss } from './utils'
-import { PlayerGlobals } from './interfaces/player-globals.interface'
+} from './widgets';
+import { of, Observable } from 'rxjs';
+import { catchError, last, map, takeUntil } from 'rxjs/operators';
+import { JsonLayer, JsonPlaylist } from './interfaces';
+import { Transition, fromJSON } from './transitions';
+import { applyCss } from './utils';
+import { PlayerGlobals } from './interfaces/player-globals.interface';
 
 export class Layer extends EventEmitter {
-  id: string = ''
-  widgetId: string = ''
+  id: string = '';
+  widgetId: string = '';
 
-  opacity: string = '1'
+  opacity: string = '1';
 
-  rotation: number = 0
-  zIndex: number = 0
+  rotation: number = 0;
+  zIndex: number = 0;
 
-  el: HTMLElement
+  el: HTMLElement;
 
-  status: Status = Status.NotReady
-  offset = 0
+  status: Status = Status.NotReady;
+  offset = 0;
 
-  transition?: Transition
+  transition?: Transition;
 
-  slack: number = 0
+  slack: number = 0;
 
-  private widget?: Widget
-  private proxyOffset: (position: number) => void
-  private _duration = 0
+  private widget?: Widget;
+  private proxyOffset: (position: number) => void;
+  private _duration = 0;
 
   /**
    * Creates a new Layer from a json deserialized object.
@@ -60,7 +60,7 @@ export class Layer extends EventEmitter {
       config: json.config,
       style: json.style,
       globals,
-    })
+    });
 
     const layer = new Layer(json.name, {
       duration: json.duration,
@@ -71,9 +71,9 @@ export class Layer extends EventEmitter {
         height: '100%',
       },
       widget,
-    })
+    });
 
-    return layer
+    return layer;
   }
 
   /**
@@ -128,53 +128,53 @@ export class Layer extends EventEmitter {
         data: {},
       },
       globals,
-    } as TemplateWidgetOptions)
-    const duration = widget.duration()
+    } as TemplateWidgetOptions);
+    const duration = widget.duration();
     return new Layer(playlist.name, {
       widget,
       duration: 10000, // Currently a hack, the duration should be the duration of the playlist
-    })
+    });
   }
 
   constructor(
     public name: string,
     opts?: {
-      duration?: number
-      slack?: number // Some extra slack over the widget duration.
-      widget?: Widget
-      transition?: Transition
-      style?: JSX.CSSProperties
+      duration?: number;
+      slack?: number; // Some extra slack over the widget duration.
+      widget?: Widget;
+      transition?: Transition;
+      style?: JSX.CSSProperties;
     }
   ) {
-    super()
+    super();
 
-    this._duration = opts?.duration || 0
-    this.slack = opts?.slack || 0
-    this.widget = opts?.widget
-    this.transition = opts?.transition
+    this._duration = opts?.duration || 0;
+    this.slack = opts?.slack || 0;
+    this.widget = opts?.widget;
+    this.transition = opts?.transition;
 
-    this.el = document.createElement('div')
+    this.el = document.createElement('div');
 
-    const { style, dataset } = this.el
+    const { style, dataset } = this.el;
 
     if (opts?.style) {
-      applyCss(this.el, opts.style)
+      applyCss(this.el, opts.style);
     }
 
-    style.position = 'absolute'
-    style.width = '100%'
-    style.height = '100%'
-    style.display = 'flex'
-    style.justifyContent = 'center'
-    style.alignItems = 'center'
+    style.position = 'absolute';
+    style.width = '100%';
+    style.height = '100%';
+    style.display = 'flex';
+    style.justifyContent = 'center';
+    style.alignItems = 'center';
 
-    dataset['layer'] = this.name
+    dataset['layer'] = this.name;
 
-    this.proxyOffset = (offset: number) => this.emit('offset', offset)
+    this.proxyOffset = (offset: number) => this.emit('offset', offset);
   }
 
   toggleDebug() {
-    this.widget?.toggleDebug()
+    this.widget?.toggleDebug();
   }
 
   /*
@@ -197,20 +197,20 @@ export class Layer extends EventEmitter {
     utils.purgeIframe(this.iframe);
     this.widget && this.widget.off("offset", this.proxyOffset);
     */
-    this.widget?.seek(0)
-    return this.widget?.unload()
+    this.widget?.seek(0);
+    return this.widget?.unload();
   }
 
   public toJSON(): {} {
     return {
       id: this.id,
       widgetId: this.widgetId,
-    }
+    };
   }
 
   public play(timer$: Observable<number>): Observable<string | number> {
     if (!this.widget) {
-      throw new Error('Layer: missing widget')
+      throw new Error('Layer: missing widget');
     }
 
     const end$ = timer$.pipe(
@@ -218,21 +218,21 @@ export class Layer extends EventEmitter {
       // In case the stream is empty we need to catch and end.
       catchError(() => of(undefined)),
       map(() => 'end')
-    )
+    );
 
-    return this.widget.play(timer$).pipe(takeUntil(end$))
+    return this.widget.play(timer$).pipe(takeUntil(end$));
   }
 
   public async stop(): Promise<any> {
-    return this.widget?.stop()
+    return this.widget?.stop();
   }
 
   public seek(offset: number): Observable<[number, number]> {
-    this.offset = offset
+    this.offset = offset;
     if (this.widget) {
-      return this.widget.seek(offset)
+      return this.widget.seek(offset);
     }
-    return of([offset, 0])
+    return of([offset, 0]);
   }
 
   show(offset: number) {
@@ -241,27 +241,27 @@ export class Layer extends EventEmitter {
         catchError((err) => {
           // TODO: we should show more information about this error. Which widget? and which options?
           // for instance a common failure is a video or image that failed to be downloaded.
-          console.error(`Layer: show widget error`, err)
-          return of('error')
+          console.error(`Layer: show widget error`, err);
+          return of('error');
         })
-      )
+      );
     } else {
-      return of('shown')
+      return of('shown');
     }
   }
 
   async hide(): Promise<void> {
-    return
+    return;
   }
 
   duration(): number {
-    const transitionDuration = this.transition?.duration || 0
+    const transitionDuration = this.transition?.duration || 0;
     if (this._duration) {
-      return this._duration + transitionDuration
+      return this._duration + transitionDuration;
     } else if (this.widget) {
-      return this.widget.duration() + this.slack + transitionDuration
+      return this.widget.duration() + this.slack + transitionDuration;
     } else {
-      return this.slack
+      return this.slack;
     }
   }
 }

@@ -1,20 +1,20 @@
-import { Component, For, JSX, onCleanup, onMount } from 'solid-js'
-import { Item } from './item'
-import { TemplateConfig } from './binding'
+import { Component, For, JSX, onCleanup, onMount } from 'solid-js';
+import { Item } from './item';
+import { TemplateConfig } from './binding';
 import {
   TemplateComponent,
   TemplateComponentType,
   TemplateComponentTypeUnion,
-} from './template'
-import { ResourceManager } from '@castmill/cache'
-import { ComponentAnimation, applyAnimations } from './animation'
-import { BaseComponentProps } from './interfaces/base-component-props'
-import { PlayerGlobals } from '../../interfaces/player-globals.interface'
+} from './template';
+import { ResourceManager } from '@castmill/cache';
+import { ComponentAnimation, applyAnimations } from './animation';
+import { BaseComponentProps } from './interfaces/base-component-props';
+import { PlayerGlobals } from '../../interfaces/player-globals.interface';
 
 export interface GroupComponentOptions {}
 
 export class GroupComponent implements TemplateComponent {
-  readonly type = TemplateComponentType.Group
+  readonly type = TemplateComponentType.Group;
 
   constructor(
     public name: string,
@@ -43,7 +43,7 @@ export class GroupComponent implements TemplateComponent {
       ),
       json.animations,
       json.filter
-    )
+    );
   }
 
   resolveDuration(medias: { [index: string]: string }): number {
@@ -51,33 +51,33 @@ export class GroupComponent implements TemplateComponent {
       (acc: number, component: TemplateComponentTypeUnion) =>
         Math.max(acc, component.resolveDuration(medias)),
       0
-    )
+    );
   }
 }
 
 interface GroupProps extends BaseComponentProps {
-  config: TemplateConfig
-  context: any
-  components: TemplateComponentTypeUnion[]
-  globals: PlayerGlobals
-  resourceManager: ResourceManager
+  config: TemplateConfig;
+  context: any;
+  components: TemplateComponentTypeUnion[];
+  globals: PlayerGlobals;
+  resourceManager: ResourceManager;
 }
 
 export const Group: Component<GroupProps> = (props) => {
-  let groupRef: HTMLDivElement | undefined
-  let cleanUpAnimations: () => void
+  let groupRef: HTMLDivElement | undefined;
+  let cleanUpAnimations: () => void;
 
-  let count = 0
+  let count = 0;
   const onReadyAfter = () => {
-    count++
+    count++;
     if (count == props.components.length) {
-      props.onReady()
+      props.onReady();
     }
-  }
+  };
 
   onCleanup(() => {
-    cleanUpAnimations && cleanUpAnimations()
-  })
+    cleanUpAnimations && cleanUpAnimations();
+  });
 
   onMount(() => {
     if (groupRef && props.animations) {
@@ -85,9 +85,9 @@ export const Group: Component<GroupProps> = (props) => {
         props.timeline,
         props.animations,
         groupRef
-      )
+      );
     }
-  })
+  });
 
   return (
     <div
@@ -110,5 +110,5 @@ export const Group: Component<GroupProps> = (props) => {
         )}
       </For>
     </div>
-  )
-}
+  );
+};

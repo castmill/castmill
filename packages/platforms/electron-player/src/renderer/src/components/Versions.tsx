@@ -1,7 +1,7 @@
-import { type Component, createSignal } from 'solid-js'
+import { type Component, createSignal } from 'solid-js';
 
 const Versions: Component = () => {
-  const [versions] = createSignal(window.electron.process.versions)
+  const [versions] = createSignal(window.electron.process.versions);
 
   return (
     <ul class="versions">
@@ -10,7 +10,7 @@ const Versions: Component = () => {
       <li class="node-version">Node v{versions().node}</li>
       <li class="v8-version">V8 v{versions().v8}</li>
     </ul>
-  )
-}
+  );
+};
 
-export default Versions
+export default Versions;

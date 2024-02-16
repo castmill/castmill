@@ -6,13 +6,13 @@
  */
 // import "whatwg-fetch";
 
-import { Cache, ItemType } from './cache'
+import { Cache, ItemType } from './cache';
 
-let resourceManager: ResourceManager
+let resourceManager: ResourceManager;
 
 interface ResourceManagerOpts {
-  isOnline?: () => boolean
-  needsRefresh?: () => void
+  isOnline?: () => boolean;
+  needsRefresh?: () => void;
 }
 
 /**
@@ -51,8 +51,8 @@ export class ResourceManager {
     cache: Cache,
     opts: ResourceManagerOpts
   ): ResourceManager {
-    resourceManager = resourceManager || new ResourceManager(cache, opts)
-    return resourceManager
+    resourceManager = resourceManager || new ResourceManager(cache, opts);
+    return resourceManager;
   }
 
   constructor(
@@ -62,22 +62,22 @@ export class ResourceManager {
 
   async init() {
     // Get all the code resources
-    const codeResources = await this.cache.list(ItemType.Code)
+    const codeResources = await this.cache.list(ItemType.Code);
 
     // re-fetch all the code resources
-    let needRefresh = false
+    let needRefresh = false;
     for (const codeResource of codeResources) {
-      const newCode = await this.fetchCode(codeResource.url)
+      const newCode = await this.fetchCode(codeResource.url);
       if (newCode) {
-        const oldCode = await this.fetchCode(codeResource.cachedUrl)
+        const oldCode = await this.fetchCode(codeResource.cachedUrl);
 
         if (oldCode !== newCode) {
           await this.cache.set(
             codeResource.url,
             ItemType.Code,
             'text/javascript'
-          )
-          needRefresh = true
+          );
+          needRefresh = true;
         }
       }
     }
@@ -85,10 +85,10 @@ export class ResourceManager {
     // Check if any of the code resources has changed, if so call the needsRefresh callback
     // to trigger a reload of the page so that the new code can be used.
     if (needRefresh && this.opts.needsRefresh) {
-      await this.opts.needsRefresh()
+      await this.opts.needsRefresh();
     }
 
-    await this.cache.init()
+    await this.cache.init();
   }
 
   /**
@@ -97,26 +97,26 @@ export class ResourceManager {
    */
   // https://stackoverflow.com/questions/47978809/how-to-dynamically-execute-eval-javascript-code-that-contains-an-es6-module-re
   async import<T = any>(url: string): Promise<T | void> {
-    let item = await this.cache.get(url)
+    let item = await this.cache.get(url);
 
     if (item) {
-      const code = await this.fetchCode(item.cachedUrl)
-      const uri = `data:text/javascript,${code};`
-      return import(/* @vite-ignore */ uri) as Promise<T>
+      const code = await this.fetchCode(item.cachedUrl);
+      const uri = `data:text/javascript,${code};`;
+      return import(/* @vite-ignore */ uri) as Promise<T>;
     }
 
-    return this.cache.set(url, ItemType.Code, 'text/javascript')
+    return this.cache.set(url, ItemType.Code, 'text/javascript');
   }
 
   async getData<T = any>(url: string, freshness: number): Promise<T | void> {
-    const item = await this.cache.get(url)
-    const age = item ? Date.now() - item.timestamp : Infinity
+    const item = await this.cache.get(url);
+    const age = item ? Date.now() - item.timestamp : Infinity;
     if (item && age < freshness) {
-      return this.fetchJson(item.cachedUrl) as Promise<T>
+      return this.fetchJson(item.cachedUrl) as Promise<T>;
     } else {
       return this.cache.set(url, ItemType.Data, 'application/json', {
         force: true,
-      })
+      });
     }
   }
 
@@ -134,14 +134,14 @@ export class ResourceManager {
   async getMedia(url: string): Promise<string | void> {
     // We must not cache data uris
     if (url.startsWith('data:')) {
-      return url
+      return url;
     }
 
-    const item = await this.cache.get(url)
+    const item = await this.cache.get(url);
     if (!item) {
-      return this.cache.set(url, ItemType.Media, 'media/*')
+      return this.cache.set(url, ItemType.Media, 'media/*');
     }
-    return item.cachedUrl
+    return item.cachedUrl;
   }
 
   /**
@@ -157,18 +157,18 @@ export class ResourceManager {
   async cacheMedia(url: string): Promise<void> {
     // We must not cache data uris
     if (url.startsWith('data:')) {
-      return
+      return;
     }
 
     if (await this.cache.hasUrl(url)) {
-      return
+      return;
     }
 
-    return this.cache.set(url, ItemType.Media, 'media/*')
+    return this.cache.set(url, ItemType.Media, 'media/*');
   }
 
   close() {
-    this.cache.close()
+    this.cache.close();
   }
 
   /**
@@ -185,13 +185,13 @@ export class ResourceManager {
           Accept: 'application/json',
           'Content-Type': 'application/json',
         },
-      })
+      });
       if (response.ok) {
-        const data = await response.json()
-        return data
+        const data = await response.json();
+        return data;
       }
     } catch (err) {
-      console.error(err)
+      console.error(err);
     }
   }
 
@@ -200,12 +200,12 @@ export class ResourceManager {
     options: RequestInit = {}
   ): Promise<any> {
     try {
-      const response = await fetch(url)
+      const response = await fetch(url);
       if (response.ok) {
-        return response.text()
+        return response.text();
       }
     } catch (err) {
-      console.error(err)
+      console.error(err);
     }
   }
 }

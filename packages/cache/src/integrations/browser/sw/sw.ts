@@ -8,30 +8,30 @@
 /// <reference lib="webworker" />
 
 self.addEventListener('install', function (event) {
-  console.log('Installed worker')
-})
+  console.log('Installed worker');
+});
 
 self.addEventListener('activate', function (event) {
-  console.log('Activated worker version')
-})
+  console.log('Activated worker version');
+});
 
 self.addEventListener('fetch', async function (event) {
-  const request = (<FetchEvent>event).request
+  const request = (<FetchEvent>event).request;
 
   event.respondWith(
     (async () => {
-      const response = await caches.match(request)
+      const response = await caches.match(request);
       if (response) {
-        return response
+        return response;
       } else {
-        const fetchRequest = request.clone()
+        const fetchRequest = request.clone();
         try {
-          const result = await fetch(fetchRequest)
-          return result
+          const result = await fetch(fetchRequest);
+          return result;
         } catch (err) {
-          console.error('Error fetching', err)
+          console.error('Error fetching', err);
         }
       }
     })()
-  )
-})
+  );
+});

@@ -1,11 +1,11 @@
-import { JSX } from 'solid-js'
+import { JSX } from 'solid-js';
 
 export const applyCss = (element: HTMLElement, css: JSX.CSSProperties) => {
-  const styleDeclaration = (<unknown>css) as CSSStyleDeclaration
+  const styleDeclaration = (<unknown>css) as CSSStyleDeclaration;
   for (let key in styleDeclaration) {
-    const styleProperty = styleDeclaration[key]
+    const styleProperty = styleDeclaration[key];
     if (styleProperty) {
-      element.style[key] = styleProperty
+      element.style[key] = styleProperty;
     }
   }
-}
+};

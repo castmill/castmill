@@ -90,4 +90,4 @@ const JsonSchema = {
     background: {}, // Margin, padding, color, etc.
     items: [],
   },
-}
+};

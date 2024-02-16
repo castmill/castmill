@@ -1,20 +1,20 @@
-import gsap from 'gsap'
+import gsap from 'gsap';
 
-import { Component, For, JSX, mergeProps, onCleanup, onMount } from 'solid-js'
-import { TemplateConfig, resolveOption } from './binding'
-import { TemplateComponent, TemplateComponentType } from './template'
-import { ComponentAnimation } from './animation'
-import { BaseComponentProps } from './interfaces/base-component-props'
-import { ResourceManager } from '@castmill/cache'
-import { PlayerGlobals } from '../../interfaces/player-globals.interface'
+import { Component, For, JSX, mergeProps, onCleanup, onMount } from 'solid-js';
+import { TemplateConfig, resolveOption } from './binding';
+import { TemplateComponent, TemplateComponentType } from './template';
+import { ComponentAnimation } from './animation';
+import { BaseComponentProps } from './interfaces/base-component-props';
+import { ResourceManager } from '@castmill/cache';
+import { PlayerGlobals } from '../../interfaces/player-globals.interface';
 
 export interface ImageCarouselComponentOptions {
-  images: string[]
-  imageDuration: number
+  images: string[];
+  imageDuration: number;
 }
 
 export class ImageCarouselComponent implements TemplateComponent {
-  readonly type = TemplateComponentType.ImageCarousel
+  readonly type = TemplateComponentType.ImageCarousel;
 
   constructor(
     public name: string,
@@ -25,7 +25,7 @@ export class ImageCarouselComponent implements TemplateComponent {
   ) {}
 
   resolveDuration(medias: { [index: string]: string }): number {
-    return this.opts.imageDuration * this.opts.images.length
+    return this.opts.imageDuration * this.opts.images.length;
   }
 
   static fromJSON(json: any): ImageCarouselComponent {
@@ -35,7 +35,7 @@ export class ImageCarouselComponent implements TemplateComponent {
       json.style,
       json.animations,
       json.filter
-    )
+    );
   }
 
   static resolveOptions(
@@ -52,31 +52,31 @@ export class ImageCarouselComponent implements TemplateComponent {
         context,
         globals
       ),
-    }
+    };
   }
 }
 
 interface ImageCarouselProps extends BaseComponentProps {
-  config: TemplateConfig
-  context: any
+  config: TemplateConfig;
+  context: any;
 
-  opts: ImageCarouselComponentOptions
+  opts: ImageCarouselComponentOptions;
 
-  startArgs?: GSAPTweenVars
-  endArgs?: GSAPTweenVars
-  resourceManager: ResourceManager
-  globals: PlayerGlobals
+  startArgs?: GSAPTweenVars;
+  endArgs?: GSAPTweenVars;
+  resourceManager: ResourceManager;
+  globals: PlayerGlobals;
 }
 
 export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
-  let parentRef: HTMLDivElement | undefined
-  const timeline: GSAPTimeline = gsap.timeline()
+  let parentRef: HTMLDivElement | undefined;
+  const timeline: GSAPTimeline = gsap.timeline();
   const timelineItem = {
     start: props.timeline.duration(),
     child: timeline,
-  }
+  };
 
-  props.timeline.add(timelineItem)
+  props.timeline.add(timelineItem);
 
   props = mergeProps(
     {
@@ -94,7 +94,7 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
       },
     },
     props
-  )
+  );
 
   const style = Object.assign(
     {
@@ -106,82 +106,86 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
       position: 'absolute',
     },
     props.style
-  )
+  );
 
   onCleanup(() => {
-    props.timeline.remove(timelineItem)
-    timeline.kill()
-  })
+    props.timeline.remove(timelineItem);
+    timeline.kill();
+  });
 
   onMount(async () => {
-    const images = parentRef?.children!
+    const images = parentRef?.children!;
     const targetArgs = {
       duration: 1,
       x: 0,
       y: 0,
       autoAlpha: 1,
       scale: 1,
-    }
+    };
 
     if (images && images.length == 1) {
       const imageUrl = await props.resourceManager.getMedia(
         props.opts.images[0]
-      )
+      );
       timeline.set(
         images[0],
         {
           backgroundImage: `url(${imageUrl})`,
         },
         '<'
-      )
-      timeline.duration(props.opts.imageDuration)
+      );
+      timeline.duration(props.opts.imageDuration);
     }
 
     if (images && images.length > 1) {
       Array.from(images || []).forEach(async (image, index) => {
         const imageUrl = await props.resourceManager.getMedia(
           props.opts.images[index]
-        )
+        );
         timeline.set(
           image,
           {
             backgroundImage: `url(${imageUrl})`,
           },
           '<'
-        )
+        );
 
         if (index === 0) {
           timeline.set(images[images.length - 1], {
             visibility: 'hidden',
             backgroundImage: 'none',
-          })
-          timeline.set(image, Object.assign({}, targetArgs))
+          });
+          timeline.set(image, Object.assign({}, targetArgs));
         } else {
-          timeline.from(image, Object.assign({}, props.startArgs), '<')
+          timeline.from(image, Object.assign({}, props.startArgs), '<');
           timeline.set(images[index - 1], {
             visibility: 'hidden',
             backgroundImage: 'none',
-          })
+          });
         }
         // When the last image fades out we need to cross-fade the first image
-        let position = `>+=${props.opts.imageDuration}`
+        let position = `>+=${props.opts.imageDuration}`;
         if (index === images.length - 1) {
           const imageUrl = await props.resourceManager.getMedia(
             props.opts.images[0]
-          )
+          );
 
           timeline.set(images[0], {
             backgroundImage: `url(${imageUrl})`,
-          })
-          timeline.from(images[0], Object.assign({}, props.startArgs), position)
-          position = `<`
+          });
+          timeline.from(
+            images[0],
+            Object.assign({}, props.startArgs),
+            position
+          );
+          position = `<`;
         }
-        timeline.to(image, Object.assign({}, props.endArgs), position)
-      })
+        timeline.to(image, Object.assign({}, props.endArgs), position);
+      });
     }
 
-    props.onReady()
-  })
+    props.onReady();
+  });
 
   return (
     <div
@@ -194,5 +198,5 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
         {(item, i) => <div data-component="image" style={style}></div>}
       </For>
     </div>
-  )
-}
+  );
+};

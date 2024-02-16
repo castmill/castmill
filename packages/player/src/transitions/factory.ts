@@ -1,10 +1,10 @@
-import { CrossFade } from './crossfade'
-import { SideScroll } from './side-scroll'
-import { Flip } from './flip'
+import { CrossFade } from './crossfade';
+import { SideScroll } from './side-scroll';
+import { Flip } from './flip';
 
 export interface JsonTransition {
-  uri: string
-  opts?: { duration: number; ease?: string }
+  uri: string;
+  opts?: { duration: number; ease?: string };
 }
 
 export const fromJSON = (json: JsonTransition) => {
@@ -15,11 +15,11 @@ export const fromJSON = (json: JsonTransition) => {
   } else {
     switch (json.uri) {
       case 'transition://crossfade':
-        return new CrossFade(json.opts)
+        return new CrossFade(json.opts);
       case 'transition://side-scroll':
-        return new SideScroll(json.opts)
+        return new SideScroll(json.opts);
       case 'transition://flip':
-        return new Flip(json.opts)
+        return new Flip(json.opts);
     }
   }
-}
+};

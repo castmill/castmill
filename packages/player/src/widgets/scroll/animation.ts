@@ -7,7 +7,7 @@
  * make window type index-able
  */
 interface IndexableWindow {
-  [key: string]: any
+  [key: string]: any;
 }
 
 /*
@@ -15,26 +15,26 @@ interface IndexableWindow {
  * with functions declared in the global space.
  */
 const animation: {
-  requestAnimationFrame(callback: FrameRequestCallback): number
-  cancelAnimationFrame(id: number): void
+  requestAnimationFrame(callback: FrameRequestCallback): number;
+  cancelAnimationFrame(id: number): void;
 } = {
   requestAnimationFrame: () => 0,
   cancelAnimationFrame: () => undefined,
-}
+};
 
 /*
  * Look for browser specific implementations of the requestAnimationFrame, and cancelAnimationFrame functions
  */
 if (window) {
-  const vendors = ['ms', 'moz', 'webkit', 'o']
-  const win = window as IndexableWindow
+  const vendors = ['ms', 'moz', 'webkit', 'o'];
+  const win = window as IndexableWindow;
 
   animation.requestAnimationFrame = vendors
     .map((vendor) => win[vendor + 'RequestAnimationFrame'])
     .reduce(
       (accumulator, func) => accumulator || func,
       window.requestAnimationFrame
-    )
+    );
 
   animation.cancelAnimationFrame = vendors
     .map(
@@ -45,31 +45,31 @@ if (window) {
     .reduce(
       (accumulator, func) => accumulator || func,
       window.cancelAnimationFrame
-    )
+    );
 }
 
 /*
  * Fallback to setTimeout logic if no existing alternatives can be found
  */
 if (!animation.requestAnimationFrame) {
-  let lastTime = 0
+  let lastTime = 0;
   animation.requestAnimationFrame = (callback) => {
-    const currTime = new Date().getTime()
-    const timeToCall = Math.max(0, 16 - (currTime - lastTime))
+    const currTime = new Date().getTime();
+    const timeToCall = Math.max(0, 16 - (currTime - lastTime));
     const id = window.setTimeout(() => {
-      callback(currTime + timeToCall)
-    }, timeToCall)
-    lastTime = currTime + timeToCall
-    return id
-  }
+      callback(currTime + timeToCall);
+    }, timeToCall);
+    lastTime = currTime + timeToCall;
+    return id;
+  };
 
   if (!animation.cancelAnimationFrame) {
     animation.cancelAnimationFrame = (id) => {
-      clearTimeout(id)
-    }
+      clearTimeout(id);
+    };
   }
 }
 
-export const requestAnimationFrame = animation.requestAnimationFrame
+export const requestAnimationFrame = animation.requestAnimationFrame;
 
-export const cancelAnimationFrame = animation.cancelAnimationFrame
+export const cancelAnimationFrame = animation.cancelAnimationFrame;

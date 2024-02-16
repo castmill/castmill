@@ -1,10 +1,10 @@
-import EventEmitter from 'eventemitter3'
-import { Observable, Subscription } from 'rxjs'
-import { finalize, share, tap, first, concatMap } from 'rxjs/operators'
-import { Playlist } from './playlist'
-import { Renderer, Viewport } from './renderer'
+import EventEmitter from 'eventemitter3';
+import { Observable, Subscription } from 'rxjs';
+import { finalize, share, tap, first, concatMap } from 'rxjs/operators';
+import { Playlist } from './playlist';
+import { Renderer, Viewport } from './renderer';
 
-const TIMER_RESOLUTION = 50
+const TIMER_RESOLUTION = 50;
 
 /**
  * Viewport
@@ -21,20 +21,20 @@ export class Player extends EventEmitter {
     private renderer: Renderer,
     viewport?: Viewport
   ) {
-    super()
+    super();
 
     if (viewport) {
-      renderer.setViewport(viewport)
+      renderer.setViewport(viewport);
     }
   }
-  timerSubscription?: Subscription
-  playing?: Subscription
+  timerSubscription?: Subscription;
+  playing?: Subscription;
 
   show() {}
 
   toggleDebug() {
-    this.renderer.toggleDebug()
-    this.playlist.toggleDebug()
+    this.renderer.toggleDebug();
+    this.playlist.toggleDebug();
   }
 
   play(
@@ -44,35 +44,35 @@ export class Player extends EventEmitter {
     }
   ) {
     // Define the baseline time for the timer
-    const baseline = opts.baseline || Date.now()
+    const baseline = opts.baseline || Date.now();
 
-    this.stop()
+    this.stop();
 
     // Do we really need to seek here, since we also seek when doing "show"?
-    const startTime = opts.synced ? baseline : this.playlist.time || 0
+    const startTime = opts.synced ? baseline : this.playlist.time || 0;
     const timer$ = this.playlist.seek(startTime).pipe(
       first(),
       concatMap(([time, duration]) => {
-        let currTime = time
+        let currTime = time;
         return timer(baseline, startTime, TIMER_RESOLUTION, duration).pipe(
           tap((value) => {
             // Unsure why this is needed
             if (value < currTime) {
-              this.emit('end')
+              this.emit('end');
             }
-            currTime = value
+            currTime = value;
           })
-        )
+        );
       }),
       share()
-    )
+    );
 
     this.timerSubscription = timer$.subscribe({
       next: (time) => this.emit('time', time),
       error: (err) => {
-        console.log('Timer error', err)
+        console.log('Timer error', err);
       },
-    })
+    });
 
     this.playing = this.playlist
       .play(this.renderer, timer$, {
@@ -80,7 +80,7 @@ export class Player extends EventEmitter {
       })
       .pipe(
         finalize(() => {
-          this.timerSubscription?.unsubscribe()
+          this.timerSubscription?.unsubscribe();
         })
       )
       // Note for the future: for some reason, this subscribe call is a bit slow, between 10-40ms
@@ -90,21 +90,21 @@ export class Player extends EventEmitter {
       // playlist (i.e. how many layers, how many items in each layer, etc).
       .subscribe({
         error: (err) => {
-          console.log('Playing error', err)
+          console.log('Playing error', err);
         },
         complete: () => {
-          this.timerSubscription?.unsubscribe()
-          this.emit('completed')
+          this.timerSubscription?.unsubscribe();
+          this.emit('completed');
         },
-      })
+      });
   }
 
   stop() {
-    this.timerSubscription?.unsubscribe()
-    this.playing?.unsubscribe()
+    this.timerSubscription?.unsubscribe();
+    this.playing?.unsubscribe();
 
-    this.timerSubscription = void 0
-    this.playing = void 0
+    this.timerSubscription = void 0;
+    this.playing = void 0;
   }
 }
 
@@ -116,19 +116,19 @@ export function timer(
   period: number
 ) {
   return new Observable<number>((subscriber) => {
-    let timeout = 0
-    let tick = start
+    let timeout = 0;
+    let tick = start;
     const updateTick = () => {
-      subscriber.next(tick)
-      tick = (tick + interval) % period
-      baseline = baseline + interval
-      const drift = baseline - Date.now()
-      timeout = setTimeout(updateTick, interval + drift)
-    }
-    updateTick()
+      subscriber.next(tick);
+      tick = (tick + interval) % period;
+      baseline = baseline + interval;
+      const drift = baseline - Date.now();
+      timeout = setTimeout(updateTick, interval + drift);
+    };
+    updateTick();
 
     return () => {
-      clearTimeout(timeout)
-    }
-  })
+      clearTimeout(timeout);
+    };
+  });
 }

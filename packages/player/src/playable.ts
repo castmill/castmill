@@ -1,5 +1,5 @@
-import { Observable } from 'rxjs'
-import { Renderer } from './renderer'
+import { Observable } from 'rxjs';
+import { Renderer } from './renderer';
 
 export enum Status {
   NotReady,
@@ -13,12 +13,12 @@ export enum Status {
 }
 
 export interface Playable {
-  duration(): number
+  duration(): number;
 
-  play(server: Renderer, opts?: { loop: boolean }): void
-  seek(offset: number): void
-  status: Status
+  play(server: Renderer, opts?: { loop: boolean }): void;
+  seek(offset: number): void;
+  status: Status;
 
-  show(offset: number): Observable<string>
-  unload(): void
+  show(offset: number): Observable<string>;
+  unload(): void;
 }

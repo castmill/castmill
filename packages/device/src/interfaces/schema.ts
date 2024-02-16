@@ -2,26 +2,26 @@
  * Represents a schema for a document.
  *
  */
-type SimpleType = 'string' | 'number' | 'boolean'
-type ComplexType = 'map' | 'list'
+type SimpleType = 'string' | 'number' | 'boolean';
+type ComplexType = 'map' | 'list';
 
 interface FieldAttributes {
-  type: SimpleType
-  required?: boolean
-  default?: string | number
+  type: SimpleType;
+  required?: boolean;
+  default?: string | number;
 }
 
 interface ReferenceAttributes {
-  type: 'ref'
-  required?: boolean
-  collection: string
+  type: 'ref';
+  required?: boolean;
+  collection: string;
 }
 
 interface ComplexFieldAttributes {
-  type: ComplexType
-  schema: Schema
-  required?: boolean
-  default?: any
+  type: ComplexType;
+  schema: Schema;
+  required?: boolean;
+  default?: any;
 }
 
 export type Schema = {
@@ -29,5 +29,5 @@ export type Schema = {
     | SimpleType
     | FieldAttributes
     | ComplexFieldAttributes
-    | ReferenceAttributes
-}
+    | ReferenceAttributes;
+};

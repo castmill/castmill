@@ -12,12 +12,12 @@ type ValidTypes =
   | 'time'
   | 'datetime'
   | 'array'
-  | 'schema'
+  | 'schema';
 
 interface SchemaField<D extends ValidTypes, T> {
-  type: D
-  required?: boolean
-  default: T
+  type: D;
+  required?: boolean;
+  default: T;
 }
 
 export interface SchemaDefinition {
@@ -29,12 +29,12 @@ export interface SchemaDefinition {
     | SchemaField<'time', string>
     | SchemaField<'datetime', string>
     | SchemaField<'array', SchemaDefinition[]>
-    | SchemaField<'schema', SchemaDefinition>
+    | SchemaField<'schema', SchemaDefinition>;
 }
 
 export interface SchemaError {
-  key: string
-  message: string
+  key: string;
+  message: string;
 }
 
 function checkField(
@@ -47,97 +47,97 @@ function checkField(
     errors.push({
       key,
       message: `Invalid type for field: ${key}. Expected ${type}, got ${typeof value}`,
-    })
-    return false
+    });
+    return false;
   }
-  return true
+  return true;
 }
 
 export class Schema {
   constructor(private schema: SchemaDefinition) {}
 
   validate(data: any): SchemaError[] {
-    const errors: SchemaError[] = []
-    const keys = Object.keys(this.schema)
+    const errors: SchemaError[] = [];
+    const keys = Object.keys(this.schema);
 
     for (const key of keys) {
-      const value = data[key]
-      const type = this.schema[key]
+      const value = data[key];
+      const type = this.schema[key];
       if (type.required && value === undefined) {
         errors.push({
           key: key,
           message: `Missing required field: ${key}`,
-        })
+        });
       } else {
         switch (type.type) {
           case 'string':
-            checkField('string', value, key, errors)
+            checkField('string', value, key, errors);
         }
 
         if (value !== undefined) {
           switch (type.type) {
             case 'string':
-              checkField('string', value, key, errors)
-              break
+              checkField('string', value, key, errors);
+              break;
             case 'number':
-              checkField('number', value, key, errors)
-              break
+              checkField('number', value, key, errors);
+              break;
             case 'boolean':
-              checkField('boolean', value, key, errors)
-              break
+              checkField('boolean', value, key, errors);
+              break;
             case 'date':
               if (checkField('string', value, key, errors)) {
-                const date = new Date(value)
+                const date = new Date(value);
                 if (isNaN(date.getTime())) {
                   errors.push({
                     key: key,
                     message: `Invalid date: ${value}`,
-                  })
+                  });
                 }
               }
-              break
+              break;
             case 'time':
-              checkField('string', value, key, errors)
-              const time = new Date(`1970-01-01T${value}`)
+              checkField('string', value, key, errors);
+              const time = new Date(`1970-01-01T${value}`);
               if (isNaN(time.getTime())) {
                 errors.push({
                   key: key,
                   message: `Invalid time for field: ${key}`,
-                })
+                });
               }
-              break
+              break;
             case 'datetime':
-              checkField('string', value, key, errors)
-              const datetime = new Date(value)
+              checkField('string', value, key, errors);
+              const datetime = new Date(value);
               if (isNaN(datetime.getTime())) {
                 errors.push({
                   key: key,
                   message: `Invalid datetime for field: ${key}`,
-                })
+                });
               }
-              break
+              break;
             case 'array':
               if (checkField('object', value, key, errors)) {
                 if (!Array.isArray(value)) {
                   errors.push({
                     key: key,
                     message: `Invalid type for field: ${key}. Expected array, got ${typeof value}`,
-                  })
+                  });
                 }
               }
-              break
+              break;
             case 'schema':
               if (checkField('object', value, key, errors)) {
-                const schema = new Schema(type.default)
+                const schema = new Schema(type.default);
                 for (const item of value) {
-                  errors.push(...schema.validate(item))
+                  errors.push(...schema.validate(item));
                 }
               }
-              break
+              break;
           }
         }
       }
     }
-    return errors
+    return errors;
   }
 }
