@@ -9,7 +9,7 @@ import { MenuComponent } from './components/menu.component';
 const App: Component<{ device: Device }> = (props: { device: Device }) => {
   return (
     <div class={styles.App}>
-      <MenuComponent />
+      <MenuComponent integration={props.device.getIntegration()} />
       <DeviceComponent device={props.device} />
     </div>
   );
