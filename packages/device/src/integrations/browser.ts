@@ -1,4 +1,4 @@
-import { Machine } from '../interfaces/machine';
+import { Machine, type DeviceInfo } from '../interfaces/machine';
 
 export class BrowserMachine implements Machine {
   /**
@@ -48,5 +48,20 @@ export class BrowserMachine implements Machine {
 
   async getTimezone(): Promise<string> {
     return Intl.DateTimeFormat().resolvedOptions().timeZone;
+  }
+
+  async getDeviceInfo(): Promise<DeviceInfo> {
+    return {
+      appType: 'Browser',
+      appVersion: '0.0.0-todo-hardcode',
+      os: 'Browser dummy OS',
+      hardware: 'Browser dummy',
+      userAgent: navigator.userAgent,
+    };
+  }
+
+  async restart(): Promise<void> {
+    console.log('Refreshing the page');
+    location.reload();
   }
 }

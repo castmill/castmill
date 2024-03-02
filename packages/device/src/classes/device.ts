@@ -1,8 +1,7 @@
 import { Channel, Socket } from 'phoenix';
 import { Player, Playlist, Renderer, Viewport, Layer } from '@castmill/player';
 import { ResourceManager, Cache, StorageIntegration } from '@castmill/cache';
-
-import { Machine } from '../interfaces/machine';
+import { Machine, type DeviceInfo } from '../interfaces/machine';
 import { getCastmillIntro } from './intro';
 import { Calendar, JsonCalendar } from './calendar';
 import { Schema, JsonPlaylist, JsonPlaylistItem } from '../interfaces';
@@ -341,6 +340,10 @@ export class Device {
 
       console.log('Update calendars', payload);
     });
+  }
+
+  getIntegration() {
+    return this.integration;
   }
 }
 
