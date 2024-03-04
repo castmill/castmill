@@ -5,26 +5,19 @@ import {
   type JSX,
   type Component,
 } from 'solid-js';
-import { Machine } from '../interfaces/machine';
+import { Device } from '../classes/device';
 import { BaseMenu, type MenuEntry } from './basemenu.component';
 
-// The menu entries. Make these talk to the host app. Also make sure to on
-// show actions and settings that are available on the current device.
-//
-// There are three types of menu entries: - action: a simple action such as restart or shutdown
-// - checkbox: a checkbox with a state
-// - submenu: a submenu with children
-
 interface MenuProps {
-  integration: Machine;
+  device: Device;
 }
 
-const fetchDeviceInfo = (integration: Machine) => {
-  return integration.getDeviceInfo();
+const fetchDeviceInfo = (device: Device) => {
+  return device.getDeviceInfo();
 };
 
-export const MenuComponent: Component<MenuProps> = ({ integration }) => {
-  const [deviceInfo] = createResource(integration, fetchDeviceInfo);
+export const MenuComponent: Component<MenuProps> = ({ device }) => {
+  const [deviceInfo] = createResource(device, fetchDeviceInfo);
 
   const header = (
     <>
@@ -36,76 +29,78 @@ export const MenuComponent: Component<MenuProps> = ({ integration }) => {
     </>
   );
 
+  const capabilities = device.getCapabilities();
+
   const entries: MenuEntry[] = [
     // optional actions
-    ...((integration.restart
+    ...((capabilities.restart
       ? [
           {
             name: 'Restart App',
             id: 'restart',
             type: 'action',
             action: () => {
-              integration.restart?.();
+              device.restart?.();
             },
           },
         ]
       : []) as MenuEntry[]),
-    ...((integration.quit
+    ...((capabilities.quit
       ? [
           {
             name: 'Quit App',
             id: 'quit',
             type: 'action',
             action: () => {
-              integration.quit?.();
+              device.quit?.();
             },
           },
         ]
       : []) as MenuEntry[]),
-    ...((integration.reboot
+    ...((capabilities.reboot
       ? [
           {
             name: 'Reboot Device',
             id: 'reboot',
             type: 'action',
             action: () => {
-              integration.reboot?.();
+              device.reboot?.();
             },
           },
         ]
       : []) as MenuEntry[]),
-    ...((integration.shutdown
+    ...((capabilities.shutdown
       ? [
           {
             name: 'Shutdown Device',
             id: 'shutdown',
             type: 'action',
             action: () => {
-              integration.shutdown?.();
+              device.shutdown?.();
             },
           },
         ]
       : []) as MenuEntry[]),
-    ...((integration.update
+    ...((capabilities.update
       ? [
           {
             name: 'Update App',
             id: 'update',
             type: 'action',
             action: () => {
-              integration.update?.();
+              device.update?.();
             },
           },
         ]
       : []) as MenuEntry[]),
-    ...((integration.updateFirmware
+    ...((capabilities.updateFirmware
       ? [
           {
             name: 'Update Firmware',
             id: 'updateFirmware',
             type: 'action',
             action: () => {
-              integration.updateFirmware?.();
+              device.updateFirmware?.();
             },
           },
         ]

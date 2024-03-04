@@ -5,6 +5,7 @@ export interface ApplicationAPI {
   quit: () => void;
   shutdown: () => void;
   reboot: () => void;
+  update: () => void;
 }
 
 declare global {
