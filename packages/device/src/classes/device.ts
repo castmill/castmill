@@ -342,8 +342,51 @@ export class Device {
     });
   }
 
-  getIntegration() {
-    return this.integration;
+  /*
+   * Returns the capabilities of the device. The capabilities are the set of actions
+   * that the device can perform. The capabilities may vary depending on the integration
+   */
+  getCapabilities() {
+    return {
+      restart: !!this.integration.restart,
+      quit: !!this.integration.quit,
+      reboot: !!this.integration.reboot,
+      shutdown: !!this.integration.shutdown,
+      update: !!this.integration.update,
+      updateFirmware: !!this.integration.updateFirmware,
+    };
+  }
+
+  //
+  // APIs for the device to interact with the machine specific integration.
+  //
+
+  getDeviceInfo() {
+    return this.integration.getDeviceInfo();
+  }
+
+  restart() {
+    return this.integration.restart?.();
+  }
+
+  quit() {
+    return this.integration.quit?.();
+  }
+
+  reboot() {
+    return this.integration.reboot?.();
+  }
+
+  shutdown() {
+    return this.integration.shutdown?.();
+  }
+
+  update() {
+    return this.integration.update?.();
+  }
+
+  updateFirmware() {
+    return this.integration.updateFirmware?.();
   }
 }
 
