@@ -60,9 +60,8 @@ export class ElectronMachine implements Machine {
     // const [versions] = createSignal(window.electron.process.versions)
     const versions = window.electron.process.versions;
 
-    console.log('ElectronMachine.getDeviceInfo', versions);
     return {
-      appType: 'Electron',
+      appType: import.meta.env.VITE_APP_TYPE,
       appVersion: window.electron.process.env.npm_package_version,
       os: 'Hardcode OS 12345',
       hardware: 'LG 42424242 dummy',
