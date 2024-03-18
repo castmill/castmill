@@ -6,12 +6,21 @@ import { Action } from '../common';
 import icon from '../../resources/icon.png?asset';
 
 function createWindow(): void {
+
+  // Determine if the app is running in kiosk mode.
+  const kiosk = import.meta.env.VITE_KIOSK === 'true';
+
+  // Determine if the app is running in fullscreen mode.
+  const fullscreen = import.meta.env.VITE_FULLSCREEN === 'true';
+
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 900,
     height: 670,
     show: false,
     autoHideMenuBar: true,
+    fullscreen,
+    kiosk,
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
