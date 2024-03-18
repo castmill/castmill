@@ -1,15 +1,25 @@
 import { app, shell, BrowserWindow, ipcMain } from 'electron';
 import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
+import * as api from './api';
+import { Action } from '../common';
 import icon from '../../resources/icon.png?asset';
 
 function createWindow(): void {
+  // Determine if the app is running in kiosk mode.
+  const kiosk = import.meta.env.VITE_KIOSK === 'true';
+
+  // Determine if the app is running in fullscreen mode.
+  const fullscreen = import.meta.env.VITE_FULLSCREEN === 'true';
+
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 900,
     height: 670,
     show: false,
     autoHideMenuBar: true,
+    fullscreen,
+    kiosk,
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
@@ -58,6 +68,26 @@ app.whenReady().then(() => {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
+  });
+
+  ipcMain.on(Action.RELAUNCH, () => {
+    api.relaunch();
+  });
+
+  ipcMain.on(Action.QUIT, () => {
+    api.exit();
+  });
+
+  ipcMain.on(Action.SHUTDOWN, () => {
+    api.shutdown();
+  });
+
+  ipcMain.on(Action.REBOOT, () => {
+    api.reboot();
+  });
+
+  ipcMain.on(Action.UPDATE, () => {
+    api.update();
   });
 });
 
