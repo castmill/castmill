@@ -6,7 +6,6 @@ import { Action } from '../common';
 import icon from '../../resources/icon.png?asset';
 
 function createWindow(): void {
-
   // Determine if the app is running in kiosk mode.
   const kiosk = import.meta.env.VITE_KIOSK === 'true';
 

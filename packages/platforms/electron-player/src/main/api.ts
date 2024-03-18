@@ -3,7 +3,7 @@
 import { exec } from 'child_process';
 import { app } from 'electron';
 import { is } from '@electron-toolkit/utils';
-import { autoUpdater } from "electron-updater"
+import { autoUpdater } from 'electron-updater';
 
 /*
  * show a toast notification
