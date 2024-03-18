@@ -3,6 +3,7 @@
 import { exec } from 'child_process';
 import { app } from 'electron';
 import { is } from '@electron-toolkit/utils';
+import { autoUpdater } from "electron-updater"
 
 /*
  * show a toast notification
@@ -77,5 +78,7 @@ export const reboot = () => {
  * update the app
  */
 export const update = () => {
-  showToast('Not implemented', 'Update');
+  showToast('Update', 'Checking for updates...');
+  // Won't work in dev mode.
+  autoUpdater.checkForUpdatesAndNotify();
 };
