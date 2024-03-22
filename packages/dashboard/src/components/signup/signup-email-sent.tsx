@@ -11,6 +11,10 @@ const SignUpEmailSent: Component = () => {
         be that you entered an existing email. Please try again with a different
         email.
       </p>
+      <p>
+        Feel free to close this tab and come back later to complete the sign up
+        process.
+      </p>
     </div>
   );
 };
