@@ -1,5 +1,5 @@
-import { Layer } from "../layer";
-import { GsapTransition } from "./gsap-transition";
+import { Layer } from '../layer';
+import { GsapTransition } from './gsap-transition';
 
 export class CrossFade extends GsapTransition {
   constructor(opts?: { duration: number; ease?: string }) {

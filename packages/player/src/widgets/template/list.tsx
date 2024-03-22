@@ -1,4 +1,4 @@
-import gsap from "gsap";
+import gsap from 'gsap';
 import {
   Component,
   createSignal,
@@ -7,19 +7,19 @@ import {
   onCleanup,
   onMount,
   Setter,
-} from "solid-js";
-import { Item } from "./item";
-import { resolveOption, TemplateConfig } from "./binding";
+} from 'solid-js';
+import { Item } from './item';
+import { resolveOption, TemplateConfig } from './binding';
 import {
   TemplateComponent,
   TemplateComponentType,
   TemplateComponentTypeUnion,
-} from "./template";
-import { ResourceManager } from "@castmill/cache";
-import { Timeline, TimelineItem } from "./timeline";
-import { ComponentAnimation } from "./animation";
-import { BaseComponentProps } from "./interfaces/base-component-props";
-import { PlayerGlobals } from "../../interfaces/player-globals.interface";
+} from './template';
+import { ResourceManager } from '@castmill/cache';
+import { Timeline, TimelineItem } from './timeline';
+import { ComponentAnimation } from './animation';
+import { BaseComponentProps } from './interfaces/base-component-props';
+import { PlayerGlobals } from '../../interfaces/player-globals.interface';
 
 export interface ListComponentOptions {
   pageDuration: number;
@@ -88,7 +88,7 @@ interface ListProps extends BaseComponentProps {
 // one bullet per page, and the activa page should be shown in a different color: o o x o
 export const List: Component<ListProps> = (props) => {
   const [pages, setPages] = createSignal<any[][]>([props.opts.items]);
-  const [pageStyle, setPageStyle] = createSignal("");
+  const [pageStyle, setPageStyle] = createSignal('');
 
   let textRef: HTMLDivElement | undefined;
   let gsapTimeline: GSAPTimeline = gsap.timeline({ repeat: -1, paused: true });

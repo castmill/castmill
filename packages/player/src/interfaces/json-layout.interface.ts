@@ -1,6 +1,6 @@
-import { JSX } from "solid-js";
+import { JSX } from 'solid-js';
 
-import { JsonPlaylist } from "./";
+import { JsonPlaylist } from './';
 export interface JsonLayout {
   name: string;
   args: {

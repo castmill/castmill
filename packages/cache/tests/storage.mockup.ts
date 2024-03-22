@@ -2,7 +2,7 @@ import {
   StorageIntegration,
   StoreResult,
   StoreError,
-} from "../src/storage.integration";
+} from '../src/storage.integration';
 
 function byteLength(str: string) {
   return new TextEncoder().encode(str).length;
@@ -50,18 +50,18 @@ export class StorageMockup implements StorageIntegration {
         result: {
           code: StoreResult.Failure,
           error: StoreError.NotFound,
-          errMsg: "File not found",
+          errMsg: 'File not found',
         },
       };
     }
 
-    const size = byteLength(data || "");
+    const size = byteLength(data || '');
     this.files[url] = {
       url,
       size,
     };
 
-    const blob = new Blob([data], { type: "text/javascript" });
+    const blob = new Blob([data], { type: 'text/javascript' });
 
     return {
       item: {

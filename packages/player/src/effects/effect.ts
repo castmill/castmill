@@ -1,5 +1,5 @@
-import { Observable } from "rxjs";
-import { Layer } from "../layer";
+import { Observable } from 'rxjs';
+import { Layer } from '../layer';
 
 export interface JsonEffect {
   uri: string;
@@ -8,10 +8,10 @@ export interface JsonEffect {
 
 /**
  * Effect abstract class.
- * 
- * Effects can be applied on a running widget. While a transition is running between 
+ *
+ * Effects can be applied on a running widget. While a transition is running between
  * layers, effects are applied on the layer itself.
- * 
+ *
  */
 export abstract class Effect {
   static async fromJSON(json: JsonEffect) {
@@ -23,5 +23,5 @@ export abstract class Effect {
     src: Layer,
     dst: Layer,
     opts: { duration: number }
-  ): Observable<"transition:end">;
+  ): Observable<'transition:end'>;
 }

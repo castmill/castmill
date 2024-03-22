@@ -1,14 +1,14 @@
-import { Component, JSX, mergeProps, onCleanup, onMount } from "solid-js";
-import { TemplateConfig, resolveOption } from "./binding";
-import { TemplateComponent, TemplateComponentType } from "./template";
-import { ComponentAnimation, applyAnimations } from "./animation";
-import { BaseComponentProps } from "./interfaces/base-component-props";
-import { ResourceManager } from "@castmill/cache";
-import { PlayerGlobals } from "../../interfaces/player-globals.interface";
+import { Component, JSX, mergeProps, onCleanup, onMount } from 'solid-js';
+import { TemplateConfig, resolveOption } from './binding';
+import { TemplateComponent, TemplateComponentType } from './template';
+import { ComponentAnimation, applyAnimations } from './animation';
+import { BaseComponentProps } from './interfaces/base-component-props';
+import { ResourceManager } from '@castmill/cache';
+import { PlayerGlobals } from '../../interfaces/player-globals.interface';
 
 export interface ImageComponentOptions {
   url: string;
-  size: "cover" | "contain";
+  size: 'cover' | 'contain';
   duration: number;
 }
 
@@ -70,11 +70,11 @@ export const Image: Component<ImageProps> = (props: ImageProps) => {
 
   const merged = mergeProps(
     {
-      width: "100%",
-      height: "100%",
-      "background-size": props.opts.size,
-      "background-repeat": "no-repeat",
-      "background-position": "center",
+      width: '100%',
+      height: '100%',
+      'background-size': props.opts.size,
+      'background-repeat': 'no-repeat',
+      'background-position': 'center',
     },
     props.style
   );

@@ -13,10 +13,10 @@ import {
   share,
   Subscription,
   switchMap,
-} from "rxjs";
-import { Playlist, Renderer, Player, Viewport } from "../";
-import gsap from "gsap";
-import playIcon from "../icons/play.png";
+} from 'rxjs';
+import { Playlist, Renderer, Player, Viewport } from '../';
+import gsap from 'gsap';
+import playIcon from '../icons/play.png';
 
 const controlsTemplate = (id: string) => `
 <div>
@@ -79,7 +79,7 @@ const template = (id: string) => `
 `;
 
 function htmlToElement(html: string) {
-  const template = document.createElement("template");
+  const template = document.createElement('template');
   html = html.trim(); // Never return a text node of whitespace as the result
   template.innerHTML = html;
   return template.content.firstChild;
@@ -151,7 +151,7 @@ export class PlayerUIControls {
         opacity: 0,
         duration: 0.5,
         scale: 1.5,
-        ease: "back",
+        ease: 'back',
       });
 
     const stopTimeline = gsap
@@ -162,7 +162,7 @@ export class PlayerUIControls {
         opacity: 0.5,
         duration: 0.3,
         scale: 1,
-        ease: "back",
+        ease: 'back',
       });
 
     const animatePlay = <T>(evt: T) => {
@@ -180,16 +180,16 @@ export class PlayerUIControls {
       });
     };
 
-    this.$play = fromEvent(this.elements.play, "click").pipe(
+    this.$play = fromEvent(this.elements.play, 'click').pipe(
       switchMap((evt) => animatePlay<Event>(evt)),
       share()
     );
 
-    this.$keyboard = fromEvent<KeyboardEvent>(document, "keydown").pipe(
+    this.$keyboard = fromEvent<KeyboardEvent>(document, 'keydown').pipe(
       switchMap((evt) => {
         // Hack so that we can animate the play button
         const { key, code, keyCode } = evt;
-        if (key == " " || code == "Space" || keyCode == 32) {
+        if (key == ' ' || code == 'Space' || keyCode == 32) {
           return animatePlay<KeyboardEvent>(evt);
         }
         return of({ evt, timestamp: Date.now() });
@@ -199,11 +199,11 @@ export class PlayerUIControls {
   }
 
   public loopObservable() {
-    return fromEvent(this.elements.loop, "change");
+    return fromEvent(this.elements.loop, 'change');
   }
 
   public seekObservable() {
-    return fromEvent(this.elements.seek, "input");
+    return fromEvent(this.elements.seek, 'input');
   }
 
   public playObservable() {
@@ -265,7 +265,7 @@ export class PlayerUI {
     private playlist: Playlist,
     private opts: PlayerUIOptions = {}
   ) {
-    this.ui = document.createElement("div");
+    this.ui = document.createElement('div');
     this.ui.innerHTML = template(this.id);
 
     document.querySelector(`#${id}`)?.appendChild(this.ui);
@@ -304,15 +304,15 @@ export class PlayerUI {
         .keyboardObservable()
         .subscribe(({ evt, timestamp }) => {
           const { key, code, keyCode } = evt;
-          if (key == " " || code == "Space" || keyCode == 32) {
+          if (key == ' ' || code == 'Space' || keyCode == 32) {
             this.playStop(timestamp);
           }
 
-          if (key == "ArrowRight" || code == "ArrowRight" || keyCode == 39) {
+          if (key == 'ArrowRight' || code == 'ArrowRight' || keyCode == 39) {
             this.forward();
           }
 
-          if (key == "ArrowLeft" || code == "ArrowLeft" || keyCode == 37) {
+          if (key == 'ArrowLeft' || code == 'ArrowLeft' || keyCode == 37) {
             this.backward();
           }
         });
@@ -331,11 +331,11 @@ export class PlayerUI {
 
   mounted() {
     if (this.opts.controlsMaster) {
-      this.player?.on("time", (time) => {
+      this.player?.on('time', (time) => {
         this.opts.controls?.updateTime(time);
       });
     }
-    this.player?.on("completed", () => {
+    this.player?.on('completed', () => {
       this.stop();
       this.seek(0);
     });
@@ -426,16 +426,16 @@ function timeFormat(value: number, tenths = false) {
   let h = Math.floor(seconds / 3600) as any;
 
   // Check if we need to show hours
-  h = h > 0 ? h + ":" : "";
+  h = h > 0 ? h + ':' : '';
 
   // If hours are showing, we may need to add a leading zero.
   // Always show at least one digit of minutes.
-  m = (h && m < 10 ? "0" + m : m) + ":";
+  m = (h && m < 10 ? '0' + m : m) + ':';
 
   // Check if leading zero is need for seconds
-  s = s < 10 ? "0" + s : s;
+  s = s < 10 ? '0' + s : s;
 
-  const tenth = tenths ? `:${Math.floor((value * 10) % 10)}` : "";
+  const tenth = tenths ? `:${Math.floor((value * 10) % 10)}` : '';
 
   // Return the final time
   return h + m + s + tenth;

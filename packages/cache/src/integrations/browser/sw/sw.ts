@@ -7,15 +7,15 @@
  */
 /// <reference lib="webworker" />
 
-self.addEventListener("install", function (event) {
-  console.log("Installed worker");
+self.addEventListener('install', function (event) {
+  console.log('Installed worker');
 });
 
-self.addEventListener("activate", function (event) {
-  console.log("Activated worker version");
+self.addEventListener('activate', function (event) {
+  console.log('Activated worker version');
 });
 
-self.addEventListener("fetch", async function (event) {
+self.addEventListener('fetch', async function (event) {
   const request = (<FetchEvent>event).request;
 
   event.respondWith(
@@ -29,7 +29,7 @@ self.addEventListener("fetch", async function (event) {
           const result = await fetch(fetchRequest);
           return result;
         } catch (err) {
-          console.error("Error fetching", err);
+          console.error('Error fetching', err);
         }
       }
     })()

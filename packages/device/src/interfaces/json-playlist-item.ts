@@ -1,5 +1,5 @@
-import { JsonWidget } from "./json-widget";
-import { JsonWidgetConfig } from "./json-widget-config";
+import { JsonWidget } from './json-widget';
+import { JsonWidgetConfig } from './json-widget-config';
 
 export interface JsonPlaylistItem {
   id: number;

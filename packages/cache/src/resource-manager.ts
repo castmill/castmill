@@ -6,7 +6,7 @@
  */
 // import "whatwg-fetch";
 
-import { Cache, ItemType } from "./cache";
+import { Cache, ItemType } from './cache';
 
 let resourceManager: ResourceManager;
 
@@ -55,7 +55,10 @@ export class ResourceManager {
     return resourceManager;
   }
 
-  constructor(private cache: Cache, private opts: ResourceManagerOpts = {}) {}
+  constructor(
+    private cache: Cache,
+    private opts: ResourceManagerOpts = {}
+  ) {}
 
   async init() {
     // Get all the code resources
@@ -72,7 +75,7 @@ export class ResourceManager {
           await this.cache.set(
             codeResource.url,
             ItemType.Code,
-            "text/javascript"
+            'text/javascript'
           );
           needRefresh = true;
         }
@@ -102,7 +105,7 @@ export class ResourceManager {
       return import(/* @vite-ignore */ uri) as Promise<T>;
     }
 
-    return this.cache.set(url, ItemType.Code, "text/javascript");
+    return this.cache.set(url, ItemType.Code, 'text/javascript');
   }
 
   async getData<T = any>(url: string, freshness: number): Promise<T | void> {
@@ -111,7 +114,7 @@ export class ResourceManager {
     if (item && age < freshness) {
       return this.fetchJson(item.cachedUrl) as Promise<T>;
     } else {
-      return this.cache.set(url, ItemType.Data, "application/json", {
+      return this.cache.set(url, ItemType.Data, 'application/json', {
         force: true,
       });
     }
@@ -130,13 +133,13 @@ export class ResourceManager {
    */
   async getMedia(url: string): Promise<string | void> {
     // We must not cache data uris
-    if (url.startsWith("data:")) {
+    if (url.startsWith('data:')) {
       return url;
     }
 
     const item = await this.cache.get(url);
     if (!item) {
-      return this.cache.set(url, ItemType.Media, "media/*");
+      return this.cache.set(url, ItemType.Media, 'media/*');
     }
     return item.cachedUrl;
   }
@@ -153,7 +156,7 @@ export class ResourceManager {
    */
   async cacheMedia(url: string): Promise<void> {
     // We must not cache data uris
-    if (url.startsWith("data:")) {
+    if (url.startsWith('data:')) {
       return;
     }
 
@@ -161,7 +164,7 @@ export class ResourceManager {
       return;
     }
 
-    return this.cache.set(url, ItemType.Media, "media/*");
+    return this.cache.set(url, ItemType.Media, 'media/*');
   }
 
   close() {
@@ -179,8 +182,8 @@ export class ResourceManager {
     try {
       const response = await fetch(url, {
         headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
         },
       });
       if (response.ok) {

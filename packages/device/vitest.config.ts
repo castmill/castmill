@@ -9,9 +9,9 @@ export default defineConfig({
   build: {
     target: 'esnext',
   },
-  test:{
+  test: {
     environment: 'jsdom',
     globals: true,
-    testTransformMode: { web: ["/\.[jt]sx?$/"] },
-  }
+    testTransformMode: { web: ['/.[jt]sx?$/'] },
+  },
 });

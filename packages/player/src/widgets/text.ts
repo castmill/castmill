@@ -1,11 +1,10 @@
+import { JSX } from 'solid-js';
+import { gsap } from 'gsap';
+import { of } from 'rxjs';
 
-import { JSX } from "solid-js";
-import { gsap } from "gsap";
-import { of } from "rxjs";
-
-import { TimelineWidget } from "./timeline-widget";
-import { applyCss } from "../utils";
-import { ResourceManager } from "@castmill/cache";
+import { TimelineWidget } from './timeline-widget';
+import { applyCss } from '../utils';
+import { ResourceManager } from '@castmill/cache';
 
 const limits = {
   max: 100,
@@ -20,8 +19,8 @@ const AnimationPresets = {
       scale: 0,
       y: 80,
       rotationX: 180,
-      transformOrigin: "0% 50% -50",
-      ease: "back",
+      transformOrigin: '0% 50% -50',
+      ease: 'back',
       stagger: 0.05,
     },
     perspective: 400,
@@ -34,8 +33,8 @@ const AnimationPresets = {
       scale: 0,
       y: 80,
       rotationX: 180,
-      transformOrigin: "0% 50% -50",
-      ease: "back",
+      transformOrigin: '0% 50% -50',
+      ease: 'back',
       stagger: 0.01,
     },
     perspective: 400,
@@ -60,7 +59,7 @@ export class TextWidget extends TimelineWidget {
     resourceManager: ResourceManager,
     opts: {
       text: string;
-      style: JSX.CSSProperties
+      style: JSX.CSSProperties;
       font?: { url: string; name: string };
       animation?: {
         from: gsap.TweenVars;
@@ -74,7 +73,7 @@ export class TextWidget extends TimelineWidget {
     this.style = opts.style;
     this.font = opts.font;
 
-    const div = (this.div = this.div = document.createElement("div"));
+    const div = (this.div = this.div = document.createElement('div'));
     div.textContent = this.text;
     applyCss(div, this.style);
 
@@ -99,7 +98,7 @@ export class TextWidget extends TimelineWidget {
     this.offset = offset;
 
     if (this.div?.parentElement) {
-      return of("loaded");
+      return of('loaded');
     }
 
     el.appendChild(this.div);
@@ -107,13 +106,13 @@ export class TextWidget extends TimelineWidget {
     if (this.font) {
       this.fontFace = new FontFace(this.font.name, `url(${this.font.url})`);
       // add font to document
-      (<any>document.fonts)["add"](this.fontFace);
+      (<any>document.fonts)['add'](this.fontFace);
     }
 
     // TODO: Improve autofit text
     // this.autoFitText();
 
-    return of("loaded");
+    return of('loaded');
   }
 
   unload(): void {
@@ -127,7 +126,7 @@ export class TextWidget extends TimelineWidget {
   }
 
   mimeType(): string {
-    return "text";
+    return 'text';
   }
 
   autoFitText(options?: { min: number; max: number }) {
@@ -135,7 +134,7 @@ export class TextWidget extends TimelineWidget {
       const textElement = this.div; // this.getInnerTextElement();
       let size = 1;
       const setSize = function (size: number) {
-        textElement["style"]["fontSize"] = size + "em";
+        textElement['style']['fontSize'] = size + 'em';
       };
       setSize(size);
       const containerRect = this.div.getBoundingClientRect();
@@ -143,9 +142,9 @@ export class TextWidget extends TimelineWidget {
       const scaleX = containerRect.width / this.div.offsetWidth;
       const scaleY = containerRect.height / this.div.offsetHeight;
       const padding =
-        parseInt(`${gsap.getProperty(this.div, "padding", "px")}`) || 0;
+        parseInt(`${gsap.getProperty(this.div, 'padding', 'px')}`) || 0;
       const borderWidth =
-        parseInt(`${gsap.getProperty(this.div, "border-width", "px")}`) || 0;
+        parseInt(`${gsap.getProperty(this.div, 'border-width', 'px')}`) || 0;
       const borderX = padding * 1.99 * scaleX + borderWidth * 1.99 * scaleX;
       const borderY = padding * 1.99 * scaleY + borderWidth * 1.99 * scaleY;
 
@@ -171,7 +170,7 @@ export class TextWidget extends TimelineWidget {
 }
 
 function createElementFromHTML(htmlString: string) {
-  const div = document.createElement("div");
+  const div = document.createElement('div');
   div.innerHTML = htmlString.trim();
   return Array.prototype.slice.call(div.children);
 }
@@ -180,7 +179,7 @@ function splitText(div: HTMLDivElement, splitChars?: boolean) {
   if (splitChars) {
     const chars: HTMLDivElement[] = [];
     const words = div.innerHTML
-      .split(" ")
+      .split(' ')
       .map((word, index, arr) =>
         splitInChars(word, chars, index === arr.length - 1)
       );
@@ -190,7 +189,7 @@ function splitText(div: HTMLDivElement, splitChars?: boolean) {
     return { words, chars };
   } else {
     const wordsHTML = div.innerHTML
-      .split(" ")
+      .split(' ')
       .map(
         (word) =>
           `<div style="display: inline-block; text-align: start; position: relative;">${word}</div>`
@@ -212,27 +211,27 @@ function splitInChars(
   charArray: HTMLDivElement[],
   isLast: boolean
 ) {
-  const div = document.createElement("div");
-  div.style.display = "inline-block";
-  div.style.textAlign = "start";
-  div.style.position = "relative";
+  const div = document.createElement('div');
+  div.style.display = 'inline-block';
+  div.style.textAlign = 'start';
+  div.style.position = 'relative';
 
   const charElements = createElementFromHTML(
     word
-      .split("")
+      .split('')
       .map(
         (char) =>
           `<div style="display: inline-block; text-align: start; position: relative;">${char}</div>`
       )
-      .join("")
+      .join('')
   );
 
   if (!isLast) {
-    const space = document.createElement("div");
-    space.style.display = "inline-block";
-    space.style.textAlign = "start";
-    space.style.position = "relative";
-    space.innerHTML = "&nbsp;";
+    const space = document.createElement('div');
+    space.style.display = 'inline-block';
+    space.style.textAlign = 'start';
+    space.style.position = 'relative';
+    space.innerHTML = '&nbsp;';
     charElements.push(space);
   }
 

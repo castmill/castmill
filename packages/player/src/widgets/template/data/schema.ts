@@ -5,14 +5,14 @@
  *
  */
 type ValidTypes =
-  | "string"
-  | "number"
-  | "boolean"
-  | "date"
-  | "time"
-  | "datetime"
-  | "array"
-  | "schema";
+  | 'string'
+  | 'number'
+  | 'boolean'
+  | 'date'
+  | 'time'
+  | 'datetime'
+  | 'array'
+  | 'schema';
 
 interface SchemaField<D extends ValidTypes, T> {
   type: D;
@@ -22,14 +22,14 @@ interface SchemaField<D extends ValidTypes, T> {
 
 export interface SchemaDefinition {
   [key: string]:
-    | SchemaField<"string", string>
-    | SchemaField<"number", number>
-    | SchemaField<"boolean", boolean>
-    | SchemaField<"date", string>
-    | SchemaField<"time", string>
-    | SchemaField<"datetime", string>
-    | SchemaField<"array", SchemaDefinition[]>
-    | SchemaField<"schema", SchemaDefinition>;
+    | SchemaField<'string', string>
+    | SchemaField<'number', number>
+    | SchemaField<'boolean', boolean>
+    | SchemaField<'date', string>
+    | SchemaField<'time', string>
+    | SchemaField<'datetime', string>
+    | SchemaField<'array', SchemaDefinition[]>
+    | SchemaField<'schema', SchemaDefinition>;
 }
 
 export interface SchemaError {
@@ -70,25 +70,25 @@ export class Schema {
         });
       } else {
         switch (type.type) {
-          case "string":
-            checkField("string", value, key, errors);
+          case 'string':
+            checkField('string', value, key, errors);
         }
 
         if (value !== undefined) {
           switch (type.type) {
-            case "string":
-              checkField("string", value, key, errors);
+            case 'string':
+              checkField('string', value, key, errors);
               break;
-            case "number":
-              checkField("number", value, key, errors);
+            case 'number':
+              checkField('number', value, key, errors);
               break;
-            case "boolean":
-              checkField("boolean", value, key, errors);
+            case 'boolean':
+              checkField('boolean', value, key, errors);
               break;
-            case "date":
-              if(checkField("string", value, key, errors)){
+            case 'date':
+              if (checkField('string', value, key, errors)) {
                 const date = new Date(value);
-                if(isNaN(date.getTime())){
+                if (isNaN(date.getTime())) {
                   errors.push({
                     key: key,
                     message: `Invalid date: ${value}`,
@@ -96,8 +96,8 @@ export class Schema {
                 }
               }
               break;
-            case "time":
-              checkField("string", value, key, errors);
+            case 'time':
+              checkField('string', value, key, errors);
               const time = new Date(`1970-01-01T${value}`);
               if (isNaN(time.getTime())) {
                 errors.push({
@@ -106,8 +106,8 @@ export class Schema {
                 });
               }
               break;
-            case "datetime":
-              checkField("string", value, key, errors);
+            case 'datetime':
+              checkField('string', value, key, errors);
               const datetime = new Date(value);
               if (isNaN(datetime.getTime())) {
                 errors.push({
@@ -116,8 +116,8 @@ export class Schema {
                 });
               }
               break;
-            case "array":
-              if (checkField("object", value, key, errors)) {
+            case 'array':
+              if (checkField('object', value, key, errors)) {
                 if (!Array.isArray(value)) {
                   errors.push({
                     key: key,
@@ -126,8 +126,8 @@ export class Schema {
                 }
               }
               break;
-            case "schema":
-              if (checkField("object", value, key, errors)) {
+            case 'schema':
+              if (checkField('object', value, key, errors)) {
                 const schema = new Schema(type.default);
                 for (const item of value) {
                   errors.push(...schema.validate(item));

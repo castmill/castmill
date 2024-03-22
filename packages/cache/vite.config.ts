@@ -1,13 +1,13 @@
-import { defineConfig } from "vite";
-import { resolve } from "path";
-import { nodeResolve } from "@rollup/plugin-node-resolve";
+import { defineConfig } from 'vite';
+import { resolve } from 'path';
+import { nodeResolve } from '@rollup/plugin-node-resolve';
 
 const lib =
-  process.env.VITE_LIB === "sw"
-    ? "src/integrations/browser/sw/sw.ts"
-    : "src/index.ts";
+  process.env.VITE_LIB === 'sw'
+    ? 'src/integrations/browser/sw/sw.ts'
+    : 'src/index.ts';
 
-const filename = process.env.VITE_LIB === "sw" ? "sw.js" : "index.js";
+const filename = process.env.VITE_LIB === 'sw' ? 'sw.js' : 'index.js';
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -17,10 +17,10 @@ export default defineConfig({
     sourcemap: true,
 
     lib: {
-      entry: resolve(__dirname, "src/index.ts"),
-      name: "castmill-cache",
+      entry: resolve(__dirname, 'src/index.ts'),
+      name: 'castmill-cache',
       fileName: (format) => filename,
-      formats: ["es"],
+      formats: ['es'],
     },
 
     rollupOptions: {
@@ -34,8 +34,8 @@ export default defineConfig({
       output: {
         // Provide global variables to use in the UMD build
         // for externalized deps
-        dir: "dist/",
-        format: "es",
+        dir: 'dist/',
+        format: 'es',
       },
     },
   },

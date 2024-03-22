@@ -1,6 +1,6 @@
-import { JSX } from "solid-js/jsx-runtime";
-import { ComponentAnimation } from "../animation";
-import { Timeline } from "../timeline";
+import { JSX } from 'solid-js/jsx-runtime';
+import { ComponentAnimation } from '../animation';
+import { Timeline } from '../timeline';
 
 export interface BaseComponentProps {
   name?: string;

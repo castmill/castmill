@@ -40,10 +40,13 @@ export interface Machine {
    * Returns the machine's location as a latitude and longitude
    * float numbers.
    */
-  getLocation?(): Promise<undefined | {
-    latitude: number;
-    longitude: number;
-  }>;
+  getLocation?(): Promise<
+    | undefined
+    | {
+        latitude: number;
+        longitude: number;
+      }
+  >;
 
   /**
    * Returns the machine's timezone identifier as a string.

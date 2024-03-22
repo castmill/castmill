@@ -4,8 +4,8 @@
  * This module provides a simple interface for animating components.
  *
  */
-import gsap from "gsap";
-import { Timeline, TimelineItem } from "./timeline";
+import gsap from 'gsap';
+import { Timeline, TimelineItem } from './timeline';
 
 export interface AnimationKeyframe {
   from?: gsap.TweenVars;
@@ -18,7 +18,7 @@ export interface AnimationKeyframe {
 }
 
 export interface ComponentAnimation {
-  init?: Exclude<gsap.TimelineVars, "paused">;
+  init?: Exclude<gsap.TimelineVars, 'paused'>;
   keyframes: AnimationKeyframe[];
 }
 

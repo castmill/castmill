@@ -1,7 +1,7 @@
-import * as glMatrix from "gl-matrix";
+import * as glMatrix from 'gl-matrix';
 
-import texmap from "./shaders/simple-text.glsl";
-import transform from "./shaders/simple-transform.glsl";
+import texmap from './shaders/simple-text.glsl';
+import transform from './shaders/simple-transform.glsl';
 
 declare global {
   interface WebGLRenderingContext {
@@ -29,16 +29,16 @@ declare global {
   }
 }
 
-WebGLRenderingContext.prototype.pushMatrix = function(): void {
+WebGLRenderingContext.prototype.pushMatrix = function (): void {
   const copy = glMatrix.mat4.create();
 
   glMatrix.mat4.copy(this.mvMatrix, copy);
   this.mvMatrixStack.push(copy);
 };
 
-WebGLRenderingContext.prototype.popMatrix = function() {
+WebGLRenderingContext.prototype.popMatrix = function () {
   if (this.mvMatrixStack.length == 0) {
-    throw "Invalid popMatrix!";
+    throw 'Invalid popMatrix!';
   }
   this.mvMatrix = this.mvMatrixStack.pop() as glMatrix.mat4;
 };
@@ -48,7 +48,7 @@ export let webgl = {
   // Shader types: gl.FRAGMENT_SHADER, gl.VERTEX_SHADER
   //
 
-  loadShader: function(
+  loadShader: function (
     gl: WebGLRenderingContext,
     src: string,
     shaderType: number
@@ -65,7 +65,7 @@ export let webgl = {
     return shader;
   },
 
-  loadTexture: function(
+  loadTexture: function (
     gl: WebGLRenderingContext,
     textureHandle: WebGLTexture,
     canvasTexture: TexImageSource
@@ -86,10 +86,10 @@ export let webgl = {
     gl.bindTexture(gl.TEXTURE_2D, null);
   },
 
-  init: function(canvas: HTMLCanvasElement) {
+  init: function (canvas: HTMLCanvasElement) {
     let gl: WebGLRenderingContext | null = null;
     try {
-      gl = canvas.getContext("webgl");
+      gl = canvas.getContext('webgl');
 
       if (gl) {
         gl.mvMatrix = glMatrix.mat4.create();
@@ -100,23 +100,23 @@ export let webgl = {
       return gl;
     } catch (e) {}
     if (!gl) {
-      alert("Your Web Browser does not have WebGL Capabilities...");
+      alert('Your Web Browser does not have WebGL Capabilities...');
     }
   },
 
-  initShaders: function(gl: WebGLRenderingContext) {
+  initShaders: function (gl: WebGLRenderingContext) {
     const texmapShader = webgl.loadShader(gl, texmap, gl.FRAGMENT_SHADER);
     if (!texmapShader) {
-      throw new Error("Erroor loading fragment shader");
+      throw new Error('Erroor loading fragment shader');
     }
     const transformShader = webgl.loadShader(gl, transform, gl.VERTEX_SHADER);
     if (!transformShader) {
-      throw new Error("Error loading vertex shader");
+      throw new Error('Error loading vertex shader');
     }
 
     const shaderProgram = gl.createProgram();
     if (!shaderProgram) {
-      throw new Error("Error creating shader program");
+      throw new Error('Error creating shader program');
     }
 
     gl.shaderProgram = shaderProgram;
@@ -126,11 +126,11 @@ export let webgl = {
     gl.linkProgram(shaderProgram);
 
     if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
-      alert("Could not initialise shaders");
+      alert('Could not initialise shaders');
     }
 
     if (!gl.getProgramParameter(gl.shaderProgram, gl.LINK_STATUS)) {
-      alert("Could not initialise shaders");
+      alert('Could not initialise shaders');
     }
 
     gl.useProgram(gl.shaderProgram);
@@ -138,32 +138,32 @@ export let webgl = {
     // Mapping attributes
     gl.shaderProgram.vertexPositionAttribute = gl.getAttribLocation(
       gl.shaderProgram,
-      "aVertexPosition"
+      'aVertexPosition'
     );
     gl.enableVertexAttribArray(gl.shaderProgram.vertexPositionAttribute);
 
     gl.shaderProgram.textureCoordAttribute = gl.getAttribLocation(
       gl.shaderProgram,
-      "aTextureCoord"
+      'aTextureCoord'
     );
     gl.enableVertexAttribArray(gl.shaderProgram.textureCoordAttribute);
 
     // Mapping uniform variables.
     gl.shaderProgram.pMatrixUniform = gl.getUniformLocation(
       gl.shaderProgram,
-      "uPMatrix"
+      'uPMatrix'
     );
     gl.shaderProgram.mvMatrixUniform = gl.getUniformLocation(
       gl.shaderProgram,
-      "uMVMatrix"
+      'uMVMatrix'
     );
     gl.shaderProgram.samplerUniform = gl.getUniformLocation(
       gl.shaderProgram,
-      "uSampler"
+      'uSampler'
     );
   },
 
-  initQuad: function(
+  initQuad: function (
     gl: WebGLRenderingContext,
     w: number,
     h: number,
@@ -176,7 +176,7 @@ export let webgl = {
 
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
     if (!vertexBuffer) {
-      throw new Error("Invalid vertex buffer");
+      throw new Error('Invalid vertex buffer');
     }
     vertexBuffer.itemSize = 3;
     vertexBuffer.numItems = 4;
@@ -193,7 +193,7 @@ export let webgl = {
     );
 
     if (!texCoordBuffer) {
-      throw new Error("Invalid tex coord buffer");
+      throw new Error('Invalid tex coord buffer');
     }
 
     texCoordBuffer.itemSize = 2;
@@ -207,7 +207,7 @@ export let webgl = {
     return quad;
   },
 
-  drawQuad: function(
+  drawQuad: function (
     gl: WebGLRenderingContext,
     quad: {
       vertexBuffer: WebGLBuffer;

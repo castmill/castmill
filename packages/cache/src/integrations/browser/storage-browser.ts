@@ -2,16 +2,19 @@ import {
   StorageIntegration,
   StoreResult,
   StoreError,
-} from "../../storage.integration";
+} from '../../storage.integration';
 
-const UninitializedCacheError = "Cache has not been initialized";
+const UninitializedCacheError = 'Cache has not been initialized';
 
 export class StorageBrowser implements StorageIntegration {
-  prefix = "castmill:storage";
+  prefix = 'castmill:storage';
   cacheName: string;
   private cache: Cache | undefined;
 
-  constructor(private name: string, private serviceWorkerPath: string = "") {
+  constructor(
+    private name: string,
+    private serviceWorkerPath: string = ''
+  ) {
     this.cacheName = `${this.prefix}:${this.name}`;
   }
 
@@ -38,14 +41,14 @@ export class StorageBrowser implements StorageIntegration {
           `${this.serviceWorkerPath}sw.js`
         );
         console.log(
-          "ServiceWorker registration successful with scope: ",
+          'ServiceWorker registration successful with scope: ',
           registration.scope
         );
       } catch (err) {
-        console.log("ServiceWorker registration failed: ", err);
+        console.log('ServiceWorker registration failed: ', err);
       }
 
-      const registration = await navigator.serviceWorker.getRegistration("/");
+      const registration = await navigator.serviceWorker.getRegistration('/');
       if (registration) {
         await registration.update();
       }
@@ -71,14 +74,14 @@ export class StorageBrowser implements StorageIntegration {
     }
     return (
       await Promise.all(
-        (
-          await this.cache.keys()
-        ).map((request) => this.cache!.match(request.url))
+        (await this.cache.keys()).map((request) =>
+          this.cache!.match(request.url)
+        )
       )
     ).map((response) => {
       return {
         url: response!.url,
-        size: parseInt(response!.headers.get("Content-Length") || "0"),
+        size: parseInt(response!.headers.get('Content-Length') || '0'),
       };
     });
   }
@@ -96,7 +99,7 @@ export class StorageBrowser implements StorageIntegration {
     }
 
     try {
-      const request = new Request(url, { mode: "cors", method: "GET" });
+      const request = new Request(url, { mode: 'cors', method: 'GET' });
       await this.cache.add(request);
 
       const response = await this.cache.match(url);
@@ -104,7 +107,7 @@ export class StorageBrowser implements StorageIntegration {
         return {
           item: {
             url,
-            size: parseInt(response.headers.get("Content-Length") || "0"),
+            size: parseInt(response.headers.get('Content-Length') || '0'),
           },
           result: {
             code: StoreResult.Success,

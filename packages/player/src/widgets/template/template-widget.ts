@@ -1,19 +1,16 @@
-import { JSX } from "solid-js";
+import { JSX } from 'solid-js';
 
-import { ResourceManager } from "@castmill/cache";
-import { Observable, forkJoin, from, merge, of } from "rxjs";
-import { mergeMap, map, switchMap } from "rxjs/operators";
-import { TimelineWidget } from "../timeline-widget";
+import { ResourceManager } from '@castmill/cache';
+import { Observable, forkJoin, from, merge, of } from 'rxjs';
+import { mergeMap, map, switchMap } from 'rxjs/operators';
+import { TimelineWidget } from '../timeline-widget';
 
-import { render } from "solid-js/web";
-import {
-  Template,
-  TemplateComponent,
-} from "./template";
-import { TemplateConfig } from "./binding";
-import { JsonWidget } from "../../interfaces";
-import { JsonWidgetConfig } from "../../interfaces/json-widget-config.interface";
-import { PlayerGlobals } from "../../interfaces/player-globals.interface";
+import { render } from 'solid-js/web';
+import { Template, TemplateComponent } from './template';
+import { TemplateConfig } from './binding';
+import { JsonWidget } from '../../interfaces';
+import { JsonWidgetConfig } from '../../interfaces/json-widget-config.interface';
+import { PlayerGlobals } from '../../interfaces/player-globals.interface';
 
 /**
  * Template Widget
@@ -72,7 +69,7 @@ export class TemplateWidget extends TimelineWidget {
 
   private loadFonts() {
     if (!this.opts.fonts || this.opts.fonts.length === 0) {
-      return of("no:fonts");
+      return of('no:fonts');
     }
 
     return from(this.opts.fonts).pipe(
@@ -103,14 +100,14 @@ export class TemplateWidget extends TimelineWidget {
 
   private loadMedias() {
     if (!this.opts.medias || this.opts.medias.length === 0) {
-      return of("no:medias");
+      return of('no:medias');
     }
     return from(this.opts.medias).pipe(
       mergeMap((url) =>
         from(this.resourceManager.getMedia(url)).pipe(
           map((cachedUrl) => {
             this.medias[url] = cachedUrl || url;
-            return of("media:cached");
+            return of('media:cached');
           })
         )
       )
@@ -153,7 +150,7 @@ export class TemplateWidget extends TimelineWidget {
                   resourceManager: this.resourceManager,
                   onReady: () => {
                     this.seek(offset + (Date.now() - basetime));
-                    subscriber.next("template-widget:shown");
+                    subscriber.next('template-widget:shown');
                     subscriber.complete();
                   },
                 }),
@@ -164,13 +161,13 @@ export class TemplateWidget extends TimelineWidget {
 
         // Seek to compensate for the time spent loading the assets.
         this.seek(offset + (Date.now() - basetime));
-        return of("template-widget:shown");
+        return of('template-widget:shown');
       })
     );
   }
 
   mimeType(): string {
-    return "template/widget";
+    return 'template/widget';
   }
 
   duration(): number {

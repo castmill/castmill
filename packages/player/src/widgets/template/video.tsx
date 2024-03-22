@@ -1,5 +1,5 @@
-import { Component, JSX, mergeProps, onCleanup, onMount } from "solid-js";
-import { TemplateConfig, resolveOption } from "./binding";
+import { Component, JSX, mergeProps, onCleanup, onMount } from 'solid-js';
+import { TemplateConfig, resolveOption } from './binding';
 import {
   Observable,
   Subscription,
@@ -8,13 +8,13 @@ import {
   of,
   take,
   timeout,
-} from "rxjs";
-import { TemplateComponent, TemplateComponentType } from "./template";
-import { Timeline, TimelineItem } from "./timeline";
-import { ComponentAnimation } from "./animation";
-import { BaseComponentProps } from "./interfaces/base-component-props";
-import { ResourceManager } from "@castmill/cache";
-import { PlayerGlobals } from "../../interfaces/player-globals.interface";
+} from 'rxjs';
+import { TemplateComponent, TemplateComponentType } from './template';
+import { Timeline, TimelineItem } from './timeline';
+import { ComponentAnimation } from './animation';
+import { BaseComponentProps } from './interfaces/base-component-props';
+import { ResourceManager } from '@castmill/cache';
+import { PlayerGlobals } from '../../interfaces/player-globals.interface';
 
 enum ReadyState {
   HAVE_NOTHING = 0, // No information is available about the media resource.
@@ -26,7 +26,7 @@ enum ReadyState {
 
 export interface VideoComponentOptions {
   url: string;
-  size: "cover" | "contain";
+  size: 'cover' | 'contain';
 }
 
 export class VideoComponent implements TemplateComponent {
@@ -47,15 +47,15 @@ export class VideoComponent implements TemplateComponent {
       throw new Error(`Video ${this.opts.url} not found in medias`);
     }
 
-    const video = document.createElement("video");
-    video.preload = "metadata";
+    const video = document.createElement('video');
+    video.preload = 'metadata';
     video.src = videoUrl;
 
-    return fromEvent(video, "durationchange").pipe(
+    return fromEvent(video, 'durationchange').pipe(
       take(1),
       map((evt) => {
         const duration = (video?.duration ?? 0) * 1000;
-        video.src = "";
+        video.src = '';
         return duration;
       })
     );
@@ -102,8 +102,8 @@ export const Video: Component<VideoProps> = (props) => {
 
   const merged = mergeProps(
     {
-      width: "100%",
-      height: "100%",
+      width: '100%',
+      height: '100%',
     },
     props.style
   );
@@ -120,7 +120,6 @@ export const Video: Component<VideoProps> = (props) => {
 
   onMount(async () => {
     if (videoRef) {
-
       const videoUrl = await props.resourceManager.getMedia(props.opts.url);
       if (!videoUrl) {
         throw new Error(`Video ${props.opts.url} not found in medias`);
@@ -136,7 +135,7 @@ export const Video: Component<VideoProps> = (props) => {
 
           const slow$ = of([time, 0]);
 
-          return fromEvent(videoRef, "seeked").pipe(
+          return fromEvent(videoRef, 'seeked').pipe(
             take(1),
             // Timeout for slow or video tags not implementing seeked event.
             timeout({
@@ -155,29 +154,29 @@ export const Video: Component<VideoProps> = (props) => {
       if (videoRef.readyState < ReadyState.HAVE_ENOUGH_DATA) {
         loading$ = new Observable<string>((subscriber) => {
           const handler = (ev: Event) => {
-            subscriber.next("video:loaded");
+            subscriber.next('video:loaded');
             subscriber.complete();
           };
 
           const errorHandler = (ev: Event) => {
-            subscriber.error("error");
+            subscriber.error('error');
           };
 
-          videoRef!.addEventListener("canplaythrough", handler);
-          videoRef!.addEventListener("error", errorHandler);
+          videoRef!.addEventListener('canplaythrough', handler);
+          videoRef!.addEventListener('error', errorHandler);
 
           return () => {
-            videoRef!.removeEventListener("canplaythrough", handler);
-            videoRef!.removeEventListener("error", errorHandler);
+            videoRef!.removeEventListener('canplaythrough', handler);
+            videoRef!.removeEventListener('error', errorHandler);
           };
         });
         videoRef.load();
       } else {
-        loading$ = of("vide0:loaded");
+        loading$ = of('vide0:loaded');
       }
 
       loadingSubscription = loading$.subscribe((ev) => {
-        timeline = new Timeline("video");
+        timeline = new Timeline('video');
 
         const child = {
           seek: (time: number) => {

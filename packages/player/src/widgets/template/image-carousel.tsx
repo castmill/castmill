@@ -1,12 +1,12 @@
-import gsap from "gsap";
+import gsap from 'gsap';
 
-import { Component, For, JSX, mergeProps, onCleanup, onMount } from "solid-js";
-import { TemplateConfig, resolveOption } from "./binding";
-import { TemplateComponent, TemplateComponentType } from "./template";
-import { ComponentAnimation } from "./animation";
-import { BaseComponentProps } from "./interfaces/base-component-props";
-import { ResourceManager } from "@castmill/cache";
-import { PlayerGlobals } from "../../interfaces/player-globals.interface";
+import { Component, For, JSX, mergeProps, onCleanup, onMount } from 'solid-js';
+import { TemplateConfig, resolveOption } from './binding';
+import { TemplateComponent, TemplateComponentType } from './template';
+import { ComponentAnimation } from './animation';
+import { BaseComponentProps } from './interfaces/base-component-props';
+import { ResourceManager } from '@castmill/cache';
+import { PlayerGlobals } from '../../interfaces/player-globals.interface';
 
 export interface ImageCarouselComponentOptions {
   images: string[];
@@ -98,12 +98,12 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
 
   const style = Object.assign(
     {
-      width: "100%",
-      height: "100%",
-      "background-size": "cover",
-      "background-repeat": "no-repeat",
-      "background-position": "center",
-      position: "absolute",
+      width: '100%',
+      height: '100%',
+      'background-size': 'cover',
+      'background-repeat': 'no-repeat',
+      'background-position': 'center',
+      position: 'absolute',
     },
     props.style
   );
@@ -132,7 +132,7 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
         {
           backgroundImage: `url(${imageUrl})`,
         },
-        "<"
+        '<'
       );
       timeline.duration(props.opts.imageDuration);
     }
@@ -147,20 +147,20 @@ export const ImageCarousel: Component<ImageCarouselProps> = (props) => {
           {
             backgroundImage: `url(${imageUrl})`,
           },
-          "<"
+          '<'
         );
 
         if (index === 0) {
           timeline.set(images[images.length - 1], {
-            visibility: "hidden",
-            backgroundImage: "none",
+            visibility: 'hidden',
+            backgroundImage: 'none',
           });
           timeline.set(image, Object.assign({}, targetArgs));
         } else {
-          timeline.from(image, Object.assign({}, props.startArgs), "<");
+          timeline.from(image, Object.assign({}, props.startArgs), '<');
           timeline.set(images[index - 1], {
-            visibility: "hidden",
-            backgroundImage: "none",
+            visibility: 'hidden',
+            backgroundImage: 'none',
           });
         }
         // When the last image fades out we need to cross-fade the first image

@@ -27,5 +27,4 @@ interface AutoFitOpts {
   // Minimum size the text can have (in em) before scroll is enabled.
   minSize?: number;
 }
-
 ```

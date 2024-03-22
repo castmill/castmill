@@ -1,18 +1,18 @@
-import { Component, JSX } from "solid-js";
-import { ResourceManager } from "@castmill/cache";
+import { Component, JSX } from 'solid-js';
+import { ResourceManager } from '@castmill/cache';
 
-import { Item } from "./item";
-import { TemplateConfig } from "./binding";
-import { GroupComponent } from "./group";
-import { TextComponent } from "./text";
-import { ImageComponent } from "./image";
-import { VideoComponent } from "./video";
-import { ListComponent } from "./list";
-import { ImageCarouselComponent } from "./image-carousel";
-import { LayoutComponent } from "./layout";
-import { Timeline } from "./timeline";
-import { ComponentAnimation } from "./animation";
-import { PlayerGlobals } from "../../interfaces/player-globals.interface";
+import { Item } from './item';
+import { TemplateConfig } from './binding';
+import { GroupComponent } from './group';
+import { TextComponent } from './text';
+import { ImageComponent } from './image';
+import { VideoComponent } from './video';
+import { ListComponent } from './list';
+import { ImageCarouselComponent } from './image-carousel';
+import { LayoutComponent } from './layout';
+import { Timeline } from './timeline';
+import { ComponentAnimation } from './animation';
+import { PlayerGlobals } from '../../interfaces/player-globals.interface';
 
 export type TemplateComponentTypeUnion =
   | TextComponent
@@ -24,14 +24,14 @@ export type TemplateComponentTypeUnion =
   | ImageCarouselComponent;
 
 export enum TemplateComponentType {
-  Template = "template",
-  Layout = "layout",
-  Text = "text",
-  Image = "image",
-  Video = "video",
-  List = "list",
-  Group = "group",
-  ImageCarousel = "image-carousel",
+  Template = 'template',
+  Layout = 'layout',
+  Text = 'text',
+  Image = 'image',
+  Video = 'video',
+  List = 'list',
+  Group = 'group',
+  ImageCarousel = 'image-carousel',
 }
 
 export class TemplateComponent {
@@ -93,7 +93,7 @@ export const Template: Component<{
     <div
       data-component="template"
       data-name={props.name}
-      style={props.style || { width: "100%", height: "100%" }}
+      style={props.style || { width: '100%', height: '100%' }}
     >
       <Item
         config={props.config}

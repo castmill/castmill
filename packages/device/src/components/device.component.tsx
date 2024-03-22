@@ -1,7 +1,7 @@
-import { Match, Show, Switch, createResource } from "solid-js";
-import { Device, Status } from "../classes/device";
-import { RegisterComponent } from "./register.component";
-import { PlayerComponent } from "./player.component";
+import { Match, Show, Switch, createResource } from 'solid-js';
+import { Device, Status } from '../classes/device';
+import { RegisterComponent } from './register.component';
+import { PlayerComponent } from './player.component';
 
 export function DeviceComponent(props: { device: Device }) {
   const [loginOrRegister, { mutate, refetch }] = createResource(() =>

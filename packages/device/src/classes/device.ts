@@ -1,21 +1,21 @@
-import { Channel, Socket } from "phoenix";
-import { Player, Playlist, Renderer, Viewport, Layer } from "@castmill/player";
-import { ResourceManager, Cache, StorageIntegration } from "@castmill/cache";
+import { Channel, Socket } from 'phoenix';
+import { Player, Playlist, Renderer, Viewport, Layer } from '@castmill/player';
+import { ResourceManager, Cache, StorageIntegration } from '@castmill/cache';
 
-import { Machine } from "../interfaces/machine";
-import { getCastmillIntro } from "./intro";
-import { Calendar, JsonCalendar } from "./calendar";
-import { Schema, JsonPlaylist, JsonPlaylistItem } from "../interfaces";
-import { JsonMedia } from "../interfaces/json-media";
+import { Machine } from '../interfaces/machine';
+import { getCastmillIntro } from './intro';
+import { Calendar, JsonCalendar } from './calendar';
+import { Schema, JsonPlaylist, JsonPlaylistItem } from '../interfaces';
+import { JsonMedia } from '../interfaces/json-media';
 
 export enum Status {
-  Registering = "registering",
-  Login = "login", // Loggedin?
+  Registering = 'registering',
+  Login = 'login', // Loggedin?
 }
 
 export interface DeviceMessage {
-  resource: "device" | "calendar" | "playlist" | "widget";
-  action: "update" | "delete";
+  resource: 'device' | 'calendar' | 'playlist' | 'widget';
+  action: 'update' | 'delete';
   data: any;
 }
 
@@ -48,12 +48,12 @@ export class Device {
   ) {
     this.cache = new Cache(
       this.storageIntegration,
-      "castmill-device",
+      'castmill-device',
       opts?.cache?.maxItems || 1000
     );
     this.resourceManager = new ResourceManager(this.cache);
 
-    this.contentQueue = new Playlist("content-queue", this.resourceManager);
+    this.contentQueue = new Playlist('content-queue', this.resourceManager);
 
     const intro = getCastmillIntro(this.resourceManager);
     this.contentQueue.add(intro);
@@ -62,12 +62,12 @@ export class Device {
   async start(el: HTMLElement) {
     let credentials = await this.integration.getCredentials();
     if (!credentials) {
-      throw new Error("Invalid credentials");
+      throw new Error('Invalid credentials');
     }
 
     const { device } = JSON.parse(credentials);
     if (!device) {
-      throw new Error("Invalid credentials");
+      throw new Error('Invalid credentials');
     }
 
     const renderer = new Renderer(el);
@@ -94,7 +94,7 @@ export class Device {
           if (entry) {
             const jsonPlaylist: JsonPlaylist | void =
               await this.resourceManager.getData(
-                `${this.opts?.baseUrl || ""}devices/${device.id}/playlists/${
+                `${this.opts?.baseUrl || ''}devices/${device.id}/playlists/${
                   entry.playlist
                 }`,
                 1000
@@ -107,7 +107,7 @@ export class Device {
                 jsonPlaylist,
                 this.resourceManager,
                 {
-                  target: "default",
+                  target: 'default',
                 }
               );
               this.contentQueue.add(layer);
@@ -116,10 +116,10 @@ export class Device {
 
               const onEnd = () => {
                 this.contentQueue.remove(layer);
-                layer.off("end", onEnd);
+                layer.off('end', onEnd);
               };
 
-              layer.on("end", onEnd);
+              layer.on('end', onEnd);
             }
           }
 
@@ -147,19 +147,19 @@ export class Device {
   private getWidgetMedias(
     schema: Schema,
     data: { [index: string]: any },
-    opts: { context: string } = { context: "default" }
+    opts: { context: string } = { context: 'default' }
   ): string[] {
-    const str = "medias|type:image";
+    const str = 'medias|type:image';
     const regex = /([^|]+)\|([^|]+)/; // A regular expression to capture two groups separated by a pipe character
 
     // Find all the keys in the schema that are references to media.
     const mediaKeys = Object.keys(schema).filter((key) => {
       const field = schema[key];
-      if (typeof field !== "string" && field.type === "ref") {
+      if (typeof field !== 'string' && field.type === 'ref') {
         const match = field.collection.match(regex);
         if (match) {
           const [, collection, filter] = match;
-          return collection === "medias";
+          return collection === 'medias';
         }
       }
     });
@@ -173,7 +173,7 @@ export class Device {
         const file = media?.files[opts.context];
         return file?.uri;
       })
-      .filter((uri) => typeof uri !== "undefined") as string[];
+      .filter((uri) => typeof uri !== 'undefined') as string[];
   }
 
   private getPlaylistMedias(playlist: JsonPlaylist) {
@@ -206,10 +206,10 @@ export class Device {
 
   private async requestPincode(hardwareId: string) {
     const location = await this.integration.getLocation!();
-    const pincodeResponse = await fetch("/registrations", {
-      method: "POST",
+    const pincodeResponse = await fetch('/registrations', {
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         hardware_id: hardwareId,
@@ -240,7 +240,7 @@ export class Device {
       this.initListeners(channel);
 
       const rawCalendars = await this.resourceManager.getData(
-        `${this.opts?.baseUrl || ""}/devices/${device.id}/calendars`,
+        `${this.opts?.baseUrl || ''}/devices/${device.id}/calendars`,
         1000
       );
 
@@ -256,7 +256,7 @@ export class Device {
   }
 
   get socketEndpoint() {
-    return `${this.opts?.baseUrl || ""}/socket`;
+    return `${this.opts?.baseUrl || ''}/socket`;
   }
 
   async register(hardwareId: string) {
@@ -274,17 +274,17 @@ export class Device {
     });
     channel
       .join()
-      .receive("ok", (resp) => {
+      .receive('ok', (resp) => {
         // Do not show the pincode until this is done
-        console.log("Joined successfully", resp);
+        console.log('Joined successfully', resp);
       })
-      .receive("error", (resp) => {
+      .receive('error', (resp) => {
         // TODO: Show error in UI.
-        console.log("Unable to join", resp);
+        console.log('Unable to join', resp);
       });
 
-    channel.on("device:registered", async (payload) => {
-      console.log("Device registered", payload);
+    channel.on('device:registered', async (payload) => {
+      console.log('Device registered', payload);
 
       // Store token in local storage as credentials.
       await this.integration.storeCredentials!(JSON.stringify(payload));
@@ -313,33 +313,33 @@ export class Device {
     return new Promise<Channel>((resolve, reject) => {
       channel
         .join()
-        .receive("ok", (resp) => {
+        .receive('ok', (resp) => {
           resolve(channel);
         })
-        .receive("error", (resp) => {
+        .receive('error', (resp) => {
           reject(resp);
         });
     });
   }
 
   private initListeners(channel: Channel) {
-    channel.on("update", async (payload: DeviceMessage) => {
+    channel.on('update', async (payload: DeviceMessage) => {
       switch (payload.resource) {
-        case "device":
+        case 'device':
           break;
-        case "calendar":
+        case 'calendar':
           // We could just mark the calendar as dirty (in the resource manager), as we do not know
           // when the calendar would be used.
           break;
-        case "playlist":
+        case 'playlist':
           // We could mark the playlist as dirty (in the resource manager), as we do not know
           // when or even if the playlist will be used.
           break;
-        case "widget":
+        case 'widget':
           break;
       }
 
-      console.log("Update calendars", payload);
+      console.log('Update calendars', payload);
     });
   }
 }

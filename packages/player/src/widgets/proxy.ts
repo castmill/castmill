@@ -1,8 +1,8 @@
-import { ResourceManager } from "@castmill/cache";
-import { Observable, from, of } from "rxjs";
-import { JsonWidget } from "../interfaces";
+import { ResourceManager } from '@castmill/cache';
+import { Observable, from, of } from 'rxjs';
+import { JsonWidget } from '../interfaces';
 
-import { Widget } from "./";
+import { Widget } from './';
 
 interface ProxyData {
   counter: number;
@@ -10,20 +10,20 @@ interface ProxyData {
 }
 
 interface ProxyRequest {
-  type: "request";
+  type: 'request';
   id: number;
   method: string;
   args: any[];
 }
 
 interface ProxyResponse {
-  type: "response";
+  type: 'response';
   id: number;
   result: any;
 }
 
 interface ProxyNotification {
-  type: "notification";
+  type: 'notification';
   data: any;
 }
 
@@ -77,7 +77,7 @@ class Proxy extends Widget {
         return;
       }
 
-      if (typeof data.counter !== "undefined") {
+      if (typeof data.counter !== 'undefined') {
         if (this.resolvers[data.counter]) {
           this.resolvers[data.counter](data.result);
           delete this.resolvers[data.counter];
@@ -92,11 +92,11 @@ class Proxy extends Widget {
 
     this.origin = childSrc;
 
-    this.parent.addEventListener("message", messageHandler, false);
+    this.parent.addEventListener('message', messageHandler, false);
   }
 
   async load() {
-    return this.callMethod("prepare");
+    return this.callMethod('prepare');
   }
 
   /**
@@ -109,7 +109,7 @@ class Proxy extends Widget {
    */
   unload(): void {
     if (this.messageHandler) {
-      this.parent.removeEventListener("message", this.messageHandler);
+      this.parent.removeEventListener('message', this.messageHandler);
     }
   }
 
@@ -117,18 +117,18 @@ class Proxy extends Widget {
    * Return mimetype for this widget
    */
   mimeType(): string {
-    return "proxy";
+    return 'proxy';
   }
 
   /**
    *  Starts playing the content.
    */
   play(timer$: Observable<any>): Observable<string | number> {
-    return from(this.callMethod("play"));
+    return from(this.callMethod('play'));
   }
 
   stop() {
-    return this.callMethod("stop");
+    return this.callMethod('stop');
   }
 
   /*
@@ -138,11 +138,11 @@ class Proxy extends Widget {
   */
 
   seek(offset: number) {
-    return this.callMethod("seek", [offset]);
+    return this.callMethod('seek', [offset]);
   }
 
   volume(level: number) {
-    return this.callMethod("volume", [level]);
+    return this.callMethod('volume', [level]);
   }
 
   private callMethod(method: string, args?: any[]): Observable<any> {

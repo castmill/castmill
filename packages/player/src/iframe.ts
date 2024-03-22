@@ -3,7 +3,7 @@
  *
  */
 
-import { Widget } from "./widgets";
+import { Widget } from './widgets';
 
 // We may want to use "srcdoc" instead because that would allow us to "cache" the source of the iframe and
 // make it faster.
@@ -13,15 +13,15 @@ export async function createIframe(
   parent: HTMLElement,
   src?: string
 ): Promise<HTMLIFrameElement> {
-  var iframe = document.createElement("iframe");
-  iframe.style.display = "block";
-  iframe.style.width = "100%";
-  iframe.style.height = "100%";
-  iframe.style.overflow = "hidden";
-  iframe.frameBorder = "0";
-  iframe.scrolling = "0";
-  iframe.marginWidth = "0";
-  iframe.marginHeight = "0";
+  var iframe = document.createElement('iframe');
+  iframe.style.display = 'block';
+  iframe.style.width = '100%';
+  iframe.style.height = '100%';
+  iframe.style.overflow = 'hidden';
+  iframe.frameBorder = '0';
+  iframe.scrolling = '0';
+  iframe.marginWidth = '0';
+  iframe.marginHeight = '0';
 
   //iframe.src = src || "about:blank";
   //iframe.src = "about:blank";
@@ -38,9 +38,9 @@ export async function createIframe(
   parent.appendChild(iframe);
 
   if (!garbageBin) {
-    garbageBin = document.createElement("div");
+    garbageBin = document.createElement('div');
     //Make sure it is not displayed
-    garbageBin.style.display = "none";
+    garbageBin.style.display = 'none';
     document.body.appendChild(garbageBin);
   }
 
@@ -74,7 +74,7 @@ export function purgeIframe(iframe: HTMLIFrameElement) {
   if (iframe.parentElement) {
     iframe.parentElement.removeChild(iframe);
   }
-  iframe.src = "about:blank";
+  iframe.src = 'about:blank';
 
   // Trying to put null on a nulled contentWindow raises an exception!
   /*
@@ -85,7 +85,7 @@ export function purgeIframe(iframe: HTMLIFrameElement) {
 
   // Complete discard the iframe
   garbageBin.appendChild(iframe);
-  garbageBin.innerHTML = "";
+  garbageBin.innerHTML = '';
 }
 
 export function getIframeWidget(iframe: HTMLIFrameElement, content?: string) {

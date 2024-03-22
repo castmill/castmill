@@ -1,8 +1,8 @@
-import { JSX } from "solid-js";
+import { JSX } from 'solid-js';
 
-import { JsonWidget } from "./json-widget.interface";
-import { JsonTransition } from "../transitions";
-import { JsonWidgetConfig } from "./json-widget-config.interface";
+import { JsonWidget } from './json-widget.interface';
+import { JsonTransition } from '../transitions';
+import { JsonWidgetConfig } from './json-widget-config.interface';
 export interface JsonLayer {
   name: string;
   duration?: number;

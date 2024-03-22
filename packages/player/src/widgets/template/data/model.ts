@@ -73,7 +73,7 @@ export class Model {
    * @returns
    */
   static get(obj: any, keypath: string, globals?: { [index: string]: any }) {
-    const keys = keypath.split(".");
+    const keys = keypath.split('.');
     let error;
 
     for (const key of keys) {
@@ -82,13 +82,13 @@ export class Model {
         let array = obj[variable];
 
         for (let i = 0; i < indexes.length; i++) {
-          if (!Array.isArray(array) && typeof array !== "object") {
+          if (!Array.isArray(array) && typeof array !== 'object') {
             error = new Error(`${variable} as ${keypath} is not an array`);
             break;
           }
-          if (indexes[i].includes(":")) {
+          if (indexes[i].includes(':')) {
             array = getSubArray(array, indexes[i], globals);
-          } else if (indexes[i].startsWith("@")) {
+          } else if (indexes[i].startsWith('@')) {
             const globalKey = indexes[i].slice(1) as string | number;
             if (globals && globalKey in globals) {
               array = array[globals[globalKey]]; // This will work for both object and array
@@ -149,7 +149,7 @@ function getSubArray(
   globals?: { [index: string]: any }
 ) {
   const [start, end] = substr
-    .split(":")
-    .map((e) => (e.startsWith("@") && globals ? globals[e.slice(1)] : +e));
+    .split(':')
+    .map((e) => (e.startsWith('@') && globals ? globals[e.slice(1)] : +e));
   return arr.slice(start, end);
 }

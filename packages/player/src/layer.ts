@@ -5,29 +5,29 @@
 
   (c) 2011-2023 Castmill AB All Rights Reserved
 */
-import { JSX } from "solid-js";
-import { ResourceManager } from "@castmill/cache";
+import { JSX } from 'solid-js';
+import { ResourceManager } from '@castmill/cache';
 
-import { Status } from "./playable";
-import { EventEmitter } from "eventemitter3";
+import { Status } from './playable';
+import { EventEmitter } from 'eventemitter3';
 import {
   TemplateComponentType,
   TemplateWidget,
   TemplateWidgetOptions,
   Widget,
-} from "./widgets";
-import { of, Observable } from "rxjs";
-import { catchError, last, map, takeUntil } from "rxjs/operators";
-import { JsonLayer, JsonPlaylist } from "./interfaces";
-import { Transition, fromJSON } from "./transitions";
-import { applyCss } from "./utils";
-import { PlayerGlobals } from "./interfaces/player-globals.interface";
+} from './widgets';
+import { of, Observable } from 'rxjs';
+import { catchError, last, map, takeUntil } from 'rxjs/operators';
+import { JsonLayer, JsonPlaylist } from './interfaces';
+import { Transition, fromJSON } from './transitions';
+import { applyCss } from './utils';
+import { PlayerGlobals } from './interfaces/player-globals.interface';
 
 export class Layer extends EventEmitter {
-  id: string = "";
-  widgetId: string = "";
+  id: string = '';
+  widgetId: string = '';
 
-  opacity: string = "1";
+  opacity: string = '1';
 
   rotation: number = 0;
   zIndex: number = 0;
@@ -67,8 +67,8 @@ export class Layer extends EventEmitter {
       slack: json.slack,
       transition: json.transition && fromJSON(json.transition),
       style: json.style || {
-        width: "100%",
-        height: "100%",
+        width: '100%',
+        height: '100%',
       },
       widget,
     });
@@ -92,24 +92,24 @@ export class Layer extends EventEmitter {
     globals: PlayerGlobals
   ): Layer {
     const widget: TemplateWidget = new TemplateWidget(resourceManager, {
-      name: "layout",
+      name: 'layout',
       duration: 10000, // Currently a hack, the duration should be the duration of the playlist
       widget: {
         id: 666,
-        name: "layout-1-1",
+        name: 'layout-1-1',
         template: {
-          name: "Main playlist layout",
+          name: 'Main playlist layout',
           type: TemplateComponentType.Layout,
           opts: {
             containers: [
               {
                 playlist,
                 style: {
-                  width: "100%",
-                  height: "100%",
-                  left: "0%",
-                  top: "0%",
-                  overflow: "auto",
+                  width: '100%',
+                  height: '100%',
+                  left: '0%',
+                  top: '0%',
+                  overflow: 'auto',
                 },
               },
             ],
@@ -118,11 +118,11 @@ export class Layer extends EventEmitter {
       },
       fonts: [],
       style: {
-        width: "100%",
-        height: "100%",
+        width: '100%',
+        height: '100%',
       },
       config: {
-        id: "layout-1-1",
+        id: 'layout-1-1',
         widget_id: 666,
         options: {},
         data: {},
@@ -153,7 +153,7 @@ export class Layer extends EventEmitter {
     this.widget = opts?.widget;
     this.transition = opts?.transition;
 
-    this.el = document.createElement("div");
+    this.el = document.createElement('div');
 
     const { style, dataset } = this.el;
 
@@ -161,16 +161,16 @@ export class Layer extends EventEmitter {
       applyCss(this.el, opts.style);
     }
 
-    style.position = "absolute";
-    style.width = "100%";
-    style.height = "100%";
-    style.display = "flex";
-    style.justifyContent = "center";
-    style.alignItems = "center";
+    style.position = 'absolute';
+    style.width = '100%';
+    style.height = '100%';
+    style.display = 'flex';
+    style.justifyContent = 'center';
+    style.alignItems = 'center';
 
-    dataset["layer"] = this.name;
+    dataset['layer'] = this.name;
 
-    this.proxyOffset = (offset: number) => this.emit("offset", offset);
+    this.proxyOffset = (offset: number) => this.emit('offset', offset);
   }
 
   toggleDebug() {
@@ -210,14 +210,14 @@ export class Layer extends EventEmitter {
 
   public play(timer$: Observable<number>): Observable<string | number> {
     if (!this.widget) {
-      throw new Error("Layer: missing widget");
+      throw new Error('Layer: missing widget');
     }
 
     const end$ = timer$.pipe(
       last(),
       // In case the stream is empty we need to catch and end.
       catchError(() => of(undefined)),
-      map(() => "end")
+      map(() => 'end')
     );
 
     return this.widget.play(timer$).pipe(takeUntil(end$));
@@ -242,11 +242,11 @@ export class Layer extends EventEmitter {
           // TODO: we should show more information about this error. Which widget? and which options?
           // for instance a common failure is a video or image that failed to be downloaded.
           console.error(`Layer: show widget error`, err);
-          return of("error");
+          return of('error');
         })
       );
     } else {
-      return of("shown");
+      return of('shown');
     }
   }
 

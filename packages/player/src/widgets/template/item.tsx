@@ -1,22 +1,22 @@
-import { Component, Switch, Match, Show } from "solid-js";
+import { Component, Switch, Match, Show } from 'solid-js';
 
-import { ResourceManager } from "@castmill/cache";
+import { ResourceManager } from '@castmill/cache';
 
-import { Group, GroupComponent } from "./group";
-import { Image, ImageComponent } from "./image";
-import { List, ListComponent } from "./list";
-import { ImageCarousel, ImageCarouselComponent } from "./image-carousel";
-import { Text, TextComponent, TextComponentOptions } from "./text";
-import { TemplateConfig, resolveKey } from "./binding";
-import { Video, VideoComponent } from "./video";
+import { Group, GroupComponent } from './group';
+import { Image, ImageComponent } from './image';
+import { List, ListComponent } from './list';
+import { ImageCarousel, ImageCarouselComponent } from './image-carousel';
+import { Text, TextComponent, TextComponentOptions } from './text';
+import { TemplateConfig, resolveKey } from './binding';
+import { Video, VideoComponent } from './video';
 import {
   TemplateComponent,
   TemplateComponentType,
   TemplateComponentTypeUnion,
-} from "./template";
-import { Layout, LayoutComponent } from "./layout";
-import { Timeline } from "./timeline";
-import { PlayerGlobals } from "../../interfaces/player-globals.interface";
+} from './template';
+import { Layout, LayoutComponent } from './layout';
+import { Timeline } from './timeline';
+import { PlayerGlobals } from '../../interfaces/player-globals.interface';
 
 /**
  *

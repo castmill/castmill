@@ -71,7 +71,8 @@ const entries: MenuEntry[] = [
         name: 'Even more advanced options',
         id: 'advanced2',
         type: 'submenu',
-        action: (state: boolean) => console.log('Even more advanced options', state),
+        action: (state: boolean) =>
+          console.log('Even more advanced options', state),
         children: [
           {
             name: 'Debug mode4',
@@ -104,14 +105,11 @@ const header = (
     <h1>Menu header</h1>
     <p>Foo: 1</p>
     <p>Bar: 2</p>
-    <p>Baz: 3</p> 
+    <p>Baz: 3</p>
     <p>Qux: {count()}</p>
   </>
 );
 
-
 export function MenuComponent() {
-  return (
-    <BaseMenu header={header} entries={entries} />
-  );
+  return <BaseMenu header={header} entries={entries} />;
 }

@@ -1,16 +1,16 @@
-import { Component, For, JSX, mergeProps, onCleanup, onMount } from "solid-js";
-import { TemplateConfig, resolveOption } from "./binding";
-import { Subscription, of, share, switchMap, take } from "rxjs";
-import { TemplateComponent, TemplateComponentType } from "./template";
-import { JsonPlaylist } from "../../interfaces";
-import { Playlist } from "../../playlist";
-import { ResourceManager } from "@castmill/cache";
-import { Renderer } from "../../renderer";
-import { Timeline, TimelineItem } from "./timeline";
-import { timer } from "../../player";
-import { ComponentAnimation } from "./animation";
-import { BaseComponentProps } from "./interfaces/base-component-props";
-import { PlayerGlobals } from "../../interfaces/player-globals.interface";
+import { Component, For, JSX, mergeProps, onCleanup, onMount } from 'solid-js';
+import { TemplateConfig, resolveOption } from './binding';
+import { Subscription, of, share, switchMap, take } from 'rxjs';
+import { TemplateComponent, TemplateComponentType } from './template';
+import { JsonPlaylist } from '../../interfaces';
+import { Playlist } from '../../playlist';
+import { ResourceManager } from '@castmill/cache';
+import { Renderer } from '../../renderer';
+import { Timeline, TimelineItem } from './timeline';
+import { timer } from '../../player';
+import { ComponentAnimation } from './animation';
+import { BaseComponentProps } from './interfaces/base-component-props';
+import { PlayerGlobals } from '../../interfaces/player-globals.interface';
 
 export interface LayoutContainer {
   playlist: JsonPlaylist;
@@ -84,7 +84,7 @@ interface LayoutProps extends BaseComponentProps {
 }
 
 export const Layout: Component<LayoutProps> = (props) => {
-  const timeline = new Timeline("layout");
+  const timeline = new Timeline('layout');
   const timelineItem = {
     start: props.timeline.duration(),
     child: timeline,
@@ -93,8 +93,8 @@ export const Layout: Component<LayoutProps> = (props) => {
 
   const merged = mergeProps(
     {
-      width: "100%",
-      height: "100%",
+      width: '100%',
+      height: '100%',
     },
     props.style
   );
@@ -154,7 +154,7 @@ const LayoutContainer: Component<{
 
   onMount(() => {
     const playlistDuration = playlist.duration();
-    timeline = new Timeline("layout-container", {
+    timeline = new Timeline('layout-container', {
       loop: true,
       duration: playlistDuration,
     });
@@ -167,7 +167,7 @@ const LayoutContainer: Component<{
     props.timeline.add(timelineItem);
 
     if (containerRef) {
-      containerRef.style.position = "absolute";
+      containerRef.style.position = 'absolute';
       renderer = new Renderer(containerRef);
       const seek = timeline.seek.bind(timeline);
       (timeline as any).seek = (time: number) => {
@@ -197,7 +197,7 @@ const LayoutContainer: Component<{
 
         timerSubscription = timer$.subscribe({
           error: (err) => {
-            console.log("Timer error", err);
+            console.log('Timer error', err);
           },
         });
 

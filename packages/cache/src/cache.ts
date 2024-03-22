@@ -14,12 +14,12 @@
  * all the content. It may be possible in the future to support for "streaming", not cacheable content, but
  * this is a separate case from the general case.
  */
-import { Dexie } from "dexie";
+import { Dexie } from 'dexie';
 import {
   StorageIntegration,
   StoreResult,
   StoreError,
-} from "./storage.integration";
+} from './storage.integration';
 
 /*
 if ("storage" in navigator && "estimate" in navigator.storage) {
@@ -30,9 +30,9 @@ if ("storage" in navigator && "estimate" in navigator.storage) {
 */
 
 export enum ItemType {
-  Code = "code",
-  Data = "data",
-  Media = "media",
+  Code = 'code',
+  Data = 'data',
+  Media = 'media',
 }
 
 interface ItemMetadata {
@@ -59,7 +59,7 @@ export class Cache extends Dexie {
     super(name);
 
     this.version(version).stores({
-      items: "url, timestamp, type",
+      items: 'url, timestamp, type',
     });
   }
 
@@ -74,7 +74,7 @@ export class Cache extends Dexie {
   async list(type: ItemType, offset: number = 0, limit: number = 10) {
     // List all the items of a given type
     const items = await this.items
-      .where("type")
+      .where('type')
       .equals(type)
       .offset(offset)
       .limit(limit)
@@ -144,7 +144,7 @@ export class Cache extends Dexie {
       const count = await this.items.count();
       if (count >= this.maxItems) {
         const items = await this.items
-          .orderBy("timestamp")
+          .orderBy('timestamp')
           .limit(count - this.maxItems + 1)
           .toArray();
         for (const item of items) {
@@ -170,7 +170,7 @@ export class Cache extends Dexie {
           if (item) {
             const { url: cachedUrl, size } = item;
             if (!cachedUrl) {
-              throw new Error("Cached url is null");
+              throw new Error('Cached url is null');
             }
             this.totalSize += size;
             delete this.caching[url];
@@ -185,7 +185,7 @@ export class Cache extends Dexie {
             });
           }
           throw new Error(
-            "Cache: Storage is missing item despite signaling success"
+            'Cache: Storage is missing item despite signaling success'
           );
         case StoreResult.Failure:
           switch (result.error) {
@@ -195,7 +195,7 @@ export class Cache extends Dexie {
                 await this.freeSpace(requiredSpace);
                 return this.storeFile(url, type, mimeType);
               } else {
-                throw new Error("Not enough space, and no error message");
+                throw new Error('Not enough space, and no error message');
               }
             default:
               throw new Error(
@@ -206,7 +206,7 @@ export class Cache extends Dexie {
           throw new Error(`Unhandled result code ${result.code}`);
       }
     } catch (err) {
-      console.error("Error caching file", url, err);
+      console.error('Error caching file', url, err);
       throw err as Error;
     }
   }
@@ -228,7 +228,7 @@ export class Cache extends Dexie {
     const totalSize = await this.getTotalSize();
 
     if (totalSize < size) {
-      throw new Error("Not enough space to free");
+      throw new Error('Not enough space to free');
     }
 
     // Iterate in chunks of 10, and free as much as needed
@@ -237,7 +237,7 @@ export class Cache extends Dexie {
     const numChunks = Math.ceil(count / chunkSize);
     for (let chunk = 0; chunk < numChunks; chunk++) {
       const items = await this.items
-        .orderBy("timestamp")
+        .orderBy('timestamp')
         .offset(chunk * chunkSize)
         .limit(chunkSize)
         .toArray();
@@ -250,7 +250,7 @@ export class Cache extends Dexie {
       }
     }
 
-    throw new Error("Could not free enough space");
+    throw new Error('Could not free enough space');
   }
 
   private async getTotalSize() {
@@ -262,7 +262,7 @@ export class Cache extends Dexie {
     const numChunks = Math.ceil(count / chunkSize);
     for (let chunk = 0; chunk < numChunks; chunk++) {
       const items = await this.items
-        .orderBy("timestamp")
+        .orderBy('timestamp')
         .offset(chunk * chunkSize)
         .limit(chunkSize)
         .toArray();

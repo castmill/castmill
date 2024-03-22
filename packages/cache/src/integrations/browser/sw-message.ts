@@ -1,5 +1,5 @@
 export interface SWMessage {
-  cmd: "init" | "cacheFile" | "deleteFile" | "deleteAll";
+  cmd: 'init' | 'cacheFile' | 'deleteFile' | 'deleteAll';
   args: { [key: string]: any };
 }
 

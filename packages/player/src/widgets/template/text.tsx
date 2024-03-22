@@ -1,12 +1,12 @@
-import gsap from "gsap";
+import gsap from 'gsap';
 
-import { Component, JSX, mergeProps, onCleanup, onMount } from "solid-js";
-import { TemplateConfig, resolveOption } from "./binding";
-import { TemplateComponent, TemplateComponentType } from "./template";
-import { TimelineItem } from "./timeline";
-import { ComponentAnimation, applyAnimations } from "./animation";
-import { BaseComponentProps } from "./interfaces/base-component-props";
-import { PlayerGlobals } from "../../interfaces/player-globals.interface";
+import { Component, JSX, mergeProps, onCleanup, onMount } from 'solid-js';
+import { TemplateConfig, resolveOption } from './binding';
+import { TemplateComponent, TemplateComponentType } from './template';
+import { TimelineItem } from './timeline';
+import { ComponentAnimation, applyAnimations } from './animation';
+import { BaseComponentProps } from './interfaces/base-component-props';
+import { PlayerGlobals } from '../../interfaces/player-globals.interface';
 interface AutoFitOpts {
   // Base size of the text (in em). Used if the text fits in the container.
   baseSize?: number;
@@ -99,12 +99,12 @@ export const Text: Component<TextProps> = (props) => {
   let cleanUpAnimations: () => void;
 
   const merged = mergeProps(
-    { width: "100%", height: "100%", "line-height": "1em" },
+    { width: '100%', height: '100%', 'line-height': '1em' },
     props.style
   );
 
   const spanStyle = {
-    "line-height": merged["line-height"],
+    'line-height': merged['line-height'],
   };
 
   onCleanup(() => {
@@ -152,7 +152,7 @@ export const Text: Component<TextProps> = (props) => {
           {
             duration,
             x: -(textRect.width + slack),
-            ease: "none",
+            ease: 'none',
           },
           1 // Wait 1 second before starting the animation
         );
@@ -193,7 +193,7 @@ function autoFitText(div: HTMLDivElement, options: AutoFitOpts): number {
   }
 
   const textElement = div;
-  textElement.style.overflowWrap = "normal";
+  textElement.style.overflowWrap = 'normal';
 
   const setSize = function (size: number) {
     textElement.style.fontSize = `${size}em`;
@@ -275,7 +275,7 @@ function autoFitText(div: HTMLDivElement, options: AutoFitOpts): number {
 }
 
 function createElementFromHTML(htmlString: string) {
-  const div = document.createElement("div");
+  const div = document.createElement('div');
   div.innerHTML = htmlString.trim();
   return Array.prototype.slice.call(div.children);
 }
@@ -284,7 +284,7 @@ function splitText(div: HTMLDivElement, splitChars?: boolean) {
   if (splitChars) {
     const chars: HTMLDivElement[] = [];
     const words = div.innerHTML
-      .split(" ")
+      .split(' ')
       .map((word, index, arr) =>
         splitInChars(word, chars, index === arr.length - 1)
       );
@@ -294,7 +294,7 @@ function splitText(div: HTMLDivElement, splitChars?: boolean) {
     return { words, chars };
   } else {
     const wordsHTML = div.innerHTML
-      .split(" ")
+      .split(' ')
       .map(
         (word) =>
           `<div style="display: inline-block; text-align: start; position: relative;">${word}</div>`
@@ -316,27 +316,27 @@ function splitInChars(
   charArray: HTMLDivElement[],
   isLast: boolean
 ) {
-  const div = document.createElement("div");
-  div.style.display = "inline-block";
-  div.style.textAlign = "start";
-  div.style.position = "relative";
+  const div = document.createElement('div');
+  div.style.display = 'inline-block';
+  div.style.textAlign = 'start';
+  div.style.position = 'relative';
 
   const charElements = createElementFromHTML(
     word
-      .split("")
+      .split('')
       .map(
         (char) =>
           `<div style="display: inline-block; text-align: start; position: relative;">${char}</div>`
       )
-      .join("")
+      .join('')
   );
 
   if (!isLast) {
-    const space = document.createElement("div");
-    space.style.display = "inline-block";
-    space.style.textAlign = "start";
-    space.style.position = "relative";
-    space.innerHTML = "&nbsp;";
+    const space = document.createElement('div');
+    space.style.display = 'inline-block';
+    space.style.textAlign = 'start';
+    space.style.position = 'relative';
+    space.innerHTML = '&nbsp;';
     charElements.push(space);
   }
 

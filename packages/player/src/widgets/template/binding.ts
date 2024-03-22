@@ -1,4 +1,4 @@
-import { Model } from "./data/model";
+import { Model } from './data/model';
 
 export interface Binding<T extends any> {
   key: string;
@@ -10,7 +10,7 @@ export interface TemplateConfig<Options = any, Data = any> {
   data: Data;
 }
 
-export const isBinding = (value: any) => typeof value === "object" && value.key;
+export const isBinding = (value: any) => typeof value === 'object' && value.key;
 
 export const resolveKey = (
   key: string,
@@ -18,7 +18,7 @@ export const resolveKey = (
   context: any,
   globals: { [index: string]: any }
 ) => {
-  if (key.startsWith("$.")) {
+  if (key.startsWith('$.')) {
     // Resolve context path removing the "$." prefix
     return Model.get(context, key.substring(2), globals);
   }
@@ -33,7 +33,7 @@ export const resolveBinding = (
 ) => {
   const result = resolveKey(binding.key, config, currentContext, globals);
 
-  if (typeof result == "undefined" || result[1] != null) {
+  if (typeof result == 'undefined' || result[1] != null) {
     return binding.default;
   }
   return result[0];

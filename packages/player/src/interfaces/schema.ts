@@ -1,11 +1,11 @@
 /**
  * Schema interface.
- * 
- * 
+ *
+ *
  */
 
-type SimpleType = "string" | "number" | "boolean";
-type ComplexType = "ref" | "map" | "list";
+type SimpleType = 'string' | 'number' | 'boolean';
+type ComplexType = 'ref' | 'map' | 'list';
 type FieldType = SimpleType | ComplexType;
 
 interface FieldAttributes {

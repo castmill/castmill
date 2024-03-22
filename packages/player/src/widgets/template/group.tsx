@@ -1,15 +1,15 @@
-import { Component, For, JSX, onCleanup, onMount } from "solid-js";
-import { Item } from "./item";
-import { TemplateConfig } from "./binding";
+import { Component, For, JSX, onCleanup, onMount } from 'solid-js';
+import { Item } from './item';
+import { TemplateConfig } from './binding';
 import {
   TemplateComponent,
   TemplateComponentType,
   TemplateComponentTypeUnion,
-} from "./template";
-import { ResourceManager } from "@castmill/cache";
-import { ComponentAnimation, applyAnimations } from "./animation";
-import { BaseComponentProps } from "./interfaces/base-component-props";
-import { PlayerGlobals } from "../../interfaces/player-globals.interface";
+} from './template';
+import { ResourceManager } from '@castmill/cache';
+import { ComponentAnimation, applyAnimations } from './animation';
+import { BaseComponentProps } from './interfaces/base-component-props';
+import { PlayerGlobals } from '../../interfaces/player-globals.interface';
 
 export interface GroupComponentOptions {}
 

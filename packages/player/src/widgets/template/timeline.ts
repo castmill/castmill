@@ -1,4 +1,4 @@
-import { gsap } from "gsap";
+import { gsap } from 'gsap';
 
 /**
  * This class represents a timeline.
@@ -65,7 +65,7 @@ export class Timeline implements TimelineBasic {
     const duration = this.duration();
 
     if (!(duration > 0)) {
-      throw new Error("Timeline duration must be greater than 0");
+      throw new Error('Timeline duration must be greater than 0');
     }
 
     const tick = () => {
@@ -138,8 +138,8 @@ export class Timeline implements TimelineBasic {
         item.child instanceof gsap.core.Timeline
           ? effectivePosition / 1000
           : item.repeat
-          ? effectivePosition % duration
-          : effectivePosition
+            ? effectivePosition % duration
+            : effectivePosition
       );
     });
   }
@@ -153,7 +153,7 @@ export class Timeline implements TimelineBasic {
 
   seek(offset: number) {
     if (this.playing.size !== 0) {
-      throw new Error("Cannot seek while playing");
+      throw new Error('Cannot seek while playing');
     }
     this.time = offset;
 

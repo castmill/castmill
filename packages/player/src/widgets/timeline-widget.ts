@@ -1,8 +1,8 @@
-import { ResourceManager } from "@castmill/cache";
-import { of, Observable, concat } from "rxjs";
+import { ResourceManager } from '@castmill/cache';
+import { of, Observable, concat } from 'rxjs';
 
-import { Widget } from "./widget";
-import { Timeline } from "./template/timeline";
+import { Widget } from './widget';
+import { Timeline } from './template/timeline';
 
 /**
  * A Widget base class for widgets that want to use timelines for
@@ -19,7 +19,7 @@ export class TimelineWidget extends Widget {
   constructor(resourceManager: ResourceManager, opts?: {}) {
     super(resourceManager, opts);
 
-    this.timeline = new Timeline("root", { loop: true });
+    this.timeline = new Timeline('root', { loop: true });
   }
 
   play(timer$: Observable<number>) {
@@ -31,7 +31,7 @@ export class TimelineWidget extends Widget {
     return concat(
       new Observable<string>((subscriber) => {
         const handler = (ev: Event) => {
-          subscriber.next("played");
+          subscriber.next('played');
           subscriber.complete();
         };
 

@@ -1,8 +1,8 @@
-import EventEmitter from "eventemitter3";
-import { Observable, Subscription } from "rxjs";
-import { finalize, share, tap, first, concatMap } from "rxjs/operators";
-import { Playlist } from "./playlist";
-import { Renderer, Viewport } from "./renderer";
+import EventEmitter from 'eventemitter3';
+import { Observable, Subscription } from 'rxjs';
+import { finalize, share, tap, first, concatMap } from 'rxjs/operators';
+import { Playlist } from './playlist';
+import { Renderer, Viewport } from './renderer';
 
 const TIMER_RESOLUTION = 50;
 
@@ -58,19 +58,19 @@ export class Player extends EventEmitter {
           tap((value) => {
             // Unsure why this is needed
             if (value < currTime) {
-              this.emit("end");
+              this.emit('end');
             }
             currTime = value;
-          }),
+          })
         );
       }),
       share()
     );
 
     this.timerSubscription = timer$.subscribe({
-      next: (time) => this.emit("time", time),
+      next: (time) => this.emit('time', time),
       error: (err) => {
-        console.log("Timer error", err);
+        console.log('Timer error', err);
       },
     });
 
@@ -90,11 +90,11 @@ export class Player extends EventEmitter {
       // playlist (i.e. how many layers, how many items in each layer, etc).
       .subscribe({
         error: (err) => {
-          console.log("Playing error", err);
+          console.log('Playing error', err);
         },
         complete: () => {
           this.timerSubscription?.unsubscribe();
-          this.emit("completed");
+          this.emit('completed');
         },
       });
   }

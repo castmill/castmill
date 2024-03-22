@@ -1,9 +1,9 @@
-import { ResourceManager } from "@castmill/cache";
+import { ResourceManager } from '@castmill/cache';
 
-import { Status } from "./playable";
-import { Layer } from "./layer";
-import { EventEmitter } from "eventemitter3";
-import { of, from, Observable } from "rxjs";
+import { Status } from './playable';
+import { Layer } from './layer';
+import { EventEmitter } from 'eventemitter3';
+import { of, from, Observable } from 'rxjs';
 import {
   concatMap,
   map,
@@ -12,10 +12,10 @@ import {
   takeWhile,
   tap,
   switchMap,
-} from "rxjs/operators";
-import { Renderer } from "./renderer";
-import { JsonPlaylist } from "./";
-import { PlayerGlobals } from "./interfaces/player-globals.interface";
+} from 'rxjs/operators';
+import { Renderer } from './renderer';
+import { JsonPlaylist } from './';
+import { PlayerGlobals } from './interfaces/player-globals.interface';
 
 export class Playlist extends EventEmitter {
   public layers: Layer[] = [];
@@ -26,7 +26,10 @@ export class Playlist extends EventEmitter {
 
   private debugLayer?: HTMLElement;
 
-  constructor(public name: string, private resourceManager: ResourceManager) {
+  constructor(
+    public name: string,
+    private resourceManager: ResourceManager
+  ) {
     super();
     // this.toggleDebug();
   }
@@ -142,7 +145,7 @@ export class Playlist extends EventEmitter {
         return playing$;
       }
     } else {
-      return of("end");
+      return of('end');
     }
   }
 
@@ -218,7 +221,7 @@ export class Playlist extends EventEmitter {
       const { layer, offset = 0 } = item;
       return renderer.show(layer, offset);
     }
-    return of("end");
+    return of('end');
   }
 
   unload(): void {

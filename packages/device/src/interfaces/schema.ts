@@ -2,8 +2,8 @@
  * Represents a schema for a document.
  *
  */
-type SimpleType = "string" | "number" | "boolean";
-type ComplexType = "map" | "list";
+type SimpleType = 'string' | 'number' | 'boolean';
+type ComplexType = 'map' | 'list';
 
 interface FieldAttributes {
   type: SimpleType;
@@ -12,7 +12,7 @@ interface FieldAttributes {
 }
 
 interface ReferenceAttributes {
-  type: "ref";
+  type: 'ref';
   required?: boolean;
   collection: string;
 }

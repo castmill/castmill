@@ -5,9 +5,9 @@ import {
   onCleanup,
   Show,
   type JSX,
-  type Component
+  type Component,
 } from 'solid-js';
-import styles from "./basemenu.module.css";
+import styles from './basemenu.module.css';
 
 const MENU_TIMEOUT = 10 * 1000;
 
@@ -59,7 +59,7 @@ interface BaseMenuProps {
   entries: MenuEntry[];
 }
 
-export const BaseMenu: Component<BaseMenuProps> = ({header, entries}) => {
+export const BaseMenu: Component<BaseMenuProps> = ({ header, entries }) => {
   // get initial checkbox states from menu entries
   const getCheckbosState = (menuEntries: MenuEntry[]) => {
     return menuEntries.reduce((acc: Record<string, boolean>, entry) => {
@@ -85,7 +85,9 @@ export const BaseMenu: Component<BaseMenuProps> = ({header, entries}) => {
     getCheckbosState(entries)
   );
   // submenu states (expanded or not)
-  const [submenuState, setSubmenuState] = createSignal<Record<string, boolean>>({});
+  const [submenuState, setSubmenuState] = createSignal<Record<string, boolean>>(
+    {}
+  );
 
   // Show menu when triggering action. Hide it after MENU_TIMEOUT ms of inactivity
   const showMenu = () => {
@@ -101,11 +103,11 @@ export const BaseMenu: Component<BaseMenuProps> = ({header, entries}) => {
     }, MENU_TIMEOUT);
 
     setTimer(t);
-  }
+  };
 
   const hideMenu = () => {
     setVisible(false);
-  }
+  };
 
   // highlight selected item when triggering action
   const highlightItem = (id: string) => {
@@ -136,7 +138,7 @@ export const BaseMenu: Component<BaseMenuProps> = ({header, entries}) => {
           offset,
           id: entry.id,
         });
-        
+
         // if submenu is expanded, add its children
         if (expanded) items.push(...getItems(entry.children, offset + 1));
       } else if (isCheckboxMenuEntry(entry)) {
@@ -163,11 +165,7 @@ export const BaseMenu: Component<BaseMenuProps> = ({header, entries}) => {
             highlightItem(entry.id);
             onEnter(entry);
           },
-          content: (
-            <span>
-              {entry.name}
-            </span>
-          ),
+          content: <span>{entry.name}</span>,
           offset,
           id: entry.id,
         });
@@ -184,16 +182,16 @@ export const BaseMenu: Component<BaseMenuProps> = ({header, entries}) => {
     if (isActionMenuEntry(entry)) {
       entry.action();
     } else if (isCheckboxMenuEntry(entry)) {
-      const newValue = !(checked()[entry.id]);
+      const newValue = !checked()[entry.id];
       entry.action(newValue);
       setChecked((c) => ({ ...c, [entry.id]: newValue }));
     } else if (isSubmenuMenuEntry(entry)) {
-      const newValue = !(submenuState()[entry.id]);
+      const newValue = !submenuState()[entry.id];
       entry.action(newValue);
       setSubmenuState((c) => ({ ...c, [entry.id]: newValue }));
     }
-  }
-  
+  };
+
   // register event listeners. We may need more generic key events in the future to
   // support other devices. TV remote for example.
   onMount(() => {
@@ -230,40 +228,35 @@ export const BaseMenu: Component<BaseMenuProps> = ({header, entries}) => {
 
   return (
     <div class={styles.menu}>
-      <Show
-        when={visible()}
-      >
-        <div role="menu" >
-          <div class={styles.menuHead}>
-            {header}
-          </div>
+      <Show when={visible()}>
+        <div role="menu">
+          <div class={styles.menuHead}>{header}</div>
           <ul>
-          {items().map((item, i) => {
-            const isSelected = selected() === i;
-            const isActive = active() === item.id;
+            {items().map((item, i) => {
+              const isSelected = selected() === i;
+              const isActive = active() === item.id;
 
-            const className =
-              `${styles.menuItem} ${isSelected ? styles.selected : ''} ${isActive ? styles.active : ''}`;
-            return (
-               <li
-                 onClick={() => {
-                   item.action();
-                 }}
-                 onMouseOver={() => {
-                   showMenu();
-                   setSelected(i);
-                 }}
-                 class={className}
-               >
-                 <div style={{ 'margin-left': `${item.offset * 20}px`}}>
-                   {item.content ? item.content : ''}
-                 </div>
-              </li>
-            );
-          })}
+              const className = `${styles.menuItem} ${isSelected ? styles.selected : ''} ${isActive ? styles.active : ''}`;
+              return (
+                <li
+                  onClick={() => {
+                    item.action();
+                  }}
+                  onMouseOver={() => {
+                    showMenu();
+                    setSelected(i);
+                  }}
+                  class={className}
+                >
+                  <div style={{ 'margin-left': `${item.offset * 20}px` }}>
+                    {item.content ? item.content : ''}
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         </div>
       </Show>
     </div>
   );
-}
+};
