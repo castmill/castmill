@@ -1,1 +1,1 @@
-export * from './ElectronMachine';
+export * from './electron-machine';
