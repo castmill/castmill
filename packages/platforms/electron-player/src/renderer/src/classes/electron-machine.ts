@@ -9,13 +9,7 @@ export class ElectronMachine implements Machine {
    *
    */
   async getMachineGUID(): Promise<string> {
-    //TODO use a real hardware identifier
-    let machineId = localStorage.getItem('machineId');
-    if (!machineId) {
-      machineId = crypto.randomUUID();
-      localStorage.setItem('machineId', machineId);
-    }
-    return machineId;
+    return window.api.getMachineGUID();
   }
 
   async storeCredentials(credentials: string): Promise<void> {

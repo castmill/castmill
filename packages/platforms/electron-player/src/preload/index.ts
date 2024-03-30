@@ -10,6 +10,7 @@ const api: ApplicationAPI = {
   shutdown: () => ipcRenderer.send(Action.SHUTDOWN),
   reboot: () => ipcRenderer.send(Action.REBOOT),
   update: () => ipcRenderer.send(Action.UPDATE),
+  getMachineGUID: () => ipcRenderer.invoke(Action.GET_MACHINE_GUID),
 };
 
 // Use `contextBridge` APIs to expose Electron APIs to

@@ -4,6 +4,8 @@ import { exec } from 'child_process';
 import { app } from 'electron';
 import { is } from '@electron-toolkit/utils';
 import { autoUpdater } from 'electron-updater';
+import { one } from 'macaddress';
+import { createHash } from 'crypto';
 
 /*
  * show a toast notification
@@ -81,4 +83,21 @@ export const update = () => {
   showToast('Update', 'Checking for updates...');
   // Won't work in dev mode.
   autoUpdater.checkForUpdatesAndNotify();
+};
+
+/*
+ * get the mac address
+ */
+const getMacAddress = () => {
+  return one();
+};
+
+/*
+ * get the device uuid by hashing the mac address
+ */
+export const getMachineGUID = async () => {
+  const macAddress = await getMacAddress();
+  const shasum = createHash('sha1');
+  shasum.update(macAddress);
+  return shasum.digest('hex');
 };

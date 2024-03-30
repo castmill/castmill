@@ -6,6 +6,7 @@ export interface ApplicationAPI {
   shutdown: () => void;
   reboot: () => void;
   update: () => void;
+  getMachineGUID: () => Promise<string>;
 }
 
 declare global {
