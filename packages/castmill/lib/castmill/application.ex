@@ -17,9 +17,11 @@ defmodule Castmill.Application do
       # Start Finch
       {Finch, name: Castmill.Finch},
       # Start the Endpoint (http/https)
-      CastmillWeb.Endpoint
+      CastmillWeb.Endpoint,
       # Start a worker by calling: Castmill.Worker.start_link(arg)
       # {Castmill.Worker, arg}
+
+      Castmill.Hooks.Supervisor
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

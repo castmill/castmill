@@ -60,7 +60,6 @@ defmodule CastmillWeb.SignUpController do
 
     case Accounts.create_user_from_signup(signup_id, email, credential_id, public_key_spki) do
       {:ok, %{id: user_id} = user} ->
-        # TODO: Send welcome email with on-boarding instructions...
         conn
         |> put_session(:user, user)
         |> SessionUtils.log_in_user(user_id)

@@ -359,6 +359,9 @@ defmodule Castmill.Accounts do
            {:ok, %{id: user_id} = user} <- create_user_for_email(email),
            :ok <- create_user_credential(user_id, credential_id, public_key_spki),
            :ok <- update_signup_status(signup, user_id) do
+
+        Castmill.Hooks.trigger_hook(:user_signup, %{user_id: user_id, email: email})
+
         sanitize_user(user)
       else
         {:error, error} ->
