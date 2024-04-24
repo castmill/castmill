@@ -1,6 +1,7 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron';
+import { app, shell, BrowserWindow, ipcMain, IpcMainInvokeEvent } from 'electron';
 import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
+import Store from 'electron-store';
 import * as api from './api';
 import { Action } from '../common';
 import icon from '../../resources/icon.png?asset';
@@ -49,6 +50,7 @@ function createWindow(): void {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
+  const store = new Store();
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron');
 
@@ -86,6 +88,18 @@ app.whenReady().then(() => {
     return api.getMachineGUID();
   });
 
+  ipcMain.handle(Action.GET_STORE_VALUE, (_event: IpcMainInvokeEvent, key: string) => {
+    return store.get(key);
+  });
+
+  ipcMain.on(Action.SET_STORE_VALUE, (_event: IpcMainInvokeEvent, key: string, value: string) => {
+    store.set(key, value);
+  });
+
+  ipcMain.on(Action.DELETE_STORE_VALUE, (_event: IpcMainInvokeEvent, key: string) => {
+    store.delete(key);
+  });
+
   createWindow();
 
   app.on('activate', function () {
@@ -93,6 +107,7 @@ app.whenReady().then(() => {
     // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
+
 });
 
 // Quit when all windows are closed, except on macOS. There, it's common
