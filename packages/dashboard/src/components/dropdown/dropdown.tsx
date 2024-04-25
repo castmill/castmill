@@ -6,9 +6,9 @@
  *
  */
 
-import { Component } from "solid-js";
+import { Component } from 'solid-js';
 
-import "./dropdown.scss";
+import './dropdown.scss';
 
 interface DropdownItem {
   value: string;
@@ -18,13 +18,19 @@ interface DropdownItem {
 interface DropdownProps {
   label: string;
   items: Array<DropdownItem>;
+  onSelectChange: (value: string) => void; // Callback function for when selection changes
 }
 
 const Dropdown: Component<DropdownProps> = (props) => {
+  // Function to handle change events on the dropdown
+  const handleChange = (event: Event) => {
+    const target = event.target as HTMLSelectElement;
+    props.onSelectChange(target.value); // Call the callback function with the new value
+  };
   return (
     <div class="castmill-dropdown">
       <span class="label">{props.label}</span>
-      <select>
+      <select onChange={handleChange}>
         {props.items.map((item) => {
           return <option value={item.value}>{item.name}</option>;
         })}
