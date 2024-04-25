@@ -1,0 +1,61 @@
+.button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 0.3em;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition:
+    background-color 0.3s,
+    box-shadow 0.3s;
+
+  &-icon {
+    display: flex;
+  }
+
+  &-primary {
+    background-color: #007bff;
+    color: white;
+  }
+  &-secondary {
+    background-color: #6c757d;
+    color: white;
+  }
+  &-danger {
+    border: 1px solid #555;
+    background-color: #00000000;
+    color: #a2a0a0;
+  }
+
+  &-danger:hover {
+    background-color: #747474;
+    color: white;
+  }
+
+  &-success {
+    background-color: #267538;
+    color: white;
+  }
+
+  &-success:hover {
+    background-color: #3d8b4d;
+  }
+
+  &-info {
+    background-color: #17a2b8;
+    color: white;
+  }
+
+  &:not(.button-disabled):hover {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  &.button-disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
+}
