@@ -11,14 +11,6 @@
   "module": "dist/index/index.module.js",
   "types": "dist/index/index.d.ts",
   "exports": {
-    "./someting": {
-      "types": "./dist/index/index.d.ts",
-      "solid": "./dist/index/index.jsx",
-      "import": "./dist/index/index.module.js",
-      "browser": "./dist/index/index.module.js",
-      "require": "./dist/index/index.common.js",
-      "node": "./dist/index/index.common.js"
-    },
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
