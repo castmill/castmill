@@ -15,7 +15,7 @@ defmodule Castmill.Addons.Onboarding do
     to be sent in 3 days.
   """
   def on_user_signup(%{user_id: user_id, email: email}) do
-    result = welcome_email(user_id, email)
+    _result = welcome_email(user_id, email)
     # Schedule another email to be sent in 3 days
     # Castmill.Scheduler.schedule_in(3 * 24 * 60 * 60, &reminder_email/1, [user_id])
   end
