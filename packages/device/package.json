@@ -2,7 +2,6 @@
   "name": "@castmill/device",
   "version": "1.0.0",
   "description": "",
-  "exports": "./dist/index.js",
   "type": "module",
   "scripts": {
     "format": "prettier --write .",
@@ -16,6 +15,10 @@
     "build:watch": "tsc --watch",
     "prepare": "yarn build",
     "ts-types": "tsc --emitDeclarationOnly --outDir dist"
+  },
+  "exports": {
+    ".": "./dist/index.js",
+    "./dist/style.css": "./dist/style.css"
   },
   "license": "AGPL-3.0-or-later",
   "devDependencies": {

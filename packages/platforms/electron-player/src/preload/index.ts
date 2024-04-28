@@ -1,8 +1,17 @@
-import { contextBridge } from 'electron';
+import { contextBridge, ipcRenderer } from 'electron';
 import { electronAPI } from '@electron-toolkit/preload';
+import type { ApplicationAPI } from './index.d';
+import { Action } from '../common';
 
 // Custom APIs for renderer
-const api = {};
+const api: ApplicationAPI = {
+  relaunch: () => ipcRenderer.send(Action.RELAUNCH),
+  quit: () => ipcRenderer.send(Action.QUIT),
+  shutdown: () => ipcRenderer.send(Action.SHUTDOWN),
+  reboot: () => ipcRenderer.send(Action.REBOOT),
+  update: () => ipcRenderer.send(Action.UPDATE),
+  getMachineGUID: () => ipcRenderer.invoke(Action.GET_MACHINE_GUID),
+};
 
 // Use `contextBridge` APIs to expose Electron APIs to
 // renderer only if context isolation is enabled, otherwise

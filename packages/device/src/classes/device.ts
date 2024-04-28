@@ -1,8 +1,7 @@
 import { Channel, Socket } from 'phoenix';
 import { Player, Playlist, Renderer, Viewport, Layer } from '@castmill/player';
 import { ResourceManager, Cache, StorageIntegration } from '@castmill/cache';
-
-import { Machine } from '../interfaces/machine';
+import { Machine, DeviceInfo } from '../interfaces/machine';
 import { getCastmillIntro } from './intro';
 import { Calendar, JsonCalendar } from './calendar';
 import { Schema, JsonPlaylist, JsonPlaylistItem } from '../interfaces';
@@ -341,6 +340,53 @@ export class Device {
 
       console.log('Update calendars', payload);
     });
+  }
+
+  /*
+   * Returns the capabilities of the device. The capabilities are the set of actions
+   * that the device can perform. The capabilities may vary depending on the integration
+   */
+  getCapabilities() {
+    return {
+      restart: !!this.integration.restart,
+      quit: !!this.integration.quit,
+      reboot: !!this.integration.reboot,
+      shutdown: !!this.integration.shutdown,
+      update: !!this.integration.update,
+      updateFirmware: !!this.integration.updateFirmware,
+    };
+  }
+
+  //
+  // APIs for the device to interact with the machine specific integration.
+  //
+
+  getDeviceInfo() {
+    return this.integration.getDeviceInfo();
+  }
+
+  restart() {
+    return this.integration.restart?.();
+  }
+
+  quit() {
+    return this.integration.quit?.();
+  }
+
+  reboot() {
+    return this.integration.reboot?.();
+  }
+
+  shutdown() {
+    return this.integration.shutdown?.();
+  }
+
+  update() {
+    return this.integration.update?.();
+  }
+
+  updateFirmware() {
+    return this.integration.updateFirmware?.();
   }
 }
 

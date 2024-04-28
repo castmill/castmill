@@ -1,3 +1,15 @@
+export interface DeviceInfo {
+  appType: string; // Electron, Android, iOS, etc.
+  appVersion: string; // 0.0.0-todo-hardcode
+  os: string; // OS e.g. LG WebOs 3.2, Android 8, Linux Raspbian 3, Windows 11, etc.
+  hardware: string; // E.g. LG 52XS4FMC
+  environmentVersion?: string; // The version of the environment e.g. Electron v28.0.0
+  chromiumVersion?: string; // The version of the chromium engine e.g. 98.0.4758.102
+  v8Version?: string; // The version of the V8 engine if available e.g. 9.8.0
+  nodeVersion?: string; // The version of the Node.js if available e.g. 16.13.0
+  userAgent: string; // The user agent string
+}
+
 export interface Machine {
   /**
    * Returns the machine's unique identifier.
@@ -60,9 +72,19 @@ export interface Machine {
   getTimezone?(): Promise<string>;
 
   /**
-   * Reset the device application.
+   * Retunrs the device information, such as the software and hardware versions.
    */
-  reset?(): Promise<void>;
+  getDeviceInfo(): Promise<DeviceInfo>;
+
+  /**
+   * Restart the device application.
+   */
+  restart?(): Promise<void>;
+
+  /**
+   * Quit the device application.
+   */
+  quit?(): Promise<void>;
 
   /**
    * Reboot the device. This should perform a clean hardware reboot of the device.
