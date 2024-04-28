@@ -26,17 +26,6 @@ describe('Modal Component', () => {
     expect(screen.getByText('This is a test')).toBeInTheDocument();
   });
 
-  /*
-  it('closes on overlay click', () => {
-    const mockOnClose = vi.fn();
-    render(() => <Modal title="Test Modal" onClose={mockOnClose} />);
-    const overlay = screen.getByText(/Test Modal/).parentNode.parentNode; // Adjust as necessary based on your markup
-    fireEvent.click(overlay);
-    vi.runAllTimers();
-    expect(mockOnClose).toHaveBeenCalled();
-  });
-  */
-
   it('closes on overlay click', () => {
     const mockOnClose = vi.fn();
     render(() => <Modal title="Test Modal" onClose={mockOnClose} />);
