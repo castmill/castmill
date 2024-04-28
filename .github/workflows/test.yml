@@ -32,8 +32,8 @@ jobs:
     name: OTP ${{matrix.otp}} / Elixir ${{matrix.elixir}}
     strategy:
       matrix:
-        otp: ['25']
-        elixir: ['1.14.2']
+        otp: ['26']
+        elixir: ['1.15.6']
 
     steps:
       - uses: actions/checkout@v3
@@ -74,26 +74,26 @@ jobs:
       - run: yarn test --run
 
   test_dashboard:
-      runs-on: ubuntu-latest
-  
-      name: testing Dashboard package with node@18
-  
-      defaults:
-        run:
-          working-directory: ./packages/dashboard
-  
-      steps:
-        - name: Checkout repository
-          uses: actions/checkout@v3
-        - name: Use Node.js current
-          uses: actions/setup-node@v3
-          with:
-            node-version: 18
-            cache: 'yarn'
-        - run: yarn install --ignore-engines --frozen-lockfile --non-interactive
-        - run: yarn build
-        - run: yarn format:check
-        - run: yarn test --run
+    runs-on: ubuntu-latest
+
+    name: testing Dashboard package with node@18
+
+    defaults:
+      run:
+        working-directory: ./packages/dashboard
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Use Node.js current
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'yarn'
+      - run: yarn install --ignore-engines --frozen-lockfile --non-interactive
+      - run: yarn build
+      - run: yarn format:check
+      - run: yarn test --run
 
   test_player:
     runs-on: ubuntu-latest
