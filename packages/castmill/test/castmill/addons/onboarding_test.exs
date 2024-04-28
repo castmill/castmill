@@ -17,7 +17,6 @@ defmodule Castmill.Addons.OnboardingTest do
     # ** (DBConnection.OwnershipError) cannot find ownership process for #PID<0.442.0>.
     @tag :skip
     test "registers user_signup hook correctly" do
-
       user = user_fixture()
 
       # Register addon
