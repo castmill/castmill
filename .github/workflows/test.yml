@@ -76,11 +76,11 @@ jobs:
   test_dashboard:
       runs-on: ubuntu-latest
   
-      name: testing UI Common package with node@18
+      name: testing Dashboard package with node@18
   
       defaults:
         run:
-          working-directory: ./packages/ui-common
+          working-directory: ./packages/dashboard
   
       steps:
         - name: Checkout repository
