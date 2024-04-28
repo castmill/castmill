@@ -10,13 +10,3 @@ const IconWrapper: Component<{ icon: IconTypes }> = (props) => {
 };
 
 export default IconWrapper;
-
-/*
-      {typeof defaultProps.icon === 'function' ? (
-        <defaultProps.icon
-          {...(defaultProps.iconProps ? defaultProps.iconProps : {})}
-        />
-      ) : (
-        defaultProps.icon
-      )}
-      */
