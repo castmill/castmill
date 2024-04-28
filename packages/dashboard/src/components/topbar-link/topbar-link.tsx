@@ -5,9 +5,9 @@
  *
  */
 
-import { Component } from "solid-js";
-import "./topbar-link.scss";
-import { A } from "@solidjs/router";
+import { Component } from 'solid-js';
+import './topbar-link.scss';
+import { A } from '@solidjs/router';
 
 interface TopbarLinkProps {
   to: string;

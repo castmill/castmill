@@ -1,32 +1,73 @@
-import { Component } from "solid-js";
-import "./sidepanel.scss";
-import PanelItem from "../panel-item/panel-item";
-import Dropdown from "../dropdown/dropdown";
+import { Component, For, Show, Suspense, lazy } from 'solid-js';
+import './sidepanel.scss';
+import PanelItem from '../panel-item/panel-item';
+import Dropdown from '../dropdown/dropdown';
 
-import { IoSettingsOutline } from "solid-icons/io";
+import { IoSettingsOutline } from 'solid-icons/io';
+import { AddOnTree } from '../../classes/addon-tree';
+import { AddOnNode } from '../../interfaces/addon-node.interface';
+import { store } from '../../store/store';
 
-const organizations = [
-  {
-    name: "Castmill",
-    value: "castmill",
-  },
-  {
-    name: "Tylöprint",
-    value: "tyloprint",
-  },
-  {
-    name: "AdCode",
-    value: "adcode",
-  },
-];
+const addOnBasePath = 'http://localhost:4000/assets/addons';
 
-const SidePanel: Component = () => {
+const SidePanelTree: Component<{ node: AddOnNode }> = (props) => {
+  const addon = props.node.addon;
+  const children = Array.from(props.node.children || []);
+
+  return (
+    <>
+      <Show when={addon}>
+        <Suspense fallback={<div>Loading...</div>}>
+          <PanelItem
+            to={addon!.mount_path || ''}
+            text={addon!.name}
+            icon={lazy(() => import(`${addOnBasePath}${addon?.icon}`))}
+          />
+        </Suspense>
+      </Show>
+      <For each={children}>
+        {([name, node]) => (
+          <Show when={node.children || node.addon}>
+            <SidePanelTree node={node} />
+          </Show>
+        )}
+      </For>
+    </>
+  );
+};
+
+const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
+  /*
+  Addons include a "mount_point" property that is a period separated string that 
+  represents where in the application the addon should be mounted. For example, if
+  the mount_point is "admin.settings", the AddOn will be mounted at /admin/settings.
+
+  Since we are in the SidePanel component, we need to filter the addons that have a
+  mount_point that starts with "sidepanel". Note that the addons can be nested, so
+  we need to check if the mount_point starts with "sidepanel" and if it is nested like for
+  example: "sidepanel.content.medias" create the proper entry in the panel.
+  */
+  const addonsPanelTree = props.addons.getSubTree('sidepanel');
+
   return (
     <div class="castmill-sidepanel">
       <div class="top">
-        <Dropdown label="Organization" items={organizations} />
+        <Dropdown
+          label="Organization"
+          items={store.organizations.data.map((org) => ({
+            name: org.name,
+            value: org.id,
+          }))}
+          onSelectChange={(value) => {
+            store.organizations.selectedId = value;
+          }}
+        />
       </div>
       <div class="links">
+        <Show when={addonsPanelTree}>
+          <SidePanelTree node={addonsPanelTree!} />
+        </Show>
+
         <PanelItem to="/settings" text="Settings" icon={IoSettingsOutline} />
       </div>
     </div>

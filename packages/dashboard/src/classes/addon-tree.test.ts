@@ -42,7 +42,6 @@ describe('AddOnTree', () => {
 
   it('correctly builds a tree from a list of addons', () => {
     const tree = new AddOnTree(addons);
-    console.log(tree.root);
 
     expect(tree.root.size).toBe(1); // Only 'root' should be at the top level
     expect(tree.root.get('root')).toBeDefined();
