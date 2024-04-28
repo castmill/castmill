@@ -8,7 +8,7 @@ defmodule Castmill.Addons.Addon do
       # Default implementations for optional callbacks from your behaviour
       def mount_routes(_router, _base_path), do: :ok
       def register_hooks(), do: :ok
-      def component_info(), do: :no_component
+      def component_info(), do: nil
 
       # Make init overridable in case consuming modules want their own implementation
       defoverridable mount_routes: 2

@@ -3,7 +3,7 @@ defmodule Castmill.Addons.AddonBehaviour do
   @callback register_hooks() :: any()
 
   @callback component_info() ::
-              {:ok, [component_info :: Castmill.Addons.ComponentInfo]} | :no_component
+              [component_info :: Castmill.Addons.ComponentInfo] | nil
 
   @optional_callbacks [
     mount_routes: 2,
