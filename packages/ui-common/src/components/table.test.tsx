@@ -59,26 +59,6 @@ describe('CastmillTable Component', () => {
     expect(checkbox).toBeChecked();
   });
 
-  /*
-  it('sorts data on column header click', async () => {
-    const mockFetchData = vi.fn(() => Promise.resolve());
-    render(() => (
-      <CastmillTable columns={columns} data={data} fetchData={mockFetchData} />
-    ));
-    const nameHeader = screen.getByText('Name');
-    fireEvent.click(nameHeader); // First click: ascending
-    expect(mockFetchData).toHaveBeenCalledWith({
-      key: 'name',
-      direction: 'ascending',
-    });
-    fireEvent.click(nameHeader); // Second click: descending
-    expect(mockFetchData).toHaveBeenCalledWith({
-      key: 'name',
-      direction: 'descending',
-    });
-  });
-  */
-
   it('calls onSort callback with correct options when a column header is clicked', () => {
     const mockOnSort = vi.fn();
     render(() => (
