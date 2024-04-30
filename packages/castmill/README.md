@@ -12,13 +12,29 @@ The server is implemented in [Elixir](https://elixir-lang.org/) using the [Phoen
   * Run `mix setup` to install and setup dependencies
   * Start Phoenix endpoint with `mix phx.server` or inside IEx with `iex -S mix phx.server`
 
-Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
+Now you can visit [`localhost:4000`](http://localhost:4000) from your browser to access the Device server, or
+[`localhost:4000`](http://localhost:4000/admin) to access the admin interface.
 
 ## Learn more
 
   * Official website: https://castmill.com/
   * Guides: coming soon.
   * Docs: coming soon.
+
+
+## Deployment
+
+This server can be deployed on any host that supports docker.
+
+
+### Fly.io
+
+Fly.io is a cloud provider with pretty good support for elixir applications.
+In order to deploy Castmill you will first need to signup in fly.io. At the time of writing
+even though you can use it for free for development purposes it will require a credit card
+in order to get the necessary free allowances.
+
+
 
 ## License
 
