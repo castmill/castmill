@@ -1,7 +1,6 @@
 # Castmill - Open Digital Signage Platform
 
-Castmill is a complete platform for Digital Signage. It includes a player, a server and a web interface for managing
-the content.
+Castmill is a complete platform for Digital Signage. It includes a player, a server and a web interface for managing the content.
 
 Some of its features:
 
