@@ -13,12 +13,16 @@ defmodule Castmill.Accounts.SignUp do
     field(:status, Ecto.Enum, values: [:created, :sent, :registered, :failed], default: :created)
 
     field(:status_message, :string)
+
+    belongs_to(:network, Castmill.Networks.Network, foreign_key: :network_id, type: Ecto.UUID)
+
     timestamps()
   end
 
   def changeset(signup, attrs) do
     signup
-    |> cast(attrs, [:email, :challenge, :status, :status_message])
+    |> cast(attrs, [:email, :challenge, :status, :status_message, :network_id])
+    |> validate_required([:email, :challenge, :status, :network_id])
   end
 
   defimpl Jason.Encoder, for: Castmill.Accounts.SignUp do

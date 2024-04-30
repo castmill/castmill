@@ -1,12 +1,12 @@
 export const arrayBufferToBase64 = (buffer: ArrayBuffer) => {
-  var binary = "";
+  var binary = '';
   var bytes = new Uint8Array(buffer);
   var len = bytes.byteLength;
   for (var i = 0; i < len; i++) {
     binary += String.fromCharCode(bytes[i]);
   }
   return window.btoa(binary);
-}
+};
 
 export const base64ToArrayBuffer = (b64: string) => {
   const bin = window.atob(b64);
@@ -16,9 +16,9 @@ export const base64ToArrayBuffer = (b64: string) => {
     bytes[i] = bin.charCodeAt(i);
   }
   return bytes.buffer;
-}
+};
 
 export const base64URLToArrayBuffer = (b64: string) => {
-  const converted = b64.replace(/[-_]/g, (c) => c === "-" ? "+" : "/");
+  const converted = b64.replace(/[-_]/g, (c) => (c === '-' ? '+' : '/'));
   return base64ToArrayBuffer(converted);
-}
+};

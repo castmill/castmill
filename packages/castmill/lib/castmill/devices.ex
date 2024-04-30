@@ -149,7 +149,7 @@ defmodule Castmill.Devices do
           # loc_long: _loc_long,
         } = attrs
       ) do
-    symbols = '123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    symbols = ~c"123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
     symbol_count = Enum.count(symbols)
 
     pincode = for _ <- 1..10, into: "", do: <<Enum.at(symbols, :rand.uniform(symbol_count) - 1)>>

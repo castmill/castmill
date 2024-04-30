@@ -7,7 +7,7 @@ defmodule Castmill.Networks.Network do
   @foreign_key_type Ecto.UUID
 
   schema "networks" do
-    field(:copyright, :string, default: "© 2023 Castmill")
+    field(:copyright, :string, default: "© 2024 Castmill AB")
     field(:domain, :string)
     field(:email, :string)
     field(:logo, :string, default: "https://castmill.com/images/logo.png")

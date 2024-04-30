@@ -1,24 +1,32 @@
-import { Component, createSignal, onMount, Show } from "solid-js";
-import { arrayBufferToBase64, base64URLToArrayBuffer } from "../utils";
+import {
+  Component,
+  createSignal,
+  Match,
+  onMount,
+  Show,
+  Switch,
+} from 'solid-js';
+import { arrayBufferToBase64, base64URLToArrayBuffer } from '../utils';
 
-import "./login.scss";
-import { resetSession, setAuthenticated } from "../auth";
-import { useNavigate } from "@solidjs/router";
-import SignUpEmailSent from "../signup/signup-email-sent";
+import './login.scss';
+import { resetSession, setAuthenticated } from '../auth';
+import { useNavigate } from '@solidjs/router';
+import SignUpEmailSent from '../signup/signup-email-sent';
 
-const baseUrl = "http://localhost:4000";
-const domain = "localhost";
+const baseUrl = 'http://localhost:4000';
+const domain = 'localhost';
 
-console.log("ENV:", import.meta.env);
+console.log('ENV:', import.meta.env);
 
 const encoder = new TextEncoder(); // Creates a new encoder
 
 const Login: Component = () => {
   const [isMounted, setIsMounted] = createSignal<boolean>(false);
   const [loading, setLoading] = createSignal<boolean>(false);
-  const [status, setStatus] = createSignal<string>("Ready");
+  const [status, setStatus] = createSignal<string>('Ready');
+  const [error, setError] = createSignal<string>('');
   const [supportsPasskeys, setSupportsPasskeys] = createSignal<boolean>(false);
-  const [email, setEmail] = createSignal<string>("");
+  const [email, setEmail] = createSignal<string>('');
   const [disabledSignUp, setDisabledSignUp] = createSignal<boolean>(true);
   const [showEmailSent, setShowEmailSent] = createSignal<boolean>(false);
 
@@ -42,7 +50,7 @@ const Login: Component = () => {
 
   onMount(async () => {
     if (!(await checkPasskeysSupport())) {
-      setStatus("Passkey not supported");
+      setStatus('Passkey not supported');
       return;
     } else {
       setSupportsPasskeys(true);
@@ -52,19 +60,19 @@ const Login: Component = () => {
 
   const loginWithPasskey = async (): Promise<void> => {
     try {
-      setStatus("Authenticating...");
+      setStatus('Authenticating...');
 
       const response = await fetch(`${baseUrl}/sessions/challenges`, {
-        credentials: "include", // Essential for including cookies
+        credentials: 'include', // Essential for including cookies
       });
       if (!response.ok) {
-        console.error("Failed to get challenge");
-        setStatus("Authentication failed");
+        console.error('Failed to get challenge');
+        setStatus('Authentication failed');
         return;
       }
 
       const { challenge } = (await response.json()) as { challenge: string };
-      console.log("Challenge:", challenge);
+      console.log('Challenge:', challenge);
 
       const publicKey: PublicKeyCredentialRequestOptions = {
         rpId: domain,
@@ -76,8 +84,8 @@ const Login: Component = () => {
       });
 
       if (!credential) {
-        console.error("No credentials received");
-        setStatus("Authentication failed");
+        console.error('No credentials received');
+        setStatus('Authentication failed');
         return;
       }
 
@@ -90,9 +98,9 @@ const Login: Component = () => {
       );
 
       const result = await fetch(`${baseUrl}/sessions/`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           credential_id: publicKeyCredential.id,
@@ -105,25 +113,27 @@ const Login: Component = () => {
           email,
           challenge,
         }),
-        credentials: "include",
+        credentials: 'include',
       });
 
       if (!result.ok) {
-        console.error("Failed to authenticate");
-        setStatus("Authentication failed");
+        console.error('Failed to authenticate');
+        setStatus('Authentication failed');
         return;
       } else {
-        setStatus("Authenticated");
+        setStatus('Authenticated');
 
         // Set the authenticated signal to true
         setAuthenticated(true);
 
-        // Redirect to dashboard
-        navigate("/");
+        // Redirect to page specified by the redirectTo query parameter of '/' if not present
+        const urlParams = new URLSearchParams(window.location.search);
+        const redirectTo = urlParams.get('redirectTo') || '/';
+        navigate(redirectTo);
       }
     } catch (error) {
-      console.error("Authentication error:", error);
-      setStatus("Authentication failed");
+      console.error('Authentication error:', error);
+      setStatus('Authentication failed');
     }
   };
 
@@ -133,21 +143,22 @@ const Login: Component = () => {
     setLoading(true);
 
     const result = await fetch(`${baseUrl}/signups`, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
-      credentials: "include",
+      credentials: 'include',
       body: JSON.stringify({ email: email() }),
     });
 
     if (!result.ok) {
-      setStatus("Failed to start signup process");
+      setStatus('Failed to start signup process');
+      setError(`Failed to start signup process ${result.statusText}`);
     } else {
-      setStatus("Check your email for the signup link");
+      setStatus('Check your email for the signup link');
+      setShowEmailSent(true);
     }
     setLoading(false);
-    setShowEmailSent(true);
   };
 
   const handleEmailChange = (event: Event) => {
@@ -174,57 +185,62 @@ const Login: Component = () => {
 
         <div class="login-container">
           <div class="login-box">
-            <Show when={!showEmailSent()} fallback={<SignUpEmailSent />}>
-              <h2>Login</h2>
+            <Switch fallback={<SignUpEmailSent />}>
+              <Match when={error()}>
+                <div class="error">{error()}</div>
+              </Match>
+              <Match when={!showEmailSent()}>
+                <h2>Login</h2>
 
-              <button
-                class="signup-button"
-                onClick={loginWithPasskey}
-                disabled={!supportsPasskeys()}
-              >
-                Login with Passkey
-              </button>
+                <button
+                  class="signup-button"
+                  onClick={loginWithPasskey}
+                  disabled={!supportsPasskeys()}
+                >
+                  Login with Passkey
+                </button>
 
-              <div>
-                <p>or</p>
-              </div>
+                <div>
+                  <p>or</p>
+                </div>
 
-              <h2>Sign Up</h2>
+                <h2>Sign Up</h2>
 
-              <input
-                type="text"
-                placeholder="Email"
-                value={email()}
-                onChange={handleEmailChange}
-              />
-              <button
-                class="login-button"
-                onClick={startSignupProcess}
-                disabled={disabledSignUp()}
-              >
-                Continue
-              </button>
+                <input
+                  type="text"
+                  placeholder="Email"
+                  value={email()}
+                  onChange={handleEmailChange}
+                />
+                <button
+                  class="login-button"
+                  onClick={startSignupProcess}
+                  disabled={disabledSignUp()}
+                >
+                  Continue
+                </button>
 
-              <p class="status">Status: {status()}</p>
-              <Show when={!supportsPasskeys()}>
-                <p class="warn">
-                  Your browser does not support Passkeys. Link here with more
-                  info...
-                </p>
-              </Show>
+                <p class="status">Status: {status()}</p>
+                <Show when={!supportsPasskeys()}>
+                  <p class="warn">
+                    Your browser does not support Passkeys. Link here with more
+                    info...
+                  </p>
+                </Show>
 
-              <div class="privacy">
-                <p>
-                  We care about your privacy. Read our{" "}
-                  <a href="#">Privacy Policy</a>.
-                </p>
-              </div>
-              <div>
-                <p>
-                  <a href="#">Lost your credentials?</a>
-                </p>
-              </div>
-            </Show>
+                <div class="privacy">
+                  <p>
+                    We care about your privacy. Read our{' '}
+                    <a href="#">Privacy Policy</a>.
+                  </p>
+                </div>
+                <div>
+                  <p>
+                    <a href="#">Lost your credentials?</a>
+                  </p>
+                </div>
+              </Match>
+            </Switch>
           </div>
         </div>
       </div>

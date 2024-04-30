@@ -1,11 +1,11 @@
-import { Component, createSignal, onMount, Show } from "solid-js";
-import { useNavigate, useSearchParams } from "@solidjs/router";
+import { Component, createSignal, onMount, Show } from 'solid-js';
+import { useNavigate, useSearchParams } from '@solidjs/router';
 
-import { arrayBufferToBase64 } from "../utils";
+import { arrayBufferToBase64 } from '../utils';
 
-import "./signup.scss";
+import './signup.scss';
 
-const domain = "localhost";
+const domain = 'localhost';
 
 /**
  * Sign Up Component.
@@ -26,14 +26,14 @@ interface SignUpQueryParams {
   challenge: string;
 }
 
-const baseUrl = "http://localhost:4000";
-const origin = "http://localhost:3000";
+const baseUrl = 'http://localhost:4000';
+const origin = 'http://localhost:3000';
 
 const SignUp: Component = () => {
   const navigate = useNavigate();
 
   const [isMounted, setIsMounted] = createSignal<boolean>(false);
-  const [status, setStatus] = createSignal<string>("Ready");
+  const [status, setStatus] = createSignal<string>('Ready');
   const [supportsPasskeys, setSupportsPasskeys] = createSignal<boolean>(false);
 
   const [searchParams, setSearchParams] = useSearchParams<SignUpQueryParams>();
@@ -43,7 +43,7 @@ const SignUp: Component = () => {
   const { email, signup_id, challenge } = searchParams;
 
   if (!email || !signup_id || !challenge) {
-    setStatus("Invalid query params");
+    setStatus('Invalid query params');
   }
 
   async function checkPasskeysSupport() {
@@ -66,7 +66,7 @@ const SignUp: Component = () => {
         // rp -> Relying Party
         rp: {
           id: domain, // your domain (should be sent from the server I guess)
-          name: "Castmill AB", // your company name
+          name: 'Castmill AB', // your company name
         },
         user: {
           id: encoder.encode(signup_id!),
@@ -74,13 +74,13 @@ const SignUp: Component = () => {
           displayName: email!,
         },
         pubKeyCredParams: [
-          { type: "public-key", alg: -8 }, // Ed25519
-          { type: "public-key", alg: -7 }, // ES256
-          { type: "public-key", alg: -257 }, // RS256
+          { type: 'public-key', alg: -8 }, // Ed25519
+          { type: 'public-key', alg: -7 }, // ES256
+          { type: 'public-key', alg: -257 }, // RS256
         ],
         challenge: encoder.encode(searchParams.challenge!),
         authenticatorSelection: {
-          userVerification: "required",
+          userVerification: 'required',
           requireResidentKey: true,
         },
         /*
@@ -94,7 +94,7 @@ const SignUp: Component = () => {
 
     const credential = await navigator.credentials.create(createOptions);
     if (!credential) {
-      alert("Could not create credential");
+      alert('Could not create credential');
       return;
     }
 
@@ -103,7 +103,7 @@ const SignUp: Component = () => {
       publicKeyCredential.response as AuthenticatorAttestationResponse;
     const publicKey = authAttestationResponse.getPublicKey();
     if (!publicKey) {
-      alert("Could not get public key");
+      alert('Could not get public key');
       return;
     }
 
@@ -115,19 +115,19 @@ const SignUp: Component = () => {
     console.log({ clientData, authAttestationResponse, publicKey });
 
     if (
-      clientData.type !== "webauthn.create" ||
-      ("crossOrigin" in clientData && clientData.crossOrigin) ||
+      clientData.type !== 'webauthn.create' ||
+      ('crossOrigin' in clientData && clientData.crossOrigin) ||
       clientData.origin !== origin
     ) {
-      alert("Invalid credential");
+      alert('Invalid credential');
       return;
     }
 
     // Send the credential to the server to be stored
     const result = await fetch(`${baseUrl}/signups/${signup_id}/users`, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         email,
@@ -139,19 +139,19 @@ const SignUp: Component = () => {
           authAttestationResponse.clientDataJSON
         ),
       }),
-      credentials: "include", // Essential for including cookies
+      credentials: 'include', // Essential for including cookies
     });
 
     if (!result.ok) {
-      alert("Something went wrong when signing up, contact support.");
+      alert('Something went wrong when signing up, contact support.');
     } else {
-      navigate("/");
+      navigate('/');
     }
   }
 
   onMount(async () => {
     if (!(await checkPasskeysSupport())) {
-      setStatus("Passkey not supported");
+      setStatus('Passkey not supported');
       return;
     } else {
       setSupportsPasskeys(true);
@@ -184,7 +184,7 @@ const SignUp: Component = () => {
 
           <div class="privacy">
             <p>
-              We care about your privacy. Read our{" "}
+              We care about your privacy. Read our{' '}
               <a href="#">Privacy Policy</a>.
             </p>
           </div>

@@ -18,7 +18,10 @@ config :castmill, CastmillWeb.Endpoint,
     layout: false
   ],
   pubsub_server: Castmill.PubSub,
-  live_view: [signing_salt: "Km2MOAJ1"]
+  live_view: [signing_salt: "Km2MOAJ1"],
+  watchers: [
+    node: ["build.js", "--watch", cd: Path.expand("../assets", __DIR__)]
+  ]
 
 # Configures the mailer
 #
@@ -65,3 +68,10 @@ import_config "#{config_env()}.exs"
 
 # Ensure we use the Accounts impl.
 config :castmill, accounts: Castmill.Accounts
+
+# Configure the AddOns
+config :castmill, :addons, [
+  Castmill.Addons.Onboarding,
+  Castmill.Addons.Content,
+  Castmill.Addons.Devices
+]

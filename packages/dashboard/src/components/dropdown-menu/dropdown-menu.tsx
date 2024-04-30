@@ -6,11 +6,11 @@
  *
  */
 
-import { Component, onCleanup, children, JSX, For } from "solid-js";
-import "./dropdown-menu.scss";
+import { Component, onCleanup, children, JSX, For } from 'solid-js';
+import './dropdown-menu.scss';
 
-import { createSignal, onMount, Show } from "solid-js";
-import { FaSolidAngleDown, FaSolidAngleUp } from "solid-icons/fa";
+import { createSignal, onMount, Show } from 'solid-js';
+import { FaSolidAngleDown, FaSolidAngleUp } from 'solid-icons/fa';
 
 interface DropdownMenuProps {
   ButtonComponent: Component<{ onClick: () => void }>; // Define prop for custom button component
@@ -40,7 +40,7 @@ const DropdownMenu: Component<DropdownMenuProps> = (props) => {
   };
 
   onMount(() => {
-    document.addEventListener("click", handleClickOutside);
+    document.addEventListener('click', handleClickOutside);
 
     const buttonRect = buttonRef.getBoundingClientRect();
     const viewportHeight = window.innerHeight;
@@ -59,7 +59,7 @@ const DropdownMenu: Component<DropdownMenuProps> = (props) => {
   });
 
   onCleanup(() => {
-    document.removeEventListener("click", handleClickOutside);
+    document.removeEventListener('click', handleClickOutside);
   });
 
   return (
@@ -74,7 +74,7 @@ const DropdownMenu: Component<DropdownMenuProps> = (props) => {
         <ul
           ref={menuRef!}
           style={positionStyle()}
-          class={`${isOpen() ? "open" : "close"} menu`}
+          class={`${isOpen() ? 'open' : 'close'} menu`}
         >
           <For each={menuItems}>{(item) => <li>{item}</li>}</For>
         </ul>

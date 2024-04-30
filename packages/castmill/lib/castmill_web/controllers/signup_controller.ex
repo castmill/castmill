@@ -16,33 +16,48 @@ defmodule CastmillWeb.SignUpController do
 
     params = %{"email" => email, "challenge" => challenge}
 
-    if email == nil do
+    # Based on the domain, we need to determine which network the user is signing up for
+    # and set the network_id in the params.
+    # This is a simplified version of the code, in a real-world scenario, we would need to
+    # check the domain against a list of known domains and set the network_id accordingly.
+    domain = conn.host
+    network_id = Accounts.get_network_id_by_domain(domain)
+
+    if network_id == nil do
       conn
       |> put_status(:unprocessable_entity)
-      |> json(%{status: :error})
+      |> json(%{status: :error, msg: "Network not found"})
     else
-      # TODO: What if the email is already in use?
-      # We should probably need to ignore this signup attempt, communicating
-      # the user that the email exists will reveal confidential information
-      # about our users.
-      case Accounts.create_signup(params) do
-        {:ok, signup} ->
-          UserNotifier.deliver_signup_instructions(signup)
+      params = Map.put(params, "network_id", network_id)
 
-          # Return the signup
-          conn
-          # |> put_session(:challenge, challenge)
-          |> put_status(:created)
-          |> json(%{status: :ok, signup: signup})
+      if email == nil do
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{status: :error, msg: "Email is required"})
+      else
+        # TODO: What if the email is already in use?
+        # We should probably need to ignore this signup attempt, communicating
+        # the user that the email exists will reveal confidential information
+        # about our users.
+        case Accounts.create_signup(params) do
+          {:ok, signup} ->
+            UserNotifier.deliver_signup_instructions(signup)
 
-        {:error, _changeset} ->
-          conn
-          |> put_status(:unprocessable_entity)
-          |> json(%{status: :error})
+            # Return the signup
+            conn
+            # |> put_session(:challenge, challenge)
+            |> put_status(:created)
+            |> json(%{status: :ok, signup: signup})
 
-          conn
-          |> put_status(:created)
-          |> send_resp(:no_content, "")
+          {:error, _changeset} ->
+            conn
+            |> put_status(:unprocessable_entity)
+            |> json(%{status: :error})
+
+            conn
+            |> put_status(:created)
+            |> send_resp(:no_content, "")
+        end
       end
     end
   end
@@ -60,7 +75,6 @@ defmodule CastmillWeb.SignUpController do
 
     case Accounts.create_user_from_signup(signup_id, email, credential_id, public_key_spki) do
       {:ok, %{id: user_id} = user} ->
-        # TODO: Send welcome email with on-boarding instructions...
         conn
         |> put_session(:user, user)
         |> SessionUtils.log_in_user(user_id)

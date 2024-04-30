@@ -1,19 +1,19 @@
-import { Component, Show, createEffect, createSignal } from "solid-js";
-import "./topbar.scss";
+import { Component, Show, createEffect, createSignal } from 'solid-js';
+import './topbar.scss';
 
-import { checkAuth, getUser, resetSession } from "../auth";
-import { useNavigate } from "@solidjs/router";
-import TopbarLink from "../topbar-link/topbar-link";
-import Search from "../search/search";
+import { checkAuth, getUser, resetSession } from '../auth';
+import { useNavigate } from '@solidjs/router';
+import TopbarLink from '../topbar-link/topbar-link';
+import Search from '../search/search';
 
 // Find any icon here: https://solid-icons.vercel.app/search/settings
-import { FaRegularBell } from "solid-icons/fa";
-import { TbHelpCircle } from "solid-icons/tb";
+import { FaRegularBell } from 'solid-icons/fa';
+import { TbHelpCircle } from 'solid-icons/tb';
 
-import logo from "../../assets/castmill-logo-topbar.png";
-import DropdownMenu from "../dropdown-menu/dropdown-menu";
+import logo from '../../assets/castmill-logo-topbar.png';
+import DropdownMenu from '../dropdown-menu/dropdown-menu';
 
-const baseUrl = "http://localhost:4000";
+const baseUrl = 'http://localhost:4000';
 
 const Topbar: Component = () => {
   const [triggerLogout, setTriggerLogout] = createSignal(false);
@@ -23,17 +23,17 @@ const Topbar: Component = () => {
   const logout = async () => {
     // Log the user out
     const result = await fetch(`${baseUrl}/sessions`, {
-      method: "DELETE",
+      method: 'DELETE',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
-      credentials: "include",
+      credentials: 'include',
     });
 
     if (result.status === 200) {
       // Reset the user's session
       resetSession();
-      navigate("/login");
+      navigate('/login');
     }
   };
 

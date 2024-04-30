@@ -25,7 +25,7 @@ defmodule CastmillWeb.Admin.UserAuth do
   if you are not using LiveView.
   """
   def log_in_user(conn, user, params \\ %{}) do
-    token = Accounts.generate_user_session_token(user)
+    token = Accounts.generate_user_session_token(user.id)
     user_return_to = get_session(conn, :user_return_to)
 
     conn
