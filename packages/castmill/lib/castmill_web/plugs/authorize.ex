@@ -34,7 +34,9 @@ defmodule Castmill.Plug.Authorize do
 
   def call(conn, %{:parent => parent, :resource => _, :action => action}) do
     # Check if user is root, and in that case, skip the authorization process
-    if conn.assigns[:current_user].is_root do
+    is_root = Map.get(conn.assigns[:current_user], :is_root, false)
+
+    if is_root do
       conn
     else
       with {:ok, true} <-

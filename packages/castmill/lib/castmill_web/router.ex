@@ -24,7 +24,7 @@ defmodule CastmillWeb.Router do
 
   pipeline :api do
     plug(:accepts, ["json"])
-    plug(:authenticate_user)
+    plug(:authenticate_with_token)
   end
 
   scope "/", CastmillWeb do
@@ -126,14 +126,7 @@ defmodule CastmillWeb.Router do
   end
 
   # Allows starting a signup process for Passkeys
-  pipeline :signups do
-    plug(:fetch_session)
-    plug(:accepts, ["json"])
-    plug(CORSPlug, origin: CastmillWeb.Envs.get_dashboard_uri(), credentials: true)
-    plug(:put_secure_browser_headers)
-  end
-
-  pipeline :sessions do
+  pipeline :dashboard do
     plug(:fetch_session)
     plug(:accepts, ["json"])
     plug(CORSPlug, origin: CastmillWeb.Envs.get_dashboard_uri(), credentials: true)
@@ -141,14 +134,14 @@ defmodule CastmillWeb.Router do
   end
 
   scope "/signups", CastmillWeb do
-    pipe_through(:signups)
+    pipe_through(:dashboard)
 
     post("/", SignUpController, :create)
     post("/:id/users", SignUpController, :create_user)
   end
 
   scope "/sessions", CastmillWeb do
-    pipe_through(:signups)
+    pipe_through(:dashboard)
 
     get("/", SessionController, :get)
     post("/", SessionController, :login_user)
@@ -156,9 +149,36 @@ defmodule CastmillWeb.Router do
     get("/challenges", SessionController, :create_challenge)
   end
 
+  scope "/dashboard", CastmillWeb do
+    pipe_through([:dashboard, :authenticate_user])
+    get("/addons", AddonsController, :index)
+    get("/users/:user_id/organizations", OrganizationController, :list_users_organizations)
+
+    get("/organizations/:organization_id/devices", OrganizationController, :list_devices)
+    post("/organizations/:organization_id/devices", OrganizationController, :register_device)
+
+    get(
+      "/organizations/:organization_id/devices/:device_id",
+      OrganizationController,
+      :show_device
+    )
+
+    put(
+      "/organizations/:organization_id/devices/:device_id",
+      OrganizationController,
+      :update_device
+    )
+
+    delete(
+      "/organizations/:organization_id/devices/:device_id",
+      OrganizationController,
+      :delete_device
+    )
+  end
+
   # Other scopes may use custom stacks.
   scope "/api", CastmillWeb do
-    pipe_through([:api, :authenticate_user])
+    pipe_through([:api])
 
     resources "/networks", NetworkController, except: [:new, :edit] do
       pipe_through(:load_network)
@@ -225,21 +245,33 @@ defmodule CastmillWeb.Router do
     end
   end
 
-  defp authenticate_user(conn, _opts) do
+  defp authenticate_user(conn, opts) do
+    # First, attempt to retrieve the user from the session
+    case get_session(conn, :user) do
+      nil ->
+        # If there's no user in the session, proceed with token authentication
+        authenticate_with_token(conn, opts)
+
+      user ->
+        IO.puts("User found in session")
+        # If there is a user in the session, use it directly
+        assign_user(conn, user)
+    end
+  end
+
+  defp authenticate_with_token(conn, _opts) do
     conn
     |> get_bearer_token()
-    |> Castmill.Accounts.get_user_by_access_token(Utils.RemoteIp.get(conn))
     |> case do
-      {:ok, user} ->
-        conn
-        |> assign(:current_user, user)
-        |> assign(:network, user.network)
+      {:ok, token} ->
+        Castmill.Accounts.get_user_by_access_token(token, Utils.RemoteIp.get(conn))
+        |> case do
+          {:ok, user} -> assign_user(conn, user)
+          {:error, message} -> respond_with_error(conn, message)
+        end
 
       {:error, message} ->
-        conn
-        |> put_status(:unauthorized)
-        |> Phoenix.Controller.json(%{message: message})
-        |> halt
+        respond_with_error(conn, message)
     end
   end
 
@@ -247,15 +279,23 @@ defmodule CastmillWeb.Router do
     auth_header = List.first(get_req_header(conn, "authorization"))
 
     case String.split(auth_header || "", " ") do
-      ["Bearer", token] ->
-        token
-
-      [] ->
-        nil
-
-      _ ->
-        raise "Invalid token format"
+      ["Bearer", token] -> {:ok, token}
+      [] -> {:error, "No token provided"}
+      _ -> {:error, "Invalid token format"}
     end
+  end
+
+  defp assign_user(conn, user) do
+    conn
+    |> assign(:current_user, user)
+    |> assign(:network, user.network)
+  end
+
+  defp respond_with_error(conn, message) do
+    conn
+    |> put_status(:unauthorized)
+    |> Phoenix.Controller.json(%{error: message})
+    |> halt()
   end
 
   defp load_network(conn, _params) do

@@ -1,12 +1,14 @@
 defmodule CastmillWeb.SignUpControllerTest do
   use CastmillWeb.ConnCase
 
+  import Castmill.NetworksFixtures
   alias CastmillWeb.Router.Helpers
 
   # Import or define any necessary fixture functions here
   import Castmill.AccountsFixtures
   import Swoosh.TestAssertions
 
+  @tag :signups
   setup %{conn: conn} do
     Mox.stub(Castmill.AccountsMock, :generate_user_session_token, fn _user_id ->
       "mock_token"
@@ -17,8 +19,13 @@ defmodule CastmillWeb.SignUpControllerTest do
 
   describe "create/2" do
     test "successfully creates a signup and sends instructions", %{conn: conn} do
+      domain = conn.host
+      _network = network_fixture(%{domain: domain})
+
       email = "test@example.com"
-      conn = post(conn, Helpers.sign_up_path(conn, :create), %{email: email})
+
+      conn =
+        post(conn, Helpers.sign_up_path(conn, :create), %{email: email})
 
       assert json_response(conn, 201)["status"] == "ok"
 
@@ -37,7 +44,12 @@ defmodule CastmillWeb.SignUpControllerTest do
   describe "create_user/2" do
     setup do
       # Define or use a fixture function
-      signup = signup_fixture(%{email: "user@example.com"})
+      network = network_fixture(%{domain: "example.com"})
+      challenge = CastmillWeb.SessionUtils.new_challenge()
+
+      signup =
+        signup_fixture(%{email: "user@example.com", network_id: network.id, challenge: challenge})
+
       {:ok, signup: signup}
     end
 

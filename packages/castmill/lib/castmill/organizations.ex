@@ -8,6 +8,7 @@ defmodule Castmill.Organizations do
 
   alias Castmill.Organizations.Organization
   alias Castmill.Organizations.OrganizationsUsersAccess
+  alias Castmill.Organizations.OrganizationsUsers
   alias Castmill.Protocol.Access
   alias Castmill.QueryHelpers
 
@@ -41,7 +42,6 @@ defmodule Castmill.Organizations do
       [%Organization{}, ...]
 
   """
-
   def list_organizations(%{search: search, page: page, page_size: page_size}) do
     offset = if page_size == nil, do: 0, else: max((page - 1) * page_size, 0)
 
@@ -71,6 +71,21 @@ defmodule Castmill.Organizations do
     Organization.base_query()
     |> QueryHelpers.where_name_like(search)
     |> Repo.aggregate(:count, :id)
+  end
+
+  @doc """
+    List all organizations a user is part of
+  """
+  def list_user_organizations(user_id) do
+    query =
+      from(ou in OrganizationsUsers,
+        join: o in Organization,
+        on: ou.organization_id == o.id,
+        where: ou.user_id == ^user_id,
+        select: o
+      )
+
+    Repo.all(query)
   end
 
   @doc """
@@ -167,6 +182,30 @@ defmodule Castmill.Organizations do
   """
   def change_organization(%Organization{} = organization, attrs \\ %{}) do
     Organization.changeset(organization, attrs)
+  end
+
+  @doc """
+    Returns the role of a given user in an organization.
+
+    ## Examples
+
+        iex> get_user_role(organization_id, user_id)
+        "admin"
+  """
+  def get_user_role(organization_id, user_id) do
+    organization_user =
+      Repo.get_by(OrganizationsUsers, organization_id: organization_id, user_id: user_id)
+
+    if organization_user != nil do
+      organization_user.role
+    else
+      nil
+    end
+  end
+
+  def is_admin?(organization_id, user_id) do
+    role = get_user_role(organization_id, user_id)
+    role == :admin
   end
 
   @doc """

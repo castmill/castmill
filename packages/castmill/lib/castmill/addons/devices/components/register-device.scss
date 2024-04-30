@@ -1,0 +1,12 @@
+.bottom-buttons {
+  display: flex;
+  flex-direction: row;
+  margin-top: 2em;
+  gap: 1em;
+}
+
+.error {
+  font-size: 0.8em;
+  color: #ff5151;
+  margin-top: 0.3em;
+}

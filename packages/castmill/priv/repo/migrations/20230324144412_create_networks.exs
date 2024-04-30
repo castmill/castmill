@@ -9,7 +9,7 @@ defmodule Castmill.Repo.Migrations.CreateNetworks do
       add :copyright, :string
       add :email, :string, null: false
       add :logo, :string
-      add :domain, :string
+      add :domain, :string, null: false
 
       add :meta, :map
 
@@ -17,5 +17,6 @@ defmodule Castmill.Repo.Migrations.CreateNetworks do
     end
 
     create unique_index(:networks, [:name])
+    create unique_index(:networks, [:domain])
   end
 end

@@ -1,5 +1,6 @@
 defmodule Castmill.HooksTest do
   use ExUnit.Case
+
   alias Castmill.Hooks
 
   import Castmill.OrganizationsFixtures

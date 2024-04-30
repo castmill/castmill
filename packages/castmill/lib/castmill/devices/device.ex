@@ -5,34 +5,53 @@ defmodule Castmill.Devices.Device do
 
   @primary_key {:id, :binary_id, autogenerate: true}
 
+  @derive {Jason.Encoder,
+           only: [
+             :id,
+             :name,
+             :description,
+             :last_ip,
+             :last_online,
+             :loc_lat,
+             :loc_long,
+             :meta,
+             :settings,
+             :timezone,
+             :user_agent,
+             :version,
+             :volume
+           ]}
+
   schema "devices" do
-    field :info, :map
-    field :last_ip, :string
-    field :last_online, :date
-    field :loc_lat, :float
-    field :loc_long, :float
-    field :meta, :map
-    field :name, :string
-    field :description, :string
-    field :settings, :map
-    field :timezone, :string
-    field :user_agent, :string
-    field :version, :string
-    field :volume, :integer
-    field :hardware_id, :string
-    field :token_hash, :string
+    field(:info, :map)
+    field(:last_ip, :string)
+    field(:last_online, :date)
+    field(:loc_lat, :float)
+    field(:loc_long, :float)
+    field(:meta, :map)
+    field(:name, :string)
+    field(:description, :string)
+    field(:settings, :map)
+    field(:timezone, :string)
+    field(:user_agent, :string)
+    field(:version, :string)
+    field(:volume, :integer)
+    field(:hardware_id, :string)
+    field(:token_hash, :string)
 
-    field :token, :string, virtual: true
+    field(:token, :string, virtual: true)
 
-    belongs_to :organization, Castmill.Organizations.Organization,
+    belongs_to(:organization, Castmill.Organizations.Organization,
       foreign_key: :organization_id,
       type: Ecto.UUID
+    )
 
-    belongs_to :resource, Castmill.Resources.Resource, foreign_key: :resource_id
+    belongs_to(:resource, Castmill.Resources.Resource, foreign_key: :resource_id)
 
-    many_to_many :calendars, Castmill.Devices.DevicesCalendars,
+    many_to_many(:calendars, Castmill.Devices.DevicesCalendars,
       join_through: "devices_calendars",
       on_replace: :delete
+    )
 
     timestamps()
   end
@@ -104,7 +123,7 @@ defmodule Castmill.Devices.Device do
   defp put_pass_hash(changeset), do: changeset
 
   def base_query() do
-    from device in Castmill.Devices.Device, as: :device
+    from(device in Castmill.Devices.Device, as: :device)
   end
 
   defp add_hash(password, opts) do

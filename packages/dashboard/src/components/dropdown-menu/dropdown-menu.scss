@@ -1,4 +1,4 @@
-@use "../../colors.scss";
+@use '../../colors.scss';
 
 .castmill-dropdown-menu {
   padding: 0.5rem;
@@ -33,7 +33,9 @@
       border: 1px solid colors.$separator-color;
       position: absolute;
       z-index: 0;
-      transition: opacity 0.3s ease, transform 0.3s ease;
+      transition:
+        opacity 0.3s ease,
+        transform 0.3s ease;
 
       display: flex;
       flex-direction: column;

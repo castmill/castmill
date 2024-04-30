@@ -2,7 +2,6 @@
   "name": "@castmill/device",
   "version": "1.0.0",
   "description": "",
-  "exports": "./dist/index.js",
   "type": "module",
   "scripts": {
     "format": "prettier --write .",
@@ -12,10 +11,14 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "serve": "vite preview",
-    "build": "rimraf dist && yarn ts-types && vite build",
+    "build": "rimraf dist && vite build",
     "build:watch": "tsc --watch",
     "prepare": "yarn build",
     "ts-types": "tsc --emitDeclarationOnly --outDir dist"
+  },
+  "exports": {
+    ".": "./dist/index.js",
+    "./dist/style.css": "./dist/style.css"
   },
   "license": "AGPL-3.0-or-later",
   "devDependencies": {
@@ -25,8 +28,8 @@
     "jsdom": "^24.0.0",
     "prettier": "^3.2.5",
     "typescript": "^4.9.5",
-    "vite": "^4.1.1",
-    "vite-plugin-solid": "^2.5.0",
+    "vite": "^5.2.10",
+    "vite-plugin-solid": "^2.10.2",
     "vitest": "^1.2.2"
   },
   "dependencies": {

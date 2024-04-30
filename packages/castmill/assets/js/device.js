@@ -1,7 +1,7 @@
 /**
  * Device bootstrapping.
  *
- * (c) 2011-2023 Castmill AB All Rights Reserved.
+ * (c) 2011-2024 Castmill AB All Rights Reserved.
  *
  */
 import { StorageBrowser } from "@castmill/cache";

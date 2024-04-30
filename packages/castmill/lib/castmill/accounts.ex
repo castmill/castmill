@@ -12,6 +12,8 @@ defmodule Castmill.Accounts do
   alias Castmill.Accounts.UserToken
   alias Castmill.Accounts.UserNotifier
   alias Castmill.Accounts.User
+  alias Castmill.Organizations.Organization
+  alias Castmill.Organizations.OrganizationsUsers
   alias Castmill.Accounts.SignUp
   alias Castmill.Accounts.UserCredential
   alias Castmill.QueryHelpers
@@ -356,9 +358,11 @@ defmodule Castmill.Accounts do
   def create_user_from_signup(signup_id, email, credential_id, public_key_spki) do
     Repo.transaction(fn ->
       with {:ok, signup} <- validate_signup(signup_id, email),
-           {:ok, %{id: user_id} = user} <- create_user_for_email(email),
+           {:ok, %{id: user_id} = user} <- create_user_and_organization(email, signup.network_id),
            :ok <- create_user_credential(user_id, credential_id, public_key_spki),
            :ok <- update_signup_status(signup, user_id) do
+        Castmill.Hooks.trigger_hook(:user_signup, %{user_id: user_id, email: email})
+
         sanitize_user(user)
       else
         {:error, error} ->
@@ -370,6 +374,24 @@ defmodule Castmill.Accounts do
 
   def get_credential(id) do
     Repo.get(UserCredential, id)
+  end
+
+  def get_network_id_by_domain(domain) do
+    from(network in Castmill.Networks.Network,
+      where: network.domain == ^domain,
+      select: network.id
+    )
+    |> Repo.one()
+  end
+
+  ## Addons
+  def list_addons(_user_id) do
+    # Get all addons from the configuration
+    Application.get_env(:castmill, :addons)
+    # Call component_info/0 on each
+    |> Enum.map(& &1.component_info())
+    # Exclude addons that return nil
+    |> Enum.filter(&(&1 != nil))
   end
 
   defp validate_signup(signup_id, email) do
@@ -391,13 +413,29 @@ defmodule Castmill.Accounts do
     end
   end
 
-  defp create_user_for_email(email) do
-    %User{}
-    |> User.changeset(%{name: email, email: email})
-    |> Repo.insert()
-    |> case do
-      {:ok, user} -> {:ok, user}
-      {:error, changeset} -> {:error, inspect(changeset)}
+  # Creates a user with the given email and network_id with a default organization
+  # with the same name as the user.
+  defp create_user_and_organization(email, network_id) do
+    with {:ok, user} <-
+           Repo.insert(
+             User.changeset(%User{}, %{name: email, email: email, network_id: network_id})
+           ),
+         {:ok, organization} <-
+           Repo.insert(
+             Organization.changeset(%Organization{}, %{name: email, network_id: network_id})
+           ),
+         {:ok, _org_user} <-
+           Repo.insert(
+             OrganizationsUsers.changeset(%OrganizationsUsers{}, %{
+               role: :admin,
+               organization_id: organization.id,
+               user_id: user.id
+             })
+           ) do
+      {:ok, user}
+    else
+      {:error, changeset} ->
+        {:error, inspect(changeset)}
     end
   end
 

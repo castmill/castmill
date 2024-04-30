@@ -1,14 +1,20 @@
-import { RouteSectionProps } from "@solidjs/router";
-import { Component } from "solid-js";
+import { RouteSectionProps } from '@solidjs/router';
+import { Component } from 'solid-js';
 
-import SidePanel from "../sidepanel/sidepanel";
+import SidePanel from '../sidepanel/sidepanel';
 
-import "./dashboard.scss";
+import './dashboard.scss';
+import { AddOnTree } from '../../classes/addon-tree';
 
-const Dashboard: Component<RouteSectionProps<unknown>> = (props) => {
+// Define a type that includes RouteSectionProps and your addons
+interface DashboardProps extends RouteSectionProps<unknown> {
+  addons: AddOnTree; // Use a more specific type for your addons if possible
+}
+
+const Dashboard: Component<DashboardProps> = (props) => {
   return (
     <div class="castmill-dashboard">
-      <SidePanel />
+      <SidePanel addons={props.addons} />
       <div class="content">
         <h1>Dashboard</h1>
         {props.children}

@@ -1,0 +1,39 @@
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%; // Makes the button circular
+  border: none;
+  background-color: #007bff; // Default background color
+  color: white;
+  cursor: pointer;
+  transition: background-color 0.3s;
+
+  &:hover {
+    background-color: darken(#007bff, 10%);
+  }
+
+  &.icon-button-disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+  }
+
+  // Color modifiers
+  &-primary {
+    background-color: #007bff;
+  }
+  &-secondary {
+    background-color: #6c757d;
+  }
+  &-danger {
+    background-color: #dc3545;
+  }
+  &-success {
+    background-color: #28a745;
+  }
+  &-info {
+    background-color: #17a2b8;
+  }
+}

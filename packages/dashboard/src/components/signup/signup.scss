@@ -1,4 +1,4 @@
-@use "../../colors.scss";
+@use '../../colors.scss';
 
 .castmill-signup {
   display: flex;
@@ -32,7 +32,7 @@
     font-size: 16px;
   }
 
-  input[type="text"] {
+  input[type='text'] {
     width: 20em;
     padding: 10px 20px;
     margin: 10px 0;

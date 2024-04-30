@@ -10,10 +10,10 @@
  *
  */
 
-import { Component } from "solid-js";
-import { A } from "@solidjs/router";
+import { Component } from 'solid-js';
+import { A } from '@solidjs/router';
 
-import "./panel-item.scss";
+import './panel-item.scss';
 
 interface PanelItemProps {
   to: string;
@@ -22,6 +22,8 @@ interface PanelItemProps {
 }
 
 const PanelItem: Component<PanelItemProps> = (props) => {
+  const result = props.icon({});
+
   return (
     <span class="castmill-panel-item">
       <A href={props.to}>

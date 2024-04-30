@@ -1,5 +1,5 @@
-import { Component } from "solid-js";
-import "./settings-page.scss";
+import { Component } from 'solid-js';
+import './settings-page.scss';
 
 const SettingsPage: Component = () => {
   return (
