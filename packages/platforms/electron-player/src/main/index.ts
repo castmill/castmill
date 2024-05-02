@@ -1,4 +1,10 @@
-import { app, shell, BrowserWindow, ipcMain, IpcMainInvokeEvent } from 'electron';
+import {
+  app,
+  shell,
+  BrowserWindow,
+  ipcMain,
+  IpcMainInvokeEvent,
+} from 'electron';
 import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import Store from 'electron-store';
@@ -88,17 +94,72 @@ app.whenReady().then(() => {
     return api.getMachineGUID();
   });
 
-  ipcMain.handle(Action.GET_STORE_VALUE, (_event: IpcMainInvokeEvent, key: string) => {
-    return store.get(key);
-  });
+  ipcMain.handle(
+    Action.GET_STORE_VALUE,
+    (_event: IpcMainInvokeEvent, key: string) => {
+      return store.get(key);
+    }
+  );
 
-  ipcMain.on(Action.SET_STORE_VALUE, (_event: IpcMainInvokeEvent, key: string, value: string) => {
-    store.set(key, value);
-  });
+  ipcMain.on(
+    Action.SET_STORE_VALUE,
+    (_event: IpcMainInvokeEvent, key: string, value: string) => {
+      store.set(key, value);
+    }
+  );
 
-  ipcMain.on(Action.DELETE_STORE_VALUE, (_event: IpcMainInvokeEvent, key: string) => {
-    store.delete(key);
-  });
+  ipcMain.on(
+    Action.DELETE_STORE_VALUE,
+    (_event: IpcMainInvokeEvent, key: string) => {
+      store.delete(key);
+    }
+  );
+
+  ipcMain.handle(
+    Action.FS_INIT,
+    (_event: IpcMainInvokeEvent, storagePath: string) =>
+      api.initStorage(storagePath)
+  );
+
+  ipcMain.handle(
+    Action.FS_INFO,
+    (_event: IpcMainInvokeEvent, storagePath: string) =>
+      api.getStorageInfo(storagePath)
+  );
+
+  ipcMain.handle(
+    Action.FS_LIST_FILES,
+    (_event: IpcMainInvokeEvent, storagePath: string) =>
+      api.listFiles(storagePath)
+  );
+
+  ipcMain.handle(
+    Action.FS_STORE_FILE,
+    (
+      _event: IpcMainInvokeEvent,
+      storagePath: string,
+      url: string,
+      data?: any
+    ) => api.storeFile(storagePath, url, data)
+  );
+
+  ipcMain.handle(
+    Action.FS_RETRIEVE_FILE,
+    (_event: IpcMainInvokeEvent, storagePath: string, url: string) =>
+      api.retrieveFile(storagePath, url)
+  );
+
+  ipcMain.handle(
+    Action.FS_DELETE_FILE,
+    (_event: IpcMainInvokeEvent, storagePath: string, url: string) =>
+      api.deleteFile(storagePath, url)
+  );
+
+  ipcMain.handle(
+    Action.FS_DELETE_ALL_FILES,
+    (_event: IpcMainInvokeEvent, storagePath: string) =>
+      api.deleteAllFiles(storagePath)
+  );
 
   createWindow();
 
@@ -107,7 +168,6 @@ app.whenReady().then(() => {
     // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
   });
-
 });
 
 // Quit when all windows are closed, except on macOS. There, it's common
