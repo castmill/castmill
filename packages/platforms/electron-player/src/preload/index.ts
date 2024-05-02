@@ -39,7 +39,6 @@ const fsApi = {
 async function getHardwareInfo() {
   try {
     const data = await si.system();
-    console.log(data); // Logs the complete system data for debugging
     return data.model; // Returns the model name, e.g., "MacBookPro15,1" or a specific Windows/Linux machine model
   } catch (error) {
     console.error('Error fetching system information:', error);
