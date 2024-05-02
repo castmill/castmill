@@ -1,7 +1,6 @@
 import { Machine, DeviceInfo } from '@castmill/device';
 
 export class ElectronMachine implements Machine {
-
   async getMachineGUID(): Promise<string> {
     return window.api.getMachineGUID();
   }
