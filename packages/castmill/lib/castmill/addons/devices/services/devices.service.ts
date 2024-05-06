@@ -20,7 +20,7 @@ export const DevicesService = {
     });
 
     if (response.status >= 200 && response.status < 300) {
-      return (await response.json())?.data as Device;
+      return (await response.json()) as Device;
     } else {
       let errMsg = "";
       try {
@@ -54,7 +54,7 @@ export const DevicesService = {
     });
 
     if (response.status >= 200 && response.status < 300) {
-      return await response.json() as { rows: Device[], count: number };
+      return await response.json() as { data: Device[], count: number };
     } else {
       let errMsg = "";
       try {

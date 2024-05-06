@@ -1,25 +1,40 @@
 defmodule CastmillWeb.ResourceController do
   use CastmillWeb, :controller
+  use CastmillWeb.AccessActorBehaviour
 
   alias Castmill.Organizations
-  alias Castmill.Plug.Authorize
+  alias Castmill.Plug.AuthorizeDash
+
   alias Castmill.Resources.Media
   alias Castmill.Resources.Calendar
   alias Castmill.Resources.Playlist
   alias Castmill.Resources.CalendarEntry
   alias Castmill.Devices.Device
+  alias Castmill.Devices
 
   action_fallback(CastmillWeb.FallbackController)
 
-  plug(
-    Authorize,
-    %{parent: :organization, resource: :not_needed, action: :index} when action in [:index]
-  )
+  @impl CastmillWeb.AccessActorBehaviour
 
-  plug(
-    Authorize,
-    %{parent: :organization, resource: :not_needed, action: :create} when action in [:create]
-  )
+  def check_access(actor_id, action, %{
+        "organization_id" => organization_id,
+        "resources" => resources
+      }) do
+    if Organizations.is_admin?(organization_id, actor_id) or
+         Organizations.has_access(organization_id, actor_id, resources, action) do
+      {:ok, true}
+    else
+      {:ok, false}
+    end
+  end
+
+  # Default implementation for other actions not explicitly handled above
+  def check_access(_actor_id, _action, _params) do
+    # Default to false or implement your own logic based on other conditions
+    {:ok, false}
+  end
+
+  plug(AuthorizeDash)
 
   @index_params_schema %{
     resources: [type: :string, required: true],
@@ -28,53 +43,38 @@ defmodule CastmillWeb.ResourceController do
     search: :string
   }
 
-  def index(conn, %{"resources" => "medias"} = params) do
-    with {:ok, params} <- Tarams.cast(params, @index_params_schema) do
-      medias = Organizations.list_medias(params)
-      count = Organizations.count_medias(params)
-      render(conn, :index, medias: medias, count: count)
-    else
-      {:error, errors} ->
-        conn
-        |> put_status(:bad_request)
-        |> Phoenix.Controller.json(%{errors: errors})
-        |> halt()
-    end
-  end
-
-  def index(conn, %{"resources" => "playlists"} = params) do
-    with {:ok, params} <- Tarams.cast(params, @index_params_schema) do
-      playlists = Organizations.list_playlists(params)
-      count = Organizations.count_playlists(params)
-      render(conn, :index, playlists: playlists, count: count)
-    else
-      {:error, errors} ->
-        conn
-        |> put_status(:bad_request)
-        |> Phoenix.Controller.json(%{errors: errors})
-        |> halt()
-    end
-  end
-
-  def index(conn, %{"resources" => "calendars"} = params) do
-    with {:ok, params} <- Tarams.cast(params, @index_params_schema) do
-      calendars = Organizations.list_calendars(params)
-      count = Organizations.count_calendars(params)
-      render(conn, :index, calendars: calendars, count: count)
-    else
-      {:error, errors} ->
-        conn
-        |> put_status(:bad_request)
-        |> Phoenix.Controller.json(%{errors: errors})
-        |> halt()
-    end
-  end
-
+  # The only reason we have a specific index function for devices is that we need to
+  # set the online status of the devices before returning them. Maybe there are better
+  # ways to do this.
   def index(conn, %{"resources" => "devices"} = params) do
     with {:ok, params} <- Tarams.cast(params, @index_params_schema) do
-      devices = Organizations.list_devices(params)
-      count = Organizations.count_devices(params)
-      render(conn, :index, devices: devices, count: count)
+      response = %{
+        data: Devices.set_devices_online(Organizations.list_devices(params)),
+        count: Organizations.count_devices(params)
+      }
+
+      conn
+      |> put_status(:ok)
+      |> json(response)
+    else
+      {:error, errors} ->
+        conn
+        |> put_status(:bad_request)
+        |> Phoenix.Controller.json(%{errors: errors})
+        |> halt()
+    end
+  end
+
+  def index(conn, params) do
+    with {:ok, params} <- Tarams.cast(params, @index_params_schema) do
+      response = %{
+        data: Organizations.list_resources(params),
+        count: Organizations.count_resources(params)
+      }
+
+      conn
+      |> put_status(:ok)
+      |> json(response)
     else
       {:error, errors} ->
         conn

@@ -12,6 +12,7 @@ defmodule Castmill.Devices.Device do
              :description,
              :last_ip,
              :last_online,
+             :online,
              :loc_lat,
              :loc_long,
              :meta,
@@ -25,7 +26,8 @@ defmodule Castmill.Devices.Device do
   schema "devices" do
     field(:info, :map)
     field(:last_ip, :string)
-    field(:last_online, :date)
+    field(:last_online, :naive_datetime)
+    field(:online, :boolean, default: false)
     field(:loc_lat, :float)
     field(:loc_long, :float)
     field(:meta, :map)
@@ -100,6 +102,7 @@ defmodule Castmill.Devices.Device do
       :last_ip,
       :token,
       :meta,
+      :online,
       :last_online,
       :user_agent,
       :timezone,

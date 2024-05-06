@@ -5,6 +5,7 @@
 import { createStore } from 'solid-js/store';
 import { AddOn } from '../interfaces/addon.interface';
 import { Organization } from '../interfaces/organization';
+import { Socket } from 'phoenix';
 
 interface CastmillStore {
   loadedAddons: boolean;
@@ -17,6 +18,8 @@ interface CastmillStore {
     data: Organization[];
     selectedId: string | null;
   };
+
+  socket?: Socket;
 }
 
 const [store, setStore] = createStore<CastmillStore>({

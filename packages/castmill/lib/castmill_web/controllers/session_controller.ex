@@ -29,9 +29,16 @@ defmodule CastmillWeb.SessionController do
         |> json(%{status: :error, message: "Not logged in"})
 
       _ ->
+        token =
+          Phoenix.Token.sign(
+            CastmillWeb.Endpoint,
+            CastmillWeb.Envs.get_dashboard_user_token_salt(),
+            user.id
+          )
+
         conn
         |> put_status(:ok)
-        |> json(%{status: :ok, user: user})
+        |> json(%{status: :ok, user: user, token: token})
     end
   end
 

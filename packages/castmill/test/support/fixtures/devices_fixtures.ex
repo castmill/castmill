@@ -13,7 +13,13 @@ defmodule Castmill.DevicesFixtures do
     {:ok, device} =
       attrs
       |> Enum.into(%{
-        name: "Hangar 42"
+        name: "Hangar 42",
+        last_ip: "192.168.1.2",
+        hardware_id: "some device id",
+        token: "some token",
+        user_agent: "some user agent",
+        timezone: "Europe/Amsterdam",
+        version: "1.0.0",
       })
       |> Castmill.Devices.create_device()
 

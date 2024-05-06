@@ -58,6 +58,26 @@ defmodule Castmill.Devices do
 
   def get_device(_), do: nil
 
+  # compute online based on last_online date and online status
+  # If online is false, then the device is offline
+  # If online is true, and last_online is more than 1 minute ago, then the device is offline
+  def set_devices_online(devices) do
+    current_time = DateTime.utc_now() |> DateTime.to_naive()
+
+    Enum.map(devices, fn device ->
+      Map.update!(device, :online, fn online ->
+        online && check_online_within_minute(device.last_online, current_time)
+      end)
+    end)
+  end
+
+  defp check_online_within_minute(nil, _current_time), do: false
+
+  defp check_online_within_minute(last_online, current_time) do
+    one_minute_ago = NaiveDateTime.add(current_time, -60, :second)
+    NaiveDateTime.compare(last_online, one_minute_ago) == :gt
+  end
+
   @doc """
   Returns the list of devices for a given organization.
 
@@ -124,6 +144,32 @@ defmodule Castmill.Devices do
 
   def count_devices(_params) do
     count_devices(%{organization_id: nil, search: nil})
+  end
+
+  @doc """
+    Mark a device as online. Sets the online field as well as the last_online field.
+  """
+  def mark_online(device_id, ip) do
+    fast_update_device(device_id, %{online: true, last_online: DateTime.utc_now(), last_ip: ip})
+  end
+
+  @doc """
+    Mark a device as offline. Sets the online field as well as the last_online field.
+  """
+  def mark_offline(device_id) do
+    fast_update_device(device_id, %{online: false, last_online: DateTime.utc_now()})
+  end
+
+  @doc """
+    Fast device update without validations.
+  """
+  def fast_update_device(id, attrs) do
+    # Convert the map `attrs` to a keyword list if it's not already
+    updates = Enum.into(attrs, [])
+
+    query = from(d in Device, where: d.id == ^id)
+    {1, nil} = Repo.update_all(query, set: updates)
+    {:ok, nil}
   end
 
   @doc """

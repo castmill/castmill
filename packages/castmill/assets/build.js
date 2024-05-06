@@ -49,7 +49,7 @@ let baseOpts = {
   },
   plugins: [inlineCSSPlugin, solidPlugin()],
   // TODO: It would be important to be able to mark SolidJS as external as it takes a lot of Kb per component otherwise
-  external: ['solid-js', 'solid-js/web'], // Mark SolidJS and its modules as external
+  external: ['solid-js', 'solid-js/web', '@solidjs/router'], // Mark SolidJS and its modules as external
 };
 
 // Add minify option for deployment

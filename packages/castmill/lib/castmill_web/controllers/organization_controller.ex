@@ -20,15 +20,6 @@ defmodule CastmillWeb.OrganizationController do
     {:ok, false}
   end
 
-  def check_access(actor_id, :list_devices, %{"organization_id" => organization_id}) do
-    if Organizations.is_admin?(organization_id, actor_id) or
-         Organizations.has_access(organization_id, actor_id, "devices", "list") do
-      {:ok, true}
-    else
-      {:ok, false}
-    end
-  end
-
   def check_access(actor_id, :register_device, %{"organization_id" => organization_id}) do
     if Organizations.is_admin?(organization_id, actor_id) or
          Organizations.has_access(organization_id, actor_id, "devices", "register") do
@@ -113,16 +104,5 @@ defmodule CastmillWeb.OrganizationController do
       |> put_resp_header("location", ~p"/devices/#{device.id}")
       |> json(device)
     end
-  end
-
-  def list_devices(conn, params) do
-    response = %{
-      rows: Castmill.Devices.list_devices(params),
-      count: Castmill.Devices.count_devices(params)
-    }
-
-    conn
-    |> put_status(:ok)
-    |> json(response)
   end
 end

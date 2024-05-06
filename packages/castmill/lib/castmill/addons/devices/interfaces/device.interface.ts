@@ -1,9 +1,10 @@
 export interface Device {
-    name: string;
-    online: boolean;
-    location: string;
-    city: string;
-    country: string;
-    ip: string;
-    id: string;
+  id: string;
+  name: string;
+  online: boolean;
+  last_online: Date;
+  location: string;
+  city: string;
+  country: string;
+  ip: string;
 }

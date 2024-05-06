@@ -1,3 +1,4 @@
+import { EventEmitter } from 'eventemitter3';
 import { Channel, Socket } from 'phoenix';
 import { Player, Playlist, Renderer, Viewport, Layer } from '@castmill/player';
 import { ResourceManager, Cache, StorageIntegration } from '@castmill/cache';
@@ -6,6 +7,8 @@ import { getCastmillIntro } from './intro';
 import { Calendar, JsonCalendar } from './calendar';
 import { Schema, JsonPlaylist, JsonPlaylistItem } from '../interfaces';
 import { JsonMedia } from '../interfaces/json-media';
+
+const HEARTBEAT_INTERVAL = 1000 * 30; // 30 seconds
 
 export enum Status {
   Registering = 'registering',
@@ -25,7 +28,7 @@ export interface DeviceMessage {
  * remotely.
  *
  */
-export class Device {
+export class Device extends EventEmitter {
   private closing = false;
   private cache: Cache;
   private resourceManager: ResourceManager;
@@ -33,6 +36,9 @@ export class Device {
   private player?: Player;
   private calendars: Calendar[] = [];
   private calendarIndex = 0;
+
+  public id?: string;
+  public name?: string;
 
   constructor(
     private integration: Machine,
@@ -45,6 +51,8 @@ export class Device {
       baseUrl: string;
     }
   ) {
+    super();
+
     this.cache = new Cache(
       this.storageIntegration,
       'castmill-device',
@@ -64,10 +72,15 @@ export class Device {
       throw new Error('Invalid credentials');
     }
 
-    const { device } = JSON.parse(credentials);
+    const { device } = JSON.parse(credentials) as { device: { id: string, name: string, token: string } }
     if (!device) {
       throw new Error('Invalid credentials');
     }
+
+    this.id = device.id;
+    this.name = device.name;
+
+    this.emit("started", device);
 
     const renderer = new Renderer(el);
     this.player = new Player(this.contentQueue, renderer, this.opts?.viewport);
@@ -82,7 +95,7 @@ export class Device {
      *
      */
 
-    // Main loop. This loop will run until the device is stopped.s
+    // Main loop. This loop will run until the device is stopped.
     while (!this.closing) {
       // Add next batch of items from the next calendar.
       // Play until only one item remains in the playlist or the device is stopped.
@@ -93,8 +106,7 @@ export class Device {
           if (entry) {
             const jsonPlaylist: JsonPlaylist | void =
               await this.resourceManager.getData(
-                `${this.opts?.baseUrl || ''}devices/${device.id}/playlists/${
-                  entry.playlist
+                `${this.opts?.baseUrl || ''}devices/${device.id}/playlists/${entry.playlist
                 }`,
                 1000
               );
@@ -237,6 +249,7 @@ export class Device {
 
       const channel = await this.login(credentials, hardwareId);
       this.initListeners(channel);
+      this.initHeartbeat(channel);
 
       const rawCalendars = await this.resourceManager.getData(
         `${this.opts?.baseUrl || ''}/devices/${device.id}/calendars`,
@@ -340,6 +353,12 @@ export class Device {
 
       console.log('Update calendars', payload);
     });
+  }
+
+  private initHeartbeat(channel: Channel) {
+    setInterval(() => {
+      channel.push('heartbeat', {});
+    }, HEARTBEAT_INTERVAL);
   }
 
   /*

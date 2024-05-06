@@ -3,18 +3,6 @@ defmodule Castmill.Resources.Media do
   import Ecto.Changeset
   import Ecto.Query, warn: false
 
-  @derive {Jason.Encoder,
-           only: [
-             :id,
-             :mimetype,
-             :name,
-             :status,
-             :status_message,
-             :meta,
-             :files,
-             :inserted_at,
-             :updated_at
-           ]}
   schema "medias" do
     field(:mimetype, :string)
     field(:name, :string)
@@ -77,5 +65,29 @@ defmodule Castmill.Resources.Media do
       true ->
         changeset
     end
+  end
+end
+
+defimpl Jason.Encoder, for: Castmill.Resources.Media do
+  def encode(%Castmill.Resources.Media{} = media, opts) do
+    files =
+      case media.files do
+        %Ecto.Association.NotLoaded{} -> []
+        files -> files
+      end
+
+    map = %{
+      id: media.id,
+      mimetype: media.mimetype,
+      name: media.name,
+      status: media.status,
+      status_message: media.status_message,
+      meta: media.meta,
+      files: files,
+      inserted_at: media.inserted_at,
+      updated_at: media.updated_at
+    }
+
+    Jason.Encode.map(map, opts)
   end
 end

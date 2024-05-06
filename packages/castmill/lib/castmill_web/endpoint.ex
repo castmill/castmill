@@ -21,6 +21,21 @@ defmodule CastmillWeb.Endpoint do
     websocket: [connect_info: [:peer_data, :trace_context_headers, :x_headers, :uri]]
   )
 
+  # Socket used for real time communication with the user's browser (mostly observing devices)
+  # This socket must use the same authentication as the user's browser (dashboard endpoints)
+  socket("/user_socket", CastmillWeb.UserSocket,
+    websocket: [
+      connect_info: [
+        :peer_data,
+        :trace_context_headers,
+        :x_headers,
+        :uri,
+        session: @session_options,
+        check_origin: true
+      ]
+    ]
+  )
+
   # Serve at "/" the static files from "priv/static" directory.
   #
   # You should set gzip to true if you are running phx.digest

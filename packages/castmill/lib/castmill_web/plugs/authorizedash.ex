@@ -7,18 +7,16 @@ defmodule Castmill.Plug.AuthorizeDash do
   def init(default), do: default
 
   def call(conn, _) do
-    # Check if user is root, and in that case, skip the authorization process
+    # Check if the user is logged in
     if conn.assigns[:current_user] == nil do
       deny_access(conn)
     else
+      # Check if user is root, and in that case, skip the authorization process
       is_root = Map.get(conn.assigns[:current_user], :is_root, false)
 
       if is_root do
         conn
       else
-        # Not sure how standard this is, but it works for now
-        # action = Map.get(conn.private, :phoenix_action)
-        # controller = Map.get(conn.private, :phoenix_controller)
         action = Phoenix.Controller.action_name(conn)
         controller = Phoenix.Controller.controller_module(conn)
 

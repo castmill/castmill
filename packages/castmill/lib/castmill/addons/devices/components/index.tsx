@@ -1,3 +1,5 @@
+import { Socket, Channel } from 'phoenix';
+
 import {
   Component,
   createSignal,
@@ -5,7 +7,7 @@ import {
   onCleanup,
   Show,
 } from 'solid-js';
-import { useParams } from '@solidjs/router';
+import { useSearchParams } from '@solidjs/router';
 
 import {
   Button,
@@ -13,7 +15,7 @@ import {
   CastmillTable,
   Column,
   SortOptions,
-} from '@castmill/ui-common'
+} from '@castmill/ui-common';
 
 import { BsCheckLg } from 'solid-icons/bs';
 
@@ -29,6 +31,7 @@ import { DevicesService } from '../services/devices.service';
 interface DeviceTableItem {
   name: string;
   online: boolean;
+  last_online: Date;
   location: string;
   city: string;
   country: string;
@@ -37,9 +40,12 @@ interface DeviceTableItem {
 }
 
 const DevicesPage: Component<{
-  store: { organizations: { selectedId: string } };
+  store: { organizations: { selectedId: string }; socket: Socket };
+  params: typeof useSearchParams;
 }> = (props) => {
-  const [data, setData] = createSignal<DeviceTableItem[]>([]);
+  const [data, setData] = createSignal<DeviceTableItem[]>([], {
+    equals: false,
+  });
   const [pincode, setPincode] = createSignal('');
 
   const [showModal, setShowModal] = createSignal(false);
@@ -50,16 +56,16 @@ const DevicesPage: Component<{
   const [loadingError, setLoadingError] = createSignal('');
 
   const [currentDevice, setCurrentDevice] = createSignal<DeviceTableItem>();
+  const [searchParams, setSearchParams] = props.params();
 
-  /*
+  const channels: Channel[] = [];
+
   // We want to show this modal directly, if for example the user did arrive to the registration page
   // via a link embedded in a QR-Code. The registration code is then passed as a URL parameter.
-  const params = useParams();
-  if (params.registrationCode) {
+  if (searchParams.registrationCode) {
     setShowRegisterModal(true);
-    setPincode(params.registrationCode);
+    setPincode(searchParams.registrationCode);
   }
-  */
 
   const handleDeviceRegistrationSubmit = async (registrationData: {
     name: string;
@@ -140,18 +146,44 @@ const DevicesPage: Component<{
     },
   ];
 
+  const updateDeviceStatus = (deviceId: string, newOnlineStatus: boolean) => {
+    setData((prevData) => {
+      return prevData.map((device) => {
+        if (device.id === deviceId) {
+          return { ...device, online: newOnlineStatus };
+        }
+        return device;
+      });
+    });
+  };
+
   const fetchData = async (sortOptions: SortOptions) => {
     try {
       const result = await DevicesService.fetchDevices(
         props.store.organizations.selectedId,
-        0,
+        1,
         10,
         sortOptions
       );
 
-      console.log({ result });
+      // Clean all the previous channel subscriptions
+      channels.forEach((channel) => {
+        channel.leave();
+      });
 
-      setData(result.rows);
+      // Join to every device channel to get the online status
+      result.data?.forEach((device) => {
+        const channel = props.store.socket.channel(
+          `device_updates:${device.id}`
+        );
+        channels.push(channel);
+        channel.join();
+        channel.on('device:status', ({ online }: { online: boolean }) => {
+          updateDeviceStatus(device.id, online);
+        });
+      });
+
+      setData(result.data);
     } catch (error) {
       setLoadingError(`Error fetching devices: ${error}`);
     }
@@ -160,6 +192,12 @@ const DevicesPage: Component<{
   createEffect(async () => {
     // TODO: Show some error if this fetch fails for any reason.
     await fetchData({ key: 'name', direction: 'ascending' }); // Initial fetch
+  });
+
+  onCleanup(() => {
+    channels.forEach((channel) => {
+      channel.leave();
+    });
   });
 
   return (

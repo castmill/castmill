@@ -154,8 +154,12 @@ defmodule CastmillWeb.Router do
     get("/addons", AddonsController, :index)
     get("/users/:user_id/organizations", OrganizationController, :list_users_organizations)
 
-    get("/organizations/:organization_id/devices", OrganizationController, :list_devices)
-    post("/organizations/:organization_id/devices", OrganizationController, :register_device)
+    resources "/organizations", OrganizationController, only: [] do
+      resources "/:resources", ResourceController, except: [:new, :edit] do
+      end
+
+      post("/devices", OrganizationController, :register_device)
+    end
 
     get(
       "/organizations/:organization_id/devices/:device_id",

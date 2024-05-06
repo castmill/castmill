@@ -2,7 +2,7 @@
 import './index.scss';
 
 import { render } from 'solid-js/web';
-import { Router, Route, RouteSectionProps } from '@solidjs/router';
+import { Router, Route, RouteSectionProps, useSearchParams } from '@solidjs/router';
 
 import { Component, For, Suspense, lazy } from 'solid-js';
 import { loginUser } from './components/auth';
@@ -47,7 +47,9 @@ const App: Component<RouteSectionProps<unknown>> = (props) => {
 const wrapLazyComponent = (addon: { path: string }) => {
   return (props: any) => {
     const LazyComponent = lazy(() => import(`${addOnBasePath}${addon.path}`));
-    return <LazyComponent {...props} store={store} />;
+    const params = useSearchParams();
+    console.log({ params }, params);
+    return <LazyComponent {...props} store={store} params={useSearchParams} />;
   };
 };
 
