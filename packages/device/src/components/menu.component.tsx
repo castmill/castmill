@@ -1,8 +1,8 @@
 import {
-  createSignal,
   createResource,
+  createSignal,
+  onCleanup,
   onMount,
-  type JSX,
   type Component,
 } from 'solid-js';
 import { Device } from '../classes/device';
@@ -22,42 +22,71 @@ const createAction = (name: string, action: () => void): MenuEntry => {
   return { name, id, type: 'action', action };
 };
 
-export const MenuComponent: Component<MenuProps> = ({ device }) => {
-  const [deviceInfo] = createResource(device, fetchDeviceInfo);
+const shortDeviceId = (deviceId?: string) => deviceId?.split('-').shift();
+
+export const MenuComponent: Component<MenuProps> = (props) => {
+  const [deviceInfo] = createResource(props.device, fetchDeviceInfo);
+  const [deviceName, setDeviceName] = createSignal<string>(
+    props.device.name || 'N/A'
+  );
+  const [deviceId, setDeviceId] = createSignal<string>(
+    props.device.id || 'N/A'
+  );
+
+  const deviceStartedHandler = ({ id, name }: { id: string; name: string }) => {
+    setDeviceName(name);
+    setDeviceId(id);
+  };
+
+  onMount(() => {
+    props.device.once('started', deviceStartedHandler);
+  });
+
+  onCleanup(() => {
+    props.device.off('started', deviceStartedHandler);
+  });
 
   const header = (
     <>
       <h1>Castmill Player</h1>
       <p>
-        Player: {deviceInfo()?.appType} {deviceInfo()?.appVersion}
+        Version: {deviceInfo()?.appType} {deviceInfo()?.appVersion}
       </p>
       <p>OS: {deviceInfo()?.os}</p>
     </>
   );
 
-  const capabilities = device.getCapabilities();
+  const footer = (
+    <>
+      <p>Device ID: {shortDeviceId(deviceId()) || 'N/A'} </p>
+      <p>Device Name: {deviceName()}</p>
+      <p>(c) 2024 Castmill AB</p>
+    </>
+  );
+
+  const capabilities = props.device.getCapabilities();
 
   const entries: MenuEntry[] = [
     // optional actions
     ...(capabilities.restart
-      ? [createAction('Restart App', () => device.restart())]
+      ? [createAction('Restart App', () => props.device.restart())]
       : []),
     ...(capabilities.quit
-      ? [createAction('Quit App', () => device.quit())]
+      ? [createAction('Quit App', () => props.device.quit())]
       : []),
     ...(capabilities.reboot
-      ? [createAction('Reboot Device', () => device.reboot())]
+      ? [createAction('Reboot Device', () => props.device.reboot())]
       : []),
     ...(capabilities.shutdown
-      ? [createAction('Shutdown Device', () => device.shutdown())]
+      ? [createAction('Shutdown Device', () => props.device.shutdown())]
       : []),
     ...(capabilities.update
-      ? [createAction('Update App', () => device.update())]
+      ? [createAction('Update App', () => props.device.update())]
       : []),
     ...(capabilities.updateFirmware
-      ? [createAction('Update Firmware', () => device.updateFirmware())]
+      ? [createAction('Update Firmware', () => props.device.updateFirmware())]
       : []),
   ];
 
-  return <BaseMenu header={header} entries={entries} />;
+  return <BaseMenu header={header} entries={entries} footer={footer} />;
 };
