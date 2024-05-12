@@ -61,10 +61,7 @@ export interface StorageIntegration {
    * @param url
    * @param optional data to store, so it is not needed to download the file.
    */
-  storeFile(
-    url: string,
-    data?: any
-  ): Promise<StoreFileReturnValue>;
+  storeFile(url: string, data?: any): Promise<StoreFileReturnValue>;
 
   /**
    * Retrieves a uri like string representing a file in the storage.
