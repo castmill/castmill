@@ -17,6 +17,7 @@ vi.mock('fs/promises', () => ({
   readFile: vi.fn(() => Promise.resolve('test data')),
   mkdir: vi.fn(() => Promise.resolve()),
   readdir: vi.fn(() => Promise.resolve([])), // No files initially
+  rename: vi.fn(() => Promise.resolve()),
   unlink: vi.fn(() => Promise.resolve()),
   stat: vi.fn(() => Promise.resolve({ size: 9 })),
 }));
