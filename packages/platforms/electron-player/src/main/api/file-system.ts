@@ -5,17 +5,22 @@ import type {
 } from '@castmill/cache';
 
 import { createHash } from 'crypto';
-import { writeFile, mkdir, readdir, unlink, stat } from 'fs/promises';
+import { writeFile, mkdir, readdir, unlink, stat, rename } from 'fs/promises';
 import { createWriteStream } from 'fs';
 import { join } from 'path';
 import { URL } from 'url';
 import { net } from 'electron';
+import os from 'os';
 
 // Only works with CommonJS require
 const checkDiskSpace = require('check-disk-space').default;
 
+console.log('checkDiskSpace', checkDiskSpace);
+// Get home directory
+const homeDir = os.homedir();
+
 // Base directory for storage
-const BASE_DIR = join(__dirname, 'file-storage');
+const BASE_DIR = join(homeDir, 'castmill-electron-file-storage');
 
 /*
  * Initialize storage
@@ -62,14 +67,16 @@ export async function listFiles(storagePath: string): Promise<StorageItem[]> {
   try {
     const files = await readdir(fullPath);
     return Promise.all(
-      files.map(async (file) => {
-        const filePath = join(fullPath, file);
-        const stats = await stat(filePath);
-        return {
-          url: filePath,
-          size: stats.size,
-        };
-      })
+      files
+        .filter((file) => !file.endsWith('.tmp')) // Exclude temporary files
+        .map(async (file) => {
+          const filePath = join(fullPath, file);
+          const stats = await stat(filePath);
+          return {
+            url: filePath,
+            size: stats.size,
+          };
+        })
     );
   } catch (error) {
     console.error('Failed to list files:', error);
@@ -92,11 +99,26 @@ export async function storeFile(
   const fullPath = join(BASE_DIR, storagePath);
   try {
     const filename = getFileName(url);
+
     const filePath = join(fullPath, filename);
-    if (data) {
-      await writeFile(filePath, data);
-    } else {
-      await downloadFile(url, filePath);
+    const tempPath = filePath + '.tmp';
+
+    try {
+      if (data) {
+        await writeFile(tempPath, data);
+      } else {
+        await downloadFile(tempPath, url);
+      }
+
+      // Atomically rename the file to its final name
+      await rename(tempPath, filePath);
+    } catch (error) {
+      console.error('Failed to store file:', error);
+
+      // Delete the temporary file if it exists
+      await unlink(tempPath);
+
+      throw error;
     }
     const stats = await stat(filePath);
     return {
@@ -166,7 +188,7 @@ export async function deleteAllFiles(storagePath: string): Promise<void> {
 /*
  * Download a file from the URL and save it to the destination path
  */
-function downloadFile(url: string, destPath: string): Promise<string> {
+function downloadFile(destPath: string, url: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const request = net.request(url);
     request.on('response', (response) => {
@@ -185,6 +207,14 @@ function downloadFile(url: string, destPath: string): Promise<string> {
       response.on('end', () => {
         writeStream.end();
         return resolve(destPath);
+      });
+      response.on('error', (error) => {
+        console.error('Failed to download file:', error);
+        return reject(error);
+      });
+      writeStream.on('error', (error) => {
+        console.error('Failed to write file:', error);
+        return reject(error);
       });
     });
     request.end();
