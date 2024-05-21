@@ -15,7 +15,6 @@ import os from 'os';
 // Only works with CommonJS require
 const checkDiskSpace = require('check-disk-space').default;
 
-console.log('checkDiskSpace', checkDiskSpace);
 // Get home directory
 const homeDir = os.homedir();
 
@@ -210,6 +209,7 @@ function downloadFile(destPath: string, url: string): Promise<string> {
       });
       response.on('error', (error) => {
         console.error('Failed to download file:', error);
+        writeStream.end();
         return reject(error);
       });
       writeStream.on('error', (error) => {
