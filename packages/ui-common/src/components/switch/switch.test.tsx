@@ -5,7 +5,7 @@ import { Switch } from './switch';
 import styles from './switch.module.scss'; // Import the styles for accurate class references
 
 describe('Switch component', () => {
-    afterEach(() => cleanup());
+  afterEach(() => cleanup());
 
   it('renders with correct active state and can be toggled', async () => {
     const onToggle = vi.fn();
