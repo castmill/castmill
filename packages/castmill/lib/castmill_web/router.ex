@@ -158,7 +158,7 @@ defmodule CastmillWeb.Router do
 
     post("/devices/:device_id/commands", DeviceController, :send_command)
     get("/devices/:device_id/events", DeviceController, :list_events)
-    get("devices/:device_id/cache", DeviceController, :get_cache)
+    get("/devices/:device_id/cache", DeviceController, :get_cache)
 
     get(
       "/organizations/:organization_id/devices/:device_id",
