@@ -1,7 +1,7 @@
 /** @jsxImportSource solid-js */
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import { render, fireEvent, screen, cleanup } from '@solidjs/testing-library';
-import { ToolBar } from './ToolBar';
+import { ToolBar } from './toolbar';
 import { FaSolidMagnifyingGlass } from 'solid-icons/fa';
 
 // Mock Button component for mainAction

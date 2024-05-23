@@ -1,7 +1,7 @@
 // Pagination.test.tsx
 import { describe, it, expect, vi } from 'vitest';
 import { render, fireEvent } from '@solidjs/testing-library';
-import { Pagination } from './Pagination';
+import { Pagination } from './pagination';
 
 describe('Pagination Component', () => {
   // Utility function to render the component with initial values
