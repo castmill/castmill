@@ -9,6 +9,7 @@ defmodule Castmill.Devices do
   alias Castmill.Repo
   alias Castmill.Devices.Device
   alias Castmill.Devices.DevicesRegistrations
+  alias Castmill.Devices.DevicesEvents
 
   alias Castmill.Protocol.Access
   alias Castmill.QueryHelpers
@@ -168,8 +169,11 @@ defmodule Castmill.Devices do
     updates = Enum.into(attrs, [])
 
     query = from(d in Device, where: d.id == ^id)
-    {1, nil} = Repo.update_all(query, set: updates)
-    {:ok, nil}
+
+    case Repo.update_all(query, set: updates) do
+      {1, nil} -> {:ok, nil}
+      _ -> {:error, "Failed to update device"}
+    end
   end
 
   @doc """
@@ -282,21 +286,21 @@ defmodule Castmill.Devices do
   # The following are helper functions that were deprecated in Argon2
   defp check_password(nil, _password, opts) do
     unless opts[:hide_user] == false, do: no_user_verify(opts)
-    {:error, "invalid user-identifier"}
+    {:error, :invalid_device}
   end
 
-  defp check_password(user, password, opts) when is_binary(password) do
-    case get_hash(user, opts[:hash_key]) do
+  defp check_password(device, password, opts) when is_binary(password) do
+    case get_hash(device, opts[:hash_key]) do
       {:ok, hash} ->
-        if verify_pass(password, hash), do: {:ok, user}, else: {:error, "invalid password"}
+        if verify_pass(password, hash), do: {:ok, device}, else: {:error, "invalid password"}
 
       _ ->
-        {:error, "no password hash found in the user struct"}
+        {:error, "no token hash found in the device struct"}
     end
   end
 
-  defp check_password(_, _, _) do
-    {:error, "password is not a string"}
+  defp check_password(_a, _b, _c) do
+    {:error, "token is not a string"}
   end
 
   defp get_hash(%{password_hash: hash}, nil), do: {:ok, hash}
@@ -413,5 +417,80 @@ defmodule Castmill.Devices do
       )
 
     Repo.one(query) !== nil
+  end
+
+  @doc """
+    Inserts an event entry for a device.
+
+    If the number of event exceeds the limit, the oldest entries are deleted.
+  """
+  def insert_event(%{device_id: device_id} = attrs, max_logs \\ 100) do
+    Repo.transaction(fn ->
+      # Count the current number of logs for this device
+      current_count =
+        from(l in DevicesEvents, where: l.device_id == ^device_id)
+        |> Repo.aggregate(:count, :id)
+
+      # Identify and delete the oldest log IDs if the count exceeds the limit
+      if current_count >= max_logs do
+        oldest_ids =
+          from(l in DevicesEvents, where: l.device_id == ^device_id)
+          |> order_by([l], asc: l.id)
+          |> limit(^max(current_count - max_logs + 1, 0))
+          |> select([l], l.id)
+          |> Repo.all()
+
+        from(l in DevicesEvents, where: l.id in ^oldest_ids)
+        |> Repo.delete_all()
+      end
+
+      # Insert the new event entry with the current UTC timestamp
+      %DevicesEvents{}
+      |> DevicesEvents.changeset(Map.put(attrs, :timestamp, DateTime.utc_now()))
+      |> Repo.insert!()
+    end)
+  end
+
+  @doc """
+  Returns the list of events for a given device. Supports pagination and search.
+
+  ## Examples
+
+      iex> list_resources(Media, params)
+      [%Media{}, ...]
+  """
+  def list_devices_events(%{
+        device_id: device_id,
+        page: page,
+        page_size: page_size,
+        search: search
+      }) do
+    offset = if page_size == nil, do: 0, else: max((page - 1) * page_size, 0)
+
+    Castmill.Devices.DevicesEvents.base_query()
+    # Pin the device_id variable using ^
+    |> where([dl], dl.device_id == ^device_id)
+    |> where_msg_like(search)
+    |> Ecto.Query.order_by([d], desc: d.timestamp)
+    |> Ecto.Query.limit(^page_size)
+    |> Ecto.Query.offset(^offset)
+    |> Repo.all()
+  end
+
+  defp where_msg_like(query, nil) do
+    query
+  end
+
+  defp where_msg_like(query, pattern) do
+    from(e in query,
+      where: ilike(e.msg, ^"%#{pattern}%")
+    )
+  end
+
+  def count_devices_events(%{device_id: device_id, search: search}) do
+    Castmill.Devices.DevicesEvents.base_query()
+    |> where([dl], dl.device_id == ^device_id)
+    |> where_msg_like(search)
+    |> Repo.aggregate(:count, :id)
   end
 end
