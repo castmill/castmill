@@ -1,6 +1,6 @@
 $animation-duration: 0.3s;
 
-.modal-overlay {
+.modalOverlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -24,24 +24,28 @@ $animation-duration: 0.3s;
       visibility 0s linear 0s; // Ensure visibility changes immediately
   }
 
-  .modal-content {
+  .modalContent {
     background-color: #211d32;
     color: white;
     border-radius: 8px;
+
+    /*
     width: 500px;
+    */
     padding: 1.6em;
     transform: translateY(-20px); // Starts slightly above the final position
     opacity: 0; // Starts transparent
     transition:
       transform $animation-duration ease,
-      opacity $animation-duration ease;
+      opacity $animation-duration ease,
+      width 0.3s ease;
 
     &.active {
       transform: translateY(0); // Ends at the final position
       opacity: 1; // Fully opaque
     }
 
-    .modal-header {
+    .modalHeader {
       display: flex;
       justify-content: space-between;
       border-bottom: 1px solid #3d3d3d;
@@ -52,18 +56,18 @@ $animation-duration: 0.3s;
         line-height: 1.4;
       }
 
-      h2 {
-        margin-bottom: 0.2em;
-      }
-
       h3 {
         color: #a4a3b7;
         font-weight: 400;
       }
+
+      .title {
+        margin-bottom: 0.5em;
+      }
     }
 
-    .modal-error,
-    .modal-success {
+    .modalError,
+    .modalSuccess {
       padding: 0.8em;
       margin-top: 1em;
       border: 1px solid;
@@ -72,11 +76,11 @@ $animation-duration: 0.3s;
       justify-content: center;
       border-radius: 0.3em;
 
-      &.modal-error {
+      &.modalError {
         border-color: #ff4200;
       }
 
-      &.modal-success {
+      &.modalSuccess {
         border-color: #00ff00; // Example success color
       }
     }

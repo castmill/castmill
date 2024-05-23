@@ -1,3 +1,5 @@
+/** @jsxImportSource solid-js */
+
 import {
   Component,
   JSX,
@@ -8,11 +10,12 @@ import {
   mergeProps,
 } from 'solid-js';
 import { Portal } from 'solid-js/web';
-import { BsX, BsCheckLg, BsArrowRepeat } from 'solid-icons/bs';
-import { IconButton } from './icon-button';
-import { Button } from './button';
+import { BsCheckLg, BsArrowRepeat } from 'solid-icons/bs';
+import { VsClose } from 'solid-icons/vs';
+import { IconButton } from '../icon-button/icon-button';
+import { Button } from '../button/button';
 
-import './modal.scss';
+import styles from './modal.module.scss';
 
 interface ModalProps {
   onClose: () => void;
@@ -90,29 +93,33 @@ export const Modal: Component<ModalProps> = (props) => {
     <Portal mount={document.body}>
       <div
         data-testid="modal-overlay"
-        class={`modal-overlay ${isActive() ? 'active' : ''}`}
+        class={`${styles.modalOverlay} ${isActive() ? styles.active : ''}`}
         onClick={closeModalOnOverlayClick}
       >
         <div
-          class={`modal-content ${isActive() ? 'active' : ''}`}
+          class={`${styles.modalContent} ${isActive() ? styles.active : ''}`}
           onClick={(e) => e.stopPropagation()}
         >
-          <div class="modal-header">
+          <div class={styles.modalHeader}>
             <div class="title">
               <h2>{props.title}</h2>
               <h3>{props.description}</h3>
             </div>
-            <IconButton icon={BsX} onClick={props.onClose} color="secondary" />
+            <IconButton
+              icon={VsClose}
+              onClick={props.onClose}
+              color="secondary"
+            />
           </div>
           {props.successMessage && (
-            <div class="modal-success">{props.successMessage}</div>
+            <div class={styles.modalSuccess}>{props.successMessage}</div>
           )}
           {props.errorMessage && (
-            <div class="modal-error">{props.errorMessage}</div>
+            <div class={styles.modalError}>{props.errorMessage}</div>
           )}
-          <div class="modal-body">{props.children}</div>
-          {isLoading() && <div class="modal-loading">Loading...</div>}
-          <div class="modal-footer">
+          <div class={styles.modalBody}>{props.children}</div>
+          {isLoading() && <div class={styles.modalLoading}>Loading...</div>}
+          <div class={styles.modalFooter}>
             {props.successMessage && (
               <Button icon={BsCheckLg} label="Close" onClick={props.onClose} />
             )}
