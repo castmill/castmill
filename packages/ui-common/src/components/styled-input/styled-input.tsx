@@ -1,5 +1,5 @@
 import { Component } from 'solid-js';
-import './styled-input.scss'; // Import the custom CSS styles
+import styles from './styled-input.module.scss'; // Import the custom CSS styles
 
 export const StyledInput: Component<{
   value: string;
@@ -8,16 +8,21 @@ export const StyledInput: Component<{
   type?: string;
   id: string;
   disabled?: boolean;
+  onFocus?: () => void;
+  onBlur?: () => void;
 }> = (props) => {
   return (
     <input
       id={props.id}
       type={props.type || 'text'} // Default type is text if not specified
-      class="input-text"
+      class={styles["input-text"]}
       value={props.value}
       onInput={(e) => props.onInput(e.currentTarget.value)}
       placeholder={props.placeholder}
       disabled={props.disabled}
+      onFocus={props.onFocus}
+      onBlur={props.onBlur}
+      autocomplete="off"
     />
   );
 };

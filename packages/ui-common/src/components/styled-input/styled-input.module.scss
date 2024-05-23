@@ -1,17 +1,15 @@
 /* StyledInput.scss */
 .input-text {
-  font-size: 16px;
-  padding: 10px 15px;
-  border: 2px solid #ccc;
-  border-radius: 8px;
-  outline: none;
   width: 100%;
+  font-size: 16px;
+  outline: none;
   box-sizing: border-box;
   background-color: #151320;
-  color: gray;
-  border: 1px solid #2d2d2d;
-  border-radius: 4px;
-  margin-top: 0.3em;
+  color: #b1b1b1;
+  font-weight: 600;
+  border: none;
+  padding: 0.3em 0;
+  -webkit-font-smoothing: antialiased;
 
   &:hover {
     border-color: #b0b0b0;
@@ -19,15 +17,15 @@
 
   &:focus {
     border-color: #cccccc;
-    box-shadow: 0 0 8px rgba(172, 172, 172, 0.8);
   }
 
   &::placeholder {
-    color: #aaa;
+    color: #666666;
+    font-weight: 300;
   }
 
   &:disabled {
-    background-color: #f7f7f7;
     color: #ccc;
+    cursor: not-allowed;
   }
 }
