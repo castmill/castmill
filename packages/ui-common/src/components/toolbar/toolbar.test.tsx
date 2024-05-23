@@ -78,7 +78,9 @@ describe('ToolBar Component', () => {
 
   it('renders action buttons and triggers them correctly', () => {
     const mockAction = vi.fn();
-    render(() => <ToolBar actions={<button onClick={mockAction}>Remove</button>} />);
+    render(() => (
+      <ToolBar actions={<button onClick={mockAction}>Remove</button>} />
+    ));
 
     const removeButton = screen.getByText('Remove');
     fireEvent.click(removeButton);

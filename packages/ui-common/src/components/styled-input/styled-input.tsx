@@ -15,7 +15,7 @@ export const StyledInput: Component<{
     <input
       id={props.id}
       type={props.type || 'text'} // Default type is text if not specified
-      class={styles["input-text"]}
+      class={styles['input-text']}
       value={props.value}
       onInput={(e) => props.onInput(e.currentTarget.value)}
       placeholder={props.placeholder}
