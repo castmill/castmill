@@ -428,17 +428,20 @@ defmodule Castmill.Resources do
         organization_id: organization_id,
         page: page,
         page_size: page_size,
-        search: search
+        search: search,
+        filters: filters
       }) do
-    offset = if page_size == nil, do: 0, else: max((page - 1) * page_size, 0)
+    offset = (page_size && max((page - 1) * page_size, 0)) || 0
 
-    resource.base_query()
-    |> Organization.where_org_id(organization_id)
-    |> QueryHelpers.where_name_like(search)
-    |> Ecto.Query.order_by([d], asc: d.name)
-    |> Ecto.Query.limit(^page_size)
-    |> Ecto.Query.offset(^offset)
-    |> Repo.all()
+    Repo.all(
+      resource.base_query()
+      |> Organization.where_org_id(organization_id)
+      |> QueryHelpers.apply_combined_filters(filters, resource)
+      |> QueryHelpers.where_name_like(search)
+      |> Ecto.Query.order_by([d], asc: d.name)
+      |> Ecto.Query.limit(^page_size)
+      |> Ecto.Query.offset(^offset)
+    )
   end
 
   def list_resources(resource, %{page: page, page_size: page_size, search: search}) do
@@ -446,7 +449,8 @@ defmodule Castmill.Resources do
       organization_id: nil,
       page: page,
       page_size: page_size,
-      search: search
+      search: search,
+      filters: nil
     })
   end
 
@@ -455,19 +459,43 @@ defmodule Castmill.Resources do
       organization_id: organization_id,
       page: 1,
       page_size: nil,
-      search: nil
+      search: nil,
+      filters: nil
     })
   end
 
-  def count_resources(resource, %{organization_id: organization_id, search: search}) do
+  def list_resources(resource, %{organization_id: organization_id, filters: filters}) do
+    list_resources(resource, %{
+      organization_id: organization_id,
+      page: 1,
+      page_size: nil,
+      search: nil,
+      filters: filters
+    })
+  end
+
+  def count_resources(resource, %{
+        organization_id: organization_id,
+        search: search,
+        filters: filters
+      }) do
     resource.base_query()
     |> Organization.where_org_id(organization_id)
+    |> QueryHelpers.apply_combined_filters(filters, resource)
     |> QueryHelpers.where_name_like(search)
     |> Repo.aggregate(:count, :id)
   end
 
   def count_resources(resource, %{search: search}) do
-    count_resources(resource, %{organization_id: nil, search: search})
+    count_resources(resource, %{organization_id: nil, search: search, filters: nil})
+  end
+
+  def count_resources(resource, %{organization_id: organization_id}) do
+    count_resources(resource, %{organization_id: organization_id, search: nil, filters: nil})
+  end
+
+  def count_resources(resource, %{organization_id: organization_id, filters: filters}) do
+    count_resources(resource, %{organization_id: organization_id, search: nil, filters: filters})
   end
 
   @doc """

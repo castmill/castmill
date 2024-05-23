@@ -6,7 +6,7 @@ defmodule Castmill.Plug.AuthorizeDash do
 
   def init(default), do: default
 
-  def call(conn, _) do
+  def call(conn, _params) do
     # Check if the user is logged in
     if conn.assigns[:current_user] == nil do
       deny_access(conn)

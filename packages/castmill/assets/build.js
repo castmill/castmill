@@ -9,7 +9,7 @@ const args = process.argv.slice(2);
 const watch = args.includes('--watch');
 const deploy = args.includes('--deploy');
 
-console.log(esbuild.version)
+console.log(esbuild.version);
 
 // Custom plugin to inline CSS/SCSS
 const inlineCSSPlugin = {
@@ -79,7 +79,7 @@ componentIcons.forEach((entry) => {
   esbuild
     .build({
       ...baseOpts,
-      external: ['solid-js', 'solid-js/web'], // Mark SolidJS and its modules as external
+      external: ['solid-js', 'solid-js/web', '@solidjs/router'], // Mark SolidJS and its modules as external
       entryPoints: [entry],
       outfile: path.join(
         __dirname,

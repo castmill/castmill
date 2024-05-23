@@ -26,6 +26,12 @@ defmodule CastmillWeb.DeviceUpdatesChannel do
     {:noreply, socket}
   end
 
+  @impl true
+  def terminate(_reason, _socket) do
+    Logger.info("DeviceUpdatesChannel terminated")
+    :ok
+  end
+
   # Handle broadcasted messages from the device channel via PubSub
   @impl true
   def handle_info(%{online: true}, socket) do
@@ -47,8 +53,7 @@ defmodule CastmillWeb.DeviceUpdatesChannel do
         false
 
       _ ->
-        Organizations.is_admin?(device.organization_id, actor_id) or
-          Organizations.has_access(device.organization_id, actor_id, "devices", "read")
+        Organizations.has_access(device.organization_id, actor_id, "devices", "read")
     end
   end
 end

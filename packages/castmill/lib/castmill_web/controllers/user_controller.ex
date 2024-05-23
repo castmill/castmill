@@ -6,11 +6,11 @@ defmodule CastmillWeb.UserController do
   alias Castmill.Accounts.User
   alias Castmill.Plug.Authorize
 
-  action_fallback CastmillWeb.FallbackController
+  action_fallback(CastmillWeb.FallbackController)
   # plug :authorize_network when action in [:index, :create, :show, :update, :delete]
   # plug Authorize, action: :index, resource: :network
-  plug Authorize, %{parent: :network, resource: :user, action: :index} when action in [:index]
-  plug Authorize, %{parent: :network, resource: :user, action: :create} when action in [:create]
+  plug(Authorize, %{parent: :network, resource: :user, action: :index} when action in [:index])
+  plug(Authorize, %{parent: :network, resource: :user, action: :create} when action in [:create])
 
   def index(conn, %{"organization_id" => organization_id}) do
     users_access = Organizations.list_users(organization_id)
@@ -69,7 +69,7 @@ defmodule CastmillWeb.UserController do
     Adds an existing user to an organization with a given access list.
   """
   def update(conn, %{"access" => access, "id" => user_id, "organization_id" => organization_id}) do
-    with {:ok, _} <- Organizations.update_access(organization_id, user_id, access) do
+    with {:ok, _} <- Organizations.update_role(organization_id, user_id, access) do
       send_resp(conn, :no_content, "")
     end
   end

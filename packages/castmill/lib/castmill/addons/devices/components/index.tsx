@@ -1,64 +1,64 @@
 import { Socket, Channel } from 'phoenix';
-
-import {
-  Component,
-  createSignal,
-  createEffect,
-  onCleanup,
-  Show,
-} from 'solid-js';
-import { useSearchParams } from '@solidjs/router';
+import { Component, createSignal, onCleanup, Show } from 'solid-js';
 
 import {
   Button,
+  IconButton,
+  ConfirmDialog,
   Modal,
-  CastmillTable,
   Column,
   SortOptions,
+  TableView,
+  TableViewRef,
 } from '@castmill/ui-common';
 
 import { BsCheckLg } from 'solid-icons/bs';
-
-import DeviceView from './device-view';
-
 import { BsEye } from 'solid-icons/bs';
 import { AiOutlineDelete } from 'solid-icons/ai';
 
-import './devices.scss';
+import { Device } from '../interfaces/device.interface';
+import DeviceView from './device-view';
+import './devices.module.scss';
+
 import RegisterDevice from './register-device';
 import { DevicesService } from '../services/devices.service';
 
-interface DeviceTableItem {
-  name: string;
-  online: boolean;
-  last_online: Date;
+interface DeviceTableItem extends Device {
   location: string;
   city: string;
   country: string;
-  ip: string;
-  id: string;
 }
 
 const DevicesPage: Component<{
   store: { organizations: { selectedId: string }; socket: Socket };
-  params: typeof useSearchParams;
+  params: any; //typeof useSearchParams;
 }> = (props) => {
+  const [currentPage, setCurrentPage] = createSignal(1);
+  const [totalItems, setTotalItems] = createSignal(0);
+
+  const itemsPerPage = 2; // Number of items to show per page
+
   const [data, setData] = createSignal<DeviceTableItem[]>([], {
     equals: false,
   });
+
+  const [loading, setLoading] = createSignal(false);
+  const [loadingSuccess, setLoadingSuccess] = createSignal('');
+
   const [pincode, setPincode] = createSignal('');
 
   const [showModal, setShowModal] = createSignal(false);
   const [showRegisterModal, setShowRegisterModal] = createSignal(false);
-  const [loading, setLoading] = createSignal(false);
-  const [loadingSuccess, setLoadingSuccess] = createSignal('');
+
   const [registerError, setRegisterError] = createSignal('');
-  const [loadingError, setLoadingError] = createSignal('');
 
   const [currentDevice, setCurrentDevice] = createSignal<DeviceTableItem>();
-  const [searchParams, setSearchParams] = props.params();
 
-  const channels: Channel[] = [];
+  const [selectedDevices, setSelectedDevices] = createSignal(new Set<string>());
+
+  const [searchParams, setSearchParams] = props.params;
+
+  const channels: Record<string, Channel> = {};
 
   // We want to show this modal directly, if for example the user did arrive to the registration page
   // via a link embedded in a QR-Code. The registration code is then passed as a URL parameter.
@@ -71,12 +71,6 @@ const DevicesPage: Component<{
     name: string;
     pincode: string;
   }) => {
-    console.log(
-      'Submitting data:',
-      registrationData,
-      props.store.organizations
-    );
-
     try {
       setLoading(true);
       const device = await DevicesService.registerDevice(
@@ -84,8 +78,12 @@ const DevicesPage: Component<{
         registrationData.name,
         registrationData.pincode
       );
-      setData([...data(), device]);
+
+      refreshData();
       setLoadingSuccess('Device registered successfully');
+
+      // Update total items
+      setTotalItems(totalItems() + 1);
     } catch (error) {
       setRegisterError(`Error registering device: ${error}`);
     } finally {
@@ -112,7 +110,7 @@ const DevicesPage: Component<{
   const columns = [
     { key: 'name', title: 'Name', sortable: true },
     {
-      key: 'last_online',
+      key: 'online',
       title: 'Online',
       sortable: true,
       render: (item: DeviceTableItem) => (
@@ -133,6 +131,8 @@ const DevicesPage: Component<{
   ] as Column<DeviceTableItem>[];
 
   const actions = [
+    /*
+    // Example of action with custom props based on the item
     {
       icon: BsEye,
       props: (item: DeviceTableItem) => ({
@@ -140,77 +140,146 @@ const DevicesPage: Component<{
       }),
       handler: openModal,
     },
+    */
+    {
+      icon: BsEye,
+      handler: openModal,
+    },
     {
       icon: AiOutlineDelete,
-      handler: (item: DeviceTableItem) => console.log('Removing', item),
+      handler: (item: DeviceTableItem) => {
+        setCurrentDevice(item);
+        setShowConfirmDialog(true);
+      },
     },
   ];
 
   const updateDeviceStatus = (deviceId: string, newOnlineStatus: boolean) => {
-    setData((prevData) => {
-      return prevData.map((device) => {
-        if (device.id === deviceId) {
-          return { ...device, online: newOnlineStatus };
-        }
-        return device;
-      });
-    });
+    updateItem(deviceId, { online: newOnlineStatus } as DeviceTableItem);
   };
 
-  const fetchData = async (sortOptions: SortOptions) => {
-    try {
-      const result = await DevicesService.fetchDevices(
-        props.store.organizations.selectedId,
-        1,
-        10,
-        sortOptions
-      );
+  const fetchData = async ({
+    page,
+    sortOptions,
+    search,
+    filters,
+  }: {
+    page: { num: number; size: number };
+    sortOptions: SortOptions;
+    search?: string;
+    filters?: Record<string, string | boolean>;
+  }) => {
+    const result = await DevicesService.fetchDevices(
+      props.store.organizations.selectedId,
+      {
+        page: page.num,
+        page_size: page.size,
+        sortOptions,
+        search,
+        filters,
+      }
+    );
 
-      // Clean all the previous channel subscriptions
-      channels.forEach((channel) => {
+    const newDeviceIds = new Set(result.data?.map((device) => device.id));
+
+    // Clean all the old unused channel subscriptions
+    Object.keys(channels).forEach((deviceId) => {
+      if (!newDeviceIds.has(deviceId)) {
+        const channel = channels[deviceId];
+        channel.off('device:status');
         channel.leave();
-      });
+        delete channels[deviceId];
+      }
+    });
 
-      // Join to every device channel to get the online status
-      result.data?.forEach((device) => {
-        const channel = props.store.socket.channel(
-          `device_updates:${device.id}`
-        );
-        channels.push(channel);
+    // Join to every new device channel to get the online status
+    result.data?.forEach((device) => {
+      if (channels[device.id]) {
+        return;
+      } else {
+        const topic = `device_updates:${device.id}`;
+        const channel = props.store.socket.channel(topic);
+        channels[device.id] = channel;
         channel.join();
         channel.on('device:status', ({ online }: { online: boolean }) => {
           updateDeviceStatus(device.id, online);
         });
-      });
+      }
+    });
 
-      setData(result.data);
-    } catch (error) {
-      setLoadingError(`Error fetching devices: ${error}`);
-    }
+    return result;
   };
 
-  createEffect(async () => {
-    // TODO: Show some error if this fetch fails for any reason.
-    await fetchData({ key: 'name', direction: 'ascending' }); // Initial fetch
-  });
-
   onCleanup(() => {
-    channels.forEach((channel) => {
+    Object.values(channels).forEach((channel) => {
       channel.leave();
     });
   });
 
+  const [showConfirmDialog, setShowConfirmDialog] = createSignal(false);
+  const [showConfirmDialogMultiple, setShowConfirmDialogMultiple] =
+    createSignal(false);
+
+  const confirmRemoveDevice = async (device: DeviceTableItem | undefined) => {
+    if (!device) {
+      return;
+    }
+    try {
+      await DevicesService.removeDevice(
+        props.store.organizations.selectedId,
+        device.id
+      );
+
+      refreshData();
+    } catch (error) {
+      alert(`Error removing device ${device.name}: ${error}`);
+    }
+    setShowConfirmDialog(false);
+  };
+
+  const confirmRemoveMultipleDevices = async () => {
+    try {
+      await Promise.all(
+        Array.from(selectedDevices()).map((deviceId) =>
+          DevicesService.removeDevice(
+            props.store.organizations.selectedId,
+            deviceId
+          )
+        )
+      );
+
+      refreshData();
+    } catch (error) {
+      alert(`Error removing devices: ${error}`);
+    }
+    setShowConfirmDialogMultiple(false);
+  };
+
+  const onRowSelect = (rowsSelected: Set<string>) => {
+    console.log('Selected rows:', rowsSelected);
+    setSelectedDevices(rowsSelected);
+  };
+
+  let tableViewRef: TableViewRef;
+
+  const setRef = (ref: TableViewRef) => {
+    tableViewRef = ref;
+  };
+
+  const refreshData = () => {
+    if (tableViewRef) {
+      tableViewRef.reloadData();
+    }
+  };
+
+  const updateItem = (itemId: string, item: Partial<DeviceTableItem>) => {
+    if (tableViewRef) {
+      tableViewRef.updateItem(itemId, item);
+    }
+  };
+
   return (
     <div class="devices-page">
-      <div class="devices-bar">
-        <h1>Devices</h1>
-        <Button
-          label="Add Device"
-          onClick={openRegisterModal}
-          icon={BsCheckLg}
-          color="primary"
-        />
-      </div>
       <Show when={showRegisterModal()}>
         <Modal
           title="Register device"
@@ -229,26 +298,81 @@ const DevicesPage: Component<{
       </Show>
       <Show when={showModal()}>
         <Modal
-          title="Device"
+          title={`Device "${currentDevice()?.name}"`}
           description="Details of your device"
           onClose={closeModal}
         >
-          <DeviceView device={currentDevice()!} />
+          <DeviceView
+            organization_id={props.store.organizations.selectedId}
+            device={currentDevice()!}
+            onChange={(device) => {
+              updateItem(device.id, device);
+            }}
+          />
         </Modal>
       </Show>
-      <div class="devices-table">
-        <Show
-          when={!loadingError()}
-          fallback={<div>Loading Error: {loadingError()}</div>}
-        >
-          <CastmillTable<DeviceTableItem>
-            columns={columns}
-            data={data()}
-            fetchData={fetchData}
-            actions={actions}
-          />
-        </Show>
-      </div>
+
+      <ConfirmDialog
+        show={showConfirmDialog()}
+        title="Remove Device"
+        message={`Are you sure you want to remove device "${currentDevice()?.name}"?`}
+        onClose={() => setShowConfirmDialog(false)}
+        onConfirm={() => confirmRemoveDevice(currentDevice())}
+      />
+
+      <ConfirmDialog
+        show={showConfirmDialogMultiple()}
+        title="Remove Devices"
+        message={'Are you sure you want to remove the following devices?'}
+        onClose={() => setShowConfirmDialogMultiple(false)}
+        onConfirm={() => confirmRemoveMultipleDevices()}
+      >
+        <div style="margin: 1.5em; line-height: 1.5em;">
+          {Array.from(selectedDevices()).map((deviceId) => {
+            const device = data().find((d) => d.id === deviceId);
+            return <div>{`- ${device?.name}`}</div>;
+          })}
+        </div>
+      </ConfirmDialog>
+
+      <TableView
+        title="Devices"
+        resource="devices"
+        params={props.params}
+        fetchData={fetchData}
+        ref={setRef}
+        toolbar={{
+          filters: [
+            { name: 'Online', key: 'online', isActive: true },
+            { name: 'Offline', key: 'offline', isActive: true },
+          ],
+          mainAction: (
+            <Button
+              label="Add Device"
+              onClick={openRegisterModal}
+              icon={BsCheckLg}
+              color="primary"
+            />
+          ),
+          actions: (
+            <div>
+              <IconButton
+                title="Remove"
+                onClick={() => setShowConfirmDialogMultiple(true)}
+                icon={AiOutlineDelete}
+                color="primary"
+                disabled={selectedDevices().size === 0}
+              />
+            </div>
+          ),
+        }}
+        table={{
+          columns,
+          actions,
+          onRowSelect,
+        }}
+        pagination={{ itemsPerPage }}
+      ></TableView>
     </div>
   );
 };

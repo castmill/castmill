@@ -1,0 +1,32 @@
+.maintainance {
+  max-width: 30em;
+
+  .maintainance-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.8em;
+    gap: 1em;
+    height: 4.5em;
+
+    .button-wrapper {
+      width: 50%;
+      button {
+        width: 100%;
+      }
+    }
+
+    p {
+      width: 50%;
+    }
+  }
+
+  .offline-message {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    color: red;
+  }
+}

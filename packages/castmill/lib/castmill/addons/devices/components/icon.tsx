@@ -1,3 +1,4 @@
-import { IoSettingsOutline } from 'solid-icons/io';
+import { HiOutlineTv } from 'solid-icons/hi';
+import { IconWrapper } from '@castmill/ui-common';
 
-export default IoSettingsOutline;
+export default <IconWrapper icon={HiOutlineTv} />;

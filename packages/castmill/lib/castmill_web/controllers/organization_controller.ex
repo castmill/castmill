@@ -21,8 +21,7 @@ defmodule CastmillWeb.OrganizationController do
   end
 
   def check_access(actor_id, :register_device, %{"organization_id" => organization_id}) do
-    if Organizations.is_admin?(organization_id, actor_id) or
-         Organizations.has_access(organization_id, actor_id, "devices", "register") do
+    if Organizations.has_access(organization_id, actor_id, "devices", "register") do
       {:ok, true}
     else
       {:ok, false}

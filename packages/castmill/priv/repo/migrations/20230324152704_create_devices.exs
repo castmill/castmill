@@ -23,6 +23,9 @@ defmodule Castmill.Repo.Migrations.CreateDevices do
       add :settings, :map
       add :info, :map
 
+      # normal, test, debug
+      add :mode, :string, default: "normal"
+
       add :resource_id, references(:resources, on_delete: :nilify_all), null: true
 
       add :organization_id,

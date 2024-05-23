@@ -33,7 +33,7 @@ defmodule CastmillWeb.Live.Admin.Show do
         <.tabs tabs={@tabs} selected_tab={@selected_tab} base_url={@base_url}>
           <div :if={@selected_tab != nil} class="p-2">
             <div class="flex flex-row justify-between py-2">
-              <.search placeholder="Search" phx-debounce="500" phx-target="search" phx-value="" />
+              <.search placeholder="Search" phx-debounce="500" phx-target="search" value="" />
               <!-- use href instead of patch because streams do not allow :reset yet -->
               <.link
                 :if={Enum.find(@tabs, fn tab -> tab.href == @selected_tab end).form != nil}

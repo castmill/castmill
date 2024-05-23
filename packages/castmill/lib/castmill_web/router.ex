@@ -97,6 +97,7 @@ defmodule CastmillWeb.Router do
     plug(:accepts, ["json"])
   end
 
+  # This is most likely not used anymore as registrations go through the dashboard.
   scope "/registrations", CastmillWeb do
     pipe_through(:register)
 
@@ -117,12 +118,6 @@ defmodule CastmillWeb.Router do
     # its current status to the server. It can be called in
     # regular intervals or triggered by a user.
     post("/:id/info", DeviceController, :info)
-
-    # post "/", DeviceController, :create
-    # get "/", DeviceController, :index
-    # get "/:id", DeviceController, :show
-    # put "/:id", DeviceController, :update
-    # delete "/:id", DeviceController, :delete
   end
 
   # Allows starting a signup process for Passkeys
@@ -155,11 +150,15 @@ defmodule CastmillWeb.Router do
     get("/users/:user_id/organizations", OrganizationController, :list_users_organizations)
 
     resources "/organizations", OrganizationController, only: [] do
+      post("/devices", OrganizationController, :register_device)
+
       resources "/:resources", ResourceController, except: [:new, :edit] do
       end
-
-      post("/devices", OrganizationController, :register_device)
     end
+
+    post("/devices/:device_id/commands", DeviceController, :send_command)
+    get("/devices/:device_id/events", DeviceController, :list_events)
+    get("devices/:device_id/cache", DeviceController, :get_cache)
 
     get(
       "/organizations/:organization_id/devices/:device_id",

@@ -1,3 +1,4 @@
-import { IoSettingsOutline } from 'solid-icons/io';
+import { VsFileMedia } from 'solid-icons/vs';
+import { IconWrapper } from '@castmill/ui-common';
 
-export default IoSettingsOutline;
+export default <IconWrapper icon={VsFileMedia} />;
