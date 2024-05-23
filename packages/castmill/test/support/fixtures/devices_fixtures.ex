@@ -19,7 +19,7 @@ defmodule Castmill.DevicesFixtures do
         token: "some token",
         user_agent: "some user agent",
         timezone: "Europe/Amsterdam",
-        version: "1.0.0",
+        version: "1.0.0"
       })
       |> Castmill.Devices.create_device()
 
