@@ -1,0 +1,14 @@
+.pagination-wrapper {
+  display: flex;
+  margin-top: 1em;
+  width: 100%;
+
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+
+  .pagination-text {
+    margin-left: 1em;
+    font-size: 0.8em;
+  }
+}
