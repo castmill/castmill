@@ -21,7 +21,7 @@ interface DropdownProps {
   onSelectChange: (value: string) => void; // Callback function for when selection changes
 }
 
-const Dropdown: Component<DropdownProps> = (props) => {
+export const Dropdown: Component<DropdownProps> = (props) => {
   // Function to handle change events on the dropdown
   const handleChange = (event: Event) => {
     const target = event.target as HTMLSelectElement;
@@ -38,5 +38,3 @@ const Dropdown: Component<DropdownProps> = (props) => {
     </div>
   );
 };
-
-export default Dropdown;

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@solidjs/testing-library';
-import Dropdown from './dropdown';
+import { Dropdown } from './dropdown';
 
 // Define a sample props to use in tests
 const sampleProps = {
