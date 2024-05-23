@@ -1,6 +1,7 @@
 import { render, fireEvent, cleanup } from '@solidjs/testing-library';
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { Button } from './button';
+import styles from './button.module.scss'; // Import the CSS module styles
 
 describe('Button Component', () => {
   afterEach(cleanup); // Clean up after each test
@@ -9,7 +10,7 @@ describe('Button Component', () => {
     const { getByRole } = render(() => <Button label="Click me" />);
     const button = getByRole('button');
     expect(button).toBeInTheDocument();
-    expect(button).toHaveClass('button-primary');
+    expect(button).toHaveClass(styles['button-primary']); // Use the styles object for the class name
     expect(button).toHaveAttribute('type', 'button');
     expect(button).not.toBeDisabled();
   });
@@ -51,6 +52,6 @@ describe('Button Component', () => {
   it('applies the correct class based on the color prop', () => {
     const { getByRole } = render(() => <Button color="danger" />);
     const button = getByRole('button');
-    expect(button).toHaveClass('button-danger');
+    expect(button).toHaveClass(styles['button-danger']);
   });
 });

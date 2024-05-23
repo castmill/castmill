@@ -21,14 +21,25 @@
     background-color: #007bff;
     color: white;
   }
+  &-primary:active {
+    background-color: #0056b3; /* Darker shade of primary color */
+  }
+
   &-secondary {
     background-color: #6c757d;
     color: white;
   }
+  &-secondary:active {
+    background-color: #545b62; /* Darker shade of secondary color */
+  }
+
   &-danger {
     border: 1px solid #555;
     background-color: #00000000;
     color: #a2a0a0;
+  }
+  &-danger:active {
+    background-color: #3b3b3b; /* Darker shade */
   }
 
   &-danger:hover {
@@ -40,6 +51,9 @@
     background-color: #267538;
     color: white;
   }
+  &-success:active {
+    background-color: #1d5a2a; /* Darker shade of success color */
+  }
 
   &-success:hover {
     background-color: #3d8b4d;
@@ -48,6 +62,9 @@
   &-info {
     background-color: #17a2b8;
     color: white;
+  }
+  &-info:active {
+    background-color: #117a8b; /* Darker shade of info color */
   }
 
   &:not(.button-disabled):hover {
@@ -58,4 +75,12 @@
     background-color: #ccc;
     cursor: not-allowed;
   }
+}
+
+.button-primary-active {
+  background-color: #0056b3; // Darker shade of primary color
+}
+
+.button-secondary-active {
+  background-color: #545b62; // Darker shade of secondary color
 }
