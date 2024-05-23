@@ -17,7 +17,7 @@ vi.mock('phoenix', () => ({
   })),
 }));
 
-describe.only('WebSocketLogger', () => {
+describe('WebSocketLogger', () => {
   let logger: WebSocketLogger;
   let mockSocket: Socket;
   let channelMock: any;
