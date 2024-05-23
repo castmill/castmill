@@ -40,18 +40,20 @@ export async function loginUser() {
     socket.connect();
     const channel = socket.channel(`users:${user.id}`, {});
 
-    channel.join().receive('ok', () => {
-      console.log('Joined successfully');
-      // TODO: Set some state icon to show we are online receiving updates
-    }).receive('error', () => {
-      console.log('Unable to join');
-      // TODO: Set some state icon to show we are offline
-    });
+    channel
+      .join()
+      .receive('ok', () => {
+        console.log('Joined successfully');
+        // TODO: Set some state icon to show we are online receiving updates
+      })
+      .receive('error', () => {
+        console.log('Unable to join');
+        // TODO: Set some state icon to show we are offline
+      });
 
     setStore('socket', socket);
     setUser(user);
     setIsAuthenticated(true);
-
   } else {
     resetSession();
   }
