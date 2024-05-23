@@ -1,8 +1,8 @@
-import { describe, it, expect, afterEach, vi, beforeEach } from 'vitest';
+import { describe, it, expect, afterEach, vi } from 'vitest';
 import { render, fireEvent, cleanup, screen } from '@solidjs/testing-library';
-import { CastmillTable } from './table';
+import { Table } from './table';
 
-describe('CastmillTable Component', () => {
+describe('Table Component', () => {
   afterEach(() => cleanup());
 
   const columns = [
@@ -25,7 +25,7 @@ describe('CastmillTable Component', () => {
 
   it('renders correctly with data and columns', () => {
     render(() => (
-      <CastmillTable
+      <Table
         columns={columns}
         data={data}
         fetchData={() => Promise.resolve()}
@@ -48,7 +48,7 @@ describe('CastmillTable Component', () => {
 
   it('handles row selection correctly', async () => {
     render(() => (
-      <CastmillTable
+      <Table
         columns={columns}
         data={data}
         fetchData={() => Promise.resolve()}
@@ -61,9 +61,7 @@ describe('CastmillTable Component', () => {
 
   it('calls onSort callback with correct options when a column header is clicked', () => {
     const mockOnSort = vi.fn();
-    render(() => (
-      <CastmillTable columns={columns} data={data} onSort={mockOnSort} />
-    ));
+    render(() => <Table columns={columns} data={data} onSort={mockOnSort} />);
 
     const nameHeader = screen.getByText('Name');
     fireEvent.click(nameHeader); // Trigger sorting by name
@@ -81,7 +79,7 @@ describe('CastmillTable Component', () => {
 
   it('executes action on button click', async () => {
     render(() => (
-      <CastmillTable
+      <Table
         columns={columns}
         data={data}
         actions={actions}
