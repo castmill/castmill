@@ -164,8 +164,8 @@ describe('Cache', () => {
       expect(isRemoved).to.be.false;
     }
   });
-  it('should remove older cached items if the cache is full (maxSize)', () => { });
-  it('should not download the same file again if already in the process of caching', () => { });
+  it('should remove older cached items if the cache is full (maxSize)', () => {});
+  it('should not download the same file again if already in the process of caching', () => {});
 
-  it('should clear the cache', async () => { });
+  it('should clear the cache', async () => {});
 });
