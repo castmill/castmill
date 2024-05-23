@@ -71,14 +71,15 @@ export const Item: Component<{
     const $styles = (props.component as TemplateComponent).$styles!;
     for (let i = 0; i < $styles.length; i++) {
       if (
+        $styles[i] &&
         checkFilter(
-          $styles![i].filter,
+          $styles[i]!.filter,
           props.config,
           props.context,
           props.globals
         )
       ) {
-        style = { ...style, ...$styles![i].style };
+        style = { ...style, ...$styles[i]!.style };
       }
     }
   }
