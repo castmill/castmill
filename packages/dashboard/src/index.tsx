@@ -47,9 +47,7 @@ const App: Component<RouteSectionProps<unknown>> = (props) => {
 const wrapLazyComponent = (addon: { path: string }) => {
   return (props: any) => {
     const LazyComponent = lazy(() => import(`${addOnBasePath}${addon.path}`));
-    const params = useSearchParams();
-    console.log({ params }, params);
-    return <LazyComponent {...props} store={store} params={useSearchParams} />;
+    return <LazyComponent {...props} store={store} params={useSearchParams()} />;
   };
 };
 
