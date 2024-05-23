@@ -1,14 +1,18 @@
 import { EventEmitter } from 'eventemitter3';
 import { Channel, Socket } from 'phoenix';
 import { Player, Playlist, Renderer, Viewport, Layer } from '@castmill/player';
-import { ResourceManager, Cache, StorageIntegration } from '@castmill/cache';
+import { ResourceManager, Cache, StorageIntegration, ItemType } from '@castmill/cache';
 import { Machine, DeviceInfo } from '../interfaces/machine';
 import { getCastmillIntro } from './intro';
 import { Calendar, JsonCalendar } from './calendar';
 import { Schema, JsonPlaylist, JsonPlaylistItem } from '../interfaces';
 import { JsonMedia } from '../interfaces/json-media';
+import { DivLogger, Logger, NullLogger, WebSocketLogger } from './logger';
 
 const HEARTBEAT_INTERVAL = 1000 * 30; // 30 seconds
+const DEFAULT_MAX_LOGS = 100;
+
+const supportedDebugModes = ['remote', 'local', 'none'];
 
 export enum Status {
   Registering = 'registering',
@@ -19,6 +23,28 @@ export interface DeviceMessage {
   resource: 'device' | 'calendar' | 'playlist' | 'widget';
   action: 'update' | 'delete';
   data: any;
+}
+
+export interface DeviceCommand {
+  command:
+  "refresh" |
+  "clear_cache" |
+  "restart_app" |
+  "restart_device" |
+  "update_app" |
+  "update_firmware" |
+  "shutdown"
+}
+
+interface CachePage {
+  page: number,
+  page_size: number,
+  type: ItemType,
+};
+
+interface DeviceRequest {
+  resource: "cache"
+  opts: CachePage & { ref: string }
 }
 
 /**
@@ -36,9 +62,13 @@ export class Device extends EventEmitter {
   private player?: Player;
   private calendars: Calendar[] = [];
   private calendarIndex = 0;
+  private logger: Logger = new Logger();
+  private logDiv?: HTMLDivElement;
+  private socket?: Socket;
 
   public id?: string;
   public name?: string;
+  public debugMode: "remote" | "local" | "none" = "none";
 
   constructor(
     private integration: Machine,
@@ -53,6 +83,8 @@ export class Device extends EventEmitter {
   ) {
     super();
 
+    this.logger.setLogger(new NullLogger());
+
     this.cache = new Cache(
       this.storageIntegration,
       'castmill-device',
@@ -66,7 +98,7 @@ export class Device extends EventEmitter {
     this.contentQueue.add(intro);
   }
 
-  async start(el: HTMLElement) {
+  async start(el: HTMLElement, logDiv: HTMLDivElement) {
     let credentials = await this.integration.getCredentials();
     if (!credentials) {
       throw new Error('Invalid credentials');
@@ -79,11 +111,15 @@ export class Device extends EventEmitter {
 
     this.id = device.id;
     this.name = device.name;
+    this.logDiv = logDiv;
 
     this.emit("started", device);
 
+    // TODO: Should be able to pass the logger to the renderer and the player.
     const renderer = new Renderer(el);
     this.player = new Player(this.contentQueue, renderer, this.opts?.viewport);
+
+
     // this.player.play({ loop: true });
 
     /**
@@ -247,9 +283,23 @@ export class Device extends EventEmitter {
     if (credentials) {
       const { device } = JSON.parse(credentials);
 
-      const channel = await this.login(credentials, hardwareId);
-      this.initListeners(channel);
-      this.initHeartbeat(channel);
+      try {
+        const channel = await this.login(credentials, hardwareId);
+        this.initListeners(channel);
+        this.initHeartbeat(channel);
+      } catch (error) {
+        if (error === "invalid_device") {
+          // Clean all app data and refresh the page.
+          await this.integration.removeCredentials();
+          window.location.reload();
+        } else {
+          this.logger.error(`Unable to login ${error}`);
+
+          // Wait 5 seconds and refresh
+          await new Promise((resolve) => setTimeout(resolve, 5000));
+          window.location.reload();
+        }
+      }
 
       const rawCalendars = await this.resourceManager.getData(
         `${this.opts?.baseUrl || ''}/devices/${device.id}/calendars`,
@@ -288,15 +338,15 @@ export class Device extends EventEmitter {
       .join()
       .receive('ok', (resp) => {
         // Do not show the pincode until this is done
-        console.log('Joined successfully', resp);
+        this.logger.info(`Joined successfully ${resp}`);
       })
       .receive('error', (resp) => {
         // TODO: Show error in UI.
-        console.log('Unable to join', resp);
+        this.logger.error(`Unable to join ${resp}`)
       });
 
     channel.on('device:registered', async (payload) => {
-      console.log('Device registered', payload);
+      this.logger.info(`Device registered ${payload}`);
 
       // Store token in local storage as credentials.
       await this.integration.storeCredentials!(JSON.stringify(payload));
@@ -311,8 +361,10 @@ export class Device extends EventEmitter {
   async login(credentials: string, hardwareId: string) {
     const { device } = JSON.parse(credentials);
 
-    const socket = new Socket(`/socket`, {
+    const socket = this.socket = new Socket(`/socket`, {
       params: { device_id: device.id, hardware_id: hardwareId },
+      reconnectAfterMs: (_tries: number) => 10_000,
+      rejoinAfterMs: (_tries: number) => 10_000,
     });
 
     socket.connect();
@@ -335,8 +387,48 @@ export class Device extends EventEmitter {
   }
 
   private initListeners(channel: Channel) {
-    channel.on('update', async (payload: DeviceMessage) => {
-      switch (payload.resource) {
+    channel.on("command", async (payload: DeviceCommand) => {
+      switch (payload.command) {
+        case "refresh":
+          // Refresh browser
+          location.reload();
+          break;
+        case "clear_cache":
+          // Clear cache
+          this.cache.clean();
+          break;
+        case "restart_app":
+          this.restart();
+          break;
+        case "restart_device":
+          this.reboot();
+          break;
+        case "update_app":
+          this.update();
+          break;
+        case "update_firmware":
+          this.updateFirmware();
+          break;
+        case "shutdown":
+          this.shutdown();
+          break;
+      }
+    });
+
+    channel.on("get", async (payload: DeviceRequest) => {
+      const { resource, opts } = payload;
+      console.log({ payload })
+      switch (resource) {
+        case "cache":
+          const page = await this.getCache(opts)
+          console.log({ page })
+          channel.push('res:get', { page, ref: opts.ref });
+          break;
+      }
+    });
+
+    channel.on('update', async (data: DeviceMessage) => {
+      switch (data.resource) {
         case 'device':
           break;
         case 'calendar':
@@ -350,9 +442,18 @@ export class Device extends EventEmitter {
         case 'widget':
           break;
       }
+    })
+  }
 
-      console.log('Update calendars', payload);
-    });
+  private async getCache({
+    page,
+    page_size: perPage,
+    type,
+  }: CachePage) {
+    const data = await this.cache.list(type, (page - 1) * perPage, perPage);
+    const count = await this.cache.count(type);
+
+    return { data, count };
   }
 
   private initHeartbeat(channel: Channel) {
@@ -406,6 +507,30 @@ export class Device extends EventEmitter {
 
   updateFirmware() {
     return this.integration.updateFirmware?.();
+  }
+
+  setLogMode(logMode: "remote" | "local" | "none") {
+    if (supportedDebugModes.indexOf(logMode) !== -1) {
+      this.debugMode = logMode;
+      switch (logMode) {
+        case "remote":
+          if (this.socket && this.id) {
+            this.logger.setLogger(
+              new WebSocketLogger(this.socket, this.id)
+            );
+          }
+          break;
+        case "local":
+          // Show logs in log div
+          if (this.logDiv) {
+            this.logger.setLogger(new DivLogger(this.logDiv!, DEFAULT_MAX_LOGS));
+          }
+          break;
+        case "none":
+          this.logger.setLogger(new NullLogger());
+          break;
+      }
+    }
   }
 }
 
