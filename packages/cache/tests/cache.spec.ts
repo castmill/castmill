@@ -159,11 +159,13 @@ describe('Cache', () => {
     expect(items).to.have.length(10);
     const removed = [`${url}0`, `${url}1`, `${url}2`];
     for (let i = 0; i < items.length; i++) {
-      expect(items[i].url).to.not.be.oneOf(removed);
+      const url = items[i]?.url;
+      const isRemoved = removed.includes(url!);
+      expect(isRemoved).to.be.false;
     }
   });
-  it('should remove older cached items if the cache is full (maxSize)', () => {});
-  it('should not download the same file again if already in the process of caching', () => {});
+  it('should remove older cached items if the cache is full (maxSize)', () => { });
+  it('should not download the same file again if already in the process of caching', () => { });
 
-  it('should clear the cache', async () => {});
+  it('should clear the cache', async () => { });
 });
