@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { Logger, NullLogger, DivLogger, WebSocketLogger, ILogger } from './';  // Adjust paths as necessary
-import { Socket } from "phoenix";  // Mocked Phoenix
+import { Logger, NullLogger, DivLogger, WebSocketLogger, ILogger } from './'; // Adjust paths as necessary
+import { Socket } from 'phoenix'; // Mocked Phoenix
 
 // Mocking HTML elements for DivLogger tests
 
 // At the top of your test file
-vi.spyOn(console, 'error').mockImplementation(() => { });
+vi.spyOn(console, 'error').mockImplementation(() => {});
 
 // Resetting mocks and restoring the original functionality (if needed) after each test
 afterEach(() => {
@@ -23,7 +23,6 @@ beforeEach(() => {
   };
   global.document.getElementById = vi.fn(() => mockDiv);
 });
-
 
 // Mock Phoenix Channel and Socket
 vi.mock('phoenix', () => ({
@@ -43,7 +42,7 @@ vi.mock('phoenix', () => ({
 describe('NullLogger', () => {
   it('should not perform any operations', async () => {
     const logger = new NullLogger();
-    await logger.log("info", "This is a test log.");
+    await logger.log('info', 'This is a test log.');
     // No assertion is necessary; success is no error thrown
   });
 });
@@ -55,28 +54,32 @@ describe('DivLogger', () => {
   beforeEach(() => {
     // Create a mock HTMLDivElement
     mockDiv = document.createElement('div');
-    mockDiv.appendChild = vi.fn(mockDiv.appendChild.bind(mockDiv));  // Bind original function to keep normal behavior
-    mockDiv.removeChild = vi.fn(mockDiv.removeChild.bind(mockDiv));  // Bind original function to keep normal behavior
+    mockDiv.appendChild = vi.fn(mockDiv.appendChild.bind(mockDiv)); // Bind original function to keep normal behavior
+    mockDiv.removeChild = vi.fn(mockDiv.removeChild.bind(mockDiv)); // Bind original function to keep normal behavior
 
     // Mock read-only properties using Object.defineProperty
-    Object.defineProperty(mockDiv, 'scrollHeight', { value: 1000, writable: true });
+    Object.defineProperty(mockDiv, 'scrollHeight', {
+      value: 1000,
+      writable: true,
+    });
     Object.defineProperty(mockDiv, 'scrollTop', { value: 0, writable: true });
 
-    logger = new DivLogger(mockDiv, 3);  // Instantiate logger with mock div and maxLogs set to 3
+    logger = new DivLogger(mockDiv, 3); // Instantiate logger with mock div and maxLogs set to 3
   });
 
   it('should append logs to the div', async () => {
     await logger.log('info', 'Test log entry');
     expect(mockDiv.appendChild).toHaveBeenCalled();
-    expect(mockDiv.children.length).toBe(1);  // Ensure a log entry was added
+    expect(mockDiv.children.length).toBe(1); // Ensure a log entry was added
   });
 
   it('should respect the maximum log count', async () => {
-    for (let i = 0; i < 5; i++) {  // Log more than the max to trigger removals
+    for (let i = 0; i < 5; i++) {
+      // Log more than the max to trigger removals
       await logger.log('info', `Log ${i}`);
     }
-    expect(mockDiv.children.length).toBe(3);  // Max of 3 logs should be maintained
-    expect(mockDiv.removeChild).toHaveBeenCalledTimes(2);  // Two old logs should be removed
+    expect(mockDiv.children.length).toBe(3); // Max of 3 logs should be maintained
+    expect(mockDiv.removeChild).toHaveBeenCalledTimes(2); // Two old logs should be removed
   });
 
   it('should scroll to bottom on new log', async () => {
@@ -91,16 +94,16 @@ describe('Logger', () => {
 
   beforeEach(() => {
     mockLogger = {
-      log: vi.fn().mockResolvedValue(undefined)
+      log: vi.fn().mockResolvedValue(undefined),
     };
     logger = new Logger();
-    logger.setLogger(mockLogger);  // Set the mock logger
+    logger.setLogger(mockLogger); // Set the mock logger
 
-    vi.spyOn(console, 'error').mockImplementation(() => { });
+    vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();  // Restore original functions after each test
+    vi.restoreAllMocks(); // Restore original functions after each test
   });
 
   it('should delegate log calls to the configured logger', async () => {
@@ -125,7 +128,7 @@ describe('Logger', () => {
 
   it('should handle logging errors gracefully', async () => {
     const errorLogger: ILogger = {
-      log: vi.fn().mockRejectedValue(new Error("Logging failed"))
+      log: vi.fn().mockRejectedValue(new Error('Logging failed')),
     };
     logger.setLogger(errorLogger);
 
@@ -137,6 +140,8 @@ describe('Logger', () => {
     }
 
     // Check if console.error was called correctly
-    expect(console.error).toHaveBeenCalledWith(expect.stringContaining("Failed to log message:"));
+    expect(console.error).toHaveBeenCalledWith(
+      expect.stringContaining('Failed to log message:')
+    );
   });
 });

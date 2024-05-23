@@ -1,7 +1,12 @@
 import { EventEmitter } from 'eventemitter3';
 import { Channel, Socket } from 'phoenix';
 import { Player, Playlist, Renderer, Viewport, Layer } from '@castmill/player';
-import { ResourceManager, Cache, StorageIntegration, ItemType } from '@castmill/cache';
+import {
+  ResourceManager,
+  Cache,
+  StorageIntegration,
+  ItemType,
+} from '@castmill/cache';
 import { Machine, DeviceInfo } from '../interfaces/machine';
 import { getCastmillIntro } from './intro';
 import { Calendar, JsonCalendar } from './calendar';
@@ -27,24 +32,24 @@ export interface DeviceMessage {
 
 export interface DeviceCommand {
   command:
-  "refresh" |
-  "clear_cache" |
-  "restart_app" |
-  "restart_device" |
-  "update_app" |
-  "update_firmware" |
-  "shutdown"
+    | 'refresh'
+    | 'clear_cache'
+    | 'restart_app'
+    | 'restart_device'
+    | 'update_app'
+    | 'update_firmware'
+    | 'shutdown';
 }
 
 interface CachePage {
-  page: number,
-  page_size: number,
-  type: ItemType,
-};
+  page: number;
+  page_size: number;
+  type: ItemType;
+}
 
 interface DeviceRequest {
-  resource: "cache"
-  opts: CachePage & { ref: string }
+  resource: 'cache';
+  opts: CachePage & { ref: string };
 }
 
 /**
@@ -68,7 +73,7 @@ export class Device extends EventEmitter {
 
   public id?: string;
   public name?: string;
-  public debugMode: "remote" | "local" | "none" = "none";
+  public debugMode: 'remote' | 'local' | 'none' = 'none';
 
   constructor(
     private integration: Machine,
@@ -104,7 +109,9 @@ export class Device extends EventEmitter {
       throw new Error('Invalid credentials');
     }
 
-    const { device } = JSON.parse(credentials) as { device: { id: string, name: string, token: string } }
+    const { device } = JSON.parse(credentials) as {
+      device: { id: string; name: string; token: string };
+    };
     if (!device) {
       throw new Error('Invalid credentials');
     }
@@ -113,12 +120,11 @@ export class Device extends EventEmitter {
     this.name = device.name;
     this.logDiv = logDiv;
 
-    this.emit("started", device);
+    this.emit('started', device);
 
     // TODO: Should be able to pass the logger to the renderer and the player.
     const renderer = new Renderer(el);
     this.player = new Player(this.contentQueue, renderer, this.opts?.viewport);
-
 
     // this.player.play({ loop: true });
 
@@ -142,7 +148,8 @@ export class Device extends EventEmitter {
           if (entry) {
             const jsonPlaylist: JsonPlaylist | void =
               await this.resourceManager.getData(
-                `${this.opts?.baseUrl || ''}devices/${device.id}/playlists/${entry.playlist
+                `${this.opts?.baseUrl || ''}devices/${device.id}/playlists/${
+                  entry.playlist
                 }`,
                 1000
               );
@@ -288,7 +295,7 @@ export class Device extends EventEmitter {
         this.initListeners(channel);
         this.initHeartbeat(channel);
       } catch (error) {
-        if (error === "invalid_device") {
+        if (error === 'invalid_device') {
           // Clean all app data and refresh the page.
           await this.integration.removeCredentials();
           window.location.reload();
@@ -342,7 +349,7 @@ export class Device extends EventEmitter {
       })
       .receive('error', (resp) => {
         // TODO: Show error in UI.
-        this.logger.error(`Unable to join ${resp}`)
+        this.logger.error(`Unable to join ${resp}`);
       });
 
     channel.on('device:registered', async (payload) => {
@@ -361,11 +368,11 @@ export class Device extends EventEmitter {
   async login(credentials: string, hardwareId: string) {
     const { device } = JSON.parse(credentials);
 
-    const socket = this.socket = new Socket(`/socket`, {
+    const socket = (this.socket = new Socket(`/socket`, {
       params: { device_id: device.id, hardware_id: hardwareId },
       reconnectAfterMs: (_tries: number) => 10_000,
       rejoinAfterMs: (_tries: number) => 10_000,
-    });
+    }));
 
     socket.connect();
 
@@ -387,41 +394,41 @@ export class Device extends EventEmitter {
   }
 
   private initListeners(channel: Channel) {
-    channel.on("command", async (payload: DeviceCommand) => {
+    channel.on('command', async (payload: DeviceCommand) => {
       switch (payload.command) {
-        case "refresh":
+        case 'refresh':
           // Refresh browser
           location.reload();
           break;
-        case "clear_cache":
+        case 'clear_cache':
           // Clear cache
           this.cache.clean();
           break;
-        case "restart_app":
+        case 'restart_app':
           this.restart();
           break;
-        case "restart_device":
+        case 'restart_device':
           this.reboot();
           break;
-        case "update_app":
+        case 'update_app':
           this.update();
           break;
-        case "update_firmware":
+        case 'update_firmware':
           this.updateFirmware();
           break;
-        case "shutdown":
+        case 'shutdown':
           this.shutdown();
           break;
       }
     });
 
-    channel.on("get", async (payload: DeviceRequest) => {
+    channel.on('get', async (payload: DeviceRequest) => {
       const { resource, opts } = payload;
-      console.log({ payload })
+      console.log({ payload });
       switch (resource) {
-        case "cache":
-          const page = await this.getCache(opts)
-          console.log({ page })
+        case 'cache':
+          const page = await this.getCache(opts);
+          console.log({ page });
           channel.push('res:get', { page, ref: opts.ref });
           break;
       }
@@ -442,14 +449,10 @@ export class Device extends EventEmitter {
         case 'widget':
           break;
       }
-    })
+    });
   }
 
-  private async getCache({
-    page,
-    page_size: perPage,
-    type,
-  }: CachePage) {
+  private async getCache({ page, page_size: perPage, type }: CachePage) {
     const data = await this.cache.list(type, (page - 1) * perPage, perPage);
     const count = await this.cache.count(type);
 
@@ -509,24 +512,24 @@ export class Device extends EventEmitter {
     return this.integration.updateFirmware?.();
   }
 
-  setLogMode(logMode: "remote" | "local" | "none") {
+  setLogMode(logMode: 'remote' | 'local' | 'none') {
     if (supportedDebugModes.indexOf(logMode) !== -1) {
       this.debugMode = logMode;
       switch (logMode) {
-        case "remote":
+        case 'remote':
           if (this.socket && this.id) {
+            this.logger.setLogger(new WebSocketLogger(this.socket, this.id));
+          }
+          break;
+        case 'local':
+          // Show logs in log div
+          if (this.logDiv) {
             this.logger.setLogger(
-              new WebSocketLogger(this.socket, this.id)
+              new DivLogger(this.logDiv!, DEFAULT_MAX_LOGS)
             );
           }
           break;
-        case "local":
-          // Show logs in log div
-          if (this.logDiv) {
-            this.logger.setLogger(new DivLogger(this.logDiv!, DEFAULT_MAX_LOGS));
-          }
-          break;
-        case "none":
+        case 'none':
           this.logger.setLogger(new NullLogger());
           break;
       }

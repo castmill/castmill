@@ -1,4 +1,4 @@
-import { ILogger, LogLevel } from "./logger";
+import { ILogger, LogLevel } from './logger';
 
 export class DivLogger implements ILogger {
   private outputDiv: HTMLDivElement;
@@ -8,8 +8,8 @@ export class DivLogger implements ILogger {
   constructor(outputDiv: HTMLDivElement, maxLogs: number = 100) {
     this.outputDiv = outputDiv;
     this.maxLogs = maxLogs;
-    this.outputDiv.style.overflow = "auto"; // Ensure the DIV is scrollable
-    this.outputDiv.style.height = "400px"; // Set a fixed height for the DIV
+    this.outputDiv.style.overflow = 'auto'; // Ensure the DIV is scrollable
+    this.outputDiv.style.height = '400px'; // Set a fixed height for the DIV
   }
 
   async log(level: LogLevel, message: string): Promise<void> {
@@ -21,7 +21,7 @@ export class DivLogger implements ILogger {
       this.logCount--;
     }
 
-    const entry = document.createElement("p");
+    const entry = document.createElement('p');
     entry.textContent = `${new Date().toISOString()} [${level}]: ${message}`;
     this.outputDiv.appendChild(entry);
     this.logCount++;
