@@ -1,0 +1,66 @@
+.filterLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 34px;
+    height: 20px;
+
+    input {
+      opacity: 0;
+      position: absolute;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition:
+        background-color 0.4s,
+        transform 0.4s;
+      border-radius: 20px;
+
+      &:before {
+        position: absolute;
+        content: '';
+        height: 14px;
+        width: 14px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: transform 0.4s;
+        border-radius: 50%;
+      }
+    }
+
+    input:checked + .slider {
+      background-color: #4caf50;
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(14px);
+    }
+
+    input:disabled + .slider {
+      /*background-color: #e0e0e0;*/
+      cursor: not-allowed;
+    }
+
+    /*
+        input:disabled + .slider:before {
+          background-color: #cbcbcb;
+        }
+        */
+  }
+}
