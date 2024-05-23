@@ -73,11 +73,11 @@ export class Cache extends Dexie {
 
   /**
    * List items of a given type. Supports pagination.
-   * @param type 
-   * 
-   * @param offset 
-   * @param limit 
-   * @returns 
+   * @param type
+   *
+   * @param offset
+   * @param limit
+   * @returns
    */
   async list(type: ItemType, offset: number = 0, limit: number = 10) {
     // List all the items of a given type
@@ -93,7 +93,7 @@ export class Cache extends Dexie {
 
   /**
    * Count the items of a given type.
-   * 
+   *
    */
   async count(type: ItemType) {
     return this.items.where('type').equals(type).count();
