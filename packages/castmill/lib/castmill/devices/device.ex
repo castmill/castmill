@@ -1,5 +1,8 @@
 defmodule Castmill.Devices.Device do
+  @behaviour Castmill.Behaviour.Filterable
+
   use Ecto.Schema
+
   import Ecto.Changeset
   import Ecto.Query, warn: false
 
@@ -20,7 +23,9 @@ defmodule Castmill.Devices.Device do
              :timezone,
              :user_agent,
              :version,
-             :volume
+             :volume,
+             :inserted_at,
+             :updated_at
            ]}
 
   schema "devices" do
@@ -40,6 +45,7 @@ defmodule Castmill.Devices.Device do
     field(:volume, :integer)
     field(:hardware_id, :string)
     field(:token_hash, :string)
+    field(:mode, :string, default: "normal")
 
     field(:token, :string, virtual: true)
 
@@ -132,5 +138,23 @@ defmodule Castmill.Devices.Device do
   defp add_hash(password, opts) do
     hash_key = opts[:hash_key] || :password_hash
     %{hash_key => Argon2.hash_pwd_salt(password, opts)}
+  end
+
+  @impl Castmill.Behaviour.Filterable
+  # Filter by online status, however online is defined as having the online field set
+  # to true and the last_online field being within the last minute
+  def apply_filter({"online", true}) do
+    dynamic([d], d.online == true and d.last_online > ago(1, "minute"))
+  end
+
+  # Offline is consider any device that has the online field set to false or the last_online
+  # field being older than a minute
+  def apply_filter({"offline", true}) do
+    dynamic([d], d.online == false or d.last_online <= ago(1, "minute"))
+  end
+
+  def apply_filter(_) do
+    # Return the query unchanged for unrecognized filters
+    nil
   end
 end
