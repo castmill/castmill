@@ -1,30 +1,20 @@
 import { Machine, DeviceInfo } from '@castmill/device';
 
-// get the version of the electron app from
-
 export class ElectronMachine implements Machine {
-  /**
-   * Since a browser does not support a MAC address or another
-   * persistent GUID, we will use a random UUID.
-   *
-   */
   async getMachineGUID(): Promise<string> {
     return window.api.getMachineGUID();
   }
 
   async storeCredentials(credentials: string): Promise<void> {
-    //TODO use a real storage
-    localStorage.setItem('castmill.credentials', credentials);
+    window.api.setItem('castmill-credentials', credentials);
   }
 
   async getCredentials(): Promise<string> {
-    //TODO use a real storage
-    return localStorage.getItem('castmill.credentials') || '';
+    return window.api.getItem('castmill-credentials');
   }
 
   async removeCredentials(): Promise<void> {
-    //TODO use a real storage
-    localStorage.removeItem('castmill.credentials');
+    window.api.deleteItem('castmill-credentials');
   }
 
   async getLocation(): Promise<
@@ -51,14 +41,13 @@ export class ElectronMachine implements Machine {
   }
 
   async getDeviceInfo(): Promise<DeviceInfo> {
-    // const [versions] = createSignal(window.electron.process.versions)
     const versions = window.electron.process.versions;
 
     return {
       appType: import.meta.env.VITE_APP_TYPE,
       appVersion: window.electron.process.env.npm_package_version,
-      os: 'Hardcode OS 12345',
-      hardware: 'LG 42424242 dummy',
+      os: `${window.osInfo.type} ${window.osInfo.release}`,
+      hardware: await window.hardwareInfo(),
       environmentVersion: versions.electron,
       chromiumVersion: versions.chrome,
       v8Version: versions.v8,

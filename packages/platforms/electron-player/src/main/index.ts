@@ -1,6 +1,13 @@
-import { app, shell, BrowserWindow, ipcMain } from 'electron';
+import {
+  app,
+  shell,
+  BrowserWindow,
+  ipcMain,
+  IpcMainInvokeEvent,
+} from 'electron';
 import { join } from 'path';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
+import Store from 'electron-store';
 import * as api from './api';
 import { Action } from '../common';
 import icon from '../../resources/icon.png?asset';
@@ -49,6 +56,7 @@ function createWindow(): void {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
+  const store = new Store();
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron');
 
@@ -85,6 +93,73 @@ app.whenReady().then(() => {
   ipcMain.handle(Action.GET_MACHINE_GUID, () => {
     return api.getMachineGUID();
   });
+
+  ipcMain.handle(
+    Action.GET_STORE_VALUE,
+    (_event: IpcMainInvokeEvent, key: string) => {
+      return store.get(key);
+    }
+  );
+
+  ipcMain.on(
+    Action.SET_STORE_VALUE,
+    (_event: IpcMainInvokeEvent, key: string, value: string) => {
+      store.set(key, value);
+    }
+  );
+
+  ipcMain.on(
+    Action.DELETE_STORE_VALUE,
+    (_event: IpcMainInvokeEvent, key: string) => {
+      store.delete(key);
+    }
+  );
+
+  ipcMain.handle(
+    Action.FS_INIT,
+    (_event: IpcMainInvokeEvent, storagePath: string) =>
+      api.initStorage(storagePath)
+  );
+
+  ipcMain.handle(
+    Action.FS_INFO,
+    (_event: IpcMainInvokeEvent, storagePath: string) =>
+      api.getStorageInfo(storagePath)
+  );
+
+  ipcMain.handle(
+    Action.FS_LIST_FILES,
+    (_event: IpcMainInvokeEvent, storagePath: string) =>
+      api.listFiles(storagePath)
+  );
+
+  ipcMain.handle(
+    Action.FS_STORE_FILE,
+    (
+      _event: IpcMainInvokeEvent,
+      storagePath: string,
+      url: string,
+      data?: any
+    ) => api.storeFile(storagePath, url, data)
+  );
+
+  ipcMain.handle(
+    Action.FS_RETRIEVE_FILE,
+    (_event: IpcMainInvokeEvent, storagePath: string, url: string) =>
+      api.retrieveFile(storagePath, url)
+  );
+
+  ipcMain.handle(
+    Action.FS_DELETE_FILE,
+    (_event: IpcMainInvokeEvent, storagePath: string, url: string) =>
+      api.deleteFile(storagePath, url)
+  );
+
+  ipcMain.handle(
+    Action.FS_DELETE_ALL_FILES,
+    (_event: IpcMainInvokeEvent, storagePath: string) =>
+      api.deleteAllFiles(storagePath)
+  );
 
   createWindow();
 

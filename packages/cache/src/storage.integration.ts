@@ -32,6 +32,11 @@ export enum StoreError {
   NotEnoughSpace,
 }
 
+export interface StoreFileReturnValue {
+  result: { code: StoreResult; error?: StoreError; errMsg?: string };
+  item?: StorageItem;
+}
+
 export interface StorageIntegration {
   /**
    * Perform any initialization required by the cache.
@@ -56,13 +61,7 @@ export interface StorageIntegration {
    * @param url
    * @param optional data to store, so it is not needed to download the file.
    */
-  storeFile(
-    url: string,
-    data?: any
-  ): Promise<{
-    result: { code: StoreResult; error?: StoreError; errMsg?: string };
-    item?: StorageItem;
-  }>;
+  storeFile(url: string, data?: any): Promise<StoreFileReturnValue>;
 
   /**
    * Retrieves a uri like string representing a file in the storage.
