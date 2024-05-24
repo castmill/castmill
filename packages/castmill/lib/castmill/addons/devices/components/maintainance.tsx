@@ -14,6 +14,7 @@ export const Maintainance: Component<{ device: Device }> = (props) => {
     try {
       await DevicesService.sendCommand(props.device.id, command);
     } catch (error) {
+      console.error(error);
       alert('An error occurred while processing your request');
     }
   };
