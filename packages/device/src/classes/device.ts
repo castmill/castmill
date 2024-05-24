@@ -424,11 +424,9 @@ export class Device extends EventEmitter {
 
     channel.on('get', async (payload: DeviceRequest) => {
       const { resource, opts } = payload;
-      console.log({ payload });
       switch (resource) {
         case 'cache':
           const page = await this.getCache(opts);
-          console.log({ page });
           channel.push('res:get', { page, ref: opts.ref });
           break;
       }
