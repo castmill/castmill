@@ -5,7 +5,8 @@ defmodule CastmillWeb.Live.Admin do
   def mount(params, _session, socket) do
     IO.puts("mounting admin live view")
     IO.puts("socket: #{inspect(params)}")
-    {:ok, socket}
+    # or some default value
+    {:ok, assign(socket, :selected_link, nil)}
   end
 
   #     <.live_component module={CastmillWeb.Live.Admin.Sidebar} id="sidebar" />

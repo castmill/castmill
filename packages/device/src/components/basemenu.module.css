@@ -1,27 +1,47 @@
 .menu {
-  background-color: #969696;
-  color: #111;
+  background-color: #1e1e1e;
+  color: #d3d3d3;
   position: absolute;
   width: 300px;
   text-align: left;
+  border-bottom-right-radius: 0.5em;
+  border-right: 1px solid #a7a7a7;
+  border-bottom: 1px solid #a7a7a7;
+  box-shadow: 0.3em 0.3em 0.2em #d0d1e7;
 }
 
 .menuHead {
-  background-color: #a7a7a7;
-  color: #111;
+  margin: 0 0 1em 0.5em;
   padding: 5px;
-  cursor: pointer;
+}
+.menuFooter {
+  margin: 4em 0 1em;
+  padding: 1em 0 0 0.5em;
+  border-top: 1px solid #696969;
+  font-weight: 400;
+  color: #7171de;
+  font-size: 0.8em;
+  font-weight: 600;
 }
 
 .menu h1 {
-  text-align: center;
+  text-align: left;
   font-size: 24px;
+}
+
+.menuHead p {
+  color: #7c7c7c;
+  font-size: 0.8em;
+}
+
+.menu ul {
+  border-top: 1px solid #484848;
 }
 
 .menuItem {
   padding: 5px;
   cursor: pointer;
-  border-bottom: 1px solid #a7a7a7;
+  border-bottom: 1px solid #696969;
 }
 
 .checkbox {
@@ -31,7 +51,7 @@
 }
 
 .selected {
-  background: #2980b9;
+  background: #3a3a3a;
   color: #eee;
 }
 

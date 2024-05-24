@@ -12,6 +12,8 @@ defmodule Castmill.Organizations do
   alias Castmill.Protocol.Access
   alias Castmill.QueryHelpers
 
+  require Logger
+
   defimpl Access, for: Organization do
     def canAccess(organization, user, _action) do
       if user == nil do
@@ -205,6 +207,7 @@ defmodule Castmill.Organizations do
 
   def is_admin?(organization_id, user_id) do
     role = get_user_role(organization_id, user_id)
+    Logger.info("Role: #{inspect(role)}")
     role == :admin
   end
 
@@ -240,27 +243,34 @@ defmodule Castmill.Organizations do
     organization or in any of its parents organizations hierarchy
   """
   def has_access(organization_id, user_id, resource_type, action) do
-    query =
-      from(oua in OrganizationsUsersAccess,
-        join: o in Organization,
-        on: oua.organization_id == o.id,
-        where:
-          oua.user_id == ^user_id and oua.access == ^"#{resource_type}:#{action}" and
-            (o.id == ^organization_id or o.organization_id == ^organization_id),
-        select: oua
-      )
-
-    if Repo.one(query) == nil do
-      # Check if parent organization has access recursively
-      organization = Repo.get!(Organization, organization_id)
-
-      if organization.organization_id != nil do
-        has_access(organization.organization_id, user_id, resource_type, action)
-      end
-    else
+    if is_admin?(organization_id, user_id) do
       true
+    else
+      query =
+        from(oua in OrganizationsUsersAccess,
+          join: o in Organization,
+          on: oua.organization_id == o.id,
+          where:
+            oua.user_id == ^user_id and oua.access == ^"#{resource_type}:#{action}" and
+              (o.id == ^organization_id or o.organization_id == ^organization_id),
+          select: oua
+        )
+
+      if Repo.one(query) == nil do
+        # Check if parent organization has access recursively
+        organization = Repo.get!(Organization, organization_id)
+
+        if organization.organization_id != nil do
+          has_access(organization.organization_id, user_id, resource_type, action)
+        end
+      else
+        true
+      end
     end
   end
+
+  # TODO: We need a has_access function that checks if the user has access to an actual resource
+  # like for example a specific device, media or playlist. This is not implemented yet.
 
   alias Castmill.Accounts.User
 
@@ -285,6 +295,53 @@ defmodule Castmill.Organizations do
     # select: [user, ou.role]
 
     Repo.all(query)
+  end
+
+  @doc """
+    Returns a list of resources of a given resource type
+  """
+  def list_resources(%{resources: "medias"} = params) do
+    Castmill.Resources.list_resources(
+      Castmill.Resources.Media,
+      params
+    )
+  end
+
+  def list_resources(%{resources: "playlists"} = params) do
+    Castmill.Resources.list_resources(
+      Castmill.Resources.Playlist,
+      params
+    )
+  end
+
+  def list_resources(%{resources: "calendars"} = params) do
+    Castmill.Resources.list_resources(
+      Castmill.Resources.Calendar,
+      params
+    )
+  end
+
+  def list_resources(%{resources: "devices"} = params) do
+    Castmill.Resources.list_resources(Castmill.Devices.Device, params)
+  end
+
+  @doc """
+    Returns the count of resources of a given resource type
+  """
+  def count_resources(%{resources: "medias"} = params) do
+    Castmill.Resources.count_resources(Castmill.Resources.Media, params)
+  end
+
+  def count_resources(%{resources: "playlists"} = params) do
+    Castmill.Resources.count_resources(Castmill.Resources.Playlist, params)
+  end
+
+  def count_resources(%{resources: "calendars"} = params) do
+    Castmill.Resources.count_resources(Castmill.Resources.Calendar, params)
+  end
+
+  def count_resources(%{resources: "devices"} = params) do
+    Castmill.Resources.count_resources(Castmill.Devices.Device, params)
   end
 
   @doc """
@@ -404,9 +461,9 @@ defmodule Castmill.Organizations do
   end
 
   @doc """
-    Update the access for a user in an organization.
+    Update the role for a member of an organization.
   """
-  def update_access(organization_id, user_id, role) do
+  def update_role(organization_id, user_id, role) do
     %Castmill.Organizations.OrganizationsUsers{
       role: role,
       user_id: user_id,

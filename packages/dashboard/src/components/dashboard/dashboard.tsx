@@ -15,10 +15,7 @@ const Dashboard: Component<DashboardProps> = (props) => {
   return (
     <div class="castmill-dashboard">
       <SidePanel addons={props.addons} />
-      <div class="content">
-        <h1>Dashboard</h1>
-        {props.children}
-      </div>
+      <div class="content">{props.children}</div>
     </div>
   );
 };

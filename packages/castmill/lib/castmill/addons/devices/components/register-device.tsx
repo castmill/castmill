@@ -34,7 +34,7 @@ const RegisterDevice: Component<{
   };
 
   const isFormValid = () => {
-    return ![...errors().values()].some((e) => e);
+    return ![...errors().values()].some((e) => e) && name() && pincode();
   };
 
   return (
@@ -51,9 +51,9 @@ const RegisterDevice: Component<{
           <FormItem
             label="Name"
             id="name"
-            name={name()}
+            value={name()}
             placeholder="Enter device name"
-            onInput={(value) => {
+            onInput={(value: string) => {
               setName(value);
               validateField('name', value);
             }}
@@ -64,10 +64,11 @@ const RegisterDevice: Component<{
           <FormItem
             label="Pincode"
             id="pincode"
-            name={pincode()}
+            value={pincode()}
             placeholder={`Enter ${pincodeLength}-characters pincode`}
             disabled={!!props.pincode}
-            onInput={(value) => {
+            description="The pincode will be shown on the device's screen."
+            onInput={(value: string) => {
               setPincode(value);
               validateField('pincode', value);
             }}

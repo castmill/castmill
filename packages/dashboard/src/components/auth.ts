@@ -1,4 +1,6 @@
+import { Socket } from 'phoenix';
 import { createSignal } from 'solid-js';
+import { setStore } from '../store';
 
 const baseUrl = 'http://localhost:4000';
 
@@ -21,10 +23,37 @@ export async function loginUser() {
 
   // If status is 200, set isAuthenticated to true
   if (result.status === 200) {
-    setIsAuthenticated(true);
-    const { status, user } = await result.json();
-    // status should be "ok" and user should be an object
+    // TODO: We should refresh the token once per hour, this is specially important
+    // if the socket needs to reconnect and therefore the token needs to be fresh
+    const { status, user, token } = await result.json();
+
+    // Check if the status is "ok" and if the user is an object
+    if (status !== 'ok' || typeof user !== 'object') {
+      resetSession();
+      return;
+    }
+
+    // Start user_socket connection for realtime updates
+    const socket = new Socket(`ws:localhost:4000/user_socket`, {
+      params: () => ({ token }),
+    });
+    socket.connect();
+    const channel = socket.channel(`users:${user.id}`, {});
+
+    channel
+      .join()
+      .receive('ok', () => {
+        console.log('Joined successfully');
+        // TODO: Set some state icon to show we are online receiving updates
+      })
+      .receive('error', () => {
+        console.log('Unable to join');
+        // TODO: Set some state icon to show we are offline
+      });
+
+    setStore('socket', socket);
     setUser(user);
+    setIsAuthenticated(true);
   } else {
     resetSession();
   }

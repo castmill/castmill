@@ -44,9 +44,19 @@ defmodule CastmillWeb.SessionControllerTest do
     end
 
     test "returns current user if logged in", %{conn: conn} do
-      user = %{"id" => "some_id", "name" => "John Doe"}
+      user = %{:id => "some_id", :name => "John Doe"}
       conn = conn |> put_session(:user, user) |> get(Helpers.session_path(conn, :get))
-      assert json_response(conn, 200) == %{"status" => "ok", "user" => user}
+
+      result = json_response(conn, 200)
+
+      # assert that has a defined token
+      assert result["token"]
+
+      assert result == %{
+               "status" => "ok",
+               "user" => Jason.decode!(Jason.encode!(user)),
+               "token" => result["token"]
+             }
     end
   end
 

@@ -1,7 +1,7 @@
 import { Component, For, Show, Suspense, lazy } from 'solid-js';
 import './sidepanel.scss';
 import PanelItem from '../panel-item/panel-item';
-import Dropdown from '../dropdown/dropdown';
+import { Dropdown } from '@castmill/ui-common';
 
 import { IoSettingsOutline } from 'solid-icons/io';
 import { AddOnTree } from '../../classes/addon-tree';

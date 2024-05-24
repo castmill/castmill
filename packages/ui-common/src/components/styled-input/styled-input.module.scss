@@ -1,0 +1,31 @@
+/* StyledInput.scss */
+.input-text {
+  width: 100%;
+  font-size: 16px;
+  outline: none;
+  box-sizing: border-box;
+  background-color: #151320;
+  color: #b1b1b1;
+  font-weight: 600;
+  border: none;
+  padding: 0.3em 0;
+  -webkit-font-smoothing: antialiased;
+
+  &:hover {
+    border-color: #b0b0b0;
+  }
+
+  &:focus {
+    border-color: #cccccc;
+  }
+
+  &::placeholder {
+    color: #666666;
+    font-weight: 300;
+  }
+
+  &:disabled {
+    color: #ccc;
+    cursor: not-allowed;
+  }
+}

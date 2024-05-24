@@ -10,7 +10,8 @@ defmodule Castmill.Repo.Migrations.CreateDevices do
       add :hardware_id, :string, null: false
       add :last_ip, :string
       add :token_hash, :string
-      add :last_online, :date
+      add :online, :boolean
+      add :last_online, :naive_datetime
       add :user_agent, :string
       add :timezone, :string
       add :loc_lat, :float
@@ -21,6 +22,9 @@ defmodule Castmill.Repo.Migrations.CreateDevices do
       add :meta, :map
       add :settings, :map
       add :info, :map
+
+      # normal, test, debug
+      add :mode, :string, default: "normal"
 
       add :resource_id, references(:resources, on_delete: :nilify_all), null: true
 

@@ -1,0 +1,31 @@
+.form-item-wrapper {
+  margin: 0.75em 0;
+
+  .form-item1 {
+    border: 1px solid #555;
+    border-radius: 0.3em;
+    margin-bottom: 0.3em;
+    padding: 0.5em 1.1em;
+
+    background-color: #151320;
+
+    label {
+      font-size: 0.8em;
+      color: #577cbb;
+    }
+
+    &:hover {
+      border-color: #b0b0b0;
+    }
+
+    &.focused {
+      border-color: #4a90e2; /* Highlight color */
+    }
+  }
+
+  .description {
+    padding-top: 0.2em;
+    color: #6a5da2;
+    font-size: 0.8em;
+  }
+}

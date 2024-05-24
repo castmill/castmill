@@ -1,0 +1,64 @@
+/* Tabs.css - Dark Mode */
+:root {
+  --bg-color: #2c2c2c; /* Dark background color */
+  --primary-color: #007bff; /* Accent color for active tabs */
+  --text-color: #e8e8e8; /* Light text color */
+  --hover-bg-color: #444444; /* Hover effect for buttons */
+  --border-color: #555555; /* Borders for separating tabs */
+  --active-bg-color: #333333; /* Background for active tab */
+  --transition-duration: 0.3s; /* Adjust duration for transitions */
+}
+
+.tabs {
+  margin-top: 20px;
+
+  .tabHeader {
+    display: flex;
+    border-bottom: 2px solid var(--border-color);
+  }
+
+  .tabButton {
+    flex: 1;
+    font-size: 1em;
+    padding: 10px;
+    cursor: pointer;
+    /*background-color: var(--bg-color);*/
+    background-color: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--text-color);
+    transition:
+      background-color var(--transition-duration),
+      color var(--transition-duration);
+
+    font-weight: bold;
+  }
+
+  .tabButton:hover {
+    background-color: var(--hover-bg-color);
+  }
+
+  .tabButton.active {
+    border-bottom: 2px solid var(--primary-color); /* Active tab indicator */
+    color: var(--primary-color); /* Accent color for active tab text */
+  }
+
+  .tabContent {
+    height: 100%;
+    min-height: 22em;
+    padding: 15px;
+    border-top: none;
+    color: var(--text-color);
+    opacity: 0;
+    transform: translateY(10px); /* Shift content slightly for animation */
+    transition:
+      opacity var(--transition-duration),
+      transform var(--transition-duration);
+  }
+
+  /* Show the tab content when active */
+  .tabContentActive {
+    opacity: 1;
+    transform: translateY(0); /* Reset position to align properly */
+  }
+}

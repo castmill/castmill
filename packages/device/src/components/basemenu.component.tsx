@@ -56,10 +56,15 @@ const isSubmenuMenuEntry = (entry: MenuEntry): entry is SubmenuMenuEntry =>
 // BaseMenu component props
 interface BaseMenuProps {
   header: JSX.Element;
+  footer: JSX.Element;
   entries: MenuEntry[];
 }
 
-export const BaseMenu: Component<BaseMenuProps> = ({ header, entries }) => {
+export const BaseMenu: Component<BaseMenuProps> = ({
+  header,
+  entries,
+  footer,
+}) => {
   // get initial checkbox states from menu entries
   const getCheckbosState = (menuEntries: MenuEntry[]) => {
     return menuEntries.reduce((acc: Record<string, boolean>, entry) => {
@@ -255,6 +260,7 @@ export const BaseMenu: Component<BaseMenuProps> = ({ header, entries }) => {
               );
             })}
           </ul>
+          <div class={styles.menuFooter}>{footer}</div>
         </div>
       </Show>
     </div>

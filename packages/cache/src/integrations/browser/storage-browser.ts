@@ -33,6 +33,7 @@ export class StorageBrowser implements StorageIntegration {
           if (key.startsWith(this.prefix) && key !== this.cacheName) {
             return caches.delete(key);
           }
+          return null;
         })
       );
 

@@ -53,7 +53,7 @@ defmodule Castmill.MixProject do
       {:jason, "~> 1.2"},
       {:plug_cowboy, "~> 2.5"},
       {:argon2_elixir, "~> 3.1.0"},
-      {:tarams, "~> 1.0.0"},
+      {:tarams, "~> 1.8.0"},
       {:wax_, "~> 0.6.0"},
       {:mox, "~> 1.0", only: [:test]}
     ]

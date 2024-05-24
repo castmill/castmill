@@ -123,9 +123,13 @@ export class TemplateWidget extends TimelineWidget {
 
     for (let i = 0; i < fontFacesNames.length; i++) {
       const fontFaceName = fontFacesNames[i];
-      const fontFace = await this.fontFaces[fontFaceName];
-      fontFaceSet.delete(fontFace);
-      delete this.fontFaces[fontFaceName];
+      if (fontFaceName) {
+        const fontFace = await this.fontFaces[fontFaceName];
+        if (fontFace) {
+          fontFaceSet.delete(fontFace);
+        }
+        delete this.fontFaces[fontFaceName];
+      }
     }
   }
 

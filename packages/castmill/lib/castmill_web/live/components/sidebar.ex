@@ -82,7 +82,7 @@ defmodule CastmillWeb.Live.Admin.Sidebar do
           </ul>
         </div>
         <div class="text-gray-600 text-xs text-center">
-          <div>© 2011-2023, Castmill AB</div>
+          <div>© 2011-2024, Castmill AB</div>
           <div>Licensed under AGPL</div>
           <div>All rights reserved</div>
         </div>
