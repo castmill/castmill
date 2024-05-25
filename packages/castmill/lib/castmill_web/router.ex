@@ -108,11 +108,11 @@ defmodule CastmillWeb.Router do
     pipe_through(:device)
 
     get("/:id", DeviceController, :show)
-    get("/:id/calendars", DeviceController, :get_calendars)
+    get("/:id/channels", DeviceController, :get_channels)
     get("/:id/playlists/:playlist_id", DeviceController, :get_playlist)
 
-    put("/:id/calendars/:calendar_id", DeviceController, :add_calendar)
-    delete("/:id/calendars/:calendar_id", DeviceController, :remove_calendar)
+    put("/:id/channels/:channel_id", DeviceController, :add_channel)
+    delete("/:id/channels/:channel_id", DeviceController, :remove_channel)
 
     # This route can be used by a device in order to post
     # its current status to the server. It can be called in
@@ -207,9 +207,9 @@ defmodule CastmillWeb.Router do
       resources "/medias/:media_id/files", FileController, except: [:new, :edit] do
       end
 
-      post("/calendars/:calendar_id/entries", ResourceController, :add_calendar_entry)
-      put("/calendars/:calendar_id/entries/:id", ResourceController, :update_calendar_entry)
-      delete("/calendars/:calendar_id/entries/:id", ResourceController, :delete_calendar_entry)
+      post("/channels/:channel_id/entries", ResourceController, :add_channel_entry)
+      put("/channels/:channel_id/entries/:id", ResourceController, :update_channel_entry)
+      delete("/channels/:channel_id/entries/:id", ResourceController, :delete_channel_entry)
 
       post("/playlists/:playlist_id/items", PlaylistController, :add_item)
       delete("/playlists/:playlist_id/items/:id", PlaylistController, :delete_item)

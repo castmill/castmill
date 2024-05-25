@@ -55,9 +55,9 @@ defmodule CastmillWeb.Live.Admin.OrganizationShow do
           form: CastmillWeb.Live.Admin.DeviceForm
         },
         %{
-          name: "Calendars",
-          icon: "hero-calendar-days-solid",
-          href: "calendars",
+          name: "Channels",
+          icon: "hero-channel-days-solid",
+          href: "channels",
           form: nil
         },
         %{
@@ -258,8 +258,8 @@ defmodule CastmillWeb.Live.Admin.OrganizationShow do
      ]}
   end
 
-  defp resources_for_organization(organization_id, "calendars") do
-    {Organizations.list_calendars(organization_id) || [],
+  defp resources_for_organization(organization_id, "channels") do
+    {Organizations.list_channels(organization_id) || [],
      [
        %{
          name: "ID",

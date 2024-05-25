@@ -1,8 +1,8 @@
 defmodule CastmillWeb.ResourceJSON do
   alias Castmill.Resources.Media
   alias Castmill.Resources.Playlist
-  alias Castmill.Resources.Calendar
-  alias Castmill.Resources.CalendarEntry
+  alias Castmill.Resources.Channel
+  alias Castmill.Resources.ChannelEntry
   alias Castmill.Devices.Device
 
   @doc """
@@ -22,10 +22,10 @@ defmodule CastmillWeb.ResourceJSON do
     }
   end
 
-  def index(%{calendars: calendars, count: count}) do
+  def index(%{channels: channels, count: count}) do
     %{
       count: count,
-      data: for(calendar <- calendars, do: data(calendar))
+      data: for(channel <- channels, do: data(channel))
     }
   end
 
@@ -43,8 +43,8 @@ defmodule CastmillWeb.ResourceJSON do
     %{data: data(media)}
   end
 
-  def show(%{calendar: calendar}) do
-    %{data: data(calendar)}
+  def show(%{channel: channel}) do
+    %{data: data(channel)}
   end
 
   def show(%{entry: entry}) do
@@ -100,27 +100,27 @@ defmodule CastmillWeb.ResourceJSON do
     }
   end
 
-  defp data(%Calendar{entries: %Ecto.Association.NotLoaded{}} = calendar) do
+  defp data(%Channel{entries: %Ecto.Association.NotLoaded{}} = channel) do
     %{
-      id: calendar.id,
-      name: calendar.name,
-      timezone: calendar.timezone,
-      default_playlist_id: calendar.default_playlist_id,
+      id: channel.id,
+      name: channel.name,
+      timezone: channel.timezone,
+      default_playlist_id: channel.default_playlist_id,
       entries: []
     }
   end
 
-  defp data(%Calendar{} = calendar) do
+  defp data(%Channel{} = channel) do
     %{
-      id: calendar.id,
-      name: calendar.name,
-      timezone: calendar.timezone,
-      default_playlist_id: calendar.default_playlist_id,
-      entries: calendar.entries
+      id: channel.id,
+      name: channel.name,
+      timezone: channel.timezone,
+      default_playlist_id: channel.default_playlist_id,
+      entries: channel.entries
     }
   end
 
-  defp data(%CalendarEntry{} = entry) do
+  defp data(%ChannelEntry{} = entry) do
     %{
       id: entry.id,
       start: entry.start,

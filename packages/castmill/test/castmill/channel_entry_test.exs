@@ -1,9 +1,9 @@
-defmodule Castmill.Resources.CalendarEntryTest do
+defmodule Castmill.Resources.ChannelEntryTest do
   use ExUnit.Case, async: true
-  alias Castmill.Resources.CalendarEntry
+  alias Castmill.Resources.ChannelEntry
 
-  @moduletag :calendar_entry
-  describe "CalendarEntry changeset" do
+  @moduletag :channel_entry
+  describe "ChannelEntry changeset" do
     test "validates that dates are in the same week" do
       # Let's use a fixed date, e.g., a Wednesday
       wednesday = DateTime.to_unix(~U[2023-08-09 19:59:03Z])
@@ -11,19 +11,19 @@ defmodule Castmill.Resources.CalendarEntryTest do
       next_wednesday = DateTime.to_unix(~U[2023-08-16 19:59:03Z])
 
       # Mock values for required fields
-      common_attrs = %{playlist_id: 1, calendar_id: 1}
+      common_attrs = %{playlist_id: 1, channel_id: 1}
 
       changeset =
-        CalendarEntry.changeset(
-          %CalendarEntry{},
+        ChannelEntry.changeset(
+          %ChannelEntry{},
           Map.merge(%{start: wednesday, end: thursday}, common_attrs)
         )
 
       assert changeset.valid?
 
       changeset =
-        CalendarEntry.changeset(
-          %CalendarEntry{},
+        ChannelEntry.changeset(
+          %ChannelEntry{},
           Map.merge(%{start: wednesday, end: next_wednesday}, common_attrs)
         )
 
@@ -36,11 +36,11 @@ defmodule Castmill.Resources.CalendarEntryTest do
       yesterday = DateTime.to_unix(~U[2023-08-08 19:59:03Z])
 
       # Mock values for required fields
-      common_attrs = %{playlist_id: 1, calendar_id: 1}
+      common_attrs = %{playlist_id: 1, channel_id: 1}
 
       changeset =
-        CalendarEntry.changeset(
-          %CalendarEntry{},
+        ChannelEntry.changeset(
+          %ChannelEntry{},
           Map.merge(%{start: today, end: yesterday}, common_attrs)
         )
 
@@ -52,19 +52,19 @@ defmodule Castmill.Resources.CalendarEntryTest do
       today = DateTime.to_unix(~U[2023-08-09 19:59:03Z])
       tomorrow = today + 24 * 60 * 60
       yesterday = today - 24 * 60 * 60
-      future = CalendarEntry.timestamp() + 24 * 60 * 60
+      future = ChannelEntry.timestamp() + 24 * 60 * 60
 
       # Common attributes for the required fields
       common_attrs = %{
         start: today,
         end: tomorrow,
         playlist_id: 1,
-        calendar_id: 1
+        channel_id: 1
       }
 
       changeset =
-        CalendarEntry.changeset(
-          %CalendarEntry{},
+        ChannelEntry.changeset(
+          %ChannelEntry{},
           Map.merge(common_attrs, %{
             repeat_weekly_until: DateTime.to_date(DateTime.from_unix!(future))
           })
@@ -73,16 +73,16 @@ defmodule Castmill.Resources.CalendarEntryTest do
       assert changeset.valid?
 
       changeset =
-        CalendarEntry.changeset(
-          %CalendarEntry{},
+        ChannelEntry.changeset(
+          %ChannelEntry{},
           Map.merge(common_attrs, %{repeat_weekly_until: nil})
         )
 
       assert changeset.valid?
 
       changeset =
-        CalendarEntry.changeset(
-          %CalendarEntry{},
+        ChannelEntry.changeset(
+          %ChannelEntry{},
           Map.merge(common_attrs, %{
             repeat_weekly_until: DateTime.to_date(DateTime.from_unix!(yesterday))
           })

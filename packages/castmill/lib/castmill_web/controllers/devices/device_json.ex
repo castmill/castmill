@@ -1,13 +1,13 @@
 defmodule CastmillWeb.DeviceJSON do
   alias Castmill.Devices.Device
   alias Castmill.Devices.DevicesRegistrations
-  alias Castmill.Resources.Calendar
+  alias Castmill.Resources.Channel
 
   @doc """
-  Renders a list of calendars
+  Renders a list of channels
   """
-  def index(%{calendars: calendars}) do
-    %{data: for(calendar <- calendars, do: data(calendar))}
+  def index(%{channels: channels}) do
+    %{data: for(channel <- channels, do: data(channel))}
   end
 
   @doc """
@@ -38,10 +38,10 @@ defmodule CastmillWeb.DeviceJSON do
     }
   end
 
-  defp data(%Calendar{} = calendar) do
+  defp data(%Channel{} = channel) do
     %{
-      id: calendar.id,
-      name: calendar.name
+      id: channel.id,
+      name: channel.name
     }
   end
 end

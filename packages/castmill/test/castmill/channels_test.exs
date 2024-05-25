@@ -1,71 +1,71 @@
-defmodule Castmill.CalendarsTest do
+defmodule Castmill.ChannelsTest do
   use Castmill.DataCase
 
   @moduletag :playlist_data_case
 
   alias Castmill.Resources
 
-  describe "calendars" do
-    @describetag :calendars
+  describe "channels" do
+    @describetag :channels
 
-    alias Castmill.Resources.Calendar
+    alias Castmill.Resources.Channel
 
     import Castmill.NetworksFixtures
     import Castmill.OrganizationsFixtures
-    import Castmill.CalendarsFixtures
+    import Castmill.ChannelsFixtures
     import Castmill.PlaylistsFixtures
 
-    test "list_calendar/1 returns all calendars" do
+    test "list_channel/1 returns all channels" do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
 
-      calendar =
-        calendar_fixture(%{organization_id: organization.id, timezone: "Europe/Stockholm"})
+      channel =
+        channel_fixture(%{organization_id: organization.id, timezone: "Europe/Stockholm"})
 
-      assert Resources.list_resources(Calendar, %{organization_id: organization.id}) == [calendar]
+      assert Resources.list_resources(Channel, %{organization_id: organization.id}) == [channel]
     end
 
-    test "update_calendar/1 updates the calendar name" do
+    test "update_channel/1 updates the channel name" do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
 
-      calendar =
-        calendar_fixture(%{organization_id: organization.id, timezone: "Europe/Stockholm"})
+      channel =
+        channel_fixture(%{organization_id: organization.id, timezone: "Europe/Stockholm"})
 
-      assert Resources.list_resources(Calendar, %{organization_id: organization.id}) == [calendar]
+      assert Resources.list_resources(Channel, %{organization_id: organization.id}) == [channel]
 
       update_attrs = %{name: "some updated name"}
 
-      assert {:ok, calendar} = Resources.update_calendar(calendar, update_attrs)
-      assert calendar.name == "some updated name"
+      assert {:ok, channel} = Resources.update_channel(channel, update_attrs)
+      assert channel.name == "some updated name"
     end
 
-    test "delete_calendar/1 deletes calendar" do
+    test "delete_channel/1 deletes channel" do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
 
-      calendar =
-        calendar_fixture(%{organization_id: organization.id, timezone: "Europe/Stockholm"})
+      channel =
+        channel_fixture(%{organization_id: organization.id, timezone: "Europe/Stockholm"})
 
-      assert Resources.list_resources(Calendar, %{organization_id: organization.id}) == [calendar]
+      assert Resources.list_resources(Channel, %{organization_id: organization.id}) == [channel]
 
-      Resources.delete_calendar(calendar)
+      Resources.delete_channel(channel)
 
-      assert Resources.list_resources(Calendar, %{organization_id: organization.id}) == []
+      assert Resources.list_resources(Channel, %{organization_id: organization.id}) == []
     end
 
-    test "add_calendar_entry/3 adds one entry to a given calendar" do
+    test "add_channel_entry/3 adds one entry to a given channel" do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
       playlist = playlist_fixture(%{organization_id: organization.id})
 
-      calendar =
-        calendar_fixture(%{organization_id: organization.id, timezone: "Europe/Stockholm"})
+      channel =
+        channel_fixture(%{organization_id: organization.id, timezone: "Europe/Stockholm"})
 
-      assert Resources.list_resources(Calendar, %{organization_id: organization.id}) == [calendar]
+      assert Resources.list_resources(Channel, %{organization_id: organization.id}) == [channel]
 
-      assert Resources.list_calendar_entries(
-               calendar.id,
+      assert Resources.list_channel_entries(
+               channel.id,
                DateTime.to_unix(~U[2005-05-05 19:59:03Z]),
                DateTime.to_unix(~U[9999-12-31 00:00:00Z])
              ) == []
@@ -78,10 +78,10 @@ defmodule Castmill.CalendarsTest do
         playlist_id: playlist.id
       }
 
-      assert {:ok, entry} = Resources.add_calendar_entry(calendar.id, entry_attrs)
+      assert {:ok, entry} = Resources.add_channel_entry(channel.id, entry_attrs)
 
-      assert Resources.list_calendar_entries(
-               calendar.id,
+      assert Resources.list_channel_entries(
+               channel.id,
                DateTime.to_unix(~U[2005-05-05 19:59:03Z]),
                DateTime.to_unix(~U[9999-12-31 00:00:00Z])
              ) == [
@@ -89,18 +89,18 @@ defmodule Castmill.CalendarsTest do
              ]
     end
 
-    test "add_calendar_entry/3 adds several entries to a given calendar" do
+    test "add_channel_entry/3 adds several entries to a given channel" do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
       playlist = playlist_fixture(%{organization_id: organization.id})
 
-      calendar =
-        calendar_fixture(%{organization_id: organization.id, timezone: "Europe/Stockholm"})
+      channel =
+        channel_fixture(%{organization_id: organization.id, timezone: "Europe/Stockholm"})
 
-      assert Resources.list_resources(Calendar, %{organization_id: organization.id}) == [calendar]
+      assert Resources.list_resources(Channel, %{organization_id: organization.id}) == [channel]
 
-      assert Resources.list_calendar_entries(
-               calendar.id,
+      assert Resources.list_channel_entries(
+               channel.id,
                DateTime.to_unix(~U[2005-05-05 19:59:03Z]),
                DateTime.to_unix(~U[9999-12-31 00:00:00Z])
              ) == []
@@ -113,10 +113,10 @@ defmodule Castmill.CalendarsTest do
         playlist_id: playlist.id
       }
 
-      assert {:ok, entry} = Resources.add_calendar_entry(calendar.id, entry_attrs)
+      assert {:ok, entry} = Resources.add_channel_entry(channel.id, entry_attrs)
 
-      assert Resources.list_calendar_entries(
-               calendar.id,
+      assert Resources.list_channel_entries(
+               channel.id,
                DateTime.to_unix(~U[2005-05-05 19:59:03Z]),
                DateTime.to_unix(~U[9999-12-31 00:00:00Z])
              ) == [
@@ -131,10 +131,10 @@ defmodule Castmill.CalendarsTest do
         playlist_id: playlist.id
       }
 
-      assert {:ok, entry2} = Resources.add_calendar_entry(calendar.id, entry_attrs)
+      assert {:ok, entry2} = Resources.add_channel_entry(channel.id, entry_attrs)
 
-      assert Resources.list_calendar_entries(
-               calendar.id,
+      assert Resources.list_channel_entries(
+               channel.id,
                DateTime.to_unix(~U[2005-05-05 19:59:03Z]),
                DateTime.to_unix(~U[9999-12-31 00:00:00Z])
              ) == [
@@ -143,14 +143,14 @@ defmodule Castmill.CalendarsTest do
              ]
     end
 
-    test "delete_calendar/1 deletes calendar and its calendar entries" do
+    test "delete_channel/1 deletes channel and its channel entries" do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
 
-      calendar =
-        calendar_fixture(%{organization_id: organization.id, timezone: "Europe/Stockholm"})
+      channel =
+        channel_fixture(%{organization_id: organization.id, timezone: "Europe/Stockholm"})
 
-      assert Resources.list_resources(Calendar, %{organization_id: organization.id}) == [calendar]
+      assert Resources.list_resources(Channel, %{organization_id: organization.id}) == [channel]
 
       playlist = playlist_fixture(%{organization_id: organization.id})
 
@@ -162,18 +162,18 @@ defmodule Castmill.CalendarsTest do
         playlist_id: playlist.id
       }
 
-      assert {:ok, entry} = Resources.add_calendar_entry(calendar.id, entry_attrs)
+      assert {:ok, entry} = Resources.add_channel_entry(channel.id, entry_attrs)
 
-      assert Resources.list_calendar_entries(
-               calendar.id,
+      assert Resources.list_channel_entries(
+               channel.id,
                DateTime.to_unix(~U[2005-05-05 00:00:00Z]),
                DateTime.to_unix(~U[9999-12-31 00:00:00Z])
              ) == [entry]
 
-      Resources.delete_calendar(calendar)
+      Resources.delete_channel(channel)
 
-      assert Resources.list_calendar_entries(
-               calendar.id,
+      assert Resources.list_channel_entries(
+               channel.id,
                DateTime.to_unix(~U[2005-05-05 00:00:00Z]),
                DateTime.to_unix(~U[9999-12-31 00:00:00Z])
              ) == []

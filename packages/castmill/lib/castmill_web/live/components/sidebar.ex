@@ -30,8 +30,8 @@ defmodule CastmillWeb.Live.Admin.Sidebar do
         icon: "hero-computer-desktop-solid"
       },
       %{
-        href: "calendars",
-        name: "Calendars",
+        href: "channels",
+        name: "Channels",
         icon: "hero-calendar-days-solid"
       },
       %{

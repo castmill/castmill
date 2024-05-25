@@ -56,13 +56,13 @@ defmodule CastmillWeb.DevicesChannel do
   # Not sure we should use the socket connection for getting stufff, seems conterintuitive
   # Going to deprecate this
   @impl true
-  def handle_in("req:get:calendars", _payload, socket) do
+  def handle_in("req:get:channels", _payload, socket) do
     %{:device_id => device_id, :device_ip => _device_ip, :hardware_id => _hardware_id} =
       socket.assigns.device
 
-    calendars = Devices.list_calendars(device_id)
+    channels = Devices.list_channels(device_id)
 
-    {:reply, {:ok, calendars}, socket}
+    {:reply, {:ok, channels}, socket}
   end
 
   # Handle all messages that are not handled by the

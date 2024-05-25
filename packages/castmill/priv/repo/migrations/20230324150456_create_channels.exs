@@ -1,8 +1,8 @@
-defmodule Castmill.Repo.Migrations.CreateCalendars do
+defmodule Castmill.Repo.Migrations.CreateChannels do
   use Ecto.Migration
 
   def change do
-    create table(:calendars) do
+    create table(:channels) do
       add :name, :string
       add :timezone, :string
       add :description, :string

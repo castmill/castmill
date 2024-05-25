@@ -314,9 +314,9 @@ defmodule Castmill.Organizations do
     )
   end
 
-  def list_resources(%{resources: "calendars"} = params) do
+  def list_resources(%{resources: "channels"} = params) do
     Castmill.Resources.list_resources(
-      Castmill.Resources.Calendar,
+      Castmill.Resources.Channel,
       params
     )
   end
@@ -336,8 +336,8 @@ defmodule Castmill.Organizations do
     Castmill.Resources.count_resources(Castmill.Resources.Playlist, params)
   end
 
-  def count_resources(%{resources: "calendars"} = params) do
-    Castmill.Resources.count_resources(Castmill.Resources.Calendar, params)
+  def count_resources(%{resources: "channels"} = params) do
+    Castmill.Resources.count_resources(Castmill.Resources.Channel, params)
   end
 
   def count_resources(%{resources: "devices"} = params) do
@@ -403,32 +403,32 @@ defmodule Castmill.Organizations do
   end
 
   @doc """
-  Returns the list of calendars.
+  Returns the list of channels.
 
   ## Examples
 
-      iex> list_calendars()
-      [%Calendar{}, ...]
+      iex> list_channels()
+      [%Channel{}, ...]
 
   """
-  def list_calendars(params) do
+  def list_channels(params) do
     Castmill.Resources.list_resources(
-      Castmill.Resources.Calendar,
+      Castmill.Resources.Channel,
       params
     )
   end
 
   @doc """
-  Returns number of matching calendars.
+  Returns number of matching channels.
 
   ## Examples
 
-      iex> count_calendars()
+      iex> count_channels()
       2
 
   """
-  def count_calendars(params) do
-    Castmill.Resources.count_resources(Castmill.Resources.Calendar, params)
+  def count_channels(params) do
+    Castmill.Resources.count_resources(Castmill.Resources.Channel, params)
   end
 
   @doc """

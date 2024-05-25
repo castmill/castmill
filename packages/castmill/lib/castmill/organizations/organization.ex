@@ -21,7 +21,7 @@ defmodule Castmill.Organizations.Organization do
 
     has_many(:devices, Castmill.Devices.Device)
     has_many(:teams, Castmill.Teams.Team)
-    has_many(:calendars, Castmill.Resources.Calendar)
+    has_many(:channels, Castmill.Resources.Channel)
     has_many(:playlists, Castmill.Resources.Playlist)
     has_many(:medias, Castmill.Resources.Media)
 

@@ -44,7 +44,7 @@ defmodule CastmillWeb.DeviceController do
 
   plug(
     AuthorizeDash,
-    %{} when action in [:send_command, :add_calendar, :remove_calendar]
+    %{} when action in [:send_command, :add_channel, :remove_channel]
   )
 
   def home(conn, _params) do
@@ -132,21 +132,21 @@ defmodule CastmillWeb.DeviceController do
   end
 
   @doc """
-    Returns calendars associated to this player
+    Returns channels associated to this player
   """
-  def get_calendars(conn, %{"id" => device_id}) do
-    calendars = Devices.list_calendars(device_id)
+  def get_channels(conn, %{"id" => device_id}) do
+    channels = Devices.list_channels(device_id)
 
     conn
     |> put_status(:ok)
     |> put_resp_header("content-type", "application/json")
-    |> json(%{data: calendars})
+    |> json(%{data: channels})
   end
 
   @doc """
     Returns the given playlists.
     TODO: Add authorization check to ensure that the device has access to the playlist.
-    Basically check if the playlist is referenced by a calendar that is associated to the device.
+    Basically check if the playlist is referenced by a channel that is associated to the device.
   """
   def get_playlist(conn, %{"id" => _device_id, "playlist_id" => playlist_id}) do
     playlist = Resources.get_playlist(playlist_id)
@@ -158,10 +158,10 @@ defmodule CastmillWeb.DeviceController do
   end
 
   @doc """
-    Adds a calendar to a device
+    Adds a channel to a device
   """
-  def add_calendar(conn, %{"id" => device_id, "calendar_id" => calendar_id}) do
-    with {:ok, _device} <- Devices.add_calendar(device_id, calendar_id) do
+  def add_channel(conn, %{"id" => device_id, "channel_id" => channel_id}) do
+    with {:ok, _device} <- Devices.add_channel(device_id, channel_id) do
       conn
       |> put_status(:ok)
       |> send_resp(200, "")
@@ -169,10 +169,10 @@ defmodule CastmillWeb.DeviceController do
   end
 
   @doc """
-    Removes a calendar from a device
+    Removes a channel from a device
   """
-  def remove_calendar(conn, %{"id" => device_id, "calendar_id" => calendar_id}) do
-    with {:ok, _device} <- Devices.remove_calendar(device_id, calendar_id) do
+  def remove_channel(conn, %{"id" => device_id, "channel_id" => channel_id}) do
+    with {:ok, _device} <- Devices.remove_channel(device_id, channel_id) do
       conn
       |> put_status(:ok)
       |> send_resp(200, "")

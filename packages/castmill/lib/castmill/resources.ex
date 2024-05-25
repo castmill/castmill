@@ -15,8 +15,8 @@ defmodule Castmill.Resources do
   alias Castmill.Resources.Media
   alias Castmill.Resources.Playlist
   alias Castmill.Resources.PlaylistItem
-  alias Castmill.Resources.Calendar
-  alias Castmill.Resources.CalendarEntry
+  alias Castmill.Resources.Channel
+  alias Castmill.Resources.ChannelEntry
 
   alias Castmill.Devices.Device
 
@@ -69,7 +69,7 @@ defmodule Castmill.Resources do
     end
   end
 
-  defimpl Access, for: Calendar do
+  defimpl Access, for: Channel do
     def canAccess(resource, user, action) do
       Castmill.Resources.canAccessResource(resource, user, action)
     end
@@ -91,8 +91,8 @@ defmodule Castmill.Resources do
     def type(_value), do: "playlist"
   end
 
-  defimpl Resource, for: Calendar do
-    def type(_value), do: "calendar"
+  defimpl Resource, for: Channel do
+    def type(_value), do: "channel"
   end
 
   defimpl Resource, for: Device do
@@ -560,79 +560,79 @@ defmodule Castmill.Resources do
   end
 
   @doc """
-  Creates a calendar.
+  Creates a channel.
 
   ## Examples
 
-      iex> create_calendar(%{field: value})
-      {:ok, %Calendar{}}
+      iex> create_channel(%{field: value})
+      {:ok, %Channel{}}
 
-      iex> create_calendar(%{field: bad_value})
+      iex> create_channel(%{field: bad_value})
       {:error, %Ecto.Changeset{}}
   """
-  def create_calendar(attrs \\ %{}) do
-    %Calendar{}
-    |> Calendar.changeset(attrs)
+  def create_channel(attrs \\ %{}) do
+    %Channel{}
+    |> Channel.changeset(attrs)
     |> Repo.insert()
   end
 
   @doc """
-    Gets a calendar.
+    Gets a channel.
   """
-  def get_calendar(id) do
-    Calendar
+  def get_channel(id) do
+    Channel
     |> where(id: ^id)
     |> Repo.one()
     |> Repo.preload(:entries)
   end
 
   @doc """
-    Updates a calendar.
+    Updates a channel.
   """
-  def update_calendar(%Calendar{} = calendar, attrs) do
-    calendar
-    |> Calendar.changeset(attrs)
+  def update_channel(%Channel{} = channel, attrs) do
+    channel
+    |> Channel.changeset(attrs)
     |> Repo.update()
   end
 
   @doc """
-    Add entry to calendar. Will give an error if the entry overlaps
+    Add entry to channel. Will give an error if the entry overlaps
     with an existing entry.
   """
-  def add_calendar_entry(calendar_id, entry_attrs \\ %{}) do
-    %CalendarEntry{
-      calendar_id: calendar_id
+  def add_channel_entry(channel_id, entry_attrs \\ %{}) do
+    %ChannelEntry{
+      channel_id: channel_id
     }
-    |> CalendarEntry.changeset(entry_attrs)
+    |> ChannelEntry.changeset(entry_attrs)
     |> Repo.insert()
   end
 
   @doc """
-    Update entry in calendar.
+    Update entry in channel.
   """
-  def update_calendar_entry(%CalendarEntry{} = entry, attrs) do
+  def update_channel_entry(%ChannelEntry{} = entry, attrs) do
     entry
-    |> CalendarEntry.changeset(attrs)
+    |> ChannelEntry.changeset(attrs)
     |> Repo.update()
   end
 
   @doc """
-    Remove entry from calendar.
+    Remove entry from channel.
   """
-  def delete_calendar_entry(%CalendarEntry{} = entry) do
+  def delete_channel_entry(%ChannelEntry{} = entry) do
     Repo.delete(entry)
   end
 
   @doc """
-    List calendar entries between two dates.
+    List channel entries between two dates.
   """
-  def list_calendar_entries(calendar_id, start_date, end_date) do
+  def list_channel_entries(channel_id, start_date, end_date) do
     repeat_weekly_until = DateTime.from_unix!(end_date) |> DateTime.to_date()
 
     query =
-      from(entry in CalendarEntry,
+      from(entry in ChannelEntry,
         where:
-          entry.calendar_id == ^calendar_id and
+          entry.channel_id == ^channel_id and
             entry.start >= ^start_date and
             (entry.end <= ^end_date or entry.repeat_weekly_until <= ^repeat_weekly_until),
         select: entry
@@ -642,10 +642,10 @@ defmodule Castmill.Resources do
   end
 
   @doc """
-  Removes a calendar and all its entries.
+  Removes a channel and all its entries.
   """
-  def delete_calendar(%Calendar{} = calendar) do
-    Repo.delete(calendar)
+  def delete_channel(%Channel{} = channel) do
+    Repo.delete(channel)
   end
 end
 

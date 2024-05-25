@@ -54,9 +54,9 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
           form: nil
         },
         %{
-          name: "Calendars",
-          icon: "hero-calendar-days-solid",
-          href: "calendars",
+          name: "Channels",
+          icon: "hero-channel-days-solid",
+          href: "channels",
           form: nil
         },
         %{
