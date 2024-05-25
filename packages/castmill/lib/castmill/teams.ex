@@ -8,7 +8,7 @@ defmodule Castmill.Teams do
   alias Castmill.Repo
   alias Castmill.Organizations.Organization
   alias Castmill.Teams.{Team, TeamsUsers, TeamsResources}
-  alias Castmill.Resources.{Media, Playlist, Calendar}
+  alias Castmill.Resources.{Media, Playlist, Channel}
   alias Castmill.Protocol.Access
   alias Castmill.QueryHelpers
 
@@ -207,7 +207,7 @@ defmodule Castmill.Teams do
     case type do
       :media -> Repo.get(Media, id)
       :playlist -> Repo.get(Playlist, id)
-      :calendar -> Repo.get(Calendar, id)
+      :channel -> Repo.get(Channel, id)
       :device -> Repo.get(Device, id)
       _ -> {:error, "Invalid resource type"}
     end
@@ -280,14 +280,14 @@ defmodule Castmill.Teams do
         where: tr.team_id == ^team_id,
         join: r in Castmill.Resources.Resource,
         on: r.id == tr.resource_id,
-        preload: [resource: :media, resource: :playlist, resource: :calendar, resource: :device]
+        preload: [resource: :media, resource: :playlist, resource: :channel, resource: :device]
       )
 
     Repo.all(query)
   end
 
   @doc """
-    Checks if a given user has access to a given resource. A given resource can be a media, a playlist, a calendar or a device.
+    Checks if a given user has access to a given resource. A given resource can be a media, a playlist, a channel or a device.
     The resource belongs to the proxy table Resource, and is part of a Team through the proxy table TeamsResources, which
     includes an access field of type array that can include accesses such as read, write or delete.
 

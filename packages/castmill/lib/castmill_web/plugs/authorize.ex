@@ -16,14 +16,14 @@ defmodule Castmill.Plug.Authorize do
           media
           playlist
           widgets
-          calendars
+          channels
           devices
           etc.
           team
             media
             playlist
             widgets
-            calendars
+            channels
             devices
             etc.
   """

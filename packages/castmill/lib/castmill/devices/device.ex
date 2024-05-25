@@ -56,8 +56,8 @@ defmodule Castmill.Devices.Device do
 
     belongs_to(:resource, Castmill.Resources.Resource, foreign_key: :resource_id)
 
-    many_to_many(:calendars, Castmill.Devices.DevicesCalendars,
-      join_through: "devices_calendars",
+    many_to_many(:channels, Castmill.Devices.DevicesChannels,
+      join_through: "devices_channels",
       on_replace: :delete
     )
 

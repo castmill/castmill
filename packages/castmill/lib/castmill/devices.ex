@@ -341,43 +341,43 @@ defmodule Castmill.Devices do
   end
 
   @doc """
-    Add calendar to device
+    Add channel to device. A device can have multiple channels attached to it.
   """
-  def add_calendar(device_id, calendar_id) do
-    %Castmill.Devices.DevicesCalendars{}
-    |> Castmill.Devices.DevicesCalendars.changeset(%{
+  def add_channel(device_id, channel_id) do
+    %Castmill.Devices.DevicesChannels{}
+    |> Castmill.Devices.DevicesChannels.changeset(%{
       device_id: device_id,
-      calendar_id: calendar_id
+      channel_id: channel_id
     })
     |> Castmill.Repo.insert()
   end
 
   @doc """
-    Remove calendar from device
+    Remove channel from device.
   """
-  def remove_calendar(device_id, calendar_id) do
+  def remove_channel(device_id, channel_id) do
     query =
-      from(dc in Castmill.Devices.DevicesCalendars,
-        where: dc.device_id == ^device_id and dc.calendar_id == ^calendar_id
+      from(dc in Castmill.Devices.DevicesChannels,
+        where: dc.device_id == ^device_id and dc.channel_id == ^channel_id
       )
 
     Repo.delete_all(query)
   end
 
   @doc """
-    List device calendars.
+    List device channels.
   """
-  def list_calendars(device_id) do
+  def list_channels(device_id) do
     query =
-      from(calendar in Castmill.Resources.Calendar,
-        join: dc in Castmill.Devices.DevicesCalendars,
-        on: calendar.id == dc.calendar_id,
+      from(channel in Castmill.Resources.Channel,
+        join: dc in Castmill.Devices.DevicesChannels,
+        on: channel.id == dc.channel_id,
         where: dc.device_id == ^device_id,
-        select: calendar
+        select: channel
       )
 
-    calendars = Repo.all(query)
-    Repo.preload(calendars, :entries)
+    channels = Repo.all(query)
+    Repo.preload(channels, :entries)
   end
 
   @doc """
@@ -388,14 +388,14 @@ defmodule Castmill.Devices do
   end
 
   @doc """
-    Checks if a device has access to a calendar entry
+    Checks if a device has access to a channeö entry
   """
-  def has_access_to_calendar_entry(device_id, calendar_entry_id) do
+  def has_access_to_channel_entry(device_id, channel_entry_id) do
     query =
-      from(dc in Castmill.Devices.DevicesCalendars,
-        join: ce in Castmill.Resources.CalendarEntry,
-        on: dc.calendar_id == ce.calendar_id,
-        where: dc.device_id == ^device_id and ce.id == ^calendar_entry_id
+      from(dc in Castmill.Devices.DevicesChannels,
+        join: ce in Castmill.Resources.ChannelEntry,
+        on: dc.channel_id == ce.channel_id,
+        where: dc.device_id == ^device_id and ce.id == ^channel_entry_id
       )
 
     Repo.one(query) !== nil
@@ -403,14 +403,14 @@ defmodule Castmill.Devices do
 
   @doc """
     Checks if a device has access to a playlist.
-    If a playlist is used by a calendar entry, it is considered to be accessible
-    by the device that has the calendar with the given calendar entry.
+    If a playlist is used by a channel entry, it is considered to be accessible
+    by the device that has the channel with the given channel entry.
   """
   def has_access_to_playlist(device_id, playlist_id) do
     query =
-      from(dc in Castmill.Devices.DevicesCalendars,
-        join: ce in Castmill.Resources.CalendarEntry,
-        on: dc.calendar_id == ce.calendar_id,
+      from(dc in Castmill.Devices.DevicesChannels,
+        join: ce in Castmill.Resources.ChannelEntry,
+        on: dc.channel_id == ce.channel_id,
         join: pl in Castmill.Resources.Playlist,
         on: ce.playlist_id == pl.id,
         where: dc.device_id == ^device_id and pl.id == ^playlist_id

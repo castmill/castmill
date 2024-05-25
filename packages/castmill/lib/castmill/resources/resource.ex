@@ -6,12 +6,12 @@ defmodule Castmill.Resources.Resource do
   # reason we need it.
   schema "resources" do
     field :type, Ecto.Enum,
-      values: [:playlist, :widget, :media, :calendar, :device],
+      values: [:playlist, :widget, :media, :channel, :device],
       default: :playlist
 
     has_one :media, Castmill.Resources.Media
     has_one :playlist, Castmill.Resources.Playlist
-    has_one :calendar, Castmill.Resources.Calendar
+    has_one :channel, Castmill.Resources.Channel
     has_one :device, Castmill.Devices.Device
 
     timestamps()

@@ -13,8 +13,8 @@ defmodule Castmill.Quotas.QuotasOrganizations do
         :organizations,
         :medias,
         :playlists,
-        :calendars,
-        :calendars_entries,
+        :channels,
+        :channels_entries,
         :devices,
         :users,
         :teams

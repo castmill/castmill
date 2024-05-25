@@ -1,4 +1,4 @@
-defmodule Castmill.Resources.CalendarEntry do
+defmodule Castmill.Resources.ChannelEntry do
   use Ecto.Schema
   import Ecto.Changeset
 
@@ -12,22 +12,22 @@ defmodule Castmill.Resources.CalendarEntry do
              :inserted_at,
              :updated_at
            ]}
-  schema "calendar_entries" do
+  schema "channel_entries" do
     field(:start, :integer)
     field(:end, :integer)
     field(:repeat_weekly_until, :date, default: nil)
 
     belongs_to(:playlist, Castmill.Resources.Playlist)
-    belongs_to(:calendar, Castmill.Resources.Calendar)
+    belongs_to(:channel, Castmill.Resources.Channel)
 
     timestamps()
   end
 
   @doc false
-  def changeset(calendar_entry, attrs) do
-    calendar_entry
-    |> cast(attrs, [:start, :end, :repeat_weekly_until, :playlist_id, :calendar_id])
-    |> validate_required([:start, :end, :playlist_id, :calendar_id])
+  def changeset(channel_entry, attrs) do
+    channel_entry
+    |> cast(attrs, [:start, :end, :repeat_weekly_until, :playlist_id, :channel_id])
+    |> validate_required([:start, :end, :playlist_id, :channel_id])
     |> validate_same_week(:start, :end)
     |> validate_date_before(:start, :end)
     |> validate_future_or_nil(:repeat_weekly_until)

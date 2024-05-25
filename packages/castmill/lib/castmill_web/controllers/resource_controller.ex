@@ -6,9 +6,9 @@ defmodule CastmillWeb.ResourceController do
   alias Castmill.Plug.AuthorizeDash
 
   alias Castmill.Resources.Media
-  alias Castmill.Resources.Calendar
+  alias Castmill.Resources.Channel
   alias Castmill.Resources.Playlist
-  alias Castmill.Resources.CalendarEntry
+  alias Castmill.Resources.ChannelEntry
   alias Castmill.Devices.Device
   alias Castmill.Devices
 
@@ -213,20 +213,20 @@ defmodule CastmillWeb.ResourceController do
   end
 
   def create(conn, %{
-        "resources" => "calendars",
+        "resources" => "channels",
         "organization_id" => organization_id,
-        "calendar" => calendar
+        "channel" => channel
       }) do
-    create_attrs = Map.merge(calendar, %{"organization_id" => organization_id})
+    create_attrs = Map.merge(channel, %{"organization_id" => organization_id})
 
-    with {:ok, %Calendar{} = calendar} <- Castmill.Resources.create_calendar(create_attrs) do
+    with {:ok, %Channel{} = channel} <- Castmill.Resources.create_channel(create_attrs) do
       conn
       |> put_status(:created)
       |> put_resp_header(
         "location",
-        ~p"/api/organizations/#{organization_id}/calendars/#{calendar.id}"
+        ~p"/api/organizations/#{organization_id}/channels/#{channel.id}"
       )
-      |> render(:show, calendar: calendar)
+      |> render(:show, channel: channel)
     end
   end
 
@@ -273,22 +273,22 @@ defmodule CastmillWeb.ResourceController do
   end
 
   def delete(conn, %{
-        "resources" => "calendars",
+        "resources" => "channels",
         "id" => id
       }) do
-    case Castmill.Resources.get_calendar(id) do
+    case Castmill.Resources.get_channel(id) do
       nil ->
         conn
         |> put_status(:not_found)
-        |> Phoenix.Controller.json(%{errors: ["Calendar not found"]})
+        |> Phoenix.Controller.json(%{errors: ["Channel not found"]})
         |> halt()
 
-      calendar ->
-        with {:ok, %Calendar{}} <- Castmill.Resources.delete_calendar(calendar) do
+      channel ->
+        with {:ok, %Channel{}} <- Castmill.Resources.delete_channel(channel) do
           send_resp(conn, :no_content, "")
         else
           {:error, reason} ->
-            send_resp(conn, 500, "Error deleting calendar: #{inspect(reason)}")
+            send_resp(conn, 500, "Error deleting channel: #{inspect(reason)}")
         end
     end
   end
@@ -328,17 +328,17 @@ defmodule CastmillWeb.ResourceController do
     end
   end
 
-  def show(conn, %{"resources" => "calendars", "id" => id}) do
-    case Castmill.Resources.get_calendar(id) do
+  def show(conn, %{"resources" => "channels", "id" => id}) do
+    case Castmill.Resources.get_channel(id) do
       nil ->
         conn
         |> put_status(:not_found)
-        |> Phoenix.Controller.json(%{message: "Calendar not found"})
+        |> Phoenix.Controller.json(%{message: "Channel not found"})
         |> halt()
 
-      calendar ->
+      channel ->
         conn
-        |> render(:show, calendar: calendar)
+        |> render(:show, channel: channel)
     end
   end
 
@@ -356,29 +356,29 @@ defmodule CastmillWeb.ResourceController do
     end
   end
 
-  def add_calendar_entry(
+  def add_channel_entry(
         %Plug.Conn{
           body_params: body_params
         } = conn,
-        %{"calendar_id" => calendar_id_str, "organization_id" => organization_id}
+        %{"channel_id" => channel_id_str, "organization_id" => organization_id}
       ) do
-    calendar_id = String.to_integer(calendar_id_str)
+    channel_id = String.to_integer(channel_id_str)
 
-    case Castmill.Resources.get_calendar(calendar_id) do
+    case Castmill.Resources.get_channel(channel_id) do
       nil ->
         conn
         |> put_status(:not_found)
-        |> Phoenix.Controller.json(%{message: "Calendar not found"})
+        |> Phoenix.Controller.json(%{message: "Channel not found"})
         |> halt()
 
-      calendar ->
-        with {:ok, %CalendarEntry{} = entry} <-
-               Castmill.Resources.add_calendar_entry(calendar_id, body_params) do
+      channel ->
+        with {:ok, %ChannelEntry{} = entry} <-
+               Castmill.Resources.add_channel_entry(channel_id, body_params) do
           conn
           |> put_status(:created)
           |> put_resp_header(
             "location",
-            ~p"/api/organizations/#{organization_id}/calendars/#{calendar.id}"
+            ~p"/api/organizations/#{organization_id}/channels/#{channel.id}"
           )
           |> render(:show, entry: entry)
         end

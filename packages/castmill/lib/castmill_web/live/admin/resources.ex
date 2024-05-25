@@ -177,7 +177,7 @@ defmodule CastmillWeb.Live.Admin.Resources do
      |> assign(:page_title, "Devices")}
   end
 
-  def handle_params(%{"resource" => "calendars"} = params, _url, socket) do
+  def handle_params(%{"resource" => "channels"} = params, _url, socket) do
     columns = [
       %{
         name: "Name",
@@ -193,13 +193,13 @@ defmodule CastmillWeb.Live.Admin.Resources do
       }
     ]
 
-    socket = handle_resource("Calendar", params, socket)
+    socket = handle_resource("Channel", params, socket)
 
     {:noreply,
      socket
      |> assign(:cols, columns)
-     |> assign(:selected_link, "calendars")
-     |> assign(:page_title, "Calendars")}
+     |> assign(:selected_link, "channels")
+     |> assign(:page_title, "Channels")}
   end
 
   def handle_params(%{"resource" => "playlists"} = params, _url, socket) do
@@ -410,10 +410,10 @@ defmodule CastmillWeb.Live.Admin.Resources do
           count: Resources.count_resources(Castmill.Resources.Playlist, query_params)
         }
 
-      "Calendar" ->
+      "Channel" ->
         %{
-          rows: Resources.list_resources(Castmill.Resources.Calendar, query_params),
-          count: Resources.count_resources(Castmill.Resources.Calendar, query_params)
+          rows: Resources.list_resources(Castmill.Resources.Channel, query_params),
+          count: Resources.count_resources(Castmill.Resources.Channel, query_params)
         }
 
       "Device" ->

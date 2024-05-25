@@ -1,9 +1,9 @@
-defmodule Castmill.Resources.Calendar do
+defmodule Castmill.Resources.Channel do
   use Ecto.Schema
   import Ecto.Changeset
   import Ecto.Query, warn: false
 
-  schema "calendars" do
+  schema "channels" do
     field(:description, :string)
     field(:name, :string)
     field(:timezone, :string)
@@ -17,14 +17,14 @@ defmodule Castmill.Resources.Calendar do
 
     belongs_to(:resource, Castmill.Resources.Resource, foreign_key: :resource_id)
 
-    has_many(:entries, Castmill.Resources.CalendarEntry)
+    has_many(:entries, Castmill.Resources.ChannelEntry)
 
     timestamps()
   end
 
   @doc false
-  def changeset(calendar, attrs) do
-    calendar
+  def changeset(channel, attrs) do
+    channel
     |> cast(attrs, [
       :name,
       :timezone,
@@ -34,27 +34,27 @@ defmodule Castmill.Resources.Calendar do
       :resource_id
     ])
     |> validate_required([:name, :timezone, :organization_id])
-    |> foreign_key_constraint(:default_playlist_id, name: :calendars_default_playlist_id_fkey)
+    |> foreign_key_constraint(:default_playlist_id, name: :channels_default_playlist_id_fkey)
   end
 
   def base_query() do
-    from(calendar in Castmill.Resources.Calendar, as: :calendar)
+    from(channel in Castmill.Resources.Channel, as: :channel)
   end
 end
 
-defimpl Jason.Encoder, for: Castmill.Resources.Calendar do
-  def encode(%Castmill.Resources.Calendar{} = calendar, opts) do
+defimpl Jason.Encoder, for: Castmill.Resources.Channel do
+  def encode(%Castmill.Resources.Channel{} = channel, opts) do
     entries =
-      case calendar.entries do
+      case channel.entries do
         %Ecto.Association.NotLoaded{} -> []
         entries -> entries
       end
 
     map = %{
-      id: calendar.id,
-      name: calendar.name,
-      timezone: calendar.timezone,
-      default_playlist_id: calendar.default_playlist_id,
+      id: channel.id,
+      name: channel.name,
+      timezone: channel.timezone,
+      default_playlist_id: channel.default_playlist_id,
       entries: entries
     }
 
