@@ -9,7 +9,7 @@ import {
 import { arrayBufferToBase64, base64URLToArrayBuffer } from '../utils';
 
 import './login.scss';
-import { resetSession, setAuthenticated } from '../auth';
+import { loginUser, resetSession } from '../auth';
 import { useNavigate } from '@solidjs/router';
 import SignUpEmailSent from '../signup/signup-email-sent';
 
@@ -123,8 +123,7 @@ const Login: Component = () => {
       } else {
         setStatus('Authenticated');
 
-        // Set the authenticated signal to true
-        setAuthenticated(true);
+        await loginUser();
 
         // Redirect to page specified by the redirectTo query parameter of '/' if not present
         const urlParams = new URLSearchParams(window.location.search);
