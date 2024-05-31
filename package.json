@@ -2,6 +2,9 @@
   "name": "castmill",
   "description": "Castmill Digital Signage Platform",
   "private": true,
+  "scripts": {
+    "build-all": "yarn workspaces run build"
+  },
   "workspaces": [
     "packages/*",
     "packages/platforms/*",
