@@ -45,7 +45,7 @@ export class ElectronMachine implements Machine {
 
     return {
       appType: import.meta.env.VITE_APP_TYPE,
-      appVersion: window.electron.process.env.npm_package_version,
+      appVersion: window.electron.process.env.npm_package_version ?? 'unknown',
       os: `${window.osInfo.type} ${window.osInfo.release}`,
       hardware: await window.hardwareInfo(),
       environmentVersion: versions.electron,
