@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "type": "module",
+  "types": "dist/index.d.ts",
   "scripts": {
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -11,11 +12,14 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "serve": "vite preview",
-    "build": "rimraf dist && vite build",
+    "build": "rimraf dist && vite build && yarn ts-types",
     "build:watch": "vite build --watch",
     "prepare": "yarn build",
     "ts-types": "tsc --emitDeclarationOnly --outDir dist"
   },
+  "files": [
+    "dist"
+  ],
   "exports": {
     ".": "./dist/index.js",
     "./dist/style.css": "./dist/style.css"

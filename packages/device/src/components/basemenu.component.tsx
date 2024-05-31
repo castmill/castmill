@@ -103,7 +103,7 @@ export const BaseMenu: Component<BaseMenuProps> = ({
     clearTimeout(timer());
 
     // set new timer
-    const t = setTimeout(() => {
+    const t = window.setTimeout(() => {
       setVisible(false);
     }, MENU_TIMEOUT);
 
