@@ -101,7 +101,7 @@ export class ResourceManager {
 
     if (item) {
       const code = await this.fetchCode(item.cachedUrl);
-      if(code) {
+      if (code) {
         // This if statement is needed to avoid an error when vite tries to inline an
         // await inside an import statement.
         // Example: import(`data:text/javascript,${await this.fetchCode(item.cachedUrl)};`)
