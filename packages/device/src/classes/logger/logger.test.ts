@@ -20,7 +20,7 @@ beforeEach(() => {
     style: {},
     scrollTop: 0,
     scrollHeight: 100,
-  };
+  } as any as HTMLDivElement;
   global.document.getElementById = vi.fn(() => mockDiv);
 });
 
