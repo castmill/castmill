@@ -101,14 +101,13 @@ export class ResourceManager {
 
     if (item) {
       const code = await this.fetchCode(item.cachedUrl);
-      if (code) {
-        // This if statement is needed to avoid an error when vite tries to inline an
-        // await inside an import statement.
-        // Example: import(`data:text/javascript,${await this.fetchCode(item.cachedUrl)};`)
-        // When building the electron-player, this throws an error.
-        const uri = `data:text/javascript,${code};`;
-        return import(/* @vite-ignore */ uri) as Promise<T>;
+
+      if (!code) {
+        throw Error(`Failed to fetch code for ${url}`);
       }
+
+      const uri = `data:text/javascript,${code};`;
+      return import(/* @vite-ignore */ uri) as Promise<T>;
     }
 
     return this.cache.set(url, ItemType.Code, 'text/javascript');
