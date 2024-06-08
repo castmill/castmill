@@ -58,7 +58,7 @@ export class ResourceManager {
   constructor(
     private cache: Cache,
     private opts: ResourceManagerOpts = {}
-  ) {}
+  ) { }
 
   async init() {
     // Get all the code resources
@@ -75,7 +75,8 @@ export class ResourceManager {
           await this.cache.set(
             codeResource.url,
             ItemType.Code,
-            'text/javascript'
+            'text/javascript',
+            { force: true }
           );
           needRefresh = true;
         }
@@ -99,24 +100,32 @@ export class ResourceManager {
   async import<T = any>(url: string): Promise<T | void> {
     let item = await this.cache.get(url);
 
-    if (item) {
-      const code = await this.fetchCode(item.cachedUrl);
-      const uri = `data:text/javascript,${code};`;
-      return import(/* @vite-ignore */ uri) as Promise<T>;
+    if (!item) {
+      item = await this.cache.set(url, ItemType.Code, 'text/javascript');
     }
 
-    return this.cache.set(url, ItemType.Code, 'text/javascript');
+    if (item) {
+      const uri = await this.buildCodeDataUri(item.cachedUrl);
+      return import(/* @vite-ignore */ uri) as Promise<T>;
+    }
+  }
+
+  private async buildCodeDataUri(url: string): Promise<string> {
+    const code = await this.fetchCode(url);
+    return `data:text/javascript,${code};`;
   }
 
   async getData<T = any>(url: string, freshness: number): Promise<T | void> {
-    const item = await this.cache.get(url);
+    let item = await this.cache.get(url);
     const age = item ? Date.now() - item.timestamp : Infinity;
-    if (item && age < freshness) {
-      return this.fetchJson(item.cachedUrl) as Promise<T>;
-    } else {
-      return this.cache.set(url, ItemType.Data, 'application/json', {
+
+    if (!item || age > freshness) {
+      item = await this.cache.set(url, ItemType.Data, 'application/json', {
         force: true,
       });
+    }
+    if (item) {
+      return this.fetchJson(item.cachedUrl) as Promise<T>;
     }
   }
 
@@ -137,11 +146,11 @@ export class ResourceManager {
       return url;
     }
 
-    const item = await this.cache.get(url);
+    let item = await this.cache.get(url);
     if (!item) {
-      return this.cache.set(url, ItemType.Media, 'media/*');
+      item = await this.cache.set(url, ItemType.Media, 'media/*');
     }
-    return item.cachedUrl;
+    return item?.cachedUrl;
   }
 
   /**
@@ -164,7 +173,7 @@ export class ResourceManager {
       return;
     }
 
-    return this.cache.set(url, ItemType.Media, 'media/*');
+    await this.cache.set(url, ItemType.Media, 'media/*');
   }
 
   close() {
@@ -186,6 +195,7 @@ export class ResourceManager {
           'Content-Type': 'application/json',
         },
       });
+
       if (response.ok) {
         const data = await response.json();
         return data;

@@ -19,6 +19,7 @@ import {
   StorageIntegration,
   StoreResult,
   StoreError,
+  StorageItem,
 } from './storage.integration';
 
 /*
@@ -47,7 +48,7 @@ interface ItemMetadata {
 
 export class Cache extends Dexie {
   items!: Dexie.Table<ItemMetadata, string>;
-  caching: { [index: string]: Promise<{ url: string; size: number }> } = {};
+  caching: { [index: string]: Promise<StorageItem | undefined> } = {};
   totalSize: number = 0;
 
   constructor(
@@ -170,28 +171,45 @@ export class Cache extends Dexie {
       }
     }
 
-    // TODO: We should attach an error handler, possibly emitting an error
-    // event as this process will happen in the background.
-    this.caching[url] = this.storeFile(url, type, mimeType);
+    const storeFilePromise = this.storeFile(url, type, mimeType);
+    this.caching[url] = storeFilePromise;
+
+    return storeFilePromise.catch(async (err) => {
+      // TODO: we should use the device logger instead of console.error
+      console.error('Error caching file', url, err);
+
+      try {
+        const item = await this.items.get({ url });
+        if (item) {
+          await this.del(url);
+        }
+      } catch (err) {
+        console.error('Error deleting item', url, err);
+      }
+
+      throw err;
+    }).finally(() => {
+      delete this.caching[url];
+    });
   }
 
   private async storeFile(
     url: string,
     type: ItemType,
     mimeType: string
-  ): Promise<any> {
+  ): Promise<ItemMetadata | undefined> {
     try {
-      const { result, item } = await this.integration.storeFile(url);
+      const { result, item: storageItem } = await this.integration.storeFile(url);
       switch (result.code) {
         case StoreResult.Success:
-          if (item) {
-            const { url: cachedUrl, size } = item;
+          if (storageItem) {
+            const { url: cachedUrl, size } = storageItem;
             if (!cachedUrl) {
               throw new Error('Cached url is null');
             }
             this.totalSize += size;
-            delete this.caching[url];
-            return this.items.add({
+
+            const item: ItemMetadata = {
               timestamp: Date.now(),
               size,
               accessed: 0,
@@ -199,7 +217,9 @@ export class Cache extends Dexie {
               url,
               cachedUrl,
               mimeType,
-            });
+            }
+            await this.items.add(item);
+            return item;
           }
           throw new Error(
             'Cache: Storage is missing item despite signaling success'
@@ -207,6 +227,7 @@ export class Cache extends Dexie {
         case StoreResult.Failure:
           switch (result.error) {
             case StoreError.NotEnoughSpace:
+              // TODO: we probably need a counter here to avoid infinite loops
               if (result.errMsg) {
                 const requiredSpace = parseInt(result.errMsg);
                 await this.freeSpace(requiredSpace);
@@ -214,6 +235,8 @@ export class Cache extends Dexie {
               } else {
                 throw new Error('Not enough space, and no error message');
               }
+            case StoreError.NotFound:
+              throw new Error('File not found');
             default:
               throw new Error(
                 `Unhandled error ${result.error} ${result.errMsg}`
