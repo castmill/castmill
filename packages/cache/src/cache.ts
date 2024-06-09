@@ -177,23 +177,25 @@ export class Cache extends Dexie {
     const storeFilePromise = this.storeFile(url, type, mimeType, opts);
     this.caching[url] = storeFilePromise;
 
-    return storeFilePromise.catch(async (err) => {
-      // TODO: we should use the device logger instead of console.error
-      console.error('Error caching file', url, err);
+    return storeFilePromise
+      .catch(async (err) => {
+        // TODO: we should use the device logger instead of console.error
+        console.error('Error caching file', url, err);
 
-      try {
-        const item = await this.items.get({ url });
-        if (item) {
-          await this.del(url);
+        try {
+          const item = await this.items.get({ url });
+          if (item) {
+            await this.del(url);
+          }
+        } catch (err) {
+          console.error('Error deleting item', url, err);
         }
-      } catch (err) {
-        console.error('Error deleting item', url, err);
-      }
 
-      throw err;
-    }).finally(() => {
-      delete this.caching[url];
-    });
+        throw err;
+      })
+      .finally(() => {
+        delete this.caching[url];
+      });
   }
 
   private async storeFile(
@@ -203,7 +205,10 @@ export class Cache extends Dexie {
     opts?: StoreOptions
   ): Promise<ItemMetadata | undefined> {
     try {
-      const { result, item: storageItem } = await this.integration.storeFile(url, opts);
+      const { result, item: storageItem } = await this.integration.storeFile(
+        url,
+        opts
+      );
       switch (result.code) {
         case StoreResult.Success:
           if (storageItem) {
@@ -221,7 +226,7 @@ export class Cache extends Dexie {
               url,
               cachedUrl,
               mimeType,
-            }
+            };
             await this.items.add(item);
             return item;
           }

@@ -32,13 +32,13 @@ export interface DeviceMessage {
 
 export interface DeviceCommand {
   command:
-  | 'refresh'
-  | 'clear_cache'
-  | 'restart_app'
-  | 'restart_device'
-  | 'update_app'
-  | 'update_firmware'
-  | 'shutdown';
+    | 'refresh'
+    | 'clear_cache'
+    | 'restart_app'
+    | 'restart_device'
+    | 'update_app'
+    | 'update_firmware'
+    | 'shutdown';
 }
 
 interface CachePage {
@@ -98,7 +98,6 @@ export class Device extends EventEmitter {
 
     //const intro = getCastmillIntro(this.resourceManager);
     //this.contentQueue.add(intro);
-  
   }
 
   async start(el: HTMLElement, logDiv: HTMLDivElement) {
@@ -114,7 +113,9 @@ export class Device extends EventEmitter {
       throw new Error('Invalid credentials');
     }
 
-    this.resourceManager = new ResourceManager(this.cache, { authToken: device.token });
+    this.resourceManager = new ResourceManager(this.cache, {
+      authToken: device.token,
+    });
 
     await this.resourceManager.init();
 
@@ -161,7 +162,8 @@ export class Device extends EventEmitter {
           if (entry) {
             const jsonPlaylist: JsonPlaylist | void =
               await this.resourceManager.getData(
-                `${this.opts?.baseUrl || ''}devices/${device.id}/playlists/${entry.playlist
+                `${this.opts?.baseUrl || ''}devices/${device.id}/playlists/${
+                  entry.playlist
                 }`,
                 1000
               );

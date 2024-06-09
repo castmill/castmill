@@ -19,7 +19,8 @@ export interface StorageInfo {
 }
 
 export interface StoreOptions {
-  headers?: Record<string, string>, data?: any
+  headers?: Record<string, string>;
+  data?: any;
 }
 
 export enum StoreResult {

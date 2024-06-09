@@ -5,8 +5,8 @@
  *
  */
 
-import { Schema } from "./schema.interface";
-import { JsonWidgetTemplate } from "./json-widget-template";
+import { Schema } from './schema.interface';
+import { JsonWidgetTemplate } from './json-widget-template';
 
 export interface JsonWidget {
   id: number;

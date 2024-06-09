@@ -1,6 +1,6 @@
-import { JSX } from "solid-js/jsx-runtime";
-import { TemplateComponentType } from "..";
-import { ComponentAnimation } from "../widgets/template/animation";
+import { JSX } from 'solid-js/jsx-runtime';
+import { TemplateComponentType } from '..';
+import { ComponentAnimation } from '../widgets/template/animation';
 
 export interface JsonWidgetTemplate {
   type: TemplateComponentType;

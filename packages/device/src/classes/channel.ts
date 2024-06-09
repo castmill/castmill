@@ -81,10 +81,10 @@ export class Channel {
 
     return this.attrs.default_playlist_id
       ? {
-        playlist: this.attrs.default_playlist_id,
-        endTime: Infinity,
-        nextTime: undefined,
-      }
+          playlist: this.attrs.default_playlist_id,
+          endTime: Infinity,
+          nextTime: undefined,
+        }
       : undefined;
   }
 }

@@ -43,7 +43,6 @@ interface ResourceManagerOpts {
  *
  */
 export class ResourceManager {
-
   private authHeader?: string;
 
   /**
@@ -108,11 +107,10 @@ export class ResourceManager {
     let item = await this.cache.get(url);
 
     if (!item) {
-      item = await this.cache.set(
-        url,
-        ItemType.Code,
-        'text/javascript',
-        { headers: this.getAuthHeader(), force: false });
+      item = await this.cache.set(url, ItemType.Code, 'text/javascript', {
+        headers: this.getAuthHeader(),
+        force: false,
+      });
     }
 
     if (item) {
@@ -128,14 +126,14 @@ export class ResourceManager {
 
   /**
    * getData
-   * 
+   *
    * Returns possibly cached data for a given URL. If the data is not cached it will
    * be cached and returned if possible.
-   * 
-   * @param url 
-   * @param freshness 
-   * @param opts 
-   * @returns 
+   *
+   * @param url
+   * @param freshness
+   * @param opts
+   * @returns
    */
   async getData<T = any>(url: string, freshness: number): Promise<T | void> {
     let item = await this.cache.get(url);
@@ -171,11 +169,10 @@ export class ResourceManager {
 
     let item = await this.cache.get(url);
     if (!item) {
-      item = await this.cache.set(
-        url,
-        ItemType.Media,
-        'media/*',
-        { headers: this.getAuthHeader(), force: false });
+      item = await this.cache.set(url, ItemType.Media, 'media/*', {
+        headers: this.getAuthHeader(),
+        force: false,
+      });
     }
     return item?.cachedUrl;
   }
@@ -200,12 +197,10 @@ export class ResourceManager {
       return;
     }
 
-    await this.cache.set(
-      url,
-      ItemType.Media,
-      'media/*',
-      { headers: this.getAuthHeader(), force: false }
-    );
+    await this.cache.set(url, ItemType.Media, 'media/*', {
+      headers: this.getAuthHeader(),
+      force: false,
+    });
   }
 
   close() {
@@ -216,9 +211,7 @@ export class ResourceManager {
    *
    * @param url The url of the data resource to fetch.
    */
-  private async fetchJson(
-    url: string,
-  ): Promise<any> {
+  private async fetchJson(url: string): Promise<any> {
     try {
       const response = await fetch(url, {
         headers: {
@@ -237,16 +230,14 @@ export class ResourceManager {
     }
   }
 
-  private async fetchCode(
-    url: string,
-  ): Promise<any> {
+  private async fetchCode(url: string): Promise<any> {
     try {
       const response = await fetch(url, {
         headers: {
           Accept: 'application/json',
           'Content-Type': 'application/json',
           ...this.getAuthHeader(),
-        }
+        },
       });
       if (response.ok) {
         return response.text();

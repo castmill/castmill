@@ -1,4 +1,3 @@
-
 /**
  * Represents a schema for a document.
  *

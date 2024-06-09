@@ -102,7 +102,7 @@ export class Proxy extends Widget {
   /**
    * Widget is ready.
    */
-  async ready(): Promise<void> { }
+  async ready(): Promise<void> {}
 
   /**
    * Dispose.

@@ -74,14 +74,13 @@ describe('ResourceManager', () => {
 
   describe('data resources', () => {
     it('should get new data if freshness has expired', async () => {
-
       // Configure the Mockup to resolve with fresh data
       const uri = 'https://example.com/data.json';
-      const initialData = JSON.stringify({ "foo": "initial" });
-      const updatedData = JSON.stringify({ "foo": "updated" });
+      const initialData = JSON.stringify({ foo: 'initial' });
+      const updatedData = JSON.stringify({ foo: 'updated' });
 
       const filesFixture = {
-        [uri]: initialData
+        [uri]: initialData,
       };
 
       const storage = new StorageMockup(filesFixture);
@@ -176,9 +175,8 @@ describe('ResourceManager', () => {
       } catch (err) {
         expect((err as Error).message).to.be.eql('File not found');
       }
-
     });
 
-    it('should free space and try to store file is storage is full', async () => { });
+    it('should free space and try to store file is storage is full', async () => {});
   });
 });
