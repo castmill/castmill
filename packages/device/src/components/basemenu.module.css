@@ -1,23 +1,21 @@
 .menu {
+  font-family: sans-serif;
   background-color: #1e1e1e;
   color: #d3d3d3;
   position: absolute;
   width: 300px;
   text-align: left;
   border-bottom-right-radius: 0.5em;
-  border-right: 1px solid #a7a7a7;
-  border-bottom: 1px solid #a7a7a7;
-  box-shadow: 0.3em 0.3em 0.2em #d0d1e7;
+  border-right: 1px solid #484848;
+  border-bottom: 1px solid #484848;
 }
 
 .menuHead {
-  margin: 0 0 1em 0.5em;
-  padding: 5px;
+  padding: 5px 10px;
 }
+
 .menuFooter {
-  margin: 4em 0 1em;
-  padding: 1em 0 0 0.5em;
-  border-top: 1px solid #696969;
+  padding: 5px 10px;
   font-weight: 400;
   color: #7171de;
   font-size: 0.8em;
@@ -36,12 +34,15 @@
 
 .menu ul {
   border-top: 1px solid #484848;
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
 }
 
 .menuItem {
-  padding: 5px;
+  padding: 5px 10px;
   cursor: pointer;
-  border-bottom: 1px solid #696969;
+  border-bottom: 1px solid #484848;
 }
 
 .checkbox {
