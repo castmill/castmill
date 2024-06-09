@@ -5,7 +5,8 @@ defmodule Castmill.Repo.Migrations.AddDefaultWidgets do
   def change do
     for attrs <- [
           %{
-            name: "image",
+            name: "Image",
+            slug: "image",
             template: %{
               "type" => "image",
               "name" => "image",
@@ -38,7 +39,8 @@ defmodule Castmill.Repo.Migrations.AddDefaultWidgets do
             }
           },
           %{
-            name: "video",
+            name: "Video",
+            slug: "video",
             template: %{
               "type" => "video",
               "name" => "video",
@@ -67,7 +69,8 @@ defmodule Castmill.Repo.Migrations.AddDefaultWidgets do
             }
           },
           %{
-            name: "layout-portrait-3",
+            name: "Layout Portrait 3",
+            slug: "layout-portrait-3",
             aspect_ratio: "9:16",
             template: %{
               "type" => "layout",
@@ -123,7 +126,8 @@ defmodule Castmill.Repo.Migrations.AddDefaultWidgets do
             }
           },
           %{
-            name: "weather",
+            name: "Weather",
+            slug: "weather",
             template: %{
               "type" => "group",
               "name" => "weather",
@@ -166,7 +170,8 @@ defmodule Castmill.Repo.Migrations.AddDefaultWidgets do
             webhook_url: "widgets/weather"
           },
           %{
-            name: "web",
+            name: "Web",
+            slug: "web",
             template: %{
               "type" => "web",
               "name" => "web",

@@ -32,7 +32,9 @@ defmodule CastmillWeb.DeviceController do
 
   # A device will have access for most actions on itself (but not all,
   # like sending commands to itself, removing itself, etc).
+  # TODO: add when clause to limit the actions that are allowed
   def check_access(actor_id, _action, %{"device_id" => device_id}) do
+    IO.inspect("Device check_access #{inspect({actor_id, device_id})}")
     {:ok, actor_id == device_id}
   end
 
@@ -44,7 +46,15 @@ defmodule CastmillWeb.DeviceController do
 
   plug(
     AuthorizeDash,
-    %{} when action in [:send_command, :add_channel, :remove_channel]
+    %{}
+    when action in [
+           :send_command,
+           :add_channel,
+           :remove_channel,
+           :get_channels,
+           :get_playlist,
+           :list_events
+         ]
   )
 
   def home(conn, _params) do
@@ -134,7 +144,7 @@ defmodule CastmillWeb.DeviceController do
   @doc """
     Returns channels associated to this player
   """
-  def get_channels(conn, %{"id" => device_id}) do
+  def get_channels(conn, %{"device_id" => device_id}) do
     channels = Devices.list_channels(device_id)
 
     conn
@@ -148,7 +158,7 @@ defmodule CastmillWeb.DeviceController do
     TODO: Add authorization check to ensure that the device has access to the playlist.
     Basically check if the playlist is referenced by a channel that is associated to the device.
   """
-  def get_playlist(conn, %{"id" => _device_id, "playlist_id" => playlist_id}) do
+  def get_playlist(conn, %{"device_id" => _device_id, "playlist_id" => playlist_id}) do
     playlist = Resources.get_playlist(playlist_id)
 
     conn
@@ -160,7 +170,7 @@ defmodule CastmillWeb.DeviceController do
   @doc """
     Adds a channel to a device
   """
-  def add_channel(conn, %{"id" => device_id, "channel_id" => channel_id}) do
+  def add_channel(conn, %{"device_id" => device_id, "channel_id" => channel_id}) do
     with {:ok, _device} <- Devices.add_channel(device_id, channel_id) do
       conn
       |> put_status(:ok)
@@ -171,7 +181,7 @@ defmodule CastmillWeb.DeviceController do
   @doc """
     Removes a channel from a device
   """
-  def remove_channel(conn, %{"id" => device_id, "channel_id" => channel_id}) do
+  def remove_channel(conn, %{"device_id" => device_id, "channel_id" => channel_id}) do
     with {:ok, _device} <- Devices.remove_channel(device_id, channel_id) do
       conn
       |> put_status(:ok)

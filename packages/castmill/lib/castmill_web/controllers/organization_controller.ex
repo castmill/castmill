@@ -97,7 +97,9 @@ defmodule CastmillWeb.OrganizationController do
         "organization_id" => organization_id
       }) do
     with {:ok, {device, _token}} <-
-           Castmill.Devices.register_device(organization_id, pincode, %{name: name}) do
+           Castmill.Devices.register_device(organization_id, pincode, %{name: name}, %{
+             add_default_channel: true
+           }) do
       conn
       |> put_status(:created)
       |> put_resp_header("location", ~p"/devices/#{device.id}")

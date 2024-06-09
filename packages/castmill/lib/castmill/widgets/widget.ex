@@ -7,19 +7,24 @@ defmodule Castmill.Widgets.Widget do
            only: [
              :id,
              :name,
+             :description,
+             :slug,
              :template,
              :options_schema,
              :data_schema,
              :meta,
              :icon,
              :small_icon,
-             :update_granularity
+             :update_interval_seconds
            ]}
   schema "widgets" do
     field(:name, :string)
+    field(:slug, :string)
+    field(:description, :string)
+
     field(:template, :map)
-    field(:options_schema, :map)
-    field(:data_schema, :map)
+    field(:options_schema, :map, default: %{})
+    field(:data_schema, :map, default: %{})
 
     field(:meta, :map)
 
@@ -34,7 +39,7 @@ defmodule Castmill.Widgets.Widget do
     field(:webhook_url, :string)
 
     # Granularity in seconds for how often the widget should ask the server for updates.
-    field(:update_granularity, :integer, default: 60)
+    field(:update_interval_seconds, :integer, default: 60)
 
     timestamps()
   end
@@ -44,17 +49,19 @@ defmodule Castmill.Widgets.Widget do
     widget
     |> cast(attrs, [
       :name,
+      :slug,
+      :description,
       :template,
       :options_schema,
       :data_schema,
       :meta,
-      :update_granularity,
+      :update_interval_seconds,
       :icon,
       :small_icon,
       :is_system,
       :webhook_url
     ])
-    |> validate_required([:name, :template, :options_schema])
+    |> validate_required([:name, :template])
     |> validate_schema(:options_schema)
     |> validate_schema(:data_schema)
   end

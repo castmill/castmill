@@ -105,19 +105,19 @@ defmodule CastmillWeb.Router do
   end
 
   scope "/devices", CastmillWeb do
-    pipe_through(:device)
+    pipe_through([:device, :authenticate_device])
 
-    get("/:id", DeviceController, :show)
-    get("/:id/channels", DeviceController, :get_channels)
-    get("/:id/playlists/:playlist_id", DeviceController, :get_playlist)
+    get("/:device_id", DeviceController, :show)
+    get("/:device_id/channels", DeviceController, :get_channels)
+    get("/:device_id/playlists/:playlist_id", DeviceController, :get_playlist)
 
-    put("/:id/channels/:channel_id", DeviceController, :add_channel)
-    delete("/:id/channels/:channel_id", DeviceController, :remove_channel)
+    put("/:device_id/channels/:channel_id", DeviceController, :add_channel)
+    delete("/:device_id/channels/:channel_id", DeviceController, :remove_channel)
 
     # This route can be used by a device in order to post
     # its current status to the server. It can be called in
     # regular intervals or triggered by a user.
-    post("/:id/info", DeviceController, :info)
+    post("/:device_id/info", DeviceController, :info)
   end
 
   # Allows starting a signup process for Passkeys
@@ -270,6 +270,24 @@ defmodule CastmillWeb.Router do
         Castmill.Accounts.get_user_by_access_token(token, Utils.RemoteIp.get(conn))
         |> case do
           {:ok, user} -> assign_user(conn, user)
+          {:error, message} -> respond_with_error(conn, message)
+        end
+
+      {:error, message} ->
+        respond_with_error(conn, message)
+    end
+  end
+
+  defp authenticate_device(conn, _opts) do
+    device_id = conn.params["device_id"]
+
+    conn
+    |> get_bearer_token()
+    |> case do
+      {:ok, token} ->
+        Castmill.Devices.verify_device_token(device_id, token)
+        |> case do
+          {:ok, device} -> assign(conn, :current_actor, device)
           {:error, message} -> respond_with_error(conn, message)
         end
 
