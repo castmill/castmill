@@ -6,7 +6,7 @@ export interface JsonPlaylist {
   name: string;
   status: 'draft' | 'live' | 'archived';
   items: JsonPlaylistItem[];
-  settings: null;
+  settings?: any;
   inserted_at?: string;
   updated_at?: string;
 }

@@ -5,4 +5,4 @@ export * from './json-playlist.interface';
 export * from './json-widget-config.interface';
 export * from './json-widget.interface';
 export * from './player-globals.interface';
-export * from './schema';
+export * from './schema.interface';

@@ -9,7 +9,7 @@ import { PlayerGlobals } from '../../interfaces/player-globals.interface';
 export interface ImageComponentOptions {
   url: string;
   size: 'cover' | 'contain';
-  duration: number;
+  duration?: number;
 }
 
 export class ImageComponent implements TemplateComponent {

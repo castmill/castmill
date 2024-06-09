@@ -1,6 +1,6 @@
 // export * from "./scroll";
 
-export * from './proxy';
+// export * from './proxy';
 // export * from "./text-scroll";
 export * from './text';
 export * from './timeline-widget';
