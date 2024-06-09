@@ -197,6 +197,13 @@ export const BaseMenu: Component<BaseMenuProps> = ({
     }
   };
 
+  enum Key {
+    Down = 40,
+    Up = 38,
+    Enter = 13,
+    Escape = 27,
+  }
+
   // register event listeners. We may need more generic key events in the future to
   // support other devices. TV remote for example.
   onMount(() => {
@@ -204,14 +211,14 @@ export const BaseMenu: Component<BaseMenuProps> = ({
       showMenu();
 
       const currentItems = items();
-      if (e.key === 'ArrowUp') {
+      if (e.keyCode === Key.Up) {
         setSelected((s) => (s - 1 + currentItems.length) % currentItems.length);
-      } else if (e.key === 'ArrowDown') {
+      } else if (e.keyCode === Key.Down) {
         setSelected((s) => (s + 1) % currentItems.length);
-      } else if (e.key === 'Enter') {
+      } else if (e.keyCode === Key.Enter) {
         const item = currentItems[selected()];
         item.action();
-      } else if (e.key === 'Escape') {
+      } else if (e.keyCode === Key.Escape) {
         hideMenu();
       }
     };
