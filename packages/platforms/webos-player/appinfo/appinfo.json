@@ -1,0 +1,19 @@
+{
+  "id": "com.lg.app.signage",
+  "version": "2.0.0",
+  "vendor": "Castmill AB",
+  "type": "web",
+  "main": "index.html",
+  "title": "Castmill Player",
+  "icon": "icon.png",
+  "largeIcon": "largeIcon.png",
+  "uiRevision": 2,
+  "supportedOrientations": [
+    "Landscape",
+    "InvertedPortrait",
+    "InvertedLandscape",
+    "Portrait"
+  ],
+  "inspectable": true,
+  "crossDomainSecurity": "disable"
+}
