@@ -121,6 +121,9 @@ export class ResourceManager {
 
   private async buildCodeDataUri(url: string): Promise<string> {
     const code = await this.fetchCode(url);
+    if (!code) {
+      throw Error(`Failed to fetch code for ${url}`);
+    }
     return `data:text/javascript,${code};`;
   }
 
