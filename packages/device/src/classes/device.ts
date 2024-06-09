@@ -101,7 +101,7 @@ export class Device extends EventEmitter {
   
   }
 
-  async start(el: HTMLElement, logDiv: HTMLDivElement) {
+  async start(el: HTMLElement, logDiv?: HTMLDivElement) {
     let credentials = await this.integration.getCredentials();
     if (!credentials) {
       throw new Error('Invalid credentials');
