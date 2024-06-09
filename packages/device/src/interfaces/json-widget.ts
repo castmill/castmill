@@ -9,6 +9,7 @@ import { Schema } from './schema';
 export interface JsonWidget {
   id: number;
   name: string;
+  description: string;
   template: {
     type: string;
     name: string;
@@ -19,5 +20,5 @@ export interface JsonWidget {
   meta?: any;
   icon?: string;
   small_icon?: string;
-  update_granularity?: number;
+  update_interval_seconds?: number;
 }

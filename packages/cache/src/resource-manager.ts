@@ -11,6 +11,7 @@ import { Cache, ItemType } from './cache';
 let resourceManager: ResourceManager;
 
 interface ResourceManagerOpts {
+  authToken?: string;
   isOnline?: () => boolean;
   needsRefresh?: () => void;
 }
@@ -42,8 +43,12 @@ interface ResourceManagerOpts {
  *
  */
 export class ResourceManager {
+
+  private authHeader?: string;
+
   /**
    * Singleton factory method
+   * TODO: determine if we really need this singleton behaviour, and if not, remove it.
    * @param cache The cache to use for the resource manager.
    * @returns
    */
@@ -58,7 +63,9 @@ export class ResourceManager {
   constructor(
     private cache: Cache,
     private opts: ResourceManagerOpts = {}
-  ) { }
+  ) {
+    this.authHeader = opts.authToken ? `Bearer ${opts.authToken}` : undefined;
+  }
 
   async init() {
     // Get all the code resources
@@ -76,7 +83,7 @@ export class ResourceManager {
             codeResource.url,
             ItemType.Code,
             'text/javascript',
-            { force: true }
+            { force: true, headers: this.getAuthHeader() }
           );
           needRefresh = true;
         }
@@ -101,7 +108,11 @@ export class ResourceManager {
     let item = await this.cache.get(url);
 
     if (!item) {
-      item = await this.cache.set(url, ItemType.Code, 'text/javascript');
+      item = await this.cache.set(
+        url,
+        ItemType.Code,
+        'text/javascript',
+        { headers: this.getAuthHeader(), force: false });
     }
 
     if (item) {
@@ -115,12 +126,24 @@ export class ResourceManager {
     return `data:text/javascript,${code};`;
   }
 
+  /**
+   * getData
+   * 
+   * Returns possibly cached data for a given URL. If the data is not cached it will
+   * be cached and returned if possible.
+   * 
+   * @param url 
+   * @param freshness 
+   * @param opts 
+   * @returns 
+   */
   async getData<T = any>(url: string, freshness: number): Promise<T | void> {
     let item = await this.cache.get(url);
     const age = item ? Date.now() - item.timestamp : Infinity;
 
     if (!item || age > freshness) {
       item = await this.cache.set(url, ItemType.Data, 'application/json', {
+        headers: this.getAuthHeader(),
         force: true,
       });
     }
@@ -148,7 +171,11 @@ export class ResourceManager {
 
     let item = await this.cache.get(url);
     if (!item) {
-      item = await this.cache.set(url, ItemType.Media, 'media/*');
+      item = await this.cache.set(
+        url,
+        ItemType.Media,
+        'media/*',
+        { headers: this.getAuthHeader(), force: false });
     }
     return item?.cachedUrl;
   }
@@ -173,7 +200,12 @@ export class ResourceManager {
       return;
     }
 
-    await this.cache.set(url, ItemType.Media, 'media/*');
+    await this.cache.set(
+      url,
+      ItemType.Media,
+      'media/*',
+      { headers: this.getAuthHeader(), force: false }
+    );
   }
 
   close() {
@@ -186,13 +218,13 @@ export class ResourceManager {
    */
   private async fetchJson(
     url: string,
-    options: RequestInit = {}
   ): Promise<any> {
     try {
       const response = await fetch(url, {
         headers: {
           Accept: 'application/json',
           'Content-Type': 'application/json',
+          ...this.getAuthHeader(),
         },
       });
 
@@ -207,15 +239,28 @@ export class ResourceManager {
 
   private async fetchCode(
     url: string,
-    options: RequestInit = {}
   ): Promise<any> {
     try {
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        headers: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+          ...this.getAuthHeader(),
+        }
+      });
       if (response.ok) {
         return response.text();
       }
     } catch (err) {
       console.error(err);
+    }
+  }
+
+  private getAuthHeader(): { Authorization: string } | {} {
+    if (this.authHeader) {
+      return { Authorization: this.authHeader };
+    } else {
+      return {};
     }
   }
 }

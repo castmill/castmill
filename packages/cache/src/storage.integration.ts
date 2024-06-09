@@ -10,11 +10,16 @@
 export interface StorageItem {
   url: string;
   size: number; // Size in bytes of the item.
+  headers?: Record<string, string>; // Optiona headers required to get the stored item.
 }
 
 export interface StorageInfo {
   used: number; // Size in bytes of the used storage.
   total: number; // Size in bytes of the total storage.
+}
+
+export interface StoreOptions {
+  headers?: Record<string, string>, data?: any
 }
 
 export enum StoreResult {
@@ -59,9 +64,9 @@ export interface StorageIntegration {
    * given platform.
    *
    * @param url
-   * @param optional data to store, so it is not needed to download the file.
+   * @param opts Options such as request headers, and/or data.
    */
-  storeFile(url: string, data?: any): Promise<StoreFileReturnValue>;
+  storeFile(url: string, opts?: StoreOptions): Promise<StoreFileReturnValue>;
 
   /**
    * Retrieves a uri like string representing a file in the storage.

@@ -20,6 +20,7 @@ import {
   StoreResult,
   StoreError,
   StorageItem,
+  StoreOptions,
 } from './storage.integration';
 
 /*
@@ -45,6 +46,8 @@ interface ItemMetadata {
   type: ItemType;
   mimeType: string;
 }
+
+export type SetItemCacheOptions = StoreOptions & { force: boolean };
 
 export class Cache extends Dexie {
   items!: Dexie.Table<ItemMetadata, string>;
@@ -141,7 +144,7 @@ export class Cache extends Dexie {
     url: string,
     type: ItemType,
     mimeType: string,
-    { force } = { force: false }
+    opts: SetItemCacheOptions = { force: false }
   ) {
     // Check if we are already caching the item.
     if (!!this.caching[url]) {
@@ -151,7 +154,7 @@ export class Cache extends Dexie {
     // Check if the item  is not  already cached
     const item = await this.items.get({ url });
     if (item) {
-      if (!force) {
+      if (!opts.force) {
         return;
       }
       await this.del(url);
@@ -171,7 +174,7 @@ export class Cache extends Dexie {
       }
     }
 
-    const storeFilePromise = this.storeFile(url, type, mimeType);
+    const storeFilePromise = this.storeFile(url, type, mimeType, opts);
     this.caching[url] = storeFilePromise;
 
     return storeFilePromise.catch(async (err) => {
@@ -196,10 +199,11 @@ export class Cache extends Dexie {
   private async storeFile(
     url: string,
     type: ItemType,
-    mimeType: string
+    mimeType: string,
+    opts?: StoreOptions
   ): Promise<ItemMetadata | undefined> {
     try {
-      const { result, item: storageItem } = await this.integration.storeFile(url);
+      const { result, item: storageItem } = await this.integration.storeFile(url, opts);
       switch (result.code) {
         case StoreResult.Success:
           if (storageItem) {
@@ -231,7 +235,7 @@ export class Cache extends Dexie {
               if (result.errMsg) {
                 const requiredSpace = parseInt(result.errMsg);
                 await this.freeSpace(requiredSpace);
-                return this.storeFile(url, type, mimeType);
+                return this.storeFile(url, type, mimeType, opts);
               } else {
                 throw new Error('Not enough space, and no error message');
               }
