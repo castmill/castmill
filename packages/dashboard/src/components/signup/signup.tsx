@@ -143,7 +143,9 @@ const SignUp: Component = () => {
     });
 
     if (!result.ok) {
-      alert('Something went wrong when signing up, contact support.');
+      alert(
+        `Something went wrong when signing up, contact support. ERROR: ${result.statusText}`
+      );
     } else {
       navigate('/');
     }
