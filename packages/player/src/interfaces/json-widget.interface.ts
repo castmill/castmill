@@ -11,7 +11,7 @@ import { JsonWidgetTemplate } from './json-widget-template';
 export interface JsonWidget {
   id: number;
   name: string;
-  description: string;
+  description?: string;
   template: JsonWidgetTemplate;
   options_schema?: Schema;
   data_schema?: Schema;

@@ -1,6 +1,14 @@
 import { EventEmitter } from 'eventemitter3';
 import { Channel as PhoenixChannel, Socket } from 'phoenix';
-import { Player, Playlist, Renderer, Viewport, Layer } from '@castmill/player';
+import {
+  Player,
+  Playlist,
+  Renderer,
+  Viewport,
+  Layer,
+  JsonPlaylist,
+  JsonPlaylistItem,
+} from '@castmill/player';
 import {
   ResourceManager,
   Cache,
@@ -10,7 +18,7 @@ import {
 import { Machine, DeviceInfo } from '../interfaces/machine';
 import { getCastmillIntro } from './intro';
 import { Channel, JsonChannel } from './channel';
-import { Schema, JsonPlaylist, JsonPlaylistItem } from '../interfaces';
+import { Schema } from '../interfaces';
 import { JsonMedia } from '../interfaces/json-media';
 import { DivLogger, Logger, NullLogger, WebSocketLogger } from './logger';
 
@@ -268,7 +276,7 @@ export class Device extends EventEmitter {
 
   private cacheMedias(medias: string[]) {
     return Promise.all(
-      medias.map((url) => this.resourceManager.cacheMedia(url))
+      medias.map((url) => this.resourceManager?.cacheMedia(url))
     );
   }
 
