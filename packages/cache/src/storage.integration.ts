@@ -10,7 +10,7 @@
 export interface StorageItem {
   url: string;
   size: number; // Size in bytes of the item.
-  headers?: Record<string, string>; // Optiona headers required to get the stored item.
+  headers?: Record<string, string>; // Optional headers required to get the stored item.
 }
 
 export interface StorageInfo {
