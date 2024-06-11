@@ -30,7 +30,7 @@ export default defineConfig({
       },
       // make sure to externalize deps that shouldn't be bundled
       // into your library
-      // external: ["vue", "gsap", "lodash", "rxjs"],
+      // external: ["vue", "gsap", "rxjs"],
       output: {
         // Provide global variables to use in the UMD build
         // for externalized deps
