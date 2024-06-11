@@ -140,7 +140,7 @@ defmodule Castmill.Resources do
     # Resolve widget references and get the updated options
     resolved_options =
       resolve_widget_references(
-        item.widget_config.widget.options_schema,
+        item.widget_config.widget.options_schema || %{},
         item.widget_config.options
       )
 

@@ -43,7 +43,7 @@ export class Playlist extends EventEmitter {
   static fromJSON(
     json: JsonPlaylist,
     resourceManager: ResourceManager,
-    globals: PlayerGlobals
+    globals: PlayerGlobals = { target: 'default' }
   ) {
     const playlist = new Playlist(json.name, resourceManager);
     const layers = json.items || [];

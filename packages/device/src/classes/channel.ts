@@ -1,23 +1,23 @@
 /**
- * Calendar
+ * Channel
  *
- * The calendar is responsible for scheduling the playlists to be played.
+ * The channel is responsible for scheduling the playlists to be played.
  *
  */
 
-export interface JsonCalendar {
+export interface JsonChannel {
   id?: string;
   name: string;
   description: string | undefined;
   timezone: string;
-  entries?: CalendarEntry[];
+  entries?: ChannelEntry[];
   default_playlist_id?: string;
   updated_at?: number;
   inserted_at?: number;
 }
-export class Calendar {
-  sortedEntries: CalendarEntry[];
-  constructor(public attrs: JsonCalendar) {
+export class Channel {
+  sortedEntries: ChannelEntry[];
+  constructor(public attrs: JsonChannel) {
     this.sortedEntries = attrs.entries
       ? attrs.entries.sort((a, b) => a.start - b.start)
       : [];
@@ -90,9 +90,9 @@ export class Calendar {
 }
 
 /**
- * CalendarEntry
+ * ChannelEntry
  *
- * A calendar entry is a single entry in the calendar. It defines a start and end date, and a playlist to be played
+ * A channel entry is a single entry in the channel. It defines a start and end date, and a playlist to be played
  * during that time.
  *
  * The entries start and end dates are in UTC time, and define a time range in a particular way:
@@ -104,10 +104,10 @@ export class Calendar {
  *
  * If the entry is a recurring entry, it will also define a repeatWeekelyUntil date.
  */
-interface CalendarEntry {
+interface ChannelEntry {
   start: number;
   end: number;
   playlist_id: string;
-  calendar_id: string;
+  channel_id: string;
   repeat_weekly_until: number | undefined;
 }

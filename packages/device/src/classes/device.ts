@@ -1,6 +1,14 @@
 import { EventEmitter } from 'eventemitter3';
-import { Channel, Socket } from 'phoenix';
-import { Player, Playlist, Renderer, Viewport, Layer } from '@castmill/player';
+import { Channel as PhoenixChannel, Socket } from 'phoenix';
+import {
+  Player,
+  Playlist,
+  Renderer,
+  Viewport,
+  Layer,
+  JsonPlaylist,
+  JsonPlaylistItem,
+} from '@castmill/player';
 import {
   ResourceManager,
   Cache,
@@ -9,8 +17,8 @@ import {
 } from '@castmill/cache';
 import { Machine, DeviceInfo } from '../interfaces/machine';
 import { getCastmillIntro } from './intro';
-import { Calendar, JsonCalendar } from './calendar';
-import { Schema, JsonPlaylist, JsonPlaylistItem } from '../interfaces';
+import { Channel, JsonChannel } from './channel';
+import { Schema } from '../interfaces';
 import { JsonMedia } from '../interfaces/json-media';
 import { DivLogger, Logger, NullLogger, WebSocketLogger } from './logger';
 
@@ -25,7 +33,7 @@ export enum Status {
 }
 
 export interface DeviceMessage {
-  resource: 'device' | 'calendar' | 'playlist' | 'widget';
+  resource: 'device' | 'channel' | 'playlist' | 'widget';
   action: 'update' | 'delete';
   data: any;
 }
@@ -62,11 +70,11 @@ interface DeviceRequest {
 export class Device extends EventEmitter {
   private closing = false;
   private cache: Cache;
-  private resourceManager: ResourceManager;
-  private contentQueue: Playlist;
+  private resourceManager?: ResourceManager;
+  private contentQueue?: Playlist;
   private player?: Player;
-  private calendars: Calendar[] = [];
-  private calendarIndex = 0;
+  private channels: Channel[] = [];
+  private channelIndex = 0;
   private logger: Logger = new Logger();
   private logDiv?: HTMLDivElement;
   private socket?: Socket;
@@ -95,12 +103,9 @@ export class Device extends EventEmitter {
       'castmill-device',
       opts?.cache?.maxItems || 1000
     );
-    this.resourceManager = new ResourceManager(this.cache);
 
-    this.contentQueue = new Playlist('content-queue', this.resourceManager);
-
-    const intro = getCastmillIntro(this.resourceManager);
-    this.contentQueue.add(intro);
+    //const intro = getCastmillIntro(this.resourceManager);
+    //this.contentQueue.add(intro);
   }
 
   async start(el: HTMLElement, logDiv?: HTMLDivElement) {
@@ -116,6 +121,23 @@ export class Device extends EventEmitter {
       throw new Error('Invalid credentials');
     }
 
+    this.resourceManager = new ResourceManager(this.cache, {
+      authToken: device.token,
+    });
+
+    await this.resourceManager.init();
+
+    this.contentQueue = new Playlist('content-queue', this.resourceManager);
+
+    const rawChannels = await this.resourceManager.getData(
+      `${this.opts?.baseUrl || ''}/devices/${device.id}/channels`,
+      1000
+    );
+
+    this.channels = (rawChannels?.data || []).map(
+      (channel: JsonChannel) => new Channel(channel)
+    );
+
     this.id = device.id;
     this.name = device.name;
     this.logDiv = logDiv;
@@ -129,7 +151,7 @@ export class Device extends EventEmitter {
     // this.player.play({ loop: true });
 
     /**
-     * Since a device can have a lot of calendars associated to it, as well as be subject to play content based on
+     * Since a device can have a lot of channels associated to it, as well as be subject to play content based on
      * events at any time, we will use a single player instance to play all the content, and a single playlist.
      * The playlist will be handled as a queue of content to be played. When an item of the playlist has been played
      * it will be removed from the playlist and the next item will be played. When only 1 item remains in the playlist,
@@ -142,8 +164,8 @@ export class Device extends EventEmitter {
       // Add next batch of items from the next calendar.
       // Play until only one item remains in the playlist or the device is stopped.
       if (this.contentQueue.length < 2) {
-        if (this.calendars.length) {
-          const calendar = this.calendars[this.calendarIndex];
+        if (this.channels.length) {
+          const calendar = this.channels[this.channelIndex];
           const entry = calendar.getPlaylistAt(Date.now());
           if (entry) {
             const jsonPlaylist: JsonPlaylist | void =
@@ -169,7 +191,7 @@ export class Device extends EventEmitter {
               this.player.play({ loop: true });
 
               const onEnd = () => {
-                this.contentQueue.remove(layer);
+                this.contentQueue!.remove(layer);
                 layer.off('end', onEnd);
               };
 
@@ -177,9 +199,9 @@ export class Device extends EventEmitter {
             }
           }
 
-          // TODO: If there is no entry we should try with the next calendar instead of
+          // TODO: If there is no entry we should try with the next channel instead of
           // waiting for the next loop iteration.
-          this.calendarIndex = (this.calendarIndex + 1) % this.calendars.length;
+          this.channelIndex = (this.channelIndex + 1) % this.channels.length;
         }
       }
       await new Promise((resolve) => setTimeout(resolve, 5000));
@@ -254,7 +276,7 @@ export class Device extends EventEmitter {
 
   private cacheMedias(medias: string[]) {
     return Promise.all(
-      medias.map((url) => this.resourceManager.cacheMedia(url))
+      medias.map((url) => this.resourceManager?.cacheMedia(url))
     );
   }
 
@@ -291,9 +313,9 @@ export class Device extends EventEmitter {
       const { device } = JSON.parse(credentials);
 
       try {
-        const channel = await this.login(credentials, hardwareId);
-        this.initListeners(channel);
-        this.initHeartbeat(channel);
+        const phoenixChannel = await this.login(credentials, hardwareId);
+        this.initListeners(phoenixChannel);
+        this.initHeartbeat(phoenixChannel);
       } catch (error) {
         if (error === 'invalid_device') {
           // Clean all app data and refresh the page.
@@ -307,15 +329,6 @@ export class Device extends EventEmitter {
           window.location.reload();
         }
       }
-
-      const rawCalendars = await this.resourceManager.getData(
-        `${this.opts?.baseUrl || ''}/devices/${device.id}/calendars`,
-        1000
-      );
-
-      this.calendars = (rawCalendars?.data || []).map(
-        (calendar: JsonCalendar) => new Calendar(calendar)
-      );
 
       return { status: Status.Login };
     } else {
@@ -381,7 +394,7 @@ export class Device extends EventEmitter {
       token: device.token,
     });
 
-    return new Promise<Channel>((resolve, reject) => {
+    return new Promise<PhoenixChannel>((resolve, reject) => {
       channel
         .join()
         .receive('ok', (resp) => {
@@ -393,7 +406,7 @@ export class Device extends EventEmitter {
     });
   }
 
-  private initListeners(channel: Channel) {
+  private initListeners(channel: PhoenixChannel) {
     channel.on('command', async (payload: DeviceCommand) => {
       switch (payload.command) {
         case 'refresh':
@@ -436,9 +449,9 @@ export class Device extends EventEmitter {
       switch (data.resource) {
         case 'device':
           break;
-        case 'calendar':
-          // We could just mark the calendar as dirty (in the resource manager), as we do not know
-          // when the calendar would be used.
+        case 'channel':
+          // We could just mark the channel as dirty (in the resource manager), as we do not know
+          // when the channel would be used.
           break;
         case 'playlist':
           // We could mark the playlist as dirty (in the resource manager), as we do not know
@@ -457,7 +470,7 @@ export class Device extends EventEmitter {
     return { data, count };
   }
 
-  private initHeartbeat(channel: Channel) {
+  private initHeartbeat(channel: PhoenixChannel) {
     setInterval(() => {
       channel.push('heartbeat', {});
     }, HEARTBEAT_INTERVAL);

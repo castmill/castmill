@@ -2,6 +2,7 @@ import {
   StorageIntegration,
   StoreResult,
   StoreError,
+  StoreOptions,
 } from '../../storage.integration';
 
 const UninitializedCacheError = 'Cache has not been initialized';
@@ -94,13 +95,17 @@ export class StorageBrowser implements StorageIntegration {
    *
    * @param url
    */
-  async storeFile(url: string) {
+  async storeFile(url: string, opts?: StoreOptions) {
     if (!this.cache) {
       throw new Error(UninitializedCacheError);
     }
 
     try {
-      const request = new Request(url, { mode: 'cors', method: 'GET' });
+      const request = new Request(url, {
+        mode: 'cors',
+        method: 'GET',
+        headers: opts?.headers,
+      });
       await this.cache.add(request);
 
       const response = await this.cache.match(url);

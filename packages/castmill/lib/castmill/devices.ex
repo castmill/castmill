@@ -225,15 +225,16 @@ defmodule Castmill.Devices do
   end
 
   @doc """
-    Registers a device.
+  Registers a device.
 
-    Perform the following steps inside a transaction:
-      Check if there is a devices register with the given pincode.
-      If there is, create a new device and delete the register.
-      If there is not, return an error.
-      If there is a register, but the pincode is expired, return an error.
+  Perform the following steps inside a transaction:
+    Check if there is a devices registration with the given pincode.
+    If there is, create a new device and delete the register.
+    If there is not, return an error.
+    If there is a register, but the pincode is expired, return an error.
+    Optionally, add a default channel to the device based on the `add_default_channel` option.
   """
-  def register_device(organization_id, pincode, attrs \\ {}) do
+  def register_device(organization_id, pincode, attrs \\ %{}, opts \\ %{}) do
     Repo.transaction(fn ->
       devices_registration = Repo.get_by(DevicesRegistrations, pincode: pincode)
 
@@ -256,15 +257,35 @@ defmodule Castmill.Devices do
 
           with {:ok, _} <- Repo.delete(devices_registration),
                {:ok, device} <- create_device(Map.merge(params, attrs)) do
-            Endpoint.broadcast("register:#{device.hardware_id}", "device:registered", %{
-              device: %{
-                id: device.id,
-                name: device.name,
-                token: token
-              }
-            })
+            add_channel_option = Map.get(opts, :add_default_channel, false)
 
-            {Map.drop(device, [:token, :token_hash]), token}
+            add_channel_result =
+              if add_channel_option do
+                with {:ok, channel} <- create_default_channel(device),
+                     {:ok, _} <- add_channel(device.id, channel.id) do
+                  {:ok, channel}
+                else
+                  {:error, changeset} -> Repo.rollback(changeset)
+                end
+              else
+                {:ok, nil}
+              end
+
+            case add_channel_result do
+              {:ok, _channel} ->
+                Endpoint.broadcast("register:#{device.hardware_id}", "device:registered", %{
+                  device: %{
+                    id: device.id,
+                    name: device.name,
+                    token: token
+                  }
+                })
+
+                {Map.drop(device, [:token, :token_hash]), token}
+
+              {:error, _} = error ->
+                error
+            end
           else
             {:error, changeset} -> Repo.rollback(changeset)
           end
@@ -273,6 +294,49 @@ defmodule Castmill.Devices do
         Repo.rollback(:invalid_pincode)
       end
     end)
+  end
+
+  # Creates a default channel for a given device
+  # This channel is used to store the default playlist for the device
+  # The default playlist is the playlist that is played when no other playlist is selected
+  defp create_default_channel(device) do
+    # Create default playlist and assign it as default playlist to the channel
+    {:ok, playlist} = create_default_playlist("#{device.name} Default", device.organization_id)
+
+    %Castmill.Resources.Channel{}
+    |> Castmill.Resources.Channel.changeset(%{
+      name: "#{device.name} Default",
+      organization_id: device.organization_id,
+      default_playlist_id: playlist.id,
+      timezone: "UTC"
+    })
+    |> Castmill.Repo.insert()
+  end
+
+  defp create_default_playlist(name, organization_id) do
+    {:ok, playlist} =
+      %Castmill.Resources.Playlist{}
+      |> Castmill.Resources.Playlist.changeset(%{
+        name: name,
+        organization_id: organization_id
+      })
+      |> Castmill.Repo.insert()
+
+    # Add a default entry to the playlist (we will add the Intro widget)
+    widget = Castmill.Widgets.get_widget_by_slug("intro")
+
+    if widget != nil do
+      {:ok, _item} =
+        Castmill.Resources.insert_item_into_playlist(
+          playlist.id,
+          nil,
+          widget.id,
+          0,
+          10000
+        )
+    end
+
+    {:ok, playlist}
   end
 
   @doc """

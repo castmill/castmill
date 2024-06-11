@@ -97,6 +97,7 @@ export class Layer extends EventEmitter {
       widget: {
         id: 666,
         name: 'layout-1-1',
+        description: 'Main playlist layout',
         template: {
           name: 'Main playlist layout',
           type: TemplateComponentType.Layout,

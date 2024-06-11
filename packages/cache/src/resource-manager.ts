@@ -11,6 +11,7 @@ import { Cache, ItemType } from './cache';
 let resourceManager: ResourceManager;
 
 interface ResourceManagerOpts {
+  authToken?: string;
   isOnline?: () => boolean;
   needsRefresh?: () => void;
 }
@@ -42,8 +43,11 @@ interface ResourceManagerOpts {
  *
  */
 export class ResourceManager {
+  private authHeader?: string;
+
   /**
    * Singleton factory method
+   * TODO: determine if we really need this singleton behaviour, and if not, remove it.
    * @param cache The cache to use for the resource manager.
    * @returns
    */
@@ -58,7 +62,9 @@ export class ResourceManager {
   constructor(
     private cache: Cache,
     private opts: ResourceManagerOpts = {}
-  ) {}
+  ) {
+    this.authHeader = opts.authToken ? `Bearer ${opts.authToken}` : undefined;
+  }
 
   async init() {
     // Get all the code resources
@@ -75,7 +81,8 @@ export class ResourceManager {
           await this.cache.set(
             codeResource.url,
             ItemType.Code,
-            'text/javascript'
+            'text/javascript',
+            { force: true, headers: this.getAuthHeader() }
           );
           needRefresh = true;
         }
@@ -99,29 +106,50 @@ export class ResourceManager {
   async import<T = any>(url: string): Promise<T | void> {
     let item = await this.cache.get(url);
 
-    if (item) {
-      const code = await this.fetchCode(item.cachedUrl);
-
-      if (!code) {
-        throw Error(`Failed to fetch code for ${url}`);
-      }
-
-      const uri = `data:text/javascript,${code};`;
-      return import(/* @vite-ignore */ uri) as Promise<T>;
+    if (!item) {
+      item = await this.cache.set(url, ItemType.Code, 'text/javascript', {
+        headers: this.getAuthHeader(),
+        force: false,
+      });
     }
 
-    return this.cache.set(url, ItemType.Code, 'text/javascript');
+    if (item) {
+      const uri = await this.buildCodeDataUri(item.cachedUrl);
+      return import(/* @vite-ignore */ uri) as Promise<T>;
+    }
   }
 
+  private async buildCodeDataUri(url: string): Promise<string> {
+    const code = await this.fetchCode(url);
+    if (!code) {
+      throw Error(`Failed to fetch code for ${url}`);
+    }
+    return `data:text/javascript,${code};`;
+  }
+
+  /**
+   * getData
+   *
+   * Returns possibly cached data for a given URL. If the data is not cached it will
+   * be cached and returned if possible.
+   *
+   * @param url
+   * @param freshness
+   * @param opts
+   * @returns
+   */
   async getData<T = any>(url: string, freshness: number): Promise<T | void> {
-    const item = await this.cache.get(url);
+    let item = await this.cache.get(url);
     const age = item ? Date.now() - item.timestamp : Infinity;
-    if (item && age < freshness) {
-      return this.fetchJson(item.cachedUrl) as Promise<T>;
-    } else {
-      return this.cache.set(url, ItemType.Data, 'application/json', {
+
+    if (!item || age > freshness) {
+      item = await this.cache.set(url, ItemType.Data, 'application/json', {
+        headers: this.getAuthHeader(),
         force: true,
       });
+    }
+    if (item) {
+      return this.fetchJson(item.cachedUrl) as Promise<T>;
     }
   }
 
@@ -142,11 +170,14 @@ export class ResourceManager {
       return url;
     }
 
-    const item = await this.cache.get(url);
+    let item = await this.cache.get(url);
     if (!item) {
-      return this.cache.set(url, ItemType.Media, 'media/*');
+      item = await this.cache.set(url, ItemType.Media, 'media/*', {
+        headers: this.getAuthHeader(),
+        force: false,
+      });
     }
-    return item.cachedUrl;
+    return item?.cachedUrl;
   }
 
   /**
@@ -169,7 +200,10 @@ export class ResourceManager {
       return;
     }
 
-    return this.cache.set(url, ItemType.Media, 'media/*');
+    await this.cache.set(url, ItemType.Media, 'media/*', {
+      headers: this.getAuthHeader(),
+      force: false,
+    });
   }
 
   close() {
@@ -180,17 +214,16 @@ export class ResourceManager {
    *
    * @param url The url of the data resource to fetch.
    */
-  private async fetchJson(
-    url: string,
-    options: RequestInit = {}
-  ): Promise<any> {
+  private async fetchJson(url: string): Promise<any> {
     try {
       const response = await fetch(url, {
         headers: {
           Accept: 'application/json',
           'Content-Type': 'application/json',
+          ...this.getAuthHeader(),
         },
       });
+
       if (response.ok) {
         const data = await response.json();
         return data;
@@ -200,17 +233,27 @@ export class ResourceManager {
     }
   }
 
-  private async fetchCode(
-    url: string,
-    options: RequestInit = {}
-  ): Promise<any> {
+  private async fetchCode(url: string): Promise<any> {
     try {
-      const response = await fetch(url);
+      const response = await fetch(url, {
+        headers: {
+          Accept: 'application/json',
+          ...this.getAuthHeader(),
+        },
+      });
       if (response.ok) {
         return response.text();
       }
     } catch (err) {
       console.error(err);
+    }
+  }
+
+  private getAuthHeader(): { Authorization: string } | {} {
+    if (this.authHeader) {
+      return { Authorization: this.authHeader };
+    } else {
+      return {};
     }
   }
 }

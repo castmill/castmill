@@ -79,4 +79,10 @@ defmodule Castmill.Widgets do
     })
     |> Repo.insert()
   end
+
+  def get_widget_by_slug(slug) do
+    Widget
+    |> where([w], w.slug == ^slug)
+    |> Repo.one()
+  end
 end

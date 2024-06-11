@@ -27,7 +27,7 @@ defmodule Castmill.PlaylistsTest do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
       playlist = playlist_fixture(%{organization_id: organization.id})
-      widget = Repo.get_by(Castmill.Widgets.Widget, name: "image")
+      widget = Castmill.Widgets.get_widget_by_slug("image")
 
       {:ok, item1} = Resources.insert_item_into_playlist(playlist.id, nil, widget.id, 0, 12345)
       {:ok, item2} = Resources.insert_item_into_playlist(playlist.id, nil, widget.id, 0, 423)
@@ -42,7 +42,7 @@ defmodule Castmill.PlaylistsTest do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
       playlist = playlist_fixture(%{organization_id: organization.id})
-      widget = Repo.get_by(Castmill.Widgets.Widget, name: "image")
+      widget = Castmill.Widgets.get_widget_by_slug("image")
 
       {:ok, item1} = Resources.insert_item_into_playlist(playlist.id, nil, widget.id, 0, 12345)
       {:ok, item2} = Resources.insert_item_into_playlist(playlist.id, item1.id, widget.id, 0, 423)
@@ -61,7 +61,7 @@ defmodule Castmill.PlaylistsTest do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
       playlist = playlist_fixture(%{organization_id: organization.id})
-      widget = Repo.get_by(Castmill.Widgets.Widget, name: "image")
+      widget = Castmill.Widgets.get_widget_by_slug("image")
 
       {:ok, item1} = Resources.insert_item_into_playlist(playlist.id, nil, widget.id, 0, 12345)
       {:ok, item2} = Resources.insert_item_into_playlist(playlist.id, item1.id, widget.id, 0, 423)
@@ -93,7 +93,7 @@ defmodule Castmill.PlaylistsTest do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
       playlist = playlist_fixture(%{organization_id: organization.id})
-      widget = Repo.get_by(Castmill.Widgets.Widget, name: "image")
+      widget = Castmill.Widgets.get_widget_by_slug("image")
 
       {:ok, item1} = Resources.insert_item_into_playlist(playlist.id, nil, widget.id, 0, 12345)
 
@@ -107,7 +107,7 @@ defmodule Castmill.PlaylistsTest do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
       playlist = playlist_fixture(%{organization_id: organization.id})
-      widget = Repo.get_by(Castmill.Widgets.Widget, name: "image")
+      widget = Castmill.Widgets.get_widget_by_slug("image")
 
       {:ok, item1} = Resources.insert_item_into_playlist(playlist.id, nil, widget.id, 0, 12345)
       {:ok, item2} = Resources.insert_item_into_playlist(playlist.id, nil, widget.id, 0, 423)
@@ -123,7 +123,7 @@ defmodule Castmill.PlaylistsTest do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
       playlist = playlist_fixture(%{organization_id: organization.id})
-      widget = Repo.get_by(Castmill.Widgets.Widget, name: "image")
+      widget = Castmill.Widgets.get_widget_by_slug("image")
 
       {:ok, item1} = Resources.insert_item_into_playlist(playlist.id, nil, widget.id, 0, 12345)
       {:ok, item2} = Resources.insert_item_into_playlist(playlist.id, nil, widget.id, 0, 423)
@@ -139,7 +139,7 @@ defmodule Castmill.PlaylistsTest do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
       playlist = playlist_fixture(%{organization_id: organization.id})
-      widget = Repo.get_by(Castmill.Widgets.Widget, name: "image")
+      widget = Castmill.Widgets.get_widget_by_slug("image")
 
       {:ok, item1} = Resources.insert_item_into_playlist(playlist.id, nil, widget.id, 0, 12345)
       {:ok, item2} = Resources.insert_item_into_playlist(playlist.id, item1.id, widget.id, 0, 423)
@@ -178,7 +178,7 @@ defmodule Castmill.PlaylistsTest do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
       playlist = playlist_fixture(%{organization_id: organization.id})
-      widget = Repo.get_by(Castmill.Widgets.Widget, name: "image")
+      widget = Castmill.Widgets.get_widget_by_slug("image")
 
       {:ok, item8} = Resources.insert_item_into_playlist(playlist.id, nil, widget.id, 0, 12345)
       {:ok, item7} = Resources.insert_item_into_playlist(playlist.id, nil, widget.id, 0, 423)
@@ -204,7 +204,7 @@ defmodule Castmill.PlaylistsTest do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
       playlist = playlist_fixture(%{organization_id: organization.id})
-      widget = Repo.get_by(Castmill.Widgets.Widget, name: "image")
+      widget = Castmill.Widgets.get_widget_by_slug("image")
 
       {:ok, item8} = Resources.insert_item_into_playlist(playlist.id, nil, widget.id, 0, 12345)
       {:ok, item7} = Resources.insert_item_into_playlist(playlist.id, nil, widget.id, 0, 423)
@@ -230,7 +230,7 @@ defmodule Castmill.PlaylistsTest do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
       playlist = playlist_fixture(%{organization_id: organization.id})
-      widget = Repo.get_by(Castmill.Widgets.Widget, name: "image")
+      widget = Castmill.Widgets.get_widget_by_slug("image")
 
       {:ok, item8} = Resources.insert_item_into_playlist(playlist.id, nil, widget.id, 0, 12345)
       {:ok, item7} = Resources.insert_item_into_playlist(playlist.id, nil, widget.id, 0, 423)
@@ -256,7 +256,7 @@ defmodule Castmill.PlaylistsTest do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
       playlist = playlist_fixture(%{organization_id: organization.id})
-      widget = Repo.get_by(Castmill.Widgets.Widget, name: "image")
+      widget = Castmill.Widgets.get_widget_by_slug("image")
 
       {:ok, item2} = Resources.insert_item_into_playlist(playlist.id, nil, widget.id, 0, 1231)
       {:ok, item1} = Resources.insert_item_into_playlist(playlist.id, nil, widget.id, 0, 8675)
@@ -271,7 +271,7 @@ defmodule Castmill.PlaylistsTest do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
       playlist = playlist_fixture(%{organization_id: organization.id})
-      widget = Repo.get_by(Castmill.Widgets.Widget, name: "image")
+      widget = Castmill.Widgets.get_widget_by_slug("image")
 
       {:ok, item2} = Resources.insert_item_into_playlist(playlist.id, nil, widget.id, 0, 1231)
       {:ok, item1} = Resources.insert_item_into_playlist(playlist.id, nil, widget.id, 0, 8675)
@@ -286,7 +286,7 @@ defmodule Castmill.PlaylistsTest do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
       playlist = playlist_fixture(%{organization_id: organization.id})
-      widget = Repo.get_by(Castmill.Widgets.Widget, name: "image")
+      widget = Castmill.Widgets.get_widget_by_slug("image")
 
       {:ok, item2} = Resources.insert_item_into_playlist(playlist.id, nil, widget.id, 0, 1231)
       {:ok, item1} = Resources.insert_item_into_playlist(playlist.id, nil, widget.id, 0, 8675)
@@ -319,7 +319,7 @@ defmodule Castmill.PlaylistsTest do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
       playlist = playlist_fixture(%{organization_id: organization.id, name: "Apples"})
-      widget = Repo.get_by(Castmill.Widgets.Widget, name: "image")
+      widget = Castmill.Widgets.get_widget_by_slug("image")
       media = media_fixture(%{organization_id: organization.id, name: "Test Media"})
 
       {:ok, file} =

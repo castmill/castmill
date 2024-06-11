@@ -2,8 +2,7 @@
 
 import 'fake-indexeddb/auto';
 
-import { describe, it } from 'mocha';
-import { expect } from 'chai';
+import { describe, it, expect } from 'vitest';
 
 import { Cache, ItemType } from '../src/cache';
 import { StorageMockup } from './storage.mockup';
