@@ -23,8 +23,6 @@ export const WidgetView = () => {
   createEffect(() => {
     const widget = JSON.parse(fileContent());
 
-    console.log({ widget });
-
     const layer = {
       id: 123,
       offset: 0,
