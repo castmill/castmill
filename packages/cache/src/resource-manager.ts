@@ -238,7 +238,6 @@ export class ResourceManager {
       const response = await fetch(url, {
         headers: {
           Accept: 'application/json',
-          'Content-Type': 'application/json',
           ...this.getAuthHeader(),
         },
       });
