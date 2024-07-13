@@ -3,7 +3,8 @@
 
 import { defineConfig } from 'vite';
 import solidPlugin from 'vite-plugin-solid';
-import legacy from '@vitejs/plugin-legacy'
+import legacy from '@vitejs/plugin-legacy';
+import { viteStaticCopy } from 'vite-plugin-static-copy';
 // import devtools from 'solid-devtools/vite';
 
 export default defineConfig({
@@ -21,6 +22,7 @@ export default defineConfig({
         'es.object.assign',
         'web.queue-microtask',
       ],
+      // externalSystemJS: true,
       // additionalLegacyPolyfills: ['es6.symbol'],
     }),
     /* 
@@ -29,7 +31,19 @@ export default defineConfig({
     */
     // devtools(),
     solidPlugin(),
+    // viteStaticCopy({
+    //   targets: [],
+    // //   targets: [
+    // //     {
+    // //       'src': 'lib',
+    // //       'dest': 'dist/lib'
+    // //     },
+    // //   ],
+    // }),
   ],
+  base: '',
+  // root: '.',
+  publicDir: 'public',
   server: {
     port: 3001,
   },
@@ -44,6 +58,7 @@ export default defineConfig({
   build: {
     // target: 'chrome38',
     minify: false,
+    sourcemap: 'inline',
   },
   resolve: {
     conditions: ['development', 'browser'],
