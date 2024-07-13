@@ -2,7 +2,7 @@ var express = require('express');
 var onFinished = require('on-finished');
 var app = express();
 
-const {version} = require('./appinfo/appinfo.json');
+const { version } = require('./appinfo/appinfo.json');
 
 // LATEST BUILD
 const CURRENT_BUILD = {
@@ -64,10 +64,10 @@ app.use('/application/com.lg.app.signage.ipk', (req, res, next) => {
   console.log('got request for com.lg.app.signage.ipk');
   console.log(`Sending file ${path.root}/${path.file}`);
   res.contentType('application/octet-stream; charset=UTF-8');
-  res.sendFile(path.file, {root: path.root});
+  res.sendFile(path.file, { root: path.root });
 });
 
 // static serve of the dist folder
-app.use('/dist', express.static('dist'));
+app.use('/', express.static('dist'));
 
 app.listen(3232);
