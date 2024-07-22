@@ -11,27 +11,60 @@ var UPDATE_CONFIG = {
   fqdnAddr: 'https://update.castmill.io/webos/player-new.ipk',
 };
 
+var CREDENTIALS_FILE_PATH = 'credentials.txt';
+
+/**
+ * Digests a string into a SHA-256 hash.
+ */
+async function digestText(message: string) {
+  const msgUint8 = new TextEncoder().encode(message);
+  const hashBuffer = await window.crypto.subtle.digest('SHA-256', msgUint8);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  // Convert bytes to hex string
+  const hashHex = hashArray
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+  return hashHex;
+}
+
 export class WebosMachine implements Machine {
   async getMachineGUID(): Promise<string> {
-    //TODO implement
     console.log('getMachineGUID');
-    return '123';
+
+    const { wiredInfo, wifiInfo } = await deviceInfo.getNetworkMacInfo();
+    const macAddress = wiredInfo?.macAddress || wifiInfo?.macAddress;
+    if (!macAddress) {
+      throw new Error('No mac address found');
+    }
+
+    const hash = await digestText(macAddress);
+
+    return hash;
   }
 
   async storeCredentials(credentials: string): Promise<void> {
-    //TODO implement
     console.log('storeCredentials', credentials);
+    await storage.writeFile({
+      path: CREDENTIALS_FILE_PATH,
+      data: credentials,
+    });
+    return;
   }
 
   async getCredentials(): Promise<string> {
-    //TODO implement
     console.log('getCredentials');
-    return 'credentials';
+    const credentials = await storage.readFile({
+      path: CREDENTIALS_FILE_PATH,
+    });
+
+    return credentials.data.toString();
   }
 
   async removeCredentials(): Promise<void> {
-    //TODO implement
     console.log('removeCredentials');
+    return storage.removeFile({
+      file: CREDENTIALS_FILE_PATH,
+    });
   }
 
   async getLocation(): Promise<
@@ -142,6 +175,8 @@ export class WebosMachine implements Machine {
   private async getFirmwareDownloadUrl(): Promise<string> {
     const { manufacturer, modelName } = await deviceInfo.getPlatformInfo();
 
+    // TODO: Model name is probably too specific, we should use the model family instead
+    // e.g. 'XS2E' instead of '55XS2E-BH'
     return `https://update.castmill.io/webos/firmware/${manufacturer}-${modelName}.epk`;
   }
 }
