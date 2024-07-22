@@ -16,6 +16,9 @@ export const deviceInfo = {
   getPlatformInfo: promisifyNoOpt(
     scapDeviceInfo.getPlatformInfo.bind(scapDeviceInfo)
   ),
+  getNetworkMacInfo: promisifyNoOpt(
+    scapDeviceInfo.getNetworkMacInfo.bind(scapConfig)
+  ),
 };
 
 export const utility = {
@@ -59,6 +62,9 @@ export const storage = {
   upgradeFirmware: promisifyNoOptNoRet(
     scapStorage.upgradeFirmware.bind(scapStorage)
   ),
+  writeFile: promisify(scapStorage.writeFile.bind(scapStorage)),
+  readFile: promisify(scapStorage.readFile.bind(scapStorage)),
+  removeFile: promisifyNoRet(scapStorage.removeFile.bind(scapStorage)),
 };
 
 // const a = promisify((successCallback: (result: string) => void, errorCallback: (error: any) => void, options?: { a: string }) => {

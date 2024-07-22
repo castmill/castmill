@@ -14,7 +14,6 @@ if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
   );
 }
 
-
 const getDI = async () => {
   const di = await deviceInfo.getPlatformInfo();
 
