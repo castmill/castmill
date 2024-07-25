@@ -1,5 +1,6 @@
 import { Machine, DeviceInfo } from '@castmill/device';
 import { configuration, deviceInfo, power, storage } from '../native';
+import { digestText } from './utils';
 
 var UPDATE_CONFIG = {
   serverIp: '0.0.0.0',
@@ -12,20 +13,6 @@ var UPDATE_CONFIG = {
 };
 
 var CREDENTIALS_FILE_PATH = 'credentials.txt';
-
-/**
- * Digests a string into a SHA-256 hash.
- */
-async function digestText(message: string) {
-  const msgUint8 = new TextEncoder().encode(message);
-  const hashBuffer = await window.crypto.subtle.digest('SHA-256', msgUint8);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  // Convert bytes to hex string
-  const hashHex = hashArray
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
-  return hashHex;
-}
 
 export class WebosMachine implements Machine {
   async getMachineGUID(): Promise<string> {
