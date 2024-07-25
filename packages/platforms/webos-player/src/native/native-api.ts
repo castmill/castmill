@@ -65,6 +65,7 @@ export const storage = {
   writeFile: promisify(scapStorage.writeFile.bind(scapStorage)),
   readFile: promisify(scapStorage.readFile.bind(scapStorage)),
   removeFile: promisifyNoRet(scapStorage.removeFile.bind(scapStorage)),
+  statFile: promisify(scapStorage.statFile.bind(scapStorage)),
 };
 
 // const a = promisify((successCallback: (result: string) => void, errorCallback: (error: any) => void, options?: { a: string }) => {
