@@ -11,5 +11,6 @@
     "jsx": "preserve",
     "jsxImportSource": "solid-js",
     "types": ["vite/client", "@testing-library/jest-dom"],
+    "resolveJsonModule": true,
   },
 }
