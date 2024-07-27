@@ -1,6 +1,7 @@
 import { Machine, DeviceInfo } from '@castmill/device';
 import { configuration, deviceInfo, power, storage } from '../native';
 import { digestText } from './utils';
+import { version } from '../../package.json';
 
 var UPDATE_CONFIG = {
   serverIp: '0.0.0.0',
@@ -57,6 +58,7 @@ export class WebosMachine implements Machine {
   async getLocation(): Promise<
     undefined | { latitude: number; longitude: number }
   > {
+    // TODO: Check if this works on LG
     console.log('getLocation');
     try {
       const location = await new Promise<GeolocationPosition>(
@@ -81,16 +83,17 @@ export class WebosMachine implements Machine {
 
   async getDeviceInfo(): Promise<DeviceInfo> {
     console.log('getDeviceInfo');
-    //TODO implement
+
+    const platformInfo = await deviceInfo.getPlatformInfo();
+    // get chromium version from user agent
+    const chromiumVersion = navigator.userAgent.match(/Chrome\/([0-9.]+)/)?.[1] ?? undefined;;  
     return {
-      appType: import.meta.env.VITE_APP_TYPE,
-      appVersion: 'TODO version',
-      os: 'TODO os',
-      hardware: 'TODO hardware',
-      environmentVersion: 'TODO environmentVersion',
-      chromiumVersion: 'TODO chromiumVersion',
-      v8Version: 'TODO v8Version',
-      nodeVersion: 'TODO nodeVersion',
+      appType: 'LG WebOS',
+      appVersion: version,
+      os: 'LG WebOS',
+      hardware: platformInfo.modelName,
+      environmentVersion: platformInfo.firmwareVersion,
+      chromiumVersion,
       userAgent: navigator.userAgent,
     };
   }
@@ -147,7 +150,7 @@ export class WebosMachine implements Machine {
   /**
    * Updates the device's firmware.
    */
-  async updateFirmware?(): Promise<void> {
+  async updateFirmware(): Promise<void> {
     console.log('updateFirmware');
 
     const url = await this.getFirmwareDownloadUrl();
