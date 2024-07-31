@@ -35,7 +35,14 @@ export class AddOnTree {
 
       for (let j = 0; j < mountPoint.length; j++) {
         const key = mountPoint[j];
-        if (!nodeChildren.has(key) || !nodeChildren.get(key)?.children) {
+        if (nodeChildren.has(key)) {
+          const node = nodeChildren.get(key);
+          if (!node!.children) {
+            node!.children = new Map<string, AddOnNode>();
+          }
+          nodeChildren = node!.children;
+          continue;
+        } else {
           const isLastKey = j === mountPoint.length - 1;
           const newNode = {
             children: !isLastKey ? new Map<string, AddOnNode>() : undefined,
@@ -44,8 +51,6 @@ export class AddOnTree {
           };
           nodeChildren.set(key, newNode);
           nodeChildren = newNode.children!;
-        } else {
-          nodeChildren = nodeChildren.get(key)!.children!;
         }
       }
     }

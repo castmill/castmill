@@ -1,3 +1,5 @@
+/** @jsxImportSource solid-js */
+
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { render, fireEvent, cleanup, screen } from '@solidjs/testing-library';
 
@@ -11,7 +13,7 @@ describe('StyledInput Component', () => {
     render(() => (
       <StyledInput id="test-input" value="" onInput={mockOnInput} />
     ));
-    const input = screen.getByRole('textbox');
+    const input = screen.getByRole('textbox') as HTMLInputElement;
     expect(input).toHaveAttribute('type', 'text');
     expect(input).toHaveAttribute('id', 'test-input');
     expect(input.value).toBe('');

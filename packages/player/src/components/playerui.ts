@@ -99,6 +99,9 @@ export class PlayerUIControls {
   $play: Observable<{ evt: Event; timestamp: number }>;
   $keyboard: Observable<{ evt: KeyboardEvent; timestamp: number }>;
 
+  playTimeline: gsap.core.Timeline;
+  stopTimeline: gsap.core.Timeline;
+
   elements: {
     controls: HTMLDivElement;
     play: HTMLButtonElement;
@@ -143,7 +146,7 @@ export class PlayerUIControls {
 
     this.setTimeDuration(0, 0, true);
 
-    const playTimeline = gsap
+    this.playTimeline = gsap
       .timeline({
         paused: true,
       })
@@ -154,7 +157,7 @@ export class PlayerUIControls {
         ease: 'back',
       });
 
-    const stopTimeline = gsap
+    this.stopTimeline = gsap
       .timeline({
         paused: true,
       })
@@ -171,11 +174,11 @@ export class PlayerUIControls {
         observer.next({ evt, timestamp: Date.now() });
         observer.complete();
         if (this.playing) {
-          playTimeline.seek(0);
-          playTimeline.play();
+          this.playTimeline.seek(0);
+          this.playTimeline.play();
         } else {
-          stopTimeline.seek(0);
-          stopTimeline.play();
+          this.stopTimeline.seek(0);
+          this.stopTimeline.play();
         }
       });
     };
@@ -234,6 +237,15 @@ export class PlayerUIControls {
     if (this.elements.loop) {
       this.elements.loop.disabled = loop;
     }
+  }
+
+  destroy() {
+    // Kill GSAP animations to free up resources.
+    this.playTimeline.kill();
+    this.stopTimeline.kill();
+
+    // Remove the controls from the DOM
+    this.controls.remove();
   }
 }
 
@@ -350,12 +362,12 @@ export class PlayerUI {
   /**
    * Seeks to the next item in the playlist
    */
-  forward() {}
+  forward() { }
 
   /**
    * Seeks to the previous item in the playlist
    */
-  backward() {}
+  backward() { }
 
   seek(value: number) {
     const time = (this.time = value);

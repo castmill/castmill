@@ -1,4 +1,4 @@
-import { Socket, Channel } from 'phoenix';
+import { Socket } from 'phoenix';
 import { Component, createSignal, onCleanup, Show } from 'solid-js';
 
 import {
@@ -10,6 +10,8 @@ import {
   SortOptions,
   TableView,
   TableViewRef,
+  TableAction,
+  ResourcesObserver,
 } from '@castmill/ui-common';
 
 import { BsCheckLg } from 'solid-icons/bs';
@@ -36,7 +38,7 @@ const DevicesPage: Component<{
   const [currentPage, setCurrentPage] = createSignal(1);
   const [totalItems, setTotalItems] = createSignal(0);
 
-  const itemsPerPage = 2; // Number of items to show per page
+  const itemsPerPage = 10; // Number of items to show per page
 
   const [data, setData] = createSignal<DeviceTableItem[]>([], {
     equals: false,
@@ -58,7 +60,18 @@ const DevicesPage: Component<{
 
   const [searchParams, setSearchParams] = props.params;
 
-  const channels: Record<string, Channel> = {};
+  const resourcesObserver = new ResourcesObserver<DeviceTableItem>(
+    props.store.socket,
+    'device:status',
+    /* onJoin */
+    (resource: DeviceTableItem) => {
+      return `device_updates:${resource.id}`;
+    },
+    /* onUpdate */
+    (resource: DeviceTableItem, { online }: { online: boolean }) => {
+      updateDeviceStatus(resource.id, online);
+    }
+  );
 
   // We want to show this modal directly, if for example the user did arrive to the registration page
   // via a link embedded in a QR-Code. The registration code is then passed as a URL parameter.
@@ -130,20 +143,11 @@ const DevicesPage: Component<{
     { key: 'id', title: 'ID', sortable: true },
   ] as Column<DeviceTableItem>[];
 
-  const actions = [
-    /*
-    // Example of action with custom props based on the item
-    {
-      icon: BsEye,
-      props: (item: DeviceTableItem) => ({
-        color: item.online ? 'green' : 'red',
-      }),
-      handler: openModal,
-    },
-    */
+  const actions: TableAction<DeviceTableItem>[] = [
     {
       icon: BsEye,
       handler: openModal,
+      label: 'View',
     },
     {
       icon: AiOutlineDelete,
@@ -151,6 +155,7 @@ const DevicesPage: Component<{
         setCurrentDevice(item);
         setShowConfirmDialog(true);
       },
+      label: 'Remove',
     },
   ];
 
@@ -180,40 +185,15 @@ const DevicesPage: Component<{
       }
     );
 
-    const newDeviceIds = new Set(result.data?.map((device) => device.id));
+    resourcesObserver.observe(result.data);
 
-    // Clean all the old unused channel subscriptions
-    Object.keys(channels).forEach((deviceId) => {
-      if (!newDeviceIds.has(deviceId)) {
-        const channel = channels[deviceId];
-        channel.off('device:status');
-        channel.leave();
-        delete channels[deviceId];
-      }
-    });
-
-    // Join to every new device channel to get the online status
-    result.data?.forEach((device) => {
-      if (channels[device.id]) {
-        return;
-      } else {
-        const topic = `device_updates:${device.id}`;
-        const channel = props.store.socket.channel(topic);
-        channels[device.id] = channel;
-        channel.join();
-        channel.on('device:status', ({ online }: { online: boolean }) => {
-          updateDeviceStatus(device.id, online);
-        });
-      }
-    });
+    setData(result.data);
 
     return result;
   };
 
   onCleanup(() => {
-    Object.values(channels).forEach((channel) => {
-      channel.leave();
-    });
+    resourcesObserver.cleanup();
   });
 
   const [showConfirmDialog, setShowConfirmDialog] = createSignal(false);
@@ -256,13 +236,12 @@ const DevicesPage: Component<{
   };
 
   const onRowSelect = (rowsSelected: Set<string>) => {
-    console.log('Selected rows:', rowsSelected);
     setSelectedDevices(rowsSelected);
   };
 
-  let tableViewRef: TableViewRef;
+  let tableViewRef: TableViewRef<DeviceTableItem>;
 
-  const setRef = (ref: TableViewRef) => {
+  const setRef = (ref: TableViewRef<DeviceTableItem>) => {
     tableViewRef = ref;
   };
 
@@ -357,7 +336,6 @@ const DevicesPage: Component<{
           actions: (
             <div>
               <IconButton
-                title="Remove"
                 onClick={() => setShowConfirmDialogMultiple(true)}
                 icon={AiOutlineDelete}
                 color="primary"

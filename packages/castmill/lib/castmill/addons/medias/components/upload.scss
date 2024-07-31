@@ -1,0 +1,101 @@
+.upload-files {
+  margin-top: 2em;
+  width: 100%;
+
+  .drop-zone {
+    width: 100%;
+    height: 10em;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    border: 2px dashed #ccc;
+    margin-top: 1em;
+  }
+
+  progress {
+    width: 100%;
+    height: 20px;
+  }
+
+  progress::-webkit-progress-bar {
+    background-color: #f3f3f3;
+    border-radius: 5px;
+    box-shadow: 0 0 3px rgba(0, 0, 0, 0.2) inset;
+  }
+
+  progress::-webkit-progress-value {
+    background-color: #4caf50;
+    border-radius: 5px;
+  }
+
+  progress::-moz-progress-bar {
+    background-color: #4caf50;
+    border-radius: 5px;
+  }
+
+  .file-input {
+    opacity: 0;
+    width: 0.1px;
+    height: 0.1px;
+    position: absolute;
+    z-index: -1;
+  }
+
+  .file-label {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+
+  .file-label:hover {
+    background-color: #0056b3;
+  }
+
+  .files {
+    overflow: auto;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    width: 100%;
+    min-height: 10em;
+    max-height: 20em;
+
+    margin: 1em 0 2em 0;
+
+    table {
+      width: 100%;
+      height: 100%;
+
+      .file {
+        text-align: center;
+
+        .filename-cell {
+          max-width: 16em; /* Adjust based on your layout needs */
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+      }
+
+      .actions {
+        cursor: pointer;
+      }
+    }
+  }
+
+  .buttons {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    margin-top: 1em;
+    gap: 1em;
+  }
+}

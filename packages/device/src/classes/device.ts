@@ -183,7 +183,7 @@ export class Device extends EventEmitter {
                 jsonPlaylist,
                 this.resourceManager,
                 {
-                  target: 'default',
+                  target: 'poster',
                 }
               );
               this.contentQueue.add(layer);

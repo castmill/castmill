@@ -1,6 +1,8 @@
 @use '../../colors.scss';
 
 .castmill-dashboard {
+  flex: 1 0 auto; /* Takes up all available space */
+
   height: 100%;
   width: 100%;
 

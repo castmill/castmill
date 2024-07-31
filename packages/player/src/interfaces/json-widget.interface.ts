@@ -9,7 +9,7 @@ import { Schema } from './schema.interface';
 import { JsonWidgetTemplate } from './json-widget-template';
 
 export interface JsonWidget {
-  id: number;
+  id?: number;
   name: string;
   description?: string;
   template: JsonWidgetTemplate;

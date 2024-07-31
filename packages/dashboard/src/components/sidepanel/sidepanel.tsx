@@ -10,7 +10,9 @@ import { store } from '../../store/store';
 
 const addOnBasePath = 'http://localhost:4000/assets/addons';
 
-const SidePanelTree: Component<{ node: AddOnNode }> = (props) => {
+const SidePanelTree: Component<{ node: AddOnNode; level: number }> = (
+  props
+) => {
   const addon = props.node.addon;
   const children = Array.from(props.node.children || []);
 
@@ -21,6 +23,7 @@ const SidePanelTree: Component<{ node: AddOnNode }> = (props) => {
           <PanelItem
             to={addon!.mount_path || ''}
             text={addon!.name}
+            level={props.level}
             icon={lazy(() => import(`${addOnBasePath}${addon?.icon}`))}
           />
         </Suspense>
@@ -28,7 +31,7 @@ const SidePanelTree: Component<{ node: AddOnNode }> = (props) => {
       <For each={children}>
         {([name, node]) => (
           <Show when={node.children || node.addon}>
-            <SidePanelTree node={node} />
+            <SidePanelTree node={node} level={props.level + 1} />
           </Show>
         )}
       </For>
@@ -65,10 +68,15 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
       </div>
       <div class="links">
         <Show when={addonsPanelTree}>
-          <SidePanelTree node={addonsPanelTree!} />
+          <SidePanelTree node={addonsPanelTree!} level={-1} />
         </Show>
 
-        <PanelItem to="/settings" text="Settings" icon={IoSettingsOutline} />
+        <PanelItem
+          to="/settings"
+          text="Settings"
+          level={0}
+          icon={IoSettingsOutline}
+        />
       </div>
     </div>
   );

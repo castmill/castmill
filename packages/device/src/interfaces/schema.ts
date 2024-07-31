@@ -2,32 +2,37 @@
  * Represents a schema for a document.
  *
  */
-type SimpleType = 'string' | 'number' | 'boolean';
+type SimpleType = 'string' | 'number' | 'boolean' | 'color' | 'url' | 'location';
 type ComplexType = 'map' | 'list';
 
-interface FieldAttributes {
-  type: SimpleType;
+interface BaseAttributes {
+  label?: string;
+  placeholder?: string;
+  help?: string;
   required?: boolean;
-  default?: string | number;
+  default?: any;
 }
 
-interface ReferenceAttributes {
+interface FieldAttributes extends BaseAttributes {
+  type: SimpleType;
+  default?: string | number | boolean;
+}
+
+interface ReferenceAttributes extends BaseAttributes {
   type: 'ref';
-  required?: boolean;
   collection: string;
 }
 
-interface ComplexFieldAttributes {
+interface ComplexFieldAttributes extends BaseAttributes {
   type: ComplexType;
   schema: Schema;
-  required?: boolean;
   default?: any;
 }
 
 export type Schema = {
   [fieldName: string]:
-    | SimpleType
-    | FieldAttributes
-    | ComplexFieldAttributes
-    | ReferenceAttributes;
+  | SimpleType
+  | FieldAttributes
+  | ComplexFieldAttributes
+  | ReferenceAttributes;
 };

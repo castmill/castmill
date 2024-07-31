@@ -3,6 +3,7 @@ defmodule Castmill.Widgets do
   The Widgets context.
   """
   import Ecto.Query, warn: false
+
   alias Castmill.Repo
   alias Castmill.Protocol.Access
   alias Castmill.Widgets.Widget
@@ -83,6 +84,42 @@ defmodule Castmill.Widgets do
   def get_widget_by_slug(slug) do
     Widget
     |> where([w], w.slug == ^slug)
+    |> Repo.one()
+  end
+
+  def update_widget_config(playlist_id, playlist_item_id, options, data) do
+    # Define the current timestamp for the last_request_at field
+    current_timestamp = DateTime.utc_now()
+
+    # Directly use keyword list for the update clause
+    {count, _} =
+      from(wc in WidgetConfig,
+        join: pi in assoc(wc, :playlist_item),
+        where: pi.playlist_id == ^playlist_id and pi.id == ^playlist_item_id,
+        update: [
+          set: [
+            options: ^options,
+            data: ^data,
+            last_request_at: ^current_timestamp,
+            version: fragment("version + 1")
+          ]
+        ]
+      )
+      |> Repo.update_all([])
+
+    case count do
+      1 -> {:ok, "Widget configuration updated successfully"}
+      0 -> {:error, "No widget configuration found with the provided IDs"}
+      _ -> {:error, "Unexpected number of records updated"}
+    end
+  end
+
+  def get_widget_config(playlist_id, playlist_item_id) do
+    from(wc in WidgetConfig,
+      join: pi in assoc(wc, :playlist_item),
+      where: pi.playlist_id == ^playlist_id and pi.id == ^playlist_item_id,
+      select: wc
+    )
     |> Repo.one()
   end
 end

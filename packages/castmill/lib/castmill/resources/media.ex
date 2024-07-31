@@ -19,7 +19,7 @@ defmodule Castmill.Resources.Media do
 
     belongs_to(:resource, Castmill.Resources.Resource, foreign_key: :resource_id)
 
-    has_many(:files, Castmill.Files.FilesMedias)
+    has_many(:files_medias, Castmill.Files.FilesMedias)
 
     timestamps()
   end
@@ -43,12 +43,15 @@ defmodule Castmill.Resources.Media do
   def update_changeset(media, attrs) do
     media
     |> cast(attrs, [:name, :status, :status_message])
-    |> validate_required([:name])
     |> validate_status_and_message()
   end
 
   def base_query() do
-    from(media in Castmill.Resources.Media, as: :media)
+    from(media in __MODULE__, as: :media)
+  end
+
+  def preloads() do
+    [files_medias: :file]
   end
 
   defp validate_status_and_message(changeset) do
@@ -70,14 +73,20 @@ end
 
 defimpl Jason.Encoder, for: Castmill.Resources.Media do
   def encode(%Castmill.Resources.Media{} = media, opts) do
-    files =
-      case media.files do
+    files_medias =
+      case media.files_medias do
         %Ecto.Association.NotLoaded{} -> []
-        files -> files
+        files_medias -> files_medias
       end
+
+    files =
+      Enum.reduce(files_medias, %{}, fn files_media, acc ->
+        Map.put(acc, files_media.context, files_media.file)
+      end)
 
     map = %{
       id: media.id,
+      organization_id: media.organization_id,
       mimetype: media.mimetype,
       name: media.name,
       status: media.status,
@@ -85,7 +94,8 @@ defimpl Jason.Encoder, for: Castmill.Resources.Media do
       meta: media.meta,
       files: files,
       inserted_at: media.inserted_at,
-      updated_at: media.updated_at
+      updated_at: media.updated_at,
+      size: Enum.reduce(files, 0, fn {_, file}, acc -> acc + file.size end)
     }
 
     Jason.Encode.map(map, opts)

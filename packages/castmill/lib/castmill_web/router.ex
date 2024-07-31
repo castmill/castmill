@@ -146,37 +146,32 @@ defmodule CastmillWeb.Router do
 
   scope "/dashboard", CastmillWeb do
     pipe_through([:dashboard, :authenticate_user])
+
     get("/addons", AddonsController, :index)
     get("/users/:user_id/organizations", OrganizationController, :list_users_organizations)
+
+    # List all the widgets available for the organization
+    get("/organizations/:organization_id/widgets", OrganizationController, :list_widgets)
 
     resources "/organizations", OrganizationController, only: [] do
       post("/devices", OrganizationController, :register_device)
 
+      # This route is used to upload media files to the server.
+      post("/medias", UploadController, :create)
+
       resources "/:resources", ResourceController, except: [:new, :edit] do
       end
+
+      post("/playlists/:playlist_id/items", PlaylistController, :add_item)
+      patch("/playlists/:playlist_id/items/:item_id", PlaylistController, :update_item)
+      patch("/playlists/:playlist_id/items/:item_id/config", PlaylistController, :update_widget_config)
+      put("/playlists/:playlist_id/items/:item_id", PlaylistController, :move_item)
+      delete("/playlists/:playlist_id/items/:item_id", PlaylistController, :delete_item)
     end
 
     post("/devices/:device_id/commands", DeviceController, :send_command)
     get("/devices/:device_id/events", DeviceController, :list_events)
     get("/devices/:device_id/cache", DeviceController, :get_cache)
-
-    get(
-      "/organizations/:organization_id/devices/:device_id",
-      OrganizationController,
-      :show_device
-    )
-
-    put(
-      "/organizations/:organization_id/devices/:device_id",
-      OrganizationController,
-      :update_device
-    )
-
-    delete(
-      "/organizations/:organization_id/devices/:device_id",
-      OrganizationController,
-      :delete_device
-    )
   end
 
   # Other scopes may use custom stacks.

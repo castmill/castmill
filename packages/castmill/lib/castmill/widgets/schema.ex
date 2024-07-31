@@ -51,58 +51,82 @@ defmodule Castmill.Widgets.Schema do
   <number> ::= "an integer or a float"
   <boolean> ::= true | false
   """
+
+  def is_url(value) when is_binary(value) do
+    Regex.match?(~r/^https?:\/\/[^\s$.?#].[^\s]*$/, value)
+  end
+
+  # Color validation using a regular expression
+  def is_color(value) when is_binary(value) do
+    Regex.match?(~r/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/, value)
+  end
+
+  # Define a map of validations for simple types
+  @type_validations %{
+    "string" => &is_binary/1,
+    "number" => &is_number/1,
+    "boolean" => &is_boolean/1,
+    "url" => &Castmill.Widgets.Schema.is_url/1,
+    "color" => &Castmill.Widgets.Schema.is_color/1,
+    # Simplistic assumption that cities are just strings
+    "city" => &is_binary/1
+  }
   def validate_schema(schema) when map_size(schema) > 0 do
     schema
     |> Enum.reduce_while({:ok, nil}, fn
       {field, value}, _acc when is_map(value) ->
         validate_field(value, field)
 
-      {_field, value}, _acc
-      when is_binary(value) and (value == "string" or value == "number" or value == "boolean") ->
-        {:cont, {:ok, nil}}
-
-      {field, value}, _acc ->
-        {:halt, {:error, "Field's '#{field}' type '#{value}' is not a recognized type"}}
+      {_field, value}, _acc ->
+        case @type_validations[value] do
+          nil -> {:halt, {:error, "Field's type '#{value}' is not a recognized type"}}
+          _ -> {:cont, {:ok, nil}}
+        end
     end)
   end
 
   def validate_schema(_schema), do: {:error, "Schema is not a non-empty map"}
 
   defp validate_field(%{"type" => type} = map, field) do
-    is_valid_default_for_schema = fn v -> valid_data?(map["schema"], v) end
+    validator = @type_validations[type]
 
-    case type do
-      "string" ->
-        validate_complex_field(map, field, &is_binary/1, "binary")
+    if is_nil(validator) do
+      is_valid_default_for_schema = fn v -> valid_data?(map["schema"], v) end
 
-      "number" ->
-        validate_complex_field(map, field, &is_number/1, "number")
+      case type do
+        "ref" ->
+          validate_complex_field(map, field, &is_binary/1, "binary", ["collection"])
 
-      "boolean" ->
-        validate_complex_field(map, field, &is_boolean/1, "boolean")
+        "map" ->
+          validate_complex_field(
+            map,
+            field,
+            is_valid_default_for_schema,
+            "map",
+            ["schema"]
+          )
 
-      "ref" ->
-        validate_complex_field(map, field, &is_binary/1, "binary", ["collection"])
+        "list" ->
+          validate_complex_field(map, field, is_valid_default_for_schema, "list", ["items"])
 
-      "map" ->
-        validate_complex_field(
-          map,
-          field,
-          is_valid_default_for_schema,
-          "map",
-          ["schema"]
-        )
-
-      "list" ->
-        validate_complex_field(map, field, is_valid_default_for_schema, "list", ["items"])
-
-      _ ->
-        {:halt, {:error, "Invalid type #{inspect(type)} for field #{inspect(field)}"}}
+        _ ->
+          {:halt, {:error, "Invalid type #{inspect(type)} for field #{inspect(field)}"}}
+      end
+    else
+      validate_complex_field(map, field, validator, type)
     end
   end
 
   defp validate_complex_field(map, field, validator, expected_type, required_keys \\ []) do
-    optional_keys = ["type", "required", "default" | required_keys]
+    optional_keys = [
+      "type",
+      "required",
+      "default",
+      "description",
+      "help",
+      "placeholder" | required_keys
+    ]
+
     keys = Map.keys(map)
 
     invalid_key = Enum.find(keys, fn key -> key not in optional_keys end)
@@ -247,6 +271,9 @@ defmodule Castmill.Widgets.Schema do
   defp validate_data_field(value, "number", field, acc_data) when is_number(value),
     do: {:cont, {:ok, Map.put(acc_data, field, value)}}
 
+  defp validate_data_field(value, "boolean", field, acc_data) when is_boolean(value),
+    do: {:cont, {:ok, Map.put(acc_data, field, value)}}
+
   defp validate_data_field(value, %{"type" => "map", "schema" => sub_schema}, field, acc_data)
        when is_map(value) do
     case validate_data(sub_schema, value) do
@@ -294,12 +321,12 @@ defmodule Castmill.Widgets.Schema do
          field,
          acc_data
        ) do
-    # We'll simply check if the value is a string for simplicity. In a real system, you might want to validate that this value
+    # We'll simply check if the value is a string or a number for simplicity. We might want to validate that this value
     # refers to an actual existing resource in the specified collection.
-    if is_binary(value) do
+    if is_binary(value) or is_number(value) do
       {:cont, {:ok, Map.put(acc_data, field, value)}}
     else
-      {:halt, {:error, "Invalid ref value for #{field}"}}
+      {:halt, {:error, "Invalid ref value #{inspect(value)} for #{field}"}}
     end
   end
 

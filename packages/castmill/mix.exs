@@ -55,7 +55,14 @@ defmodule Castmill.MixProject do
       {:argon2_elixir, "~> 3.1.0"},
       {:tarams, "~> 1.8.0"},
       {:wax_, "~> 0.6.0"},
-      {:mox, "~> 1.0", only: [:test]}
+      {:mox, "~> 1.0", only: [:test]},
+      {:file_type, "~> 0.1.0"},
+      {:oban, "~> 2.17"},
+      {:image, "~> 0.37"},
+      {:ex_aws, "~> 2.0"},
+      {:ex_aws_s3, "~> 2.0"},
+      {:hackney, "~> 1.9"},
+      {:uuid, "~> 1.1"}
     ]
   end
 

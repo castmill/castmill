@@ -1,6 +1,8 @@
 @use '../../colors.scss';
 
 .castmill-header {
+  flex: 0 0 auto; /* Fixed height */
+
   display: flex;
   flex-direction: row;
   justify-content: space-between;

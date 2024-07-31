@@ -1,0 +1,72 @@
+.widget-config-dialog {
+  width: 90vw;
+  height: 80vh;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-top: 1em;
+
+  .widget-config {
+    display: flex;
+    height: 100%;
+    width: 40%;
+    justify-content: flex-start;
+    flex-direction: column;
+    align-items: flex-start;
+
+    form {
+      height: 100%;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+
+      .error {
+        font-size: 0.8em;
+        color: #a10000;
+      }
+
+      .media-item {
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-start;
+        align-items: center;
+
+        padding: 0.2em;
+
+        width: 100%;
+
+        gap: 1em;
+
+        .thumbnail {
+          width: 3em;
+          height: 3em;
+          background-size: cover;
+          background-position: center;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          overflow: hidden;
+        }
+      }
+
+      .form-actions {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 1em;
+      }
+    }
+  }
+
+  .preview {
+    display: flex;
+    background-color: black;
+    width: 50%;
+    height: 100%;
+    justify-content: center;
+    align-items: center;
+  }
+}

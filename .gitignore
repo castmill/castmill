@@ -45,3 +45,4 @@ dist
 dump.rdb
 .vscode/launch.json
 packages/erl_crash.dump
+packages/castmill/priv/static/uploads

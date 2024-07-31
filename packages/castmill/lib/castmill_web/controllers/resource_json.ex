@@ -59,7 +59,7 @@ defmodule CastmillWeb.ResourceJSON do
     %{data: data(device)}
   end
 
-  defp data(%Media{files: %Ecto.Association.NotLoaded{}} = media) do
+  defp data(%Media{files_medias: %Ecto.Association.NotLoaded{}} = media) do
     %{
       id: media.id,
       name: media.name,
@@ -79,7 +79,7 @@ defmodule CastmillWeb.ResourceJSON do
       meta: media.meta,
       status: media.status,
       status_message: media.status_message,
-      files: media.files
+      files: media.files_medias
     }
   end
 

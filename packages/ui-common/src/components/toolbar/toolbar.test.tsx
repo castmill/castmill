@@ -55,27 +55,6 @@ describe('ToolBar Component', () => {
     expect(mockSearch).toHaveBeenCalledWith('Test Search');
   });
 
-  it.skip('renders filter switches and toggles them correctly', () => {
-    const filters = [
-      { key: 'active', name: 'Active', isActive: true },
-      { key: 'inactive', name: 'Inactive', isActive: false },
-    ];
-
-    render(() => <ToolBar filters={filters} />);
-
-    filters.forEach((filter) => {
-      const label = screen.getByText(filter.name).closest('label');
-      const switchInput = label?.querySelector('input');
-      if (switchInput) {
-        expect(switchInput).toBeInTheDocument();
-        expect(switchInput).not.toBeChecked();
-
-        fireEvent.click(switchInput, { target: { checked: true } });
-        expect(switchInput).toBeChecked();
-      }
-    });
-  });
-
   it('renders action buttons and triggers them correctly', () => {
     const mockAction = vi.fn();
     render(() => (

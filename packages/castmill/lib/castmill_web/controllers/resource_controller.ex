@@ -172,6 +172,48 @@ defmodule CastmillWeb.ResourceController do
     end
   end
 
+  @update_media_params_schema %{
+    organization_id: [type: :string, required: true],
+    resources: [type: :string, cast: :integer, required: true],
+    id: [type: :integer, required: true],
+    update: :map
+  }
+  def update(
+        conn,
+        %{
+          "resources" => "medias",
+          "id" => _id,
+          "organization_id" => organization_id
+        } = params
+      ) do
+    with {:ok, params} <- Tarams.cast(params, @update_media_params_schema) do
+      media = %Media{
+        id: params.id,
+        organization_id: organization_id
+      }
+
+      Castmill.Resources.update_media(media, params.update)
+      |> case do
+        {:ok, media} ->
+          conn
+          |> put_status(:ok)
+          |> json(media)
+
+        {:error, errors} ->
+          conn
+          |> put_status(:bad_request)
+          |> Phoenix.Controller.json(%{errors: errors})
+          |> halt()
+      end
+    else
+      {:error, errors} ->
+        conn
+        |> put_status(:bad_request)
+        |> Phoenix.Controller.json(%{errors: errors})
+        |> halt()
+    end
+  end
+
   def update(conn, _params) do
     conn
     |> put_status(:bad_request)
