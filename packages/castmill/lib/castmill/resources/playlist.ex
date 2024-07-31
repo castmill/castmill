@@ -51,7 +51,11 @@ defimpl Jason.Encoder, for: Castmill.Resources.Playlist do
     map = %{
       id: playlist.id,
       name: playlist.name,
-      items: items
+      items: items,
+      settings: playlist.settings,
+      status: playlist.status,
+      inserted_at: playlist.inserted_at,
+      updated_at: playlist.updated_at
     }
 
     Jason.Encode.map(map, opts)

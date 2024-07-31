@@ -1,11 +1,13 @@
 defmodule Castmill.MediasFixtures do
+  alias Castmill.Repo
+
   @moduledoc """
   This module defines test helpers for creating
   medias related entities.
   """
 
   @doc """
-  Generate a access_token.
+  Create a media fixture.
   """
   def media_fixture(attrs \\ %{}) do
     {:ok, media} =
@@ -16,6 +18,6 @@ defmodule Castmill.MediasFixtures do
       })
       |> Castmill.Resources.create_media()
 
-    media
+    Repo.preload(media, [:files_medias])
   end
 end

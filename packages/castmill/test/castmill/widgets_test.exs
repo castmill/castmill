@@ -1,7 +1,12 @@
 defmodule Castmill.WidgetsTest do
   use Castmill.DataCase
 
+  import Castmill.NetworksFixtures
+  import Castmill.OrganizationsFixtures
+  import Castmill.PlaylistsFixtures
+
   alias Castmill.Widgets.Schema
+  alias Castmill.Widgets
 
   @moduletag :widgets_config_case
 
@@ -80,6 +85,22 @@ defmodule Castmill.WidgetsTest do
                Schema.validate_schema(%{
                  "field_a" => "foo"
                })
+    end
+
+    test "validate_schema/1 with incorrect data types for boolean and number fields" do
+      schema = %{
+        # expects a number
+        "field_a" => "number",
+        # expects a boolean
+        "field_b" => "boolean"
+      }
+
+      data = %{
+        "field_a" => "not a number",
+        "field_b" => "not a boolean"
+      }
+
+      assert {:error, _} = Schema.validate_data(schema, data)
     end
 
     test "validate_schema/1 with incorrect type" do
@@ -333,7 +354,6 @@ defmodule Castmill.WidgetsTest do
       assert {:ok, ^data} = Schema.validate_data(schema, data)
     end
 
-    @tag :only
     test "validate_data/2 gives an error for invalid list data" do
       schema = %{
         "field_a" => %{
@@ -358,8 +378,8 @@ defmodule Castmill.WidgetsTest do
       }
 
       data = %{
-        # "ref" should be a string
-        "field_a" => 123
+        # "ref" should be a string or a number
+        "field_a" => %{}
       }
 
       assert {:error, _} = Schema.validate_data(schema, data)
@@ -572,6 +592,65 @@ defmodule Castmill.WidgetsTest do
       }
 
       assert {:error, _} = Schema.validate_data(schema, data)
+    end
+  end
+
+  describe "update_widget_config/4" do
+    setup do
+      network = network_fixture()
+
+      organization = organization_fixture(%{network_id: network.id})
+      playlist = playlist_fixture(%{organization_id: organization.id})
+
+      widget =
+        widget_fixture(%{
+          name: "widget",
+          template: %{
+            "type" => "image",
+            "name" => "image",
+            "opts" => %{
+              "url" => %{"key" => "options.image.files[@target].uri"},
+              "autozoom" => %{"key" => "options.autozoom"},
+              "duration" => %{"key" => "options.duration"}
+            }
+          }
+        })
+
+      playlist_item =
+        playlist_item_fixture(%{
+          playlist_id: playlist.id,
+          offset: 0,
+          duration: 120
+        })
+
+      widget_config =
+        widget_config_fixture(%{playlist_item_id: playlist_item.id, widget_id: widget.id})
+
+      options = %{"color" => "blue"}
+      data = %{"size" => "large"}
+
+      [
+        playlist: playlist,
+        playlist_item: playlist_item,
+        widget_config: widget_config,
+        options: options,
+        data: data
+      ]
+    end
+
+    test "updates widget configuration successfully", %{
+      playlist: playlist,
+      playlist_item: playlist_item,
+      options: options,
+      data: data
+    } do
+      assert {:ok, "Widget configuration updated successfully"} =
+               Widgets.update_widget_config(playlist.id, playlist_item.id, options, data)
+
+      updated_widget_config = Widgets.get_widget_config(playlist.id, playlist_item.id)
+
+      assert updated_widget_config.options == options
+      assert updated_widget_config.data == data
     end
   end
 end

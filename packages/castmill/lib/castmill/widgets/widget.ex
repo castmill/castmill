@@ -62,6 +62,8 @@ defmodule Castmill.Widgets.Widget do
       :webhook_url
     ])
     |> validate_required([:name, :template])
+    |> unique_constraint(:name)
+    |> unique_constraint(:slug)
     |> validate_schema(:options_schema)
     |> validate_schema(:data_schema)
   end

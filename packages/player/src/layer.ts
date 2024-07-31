@@ -123,7 +123,7 @@ export class Layer extends EventEmitter {
         height: '100%',
       },
       config: {
-        id: 'layout-1-1',
+        id: 1,
         widget_id: 666,
         options: {},
         data: {},

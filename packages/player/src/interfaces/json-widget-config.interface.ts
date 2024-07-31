@@ -1,6 +1,9 @@
+export interface OptionsDict {
+  [key: string]: string | number | boolean | object;
+}
 export interface JsonWidgetConfig {
-  id: string;
+  id: number;
   widget_id: number;
-  options: { [key: string]: string | number | boolean | object };
-  data: { [key: string]: string | number | boolean | object };
+  options: OptionsDict;
+  data: OptionsDict;
 }

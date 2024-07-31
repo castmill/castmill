@@ -1,6 +1,6 @@
 .castmill-footer {
-  position: absolute;
-  bottom: 0;
+  flex: 0 0 auto; /* Fixed height */
+
 
   display: flex;
   flex-direction: row;

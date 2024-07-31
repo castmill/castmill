@@ -4,7 +4,11 @@ import { createEffect } from 'solid-js';
 import { useFileContent } from './file-context-provider';
 
 import { Playlist, PlayerUI, PlayerUIControls } from '@castmill/player';
-import { ResourceManager, StorageBrowser, Cache } from '@castmill/cache';
+import {
+  ResourceManager,
+  Cache,
+  StorageDummy,
+} from '@castmill/cache';
 
 import styles from './widget-view.module.scss';
 
@@ -12,7 +16,7 @@ export const WidgetView = () => {
   const { fileContent } = useFileContent();
 
   const cache = new Cache(
-    new StorageBrowser('widget-editor', import.meta.env.VITE_SW_BASE_PATH),
+    new StorageDummy('widget-editor'),
     'widget-editor-cache',
     100
   );
@@ -35,7 +39,7 @@ export const WidgetView = () => {
         height: '100%',
       },
       config: {
-        id: "my-config-id",
+        id: 'my-config-id',
         widget_id: widget.id,
         options: {},
         data: {},

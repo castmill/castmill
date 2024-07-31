@@ -12,6 +12,7 @@ $animation-duration: 0.3s;
   background-color: rgba(0, 0, 0, 0.4);
   opacity: 0; // Starts invisible
   visibility: hidden; // Ensures it's not interactable when not visible
+  z-index: 1000;
   transition:
     opacity $animation-duration ease,
     visibility $animation-duration ease;
@@ -25,13 +26,13 @@ $animation-duration: 0.3s;
   }
 
   .modalContent {
+    display: flex;
+    flex-direction: column;
+
     background-color: #211d32;
     color: white;
     border-radius: 8px;
 
-    /*
-    width: 500px;
-    */
     padding: 1.6em;
     transform: translateY(-20px); // Starts slightly above the final position
     opacity: 0; // Starts transparent
@@ -49,6 +50,7 @@ $animation-duration: 0.3s;
       display: flex;
       justify-content: space-between;
       border-bottom: 1px solid #3d3d3d;
+      padding-bottom: 1em;
 
       h2,
       h3 {
@@ -64,6 +66,15 @@ $animation-duration: 0.3s;
       .title {
         margin-bottom: 0.5em;
       }
+    }
+
+    .modalBody {
+      width: 100%;
+      flex: 1;
+
+      flex-grow: 1; /* Ensures it grows to take available space */
+      flex-shrink: 1; /* Allows shrinking if necessary */
+      flex-basis: 0; /* Starts calculation from 0% of the container's remaining space */
     }
 
     .modalError,

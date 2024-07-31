@@ -13,3 +13,5 @@ export * from './confirm-dialog/confirm-dialog';
 export * from './dropdown/dropdown';
 export * from './loading-overlay/loading-overlay';
 export * from './switch/switch';
+export * from './combobox/combobox';
+export * from './circular-progress/circular-progress';

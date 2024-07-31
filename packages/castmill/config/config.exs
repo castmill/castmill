@@ -73,5 +73,31 @@ config :castmill, accounts: Castmill.Accounts
 config :castmill, :addons, [
   Castmill.Addons.Onboarding,
   Castmill.Addons.Content,
+  Castmill.Addons.Playlists,
+  Castmill.Addons.Medias,
   Castmill.Addons.Devices
 ]
+
+# Configure File Uploads
+config :castmill, :upload_settings,
+  local: "uploads/",
+  s3: [bucket: System.get_env("S3_MEDIAS_BUCKET") || "castmill-medias"]
+
+config :castmill, :file_storage, :local
+
+# Choose S3 or Local as file upload destination
+# config :castmill, :file_storage, :s3
+
+config :ex_aws,
+  access_key_id: System.get_env("AWS_ACCESS_KEY_ID"),
+  secret_access_key: System.get_env("AWS_SECRET_ACCESS_KEY"),
+  region: System.get_env("AWS_REGION") || "eu-central-1"
+
+config :ex_aws, :hackney_opts, recv_timeout: 30_000
+
+# Configure Oban
+config :castmill, Oban,
+  plugins: [{Oban.Plugins.Pruner, max_age: 300}],
+  engine: Oban.Engines.Basic,
+  queues: [image_transcoder: 10],
+  repo: Castmill.Repo

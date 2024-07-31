@@ -108,7 +108,7 @@ const createImageLayer = (imageUrl: string) =>
 
 export function getCastmillIntro(resourceManager: ResourceManager): Layer {
   return Layer.fromJSON(createImageLayer(castmillLogo), resourceManager, {
-    target: 'default',
+    target: 'poster',
   });
 }
 

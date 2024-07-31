@@ -1,0 +1,144 @@
+@use '../../colors.scss';
+
+.combo-box {
+  .base-box {
+    border: 1px solid #555;
+    border-radius: 0.3em;
+    background-color: #151320;
+  }
+
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-direction: row;
+    user-select: none;
+
+    padding: 1em;
+    cursor: pointer;
+
+    .info {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+    }
+
+    button {
+      margin: 0;
+      border: none;
+      background: none;
+      color: white;
+      width: 2em;
+      height: 2em;
+      cursor: pointer;
+    }
+
+    &:hover {
+      border-color: #b0b0b0;
+    }
+
+    .label {
+      font-size: 0.8em;
+      padding: 0 0 0.2em 3px;
+      color: #577cbb;
+      text-transform: capitalize;
+    }
+
+    input {
+      width: 100%;
+      padding: 0;
+      margin: 0;
+      font-size: 1em;
+      border: none;
+      color: #b1b1b1;
+      background-color: #151320;
+
+      &:focus {
+        outline: none;
+      }
+    }
+
+    .description {
+      padding-top: 0.2em;
+      color: #6a5da2;
+      font-size: 0.8em;
+    }
+  }
+
+  .dropdown {
+    margin-top: 0.25em;
+    .search-box {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      border-radius: 0.3em 0.3em 0 0;
+      border-bottom: 1px solid #555;
+
+      height: 2.5em;
+      background-color: #221e34;
+
+      .search-icon {
+        color: #b1b1b1;
+        padding: 0 0.5em;
+      }
+
+      input {
+        width: 100%;
+        height: 100%;
+        padding: 0;
+        margin: 0;
+        font-size: 1em;
+        border: none;
+        color: #b1b1b1;
+        background: none;
+
+        &:focus {
+          outline: none;
+        }
+      }
+    }
+    .items-list {
+      overflow-y: auto;
+      max-height: 18em;
+
+      /*
+      min-height: 2em;
+      max-height: 18em;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding-top: 1em;
+      */
+
+      .item {
+        cursor: pointer;
+      }
+
+      .item:hover {
+        background-color: #1e1f25;
+      }
+
+      .item:nth-child(odd) {
+        background-color: #18191e;
+      }
+
+      .item:nth-child(even) {
+        background-color: #1e1f25; /* Lighter grey background for even items */
+      }
+    }
+
+    .footer {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
+      font-size: 0.7em;
+      padding: 0.8em;
+      font-style: italic;
+      border-top: 1px solid #555;
+      color: #b1b1b1;
+    }
+  }
+}

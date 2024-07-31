@@ -16,7 +16,7 @@ You can start with Castmill by running the main Castmill Server, which is a [Eli
 
 The Castmill Server is a standalone application that can be installed on any Linux server, and it is also available as a Docker image. If you want you can also clone this repo and run the server locally.
 
-### Installation
+## Installation
 
 Coming soon.
 
@@ -38,11 +38,40 @@ Coming soon.
 
 - [PostgreSQL](https://www.postgresql.org/download/) version 13 or above:
 
-#### Start your Castmill server
+## Start your Castmill server
 
-Run the development server:
+### Run migrations
+
+Go to packages/castmill and run the migration script:
 
 ```bash
-cd my-castmill-server
+$ mix ecto.migrate
+```
+
+### Run the server
+After that you can run the development server:
+
+```bash
 mix phx.server
 ```
+
+### Login into the Admin tool
+
+Point your browser to localhost:4000/admin
+A login window will appear, by default the admin user and pass are: info@castmill.com and 1234567890
+
+Before you can use Castmill you need to create at least one network. Since we are testing we will create a "localhost" network. Go to Networks and click on "Create". A modal will appear that you can fill with test data, the important field that you need to change is Domain, you must use "localhost", as that will be the domain you use when you test from your local machine.
+
+
+### Start the dasboard
+
+Start the dashboard going to packages/dashboard and run "yarn && yarn dev". A dev server will be started at http://localhost:3000.
+
+### Login into the dashboard
+
+ You can point your browser that url and a login / signup modal will appear. Since this is the first time you access the dashboard you will specify an email address (does not need to be a real one) and click on "Signup".
+
+Check sent email in the swoosh email webapp: ```http://localhost:4000/dev/mailbox/```. There you should
+find an email with a link to create your account, copy the link to your browser and follow the instructions.
+
+

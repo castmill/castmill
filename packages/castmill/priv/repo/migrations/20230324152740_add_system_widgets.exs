@@ -6,6 +6,7 @@ defmodule Castmill.Repo.Migrations.AddDefaultWidgets do
     for attrs <- [
           %{
             name: "Image",
+            description: "Display an image.",
             slug: "image",
             template: %{
               "type" => "image",
@@ -22,8 +23,15 @@ defmodule Castmill.Repo.Migrations.AddDefaultWidgets do
                 "required" => true,
                 "collection" => "medias|type:image"
               },
-              "autozoom" => "string",
-              "duration" => "number"
+              "autozoom" => "boolean",
+              "duration" => %{
+                "type" => "number",
+                "required" => true,
+                "default" => 10,
+                "description" => "The duration in seconds to display the image",
+                "min" => 1,
+                "max" => 60
+              }
             },
             data_schema: %{
               "image" => %{
@@ -40,6 +48,7 @@ defmodule Castmill.Repo.Migrations.AddDefaultWidgets do
           },
           %{
             name: "Video",
+            description: "Display a video.",
             slug: "video",
             template: %{
               "type" => "video",
@@ -70,6 +79,7 @@ defmodule Castmill.Repo.Migrations.AddDefaultWidgets do
           },
           %{
             name: "Layout Portrait 3",
+            description: "Display 3 playlists in a portrait layout.",
             slug: "layout-portrait-3",
             aspect_ratio: "9:16",
             template: %{
@@ -112,10 +122,9 @@ defmodule Castmill.Repo.Migrations.AddDefaultWidgets do
               }
             },
             options_schema: %{
-              "background" => "string",
-              "color" => "string",
+              "background" => "color",
               "playlists" => %{
-                # "list|3" means a list of exact 3 items
+                # "list|3" means a list of exact 3 items, maybe introduce tuple type?
                 "type" => "list",
                 "items" => %{
                   "type" => "ref",
@@ -127,6 +136,7 @@ defmodule Castmill.Repo.Migrations.AddDefaultWidgets do
           },
           %{
             name: "Weather",
+            description: "Display weather information.",
             slug: "weather",
             template: %{
               "type" => "group",
@@ -171,6 +181,7 @@ defmodule Castmill.Repo.Migrations.AddDefaultWidgets do
           },
           %{
             name: "Web",
+            description: "Displays the content of a web page.",
             slug: "web",
             template: %{
               "type" => "web",
@@ -180,7 +191,12 @@ defmodule Castmill.Repo.Migrations.AddDefaultWidgets do
               }
             },
             options_schema: %{
-              "url" => "string"
+              "url" => %{
+                "type" => "url",
+                "required" => true,
+                "placeholder" => "https://example.com",
+                "description" => "The URL to be used by the widget"
+              }
             }
           }
         ] do

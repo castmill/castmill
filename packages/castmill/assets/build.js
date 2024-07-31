@@ -1,5 +1,6 @@
 const esbuild = require('esbuild');
 const { solidPlugin } = require('esbuild-plugin-solid');
+const { ScssModulesPlugin } = require('esbuild-scss-modules-plugin');
 
 const glob = require('glob');
 const path = require('path');
@@ -8,8 +9,6 @@ const sass = require('sass');
 const args = process.argv.slice(2);
 const watch = args.includes('--watch');
 const deploy = args.includes('--deploy');
-
-console.log(esbuild.version);
 
 // Custom plugin to inline CSS/SCSS
 const inlineCSSPlugin = {
@@ -35,7 +34,7 @@ const inlineCSSPlugin = {
 // Define the base options for esbuild
 let baseOpts = {
   bundle: true,
-  logLevel: 'info',
+  logLevel: 'debug',
   target: 'es2017',
   format: 'esm', // Use ES Module format
   external: ['/fonts/*', '/images/*'],
@@ -47,9 +46,17 @@ let baseOpts = {
     '.tsx': 'tsx',
     '.scss': 'css',
   },
-  plugins: [inlineCSSPlugin, solidPlugin()],
+  plugins: [
+    ScssModulesPlugin({
+      inject: true,
+      minify: true,
+      cssCallback: (css) => console.log(css),
+    }),
+    inlineCSSPlugin,
+    solidPlugin(),
+  ],
   // TODO: It would be important to be able to mark SolidJS as external as it takes a lot of Kb per component otherwise
-  external: ['solid-js', 'solid-js/web', '@solidjs/router'], // Mark SolidJS and its modules as external
+  external: [/*'solid-js', 'solid-js/web',  */ '@solidjs/router'], // Mark SolidJS and its modules as external
 };
 
 // Add minify option for deployment
@@ -79,7 +86,6 @@ componentIcons.forEach((entry) => {
   esbuild
     .build({
       ...baseOpts,
-      external: ['solid-js', 'solid-js/web', '@solidjs/router'], // Mark SolidJS and its modules as external
       entryPoints: [entry],
       outfile: path.join(
         __dirname,

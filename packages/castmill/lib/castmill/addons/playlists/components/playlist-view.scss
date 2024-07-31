@@ -1,0 +1,89 @@
+.playlist-view {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  width: 100%;
+  height: 94%;
+  gap: 1em;
+
+  .playlist-preview {
+    display: flex;
+    width: 60%;
+    height: 50%;
+    background: black;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .playlist-items-wrapper {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 45%;
+
+    .widget-list {
+      width: 50%;
+      height: 95%;
+      background: gray;
+      margin: 2em;
+      display: flex;
+      padding: 1em 0;
+      justify-content: flex-start;
+      align-items: center;
+      flex-direction: column;
+      gap: 0.5em;
+    }
+  }
+
+  .playlist-items {
+    transition: background-color 0.3s ease;
+
+    overflow: auto;
+    width: 50%;
+    height: 100%;
+    background: darkgray;
+    margin: 2em;
+
+    flex-direction: column;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+  }
+}
+
+.item-fade-enter-active,
+.item-fade-exit-active {
+  transition: all 0.3s;
+}
+
+.item-enter {
+  height: 0;
+}
+
+.item-fade-enter-to {
+  height: 5em;
+}
+
+.item-fade-exit-to {
+  height: 0;
+}
+
+.animate {
+  transition: height 0.3s;
+}
+
+.stop-animation {
+  transition: none;
+}
+
+.item-placeholder {
+  height: 1em;
+}
+
+.item[selected*=yes] {
+  background: #f0f0f0;
+  transition: none;
+}

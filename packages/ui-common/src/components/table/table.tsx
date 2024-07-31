@@ -6,7 +6,7 @@ import { SortOptions } from '../../interfaces/sort-options.interface';
 
 import './table.scss';
 
-export type ItemBase = Record<string, any> & { id: string };
+export type ItemBase = Record<string, any> & { id: string | number };
 
 export interface Column<Item extends ItemBase> {
   key: string;
@@ -15,19 +15,19 @@ export interface Column<Item extends ItemBase> {
   render?: (item: Item) => JSX.Element;
 }
 
-export interface TableAction {
+export interface TableAction<Item extends ItemBase> {
   icon: Component | string;
   label: string;
-  props?: (item: ItemBase) => Record<string, any>;
-  handler: (item: ItemBase) => void;
+  props?: (item: Item) => Record<string, any>;
+  handler: (item: Item) => void;
 }
 
 export interface TableProps<Item extends ItemBase> {
   columns: Column<Item>[];
   data: Item[];
   onSort: (options: SortOptions) => void;
-  actions?: TableAction[];
-  onRowSelect?: (selectedIds: Set<string>) => void;
+  actions?: TableAction<Item>[];
+  onRowSelect?: (selectedIds: Set<string | number>) => void;
 }
 
 export const Table = <Item extends ItemBase>(
@@ -37,7 +37,9 @@ export const Table = <Item extends ItemBase>(
     key: undefined,
     direction: 'ascending',
   } as SortOptions);
-  const [selectedRows, setSelectedRows] = createSignal(new Set<string>());
+  const [selectedRows, setSelectedRows] = createSignal(
+    new Set<string | number>()
+  );
 
   const handleSort = async (key: string) => {
     const direction =
@@ -59,9 +61,9 @@ export const Table = <Item extends ItemBase>(
     return column.sortable ? <FaSolidSort /> : <></>; // Empty fragment for non-sortable columns
   };
 
-  const handleSelectRow = (id: string, isChecked: boolean) => {
+  const handleSelectRow = (id: string|number, isChecked: boolean) => {
     setSelectedRows((prevSelected) => {
-      const newSet = new Set<string>(prevSelected);
+      const newSet = new Set<string | number>(prevSelected);
       if (isChecked) {
         newSet.add(id);
       } else {
@@ -74,7 +76,7 @@ export const Table = <Item extends ItemBase>(
 
   const handleSelectAll = (event: Event) => {
     const target = event.target as HTMLInputElement;
-    const newSet = new Set<string>();
+    const newSet = new Set<string|number>();
     if (target.checked) {
       for (const item of props.data) {
         newSet.add(item.id);

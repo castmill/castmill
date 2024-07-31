@@ -1,3 +1,3 @@
 export interface PlayerGlobals {
-  target: 'thumbnail' | 'preview' | 'default';
+  target: 'thumbnail' | 'preview' | 'poster';
 }

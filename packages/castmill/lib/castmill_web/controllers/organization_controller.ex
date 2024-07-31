@@ -28,6 +28,11 @@ defmodule CastmillWeb.OrganizationController do
     end
   end
 
+  def check_access(_actor_id, :list_widgets, %{"organization_id" => _organization_id}) do
+    # Normally all users can list widgets, but will not get the same ones.
+    {:ok, true}
+  end
+
   # Default implementation for other actions not explicitly handled above
   def check_access(_actor_id, _action, _params) do
     # Default to false or implement your own logic based on other conditions
@@ -105,5 +110,16 @@ defmodule CastmillWeb.OrganizationController do
       |> put_resp_header("location", ~p"/devices/#{device.id}")
       |> json(device)
     end
+  end
+
+  # List all the widgets available an organization
+  def list_widgets(conn, %{"organization_id" => _organization_id}) do
+    # Note: for now we return all widgets, but we should only return the widgets that are available
+    # for the organization (some widgets are available to all organizations though).
+    widgets = Castmill.Widgets.list_widgets()
+
+    conn
+    |> put_status(:ok)
+    |> json(widgets)
   end
 end

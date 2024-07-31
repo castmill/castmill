@@ -17,15 +17,14 @@ import './panel-item.scss';
 
 interface PanelItemProps {
   to: string;
-  icon?: Component;
   text: string;
+  level: number;
+  icon?: Component;
 }
 
 const PanelItem: Component<PanelItemProps> = (props) => {
-  const result = props.icon({});
-
   return (
-    <span class="castmill-panel-item">
+    <span class={`castmill-panel-item item-level-${props.level}`}>
       <A href={props.to}>
         {props.icon && <props.icon></props.icon>}
         <span>{props.text}</span>

@@ -120,16 +120,8 @@ defmodule Castmill.Resources do
     if playlist == nil do
       nil
     else
-      items_query =
-        from(pi in Castmill.Resources.PlaylistItem,
-          where: pi.playlist_id == ^id,
-          join: wd in assoc(pi, :widget_config),
-          join: w in assoc(wd, :widget),
-          preload: [widget_config: {wd, widget: w}]
-        )
-
       items =
-        Repo.all(items_query)
+        get_playlist_items(id)
         |> Enum.map(&transform_item/1)
 
       %{playlist | items: items}
@@ -227,7 +219,6 @@ defmodule Castmill.Resources do
    beginning of the list if nil is passed as the prev_item_id.
 
    The options passed must conform with the widget's schema, or an error will be returned.
-
   """
   def insert_item_into_playlist(
         playlist_id,
@@ -238,73 +229,99 @@ defmodule Castmill.Resources do
         options \\ %{}
       ) do
     Repo.transaction(fn ->
-      if prev_item_id do
-        case Repo.one(from(item in PlaylistItem, where: item.id == ^prev_item_id, select: item)) do
-          nil ->
-            Repo.rollback("Invalid prev_item_id")
-
-          prev_item ->
-            next_item_id = prev_item.next_item_id
-
-            with {:ok, item} <-
-                   create_playlist_item(%{
-                     playlist_id: playlist_id,
-                     offset: offset,
-                     duration: duration,
-                     prev_item_id: prev_item.id,
-                     next_item_id: next_item_id
-                   }),
-                 {:ok, _widget_config} <-
-                   Castmill.Widgets.new_widget_config(widget_id, item.id, options) do
-              update_playlist_item(prev_item, %{next_item_id: item.id})
-
-              if next_item_id do
-                next_item = Repo.one(from(item in PlaylistItem, where: item.id == ^next_item_id))
-                update_playlist_item(next_item, %{prev_item_id: item.id})
-              end
-
-              item
-            end
-        end
+      with {:ok, prev_item, next_item_id} <- get_prev_and_next_items(playlist_id, prev_item_id),
+           {:ok, item} <-
+             create_playlist_item(%{
+               playlist_id: playlist_id,
+               offset: offset,
+               duration: duration,
+               prev_item_id: prev_item && prev_item.id,
+               next_item_id: next_item_id
+             }),
+           {:ok, _widget_config} <-
+             Castmill.Widgets.new_widget_config(widget_id, item.id, options),
+           :ok <- link_playlist_items(prev_item, item) do
+        item
       else
-        first_item =
-          Repo.one(
-            from(item in PlaylistItem,
-              where: is_nil(item.prev_item_id) and item.playlist_id == ^playlist_id
-            )
-          )
-
-        with {:ok, item} <-
-               create_playlist_item(%{
-                 playlist_id: playlist_id,
-                 offset: offset,
-                 duration: duration,
-                 prev_item_id: nil,
-                 next_item_id: first_item && first_item.id
-               }),
-             {:ok, _widget_config} <-
-               Castmill.Widgets.new_widget_config(widget_id, item.id, options) do
-          if first_item do
-            update_playlist_item(first_item, %{prev_item_id: item.id})
-          end
-
-          item
-        else
-          {:error, reason} ->
-            Repo.rollback(reason)
-        end
+        {:error, reason} -> Repo.rollback(reason)
+        error -> Repo.rollback(to_string(error))
       end
     end)
   end
 
+  # Return nil safely without error
+  def get_prev_and_next_items(playlist_id, nil) do
+    first_item =
+      Repo.one(
+        from(item in PlaylistItem,
+          where: is_nil(item.prev_item_id) and item.playlist_id == ^playlist_id
+        )
+      )
+
+    {:ok, nil, first_item && first_item.id}
+  end
+
+  def get_prev_and_next_items(playlist_id, prev_item_id) do
+    case Repo.one(
+           from(item in PlaylistItem,
+             where: item.id == ^prev_item_id and item.playlist_id == ^playlist_id
+           )
+         ) do
+      nil -> {:error, "No previous item found with the given ID"}
+      prev_item -> {:ok, prev_item, prev_item.next_item_id}
+    end
+  end
+
+  defp link_playlist_items(nil, new_item) do
+    next_item_id = new_item.next_item_id
+    next_item = if next_item_id, do: Repo.get(PlaylistItem, next_item_id)
+
+    # Update the next_item to point to new_item as the next item
+    {:ok, _} = maybe_update_playlist_item(next_item, %{prev_item_id: new_item.id})
+    :ok
+  end
+
+  defp link_playlist_items(prev_item, new_item) do
+    next_item_id = prev_item && prev_item.next_item_id
+    next_item = if next_item_id, do: Repo.get(PlaylistItem, next_item_id)
+
+    # Update the prev_item and next_item to point to new_item as the next item
+    results = [
+      maybe_update_playlist_item(prev_item, %{next_item_id: new_item.id}),
+      maybe_update_playlist_item(next_item, %{prev_item_id: new_item.id})
+    ]
+
+    # Process results to handle potential errors
+    Enum.reduce(results, :ok, fn
+      {:ok, _}, acc -> acc
+      {:error, reason}, _ -> {:error, reason}
+      # Catch-all clause to handle unexpected patterns
+      _, acc -> acc
+    end)
+  end
+
+  defp maybe_update_playlist_item(nil, _changes), do: {:ok, nil}
+
+  defp maybe_update_playlist_item(item, changes) do
+    case Repo.update(PlaylistItem.changeset(item, changes)) do
+      {:ok, updated_item} -> {:ok, updated_item}
+      {:error, reason} -> {:error, reason}
+    end
+  end
+
   @doc """
     Remove an item from a playlist.
-    TODO: For security we should also require the playlist_id to be passed in.
   """
-  def remove_item_from_playlist(item_id) do
+  def remove_item_from_playlist(playlist_id, item_id) do
     # Use a transaction to remove a playlist item and update the items in the linked list atomically.
     Repo.transaction(fn ->
-      item = from(item in PlaylistItem, where: item.id == ^item_id, select: item) |> Repo.one()
+      item =
+        from(item in PlaylistItem,
+          where: item.id == ^item_id and item.playlist_id == ^playlist_id,
+          select: item
+        )
+        |> Repo.one()
+
       prev_item_id = item.prev_item_id
       next_item_id = item.next_item_id
 
@@ -433,6 +450,13 @@ defmodule Castmill.Resources do
       }) do
     offset = (page_size && max((page - 1) * page_size, 0)) || 0
 
+    preloads =
+      if function_exported?(resource, :preloads, 0) do
+        resource.preloads()
+      else
+        []
+      end
+
     Repo.all(
       resource.base_query()
       |> Organization.where_org_id(organization_id)
@@ -441,6 +465,7 @@ defmodule Castmill.Resources do
       |> Ecto.Query.order_by([d], asc: d.name)
       |> Ecto.Query.limit(^page_size)
       |> Ecto.Query.offset(^offset)
+      |> Ecto.Query.preload(^preloads)
     )
   end
 
@@ -534,13 +559,13 @@ defmodule Castmill.Resources do
       Media
       |> where(id: ^id)
       |> Repo.one()
-      |> Repo.preload(files: [:file])
+      |> Repo.preload(files_medias: [:file])
 
     if media == nil do
       nil
     else
       transformed_files =
-        Enum.reduce(media.files, %{}, fn files_media, acc ->
+        Enum.reduce(media.files_medias, %{}, fn files_media, acc ->
           Map.put(acc, files_media.context, files_media.file)
         end)
 

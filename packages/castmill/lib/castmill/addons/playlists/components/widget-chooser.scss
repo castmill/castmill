@@ -1,0 +1,38 @@
+.widget-chooser {
+  .items-container {
+    overflow: auto;
+    display: flex;
+
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+}
+
+.widget-item {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  gap: 0.5em;
+  align-items: center;
+  width: 18em;
+  height: 4em;
+  background-color: #363636;
+  border-radius: 0.2em;
+  border: 1px solid darkgray;
+  padding: 0 0.5em;
+
+  /* Draggable cursor */
+  cursor: move;
+
+  .name {
+    color: #fff;
+    font-size: 1em;
+    font-weight: 700;
+  }
+
+  .description {
+    color: #b3b3b3;
+    font-size: 0.85em;
+  }
+}

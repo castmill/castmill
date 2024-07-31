@@ -12,6 +12,7 @@ defmodule Castmill.Application do
       CastmillWeb.Telemetry,
       # Start the Ecto repository
       Castmill.Repo,
+
       # Start the PubSub system
       {Phoenix.PubSub, name: Castmill.PubSub},
       # Start Finch
@@ -21,7 +22,11 @@ defmodule Castmill.Application do
       # Start a worker by calling: Castmill.Worker.start_link(arg)
       # {Castmill.Worker, arg}
 
-      Castmill.Hooks.Supervisor
+      # Start the Hoos supervisor tree
+      Castmill.Hooks.Supervisor,
+
+      # Start the Oban supervisor tree
+      {Oban, Application.fetch_env!(:castmill, Oban)}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
