@@ -8,7 +8,7 @@ import {
   waitFor,
 } from '@solidjs/testing-library';
 
-import { ComboBox } from './ComboBox';
+import { ComboBox } from './combobox';
 
 describe('ComboBox Component', () => {
   afterEach(cleanup);
