@@ -333,7 +333,8 @@ defmodule Castmill.PlaylistsTest do
 
       {:ok, _} =
         Resources.insert_item_into_playlist(playlist.id, nil, widget.id, 0, 1231, %{
-          "image" => "#{media.id}"
+          "image" => "#{media.id}",
+          "duration" => 15
         })
 
       fetched_playlist = Resources.get_playlist(playlist.id)
