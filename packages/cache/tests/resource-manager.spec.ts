@@ -14,7 +14,7 @@ describe('ResourceManager', () => {
   });
 
   describe('code resources', () => {
-    it.only('should trigger refresh callback if code has been updated', async () => {
+    it('should trigger refresh callback if code has been updated', async () => {
       const uri = 'https://app.castmill.com/static/js/doohv2/app.js';
 
       // We need to mock the fetch function as well as the StorageMockup
@@ -80,6 +80,8 @@ describe('ResourceManager', () => {
       cache2.close();
 
       expect(needsRefreshCalled).to.be.true;
+
+      global.fetch = originalFetch;
     });
 
     it('should cache code resources', async () => {
