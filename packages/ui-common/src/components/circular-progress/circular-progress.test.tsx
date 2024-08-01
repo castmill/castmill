@@ -5,7 +5,7 @@ import { createSignal } from 'solid-js';
 
 import { CircularProgress } from './circular-progress';
 
-describe.only('CircularProgress Component', () => {
+describe('CircularProgress Component', () => {
   it('renders correctly with initial props', () => {
     const { container } = render(() => <CircularProgress progress={50} />);
     const svg = container.querySelector('svg');
