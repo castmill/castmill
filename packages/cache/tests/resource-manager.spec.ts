@@ -23,11 +23,17 @@ describe('ResourceManager', () => {
       const originalFetch = global.fetch;
 
       const setFetchMock = (code: string) => {
-        global.fetch = vi.fn((url: string) => url == uri ? Promise.resolve(new Response(code, {
-          status: 200,
-          headers: { 'Content-Type': 'text/javascript' }
-        })) : originalFetch(url)) as unknown as Mock;
-      }
+        global.fetch = vi.fn((url: string) =>
+          url == uri
+            ? Promise.resolve(
+                new Response(code, {
+                  status: 200,
+                  headers: { 'Content-Type': 'text/javascript' },
+                })
+              )
+            : originalFetch(url)
+        ) as unknown as Mock;
+      };
 
       const code1 = 'export const a = 1;';
 
@@ -198,6 +204,6 @@ describe('ResourceManager', () => {
       }
     });
 
-    it('should free space and try to store file is storage is full', async () => { });
+    it('should free space and try to store file is storage is full', async () => {});
   });
 });
