@@ -164,7 +164,13 @@ defmodule CastmillWeb.Router do
 
       post("/playlists/:playlist_id/items", PlaylistController, :add_item)
       patch("/playlists/:playlist_id/items/:item_id", PlaylistController, :update_item)
-      patch("/playlists/:playlist_id/items/:item_id/config", PlaylistController, :update_widget_config)
+
+      patch(
+        "/playlists/:playlist_id/items/:item_id/config",
+        PlaylistController,
+        :update_widget_config
+      )
+
       put("/playlists/:playlist_id/items/:item_id", PlaylistController, :move_item)
       delete("/playlists/:playlist_id/items/:item_id", PlaylistController, :delete_item)
     end
