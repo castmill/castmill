@@ -27,6 +27,9 @@ defmodule Castmill.Widgets.Schema do
                  | <field-type> "," <field-required>
                  | <field-type> "," <field-required> "," <field-default>
 
+  <field-min> ::= "min" ":" <number>
+  <field-max> ::= "max" ":" <number>
+
   <map-field-attributes> ::= "type" ":" '"' "map" '"'
   <list-field-attributes> ::= "type" ":" '"' "list" '"'
   <ref-field-attributes> ::= "type" ":" '"' "ref" '"'
@@ -124,7 +127,9 @@ defmodule Castmill.Widgets.Schema do
       "default",
       "description",
       "help",
-      "placeholder" | required_keys
+      "placeholder",
+      "min",
+      "max" | required_keys
     ]
 
     keys = Map.keys(map)
@@ -270,6 +275,21 @@ defmodule Castmill.Widgets.Schema do
 
   defp validate_data_field(value, "number", field, acc_data) when is_number(value),
     do: {:cont, {:ok, Map.put(acc_data, field, value)}}
+
+  defp validate_data_field(value, %{"type" => "number"} = map, field, acc_data)
+       when is_number(value) do
+    if Map.has_key?(map, "min") and value < map["min"] do
+      {:halt,
+       {:error, "Value #{value} is less than the minimum value in field #{inspect(field)}"}}
+    else
+      if Map.has_key?(map, "max") and value > map["max"] do
+        {:halt,
+         {:error, "Value #{value} is greater than the maximum value in field #{inspect(field)}"}}
+      else
+        {:cont, {:ok, Map.put(acc_data, field, value)}}
+      end
+    end
+  end
 
   defp validate_data_field(value, "boolean", field, acc_data) when is_boolean(value),
     do: {:cont, {:ok, Map.put(acc_data, field, value)}}
