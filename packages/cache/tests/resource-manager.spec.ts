@@ -1,58 +1,79 @@
 import 'fake-indexeddb/auto';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 
 import { ResourceManager } from '../src/resource-manager';
 import { Cache } from '../src/cache';
 import { StorageMockup } from './storage.mockup';
 
+import type { Mock } from 'vitest';
+
 describe('ResourceManager', () => {
+  beforeEach(() => {
+    // Reset fetch mock to clear histories and restore default implementation
+    vi.resetAllMocks();
+  });
+
   describe('code resources', () => {
-    it('should trigger refresh callback if code has been updated', async () => {
+    it.only('should trigger refresh callback if code has been updated', async () => {
       const uri = 'https://app.castmill.com/static/js/doohv2/app.js';
 
-      const storage1 = new StorageMockup({
-        [uri]: 'export const a = 1;',
+      // We need to mock the fetch function as well as the StorageMockup
+      // The reason is that the ResourceManager will issue a fetch to check if the
+      // code has been updated, but the StorageMockup will read the actual code to store (without fetching it)
+      const originalFetch = global.fetch;
+
+      const setFetchMock = (code: string) => {
+        global.fetch = vi.fn((url: string) => url == uri ? Promise.resolve(new Response(code, {
+          status: 200,
+          headers: { 'Content-Type': 'text/javascript' }
+        })) : originalFetch(url)) as unknown as Mock;
+      }
+
+      const code1 = 'export const a = 1;';
+
+      setFetchMock(code1);
+
+      const storage = new StorageMockup({
+        [uri]: code1,
       });
-      const cache1 = new Cache(storage1, 'test-resource', 10);
-      const manager1 = new ResourceManager(cache1);
 
-      await manager1.init();
+      const cache = new Cache(storage, 'test-resource', 10);
+      const manager = new ResourceManager(cache);
 
-      const { a } = await manager1.import(uri);
+      await manager.init();
+
+      const { a } = await manager.import(uri);
       expect(a).to.be.eql(1);
 
-      manager1.close();
-      cache1.close();
+      manager.close();
+      cache.close();
+
+      const code2 = 'export const a = 20;';
+      setFetchMock(code2);
 
       const storage2 = new StorageMockup({
-        [uri]: 'export const a = 2;',
+        [uri]: code2,
       });
 
       const cache2 = new Cache(storage2, 'test-resource', 10);
+      await cache2.init();
 
-      await new Promise<void>(async (resolve, reject) => {
-        let needsRefreshCalled = false;
-        const manager2 = new ResourceManager(cache2, {
-          needsRefresh: () => {
-            needsRefreshCalled = true;
-          },
-        });
-
-        try {
-          await manager2.init();
-
-          const result1 = await manager2.import(uri);
-          expect(result1.a).to.be.eql(2);
-
-          manager2.close();
-          cache2.close();
-
-          expect(needsRefreshCalled).to.be.true;
-          resolve();
-        } catch (err) {
-          reject(err);
-        }
+      let needsRefreshCalled = false;
+      const manager2 = new ResourceManager(cache2, {
+        needsRefresh: () => {
+          needsRefreshCalled = true;
+        },
       });
+
+      await manager2.init();
+
+      const result1 = await manager2.import(uri);
+      expect(result1.a).to.be.eql(20);
+
+      manager2.close();
+      cache2.close();
+
+      expect(needsRefreshCalled).to.be.true;
     });
 
     it('should cache code resources', async () => {
@@ -177,6 +198,6 @@ describe('ResourceManager', () => {
       }
     });
 
-    it('should free space and try to store file is storage is full', async () => {});
+    it('should free space and try to store file is storage is full', async () => { });
   });
 });

@@ -11,12 +11,12 @@ function byteLength(str: string) {
 export class StorageMockup implements StorageIntegration {
   files: { [index: string]: { url: string; size: number } } = {};
 
-  constructor(private filesFixture: { [url: string]: string }) {}
+  constructor(private filesFixture: { [url: string]: string }) { }
 
   /**
    * Perform any initialization required by the cache.
    */
-  async init() {}
+  async init() { }
 
   /**
    *
@@ -32,7 +32,7 @@ export class StorageMockup implements StorageIntegration {
    * List the files of the cache, if possible support pagination.
    */
   async listFiles() {
-    return [];
+    return Object.values(this.files);
   }
 
   /**
@@ -80,7 +80,7 @@ export class StorageMockup implements StorageIntegration {
    * NOTE:  Maybe not needed since we are storing the uri in indexedDB.
    * @param key
    */
-  async retrieveFile(key: string): Promise<string | void> {}
+  async retrieveFile(key: string): Promise<string | void> { }
 
   /**
    * Deletes a file from the storage.
@@ -99,5 +99,5 @@ export class StorageMockup implements StorageIntegration {
     this.files = {};
   }
 
-  async close() {}
+  async close() { }
 }

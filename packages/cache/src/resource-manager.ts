@@ -241,6 +241,7 @@ export class ResourceManager {
           ...this.getAuthHeader(),
         },
       });
+
       if (response.ok) {
         return response.text();
       }
