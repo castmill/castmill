@@ -68,11 +68,29 @@ export class Cache extends Dexie {
   }
 
   async init() {
-    // TODO: Compute total cached size
+    await this.integration.init();
+    await this.syncCache();
+  }
 
-    // TODO: Check integrity of the cache, i.e. that all files in the
-    // integration have a reference in the cache, if not delete them.
-    return this.integration.init();
+  private async syncCache() {
+    // Remove items from integration that are not cached anymore
+    const files = await this.integration.listFiles();
+    for (const file of files) {
+      const item = await this.items.get({ url: file.url });
+      if (!item) {
+        await this.integration.deleteFile(file.url);
+      }
+    }
+
+    // Iterate existing items and make sure they are up-to-date
+    /*
+    for (const itemType of Object.values(ItemType)) {
+      const items = await this.list(itemType);
+      for (const item of items) {
+        await this.set(item.url, item.type, item.mimeType, { force: true });
+      }
+    }
+    */
   }
 
   /**
