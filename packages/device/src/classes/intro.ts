@@ -9,7 +9,7 @@ const createImageLayer = (imageUrl: string) =>
     duration: 10000,
     slack: 1000,
     config: {
-      id: '13',
+      id: 13,
       widget_id: 123,
       options: {},
       data: {},
