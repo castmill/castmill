@@ -8,13 +8,13 @@ vi.mock('phoenix', () => {
     on: vi.fn(),
     off: vi.fn(),
     leave: vi.fn(),
-    join: vi.fn()
+    join: vi.fn(),
   });
 
   return {
     Socket: vi.fn().mockImplementation((endPoint: string) => ({
-      channel: vi.fn().mockImplementation((topic: string) => mockChannel())
-    }))
+      channel: vi.fn().mockImplementation((topic: string) => mockChannel()),
+    })),
   };
 });
 
@@ -28,7 +28,12 @@ describe('ResourcesObserver', () => {
     mockSocket = new Socket('ws://example.com/socket');
     onJoin = vi.fn((resource) => `topic:${resource.id}`);
     onUpdate = vi.fn();
-    observer = new ResourcesObserver(mockSocket, 'updateRoom', onJoin, onUpdate);
+    observer = new ResourcesObserver(
+      mockSocket,
+      'updateRoom',
+      onJoin,
+      onUpdate
+    );
   });
 
   it('should create and join new channels for new resources', () => {
@@ -39,8 +44,10 @@ describe('ResourcesObserver', () => {
     expect(mockSocket.channel).toHaveBeenCalledWith('topic:2');
 
     // Checking if `join` has been called on each channel instance
-    const allChannels = mockSocket.channel.mock.results.map(result => result.value);
-    allChannels.forEach(channel => {
+    const allChannels = mockSocket.channel.mock.results.map(
+      (result) => result.value
+    );
+    allChannels.forEach((channel) => {
       expect(channel.join).toHaveBeenCalledTimes(1);
     });
   });

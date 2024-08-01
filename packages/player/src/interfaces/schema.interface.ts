@@ -30,8 +30,8 @@ export interface ComplexFieldAttributes {
 
 export type Schema = {
   [fieldName: string]:
-  | SimpleType
-  | FieldAttributes
-  | ComplexFieldAttributes
-  | ReferenceAttributes;
+    | SimpleType
+    | FieldAttributes
+    | ComplexFieldAttributes
+    | ReferenceAttributes;
 };

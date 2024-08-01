@@ -2,7 +2,13 @@
  * Represents a schema for a document.
  *
  */
-type SimpleType = 'string' | 'number' | 'boolean' | 'color' | 'url' | 'location';
+type SimpleType =
+  | 'string'
+  | 'number'
+  | 'boolean'
+  | 'color'
+  | 'url'
+  | 'location';
 type ComplexType = 'map' | 'list';
 
 interface BaseAttributes {
@@ -31,8 +37,8 @@ interface ComplexFieldAttributes extends BaseAttributes {
 
 export type Schema = {
   [fieldName: string]:
-  | SimpleType
-  | FieldAttributes
-  | ComplexFieldAttributes
-  | ReferenceAttributes;
+    | SimpleType
+    | FieldAttributes
+    | ComplexFieldAttributes
+    | ReferenceAttributes;
 };

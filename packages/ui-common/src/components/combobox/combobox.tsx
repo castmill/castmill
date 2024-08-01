@@ -108,15 +108,9 @@ export const ComboBox = <T extends { id: string }>(
   let headerRef: HTMLDivElement | undefined;
   let dropdownRef: HTMLDivElement | undefined;
   const handleClick = (event: MouseEvent) => {
-    console.log('click event', event.target);
-    console.log('Current target', event.currentTarget);
-    console.log("headerRef", headerRef);
-
     if (headerRef?.contains(event.target as Node)) {
-      console.log('header clicked');
       setIsOpen(!isOpen());
     } else if (!dropdownRef?.contains(event.target as Node)) {
-      console.log('outside clicked');
       setIsOpen(false);
     }
   };
