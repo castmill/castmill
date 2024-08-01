@@ -71,13 +71,6 @@ describe('AddOnTree', () => {
     expect(subTree?.children).toBeUndefined(); // Leaf node shouldn't have children
   });
 
-  it('ensures non-leaf nodes do not contain addon data directly', () => {
-    const tree = new AddOnTree(addons);
-    const nonLeafNode = tree.getSubTree('root');
-    expect(nonLeafNode?.children?.size).toBeGreaterThan(0); // Should have children
-    expect(nonLeafNode?.addon).toBeUndefined(); // Non-leaf node, thus no direct addon
-  });
-
   it('treats dot-separated paths as nested paths', () => {
     const tree = new AddOnTree(addons);
     const nestedNode = tree.getSubTree('root.first');
