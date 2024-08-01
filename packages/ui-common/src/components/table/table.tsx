@@ -61,7 +61,7 @@ export const Table = <Item extends ItemBase>(
     return column.sortable ? <FaSolidSort /> : <></>; // Empty fragment for non-sortable columns
   };
 
-  const handleSelectRow = (id: string|number, isChecked: boolean) => {
+  const handleSelectRow = (id: string | number, isChecked: boolean) => {
     setSelectedRows((prevSelected) => {
       const newSet = new Set<string | number>(prevSelected);
       if (isChecked) {
@@ -76,7 +76,7 @@ export const Table = <Item extends ItemBase>(
 
   const handleSelectAll = (event: Event) => {
     const target = event.target as HTMLInputElement;
-    const newSet = new Set<string|number>();
+    const newSet = new Set<string | number>();
     if (target.checked) {
       for (const item of props.data) {
         newSet.add(item.id);

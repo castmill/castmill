@@ -105,8 +105,8 @@ export class Playlist extends EventEmitter {
       // (so that we can have a complete array to loop with from current item offset)
       const elements = loop
         ? layersWithOffsets
-          .slice(index)
-          .concat(layersWithOffsets.slice(0, index))
+            .slice(index)
+            .concat(layersWithOffsets.slice(0, index))
         : layersWithOffsets.slice(index);
 
       // We start playing from the found layer at the current offset.

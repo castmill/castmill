@@ -8,8 +8,8 @@ export class ResourcesObserver<T extends { id: string }> {
     private updateRoom: string,
     /* Called everytime a new resource is added to the list, must return a topic to join to */
     private onJoin: (resource: T) => string,
-    private onUpdate: (resource: T, data: any) => void) {
-  }
+    private onUpdate: (resource: T, data: any) => void
+  ) {}
 
   observe(resources: T[]) {
     const resourceIds = new Set(resources.map((resource) => resource.id));
@@ -29,7 +29,6 @@ export class ResourcesObserver<T extends { id: string }> {
       if (this.channels[resource.id]) {
         return;
       } else {
-
         const topic = this.onJoin(resource);
         const channel = this.socket.channel(topic);
         this.channels[resource.id] = channel;
@@ -46,7 +45,6 @@ export class ResourcesObserver<T extends { id: string }> {
   cleanup() {
     Object.values(this.channels).forEach((channel) => {
       channel.leave();
-    })
+    });
   }
 }
-

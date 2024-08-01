@@ -47,7 +47,7 @@ interface TableViewProps<Item extends ItemBase> extends TableProps<Item> {
     }[];
     onSort: (options: SortOptions) => void;
     actions?: TableAction<Item>[];
-    onRowSelect?: (selectedIds: Set<string|number>) => void;
+    onRowSelect?: (selectedIds: Set<string | number>) => void;
   };
 
   pagination: {

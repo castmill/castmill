@@ -362,12 +362,12 @@ export class PlayerUI {
   /**
    * Seeks to the next item in the playlist
    */
-  forward() { }
+  forward() {}
 
   /**
    * Seeks to the previous item in the playlist
    */
-  backward() { }
+  backward() {}
 
   seek(value: number) {
     const time = (this.time = value);

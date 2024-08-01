@@ -1,6 +1,6 @@
 /**
  * A dummy storage integration when no storage is needed or available.
- * 
+ *
  */
 import {
   StorageIntegration,
@@ -16,20 +16,16 @@ export class StorageDummy implements StorageIntegration {
       url: string;
       size: number;
     };
-
   } = {};
 
-  constructor(
-    private name: string,
-  ) {
+  constructor(private name: string) {
     this.cacheName = `${this.prefix}:${this.name}`;
   }
 
   /**
    * Perform any initialization required by the cache.
    */
-  async init() {
-  }
+  async init() {}
 
   /**
    *
@@ -77,7 +73,7 @@ export class StorageDummy implements StorageIntegration {
    * NOTE:  Maybe not needed since we are storing the uri in indexedDB.
    * @param key
    */
-  async retrieveFile(key: string): Promise<string | void> { }
+  async retrieveFile(key: string): Promise<string | void> {}
 
   /**
    * Deletes a file from the storage.
@@ -96,5 +92,5 @@ export class StorageDummy implements StorageIntegration {
     this.cache = {};
   }
 
-  async close() { }
+  async close() {}
 }
