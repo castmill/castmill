@@ -26,6 +26,8 @@ interface Messages {
   [key: string]: string | JSX.Element;
 }
 
+const supportedFileTypes = ['image/png', 'image/jpeg', 'image/gif'];
+
 export const UploadComponent = (props: UploadComponentProps) => {
   const [files, setFiles] = createSignal<File[]>([]);
   const [messages, setMessages] = createSignal<Messages>({});
@@ -34,11 +36,8 @@ export const UploadComponent = (props: UploadComponentProps) => {
   const handleFileChange = (e: Event) => {
     const target = e.target as HTMLInputElement;
     if (target.files) {
-      const selectedFiles = Array.from(target.files).filter(
-        (file) =>
-          file.type === 'image/png' ||
-          file.type === 'image/jpeg' ||
-          file.type === 'image/gif'
+      const selectedFiles = Array.from(target.files).filter((file) =>
+        supportedFileTypes.includes(file.type)
       );
       console.log({ selectedFiles });
       setFiles(selectedFiles);
@@ -119,12 +118,13 @@ export const UploadComponent = (props: UploadComponentProps) => {
 
         const droppedFiles = Array.from(source.items).filter(
           (file) =>
-            file.type === 'image/png' ||
-            file.type === 'image/jpeg' ||
-            file.type === 'image/gif'
+            file.kind === 'file' && supportedFileTypes.includes(file.type)
         );
 
-        // TODO: show some kind of error if not supported file type
+        if (droppedFiles.length === 0) {
+          alert('No supported files found in the dropped files.');
+          return;
+        }
 
         setFiles([
           ...files(),
