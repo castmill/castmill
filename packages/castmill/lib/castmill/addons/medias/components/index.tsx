@@ -34,6 +34,8 @@ const MediasPage: Component<{
     equals: false,
   });
 
+  const itemsPerPage = 10; // Number of items to show per page
+
   const [showModal, setShowModal] = createSignal<JsonMedia | undefined>();
 
   const [showAddMediasModal, setShowAddMediasModal] = createSignal(false);
@@ -106,8 +108,6 @@ const MediasPage: Component<{
   const onRowSelect = (rowsSelected: Set<string>) => {
     setSelectedMedias(rowsSelected);
   };
-
-  const itemsPerPage = 10; // Number of items to show per page
 
   let tableViewRef: TableViewRef<JsonMedia>;
 
