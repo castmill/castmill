@@ -88,7 +88,8 @@ export class WebosMachine implements Machine {
 
     const platformInfo = await deviceInfo.getPlatformInfo();
     // get chromium version from user agent
-    const chromiumVersion = navigator.userAgent.match(/Chrome\/([0-9.]+)/)?.[1] ?? undefined;;  
+    const chromiumVersion =
+      navigator.userAgent.match(/Chrome\/([0-9.]+)/)?.[1] ?? undefined;
     return {
       appType: 'LG WebOS',
       appVersion: version,

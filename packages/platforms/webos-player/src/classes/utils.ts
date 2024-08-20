@@ -11,4 +11,3 @@ export async function digestText(message: string) {
     .join('');
   return hashHex;
 }
-
