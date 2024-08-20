@@ -3,6 +3,8 @@ import { configuration, deviceInfo, power, storage } from '../native';
 import { digestText } from './utils';
 import { version } from '../../package.json';
 
+// The update config is used to update the application on the device. We set this
+// to make sure the application updates from the correct source.
 var UPDATE_CONFIG = {
   serverIp: '0.0.0.0',
   serverPort: 0,
@@ -140,11 +142,19 @@ export class WebosMachine implements Machine {
    */
   async update(): Promise<void> {
     console.log('update');
-    return storage.upgradeApplication({
+
+    // First set the server properties to the correct values
+    await configuration.setServerProperty(UPDATE_CONFIG);
+
+    // Then download the application
+    await storage.upgradeApplication({
       type: 'ipk',
       to: 'local',
       recovery: true,
     });
+
+    // Reboot the device to apply the update
+    return this.reboot();
   }
 
   /**
@@ -167,6 +177,8 @@ export class WebosMachine implements Machine {
 
     // TODO: Model name is probably too specific, we should use the model family instead
     // e.g. 'XS2E' instead of '55XS2E-BH'
-    return `https://update.castmill.io/webos/firmware/${manufacturer}-${modelName}.epk`;
+    const url = `https://update.castmill.io/webos/firmware/${manufacturer}-${modelName}.epk`;
+    console.log('Firmware download URL:', url);
+    return url;
   }
 }
