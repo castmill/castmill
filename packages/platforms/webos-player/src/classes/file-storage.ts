@@ -3,6 +3,7 @@ import {
   StorageInfo,
   StorageItem,
   StoreFileReturnValue,
+  StoreResult,
 } from '@castmill/cache';
 import { storage } from '../native';
 import { digestText } from './utils';
@@ -38,7 +39,52 @@ export class FileStorage implements StorageIntegration {
 
   async storeFile(url: string, data?: any): Promise<StoreFileReturnValue> {
     //TODO implement
-    throw new Error('Method not implemented.');
+    const fullPath = join(CACHE_PATH, this.storagePath);
+    try {
+      const filename = await getFileName(url);
+
+      const filePath = join(fullPath, filename);
+      const tempPath = filePath + '.tmp';
+
+      try {
+        if (data) {
+          await storage.writeFile({ path: tempPath, data });
+        } else {
+          await storage.downloadFile({
+            action: 'start',
+            destination: tempPath,
+            source: url,
+          });
+        }
+
+        // Atomically rename the file to its final name
+        await storage.moveFile({
+          oldPath: tempPath,
+          newPath: filePath,
+        });
+      } catch (error) {
+        console.error('Failed to store file:', error);
+
+        // Delete the temporary file if it exists
+        await storage.removeFile({ file: tempPath });
+
+        throw error;
+      }
+      const stats = await storage.statFile({ path: filePath });
+      return {
+        result: { code: StoreResult.Success },
+        item: {
+          url: filePath,
+          size: stats.size,
+        },
+      };
+    } catch (error: any) {
+      console.error('Failed to store file:', error);
+      const errMsg = error?.message ?? 'Unknown Error';
+      return {
+        result: { code: StoreResult.Failure, errMsg },
+      };
+    }
   }
 
   /*
@@ -47,7 +93,7 @@ export class FileStorage implements StorageIntegration {
   async retrieveFile(url: string): Promise<string | void> {
     try {
       const filePath = `%{CACHE_PATH}/${await getFileName(url)}`;
-      await storage.statFile({path: filePath}); // Check if file exists
+      await storage.statFile({ path: filePath }); // Check if file exists
       return filePath;
     } catch (error) {
       console.log('Failed to retrieve file:', error);
@@ -61,7 +107,7 @@ export class FileStorage implements StorageIntegration {
   async deleteFile(url: string): Promise<void> {
     return storage.removeFile({
       file: `${CACHE_PATH}/${url}`,
-      recursive: true
+      recursive: true,
     });
   }
 
@@ -71,7 +117,7 @@ export class FileStorage implements StorageIntegration {
   async deleteAllFiles(): Promise<void> {
     return storage.removeFile({
       file: CACHE_PATH,
-      recursive: true
+      recursive: true,
     });
   }
 
