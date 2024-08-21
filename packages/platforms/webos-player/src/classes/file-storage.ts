@@ -23,27 +23,39 @@ export class FileStorage implements StorageIntegration {
   }
 
   async init(): Promise<void> {
-    //TODO implement
     console.log('Initializing file storage');
+    return storage.mkdir({ path: CACHE_PATH });
   }
 
   async info(): Promise<StorageInfo> {
-    //TODO implement
-    throw new Error('Method not implemented.');
+    console.log('Getting storage info');
+    try {
+      const { files } = await storage.listFiles({ path: CACHE_PATH });
+      let used = files.reduce((acc, file) => acc + (file.size ?? 0), 0);
+      const total = (await storage.getStorageInfo()).free + used * 0.5;
+      return { used, total };
+    } catch (error) {
+      console.error('Failed to get storage info:', error);
+      throw error;
+    }
   }
 
   async listFiles(): Promise<StorageItem[]> {
-    //TODO implement
-    throw new Error('Method not implemented.');
+    const { files } = await storage.listFiles({ path: CACHE_PATH });
+
+    return files
+      .filter(({ name }) => name)
+      .map((file) => ({
+        url: join(CACHE_PATH, file.name ?? ''),
+        size: file.size ?? 0,
+      }));
   }
 
   async storeFile(url: string, data?: any): Promise<StoreFileReturnValue> {
-    //TODO implement
-    const fullPath = join(CACHE_PATH, this.storagePath);
     try {
       const filename = await getFileName(url);
 
-      const filePath = join(fullPath, filename);
+      const filePath = join(CACHE_PATH, filename);
       const tempPath = filePath + '.tmp';
 
       try {
@@ -58,10 +70,7 @@ export class FileStorage implements StorageIntegration {
         }
 
         // Atomically rename the file to its final name
-        await storage.moveFile({
-          oldPath: tempPath,
-          newPath: filePath,
-        });
+        await storage.moveFile({ oldPath: tempPath, newPath: filePath });
       } catch (error) {
         console.error('Failed to store file:', error);
 

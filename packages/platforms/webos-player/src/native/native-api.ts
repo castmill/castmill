@@ -68,6 +68,9 @@ export const storage = {
   removeFile: promisifyNoRet(scapStorage.removeFile.bind(scapStorage)),
   statFile: promisify(scapStorage.statFile.bind(scapStorage)),
   downloadFile: promisify(scapStorage.downloadFile.bind(scapStorage)),
+  mkdir: promisifyNoRet(scapStorage.mkdir.bind(scapStorage)),
+  listFiles: promisify(scapStorage.listFiles.bind(scapStorage)),
+  getStorageInfo: promisifyNoOpt(scapStorage.getStorageInfo.bind(scapStorage)),
 };
 
 // const a = promisify((successCallback: (result: string) => void, errorCallback: (error: any) => void, options?: { a: string }) => {
