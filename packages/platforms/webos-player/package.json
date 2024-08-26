@@ -12,12 +12,10 @@
     "serve": "vite preview",
     "copy-assets": "cp -r appinfo/* dist && cp -r lib dist",
     "package": "bash -lic scripts/ares-package.sh",
-    "test": "vitest"
+    "test": "vitest run"
   },
   "devDependencies": {
     "@solidjs/testing-library": "^0.8.5",
-    "@testing-library/jest-dom": "^6.2.0",
-    "@types/testing-library__jest-dom": "^5.14.9",
     "@vitejs/plugin-legacy": "^5.4.1",
     "express": "^4.19.2",
     "jsdom": "^23.2.0",
@@ -29,7 +27,7 @@
     "vite-plugin-copy": "^0.1.6",
     "vite-plugin-solid": "^2.8.2",
     "vite-plugin-static-copy": "^1.0.5",
-    "vitest": "^1.2.1"
+    "vitest": "^1.5.3"
   },
   "dependencies": {
     "@castmill/cache": "*",

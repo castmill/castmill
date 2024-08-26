@@ -6,7 +6,7 @@ import {
   StoreResult,
 } from '@castmill/cache';
 import { storage } from '../native';
-import { digestText } from './utils';
+import { simpleHash } from './utils';
 
 const CACHE_DIR = 'castmill-cache';
 const CACHE_PATH = `file://internal/${CACHE_DIR}`;
@@ -101,7 +101,7 @@ export class FileStorage implements StorageIntegration {
    */
   async retrieveFile(url: string): Promise<string | void> {
     try {
-      const filePath = `%{CACHE_PATH}/${await getFileName(url)}`;
+      const filePath = `${CACHE_PATH}/${await getFileName(url)}`;
       await storage.statFile({ path: filePath }); // Check if file exists
       return filePath;
     } catch (error) {
@@ -145,7 +145,7 @@ async function getFileName(url: string): Promise<string> {
   const pathName = new URL(url).pathname;
   const extension = pathName.split('.').pop();
 
-  const hash = await digestText(pathName);
+  const hash = simpleHash(pathName);
   // if extension is present, append it to the hash otherwise, just return the hash
   return extension ? `${hash}.${extension}` : hash;
 }
