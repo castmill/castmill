@@ -1,6 +1,7 @@
 import { signage } from '../native';
 const state: Record<string, SystemMonitorEvent['data']> = {};
 
+// Event example:
 // {
 //   "source": "THERMOMETER",
 //   "type": "CURRENT_TEMPERATURE",
