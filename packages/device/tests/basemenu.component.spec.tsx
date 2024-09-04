@@ -77,11 +77,21 @@ describe('BaseMenu component', () => {
     expect(menu).not.toBeInTheDocument();
 
     // Simulate an event that shows the menu
-    fireEvent.keyDown(window, { key: 'Enter', code: 'Enter', charCode: 13 });
+    fireEvent.keyDown(window, {
+      key: 'Enter',
+      code: 'Enter',
+      charCode: 13,
+      keyCode: 13,
+    });
     expect(queryByRole('menu')).toBeVisible();
 
     // Simulate an event that hides the menu
-    fireEvent.keyDown(window, { key: 'Escape', code: 'Escape', charCode: 27 });
+    fireEvent.keyDown(window, {
+      key: 'Escape',
+      code: 'Escape',
+      charCode: 27,
+      keyCode: 27,
+    });
     expect(queryByRole('menu')).not.toBeInTheDocument();
   });
 
@@ -105,16 +115,27 @@ describe('BaseMenu component', () => {
     const menu = queryByRole('menu');
 
     // Simulate an event that shows the menu
-    fireEvent.keyDown(window, { key: 'Enter', code: 'Enter', charCode: 13 });
+    fireEvent.keyDown(window, {
+      key: 'Enter',
+      code: 'Enter',
+      charCode: 13,
+      keyCode: 13,
+    });
     expect(queryByRole('menu')).toBeVisible();
 
     // Simulate keyboard interactions
     fireEvent.keyDown(window, {
       key: 'ArrowDown',
       code: 'ArrowDown',
+      keyCode: 40,
       charCode: 40,
     });
-    fireEvent.keyDown(window, { key: 'Enter', code: 'Enter', charCode: 13 });
+    fireEvent.keyDown(window, {
+      key: 'Enter',
+      code: 'Enter',
+      charCode: 13,
+      keyCode: 13,
+    });
 
     // First checkbox should have been toggled from false to true
     expect(mockEntries[1].action).toHaveBeenCalledWith(true);
@@ -122,9 +143,15 @@ describe('BaseMenu component', () => {
     fireEvent.keyDown(window, {
       key: 'ArrowDown',
       code: 'ArrowDown',
+      keyCode: 40,
       charCode: 40,
     });
-    fireEvent.keyDown(window, { key: 'Enter', code: 'Enter', charCode: 13 });
+    fireEvent.keyDown(window, {
+      key: 'Enter',
+      code: 'Enter',
+      charCode: 13,
+      keyCode: 13,
+    });
 
     // Submenu should have been opened
     expect(mockEntries[2].action).toHaveBeenCalled();
@@ -134,9 +161,15 @@ describe('BaseMenu component', () => {
     fireEvent.keyDown(window, {
       key: 'ArrowDown',
       code: 'ArrowDown',
+      keyCode: 40,
       charCode: 40,
     });
-    fireEvent.keyDown(window, { key: 'Enter', code: 'Enter', charCode: 13 });
+    fireEvent.keyDown(window, {
+      key: 'Enter',
+      code: 'Enter',
+      charCode: 13,
+      keyCode: 13,
+    });
 
     // Submenu action should have been called
     expect(mockEntries[2].children[0].action).toHaveBeenCalled();
@@ -144,9 +177,15 @@ describe('BaseMenu component', () => {
     fireEvent.keyDown(window, {
       key: 'ArrowDown',
       code: 'ArrowDown',
+      keyCode: 40,
       charCode: 40,
     });
-    fireEvent.keyDown(window, { key: 'Enter', code: 'Enter', charCode: 13 });
+    fireEvent.keyDown(window, {
+      key: 'Enter',
+      code: 'Enter',
+      charCode: 13,
+      keyCode: 13,
+    });
 
     // Submenu checkbox should have been toggled from true to false
     expect(mockEntries[2].children[1].action).toHaveBeenCalledWith(false);
