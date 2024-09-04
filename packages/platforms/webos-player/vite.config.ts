@@ -14,7 +14,6 @@ export default defineConfig({
         chrome: '38',
       },
       renderModernChunks: false,
-      // polyfills: false,
       polyfills: [
         'es.promise.finally',
         'es/map',
@@ -22,8 +21,6 @@ export default defineConfig({
         'es.object.assign',
         'web.queue-microtask',
       ],
-      // externalSystemJS: true,
-      // additionalLegacyPolyfills: ['es6.symbol'],
     }),
     /* 
     Uncomment the following line to enable solid-devtools.
@@ -31,18 +28,8 @@ export default defineConfig({
     */
     // devtools(),
     solidPlugin(),
-    // viteStaticCopy({
-    //   targets: [],
-    // //   targets: [
-    // //     {
-    // //       'src': 'lib',
-    // //       'dest': 'dist/lib'
-    // //     },
-    // //   ],
-    // }),
   ],
   base: '',
-  // root: '.',
   publicDir: 'public',
   server: {
     port: 3001,
@@ -56,7 +43,6 @@ export default defineConfig({
     isolate: false,
   },
   build: {
-    // target: 'chrome38',
     minify: false,
     sourcemap: 'inline',
   },
