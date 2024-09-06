@@ -10,6 +10,42 @@ export interface DeviceInfo {
   userAgent: string; // The user agent string
 }
 
+/**
+ * Possible values for the weekDays property of the TimerEntry interface. "all" means
+ * that the timer should be active every day of the week.
+ */
+export type WeekDay =
+  | 'mon'
+  | 'tue'
+  | 'wed'
+  | 'thu'
+  | 'fri'
+  | 'sat'
+  | 'sun'
+  | 'all';
+
+/**
+ * Represents a timer entry. The timer entry is used to turn the device on or off
+ * at specific times. The hours and minutes properties represent the time at which
+ * the device should be turned on or off. The weekDays property represents the days
+ * of the week when the timer should be active.
+ */
+export interface TimerEntry {
+  hours: number;
+  minutes: number;
+  weekDays: WeekDay[];
+}
+
+/**
+ * Represents the timers set on the device. The on property represents the timers
+ * that turn the device on at specific times. The off property represents the timers
+ * that turn the device off at specific times.
+ */
+export interface Timers {
+  on: TimerEntry[];
+  off: TimerEntry[];
+}
+
 export interface Machine {
   /**
    * Returns the machine's unique identifier.
@@ -72,7 +108,7 @@ export interface Machine {
   getTimezone?(): Promise<string>;
 
   /**
-   * Retunrs the device information, such as the software and hardware versions.
+   * Returns the device information, such as the software and hardware versions.
    */
   getDeviceInfo(): Promise<DeviceInfo>;
 
@@ -107,4 +143,16 @@ export interface Machine {
    * Updates the device's firmware.
    */
   updateFirmware?(): Promise<void>;
+
+  /**
+   * Returns the current timers set on the device. The timers are used to turn the
+   * device on and off at specific times.
+   */
+  getTimers?(): Promise<Timers>;
+
+  /**
+   * Set the timers on the device. The timers are used to turn the device on and off
+   * at specific times.
+   */
+  setTimers?(timers: Timers): Promise<void>;
 }
