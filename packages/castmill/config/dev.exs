@@ -83,5 +83,4 @@ config :swoosh, :api_client, false
 config :castmill, :file_storage, :local
 
 # widgets json files
-config :castmill, CastmillWeb.Widgets.WidgetsLoader,
-  json_dir: "../widged/dist/widgets"
+config :castmill, CastmillWeb.Widgets.WidgetsLoader, json_dir: "../widged/dist/widgets"
