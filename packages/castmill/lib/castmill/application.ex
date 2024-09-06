@@ -37,6 +37,7 @@ defmodule Castmill.Application do
     # After starting the supervision tree, load the Widgets from JSON files
     # Ensure that the Repo is started before this call
     env = Application.get_env(:castmill, :env)
+
     unless env == :test do
       CastmillWeb.Widgets.WidgetsLoader.load_and_insert_json_data()
     end
