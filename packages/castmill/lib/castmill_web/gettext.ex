@@ -20,5 +20,5 @@ defmodule CastmillWeb.Gettext do
 
   See the [Gettext Docs](https://hexdocs.pm/gettext) for detailed usage.
   """
-  use Gettext, otp_app: :castmill
+  use Gettext.Backend, otp_app: :castmill
 end
