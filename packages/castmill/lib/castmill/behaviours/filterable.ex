@@ -1,3 +1,3 @@
 defmodule Castmill.Behaviour.Filterable do
-  @callback apply_filter({String.t(), any()}) :: dynamic | nil
+  @callback apply_filter({String.t(), any()}) :: any() | nil
 end

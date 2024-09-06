@@ -26,7 +26,8 @@ config :castmill, CastmillWeb.Endpoint,
   secret_key_base: "IQmKkVEDXFqnIx+tOIZRyd+qDvEYrUOcTGN0iQ/QgYcGsTLkA6A4UTgBYXti5lic",
   watchers: [
     esbuild: {Esbuild, :install_and_run, [:default, ~w(--sourcemap=inline --watch)]},
-    tailwind: {Tailwind, :install_and_run, [:default, ~w(--watch)]}
+    tailwind: {Tailwind, :install_and_run, [:default, ~w(--watch)]},
+    node: ["build.js", "--watch", cd: Path.expand("../assets", __DIR__)]
   ]
 
 # ## SSL Support
@@ -80,3 +81,7 @@ config :swoosh, :api_client, false
 
 # Choose local upload destination
 config :castmill, :file_storage, :local
+
+# widgets json files
+config :castmill, CastmillWeb.Widgets.WidgetsLoader,
+  json_dir: "../widged/dist/widgets"

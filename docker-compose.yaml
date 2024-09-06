@@ -1,0 +1,50 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: castmill_dev
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - '5432:5432'
+
+  dashboard:
+    build:
+      context: ./
+      dockerfile: Dockerfile-dashboard
+    ports:
+      - '3000:3000'
+    depends_on:
+      - app
+    restart: on-failure
+  app:
+    build:
+      context: .
+    ports:
+      - '4000:4000'
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: 'ecto://postgres:postgres@db:5432/castmill_dev'
+      SECRET_KEY_BASE: LBw3IQCIKcMMyoBmjx6rFxaSksOUd7Xoncte1zGqwazIK4DfrbIHwvkFNroc0sWa
+      CASTMILL_HOST: ${CASTMILL_HOST:-localhost}
+      CASTMILL_PORT: ${CASTMILL_PORT:-4000}
+      CASTMILL_DASHBOARD_URI: ${CASTMILL_DASHBOARD_URI:-}
+      CASTMILL_DASHBOARD_USER_SALT: ${CASTMILL_DASHBOARD_USER_SALT:-}
+      CASTMILL_ROOT_USER_EMAIL: ${CASTMILL_ROOT_USER_EMAIL:-root@example.com}
+      CASTMILL_ROOT_USER_PASSWORD: ${CASTMILL_ROOT_USER_PASSWORD:-root}
+      S3_MEDIAS_BUCKET: ${S3_MEDIAS_BUCKET}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_REGION: ${AWS_REGION}
+      MAILGUN_API_KEY: ${MAILGUN_API_KEY}
+      MAILGUN_DOMAIN: ${MAILGUN_DOMAIN}
+      MAILER_FROM: ${MAILER_FROM}
+    restart: on-failure
+
+volumes:
+  postgres_data:
+  assets:
+  deps:

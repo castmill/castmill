@@ -31,7 +31,7 @@
     "@types/phoenix": "^1.6.4",
     "jsdom": "^24.0.0",
     "prettier": "^3.2.5",
-    "rimraf": "^5.0.5",
+    "rimraf": "^6.0.1",
     "typescript": "^5.4.5",
     "vite": "^5.2.10",
     "vite-plugin-solid": "^2.10.2",
@@ -41,6 +41,6 @@
     "@castmill/cache": "*",
     "@castmill/player": "*",
     "phoenix": "^1.7.2",
-    "solid-js": "^1.8.12"
+    "solid-js": "^1.8.22"
   }
 }
