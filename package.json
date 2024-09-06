@@ -3,10 +3,21 @@
   "description": "Castmill Digital Signage Platform",
   "private": true,
   "scripts": {
-    "build-all": "yarn workspaces run build"
+    "build:ui-common": "cd packages/ui-common && yarn build",
+    "build:cache": "cd packages/cache && yarn build",
+    "build:player": "cd packages/player && yarn build",
+    "build:device": "cd packages/device && yarn build",
+    "build:dashboard": "cd packages/dashboard && yarn build",
+    "build:widged": "cd packages/widged && yarn build",
+    "build:all": "yarn run build:ui-common && yarn run build:cache && yarn run build:player && yarn run build:device && yarn run build:dashboard && yarn run build:widged"
   },
   "workspaces": [
-    "packages/*",
+    "packages/cache",
+    "packages/dashboard",
+    "packages/device",
+    "packages/player",
+    "packages/ui-common",
+    "packages/widged",
     "packages/platforms/*",
     "packages/castmill/assets"
   ]

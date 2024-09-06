@@ -18,10 +18,7 @@ config :castmill, CastmillWeb.Endpoint,
     layout: false
   ],
   pubsub_server: Castmill.PubSub,
-  live_view: [signing_salt: "Km2MOAJ1"],
-  watchers: [
-    node: ["build.js", "--watch", cd: Path.expand("../assets", __DIR__)]
-  ]
+  live_view: [signing_salt: "Km2MOAJ1"]
 
 # Configures the mailer
 #

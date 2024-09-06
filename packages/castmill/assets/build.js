@@ -115,17 +115,20 @@ async function buildAddons() {
       path.dirname(path.resolve(entry, '..'))
     );
 
-    const context = await esbuild.context({
+    const opts = {
       ...baseOpts,
       entryPoints: [entry],
       outfile: path.join(
         __dirname,
         `../priv/static/assets/addons/${componentDirName}.js`
       ),
-    });
+    };
 
     if (watch) {
+      const context = await esbuild.context(opts);
       await context.watch();
+    } else {
+      esbuild.build(opts).catch(() => process.exit(1));
     }
   });
 }

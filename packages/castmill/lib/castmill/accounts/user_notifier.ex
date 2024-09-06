@@ -8,7 +8,7 @@ defmodule Castmill.Accounts.UserNotifier do
     email =
       new()
       |> to(recipient)
-      |> from({"Hello", "contact@example.com"})
+      |> from({"Castmill", System.get_env("MAILER_FROM")})
       |> subject(subject)
       |> text_body(body)
 

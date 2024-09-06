@@ -1,6 +1,6 @@
 
 // Importing the intro template
-import { intro } from './dist/widgets';
+import { intro } from './dist/widgets.js';
 
 // Serializing the intro template
 const introSerialized = JSON.stringify(intro, null, 2);

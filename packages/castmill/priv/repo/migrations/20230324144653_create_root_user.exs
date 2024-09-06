@@ -2,17 +2,25 @@ defmodule Castmill.Repo.Migrations.AddRootUser do
   use Ecto.Migration
 
   def change do
+    email =
+      System.get_env("CASTMILL_ROOT_USER_EMAIL") ||
+        raise "environment variable ROOT_USER_EMAIL is missing."
+
+    password =
+      System.get_env("CASTMILL_ROOT_USER_PASSWORD") ||
+        raise "environment variable ROOT_USER_PASSWORD is missing."
+
     user =
       %Castmill.Accounts.User{
         name: "root",
-        email: "info@castmill.com",
+        email: email,
         network_id: nil
       }
       |> Castmill.Accounts.User.changeset(%{})
       |> Castmill.Repo.insert!()
 
     # The access token is constructed from the user's name and a password
-    token = user.email <> ":1234567890"
+    token = user.email <> ":" <> password
 
     %Castmill.Accounts.AccessToken{}
     |> Castmill.Accounts.AccessToken.changeset(%{

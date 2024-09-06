@@ -2,7 +2,7 @@ defmodule CastmillWeb.Widgets.WidgetsLoader do
   alias Castmill.Repo
   alias Castmill.Widgets.Widget
 
-  @json_dir "../widged/dist/widgets"
+  @json_dir Application.compile_env(:castmill, CastmillWeb.Widgets.WidgetsLoader)[:json_dir]
 
   def load_and_insert_json_data do
     @json_dir
