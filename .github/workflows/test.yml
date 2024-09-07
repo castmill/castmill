@@ -15,6 +15,9 @@ jobs:
         image: postgres
         env:
           POSTGRES_PASSWORD: postgres
+          CASTMILL_ROOT_USER_EMAIL: root@mydomain.com
+          CASTMILL_ROOT_USER_PASSWORD: root
+
         # Set health checks to wait until postgres has started
         options: >-
           --health-cmd pg_isready
