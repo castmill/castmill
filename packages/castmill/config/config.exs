@@ -98,3 +98,6 @@ config :castmill, Oban,
   engine: Oban.Engines.Basic,
   queues: [image_transcoder: 10],
   repo: Castmill.Repo
+
+# Configure gettext
+config :castmill, CastmillWeb.Gettext, default_locale: "en"
