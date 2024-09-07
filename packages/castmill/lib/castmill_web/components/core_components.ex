@@ -17,7 +17,7 @@ defmodule CastmillWeb.CoreComponents do
   use Phoenix.Component
 
   alias Phoenix.LiveView.JS
-  import CastmillWeb.Gettext
+  use Gettext, backend: CastmillWeb.Gettext
 
   @doc """
   Renders a modal.
