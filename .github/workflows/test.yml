@@ -15,8 +15,6 @@ jobs:
         image: postgres
         env:
           POSTGRES_PASSWORD: postgres
-          CASTMILL_ROOT_USER_EMAIL: root@mydomain.com
-          CASTMILL_ROOT_USER_PASSWORD: root
 
         # Set health checks to wait until postgres has started
         options: >-
@@ -53,6 +51,10 @@ jobs:
           POSTGRES_HOST: localhost
           # The default PostgreSQL port
           POSTGRES_PORT: 5432
+
+          # Default root user credentials
+          CASTMILL_ROOT_USER_EMAIL: root@mydomain.com
+          CASTMILL_ROOT_USER_PASSWORD: root
 
   test_ui_common:
     runs-on: ubuntu-latest
