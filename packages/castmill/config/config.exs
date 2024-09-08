@@ -7,6 +7,8 @@
 # General application configuration
 import Config
 
+config :castmill, :env, Mix.env()
+
 config :castmill,
   ecto_repos: [Castmill.Repo]
 
