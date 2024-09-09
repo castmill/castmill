@@ -1,3 +1,7 @@
+/**
+ * THis is a simple server that serves the built ipk file. It is used to deploy the
+ * app to the LG TV while in development mode.
+ */
 var express = require('express');
 var onFinished = require('on-finished');
 var app = express();
