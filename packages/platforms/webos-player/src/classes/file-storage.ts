@@ -131,7 +131,7 @@ export class FileStorage implements StorageIntegration {
   }
 
   async close(): Promise<void> {
-    //TODO implement?
+    // Not avilable on LG
     console.log('Closing storage resources, if any');
   }
 }

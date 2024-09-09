@@ -60,7 +60,6 @@ export class WebosMachine implements Machine {
   async getLocation(): Promise<
     undefined | { latitude: number; longitude: number }
   > {
-    // TODO: Check if this works on LG
     console.log('getLocation');
     try {
       const location = await new Promise<GeolocationPosition>(

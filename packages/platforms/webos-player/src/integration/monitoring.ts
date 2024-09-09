@@ -24,9 +24,6 @@ export function startMonitoring() {
   return signage.registerSystemMonitor({
     monitorConfiguration: {
       fan: true,
-      // lamp: true,
-      // screen: true,
-      // signal: true,
       temperature: true,
     },
     eventHandler: eventHandler,
