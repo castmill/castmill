@@ -92,10 +92,8 @@ export async function storeFile(
   url: string,
   data = null
 ): Promise<StoreFileReturnValue> {
-  // Must be imported dynamically since the main process is a CommonJS module but @castmill/cache is an ES module
-  const { StoreResult } = await import('@castmill/cache');
-
   const fullPath = join(BASE_DIR, storagePath);
+
   try {
     const filename = getFileName(url);
 
@@ -121,7 +119,7 @@ export async function storeFile(
     }
     const stats = await stat(filePath);
     return {
-      result: { code: StoreResult.Success },
+      result: { code: 'SUCCESS' },
       item: {
         url: filePath,
         size: stats.size,
@@ -131,7 +129,7 @@ export async function storeFile(
     console.error('Failed to store file:', error);
     const errMsg = error?.message ?? 'Unknown Error';
     return {
-      result: { code: StoreResult.Failure, errMsg },
+      result: { code: 'FAILURE', errMsg },
     };
   }
 }

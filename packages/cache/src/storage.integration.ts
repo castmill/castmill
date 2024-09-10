@@ -23,20 +23,16 @@ export interface StoreOptions {
   data?: any;
 }
 
-export enum StoreResult {
-  Success,
-  Failure,
-}
+export type StoreResult = 'SUCCESS' | 'FAILURE';
 
-export enum StoreError {
-  None,
-  Unknown,
-  NotFound,
-  NotAllowed,
-  NotSupported,
-  TooLarge,
-  NotEnoughSpace,
-}
+export type StoreError =
+  | 'NONE'
+  | 'UNKNOWN'
+  | 'NOT_FOUND'
+  | 'NOT_ALLOWED'
+  | 'NOT_SUPPORTED'
+  | 'TOO_LARGE'
+  | 'NOT_ENOUGH_SPACE';
 
 export interface StoreFileReturnValue {
   result: { code: StoreResult; error?: StoreError; errMsg?: string };

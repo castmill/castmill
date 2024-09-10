@@ -1,7 +1,6 @@
 import {
   StorageIntegration,
-  StoreResult,
-  StoreError,
+  StoreFileReturnValue,
   StoreOptions,
 } from '../../storage.integration';
 
@@ -95,7 +94,10 @@ export class StorageBrowser implements StorageIntegration {
    *
    * @param url
    */
-  async storeFile(url: string, opts?: StoreOptions) {
+  async storeFile(
+    url: string,
+    opts?: StoreOptions
+  ): Promise<StoreFileReturnValue> {
     if (!this.cache) {
       throw new Error(UninitializedCacheError);
     }
@@ -116,14 +118,14 @@ export class StorageBrowser implements StorageIntegration {
             size: parseInt(response.headers.get('Content-Length') || '0'),
           },
           result: {
-            code: StoreResult.Success,
+            code: 'SUCCESS',
           },
         };
       } else {
         return {
           result: {
-            code: StoreResult.Failure,
-            error: StoreError.Unknown,
+            code: 'FAILURE',
+            error: 'UNKNOWN',
             errMsg: response?.statusText,
           },
         };
@@ -132,8 +134,8 @@ export class StorageBrowser implements StorageIntegration {
       console.error(err);
       return {
         result: {
-          code: StoreResult.Failure,
-          error: StoreError.NotFound,
+          code: 'FAILURE',
+          error: 'NOT_FOUND',
           errMsg: (err as Error).message,
         },
       };
