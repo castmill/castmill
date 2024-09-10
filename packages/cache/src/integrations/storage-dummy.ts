@@ -4,7 +4,7 @@
  */
 import {
   StorageIntegration,
-  StoreResult,
+  StoreFileReturnValue,
   StoreOptions,
 } from '../storage.integration';
 
@@ -51,15 +51,18 @@ export class StorageDummy implements StorageIntegration {
    *
    * @param url
    */
-  async storeFile(url: string, opts?: StoreOptions) {
+  async storeFile(
+    url: string,
+    opts?: StoreOptions
+  ): Promise<StoreFileReturnValue> {
     const item = {
       url,
       size: 0,
     };
-    const file = {
+    const file: StoreFileReturnValue = {
       item,
       result: {
-        code: StoreResult.Success,
+        code: 'SUCCESS',
       },
     };
 

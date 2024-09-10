@@ -17,8 +17,6 @@
 import { Dexie } from 'dexie';
 import {
   StorageIntegration,
-  StoreResult,
-  StoreError,
   StorageItem,
   StoreOptions,
 } from './storage.integration';
@@ -228,7 +226,7 @@ export class Cache extends Dexie {
         opts
       );
       switch (result.code) {
-        case StoreResult.Success:
+        case 'SUCCESS':
           if (storageItem) {
             const { url: cachedUrl, size } = storageItem;
             if (!cachedUrl) {
@@ -251,9 +249,9 @@ export class Cache extends Dexie {
           throw new Error(
             'Cache: Storage is missing item despite signaling success'
           );
-        case StoreResult.Failure:
+        case 'FAILURE':
           switch (result.error) {
-            case StoreError.NotEnoughSpace:
+            case 'NOT_ENOUGH_SPACE':
               // TODO: we probably need a counter here to avoid infinite loops
               if (result.errMsg) {
                 const requiredSpace = parseInt(result.errMsg);
@@ -262,7 +260,7 @@ export class Cache extends Dexie {
               } else {
                 throw new Error('Not enough space, and no error message');
               }
-            case StoreError.NotFound:
+            case 'NOT_FOUND':
               throw new Error('File not found');
             default:
               throw new Error(

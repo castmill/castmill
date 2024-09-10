@@ -15,14 +15,14 @@ export interface DeviceInfo {
  * that the timer should be active every day of the week.
  */
 export type WeekDay =
-  | 'mon'
-  | 'tue'
-  | 'wed'
-  | 'thu'
-  | 'fri'
-  | 'sat'
-  | 'sun'
-  | 'all';
+  | 'MON'
+  | 'TUE'
+  | 'WED'
+  | 'THU'
+  | 'FRI'
+  | 'SAT'
+  | 'SUN'
+  | 'ALL';
 
 /**
  * Represents a timer entry. The timer entry is used to turn the device on or off
