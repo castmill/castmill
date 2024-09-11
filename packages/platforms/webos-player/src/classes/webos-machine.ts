@@ -5,7 +5,7 @@ import { version } from '../../package.json';
 
 // The update config is used to update the application on the device. We set this
 // to make sure the application updates from the correct source.
-var UPDATE_CONFIG = {
+const UPDATE_CONFIG = {
   serverIp: '0.0.0.0',
   serverPort: 0,
   secureConnection: true,
@@ -15,12 +15,10 @@ var UPDATE_CONFIG = {
   fqdnAddr: 'https://update.castmill.io/webos/player-new.ipk',
 };
 
-var CREDENTIALS_FILE_PATH = 'credentials.txt';
+const CREDENTIALS_FILE_PATH = 'credentials.txt';
 
 export class WebosMachine implements Machine {
   async getMachineGUID(): Promise<string> {
-    console.log('getMachineGUID');
-
     const { wiredInfo, wifiInfo } = await deviceInfo.getNetworkMacInfo();
     const macAddress = wiredInfo?.macAddress || wifiInfo?.macAddress;
     if (!macAddress) {
@@ -33,7 +31,6 @@ export class WebosMachine implements Machine {
   }
 
   async storeCredentials(credentials: string): Promise<void> {
-    console.log('storeCredentials', credentials);
     await storage.writeFile({
       path: CREDENTIALS_FILE_PATH,
       data: credentials,
@@ -42,7 +39,6 @@ export class WebosMachine implements Machine {
   }
 
   async getCredentials(): Promise<string> {
-    console.log('getCredentials');
     const credentials = await storage.readFile({
       path: CREDENTIALS_FILE_PATH,
     });
@@ -51,7 +47,6 @@ export class WebosMachine implements Machine {
   }
 
   async removeCredentials(): Promise<void> {
-    console.log('removeCredentials');
     return storage.removeFile({
       file: CREDENTIALS_FILE_PATH,
     });
@@ -60,7 +55,6 @@ export class WebosMachine implements Machine {
   async getLocation(): Promise<
     undefined | { latitude: number; longitude: number }
   > {
-    console.log('getLocation');
     try {
       const location = await new Promise<GeolocationPosition>(
         (resolve, reject) => {
@@ -78,13 +72,10 @@ export class WebosMachine implements Machine {
   }
 
   async getTimezone(): Promise<string> {
-    console.log('getTimezone');
     return Intl.DateTimeFormat().resolvedOptions().timeZone;
   }
 
   async getDeviceInfo(): Promise<DeviceInfo> {
-    console.log('getDeviceInfo');
-
     const platformInfo = await deviceInfo.getPlatformInfo();
     // get chromium version from user agent
     const chromiumVersion =
@@ -104,7 +95,6 @@ export class WebosMachine implements Machine {
    * Restart the device application.
    */
   async restart(): Promise<void> {
-    console.log('restart');
     return configuration.restartApplication();
   }
 
@@ -120,7 +110,6 @@ export class WebosMachine implements Machine {
    *
    */
   async reboot(): Promise<void> {
-    console.log('reboot');
     return power.executePowerCommand({
       powerCommand: 'reboot',
     });
@@ -131,7 +120,6 @@ export class WebosMachine implements Machine {
    * i.e. after this method is called the device should be completely powered off.
    */
   async shutdown(): Promise<void> {
-    console.log('shutdown');
     return power.executePowerCommand({
       powerCommand: 'powerOff',
     });
@@ -141,8 +129,6 @@ export class WebosMachine implements Machine {
    * Updates the device's application.
    */
   async update(): Promise<void> {
-    console.log('update');
-
     // First set the server properties to the correct values
     await configuration.setServerProperty(UPDATE_CONFIG);
 
@@ -161,15 +147,20 @@ export class WebosMachine implements Machine {
    * Updates the device's firmware.
    */
   async updateFirmware(): Promise<void> {
-    console.log('updateFirmware');
-
     const url = await this.getFirmwareDownloadUrl();
 
+    // The firmware is downloaded to the device's temporary storage. It will be
+    // deleted automatically after the device reboots.
     await storage.downloadFirmware({
       uri: url,
     });
 
+    // Trigger the firmware upgrade.
     return storage.upgradeFirmware();
+
+    // Reboot the device to apply the update. The downloaded firmware will be
+    // deleted automatically after the reboot.
+    return this.reboot();
   }
 
   private async getFirmwareDownloadUrl(): Promise<string> {
@@ -178,7 +169,6 @@ export class WebosMachine implements Machine {
     // TODO: Model name is probably too specific, we should use the model family instead
     // e.g. 'XS2E' instead of '55XS2E-BH'
     const url = `https://update.castmill.io/webos/firmware/${manufacturer}-${modelName}.epk`;
-    console.log('Firmware download URL:', url);
     return url;
   }
 }

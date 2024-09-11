@@ -23,15 +23,13 @@ export class FileStorage implements StorageIntegration {
   }
 
   async init(): Promise<void> {
-    console.log('Initializing file storage');
     return storage.mkdir({ path: CACHE_PATH });
   }
 
   async info(): Promise<StorageInfo> {
-    console.log('Getting storage info');
     try {
       const { files } = await storage.listFiles({ path: CACHE_PATH });
-      let used = files.reduce((acc, file) => acc + (file.size ?? 0), 0);
+      const used = files.reduce((acc, file) => acc + (file.size ?? 0), 0);
       const total = (await storage.getStorageInfo()).free + used * 0.5;
       return { used, total };
     } catch (error) {
@@ -105,7 +103,7 @@ export class FileStorage implements StorageIntegration {
       await storage.statFile({ path: filePath }); // Check if file exists
       return filePath;
     } catch (error) {
-      console.log('Failed to retrieve file:', error);
+      console.error('Failed to retrieve file:', error);
       return undefined; // File does not exist
     }
   }
@@ -131,8 +129,7 @@ export class FileStorage implements StorageIntegration {
   }
 
   async close(): Promise<void> {
-    // Not avilable on LG
-    console.log('Closing storage resources, if any');
+    // NOOP on WebOS
   }
 }
 

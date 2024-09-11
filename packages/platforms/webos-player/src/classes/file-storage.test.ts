@@ -100,7 +100,6 @@ describe('FileStorage', () => {
       const url = 'http://example.com/image.png';
       const result = await storage.storeFile(url);
 
-      console.log('aa', result);
       expect(result.result.code).to.equal(StoreResult.Success);
       expect(api.downloadFile).toHaveBeenCalledOnce();
       expect(api.moveFile).toHaveBeenCalledOnce();
