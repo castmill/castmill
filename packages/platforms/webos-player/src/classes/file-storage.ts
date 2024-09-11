@@ -3,7 +3,6 @@ import {
   StorageInfo,
   StorageItem,
   StoreFileReturnValue,
-  StoreResult,
 } from '@castmill/cache';
 import { storage } from '../native';
 import { simpleHash } from './utils';
@@ -79,7 +78,7 @@ export class FileStorage implements StorageIntegration {
       }
       const stats = await storage.statFile({ path: filePath });
       return {
-        result: { code: StoreResult.Success },
+        result: { code: 'SUCCESS' },
         item: {
           url: filePath,
           size: stats.size,
@@ -89,7 +88,7 @@ export class FileStorage implements StorageIntegration {
       console.error('Failed to store file:', error);
       const errMsg = error?.message ?? 'Unknown Error';
       return {
-        result: { code: StoreResult.Failure, errMsg },
+        result: { code: 'FAILURE', errMsg },
       };
     }
   }
