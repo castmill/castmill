@@ -1,4 +1,3 @@
-import { StoreResult } from '@castmill/cache';
 import {
   vi,
   describe,
@@ -42,7 +41,7 @@ describe('FileStorage', () => {
     const url = 'http://example.com/image.png';
 
     const result = await storage.storeFile(url, data);
-    expect(result.result.code).toBe(StoreResult.Success);
+    expect(result.result.code).toBe('SUCCESS');
     expect(result.item.size).toBe(data.length);
   });
 
@@ -100,7 +99,7 @@ describe('FileStorage', () => {
       const url = 'http://example.com/image.png';
       const result = await storage.storeFile(url);
 
-      expect(result.result.code).to.equal(StoreResult.Success);
+      expect(result.result.code).to.equal('SUCCESS');
       expect(api.downloadFile).toHaveBeenCalledOnce();
       expect(api.moveFile).toHaveBeenCalledOnce();
     });
@@ -112,7 +111,7 @@ describe('FileStorage', () => {
       const url = 'http://example.com/image.png';
       const result = await storage.storeFile(url);
 
-      expect(result.result.code).to.equal(StoreResult.Failure);
+      expect(result.result.code).to.equal('FAILURE');
     });
   });
 });
