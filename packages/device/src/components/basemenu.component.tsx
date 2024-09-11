@@ -214,7 +214,9 @@ export const BaseMenu: Component<BaseMenuProps> = ({
 
       switch (e.keyCode) {
         case Key.Up:
-          setSelected((s) => (s - 1 + currentItems.length) % currentItems.length);
+          setSelected(
+            (s) => (s - 1 + currentItems.length) % currentItems.length
+          );
           break;
         case Key.Down:
           setSelected((s) => (s + 1) % currentItems.length);
