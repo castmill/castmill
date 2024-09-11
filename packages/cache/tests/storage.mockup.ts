@@ -1,7 +1,6 @@
 import {
   StorageIntegration,
-  StoreResult,
-  StoreError,
+  StoreFileReturnValue,
 } from '../src/storage.integration';
 
 function byteLength(str: string) {
@@ -42,14 +41,14 @@ export class StorageMockup implements StorageIntegration {
    *
    * @param url
    */
-  async storeFile(url: string) {
+  async storeFile(url: string): Promise<StoreFileReturnValue> {
     const data = this.filesFixture[url];
 
     if (!data) {
       return {
         result: {
-          code: StoreResult.Failure,
-          error: StoreError.NotFound,
+          code: 'FAILURE',
+          error: 'NOT_FOUND',
           errMsg: 'File not found',
         },
       };
@@ -69,7 +68,7 @@ export class StorageMockup implements StorageIntegration {
         size,
       },
       result: {
-        code: StoreResult.Success,
+        code: 'SUCCESS',
       },
     };
   }
