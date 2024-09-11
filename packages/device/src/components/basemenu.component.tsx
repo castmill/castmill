@@ -211,15 +211,21 @@ export const BaseMenu: Component<BaseMenuProps> = ({
       showMenu();
 
       const currentItems = items();
-      if (e.keyCode === Key.Up) {
-        setSelected((s) => (s - 1 + currentItems.length) % currentItems.length);
-      } else if (e.keyCode === Key.Down) {
-        setSelected((s) => (s + 1) % currentItems.length);
-      } else if (e.keyCode === Key.Enter) {
-        const item = currentItems[selected()];
-        item.action();
-      } else if (e.keyCode === Key.Escape) {
-        hideMenu();
+
+      switch (e.keyCode) {
+        case Key.Up:
+          setSelected((s) => (s - 1 + currentItems.length) % currentItems.length);
+          break;
+        case Key.Down:
+          setSelected((s) => (s + 1) % currentItems.length);
+          break;
+        case Key.Enter:
+          const item = currentItems[selected()];
+          item.action();
+          break;
+        case Key.Escape:
+          hideMenu();
+          break;
       }
     };
 
