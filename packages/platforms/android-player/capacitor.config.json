@@ -1,0 +1,10 @@
+{
+  "appId": "com.castmill.android.app",
+  "appName": "Castmill Player",
+  "webDir": "dist",
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 0
+    }
+  }
+}
