@@ -1,0 +1,23 @@
+{
+  "name": "@castmill/android-player",
+  "version": "1.0.0",
+  "description": "Castmill Player Android App",
+  "main": "index.js",
+  "scripts": {
+    "start": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@capacitor/android": "^6.1.2",
+    "@capacitor/camera": "latest",
+    "@capacitor/core": "latest",
+    "@capacitor/splash-screen": "latest"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "latest",
+    "vite": "^4.0.0"
+  },
+  "author": "Castmill AB",
+  "license": "AGPL-3.0-or-later"
+}
