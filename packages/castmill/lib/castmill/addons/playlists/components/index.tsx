@@ -1,9 +1,7 @@
-import { Socket } from 'phoenix';
-
 import { BsCheckLg } from 'solid-icons/bs';
 import { BsEye } from 'solid-icons/bs';
 import { AiOutlineDelete } from 'solid-icons/ai';
-import { Component, createSignal, onCleanup, Show } from 'solid-js';
+import { Component, createSignal, Show } from 'solid-js';
 
 import {
   Button,
@@ -20,9 +18,10 @@ import { PlaylistsService } from '../services/playlists.service';
 
 import './playlists.scss';
 import { PlaylistView } from './playlist-view';
+import { AddonStore } from '../../common/interfaces/addon-store';
 
 const PlaylistsPage: Component<{
-  store: { organizations: { selectedId: string }; socket: Socket };
+  store: AddonStore;
   params: any; //typeof useSearchParams;
 }> = (props) => {
   const [currentPlaylist, setCurrentPlaylist] = createSignal<JsonPlaylist>();
@@ -59,6 +58,7 @@ const PlaylistsPage: Component<{
     filters?: Record<string, string | boolean>;
   }) => {
     const result = await PlaylistsService.fetchPlaylists(
+      props.store.env.baseUrl,
       props.store.organizations.selectedId,
       {
         page: page.num,
@@ -119,6 +119,7 @@ const PlaylistsPage: Component<{
           contentClass="playlist-modal"
         >
           <PlaylistView
+            baseUrl={props.store.env.baseUrl}
             organizationId={props.store.organizations.selectedId}
             playlistId={currentPlaylist()?.id!}
             onChange={(playlist) => {

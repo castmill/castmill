@@ -65,7 +65,7 @@ defmodule Castmill.Accounts do
     Returns the user with the access that has the given token.
   """
   def get_user_by_access_token(token, source_ip) do
-    if token == nil do
+    if is_nil(token) do
       {:error, "No token provided"}
     else
       secret_hash = :crypto.hash(:sha256, token) |> Base.encode16()

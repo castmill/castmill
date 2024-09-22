@@ -61,10 +61,6 @@ config :logger, :console,
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
-# Import environment specific config. This must remain at the bottom
-# of this file so it overrides the configuration defined above.
-import_config "#{config_env()}.exs"
-
 # Ensure we use the Accounts impl.
 config :castmill, accounts: Castmill.Accounts
 
@@ -84,14 +80,6 @@ config :castmill, :upload_settings,
 
 config :castmill, :file_storage, :local
 
-# Choose S3 or Local as file upload destination
-# config :castmill, :file_storage, :s3
-
-config :ex_aws,
-  access_key_id: System.get_env("AWS_ACCESS_KEY_ID"),
-  secret_access_key: System.get_env("AWS_SECRET_ACCESS_KEY"),
-  region: System.get_env("AWS_REGION") || "eu-central-1"
-
 config :ex_aws, :hackney_opts, recv_timeout: 30_000
 
 # Configure Oban
@@ -103,3 +91,7 @@ config :castmill, Oban,
 
 # Configure gettext
 config :castmill, CastmillWeb.Gettext, default_locale: "en"
+
+# Import environment specific config. This must remain at the bottom
+# of this file so it overrides the configuration defined above.
+import_config "#{config_env()}.exs"

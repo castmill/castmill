@@ -8,7 +8,8 @@ defmodule CastmillWeb.SignUpControllerTest do
   import Castmill.AccountsFixtures
   import Swoosh.TestAssertions
 
-  @tag :signups
+  @moduletag :signups
+
   setup %{conn: conn} do
     Mox.stub(Castmill.AccountsMock, :generate_user_session_token, fn _user_id ->
       "mock_token"
@@ -19,8 +20,10 @@ defmodule CastmillWeb.SignUpControllerTest do
 
   describe "create/2" do
     test "successfully creates a signup and sends instructions", %{conn: conn} do
-      domain = conn.host
-      _network = network_fixture(%{domain: domain})
+      origin = "https://example.com"
+      # Setting the origin header
+      conn = put_req_header(conn, "origin", origin)
+      _network = network_fixture(%{domain: origin})
 
       email = "test@example.com"
 

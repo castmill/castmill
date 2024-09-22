@@ -9,9 +9,8 @@ import {
 } from 'solid-icons/ai';
 import { Button, IconButton, IconWrapper } from '@castmill/ui-common';
 
-const baseUrl = 'http://localhost:4000/dashboard';
-
 interface UploadComponentProps {
+  baseUrl: string;
   organizationId: string;
   onFileUpload?: (fileName: string, result: any) => void;
   onCancel?: () => void;
@@ -60,7 +59,7 @@ export const UploadComponent = (props: UploadComponentProps) => {
       const xhr = new XMLHttpRequest();
       xhr.open(
         'POST',
-        `${baseUrl}/organizations/${props.organizationId}/medias`,
+        `${props.baseUrl}/dashboard/organizations/${props.organizationId}/medias`,
         true
       );
       xhr.withCredentials = true;

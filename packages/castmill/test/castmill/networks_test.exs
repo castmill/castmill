@@ -3,7 +3,8 @@ defmodule Castmill.NetworksTest do
 
   alias Castmill.Networks
 
-  @tag :networks
+  @moduletag :networks
+
   describe "networks" do
     alias Castmill.Networks.Network
 

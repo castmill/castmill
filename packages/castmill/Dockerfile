@@ -7,13 +7,13 @@
 # This file is based on these images:
 #
 #   - https://hub.docker.com/r/hexpm/elixir/tags - for the build image
-#   - https://hub.docker.com/_/debian?tab=tags&page=1&name=bullseye-20230612-slim - for the release image
+#   - https://hub.docker.com/_/debian?tab=tags&page=1&name=bullseye-20240612-slim - for the release image
 #   - https://pkgs.org/ - resource for finding needed packages
-#   - Ex: hexpm/elixir:1.15.6-erlang-26.0.2-debian-bullseye-20230612-slim
+#   - Ex: hexpm/elixir:1.17.1-erlang-26.2.5-debian-bullseye-20240612-slim
 #
-ARG ELIXIR_VERSION=1.15.6
-ARG OTP_VERSION=26.0.1
-ARG DEBIAN_VERSION=bullseye-20230612-slim
+ARG ELIXIR_VERSION=1.17.1
+ARG OTP_VERSION=26.2.5
+ARG DEBIAN_VERSION=bullseye-20240612-slim
 
 ARG BUILDER_IMAGE="hexpm/elixir:${ELIXIR_VERSION}-erlang-${OTP_VERSION}-debian-${DEBIAN_VERSION}"
 ARG RUNNER_IMAGE="debian:${DEBIAN_VERSION}"
@@ -47,15 +47,12 @@ RUN mix deps.compile
 
 COPY priv priv
 
-COPY priv/static priv/static
-
 COPY lib lib
 
 COPY assets assets
 
 # compile assets
-# RUN mix assets.deploy
-RUN mix phx.digest
+RUN mix assets.deploy
 
 # Compile the release
 RUN mix compile

@@ -13,7 +13,7 @@ import { TbHelpCircle } from 'solid-icons/tb';
 import logo from '../../assets/castmill-logo-topbar.png';
 import DropdownMenu from '../dropdown-menu/dropdown-menu';
 
-const baseUrl = 'http://localhost:4000';
+import { baseUrl } from '../../env';
 
 const Topbar: Component = () => {
   const [triggerLogout, setTriggerLogout] = createSignal(false);

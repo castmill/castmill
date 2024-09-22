@@ -16,6 +16,7 @@ import { PlaylistPreview } from './playlist-preview';
 export const PlaylistView: Component<{
   playlistId: number;
   organizationId: string;
+  baseUrl: string;
   onChange?: (playlist: JsonPlaylist) => void;
 }> = (props) => {
   const [widgets, setWidgets] = createSignal<JsonWidget[]>([]);
@@ -25,13 +26,17 @@ export const PlaylistView: Component<{
 
   createEffect(async () => {
     const playlist: JsonPlaylist = await PlaylistsService.getPlaylist(
+      props.baseUrl,
       props.organizationId,
       props.playlistId
     );
     setPlaylist(playlist);
     setItems(playlist.items);
 
-    const result = await PlaylistsService.getWidgets(props.organizationId);
+    const result = await PlaylistsService.getWidgets(
+      props.baseUrl,
+      props.organizationId
+    );
     setWidgets(result);
 
     setLoading(false);
@@ -49,6 +54,7 @@ export const PlaylistView: Component<{
   ) => {
     try {
       await PlaylistsService.updateWidgetConfig(
+        props.baseUrl,
         props.organizationId,
         props.playlistId,
         item.id,
@@ -94,10 +100,11 @@ export const PlaylistView: Component<{
 
     try {
       const newItem = await PlaylistsService.insertWidgetIntoPlaylist(
+        props.baseUrl,
         props.organizationId,
         props.playlistId,
         {
-          widget_id: widget.id,
+          widget_id: widget.id!,
           offset: 0,
           duration,
           options: config.options!,
@@ -171,6 +178,7 @@ export const PlaylistView: Component<{
 
     try {
       await PlaylistsService.moveItemInPlaylist(
+        props.baseUrl,
         props.organizationId,
         props.playlistId,
         item.id,
@@ -187,6 +195,7 @@ export const PlaylistView: Component<{
   const onRemoveItem = async (itemToRemove: JsonPlaylistItem) => {
     try {
       const result = await PlaylistsService.removeItemFromPlaylist(
+        props.baseUrl,
         props.organizationId,
         props.playlistId,
         itemToRemove.id

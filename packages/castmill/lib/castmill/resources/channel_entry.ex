@@ -61,7 +61,7 @@ defmodule Castmill.Resources.ChannelEntry do
   defp validate_future_or_nil(changeset, field) do
     field_date = get_field(changeset, field)
 
-    if field_date == nil do
+    if is_nil(field_date) do
       changeset
     else
       iso_date = "#{Date.to_iso8601(field_date)}T00:00:00Z"

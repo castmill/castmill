@@ -122,10 +122,9 @@ defmodule CastmillWeb.Router do
 
   # Allows starting a signup process for Passkeys
   pipeline :dashboard do
+    plug(:put_secure_browser_headers)
     plug(:fetch_session)
     plug(:accepts, ["json"])
-    plug(CORSPlug, origin: CastmillWeb.Envs.get_dashboard_uri(), credentials: true)
-    plug(:put_secure_browser_headers)
   end
 
   scope "/signups", CastmillWeb do

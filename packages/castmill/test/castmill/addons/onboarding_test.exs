@@ -10,12 +10,12 @@ defmodule Castmill.Addons.OnboardingTest do
 
   import Castmill.OrganizationsFixtures
 
-  @tag :onboarding
+  @moduletag :onboarding
 
   describe "register_hooks/0" do
     # Skiping for now as I lack the knoledge to fix this error:
     # ** (DBConnection.OwnershipError) cannot find ownership process for #PID<0.442.0>.
-    @tag :skip
+    @describetag :skip
     test "registers user_signup hook correctly" do
       user = user_fixture()
 

@@ -13,10 +13,7 @@ import { loginUser, resetSession } from '../auth';
 import { useNavigate } from '@solidjs/router';
 import SignUpEmailSent from '../signup/signup-email-sent';
 
-const baseUrl = 'http://localhost:4000';
-const domain = 'localhost';
-
-console.log('ENV:', import.meta.env);
+import { baseUrl, domain } from '../../env';
 
 const encoder = new TextEncoder(); // Creates a new encoder
 

@@ -7,12 +7,14 @@ import './maintainance.scss';
 import { DeviceCommand } from '../types/device-command.type';
 
 // Modal component that will be used to display the device details and allow the user to edit the device
-export const Maintainance: Component<{ device: Device }> = (props) => {
+export const Maintainance: Component<{ baseUrl: string; device: Device }> = (
+  props
+) => {
   const [handlingRequest, setHandlingRequest] = createSignal(false);
 
   const handleRequest = async (command: DeviceCommand) => {
     try {
-      await DevicesService.sendCommand(props.device.id, command);
+      await DevicesService.sendCommand(props.baseUrl, props.device.id, command);
     } catch (error) {
       console.error(error);
       alert('An error occurred while processing your request');

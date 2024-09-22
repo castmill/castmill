@@ -1,6 +1,16 @@
 # Step 1: Building the frontend
 FROM node:20 AS builder
 
+# Set the environment variable
+ARG VITE_API_URL
+ENV VITE_API_URL=${VITE_API_URL:-'http://localhost:4000/dashboard'}
+
+ARG VITE_DOMAIN
+ENV VITE_DOMAIN=${VITE_DOMAIN:-'localhost'}
+
+ARG VITE_ORIGIN
+ENV VITE_ORIGIN=${VITE_ORIGIN:-'http://localhost:3000'}
+
 # Copy all
 COPY . /app
 

@@ -1,7 +1,5 @@
 import { Organization } from '../interfaces/organization';
-
-const baseUrl =
-  import.meta.env.VITE_API_URL || 'http://localhost:4000/dashboard';
+import { baseUrl } from '../env';
 
 export const OrganizationsService = {
   /**
@@ -10,10 +8,13 @@ export const OrganizationsService = {
    * @returns {Promise<Organization[]>} A promise that resolves to an array of Organizations.
    */
   async getAll(userId: string) {
-    const response = await fetch(`${baseUrl}/users/${userId}/organizations`, {
-      method: 'GET',
-      credentials: 'include',
-    });
+    const response = await fetch(
+      `${baseUrl}/dashboard/users/${userId}/organizations`,
+      {
+        method: 'GET',
+        credentials: 'include',
+      }
+    );
 
     if (response.status === 200) {
       return (await response.json())?.data as Organization[];

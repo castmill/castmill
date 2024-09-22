@@ -1,8 +1,8 @@
 defmodule CastmillWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :castmill
 
-  # Enable CORS
-  plug(CORSPlug, origin: CastmillWeb.Envs.get_dashboard_uri(), credentials: true)
+  # Enable CORS. Only allow requests from the domains listed in the network domains
+  plug(CORSPlug, origin: &CastmillWeb.Endpoint.getAllowedOrigins/0, credentials: true)
 
   # The session will be stored in the cookie and signed,
   # this means its contents can be read but not tampered with.
@@ -14,11 +14,15 @@ defmodule CastmillWeb.Endpoint do
     same_site: "Lax"
   ]
 
-  socket("/live", Phoenix.LiveView.Socket, websocket: [connect_info: [session: @session_options]])
+  socket("/live", Phoenix.LiveView.Socket,
+    websocket: [connect_info: [session: @session_options], check_origin: false]
+  )
 
   # Socket used for real time communication with devices
   socket("/socket", CastmillWeb.DeviceSocket,
-    websocket: [connect_info: [:peer_data, :trace_context_headers, :x_headers, :uri]]
+    websocket: [
+      connect_info: [:peer_data, :trace_context_headers, :x_headers, :uri, check_origin: false]
+    ]
   )
 
   # Socket used for real time communication with the user's browser (mostly observing devices)
@@ -31,7 +35,8 @@ defmodule CastmillWeb.Endpoint do
         :x_headers,
         :uri,
         session: @session_options,
-        check_origin: true
+        # TODO: We may want to restrict the origins to the network domains
+        check_origin: false
       ]
     ]
   )
@@ -74,4 +79,10 @@ defmodule CastmillWeb.Endpoint do
   plug(Plug.Head)
   plug(Plug.Session, @session_options)
   plug(CastmillWeb.Router)
+
+  # TODO: we must cache the allowed origins at least for a few minutes or this
+  # will be a huge performance bottleneck. The cache must use ETS to be shared.
+  def getAllowedOrigins() do
+    Castmill.Networks.list_network_domains()
+  end
 end

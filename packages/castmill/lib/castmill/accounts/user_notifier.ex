@@ -80,7 +80,7 @@ defmodule Castmill.Accounts.UserNotifier do
   @doc """
   Deliver Signup instructions.
   """
-  def deliver_signup_instructions(signup) do
+  def deliver_signup_instructions(signup, dashboard_uri) do
     deliver(signup.email, "Signup instructions", """
 
     ==============================
@@ -89,7 +89,7 @@ defmodule Castmill.Accounts.UserNotifier do
 
     You can signup by visiting the URL below:
 
-    #{signup_url(signup)}
+    #{signup_url(signup, dashboard_uri)}
 
     If you didn't request this, please ignore this.
 
@@ -97,8 +97,10 @@ defmodule Castmill.Accounts.UserNotifier do
     """)
   end
 
-  defp signup_url(%Castmill.Accounts.SignUp{id: id, email: email, challenge: challenge}) do
-    dashboard_uri = CastmillWeb.Envs.get_dashboard_uri()
+  defp signup_url(
+         %Castmill.Accounts.SignUp{id: id, email: email, challenge: challenge},
+         dashboard_uri
+       ) do
     "#{dashboard_uri}/signup/?signup_id=#{id}&email=#{email}&challenge=#{challenge}"
   end
 end

@@ -1,4 +1,4 @@
-import { Component, createSignal, createEffect } from 'solid-js';
+import { Component, createSignal } from 'solid-js';
 
 import {
   TableView,
@@ -10,7 +10,6 @@ import {
 import { Device } from '../interfaces/device.interface';
 
 import { DevicesService } from '../services/devices.service';
-import { DeviceEvent } from '../interfaces/device-event.interface';
 
 interface DeviceTableLogItem {
   timestamp: string;
@@ -24,7 +23,9 @@ const columns = [
   { key: 'msg', title: 'Message', sortable: false },
 ] as Column<DeviceTableLogItem>[];
 
-export const DeviceLogs: Component<{ device: Device }> = (props) => {
+export const DeviceLogs: Component<{ baseUrl: string; device: Device }> = (
+  props
+) => {
   const [selectedItems, setSelectedItems] = createSignal(new Set<string>());
 
   const itemsPerPage = 10; // Number of items to show per page
@@ -41,6 +42,7 @@ export const DeviceLogs: Component<{ device: Device }> = (props) => {
     filters?: Record<string, string | boolean>;
   }) => {
     return DevicesService.getDeviceEvents(
+      props.baseUrl,
       props.device.id,
       page.num,
       page.size,
