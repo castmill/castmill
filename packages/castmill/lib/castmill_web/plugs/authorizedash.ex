@@ -10,7 +10,7 @@ defmodule Castmill.Plug.AuthorizeDash do
     current_actor = conn.assigns[:current_actor] || conn.assigns[:current_user]
 
     # Check if the user is logged in
-    if current_actor == nil do
+    if is_nil(current_actor) do
       deny_access(conn)
     else
       # Check if user is root, and in that case, skip the authorization process

@@ -22,7 +22,7 @@ end
 
 if config_env() == :prod do
   database_url =
-    System.get_env("DATABASE_URL") ||
+    CastmillWeb.Secrets.get_database_url() ||
       raise """
       environment variable DATABASE_URL is missing.
       For example: ecto://USER:PASS@HOST/DATABASE
@@ -31,8 +31,15 @@ if config_env() == :prod do
   # Configures the mailer. For now we use Mailgun, maybe we can include others in the future
   config :castmill, Castmill.Mailer,
     adapter: Swoosh.Adapters.Mailgun,
-    api_key: System.get_env("MAILGUN_API_KEY"),
+    api_key: CastmillWeb.Secrets.get_mailgun_api_key(),
     domain: System.get_env("MAILGUN_DOMAIN")
+
+  # Choose S3 or Local as file upload destination
+  # config :castmill, :file_storage, :s3
+  config :ex_aws,
+    access_key_id: CastmillWeb.Secrets.get_aws_access_key_id(),
+    secret_access_key: CastmillWeb.Secrets.get_aws_secret_access_key(),
+    region: System.get_env("AWS_REGION") || "eu-central-1"
 
   maybe_ipv6 = if System.get_env("ECTO_IPV6") in ~w(true 1), do: [:inet6], else: []
 
@@ -48,7 +55,7 @@ if config_env() == :prod do
   # to check this value into version control, so we use an environment
   # variable instead.
   secret_key_base =
-    System.get_env("SECRET_KEY_BASE") ||
+    CastmillWeb.Secrets.get_secret_key_base() ||
       raise """
       environment variable SECRET_KEY_BASE is missing.
       You can generate one by calling: mix phx.gen.secret

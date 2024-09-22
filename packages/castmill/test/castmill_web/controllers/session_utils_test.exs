@@ -50,7 +50,7 @@ defmodule CastmillWeb.SessionUtilsTest do
       valid_input = %{
         "type" => "webauthn.get",
         "challenge" => "dummy_challenge",
-        "origin" => CastmillWeb.Envs.get_dashboard_uri()
+        "origin" => "http://localhost:3000"
       }
 
       assert CastmillWeb.SessionUtils.check_client_data_json(valid_input) ==

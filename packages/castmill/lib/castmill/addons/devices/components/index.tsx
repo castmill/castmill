@@ -1,4 +1,3 @@
-import { Socket } from 'phoenix';
 import { Component, createSignal, onCleanup, Show } from 'solid-js';
 
 import {
@@ -24,6 +23,7 @@ import './devices.module.scss';
 
 import RegisterDevice from './register-device';
 import { DevicesService } from '../services/devices.service';
+import { AddonStore } from '../../common/interfaces/addon-store';
 
 interface DeviceTableItem extends Device {
   location: string;
@@ -32,7 +32,7 @@ interface DeviceTableItem extends Device {
 }
 
 const DevicesPage: Component<{
-  store: { organizations: { selectedId: string }; socket: Socket };
+  store: AddonStore;
   params: any; //typeof useSearchParams;
 }> = (props) => {
   const [currentPage, setCurrentPage] = createSignal(1);
@@ -87,6 +87,7 @@ const DevicesPage: Component<{
     try {
       setLoading(true);
       const device = await DevicesService.registerDevice(
+        props.store.env.baseUrl,
         props.store.organizations.selectedId,
         registrationData.name,
         registrationData.pincode
@@ -175,6 +176,7 @@ const DevicesPage: Component<{
     filters?: Record<string, string | boolean>;
   }) => {
     const result = await DevicesService.fetchDevices(
+      props.store.env.baseUrl,
       props.store.organizations.selectedId,
       {
         page: page.num,
@@ -206,6 +208,7 @@ const DevicesPage: Component<{
     }
     try {
       await DevicesService.removeDevice(
+        props.store.env.baseUrl,
         props.store.organizations.selectedId,
         device.id
       );
@@ -222,6 +225,7 @@ const DevicesPage: Component<{
       await Promise.all(
         Array.from(selectedDevices()).map((deviceId) =>
           DevicesService.removeDevice(
+            props.store.env.baseUrl,
             props.store.organizations.selectedId,
             deviceId
           )
@@ -282,6 +286,7 @@ const DevicesPage: Component<{
           onClose={closeModal}
         >
           <DeviceView
+            baseUrl={props.store.env.baseUrl}
             organization_id={props.store.organizations.selectedId}
             device={currentDevice()!}
             onChange={(device) => {

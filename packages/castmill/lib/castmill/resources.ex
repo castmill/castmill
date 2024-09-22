@@ -33,7 +33,7 @@ defmodule Castmill.Resources do
     Access level is defined when adding a user to an organization via the organization_users table.
   """
   def canAccessResource(resource, user, action) do
-    if user == nil do
+    if is_nil(user) do
       {:error, "No user provided"}
     else
       # Determine if the user has access to the media that belongs to the organization
@@ -117,7 +117,7 @@ defmodule Castmill.Resources do
       |> where(id: ^id)
       |> Repo.one()
 
-    if playlist == nil do
+    if is_nil(playlist) do
       nil
     else
       items =
@@ -561,7 +561,7 @@ defmodule Castmill.Resources do
       |> Repo.one()
       |> Repo.preload(files_medias: [:file])
 
-    if media == nil do
+    if is_nil(media) do
       nil
     else
       transformed_files =
@@ -682,7 +682,7 @@ defmodule LinkedList do
 
     # Next, we need to find the head of the linked list.
     # The head is the node with prev_node = nil.
-    head = Enum.find(nodes, fn node -> node.prev_item_id == nil end)
+    head = Enum.find(nodes, fn node -> is_nil(node.prev_item_id) end)
 
     # We can now traverse the linked list by following the next_node links
     # starting from the head node. We will keep track of the sorted nodes in

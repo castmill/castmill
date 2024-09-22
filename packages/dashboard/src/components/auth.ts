@@ -2,7 +2,7 @@ import { Socket } from 'phoenix';
 import { createSignal } from 'solid-js';
 import { setStore } from '../store';
 
-const baseUrl = 'http://localhost:4000';
+import { baseUrl } from '../env';
 
 class User {
   id?: string;

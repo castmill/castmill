@@ -12,7 +12,7 @@ defmodule Castmill.NetworksFixtures do
       attrs
       |> Enum.into(%{
         copyright: "some copyright",
-        domain: "some domain",
+        domain: "http://localhost:3000",
         email: "some@email.com",
         logo: "some logo",
         name: "some name"

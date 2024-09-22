@@ -314,7 +314,6 @@ defmodule Castmill.PlaylistsTest do
                4
     end
 
-    @tag :only
     test "transforms playlist items correctly" do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})

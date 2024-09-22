@@ -14,12 +14,17 @@ services:
     build:
       context: ./
       dockerfile: Dockerfile-dashboard
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:4000}
+        VITE_ORIGIN: ${VITE_ORIGIN:-http://localhost:3000}
+        VITE_DOMAIN: ${VITE_DOMAIN:-localhost}
+
     ports:
       - '3000:3000'
     depends_on:
-      - app
+      - backend
     restart: on-failure
-  app:
+  backend:
     build:
       context: .
     ports:
@@ -27,24 +32,56 @@ services:
     depends_on:
       - db
     environment:
-      DATABASE_URL: 'ecto://postgres:postgres@db:5432/castmill_dev'
-      SECRET_KEY_BASE: LBw3IQCIKcMMyoBmjx6rFxaSksOUd7Xoncte1zGqwazIK4DfrbIHwvkFNroc0sWa
+      #DATABASE_URL: ${DATABASE_URL:-ecto://postgres:postgres@db:5432/castmill_dev}
       CASTMILL_HOST: ${CASTMILL_HOST:-localhost}
       CASTMILL_PORT: ${CASTMILL_PORT:-4000}
       CASTMILL_DASHBOARD_URI: ${CASTMILL_DASHBOARD_URI:-}
-      CASTMILL_DASHBOARD_USER_SALT: ${CASTMILL_DASHBOARD_USER_SALT:-}
-      CASTMILL_ROOT_USER_EMAIL: ${CASTMILL_ROOT_USER_EMAIL:-root@example.com}
-      CASTMILL_ROOT_USER_PASSWORD: ${CASTMILL_ROOT_USER_PASSWORD:-root}
+
       S3_MEDIAS_BUCKET: ${S3_MEDIAS_BUCKET}
-      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
-      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
       AWS_REGION: ${AWS_REGION}
-      MAILGUN_API_KEY: ${MAILGUN_API_KEY}
       MAILGUN_DOMAIN: ${MAILGUN_DOMAIN}
       MAILER_FROM: ${MAILER_FROM}
+
+      # Secrets
+      DATABASE_URL_FILENAME: /run/secrets/database_url
+      SECRET_KEY_BASE_FILENAME: /run/secrets/secret_key_base
+      CASTMILL_DASHBOARD_USER_SALT_FILENAME: /run/secrets/castmill_dashboard_user_salt
+      CASTMILL_ROOT_USER_EMAIL_FILENAME: /run/secrets/castmill_root_user_email
+      CASTMILL_ROOT_USER_PASSWORD_FILENAME: /run/secrets/castmill_root_user_password
+      AWS_ACCESS_KEY_ID_FILENAME: /run/secrets/aws_access_key_id
+      AWS_SECRET_ACCESS_KEY_FILENAME: /run/secrets/aws_secret_access_key
+      MAILGUN_API_KEY_FILENAME: /run/secrets/mailgun_api_key
+
     restart: on-failure
+    secrets:
+      - database_url
+      - secret_key_base
+      - castmill_dashboard_user_salt
+      - castmill_root_user_email
+      - castmill_root_user_password
+      - aws_access_key_id
+      - aws_secret_access_key
+      - mailgun_api_key
 
 volumes:
   postgres_data:
   assets:
   deps:
+
+secrets:
+  database_url:
+    environment: DATABASE_URL
+  secret_key_base:
+    environment: SECRET_KEY_BASE
+  castmill_dashboard_user_salt:
+    environment: CASTMILL_DASHBOARD_USER_SALT
+  castmill_root_user_email:
+    environment: CASTMILL_ROOT_USER_EMAIL
+  castmill_root_user_password:
+    environment: CASTMILL_ROOT_USER_PASSWORD
+  aws_access_key_id:
+    environment: AWS_ACCESS_KEY_ID
+  aws_secret_access_key:
+    environment: AWS_SECRET_ACCESS_KEY
+  mailgun_api_key:
+    environment: MAILGUN_API_KEY

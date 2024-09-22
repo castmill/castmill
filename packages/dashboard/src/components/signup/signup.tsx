@@ -5,7 +5,7 @@ import { arrayBufferToBase64 } from '../utils';
 
 import './signup.scss';
 
-const domain = 'localhost';
+import { baseUrl, origin, domain } from '../../env';
 
 /**
  * Sign Up Component.
@@ -25,9 +25,6 @@ interface SignUpQueryParams {
   email: string;
   challenge: string;
 }
-
-const baseUrl = 'http://localhost:4000';
-const origin = 'http://localhost:3000';
 
 const SignUp: Component = () => {
   const navigate = useNavigate();

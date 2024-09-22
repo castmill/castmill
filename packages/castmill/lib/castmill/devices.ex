@@ -18,7 +18,7 @@ defmodule Castmill.Devices do
 
   defimpl Access, for: Device do
     def canAccess(_device, user, _action) do
-      if user == nil do
+      if is_nil(user) do
         {:error, "No user provided"}
       else
         {:ok, true}
@@ -95,7 +95,7 @@ defmodule Castmill.Devices do
         page: page,
         page_size: page_size
       }) do
-    offset = if page_size == nil, do: 0, else: max((page - 1) * page_size, 0)
+    offset = if is_nil(page_size), do: 0, else: max((page - 1) * page_size, 0)
 
     Device.base_query()
     |> Organization.where_org_id(organization_id)
@@ -387,7 +387,7 @@ defmodule Castmill.Devices do
       device = Repo.get_by(Device, hardware_id: hardware_id)
 
       # TODO: also check if auto_recovery is enabled
-      if device !== nil and
+      if not is_nil(device) and
            device.last_ip == device_ip and
            device.updated_at >= DateTime.from_unix(:os.system_time(:seconds) - 60 * 60, :second) do
         # Update device token
@@ -529,7 +529,7 @@ defmodule Castmill.Devices do
         page_size: page_size,
         search: search
       }) do
-    offset = if page_size == nil, do: 0, else: max((page - 1) * page_size, 0)
+    offset = if is_nil(page_size), do: 0, else: max((page - 1) * page_size, 0)
 
     Castmill.Devices.DevicesEvents.base_query()
     # Pin the device_id variable using ^

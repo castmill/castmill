@@ -29,7 +29,9 @@ const columns = [
   { key: 'mimeType', title: 'Mime Type', sortable: false },
 ] as Column<DeviceTableCacheItem>[];
 
-export const DeviceCache: Component<{ device: Device }> = (props) => {
+export const DeviceCache: Component<{ baseUrl: string; device: Device }> = (
+  props
+) => {
   const [selectedItems, setSelectedItems] = createSignal(new Set<string>());
 
   const itemsPerPage = 10; // Number of items to show per page
@@ -48,7 +50,7 @@ export const DeviceCache: Component<{ device: Device }> = (props) => {
       filters?: Record<string, string | boolean>;
     }
   ) => {
-    return DevicesService.getDeviceCache(props.device.id, {
+    return DevicesService.getDeviceCache(props.baseUrl, props.device.id, {
       type,
       page: page.num,
       page_size: page.size,

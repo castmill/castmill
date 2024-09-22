@@ -14,7 +14,7 @@ defmodule CastmillWeb.UserSocket do
     with {:ok, user_id} <-
            Phoenix.Token.verify(
              CastmillWeb.Endpoint,
-             CastmillWeb.Envs.get_dashboard_user_token_salt(),
+             CastmillWeb.Secrets.get_dashboard_user_token_salt(),
              token,
              max_age: 86_400
            ),

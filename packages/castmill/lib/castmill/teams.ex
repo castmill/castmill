@@ -14,7 +14,7 @@ defmodule Castmill.Teams do
 
   defimpl Access, for: Team do
     def canAccess(_team, user, _action) do
-      if user == nil do
+      if is_nil(user) do
         {:error, "No user provided"}
       else
         # network_admin = Repo.get_by(Castmill.Networks.NetworksAdmins, network_id: network.id, user_id: user.id)

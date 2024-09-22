@@ -11,7 +11,7 @@ defmodule Castmill.Networks do
 
   defimpl Access, for: Network do
     def canAccess(network, user, _action) do
-      if user == nil do
+      if is_nil(user) do
         {:error, "No user provided"}
       else
         network_admin =
@@ -47,7 +47,7 @@ defmodule Castmill.Networks do
   end
 
   def list_networks(%{search: search, page: page, page_size: page_size}) do
-    offset = if page_size == nil, do: 0, else: max((page - 1) * page_size, 0)
+    offset = if is_nil(page_size), do: 0, else: max((page - 1) * page_size, 0)
 
     Network.base_query()
     |> QueryHelpers.where_name_like(search)
@@ -61,6 +61,18 @@ defmodule Castmill.Networks do
     Network.base_query()
     |> QueryHelpers.where_name_like(search)
     |> Repo.aggregate(:count, :id)
+  end
+
+  @doc """
+  Returns the list of all network domains
+  """
+  def list_network_domains() do
+    query =
+      from(network in Network,
+        select: network.domain
+      )
+
+    Repo.all(query)
   end
 
   @doc """

@@ -32,7 +32,7 @@ defmodule CastmillWeb.SessionController do
         token =
           Phoenix.Token.sign(
             CastmillWeb.Endpoint,
-            CastmillWeb.Envs.get_dashboard_user_token_salt(),
+            CastmillWeb.Secrets.get_dashboard_user_token_salt(),
             user.id
           )
 

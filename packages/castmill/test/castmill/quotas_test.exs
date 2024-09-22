@@ -5,7 +5,8 @@ defmodule Castmill.QuotasTest do
 
   alias Castmill.Quotas
 
-  @tag :quotas
+  @moduletag :quotas
+
   describe "quotas" do
     @describetag :quotas
 

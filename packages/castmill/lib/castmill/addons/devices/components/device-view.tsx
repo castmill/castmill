@@ -12,6 +12,7 @@ import { DeviceCache } from './device-cache';
 
 // Modal component that will be used to display the device details and allow the user to edit the device
 const DeviceView: Component<{
+  baseUrl: string;
   device: Device;
   organization_id: string;
   onChange?: (device: Device) => void;
@@ -24,6 +25,7 @@ const DeviceView: Component<{
     try {
       await Promise.all([
         await DevicesService.updateDevice(
+          props.baseUrl,
           props.organization_id,
           props.device.id,
           device
@@ -57,7 +59,7 @@ const DeviceView: Component<{
       title: 'Cache',
       content: () => (
         <div>
-          <DeviceCache device={props.device} />
+          <DeviceCache baseUrl={props.baseUrl} device={props.device} />
         </div>
       ),
     },
@@ -65,7 +67,7 @@ const DeviceView: Component<{
       title: 'Maintainance',
       content: () => (
         <div>
-          <Maintainance device={props.device} />
+          <Maintainance baseUrl={props.baseUrl} device={props.device} />
         </div>
       ),
     },
@@ -73,7 +75,7 @@ const DeviceView: Component<{
       title: 'Events',
       content: () => (
         <div>
-          <DeviceLogs device={props.device} />
+          <DeviceLogs baseUrl={props.baseUrl} device={props.device} />
         </div>
       ),
     },

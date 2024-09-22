@@ -3,11 +3,11 @@ defmodule Castmill.Repo.Migrations.AddRootUser do
 
   def change do
     email =
-      System.get_env("CASTMILL_ROOT_USER_EMAIL") ||
+      CastmillWeb.Secrets.get_root_user_email() ||
         raise "environment variable CASTMILL_ROOT_USER_EMAIL is missing."
 
     password =
-      System.get_env("CASTMILL_ROOT_USER_PASSWORD") ||
+      CastmillWeb.Secrets.get_root_user_password() ||
         raise "environment variable CASTMILL_ROOT_USER_PASSWORD is missing."
 
     user =

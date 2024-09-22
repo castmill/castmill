@@ -1,5 +1,4 @@
-const baseUrl =
-  import.meta.env.VITE_API_URL || 'http://localhost:4000/dashboard';
+import { baseUrl } from '../env';
 
 export const AddonsService = {
   /**
@@ -8,7 +7,7 @@ export const AddonsService = {
    * @returns {Promise<AddOn[]>} A promise that resolves to an array of AddOns.
    */
   async getAll() {
-    const response = await fetch(`${baseUrl}/addons/`, {
+    const response = await fetch(`${baseUrl}/dashboard/addons/`, {
       method: 'GET',
       credentials: 'include',
     });

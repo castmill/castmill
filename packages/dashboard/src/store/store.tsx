@@ -2,10 +2,12 @@
  * Global store for the application
  *
  */
+import { Socket } from 'phoenix';
 import { createStore } from 'solid-js/store';
+
 import { AddOn } from '../interfaces/addon.interface';
 import { Organization } from '../interfaces/organization';
-import { Socket } from 'phoenix';
+import { baseUrl, origin, domain } from '../env';
 
 interface CastmillStore {
   loadedAddons: boolean;
@@ -20,6 +22,12 @@ interface CastmillStore {
   };
 
   socket?: Socket;
+
+  env: {
+    baseUrl: string;
+    origin: string;
+    domain: string;
+  };
 }
 
 const [store, setStore] = createStore<CastmillStore>({
@@ -32,6 +40,12 @@ const [store, setStore] = createStore<CastmillStore>({
     loading: false,
     data: [],
     selectedId: null,
+  },
+
+  env: {
+    baseUrl,
+    origin,
+    domain,
   },
 });
 

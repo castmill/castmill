@@ -16,7 +16,7 @@ defmodule Castmill.Organizations do
 
   defimpl Access, for: Organization do
     def canAccess(organization, user, _action) do
-      if user == nil do
+      if is_nil(user) do
         {:error, "No user provided"}
       else
         network_admin =
@@ -45,7 +45,7 @@ defmodule Castmill.Organizations do
 
   """
   def list_organizations(%{search: search, page: page, page_size: page_size}) do
-    offset = if page_size == nil, do: 0, else: max((page - 1) * page_size, 0)
+    offset = if is_nil(page_size), do: 0, else: max((page - 1) * page_size, 0)
 
     Organization.base_query()
     |> QueryHelpers.where_name_like(search)
@@ -256,7 +256,7 @@ defmodule Castmill.Organizations do
           select: oua
         )
 
-      if Repo.one(query) == nil do
+      if is_nil(Repo.one(query)) do
         # Check if parent organization has access recursively
         organization = Repo.get!(Organization, organization_id)
 

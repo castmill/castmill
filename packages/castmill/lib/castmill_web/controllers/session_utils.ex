@@ -64,7 +64,10 @@ defmodule CastmillWeb.SessionUtils do
         "challenge" => challenge,
         "origin" => origin
       }) do
-    if origin == CastmillWeb.Envs.get_dashboard_uri() do
+    # Check if there is a network matching the origin
+    network_id = Accounts.get_network_id_by_domain(origin)
+
+    if network_id do
       {:ok, challenge}
     else
       false

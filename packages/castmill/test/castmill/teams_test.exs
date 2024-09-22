@@ -1,11 +1,11 @@
 defmodule Castmill.TeamsTest do
   use Castmill.DataCase
 
-  @moduletag :teams_data_case
-
   alias Castmill.Teams
 
-  @tag :teams
+  @moduletag :teams_data_case
+  @moduletag :teams
+
   describe "teams" do
     import Castmill.NetworksFixtures
     import Castmill.OrganizationsFixtures

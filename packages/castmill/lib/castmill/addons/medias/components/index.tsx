@@ -1,5 +1,3 @@
-import { Socket } from 'phoenix';
-
 import { BsCheckLg } from 'solid-icons/bs';
 import { BsEye } from 'solid-icons/bs';
 import { AiOutlineDelete } from 'solid-icons/ai';
@@ -25,9 +23,10 @@ import { UploadComponent } from './upload';
 
 import './medias.scss';
 import { MediaDetails } from './media-details';
+import { AddonStore } from '../../common/interfaces/addon-store';
 
 const MediasPage: Component<{
-  store: { organizations: { selectedId: string }; socket: Socket };
+  store: AddonStore;
   params: any; //typeof useSearchParams;
 }> = (props) => {
   const [data, setData] = createSignal<JsonMedia[]>([], {
@@ -69,13 +68,14 @@ const MediasPage: Component<{
     }
     try {
       await MediasService.removeMedia(
+        props.store.env.baseUrl,
         props.store.organizations.selectedId,
         `${resource.id}`
       );
 
       refreshData();
     } catch (error) {
-      alert(`Error removing device ${device.name}: ${error}`);
+      alert(`Error removing device ${resource.name}: ${error}`);
     }
     setShowConfirmDialog();
   };
@@ -85,6 +85,7 @@ const MediasPage: Component<{
       await Promise.all(
         Array.from(selectedMedias()).map((resourceId) =>
           MediasService.removeMedia(
+            props.store.env.baseUrl,
             props.store.organizations.selectedId,
             resourceId
           )
@@ -139,6 +140,7 @@ const MediasPage: Component<{
     filters?: Record<string, string | boolean>;
   }) => {
     const result = await MediasService.fetchMedias(
+      props.store.env.baseUrl,
       props.store.organizations.selectedId,
       {
         page: page.num,
@@ -249,16 +251,17 @@ const MediasPage: Component<{
           loading={loading()}
         >
           <UploadComponent
+            baseUrl={props.store.env.baseUrl}
             organizationId={props.store.organizations.selectedId}
-            onFileUpload={(file: File) => {
-              console.log('File uploaded', file);
+            onFileUpload={(fileName: string, result: any) => {
+              console.log('File uploaded', fileName, result);
             }}
             onUploadComplete={() => {
               // Refresh table
               refreshData();
             }}
             onCancel={() => {
-              addMediasModal.close();
+              addMediasModal!.close();
             }}
           />
         </Modal>
@@ -275,6 +278,7 @@ const MediasPage: Component<{
             onSubmit={async (mediaUpdate) => {
               try {
                 await MediasService.updateMedia(
+                  props.store.env.baseUrl,
                   props.store.organizations.selectedId,
                   `${showModal()?.id}`,
                   mediaUpdate

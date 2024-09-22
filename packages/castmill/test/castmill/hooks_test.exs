@@ -5,7 +5,8 @@ defmodule Castmill.HooksTest do
 
   import Castmill.OrganizationsFixtures
 
-  @tag :hooks
+  @moduletag :hooks
+
   describe "register_hook/2" do
     test "registers a hook and returns an ID" do
       assert {:ok, _id} =
@@ -13,7 +14,6 @@ defmodule Castmill.HooksTest do
     end
   end
 
-  @tag :hooks
   describe "unregister_hook/2" do
     test "unregisters a previously registered hook" do
       {:ok, id} = Hooks.register_hook(:user_signup, fn %{user_id: _, email: _} -> :ok end)
@@ -21,8 +21,9 @@ defmodule Castmill.HooksTest do
     end
   end
 
-  @tag :skip
   describe "trigger_hook/2" do
+    @describetag :skip
+
     test "triggers a registered hook" do
       # Adjusted test_args to match the expected schema for :user_signup
       user = user_fixture()

@@ -1,7 +1,5 @@
-import { JsonMedia } from "@castmill/player";
-import { SortOptions } from "@castmill/ui-common";
-
-const baseUrl = "http://localhost:4000/dashboard";
+import { JsonMedia } from '@castmill/player';
+import { SortOptions } from '@castmill/ui-common';
 
 export interface FetchMediasOptions {
   page: number;
@@ -19,15 +17,24 @@ export interface MediasUpdate {
   description: string;
 }
 
-async function handleResponse<T = any>(response: Response, options: { parse: true }): Promise<T>;
-async function handleResponse<T = any>(response: Response, options?: { parse?: false }): Promise<void>;
-async function handleResponse<T = any>(response: Response, options: HandleResponseOptions = {}): Promise<T | void> {
+async function handleResponse<T = any>(
+  response: Response,
+  options: { parse: true }
+): Promise<T>;
+async function handleResponse<T = any>(
+  response: Response,
+  options?: { parse?: false }
+): Promise<void>;
+async function handleResponse<T = any>(
+  response: Response,
+  options: HandleResponseOptions = {}
+): Promise<T | void> {
   if (response.status >= 200 && response.status < 300) {
     if (options.parse) {
       return (await response.json()) as T;
     }
   } else {
-    let errMsg = "";
+    let errMsg = '';
     try {
       const { errors } = await response.json();
       errMsg = `${errors.detail || response.statusText}`;
@@ -41,35 +48,42 @@ async function handleResponse<T = any>(response: Response, options: HandleRespon
 export const MediasService = {
   /**
    * Uploads a media file.
-   * 
+   *
    * @returns JsonPlaylist
    */
-  async uploadMedia(organizationId: string, name: string) {
-    const response = await fetch(`${baseUrl}/organizations/${organizationId}/playlists`, {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ name }),
-    });
+  async uploadMedia(baseUrl: string, organizationId: string, name: string) {
+    const response = await fetch(
+      `${baseUrl}/dashboard/organizations/${organizationId}/playlists`,
+      {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name }),
+      }
+    );
 
     return handleResponse<JsonMedia>(response, { parse: true });
   },
 
   /**
    * Fetch Medias.
-   * 
+   *
    * @returns { page: number, data: JsonPlaylist[], total: number }
    */
   async fetchMedias(
+    baseUrl: string,
     organizationId: string,
-    { page, page_size, sortOptions, search, filters }: FetchMediasOptions) {
-
+    { page, page_size, sortOptions, search, filters }: FetchMediasOptions
+  ) {
     const filtersToString = (filters: Record<string, string | boolean>) => {
-      return Object.entries(filters).map(([key, value]) =>
-        typeof value === "boolean" ? `${key}` : `${key}:${value}`).join(",");
-    }
+      return Object.entries(filters)
+        .map(([key, value]) =>
+          typeof value === 'boolean' ? `${key}` : `${key}:${value}`
+        )
+        .join(',');
+    };
 
     const query = {
       ...sortOptions,
@@ -78,67 +92,92 @@ export const MediasService = {
     } as Record<string, string>;
 
     if (search) {
-      query["search"] = search;
+      query['search'] = search;
     }
 
     if (filters) {
-      query["filters"] = filtersToString(filters);
+      query['filters'] = filtersToString(filters);
     }
 
     const queryString = new URLSearchParams(query).toString();
 
-    const response = await fetch(`${baseUrl}/organizations/${organizationId}/medias?${queryString}`, {
-      method: "GET",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    const response = await fetch(
+      `${baseUrl}/dashboard/organizations/${organizationId}/medias?${queryString}`,
+      {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
 
-    return handleResponse<{ data: JsonMedia[], count: number }>(response, { parse: true });
+    return handleResponse<{ data: JsonMedia[]; count: number }>(response, {
+      parse: true,
+    });
   },
 
-  async getPlaylist(organizationId: string, playlistId: number) {
-    const response = await fetch(`${baseUrl}/organizations/${organizationId}/playlists/${playlistId}`, {
-      method: "GET",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+  async getPlaylist(
+    baseUrl: string,
+    organizationId: string,
+    playlistId: number
+  ) {
+    const response = await fetch(
+      `${baseUrl}/dashboard/organizations/${organizationId}/playlists/${playlistId}`,
+      {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
 
-    const { data } = await handleResponse<{ data: JsonMedia }>(response, { parse: true });
+    const { data } = await handleResponse<{ data: JsonMedia }>(response, {
+      parse: true,
+    });
     return data;
   },
 
   /**
    * Remove Media
    */
-  async removeMedia(organizationId: string, mediaId: string) {
-    const response = await fetch(`${baseUrl}/organizations/${organizationId}/medias/${mediaId}`, {
-      method: "DELETE",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+  async removeMedia(baseUrl: string, organizationId: string, mediaId: string) {
+    const response = await fetch(
+      `${baseUrl}/dashboard/organizations/${organizationId}/medias/${mediaId}`,
+      {
+        method: 'DELETE',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
 
     handleResponse(response);
   },
 
-  /** 
+  /**
    * Update playlist
    * */
-  async updateMedia(organizationId: string, mediaId: string, playlist: Partial<MediasUpdate>) {
-    const response = await fetch(`${baseUrl}/organizations/${organizationId}/medias/${mediaId}`, {
-      method: "PATCH",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ update: playlist }),
-    });
+  async updateMedia(
+    baseUrl: string,
+    organizationId: string,
+    mediaId: string,
+    playlist: Partial<MediasUpdate>
+  ) {
+    const response = await fetch(
+      `${baseUrl}/dashboard/organizations/${organizationId}/medias/${mediaId}`,
+      {
+        method: 'PATCH',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ update: playlist }),
+      }
+    );
 
     handleResponse(response);
   },
-}
+};
