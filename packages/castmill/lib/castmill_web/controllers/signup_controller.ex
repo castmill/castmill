@@ -11,6 +11,12 @@ defmodule CastmillWeb.SignUpController do
   @doc """
     Create a new signup. The Signup starts the signup process for a new user.
   """
+  def create(conn, %{"email" => nil}) do
+    conn
+    |> put_status(:unprocessable_entity)
+    |> json(%{status: :error, msg: "Missing email"})
+  end
+
   def create(conn, %{"email" => email}) do
     origin = List.first(Plug.Conn.get_req_header(conn, "origin"))
 
@@ -48,12 +54,6 @@ defmodule CastmillWeb.SignUpController do
       conn
       |> put_status(:internal_server_error)
       |> json(%{status: :error, msg: "Unexpected error: #{inspect(error)}"})
-  end
-
-  def create(conn, %{"email" => nil}) do
-    conn
-    |> put_status(:unprocessable_entity)
-    |> json(%{status: :error, msg: "Missing email"})
   end
 
   @doc """
