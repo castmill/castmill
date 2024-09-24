@@ -4,19 +4,38 @@
   "description": "Castmill Player Android App",
   "main": "index.js",
   "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "start": "vite",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "build": "vite build",
     "preview": "vite preview"
   },
   "dependencies": {
     "@capacitor/android": "^6.1.2",
+    "@capacitor/app": "^6.0.1",
     "@capacitor/camera": "latest",
     "@capacitor/core": "latest",
-    "@capacitor/splash-screen": "latest"
+    "@capacitor/device": "^6.0.1",
+    "@capacitor/filesystem": "^6.0.1",
+    "@capacitor/preferences": "^6.0.2",
+    "@capacitor/splash-screen": "latest",
+    "@capacitor/toast": "^6.0.2",
+    "@castmill/cache": "*",
+    "@castmill/device": "*",
+    "@castmill/player": "*",
+    "solid-js": "^1.8.11"
   },
   "devDependencies": {
     "@capacitor/cli": "latest",
-    "vite": "^4.0.0"
+    "@solidjs/testing-library": "^0.8.5",
+    "@vitejs/plugin-legacy": "^5.4.1",
+    "prettier": "^3.3.2",
+    "solid-devtools": "^0.29.2",
+    "vite": "^4.0.0",
+    "vite-plugin-solid": "^2.8.2",
+    "vitest": "^1.5.3"
   },
   "author": "Castmill AB",
   "license": "AGPL-3.0-or-later"
