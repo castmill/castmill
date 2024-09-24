@@ -20,7 +20,7 @@ export class AndroidMachine implements Machine {
   }
 
   async getCredentials(): Promise<string> {
-    const {value} = await Preferences.get({ key: 'credentials' });
+    const { value } = await Preferences.get({ key: 'credentials' });
     if (!value) {
       throw new Error('Credentials not found');
     }
@@ -86,7 +86,7 @@ export class AndroidMachine implements Machine {
       text: 'About to restart',
     });
 
-    await delay(3000); 
+    await delay(3000);
 
     return Castmill.restart();
   }
@@ -99,7 +99,7 @@ export class AndroidMachine implements Machine {
       text: 'About to quit',
     });
 
-    await delay(3000); 
+    await delay(3000);
 
     return Castmill.quit();
   }

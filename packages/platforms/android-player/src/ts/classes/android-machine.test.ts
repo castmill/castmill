@@ -1,11 +1,4 @@
-import {
-  vi,
-  describe,
-  it,
-  beforeEach,
-  afterEach,
-  expect,
-} from 'vitest';
+import { vi, describe, it, beforeEach, afterEach, expect } from 'vitest';
 import { AndroidMachine } from './android-machine';
 import { Device } from '@capacitor/device';
 import { Toast } from '@capacitor/toast';
@@ -95,7 +88,9 @@ describe('AndroidMachine', () => {
   it('should throw an error when credentials are not found', async () => {
     vi.mocked(Preferences.get).mockResolvedValue({ value: null });
 
-    await expect(machine.getCredentials()).rejects.toThrow('Credentials not found');
+    await expect(machine.getCredentials()).rejects.toThrow(
+      'Credentials not found'
+    );
   });
 
   it('should remove credentials', async () => {
@@ -120,7 +115,9 @@ describe('AndroidMachine', () => {
 
   it('should return undefined when location is unavailable', async () => {
     global.navigator.geolocation = {
-      getCurrentPosition: vi.fn((_, error) => error(new Error('Location error'))),
+      getCurrentPosition: vi.fn((_, error) =>
+        error(new Error('Location error'))
+      ),
     };
 
     const location = await machine.getLocation();
@@ -164,7 +161,9 @@ describe('AndroidMachine', () => {
       osVersion: '12',
       webViewVersion: '88.0',
     });
-    vi.mocked(App.getInfo).mockRejectedValueOnce(new Error('App plugin not available'));
+    vi.mocked(App.getInfo).mockRejectedValueOnce(
+      new Error('App plugin not available')
+    );
 
     const deviceInfo = await machine.getDeviceInfo();
     expect(deviceInfo.appVersion).toBe('N/A');
