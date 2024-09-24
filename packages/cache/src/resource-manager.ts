@@ -115,7 +115,12 @@ export class ResourceManager {
 
     if (item) {
       const uri = await this.buildCodeDataUri(item.cachedUrl);
-      return import(/* @vite-ignore */ uri) as Promise<T>;
+
+      if(uri) {
+        // Important to have an if statement here, otherwise the code will be compiled to import(await this.buildCodeDataUri(item.cachedUrl));
+        // await inside an import doen't work on older browsers.
+        return import(/* @vite-ignore */ uri) as Promise<T>;
+      }
     }
   }
 
