@@ -1,6 +1,6 @@
 import { Capacitor } from '@capacitor/core';
 import { Filesystem, Directory } from '@capacitor/filesystem';
-import {Device} from '@capacitor/device';
+import { Device } from '@capacitor/device';
 
 import {
   StorageIntegration,
@@ -19,12 +19,12 @@ function join(...parts: string[]): string {
 
 async function digestText(message: string) {
   const msgUint8 = new TextEncoder().encode(message);
-  const hashBuffer = await window.crypto.subtle.digest("SHA-256", msgUint8);
+  const hashBuffer = await window.crypto.subtle.digest('SHA-256', msgUint8);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   // Convert bytes to hex string
   const hashHex = hashArray
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
   return hashHex;
 }
 
@@ -37,7 +37,10 @@ export class AndroidStorage implements StorageIntegration {
 
   async init(): Promise<void> {
     try {
-      const storageDirStats = await Filesystem.stat({path: this.storagePath, directory: DIR});
+      const storageDirStats = await Filesystem.stat({
+        path: this.storagePath,
+        directory: DIR,
+      });
       return;
     } catch (error) {
       return Filesystem.mkdir({
@@ -49,7 +52,7 @@ export class AndroidStorage implements StorageIntegration {
 
   async info(): Promise<StorageInfo> {
     try {
-      const {files} = await Filesystem.readdir({
+      const { files } = await Filesystem.readdir({
         path: this.storagePath,
         directory: DIR,
       });
@@ -58,8 +61,8 @@ export class AndroidStorage implements StorageIntegration {
         used += file.size;
       }
 
-      const {diskFree} = await Device.getInfo();
-      const total = diskFree ? diskFree + used * 0.5: FALLBACK_MAX_DISK_SPACE;
+      const { diskFree } = await Device.getInfo();
+      const total = diskFree ? diskFree + used * 0.5 : FALLBACK_MAX_DISK_SPACE;
       return { used, total };
     } catch (error) {
       console.error('Failed to get storage info:', error);
@@ -69,14 +72,14 @@ export class AndroidStorage implements StorageIntegration {
 
   async listFiles(): Promise<StorageItem[]> {
     try {
-      const {files} = await Filesystem.readdir({
+      const { files } = await Filesystem.readdir({
         path: this.storagePath,
         directory: DIR,
       });
       return Promise.all(
         files
-          .filter(({name}) => !name.endsWith('.tmp')) // Exclude temporary files
-          .map(({name, size}) => {
+          .filter(({ name }) => !name.endsWith('.tmp')) // Exclude temporary files
+          .map(({ name, size }) => {
             const filePath = join(this.storagePath, name);
             return {
               url: filePath,
@@ -93,7 +96,7 @@ export class AndroidStorage implements StorageIntegration {
   async deleteFileIfExists(filePath: string): Promise<void> {
     console.log('Deleting if exists', filePath);
     try {
-      await Filesystem.deleteFile({path: filePath, directory: DIR});
+      await Filesystem.deleteFile({ path: filePath, directory: DIR });
     } catch (error) {
       // File does not exist, nothing to do
     }
@@ -133,31 +136,28 @@ export class AndroidStorage implements StorageIntegration {
   async storeFile(url: string, data?: any): Promise<StoreFileReturnValue> {
     try {
       const filename = await this.getFileName(url);
-   
+
       const filePath = join(this.storagePath, filename);
       const tempPath = this.getTempPath(filePath);
-   
+
       try {
         if (data) {
           await this.writeFile(tempPath, data);
         } else {
           await this.downloadFile(tempPath, url);
         }
-   
+
         // Atomically rename the file to its final name
-        await this.rename(
-          tempPath,
-          filePath,
-        );
+        await this.rename(tempPath, filePath);
       } catch (error) {
         console.error('Failed to store file:', error);
-   
+
         // Delete the temporary file if it exists
         await Filesystem.deleteFile({
-          path:tempPath,
+          path: tempPath,
           directory: DIR,
         });
-   
+
         throw error;
       }
       const stats = await Filesystem.stat({
@@ -165,7 +165,7 @@ export class AndroidStorage implements StorageIntegration {
         directory: DIR,
       });
 
-      const {uri} = await Filesystem.getUri({
+      const { uri } = await Filesystem.getUri({
         path: filePath,
         directory: DIR,
       });
@@ -207,7 +207,7 @@ export class AndroidStorage implements StorageIntegration {
   async retrieveFile(url: string): Promise<string | void> {
     try {
       const filePath = join(this.storagePath, await this.getFileName(url));
-      await Filesystem.stat({path: filePath, directory: DIR}); // Check if file exists
+      await Filesystem.stat({ path: filePath, directory: DIR }); // Check if file exists
       return filePath;
     } catch (error) {
       console.log('Failed to retrieve file:', error);
@@ -218,21 +218,21 @@ export class AndroidStorage implements StorageIntegration {
   async deleteFile(url: string): Promise<void> {
     try {
       const filePath = join(this.storagePath, await this.getFileName(url));
-      await Filesystem.deleteFile({path: filePath, directory: DIR});
+      await Filesystem.deleteFile({ path: filePath, directory: DIR });
     } catch (error) {
       console.error('Failed to delete file:', error);
       throw error;
-    } 
+    }
   }
 
   async deleteAllFiles(): Promise<void> {
     try {
-      const {files} = await Filesystem.readdir({
+      const { files } = await Filesystem.readdir({
         path: this.storagePath,
         directory: DIR,
       });
       await Promise.all(
-        files.map(({name}) => {
+        files.map(({ name }) => {
           return Filesystem.deleteFile({
             path: join(this.storagePath, name),
             directory: DIR,
@@ -249,5 +249,4 @@ export class AndroidStorage implements StorageIntegration {
     //noop
     console.log('Closing storage resources, if any');
   }
-
 }

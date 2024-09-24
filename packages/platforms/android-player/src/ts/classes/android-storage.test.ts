@@ -1,11 +1,4 @@
-import {
-  vi,
-  describe,
-  it,
-  beforeEach,
-  afterEach,
-  expect,
-} from 'vitest';
+import { vi, describe, it, beforeEach, afterEach, expect } from 'vitest';
 import { AndroidStorage } from './android-storage';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Device } from '@capacitor/device';
@@ -55,8 +48,20 @@ describe('AndroidStorage', () => {
   it('should return storage info with used and total space', async () => {
     vi.mocked(Filesystem.readdir).mockResolvedValueOnce({
       files: [
-        { name: 'file1.txt', size: 100, type: 'file', mtime: Date.now(), uri: 'file://test/file1.txt' },
-        { name: 'file2.txt', size: 200, type: 'file', mtime: Date.now(), uri: 'file://test/file2.txt' },
+        {
+          name: 'file1.txt',
+          size: 100,
+          type: 'file',
+          mtime: Date.now(),
+          uri: 'file://test/file1.txt',
+        },
+        {
+          name: 'file2.txt',
+          size: 200,
+          type: 'file',
+          mtime: Date.now(),
+          uri: 'file://test/file2.txt',
+        },
       ],
     });
     vi.mocked(Device.getInfo).mockResolvedValueOnce({
@@ -86,8 +91,12 @@ describe('AndroidStorage', () => {
       mtime: Date.now(),
       uri: 'file://test/filepath',
     });
-    vi.mocked(Filesystem.writeFile).mockResolvedValueOnce({ uri: 'file://test/filepath' });
-    vi.mocked(Filesystem.getUri).mockResolvedValueOnce({ uri: 'file://test/filepath' });
+    vi.mocked(Filesystem.writeFile).mockResolvedValueOnce({
+      uri: 'file://test/filepath',
+    });
+    vi.mocked(Filesystem.getUri).mockResolvedValueOnce({
+      uri: 'file://test/filepath',
+    });
     vi.mocked(Capacitor.convertFileSrc).mockReturnValue('converted-file-url');
     vi.spyOn(storage, 'getFileName').mockResolvedValue(fileName);
 
@@ -119,7 +128,9 @@ describe('AndroidStorage', () => {
     const fileName = 'hashed-filename.png';
 
     vi.spyOn(storage, 'getFileName').mockResolvedValue(fileName);
-    vi.mocked(Filesystem.stat).mockRejectedValueOnce(new Error('File not found'));
+    vi.mocked(Filesystem.stat).mockRejectedValueOnce(
+      new Error('File not found')
+    );
 
     const filePath = await storage.retrieveFile(url);
     expect(filePath).toBeUndefined();
@@ -144,7 +155,9 @@ describe('AndroidStorage', () => {
     const fileName = 'hashed-filename.png';
 
     vi.spyOn(storage, 'getFileName').mockResolvedValue(fileName);
-    vi.mocked(Filesystem.deleteFile).mockRejectedValueOnce(new Error('Delete failed'));
+    vi.mocked(Filesystem.deleteFile).mockRejectedValueOnce(
+      new Error('Delete failed')
+    );
 
     await expect(storage.deleteFile(url)).rejects.toThrow('Delete failed');
     expect(Filesystem.deleteFile).toHaveBeenCalled();
@@ -153,8 +166,20 @@ describe('AndroidStorage', () => {
   it('should delete all files in the directory', async () => {
     vi.mocked(Filesystem.readdir).mockResolvedValueOnce({
       files: [
-        { name: 'file1.txt', size: 100, type: 'file', mtime: Date.now(), uri: 'file://test/file1.txt' },
-        { name: 'file2.txt', size: 200, type: 'file', mtime: Date.now(), uri: 'file://test/file2.txt' },
+        {
+          name: 'file1.txt',
+          size: 100,
+          type: 'file',
+          mtime: Date.now(),
+          uri: 'file://test/file1.txt',
+        },
+        {
+          name: 'file2.txt',
+          size: 200,
+          type: 'file',
+          mtime: Date.now(),
+          uri: 'file://test/file2.txt',
+        },
       ],
     });
 
@@ -205,7 +230,9 @@ describe('AndroidStorage', () => {
       mtime: Date.now(),
       uri: 'file://test/hashed-file.png',
     });
-    vi.mocked(Filesystem.getUri).mockResolvedValueOnce({ uri: 'file://test/hashed-file.png' });
+    vi.mocked(Filesystem.getUri).mockResolvedValueOnce({
+      uri: 'file://test/hashed-file.png',
+    });
     vi.mocked(Capacitor.convertFileSrc).mockReturnValue('converted-file-url');
 
     const result = await storage.storeFile(url);
@@ -231,7 +258,9 @@ describe('AndroidStorage', () => {
 
     vi.spyOn(storage, 'getFileName').mockResolvedValue('hashed-file.png');
     vi.spyOn(storage, 'getTempPath').mockReturnValue(tempPath);
-    vi.mocked(Filesystem.downloadFile).mockRejectedValueOnce(new Error('Download error'));
+    vi.mocked(Filesystem.downloadFile).mockRejectedValueOnce(
+      new Error('Download error')
+    );
 
     const result = await storage.storeFile(url);
     expect(result.result.code).toBe('FAILURE');
