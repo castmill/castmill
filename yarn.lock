@@ -1028,6 +1028,11 @@
   resolved "https://registry.yarnpkg.com/@capacitor/android/-/android-6.1.2.tgz#7c767af5d8f708f19a1abcd9db38b458a76adb14"
   integrity sha512-Yh0gQDY1bgRrL25J6ecIlvvs2kF8iNSwIPXjyw6Yz9mnwYxBazF5KZbjpKtGPnJgicJhFkYGsqOkEtxrve0EoQ==
 
+"@capacitor/app@^6.0.1":
+  version "6.0.1"
+  resolved "https://registry.yarnpkg.com/@capacitor/app/-/app-6.0.1.tgz#601878ea1b4488a9a89b61b437644bbe134a0532"
+  integrity sha512-0kXbOl7LPPMFVcAii3u/7Ps0DvXlr7dtHT97r9J1faDlgdQLQUvtGp48tjvFm48gqHI0aOPRJnTBr5JXW4ETYg==
+
 "@capacitor/camera@latest":
   version "6.0.2"
   resolved "https://registry.yarnpkg.com/@capacitor/camera/-/camera-6.0.2.tgz#353374f83a64b66b8b474a04d5e8167d680490ef"
@@ -1064,10 +1069,30 @@
   dependencies:
     tslib "^2.1.0"
 
+"@capacitor/device@^6.0.1":
+  version "6.0.1"
+  resolved "https://registry.yarnpkg.com/@capacitor/device/-/device-6.0.1.tgz#bb5cb2b9e9c37142b71d51e4c6eed84625ce821e"
+  integrity sha512-Tlz67DAO5GKb5YAfupXiENZxDww6mHnG9iKI+8D5SVF82VLpEv5r9qwKtiounuQB2y2HWiHV8tlOk7DqnLVUqQ==
+
+"@capacitor/filesystem@^6.0.1":
+  version "6.0.1"
+  resolved "https://registry.yarnpkg.com/@capacitor/filesystem/-/filesystem-6.0.1.tgz#2c8aa67217c628ee3237555148b021e69df7b198"
+  integrity sha512-eHhXm6tzBIQhErzFnfOE6eA1U+15DHc2212/COfzzGGRk/dyGympoVV3ct2YPVzvpTSxMEW3xFocORv/xD9gFg==
+
+"@capacitor/preferences@^6.0.2":
+  version "6.0.2"
+  resolved "https://registry.yarnpkg.com/@capacitor/preferences/-/preferences-6.0.2.tgz#9b69931b64535af6e5f36971ca0278b1ac5bec9e"
+  integrity sha512-ccD4/9ybnipJncLeCWlRPNQS2jv3nn8ivVLKzdVIWkiUHLo/hvuSSP7awVzvBwDNtAhNxIipjjWH6TyzZgLCcg==
+
 "@capacitor/splash-screen@latest":
   version "6.0.2"
   resolved "https://registry.yarnpkg.com/@capacitor/splash-screen/-/splash-screen-6.0.2.tgz#b235f8eed0554707bfa0ce76bd0a2ff120144b4a"
   integrity sha512-WC0KYZ+ev15up03xs4fTnoTKwBVUSxXsKKQr/8XAncvi/nAG8qrpanW8OlavSC5zF5e1IZZDLsI2GSv0SkZ7VQ==
+
+"@capacitor/toast@^6.0.2":
+  version "6.0.2"
+  resolved "https://registry.yarnpkg.com/@capacitor/toast/-/toast-6.0.2.tgz#e9adb1ca2f3a8bf1ee7ddda7667f9904ccd24685"
+  integrity sha512-kw9a4jSbP278xSB7cfXzafkRG0wIjsQ+rv+alzmrQa9IQsVwA5c3BvY3g+O/iE0uDGr7s11ZJNszUm1GkzJKyQ==
 
 "@colors/colors@1.5.0":
   version "1.5.0"
