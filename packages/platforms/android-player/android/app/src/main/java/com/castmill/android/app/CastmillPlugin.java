@@ -21,11 +21,12 @@ public class CastmillPlugin extends Plugin {
 
         boolean result = RecoveryTools.restart();
 
-        if(result)
+        if(result) {
             call.resolve();
-        else
+        } else {
             Log.e(TAG, "restart failed");
             call.reject("Restart failed");
+        }
     }
 
     @PluginMethod()
@@ -35,12 +36,13 @@ public class CastmillPlugin extends Plugin {
 
         boolean result = RecoveryTools.reboot();
 
-        if(result)
+        if(result) {
             // not likely that we ever get here
             call.resolve();
-        else
+        } else {
             Log.e(TAG, "reboot failed");
-            call.reject("Restart failed");
+            call.reject("Reboot failed");
+        }
     }
     private void stopWatchdogApp() {
         Log.d(TAG, "Stopping watchdog");
