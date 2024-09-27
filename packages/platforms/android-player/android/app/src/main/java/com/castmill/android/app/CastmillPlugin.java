@@ -61,14 +61,4 @@ public class CastmillPlugin extends Plugin {
 
         call.resolve();
     }
-    /*
-    @PluginMethod()
-    public void restart(PluginCall call) {
-        String value = call.getString("value");
-
-        JSObject ret = new JSObject();
-        ret.put("value", value);
-        call.resolve(ret);
-    }
-    */
 }
