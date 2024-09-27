@@ -12,15 +12,21 @@ public class WatchdogHelper {
 
     public static void enableWatchdog(Context context) {
         Log.d(TAG, "enableWatchdog");
-        //TODO: uncomment when watchdog is available
-        //ContentValues values = new ContentValues();
-        //context.getContentResolver().insert(ENABLE_URI, values);
+        try {
+            ContentValues values = new ContentValues();
+            context.getContentResolver().insert(ENABLE_URI, values);
+        } catch(Exception e) {
+            Log.e(TAG, "Failed to enable watchdog. Is it installed?");
+        }
     }
 
     public static void disableWatchdog(Context context) {
         Log.d(TAG, "disableWatchdog");
-        //TODO: uncomment when watchdog is available
-        //ContentValues values = new ContentValues();
-        //context.getContentResolver().insert(DISABLE_URI, values);
+        try {
+            ContentValues values = new ContentValues();
+            context.getContentResolver().insert(DISABLE_URI, values);
+        } catch(Exception e) {
+            Log.e(TAG, "Failed to enable watchdog. Is it installed?");
+        }
     }
 }
