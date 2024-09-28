@@ -256,7 +256,6 @@ defmodule CastmillWeb.Router do
         authenticate_with_token(conn, opts)
 
       user ->
-        IO.puts("User found in session")
         # If there is a user in the session, use it directly
         assign_user(conn, user)
     end

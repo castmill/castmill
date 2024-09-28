@@ -25,7 +25,16 @@ interface Messages {
   [key: string]: string | JSX.Element;
 }
 
-const supportedFileTypes = ['image/png', 'image/jpeg', 'image/gif'];
+const supportedFileTypes = [
+  'image/png',
+  'image/jpeg',
+  'image/gif',
+  'video/mp4',
+  'video/quicktime',
+  'video/x-msvideo',
+  'video/ogg',
+  'video/x-ms-wmv',
+];
 
 export const UploadComponent = (props: UploadComponentProps) => {
   const [files, setFiles] = createSignal<File[]>([]);
@@ -160,7 +169,7 @@ export const UploadComponent = (props: UploadComponentProps) => {
           class="file-input"
           multiple
           onChange={handleFileChange}
-          accept="image/png, image/jpeg, image/gif"
+          accept={supportedFileTypes.join(',')}
         />
         <label for="file" class="file-label">
           Choose Files

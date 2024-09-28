@@ -31,3 +31,25 @@ Network management can only be done in the admin tool, and this tool is only acc
 ### How to create a network
 
 To create a network you must login into the admin tool and go to the Networks section. There you will find a button to create a new network. You must fill in the name and domain of the network. The domain is important as it will be used to associate the network to the domain of the dashboard.
+
+
+## Running a local S3 server
+
+To run a local S3 server you can use the [minio](https://min.io/) server. You can download the server from the website and run it with the following command:
+
+```bash
+mkdir -p ~/minio/data
+
+docker run \
+   -p 9000:9000 \
+   -p 9001:9001 \
+   --user $(id -u):$(id -g) \
+   --name minio1 \
+   -e "MINIO_ROOT_USER=ROOTUSER" \
+   -e "MINIO_ROOT_PASSWORD=CHANGEME123" \
+   -v ~/minio/data:/data \
+   quay.io/minio/minio server /data --console-address ":9001"
+```
+
+This will start the minio server on port 9000 and the console on port 9001. You can access the console by going to http://localhost:9001. The default username is `ROOTUSER` and the password is `CHANGEME123`. You can change the password in the console.
+

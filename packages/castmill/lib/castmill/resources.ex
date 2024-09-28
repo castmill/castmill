@@ -25,6 +25,8 @@ defmodule Castmill.Resources do
   alias Castmill.Protocol.Access
   alias Castmill.QueryHelpers
 
+  alias Castmill.Files.FilesMedias
+
   @doc """
     Can access the resource.
     User can only access a resource if he has access to the organization that owns the resource
@@ -579,9 +581,80 @@ defmodule Castmill.Resources do
   it will trigger a "delete" webhook event if such a webhook is configured.
   """
   def delete_media(%Media{} = media) do
-    # TODO: Call relevant webhooks so that the integration has a chance to
-    # clean up the media from the storage system.
-    Repo.delete(media)
+    # TODO: check if the media is used somewhere, if so, it cannot be
+    # deleted until the references are removed. (Maybe we can force
+    # delete the media and remove all itsreferences as well in this call)
+
+    # Get all the files belonging to the media
+    media = get_media(media.id)
+
+    # Iterate through all the files and delete them
+    Enum.each(media.files, fn {_context, file} ->
+      delete_file_from_storage(file)
+    end)
+
+    # Create a transaction for deleting the media and all its associated files
+    Repo.transaction(fn ->
+      # Delete all the file medias and files associated with the media
+      from(files_medias in FilesMedias, where: files_medias.media_id == ^media.id)
+      |> Repo.delete_all()
+
+      file_ids = Enum.map(media.files, fn {_context, file} -> file.id end)
+
+      from(f in Castmill.Files.File, where: f.id in ^file_ids)
+      |> Repo.delete_all()
+
+      # Delete the media itself
+      case Repo.delete(media) do
+        {:ok, struct} -> struct
+        {:error, changeset} -> raise "Failed to delete media: #{inspect(changeset)}"
+      end
+    end)
+  end
+
+  defp delete_file_from_storage(%Castmill.Files.File{uri: uri}) do
+    case Application.get_env(:castmill, :file_storage) do
+      :local ->
+        file_path = get_local_file_path(uri)
+        File.rm(file_path)
+
+      :s3 ->
+        {bucket, object_path} = get_s3_file_path(uri)
+
+        case ExAws.S3.delete_object(bucket, object_path) |> ExAws.request() do
+          {:ok, _} -> :ok
+          {:error, reason} -> {:error, reason}
+        end
+    end
+  end
+
+  defp get_local_file_path(uri) do
+    # Assuming your URIs are built like "http://localhost:4000/medias/dst_path/filename"
+    # Strip off the "http://localhost:4000" and return the path that starts with "medias/..."
+    uri
+    |> URI.parse()
+    |> then(fn %URI{path: path} ->
+      # Strip leading slashes to get the relative file path
+      String.trim_leading(path, "/")
+    end)
+    # Ensure correct base directory
+    |> Path.join([Application.app_dir(:castmill), "priv/static"])
+  end
+
+  defp get_s3_file_path(uri) do
+    # Assuming your URIs are built with get_s3_uri/2 function
+    # Example: "https://s3.amazonaws.com:443/my-bucket/path/to/file"
+    # We need to extract the bucket and file path
+    uri
+    |> URI.parse()
+    |> then(fn %URI{path: path} ->
+      # The path includes the bucket and the file path, e.g., "/my-bucket/path/to/file"
+      # Split the path into the bucket and the file path
+      [_slash, bucket | object_parts] = String.split(path, "/", parts: 3)
+      object_path = Enum.join(object_parts, "/")
+
+      {bucket, object_path}
+    end)
   end
 
   @doc """

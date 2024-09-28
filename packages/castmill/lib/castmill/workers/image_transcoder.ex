@@ -1,6 +1,7 @@
 defmodule Castmill.Workers.ImageTranscoder do
   use Oban.Worker, queue: :image_transcoder
   alias Castmill.Repo
+  alias Castmill.Workers.Helpers
 
   @file_sizes_and_contexts [
     {128, "thumbnail"},
@@ -12,7 +13,6 @@ defmodule Castmill.Workers.ImageTranscoder do
   def perform(%Oban.Job{args: args} = job) do
     dbg(job)
 
-    # Repo.transaction(fn ->
     media = args["media"]
     organization_id = media["organization_id"]
     media_id = media["id"]
@@ -29,7 +29,7 @@ defmodule Castmill.Workers.ImageTranscoder do
 
     # For every media we need to create several files, a thumbnail, a preview, and a poster. And we need to upload every image to S3 as well
     # We will use the Image library. We must start by creating a new file stream
-    {:ok, stream} = stream_from_filepath(filepath)
+    {:ok, stream} = Helpers.get_stream_from_uri(filepath)
 
     # Iterate through the file sizes and names
     Repo.transaction(fn ->
@@ -89,30 +89,13 @@ defmodule Castmill.Workers.ImageTranscoder do
     end)
   end
 
-  defp stream_from_filepath(filepath) do
-    case URI.parse(filepath) do
-      %URI{scheme: "file"} = uri ->
-        {:ok, File.stream!(uri.path, [], 8192)}
-
-      # Assume that https and http are for S3 files
-      %URI{scheme: "https", path: path} = _uri ->
-        {:ok, ExAws.S3.download_file("tmp-upload-files", path, :memory) |> ExAws.stream!()}
-
-      %URI{scheme: "http", path: path} = _uri ->
-        {:ok, ExAws.S3.download_file("tmp-upload-files", path, :memory) |> ExAws.stream!()}
-
-      _ ->
-        {:error, :invalid_protocol}
-    end
-  end
-
   # Upload to local directory or S3 depending on the configuration
   defp upload_image(image, organization_id, media_id, filename) do
     dst_path = "#{organization_id}/#{media_id}"
 
     case Application.get_env(:castmill, :file_storage) do
       :local ->
-        dest_dir = Path.join([static_dir(), "uploads", dst_path])
+        dest_dir = Path.join([Helpers.static_dir(), "medias", dst_path])
         File.mkdir_p!(dest_dir)
 
         dst_file = Path.join(dest_dir, filename)
@@ -122,24 +105,37 @@ defmodule Castmill.Workers.ImageTranscoder do
 
         %{size: size} = File.stat!(dst_file)
 
-        dbg(size)
-
-        # TODO: This uri is not really correct as it should include a confifurable host!
-        {"http://localhost:4000/#{Path.join(["uploads", dst_path, filename])}", size}
+        {"#{Helpers.get_endpoint_url()}/#{Path.join(["medias", dst_path, filename])}", size}
 
       :s3 ->
-        image
-        |> Image.stream!(suffix: ".jpg", buffer_size: 5_242_880)
-        |> ExAws.S3.upload("medias", Path.join(dst_path, filename))
-        |> ExAws.request()
+        bucket = System.get_env("AWS_S3_BUCKET")
 
-        "https://castmill-medias.s3.amazonaws.com/#{dst_path}/#{filename}"
+        filepath = Path.join(dst_path, filename)
+
+        {:ok, _response} =
+          image
+          |> Image.stream!(suffix: ".jpg", buffer_size: 5_242_880)
+          |> ExAws.S3.upload(bucket, filepath)
+          |> ExAws.request()
+
+        # Get the size from the remote location
+        {:ok, response} =
+          ExAws.S3.head_object(bucket, filepath)
+          |> ExAws.request()
+
+        # headers is a list of tuples, we need to convert it to a map
+        size =
+          response
+          |> Map.get(:headers)
+          |> Enum.find(fn {key, _value} -> key == "Content-Length" end)
+          |> case do
+            nil -> {:error, "Content-Length header not found"}
+            {"Content-Length", value} -> String.to_integer(value)
+          end
+
+        uri = Helpers.get_s3_uri(bucket, filepath)
+
+        {uri, size}
     end
-  end
-
-  defp static_dir do
-    priv_dir = :code.priv_dir(:castmill) |> to_string()
-    dbg(priv_dir)
-    Path.join(priv_dir, "static")
   end
 end

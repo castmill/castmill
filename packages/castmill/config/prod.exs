@@ -12,6 +12,11 @@ import Config
 config :castmill, CastmillWeb.Endpoint,
   cache_static_manifest: "priv/static/cache_manifest.json",
   url: [
+    scheme:
+      if(System.get_env("CASTMILL_SCHEME") in [nil, "", false],
+        do: "http",
+        else: System.get_env("CASTMILL_SCHEME")
+      ),
     host:
       if(System.get_env("CASTMILL_HOST") in [nil, "", false],
         do: "localhost",
