@@ -14,7 +14,7 @@ config :castmill,
 
 # Configures the endpoint
 config :castmill, CastmillWeb.Endpoint,
-  url: [host: "localhost"],
+  url: [scheme: "http", host: "localhost", port: 4000],
   render_errors: [
     formats: [html: CastmillWeb.ErrorHTML, json: CastmillWeb.ErrorJSON],
     layout: false
@@ -75,18 +75,26 @@ config :castmill, :addons, [
 
 # Configure File Uploads
 config :castmill, :upload_settings,
-  local: "uploads/",
-  s3: [bucket: System.get_env("S3_MEDIAS_BUCKET") || "castmill-medias"]
+  local: "medias/",
+  s3: [bucket: System.get_env("AWS_S3_BUCKET") || "castmill-medias"]
 
 config :castmill, :file_storage, :local
 
 config :ex_aws, :hackney_opts, recv_timeout: 30_000
 
+config :ex_aws, :s3,
+  scheme: "http://",
+  host: "localhost",
+  # MinIO default port
+  port: 9000,
+  access_key_id: System.get_env("AWS_ACCESS_KEY_ID"),
+  secret_access_key: System.get_env("AWS_SECRET_ACCESS_KEY")
+
 # Configure Oban
 config :castmill, Oban,
   plugins: [{Oban.Plugins.Pruner, max_age: 300}],
   engine: Oban.Engines.Basic,
-  queues: [image_transcoder: 10],
+  queues: [image_transcoder: 10, video_transcoder: 10],
   repo: Castmill.Repo
 
 # Configure gettext

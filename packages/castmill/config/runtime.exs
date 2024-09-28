@@ -36,7 +36,11 @@ if config_env() == :prod do
 
   # Choose S3 or Local as file upload destination
   # config :castmill, :file_storage, :s3
-  config :ex_aws,
+  config :ex_aws, :s3,
+    scheme: "http://",
+    host: "localhost",
+    # MinIO default port
+    port: 9000,
     access_key_id: CastmillWeb.Secrets.get_aws_access_key_id(),
     secret_access_key: CastmillWeb.Secrets.get_aws_secret_access_key(),
     region: System.get_env("AWS_REGION") || "eu-central-1"

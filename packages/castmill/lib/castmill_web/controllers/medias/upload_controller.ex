@@ -2,28 +2,51 @@ defmodule CastmillWeb.UploadController do
   use CastmillWeb, :controller
   alias ExAws.S3
 
-  @chunk_size 8192
+  # 5 MB
+  @chunk_size 5 * 1024 * 1024
 
   def create(conn, %{
         "organization_id" => organization_id,
         "file" => %Plug.Upload{filename: filename, path: path}
       }) do
-    {:ok, {_extension, mime_type}} = FileType.from_path(path)
+    case FileType.from_path(path) do
+      {:ok, {_extension, mime_type}} ->
+        IO.inspect(mime_type)
 
-    # Only allows images (all formats) and videos (all formats). Matches using globs, for example "image/*" or "video/*"
-    unless matches?(mime_type, ["image/*", "video/*"]) do
-      conn
-      |> put_status(:bad_request)
-      |> json(%{error: "Invalid file type", message: "Only images and videos are allowed"})
+        # Only allows images (all formats) and videos (all formats). Matches using globs, for example "image/*" or "video/*"
+        if matches?(mime_type, ["image/*", "video/*", "application/vnd.ms-asf"]) do
+          process_file(conn, organization_id, filename, path, mime_type)
+        else
+          conn
+          |> put_status(:bad_request)
+          |> json(%{
+            error: "Invalid file type",
+            message: "Only images and videos are allowed"
+          })
+          |> halt()
+        end
+
+      # Continue processing if the file type is correct
+      # You would place your logic here to handle the file upload as expected
+
+      {:error, :unrecognized} ->
+        conn
+        |> put_status(:bad_request)
+        |> json(%{
+          error: "Unrecognized file type",
+          message: "The file type could not be determined"
+        })
+        |> halt()
     end
+  end
 
+  defp process_file(conn, organization_id, filename, path, mime_type) do
     case upload_file(path, filename) do
       {:ok, destpath} ->
-        # The media file has been uploaded successfully. Now we need to insert a media record in the database.
-        # with status "uploaded", and the file path including protocol (for local file it would be file://filepath)
-        # Extract name from the filename without extension
+        # Extract the name from the filename without extension
         name = Path.basename(filename, Path.extname(filename))
 
+        # Create media with the extracted mime_type
         {:ok, media} =
           Castmill.Resources.create_media(%{
             organization_id: organization_id,
@@ -33,13 +56,22 @@ defmodule CastmillWeb.UploadController do
             mimetype: mime_type
           })
 
-        %{
-          media: media,
-          filepath: destpath
-        }
-        |> Castmill.Workers.ImageTranscoder.new()
-        |> Oban.insert()
+        # Proceed with transcoding and job queuing
+        case queue_transcoding_job(media, destpath, mime_type) do
+          :ok ->
+            :ok
 
+          :unsupported_mime_type ->
+            conn
+            |> put_status(:bad_request)
+            |> json(%{
+              error: "Unsupported MIME type",
+              message: "The MIME type is not supported"
+            })
+            |> halt()
+        end
+
+        # Return successful response
         conn
         |> put_status(:ok)
         |> json(media)
@@ -53,13 +85,38 @@ defmodule CastmillWeb.UploadController do
     end
   end
 
+  defp queue_transcoding_job(media, destpath, mime_type) do
+    job_args = %{media: media, filepath: destpath}
+
+    cond do
+      String.starts_with?(mime_type, "image/") ->
+        job_args
+        |> Castmill.Workers.ImageTranscoder.new()
+        |> Oban.insert()
+
+        :ok
+
+      ## Either starts with video or is an ASF file ( "application/vnd.ms-asf" )
+      String.starts_with?(mime_type, "video/") or mime_type == "application/vnd.ms-asf" ->
+        job_args
+        |> Castmill.Workers.VideoTranscoder.new()
+        |> Oban.insert()
+
+        :ok
+
+      true ->
+        # Return an atom to indicate unsupported MIME type
+        :unsupported_mime_type
+    end
+  end
+
   defp upload_file(path, filename) do
     case Application.get_env(:castmill, :file_storage) do
       :local ->
         upload_to_local(path, get_temp_file())
 
       :s3 ->
-        upload_to_s3(path, filename, "CHANGE_ME_TO_TMP_MEDIAS_BUCKET_NAME")
+        upload_to_s3(path, filename, System.get_env("AWS_S3_TMP_BUCKET"))
     end
   end
 
@@ -71,9 +128,17 @@ defmodule CastmillWeb.UploadController do
   end
 
   defp upload_to_s3(path, filename, bucket_name) do
-    File.stream!(path, [], @chunk_size)
-    |> S3.upload(bucket_name, filename)
-    |> ExAws.request()
+    case File.stream!(path, [], @chunk_size)
+         |> S3.upload(bucket_name, filename)
+         |> ExAws.request() do
+      {:ok, _response} ->
+        # Return a success message with the S3 path
+        {:ok, "s3://#{bucket_name}/#{filename}"}
+
+      {:error, reason} ->
+        # Return the error as-is
+        {:error, reason}
+    end
   end
 
   def matches?(mime_type, patterns) do

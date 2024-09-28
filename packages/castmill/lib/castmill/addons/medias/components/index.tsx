@@ -194,7 +194,7 @@ const MediasPage: Component<{
       render: (item: JsonMedia) => (
         <div class="thumbnail">
           <Show
-            when={item.files['thumbnail'] && item.status == 'ready'}
+            when={item.status == 'ready' && item.files && item.files['thumbnail']}
             fallback={
               <Show
                 when={item['status'] == 'transcoding'}

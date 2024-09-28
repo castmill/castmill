@@ -26,8 +26,8 @@ defmodule CastmillWeb.ResourceUpdatesChannel do
   end
 
   @impl true
-  def terminate(_reason, _socket) do
-    Logger.info("ResourceUpdatesChannel terminated")
+  def terminate(reason, _socket) do
+    Logger.info("ResourceUpdatesChannel terminated #{inspect(reason)}")
     :ok
   end
 

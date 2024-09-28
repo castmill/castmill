@@ -97,7 +97,7 @@ These variables are used to configure the root user that will be created in the 
 
 These variables are used to configure the mailgun service that is used to send emails from the server. You can create a free account at mailgun.com and get the API key and domain to use in these variables. Note that without these variables set the server will not be able to send emails, so you will not be able to create new users or reset passwords.
 
-### AWS S3 configuration (S3_MEDIAS_BUCKET, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION)
+### AWS S3 configuration (AWS_S3_BUCKET, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_REGION)
 
 These variables are used to configure the AWS S3 bucket where the media files will be stored. You can create a free account at aws.amazon.com and get the access key and secret to use in these variables. Note that without these variables set the server will not be able to store media files, so you will not be able to upload images or videos to the server.
 
