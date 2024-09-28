@@ -81,7 +81,7 @@ config :swoosh, :api_client, false
 
 # Choose local upload destination
 config :castmill, :file_storage, :local
-#config :castmill, :file_storage, :s3
+# config :castmill, :file_storage, :s3
 
 # widgets json files
 config :castmill, CastmillWeb.Widgets.WidgetsLoader, json_dir: "../widged/dist/widgets"
