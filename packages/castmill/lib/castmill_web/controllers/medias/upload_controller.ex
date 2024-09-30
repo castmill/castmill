@@ -11,8 +11,6 @@ defmodule CastmillWeb.UploadController do
       }) do
     case FileType.from_path(path) do
       {:ok, {_extension, mime_type}} ->
-        IO.inspect(mime_type)
-
         # Only allows images (all formats) and videos (all formats). Matches using globs, for example "image/*" or "video/*"
         if matches?(mime_type, ["image/*", "video/*", "application/vnd.ms-asf"]) do
           process_file(conn, organization_id, filename, path, mime_type)
@@ -77,8 +75,6 @@ defmodule CastmillWeb.UploadController do
         |> json(media)
 
       {:error, reason} ->
-        IO.inspect(reason)
-
         conn
         |> put_status(:internal_server_error)
         |> json(%{error: "File upload failed", reason: inspect(reason)})
@@ -86,7 +82,7 @@ defmodule CastmillWeb.UploadController do
   end
 
   defp queue_transcoding_job(media, destpath, mime_type) do
-    job_args = %{media: media, filepath: destpath}
+    job_args = %{media: media, filepath: destpath, mime_type: mime_type}
 
     cond do
       String.starts_with?(mime_type, "image/") ->
