@@ -27,6 +27,19 @@ defmodule Castmill.Workers.ImageTranscoder do
     # Can be a local file or a remote file, depending on the protocol, for example file:// or https://
     filepath = args["filepath"]
 
+    extension =
+      case args["mime_type"] do
+        "image/png" -> ".png"
+        _ -> ".jpg"
+      end
+
+    mimetype =
+      if extension == ".png" do
+        "image/png"
+      else
+        "image/jpeg"
+      end
+
     # For every media we need to create several files, a thumbnail, a preview, and a poster. And we need to upload every image to S3 as well
     # We will use the Image library. We must start by creating a new file stream
     {:ok, stream} = Helpers.get_stream_from_uri(filepath)
@@ -39,7 +52,7 @@ defmodule Castmill.Workers.ImageTranscoder do
           {uri, size} =
             Image.open!(stream)
             |> Image.thumbnail!(size)
-            |> upload_image(organization_id, media_id, "#{context}.jpg")
+            |> upload_image(organization_id, media_id, "#{context}.#{extension}")
 
           {:ok, file} =
             Castmill.Files.create_file(%{
@@ -48,7 +61,7 @@ defmodule Castmill.Workers.ImageTranscoder do
               uri: uri,
               size: size,
               organization_id: organization_id,
-              mimetype: "image/jpeg"
+              mimetype: mimetype
             })
 
           Castmill.Files.add_file_to_media(file.id, media_id, context)
