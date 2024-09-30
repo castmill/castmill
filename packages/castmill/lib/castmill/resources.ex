@@ -615,30 +615,39 @@ defmodule Castmill.Resources do
   defp delete_file_from_storage(%Castmill.Files.File{uri: uri}) do
     case Application.get_env(:castmill, :file_storage) do
       :local ->
-        file_path = get_local_file_path(uri)
-        File.rm(file_path)
+        case get_local_file_path(uri) do
+          {:ok, file_path} -> File.rm(file_path)
+          {:error, _reason} -> {:error, :invalid_path}
+        end
 
       :s3 ->
         {bucket, object_path} = get_s3_file_path(uri)
 
-        case ExAws.S3.delete_object(bucket, object_path) |> ExAws.request() do
-          {:ok, _} -> :ok
-          {:error, reason} -> {:error, reason}
-        end
+        ExAws.S3.delete_object(bucket, object_path)
+        |> ExAws.request()
     end
   end
 
   defp get_local_file_path(uri) do
     # Assuming your URIs are built like "http://localhost:4000/medias/dst_path/filename"
     # Strip off the "http://localhost:4000" and return the path that starts with "medias/..."
+
+    base_directory = Path.join([Application.app_dir(:castmill), "priv", "static"])
+
     uri
     |> URI.parse()
     |> then(fn %URI{path: path} ->
-      # Strip leading slashes to get the relative file path
       String.trim_leading(path, "/")
     end)
-    # Ensure correct base directory
-    |> Path.join([Application.app_dir(:castmill), "priv/static"])
+    |> (fn relative_path ->
+          full_path = Path.expand(relative_path, base_directory)
+
+          if String.starts_with?(full_path, base_directory) do
+            {:ok, full_path}
+          else
+            {:error, "Path traversal detected"}
+          end
+        end).()
   end
 
   defp get_s3_file_path(uri) do
