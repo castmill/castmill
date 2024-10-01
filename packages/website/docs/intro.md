@@ -52,7 +52,7 @@ user is created in the database in a migration step.
 The dasboard is the main interface that the users will use to interact with Castmill, the content and the devices. By default any users
 can just sign up and start using the dashboard (we will offer an "invitation only" mode in the future).
 
-The signup process is based on passkeys ([read more about passkeys](/https://fidoalliance.org/passkeys/)). Passkeys are a modern and secure way to authenticate users, and they are based on the device's biosignature. This means that the user will need to use the same device to sign up and login into the dashboard, however it will be possible to associate different devices to the same account.
+The signup process is based on passkeys ([read more about passkeys](https://fidoalliance.org/passkeys/)). Passkeys are a modern and secure way to authenticate users, and they are based on the device's biosignature. This means that the user will need to use the same device to sign up and login into the dashboard, however it will be possible to associate different devices to the same account.
 
 As soon as you sign up you will receive an email with a link to verify and create your account, note that this will only work if you
 have a valid email configuration in the docker-compose.yml file.
