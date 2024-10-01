@@ -7,14 +7,14 @@ sidebar_position: 2
 Castmill is a large system that can be used to tackle most scenarios that can arise in the digital signage world. This guide will help you understand the main concepts and how to use the system.
 
 There are several concepts that are important to understand in order to use Castmill effectively. These are:
-- [Networks](networks.md)
-- [Organizations](organizations.md)
-- [Users](users.md)
-- [Teams](teams.md)
-- [Devices](devices.md)
-- [Content](content.md)
-- [Widgets](widgets.md)
-- [Schedules](schedules.md)
+- [Networks](networks/networks.md)
+- [Organizations](organizations/organizations.md)
+- [Users](organizations/users.md)
+- [Teams](organizations/teams.md)
+- [Devices](devices/devices.md)
+- [Content](content/content.md)
+- [Widgets](widgets/widgets.md)
+- [Channels](channels/channels.md)
 
 These concepts are the building blocks of the Castmill system. They are used to organize and manage the different parts of the system.
 
