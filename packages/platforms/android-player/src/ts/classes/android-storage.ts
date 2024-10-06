@@ -6,6 +6,7 @@ import {
   StorageIntegration,
   StorageInfo,
   StorageItem,
+  StoreOptions,
   StoreFileReturnValue,
 } from '@castmill/cache';
 import { simpleHash } from '../utils';
@@ -15,17 +16,6 @@ const DIR = Directory.Documents;
 
 function join(...parts: string[]): string {
   return parts.join('/');
-}
-
-async function digestText(message: string) {
-  const msgUint8 = new TextEncoder().encode(message);
-  const hashBuffer = await window.crypto.subtle.digest('SHA-256', msgUint8);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  // Convert bytes to hex string
-  const hashHex = hashArray
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
-  return hashHex;
 }
 
 export class AndroidStorage implements StorageIntegration {
@@ -62,7 +52,8 @@ export class AndroidStorage implements StorageIntegration {
       }
 
       const { diskFree } = await Device.getInfo();
-      const total = diskFree ? diskFree + used * 0.5 : FALLBACK_MAX_DISK_SPACE;
+      // Use 50% of the free disk space as the total space
+      const total = diskFree ? (diskFree + used) * 0.5 : FALLBACK_MAX_DISK_SPACE;
       return { used, total };
     } catch (error) {
       console.error('Failed to get storage info:', error);
@@ -79,10 +70,12 @@ export class AndroidStorage implements StorageIntegration {
       return Promise.all(
         files
           .filter(({ name }) => !name.endsWith('.tmp')) // Exclude temporary files
-          .map(({ name, size }) => {
+          .map(async ({ name, size }) => {
             const filePath = join(this.storagePath, name);
+
+            const localUrl = await this.getLocalUrl(filePath);
             return {
-              url: filePath,
+              url: localUrl,
               size,
             };
           })
@@ -93,38 +86,18 @@ export class AndroidStorage implements StorageIntegration {
     }
   }
 
-  async deleteFileIfExists(filePath: string): Promise<void> {
-    console.log('Deleting if exists', filePath);
-    try {
-      await Filesystem.deleteFile({ path: filePath, directory: DIR });
-    } catch (error) {
-      // File does not exist, nothing to do
-    }
-  }
-
-  async writeFile(filePath: string, data: any) {
-    await this.deleteFileIfExists(filePath);
-    return await Filesystem.writeFile({
-      path: filePath,
-      data: data,
-      directory: DIR,
-      recursive: true,
-    });
-  }
-
-  async downloadFile(filePath: string, url: string) {
-    console.log('Downloading', url, 'to', filePath);
+  async downloadFile(filePath: string, url: string, opts?: StoreOptions) {
     await this.deleteFileIfExists(filePath);
     return await Filesystem.downloadFile({
       path: filePath,
       url: url,
+      headers: opts?.headers,
       directory: DIR,
       recursive: true,
     });
   }
 
   async rename(oldPath: string, newPath: string) {
-    console.log('Renaming', oldPath, newPath);
     await this.deleteFileIfExists(newPath);
     return await Filesystem.rename({
       from: oldPath,
@@ -133,19 +106,15 @@ export class AndroidStorage implements StorageIntegration {
     });
   }
 
-  async storeFile(url: string, data?: any): Promise<StoreFileReturnValue> {
+  async storeFile(url: string, opts?: StoreOptions): Promise<StoreFileReturnValue> {
     try {
-      const filename = await this.getFileName(url);
+      const filename = this.getFileName(url);
 
       const filePath = join(this.storagePath, filename);
       const tempPath = this.getTempPath(filePath);
 
       try {
-        if (data) {
-          await this.writeFile(tempPath, data);
-        } else {
-          await this.downloadFile(tempPath, url);
-        }
+          await this.downloadFile(tempPath, url, opts);
 
         // Atomically rename the file to its final name
         await this.rename(tempPath, filePath);
@@ -165,11 +134,8 @@ export class AndroidStorage implements StorageIntegration {
         directory: DIR,
       });
 
-      const { uri } = await Filesystem.getUri({
-        path: filePath,
-        directory: DIR,
-      });
-      const localUrl = Capacitor.convertFileSrc(uri);
+      const localUrl = await this.getLocalUrl(filePath);
+
       return {
         result: { code: 'SUCCESS' },
         item: {
@@ -186,44 +152,35 @@ export class AndroidStorage implements StorageIntegration {
     }
   }
 
-  /*
-   * Generate a unique file name based on the URL. Keep the extension if present.
-   * @param {string} url - The URL of the file
-   * @returns {string} - The unique file name
-   */
-  async getFileName(url: string): Promise<string> {
-    const pathName = new URL(url).pathname;
-    const extension = pathName.split('.').pop();
-
-    const hash = await digestText(pathName);
-    // if extension is present, append it to the hash otherwise, just return the hash
-    return extension ? `${hash}.${extension}` : hash;
-  }
-
-  getTempPath(path: string): string {
-    return `${path}-${Date.now()}.tmp`;
-  }
-
   async retrieveFile(url: string): Promise<string | void> {
     try {
-      const filePath = join(this.storagePath, await this.getFileName(url));
+      const filePath = join(this.storagePath, this.getFileName(url));
       await Filesystem.stat({ path: filePath, directory: DIR }); // Check if file exists
       return filePath;
     } catch (error) {
-      console.log('Failed to retrieve file:', error);
       return undefined; // File does not exist
     }
   }
 
   async deleteFile(url: string): Promise<void> {
+    const filePath = join(this.storagePath, this.getFileName(url));
+    await this.deleteFileIfExists(filePath);
+  }
+
+  async deleteFileIfExists(filePath: string): Promise<void> {
     try {
-      const filePath = join(this.storagePath, await this.getFileName(url));
       await Filesystem.deleteFile({ path: filePath, directory: DIR });
-    } catch (error) {
+    } catch (error: any) {
+      if (error?.message === 'File does not exist') {
+        // File does not exist, nothing to do
+        return;
+      }
+
       console.error('Failed to delete file:', error);
       throw error;
     }
   }
+
 
   async deleteAllFiles(): Promise<void> {
     try {
@@ -247,6 +204,40 @@ export class AndroidStorage implements StorageIntegration {
 
   async close(): Promise<void> {
     //noop
-    console.log('Closing storage resources, if any');
   }
+
+  /*
+   * Generate a unique file name based on the URL. Keep the extension if present.
+   * @param {string} url - The URL of the file
+   * @returns {string} - The unique file name
+   */
+  private getFileName(url: string): string {
+    const pathName = new URL(url).pathname;
+    // Get the extension of the file using regex. up to 4 characters after the last dot
+    const [file, extension] = pathName.split('.');
+
+    const hash = simpleHash(pathName);
+
+    // if extension is present, append it to the hash otherwise, just return the hash
+    return extension ? `${hash}.${extension}` : hash;
+  }
+
+  private getTempPath(path: string): string {
+    return `${path}-${Date.now()}.tmp`;
+  }
+
+  /**
+   * Get the local URL of a file.
+   * Example:
+   *  getLocalUrl('test/file1.txt') =>
+   *    'https://localhost/_capacitor_file_/test/file1.txt'
+   */
+  private async getLocalUrl(filePath: string): Promise<string> {
+      const { uri } = await Filesystem.getUri({
+        path: filePath,
+        directory: DIR,
+      });
+      return Capacitor.convertFileSrc(uri);
+  }
+
 }
