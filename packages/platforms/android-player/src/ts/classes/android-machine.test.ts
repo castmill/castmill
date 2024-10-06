@@ -107,15 +107,12 @@ describe('AndroidMachine', () => {
       heading: null,
       speed: null,
     };
-    // global.navigator.geolocation = {
-    //   getCurrentPosition: vi.fn((success) => success(mockLocation)),
-    // };
-    //mock geolocation api
-    vi.mocked(navigator.geolocation.getCurrentPosition).mockImplementation(
-      (success, error) => {
-        success(mockLocation);
-      }
-    );
+
+    vi.stubGlobal('navigator', {
+      geolocation: {
+        getCurrentPosition: vi.fn((success, error) => success(mockLocation)),
+      },
+    });
 
     const location = await machine.getLocation();
     expect(location).toEqual({
@@ -125,11 +122,11 @@ describe('AndroidMachine', () => {
   });
 
   it('should return undefined when location is unavailable', async () => {
-    global.navigator.geolocation = {
-      getCurrentPosition: vi.fn((_, error) =>
-        error(new Error('Location error'))
-      ),
-    };
+    vi.stubGlobal('navigator', {
+      geolocation: {
+        getCurrentPosition: vi.fn((success, error) => error(new Error('Location error'))),
+      },
+    });
 
     const location = await machine.getLocation();
     expect(location).toBeUndefined();
@@ -161,7 +158,7 @@ describe('AndroidMachine', () => {
     expect(deviceInfo).toEqual({
       appType: 'android',
       appVersion: '1.0.0',
-      os: 'Android',
+      os: 'android',
       hardware: 'Pixel',
       environmentVersion: '12',
       chromiumVersion: '88.0',
