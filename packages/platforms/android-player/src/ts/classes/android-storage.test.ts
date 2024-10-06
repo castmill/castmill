@@ -77,7 +77,7 @@ describe('AndroidStorage', () => {
 
     const info = await storage.info();
     expect(info.used).toBe(300);
-    expect(info.total).toBeGreaterThan(500000);
+    expect(info.total).toBe(250150);
   });
 
   it('should store a file and return its details', async () => {
@@ -110,7 +110,7 @@ describe('AndroidStorage', () => {
     const url = 'http://example.com/image.png';
     const fileName = 'hashed-filename.png';
 
-    vi.spyOn(storage, 'getFileName').mockResolvedValue(fileName);
+    vi.spyOn(storage, 'getFileName').mockReturnValue(fileName);
     vi.mocked(Filesystem.stat).mockResolvedValueOnce({
       type: 'file',
       size: 100,
@@ -127,7 +127,7 @@ describe('AndroidStorage', () => {
     const url = 'http://example.com/image.png';
     const fileName = 'hashed-filename.png';
 
-    vi.spyOn(storage, 'getFileName').mockResolvedValue(fileName);
+    vi.spyOn(storage, 'getFileName').mockReturnValue(fileName);
     vi.mocked(Filesystem.stat).mockRejectedValueOnce(
       new Error('File not found')
     );
@@ -140,7 +140,7 @@ describe('AndroidStorage', () => {
     const url = 'http://example.com/image.png';
     const fileName = 'hashed-filename.png';
 
-    vi.spyOn(storage, 'getFileName').mockResolvedValue(fileName);
+    vi.spyOn(storage, 'getFileName').mockReturnValue(fileName);
     vi.mocked(Filesystem.deleteFile).mockResolvedValueOnce();
 
     await storage.deleteFile(url);
@@ -154,7 +154,7 @@ describe('AndroidStorage', () => {
     const url = 'http://example.com/image.png';
     const fileName = 'hashed-filename.png';
 
-    vi.spyOn(storage, 'getFileName').mockResolvedValue(fileName);
+    vi.spyOn(storage, 'getFileName').mockReturnValue(fileName);
     vi.mocked(Filesystem.deleteFile).mockRejectedValueOnce(
       new Error('Delete failed')
     );
@@ -218,7 +218,7 @@ describe('AndroidStorage', () => {
     const url = 'http://example.com/file.png';
     const tempPath = `${testDir}/hashed-file-${Date.now()}.tmp`;
 
-    vi.spyOn(storage, 'getFileName').mockResolvedValue('hashed-file.png');
+    vi.spyOn(storage, 'getFileName').mockReturnValue('hashed-file.png');
     vi.spyOn(storage, 'getTempPath').mockReturnValue(tempPath);
     vi.mocked(Filesystem.downloadFile).mockResolvedValueOnce({
       path: tempPath,
@@ -253,10 +253,10 @@ describe('AndroidStorage', () => {
   });
 
   it('should handle file download failure and return FAILURE', async () => {
-    const url = 'http://example.com/file.png';
+    const url = 'http://example.com/a/b/c/file.png';
     const tempPath = `${testDir}/hashed-file-${Date.now()}.tmp`;
 
-    vi.spyOn(storage, 'getFileName').mockResolvedValue('hashed-file.png');
+    vi.spyOn(storage, 'getFileName').mockReturnValue('hashed-file.png');
     vi.spyOn(storage, 'getTempPath').mockReturnValue(tempPath);
     vi.mocked(Filesystem.downloadFile).mockRejectedValueOnce(
       new Error('Download error')
@@ -267,6 +267,20 @@ describe('AndroidStorage', () => {
     expect(Filesystem.deleteFile).toHaveBeenCalledWith({
       path: tempPath,
       directory: Directory.Documents,
+    });
+  });
+
+  describe('getFileName', () => {
+    it('should return a hashed filename', async () => {
+      const url = 'http://10.0.2.2:4000/devices/10022585-f83a-414c-9fd8-8dca87559cdd/channels';
+      const fileName = await storage.getFileName(url);
+      expect(fileName).toMatch(/^[a-f0-9]+$/);
+    });
+
+    it('should return a hashed filename with extention if present', async () => {
+      const url = 'http://10.0.2.2:4000/files/image.png';
+      const fileName = await storage.getFileName(url);
+      expect(fileName).toMatch(/^[a-f0-9]+\.png$/);
     });
   });
 });
