@@ -19,11 +19,8 @@ export class AndroidMachine implements Machine {
     });
   }
 
-  async getCredentials(): Promise<string> {
+  async getCredentials(): Promise<string | null> {
     const { value } = await Preferences.get({ key: 'credentials' });
-    if (!value) {
-      throw new Error('Credentials not found');
-    }
     return value;
   }
 

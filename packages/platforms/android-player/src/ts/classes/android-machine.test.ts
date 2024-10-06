@@ -85,12 +85,11 @@ describe('AndroidMachine', () => {
     expect(Preferences.get).toHaveBeenCalledWith({ key: 'credentials' });
   });
 
-  it('should throw an error when credentials are not found', async () => {
+  it('should return null when credentials are not found', async () => {
     vi.mocked(Preferences.get).mockResolvedValue({ value: null });
 
-    await expect(machine.getCredentials()).rejects.toThrow(
-      'Credentials not found'
-    );
+    const credentials = await machine.getCredentials();
+    expect(credentials).toBeNull();
   });
 
   it('should remove credentials', async () => {
@@ -101,10 +100,22 @@ describe('AndroidMachine', () => {
   it('should return location when available', async () => {
     const mockLocation = {
       coords: { latitude: 51.509865, longitude: -0.118092 },
+      timestamp: Date.now(),
+      accuracy: 0,
+      altitude: null,
+      altitudeAccuracy: null,
+      heading: null,
+      speed: null,
     };
-    global.navigator.geolocation = {
-      getCurrentPosition: vi.fn((success) => success(mockLocation)),
-    };
+    // global.navigator.geolocation = {
+    //   getCurrentPosition: vi.fn((success) => success(mockLocation)),
+    // };
+    //mock geolocation api
+    vi.mocked(navigator.geolocation.getCurrentPosition).mockImplementation(
+      (success, error) => {
+        success(mockLocation);
+      }
+    );
 
     const location = await machine.getLocation();
     expect(location).toEqual({
@@ -132,13 +143,18 @@ describe('AndroidMachine', () => {
   it('should return device information', async () => {
     vi.mocked(Device.getInfo).mockResolvedValue({
       platform: 'android',
-      operatingSystem: 'Android',
+      operatingSystem: 'android',
       model: 'Pixel',
       osVersion: '12',
       webViewVersion: '88.0',
+      manufacturer: 'Google',
+      isVirtual: false,
     });
     vi.mocked(App.getInfo).mockResolvedValue({
       version: '1.0.0',
+      name: 'Test App',
+      id: 'com.test.app',
+      build: '1',
     });
 
     const deviceInfo = await machine.getDeviceInfo();
@@ -156,10 +172,12 @@ describe('AndroidMachine', () => {
   it('should handle missing App plugin by using default app version', async () => {
     vi.mocked(Device.getInfo).mockResolvedValue({
       platform: 'android',
-      operatingSystem: 'Android',
+      operatingSystem: 'android',
       model: 'Pixel',
       osVersion: '12',
       webViewVersion: '88.0',
+      manufacturer: 'Google',
+      isVirtual: false,
     });
     vi.mocked(App.getInfo).mockRejectedValueOnce(
       new Error('App plugin not available')

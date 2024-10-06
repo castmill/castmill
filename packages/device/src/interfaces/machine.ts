@@ -77,7 +77,7 @@ export interface Machine {
    *  Returns the credentials stored on the device.
    *
    */
-  getCredentials(): Promise<string>;
+  getCredentials(): Promise<string | null>;
 
   /**
    * Remove the credentials from the device.
