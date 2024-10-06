@@ -90,8 +90,8 @@ export class Device extends EventEmitter {
       cache?: {
         maxItems?: number;
       };
-      viewport: Viewport;
-      baseUrl: string;
+      viewport?: Viewport;
+      baseUrl?: string;
     }
   ) {
     super();
@@ -130,7 +130,7 @@ export class Device extends EventEmitter {
     this.contentQueue = new Playlist('content-queue', this.resourceManager);
 
     const rawChannels = await this.resourceManager.getData(
-      `${this.opts?.baseUrl || ''}/devices/${device.id}/channels`,
+      `${this.getBaseUrl()}/devices/${device.id}/channels`,
       1000
     );
 
@@ -170,7 +170,7 @@ export class Device extends EventEmitter {
           if (entry) {
             const jsonPlaylist: JsonPlaylist | void =
               await this.resourceManager.getData(
-                `${this.opts?.baseUrl || ''}devices/${device.id}/playlists/${
+                `${this.getBaseUrl()}/devices/${device.id}/playlists/${
                   entry.playlist
                 }`,
                 1000
@@ -282,7 +282,7 @@ export class Device extends EventEmitter {
 
   private async requestPincode(hardwareId: string) {
     const location = await this.integration.getLocation!();
-    const pincodeResponse = await fetch('/registrations', {
+    const pincodeResponse = await fetch(`${this.getBaseUrl()}/registrations`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -338,13 +338,13 @@ export class Device extends EventEmitter {
   }
 
   get socketEndpoint() {
-    return `${this.opts?.baseUrl || ''}/socket`;
+    return `${this.getBaseUrl().replace('http', 'ws')}/socket`;
   }
 
   async register(hardwareId: string) {
     const pincode = await this.requestPincode(hardwareId);
 
-    let socket = new Socket(`/socket`, {
+    let socket = new Socket(this.socketEndpoint, {
       params: { token: pincode },
     });
 
@@ -381,7 +381,7 @@ export class Device extends EventEmitter {
   async login(credentials: string, hardwareId: string) {
     const { device } = JSON.parse(credentials);
 
-    const socket = (this.socket = new Socket(`/socket`, {
+    const socket = (this.socket = new Socket(this.socketEndpoint, {
       params: { device_id: device.id, hardware_id: hardwareId },
       reconnectAfterMs: (_tries: number) => 10_000,
       rejoinAfterMs: (_tries: number) => 10_000,
@@ -545,6 +545,10 @@ export class Device extends EventEmitter {
           break;
       }
     }
+  }
+
+  private getBaseUrl() {
+    return this.opts?.baseUrl ?? '';
   }
 }
 
