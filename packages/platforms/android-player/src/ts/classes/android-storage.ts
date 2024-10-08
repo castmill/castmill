@@ -90,7 +90,7 @@ export class AndroidStorage implements StorageIntegration {
     await this.deleteFileIfExists(filePath);
     return await Filesystem.downloadFile({
       path: filePath,
-      url: url,
+      url: url.replace('localhost', '10.0.2.2'), // Android emulator localhost
       headers: opts?.headers,
       directory: DIR,
       recursive: true,
@@ -114,7 +114,7 @@ export class AndroidStorage implements StorageIntegration {
       const tempPath = this.getTempPath(filePath);
 
       try {
-          await this.downloadFile(tempPath, url, opts);
+        await this.downloadFile(tempPath, url, opts);
 
         // Atomically rename the file to its final name
         await this.rename(tempPath, filePath);
