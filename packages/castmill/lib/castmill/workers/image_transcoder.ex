@@ -52,7 +52,7 @@ defmodule Castmill.Workers.ImageTranscoder do
           {uri, size} =
             Image.open!(stream)
             |> Image.thumbnail!(size)
-            |> upload_image(organization_id, media_id, "#{context}.#{extension}")
+            |> upload_image(organization_id, media_id, "#{context}#{extension}")
 
           {:ok, file} =
             Castmill.Files.create_file(%{
