@@ -20,6 +20,7 @@ import { PlaylistItem } from './playlist-item';
 import { WidgetConfig } from './widget-config';
 
 export const PlaylistItems: Component<{
+  baseUrl: string;
   organizationId: string;
   items: JsonPlaylistItem[];
   onEditItem: (
@@ -203,6 +204,7 @@ export const PlaylistItems: Component<{
           onClose={() => closeDialog()}
         >
           <WidgetConfig
+            baseUrl={props.baseUrl}
             item={showModal()!}
             onSubmit={async ({ config, expandedOptions }) => {
               closeDialog({ config, expandedOptions });

@@ -27,6 +27,7 @@ import { WidgetView } from './widget-view';
  */
 
 interface WidgetConfigProps {
+  baseUrl: string;
   item: JsonPlaylistItem;
   organizationId: string;
   onSubmit: (value: {
@@ -242,6 +243,7 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
                     search: string
                   ) => {
                     return ResourcesService.fetch<JsonMedia>(
+                      props.baseUrl,
                       props.organizationId,
                       'medias',
                       {
