@@ -221,6 +221,7 @@ export const PlaylistView: Component<{
             <WidgetChooser widgets={widgets()} />
           </div>
           <PlaylistItems
+            baseUrl={props.baseUrl}
             organizationId={props.organizationId}
             items={items()}
             onEditItem={onEditItem}
