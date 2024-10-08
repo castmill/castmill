@@ -83,6 +83,7 @@ defmodule CastmillWeb.Endpoint do
   # TODO: we must cache the allowed origins at least for a few minutes or this
   # will be a huge performance bottleneck. The cache must use ETS to be shared.
   def getAllowedOrigins() do
-    Castmill.Networks.list_network_domains()
+    ["https://localhost" | Castmill.Networks.list_network_domains()]
   end
+
 end
