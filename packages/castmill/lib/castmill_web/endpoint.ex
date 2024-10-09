@@ -85,5 +85,4 @@ defmodule CastmillWeb.Endpoint do
   def getAllowedOrigins() do
     ["https://localhost" | Castmill.Networks.list_network_domains()]
   end
-
 end
