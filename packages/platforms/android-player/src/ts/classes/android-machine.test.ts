@@ -124,7 +124,9 @@ describe('AndroidMachine', () => {
   it('should return undefined when location is unavailable', async () => {
     vi.stubGlobal('navigator', {
       geolocation: {
-        getCurrentPosition: vi.fn((success, error) => error(new Error('Location error'))),
+        getCurrentPosition: vi.fn((success, error) =>
+          error(new Error('Location error'))
+        ),
       },
     });
 

@@ -53,7 +53,9 @@ export class AndroidStorage implements StorageIntegration {
 
       const { diskFree } = await Device.getInfo();
       // Use 50% of the free disk space as the total space
-      const total = diskFree ? (diskFree + used) * 0.5 : FALLBACK_MAX_DISK_SPACE;
+      const total = diskFree
+        ? (diskFree + used) * 0.5
+        : FALLBACK_MAX_DISK_SPACE;
       return { used, total };
     } catch (error) {
       console.error('Failed to get storage info:', error);
@@ -106,7 +108,10 @@ export class AndroidStorage implements StorageIntegration {
     });
   }
 
-  async storeFile(url: string, opts?: StoreOptions): Promise<StoreFileReturnValue> {
+  async storeFile(
+    url: string,
+    opts?: StoreOptions
+  ): Promise<StoreFileReturnValue> {
     try {
       const filename = this.getFileName(url);
 
@@ -181,7 +186,6 @@ export class AndroidStorage implements StorageIntegration {
     }
   }
 
-
   async deleteAllFiles(): Promise<void> {
     try {
       const { files } = await Filesystem.readdir({
@@ -233,11 +237,10 @@ export class AndroidStorage implements StorageIntegration {
    *    'https://localhost/_capacitor_file_/test/file1.txt'
    */
   private async getLocalUrl(filePath: string): Promise<string> {
-      const { uri } = await Filesystem.getUri({
-        path: filePath,
-        directory: DIR,
-      });
-      return Capacitor.convertFileSrc(uri);
+    const { uri } = await Filesystem.getUri({
+      path: filePath,
+      directory: DIR,
+    });
+    return Capacitor.convertFileSrc(uri);
   }
-
 }
