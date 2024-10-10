@@ -272,7 +272,8 @@ describe('AndroidStorage', () => {
 
   describe('getFileName', () => {
     it('should return a hashed filename', async () => {
-      const url = 'http://10.0.2.2:4000/devices/10022585-f83a-414c-9fd8-8dca87559cdd/channels';
+      const url =
+        'http://10.0.2.2:4000/devices/10022585-f83a-414c-9fd8-8dca87559cdd/channels';
       const fileName = await storage.getFileName(url);
       expect(fileName).toMatch(/^[a-f0-9]+$/);
     });
