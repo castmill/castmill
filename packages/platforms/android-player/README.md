@@ -10,3 +10,9 @@ To run the provided example, you can use `npm start` command.
 ```bash
 npm start
 ```
+
+## How to build the app
+
+1. `yarn build` - build typescript
+2. `npx cap sync` - sync built assets to android project
+3. Build in android studio
