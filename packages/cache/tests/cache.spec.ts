@@ -167,4 +167,51 @@ describe('Cache', () => {
   it('should not download the same file again if already in the process of caching', () => {});
 
   it('should clear the cache', async () => {});
+
+  it('should remove items from integration that are not in the cache', async () => {
+    const url = 'https://example.com/code.js';
+    const storage = {
+      init: vi.fn(),
+      listFiles: async () => [
+        { url, size: 12 },
+      ],
+      deleteFile: vi.fn(),
+    } as unknown as StorageIntegration;
+
+    const cache = new Cache(storage, 'test-remove', 10);
+    await cache.init();
+
+    expect(storage.deleteFile).toHaveBeenCalledWith(url);
+  });
+
+  it('should remove items from cache that are not in the integration', async () => {
+    const url = 'https://example.com/code.js';
+    const storage = {
+      init: vi.fn(),
+      listFiles: async () => [],
+      storeFile: vi.fn().mockResolvedValue({
+        result: {
+          code: 'SUCCESS'
+        },
+        item: { url, size: 12 }
+      }),
+      deleteFile: vi.fn(),
+    } as unknown as StorageIntegration;
+
+    const cache = new Cache(storage, 'test-remove', 10);
+    await cache.init();
+
+    // set the item in the cache. The mocked integration will not store it
+    await cache.set(url, ItemType.Code, 'text/javascript');
+
+    const items = await cache.list(ItemType.Code);
+    expect(items).to.have.length(1);
+
+    // Trigger the init again. The cache should now detect that the item is not in the integration and remove it from the cache.
+    await cache.init();
+
+    // The item should be removed from the cache
+    const items2 = await cache.list(ItemType.Code);
+    expect(items2).to.have.length(0);
+  });
 });
