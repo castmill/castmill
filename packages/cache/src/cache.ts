@@ -80,6 +80,15 @@ export class Cache extends Dexie {
       }
     }
 
+    // Remove items from cache that are not in the integration
+    const items = await this.items.toArray();
+    for (const item of items) {
+      const exists = files.some((file) => file.url === item.cachedUrl);
+      if (!exists) {
+        await this.items.delete(item.url);
+      }
+    }
+
     // Iterate existing items and make sure they are up-to-date
     /*
     for (const itemType of Object.values(ItemType)) {
