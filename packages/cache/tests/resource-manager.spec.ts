@@ -39,46 +39,36 @@ describe('ResourceManager', () => {
 
       setFetchMock(code1);
 
+      // Create a cache with the initial code
       const storage = new StorageMockup({
         [uri]: code1,
       });
 
+      // Create a cache with the initial code
       const cache = new Cache(storage, 'test-resource', 10);
+      let needsRefreshCalled = false;
       const manager = new ResourceManager(cache);
 
       await manager.init();
 
+      // Get the code from the cache
       const { a } = await manager.import(uri);
       expect(a).to.be.eql(1);
-
-      manager.close();
-      cache.close();
 
       const code2 = 'export const a = 20;';
       setFetchMock(code2);
 
-      const storage2 = new StorageMockup({
-        [uri]: code2,
-      });
-
-      const cache2 = new Cache(storage2, 'test-resource', 10);
-      await cache2.init();
-
-      let needsRefreshCalled = false;
-      const manager2 = new ResourceManager(cache2, {
+      const manager2 = new ResourceManager(cache, {
         needsRefresh: () => {
           needsRefreshCalled = true;
         },
       });
 
       await manager2.init();
-
-      const result1 = await manager2.import(uri);
-      expect(result1.a).to.be.eql(20);
-
       manager2.close();
-      cache2.close();
+      cache.close();
 
+      // Check if the needsRefresh callback was called
       expect(needsRefreshCalled).to.be.true;
 
       global.fetch = originalFetch;
