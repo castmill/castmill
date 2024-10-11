@@ -172,9 +172,7 @@ describe('Cache', () => {
     const url = 'https://example.com/code.js';
     const storage = {
       init: vi.fn(),
-      listFiles: async () => [
-        { url, size: 12 },
-      ],
+      listFiles: async () => [{ url, size: 12 }],
       deleteFile: vi.fn(),
     } as unknown as StorageIntegration;
 
@@ -191,9 +189,9 @@ describe('Cache', () => {
       listFiles: async () => [],
       storeFile: vi.fn().mockResolvedValue({
         result: {
-          code: 'SUCCESS'
+          code: 'SUCCESS',
         },
-        item: { url, size: 12 }
+        item: { url, size: 12 },
       }),
       deleteFile: vi.fn(),
     } as unknown as StorageIntegration;
