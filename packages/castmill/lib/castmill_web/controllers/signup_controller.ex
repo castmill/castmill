@@ -26,11 +26,7 @@ defmodule CastmillWeb.SignUpController do
       |> json(%{status: :error, msg: "Missing origin"})
     else
       case Accounts.get_network_id_by_domain(origin) do
-        network_id ->
-          conn
-          |> put_status(:unprocessable_entity)
-          |> json(%{status: :error, msg: "Network not found"})
-
+        {:ok, network_id} ->
           challenge = SessionUtils.new_challenge()
           params = %{"email" => email, "challenge" => challenge, "network_id" => network_id}
 
@@ -38,22 +34,32 @@ defmodule CastmillWeb.SignUpController do
             {:ok, signup} ->
               UserNotifier.deliver_signup_instructions(signup, origin)
 
+              # Serialize the signup struct
+              signup_data = %{
+                id: signup.id,
+                email: signup.email,
+                inserted_at: signup.inserted_at,
+                updated_at: signup.updated_at,
+                challenge: signup.challenge,
+                status_message: signup.status_message
+              }
+
               conn
               |> put_status(:created)
-              |> json(%{status: :ok, signup: signup})
+              |> json(%{status: :ok, signup: signup_data})
 
             {:error, _changeset} ->
               conn
               |> put_status(:unprocessable_entity)
               |> json(%{status: :error})
           end
+
+        {:error, :network_not_found} ->
+          conn
+          |> put_status(:unprocessable_entity)
+          |> json(%{status: :error, msg: "Network not found"})
       end
     end
-  rescue
-    error ->
-      conn
-      |> put_status(:internal_server_error)
-      |> json(%{status: :error, msg: "Unexpected error: #{inspect(error)}"})
   end
 
   @doc """

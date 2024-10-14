@@ -377,11 +377,17 @@ defmodule Castmill.Accounts do
   end
 
   def get_network_id_by_domain(domain) do
-    from(network in Castmill.Networks.Network,
-      where: network.domain == ^domain,
-      select: network.id
-    )
-    |> Repo.one()
+    case from(network in Castmill.Networks.Network,
+           where: network.domain == ^domain,
+           select: network.id
+         )
+         |> Repo.one() do
+      nil ->
+        {:error, :network_not_found}
+
+      network_id ->
+        {:ok, network_id}
+    end
   end
 
   ## Addons
