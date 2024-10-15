@@ -50,7 +50,7 @@ RUN mix local.hex --force && \
     mix local.rebar --force
 
 # Set build ENV
-ENV MIX_ENV="prod"
+ENV MIX_ENV=prod
 
 # Install mix dependencies
 RUN mix deps.get --only $MIX_ENV
@@ -88,7 +88,7 @@ WORKDIR "/app"
 RUN chown nobody /app
 
 # set runner ENV
-ENV MIX_ENV="prod"
+ENV MIX_ENV=prod
 
 # Only copy the final release from the build stage
 COPY --from=builder --chown=nobody:root /app/packages/castmill/_build/${MIX_ENV}/rel/castmill ./
