@@ -11,6 +11,15 @@ import Config
 # before starting your production server.
 config :castmill, CastmillWeb.Endpoint,
   cache_static_manifest: "priv/static/cache_manifest.json",
+  http: [
+    ip: {0, 0, 0, 0},
+    port:
+      String.to_integer(
+        if System.get_env("PORT") in [nil, "", false],
+          do: "4000",
+          else: System.get_env("PORT")
+      )
+  ],
   url: [
     scheme:
       if(System.get_env("CASTMILL_SCHEME") in [nil, "", false],
