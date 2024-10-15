@@ -18,7 +18,7 @@ defmodule CastmillWeb.Secrets do
   end
 
   def get_database_url do
-    get_env_or_file_value("DATABASE_URL", "ecto://postgres:postgres@db:5432/castmill_dev")
+    get_env_or_file_value("DATABASE_URL")
   end
 
   def get_secret_key_base do
