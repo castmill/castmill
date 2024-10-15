@@ -1,5 +1,7 @@
 import Config
 
+require Logger
+
 # config/runtime.exs is executed for all environments, including
 # during releases. It is executed after compilation and before the
 # system starts, so it is typically used to load production configuration
@@ -20,9 +22,11 @@ if System.get_env("PHX_SERVER") do
   config :castmill, CastmillWeb.Endpoint, server: true
 end
 
-IO.inspect("Loading runtime configuration... for #{config_env()} environment")
+Logger.info("Loading runtime configuration for #{config_env()} environment")
 
 if config_env() == :prod do
+  Logger.info("Loading production configuration...")
+
   database_url =
     CastmillWeb.Secrets.get_database_url() ||
       raise """
