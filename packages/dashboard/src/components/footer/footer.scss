@@ -1,4 +1,6 @@
 .castmill-footer {
+  position: fixed; /* Always at the bottom */
+  bottom: 0;
   flex: 0 0 auto; /* Fixed height */
 
   display: flex;
