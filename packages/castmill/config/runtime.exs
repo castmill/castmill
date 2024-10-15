@@ -32,7 +32,8 @@ if config_env() == :prod do
   config :castmill, Castmill.Mailer,
     adapter: Swoosh.Adapters.Mailgun,
     api_key: CastmillWeb.Secrets.get_mailgun_api_key(),
-    domain: System.get_env("MAILGUN_DOMAIN")
+    domain: System.get_env("MAILGUN_DOMAIN"),
+    base_url: System.get_env("MAILGUN_BASE_URL")
 
   # Choose S3 or Local as file upload destination
   # config :castmill, :file_storage, :s3
