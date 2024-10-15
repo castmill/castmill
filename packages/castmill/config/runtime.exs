@@ -20,6 +20,8 @@ if System.get_env("PHX_SERVER") do
   config :castmill, CastmillWeb.Endpoint, server: true
 end
 
+IO.inspect("Loading runtime configuration... for #{Mix.env()} environment")
+
 if config_env() == :prod do
   database_url =
     CastmillWeb.Secrets.get_database_url() ||
