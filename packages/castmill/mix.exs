@@ -48,6 +48,7 @@ defmodule Castmill.MixProject do
       {:image, "~> 0.37"},
       {:jason, "~> 1.2"},
       {:mox, "~> 1.0", only: [:test]},
+      {:multipart, "~> 0.4.0"},
       {:oban, "~> 2.17"},
       {:phoenix, "~> 1.7.2"},
       {:phoenix_ecto, "~> 4.4"},
