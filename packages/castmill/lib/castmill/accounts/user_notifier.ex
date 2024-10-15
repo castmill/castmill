@@ -1,5 +1,6 @@
 defmodule Castmill.Accounts.UserNotifier do
   import Swoosh.Email
+  require Logger
 
   alias Castmill.Mailer
 
@@ -12,8 +13,14 @@ defmodule Castmill.Accounts.UserNotifier do
       |> subject(subject)
       |> text_body(body)
 
-    with {:ok, _metadata} <- Mailer.deliver(email) do
-      {:ok, email}
+    case Mailer.deliver(email) do
+      {:ok, response} ->
+        Logger.info("Email sent successfully: #{inspect(response)}")
+        {:ok, email}
+
+      {:error, reason} ->
+        Logger.error("Failed to send email: #{inspect(reason)}")
+        {:error, reason}
     end
   end
 
