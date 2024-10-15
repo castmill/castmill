@@ -22,10 +22,10 @@ if System.get_env("PHX_SERVER") do
   config :castmill, CastmillWeb.Endpoint, server: true
 end
 
-Logger.info("Loading runtime configuration for #{config_env()} environment")
+IO.puts("Loading runtime configuration for #{config_env()} environment")
 
 if config_env() == :prod do
-  Logger.info("Loading production configuration...")
+  IO.puts("Loading production configuration...")
 
   database_url =
     CastmillWeb.Secrets.get_database_url() ||
