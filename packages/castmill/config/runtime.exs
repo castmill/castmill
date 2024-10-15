@@ -70,7 +70,7 @@ if config_env() == :prod do
       do: "localhost",
       else: System.get_env("CASTMILL_HOST")
 
-  port = String.to_integer(System.get_env("CASTMILL_PORT") || "4000")
+  port = String.to_integer(System.get_env("PORT") || "4000")
 
   config :castmill, CastmillWeb.Endpoint,
     url: [host: host, port: 443, scheme: "https"],
