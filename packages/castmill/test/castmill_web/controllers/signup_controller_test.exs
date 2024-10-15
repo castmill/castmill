@@ -3,6 +3,7 @@ defmodule CastmillWeb.SignUpControllerTest do
 
   import Castmill.NetworksFixtures
   alias CastmillWeb.Router.Helpers
+  alias CastmillWeb.Router.Helpers, as: Routes
 
   # Import or define any necessary fixture functions here
   import Castmill.AccountsFixtures
@@ -19,6 +20,57 @@ defmodule CastmillWeb.SignUpControllerTest do
   end
 
   describe "create/2" do
+    test "returns error when origin header is missing", %{conn: conn} do
+      email = "test@example.com"
+
+      conn =
+        post(conn, Routes.sign_up_path(conn, :create), %{email: email})
+
+      response = json_response(conn, 422)
+      assert response["status"] == "error"
+      assert response["msg"] == "Missing origin"
+    end
+
+    test "returns error when network is not found", %{conn: conn} do
+      origin = "https://unknown.com"
+      conn = put_req_header(conn, "origin", origin)
+
+      email = "test@example.com"
+
+      conn =
+        post(conn, Routes.sign_up_path(conn, :create), %{email: email})
+
+      response = json_response(conn, 422)
+      assert response["status"] == "error"
+      assert response["msg"] == "Network not found"
+    end
+
+    test "successfully creates a signup and returns serialized data", %{conn: conn} do
+      origin = "https://example.com"
+      conn = put_req_header(conn, "origin", origin)
+      _network = network_fixture(%{domain: origin})
+
+      email = "test@example.com"
+
+      conn =
+        post(conn, Routes.sign_up_path(conn, :create), %{email: email})
+
+      response = json_response(conn, 201)
+      assert response["status"] == "ok"
+      assert response["signup"]
+
+      signup = response["signup"]
+      assert signup["email"] == email
+      assert signup["challenge"]
+      assert signup["inserted_at"]
+      assert signup["updated_at"]
+      refute Map.has_key?(signup, "__meta__")
+      refute Map.has_key?(signup, "password_hash")
+
+      # Ensure an email was sent
+      assert_email_sent(subject: "Signup instructions")
+    end
+
     test "successfully creates a signup and sends instructions", %{conn: conn} do
       origin = "https://example.com"
       # Setting the origin header
@@ -37,10 +89,19 @@ defmodule CastmillWeb.SignUpControllerTest do
     end
 
     test "handles errors during signup creation", %{conn: conn} do
-      # Simulate an error scenario, e.g., invalid parameters
-      conn = post(conn, Helpers.sign_up_path(conn, :create), email: nil)
+      origin = "https://example.com"
+      conn = put_req_header(conn, "origin", origin)
+      _network = network_fixture(%{domain: origin})
 
-      assert json_response(conn, 422)["status"] == "error"
+      # Simulate invalid email
+      email = nil
+
+      conn =
+        post(conn, Routes.sign_up_path(conn, :create), %{email: email})
+
+      response = json_response(conn, 422)
+      assert response["status"] == "error"
+      # Optionally check for specific error messages
     end
   end
 
