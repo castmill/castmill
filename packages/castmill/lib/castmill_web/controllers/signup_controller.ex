@@ -32,21 +32,30 @@ defmodule CastmillWeb.SignUpController do
 
           case Accounts.create_signup(params) do
             {:ok, signup} ->
-              UserNotifier.deliver_signup_instructions(signup, origin)
+              case UserNotifier.deliver_signup_instructions(signup, origin) do
+                {:ok, _email} ->
+                  # Serialize the signup struct
+                  signup_data = %{
+                    id: signup.id,
+                    email: signup.email,
+                    inserted_at: signup.inserted_at,
+                    updated_at: signup.updated_at,
+                    challenge: signup.challenge,
+                    status_message: signup.status_message
+                  }
 
-              # Serialize the signup struct
-              signup_data = %{
-                id: signup.id,
-                email: signup.email,
-                inserted_at: signup.inserted_at,
-                updated_at: signup.updated_at,
-                challenge: signup.challenge,
-                status_message: signup.status_message
-              }
+                  conn
+                  |> put_status(:created)
+                  |> json(%{status: :ok, signup: signup_data})
 
-              conn
-              |> put_status(:created)
-              |> json(%{status: :ok, signup: signup_data})
+                {:error, reason} ->
+                  # Optionally, you might want to delete the signup if email delivery fails
+                  # Accounts.delete_signup(signup)
+
+                  conn
+                  |> put_status(:unprocessable_entity)
+                  |> json(%{status: :error, msg: "Failed to send email", error: inspect(reason)})
+              end
 
             {:error, _changeset} ->
               conn
