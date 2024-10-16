@@ -1,5 +1,6 @@
 /* @refresh reload */
 import './index.scss';
+import { baseUrl } from './env';
 
 import { render } from 'solid-js/web';
 import {
@@ -27,7 +28,7 @@ const NotFound = lazy(() => import('./components/not-found'));
 
 const root = document.getElementById('root');
 
-const addOnBasePath = 'http://localhost:4000/assets/addons';
+const addOnBasePath = `${baseUrl}/assets/addons`;
 
 if (import.meta.env.DEV && !(root instanceof HTMLElement)) {
   throw new Error(

@@ -7,8 +7,9 @@ import { IoSettingsOutline } from 'solid-icons/io';
 import { AddOnTree } from '../../classes/addon-tree';
 import { AddOnNode } from '../../interfaces/addon-node.interface';
 import { store } from '../../store/store';
+import { baseUrl } from '../../env';
 
-const addOnBasePath = 'http://localhost:4000/assets/addons';
+const addOnBasePath = `${baseUrl}/assets/addons`;
 
 const SidePanelTree: Component<{ node: AddOnNode; level: number }> = (
   props
