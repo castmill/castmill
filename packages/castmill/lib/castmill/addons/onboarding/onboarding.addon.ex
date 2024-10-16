@@ -1,5 +1,6 @@
 defmodule Castmill.Addons.Onboarding do
   use Castmill.Addons.Addon
+  require Logger
 
   import Swoosh.Email
   alias Castmill.Mailer
@@ -23,15 +24,19 @@ defmodule Castmill.Addons.Onboarding do
   defp welcome_email(user_id, email) do
     user = Castmill.Accounts.get_user(user_id)
 
-    subject = "Welcome to Castmill!"
+    if user == nil do
+      Logger.error("User not found for id #{user_id}")
+    else
+      subject = "Welcome to Castmill!"
 
-    body = """
-    Hello #{user.name || ""}
+      body = """
+      Hello #{user.name || ""}
 
-    Welcome to Castmill! We're excited to have you on board.
-    """
+      Welcome to Castmill! We're excited to have you on board.
+      """
 
-    deliver(email, subject, body)
+      deliver(email, subject, body)
+    end
   end
 
   # Delivers the email using the application mailer.
