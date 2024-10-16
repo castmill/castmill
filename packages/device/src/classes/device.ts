@@ -60,6 +60,14 @@ interface DeviceRequest {
   opts: CachePage & { ref: string };
 }
 
+interface Credentials {
+  device: {
+    id: string;
+    name: string;
+    token: string;
+  };
+}
+
 /**
  * Castmill Device
  *
@@ -109,17 +117,13 @@ export class Device extends EventEmitter {
   }
 
   async start(el: HTMLElement, logDiv?: HTMLDivElement) {
-    let credentials = await this.integration.getCredentials();
+    const credentials = await this.getCredentials();
+
     if (!credentials) {
       throw new Error('Invalid credentials');
     }
 
-    const { device } = JSON.parse(credentials) as {
-      device: { id: string; name: string; token: string };
-    };
-    if (!device) {
-      throw new Error('Invalid credentials');
-    }
+    const { device } = credentials;
 
     this.resourceManager = new ResourceManager(this.cache, {
       authToken: device.token,
@@ -214,8 +218,35 @@ export class Device extends EventEmitter {
     this.player = undefined;
   }
 
+  /**
+   * Get the credentials from the integration and validate them.
+   * If the credentials are valid, return them.
+   */
+  async getCredentials(): Promise<Credentials | undefined> {
+    const credentials = await this.integration.getCredentials();
+
+    if (!credentials) {
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(credentials);
+      // Validate the credentials
+      if (
+        parsed?.device &&
+        parsed?.device?.id &&
+        parsed?.device?.token &&
+        parsed?.device?.name
+      ) {
+        return parsed;
+      }
+    } catch (error) {
+      this.logger.error(`Unparseable credentials ${error}`);
+    }
+  }
+
   async hasCredentials(): Promise<boolean> {
-    return !!(await this.integration.getCredentials());
+    return !!(await this.getCredentials());
   }
 
   // TODO: We shall get medias both from options and from the data.
@@ -307,11 +338,9 @@ export class Device extends EventEmitter {
     const hardwareId = await this.integration.getMachineGUID();
 
     // Check if this device is registered by getting the credentials from the local storage (if they exist).
-    let credentials = await this.integration.getCredentials();
+    let credentials = await this.getCredentials();
 
     if (credentials) {
-      const { device } = JSON.parse(credentials);
-
       try {
         const phoenixChannel = await this.login(credentials, hardwareId);
         this.initListeners(phoenixChannel);
@@ -378,8 +407,8 @@ export class Device extends EventEmitter {
     return pincode;
   }
 
-  async login(credentials: string, hardwareId: string) {
-    const { device } = JSON.parse(credentials);
+  async login(credentials: Credentials, hardwareId: string) {
+    const { device } = credentials;
 
     const socket = (this.socket = new Socket(this.socketEndpoint, {
       params: { device_id: device.id, hardware_id: hardwareId },
