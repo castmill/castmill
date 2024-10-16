@@ -11,6 +11,9 @@ ENV VITE_DOMAIN=${VITE_DOMAIN:-'localhost'}
 ARG VITE_ORIGIN
 ENV VITE_ORIGIN=${VITE_ORIGIN:-'http://localhost:3000'}
 
+ARG VITE_WS_ENDPOINT
+ENV VITE_WS_ENDPOINT=${VITE_WS_ENDPOINT:-'ws://localhost:4000/dashboard'}
+
 # Copy all
 COPY . /app
 
