@@ -21,7 +21,8 @@ defmodule CastmillWeb.Endpoint do
   # Socket used for real time communication with devices
   socket("/socket", CastmillWeb.DeviceSocket,
     websocket: [
-      connect_info: [:peer_data, :trace_context_headers, :x_headers, :uri, check_origin: false]
+      check_origin: false,
+      connect_info: [:peer_data, :trace_context_headers, :x_headers, :uri]
     ]
   )
 
@@ -29,14 +30,15 @@ defmodule CastmillWeb.Endpoint do
   # This socket must use the same authentication as the user's browser (dashboard endpoints)
   socket("/user_socket", CastmillWeb.UserSocket,
     websocket: [
+      # TODO: We may want to restrict the origins to the network domains
+      # Example: origin: &CastmillWeb.Endpoint.getAllowedOrigins/0,
+      check_origin: false,
       connect_info: [
         :peer_data,
         :trace_context_headers,
         :x_headers,
         :uri,
-        session: @session_options,
-        # TODO: We may want to restrict the origins to the network domains
-        check_origin: false
+        session: @session_options
       ]
     ]
   )
