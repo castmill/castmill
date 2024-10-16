@@ -2,7 +2,7 @@ import { Socket } from 'phoenix';
 import { createSignal } from 'solid-js';
 import { setStore } from '../store';
 
-import { baseUrl } from '../env';
+import { baseUrl, wsEndpoint } from '../env';
 
 class User {
   id?: string;
@@ -34,7 +34,7 @@ export async function loginUser() {
     }
 
     // Start user_socket connection for realtime updates
-    const socket = new Socket(`ws:localhost:4000/user_socket`, {
+    const socket = new Socket(`${wsEndpoint}/user_socket`, {
       params: () => ({ token }),
     });
     socket.connect();
