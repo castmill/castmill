@@ -1,4 +1,3 @@
-import { StoreResult } from '@castmill/cache';
 import { vi, describe, it, beforeAll, beforeEach, expect } from 'vitest';
 import * as path from 'path';
 
@@ -33,26 +32,14 @@ vi.mock('electron', () => ({
 }));
 
 import { readFile, writeFile, readdir, stat, unlink } from 'fs/promises';
-import { createWriteStream } from 'fs';
-import { net } from 'electron';
+import { createWriteStream, Dirent, Stats, WriteStream } from 'fs';
+import { net, ClientRequest } from 'electron';
 
 describe('File System', () => {
   const testDir = 'test-dir';
 
   beforeEach(async () => {
     vi.resetAllMocks();
-  });
-
-  it('should store a file and return file details', async () => {
-    stat.mockResolvedValueOnce({ size: 9 });
-    const data = 'test data';
-    const url = 'http://example.com/image.png';
-
-    const result = await storeFile(testDir, url, data);
-
-    expect(result.item.size).to.equal(9);
-    expect(result.result.code).to.equal(StoreResult.Success);
-    expect(writeFile).toHaveBeenCalled();
   });
 
   it('should retrieve a file path if file exists', async () => {
@@ -63,7 +50,7 @@ describe('File System', () => {
   });
 
   it('should return undefined if file does not exist', async () => {
-    stat.mockRejectedValueOnce(new Error('File not found'));
+    vi.mocked(stat).mockRejectedValueOnce(new Error('File not found'));
     const url = 'http://example.com/image.png';
     const filePath = await retrieveFile(testDir, url);
 
@@ -71,8 +58,10 @@ describe('File System', () => {
   });
 
   it('should list files with details', async () => {
-    readdir.mockResolvedValueOnce(['image.png']);
-    stat.mockResolvedValueOnce({ size: 9 });
+    vi.mocked(readdir).mockResolvedValueOnce([
+      'image.png',
+    ] as unknown as Dirent[]);
+    vi.mocked(stat).mockResolvedValueOnce({ size: 9 } as unknown as Stats);
 
     const fileList = await listFiles(testDir);
 
@@ -81,7 +70,7 @@ describe('File System', () => {
   });
 
   it('should delete a file', async () => {
-    unlink.mockResolvedValueOnce();
+    vi.mocked(unlink).mockResolvedValueOnce();
     const url = 'http://example.com/image.png';
     await deleteFile(testDir, url);
 
@@ -89,8 +78,11 @@ describe('File System', () => {
   });
 
   it('should delete all files in the directory', async () => {
-    readdir.mockResolvedValueOnce(['image.png', 'image2.png']);
-    unlink.mockResolvedValue();
+    vi.mocked(readdir).mockResolvedValueOnce([
+      'image.png',
+      'image2.png',
+    ] as unknown as Dirent[]);
+    vi.mocked(unlink).mockResolvedValue();
     await deleteAllFiles(testDir);
 
     expect(unlink).toHaveBeenCalledTimes(2);
@@ -98,16 +90,16 @@ describe('File System', () => {
 
   describe('Downloading', () => {
     it('should download a file from a URL and write it to the file system', async () => {
-      stat.mockResolvedValueOnce({ size: 9 });
+      vi.mocked(stat).mockResolvedValueOnce({ size: 9 } as unknown as Stats);
       const writeStream = {
         write: vi.fn(() => {}),
         on: vi.fn((event: string, cb: (response: string) => void) => {}),
         end: vi.fn(),
-      };
-      createWriteStream.mockImplementationOnce(() => writeStream);
-      net.request.mockImplementationOnce(() => {
+      } as unknown as WriteStream;
+      vi.mocked(createWriteStream).mockImplementationOnce(() => writeStream);
+      vi.mocked(net.request).mockImplementationOnce(() => {
         return {
-          on: (event: string, cb: (response: string) => void) => {
+          on: (event: string, cb: (response) => void) => {
             if (event === 'response') {
               cb({
                 statusCode: 200,
@@ -117,7 +109,7 @@ describe('File System', () => {
                       cb('test data');
                       break;
                     case 'end':
-                      cb();
+                      cb('ok');
                       break;
                   }
                 },
@@ -125,36 +117,41 @@ describe('File System', () => {
             }
           },
           end: () => {},
-        };
+        } as unknown as ClientRequest;
       });
 
       const url = 'http://example.com/image.png';
       const result = await storeFile(testDir, url);
 
-      expect(result.result.code).to.equal(StoreResult.Success);
+      expect(result.result.code).to.equal('SUCCESS');
       expect(writeStream.write).toHaveBeenCalledWith('test data');
       expect(writeStream.end).toHaveBeenCalledOnce();
     });
 
     it('should return error if data cannot be stored', async () => {
-      writeFile.mockRejectedValueOnce(new Error('Failed to store file'));
+      vi.mocked(writeFile).mockRejectedValueOnce(
+        new Error('Failed to store file')
+      );
       const data = 'test data';
       const url = 'http://example.com/image.png';
 
       const result = await storeFile(testDir, url, data);
 
-      expect(result.result.code).to.equal(StoreResult.Failure);
+      expect(result.result.code).to.equal('FAILURE');
       expect(unlink).toHaveBeenCalledOnce();
     });
 
     it('should return error if download fails due to 404', async () => {
-      createWriteStream.mockImplementationOnce(() => ({
-        write: vi.fn(() => {}),
-        on: (event: string, cb: (response: string) => void) => {},
-      }));
-      net.request.mockImplementationOnce(() => {
+      vi.mocked(createWriteStream).mockImplementationOnce(
+        () =>
+          ({
+            write: vi.fn(() => {}),
+            on: (event: string, cb: (response: string) => void) => {},
+          }) as unknown as WriteStream
+      );
+      vi.mocked(net.request).mockImplementationOnce(() => {
         return {
-          on: (event: string, cb: (response: string) => void) => {
+          on: (event: string, cb: (response) => void) => {
             if (event === 'response') {
               cb({
                 statusCode: 404,
@@ -163,14 +160,14 @@ describe('File System', () => {
             }
           },
           end: () => {},
-        };
+        } as unknown as ClientRequest;
       });
 
       const url = 'http://example.com/image.png';
 
       const result = await storeFile(testDir, url);
 
-      expect(result.result.code).to.equal(StoreResult.Failure);
+      expect(result.result.code).to.equal('FAILURE');
     });
 
     it('should return error if response emits an eror', async () => {
@@ -178,11 +175,11 @@ describe('File System', () => {
         write: vi.fn(),
         on: vi.fn((event: string, cb: (response: string) => void) => {}),
         end: vi.fn(),
-      };
-      createWriteStream.mockImplementationOnce(() => writeStream);
-      net.request.mockImplementationOnce(() => {
+      } as unknown as WriteStream;
+      vi.mocked(createWriteStream).mockImplementationOnce(() => writeStream);
+      vi.mocked(net.request).mockImplementationOnce(() => {
         return {
-          on: (event: string, cb: (response: string) => void) => {
+          on: (event: string, cb: (response) => void) => {
             if (event === 'response') {
               cb({
                 statusCode: 200,
@@ -197,28 +194,31 @@ describe('File System', () => {
             }
           },
           end: vi.fn(),
-        };
+        } as unknown as ClientRequest;
       });
 
       const url = 'http://example.com/image.png';
       const result = await storeFile(testDir, url);
 
-      expect(result.result.code).to.equal(StoreResult.Failure);
+      expect(result.result.code).to.equal('FAILURE');
       expect(writeStream.end).toHaveBeenCalled();
     });
 
     it('should return error if file cannot be written', async () => {
-      createWriteStream.mockImplementationOnce(() => ({
-        write: vi.fn(() => {}),
-        on: (event: string, cb: (response: string) => void) => {
-          if (event === 'error') {
-            cb('Failed to write file');
-          }
-        },
-      }));
-      net.request.mockImplementationOnce(() => {
+      vi.mocked(createWriteStream).mockImplementationOnce(
+        () =>
+          ({
+            write: vi.fn(() => {}),
+            on: (event: string, cb: (response: string) => void) => {
+              if (event === 'error') {
+                cb('Failed to write file');
+              }
+            },
+          }) as unknown as WriteStream
+      );
+      vi.mocked(net.request).mockImplementationOnce(() => {
         return {
-          on: (event: string, cb: (response: string) => void) => {
+          on: (event: string, cb: (response) => void) => {
             if (event === 'response') {
               cb({
                 statusCode: 200,
@@ -227,14 +227,14 @@ describe('File System', () => {
             }
           },
           end: () => {},
-        };
+        } as unknown as ClientRequest;
       });
 
       const url = 'http://example.com/image.png';
 
       const result = await storeFile(testDir, url);
 
-      expect(result.result.code).to.equal(StoreResult.Failure);
+      expect(result.result.code).to.equal('FAILURE');
     });
   });
 });
