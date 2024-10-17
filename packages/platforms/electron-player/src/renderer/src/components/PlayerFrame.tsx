@@ -8,7 +8,10 @@ const PlayerFrame: Component = () => {
   onMount(async () => {
     const electronMachine = new ElectronMachine();
     const cache = new FileStorage('file-cache');
-    const device = new Device(electronMachine, cache);
+    const device = new Device(electronMachine, cache, {
+      //TODO make configurable
+      baseUrl: 'http://localhost:4000',
+    });
 
     await cache.init();
     mountDevice(ref, device);
