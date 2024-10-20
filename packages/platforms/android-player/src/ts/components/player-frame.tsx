@@ -12,14 +12,11 @@ export const PlayerFrame: Component = () => {
 
     const androidMachine = new AndroidMachine();
     const cache = new AndroidStorage('file-cache');
+    const device = new Device(androidMachine, cache);
 
-    // Android Emulator uses 10.0.2.2 to refer to the host machine
-    // TODO: Make this configurable somehow to support different player backends
-    const device = new Device(androidMachine, cache, {
-      baseUrl: 'http://10.0.2.2:4000',
-    });
-
+    await device.init();
     await cache.init();
+
     mountDevice(ref, device);
   });
 

@@ -71,20 +71,23 @@ export class Cache extends Dexie {
   }
 
   private async syncCache() {
-    // Remove items from integration that are not cached anymore
     const files = await this.integration.listFiles();
+    const items = await this.items.toArray();
+
+    // Remove items from integration that are not cached anymore
     for (const file of files) {
-      const item = await this.items.get({ url: file.url });
-      if (!item) {
+      const existsInCache = items.some((item) => item.cachedUrl === file.url);
+      if (!existsInCache) {
         await this.integration.deleteFile(file.url);
       }
     }
 
     // Remove items from cache that are not in the integration
-    const items = await this.items.toArray();
     for (const item of items) {
-      const exists = files.some((file) => file.url === item.cachedUrl);
-      if (!exists) {
+      const existsInIntegration = files.some(
+        (file) => file.url === item.cachedUrl
+      );
+      if (!existsInIntegration) {
         await this.items.delete(item.url);
       }
     }

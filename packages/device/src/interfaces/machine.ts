@@ -48,6 +48,22 @@ export interface Timers {
 
 export interface Machine {
   /**
+   * Get the base URL to use for all the requests to the server.
+   */
+  getBaseUrl(): Promise<string | null>;
+
+  /**
+   * Set the base URL to use for all the requests to the server.
+   */
+  setBaseUrl(url: string): Promise<void>;
+
+  /**
+   * Get the additional base URLs to use for all the requests to the server.
+   * These URLs are selectable by the user in the device's settings.
+   */
+  getAdditionalBaseUrls(): Promise<{ name: string; url: string }[]>;
+
+  /**
    * Returns the machine's unique identifier.
    *
    * This ID must be unique across all machines. And the call to this

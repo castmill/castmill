@@ -15,9 +15,30 @@ const UPDATE_CONFIG = {
   fqdnAddr: 'https://update.castmill.io/webos/player-new.ipk',
 };
 
+const BASE_URL_FILE_PATH = 'base-url.txt';
 const CREDENTIALS_FILE_PATH = 'credentials.txt';
 
 export class WebosMachine implements Machine {
+  async setBaseUrl(baseUrl: string): Promise<void> {
+    await storage.writeFile({
+      path: BASE_URL_FILE_PATH,
+      data: baseUrl,
+    });
+    return;
+  }
+
+  async getBaseUrl(): Promise<string | null> {
+    const file = await storage.readFile({
+      path: BASE_URL_FILE_PATH,
+    });
+
+    return file.data.toString();
+  }
+
+  async getAdditionalBaseUrls(): Promise<{ name: string; url: string }[]> {
+    return [];
+  }
+
   async getMachineGUID(): Promise<string> {
     const { wiredInfo, wifiInfo } = await deviceInfo.getNetworkMacInfo();
     const macAddress = wiredInfo?.macAddress || wifiInfo?.macAddress;
