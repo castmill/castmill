@@ -1,4 +1,5 @@
 .menu {
+  z-index: 1000000;
   font-family: sans-serif;
   background-color: #1e1e1e;
   color: #d3d3d3;
@@ -46,6 +47,12 @@
 }
 
 .checkbox {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.radiobutton {
   display: flex;
   align-items: center;
   justify-content: space-between;
