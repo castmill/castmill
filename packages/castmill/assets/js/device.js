@@ -8,10 +8,12 @@ import { StorageBrowser } from "@castmill/cache";
 import { mountDevice, Device, BrowserMachine } from "@castmill/device";
 
 (async () => {
-  const machineBrowser = new BrowserMachine();
+  const browserMachine = new BrowserMachine();
   const browserCache = new StorageBrowser("browser-cache", "/assets/");
-  const device = new Device(machineBrowser, browserCache);
+  const device = new Device(browserMachine, browserCache);
 
+  await device.init();
   await browserCache.init();
+
   mountDevice(document.getElementById("device"), device);
 })();

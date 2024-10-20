@@ -86,6 +86,7 @@ export class Device extends EventEmitter {
   private logger: Logger = new Logger();
   private logDiv?: HTMLDivElement;
   private socket?: Socket;
+  private baseUrl = '';
 
   public id?: string;
   public name?: string;
@@ -99,7 +100,6 @@ export class Device extends EventEmitter {
         maxItems?: number;
       };
       viewport?: Viewport;
-      baseUrl?: string;
     }
   ) {
     super();
@@ -114,6 +114,10 @@ export class Device extends EventEmitter {
 
     //const intro = getCastmillIntro(this.resourceManager);
     //this.contentQueue.add(intro);
+  }
+
+  async init() {
+    this.baseUrl = await this.getBaseUrl();
   }
 
   async start(el: HTMLElement, logDiv?: HTMLDivElement) {
@@ -134,7 +138,7 @@ export class Device extends EventEmitter {
     this.contentQueue = new Playlist('content-queue', this.resourceManager);
 
     const rawChannels = await this.resourceManager.getData(
-      `${this.getBaseUrl()}/devices/${device.id}/channels`,
+      `${this.baseUrl}/devices/${device.id}/channels`,
       1000
     );
 
@@ -174,7 +178,7 @@ export class Device extends EventEmitter {
           if (entry) {
             const jsonPlaylist: JsonPlaylist | void =
               await this.resourceManager.getData(
-                `${this.getBaseUrl()}/devices/${device.id}/playlists/${
+                `${this.baseUrl}/devices/${device.id}/playlists/${
                   entry.playlist
                 }`,
                 1000
@@ -313,7 +317,7 @@ export class Device extends EventEmitter {
 
   private async requestPincode(hardwareId: string) {
     const location = await this.integration.getLocation!();
-    const pincodeResponse = await fetch(`${this.getBaseUrl()}/registrations`, {
+    const pincodeResponse = await fetch(`${this.baseUrl}/registrations`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -367,7 +371,7 @@ export class Device extends EventEmitter {
   }
 
   get socketEndpoint() {
-    return `${this.getBaseUrl().replace('http', 'ws')}/socket`;
+    return `${this.baseUrl.replace('http', 'ws')}/socket`;
   }
 
   async register(hardwareId: string) {
@@ -520,9 +524,40 @@ export class Device extends EventEmitter {
     };
   }
 
+  async getAvailableBaseUrls(): Promise<{ name: string; url: string }[]> {
+    const additionalBaseUrls = await this.integration.getAdditionalBaseUrls();
+
+    const a = 1;
+    return [
+      {
+        name: 'Localhost', // TODO: Only show this in development mode.
+        url: 'http://localhost:4000',
+      },
+      {
+        name: 'Dev',
+        url: 'https://api.castmill.dev',
+      },
+      {
+        name: 'Production',
+        url: 'https://api.castmill.io', // or whatever the production url is
+      },
+      ...additionalBaseUrls,
+    ];
+  }
+
   //
   // APIs for the device to interact with the machine specific integration.
   //
+
+  async setBaseUrl(url: string) {
+    await this.integration.setBaseUrl(url);
+    // Refresh the page to reinitialize the player with the new base url.
+    location.reload();
+  }
+
+  async getBaseUrl(): Promise<string> {
+    return (await this.integration.getBaseUrl()) ?? '';
+  }
 
   getDeviceInfo() {
     return this.integration.getDeviceInfo();
@@ -574,10 +609,6 @@ export class Device extends EventEmitter {
           break;
       }
     }
-  }
-
-  private getBaseUrl() {
-    return this.opts?.baseUrl ?? '';
   }
 }
 
