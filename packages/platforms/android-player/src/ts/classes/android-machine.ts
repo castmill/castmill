@@ -7,6 +7,27 @@ import { Castmill } from '../../plugins/castmill';
 import { delay } from '../utils';
 
 export class AndroidMachine implements Machine {
+  async setBaseUrl(baseUrl: string): Promise<void> {
+    await Preferences.set({
+      key: 'baseUrl',
+      value: baseUrl,
+    });
+  }
+
+  async getBaseUrl(): Promise<string | null> {
+    const { value } = await Preferences.get({ key: 'baseUrl' });
+    return value;
+  }
+
+  async getAdditionalBaseUrls(): Promise<{ name: string; url: string }[]> {
+    return [
+      {
+        name: 'Android Emu Host',
+        url: 'http://10.0.2.2:4000',
+      },
+    ];
+  }
+
   async getMachineGUID(): Promise<string> {
     const deviceId = await Device.getId();
     return deviceId.identifier;
