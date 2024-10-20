@@ -527,7 +527,6 @@ export class Device extends EventEmitter {
   async getAvailableBaseUrls(): Promise<{ name: string; url: string }[]> {
     const additionalBaseUrls = await this.integration.getAdditionalBaseUrls();
 
-    const a = 1;
     return [
       {
         name: 'Localhost', // TODO: Only show this in development mode.
