@@ -91,6 +91,7 @@ defmodule CastmillWeb.Endpoint do
   # TODO: we must cache the allowed origins at least for a few minutes or this
   # will be a huge performance bottleneck. The cache must use ETS to be shared.
   def getAllowedOrigins() do
-    [@android_origin, @electron_origin, @webos_origin, @legacy_local_origin] ++ Castmill.Networks.list_network_domains()
+    [@android_origin, @electron_origin, @webos_origin, @legacy_local_origin] ++
+      Castmill.Networks.list_network_domains()
   end
 end
