@@ -297,8 +297,9 @@ defmodule CastmillWeb.Router do
 
   defp get_bearer_token(conn) do
     auth_header = List.first(get_req_header(conn, "authorization"))
+    auth_param = conn.params["auth"]
 
-    case String.split(auth_header || "", " ") do
+    case String.split(auth_header || auth_param || "", " ") do
       ["Bearer", token] -> {:ok, token}
       [] -> {:error, "No token provided"}
       _ -> {:error, "Invalid token format"}
