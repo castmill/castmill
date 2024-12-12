@@ -27,6 +27,7 @@ describe('Device', () => {
       getBaseUrl: vi.fn(),
       getMachineGUID: vi.fn(),
       removeCredentials: vi.fn(),
+      getAdditionalBaseUrls: vi.fn(),
     };
 
     mockStorageIntegration = {
@@ -55,10 +56,12 @@ describe('Device', () => {
     expect(mockIntegration.getBaseUrl).toHaveBeenCalled();
   });
 
-  it('should defalult to empty string if getBaseUrl returns null', async () => {
+  it('should default to first available baseUrl if getBaseUrl returns null', async () => {
     mockIntegration.getBaseUrl.mockResolvedValue(null);
+    mockIntegration.getAdditionalBaseUrls.mockResolvedValue([]);
     await device.init();
-    expect(device['baseUrl']).toBe('');
+    const availableBaseUrls = await device.getAvailableBaseUrls();
+    expect(device['baseUrl']).toBe(availableBaseUrls[0].url);
     expect(mockIntegration.getBaseUrl).toHaveBeenCalled();
   });
 });
