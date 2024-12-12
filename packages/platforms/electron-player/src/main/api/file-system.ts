@@ -108,7 +108,11 @@ export async function storeFile(
     const tempPath = getTempPath(filePath);
 
     try {
-      await downloadFile(tempPath, url, opts);
+      await downloadFile(
+        tempPath,
+        mapLocalhostUrl(url),
+        opts,
+      );
 
       // Atomically rename the file to its final name
       await rename(tempPath, filePath);
@@ -300,4 +304,19 @@ function getLocalUrlForFile(storagePath: string, filename: string): string {
 function getLocalUrl(storagePath: string, remoteUrl: string): string {
   const filename = getFileName(remoteUrl);
   return getLocalUrlForFile(storagePath, filename);
+}
+
+/**
+ * Map localhost url to remote url. Used when server is running on localhost.
+ * @param {string} url - The URL to map
+ * @returns {string} - The mapped URL
+ */
+function mapLocalhostUrl(url: string): string {
+  const fileHost = import.meta.env.VITE_FILE_HOST;
+
+  if (!fileHost) {
+    return url;
+  }
+
+  return url.replace('localhost', fileHost);
 }
