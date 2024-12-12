@@ -20,6 +20,7 @@ The **Castmill Legacy Adapter** is a bridge designed to support legacy Castmill 
 The Castmill Legacy Adapter serves at the endpoint where the old Castmill application was hosted. It ensures that legacy players, which rely on the original APIs, continue to function without modification. Internally, it proxies or adapts these requests to the new Castmill player, enabling a seamless experience for both legacy and new clients.
 
 ### Key Purpose:
+
 - Maintain compatibility with legacy Electron and Android Castmill players.
 - Integrate the modern Castmill player without disrupting existing workflows.
 
@@ -46,13 +47,16 @@ The Castmill Legacy Adapter serves at the endpoint where the old Castmill applic
 ## Configuration
 
 ### Base URL Configuration
+
 The adapter allows you to configure a default base URL by setting the `VITE_BASE_URL` environment variable in a `.env.local` file. This ensures flexibility when running the adapter in different environments.
 
 1. Create a `.env.local` file in the project root if it doesn’t already exist.
 2. Add the following line to specify the base URL:
+
    ```env
    VITE_BASE_URL="http://192.168.1.1:4000"
    ```
+
    Replace `http://192.168.1.1:4000` with the appropriate base URL for your setup.
 
 3. Build and restart the server for the changes to take effect:

@@ -38,7 +38,7 @@ const createAction = (name: string, action: () => void): MenuEntry => {
 // Helper function to create a menu entry for a submenu
 const createSubmenu = (name: string, entries: MenuEntry[]): MenuEntry => {
   const id = name.toLowerCase().replace(' ', '-');
-  return { name, id, type: 'submenu', children: entries, action: () => {}, };
+  return { name, id, type: 'submenu', children: entries, action: () => {} };
 };
 
 // Helper function to create a menu entry for radio buttons
