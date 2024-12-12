@@ -381,6 +381,7 @@ export class Device extends EventEmitter {
       params: { token: pincode },
     });
 
+
     socket.connect();
 
     // Join the channel to listen for the device to be registered.
@@ -529,16 +530,16 @@ export class Device extends EventEmitter {
 
     return [
       {
-        name: 'Localhost', // TODO: Only show this in development mode.
-        url: 'http://localhost:4000',
+        name: 'Production',
+        url: 'https://api.castmill.io', // or whatever the production url is
       },
       {
         name: 'Dev',
         url: 'https://api.castmill.dev',
       },
       {
-        name: 'Production',
-        url: 'https://api.castmill.io', // or whatever the production url is
+        name: 'Localhost', // TODO: Only show this in development mode.
+        url: 'http://localhost:4000',
       },
       ...additionalBaseUrls,
     ];
@@ -555,7 +556,21 @@ export class Device extends EventEmitter {
   }
 
   async getBaseUrl(): Promise<string> {
-    return (await this.integration.getBaseUrl()) ?? '';
+    const baseUrl = await this.integration.getBaseUrl();
+
+    if (baseUrl) {
+      return baseUrl;
+    }
+
+    // If there is no base url, we should set the default one.
+    const defaultBaseUrl = (await this.getAvailableBaseUrls())[0].url;
+
+
+    if (defaultBaseUrl) {
+      return defaultBaseUrl;
+    }
+
+    return '';
   }
 
   getDeviceInfo() {
