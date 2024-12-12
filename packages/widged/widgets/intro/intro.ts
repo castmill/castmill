@@ -19,59 +19,50 @@ export const intro: Omit<JsonWidget, "id"> = {
         keyframes: [
           {
             set: {
-              filter: "blur(0px)",
+              rotateX: "0deg",
+              rotateZ: "0deg",
+              translateX: "-70%",
+              translateY: "-40%",
+              scale: 0.2,
             },
-            from: {
-              filter: "blur(100px)",
+          },
+          {
+            to: {
+              rotateX: "0deg",
+              rotateZ: "0deg",
+              translateX: "0%",
+              translateY: "-40%",
+              scale: 0.2,
               duration: 2,
               ease: "power1.inOut",
             },
-            to: {
-              translateX: "-40%",
-              translateY: "45%",
-              scale: 0.2,
-              duration: 1,
-              ease: "power1.inOut",
-            },
           },
           {
             to: {
-              translateX: "40%",
-              translateY: "45%",
-              duration: 1,
-              ease: "power1.inOut",
-            },
-          },
-          {
-            to: {
-              translateX: "40%",
-              translateY: "-45%",
-              duration: 1,
-              ease: "power1.inOut",
-            },
-          },
-          {
-            to: {
-              translateX: "-40%",
-              translateY: "-45%",
-              duration: 1,
-              ease: "power1.inOut",
-            },
-          },
-          {
-            to: {
-              translateX: "0%",
-              translateY: "0%",
-              scale: 1,
-              duration: 1,
-              ease: "power1.inOut",
-            },
-          },
-          {
-            to: {
-              filter: "blur(100px)",
+              translateY: "30%",
+              rotateX: "40deg",
+              scale: 0.5,
               duration: 3,
-              ease: "power1.inOut",
+              ease: "bounce.out",
+            },
+          },
+          {
+            to: {
+              rotateX: "86deg",
+              translateY: "37%",
+              duration: 1,
+              ease: "circ.in",
+            },
+          },
+          {
+            to: {
+              translateY: "0%",
+              translateX: "20%",
+              rotateZ: "30deg",
+              rotateX: "80deg",
+              scale: 0,
+              duration: 4,
+              ease: "power2.in",
             },
           },
         ],
