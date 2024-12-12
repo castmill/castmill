@@ -3,15 +3,33 @@ import {
   StorageInfo,
   StorageItem,
   StoreFileReturnValue,
+  StoreOptions,
 } from '@castmill/cache';
 import { storage } from '../native';
 import { simpleHash } from './utils';
 
 const CACHE_DIR = 'castmill-cache';
+
+// The path to use when accessing the local files using the storage api
 const CACHE_PATH = `file://internal/${CACHE_DIR}`;
+
+// The path to use when accessing the local files from the web app
+const EXTERNAL_PATH = `http://127.0.0.1:9080/${CACHE_DIR}`;
 
 function join(...parts: string[]): string {
   return parts.join('/');
+}
+
+function getLocalUrl(path: string): string {
+  return `${CACHE_PATH}/${path}`;
+}
+
+function getExternalUrl(path: string): string {
+  return `${EXTERNAL_PATH}/${path}`;
+}
+
+function getTempPath(path: string): string {
+  return `${path}-${Date.now()}.tmp`;
 }
 
 export class FileStorage implements StorageIntegration {
@@ -29,7 +47,7 @@ export class FileStorage implements StorageIntegration {
     try {
       const { files } = await storage.listFiles({ path: CACHE_PATH });
       const used = files.reduce((acc, file) => acc + (file.size ?? 0), 0);
-      const total = (await storage.getStorageInfo()).free + used * 0.5;
+      const total = ((await storage.getStorageInfo()).free + used) * 0.5;
       return { used, total };
     } catch (error) {
       console.error('Failed to get storage info:', error);
@@ -41,30 +59,33 @@ export class FileStorage implements StorageIntegration {
     const { files } = await storage.listFiles({ path: CACHE_PATH });
 
     return files
-      .filter(({ name }) => name)
+      .filter((file): file is { name: string; size: number } => !!file.name)
+      .filter(({ name }) => !name.endsWith('.tmp'))
       .map((file) => ({
-        url: join(CACHE_PATH, file.name ?? ''),
+        url: getExternalUrl(file.name),
         size: file.size ?? 0,
       }));
   }
 
-  async storeFile(url: string, data?: any): Promise<StoreFileReturnValue> {
+  async storeFile(
+    url: string,
+    opts?: StoreOptions
+  ): Promise<StoreFileReturnValue> {
     try {
-      const filename = await getFileName(url);
+      const filename = getFileName(url);
 
-      const filePath = join(CACHE_PATH, filename);
-      const tempPath = filePath + '.tmp';
+      const filePath = getLocalUrl(filename);
+      const externalUrl = getExternalUrl(filename);
+      const tempPath = getTempPath(filePath);
 
       try {
-        if (data) {
-          await storage.writeFile({ path: tempPath, data });
-        } else {
-          await storage.downloadFile({
-            action: 'start',
-            destination: tempPath,
-            source: url,
-          });
-        }
+        await storage.copyFile({
+          source: mapLocalhostUrl(url),
+          destination: tempPath,
+          httpOption: {
+            headers: opts?.headers,
+          },
+        });
 
         // Atomically rename the file to its final name
         await storage.moveFile({ oldPath: tempPath, newPath: filePath });
@@ -77,10 +98,11 @@ export class FileStorage implements StorageIntegration {
         throw error;
       }
       const stats = await storage.statFile({ path: filePath });
+
       return {
         result: { code: 'SUCCESS' },
         item: {
-          url: filePath,
+          url: externalUrl,
           size: stats.size,
         },
       };
@@ -98,7 +120,7 @@ export class FileStorage implements StorageIntegration {
    */
   async retrieveFile(url: string): Promise<string | void> {
     try {
-      const filePath = `${CACHE_PATH}/${await getFileName(url)}`;
+      const filePath = getExternalUrl(getFileName(url));
       await storage.statFile({ path: filePath }); // Check if file exists
       return filePath;
     } catch (error) {
@@ -111,10 +133,22 @@ export class FileStorage implements StorageIntegration {
    * Delete a file from the storage
    */
   async deleteFile(url: string): Promise<void> {
-    return storage.removeFile({
-      file: `${CACHE_PATH}/${url}`,
-      recursive: true,
-    });
+    const filePath = getLocalPath(url);
+
+    try {
+      await storage.removeFile({
+        file: filePath,
+        recursive: true,
+      });
+    } catch (error: any) {
+      if (error.errorCode === 'IO_ERROR') {
+        // File does not exist, nothing to delete
+        console.warn('File does not exist:', filePath);
+        return;
+      }
+      console.error('Failed to delete file:', error);
+      throw error;
+    }
   }
 
   /*
@@ -137,11 +171,54 @@ export class FileStorage implements StorageIntegration {
  * @param {string} url - The URL of the file
  * @returns {string} - The unique file name
  */
-async function getFileName(url: string): Promise<string> {
+function getFileName(url: string): string {
   const pathName = new URL(url).pathname;
-  const extension = pathName.split('.').pop();
+
+  const [file, extension] = pathName.split('.');
 
   const hash = simpleHash(pathName);
   // if extension is present, append it to the hash otherwise, just return the hash
-  return extension ? `${hash}.${extension}` : hash;
+  return extension ? `${hash}.${extension}` : `${hash}`;
+}
+
+/**
+ * Get the local path of a downloaded file.
+ * Both remote URLs and local URLs are supported.
+ *
+ * Example:
+ * getLocalPath('http://abc.com/test/file1.txt') =>
+ *  'file://internal/castmill-cache/123455.txt'
+ * getLocalPath('file://internal/castmill-cache/123455.txt') =>
+ *  'file://internal/castmill-cache/123455.txt'
+ * getLocalPath('http://127.0.0.1:9080/castmill-cache/123455.txt') =>
+ *  'file://internal/castmill-cache/123455.txt'
+ */
+function getLocalPath(url: string): string {
+  if (url.startsWith(EXTERNAL_PATH)) {
+    const pathName = new URL(url).pathname.split('/').pop() ?? '';
+
+    return getLocalUrl(pathName);
+  } else if (url.startsWith('http')) {
+    const filename = getFileName(url);
+    return getLocalUrl(filename);
+  } else if (url.startsWith(CACHE_PATH)) {
+    return url;
+  } else {
+    throw new Error(`Invalid URL: ${url}`);
+  }
+}
+
+/**
+ * Map localhost url to remote url. Used when server is running on localhost.
+ * @param {string} url - The URL to map
+ * @returns {string} - The mapped URL
+ */
+function mapLocalhostUrl(url: string): string {
+  const fileHost = import.meta.env.VITE_FILE_HOST;
+
+  if (!fileHost) {
+    return url;
+  }
+
+  return url.replace('localhost', fileHost);
 }
