@@ -108,11 +108,7 @@ export async function storeFile(
     const tempPath = getTempPath(filePath);
 
     try {
-      await downloadFile(
-        tempPath,
-        mapLocalhostUrl(url),
-        opts,
-      );
+      await downloadFile(tempPath, mapLocalhostUrl(url), opts);
 
       // Atomically rename the file to its final name
       await rename(tempPath, filePath);

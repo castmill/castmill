@@ -381,7 +381,6 @@ export class Device extends EventEmitter {
       params: { token: pincode },
     });
 
-
     socket.connect();
 
     // Join the channel to listen for the device to be registered.
@@ -564,7 +563,6 @@ export class Device extends EventEmitter {
 
     // If there is no base url, we should set the default one.
     const defaultBaseUrl = (await this.getAvailableBaseUrls())[0].url;
-
 
     if (defaultBaseUrl) {
       return defaultBaseUrl;
