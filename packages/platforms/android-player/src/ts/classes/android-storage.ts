@@ -92,7 +92,7 @@ export class AndroidStorage implements StorageIntegration {
     await this.deleteFileIfExists(filePath);
     return await Filesystem.downloadFile({
       path: filePath,
-      url: url.replace('localhost', '10.0.2.2'), // Android emulator localhost
+      url: mapLocalhostUrl(url),
       headers: opts?.headers,
       directory: DIR,
       recursive: true,
@@ -243,4 +243,19 @@ export class AndroidStorage implements StorageIntegration {
     });
     return Capacitor.convertFileSrc(uri);
   }
+}
+
+/**
+ * Map localhost url to remote url. Used when server is running on localhost.
+ * @param {string} url - The URL to map
+ * @returns {string} - The mapped URL
+ */
+function mapLocalhostUrl(url: string): string {
+  const fileHost = import.meta.env.VITE_FILE_HOST;
+
+  if (!fileHost) {
+    return url;
+  }
+
+  return url.replace('localhost', fileHost);
 }
