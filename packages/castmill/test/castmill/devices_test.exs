@@ -70,7 +70,10 @@ defmodule Castmill.DevicesTest do
       assert Devices.list_devices(%{organization_id: organization.id}) == [device]
 
       {:ok, devices_registration} =
-        device_registration_fixture(%{hardware_id: "some hardware id", pincode: "another pincode"})
+        device_registration_fixture(%{
+          hardware_id: "some hardware id",
+          pincode: "another pincode"
+        })
 
       assert {:error, _} =
                Devices.register_device(organization.id, devices_registration.pincode, %{
