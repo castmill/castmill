@@ -14,15 +14,9 @@ defmodule Castmill.Plug.ApiAuthenticate do
         conn
         |> put_status(:unauthorized)
         |> Phoenix.Controller.json(%{message: message})
-        |> halt
+        |> halt()
 
-      {:not_found, message} ->
-        conn
-        |> put_status(:unauthorized)
-        |> Phoenix.Controller.json(%{message: message})
-        |> halt
-
-      user ->
+      {:ok, user} ->
         conn
         |> assign(:current_user, user)
     end

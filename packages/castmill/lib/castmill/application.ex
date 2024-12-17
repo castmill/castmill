@@ -38,7 +38,7 @@ defmodule Castmill.Application do
     # Ensure that the Repo is started before this call
     env = Application.get_env(:castmill, :env)
 
-    unless env == :test do
+    if env != :test do
       CastmillWeb.Widgets.WidgetsLoader.load_and_insert_json_data()
     end
 

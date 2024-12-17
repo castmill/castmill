@@ -239,61 +239,68 @@ defmodule Castmill.Devices do
       devices_registration = Repo.get_by(DevicesRegistrations, pincode: pincode)
 
       if devices_registration do
-        if devices_registration.expires_at < DateTime.utc_now() do
-          Repo.rollback(:pincode_expired)
-        else
-          token = generate_token()
-
-          params =
-            Map.merge(
-              %{
-                organization_id: organization_id,
-                token: token,
-                last_online: DateTime.utc_now(),
-                last_ip: devices_registration.device_ip
-              },
-              Map.from_struct(devices_registration)
-            )
-
-          with {:ok, _} <- Repo.delete(devices_registration),
-               {:ok, device} <- create_device(Map.merge(params, attrs)) do
-            add_channel_option = Map.get(opts, :add_default_channel, false)
-
-            add_channel_result =
-              if add_channel_option do
-                with {:ok, channel} <- create_default_channel(device),
-                     {:ok, _} <- add_channel(device.id, channel.id) do
-                  {:ok, channel}
-                else
-                  {:error, changeset} -> Repo.rollback(changeset)
-                end
-              else
-                {:ok, nil}
-              end
-
-            case add_channel_result do
-              {:ok, _channel} ->
-                Endpoint.broadcast("register:#{device.hardware_id}", "device:registered", %{
-                  device: %{
-                    id: device.id,
-                    name: device.name,
-                    token: token
-                  }
-                })
-
-                {Map.drop(device, [:token, :token_hash]), token}
-
-              {:error, _} = error ->
-                error
-            end
-          else
-            {:error, changeset} -> Repo.rollback(changeset)
-          end
+        case DateTime.compare(devices_registration.expires_at, DateTime.utc_now()) do
+          :lt ->
+            # expires_at is before utc_now()
+            # Handle the expired logic here
+            Repo.rollback(:pincode_expired)
+          :eq -> handle_non_expired_device(devices_registration, organization_id, opts, attrs)
+          :gt -> handle_non_expired_device(devices_registration, organization_id, opts, attrs)
         end
       else
         Repo.rollback(:invalid_pincode)
       end
     end)
+  end
+
+  defp handle_non_expired_device(devices_registration, organization_id, opts, attrs) do
+    token = generate_token()
+
+    params =
+      Map.merge(
+        %{
+          organization_id: organization_id,
+          token: token,
+          last_online: DateTime.utc_now(),
+          last_ip: devices_registration.device_ip
+        },
+        Map.from_struct(devices_registration)
+      )
+
+    with {:ok, _} <- Repo.delete(devices_registration),
+         {:ok, device} <- create_device(Map.merge(params, attrs)) do
+      add_channel_option = Map.get(opts, :add_default_channel, false)
+
+      add_channel_result =
+        if add_channel_option do
+          with {:ok, channel} <- create_default_channel(device),
+               {:ok, _} <- add_channel(device.id, channel.id) do
+            {:ok, channel}
+          else
+            {:error, changeset} -> Repo.rollback(changeset)
+          end
+        else
+          {:ok, nil}
+        end
+
+      case add_channel_result do
+        {:ok, _channel} ->
+          Endpoint.broadcast("register:#{device.hardware_id}", "device:registered", %{
+            device: %{
+              id: device.id,
+              name: device.name,
+              token: token
+            }
+          })
+
+          {Map.drop(device, [:token, :token_hash]), token}
+
+        {:error, _} = error ->
+          error
+      end
+    else
+      {:error, changeset} -> Repo.rollback(changeset)
+    end
   end
 
   # Creates a default channel for a given device
@@ -349,7 +356,7 @@ defmodule Castmill.Devices do
 
   # The following are helper functions that were deprecated in Argon2
   defp check_password(nil, _password, opts) do
-    unless opts[:hide_user] == false, do: no_user_verify(opts)
+    if opts[:hide_user] != false, do: no_user_verify(opts)
     {:error, :invalid_device}
   end
 
