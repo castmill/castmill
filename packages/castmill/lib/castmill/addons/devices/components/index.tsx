@@ -19,7 +19,7 @@ import { AiOutlineDelete } from 'solid-icons/ai';
 
 import { Device } from '../interfaces/device.interface';
 import DeviceView from './device-view';
-import './devices.module.scss';
+import styles from './devices.module.scss';
 
 import RegisterDevice from './register-device';
 import { DevicesService } from '../services/devices.service';
@@ -262,7 +262,7 @@ const DevicesPage: Component<{
   };
 
   return (
-    <div class="devices-page">
+    <div class={`${styles.devicesPage}`}>
       <Show when={showRegisterModal()}>
         <Modal
           title="Register device"
