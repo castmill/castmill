@@ -244,8 +244,12 @@ defmodule Castmill.Devices do
             # expires_at is before utc_now()
             # Handle the expired logic here
             Repo.rollback(:pincode_expired)
-          :eq -> handle_non_expired_device(devices_registration, organization_id, opts, attrs)
-          :gt -> handle_non_expired_device(devices_registration, organization_id, opts, attrs)
+
+          :eq ->
+            handle_non_expired_device(devices_registration, organization_id, opts, attrs)
+
+          :gt ->
+            handle_non_expired_device(devices_registration, organization_id, opts, attrs)
         end
       else
         Repo.rollback(:invalid_pincode)
