@@ -82,9 +82,16 @@ defmodule CastmillWeb.Endpoint do
   plug(Plug.Session, @session_options)
   plug(CastmillWeb.Router)
 
+  # Origin of different players
+  @android_origin "https://localhost"
+  @electron_origin "http://localhost:5173"
+  @webos_origin "file://com.lg.app.signage"
+  @legacy_local_origin "http://localhost:3003"
+
   # TODO: we must cache the allowed origins at least for a few minutes or this
   # will be a huge performance bottleneck. The cache must use ETS to be shared.
   def getAllowedOrigins() do
-    ["https://localhost" | Castmill.Networks.list_network_domains()]
+    [@android_origin, @electron_origin, @webos_origin, @legacy_local_origin] ++
+      Castmill.Networks.list_network_domains()
   end
 end

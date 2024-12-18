@@ -27,15 +27,28 @@ interface CheckboxMenuEntry {
   action: (state: boolean) => void;
 }
 
+interface RadioButtonMenuEntry {
+  name: string;
+  groupId: string;
+  id: string;
+  type: 'radiobutton';
+  state: boolean;
+  action: (selectedId: string) => void;
+}
+
 interface SubmenuMenuEntry {
   name: string;
   id: string;
   type: 'submenu';
-  action: (state: boolean) => void;
+  action?: (state: boolean) => void;
   children: MenuEntry[];
 }
 
-export type MenuEntry = ActionMenuEntry | CheckboxMenuEntry | SubmenuMenuEntry;
+export type MenuEntry =
+  | ActionMenuEntry
+  | CheckboxMenuEntry
+  | RadioButtonMenuEntry
+  | SubmenuMenuEntry;
 
 // internal item interface
 interface MenuRowItem {
@@ -50,6 +63,9 @@ const isActionMenuEntry = (entry: MenuEntry): entry is ActionMenuEntry =>
   entry.type === 'action';
 const isCheckboxMenuEntry = (entry: MenuEntry): entry is CheckboxMenuEntry =>
   entry.type === 'checkbox';
+const isRadioButtonMenuEntry = (
+  entry: MenuEntry
+): entry is RadioButtonMenuEntry => entry.type === 'radiobutton';
 const isSubmenuMenuEntry = (entry: MenuEntry): entry is SubmenuMenuEntry =>
   entry.type === 'submenu';
 
@@ -60,18 +76,14 @@ interface BaseMenuProps {
   entries: MenuEntry[];
 }
 
-export const BaseMenu: Component<BaseMenuProps> = ({
-  header,
-  entries,
-  footer,
-}) => {
+export const BaseMenu: Component<BaseMenuProps> = (props) => {
   // get initial checkbox states from menu entries
-  const getCheckbosState = (menuEntries: MenuEntry[]) => {
+  const getCheckboxState = (menuEntries: MenuEntry[]) => {
     return menuEntries.reduce((acc: Record<string, boolean>, entry) => {
       if (isCheckboxMenuEntry(entry)) {
         acc[entry.id] = entry.state;
       } else if (isSubmenuMenuEntry(entry)) {
-        acc = { ...acc, ...getCheckbosState(entry.children) };
+        acc = { ...acc, ...getCheckboxState(entry.children) };
       }
       return acc;
     }, {});
@@ -87,8 +99,9 @@ export const BaseMenu: Component<BaseMenuProps> = ({
   const [active, setActive] = createSignal();
   // checkbox states
   const [checked, setChecked] = createSignal<Record<string, boolean>>(
-    getCheckbosState(entries)
+    getCheckboxState(props.entries)
   );
+
   // submenu states (expanded or not)
   const [submenuState, setSubmenuState] = createSignal<Record<string, boolean>>(
     {}
@@ -163,6 +176,21 @@ export const BaseMenu: Component<BaseMenuProps> = ({
           offset,
           id: entry.id,
         });
+      } else if (isRadioButtonMenuEntry(entry)) {
+        // add radio buttons item
+        items.push({
+          action: () => {
+            onEnter(entry);
+          },
+          content: (
+            <div class={styles.radiobutton}>
+              {entry.name}
+              <input type="radio" checked={entry.state} />
+            </div>
+          ),
+          offset,
+          id: entry.id,
+        });
       } else {
         // add action item
         items.push({
@@ -180,7 +208,7 @@ export const BaseMenu: Component<BaseMenuProps> = ({
     return items;
   };
 
-  const items = () => getItems(entries);
+  const items = () => getItems(props.entries);
 
   // handle enter keypress or click
   const onEnter = (entry: MenuEntry) => {
@@ -190,9 +218,11 @@ export const BaseMenu: Component<BaseMenuProps> = ({
       const newValue = !checked()[entry.id];
       entry.action(newValue);
       setChecked((c) => ({ ...c, [entry.id]: newValue }));
+    } else if (isRadioButtonMenuEntry(entry)) {
+      entry.action(entry.id);
     } else if (isSubmenuMenuEntry(entry)) {
       const newValue = !submenuState()[entry.id];
-      entry.action(newValue);
+      entry.action?.(newValue);
       setSubmenuState((c) => ({ ...c, [entry.id]: newValue }));
     }
   };
@@ -247,10 +277,10 @@ export const BaseMenu: Component<BaseMenuProps> = ({
   });
 
   return (
-    <div class={styles.menu}>
-      <Show when={visible()}>
+    <Show when={visible()}>
+      <div class={styles.menu}>
         <div role="menu">
-          <div class={styles.menuHead}>{header}</div>
+          <div class={styles.menuHead}>{props.header}</div>
           <ul>
             {items().map((item, i) => {
               const isSelected = selected() === i;
@@ -275,9 +305,9 @@ export const BaseMenu: Component<BaseMenuProps> = ({
               );
             })}
           </ul>
-          <div class={styles.menuFooter}>{footer}</div>
+          <div class={styles.menuFooter}>{props.footer}</div>
         </div>
-      </Show>
-    </div>
+      </div>
+    </Show>
   );
 };

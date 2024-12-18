@@ -60,6 +60,14 @@ interface DeviceRequest {
   opts: CachePage & { ref: string };
 }
 
+interface Credentials {
+  device: {
+    id: string;
+    name: string;
+    token: string;
+  };
+}
+
 /**
  * Castmill Device
  *
@@ -78,6 +86,7 @@ export class Device extends EventEmitter {
   private logger: Logger = new Logger();
   private logDiv?: HTMLDivElement;
   private socket?: Socket;
+  private baseUrl = '';
 
   public id?: string;
   public name?: string;
@@ -91,7 +100,6 @@ export class Device extends EventEmitter {
         maxItems?: number;
       };
       viewport?: Viewport;
-      baseUrl?: string;
     }
   ) {
     super();
@@ -108,18 +116,18 @@ export class Device extends EventEmitter {
     //this.contentQueue.add(intro);
   }
 
+  async init() {
+    this.baseUrl = await this.getBaseUrl();
+  }
+
   async start(el: HTMLElement, logDiv?: HTMLDivElement) {
-    let credentials = await this.integration.getCredentials();
+    const credentials = await this.getCredentials();
+
     if (!credentials) {
       throw new Error('Invalid credentials');
     }
 
-    const { device } = JSON.parse(credentials) as {
-      device: { id: string; name: string; token: string };
-    };
-    if (!device) {
-      throw new Error('Invalid credentials');
-    }
+    const { device } = credentials;
 
     this.resourceManager = new ResourceManager(this.cache, {
       authToken: device.token,
@@ -130,7 +138,7 @@ export class Device extends EventEmitter {
     this.contentQueue = new Playlist('content-queue', this.resourceManager);
 
     const rawChannels = await this.resourceManager.getData(
-      `${this.getBaseUrl()}/devices/${device.id}/channels`,
+      `${this.baseUrl}/devices/${device.id}/channels`,
       1000
     );
 
@@ -170,7 +178,7 @@ export class Device extends EventEmitter {
           if (entry) {
             const jsonPlaylist: JsonPlaylist | void =
               await this.resourceManager.getData(
-                `${this.getBaseUrl()}/devices/${device.id}/playlists/${
+                `${this.baseUrl}/devices/${device.id}/playlists/${
                   entry.playlist
                 }`,
                 1000
@@ -214,8 +222,35 @@ export class Device extends EventEmitter {
     this.player = undefined;
   }
 
+  /**
+   * Get the credentials from the integration and validate them.
+   * If the credentials are valid, return them.
+   */
+  async getCredentials(): Promise<Credentials | undefined> {
+    const credentials = await this.integration.getCredentials();
+
+    if (!credentials) {
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(credentials);
+      // Validate the credentials
+      if (
+        parsed?.device &&
+        parsed?.device?.id &&
+        parsed?.device?.token &&
+        parsed?.device?.name
+      ) {
+        return parsed;
+      }
+    } catch (error) {
+      this.logger.error(`Unparseable credentials ${error}`);
+    }
+  }
+
   async hasCredentials(): Promise<boolean> {
-    return !!(await this.integration.getCredentials());
+    return !!(await this.getCredentials());
   }
 
   // TODO: We shall get medias both from options and from the data.
@@ -282,7 +317,7 @@ export class Device extends EventEmitter {
 
   private async requestPincode(hardwareId: string) {
     const location = await this.integration.getLocation!();
-    const pincodeResponse = await fetch(`${this.getBaseUrl()}/registrations`, {
+    const pincodeResponse = await fetch(`${this.baseUrl}/registrations`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -307,11 +342,9 @@ export class Device extends EventEmitter {
     const hardwareId = await this.integration.getMachineGUID();
 
     // Check if this device is registered by getting the credentials from the local storage (if they exist).
-    let credentials = await this.integration.getCredentials();
+    let credentials = await this.getCredentials();
 
     if (credentials) {
-      const { device } = JSON.parse(credentials);
-
       try {
         const phoenixChannel = await this.login(credentials, hardwareId);
         this.initListeners(phoenixChannel);
@@ -338,7 +371,7 @@ export class Device extends EventEmitter {
   }
 
   get socketEndpoint() {
-    return `${this.getBaseUrl().replace('http', 'ws')}/socket`;
+    return `${this.baseUrl.replace('http', 'ws')}/socket`;
   }
 
   async register(hardwareId: string) {
@@ -378,8 +411,8 @@ export class Device extends EventEmitter {
     return pincode;
   }
 
-  async login(credentials: string, hardwareId: string) {
-    const { device } = JSON.parse(credentials);
+  async login(credentials: Credentials, hardwareId: string) {
+    const { device } = credentials;
 
     const socket = (this.socket = new Socket(this.socketEndpoint, {
       params: { device_id: device.id, hardware_id: hardwareId },
@@ -491,9 +524,52 @@ export class Device extends EventEmitter {
     };
   }
 
+  async getAvailableBaseUrls(): Promise<{ name: string; url: string }[]> {
+    const additionalBaseUrls = await this.integration.getAdditionalBaseUrls();
+
+    return [
+      {
+        name: 'Production',
+        url: 'https://api.castmill.io', // or whatever the production url is
+      },
+      {
+        name: 'Dev',
+        url: 'https://api.castmill.dev',
+      },
+      {
+        name: 'Localhost', // TODO: Only show this in development mode.
+        url: 'http://localhost:4000',
+      },
+      ...additionalBaseUrls,
+    ];
+  }
+
   //
   // APIs for the device to interact with the machine specific integration.
   //
+
+  async setBaseUrl(url: string) {
+    await this.integration.setBaseUrl(url);
+    // Refresh the page to reinitialize the player with the new base url.
+    location.reload();
+  }
+
+  async getBaseUrl(): Promise<string> {
+    const baseUrl = await this.integration.getBaseUrl();
+
+    if (baseUrl) {
+      return baseUrl;
+    }
+
+    // If there is no base url, we should set the default one.
+    const defaultBaseUrl = (await this.getAvailableBaseUrls())[0].url;
+
+    if (defaultBaseUrl) {
+      return defaultBaseUrl;
+    }
+
+    return '';
+  }
 
   getDeviceInfo() {
     return this.integration.getDeviceInfo();
@@ -545,10 +621,6 @@ export class Device extends EventEmitter {
           break;
       }
     }
-  }
-
-  private getBaseUrl() {
-    return this.opts?.baseUrl ?? '';
   }
 }
 

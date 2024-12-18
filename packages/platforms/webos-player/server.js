@@ -6,7 +6,7 @@ var express = require('express');
 var onFinished = require('on-finished');
 var app = express();
 
-const { version } = require('./appinfo/appinfo.json');
+const { version } = require('./public/appinfo.json');
 
 // LATEST BUILD
 const CURRENT_BUILD = {
