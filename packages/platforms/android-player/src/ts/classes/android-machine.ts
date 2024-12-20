@@ -2,30 +2,21 @@ import { Device } from '@capacitor/device';
 import { Toast } from '@capacitor/toast';
 import { App } from '@capacitor/app';
 import { Preferences } from '@capacitor/preferences';
-import { Machine, DeviceInfo } from '@castmill/device';
+import { Machine, DeviceInfo, SettingKey } from '@castmill/device';
 import { Castmill } from '../../plugins/castmill';
 import { delay } from '../utils';
 
 export class AndroidMachine implements Machine {
-  async setBaseUrl(baseUrl: string): Promise<void> {
+  async setSetting(key: SettingKey, value: string): Promise<void> {
     await Preferences.set({
-      key: 'baseUrl',
-      value: baseUrl,
+      key,
+      value,
     });
   }
 
-  async getBaseUrl(): Promise<string | null> {
-    const { value } = await Preferences.get({ key: 'baseUrl' });
+  async getSetting(key: SettingKey): Promise<string | null> {
+    const { value } = await Preferences.get({ key });
     return value;
-  }
-
-  async getAdditionalBaseUrls(): Promise<{ name: string; url: string }[]> {
-    return [
-      {
-        name: 'Android Emu Host',
-        url: 'http://10.0.2.2:4000',
-      },
-    ];
   }
 
   async getMachineGUID(): Promise<string> {

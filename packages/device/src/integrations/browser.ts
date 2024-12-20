@@ -1,22 +1,18 @@
-import { Machine, type DeviceInfo } from '../interfaces/machine';
+import {
+  Machine,
+  type DeviceInfo,
+  type SettingKey,
+} from '../interfaces/machine';
 
 export class BrowserMachine implements Machine {
-  async getBaseUrl(): Promise<string | null> {
-    return localStorage.getItem('castmill.baseUrl');
+  async getSetting(key: SettingKey): Promise<string | null> {
+    return localStorage.getItem(`castmill.${key}`);
   }
 
-  async setBaseUrl(url: string): Promise<void> {
-    localStorage.setItem('castmill.baseUrl', url);
+  async setSetting(key: SettingKey, value: string): Promise<void> {
+    localStorage.setItem(`castmill.${key}`, value);
   }
 
-  async getAdditionalBaseUrls(): Promise<{ name: string; url: string }[]> {
-    return [
-      {
-        name: 'Dummy URL',
-        url: 'https://example.dummy',
-      },
-    ];
-  }
   /**
    * Since a browser does not support a MAC address or another
    * persistent GUID, we will use a random UUID.

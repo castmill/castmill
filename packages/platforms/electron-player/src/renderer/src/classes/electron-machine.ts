@@ -1,16 +1,13 @@
-import { Machine, DeviceInfo } from '@castmill/device';
+import { Machine, DeviceInfo, SettingKey } from '@castmill/device';
 
 export class ElectronMachine implements Machine {
-  async setBaseUrl(baseUrl: string): Promise<void> {
-    await window.api.setItem('castmill-baseUrl', baseUrl);
+
+  async setSetting(key: SettingKey, value: string): Promise<void> {
+    await window.api.setItem(`castmill-${key}`, value);
   }
 
-  async getBaseUrl(): Promise<string | null> {
-    return window.api.getItem('castmill-baseUrl');
-  }
-
-  async getAdditionalBaseUrls(): Promise<{ name: string; url: string }[]> {
-    return [];
+  async getSetting(key: SettingKey): Promise<string | null> {
+    return window.api.getItem(`castmill-${key}`);
   }
 
   async getMachineGUID(): Promise<string> {

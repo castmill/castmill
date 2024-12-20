@@ -1,4 +1,4 @@
-import { DeviceInfo } from '@castmill/device';
+import { DeviceInfo, SettingKey } from '@castmill/device';
 import { LegacyMachine, PING_INTERVAL } from './legacy-machine';
 import { simpleHash } from './utils';
 import { version } from '../../package.json';
@@ -46,39 +46,18 @@ export class AndroidLegacyMachine implements LegacyMachine {
     return setItem(key, UNSET_VALUE);
   }
 
-  async setBaseUrl(baseUrl: string): Promise<void> {
-    console.log('legacy:setBaseUrl');
-    await this.setItem('BASE_URL', baseUrl);
+  async setSetting(key: SettingKey, value: string): Promise<void> {
+    console.log('legacy:setSetting');
+    await this.setItem(key, value);
   }
 
-  async getBaseUrl(): Promise<string | null> {
-    console.log('legacy:getBaseUrl');
-    const baseUrl = await this.getItem('BASE_URL');
+  async getSetting(key: SettingKey): Promise<string | null> {
+    console.log('legacy:getSetting');
+    const value = await this.getItem(key);
 
-    console.log(`legacy:getBaseUrl, baseUrl: ${baseUrl}`);
+    console.log(`legacy:getSetting ${key} = ${value}`);
 
-    if (!baseUrl) {
-      const additionalBaseUrls = await this.getAdditionalBaseUrls();
-      return additionalBaseUrls[0]?.url;
-    }
-
-    return baseUrl;
-  }
-
-  async getAdditionalBaseUrls(): Promise<{ name: string; url: string }[]> {
-    const localBaseUrl = import.meta.env.VITE_BASE_URL;
-    console.log('localBaseUrl', localBaseUrl);
-
-    if (localBaseUrl) {
-      return [
-        {
-          name: 'Local',
-          url: localBaseUrl,
-        },
-      ];
-    } else {
-      return [];
-    }
+    return value;
   }
 
   async getMachineGUID(): Promise<string> {
