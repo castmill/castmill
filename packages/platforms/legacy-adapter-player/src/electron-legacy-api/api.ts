@@ -21,12 +21,6 @@ export async function getEnvironment(): Promise<EnvironmentData> {
   }
 
   return new Promise((resolve, reject) => {
-    // Set a timeout to reject the promise if we don't get a response
-    const timeoutId = setTimeout(
-      () => reject(new Error('Request to Electron player api timed out')),
-      5000
-    );
-
     const responseHandler = (event: MessageEvent) => {
       try {
         const data = JSON.parse(event.data);
@@ -45,8 +39,6 @@ export async function getEnvironment(): Promise<EnvironmentData> {
         });
       } catch (err) {
         reject(err);
-      } finally {
-        clearTimeout(timeoutId);
       }
     };
 
