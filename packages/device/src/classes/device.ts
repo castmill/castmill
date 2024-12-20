@@ -86,6 +86,10 @@ export class Device extends EventEmitter {
   private logger: Logger = new Logger();
   private logDiv?: HTMLDivElement;
   private socket?: Socket;
+
+  // The base url is the url of the Castmill API. By default it is assumed that the API is
+  // hosted at the same domain as this device and accessible through a relative path.
+  // Hence, the default value is an empty string.
   private baseUrl = '';
 
   public id?: string;
@@ -525,22 +529,21 @@ export class Device extends EventEmitter {
   }
 
   async getAvailableBaseUrls(): Promise<{ name: string; url: string }[]> {
-    const additionalBaseUrls = await this.integration.getAdditionalBaseUrls();
+    // The prod and dev base urls are defined in the environment variables in the
+    // .env file
+    const productionBaseUrl = import.meta.env.VITE_PRODUCTION_BASE_URL;
+    const devBaseUrl = import.meta.env.VITE_DEV_BASE_URL;
+
+    // The local base url is only used for development purposes. Defined on the
+    // command line or in a .env.local file.
+    const localBaseUrl = import.meta.env.VITE_LOCAL_BASE_URL;
 
     return [
-      {
-        name: 'Production',
-        url: 'https://api.castmill.io', // or whatever the production url is
-      },
-      {
-        name: 'Dev',
-        url: 'https://api.castmill.dev',
-      },
-      {
-        name: 'Localhost', // TODO: Only show this in development mode.
-        url: 'http://localhost:4000',
-      },
-      ...additionalBaseUrls,
+      ...(productionBaseUrl
+        ? [{ name: 'Production', url: productionBaseUrl }]
+        : []),
+      ...(devBaseUrl ? [{ name: 'Dev', url: devBaseUrl }] : []),
+      ...(localBaseUrl ? [{ name: 'Local', url: localBaseUrl }] : []),
     ];
   }
 
@@ -549,26 +552,28 @@ export class Device extends EventEmitter {
   //
 
   async setBaseUrl(url: string) {
-    await this.integration.setBaseUrl(url);
+    await this.integration.setSetting('BASE_URL', url);
     // Refresh the page to reinitialize the player with the new base url.
     location.reload();
   }
 
   async getBaseUrl(): Promise<string> {
-    const baseUrl = await this.integration.getBaseUrl();
-
+    // First we check if there is a base url set in the settings.
+    const baseUrl = await this.integration.getSetting('BASE_URL');
     if (baseUrl) {
       return baseUrl;
     }
 
-    // If there is no base url, we should set the default one.
-    const defaultBaseUrl = (await this.getAvailableBaseUrls())[0].url;
-
+    // If there is no base url set in the settings, we check if there is a default
+    // base url set in the environment variables.
+    const defaultBaseUrl = import.meta.env.VITE_DEFAULT_BASE_URL;
     if (defaultBaseUrl) {
       return defaultBaseUrl;
     }
 
-    return '';
+    // Otherwise, we use the first available base url.
+    const firstBaseUrl = (await this.getAvailableBaseUrls())[0].url;
+    return firstBaseUrl;
   }
 
   getDeviceInfo() {
