@@ -26,35 +26,6 @@ export class ElectronLegacyMachine
     }, 1000);
   }
 
-  async getBaseUrl(): Promise<string | null> {
-    const baseUrl = await super.getBaseUrl();
-
-    if (!baseUrl) {
-      console.log('legacy:getBaseUrl, baseUrl is not set');
-      const additionalBaseUrls = await this.getAdditionalBaseUrls();
-      console.log('legacy:getBaseUrl, additionalBaseUrls', additionalBaseUrls);
-      return additionalBaseUrls[0]?.url;
-    }
-
-    return baseUrl;
-  }
-
-  async getAdditionalBaseUrls(): Promise<{ name: string; url: string }[]> {
-    const localBaseUrl = import.meta.env.VITE_BASE_URL;
-    console.log('localBaseUrl', localBaseUrl);
-
-    if (localBaseUrl) {
-      return [
-        {
-          name: 'Local',
-          url: localBaseUrl,
-        },
-      ];
-    } else {
-      return [];
-    }
-  }
-
   async getMachineGUID(): Promise<string> {
     console.log('legacy-electron:getMachineGUID');
     const environment = await getEnvironment();

@@ -46,22 +46,20 @@ export interface Timers {
   off: TimerEntry[];
 }
 
+// The keys of the settings that the machine can store. For type safety defined
+// as a union type.
+export type SettingKey = 'BASE_URL'; // Add more keys as needed
+
 export interface Machine {
   /**
-   * Get the base URL to use for all the requests to the server.
+   * Get the the value of the setting with the given key.
    */
-  getBaseUrl(): Promise<string | null>;
+  getSetting(key: SettingKey): Promise<string | null>;
 
   /**
-   * Set the base URL to use for all the requests to the server.
+   * Set the value of the setting with the given key.
    */
-  setBaseUrl(url: string): Promise<void>;
-
-  /**
-   * Get the additional base URLs to use for all the requests to the server.
-   * These URLs are selectable by the user in the device's settings.
-   */
-  getAdditionalBaseUrls(): Promise<{ name: string; url: string }[]>;
+  setSetting(key: SettingKey, value: string): Promise<void>;
 
   /**
    * Returns the machine's unique identifier.

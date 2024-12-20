@@ -1,4 +1,4 @@
-import { Machine, DeviceInfo } from '@castmill/device';
+import { Machine, DeviceInfo, SettingKey } from '@castmill/device';
 import { configuration, deviceInfo, power, storage } from '../native';
 import { simpleHash } from './utils';
 import { version } from '../../package.json';
@@ -15,43 +15,27 @@ const UPDATE_CONFIG = {
   fqdnAddr: 'https://update.castmill.io/webos/player-new.ipk',
 };
 
-const BASE_URL_FILE_PATH = 'base-url.txt';
 const CREDENTIALS_FILE_PATH = 'credentials.txt';
 
 const getFilePath = (path: string) => `file://internal/${path}`;
 
 export class WebosMachine implements Machine {
-  async setBaseUrl(baseUrl: string): Promise<void> {
+  async setSetting(key: SettingKey, value: string): Promise<void> {
     await storage.writeFile({
-      path: getFilePath(BASE_URL_FILE_PATH),
-      data: baseUrl,
+      path: getFilePath(`castmill-${key}.txt`),
+      data: value,
     });
   }
 
-  async getBaseUrl(): Promise<string | null> {
+  async getSetting(key: SettingKey): Promise<string | null> {
     try {
       const file = await storage.readFile({
-        path: getFilePath(BASE_URL_FILE_PATH),
+        path: getFilePath(`castmill-${key}.txt`),
       });
 
       return file.data.toString();
     } catch (e) {
       return null;
-    }
-  }
-
-  async getAdditionalBaseUrls(): Promise<{ name: string; url: string }[]> {
-    const localBaseUrl = import.meta.env.VITE_BASE_URL;
-
-    if (localBaseUrl) {
-      return [
-        {
-          name: 'Local',
-          url: localBaseUrl,
-        },
-      ];
-    } else {
-      return [];
     }
   }
 
