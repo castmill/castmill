@@ -13,42 +13,29 @@ interface PlayerData {
 
 const msg = new Msg(window.parent, inbound, outbound);
 
-const SIMPLE_ACTIONS_TIMEOUT_MS = 5000;
-// Return a promise that rejects after a timeout
-const timeout = (ms = SIMPLE_ACTIONS_TIMEOUT_MS) =>
-  new Promise((_, reject) =>
-    setTimeout(
-      () => reject(new Error('Request to Android player api timed out')),
-      ms
-    )
-  );
-
 export async function getPlayerData(): Promise<PlayerData> {
   console.log('Android api: getPlayerData');
-  return Promise.race([
-    outbound.getPlayerData(),
-    timeout(),
-  ]) as unknown as PlayerData;
+  return outbound.getPlayerData() as unknown as PlayerData;
 }
 
 export async function setItem(key: string, value: string): Promise<void> {
   console.log('Android api: setItem', key, value);
-  await Promise.race([outbound.set(key, value), timeout()]);
+  await outbound.set(key, value);
 }
 
 export async function getItem(key: string): Promise<string | null> {
   console.log('Android api: getItem', key);
-  return Promise.race([outbound.get(key), timeout()]) as unknown as string;
+  await outbound.get(key);
 }
 
 export async function reboot(): Promise<void> {
   console.log('Android api: reboot');
-  await Promise.race([outbound.reboot(), timeout()]);
+  await outbound.reboot();
 }
 
 export async function restart(): Promise<void> {
   console.log('Android api: restart');
-  await Promise.race([outbound.restart(), timeout()]);
+  await outbound.restart();
 }
 
 export async function downloadFile(
@@ -61,12 +48,12 @@ export async function downloadFile(
 
 export async function deleteFile(path: string): Promise<void> {
   console.log('Android api: deleteFile', path);
-  await Promise.race([outbound.deleteFile(path), timeout()]);
+  await outbound.deleteFile(path);
 }
 
 export async function deletePath(path: string): Promise<void> {
   console.log('Android api: deletePath', path);
-  await Promise.race([outbound.deletePath(path), timeout()]);
+  await outbound.deletePath(path);
 }
 
 export function sendHeartbeat() {
