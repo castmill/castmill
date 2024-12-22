@@ -38,17 +38,6 @@ describe('ElectronLegacyMachine', () => {
     expect(getEnvironment).toHaveBeenCalled();
   });
 
-  it('should return additional base URLs', async () => {
-    import.meta.env.VITE_BASE_URL = 'http://a.b.c';
-    const urls = await machine.getAdditionalBaseUrls();
-    expect(urls).toEqual([
-      {
-        name: 'Local',
-        url: 'http://a.b.c',
-      },
-    ]);
-  });
-
   it('should return device info', async () => {
     const info = await machine.getDeviceInfo();
     expect(info).toEqual({

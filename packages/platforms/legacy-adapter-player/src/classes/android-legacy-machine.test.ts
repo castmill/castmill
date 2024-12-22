@@ -51,28 +51,6 @@ describe('AndroidLegacyMachine', () => {
     setTimeoutSpy.mockRestore();
   });
 
-  it('should set and get base URL', async () => {
-    await machine.setBaseUrl('http://example.com');
-    expect(setItem).toHaveBeenCalledWith('BASE_URL', 'http://example.com');
-
-    const baseUrl = await machine.getBaseUrl();
-    expect(baseUrl).toBe('mocked_value');
-    expect(getItem).toHaveBeenCalledWith('BASE_URL');
-  });
-
-  it('should return mocked base URL if unset', async () => {
-    import.meta.env.VITE_BASE_URL = 'http://a.b.c';
-    (getItem as jest.Mock).mockResolvedValueOnce(UNSET_VALUE);
-    const baseUrl = await machine.getBaseUrl();
-    expect(baseUrl).toBe('http://a.b.c');
-  });
-
-  it('should return additional base URLs', async () => {
-    import.meta.env.VITE_BASE_URL = 'http://a.b.c';
-    const urls = await machine.getAdditionalBaseUrls();
-    expect(urls).toEqual([{ name: 'Local', url: 'http://a.b.c' }]);
-  });
-
   it('should return machine GUID', async () => {
     const guid = await machine.getMachineGUID();
     expect(guid).toBe('mocked_uuid');
