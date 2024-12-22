@@ -11,30 +11,34 @@ interface PlayerData {
   android_version: string;
 }
 
+import { Logger } from '../utils';
+
+const logger = new Logger('Api');
+
 const msg = new Msg(window.parent, inbound, outbound);
 
 export async function getPlayerData(): Promise<PlayerData> {
-  console.log('Android api: getPlayerData');
+  logger.log('getPlayerData');
   return outbound.getPlayerData() as unknown as PlayerData;
 }
 
 export async function setItem(key: string, value: string): Promise<void> {
-  console.log('Android api: setItem', key, value);
+  logger.log('setItem', key, value);
   await outbound.set(key, value);
 }
 
 export async function getItem(key: string): Promise<string | null> {
-  console.log('Android api: getItem', key);
-  await outbound.get(key);
+  logger.log('getItem', key);
+  return outbound.get(key) as unknown as string | null;
 }
 
 export async function reboot(): Promise<void> {
-  console.log('Android api: reboot');
+  logger.log('reboot');
   await outbound.reboot();
 }
 
 export async function restart(): Promise<void> {
-  console.log('Android api: restart');
+  logger.log('restart');
   await outbound.restart();
 }
 
@@ -42,26 +46,26 @@ export async function downloadFile(
   path: string,
   localPath: string
 ): Promise<string> {
-  console.log('Android api: downloadFile', path, localPath);
+  logger.log('downloadFile', path, localPath);
   return outbound.downloadFile(path, localPath) as unknown as string;
 }
 
 export async function deleteFile(path: string): Promise<void> {
-  console.log('Android api: deleteFile', path);
+  logger.log('deleteFile', path);
   await outbound.deleteFile(path);
 }
 
 export async function deletePath(path: string): Promise<void> {
-  console.log('Android api: deletePath', path);
+  logger.log('deletePath', path);
   await outbound.deletePath(path);
 }
 
 export function sendHeartbeat() {
-  console.log('Android api: Sending heartbeat');
+  logger.log('Sending heartbeat');
   parent.postMessage('alive', '*');
 }
 
 export function sendPlayerReady() {
-  console.log('Android api: Sending player ready');
+  logger.log('Sending player ready');
   parent.postMessage('player_ready', '*');
 }

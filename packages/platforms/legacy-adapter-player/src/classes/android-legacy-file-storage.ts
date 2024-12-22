@@ -58,8 +58,6 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
   }
 
   async init(): Promise<void> {
-    console.log('legacy:file-storage:init');
-
     this.fileMap = await this.loadFileMap();
   }
 
