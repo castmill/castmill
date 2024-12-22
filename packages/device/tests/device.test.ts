@@ -24,10 +24,9 @@ describe('Device', () => {
   beforeEach(() => {
     mockIntegration = {
       getCredentials: vi.fn(),
-      getBaseUrl: vi.fn(),
+      getSetting: vi.fn(),
       getMachineGUID: vi.fn(),
       removeCredentials: vi.fn(),
-      getAdditionalBaseUrls: vi.fn(),
     };
 
     mockStorageIntegration = {
@@ -36,6 +35,7 @@ describe('Device', () => {
       removeItem: vi.fn(),
     };
 
+    // mock vite env
     device = new Device(mockIntegration, mockStorageIntegration, {
       cache: { maxItems: 100 },
     });
@@ -50,19 +50,28 @@ describe('Device', () => {
   });
 
   it('should initialize and get base URL', async () => {
-    mockIntegration.getBaseUrl.mockResolvedValue('http://localhost:3000');
+    mockIntegration.getSetting.mockResolvedValue('http://localhost:3000');
     await device.init();
     expect(device['baseUrl']).toBe('http://localhost:3000');
-    expect(mockIntegration.getBaseUrl).toHaveBeenCalled();
+    expect(mockIntegration.getSetting).toHaveBeenCalled();
   });
 
-  it('should default to first available baseUrl if getBaseUrl returns null', async () => {
-    mockIntegration.getBaseUrl.mockResolvedValue(null);
-    mockIntegration.getAdditionalBaseUrls.mockResolvedValue([]);
+  it('should default to VITE_DEFAULT_BASE_URL if getBaseUrl returns null', async () => {
+    mockIntegration.getSetting.mockResolvedValue(null);
+    vi.stubEnv('VITE_DEFAULT_BASE_URL', 'https://default.castmill.io');
+    await device.init();
+    const defaultBaseUrl = 'https://default.castmill.io';
+    expect(device['baseUrl']).toBe(defaultBaseUrl);
+  });
+
+  it('should default to first available baseUrl if getBaseUrl returns null and VITE_DEFAULT_BASE_URL is unset', async () => {
+    mockIntegration.getSetting.mockResolvedValue(null);
+    vi.stubEnv('VITE_DEFAULT_BASE_URL', '');
+    vi.stubEnv('VITE_PRODUCTION_BASE_URL', 'https://prod.castmill.io');
     await device.init();
     const availableBaseUrls = await device.getAvailableBaseUrls();
     expect(device['baseUrl']).toBe(availableBaseUrls[0].url);
-    expect(mockIntegration.getBaseUrl).toHaveBeenCalled();
+    expect(mockIntegration.getSetting).toHaveBeenCalled();
   });
 });
 
