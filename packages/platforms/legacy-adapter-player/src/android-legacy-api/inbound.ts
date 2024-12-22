@@ -1,12 +1,16 @@
+import { Logger } from '../utils';
+
+const logger = new Logger('Inbound');
+
 // inbound interface
 export const inbound = {
   command: function (cmd: string) {
-    console.log('inbound: command: ' + cmd);
+    logger.log('command: ' + cmd);
     return Promise.resolve();
   },
   event: function (type: string, param: any): Promise<void> {
     return new Promise(function (resolve, reject) {
-      console.log('inbound: event ' + type + ' ' + param);
+      logger.log('event ' + type + ' ' + param);
       switch (type) {
         case 'ready':
           resolve();

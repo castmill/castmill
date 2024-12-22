@@ -12,13 +12,17 @@ import {
   sendPlayerReady,
 } from '../android-legacy-api';
 
+import { Logger } from '../utils';
+
+const logger = new Logger('LegacyMachine');
+
 // The default value for unset values in the android settings
 export const UNSET_VALUE = 'YES';
 
 export class AndroidLegacyMachine implements LegacyMachine {
   initLegacy(): void {
     setInterval(() => {
-      console.log('Sending heartbeat');
+      logger.log('Sending heartbeat');
       sendHeartbeat();
     }, PING_INTERVAL);
 
@@ -28,12 +32,12 @@ export class AndroidLegacyMachine implements LegacyMachine {
   }
 
   private async setItem(key: string, value: string): Promise<void> {
-    console.log('setItem', key, value);
+    logger.log('setItem', key, value);
     return setItem(key, value);
   }
 
   private async getItem(key: string): Promise<string | null> {
-    console.log('legacy:getItem ' + key);
+    logger.log('getItem', key);
     const value = await getItem(key);
     if (value === UNSET_VALUE) {
       // If the value is unset
@@ -47,47 +51,45 @@ export class AndroidLegacyMachine implements LegacyMachine {
   }
 
   async setSetting(key: SettingKey, value: string): Promise<void> {
-    console.log('legacy:setSetting');
+    logger.log('setSetting');
     await this.setItem(key, value);
   }
 
   async getSetting(key: SettingKey): Promise<string | null> {
-    console.log('legacy:getSetting');
     const value = await this.getItem(key);
 
-    console.log(`legacy:getSetting ${key} = ${value}`);
+    logger.log('getSetting', key, value);
 
     return value;
   }
 
   async getMachineGUID(): Promise<string> {
-    console.log('legacy:getMachineGUID');
     const playerData = await getPlayerData();
-    console.log('playerData', playerData);
+    logger.log('getMachineGUID', playerData);
     return playerData.uuid;
   }
 
   async storeCredentials(credentials: string): Promise<void> {
-    console.log('legacy:storeCredentials');
+    logger.log('storeCredentials');
     await this.setItem('CREDENTIALS', credentials);
   }
 
   async getCredentials(): Promise<string | null> {
-    console.log('legacy:getCredentials');
+    logger.log('getCredentials');
     const credentials = await this.getItem('CREDENTIALS');
 
     return credentials;
   }
 
   async removeCredentials(): Promise<void> {
-    console.log('legacy:removeCredentials');
+    logger.log('removeCredentials');
     this.removeItem('CREDENTIALS');
   }
 
   async getLocation(): Promise<
     undefined | { latitude: number; longitude: number }
   > {
-    console.log('legacy:getLocation');
+    logger.log('getLocation');
     return undefined;
     try {
       const location = await new Promise<GeolocationPosition>(
@@ -106,12 +108,12 @@ export class AndroidLegacyMachine implements LegacyMachine {
   }
 
   async getTimezone(): Promise<string> {
-    console.log('legacy:getTimezone');
+    logger.log('getTimezone');
     return Intl.DateTimeFormat().resolvedOptions().timeZone;
   }
 
   async getDeviceInfo(): Promise<DeviceInfo> {
-    console.log('legacy:getDeviceInfo');
+    logger.log('getDeviceInfo');
     // get chromium version from user agent
     const chromiumVersion =
       navigator.userAgent.match(/Chrome\/([0-9.]+)/)?.[1] ?? undefined;
@@ -132,7 +134,7 @@ export class AndroidLegacyMachine implements LegacyMachine {
    * Restart the device application.
    */
   async restart(): Promise<void> {
-    console.log('legacy:restart');
+    logger.log('restart');
     return restart();
   }
 
@@ -140,7 +142,7 @@ export class AndroidLegacyMachine implements LegacyMachine {
    * Refresh the browser.
    */
   async refresh(): Promise<void> {
-    console.log('legacy:refresh');
+    logger.log('refresh');
     return window.location.reload();
   }
 
@@ -149,7 +151,7 @@ export class AndroidLegacyMachine implements LegacyMachine {
    *
    */
   async reboot(): Promise<void> {
-    console.log('legacy:reboot');
+    logger.log('reboot');
     return reboot();
   }
 }
