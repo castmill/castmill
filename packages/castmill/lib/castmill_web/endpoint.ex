@@ -2,7 +2,7 @@ defmodule CastmillWeb.Endpoint do
   use Phoenix.Endpoint, otp_app: :castmill
 
   # Enable CORS. Only allow requests from the domains listed in the network domains
-  plug(CORSPlug, origin: &CastmillWeb.Endpoint.getAllowedOrigins/0, credentials: true)
+  plug(CORSPlug, origin: &CastmillWeb.Endpoint.getAllowedOrigins/1, credentials: true)
 
   # The session will be stored in the cookie and signed,
   # this means its contents can be read but not tampered with.
@@ -82,16 +82,17 @@ defmodule CastmillWeb.Endpoint do
   plug(Plug.Session, @session_options)
   plug(CastmillWeb.Router)
 
-  # Origin of different players
-  @android_origin "https://localhost"
-  @electron_origin "http://localhost:5173"
-  @webos_origin "file://com.lg.app.signage"
-  @legacy_local_origin "http://localhost:3003"
+  # The endpoints used exclusively by the player apps
+  @player_endpoints [
+    "/registrations"
+  ]
 
-  # TODO: we must cache the allowed origins at least for a few minutes or this
-  # will be a huge performance bottleneck. The cache must use ETS to be shared.
-  def getAllowedOrigins() do
-    [@android_origin, @electron_origin, @webos_origin, @legacy_local_origin] ++
+  def getAllowedOrigins(conn) do
+    # If the request is for a player endpoint, we allow all origins.
+    if Enum.member?(@player_endpoints, conn.request_path) do
+      ["*"]
+    else
       Castmill.Networks.list_network_domains()
+    end
   end
 end
