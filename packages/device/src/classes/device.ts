@@ -336,6 +336,21 @@ export class Device extends EventEmitter {
     if (pincodeResponse.status === 201) {
       const { data } = await pincodeResponse.json();
       return data.pincode;
+    } else if (pincodeResponse.status === 200) {
+      // Device was already registered, and we got the token to recover it.
+      const { data } = await pincodeResponse.json();
+
+      const credentials = {
+        device: {
+          id: data.id,
+          name: data.name,
+          token: data.token,
+        },
+      };
+      await this.integration.storeCredentials!(JSON.stringify(credentials));
+
+      // Refresh the page to initialize the player with the new credentials.
+      window.location.reload();
     } else {
       throw new Error(`Invalid status ${pincodeResponse.status}`);
     }
