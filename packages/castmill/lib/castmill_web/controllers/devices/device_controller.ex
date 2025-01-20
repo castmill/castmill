@@ -74,10 +74,25 @@ defmodule CastmillWeb.DeviceController do
       version: "0.0.1"
     }
 
-    with {:ok, device} <- Castmill.Devices.create_device_registration(device_attrs) do
-      conn
-      |> put_status(:created)
-      |> render(:show, device: device)
+    # Try to recover the device through the hardware_id
+    case Devices.recover_device(hardware_id, device_attrs.device_ip) do
+      {:ok, device} ->
+        conn
+        |> put_status(:ok)
+        |> render(:recover, device: device)
+
+      {:error, _reason} ->
+        case Castmill.Devices.create_device_registration(device_attrs) do
+          {:ok, device} ->
+            conn
+            |> put_status(:created)
+            |> render(:show, device: device)
+
+          {:error, _reason} ->
+            conn
+            |> put_status(:internal_server_error)
+            |> json(%{error: "Failed to create device"})
+        end
     end
   end
 

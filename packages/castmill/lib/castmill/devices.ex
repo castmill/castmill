@@ -400,15 +400,25 @@ defmodule Castmill.Devices do
       # TODO: also check if auto_recovery is enabled
       if not is_nil(device) and
            device.last_ip == device_ip and
-           device.updated_at >= DateTime.from_unix(:os.system_time(:seconds) - 60 * 60, :second) do
+           device.updated_at <= hour_ago() do
         # Update device token
         token = generate_token()
-        device = update_device(device, %{token: token})
-        {device, token}
+        {:ok, device} = update_device(device, %{token: token})
+        device
       else
         Repo.rollback("Device not found or not eligible for recovery")
       end
     end)
+  end
+
+  @doc """
+    Returns the time one hour ago as a naive datetime.
+  """
+  defp hour_ago do
+    :os.system_time(:seconds)
+    |> Kernel.-(3600)
+    |> DateTime.from_unix!(:second)
+    |> DateTime.to_naive()
   end
 
   defp generate_token do
