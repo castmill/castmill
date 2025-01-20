@@ -17,6 +17,19 @@ defmodule CastmillWeb.DeviceJSON do
     %{data: data(device)}
   end
 
+  @doc """
+  Renders the recovery information for a device.
+  """
+  def recover(%{device: device}) do
+    %{
+      data: %{
+        id: device.id,
+        name: device.name,
+        token: device.token
+      }
+    }
+  end
+
   defp data(%Device{} = device) do
     %{
       id: device.id,
