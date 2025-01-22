@@ -411,9 +411,6 @@ defmodule Castmill.Devices do
     end)
   end
 
-  @doc """
-    Returns the time one hour ago as a naive datetime.
-  """
   defp hour_ago do
     :os.system_time(:seconds)
     |> Kernel.-(3600)
