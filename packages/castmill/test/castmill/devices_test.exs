@@ -162,7 +162,21 @@ defmodule Castmill.DevicesTest do
                  name: "some device"
                })
 
-      assert {:ok, {_device, _token}} = Devices.recover_device(device.hardware_id, device.last_ip)
+      # The updated at isn't older than an hour, so it should not be possible to recover the device
+      assert {:error, _} = Devices.recover_device(device.hardware_id, device.last_ip)
+
+      # Setting the updated_at to an hour ago
+      hour_ago =
+        :os.system_time(:seconds)
+        |> Kernel.-(3600)
+        |> DateTime.from_unix!(:second)
+        |> DateTime.to_naive()
+
+      from(d in Devices.Device, where: d.id == ^device.id)
+      |> Repo.update_all(set: [updated_at: hour_ago])
+
+      # Now it should be possible to recover the device
+      assert {:ok, _} = Devices.recover_device(device.hardware_id, device.last_ip)
     end
 
     test "recover_device/2 do not recover a device with different ip address" do
