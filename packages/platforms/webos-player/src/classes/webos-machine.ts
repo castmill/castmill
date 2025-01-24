@@ -161,9 +161,12 @@ export class WebosMachine implements Machine {
    * Updates the device's application.
    */
   async update(): Promise<void> {
-    // First set the server properties to the correct values
-    // TODO set it if running in production
-    // await configuration.setServerProperty(UPDATE_CONFIG);
+    const keepServerSettings =
+      import.meta.env.VITE_KEEP_SERVER_SETTINGS === 'true';
+    if (!keepServerSettings) {
+      // Set the server properties to the correct values
+      await configuration.setServerProperty(UPDATE_CONFIG);
+    }
 
     // Then download the application
     await storage.upgradeApplication({
