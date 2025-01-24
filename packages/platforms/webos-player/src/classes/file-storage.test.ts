@@ -18,7 +18,7 @@ vi.mock('../native/native-api', () => ({
     moveFile: vi.fn(() => Promise.resolve()),
     removeFile: vi.fn(() => Promise.resolve()),
     statFile: vi.fn(() => Promise.resolve({ size: 9 })),
-    downloadFile: vi.fn(() => Promise.resolve()),
+    copyFile: vi.fn(() => Promise.resolve()),
   },
 }));
 
@@ -26,6 +26,7 @@ import { storage as api } from '../native/native-api';
 
 describe('FileStorage', () => {
   const testDir = 'file://internal/castmill-cache';
+  const cacheBasePath = 'http://127.0.0.1:9080/castmill-cache';
   let storage;
   beforeEach(async () => {
     storage = new FileStorage(testDir);
@@ -36,20 +37,11 @@ describe('FileStorage', () => {
     vi.resetAllMocks();
   });
 
-  it('should store and return file details', async () => {
-    const data = 'test data';
-    const url = 'http://example.com/image.png';
-
-    const result = await storage.storeFile(url, data);
-    expect(result.result.code).toBe('SUCCESS');
-    expect(result.item.size).toBe(data.length);
-  });
-
   it('should retrieve a file path if file exists', async () => {
     const url = 'http://example.com/image.png';
     const filePath = await storage.retrieveFile(url);
 
-    expect(filePath).to.include(testDir);
+    expect(filePath).to.include(cacheBasePath);
   });
 
   it('should return undefined if file does not exist', async () => {
@@ -100,12 +92,12 @@ describe('FileStorage', () => {
       const result = await storage.storeFile(url);
 
       expect(result.result.code).to.equal('SUCCESS');
-      expect(api.downloadFile).toHaveBeenCalledOnce();
+      expect(api.copyFile).toHaveBeenCalledOnce();
       expect(api.moveFile).toHaveBeenCalledOnce();
     });
 
     it('should return error if data cannot be downloaded', async () => {
-      vi.mocked(api.downloadFile).mockRejectedValueOnce(
+      vi.mocked(api.copyFile).mockRejectedValueOnce(
         new Error('Failed to download file')
       );
       const url = 'http://example.com/image.png';
