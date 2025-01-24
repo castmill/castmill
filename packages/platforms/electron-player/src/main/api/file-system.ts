@@ -2,7 +2,7 @@ import type {
   StorageInfo,
   StorageItem,
   StoreFileReturnValue,
-  StoreFileOptions,
+  StoreOptions,
 } from '@castmill/cache';
 
 import { createHash } from 'crypto';
@@ -97,7 +97,7 @@ export async function listFiles(storagePath: string): Promise<StorageItem[]> {
 export async function storeFile(
   storagePath: string,
   url: string,
-  opts?: StoreFileOptions
+  opts?: StoreOptions
 ): Promise<StoreFileReturnValue> {
   const fullPath = join(BASE_DIR, storagePath);
 
@@ -199,7 +199,7 @@ export async function deleteAllFiles(storagePath: string): Promise<void> {
 function downloadFile(
   destPath: string,
   url: string,
-  opts?: StoreFileOptions
+  opts?: StoreOptions
 ): Promise<string> {
   return new Promise((resolve, reject) => {
     const request = net.request({
