@@ -6,7 +6,7 @@ export class Logger {
   private active = import.meta.env.VITE_LOGGING === 'true';
 
   constructor(private readonly prefix: string) {}
-  
+
   log(...args: any[]): void {
     if (!this.active) {
       return;
