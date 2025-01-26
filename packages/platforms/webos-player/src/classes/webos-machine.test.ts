@@ -145,6 +145,24 @@ describe('WebosMachine', () => {
     expect(rebootSpy).toHaveBeenCalledOnce();
   });
 
+  it('should not overwrite server settings if VITE_KEEP_SERVER_SETTINGS is true', async () => {
+    const rebootSpy = vi.spyOn(machine, 'reboot');
+    vi.stubEnv('VITE_KEEP_SERVER_SETTINGS', 'true');
+    await machine.update();
+    expect(configuration.setServerProperty).not.toHaveBeenCalled();
+    expect(storage.upgradeApplication).toHaveBeenCalledOnce();
+    expect(rebootSpy).toHaveBeenCalledOnce();
+  });
+
+  it('should overwrite server settings if VITE_KEEP_SERVER_SETTINGS is unset', async () => {
+    const rebootSpy = vi.spyOn(machine, 'reboot');
+    vi.stubEnv('VITE_KEEP_SERVER_SETTINGS', undefined);
+    await machine.update();
+    expect(configuration.setServerProperty).toHaveBeenCalledOnce();
+    expect(storage.upgradeApplication).toHaveBeenCalledOnce();
+    expect(rebootSpy).toHaveBeenCalledOnce();
+  });
+
   it('should update the firmware', async () => {
     const url = 'https://update.castmill.io/webos/firmware/LG-55XS2E-BH.epk';
     const urlSpy = vi
