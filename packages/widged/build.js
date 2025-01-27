@@ -1,4 +1,3 @@
-
 // Importing the intro template
 import { intro } from './dist/widgets.js';
 
