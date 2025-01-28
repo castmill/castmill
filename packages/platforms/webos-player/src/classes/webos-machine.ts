@@ -34,7 +34,7 @@ export class WebosMachine implements Machine {
       });
 
       return file.data.toString();
-    } catch (e) {
+    } catch {
       return null;
     }
   }
@@ -66,7 +66,7 @@ export class WebosMachine implements Machine {
       });
 
       return credentials.data.toString();
-    } catch (e) {
+    } catch {
       return null;
     }
   }
@@ -91,7 +91,7 @@ export class WebosMachine implements Machine {
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
       };
-    } catch (e) {
+    } catch {
       return undefined;
     }
   }
@@ -199,7 +199,7 @@ export class WebosMachine implements Machine {
     return this.reboot();
   }
 
-  private async getFirmwareDownloadUrl(): Promise<string> {
+  async getFirmwareDownloadUrl(): Promise<string> {
     const { manufacturer, modelName } = await deviceInfo.getPlatformInfo();
 
     // TODO: Model name is probably too specific, we should use the model family instead
