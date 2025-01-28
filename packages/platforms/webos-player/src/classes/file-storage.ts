@@ -16,10 +16,6 @@ const CACHE_PATH = `file://internal/${CACHE_DIR}`;
 // The path to use when accessing the local files from the web app
 const EXTERNAL_PATH = `http://127.0.0.1:9080/${CACHE_DIR}`;
 
-function join(...parts: string[]): string {
-  return parts.join('/');
-}
-
 function getLocalUrl(path: string): string {
   return `${CACHE_PATH}/${path}`;
 }
@@ -106,6 +102,7 @@ export class FileStorage implements StorageIntegration {
           size: stats.size,
         },
       };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error('Failed to store file:', error);
       const errMsg = error?.message ?? 'Unknown Error';
@@ -140,6 +137,7 @@ export class FileStorage implements StorageIntegration {
         file: filePath,
         recursive: true,
       });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       if (error.errorCode === 'IO_ERROR') {
         // File does not exist, nothing to delete
@@ -174,7 +172,7 @@ export class FileStorage implements StorageIntegration {
 function getFileName(url: string): string {
   const pathName = new URL(url).pathname;
 
-  const [file, extension] = pathName.split('.');
+  const [, extension] = pathName.split('.');
 
   const hash = simpleHash(pathName);
   // if extension is present, append it to the hash otherwise, just return the hash

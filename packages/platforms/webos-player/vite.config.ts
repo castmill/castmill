@@ -4,7 +4,6 @@
 import { defineConfig } from 'vite';
 import solidPlugin from 'vite-plugin-solid';
 import legacy from '@vitejs/plugin-legacy';
-import { viteStaticCopy } from 'vite-plugin-static-copy';
 
 export default defineConfig({
   plugins: [

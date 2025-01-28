@@ -1,4 +1,4 @@
-import { vi, describe, it, beforeEach, expect, MockedFunction } from 'vitest';
+import { vi, describe, it, beforeEach, expect } from 'vitest';
 import { WebosMachine } from './webos-machine';
 
 vi.mock('../native', () => ({
@@ -166,7 +166,7 @@ describe('WebosMachine', () => {
   it('should update the firmware', async () => {
     const url = 'https://update.castmill.io/webos/firmware/LG-55XS2E-BH.epk';
     const urlSpy = vi
-      .spyOn<any, any>(machine, 'getFirmwareDownloadUrl')
+      .spyOn(machine, 'getFirmwareDownloadUrl')
       .mockResolvedValueOnce(url);
 
     await machine.updateFirmware();

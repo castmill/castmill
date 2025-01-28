@@ -1,12 +1,4 @@
-import {
-  vi,
-  describe,
-  it,
-  beforeAll,
-  beforeEach,
-  expect,
-  MockedFunction,
-} from 'vitest';
+import { vi, describe, it, beforeEach, expect } from 'vitest';
 import { FileStorage } from './file-storage';
 
 vi.mock('../native/native-api', () => ({
@@ -49,7 +41,7 @@ describe('FileStorage', () => {
     const url = 'http://example.com/image.png';
     const filePath = await storage.retrieveFile(url);
 
-    expect(filePath).to.be.undefined;
+    expect(filePath).to.equal(undefined);
   });
 
   it('should list files with details', async () => {
