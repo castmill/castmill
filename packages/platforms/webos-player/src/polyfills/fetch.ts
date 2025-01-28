@@ -22,16 +22,7 @@ const fetchPolyfill = (
     throw new Error('fetchPolyfill: input is not a string');
   }
 
-  // if (!(init && 'method' in init && 'headers' in init && 'body' in init)) {
-  //   throw new Error('fetchPolyfill: init is not a FetchOptions');
-  // }
-  //
   const url = input as string;
-  // const {
-  //   method,
-  //   headers,
-  //   body,
-  // } = init as FetchOptions;
   const method = init?.method ?? 'GET';
   const headers = (init?.headers as Record<string, string> | undefined) ?? {};
   const body = init?.body as string | undefined;
