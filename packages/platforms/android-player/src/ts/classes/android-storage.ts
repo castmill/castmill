@@ -27,12 +27,12 @@ export class AndroidStorage implements StorageIntegration {
 
   async init(): Promise<void> {
     try {
-      const storageDirStats = await Filesystem.stat({
+      await Filesystem.stat({
         path: this.storagePath,
         directory: DIR,
       });
       return;
-    } catch (error) {
+    } catch {
       return Filesystem.mkdir({
         path: this.storagePath,
         directory: DIR,
@@ -148,6 +148,7 @@ export class AndroidStorage implements StorageIntegration {
           size: stats.size,
         },
       };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       console.error('Failed to store file:', error);
       const errMsg = error?.message ?? 'Unknown Error';
@@ -162,7 +163,7 @@ export class AndroidStorage implements StorageIntegration {
       const filePath = join(this.storagePath, this.getFileName(url));
       await Filesystem.stat({ path: filePath, directory: DIR }); // Check if file exists
       return filePath;
-    } catch (error) {
+    } catch {
       return undefined; // File does not exist
     }
   }
@@ -175,6 +176,7 @@ export class AndroidStorage implements StorageIntegration {
   async deleteFileIfExists(filePath: string): Promise<void> {
     try {
       await Filesystem.deleteFile({ path: filePath, directory: DIR });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
       if (error?.message === 'File does not exist') {
         // File does not exist, nothing to do
@@ -218,7 +220,7 @@ export class AndroidStorage implements StorageIntegration {
   private getFileName(url: string): string {
     const pathName = new URL(url).pathname;
     // Get the extension of the file using regex. up to 4 characters after the last dot
-    const [file, extension] = pathName.split('.');
+    const [, extension] = pathName.split('.');
 
     const hash = simpleHash(pathName);
 

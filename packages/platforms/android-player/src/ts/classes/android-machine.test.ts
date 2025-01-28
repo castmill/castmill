@@ -110,7 +110,7 @@ describe('AndroidMachine', () => {
 
     vi.stubGlobal('navigator', {
       geolocation: {
-        getCurrentPosition: vi.fn((success, error) => success(mockLocation)),
+        getCurrentPosition: vi.fn((success) => success(mockLocation)),
       },
     });
 

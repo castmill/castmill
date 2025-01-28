@@ -1,5 +1,3 @@
-import type { PluginListenerHandle } from '@capacitor/core';
-
 export interface CastmillPlugin {
   /**
    * Restart the Castmill application.
