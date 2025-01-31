@@ -17,8 +17,6 @@ defmodule Castmill.Resources.Media do
       type: Ecto.UUID
     )
 
-    belongs_to(:resource, Castmill.Resources.Resource, foreign_key: :resource_id)
-
     has_many(:files_medias, Castmill.Files.FilesMedias)
 
     timestamps()
@@ -32,7 +30,6 @@ defmodule Castmill.Resources.Media do
       :mimetype,
       :meta,
       :organization_id,
-      :resource_id,
       :status,
       :status_message
     ])

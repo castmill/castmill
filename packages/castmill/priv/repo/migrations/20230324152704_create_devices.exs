@@ -26,8 +26,6 @@ defmodule Castmill.Repo.Migrations.CreateDevices do
       # normal, test, debug
       add :mode, :string, default: "normal"
 
-      add :resource_id, references(:resources, on_delete: :nilify_all), null: true
-
       add :organization_id,
           references("organizations", column: "id", type: :uuid, on_delete: :delete_all),
           null: false

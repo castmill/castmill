@@ -16,8 +16,6 @@ defmodule Castmill.Resources.Playlist do
       type: Ecto.UUID
     )
 
-    belongs_to(:resource, Castmill.Resources.Resource, foreign_key: :resource_id)
-
     many_to_many(
       :items,
       Castmill.Widgets.WidgetConfig,
@@ -31,7 +29,7 @@ defmodule Castmill.Resources.Playlist do
   @doc false
   def changeset(playlist, attrs) do
     playlist
-    |> cast(attrs, [:name, :settings, :organization_id, :resource_id])
+    |> cast(attrs, [:name, :settings, :organization_id])
     |> validate_required([:name, :organization_id])
   end
 

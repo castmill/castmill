@@ -54,8 +54,6 @@ defmodule Castmill.Devices.Device do
       type: Ecto.UUID
     )
 
-    belongs_to(:resource, Castmill.Resources.Resource, foreign_key: :resource_id)
-
     many_to_many(:channels, Castmill.Devices.DevicesChannels,
       join_through: "devices_channels",
       on_replace: :delete
@@ -84,7 +82,6 @@ defmodule Castmill.Devices.Device do
       :info,
       :hardware_id,
       :organization_id,
-      :resource_id
     ])
     |> put_pass_hash()
     |> validate_required([
@@ -120,7 +117,6 @@ defmodule Castmill.Devices.Device do
       :info,
       :hardware_id,
       :organization_id,
-      :resource_id
     ])
     |> put_pass_hash()
   end
