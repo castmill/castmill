@@ -96,7 +96,9 @@ const TeamsInvitationPage = () => {
 
   return (
     <div>
-      <h1>You have been invited to join the team {`${invitation()?.team_name}`}</h1>
+      <h1>
+        You have been invited to join the team {`${invitation()?.team_name}`}
+      </h1>
       <Show when={loading()}>
         <p>Loading invitation...</p>
       </Show>

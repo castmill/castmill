@@ -13,6 +13,5 @@ defmodule Castmill.Repo.Migrations.CreateTeams do
 
     create index(:teams, [:organization_id])
     create unique_index(:teams, [:organization_id, :name], name: :unique_team_name_per_org)
-
   end
 end

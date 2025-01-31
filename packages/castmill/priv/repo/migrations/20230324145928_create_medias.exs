@@ -15,6 +15,7 @@ defmodule Castmill.Repo.Migrations.CreateMedias do
       add :organization_id,
           references(:organizations, column: "id", type: :uuid, on_delete: :delete_all),
           null: false
+
       timestamps()
     end
   end
