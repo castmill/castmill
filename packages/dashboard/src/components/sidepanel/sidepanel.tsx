@@ -8,6 +8,8 @@ import { AddOnTree } from '../../classes/addon-tree';
 import { AddOnNode } from '../../interfaces/addon-node.interface';
 import { store } from '../../store/store';
 import { baseUrl } from '../../env';
+import { TbChartHistogram } from 'solid-icons/tb';
+import { AiOutlineTeam } from 'solid-icons/ai';
 
 const addOnBasePath = `${baseUrl}/assets/addons`;
 
@@ -72,6 +74,8 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
           <SidePanelTree node={addonsPanelTree!} level={-1} />
         </Show>
 
+        <PanelItem to="/teams" text="Teams" level={0} icon={AiOutlineTeam} />
+        <PanelItem to="/usage" text="Usage" level={0} icon={TbChartHistogram} />
         <PanelItem
           to="/settings"
           text="Settings"

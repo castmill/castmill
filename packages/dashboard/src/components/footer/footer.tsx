@@ -5,7 +5,7 @@ const Footer: Component = () => {
   return (
     <div class="castmill-footer">
       <div class="footer-links">
-        <p>© 2011-2024 Castmill™</p>
+        <p>© 2011-2025 Castmill™</p>
         <a href="#">Privacy</a>
         <a href="#">Terms</a>
         <a href="#">Contact</a>

@@ -12,6 +12,9 @@ export default defineConfig({
     solidPlugin(),
   ],
   css: {
+    modules: {
+      localsConvention: 'camelCase', // or 'camelCaseOnly', etc.
+    },
     preprocessorOptions: {
       scss: {
         math: 'always',

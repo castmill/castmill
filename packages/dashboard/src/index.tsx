@@ -21,6 +21,9 @@ import SearchPage from './pages/search-page/search-page';
 import { AddOnTree } from './classes/addon-tree';
 
 import { store } from './store/store';
+import UsagePage from './pages/usage-page/usage-page';
+import TeamsPage from './pages/teams-page/teams-page';
+import TeamsInvitationPage from './pages/teams-invitations-page/teams-invitations-page';
 
 const Login = lazy(() => import('./components/login/login'));
 const SignUp = lazy(() => import('./components/signup/signup'));
@@ -52,10 +55,10 @@ const App: Component<RouteSectionProps<unknown>> = (props) => {
 
 const wrapLazyComponent = (addon: { path: string }) => {
   return (props: any) => {
+    const params = useSearchParams();
+
     const LazyComponent = lazy(() => import(`${addOnBasePath}${addon.path}`));
-    return (
-      <LazyComponent {...props} store={store} params={useSearchParams()} />
-    );
+    return <LazyComponent {...props} store={store} params={params} />;
   };
 };
 
@@ -84,6 +87,9 @@ render(() => {
         <Route path="" component={EmptyComponent} />
         <Route path="settings" component={SettingsPage} />
         <Route path="search" component={SearchPage} />
+        <Route path="usage" component={UsagePage} />
+        <Route path="teams" component={TeamsPage} />
+        <Route path="invite" component={TeamsInvitationPage} />
 
         {/* Dynamically generate routes for AddOns */}
         <For each={store.addons}>
