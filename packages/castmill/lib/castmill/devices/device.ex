@@ -81,7 +81,7 @@ defmodule Castmill.Devices.Device do
       :volume,
       :info,
       :hardware_id,
-      :organization_id,
+      :organization_id
     ])
     |> put_pass_hash()
     |> validate_required([
@@ -116,7 +116,7 @@ defmodule Castmill.Devices.Device do
       :volume,
       :info,
       :hardware_id,
-      :organization_id,
+      :organization_id
     ])
     |> put_pass_hash()
   end

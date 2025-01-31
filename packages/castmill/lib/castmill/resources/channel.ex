@@ -28,7 +28,7 @@ defmodule Castmill.Resources.Channel do
       :timezone,
       :default_playlist_id,
       :description,
-      :organization_id,
+      :organization_id
     ])
     |> validate_required([:name, :timezone, :organization_id])
     |> foreign_key_constraint(:default_playlist_id, name: :channels_default_playlist_id_fkey)

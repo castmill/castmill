@@ -10,6 +10,7 @@ defmodule Castmill.Repo.Migrations.CreatePlaylists do
       add :organization_id,
           references(:organizations, column: "id", type: :uuid, on_delete: :delete_all),
           null: false
+
       timestamps()
     end
   end
