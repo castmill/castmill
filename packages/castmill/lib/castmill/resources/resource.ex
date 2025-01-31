@@ -1,3 +1,4 @@
+# DEPRECATED: This module is not used anymore, but it's kept here until we remove all references to it.
 defmodule Castmill.Resources.Resource do
   use Ecto.Schema
   import Ecto.Changeset
@@ -8,11 +9,6 @@ defmodule Castmill.Resources.Resource do
     field :type, Ecto.Enum,
       values: [:playlist, :widget, :media, :channel, :device],
       default: :playlist
-
-    has_one :media, Castmill.Resources.Media
-    has_one :playlist, Castmill.Resources.Playlist
-    has_one :channel, Castmill.Resources.Channel
-    has_one :device, Castmill.Devices.Device
 
     timestamps()
   end
