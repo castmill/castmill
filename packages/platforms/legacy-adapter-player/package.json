@@ -1,0 +1,36 @@
+{
+  "name": "@castmill/legacy-adapter-player",
+  "version": "1.0.0",
+  "description": "",
+  "type:": "module",
+  "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "start": "vite",
+    "dev": "vite -d",
+    "build": "vite build",
+    "serve": "vite preview",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@solidjs/testing-library": "^0.8.5",
+    "@vitejs/plugin-legacy": "^5.4.1",
+    "express": "^4.19.2",
+    "jsdom": "^23.2.0",
+    "on-finished": "^2.4.1",
+    "prettier": "^3.3.2",
+    "solid-devtools": "^0.29.2",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.11",
+    "vite-plugin-copy": "^0.1.6",
+    "vite-plugin-solid": "^2.8.2",
+    "vite-plugin-static-copy": "^1.0.5",
+    "vitest": "^1.5.3"
+  },
+  "dependencies": {
+    "@castmill/cache": "*",
+    "@castmill/device": "*",
+    "@castmill/player": "*",
+    "solid-js": "^1.8.11"
+  }
+}

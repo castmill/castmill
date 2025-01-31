@@ -198,3 +198,70 @@ jobs:
       - run: yarn build
       - run: yarn format:check
       - run: yarn test
+
+  test_platforms:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        platform:
+          - name: android-player
+            dir: ./packages/platforms/android-player
+          - name: webos-player
+            dir: ./packages/platforms/webos-player
+          - name: electron-player
+            dir: ./packages/platforms/electron-player
+          - name: legacy-adapter-player
+            dir: ./packages/platforms/legacy-adapter-player
+
+    name: Testing ${{ matrix.platform.name }} package with node@18
+
+    defaults:
+      run:
+        working-directory: ${{ matrix.platform.dir }}
+
+    steps:
+      # Step 1: Checkout repository
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Step 2: Setup Node.js with caching
+      - name: Use Node.js current
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'yarn'
+
+      # Step 3: Install workspace dependencies
+      - name: Install workspace dependencies
+        working-directory: ./
+        run: yarn install --ignore-engines --frozen-lockfile --non-interactive
+
+      # Step 4: Install cache dependency
+      - name: Install and build cache dependency
+        working-directory: ./packages/cache
+        run: |
+          yarn install --ignore-engines --frozen-lockfile --non-interactive
+          yarn build
+
+      # Step 5: Install player dependency
+      - name: Install and build player dependency
+        working-directory: ./packages/player
+        run: |
+          yarn install --ignore-engines --frozen-lockfile --non-interactive
+          yarn build
+
+      # Step 6: Install device dependency
+      - name: Install and build device dependency
+        working-directory: ./packages/device
+        run: |
+          yarn install --ignore-engines --frozen-lockfile --non-interactive
+          yarn build
+
+      # Step 7: Check formatting
+      - name: Check formatting
+        run: yarn format:check
+
+      # Step 8: Run tests
+      - name: Run tests
+        run: yarn test

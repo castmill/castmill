@@ -60,6 +60,14 @@ interface DeviceRequest {
   opts: CachePage & { ref: string };
 }
 
+interface Credentials {
+  device: {
+    id: string;
+    name: string;
+    token: string;
+  };
+}
+
 /**
  * Castmill Device
  *
@@ -79,6 +87,11 @@ export class Device extends EventEmitter {
   private logDiv?: HTMLDivElement;
   private socket?: Socket;
 
+  // The base url is the url of the Castmill API. By default it is assumed that the API is
+  // hosted at the same domain as this device and accessible through a relative path.
+  // Hence, the default value is an empty string.
+  private baseUrl = '';
+
   public id?: string;
   public name?: string;
   public debugMode: 'remote' | 'local' | 'none' = 'none';
@@ -91,7 +104,6 @@ export class Device extends EventEmitter {
         maxItems?: number;
       };
       viewport?: Viewport;
-      baseUrl?: string;
     }
   ) {
     super();
@@ -108,18 +120,18 @@ export class Device extends EventEmitter {
     //this.contentQueue.add(intro);
   }
 
+  async init() {
+    this.baseUrl = await this.getBaseUrl();
+  }
+
   async start(el: HTMLElement, logDiv?: HTMLDivElement) {
-    let credentials = await this.integration.getCredentials();
+    const credentials = await this.getCredentials();
+
     if (!credentials) {
       throw new Error('Invalid credentials');
     }
 
-    const { device } = JSON.parse(credentials) as {
-      device: { id: string; name: string; token: string };
-    };
-    if (!device) {
-      throw new Error('Invalid credentials');
-    }
+    const { device } = credentials;
 
     this.resourceManager = new ResourceManager(this.cache, {
       authToken: device.token,
@@ -130,7 +142,7 @@ export class Device extends EventEmitter {
     this.contentQueue = new Playlist('content-queue', this.resourceManager);
 
     const rawChannels = await this.resourceManager.getData(
-      `${this.getBaseUrl()}/devices/${device.id}/channels`,
+      `${this.baseUrl}/devices/${device.id}/channels`,
       1000
     );
 
@@ -170,7 +182,7 @@ export class Device extends EventEmitter {
           if (entry) {
             const jsonPlaylist: JsonPlaylist | void =
               await this.resourceManager.getData(
-                `${this.getBaseUrl()}/devices/${device.id}/playlists/${
+                `${this.baseUrl}/devices/${device.id}/playlists/${
                   entry.playlist
                 }`,
                 1000
@@ -214,8 +226,35 @@ export class Device extends EventEmitter {
     this.player = undefined;
   }
 
+  /**
+   * Get the credentials from the integration and validate them.
+   * If the credentials are valid, return them.
+   */
+  async getCredentials(): Promise<Credentials | undefined> {
+    const credentials = await this.integration.getCredentials();
+
+    if (!credentials) {
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(credentials);
+      // Validate the credentials
+      if (
+        parsed?.device &&
+        parsed?.device?.id &&
+        parsed?.device?.token &&
+        parsed?.device?.name
+      ) {
+        return parsed;
+      }
+    } catch (error) {
+      this.logger.error(`Unparseable credentials ${error}`);
+    }
+  }
+
   async hasCredentials(): Promise<boolean> {
-    return !!(await this.integration.getCredentials());
+    return !!(await this.getCredentials());
   }
 
   // TODO: We shall get medias both from options and from the data.
@@ -282,7 +321,7 @@ export class Device extends EventEmitter {
 
   private async requestPincode(hardwareId: string) {
     const location = await this.integration.getLocation!();
-    const pincodeResponse = await fetch(`${this.getBaseUrl()}/registrations`, {
+    const pincodeResponse = await fetch(`${this.baseUrl}/registrations`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -307,11 +346,9 @@ export class Device extends EventEmitter {
     const hardwareId = await this.integration.getMachineGUID();
 
     // Check if this device is registered by getting the credentials from the local storage (if they exist).
-    let credentials = await this.integration.getCredentials();
+    let credentials = await this.getCredentials();
 
     if (credentials) {
-      const { device } = JSON.parse(credentials);
-
       try {
         const phoenixChannel = await this.login(credentials, hardwareId);
         this.initListeners(phoenixChannel);
@@ -338,7 +375,7 @@ export class Device extends EventEmitter {
   }
 
   get socketEndpoint() {
-    return `${this.getBaseUrl().replace('http', 'ws')}/socket`;
+    return `${this.baseUrl.replace('http', 'ws')}/socket`;
   }
 
   async register(hardwareId: string) {
@@ -378,8 +415,8 @@ export class Device extends EventEmitter {
     return pincode;
   }
 
-  async login(credentials: string, hardwareId: string) {
-    const { device } = JSON.parse(credentials);
+  async login(credentials: Credentials, hardwareId: string) {
+    const { device } = credentials;
 
     const socket = (this.socket = new Socket(this.socketEndpoint, {
       params: { device_id: device.id, hardware_id: hardwareId },
@@ -491,9 +528,53 @@ export class Device extends EventEmitter {
     };
   }
 
+  async getAvailableBaseUrls(): Promise<{ name: string; url: string }[]> {
+    // The prod and dev base urls are defined in the environment variables in the
+    // .env file
+    const productionBaseUrl = import.meta.env.VITE_PRODUCTION_BASE_URL;
+    const devBaseUrl = import.meta.env.VITE_DEV_BASE_URL;
+
+    // The local base url is only used for development purposes. Defined on the
+    // command line or in a .env.local file.
+    const localBaseUrl = import.meta.env.VITE_LOCAL_BASE_URL;
+
+    return [
+      ...(productionBaseUrl
+        ? [{ name: 'Production', url: productionBaseUrl }]
+        : []),
+      ...(devBaseUrl ? [{ name: 'Dev', url: devBaseUrl }] : []),
+      ...(localBaseUrl ? [{ name: 'Local', url: localBaseUrl }] : []),
+    ];
+  }
+
   //
   // APIs for the device to interact with the machine specific integration.
   //
+
+  async setBaseUrl(url: string) {
+    await this.integration.setSetting('BASE_URL', url);
+    // Refresh the page to reinitialize the player with the new base url.
+    location.reload();
+  }
+
+  async getBaseUrl(): Promise<string> {
+    // First we check if there is a base url set in the settings.
+    const baseUrl = await this.integration.getSetting('BASE_URL');
+    if (baseUrl) {
+      return baseUrl;
+    }
+
+    // If there is no base url set in the settings, we check if there is a default
+    // base url set in the environment variables.
+    const defaultBaseUrl = import.meta.env.VITE_DEFAULT_BASE_URL;
+    if (defaultBaseUrl) {
+      return defaultBaseUrl;
+    }
+
+    // Otherwise, we use the first available base url.
+    const firstBaseUrl = (await this.getAvailableBaseUrls())[0].url;
+    return firstBaseUrl;
+  }
 
   getDeviceInfo() {
     return this.integration.getDeviceInfo();
@@ -545,10 +626,6 @@ export class Device extends EventEmitter {
           break;
       }
     }
-  }
-
-  private getBaseUrl() {
-    return this.opts?.baseUrl ?? '';
   }
 }
 

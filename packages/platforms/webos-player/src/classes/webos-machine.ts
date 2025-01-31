@@ -1,6 +1,6 @@
-import { Machine, DeviceInfo } from '@castmill/device';
+import { Machine, DeviceInfo, SettingKey } from '@castmill/device';
 import { configuration, deviceInfo, power, storage } from '../native';
-import { digestText } from './utils';
+import { simpleHash } from './utils';
 import { version } from '../../package.json';
 
 // The update config is used to update the application on the device. We set this
@@ -17,7 +17,28 @@ const UPDATE_CONFIG = {
 
 const CREDENTIALS_FILE_PATH = 'credentials.txt';
 
+const getFilePath = (path: string) => `file://internal/${path}`;
+
 export class WebosMachine implements Machine {
+  async setSetting(key: SettingKey, value: string): Promise<void> {
+    await storage.writeFile({
+      path: getFilePath(`castmill-${key}.txt`),
+      data: value,
+    });
+  }
+
+  async getSetting(key: SettingKey): Promise<string | null> {
+    try {
+      const file = await storage.readFile({
+        path: getFilePath(`castmill-${key}.txt`),
+      });
+
+      return file.data.toString();
+    } catch (e) {
+      return null;
+    }
+  }
+
   async getMachineGUID(): Promise<string> {
     const { wiredInfo, wifiInfo } = await deviceInfo.getNetworkMacInfo();
     const macAddress = wiredInfo?.macAddress || wifiInfo?.macAddress;
@@ -25,25 +46,29 @@ export class WebosMachine implements Machine {
       throw new Error('No mac address found');
     }
 
-    const hash = await digestText(macAddress);
+    const hash = simpleHash(macAddress);
 
     return hash;
   }
 
   async storeCredentials(credentials: string): Promise<void> {
     await storage.writeFile({
-      path: CREDENTIALS_FILE_PATH,
+      path: getFilePath(CREDENTIALS_FILE_PATH),
       data: credentials,
     });
     return;
   }
 
-  async getCredentials(): Promise<string> {
-    const credentials = await storage.readFile({
-      path: CREDENTIALS_FILE_PATH,
-    });
+  async getCredentials(): Promise<string | null> {
+    try {
+      const credentials = await storage.readFile({
+        path: getFilePath(CREDENTIALS_FILE_PATH),
+      });
 
-    return credentials.data.toString();
+      return credentials.data.toString();
+    } catch (e) {
+      return null;
+    }
   }
 
   async removeCredentials(): Promise<void> {
@@ -106,6 +131,13 @@ export class WebosMachine implements Machine {
   }
 
   /**
+   * Refresh the browser.
+   */
+  async refresh(): Promise<void> {
+    return window.location.reload();
+  }
+
+  /**
    * Reboot the device. This should perform a clean hardware reboot of the device.
    *
    */
@@ -129,8 +161,12 @@ export class WebosMachine implements Machine {
    * Updates the device's application.
    */
   async update(): Promise<void> {
-    // First set the server properties to the correct values
-    await configuration.setServerProperty(UPDATE_CONFIG);
+    const keepServerSettings =
+      import.meta.env.VITE_KEEP_SERVER_SETTINGS === 'true';
+    if (!keepServerSettings) {
+      // Set the server properties to the correct values
+      await configuration.setServerProperty(UPDATE_CONFIG);
+    }
 
     // Then download the application
     await storage.upgradeApplication({

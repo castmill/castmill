@@ -23,12 +23,7 @@ export const FileReaderComponent: () => JSX.Element = () => {
         Select Widget JSON File
       </label>
 
-      <input
-        type="file"
-        id="file"
-        accept=".json"
-        onChange={handleFileChange}
-      />
+      <input type="file" id="file" accept=".json" onChange={handleFileChange} />
     </div>
   );
 };

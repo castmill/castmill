@@ -4,11 +4,7 @@ import { createEffect } from 'solid-js';
 import { useFileContent } from './file-context-provider';
 
 import { Playlist, PlayerUI, PlayerUIControls } from '@castmill/player';
-import {
-  ResourceManager,
-  Cache,
-  StorageDummy,
-} from '@castmill/cache';
+import { ResourceManager, Cache, StorageDummy } from '@castmill/cache';
 
 import styles from './widget-view.module.scss';
 

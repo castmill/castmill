@@ -46,7 +46,21 @@ export interface Timers {
   off: TimerEntry[];
 }
 
+// The keys of the settings that the machine can store. For type safety defined
+// as a union type.
+export type SettingKey = 'BASE_URL'; // Add more keys as needed
+
 export interface Machine {
+  /**
+   * Get the the value of the setting with the given key.
+   */
+  getSetting(key: SettingKey): Promise<string | null>;
+
+  /**
+   * Set the value of the setting with the given key.
+   */
+  setSetting(key: SettingKey, value: string): Promise<void>;
+
   /**
    * Returns the machine's unique identifier.
    *

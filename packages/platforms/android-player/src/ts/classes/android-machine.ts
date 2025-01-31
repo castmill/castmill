@@ -2,11 +2,23 @@ import { Device } from '@capacitor/device';
 import { Toast } from '@capacitor/toast';
 import { App } from '@capacitor/app';
 import { Preferences } from '@capacitor/preferences';
-import { Machine, DeviceInfo } from '@castmill/device';
+import { Machine, DeviceInfo, SettingKey } from '@castmill/device';
 import { Castmill } from '../../plugins/castmill';
 import { delay } from '../utils';
 
 export class AndroidMachine implements Machine {
+  async setSetting(key: SettingKey, value: string): Promise<void> {
+    await Preferences.set({
+      key,
+      value,
+    });
+  }
+
+  async getSetting(key: SettingKey): Promise<string | null> {
+    const { value } = await Preferences.get({ key });
+    return value;
+  }
+
   async getMachineGUID(): Promise<string> {
     const deviceId = await Device.getId();
     return deviceId.identifier;

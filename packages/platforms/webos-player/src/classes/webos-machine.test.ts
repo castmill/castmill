@@ -35,7 +35,7 @@ vi.mock('../native', () => ({
 }));
 
 vi.mock('./utils', () => ({
-  digestText: vi.fn((text: string) => Promise.resolve('hashed_' + text)),
+  simpleHash: vi.fn((text: string) => 'hashed_' + text),
 }));
 
 vi.mock('../../package.json', () => ({
@@ -43,7 +43,7 @@ vi.mock('../../package.json', () => ({
 }));
 
 import { deviceInfo, storage, configuration, power } from '../native';
-import { digestText } from './utils';
+import { simpleHash } from './utils';
 
 describe('WebosMachine', () => {
   let machine: WebosMachine;
@@ -60,14 +60,14 @@ describe('WebosMachine', () => {
     const guid = await machine.getMachineGUID();
     expect(guid).toBe('hashed_00:11:22:33:44:55');
     expect(deviceInfo.getNetworkMacInfo).toHaveBeenCalledOnce();
-    expect(digestText).toHaveBeenCalledWith('00:11:22:33:44:55');
+    expect(simpleHash).toHaveBeenCalledWith('00:11:22:33:44:55');
   });
 
   it('should store credentials', async () => {
     const credentials = 'test_credentials';
     await machine.storeCredentials(credentials);
     expect(storage.writeFile).toHaveBeenCalledWith({
-      path: 'credentials.txt',
+      path: 'file://internal/credentials.txt',
       data: credentials,
     });
   });
@@ -79,7 +79,7 @@ describe('WebosMachine', () => {
     const credentials = await machine.getCredentials();
     expect(credentials).toBe('mocked_credentials');
     expect(storage.readFile).toHaveBeenCalledWith({
-      path: 'credentials.txt',
+      path: 'file://internal/credentials.txt',
     });
   });
 
@@ -130,7 +130,7 @@ describe('WebosMachine', () => {
 
   it('should update the application and reboot', async () => {
     const rebootSpy = vi.spyOn(machine, 'reboot');
-
+    vi.stubEnv('VITE_KEEP_SERVER_SETTINGS', 'false');
     await machine.update();
     expect(configuration.setServerProperty).toHaveBeenCalledWith({
       serverIp: '0.0.0.0',
@@ -141,6 +141,24 @@ describe('WebosMachine', () => {
       fqdnMode: true,
       fqdnAddr: 'https://update.castmill.io/webos/player-new.ipk',
     });
+    expect(storage.upgradeApplication).toHaveBeenCalledOnce();
+    expect(rebootSpy).toHaveBeenCalledOnce();
+  });
+
+  it('should not overwrite server settings if VITE_KEEP_SERVER_SETTINGS is true', async () => {
+    const rebootSpy = vi.spyOn(machine, 'reboot');
+    vi.stubEnv('VITE_KEEP_SERVER_SETTINGS', 'true');
+    await machine.update();
+    expect(configuration.setServerProperty).not.toHaveBeenCalled();
+    expect(storage.upgradeApplication).toHaveBeenCalledOnce();
+    expect(rebootSpy).toHaveBeenCalledOnce();
+  });
+
+  it('should overwrite server settings if VITE_KEEP_SERVER_SETTINGS is unset', async () => {
+    const rebootSpy = vi.spyOn(machine, 'reboot');
+    vi.stubEnv('VITE_KEEP_SERVER_SETTINGS', undefined);
+    await machine.update();
+    expect(configuration.setServerProperty).toHaveBeenCalledOnce();
     expect(storage.upgradeApplication).toHaveBeenCalledOnce();
     expect(rebootSpy).toHaveBeenCalledOnce();
   });

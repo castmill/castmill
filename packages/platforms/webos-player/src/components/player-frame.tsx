@@ -14,8 +14,9 @@ export const PlayerFrame: Component = () => {
     const cache = new FileStorage('file-cache');
     const device = new Device(webosMachine, cache);
 
-    //TODO: perform initial setup once
+    await device.init();
     await cache.init();
+
     mountDevice(ref, device);
   });
 

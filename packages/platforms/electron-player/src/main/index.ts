@@ -4,13 +4,17 @@ import {
   BrowserWindow,
   ipcMain,
   IpcMainInvokeEvent,
+  protocol,
+  net,
 } from 'electron';
 import { join } from 'path';
+import { pathToFileURL } from 'url';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import Store from 'electron-store';
 import * as api from './api';
 import { Action } from '../common';
 import icon from '../../resources/icon.png?asset';
+import { LOCAL_URL_SCHEME, CACHE_DIR } from './constants';
 
 function createWindow(): void {
   // Determine if the app is running in kiosk mode.
@@ -52,10 +56,38 @@ function createWindow(): void {
   }
 }
 
+// Register the url scheme local://
+protocol.registerSchemesAsPrivileged([
+  {
+    scheme: LOCAL_URL_SCHEME,
+    privileges: {
+      secure: true,
+      standard: true,
+      supportFetchAPI: true,
+      // stream: true, // Add this if you intend to use the protocol for streaming i.e. in video/audio html tags.
+      // corsEnabled: true, // Add this if you need to enable cors for this protocol.
+    },
+  },
+]);
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.whenReady().then(() => {
+file: app.whenReady().then(() => {
+  protocol.handle(LOCAL_URL_SCHEME, async (request: Request) => {
+    const localPath = request.url.slice(LOCAL_URL_SCHEME.length + 3); // 3 for '://
+
+    const fullPath = pathToFileURL(
+      join(__dirname, CACHE_DIR, localPath)
+    ).toString();
+
+    try {
+      return net.fetch(fullPath);
+    } catch (error) {
+      console.error('Failed to fetch:', error);
+      throw error;
+    }
+  });
+
   const store = new Store();
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron');
