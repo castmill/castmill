@@ -2,24 +2,27 @@ import type {
   StorageInfo,
   StorageItem,
   StoreFileReturnValue,
+  StoreOptions,
 } from '@castmill/cache';
 
 import { createHash } from 'crypto';
-import { writeFile, mkdir, readdir, unlink, stat, rename } from 'fs/promises';
+import { mkdir, readdir, unlink, stat, rename } from 'fs/promises';
 import { createWriteStream } from 'fs';
-import { join } from 'path';
+import { join, extname } from 'path';
 import { URL } from 'url';
 import { net } from 'electron';
-import os from 'os';
+import { LOCAL_URL_SCHEME, CACHE_DIR } from '../constants';
+
+const LOCAL_URL_PREFIX = `${LOCAL_URL_SCHEME}://`;
 
 // Only works with CommonJS require
 const checkDiskSpace = require('check-disk-space').default;
 
-// Get home directory
-const homeDir = os.homedir();
+const BASE_DIR = join(__dirname, CACHE_DIR);
 
-// Base directory for storage
-const BASE_DIR = join(homeDir, 'castmill-electron-file-storage');
+function getTempPath(path: string): string {
+  return `${path}-${Date.now()}.tmp`;
+}
 
 /*
  * Initialize storage
@@ -60,6 +63,8 @@ export async function getStorageInfo(
 
 /*
  * List all files in the storage
+ *
+ * Returns an array of objects with the local file URL and size
  */
 export async function listFiles(storagePath: string): Promise<StorageItem[]> {
   const fullPath = join(BASE_DIR, storagePath);
@@ -71,8 +76,9 @@ export async function listFiles(storagePath: string): Promise<StorageItem[]> {
         .map(async (file) => {
           const filePath = join(fullPath, file);
           const stats = await stat(filePath);
+          const localUrl = getLocalUrlForFile(storagePath, file);
           return {
-            url: filePath,
+            url: localUrl,
             size: stats.size,
           };
         })
@@ -84,13 +90,14 @@ export async function listFiles(storagePath: string): Promise<StorageItem[]> {
 }
 
 /*
- * Store a file in the storage. If data is provided, it is used as the file
- * content. Otherwise, the file is downloaded from the URL.
+ * Store a file in the storage.
+ *
+ * Returns a StoreFileReturnValue object with the result code and the stored local file path
  */
 export async function storeFile(
   storagePath: string,
   url: string,
-  data = null
+  opts?: StoreOptions
 ): Promise<StoreFileReturnValue> {
   const fullPath = join(BASE_DIR, storagePath);
 
@@ -98,14 +105,10 @@ export async function storeFile(
     const filename = getFileName(url);
 
     const filePath = join(fullPath, filename);
-    const tempPath = filePath + '.tmp';
+    const tempPath = getTempPath(filePath);
 
     try {
-      if (data) {
-        await writeFile(tempPath, data);
-      } else {
-        await downloadFile(tempPath, url);
-      }
+      await downloadFile(tempPath, mapLocalhostUrl(url), opts);
 
       // Atomically rename the file to its final name
       await rename(tempPath, filePath);
@@ -118,10 +121,11 @@ export async function storeFile(
       throw error;
     }
     const stats = await stat(filePath);
+    const localUrl = getLocalUrl(storagePath, url);
     return {
       result: { code: 'SUCCESS' },
       item: {
-        url: filePath,
+        url: localUrl,
         size: stats.size,
       },
     };
@@ -141,13 +145,12 @@ export async function retrieveFile(
   storagePath: string,
   url: string
 ): Promise<string | void> {
-  const fullPath = join(BASE_DIR, storagePath);
   try {
-    const filePath = join(fullPath, getFileName(url));
-    await stat(filePath); // Check if file exists
-    return filePath;
+    const localPath = getLocalPath(storagePath, url);
+    await stat(localPath); // Check if file exists
+    return getLocalUrl(storagePath, url);
   } catch (error) {
-    console.log('Failed to retrieve file:', error);
+    console.error('Failed to retrieve file:', error);
     return undefined; // File does not exist
   }
 }
@@ -159,11 +162,19 @@ export async function deleteFile(
   storagePath: string,
   url: string
 ): Promise<void> {
-  const fullPath = join(BASE_DIR, storagePath);
+  const localPath = getLocalPath(storagePath, url);
+  await deleteFileIfExists(localPath);
+}
+
+async function deleteFileIfExists(filePath: string): Promise<void> {
   try {
-    const filePath = join(fullPath, getFileName(url));
     await unlink(filePath);
-  } catch (error) {
+  } catch (error: any) {
+    if (error?.code === 'ENOENT') {
+      // File does not exist, nothing to do
+      return;
+    }
+
     console.error('Failed to delete file:', error);
     throw error;
   }
@@ -185,9 +196,16 @@ export async function deleteAllFiles(storagePath: string): Promise<void> {
 /*
  * Download a file from the URL and save it to the destination path
  */
-function downloadFile(destPath: string, url: string): Promise<string> {
+function downloadFile(
+  destPath: string,
+  url: string,
+  opts?: StoreOptions
+): Promise<string> {
   return new Promise((resolve, reject) => {
-    const request = net.request(url);
+    const request = net.request({
+      url,
+      headers: opts?.headers,
+    });
     request.on('response', (response) => {
       if (response.statusCode !== 200) {
         console.error(
@@ -220,23 +238,81 @@ function downloadFile(destPath: string, url: string): Promise<string> {
 }
 
 /*
- * Generate a unique file name based on the URL. Keep the extension if present.
- * @param {string} url - The URL of the file
- * @returns {string} - The unique file name
- */
-function getFileName(url: string): string {
-  const pathName = new URL(url).pathname;
-  const extension = pathName.split('.').pop();
-
-  const hash = createHash('sha256').update(pathName).digest('hex');
-  // if extension is present, append it to the hash otherwise, just return the hash
-  return extension ? `${hash}.${extension}` : hash;
-}
-
-/*
  * Get the free disk space in bytes
  */
 async function getFreeDiskSpace(path) {
   const { free } = await checkDiskSpace(path);
   return free;
+}
+
+/*
+ * Generate a unique file name based on the URL. Keep the extension if present.
+ */
+function getFileName(url: string): string {
+  const pathName = new URL(url).pathname;
+  const extension = extname(pathName);
+
+  const hash = createHash('sha256').update(pathName).digest('hex');
+  // extension includes the dot if present. Empty string if no extension
+  return `${hash}${extension}`;
+}
+
+/**
+ * Get the local path of a downloaded file.
+ * Both remote URLs and local URLs are supported.
+ *
+ * Example:
+ * getLocalPath('http://abc.com/test/file1.txt') =>
+ *  '/home/user/castmill/castmill-electron-file-storage/123455.txt'
+ * getLocalPath('local://123455.txt') =>
+ *  '/home/user/castmill/castmill-electron-file-storage/123455.txt'
+ */
+function getLocalPath(storagePath: string, url: string): string {
+  if (url.startsWith('http')) {
+    const filename = getFileName(url);
+    return join(BASE_DIR, storagePath, filename);
+  } else if (url.startsWith(LOCAL_URL_PREFIX)) {
+    const filename = url.split(LOCAL_URL_PREFIX)[1];
+    return join(BASE_DIR, storagePath, filename);
+  } else {
+    throw new Error(`Invalid URL: ${url}`);
+  }
+}
+
+/**
+ * Get the local URL of a file
+ *
+ * Example:
+ *  getLocalUrl('12355.txt') =>
+ *    'local://storage-path/12355.txt'
+ */
+function getLocalUrlForFile(storagePath: string, filename: string): string {
+  return `${LOCAL_URL_PREFIX}${join(storagePath, filename)}`;
+}
+
+/**
+ * Get the local URL of a remote url
+ *
+ * Example:
+ *  getLocalUrl('http://test/file1.txt') =>
+ *    'local://12355.txt'
+ */
+function getLocalUrl(storagePath: string, remoteUrl: string): string {
+  const filename = getFileName(remoteUrl);
+  return getLocalUrlForFile(storagePath, filename);
+}
+
+/**
+ * Map localhost url to remote url. Used when server is running on localhost.
+ * @param {string} url - The URL to map
+ * @returns {string} - The mapped URL
+ */
+function mapLocalhostUrl(url: string): string {
+  const fileHost = import.meta.env.VITE_FILE_HOST;
+
+  if (!fileHost) {
+    return url;
+  }
+
+  return url.replace('localhost', fileHost);
 }

@@ -9,7 +9,12 @@
     "build:device": "cd packages/device && yarn build",
     "build:dashboard": "cd packages/dashboard && yarn build",
     "build:widged": "cd packages/widged && yarn build",
-    "build:all": "yarn run build:ui-common && yarn run build:cache && yarn run build:player && yarn run build:device && yarn run build:dashboard && yarn run build:widged"
+    "build:platforms:android": "cd packages/platforms/android-player && yarn build",
+    "build:platforms:webos": "cd packages/platforms/webos-player && yarn build",
+    "build:platforms:electron": "cd packages/platforms/electron-player && yarn build",
+    "build:platforms:legacy": "cd packages/platforms/legacy-adapter-player && yarn build",
+    "build:platforms": "yarn run build:platforms:android && yarn run build:platforms:webos && yarn run build:platforms:electron && yarn run build:platforms:legacy",
+    "build:all": "yarn run build:ui-common && yarn run build:cache && yarn run build:player && yarn run build:device && yarn run build:dashboard && yarn run build:widged && yarn run build:platforms"
   },
   "workspaces": [
     "packages/cache",

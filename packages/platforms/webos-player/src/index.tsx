@@ -3,6 +3,7 @@ import { render } from 'solid-js/web';
 import { deviceInfo, utility, signage } from './native';
 
 import { PlayerFrame } from './components/player-frame';
+import './polyfills/fetch';
 
 const root = document.getElementById('root');
 
