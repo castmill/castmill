@@ -46,6 +46,71 @@ function removeModal(modalId: string) {
   modalStack = modalStack.filter((id) => id !== modalId);
 }
 
+interface AnimatedSizeWrapperProps {
+  children: any;
+}
+
+export const AnimatedSizeWrapper: Component<AnimatedSizeWrapperProps> = (
+  props
+) => {
+  // Store the “current displayed” width/height
+  const [size, setSize] = createSignal({ width: 'auto', height: 'auto' });
+
+  let contentRef: HTMLDivElement | undefined;
+  let resizeObserver: ResizeObserver | null = null;
+
+  onMount(() => {
+    // Create the ResizeObserver
+    let prevEventTimestamp = 0;
+    resizeObserver = new ResizeObserver((entries) => {
+      if (prevEventTimestamp + 250 > Date.now()) {
+        return;
+      }
+
+      prevEventTimestamp = Date.now();
+      for (const entry of entries) {
+        const { width, height } = entry.contentRect;
+        // Update the signal with the newly observed size
+        setSize({ width: `${width}px`, height: `${height}px` });
+        break;
+      }
+    });
+
+    // Start observing the content div
+    if (contentRef) {
+      resizeObserver.observe(contentRef);
+    }
+  });
+
+  // Clean up when component unmounts
+  onCleanup(() => {
+    if (contentRef && resizeObserver) {
+      resizeObserver.unobserve(contentRef);
+    }
+    resizeObserver?.disconnect();
+    resizeObserver = null;
+  });
+
+  return (
+    <div
+      style={{
+        /* Animate from old -> new dimensions */
+        width: '100%',
+        height: '100%',
+        transition: 'width 0.3s ease, height 0.3s ease',
+        overflow: 'hidden',
+      }}
+    >
+      {/* The actual content whose size is being observed */}
+      <div
+        style="display: inline-block; width: 100%; height: 100%;"
+        ref={contentRef}
+      >
+        {props.children}
+      </div>
+    </div>
+  );
+};
 export const Modal: Component<ModalProps> = (props) => {
   const modalId = Math.random().toString(36).substring(7);
 
@@ -136,7 +201,7 @@ export const Modal: Component<ModalProps> = (props) => {
       >
         <div class={contentClasses()} onClick={(e) => e.stopPropagation()}>
           <div class={styles.modalHeader}>
-            <div class="title">
+            <div class={styles.title}>
               <h2>{props.title}</h2>
               <h3>{props.description}</h3>
             </div>
@@ -152,7 +217,10 @@ export const Modal: Component<ModalProps> = (props) => {
           {props.errorMessage && (
             <div class={styles.modalError}>{props.errorMessage}</div>
           )}
-          <div class={styles.modalBody}>{props.children}</div>
+          <div class={styles.modalBody}>
+            {/* Instead of showing children directly, wrap them: */}
+            <AnimatedSizeWrapper>{props.children}</AnimatedSizeWrapper>
+          </div>
           {isLoading() && <div class={styles.modalLoading}>Loading...</div>}
           <div class={styles.modalFooter}>
             {props.successMessage && (

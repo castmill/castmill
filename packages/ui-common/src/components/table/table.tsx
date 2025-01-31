@@ -4,42 +4,60 @@ import { FaSolidSortUp } from 'solid-icons/fa';
 import { FaSolidSort } from 'solid-icons/fa';
 import { SortOptions } from '../../interfaces/sort-options.interface';
 
-import './table.scss';
+import style from './table.module.scss';
 
-export type ItemBase = Record<string, any> & { id: string | number };
+export type ItemBase<IdType = string> = Record<string, any> & { id: IdType };
 
-export interface Column<Item extends ItemBase> {
+export interface Column<
+  IdType = string,
+  Item extends ItemBase<IdType> = ItemBase<IdType>,
+> {
   key: string;
   title: string;
   sortable?: boolean;
   render?: (item: Item) => JSX.Element;
 }
 
-export interface TableAction<Item extends ItemBase> {
+export interface TableAction<Item> {
   icon: Component | string;
   label: string;
   props?: (item: Item) => Record<string, any>;
   handler: (item: Item) => void;
 }
 
-export interface TableProps<Item extends ItemBase> {
-  columns: Column<Item>[];
+export interface TableProps<
+  IdType = string,
+  Item extends ItemBase<IdType> = ItemBase<IdType>,
+> {
+  columns: Column<IdType, Item>[]; // Make sure to pass both generics
   data: Item[];
-  onSort: (options: SortOptions) => void;
+  onSort?: (options: SortOptions) => void;
   actions?: TableAction<Item>[];
-  onRowSelect?: (selectedIds: Set<string | number>) => void;
+  onRowSelect?: (selectedIds: Set<IdType>) => void;
+  itemIdKey?: string;
 }
 
-export const Table = <Item extends ItemBase>(
-  props: TableProps<Item>
+// Helper function to safely read nested properties using a dot path (e.g. "user.name")
+function getValueByKeyPath<T extends Record<string, any>>(
+  obj: T,
+  path: string
+): unknown {
+  return path
+    .split('.')
+    .reduce((acc, key) => (acc ? acc[key] : undefined), obj);
+}
+
+export const Table = <
+  IdType = string,
+  Item extends ItemBase<IdType> = ItemBase<IdType>,
+>(
+  props: TableProps<IdType, Item>
 ): JSX.Element => {
   const [sortConfig, setSortConfig] = createSignal({
     key: undefined,
     direction: 'ascending',
   } as SortOptions);
-  const [selectedRows, setSelectedRows] = createSignal(
-    new Set<string | number>()
-  );
+  const [selectedRows, setSelectedRows] = createSignal(new Set<IdType>());
 
   const handleSort = async (key: string) => {
     const direction =
@@ -47,10 +65,13 @@ export const Table = <Item extends ItemBase>(
         ? 'descending'
         : 'ascending';
     setSortConfig({ key, direction });
-    props.onSort({ key, direction });
+
+    if (props.onSort) {
+      props.onSort({ key, direction });
+    }
   };
 
-  const sortIcon = (column: Column<any>): JSX.Element => {
+  const sortIcon = (column: Column<IdType, Item>): JSX.Element => {
     if (sortConfig() && sortConfig().key === column.key) {
       return sortConfig().direction === 'ascending' ? (
         <FaSolidSortUp />
@@ -61,9 +82,9 @@ export const Table = <Item extends ItemBase>(
     return column.sortable ? <FaSolidSort /> : <></>; // Empty fragment for non-sortable columns
   };
 
-  const handleSelectRow = (id: string | number, isChecked: boolean) => {
+  const handleSelectRow = (id: IdType, isChecked: boolean) => {
     setSelectedRows((prevSelected) => {
-      const newSet = new Set<string | number>(prevSelected);
+      const newSet = new Set<IdType>(prevSelected);
       if (isChecked) {
         newSet.add(id);
       } else {
@@ -76,18 +97,20 @@ export const Table = <Item extends ItemBase>(
 
   const handleSelectAll = (event: Event) => {
     const target = event.target as HTMLInputElement;
-    const newSet = new Set<string | number>();
+    const newSet = new Set<IdType>();
     if (target.checked) {
       for (const item of props.data) {
-        newSet.add(item.id);
+        newSet.add(getItemId(item));
       }
     }
     setSelectedRows(newSet);
     props.onRowSelect && props.onRowSelect(newSet);
   };
 
+  const getItemId = (item: Item): IdType => item[props.itemIdKey || 'id'];
+
   return (
-    <div class="castmill-table">
+    <div class={style['castmill-table']}>
       <table>
         <thead>
           <tr>
@@ -100,7 +123,7 @@ export const Table = <Item extends ItemBase>(
                   onClick={() => column.sortable && handleSort(column.key)}
                   style={{ cursor: column.sortable ? 'pointer' : 'default' }}
                 >
-                  <div class="table-header-title">
+                  <div class={style['table-header-title']}>
                     {column.title}
                     {sortIcon(column)}
                   </div>
@@ -117,20 +140,24 @@ export const Table = <Item extends ItemBase>(
                 <td>
                   <input
                     type="checkbox"
-                    checked={selectedRows().has(item.id)}
-                    onInput={(e) => handleSelectRow(item.id, e.target.checked)}
+                    checked={selectedRows().has(getItemId(item))}
+                    onInput={(e) =>
+                      handleSelectRow(getItemId(item), e.target.checked)
+                    }
                   />
                 </td>
                 <For each={props.columns}>
                   {(column) => (
                     <td>
-                      {column.render ? column.render(item) : item[column.key]}
+                      {column.render
+                        ? column.render(item)
+                        : (getValueByKeyPath(item, column.key) as JSX.Element)}
                     </td>
                   )}
                 </For>
                 {props.actions && (
                   <td>
-                    <div class="table-actions">
+                    <div class={style['table-actions']}>
                       <For each={props.actions}>
                         {(action) => (
                           <button

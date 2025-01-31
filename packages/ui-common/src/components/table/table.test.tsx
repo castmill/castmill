@@ -1,3 +1,4 @@
+/** @jsxImportSource solid-js */
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { render, fireEvent, cleanup, screen } from '@solidjs/testing-library';
 import { Table } from './table';
@@ -28,7 +29,6 @@ describe('Table Component', () => {
       <Table
         columns={columns}
         data={data}
-        fetchData={() => Promise.resolve()}
         actions={[
           {
             icon: 'Edit',
@@ -47,13 +47,7 @@ describe('Table Component', () => {
   });
 
   it('handles row selection correctly', async () => {
-    render(() => (
-      <Table
-        columns={columns}
-        data={data}
-        fetchData={() => Promise.resolve()}
-      />
-    ));
+    render(() => <Table columns={columns} data={data} />);
     const checkbox = screen.getAllByRole('checkbox')[1]; // First row checkbox
     fireEvent.click(checkbox);
     expect(checkbox).toBeChecked();
@@ -78,14 +72,7 @@ describe('Table Component', () => {
   });
 
   it('executes action on button click', async () => {
-    render(() => (
-      <Table
-        columns={columns}
-        data={data}
-        actions={actions}
-        fetchData={() => Promise.resolve()}
-      />
-    ));
+    render(() => <Table columns={columns} data={data} actions={actions} />);
     const actionButton = screen.getByLabelText(`Edit ${data[0].name}`); // Adjust based on actual aria-label used
     fireEvent.click(actionButton);
     expect(actions[0].handler).toHaveBeenCalled();

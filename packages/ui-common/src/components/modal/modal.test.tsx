@@ -9,10 +9,12 @@ describe('Modal Component', () => {
 
   afterEach(() => {
     cleanup();
+    // Remove any remaining modal overlays from the body
+    const overlays = document.body.querySelectorAll('[data-testid="modal-overlay"]');
+    overlays.forEach(overlay => overlay.remove());
     vi.restoreAllMocks();
-    vi.runAllTimers(); // Ensure all timers are flushed to avoid state leaks
+    vi.runAllTimers(); // Ensure all timers are flushed
   });
-
   it('renders correctly with title and description', () => {
     render(() => (
       <Modal

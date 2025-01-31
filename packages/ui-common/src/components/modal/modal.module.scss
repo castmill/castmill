@@ -39,7 +39,8 @@ $animation-duration: 0.3s;
     transition:
       transform $animation-duration ease,
       opacity $animation-duration ease,
-      width 0.3s ease;
+      width 0.3s ease,
+      height 0.3s ease;
 
     &.active {
       transform: translateY(0); // Ends at the final position

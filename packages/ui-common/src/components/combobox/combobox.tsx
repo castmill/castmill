@@ -28,7 +28,7 @@ const SimpleIconButton = (props: { icon: IconTypes; onClick: () => void }) => {
   );
 };
 
-interface ComboBoxProps<T extends { id: string }> {
+interface ComboBoxProps<T extends { id: string | number }> {
   id: string;
   label: string;
   placeholder?: string;
