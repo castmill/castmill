@@ -35,6 +35,14 @@ defmodule Castmill.Resources.Playlist do
     |> validate_required([:name, :organization_id])
   end
 
+  @doc """
+  A bare query with no named binding, used where you need a pinned query
+  or want to avoid compile-time binding conflicts.
+  """
+  def bare_query do
+    from(m in __MODULE__)
+  end
+
   def base_query() do
     from(playlist in Castmill.Resources.Playlist, as: :playlist)
   end

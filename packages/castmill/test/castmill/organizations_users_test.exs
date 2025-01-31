@@ -2,6 +2,7 @@ defmodule Castmill.OrganizationsUsersTest do
   use Castmill.DataCase
 
   alias Castmill.Organizations
+  alias Castmill.Accounts
 
   import Castmill.NetworksFixtures
   import Castmill.OrganizationsFixtures
@@ -37,11 +38,6 @@ defmodule Castmill.OrganizationsUsersTest do
       assert [] == Organizations.list_users(organization.id)
     end
 
-    test "get_user!/1 returns the user with given id" do
-      user = user_fixture()
-      assert Organizations.get_user!(user.id) == user
-    end
-
     test "create_user/1 with valid data creates a user" do
       valid_attrs = %{
         avatar: "https://example.com/avatar",
@@ -49,38 +45,14 @@ defmodule Castmill.OrganizationsUsersTest do
         name: "some name"
       }
 
-      assert {:ok, %User{} = user} = Organizations.create_user(valid_attrs)
+      assert {:ok, %User{} = user} = Accounts.create_user(valid_attrs)
       assert user.avatar == "https://example.com/avatar"
       assert user.email == "john@doe.com"
       assert user.name == "some name"
     end
 
     test "create_user/1 with invalid data returns error changeset" do
-      assert {:error, %Ecto.Changeset{}} = Organizations.create_user(@invalid_attrs)
-    end
-
-    test "update_user/2 with valid data updates the user" do
-      avatar = "https://example.com/updated-avatar"
-      email = "updated@email.com"
-      user = user_fixture()
-      update_attrs = %{avatar: avatar, email: email, name: "some updated name"}
-
-      assert {:ok, %User{} = user} = Organizations.update_user(user, update_attrs)
-      assert user.avatar == avatar
-      assert user.email == email
-      assert user.name == "some updated name"
-    end
-
-    test "update_user/2 with invalid data returns error changeset" do
-      user = user_fixture()
-      assert {:error, %Ecto.Changeset{}} = Organizations.update_user(user, @invalid_attrs)
-      assert user == Organizations.get_user!(user.id)
-    end
-
-    test "delete_user/1 deletes the user" do
-      user = user_fixture()
-      assert {:ok, %User{}} = Organizations.delete_user(user)
-      assert_raise Ecto.NoResultsError, fn -> Organizations.get_user!(user.id) end
+      assert {:error, %Ecto.Changeset{}} = Accounts.create_user(@invalid_attrs)
     end
 
     test "change_user/1 returns a user changeset" do

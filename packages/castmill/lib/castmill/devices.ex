@@ -451,8 +451,8 @@ defmodule Castmill.Devices do
         select: channel
       )
 
-    channels = Repo.all(query)
-    Repo.preload(channels, :entries)
+    Repo.all(query)
+    |> Repo.preload(:entries)
   end
 
   @doc """

@@ -1,6 +1,7 @@
 defmodule CastmillWeb.UserController do
   use CastmillWeb, :controller
 
+  alias Castmill.Accounts
   alias Castmill.Organizations
   alias Castmill.Networks
   alias Castmill.Accounts.User
@@ -53,17 +54,9 @@ defmodule CastmillWeb.UserController do
 
   @spec show(Plug.Conn.t(), map) :: Plug.Conn.t()
   def show(conn, %{"id" => id}) do
-    user = Organizations.get_user!(id)
+    user = Accounts.get_user(id)
     render(conn, :show, user: user)
   end
-
-  # def update(conn, %{"id" => id, "user" => user_params}) do
-  #   user = Organizations.get_user!(id)
-
-  #   with {:ok, %User{} = user} <- Organizations.update_user(user, user_params) do
-  #     render(conn, :show, user: user)
-  #   end
-  # end
 
   @doc """
     Adds an existing user to an organization with a given access list.

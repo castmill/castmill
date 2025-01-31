@@ -34,17 +34,13 @@ defmodule CastmillWeb.ResourceController.MediasTest do
   end
 
   describe "list medias" do
-    test "lists all medias", %{conn: conn, organization: organization, team: team} do
-      media1 =
-        media_fixture(%{
-          organization_id: organization.id,
-          name: "media1",
-          uri: "http://youtube.com",
-          mime_type: "video/mp4"
-        })
-
-      # Add the media to the team, needed when the user is not root
-      {:ok, _result} = Teams.add_resource_to_team(team.id, media1.id, :media, [:read])
+    test "lists all medias", %{conn: conn, organization: organization} do
+      media_fixture(%{
+        organization_id: organization.id,
+        name: "media1",
+        uri: "http://youtube.com",
+        mime_type: "video/mp4"
+      })
 
       conn = get(conn, "/api/organizations/#{organization.id}/medias")
       response = json_response(conn, 200)

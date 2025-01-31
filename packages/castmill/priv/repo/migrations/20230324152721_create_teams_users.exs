@@ -11,6 +11,8 @@ defmodule Castmill.Repo.Migrations.CreateTeamsUsers do
 
       add :team_id, references(:teams, on_delete: :delete_all), null: false, primary_key: true
 
+      add :status, :string, null: false, default: "invited"
+
       timestamps()
     end
   end
