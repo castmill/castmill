@@ -259,8 +259,6 @@ defmodule CastmillWeb.TeamController do
         "access" => access
       }) do
     # Check access includes the only allowed values
-    IO.inspect(access)
-
     case Teams.add_resource_to_team(team_id, resource_type, resource_id, access) do
       {:ok, _} ->
         conn
