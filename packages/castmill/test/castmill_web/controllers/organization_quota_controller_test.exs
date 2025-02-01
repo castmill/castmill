@@ -4,7 +4,6 @@ defmodule CastmillWeb.OrganizationQuotaControllerTest do
   import Castmill.QuotasFixtures
   alias CastmillWeb.Router.Helpers, as: Routes
 
-
   @organization_id "00000000-0000-0000-0000-000000000000"
 
   @moduletag :skip
