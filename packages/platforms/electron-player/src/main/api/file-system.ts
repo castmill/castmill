@@ -16,6 +16,7 @@ import { LOCAL_URL_SCHEME, CACHE_DIR } from '../constants';
 const LOCAL_URL_PREFIX = `${LOCAL_URL_SCHEME}://`;
 
 // Only works with CommonJS require
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const checkDiskSpace = require('check-disk-space').default;
 
 const BASE_DIR = join(__dirname, CACHE_DIR);
@@ -129,6 +130,7 @@ export async function storeFile(
         size: stats.size,
       },
     };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     console.error('Failed to store file:', error);
     const errMsg = error?.message ?? 'Unknown Error';
@@ -169,6 +171,7 @@ export async function deleteFile(
 async function deleteFileIfExists(filePath: string): Promise<void> {
   try {
     await unlink(filePath);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     if (error?.code === 'ENOENT') {
       // File does not exist, nothing to do

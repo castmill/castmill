@@ -11,6 +11,7 @@ import { join } from 'path';
 import { pathToFileURL } from 'url';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import Store from 'electron-store';
+import { StoreOptions } from '@castmill/cache';
 import * as api from './api';
 import { Action } from '../common';
 import icon from '../../resources/icon.png?asset';
@@ -69,9 +70,12 @@ protocol.registerSchemesAsPrivileged([
     },
   },
 ]);
+
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
+//
+// eslint-disable-next-line no-unused-labels
 file: app.whenReady().then(() => {
   protocol.handle(LOCAL_URL_SCHEME, async (request: Request) => {
     const localPath = request.url.slice(LOCAL_URL_SCHEME.length + 3); // 3 for '://
@@ -171,8 +175,8 @@ file: app.whenReady().then(() => {
       _event: IpcMainInvokeEvent,
       storagePath: string,
       url: string,
-      data?: any
-    ) => api.storeFile(storagePath, url, data)
+      opts?: StoreOptions
+    ) => api.storeFile(storagePath, url, opts)
   );
 
   ipcMain.handle(

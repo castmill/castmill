@@ -2,6 +2,7 @@ import {
   StorageIntegration,
   StorageInfo,
   StorageItem,
+  StoreOptions,
   StoreFileReturnValue,
 } from '@castmill/cache';
 
@@ -27,8 +28,11 @@ export class FileStorage implements StorageIntegration {
     return fsApi.listFiles(this.storagePath);
   }
 
-  async storeFile(url: string, data?: any): Promise<StoreFileReturnValue> {
-    return fsApi.storeFile(this.storagePath, url, data);
+  async storeFile(
+    url: string,
+    opts?: StoreOptions
+  ): Promise<StoreFileReturnValue> {
+    return fsApi.storeFile(this.storagePath, url, opts);
   }
 
   async retrieveFile(url: string): Promise<string | void> {

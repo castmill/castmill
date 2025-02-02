@@ -39,7 +39,7 @@ export class ElectronMachine implements Machine {
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
       };
-    } catch (e) {
+    } catch {
       return undefined;
     }
   }
