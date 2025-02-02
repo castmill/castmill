@@ -1,4 +1,4 @@
-import { vi, describe, it, beforeEach, afterEach, expect } from 'vitest';
+import { vi, describe, it, beforeEach, expect } from 'vitest';
 import { ElectronLegacyMachine } from './electron-legacy-machine';
 
 vi.mock('../electron-legacy-api', () => ({
@@ -70,7 +70,7 @@ describe('ElectronLegacyMachine', () => {
     expect(setIntervalSpy).toHaveBeenCalled();
     expect(sendHeartbeat).not.toHaveBeenCalled(); // Verify heartbeat isn't sent immediately
     // Simulate interval execution
-    const callback = setIntervalSpy.mock.calls[0][0] as Function;
+    const callback = setIntervalSpy.mock.calls[0][0] as () => void;
     callback();
     expect(sendHeartbeat).toHaveBeenCalled();
     setIntervalSpy.mockRestore();
@@ -80,7 +80,7 @@ describe('ElectronLegacyMachine', () => {
     const setTimeoutSpy = vi.spyOn(global, 'setTimeout');
     machine.initLegacy();
     expect(setTimeoutSpy).toHaveBeenCalled();
-    const callback = setTimeoutSpy.mock.calls[0][0] as Function;
+    const callback = setTimeoutSpy.mock.calls[0][0] as () => void;
     callback();
     expect(sendPlayerReady).toHaveBeenCalled();
     setTimeoutSpy.mockRestore();

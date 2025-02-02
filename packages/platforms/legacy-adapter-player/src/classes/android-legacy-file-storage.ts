@@ -171,7 +171,7 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
   private getFileName(url: string): string {
     const pathName = new URL(url).pathname;
 
-    const [file, extension] = pathName.split('.');
+    const [, extension] = pathName.split('.');
 
     const hash = simpleHash(pathName);
     // if extension is present, append it to the hash otherwise, just return the hash

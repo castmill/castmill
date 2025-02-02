@@ -8,7 +8,7 @@ export const inbound = {
     logger.log('command: ' + cmd);
     return Promise.resolve();
   },
-  event: function (type: string, param: any): Promise<void> {
+  event: function (type: string, param: unknown): Promise<void> {
     return new Promise(function (resolve, reject) {
       logger.log('event ' + type + ' ' + param);
       switch (type) {

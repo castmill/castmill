@@ -7,7 +7,7 @@ export class Logger {
 
   constructor(private readonly prefix: string) {}
 
-  log(...args: any[]): void {
+  log(...args: unknown[]): void {
     if (!this.active) {
       return;
     }
@@ -15,7 +15,7 @@ export class Logger {
     console.log(`[${this.prefix}] ${args.join(' ')}`);
   }
 
-  error(...args: any[]): void {
+  error(...args: unknown[]): void {
     if (!this.active) {
       return;
     }
@@ -23,7 +23,7 @@ export class Logger {
     console.error(`[${this.prefix}] ${args.join(' ')}`);
   }
 
-  warn(...args: any[]): void {
+  warn(...args: unknown[]): void {
     if (!this.active) {
       return;
     }

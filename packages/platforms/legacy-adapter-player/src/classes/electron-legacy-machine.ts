@@ -1,12 +1,9 @@
 import { DeviceInfo, BrowserMachine } from '@castmill/device';
 import { LegacyMachine, PING_INTERVAL } from './legacy-machine';
-import { simpleHash } from './utils';
-import { version } from '../../package.json';
 import {
   getEnvironment,
   reboot,
   restart,
-  updatePlayer,
   sendHeartbeat,
   sendPlayerReady,
 } from '../electron-legacy-api';
