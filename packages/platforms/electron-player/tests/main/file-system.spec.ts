@@ -1,9 +1,7 @@
-import { vi, describe, it, beforeAll, beforeEach, expect } from 'vitest';
-import * as path from 'path';
+import { vi, describe, it, beforeEach, expect } from 'vitest';
+import { StoreOptions } from '@castmill/cache';
 
 import {
-  initStorage,
-  getStorageInfo,
   listFiles,
   storeFile,
   retrieveFile,
@@ -31,7 +29,7 @@ vi.mock('electron', () => ({
   },
 }));
 
-import { readFile, writeFile, readdir, stat, unlink } from 'fs/promises';
+import { writeFile, readdir, stat, unlink } from 'fs/promises';
 import { createWriteStream, Dirent, Stats, WriteStream } from 'fs';
 import { net, ClientRequest } from 'electron';
 
@@ -54,7 +52,7 @@ describe('File System', () => {
     const url = 'http://example.com/image.png';
     const filePath = await retrieveFile(testDir, url);
 
-    expect(filePath).to.be.undefined;
+    expect(filePath).to.equal(undefined);
   });
 
   it('should list files with details', async () => {
@@ -93,7 +91,7 @@ describe('File System', () => {
       vi.mocked(stat).mockResolvedValueOnce({ size: 9 } as unknown as Stats);
       const writeStream = {
         write: vi.fn(() => {}),
-        on: vi.fn((event: string, cb: (response: string) => void) => {}),
+        on: vi.fn(() => {}),
         end: vi.fn(),
       } as unknown as WriteStream;
       vi.mocked(createWriteStream).mockImplementationOnce(() => writeStream);
@@ -132,10 +130,14 @@ describe('File System', () => {
       vi.mocked(writeFile).mockRejectedValueOnce(
         new Error('Failed to store file')
       );
-      const data = 'test data';
+      const opts: StoreOptions = {
+        headers: {
+          Authorization: 'Bearer token',
+        },
+      };
       const url = 'http://example.com/image.png';
 
-      const result = await storeFile(testDir, url, data);
+      const result = await storeFile(testDir, url, opts);
 
       expect(result.result.code).to.equal('FAILURE');
       expect(unlink).toHaveBeenCalledOnce();
@@ -146,7 +148,7 @@ describe('File System', () => {
         () =>
           ({
             write: vi.fn(() => {}),
-            on: (event: string, cb: (response: string) => void) => {},
+            on: () => {},
           }) as unknown as WriteStream
       );
       vi.mocked(net.request).mockImplementationOnce(() => {
@@ -155,7 +157,7 @@ describe('File System', () => {
             if (event === 'response') {
               cb({
                 statusCode: 404,
-                on: (event: string, cb: (response: string) => void) => {},
+                on: () => {},
               });
             }
           },
@@ -173,7 +175,7 @@ describe('File System', () => {
     it('should return error if response emits an eror', async () => {
       const writeStream = {
         write: vi.fn(),
-        on: vi.fn((event: string, cb: (response: string) => void) => {}),
+        on: vi.fn(() => {}),
         end: vi.fn(),
       } as unknown as WriteStream;
       vi.mocked(createWriteStream).mockImplementationOnce(() => writeStream);
@@ -222,7 +224,7 @@ describe('File System', () => {
             if (event === 'response') {
               cb({
                 statusCode: 200,
-                on: (event: string, cb: (response: string) => void) => {},
+                on: () => {},
               });
             }
           },

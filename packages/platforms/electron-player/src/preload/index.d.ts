@@ -2,6 +2,7 @@ import { ElectronAPI } from '@electron-toolkit/preload';
 import {
   StorageInfo,
   StorageItem,
+  StoreOptions,
   StoreFileReturnValue,
 } from '@castmill/cache';
 
@@ -30,7 +31,7 @@ interface FsApi {
   storeFile: (
     storagePath: string,
     url: string,
-    data?: string
+    data?: StoreOptions
   ) => Promise<StoreFileReturnValue>;
   retrieveFile: (storagePath: string, url: string) => Promise<string>;
   deleteFile: (storagePath: string, url: string) => Promise<void>;
