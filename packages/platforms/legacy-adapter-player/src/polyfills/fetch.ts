@@ -1,18 +1,3 @@
-interface FetchOptions {
-  method?: 'GET' | 'POST' | 'PUT' | 'DELETE';
-  headers?: Record<string, string>;
-  body?: string;
-}
-
-interface FetchResponse {
-  status: number;
-  text: () => Promise<string>;
-  json: () => Promise<any>;
-  ok: boolean;
-  redirected: boolean;
-  statusText: string;
-}
-
 const fetchPolyfill = (
   input: RequestInfo | URL,
   init?: RequestInit | undefined

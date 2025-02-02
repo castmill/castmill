@@ -1,5 +1,5 @@
 import { type Component, onMount } from 'solid-js';
-import { mountDevice, Device, Machine, BrowserMachine } from '@castmill/device';
+import { mountDevice, Device, BrowserMachine } from '@castmill/device';
 import { StorageIntegration, StorageBrowser } from '@castmill/cache';
 import {
   AndroidLegacyMachine,

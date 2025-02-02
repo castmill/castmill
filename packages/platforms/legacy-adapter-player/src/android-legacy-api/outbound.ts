@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // outbound interface for the Android platform
 // This file defines the calls that the legacy wrapper can make when running on Android
 export const outbound = {

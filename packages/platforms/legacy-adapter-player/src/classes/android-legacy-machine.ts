@@ -1,7 +1,5 @@
 import { DeviceInfo, SettingKey } from '@castmill/device';
 import { LegacyMachine, PING_INTERVAL } from './legacy-machine';
-import { simpleHash } from './utils';
-import { version } from '../../package.json';
 import {
   getPlayerData,
   getItem,
@@ -102,7 +100,7 @@ export class AndroidLegacyMachine implements LegacyMachine {
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
       };
-    } catch (e) {
+    } catch {
       return undefined;
     }
   }

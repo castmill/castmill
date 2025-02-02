@@ -1,4 +1,4 @@
-import { vi, describe, it, beforeEach, afterEach, expect } from 'vitest';
+import { vi, describe, it, beforeEach, expect } from 'vitest';
 import { AndroidLegacyMachine, UNSET_VALUE } from './android-legacy-machine';
 vi.mock('../android-legacy-api', () => ({
   getPlayerData: vi.fn().mockResolvedValue({
@@ -16,7 +16,6 @@ vi.mock('../android-legacy-api', () => ({
 
 import {
   getPlayerData,
-  getItem,
   setItem,
   reboot,
   restart,
@@ -39,11 +38,11 @@ describe('AndroidLegacyMachine', () => {
     expect(setIntervalSpy).toHaveBeenCalled();
     expect(setTimeoutSpy).toHaveBeenCalled();
 
-    const intervalCallback = setIntervalSpy.mock.calls[0][0] as Function;
+    const intervalCallback = setIntervalSpy.mock.calls[0][0] as () => void;
     intervalCallback();
     expect(sendHeartbeat).toHaveBeenCalled();
 
-    const timeoutCallback = setTimeoutSpy.mock.calls[0][0] as Function;
+    const timeoutCallback = setTimeoutSpy.mock.calls[0][0] as () => void;
     timeoutCallback();
     expect(sendPlayerReady).toHaveBeenCalled();
 

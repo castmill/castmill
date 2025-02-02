@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * This is a helper class that allows for easy communication between iframes.
  * Copied from legacy codebase and ported to typescript
@@ -75,8 +76,7 @@ export class Msg {
     let action: Action;
     try {
       action = JSON.parse(e.data);
-    } catch (err) {
-      // log.warn('Got unparsable message: ' + e.data);
+    } catch {
       return;
     }
 
@@ -124,7 +124,7 @@ export class Msg {
 
   private _setupOutbound(outbound: OutboundFunctions): void {
     for (const key in outbound) {
-      if (outbound.hasOwnProperty(key)) {
+      if (Object.prototype.hasOwnProperty.call(outbound, key)) {
         outbound[key] = this._outboundProperty(key);
       }
     }

@@ -15,7 +15,7 @@ import { Logger } from '../utils';
 
 const logger = new Logger('Api');
 
-const msg = new Msg(window.parent, inbound, outbound);
+new Msg(window.parent, inbound, outbound);
 
 export async function getPlayerData(): Promise<PlayerData> {
   logger.log('getPlayerData');
