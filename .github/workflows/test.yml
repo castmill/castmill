@@ -263,8 +263,8 @@ jobs:
         run: yarn format:check
 
       # Step 8: Lint
-      = name: Lint code
-        runt: yarn lint
+      - name: Lint code
+        run: yarn lint
 
       # Step 9: Run unit tests
       - name: Run unit tests
