@@ -131,7 +131,7 @@ export const TeamInvitationsView = (props: {
       <ConfirmDialog
         show={showConfirmDialog()}
         title={`Remove Invitation From Team`}
-        message={`Are you sure you want to invitation fo member "${currentInvitation()?.email}" from the team?`}
+        message={`Are you sure you want to remove the invitation of member "${currentInvitation()?.email}" from the team?`}
         onClose={() => setShowConfirmDialog(false)}
         onConfirm={() => confirmRemoveInvitationFromTeam(currentInvitation())}
       />
