@@ -4,6 +4,7 @@ defmodule CastmillWeb.ResourceJSON do
   alias Castmill.Resources.Channel
   alias Castmill.Resources.ChannelEntry
   alias Castmill.Devices.Device
+  alias Castmill.Teams.Team
 
   @doc """
   Renders a list of medias.
@@ -36,6 +37,13 @@ defmodule CastmillWeb.ResourceJSON do
     }
   end
 
+  def index(%{teams: teams, count: count}) do
+    %{
+      count: count,
+      data: for(team <- teams, do: data(team))
+    }
+  end
+
   @doc """
   Renders a single media.
   """
@@ -57,6 +65,10 @@ defmodule CastmillWeb.ResourceJSON do
 
   def show(%{device: device}) do
     %{data: data(device)}
+  end
+
+  def show(%{team: team}) do
+    %{data: data(team)}
   end
 
   defp data(%Media{files_medias: %Ecto.Association.NotLoaded{}} = media) do
@@ -136,6 +148,14 @@ defmodule CastmillWeb.ResourceJSON do
       timezone: device.timezone,
       hardware_id: device.hardware_id,
       last_ip: device.last_ip
+    }
+  end
+
+  defp data(%Team{} = team) do
+    %{
+      id: team.id,
+      name: team.name,
+      organization_id: team.organization_id
     }
   end
 end

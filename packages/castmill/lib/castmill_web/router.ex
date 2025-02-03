@@ -152,15 +152,20 @@ defmodule CastmillWeb.Router do
     # List all the widgets available for the organization
     get("/organizations/:organization_id/widgets", OrganizationController, :list_widgets)
 
+    # Return Usage information for the organization
+    get("/organizations/:organization_id/usage", OrganizationUsageController, :index)
+
+    # View and accept invitations
+    get("/invitations/:token", TeamController, :show_invitation, as: :team_invitation)
+    post("/invitations/:token/accept", TeamController, :accept_invitation, as: :team_invitation)
+
     resources "/organizations", OrganizationController, only: [] do
       post("/devices", OrganizationController, :register_device)
 
       # This route is used to upload media files to the server.
       post("/medias", UploadController, :create)
 
-      resources "/:resources", ResourceController, except: [:new, :edit] do
-      end
-
+      # Playlist specific routes
       post("/playlists/:playlist_id/items", PlaylistController, :add_item)
       patch("/playlists/:playlist_id/items/:item_id", PlaylistController, :update_item)
 
@@ -172,7 +177,30 @@ defmodule CastmillWeb.Router do
 
       put("/playlists/:playlist_id/items/:item_id", PlaylistController, :move_item)
       delete("/playlists/:playlist_id/items/:item_id", PlaylistController, :delete_item)
+
+      # Teams Specific routes
+      put("/teams/:team_id", TeamController, :update_team)
+      get("/teams/:team_id/members", TeamController, :list_members)
+      delete("/teams/:team_id/members/:user_id", TeamController, :remove_member)
+
+      # Invitations
+      post("/teams/:team_id/invitations", TeamController, :invite_user)
+      get("/teams/:team_id/invitations", TeamController, :list_invitations)
+      delete("/teams/:team_id/invitations/:invitation_id", TeamController, :remove_invitation)
+
+      # Team Resources
+      get("/teams/:team_id/:resource_type", TeamController, :list_resources)
+      put("/teams/:team_id/:resource_type/:resource_id", TeamController, :add_resource)
+      delete("/teams/:team_id/:resource_type/:resource_id", TeamController, :remove_resource)
+
+      # Fall back route for all other resources
+      resources "/:resources", ResourceController, except: [:new, :edit] do
+      end
     end
+
+    # Routes for organization quotas
+    resources "/organizations/:organization_id/quotas", OrganizationQuotaController,
+      only: [:index, :show, :create, :update]
 
     post("/devices/:device_id/commands", DeviceController, :send_command)
     get("/devices/:device_id/events", DeviceController, :list_events)

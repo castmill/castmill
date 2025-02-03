@@ -28,10 +28,12 @@
   "devDependencies": {
     "@solidjs/testing-library": "^0.8.6",
     "@testing-library/jest-dom": "^6.4.1",
+    "@testing-library/user-event": "^14.6.1",
     "@types/phoenix": "^1.6.4",
     "jsdom": "^24.0.0",
     "prettier": "^3.2.5",
     "rimraf": "^6.0.1",
+    "solid-js": "^1.9.4",
     "typescript": "^5.4.5",
     "vite": "^5.2.10",
     "vite-plugin-solid": "^2.10.2",
@@ -40,7 +42,6 @@
   "dependencies": {
     "@castmill/cache": "*",
     "@castmill/player": "*",
-    "phoenix": "^1.7.2",
-    "solid-js": "^1.8.22"
+    "phoenix": "^1.7.2"
   }
 }

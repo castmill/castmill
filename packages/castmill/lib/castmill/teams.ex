@@ -2,38 +2,27 @@ defmodule Castmill.Teams do
   @moduledoc """
   The Teams context.
   """
+  require Logger
+
   import Ecto.Query, warn: false
-  alias Ecto.Multi
 
+  alias Swoosh.Email
+
+  alias Castmill.Mailer
   alias Castmill.Repo
-  alias Castmill.Organizations.Organization
-  alias Castmill.Teams.{Team, TeamsUsers, TeamsResources}
-  alias Castmill.Resources.{Media, Playlist, Channel}
-  alias Castmill.Protocol.Access
-  alias Castmill.QueryHelpers
 
-  defimpl Access, for: Team do
-    def canAccess(_team, user, _action) do
-      if is_nil(user) do
-        {:error, "No user provided"}
-      else
-        # network_admin = Repo.get_by(Castmill.Networks.NetworksAdmins, network_id: network.id, user_id: user.id)
-        # if network_admin !== nil do
-        #   {:ok, true}
-        # else
-        #   {:ok, false}
-        # end
-      end
-    end
-  end
+  alias Castmill.Organizations.Organization
+  alias Castmill.Teams.{Team, TeamsUsers, TeamsMedias, TeamsPlaylists, Invitation}
+  alias Castmill.Resources.{Media, Playlist}
+  alias Castmill.QueryHelpers
 
   @doc """
   Returns the list of teams.
 
   ## Examples
 
-      iex> list_networks()
-      [%Network{}, ...]
+      iex> list_teams()
+      [%Team{}, ...]
 
   """
   def list_teams(%{
@@ -151,80 +140,75 @@ defmodule Castmill.Teams do
     |> Repo.insert()
   end
 
-  @doc """
-    Add a resource to a team with a given access.
-  """
-  def add_resource_to_team(team_id, child_id, type, access) do
-    {:ok, %{add_resource_to_team: team_resource}} =
-      Repo.transaction(
-        Multi.new()
-        |> Multi.run(:upsert_resource, fn _repo, _changes ->
-          upsert_resource(child_id, type)
-        end)
-        |> Multi.run(:add_resource_to_team, fn _repo, %{upsert_resource: resource_id} ->
-          %TeamsResources{}
-          |> TeamsResources.changeset(%{
-            access: access,
+  def add_resource_to_team(team_id, resource_type, resource_id, access) do
+    case Map.get(resources_map(), resource_type) do
+      {join_mod, foreign_key, _resource_mod, _assoc_field} ->
+        # Build the attributes, dynamically inserting the correct resource_id key
+        attrs =
+          %{
             team_id: team_id,
-            resource_id: resource_id
-          })
-          |> Repo.insert()
-        end)
-      )
+            access: access
+          }
+          |> Map.put(foreign_key, resource_id)
 
-    {:ok, team_resource}
+        # Create a struct for the join table
+        record = struct(join_mod, attrs)
+
+        # Build the changeset (each join schema should define its own changeset/2)
+        changeset = join_mod.changeset(record, attrs)
+
+        # Insert into the DB (returns {:ok, record} or {:error, changeset})
+        Repo.insert(changeset)
+
+      nil ->
+        {:error, {:unsupported_resource_type, resource_type}}
+    end
+  end
+
+  def remove_resource_from_team(team_id, resource_type, resource_id) do
+    case Map.get(resources_map(), resource_type) do
+      {join_mod, foreign_key, _resource_mod, _assoc_field} ->
+        # Build a keyword list for Repo.get_by
+        fields = [team_id: team_id] |> Keyword.put(foreign_key, resource_id)
+
+        case Repo.get_by(join_mod, fields) do
+          nil ->
+            # Record doesn't exist, so nothing to remove
+            {:error, :not_found}
+
+          record ->
+            Repo.delete(record)
+        end
+
+      nil ->
+        {:error, {:unsupported_resource_type, resource_type}}
+    end
   end
 
   @doc """
     Update access for a resource in a team.
   """
-  def update_resource_access(team_id, resource_id, access) do
-    from(team_resource in TeamsResources,
-      where: team_resource.team_id == ^team_id and team_resource.resource_id == ^resource_id
-    )
-    |> Repo.update_all(set: [access: access])
-  end
+  def update_resource_access(team_id, resource_type, resource_id, access) do
+    case Map.get(resources_map(), resource_type) do
+      {join_mod, foreign_key, _resource_mod, _assoc_field} ->
+        from(j in join_mod,
+          where: j.team_id == ^team_id and field(j, ^foreign_key) == ^resource_id
+        )
+        |> Repo.update_all(set: [access: access])
 
-  defp upsert_resource(id, type) do
-    # First upsert the resource (insert only if there is no a resource for the given id and type)
-    # Check if the child has a resource associated to it already.
-    child = get_child_resource(id, type)
-
-    if child.resource_id do
-      {:ok, child.resource_id}
-    else
-      {:ok, resource} =
-        %Castmill.Resources.Resource{}
-        |> Castmill.Resources.Resource.changeset(%{type: type})
-        |> Repo.insert()
-
-      Castmill.Resources.update(child, %{resource_id: resource.id})
-      {:ok, resource.id}
-    end
-  end
-
-  defp get_child_resource(id, type) do
-    case type do
-      :media -> Repo.get(Media, id)
-      :playlist -> Repo.get(Playlist, id)
-      :channel -> Repo.get(Channel, id)
-      :device -> Repo.get(Device, id)
-      _ -> {:error, "Invalid resource type"}
+      nil ->
+        {:error, :unsupported_resource_type}
     end
   end
 
   def remove_user_from_team(team_id, user_id) do
-    from(team_user in TeamsUsers,
-      where: team_user.team_id == ^team_id and team_user.user_id == ^user_id
-    )
-    |> Repo.delete_all()
-  end
+    case Repo.get_by(TeamsUsers, team_id: team_id, user_id: user_id) do
+      nil ->
+        {:error, :not_found}
 
-  def remove_resource_from_team(team_id, resource_id) do
-    from(team_resource in TeamsResources,
-      where: team_resource.team_id == ^team_id and team_resource.resource_id == ^resource_id
-    )
-    |> Repo.delete_all()
+      teams_user ->
+        Repo.delete(teams_user)
+    end
   end
 
   @doc """
@@ -240,61 +224,209 @@ defmodule Castmill.Teams do
     Team.changeset(team, attrs)
   end
 
-  @doc """
-    Returns the list of users of the given team
+  defp maybe_search_by_user_name(query, nil), do: query
+  defp maybe_search_by_user_name(query, ""), do: query
 
-    ## Examples
+  defp maybe_search_by_user_name(query, search) do
+    from [user: u] in query,
+      where: ilike(u.name, ^"%#{search}%")
+  end
 
-    iex> list_users()
-    [%User{}, ...]
-  """
-  def list_users(team_id) do
-    # Maybe it is possible to do a query that do not requires doing a Enum.map at the end
-    # to merge the role into the user, this works well for now.
-    query =
-      from(teams_users in TeamsUsers,
-        where: teams_users.team_id == ^team_id,
-        join: user in assoc(teams_users, :user),
-        order_by: [asc: user.updated_at],
-        select:
-          {%{id: user.id, name: user.name, email: user.email, avatar: user.avatar},
-           %{role: teams_users.role}}
-      )
+  def list_users(params) when is_map(params) do
+    # define sensible defaults for all these optional params
+    defaults = %{
+      team_id: nil,
+      page: 1,
+      page_size: 10,
+      search: nil,
+      filters: nil
+    }
 
-    Repo.all(query)
-    |> Enum.map(fn {user, role} -> Map.put(user, :role, role.role) end)
+    # merge the defaults with whatever keys are passed in params
+    merged_params = Map.merge(defaults, params)
+
+    do_list_users(merged_params)
+  end
+
+  def do_list_users(%{
+        team_id: team_id,
+        search: search,
+        page: page,
+        page_size: page_size
+      }) do
+    offset = if page_size == nil, do: 0, else: max((page - 1) * page_size, 0)
+
+    users =
+      TeamsUsers.base_query()
+      |> TeamsUsers.where_team_id(team_id)
+      |> join(:inner, [tu], u in assoc(tu, :user), as: :user)
+      |> maybe_search_by_user_name(search)
+      |> order_by([teams_users: _tu, user: u], asc: u.name)
+      |> Ecto.Query.limit(^page_size)
+      |> Ecto.Query.offset(^offset)
+      |> select([teams_users: tu, user: u], %{
+        role: tu.role,
+        user: %{
+          id: u.id,
+          name: u.name,
+          email: u.email,
+          avatar: u.avatar
+        }
+      })
+      |> Repo.all()
+
+    users
+  end
+
+  def count_users(%{
+        team_id: team_id,
+        search: search
+      }) do
+    TeamsUsers.base_query()
+    |> Team.where_team_id(team_id)
+    # |> QueryHelpers.where_name_like(search)
+    |> join(:inner, [tu], u in assoc(tu, :user), as: :user)
+    |> maybe_search_by_user_name(search)
+    |> Repo.aggregate(:count, :user_id)
   end
 
   @doc """
-  Returns the list of resources of the given team
+  Returns a list of resources for the given `resource_type` and parameters.
+
+  ## Parameters
+
+    - `resource_type`: An atom representing which resource to fetch
+      (e.g., `:media`, `:playlist`, `:channel`, etc.).
+    - `%{team_id: integer(), search: String.t(), page: integer(), page_size: integer()}`:
+      A map containing the relevant parameters.
 
   ## Examples
 
-  iex> list_resources()
-  [%User{}, ...]
-  """
-  def list_resources(team_id) do
-    query =
-      from(
-        tr in Castmill.Teams.TeamsResources,
-        where: tr.team_id == ^team_id,
-        join: r in Castmill.Resources.Resource,
-        on: r.id == tr.resource_id,
-        preload: [resource: :media, resource: :playlist, resource: :channel, resource: :device]
-      )
+      iex> list_resources(:media, %{team_id: 1, search: "demo", page: 1, page_size: 10})
+      [%Media{}, ...]
 
-    Repo.all(query)
+  """
+  def list_resources(resource_type, params) when is_map(params) do
+    defaults = %{
+      team_id: nil,
+      search: nil,
+      page: 1,
+      page_size: 10
+    }
+
+    merged_params = Map.merge(defaults, params)
+
+    do_list_resources(resource_type, merged_params)
+  end
+
+  def do_list_resources(
+        resource_type,
+        %{
+          team_id: team_id,
+          search: search,
+          page: page,
+          page_size: page_size
+        }
+      ) do
+    case Map.get(resources_map(), resource_type) do
+      {join_mod, foreign_key, resource_mod, assoc_field} ->
+        resource_preloads =
+          if function_exported?(resource_mod, :preloads, 0) do
+            resource_mod.preloads()
+          else
+            []
+          end
+
+        join_mod.bare_query()
+        |> join(:inner, [j], r in ^resource_mod.bare_query(), on: field(j, ^foreign_key) == r.id)
+        |> where([j], j.team_id == ^team_id)
+        |> where([_, r], like(r.name, ^"%#{search}%"))
+        |> paginate(page, page_size)
+        |> Repo.all()
+        |> Repo.preload([{assoc_field, resource_preloads}])
+
+      nil ->
+        IO.inspect("Unsupported resource type: #{resource_type}")
+        default_fallback()
+    end
+  end
+
+  def count_resources(resource_type, %{team_id: team_id, search: search}) do
+    case Map.get(resources_map(), resource_type) do
+      {join_mod, foreign_key, resource_mod, _assoc_field} ->
+        join_mod.bare_query()
+        |> join(:inner, [j], r in ^resource_mod.bare_query(), on: field(j, ^foreign_key) == r.id)
+        |> where([j], j.team_id == ^team_id)
+        |> where([_, r], like(r.name, ^"%#{search}%"))
+        |> Repo.aggregate(:count)
+
+      nil ->
+        IO.inspect("Unsupported resource type: #{resource_type}")
+        default_fallback()
+    end
+  end
+
+  defp default_fallback do
+    {:error, :unsupported_resource_type}
+  end
+
+  defp paginate(query, page, page_size) do
+    offset = (page - 1) * page_size
+
+    query
+    |> limit(^page_size)
+    |> offset(^offset)
+  end
+
+  # A simple map describing each resource’s join schema, foreign key, resource schema, and preload field
+  defp resources_map do
+    %{
+      "medias" => {
+        # join schema module
+        TeamsMedias,
+        # foreign key in join schema
+        :media_id,
+        # resource schema module
+        Media,
+        # association name in join schema
+        :media
+      },
+      "playlists" => {
+        TeamsPlaylists,
+        :playlist_id,
+        Playlist,
+        :playlist
+      }
+      # channels: {
+      #   MyApp.Schema.TeamsChannels,
+      #   :channel_id,
+      #   MyApp.Schema.Channel,
+      #   :channel
+      # },
+      # devices: {
+      #   MyApp.Schema.TeamsDevices,
+      #   :device_id,
+      #   MyApp.Schema.Device,
+      #   :device
+      # },
+      # teams: {
+      #   MyApp.Schema.TeamsTeams,
+      #   :team_id,
+      #   MyApp.Schema.Team,
+      #   :team
+      # }
+    }
   end
 
   @doc """
-    Checks if a given user has access to a given resource. A given resource can be a media, a playlist, a channel or a device.
+    Checks if a given user has access to a given resource. A given resource can be a media, a playlist, a channel, a device or a team.
     The resource belongs to the proxy table Resource, and is part of a Team through the proxy table TeamsResources, which
     includes an access field of type array that can include accesses such as read, write or delete.
 
     Any user belonging to a given team will have access to a given resource based on the access field of the TeamsResources table
     for the given resource.
   """
-  def has_access_to_resource(user_id, resource_id, access) do
+  def has_access_to_resource_legacy(user_id, resource_id, access) do
     query =
       from(
         tr in Castmill.Teams.TeamsResources,
@@ -306,5 +438,222 @@ defmodule Castmill.Teams do
       )
 
     Repo.one(query) != nil
+  end
+
+  def resource_in_team?(team_id, resource_type, resource_id) do
+    case Map.get(resources_map(), resource_type) do
+      {join_mod, foreign_key, _resource_mod, _assoc_field} ->
+        from(j in join_mod,
+          where: j.team_id == ^team_id and field(j, ^foreign_key) == ^resource_id
+        )
+        |> Repo.exists?()
+
+      nil ->
+        false
+    end
+  end
+
+  def has_access_to_resource(actor_id, resource_type, resource_id, access) do
+    case Map.get(resources_map(), resource_type) do
+      {join_mod, foreign_key, _resource_mod, _assoc_field} ->
+        query =
+          from(j in join_mod,
+            where:
+              j.team_id in subquery(
+                from(tu in TeamsUsers, where: tu.user_id == ^actor_id, select: tu.team_id)
+              ),
+            where: field(j, ^foreign_key) == ^resource_id,
+            where: ^access in j.access
+          )
+
+        Repo.exists?(query)
+
+      nil ->
+        false
+    end
+  end
+
+  def add_invitation_to_team(organization_id, team_id, email) do
+    token =
+      :crypto.strong_rand_bytes(16)
+      |> Base.url_encode64(padding: false)
+
+    Ecto.Multi.new()
+    # 1) Check if the user is already in the team
+    |> Ecto.Multi.run(:check_membership, fn _repo, _changes ->
+      if user_in_team?(team_id, email) do
+        {:error, :already_member}
+      else
+        {:ok, :no_conflict}
+      end
+    end)
+    # 2) Check if there’s already an active “invited” row
+    |> Ecto.Multi.run(:check_existing_invite, fn _repo, _changes ->
+      existing =
+        Repo.get_by(Invitation,
+          team_id: team_id,
+          email: email,
+          status: "invited"
+        )
+
+      if existing do
+        {:error, :already_invited}
+      else
+        {:ok, :no_conflict}
+      end
+    end)
+    # 3) Insert the new invitation row
+    |> Ecto.Multi.insert(:invitation, fn _changes ->
+      %Invitation{}
+      |> Invitation.changeset(%{
+        team_id: team_id,
+        email: email,
+        token: token
+        # status defaults to "invited", unless you override it
+      })
+    end)
+    # 4) Execute the DB transaction
+    |> Repo.transaction()
+    # 5) Send the invitation email only if the transaction succeeds
+    |> case do
+      {:ok, %{invitation: invitation}} ->
+        # Transaction committed successfully;
+        # now we can send the email outside the transaction.
+        organization = Castmill.Organizations.get_organization(organization_id)
+        network = Castmill.Networks.get_network(organization.network_id)
+        send_invitation_email(network.domain, email, token)
+
+        {:ok, invitation.token}
+
+      # If membership check failed:
+      {:error, :check_membership, :already_member, _changes} ->
+        {:error, :already_member}
+
+      # If there's already an active invitation:
+      {:error, :check_existing_invite, :already_invited, _changes} ->
+        {:error, :already_invited}
+
+      # If inserting the invitation failed (e.g. a constraint error):
+      {:error, :invitation, changeset, _changes} ->
+        {:error, changeset}
+    end
+  end
+
+  def user_in_team?(team_id, email) do
+    # Suppose you can map email -> user.id, then check teams_users to see if
+    # that user already exists for the given team:
+    from(tu in "teams_users",
+      join: u in "users",
+      on: u.id == tu.user_id,
+      where: tu.team_id == ^team_id and u.email == ^email
+    )
+    |> Repo.exists?()
+  end
+
+  defp send_invitation_email(baseUrl, email, token) do
+    subject = "You have been invited to a team on Castmill"
+
+    body = """
+    Hello
+
+    You have been invited to join a team on Castmill. Please click on the link below to accept the invitation.
+
+    #{baseUrl}/invite/?token=#{token}
+
+    """
+
+    deliver(email, subject, body)
+  end
+
+  # Delivers the email using the application mailer.
+  defp deliver(recipient, subject, body) do
+    email =
+      Email.new()
+      |> Email.to(recipient)
+      |> Email.from({"Castmill", "no-reply@castmill.com"})
+      |> Email.subject(subject)
+      |> Email.text_body(body)
+
+    with {:ok, _metadata} <- Mailer.deliver(email) do
+      {:ok, email}
+    end
+  end
+
+  def get_invitation(token) do
+    from(i in Invitation,
+      where: i.token == ^token,
+      join: t in assoc(i, :team),
+      preload: [team: t]
+    )
+    |> Repo.one()
+  end
+
+  def get_invitation_by_email(email) do
+    from(i in Invitation,
+      where: i.email == ^email,
+      join: t in assoc(i, :team),
+      preload: [team: t]
+    )
+    |> Repo.one()
+  end
+
+  # Accepts an invitation by updating the status of the invitation to accepted and
+  # adding the user to the team.
+  def accept_invitation(token, user_id) do
+    case get_invitation(token) do
+      nil ->
+        {:error, "Invalid token"}
+
+      invitation ->
+        case add_user_to_team(invitation.team_id, user_id, "member") do
+          {:ok, _} ->
+            from(i in Invitation,
+              where: i.token == ^token
+            )
+            |> Repo.update_all(set: [status: "accepted"])
+
+            {:ok, invitation}
+
+          {:error, changeset} ->
+            {:error, changeset}
+        end
+    end
+  end
+
+  # List invitations for a given team, we need to support pagination, and search
+  def list_invitations(%{
+        team_id: team_id,
+        search: search,
+        page: page,
+        page_size: page_size
+      }) do
+    offset = if page_size == nil, do: 0, else: max((page - 1) * page_size, 0)
+
+    from(i in Invitation,
+      where: i.team_id == ^team_id,
+      where: ilike(i.email, ^"%#{search}%"),
+      order_by: [desc: i.inserted_at],
+      limit: ^page_size,
+      offset: ^offset
+    )
+    |> Repo.all()
+  end
+
+  def count_invitations(%{team_id: team_id, search: search}) do
+    from(i in Invitation,
+      where: i.team_id == ^team_id,
+      where: ilike(i.email, ^"%#{search}%")
+    )
+    |> Repo.aggregate(:count, :id)
+  end
+
+  def remove_invitation_from_team(team_id, invitation_id) do
+    case Repo.get_by(Invitation, id: invitation_id, team_id: team_id) do
+      nil ->
+        {:error, :not_found}
+
+      invitation ->
+        Repo.delete(invitation)
+    end
   end
 end

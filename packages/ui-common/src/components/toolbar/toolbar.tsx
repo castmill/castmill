@@ -79,7 +79,9 @@ export function ToolBar(props: ToolBarProps) {
   return (
     <div class="toolbar-container">
       <div class="toolbar-left">
-        <h2 class="toolbar-title">{props.title || ''}</h2>
+        <Show when={props.title}>
+          <h2 class="toolbar-title">{props.title}</h2>
+        </Show>
         <Show when="props.onSearch">
           <div class="search-container">
             <IconWrapper icon={FaSolidMagnifyingGlass} />

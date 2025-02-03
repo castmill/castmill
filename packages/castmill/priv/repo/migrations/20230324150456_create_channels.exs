@@ -7,8 +7,6 @@ defmodule Castmill.Repo.Migrations.CreateChannels do
       add :timezone, :string
       add :description, :string
 
-      add :resource_id, references(:resources, on_delete: :nilify_all), null: true
-
       add :organization_id,
           references("organizations", column: "id", type: :uuid, on_delete: :delete_all),
           null: false

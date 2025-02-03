@@ -1,0 +1,90 @@
+@use '../../colors.scss';
+
+.castmill-usage {
+  color: colors.$base-color;
+  background-color: colors.$background;
+
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-content: center;
+  width: 100%;
+
+  .wrapper {
+    display: flex;
+    width: 28em;
+    flex-direction: column;
+    justify-content: center;
+    align-content: center;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+    font-family: system-ui, sans-serif;
+    transition:
+      background-color 0.3s ease,
+      color 0.3s ease;
+  }
+
+  /* Panels, cards, and containers */
+  .p-4.bg-white.rounded.shadow-md {
+    background-color: #2a2a2a !important;
+    color: #e0e0e0;
+  }
+
+  table.w-full.text-left {
+    color: #e0e0e0;
+  }
+
+  /* Table headers, borders */
+  th,
+  td {
+    border-color: #3c3c3c;
+  }
+
+  thead tr {
+    border-bottom-color: #3c3c3c;
+  }
+
+  tbody tr:hover {
+    background-color: #333333;
+  }
+
+  /* Headings and titles */
+  h2.text-xl.font-bold.mb-4 {
+    color: #ffffff;
+  }
+
+  /* Progress bar background */
+  .bg-gray-200 {
+    background-color: #3c3c3c !important;
+  }
+
+  /* Progress bar fill */
+  .bg-blue-500 {
+    background-color: #609bff !important;
+  }
+
+  /* Hover states */
+  a:hover,
+  button:hover {
+    color: #ffffff;
+  }
+
+  /* Accents */
+  .capitalize {
+    color: #ffffff;
+    text-transform: capitalize;
+  }
+
+  /* Smooth transitions for theme changes */
+  * {
+    transition:
+      background-color 0.1s ease,
+      color 0.1s ease,
+      border-color 0.1s ease;
+  }
+}

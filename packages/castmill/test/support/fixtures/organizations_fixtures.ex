@@ -19,7 +19,7 @@ defmodule Castmill.OrganizationsFixtures do
   end
 
   @doc """
-  Generate a user.
+  Generate a user
   """
   def user_fixture(attrs \\ %{}) do
     {:ok, user} =
@@ -29,7 +29,7 @@ defmodule Castmill.OrganizationsFixtures do
         email: "some@email.com",
         name: "some name"
       })
-      |> Castmill.Organizations.create_user()
+      |> Castmill.Accounts.create_user()
 
     user
   end

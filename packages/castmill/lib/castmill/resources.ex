@@ -459,16 +459,15 @@ defmodule Castmill.Resources do
         []
       end
 
-    Repo.all(
-      resource.base_query()
-      |> Organization.where_org_id(organization_id)
-      |> QueryHelpers.apply_combined_filters(filters, resource)
-      |> QueryHelpers.where_name_like(search)
-      |> Ecto.Query.order_by([d], asc: d.name)
-      |> Ecto.Query.limit(^page_size)
-      |> Ecto.Query.offset(^offset)
-      |> Ecto.Query.preload(^preloads)
-    )
+    resource.base_query()
+    |> Organization.where_org_id(organization_id)
+    |> QueryHelpers.apply_combined_filters(filters, resource)
+    |> QueryHelpers.where_name_like(search)
+    |> Ecto.Query.order_by([d], asc: d.name)
+    |> Ecto.Query.limit(^page_size)
+    |> Ecto.Query.offset(^offset)
+    |> Ecto.Query.preload(^preloads)
+    |> Repo.all()
   end
 
   def list_resources(resource, %{page: page, page_size: page_size, search: search}) do

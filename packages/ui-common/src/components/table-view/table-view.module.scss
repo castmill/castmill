@@ -1,14 +1,22 @@
-.pagination-wrapper {
+.table-view {
   display: flex;
-  margin-top: 1em;
-  width: 100%;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: normal;
+  gap: 0.7em;
 
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
+  .pagination-wrapper {
+    display: flex;
+    margin-top: 1em;
+    width: 100%;
 
-  .pagination-text {
-    margin-left: 1em;
-    font-size: 0.8em;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+
+    .pagination-text {
+      margin-left: 1em;
+      font-size: 0.8em;
+    }
   }
 }

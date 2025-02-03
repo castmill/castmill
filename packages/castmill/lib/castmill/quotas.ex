@@ -169,10 +169,12 @@ defmodule Castmill.Quotas do
     Check the amount of quota used for a given resource in a given organization.
     i.e. how many resources of a given type are used in a given organization.
   """
-  def get_quota_used_for_organization(query, organization_id) do
-    query
-    |> where(organization_id: ^organization_id)
-    |> select(count(:id))
+  def get_quota_used_for_organization(organization_id, schema_module) do
+    from(r in schema_module,
+      where: r.organization_id == ^organization_id,
+      select: count(r.id)
+    )
+    |> Repo.one()
   end
 
   @doc """

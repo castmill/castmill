@@ -11,6 +11,8 @@ defmodule CastmillWeb.ResourceController do
   alias Castmill.Resources.ChannelEntry
   alias Castmill.Devices.Device
   alias Castmill.Devices
+  alias Castmill.Teams
+  alias Castmill.Teams.Team
 
   action_fallback(CastmillWeb.FallbackController)
 
@@ -272,6 +274,24 @@ defmodule CastmillWeb.ResourceController do
     end
   end
 
+  def create(conn, %{
+        "resources" => "teams",
+        "organization_id" => organization_id,
+        "team" => team
+      }) do
+    create_attrs = Map.merge(team, %{"organization_id" => organization_id})
+
+    with {:ok, %Team{} = team} <- Teams.create_team(create_attrs) do
+      conn
+      |> put_status(:created)
+      |> put_resp_header(
+        "location",
+        ~p"/api/organizations/#{organization_id}/teams/#{team.id}"
+      )
+      |> render(:show, team: team)
+    end
+  end
+
   def delete(conn, %{
         "resources" => "medias",
         "id" => id
@@ -352,6 +372,27 @@ defmodule CastmillWeb.ResourceController do
         else
           {:error, reason} ->
             send_resp(conn, 500, "Error deleting device: #{inspect(reason)}")
+        end
+    end
+  end
+
+  def delete(conn, %{
+        "resources" => "teams",
+        "id" => id
+      }) do
+    case Castmill.Teams.get_team(id) do
+      nil ->
+        conn
+        |> put_status(:not_found)
+        |> Phoenix.Controller.json(%{errors: ["Team not found"]})
+        |> halt()
+
+      team ->
+        with {:ok, %Team{}} <- Teams.delete_team(team) do
+          send_resp(conn, :no_content, "")
+        else
+          {:error, reason} ->
+            send_resp(conn, 500, "Error deleting team: #{inspect(reason)}")
         end
     end
   end

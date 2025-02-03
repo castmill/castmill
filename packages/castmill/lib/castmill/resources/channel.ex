@@ -15,8 +15,6 @@ defmodule Castmill.Resources.Channel do
       type: Ecto.UUID
     )
 
-    belongs_to(:resource, Castmill.Resources.Resource, foreign_key: :resource_id)
-
     has_many(:entries, Castmill.Resources.ChannelEntry)
 
     timestamps()
@@ -30,8 +28,7 @@ defmodule Castmill.Resources.Channel do
       :timezone,
       :default_playlist_id,
       :description,
-      :organization_id,
-      :resource_id
+      :organization_id
     ])
     |> validate_required([:name, :timezone, :organization_id])
     |> foreign_key_constraint(:default_playlist_id, name: :channels_default_playlist_id_fkey)

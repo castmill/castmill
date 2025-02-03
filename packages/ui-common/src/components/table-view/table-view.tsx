@@ -6,31 +6,39 @@
  * (c) 2024 Castmill AB.
  */
 import { JSX, Show, createEffect, createSignal, onMount } from 'solid-js';
-import {
-  ToolBar,
-  ItemBase,
-  TableProps,
-  Table,
-  Pagination,
-  Filter,
-  TableAction,
-} from '../';
+import { Filter, ItemBase, Pagination, Table, TableAction, ToolBar } from '../';
 import { SortOptions } from '../../interfaces/sort-options.interface';
 
 import style from './table-view.module.scss';
 
-export interface TableViewRef<Item extends ItemBase> {
-  reloadData: () => Promise<void>;
-  updateItem: (itemId: string, item: Item) => void;
+export interface FetchDataOptions {
+  page: { num: number; size: number };
+  sortOptions: SortOptions;
+  search?: string;
+  filters?: Record<string, string | boolean>;
 }
 
-interface TableViewProps<Item extends ItemBase> extends TableProps<Item> {
+export interface TableViewRef<
+  IdType = string,
+  Item extends ItemBase<IdType> = ItemBase<IdType>,
+> {
+  reloadData: () => Promise<void>;
+  updateItem: (itemId: IdType, item: Partial<Item>) => void;
+}
+
+type Params = Record<string, string>;
+type SetParams = Record<string, string | number | boolean | null | undefined>;
+
+interface TableViewProps<
+  IdType = string,
+  Item extends ItemBase<IdType> = ItemBase<IdType>,
+> {
   title: string;
   resource: string;
 
-  params?: any; // typeof useSearchParams;
+  params?: [Partial<Params>, (params: SetParams, options?: any) => void]; // typeof useSearchParams;
 
-  ref?: (ref: TableViewRef<Item>) => void;
+  ref?: (ref: TableViewRef<IdType, Item>) => void;
 
   fetchData: (params: {
     page: { num: number; size: number };
@@ -45,9 +53,9 @@ interface TableViewProps<Item extends ItemBase> extends TableProps<Item> {
       title: string;
       sortable?: boolean;
     }[];
-    onSort: (options: SortOptions) => void;
+    onSort?: (options: SortOptions) => void;
     actions?: TableAction<Item>[];
-    onRowSelect?: (selectedIds: Set<string | number>) => void;
+    onRowSelect?: (selectedIds: Set<IdType>) => void;
   };
 
   pagination: {
@@ -59,10 +67,15 @@ interface TableViewProps<Item extends ItemBase> extends TableProps<Item> {
     mainAction?: JSX.Element;
     actions?: JSX.Element;
   };
+
+  itemIdKey?: string;
 }
 
-export const TableView = <Item extends ItemBase>(
-  props: TableViewProps<Item>
+export const TableView = <
+  IdType = string,
+  Item extends ItemBase<IdType> = ItemBase<IdType>,
+>(
+  props: TableViewProps<IdType, Item>
 ): JSX.Element => {
   const [data, setData] = createSignal<Item[]>([]);
 
@@ -75,17 +88,51 @@ export const TableView = <Item extends ItemBase>(
     props.toolbar?.filters || []
   );
 
-  const [searchParams, setSearchParams] = props.params || [{} as any, () => {}];
+  // If props.params is defined, it’s `[searchParams, setSearchParams]` from useSearchParams
+  // Otherwise use reactive signals (or store) as a fallback
+  const [fallbackParams, setFallbackParams] = createSignal<{
+    page?: number;
+    search?: string;
+    filters?: string;
+  }>({});
 
-  onMount(() => {
+  const getSearchParams = () => {
+    if (props.params) {
+      const [searchParams, _] = props.params;
+      return searchParams;
+    }
+    return fallbackParams();
+  };
+
+  const setSearchParams = (params: {
+    page?: number;
+    search?: string;
+    filters?: string;
+  }) => {
+    if (props.params) {
+      const [searchParams, setSearchParamsEx] = props.params;
+      console.log('setSearchParams', params);
+      setSearchParamsEx({ ...searchParams, ...params });
+    } else {
+      setFallbackParams({ ...fallbackParams(), ...params });
+    }
+  };
+
+  onMount(async () => {
     // Get initial filters from search params
-    const initialFilters = searchParams.filters;
+    const initialFilters = getSearchParams().filters;
 
     if (initialFilters) {
       filters().forEach((filter) => {
         filter.isActive = initialFilters.includes(filter.key);
       });
     }
+
+    // For dynamic loaded components we need this to wait for the next event loop
+    // Not sure why, something to do with SolidJS reactivity internals.
+    setTimeout(async () => {
+      await updateData();
+    });
   });
 
   const activeFilters = () =>
@@ -94,7 +141,8 @@ export const TableView = <Item extends ItemBase>(
       .map((filter: { key: string }) => filter.key);
 
   const updateData = async () => {
-    const search = searchParams.search;
+    const params = getSearchParams();
+    const { search = '', page = 1 } = params;
 
     try {
       const filtersObject = activeFilters().reduce(
@@ -123,52 +171,66 @@ export const TableView = <Item extends ItemBase>(
     }
   };
 
-  createEffect(async () => {
+  const handleChange = async (opts: {
+    page?: number;
+    search?: string;
+    filters?: string;
+  }) => {
+    // Since it takes one event loop to update the search params, we need to wait for it.
+    await new Promise<void>((resolve) =>
+      setTimeout(async () => {
+        const params = {} as SetParams;
+
+        console.log({ opts });
+
+        if (opts.page) {
+          params['page'] = opts.page;
+          if (opts.page != currentPage()) {
+            setCurrentPage(opts.page);
+          }
+        }
+
+        if (typeof opts.search != 'undefined') {
+          params['search'] = opts.search;
+        }
+
+        if (typeof opts.filters != 'undefined') {
+          params['filters'] = opts.filters;
+        }
+
+        console.log('handleChange', params);
+        setSearchParams(params);
+
+        resolve();
+      }, 0)
+    );
     await updateData();
-  });
+  };
 
   const handlePageChange = async (newPage: number) => {
-    setTimeout(async () => {
-      if (newPage != currentPage()) {
-        setCurrentPage(newPage);
-        setSearchParams({ ...searchParams, page: newPage });
-      }
-      await updateData();
-    }, 0);
+    await handleChange({ page: newPage });
   };
 
   const handleSearch = async (search: string) => {
-    if (search === searchParams['search']) {
+    if (search === getSearchParams().search) {
       return;
     }
-
-    // As we are changing the search, we need to reset the page to 1
-    setCurrentPage(1);
-    setSearchParams({ ...searchParams, search, page: 1 });
-    await handlePageChange(1);
+    await handleChange({ search, page: 1 });
   };
 
-  const updateFiltersParams = () => {
-    setSearchParams({
-      ...searchParams,
-      filters: activeFilters().join(','), // Unfortunatelly the , gets encoded to %2C
-    });
-  };
-
-  const handleFilterChange = (updatedFilters: Filter[]) => {
+  const handleFilterChange = async (updatedFilters: Filter[]) => {
     setFilters(updatedFilters);
-
-    // As we are changing the filters, we need to reset the page to 1
-    setCurrentPage(1);
-    updateFiltersParams();
-    handlePageChange(currentPage());
+    await handleChange({
+      filters: activeFilters().join(','),
+      page: 1,
+    });
   };
 
   const ref = {
     reloadData: async () => {
       await updateData();
     },
-    updateItem: (itemId: string, item: Partial<Item>) => {
+    updateItem: (itemId: IdType, item: Partial<Item>) => {
       setData((prevData: Item[]) => {
         return prevData.map((prevItem) => {
           if (prevItem.id === itemId) {
@@ -190,35 +252,38 @@ export const TableView = <Item extends ItemBase>(
         when={!loadingError()}
         fallback={<div>Loading Error: {loadingError()}</div>}
       >
-        <Show when={props.toolbar}>
-          <ToolBar
-            title={props.title}
-            filters={filters()}
-            onFilterChange={handleFilterChange}
-            initialSearchText={searchParams.search || ''}
-            onSearch={handleSearch}
-            mainAction={props.toolbar?.mainAction}
-            actions={props.toolbar?.actions}
-          />
-        </Show>
+        <div class={style['table-view']}>
+          <Show when={props.toolbar}>
+            <ToolBar
+              title={props.title}
+              filters={filters()}
+              onFilterChange={handleFilterChange}
+              initialSearchText={(getSearchParams().search as string) || ''}
+              onSearch={handleSearch}
+              mainAction={props.toolbar?.mainAction}
+              actions={props.toolbar?.actions}
+            />
+          </Show>
 
-        <Table<Item>
-          columns={props.table.columns}
-          data={data()}
-          actions={props.table.actions}
-          onRowSelect={props.table.onRowSelect}
-          onSort={props.table.onSort}
-        />
-
-        <div class={style['pagination-wrapper']}>
-          <Pagination
-            itemsPerPage={props.pagination.itemsPerPage}
-            totalItems={totalItems()}
-            currentPage={currentPage()}
-            onPageChange={handlePageChange}
+          <Table<IdType, Item>
+            columns={props.table.columns}
+            data={data()}
+            actions={props.table.actions}
+            onRowSelect={props.table.onRowSelect}
+            onSort={props.table.onSort}
+            itemIdKey={props.itemIdKey}
           />
-          <div class={style['pagination-text']}>
-            Showing {data().length} of {totalItems()} {props.resource}
+
+          <div class={style['pagination-wrapper']}>
+            <Pagination
+              itemsPerPage={props.pagination.itemsPerPage}
+              totalItems={totalItems()}
+              currentPage={currentPage()}
+              onPageChange={handlePageChange}
+            />
+            <div class={style['pagination-text']}>
+              Showing {data().length} of {totalItems()} {props.resource}
+            </div>
           </div>
         </div>
       </Show>

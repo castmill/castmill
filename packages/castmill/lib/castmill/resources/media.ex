@@ -17,8 +17,6 @@ defmodule Castmill.Resources.Media do
       type: Ecto.UUID
     )
 
-    belongs_to(:resource, Castmill.Resources.Resource, foreign_key: :resource_id)
-
     has_many(:files_medias, Castmill.Files.FilesMedias)
 
     timestamps()
@@ -32,7 +30,6 @@ defmodule Castmill.Resources.Media do
       :mimetype,
       :meta,
       :organization_id,
-      :resource_id,
       :status,
       :status_message
     ])
@@ -46,12 +43,25 @@ defmodule Castmill.Resources.Media do
     |> validate_status_and_message()
   end
 
+  @doc """
+  A bare query with no named binding, used where you need a pinned query
+  or want to avoid compile-time binding conflicts.
+  """
+  def bare_query do
+    from(m in __MODULE__)
+  end
+
   def base_query() do
     from(media in __MODULE__, as: :media)
   end
 
   def preloads() do
     [files_medias: :file]
+  end
+
+  def apply_filter(_) do
+    # Return the query unchanged for unrecognized filters
+    nil
   end
 
   defp validate_status_and_message(changeset) do

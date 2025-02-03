@@ -6,6 +6,11 @@ import solidPlugin from 'vite-plugin-solid';
 
 export default defineConfig({
   plugins: [solidPlugin(), cssInjectedByJsPlugin()],
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./test-setup.ts'],
+  },
   build: {
     lib: {
       entry: resolve(__dirname, 'src/index.ts'),

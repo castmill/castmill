@@ -38,7 +38,7 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
           name: "playlist1"
         })
 
-      {:ok, _result} = Teams.add_resource_to_team(team.id, playlist1.id, :playlist, [:read])
+      {:ok, _result} = Teams.add_resource_to_team(team.id, "playlists", playlist1.id, [:read])
 
       conn = get(conn, "/api/organizations/#{organization.id}/playlists")
       response = json_response(conn, 200)

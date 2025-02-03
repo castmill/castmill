@@ -187,6 +187,21 @@ defmodule Castmill.Organizations do
   end
 
   @doc """
+    Sets the role of a user in an organization.
+  """
+  def set_user_role(organization_id, user_id, role) do
+    %OrganizationsUsers{
+      organization_id: organization_id,
+      user_id: user_id,
+      role: role
+    }
+    |> Repo.insert(
+      on_conflict: [set: [role: role]],
+      conflict_target: [:organization_id, :user_id]
+    )
+  end
+
+  @doc """
     Returns the role of a given user in an organization.
 
     ## Examples
@@ -325,6 +340,10 @@ defmodule Castmill.Organizations do
     Castmill.Resources.list_resources(Castmill.Devices.Device, params)
   end
 
+  def list_resources(%{resources: "teams"} = params) do
+    Castmill.Teams.list_teams(params)
+  end
+
   @doc """
     Returns the count of resources of a given resource type
   """
@@ -342,6 +361,10 @@ defmodule Castmill.Organizations do
 
   def count_resources(%{resources: "devices"} = params) do
     Castmill.Resources.count_resources(Castmill.Devices.Device, params)
+  end
+
+  def count_resources(%{resources: "teams"} = params) do
+    Castmill.Teams.count_teams(params)
   end
 
   @doc """
@@ -502,74 +525,6 @@ defmodule Castmill.Organizations do
       _ ->
         {:error, :not_found}
     end
-  end
-
-  @doc """
-  Gets a single user.
-
-  Raises `Ecto.NoResultsError` if the User does not exist.
-
-  ## Examples
-
-      iex> get_user!(123)
-      %User{}
-
-      iex> get_user!(456)
-      ** (Ecto.NoResultsError)
-
-  """
-  def get_user!(id), do: Repo.get!(User, id)
-
-  @doc """
-  Creates a user.
-
-  ## Examples
-
-      iex> create_user(%{field: value})
-      {:ok, %User{}}
-
-      iex> create_user(%{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def create_user(attrs \\ %{}) do
-    %User{}
-    |> User.changeset(attrs)
-    |> Repo.insert()
-  end
-
-  @doc """
-  Updates a user.
-
-  ## Examples
-
-      iex> update_user(user, %{field: new_value})
-      {:ok, %User{}}
-
-      iex> update_user(user, %{field: bad_value})
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def update_user(%User{} = user, attrs) do
-    user
-    |> User.changeset(attrs)
-    |> Repo.update()
-  end
-
-  @doc """
-  Deletes a user.
-
-  ## Examples
-
-      iex> delete_user(user)
-      {:ok, %User{}}
-
-      iex> delete_user(user)
-      {:error, %Ecto.Changeset{}}
-
-  """
-  def delete_user(%User{} = user) do
-    Repo.delete(user)
   end
 
   @doc """

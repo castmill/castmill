@@ -7,6 +7,11 @@ import { ConfirmDialog } from './confirm-dialog';
 describe('ConfirmDialog', () => {
   afterEach(() => {
     cleanup();
+    // Clean up portal elements
+    const overlays = document.body.querySelectorAll(
+      '[data-testid="modal-overlay"]'
+    );
+    overlays.forEach((overlay) => overlay.remove());
   });
 
   it('should render correctly when shown', async () => {
