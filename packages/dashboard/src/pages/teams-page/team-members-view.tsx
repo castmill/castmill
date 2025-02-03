@@ -19,7 +19,7 @@ import { store, setStore } from '../../store/store';
 import { BsCheckLg } from 'solid-icons/bs';
 import { AiOutlineDelete } from 'solid-icons/ai';
 import { createSignal, Show } from 'solid-js';
-import { User } from '../../interfaces/user..interface';
+import { User } from '../../interfaces/user.interface';
 
 const [data, setData] = createSignal<{ user: User; user_id: string }[]>([], {
   equals: false,

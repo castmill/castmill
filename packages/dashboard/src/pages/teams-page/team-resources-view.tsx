@@ -5,7 +5,7 @@
  */
 
 import { TabItem, Tabs } from '@castmill/ui-common';
-import { User } from '../../interfaces/user..interface';
+import { User } from '../../interfaces/user.interface';
 import { ResourcesView } from './resources-view';
 import { TeamMembersView } from './team-members-view';
 import { TeamInvitationsView } from './teams-invitations-view';
