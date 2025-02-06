@@ -398,15 +398,26 @@ defmodule Castmill.Devices do
       device = Repo.get_by(Device, hardware_id: hardware_id)
 
       # TODO: also check if auto_recovery is enabled
-      if not is_nil(device) and
-           device.last_ip == device_ip and
-           device.updated_at <= hour_ago() do
-        # Update device token
-        token = generate_token()
-        {:ok, device} = update_device(device, %{token: token})
-        device
-      else
-        Repo.rollback("Device not found or not eligible for recovery")
+      cond do
+        is_nil(device) ->
+          Repo.rollback("Device not found")
+
+        device.last_ip != device_ip ->
+          Repo.rollback("IP mismatch")
+
+        NaiveDateTime.compare(device.updated_at, hour_ago()) == :gt ->
+          Repo.rollback("Device updated recently")
+
+        true ->
+          token = generate_token()
+
+          case update_device(device, %{token: token}) do
+            {:ok, device} ->
+              device
+
+            {:error, changeset} ->
+              Repo.rollback("Failed to update device: #{inspect(changeset.errors)}")
+          end
       end
     end)
   end

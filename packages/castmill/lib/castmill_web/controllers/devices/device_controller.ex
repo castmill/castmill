@@ -1,4 +1,6 @@
 defmodule CastmillWeb.DeviceController do
+  require Logger
+
   use CastmillWeb, :controller
   use CastmillWeb.AccessActorBehaviour
 
@@ -77,6 +79,8 @@ defmodule CastmillWeb.DeviceController do
     # Try to recover the device through the hardware_id
     case Devices.recover_device(hardware_id, device_attrs.device_ip) do
       {:ok, device} ->
+        Logger.info("Device recovered: #{device.hardware_id} (#{device.name})")
+
         conn
         |> put_status(:ok)
         |> render(:recover, device: device)
@@ -84,11 +88,15 @@ defmodule CastmillWeb.DeviceController do
       {:error, _reason} ->
         case Castmill.Devices.create_device_registration(device_attrs) do
           {:ok, device} ->
+            Logger.info("New device registered: #{device.hardware_id}")
+
             conn
             |> put_status(:created)
             |> render(:show, device: device)
 
-          {:error, _reason} ->
+          {:error, changeset} ->
+            Logger.error("Device registration failed: #{inspect(changeset.errors)}")
+
             conn
             |> put_status(:internal_server_error)
             |> json(%{error: "Failed to create device"})
