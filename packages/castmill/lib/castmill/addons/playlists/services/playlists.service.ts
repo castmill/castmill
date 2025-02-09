@@ -69,11 +69,11 @@ export const PlaylistsService = {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ name }),
+        body: JSON.stringify({ playlist: { name } }),
       }
     );
 
-    return handleResponse<JsonPlaylist>(response, { parse: true });
+    return handleResponse<{ data: JsonPlaylist }>(response, { parse: true });
   },
 
   /**
@@ -267,7 +267,7 @@ export const PlaylistsService = {
   async removePlaylist(
     baseUrl: string,
     organizationId: string,
-    playlistId: string
+    playlistId: number
   ) {
     const response = await fetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/playlists/${playlistId}`,
