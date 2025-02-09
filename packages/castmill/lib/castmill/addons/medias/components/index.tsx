@@ -75,7 +75,7 @@ const MediasPage: Component<{
 
       refreshData();
     } catch (error) {
-      alert(`Error removing device ${resource.name}: ${error}`);
+      alert(`Error removing media ${resource.name}: ${error}`);
     }
     setShowConfirmDialog();
   };
@@ -94,7 +94,7 @@ const MediasPage: Component<{
 
       refreshData();
     } catch (error) {
-      alert(`Error removing devices: ${error}`);
+      alert(`Error removing medias: ${error}`);
     }
     setShowConfirmDialogMultiple(false);
     setSelectedMedias(new Set<string>());
@@ -194,7 +194,9 @@ const MediasPage: Component<{
       render: (item: JsonMedia) => (
         <div class="thumbnail">
           <Show
-            when={item.status == 'ready' && item.files && item.files['thumbnail']}
+            when={
+              item.status == 'ready' && item.files && item.files['thumbnail']
+            }
             fallback={
               <Show
                 when={item['status'] == 'transcoding'}
@@ -295,23 +297,22 @@ const MediasPage: Component<{
       </Show>
 
       <ConfirmDialog
-        show={showConfirmDialog()}
-        title="Remove Device"
-        message={`Are you sure you want to remove device "${showConfirmDialog()?.name}"?`}
+        show={!!showConfirmDialog()}
+        title="Remove Media"
+        message={`Are you sure you want to remove media "${showConfirmDialog()?.name}"?`}
         onClose={() => setShowConfirmDialog()}
         onConfirm={() => confirmRemoveResource(showConfirmDialog())}
       />
 
       <ConfirmDialog
         show={showConfirmDialogMultiple()}
-        title="Remove Devices"
-        message={'Are you sure you want to remove the following devices?'}
+        title="Remove Medias"
+        message={'Are you sure you want to remove the following medias?'}
         onClose={() => setShowConfirmDialogMultiple(false)}
         onConfirm={() => confirmRemoveMultipleResources()}
       >
         <div style="margin: 1.5em; line-height: 1.5em;">
           {Array.from(selectedMedias()).map((resourceId) => {
-            console.log('Resource ID', resourceId);
             const resource = data().find((d) => `${d.id}` == resourceId);
             return <div>{`- ${resource?.name}`}</div>;
           })}
