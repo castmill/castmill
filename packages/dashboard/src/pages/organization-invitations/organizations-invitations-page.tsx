@@ -1,18 +1,18 @@
 import { useNavigate, useSearchParams } from '@solidjs/router';
 import { createSignal, onMount, Show } from 'solid-js';
 import { checkAuth, getUser } from '../../components/auth'; // your existing auth helpers
-import { TeamsService } from '../../services/teams.service';
+import { OrganizationsService } from '../../services/organizations.service';
 
 interface Invitation {
   email: string;
-  team_id: string;
+  organization_id: string;
   status: string; // "invited", "expired", etc.
   expires_at?: string;
   // Add any other fields your backend returns
-  team_name: string;
+  organization_name: string;
 }
 
-const TeamsInvitationPage = () => {
+const OrganizationsInvitationPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [invitation, setInvitation] = createSignal<Invitation | null>(null);
@@ -35,9 +35,7 @@ const TeamsInvitationPage = () => {
       if (!email) {
         throw new Error('Not logged in.');
       }
-      const result = await TeamsService.getInvitation(email, token);
-
-      console.log({ result });
+      const result = await OrganizationsService.getInvitation(email, token);
 
       setInvitation(result);
     } catch (error: any) {
@@ -52,13 +50,11 @@ const TeamsInvitationPage = () => {
     // Additional checks (e.g. is invitation expired?) can be done here or by your backend
     try {
       const email = invitation()?.email!;
-      const result = await TeamsService.acceptInvitation(email, token);
+      const result = await OrganizationsService.acceptInvitation(email, token);
 
-      // If successful, navigate to the team page or dashboard
-      // The backend can return the team_id if you want to route to a specific team:
-      //const updatedInvite: Invitation = await res.json();
-      navigate(`/teams`);
-      // or navigate(`/teams/${updatedInvite.team_id}`);
+      console.log(result);
+
+      navigate(`/organization`);
     } catch (error: any) {
       setErrorMessage(error.message || 'Error accepting invitation.');
     }
@@ -95,7 +91,8 @@ const TeamsInvitationPage = () => {
   return (
     <div>
       <h1>
-        You have been invited to join the team {`${invitation()?.team_name}`}
+        You have been invited to join the organization{' '}
+        {`${invitation()?.organization_name}`}
       </h1>
       <Show when={loading()}>
         <p>Loading invitation...</p>
@@ -116,4 +113,4 @@ const TeamsInvitationPage = () => {
   );
 };
 
-export default TeamsInvitationPage;
+export default OrganizationsInvitationPage;

@@ -6,7 +6,7 @@ defmodule Castmill.Teams.TeamsUsers do
   @primary_key false
 
   schema "teams_users" do
-    field :role, Ecto.Enum, values: [:member, :admin]
+    field :role, Ecto.Enum, values: [:regular, :admin]
 
     belongs_to :team, Castmill.Teams.Team, foreign_key: :team_id, primary_key: true
 

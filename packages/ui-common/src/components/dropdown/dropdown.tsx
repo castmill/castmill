@@ -18,14 +18,17 @@ interface DropdownItem {
 interface DropdownProps {
   label: string;
   items: Array<DropdownItem>;
-  onSelectChange: (value: string) => void; // Callback function for when selection changes
+  onSelectChange: (value: string, name?: string) => void; // Callback function for when selection changes
 }
 
 export const Dropdown: Component<DropdownProps> = (props) => {
   // Function to handle change events on the dropdown
   const handleChange = (event: Event) => {
     const target = event.target as HTMLSelectElement;
-    props.onSelectChange(target.value); // Call the callback function with the new value
+    props.onSelectChange(
+      target.value,
+      props.items.find((item) => item.value === target.value)?.name
+    ); // Call the callback function with the new value
   };
   return (
     <div class="castmill-dropdown">

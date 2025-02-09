@@ -32,13 +32,13 @@ defmodule Castmill.TeamsTest do
       team = team_fixture(%{organization_id: organization.id})
       user = user_fixture(%{organization_id: organization.id})
 
-      {:ok, _result} = Teams.add_user_to_team(team.id, user.id, :member)
+      {:ok, _result} = Teams.add_user_to_team(team.id, user.id, :regular)
 
       users = Teams.list_users(%{team_id: team.id})
 
       assert users == [
                %{
-                 role: :member,
+                 role: :regular,
                  user: %{
                    id: user.id,
                    name: user.name,
@@ -138,11 +138,11 @@ defmodule Castmill.TeamsTest do
 
       lean_user = %{id: user.id, name: user.name, email: user.email, avatar: user.avatar}
 
-      {:ok, _result} = Teams.add_user_to_team(team.id, user.id, :member)
+      {:ok, _result} = Teams.add_user_to_team(team.id, user.id, :regular)
 
       users = Teams.list_users(%{team_id: team.id})
 
-      assert [%{role: :member, user: ^lean_user}] = users
+      assert [%{role: :regular, user: ^lean_user}] = users
 
       assert Teams.list_teams(organization.id) == [team]
 
@@ -199,7 +199,7 @@ defmodule Castmill.TeamsTest do
       team = team_fixture(%{organization_id: organization.id})
       user = user_fixture(%{organization_id: organization.id})
 
-      {:ok, _result} = Teams.add_user_to_team(team.id, user.id, :member)
+      {:ok, _result} = Teams.add_user_to_team(team.id, user.id, :regular)
 
       assert Teams.has_access_to_resource(user.id, "playlists", playlist.id, :read) == false
 

@@ -6,6 +6,7 @@ defmodule CastmillWeb.OrganizationController do
   alias Castmill.Organizations
   alias Castmill.Organizations.Organization
   alias Castmill.Plug.AuthorizeDash
+  alias Castmill.Accounts
 
   action_fallback(CastmillWeb.FallbackController)
 
@@ -33,6 +34,27 @@ defmodule CastmillWeb.OrganizationController do
     {:ok, true}
   end
 
+  def check_access(actor_id, :list_members, %{"organization_id" => organization_id}) do
+    {:ok, Organizations.has_any_role?(organization_id, actor_id, [:admin, :regular])}
+  end
+
+  def check_access(actor_id, :invite_member, %{"organization_id" => organization_id}) do
+    {:ok, Organizations.is_admin?(organization_id, actor_id)}
+  end
+
+  def check_access(actor_id, :list_invitations, %{"organization_id" => organization_id}) do
+    {:ok, Organizations.is_admin?(organization_id, actor_id)}
+  end
+
+  def check_access(actor_id, :update, %{"id" => organization_id}) do
+    {:ok, Organizations.is_admin?(organization_id, actor_id)}
+  end
+
+  def check_access(actor_id, action, %{"token" => token})
+      when action in [:show_invitation, :accept_invitation] do
+    validInvitation?(actor_id, token)
+  end
+
   # Default implementation for other actions not explicitly handled above
   def check_access(_actor_id, _action, _params) do
     # Default to false or implement your own logic based on other conditions
@@ -40,6 +62,33 @@ defmodule CastmillWeb.OrganizationController do
   end
 
   plug(AuthorizeDash)
+
+  defp validInvitation?(user_id, token) do
+    user = Accounts.get_user(user_id)
+
+    if user == nil do
+      {:ok, false}
+    else
+      case Organizations.get_invitation(token) do
+        nil ->
+          {:ok, false}
+
+        invitation ->
+          if invitation.email == user.email do
+            {:ok, true}
+          else
+            {:ok, false}
+          end
+      end
+    end
+  end
+
+  @index_params_schema %{
+    organization_id: [type: :string, required: true],
+    page: [type: :integer, number: [min: 1]],
+    page_size: [type: :integer, number: [min: 1, max: 100]],
+    search: :string
+  }
 
   # TODO: We also need a Quota plug to check if the user has enough quota to create resources in
   # the organization. This is not implemented yet.
@@ -75,11 +124,11 @@ defmodule CastmillWeb.OrganizationController do
     render(conn, :show, organization: organization)
   end
 
-  def update(conn, %{"id" => id, "organization" => organization_params}) do
+  def update(conn, %{"id" => id} = params) do
     organization = Organizations.get_organization!(id)
 
     with {:ok, %Organization{} = organization} <-
-           Organizations.update_organization(organization, organization_params) do
+           Organizations.update_organization(organization, params) do
       render(conn, :show, organization: organization)
     end
   end
@@ -121,5 +170,109 @@ defmodule CastmillWeb.OrganizationController do
     conn
     |> put_status(:ok)
     |> json(widgets)
+  end
+
+  def list_members(conn, params) do
+    with {:ok, params} <- Tarams.cast(params, @index_params_schema) do
+      response = %{
+        data: Organizations.list_users(params),
+        count: Organizations.count_users(params)
+      }
+
+      conn
+      |> put_status(:ok)
+      |> json(response)
+    else
+      {:error, errors} ->
+        conn
+        |> put_status(:bad_request)
+        |> Phoenix.Controller.json(%{errors: errors})
+        |> halt()
+    end
+  end
+
+  def invite_member(conn, %{
+        "organization_id" => organization_id,
+        "email" => email,
+        "role" => role
+      }) do
+    case Organizations.invite_user(organization_id, email, role) do
+      {:ok, _} ->
+        conn
+        |> put_status(:created)
+        |> json(%{})
+
+      {:error, %Ecto.Changeset{} = changeset} ->
+        # Return errors only
+        errors =
+          Ecto.Changeset.traverse_errors(changeset, fn {msg, _opts} ->
+            # Optionally translate or localize your error messages here
+            # For now, just return the raw msg
+            msg
+          end)
+
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{errors: errors})
+
+      {:error, msg} ->
+        conn
+        |> put_status(:bad_request)
+        |> json(%{error: msg})
+    end
+  end
+
+  def list_invitations(conn, params) do
+    with {:ok, params} <- Tarams.cast(params, @index_params_schema) do
+      response = %{
+        data: Organizations.list_invitations(params),
+        count: Organizations.count_invitations(params)
+      }
+
+      conn
+      |> put_status(:ok)
+      |> json(response)
+    else
+      {:error, errors} ->
+        conn
+        |> put_status(:bad_request)
+        |> Phoenix.Controller.json(%{errors: errors})
+        |> halt()
+    end
+  end
+
+  def show_invitation(conn, %{"token" => token}) do
+    conn
+    |> put_status(:ok)
+    |> json(Organizations.get_invitation(token))
+  end
+
+  def accept_invitation(conn, %{"token" => token}) do
+    current_user = conn.assigns[:current_user]
+
+    case Organizations.accept_invitation(token, current_user.id) do
+      {:ok, _} ->
+        conn
+        |> put_status(:ok)
+        |> json(%{})
+
+      {:error, %Ecto.Changeset{} = changeset} ->
+        # Return errors only
+        errors =
+          Ecto.Changeset.traverse_errors(changeset, fn {msg, _opts} ->
+            # Optionally translate or localize your error messages here
+            # For now, just return the raw msg
+            msg
+          end)
+
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{errors: errors})
+
+      {:error, _} ->
+        conn
+        |> put_status(:bad_request)
+        |> json(%{})
+    end
   end
 end

@@ -83,7 +83,7 @@ defmodule CastmillWeb.TeamController do
     else
       role = Castmill.Organizations.get_user_role(team.organization_id, user_id)
 
-      if role == :admin or role == :member do
+      if role == :admin or role == :regular do
         true
       else
         false
@@ -118,7 +118,7 @@ defmodule CastmillWeb.TeamController do
   end
 
   def add_member(conn, %{"team_id" => team_id, "user_id" => user_id}) do
-    case Teams.add_user_to_team(team_id, user_id, "member") do
+    case Teams.add_user_to_team(team_id, user_id, "regular") do
       {:ok, _} ->
         conn
         |> put_status(:created)

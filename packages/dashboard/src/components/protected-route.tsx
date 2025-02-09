@@ -4,7 +4,7 @@ import { checkAuth, getUser } from './auth'; // Import your authentication check
 import { AddOn } from '../interfaces/addon.interface';
 import { AddonsService } from '../services/addons';
 import { store, setStore } from '../store/store';
-import { OrganizationsService } from '../services/organizations';
+import { OrganizationsService } from '../services/organizations.service';
 
 interface ProtectedRouteProps {
   children: (addons: AddOn[]) => JSX.Element; // children is now a function that accepts the addons array
@@ -49,6 +49,7 @@ const ProtectedRoute: Component<ProtectedRouteProps> = (
           loaded: true,
           loading: false,
           selectedId: organizations[0]?.id,
+          selectedName: organizations[0]?.name,
         });
       } catch (error) {
         console.error(error);

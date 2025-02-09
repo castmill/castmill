@@ -152,6 +152,28 @@ defmodule CastmillWeb.Router do
     # List all the widgets available for the organization
     get("/organizations/:organization_id/widgets", OrganizationController, :list_widgets)
 
+    # List all the users in the organization
+    get("/organizations/:organization_id/members", OrganizationController, :list_members)
+
+    delete(
+      "/organizations/:organization_id/members/:user_id",
+      OrganizationController,
+      :remove_member
+    )
+
+    # Invite User to an organization
+    post("/organizations/:organization_id/invitations", OrganizationController, :invite_member)
+    get("/organizations/:organization_id/invitations", OrganizationController, :list_invitations)
+
+    delete(
+      "/organizations/:organization_id/invitations/:invitation_id",
+      OrganizationController,
+      :remove_invitation
+    )
+
+    get("/organizations_invitations/:token", OrganizationController, :show_invitation)
+    post("/organizations_invitations/:token/accept", OrganizationController, :accept_invitation)
+
     # Return Usage information for the organization
     get("/organizations/:organization_id/usage", OrganizationUsageController, :index)
 
@@ -159,7 +181,7 @@ defmodule CastmillWeb.Router do
     get("/invitations/:token", TeamController, :show_invitation, as: :team_invitation)
     post("/invitations/:token/accept", TeamController, :accept_invitation, as: :team_invitation)
 
-    resources "/organizations", OrganizationController, only: [] do
+    resources "/organizations", OrganizationController, only: [:update] do
       post("/devices", OrganizationController, :register_device)
 
       # This route is used to upload media files to the server.
@@ -199,8 +221,9 @@ defmodule CastmillWeb.Router do
     end
 
     # Routes for organization quotas
-    resources "/organizations/:organization_id/quotas", OrganizationQuotaController,
+    resources("/organizations/:organization_id/quotas", OrganizationQuotaController,
       only: [:index, :show, :create, :update]
+    )
 
     post("/devices/:device_id/commands", DeviceController, :send_command)
     get("/devices/:device_id/events", DeviceController, :list_events)

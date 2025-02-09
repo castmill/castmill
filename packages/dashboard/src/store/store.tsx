@@ -19,6 +19,7 @@ interface CastmillStore {
     loading: boolean;
     data: Organization[];
     selectedId: string | null;
+    selectedName: string;
   };
 
   socket?: Socket;
@@ -40,6 +41,7 @@ const [store, setStore] = createStore<CastmillStore>({
     loading: false,
     data: [],
     selectedId: null,
+    selectedName: '',
   },
 
   env: {

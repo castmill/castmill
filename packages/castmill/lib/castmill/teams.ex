@@ -605,7 +605,7 @@ defmodule Castmill.Teams do
         {:error, "Invalid token"}
 
       invitation ->
-        case add_user_to_team(invitation.team_id, user_id, "member") do
+        case add_user_to_team(invitation.team_id, user_id, "regular") do
           {:ok, _} ->
             from(i in Invitation,
               where: i.token == ^token

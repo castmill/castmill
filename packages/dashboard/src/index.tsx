@@ -24,6 +24,8 @@ import { store } from './store/store';
 import UsagePage from './pages/usage-page/usage-page';
 import TeamsPage from './pages/teams-page/teams-page';
 import TeamsInvitationPage from './pages/teams-invitations-page/teams-invitations-page';
+import OrganizationPage from './pages/organization-page/organization-page';
+import OrganizationsInvitationPage from './pages/organization-invitations/organizations-invitations-page';
 
 const Login = lazy(() => import('./components/login/login'));
 const SignUp = lazy(() => import('./components/signup/signup'));
@@ -89,7 +91,12 @@ render(() => {
         <Route path="search" component={SearchPage} />
         <Route path="usage" component={UsagePage} />
         <Route path="teams" component={TeamsPage} />
+        <Route path="organization" component={OrganizationPage} />
         <Route path="invite" component={TeamsInvitationPage} />
+        <Route
+          path="invite-organization"
+          component={OrganizationsInvitationPage}
+        />
 
         {/* Dynamically generate routes for AddOns */}
         <For each={store.addons}>

@@ -1,0 +1,23 @@
+.organization-page {
+  text-align: left;
+  margin: 1em;
+
+  .header {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    text-align: left;
+
+    .form-inputs {
+      display: flex;
+      flex-direction: row;
+      justify-content: flex-start;
+      align-items: center;
+      gap: 1em;
+
+      .form-input {
+        margin-bottom: 1em;
+      }
+    }
+  }
+}
