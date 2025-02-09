@@ -91,7 +91,8 @@ export class WebosMachine implements Machine {
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
       };
-    } catch {
+    } catch (error) {
+      console.error(`Failed to get location: ${error}`);
       return undefined;
     }
   }

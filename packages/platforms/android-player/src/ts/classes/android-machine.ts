@@ -54,7 +54,8 @@ export class AndroidMachine implements Machine {
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
       };
-    } catch {
+    } catch (error) {
+      console.error(`Error getting location: ${error}`);
       return undefined;
     }
   }
@@ -67,7 +68,10 @@ export class AndroidMachine implements Machine {
     let appInfo;
     try {
       appInfo = await App.getInfo();
-    } catch {
+    } catch (error) {
+      console.error(
+        `Error getting app info. This is expoected when running in a browser: ${error}`
+      );
       // App plugin not available
       // This is the case when running in a browser
       appInfo = { version: 'N/A' };
