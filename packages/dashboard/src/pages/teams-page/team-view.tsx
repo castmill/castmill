@@ -80,7 +80,7 @@ export const TeamView = (props: {
             label="Name"
             id="name"
             value={name()!}
-            placeholder="Enter media name"
+            placeholder="Enter team name"
             onInput={(value: string | number | boolean) => {
               const strValue = value as string;
               setName(strValue);

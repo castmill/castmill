@@ -20,7 +20,7 @@ defmodule Castmill.Accounts.User do
     field(:email, :string)
     field(:name, :string)
 
-    field(:role, Ecto.Enum, values: [:admin, :member, :guest], virtual: true)
+    field(:role, Ecto.Enum, values: [:admin, :regular, :guest], virtual: true)
 
     field(:meta, :map)
 

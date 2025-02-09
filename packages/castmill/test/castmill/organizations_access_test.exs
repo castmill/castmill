@@ -12,7 +12,7 @@ defmodule Castmill.OrganizationsAccessTest do
     test "give_access/4 gives access to a given resource type for a given action" do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
-      user = user_fixture(%{network_id: network.id, role: "member"})
+      user = user_fixture(%{network_id: network.id, role: "regular"})
 
       organizationId = organization.id
       userId = user.id
@@ -40,7 +40,7 @@ defmodule Castmill.OrganizationsAccessTest do
     test "remove_access/4 removes access to a given resource type for a given action" do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
-      user = user_fixture(%{network_id: network.id, role: "member"})
+      user = user_fixture(%{network_id: network.id, role: "regular"})
 
       organizationId = organization.id
       userId = user.id
@@ -62,7 +62,7 @@ defmodule Castmill.OrganizationsAccessTest do
     test "give_access/4 does nothing if given access already exists" do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
-      user = user_fixture(%{network_id: network.id, role: "member"})
+      user = user_fixture(%{network_id: network.id, role: "regular"})
 
       organizationId = organization.id
       userId = user.id
@@ -96,7 +96,7 @@ defmodule Castmill.OrganizationsAccessTest do
           name: "parent organization"
         })
 
-      user = user_fixture(%{network_id: network.id, role: "member"})
+      user = user_fixture(%{network_id: network.id, role: "regular"})
 
       organizationId = parent_organization.id
       userId = user.id
@@ -134,7 +134,7 @@ defmodule Castmill.OrganizationsAccessTest do
           name: "grand father organization"
         })
 
-      user = user_fixture(%{network_id: network.id, role: "member"})
+      user = user_fixture(%{network_id: network.id, role: "regular"})
 
       organizationId = parent_organization.id
       userId = user.id

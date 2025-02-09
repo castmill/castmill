@@ -6,10 +6,11 @@ import { Dropdown } from '@castmill/ui-common';
 import { IoSettingsOutline } from 'solid-icons/io';
 import { AddOnTree } from '../../classes/addon-tree';
 import { AddOnNode } from '../../interfaces/addon-node.interface';
-import { store } from '../../store/store';
+import { store, setStore } from '../../store/store';
 import { baseUrl } from '../../env';
 import { TbChartHistogram } from 'solid-icons/tb';
 import { AiOutlineTeam } from 'solid-icons/ai';
+import { RiEditorOrganizationChart } from 'solid-icons/ri';
 
 const addOnBasePath = `${baseUrl}/assets/addons`;
 
@@ -64,12 +65,22 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
             name: org.name,
             value: org.id,
           }))}
-          onSelectChange={(value) => {
-            store.organizations.selectedId = value;
+          onSelectChange={(value, name) => {
+            setStore('organizations', {
+              selectedId: value,
+              selectedName: name,
+            });
           }}
         />
       </div>
       <div class="links">
+        <PanelItem
+          to="/organization"
+          text="Organization"
+          level={0}
+          icon={RiEditorOrganizationChart}
+        />
+
         <Show when={addonsPanelTree}>
           <SidePanelTree node={addonsPanelTree!} level={-1} />
         </Show>

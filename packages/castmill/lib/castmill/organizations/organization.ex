@@ -3,7 +3,8 @@ defmodule Castmill.Organizations.Organization do
   import Ecto.Changeset
   import Ecto.Query, warn: false
 
-  @primary_key {:id, :binary_id, autogenerate: true}
+  @primary_key {:id, Ecto.UUID, autogenerate: true}
+  @foreign_key_type Ecto.UUID
 
   schema "organizations" do
     field(:name, :string)

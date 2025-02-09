@@ -134,7 +134,7 @@ defmodule CastmillWeb.TeamControllerTest do
 
     test "forbids non-admin org user from these actions", %{conn: conn, team: team} do
       member_user = user_fixture(%{})
-      {:ok, _} = Organizations.set_user_role(team.organization_id, member_user.id, :member)
+      {:ok, _} = Organizations.set_user_role(team.organization_id, member_user.id, :regular)
 
       conn =
         put(
@@ -156,7 +156,7 @@ defmodule CastmillWeb.TeamControllerTest do
       team: team,
       user: user
     } do
-      {:ok, _} = Organizations.set_user_role(team.organization_id, user.id, :member)
+      {:ok, _} = Organizations.set_user_role(team.organization_id, user.id, :regular)
 
       conn =
         get(
@@ -251,9 +251,9 @@ defmodule CastmillWeb.TeamControllerTest do
 
   describe "list_members/2" do
     test "lists existing team members", %{conn: conn, team: team, user: user} do
-      {:ok, _} = Organizations.set_user_role(team.organization_id, user.id, :member)
+      {:ok, _} = Organizations.set_user_role(team.organization_id, user.id, :regular)
 
-      {:ok, _} = Teams.add_user_to_team(team.id, user.id, "member")
+      {:ok, _} = Teams.add_user_to_team(team.id, user.id, "regular")
 
       conn =
         get(
@@ -285,7 +285,7 @@ defmodule CastmillWeb.TeamControllerTest do
     } do
       new_email = "invitee@example.com"
 
-      {:ok, _} = Organizations.set_user_role(team.organization_id, user.id, :member)
+      {:ok, _} = Organizations.set_user_role(team.organization_id, user.id, :regular)
 
       conn =
         post(
@@ -328,7 +328,7 @@ defmodule CastmillWeb.TeamControllerTest do
       user: user
     } do
       # Add the user to the team
-      {:ok, _} = Teams.add_user_to_team(team.id, user.id, "member")
+      {:ok, _} = Teams.add_user_to_team(team.id, user.id, "regular")
 
       {:ok, _} = Organizations.set_user_role(team.organization_id, user.id, :admin)
 
@@ -515,7 +515,7 @@ defmodule CastmillWeb.TeamControllerTest do
       assert conn.status == 403
 
       # Try again with a user who is a member of the organization
-      Organizations.add_user(organization.id, user.id, :member)
+      Organizations.add_user(organization.id, user.id, :regular)
 
       conn =
         get(
@@ -576,7 +576,7 @@ defmodule CastmillWeb.TeamControllerTest do
   describe "remove_member/2" do
     test "removes a member from the team", %{conn: conn, team: team, user: user} do
       user2 = user_fixture()
-      Teams.add_user_to_team(team.id, user2.id, "member")
+      Teams.add_user_to_team(team.id, user2.id, "regular")
 
       {:ok, _} = Organizations.set_user_role(team.organization_id, user.id, :admin)
 

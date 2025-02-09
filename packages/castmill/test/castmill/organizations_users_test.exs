@@ -21,8 +21,22 @@ defmodule Castmill.OrganizationsUsersTest do
 
       Organizations.add_user(organization.id, user.id, :admin)
 
-      result = Organizations.list_users(organization.id)
-      assert result == [Map.put(user, :role, :admin)]
+      result = Organizations.list_users(%{organization_id: organization.id})
+
+      expected_result = [
+        %{
+          user: %{
+            avatar: user.avatar,
+            email: user.email,
+            id: user.id,
+            name: user.name
+          },
+          role: :admin,
+          inserted_at: List.first(result).inserted_at
+        }
+      ]
+
+      assert result == expected_result
     end
 
     test "remove_user/2 removes the user from the organization" do
@@ -35,7 +49,7 @@ defmodule Castmill.OrganizationsUsersTest do
       assert {:ok, "User successfully removed."} =
                Organizations.remove_user(organization.id, user.id)
 
-      assert [] == Organizations.list_users(organization.id)
+      assert [] == Organizations.list_users(%{organization_id: organization.id})
     end
 
     test "create_user/1 with valid data creates a user" do
