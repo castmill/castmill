@@ -1,5 +1,5 @@
 defmodule Castmill.Teams.Invitation do
-  use Ecto.Schema
+  use Castmill.Schema
   import Ecto.Changeset
   alias __MODULE__
 

@@ -11,7 +11,7 @@ defmodule Castmill.Repo.Migrations.CreateDevices do
       add :last_ip, :string
       add :token_hash, :string
       add :online, :boolean
-      add :last_online, :naive_datetime
+      add :last_online, :utc_datetime
       add :user_agent, :string
       add :timezone, :string
       add :loc_lat, :float

@@ -1,5 +1,5 @@
 defmodule Castmill.Resources.PlaylistItem do
-  use Ecto.Schema
+  use Castmill.Schema
   import Ecto.Changeset
 
   @derive {Jason.Encoder,

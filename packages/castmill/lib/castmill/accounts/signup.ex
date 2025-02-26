@@ -2,7 +2,7 @@
 # Signups are used to generate signup links that can then be used to create a
 # new user account using Passkey authentication.
 defmodule Castmill.Accounts.SignUp do
-  use Ecto.Schema
+  use Castmill.Schema
   import Ecto.Changeset
 
   @primary_key {:id, Ecto.UUID, autogenerate: true}
