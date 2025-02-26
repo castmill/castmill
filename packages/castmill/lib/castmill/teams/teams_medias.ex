@@ -1,5 +1,5 @@
 defmodule Castmill.Teams.TeamsMedias do
-  use Ecto.Schema
+  use Castmill.Schema
   import Ecto.Changeset
   import Ecto.Query, warn: false
 

@@ -1,5 +1,5 @@
 defmodule Castmill.Files.FilesMedias do
-  use Ecto.Schema
+  use Castmill.Schema
   import Ecto.Changeset
 
   @derive {Jason.Encoder, only: [:id, :file_id, :media_id, :context]}
