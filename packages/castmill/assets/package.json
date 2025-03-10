@@ -12,7 +12,8 @@
     "@castmill/cache": "*",
     "@castmill/device": "*",
     "@castmill/ui-common": "*",
-    "@thisbeyond/solid-dnd": "^0.7.5"
+    "@thisbeyond/solid-dnd": "^0.7.5",
+    "lodash": "^4.17.21"
   },
   "devDependencies": {
     "@atlaskit/pragmatic-drag-and-drop": "^1.1.12",
