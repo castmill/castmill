@@ -52,6 +52,7 @@ export const PlaylistView: Component<{
       expandedOptions: OptionsDict;
     }
   ) => {
+    console.log('onEditItem', item, config, expandedOptions);
     try {
       await PlaylistsService.updateWidgetConfig(
         props.baseUrl,
@@ -210,6 +211,24 @@ export const PlaylistView: Component<{
     }
   };
 
+  const onChangeDuration = async (item: JsonPlaylistItem, duration: number) => {
+    const newItems = items().map((i) =>
+      i.id === item.id ? { ...i, duration } : i
+    );
+    setItems(newItems);
+    setPlaylist((prevPlaylist) => ({ ...prevPlaylist, items: newItems }));
+    await PlaylistsService.updateItemInPlaylist(
+      props.baseUrl,
+      props.organizationId,
+      props.playlistId,
+      item.id,
+      {
+        duration,
+      }
+    );
+  }
+
+
   return (
     <Show when={!loading()}>
       <div class="playlist-view">
@@ -228,6 +247,7 @@ export const PlaylistView: Component<{
             onInsertItem={onInsertItem}
             onMoveItem={onMoveItem}
             onRemoveItem={onRemoveItem}
+            onChangeDuration={onChangeDuration}
           />
         </div>
       </div>
