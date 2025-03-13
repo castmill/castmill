@@ -200,6 +200,12 @@ defmodule CastmillWeb.Router do
       put("/playlists/:playlist_id/items/:item_id", PlaylistController, :move_item)
       delete("/playlists/:playlist_id/items/:item_id", PlaylistController, :delete_item)
 
+      # Channel Entries
+      get("/channels/:channel_id/entries", ResourceController, :list_channel_entries)
+      post("/channels/:channel_id/entries", ResourceController, :add_channel_entry)
+      patch("/channels/:channel_id/entries/:id", ResourceController, :update_channel_entry)
+      delete("/channels/:channel_id/entries/:id", ResourceController, :delete_channel_entry)
+
       # Teams Specific routes
       put("/teams/:team_id", TeamController, :update_team)
       get("/teams/:team_id/members", TeamController, :list_members)
@@ -258,8 +264,9 @@ defmodule CastmillWeb.Router do
       resources "/medias/:media_id/files", FileController, except: [:new, :edit] do
       end
 
+      get("/channels/:channel_id/entries", ResourceController, :list_channel_entries)
       post("/channels/:channel_id/entries", ResourceController, :add_channel_entry)
-      put("/channels/:channel_id/entries/:id", ResourceController, :update_channel_entry)
+      patch("/channels/:channel_id/entries/:id", ResourceController, :update_channel_entry)
       delete("/channels/:channel_id/entries/:id", ResourceController, :delete_channel_entry)
 
       post("/playlists/:playlist_id/items", PlaylistController, :add_item)

@@ -63,6 +63,7 @@ defmodule Castmill.MixProject do
       {:telemetry_metrics, "~> 0.6"},
       {:telemetry_poller, "~> 1.0"},
       {:tarams, "~> 1.8.0"},
+      {:tzdata, "~> 1.1"},
       {:uuid, "~> 1.1"},
       {:wax_, "~> 0.6.0"}
     ]

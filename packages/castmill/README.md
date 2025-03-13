@@ -35,7 +35,6 @@ even though you can use it for free for development purposes it will require a c
 in order to get the necessary free allowances.
 
 
-
 ## License
 
 This software is open source and is covered by the [AGPLv3 license](./LICENSE.md). If you require a different license for commercial

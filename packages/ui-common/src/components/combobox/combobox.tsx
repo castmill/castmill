@@ -29,7 +29,7 @@ const SimpleIconButton = (props: { icon: IconTypes; onClick: () => void }) => {
 };
 
 interface ComboBoxProps<T extends { id: string | number }> {
-  id: string;
+  id: string | number;
   label: string;
   placeholder?: string;
   value?: T;
@@ -174,7 +174,7 @@ export const ComboBox = <T extends { id: string }>(
               <IconWrapper icon={AiOutlineSearch} />
             </div>
             <input
-              id={props.id}
+              id={typeof props.id == 'string' ? props.id : props.id.toString()}
               type="text"
               placeholder={props.placeholder || 'Search...'}
               onInput={(e) => search(e.currentTarget.value)}

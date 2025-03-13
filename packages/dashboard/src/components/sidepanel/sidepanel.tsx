@@ -11,6 +11,7 @@ import { baseUrl } from '../../env';
 import { TbChartHistogram } from 'solid-icons/tb';
 import { AiOutlineTeam } from 'solid-icons/ai';
 import { RiEditorOrganizationChart } from 'solid-icons/ri';
+import { BsCalendarWeek } from 'solid-icons/bs';
 
 const addOnBasePath = `${baseUrl}/assets/addons`;
 
@@ -84,6 +85,12 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
         <Show when={addonsPanelTree}>
           <SidePanelTree node={addonsPanelTree!} level={-1} />
         </Show>
+        <PanelItem
+          to="/channels"
+          text="Channels"
+          level={0}
+          icon={BsCalendarWeek}
+        />
 
         <PanelItem to="/teams" text="Teams" level={0} icon={AiOutlineTeam} />
         <PanelItem to="/usage" text="Usage" level={0} icon={TbChartHistogram} />

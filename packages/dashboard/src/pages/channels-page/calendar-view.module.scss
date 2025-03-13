@@ -1,0 +1,139 @@
+/* Example dark-mode calendar CSS */
+
+html,
+body {
+  background-color: #1a1c1f;
+  margin: 0;
+  padding: 0;
+  color: #e6e6e6; /* Default text color */
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+}
+
+.calendar-wrapper {
+  width: 100%;
+  background: #1a1c1f; /* main dark background */
+  border: 1px solid #2f3136;
+  margin-top: 1em;
+}
+
+/* Top header (navigation + date range) */
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #2a2d31; /* slightly lighter dark */
+  border-bottom: 1px solid #2f3136;
+  padding: 8px 10px;
+  margin-bottom: 0;
+}
+
+.calendar-header button {
+  background: #3b3e42;
+  color: #e6e6e6;
+  border: 1px solid #444;
+  padding: 4px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.calendar-header button:hover {
+  background: #4a4d51;
+}
+
+/* The pinned header table (days of the week) */
+.header-table-container {
+  overflow: hidden;
+  border: 1px solid #2f3136;
+  background: #2a2d31;
+  margin-bottom: 0;
+}
+
+.header-table {
+  table-layout: fixed;
+  width: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+.header-table th {
+  border-right: 1px solid #2f3136;
+  border-bottom: 1px solid #2f3136;
+  text-align: center;
+  height: 2em;
+  font-size: 13px;
+  color: #e6e6e6;
+  padding: 0;
+  background: #2a2d31;
+}
+
+.header-time-col {
+  width: 10%;
+  background: #2a2d31;
+  border-right: 1px solid #2f3136;
+  font-size: 0.5em !important;
+}
+
+/* The scrollable body table for time slots */
+.body-table-container {
+  position: relative;
+  max-height: 600px;
+  overflow-y: auto;
+  border: 1px solid #2f3136;
+  background: #1a1c1f;
+}
+
+.body-table {
+  table-layout: fixed;
+  width: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+}
+
+.body-table td {
+  border-right: 1px solid #2f3136;
+  border-bottom: 1px solid #2f3136;
+  height: 1.5em; /* or your rowHeight */
+  text-align: center;
+  position: relative;
+  background: #1a1c1f;
+}
+
+.body-time-col {
+  width: 10%;
+  background: #2a2d31;
+  border-right: 1px solid #2f3136;
+  font-size: 12px;
+  text-align: right;
+  padding: 0;
+  font-weight: bold;
+  color: #bcbcbc;
+}
+
+/* The absolutely positioned event layer */
+.event-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+/* Hover effect for an event if you like */
+.calendar-event:hover {
+  border-color: #777;
+}
+
+/* Example hovered cell styling if you want a highlight on drag/resize */
+.hovered {
+  background-color: rgb(127, 127, 127) !important;
+  border: none !important;
+}
+
+.current-day {
+  background-color: #685f43 !important; // Light yellowish color (adjust as needed)
+}
+
+.left-panel {
+  margin: 1em 1em 0 0;
+}

@@ -14,6 +14,7 @@
   },
   "license": "MIT",
   "devDependencies": {
+    "@atlaskit/pragmatic-drag-and-drop-auto-scroll": "^2.1.0",
     "@solidjs/router": "^0.13.2",
     "@solidjs/testing-library": "^0.8.6",
     "@testing-library/jest-dom": "^6.4.2",
@@ -31,6 +32,8 @@
     "vitest": "^1.2.2"
   },
   "dependencies": {
-    "@castmill/ui-common": "*"
+    "@castmill/ui-common": "*",
+    "date-fns": "^4.1.0",
+    "date-fns-tz": "^3.2.0"
   }
 }
