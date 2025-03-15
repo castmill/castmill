@@ -4,7 +4,7 @@ import { render, fireEvent, cleanup, screen } from '@solidjs/testing-library';
 import { Slider } from './slider';
 import styles from './slider.module.scss';
 
-describe.only('Slider component', () => {
+describe('Slider component', () => {
   afterEach(() => cleanup());
 
   it('renders with correct initial value and updates on input', async () => {
