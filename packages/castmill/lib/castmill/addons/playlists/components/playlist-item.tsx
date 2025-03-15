@@ -7,7 +7,7 @@ import { pointerOutsideOfPreview } from '@atlaskit/pragmatic-drag-and-drop/eleme
 
 import { debounce } from 'lodash';
 
-import { IconWrapper, Slider } from '@castmill/ui-common';
+import { IconWrapper, Slider, formatDuration } from '@castmill/ui-common';
 import { RiEditorDraggable } from 'solid-icons/ri';
 import { AiOutlineEdit } from 'solid-icons/ai';
 import { BsTrash3 } from 'solid-icons/bs';
@@ -22,13 +22,6 @@ import {
   Show,
 } from 'solid-js';
 import { JsonPlaylistItem } from '@castmill/player';
-
-// format time in ms to mm:ss
-const formatTime = (ms: number) => {
-  const seconds = Math.floor(ms / 1000);
-  const minutes = Math.floor(seconds / 60);
-  return `${minutes}:${String(seconds % 60).padStart(2, '0')}`;
-};
 
 // get thumbnail uri from playlist item
 const getThumbnailUri = (item: JsonPlaylistItem) => {
@@ -157,7 +150,7 @@ export const PlaylistItem: Component<{
             max={Math.max(60000, props.item.duration)} 
             step={1000}
             onSlideStop={handleDurationChange}
-            formatValue={formatTime}
+            formatValue={formatDuration}
           />
         </div>
         <div class={styles.playlistItemActions}>
