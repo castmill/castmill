@@ -52,7 +52,6 @@ export const PlaylistView: Component<{
       expandedOptions: OptionsDict;
     }
   ) => {
-    console.log('onEditItem', item, config, expandedOptions);
     try {
       await PlaylistsService.updateWidgetConfig(
         props.baseUrl,
