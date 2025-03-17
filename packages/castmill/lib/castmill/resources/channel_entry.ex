@@ -59,10 +59,10 @@ defmodule Castmill.Resources.ChannelEntry do
               end_date = DateTime.to_date(end_in_tz)
 
               {start_year, start_week} =
-                :calendar.iso_week_number({start_date.year, start_date.month, start_date.day})
+                iso_week_number(start_date)
 
               {end_year, end_week} =
-                :calendar.iso_week_number({end_date.year, end_date.month, end_date.day})
+                iso_week_number(end_date)
 
               # Check if they're in the same week
               if start_year == end_year && start_week == end_week do
@@ -82,7 +82,7 @@ defmodule Castmill.Resources.ChannelEntry do
     end
   end
 
-  def iso_week_number(date) do
+  defp iso_week_number(date) do
     {year, month, day} = {date.year, date.month, date.day}
     :calendar.iso_week_number({year, month, day})
   end
