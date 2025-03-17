@@ -113,8 +113,4 @@ defmodule Castmill.Resources.ChannelEntry do
       end
     end
   end
-
-  def timestamp do
-    DateTime.to_unix(DateTime.utc_now())
-  end
 end
