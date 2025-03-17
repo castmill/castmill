@@ -3,6 +3,8 @@ defmodule Castmill.Resources.Channel do
   import Ecto.Changeset
   import Ecto.Query, warn: false
 
+  require Logger
+
   schema "channels" do
     field(:description, :string)
     field(:name, :string)
@@ -31,7 +33,30 @@ defmodule Castmill.Resources.Channel do
       :organization_id
     ])
     |> validate_required([:name, :timezone, :organization_id])
+    |> validate_timezone(:timezone)
     |> foreign_key_constraint(:default_playlist_id, name: :channels_default_playlist_id_fkey)
+  end
+
+  defp validate_timezone(changeset, field) do
+    timezone = get_field(changeset, field)
+
+    if timezone && not valid_timezone?(timezone) do
+      add_error(changeset, field, "is not a valid timezone")
+    else
+      changeset
+    end
+  end
+
+  # Helper function to check if a timezone is valid
+  defp valid_timezone?(timezone) do
+    case DateTime.shift_zone(DateTime.utc_now(), timezone) do
+      {:ok, _} ->
+        true
+
+      {:error, err} ->
+        Logger.error("Invalid timezone: #{timezone} - #{inspect(err)}")
+        false
+    end
   end
 
   def base_query() do

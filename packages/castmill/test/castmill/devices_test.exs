@@ -290,10 +290,10 @@ defmodule Castmill.DevicesTest do
       playlist = playlist_fixture(%{organization_id: organization.id})
 
       entry_attrs = %{
-        name: "some entry name",
-        start: DateTime.to_unix(~U[2005-05-05 19:59:03Z]),
-        end: DateTime.to_unix(~U[2005-05-05 21:59:03Z]),
-        playlist_id: playlist.id
+        "name" => "some entry name",
+        "start" => DateTime.to_unix(~U[2005-05-05 19:59:03Z]),
+        "end" => DateTime.to_unix(~U[2005-05-05 21:59:03Z]),
+        "playlist_id" => playlist.id
       }
 
       assert {:ok, entry} = Resources.add_channel_entry(channel.id, entry_attrs)
@@ -329,11 +329,11 @@ defmodule Castmill.DevicesTest do
       playlist = playlist_fixture(%{organization_id: organization.id})
 
       entry_attrs = %{
-        name: "some entry name",
-        start: DateTime.to_unix(~U[2005-05-05 19:59:03Z]),
-        end: DateTime.to_unix(~U[2005-05-05 21:59:03Z]),
-        timezone: "Europe/Stockholm",
-        playlist_id: playlist.id
+        "name" => "some entry name",
+        "start" => DateTime.to_unix(~U[2005-05-05 19:59:03Z]),
+        "end" => DateTime.to_unix(~U[2005-05-05 21:59:03Z]),
+        "timezone" => "Europe/Stockholm",
+        "playlist_id" => playlist.id
       }
 
       assert {:ok, _entry} = Resources.add_channel_entry(channel.id, entry_attrs)

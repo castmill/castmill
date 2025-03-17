@@ -706,6 +706,12 @@ defmodule Castmill.Resources do
     with an existing entry.
   """
   def add_channel_entry(channel_id, entry_attrs \\ %{}) do
+    # Convert timestamps to DateTime structs
+    entry_attrs =
+      entry_attrs
+      |> Map.update("start", nil, &DateTime.from_unix!(&1, :millisecond))
+      |> Map.update("end", nil, &DateTime.from_unix!(&1, :millisecond))
+
     %ChannelEntry{
       channel_id: channel_id
     }
@@ -714,9 +720,25 @@ defmodule Castmill.Resources do
   end
 
   @doc """
+    Get a channel entry.
+  """
+  def get_channel_entry(id) do
+    ChannelEntry
+    |> where(id: ^id)
+    |> Repo.one()
+  end
+
+  @doc """
     Update entry in channel.
   """
   def update_channel_entry(%ChannelEntry{} = entry, attrs) do
+    attrs =
+      Map.new(attrs, fn
+        {"start", val} -> {"start", DateTime.from_unix!(val, :millisecond)}
+        {"end", val} -> {"end", DateTime.from_unix!(val, :millisecond)}
+        {key, val} -> {key, val}
+      end)
+
     entry
     |> ChannelEntry.changeset(attrs)
     |> Repo.update()
@@ -732,15 +754,20 @@ defmodule Castmill.Resources do
   @doc """
     List channel entries between two dates.
   """
-  def list_channel_entries(channel_id, start_date, end_date) do
-    repeat_weekly_until = DateTime.from_unix!(end_date) |> DateTime.to_date()
+  def list_channel_entries(channel_id, start_ts \\ 0, end_ts \\ 253_402_300_799) do
+    start_datetime = DateTime.from_unix!(start_ts, :millisecond)
+    end_datetime = DateTime.from_unix!(end_ts, :millisecond)
 
     query =
       from(entry in ChannelEntry,
         where:
           entry.channel_id == ^channel_id and
-            entry.start >= ^start_date and
-            (entry.end <= ^end_date or entry.repeat_weekly_until <= ^repeat_weekly_until),
+            ((is_nil(entry.repeat_weekly_until) and
+                entry.start < ^end_datetime and
+                entry.end > ^start_datetime) or
+               (not is_nil(entry.repeat_weekly_until) and
+                  entry.start < ^end_datetime and
+                  entry.repeat_weekly_until >= ^DateTime.to_date(start_datetime))),
         select: entry
       )
 

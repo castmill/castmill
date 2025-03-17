@@ -38,6 +38,30 @@ defmodule CastmillWeb.ResourceController do
 
   def check_access(actor_id, action, %{
         "organization_id" => organization_id,
+        "channel_id" => channel_id
+      })
+      when action in [:add_channel_entry, :delete_channel_entry, :update_channel_entry] do
+    channel = Castmill.Resources.get_channel(channel_id)
+
+    if channel == nil do
+      {:ok, false}
+    else
+      if channel.organization_id != organization_id do
+        {:ok, false}
+      else
+        {:ok, Organizations.has_any_role?(organization_id, actor_id, [:admin, :regular])}
+      end
+    end
+  end
+
+  def check_access(actor_id, :list_channel_entries, %{
+        "organization_id" => organization_id
+      }) do
+    {:ok, Organizations.has_any_role?(organization_id, actor_id, [:admin, :regular, :guest])}
+  end
+
+  def check_access(actor_id, action, %{
+        "organization_id" => organization_id,
         "resources" => resources
       }) do
     if Organizations.has_access(organization_id, actor_id, resources, action) do
@@ -200,6 +224,44 @@ defmodule CastmillWeb.ResourceController do
           conn
           |> put_status(:ok)
           |> json(media)
+
+        {:error, errors} ->
+          conn
+          |> put_status(:bad_request)
+          |> Phoenix.Controller.json(%{errors: errors})
+          |> halt()
+      end
+    else
+      {:error, errors} ->
+        conn
+        |> put_status(:bad_request)
+        |> Phoenix.Controller.json(%{errors: errors})
+        |> halt()
+    end
+  end
+
+  @update_channel_params_schema %{
+    organization_id: [type: :string, required: true],
+    id: [type: :integer, required: true],
+    update: :map
+  }
+
+  def update(
+        conn,
+        %{
+          "resources" => "channels",
+          "id" => _id
+        } = params
+      ) do
+    with {:ok, params} <- Tarams.cast(params, @update_channel_params_schema) do
+      channel = Castmill.Resources.get_channel(params.id)
+
+      Castmill.Resources.update_channel(channel, params.update)
+      |> case do
+        {:ok, channel} ->
+          conn
+          |> put_status(:ok)
+          |> json(channel)
 
         {:error, errors} ->
           conn
@@ -439,6 +501,48 @@ defmodule CastmillWeb.ResourceController do
     end
   end
 
+  @list_entries_params_schema %{
+    organization_id: [type: :string, required: true],
+    channel_id: [type: :string, required: true],
+    start_date: [type: :integer, required: false],
+    end_date: [type: :integer, required: false]
+  }
+
+  def list_channel_entries(conn, params) do
+    with {:ok, params} <- Tarams.cast(params, @list_entries_params_schema) do
+      _ = %{
+        data: Devices.set_devices_online(Organizations.list_devices(params)),
+        count: Organizations.count_devices(params)
+      }
+
+      case Castmill.Resources.get_channel(params.channel_id) do
+        nil ->
+          conn
+          |> put_status(:not_found)
+          |> Phoenix.Controller.json(%{message: "Channel not found"})
+          |> halt()
+
+        _ ->
+          entries =
+            Castmill.Resources.list_channel_entries(
+              params.channel_id,
+              params.start_date,
+              params.end_date
+            )
+
+          conn
+          |> put_status(:ok)
+          |> json(entries)
+      end
+    else
+      {:error, errors} ->
+        conn
+        |> put_status(:bad_request)
+        |> json(%{errors: errors})
+        |> halt()
+    end
+  end
+
   def add_channel_entry(
         %Plug.Conn{
           body_params: body_params
@@ -451,7 +555,7 @@ defmodule CastmillWeb.ResourceController do
       nil ->
         conn
         |> put_status(:not_found)
-        |> Phoenix.Controller.json(%{message: "Channel not found"})
+        |> Phoenix.Controller.json(%{message: "Channel #{channel_id} not found"})
         |> halt()
 
       channel ->
@@ -464,6 +568,74 @@ defmodule CastmillWeb.ResourceController do
             ~p"/api/organizations/#{organization_id}/channels/#{channel.id}"
           )
           |> render(:show, entry: entry)
+        end
+    end
+  end
+
+  def delete_channel_entry(
+        conn,
+        %{"channel_id" => channel_id_str, "id" => id_str}
+      ) do
+    channel_id = String.to_integer(channel_id_str)
+    id = String.to_integer(id_str)
+
+    case Castmill.Resources.get_channel(channel_id) do
+      nil ->
+        conn
+        |> put_status(:not_found)
+        |> Phoenix.Controller.json(%{message: "Channel #{channel_id} not found"})
+        |> halt()
+
+      _ ->
+        case Castmill.Resources.get_channel_entry(id) do
+          nil ->
+            conn
+            |> put_status(:not_found)
+            |> Phoenix.Controller.json(%{message: "Channel entry #{id} not found"})
+            |> halt()
+
+          entry ->
+            with {:ok, %ChannelEntry{}} <- Castmill.Resources.delete_channel_entry(entry) do
+              send_resp(conn, :no_content, "")
+            else
+              {:error, reason} ->
+                send_resp(conn, 500, "Error deleting channel entry: #{inspect(reason)}")
+            end
+        end
+    end
+  end
+
+  def update_channel_entry(
+        %Plug.Conn{
+          body_params: body_params
+        } = conn,
+        %{"channel_id" => channel_id_str, "id" => id_str}
+      ) do
+    channel_id = String.to_integer(channel_id_str)
+    id = String.to_integer(id_str)
+
+    case Castmill.Resources.get_channel(channel_id) do
+      nil ->
+        conn
+        |> put_status(:not_found)
+        |> Phoenix.Controller.json(%{message: "Channel #{channel_id} not found"})
+        |> halt()
+
+      _ ->
+        case Castmill.Resources.get_channel_entry(id) do
+          nil ->
+            conn
+            |> put_status(:not_found)
+            |> Phoenix.Controller.json(%{message: "Channel entry #{id} not found"})
+            |> halt()
+
+          entry ->
+            with {:ok, %ChannelEntry{} = entry} <-
+                   Castmill.Resources.update_channel_entry(entry, body_params) do
+              conn
+              |> put_status(:ok)
+              |> render(:show, entry: entry)
+            end
         end
     end
   end

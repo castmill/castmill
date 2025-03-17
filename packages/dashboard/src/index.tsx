@@ -26,6 +26,7 @@ import TeamsPage from './pages/teams-page/teams-page';
 import TeamsInvitationPage from './pages/teams-invitations-page/teams-invitations-page';
 import OrganizationPage from './pages/organization-page/organization-page';
 import OrganizationsInvitationPage from './pages/organization-invitations/organizations-invitations-page';
+import ChannelsPage from './pages/channels-page/channels-page';
 
 const Login = lazy(() => import('./components/login/login'));
 const SignUp = lazy(() => import('./components/signup/signup'));
@@ -92,6 +93,7 @@ render(() => {
         <Route path="usage" component={UsagePage} />
         <Route path="teams" component={TeamsPage} />
         <Route path="organization" component={OrganizationPage} />
+        <Route path="channels" component={ChannelsPage} />
         <Route path="invite" component={TeamsInvitationPage} />
         <Route
           path="invite-organization"

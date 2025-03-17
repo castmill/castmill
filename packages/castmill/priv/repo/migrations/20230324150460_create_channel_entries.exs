@@ -3,8 +3,8 @@ defmodule Castmill.Repo.Migrations.CreateChannelEntries do
 
   def change do
     create table(:channel_entries) do
-      add :start, :bigint
-      add :end, :bigint
+      add :start, :utc_datetime
+      add :end, :utc_datetime
       add :repeat_weekly_until, :date, null: true
 
       add :channel_id,
