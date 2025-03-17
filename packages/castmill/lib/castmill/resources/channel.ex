@@ -3,6 +3,8 @@ defmodule Castmill.Resources.Channel do
   import Ecto.Changeset
   import Ecto.Query, warn: false
 
+  require Logger
+
   schema "channels" do
     field(:description, :string)
     field(:name, :string)
@@ -52,7 +54,7 @@ defmodule Castmill.Resources.Channel do
         true
 
       {:error, err} ->
-        IO.inspect("Invalid timezone: #{timezone} - #{inspect(err)}")
+        Logger.error("Invalid timezone: #{timezone} - #{inspect(err)}")
         false
     end
   end
