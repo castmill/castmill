@@ -53,7 +53,6 @@ const ChannelsPage: Component = () => {
   );
 
   createEffect(() => {
-    console.log('Organization changed', store.organizations.selectedId);
     channelsService = new ChannelsService(
       baseUrl,
       store.organizations.selectedId!

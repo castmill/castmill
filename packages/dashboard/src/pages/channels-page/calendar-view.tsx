@@ -317,7 +317,6 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
         const { dayIndex, hour, minute } = lastDropData;
         const { entry } = source.data as { entry?: CalendarEntry };
 
-        console.log('Dropped entry', entry, 'on', dayIndex, hour, minute);
         if (!entry) {
           return;
         }

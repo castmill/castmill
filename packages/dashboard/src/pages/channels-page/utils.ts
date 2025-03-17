@@ -42,8 +42,6 @@ export function timestampsToCalendarEntry(
   const startDayIndex = (startDate.getDay() + 6) % 7;
   const endDayIndex = (endDate.getDay() + 6) % 7;
 
-  console.log({ startDate, endDate, startDayIndex, endDayIndex });
-
   const numDays = endDayIndex - startDayIndex + 1;
 
   // Extract local hours and minutes
