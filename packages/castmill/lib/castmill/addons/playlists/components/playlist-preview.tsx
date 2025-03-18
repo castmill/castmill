@@ -38,7 +38,7 @@ export const PlaylistPreview: Component<PlaylistPreviewProps> = (props) => {
 
     controls = new PlayerUIControls('controls', {
       position: {
-        bottom: '4em',
+        bottom: '0',
       },
     });
 
