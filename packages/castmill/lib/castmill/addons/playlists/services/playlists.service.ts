@@ -1,4 +1,4 @@
-import { JsonPlaylist, JsonWidget, JsonWidgetConfig } from '@castmill/player';
+import { JsonPlaylist, JsonWidget, JsonWidgetConfig, JsonPlaylistItem } from '@castmill/player';
 import { SortOptions } from '@castmill/ui-common';
 
 export interface FetchPlaylistsOptions {
@@ -200,7 +200,7 @@ export const PlaylistsService = {
     organizationId: string,
     playlistId: number,
     itemId: number,
-    options: Record<string, any>
+    options: Partial<JsonPlaylistItem>
   ) {
     const response = await fetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/playlists/${playlistId}/items/${itemId}`,

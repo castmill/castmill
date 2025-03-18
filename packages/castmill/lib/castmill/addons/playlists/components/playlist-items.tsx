@@ -44,6 +44,7 @@ export const PlaylistItems: Component<{
     newIndex: number | undefined
   ) => Promise<void>;
   onRemoveItem: (item: JsonPlaylistItem) => Promise<void>;
+  onChangeDuration: (item: JsonPlaylistItem, duration: number) => Promise<void>;
 }> = (props) => {
   const [showModal, setShowModal] = createSignal<JsonPlaylistItem>();
   const [promiseResolve, setPromiseResolve] = createSignal<{
@@ -121,6 +122,10 @@ export const PlaylistItems: Component<{
     await props.onRemoveItem(itemToRemove);
   };
 
+  const changeDuration = async (item: JsonPlaylistItem, duration: number) => {
+    await props.onChangeDuration(item, duration);
+  }
+
   const [isDraggedOver, setIsDraggedOver] = createSignal(false);
   const [animationEnabled, setAnimationEnabled] = createSignal(true);
 
@@ -183,10 +188,10 @@ export const PlaylistItems: Component<{
             <PlaylistItem
               item={item}
               onRemove={removeItem}
+              onChangeDuration={changeDuration}
               onEdit={() => editItem(item)}
               index={index()}
               onDragStart={() => {
-                console.log('drag start');
                 setAnimationEnabled(false);
                 // We use this to disable animations when starting to drag
                 setTimeout(() => setAnimationEnabled(true), 100);
