@@ -1,5 +1,5 @@
 defmodule Castmill.Widgets.WidgetConfig do
-  use Ecto.Schema
+  use Castmill.Schema
   import Ecto.Changeset
   import Ecto.Query, warn: false
 
@@ -18,7 +18,7 @@ defmodule Castmill.Widgets.WidgetConfig do
     field(:version, :integer, default: 1)
 
     # TODO: rename to requested_at (for consistency with updated_at and inserted_at)
-    field(:last_request_at, :naive_datetime, default: nil)
+    field(:last_request_at, :utc_datetime, default: nil)
 
     belongs_to(:widget, Castmill.Widgets.Widget)
     belongs_to :playlist_item, Castmill.Resources.PlaylistItem, foreign_key: :playlist_item_id

@@ -1,7 +1,7 @@
 defmodule Castmill.Devices.Device do
   @behaviour Castmill.Behaviour.Filterable
 
-  use Ecto.Schema
+  use Castmill.Schema
 
   import Ecto.Changeset
   import Ecto.Query, warn: false
@@ -31,7 +31,7 @@ defmodule Castmill.Devices.Device do
   schema "devices" do
     field(:info, :map)
     field(:last_ip, :string)
-    field(:last_online, :naive_datetime)
+    field(:last_online, :utc_datetime)
     field(:online, :boolean, default: false)
     field(:loc_lat, :float)
     field(:loc_long, :float)

@@ -1,5 +1,5 @@
 defmodule Castmill.Files.File do
-  use Ecto.Schema
+  use Castmill.Schema
   import Ecto.Changeset
   import Ecto.Query, warn: false
 

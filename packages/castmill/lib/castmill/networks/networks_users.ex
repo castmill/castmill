@@ -1,5 +1,5 @@
 defmodule Castmill.Networks.NetworksUsers do
-  use Ecto.Schema
+  use Castmill.Schema
   import Ecto.Changeset
 
   schema "networks_users" do

@@ -1,6 +1,6 @@
 # DEPRECATED: This module is not used anymore, but it's kept here until we remove all references to it.
 defmodule Castmill.Resources.Resource do
-  use Ecto.Schema
+  use Castmill.Schema
   import Ecto.Changeset
 
   # Todo maybe change the name to "shareable-resource" to make more explicit the

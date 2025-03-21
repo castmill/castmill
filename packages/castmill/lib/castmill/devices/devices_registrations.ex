@@ -1,5 +1,5 @@
 defmodule Castmill.Devices.DevicesRegistrations do
-  use Ecto.Schema
+  use Castmill.Schema
   import Ecto.Changeset
 
   @primary_key false

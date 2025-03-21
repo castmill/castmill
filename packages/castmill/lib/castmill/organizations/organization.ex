@@ -1,5 +1,5 @@
 defmodule Castmill.Organizations.Organization do
-  use Ecto.Schema
+  use Castmill.Schema
   import Ecto.Changeset
   import Ecto.Query, warn: false
 

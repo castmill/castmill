@@ -1,5 +1,5 @@
 defmodule Castmill.Accounts.AccessToken do
-  use Ecto.Schema
+  use Castmill.Schema
   import Ecto.Changeset
 
   schema "access_tokens" do

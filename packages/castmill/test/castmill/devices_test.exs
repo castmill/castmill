@@ -166,11 +166,7 @@ defmodule Castmill.DevicesTest do
       assert {:error, _} = Devices.recover_device(device.hardware_id, device.last_ip)
 
       # Setting the updated_at to an hour ago
-      hour_ago =
-        :os.system_time(:seconds)
-        |> Kernel.-(3600)
-        |> DateTime.from_unix!(:second)
-        |> DateTime.to_naive()
+      hour_ago = DateTime.utc_now() |> DateTime.add(-1, :hour)
 
       from(d in Devices.Device, where: d.id == ^device.id)
       |> Repo.update_all(set: [updated_at: hour_ago])

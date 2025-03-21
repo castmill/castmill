@@ -9,7 +9,7 @@ defmodule Castmill.Repo.Migrations.CreateWidgetsConfig do
       add(:options, :map, default: %{})
       add(:data, :map, default: %{})
 
-      add(:last_request_at, :naive_datetime, default: nil)
+      add(:last_request_at, :utc_datetime, default: nil)
 
       add(:widget_id, references(:widgets, column: "id", on_delete: :delete_all), null: false)
 

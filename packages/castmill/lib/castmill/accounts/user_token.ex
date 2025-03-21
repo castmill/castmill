@@ -1,5 +1,5 @@
 defmodule Castmill.Accounts.UserToken do
-  use Ecto.Schema
+  use Castmill.Schema
   import Ecto.Query
   alias Castmill.Accounts.UserToken
 

@@ -63,7 +63,7 @@ defmodule Castmill.Devices do
   # If online is false, then the device is offline
   # If online is true, and last_online is more than 1 minute ago, then the device is offline
   def set_devices_online(devices) do
-    current_time = DateTime.utc_now() |> DateTime.to_naive()
+    current_time = DateTime.utc_now()
 
     Enum.map(devices, fn device ->
       Map.update!(device, :online, fn online ->
@@ -75,8 +75,8 @@ defmodule Castmill.Devices do
   defp check_online_within_minute(nil, _current_time), do: false
 
   defp check_online_within_minute(last_online, current_time) do
-    one_minute_ago = NaiveDateTime.add(current_time, -60, :second)
-    NaiveDateTime.compare(last_online, one_minute_ago) == :gt
+    one_minute_ago = DateTime.add(current_time, -60, :second)
+    DateTime.compare(last_online, one_minute_ago) == :gt
   end
 
   @doc """
@@ -397,7 +397,6 @@ defmodule Castmill.Devices do
       # Find device by hardware_id
       device = Repo.get_by(Device, hardware_id: hardware_id)
 
-      # TODO: also check if auto_recovery is enabled
       cond do
         is_nil(device) ->
           Repo.rollback("Device not found")
@@ -405,7 +404,7 @@ defmodule Castmill.Devices do
         device.last_ip != device_ip ->
           Repo.rollback("IP mismatch")
 
-        NaiveDateTime.compare(device.updated_at, hour_ago()) == :gt ->
+        DateTime.compare(device.updated_at, hour_ago()) == :gt ->
           Repo.rollback("Device updated recently")
 
         true ->
@@ -423,10 +422,7 @@ defmodule Castmill.Devices do
   end
 
   defp hour_ago do
-    :os.system_time(:seconds)
-    |> Kernel.-(3600)
-    |> DateTime.from_unix!(:second)
-    |> DateTime.to_naive()
+    DateTime.utc_now() |> DateTime.add(-1, :hour)
   end
 
   defp generate_token do

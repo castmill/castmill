@@ -1,5 +1,5 @@
 defmodule Castmill.Organizations.OrganizationsUsersAccess do
-  use Ecto.Schema
+  use Castmill.Schema
   import Ecto.Changeset
 
   @primary_key false
