@@ -11,6 +11,9 @@ const scapSignage = new Signage();
 const scapPower = new Power();
 const scapConfig = new Configuration();
 const scapStorage = new Storage();
+const scapTime = new Time();
+
+const noOp = () => {};
 
 export const deviceInfo = {
   getPlatformInfo: promisifyNoOpt(
@@ -34,10 +37,36 @@ export const signage = {
   ),
 };
 
+export const time = {
+  // webos >= 4, scap 1.7
+  clearAllOnOffTimers: scapTime.clearAllOnOffTimers
+    ? promisifyNoOptNoRet(scapTime.clearAllOnOffTimers.bind(scapTime))
+    : undefined,
+  reserveOnOffTimer: scapTime.reserveOnOffTimer
+    ? promisifyNoRet(scapTime.reserveOnOffTimer.bind(scapTime))
+    : undefined,
+};
+
 export const power = {
   executePowerCommand: promisifyNoRet(
     scapPower.executePowerCommand.bind(scapPower)
   ),
+  getOnTimerList: promisifyNoOpt(scapPower.getOnTimerList.bind(scapPower)),
+  getOffTimerList: promisifyNoOpt(scapPower.getOffTimerList.bind(scapPower)),
+
+  // webos < 4, scap 1.5
+  enableAllOnTimer: scapPower.enableAllOnTimer
+    ? promisifyNoRet(scapPower.enableAllOnTimer.bind(scapPower))
+    : undefined,
+  enableAllOffTimer: scapPower.enableAllOffTimer
+    ? promisifyNoRet(scapPower.enableAllOffTimer.bind(scapPower))
+    : undefined,
+  addOnTimer: scapPower.addOnTimer
+    ? promisifyNoRet(scapPower.addOnTimer.bind(scapPower))
+    : undefined,
+  addOffTimer: scapPower.addOffTimer
+    ? promisifyNoRet(scapPower.addOffTimer.bind(scapPower))
+    : undefined,
 };
 
 export const configuration = {
