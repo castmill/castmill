@@ -13,8 +13,6 @@ const scapConfig = new Configuration();
 const scapStorage = new Storage();
 const scapTime = new Time();
 
-const noOp = () => {};
-
 export const deviceInfo = {
   getPlatformInfo: promisifyNoOpt(
     scapDeviceInfo.getPlatformInfo.bind(scapDeviceInfo)
