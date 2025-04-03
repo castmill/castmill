@@ -14,6 +14,22 @@ interface Time {
     successCallback: () => void,
     errorCallback: (cbObject: ErrorResponse) => void
   ): void;
+  clearAllOnOffTimers?(
+    successCallback: () => void,
+    errorCallback: (cbObject: ErrorResponse) => void
+  ): void;
+  reserveOnOffTimer?(
+    successCallback: () => void,
+    errorCallback: (cbObject: ErrorResponse) => void,
+    options: ReserveOnOffTimerOptions
+  ): void;
+}
+
+interface ReserveOnOffTimerOptions {
+  type: 'ONTIMER' | 'OFFTIMER';
+  hour: number;
+  minute: number;
+  week: number;
 }
 
 interface ErrorResponse {
