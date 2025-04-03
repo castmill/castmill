@@ -1,5 +1,5 @@
 import { TimerEntry } from '@castmill/device';
-import { vi, describe, it, beforeEach, expect } from 'vitest';
+import { vi, describe, it, expect } from 'vitest';
 import {
   DEFAULT_INPUT_SOURCE,
   toWebosWeekDays,
