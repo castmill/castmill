@@ -30,7 +30,6 @@ export const toWebosWeekDays = (week: TimerEntry['weekDays']) => {
       default:
         return acc;
     }
-    return acc;
   }, 0b0);
 };
 
