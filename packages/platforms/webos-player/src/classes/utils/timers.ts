@@ -90,25 +90,15 @@ const addOffTimer = (timer: TimerEntry) => {
 };
 
 export const addOnTimers = async (list: TimerEntry[]): Promise<void> => {
-  if (list.length === 0) {
-    return;
+  for (const timer of list) {
+    await addOnTimer(timer);
   }
-
-  const [first, ...rest] = list;
-
-  await addOnTimer(first);
-  return addOnTimers(rest);
 };
 
 export const addOffTimers = async (list: TimerEntry[]): Promise<void> => {
-  if (list.length === 0) {
-    return;
+  for (const timer of list) {
+    await addOffTimer(timer);
   }
-
-  const [first, ...rest] = list;
-
-  await addOffTimer(first);
-  return addOffTimers(rest);
 };
 
 export const clearAllTimers = () => {
