@@ -19,7 +19,7 @@ defmodule CastmillWeb.DeviceController do
   # end
 
   def check_access(actor_id, action, %{"device_id" => device_id})
-      when action in [:send_command, :get_cache] do
+      when action in [:send_command, :get_cache, :get_channels, :add_channel, :remove_channel] do
     # Check if the actor has access via the device organization
     device = Devices.get_device(device_id)
     organization_id = device.organization_id
@@ -36,13 +36,11 @@ defmodule CastmillWeb.DeviceController do
   # like sending commands to itself, removing itself, etc).
   # TODO: add when clause to limit the actions that are allowed
   def check_access(actor_id, _action, %{"device_id" => device_id}) do
-    IO.inspect("Device check_access #{inspect({actor_id, device_id})}")
     {:ok, actor_id == device_id}
   end
 
   # Default implementation for other actions not explicitly handled above
-  def check_access(actor_id, action, params) do
-    IO.inspect("Default check_access #{inspect({actor_id, action, params})}")
+  def check_access(_actor_id, _action, _params) do
     {:ok, false}
   end
 
@@ -205,10 +203,15 @@ defmodule CastmillWeb.DeviceController do
     Removes a channel from a device
   """
   def remove_channel(conn, %{"device_id" => device_id, "channel_id" => channel_id}) do
-    with {:ok, _device} <- Devices.remove_channel(device_id, channel_id) do
+    with {num_deleted, nil} <- Devices.remove_channel(device_id, channel_id) do
       conn
       |> put_status(:ok)
-      |> send_resp(200, "")
+      |> json(%{message: "#{num_deleted} channels removed successfully"})
+    else
+      {:error, reason} ->
+        conn
+        |> put_status(:bad_request)
+        |> json(%{error: "Failed to remove channel", reason: reason})
     end
   end
 
