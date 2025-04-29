@@ -1,6 +1,7 @@
 import { Component, createSignal } from 'solid-js';
 import { Device } from '../interfaces/device.interface';
 import { Tabs, LoadingOverlay } from '@castmill/ui-common';
+import { Channels } from './channels';
 import { Maintainance } from './maintainance';
 import { DeviceLogs } from './device-events';
 import { DeviceDetails, DeviceUpdate } from './device-details';
@@ -18,7 +19,6 @@ const DeviceView: Component<{
   onChange?: (device: Device) => void;
 }> = (props) => {
   const [loading, setLoading] = createSignal(false);
-
   const updateDevice = async (device: DeviceUpdate) => {
     setLoading(true);
 
@@ -49,6 +49,18 @@ const DeviceView: Component<{
       title: 'Details',
       content: () => (
         <DeviceDetails device={props.device} onSubmit={updateDevice} />
+      ),
+    },
+    {
+      title: 'Channels',
+      content: () => (
+        <div>
+          <Channels
+            baseUrl={props.baseUrl}
+            organizationId={props.organization_id}
+            device={props.device}
+          />
+        </div>
       ),
     },
     {
