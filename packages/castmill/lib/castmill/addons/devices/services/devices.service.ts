@@ -1,5 +1,8 @@
 import { Device } from '../interfaces/device.interface';
-import { SortOptions } from '@castmill/ui-common';
+import { SortOptions,
+  FetchDataOptions,
+  fetchOptionsToQueryString,
+} from '@castmill/ui-common';
 import { DeviceCommand } from '../types/device-command.type';
 import { DeviceEvent as DeviceEvent } from '../interfaces/device-event.interface';
 import { DeviceUpdate } from '../components/device-details';
@@ -14,6 +17,27 @@ export interface FetchDevicesOptions {
 type HandleResponseOptions = {
   parse?: boolean;
 };
+
+export interface JsonChannelEntry {
+  id: number;
+  name: string;
+  start: number;
+  end: number;
+  playlist_id: number;
+  inserted_at: string;
+  updated_at: string;
+  repeat_weekly_until: number;
+}
+
+export interface JsonChannel {
+  id: number;
+  organization_id: string;
+  name: string;
+  timezone: string;
+
+  default_playlist_id: number;
+  entries: JsonChannelEntry[];
+}
 
 async function handleResponse<T = any>(
   response: Response,
@@ -247,4 +271,177 @@ export const DevicesService = {
 
     handleResponse(response);
   },
+
+  /**
+   * Get all the available channels
+   */
+  async fetchChannels(
+    baseUrl: string,
+    organizationId: string,
+    opts: FetchDataOptions
+  ) {
+    const queryString = fetchOptionsToQueryString(opts);
+    const response = await fetch(
+      `${baseUrl}/dashboard/organizations/${organizationId}/channels?${queryString}`,
+      {
+        method: 'GET',
+        credentials: 'include',
+      }
+    );
+
+    if (response.status === 200) {
+      return await response.json();
+    } else {
+      throw new Error('Failed to fetch channels');
+    }
+  },
+
+  /**
+   * Get the current channel of a device
+   */
+  async fetchChannelByDeviceId(
+    baseUrl: string,
+    deviceId: string
+  ) {
+    const response = await fetch(
+      `${baseUrl}/dashboard/devices/${deviceId}/channels`,
+      {
+        method: 'GET',
+        credentials: 'include',
+      }
+    );
+
+    if (response.status === 200) {
+      return await response.json();
+    } else {
+      throw new Error('Failed to fetch channel');
+    }
+  },
+
+  /**
+   * Set the channel of a device.
+   * 
+   * @param baseUrl API base URL
+   * @param organizationId Organization ID
+   * @param deviceId Device ID
+   * @param channelId Channel ID to assign to the device
+   * @returns Promise that resolves when the channel is set
+   */
+  async setChannelByDeviceId(
+    baseUrl: string,
+    organizationId: string,
+    deviceId: string,
+    channelId: number
+  ) {
+    return await setChannelOfDevice(
+      baseUrl,
+      deviceId,
+      channelId
+    );
+  },
 };
+
+/**
+ * Adds a channel to a device.
+ * 
+ * @param baseUrl API base URL
+ * @param deviceId Device ID
+ * @param channelId Channel ID to add
+ * @returns Promise that resolves when the channel is added
+ */
+const addChannelToDevice = async (
+  baseUrl: string,
+  deviceId: string,
+  channelId: number
+) => {
+  const response = await fetch(
+    `${baseUrl}/dashboard/devices/${deviceId}/channels`,
+    {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ channel_id: channelId }),
+    }
+  );
+
+  return handleResponse(response);
+}
+
+/**
+ * Removes a channel from a device.
+ * 
+ * @param baseUrl API base URL
+ * @param deviceId Device ID
+ * @param channelId Channel ID to remove
+ * @returns Promise that resolves when the channel is removed
+ */
+const removeChannelFromDevice = async (
+  baseUrl: string,
+  deviceId: string,
+  channelId: number
+) => {
+  const response = await fetch(
+    `${baseUrl}/dashboard/devices/${deviceId}/channels/${channelId}`,
+    {
+      method: 'DELETE',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }
+  );
+
+  return handleResponse(response);
+}
+
+/**
+ * Gets all channels of a device.
+ * 
+ * @param baseUrl API base URL
+ * @param deviceId Device ID
+ * @returns Promise that resolves with the channels of the device
+ */
+const getChannelsOfDevice = async (
+  baseUrl: string,
+  deviceId: string
+) => {
+  const response = await fetch(
+    `${baseUrl}/dashboard/devices/${deviceId}/channels`,
+    {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    }
+  );
+
+  return handleResponse(response, { parse: true });
+}
+
+/**
+ * Sets the channel of a device.
+ * 
+ * @param baseUrl API base URL
+ * @param deviceId Device ID
+ * @param channelId Channel ID to set
+ * @returns Promise that resolves when the channel is set
+ */
+const setChannelOfDevice = async (
+  baseUrl: string,
+  deviceId: string,
+  channelId: number
+) => {
+  // first get the current channels
+  const { data: channels } = await getChannelsOfDevice(baseUrl, deviceId);
+
+  // now remove all the channels
+  for (const channel of channels) {
+    await removeChannelFromDevice(baseUrl, deviceId, channel.id);
+  }
+
+  // now add the new channel
+  return await addChannelToDevice(baseUrl, deviceId, channelId);
+}

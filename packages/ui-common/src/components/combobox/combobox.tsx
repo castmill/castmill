@@ -42,7 +42,7 @@ interface ComboBoxProps<T extends { id: string | number }> {
   onSelect: (item: T) => void; // Callback function for when selection changes
 }
 
-export const ComboBox = <T extends { id: string }>(
+export const ComboBox = <T extends { id: string | number }>(
   props: ComboBoxProps<T>
 ): JSX.Element => {
   const [isOpen, setIsOpen] = createSignal(false);
