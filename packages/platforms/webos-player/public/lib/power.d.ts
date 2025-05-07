@@ -1,12 +1,12 @@
 // Power.d.ts
 
 interface Power {
-  addOffTimer(
+  addOffTimer?(
     successCallback: () => void,
     errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
     options: AddOffTimerOptions
   ): void;
-  addOnTimer(
+  addOnTimer?(
     successCallback: () => void,
     errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
     options: AddOnTimerOptions
@@ -21,12 +21,14 @@ interface Power {
     errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
     options: DeleteOnTimerOptions
   ): void;
-  enableAllOffTimer(
+  // webos < 4, scap 1.5
+  enableAllOffTimer?(
     successCallback: () => void,
     errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
     options: EnableAllOffTimerOptions
   ): void;
-  enableAllOnTimer(
+  // webos < 4, scap 1.5
+  enableAllOnTimer?(
     successCallback: () => void,
     errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
     options: EnableAllOnTimerOptions
