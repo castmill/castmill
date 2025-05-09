@@ -319,7 +319,9 @@ export const DevicesService = {
   },
 
   /**
-   * Add a channel to a device.
+   * Add a channel to a device without replacing existing channels.
+   * This method ensures that the specified channel is added to the device
+   * while preserving any other channels already associated with it.
    * 
    * @param baseUrl API base URL
    * @param deviceId Device ID
