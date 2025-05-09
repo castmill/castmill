@@ -44,7 +44,8 @@ export const Channels: Component<{ baseUrl: string; organizationId: string, devi
       label: 'Remove',
       props: (item: JsonChannel) => ({
         // Disable the delete button if this is the only channel
-        disabled: channels().length <= 1
+        disabled: channels().length <= 1,
+        title: channels().length <= 1 ? 'Cannot delete the last remaining channel.' : undefined
       })
     }
   ];
