@@ -276,7 +276,9 @@ export const TableView = <
             hideCheckboxes={props.table.hideCheckboxes}
           />
 
-          <div class={style['pagination-wrapper']}>
+          <div
+            class={`${style['pagination-wrapper']} ${totalItems() <= props.pagination.itemsPerPage ? style['hidden'] : ''}`}
+          >
             <Pagination
               itemsPerPage={props.pagination.itemsPerPage}
               totalItems={totalItems()}
