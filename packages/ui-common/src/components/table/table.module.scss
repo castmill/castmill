@@ -16,7 +16,7 @@
     border-radius: 0.5em;
 
     /* Checkbox styling */
-    input[type='checkbox'] {
+    .styled-checkbox {
       appearance: none;
       -webkit-appearance: none;
       -moz-appearance: none;
@@ -32,6 +32,7 @@
       transition:
         background-color 0.2s,
         border-color 0.2s;
+      z-index: 1;
 
       &:checked {
         background-color: #5792ee; /* Using the highlight-color from colors.scss */
@@ -68,48 +69,17 @@
       height: 48px;
       padding: 0;
       text-align: center;
-
-      input[type='checkbox'] {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        margin: 0;
-        z-index: 1;
-      }
-
-      /* Create a larger touch target using a pseudo-element */
-      &::before {
-        content: '';
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 48px;
-        height: 48px;
-        cursor: pointer;
-        z-index: 0;
-      }
-
-      /* This label will serve as the touch target */
-      label {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        cursor: pointer;
-        z-index: 2;
-        /* Make the label take precendence over the pseudo-element */
-      }
     }
 
-    /* Remove the previous styling for td:first-child, th:first-child as we now use the checkbox-cell class */
-    td:first-child,
-    th:first-child {
-      &:not(.checkbox-cell) {
-        padding: 0.75em;
-      }
+    /* Large touch target for the checkbox */
+    .checkbox-touch-target {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+      z-index: 2;
     }
 
     button {

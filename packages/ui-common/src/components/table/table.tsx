@@ -118,13 +118,19 @@ export const Table = <
           <tr>
             {!props.hideCheckboxes && (
               <th class={style['checkbox-cell']}>
+                {/* Simple checkbox container */}
                 <input
                   type="checkbox"
                   id="select-all-checkbox"
                   onChange={handleSelectAll}
                   aria-label="Select all rows"
+                  class={style['styled-checkbox']}
                 />
-                <label htmlFor="select-all-checkbox" aria-hidden="true"></label>
+                <label
+                  for="select-all-checkbox"
+                  aria-hidden="true"
+                  class={style['checkbox-touch-target']}
+                ></label>
               </th>
             )}
             <For each={props.columns}>
@@ -171,10 +177,12 @@ export const Table = <
                         handleSelectRow(getItemId(item), e.target.checked)
                       }
                       aria-label={`Select row ${getItemId(item)}`}
+                      class={style['styled-checkbox']}
                     />
                     <label
-                      htmlFor={`row-checkbox-${getItemId(item)}`}
+                      for={`row-checkbox-${getItemId(item)}`}
                       aria-hidden="true"
+                      class={style['checkbox-touch-target']}
                     ></label>
                   </td>
                 )}
