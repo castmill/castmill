@@ -117,8 +117,14 @@ export const Table = <
         <thead>
           <tr>
             {!props.hideCheckboxes && (
-              <th>
-                <input type="checkbox" onChange={handleSelectAll} />
+              <th class={style['checkbox-cell']}>
+                <input
+                  type="checkbox"
+                  id="select-all-checkbox"
+                  onChange={handleSelectAll}
+                  aria-label="Select all rows"
+                />
+                <label htmlFor="select-all-checkbox" aria-hidden="true"></label>
               </th>
             )}
             <For each={props.columns}>
@@ -156,14 +162,20 @@ export const Table = <
                 }}
               >
                 {!props.hideCheckboxes && (
-                  <td>
+                  <td class={style['checkbox-cell']}>
                     <input
                       type="checkbox"
+                      id={`row-checkbox-${getItemId(item)}`}
                       checked={selectedRows().has(getItemId(item))}
                       onInput={(e) =>
                         handleSelectRow(getItemId(item), e.target.checked)
                       }
+                      aria-label={`Select row ${getItemId(item)}`}
                     />
+                    <label
+                      htmlFor={`row-checkbox-${getItemId(item)}`}
+                      aria-hidden="true"
+                    ></label>
                   </td>
                 )}
                 <For each={props.columns}>
