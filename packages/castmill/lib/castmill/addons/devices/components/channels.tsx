@@ -12,7 +12,7 @@ export const Channels: Component<{ baseUrl: string; organizationId: string, devi
   const [channels, setChannels] = createSignal<JsonChannel[]>([]);
   const [selectedChannels, setSelectedChannels] = createSignal(new Set<number>());
   
-  const itemsPerPage = 10; // Number of items to show per page
+  const itemsPerPage = 5; // Number of items to show per page
 
   // Setup table reference
   let tableViewRef: TableViewRef<number, JsonChannel>;
@@ -147,8 +147,10 @@ export const Channels: Component<{ baseUrl: string; organizationId: string, devi
           columns,
           actions,
           onRowSelect,
+          hideCheckboxes: true
         }}
         pagination={{ itemsPerPage }}
+      
       />
 
       {/* Channel selector */}
