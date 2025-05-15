@@ -15,6 +15,73 @@
 
     border-radius: 0.5em;
 
+    /* Checkbox styling */
+    .styled-checkbox {
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      width: 18px;
+      height: 18px;
+      border: 2px solid #666;
+      border-radius: 3px;
+      margin: 0;
+      background-color: transparent;
+      position: relative;
+      cursor: pointer;
+      vertical-align: middle;
+      transition:
+        background-color 0.2s,
+        border-color 0.2s;
+      z-index: 1;
+
+      &:checked {
+        background-color: #5792ee; /* Using the highlight-color from colors.scss */
+        border-color: #5792ee;
+
+        &::after {
+          content: '';
+          position: absolute;
+          left: 50%;
+          top: 45%;
+          width: 5px;
+          height: 10px;
+          border: solid white;
+          border-width: 0 2px 2px 0;
+          transform: translate(-50%, -50%) rotate(45deg);
+        }
+      }
+
+      &:hover {
+        border-color: #888;
+      }
+
+      &:focus {
+        outline: none;
+        box-shadow: 0 0 0 2px rgba(87, 146, 238, 0.4); /* Using highlight-color with opacity */
+      }
+    }
+
+    /* Checkbox cell styling */
+    .checkbox-cell {
+      position: relative;
+      width: 48px;
+      min-width: 48px;
+      height: 48px;
+      padding: 0;
+      text-align: center;
+    }
+
+    /* Large touch target for the checkbox */
+    .checkbox-touch-target {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+      z-index: 2;
+    }
+
     button {
       background: none;
       color: inherit;

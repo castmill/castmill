@@ -319,26 +319,38 @@ export const DevicesService = {
   },
 
   /**
-   * Set the channel of a device.
+   * Add a channel to a device without replacing existing channels.
+   * This method ensures that the specified channel is added to the device
+   * while preserving any other channels already associated with it.
    * 
    * @param baseUrl API base URL
-   * @param organizationId Organization ID
    * @param deviceId Device ID
-   * @param channelId Channel ID to assign to the device
-   * @returns Promise that resolves when the channel is set
+   * @param channelId Channel ID to add
+   * @returns Promise that resolves when the channel is added
    */
-  async setChannelByDeviceId(
+  async addChannelToDevice(
     baseUrl: string,
-    organizationId: string,
     deviceId: string,
     channelId: number
   ) {
-    return await setChannelOfDevice(
-      baseUrl,
-      deviceId,
-      channelId
-    );
+    return await addChannelToDevice(baseUrl, deviceId, channelId);
   },
+
+  /**
+   * Remove a channel from a device.
+   * 
+   * @param baseUrl API base URL 
+   * @param deviceId Device ID
+   * @param channelId Channel ID to remove
+   * @returns Promise that resolves when the channel is removed
+   */
+  async removeChannelFromDevice(
+    baseUrl: string,
+    deviceId: string,
+    channelId: number
+  ) {
+    return await removeChannelFromDevice(baseUrl, deviceId, channelId);
+  }
 };
 
 /**
@@ -419,29 +431,4 @@ const getChannelsOfDevice = async (
   );
 
   return handleResponse(response, { parse: true });
-}
-
-/**
- * Sets the channel of a device.
- * 
- * @param baseUrl API base URL
- * @param deviceId Device ID
- * @param channelId Channel ID to set
- * @returns Promise that resolves when the channel is set
- */
-const setChannelOfDevice = async (
-  baseUrl: string,
-  deviceId: string,
-  channelId: number
-) => {
-  // first get the current channels
-  const { data: channels } = await getChannelsOfDevice(baseUrl, deviceId);
-
-  // now remove all the channels
-  for (const channel of channels) {
-    await removeChannelFromDevice(baseUrl, deviceId, channel.id);
-  }
-
-  // now add the new channel
-  return await addChannelToDevice(baseUrl, deviceId, channelId);
 }
