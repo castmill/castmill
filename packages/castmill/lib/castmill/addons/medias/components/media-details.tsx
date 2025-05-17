@@ -1,10 +1,11 @@
-import { createSignal, createEffect, Show } from 'solid-js';
+import { createSignal, createEffect } from 'solid-js';
 
 import { Button, FormItem } from '@castmill/ui-common';
 
 import { BsCheckLg, BsX } from 'solid-icons/bs';
 import { JsonMedia } from '@castmill/player';
 import { MediasUpdate } from '../services/medias.service';
+import { MediaPreview } from './media-preview';
 
 export const MediaDetails = (props: {
   media: JsonMedia;
@@ -75,19 +76,7 @@ export const MediaDetails = (props: {
           </FormItem>
         </div>
 
-        <div class="preview">
-          <Show
-            when={props.media.files['preview']}
-            fallback={<div> Placeholder ...</div>}
-          >
-            <div
-              class="image"
-              style={{
-                'background-image': `url(${props.media.files['preview'].uri})`,
-              }}
-            ></div>
-          </Show>
-        </div>
+        <MediaPreview media={props.media} />
 
         <div class="actions">
           <Button
