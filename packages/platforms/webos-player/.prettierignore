@@ -5,3 +5,6 @@ LICENSE.md
 tsconfig.json
 tsconfig.*.json
 public/lib/scap*
+
+# Ignore custom library file
+public/lib/custom.js
