@@ -56,6 +56,7 @@ interface TableViewProps<
     onSort?: (options: SortOptions) => void;
     actions?: TableAction<Item>[];
     onRowSelect?: (selectedIds: Set<IdType>) => void;
+    hideCheckboxes?: boolean;
   };
 
   pagination: {
@@ -272,9 +273,12 @@ export const TableView = <
             onRowSelect={props.table.onRowSelect}
             onSort={props.table.onSort}
             itemIdKey={props.itemIdKey}
+            hideCheckboxes={props.table.hideCheckboxes}
           />
 
-          <div class={style['pagination-wrapper']}>
+          <div
+            class={`${style['pagination-wrapper']} ${totalItems() <= props.pagination.itemsPerPage ? style['hidden'] : ''}`}
+          >
             <Pagination
               itemsPerPage={props.pagination.itemsPerPage}
               totalItems={totalItems()}

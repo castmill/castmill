@@ -9,10 +9,22 @@
     display: flex;
     margin-top: 1em;
     width: 100%;
-
     flex-direction: row;
     justify-content: center;
     align-items: center;
+    max-height: 3em; /* Set a fixed max-height for animation */
+    overflow: hidden;
+    opacity: 1;
+    transition:
+      max-height 0.3s ease,
+      opacity 0.2s ease,
+      margin-top 0.3s ease;
+
+    &.hidden {
+      max-height: 0;
+      opacity: 0;
+      margin-top: 0;
+    }
 
     .pagination-text {
       margin-left: 1em;
