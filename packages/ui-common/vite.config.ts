@@ -6,6 +6,10 @@ import solidPlugin from 'vite-plugin-solid';
 
 export default defineConfig({
   plugins: [solidPlugin(), cssInjectedByJsPlugin()],
+  test: {
+    environment: 'jsdom',
+    setupFiles: ['./test-setup.ts'],
+  },
   esbuild: {
     jsx: 'automatic',
     jsxImportSource: 'solid-js',
