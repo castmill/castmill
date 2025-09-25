@@ -37,8 +37,6 @@ const TeamsInvitationPage = () => {
       }
       const result = await TeamsService.getInvitation(email, token);
 
-      console.log({ result });
-
       setInvitation(result);
     } catch (error: any) {
       setErrorMessage(error.message || 'Error loading invitation.');
