@@ -1,5 +1,6 @@
 appId: com.electron.app
 productName: electron-player
+electronVersion: 32.2.0
 directories:
   buildResources: build
 files:
