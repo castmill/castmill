@@ -8,15 +8,15 @@ export default defineConfig({
   plugins: [solidPlugin(), cssInjectedByJsPlugin()],
   esbuild: {
     jsx: 'automatic',
-    jsxImportSource: 'solid-js'
+    jsxImportSource: 'solid-js',
   },
   css: {
     preprocessorOptions: {
       scss: {
         api: 'modern-compiler', // Use modern Sass API
-        silenceDeprecations: ["legacy-js-api"]
-      }
-    }
+        silenceDeprecations: ['legacy-js-api'],
+      },
+    },
   },
   build: {
     lib: {

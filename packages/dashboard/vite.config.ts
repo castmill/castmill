@@ -13,7 +13,7 @@ export default defineConfig({
   ],
   esbuild: {
     jsx: 'automatic',
-    jsxImportSource: 'solid-js'
+    jsxImportSource: 'solid-js',
   },
   css: {
     modules: {
@@ -22,7 +22,7 @@ export default defineConfig({
     preprocessorOptions: {
       scss: {
         api: 'modern-compiler',
-        silenceDeprecations: ["legacy-js-api"],
+        silenceDeprecations: ['legacy-js-api'],
         math: 'always',
         relativeUrls: true,
         javascriptEnabled: true,

@@ -150,19 +150,19 @@ export default defineConfig({
     sourcemap: 'inline',
     rollupOptions: {
       input: {
-        main: 'index.html'
+        main: 'index.html',
       },
       output: {
-        manualChunks: undefined
-      }
-    }
+        manualChunks: undefined,
+      },
+    },
   },
   optimizeDeps: {
     exclude: [
       'lib/scap_1.7/cordova/2.7.0/cordova.webos.js',
-      'lib/custom.js', 
-      'lib/scap-loader.js'
-    ]
+      'lib/custom.js',
+      'lib/scap-loader.js',
+    ],
   },
   resolve: {
     conditions: ['development', 'browser'],
