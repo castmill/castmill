@@ -2,7 +2,7 @@
   "name": "@castmill/webos-player",
   "version": "2.0.0",
   "description": "",
-  "type:": "module",
+  "type": "module",
   "scripts": {
     "format": "prettier --write .",
     "format:check": "prettier --check .",

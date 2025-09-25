@@ -11,12 +11,18 @@ export default defineConfig({
     // devtools(),
     solidPlugin(),
   ],
+  esbuild: {
+    jsx: 'automatic',
+    jsxImportSource: 'solid-js'
+  },
   css: {
     modules: {
       localsConvention: 'camelCase', // or 'camelCaseOnly', etc.
     },
     preprocessorOptions: {
       scss: {
+        api: 'modern-compiler',
+        silenceDeprecations: ["legacy-js-api"],
         math: 'always',
         relativeUrls: true,
         javascriptEnabled: true,
