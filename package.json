@@ -9,6 +9,8 @@
     "build:device": "cd packages/device && yarn build",
     "build:dashboard": "cd packages/dashboard && yarn build",
     "build:widged": "cd packages/widged && yarn build",
+    "build:website": "cd packages/website && yarn build",
+    "dev:website": "cd packages/website && yarn start",
     "build:platforms:android": "cd packages/platforms/android-player && yarn build",
     "build:platforms:webos": "cd packages/platforms/webos-player && yarn build",
     "build:platforms:electron": "cd packages/platforms/electron-player && yarn build",
@@ -22,6 +24,7 @@
     "packages/device",
     "packages/player",
     "packages/ui-common",
+    "packages/website",
     "packages/widged",
     "packages/platforms/*",
     "packages/castmill/assets"
