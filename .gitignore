@@ -51,3 +51,13 @@ dump.rdb
 .vscode/launch.json
 packages/erl_crash.dump
 packages/castmill/priv/static/medias
+
+# Lock files from other package managers
+bun.lock
+package-lock.json
+
+# Build artifacts
+packages/platforms/electron-player/out/
+
+# Temporary config files
+*.timestamp-*

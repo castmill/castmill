@@ -3,22 +3,620 @@
  * and scoped locally.
  */
 
-.heroBanner {
-  padding: 4rem 0;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
-  color: white;
+.main {
+  background: var(--ifm-background-color);
 }
 
-@media screen and (max-width: 996px) {
-  .heroBanner {
-    padding: 2rem;
+.heroBanner {
+  position: relative;
+  overflow: hidden;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  background: var(--ifm-background-color);
+  border-bottom: 1px solid var(--ifm-color-emphasis-200);
+}
+
+/* Clean, minimal background */
+.heroBackground {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 0;
+}
+
+/* Subtle geometric pattern */
+.heroPattern {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background-image: 
+    linear-gradient(90deg, var(--ifm-color-emphasis-100) 1px, transparent 1px),
+    linear-gradient(var(--ifm-color-emphasis-100) 1px, transparent 1px);
+  background-size: 100px 100px;
+  opacity: 0.3;
+}
+
+/* Better pattern visibility for light mode */
+[data-theme='light'] .heroPattern {
+  background-image: 
+    linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px),
+    linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px);
+  opacity: 0.3;
+}
+
+[data-theme='dark'] .heroPattern {
+  background-image: 
+    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px),
+    linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px);
+  opacity: 0.25;
+}
+
+/* Minimal accent overlay */
+.heroGradient {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, 
+    rgba(59, 130, 246, 0.03) 0%, 
+    rgba(147, 51, 234, 0.03) 100%);
+}
+
+[data-theme='dark'] .heroGradient {
+  background: linear-gradient(135deg, 
+    rgba(59, 130, 246, 0.05) 0%, 
+    rgba(147, 51, 234, 0.05) 100%);
+}
+
+.heroContent {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 120px 40px;
+}
+
+.heroText {
+  margin-bottom: 80px;
+}
+
+.heroTitle {
+  font-size: clamp(3.5rem, 8vw, 6rem);
+  font-weight: 300;
+  line-height: 1.1;
+  margin-bottom: 40px;
+  color: var(--ifm-heading-color);
+  letter-spacing: -0.02em;
+}
+
+/* Ensure good contrast in light mode */
+[data-theme='light'] .heroTitle {
+  color: #1e293b;
+}
+
+[data-theme='dark'] .heroTitle {
+  color: var(--ifm-heading-color);
+}
+
+.heroTitleMain {
+  display: block;
+  font-weight: 300;
+}
+
+.heroTitleAccent {
+  display: block;
+  font-weight: 600;
+  color: var(--ifm-color-primary);
+  margin-top: 0.2em;
+  opacity: 0.85;
+}
+
+/* Make "Partner" text more visible and less blurry in both themes */
+[data-theme='light'] .heroTitleAccent {
+  color: #2563eb;
+  opacity: 0.9;
+}
+
+[data-theme='dark'] .heroTitleAccent {
+  color: var(--ifm-color-primary-light);
+  opacity: 0.95;
+}
+
+.heroSubtitle {
+  font-size: clamp(1.25rem, 2.5vw, 1.5rem);
+  color: var(--ifm-color-content-secondary);
+  margin-bottom: 60px;
+  font-weight: 400;
+  line-height: 1.6;
+  max-width: 800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Better contrast for light mode */
+[data-theme='light'] .heroSubtitle {
+  color: #475569;
+}
+
+[data-theme='dark'] .heroSubtitle {
+  color: var(--ifm-color-content-secondary);
+}
+
+/* Clean stats design */
+.heroStats {
+  display: flex;
+  justify-content: center;
+  gap: 80px;
+  margin-bottom: 60px;
+  flex-wrap: wrap;
+}
+
+.stat {
+  text-align: center;
+  padding: 0 20px;
+}
+
+.statNumber {
+  font-size: 3rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--ifm-color-primary);
+  display: block;
+  opacity: 0.9;
+}
+
+/* Make stat numbers much more subtle and less overwhelming */
+[data-theme='light'] .statNumber {
+  color: #475569;
+  opacity: 0.75;
+  font-weight: 500;
+}
+
+[data-theme='dark'] .statNumber {
+  color: rgba(148, 163, 184, 0.8);
+  opacity: 0.7;
+  font-weight: 500;
+}
+
+.statLabel {
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: var(--ifm-color-content-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  opacity: 0.8;
+}
+
+/* Make stat labels much more subtle and blend with background */
+[data-theme='light'] .statLabel {
+  color: #64748b;
+  opacity: 0.65;
+  font-weight: 400;
+}
+
+[data-theme='dark'] .statLabel {
+  color: rgba(148, 163, 184, 0.6);
+  opacity: 0.6;
+  font-weight: 400;
+}
+
+.heroActions {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.heroButton {
+  min-width: 180px;
+  font-weight: 500;
+  border-radius: 8px;
+  padding: 16px 32px;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  position: relative;
+  text-decoration: none;
+  border: none;
+}
+
+.heroPrimaryButton {
+  background: var(--ifm-color-primary);
+  color: white;
+  box-shadow: 
+    0 1px 3px rgba(0, 0, 0, 0.12), 
+    0 1px 2px rgba(0, 0, 0, 0.24);
+}
+
+.heroPrimaryButton:hover {
+  background: var(--ifm-color-primary-dark);
+  transform: translateY(-1px);
+  box-shadow: 
+    0 4px 6px rgba(0, 0, 0, 0.12), 
+    0 2px 4px rgba(0, 0, 0, 0.08);
+  color: white;
+  text-decoration: none;
+}
+
+.heroSecondaryButton {
+  background: transparent;
+  color: var(--ifm-color-content);
+  border: 1px solid var(--ifm-color-emphasis-300);
+}
+
+.heroSecondaryButton:hover {
+  background: var(--ifm-color-emphasis-100);
+  border-color: var(--ifm-color-emphasis-400);
+  transform: translateY(-1px);
+  color: var(--ifm-color-content);
+  text-decoration: none;
+}
+
+[data-theme='dark'] .heroSecondaryButton:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.githubIcon {
+  margin-right: 8px;
+  font-size: 1em;
+}
+
+/* Minimal scroll indicator */
+.heroScroll {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+}
+
+.scrollIndicator {
+  text-align: center;
+  color: var(--ifm-color-content-secondary);
+  font-size: 0.8rem;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.scrollArrow {
+  font-size: 1.2rem;
+  margin-top: 8px;
+  animation: gentleBounce 3s infinite ease-in-out;
+}
+
+@keyframes gentleBounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(8px);
   }
 }
 
-.buttons {
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .heroBanner {
+    min-height: 90vh;
+  }
+  
+  .heroContent {
+    padding: 80px 20px;
+  }
+  
+  .heroStats {
+    gap: 40px;
+    margin-bottom: 40px;
+  }
+  
+  .stat {
+    padding: 0 10px;
+  }
+  
+  .heroActions {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .heroButton {
+    min-width: 280px;
+  }
+  
+  .statNumber {
+    font-size: 2.5rem;
+  }
+}
+
+/* Enterprise-grade professional styling */
+@media (max-width: 480px) {
+  .heroContent {
+    padding: 60px 16px;
+  }
+  
+  .heroStats {
+    gap: 30px;
+  }
+  
+  .heroTitle {
+    margin-bottom: 30px;
+  }
+  
+  .heroSubtitle {
+    margin-bottom: 40px;
+  }
+}
+
+.heroContent {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 80px 20px;
+}
+
+.heroText {
+  margin-bottom: 60px;
+}
+
+.heroTitle {
+  font-size: clamp(3rem, 8vw, 5rem);
+  font-weight: 800;
+  line-height: 1.1;
+  margin-bottom: 30px;
+  color: white;
+  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.heroTitleMain {
+  display: block;
+}
+
+.heroTitleAccent {
+  display: block;
+  font-weight: 600;
+  color: var(--ifm-color-primary);
+  margin-top: 0.2em;
+  opacity: 0.85;
+}
+
+/* Make "Partner" text more visible and less blurry in both themes */
+[data-theme='light'] .heroTitleAccent {
+  color: #2563eb;
+  opacity: 0.9;
+}
+
+[data-theme='dark'] .heroTitleAccent {
+  color: var(--ifm-color-primary-light);
+  opacity: 0.95;
+}
+
+.heroSubtitle {
+  font-size: clamp(1.2rem, 3vw, 1.5rem);
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 50px;
+  font-weight: 400;
+  line-height: 1.6;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.heroStats {
   display: flex;
-  align-items: center;
   justify-content: center;
+  gap: 50px;
+  margin-bottom: 50px;
+  flex-wrap: wrap;
+}
+
+.stat {
+  text-align: center;
+  color: white;
+}
+
+.statNumber {
+  font-size: 3rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--ifm-color-primary);
+  display: block;
+  opacity: 0.9;
+}
+
+/* Make stat numbers much more subtle and less overwhelming */
+[data-theme='light'] .statNumber {
+  color: #475569;
+  opacity: 0.75;
+  font-weight: 500;
+}
+
+[data-theme='dark'] .statNumber {
+  color: rgba(148, 163, 184, 0.8);
+  opacity: 0.7;
+  font-weight: 500;
+}
+
+.statLabel {
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: var(--ifm-color-content-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  opacity: 0.8;
+}
+
+/* Make stat labels much more subtle and blend with background */
+[data-theme='light'] .statLabel {
+  color: #64748b;
+  opacity: 0.65;
+  font-weight: 400;
+}
+
+[data-theme='dark'] .statLabel {
+  color: rgba(148, 163, 184, 0.6);
+  opacity: 0.6;
+  font-weight: 400;
+}
+
+.heroActions {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.heroButton {
+  min-width: 200px;
+  font-weight: 600;
+  border-radius: 50px;
+  padding: 16px 32px;
+  font-size: 1.1rem;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.heroPrimaryButton {
+  background: linear-gradient(135deg, #ffffff, #f3f4f6);
+  color: #667eea;
+  border: none;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.heroPrimaryButton:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+  color: #667eea;
+  text-decoration: none;
+}
+
+.heroSecondaryButton {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* Better visibility for GitHub button in light mode */
+[data-theme='light'] .heroSecondaryButton {
+  background: rgba(30, 41, 59, 0.9);
+  color: white;
+  border: 2px solid rgba(30, 41, 59, 0.2);
+}
+
+[data-theme='dark'] .heroSecondaryButton {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.heroSecondaryButton:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-2px);
+  color: white;
+  text-decoration: none;
+}
+
+/* Theme-specific hover states */
+[data-theme='light'] .heroSecondaryButton:hover {
+  background: rgba(30, 41, 59, 1);
+  border-color: rgba(59, 130, 246, 0.5);
+  transform: translateY(-2px);
+  color: white;
+  text-decoration: none;
+}
+
+[data-theme='dark'] .heroSecondaryButton:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.5);
+  transform: translateY(-2px);
+  color: white;
+  text-decoration: none;
+}
+
+.githubIcon {
+  margin-right: 8px;
+  font-size: 1.2em;
+}
+
+.heroScroll {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+}
+
+.scrollIndicator {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.scrollArrow {
+  font-size: 1.5rem;
+  margin-top: 8px;
+  animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-10px);
+  }
+  60% {
+    transform: translateY(-5px);
+  }
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .heroBanner {
+    min-height: 80vh;
+  }
+  
+  .heroContent {
+    padding: 40px 20px;
+  }
+  
+  .heroStats {
+    gap: 30px;
+  }
+  
+  .heroActions {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .heroButton {
+    min-width: 250px;
+  }
+  
+  .statNumber {
+    font-size: 2rem;
+  }
+}
+
+/* Dark mode adjustments */
+[data-theme='dark'] .heroPrimaryButton {
+  background: linear-gradient(135deg, #1e293b, #334155);
+  color: #e2e8f0;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme='dark'] .heroPrimaryButton:hover {
+  color: #e2e8f0;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
 }
