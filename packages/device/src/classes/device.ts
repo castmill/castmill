@@ -586,9 +586,13 @@ export class Device extends EventEmitter {
       return defaultBaseUrl;
     }
 
-    // Otherwise, we use the first available base url.
-    const firstBaseUrl = (await this.getAvailableBaseUrls())[0].url;
-    return firstBaseUrl;
+    // Otherwise, we use the first available base url, if any.
+    const availableBaseUrls = await this.getAvailableBaseUrls();
+    if (availableBaseUrls.length > 0 && availableBaseUrls[0]?.url) {
+      return availableBaseUrls[0].url;
+    }
+    // Fallback: return empty string or a sensible default
+    return '';
   }
 
   getDeviceInfo() {

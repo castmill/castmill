@@ -63,21 +63,21 @@ const createRadioButtons = (
 const shortDeviceId = (deviceId?: string) => deviceId?.split('-').shift();
 
 export const MenuComponent: Component<MenuProps> = (props) => {
-  const [deviceInfo] = createResource(props.device, fetchDeviceInfo);
+  const [deviceInfo] = createResource(() => props.device, fetchDeviceInfo);
 
-  const [availableUrls] = createResource(props.device, fetchAvailableUrls, {
+  const [availableUrls] = createResource(() => props.device, fetchAvailableUrls, {
     initialValue: [],
   });
 
-  const [selectedUrl] = createResource(props.device, fetchSelectedUrl, {
+  const [selectedUrl] = createResource(() => props.device, fetchSelectedUrl, {
     initialValue: '',
   });
 
   const [deviceName, setDeviceName] = createSignal<string>(
-    props.device.name || 'N/A'
+    props.device?.name || 'N/A'
   );
   const [deviceId, setDeviceId] = createSignal<string>(
-    props.device.id || 'N/A'
+    props.device?.id || 'N/A'
   );
 
   const deviceStartedHandler = ({ id, name }: { id: string; name: string }) => {
