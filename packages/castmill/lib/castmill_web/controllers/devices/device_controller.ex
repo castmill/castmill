@@ -13,22 +13,22 @@ defmodule CastmillWeb.DeviceController do
   action_fallback(CastmillWeb.FallbackController)
 
   @impl CastmillWeb.AccessActorBehaviour
-  # Allow access for the player start page
-  # def check_access(_actor_id, _action, _params) do
-  #   {:ok, true}
-  # end
 
   def check_access(actor_id, action, %{"device_id" => device_id})
       when action in [:send_command, :get_cache, :get_channels, :add_channel, :remove_channel] do
-    # Check if the actor has access via the device organization
-    device = Devices.get_device(device_id)
-    organization_id = device.organization_id
-
-    if Organizations.has_access(organization_id, actor_id, "devices", action) do
+    # Device can access its own resources for these actions
+    if actor_id == device_id do
       {:ok, true}
     else
-      # TODO: Check if the actor has access via teams
-      {:ok, false}
+      device = Devices.get_device(device_id)
+      organization_id = device.organization_id
+
+      if Organizations.has_access(organization_id, actor_id, "devices", action) do
+        {:ok, true}
+      else
+        # TODO: Check if the actor has access via teams
+        {:ok, false}
+      end
     end
   end
 
