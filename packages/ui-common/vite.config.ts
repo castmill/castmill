@@ -7,9 +7,20 @@ import solidPlugin from 'vite-plugin-solid';
 export default defineConfig({
   plugins: [solidPlugin(), cssInjectedByJsPlugin()],
   test: {
-    globals: true,
     environment: 'jsdom',
     setupFiles: ['./test-setup.ts'],
+  },
+  esbuild: {
+    jsx: 'automatic',
+    jsxImportSource: 'solid-js',
+  },
+  css: {
+    preprocessorOptions: {
+      scss: {
+        api: 'modern-compiler', // Use modern Sass API
+        silenceDeprecations: ['legacy-js-api'],
+      },
+    },
   },
   build: {
     lib: {

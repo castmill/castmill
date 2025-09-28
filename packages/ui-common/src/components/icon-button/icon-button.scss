@@ -1,3 +1,5 @@
+@use 'sass:color';
+
 .icon-button {
   display: inline-flex;
   align-items: center;
@@ -12,7 +14,7 @@
   transition: background-color 0.3s;
 
   &:hover {
-    background-color: darken(#007bff, 10%);
+    background-color: color.scale(#007bff, $lightness: -10%);
   }
 
   &.icon-button-disabled {

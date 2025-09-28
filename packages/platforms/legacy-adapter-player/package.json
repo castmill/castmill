@@ -2,7 +2,8 @@
   "name": "@castmill/legacy-adapter-player",
   "version": "1.0.0",
   "description": "",
-  "type:": "module",
+  "type": "module",
+  "license": "AGPL-3.0-or-later",
   "scripts": {
     "format": "prettier --write .",
     "format:check": "prettier --check .",
