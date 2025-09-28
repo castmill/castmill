@@ -93,7 +93,7 @@ export class TemplateWidget extends TimelineWidget {
     const fontFace = new FontFace(name, `url(${url})`);
 
     return fontFace.load().then((loadedFace) => {
-      document.fonts.add(loadedFace);
+      (document.fonts as any).add(loadedFace);
       return loadedFace;
     });
   }
@@ -126,7 +126,7 @@ export class TemplateWidget extends TimelineWidget {
       if (fontFaceName) {
         const fontFace = await this.fontFaces[fontFaceName];
         if (fontFace) {
-          fontFaceSet.delete(fontFace);
+          (fontFaceSet as any).delete(fontFace);
         }
         delete this.fontFaces[fontFaceName];
       }

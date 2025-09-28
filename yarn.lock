@@ -4838,11 +4838,6 @@
   dependencies:
     "@types/node" "*"
 
-"@types/css-font-loading-module@^0.0.13":
-  version "0.0.13"
-  resolved "https://registry.yarnpkg.com/@types/css-font-loading-module/-/css-font-loading-module-0.0.13.tgz#22f104350e1123ddcda052843cd0038018bc48c8"
-  integrity sha512-EnmFmshMT9rD3yohKkrbMMrRULUVkZbUAJFrFFO12mxiFWQvRKDQYsK1CB8tSUYZQ+uUui5RBvENNHqhL9xqgQ==
-
 "@types/debug@^4.0.0", "@types/debug@^4.1.6":
   version "4.1.12"
   resolved "https://registry.yarnpkg.com/@types/debug/-/debug-4.1.12.tgz#a155f21690871953410df4b6b6f53187f0500917"

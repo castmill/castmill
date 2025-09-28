@@ -278,6 +278,6 @@ function drawScene(
 }
 
 function setMatrixUniforms(gl: WebGLRenderingContext) {
-  gl.uniformMatrix4fv(gl.shaderProgram.pMatrixUniform, false, gl.pMatrix);
-  gl.uniformMatrix4fv(gl.shaderProgram.mvMatrixUniform, false, gl.mvMatrix);
+  gl.uniformMatrix4fv(gl.shaderProgram.pMatrixUniform, false, new Float32Array(gl.pMatrix));
+  gl.uniformMatrix4fv(gl.shaderProgram.mvMatrixUniform, false, new Float32Array(gl.mvMatrix));
 }
