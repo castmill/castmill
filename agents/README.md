@@ -1,11 +1,11 @@
-# Castmill AI Documentation
+# Castmill Agent Documentation
 
-This directory contains comprehensive technical documentation specifically designed for AI assistants and automated tools working with the Castmill monorepo. The documentation is organized hierarchically to handle the complexity of multiple packages and interconnected systems.
+This directory contains comprehensive technical documentation specifically designed for AI agents, automated tools, and other intelligent systems working with the Castmill monorepo. The documentation is organized hierarchically to handle the complexity of multiple packages and interconnected systems.
 
 ## 🏗️ Directory Structure
 
 ```
-docs-ai/
+agents/
 ├── README.md                    # This index file
 ├── packages/                    # Package-specific documentation
 │   ├── website/                # Documentation website (Docusaurus)
@@ -62,7 +62,7 @@ docs-ai/
 
 ### When to Create AI Documentation
 
-**✅ Create AI docs for:**
+**✅ Create machine docs for:**
 - Complex automated systems (build tools, generators, data pipelines)
 - Multi-package integrations and shared systems  
 - Custom plugins, extensions, or middleware
@@ -70,7 +70,7 @@ docs-ai/
 - Systems with multiple configuration options
 - Cross-cutting concerns (auth, logging, caching)
 
-**❌ Don't create AI docs for:**
+**❌ Don't create machine docs for:**
 - Simple component implementations
 - Standard configuration files
 - Basic styling or content changes
@@ -119,7 +119,7 @@ Common issues, debugging approaches, known limitations.
 Planned improvements, technical debt, scaling concerns.
 ```
 
-## 🤖 AI Usage Guidelines
+## 🤖 Machine Usage Guidelines
 
 ### For AI Assistants Working on Castmill:
 
@@ -168,4 +168,4 @@ Planned improvements, technical debt, scaling concerns.
 
 ---
 
-*This documentation system ensures comprehensive technical context is preserved and accessible for future AI assistance across the entire Castmill monorepo.*
+*This documentation system ensures comprehensive technical context is preserved and accessible for future machine assistance across the entire Castmill monorepo.*
