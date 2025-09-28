@@ -65,9 +65,13 @@ const shortDeviceId = (deviceId?: string) => deviceId?.split('-').shift();
 export const MenuComponent: Component<MenuProps> = (props) => {
   const [deviceInfo] = createResource(() => props.device, fetchDeviceInfo);
 
-  const [availableUrls] = createResource(() => props.device, fetchAvailableUrls, {
-    initialValue: [],
-  });
+  const [availableUrls] = createResource(
+    () => props.device,
+    fetchAvailableUrls,
+    {
+      initialValue: [],
+    }
+  );
 
   const [selectedUrl] = createResource(() => props.device, fetchSelectedUrl, {
     initialValue: '',
