@@ -46,6 +46,7 @@ agents/
 - **Test Coverage**: Maintain >90% coverage on new code (unit, integration, e2e tests)
 - **Linting**: Follow existing ESLint/Prettier configurations
 - **Architecture**: Maintain consistency with existing patterns
+- **Commit Messages**: Follow conventional commits standard (e.g., `feat:`, `fix:`, `docs:`, `refactor:`)
 
 ### Key Technologies
 - **Frontend**: React 18, TypeScript, Vite, Tailwind CSS
@@ -89,6 +90,7 @@ yarn workspace dashboard dev    # Dashboard
 - Use TypeScript for all new frontend code
 - Write comprehensive tests (>90% coverage target)
 - Follow existing ESLint/Prettier configurations
+- Use conventional commits format for all commit messages
 - Update `agents/` docs when making architectural changes
 - Maintain professional UI/UX standards for enterprise users
 
