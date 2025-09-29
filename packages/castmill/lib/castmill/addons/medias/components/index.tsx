@@ -251,7 +251,6 @@ const MediasPage: Component<{
           successMessage={loadingSuccess()}
           errorMessage={loadingError()}
           loading={loading()}
-          contentClass="medias-modal"
         >
           <UploadComponent
             baseUrl={props.store.env.baseUrl}
