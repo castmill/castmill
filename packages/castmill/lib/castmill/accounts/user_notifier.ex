@@ -95,9 +95,13 @@ defmodule Castmill.Accounts.UserNotifier do
 
     Hi #{user.name},
 
-    Please verify your new email address by clicking the link below:
+    You requested to change your email address for your Castmill account.
+
+    To prevent account lockout, please verify your new email address by clicking the link below:
 
     #{verification_url(token)}
+
+    Your email address will only be updated after verification is complete.
 
     If you didn't request this change, please ignore this email.
 

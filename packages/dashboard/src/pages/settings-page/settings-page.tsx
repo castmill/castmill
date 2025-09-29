@@ -188,14 +188,15 @@ const SettingsPage: Component = () => {
               type="email"
               placeholder="Enter your email address"
               onInput={(value) => setEmail(String(value))}
+              description="Changes to your email address require verification to prevent account lockout"
             >
               <></>
             </FormItem>
 
             <Show when={emailVerification().verificationSent}>
               <div class="email-verification-notice">
-                <p><strong>Email verification sent!</strong></p>
-                <p>Please check your email ({emailVerification().pendingEmail}) and click the verification link to confirm your new email address.</p>
+                <p><strong>Email verification required!</strong></p>
+                <p>To prevent account lockout, please verify your new email address ({emailVerification().pendingEmail}) by clicking the verification link we sent. Your email will only be updated after verification.</p>
               </div>
             </Show>
 
