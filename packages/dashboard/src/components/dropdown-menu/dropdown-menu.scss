@@ -3,7 +3,7 @@
 .castmill-dropdown-menu {
   padding: 0.5rem;
   background-color: colors.$component-background-color;
-  border-radius: 0.2em;
+  border-radius: 0.3em;
 
   .container {
     position: relative;
@@ -17,41 +17,102 @@
       position: relative;
       z-index: 1;
       cursor: pointer;
+      padding: 0.5rem;
+      border-radius: 0.3em;
+      transition: background-color 0.2s ease;
+
+      &:hover {
+        background-color: colors.$component-background-color-light;
+      }
 
       svg {
         margin-left: 0.5rem;
+        transition: transform 0.2s ease;
       }
     }
 
     .menu {
       list-style: none;
-      min-width: 10em;
+      min-width: 12em;
       margin: 0;
-      padding: 1em;
+      padding: 0.5rem;
       color: colors.$base-color;
-      background-color: colors.$background;
+      background-color: colors.$component-background-color;
       border: 1px solid colors.$separator-color;
+      border-radius: 0.5rem;
+      box-shadow: 
+        0 4px 6px -1px rgba(0, 0, 0, 0.4),
+        0 2px 4px -1px rgba(0, 0, 0, 0.3);
       position: absolute;
-      z-index: 0;
+      right: 0;
+      top: 100%;
+      z-index: 1000;
       transition:
         opacity 0.3s ease,
-        transform 0.3s ease;
+        transform 0.3s ease,
+        visibility 0.3s ease;
 
       display: flex;
       flex-direction: column;
-      align-items: flex-start;
-      justify-content: center;
+      align-items: stretch;
+      justify-content: flex-start;
+      gap: 0.25rem;
+
+      /* Menu items styling */
+      li {
+        margin: 0;
+        padding: 0;
+
+        a, button {
+          display: block;
+          width: 100%;
+          padding: 0.75rem 1rem;
+          margin: 0;
+          text-decoration: none;
+          color: colors.$base-color;
+          background: none;
+          border: none;
+          border-radius: 0.3rem;
+          cursor: pointer;
+          font-size: 0.9rem;
+          font-family: inherit;
+          text-align: left;
+          transition: 
+            background-color 0.2s ease,
+            color 0.2s ease;
+
+          &:hover, &:focus {
+            background-color: colors.$highlight-background-color;
+            color: colors.$highlight-color;
+            outline: none;
+          }
+
+          &:active {
+            background-color: colors.$separator-color;
+          }
+
+          &.logout {
+            color: #ff6b6b;
+            
+            &:hover, &:focus {
+              background-color: rgba(255, 107, 107, 0.1);
+              color: #ff4757;
+            }
+          }
+        }
+      }
     }
 
     .close {
       visibility: hidden;
       opacity: 0;
-      transform: translateY(-1em);
+      transform: translateY(-0.5rem) scale(0.95);
     }
 
     .open {
+      visibility: visible;
       opacity: 1;
-      transform: translateY(0.5em);
+      transform: translateY(0.25rem) scale(1);
     }
   }
 }
