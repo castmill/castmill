@@ -14,6 +14,7 @@ Some of its features:
 
 The Castmill platform is composed of several packages:
 
+- [Dashboard](./packages/dashboard/README.md) - The dashboard component of the platform.
 - [Player](./packages/player/README.md) - Core library for the player.
 - [Device](./packages/device/README.md) - Device management and configuration.
 - [Cache](./packages/cache/README.md) - Cache and Resource Manager.
