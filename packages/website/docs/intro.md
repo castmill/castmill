@@ -1,12 +1,13 @@
 ---
 sidebar_position: 1
+image: /img/social/docs-intro.jpg
 ---
 
 # Introduction
 
 ![Castmill](./img/castmill.png)
 
-Welcome to **Castmill**, a comprehensive open source platform for creating and managing digital signage, including content management, device management, APIs and SDKs for third party integrations and extensions.
+Welcome to **Castmill**, a comprehensive open source solution for creating and managing digital signage, including content management, device management, APIs and SDKs for third party integrations and extensions.
 
 Let's discover **Castmill in less than 5 minutes**.
 

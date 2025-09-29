@@ -1,6 +1,6 @@
-import { Machine, DeviceInfo, SettingKey } from '@castmill/device';
+import { Machine, DeviceInfo, SettingKey, Timers } from '@castmill/device';
 import { configuration, deviceInfo, power, storage } from '../native';
-import { simpleHash } from './utils';
+import { simpleHash, getTimers, setTimers } from './utils';
 import { version } from '../../package.json';
 
 // The update config is used to update the application on the device. We set this
@@ -207,5 +207,13 @@ export class WebosMachine implements Machine {
     // e.g. 'XS2E' instead of '55XS2E-BH'
     const url = `https://update.castmill.io/webos/firmware/${manufacturer}-${modelName}.epk`;
     return url;
+  }
+
+  async getTimers(): Promise<Timers> {
+    return getTimers();
+  }
+
+  async setTimers(timers: Timers): Promise<void> {
+    return setTimers(timers);
   }
 }

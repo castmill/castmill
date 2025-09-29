@@ -27,10 +27,6 @@ env:
 jobs:
   # Single deploy job since we're just deploying
   deploy:
-    defaults:
-      run:
-        working-directory: ./packages/website
-
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -42,10 +38,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20.x
+          cache: 'yarn'
       - name: Install dependencies
-        run: npm install
-      - name: Build
-        run: npm run build
+        run: yarn install --frozen-lockfile
+      - name: Build website
+        run: yarn workspace website build
       - name: Setup Pages
         uses: actions/configure-pages@v3
       - name: Upload artifact

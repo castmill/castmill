@@ -92,7 +92,7 @@ export const List: Component<ListProps> = (props) => {
 
   let textRef: HTMLDivElement | undefined;
   let gsapTimeline: GSAPTimeline = gsap.timeline({ repeat: -1, paused: true });
-  let timelineItem: TimelineItem;
+  let timelineItem: TimelineItem | null = null;
 
   let count = 0;
   const onReadyAfter = () => {
