@@ -13,7 +13,7 @@ export function RegisterComponent(props: { device: Device; pincode: string }) {
     // Update window width on resize to make QR code responsive
     const handleResize = () => setWindowWidth(window.innerWidth);
     window.addEventListener('resize', handleResize);
-    
+
     try {
       // Generate QR code for the registration URL with responsive sizing
       const registrationUrl = `https://app.castmill.com/register/${props.pincode}`;
