@@ -1,8 +1,14 @@
-.bottom-buttons {
+.bottom-buttons,
+.success-buttons {
   display: flex;
   flex-direction: row;
   margin-top: 2em;
   gap: 1em;
+}
+
+.success-content {
+  text-align: center;
+  padding: 1em 0;
 }
 
 .error {
