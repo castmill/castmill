@@ -1,22 +1,35 @@
 import { createSignal, onMount } from 'solid-js';
 import * as QRCode from 'qrcode';
 import { Device } from '../classes';
-import styles from './register.module.css';
-import logoSvg from '../assets/logo.svg';
+import { PincodeComponent } from './pincode.component';
+import styles from './register.module.scss';
+import castmillLogo from '../assets/castmill-logo.png';
 
 export function RegisterComponent(props: { device: Device; pincode: string }) {
   const [qrCodeUrl, setQrCodeUrl] = createSignal<string>('');
+  const [windowWidth, setWindowWidth] = createSignal(window.innerWidth);
 
   onMount(async () => {
+    // Update window width on resize to make QR code responsive
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    
     try {
-      // Generate QR code for the registration URL
-      // In a real implementation, this would be the actual registration URL
+      // Generate QR code for the registration URL with responsive sizing
       const registrationUrl = `https://app.castmill.com/register/${props.pincode}`;
+      
+      // Make QR code size responsive to screen dimensions
+      const getQrSize = () => {
+        if (windowWidth() < 480) return 150;
+        if (windowWidth() < 768) return 180;
+        return 200;
+      };
+
       const qrDataUrl = await QRCode.toDataURL(registrationUrl, {
-        width: 200,
+        width: getQrSize(),
         margin: 1,
         color: {
-          dark: '#1e3a8a',
+          dark: '#315aa9', // Using Castmill brand color
           light: '#ffffff'
         }
       });
@@ -24,26 +37,24 @@ export function RegisterComponent(props: { device: Device; pincode: string }) {
     } catch (error) {
       console.error('Error generating QR code:', error);
     }
+
+    // Cleanup event listener on unmount
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
   });
 
   return (
     <div class={styles.container}>
       <div class={styles.main}>
         <header class={styles.header}>
-          <img src={logoSvg} alt="Castmill" class={styles.logo} />
+          <img src={castmillLogo} alt="Castmill" class={styles.logo} />
           <h1 class={styles.title}>Register Your Device</h1>
           <p class={styles.subtitle}>Connect your device to the Castmill platform</p>
         </header>
 
         <div class={styles.content}>
-          <div class={styles.pincodeSection}>
-            <div class={styles.pincodeLabel}>Your Registration Code</div>
-            <div class={styles.pincode}>{props.pincode}</div>
-            <div class={styles.instructions}>
-              Enter this code on the Castmill dashboard to register your device, 
-              or scan the QR code below with your mobile device.
-            </div>
-          </div>
+          <PincodeComponent pincode={props.pincode} />
 
           {qrCodeUrl() && (
             <div class={styles.qrSection}>
