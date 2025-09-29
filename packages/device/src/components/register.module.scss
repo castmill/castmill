@@ -67,15 +67,15 @@ $castmill-lightest-blue: #dcf2fd;
   margin-bottom: 3rem;
 }
 
-// Create a subtle highlight area around the logo
+// Create a black container that matches the logo's black background
 .logoArea {
-  background: rgba(255, 255, 255, 0.05);
+  background: #000000; // Black background to match logo
   border-radius: 1rem;
   padding: 1.5rem;
   margin-bottom: 2rem;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2); // Subtle light border for definition
   display: inline-block; // Make it fit the logo size
+  box-shadow: 0 8px 25px rgba(0,0,0,0.4); // Enhanced shadow for depth
 }
 
 .logo {
