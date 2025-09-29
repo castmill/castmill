@@ -34,10 +34,13 @@ $castmill-darker-blue: #1f3b77;
   animation: pulse 2s ease-in-out infinite;
   overflow: hidden; // Prevent any text overflow
   white-space: nowrap; // Keep text on single line
-  text-overflow: ellipsis; // Show ellipsis if text is too long
   max-width: 100%; // Ensure it doesn't exceed container
   box-sizing: border-box; // Include padding in width calculation
   min-width: 0; // Allow shrinking
+  
+  // Use CSS clamp for better responsive scaling
+  font-size: clamp(1.5rem, 8vw, 3rem); // Scale between 1.5rem and 3rem based on viewport
+  letter-spacing: clamp(0.05em, 0.5vw, 0.25em); // Scale letter spacing too
 }
 
 .instructions {
@@ -48,36 +51,36 @@ $castmill-darker-blue: #1f3b77;
   color: white;
 }
 
-// Responsive design
+// Responsive design - Additional breakpoints for better scaling
 @media (max-width: 768px) {
   .pincode {
-    font-size: 2.25rem; // Slightly smaller
-    letter-spacing: 0.15em; // Reduced letter spacing
     padding: 0.875rem 1rem; // Reduced padding
   }
 }
 
 @media (max-width: 480px) {
   .pincode {
-    font-size: 1.75rem; // Much smaller for narrow screens
     padding: 0.75rem 0.75rem;
-    letter-spacing: 0.1em;
   }
 }
 
 @media (max-width: 360px) {
   .pincode {
-    font-size: 1.5rem; // Even smaller for very narrow screens
-    letter-spacing: 0.05em;
     padding: 0.5rem;
   }
 }
 
 @media (max-height: 600px) {
   .pincode {
-    font-size: 2rem; // Smaller for short screens
-    padding: 0.75rem 1rem;
     margin: 0.5rem 0;
+    padding: 0.75rem 1rem;
+  }
+}
+
+@media (max-height: 500px) {
+  .pincode {
+    margin: 0.25rem 0;
+    padding: 0.5rem 0.75rem;
   }
 }
 

@@ -20,6 +20,8 @@ $castmill-lightest-blue: #dcf2fd;
   color: white;
   position: relative;
   overflow: hidden; // Changed back to hidden to prevent scrollbars
+  width: 100vw; // Ensure full width to prevent white bar
+  box-sizing: border-box; // Include padding in width calculation
   
   // Responsive padding - much more conservative
   @media (max-height: 700px) {
@@ -33,14 +35,14 @@ $castmill-lightest-blue: #dcf2fd;
   &::before {
     content: '';
     position: absolute;
-    top: -25%; // Reduced animation area
-    left: -25%;
-    width: 150%; // Reduced size
-    height: 150%;
+    top: -50%; // Restored larger animation area
+    left: -50%;
+    width: 200%; // Restored original size
+    height: 200%;
     background: 
-      radial-gradient(circle at 25% 25%, rgba(255,255,255,0.05) 0%, transparent 50%), // Reduced opacity
-      radial-gradient(circle at 75% 75%, rgba(255,255,255,0.025) 0%, transparent 50%);
-    animation: float 30s ease-in-out infinite; // Slower animation
+      radial-gradient(circle at 25% 25%, rgba(255,255,255,0.1) 0%, transparent 50%), // Restored higher opacity
+      radial-gradient(circle at 75% 75%, rgba(255,255,255,0.05) 0%, transparent 50%);
+    animation: float 20s ease-in-out infinite; // Restored original speed
   }
 }
 
@@ -62,10 +64,16 @@ $castmill-lightest-blue: #dcf2fd;
   flex: 1; // Take available space but don't grow beyond viewport
   justify-content: center;
   min-height: 0; // Allow shrinking
+  overflow: hidden; // Prevent content from expanding beyond bounds
   
   @media (max-height: 600px) {
     justify-content: flex-start;
     margin-top: 0.5rem;
+  }
+  
+  @media (max-height: 500px) {
+    justify-content: flex-start;
+    margin-top: 0.25rem;
   }
 }
 
@@ -152,6 +160,7 @@ $castmill-lightest-blue: #dcf2fd;
   text-align: center;
   width: 100%;
   max-width: 500px;
+  flex-shrink: 1; // Allow shrinking if needed
   
   @media (max-width: 768px) {
     padding: 1.25rem; // Reduced from 2rem 1.5rem
@@ -159,6 +168,10 @@ $castmill-lightest-blue: #dcf2fd;
   
   @media (max-height: 600px) {
     padding: 1rem;
+  }
+  
+  @media (max-height: 500px) {
+    padding: 0.75rem;
   }
 }
 
