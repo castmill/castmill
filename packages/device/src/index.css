@@ -1,10 +1,30 @@
 body {
   margin: 0;
+  padding: 0; // Ensure no padding
+  width: 100%; // Ensure full width
+  height: 100vh; // Ensure full height
+  overflow: hidden; // Prevent any scrolling at body level
   font-family:
     -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu',
     'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden; // Prevent scrolling at html level too
+}
+
+#root {
+  width: 100%;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
 }
 
 code {

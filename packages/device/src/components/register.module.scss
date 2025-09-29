@@ -20,7 +20,8 @@ $castmill-lightest-blue: #dcf2fd;
   color: white;
   position: relative;
   overflow: hidden; // Changed back to hidden to prevent scrollbars
-  width: 100vw; // Ensure full width to prevent white bar
+  width: 100%; // Changed from 100vw to 100% to prevent background showing
+  max-width: 100vw; // Ensure it doesn't exceed viewport
   box-sizing: border-box; // Include padding in width calculation
   
   // Responsive padding - much more conservative
@@ -64,16 +65,21 @@ $castmill-lightest-blue: #dcf2fd;
   flex: 1; // Take available space but don't grow beyond viewport
   justify-content: center;
   min-height: 0; // Allow shrinking
-  overflow: hidden; // Prevent content from expanding beyond bounds
+  overflow: visible; // Changed from hidden to visible to prevent clipping
   
-  @media (max-height: 600px) {
+  @media (max-height: 700px) {
     justify-content: flex-start;
     margin-top: 0.5rem;
   }
   
-  @media (max-height: 500px) {
+  @media (max-height: 600px) {
     justify-content: flex-start;
     margin-top: 0.25rem;
+  }
+  
+  @media (max-height: 500px) {
+    justify-content: flex-start;
+    margin-top: 0.125rem;
   }
 }
 
@@ -91,9 +97,18 @@ $castmill-lightest-blue: #dcf2fd;
 .header {
   text-align: center;
   margin-bottom: 1.5rem; // Reduced from 3rem
+  flex-shrink: 0; // Prevent header from shrinking
+  
+  @media (max-height: 700px) {
+    margin-bottom: 1rem;
+  }
   
   @media (max-height: 600px) {
-    margin-bottom: 1rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  @media (max-height: 500px) {
+    margin-bottom: 0.5rem;
   }
 }
 
@@ -107,6 +122,16 @@ $castmill-lightest-blue: #dcf2fd;
   display: inline-block; // Make it fit the logo size
   box-shadow: 0 8px 25px rgba(0,0,0,0.4); // Enhanced shadow for depth
   text-align: center; // Center the logo horizontally
+  
+  @media (max-height: 600px) {
+    padding: 0.6rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  @media (max-height: 500px) {
+    padding: 0.4rem;
+    margin-bottom: 0.5rem;
+  }
 }
 
 .logo {
@@ -161,9 +186,14 @@ $castmill-lightest-blue: #dcf2fd;
   width: 100%;
   max-width: 500px;
   flex-shrink: 1; // Allow shrinking if needed
+  margin: 0 auto; // Center the content
   
   @media (max-width: 768px) {
     padding: 1.25rem; // Reduced from 2rem 1.5rem
+  }
+  
+  @media (max-height: 700px) {
+    padding: 1.25rem;
   }
   
   @media (max-height: 600px) {
@@ -172,6 +202,10 @@ $castmill-lightest-blue: #dcf2fd;
   
   @media (max-height: 500px) {
     padding: 0.75rem;
+  }
+  
+  @media (max-height: 450px) {
+    padding: 0.5rem;
   }
 }
 
