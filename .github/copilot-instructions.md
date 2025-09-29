@@ -14,10 +14,12 @@ This is a **Yarn workspace monorepo** with the following structure:
 - `packages/ui-common/` - Shared UI components and utilities
 - `packages/widged/` - Widget system and components
 
-### Backend & Infrastructure
+### Backend (Elixir/Phoenix)
 - `packages/castmill/` - Main Elixir/Phoenix backend application
-- `packages/cache/` - Caching layer and resource management
-- `packages/platforms/` - Platform-specific implementations (Android, WebOS, Electron, Legacy)
+
+### Digital Signage Players & Infrastructure
+- `packages/platforms/` - Castmill digital signage player apps for different platforms (Android, WebOS, Electron, Legacy)
+- `packages/cache/` - TypeScript caching package used by players (frontend/player hybrid)
 
 ## 📖 AI Documentation System
 
@@ -47,15 +49,16 @@ agents/
 
 ### Key Technologies
 - **Frontend**: React 18, TypeScript, Vite, Tailwind CSS
-- **Backend**: Elixir/Phoenix, PostgreSQL, real-time channels
+- **Backend**: Elixir/Phoenix, PostgreSQL, real-time channels  
+- **Players**: TypeScript-based digital signage apps for multiple platforms
 - **Documentation**: Docusaurus with custom plugins
 - **Testing**: Vitest, React Testing Library, Phoenix test framework
-- **Build**: Vite for frontend, Mix for backend
+- **Build**: Vite for frontend/players, Mix for backend
 
 ### Architecture Patterns
 - **Monorepo**: Related packages share dependencies and build tooling
 - **Component-driven**: UI components in `ui-common` are shared across packages
-- **Plugin architecture**: Extensible widget and platform systems
+- **Digital signage platform**: Player apps deployed across multiple platforms (Android, WebOS, etc.)
 - **Modern tooling**: Vite for builds, Vitest for testing
 
 ## 🔧 Common Commands
