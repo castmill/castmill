@@ -86,6 +86,60 @@
         line-height: 1.5;
       }
 
+      h4 {
+        margin: 1.5rem 0 1rem 0;
+        font-size: 1rem;
+        font-weight: 500;
+      }
+
+      .passkey-list {
+        margin-bottom: 1.5rem;
+
+        .passkey-item {
+          background: colors.$highlight-background-color;
+          border: 1px solid colors.$separator-color;
+          border-radius: 4px;
+          padding: 1rem;
+          margin-bottom: 0.5rem;
+
+          .passkey-info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          }
+
+          .passkey-details {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+
+            .passkey-name {
+              font-weight: 500;
+            }
+
+            .passkey-date {
+              color: colors.$component-color;
+              font-size: 0.875rem;
+            }
+          }
+
+          .passkey-actions {
+            display: flex;
+            gap: 0.5rem;
+          }
+
+          .passkey-edit {
+            width: 100%;
+
+            .edit-actions {
+              display: flex;
+              gap: 0.5rem;
+              margin-top: 0.5rem;
+            }
+          }
+        }
+      }
+
       .passkey-actions {
         display: flex;
         flex-direction: column;
@@ -94,6 +148,24 @@
         small {
           color: colors.$component-color;
           font-size: 0.75rem;
+        }
+      }
+
+      .email-verification-notice {
+        background: colors.$highlight-background-color;
+        border: 1px solid colors.$highlight-color;
+        border-radius: 4px;
+        padding: 1rem;
+        margin: 1rem 0;
+
+        p {
+          margin: 0 0 0.5rem 0;
+          color: colors.$highlight-color;
+
+          &:last-child {
+            margin-bottom: 0;
+            color: colors.$component-color;
+          }
         }
       }
     }
@@ -137,6 +209,23 @@
 
     .settings-section {
       padding: 1rem;
+
+      .passkey-item {
+        .passkey-info-row {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 1rem;
+        }
+
+        .passkey-actions {
+          flex-direction: column;
+          width: 100%;
+        }
+
+        .edit-actions {
+          flex-direction: column;
+        }
+      }
     }
 
     .settings-header h1 {

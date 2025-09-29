@@ -18,6 +18,11 @@ vi.mock('../../services/user.service', () => ({
     deleteAccount: vi.fn(),
     getCurrentUser: vi.fn(),
     checkOrganizationOwnership: vi.fn(),
+    getUserCredentials: vi.fn(() => Promise.resolve({ credentials: [] })),
+    deleteCredential: vi.fn(),
+    updateCredentialName: vi.fn(),
+    sendEmailVerification: vi.fn(),
+    verifyEmail: vi.fn(),
   },
 }));
 
@@ -43,10 +48,23 @@ describe('SettingsPage', () => {
     // Check security section
     expect(screen.getByText('Security & Authentication')).toBeInTheDocument();
     expect(screen.getByText('Passkeys')).toBeInTheDocument();
+    expect(screen.getByText('Your Passkeys')).toBeInTheDocument();
 
     // Check danger zone
     expect(screen.getByText('Account Management')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Delete Account' })).toBeInTheDocument();
+  });
+
+  it('displays passkey management section', () => {
+    render(() => <SettingsPage />);
+
+    expect(
+      screen.getByText(
+        /Your account uses passkeys for secure, passwordless authentication/
+      )
+    ).toBeInTheDocument();
+    expect(screen.getByText('Add New Passkey')).toBeInTheDocument();
+    expect(screen.getByText('Adding new passkeys coming soon')).toBeInTheDocument();
   });
 
   it('pre-populates form fields with user data', () => {
@@ -80,5 +98,24 @@ describe('SettingsPage', () => {
     expect(screen.getByText('Are you sure?')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Yes, Delete Account' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
+  });
+
+  it('shows email verification notice when email verification is sent', async () => {
+    const { UserService } = await import('../../services/user.service');
+    (UserService.sendEmailVerification as any).mockResolvedValue({ status: 'ok' });
+
+    render(() => <SettingsPage />);
+
+    const emailInput = screen.getByLabelText('Email Address') as HTMLInputElement;
+    emailInput.value = 'newemail@example.com';
+    emailInput.dispatchEvent(new Event('input', { bubbles: true }));
+
+    const saveButton = screen.getByRole('button', { name: 'Save Changes' });
+    saveButton.click();
+
+    // Wait for the email verification notice to appear
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    expect(screen.getByText('Email verification sent!')).toBeInTheDocument();
   });
 });

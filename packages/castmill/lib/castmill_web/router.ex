@@ -283,6 +283,14 @@ defmodule CastmillWeb.Router do
     end
 
     resources("/users", UserController, except: [:new, :edit, :index])
+    
+    # User credential and email management routes
+    get("/users/:id/credentials", UserController, :list_credentials)
+    delete("/users/:id/credentials/:credential_id", UserController, :delete_credential)
+    put("/users/:id/credentials/:credential_id", UserController, :update_credential)
+    post("/users/:id/send-email-verification", UserController, :send_email_verification)
+    post("/verify-email", UserController, :verify_email)
+    
     resources("/access_tokens", AccessTokenController, except: [:new, :edit])
 
     # These routes are here to avoid some warnings, but not sure they are needed.

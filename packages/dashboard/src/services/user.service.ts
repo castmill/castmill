@@ -53,4 +53,78 @@ export const UserService = {
     // For now, we'll return a placeholder
     return { hasOrganizations: false, organizations: [] };
   },
+
+  /**
+   * Get all user credentials/passkeys
+   */
+  async getUserCredentials(userId: string) {
+    const response = await fetch(`${baseUrl}/api/users/${userId}/credentials`, {
+      method: 'GET',
+      credentials: 'include',
+    });
+
+    return handleResponse<{ credentials: Array<{id: string, name: string, inserted_at: string, updated_at: string}> }>(response, { parse: true });
+  },
+
+  /**
+   * Delete a user credential/passkey
+   */
+  async deleteCredential(userId: string, credentialId: string) {
+    const response = await fetch(`${baseUrl}/api/users/${userId}/credentials/${credentialId}`, {
+      method: 'DELETE',
+      credentials: 'include',
+    });
+
+    if (response.status !== 204) {
+      throw new Error('Failed to delete credential');
+    }
+  },
+
+  /**
+   * Update credential name
+   */
+  async updateCredentialName(userId: string, credentialId: string, name: string) {
+    const response = await fetch(`${baseUrl}/api/users/${userId}/credentials/${credentialId}`, {
+      method: 'PUT',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ name }),
+    });
+
+    return handleResponse<{ status: string, message: string }>(response, { parse: true });
+  },
+
+  /**
+   * Send email verification for new email
+   */
+  async sendEmailVerification(userId: string, newEmail: string) {
+    const response = await fetch(`${baseUrl}/api/users/${userId}/send-email-verification`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email: newEmail }),
+    });
+
+    return handleResponse<{ status: string, message: string }>(response, { parse: true });
+  },
+
+  /**
+   * Verify email with token
+   */
+  async verifyEmail(token: string, newEmail: string) {
+    const response = await fetch(`${baseUrl}/api/verify-email`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ token, email: newEmail }),
+    });
+
+    return handleResponse<{ status: string, user: User }>(response, { parse: true });
+  },
 };

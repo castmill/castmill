@@ -1,8 +1,9 @@
-import { Component, createSignal, onMount, Show } from 'solid-js';
+import { Component, createSignal, onMount, Show, For } from 'solid-js';
 import { Button, FormItem } from '@castmill/ui-common';
 import { getUser } from '../../components/auth';
 import { UserService } from '../../services/user.service';
 import { User } from '../../interfaces/user.interface';
+import { Credential, EmailVerificationState } from '../../interfaces/credential.interface';
 import './settings-page.scss';
 
 const SettingsPage: Component = () => {
@@ -13,6 +14,18 @@ const SettingsPage: Component = () => {
   const [saveSuccess, setSaveSuccess] = createSignal(false);
   const [error, setError] = createSignal('');
   const [showDeleteConfirm, setShowDeleteConfirm] = createSignal(false);
+  
+  // Credential management
+  const [credentials, setCredentials] = createSignal<Credential[]>([]);
+  const [credentialsLoading, setCredentialsLoading] = createSignal(false);
+  const [editingCredential, setEditingCredential] = createSignal<string | null>(null);
+  const [newCredentialName, setNewCredentialName] = createSignal('');
+  
+  // Email verification
+  const [emailVerification, setEmailVerification] = createSignal<EmailVerificationState>({
+    verificationSent: false,
+    isVerifying: false
+  });
 
   onMount(async () => {
     const currentUser = getUser();
@@ -20,8 +33,21 @@ const SettingsPage: Component = () => {
       setUser(currentUser as User);
       setName(currentUser.name || '');
       setEmail(currentUser.email || '');
+      await loadCredentials(currentUser.id);
     }
   });
+
+  const loadCredentials = async (userId: string) => {
+    setCredentialsLoading(true);
+    try {
+      const response = await UserService.getUserCredentials(userId);
+      setCredentials(response.credentials);
+    } catch (err) {
+      console.error('Failed to load credentials:', err);
+    } finally {
+      setCredentialsLoading(false);
+    }
+  };
 
   const handleSaveProfile = async () => {
     const currentUser = user();
@@ -33,11 +59,34 @@ const SettingsPage: Component = () => {
 
     try {
       const updates: Partial<User> = {};
-      if (name() !== currentUser.name) updates.name = name();
-      if (email() !== currentUser.email) updates.email = email();
+      const nameChanged = name() !== currentUser.name;
+      const emailChanged = email() !== currentUser.email;
+
+      if (nameChanged) {
+        updates.name = name();
+      }
+
+      // Handle email change with verification
+      if (emailChanged) {
+        await UserService.sendEmailVerification(currentUser.id, email());
+        setEmailVerification({
+          pendingEmail: email(),
+          verificationSent: true,
+          isVerifying: false
+        });
+        // Reset email to original value until verified
+        setEmail(currentUser.email || '');
+      }
 
       if (Object.keys(updates).length > 0) {
         await UserService.updateProfile(currentUser.id, updates);
+      }
+
+      if (emailChanged) {
+        setSaveSuccess(false); // Don't show success for email yet
+        // Show different message for email verification
+        setError(''); // Clear any previous errors
+      } else {
         setSaveSuccess(true);
         setTimeout(() => setSaveSuccess(false), 3000);
       }
@@ -67,6 +116,46 @@ const SettingsPage: Component = () => {
       setLoading(false);
       setShowDeleteConfirm(false);
     }
+  };
+
+  const handleDeleteCredential = async (credentialId: string) => {
+    const currentUser = user();
+    if (!currentUser?.id) return;
+
+    try {
+      await UserService.deleteCredential(currentUser.id, credentialId);
+      // Reload credentials list
+      await loadCredentials(currentUser.id);
+    } catch (err) {
+      setError('Failed to delete passkey. Please try again.');
+      console.error('Delete credential error:', err);
+    }
+  };
+
+  const handleUpdateCredentialName = async (credentialId: string) => {
+    const currentUser = user();
+    if (!currentUser?.id || !newCredentialName()) return;
+
+    try {
+      await UserService.updateCredentialName(currentUser.id, credentialId, newCredentialName());
+      setEditingCredential(null);
+      setNewCredentialName('');
+      // Reload credentials list
+      await loadCredentials(currentUser.id);
+    } catch (err) {
+      setError('Failed to update passkey name. Please try again.');
+      console.error('Update credential error:', err);
+    }
+  };
+
+  const startEditingCredential = (credential: Credential) => {
+    setEditingCredential(credential.id);
+    setNewCredentialName(credential.name);
+  };
+
+  const cancelEditingCredential = () => {
+    setEditingCredential(null);
+    setNewCredentialName('');
   };
 
   return (
@@ -103,6 +192,13 @@ const SettingsPage: Component = () => {
               <></>
             </FormItem>
 
+            <Show when={emailVerification().verificationSent}>
+              <div class="email-verification-notice">
+                <p><strong>Email verification sent!</strong></p>
+                <p>Please check your email ({emailVerification().pendingEmail}) and click the verification link to confirm your new email address.</p>
+              </div>
+            </Show>
+
             <div class="form-actions">
               <Button
                 label="Save Changes"
@@ -131,14 +227,77 @@ const SettingsPage: Component = () => {
                 Passkeys are stored securely on your device and provide better security 
                 than traditional passwords.
               </p>
+              
+              <div class="passkey-list">
+                <h4>Your Passkeys</h4>
+                <Show when={credentialsLoading()}>
+                  <p>Loading passkeys...</p>
+                </Show>
+                <Show when={!credentialsLoading() && credentials().length === 0}>
+                  <p>No passkeys found.</p>
+                </Show>
+                <For each={credentials()}>
+                  {(credential) => (
+                    <div class="passkey-item">
+                      <div class="passkey-info-row">
+                        <Show when={editingCredential() !== credential.id}>
+                          <div class="passkey-details">
+                            <span class="passkey-name">{credential.name}</span>
+                            <span class="passkey-date">Added {new Date(credential.inserted_at).toLocaleDateString()}</span>
+                          </div>
+                          <div class="passkey-actions">
+                            <Button
+                              label="Rename"
+                              onClick={() => startEditingCredential(credential)}
+                              color="secondary"
+                            />
+                            <Button
+                              label="Remove"
+                              onClick={() => handleDeleteCredential(credential.id)}
+                              color="danger"
+                            />
+                          </div>
+                        </Show>
+                        <Show when={editingCredential() === credential.id}>
+                          <div class="passkey-edit">
+                            <FormItem
+                              label="Passkey Name"
+                              id={`credential-name-${credential.id}`}
+                              value={newCredentialName()}
+                              type="text"
+                              placeholder="Enter a name for this passkey"
+                              onInput={(value) => setNewCredentialName(String(value))}
+                            >
+                              <></>
+                            </FormItem>
+                            <div class="edit-actions">
+                              <Button
+                                label="Save"
+                                onClick={() => handleUpdateCredentialName(credential.id)}
+                                color="primary"
+                              />
+                              <Button
+                                label="Cancel"
+                                onClick={cancelEditingCredential}
+                                color="secondary"
+                              />
+                            </div>
+                          </div>
+                        </Show>
+                      </div>
+                    </div>
+                  )}
+                </For>
+              </div>
+
               <div class="passkey-actions">
                 <Button
-                  label="Manage Passkeys"
-                  onClick={() => {/* TODO: Implement passkey management */}}
+                  label="Add New Passkey"
+                  onClick={() => {/* TODO: Implement new passkey registration */}}
                   color="secondary"
                   disabled={true}
                 />
-                <small>Passkey management coming soon</small>
+                <small>Adding new passkeys coming soon</small>
               </div>
             </div>
           </div>

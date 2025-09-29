@@ -376,6 +376,86 @@ defmodule Castmill.Accounts do
     Repo.get(UserCredential, id)
   end
 
+  @doc """
+  List all credentials for a user
+  """
+  def list_user_credentials(user_id) do
+    from(uc in UserCredential, where: uc.user_id == ^user_id, order_by: [desc: uc.inserted_at])
+    |> Repo.all()
+  end
+
+  @doc """
+  Delete a specific user credential
+  """
+  def delete_user_credential(user_id, credential_id) do
+    from(uc in UserCredential, where: uc.user_id == ^user_id and uc.id == ^credential_id)
+    |> Repo.delete_all()
+    |> case do
+      {1, nil} -> {:ok, "Credential deleted successfully"}
+      {0, nil} -> {:error, :not_found}
+    end
+  end
+
+  @doc """
+  Add a friendly name to a credential by storing it in user meta
+  """
+  def update_credential_name(user_id, credential_id, name) do
+    with user when not is_nil(user) <- Repo.get(User, user_id) do
+      current_meta = user.meta || %{}
+      credential_names = Map.get(current_meta, "credential_names", %{})
+      updated_credential_names = Map.put(credential_names, credential_id, name)
+      updated_meta = Map.put(current_meta, "credential_names", updated_credential_names)
+      
+      user
+      |> Ecto.Changeset.change(meta: updated_meta)
+      |> Repo.update()
+    else
+      nil -> {:error, :user_not_found}
+    end
+  end
+
+  @doc """
+  Get credential name from user meta
+  """
+  def get_credential_name(user, credential_id) do
+    user.meta
+    |> Map.get("credential_names", %{})
+    |> Map.get(credential_id, "Unnamed Device")
+  end
+
+  @doc """
+  Send email verification when email is updated
+  """
+  def send_email_verification(%User{} = user, new_email) do
+    {encoded_token, user_token} = UserToken.build_email_token(user, "email_verification")
+    Repo.insert!(user_token)
+    
+    # Store the new email in token context for verification
+    UserNotifier.deliver_email_verification_instructions(user, new_email, encoded_token)
+  end
+
+  @doc """
+  Verify email with token and update user email
+  """
+  def verify_email_token(token, new_email) do
+    with {:ok, query} <- UserToken.verify_email_token_query(token, "email_verification"),
+         %UserToken{user_id: user_id} = user_token <- Repo.one(query),
+         %User{} = user <- Repo.get(User, user_id) do
+      
+      # Update user email and delete the token
+      Ecto.Multi.new()
+      |> Ecto.Multi.update(:user, User.changeset(user, %{email: new_email}))
+      |> Ecto.Multi.delete(:token, user_token)
+      |> Repo.transaction()
+      |> case do
+        {:ok, %{user: user}} -> {:ok, user}
+        {:error, changeset} -> {:error, changeset}
+      end
+    else
+      _ -> {:error, :invalid_token}
+    end
+  end
+
   def get_network_id_by_domain(domain) do
     case from(network in Castmill.Networks.Network,
            where: network.domain == ^domain,

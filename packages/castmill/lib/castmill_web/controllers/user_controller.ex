@@ -82,4 +82,72 @@ defmodule CastmillWeb.UserController do
       {:error, :not_found} -> send_resp(conn, :not_found, "")
     end
   end
+
+  @doc """
+  List user's credentials/passkeys
+  """
+  def list_credentials(conn, %{"id" => user_id}) do
+    credentials = Accounts.list_user_credentials(user_id)
+    user = Accounts.get_user(user_id)
+    
+    # Add friendly names to credentials
+    credentials_with_names = Enum.map(credentials, fn credential ->
+      name = if user, do: Accounts.get_credential_name(user, credential.id), else: "Unnamed Device"
+      %{
+        id: credential.id,
+        name: name,
+        inserted_at: credential.inserted_at,
+        updated_at: credential.updated_at
+      }
+    end)
+    
+    json(conn, %{credentials: credentials_with_names})
+  end
+
+  @doc """
+  Delete a user's credential/passkey
+  """
+  def delete_credential(conn, %{"id" => user_id, "credential_id" => credential_id}) do
+    with {:ok, _} <- Accounts.delete_user_credential(user_id, credential_id) do
+      send_resp(conn, :no_content, "")
+    else
+      {:error, :not_found} -> send_resp(conn, :not_found, "")
+    end
+  end
+
+  @doc """
+  Update credential name
+  """
+  def update_credential(conn, %{"id" => user_id, "credential_id" => credential_id, "name" => name}) do
+    with {:ok, _} <- Accounts.update_credential_name(user_id, credential_id, name) do
+      json(conn, %{status: "ok", message: "Credential name updated"})
+    else
+      {:error, :user_not_found} -> send_resp(conn, :not_found, "User not found")
+    end
+  end
+
+  @doc """
+  Send email verification for new email address
+  """
+  def send_email_verification(conn, %{"id" => user_id, "email" => new_email}) do
+    with user when not is_nil(user) <- Accounts.get_user(user_id),
+         {:ok, _} <- Accounts.send_email_verification(user, new_email) do
+      json(conn, %{status: "ok", message: "Verification email sent"})
+    else
+      nil -> send_resp(conn, :not_found, "User not found")
+      {:error, _} -> send_resp(conn, :unprocessable_entity, "Failed to send verification email")
+    end
+  end
+
+  @doc """
+  Verify email with token
+  """
+  def verify_email(conn, %{"token" => token, "email" => new_email}) do
+    with {:ok, user} <- Accounts.verify_email_token(token, new_email) do
+      json(conn, %{status: "ok", user: user})
+    else
+      {:error, :invalid_token} -> send_resp(conn, :unprocessable_entity, "Invalid or expired token")
+      {:error, _} -> send_resp(conn, :unprocessable_entity, "Failed to verify email")
+    end
+  end
 end
