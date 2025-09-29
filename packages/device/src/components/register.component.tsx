@@ -48,7 +48,9 @@ export function RegisterComponent(props: { device: Device; pincode: string }) {
     <div class={styles.container}>
       <div class={styles.main}>
         <header class={styles.header}>
-          <img src={castmillLogo} alt="Castmill" class={styles.logo} />
+          <div class={styles.logoArea}>
+            <img src={castmillLogo} alt="Castmill" class={styles.logo} />
+          </div>
           <h1 class={styles.title}>Register Your Device</h1>
           <p class={styles.subtitle}>Connect your device to the Castmill platform</p>
         </header>

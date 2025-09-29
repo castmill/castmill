@@ -67,19 +67,31 @@ $castmill-lightest-blue: #dcf2fd;
   margin-bottom: 3rem;
 }
 
+// Create a subtle highlight area around the logo
+.logoArea {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: inline-block; // Make it fit the logo size
+}
+
 .logo {
-  max-width: 200px;
+  max-width: 300px; // Increased size significantly
   height: auto;
-  margin-bottom: 1.5rem;
-  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+  margin-bottom: 2rem;
+  border-radius: 0.5rem; // Add subtle border radius to soften the black background
+  box-shadow: 0 8px 25px rgba(0,0,0,0.4); // Enhanced shadow for better integration
   
   // Responsive logo sizing
   @media (max-width: 768px) {
-    max-width: 160px;
+    max-width: 240px; // Larger on tablet
   }
   
   @media (max-width: 480px) {
-    max-width: 140px;
+    max-width: 200px; // Still larger on mobile than before
   }
 }
 
