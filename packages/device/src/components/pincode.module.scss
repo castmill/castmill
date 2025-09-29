@@ -32,6 +32,10 @@ $castmill-darker-blue: #1f3b77;
   word-spacing: 0.1em;
   color: white;
   animation: pulse 2s ease-in-out infinite;
+  overflow: hidden; // Prevent any text overflow
+  word-break: break-all; // Allow breaking of long codes
+  max-width: 100%; // Ensure it doesn't exceed container
+  box-sizing: border-box; // Include padding in width calculation
 }
 
 .instructions {
@@ -47,6 +51,7 @@ $castmill-darker-blue: #1f3b77;
   .pincode {
     font-size: 2.5rem;
     letter-spacing: 0.2em;
+    padding: 0.875rem 1.25rem;
   }
 }
 
@@ -54,6 +59,15 @@ $castmill-darker-blue: #1f3b77;
   .pincode {
     font-size: 2rem;
     padding: 0.75rem 1rem;
+    letter-spacing: 0.15em;
+  }
+}
+
+@media (max-height: 600px) {
+  .pincode {
+    font-size: 2.25rem;
+    padding: 0.75rem 1rem;
+    margin: 0.5rem 0;
   }
 }
 

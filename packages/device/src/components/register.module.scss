@@ -10,15 +10,25 @@ $castmill-lightest-blue: #dcf2fd;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between; // Changed from center to space-between
   background: linear-gradient(135deg, $castmill-darker-blue 0%, $castmill-blue 50%, $castmill-dark-blue 100%);
-  padding: 2rem;
+  padding: 2rem 2rem 5rem 2rem; // Added more bottom padding for footer
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   color: white;
   position: relative;
-  overflow: hidden;
+  overflow: auto; // Changed from hidden to auto to allow scrolling if needed
+  
+  // Responsive padding
+  @media (max-height: 700px) {
+    padding: 1rem 2rem 4rem 2rem;
+  }
+  
+  @media (max-height: 600px) {
+    padding: 0.5rem 1rem 3rem 1rem;
+    justify-content: flex-start; // On very small screens, don't center
+  }
 
   &::before {
     content: '';
@@ -49,6 +59,13 @@ $castmill-lightest-blue: #dcf2fd;
   max-width: 600px;
   width: 100%;
   animation: fadeInUp 0.8s ease-out;
+  flex-grow: 1; // Allow to grow and take available space
+  justify-content: center; // Center content within main area
+  
+  @media (max-height: 600px) {
+    justify-content: flex-start;
+    margin-top: 1rem;
+  }
 }
 
 @keyframes fadeInUp {
@@ -172,14 +189,18 @@ $castmill-lightest-blue: #dcf2fd;
 }
 
 .footer {
-  position: absolute;
-  bottom: 1rem;
-  left: 50%;
-  transform: translateX(-50%);
+  position: relative; // Changed from absolute to relative
+  margin-top: auto; // Push to bottom with flexbox
   text-align: center;
   font-size: 0.875rem;
   opacity: 0.7;
   z-index: 1;
+  padding: 1rem 0;
+  
+  @media (max-height: 600px) {
+    font-size: 0.75rem;
+    padding: 0.5rem 0;
+  }
 }
 
 // Fullscreen support

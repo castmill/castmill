@@ -70,7 +70,7 @@ export function RegisterComponent(props: { device: Device; pincode: string }) {
       </div>
 
       <footer class={styles.footer}>
-        <div>© 2024 Castmill. All rights reserved.</div>
+        <div>© 2011-{new Date().getFullYear()} Castmill. All rights reserved.</div>
         <div>Digital Signage Made Simple</div>
       </footer>
     </div>
