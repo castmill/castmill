@@ -122,4 +122,69 @@ defmodule Castmill.Widgets do
     )
     |> Repo.one()
   end
+
+  @doc """
+  Creates a widget.
+
+  ## Examples
+
+      iex> create_widget(%{field: value})
+      {:ok, %Widget{}}
+
+      iex> create_widget(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_widget(attrs \\ %{}) do
+    %Widget{}
+    |> Widget.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates a widget.
+
+  ## Examples
+
+      iex> update_widget(widget, %{field: new_value})
+      {:ok, %Widget{}}
+
+      iex> update_widget(widget, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_widget(%Widget{} = widget, attrs) do
+    widget
+    |> Widget.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a widget.
+
+  ## Examples
+
+      iex> delete_widget(widget)
+      {:ok, %Widget{}}
+
+      iex> delete_widget(widget)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_widget(%Widget{} = widget) do
+    Repo.delete(widget)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking widget changes.
+
+  ## Examples
+
+      iex> change_widget(widget)
+      %Ecto.Changeset{data: %Widget{}}
+
+  """
+  def change_widget(%Widget{} = widget, attrs \\ %{}) do
+    Widget.changeset(widget, attrs)
+  end
 end

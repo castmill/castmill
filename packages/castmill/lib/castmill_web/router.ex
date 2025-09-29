@@ -151,6 +151,9 @@ defmodule CastmillWeb.Router do
 
     # List all the widgets available for the organization
     get("/organizations/:organization_id/widgets", OrganizationController, :list_widgets)
+    post("/organizations/:organization_id/widgets", OrganizationController, :create_widget)
+    delete("/organizations/:organization_id/widgets/:widget_id", OrganizationController, :delete_widget)
+    patch("/organizations/:organization_id/widgets/:widget_id", OrganizationController, :update_widget)
 
     # List all the users in the organization
     get("/organizations/:organization_id/members", OrganizationController, :list_members)

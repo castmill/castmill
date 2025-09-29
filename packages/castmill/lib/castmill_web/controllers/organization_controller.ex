@@ -34,6 +34,21 @@ defmodule CastmillWeb.OrganizationController do
     {:ok, true}
   end
 
+  def check_access(actor_id, :create_widget, %{"organization_id" => organization_id}) do
+    # Only admins can create widgets for now
+    {:ok, Organizations.is_admin?(organization_id, actor_id)}
+  end
+
+  def check_access(actor_id, :delete_widget, %{"organization_id" => organization_id}) do
+    # Only admins can delete widgets for now
+    {:ok, Organizations.is_admin?(organization_id, actor_id)}
+  end
+
+  def check_access(actor_id, :update_widget, %{"organization_id" => organization_id}) do
+    # Only admins can update widgets for now
+    {:ok, Organizations.is_admin?(organization_id, actor_id)}
+  end
+
   def check_access(actor_id, :list_members, %{"organization_id" => organization_id}) do
     {:ok, Organizations.has_any_role?(organization_id, actor_id, [:admin, :regular])}
   end
@@ -170,6 +185,77 @@ defmodule CastmillWeb.OrganizationController do
     conn
     |> put_status(:ok)
     |> json(widgets)
+  end
+
+  def create_widget(conn, %{"organization_id" => _organization_id, "widget" => widget_file}) do
+    with {:ok, content} <- File.read(widget_file.path),
+         {:ok, widget_data} <- Jason.decode(content),
+         {:ok, widget} <- Castmill.Widgets.create_widget(widget_data) do
+      conn
+      |> put_status(:created)
+      |> json(widget)
+    else
+      {:error, :enoent} ->
+        conn
+        |> put_status(:bad_request)
+        |> json(%{error: "Failed to read uploaded file"})
+
+      {:error, %Jason.DecodeError{}} ->
+        conn
+        |> put_status(:bad_request)
+        |> json(%{error: "Invalid JSON format"})
+
+      {:error, %Ecto.Changeset{} = changeset} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{errors: changeset})
+
+      {:error, reason} ->
+        conn
+        |> put_status(:bad_request)
+        |> json(%{error: to_string(reason)})
+    end
+  end
+
+  def delete_widget(conn, %{"organization_id" => _organization_id, "widget_id" => widget_id}) do
+    with widget when not is_nil(widget) <- Castmill.Widgets.get_widget(widget_id),
+         {:ok, _} <- Castmill.Widgets.delete_widget(widget) do
+      send_resp(conn, :no_content, "")
+    else
+      nil ->
+        conn
+        |> put_status(:not_found)
+        |> json(%{error: "Widget not found"})
+
+      {:error, reason} ->
+        conn
+        |> put_status(:bad_request)
+        |> json(%{error: to_string(reason)})
+    end
+  end
+
+  def update_widget(conn, %{"organization_id" => _organization_id, "widget_id" => widget_id} = params) do
+    with widget when not is_nil(widget) <- Castmill.Widgets.get_widget(widget_id),
+         {:ok, updated_widget} <- Castmill.Widgets.update_widget(widget, params) do
+      conn
+      |> put_status(:ok)
+      |> json(updated_widget)
+    else
+      nil ->
+        conn
+        |> put_status(:not_found)
+        |> json(%{error: "Widget not found"})
+
+      {:error, %Ecto.Changeset{} = changeset} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{errors: changeset})
+
+      {:error, reason} ->
+        conn
+        |> put_status(:bad_request)
+        |> json(%{error: to_string(reason)})
+    end
   end
 
   def list_members(conn, params) do

@@ -72,6 +72,7 @@ config :castmill, :addons, [
   Castmill.Addons.Content,
   Castmill.Addons.Playlists,
   Castmill.Addons.Medias,
+  Castmill.Addons.Widgets,
   Castmill.Addons.Devices
 ]
 
