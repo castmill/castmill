@@ -7,40 +7,40 @@ $castmill-lightest-blue: #dcf2fd;
 
 .container {
   min-height: 100vh;
+  height: 100vh; // Fixed height to prevent overflow
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-between; // Changed from center to space-between
+  justify-content: space-between;
   background: linear-gradient(135deg, $castmill-darker-blue 0%, $castmill-blue 50%, $castmill-dark-blue 100%);
-  padding: 2rem 2rem 5rem 2rem; // Added more bottom padding for footer
+  padding: 1rem; // Reduced padding significantly
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   color: white;
   position: relative;
-  overflow: auto; // Changed from hidden to auto to allow scrolling if needed
+  overflow: hidden; // Changed back to hidden to prevent scrollbars
   
-  // Responsive padding
+  // Responsive padding - much more conservative
   @media (max-height: 700px) {
-    padding: 1rem 2rem 4rem 2rem;
+    padding: 0.5rem;
   }
   
   @media (max-height: 600px) {
-    padding: 0.5rem 1rem 3rem 1rem;
-    justify-content: flex-start; // On very small screens, don't center
+    padding: 0.25rem;
   }
 
   &::before {
     content: '';
     position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
+    top: -25%; // Reduced animation area
+    left: -25%;
+    width: 150%; // Reduced size
+    height: 150%;
     background: 
-      radial-gradient(circle at 25% 25%, rgba(255,255,255,0.1) 0%, transparent 50%),
-      radial-gradient(circle at 75% 75%, rgba(255,255,255,0.05) 0%, transparent 50%);
-    animation: float 20s ease-in-out infinite;
+      radial-gradient(circle at 25% 25%, rgba(255,255,255,0.05) 0%, transparent 50%), // Reduced opacity
+      radial-gradient(circle at 75% 75%, rgba(255,255,255,0.025) 0%, transparent 50%);
+    animation: float 30s ease-in-out infinite; // Slower animation
   }
 }
 
@@ -59,12 +59,13 @@ $castmill-lightest-blue: #dcf2fd;
   max-width: 600px;
   width: 100%;
   animation: fadeInUp 0.8s ease-out;
-  flex-grow: 1; // Allow to grow and take available space
-  justify-content: center; // Center content within main area
+  flex: 1; // Take available space but don't grow beyond viewport
+  justify-content: center;
+  min-height: 0; // Allow shrinking
   
   @media (max-height: 600px) {
     justify-content: flex-start;
-    margin-top: 1rem;
+    margin-top: 0.5rem;
   }
 }
 
@@ -81,15 +82,19 @@ $castmill-lightest-blue: #dcf2fd;
 
 .header {
   text-align: center;
-  margin-bottom: 3rem;
+  margin-bottom: 1.5rem; // Reduced from 3rem
+  
+  @media (max-height: 600px) {
+    margin-bottom: 1rem;
+  }
 }
 
 // Create a black container that matches the logo's black background
 .logoArea {
   background: #000000; // Black background to match logo
   border-radius: 1rem;
-  padding: 1.2rem; // Reduced from 1.5rem (20% less: 1.5 * 0.8 = 1.2)
-  margin-bottom: 2rem;
+  padding: 0.8rem; // Reduced from 1.2rem
+  margin-bottom: 1rem; // Reduced from 2rem
   border: 1px solid rgba(255, 255, 255, 0.2); // Subtle light border for definition
   display: inline-block; // Make it fit the logo size
   box-shadow: 0 8px 25px rgba(0,0,0,0.4); // Enhanced shadow for depth
@@ -142,19 +147,23 @@ $castmill-lightest-blue: #dcf2fd;
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 1rem;
-  padding: 2.5rem;
+  padding: 1.5rem; // Reduced from 2.5rem
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
   text-align: center;
   width: 100%;
   max-width: 500px;
   
   @media (max-width: 768px) {
-    padding: 2rem 1.5rem;
+    padding: 1.25rem; // Reduced from 2rem 1.5rem
+  }
+  
+  @media (max-height: 600px) {
+    padding: 1rem;
   }
 }
 
 .qrSection {
-  margin: 2rem 0;
+  margin: 1rem 0; // Reduced from 2rem 0
 }
 
 .qrLabel {
@@ -195,11 +204,12 @@ $castmill-lightest-blue: #dcf2fd;
   font-size: 0.875rem;
   opacity: 0.7;
   z-index: 1;
-  padding: 1rem 0;
+  padding: 0.5rem 0; // Reduced from 1rem 0
+  flex-shrink: 0; // Don't shrink the footer
   
   @media (max-height: 600px) {
     font-size: 0.75rem;
-    padding: 0.5rem 0;
+    padding: 0.25rem 0;
   }
 }
 
