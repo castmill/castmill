@@ -71,19 +71,21 @@ $castmill-lightest-blue: #dcf2fd;
 .logoArea {
   background: #000000; // Black background to match logo
   border-radius: 1rem;
-  padding: 1.5rem;
+  padding: 1.2rem; // Reduced from 1.5rem (20% less: 1.5 * 0.8 = 1.2)
   margin-bottom: 2rem;
   border: 1px solid rgba(255, 255, 255, 0.2); // Subtle light border for definition
   display: inline-block; // Make it fit the logo size
   box-shadow: 0 8px 25px rgba(0,0,0,0.4); // Enhanced shadow for depth
+  text-align: center; // Center the logo horizontally
 }
 
 .logo {
   max-width: 300px; // Increased size significantly
   height: auto;
-  margin-bottom: 2rem;
+  margin: 0; // Remove bottom margin to center vertically and reduce height
   border-radius: 0.5rem; // Add subtle border radius to soften the black background
   box-shadow: 0 8px 25px rgba(0,0,0,0.4); // Enhanced shadow for better integration
+  display: block; // Ensure proper centering
   
   // Responsive logo sizing
   @media (max-width: 768px) {
