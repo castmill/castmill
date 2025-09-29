@@ -274,6 +274,14 @@ export const ResourceChooser = (props: {
           columns,
           actions,
           onRowSelect,
+          defaultRowAction: {
+            icon: BsEye,
+            handler: (item: TableItem) => {
+              setCurrentResource(item);
+              setShowModal(true);
+            },
+            label: 'View',
+          },
         }}
         pagination={{ itemsPerPage }}
       ></TableView>

@@ -254,6 +254,11 @@ export const ResourcesView = (props: {
           columns,
           actions,
           onRowSelect,
+          defaultRowAction: {
+            icon: BsEye,
+            handler: openModal,
+            label: 'View',
+          },
         }}
         pagination={{ itemsPerPage }}
       ></TableView>
