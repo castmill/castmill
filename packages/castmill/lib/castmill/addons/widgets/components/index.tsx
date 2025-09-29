@@ -20,10 +20,8 @@ import {
 } from '@castmill/ui-common';
 import { JsonWidget } from '@castmill/player';
 import { WidgetsService } from '../services/widgets.service';
-import { UploadComponent } from './upload';
 
 import './widgets.scss';
-import { WidgetDetails } from './widget-details';
 import { AddonStore } from '../../common/interfaces/addon-store';
 
 const WidgetsPage: Component<{
@@ -34,85 +32,9 @@ const WidgetsPage: Component<{
     equals: false,
   });
 
-  const itemsPerPage = 10; // Number of items to show per page
+  const itemsPerPage = 10;
 
   const [showModal, setShowModal] = createSignal<JsonWidget | undefined>();
-
-  const [showAddWidgetsModal, setShowAddWidgetsModal] = createSignal(false);
-
-  const resourcesObserver = new ResourcesObserver<JsonWidget>(
-    props.store.socket,
-    'update',
-    /* onJoin */
-    (resource: JsonWidget) => {
-      return `resource:widget:${resource.id}`;
-    },
-    /* onUpdate */
-    (resource: JsonWidget, data: Partial<JsonWidget>) => {
-      console.log('Updating widget', resource.id, data);
-      updateItem(resource.id, data);
-    }
-  );
-
-  /** It may be possible to refactor this code as most views will have the same UI for
-   * removing resources.
-   */
-  const [showConfirmDialog, setShowConfirmDialog] = createSignal<
-    JsonWidget | undefined
-  >();
-  const [showConfirmDialogMultiple, setShowConfirmDialogMultiple] =
-    createSignal(false);
-
-  const confirmRemoveResource = async (resource: JsonWidget | undefined) => {
-    if (!resource) {
-      return;
-    }
-    try {
-      await WidgetsService.removeWidget(
-        props.store.env.baseUrl,
-        props.store.organizations.selectedId,
-        `${resource.id}`
-      );
-
-      refreshData();
-    } catch (error) {
-      alert(`Error removing widget ${resource.name}: ${error}`);
-    }
-    setShowConfirmDialog();
-  };
-
-  const confirmRemoveMultipleResources = async () => {
-    try {
-      await Promise.all(
-        Array.from(selectedWidgets()).map((resourceId) =>
-          WidgetsService.removeWidget(
-            props.store.env.baseUrl,
-            props.store.organizations.selectedId,
-            resourceId
-          )
-        )
-      );
-
-      refreshData();
-    } catch (error) {
-      alert(`Error removing widgets: ${error}`);
-    }
-    setShowConfirmDialogMultiple(false);
-    setSelectedWidgets(new Set<string>());
-  };
-
-  const closeAddWidgetsModal = () => {
-    setShowAddWidgetsModal(false);
-    refreshData();
-  };
-
-  const openAddWidgetsModal = () => {
-    setShowAddWidgetsModal(true);
-  };
-
-  const [selectedWidgets, setSelectedWidgets] = createSignal<Set<string>>(
-    new Set()
-  );
 
   const [tableRef, setRef] = createSignal<TableViewRef>();
 
@@ -134,26 +56,6 @@ const WidgetsPage: Component<{
         filters,
       }
     );
-  };
-
-  const refreshData = () => {
-    const ref = tableRef();
-    if (ref) {
-      ref.refresh();
-    }
-  };
-
-  const updateItem = (id: number, updates: Partial<JsonWidget>) => {
-    setData((prevData) => {
-      const newData = prevData.map((item) =>
-        item.id === id ? { ...item, ...updates } : item
-      );
-      return newData;
-    });
-  };
-
-  const onRowSelect = (selectedIds: Set<string>) => {
-    setSelectedWidgets(selectedIds);
   };
 
   const columns: Column[] = [
@@ -201,73 +103,26 @@ const WidgetsPage: Component<{
       icon: BsEye,
       handler: (widget: JsonWidget) => setShowModal(widget),
     },
-    {
-      label: 'Delete',
-      icon: AiOutlineDelete,
-      handler: (widget: JsonWidget) => setShowConfirmDialog(widget),
-      color: 'danger',
-    },
   ];
-
-  onCleanup(() => {
-    resourcesObserver.cleanup();
-  });
 
   return (
     <div class="widgets-page">
       <Modal ref={setShowModal} onClose={() => setShowModal()}>
         <Show when={showModal()}>
-          <WidgetDetails 
-            widget={showModal()!} 
-            store={props.store}
-            onClose={() => setShowModal()}
-          />
+          <div style="padding: 2rem; max-width: 800px;">
+            <h2>{showModal()!.name}</h2>
+            {showModal()!.description && (
+              <p>{showModal()!.description}</p>
+            )}
+            <div style="margin-top: 1rem;">
+              <h3>Template</h3>
+              <pre style="background: #f5f5f5; padding: 1rem; border-radius: 4px; overflow: auto;">
+                {JSON.stringify(showModal()!.template, null, 2)}
+              </pre>
+            </div>
+          </div>
         </Show>
       </Modal>
-
-      <Modal ref={setShowAddWidgetsModal} onClose={closeAddWidgetsModal}>
-        <Show when={showAddWidgetsModal()}>
-          <UploadComponent
-            baseUrl={props.store.env.baseUrl}
-            organizationId={props.store.organizations.selectedId}
-            onCancel={closeAddWidgetsModal}
-            onUploadComplete={closeAddWidgetsModal}
-          />
-        </Show>
-      </Modal>
-
-      <ConfirmDialog
-        isOpen={!!showConfirmDialog()}
-        onConfirm={() => confirmRemoveResource(showConfirmDialog())}
-        onCancel={() => setShowConfirmDialog()}
-        title="Delete Widget"
-        confirmText="Delete"
-        type="danger"
-      >
-        <div>
-          Are you sure you want to delete the widget{' '}
-          <strong>{showConfirmDialog()?.name}</strong>? This action cannot be
-          undone.
-        </div>
-      </ConfirmDialog>
-
-      <ConfirmDialog
-        isOpen={showConfirmDialogMultiple()}
-        onConfirm={confirmRemoveMultipleResources}
-        onCancel={() => setShowConfirmDialogMultiple(false)}
-        title="Delete Multiple Widgets"
-        confirmText="Delete"
-        type="danger"
-      >
-        <div>
-          Are you sure you want to delete {selectedWidgets().size} widgets?
-          This action cannot be undone.
-          {Array.from(selectedWidgets()).map((resourceId) => {
-            const resource = data().find((d) => `${d.id}` == resourceId);
-            return <div>{`- ${resource?.name}`}</div>;
-          })}
-        </div>
-      </ConfirmDialog>
 
       <TableView
         title="Widgets"
@@ -275,33 +130,12 @@ const WidgetsPage: Component<{
         params={props.params}
         fetchData={fetchData}
         ref={setRef}
-        toolbar={{
-          mainAction: (
-            <Button
-              label="Upload Widget"
-              onClick={openAddWidgetsModal}
-              icon={AiOutlineUpload}
-              color="primary"
-            />
-          ),
-          actions: (
-            <div>
-              <IconButton
-                onClick={() => setShowConfirmDialogMultiple(true)}
-                icon={AiOutlineDelete}
-                color="primary"
-                disabled={selectedWidgets().size === 0}
-              />
-            </div>
-          ),
-        }}
         table={{
           columns,
           actions,
-          onRowSelect,
         }}
         pagination={{ itemsPerPage }}
-      ></TableView>
+      />
     </div>
   );
 };
