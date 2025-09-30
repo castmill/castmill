@@ -1,9 +1,19 @@
-import { Component, createSignal, createMemo, onMount, Show, For } from 'solid-js';
+import {
+  Component,
+  createSignal,
+  createMemo,
+  onMount,
+  Show,
+  For,
+} from 'solid-js';
 import { Button, FormItem } from '@castmill/ui-common';
 import { getUser } from '../../components/auth';
 import { UserService } from '../../services/user.service';
 import { User } from '../../interfaces/user.interface';
-import { Credential, EmailVerificationState } from '../../interfaces/credential.interface';
+import {
+  Credential,
+  EmailVerificationState,
+} from '../../interfaces/credential.interface';
 import './settings-page.scss';
 
 const SettingsPage: Component = () => {
@@ -13,27 +23,33 @@ const SettingsPage: Component = () => {
   const [loading, setLoading] = createSignal(false);
   const [saveSuccess, setSaveSuccess] = createSignal(false);
   const [error, setError] = createSignal('');
-  
+
   // Track if form has unsaved changes
   const isDirty = createMemo(() => {
     const currentUser = user();
     if (!currentUser) return false;
-    return name() !== (currentUser.name || '') || email() !== (currentUser.email || '');
+    return (
+      name() !== (currentUser.name || '') ||
+      email() !== (currentUser.email || '')
+    );
   });
   const [showDeleteConfirm, setShowDeleteConfirm] = createSignal(false);
-  
+
   // Credential management
   const [credentials, setCredentials] = createSignal<Credential[]>([]);
   const [credentialsLoading, setCredentialsLoading] = createSignal(false);
   const [credentialsError, setCredentialsError] = createSignal('');
-  const [editingCredential, setEditingCredential] = createSignal<string | null>(null);
+  const [editingCredential, setEditingCredential] = createSignal<string | null>(
+    null
+  );
   const [newCredentialName, setNewCredentialName] = createSignal('');
-  
+
   // Email verification
-  const [emailVerification, setEmailVerification] = createSignal<EmailVerificationState>({
-    verificationSent: false,
-    isVerifying: false
-  });
+  const [emailVerification, setEmailVerification] =
+    createSignal<EmailVerificationState>({
+      verificationSent: false,
+      isVerifying: false,
+    });
 
   onMount(async () => {
     const currentUser = getUser();
@@ -53,16 +69,20 @@ const SettingsPage: Component = () => {
       setCredentials(response.credentials);
     } catch (err) {
       console.error('Failed to load credentials:', err);
-      
+
       // If we get an unauthorized error, the session has expired
       if (err instanceof Error && err.message === 'Unauthorized') {
-        setCredentialsError('Your session has expired. Redirecting to login...');
+        setCredentialsError(
+          'Your session has expired. Redirecting to login...'
+        );
         setTimeout(() => {
           window.location.href = '/login';
         }, 1500);
       } else {
         // For other errors, show a generic error message
-        setCredentialsError('Failed to load credentials. Please try refreshing the page.');
+        setCredentialsError(
+          'Failed to load credentials. Please try refreshing the page.'
+        );
       }
     } finally {
       setCredentialsLoading(false);
@@ -92,7 +112,7 @@ const SettingsPage: Component = () => {
         setEmailVerification({
           pendingEmail: email(),
           verificationSent: true,
-          isVerifying: false
+          isVerifying: false,
         });
         // Reset email to original value until verified
         setEmail(currentUser.email || '');
@@ -147,10 +167,10 @@ const SettingsPage: Component = () => {
     // Confirm before deleting
     const confirmed = window.confirm(
       'Are you sure you want to remove this passkey?\n\n' +
-      'Note: This will remove the passkey from your account, but you may need to manually delete it from your device\'s settings (like iCloud Keychain, Google Password Manager, or Windows Hello).\n\n' +
-      'Make sure you have tested your other passkey(s) work before removing this one.'
+        "Note: This will remove the passkey from your account, but you may need to manually delete it from your device's settings (like iCloud Keychain, Google Password Manager, or Windows Hello).\n\n" +
+        'Make sure you have tested your other passkey(s) work before removing this one.'
     );
-    
+
     if (!confirmed) return;
 
     try {
@@ -159,7 +179,7 @@ const SettingsPage: Component = () => {
       await loadCredentials(currentUser.id);
     } catch (err) {
       console.error('Delete credential error:', err);
-      
+
       // Handle authorization errors specifically
       if (err instanceof Error && err.message === 'Unauthorized') {
         setCredentialsError('Your session has expired. Please log in again.');
@@ -177,14 +197,18 @@ const SettingsPage: Component = () => {
     if (!currentUser?.id || !newCredentialName()) return;
 
     try {
-      await UserService.updateCredentialName(currentUser.id, credentialId, newCredentialName());
+      await UserService.updateCredentialName(
+        currentUser.id,
+        credentialId,
+        newCredentialName()
+      );
       setEditingCredential(null);
       setNewCredentialName('');
       // Reload credentials list
       await loadCredentials(currentUser.id);
     } catch (err) {
       console.error('Update credential error:', err);
-      
+
       // Handle authorization errors specifically
       if (err instanceof Error && err.message === 'Unauthorized') {
         setCredentialsError('Your session has expired. Please log in again.');
@@ -203,10 +227,11 @@ const SettingsPage: Component = () => {
 
     try {
       setCredentialsError('');
-      
+
       // Step 1: Get a challenge from the server
-      const { challenge, user_id } = await UserService.createCredentialChallenge(currentUser.id);
-      
+      const { challenge, user_id } =
+        await UserService.createCredentialChallenge(currentUser.id);
+
       // Step 2: Create the credential using WebAuthn
       // Decode the base64url challenge string to bytes
       const base64urlToUint8Array = (base64url: string) => {
@@ -221,7 +246,7 @@ const SettingsPage: Component = () => {
         }
         return bytes;
       };
-      
+
       const createOptions: CredentialCreationOptions = {
         publicKey: {
           challenge: base64urlToUint8Array(challenge),
@@ -230,12 +255,12 @@ const SettingsPage: Component = () => {
             id: window.location.hostname,
           },
           user: {
-            id: Uint8Array.from(user_id, c => c.charCodeAt(0)),
+            id: Uint8Array.from(user_id, (c) => c.charCodeAt(0)),
             name: currentUser.email || 'user@castmill.io',
             displayName: currentUser.name || 'Castmill User',
           },
           pubKeyCredParams: [
-            { alg: -7, type: 'public-key' },  // ES256
+            { alg: -7, type: 'public-key' }, // ES256
             { alg: -257, type: 'public-key' }, // RS256
           ],
           authenticatorSelection: {
@@ -253,9 +278,10 @@ const SettingsPage: Component = () => {
       }
 
       const publicKeyCredential = credential as PublicKeyCredential;
-      const authAttestationResponse = publicKeyCredential.response as AuthenticatorAttestationResponse;
+      const authAttestationResponse =
+        publicKeyCredential.response as AuthenticatorAttestationResponse;
       const publicKey = authAttestationResponse.getPublicKey();
-      
+
       if (!publicKey) {
         throw new Error('Could not get public key');
       }
@@ -279,16 +305,18 @@ const SettingsPage: Component = () => {
 
       // Step 4: Reload credentials to show the new one
       await loadCredentials(currentUser.id);
-      
+
       setCredentialsError(''); // Clear any previous errors
     } catch (err) {
       console.error('Failed to add new passkey:', err);
-      
+
       if (err instanceof Error) {
         if (err.name === 'NotAllowedError') {
           setCredentialsError('Passkey creation was cancelled or timed out.');
         } else if (err.message === 'Unauthorized') {
-          setCredentialsError('Authentication error: Your session may have expired. Please refresh the page and try again.');
+          setCredentialsError(
+            'Authentication error: Your session may have expired. Please refresh the page and try again.'
+          );
           // Temporarily disabled redirect to debug
           // setTimeout(() => {
           //   window.location.href = '/login';
@@ -349,8 +377,15 @@ const SettingsPage: Component = () => {
 
             <Show when={emailVerification().verificationSent}>
               <div class="email-verification-notice">
-                <p><strong>Email verification required!</strong></p>
-                <p>To prevent account lockout, please verify your new email address ({emailVerification().pendingEmail}) by clicking the verification link we sent. Your email will only be updated after verification.</p>
+                <p>
+                  <strong>Email verification required!</strong>
+                </p>
+                <p>
+                  To prevent account lockout, please verify your new email
+                  address ({emailVerification().pendingEmail}) by clicking the
+                  verification link we sent. Your email will only be updated
+                  after verification.
+                </p>
               </div>
             </Show>
 
@@ -362,7 +397,9 @@ const SettingsPage: Component = () => {
                 color="primary"
               />
               <Show when={saveSuccess()}>
-                <span class="success-message">Profile updated successfully!</span>
+                <span class="success-message">
+                  Profile updated successfully!
+                </span>
               </Show>
               <Show when={error()}>
                 <span class="error-message">{error()}</span>
@@ -378,20 +415,28 @@ const SettingsPage: Component = () => {
             <div class="passkey-info">
               <h3>Passkeys</h3>
               <p>
-                Your account uses passkeys for secure, passwordless authentication. 
-                Passkeys are stored securely on your device and provide better security 
-                than traditional passwords.
+                Your account uses passkeys for secure, passwordless
+                authentication. Passkeys are stored securely on your device and
+                provide better security than traditional passwords.
               </p>
-              
+
               <div class="passkey-list">
                 <h4>Your Passkeys</h4>
                 <Show when={credentialsLoading()}>
                   <p>Loading passkeys...</p>
                 </Show>
-                <Show when={!credentialsLoading() && credentialsError() && credentials().length === 0}>
+                <Show
+                  when={
+                    !credentialsLoading() &&
+                    credentialsError() &&
+                    credentials().length === 0
+                  }
+                >
                   <div class="error-container">
                     <p class="error-message">{credentialsError()}</p>
-                    <Show when={!credentialsError().includes('session has expired')}>
+                    <Show
+                      when={!credentialsError().includes('session has expired')}
+                    >
                       <Button
                         label="Retry"
                         onClick={() => {
@@ -405,7 +450,13 @@ const SettingsPage: Component = () => {
                     </Show>
                   </div>
                 </Show>
-                <Show when={!credentialsLoading() && !credentialsError() && credentials().length === 0}>
+                <Show
+                  when={
+                    !credentialsLoading() &&
+                    !credentialsError() &&
+                    credentials().length === 0
+                  }
+                >
                   <p>No passkeys found.</p>
                 </Show>
                 <For each={credentials()}>
@@ -415,7 +466,12 @@ const SettingsPage: Component = () => {
                         <Show when={editingCredential() !== credential.id}>
                           <div class="passkey-details">
                             <span class="passkey-name">{credential.name}</span>
-                            <span class="passkey-date">Added {new Date(credential.inserted_at).toLocaleDateString()}</span>
+                            <span class="passkey-date">
+                              Added{' '}
+                              {new Date(
+                                credential.inserted_at
+                              ).toLocaleDateString()}
+                            </span>
                           </div>
                           <div class="passkey-actions">
                             <Button
@@ -425,7 +481,9 @@ const SettingsPage: Component = () => {
                             />
                             <Button
                               label="Remove"
-                              onClick={() => handleDeleteCredential(credential.id)}
+                              onClick={() =>
+                                handleDeleteCredential(credential.id)
+                              }
                               color="danger"
                               disabled={credentials().length === 1}
                             />
@@ -439,14 +497,18 @@ const SettingsPage: Component = () => {
                               value={newCredentialName()}
                               type="text"
                               placeholder="Enter a name for this passkey"
-                              onInput={(value) => setNewCredentialName(String(value))}
+                              onInput={(value) =>
+                                setNewCredentialName(String(value))
+                              }
                             >
                               <></>
                             </FormItem>
                             <div class="edit-actions">
                               <Button
                                 label="Save"
-                                onClick={() => handleUpdateCredentialName(credential.id)}
+                                onClick={() =>
+                                  handleUpdateCredentialName(credential.id)
+                                }
                                 color="primary"
                               />
                               <Button
@@ -483,7 +545,8 @@ const SettingsPage: Component = () => {
             <div class="danger-actions">
               <h3>Delete Account</h3>
               <p>
-                Permanently delete your account and all associated data. This action cannot be undone.
+                Permanently delete your account and all associated data. This
+                action cannot be undone.
               </p>
               <Show when={!showDeleteConfirm()}>
                 <Button
@@ -494,7 +557,10 @@ const SettingsPage: Component = () => {
               </Show>
               <Show when={showDeleteConfirm()}>
                 <div class="delete-confirmation">
-                  <p><strong>Are you sure?</strong> This will permanently delete your account.</p>
+                  <p>
+                    <strong>Are you sure?</strong> This will permanently delete
+                    your account.
+                  </p>
                   <div class="confirmation-actions">
                     <Button
                       label="Yes, Delete Account"

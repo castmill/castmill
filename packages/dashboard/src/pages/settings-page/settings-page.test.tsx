@@ -18,11 +18,17 @@ vi.mock('../../services/user.service', () => ({
     deleteAccount: vi.fn(),
     getCurrentUser: vi.fn(),
     checkOrganizationOwnership: vi.fn(),
-    getUserCredentials: vi.fn(() => Promise.resolve({ 
-      credentials: [
-        { id: 'cred1', name: 'My Laptop', inserted_at: '2024-01-01T00:00:00Z' }
-      ] 
-    })),
+    getUserCredentials: vi.fn(() =>
+      Promise.resolve({
+        credentials: [
+          {
+            id: 'cred1',
+            name: 'My Laptop',
+            inserted_at: '2024-01-01T00:00:00Z',
+          },
+        ],
+      })
+    ),
     deleteCredential: vi.fn(),
     updateCredentialName: vi.fn(),
     sendEmailVerification: vi.fn(),
@@ -50,12 +56,12 @@ describe('SettingsPage', () => {
     const module = await import('../../services/user.service');
     UserService = module.UserService;
     vi.clearAllMocks();
-    
+
     // Reset default mock implementation
-    (UserService.getUserCredentials as any).mockResolvedValue({ 
+    (UserService.getUserCredentials as any).mockResolvedValue({
       credentials: [
-        { id: 'cred1', name: 'My Laptop', inserted_at: '2024-01-01T00:00:00Z' }
-      ] 
+        { id: 'cred1', name: 'My Laptop', inserted_at: '2024-01-01T00:00:00Z' },
+      ],
     });
   });
 
@@ -80,7 +86,9 @@ describe('SettingsPage', () => {
       render(() => <SettingsPage />);
 
       const nameInput = screen.getByLabelText('Full Name') as HTMLInputElement;
-      const emailInput = screen.getByLabelText('Email Address') as HTMLInputElement;
+      const emailInput = screen.getByLabelText(
+        'Email Address'
+      ) as HTMLInputElement;
 
       expect(nameInput.value).toBe('John Doe');
       expect(emailInput.value).toBe('john@example.com');
@@ -112,7 +120,9 @@ describe('SettingsPage', () => {
     it('enables Save Changes button when email is changed', async () => {
       render(() => <SettingsPage />);
 
-      const emailInput = screen.getByLabelText('Email Address') as HTMLInputElement;
+      const emailInput = screen.getByLabelText(
+        'Email Address'
+      ) as HTMLInputElement;
       fireEvent.input(emailInput, { target: { value: 'jane@example.com' } });
 
       await waitFor(() => {
@@ -123,7 +133,7 @@ describe('SettingsPage', () => {
 
     it('disables Save Changes button after successful save', async () => {
       (UserService.updateProfile as any).mockResolvedValue({ status: 'ok' });
-      
+
       render(() => <SettingsPage />);
 
       const nameInput = screen.getByLabelText('Full Name') as HTMLInputElement;
@@ -133,7 +143,9 @@ describe('SettingsPage', () => {
       fireEvent.click(saveButton);
 
       await waitFor(() => {
-        expect(UserService.updateProfile).toHaveBeenCalledWith('1', { name: 'Jane Doe' });
+        expect(UserService.updateProfile).toHaveBeenCalledWith('1', {
+          name: 'Jane Doe',
+        });
       });
 
       await waitFor(() => {
@@ -145,7 +157,7 @@ describe('SettingsPage', () => {
   describe('Profile Updates', () => {
     it('calls updateProfile with name changes only', async () => {
       (UserService.updateProfile as any).mockResolvedValue({ status: 'ok' });
-      
+
       render(() => <SettingsPage />);
 
       const nameInput = screen.getByLabelText('Full Name') as HTMLInputElement;
@@ -155,13 +167,15 @@ describe('SettingsPage', () => {
       fireEvent.click(saveButton);
 
       await waitFor(() => {
-        expect(UserService.updateProfile).toHaveBeenCalledWith('1', { name: 'Jane Doe' });
+        expect(UserService.updateProfile).toHaveBeenCalledWith('1', {
+          name: 'Jane Doe',
+        });
       });
     });
 
     it('shows success message after profile update', async () => {
       (UserService.updateProfile as any).mockResolvedValue({ status: 'ok' });
-      
+
       render(() => <SettingsPage />);
 
       const nameInput = screen.getByLabelText('Full Name') as HTMLInputElement;
@@ -171,27 +185,40 @@ describe('SettingsPage', () => {
       fireEvent.click(saveButton);
 
       await waitFor(() => {
-        expect(screen.getByText('Profile updated successfully!')).toBeInTheDocument();
+        expect(
+          screen.getByText('Profile updated successfully!')
+        ).toBeInTheDocument();
       });
     });
 
     it('handles email verification flow', async () => {
-      (UserService.sendEmailVerification as any).mockResolvedValue({ status: 'ok' });
-      
+      (UserService.sendEmailVerification as any).mockResolvedValue({
+        status: 'ok',
+      });
+
       render(() => <SettingsPage />);
 
-      const emailInput = screen.getByLabelText('Email Address') as HTMLInputElement;
-      fireEvent.input(emailInput, { target: { value: 'newemail@example.com' } });
+      const emailInput = screen.getByLabelText(
+        'Email Address'
+      ) as HTMLInputElement;
+      fireEvent.input(emailInput, {
+        target: { value: 'newemail@example.com' },
+      });
 
       const saveButton = screen.getByRole('button', { name: 'Save Changes' });
       fireEvent.click(saveButton);
 
       await waitFor(() => {
-        expect(UserService.sendEmailVerification).toHaveBeenCalledWith('1', 'newemail@example.com');
+        expect(UserService.sendEmailVerification).toHaveBeenCalledWith(
+          '1',
+          'newemail@example.com'
+        );
       });
 
       await waitFor(() => {
-        expect(screen.getByText(/Email verification required/)).toBeInTheDocument();
+        expect(
+          screen.getByText(/Email verification required/)
+        ).toBeInTheDocument();
       });
     });
   });
@@ -209,13 +236,17 @@ describe('SettingsPage', () => {
       render(() => <SettingsPage />);
 
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: 'Add New Passkey' })).toBeInTheDocument();
+        expect(
+          screen.getByRole('button', { name: 'Add New Passkey' })
+        ).toBeInTheDocument();
       });
     });
 
     it('allows renaming a passkey', async () => {
-      (UserService.updateCredentialName as any).mockResolvedValue({ status: 'ok' });
-      
+      (UserService.updateCredentialName as any).mockResolvedValue({
+        status: 'ok',
+      });
+
       render(() => <SettingsPage />);
 
       await waitFor(() => {
@@ -237,7 +268,11 @@ describe('SettingsPage', () => {
       fireEvent.click(saveButton);
 
       await waitFor(() => {
-        expect(UserService.updateCredentialName).toHaveBeenCalledWith('1', 'cred1', 'Work Laptop');
+        expect(UserService.updateCredentialName).toHaveBeenCalledWith(
+          '1',
+          'cred1',
+          'Work Laptop'
+        );
       });
     });
 
@@ -251,11 +286,19 @@ describe('SettingsPage', () => {
     });
 
     it('enables Remove button when multiple passkeys exist', async () => {
-      (UserService.getUserCredentials as any).mockResolvedValue({ 
+      (UserService.getUserCredentials as any).mockResolvedValue({
         credentials: [
-          { id: 'cred1', name: 'My Laptop', inserted_at: '2024-01-01T00:00:00Z' },
-          { id: 'cred2', name: 'My Phone', inserted_at: '2024-01-02T00:00:00Z' }
-        ] 
+          {
+            id: 'cred1',
+            name: 'My Laptop',
+            inserted_at: '2024-01-01T00:00:00Z',
+          },
+          {
+            id: 'cred2',
+            name: 'My Phone',
+            inserted_at: '2024-01-02T00:00:00Z',
+          },
+        ],
       });
 
       render(() => <SettingsPage />);
@@ -263,22 +306,30 @@ describe('SettingsPage', () => {
       await waitFor(() => {
         const removeButtons = screen.getAllByRole('button', { name: 'Remove' });
         expect(removeButtons).toHaveLength(2);
-        removeButtons.forEach(button => {
+        removeButtons.forEach((button) => {
           expect(button).not.toBeDisabled();
         });
       });
     });
 
     it('shows confirmation dialog before deleting passkey', async () => {
-      (UserService.getUserCredentials as any).mockResolvedValue({ 
+      (UserService.getUserCredentials as any).mockResolvedValue({
         credentials: [
-          { id: 'cred1', name: 'My Laptop', inserted_at: '2024-01-01T00:00:00Z' },
-          { id: 'cred2', name: 'My Phone', inserted_at: '2024-01-02T00:00:00Z' }
-        ] 
+          {
+            id: 'cred1',
+            name: 'My Laptop',
+            inserted_at: '2024-01-01T00:00:00Z',
+          },
+          {
+            id: 'cred2',
+            name: 'My Phone',
+            inserted_at: '2024-01-02T00:00:00Z',
+          },
+        ],
       });
-      
+
       const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
-      
+
       render(() => <SettingsPage />);
 
       await waitFor(() => {
@@ -295,16 +346,24 @@ describe('SettingsPage', () => {
     });
 
     it('deletes passkey after confirmation', async () => {
-      (UserService.getUserCredentials as any).mockResolvedValue({ 
+      (UserService.getUserCredentials as any).mockResolvedValue({
         credentials: [
-          { id: 'cred1', name: 'My Laptop', inserted_at: '2024-01-01T00:00:00Z' },
-          { id: 'cred2', name: 'My Phone', inserted_at: '2024-01-02T00:00:00Z' }
-        ] 
+          {
+            id: 'cred1',
+            name: 'My Laptop',
+            inserted_at: '2024-01-01T00:00:00Z',
+          },
+          {
+            id: 'cred2',
+            name: 'My Phone',
+            inserted_at: '2024-01-02T00:00:00Z',
+          },
+        ],
       });
       (UserService.deleteCredential as any).mockResolvedValue({ status: 'ok' });
-      
+
       const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
-      
+
       render(() => <SettingsPage />);
 
       await waitFor(() => {
@@ -326,13 +385,19 @@ describe('SettingsPage', () => {
     it('shows delete account confirmation when delete button is clicked', async () => {
       render(() => <SettingsPage />);
 
-      const deleteButton = screen.getByRole('button', { name: 'Delete Account' });
+      const deleteButton = screen.getByRole('button', {
+        name: 'Delete Account',
+      });
       fireEvent.click(deleteButton);
 
       await waitFor(() => {
         expect(screen.getByText('Are you sure?')).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: 'Yes, Delete Account' })).toBeInTheDocument();
-        expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
+        expect(
+          screen.getByRole('button', { name: 'Yes, Delete Account' })
+        ).toBeInTheDocument();
+        expect(
+          screen.getByRole('button', { name: 'Cancel' })
+        ).toBeInTheDocument();
       });
     });
   });
