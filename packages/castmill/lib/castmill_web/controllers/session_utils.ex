@@ -58,12 +58,21 @@ defmodule CastmillWeb.SessionUtils do
 
   @doc """
     Verifies that client data has the expected values and returns the challenge.
+    Accepts either a map or a JSON string/charlist.
   """
+  def check_client_data_json(client_data) when is_list(client_data) or is_binary(client_data) do
+    # Parse JSON string/charlist to map
+    case Jason.decode(to_string(client_data)) do
+      {:ok, parsed} -> check_client_data_json(parsed)
+      {:error, _} -> false
+    end
+  end
+
   def check_client_data_json(%{
-        "type" => "webauthn.get",
+        "type" => type,
         "challenge" => challenge,
         "origin" => origin
-      }) do
+      }) when type in ["webauthn.get", "webauthn.create"] do
     # Check if there is a network matching the origin
     network_id = Accounts.get_network_id_by_domain(origin)
 

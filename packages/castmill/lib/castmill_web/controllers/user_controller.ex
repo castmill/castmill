@@ -59,8 +59,27 @@ defmodule CastmillWeb.UserController do
   end
 
   @doc """
-    Adds an existing user to an organization with a given access list.
+  Updates a user:
+  - With "user" params: Updates user profile (name, etc.)
+  - With "access" and "organization_id" params: Updates user role in an organization
   """
+  def update(conn, params)
+
+  def update(conn, %{"id" => user_id, "user" => user_params}) do
+    user = Accounts.get_user(user_id)
+
+    with {:ok, updated_user} <- Accounts.update_user(user, user_params) do
+      # Update the session with the new user data if this is the current user's session
+      conn = if get_session(conn, :user) && get_session(conn, :user).id == user_id do
+        put_session(conn, :user, updated_user)
+      else
+        conn
+      end
+
+      render(conn, :show, user: updated_user)
+    end
+  end
+
   def update(conn, %{"access" => access, "id" => user_id, "organization_id" => organization_id}) do
     with {:ok, _} <- Organizations.update_role(organization_id, user_id, access) do
       send_resp(conn, :no_content, "")
@@ -89,7 +108,7 @@ defmodule CastmillWeb.UserController do
   def list_credentials(conn, %{"id" => user_id}) do
     credentials = Accounts.list_user_credentials(user_id)
     user = Accounts.get_user(user_id)
-    
+
     # Add friendly names to credentials
     credentials_with_names = Enum.map(credentials, fn credential ->
       name = if user, do: Accounts.get_credential_name(user, credential.id), else: "Unnamed Device"
@@ -100,7 +119,7 @@ defmodule CastmillWeb.UserController do
         updated_at: credential.updated_at
       }
     end)
-    
+
     json(conn, %{credentials: credentials_with_names})
   end
 
@@ -123,6 +142,75 @@ defmodule CastmillWeb.UserController do
       json(conn, %{status: "ok", message: "Credential name updated"})
     else
       {:error, :user_not_found} -> send_resp(conn, :not_found, "User not found")
+    end
+  end
+
+  @doc """
+  Create a challenge for adding a new credential/passkey
+  """
+  def create_credential_challenge(conn, %{"id" => user_id}) do
+    challenge = CastmillWeb.SessionUtils.new_challenge()
+
+    conn
+    |> put_session(:credential_challenge, challenge)
+    |> put_session(:credential_user_id, user_id)
+    |> json(%{challenge: challenge, user_id: user_id})
+  end
+
+  @doc """
+  Add a new credential/passkey for the user
+  """
+  def add_credential(conn, %{
+        "id" => user_id,
+        "credential_id" => credential_id,
+        "public_key_spki" => public_key_spki_base64,
+        "client_data_json" => client_data_json
+      }) do
+    with {:ok, challenge} <- CastmillWeb.SessionUtils.check_client_data_json(client_data_json),
+         true <- challenge == get_session(conn, :credential_challenge),
+         true <- user_id == get_session(conn, :credential_user_id) do
+
+      # Extract and parse User-Agent for device information
+      user_agent = get_req_header(conn, "user-agent") |> List.first()
+      device_info =
+        Castmill.UserAgentParser.parse(user_agent)
+        |> Map.put(:user_agent, user_agent)
+
+      public_key_spki = Base.decode64!(public_key_spki_base64)
+
+      case Accounts.add_user_credential(user_id, credential_id, public_key_spki, device_info) do
+        {:ok, credential} ->
+          conn
+          |> delete_session(:credential_challenge)
+          |> delete_session(:credential_user_id)
+          |> put_status(:created)
+          |> json(%{
+            status: "ok",
+            message: "Credential added successfully",
+            credential: %{
+              id: credential.id,
+              name: credential.device_name || "New Passkey",
+              inserted_at: credential.inserted_at
+            }
+          })
+
+        {:error, _changeset} ->
+          conn
+          |> put_status(:unprocessable_entity)
+          |> json(%{status: "error", message: "Failed to add credential"})
+      end
+    else
+      false ->
+        conn
+        |> delete_session(:credential_challenge)
+        |> delete_session(:credential_user_id)
+        |> put_status(:unauthorized)
+        |> json(%{status: "error", message: "Invalid challenge or user ID"})
+
+      {:error, message} ->
+        conn
+        |> put_status(:bad_request)
+        |> json(%{status: "error", message: message})
     end
   end
 

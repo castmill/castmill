@@ -7,7 +7,7 @@ export const UserService = {
    * Update current user's profile information
    */
   async updateProfile(userId: string, updates: Partial<User>) {
-    const response = await fetch(`${baseUrl}/api/users/${userId}`, {
+    const response = await fetch(`${baseUrl}/dashboard/users/${userId}`, {
       method: 'PUT',
       credentials: 'include',
       headers: {
@@ -23,7 +23,7 @@ export const UserService = {
    * Delete current user account
    */
   async deleteAccount(userId: string) {
-    const response = await fetch(`${baseUrl}/api/users/${userId}`, {
+    const response = await fetch(`${baseUrl}/dashboard/users/${userId}`, {
       method: 'DELETE',
       credentials: 'include',
     });
@@ -37,7 +37,7 @@ export const UserService = {
    * Get current user information
    */
   async getCurrentUser(userId: string) {
-    const response = await fetch(`${baseUrl}/api/users/${userId}`, {
+    const response = await fetch(`${baseUrl}/dashboard/users/${userId}`, {
       method: 'GET',
       credentials: 'include',
     });
@@ -58,7 +58,7 @@ export const UserService = {
    * Get all user credentials/passkeys
    */
   async getUserCredentials(userId: string) {
-    const response = await fetch(`${baseUrl}/api/users/${userId}/credentials`, {
+    const response = await fetch(`${baseUrl}/dashboard/users/${userId}/credentials`, {
       method: 'GET',
       credentials: 'include',
     });
@@ -70,7 +70,7 @@ export const UserService = {
    * Delete a user credential/passkey
    */
   async deleteCredential(userId: string, credentialId: string) {
-    const response = await fetch(`${baseUrl}/api/users/${userId}/credentials/${credentialId}`, {
+    const response = await fetch(`${baseUrl}/dashboard/users/${userId}/credentials/${credentialId}`, {
       method: 'DELETE',
       credentials: 'include',
     });
@@ -84,7 +84,7 @@ export const UserService = {
    * Update credential name
    */
   async updateCredentialName(userId: string, credentialId: string, name: string) {
-    const response = await fetch(`${baseUrl}/api/users/${userId}/credentials/${credentialId}`, {
+    const response = await fetch(`${baseUrl}/dashboard/users/${userId}/credentials/${credentialId}`, {
       method: 'PUT',
       credentials: 'include',
       headers: {
@@ -100,7 +100,7 @@ export const UserService = {
    * Send email verification for new email
    */
   async sendEmailVerification(userId: string, newEmail: string) {
-    const response = await fetch(`${baseUrl}/api/users/${userId}/send-email-verification`, {
+    const response = await fetch(`${baseUrl}/dashboard/users/${userId}/send-email-verification`, {
       method: 'POST',
       credentials: 'include',
       headers: {
@@ -116,7 +116,7 @@ export const UserService = {
    * Verify email with token
    */
   async verifyEmail(token: string, newEmail: string) {
-    const response = await fetch(`${baseUrl}/api/verify-email`, {
+    const response = await fetch(`${baseUrl}/dashboard/verify-email`, {
       method: 'POST',
       credentials: 'include',
       headers: {
@@ -126,5 +126,37 @@ export const UserService = {
     });
 
     return handleResponse<{ status: string, user: User }>(response, { parse: true });
+  },
+
+  /**
+   * Create a challenge for adding a new credential/passkey
+   */
+  async createCredentialChallenge(userId: string) {
+    const response = await fetch(`${baseUrl}/dashboard/users/${userId}/credentials/challenge`, {
+      method: 'POST',
+      credentials: 'include',
+    });
+
+    return handleResponse<{ challenge: string, user_id: string }>(response, { parse: true });
+  },
+
+  /**
+   * Add a new credential/passkey
+   */
+  async addCredential(userId: string, credentialId: string, publicKeySpki: string, clientDataJSON: Uint8Array) {
+    const response = await fetch(`${baseUrl}/dashboard/users/${userId}/credentials`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        credential_id: credentialId,
+        public_key_spki: publicKeySpki,
+        client_data_json: Array.from(clientDataJSON),
+      }),
+    });
+
+    return handleResponse<{ status: string, message: string, credential: {id: string, name: string, inserted_at: string} }>(response, { parse: true });
   },
 };

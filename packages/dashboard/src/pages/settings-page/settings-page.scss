@@ -6,6 +6,7 @@
   padding: 2rem;
   max-width: 800px;
   margin: 0 auto;
+  margin-bottom: 2em;
 
   .settings-header {
     margin-bottom: 2rem;
@@ -39,7 +40,6 @@
 
     &.danger-zone {
       border-color: #e74c3c;
-      border-left: 4px solid #e74c3c;
     }
 
     h2 {
@@ -95,6 +95,19 @@
       .passkey-list {
         margin-bottom: 1.5rem;
 
+        .error-container {
+          display: flex;
+          flex-direction: column;
+          gap: 0.75rem;
+          padding: 1rem;
+
+          .error-message {
+            color: #e74c3c;
+            font-size: 0.875rem;
+            font-weight: 500;
+          }
+        }
+
         .passkey-item {
           background: colors.$highlight-background-color;
           border: 1px solid colors.$separator-color;
@@ -115,17 +128,21 @@
 
             .passkey-name {
               font-weight: 500;
+              text-align: left;
             }
 
             .passkey-date {
               color: colors.$component-color;
               font-size: 0.875rem;
+              text-align: left;
             }
           }
 
           .passkey-actions {
             display: flex;
+            flex-direction: row;
             gap: 0.5rem;
+            align-items: center;
           }
 
           .passkey-edit {

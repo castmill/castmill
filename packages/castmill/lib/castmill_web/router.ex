@@ -124,6 +124,7 @@ defmodule CastmillWeb.Router do
   pipeline :dashboard do
     plug(:put_secure_browser_headers)
     plug(:fetch_session)
+    plug(:fetch_dashboard_user)
     plug(:accepts, ["json"])
   end
 
@@ -148,6 +149,11 @@ defmodule CastmillWeb.Router do
 
     get("/addons", AddonsController, :index)
     get("/users/:user_id/organizations", OrganizationController, :list_users_organizations)
+
+    # User profile management
+    get("/users/:id", UserController, :show)
+    put("/users/:id", UserController, :update)
+    delete("/users/:id", UserController, :delete)
 
     # List all the widgets available for the organization
     get("/organizations/:organization_id/widgets", OrganizationController, :list_widgets)
@@ -243,6 +249,15 @@ defmodule CastmillWeb.Router do
 
     # Endpoint to remove a channel from a device in the dashboard scope
     delete("/devices/:device_id/channels/:channel_id", DeviceController, :remove_channel)
+
+    # User credential and email management routes (session-authenticated)
+    get("/users/:id/credentials", UserController, :list_credentials)
+    post("/users/:id/credentials/challenge", UserController, :create_credential_challenge)
+    post("/users/:id/credentials", UserController, :add_credential)
+    delete("/users/:id/credentials/:credential_id", UserController, :delete_credential)
+    put("/users/:id/credentials/:credential_id", UserController, :update_credential)
+    post("/users/:id/send-email-verification", UserController, :send_email_verification)
+    post("/verify-email", UserController, :verify_email)
   end
 
   # Other scopes may use custom stacks.
@@ -283,14 +298,7 @@ defmodule CastmillWeb.Router do
     end
 
     resources("/users", UserController, except: [:new, :edit, :index])
-    
-    # User credential and email management routes
-    get("/users/:id/credentials", UserController, :list_credentials)
-    delete("/users/:id/credentials/:credential_id", UserController, :delete_credential)
-    put("/users/:id/credentials/:credential_id", UserController, :update_credential)
-    post("/users/:id/send-email-verification", UserController, :send_email_verification)
-    post("/verify-email", UserController, :verify_email)
-    
+
     resources("/access_tokens", AccessTokenController, except: [:new, :edit])
 
     # These routes are here to avoid some warnings, but not sure they are needed.
@@ -324,14 +332,14 @@ defmodule CastmillWeb.Router do
   end
 
   defp authenticate_user(conn, opts) do
-    # First, attempt to retrieve the user from the session
-    case get_session(conn, :user) do
+    # First, check if user was loaded by fetch_dashboard_user plug
+    case conn.assigns[:current_user] do
       nil ->
-        # If there's no user in the session, proceed with token authentication
+        # If there's no user in assigns, try token authentication
         authenticate_with_token(conn, opts)
 
       user ->
-        # If there is a user in the session, use it directly
+        # If there is a user in assigns, use it
         assign_user(conn, user)
     end
   end
@@ -419,6 +427,18 @@ defmodule CastmillWeb.Router do
       network ->
         conn
         |> assign(:network, network)
+    end
+  end
+
+  # Fetches the user from the session for dashboard API requests
+  defp fetch_dashboard_user(conn, _opts) do
+    case get_session(conn, :user_session_token) do
+      nil ->
+        conn
+
+      token ->
+        user = Castmill.Accounts.get_user_by_session_token(token)
+        assign(conn, :current_user, user)
     end
   end
 end
