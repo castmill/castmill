@@ -355,7 +355,13 @@ defmodule Castmill.Accounts do
     Registers a user based on an existing Signup
     with the given email, credential_id, and public_key_spki.
   """
-  def create_user_from_signup(signup_id, email, credential_id, public_key_spki, device_info \\ %{}) do
+  def create_user_from_signup(
+        signup_id,
+        email,
+        credential_id,
+        public_key_spki,
+        device_info \\ %{}
+      ) do
     Repo.transaction(fn ->
       with {:ok, signup} <- validate_signup(signup_id, email),
            {:ok, %{id: user_id} = user} <- create_user_and_organization(email, signup.network_id),
@@ -454,8 +460,9 @@ defmodule Castmill.Accounts do
       credential.device_name
     else
       # Fallback to date-based name
-      date = credential.inserted_at
-      |> Calendar.strftime("%b %d, %Y at %H:%M")
+      date =
+        credential.inserted_at
+        |> Calendar.strftime("%b %d, %Y at %H:%M")
 
       "Passkey created on #{date}"
     end
@@ -479,7 +486,6 @@ defmodule Castmill.Accounts do
     with {:ok, query} <- UserToken.verify_email_token_query(token, "email_verification"),
          %UserToken{user_id: user_id} = user_token <- Repo.one(query),
          %User{} = user <- Repo.get(User, user_id) do
-
       # Update user email and delete the token
       Ecto.Multi.new()
       |> Ecto.Multi.update(:user, User.changeset(user, %{email: new_email}))

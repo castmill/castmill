@@ -41,12 +41,13 @@ defmodule Castmill.UserAgentParser do
     os = parse_os(ua)
     browser = parse_browser(ua)
 
-    device = cond do
-      String.contains?(ua, "iPhone") -> "iPhone"
-      String.contains?(ua, "iPad") -> "iPad"
-      String.contains?(ua, "Android") -> "Android Device"
-      true -> os
-    end
+    device =
+      cond do
+        String.contains?(ua, "iPhone") -> "iPhone"
+        String.contains?(ua, "iPad") -> "iPad"
+        String.contains?(ua, "Android") -> "Android Device"
+        true -> os
+      end
 
     "#{browser} on #{device}"
   end

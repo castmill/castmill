@@ -72,7 +72,8 @@ defmodule CastmillWeb.SessionUtils do
         "type" => type,
         "challenge" => challenge,
         "origin" => origin
-      }) when type in ["webauthn.get", "webauthn.create"] do
+      })
+      when type in ["webauthn.get", "webauthn.create"] do
     # Check if there is a network matching the origin
     network_id = Accounts.get_network_id_by_domain(origin)
 

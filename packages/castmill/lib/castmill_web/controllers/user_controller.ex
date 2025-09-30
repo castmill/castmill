@@ -70,11 +70,12 @@ defmodule CastmillWeb.UserController do
 
     with {:ok, updated_user} <- Accounts.update_user(user, user_params) do
       # Update the session with the new user data if this is the current user's session
-      conn = if get_session(conn, :user) && get_session(conn, :user).id == user_id do
-        put_session(conn, :user, updated_user)
-      else
-        conn
-      end
+      conn =
+        if get_session(conn, :user) && get_session(conn, :user).id == user_id do
+          put_session(conn, :user, updated_user)
+        else
+          conn
+        end
 
       render(conn, :show, user: updated_user)
     end
@@ -110,15 +111,18 @@ defmodule CastmillWeb.UserController do
     user = Accounts.get_user(user_id)
 
     # Add friendly names to credentials
-    credentials_with_names = Enum.map(credentials, fn credential ->
-      name = if user, do: Accounts.get_credential_name(user, credential.id), else: "Unnamed Device"
-      %{
-        id: credential.id,
-        name: name,
-        inserted_at: credential.inserted_at,
-        updated_at: credential.updated_at
-      }
-    end)
+    credentials_with_names =
+      Enum.map(credentials, fn credential ->
+        name =
+          if user, do: Accounts.get_credential_name(user, credential.id), else: "Unnamed Device"
+
+        %{
+          id: credential.id,
+          name: name,
+          inserted_at: credential.inserted_at,
+          updated_at: credential.updated_at
+        }
+      end)
 
     json(conn, %{credentials: credentials_with_names})
   end
@@ -169,9 +173,9 @@ defmodule CastmillWeb.UserController do
     with {:ok, challenge} <- CastmillWeb.SessionUtils.check_client_data_json(client_data_json),
          true <- challenge == get_session(conn, :credential_challenge),
          true <- user_id == get_session(conn, :credential_user_id) do
-
       # Extract and parse User-Agent for device information
       user_agent = get_req_header(conn, "user-agent") |> List.first()
+
       device_info =
         Castmill.UserAgentParser.parse(user_agent)
         |> Map.put(:user_agent, user_agent)
@@ -234,8 +238,11 @@ defmodule CastmillWeb.UserController do
     with {:ok, user} <- Accounts.verify_email_token(token, new_email) do
       json(conn, %{status: "ok", user: user})
     else
-      {:error, :invalid_token} -> send_resp(conn, :unprocessable_entity, "Invalid or expired token")
-      {:error, _} -> send_resp(conn, :unprocessable_entity, "Failed to verify email")
+      {:error, :invalid_token} ->
+        send_resp(conn, :unprocessable_entity, "Invalid or expired token")
+
+      {:error, _} ->
+        send_resp(conn, :unprocessable_entity, "Failed to verify email")
     end
   end
 end
