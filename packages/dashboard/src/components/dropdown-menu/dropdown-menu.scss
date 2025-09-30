@@ -40,7 +40,7 @@
       background-color: colors.$component-background-color;
       border: 1px solid colors.$separator-color;
       border-radius: 0.5rem;
-      box-shadow: 
+      box-shadow:
         0 4px 6px -1px rgba(0, 0, 0, 0.4),
         0 2px 4px -1px rgba(0, 0, 0, 0.3);
       position: absolute;
@@ -63,9 +63,13 @@
         margin: 0;
         padding: 0;
 
-        a, button {
-          display: block;
+        button {
           width: 100%;
+        }
+
+        a,
+        button {
+          display: block;
           padding: 0.75rem 1rem;
           margin: 0;
           text-decoration: none;
@@ -77,11 +81,12 @@
           font-size: 0.9rem;
           font-family: inherit;
           text-align: left;
-          transition: 
+          transition:
             background-color 0.2s ease,
             color 0.2s ease;
 
-          &:hover, &:focus {
+          &:hover,
+          &:focus {
             background-color: colors.$highlight-background-color;
             color: colors.$highlight-color;
             outline: none;
@@ -93,8 +98,9 @@
 
           &.logout {
             color: #ff6b6b;
-            
-            &:hover, &:focus {
+
+            &:hover,
+            &:focus {
               background-color: rgba(255, 107, 107, 0.1);
               color: #ff4757;
             }
