@@ -30,6 +30,7 @@
     "@testing-library/jest-dom": "^6.4.1",
     "@testing-library/user-event": "^14.6.1",
     "@types/phoenix": "^1.6.4",
+    "@types/qrcode": "^1.5.5",
     "jsdom": "^24.0.0",
     "prettier": "^3.2.5",
     "rimraf": "^6.0.1",
@@ -42,6 +43,7 @@
   "dependencies": {
     "@castmill/cache": "*",
     "@castmill/player": "*",
-    "phoenix": "^1.7.2"
+    "phoenix": "^1.7.2",
+    "qrcode": "^1.5.4"
   }
 }
