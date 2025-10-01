@@ -36,8 +36,8 @@ WORKDIR /app
 RUN npm install --global yarn
 RUN yarn install
 
-# Run the build script for all workspaces
-RUN yarn build:all
+# Run the build script for server dependencies only
+RUN yarn build:server
 
 WORKDIR /app/packages/castmill
 
