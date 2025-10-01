@@ -657,32 +657,35 @@ defmodule Castmill.WidgetsTest do
   describe "list_widgets/1" do
     setup do
       # Create test widgets with different names for search testing
-      {:ok, widget1} = Widgets.create_widget(%{
-        name: "Text Widget",
-        slug: "text-widget",
-        description: "A simple text widget",
-        template: %{},
-        options_schema: %{},
-        data_schema: %{}
-      })
+      {:ok, widget1} =
+        Widgets.create_widget(%{
+          name: "Text Widget",
+          slug: "text-widget",
+          description: "A simple text widget",
+          template: %{},
+          options_schema: %{},
+          data_schema: %{}
+        })
 
-      {:ok, widget2} = Widgets.create_widget(%{
-        name: "Image Widget",
-        slug: "image-widget",
-        description: "An image display widget",
-        template: %{},
-        options_schema: %{},
-        data_schema: %{}
-      })
+      {:ok, widget2} =
+        Widgets.create_widget(%{
+          name: "Image Widget",
+          slug: "image-widget",
+          description: "An image display widget",
+          template: %{},
+          options_schema: %{},
+          data_schema: %{}
+        })
 
-      {:ok, widget3} = Widgets.create_widget(%{
-        name: "Video Widget",
-        slug: "video-widget",
-        description: "A video player widget",
-        template: %{},
-        options_schema: %{},
-        data_schema: %{}
-      })
+      {:ok, widget3} =
+        Widgets.create_widget(%{
+          name: "Video Widget",
+          slug: "video-widget",
+          description: "A video player widget",
+          template: %{},
+          options_schema: %{},
+          data_schema: %{}
+        })
 
       {:ok, widget1: widget1, widget2: widget2, widget3: widget3}
     end
@@ -777,21 +780,23 @@ defmodule Castmill.WidgetsTest do
 
   describe "count_widgets/1" do
     setup do
-      {:ok, _widget1} = Widgets.create_widget(%{
-        name: "Counter Widget 1",
-        slug: "counter-widget-1",
-        template: %{},
-        options_schema: %{},
-        data_schema: %{}
-      })
+      {:ok, _widget1} =
+        Widgets.create_widget(%{
+          name: "Counter Widget 1",
+          slug: "counter-widget-1",
+          template: %{},
+          options_schema: %{},
+          data_schema: %{}
+        })
 
-      {:ok, _widget2} = Widgets.create_widget(%{
-        name: "Counter Widget 2",
-        slug: "counter-widget-2",
-        template: %{},
-        options_schema: %{},
-        data_schema: %{}
-      })
+      {:ok, _widget2} =
+        Widgets.create_widget(%{
+          name: "Counter Widget 2",
+          slug: "counter-widget-2",
+          template: %{},
+          options_schema: %{},
+          data_schema: %{}
+        })
 
       :ok
     end

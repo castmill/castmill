@@ -23,32 +23,35 @@ defmodule CastmillWeb.OrganizationController.WidgetsTest do
       |> put_req_header("authorization", "Bearer #{access_token.secret}")
 
     # Create test widgets
-    {:ok, widget1} = Widgets.create_widget(%{
-      name: "Alpha Widget",
-      slug: "alpha-widget",
-      description: "First test widget",
-      template: %{},
-      options_schema: %{},
-      data_schema: %{}
-    })
+    {:ok, widget1} =
+      Widgets.create_widget(%{
+        name: "Alpha Widget",
+        slug: "alpha-widget",
+        description: "First test widget",
+        template: %{},
+        options_schema: %{},
+        data_schema: %{}
+      })
 
-    {:ok, widget2} = Widgets.create_widget(%{
-      name: "Beta Widget",
-      slug: "beta-widget",
-      description: "Second test widget",
-      template: %{},
-      options_schema: %{},
-      data_schema: %{}
-    })
+    {:ok, widget2} =
+      Widgets.create_widget(%{
+        name: "Beta Widget",
+        slug: "beta-widget",
+        description: "Second test widget",
+        template: %{},
+        options_schema: %{},
+        data_schema: %{}
+      })
 
-    {:ok, widget3} = Widgets.create_widget(%{
-      name: "Gamma Widget",
-      slug: "gamma-widget",
-      description: "Third test widget",
-      template: %{},
-      options_schema: %{},
-      data_schema: %{}
-    })
+    {:ok, widget3} =
+      Widgets.create_widget(%{
+        name: "Gamma Widget",
+        slug: "gamma-widget",
+        description: "Third test widget",
+        template: %{},
+        options_schema: %{},
+        data_schema: %{}
+      })
 
     {:ok,
      conn: conn,

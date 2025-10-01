@@ -250,7 +250,10 @@ defmodule CastmillWeb.OrganizationController do
     end
   end
 
-  def update_widget(conn, %{"organization_id" => _organization_id, "widget_id" => widget_id} = params) do
+  def update_widget(
+        conn,
+        %{"organization_id" => _organization_id, "widget_id" => widget_id} = params
+      ) do
     with widget when not is_nil(widget) <- Castmill.Widgets.get_widget(widget_id),
          {:ok, updated_widget} <- Castmill.Widgets.update_widget(widget, params) do
       conn
