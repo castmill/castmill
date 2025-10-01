@@ -17,7 +17,7 @@ export function RegisterComponent(props: { device: Device; pincode: string }) {
     try {
       // Generate QR code for the registration URL with responsive sizing
       const registrationUrl = `https://app.castmill.com/register/${props.pincode}`;
-      
+
       // Make QR code size responsive to screen dimensions
       const getQrSize = () => {
         if (windowWidth() < 480) return 150;
@@ -30,8 +30,8 @@ export function RegisterComponent(props: { device: Device; pincode: string }) {
         margin: 1,
         color: {
           dark: '#315aa9', // Using Castmill brand color
-          light: '#ffffff'
-        }
+          light: '#ffffff',
+        },
       });
       setQrCodeUrl(qrDataUrl);
     } catch (error) {
@@ -52,7 +52,9 @@ export function RegisterComponent(props: { device: Device; pincode: string }) {
             <img src={castmillLogo} alt="Castmill" class={styles.logo} />
           </div>
           <h1 class={styles.title}>Register Your Device</h1>
-          <p class={styles.subtitle}>Connect your device to the Castmill platform</p>
+          <p class={styles.subtitle}>
+            Connect your device to the Castmill platform
+          </p>
         </header>
 
         <div class={styles.content}>
@@ -70,7 +72,9 @@ export function RegisterComponent(props: { device: Device; pincode: string }) {
       </div>
 
       <footer class={styles.footer}>
-        <div>© 2011-{new Date().getFullYear()} Castmill. All rights reserved.</div>
+        <div>
+          © 2011-{new Date().getFullYear()} Castmill. All rights reserved.
+        </div>
         <div>Digital Signage Made Simple</div>
       </footer>
     </div>
