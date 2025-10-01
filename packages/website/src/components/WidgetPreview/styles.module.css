@@ -1,0 +1,65 @@
+.widgetPreviewContainer {
+  position: relative;
+  margin: 1rem 0;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--ifm-background-color);
+}
+
+.controls {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: var(--ifm-color-emphasis-100);
+  border-bottom: 1px solid var(--ifm-color-emphasis-300);
+}
+
+.controlButton {
+  padding: 0.5rem 1rem;
+  font-size: 1.2em;
+  background: var(--ifm-color-primary);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.controlButton:hover {
+  background: var(--ifm-color-primary-dark);
+}
+
+.controlButton:active {
+  transform: scale(0.95);
+}
+
+.widgetContainer {
+  position: relative;
+  width: 100%;
+  background: #f5f5f5;
+  overflow: hidden;
+}
+
+[data-theme='dark'] .widgetContainer {
+  background: #1e1e1e;
+}
+
+.error {
+  padding: 1.5rem;
+  background: #ffebee;
+  color: #c62828;
+  border-radius: 4px;
+  margin: 1rem;
+}
+
+[data-theme='dark'] .error {
+  background: #4a1a1a;
+  color: #ff5252;
+}
+
+.error strong {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 1.1em;
+}

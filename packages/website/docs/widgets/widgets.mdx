@@ -1,3 +1,27 @@
+---
+sidebar_position: 1
+---
+
+import WidgetExample from '@site/src/components/WidgetExample';
+import { 
+  simpleTextWidget,
+  simpleImageWidget, 
+  styledTextWidget,
+  autoScrollTextWidget,
+  textWithDataWidget,
+  textWithDataData,
+  simpleGroupWidget,
+  flexLayoutWidget,
+  fadeInWidget,
+  slideInWidget,
+  simpleListWidget,
+  simpleListData,
+  restaurantMenuWidget, 
+  restaurantMenuData, 
+  dessertMenuWidget, 
+  dessertMenuData 
+} from '@site/src/components/WidgetExample/sampleWidgets';
+
 # Widgets
 
 **Transform your digital signage with powerful, data-driven templates**
@@ -19,35 +43,47 @@ A widget is a JSON-based template that defines how content should be displayed o
 
 ## Quick Start
 
-Let's create your first widget—a simple image display:
+Let's create your first widget—a simple image display. You can see both the JSON definition and a live preview of how it renders:
 
+<WidgetExample 
+  widget={simpleImageWidget}
+  height="300px"
+  title="Simple Image Widget"
+  description="A basic widget that displays a static image with cover sizing."
+  showControls={false}
+/>
+
+This widget displays an image for 10 seconds. The `options_schema` defines what data the widget needs, while the `template` describes how to render it. Toggle between showing the code and preview using the buttons above!
+
+## 🎯 Best Practice: Responsive Units
+
+:::warning[Critical: Always Use Relative Units]
+**Never use absolute pixel units (`px`) in your widgets!** Digital signage displays come in many resolutions (1080p, 4K, vertical displays, etc.). Using pixels will make your widget look different on each screen size.
+
+**✅ Use these relative units instead:**
+- **`em`** - Relative to the element's font size (best for padding, margins, borders)
+- **`rem`** - Relative to the root font size (good for consistent spacing)
+- **`%`** - Percentage of parent container (great for widths and heights)
+- **`vh`/`vw`** - Viewport height/width (useful for full-screen sections)
+- **Unitless values** - For properties like `flex`, `lineHeight`
+
+**Examples:**
 ```json
+// ❌ BAD - Will not scale properly
 {
-  "name": "Product Showcase",
-  "description": "Display a product image with zoom effect",
-  "template": {
-    "type": "image",
-    "name": "product",
-    "opts": {
-      "url": { "key": "options.image.files[@target].uri" },
-      "duration": 10
-    },
-    "style": {
-      "width": "100%",
-      "height": "100%"
-    }
-  },
-  "options_schema": {
-    "image": {
-      "type": "ref",
-      "required": true,
-      "collection": "medias|type:image"
-    }
-  }
+  "padding": "20px",
+  "fontSize": "24px",
+  "borderRadius": "8px"
+}
+
+// ✅ GOOD - Scales seamlessly across all resolutions
+{
+  "padding": "1em",
+  "fontSize": "1.5em",
+  "borderRadius": "0.5em"
 }
 ```
-
-This widget displays an image for 10 seconds. The `options_schema` defines what data the widget needs, while the `template` describes how to render it.
+:::
 
 ## Widget Structure
 
@@ -102,7 +138,7 @@ Display static or dynamic images with customizable sizing and duration.
 }
 ```
 
-**Example**:
+**Example** (Direct URL):
 ```json
 {
   "type": "image",
@@ -119,6 +155,27 @@ Display static or dynamic images with customizable sizing and duration.
   }
 }
 ```
+
+**Example** (Castmill Media with Adaptive Resolution):
+```json
+{
+  "type": "image",
+  "name": "product-photo",
+  "opts": {
+    "url": { "key": "options.productImage.files[@target].uri" },
+    "size": "cover",
+    "duration": 10
+  },
+  "style": {
+    "width": "100%",
+    "height": "100%"
+  }
+}
+```
+
+:::tip Working with Castmill Media
+When using images uploaded to Castmill, use `files[@target].uri` to automatically get the optimal resolution. See [Adaptive Media Resolution](#adaptive-media-resolution-with-target) for details. ↓
+:::
 
 ### 2. Video Component
 
@@ -150,6 +207,10 @@ Play video content with automatic looping and sizing control.
 }
 ```
 
+:::tip What's `[@target]`?
+The `[@target]` variable automatically selects the best video resolution for the context—`preview` in the dashboard for fast editing, `screen` on displays for maximum quality. Castmill generates multiple optimized versions when you upload media. [Learn more about adaptive media resolution](#adaptive-media-resolution-with-target) ↓
+:::
+
 ### 3. Text Component
 
 Render text with automatic sizing, scrolling, and character-level animations.
@@ -170,7 +231,13 @@ Render text with automatic sizing, scrolling, and character-level animations.
 }
 ```
 
-**Example**:
+**Auto-Fit Behavior**:
+- Starts at `baseSize`
+- Scales up to `maxSize` if space available
+- Scales down to `minSize` if text doesn't fit
+- Enables horizontal scrolling if below `minSize`
+
+#### Example Code:
 ```json
 {
   "type": "text",
@@ -187,16 +254,38 @@ Render text with automatic sizing, scrolling, and character-level animations.
     "color": "#ffffff",
     "fontWeight": "bold",
     "textAlign": "center",
-    "padding": "20px"
+    "padding": "1em"
   }
 }
 ```
 
-**Auto-Fit Behavior**:
-- Starts at `baseSize`
-- Scales up to `maxSize` if space available
-- Scales down to `minSize` if text doesn't fit
-- Enables horizontal scrolling if below `minSize`
+#### Live Demo:
+
+<WidgetExample 
+  widget={simpleTextWidget}
+  height="200px"
+  title="Basic Text Component"
+  description="A simple text widget with static content and basic styling. This is the foundation for all text-based widgets."
+  showControls={false}
+/>
+
+#### Auto-Scroll Behavior
+
+When text is too long to fit and reaches the `minSize`, it will automatically scroll horizontally:
+
+<WidgetExample 
+  widget={autoScrollTextWidget}
+  height="150px"
+  title="Auto-Scrolling Text"
+  description="Long text that automatically scrolls horizontally when it reaches minimum size. Click play to see the scrolling effect!"
+/>
+
+This example demonstrates:
+- Text is set to `maxSize: 4em` and `minSize: 2em`
+- The text is too long to fit at the minimum size, so **horizontal scrolling activates when playing**
+- `'white-space': 'nowrap'` prevents text wrapping, enabling the scroll effect
+- Click the play button to see the text continuously scroll from right to left
+- Perfect for news tickers, announcements, or any content that might overflow
 
 ### 4. Group Component
 
@@ -204,42 +293,45 @@ Container for multiple components, useful for complex layouts and coordinated an
 
 **Type**: `"group"`
 
-**Options**:
-```typescript
-{
-  components: TemplateComponent[]  // Array of child components
-}
-```
+**Important**: The `components` array is a **top-level property**, not inside `opts`.
 
-**Example**:
+#### Example Code:
 ```json
 {
   "type": "group",
   "name": "header",
-  "opts": {
-    "components": [
-      {
-        "type": "image",
-        "name": "logo",
-        "opts": { "url": "/logo.png", "duration": 60 },
-        "style": { "width": "150px", "height": "60px" }
-      },
-      {
-        "type": "text",
-        "name": "tagline",
-        "opts": { "text": "Digital Signage Made Simple" },
-        "style": { "marginLeft": "20px", "fontSize": "1.5em" }
-      }
-    ]
-  },
+  "components": [
+    {
+      "type": "image",
+      "name": "logo",
+      "opts": { "url": "/logo.png", "size": "contain" },
+      "style": { "width": "10em", "height": "4em" }
+    },
+    {
+      "type": "text",
+      "name": "tagline",
+      "opts": { "text": "Digital Signage Made Simple" },
+      "style": { "marginLeft": "1em", "fontSize": "1.5em" }
+    }
+  ],
   "style": {
     "display": "flex",
     "alignItems": "center",
-    "padding": "20px",
+    "padding": "1em",
     "background": "linear-gradient(90deg, #667eea 0%, #764ba2 100%)"
   }
 }
 ```
+
+#### Live Demo:
+
+<WidgetExample 
+  widget={simpleGroupWidget}
+  height="300px"
+  title="Basic Group Component"
+  description="A group containing two images arranged side-by-side. Groups are the foundation for building complex layouts with multiple components."
+  showControls={false}
+/>
 
 ### 5. List Component
 
@@ -251,7 +343,6 @@ Iterate over data arrays to create repeated elements (menus, schedules, feeds).
 ```typescript
 {
   items: Binding,                  // Data binding to array
-  component: TemplateComponent,    // Template for each item
   itemDuration?: number,           // Duration per item (seconds)
   itemsPerPage?: number,           // Items visible at once
   pageDuration?: number,           // Duration per page (seconds)
@@ -259,7 +350,9 @@ Iterate over data arrays to create repeated elements (menus, schedules, feeds).
 }
 ```
 
-**Example** (Restaurant Menu):
+**Important**: The `component` property (template for each item) is a **top-level property**, not inside `opts`.
+
+#### Example Code:
 ```json
 {
   "type": "list",
@@ -267,36 +360,64 @@ Iterate over data arrays to create repeated elements (menus, schedules, feeds).
   "opts": {
     "items": { "key": "data.dishes" },
     "itemsPerPage": 5,
-    "pageDuration": 8,
-    "component": {
-      "type": "group",
-      "name": "menu-item",
-      "opts": {
-        "components": [
-          {
-            "type": "text",
-            "name": "dish-name",
-            "opts": { "text": { "key": "$.name" } },
-            "style": { "fontWeight": "bold", "fontSize": "1.8em" }
-          },
-          {
-            "type": "text",
-            "name": "price",
-            "opts": { "text": { "key": "$.price" } },
-            "style": { "fontSize": "1.5em", "color": "#2ecc71" }
-          }
-        ]
+    "pageDuration": 8
+  },
+  "component": {
+    "type": "group",
+    "name": "menu-item",
+    "components": [
+      {
+        "type": "text",
+        "name": "dish-name",
+        "opts": { "text": { "key": "$.name" } },
+        "style": { "fontWeight": "bold", "fontSize": "1.8em" }
       },
-      "style": {
-        "display": "flex",
-        "justifyContent": "space-between",
-        "padding": "15px 30px",
-        "borderBottom": "1px solid #ecf0f1"
+      {
+        "type": "text",
+        "name": "price",
+        "opts": { "text": { "key": "$.price" } },
+        "style": { "fontSize": "1.5em", "color": "#2ecc71" }
       }
+    ],
+    "style": {
+      "display": "flex",
+      "justifyContent": "space-between",
+      "padding": "0.75em 1.5em",
+      "borderBottom": "0.0625em solid #ecf0f1"
     }
   }
 }
 ```
+
+#### Live Demo - Simple List:
+
+<WidgetExample 
+  widget={simpleListWidget}
+  data={simpleListData}
+  height="380px"
+  title="Basic List Component"
+  description="A list showing 2 items at a time from 8 total fruits. Pages automatically rotate every 3 seconds when playing. Click play to see the pagination in action!"
+/>
+
+#### Advanced Example: Dessert Menu Board
+
+See the list component in action with this elegant dessert menu that combines a background image, styled container, and animated list items:
+
+<WidgetExample 
+  widget={dessertMenuWidget}
+  data={dessertMenuData}
+  height="500px"
+  title="Dessert Menu Board"
+  description="An elegant menu board showcasing desserts with names, descriptions, and prices. Items animate in smoothly and paginate automatically every 8 seconds. Watch how 4 items display at once!"
+/>
+
+This example demonstrates several powerful features:
+- **Layered components**: Background image with overlay content
+- **List pagination**: Shows 4 items at a time, rotating through all 7 desserts
+- **Data binding**: Each item pulls name, description, and price from `data.desserts`
+- **Animations**: Items slide in from the left with a smooth ease
+- **Responsive text**: Auto-fitting ensures text scales appropriately
+- **Professional styling**: Semi-transparent container with border creates depth
 
 ### 6. Image Carousel Component
 
@@ -457,13 +578,74 @@ Access array elements with bracket notation:
 }
 ```
 
-Use `[@target]` for responsive media selection:
+### Adaptive Media Resolution with `[@target]`
+
+Castmill automatically generates multiple versions of uploaded images and videos optimized for different contexts. Instead of hard-coding a specific file, use the `[@target]` variable for intelligent resolution selection:
 
 ```json
 {
-  "url": { "key": "options.image.files[@target].uri" }  // Best resolution for screen
+  "type": "image",
+  "opts": {
+    "url": { "key": "options.productImage.files[@target].uri" },
+    "size": "cover"
+  }
 }
 ```
+
+**How It Works:**
+
+When media is uploaded to Castmill, the platform generates multiple optimized versions:
+
+| Target Key | Purpose | Typical Resolution | Use Case |
+|-----------|---------|-------------------|----------|
+| `thumbnail` | Small preview | ~150x150px | Lists, grid views |
+| `preview` | Medium preview | ~480x270px | Dashboard editing |
+| `screen` | Full display | Original or 1920x1080px | Digital signage screens |
+
+The `[@target]` variable automatically resolves to the appropriate key based on context:
+- **Dashboard/Editor**: Uses `"preview"` for faster loading and editing
+- **Player on Screens**: Uses `"screen"` for maximum quality
+- **Mobile Apps**: May use `"thumbnail"` for bandwidth efficiency
+
+**File Structure:**
+
+Each media item in Castmill has a `files` array containing multiple `File` objects stored in PostgreSQL:
+
+```json
+{
+  "productImage": {
+    "id": "media_123",
+    "name": "product-hero.jpg",
+    "files": [
+      { "target": "thumbnail", "uri": "https://cdn.castmill.com/thumb_abc.jpg", "width": 150, "height": 150 },
+      { "target": "preview", "uri": "https://cdn.castmill.com/prev_abc.jpg", "width": 480, "height": 270 },
+      { "target": "screen", "uri": "https://cdn.castmill.com/screen_abc.jpg", "width": 1920, "height": 1080 }
+    ]
+  }
+}
+```
+
+**Benefits:**
+
+- **Performance**: Dashboard loads quickly with preview-sized media
+- **Quality**: Screens display full-resolution content
+- **Bandwidth**: Each context uses appropriately-sized files
+- **Automatic**: No manual selection needed—Castmill handles it intelligently
+
+**Example with Video:**
+
+```json
+{
+  "type": "video",
+  "name": "promo-video",
+  "opts": {
+    "url": { "key": "options.video.files[@target].uri" },
+    "size": "cover"
+  }
+}
+```
+
+This pattern works identically for both images and videos, ensuring optimal media delivery across all Castmill contexts.
 
 ---
 
