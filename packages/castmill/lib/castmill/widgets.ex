@@ -38,23 +38,31 @@ defmodule Castmill.Widgets do
   """
   def list_widgets(params \\ %{})
 
-  def list_widgets(%{page: page, page_size: page_size, search: search, key: sort_key, direction: sort_direction}) do
+  def list_widgets(%{
+        page: page,
+        page_size: page_size,
+        search: search,
+        key: sort_key,
+        direction: sort_direction
+      }) do
     offset = (page_size && max((page - 1) * page_size, 0)) || 0
 
     # Convert sort direction string to atom
-    sort_dir = case sort_direction do
-      "ascending" -> :asc
-      "descending" -> :desc
-      _ -> :asc
-    end
+    sort_dir =
+      case sort_direction do
+        "ascending" -> :asc
+        "descending" -> :desc
+        _ -> :asc
+      end
 
     # Convert sort key string to atom, default to :name
-    sort_field = case sort_key do
-      "name" -> :name
-      "inserted_at" -> :inserted_at
-      "updated_at" -> :updated_at
-      _ -> :name
-    end
+    sort_field =
+      case sort_key do
+        "name" -> :name
+        "inserted_at" -> :inserted_at
+        "updated_at" -> :updated_at
+        _ -> :name
+      end
 
     Widget.base_query()
     |> QueryHelpers.where_name_like(search)
