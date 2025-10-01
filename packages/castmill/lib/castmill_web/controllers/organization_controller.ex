@@ -177,14 +177,30 @@ defmodule CastmillWeb.OrganizationController do
   end
 
   # List all the widgets available an organization
-  def list_widgets(conn, %{"organization_id" => _organization_id}) do
+  def list_widgets(conn, %{"organization_id" => _organization_id} = params) do
     # Note: for now we return all widgets, but we should only return the widgets that are available
     # for the organization (some widgets are available to all organizations though).
-    widgets = Castmill.Widgets.list_widgets()
+
+    # Extract pagination, search, and sorting parameters
+    query_params = %{
+      page: String.to_integer(params["page"] || "1"),
+      page_size: String.to_integer(params["page_size"] || "10"),
+      search: params["search"],
+      key: params["key"] || "name",
+      direction: params["direction"] || "ascending"
+    }
+
+    widgets = Castmill.Widgets.list_widgets(query_params)
+    count = Castmill.Widgets.count_widgets(query_params)
+
+    response = %{
+      data: widgets,
+      count: count
+    }
 
     conn
     |> put_status(:ok)
-    |> json(widgets)
+    |> json(response)
   end
 
   def create_widget(conn, %{"organization_id" => _organization_id, "widget" => widget_file}) do

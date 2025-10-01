@@ -1,3 +1,4 @@
 import { FiPackage } from 'solid-icons/fi';
+import { IconWrapper } from '@castmill/ui-common';
 
-export default FiPackage;
+export default <IconWrapper icon={FiPackage} />;

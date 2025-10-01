@@ -653,4 +653,167 @@ defmodule Castmill.WidgetsTest do
       assert updated_widget_config.data == data
     end
   end
+
+  describe "list_widgets/1" do
+    setup do
+      # Create test widgets with different names for search testing
+      {:ok, widget1} = Widgets.create_widget(%{
+        name: "Text Widget",
+        slug: "text-widget",
+        description: "A simple text widget",
+        template: %{},
+        options_schema: %{},
+        data_schema: %{}
+      })
+
+      {:ok, widget2} = Widgets.create_widget(%{
+        name: "Image Widget",
+        slug: "image-widget",
+        description: "An image display widget",
+        template: %{},
+        options_schema: %{},
+        data_schema: %{}
+      })
+
+      {:ok, widget3} = Widgets.create_widget(%{
+        name: "Video Widget",
+        slug: "video-widget",
+        description: "A video player widget",
+        template: %{},
+        options_schema: %{},
+        data_schema: %{}
+      })
+
+      {:ok, widget1: widget1, widget2: widget2, widget3: widget3}
+    end
+
+    test "returns all widgets without parameters" do
+      widgets = Widgets.list_widgets()
+      assert length(widgets) >= 3
+    end
+
+    test "returns paginated widgets", %{widget1: widget1, widget2: widget2} do
+      params = %{
+        page: 1,
+        page_size: 2,
+        search: nil,
+        key: "name",
+        direction: "ascending"
+      }
+
+      widgets = Widgets.list_widgets(params)
+      assert length(widgets) == 2
+    end
+
+    test "returns second page of widgets" do
+      params = %{
+        page: 2,
+        page_size: 2,
+        search: nil,
+        key: "name",
+        direction: "ascending"
+      }
+
+      widgets = Widgets.list_widgets(params)
+      assert is_list(widgets)
+    end
+
+    test "filters widgets by search term" do
+      params = %{
+        page: 1,
+        page_size: 10,
+        search: "Text",
+        key: "name",
+        direction: "ascending"
+      }
+
+      widgets = Widgets.list_widgets(params)
+      assert length(widgets) >= 1
+      assert Enum.any?(widgets, fn w -> String.contains?(w.name, "Text") end)
+    end
+
+    test "search is case insensitive" do
+      params = %{
+        page: 1,
+        page_size: 10,
+        search: "text",
+        key: "name",
+        direction: "ascending"
+      }
+
+      widgets = Widgets.list_widgets(params)
+      assert length(widgets) >= 1
+      assert Enum.any?(widgets, fn w -> String.contains?(w.name, "Text") end)
+    end
+
+    test "sorts widgets by name ascending" do
+      params = %{
+        page: 1,
+        page_size: 10,
+        search: nil,
+        key: "name",
+        direction: "ascending"
+      }
+
+      widgets = Widgets.list_widgets(params)
+      names = Enum.map(widgets, & &1.name)
+      assert names == Enum.sort(names)
+    end
+
+    test "sorts widgets by name descending" do
+      params = %{
+        page: 1,
+        page_size: 10,
+        search: nil,
+        key: "name",
+        direction: "descending"
+      }
+
+      widgets = Widgets.list_widgets(params)
+      names = Enum.map(widgets, & &1.name)
+      assert names == Enum.sort(names, :desc)
+    end
+  end
+
+  describe "count_widgets/1" do
+    setup do
+      {:ok, _widget1} = Widgets.create_widget(%{
+        name: "Counter Widget 1",
+        slug: "counter-widget-1",
+        template: %{},
+        options_schema: %{},
+        data_schema: %{}
+      })
+
+      {:ok, _widget2} = Widgets.create_widget(%{
+        name: "Counter Widget 2",
+        slug: "counter-widget-2",
+        template: %{},
+        options_schema: %{},
+        data_schema: %{}
+      })
+
+      :ok
+    end
+
+    test "returns total count of widgets" do
+      count = Widgets.count_widgets()
+      assert count >= 2
+    end
+
+    test "returns count with search filter" do
+      count = Widgets.count_widgets(%{search: "Counter"})
+      assert count >= 2
+    end
+
+    test "returns zero for non-matching search" do
+      count = Widgets.count_widgets(%{search: "NonExistentWidget12345"})
+      assert count == 0
+    end
+
+    test "search count is case insensitive" do
+      count = Widgets.count_widgets(%{search: "counter"})
+      assert count >= 2
+    end
+  end
 end

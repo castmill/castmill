@@ -58,10 +58,34 @@ export const WidgetsService = {
   async fetchWidgets(
     baseUrl: string,
     organizationId: string,
-    options: FetchWidgetsOptions
+    { page, page_size, sortOptions, search, filters }: FetchWidgetsOptions
   ): Promise<{ data: JsonWidget[]; count: number }> {
+    const filtersToString = (filters: Record<string, string | boolean>) => {
+      return Object.entries(filters)
+        .map(([key, value]) =>
+          typeof value === 'boolean' ? `${key}` : `${key}:${value}`
+        )
+        .join(',');
+    };
+
+    const query = {
+      ...sortOptions,
+      page_size: page_size.toString(),
+      page: page.toString(),
+    } as Record<string, string>;
+
+    if (search) {
+      query['search'] = search;
+    }
+
+    if (filters) {
+      query['filters'] = filtersToString(filters);
+    }
+
+    const queryString = new URLSearchParams(query).toString();
+
     const response = await fetch(
-      `${baseUrl}/dashboard/organizations/${organizationId}/widgets`,
+      `${baseUrl}/dashboard/organizations/${organizationId}/widgets?${queryString}`,
       {
         method: 'GET',
         credentials: 'include',
@@ -71,45 +95,9 @@ export const WidgetsService = {
       }
     );
 
-    // For now, the API returns a simple array. We'll wrap it in the expected format
-    // and handle client-side pagination, sorting, and filtering
-    const widgets = await handleResponse<JsonWidget[]>(response, {
+    return handleResponse<{ data: JsonWidget[]; count: number }>(response, {
       parse: true,
     });
-
-    let filteredWidgets = widgets;
-
-    // Client-side search
-    if (options.search && options.search.trim()) {
-      const searchTerm = options.search.toLowerCase();
-      filteredWidgets = filteredWidgets.filter(
-        (widget) =>
-          widget.name.toLowerCase().includes(searchTerm) ||
-          (widget.description && widget.description.toLowerCase().includes(searchTerm))
-      );
-    }
-
-    // Client-side sorting
-    if (options.sortOptions.field) {
-      const { field, direction } = options.sortOptions;
-      filteredWidgets.sort((a, b) => {
-        const aVal = (a as any)[field] || '';
-        const bVal = (b as any)[field] || '';
-        const comparison = aVal.toString().localeCompare(bVal.toString());
-        return direction === 'asc' ? comparison : -comparison;
-      });
-    }
-
-    // Client-side pagination
-    const totalCount = filteredWidgets.length;
-    const startIndex = (options.page - 1) * options.page_size;
-    const endIndex = startIndex + options.page_size;
-    const paginatedWidgets = filteredWidgets.slice(startIndex, endIndex);
-
-    return {
-      data: paginatedWidgets,
-      count: totalCount,
-    };
   },
 
   /**

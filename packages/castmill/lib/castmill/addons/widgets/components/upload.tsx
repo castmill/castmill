@@ -24,10 +24,7 @@ interface Messages {
   [key: string]: string | JSX.Element;
 }
 
-const supportedFileTypes = [
-  'application/json',
-  'text/json',
-];
+const supportedFileTypes = ['application/json', 'text/json'];
 
 export const UploadComponent = (props: UploadComponentProps) => {
   const [files, setFiles] = createSignal<File[]>([]);
@@ -54,9 +51,13 @@ export const UploadComponent = (props: UploadComponentProps) => {
 
   const addFiles = (newFiles: File[]) => {
     const validFiles = newFiles.filter((file) => {
-      const isValidType = supportedFileTypes.includes(file.type) || file.name.endsWith('.json');
+      const isValidType =
+        supportedFileTypes.includes(file.type) || file.name.endsWith('.json');
       if (!isValidType) {
-        setMessage(file.name, 'Invalid file type. Only JSON files are supported.');
+        setMessage(
+          file.name,
+          'Invalid file type. Only JSON files are supported.'
+        );
       }
       return isValidType;
     });
@@ -83,10 +84,12 @@ export const UploadComponent = (props: UploadComponentProps) => {
       // Read and validate JSON content
       const jsonContent = await file.text();
       const parsedJson = JSON.parse(jsonContent);
-      
+
       // Basic validation for widget JSON structure
       if (!parsedJson.name || !parsedJson.template) {
-        throw new Error('Invalid widget JSON: must contain "name" and "template" fields');
+        throw new Error(
+          'Invalid widget JSON: must contain "name" and "template" fields'
+        );
       }
 
       setProgress(file.name, 50);
@@ -105,29 +108,62 @@ export const UploadComponent = (props: UploadComponentProps) => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || errorData.message || 'Upload failed');
+
+        // Handle Ecto changeset errors
+        if (errorData.errors && typeof errorData.errors === 'object') {
+          const changeset = errorData.errors;
+          const errorMessages = [];
+
+          // Extract errors from changeset
+          for (const [field, errors] of Object.entries(changeset)) {
+            if (Array.isArray(errors)) {
+              errorMessages.push(`${field}: ${errors.join(', ')}`);
+            }
+          }
+
+          throw new Error(
+            errorMessages.length > 0
+              ? errorMessages.join('; ')
+              : 'Validation failed'
+          );
+        }
+
+        throw new Error(
+          errorData.error || errorData.message || 'Upload failed'
+        );
       }
 
       setProgress(file.name, 100);
-      setMessage(file.name, <AiOutlineCheck color="green" />);
-      
+      setMessage(
+        file.name,
+        <div style="display: flex; align-items: center; gap: 0.5rem; color: #22c55e;">
+          <AiOutlineCheck />
+          <span>Uploaded successfully</span>
+        </div>
+      );
+
       const result = await response.json();
       props.onFileUpload?.(file.name, result);
     } catch (error: any) {
       console.error('Upload error:', error);
-      setMessage(file.name, `Error: ${error.message}`);
+      setMessage(
+        file.name,
+        <div style="color: #ef4444; font-size: 0.9em; line-height: 1.4;">
+          {error.message}
+        </div>
+      );
     }
   };
 
   const handleUpload = async () => {
     const uploadPromises = files().map((file) => uploadFile(file));
     await Promise.all(uploadPromises);
-    
+
     // Check if all files were processed
-    const allProcessed = files().every((file) => 
-      messages()[file.name] !== undefined
+    const allProcessed = files().every(
+      (file) => messages()[file.name] !== undefined
     );
-    
+
     if (allProcessed) {
       setTimeout(() => {
         props.onUploadComplete?.();
@@ -150,9 +186,14 @@ export const UploadComponent = (props: UploadComponentProps) => {
       onDragLeave: () => setIsDraggedOver(false),
       onDrop: ({ source }) => {
         setIsDraggedOver(false);
-        const files = source.items as File[];
-        if (files) {
-          addFiles(Array.from(files));
+        // Extract files from DataTransferItems
+        const fileItems = Array.from(source.items)
+          .filter((item: DataTransferItem) => item.kind === 'file')
+          .map((item: DataTransferItem) => item.getAsFile())
+          .filter((file): file is File => file !== null);
+
+        if (fileItems.length > 0) {
+          addFiles(fileItems);
         }
       },
     });
@@ -163,40 +204,53 @@ export const UploadComponent = (props: UploadComponentProps) => {
   return (
     <div class="upload-widgets">
       <h2>Upload Widget</h2>
-      
+
       <div class="upload-description">
-        <p>Upload JSON files containing widget definitions. Each widget must include:</p>
-        <ul>
-          <li><strong>name</strong>: The widget name</li>
-          <li><strong>template</strong>: The widget template configuration</li>
-          <li><strong>description</strong> (optional): Widget description</li>
-          <li><strong>options_schema</strong> (optional): Schema for widget options</li>
-          <li><strong>data_schema</strong> (optional): Schema for widget data</li>
-        </ul>
-        
-        <div class="json-example">
-{`{
-  "name": "My Widget",
-  "description": "A sample widget",
-  "template": {
-    "type": "image",
-    "name": "image",
-    "opts": {
-      "url": {"key": "options.image.files[@target].uri"}
-    }
-  },
-  "options_schema": {
-    "image": {
-      "type": "ref",
-      "required": true,
-      "collection": "medias|type:image"
-    }
-  }
-}`}
+        <p>Upload a JSON file containing a widget definition.</p>
+
+        <div style="background: #1e3a5f; border-left: 3px solid #3b82f6; padding: 0.75rem 1rem; margin: 1rem 0; border-radius: 4px;">
+          <p style="margin: 0; font-size: 0.9em; color: #93c5fd;">
+            <strong>Required fields:</strong>{' '}
+            <code style="background: #2d4a6e; color: #93c5fd; padding: 2px 6px; border-radius: 3px;">
+              name
+            </code>{' '}
+            and{' '}
+            <code style="background: #2d4a6e; color: #93c5fd; padding: 2px 6px; border-radius: 3px;">
+              template
+            </code>
+          </p>
         </div>
+
+        <p class="example-title">Example format:</p>
+        <pre class="json-example">
+          <code>
+            {JSON.stringify(
+              {
+                name: 'My Widget',
+                description: 'A sample widget',
+                template: {
+                  type: 'image',
+                  name: 'image',
+                  opts: {
+                    url: { key: 'options.image.files[@target].uri' },
+                  },
+                },
+                options_schema: {
+                  image: {
+                    type: 'ref',
+                    required: true,
+                    collection: 'medias|type:image',
+                  },
+                },
+              },
+              null,
+              2
+            )}
+          </code>
+        </pre>
       </div>
 
-      <div 
+      <div
         ref={dropZoneRef}
         class={`file-input-container ${isDraggedOver() ? 'drag-over' : ''}`}
         onDragOver={(e) => e.preventDefault()}
@@ -208,9 +262,7 @@ export const UploadComponent = (props: UploadComponentProps) => {
           accept=".json,application/json"
           onChange={onFileChange}
         />
-        <div class="upload-hint">
-          Or drag and drop JSON files here...
-        </div>
+        <div class="upload-hint">Or drag and drop JSON files here...</div>
       </div>
 
       <Show when={files().length}>
@@ -224,30 +276,34 @@ export const UploadComponent = (props: UploadComponentProps) => {
                   </div>
                   <div class="file-size">{file.size} bytes</div>
                 </div>
-                
+
                 <div class="file-status">
                   <Show
                     when={messages()[file.name]}
                     fallback={
-                      <Show 
+                      <Show
                         when={progresses()[file.name] > 0}
-                        fallback="Ready"
+                        fallback={<span style="color: #6b7280;">Ready</span>}
                       >
-                        <progress
-                          value={progresses()[file.name] || 0}
-                          max="100"
-                        >
-                          {progresses()[file.name]}%
-                        </progress>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                          <progress
+                            value={progresses()[file.name] || 0}
+                            max="100"
+                            style="flex: 1;"
+                          >
+                            {progresses()[file.name]}%
+                          </progress>
+                          <span style="font-size: 0.85em; color: #6b7280;">
+                            {progresses()[file.name]}%
+                          </span>
+                        </div>
                       </Show>
                     }
                   >
-                    <div class={typeof messages()[file.name] === 'string' && messages()[file.name].toString().startsWith('Error') ? 'error' : 'success'}>
-                      {messages()[file.name]}
-                    </div>
+                    {messages()[file.name]}
                   </Show>
                 </div>
-                
+
                 <IconButton
                   onClick={() => onFileRemove(file)}
                   icon={AiOutlineDelete}
@@ -278,7 +334,10 @@ export const UploadComponent = (props: UploadComponentProps) => {
         </Show>
 
         <Button
-          disabled={files().length === 0 || Object.keys(messages()).length === files().length}
+          disabled={
+            files().length === 0 ||
+            Object.keys(messages()).length === files().length
+          }
           label="Upload"
           onClick={handleUpload}
           icon={AiOutlineUpload}
