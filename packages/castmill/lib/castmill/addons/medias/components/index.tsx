@@ -349,6 +349,13 @@ const MediasPage: Component<{
           columns,
           actions,
           onRowSelect,
+          defaultRowAction: {
+            icon: BsEye,
+            handler: (item: JsonMedia) => {
+              openModal(item);
+            },
+            label: 'View',
+          },
         }}
         pagination={{ itemsPerPage }}
       ></TableView>

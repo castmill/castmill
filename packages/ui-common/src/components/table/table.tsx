@@ -34,6 +34,7 @@ export interface TableProps<
   onSort?: (options: SortOptions) => void;
   actions?: TableAction<Item>[];
   onRowSelect?: (selectedIds: Set<IdType>) => void;
+  onRowClick?: (item: Item) => void;
   itemIdKey?: string;
 }
 
@@ -136,7 +137,21 @@ export const Table = <
         <tbody>
           <For each={props.data}>
             {(item) => (
-              <tr>
+              <tr
+                onClick={(e) => {
+                  // Don't trigger row click when clicking on checkbox or action buttons
+                  if (
+                    props.onRowClick &&
+                    !(e.target as Element)?.closest('input[type="checkbox"]') &&
+                    !(e.target as Element)?.closest('.table-actions')
+                  ) {
+                    props.onRowClick(item);
+                  }
+                }}
+                style={{
+                  cursor: props.onRowClick ? 'pointer' : 'default',
+                }}
+              >
                 <td>
                   <input
                     type="checkbox"

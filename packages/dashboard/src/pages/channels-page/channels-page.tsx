@@ -304,6 +304,14 @@ const ChannelsPage: Component = () => {
             columns,
             actions,
             onRowSelect,
+            defaultRowAction: {
+              icon: BsEye,
+              handler: (item: ChannelTableItem) => {
+                setCurrentChannel(item);
+                setShowModal(true);
+              },
+              label: 'View',
+            },
           }}
           pagination={{ itemsPerPage }}
         ></TableView>

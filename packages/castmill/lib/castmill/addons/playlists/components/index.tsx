@@ -258,6 +258,14 @@ const PlaylistsPage: Component<{
           columns,
           actions,
           onRowSelect,
+          defaultRowAction: {
+            icon: BsEye,
+            handler: (item: JsonPlaylist) => {
+              setCurrentPlaylist(item);
+              setShowModal(true);
+            },
+            label: 'View',
+          },
         }}
         pagination={{ itemsPerPage }}
       ></TableView>

@@ -56,6 +56,7 @@ interface TableViewProps<
     onSort?: (options: SortOptions) => void;
     actions?: TableAction<Item>[];
     onRowSelect?: (selectedIds: Set<IdType>) => void;
+    defaultRowAction?: TableAction<Item>;
   };
 
   pagination: {
@@ -271,6 +272,7 @@ export const TableView = <
             actions={props.table.actions}
             onRowSelect={props.table.onRowSelect}
             onSort={props.table.onSort}
+            onRowClick={props.table.defaultRowAction?.handler}
             itemIdKey={props.itemIdKey}
           />
 
