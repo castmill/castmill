@@ -58,7 +58,11 @@ const Topbar: Component = () => {
         <Show when={checkAuth()}>
           <Search />
 
-          <TopbarLink to="/help" icon={TbHelpCircle} text={t('topbar.help')}></TopbarLink>
+          <TopbarLink
+            to="/help"
+            icon={TbHelpCircle}
+            text={t('topbar.help')}
+          ></TopbarLink>
 
           {/* Implement the Alert icon + Alerts page */}
           <div style="margin: 0 1rem; margin: 0 1rem; display: flex; flex-direction: row; justify-content: center; align-items: center;">

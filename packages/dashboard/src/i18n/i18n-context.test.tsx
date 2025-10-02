@@ -6,7 +6,7 @@ import { LOCALE_STORAGE_KEY } from './types';
 // Test component that uses i18n
 function TestComponent() {
   const { t, locale, setLocale } = useI18n();
-  
+
   return (
     <div>
       <div data-testid="current-locale">{locale()}</div>
@@ -54,7 +54,7 @@ describe('I18n Context', () => {
     button.click();
 
     // Wait for effects to run
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Check localStorage was updated
     expect(localStorage.getItem(LOCALE_STORAGE_KEY)).toBe('es');
@@ -72,7 +72,7 @@ describe('I18n Context', () => {
     button.click();
 
     // Wait for translations to load
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     expect(screen.getByTestId('current-locale').textContent).toBe('es');
     // Spanish translation should be loaded

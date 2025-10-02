@@ -1,6 +1,6 @@
 /**
  * I18n Context and Provider for the Dashboard
- * 
+ *
  * Provides translation functions and locale management throughout the app.
  */
 
@@ -46,7 +46,9 @@ async function loadTranslations(locale: Locale): Promise<Translations> {
     const translations = await import(`./locales/${locale}.json`);
     return translations.default || translations;
   } catch (error) {
-    console.warn(`Failed to load translations for locale: ${locale}, falling back to English`);
+    console.warn(
+      `Failed to load translations for locale: ${locale}, falling back to English`
+    );
     return en;
   }
 }
@@ -57,13 +59,13 @@ async function loadTranslations(locale: Locale): Promise<Translations> {
 function getInitialLocale(): Locale {
   // Check localStorage first
   const stored = localStorage.getItem(LOCALE_STORAGE_KEY);
-  if (stored && SUPPORTED_LOCALES.some(l => l.code === stored)) {
+  if (stored && SUPPORTED_LOCALES.some((l) => l.code === stored)) {
     return stored as Locale;
   }
 
   // Try to detect from browser
   const browserLang = navigator.language.split('-')[0];
-  if (SUPPORTED_LOCALES.some(l => l.code === browserLang)) {
+  if (SUPPORTED_LOCALES.some((l) => l.code === browserLang)) {
     return browserLang as Locale;
   }
 
@@ -89,12 +91,12 @@ export function I18nProvider(props: { children: JSX.Element }) {
     const currentLocale = locale();
     const loadedTranslations = await loadTranslations(currentLocale);
     setTranslations(loadedTranslations);
-    
+
     // Set HTML lang attribute
     document.documentElement.lang = currentLocale;
-    
+
     // Set RTL direction for Arabic
-    const localeInfo = SUPPORTED_LOCALES.find(l => l.code === currentLocale);
+    const localeInfo = SUPPORTED_LOCALES.find((l) => l.code === currentLocale);
     if (localeInfo?.rtl) {
       document.documentElement.dir = 'rtl';
     } else {
@@ -113,9 +115,12 @@ export function I18nProvider(props: { children: JSX.Element }) {
   /**
    * Translation function with parameter interpolation
    */
-  const t = (key: TranslationKey, params?: Record<string, string | number>): string => {
+  const t = (
+    key: TranslationKey,
+    params?: Record<string, string | number>
+  ): string => {
     const translation = getNestedValue(translations(), key);
-    
+
     if (!translation) {
       console.warn(`Translation missing for key: ${key}`);
       return key;
@@ -141,9 +146,7 @@ export function I18nProvider(props: { children: JSX.Element }) {
   };
 
   return (
-    <I18nContext.Provider value={value}>
-      {props.children}
-    </I18nContext.Provider>
+    <I18nContext.Provider value={value}>{props.children}</I18nContext.Provider>
   );
 }
 

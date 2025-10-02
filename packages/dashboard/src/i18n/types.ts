@@ -2,7 +2,16 @@
  * I18n types for type-safe translations
  */
 
-export type Locale = 'en' | 'es' | 'sv' | 'de' | 'fr' | 'zh' | 'ar' | 'ko' | 'ja';
+export type Locale =
+  | 'en'
+  | 'es'
+  | 'sv'
+  | 'de'
+  | 'fr'
+  | 'zh'
+  | 'ar'
+  | 'ko'
+  | 'ja';
 
 export interface LocaleInfo {
   code: Locale;

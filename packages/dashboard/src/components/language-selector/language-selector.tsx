@@ -1,6 +1,6 @@
 /**
  * Language Selector Component
- * 
+ *
  * Dropdown component for selecting the application language
  */
 
@@ -16,7 +16,8 @@ const LanguageSelector: Component<LanguageSelectorProps> = (props) => {
   const { locale, setLocale, t } = useI18n();
   const [isOpen, setIsOpen] = createSignal(false);
 
-  const currentLocale = () => SUPPORTED_LOCALES.find(l => l.code === locale());
+  const currentLocale = () =>
+    SUPPORTED_LOCALES.find((l) => l.code === locale());
 
   const handleLocaleChange = (newLocale: Locale) => {
     setLocale(newLocale);
@@ -31,7 +32,9 @@ const LanguageSelector: Component<LanguageSelectorProps> = (props) => {
         aria-label={t('common.language')}
       >
         <span class="language-selector__current">
-          {props.compact ? currentLocale()?.code.toUpperCase() : currentLocale()?.nativeName}
+          {props.compact
+            ? currentLocale()?.code.toUpperCase()
+            : currentLocale()?.nativeName}
         </span>
         <span class="language-selector__arrow">▼</span>
       </button>
@@ -45,8 +48,12 @@ const LanguageSelector: Component<LanguageSelectorProps> = (props) => {
                 classList={{ active: locale() === localeInfo.code }}
                 onClick={() => handleLocaleChange(localeInfo.code)}
               >
-                <span class="language-selector__code">{localeInfo.code.toUpperCase()}</span>
-                <span class="language-selector__name">{localeInfo.nativeName}</span>
+                <span class="language-selector__code">
+                  {localeInfo.code.toUpperCase()}
+                </span>
+                <span class="language-selector__name">
+                  {localeInfo.nativeName}
+                </span>
                 <Show when={locale() === localeInfo.code}>
                   <span class="language-selector__check">✓</span>
                 </Show>

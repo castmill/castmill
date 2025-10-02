@@ -15,8 +15,10 @@ import {
   EmailVerificationState,
 } from '../../interfaces/credential.interface';
 import './settings-page.scss';
+import { useI18n, SUPPORTED_LOCALES } from '../../i18n';
 
 const SettingsPage: Component = () => {
+  const { t, locale, setLocale } = useI18n();
   const [user, setUser] = createSignal<User | null>(null);
   const [name, setName] = createSignal('');
   const [email, setEmail] = createSignal('');
@@ -343,14 +345,14 @@ const SettingsPage: Component = () => {
   return (
     <div class="castmill-settings">
       <div class="settings-header">
-        <h1>Account Settings</h1>
+        <h1>{t('settings.title')}</h1>
         <p>Manage your account information and preferences</p>
       </div>
 
       <div class="settings-sections">
         {/* Profile Settings */}
         <section class="settings-section">
-          <h2>Profile Information</h2>
+          <h2>{t('settings.profile')}</h2>
           <div class="settings-content">
             <FormItem
               label="Full Name"
@@ -534,6 +536,33 @@ const SettingsPage: Component = () => {
                 />
                 <small>Add a passkey for another device or browser</small>
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Language Settings */}
+        <section class="settings-section">
+          <h2>{t('settings.languageSettings')}</h2>
+          <div class="settings-content">
+            <p>{t('settings.selectLanguage')}</p>
+            <div class="language-options">
+              <For each={SUPPORTED_LOCALES}>
+                {(localeInfo) => (
+                  <button
+                    class="language-option"
+                    classList={{ active: locale() === localeInfo.code }}
+                    onClick={() => setLocale(localeInfo.code)}
+                  >
+                    <span class="language-code">
+                      {localeInfo.code.toUpperCase()}
+                    </span>
+                    <span class="language-name">{localeInfo.nativeName}</span>
+                    <Show when={locale() === localeInfo.code}>
+                      <span class="language-check">✓</span>
+                    </Show>
+                  </button>
+                )}
+              </For>
             </div>
           </div>
         </section>

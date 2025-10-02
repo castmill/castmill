@@ -216,6 +216,55 @@
         }
       }
     }
+
+    .language-options {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 0.75rem;
+      margin-top: 1rem;
+
+      .language-option {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem 1rem;
+        background: colors.$highlight-background-color;
+        border: 2px solid colors.$separator-color;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-align: left;
+
+        &:hover {
+          border-color: colors.$highlight-color;
+          background: colors.$component-background-color;
+        }
+
+        &.active {
+          border-color: colors.$highlight-color;
+          background: colors.$component-background-color;
+          box-shadow: 0 0 0 3px rgba(colors.$highlight-color, 0.1);
+        }
+
+        .language-code {
+          font-weight: 600;
+          font-size: 0.875rem;
+          color: colors.$component-color;
+          min-width: 28px;
+        }
+
+        .language-name {
+          flex: 1;
+          font-size: 0.95rem;
+        }
+
+        .language-check {
+          color: #27ae60;
+          font-weight: bold;
+          font-size: 1.2rem;
+        }
+      }
+    }
   }
 }
 
