@@ -211,6 +211,82 @@ To add more RTL languages (Hebrew, Farsi, etc.):
 - Wrap test components in `I18nProvider`
 - See `settings-page.test.tsx` for examples
 
+## Preventing Non-Localized Content
+
+To ensure all user-facing text is localized:
+
+### 1. ESLint Rule (Recommended)
+
+Add the `eslint-plugin-react` rule to detect hardcoded strings:
+
+```json
+// .eslintrc.json
+{
+  "plugins": ["react"],
+  "rules": {
+    "react/jsx-no-literals": ["warn", {
+      "noStrings": true,
+      "ignoreProps": true,
+      "noAttributeStrings": true
+    }]
+  }
+}
+```
+
+This warns when JSX contains hardcoded strings instead of translations.
+
+### 2. Code Review Checklist
+
+When reviewing PRs, check for:
+- [ ] All user-facing text uses `t()` function
+- [ ] No hardcoded strings in JSX (e.g., `<button>Save</button>`)
+- [ ] Translation keys added to all language files
+- [ ] Tests updated to use `I18nProvider`
+
+### 3. Automated Detection Script
+
+Run this script to find potential hardcoded strings:
+
+```bash
+# Find JSX with hardcoded strings
+grep -r ">[A-Z]" src --include="*.tsx" | grep -v "import" | grep -v "//"
+```
+
+### 4. Developer Guidelines
+
+**DO:**
+```tsx
+// ✅ Use translation function
+<button>{t('common.save')}</button>
+<h1>{t('settings.title')}</h1>
+```
+
+**DON'T:**
+```tsx
+// ❌ Hardcoded strings
+<button>Save</button>
+<h1>Settings</h1>
+```
+
+### 5. Component Template
+
+Use this template for new components:
+
+```tsx
+import { useI18n } from '../../i18n';
+
+function MyComponent() {
+  const { t } = useI18n();
+  
+  return (
+    <div>
+      <h1>{t('myComponent.title')}</h1>
+      <button>{t('common.save')}</button>
+    </div>
+  );
+}
+```
+
 ## Future Enhancements
 
 Potential improvements for the i18n system:
@@ -222,3 +298,4 @@ Potential improvements for the i18n system:
 - [ ] Automated translation detection for untranslated keys
 - [ ] Translation validation scripts
 - [ ] Support for nested parameter interpolation
+- [ ] ESLint rule integration for enforcing translations
