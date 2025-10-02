@@ -353,6 +353,14 @@ const DevicesPage: Component<{
           columns,
           actions,
           onRowSelect,
+          defaultRowAction: {
+            icon: BsEye,
+            handler: (item: DeviceTableItem) => {
+              setCurrentDevice(item);
+              setShowModal(true);
+            },
+            label: 'View',
+          },
         }}
         pagination={{ itemsPerPage }}
       ></TableView>
