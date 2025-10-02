@@ -6,7 +6,7 @@ import {
   Show,
   For,
 } from 'solid-js';
-import { Button, FormItem } from '@castmill/ui-common';
+import { Button, FormItem, Timestamp } from '@castmill/ui-common';
 import { getUser } from '../../components/auth';
 import { UserService } from '../../services/user.service';
 import { User } from '../../interfaces/user.interface';
@@ -467,10 +467,7 @@ const SettingsPage: Component = () => {
                           <div class="passkey-details">
                             <span class="passkey-name">{credential.name}</span>
                             <span class="passkey-date">
-                              Added{' '}
-                              {new Date(
-                                credential.inserted_at
-                              ).toLocaleDateString()}
+                              Added <Timestamp value={credential.inserted_at} mode="relative" />
                             </span>
                           </div>
                           <div class="passkey-actions">
