@@ -1,0 +1,86 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "remove": "Remove",
+    "close": "Close",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "search": "Search",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "name": "Name",
+    "email": "Email",
+    "password": "Password",
+    "settings": "Settings",
+    "profile": "Profile",
+    "logout": "Logout",
+    "login": "Login",
+    "signup": "Sign Up",
+    "language": "Language"
+  },
+  "topbar": {
+    "help": "Help",
+    "notifications": "Notifications"
+  },
+  "settings": {
+    "title": "Settings",
+    "profile": "Profile Information",
+    "name": "Name",
+    "email": "Email",
+    "saveProfile": "Save Profile",
+    "saveSuccess": "Profile updated successfully!",
+    "unsavedChanges": "You have unsaved changes",
+    "credentials": "Credentials",
+    "credentialsDescription": "Manage your login credentials",
+    "addCredential": "Add Credential",
+    "credentialName": "Credential Name",
+    "deleteCredential": "Delete Credential",
+    "deleteConfirm": "Are you sure you want to delete this credential?",
+    "emailVerification": "Email Verification",
+    "emailVerified": "Email is verified",
+    "emailNotVerified": "Email is not verified",
+    "sendVerification": "Send Verification Email",
+    "verificationSent": "Verification email sent!",
+    "sessionExpired": "Your session has expired. Redirecting to login...",
+    "failedLoadCredentials": "Failed to load credentials. Please try refreshing the page.",
+    "languageSettings": "Language Settings",
+    "selectLanguage": "Select your preferred language"
+  },
+  "usage": {
+    "title": "Usage",
+    "resourceUsage": "Resource Usage",
+    "resource": "Resource",
+    "used": "Used",
+    "total": "Total",
+    "progress": "Progress"
+  },
+  "teams": {
+    "title": "Teams",
+    "members": "Members",
+    "invitations": "Invitations",
+    "medias": "Medias",
+    "playlists": "Playlists",
+    "devices": "Devices",
+    "channels": "Channels"
+  },
+  "login": {
+    "title": "Login",
+    "email": "Email",
+    "password": "Password",
+    "loginButton": "Login",
+    "signupLink": "Don't have an account? Sign up",
+    "ready": "Ready",
+    "loading": "Loading..."
+  },
+  "errors": {
+    "generic": "An error occurred. Please try again.",
+    "networkError": "Network error. Please check your connection.",
+    "unauthorized": "Unauthorized. Please log in again."
+  }
+}

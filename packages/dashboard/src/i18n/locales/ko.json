@@ -1,0 +1,86 @@
+{
+  "common": {
+    "save": "저장",
+    "cancel": "취소",
+    "delete": "삭제",
+    "edit": "편집",
+    "add": "추가",
+    "remove": "제거",
+    "close": "닫기",
+    "confirm": "확인",
+    "back": "뒤로",
+    "next": "다음",
+    "search": "검색",
+    "loading": "로딩 중...",
+    "error": "오류",
+    "success": "성공",
+    "name": "이름",
+    "email": "이메일",
+    "password": "비밀번호",
+    "settings": "설정",
+    "profile": "프로필",
+    "logout": "로그아웃",
+    "login": "로그인",
+    "signup": "회원가입",
+    "language": "언어"
+  },
+  "topbar": {
+    "help": "도움말",
+    "notifications": "알림"
+  },
+  "settings": {
+    "title": "설정",
+    "profile": "프로필 정보",
+    "name": "이름",
+    "email": "이메일",
+    "saveProfile": "프로필 저장",
+    "saveSuccess": "프로필이 성공적으로 업데이트되었습니다!",
+    "unsavedChanges": "저장되지 않은 변경사항이 있습니다",
+    "credentials": "자격 증명",
+    "credentialsDescription": "로그인 자격 증명 관리",
+    "addCredential": "자격 증명 추가",
+    "credentialName": "자격 증명 이름",
+    "deleteCredential": "자격 증명 삭제",
+    "deleteConfirm": "이 자격 증명을 삭제하시겠습니까?",
+    "emailVerification": "이메일 인증",
+    "emailVerified": "이메일이 인증되었습니다",
+    "emailNotVerified": "이메일이 인증되지 않았습니다",
+    "sendVerification": "인증 이메일 보내기",
+    "verificationSent": "인증 이메일이 전송되었습니다!",
+    "sessionExpired": "세션이 만료되었습니다. 로그인 페이지로 이동합니다...",
+    "failedLoadCredentials": "자격 증명을 불러오지 못했습니다. 페이지를 새로고침해 주세요.",
+    "languageSettings": "언어 설정",
+    "selectLanguage": "선호하는 언어를 선택하세요"
+  },
+  "usage": {
+    "title": "사용량",
+    "resourceUsage": "리소스 사용량",
+    "resource": "리소스",
+    "used": "사용됨",
+    "total": "전체",
+    "progress": "진행률"
+  },
+  "teams": {
+    "title": "팀",
+    "members": "멤버",
+    "invitations": "초대",
+    "medias": "미디어",
+    "playlists": "재생목록",
+    "devices": "기기",
+    "channels": "채널"
+  },
+  "login": {
+    "title": "로그인",
+    "email": "이메일",
+    "password": "비밀번호",
+    "loginButton": "로그인",
+    "signupLink": "계정이 없으신가요? 회원가입",
+    "ready": "준비됨",
+    "loading": "로딩 중..."
+  },
+  "errors": {
+    "generic": "오류가 발생했습니다. 다시 시도해 주세요.",
+    "networkError": "네트워크 오류입니다. 연결을 확인해 주세요.",
+    "unauthorized": "인증되지 않았습니다. 다시 로그인해 주세요."
+  }
+}

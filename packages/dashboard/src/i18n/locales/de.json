@@ -1,0 +1,86 @@
+{
+  "common": {
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "add": "Hinzufügen",
+    "remove": "Entfernen",
+    "close": "Schließen",
+    "confirm": "Bestätigen",
+    "back": "Zurück",
+    "next": "Weiter",
+    "search": "Suchen",
+    "loading": "Wird geladen...",
+    "error": "Fehler",
+    "success": "Erfolg",
+    "name": "Name",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "settings": "Einstellungen",
+    "profile": "Profil",
+    "logout": "Abmelden",
+    "login": "Anmelden",
+    "signup": "Registrieren",
+    "language": "Sprache"
+  },
+  "topbar": {
+    "help": "Hilfe",
+    "notifications": "Benachrichtigungen"
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "profile": "Profilinformationen",
+    "name": "Name",
+    "email": "E-Mail",
+    "saveProfile": "Profil speichern",
+    "saveSuccess": "Profil erfolgreich aktualisiert!",
+    "unsavedChanges": "Sie haben ungespeicherte Änderungen",
+    "credentials": "Anmeldeinformationen",
+    "credentialsDescription": "Verwalten Sie Ihre Anmeldedaten",
+    "addCredential": "Anmeldedaten hinzufügen",
+    "credentialName": "Name der Anmeldedaten",
+    "deleteCredential": "Anmeldedaten löschen",
+    "deleteConfirm": "Sind Sie sicher, dass Sie diese Anmeldedaten löschen möchten?",
+    "emailVerification": "E-Mail-Verifizierung",
+    "emailVerified": "E-Mail ist verifiziert",
+    "emailNotVerified": "E-Mail ist nicht verifiziert",
+    "sendVerification": "Bestätigungsmail senden",
+    "verificationSent": "Bestätigungsmail gesendet!",
+    "sessionExpired": "Ihre Sitzung ist abgelaufen. Weiterleitung zur Anmeldung...",
+    "failedLoadCredentials": "Fehler beim Laden der Anmeldedaten. Bitte aktualisieren Sie die Seite.",
+    "languageSettings": "Spracheinstellungen",
+    "selectLanguage": "Wählen Sie Ihre bevorzugte Sprache"
+  },
+  "usage": {
+    "title": "Nutzung",
+    "resourceUsage": "Ressourcennutzung",
+    "resource": "Ressource",
+    "used": "Verwendet",
+    "total": "Gesamt",
+    "progress": "Fortschritt"
+  },
+  "teams": {
+    "title": "Teams",
+    "members": "Mitglieder",
+    "invitations": "Einladungen",
+    "medias": "Medien",
+    "playlists": "Wiedergabelisten",
+    "devices": "Geräte",
+    "channels": "Kanäle"
+  },
+  "login": {
+    "title": "Anmelden",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "loginButton": "Anmelden",
+    "signupLink": "Noch kein Konto? Registrieren",
+    "ready": "Bereit",
+    "loading": "Wird geladen..."
+  },
+  "errors": {
+    "generic": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
+    "networkError": "Netzwerkfehler. Bitte überprüfen Sie Ihre Verbindung.",
+    "unauthorized": "Nicht autorisiert. Bitte melden Sie sich erneut an."
+  }
+}

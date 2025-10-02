@@ -1,0 +1,86 @@
+{
+  "common": {
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "add": "Ajouter",
+    "remove": "Retirer",
+    "close": "Fermer",
+    "confirm": "Confirmer",
+    "back": "Retour",
+    "next": "Suivant",
+    "search": "Rechercher",
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès",
+    "name": "Nom",
+    "email": "E-mail",
+    "password": "Mot de passe",
+    "settings": "Paramètres",
+    "profile": "Profil",
+    "logout": "Déconnexion",
+    "login": "Connexion",
+    "signup": "S'inscrire",
+    "language": "Langue"
+  },
+  "topbar": {
+    "help": "Aide",
+    "notifications": "Notifications"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "profile": "Informations du profil",
+    "name": "Nom",
+    "email": "E-mail",
+    "saveProfile": "Enregistrer le profil",
+    "saveSuccess": "Profil mis à jour avec succès !",
+    "unsavedChanges": "Vous avez des modifications non enregistrées",
+    "credentials": "Identifiants",
+    "credentialsDescription": "Gérer vos identifiants de connexion",
+    "addCredential": "Ajouter un identifiant",
+    "credentialName": "Nom de l'identifiant",
+    "deleteCredential": "Supprimer l'identifiant",
+    "deleteConfirm": "Êtes-vous sûr de vouloir supprimer cet identifiant ?",
+    "emailVerification": "Vérification de l'e-mail",
+    "emailVerified": "L'e-mail est vérifié",
+    "emailNotVerified": "L'e-mail n'est pas vérifié",
+    "sendVerification": "Envoyer l'e-mail de vérification",
+    "verificationSent": "E-mail de vérification envoyé !",
+    "sessionExpired": "Votre session a expiré. Redirection vers la connexion...",
+    "failedLoadCredentials": "Échec du chargement des identifiants. Veuillez actualiser la page.",
+    "languageSettings": "Paramètres de langue",
+    "selectLanguage": "Sélectionnez votre langue préférée"
+  },
+  "usage": {
+    "title": "Utilisation",
+    "resourceUsage": "Utilisation des ressources",
+    "resource": "Ressource",
+    "used": "Utilisé",
+    "total": "Total",
+    "progress": "Progression"
+  },
+  "teams": {
+    "title": "Équipes",
+    "members": "Membres",
+    "invitations": "Invitations",
+    "medias": "Médias",
+    "playlists": "Listes de lecture",
+    "devices": "Appareils",
+    "channels": "Chaînes"
+  },
+  "login": {
+    "title": "Connexion",
+    "email": "E-mail",
+    "password": "Mot de passe",
+    "loginButton": "Se connecter",
+    "signupLink": "Pas de compte ? S'inscrire",
+    "ready": "Prêt",
+    "loading": "Chargement..."
+  },
+  "errors": {
+    "generic": "Une erreur s'est produite. Veuillez réessayer.",
+    "networkError": "Erreur réseau. Veuillez vérifier votre connexion.",
+    "unauthorized": "Non autorisé. Veuillez vous reconnecter."
+  }
+}

@@ -1,0 +1,86 @@
+{
+  "common": {
+    "save": "حفظ",
+    "cancel": "إلغاء",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "add": "إضافة",
+    "remove": "إزالة",
+    "close": "إغلاق",
+    "confirm": "تأكيد",
+    "back": "رجوع",
+    "next": "التالي",
+    "search": "بحث",
+    "loading": "جاري التحميل...",
+    "error": "خطأ",
+    "success": "نجح",
+    "name": "الاسم",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "settings": "الإعدادات",
+    "profile": "الملف الشخصي",
+    "logout": "تسجيل الخروج",
+    "login": "تسجيل الدخول",
+    "signup": "التسجيل",
+    "language": "اللغة"
+  },
+  "topbar": {
+    "help": "مساعدة",
+    "notifications": "الإشعارات"
+  },
+  "settings": {
+    "title": "الإعدادات",
+    "profile": "معلومات الملف الشخصي",
+    "name": "الاسم",
+    "email": "البريد الإلكتروني",
+    "saveProfile": "حفظ الملف الشخصي",
+    "saveSuccess": "تم تحديث الملف الشخصي بنجاح!",
+    "unsavedChanges": "لديك تغييرات غير محفوظة",
+    "credentials": "بيانات الاعتماد",
+    "credentialsDescription": "إدارة بيانات تسجيل الدخول",
+    "addCredential": "إضافة بيانات اعتماد",
+    "credentialName": "اسم بيانات الاعتماد",
+    "deleteCredential": "حذف بيانات الاعتماد",
+    "deleteConfirm": "هل أنت متأكد من أنك تريد حذف بيانات الاعتماد هذه؟",
+    "emailVerification": "التحقق من البريد الإلكتروني",
+    "emailVerified": "تم التحقق من البريد الإلكتروني",
+    "emailNotVerified": "لم يتم التحقق من البريد الإلكتروني",
+    "sendVerification": "إرسال بريد التحقق",
+    "verificationSent": "تم إرسال بريد التحقق!",
+    "sessionExpired": "انتهت صلاحية جلستك. جاري إعادة التوجيه إلى تسجيل الدخول...",
+    "failedLoadCredentials": "فشل تحميل بيانات الاعتماد. يرجى محاولة تحديث الصفحة.",
+    "languageSettings": "إعدادات اللغة",
+    "selectLanguage": "اختر لغتك المفضلة"
+  },
+  "usage": {
+    "title": "الاستخدام",
+    "resourceUsage": "استخدام الموارد",
+    "resource": "المورد",
+    "used": "المستخدم",
+    "total": "الإجمالي",
+    "progress": "التقدم"
+  },
+  "teams": {
+    "title": "الفرق",
+    "members": "الأعضاء",
+    "invitations": "الدعوات",
+    "medias": "الوسائط",
+    "playlists": "قوائم التشغيل",
+    "devices": "الأجهزة",
+    "channels": "القنوات"
+  },
+  "login": {
+    "title": "تسجيل الدخول",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "loginButton": "تسجيل الدخول",
+    "signupLink": "ليس لديك حساب؟ سجل",
+    "ready": "جاهز",
+    "loading": "جاري التحميل..."
+  },
+  "errors": {
+    "generic": "حدث خطأ. يرجى المحاولة مرة أخرى.",
+    "networkError": "خطأ في الشبكة. يرجى التحقق من اتصالك.",
+    "unauthorized": "غير مصرح. يرجى تسجيل الدخول مرة أخرى."
+  }
+}

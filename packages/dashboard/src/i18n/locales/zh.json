@@ -1,0 +1,86 @@
+{
+  "common": {
+    "save": "保存",
+    "cancel": "取消",
+    "delete": "删除",
+    "edit": "编辑",
+    "add": "添加",
+    "remove": "移除",
+    "close": "关闭",
+    "confirm": "确认",
+    "back": "返回",
+    "next": "下一步",
+    "search": "搜索",
+    "loading": "加载中...",
+    "error": "错误",
+    "success": "成功",
+    "name": "名称",
+    "email": "电子邮件",
+    "password": "密码",
+    "settings": "设置",
+    "profile": "个人资料",
+    "logout": "退出登录",
+    "login": "登录",
+    "signup": "注册",
+    "language": "语言"
+  },
+  "topbar": {
+    "help": "帮助",
+    "notifications": "通知"
+  },
+  "settings": {
+    "title": "设置",
+    "profile": "个人资料信息",
+    "name": "名称",
+    "email": "电子邮件",
+    "saveProfile": "保存个人资料",
+    "saveSuccess": "个人资料更新成功！",
+    "unsavedChanges": "您有未保存的更改",
+    "credentials": "凭据",
+    "credentialsDescription": "管理您的登录凭据",
+    "addCredential": "添加凭据",
+    "credentialName": "凭据名称",
+    "deleteCredential": "删除凭据",
+    "deleteConfirm": "您确定要删除此凭据吗？",
+    "emailVerification": "电子邮件验证",
+    "emailVerified": "电子邮件已验证",
+    "emailNotVerified": "电子邮件未验证",
+    "sendVerification": "发送验证邮件",
+    "verificationSent": "验证邮件已发送！",
+    "sessionExpired": "您的会话已过期。正在重定向到登录页面...",
+    "failedLoadCredentials": "加载凭据失败。请尝试刷新页面。",
+    "languageSettings": "语言设置",
+    "selectLanguage": "选择您的首选语言"
+  },
+  "usage": {
+    "title": "使用情况",
+    "resourceUsage": "资源使用情况",
+    "resource": "资源",
+    "used": "已使用",
+    "total": "总计",
+    "progress": "进度"
+  },
+  "teams": {
+    "title": "团队",
+    "members": "成员",
+    "invitations": "邀请",
+    "medias": "媒体",
+    "playlists": "播放列表",
+    "devices": "设备",
+    "channels": "频道"
+  },
+  "login": {
+    "title": "登录",
+    "email": "电子邮件",
+    "password": "密码",
+    "loginButton": "登录",
+    "signupLink": "没有账户？注册",
+    "ready": "就绪",
+    "loading": "加载中..."
+  },
+  "errors": {
+    "generic": "发生错误。请重试。",
+    "networkError": "网络错误。请检查您的连接。",
+    "unauthorized": "未授权。请重新登录。"
+  }
+}

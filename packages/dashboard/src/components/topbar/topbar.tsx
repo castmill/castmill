@@ -12,11 +12,14 @@ import { TbHelpCircle } from 'solid-icons/tb';
 
 import logo from '../../assets/castmill-logo-topbar.png';
 import DropdownMenu from '../dropdown-menu/dropdown-menu';
+import LanguageSelector from '../language-selector/language-selector';
 
 import { baseUrl } from '../../env';
+import { useI18n } from '../../i18n';
 
 const Topbar: Component = () => {
   const [triggerLogout, setTriggerLogout] = createSignal(false);
+  const { t } = useI18n();
 
   const navigate = useNavigate();
 
@@ -55,18 +58,20 @@ const Topbar: Component = () => {
         <Show when={checkAuth()}>
           <Search />
 
-          <TopbarLink to="/help" icon={TbHelpCircle} text="Help"></TopbarLink>
+          <TopbarLink to="/help" icon={TbHelpCircle} text={t('topbar.help')}></TopbarLink>
 
           {/* Implement the Alert icon + Alerts page */}
           <div style="margin: 0 1rem; margin: 0 1rem; display: flex; flex-direction: row; justify-content: center; align-items: center;">
             <FaRegularBell />
           </div>
 
+          <LanguageSelector compact={true} />
+
           <DropdownMenu ButtonComponent={() => <div>{getUser().name} </div>}>
-            <a href="/profile">Profile</a>
-            <a href="/settings">Settings</a>
+            <a href="/profile">{t('common.profile')}</a>
+            <a href="/settings">{t('common.settings')}</a>
             <button class="logout" onClick={() => setTriggerLogout(true)}>
-              Logout
+              {t('common.logout')}
             </button>
           </DropdownMenu>
         </Show>

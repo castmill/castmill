@@ -27,6 +27,7 @@ import TeamsInvitationPage from './pages/teams-invitations-page/teams-invitation
 import OrganizationPage from './pages/organization-page/organization-page';
 import OrganizationsInvitationPage from './pages/organization-invitations/organizations-invitations-page';
 import ChannelsPage from './pages/channels-page/channels-page';
+import { I18nProvider } from './i18n';
 
 const Login = lazy(() => import('./components/login/login'));
 const SignUp = lazy(() => import('./components/signup/signup'));
@@ -72,51 +73,53 @@ render(() => {
   });
 
   return (
-    <Router root={App}>
-      <Route path="/login" component={Login} />
-      <Route path="/signup" component={SignUp} />
-      <Route
-        path="/"
-        component={(props: any) => (
-          <Suspense fallback={<div>Loading...</div>}>
-            <ProtectedRoute>
-              {(addons) => (
-                <Dashboard {...props} addons={new AddOnTree(addons)} />
-              )}
-            </ProtectedRoute>
-          </Suspense>
-        )}
-      >
-        <Route path="" component={EmptyComponent} />
-        <Route path="settings" component={SettingsPage} />
-        <Route path="search" component={SearchPage} />
-        <Route path="usage" component={UsagePage} />
-        <Route path="teams" component={TeamsPage} />
-        <Route path="organization" component={OrganizationPage} />
-        <Route path="channels" component={ChannelsPage} />
-        <Route path="invite" component={TeamsInvitationPage} />
+    <I18nProvider>
+      <Router root={App}>
+        <Route path="/login" component={Login} />
+        <Route path="/signup" component={SignUp} />
         <Route
-          path="invite-organization"
-          component={OrganizationsInvitationPage}
-        />
+          path="/"
+          component={(props: any) => (
+            <Suspense fallback={<div>Loading...</div>}>
+              <ProtectedRoute>
+                {(addons) => (
+                  <Dashboard {...props} addons={new AddOnTree(addons)} />
+                )}
+              </ProtectedRoute>
+            </Suspense>
+          )}
+        >
+          <Route path="" component={EmptyComponent} />
+          <Route path="settings" component={SettingsPage} />
+          <Route path="search" component={SearchPage} />
+          <Route path="usage" component={UsagePage} />
+          <Route path="teams" component={TeamsPage} />
+          <Route path="organization" component={OrganizationPage} />
+          <Route path="channels" component={ChannelsPage} />
+          <Route path="invite" component={TeamsInvitationPage} />
+          <Route
+            path="invite-organization"
+            component={OrganizationsInvitationPage}
+          />
 
-        {/* Dynamically generate routes for AddOns */}
-        <For each={store.addons}>
-          {(addon) => {
-            if (!addon.mount_path) {
-              return null;
-            }
-            return (
-              <Route
-                path={addon.mount_path}
-                component={wrapLazyComponent(addon)}
-              />
-            );
-          }}
-        </For>
+          {/* Dynamically generate routes for AddOns */}
+          <For each={store.addons}>
+            {(addon) => {
+              if (!addon.mount_path) {
+                return null;
+              }
+              return (
+                <Route
+                  path={addon.mount_path}
+                  component={wrapLazyComponent(addon)}
+                />
+              );
+            }}
+          </For>
 
-        <Route path="*404" component={NotFound} />
-      </Route>
-    </Router>
+          <Route path="*404" component={NotFound} />
+        </Route>
+      </Router>
+    </I18nProvider>
   );
 }, root!);

@@ -1,0 +1,86 @@
+{
+  "common": {
+    "save": "Spara",
+    "cancel": "Avbryt",
+    "delete": "Ta bort",
+    "edit": "Redigera",
+    "add": "Lägg till",
+    "remove": "Ta bort",
+    "close": "Stäng",
+    "confirm": "Bekräfta",
+    "back": "Tillbaka",
+    "next": "Nästa",
+    "search": "Sök",
+    "loading": "Laddar...",
+    "error": "Fel",
+    "success": "Framgång",
+    "name": "Namn",
+    "email": "E-post",
+    "password": "Lösenord",
+    "settings": "Inställningar",
+    "profile": "Profil",
+    "logout": "Logga ut",
+    "login": "Logga in",
+    "signup": "Registrera",
+    "language": "Språk"
+  },
+  "topbar": {
+    "help": "Hjälp",
+    "notifications": "Notiser"
+  },
+  "settings": {
+    "title": "Inställningar",
+    "profile": "Profilinformation",
+    "name": "Namn",
+    "email": "E-post",
+    "saveProfile": "Spara profil",
+    "saveSuccess": "Profilen har uppdaterats!",
+    "unsavedChanges": "Du har osparade ändringar",
+    "credentials": "Inloggningsuppgifter",
+    "credentialsDescription": "Hantera dina inloggningsuppgifter",
+    "addCredential": "Lägg till inloggningsuppgift",
+    "credentialName": "Namn på inloggningsuppgift",
+    "deleteCredential": "Ta bort inloggningsuppgift",
+    "deleteConfirm": "Är du säker på att du vill ta bort denna inloggningsuppgift?",
+    "emailVerification": "E-postverifiering",
+    "emailVerified": "E-posten är verifierad",
+    "emailNotVerified": "E-posten är inte verifierad",
+    "sendVerification": "Skicka verifieringsmail",
+    "verificationSent": "Verifieringsmail skickat!",
+    "sessionExpired": "Din session har gått ut. Omdirigerar till inloggning...",
+    "failedLoadCredentials": "Misslyckades med att ladda inloggningsuppgifter. Försök uppdatera sidan.",
+    "languageSettings": "Språkinställningar",
+    "selectLanguage": "Välj ditt föredragna språk"
+  },
+  "usage": {
+    "title": "Användning",
+    "resourceUsage": "Resursanvändning",
+    "resource": "Resurs",
+    "used": "Använd",
+    "total": "Totalt",
+    "progress": "Framsteg"
+  },
+  "teams": {
+    "title": "Team",
+    "members": "Medlemmar",
+    "invitations": "Inbjudningar",
+    "medias": "Media",
+    "playlists": "Spellistor",
+    "devices": "Enheter",
+    "channels": "Kanaler"
+  },
+  "login": {
+    "title": "Logga in",
+    "email": "E-post",
+    "password": "Lösenord",
+    "loginButton": "Logga in",
+    "signupLink": "Har du inget konto? Registrera dig",
+    "ready": "Redo",
+    "loading": "Laddar..."
+  },
+  "errors": {
+    "generic": "Ett fel uppstod. Försök igen.",
+    "networkError": "Nätverksfel. Kontrollera din anslutning.",
+    "unauthorized": "Obehörig. Logga in igen."
+  }
+}

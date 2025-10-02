@@ -1,0 +1,86 @@
+{
+  "common": {
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "add": "Añadir",
+    "remove": "Quitar",
+    "close": "Cerrar",
+    "confirm": "Confirmar",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "search": "Buscar",
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito",
+    "name": "Nombre",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "settings": "Configuración",
+    "profile": "Perfil",
+    "logout": "Cerrar sesión",
+    "login": "Iniciar sesión",
+    "signup": "Registrarse",
+    "language": "Idioma"
+  },
+  "topbar": {
+    "help": "Ayuda",
+    "notifications": "Notificaciones"
+  },
+  "settings": {
+    "title": "Configuración",
+    "profile": "Información del perfil",
+    "name": "Nombre",
+    "email": "Correo electrónico",
+    "saveProfile": "Guardar perfil",
+    "saveSuccess": "¡Perfil actualizado correctamente!",
+    "unsavedChanges": "Tienes cambios sin guardar",
+    "credentials": "Credenciales",
+    "credentialsDescription": "Gestiona tus credenciales de acceso",
+    "addCredential": "Añadir credencial",
+    "credentialName": "Nombre de la credencial",
+    "deleteCredential": "Eliminar credencial",
+    "deleteConfirm": "¿Estás seguro de que quieres eliminar esta credencial?",
+    "emailVerification": "Verificación de correo electrónico",
+    "emailVerified": "El correo electrónico está verificado",
+    "emailNotVerified": "El correo electrónico no está verificado",
+    "sendVerification": "Enviar correo de verificación",
+    "verificationSent": "¡Correo de verificación enviado!",
+    "sessionExpired": "Tu sesión ha expirado. Redirigiendo al inicio de sesión...",
+    "failedLoadCredentials": "Error al cargar las credenciales. Por favor, intenta actualizar la página.",
+    "languageSettings": "Configuración de idioma",
+    "selectLanguage": "Selecciona tu idioma preferido"
+  },
+  "usage": {
+    "title": "Uso",
+    "resourceUsage": "Uso de recursos",
+    "resource": "Recurso",
+    "used": "Usado",
+    "total": "Total",
+    "progress": "Progreso"
+  },
+  "teams": {
+    "title": "Equipos",
+    "members": "Miembros",
+    "invitations": "Invitaciones",
+    "medias": "Medios",
+    "playlists": "Listas de reproducción",
+    "devices": "Dispositivos",
+    "channels": "Canales"
+  },
+  "login": {
+    "title": "Iniciar sesión",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "loginButton": "Iniciar sesión",
+    "signupLink": "¿No tienes una cuenta? Regístrate",
+    "ready": "Listo",
+    "loading": "Cargando..."
+  },
+  "errors": {
+    "generic": "Se ha producido un error. Por favor, inténtalo de nuevo.",
+    "networkError": "Error de red. Por favor, comprueba tu conexión.",
+    "unauthorized": "No autorizado. Por favor, inicia sesión de nuevo."
+  }
+}
