@@ -6,6 +6,7 @@ import {
   IconButton,
   TableAction,
   TableView,
+  useToast,
 } from '@castmill/ui-common';
 import { BsEye } from 'solid-icons/bs';
 import { createSignal } from 'solid-js';
@@ -54,6 +55,7 @@ export const ResourceChooser = (props: {
   resourceName: string;
   onSelect: (resources: { id: string }[]) => void;
 }) => {
+  const toast = useToast();
   const [data, setData] = createSignal<any[]>([]);
   const [currentResource, setCurrentResource] = createSignal<any>();
   const [selectedResources, setSelectedResources] = createSignal(
@@ -82,8 +84,9 @@ export const ResourceChooser = (props: {
       );
 
       props.onSelect([resource]);
+      toast.success('Resource added to team successfully');
     } catch (error) {
-      alert(`Error adding resource to team: ${error}`);
+      toast.error(`Error adding resource to team: ${error}`);
     }
     setShowConfirmDialog(false);
   };
@@ -104,8 +107,9 @@ export const ResourceChooser = (props: {
 
       const resources = Array.from(selectedResources()).map((id) => ({ id }));
       props.onSelect(resources);
+      toast.success('Resources added to team successfully');
     } catch (error) {
-      alert(`Error removing teams: ${error}`);
+      toast.error(`Error adding resources to team: ${error}`);
     }
     setShowConfirmDialogMultiple(false);
   };

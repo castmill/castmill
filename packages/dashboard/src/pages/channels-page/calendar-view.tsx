@@ -27,7 +27,7 @@ import {
 import { timestampsToCalendarEntry } from './utils';
 import { CalendarCell } from './calendar-cell';
 import { DefaultPlaylistComboBox } from './default-playlist-combobox';
-import { Modal } from '@castmill/ui-common';
+import { Modal, useToast } from '@castmill/ui-common';
 import { ChanneEntrylView } from './channel-entry-view';
 
 export interface DropTargetData {
@@ -560,8 +560,9 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
                 );
 
                 setShowEntryModal();
+                toast.success('Channel entry updated successfully');
               } catch (error) {
-                alert(`Error updating channel entry: ${error}`);
+                toast.error(`Error updating channel entry: ${error}`);
               }
             }}
           />
