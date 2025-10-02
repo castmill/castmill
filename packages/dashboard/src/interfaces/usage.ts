@@ -23,4 +23,8 @@ export interface Usage {
     total: number;
     used: number;
   };
+  teams: {
+    total: number;
+    used: number;
+  };
 }

@@ -13,6 +13,7 @@ export interface QuotaUsage {
   teams?: ResourceQuota;
   storage?: ResourceQuota;
   users?: ResourceQuota;
+  [key: string]: ResourceQuota | undefined;
 }
 
 export type ResourceType = keyof QuotaUsage;
