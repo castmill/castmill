@@ -4,6 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="csrf-token" content={get_csrf_token()} />
+    <meta name="theme-color" content="#000000" />
+    <link rel="shortcut icon" type="image/x-icon" href={~p"/favicon.ico"} />
     <.live_title suffix=" · Castmill Admin">
       <%= assigns[:page_title] || "" %>
     </.live_title>
