@@ -257,6 +257,14 @@ const TeamsPage: Component = () => {
           columns,
           actions,
           onRowSelect,
+          defaultRowAction: {
+            icon: BsEye,
+            handler: (item: TeamTableItem) => {
+              setCurrentTeam(item);
+              setShowModal(true);
+            },
+            label: 'View',
+          },
         }}
         pagination={{ itemsPerPage }}
       ></TableView>
