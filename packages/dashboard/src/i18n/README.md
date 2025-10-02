@@ -12,20 +12,24 @@ This directory contains the internationalization system for the Castmill Dashboa
 - ⚡ Dynamic translation loading (code-splitting)
 - 🔀 RTL (Right-to-Left) support for Arabic
 - 🔌 Simple React-like context API
+- 📊 **Pluralization support** - Handle singular/plural forms correctly for each language
+- 📅 **Date/time formatting** - Locale-aware date and time display using date-fns
+- 🔢 **Number formatting** - Format numbers according to locale conventions
+- 💰 **Currency formatting** - Display currency with proper symbols and formats
 
 ## Supported Languages
 
-| Language | Code | Native Name | RTL |
-|----------|------|-------------|-----|
-| English | `en` | English | No |
-| Spanish | `es` | Español | No |
-| Swedish | `sv` | Svenska | No |
-| German | `de` | Deutsch | No |
-| French | `fr` | Français | No |
-| Chinese (Mandarin) | `zh` | 中文 | No |
-| Arabic | `ar` | العربية | Yes |
-| Korean | `ko` | 한국어 | No |
-| Japanese | `ja` | 日本語 | No |
+| Language           | Code | Native Name | RTL |
+| ------------------ | ---- | ----------- | --- |
+| English            | `en` | English     | No  |
+| Spanish            | `es` | Español     | No  |
+| Swedish            | `sv` | Svenska     | No  |
+| German             | `de` | Deutsch     | No  |
+| French             | `fr` | Français    | No  |
+| Chinese (Mandarin) | `zh` | 中文        | No  |
+| Arabic             | `ar` | العربية     | Yes |
+| Korean             | `ko` | 한국어      | No  |
+| Japanese           | `ja` | 日本語      | No  |
 
 ## Usage
 
@@ -55,8 +59,8 @@ function LanguageSwitcher() {
   const { locale, setLocale } = useI18n();
 
   return (
-    <select 
-      value={locale()} 
+    <select
+      value={locale()}
       onChange={(e) => setLocale(e.target.value as Locale)}
     >
       {SUPPORTED_LOCALES.map((loc) => (
@@ -69,8 +73,6 @@ function LanguageSwitcher() {
 
 ### Translation Keys with Parameters
 
-While the current implementation doesn't require parameters, the system supports them:
-
 ```tsx
 // In your component
 const message = t('greeting.hello', { name: 'John' });
@@ -80,6 +82,130 @@ const message = t('greeting.hello', { name: 'John' });
   "greeting": {
     "hello": "Hello, {{name}}!"
   }
+}
+```
+
+### Pluralization
+
+Handle singular/plural forms correctly:
+
+```tsx
+import { useI18n } from '../../i18n';
+
+function ItemList() {
+  const { tp } = useI18n();
+  const itemCount = 5;
+
+  return (
+    <div>
+      <p>{tp('plurals.items', itemCount)}</p>
+      {/* Displays: "5 items" */}
+
+      <p>{tp('plurals.items', 1)}</p>
+      {/* Displays: "1 item" */}
+    </div>
+  );
+}
+```
+
+Translation file structure for plurals:
+
+```json
+{
+  "plurals": {
+    "items": {
+      "one": "{{count}} item",
+      "other": "{{count}} items"
+    }
+  }
+}
+```
+
+The system automatically selects the correct plural form based on the locale's rules using `Intl.PluralRules`.
+
+### Date and Time Formatting
+
+Format dates according to locale conventions:
+
+```tsx
+import { useI18n } from '../../i18n';
+
+function DateDisplay() {
+  const { formatDate } = useI18n();
+  const date = new Date('2024-01-15');
+
+  return (
+    <div>
+      <p>{formatDate(date)}</p>
+      {/* English: "January 15, 2024" */}
+      {/* Spanish: "15 de enero de 2024" */}
+
+      <p>{formatDate(date, 'PP')}</p>
+      {/* Short date format */}
+
+      <p>{formatDate(date, 'PPpp')}</p>
+      {/* Date with time */}
+    </div>
+  );
+}
+```
+
+Format strings follow [date-fns format patterns](https://date-fns.org/docs/format):
+
+- `'PP'` - Medium date (e.g., "Apr 29, 1453")
+- `'PPP'` - Long date (e.g., "April 29th, 1453")
+- `'Pp'` - Medium date + time
+- `'PPpp'` - Long date + time
+
+### Number Formatting
+
+Format numbers according to locale conventions:
+
+```tsx
+import { useI18n } from '../../i18n';
+
+function Statistics() {
+  const { formatNumber } = useI18n();
+
+  return (
+    <div>
+      <p>{formatNumber(1234.56)}</p>
+      {/* English: "1,234.56" */}
+      {/* German: "1.234,56" */}
+
+      <p>{formatNumber(0.85, { style: 'percent' })}</p>
+      {/* "85%" */}
+
+      <p>{formatNumber(1234.5, { minimumFractionDigits: 2 })}</p>
+      {/* "1,234.50" */}
+    </div>
+  );
+}
+```
+
+### Currency Formatting
+
+Display currency with proper symbols and formats:
+
+```tsx
+import { useI18n } from '../../i18n';
+
+function Price() {
+  const { formatCurrency } = useI18n();
+
+  return (
+    <div>
+      <p>{formatCurrency(99.99, 'USD')}</p>
+      {/* English: "$99.99" */}
+      {/* Spanish: "99,99 US$" */}
+
+      <p>{formatCurrency(1234.56, 'EUR')}</p>
+      {/* "€1,234.56" or "1.234,56 €" depending on locale */}
+
+      <p>{formatCurrency(99.99, 'JPY', { minimumFractionDigits: 0 })}</p>
+      {/* "¥100" (no decimals for JPY) */}
+    </div>
+  );
 }
 ```
 
@@ -181,10 +307,12 @@ yarn test i18n-context.test
 ## RTL (Right-to-Left) Support
 
 Arabic is currently the only RTL language. The system automatically:
+
 - Sets `dir="rtl"` on the HTML element
 - Adjusts CSS for RTL layout (see `language-selector.scss` for examples)
 
 To add more RTL languages (Hebrew, Farsi, etc.):
+
 1. Add language to `SUPPORTED_LOCALES` with `rtl: true`
 2. Create translation file
 3. Test layout in RTL mode
@@ -199,15 +327,18 @@ To add more RTL languages (Hebrew, Farsi, etc.):
 ## Troubleshooting
 
 ### Translation not showing
+
 - Check if the key exists in the translation file
 - Verify the component is wrapped in `I18nProvider`
 - Look for console warnings about missing keys
 
 ### Language not persisting
+
 - Check browser localStorage is enabled
 - Verify `LOCALE_STORAGE_KEY` is not conflicting
 
 ### Tests failing with i18n
+
 - Wrap test components in `I18nProvider`
 - See `settings-page.test.tsx` for examples
 
@@ -224,11 +355,14 @@ Add the `eslint-plugin-react` rule to detect hardcoded strings:
 {
   "plugins": ["react"],
   "rules": {
-    "react/jsx-no-literals": ["warn", {
-      "noStrings": true,
-      "ignoreProps": true,
-      "noAttributeStrings": true
-    }]
+    "react/jsx-no-literals": [
+      "warn",
+      {
+        "noStrings": true,
+        "ignoreProps": true,
+        "noAttributeStrings": true
+      }
+    ]
   }
 }
 ```
@@ -238,6 +372,7 @@ This warns when JSX contains hardcoded strings instead of translations.
 ### 2. Code Review Checklist
 
 When reviewing PRs, check for:
+
 - [ ] All user-facing text uses `t()` function
 - [ ] No hardcoded strings in JSX (e.g., `<button>Save</button>`)
 - [ ] Translation keys added to all language files
@@ -255,6 +390,7 @@ grep -r ">[A-Z]" src --include="*.tsx" | grep -v "import" | grep -v "//"
 ### 4. Developer Guidelines
 
 **DO:**
+
 ```tsx
 // ✅ Use translation function
 <button>{t('common.save')}</button>
@@ -262,6 +398,7 @@ grep -r ">[A-Z]" src --include="*.tsx" | grep -v "import" | grep -v "//"
 ```
 
 **DON'T:**
+
 ```tsx
 // ❌ Hardcoded strings
 <button>Save</button>
@@ -277,7 +414,7 @@ import { useI18n } from '../../i18n';
 
 function MyComponent() {
   const { t } = useI18n();
-  
+
   return (
     <div>
       <h1>{t('myComponent.title')}</h1>
@@ -287,15 +424,42 @@ function MyComponent() {
 }
 ```
 
+## Complete Internationalization Features
+
+### Implemented ✅
+
+- [x] **Text translation** with parameter interpolation
+- [x] **Pluralization** - Automatic singular/plural forms based on locale rules
+- [x] **Date/time formatting** - Locale-aware date display with date-fns
+- [x] **Number formatting** - Format numbers according to locale conventions
+- [x] **Currency formatting** - Display currency with proper symbols and formats
+- [x] **RTL support** - Right-to-left layout for Arabic
+- [x] **Type-safe translations** - TypeScript support throughout
+- [x] **Comprehensive tests** - Full test coverage for all features
+
+### API Reference
+
+```typescript
+const {
+  locale, // Accessor<Locale> - Current locale
+  setLocale, // (locale: Locale) => void - Change language
+  t, // (key, params?) => string - Translate text
+  tp, // (key, count, params?) => string - Pluralized translation
+  formatDate, // (date, format?) => string - Format date/time
+  formatNumber, // (value, options?) => string - Format numbers
+  formatCurrency, // (value, currency?, options?) => string - Format currency
+  translations, // Accessor<Translations> - Current translations object
+} = useI18n();
+```
+
 ## Future Enhancements
 
 Potential improvements for the i18n system:
 
-- [ ] Pluralization support
-- [ ] Date/time formatting per locale
-- [ ] Number formatting per locale
-- [ ] Translation management UI
+- [ ] Translation management UI - Web interface for managing translations
 - [ ] Automated translation detection for untranslated keys
 - [ ] Translation validation scripts
-- [ ] Support for nested parameter interpolation
 - [ ] ESLint rule integration for enforcing translations
+- [ ] Relative time formatting (e.g., "3 days ago")
+- [ ] List formatting (e.g., "apples, oranges, and bananas")
+- [ ] Message formatting with nested interpolation

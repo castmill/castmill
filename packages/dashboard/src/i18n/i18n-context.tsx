@@ -2,6 +2,12 @@
  * I18n Context and Provider for the Dashboard
  *
  * Provides translation functions and locale management throughout the app.
+ * Includes support for:
+ * - Text translation with parameter interpolation
+ * - Pluralization
+ * - Date/time formatting
+ * - Number formatting
+ * - Currency formatting
  */
 
 import {
@@ -17,7 +23,9 @@ import {
   DEFAULT_LOCALE,
   LOCALE_STORAGE_KEY,
   SUPPORTED_LOCALES,
+  LOCALE_DATE_FNS_MAP,
 } from './types';
+import { format as formatDate, parseISO } from 'date-fns';
 
 // Import all translation files
 import en from './locales/en.json';
@@ -28,10 +36,25 @@ export type Translations = typeof en;
 // Translation key paths (for type-safety)
 export type TranslationKey = string;
 
+// Plural forms
+export type PluralForm = 'zero' | 'one' | 'two' | 'few' | 'many' | 'other';
+
 interface I18nContextValue {
   locale: Accessor<Locale>;
   setLocale: (locale: Locale) => void;
   t: (key: TranslationKey, params?: Record<string, string | number>) => string;
+  tp: (
+    key: TranslationKey,
+    count: number,
+    params?: Record<string, string | number>
+  ) => string;
+  formatDate: (date: Date | string, formatStr?: string) => string;
+  formatNumber: (value: number, options?: Intl.NumberFormatOptions) => string;
+  formatCurrency: (
+    value: number,
+    currency?: string,
+    options?: Intl.NumberFormatOptions
+  ) => string;
   translations: Accessor<Translations>;
 }
 
@@ -77,6 +100,15 @@ function getInitialLocale(): Locale {
  */
 function getNestedValue(obj: any, path: string): string | undefined {
   return path.split('.').reduce((current, key) => current?.[key], obj);
+}
+
+/**
+ * Determine plural form based on count and locale
+ * Uses Intl.PluralRules for locale-specific plural rules
+ */
+function getPluralForm(count: number, locale: Locale): PluralForm {
+  const rules = new Intl.PluralRules(locale);
+  return rules.select(count) as PluralForm;
 }
 
 /**
@@ -138,10 +170,126 @@ export function I18nProvider(props: { children: JSX.Element }) {
     );
   };
 
+  /**
+   * Translation function with pluralization support
+   *
+   * Usage: tp('items.count', 5) => "5 items"
+   *
+   * Translation file should have:
+   * {
+   *   "items": {
+   *     "count": {
+   *       "one": "{{count}} item",
+   *       "other": "{{count}} items"
+   *     }
+   *   }
+   * }
+   */
+  const tp = (
+    key: TranslationKey,
+    count: number,
+    params?: Record<string, string | number>
+  ): string => {
+    const pluralForms = getNestedValue(translations(), key);
+
+    if (!pluralForms || typeof pluralForms !== 'object') {
+      console.warn(`Plural translation missing for key: ${key}`);
+      return key;
+    }
+
+    // Get the appropriate plural form for this locale
+    const pluralForm = getPluralForm(count, locale());
+
+    // Try to get translation for this plural form, fallback to 'other'
+    let translation =
+      (pluralForms as any)[pluralForm] || (pluralForms as any)['other'];
+
+    if (!translation) {
+      console.warn(`Plural form '${pluralForm}' missing for key: ${key}`);
+      return key;
+    }
+
+    // Merge count with any additional params
+    const allParams = { count, ...params };
+
+    // Replace parameters
+    return Object.entries(allParams).reduce(
+      (result, [key, value]) => result.replace(`{{${key}}}`, String(value)),
+      translation
+    );
+  };
+
+  /**
+   * Format a date according to the current locale
+   *
+   * @param date - Date object or ISO string
+   * @param formatStr - Format string (e.g., 'PPP' for long date, 'Pp' for date + time)
+   *                    Defaults to 'PPP' (e.g., "April 29, 1453" in English)
+   */
+  const formatDateFn = (
+    date: Date | string,
+    formatStr: string = 'PPP'
+  ): string => {
+    try {
+      const dateObj = typeof date === 'string' ? parseISO(date) : date;
+      const dateFnsLocale = LOCALE_DATE_FNS_MAP[locale()];
+      return formatDate(dateObj, formatStr, { locale: dateFnsLocale });
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return String(date);
+    }
+  };
+
+  /**
+   * Format a number according to the current locale
+   *
+   * @param value - Number to format
+   * @param options - Intl.NumberFormatOptions (e.g., { minimumFractionDigits: 2 })
+   */
+  const formatNumber = (
+    value: number,
+    options?: Intl.NumberFormatOptions
+  ): string => {
+    try {
+      return new Intl.NumberFormat(locale(), options).format(value);
+    } catch (error) {
+      console.error('Error formatting number:', error);
+      return String(value);
+    }
+  };
+
+  /**
+   * Format a currency value according to the current locale
+   *
+   * @param value - Number to format
+   * @param currency - Currency code (e.g., 'USD', 'EUR'). Defaults to 'USD'
+   * @param options - Additional Intl.NumberFormatOptions
+   */
+  const formatCurrency = (
+    value: number,
+    currency: string = 'USD',
+    options?: Intl.NumberFormatOptions
+  ): string => {
+    try {
+      return new Intl.NumberFormat(locale(), {
+        style: 'currency',
+        currency,
+        ...options,
+      }).format(value);
+    } catch (error) {
+      console.error('Error formatting currency:', error);
+      return `${currency} ${value}`;
+    }
+  };
+
   const value: I18nContextValue = {
     locale,
     setLocale,
     t,
+    tp,
+    formatDate: formatDateFn,
+    formatNumber,
+    formatCurrency,
     translations,
   };
 

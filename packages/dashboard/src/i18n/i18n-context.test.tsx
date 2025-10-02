@@ -109,4 +109,82 @@ describe('I18n Context', () => {
 
     expect(screen.getByTestId('nested').textContent).toBe('Settings');
   });
+
+  it('supports pluralization', () => {
+    function PluralComponent() {
+      const { tp } = useI18n();
+      return (
+        <div>
+          <div data-testid="plural-one">{tp('plurals.items', 1)}</div>
+          <div data-testid="plural-many">{tp('plurals.items', 5)}</div>
+        </div>
+      );
+    }
+
+    render(() => (
+      <I18nProvider>
+        <PluralComponent />
+      </I18nProvider>
+    ));
+
+    expect(screen.getByTestId('plural-one').textContent).toBe('1 item');
+    expect(screen.getByTestId('plural-many').textContent).toBe('5 items');
+  });
+
+  it('formats numbers correctly', () => {
+    function NumberComponent() {
+      const { formatNumber } = useI18n();
+      return (
+        <div data-testid="number">
+          {formatNumber(1234.56, { minimumFractionDigits: 2 })}
+        </div>
+      );
+    }
+
+    render(() => (
+      <I18nProvider>
+        <NumberComponent />
+      </I18nProvider>
+    ));
+
+    // English locale formats as 1,234.56
+    expect(screen.getByTestId('number').textContent).toMatch(/1[,\s]234\.56/);
+  });
+
+  it('formats currency correctly', () => {
+    function CurrencyComponent() {
+      const { formatCurrency } = useI18n();
+      return <div data-testid="currency">{formatCurrency(99.99, 'USD')}</div>;
+    }
+
+    render(() => (
+      <I18nProvider>
+        <CurrencyComponent />
+      </I18nProvider>
+    ));
+
+    // Should include currency symbol and amount
+    const text = screen.getByTestId('currency').textContent;
+    expect(text).toContain('99.99');
+    expect(text).toMatch(/\$|USD/);
+  });
+
+  it('formats dates correctly', () => {
+    function DateComponent() {
+      const { formatDate } = useI18n();
+      return <div data-testid="date">{formatDate(new Date('2024-01-15'))}</div>;
+    }
+
+    render(() => (
+      <I18nProvider>
+        <DateComponent />
+      </I18nProvider>
+    ));
+
+    // English locale formats as "January 15, 2024"
+    const text = screen.getByTestId('date').textContent;
+    expect(text).toContain('January');
+    expect(text).toContain('15');
+    expect(text).toContain('2024');
+  });
 });

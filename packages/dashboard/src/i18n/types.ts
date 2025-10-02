@@ -2,6 +2,9 @@
  * I18n types for type-safe translations
  */
 
+import { Locale as DateFnsLocale } from 'date-fns';
+import { enUS, es, sv, de, fr, zhCN, arSA, ko, ja } from 'date-fns/locale';
+
 export type Locale =
   | 'en'
   | 'es'
@@ -35,3 +38,18 @@ export const SUPPORTED_LOCALES: LocaleInfo[] = [
 export const DEFAULT_LOCALE: Locale = 'en';
 
 export const LOCALE_STORAGE_KEY = 'castmill_locale';
+
+/**
+ * Map our locale codes to date-fns locale objects
+ */
+export const LOCALE_DATE_FNS_MAP: Record<Locale, DateFnsLocale> = {
+  en: enUS,
+  es: es,
+  sv: sv,
+  de: de,
+  fr: fr,
+  zh: zhCN,
+  ar: arSA,
+  ko: ko,
+  ja: ja,
+};

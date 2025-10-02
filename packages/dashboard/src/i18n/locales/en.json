@@ -82,5 +82,23 @@
     "generic": "An error occurred. Please try again.",
     "networkError": "Network error. Please check your connection.",
     "unauthorized": "Unauthorized. Please log in again."
+  },
+  "plurals": {
+    "items": {
+      "one": "{{count}} item",
+      "other": "{{count}} items"
+    },
+    "users": {
+      "one": "{{count}} user",
+      "other": "{{count}} users"
+    },
+    "devices": {
+      "one": "{{count}} device",
+      "other": "{{count}} devices"
+    },
+    "daysAgo": {
+      "one": "{{count}} day ago",
+      "other": "{{count}} days ago"
+    }
   }
 }
