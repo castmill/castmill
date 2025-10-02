@@ -471,8 +471,14 @@ defmodule Castmill.Devices do
 
   @doc """
   Removes a device and all its entries.
+  Notifies the device via WebSocket if it's connected.
   """
   def delete_device(%Device{} = device) do
+    # Notify the device that it's being removed so it can clear its data
+    Phoenix.PubSub.broadcast(Castmill.PubSub, "devices:#{device.id}", %{
+      command: "device_removed"
+    })
+
     Repo.delete(device)
   end
 

@@ -46,7 +46,8 @@ export interface DeviceCommand {
     | 'restart_device'
     | 'update_app'
     | 'update_firmware'
-    | 'shutdown';
+    | 'shutdown'
+    | 'device_removed';
 }
 
 interface CachePage {
@@ -483,6 +484,13 @@ export class Device extends EventEmitter {
           break;
         case 'shutdown':
           this.shutdown();
+          break;
+        case 'device_removed':
+          // Device has been deleted from the dashboard
+          // Clear credentials and cached data, then reload to show registration page
+          await this.integration.removeCredentials();
+          await this.cache.clean();
+          location.reload();
           break;
       }
     });
