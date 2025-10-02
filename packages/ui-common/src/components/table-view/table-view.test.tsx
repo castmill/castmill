@@ -1,6 +1,12 @@
 /** @jsxImportSource solid-js */
 import { describe, it, expect, afterEach, vi } from 'vitest';
-import { render, fireEvent, cleanup, screen, waitFor } from '@solidjs/testing-library';
+import {
+  render,
+  fireEvent,
+  cleanup,
+  screen,
+  waitFor,
+} from '@solidjs/testing-library';
 import { TableView } from './table-view';
 import { BsEye } from 'solid-icons/bs';
 
@@ -140,7 +146,7 @@ describe('TableView Component - Default Row Action', () => {
     // Test that action buttons work independently and don't trigger row click
     const editButton = screen.getByLabelText('Edit Resource 1');
     fireEvent.click(editButton);
-    
+
     // The edit action should be called
     expect(mockEditAction).toHaveBeenCalledWith(mockData[0]);
     // The default action should NOT be called when clicking the edit button
@@ -154,7 +160,7 @@ describe('TableView Component - Default Row Action', () => {
     const rows = screen.getAllByRole('row');
     const dataRow = rows[1]; // First data row
     fireEvent.click(dataRow);
-    
+
     // The default action should be called
     expect(mockDefaultAction).toHaveBeenCalledWith(mockData[0]);
     // The edit action should NOT be called when clicking the row
@@ -213,21 +219,21 @@ describe('TableView Component - Default Row Action', () => {
     // Demonstrate that the View button and row click trigger the same handler
     const rows = screen.getAllByRole('row');
     const dataRow = rows[1];
-    
+
     // Test row click triggers view handler
     fireEvent.click(dataRow);
     expect(mockViewHandler).toHaveBeenCalledWith(mockData[0]);
     expect(mockEditHandler).not.toHaveBeenCalled();
-    
+
     // Reset
     mockViewHandler.mockClear();
-    
+
     // Test that View button also triggers same handler
     const viewButton = screen.getByLabelText('View Resource 1');
     fireEvent.click(viewButton);
     expect(mockViewHandler).toHaveBeenCalledWith(mockData[0]);
     expect(mockEditHandler).not.toHaveBeenCalled();
-    
+
     // Reset
     mockViewHandler.mockClear();
 
@@ -241,7 +247,7 @@ describe('TableView Component - Default Row Action', () => {
     const checkbox = screen.getAllByRole('checkbox')[1]; // First data row checkbox
     fireEvent.click(checkbox);
     expect(mockRowSelectHandler).toHaveBeenCalled();
-    
+
     // Clicking checkbox should not trigger view action
     expect(mockViewHandler).not.toHaveBeenCalled();
   });

@@ -83,11 +83,11 @@ describe('Table Component', () => {
     render(() => (
       <Table columns={columns} data={data} onRowClick={mockOnRowClick} />
     ));
-    
+
     const rows = screen.getAllByRole('row');
     const dataRow = rows[1]; // First data row (index 0 is header)
     fireEvent.click(dataRow);
-    
+
     expect(mockOnRowClick).toHaveBeenCalledWith(data[0]);
   });
 
@@ -96,10 +96,10 @@ describe('Table Component', () => {
     render(() => (
       <Table columns={columns} data={data} onRowClick={mockOnRowClick} />
     ));
-    
+
     const checkbox = screen.getAllByRole('checkbox')[1]; // First row checkbox
     fireEvent.click(checkbox);
-    
+
     expect(mockOnRowClick).not.toHaveBeenCalled();
   });
 
@@ -113,10 +113,10 @@ describe('Table Component', () => {
         onRowClick={mockOnRowClick}
       />
     ));
-    
+
     const actionButton = screen.getByLabelText(`Edit ${data[0].name}`);
     fireEvent.click(actionButton);
-    
+
     expect(mockOnRowClick).not.toHaveBeenCalled();
     expect(actions[0].handler).toHaveBeenCalled();
   });
@@ -126,7 +126,7 @@ describe('Table Component', () => {
     render(() => (
       <Table columns={columns} data={data} onRowClick={mockOnRowClick} />
     ));
-    
+
     const rows = screen.getAllByRole('row');
     const dataRow = rows[1]; // First data row
     expect(dataRow).toHaveStyle('cursor: pointer');
@@ -134,7 +134,7 @@ describe('Table Component', () => {
 
   it('sets cursor to default when onRowClick is not provided', () => {
     render(() => <Table columns={columns} data={data} />);
-    
+
     const rows = screen.getAllByRole('row');
     const dataRow = rows[1]; // First data row
     expect(dataRow).toHaveStyle('cursor: default');

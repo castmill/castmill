@@ -142,8 +142,8 @@ export const Table = <
                   // Don't trigger row click when clicking on checkbox or action buttons
                   if (
                     props.onRowClick &&
-                    !((e.target as Element)?.closest('input[type="checkbox"]')) &&
-                    !((e.target as Element)?.closest('.table-actions'))
+                    !(e.target as Element)?.closest('input[type="checkbox"]') &&
+                    !(e.target as Element)?.closest('.table-actions')
                   ) {
                     props.onRowClick(item);
                   }

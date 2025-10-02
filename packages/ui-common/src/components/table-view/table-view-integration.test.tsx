@@ -11,9 +11,24 @@ describe('TableView - Real-world Integration Demo', () => {
     // like resources-view.tsx and resource-chooser.tsx
 
     const mockData = [
-      { id: '1', name: 'Sample Resource 1', type: 'Image', files: { thumbnail: { uri: '/thumb1.jpg' } } },
-      { id: '2', name: 'Sample Resource 2', type: 'Video', files: { thumbnail: { uri: '/thumb2.jpg' } } },
-      { id: '3', name: 'Sample Resource 3', type: 'Document', files: { thumbnail: { uri: '/thumb3.jpg' } } },
+      {
+        id: '1',
+        name: 'Sample Resource 1',
+        type: 'Image',
+        files: { thumbnail: { uri: '/thumb1.jpg' } },
+      },
+      {
+        id: '2',
+        name: 'Sample Resource 2',
+        type: 'Video',
+        files: { thumbnail: { uri: '/thumb2.jpg' } },
+      },
+      {
+        id: '3',
+        name: 'Sample Resource 3',
+        type: 'Document',
+        files: { thumbnail: { uri: '/thumb3.jpg' } },
+      },
     ];
 
     const mockFetchData = vi.fn().mockResolvedValue({
@@ -34,7 +49,7 @@ describe('TableView - Real-world Integration Demo', () => {
         sortable: true,
       },
       {
-        key: 'type', 
+        key: 'type',
         title: 'Type',
         sortable: true,
       },
@@ -114,7 +129,7 @@ describe('TableView - Real-world Integration Demo', () => {
 
     deleteResource.mockClear();
 
-    // Test 4: Checkbox should work independently  
+    // Test 4: Checkbox should work independently
     const checkbox = screen.getAllByRole('checkbox')[1]; // First data row checkbox
     fireEvent.click(checkbox);
 
@@ -161,10 +176,10 @@ describe('TableView - Real-world Integration Demo', () => {
 
     const rows = screen.getAllByRole('row');
     const dataRow = rows[1];
-    
+
     // Should have pointer cursor indicating it's clickable
     expect(dataRow).toHaveStyle('cursor: pointer');
-    
+
     // This demonstrates that the feature correctly configures cursor styling
     // based on the presence of the defaultRowAction, which is the key UX improvement
   });
