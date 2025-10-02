@@ -14,6 +14,9 @@ const OrganizationPage: Component = () => {
   const params = useSearchParams();
 
   const [name, setName] = createSignal(store.organizations.selectedName!);
+  const [previousOrgId, setPreviousOrgId] = createSignal(
+    store.organizations.selectedId
+  );
 
   const [isFormModified, setIsFormModified] = createSignal(false);
   const [errors, setErrors] = createSignal(new Map());
@@ -37,13 +40,18 @@ const OrganizationPage: Component = () => {
   };
 
   createEffect(() => {
-    // We need to check both fields or create effect will not detect the dependencies.
+    // Only reset the form when switching to a different organization
+    if (store.organizations.selectedId !== previousOrgId()) {
+      setName(store.organizations.selectedName);
+      setIsFormModified(false);
+      setPreviousOrgId(store.organizations.selectedId);
+    }
+  });
+
+  createEffect(() => {
+    // Track if the name has been modified
     const hasModifiedName = name() !== store.organizations.selectedName;
     setIsFormModified(hasModifiedName);
-
-    if (store.organizations.selectedId) {
-      setName(store.organizations.selectedName);
-    }
   });
 
   const isFormValid = () => {
