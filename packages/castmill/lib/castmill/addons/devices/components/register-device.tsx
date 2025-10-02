@@ -1,4 +1,4 @@
-import { Component, createSignal } from 'solid-js';
+import { Component, createSignal, createEffect } from 'solid-js';
 import { Button, FormItem } from '@castmill/ui-common';
 
 import { BsCheckLg, BsX } from 'solid-icons/bs';
@@ -16,10 +16,24 @@ const RegisterDevice: Component<{
   const [name, setName] = createSignal('');
   const [pincode, setPincode] = createSignal('');
   const [errors, setErrors] = createSignal(new Map());
+  const [wasSuccess, setWasSuccess] = createSignal(false);
 
   if (props.pincode) {
     setPincode(props.pincode);
   }
+
+  // Reset form when transitioning from success back to form state
+  createEffect(() => {
+    if (wasSuccess() && !props.success) {
+      // Reset form fields
+      setName('');
+      if (!props.pincode) {
+        setPincode('');
+      }
+      setErrors(new Map());
+    }
+    setWasSuccess(!!props.success);
+  });
 
   const validateField = (fieldId: string, value: string) => {
     let error = '';
