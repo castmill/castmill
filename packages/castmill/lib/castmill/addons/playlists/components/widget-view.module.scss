@@ -23,5 +23,11 @@
     left: 0;
     right: 0;
     font-family: Avenir, Helvetica, Arial, sans-serif;
+    pointer-events: none;
+
+    // Re-enable pointer events for child elements
+    & > * {
+      pointer-events: auto;
+    }
   }
 }
