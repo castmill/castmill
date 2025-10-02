@@ -695,7 +695,7 @@ defmodule Castmill.WidgetsTest do
       assert length(widgets) >= 3
     end
 
-    test "returns paginated widgets", %{widget1: widget1, widget2: widget2} do
+    test "returns paginated widgets", %{widget1: _widget1, widget2: _widget2} do
       params = %{
         page: 1,
         page_size: 2,
