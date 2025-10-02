@@ -17,6 +17,7 @@ import Topbar from './components/topbar/topbar';
 import SettingsPage from './pages/settings-page/settings-page';
 import Footer from './components/footer/footer';
 import SearchPage from './pages/search-page/search-page';
+import { ToastProvider } from '@castmill/ui-common';
 
 import { AddOnTree } from './classes/addon-tree';
 
@@ -72,51 +73,53 @@ render(() => {
   });
 
   return (
-    <Router root={App}>
-      <Route path="/login" component={Login} />
-      <Route path="/signup" component={SignUp} />
-      <Route
-        path="/"
-        component={(props: any) => (
-          <Suspense fallback={<div>Loading...</div>}>
-            <ProtectedRoute>
-              {(addons) => (
-                <Dashboard {...props} addons={new AddOnTree(addons)} />
-              )}
-            </ProtectedRoute>
-          </Suspense>
-        )}
-      >
-        <Route path="" component={EmptyComponent} />
-        <Route path="settings" component={SettingsPage} />
-        <Route path="search" component={SearchPage} />
-        <Route path="usage" component={UsagePage} />
-        <Route path="teams" component={TeamsPage} />
-        <Route path="organization" component={OrganizationPage} />
-        <Route path="channels" component={ChannelsPage} />
-        <Route path="invite" component={TeamsInvitationPage} />
+    <ToastProvider>
+      <Router root={App}>
+        <Route path="/login" component={Login} />
+        <Route path="/signup" component={SignUp} />
         <Route
-          path="invite-organization"
-          component={OrganizationsInvitationPage}
-        />
+          path="/"
+          component={(props: any) => (
+            <Suspense fallback={<div>Loading...</div>}>
+              <ProtectedRoute>
+                {(addons) => (
+                  <Dashboard {...props} addons={new AddOnTree(addons)} />
+                )}
+              </ProtectedRoute>
+            </Suspense>
+          )}
+        >
+          <Route path="" component={EmptyComponent} />
+          <Route path="settings" component={SettingsPage} />
+          <Route path="search" component={SearchPage} />
+          <Route path="usage" component={UsagePage} />
+          <Route path="teams" component={TeamsPage} />
+          <Route path="organization" component={OrganizationPage} />
+          <Route path="channels" component={ChannelsPage} />
+          <Route path="invite" component={TeamsInvitationPage} />
+          <Route
+            path="invite-organization"
+            component={OrganizationsInvitationPage}
+          />
 
-        {/* Dynamically generate routes for AddOns */}
-        <For each={store.addons}>
-          {(addon) => {
-            if (!addon.mount_path) {
-              return null;
-            }
-            return (
-              <Route
-                path={addon.mount_path}
-                component={wrapLazyComponent(addon)}
-              />
-            );
-          }}
-        </For>
+          {/* Dynamically generate routes for AddOns */}
+          <For each={store.addons}>
+            {(addon) => {
+              if (!addon.mount_path) {
+                return null;
+              }
+              return (
+                <Route
+                  path={addon.mount_path}
+                  component={wrapLazyComponent(addon)}
+                />
+              );
+            }}
+          </For>
 
-        <Route path="*404" component={NotFound} />
-      </Route>
-    </Router>
+          <Route path="*404" component={NotFound} />
+        </Route>
+      </Router>
+    </ToastProvider>
   );
 }, root!);

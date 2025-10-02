@@ -16,6 +16,7 @@ import {
   Modal,
   ConfirmDialog,
   FetchDataOptions,
+  useToast,
 } from '@castmill/ui-common';
 
 import { store, setStore } from '../../store/store';
@@ -31,6 +32,7 @@ import { TeamView } from './team-view';
 
 const TeamsPage: Component = () => {
   const params = useSearchParams();
+  const toast = useToast();
 
   const itemsPerPage = 10; // Number of items to show per page
 
@@ -104,8 +106,9 @@ const TeamsPage: Component = () => {
     try {
       await TeamsService.removeTeam(store.organizations.selectedId!, team.id);
       refreshData();
+      toast.success(`Team ${team.name} removed successfully`);
     } catch (error) {
-      alert(`Error removing team ${team.name}: ${error}`);
+      toast.error(`Error removing team ${team.name}: ${error}`);
     }
     setShowConfirmDialog(false);
   };
@@ -119,8 +122,9 @@ const TeamsPage: Component = () => {
       );
 
       refreshData();
+      toast.success('Teams removed successfully');
     } catch (error) {
-      alert(`Error removing teams: ${error}`);
+      toast.error(`Error removing teams: ${error}`);
     }
     setShowConfirmDialogMultiple(false);
   };
@@ -186,6 +190,7 @@ const TeamsPage: Component = () => {
                   );
                   setCurrentTeam({ id: newTeam.id, name: newTeam.name });
                   refreshData();
+                  toast.success(`Team ${newTeam.name} created successfully`);
                   return newTeam;
                 } else {
                   const updatedTeam = await TeamsService.updateTeam(
@@ -193,10 +198,11 @@ const TeamsPage: Component = () => {
                     team
                   );
                   updateItem(team.id, team);
+                  toast.success(`Team ${team.name} updated successfully`);
                   return updatedTeam;
                 }
               } catch (error) {
-                alert(`Error saving team: ${error}`);
+                toast.error(`Error saving team: ${error}`);
               }
             }}
           />

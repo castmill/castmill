@@ -5,6 +5,7 @@ import { UsageService } from '../../services/usage';
 import { store } from '../../store/store';
 import { Usage } from '../../interfaces/usage';
 import { UsageComponent } from '../../components/usage/usage';
+import { useToast } from '@castmill/ui-common';
 
 const [usage, setUsage] = createSignal<Usage>();
 
@@ -12,6 +13,8 @@ const [usage, setUsage] = createSignal<Usage>();
  * UsagePage component.
  */
 const UsagePage: Component = () => {
+  const toast = useToast();
+
   onMount(async () => {
     const organizationId = store.organizations.selectedId;
     if (organizationId) {
@@ -20,7 +23,7 @@ const UsagePage: Component = () => {
         console.log({ usage });
         setUsage(usage);
       } catch (error) {
-        alert(`Failed to fetch usage data ${error}`);
+        toast.error(`Failed to fetch usage data: ${error}`);
       }
     }
   });
