@@ -1,0 +1,149 @@
+.widgetExample {
+  margin: 2rem 0;
+  border: 1px solid var(--ifm-color-emphasis-300);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--ifm-background-color);
+}
+
+.header {
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--ifm-color-emphasis-300);
+  background: var(--ifm-color-emphasis-100);
+}
+
+.title {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.3em;
+  font-weight: 600;
+  color: var(--ifm-color-primary);
+}
+
+.description {
+  margin: 0;
+  color: var(--ifm-color-emphasis-700);
+  line-height: 1.6;
+}
+
+/* Main Tabs: Preview vs Code */
+.mainTabs {
+  display: flex;
+  gap: 0;
+  background: var(--ifm-color-emphasis-100);
+  border-bottom: 2px solid var(--ifm-color-emphasis-300);
+}
+
+.mainTab {
+  padding: 0.75rem 2rem;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+  font-size: 1em;
+  font-weight: 600;
+  color: var(--ifm-color-emphasis-700);
+  transition: all 0.2s;
+}
+
+.mainTab:hover {
+  background: var(--ifm-color-emphasis-200);
+  color: var(--ifm-color-primary);
+}
+
+.mainTab.activeMainTab {
+  color: var(--ifm-color-primary);
+  border-bottom-color: var(--ifm-color-primary);
+  background: var(--ifm-background-color);
+}
+
+/* Code Sub-Tabs */
+.codeTabs {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.75rem 1rem;
+  background: var(--ifm-color-emphasis-100);
+  border-bottom: 1px solid var(--ifm-color-emphasis-300);
+}
+
+.codeTabBtn {
+  padding: 0.4rem 1rem;
+  background: transparent;
+  border: 1px solid var(--ifm-color-emphasis-400);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9em;
+  color: var(--ifm-color-emphasis-700);
+  transition: all 0.2s;
+}
+
+.codeTabBtn:hover {
+  background: var(--ifm-color-emphasis-200);
+  border-color: var(--ifm-color-primary);
+}
+
+.codeTabBtn.activeCodeTab {
+  background: var(--ifm-color-primary);
+  color: white;
+  border-color: var(--ifm-color-primary);
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  min-height: 300px;
+}
+
+.codeSection {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.sectionHeader {
+  padding: 0.75rem 1.5rem;
+  background: var(--ifm-color-emphasis-100);
+  border-bottom: 1px solid var(--ifm-color-emphasis-300);
+  font-weight: 600;
+  font-size: 0.95em;
+  color: var(--ifm-color-emphasis-800);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+[data-theme='dark'] .sectionHeader {
+  color: var(--ifm-color-emphasis-600);
+}
+
+.sectionHeader::before {
+  content: '';
+  display: inline-block;
+  width: 3px;
+  height: 1em;
+  background: var(--ifm-color-primary);
+  border-radius: 2px;
+}
+
+.codeContent {
+  flex: 1;
+  overflow: auto;
+  max-height: 600px;
+}
+
+.codeContent pre {
+  margin: 0 !important;
+  border-radius: 0 !important;
+}
+
+.previewSection {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.previewSection > div {
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  flex: 1;
+}

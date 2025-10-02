@@ -34,6 +34,21 @@ defmodule CastmillWeb.OrganizationController do
     {:ok, true}
   end
 
+  def check_access(actor_id, :create_widget, %{"organization_id" => organization_id}) do
+    # Only admins can create widgets for now
+    {:ok, Organizations.is_admin?(organization_id, actor_id)}
+  end
+
+  def check_access(actor_id, :delete_widget, %{"organization_id" => organization_id}) do
+    # Only admins can delete widgets for now
+    {:ok, Organizations.is_admin?(organization_id, actor_id)}
+  end
+
+  def check_access(actor_id, :update_widget, %{"organization_id" => organization_id}) do
+    # Only admins can update widgets for now
+    {:ok, Organizations.is_admin?(organization_id, actor_id)}
+  end
+
   def check_access(actor_id, :list_members, %{"organization_id" => organization_id}) do
     {:ok, Organizations.has_any_role?(organization_id, actor_id, [:admin, :regular])}
   end
@@ -162,14 +177,104 @@ defmodule CastmillWeb.OrganizationController do
   end
 
   # List all the widgets available an organization
-  def list_widgets(conn, %{"organization_id" => _organization_id}) do
+  def list_widgets(conn, %{"organization_id" => _organization_id} = params) do
     # Note: for now we return all widgets, but we should only return the widgets that are available
     # for the organization (some widgets are available to all organizations though).
-    widgets = Castmill.Widgets.list_widgets()
+
+    # Extract pagination, search, and sorting parameters
+    query_params = %{
+      page: String.to_integer(params["page"] || "1"),
+      page_size: String.to_integer(params["page_size"] || "10"),
+      search: params["search"],
+      key: params["key"] || "name",
+      direction: params["direction"] || "ascending"
+    }
+
+    widgets = Castmill.Widgets.list_widgets(query_params)
+    count = Castmill.Widgets.count_widgets(query_params)
+
+    response = %{
+      data: widgets,
+      count: count
+    }
 
     conn
     |> put_status(:ok)
-    |> json(widgets)
+    |> json(response)
+  end
+
+  def create_widget(conn, %{"organization_id" => _organization_id, "widget" => widget_file}) do
+    with {:ok, content} <- File.read(widget_file.path),
+         {:ok, widget_data} <- Jason.decode(content),
+         {:ok, widget} <- Castmill.Widgets.create_widget(widget_data) do
+      conn
+      |> put_status(:created)
+      |> json(widget)
+    else
+      {:error, :enoent} ->
+        conn
+        |> put_status(:bad_request)
+        |> json(%{error: "Failed to read uploaded file"})
+
+      {:error, %Jason.DecodeError{}} ->
+        conn
+        |> put_status(:bad_request)
+        |> json(%{error: "Invalid JSON format"})
+
+      {:error, %Ecto.Changeset{} = changeset} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{errors: changeset})
+
+      {:error, reason} ->
+        conn
+        |> put_status(:bad_request)
+        |> json(%{error: to_string(reason)})
+    end
+  end
+
+  def delete_widget(conn, %{"organization_id" => _organization_id, "widget_id" => widget_id}) do
+    with widget when not is_nil(widget) <- Castmill.Widgets.get_widget(widget_id),
+         {:ok, _} <- Castmill.Widgets.delete_widget(widget) do
+      send_resp(conn, :no_content, "")
+    else
+      nil ->
+        conn
+        |> put_status(:not_found)
+        |> json(%{error: "Widget not found"})
+
+      {:error, reason} ->
+        conn
+        |> put_status(:bad_request)
+        |> json(%{error: to_string(reason)})
+    end
+  end
+
+  def update_widget(
+        conn,
+        %{"organization_id" => _organization_id, "widget_id" => widget_id} = params
+      ) do
+    with widget when not is_nil(widget) <- Castmill.Widgets.get_widget(widget_id),
+         {:ok, updated_widget} <- Castmill.Widgets.update_widget(widget, params) do
+      conn
+      |> put_status(:ok)
+      |> json(updated_widget)
+    else
+      nil ->
+        conn
+        |> put_status(:not_found)
+        |> json(%{error: "Widget not found"})
+
+      {:error, %Ecto.Changeset{} = changeset} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{errors: changeset})
+
+      {:error, reason} ->
+        conn
+        |> put_status(:bad_request)
+        |> json(%{error: to_string(reason)})
+    end
   end
 
   def list_members(conn, params) do

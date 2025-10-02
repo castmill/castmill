@@ -8,6 +8,7 @@ defmodule Castmill.Widgets do
   alias Castmill.Protocol.Access
   alias Castmill.Widgets.Widget
   alias Castmill.Widgets.WidgetConfig
+  alias Castmill.QueryHelpers
 
   defimpl Access, for: Widget do
     def canAccess(_team, user, _action) do
@@ -25,16 +26,79 @@ defmodule Castmill.Widgets do
   end
 
   @doc """
-  Returns the list of widgets.
+  Returns the list of widgets with optional pagination, search, and sorting.
 
   ## Examples
 
       iex> list_widgets()
       [%Widget{}, ...]
+
+      iex> list_widgets(%{page: 1, page_size: 10, search: "text"})
+      [%Widget{}, ...]
   """
-  def list_widgets() do
+  def list_widgets(params \\ %{})
+
+  def list_widgets(%{
+        page: page,
+        page_size: page_size,
+        search: search,
+        key: sort_key,
+        direction: sort_direction
+      }) do
+    offset = (page_size && max((page - 1) * page_size, 0)) || 0
+
+    # Convert sort direction string to atom
+    sort_dir =
+      case sort_direction do
+        "ascending" -> :asc
+        "descending" -> :desc
+        _ -> :asc
+      end
+
+    # Convert sort key string to atom, default to :name
+    sort_field =
+      case sort_key do
+        "name" -> :name
+        "inserted_at" -> :inserted_at
+        "updated_at" -> :updated_at
+        _ -> :name
+      end
+
+    Widget.base_query()
+    |> QueryHelpers.where_name_like(search)
+    |> order_by([w], [{^sort_dir, field(w, ^sort_field)}])
+    |> limit(^page_size)
+    |> offset(^offset)
+    |> Repo.all()
+  end
+
+  def list_widgets(_params) do
     Widget.base_query()
     |> Repo.all()
+  end
+
+  @doc """
+  Returns the count of widgets matching the search criteria.
+
+  ## Examples
+
+      iex> count_widgets()
+      5
+
+      iex> count_widgets(%{search: "text"})
+      2
+  """
+  def count_widgets(params \\ %{})
+
+  def count_widgets(%{search: search}) do
+    Widget.base_query()
+    |> QueryHelpers.where_name_like(search)
+    |> Repo.aggregate(:count, :id)
+  end
+
+  def count_widgets(_params) do
+    Widget.base_query()
+    |> Repo.aggregate(:count, :id)
   end
 
   @doc """
@@ -121,5 +185,70 @@ defmodule Castmill.Widgets do
       select: wc
     )
     |> Repo.one()
+  end
+
+  @doc """
+  Creates a widget.
+
+  ## Examples
+
+      iex> create_widget(%{field: value})
+      {:ok, %Widget{}}
+
+      iex> create_widget(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_widget(attrs \\ %{}) do
+    %Widget{}
+    |> Widget.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates a widget.
+
+  ## Examples
+
+      iex> update_widget(widget, %{field: new_value})
+      {:ok, %Widget{}}
+
+      iex> update_widget(widget, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_widget(%Widget{} = widget, attrs) do
+    widget
+    |> Widget.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a widget.
+
+  ## Examples
+
+      iex> delete_widget(widget)
+      {:ok, %Widget{}}
+
+      iex> delete_widget(widget)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_widget(%Widget{} = widget) do
+    Repo.delete(widget)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking widget changes.
+
+  ## Examples
+
+      iex> change_widget(widget)
+      %Ecto.Changeset{data: %Widget{}}
+
+  """
+  def change_widget(%Widget{} = widget, attrs \\ %{}) do
+    Widget.changeset(widget, attrs)
   end
 end
