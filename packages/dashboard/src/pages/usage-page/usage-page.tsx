@@ -5,6 +5,7 @@ import { UsageService } from '../../services/usage';
 import { store } from '../../store/store';
 import { Usage } from '../../interfaces/usage';
 import { UsageComponent } from '../../components/usage/usage';
+import { useI18n } from '../../i18n';
 
 const [usage, setUsage] = createSignal<Usage>();
 
@@ -12,6 +13,8 @@ const [usage, setUsage] = createSignal<Usage>();
  * UsagePage component.
  */
 const UsagePage: Component = () => {
+  const { t } = useI18n();
+
   onMount(async () => {
     const organizationId = store.organizations.selectedId;
     if (organizationId) {
@@ -28,16 +31,18 @@ const UsagePage: Component = () => {
   return (
     <div class={styles.castmillUsage}>
       <div class={styles.wrapper}>
-        <h1>Usage</h1>
+        <h1>{t('usage.title')}</h1>
         <UsageComponent used={10} total={100} />
         <div class="p-4 bg-white rounded shadow-md">
-          <h2 class="text-xl font-bold mb-4">Resource Usage</h2>
+          <h2 class="text-xl font-bold mb-4">{t('usage.resourceUsage')}</h2>
           <table class="w-full text-left border-collapse">
             <thead>
               <tr class="border-b border-gray-200">
-                <th class="py-2">Resource</th>
-                <th class="py-2">Used / Total</th>
-                <th class="py-2">Progress</th>
+                <th class="py-2">{t('usage.resource')}</th>
+                <th class="py-2">
+                  {t('usage.used')} / {t('usage.total')}
+                </th>
+                <th class="py-2">{t('usage.progress')}</th>
               </tr>
             </thead>
             <tbody>
