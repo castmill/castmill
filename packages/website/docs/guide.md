@@ -13,7 +13,7 @@ There are several concepts that are important to understand in order to use Cast
 - [Teams](organizations/teams.md)
 - [Devices](devices/devices.md)
 - [Content](content/content.md)
-- [Widgets](widgets/widgets.md)
+- [Widgets](widgets/widgets.mdx)
 - [Channels](channels/channels.md)
 
 These concepts are the building blocks of the Castmill system. They are used to organize and manage the different parts of the system.
