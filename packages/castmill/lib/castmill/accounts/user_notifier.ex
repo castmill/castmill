@@ -85,6 +85,37 @@ defmodule Castmill.Accounts.UserNotifier do
   end
 
   @doc """
+  Deliver email verification instructions for new email address.
+  """
+  def deliver_email_verification_instructions(user, new_email, token) do
+    # Send verification email to the NEW email address
+    deliver(new_email, "Verify your new email address", """
+
+    ==============================
+
+    Hi #{user.name},
+
+    You requested to change your email address for your Castmill account.
+
+    To prevent account lockout, please verify your new email address by clicking the link below:
+
+    #{verification_url(token)}
+
+    Your email address will only be updated after verification is complete.
+
+    If you didn't request this change, please ignore this email.
+
+    ==============================
+    """)
+  end
+
+  defp verification_url(token) do
+    # This would be configured based on your frontend URL
+    dashboard_url = System.get_env("DASHBOARD_URL") || "http://localhost:3000"
+    "#{dashboard_url}/verify-email?token=#{token}"
+  end
+
+  @doc """
   Deliver Signup instructions.
   """
   def deliver_signup_instructions(signup, dashboard_uri) do

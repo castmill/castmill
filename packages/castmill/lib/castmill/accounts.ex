@@ -355,11 +355,17 @@ defmodule Castmill.Accounts do
     Registers a user based on an existing Signup
     with the given email, credential_id, and public_key_spki.
   """
-  def create_user_from_signup(signup_id, email, credential_id, public_key_spki) do
+  def create_user_from_signup(
+        signup_id,
+        email,
+        credential_id,
+        public_key_spki,
+        device_info \\ %{}
+      ) do
     Repo.transaction(fn ->
       with {:ok, signup} <- validate_signup(signup_id, email),
            {:ok, %{id: user_id} = user} <- create_user_and_organization(email, signup.network_id),
-           :ok <- create_user_credential(user_id, credential_id, public_key_spki),
+           :ok <- create_user_credential(user_id, credential_id, public_key_spki, device_info),
            :ok <- update_signup_status(signup, user_id) do
         Castmill.Hooks.trigger_hook(:user_signup, %{user_id: user_id, email: email})
 
@@ -374,6 +380,124 @@ defmodule Castmill.Accounts do
 
   def get_credential(id) do
     Repo.get(UserCredential, id)
+  end
+
+  @doc """
+  List all credentials for a user
+  """
+  def list_user_credentials(user_id) do
+    from(uc in UserCredential, where: uc.user_id == ^user_id, order_by: [desc: uc.inserted_at])
+    |> Repo.all()
+  end
+
+  @doc """
+  Delete a specific user credential
+  """
+  def delete_user_credential(user_id, credential_id) do
+    from(uc in UserCredential, where: uc.user_id == ^user_id and uc.id == ^credential_id)
+    |> Repo.delete_all()
+    |> case do
+      {1, nil} -> {:ok, "Credential deleted successfully"}
+      {0, nil} -> {:error, :not_found}
+    end
+  end
+
+  @doc """
+  Add a new credential/passkey for an existing user
+  """
+  def add_user_credential(user_id, credential_id, public_key_spki, device_info \\ %{}) do
+    %UserCredential{}
+    |> UserCredential.changeset(%{
+      id: credential_id,
+      public_key_spki: public_key_spki,
+      user_id: user_id,
+      device_name: device_info[:device_name],
+      browser: device_info[:browser],
+      os: device_info[:os],
+      user_agent: device_info[:user_agent]
+    })
+    |> Repo.insert()
+    |> case do
+      {:ok, credential} -> {:ok, credential}
+      {:error, changeset} -> {:error, changeset}
+    end
+  end
+
+  @doc """
+  Add a friendly name to a credential by storing it in user meta
+  """
+  def update_credential_name(user_id, credential_id, name) do
+    with user when not is_nil(user) <- Repo.get(User, user_id) do
+      current_meta = user.meta || %{}
+      credential_names = Map.get(current_meta, "credential_names", %{})
+      updated_credential_names = Map.put(credential_names, credential_id, name)
+      updated_meta = Map.put(current_meta, "credential_names", updated_credential_names)
+
+      user
+      |> Ecto.Changeset.change(meta: updated_meta)
+      |> Repo.update()
+    else
+      nil -> {:error, :user_not_found}
+    end
+  end
+
+  @doc """
+  Get credential name from user meta
+  """
+  def get_credential_name(user, credential_id) do
+    credential = Repo.get(UserCredential, credential_id)
+
+    (user.meta || %{})
+    |> Map.get("credential_names", %{})
+    |> Map.get(credential_id, generate_default_credential_name(credential))
+  end
+
+  defp generate_default_credential_name(credential) when is_nil(credential), do: "Passkey"
+
+  defp generate_default_credential_name(credential) do
+    # Use device_name if available (e.g., "Chrome on macOS")
+    if credential.device_name do
+      credential.device_name
+    else
+      # Fallback to date-based name
+      date =
+        credential.inserted_at
+        |> Calendar.strftime("%b %d, %Y at %H:%M")
+
+      "Passkey created on #{date}"
+    end
+  end
+
+  @doc """
+  Send email verification when email is updated
+  """
+  def send_email_verification(%User{} = user, new_email) do
+    {encoded_token, user_token} = UserToken.build_email_token(user, "email_verification")
+    Repo.insert!(user_token)
+
+    # Store the new email in token context for verification
+    UserNotifier.deliver_email_verification_instructions(user, new_email, encoded_token)
+  end
+
+  @doc """
+  Verify email with token and update user email
+  """
+  def verify_email_token(token, new_email) do
+    with {:ok, query} <- UserToken.verify_email_token_query(token, "email_verification"),
+         %UserToken{user_id: user_id} = user_token <- Repo.one(query),
+         %User{} = user <- Repo.get(User, user_id) do
+      # Update user email and delete the token
+      Ecto.Multi.new()
+      |> Ecto.Multi.update(:user, User.changeset(user, %{email: new_email}))
+      |> Ecto.Multi.delete(:token, user_token)
+      |> Repo.transaction()
+      |> case do
+        {:ok, %{user: user}} -> {:ok, user}
+        {:error, changeset} -> {:error, changeset}
+      end
+    else
+      _ -> {:error, :invalid_token}
+    end
   end
 
   def get_network_id_by_domain(domain) do
@@ -445,12 +569,16 @@ defmodule Castmill.Accounts do
     end
   end
 
-  defp create_user_credential(user_id, credential_id, public_key_spki) do
+  defp create_user_credential(user_id, credential_id, public_key_spki, device_info) do
     %UserCredential{}
     |> UserCredential.changeset(%{
       id: credential_id,
       public_key_spki: public_key_spki,
-      user_id: user_id
+      user_id: user_id,
+      device_name: device_info[:device_name],
+      browser: device_info[:browser],
+      os: device_info[:os],
+      user_agent: device_info[:user_agent]
     })
     |> Repo.insert()
     |> case do

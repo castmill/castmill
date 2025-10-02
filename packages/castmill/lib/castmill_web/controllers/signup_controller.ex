@@ -82,7 +82,20 @@ defmodule CastmillWeb.SignUpController do
       }) do
     public_key_spki = Base.decode64!(public_key_spki)
 
-    case Accounts.create_user_from_signup(signup_id, email, credential_id, public_key_spki) do
+    # Extract and parse User-Agent for device information
+    user_agent = get_req_header(conn, "user-agent") |> List.first()
+
+    device_info =
+      Castmill.UserAgentParser.parse(user_agent)
+      |> Map.put(:user_agent, user_agent)
+
+    case Accounts.create_user_from_signup(
+           signup_id,
+           email,
+           credential_id,
+           public_key_spki,
+           device_info
+         ) do
       {:ok, %{id: user_id} = user} ->
         conn
         |> put_session(:user, user)

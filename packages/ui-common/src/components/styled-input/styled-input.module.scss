@@ -29,3 +29,11 @@
     cursor: not-allowed;
   }
 }
+
+.input-email {
+  @extend .input-text;
+}
+
+.input-number {
+  @extend .input-text;
+}
