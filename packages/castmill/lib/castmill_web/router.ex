@@ -193,6 +193,9 @@ defmodule CastmillWeb.Router do
     get("/organizations_invitations/:token", OrganizationController, :show_invitation)
     post("/organizations_invitations/:token/accept", OrganizationController, :accept_invitation)
 
+    # Check if organization name is available in a network
+    get("/organizations/:organization_id/check_name", OrganizationController, :check_name)
+
     # Return Usage information for the organization
     get("/organizations/:organization_id/usage", OrganizationUsageController, :index)
 

@@ -818,4 +818,24 @@ defmodule Castmill.Organizations do
   def unsubscribe(organization_id) do
     Phoenix.PubSub.unsubscribe(Castmill.PubSub, "organization:#{organization_id}")
   end
+
+  @doc """
+    Check if an organization name is available in a network (excluding a specific organization ID).
+    This is used to validate organization names before update.
+  """
+  def is_name_available_in_network?(network_id, name, exclude_organization_id \\ nil) do
+    query =
+      from(o in Organization,
+        where: o.network_id == ^network_id and o.name == ^name
+      )
+
+    query =
+      if exclude_organization_id do
+        from(o in query, where: o.id != ^exclude_organization_id)
+      else
+        query
+      end
+
+    !Repo.exists?(query)
+  end
 end
