@@ -24,20 +24,22 @@ defmodule Castmill.Repo.Migrations.AddDefaultPlanIdToNetworks do
     ]
 
     # Get all existing networks
-    networks = repo().query!(
-      "SELECT id FROM networks",
-      []
-    )
+    networks =
+      repo().query!(
+        "SELECT id FROM networks",
+        []
+      )
 
     # For each network, create a default plan
     Enum.each(networks.rows, fn [network_id] ->
       # Insert the plan
-      plan_result = repo().query!(
-        "INSERT INTO plans (name, network_id, inserted_at, updated_at)
+      plan_result =
+        repo().query!(
+          "INSERT INTO plans (name, network_id, inserted_at, updated_at)
          VALUES ($1, $2, NOW(), NOW())
          RETURNING id",
-        ["Default Plan", network_id]
-      )
+          ["Default Plan", network_id]
+        )
 
       plan_id = plan_result.rows |> List.first() |> List.first()
 

@@ -26,10 +26,8 @@ const ResourceIcon = (props: { type: string }) => {
   };
 
   const Icon = icons[props.type] || IoImagesOutline;
-  
-  return (
-    <Icon size={28} />
-  );
+
+  return <Icon size={28} />;
 };
 
 // Display names for resources
@@ -109,7 +107,8 @@ const UsagePage: Component = () => {
           <div class={styles.grid}>
             <For each={Object.entries(usage() || {})}>
               {([resource, { used, total }]) => {
-                const percentage = total > 0 ? Math.round((used / total) * 100) : 0;
+                const percentage =
+                  total > 0 ? Math.round((used / total) * 100) : 0;
                 const state = getUsageState(used, total);
 
                 return (
@@ -128,12 +127,16 @@ const UsagePage: Component = () => {
                       <div class={styles.stats}>
                         <div class={styles.stat}>
                           <span class={styles.statLabel}>Used</span>
-                          <span class={styles.statValue}>{formatValue(resource, used)}</span>
+                          <span class={styles.statValue}>
+                            {formatValue(resource, used)}
+                          </span>
                         </div>
                         <div class={styles.statDivider}>/</div>
                         <div class={styles.stat}>
                           <span class={styles.statLabel}>Total</span>
-                          <span class={styles.statValue}>{formatValue(resource, total)}</span>
+                          <span class={styles.statValue}>
+                            {formatValue(resource, total)}
+                          </span>
                         </div>
                       </div>
 

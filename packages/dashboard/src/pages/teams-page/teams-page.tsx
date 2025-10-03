@@ -52,7 +52,7 @@ const TeamsPage: Component = () => {
 
   const loadQuota = async () => {
     if (!store.organizations.selectedId) return;
-    
+
     try {
       setQuotaLoading(true);
       const quotaData = await QuotasService.getResourceQuota(

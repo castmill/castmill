@@ -238,8 +238,10 @@ defmodule Castmill.Quotas do
   def get_quota_used_for_organization(organization_id, :storage) do
     # Sum the size of all files associated with media in the organization
     from(m in Castmill.Resources.Media,
-      join: fm in Castmill.Files.FilesMedias, on: fm.media_id == m.id,
-      join: f in Castmill.Files.File, on: f.id == fm.file_id,
+      join: fm in Castmill.Files.FilesMedias,
+      on: fm.media_id == m.id,
+      join: f in Castmill.Files.File,
+      on: f.id == fm.file_id,
       where: m.organization_id == ^organization_id,
       select: sum(f.size)
     )

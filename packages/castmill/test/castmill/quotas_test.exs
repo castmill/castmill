@@ -318,19 +318,22 @@ defmodule Castmill.QuotasTest do
       assert Quotas.get_quota_used_for_organization(organization.id, :storage) == 0
 
       # Create media and associated files
-      media1 = media_fixture(%{
-        name: "test media 1",
-        organization_id: organization.id,
-        mimetype: "image/png"
-      })
+      media1 =
+        media_fixture(%{
+          name: "test media 1",
+          organization_id: organization.id,
+          mimetype: "image/png"
+        })
 
-      {:ok, file1} = file_fixture(%{
-        name: "file1.png",
-        organization_id: organization.id,
-        size: 1024 * 1024,  # 1 MB
-        mimetype: "image/png",
-        uri: "s3://bucket/file1.png"
-      })
+      {:ok, file1} =
+        file_fixture(%{
+          name: "file1.png",
+          organization_id: organization.id,
+          # 1 MB
+          size: 1024 * 1024,
+          mimetype: "image/png",
+          uri: "s3://bucket/file1.png"
+        })
 
       # Create files_medias association
       Castmill.Repo.insert!(%Castmill.Files.FilesMedias{
@@ -343,19 +346,22 @@ defmodule Castmill.QuotasTest do
       assert Quotas.get_quota_used_for_organization(organization.id, :storage) == 1024 * 1024
 
       # Add another media with a larger file
-      media2 = media_fixture(%{
-        name: "test media 2",
-        organization_id: organization.id,
-        mimetype: "video/mp4"
-      })
+      media2 =
+        media_fixture(%{
+          name: "test media 2",
+          organization_id: organization.id,
+          mimetype: "video/mp4"
+        })
 
-      {:ok, file2} = file_fixture(%{
-        name: "file2.mp4",
-        organization_id: organization.id,
-        size: 5 * 1024 * 1024,  # 5 MB
-        mimetype: "video/mp4",
-        uri: "s3://bucket/file2.mp4"
-      })
+      {:ok, file2} =
+        file_fixture(%{
+          name: "file2.mp4",
+          organization_id: organization.id,
+          # 5 MB
+          size: 5 * 1024 * 1024,
+          mimetype: "video/mp4",
+          uri: "s3://bucket/file2.mp4"
+        })
 
       Castmill.Repo.insert!(%Castmill.Files.FilesMedias{
         file_id: file2.id,
@@ -371,19 +377,22 @@ defmodule Castmill.QuotasTest do
       assert Quotas.get_quota_used_for_organization(organization2.id, :storage) == 0
 
       # Add file to organization2
-      media3 = media_fixture(%{
-        name: "test media 3",
-        organization_id: organization2.id,
-        mimetype: "image/jpeg"
-      })
+      media3 =
+        media_fixture(%{
+          name: "test media 3",
+          organization_id: organization2.id,
+          mimetype: "image/jpeg"
+        })
 
-      {:ok, file3} = file_fixture(%{
-        name: "file3.jpg",
-        organization_id: organization2.id,
-        size: 2 * 1024 * 1024,  # 2 MB
-        mimetype: "image/jpeg",
-        uri: "s3://bucket/file3.jpg"
-      })
+      {:ok, file3} =
+        file_fixture(%{
+          name: "file3.jpg",
+          organization_id: organization2.id,
+          # 2 MB
+          size: 2 * 1024 * 1024,
+          mimetype: "image/jpeg",
+          uri: "s3://bucket/file3.jpg"
+        })
 
       Castmill.Repo.insert!(%Castmill.Files.FilesMedias{
         file_id: file3.id,
@@ -401,20 +410,25 @@ defmodule Castmill.QuotasTest do
       organization = organization_fixture(%{network_id: network.id})
 
       # Create a plan with 10 MB storage quota
-      plan = Quotas.create_plan("Storage Plan", network.id, [
-        %{max: 10 * 1024 * 1024, resource: :storage}  # 10 MB
-      ])
+      plan =
+        Quotas.create_plan("Storage Plan", network.id, [
+          # 10 MB
+          %{max: 10 * 1024 * 1024, resource: :storage}
+        ])
 
       Quotas.assign_plan_to_organization(plan.id, organization.id)
 
       # Should have enough for 5 MB
-      assert Quotas.has_organization_enough_quota?(organization.id, :storage, 5 * 1024 * 1024) == true
+      assert Quotas.has_organization_enough_quota?(organization.id, :storage, 5 * 1024 * 1024) ==
+               true
 
       # Should have enough for exactly 10 MB
-      assert Quotas.has_organization_enough_quota?(organization.id, :storage, 10 * 1024 * 1024) == true
+      assert Quotas.has_organization_enough_quota?(organization.id, :storage, 10 * 1024 * 1024) ==
+               true
 
       # Should NOT have enough for 11 MB
-      assert Quotas.has_organization_enough_quota?(organization.id, :storage, 11 * 1024 * 1024) == false
+      assert Quotas.has_organization_enough_quota?(organization.id, :storage, 11 * 1024 * 1024) ==
+               false
     end
   end
 end

@@ -296,7 +296,10 @@ defmodule CastmillWeb.ResourceController do
       {:ok, %Media{} = media} ->
         conn
         |> put_status(:created)
-        |> put_resp_header("location", ~p"/api/organizations/#{organization_id}/medias/#{media.id}")
+        |> put_resp_header(
+          "location",
+          ~p"/api/organizations/#{organization_id}/medias/#{media.id}"
+        )
         |> render(:show, media: media)
 
       {:error, :quota_exceeded} ->

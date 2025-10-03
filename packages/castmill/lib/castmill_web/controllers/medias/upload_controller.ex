@@ -66,42 +66,42 @@ defmodule CastmillWeb.UploadController do
                  path: filename,
                  mimetype: mime_type
                }) do
-          {:ok, media} ->
-            # Proceed with transcoding and job queuing
-            case queue_transcoding_job(media, destpath, mime_type) do
-              :ok ->
-                # Return successful response
-                conn
-                |> put_status(:ok)
-                |> json(media)
+            {:ok, media} ->
+              # Proceed with transcoding and job queuing
+              case queue_transcoding_job(media, destpath, mime_type) do
+                :ok ->
+                  # Return successful response
+                  conn
+                  |> put_status(:ok)
+                  |> json(media)
 
-              :unsupported_mime_type ->
-                conn
-                |> put_status(:bad_request)
-                |> json(%{
-                  error: "Unsupported MIME type",
-                  message: "The MIME type is not supported"
-                })
-                |> halt()
-            end
+                :unsupported_mime_type ->
+                  conn
+                  |> put_status(:bad_request)
+                  |> json(%{
+                    error: "Unsupported MIME type",
+                    message: "The MIME type is not supported"
+                  })
+                  |> halt()
+              end
 
-          {:error, :quota_exceeded} ->
-            conn
-            |> put_status(:forbidden)
-            |> json(%{
-              error: "Media quota exceeded",
-              message: "You have reached your media quota limit"
-            })
-            |> halt()
+            {:error, :quota_exceeded} ->
+              conn
+              |> put_status(:forbidden)
+              |> json(%{
+                error: "Media quota exceeded",
+                message: "You have reached your media quota limit"
+              })
+              |> halt()
 
-          {:error, _changeset} ->
-            conn
-            |> put_status(:bad_request)
-            |> json(%{
-              error: "Failed to create media",
-              message: "An error occurred while creating the media"
-            })
-            |> halt()
+            {:error, _changeset} ->
+              conn
+              |> put_status(:bad_request)
+              |> json(%{
+                error: "Failed to create media",
+                message: "An error occurred while creating the media"
+              })
+              |> halt()
           end
 
         {:error, reason} ->

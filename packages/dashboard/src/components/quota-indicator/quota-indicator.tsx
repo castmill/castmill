@@ -11,13 +11,13 @@ export interface QuotaIndicatorProps {
 
 /**
  * QuotaIndicator Component
- * 
+ *
  * Displays the current usage versus the total quota for a resource.
  * Shows a progress bar with different states based on usage percentage:
  * - Normal: < warningThreshold (default 90%)
  * - Warning: >= warningThreshold and < 100%
  * - Error: 100% (quota reached)
- * 
+ *
  * @example
  * <QuotaIndicator used={10} total={100} resourceName="Playlists" />
  * <QuotaIndicator used={95} total={100} resourceName="Medias" compact />

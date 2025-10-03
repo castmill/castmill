@@ -70,7 +70,7 @@ export const ResourcesView = (props: {
 }) => {
   const resourceKey = `${props.resourceName.toLowerCase()}`;
   const itemIdKey = `${props.resourceName.toLocaleLowerCase()}_id`;
-  
+
   const [quota, setQuota] = createSignal<ResourceQuota | null>(null);
   const [quotaLoading, setQuotaLoading] = createSignal(true);
 

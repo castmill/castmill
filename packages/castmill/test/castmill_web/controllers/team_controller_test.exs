@@ -602,7 +602,10 @@ defmodule CastmillWeb.TeamControllerTest do
   describe "team creation quota enforcement" do
     @describetag team_controller: true
 
-    test "allows team creation when quota is not exceeded", %{conn: conn, organization: organization} do
+    test "allows team creation when quota is not exceeded", %{
+      conn: conn,
+      organization: organization
+    } do
       # Network has default plan with teams quota of 10
       # We already have 1 team from setup, create one more
       conn =
@@ -614,7 +617,10 @@ defmodule CastmillWeb.TeamControllerTest do
       assert json_response(conn, 201)["data"]["name"] == "New Team"
     end
 
-    test "prevents team creation when quota is exceeded", %{conn: conn, organization: organization} do
+    test "prevents team creation when quota is exceeded", %{
+      conn: conn,
+      organization: organization
+    } do
       # Set a low quota for testing
       Castmill.Quotas.add_quota_to_organization(organization.id, :teams, 1)
 
@@ -629,7 +635,10 @@ defmodule CastmillWeb.TeamControllerTest do
       assert response["errors"]["quota"] == ["Team quota exceeded"]
     end
 
-    test "respects organization-specific quota override", %{conn: conn, organization: organization} do
+    test "respects organization-specific quota override", %{
+      conn: conn,
+      organization: organization
+    } do
       # Set quota to 3 teams
       Castmill.Quotas.add_quota_to_organization(organization.id, :teams, 3)
 
@@ -642,7 +651,8 @@ defmodule CastmillWeb.TeamControllerTest do
       assert conn1.status == 201
 
       # Get auth header for reuse
-      auth_header = conn.req_headers |> Enum.find(fn {k, _} -> k == "authorization" end) |> elem(1)
+      auth_header =
+        conn.req_headers |> Enum.find(fn {k, _} -> k == "authorization" end) |> elem(1)
 
       conn2 =
         recycle(conn)
@@ -685,7 +695,8 @@ defmodule CastmillWeb.TeamControllerTest do
       assert conn1.status == 201
 
       # Get auth header for reuse
-      auth_header = conn.req_headers |> Enum.find(fn {k, _} -> k == "authorization" end) |> elem(1)
+      auth_header =
+        conn.req_headers |> Enum.find(fn {k, _} -> k == "authorization" end) |> elem(1)
 
       # 3rd team should fail
       conn2 =

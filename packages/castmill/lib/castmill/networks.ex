@@ -129,7 +129,8 @@ defmodule Castmill.Networks do
       %{resource: :playlists, max: 50},
       %{resource: :devices, max: 20},
       %{resource: :channels, max: 20},
-      %{resource: :storage, max: 1_073_741_824}  # 1 GB in bytes
+      # 1 GB in bytes
+      %{resource: :storage, max: 1_073_741_824}
     ]
 
     # Create the default plan
