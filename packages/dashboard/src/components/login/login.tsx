@@ -12,6 +12,7 @@ import './login.scss';
 import { loginUser, resetSession } from '../auth';
 import { useNavigate } from '@solidjs/router';
 import SignUpEmailSent from '../signup/signup-email-sent';
+import RecoverCredentials from './recover-credentials';
 
 import { baseUrl, domain } from '../../env';
 
@@ -26,6 +27,8 @@ const Login: Component = () => {
   const [email, setEmail] = createSignal<string>('');
   const [disabledSignUp, setDisabledSignUp] = createSignal<boolean>(true);
   const [showEmailSent, setShowEmailSent] = createSignal<boolean>(false);
+  const [showRecoverCredentials, setShowRecoverCredentials] =
+    createSignal<boolean>(false);
 
   const navigate = useNavigate();
 
@@ -180,64 +183,81 @@ const Login: Component = () => {
         </Show>
 
         <div class="login-container">
-          <div class="login-box">
-            <Switch fallback={<SignUpEmailSent />}>
-              <Match when={error()}>
-                <div class="error">{error()}</div>
-              </Match>
-              <Match when={!showEmailSent()}>
-                <h2>Login</h2>
+          <Show
+            when={!showRecoverCredentials()}
+            fallback={
+              <RecoverCredentials
+                onBack={() => setShowRecoverCredentials(false)}
+              />
+            }
+          >
+            <div class="login-box">
+              <Switch fallback={<SignUpEmailSent />}>
+                <Match when={error()}>
+                  <div class="error">{error()}</div>
+                </Match>
+                <Match when={!showEmailSent()}>
+                  <h2>Login</h2>
 
-                <button
-                  class="signup-button"
-                  onClick={loginWithPasskey}
-                  disabled={!supportsPasskeys()}
-                >
-                  Login with Passkey
-                </button>
+                  <button
+                    class="signup-button"
+                    onClick={loginWithPasskey}
+                    disabled={!supportsPasskeys()}
+                  >
+                    Login with Passkey
+                  </button>
 
-                <div>
-                  <p>or</p>
-                </div>
+                  <div>
+                    <p>or</p>
+                  </div>
 
-                <h2>Sign Up</h2>
+                  <h2>Sign Up</h2>
 
-                <input
-                  type="text"
-                  placeholder="Email"
-                  value={email()}
-                  onChange={handleEmailChange}
-                />
-                <button
-                  class="login-button"
-                  onClick={startSignupProcess}
-                  disabled={disabledSignUp()}
-                >
-                  Continue
-                </button>
+                  <input
+                    type="text"
+                    placeholder="Email"
+                    value={email()}
+                    onChange={handleEmailChange}
+                  />
+                  <button
+                    class="login-button"
+                    onClick={startSignupProcess}
+                    disabled={disabledSignUp()}
+                  >
+                    Continue
+                  </button>
 
-                <p class="status">Status: {status()}</p>
-                <Show when={!supportsPasskeys()}>
-                  <p class="warn">
-                    Your browser does not support Passkeys. Link here with more
-                    info...
-                  </p>
-                </Show>
+                  <p class="status">Status: {status()}</p>
+                  <Show when={!supportsPasskeys()}>
+                    <p class="warn">
+                      Your browser does not support Passkeys. Link here with
+                      more info...
+                    </p>
+                  </Show>
 
-                <div class="privacy">
-                  <p>
-                    We care about your privacy. Read our{' '}
-                    <a href="#">Privacy Policy</a>.
-                  </p>
-                </div>
-                <div>
-                  <p>
-                    <a href="#">Lost your credentials?</a>
-                  </p>
-                </div>
-              </Match>
-            </Switch>
-          </div>
+                  <div class="privacy">
+                    <p>
+                      We care about your privacy. Read our{' '}
+                      <a href="#">Privacy Policy</a>.
+                    </p>
+                  </div>
+                  <div>
+                    <p>
+                      <a
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setShowRecoverCredentials(true);
+                        }}
+                      >
+                        Lost your credentials?
+                      </a>
+                    </p>
+                  </div>
+                </Match>
+              </Switch>
+            </div>
+          </Show>
         </div>
       </div>
     </Show>

@@ -94,4 +94,21 @@
     align-items: center;
     z-index: 10; /* Ensure it covers other content */
   }
+
+  .info-message {
+    margin: 15px 0;
+    color: #666;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  input[type='email'] {
+    width: 20em;
+    padding: 10px 20px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    box-sizing: border-box;
+    font-size: 16px;
+  }
 }
