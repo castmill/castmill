@@ -136,6 +136,7 @@ const TeamsPage: Component = () => {
     try {
       await TeamsService.removeTeam(store.organizations.selectedId!, team.id);
       refreshData();
+      loadQuota(); // Reload quota after deletion
     } catch (error) {
       alert(`Error removing team ${team.name}: ${error}`);
     }
@@ -151,6 +152,7 @@ const TeamsPage: Component = () => {
       );
 
       refreshData();
+      loadQuota(); // Reload quota after deletion
     } catch (error) {
       alert(`Error removing teams: ${error}`);
     }
@@ -218,6 +220,7 @@ const TeamsPage: Component = () => {
                   );
                   setCurrentTeam({ id: newTeam.id, name: newTeam.name });
                   refreshData();
+                  loadQuota(); // Reload quota after creation
                   return newTeam;
                 } else {
                   const updatedTeam = await TeamsService.updateTeam(

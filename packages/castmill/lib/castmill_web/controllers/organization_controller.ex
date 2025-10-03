@@ -165,14 +165,22 @@ defmodule CastmillWeb.OrganizationController do
         "pincode" => pincode,
         "organization_id" => organization_id
       }) do
-    with {:ok, {device, _token}} <-
-           Castmill.Devices.register_device(organization_id, pincode, %{name: name}, %{
-             add_default_channel: true
-           }) do
-      conn
-      |> put_status(:created)
-      |> put_resp_header("location", ~p"/devices/#{device.id}")
-      |> json(device)
+    case Castmill.Devices.register_device(organization_id, pincode, %{name: name}, %{
+           add_default_channel: true
+         }) do
+      {:ok, {device, _token}} ->
+        conn
+        |> put_status(:created)
+        |> put_resp_header("location", ~p"/devices/#{device.id}")
+        |> json(device)
+
+      {:error, :quota_exceeded} ->
+        conn
+        |> put_status(:forbidden)
+        |> json(%{errors: %{quota: ["Device quota exceeded"]}})
+
+      {:error, _} = error ->
+        {:error, error}
     end
   end
 

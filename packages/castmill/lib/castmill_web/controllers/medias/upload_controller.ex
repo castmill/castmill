@@ -39,45 +39,76 @@ defmodule CastmillWeb.UploadController do
   end
 
   defp process_file(conn, organization_id, filename, path, mime_type) do
-    case upload_file(path, filename) do
-      {:ok, destpath} ->
-        # Extract the name from the filename without extension
-        name = Path.basename(filename, Path.extname(filename))
+    # Check storage quota before uploading
+    file_size = File.stat!(path).size
+    current_storage = Castmill.Quotas.get_quota_used_for_organization(organization_id, :storage)
+    storage_quota = Castmill.Quotas.get_quota_for_organization(organization_id, "storage")
 
-        # Create media with the extracted mime_type
-        {:ok, media} =
-          Castmill.Resources.create_media(%{
-            organization_id: organization_id,
-            status: :uploading,
-            name: name,
-            path: filename,
-            mimetype: mime_type
-          })
+    if current_storage + file_size > storage_quota do
+      conn
+      |> put_status(:forbidden)
+      |> json(%{
+        error: "Storage quota exceeded",
+        message: "Uploading this file would exceed your storage quota limit"
+      })
+      |> halt()
+    else
+      case upload_file(path, filename) do
+        {:ok, destpath} ->
+          # Extract the name from the filename without extension
+          name = Path.basename(filename, Path.extname(filename))
 
-        # Proceed with transcoding and job queuing
-        case queue_transcoding_job(media, destpath, mime_type) do
-          :ok ->
-            :ok
+          # Create media with the extracted mime_type - check media count quota
+          case Castmill.Resources.create_media(%{
+                 organization_id: organization_id,
+                 status: :uploading,
+                 name: name,
+                 path: filename,
+                 mimetype: mime_type
+               }) do
+          {:ok, media} ->
+            # Proceed with transcoding and job queuing
+            case queue_transcoding_job(media, destpath, mime_type) do
+              :ok ->
+                # Return successful response
+                conn
+                |> put_status(:ok)
+                |> json(media)
 
-          :unsupported_mime_type ->
+              :unsupported_mime_type ->
+                conn
+                |> put_status(:bad_request)
+                |> json(%{
+                  error: "Unsupported MIME type",
+                  message: "The MIME type is not supported"
+                })
+                |> halt()
+            end
+
+          {:error, :quota_exceeded} ->
+            conn
+            |> put_status(:forbidden)
+            |> json(%{
+              error: "Media quota exceeded",
+              message: "You have reached your media quota limit"
+            })
+            |> halt()
+
+          {:error, _changeset} ->
             conn
             |> put_status(:bad_request)
             |> json(%{
-              error: "Unsupported MIME type",
-              message: "The MIME type is not supported"
+              error: "Failed to create media",
+              message: "An error occurred while creating the media"
             })
             |> halt()
-        end
+          end
 
-        # Return successful response
-        conn
-        |> put_status(:ok)
-        |> json(media)
-
-      {:error, reason} ->
-        conn
-        |> put_status(:internal_server_error)
-        |> json(%{error: "File upload failed", reason: inspect(reason)})
+        {:error, reason} ->
+          conn
+          |> put_status(:internal_server_error)
+          |> json(%{error: "File upload failed", reason: inspect(reason)})
+      end
     end
   end
 

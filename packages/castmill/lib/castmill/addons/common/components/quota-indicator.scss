@@ -1,4 +1,8 @@
-@import '../../colors.scss';
+// Castmill dark theme color variables
+$component-background-color: #2c303b;
+$separator-color: rgba(255, 255, 255, 0.1);
+$base-color: white;
+$highlight-color: #5792ee;
 
 .quota-indicator {
   display: flex;
@@ -6,8 +10,8 @@
   gap: 0.25rem;
   padding: 0.5rem;
   border-radius: 0.375rem;
-  background-color: $component-background-color; // Dark theme background
-  border: 1px solid $separator-color; // Dark theme border
+  background-color: $component-background-color;
+  border: 1px solid $separator-color;
   min-width: 180px;
 
   &__text {
@@ -20,7 +24,7 @@
 
   &__label {
     font-weight: 500;
-    color: $base-color; // White text for dark theme
+    color: $base-color;
     white-space: nowrap;
     opacity: 0.9;
   }
@@ -35,7 +39,7 @@
   &__bar {
     width: 100%;
     height: 0.5rem;
-    background-color: rgba(88, 93, 103, 0.3); // Subtle dark background for progress bar
+    background-color: rgba(88, 93, 103, 0.3);
     border-radius: 0.25rem;
     overflow: hidden;
   }
@@ -49,43 +53,43 @@
   // Normal state (< warning threshold)
   &--normal {
     .quota-indicator__progress {
-      background-color: $highlight-color; // Use Castmill's accent blue
+      background-color: $highlight-color;
     }
   }
 
   // Warning state (>= warning threshold, < 100%)
   &--warning {
-    background-color: rgba(251, 146, 60, 0.15); // Subtle amber background
-    border-color: rgba(251, 146, 60, 0.4); // Amber border
+    background-color: rgba(251, 146, 60, 0.15);
+    border-color: rgba(251, 146, 60, 0.4);
 
     .quota-indicator__label {
-      color: #fbbf24; // Bright amber for visibility on dark
+      color: #fbbf24;
     }
 
     .quota-indicator__percentage {
-      color: #fcd34d; // Light amber
+      color: #fcd34d;
     }
 
     .quota-indicator__progress {
-      background-color: #f59e0b; // Amber progress
+      background-color: #f59e0b;
     }
   }
 
   // Error state (100%, quota reached)
   &--error {
-    background-color: rgba(239, 68, 68, 0.15); // Subtle red background
-    border-color: rgba(239, 68, 68, 0.4); // Red border
+    background-color: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.4);
 
     .quota-indicator__label {
-      color: #fca5a5; // Light red for visibility
+      color: #fca5a5;
     }
 
     .quota-indicator__percentage {
-      color: #f87171; // Bright red
+      color: #f87171;
     }
 
     .quota-indicator__progress {
-      background-color: #ef4444; // Red progress
+      background-color: #ef4444;
     }
   }
 
@@ -105,5 +109,19 @@
     .quota-indicator__bar {
       height: 0.375rem;
     }
+  }
+
+  // Loading state - subtle pulse animation
+  &--loading {
+    animation: quota-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+}
+
+@keyframes quota-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
   }
 }

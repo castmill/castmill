@@ -1,7 +1,7 @@
 import { BsCheckLg } from 'solid-icons/bs';
 import { BsEye } from 'solid-icons/bs';
 import { AiOutlineDelete } from 'solid-icons/ai';
-import { Component, createSignal, onCleanup, Show } from 'solid-js';
+import { Component, createSignal, onCleanup, Show, onMount } from 'solid-js';
 
 import {
   Button,
@@ -20,6 +20,8 @@ import {
 import { JsonMedia } from '@castmill/player';
 import { MediasService } from '../services/medias.service';
 import { UploadComponent } from './upload';
+import { QuotaIndicator } from '../../common/components/quota-indicator';
+import { QuotasService, ResourceQuota } from '../../common/services/quotas.service';
 
 import './medias.scss';
 import { MediaDetails } from './media-details';
@@ -74,6 +76,7 @@ const MediasPage: Component<{
       );
 
       refreshData();
+      loadQuota(); // Reload quota after deletion
     } catch (error) {
       alert(`Error removing media ${resource.name}: ${error}`);
     }
@@ -93,6 +96,7 @@ const MediasPage: Component<{
       );
 
       refreshData();
+      loadQuota(); // Reload quota after deletion
     } catch (error) {
       alert(`Error removing medias: ${error}`);
     }
@@ -105,6 +109,64 @@ const MediasPage: Component<{
   const [loading, setLoading] = createSignal(false);
   const [loadingSuccess, setLoadingSuccess] = createSignal('');
   const [loadingError, setLoadingError] = createSignal('');
+
+  const [quota, setQuota] = createSignal<ResourceQuota | null>(null);
+  const [storageQuota, setStorageQuota] = createSignal<ResourceQuota | null>(null);
+  const [quotaLoading, setQuotaLoading] = createSignal(false);
+  const [showLoadingIndicator, setShowLoadingIndicator] = createSignal(false);
+
+  const quotasService = new QuotasService(props.store.env.baseUrl);
+
+  let loadingTimeout: ReturnType<typeof setTimeout> | undefined;
+
+  const loadQuota = async () => {
+    if (!props.store.organizations.selectedId) return;
+    
+    try {
+      setQuotaLoading(true);
+      
+      // Only show loading indicator if request takes more than 1 second
+      loadingTimeout = setTimeout(() => {
+        if (quotaLoading()) {
+          setShowLoadingIndicator(true);
+        }
+      }, 1000);
+      
+      // Load both media count and storage quotas
+      const [quotaData, storageData] = await Promise.all([
+        quotasService.getResourceQuota(
+          props.store.organizations.selectedId,
+          'medias'
+        ),
+        quotasService.getResourceQuota(
+          props.store.organizations.selectedId,
+          'storage'
+        )
+      ]);
+      
+      setQuota(quotaData);
+      setStorageQuota(storageData);
+    } catch (error) {
+      console.error('Failed to fetch quota:', error);
+    } finally {
+      if (loadingTimeout) {
+        clearTimeout(loadingTimeout);
+      }
+      setQuotaLoading(false);
+      setShowLoadingIndicator(false);
+    }
+  };
+
+  onMount(() => {
+    loadQuota();
+  });
+
+  const isQuotaReached = (): boolean => {
+    const q = quota();
+    const sq = storageQuota();
+    // Disable upload if either media count OR storage quota is reached
+    return !!(q && q.used >= q.total) || !!(sq && sq.used >= sq.total);
+  };
 
   const onRowSelect = (rowsSelected: Set<string>) => {
     setSelectedMedias(rowsSelected);
@@ -261,6 +323,7 @@ const MediasPage: Component<{
             onUploadComplete={() => {
               // Refresh table
               refreshData();
+              loadQuota(); // Reload quota after upload
             }}
             onCancel={() => {
               addMediasModal!.close();
@@ -327,12 +390,34 @@ const MediasPage: Component<{
         ref={setRef}
         toolbar={{
           mainAction: (
-            <Button
-              label="Upload Media"
-              onClick={openAddMediasModal}
-              icon={BsCheckLg}
-              color="primary"
-            />
+            <div style="display: flex; align-items: center; gap: 1rem;">
+              <Show when={quota()}>
+                <QuotaIndicator 
+                  used={quota()!.used} 
+                  total={quota()!.total} 
+                  resourceName="Medias"
+                  compact
+                  isLoading={showLoadingIndicator()}
+                />
+              </Show>
+              <Show when={storageQuota()}>
+                <QuotaIndicator 
+                  used={storageQuota()!.used} 
+                  total={storageQuota()!.total} 
+                  resourceName=""
+                  compact
+                  isLoading={showLoadingIndicator()}
+                  formatValue={formatBytes}
+                />
+              </Show>
+              <Button
+                label="Upload Media"
+                onClick={openAddMediasModal}
+                icon={BsCheckLg}
+                color="primary"
+                disabled={isQuotaReached()}
+              />
+            </div>
           ),
           actions: (
             <div>
