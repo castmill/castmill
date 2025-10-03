@@ -123,11 +123,32 @@ const ChannelsPage: Component = () => {
 
   const confirmRemoveMultipleChannels = async () => {
     try {
-      await Promise.all(
+      const results = await Promise.allSettled(
         Array.from(selectedChannels()).map((channelId) =>
           channelsService.removeChannel(channelId)
         )
       );
+
+      const failedChannels = results
+        .map((result, index) => {
+          if (result.status === 'rejected') {
+            return Array.from(selectedChannels())[index];
+          }
+          return null;
+        })
+        .filter((id) => id !== null);
+
+      if (failedChannels.length > 0) {
+        const failedChannelNames = failedChannels
+          .map((id) => {
+            const channel = data().find((c) => c.id === id);
+            return channel?.name || id;
+          })
+          .join(', ');
+        alert(
+          `Some channels could not be deleted (they may be assigned to devices): ${failedChannelNames}`
+        );
+      }
 
       refreshData();
     } catch (error) {

@@ -49,7 +49,12 @@ async function handleResponse<T = any>(
     let errMsg = '';
     try {
       const { errors } = await response.json();
-      errMsg = `${errors.detail || response.statusText}`;
+      // Handle both array errors and object errors with detail
+      if (Array.isArray(errors)) {
+        errMsg = errors.join(', ');
+      } else {
+        errMsg = `${errors.detail || response.statusText}`;
+      }
     } catch (error) {
       errMsg = `${response.statusText}`;
     }
