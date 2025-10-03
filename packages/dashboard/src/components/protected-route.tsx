@@ -84,7 +84,10 @@ const ProtectedRoute: Component<ProtectedRouteProps> = (
   });
 
   return (
-    <Show when={!store.loadingAddons} fallback={<div>{t('common.loadingAddons')}</div>}>
+    <Show
+      when={!store.loadingAddons}
+      fallback={<div>{t('common.loadingAddons')}</div>}
+    >
       {props.children(store.addons)}
     </Show>
   );

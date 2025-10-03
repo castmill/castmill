@@ -18,7 +18,7 @@ interface PlaylistChooserProps {
 
 export const PlaylistChooser: Component<PlaylistChooserProps> = (props) => {
   const { t } = useI18n();
-  
+
   let channelsService: ChannelsService = new ChannelsService(
     baseUrl,
     store.organizations.selectedId!

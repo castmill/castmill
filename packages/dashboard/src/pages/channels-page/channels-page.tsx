@@ -118,7 +118,12 @@ const ChannelsPage: Component = () => {
       await channelsService.removeChannel(channel.id);
       refreshData();
     } catch (error) {
-      alert(t('channels.errors.removeChannel', { name: channel.name || '', error: String(error) }));
+      alert(
+        t('channels.errors.removeChannel', {
+          name: channel.name || '',
+          error: String(error),
+        })
+      );
     }
     setShowConfirmDialog(false);
   };
@@ -177,7 +182,9 @@ const ChannelsPage: Component = () => {
 
   createEffect(() => {
     if (currentChannel()?.id) {
-      setTitle(t('channels.channelTitle', { name: currentChannel()?.name || '' }));
+      setTitle(
+        t('channels.channelTitle', { name: currentChannel()?.name || '' })
+      );
     } else {
       setTitle(t('channels.newChannel'));
     }
@@ -209,7 +216,9 @@ const ChannelsPage: Component = () => {
                   }
                   refreshData();
                 } catch (error) {
-                  alert(t('channels.errors.addChannel', { error: String(error) }));
+                  alert(
+                    t('channels.errors.addChannel', { error: String(error) })
+                  );
                 }
               }}
             />
@@ -245,7 +254,9 @@ const ChannelsPage: Component = () => {
                     return updatedTeam;
                   }
                 } catch (error) {
-                  alert(t('channels.errors.saveChannel', { error: String(error) }));
+                  alert(
+                    t('channels.errors.saveChannel', { error: String(error) })
+                  );
                 }
               }}
             />
@@ -255,7 +266,9 @@ const ChannelsPage: Component = () => {
         <ConfirmDialog
           show={showConfirmDialog()}
           title={t('channels.removeChannel')}
-          message={t('channels.confirmRemoveChannel', { name: currentChannel()?.name || '' })}
+          message={t('channels.confirmRemoveChannel', {
+            name: currentChannel()?.name || '',
+          })}
           onClose={() => setShowConfirmDialog(false)}
           onConfirm={() => confirmRemoveChannel(currentChannel())}
         />

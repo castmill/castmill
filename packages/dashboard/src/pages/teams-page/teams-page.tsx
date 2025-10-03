@@ -107,7 +107,9 @@ const TeamsPage: Component = () => {
       await TeamsService.removeTeam(store.organizations.selectedId!, team.id);
       refreshData();
     } catch (error) {
-      alert(t('teams.errors.removeTeam', { name: team.name, error: String(error) }));
+      alert(
+        t('teams.errors.removeTeam', { name: team.name, error: String(error) })
+      );
     }
     setShowConfirmDialog(false);
   };
@@ -208,7 +210,9 @@ const TeamsPage: Component = () => {
       <ConfirmDialog
         show={showConfirmDialog()}
         title={t('teams.removeTeam')}
-        message={t('teams.confirmRemoveTeam', { name: currentTeam()?.name || '' })}
+        message={t('teams.confirmRemoveTeam', {
+          name: currentTeam()?.name || '',
+        })}
         onClose={() => setShowConfirmDialog(false)}
         onConfirm={() => confirmRemoveTeam(currentTeam())}
       />

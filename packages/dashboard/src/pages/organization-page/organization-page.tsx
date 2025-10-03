@@ -58,7 +58,9 @@ const OrganizationPage: Component = () => {
         name: organization.name,
       });
     } catch (error) {
-      alert(t('organization.errors.updateOrganization', { error: String(error) }));
+      alert(
+        t('organization.errors.updateOrganization', { error: String(error) })
+      );
     }
   };
 

@@ -383,7 +383,9 @@ const SettingsPage: Component = () => {
                   <strong>{t('settings.emailVerificationRequired')}</strong>
                 </p>
                 <p>
-                  {t('settings.emailVerificationMessage', { email: emailVerification().pendingEmail || '' })}
+                  {t('settings.emailVerificationMessage', {
+                    email: emailVerification().pendingEmail || '',
+                  })}
                 </p>
               </div>
             </Show>
@@ -413,9 +415,7 @@ const SettingsPage: Component = () => {
           <div class="settings-content">
             <div class="passkey-info">
               <h3>{t('settings.passkeys')}</h3>
-              <p>
-                {t('settings.passkeysDescription')}
-              </p>
+              <p>{t('settings.passkeysDescription')}</p>
 
               <div class="passkey-list">
                 <h4>{t('settings.yourPasskeys')}</h4>
@@ -568,9 +568,7 @@ const SettingsPage: Component = () => {
           <div class="settings-content">
             <div class="danger-actions">
               <h3>{t('settings.deleteAccount')}</h3>
-              <p>
-                {t('settings.deleteAccountDescription')}
-              </p>
+              <p>{t('settings.deleteAccountDescription')}</p>
               <Show when={!showDeleteConfirm()}>
                 <Button
                   label={t('settings.deleteAccountButton')}
@@ -581,7 +579,8 @@ const SettingsPage: Component = () => {
               <Show when={showDeleteConfirm()}>
                 <div class="delete-confirmation">
                   <p>
-                    <strong>{t('settings.deleteAccountConfirm')}</strong> {t('settings.deleteAccountWarning')}
+                    <strong>{t('settings.deleteAccountConfirm')}</strong>{' '}
+                    {t('settings.deleteAccountWarning')}
                   </p>
                   <div class="confirmation-actions">
                     <Button

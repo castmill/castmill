@@ -19,10 +19,14 @@ const enTranslations = JSON.parse(fs.readFileSync(enPath, 'utf8'));
  */
 function deepMerge(target, source) {
   const result = { ...target };
-  
+
   for (const key in source) {
     if (source.hasOwnProperty(key)) {
-      if (typeof source[key] === 'object' && source[key] !== null && !Array.isArray(source[key])) {
+      if (
+        typeof source[key] === 'object' &&
+        source[key] !== null &&
+        !Array.isArray(source[key])
+      ) {
         // Recursively merge objects
         result[key] = deepMerge(result[key] || {}, source[key]);
       } else if (!(key in result)) {
@@ -32,24 +36,30 @@ function deepMerge(target, source) {
       // Keep existing translation if key already exists
     }
   }
-  
+
   return result;
 }
 
 // Process each locale
-locales.forEach(locale => {
+locales.forEach((locale) => {
   const localePath = path.join(localesDir, `${locale}.json`);
-  
+
   try {
     // Read existing translations
-    const existingTranslations = JSON.parse(fs.readFileSync(localePath, 'utf8'));
-    
+    const existingTranslations = JSON.parse(
+      fs.readFileSync(localePath, 'utf8')
+    );
+
     // Merge with English (adds missing keys, preserves existing translations)
     const mergedTranslations = deepMerge(existingTranslations, enTranslations);
-    
+
     // Write back
-    fs.writeFileSync(localePath, JSON.stringify(mergedTranslations, null, 2) + '\n', 'utf8');
-    
+    fs.writeFileSync(
+      localePath,
+      JSON.stringify(mergedTranslations, null, 2) + '\n',
+      'utf8'
+    );
+
     console.log(`✅ ${locale}.json - merged successfully`);
   } catch (error) {
     console.error(`❌ ${locale}.json - error:`, error.message);

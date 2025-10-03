@@ -56,7 +56,7 @@ export const ResourceChooser = (props: {
   onSelect: (resources: { id: string }[]) => void;
 }) => {
   const { t } = useI18n();
-  
+
   const [data, setData] = createSignal<any[]>([]);
   const [currentResource, setCurrentResource] = createSignal<any>();
   const [selectedResources, setSelectedResources] = createSignal(

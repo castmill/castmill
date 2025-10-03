@@ -142,9 +142,7 @@ const SignUp: Component = () => {
     });
 
     if (!result.ok) {
-      alert(
-        t('signup.errors.signupFailed', { error: result.statusText })
-      );
+      alert(t('signup.errors.signupFailed', { error: result.statusText }));
     } else {
       navigate('/');
     }

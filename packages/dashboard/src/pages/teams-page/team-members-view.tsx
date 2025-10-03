@@ -84,13 +84,13 @@ export const TeamMembersView = (props: {
   onRemove: (member: User) => void;
 }) => {
   const { t } = useI18n();
-  
+
   const columns = [
     { key: 'user.name', title: t('common.name'), sortable: true },
     { key: 'role', title: t('common.role'), sortable: true },
     { key: 'inserted_at', title: t('teams.insertedAt'), sortable: true },
   ];
-  
+
   const fetchData = async (opts: FetchDataOptions) => {
     const result = await TeamsService.fetchMembers(
       props.organizationId,

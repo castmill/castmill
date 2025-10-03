@@ -68,7 +68,7 @@ const wrapLazyComponent = (addon: { path: string }) => {
     const i18n = useI18n();
 
     const LazyComponent = lazy(() => import(`${addOnBasePath}${addon.path}`));
-    
+
     // Create a store with i18n functions included
     const storeWithI18n = {
       ...store,
@@ -82,7 +82,7 @@ const wrapLazyComponent = (addon: { path: string }) => {
         setLocale: i18n.setLocale,
       },
     };
-    
+
     return <LazyComponent {...props} store={storeWithI18n} params={params} />;
   };
 };

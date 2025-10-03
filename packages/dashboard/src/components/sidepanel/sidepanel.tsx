@@ -56,7 +56,7 @@ const SidePanelTree: Component<{ node: AddOnNode; level: number }> = (
 
 const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
   const { t } = useI18n();
-  
+
   /*
   Addons include a "mount_point" property that is a period separated string that 
   represents where in the application the addon should be mounted. For example, if
@@ -104,8 +104,18 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
           icon={BsCalendarWeek}
         />
 
-        <PanelItem to="/teams" text={t('sidebar.teams')} level={0} icon={AiOutlineTeam} />
-        <PanelItem to="/usage" text={t('sidebar.usage')} level={0} icon={TbChartHistogram} />
+        <PanelItem
+          to="/teams"
+          text={t('sidebar.teams')}
+          level={0}
+          icon={AiOutlineTeam}
+        />
+        <PanelItem
+          to="/usage"
+          text={t('sidebar.usage')}
+          level={0}
+          icon={TbChartHistogram}
+        />
         <PanelItem
           to="/settings"
           text={t('common.settings')}

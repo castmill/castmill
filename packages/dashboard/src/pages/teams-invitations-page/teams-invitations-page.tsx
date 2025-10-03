@@ -110,7 +110,9 @@ const TeamsInvitationPage = () => {
         <p>
           {t('common.status')}: <b>{invitation()?.status}</b>
         </p>
-        <button onClick={acceptInvitation}>{t('common.acceptInvitation')}</button>
+        <button onClick={acceptInvitation}>
+          {t('common.acceptInvitation')}
+        </button>
       </Show>
     </div>
   );

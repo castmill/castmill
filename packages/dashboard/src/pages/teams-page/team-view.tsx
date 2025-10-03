@@ -54,7 +54,8 @@ export const TeamView = (props: {
     <div style="width: 60vw;">
       <div class="info">
         <Show when={props.team.insertedAt}>
-          <span>{t('teams.addedOn')} </span> <span>{`${props.team.insertedAt}`}. </span>
+          <span>{t('teams.addedOn')} </span>{' '}
+          <span>{`${props.team.insertedAt}`}. </span>
         </Show>
         <Show when={props.team.updatedAt}>
           <span>{t('teams.lastUpdatedOn')} </span>

@@ -30,6 +30,7 @@ The script scans all TypeScript/TSX files in `src/` and identifies:
 ## Output
 
 The script provides:
+
 - **Color-coded severity** - Errors (❌) and warnings (⚠️)
 - **File and line number** - Exact location of each issue
 - **Context** - The hardcoded string that needs localization
@@ -73,6 +74,7 @@ Add to GitHub Actions workflow:
 ## Ignored Patterns
 
 The script automatically ignores:
+
 - Test files (`*.test.tsx`, `*.spec.ts`)
 - i18n directory itself
 - Technical strings (URLs, hex colors, data attributes, etc.)
@@ -83,6 +85,7 @@ The script automatically ignores:
 ## False Positives
 
 If the script reports a false positive, you can:
+
 1. Check if the string is actually technical and shouldn't be localized
 2. Verify the string isn't already using `t()` in a way the regex didn't catch
 3. Add more ignore patterns to the script if needed
@@ -90,6 +93,7 @@ If the script reports a false positive, you can:
 ## Configuration
 
 Edit `scripts/check-i18n.cjs` to customize:
+
 - `config.textProps` - Props that commonly contain user-facing text
 - `config.ignorePatterns` - Regex patterns for strings to ignore
 - `config.excludePatterns` - File patterns to skip
@@ -218,10 +222,10 @@ When creating new utility scripts for the Dashboard:
 #!/usr/bin/env node
 /**
  * Script Name - Brief description
- * 
+ *
  * Usage:
  *   node scripts/script-name.cjs [args]
- * 
+ *
  * Description:
  *   Detailed explanation of what the script does
  */

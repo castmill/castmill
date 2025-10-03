@@ -48,7 +48,7 @@ export const ResourcesView = (props: {
   resourceName: string;
 }) => {
   const { t } = useI18n();
-  
+
   const openModal = () => {
     alert(t('teams.errors.openViewModal'));
   };

@@ -66,7 +66,9 @@ export const DefaultPlaylistComboBox: Component<{
           });
           setDefaultPlaylist(playlist);
         } catch (e) {
-          alert(t('channels.errors.updateDefaultPlaylist', { error: String(e) }));
+          alert(
+            t('channels.errors.updateDefaultPlaylist', { error: String(e) })
+          );
         }
       }}
     />

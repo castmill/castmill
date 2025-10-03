@@ -23,7 +23,10 @@ const NotFound: Component = () => {
   }
 
   return (
-    <Show when={!store.loadingAddons} fallback={<div>{t('common.loadingAddons')}</div>}>
+    <Show
+      when={!store.loadingAddons}
+      fallback={<div>{t('common.loadingAddons')}</div>}
+    >
       <div>
         <h1>{t('common.notFound')}</h1>
         <h2>{t('common.pageNotFound')}</h2>

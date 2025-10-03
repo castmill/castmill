@@ -563,7 +563,11 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
 
                 setShowEntryModal();
               } catch (error) {
-                alert(t('channels.errors.updateChannelEntry', { error: String(error) }));
+                alert(
+                  t('channels.errors.updateChannelEntry', {
+                    error: String(error),
+                  })
+                );
               }
             }}
           />
