@@ -297,6 +297,16 @@
   "devices": {
     "setDeviceChannel": "Set Device Channel",
     "selectChannel": "Select Channel",
+    "assignedChannels": "Assigned Channels",
+    "addChannel": "Add Channel",
+    "selectChannelToAdd": "Select Channel to Add",
+    "cannotDeleteLastChannel": "Cannot delete the last remaining channel.",
+    "registerAnother": "Register Another",
+    "enterDeviceName": "Enter device name",
+    "pincode": "Pincode",
+    "enterPincode": "Enter {{length}}-character pincode",
+    "pincodeDescription": "The pincode will be shown on the device's screen.",
+    "register": "Register",
     "preview": {
       "placeholder": "Preview"
     },

@@ -305,7 +305,17 @@
     "errors": {
       "setChannelFailed": "Échec de la définition du canal de l'appareil : {{error}}",
       "commandFailed": "Une erreur s'est produite lors du traitement de votre demande"
-    }
+    },
+    "assignedChannels": "Canaux assignés",
+    "addChannel": "Ajouter un canal",
+    "selectChannelToAdd": "Sélectionner le canal à ajouter",
+    "cannotDeleteLastChannel": "Impossible de supprimer le dernier canal restant.",
+    "registerAnother": "Enregistrer un autre",
+    "enterDeviceName": "Entrez le nom de l'appareil",
+    "pincode": "Code PIN",
+    "enterPincode": "Entrez le code PIN à {{length}} caractères",
+    "pincodeDescription": "Le code PIN sera affiché sur l'écran de l'appareil.",
+    "register": "Enregistrer"
   },
   "validation": {
     "fieldRequired": "Ce champ est requis",

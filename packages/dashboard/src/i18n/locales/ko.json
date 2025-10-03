@@ -305,7 +305,17 @@
     "errors": {
       "setChannelFailed": "기기 채널 설정 실패: {{error}}",
       "commandFailed": "요청 처리 중 오류가 발생했습니다"
-    }
+    },
+    "assignedChannels": "할당된 채널",
+    "addChannel": "채널 추가",
+    "selectChannelToAdd": "추가할 채널 선택",
+    "cannotDeleteLastChannel": "마지막 남은 채널은 삭제할 수 없습니다.",
+    "registerAnother": "다른 것 등록",
+    "enterDeviceName": "기기 이름 입력",
+    "pincode": "PIN 코드",
+    "enterPincode": "{{length}}자리 PIN 코드 입력",
+    "pincodeDescription": "PIN 코드는 기기 화면에 표시됩니다.",
+    "register": "등록"
   },
   "validation": {
     "fieldRequired": "이 필드는 필수입니다",

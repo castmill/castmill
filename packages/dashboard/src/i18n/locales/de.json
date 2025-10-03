@@ -321,7 +321,17 @@
     "errors": {
       "setChannelFailed": "Failed to set device channel: {{error}}",
       "commandFailed": "An error occurred while processing your request"
-    }
+    },
+    "assignedChannels": "Zugewiesene Kanäle",
+    "addChannel": "Kanal hinzufügen",
+    "selectChannelToAdd": "Kanal zum Hinzufügen auswählen",
+    "cannotDeleteLastChannel": "Der letzte verbleibende Kanal kann nicht gelöscht werden.",
+    "registerAnother": "Weiteres registrieren",
+    "enterDeviceName": "Gerätenamen eingeben",
+    "pincode": "PIN-Code",
+    "enterPincode": "{{length}}-stelligen PIN-Code eingeben",
+    "pincodeDescription": "Der PIN-Code wird auf dem Bildschirm des Geräts angezeigt.",
+    "register": "Registrieren"
   },
   "validation": {
     "fieldRequired": "Dieses Feld ist erforderlich",

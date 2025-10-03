@@ -305,7 +305,17 @@
     "errors": {
       "setChannelFailed": "デバイスチャンネルの設定に失敗しました: {{error}}",
       "commandFailed": "リクエストの処理中にエラーが発生しました"
-    }
+    },
+    "assignedChannels": "割り当てられたチャンネル",
+    "addChannel": "チャンネルを追加",
+    "selectChannelToAdd": "追加するチャンネルを選択",
+    "cannotDeleteLastChannel": "最後に残っているチャンネルは削除できません。",
+    "registerAnother": "別のものを登録",
+    "enterDeviceName": "デバイス名を入力",
+    "pincode": "PIN コード",
+    "enterPincode": "{{length}}文字のPINコードを入力",
+    "pincodeDescription": "PIN コードはデバイスの画面に表示されます。",
+    "register": "登録"
   },
   "validation": {
     "fieldRequired": "この項目は必須です",

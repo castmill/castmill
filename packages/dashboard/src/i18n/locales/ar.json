@@ -305,7 +305,17 @@
     "errors": {
       "setChannelFailed": "فشل تعيين قناة الجهاز: {{error}}",
       "commandFailed": "حدث خطأ أثناء معالجة طلبك"
-    }
+    },
+    "assignedChannels": "القنوات المخصصة",
+    "addChannel": "إضافة قناة",
+    "selectChannelToAdd": "حدد القناة المراد إضافتها",
+    "cannotDeleteLastChannel": "لا يمكن حذف القناة الأخيرة المتبقية.",
+    "registerAnother": "تسجيل آخر",
+    "enterDeviceName": "أدخل اسم الجهاز",
+    "pincode": "رمز PIN",
+    "enterPincode": "أدخل رمز PIN المكون من {{length}} أحرف",
+    "pincodeDescription": "سيتم عرض رمز PIN على شاشة الجهاز.",
+    "register": "تسجيل"
   },
   "validation": {
     "fieldRequired": "هذا الحقل مطلوب",

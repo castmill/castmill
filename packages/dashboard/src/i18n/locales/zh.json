@@ -305,7 +305,17 @@
     "errors": {
       "setChannelFailed": "设置设备频道失败:{{error}}",
       "commandFailed": "处理您的请求时发生错误"
-    }
+    },
+    "assignedChannels": "已分配的频道",
+    "addChannel": "添加频道",
+    "selectChannelToAdd": "选择要添加的频道",
+    "cannotDeleteLastChannel": "无法删除最后一个剩余频道。",
+    "registerAnother": "注册另一个",
+    "enterDeviceName": "输入设备名称",
+    "pincode": "PIN码",
+    "enterPincode": "输入{{length}}位PIN码",
+    "pincodeDescription": "PIN码将显示在设备屏幕上。",
+    "register": "注册"
   },
   "validation": {
     "fieldRequired": "此字段为必填项",

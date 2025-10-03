@@ -344,5 +344,137 @@ defmodule Castmill.DevicesTest do
 
       assert Devices.has_access_to_playlist(device.id, playlist.id) == false
     end
+
+    test "add_channel/2 can assign multiple channels to a device" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+
+      {:ok, devices_registration} =
+        device_registration_fixture(%{hardware_id: "some hardware id", pincode: "some pincode"})
+
+      assert {:ok, {device, _token}} =
+               Devices.register_device(organization.id, devices_registration.pincode, %{
+                 name: "some device"
+               })
+
+      assert Devices.list_channels(device.id) == []
+
+      # Create multiple channels
+      channel1 =
+        channel_fixture(%{
+          organization_id: organization.id,
+          name: "Channel 1",
+          timezone: "America/New_York"
+        })
+
+      channel2 =
+        channel_fixture(%{
+          organization_id: organization.id,
+          name: "Channel 2",
+          timezone: "Europe/London"
+        })
+
+      channel3 =
+        channel_fixture(%{
+          organization_id: organization.id,
+          name: "Channel 3",
+          timezone: "Asia/Tokyo"
+        })
+
+      # Add all three channels to the device
+      Devices.add_channel(device.id, channel1.id)
+      Devices.add_channel(device.id, channel2.id)
+      Devices.add_channel(device.id, channel3.id)
+
+      # Verify all channels are assigned
+      assigned_channels = Devices.list_channels(device.id)
+      assert length(assigned_channels) == 3
+
+      channel_ids = Enum.map(assigned_channels, & &1.id)
+      assert channel1.id in channel_ids
+      assert channel2.id in channel_ids
+      assert channel3.id in channel_ids
+    end
+
+    test "add_channel/2 prevents adding the same channel twice" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+
+      {:ok, devices_registration} =
+        device_registration_fixture(%{hardware_id: "some hardware id", pincode: "some pincode"})
+
+      assert {:ok, {device, _token}} =
+               Devices.register_device(organization.id, devices_registration.pincode, %{
+                 name: "some device"
+               })
+
+      channel =
+        channel_fixture(%{organization_id: organization.id, timezone: "America/Sao_Paulo"})
+
+      # Add channel first time - should succeed
+      assert {:ok, _} = Devices.add_channel(device.id, channel.id)
+      assert length(Devices.list_channels(device.id)) == 1
+
+      # Try to add the same channel again - should raise constraint error
+      assert_raise Ecto.ConstraintError, fn ->
+        Devices.add_channel(device.id, channel.id)
+      end
+
+      # Verify we still only have one channel (not duplicated)
+      assert length(Devices.list_channels(device.id)) == 1
+    end
+
+    test "remove_channel/2 with multiple channels removes only the specified channel" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+
+      {:ok, devices_registration} =
+        device_registration_fixture(%{hardware_id: "some hardware id", pincode: "some pincode"})
+
+      assert {:ok, {device, _token}} =
+               Devices.register_device(organization.id, devices_registration.pincode, %{
+                 name: "some device"
+               })
+
+      # Create and add multiple channels
+      channel1 =
+        channel_fixture(%{
+          organization_id: organization.id,
+          name: "Channel 1",
+          timezone: "America/New_York"
+        })
+
+      channel2 =
+        channel_fixture(%{
+          organization_id: organization.id,
+          name: "Channel 2",
+          timezone: "Europe/London"
+        })
+
+      channel3 =
+        channel_fixture(%{
+          organization_id: organization.id,
+          name: "Channel 3",
+          timezone: "Asia/Tokyo"
+        })
+
+      Devices.add_channel(device.id, channel1.id)
+      Devices.add_channel(device.id, channel2.id)
+      Devices.add_channel(device.id, channel3.id)
+
+      assert length(Devices.list_channels(device.id)) == 3
+
+      # Remove one channel
+      Devices.remove_channel(device.id, channel2.id)
+
+      # Verify only 2 channels remain
+      remaining_channels = Devices.list_channels(device.id)
+      assert length(remaining_channels) == 2
+
+      channel_ids = Enum.map(remaining_channels, & &1.id)
+      assert channel1.id in channel_ids
+      assert channel3.id in channel_ids
+      refute channel2.id in channel_ids
+    end
   end
 end

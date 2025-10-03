@@ -305,7 +305,17 @@
     "errors": {
       "setChannelFailed": "Misslyckades att ställa in enhetskanal: {{error}}",
       "commandFailed": "Ett fel uppstod vid bearbetning av din begäran"
-    }
+    },
+    "assignedChannels": "Tilldelade kanaler",
+    "addChannel": "Lägg till kanal",
+    "selectChannelToAdd": "Välj kanal att lägga till",
+    "cannotDeleteLastChannel": "Kan inte radera den sista kvarvarande kanalen.",
+    "registerAnother": "Registrera en till",
+    "enterDeviceName": "Ange enhetsnamn",
+    "pincode": "PIN-kod",
+    "enterPincode": "Ange {{length}}-siffrig PIN-kod",
+    "pincodeDescription": "PIN-koden kommer att visas på enhetens skärm.",
+    "register": "Registrera"
   },
   "validation": {
     "fieldRequired": "Detta fält är obligatoriskt",
