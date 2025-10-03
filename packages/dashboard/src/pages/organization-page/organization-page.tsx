@@ -3,7 +3,7 @@ import { Component, createEffect, createSignal, Show } from 'solid-js';
 
 import { Button, FormItem, TabItem, Tabs } from '@castmill/ui-common';
 import { OrganizationMembersView } from './organization-members-view';
-import { store } from '../../store';
+import { store, setStore } from '../../store';
 import { BsCheckLg } from 'solid-icons/bs';
 
 import style from './organization-page.module.scss';
@@ -63,6 +63,18 @@ const OrganizationPage: Component = () => {
       await OrganizationsService.update(organization.id, {
         name: organization.name,
       });
+
+      // Update the store with the new organization name
+      setStore('organizations', 'data', (orgs) =>
+        orgs.map((org) =>
+          org.id === organization.id ? { ...org, name: organization.name } : org
+        )
+      );
+
+      // Update the selectedName if this is the currently selected organization
+      if (store.organizations.selectedId === organization.id) {
+        setStore('organizations', 'selectedName', organization.name);
+      }
     } catch (error) {
       alert(`Error updating organization ${error}`);
     }
