@@ -14,10 +14,12 @@ import { useNavigate } from '@solidjs/router';
 import SignUpEmailSent from '../signup/signup-email-sent';
 
 import { baseUrl, domain } from '../../env';
+import { useI18n } from '../../i18n';
 
 const encoder = new TextEncoder(); // Creates a new encoder
 
 const Login: Component = () => {
+  const { t } = useI18n();
   const [isMounted, setIsMounted] = createSignal<boolean>(false);
   const [loading, setLoading] = createSignal<boolean>(false);
   const [status, setStatus] = createSignal<string>('Ready');
@@ -176,7 +178,7 @@ const Login: Component = () => {
     <Show when={isMounted()}>
       <div class="castmill-login">
         <Show when={loading()}>
-          <div class="loading-overlay">Loading...</div>
+          <div class="loading-overlay">{t('common.loading')}</div>
         </Show>
 
         <div class="login-container">
@@ -193,14 +195,14 @@ const Login: Component = () => {
                   onClick={loginWithPasskey}
                   disabled={!supportsPasskeys()}
                 >
-                  Login with Passkey
+                  {t('login.loginWithPasskey')}
                 </button>
 
                 <div>
                   <p>or</p>
                 </div>
 
-                <h2>Sign Up</h2>
+                <h2>{t('common.signUp')}</h2>
 
                 <input
                   type="text"
@@ -227,12 +229,12 @@ const Login: Component = () => {
                 <div class="privacy">
                   <p>
                     We care about your privacy. Read our{' '}
-                    <a href="#">Privacy Policy</a>.
+                    <a href="#">{t('login.privacyPolicy')}</a>.
                   </p>
                 </div>
                 <div>
                   <p>
-                    <a href="#">Lost your credentials?</a>
+                    <a href="#">{t('login.lostCredentials')}</a>
                   </p>
                 </div>
               </Match>

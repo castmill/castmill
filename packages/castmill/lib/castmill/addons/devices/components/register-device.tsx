@@ -1,5 +1,6 @@
 import { Component, createSignal } from 'solid-js';
 import { Button, FormItem } from '@castmill/ui-common';
+import { AddonStore } from '../../common/interfaces/addon-store';
 
 import { BsCheckLg, BsX } from 'solid-icons/bs';
 import './register-device.scss';
@@ -8,9 +9,14 @@ const pincodeLength = 10;
 
 const RegisterDevice: Component<{
   pincode?: string;
+  store?: AddonStore;
   onSubmit: (data: { name: string; pincode: string }) => void;
   onCancel: () => void;
 }> = (props) => {
+  // Get i18n functions from store
+  const t = (key: string, params?: Record<string, any>) =>
+    props.store?.i18n?.t(key, params) || key;
+
   const [name, setName] = createSignal('');
   const [pincode, setPincode] = createSignal('');
   const [errors, setErrors] = createSignal(new Map());
@@ -49,7 +55,7 @@ const RegisterDevice: Component<{
       >
         <div class="form-inputs">
           <FormItem
-            label="Name"
+            label={t('common.name')}
             id="name"
             value={name()}
             placeholder="Enter device name"

@@ -1,107 +1,61 @@
-.language-selector {
-  position: relative;
-  display: inline-block;
+@use '../../colors.scss';
 
-  &__trigger {
+// Language selector styles
+// Note: DropdownMenu component handles the main dropdown behavior
+.language-selector {
+  &__button {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 1rem;
-    background: transparent;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 4px;
-    color: white;
-    cursor: pointer;
-    font-size: 14px;
-    transition: all 0.2s ease;
-
-    &:hover {
-      background: rgba(255, 255, 255, 0.1);
-      border-color: rgba(255, 255, 255, 0.3);
-    }
+    justify-content: center;
+    min-width: 1.5rem;
   }
 
-  &.compact &__trigger {
-    padding: 0.35rem 0.7rem;
-    font-size: 12px;
-    font-weight: 600;
-  }
-
-  &__current {
-    white-space: nowrap;
-  }
-
-  &__arrow {
-    font-size: 10px;
-    opacity: 0.7;
-  }
-
-  &__dropdown {
-    position: absolute;
-    top: calc(100% + 4px);
-    right: 0;
-    min-width: 200px;
-    background: white;
-    border: 1px solid #e2e8f0;
-    border-radius: 6px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    z-index: 1000;
-    max-height: 400px;
-    overflow-y: auto;
+  &__flag {
+    font-size: 1.3em;
+    line-height: 1;
   }
 
   &__option {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
     width: 100%;
-    padding: 0.75rem 1rem;
+    padding: 0.5rem 1rem;
     background: none;
     border: none;
+    border-radius: 0.3rem;
     text-align: left;
     cursor: pointer;
-    color: #333;
-    transition: background 0.2s ease;
+    color: colors.$base-color;
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease;
+    font-family: inherit;
+    font-size: 0.9rem;
 
-    &:hover {
-      background: #f7fafc;
+    &:hover,
+    &:focus {
+      background-color: colors.$highlight-background-color;
+      color: colors.$highlight-color;
+      outline: none;
     }
 
     &.active {
-      background: #ebf8ff;
-      color: #2c5282;
+      background-color: colors.$highlight-background-color;
+      color: colors.$highlight-color;
+      font-weight: 600;
     }
 
-    &:first-child {
-      border-radius: 6px 6px 0 0;
-    }
-
-    &:last-child {
-      border-radius: 0 0 6px 6px;
+    &:active {
+      background-color: colors.$separator-color;
     }
   }
 
-  &__code {
-    font-weight: 600;
-    font-size: 12px;
-    color: #718096;
-    min-width: 28px;
+  &__option-content {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.75rem;
   }
 
   &__name {
     flex: 1;
-  }
-
-  &__check {
-    color: #48bb78;
-    font-weight: bold;
-  }
-}
-
-// RTL support
-[dir='rtl'] .language-selector {
-  &__dropdown {
-    right: auto;
-    left: 0;
   }
 }

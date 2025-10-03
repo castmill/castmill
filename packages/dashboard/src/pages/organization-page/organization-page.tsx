@@ -9,9 +9,11 @@ import { BsCheckLg } from 'solid-icons/bs';
 import style from './organization-page.module.scss';
 import { OrganizationsService } from '../../services/organizations.service';
 import { OrganizationInvitationsView } from './organization-invitations-view';
+import { useI18n } from '../../i18n';
 
 const OrganizationPage: Component = () => {
   const params = useSearchParams();
+  const { t } = useI18n();
 
   const [name, setName] = createSignal(store.organizations.selectedName!);
 
@@ -23,9 +25,9 @@ const OrganizationPage: Component = () => {
     switch (fieldId) {
       case 'name':
         if (!value) {
-          error = 'Name is required';
+          error = t('validation.fieldRequired');
         } else if (value.length < 5) {
-          error = 'Name must be at least 5 characters';
+          error = t('validation.minLength', { min: 5 });
         }
         break;
       default:
@@ -56,13 +58,13 @@ const OrganizationPage: Component = () => {
         name: organization.name,
       });
     } catch (error) {
-      alert(`Error updating organization ${error}`);
+      alert(t('organization.errors.updateOrganization', { error: String(error) }));
     }
   };
 
   const resourcesTabs: TabItem[] = [
     {
-      title: 'Users',
+      title: t('organization.users'),
       content: () => (
         <Show when={store.organizations.selectedId}>
           <OrganizationMembersView
@@ -74,7 +76,7 @@ const OrganizationPage: Component = () => {
       ),
     },
     {
-      title: 'Invitations',
+      title: t('organization.invitations'),
       content: () => (
         <Show when={store.organizations.selectedId}>
           <OrganizationInvitationsView
@@ -89,7 +91,7 @@ const OrganizationPage: Component = () => {
   return (
     <div class={style['organization-page']}>
       <div class={style['header']}>
-        <h1>Organization</h1>
+        <h1>{t('sidebar.organization')}</h1>
         <form
           onSubmit={async (e) => {
             e.preventDefault();
@@ -105,10 +107,10 @@ const OrganizationPage: Component = () => {
         >
           <div class={style['form-inputs']}>
             <FormItem
-              label="Name"
+              label={t('common.name')}
               id="name"
               value={name()!}
-              placeholder="Enter organization name"
+              placeholder={t('organization.placeholderName')}
               onInput={(value: string | number | boolean) => {
                 const strValue = value as string;
                 setName(strValue);
@@ -118,7 +120,7 @@ const OrganizationPage: Component = () => {
               <div class="error">{errors().get('name')}</div>
             </FormItem>
             <Button
-              label="Update"
+              label={t('organization.update')}
               type="submit"
               disabled={!isFormValid()}
               icon={BsCheckLg}

@@ -9,6 +9,7 @@ import { draggable } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import styles from './calendar-entry-box.module.scss';
 import { CalendarEntry } from './calendar-entry.interface';
 import { ConfirmDialog } from '@castmill/ui-common';
+import { useI18n } from '../../i18n';
 
 interface ResizeEdges {
   top?: boolean;
@@ -29,6 +30,7 @@ export const CalendarEntryBox: Component<{
   ) => void;
   hasOverlap?: (candidate: CalendarEntry) => boolean;
 }> = (props) => {
+  const { t } = useI18n();
   const [dragging, setDragging] = createSignal(false);
   const [topOffset, setTopOffset] = createSignal(0);
   const [leftOffset, setLeftOffset] = createSignal(0);
@@ -355,7 +357,7 @@ export const CalendarEntryBox: Component<{
     <>
       <ConfirmDialog
         show={showConfirmDialog()}
-        title="Remove Channel Entry"
+        title={t('channels.removeChannelEntry')}
         message={`Are you sure you want to remove entry "${clampedEntry().title}"?`}
         onClose={() => setShowConfirmDialog(false)}
         onConfirm={() => props.onDelete(clampedEntry().id)}

@@ -31,6 +31,10 @@ const WidgetsPage: Component<{
     equals: false,
   });
 
+  // Get i18n functions from store
+  const t = (key: string, params?: Record<string, any>) =>
+    props.store.i18n?.t(key, params) || key;
+
   const itemsPerPage = 10;
 
   const [showModal, setShowModal] = createSignal<WidgetWithId | undefined>();
@@ -113,7 +117,7 @@ const WidgetsPage: Component<{
   const columns: Column<number, WidgetWithId>[] = [
     {
       key: 'name',
-      title: 'Name',
+      title: t('common.name'),
       sortable: true,
       render: (widget: WidgetWithId) => {
         const isImageIcon =
@@ -156,9 +160,9 @@ const WidgetsPage: Component<{
     },
     {
       key: 'template',
-      title: 'Type',
+      title: t('common.type'),
       render: (widget: WidgetWithId) => {
-        const type = widget.template?.type || 'unknown';
+        const type = widget.template?.type || t('common.unknown');
         return (
           <span
             style={`
@@ -179,18 +183,18 @@ const WidgetsPage: Component<{
     },
     {
       key: 'update_interval_seconds',
-      title: 'Update Interval',
+      title: t('widgets.updateInterval'),
       sortable: true,
       render: (widget: WidgetWithId) =>
         widget.update_interval_seconds
           ? `${widget.update_interval_seconds}s`
-          : 'N/A',
+          : t('common.notAvailable'),
     },
   ];
 
   const actions: TableAction<WidgetWithId>[] = [
     {
-      label: 'View Details',
+      label: t('widgets.viewDetails'),
       icon: BsEye,
       handler: (widget: WidgetWithId) => setShowModal(widget),
     },
@@ -201,8 +205,8 @@ const WidgetsPage: Component<{
       <Show when={showUploadModal()}>
         <Modal
           ref={(ref: ModalRef) => (uploadModalRef = ref)}
-          title="Upload Widget"
-          description="Upload a JSON widget definition file."
+          title={t('widgets.uploadWidget')}
+          description={t('widgets.uploadDescription')}
           onClose={() => setShowUploadModal(false)}
           contentClass="widget-upload-modal"
         >
@@ -226,7 +230,7 @@ const WidgetsPage: Component<{
         <Modal
           ref={(ref: ModalRef) => (modalRef = ref)}
           title={showModal()!.name}
-          description={showModal()!.description || 'Widget details'}
+          description={showModal()!.description || t('widgets.widgetDetails')}
           onClose={() => setShowModal(undefined)}
           contentClass="widget-details-modal"
         >
@@ -234,14 +238,16 @@ const WidgetsPage: Component<{
             <div style="margin-bottom: 1.5rem; color: #f8f9fa; background: #2d2d2d; padding: 1rem; border-radius: 4px;">
               <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
                 <div>
-                  <strong style="color: #9cdcfe;">Type:</strong>{' '}
+                  <strong style="color: #9cdcfe;">{t('common.type')}:</strong>{' '}
                   <span style="color: #ce9178;">
-                    {showModal()!.template?.type || 'unknown'}
+                    {showModal()!.template?.type || t('common.unknown')}
                   </span>
                 </div>
                 {showModal()!.update_interval_seconds && (
                   <div>
-                    <strong style="color: #9cdcfe;">Update Interval:</strong>{' '}
+                    <strong style="color: #9cdcfe;">
+                      {t('widgets.updateInterval')}:
+                    </strong>{' '}
                     <span style="color: #b5cea8;">
                       {showModal()!.update_interval_seconds}s
                     </span>
@@ -252,7 +258,7 @@ const WidgetsPage: Component<{
 
             <div style="margin-bottom: 1.5rem;">
               <h3 style="margin-bottom: 0.5rem; font-size: 1.1em; color: #d4d4d4;">
-                Template
+                {t('widgets.template')}
               </h3>
               <JsonHighlight json={showModal()!.template} />
             </div>
@@ -260,7 +266,7 @@ const WidgetsPage: Component<{
             {showModal()!.options_schema && (
               <div style="margin-bottom: 1.5rem;">
                 <h3 style="margin-bottom: 0.5rem; font-size: 1.1em; color: #d4d4d4;">
-                  Options Schema
+                  {t('widgets.optionsSchema')}
                 </h3>
                 <JsonHighlight json={showModal()!.options_schema} />
               </div>
@@ -269,7 +275,7 @@ const WidgetsPage: Component<{
             {showModal()!.data_schema && (
               <div style="margin-bottom: 1.5rem;">
                 <h3 style="margin-bottom: 0.5rem; font-size: 1.1em; color: #d4d4d4;">
-                  Data Schema
+                  {t('widgets.dataSchema')}
                 </h3>
                 <JsonHighlight json={showModal()!.data_schema} />
               </div>
@@ -279,7 +285,7 @@ const WidgetsPage: Component<{
       </Show>
 
       <TableView<number, WidgetWithId>
-        title="Widgets"
+        title={t('widgets.title')}
         resource="widgets"
         params={props.params}
         fetchData={fetchData}
@@ -287,7 +293,7 @@ const WidgetsPage: Component<{
         toolbar={{
           mainAction: (
             <Button
-              label="Upload Widget"
+              label={t('widgets.uploadWidget')}
               onClick={openUploadModal}
               icon={AiOutlineUpload}
               color="primary"

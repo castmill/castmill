@@ -10,7 +10,7 @@
     "confirm": "確認",
     "back": "戻る",
     "next": "次へ",
-    "search": "検索",
+    "search": "検索...",
     "loading": "読み込み中...",
     "error": "エラー",
     "success": "成功",
@@ -22,7 +22,52 @@
     "logout": "ログアウト",
     "login": "ログイン",
     "signup": "新規登録",
-    "language": "言語"
+    "language": "言語",
+    "create": "作成",
+    "view": "表示",
+    "status": "ステータス",
+    "created": "作成日時",
+    "updated": "更新日時",
+    "type": "タイプ",
+    "unknown": "不明",
+    "notAvailable": "利用不可",
+    "id": "ID",
+    "role": "役割",
+    "insertedAt": "挿入日時",
+    "expiresAt": "有効期限",
+    "loadingAddons": "アドオン読み込み中...",
+    "notFound": "404 見つかりません",
+    "pageNotFound": "申し訳ございません。お探しのページは存在しません。",
+    "copyright": "© 2011-2025 Castmill™",
+    "invitedEmail": "招待メールアドレス：",
+    "acceptInvitation": "招待を承諾",
+    "loadingInvitation": "招待を読み込み中...",
+    "actions": "アクション",
+    "fileName": "ファイル名",
+    "size": "サイズ",
+    "progress": "進行状況",
+    "version": "バージョン",
+    "timezone": "タイムゾーン",
+    "time": "時刻",
+    "message": "メッセージ",
+    "timestamp": "タイムスタンプ",
+    "url": "URL",
+    "accessed": "アクセス日時",
+    "mimeType": "MIMEタイプ",
+    "ip": "IPアドレス",
+    "description": "説明",
+    "online": "オンライン",
+    "update": "更新",
+    "reset": "リセット",
+    "addedOn": "追加日",
+    "lastUpdatedOn": "最終更新日",
+    "details": "詳細",
+    "channels": "チャンネル",
+    "preview": "プレビュー",
+    "cache": "キャッシュ",
+    "maintainance": "メンテナンス",
+    "events": "イベント",
+    "telemetry": "テレメトリ"
   },
   "topbar": {
     "help": "ヘルプ",
@@ -50,15 +95,60 @@
     "sessionExpired": "セッションが期限切れです。ログインページにリダイレクトしています...",
     "failedLoadCredentials": "認証情報の読み込みに失敗しました。ページを更新してください。",
     "languageSettings": "言語設定",
-    "selectLanguage": "お好みの言語を選択してください"
+    "selectLanguage": "お好みの言語を選択してください",
+    "description": "アカウント情報と設定を管理",
+    "confirmDeletePasskey": "このパスキーを削除してもよろしいですか？\n\n注：アカウントからパスキーが削除されますが、デバイスの設定（iCloudキーチェーン、Googleパスワードマネージャー、Windows Helloなど）から手動で削除する必要がある場合があります。\n\nこのパスキーを削除する前に、他のパスキーが機能することをテストしてください。",
+    "fullName": "フルネーム",
+    "emailAddress": "メールアドレス",
+    "placeholderFullName": "フルネームを入力してください",
+    "placeholderEmail": "メールアドレスを入力してください",
+    "emailChangeWarning": "メールアドレスの変更には、有効になる前に認証が必要です。",
+    "emailVerificationRequired": "メール認証が必要です！",
+    "emailVerificationMessage": "{{email}}に認証メールが送信されました。受信トレイを確認し、認証リンクをクリックしてください。",
+    "saveChanges": "変更を保存",
+    "profileUpdatedSuccess": "プロフィールが正常に更新されました！",
+    "securityAuthentication": "セキュリティと認証",
+    "passkeys": "パスキー",
+    "passkeysDescription": "お使いのアカウントは、安全なパスワードレス認証のためにパスキーを使用しています。パスキーはデバイスに安全に保存され、従来のパスワードよりも優れたセキュリティを提供します。",
+    "yourPasskeys": "あなたのパスキー",
+    "loadingPasskeys": "パスキー読み込み中...",
+    "noPasskeysFound": "パスキーが見つかりません。",
+    "passkeyName": "パスキー名",
+    "placeholderPasskeyName": "このパスキーの名前を入力してください",
+    "addNewPasskey": "新しいパスキーを追加",
+    "addPasskeyHelp": "別のデバイスまたはブラウザ用のパスキーを追加",
+    "rename": "名前変更",
+    "added": "追加済み",
+    "accountManagement": "アカウント管理",
+    "deleteAccount": "アカウント削除",
+    "deleteAccountDescription": "アカウントと関連するすべてのデータを完全に削除します。この操作は取り消せません。",
+    "deleteAccountButton": "アカウント削除",
+    "deleteAccountConfirm": "本当によろしいですか？",
+    "deleteAccountWarning": "アカウントが完全に削除されます。",
+    "deleteAccountYes": "はい、アカウントを削除します",
+    "retry": "再試行",
+    "errors": {
+      "loadCredentials": "認証情報の読み込みに失敗しました。ページを更新してください。",
+      "updateProfile": "プロフィールの更新に失敗しました。もう一度お試しください。",
+      "deleteAccount": "アカウントの削除に失敗しました。もう一度お試しください。",
+      "deletePasskey": "パスキーの削除に失敗しました。もう一度お試しください。",
+      "updatePasskeyName": "パスキー名の更新に失敗しました。もう一度お試しください。",
+      "passkeyCreationCancelled": "パスキーの作成がキャンセルされたか、タイムアウトしました。",
+      "sessionExpired": "認証エラー：セッションが期限切れの可能性があります。ページを更新してもう一度お試しください。",
+      "addPasskeyFailed": "パスキーの追加に失敗しました：{{error}}",
+      "addPasskey": "新しいパスキーの追加に失敗しました。もう一度お試しください。"
+    }
   },
   "usage": {
-    "title": "使用状況",
+    "title": "使用量",
     "resourceUsage": "リソース使用状況",
     "resource": "リソース",
     "used": "使用済み",
     "total": "合計",
-    "progress": "進捗"
+    "progress": "進捗",
+    "errors": {
+      "fetchUsageData": "使用量データの取得に失敗しました：{{error}}"
+    }
   },
   "teams": {
     "title": "チーム",
@@ -67,20 +157,192 @@
     "medias": "メディア",
     "playlists": "プレイリスト",
     "devices": "デバイス",
-    "channels": "チャンネル"
+    "channels": "チャンネル",
+    "addTeam": "チームを追加",
+    "newTeam": "新しいチーム",
+    "teamTitle": "チーム「{{name}}」",
+    "description": "チームの詳細",
+    "removeTeam": "チームを削除",
+    "removeTeams": "チームを削除",
+    "confirmRemoveTeam": "チーム「{{name}}」を削除してもよろしいですか？",
+    "confirmRemoveTeams": "以下のチームを削除してもよろしいですか？",
+    "addedOn": "追加日",
+    "lastUpdatedOn": "最終更新日",
+    "enterTeamName": "チーム名を入力してください",
+    "insertedAt": "挿入日時",
+    "expiresAt": "有効期限",
+    "inviteMember": "メンバーを招待",
+    "inviteMemberDescription": "チームに新しいメンバーを追加",
+    "enterMember": "メンバーを入力してください",
+    "addResourceToTeam": "チームにリソースを追加",
+    "addResourcesToTeams": "チームにリソースを追加",
+    "errors": {
+      "removeTeam": "チーム{{name}}の削除中にエラーが発生しました：{{error}}",
+      "removeTeams": "チームの削除中にエラーが発生しました：{{error}}",
+      "saveTeam": "チームの保存中にエラーが発生しました：{{error}}",
+      "openViewModal": "表示モーダルを開く",
+      "removeResource": "チームからリソースを削除中にエラーが発生しました：{{error}}",
+      "removeResources": "チームからリソースを削除中にエラーが発生しました：{{error}}",
+      "addResourceToTeam": "チームにリソースを追加中にエラーが発生しました：{{error}}"
+    },
+    "confirmAddResources": "以下のリソースを追加してもよろしいですか？"
   },
   "login": {
     "title": "ログイン",
     "email": "メールアドレス",
     "password": "パスワード",
     "loginButton": "ログイン",
-    "signupLink": "アカウントをお持ちでない方は新規登録",
+    "signupLink": "アカウントをお持ちでない方はサインアップ",
     "ready": "準備完了",
-    "loading": "読み込み中..."
+    "loading": "読み込み中...",
+    "loginWithPasskey": "パスキーでログイン",
+    "privacyPolicy": "プライバシーポリシー",
+    "lostCredentials": "認証情報をお忘れですか？"
   },
   "errors": {
     "generic": "エラーが発生しました。もう一度お試しください。",
     "networkError": "ネットワークエラーです。接続を確認してください。",
     "unauthorized": "認証されていません。再度ログインしてください。"
+  },
+  "sidebar": {
+    "organization": "組織",
+    "channels": "チャンネル",
+    "teams": "チーム",
+    "usage": "使用量",
+    "devices": "デバイス",
+    "content": "コンテンツ",
+    "playlists": "プレイリスト",
+    "medias": "メディア",
+    "widgets": "Widgets"
+  },
+  "channels": {
+    "title": "チャンネル",
+    "addChannel": "チャンネルを追加",
+    "newChannel": "新しいチャンネル",
+    "channelTitle": "チャンネル「{{name}}」",
+    "description": "チャンネルの詳細",
+    "removeChannel": "チャンネルを削除",
+    "removeChannels": "チャンネルを削除",
+    "confirmRemoveChannel": "チャンネル「{{name}}」を削除してもよろしいですか？",
+    "confirmRemoveChannels": "以下のチャンネルを削除してもよろしいですか？",
+    "errors": {
+      "removeChannel": "チャンネル{{name}}の削除中にエラーが発生しました：{{error}}",
+      "removeChannels": "チャンネルの削除中にエラーが発生しました：{{error}}",
+      "addChannel": "チャンネルの追加中にエラーが発生しました：{{error}}",
+      "saveChannel": "チャンネルの保存中にエラーが発生しました：{{error}}",
+      "updateDefaultPlaylist": "チャンネルのデフォルトプレイリストの更新に失敗しました：{{error}}",
+      "updateChannelEntry": "チャンネルエントリーの更新中にエラーが発生しました：{{error}}"
+    },
+    "enterChannelName": "チャンネル名を入力してください",
+    "defaultPlaylist": "デフォルトプレイリスト",
+    "selectPlaylist": "プレイリストを選択",
+    "dragPlaylists": "プレイリストをドラッグ",
+    "repeatWeekly": "毎週繰り返しますか？",
+    "calendarEntryDetails": "カレンダーエントリーの詳細",
+    "removeChannelEntry": "チャンネルエントリーを削除"
+  },
+  "organization": {
+    "title": "組織",
+    "users": "ユーザー",
+    "invitations": "招待",
+    "update": "更新",
+    "placeholderName": "組織名を入力してください",
+    "errors": {
+      "updateOrganization": "組織の更新中にエラーが発生しました：{{error}}"
+    },
+    "inviteMember": "メンバーを招待",
+    "enterMemberEmail": "メンバーのメールアドレスを入力してください"
+  },
+  "playlists": {
+    "title": "プレイリスト",
+    "addPlaylist": "プレイリストを追加",
+    "createNewPlaylist": "新しいプレイリストを作成",
+    "playlistTitle": "プレイリスト「{{name}}」",
+    "buildPlaylist": "ここでプレイリストを作成してください",
+    "removePlaylist": "プレイリストを削除",
+    "removePlaylists": "プレイリストを削除",
+    "confirmRemovePlaylist": "プレイリスト「{{name}}」を削除してもよろしいですか？",
+    "confirmRemovePlaylists": "以下のプレイリストを削除してもよろしいですか？",
+    "errorRemovingPlaylist": "プレイリスト{{name}}の削除中にエラーが発生しました：{{error}}",
+    "errorRemovingPlaylists": "プレイリストの削除中にエラーが発生しました：{{error}}",
+    "enterPlaylistName": "プレイリスト名を入力してください"
+  },
+  "widgets": {
+    "title": "Widgets",
+    "uploadWidget": "Widgetをアップロード",
+    "uploadDescription": "Widget JSON定義ファイルをアップロードします。",
+    "widgetDetails": "Widgetの詳細",
+    "updateInterval": "更新間隔",
+    "viewDetails": "詳細を表示",
+    "template": "テンプレート",
+    "optionsSchema": "オプションスキーマ",
+    "dataSchema": "データスキーマ"
+  },
+  "devices": {
+    "setDeviceChannel": "デバイスチャンネルを設定",
+    "selectChannel": "チャンネルを選択",
+    "preview": {
+      "placeholder": "プレビュー"
+    },
+    "telemetry": {
+      "placeholder": "トレース、ログ、メトリクス、および接続性(WiFi品質など)"
+    },
+    "maintenance": {
+      "refresh": "更新",
+      "refreshDescription": "デバイスを更新します。デバイスがまだ実行中だが異常な動作を示している場合に便利です",
+      "clearCache": "キャッシュをクリア",
+      "clearCacheDescription": "すべての新しいコンテンツを強制的にダウンロードするためにキャッシュをクリアします",
+      "restartApp": "アプリを再起動",
+      "restartAppDescription": "アプリケーションを再起動します",
+      "restartDevice": "デバイスを再起動",
+      "restartDeviceDescription": "デバイスの完全なハードウェアシャットダウンと起動を実行します",
+      "checkUpdates": "更新を確認",
+      "checkUpdatesDescription": "更新を確認してインストールします。これによりデバイスは再起動されません",
+      "updateFirmware": "ファームウェアを更新",
+      "updateFirmwareDescription": "デバイスのファームウェアを更新します",
+      "offlineMessage": "デバイスがオフラインのため、コマンドを送信できません"
+    },
+    "errors": {
+      "setChannelFailed": "デバイスチャンネルの設定に失敗しました: {{error}}",
+      "commandFailed": "リクエストの処理中にエラーが発生しました"
+    }
+  },
+  "validation": {
+    "fieldRequired": "この項目は必須です",
+    "minLength": "この項目は最低{{min}}文字以上である必要があります"
+  },
+  "plurals": {
+    "items": {
+      "one": "{{count}}個のアイテム",
+      "other": "{{count}}個のアイテム"
+    },
+    "users": {
+      "one": "{{count}}人のユーザー",
+      "other": "{{count}}人のユーザー"
+    },
+    "devices": {
+      "one": "{{count}}台のデバイス",
+      "other": "{{count}}台のデバイス"
+    },
+    "daysAgo": {
+      "one": "{{count}}日前",
+      "other": "{{count}}日前"
+    }
+  },
+  "signup": {
+    "title": "サインアップ",
+    "continueWithPasskey": "パスキーで続行",
+    "privacyPolicy": "プライバシーポリシー",
+    "checkYourEmail": "メールを確認してください",
+    "errors": {
+      "couldNotCreateCredential": "認証情報を作成できませんでした",
+      "couldNotGetPublicKey": "公開鍵を取得できませんでした",
+      "invalidCredential": "無効な認証情報です",
+      "signupFailed": "サインアップ中に問題が発生しました。サポートにお問い合わせください。エラー：{{error}}"
+    }
+  },
+  "search": {
+    "title": "検索",
+    "description": "検索ページです。ここですべての検索結果を見つけることができます..."
   }
 }

@@ -8,10 +8,12 @@ import { store } from '../../store';
 import styles from './default-playlist-combobox.module.scss';
 
 import { ChannelsService, JsonChannel } from '../../services/channels.service';
+import { useI18n } from '../../i18n';
 
 export const DefaultPlaylistComboBox: Component<{
   channel: JsonChannel;
 }> = (props) => {
+  const { t } = useI18n();
   const [defaultPlaylist, setDefaultPlaylist] = createSignal<JsonPlaylist>();
 
   const channelsService = new ChannelsService(
@@ -31,8 +33,8 @@ export const DefaultPlaylistComboBox: Component<{
   return (
     <ComboBox<JsonPlaylist>
       id={123}
-      label={'Default playlist'}
-      placeholder={'Select Playlist'}
+      label={t('channels.defaultPlaylist')}
+      placeholder={t('channels.selectPlaylist')}
       value={defaultPlaylist()}
       renderItem={(item: JsonPlaylist) => {
         return (
@@ -64,7 +66,7 @@ export const DefaultPlaylistComboBox: Component<{
           });
           setDefaultPlaylist(playlist);
         } catch (e) {
-          alert(`Failed to update channel default playlist ${e}`);
+          alert(t('channels.errors.updateDefaultPlaylist', { error: String(e) }));
         }
       }}
     />

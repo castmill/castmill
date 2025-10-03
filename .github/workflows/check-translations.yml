@@ -1,0 +1,120 @@
+name: Translation Coverage Check
+
+on:
+  pull_request:
+    branches: [main, next]
+    paths:
+      - 'packages/dashboard/src/**/*.tsx'
+      - 'packages/dashboard/src/**/*.ts'
+      - 'packages/dashboard/src/i18n/locales/*.json'
+      - 'packages/dashboard/scripts/check-missing-translations.cjs'
+      - '.github/workflows/check-translations.yml'
+  push:
+    branches: [main, next]
+    paths:
+      - 'packages/dashboard/src/i18n/locales/*.json'
+
+jobs:
+  check-translation-coverage:
+    runs-on: ubuntu-latest
+    name: Check translation coverage
+
+    defaults:
+      run:
+        working-directory: ./packages/dashboard
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Check for untranslated strings
+        id: check_translations
+        run: |
+          echo "## Translation Coverage Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Run the check and capture output
+          if node scripts/check-missing-translations.cjs > translation_report.txt 2>&1; then
+            echo "✅ All languages fully translated!" >> $GITHUB_STEP_SUMMARY
+            cat translation_report.txt >> $GITHUB_STEP_SUMMARY
+            exit 0
+          else
+            echo "⚠️ Some translations are incomplete" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            cat translation_report.txt >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            
+            # Extract total untranslated count
+            TOTAL_UNTRANSLATED=$(grep -oP 'Total issues.*: \K\d+' translation_report.txt || echo "0")
+            
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Summary" >> $GITHUB_STEP_SUMMARY
+            echo "- Total untranslated strings: **${TOTAL_UNTRANSLATED}**" >> $GITHUB_STEP_SUMMARY
+            echo "- Please translate these strings before merging" >> $GITHUB_STEP_SUMMARY
+            
+            # Fail if there are untranslated strings
+            if [ "$TOTAL_UNTRANSLATED" -gt 0 ]; then
+              echo "::error::Translation check failed: ${TOTAL_UNTRANSLATED} strings are untranslated"
+              exit 1
+            fi
+          fi
+
+      - name: Comment PR with translation status
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const reportPath = './packages/dashboard/translation_report.txt';
+            let report = 'Translation coverage check failed.';
+            
+            try {
+              report = fs.readFileSync(reportPath, 'utf8');
+            } catch (error) {
+              console.log('Could not read report file');
+            }
+            
+            const body = `## ⚠️ Translation Coverage Check Failed
+            
+            Some strings are not translated in all languages. Please review and translate the missing strings.
+            
+            <details>
+            <summary>📊 Translation Report</summary>
+            
+            \`\`\`
+            ${report}
+            \`\`\`
+            
+            </details>
+            
+            ### 📝 How to fix:
+            1. Run \`cd packages/dashboard && node scripts/check-missing-translations.cjs [language]\` to see details
+            2. Update the translation files in \`packages/dashboard/src/i18n/locales/\`
+            3. Ensure all strings are translated (not just copied from English)
+            4. Re-run the check locally before pushing
+            
+            ### 🔍 Check specific language:
+            \`\`\`bash
+            cd packages/dashboard
+            node scripts/check-missing-translations.cjs es  # Spanish
+            node scripts/check-missing-translations.cjs fr  # French
+            node scripts/check-missing-translations.cjs de  # German
+            \`\`\`
+            `;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });

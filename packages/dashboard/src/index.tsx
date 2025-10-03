@@ -27,7 +27,7 @@ import TeamsInvitationPage from './pages/teams-invitations-page/teams-invitation
 import OrganizationPage from './pages/organization-page/organization-page';
 import OrganizationsInvitationPage from './pages/organization-invitations/organizations-invitations-page';
 import ChannelsPage from './pages/channels-page/channels-page';
-import { I18nProvider } from './i18n';
+import { I18nProvider, useI18n } from './i18n';
 
 const Login = lazy(() => import('./components/login/login'));
 const SignUp = lazy(() => import('./components/signup/signup'));
@@ -47,6 +47,11 @@ const EmptyComponent: Component = () => {
   return <div></div>;
 };
 
+const LoadingFallback: Component = () => {
+  const { t } = useI18n();
+  return <div>{t('common.loading')}</div>;
+};
+
 const App: Component<RouteSectionProps<unknown>> = (props) => {
   return (
     <>
@@ -60,9 +65,25 @@ const App: Component<RouteSectionProps<unknown>> = (props) => {
 const wrapLazyComponent = (addon: { path: string }) => {
   return (props: any) => {
     const params = useSearchParams();
+    const i18n = useI18n();
 
     const LazyComponent = lazy(() => import(`${addOnBasePath}${addon.path}`));
-    return <LazyComponent {...props} store={store} params={params} />;
+    
+    // Create a store with i18n functions included
+    const storeWithI18n = {
+      ...store,
+      i18n: {
+        t: i18n.t,
+        tp: i18n.tp,
+        formatDate: i18n.formatDate,
+        formatNumber: i18n.formatNumber,
+        formatCurrency: i18n.formatCurrency,
+        locale: i18n.locale,
+        setLocale: i18n.setLocale,
+      },
+    };
+    
+    return <LazyComponent {...props} store={storeWithI18n} params={params} />;
   };
 };
 
@@ -80,7 +101,7 @@ render(() => {
         <Route
           path="/"
           component={(props: any) => (
-            <Suspense fallback={<div>Loading...</div>}>
+            <Suspense fallback={<LoadingFallback />}>
               <ProtectedRoute>
                 {(addons) => (
                   <Dashboard {...props} addons={new AddOnTree(addons)} />

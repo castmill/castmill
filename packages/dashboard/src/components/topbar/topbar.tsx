@@ -69,15 +69,16 @@ const Topbar: Component = () => {
             <FaRegularBell />
           </div>
 
-          <LanguageSelector compact={true} />
-
-          <DropdownMenu ButtonComponent={() => <div>{getUser().name} </div>}>
-            <a href="/profile">{t('common.profile')}</a>
-            <a href="/settings">{t('common.settings')}</a>
-            <button class="logout" onClick={() => setTriggerLogout(true)}>
-              {t('common.logout')}
-            </button>
-          </DropdownMenu>
+          <div class="topbar-dropdowns">
+            <LanguageSelector />
+            <DropdownMenu ButtonComponent={() => <div>{getUser().name} </div>}>
+              <a href="/profile">{t('common.profile')}</a>
+              <a href="/settings">{t('common.settings')}</a>
+              <button class="logout" onClick={() => setTriggerLogout(true)}>
+                {t('common.logout')}
+              </button>
+            </DropdownMenu>
+          </div>
         </Show>
       </nav>
     </header>

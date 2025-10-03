@@ -7,9 +7,13 @@ import './maintainance.scss';
 import { DeviceCommand } from '../types/device-command.type';
 
 // Modal component that will be used to display the device details and allow the user to edit the device
-export const Maintainance: Component<{ baseUrl: string; device: Device }> = (
-  props
-) => {
+export const Maintainance: Component<{ 
+  baseUrl: string; 
+  device: Device;
+  t?: (key: string, params?: Record<string, any>) => string;
+}> = (props) => {
+  const t = props.t || ((key: string) => key);
+  
   const [handlingRequest, setHandlingRequest] = createSignal(false);
 
   const handleRequest = async (command: DeviceCommand) => {
@@ -17,7 +21,7 @@ export const Maintainance: Component<{ baseUrl: string; device: Device }> = (
       await DevicesService.sendCommand(props.baseUrl, props.device.id, command);
     } catch (error) {
       console.error(error);
-      alert('An error occurred while processing your request');
+      alert(t('devices.errors.commandFailed'));
     }
   };
 
@@ -31,80 +35,79 @@ export const Maintainance: Component<{ baseUrl: string; device: Device }> = (
         <div class="button-wrapper">
           <Button
             disabled={isDisabled()}
-            variant="primary"
-            label="Refresh"
+            color="primary"
+            label={t('devices.maintenance.refresh')}
             onClick={() => handleRequest('refresh')}
           />
         </div>
 
         <p>
-          Refreshes the device. Useful if the device is still running but
-          exhibiting anomalous behaviour
+          {t('devices.maintenance.refreshDescription')}
         </p>
       </div>
       <div class="maintainance-row">
         <div class="button-wrapper">
           <Button
             disabled={isDisabled()}
-            variant="primary"
-            label="Clear Cache"
+            color="primary"
+            label={t('devices.maintenance.clearCache')}
             onClick={() => handleRequest('clear_cache')}
           />
         </div>
 
-        <p>Clear the cache to force download of all fresh content</p>
+        <p>{t('devices.maintenance.clearCacheDescription')}</p>
       </div>
       <div class="maintainance-row">
         <div class="button-wrapper">
           <Button
             disabled={isDisabled()}
-            variant="primary"
-            label="Restart App"
+            color="primary"
+            label={t('devices.maintenance.restartApp')}
             onClick={() => handleRequest('restart_app')}
           />
         </div>
 
-        <p>Restarts the application</p>
+        <p>{t('devices.maintenance.restartAppDescription')}</p>
       </div>
       <div class="maintainance-row">
         <div class="button-wrapper">
           <Button
             disabled={isDisabled()}
-            variant="primary"
-            label="Restart Device"
+            color="primary"
+            label={t('devices.maintenance.restartDevice')}
             onClick={() => handleRequest('restart_device')}
           />
         </div>
-        <p>Performs a complete hardware shutdown and start of the device</p>
+        <p>{t('devices.maintenance.restartDeviceDescription')}</p>
       </div>
       <div class="maintainance-row">
         <div class="button-wrapper">
           <Button
             disabled={isDisabled()}
-            variant="primary"
-            label="Check for updates"
+            color="primary"
+            label={t('devices.maintenance.checkUpdates')}
             onClick={() => handleRequest('update_app')}
           />
         </div>
         <p>
-          Check for updates and install them. This will not restart the device
+          {t('devices.maintenance.checkUpdatesDescription')}
         </p>
       </div>
       <div class="maintainance-row">
         <div class="button-wrapper">
           <Button
             disabled={isDisabled()}
-            variant="primary"
-            label="Update Firmware"
+            color="primary"
+            label={t('devices.maintenance.updateFirmware')}
             onClick={() => handleRequest('update_firmware')}
           />
         </div>
-        <p>Updates the firmware of the device.</p>
+        <p>{t('devices.maintenance.updateFirmwareDescription')}</p>
       </div>
       <Show when={!props.device.online}>
         <div>
           <p class="offline-message">
-            Device is offline, so no commands can be sent to it.
+            {t('devices.maintenance.offlineMessage')}
           </p>
         </div>
       </Show>

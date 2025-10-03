@@ -8,10 +8,12 @@ import {
   AiOutlineCheck,
 } from 'solid-icons/ai';
 import { Button, IconButton, IconWrapper } from '@castmill/ui-common';
+import { AddonStore } from '../../common/interfaces/addon-store';
 
 interface UploadComponentProps {
   baseUrl: string;
   organizationId: string;
+  store?: AddonStore;
   onFileUpload?: (fileName: string, result: any) => void;
   onCancel?: () => void;
   onUploadComplete?: () => void;
@@ -37,6 +39,10 @@ const supportedFileTypes = [
 ];
 
 export const UploadComponent = (props: UploadComponentProps) => {
+  // Get i18n functions from store
+  const t = (key: string, params?: Record<string, any>) =>
+    props.store?.i18n?.t(key, params) || key;
+
   const [files, setFiles] = createSignal<File[]>([]);
   const [messages, setMessages] = createSignal<Messages>({});
   const [progresses, setProgresses] = createSignal<Progresses>({});
@@ -191,10 +197,10 @@ export const UploadComponent = (props: UploadComponentProps) => {
           <table>
             <thead>
               <tr>
-                <th>File Name</th>
-                <th>Size</th>
-                <th>Progress</th>
-                <th>Actions</th>
+                <th>{t('common.fileName')}</th>
+                <th>{t('common.size')}</th>
+                <th>{t('common.progress')}</th>
+                <th>{t('common.actions')}</th>
               </tr>
             </thead>
             <tbody>

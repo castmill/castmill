@@ -251,9 +251,11 @@
           font-size: 0.875rem;
           color: colors.$component-color;
           min-width: 28px;
+          color: lightgray;
         }
 
         .language-name {
+          color: gray;
           flex: 1;
           font-size: 0.95rem;
         }

@@ -28,9 +28,11 @@ import styles from './teams-page.module.scss';
 import { useSearchParams } from '@solidjs/router';
 import { TeamsService, TeamUpdate } from '../../services/teams.service';
 import { TeamView } from './team-view';
+import { useI18n } from '../../i18n';
 
 const TeamsPage: Component = () => {
   const params = useSearchParams();
+  const { t } = useI18n();
 
   const itemsPerPage = 10; // Number of items to show per page
 
@@ -45,8 +47,8 @@ const TeamsPage: Component = () => {
   const [selectedTeams, setSelectedTeams] = createSignal(new Set<number>());
 
   const columns = [
-    { key: 'id', title: 'ID', sortable: true },
-    { key: 'name', title: 'Name', sortable: true },
+    { key: 'id', title: t('common.id'), sortable: true },
+    { key: 'name', title: t('common.name'), sortable: true },
   ] as Column<Team>[];
 
   interface TeamTableItem extends Team {}
@@ -58,7 +60,7 @@ const TeamsPage: Component = () => {
         setCurrentTeam(item);
         setShowModal(true);
       },
-      label: 'View',
+      label: t('common.view'),
     },
     {
       icon: AiOutlineDelete,
@@ -66,7 +68,7 @@ const TeamsPage: Component = () => {
         setCurrentTeam(item);
         setShowConfirmDialog(true);
       },
-      label: 'Remove',
+      label: t('common.remove'),
     },
   ];
 
@@ -105,7 +107,7 @@ const TeamsPage: Component = () => {
       await TeamsService.removeTeam(store.organizations.selectedId!, team.id);
       refreshData();
     } catch (error) {
-      alert(`Error removing team ${team.name}: ${error}`);
+      alert(t('teams.errors.removeTeam', { name: team.name, error: String(error) }));
     }
     setShowConfirmDialog(false);
   };
@@ -120,7 +122,7 @@ const TeamsPage: Component = () => {
 
       refreshData();
     } catch (error) {
-      alert(`Error removing teams: ${error}`);
+      alert(t('teams.errors.removeTeams', { error: String(error) }));
     }
     setShowConfirmDialogMultiple(false);
   };
@@ -160,9 +162,9 @@ const TeamsPage: Component = () => {
 
   createEffect(() => {
     if (currentTeam()?.id) {
-      setTitle(`Team "${currentTeam()?.name}"`);
+      setTitle(t('teams.teamTitle', { name: currentTeam()?.name || '' }));
     } else {
-      setTitle('New Team');
+      setTitle(t('teams.newTeam'));
     }
   });
 
@@ -171,7 +173,7 @@ const TeamsPage: Component = () => {
       <Show when={showModal()}>
         <Modal
           title={title()}
-          description="Details of your team"
+          description={t('teams.description')}
           onClose={closeModal}
         >
           <TeamView
@@ -196,7 +198,7 @@ const TeamsPage: Component = () => {
                   return updatedTeam;
                 }
               } catch (error) {
-                alert(`Error saving team: ${error}`);
+                alert(t('teams.errors.saveTeam', { error: String(error) }));
               }
             }}
           />
@@ -205,16 +207,16 @@ const TeamsPage: Component = () => {
 
       <ConfirmDialog
         show={showConfirmDialog()}
-        title="Remove Team"
-        message={`Are you sure you want to remove device "${currentTeam()?.name}"?`}
+        title={t('teams.removeTeam')}
+        message={t('teams.confirmRemoveTeam', { name: currentTeam()?.name || '' })}
         onClose={() => setShowConfirmDialog(false)}
         onConfirm={() => confirmRemoveTeam(currentTeam())}
       />
 
       <ConfirmDialog
         show={showConfirmDialogMultiple()}
-        title="Remove Teams"
-        message={'Are you sure you want to remove the following teams?'}
+        title={t('teams.removeTeams')}
+        message={t('teams.confirmRemoveTeams')}
         onClose={() => setShowConfirmDialogMultiple(false)}
         onConfirm={() => confirmRemoveMultipleTeams()}
       >
@@ -227,7 +229,7 @@ const TeamsPage: Component = () => {
       </ConfirmDialog>
 
       <TableView
-        title="Teams"
+        title={t('teams.title')}
         resource="teams"
         params={params}
         fetchData={fetchData}
@@ -236,7 +238,7 @@ const TeamsPage: Component = () => {
           filters: [],
           mainAction: (
             <Button
-              label="Add Team"
+              label={t('teams.addTeam')}
               onClick={addTeam}
               icon={BsCheckLg}
               color="primary"
@@ -263,7 +265,7 @@ const TeamsPage: Component = () => {
               setCurrentTeam(item);
               setShowModal(true);
             },
-            label: 'View',
+            label: t('common.view'),
           },
         }}
         pagination={{ itemsPerPage }}

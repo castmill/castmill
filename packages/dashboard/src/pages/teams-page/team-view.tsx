@@ -6,6 +6,7 @@ import { BsCheckLg, BsX } from 'solid-icons/bs';
 import { JsonTeam } from '../../interfaces/team';
 import { TeamUpdate } from '../../services/teams.service';
 import { TeamResourcesView } from './team-resources-view';
+import { useI18n } from '../../i18n';
 
 import styles from './teams-page.module.scss';
 
@@ -14,6 +15,7 @@ export const TeamView = (props: {
   team: Omit<TeamUpdate, 'id'> & { id?: number };
   onSubmit: (teamUpdate: TeamUpdate) => Promise<JsonTeam | void>;
 }) => {
+  const { t } = useI18n();
   const [teamId, setTeamId] = createSignal<number | undefined>(props.team.id);
   const [name, setName] = createSignal(props.team.name);
 
@@ -52,10 +54,10 @@ export const TeamView = (props: {
     <div style="width: 60vw;">
       <div class="info">
         <Show when={props.team.insertedAt}>
-          <span>Added on </span> <span>{`${props.team.insertedAt}`}. </span>
+          <span>{t('teams.addedOn')} </span> <span>{`${props.team.insertedAt}`}. </span>
         </Show>
         <Show when={props.team.updatedAt}>
-          <span>Last updated on </span>
+          <span>{t('teams.lastUpdatedOn')} </span>
           <span>{`${props.team.updatedAt}`}</span>
         </Show>
       </div>
@@ -77,10 +79,10 @@ export const TeamView = (props: {
       >
         <div class="form-inputs">
           <FormItem
-            label="Name"
+            label={t('common.name')}
             id="name"
             value={name()!}
-            placeholder="Enter team name"
+            placeholder={t('teams.enterTeamName')}
             onInput={(value: string | number | boolean) => {
               const strValue = value as string;
               setName(strValue);

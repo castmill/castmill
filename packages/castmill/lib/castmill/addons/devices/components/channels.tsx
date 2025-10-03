@@ -7,9 +7,13 @@ import { DevicesService, JsonChannel } from '../services/devices.service';
 // Initialize channel to undefined by default
 const [channel, setChannel] = createSignal<JsonChannel | undefined>(undefined);
 
-export const Channels: Component<{ baseUrl: string; organizationId: string, device: Device }> = (
-  props
-) => {
+export const Channels: Component<{ 
+  baseUrl: string; 
+  organizationId: string; 
+  device: Device;
+  t?: (key: string, params?: Record<string, any>) => string;
+}> = (props) => {
+  const t = props.t || ((key: string) => key);
   // Add a createEffect to initialize the default channel
   createEffect(async () => {
     try {
@@ -27,11 +31,11 @@ export const Channels: Component<{ baseUrl: string; organizationId: string, devi
 
   return (
     <div class="channels">
-      <h2>Channels</h2>
+      <h2>{t('common.channels')}</h2>
       <ComboBox<JsonChannel>
         id={123}
-        label={'Set Device Channel'}
-        placeholder={'Select Channel'}
+        label={t('devices.setDeviceChannel')}
+        placeholder={t('devices.selectChannel')}
         value={channel()}
         renderItem={(item: JsonChannel) => {
           return (
@@ -64,7 +68,7 @@ export const Channels: Component<{ baseUrl: string; organizationId: string, devi
             );
             setChannel(selectedChannel);
           } catch (e) {
-            alert(`Failed to set device channel: ${e}`);
+            alert(t('devices.errors.setChannelFailed', { error: e }));
           }
         }}
       />

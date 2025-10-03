@@ -10,7 +10,7 @@
     "confirm": "Bestätigen",
     "back": "Zurück",
     "next": "Weiter",
-    "search": "Suchen",
+    "search": "Suchen...",
     "loading": "Wird geladen...",
     "error": "Fehler",
     "success": "Erfolg",
@@ -22,7 +22,63 @@
     "logout": "Abmelden",
     "login": "Anmelden",
     "signup": "Registrieren",
-    "language": "Sprache"
+    "language": "Sprache",
+    "create": "Erstellen",
+    "view": "Ansehen",
+    "status": "Status",
+    "created": "Erstellt",
+    "updated": "Aktualisiert",
+    "type": "Typ",
+    "unknown": "Unbekannt",
+    "notAvailable": "Nicht verfügbar",
+    "id": "ID",
+    "role": "Rolle",
+    "insertedAt": "Eingefügt am",
+    "expiresAt": "Läuft ab am",
+    "loadingAddons": "Lade Erweiterungen...",
+    "notFound": "404 Nicht gefunden",
+    "pageNotFound": "Entschuldigung, die gesuchte Seite existiert nicht.",
+    "copyright": "© 2011-2025 Castmill™",
+    "invitedEmail": "Eingeladene E-Mail:",
+    "acceptInvitation": "Einladung annehmen",
+    "loadingInvitation": "Lade Einladung...",
+    "actions": "Aktionen",
+    "fileName": "Dateiname",
+    "size": "Größe",
+    "progress": "Fortschritt",
+    "version": "Version",
+    "timezone": "Zeitzone",
+    "time": "Zeit",
+    "message": "Nachricht",
+    "timestamp": "Zeitstempel",
+    "url": "URL",
+    "accessed": "Zugegriffen",
+    "mimeType": "MIME-Typ",
+    "ip": "IP-Adresse",
+    "description": "Beschreibung",
+    "online": "Online",
+    "update": "Aktualisieren",
+    "reset": "Zurücksetzen",
+    "addedOn": "Hinzugefügt am",
+    "lastUpdatedOn": "Zuletzt aktualisiert am",
+    "details": "Details",
+    "channels": "Kanäle",
+    "preview": "Vorschau",
+    "cache": "Cache",
+    "maintainance": "Wartung",
+    "events": "Ereignisse",
+    "telemetry": "Telemetrie"
+  },
+  "sidebar": {
+    "organization": "Organisation",
+    "channels": "Kanäle",
+    "teams": "Teams",
+    "usage": "Nutzung",
+    "devices": "Geräte",
+    "content": "Inhalt",
+    "playlists": "Playlists",
+    "medias": "Medien",
+    "widgets": "Widgets"
   },
   "topbar": {
     "help": "Hilfe",
@@ -30,6 +86,7 @@
   },
   "settings": {
     "title": "Einstellungen",
+    "description": "Verwalten Sie Ihre Kontoinformationen und Einstellungen",
     "profile": "Profilinformationen",
     "name": "Name",
     "email": "E-Mail",
@@ -50,7 +107,48 @@
     "sessionExpired": "Ihre Sitzung ist abgelaufen. Weiterleitung zur Anmeldung...",
     "failedLoadCredentials": "Fehler beim Laden der Anmeldedaten. Bitte aktualisieren Sie die Seite.",
     "languageSettings": "Spracheinstellungen",
-    "selectLanguage": "Wählen Sie Ihre bevorzugte Sprache"
+    "selectLanguage": "Wählen Sie Ihre bevorzugte Sprache",
+    "confirmDeletePasskey": "Sind Sie sicher, dass Sie diesen Passkey entfernen möchten?\n\nHinweis: Dies entfernt den Passkey von Ihrem Konto, aber Sie müssen ihn möglicherweise manuell aus den Einstellungen Ihres Geräts löschen (wie iCloud Keychain, Google Password Manager oder Windows Hello).\n\nStellen Sie sicher, dass Sie getestet haben, dass Ihre anderen Passkeys funktionieren, bevor Sie diesen entfernen.",
+    "fullName": "Vollständiger Name",
+    "emailAddress": "E-Mail-Adresse",
+    "placeholderFullName": "Geben Sie Ihren vollständigen Namen ein",
+    "placeholderEmail": "Geben Sie Ihre E-Mail-Adresse ein",
+    "emailChangeWarning": "Änderungen an Ihrer E-Mail-Adresse erfordern eine Bestätigung, bevor sie wirksam werden.",
+    "emailVerificationRequired": "E-Mail-Verifizierung erforderlich!",
+    "emailVerificationMessage": "Eine Bestätigungs-E-Mail wurde an {{email}} gesendet. Bitte überprüfen Sie Ihren Posteingang und klicken Sie auf den Bestätigungslink.",
+    "saveChanges": "Änderungen speichern",
+    "profileUpdatedSuccess": "Profil erfolgreich aktualisiert!",
+    "securityAuthentication": "Sicherheit & Authentifizierung",
+    "passkeys": "Passkeys",
+    "passkeysDescription": "Ihr Konto verwendet Passkeys für sichere, passwortlose Authentifizierung. Passkeys werden sicher auf Ihrem Gerät gespeichert und bieten bessere Sicherheit als herkömmliche Passwörter.",
+    "yourPasskeys": "Ihre Passkeys",
+    "loadingPasskeys": "Lade Passkeys...",
+    "noPasskeysFound": "Keine Passkeys gefunden.",
+    "passkeyName": "Passkey-Name",
+    "placeholderPasskeyName": "Geben Sie einen Namen für diesen Passkey ein",
+    "addNewPasskey": "Neuen Passkey hinzufügen",
+    "addPasskeyHelp": "Fügen Sie einen Passkey für ein anderes Gerät oder einen anderen Browser hinzu",
+    "rename": "Umbenennen",
+    "added": "Hinzugefügt",
+    "accountManagement": "Kontoverwaltung",
+    "deleteAccount": "Konto löschen",
+    "deleteAccountDescription": "Löschen Sie Ihr Konto und alle zugehörigen Daten dauerhaft. Diese Aktion kann nicht rückgängig gemacht werden.",
+    "deleteAccountButton": "Konto löschen",
+    "deleteAccountConfirm": "Sind Sie sicher?",
+    "deleteAccountWarning": "Dies wird Ihr Konto dauerhaft löschen.",
+    "deleteAccountYes": "Ja, Konto löschen",
+    "retry": "Erneut versuchen",
+    "errors": {
+      "loadCredentials": "Fehler beim Laden der Anmeldedaten. Bitte aktualisieren Sie die Seite.",
+      "updateProfile": "Fehler beim Aktualisieren des Profils. Bitte versuchen Sie es erneut.",
+      "deleteAccount": "Fehler beim Löschen des Kontos. Bitte versuchen Sie es erneut.",
+      "deletePasskey": "Fehler beim Löschen des Passkeys. Bitte versuchen Sie es erneut.",
+      "updatePasskeyName": "Fehler beim Aktualisieren des Passkey-Namens. Bitte versuchen Sie es erneut.",
+      "passkeyCreationCancelled": "Passkey-Erstellung wurde abgebrochen oder ist abgelaufen.",
+      "sessionExpired": "Authentifizierungsfehler: Ihre Sitzung ist möglicherweise abgelaufen. Bitte aktualisieren Sie die Seite und versuchen Sie es erneut.",
+      "addPasskeyFailed": "Fehler beim Hinzufügen des Passkeys: {{error}}",
+      "addPasskey": "Fehler beim Hinzufügen eines neuen Passkeys. Bitte versuchen Sie es erneut."
+    }
   },
   "usage": {
     "title": "Nutzung",
@@ -58,29 +156,193 @@
     "resource": "Ressource",
     "used": "Verwendet",
     "total": "Gesamt",
-    "progress": "Fortschritt"
+    "progress": "Fortschritt",
+    "errors": {
+      "fetchUsageData": "Fehler beim Abrufen der Nutzungsdaten: {{error}}"
+    }
   },
   "teams": {
     "title": "Teams",
+    "addTeam": "Team hinzufügen",
+    "newTeam": "Neues Team",
+    "teamTitle": "Team \"{{name}}\"",
+    "description": "Details zu Ihrem Team",
+    "removeTeam": "Team entfernen",
+    "removeTeams": "Teams entfernen",
+    "confirmRemoveTeam": "Sind Sie sicher, dass Sie das Team \"{{name}}\" entfernen möchten?",
+    "confirmRemoveTeams": "Sind Sie sicher, dass Sie die folgenden Teams entfernen möchten?",
     "members": "Mitglieder",
     "invitations": "Einladungen",
     "medias": "Medien",
-    "playlists": "Wiedergabelisten",
+    "playlists": "Playlists",
     "devices": "Geräte",
-    "channels": "Kanäle"
+    "channels": "Kanäle",
+    "addedOn": "Hinzugefügt am",
+    "lastUpdatedOn": "Zuletzt aktualisiert am",
+    "enterTeamName": "Teamnamen eingeben",
+    "insertedAt": "Eingefügt am",
+    "expiresAt": "Läuft ab am",
+    "inviteMember": "Mitglied einladen",
+    "inviteMemberDescription": "Fügen Sie ein neues Mitglied zum Team hinzu",
+    "enterMember": "Mitglied eingeben",
+    "addResourceToTeam": "Ressource zum Team hinzufügen",
+    "addResourcesToTeams": "Ressourcen zu Teams hinzufügen",
+    "confirmAddResources": "Sind Sie sicher, dass Sie die folgenden Ressourcen hinzufügen möchten?",
+    "errors": {
+      "removeTeam": "Fehler beim Entfernen des Teams {{name}}: {{error}}",
+      "removeTeams": "Fehler beim Entfernen der Teams: {{error}}",
+      "saveTeam": "Fehler beim Speichern des Teams: {{error}}",
+      "openViewModal": "Ansichtsmodal öffnen",
+      "removeResource": "Fehler beim Entfernen der Ressource aus dem Team: {{error}}",
+      "removeResources": "Fehler beim Entfernen der Ressourcen aus dem Team: {{error}}",
+      "addResourceToTeam": "Fehler beim Hinzufügen der Ressource zum Team: {{error}}"
+    }
+  },
+  "channels": {
+    "title": "Kanäle",
+    "addChannel": "Kanal hinzufügen",
+    "newChannel": "Neuer Kanal",
+    "channelTitle": "Kanal \"{{name}}\"",
+    "description": "Details zu Ihrem Kanal",
+    "removeChannel": "Kanal entfernen",
+    "removeChannels": "Kanäle entfernen",
+    "confirmRemoveChannel": "Sind Sie sicher, dass Sie den Kanal \"{{name}}\" entfernen möchten?",
+    "confirmRemoveChannels": "Sind Sie sicher, dass Sie die folgenden Kanäle entfernen möchten?",
+    "enterChannelName": "Kanalnamen eingeben",
+    "defaultPlaylist": "Standard-Playlist",
+    "selectPlaylist": "Playlist auswählen",
+    "dragPlaylists": "Playlists ziehen",
+    "repeatWeekly": "Wöchentlich wiederholen?",
+    "calendarEntryDetails": "Kalendereintragsdetails",
+    "removeChannelEntry": "Kanaleintrag entfernen",
+    "errors": {
+      "removeChannel": "Fehler beim Entfernen des Kanals {{name}}: {{error}}",
+      "removeChannels": "Fehler beim Entfernen der Kanäle: {{error}}",
+      "addChannel": "Fehler beim Hinzufügen des Kanals: {{error}}",
+      "saveChannel": "Fehler beim Speichern des Kanals: {{error}}",
+      "updateDefaultPlaylist": "Fehler beim Aktualisieren der Standard-Playlist des Kanals: {{error}}",
+      "updateChannelEntry": "Fehler beim Aktualisieren des Kanaleintrags: {{error}}"
+    }
+  },
+  "organization": {
+    "title": "Organisation",
+    "users": "Benutzer",
+    "invitations": "Einladungen",
+    "update": "Aktualisieren",
+    "placeholderName": "Organisationsnamen eingeben",
+    "inviteMember": "Mitglied einladen",
+    "enterMemberEmail": "E-Mail des Mitglieds eingeben",
+    "errors": {
+      "updateOrganization": "Fehler beim Aktualisieren der Organisation: {{error}}"
+    }
   },
   "login": {
     "title": "Anmelden",
     "email": "E-Mail",
     "password": "Passwort",
     "loginButton": "Anmelden",
-    "signupLink": "Noch kein Konto? Registrieren",
+    "signupLink": "Sie haben noch kein Konto? Registrieren",
     "ready": "Bereit",
-    "loading": "Wird geladen..."
+    "loading": "Wird geladen...",
+    "loginWithPasskey": "Mit Passkey anmelden",
+    "privacyPolicy": "Datenschutzrichtlinie",
+    "lostCredentials": "Anmeldedaten verloren?"
+  },
+  "signup": {
+    "title": "Registrieren",
+    "continueWithPasskey": "Mit Passkey fortfahren",
+    "privacyPolicy": "Datenschutzrichtlinie",
+    "checkYourEmail": "Überprüfen Sie Ihre E-Mail",
+    "errors": {
+      "couldNotCreateCredential": "Anmeldedaten konnten nicht erstellt werden",
+      "couldNotGetPublicKey": "Öffentlicher Schlüssel konnte nicht abgerufen werden",
+      "invalidCredential": "Ungültige Anmeldedaten",
+      "signupFailed": "Bei der Registrierung ist ein Fehler aufgetreten, kontaktieren Sie den Support. FEHLER: {{error}}"
+    }
+  },
+  "search": {
+    "title": "Suche",
+    "description": "Dies ist die Suchseite. Sie finden hier alle Suchergebnisse..."
   },
   "errors": {
     "generic": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
     "networkError": "Netzwerkfehler. Bitte überprüfen Sie Ihre Verbindung.",
     "unauthorized": "Nicht autorisiert. Bitte melden Sie sich erneut an."
+  },
+  "playlists": {
+    "title": "Playlists",
+    "addPlaylist": "Playlist hinzufügen",
+    "createNewPlaylist": "Neue Playlist erstellen",
+    "playlistTitle": "Playlist \"{{name}}\"",
+    "buildPlaylist": "Erstellen Sie hier Ihre Playlist",
+    "removePlaylist": "Playlist entfernen",
+    "removePlaylists": "Playlists entfernen",
+    "confirmRemovePlaylist": "Sind Sie sicher, dass Sie die Playlist \"{{name}}\" entfernen möchten?",
+    "confirmRemovePlaylists": "Sind Sie sicher, dass Sie die folgenden Playlists entfernen möchten?",
+    "errorRemovingPlaylist": "Fehler beim Entfernen der Playlist {{name}}: {{error}}",
+    "errorRemovingPlaylists": "Fehler beim Entfernen der Playlists: {{error}}",
+    "enterPlaylistName": "Playlist-Namen eingeben"
+  },
+  "widgets": {
+    "title": "Widgets",
+    "uploadWidget": "Widget hochladen",
+    "uploadDescription": "Laden Sie eine JSON Widget-Definitionsdatei hoch.",
+    "widgetDetails": "Widget-Details",
+    "updateInterval": "Aktualisierungsintervall",
+    "viewDetails": "Details anzeigen",
+    "template": "Vorlage",
+    "optionsSchema": "Optionsschema",
+    "dataSchema": "Datenschema"
+  },
+  "devices": {
+    "setDeviceChannel": "Set Device Channel",
+    "selectChannel": "Select Channel",
+    "preview": {
+      "placeholder": "Preview"
+    },
+    "telemetry": {
+      "placeholder": "Traces, Logs, Metrics and Connectivity (WiFi quality, etc.)"
+    },
+    "maintenance": {
+      "refresh": "Refresh",
+      "refreshDescription": "Refreshes the device. Useful if the device is still running but exhibiting anomalous behaviour",
+      "clearCache": "Clear Cache",
+      "clearCacheDescription": "Clear the cache to force download of all fresh content",
+      "restartApp": "Restart App",
+      "restartAppDescription": "Restarts the application",
+      "restartDevice": "Restart Device",
+      "restartDeviceDescription": "Performs a complete hardware shutdown and start of the device",
+      "checkUpdates": "Check for updates",
+      "checkUpdatesDescription": "Check for updates and install them. This will not restart the device",
+      "updateFirmware": "Update Firmware",
+      "updateFirmwareDescription": "Updates the firmware of the device",
+      "offlineMessage": "Device is offline, so no commands can be sent to it"
+    },
+    "errors": {
+      "setChannelFailed": "Failed to set device channel: {{error}}",
+      "commandFailed": "An error occurred while processing your request"
+    }
+  },
+  "validation": {
+    "fieldRequired": "Dieses Feld ist erforderlich",
+    "minLength": "Dieses Feld muss mindestens {{min}} Zeichen lang sein"
+  },
+  "plurals": {
+    "items": {
+      "one": "{{count}} Element",
+      "other": "{{count}} Elemente"
+    },
+    "users": {
+      "one": "{{count}} Benutzer",
+      "other": "{{count}} Benutzer"
+    },
+    "devices": {
+      "one": "{{count}} Gerät",
+      "other": "{{count}} Geräte"
+    },
+    "daysAgo": {
+      "one": "vor {{count}} Tag",
+      "other": "vor {{count}} Tagen"
+    }
   }
 }

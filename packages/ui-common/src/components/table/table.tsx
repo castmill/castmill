@@ -33,6 +33,7 @@ export interface TableProps<
   data: Item[];
   onSort?: (options: SortOptions) => void;
   actions?: TableAction<Item>[];
+  actionsLabel?: string; // Label for the Actions column header
   onRowSelect?: (selectedIds: Set<IdType>) => void;
   onRowClick?: (item: Item) => void;
   itemIdKey?: string;
@@ -131,7 +132,7 @@ export const Table = <
                 </th>
               )}
             </For>
-            {props.actions && <th>Actions</th>}
+            {props.actions && <th>{props.actionsLabel || 'Actions'}</th>}
           </tr>
         </thead>
         <tbody>

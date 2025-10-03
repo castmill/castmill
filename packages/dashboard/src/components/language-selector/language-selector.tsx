@@ -2,67 +2,70 @@
  * Language Selector Component
  *
  * Dropdown component for selecting the application language
+ * Uses the shared DropdownMenu component with flag icons
  */
 
-import { Component, For, createSignal, Show } from 'solid-js';
+import { Component, For } from 'solid-js';
 import { useI18n, SUPPORTED_LOCALES, Locale } from '../../i18n';
+import DropdownMenu from '../dropdown-menu/dropdown-menu';
 import './language-selector.scss';
 
 interface LanguageSelectorProps {
   compact?: boolean;
 }
 
+// Flag emoji mapping for each language
+const LANGUAGE_FLAGS: Record<string, string> = {
+  en: '🇬🇧',
+  es: '🇪🇸',
+  sv: '🇸🇪',
+  de: '🇩🇪',
+  fr: '🇫🇷',
+  zh: '🇨🇳',
+  ar: '🇸🇦',
+  ko: '🇰🇷',
+  ja: '🇯🇵',
+};
+
 const LanguageSelector: Component<LanguageSelectorProps> = (props) => {
-  const { locale, setLocale, t } = useI18n();
-  const [isOpen, setIsOpen] = createSignal(false);
+  const { locale, setLocale } = useI18n();
 
   const currentLocale = () =>
     SUPPORTED_LOCALES.find((l) => l.code === locale());
 
   const handleLocaleChange = (newLocale: Locale) => {
     setLocale(newLocale);
-    setIsOpen(false);
   };
 
   return (
-    <div class="language-selector" classList={{ compact: props.compact }}>
-      <button
-        class="language-selector__trigger"
-        onClick={() => setIsOpen(!isOpen())}
-        aria-label={t('common.language')}
-      >
-        <span class="language-selector__current">
-          {props.compact
-            ? currentLocale()?.code.toUpperCase()
-            : currentLocale()?.nativeName}
-        </span>
-        <span class="language-selector__arrow">▼</span>
-      </button>
-
-      <Show when={isOpen()}>
-        <div class="language-selector__dropdown">
-          <For each={SUPPORTED_LOCALES}>
-            {(localeInfo) => (
-              <button
-                class="language-selector__option"
-                classList={{ active: locale() === localeInfo.code }}
-                onClick={() => handleLocaleChange(localeInfo.code)}
-              >
-                <span class="language-selector__code">
-                  {localeInfo.code.toUpperCase()}
-                </span>
-                <span class="language-selector__name">
-                  {localeInfo.nativeName}
-                </span>
-                <Show when={locale() === localeInfo.code}>
-                  <span class="language-selector__check">✓</span>
-                </Show>
-              </button>
-            )}
-          </For>
+    <DropdownMenu
+      ButtonComponent={() => (
+        <div class="language-selector__button">
+          <span class="language-selector__flag">
+            {LANGUAGE_FLAGS[currentLocale()?.code || 'en']}
+          </span>
         </div>
-      </Show>
-    </div>
+      )}
+    >
+      <For each={SUPPORTED_LOCALES}>
+        {(localeInfo) => (
+          <button
+            class="language-selector__option"
+            classList={{ active: locale() === localeInfo.code }}
+            onClick={() => handleLocaleChange(localeInfo.code)}
+          >
+            <div class="language-selector__option-content">
+              <span class="language-selector__flag">
+                {LANGUAGE_FLAGS[localeInfo.code]}
+              </span>
+              <span class="language-selector__name">
+                {localeInfo.nativeName}
+              </span>
+            </div>
+          </button>
+        )}
+      </For>
+    </DropdownMenu>
   );
 };
 

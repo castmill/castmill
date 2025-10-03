@@ -15,6 +15,7 @@ import {
   TeamsService,
 } from '../../services/teams.service';
 import { ResourceChooser } from './resource-chooser';
+import { useI18n } from '../../i18n';
 
 const itemsPerPage = 10;
 
@@ -36,26 +37,6 @@ const onRowSelect = (rowsSelected: Set<string | number>) => {
   setSelectedResources(rowsSelected);
 };
 
-const openModal = () => {
-  alert('open view modal');
-};
-
-const actions = [
-  {
-    icon: BsEye,
-    handler: openModal,
-    label: 'View',
-  },
-  {
-    icon: AiOutlineDelete,
-    handler: (item: any) => {
-      setCurrentResource(item);
-      setShowConfirmDialog(true);
-    },
-    label: 'Remove',
-  },
-];
-
 const addResource = () => {
   setShowAddResourceDialog(true);
 };
@@ -66,6 +47,27 @@ export const ResourcesView = (props: {
   resourceType: string;
   resourceName: string;
 }) => {
+  const { t } = useI18n();
+  
+  const openModal = () => {
+    alert(t('teams.errors.openViewModal'));
+  };
+
+  const actions = [
+    {
+      icon: BsEye,
+      handler: openModal,
+      label: t('common.view'),
+    },
+    {
+      icon: AiOutlineDelete,
+      handler: (item: any) => {
+        setCurrentResource(item);
+        setShowConfirmDialog(true);
+      },
+      label: t('common.remove'),
+    },
+  ];
   const resourceKey = `${props.resourceName.toLowerCase()}`;
   const itemIdKey = `${props.resourceName.toLocaleLowerCase()}_id`;
 
@@ -108,7 +110,7 @@ export const ResourcesView = (props: {
       refreshData();
       setShowConfirmDialog(false);
     } catch (error) {
-      alert(`Error removing resource from team: ${error}`);
+      alert(t('teams.errors.removeResource', { error: String(error) }));
     }
   };
 
@@ -131,7 +133,7 @@ export const ResourcesView = (props: {
       setSelectedResources(new Set<string | number>());
       setShowConfirmDialogMultiple(false);
     } catch (error) {
-      alert(`Error removing resources from team: ${error}`);
+      alert(t('teams.errors.removeResources', { error: String(error) }));
     }
   };
 

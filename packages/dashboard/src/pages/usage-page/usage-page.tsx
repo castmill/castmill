@@ -23,7 +23,7 @@ const UsagePage: Component = () => {
         console.log({ usage });
         setUsage(usage);
       } catch (error) {
-        alert(`Failed to fetch usage data ${error}`);
+        alert(t('usage.errors.fetchUsageData', { error: String(error) }));
       }
     }
   });

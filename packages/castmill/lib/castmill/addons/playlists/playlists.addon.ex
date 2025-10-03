@@ -5,6 +5,7 @@ defmodule Castmill.Addons.Playlists do
   def component_info() do
     %Castmill.Addons.ComponentInfo{
       name: "Playlists",
+      name_key: "sidebar.playlists",
       description: "Playlists view addon for Castmill",
       version: "0.1.0",
       path: "/playlists.js",

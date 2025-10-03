@@ -20,6 +20,7 @@ import { BsCheckLg } from 'solid-icons/bs';
 import { AiOutlineDelete } from 'solid-icons/ai';
 import { createSignal, Show } from 'solid-js';
 import { User } from '../../interfaces/user.interface';
+import { useI18n } from '../../i18n';
 
 const [data, setData] = createSignal<{ user: User; user_id: string }[]>([], {
   equals: false,
@@ -46,12 +47,6 @@ const onRowSelect = (rowsSelected: Set<string>) => {
 };
 
 const itemsPerPage = 10;
-
-const columns = [
-  { key: 'user.name', title: 'Name', sortable: true },
-  { key: 'role', title: 'Role', sortable: true },
-  { key: 'inserted_at', title: 'Inserted At', sortable: true },
-];
 
 const actions = [
   {
@@ -88,6 +83,14 @@ export const TeamMembersView = (props: {
   teamId: number;
   onRemove: (member: User) => void;
 }) => {
+  const { t } = useI18n();
+  
+  const columns = [
+    { key: 'user.name', title: t('common.name'), sortable: true },
+    { key: 'role', title: t('common.role'), sortable: true },
+    { key: 'inserted_at', title: t('teams.insertedAt'), sortable: true },
+  ];
+  
   const fetchData = async (opts: FetchDataOptions) => {
     const result = await TeamsService.fetchMembers(
       props.organizationId,
@@ -154,8 +157,8 @@ export const TeamMembersView = (props: {
     <>
       <Show when={showAddMemberDialog()}>
         <Modal
-          title="Invite Member"
-          description="Add a new member to the team"
+          title={t('teams.inviteMember')}
+          description={t('teams.inviteMemberDescription')}
           onClose={() => setShowAddMemberDialog(false)}
         >
           {/* Adding a new member just requires a valid email address */}
@@ -179,10 +182,10 @@ export const TeamMembersView = (props: {
             }}
           >
             <FormItem
-              label="Name"
+              label={t('common.name')}
               id="name"
               value={email()!}
-              placeholder="Enter member's email"
+              placeholder={t('teams.enterMember')}
               onInput={(value: string | number | boolean) => {
                 const strValue = value as string;
                 setEmail(strValue);
@@ -235,7 +238,7 @@ export const TeamMembersView = (props: {
         toolbar={{
           mainAction: (
             <Button
-              label="Invite Member"
+              label={t('teams.inviteMember')}
               onClick={addMember}
               icon={BsCheckLg}
               color="primary"

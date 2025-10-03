@@ -10,7 +10,7 @@
     "confirm": "Confirmer",
     "back": "Retour",
     "next": "Suivant",
-    "search": "Rechercher",
+    "search": "Rechercher...",
     "loading": "Chargement...",
     "error": "Erreur",
     "success": "Succès",
@@ -22,7 +22,52 @@
     "logout": "Déconnexion",
     "login": "Connexion",
     "signup": "S'inscrire",
-    "language": "Langue"
+    "language": "Langue",
+    "create": "Créer",
+    "view": "Voir",
+    "status": "Statut",
+    "created": "Créé",
+    "updated": "Mis à jour",
+    "type": "Type",
+    "unknown": "Inconnu",
+    "notAvailable": "N/D",
+    "id": "ID",
+    "role": "Rôle",
+    "insertedAt": "Inséré le",
+    "expiresAt": "Expire le",
+    "loadingAddons": "Chargement des modules complémentaires...",
+    "notFound": "404 Non trouvé",
+    "pageNotFound": "Désolé, la page que vous recherchez n'existe pas.",
+    "copyright": "© 2011-2025 Castmill™",
+    "invitedEmail": "E-mail invité :",
+    "acceptInvitation": "Accepter l'invitation",
+    "loadingInvitation": "Chargement de l'invitation...",
+    "actions": "Actions",
+    "fileName": "Nom du fichier",
+    "size": "Taille",
+    "progress": "Progrès",
+    "version": "Version",
+    "timezone": "Fuseau horaire",
+    "time": "Heure",
+    "message": "Message",
+    "timestamp": "Horodatage",
+    "url": "URL",
+    "accessed": "Accédé",
+    "mimeType": "Type MIME",
+    "ip": "Adresse IP",
+    "description": "Description",
+    "online": "En ligne",
+    "update": "Mettre à jour",
+    "reset": "Réinitialiser",
+    "addedOn": "Ajouté le",
+    "lastUpdatedOn": "Dernière mise à jour le",
+    "details": "Détails",
+    "channels": "Canaux",
+    "preview": "Aperçu",
+    "cache": "Cache",
+    "maintainance": "Maintenance",
+    "events": "Événements",
+    "telemetry": "Télémétrie"
   },
   "topbar": {
     "help": "Aide",
@@ -50,7 +95,49 @@
     "sessionExpired": "Votre session a expiré. Redirection vers la connexion...",
     "failedLoadCredentials": "Échec du chargement des identifiants. Veuillez actualiser la page.",
     "languageSettings": "Paramètres de langue",
-    "selectLanguage": "Sélectionnez votre langue préférée"
+    "selectLanguage": "Sélectionnez votre langue préférée",
+    "description": "Gérer les informations et préférences de votre compte",
+    "confirmDeletePasskey": "Êtes-vous sûr de vouloir supprimer cette clé d'accès ?\n\nRemarque : Cela supprimera la clé d'accès de votre compte, mais vous devrez peut-être la supprimer manuellement des paramètres de votre appareil (comme iCloud Keychain, Google Password Manager ou Windows Hello).\n\nAssurez-vous d'avoir testé que vos autres clés d'accès fonctionnent avant de supprimer celle-ci.",
+    "fullName": "Nom complet",
+    "emailAddress": "Adresse e-mail",
+    "placeholderFullName": "Entrez votre nom complet",
+    "placeholderEmail": "Entrez votre adresse e-mail",
+    "emailChangeWarning": "Les modifications de votre adresse e-mail nécessiteront une vérification avant de prendre effet.",
+    "emailVerificationRequired": "Vérification de l'e-mail requise !",
+    "emailVerificationMessage": "Un e-mail de vérification a été envoyé à {{email}}. Veuillez vérifier votre boîte de réception et cliquer sur le lien de vérification.",
+    "saveChanges": "Enregistrer les modifications",
+    "profileUpdatedSuccess": "Profil mis à jour avec succès !",
+    "securityAuthentication": "Sécurité et authentification",
+    "passkeys": "Clés d'accès",
+    "passkeysDescription": "Votre compte utilise des clés d'accès pour une authentification sécurisée sans mot de passe. Les clés d'accès sont stockées en toute sécurité sur votre appareil et offrent une meilleure sécurité que les mots de passe traditionnels.",
+    "yourPasskeys": "Vos clés d'accès",
+    "loadingPasskeys": "Chargement des clés d'accès...",
+    "noPasskeysFound": "Aucune clé d'accès trouvée.",
+    "passkeyName": "Nom de la clé d'accès",
+    "placeholderPasskeyName": "Entrez un nom pour cette clé d'accès",
+    "addNewPasskey": "Ajouter une nouvelle clé d'accès",
+    "addPasskeyHelp": "Ajouter une clé d'accès pour un autre appareil ou navigateur",
+    "rename": "Renommer",
+    "added": "Ajouté",
+    "accountManagement": "Gestion du compte",
+    "deleteAccount": "Supprimer le compte",
+    "deleteAccountDescription": "Supprimer définitivement votre compte et toutes les données associées. Cette action ne peut pas être annulée.",
+    "deleteAccountButton": "Supprimer le compte",
+    "deleteAccountConfirm": "Êtes-vous sûr ?",
+    "deleteAccountWarning": "Cela supprimera définitivement votre compte.",
+    "deleteAccountYes": "Oui, supprimer le compte",
+    "retry": "Réessayer",
+    "errors": {
+      "loadCredentials": "Échec du chargement des identifiants. Veuillez actualiser la page.",
+      "updateProfile": "Échec de la mise à jour du profil. Veuillez réessayer.",
+      "deleteAccount": "Échec de la suppression du compte. Veuillez réessayer.",
+      "deletePasskey": "Échec de la suppression de la clé d'accès. Veuillez réessayer.",
+      "updatePasskeyName": "Échec de la mise à jour du nom de la clé d'accès. Veuillez réessayer.",
+      "passkeyCreationCancelled": "La création de la clé d'accès a été annulée ou a expiré.",
+      "sessionExpired": "Erreur d'authentification : Votre session a peut-être expiré. Veuillez actualiser la page et réessayer.",
+      "addPasskeyFailed": "Échec de l'ajout de la clé d'accès : {{error}}",
+      "addPasskey": "Échec de l'ajout de la nouvelle clé d'accès. Veuillez réessayer."
+    }
   },
   "usage": {
     "title": "Utilisation",
@@ -58,7 +145,10 @@
     "resource": "Ressource",
     "used": "Utilisé",
     "total": "Total",
-    "progress": "Progression"
+    "progress": "Progression",
+    "errors": {
+      "fetchUsageData": "Échec de la récupération des données d'utilisation : {{error}}"
+    }
   },
   "teams": {
     "title": "Équipes",
@@ -67,7 +157,35 @@
     "medias": "Médias",
     "playlists": "Listes de lecture",
     "devices": "Appareils",
-    "channels": "Chaînes"
+    "channels": "Chaînes",
+    "addTeam": "Ajouter une équipe",
+    "newTeam": "Nouvelle équipe",
+    "teamTitle": "Équipe \"{{name}}\"",
+    "description": "Détails de votre équipe",
+    "removeTeam": "Supprimer l'équipe",
+    "removeTeams": "Supprimer les équipes",
+    "confirmRemoveTeam": "Êtes-vous sûr de vouloir supprimer l'équipe \"{{name}}\" ?",
+    "confirmRemoveTeams": "Êtes-vous sûr de vouloir supprimer les équipes suivantes ?",
+    "addedOn": "Ajouté le",
+    "lastUpdatedOn": "Dernière mise à jour le",
+    "enterTeamName": "Entrez le nom de l'équipe",
+    "insertedAt": "Inséré le",
+    "expiresAt": "Expire le",
+    "inviteMember": "Inviter un membre",
+    "inviteMemberDescription": "Ajouter un nouveau membre à l'équipe",
+    "enterMember": "Entrez le membre",
+    "addResourceToTeam": "Ajouter une ressource à l'équipe",
+    "addResourcesToTeams": "Ajouter des ressources aux équipes",
+    "errors": {
+      "removeTeam": "Erreur lors de la suppression de l'équipe {{name}} : {{error}}",
+      "removeTeams": "Erreur lors de la suppression des équipes : {{error}}",
+      "saveTeam": "Erreur lors de l'enregistrement de l'équipe : {{error}}",
+      "openViewModal": "ouvrir la fenêtre de visualisation",
+      "removeResource": "Erreur lors de la suppression de la ressource de l'équipe : {{error}}",
+      "removeResources": "Erreur lors de la suppression des ressources de l'équipe : {{error}}",
+      "addResourceToTeam": "Erreur lors de l'ajout de la ressource à l'équipe : {{error}}"
+    },
+    "confirmAddResources": "Êtes-vous sûr de vouloir ajouter les ressources suivantes ?"
   },
   "login": {
     "title": "Connexion",
@@ -76,11 +194,155 @@
     "loginButton": "Se connecter",
     "signupLink": "Pas de compte ? S'inscrire",
     "ready": "Prêt",
-    "loading": "Chargement..."
+    "loading": "Chargement...",
+    "loginWithPasskey": "Se connecter avec une clé d'accès",
+    "privacyPolicy": "Politique de confidentialité",
+    "lostCredentials": "Identifiants perdus ?"
   },
   "errors": {
     "generic": "Une erreur s'est produite. Veuillez réessayer.",
     "networkError": "Erreur réseau. Veuillez vérifier votre connexion.",
     "unauthorized": "Non autorisé. Veuillez vous reconnecter."
+  },
+  "sidebar": {
+    "organization": "Organisation",
+    "channels": "Canaux",
+    "teams": "Équipes",
+    "usage": "Utilisation",
+    "devices": "Appareils",
+    "content": "Contenu",
+    "playlists": "Listes de lecture",
+    "medias": "Médias",
+    "widgets": "Widgets"
+  },
+  "channels": {
+    "title": "Canaux",
+    "addChannel": "Ajouter un canal",
+    "newChannel": "Nouveau canal",
+    "channelTitle": "Canal \"{{name}}\"",
+    "description": "Détails de votre canal",
+    "removeChannel": "Supprimer le canal",
+    "removeChannels": "Supprimer les canaux",
+    "confirmRemoveChannel": "Êtes-vous sûr de vouloir supprimer le canal \"{{name}}\" ?",
+    "confirmRemoveChannels": "Êtes-vous sûr de vouloir supprimer les canaux suivants ?",
+    "errors": {
+      "removeChannel": "Erreur lors de la suppression du canal {{name}} : {{error}}",
+      "removeChannels": "Erreur lors de la suppression des canaux : {{error}}",
+      "addChannel": "Erreur lors de l'ajout du canal : {{error}}",
+      "saveChannel": "Erreur lors de l'enregistrement du canal : {{error}}",
+      "updateDefaultPlaylist": "Échec de la mise à jour de la playlist par défaut du canal : {{error}}",
+      "updateChannelEntry": "Erreur lors de la mise à jour de l'entrée du canal : {{error}}"
+    },
+    "enterChannelName": "Entrez le nom du canal",
+    "defaultPlaylist": "Playlist par défaut",
+    "selectPlaylist": "Sélectionner une playlist",
+    "dragPlaylists": "Glisser les playlists",
+    "repeatWeekly": "Répéter chaque semaine ?",
+    "calendarEntryDetails": "Détails de l'entrée du calendrier",
+    "removeChannelEntry": "Supprimer l'entrée du canal"
+  },
+  "organization": {
+    "title": "Organisation",
+    "users": "Utilisateurs",
+    "invitations": "Invitations",
+    "update": "Mettre à jour",
+    "placeholderName": "Entrez le nom de l'organisation",
+    "errors": {
+      "updateOrganization": "Erreur lors de la mise à jour de l'organisation : {{error}}"
+    },
+    "inviteMember": "Inviter un membre",
+    "enterMemberEmail": "Entrez l'e-mail du membre"
+  },
+  "playlists": {
+    "title": "Playlists",
+    "addPlaylist": "Ajouter une playlist",
+    "createNewPlaylist": "Créer une nouvelle playlist",
+    "playlistTitle": "Playlist \"{{name}}\"",
+    "buildPlaylist": "Créez votre playlist ici",
+    "removePlaylist": "Supprimer la playlist",
+    "removePlaylists": "Supprimer les playlists",
+    "confirmRemovePlaylist": "Êtes-vous sûr de vouloir supprimer la playlist \"{{name}}\" ?",
+    "confirmRemovePlaylists": "Êtes-vous sûr de vouloir supprimer les playlists suivantes ?",
+    "errorRemovingPlaylist": "Erreur lors de la suppression de la playlist {{name}} : {{error}}",
+    "errorRemovingPlaylists": "Erreur lors de la suppression des playlists : {{error}}",
+    "enterPlaylistName": "Entrez le nom de la playlist"
+  },
+  "widgets": {
+    "title": "Widgets",
+    "uploadWidget": "Télécharger un widget",
+    "uploadDescription": "Télécharger un fichier de définition de widget JSON.",
+    "widgetDetails": "Détails du widget",
+    "updateInterval": "Intervalle de mise à jour",
+    "viewDetails": "Voir les détails",
+    "template": "Modèle",
+    "optionsSchema": "Schéma d'options",
+    "dataSchema": "Schéma de données"
+  },
+  "devices": {
+    "setDeviceChannel": "Définir le canal de l'appareil",
+    "selectChannel": "Sélectionner un canal",
+    "preview": {
+      "placeholder": "Aperçu"
+    },
+    "telemetry": {
+      "placeholder": "Traces, journaux, métriques et connectivité (qualité WiFi, etc.)"
+    },
+    "maintenance": {
+      "refresh": "Actualiser",
+      "refreshDescription": "Actualise l'appareil. Utile si l'appareil fonctionne toujours mais présente un comportement anormal",
+      "clearCache": "Vider le cache",
+      "clearCacheDescription": "Vider le cache pour forcer le téléchargement de tout le contenu frais",
+      "restartApp": "Redémarrer l'application",
+      "restartAppDescription": "Redémarre l'application",
+      "restartDevice": "Redémarrer l'appareil",
+      "restartDeviceDescription": "Effectue un arrêt et démarrage complet du matériel de l'appareil",
+      "checkUpdates": "Rechercher les mises à jour",
+      "checkUpdatesDescription": "Rechercher les mises à jour et les installer. Cela ne redémarrera pas l'appareil",
+      "updateFirmware": "Mettre à jour le firmware",
+      "updateFirmwareDescription": "Met à jour le firmware de l'appareil",
+      "offlineMessage": "L'appareil est hors ligne, aucune commande ne peut donc lui être envoyée"
+    },
+    "errors": {
+      "setChannelFailed": "Échec de la définition du canal de l'appareil : {{error}}",
+      "commandFailed": "Une erreur s'est produite lors du traitement de votre demande"
+    }
+  },
+  "validation": {
+    "fieldRequired": "Ce champ est requis",
+    "minLength": "Ce champ doit contenir au moins {{min}} caractères"
+  },
+  "plurals": {
+    "items": {
+      "one": "{{count}} élément",
+      "other": "{{count}} éléments"
+    },
+    "users": {
+      "one": "{{count}} utilisateur",
+      "other": "{{count}} utilisateurs"
+    },
+    "devices": {
+      "one": "{{count}} appareil",
+      "other": "{{count}} appareils"
+    },
+    "daysAgo": {
+      "one": "il y a {{count}} jour",
+      "other": "il y a {{count}} jours"
+    }
+  },
+  "signup": {
+    "title": "S'inscrire",
+    "continueWithPasskey": "Continuer avec une clé d'accès",
+    "privacyPolicy": "Politique de confidentialité",
+    "checkYourEmail": "Vérifiez votre e-mail",
+    "errors": {
+      "couldNotCreateCredential": "Impossible de créer les identifiants",
+      "couldNotGetPublicKey": "Impossible d'obtenir la clé publique",
+      "invalidCredential": "Identifiants invalides",
+      "signupFailed": "Une erreur s'est produite lors de l'inscription, contactez le support. ERREUR : {{error}}"
+    }
+  },
+  "search": {
+    "title": "Recherche",
+    "description": "Ceci est la page de recherche. Vous pouvez trouver tous les résultats de recherche ici..."
   }
 }

@@ -5,6 +5,7 @@ defmodule Castmill.Addons.Medias do
   def component_info() do
     %Castmill.Addons.ComponentInfo{
       name: "Medias",
+      name_key: "sidebar.medias",
       description: "Medias view addon for Castmill",
       version: "0.1.0",
       path: "/medias.js",
