@@ -474,12 +474,23 @@ defmodule Castmill.Devices do
   Notifies the device via WebSocket if it's connected.
   """
   def delete_device(%Device{} = device) do
-    # Notify the device that it's being removed so it can clear its data
-    Phoenix.PubSub.broadcast(Castmill.PubSub, "devices:#{device.id}", %{
-      command: "device_removed"
-    })
+    # Delete the device from the database first
+    result = Repo.delete(device)
 
-    Repo.delete(device)
+    # After successful deletion, notify the device so it can clear its data
+    # If the device is offline or the message fails, it will detect the deletion
+    # on next connection attempt when credentials are rejected
+    case result do
+      {:ok, deleted_device} ->
+        Phoenix.PubSub.broadcast(Castmill.PubSub, "devices:#{deleted_device.id}", %{
+          command: "device_removed"
+        })
+
+      {:error, _} ->
+        :ok
+    end
+
+    result
   end
 
   @doc """
