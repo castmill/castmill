@@ -411,6 +411,13 @@ defmodule CastmillWeb.ResourceController do
         with {:ok, %Channel{}} <- Castmill.Resources.delete_channel(channel) do
           send_resp(conn, :no_content, "")
         else
+          {:error, :channel_has_devices} ->
+            conn
+            |> put_status(:conflict)
+            |> Phoenix.Controller.json(%{
+              errors: ["Cannot delete channel that is assigned to devices"]
+            })
+
           {:error, reason} ->
             send_resp(conn, 500, "Error deleting channel: #{inspect(reason)}")
         end
