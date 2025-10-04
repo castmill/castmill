@@ -16,6 +16,8 @@ import {
   Modal,
   ConfirmDialog,
   FetchDataOptions,
+  TeamFilter,
+  Team,
 } from '@castmill/ui-common';
 
 import { store } from '../../store/store';
@@ -38,6 +40,30 @@ const ChannelsPage: Component = () => {
 
   const [data, setData] = createSignal<JsonChannel[]>([], {
     equals: false,
+  });
+
+  const [teams, setTeams] = createSignal<Team[]>([]);
+  const [selectedTeamId, setSelectedTeamId] = createSignal<number | null>(null);
+
+  // Fetch teams for the organization
+  createEffect(async () => {
+    if (store.organizations.selectedId) {
+      try {
+        const response = await fetch(
+          `${baseUrl}/dashboard/organizations/${store.organizations.selectedId}/teams?page=1&page_size=100`,
+          {
+            method: 'GET',
+            credentials: 'include',
+          }
+        );
+        if (response.ok) {
+          const result = await response.json();
+          setTeams(result.data || []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch teams:', error);
+      }
+    }
   });
 
   const [showAddChannelModal, setShowAddChannelModal] = createSignal(false);
@@ -96,6 +122,7 @@ const ChannelsPage: Component = () => {
       sortOptions,
       search,
       filters,
+      team_id: selectedTeamId(),
     });
 
     setData(result.data);
@@ -150,6 +177,11 @@ const ChannelsPage: Component = () => {
     if (tableViewRef) {
       tableViewRef.reloadData();
     }
+  };
+
+  const handleTeamChange = (teamId: number | null) => {
+    setSelectedTeamId(teamId);
+    refreshData();
   };
 
   const updateItem = (itemId: number, item: JsonChannel) => {
@@ -290,7 +322,12 @@ const ChannelsPage: Component = () => {
               />
             ),
             actions: (
-              <div>
+              <div style="display: flex; gap: 1rem; align-items: center;">
+                <TeamFilter
+                  teams={teams()}
+                  selectedTeamId={selectedTeamId()}
+                  onTeamChange={handleTeamChange}
+                />
                 <IconButton
                   onClick={() => setShowConfirmDialogMultiple(true)}
                   icon={AiOutlineDelete}

@@ -25,5 +25,9 @@ export const fetchOptionsToQueryString = (options: FetchDataOptions) => {
     query['filters'] = filtersToString(options.filters);
   }
 
+  if (options.team_id !== undefined && options.team_id !== null) {
+    query['team_id'] = options.team_id.toString();
+  }
+
   return new URLSearchParams(query).toString();
 };

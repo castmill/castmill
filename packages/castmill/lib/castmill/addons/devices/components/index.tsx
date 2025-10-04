@@ -1,4 +1,4 @@
-import { Component, createSignal, onCleanup, Show } from 'solid-js';
+import { Component, createEffect, createSignal, onCleanup, Show } from 'solid-js';
 
 import {
   Button,
@@ -11,6 +11,9 @@ import {
   TableViewRef,
   TableAction,
   ResourcesObserver,
+  TeamFilter,
+  Team,
+  FetchDataOptions,
 } from '@castmill/ui-common';
 
 import { BsCheckLg } from 'solid-icons/bs';
@@ -37,6 +40,30 @@ const DevicesPage: Component<{
 }> = (props) => {
   const [currentPage, setCurrentPage] = createSignal(1);
   const [totalItems, setTotalItems] = createSignal(0);
+
+  const [teams, setTeams] = createSignal<Team[]>([]);
+  const [selectedTeamId, setSelectedTeamId] = createSignal<number | null>(null);
+
+  // Fetch teams for the organization
+  createEffect(async () => {
+    if (props.store.organizations.selectedId) {
+      try {
+        const response = await fetch(
+          `${props.store.env.baseUrl}/dashboard/organizations/${props.store.organizations.selectedId}/teams?page=1&page_size=100`,
+          {
+            method: 'GET',
+            credentials: 'include',
+          }
+        );
+        if (response.ok) {
+          const result = await response.json();
+          setTeams(result.data || []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch teams:', error);
+      }
+    }
+  });
 
   const itemsPerPage = 10; // Number of items to show per page
 
@@ -176,12 +203,7 @@ const DevicesPage: Component<{
     sortOptions,
     search,
     filters,
-  }: {
-    page: { num: number; size: number };
-    sortOptions: SortOptions;
-    search?: string;
-    filters?: Record<string, string | boolean>;
-  }) => {
+  }: FetchDataOptions) => {
     const result = await DevicesService.fetchDevices(
       props.store.env.baseUrl,
       props.store.organizations.selectedId,
@@ -191,6 +213,7 @@ const DevicesPage: Component<{
         sortOptions,
         search,
         filters,
+        team_id: selectedTeamId(),
       }
     );
 
@@ -260,6 +283,11 @@ const DevicesPage: Component<{
     if (tableViewRef) {
       tableViewRef.reloadData();
     }
+  };
+
+  const handleTeamChange = (teamId: number | null) => {
+    setSelectedTeamId(teamId);
+    refreshData();
   };
 
   const updateItem = (itemId: string, item: Partial<DeviceTableItem>) => {
@@ -348,7 +376,12 @@ const DevicesPage: Component<{
             />
           ),
           actions: (
-            <div>
+            <div style="display: flex; gap: 1rem; align-items: center;">
+              <TeamFilter
+                teams={teams()}
+                selectedTeamId={selectedTeamId()}
+                onTeamChange={handleTeamChange}
+              />
               <IconButton
                 onClick={() => setShowConfirmDialogMultiple(true)}
                 icon={AiOutlineDelete}

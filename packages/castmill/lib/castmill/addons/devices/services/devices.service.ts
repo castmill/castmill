@@ -13,6 +13,7 @@ export interface FetchDevicesOptions {
   sortOptions: SortOptions;
   search?: string;
   filters?: Record<string, string | boolean>;
+  team_id?: number | null;
 }
 type HandleResponseOptions = {
   parse?: boolean;
@@ -102,7 +103,7 @@ export const DevicesService = {
   async fetchDevices(
     baseUrl: string,
     organizationId: string,
-    { page, page_size, sortOptions, search, filters }: FetchDevicesOptions
+    { page, page_size, sortOptions, search, filters, team_id }: FetchDevicesOptions
   ) {
     const filtersToString = (filters: Record<string, string | boolean>) => {
       return Object.entries(filters)
@@ -124,6 +125,10 @@ export const DevicesService = {
 
     if (filters) {
       query['filters'] = filtersToString(filters);
+    }
+
+    if (team_id !== undefined && team_id !== null) {
+      query['team_id'] = team_id.toString();
     }
 
     const queryString = new URLSearchParams(query).toString();

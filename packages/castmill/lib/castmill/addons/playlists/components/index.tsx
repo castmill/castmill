@@ -1,7 +1,7 @@
 import { BsCheckLg } from 'solid-icons/bs';
 import { BsEye } from 'solid-icons/bs';
 import { AiOutlineDelete } from 'solid-icons/ai';
-import { Component, createSignal, Show } from 'solid-js';
+import { Component, createEffect, createSignal, Show } from 'solid-js';
 
 import {
   Button,
@@ -13,6 +13,8 @@ import {
   TableViewRef,
   FetchDataOptions,
   ConfirmDialog,
+  TeamFilter,
+  Team,
 } from '@castmill/ui-common';
 import { JsonPlaylist } from '@castmill/player';
 import { PlaylistsService } from '../services/playlists.service';
@@ -29,6 +31,30 @@ const PlaylistsPage: Component<{
   const [data, setData] = createSignal<JsonPlaylist[]>([]);
   const [currentPlaylist, setCurrentPlaylist] = createSignal<JsonPlaylist>();
   const [showModal, setShowModal] = createSignal(false);
+
+  const [teams, setTeams] = createSignal<Team[]>([]);
+  const [selectedTeamId, setSelectedTeamId] = createSignal<number | null>(null);
+
+  // Fetch teams for the organization
+  createEffect(async () => {
+    if (props.store.organizations.selectedId) {
+      try {
+        const response = await fetch(
+          `${props.store.env.baseUrl}/dashboard/organizations/${props.store.organizations.selectedId}/teams?page=1&page_size=100`,
+          {
+            method: 'GET',
+            credentials: 'include',
+          }
+        );
+        if (response.ok) {
+          const result = await response.json();
+          setTeams(result.data || []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch teams:', error);
+      }
+    }
+  });
 
   const [showAddPlaylistModal, setShowAddPlaylistModal] = createSignal(false);
   const [selectedPlaylists, setSelectedPlaylists] = createSignal(
@@ -53,6 +79,11 @@ const PlaylistsPage: Component<{
     }
   };
 
+  const handleTeamChange = (teamId: number | null) => {
+    setSelectedTeamId(teamId);
+    refreshData();
+  };
+
   const fetchData = async ({
     page,
     sortOptions,
@@ -68,6 +99,7 @@ const PlaylistsPage: Component<{
         sortOptions,
         search,
         filters,
+        team_id: selectedTeamId(),
       }
     );
 
@@ -244,7 +276,12 @@ const PlaylistsPage: Component<{
             />
           ),
           actions: (
-            <div>
+            <div style="display: flex; gap: 1rem; align-items: center;">
+              <TeamFilter
+                teams={teams()}
+                selectedTeamId={selectedTeamId()}
+                onTeamChange={handleTeamChange}
+              />
               <IconButton
                 onClick={() => setShowConfirmDialogMultiple(true)}
                 icon={AiOutlineDelete}
