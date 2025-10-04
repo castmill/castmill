@@ -598,6 +598,126 @@ defmodule CastmillWeb.TeamControllerTest do
   end
 
   # ---------------------------------------------------------------------------
+  # Quota Enforcement Tests
+  describe "team creation quota enforcement" do
+    @describetag team_controller: true
+
+    setup %{organization: organization, user: user} do
+      # Make user an admin for quota tests
+      {:ok, _} = Organizations.set_user_role(organization.id, user.id, :admin)
+      :ok
+    end
+
+    test "allows team creation when quota is not exceeded", %{
+      conn: conn,
+      organization: organization
+    } do
+      # Network has default plan with teams quota of 10
+      # We already have 1 team from setup, create one more
+      conn =
+        post(conn, Routes.organization_resource_path(conn, :create, organization.id, "teams"), %{
+          "team" => %{"name" => "New Team"}
+        })
+
+      assert conn.status == 201
+      assert json_response(conn, 201)["data"]["name"] == "New Team"
+    end
+
+    test "prevents team creation when quota is exceeded", %{
+      conn: conn,
+      organization: organization
+    } do
+      # Set a low quota for testing
+      Castmill.Quotas.add_quota_to_organization(organization.id, :teams, 1)
+
+      # We already have 1 team from setup, so this should fail
+      conn =
+        post(conn, Routes.organization_resource_path(conn, :create, organization.id, "teams"), %{
+          "team" => %{"name" => "Quota Exceeded Team"}
+        })
+
+      assert conn.status == 403
+      response = json_response(conn, 403)
+      assert response["errors"]["quota"] == ["Team quota exceeded"]
+    end
+
+    test "respects organization-specific quota override", %{
+      conn: conn,
+      organization: organization
+    } do
+      # Set quota to 3 teams
+      Castmill.Quotas.add_quota_to_organization(organization.id, :teams, 3)
+
+      # Already have 1 team, create 2 more (should succeed)
+      conn1 =
+        post(conn, Routes.organization_resource_path(conn, :create, organization.id, "teams"), %{
+          "team" => %{"name" => "Team 2"}
+        })
+
+      assert conn1.status == 201
+
+      # Get auth header for reuse
+      auth_header =
+        conn.req_headers |> Enum.find(fn {k, _} -> k == "authorization" end) |> elem(1)
+
+      conn2 =
+        recycle(conn)
+        |> put_req_header("accept", "application/json")
+        |> put_req_header("authorization", auth_header)
+        |> post(Routes.organization_resource_path(conn, :create, organization.id, "teams"), %{
+          "team" => %{"name" => "Team 3"}
+        })
+
+      assert conn2.status == 201
+
+      # 4th team should fail
+      conn3 =
+        recycle(conn)
+        |> put_req_header("accept", "application/json")
+        |> put_req_header("authorization", auth_header)
+        |> post(Routes.organization_resource_path(conn, :create, organization.id, "teams"), %{
+          "team" => %{"name" => "Team 4"}
+        })
+
+      assert conn3.status == 403
+    end
+
+    test "respects assigned plan quota", %{conn: conn, organization: organization} do
+      # Create a plan with 2 teams quota
+      plan =
+        Castmill.Quotas.create_plan("Limited Plan", organization.network_id, [
+          %{max: 2, resource: :teams},
+          %{max: 100, resource: :medias}
+        ])
+
+      Castmill.Quotas.assign_plan_to_organization(plan.id, organization.id)
+
+      # Already have 1 team, create 1 more (should succeed)
+      conn1 =
+        post(conn, Routes.organization_resource_path(conn, :create, organization.id, "teams"), %{
+          "team" => %{"name" => "Team 2"}
+        })
+
+      assert conn1.status == 201
+
+      # Get auth header for reuse
+      auth_header =
+        conn.req_headers |> Enum.find(fn {k, _} -> k == "authorization" end) |> elem(1)
+
+      # 3rd team should fail
+      conn2 =
+        recycle(conn)
+        |> put_req_header("accept", "application/json")
+        |> put_req_header("authorization", auth_header)
+        |> post(Routes.organization_resource_path(conn, :create, organization.id, "teams"), %{
+          "team" => %{"name" => "Team 3"}
+        })
+
+      assert conn2.status == 403
+    end
+  end
+
+  # ---------------------------------------------------------------------------
   # Helper function to create an invitation for a specific email in a team
   defp create_invitation_for_user_email(team, email) do
     # This presumably calls something like Teams.add_invitation_to_team/3

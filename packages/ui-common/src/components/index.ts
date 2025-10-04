@@ -17,3 +17,6 @@ export * from './slider/slider';
 export * from './combobox/combobox';
 export * from './circular-progress/circular-progress';
 export * from './formatters';
+export * from './toast/toast';
+export * from './toast/toast-container';
+export * from './toast/toast-provider';

@@ -1,9 +1,9 @@
 import { useSearchParams } from '@solidjs/router';
 import { Component, createEffect, createSignal, Show } from 'solid-js';
 
-import { Button, FormItem, TabItem, Tabs } from '@castmill/ui-common';
+import { Button, FormItem, TabItem, Tabs, useToast } from '@castmill/ui-common';
 import { OrganizationMembersView } from './organization-members-view';
-import { store } from '../../store';
+import { store, setStore } from '../../store';
 import { BsCheckLg } from 'solid-icons/bs';
 
 import style from './organization-page.module.scss';
@@ -12,8 +12,12 @@ import { OrganizationInvitationsView } from './organization-invitations-view';
 
 const OrganizationPage: Component = () => {
   const params = useSearchParams();
+  const toast = useToast();
 
   const [name, setName] = createSignal(store.organizations.selectedName!);
+  const [previousOrgId, setPreviousOrgId] = createSignal(
+    store.organizations.selectedId
+  );
 
   const [isFormModified, setIsFormModified] = createSignal(false);
   const [errors, setErrors] = createSignal(new Map());
@@ -37,13 +41,18 @@ const OrganizationPage: Component = () => {
   };
 
   createEffect(() => {
-    // We need to check both fields or create effect will not detect the dependencies.
+    // Only reset the form when switching to a different organization
+    if (store.organizations.selectedId !== previousOrgId()) {
+      setName(store.organizations.selectedName);
+      setIsFormModified(false);
+      setPreviousOrgId(store.organizations.selectedId);
+    }
+  });
+
+  createEffect(() => {
+    // Track if the name has been modified
     const hasModifiedName = name() !== store.organizations.selectedName;
     setIsFormModified(hasModifiedName);
-
-    if (store.organizations.selectedId) {
-      setName(store.organizations.selectedName);
-    }
   });
 
   const isFormValid = () => {
@@ -55,8 +64,22 @@ const OrganizationPage: Component = () => {
       await OrganizationsService.update(organization.id, {
         name: organization.name,
       });
+
       // Clear any existing errors on success
       setErrors(new Map());
+      toast.success('Organization updated successfully');
+
+      // Update the store with the new organization name
+      setStore('organizations', 'data', (orgs) =>
+        orgs.map((org) =>
+          org.id === organization.id ? { ...org, name: organization.name } : org
+        )
+      );
+
+      // Update the selectedName if this is the currently selected organization
+      if (store.organizations.selectedId === organization.id) {
+        setStore('organizations', 'selectedName', organization.name);
+      }
     } catch (error: any) {
       // Handle validation errors from the server
       if (error.status === 422 && error.data?.errors) {
@@ -71,7 +94,7 @@ const OrganizationPage: Component = () => {
         }
         setErrors(newErrors);
       } else {
-        alert(`Error updating organization: ${error.message}`);
+        toast.error(`Error updating organization: ${error.message}`);
       }
     }
   };

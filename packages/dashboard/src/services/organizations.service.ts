@@ -165,17 +165,21 @@ export const OrganizationsService = {
    * @param invitationId
    * @returns
    */
-  removeInvitationFromOrganization(
+  async removeInvitationFromOrganization(
     organizationId: string,
     invitationId: number
   ) {
-    return fetch(
+    const response = await fetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/invitations/${invitationId}`,
       {
         method: 'DELETE',
         credentials: 'include',
       }
     );
+
+    if (response.status !== 200) {
+      throw new Error('Failed to remove invitation from organization');
+    }
   },
 
   /**
