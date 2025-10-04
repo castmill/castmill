@@ -8,6 +8,7 @@ defmodule CastmillWeb.ResourceController.ChannelsTest do
   import Castmill.OrganizationsFixtures
   import Castmill.TeamsFixtures
   import Castmill.ChannelsFixtures
+  import Castmill.DevicesFixtures
 
   @moduletag :e2e
 
@@ -106,6 +107,37 @@ defmodule CastmillWeb.ResourceController.ChannelsTest do
     test "fails to delete a non-existent channel", %{conn: conn, organization: organization} do
       conn = delete(conn, "/api/organizations/#{organization.id}/channels/0")
       assert response(conn, 404)
+    end
+
+    test "fails to delete a channel assigned to a device", %{
+      conn: conn,
+      organization: organization
+    } do
+      # Create a channel
+      channel =
+        channel_fixture(%{
+          organization_id: organization.id,
+          name: "Active Channel",
+          timezone: "Europe/Amsterdam"
+        })
+
+      # Register a device
+      {:ok, devices_registration} = device_registration_fixture()
+
+      {:ok, {device, _token}} =
+        Castmill.Devices.register_device(organization.id, devices_registration.pincode, %{
+          name: "Test Device"
+        })
+
+      # Add the channel to the device
+      Castmill.Devices.add_channel(device.id, channel.id)
+
+      # Try to delete the channel - should fail
+      conn = delete(conn, "/api/organizations/#{organization.id}/channels/#{channel.id}")
+      response = json_response(conn, 409)
+
+      assert response["errors"]["detail"] == "Cannot delete channel that is assigned to devices"
+      assert response["errors"]["devices"] == ["Test Device"]
     end
   end
 

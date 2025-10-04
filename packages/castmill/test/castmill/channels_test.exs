@@ -14,6 +14,7 @@ defmodule Castmill.ChannelsTest do
     import Castmill.OrganizationsFixtures
     import Castmill.ChannelsFixtures
     import Castmill.PlaylistsFixtures
+    import Castmill.DevicesFixtures
 
     test "list_channel/1 returns all channels" do
       network = network_fixture()
@@ -177,6 +178,59 @@ defmodule Castmill.ChannelsTest do
                DateTime.to_unix(~U[2005-05-05 00:00:00Z]),
                DateTime.to_unix(~U[9999-12-31 00:00:00Z])
              ) == []
+    end
+
+    test "delete_channel/1 fails when channel is assigned to a device" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+
+      channel =
+        channel_fixture(%{organization_id: organization.id, timezone: "Europe/Stockholm"})
+
+      # Register a device
+      {:ok, devices_registration} = device_registration_fixture()
+
+      {:ok, {device, _token}} =
+        Castmill.Devices.register_device(organization.id, devices_registration.pincode, %{
+          name: "Test Device"
+        })
+
+      # Add the channel to the device
+      Castmill.Devices.add_channel(device.id, channel.id)
+
+      # Try to delete the channel - should fail
+      assert {:error, :channel_has_devices} = Resources.delete_channel(channel)
+
+      # Verify the channel still exists
+      assert Resources.list_resources(Channel, %{organization_id: organization.id}) == [channel]
+    end
+
+    test "delete_channel/1 succeeds after removing channel from all devices" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+
+      channel =
+        channel_fixture(%{organization_id: organization.id, timezone: "Europe/Stockholm"})
+
+      # Register a device
+      {:ok, devices_registration} = device_registration_fixture()
+
+      {:ok, {device, _token}} =
+        Castmill.Devices.register_device(organization.id, devices_registration.pincode, %{
+          name: "Test Device"
+        })
+
+      # Add the channel to the device
+      Castmill.Devices.add_channel(device.id, channel.id)
+
+      # Remove the channel from the device
+      Castmill.Devices.remove_channel(device.id, channel.id)
+
+      # Now deletion should succeed
+      assert {:ok, _} = Resources.delete_channel(channel)
+
+      # Verify the channel is deleted
+      assert Resources.list_resources(Channel, %{organization_id: organization.id}) == []
     end
   end
 end
