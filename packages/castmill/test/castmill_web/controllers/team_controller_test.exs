@@ -27,7 +27,7 @@ defmodule CastmillWeb.TeamControllerTest do
 
     # By default, let's add the user as an organization admin so we can test
     # various "happy paths" easily. Adjust as needed:
-    {:ok, _} = Organizations.set_user_role(organization.id, user.id, :admin)
+    # :ok = Organizations.set_user_role(organization.id, user.id, "admin")
 
     # Insert the user into the team if needed
     # {:ok, _teams_user} = Teams.add_user_to_team(team.id, user.id, :admin)
@@ -601,6 +601,12 @@ defmodule CastmillWeb.TeamControllerTest do
   # Quota Enforcement Tests
   describe "team creation quota enforcement" do
     @describetag team_controller: true
+
+    setup %{organization: organization, user: user} do
+      # Make user an admin for quota tests
+      {:ok, _} = Organizations.set_user_role(organization.id, user.id, :admin)
+      :ok
+    end
 
     test "allows team creation when quota is not exceeded", %{
       conn: conn,
