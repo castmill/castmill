@@ -98,38 +98,5 @@ defmodule Castmill.OrganizationsTest do
       assert {:error, %Ecto.Changeset{}} =
                Organizations.update_organization(organization2, %{name: "org1"})
     end
-
-    test "is_name_available_in_network?/3 returns true for available name" do
-      network = network_fixture()
-      organization_fixture(%{network_id: network.id, name: "existing org"})
-
-      assert Organizations.is_name_available_in_network?(
-               network.id,
-               "new org",
-               nil
-             ) == true
-    end
-
-    test "is_name_available_in_network?/3 returns false for taken name" do
-      network = network_fixture()
-      organization_fixture(%{network_id: network.id, name: "existing org"})
-
-      assert Organizations.is_name_available_in_network?(
-               network.id,
-               "existing org",
-               nil
-             ) == false
-    end
-
-    test "is_name_available_in_network?/3 excludes current organization" do
-      network = network_fixture()
-      organization = organization_fixture(%{network_id: network.id, name: "my org"})
-
-      assert Organizations.is_name_available_in_network?(
-               network.id,
-               "my org",
-               organization.id
-             ) == true
-    end
   end
 end

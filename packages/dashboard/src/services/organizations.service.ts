@@ -218,29 +218,12 @@ export const OrganizationsService = {
     );
 
     if (response.status !== 200) {
+      // Try to parse error response
+      const errorData = await response.json().catch(() => ({}));
       const error: any = new Error('Failed to update organization');
-      error.response = response;
+      error.status = response.status;
+      error.data = errorData;
       throw error;
-    }
-  },
-
-  /**
-   * Check if organization name is available in the network.
-   *
-   */
-  async checkNameAvailability(organizationId: string, name: string) {
-    const response = await fetch(
-      `${baseUrl}/dashboard/organizations/${organizationId}/check_name?name=${encodeURIComponent(name)}`,
-      {
-        method: 'GET',
-        credentials: 'include',
-      }
-    );
-
-    if (response.status === 200) {
-      return (await response.json()) as { available: boolean };
-    } else {
-      throw new Error('Failed to check name availability');
     }
   },
 };

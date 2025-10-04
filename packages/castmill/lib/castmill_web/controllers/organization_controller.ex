@@ -65,10 +65,6 @@ defmodule CastmillWeb.OrganizationController do
     {:ok, Organizations.is_admin?(organization_id, actor_id)}
   end
 
-  def check_access(actor_id, :check_name, %{"organization_id" => organization_id}) do
-    {:ok, Organizations.is_admin?(organization_id, actor_id)}
-  end
-
   def check_access(actor_id, action, %{"token" => token})
       when action in [:show_invitation, :accept_invitation] do
     validInvitation?(actor_id, token)
@@ -383,18 +379,5 @@ defmodule CastmillWeb.OrganizationController do
         |> put_status(:bad_request)
         |> json(%{})
     end
-  end
-
-  def check_name(conn, %{"organization_id" => organization_id, "name" => name}) do
-    organization = Organizations.get_organization!(organization_id)
-
-    # Check if another organization with the same name exists in the same network
-    # (excluding the current organization)
-    is_available =
-      Organizations.is_name_available_in_network?(organization.network_id, name, organization_id)
-
-    conn
-    |> put_status(:ok)
-    |> json(%{available: is_available})
   end
 end

@@ -17,9 +17,8 @@ const OrganizationPage: Component = () => {
 
   const [isFormModified, setIsFormModified] = createSignal(false);
   const [errors, setErrors] = createSignal(new Map());
-  const [isValidatingName, setIsValidatingName] = createSignal(false);
 
-  const validateField = async (fieldId: string, value: string) => {
+  const validateField = (fieldId: string, value: string) => {
     let error = '';
     switch (fieldId) {
       case 'name':
@@ -27,23 +26,6 @@ const OrganizationPage: Component = () => {
           error = 'Name is required';
         } else if (value.length < 5) {
           error = 'Name must be at least 5 characters';
-        } else if (value !== store.organizations.selectedName) {
-          // Only check availability if the name has changed
-          setIsValidatingName(true);
-          try {
-            const result = await OrganizationsService.checkNameAvailability(
-              store.organizations.selectedId!,
-              value
-            );
-            if (!result.available) {
-              error =
-                'An organization with this name already exists in this network';
-            }
-          } catch (err) {
-            error = 'Failed to validate name';
-          } finally {
-            setIsValidatingName(false);
-          }
         }
         break;
       default:
@@ -65,11 +47,7 @@ const OrganizationPage: Component = () => {
   });
 
   const isFormValid = () => {
-    return (
-      ![...errors().values()].some((e) => e) &&
-      isFormModified() &&
-      !isValidatingName()
-    );
+    return ![...errors().values()].some((e) => e) && isFormModified();
   };
 
   const onSubmit = async (organization: { id: string; name: string }) => {
@@ -77,20 +55,23 @@ const OrganizationPage: Component = () => {
       await OrganizationsService.update(organization.id, {
         name: organization.name,
       });
+      // Clear any existing errors on success
+      setErrors(new Map());
     } catch (error: any) {
-      // Check if it's a validation error from the server
-      if (error?.response?.status === 422) {
-        const errorData = await error.response.json();
-        if (errorData?.errors?.name) {
-          setErrors(
-            (prev) =>
-              new Map(prev).set('name', errorData.errors.name.join(', '))
-          );
-        } else {
-          alert(`Error updating organization: ${JSON.stringify(errorData)}`);
+      // Handle validation errors from the server
+      if (error.status === 422 && error.data?.errors) {
+        // Set server-side validation errors
+        const newErrors = new Map();
+        if (error.data.errors.name) {
+          // Errors come as arrays, join them with commas
+          const nameErrors = Array.isArray(error.data.errors.name)
+            ? error.data.errors.name
+            : [error.data.errors.name];
+          newErrors.set('name', nameErrors.join(', '));
         }
+        setErrors(newErrors);
       } else {
-        alert(`Error updating organization ${error}`);
+        alert(`Error updating organization: ${error.message}`);
       }
     }
   };
@@ -147,7 +128,6 @@ const OrganizationPage: Component = () => {
               onInput={(value: string | number | boolean) => {
                 const strValue = value as string;
                 setName(strValue);
-                // Use async validation
                 validateField('name', strValue);
               }}
             >
