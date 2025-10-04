@@ -152,7 +152,7 @@ const ChannelsPage: Component = () => {
     }
     try {
       const result = await channelsService.removeChannel(channel.id);
-      
+
       if (result.success) {
         refreshData();
         toast.success(`Channel ${channel.name} removed successfully`);
@@ -179,26 +179,31 @@ const ChannelsPage: Component = () => {
       )
     );
 
-    const failedChannels: Array<{ id: number; name: string; devices: string[] }> = [];
-    const unexpectedErrors: Array<{ id: number; name: string; error: string }> = [];
-    
+    const failedChannels: Array<{
+      id: number;
+      name: string;
+      devices: string[];
+    }> = [];
+    const unexpectedErrors: Array<{ id: number; name: string; error: string }> =
+      [];
+
     results.forEach((result, index) => {
       const channelId = Array.from(selectedChannels())[index];
       const channel = data().find((c) => c.id === channelId);
-      
+
       if (result.status === 'fulfilled' && !result.value.success) {
         // Business logic error (channel assigned to devices)
         failedChannels.push({
           id: channelId,
           name: channel?.name || `Channel ${channelId}`,
-          devices: result.value.error?.devices || []
+          devices: result.value.error?.devices || [],
         });
       } else if (result.status === 'rejected') {
         // Unexpected error (network, server down, etc.)
         unexpectedErrors.push({
           id: channelId,
           name: channel?.name || `Channel ${channelId}`,
-          error: String(result.reason)
+          error: String(result.reason),
         });
       }
     });
@@ -206,22 +211,26 @@ const ChannelsPage: Component = () => {
     if (failedChannels.length > 0 || unexpectedErrors.length > 0) {
       // Build a detailed error message
       const messages: string[] = [];
-      
+
       if (failedChannels.length > 0) {
-        messages.push(...failedChannels.map((fc) => {
-          if (fc.devices.length > 0) {
-            return `- ${fc.name} (assigned to: ${fc.devices.join(', ')})`;
-          }
-          return `- ${fc.name}`;
-        }));
+        messages.push(
+          ...failedChannels.map((fc) => {
+            if (fc.devices.length > 0) {
+              return `- ${fc.name} (assigned to: ${fc.devices.join(', ')})`;
+            }
+            return `- ${fc.name}`;
+          })
+        );
       }
-      
+
       if (unexpectedErrors.length > 0) {
-        messages.push(...unexpectedErrors.map((err) => 
-          `- ${err.name} (error: ${err.error})`
-        ));
+        messages.push(
+          ...unexpectedErrors.map(
+            (err) => `- ${err.name} (error: ${err.error})`
+          )
+        );
       }
-      
+
       setErrorMessage(
         `The following channel${failedChannels.length + unexpectedErrors.length > 1 ? 's' : ''} could not be deleted:`
       );
@@ -391,10 +400,10 @@ const ChannelsPage: Component = () => {
               ))}
             </div>
             <div style="margin-top: 1.5em; display: flex; justify-content: flex-end;">
-              <Button 
-                label="OK" 
-                color="primary" 
-                onClick={() => setShowErrorDialog(false)} 
+              <Button
+                label="OK"
+                color="primary"
+                onClick={() => setShowErrorDialog(false)}
               />
             </div>
           </Modal>

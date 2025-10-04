@@ -136,7 +136,8 @@ defmodule CastmillWeb.ResourceController.ChannelsTest do
       conn = delete(conn, "/api/organizations/#{organization.id}/channels/#{channel.id}")
       response = json_response(conn, 409)
 
-      assert response["errors"] == ["Cannot delete channel that is assigned to devices"]
+      assert response["errors"]["detail"] == "Cannot delete channel that is assigned to devices"
+      assert response["errors"]["devices"] == ["Test Device"]
     end
   end
 
