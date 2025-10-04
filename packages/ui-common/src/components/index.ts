@@ -16,4 +16,5 @@ export * from './switch/switch';
 export * from './slider/slider';
 export * from './combobox/combobox';
 export * from './circular-progress/circular-progress';
+export * from './team-filter/team-filter';
 export * from './formatters';

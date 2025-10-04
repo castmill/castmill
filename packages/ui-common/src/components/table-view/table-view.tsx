@@ -16,6 +16,7 @@ export interface FetchDataOptions {
   sortOptions: SortOptions;
   search?: string;
   filters?: Record<string, string | boolean>;
+  team_id?: number | null;
 }
 
 export interface TableViewRef<
