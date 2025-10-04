@@ -61,6 +61,10 @@ defmodule CastmillWeb.OrganizationController do
     {:ok, Organizations.is_admin?(organization_id, actor_id)}
   end
 
+  def check_access(actor_id, :remove_invitation, %{"organization_id" => organization_id}) do
+    {:ok, Organizations.is_admin?(organization_id, actor_id)}
+  end
+
   def check_access(actor_id, :update, %{"id" => organization_id}) do
     {:ok, Organizations.is_admin?(organization_id, actor_id)}
   end
@@ -165,14 +169,22 @@ defmodule CastmillWeb.OrganizationController do
         "pincode" => pincode,
         "organization_id" => organization_id
       }) do
-    with {:ok, {device, _token}} <-
-           Castmill.Devices.register_device(organization_id, pincode, %{name: name}, %{
-             add_default_channel: true
-           }) do
-      conn
-      |> put_status(:created)
-      |> put_resp_header("location", ~p"/devices/#{device.id}")
-      |> json(device)
+    case Castmill.Devices.register_device(organization_id, pincode, %{name: name}, %{
+           add_default_channel: true
+         }) do
+      {:ok, {device, _token}} ->
+        conn
+        |> put_status(:created)
+        |> put_resp_header("location", ~p"/devices/#{device.id}")
+        |> json(device)
+
+      {:error, :quota_exceeded} ->
+        conn
+        |> put_status(:forbidden)
+        |> json(%{errors: %{quota: ["Device quota exceeded"]}})
+
+      {:error, _} = error ->
+        {:error, error}
     end
   end
 
@@ -373,6 +385,23 @@ defmodule CastmillWeb.OrganizationController do
         conn
         |> put_status(:unprocessable_entity)
         |> json(%{errors: errors})
+
+      {:error, _} ->
+        conn
+        |> put_status(:bad_request)
+        |> json(%{})
+    end
+  end
+
+  def remove_invitation(conn, %{
+        "organization_id" => organization_id,
+        "invitation_id" => invitation_id
+      }) do
+    case Organizations.remove_invitation_from_organization(organization_id, invitation_id) do
+      {:ok, _} ->
+        conn
+        |> put_status(:ok)
+        |> json(%{})
 
       {:error, _} ->
         conn
