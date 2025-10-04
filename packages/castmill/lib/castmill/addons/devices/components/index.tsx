@@ -124,6 +124,13 @@ const DevicesPage: Component<{
     setShowRegisterModal(true);
   };
 
+  // Function to reset the registration form for "Register Another"
+  const handleRegisterAnother = () => {
+    setLoadingSuccess('');
+    setRegisterError('');
+    setPincode('');
+  };
+
   const columns = [
     { key: 'name', title: 'Name', sortable: true },
     {
@@ -279,8 +286,10 @@ const DevicesPage: Component<{
         >
           <RegisterDevice
             pincode={pincode()}
+            success={!!loadingSuccess()}
             onSubmit={handleDeviceRegistrationSubmit}
             onCancel={() => setShowRegisterModal(false)}
+            onRegisterAnother={handleRegisterAnother}
           />
         </Modal>
       </Show>

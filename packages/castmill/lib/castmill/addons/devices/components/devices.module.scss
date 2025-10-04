@@ -5,3 +5,49 @@
 .channel-combobox {
   padding: 0.5em 0 0.5em 1em;
 }
+
+.deviceDetails {
+  width: 100%;
+  max-width: 800px;
+}
+
+.deviceDetails h3 {
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.channelCombobox {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 0.5em 0 0.5em 1em;
+}
+
+.channelsList {
+  margin: 1rem 0;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.channelItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.channelItem:last-child {
+  border-bottom: none;
+}
+
+.addChannel {
+  margin-top: 1rem;
+}
+
+.tableSpacer {
+  height: 2rem;
+}
