@@ -495,8 +495,14 @@ defmodule Castmill.Resources do
         []
       end
 
+    # Get the join module for this resource type to exclude resources in teams
+    {join_module, foreign_key} = get_team_join_info(resource)
+
+    # Build query excluding resources that are in any team
     resource.base_query()
     |> Organization.where_org_id(organization_id)
+    |> join(:left, [r], t in ^join_module, on: field(t, ^foreign_key) == r.id)
+    |> where([_, t], is_nil(t.team_id))
     |> QueryHelpers.apply_combined_filters(filters, resource)
     |> QueryHelpers.where_name_like(search)
     |> Ecto.Query.order_by([d], asc: d.name)
@@ -559,8 +565,13 @@ defmodule Castmill.Resources do
         search: search,
         filters: filters
       }) do
+    # Get the join module for this resource type to exclude resources in teams
+    {join_module, foreign_key} = get_team_join_info(resource)
+
     resource.base_query()
     |> Organization.where_org_id(organization_id)
+    |> join(:left, [r], t in ^join_module, on: field(t, ^foreign_key) == r.id)
+    |> where([_, t], is_nil(t.team_id))
     |> QueryHelpers.apply_combined_filters(filters, resource)
     |> QueryHelpers.where_name_like(search)
     |> Repo.aggregate(:count, :id)

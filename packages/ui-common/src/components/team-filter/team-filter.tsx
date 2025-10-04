@@ -1,8 +1,8 @@
 /**
  * TeamFilter Component
  *
- * A dropdown filter for selecting teams. Shows "Organization" option for all resources
- * and individual team options. Hides the dropdown when no teams exist.
+ * A dropdown filter for selecting teams. Shows "Organization" option for resources
+ * not assigned to any team, and individual team options. Hides the dropdown when no teams exist.
  */
 
 import { Component, Show, createEffect, createSignal } from 'solid-js';
@@ -33,7 +33,7 @@ export const TeamFilter: Component<TeamFilterProps> = (props) => {
       name: team.name,
     }));
 
-    // Add "Organization" option at the beginning
+    // Add "Organization" option at the beginning for resources not in any team
     setItems([{ value: 'null', name: 'Organization' }, ...teamItems]);
   });
 
