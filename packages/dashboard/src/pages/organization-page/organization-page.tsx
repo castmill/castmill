@@ -65,6 +65,8 @@ const OrganizationPage: Component = () => {
         name: organization.name,
       });
 
+      // Clear any existing errors on success
+      setErrors(new Map());
       toast.success('Organization updated successfully');
 
       // Update the store with the new organization name
@@ -78,8 +80,22 @@ const OrganizationPage: Component = () => {
       if (store.organizations.selectedId === organization.id) {
         setStore('organizations', 'selectedName', organization.name);
       }
-    } catch (error) {
-      toast.error(`Error updating organization: ${error}`);
+    } catch (error: any) {
+      // Handle validation errors from the server
+      if (error.status === 422 && error.data?.errors) {
+        // Set server-side validation errors
+        const newErrors = new Map();
+        if (error.data.errors.name) {
+          // Errors come as arrays, join them with commas
+          const nameErrors = Array.isArray(error.data.errors.name)
+            ? error.data.errors.name
+            : [error.data.errors.name];
+          newErrors.set('name', nameErrors.join(', '));
+        }
+        setErrors(newErrors);
+      } else {
+        toast.error(`Error updating organization: ${error.message}`);
+      }
     }
   };
 
