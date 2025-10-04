@@ -16,6 +16,8 @@ import {
   ModalRef,
   CircularProgress,
   ResourcesObserver,
+  ToastProvider,
+  useToast,
 } from '@castmill/ui-common';
 import { JsonMedia } from '@castmill/player';
 import { MediasService } from '../services/medias.service';
@@ -31,6 +33,7 @@ const MediasPage: Component<{
   store: AddonStore;
   params: any; //typeof useSearchParams;
 }> = (props) => {
+  const toast = useToast();
   const [data, setData] = createSignal<JsonMedia[]>([], {
     equals: false,
   });
@@ -76,9 +79,10 @@ const MediasPage: Component<{
       );
 
       refreshData();
+      toast.success(`Media "${resource.name}" removed successfully`);
       loadQuota(); // Reload quota after deletion
     } catch (error) {
-      alert(`Error removing media ${resource.name}: ${error}`);
+      toast.error(`Error removing media ${resource.name}: ${error}`);
     }
     setShowConfirmDialog();
   };
@@ -96,9 +100,10 @@ const MediasPage: Component<{
       );
 
       refreshData();
+      toast.success(`${selectedMedias().size} media(s) removed successfully`);
       loadQuota(); // Reload quota after deletion
     } catch (error) {
-      alert(`Error removing medias: ${error}`);
+      toast.error(`Error removing medias: ${error}`);
     }
     setShowConfirmDialogMultiple(false);
     setSelectedMedias(new Set<string>());
@@ -349,9 +354,10 @@ const MediasPage: Component<{
                   mediaUpdate
                 );
                 refreshData();
+                toast.success(`Media "${showModal()?.name}" updated successfully`);
                 return true;
               } catch (error) {
-                alert(`Error updating media ${showModal()?.name}: ${error}`);
+                toast.error(`Error updating media ${showModal()?.name}: ${error}`);
                 return false;
               }
             }}
@@ -448,4 +454,8 @@ const MediasPage: Component<{
   );
 };
 
-export default MediasPage;
+export default (props: any) => (
+  <ToastProvider>
+    <MediasPage {...props} />
+  </ToastProvider>
+);

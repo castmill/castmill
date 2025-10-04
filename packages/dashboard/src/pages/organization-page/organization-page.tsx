@@ -1,7 +1,7 @@
 import { useSearchParams } from '@solidjs/router';
 import { Component, createEffect, createSignal, Show } from 'solid-js';
 
-import { Button, FormItem, TabItem, Tabs } from '@castmill/ui-common';
+import { Button, FormItem, TabItem, Tabs, useToast } from '@castmill/ui-common';
 import { OrganizationMembersView } from './organization-members-view';
 import { store, setStore } from '../../store';
 import { BsCheckLg } from 'solid-icons/bs';
@@ -12,6 +12,7 @@ import { OrganizationInvitationsView } from './organization-invitations-view';
 
 const OrganizationPage: Component = () => {
   const params = useSearchParams();
+  const toast = useToast();
 
   const [name, setName] = createSignal(store.organizations.selectedName!);
   const [previousOrgId, setPreviousOrgId] = createSignal(
@@ -64,6 +65,8 @@ const OrganizationPage: Component = () => {
         name: organization.name,
       });
 
+      toast.success('Organization updated successfully');
+
       // Update the store with the new organization name
       setStore('organizations', 'data', (orgs) =>
         orgs.map((org) =>
@@ -76,7 +79,7 @@ const OrganizationPage: Component = () => {
         setStore('organizations', 'selectedName', organization.name);
       }
     } catch (error) {
-      alert(`Error updating organization ${error}`);
+      toast.error(`Error updating organization: ${error}`);
     }
   };
 

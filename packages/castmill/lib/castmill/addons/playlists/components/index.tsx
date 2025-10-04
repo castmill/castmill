@@ -13,6 +13,8 @@ import {
   TableViewRef,
   FetchDataOptions,
   ConfirmDialog,
+  ToastProvider,
+  useToast,
 } from '@castmill/ui-common';
 import { JsonPlaylist } from '@castmill/player';
 import { PlaylistsService } from '../services/playlists.service';
@@ -28,6 +30,7 @@ const PlaylistsPage: Component<{
   store: AddonStore;
   params: any; //typeof useSearchParams;
 }> = (props) => {
+  const toast = useToast();
   const [data, setData] = createSignal<JsonPlaylist[]>([]);
   const [currentPlaylist, setCurrentPlaylist] = createSignal<JsonPlaylist>();
   const [showModal, setShowModal] = createSignal(false);
@@ -183,9 +186,10 @@ const PlaylistsPage: Component<{
       );
 
       refreshData();
+      toast.success(`Playlist "${resource.name}" removed successfully`);
       loadQuota(); // Reload quota after deletion
     } catch (error) {
-      alert(`Error removing playlist ${resource.name}: ${error}`);
+      toast.error(`Error removing playlist ${resource.name}: ${error}`);
     }
     setShowConfirmDialog();
   };
@@ -203,9 +207,10 @@ const PlaylistsPage: Component<{
       );
 
       refreshData();
+      toast.success(`${selectedPlaylists().size} playlist(s) removed successfully`);
       loadQuota(); // Reload quota after deletion
     } catch (error) {
-      alert(`Error removing playlists: ${error}`);
+      toast.error(`Error removing playlists: ${error}`);
     }
     setShowConfirmDialogMultiple(false);
     setSelectedPlaylists(new Set<number>());
@@ -221,17 +226,22 @@ const PlaylistsPage: Component<{
         >
           <PlaylistAddForm
             onSubmit={async (name: string) => {
-              const result = await PlaylistsService.addPlaylist(
-                props.store.env.baseUrl,
-                props.store.organizations.selectedId,
-                name
-              );
-              setShowAddPlaylistModal(false);
-              if (result?.data) {
-                setCurrentPlaylist(result.data);
-                setShowModal(true);
-                refreshData();
-                loadQuota(); // Reload quota after creation
+              try {
+                const result = await PlaylistsService.addPlaylist(
+                  props.store.env.baseUrl,
+                  props.store.organizations.selectedId,
+                  name
+                );
+                setShowAddPlaylistModal(false);
+                if (result?.data) {
+                  setCurrentPlaylist(result.data);
+                  setShowModal(true);
+                  refreshData();
+                  toast.success(`Playlist "${name}" created successfully`);
+                  loadQuota(); // Reload quota after creation
+                }
+              } catch (error) {
+                toast.error(`Error creating playlist: ${error}`);
               }
             }}
           />
@@ -336,4 +346,8 @@ const PlaylistsPage: Component<{
   );
 };
 
-export default PlaylistsPage;
+export default (props: any) => (
+  <ToastProvider>
+    <PlaylistsPage {...props} />
+  </ToastProvider>
+);

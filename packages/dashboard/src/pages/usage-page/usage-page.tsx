@@ -4,6 +4,9 @@ import { Component, createSignal, For, onMount, Show } from 'solid-js';
 import { UsageService } from '../../services/usage';
 import { store } from '../../store/store';
 import { Usage } from '../../interfaces/usage';
+
+import { UsageComponent } from '../../components/usage/usage';
+import { useToast } from '@castmill/ui-common';
 import { IoImagesOutline } from 'solid-icons/io';
 import { RiMediaPlayList2Fill } from 'solid-icons/ri';
 import { HiOutlineTv } from 'solid-icons/hi';
@@ -46,6 +49,8 @@ const resourceNames: Record<string, string> = {
  * UsagePage component - Modern dashboard showing resource quota usage.
  */
 const UsagePage: Component = () => {
+  const toast = useToast();
+
   onMount(async () => {
     const organizationId = store.organizations.selectedId;
     if (organizationId) {
@@ -54,8 +59,7 @@ const UsagePage: Component = () => {
         const usageData = await UsageService.getUsage(organizationId);
         setUsage(usageData);
       } catch (error) {
-        console.error('Failed to fetch usage data:', error);
-        alert(`Failed to fetch usage data: ${error}`);
+        toast.error(`Failed to fetch usage data: ${error}`);
       } finally {
         setLoading(false);
       }

@@ -5,6 +5,7 @@ import {
   Modal,
   TableView,
   TableViewRef,
+  useToast,
 } from '@castmill/ui-common';
 import { AiOutlineDelete } from 'solid-icons/ai';
 import { BsCheckLg, BsEye } from 'solid-icons/bs';
@@ -39,7 +40,8 @@ const onRowSelect = (rowsSelected: Set<string | number>) => {
 };
 
 const openModal = () => {
-  alert('open view modal');
+  // TODO: Implement view modal
+  console.log('View modal not yet implemented');
 };
 
 const actions = [
@@ -68,6 +70,7 @@ export const ResourcesView = (props: {
   resourceType: string;
   resourceName: string;
 }) => {
+  const toast = useToast();
   const resourceKey = `${props.resourceName.toLowerCase()}`;
   const itemIdKey = `${props.resourceName.toLocaleLowerCase()}_id`;
 
@@ -131,9 +134,10 @@ export const ResourcesView = (props: {
         resourceId
       );
       refreshData();
+      toast.success('Resource removed from team successfully');
       setShowConfirmDialog(false);
     } catch (error) {
-      alert(`Error removing resource from team: ${error}`);
+      toast.error(`Error removing resource from team: ${error}`);
     }
   };
 
@@ -154,9 +158,10 @@ export const ResourcesView = (props: {
       );
       refreshData();
       setSelectedResources(new Set<string | number>());
+      toast.success('Resources removed from team successfully');
       setShowConfirmDialogMultiple(false);
     } catch (error) {
-      alert(`Error removing resources from team: ${error}`);
+      toast.error(`Error removing resources from team: ${error}`);
     }
   };
 
