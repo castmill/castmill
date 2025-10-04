@@ -9,6 +9,8 @@
     "jsx": "preserve",
     "jsxImportSource": "solid-js",
     "types": ["vite/client", "@testing-library/jest-dom", "gsap"],
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "skipLibCheck": true,
     "incremental": true
   },
   "include": ["src/**/*.ts?"],

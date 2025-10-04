@@ -2,6 +2,7 @@ import { createSignal, createEffect } from 'solid-js';
 
 import { Device } from '../interfaces/device.interface';
 import { Button, FormItem } from '@castmill/ui-common';
+import { AddonStore } from '../../common/interfaces/addon-store';
 
 import { BsCheckLg, BsX } from 'solid-icons/bs';
 
@@ -15,8 +16,14 @@ export interface DeviceUpdate {
 
 export const DeviceDetails = (props: {
   device: Device;
+  store?: AddonStore;
+  t?: (key: string, params?: Record<string, any>) => string;
   onSubmit: (device: DeviceUpdate) => Promise<boolean>;
 }) => {
+  // Get i18n functions from store or use direct t function
+  const t = (key: string, params?: Record<string, any>) =>
+    props.t?.(key, params) || props.store?.i18n?.t(key, params) || key;
+
   const [name, setName] = createSignal(props.device.name);
   const [description, setDescription] = createSignal(props.device.description);
   const [isFormModified, setIsFormModified] = createSignal(false);
@@ -67,8 +74,8 @@ export const DeviceDetails = (props: {
   return (
     <>
       <div style="font-size: 0.8em; color: darkgray;">
-        <span>Added on </span> <span>{`${props.device.inserted_at}`}. </span>
-        <span>Last updated on </span>
+        <span>{t('common.addedOn')} </span> <span>{`${props.device.inserted_at}`}. </span>
+        <span>{t('common.lastUpdatedOn')} </span>
         <span>{`${props.device.updated_at}`}</span>
       </div>
       <form
@@ -85,7 +92,7 @@ export const DeviceDetails = (props: {
       >
         <div class="form-inputs">
           <FormItem
-            label="Name"
+            label={t('common.name')}
             id="name"
             value={name()}
             placeholder="Enter device name"
@@ -98,7 +105,7 @@ export const DeviceDetails = (props: {
           </FormItem>
 
           <FormItem
-            label="Description"
+            label={t('common.description')}
             id="description"
             value={description()}
             placeholder="Enter a description"
@@ -111,14 +118,14 @@ export const DeviceDetails = (props: {
           </FormItem>
 
           <FormItem
-            label="Online"
+            label={t('common.online')}
             id="online"
             value={onlineStatus()}
             disabled={true}
           ></FormItem>
 
           <FormItem
-            label="IP"
+            label={t('common.ip')}
             id="last_ip"
             value={props.device.last_ip}
             disabled={true}
@@ -126,14 +133,14 @@ export const DeviceDetails = (props: {
         </div>
         <div class="bottom-buttons">
           <Button
-            label="Update"
+            label={t('common.update')}
             type="submit"
             disabled={!isFormValid()}
             icon={BsCheckLg}
             color="success"
           />
           <Button
-            label="Reset"
+            label={t('common.reset')}
             onClick={() => {
               setName(props.device.name);
               setDescription(props.device.description);

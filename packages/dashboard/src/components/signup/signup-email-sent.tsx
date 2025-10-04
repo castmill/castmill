@@ -1,9 +1,11 @@
 import { Component } from 'solid-js';
+import { useI18n } from '../../i18n';
 
 const SignUpEmailSent: Component = () => {
+  const { t } = useI18n();
   return (
     <div>
-      <h2>Check your Email</h2>
+      <h2>{t('signup.checkYourEmail')}</h2>
 
       <p>
         We have sent a verification link to your email. Click the link to

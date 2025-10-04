@@ -1,6 +1,7 @@
 import { createSignal } from 'solid-js';
 import { OrganizationRole } from '../../types/organization-role.type';
 import { Button, Dropdown, FormItem } from '@castmill/ui-common';
+import { useI18n } from '../../i18n';
 
 import style from './organization-invite-form.module.scss';
 
@@ -8,6 +9,7 @@ export const OrganizationInviteForm = (props: {
   organizationId: string;
   onSubmit: (email: string, role: OrganizationRole) => void;
 }) => {
+  const { t } = useI18n();
   const [email, setEmail] = createSignal('');
   const [role, setRole] = createSignal<OrganizationRole>('regular');
 
@@ -42,10 +44,10 @@ export const OrganizationInviteForm = (props: {
       }}
     >
       <FormItem
-        label="Name"
+        label={t('common.name')}
         id="name"
         value={email()!}
-        placeholder="Enter member's email"
+        placeholder={t('organization.enterMemberEmail')}
         onInput={(value: string | number | boolean) => {
           const strValue = value as string;
           setEmail(strValue);

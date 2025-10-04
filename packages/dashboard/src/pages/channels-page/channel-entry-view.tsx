@@ -2,6 +2,7 @@ import { Button, Switch } from '@castmill/ui-common';
 import { CalendarEntry } from './calendar-entry.interface';
 import { createSignal, onMount } from 'solid-js';
 import { BsCheckLg, BsX } from 'solid-icons/bs';
+import { useI18n } from '../../i18n';
 
 import styles from './channel-entry-view.module.scss';
 
@@ -10,6 +11,7 @@ export const ChanneEntrylView = (props: {
   onSubmit: (entry: Partial<CalendarEntry>) => Promise<void>;
   onClose: () => void;
 }) => {
+  const { t } = useI18n();
   const [isWeekly, setIsWeekly] = createSignal<boolean>();
   const [initialIsWeekly, setInitialIsWeekly] = createSignal<boolean>();
   const [isFormModified, setIsFormModified] = createSignal(false);
@@ -32,7 +34,7 @@ export const ChanneEntrylView = (props: {
         <span>Playlist: {props.entry.playlist.name}</span>
 
         <Switch
-          name="Repeat Weekly?"
+          name={t('channels.repeatWeekly')}
           key="weekly"
           isActive={isWeekly()!}
           disabled={false}

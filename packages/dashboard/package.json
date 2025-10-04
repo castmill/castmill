@@ -10,7 +10,9 @@
     "dev": "vite",
     "build": "vite build",
     "serve": "vite preview",
-    "test": "vitest"
+    "test": "vitest",
+    "check-i18n": "node scripts/check-i18n.cjs",
+    "lint:i18n": "node scripts/check-i18n.cjs"
   },
   "license": "MIT",
   "devDependencies": {
@@ -18,6 +20,7 @@
     "@solidjs/router": "^0.13.2",
     "@solidjs/testing-library": "^0.8.6",
     "@testing-library/jest-dom": "^6.4.2",
+    "glob": "^11.0.3",
     "jsdom": "^24.0.0",
     "less": "^4.2.0",
     "phoenix": "^1.7.12",

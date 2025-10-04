@@ -14,6 +14,7 @@ import {
 import { TeamsService } from '../../services/teams.service';
 import { AiOutlineDelete } from 'solid-icons/ai';
 import { createSignal } from 'solid-js';
+import { useI18n } from '../../i18n';
 
 interface Invitation {
   id: number;
@@ -41,29 +42,31 @@ const onRowSelect = (rowsSelected: Set<number>) => {
 
 const itemsPerPage = 10;
 
-const columns = [
-  { key: 'email', title: 'Email', sortable: true },
-  { key: 'status', title: 'Status', sortable: true },
-  { key: 'inserted_at', title: 'Inserted At', sortable: true },
-  { key: 'expires_at', title: 'Expires At', sortable: true },
-];
-
-const actions = [
-  {
-    icon: AiOutlineDelete,
-    handler: (item: any) => {
-      setCurrentInvitation(item);
-      setShowConfirmDialog(true);
-    },
-    label: 'Remove',
-  },
-];
-
 export const TeamInvitationsView = (props: {
   organizationId: string;
   teamId: number;
   onRemove: (invitation: Invitation) => void;
 }) => {
+  const { t } = useI18n();
+
+  const columns = [
+    { key: 'email', title: t('common.email'), sortable: true },
+    { key: 'status', title: t('common.status'), sortable: true },
+    { key: 'inserted_at', title: t('common.insertedAt'), sortable: true },
+    { key: 'expires_at', title: t('common.expiresAt'), sortable: true },
+  ];
+
+  const actions = [
+    {
+      icon: AiOutlineDelete,
+      handler: (item: any) => {
+        setCurrentInvitation(item);
+        setShowConfirmDialog(true);
+      },
+      label: t('common.remove'),
+    },
+  ];
+
   const fetchData = async (opts: FetchDataOptions) => {
     const result = await TeamsService.fetchInvitations(
       props.organizationId,

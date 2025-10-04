@@ -1,5 +1,6 @@
 import { Component, createSignal, createEffect } from 'solid-js';
 import { Button, FormItem } from '@castmill/ui-common';
+import { AddonStore } from '../../common/interfaces/addon-store';
 
 import { BsCheckLg, BsX } from 'solid-icons/bs';
 import './register-device.scss';
@@ -8,11 +9,16 @@ const pincodeLength = 10;
 
 const RegisterDevice: Component<{
   pincode?: string;
+  store?: AddonStore;
   onSubmit: (data: { name: string; pincode: string }) => void;
   onCancel: () => void;
   success?: boolean;
   onRegisterAnother?: () => void;
 }> = (props) => {
+  // Get i18n functions from store
+  const t = (key: string, params?: Record<string, any>) =>
+    props.store?.i18n?.t(key, params) || key;
+
   const [name, setName] = createSignal('');
   const [pincode, setPincode] = createSignal('');
   const [errors, setErrors] = createSignal(new Map());
@@ -61,7 +67,7 @@ const RegisterDevice: Component<{
           <div class="success-buttons">
             {props.onRegisterAnother && (
               <Button
-                label="Register Another"
+                label={t('devices.registerAnother')}
                 onClick={props.onRegisterAnother}
                 icon={BsCheckLg}
                 color="success"
@@ -81,10 +87,10 @@ const RegisterDevice: Component<{
         >
           <div class="form-inputs">
             <FormItem
-              label="Name"
+              label={t('common.name')}
               id="name"
               value={name()}
-              placeholder="Enter device name"
+              placeholder={t('devices.enterDeviceName')}
               onInput={(value: string) => {
                 setName(value);
                 validateField('name', value);
@@ -94,12 +100,12 @@ const RegisterDevice: Component<{
             </FormItem>
 
             <FormItem
-              label="Pincode"
+              label={t('devices.pincode')}
               id="pincode"
               value={pincode()}
-              placeholder={`Enter ${pincodeLength}-characters pincode`}
+              placeholder={t('devices.enterPincode', { length: pincodeLength })}
               disabled={!!props.pincode}
-              description="The pincode will be shown on the device's screen."
+              description={t('devices.pincodeDescription')}
               onInput={(value: string) => {
                 setPincode(value);
                 validateField('pincode', value);
@@ -110,14 +116,14 @@ const RegisterDevice: Component<{
           </div>
           <div class="bottom-buttons">
             <Button
-              label="Register"
+              label={t('devices.register')}
               type="submit"
               disabled={!isFormValid()}
               icon={BsCheckLg}
               color="success"
             />
             <Button
-              label="Cancel"
+              label={t('common.cancel')}
               onClick={props.onCancel}
               icon={BsX}
               color="danger"
@@ -128,5 +134,3 @@ const RegisterDevice: Component<{
     </div>
   );
 };
-
-export default RegisterDevice;

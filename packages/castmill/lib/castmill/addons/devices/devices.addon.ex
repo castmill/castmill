@@ -5,6 +5,7 @@ defmodule Castmill.Addons.Devices do
   def component_info() do
     %Castmill.Addons.ComponentInfo{
       name: "Devices",
+      name_key: "sidebar.devices",
       description: "Devices management addon for Castmill",
       version: "0.1.0",
       path: "/devices.js",

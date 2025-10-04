@@ -17,15 +17,19 @@ interface DeviceTableLogItem {
   msg?: string;
 }
 
-const columns = [
-  { key: 'timestamp', title: 'Time', sortable: true },
-  { key: 'type_name', title: 'Type', sortable: true },
-  { key: 'msg', title: 'Message', sortable: false },
-] as Column<DeviceTableLogItem>[];
+export const DeviceLogs: Component<{
+  baseUrl: string;
+  device: Device;
+  t?: (key: string, params?: Record<string, any>) => string;
+}> = (props) => {
+  const t = props.t || ((key: string) => key);
 
-export const DeviceLogs: Component<{ baseUrl: string; device: Device }> = (
-  props
-) => {
+  const columns = [
+    { key: 'timestamp', title: t('common.time'), sortable: true },
+    { key: 'type_name', title: t('common.type'), sortable: true },
+    { key: 'msg', title: t('common.message'), sortable: false },
+  ] as Column<DeviceTableLogItem>[];
+
   const [selectedItems, setSelectedItems] = createSignal(new Set<string>());
 
   const itemsPerPage = 10; // Number of items to show per page

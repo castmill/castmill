@@ -2,6 +2,7 @@ import { useNavigate, useSearchParams } from '@solidjs/router';
 import { createSignal, onMount, Show } from 'solid-js';
 import { checkAuth, getUser } from '../../components/auth'; // your existing auth helpers
 import { TeamsService } from '../../services/teams.service';
+import { useI18n } from '../../i18n';
 
 interface Invitation {
   email: string;
@@ -13,6 +14,7 @@ interface Invitation {
 }
 
 const TeamsInvitationPage = () => {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [invitation, setInvitation] = createSignal<Invitation | null>(null);
@@ -96,19 +98,21 @@ const TeamsInvitationPage = () => {
         You have been invited to join the team {`${invitation()?.team_name}`}
       </h1>
       <Show when={loading()}>
-        <p>Loading invitation...</p>
+        <p>{t('common.loadingInvitation')}</p>
       </Show>
       <Show when={!loading() && errorMessage()}>
         <p style={{ color: 'red' }}>{errorMessage()}</p>
       </Show>
       <Show when={!loading() && invitation()}>
         <p>
-          Invited Email: <b>{invitation()?.email}</b>
+          {t('common.invitedEmail')} <b>{invitation()?.email}</b>
         </p>
         <p>
-          Status: <b>{invitation()?.status}</b>
+          {t('common.status')}: <b>{invitation()?.status}</b>
         </p>
-        <button onClick={acceptInvitation}>Accept Invitation</button>
+        <button onClick={acceptInvitation}>
+          {t('common.acceptInvitation')}
+        </button>
       </Show>
     </div>
   );

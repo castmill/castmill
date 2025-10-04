@@ -7,6 +7,7 @@ import { CalendarEntry } from './calendar-entry.interface';
 import { ChannelsService } from '../../services/channels.service';
 import { baseUrl } from '../../env';
 import { store } from '../../store';
+import { useI18n } from '../../i18n';
 
 interface PlaylistChooserProps {
   onDragOverCell?: (
@@ -16,6 +17,8 @@ interface PlaylistChooserProps {
 }
 
 export const PlaylistChooser: Component<PlaylistChooserProps> = (props) => {
+  const { t } = useI18n();
+
   let channelsService: ChannelsService = new ChannelsService(
     baseUrl,
     store.organizations.selectedId!
@@ -39,7 +42,7 @@ export const PlaylistChooser: Component<PlaylistChooserProps> = (props) => {
 
   return (
     <div>
-      <h2>Drag playlists</h2>
+      <h2>{t('channels.dragPlaylists')}</h2>
       <div class={style.playlistsList}>
         <For each={playlists()}>
           {(playlist) => (

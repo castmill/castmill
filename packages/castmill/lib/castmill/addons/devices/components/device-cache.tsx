@@ -21,17 +21,21 @@ interface DeviceTableCacheItem {
   mimeType: string;
 }
 
-const columns = [
-  { key: 'timestamp', title: 'Timestamp', sortable: true },
-  { key: 'url', title: 'Url', sortable: true },
-  { key: 'size', title: 'Size', sortable: false },
-  { key: 'accessed', title: 'Accessed', sortable: false },
-  { key: 'mimeType', title: 'Mime Type', sortable: false },
-] as Column<DeviceTableCacheItem>[];
+export const DeviceCache: Component<{
+  baseUrl: string;
+  device: Device;
+  t?: (key: string, params?: Record<string, any>) => string;
+}> = (props) => {
+  const t = props.t || ((key: string) => key);
 
-export const DeviceCache: Component<{ baseUrl: string; device: Device }> = (
-  props
-) => {
+  const columns = [
+    { key: 'timestamp', title: t('common.timestamp'), sortable: true },
+    { key: 'url', title: t('common.url'), sortable: true },
+    { key: 'size', title: t('common.size'), sortable: false },
+    { key: 'accessed', title: t('common.accessed'), sortable: false },
+    { key: 'mimeType', title: t('common.mimeType'), sortable: false },
+  ] as Column<DeviceTableCacheItem>[];
+
   const [selectedItems, setSelectedItems] = createSignal(new Set<string>());
 
   const itemsPerPage = 10; // Number of items to show per page

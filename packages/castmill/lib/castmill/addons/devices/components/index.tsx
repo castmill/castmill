@@ -35,6 +35,10 @@ const DevicesPage: Component<{
   store: AddonStore;
   params: any; //typeof useSearchParams;
 }> = (props) => {
+  // Get i18n functions from store
+  const t = (key: string, params?: Record<string, any>) =>
+    props.store.i18n?.t(key, params) || key;
+
   const [currentPage, setCurrentPage] = createSignal(1);
   const [totalItems, setTotalItems] = createSignal(0);
 
@@ -129,7 +133,7 @@ const DevicesPage: Component<{
   };
 
   const columns = [
-    { key: 'name', title: 'Name', sortable: true },
+    { key: 'name', title: t('common.name'), sortable: true },
     {
       key: 'online',
       title: 'Online',
@@ -145,17 +149,17 @@ const DevicesPage: Component<{
         </svg>
       ),
     },
-    { key: 'timezone', title: 'TZ', sortable: true },
-    { key: 'version', title: 'Version', sortable: true },
-    { key: 'last_ip', title: 'IP', sortable: true },
-    { key: 'id', title: 'ID', sortable: true },
+    { key: 'timezone', title: t('common.timezone'), sortable: true },
+    { key: 'version', title: t('common.version'), sortable: true },
+    { key: 'last_ip', title: t('common.ip'), sortable: true },
+    { key: 'id', title: t('common.id'), sortable: true },
   ] as Column<DeviceTableItem>[];
 
   const actions: TableAction<DeviceTableItem>[] = [
     {
       icon: BsEye,
       handler: openModal,
-      label: 'View',
+      label: t('common.view'),
     },
     {
       icon: AiOutlineDelete,
@@ -163,7 +167,7 @@ const DevicesPage: Component<{
         setCurrentDevice(item);
         setShowConfirmDialog(true);
       },
-      label: 'Remove',
+      label: t('common.remove'),
     },
   ];
 
@@ -280,6 +284,7 @@ const DevicesPage: Component<{
           loading={loading()}
         >
           <RegisterDevice
+            store={props.store}
             pincode={pincode()}
             success={!!loadingSuccess()}
             onSubmit={handleDeviceRegistrationSubmit}
@@ -301,6 +306,7 @@ const DevicesPage: Component<{
             onChange={(device) => {
               updateItem(device.id, device);
             }}
+            t={t}
           />
         </Modal>
       </Show>
@@ -361,6 +367,7 @@ const DevicesPage: Component<{
         table={{
           columns,
           actions,
+          actionsLabel: t('common.actions'),
           onRowSelect,
           defaultRowAction: {
             icon: BsEye,
@@ -368,7 +375,7 @@ const DevicesPage: Component<{
               setCurrentDevice(item);
               setShowModal(true);
             },
-            label: 'View',
+            label: t('common.view'),
           },
         }}
         pagination={{ itemsPerPage }}

@@ -35,6 +35,10 @@ const PlaylistsPage: Component<{
     new Set<number>()
   );
 
+  // Get i18n functions from store
+  const t = (key: string, params?: Record<string, any>) =>
+    props.store.i18n?.t(key, params) || key;
+
   const onRowSelect = (rowsSelected: Set<number>) => {
     setSelectedPlaylists(rowsSelected);
   };
@@ -92,17 +96,17 @@ const PlaylistsPage: Component<{
   };
 
   const columns = [
-    { key: 'name', title: 'Name', sortable: true },
-    { key: 'status', title: 'Status', sortable: false },
-    { key: 'inserted_at', title: 'Created', sortable: true },
-    { key: 'updated_at', title: 'Updated', sortable: true },
+    { key: 'name', title: t('common.name'), sortable: true },
+    { key: 'status', title: t('common.status'), sortable: false },
+    { key: 'inserted_at', title: t('common.created'), sortable: true },
+    { key: 'updated_at', title: t('common.updated'), sortable: true },
   ] as Column<JsonPlaylist>[];
 
   const actions: TableAction<JsonPlaylist>[] = [
     {
       icon: BsEye,
       handler: openModal,
-      label: 'View',
+      label: t('common.view'),
     },
     {
       icon: AiOutlineDelete,
@@ -110,7 +114,7 @@ const PlaylistsPage: Component<{
         setCurrentPlaylist(item);
         setShowConfirmDialog(item);
       },
-      label: 'Remove',
+      label: t('common.remove'),
     },
   ];
 
@@ -136,7 +140,12 @@ const PlaylistsPage: Component<{
 
       refreshData();
     } catch (error) {
-      alert(`Error removing playlist ${resource.name}: ${error}`);
+      alert(
+        t('playlists.errorRemovingPlaylist', {
+          name: resource.name,
+          error: String(error),
+        })
+      );
     }
     setShowConfirmDialog();
   };
@@ -155,7 +164,7 @@ const PlaylistsPage: Component<{
 
       refreshData();
     } catch (error) {
-      alert(`Error removing playlists: ${error}`);
+      alert(t('playlists.errorRemovingPlaylists', { error: String(error) }));
     }
     setShowConfirmDialogMultiple(false);
     setSelectedPlaylists(new Set<number>());
@@ -165,11 +174,12 @@ const PlaylistsPage: Component<{
     <div class="playlists-page">
       <Show when={showAddPlaylistModal()}>
         <Modal
-          title="Add Playlist"
-          description="Create a new playlist"
+          title={t('playlists.addPlaylist')}
+          description={t('playlists.createNewPlaylist')}
           onClose={() => setShowAddPlaylistModal(false)}
         >
           <PlaylistAddForm
+            t={t}
             onSubmit={async (name: string) => {
               const result = await PlaylistsService.addPlaylist(
                 props.store.env.baseUrl,
@@ -188,8 +198,10 @@ const PlaylistsPage: Component<{
       </Show>
       <Show when={showModal()}>
         <Modal
-          title={`Playlist "${currentPlaylist()?.name}"`}
-          description="Build your playlist here"
+          title={t('playlists.playlistTitle', {
+            name: currentPlaylist()?.name,
+          })}
+          description={t('playlists.buildPlaylist')}
           onClose={closeModal}
           contentClass="playlist-modal"
         >
@@ -206,16 +218,18 @@ const PlaylistsPage: Component<{
 
       <ConfirmDialog
         show={!!showConfirmDialog()}
-        title="Remove Playlist"
-        message={`Are you sure you want to remove playlist "${showConfirmDialog()?.name}"?`}
+        title={t('playlists.removePlaylist')}
+        message={t('playlists.confirmRemovePlaylist', {
+          name: showConfirmDialog()?.name,
+        })}
         onClose={() => setShowConfirmDialog()}
         onConfirm={() => confirmRemoveResource(showConfirmDialog())}
       />
 
       <ConfirmDialog
         show={showConfirmDialogMultiple()}
-        title="Remove Playlists"
-        message={'Are you sure you want to remove the following playlists?'}
+        title={t('playlists.removePlaylists')}
+        message={t('playlists.confirmRemovePlaylists')}
         onClose={() => setShowConfirmDialogMultiple(false)}
         onConfirm={() => confirmRemoveMultipleResources()}
       >
@@ -229,7 +243,7 @@ const PlaylistsPage: Component<{
       </ConfirmDialog>
 
       <TableView
-        title="Playlists"
+        title={t('playlists.title')}
         resource="playlists"
         params={props.params}
         fetchData={fetchData}
@@ -237,7 +251,7 @@ const PlaylistsPage: Component<{
         toolbar={{
           mainAction: (
             <Button
-              label="Add Playlist"
+              label={t('playlists.addPlaylist')}
               onClick={openAddPlaylistModal}
               icon={BsCheckLg}
               color="primary"
@@ -264,7 +278,7 @@ const PlaylistsPage: Component<{
               setCurrentPlaylist(item);
               setShowModal(true);
             },
-            label: 'View',
+            label: t('common.view'),
           },
         }}
         pagination={{ itemsPerPage }}

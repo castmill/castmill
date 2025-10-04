@@ -1,7 +1,10 @@
 import { Component, createSignal } from 'solid-js';
 import { Button, FormItem } from '@castmill/ui-common';
 
+type TranslateFn = (key: string, params?: Record<string, any>) => string;
+
 export const PlaylistAddForm: Component<{
+  t: TranslateFn;
   onSubmit: (name: string) => Promise<void>;
 }> = (props) => {
   const [name, setName] = createSignal('');
@@ -11,9 +14,9 @@ export const PlaylistAddForm: Component<{
   const validateField = (field: string, value: string) => {
     const errorsMap = new Map(errors());
     if (value.trim() === '') {
-      errorsMap.set(field, 'This field is required');
+      errorsMap.set(field, props.t('validation.fieldRequired'));
     } else if (value.length < 3) {
-      errorsMap.set(field, 'This field must be at least 3 characters long');
+      errorsMap.set(field, props.t('validation.minLength', { min: 3 }));
     } else {
       errorsMap.delete(field);
     }
@@ -36,10 +39,10 @@ export const PlaylistAddForm: Component<{
     >
       <div class="add-playlist">
         <FormItem
-          label="Name"
+          label={props.t('common.name')}
           id="name"
           value={name()!}
-          placeholder="Enter Playlist name"
+          placeholder={props.t('playlists.enterPlaylistName')}
           onInput={(value: string | number | boolean) => {
             const strValue = value as string;
             setIsFormModified(true);
@@ -50,7 +53,7 @@ export const PlaylistAddForm: Component<{
           <div class="error">{errors().get('name')}</div>
         </FormItem>
         <Button
-          label="Create"
+          label={props.t('common.create')}
           type="submit"
           color="primary"
           disabled={!isFormValid()}
