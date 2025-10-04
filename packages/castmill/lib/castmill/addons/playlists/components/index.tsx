@@ -1,7 +1,7 @@
 import { BsCheckLg } from 'solid-icons/bs';
 import { BsEye } from 'solid-icons/bs';
 import { AiOutlineDelete } from 'solid-icons/ai';
-import { Component, createEffect, createSignal, Show } from 'solid-js';
+import { Component, createSignal, Show } from 'solid-js';
 
 import {
   Button,
@@ -14,7 +14,6 @@ import {
   FetchDataOptions,
   ConfirmDialog,
   TeamFilter,
-  Team,
 } from '@castmill/ui-common';
 import { JsonPlaylist } from '@castmill/player';
 import { PlaylistsService } from '../services/playlists.service';
@@ -23,6 +22,7 @@ import './playlists.scss';
 import { PlaylistView } from './playlist-view';
 import { AddonStore } from '../../common/interfaces/addon-store';
 import { PlaylistAddForm } from './playlist-add-form';
+import { useTeamFilter } from '../../common/hooks';
 
 const PlaylistsPage: Component<{
   store: AddonStore;
@@ -32,28 +32,9 @@ const PlaylistsPage: Component<{
   const [currentPlaylist, setCurrentPlaylist] = createSignal<JsonPlaylist>();
   const [showModal, setShowModal] = createSignal(false);
 
-  const [teams, setTeams] = createSignal<Team[]>([]);
-  const [selectedTeamId, setSelectedTeamId] = createSignal<number | null>(null);
-
-  // Fetch teams for the organization
-  createEffect(async () => {
-    if (props.store.organizations.selectedId) {
-      try {
-        const response = await fetch(
-          `${props.store.env.baseUrl}/dashboard/organizations/${props.store.organizations.selectedId}/teams?page=1&page_size=100`,
-          {
-            method: 'GET',
-            credentials: 'include',
-          }
-        );
-        if (response.ok) {
-          const result = await response.json();
-          setTeams(result.data || []);
-        }
-      } catch (error) {
-        console.error('Failed to fetch teams:', error);
-      }
-    }
+  const { teams, selectedTeamId, setSelectedTeamId } = useTeamFilter({
+    baseUrl: props.store.env.baseUrl,
+    organizationId: props.store.organizations.selectedId,
   });
 
   const [showAddPlaylistModal, setShowAddPlaylistModal] = createSignal(false);

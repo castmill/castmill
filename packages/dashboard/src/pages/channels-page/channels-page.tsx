@@ -17,7 +17,6 @@ import {
   ConfirmDialog,
   FetchDataOptions,
   TeamFilter,
-  Team,
 } from '@castmill/ui-common';
 
 import { store } from '../../store/store';
@@ -32,6 +31,7 @@ import { ChannelView } from './channel-view';
 
 import { baseUrl } from '../../env';
 import { ChannelAddForm } from './channel-add-form';
+import { useTeamFilter } from '../../hooks';
 
 const ChannelsPage: Component = () => {
   const params = useSearchParams();
@@ -42,28 +42,9 @@ const ChannelsPage: Component = () => {
     equals: false,
   });
 
-  const [teams, setTeams] = createSignal<Team[]>([]);
-  const [selectedTeamId, setSelectedTeamId] = createSignal<number | null>(null);
-
-  // Fetch teams for the organization
-  createEffect(async () => {
-    if (store.organizations.selectedId) {
-      try {
-        const response = await fetch(
-          `${baseUrl}/dashboard/organizations/${store.organizations.selectedId}/teams?page=1&page_size=100`,
-          {
-            method: 'GET',
-            credentials: 'include',
-          }
-        );
-        if (response.ok) {
-          const result = await response.json();
-          setTeams(result.data || []);
-        }
-      } catch (error) {
-        console.error('Failed to fetch teams:', error);
-      }
-    }
+  const { teams, selectedTeamId, setSelectedTeamId } = useTeamFilter({
+    baseUrl,
+    organizationId: store.organizations.selectedId!,
   });
 
   const [showAddChannelModal, setShowAddChannelModal] = createSignal(false);

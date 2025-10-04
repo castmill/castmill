@@ -1,4 +1,4 @@
-import { Component, createEffect, createSignal, onCleanup, Show } from 'solid-js';
+import { Component, createSignal, onCleanup, Show } from 'solid-js';
 
 import {
   Button,
@@ -12,7 +12,6 @@ import {
   TableAction,
   ResourcesObserver,
   TeamFilter,
-  Team,
   FetchDataOptions,
 } from '@castmill/ui-common';
 
@@ -27,6 +26,7 @@ import styles from './devices.module.scss';
 import RegisterDevice from './register-device';
 import { DevicesService } from '../services/devices.service';
 import { AddonStore } from '../../common/interfaces/addon-store';
+import { useTeamFilter } from '../../common/hooks';
 
 interface DeviceTableItem extends Device {
   location: string;
@@ -41,28 +41,9 @@ const DevicesPage: Component<{
   const [currentPage, setCurrentPage] = createSignal(1);
   const [totalItems, setTotalItems] = createSignal(0);
 
-  const [teams, setTeams] = createSignal<Team[]>([]);
-  const [selectedTeamId, setSelectedTeamId] = createSignal<number | null>(null);
-
-  // Fetch teams for the organization
-  createEffect(async () => {
-    if (props.store.organizations.selectedId) {
-      try {
-        const response = await fetch(
-          `${props.store.env.baseUrl}/dashboard/organizations/${props.store.organizations.selectedId}/teams?page=1&page_size=100`,
-          {
-            method: 'GET',
-            credentials: 'include',
-          }
-        );
-        if (response.ok) {
-          const result = await response.json();
-          setTeams(result.data || []);
-        }
-      } catch (error) {
-        console.error('Failed to fetch teams:', error);
-      }
-    }
+  const { teams, selectedTeamId, setSelectedTeamId } = useTeamFilter({
+    baseUrl: props.store.env.baseUrl,
+    organizationId: props.store.organizations.selectedId,
   });
 
   const itemsPerPage = 10; // Number of items to show per page
