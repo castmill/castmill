@@ -150,19 +150,24 @@ const ChannelsPage: Component = () => {
     if (!channel) {
       return;
     }
-    const result = await channelsService.removeChannel(channel.id);
-    
-    if (result.success) {
-      refreshData();
-      toast.success(`Channel ${channel.name} removed successfully`);
-    } else {
-      // Show error with device details
-      const devices = result.error?.devices || [];
-      setErrorMessage(
-        `Cannot delete channel "${channel.name}" because it is assigned to the following device${devices.length > 1 ? 's' : ''}:`
-      );
-      setErrorDevices(devices);
-      setShowErrorDialog(true);
+    try {
+      const result = await channelsService.removeChannel(channel.id);
+      
+      if (result.success) {
+        refreshData();
+        toast.success(`Channel ${channel.name} removed successfully`);
+      } else {
+        // Show error with device details
+        const devices = result.error?.devices || [];
+        setErrorMessage(
+          `Cannot delete channel "${channel.name}" because it is assigned to the following device${devices.length > 1 ? 's' : ''}:`
+        );
+        setErrorDevices(devices);
+        setShowErrorDialog(true);
+      }
+    } catch (error) {
+      // Handle unexpected errors (network failures, server down, etc.)
+      toast.error(`Error removing channel ${channel.name}: ${error}`);
     }
     setShowConfirmDialog(false);
   };
@@ -175,37 +180,50 @@ const ChannelsPage: Component = () => {
     );
 
     const failedChannels: Array<{ id: number; name: string; devices: string[] }> = [];
+    const unexpectedErrors: Array<{ id: number; name: string; error: string }> = [];
     
     results.forEach((result, index) => {
       const channelId = Array.from(selectedChannels())[index];
       const channel = data().find((c) => c.id === channelId);
       
       if (result.status === 'fulfilled' && !result.value.success) {
+        // Business logic error (channel assigned to devices)
         failedChannels.push({
           id: channelId,
           name: channel?.name || `Channel ${channelId}`,
           devices: result.value.error?.devices || []
         });
       } else if (result.status === 'rejected') {
-        failedChannels.push({
+        // Unexpected error (network, server down, etc.)
+        unexpectedErrors.push({
           id: channelId,
           name: channel?.name || `Channel ${channelId}`,
-          devices: []
+          error: String(result.reason)
         });
       }
     });
 
-    if (failedChannels.length > 0) {
+    if (failedChannels.length > 0 || unexpectedErrors.length > 0) {
       // Build a detailed error message
-      const messages = failedChannels.map((fc) => {
-        if (fc.devices.length > 0) {
-          return `- ${fc.name} (assigned to: ${fc.devices.join(', ')})`;
-        }
-        return `- ${fc.name}`;
-      });
+      const messages: string[] = [];
+      
+      if (failedChannels.length > 0) {
+        messages.push(...failedChannels.map((fc) => {
+          if (fc.devices.length > 0) {
+            return `- ${fc.name} (assigned to: ${fc.devices.join(', ')})`;
+          }
+          return `- ${fc.name}`;
+        }));
+      }
+      
+      if (unexpectedErrors.length > 0) {
+        messages.push(...unexpectedErrors.map((err) => 
+          `- ${err.name} (error: ${err.error})`
+        ));
+      }
       
       setErrorMessage(
-        `The following channel${failedChannels.length > 1 ? 's' : ''} could not be deleted because ${failedChannels.length > 1 ? 'they are' : 'it is'} assigned to devices:`
+        `The following channel${failedChannels.length + unexpectedErrors.length > 1 ? 's' : ''} could not be deleted:`
       );
       setErrorDevices(messages);
       setShowErrorDialog(true);
