@@ -62,11 +62,13 @@ const controlsTemplate = (id: string) => `
       justify-content: center;
       align-items: center;
       z-index: 9999;
+      pointer-events: none;
       ">
       <div style="
         background: url(${playIcon}) center / contain no-repeat;
         width: 50%;
         height: 50%;
+        pointer-events: auto;
         "></div>
   </div>
 </div>
