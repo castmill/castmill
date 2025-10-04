@@ -116,7 +116,7 @@ defmodule Castmill.DevicesTest do
       assert device.name == "some updated name"
     end
 
-    test "delete_device/1 deletes the device" do
+    test "delete_device/1 deletes the device and broadcasts removal notification" do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
 
@@ -130,9 +130,16 @@ defmodule Castmill.DevicesTest do
 
       assert Devices.list_devices(%{organization_id: organization.id}) == [device]
 
+      # Subscribe to PubSub to verify the broadcast
+      Phoenix.PubSub.subscribe(Castmill.PubSub, "devices:#{device.id}")
+
       Devices.delete_device(device)
 
+      # Verify the device was deleted
       assert Devices.list_devices(%{organization_id: organization.id}) == []
+
+      # Verify that a device_removed command was broadcast
+      assert_receive %{command: "device_removed"}, 1000
     end
 
     test "verify_device_token/2 verifies if a token is correct for a given device" do
