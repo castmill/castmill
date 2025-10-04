@@ -9,12 +9,13 @@ import {
   IconButton,
   Modal,
   TableView,
-  FormItem,
   FetchDataOptions,
   ConfirmDialog,
   TableViewRef,
+  ComboBox,
 } from '@castmill/ui-common';
 import { TeamsService } from '../../services/teams.service';
+import { OrganizationsService } from '../../services/organizations.service';
 import { store, setStore } from '../../store/store';
 import { BsCheckLg } from 'solid-icons/bs';
 import { AiOutlineDelete } from 'solid-icons/ai';
@@ -37,8 +38,7 @@ const [showConfirmDialog, setShowConfirmDialog] = createSignal(false);
 
 const [selectedMembers, setSelectedMembers] = createSignal(new Set<string>());
 
-const [email, setEmail] = createSignal('');
-const [errors, setErrors] = createSignal(new Map());
+const [selectedUser, setSelectedUser] = createSignal<User | undefined>(undefined);
 const [isFormValid, setIsFormValid] = createSignal(false);
 
 const onRowSelect = (rowsSelected: Set<string>) => {
@@ -65,22 +65,9 @@ const actions = [
 ];
 
 const addMember = () => {
+  setSelectedUser(undefined);
+  setIsFormValid(false);
   setShowAddMemberDialog(true);
-};
-
-const validateField = (field: string, value: string) => {
-  if (field === 'email') {
-    if (value.length === 0) {
-      errors().set(field, 'Email is required');
-    } else if (!value.match(/^[\w-]+@([\w-]+\.)+[\w-]{2,4}$/)) {
-      errors().set(field, 'Invalid email');
-    } else {
-      errors().delete(field);
-    }
-  }
-
-  setErrors(new Map(errors()));
-  setIsFormValid(errors().size === 0);
 };
 
 export const TeamMembersView = (props: {
@@ -108,6 +95,29 @@ export const TeamMembersView = (props: {
     if (tableViewRef) {
       tableViewRef.reloadData();
     }
+  };
+
+  // Fetch organization users for the combobox
+  const fetchUsers = async (
+    page: number,
+    pageSize: number,
+    searchQuery: string
+  ) => {
+    const result = await OrganizationsService.fetchMembers(props.organizationId, {
+      page: { num: page, size: pageSize },
+      sortOptions: {},
+      search: searchQuery,
+    });
+    
+    return {
+      count: result.count,
+      data: result.data.map((member: any) => member.user),
+    };
+  };
+
+  const handleUserSelect = (user: User) => {
+    setSelectedUser(user);
+    setIsFormValid(true);
   };
 
   const confirmRemoveMemberFromTeam = async (member?: User) => {
@@ -158,16 +168,16 @@ export const TeamMembersView = (props: {
           description="Add a new member to the team"
           onClose={() => setShowAddMemberDialog(false)}
         >
-          {/* Adding a new member just requires a valid email address */}
+          {/* Select a user from the organization to invite to the team */}
           <form
             onSubmit={async (e) => {
               e.preventDefault();
-              if (isFormValid()) {
+              if (isFormValid() && selectedUser()) {
                 try {
                   await TeamsService.inviteUser(
                     store.organizations.selectedId!,
                     props.teamId,
-                    email()
+                    selectedUser()!.email
                   );
 
                   refreshData();
@@ -178,23 +188,24 @@ export const TeamMembersView = (props: {
               }
             }}
           >
-            <FormItem
-              label="Name"
-              id="name"
-              value={email()!}
-              placeholder="Enter member's email"
-              onInput={(value: string | number | boolean) => {
-                const strValue = value as string;
-                setEmail(strValue);
-                validateField('email', strValue);
-              }}
-            >
-              <div class="error">{errors().get('email')}</div>
-            </FormItem>
+            <ComboBox
+              id="user-selector"
+              label="Select User"
+              placeholder="Search for a user..."
+              value={selectedUser()}
+              fetchItems={fetchUsers}
+              renderItem={(user: User) => (
+                <div>
+                  <div style="font-weight: 500;">{user.name}</div>
+                  <div style="font-size: 0.875rem; color: #666;">{user.email}</div>
+                </div>
+              )}
+              onSelect={handleUserSelect}
+            />
             <div class="form-input"></div>
             <div class="form-actions">
               <Button
-                label="Add"
+                label="Invite"
                 type="submit"
                 disabled={!isFormValid()}
                 color="primary"
