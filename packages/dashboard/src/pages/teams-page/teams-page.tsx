@@ -3,6 +3,7 @@ import {
   createEffect,
   createSignal,
   onCleanup,
+  onMount,
   Show,
 } from 'solid-js';
 
@@ -28,6 +29,8 @@ import styles from './teams-page.module.scss';
 import { useSearchParams } from '@solidjs/router';
 import { TeamsService, TeamUpdate } from '../../services/teams.service';
 import { TeamView } from './team-view';
+import { QuotaIndicator } from '../../components/quota-indicator';
+import { QuotasService, ResourceQuota } from '../../services/quotas.service';
 
 const TeamsPage: Component = () => {
   const params = useSearchParams();
@@ -43,6 +46,35 @@ const TeamsPage: Component = () => {
   const [currentTeam, setCurrentTeam] = createSignal<TeamUpdate>();
 
   const [selectedTeams, setSelectedTeams] = createSignal(new Set<number>());
+
+  const [quota, setQuota] = createSignal<ResourceQuota | null>(null);
+  const [quotaLoading, setQuotaLoading] = createSignal(true);
+
+  const loadQuota = async () => {
+    if (!store.organizations.selectedId) return;
+
+    try {
+      setQuotaLoading(true);
+      const quotaData = await QuotasService.getResourceQuota(
+        store.organizations.selectedId,
+        'teams'
+      );
+      setQuota(quotaData);
+    } catch (error) {
+      console.error('Failed to fetch quota:', error);
+    } finally {
+      setQuotaLoading(false);
+    }
+  };
+
+  onMount(() => {
+    loadQuota();
+  });
+
+  const isQuotaReached = () => {
+    const q = quota();
+    return q ? q.used >= q.total : false;
+  };
 
   const columns = [
     { key: 'id', title: 'ID', sortable: true },
@@ -104,6 +136,7 @@ const TeamsPage: Component = () => {
     try {
       await TeamsService.removeTeam(store.organizations.selectedId!, team.id);
       refreshData();
+      loadQuota(); // Reload quota after deletion
     } catch (error) {
       alert(`Error removing team ${team.name}: ${error}`);
     }
@@ -119,6 +152,7 @@ const TeamsPage: Component = () => {
       );
 
       refreshData();
+      loadQuota(); // Reload quota after deletion
     } catch (error) {
       alert(`Error removing teams: ${error}`);
     }
@@ -186,6 +220,7 @@ const TeamsPage: Component = () => {
                   );
                   setCurrentTeam({ id: newTeam.id, name: newTeam.name });
                   refreshData();
+                  loadQuota(); // Reload quota after creation
                   return newTeam;
                 } else {
                   const updatedTeam = await TeamsService.updateTeam(
@@ -235,12 +270,28 @@ const TeamsPage: Component = () => {
         toolbar={{
           filters: [],
           mainAction: (
-            <Button
-              label="Add Team"
-              onClick={addTeam}
-              icon={BsCheckLg}
-              color="primary"
-            />
+            <div style="display: flex; align-items: center; gap: 1rem;">
+              <Show when={quota() && !quotaLoading()}>
+                <QuotaIndicator
+                  used={quota()!.used}
+                  total={quota()!.total}
+                  resourceName="Teams"
+                  compact
+                />
+              </Show>
+              <Button
+                label="Add Team"
+                onClick={addTeam}
+                icon={BsCheckLg}
+                color="primary"
+                disabled={isQuotaReached()}
+                title={
+                  isQuotaReached()
+                    ? 'Quota limit reached for Teams. Cannot add more.'
+                    : 'Add a new Team'
+                }
+              />
+            </div>
           ),
           actions: (
             <div>
