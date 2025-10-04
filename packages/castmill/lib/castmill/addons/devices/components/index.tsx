@@ -11,6 +11,8 @@ import {
   TableViewRef,
   TableAction,
   ResourcesObserver,
+  ToastProvider,
+  useToast,
 } from '@castmill/ui-common';
 
 import { BsCheckLg } from 'solid-icons/bs';
@@ -35,6 +37,7 @@ const DevicesPage: Component<{
   store: AddonStore;
   params: any; //typeof useSearchParams;
 }> = (props) => {
+  const toast = useToast();
   const [currentPage, setCurrentPage] = createSignal(1);
   const [totalItems, setTotalItems] = createSignal(0);
 
@@ -214,8 +217,9 @@ const DevicesPage: Component<{
       );
 
       refreshData();
+      toast.success(`Device "${device.name}" removed successfully`);
     } catch (error) {
-      alert(`Error removing device ${device.name}: ${error}`);
+      toast.error(`Error removing device ${device.name}: ${error}`);
     }
     setShowConfirmDialog(false);
   };
@@ -233,8 +237,9 @@ const DevicesPage: Component<{
       );
 
       refreshData();
+      toast.success(`${selectedDevices().size} device(s) removed successfully`);
     } catch (error) {
-      alert(`Error removing devices: ${error}`);
+      toast.error(`Error removing devices: ${error}`);
     }
     setShowConfirmDialogMultiple(false);
   };
@@ -368,4 +373,8 @@ const DevicesPage: Component<{
   );
 };
 
-export default DevicesPage;
+export default (props: any) => (
+  <ToastProvider>
+    <DevicesPage {...props} />
+  </ToastProvider>
+);

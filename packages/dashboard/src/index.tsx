@@ -10,14 +10,14 @@ import {
   useSearchParams,
 } from '@solidjs/router';
 
-import { Component, For, Suspense, lazy } from 'solid-js';
+import { Component, For, Suspense, lazy, ErrorBoundary } from 'solid-js';
 import { loginUser } from './components/auth';
 import ProtectedRoute from './components/protected-route';
 import Topbar from './components/topbar/topbar';
 import SettingsPage from './pages/settings-page/settings-page';
 import Footer from './components/footer/footer';
 import SearchPage from './pages/search-page/search-page';
-import { ToastProvider } from '@castmill/ui-common';
+import { ToastProvider, useToast } from '@castmill/ui-common';
 
 import { AddOnTree } from './classes/addon-tree';
 
@@ -57,12 +57,51 @@ const App: Component<RouteSectionProps<unknown>> = (props) => {
   );
 };
 
-const wrapLazyComponent = (addon: { path: string }) => {
+const wrapLazyComponent = (addon: { path: string; name: string }) => {
   return (props: any) => {
     const params = useSearchParams();
+    const toast = useToast();
 
-    const LazyComponent = lazy(() => import(`${addOnBasePath}${addon.path}`));
-    return <LazyComponent {...props} store={store} params={params} />;
+    const LazyComponent = lazy(async () => {
+      try {
+        return await import(`${addOnBasePath}${addon.path}`);
+      } catch (error) {
+        console.error(`Failed to load addon module: ${addon.name}`, error);
+        toast.error(
+          `Failed to load addon "${addon.name}". The module may not be available.`
+        );
+        // Return a fallback component
+        return {
+          default: () => (
+            <div class="addon-error">
+              <h2>Addon Loading Error</h2>
+              <p>
+                Failed to load the "{addon.name}" addon. Please contact your
+                administrator.
+              </p>
+            </div>
+          ),
+        };
+      }
+    });
+
+    return (
+      <ErrorBoundary
+        fallback={(err, reset) => {
+          console.error('Addon component error:', err);
+          toast.error(`Error in addon "${addon.name}": ${err.message}`);
+          return (
+            <div class="addon-error">
+              <h2>Addon Error</h2>
+              <p>An error occurred while rendering the "{addon.name}" addon.</p>
+              <button onClick={reset}>Retry</button>
+            </div>
+          );
+        }}
+      >
+        <LazyComponent {...props} store={store} params={params} />
+      </ErrorBoundary>
+    );
   };
 };
 

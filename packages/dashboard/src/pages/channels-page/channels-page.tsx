@@ -240,13 +240,17 @@ const ChannelsPage: Component = () => {
                     const newChannel = result.data;
                     setCurrentChannel(newChannel);
                     refreshData();
-                    toast.success(`Channel ${channel.name} created successfully`);
+                    toast.success(
+                      `Channel ${channel.name} created successfully`
+                    );
                     return newChannel;
                   } else {
                     const updatedTeam =
                       await channelsService.updateChannel(channel);
                     updateItem(channel.id, channel);
-                    toast.success(`Channel ${channel.name} updated successfully`);
+                    toast.success(
+                      `Channel ${channel.name} updated successfully`
+                    );
                     return updatedTeam;
                   }
                 } catch (error) {

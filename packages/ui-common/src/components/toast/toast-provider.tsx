@@ -11,11 +11,7 @@ import { ToastContainer } from './toast-container';
 import { ToastProps, ToastType } from './toast';
 
 interface ToastContextValue {
-  showToast: (
-    message: string,
-    type?: ToastType,
-    duration?: number
-  ) => string;
+  showToast: (message: string, type?: ToastType, duration?: number) => string;
   removeToast: (id: string) => void;
   success: (message: string, duration?: number) => string;
   error: (message: string, duration?: number) => string;

@@ -1,5 +1,5 @@
 import { Component, createSignal, createEffect, Show } from 'solid-js';
-import { Button, ComboBox } from '@castmill/ui-common';
+import { ComboBox, useToast } from '@castmill/ui-common';
 import { Device } from '../interfaces/device.interface';
 import styles from './devices.module.scss';
 import { DevicesService, JsonChannel } from '../services/devices.service';
@@ -7,9 +7,12 @@ import { DevicesService, JsonChannel } from '../services/devices.service';
 // Initialize channel to undefined by default
 const [channel, setChannel] = createSignal<JsonChannel | undefined>(undefined);
 
-export const Channels: Component<{ baseUrl: string; organizationId: string, device: Device }> = (
-  props
-) => {
+export const Channels: Component<{
+  baseUrl: string;
+  organizationId: string;
+  device: Device;
+}> = (props) => {
+  const toast = useToast();
   // Add a createEffect to initialize the default channel
   createEffect(async () => {
     try {
@@ -41,17 +44,21 @@ export const Channels: Component<{ baseUrl: string; organizationId: string, devi
           );
         }}
         fetchItems={async (page: number, pageSize: number, search: string) => {
-          const channels = await DevicesService.fetchChannels(props.baseUrl, props.organizationId, {
-            page: {
-              num: page,
-              size: pageSize,
-            },
-            sortOptions: {
-              key: 'name',
-              direction: 'ascending',
-            },
-            search,
-          });
+          const channels = await DevicesService.fetchChannels(
+            props.baseUrl,
+            props.organizationId,
+            {
+              page: {
+                num: page,
+                size: pageSize,
+              },
+              sortOptions: {
+                key: 'name',
+                direction: 'ascending',
+              },
+              search,
+            }
+          );
           return channels;
         }}
         onSelect={async (selectedChannel: JsonChannel) => {
@@ -63,8 +70,9 @@ export const Channels: Component<{ baseUrl: string; organizationId: string, devi
               selectedChannel.id
             );
             setChannel(selectedChannel);
+            toast.success(`Device channel set to "${selectedChannel.name}"`);
           } catch (e) {
-            alert(`Failed to set device channel: ${e}`);
+            toast.error(`Failed to set device channel: ${e}`);
           }
         }}
       />

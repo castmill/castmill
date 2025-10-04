@@ -6,6 +6,7 @@ import {
   OptionsDict,
 } from '@castmill/player';
 import { Component, createEffect, createSignal, Show } from 'solid-js';
+import { useToast } from '@castmill/ui-common';
 
 import './playlist-view.scss';
 import { PlaylistsService } from '../services/playlists.service';
@@ -19,6 +20,7 @@ export const PlaylistView: Component<{
   baseUrl: string;
   onChange?: (playlist: JsonPlaylist) => void;
 }> = (props) => {
+  const toast = useToast();
   const [widgets, setWidgets] = createSignal<JsonWidget[]>([]);
   const [loading, setLoading] = createSignal(true);
   const [items, setItems] = createSignal<JsonPlaylistItem[]>([]);
@@ -73,7 +75,7 @@ export const PlaylistView: Component<{
       setItems(newItems as JsonPlaylistItem[]);
       setPlaylist((prevPlaylist) => ({ ...prevPlaylist, items: newItems }));
     } catch (err) {
-      alert(`Error updating widget in playlist: ${err}`);
+      toast.error(`Error updating widget in playlist: ${err}`);
     }
   };
 
@@ -123,7 +125,7 @@ export const PlaylistView: Component<{
       setItems(newItems);
       setPlaylist((prevPlaylist) => ({ ...prevPlaylist, items: newItems }));
     } catch (err) {
-      alert(`Error inserting widget into playlist: ${err}`);
+      toast.error(`Error inserting widget into playlist: ${err}`);
     }
   };
 
@@ -188,7 +190,7 @@ export const PlaylistView: Component<{
       setItems(newItems);
       setPlaylist((prevPlaylist) => ({ ...prevPlaylist, items: newItems }));
     } catch (err) {
-      alert(`Error moving widget in playlist: ${err}`);
+      toast.error(`Error moving widget in playlist: ${err}`);
     }
   };
 
@@ -206,7 +208,7 @@ export const PlaylistView: Component<{
       );
       setPlaylist((prevPlaylist) => ({ ...prevPlaylist, items: items() }));
     } catch (err) {
-      alert(`Error removing widget from playlist: ${err}`);
+      toast.error(`Error removing widget from playlist: ${err}`);
     }
   };
 

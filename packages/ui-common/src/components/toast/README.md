@@ -24,11 +24,7 @@ The Toast component is part of `@castmill/ui-common` package and is already incl
 import { ToastProvider } from '@castmill/ui-common';
 
 function App() {
-  return (
-    <ToastProvider>
-      {/* Your app content */}
-    </ToastProvider>
-  );
+  return <ToastProvider>{/* Your app content */}</ToastProvider>;
 }
 ```
 
@@ -65,6 +61,7 @@ const MyComponent: Component = () => {
 A context provider that manages toast state globally.
 
 **Props:**
+
 - `children`: JSX.Element - The app content to wrap
 
 ### useToast Hook
@@ -72,6 +69,7 @@ A context provider that manages toast state globally.
 Returns an object with methods to show and manage toasts.
 
 **Returns:**
+
 ```typescript
 {
   showToast: (message: string, type?: ToastType, duration?: number) => string;
@@ -92,6 +90,7 @@ type ToastType = 'success' | 'error' | 'info' | 'warning';
 ## Convenience Methods
 
 ### success(message, duration?)
+
 Shows a success toast with a green theme.
 
 ```tsx
@@ -100,6 +99,7 @@ toast.success('Changes saved', 3000); // Custom duration
 ```
 
 ### error(message, duration?)
+
 Shows an error toast with a red theme.
 
 ```tsx
@@ -108,6 +108,7 @@ toast.error('Network error occurred', 5000);
 ```
 
 ### info(message, duration?)
+
 Shows an info toast with a blue theme.
 
 ```tsx
@@ -116,6 +117,7 @@ toast.info('Check your email for confirmation');
 ```
 
 ### warning(message, duration?)
+
 Shows a warning toast with an orange theme.
 
 ```tsx
@@ -190,6 +192,7 @@ Toasts appear in the **top-right corner** on desktop and adapt to **full-width**
 ## Examples in Castmill Dashboard
 
 ### After API Success
+
 ```tsx
 try {
   await TeamsService.addTeam(organizationId, teamName);
@@ -201,13 +204,14 @@ try {
 ```
 
 ### Form Validation
+
 ```tsx
 const onSubmit = async (data) => {
   if (!isValid) {
     toast.warning('Please fill all required fields');
     return;
   }
-  
+
   try {
     await saveData(data);
     toast.success('Data saved successfully');
@@ -218,10 +222,11 @@ const onSubmit = async (data) => {
 ```
 
 ### Multiple Operations
+
 ```tsx
 const deleteMultiple = async (ids) => {
   try {
-    await Promise.all(ids.map(id => deleteItem(id)));
+    await Promise.all(ids.map((id) => deleteItem(id)));
     toast.success(`${ids.length} items deleted successfully`);
   } catch (error) {
     toast.error('Failed to delete some items');
@@ -232,6 +237,7 @@ const deleteMultiple = async (ids) => {
 ## Testing
 
 The Toast component includes comprehensive tests covering:
+
 - Rendering with different types
 - Auto-dismiss functionality
 - Manual close
@@ -244,6 +250,7 @@ See `toast.test.tsx` and `toast-provider.test.tsx` for test examples.
 ## Browser Support
 
 Works in all modern browsers that support:
+
 - ES6+ JavaScript
 - CSS Grid/Flexbox
 - CSS Transitions
@@ -252,6 +259,7 @@ Works in all modern browsers that support:
 ## Migration from alert()
 
 ### Before
+
 ```tsx
 try {
   await someOperation();
@@ -262,6 +270,7 @@ try {
 ```
 
 ### After
+
 ```tsx
 const toast = useToast();
 

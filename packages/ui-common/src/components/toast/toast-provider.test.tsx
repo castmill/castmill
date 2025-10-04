@@ -96,9 +96,7 @@ describe('ToastProvider and useToast', () => {
     const TestComponent: Component = () => {
       const toast = useToast();
       return (
-        <button onClick={() => toast.error('Error message')}>
-          Show Error
-        </button>
+        <button onClick={() => toast.error('Error message')}>Show Error</button>
       );
     };
 

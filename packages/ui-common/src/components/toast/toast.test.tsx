@@ -14,9 +14,7 @@ describe('Toast Component', () => {
   });
 
   it('renders correctly with message', () => {
-    render(() => (
-      <Toast id="test-1" message="Test notification" type="info" />
-    ));
+    render(() => <Toast id="test-1" message="Test notification" type="info" />);
     expect(screen.getByText('Test notification')).toBeInTheDocument();
   });
 
