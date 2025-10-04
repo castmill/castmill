@@ -12,8 +12,9 @@ defmodule Castmill.Teams do
   alias Castmill.Repo
 
   alias Castmill.Organizations.Organization
-  alias Castmill.Teams.{Team, TeamsUsers, TeamsMedias, TeamsPlaylists, Invitation}
-  alias Castmill.Resources.{Media, Playlist}
+  alias Castmill.Teams.{Team, TeamsUsers, TeamsMedias, TeamsPlaylists, TeamsChannels, TeamsDevices, Invitation}
+  alias Castmill.Resources.{Media, Playlist, Channel}
+  alias Castmill.Devices.Device
   alias Castmill.QueryHelpers
 
   @doc """
@@ -396,25 +397,19 @@ defmodule Castmill.Teams do
         :playlist_id,
         Playlist,
         :playlist
+      },
+      "channels" => {
+        TeamsChannels,
+        :channel_id,
+        Channel,
+        :channel
+      },
+      "devices" => {
+        TeamsDevices,
+        :device_id,
+        Device,
+        :device
       }
-      # channels: {
-      #   MyApp.Schema.TeamsChannels,
-      #   :channel_id,
-      #   MyApp.Schema.Channel,
-      #   :channel
-      # },
-      # devices: {
-      #   MyApp.Schema.TeamsDevices,
-      #   :device_id,
-      #   MyApp.Schema.Device,
-      #   :device
-      # },
-      # teams: {
-      #   MyApp.Schema.TeamsTeams,
-      #   :team_id,
-      #   MyApp.Schema.Team,
-      #   :team
-      # }
     }
   end
 

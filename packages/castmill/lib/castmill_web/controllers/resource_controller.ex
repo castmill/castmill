@@ -103,6 +103,7 @@ defmodule CastmillWeb.ResourceController do
     page: [type: :integer, number: [min: 1]],
     page_size: [type: :integer, number: [min: 1, max: 100]],
     search: :string,
+    team_id: :integer,
     filters: [
       type: :string,
       cast_func: &CastmillWeb.ResourceController.parse_filters/1

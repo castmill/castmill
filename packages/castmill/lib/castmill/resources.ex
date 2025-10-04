@@ -448,6 +448,42 @@ defmodule Castmill.Resources do
         page: page,
         page_size: page_size,
         search: search,
+        filters: filters,
+        team_id: team_id
+      }) when not is_nil(team_id) do
+    offset = (page_size && max((page - 1) * page_size, 0)) || 0
+
+    preloads =
+      if function_exported?(resource, :preloads, 0) do
+        resource.preloads()
+      else
+        []
+      end
+
+    # Get the join module for this resource type
+    {join_module, foreign_key} = get_team_join_info(resource)
+
+    # Build query with team filter
+    query =
+      resource.base_query()
+      |> Organization.where_org_id(organization_id)
+      |> join(:inner, [r], t in ^join_module, on: field(t, ^foreign_key) == r.id)
+      |> where([_, t], t.team_id == ^team_id)
+      |> QueryHelpers.apply_combined_filters(filters, resource)
+      |> QueryHelpers.where_name_like(search)
+      |> Ecto.Query.order_by([d], asc: d.name)
+      |> Ecto.Query.limit(^page_size)
+      |> Ecto.Query.offset(^offset)
+      |> Ecto.Query.preload(^preloads)
+
+    Repo.all(query)
+  end
+
+  def list_resources(resource, %{
+        organization_id: organization_id,
+        page: page,
+        page_size: page_size,
+        search: search,
         filters: filters
       }) do
     offset = (page_size && max((page - 1) * page_size, 0)) || 0
@@ -503,6 +539,24 @@ defmodule Castmill.Resources do
   def count_resources(resource, %{
         organization_id: organization_id,
         search: search,
+        filters: filters,
+        team_id: team_id
+      }) when not is_nil(team_id) do
+    # Get the join module for this resource type
+    {join_module, foreign_key} = get_team_join_info(resource)
+
+    resource.base_query()
+    |> Organization.where_org_id(organization_id)
+    |> join(:inner, [r], t in ^join_module, on: field(t, ^foreign_key) == r.id)
+    |> where([_, t], t.team_id == ^team_id)
+    |> QueryHelpers.apply_combined_filters(filters, resource)
+    |> QueryHelpers.where_name_like(search)
+    |> Repo.aggregate(:count, :id)
+  end
+
+  def count_resources(resource, %{
+        organization_id: organization_id,
+        search: search,
         filters: filters
       }) do
     resource.base_query()
@@ -522,6 +576,26 @@ defmodule Castmill.Resources do
 
   def count_resources(resource, %{organization_id: organization_id, filters: filters}) do
     count_resources(resource, %{organization_id: organization_id, search: nil, filters: filters})
+  end
+
+  # Helper function to get the team join module and foreign key for a resource type
+  defp get_team_join_info(resource) do
+    case resource do
+      Castmill.Resources.Media ->
+        {Castmill.Teams.TeamsMedias, :media_id}
+
+      Castmill.Resources.Playlist ->
+        {Castmill.Teams.TeamsPlaylists, :playlist_id}
+
+      Castmill.Resources.Channel ->
+        {Castmill.Teams.TeamsChannels, :channel_id}
+
+      Castmill.Devices.Device ->
+        {Castmill.Teams.TeamsDevices, :device_id}
+
+      _ ->
+        raise "Unsupported resource type for team filtering: #{inspect(resource)}"
+    end
   end
 
   @doc """
