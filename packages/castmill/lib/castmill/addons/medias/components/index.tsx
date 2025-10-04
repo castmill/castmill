@@ -1,7 +1,7 @@
 import { BsCheckLg } from 'solid-icons/bs';
 import { BsEye } from 'solid-icons/bs';
 import { AiOutlineDelete } from 'solid-icons/ai';
-import { Component, createSignal, onCleanup, Show } from 'solid-js';
+import { Component, createEffect, createSignal, onCleanup, Show } from 'solid-js';
 
 import {
   Button,
@@ -16,6 +16,9 @@ import {
   ModalRef,
   CircularProgress,
   ResourcesObserver,
+  TeamFilter,
+  Team,
+  FetchDataOptions,
 } from '@castmill/ui-common';
 import { JsonMedia } from '@castmill/player';
 import { MediasService } from '../services/medias.service';
@@ -33,7 +36,31 @@ const MediasPage: Component<{
     equals: false,
   });
 
+  const [teams, setTeams] = createSignal<Team[]>([]);
+  const [selectedTeamId, setSelectedTeamId] = createSignal<number | null>(null);
+
   const itemsPerPage = 10; // Number of items to show per page
+
+  // Fetch teams for the organization
+  createEffect(async () => {
+    if (props.store.organizations.selectedId) {
+      try {
+        const response = await fetch(
+          `${props.store.env.baseUrl}/dashboard/organizations/${props.store.organizations.selectedId}/teams?page=1&page_size=100`,
+          {
+            method: 'GET',
+            credentials: 'include',
+          }
+        );
+        if (response.ok) {
+          const result = await response.json();
+          setTeams(result.data || []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch teams:', error);
+      }
+    }
+  });
 
   const [showModal, setShowModal] = createSignal<JsonMedia | undefined>();
 
@@ -122,6 +149,11 @@ const MediasPage: Component<{
     }
   };
 
+  const handleTeamChange = (teamId: number | null) => {
+    setSelectedTeamId(teamId);
+    refreshData();
+  };
+
   const updateItem = (itemId: number, item: Partial<JsonMedia>) => {
     if (tableViewRef) {
       tableViewRef.updateItem(itemId, item);
@@ -133,12 +165,7 @@ const MediasPage: Component<{
     sortOptions,
     search,
     filters,
-  }: {
-    page: { num: number; size: number };
-    sortOptions: SortOptions;
-    search?: string;
-    filters?: Record<string, string | boolean>;
-  }) => {
+  }: FetchDataOptions) => {
     const result = await MediasService.fetchMedias(
       props.store.env.baseUrl,
       props.store.organizations.selectedId,
@@ -148,6 +175,7 @@ const MediasPage: Component<{
         sortOptions,
         search,
         filters,
+        team_id: selectedTeamId(),
       }
     );
 
@@ -335,7 +363,12 @@ const MediasPage: Component<{
             />
           ),
           actions: (
-            <div>
+            <div style="display: flex; gap: 1rem; align-items: center;">
+              <TeamFilter
+                teams={teams()}
+                selectedTeamId={selectedTeamId()}
+                onTeamChange={handleTeamChange}
+              />
               <IconButton
                 onClick={() => setShowConfirmDialogMultiple(true)}
                 icon={AiOutlineDelete}
