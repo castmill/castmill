@@ -61,6 +61,10 @@ defmodule CastmillWeb.OrganizationController do
     {:ok, Organizations.is_admin?(organization_id, actor_id)}
   end
 
+  def check_access(actor_id, :remove_invitation, %{"organization_id" => organization_id}) do
+    {:ok, Organizations.is_admin?(organization_id, actor_id)}
+  end
+
   def check_access(actor_id, :update, %{"id" => organization_id}) do
     {:ok, Organizations.is_admin?(organization_id, actor_id)}
   end
@@ -381,6 +385,23 @@ defmodule CastmillWeb.OrganizationController do
         conn
         |> put_status(:unprocessable_entity)
         |> json(%{errors: errors})
+
+      {:error, _} ->
+        conn
+        |> put_status(:bad_request)
+        |> json(%{})
+    end
+  end
+
+  def remove_invitation(conn, %{
+        "organization_id" => organization_id,
+        "invitation_id" => invitation_id
+      }) do
+    case Organizations.remove_invitation_from_organization(organization_id, invitation_id) do
+      {:ok, _} ->
+        conn
+        |> put_status(:ok)
+        |> json(%{})
 
       {:error, _} ->
         conn
