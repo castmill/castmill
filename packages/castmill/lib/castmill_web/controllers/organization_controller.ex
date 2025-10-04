@@ -385,7 +385,10 @@ defmodule CastmillWeb.OrganizationController do
     end
   end
 
-  def remove_invitation(conn, %{"organization_id" => organization_id, "invitation_id" => invitation_id}) do
+  def remove_invitation(conn, %{
+        "organization_id" => organization_id,
+        "invitation_id" => invitation_id
+      }) do
     case Organizations.remove_invitation_from_organization(organization_id, invitation_id) do
       {:ok, _} ->
         conn
