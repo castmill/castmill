@@ -1,4 +1,4 @@
-import { Component, createSignal, onCleanup, Show } from 'solid-js';
+import { Component, createSignal, onCleanup, onMount, Show } from 'solid-js';
 
 import {
   Button,
@@ -26,6 +26,9 @@ import styles from './devices.module.scss';
 import RegisterDevice from './register-device';
 import { DevicesService } from '../services/devices.service';
 import { AddonStore } from '../../common/interfaces/addon-store';
+
+import { QuotaIndicator } from '../../common/components/quota-indicator';
+import { QuotasService, ResourceQuota } from '../../common/services/quotas.service';
 
 interface DeviceTableItem extends Device {
   location: string;
@@ -60,6 +63,51 @@ const DevicesPage: Component<{
   const [currentDevice, setCurrentDevice] = createSignal<DeviceTableItem>();
 
   const [selectedDevices, setSelectedDevices] = createSignal(new Set<string>());
+
+  const [quota, setQuota] = createSignal<ResourceQuota | null>(null);
+  const [quotaLoading, setQuotaLoading] = createSignal(false);
+  const [showLoadingIndicator, setShowLoadingIndicator] = createSignal(false);
+  
+  const quotasService = new QuotasService(props.store.env.baseUrl);
+
+  let loadingTimeout: ReturnType<typeof setTimeout> | undefined;
+
+  const loadQuota = async () => {
+    try {
+      setQuotaLoading(true);
+      
+      // Only show loading indicator if request takes more than 1 second
+      loadingTimeout = setTimeout(() => {
+        if (quotaLoading()) {
+          setShowLoadingIndicator(true);
+        }
+      }, 1000);
+      
+      const quotaData = await quotasService.getResourceQuota(
+        props.store.organizations.selectedId,
+        'devices'
+      );
+      setQuota(quotaData);
+    } catch (error) {
+      console.error('Failed to load quota:', error);
+    } finally {
+      if (loadingTimeout) {
+        clearTimeout(loadingTimeout);
+      }
+      setQuotaLoading(false);
+      setShowLoadingIndicator(false);
+    }
+  };
+
+  onMount(() => {
+    loadQuota();
+  });
+
+  const isQuotaReached = () => {
+    const currentQuota = quota();
+    if (!currentQuota) return false;
+    return currentQuota.used >= currentQuota.total;
+  };
 
   const [searchParams, setSearchParams] = props.params;
 
@@ -97,6 +145,7 @@ const DevicesPage: Component<{
       );
 
       refreshData();
+      loadQuota(); // Reload quota after registration
       setLoadingSuccess('Device registered successfully');
 
       // Update total items
@@ -225,6 +274,7 @@ const DevicesPage: Component<{
 
       refreshData();
       toast.success(`Device "${device.name}" removed successfully`);
+      loadQuota(); // Reload quota after deletion
     } catch (error) {
       toast.error(`Error removing device ${device.name}: ${error}`);
     }
@@ -245,6 +295,7 @@ const DevicesPage: Component<{
 
       refreshData();
       toast.success(`${selectedDevices().size} device(s) removed successfully`);
+      loadQuota(); // Reload quota after deletion
     } catch (error) {
       toast.error(`Error removing devices: ${error}`);
     }
@@ -345,12 +396,24 @@ const DevicesPage: Component<{
             { name: 'Offline', key: 'offline', isActive: true },
           ],
           mainAction: (
-            <Button
-              label="Add Device"
-              onClick={openRegisterModal}
-              icon={BsCheckLg}
-              color="primary"
-            />
+            <div style="display: flex; align-items: center; gap: 1rem;">
+              <Show when={quota()}>
+                <QuotaIndicator 
+                  used={quota()!.used} 
+                  total={quota()!.total} 
+                  resourceName="Devices"
+                  compact
+                  isLoading={showLoadingIndicator()}
+                />
+              </Show>
+              <Button
+                label="Add Device"
+                onClick={openRegisterModal}
+                icon={BsCheckLg}
+                color="primary"
+                disabled={isQuotaReached()}
+              />
+            </div>
           ),
           actions: (
             <div>

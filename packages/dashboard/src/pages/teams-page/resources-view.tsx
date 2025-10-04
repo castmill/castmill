@@ -9,13 +9,15 @@ import {
 } from '@castmill/ui-common';
 import { AiOutlineDelete } from 'solid-icons/ai';
 import { BsCheckLg, BsEye } from 'solid-icons/bs';
-import { createSignal, Show } from 'solid-js';
+import { createSignal, Show, onMount } from 'solid-js';
 import {
   FetchOptions,
   TeamResource,
   TeamsService,
 } from '../../services/teams.service';
 import { ResourceChooser } from './resource-chooser';
+import { QuotaIndicator } from '../../components/quota-indicator';
+import { QuotasService, ResourceQuota } from '../../services/quotas.service';
 
 const itemsPerPage = 10;
 
@@ -71,6 +73,29 @@ export const ResourcesView = (props: {
   const toast = useToast();
   const resourceKey = `${props.resourceName.toLowerCase()}`;
   const itemIdKey = `${props.resourceName.toLocaleLowerCase()}_id`;
+
+  const [quota, setQuota] = createSignal<ResourceQuota | null>(null);
+  const [quotaLoading, setQuotaLoading] = createSignal(true);
+
+  onMount(async () => {
+    try {
+      const resourceType = props.resourceType as any;
+      const quotaData = await QuotasService.getResourceQuota(
+        props.organizationId,
+        resourceType
+      );
+      setQuota(quotaData);
+    } catch (error) {
+      console.error('Failed to fetch quota:', error);
+    } finally {
+      setQuotaLoading(false);
+    }
+  });
+
+  const isQuotaReached = () => {
+    const q = quota();
+    return q ? q.used >= q.total : false;
+  };
 
   const columns = [
     {
@@ -237,12 +262,28 @@ export const ResourcesView = (props: {
         toolbar={{
           filters: [],
           mainAction: (
-            <Button
-              label={`Add ${props.resourceName}`}
-              onClick={addResource}
-              icon={BsCheckLg}
-              color="primary"
-            />
+            <div style="display: flex; align-items: center; gap: 1rem;">
+              <Show when={quota() && !quotaLoading()}>
+                <QuotaIndicator
+                  used={quota()!.used}
+                  total={quota()!.total}
+                  resourceName={props.resourceName}
+                  compact
+                />
+              </Show>
+              <Button
+                label={`Add ${props.resourceName}`}
+                onClick={addResource}
+                icon={BsCheckLg}
+                color="primary"
+                disabled={isQuotaReached()}
+                title={
+                  isQuotaReached()
+                    ? `Quota limit reached for ${props.resourceName}. Cannot add more.`
+                    : `Add a new ${props.resourceName}`
+                }
+              />
+            </div>
           ),
           actions: (
             <div>

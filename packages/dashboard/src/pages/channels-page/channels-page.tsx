@@ -3,6 +3,7 @@ import {
   createEffect,
   createSignal,
   onCleanup,
+  onMount,
   Show,
 } from 'solid-js';
 
@@ -31,6 +32,8 @@ import { ChannelView } from './channel-view';
 
 import { baseUrl } from '../../env';
 import { ChannelAddForm } from './channel-add-form';
+import { QuotaIndicator } from '../../components/quota-indicator';
+import { QuotasService, ResourceQuota } from '../../services/quotas.service';
 
 const ChannelsPage: Component = () => {
   const params = useSearchParams();
@@ -49,17 +52,47 @@ const ChannelsPage: Component = () => {
     new Set<number>()
   );
 
+  const [quota, setQuota] = createSignal<ResourceQuota | null>(null);
+  const [quotaLoading, setQuotaLoading] = createSignal(true);
+
   let channelsService: ChannelsService = new ChannelsService(
     baseUrl,
     store.organizations.selectedId!
   );
+
+  const loadQuota = async () => {
+    if (!store.organizations.selectedId) return;
+
+    try {
+      setQuotaLoading(true);
+      const quotaData = await QuotasService.getResourceQuota(
+        store.organizations.selectedId,
+        'channels'
+      );
+      setQuota(quotaData);
+    } catch (error) {
+      console.error('Failed to fetch quota:', error);
+    } finally {
+      setQuotaLoading(false);
+    }
+  };
+
+  onMount(() => {
+    loadQuota();
+  });
 
   createEffect(() => {
     channelsService = new ChannelsService(
       baseUrl,
       store.organizations.selectedId!
     );
+    loadQuota();
   });
+
+  const isQuotaReached = () => {
+    const q = quota();
+    return q ? q.used >= q.total : false;
+  };
 
   const columns = [
     { key: 'id', title: 'ID', sortable: true },
@@ -293,12 +326,28 @@ const ChannelsPage: Component = () => {
           toolbar={{
             filters: [],
             mainAction: (
-              <Button
-                label="Add Channel"
-                onClick={addChannel}
-                icon={BsCheckLg}
-                color="primary"
-              />
+              <div style="display: flex; align-items: center; gap: 1rem;">
+                <Show when={quota() && !quotaLoading()}>
+                  <QuotaIndicator
+                    used={quota()!.used}
+                    total={quota()!.total}
+                    resourceName="Channels"
+                    compact
+                  />
+                </Show>
+                <Button
+                  label="Add Channel"
+                  onClick={addChannel}
+                  icon={BsCheckLg}
+                  color="primary"
+                  disabled={isQuotaReached()}
+                  title={
+                    isQuotaReached()
+                      ? 'Quota limit reached for Channels. Cannot add more.'
+                      : 'Add a new Channel'
+                  }
+                />
+              </div>
             ),
             actions: (
               <div>
