@@ -107,53 +107,75 @@ const ChannelsPage: Component = () => {
   const [showConfirmDialog, setShowConfirmDialog] = createSignal(false);
   const [showConfirmDialogMultiple, setShowConfirmDialogMultiple] =
     createSignal(false);
+  const [showErrorDialog, setShowErrorDialog] = createSignal(false);
+  const [errorMessage, setErrorMessage] = createSignal('');
+  const [errorDevices, setErrorDevices] = createSignal<string[]>([]);
 
   const confirmRemoveChannel = async (channel: JsonChannel | undefined) => {
     if (!channel) {
       return;
     }
-    try {
-      await channelsService.removeChannel(channel.id);
+    const result = await channelsService.removeChannel(channel.id);
+    
+    if (result.success) {
       refreshData();
-    } catch (error) {
-      alert(`Error removing channel ${channel.name}: ${error}`);
+    } else {
+      // Show error with device details
+      const devices = result.error?.devices || [];
+      setErrorMessage(
+        `Cannot delete channel "${channel.name}" because it is assigned to the following device${devices.length > 1 ? 's' : ''}:`
+      );
+      setErrorDevices(devices);
+      setShowErrorDialog(true);
     }
     setShowConfirmDialog(false);
   };
 
   const confirmRemoveMultipleChannels = async () => {
-    try {
-      const results = await Promise.allSettled(
-        Array.from(selectedChannels()).map((channelId) =>
-          channelsService.removeChannel(channelId)
-        )
-      );
+    const results = await Promise.allSettled(
+      Array.from(selectedChannels()).map((channelId) =>
+        channelsService.removeChannel(channelId)
+      )
+    );
 
-      const failedChannels = results
-        .map((result, index) => {
-          if (result.status === 'rejected') {
-            return Array.from(selectedChannels())[index];
-          }
-          return null;
-        })
-        .filter((id) => id !== null);
-
-      if (failedChannels.length > 0) {
-        const failedChannelNames = failedChannels
-          .map((id) => {
-            const channel = data().find((c) => c.id === id);
-            return channel?.name || id;
-          })
-          .join(', ');
-        alert(
-          `Some channels could not be deleted (they may be assigned to devices): ${failedChannelNames}`
-        );
+    const failedChannels: Array<{ id: number; name: string; devices: string[] }> = [];
+    
+    results.forEach((result, index) => {
+      const channelId = Array.from(selectedChannels())[index];
+      const channel = data().find((c) => c.id === channelId);
+      
+      if (result.status === 'fulfilled' && !result.value.success) {
+        failedChannels.push({
+          id: channelId,
+          name: channel?.name || `Channel ${channelId}`,
+          devices: result.value.error?.devices || []
+        });
+      } else if (result.status === 'rejected') {
+        failedChannels.push({
+          id: channelId,
+          name: channel?.name || `Channel ${channelId}`,
+          devices: []
+        });
       }
+    });
 
-      refreshData();
-    } catch (error) {
-      alert(`Error removing channels: ${error}`);
+    if (failedChannels.length > 0) {
+      // Build a detailed error message
+      const messages = failedChannels.map((fc) => {
+        if (fc.devices.length > 0) {
+          return `- ${fc.name} (assigned to: ${fc.devices.join(', ')})`;
+        }
+        return `- ${fc.name}`;
+      });
+      
+      setErrorMessage(
+        `The following channel${failedChannels.length > 1 ? 's' : ''} could not be deleted because ${failedChannels.length > 1 ? 'they are' : 'it is'} assigned to devices:`
+      );
+      setErrorDevices(messages);
+      setShowErrorDialog(true);
     }
+
+    refreshData();
     setShowConfirmDialogMultiple(false);
   };
 
@@ -293,6 +315,27 @@ const ChannelsPage: Component = () => {
             })}
           </div>
         </ConfirmDialog>
+
+        <Show when={showErrorDialog()}>
+          <Modal
+            title="Cannot Delete Channel"
+            description={errorMessage()}
+            onClose={() => setShowErrorDialog(false)}
+          >
+            <div style="margin: 1.5em; line-height: 1.5em;">
+              {errorDevices().map((device) => (
+                <div>{device}</div>
+              ))}
+            </div>
+            <div style="margin-top: 1.5em; display: flex; justify-content: flex-end;">
+              <Button 
+                label="OK" 
+                color="primary" 
+                onClick={() => setShowErrorDialog(false)} 
+              />
+            </div>
+          </Modal>
+        </Show>
 
         <TableView
           title="Channels"

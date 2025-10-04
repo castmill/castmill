@@ -412,10 +412,16 @@ defmodule CastmillWeb.ResourceController do
           send_resp(conn, :no_content, "")
         else
           {:error, :channel_has_devices} ->
+            devices = Castmill.Resources.get_devices_using_channel(channel.id)
+            device_names = Enum.map(devices, & &1.name)
+
             conn
             |> put_status(:conflict)
             |> Phoenix.Controller.json(%{
-              errors: ["Cannot delete channel that is assigned to devices"]
+              errors: %{
+                detail: "Cannot delete channel that is assigned to devices",
+                devices: device_names
+              }
             })
 
           {:error, reason} ->

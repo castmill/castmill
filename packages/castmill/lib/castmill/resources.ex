@@ -792,6 +792,22 @@ defmodule Castmill.Resources do
   end
 
   @doc """
+  Gets the devices that are using a specific channel.
+  Returns a list of maps with device id and name.
+  """
+  def get_devices_using_channel(channel_id) when is_integer(channel_id) do
+    query =
+      from(dc in Castmill.Devices.DevicesChannels,
+        join: d in Castmill.Devices.Device,
+        on: dc.device_id == d.id,
+        where: dc.channel_id == ^channel_id,
+        select: %{id: d.id, name: d.name}
+      )
+
+    Repo.all(query)
+  end
+
+  @doc """
   Removes a channel and all its entries.
   Returns {:error, :channel_has_devices} if the channel is assigned to any devices.
   """
