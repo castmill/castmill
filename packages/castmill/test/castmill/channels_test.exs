@@ -4,7 +4,6 @@ defmodule Castmill.ChannelsTest do
   @moduletag :playlist_data_case
 
   alias Castmill.Resources
-  alias Castmill.Devices
 
   describe "channels" do
     @describetag :channels
