@@ -67,7 +67,7 @@ async function handleResponse<T = any>(
     } catch (error) {
       errMsg = `${response.statusText}`;
     }
-    
+
     // Create an error object that includes the parsed error data
     const err: any = new Error(errMsg);
     err.errorData = errorData;
@@ -272,7 +272,9 @@ export class ChannelsService {
    * Remove Channel
    * Returns the error data if the channel cannot be removed
    */
-  async removeChannel(channelId: number): Promise<{ success: boolean; error?: ChannelDeleteError }> {
+  async removeChannel(
+    channelId: number
+  ): Promise<{ success: boolean; error?: ChannelDeleteError }> {
     const response = await fetch(
       `${this.baseUrl}/dashboard/organizations/${this.organizationId}/channels/${channelId}`,
       {
@@ -289,14 +291,16 @@ export class ChannelsService {
     } else if (response.status === 409) {
       try {
         const { errors } = await response.json();
-        return { 
-          success: false, 
-          error: errors as ChannelDeleteError 
+        return {
+          success: false,
+          error: errors as ChannelDeleteError,
         };
       } catch (error) {
-        return { 
-          success: false, 
-          error: { detail: 'Cannot delete channel that is assigned to devices' }
+        return {
+          success: false,
+          error: {
+            detail: 'Cannot delete channel that is assigned to devices',
+          },
         };
       }
     } else {
@@ -304,9 +308,9 @@ export class ChannelsService {
         await handleResponse(response);
         return { success: true };
       } catch (error) {
-        return { 
-          success: false, 
-          error: { detail: (error as Error).message }
+        return {
+          success: false,
+          error: { detail: (error as Error).message },
         };
       }
     }
