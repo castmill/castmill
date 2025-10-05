@@ -17,6 +17,7 @@ import { WidgetsService } from '../services/widgets.service';
 import { UploadComponent } from './upload';
 import { JsonHighlight } from './json-highlight';
 
+import { DEFAULT_WIDGET_ICON } from '../../common/constants';
 import './widgets.scss';
 import { AddonStore } from '../../common/interfaces/addon-store';
 
@@ -134,12 +135,13 @@ const WidgetsPage: Component<{
                   onError={(e) => {
                     // Fallback to emoji if image fails to load
                     (e.target as HTMLImageElement).style.display = 'none';
-                    const fallback = document.createTextNode('📦');
+                    const fallback =
+                      document.createTextNode(DEFAULT_WIDGET_ICON);
                     e.target.parentNode?.appendChild(fallback);
                   }}
                 />
               ) : (
-                <span>{widget.icon || '📦'}</span>
+                <span>{widget.icon || DEFAULT_WIDGET_ICON}</span>
               )}
             </div>
             <div style="text-align: left; flex: 1;">

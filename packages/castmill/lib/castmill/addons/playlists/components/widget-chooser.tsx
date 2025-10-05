@@ -11,6 +11,7 @@ import { JsonWidget } from '@castmill/player';
 import { IconWrapper } from '@castmill/ui-common';
 import { RiEditorDraggable } from 'solid-icons/ri';
 
+import { DEFAULT_WIDGET_ICON } from '../../common/constants';
 import './widget-chooser.scss';
 
 const WidgetItem: Component<{ widget: JsonWidget }> = (props) => {
@@ -56,12 +57,12 @@ const WidgetItem: Component<{ widget: JsonWidget }> = (props) => {
             alt={props.widget.name}
             onError={(e) => {
               (e.target as HTMLImageElement).style.display = 'none';
-              const fallback = document.createTextNode('📦');
+              const fallback = document.createTextNode(DEFAULT_WIDGET_ICON);
               e.target.parentNode?.appendChild(fallback);
             }}
           />
         ) : (
-          <span>{props.widget.icon || '📦'}</span>
+          <span>{props.widget.icon || DEFAULT_WIDGET_ICON}</span>
         )}
       </div>
       <div class="info">
