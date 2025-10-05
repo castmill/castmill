@@ -53,7 +53,6 @@ async function handleResponse<T = any>(
     } catch (error) {
       errMsg = `${response.statusText}`;
     }
-    alert(errMsg);
     throw new Error(errMsg);
   }
 }

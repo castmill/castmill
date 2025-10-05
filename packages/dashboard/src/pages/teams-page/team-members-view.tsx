@@ -14,6 +14,7 @@ import {
   ConfirmDialog,
   TableViewRef,
   Timestamp,
+  useToast,
 } from '@castmill/ui-common';
 import { TeamsService } from '../../services/teams.service';
 import { store, setStore } from '../../store/store';
@@ -94,6 +95,8 @@ export const TeamMembersView = (props: {
   teamId: number;
   onRemove: (member: User) => void;
 }) => {
+  const toast = useToast();
+
   const fetchData = async (opts: FetchDataOptions) => {
     const result = await TeamsService.fetchMembers(
       props.organizationId,
@@ -129,10 +132,10 @@ export const TeamMembersView = (props: {
       );
 
       refreshData();
-
+      toast.success(`Member ${member.name} removed successfully`);
       setShowConfirmDialog(false);
     } catch (error) {
-      alert((error as Error).message);
+      toast.error((error as Error).message);
     }
   };
 
@@ -149,10 +152,10 @@ export const TeamMembersView = (props: {
       );
 
       refreshData();
-
+      toast.success('Members removed successfully');
       setShowConfirmDialogMultiple(false);
     } catch (error) {
-      alert((error as Error).message);
+      toast.error((error as Error).message);
     }
   };
 
@@ -177,9 +180,10 @@ export const TeamMembersView = (props: {
                   );
 
                   refreshData();
+                  toast.success(`Invitation sent to ${email()}`);
                   setShowAddMemberDialog(false);
                 } catch (error) {
-                  alert((error as Error).message);
+                  toast.error((error as Error).message);
                 }
               }
             }}

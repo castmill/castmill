@@ -11,6 +11,7 @@ import {
   ConfirmDialog,
   TableViewRef,
   Timestamp,
+  useToast,
 } from '@castmill/ui-common';
 import { AiOutlineDelete } from 'solid-icons/ai';
 import { createSignal } from 'solid-js';
@@ -75,6 +76,8 @@ export const OrganizationInvitationsView = (props: {
   organizationId: string;
   onRemove: (invitation: Invitation) => void;
 }) => {
+  const toast = useToast();
+
   const fetchData = async (opts: FetchDataOptions) => {
     const result = await OrganizationsService.fetchInvitations(
       props.organizationId,
@@ -110,10 +113,10 @@ export const OrganizationInvitationsView = (props: {
       );
 
       refreshData();
-
+      toast.success(`Invitation for ${invitation.email} removed successfully`);
       setShowConfirmDialog(false);
     } catch (error) {
-      alert((error as Error).message);
+      toast.error((error as Error).message);
     }
   };
 
@@ -129,10 +132,10 @@ export const OrganizationInvitationsView = (props: {
       );
 
       refreshData();
-
+      toast.success('Invitations removed successfully');
       setShowConfirmDialogMultiple(false);
     } catch (error) {
-      alert((error as Error).message);
+      toast.error((error as Error).message);
     }
   };
 

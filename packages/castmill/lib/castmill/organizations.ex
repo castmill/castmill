@@ -567,6 +567,19 @@ defmodule Castmill.Organizations do
   end
 
   @doc """
+  Removes an invitation from an organization by invitation ID.
+  """
+  def remove_invitation_from_organization(organization_id, invitation_id) do
+    case Repo.get_by(OrganizationsInvitation, id: invitation_id, organization_id: organization_id) do
+      nil ->
+        {:error, :not_found}
+
+      invitation ->
+        Repo.delete(invitation)
+    end
+  end
+
+  @doc """
     Returns a list of resources of a given resource type
   """
   def list_resources(%{resources: "medias"} = params) do

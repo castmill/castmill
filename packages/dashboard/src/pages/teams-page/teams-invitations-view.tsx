@@ -11,6 +11,7 @@ import {
   ConfirmDialog,
   TableViewRef,
   Timestamp,
+  useToast,
 } from '@castmill/ui-common';
 import { TeamsService } from '../../services/teams.service';
 import { AiOutlineDelete } from 'solid-icons/ai';
@@ -75,6 +76,8 @@ export const TeamInvitationsView = (props: {
   teamId: number;
   onRemove: (invitation: Invitation) => void;
 }) => {
+  const toast = useToast();
+
   const fetchData = async (opts: FetchDataOptions) => {
     const result = await TeamsService.fetchInvitations(
       props.organizationId,
@@ -110,10 +113,10 @@ export const TeamInvitationsView = (props: {
       );
 
       refreshData();
-
+      toast.success(`Invitation for ${invitation.email} removed successfully`);
       setShowConfirmDialog(false);
     } catch (error) {
-      alert((error as Error).message);
+      toast.error((error as Error).message);
     }
   };
 
@@ -130,10 +133,10 @@ export const TeamInvitationsView = (props: {
       );
 
       refreshData();
-
+      toast.success('Invitations removed successfully');
       setShowConfirmDialogMultiple(false);
     } catch (error) {
-      alert((error as Error).message);
+      toast.error((error as Error).message);
     }
   };
 

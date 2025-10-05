@@ -36,6 +36,7 @@ export interface TableProps<
   onRowSelect?: (selectedIds: Set<IdType>) => void;
   onRowClick?: (item: Item) => void;
   itemIdKey?: string;
+  hideCheckboxes?: boolean;
 }
 
 // Helper function to safely read nested properties using a dot path (e.g. "user.name")
@@ -115,9 +116,23 @@ export const Table = <
       <table>
         <thead>
           <tr>
-            <th>
-              <input type="checkbox" onChange={handleSelectAll} />
-            </th>
+            {!props.hideCheckboxes && (
+              <th class={style['checkbox-cell']}>
+                {/* Simple checkbox container */}
+                <input
+                  type="checkbox"
+                  id="select-all-checkbox"
+                  onChange={handleSelectAll}
+                  aria-label="Select all rows"
+                  class={style['styled-checkbox']}
+                />
+                <label
+                  for="select-all-checkbox"
+                  aria-hidden="true"
+                  class={style['checkbox-touch-target']}
+                ></label>
+              </th>
+            )}
             <For each={props.columns}>
               {(column) => (
                 <th
@@ -152,15 +167,25 @@ export const Table = <
                   cursor: props.onRowClick ? 'pointer' : 'default',
                 }}
               >
-                <td>
-                  <input
-                    type="checkbox"
-                    checked={selectedRows().has(getItemId(item))}
-                    onInput={(e) =>
-                      handleSelectRow(getItemId(item), e.target.checked)
-                    }
-                  />
-                </td>
+                {!props.hideCheckboxes && (
+                  <td class={style['checkbox-cell']}>
+                    <input
+                      type="checkbox"
+                      id={`row-checkbox-${getItemId(item)}`}
+                      checked={selectedRows().has(getItemId(item))}
+                      onInput={(e) =>
+                        handleSelectRow(getItemId(item), e.target.checked)
+                      }
+                      aria-label={`Select row ${getItemId(item)}`}
+                      class={style['styled-checkbox']}
+                    />
+                    <label
+                      for={`row-checkbox-${getItemId(item)}`}
+                      aria-hidden="true"
+                      class={style['checkbox-touch-target']}
+                    ></label>
+                  </td>
+                )}
                 <For each={props.columns}>
                   {(column) => (
                     <td>

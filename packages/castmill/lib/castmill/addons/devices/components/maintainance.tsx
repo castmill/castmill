@@ -1,5 +1,5 @@
 import { Component, createSignal, Show } from 'solid-js';
-import { Button } from '@castmill/ui-common';
+import { Button, useToast } from '@castmill/ui-common';
 import { Device } from '../interfaces/device.interface';
 import { DevicesService } from '../services/devices.service';
 
@@ -10,14 +10,16 @@ import { DeviceCommand } from '../types/device-command.type';
 export const Maintainance: Component<{ baseUrl: string; device: Device }> = (
   props
 ) => {
+  const toast = useToast();
   const [handlingRequest, setHandlingRequest] = createSignal(false);
 
   const handleRequest = async (command: DeviceCommand) => {
     try {
       await DevicesService.sendCommand(props.baseUrl, props.device.id, command);
+      toast.success(`Command "${command}" sent successfully`);
     } catch (error) {
       console.error(error);
-      alert('An error occurred while processing your request');
+      toast.error(`An error occurred while processing your request: ${error}`);
     }
   };
 

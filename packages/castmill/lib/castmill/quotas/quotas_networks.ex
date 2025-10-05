@@ -11,7 +11,14 @@ defmodule Castmill.Quotas.QuotasNetworks do
     field :resource, Ecto.Enum,
       values: [
         :organizations,
-        :users
+        :medias,
+        :playlists,
+        :channels,
+        :channels_entries,
+        :devices,
+        :users,
+        :teams,
+        :storage
       ],
       primary_key: true
 
