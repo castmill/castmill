@@ -8,7 +8,7 @@ This document describes the "Lost your credentials?" feature implemented for pas
 1. **Initiate Recovery**: User clicks "Lost your credentials?" link on login page
 2. **Enter Email**: User enters their registered email address
 3. **Confirmation**: User receives confirmation message (same response for all emails)
-4. **Email Link**: If email exists, user receives recovery email with 24-hour link
+4. **Email Link**: If email exists, user receives recovery email with 5-minute link
 5. **Verify Token**: Recovery page verifies the token automatically
 6. **Add Passkey**: User creates a new passkey using their device
 7. **Auto-Login**: User is automatically logged in after successful recovery
@@ -16,7 +16,7 @@ This document describes the "Lost your credentials?" feature implemented for pas
 ## Security Features
 
 - **No Email Enumeration**: Same response whether email exists or not
-- **Time-Limited Tokens**: Recovery links expire after 24 hours
+- **Time-Limited Tokens**: Recovery links expire after 5 minutes
 - **Cryptographic Challenge**: Secure passkey creation validation
 - **Session Management**: Recovery state secured in server session
 - **Single-Use Tokens**: Tokens consumed after successful use

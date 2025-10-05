@@ -80,7 +80,7 @@ defmodule Castmill.Accounts.UserNotifier do
 
     #{url}
 
-    This link will expire in 24 hours.
+    This link will expire in 5 minutes.
 
     If you didn't request this, please ignore this email.
 
