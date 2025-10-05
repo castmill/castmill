@@ -31,27 +31,33 @@ export const Timestamp: Component<TimestampProps> = (props) => {
   const mode = () => props.mode ?? 'relative';
   const showTooltip = () => props.showTooltip ?? true;
   
-  const [displayText, setDisplayText] = createSignal('');
-  const [tooltipText, setTooltipText] = createSignal('');
-  
-  // Update display text
-  const updateDisplayText = () => {
+  // Initialize display and tooltip text immediately
+  const getDisplayText = () => {
     if (mode() === 'relative') {
-      setDisplayText(formatRelativeTime(props.value));
+      return formatRelativeTime(props.value);
     } else {
-      setDisplayText(formatTimestamp(props.value));
-    }
-    
-    // Tooltip always shows absolute time
-    if (showTooltip()) {
-      setTooltipText(formatTimestamp(props.value));
+      return formatTimestamp(props.value);
     }
   };
   
-  // Update on mount
+  const getTooltipText = () => {
+    if (showTooltip()) {
+      return formatTimestamp(props.value);
+    }
+    return '';
+  };
+  
+  const [displayText, setDisplayText] = createSignal(getDisplayText());
+  const [tooltipText, setTooltipText] = createSignal(getTooltipText());
+  
+  // Update display text
+  const updateDisplayText = () => {
+    setDisplayText(getDisplayText());
+    setTooltipText(getTooltipText());
+  };
+  
+  // Update on mount and set interval for relative time
   onMount(() => {
-    updateDisplayText();
-    
     // For relative time, update every minute to keep it fresh
     if (mode() === 'relative') {
       const interval = setInterval(updateDisplayText, 60000); // Update every minute
