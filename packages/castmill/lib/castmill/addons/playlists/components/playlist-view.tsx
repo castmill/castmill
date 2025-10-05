@@ -24,22 +24,24 @@ export const PlaylistView: Component<{
   const [items, setItems] = createSignal<JsonPlaylistItem[]>([]);
   const [playlist, setPlaylist] = createSignal<JsonPlaylist>();
 
-  createEffect(async () => {
-    const playlist: JsonPlaylist = await PlaylistsService.getPlaylist(
-      props.baseUrl,
-      props.organizationId,
-      props.playlistId
-    );
-    setPlaylist(playlist);
-    setItems(playlist.items);
+  createEffect(() => {
+    (async () => {
+      const playlist: JsonPlaylist = await PlaylistsService.getPlaylist(
+        props.baseUrl,
+        props.organizationId,
+        props.playlistId
+      );
+      setPlaylist(playlist);
+      setItems(playlist.items);
 
-    const result = await PlaylistsService.getWidgets(
-      props.baseUrl,
-      props.organizationId
-    );
-    setWidgets(result);
+      const result = await PlaylistsService.getWidgets(
+        props.baseUrl,
+        props.organizationId
+      );
+      setWidgets(result.data);
 
-    setLoading(false);
+      setLoading(false);
+    })();
   });
 
   const onEditItem = async (

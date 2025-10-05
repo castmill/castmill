@@ -40,13 +40,42 @@ const Thumbnail: Component<{
 }> = (props) => {
   const thumbnailUri = getThumbnailUri(props.item);
   const widgetName = getWidgetName(props.item);
+  const widgetIcon = props.item.widget.icon;
+
+  const isImageIcon =
+    widgetIcon &&
+    (widgetIcon.startsWith('data:image/') ||
+      widgetIcon.startsWith('http://') ||
+      widgetIcon.startsWith('https://') ||
+      widgetIcon.startsWith('/'));
 
   return (
     <Show
       when={thumbnailUri}
-      fallback={<div>{widgetName}</div>}
+      fallback={
+        <div class={styles.widgetIcon}>
+          <Show
+            when={isImageIcon}
+            fallback={<span>{widgetIcon || '📦'}</span>}
+          >
+            <img
+              draggable={false}
+              src={widgetIcon}
+              alt={widgetName}
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = 'none';
+                const fallback = document.createTextNode('📦');
+                e.target.parentNode?.appendChild(fallback);
+              }}
+            />
+          </Show>
+          <span class={styles.widgetName}>{widgetName}</span>
+        </div>
+      }
     >
-      <img draggable={false} src={thumbnailUri} class={styles.thumbnailImage} />
+      <div class={styles.thumbnailWrapper}>
+        <img draggable={false} src={thumbnailUri} class={styles.thumbnailImage} />
+      </div>
     </Show>
   );
 }
