@@ -11,7 +11,9 @@ defmodule CastmillWeb.CredentialRecoveryController do
   """
   def request_recovery(conn, %{"email" => email}) do
     # Always get the origin to build the recovery URL
-    origin = List.first(Plug.Conn.get_req_header(conn, "origin")) || System.get_env("DASHBOARD_URL") || "http://localhost:3000"
+    origin =
+      List.first(Plug.Conn.get_req_header(conn, "origin")) || System.get_env("DASHBOARD_URL") ||
+        "http://localhost:3000"
 
     # Try to get user, but don't reveal if it exists
     if user = Accounts.get_user_by_email(email) do
@@ -29,7 +31,8 @@ defmodule CastmillWeb.CredentialRecoveryController do
     |> put_status(:ok)
     |> json(%{
       status: :ok,
-      message: "If your email is in our system, you will receive instructions to recover your credentials shortly."
+      message:
+        "If your email is in our system, you will receive instructions to recover your credentials shortly."
     })
   end
 

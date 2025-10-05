@@ -350,7 +350,11 @@ defmodule Castmill.Accounts do
       when is_function(recover_credentials_url_fun, 1) do
     {encoded_token, user_token} = UserToken.build_email_token(user, "recover_credentials")
     Repo.insert!(user_token)
-    UserNotifier.deliver_recover_credentials_instructions(user, recover_credentials_url_fun.(encoded_token))
+
+    UserNotifier.deliver_recover_credentials_instructions(
+      user,
+      recover_credentials_url_fun.(encoded_token)
+    )
   end
 
   @doc """

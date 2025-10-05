@@ -118,7 +118,8 @@ defmodule Castmill.Accounts.UserToken do
         query =
           from(token in token_and_context_query(hashed_token, context),
             join: user in assoc(token, :user),
-            where: token.inserted_at > ago(^time_value, ^time_unit) and token.sent_to == user.email,
+            where:
+              token.inserted_at > ago(^time_value, ^time_unit) and token.sent_to == user.email,
             select: user
           )
 
@@ -131,7 +132,9 @@ defmodule Castmill.Accounts.UserToken do
 
   defp time_for_context("confirm"), do: {@confirm_validity_in_days, "day"}
   defp time_for_context("reset_password"), do: {@reset_password_validity_in_days, "day"}
-  defp time_for_context("recover_credentials"), do: {@recover_credentials_validity_in_minutes, "minute"}
+
+  defp time_for_context("recover_credentials"),
+    do: {@recover_credentials_validity_in_minutes, "minute"}
 
   @doc """
   Checks if the token is valid and returns its underlying lookup query.
