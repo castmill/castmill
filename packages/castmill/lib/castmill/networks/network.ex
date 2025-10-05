@@ -17,6 +17,12 @@ defmodule Castmill.Networks.Network do
 
     has_many(:organizations, Castmill.Organizations.Organization)
     has_many(:users, Castmill.Accounts.User)
+    has_many(:plans, Castmill.Quotas.Plan)
+
+    belongs_to(:default_plan, Castmill.Quotas.Plan,
+      foreign_key: :default_plan_id,
+      type: :integer
+    )
 
     timestamps()
   end
@@ -24,7 +30,7 @@ defmodule Castmill.Networks.Network do
   @doc false
   def changeset(network, attrs) do
     network
-    |> cast(attrs, [:name, :copyright, :email, :logo, :domain, :meta])
+    |> cast(attrs, [:name, :copyright, :email, :logo, :domain, :meta, :default_plan_id])
     |> validate_required([:name, :email])
     |> validate_format(:email, ~r/@/)
     |> unique_constraint(:name)

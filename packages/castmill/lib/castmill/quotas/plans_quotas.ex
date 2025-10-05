@@ -17,7 +17,8 @@ defmodule Castmill.Quotas.PlansQuotas do
         :channels_entries,
         :devices,
         :users,
-        :teams
+        :teams,
+        :storage
       ],
       primary_key: true
 

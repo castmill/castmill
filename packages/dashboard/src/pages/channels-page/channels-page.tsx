@@ -3,6 +3,7 @@ import {
   createEffect,
   createSignal,
   onCleanup,
+  onMount,
   Show,
 } from 'solid-js';
 
@@ -17,6 +18,7 @@ import {
   ConfirmDialog,
   FetchDataOptions,
   TeamFilter,
+  useToast,
 } from '@castmill/ui-common';
 
 import { store } from '../../store/store';
@@ -32,9 +34,12 @@ import { ChannelView } from './channel-view';
 import { baseUrl } from '../../env';
 import { ChannelAddForm } from './channel-add-form';
 import { useTeamFilter } from '../../hooks';
+import { QuotaIndicator } from '../../components/quota-indicator';
+import { QuotasService, ResourceQuota } from '../../services/quotas.service';
 
 const ChannelsPage: Component = () => {
   const params = useSearchParams();
+  const toast = useToast();
 
   const itemsPerPage = 10; // Number of items to show per page
 
@@ -54,17 +59,47 @@ const ChannelsPage: Component = () => {
     new Set<number>()
   );
 
+  const [quota, setQuota] = createSignal<ResourceQuota | null>(null);
+  const [quotaLoading, setQuotaLoading] = createSignal(true);
+
   let channelsService: ChannelsService = new ChannelsService(
     baseUrl,
     store.organizations.selectedId!
   );
+
+  const loadQuota = async () => {
+    if (!store.organizations.selectedId) return;
+
+    try {
+      setQuotaLoading(true);
+      const quotaData = await QuotasService.getResourceQuota(
+        store.organizations.selectedId,
+        'channels'
+      );
+      setQuota(quotaData);
+    } catch (error) {
+      console.error('Failed to fetch quota:', error);
+    } finally {
+      setQuotaLoading(false);
+    }
+  };
+
+  onMount(() => {
+    loadQuota();
+  });
 
   createEffect(() => {
     channelsService = new ChannelsService(
       baseUrl,
       store.organizations.selectedId!
     );
+    loadQuota();
   });
+
+  const isQuotaReached = () => {
+    const q = quota();
+    return q ? q.used >= q.total : false;
+  };
 
   const columns = [
     { key: 'id', title: 'ID', sortable: true },
@@ -123,8 +158,9 @@ const ChannelsPage: Component = () => {
     try {
       await channelsService.removeChannel(channel.id);
       refreshData();
+      toast.success(`Channel ${channel.name} removed successfully`);
     } catch (error) {
-      alert(`Error removing channel ${channel.name}: ${error}`);
+      toast.error(`Error removing channel ${channel.name}: ${error}`);
     }
     setShowConfirmDialog(false);
   };
@@ -138,8 +174,9 @@ const ChannelsPage: Component = () => {
       );
 
       refreshData();
+      toast.success('Channels removed successfully');
     } catch (error) {
-      alert(`Error removing channels: ${error}`);
+      toast.error(`Error removing channels: ${error}`);
     }
     setShowConfirmDialogMultiple(false);
   };
@@ -219,8 +256,9 @@ const ChannelsPage: Component = () => {
                     refreshData();
                   }
                   refreshData();
+                  toast.success(`Channel ${name} added successfully`);
                 } catch (error) {
-                  alert(`Error adding channel: ${error}`);
+                  toast.error(`Error adding channel: ${error}`);
                 }
               }}
             />
@@ -248,15 +286,21 @@ const ChannelsPage: Component = () => {
                     const newChannel = result.data;
                     setCurrentChannel(newChannel);
                     refreshData();
+                    toast.success(
+                      `Channel ${channel.name} created successfully`
+                    );
                     return newChannel;
                   } else {
                     const updatedTeam =
                       await channelsService.updateChannel(channel);
                     updateItem(channel.id, channel);
+                    toast.success(
+                      `Channel ${channel.name} updated successfully`
+                    );
                     return updatedTeam;
                   }
                 } catch (error) {
-                  alert(`Error saving channel: ${error}`);
+                  toast.error(`Error saving channel: ${error}`);
                 }
               }}
             />
@@ -295,12 +339,28 @@ const ChannelsPage: Component = () => {
           toolbar={{
             filters: [],
             mainAction: (
-              <Button
-                label="Add Channel"
-                onClick={addChannel}
-                icon={BsCheckLg}
-                color="primary"
-              />
+              <div style="display: flex; align-items: center; gap: 1rem;">
+                <Show when={quota() && !quotaLoading()}>
+                  <QuotaIndicator
+                    used={quota()!.used}
+                    total={quota()!.total}
+                    resourceName="Channels"
+                    compact
+                  />
+                </Show>
+                <Button
+                  label="Add Channel"
+                  onClick={addChannel}
+                  icon={BsCheckLg}
+                  color="primary"
+                  disabled={isQuotaReached()}
+                  title={
+                    isQuotaReached()
+                      ? 'Quota limit reached for Channels. Cannot add more.'
+                      : 'Add a new Channel'
+                  }
+                />
+              </div>
             ),
             actions: (
               <div style="display: flex; gap: 1rem; align-items: center;">

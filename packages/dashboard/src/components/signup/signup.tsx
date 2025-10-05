@@ -1,5 +1,6 @@
 import { Component, createSignal, onMount, Show } from 'solid-js';
 import { useNavigate, useSearchParams } from '@solidjs/router';
+import { useToast } from '@castmill/ui-common';
 
 import { arrayBufferToBase64 } from '../utils';
 
@@ -28,6 +29,7 @@ interface SignUpQueryParams {
 
 const SignUp: Component = () => {
   const navigate = useNavigate();
+  const toast = useToast();
 
   const [isMounted, setIsMounted] = createSignal<boolean>(false);
   const [status, setStatus] = createSignal<string>('Ready');
@@ -91,7 +93,7 @@ const SignUp: Component = () => {
 
     const credential = await navigator.credentials.create(createOptions);
     if (!credential) {
-      alert('Could not create credential');
+      toast.error('Could not create credential');
       return;
     }
 
@@ -100,7 +102,7 @@ const SignUp: Component = () => {
       publicKeyCredential.response as AuthenticatorAttestationResponse;
     const publicKey = authAttestationResponse.getPublicKey();
     if (!publicKey) {
-      alert('Could not get public key');
+      toast.error('Could not get public key');
       return;
     }
 
@@ -116,7 +118,7 @@ const SignUp: Component = () => {
       ('crossOrigin' in clientData && clientData.crossOrigin) ||
       clientData.origin !== origin
     ) {
-      alert('Invalid credential');
+      toast.error('Invalid credential');
       return;
     }
 
@@ -140,10 +142,11 @@ const SignUp: Component = () => {
     });
 
     if (!result.ok) {
-      alert(
+      toast.error(
         `Something went wrong when signing up, contact support. ERROR: ${result.statusText}`
       );
     } else {
+      toast.success('Account created successfully!');
       navigate('/');
     }
   }

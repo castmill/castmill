@@ -1,0 +1,107 @@
+.toast {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 300px;
+  max-width: 500px;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.4),
+    0 2px 4px rgba(0, 0, 0, 0.3);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  opacity: 0;
+  transform: translateX(100%);
+  transition:
+    opacity 0.3s ease-in-out,
+    transform 0.3s ease-in-out;
+  margin-bottom: 12px;
+  backdrop-filter: blur(10px);
+
+  &.visible {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  &.exiting {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+
+  &-icon {
+    display: flex;
+    align-items: center;
+    font-size: 24px;
+    flex-shrink: 0;
+  }
+
+  &-message {
+    flex: 1;
+    line-height: 1.4;
+    word-break: break-word;
+  }
+
+  &-close {
+    display: flex;
+    align-items: center;
+    background: transparent;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    font-size: 18px;
+    flex-shrink: 0;
+    transition: background-color 0.2s;
+
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    &:active {
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+  }
+
+  // Success variant - green
+  &-success {
+    background: linear-gradient(
+      135deg,
+      rgba(34, 139, 34, 0.95) 0%,
+      rgba(50, 205, 50, 0.9) 100%
+    );
+    border-left: 4px solid #32cd32;
+  }
+
+  // Error variant - red
+  &-error {
+    background: linear-gradient(
+      135deg,
+      rgba(220, 38, 38, 0.95) 0%,
+      rgba(239, 68, 68, 0.9) 100%
+    );
+    border-left: 4px solid #ef4444;
+  }
+
+  // Info variant - blue
+  &-info {
+    background: linear-gradient(
+      135deg,
+      rgba(37, 99, 235, 0.95) 0%,
+      rgba(59, 130, 246, 0.9) 100%
+    );
+    border-left: 4px solid #3b82f6;
+  }
+
+  // Warning variant - orange/yellow
+  &-warning {
+    background: linear-gradient(
+      135deg,
+      rgba(234, 88, 12, 0.95) 0%,
+      rgba(251, 146, 60, 0.9) 100%
+    );
+    border-left: 4px solid #fb923c;
+  }
+}

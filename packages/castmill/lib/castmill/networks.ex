@@ -104,9 +104,40 @@ defmodule Castmill.Networks do
 
   """
   def create_network(attrs \\ %{}) do
-    %Network{}
-    |> Network.changeset(attrs)
-    |> Repo.insert()
+    # Create the network
+    result =
+      %Network{}
+      |> Network.changeset(attrs)
+      |> Repo.insert()
+
+    case result do
+      {:ok, network} ->
+        # Create a default plan for the new network
+        create_default_plan_for_network(network)
+        {:ok, network}
+
+      error ->
+        error
+    end
+  end
+
+  # Creates a default plan with sensible defaults for a network
+  defp create_default_plan_for_network(network) do
+    default_quotas = [
+      %{resource: :teams, max: 10},
+      %{resource: :medias, max: 1000},
+      %{resource: :playlists, max: 50},
+      %{resource: :devices, max: 20},
+      %{resource: :channels, max: 20},
+      # 1 GB in bytes
+      %{resource: :storage, max: 1_073_741_824}
+    ]
+
+    # Create the default plan
+    plan = Castmill.Quotas.create_plan("Default Plan", network.id, default_quotas)
+
+    # Set it as the network's default
+    Castmill.Quotas.set_network_default_plan(network.id, plan.id)
   end
 
   @doc """

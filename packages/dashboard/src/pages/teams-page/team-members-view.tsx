@@ -13,6 +13,7 @@ import {
   ConfirmDialog,
   TableViewRef,
   ComboBox,
+  useToast,
 } from '@castmill/ui-common';
 import { TeamsService } from '../../services/teams.service';
 import { OrganizationsService } from '../../services/organizations.service';
@@ -38,7 +39,9 @@ const [showConfirmDialog, setShowConfirmDialog] = createSignal(false);
 
 const [selectedMembers, setSelectedMembers] = createSignal(new Set<string>());
 
-const [selectedUser, setSelectedUser] = createSignal<User | undefined>(undefined);
+const [selectedUser, setSelectedUser] = createSignal<User | undefined>(
+  undefined
+);
 const [isFormValid, setIsFormValid] = createSignal(false);
 
 const onRowSelect = (rowsSelected: Set<string>) => {
@@ -75,6 +78,8 @@ export const TeamMembersView = (props: {
   teamId: number;
   onRemove: (member: User) => void;
 }) => {
+  const toast = useToast();
+
   const fetchData = async (opts: FetchDataOptions) => {
     const result = await TeamsService.fetchMembers(
       props.organizationId,
@@ -103,12 +108,15 @@ export const TeamMembersView = (props: {
     pageSize: number,
     searchQuery: string
   ) => {
-    const result = await OrganizationsService.fetchMembers(props.organizationId, {
-      page: { num: page, size: pageSize },
-      sortOptions: {},
-      search: searchQuery,
-    });
-    
+    const result = await OrganizationsService.fetchMembers(
+      props.organizationId,
+      {
+        page: { num: page, size: pageSize },
+        sortOptions: {},
+        search: searchQuery,
+      }
+    );
+
     return {
       count: result.count,
       data: result.data.map((member: any) => member.user),
@@ -133,10 +141,10 @@ export const TeamMembersView = (props: {
       );
 
       refreshData();
-
+      toast.success(`Member ${member.name} removed successfully`);
       setShowConfirmDialog(false);
     } catch (error) {
-      alert((error as Error).message);
+      toast.error((error as Error).message);
     }
   };
 
@@ -153,10 +161,10 @@ export const TeamMembersView = (props: {
       );
 
       refreshData();
-
+      toast.success('Members removed successfully');
       setShowConfirmDialogMultiple(false);
     } catch (error) {
-      alert((error as Error).message);
+      toast.error((error as Error).message);
     }
   };
 
@@ -181,9 +189,10 @@ export const TeamMembersView = (props: {
                   );
 
                   refreshData();
+                  toast.success(`Invitation sent to ${email()}`);
                   setShowAddMemberDialog(false);
                 } catch (error) {
-                  alert((error as Error).message);
+                  toast.error((error as Error).message);
                 }
               }
             }}
@@ -197,7 +206,9 @@ export const TeamMembersView = (props: {
               renderItem={(user: User) => (
                 <div>
                   <div style="font-weight: 500;">{user.name}</div>
-                  <div style="font-size: 0.875rem; color: #666;">{user.email}</div>
+                  <div style="font-size: 0.875rem; color: #666;">
+                    {user.email}
+                  </div>
                 </div>
               )}
               onSelect={handleUserSelect}

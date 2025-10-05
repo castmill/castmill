@@ -94,9 +94,35 @@ defmodule Castmill.Teams do
 
   """
   def create_team(attrs \\ %{}) do
-    %Team{}
-    |> Team.changeset(attrs)
-    |> Repo.insert()
+    organization_id = Map.get(attrs, "organization_id") || Map.get(attrs, :organization_id)
+
+    # Check quota before creating the team
+    with :ok <- check_team_quota(organization_id) do
+      %Team{}
+      |> Team.changeset(attrs)
+      |> Repo.insert()
+    else
+      {:error, :quota_exceeded} -> {:error, :quota_exceeded}
+    end
+  end
+
+  defp check_team_quota(organization_id) do
+    current_count = get_quota_used_for_organization(organization_id, Team)
+    max_quota = Castmill.Quotas.get_quota_for_organization(organization_id, :teams)
+
+    if current_count < max_quota do
+      :ok
+    else
+      {:error, :quota_exceeded}
+    end
+  end
+
+  defp get_quota_used_for_organization(organization_id, schema_module) do
+    from(r in schema_module,
+      where: r.organization_id == ^organization_id,
+      select: count(r.id)
+    )
+    |> Repo.one()
   end
 
   @doc """
