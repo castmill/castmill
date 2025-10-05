@@ -31,8 +31,8 @@ export const Timestamp: Component<TimestampProps> = (props) => {
   const mode = () => props.mode ?? 'relative';
   const showTooltip = () => props.showTooltip ?? true;
   
-  // Initialize display and tooltip text immediately
-  const getDisplayText = () => {
+  // Compute display text based on mode
+  const displayText = () => {
     if (mode() === 'relative') {
       return formatRelativeTime(props.value);
     } else {
@@ -40,30 +40,28 @@ export const Timestamp: Component<TimestampProps> = (props) => {
     }
   };
   
-  const getTooltipText = () => {
+  // Compute tooltip text (always absolute time)
+  const tooltipText = () => {
     if (showTooltip()) {
       return formatTimestamp(props.value);
     }
     return '';
   };
   
-  const [displayText, setDisplayText] = createSignal(getDisplayText());
-  const [tooltipText, setTooltipText] = createSignal(getTooltipText());
+  const [tick, setTick] = createSignal(0);
   
-  // Update display text
-  const updateDisplayText = () => {
-    setDisplayText(getDisplayText());
-    setTooltipText(getTooltipText());
-  };
-  
-  // Update on mount and set interval for relative time
+  // Update tick every minute for relative time to trigger re-render
   onMount(() => {
-    // For relative time, update every minute to keep it fresh
     if (mode() === 'relative') {
-      const interval = setInterval(updateDisplayText, 60000); // Update every minute
+      const interval = setInterval(() => {
+        setTick(tick() + 1);
+      }, 60000); // Update every minute
       onCleanup(() => clearInterval(interval));
     }
   });
+  
+  // Force re-computation by accessing tick (unused but triggers reactivity)
+  const _ = tick();
   
   // If tooltip is disabled or mode is absolute, render simple span
   if (!showTooltip() || mode() === 'absolute') {
