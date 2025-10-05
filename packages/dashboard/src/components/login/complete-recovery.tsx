@@ -165,7 +165,7 @@ const CompleteRecovery: Component = () => {
           credential_id: publicKeyCredential.id,
           public_key_spki: arrayBufferToBase64(publicKey),
           raw_id: arrayBufferToBase64(publicKeyCredential.rawId),
-          client_data_json: new Uint8Array(
+          client_data_json: arrayBufferToBase64(
             authAttestationResponse.clientDataJSON
           ),
         }),

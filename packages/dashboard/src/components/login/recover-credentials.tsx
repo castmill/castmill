@@ -21,6 +21,12 @@ const RecoverCredentials: Component<RecoverCredentialsProps> = (props) => {
     setError('');
   };
 
+  const handleEmailInput = (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    setEmail(target.value);
+    setError('');
+  };
+
   const handleSubmit = async () => {
     if (!isValidEmail()) {
       setError('Please enter a valid email address');
@@ -84,6 +90,7 @@ const RecoverCredentials: Component<RecoverCredentialsProps> = (props) => {
           type="email"
           placeholder="Email"
           value={email()}
+          onInput={handleEmailInput}
           onChange={handleEmailChange}
           disabled={loading()}
         />
