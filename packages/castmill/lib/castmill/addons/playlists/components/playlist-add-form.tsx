@@ -40,6 +40,7 @@ export const PlaylistAddForm: Component<{
           id="name"
           value={name()!}
           placeholder="Enter Playlist name"
+          autofocus={true}
           onInput={(value: string | number | boolean) => {
             const strValue = value as string;
             setIsFormModified(true);
