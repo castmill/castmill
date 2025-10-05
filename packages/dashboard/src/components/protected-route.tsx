@@ -5,6 +5,7 @@ import { AddOn } from '../interfaces/addon.interface';
 import { AddonsService } from '../services/addons';
 import { store, setStore } from '../store/store';
 import { OrganizationsService } from '../services/organizations.service';
+import { useToast } from '@castmill/ui-common';
 
 interface ProtectedRouteProps {
   children: (addons: AddOn[]) => JSX.Element; // children is now a function that accepts the addons array
@@ -22,6 +23,7 @@ const ProtectedRoute: Component<ProtectedRouteProps> = (
 ) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const toast = useToast();
 
   onMount(async () => {
     if (!checkAuth()) {
@@ -52,7 +54,9 @@ const ProtectedRoute: Component<ProtectedRouteProps> = (
           selectedName: organizations[0]?.name,
         });
       } catch (error) {
-        console.error(error);
+        toast.error(
+          `Failed to load organizations: ${error instanceof Error ? error.message : 'Unknown error'}`
+        );
       } finally {
         setStore('organizations', {
           ...store.organizations,
@@ -73,7 +77,11 @@ const ProtectedRoute: Component<ProtectedRouteProps> = (
           // Set the addons in the store
           setStore('addons', loadedAddons);
         } catch (error) {
-          console.error(error);
+          toast.error(
+            `Failed to load addons: ${error instanceof Error ? error.message : 'Unknown error'}`
+          );
+          // Set empty addons array so the app can still function
+          setStore('addons', []);
         } finally {
           setStore('loadingAddons', false);
         }
