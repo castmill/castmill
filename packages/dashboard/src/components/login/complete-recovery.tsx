@@ -1,6 +1,6 @@
 import { Component, createSignal, onMount, Show } from 'solid-js';
 import { useNavigate, useSearchParams } from '@solidjs/router';
-import { arrayBufferToBase64 } from '../utils';
+import { arrayBufferToBase64, base64URLToArrayBuffer } from '../utils';
 import { baseUrl, domain } from '../../env';
 import { loginUser } from '../auth';
 import './login.scss';
@@ -125,7 +125,7 @@ const CompleteRecovery: Component = () => {
             { type: 'public-key', alg: -7 }, // ES256
             { type: 'public-key', alg: -257 }, // RS256
           ],
-          challenge: encoder.encode(challenge),
+          challenge: base64URLToArrayBuffer(challenge),
           authenticatorSelection: {
             userVerification: 'required',
             requireResidentKey: true,
@@ -154,6 +154,11 @@ const CompleteRecovery: Component = () => {
         return;
       }
 
+      // Decode client data JSON to string (not Base64)
+      const clientDataJSON = new TextDecoder().decode(
+        authAttestationResponse.clientDataJSON
+      );
+
       // Send credential to server
       const result = await fetch(`${baseUrl}/credentials/recover/credential`, {
         method: 'POST',
@@ -165,9 +170,7 @@ const CompleteRecovery: Component = () => {
           credential_id: publicKeyCredential.id,
           public_key_spki: arrayBufferToBase64(publicKey),
           raw_id: arrayBufferToBase64(publicKeyCredential.rawId),
-          client_data_json: arrayBufferToBase64(
-            authAttestationResponse.clientDataJSON
-          ),
+          client_data_json: clientDataJSON,
         }),
         credentials: 'include',
       });

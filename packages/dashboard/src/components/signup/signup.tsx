@@ -1,7 +1,7 @@
 import { Component, createSignal, onMount, Show } from 'solid-js';
 import { useNavigate, useSearchParams } from '@solidjs/router';
 
-import { arrayBufferToBase64 } from '../utils';
+import { arrayBufferToBase64, base64URLToArrayBuffer } from '../utils';
 
 import './signup.scss';
 
@@ -75,7 +75,7 @@ const SignUp: Component = () => {
           { type: 'public-key', alg: -7 }, // ES256
           { type: 'public-key', alg: -257 }, // RS256
         ],
-        challenge: encoder.encode(searchParams.challenge!),
+        challenge: base64URLToArrayBuffer(searchParams.challenge!),
         authenticatorSelection: {
           userVerification: 'required',
           requireResidentKey: true,
@@ -132,9 +132,7 @@ const SignUp: Component = () => {
         credential_id: credential.id,
         public_key_spki: arrayBufferToBase64(publicKey),
         raw_id: arrayBufferToBase64(publicKeyCredential.rawId),
-        client_data_json: new Uint8Array(
-          authAttestationResponse.clientDataJSON
-        ),
+        client_data_json: clientDataJSON,
       }),
       credentials: 'include', // Essential for including cookies
     });
