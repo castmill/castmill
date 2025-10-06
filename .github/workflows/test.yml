@@ -59,7 +59,7 @@ jobs:
   test_ui_common:
     runs-on: ubuntu-latest
 
-    name: testing UI Common package with node@18
+    name: testing UI Common package with bun
 
     defaults:
       run:
@@ -68,20 +68,19 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-      - name: Use Node.js current
-        uses: actions/setup-node@v3
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          node-version: 18
-          cache: 'yarn'
-      - run: yarn install --ignore-engines --frozen-lockfile --non-interactive
-      - run: yarn build
-      - run: yarn format:check
-      - run: yarn test --run
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - run: bun run build
+      - run: bun run format:check
+      - run: bun run test --run
 
   test_dashboard:
     runs-on: ubuntu-latest
 
-    name: testing Dashboard package with node@18
+    name: testing Dashboard package with bun
 
     defaults:
       run:
@@ -90,29 +89,24 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-      - name: Use Node.js current
-        uses: actions/setup-node@v3
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          node-version: 18
-          cache: 'yarn'
+          bun-version: latest
       - name: Install workspace dependencies
         working-directory: ./
-        run: yarn install --ignore-engines --frozen-lockfile --non-interactive
-      - name: Install @castmill/ui-common dependency
-        working-directory: ./packages/ui-common
-        run: yarn install --ignore-engines --frozen-lockfile --non-interactive
+        run: bun install --frozen-lockfile
       - name: Build @castmill/ui-common
         working-directory: ./packages/ui-common
-        run: yarn build
-      - run: yarn install --ignore-engines --frozen-lockfile --non-interactive
-      - run: yarn build
-      - run: yarn format:check
-      - run: yarn test --run
+        run: bun run build
+      - run: bun run build
+      - run: bun run format:check
+      - run: bun run test --run
 
   test_player:
     runs-on: ubuntu-latest
 
-    name: testing Player package with node@18
+    name: testing Player package with bun
 
     defaults:
       run:
@@ -121,29 +115,24 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-      - name: Use Node.js current
-        uses: actions/setup-node@v3
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          node-version: 18
-          cache: 'yarn'
+          bun-version: latest
       - name: Install workspace dependencies
         working-directory: ./
-        run: yarn install --ignore-engines --frozen-lockfile --non-interactive
-      - name: Install @castmill/cache dependency
-        working-directory: ./packages/cache
-        run: yarn install --ignore-engines --frozen-lockfile --non-interactive
+        run: bun install --frozen-lockfile
       - name: Build @castmill/cache
         working-directory: ./packages/cache
-        run: yarn build
-      - run: yarn install --ignore-engines --frozen-lockfile --non-interactive
-      - run: yarn build
-      - run: yarn format:check
-      - run: yarn test
+        run: bun run build
+      - run: bun run build
+      - run: bun run format:check
+      - run: bun run test
 
   test_cache:
     runs-on: ubuntu-latest
 
-    name: testing Cache package with node@18
+    name: testing Cache package with bun
 
     defaults:
       run:
@@ -152,20 +141,19 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-      - name: Use Node.js current
-        uses: actions/setup-node@v3
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          node-version: 18
-          cache: 'yarn'
-      - run: yarn install --ignore-engines --frozen-lockfile --non-interactive
-      - run: yarn build
-      - run: yarn format:check
-      - run: yarn test
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - run: bun run build
+      - run: bun run format:check
+      - run: bun run test
 
   test_device:
     runs-on: ubuntu-latest
 
-    name: testing Device package with node@18
+    name: testing Device package with bun
 
     defaults:
       run:
@@ -174,30 +162,22 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-      - name: Use Node.js current
-        uses: actions/setup-node@v3
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          node-version: 18
-          cache: 'yarn'
+          bun-version: latest
       - name: Install workspace dependencies
         working-directory: ./
-        run: yarn install --ignore-engines --frozen-lockfile --non-interactive
-      - name: Install @castmill/cache dependency
-        working-directory: ./packages/cache
-        run: yarn install --ignore-engines --frozen-lockfile --non-interactive
+        run: bun install --frozen-lockfile
       - name: Build @castmill/cache
         working-directory: ./packages/cache
-        run: yarn build
-      - name: Install @castmill/player dependency
-        working-directory: ./packages/player
-        run: yarn install --ignore-engines --frozen-lockfile --non-interactive
+        run: bun run build
       - name: Build @castmill/player
         working-directory: ./packages/player
-        run: yarn build
-      - run: yarn install --ignore-engines --frozen-lockfile --non-interactive
-      - run: yarn build
-      - run: yarn format:check
-      - run: yarn test
+        run: bun run build
+      - run: bun run build
+      - run: bun run format:check
+      - run: bun run test
 
   test_platforms:
     runs-on: ubuntu-latest
@@ -214,7 +194,7 @@ jobs:
           - name: legacy-adapter-player
             dir: ./packages/platforms/legacy-adapter-player
 
-    name: Testing ${{ matrix.platform.name }} package with node@18
+    name: Testing ${{ matrix.platform.name }} package with bun
 
     defaults:
       run:
@@ -225,47 +205,40 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Step 2: Setup Node.js with caching
-      - name: Use Node.js current
-        uses: actions/setup-node@v3
+      # Step 2: Setup Bun
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          node-version: 18
-          cache: 'yarn'
+          bun-version: latest
 
       # Step 3: Install workspace dependencies
       - name: Install workspace dependencies
         working-directory: ./
-        run: yarn install --ignore-engines --frozen-lockfile --non-interactive
+        run: bun install --frozen-lockfile
 
       # Step 4: Install cache dependency
       - name: Install and build cache dependency
         working-directory: ./packages/cache
-        run: |
-          yarn install --ignore-engines --frozen-lockfile --non-interactive
-          yarn build
+        run: bun run build
 
       # Step 5: Install player dependency
       - name: Install and build player dependency
         working-directory: ./packages/player
-        run: |
-          yarn install --ignore-engines --frozen-lockfile --non-interactive
-          yarn build
+        run: bun run build
 
       # Step 6: Install device dependency
       - name: Install and build device dependency
         working-directory: ./packages/device
-        run: |
-          yarn install --ignore-engines --frozen-lockfile --non-interactive
-          yarn build
+        run: bun run build
 
       # Step 7: Check formatting
       - name: Check formatting
-        run: yarn format:check
+        run: bun run format:check
 
       # Step 8: Lint
       - name: Lint code
-        run: yarn lint
+        run: bun run lint
 
       # Step 9: Run unit tests
       - name: Run unit tests
-        run: yarn test
+        run: bun run test

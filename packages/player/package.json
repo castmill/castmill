@@ -17,10 +17,10 @@
     "dev": "vite build --watch",
     "build:demo": "vite build",
     "serve": "vite preview",
-    "build": "rimraf dist && yarn ts-types && vite build",
+    "build": "rimraf dist && bun run ts-types && vite build",
     "build:watch": "tsc --watch",
     "semantic-release": "semantic-release",
-    "prepare": "yarn build",
+    "prepare": "bun run build",
     "ts-types": "tsc --emitDeclarationOnly --outDir dist"
   },
   "repository": {

@@ -12,9 +12,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "serve": "vite preview",
-    "build": "rimraf dist && vite build && yarn ts-types",
+    "build": "rimraf dist && vite build && bun run ts-types",
     "build:watch": "vite build --watch",
-    "prepare": "yarn build",
+    "prepare": "bun run build",
     "ts-types": "tsc --emitDeclarationOnly --outDir dist"
   },
   "files": [

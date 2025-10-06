@@ -34,15 +34,18 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          node-version: 20.x
-          cache: 'yarn'
+          bun-version: latest
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: bun install --frozen-lockfile
+      - name: Build cache package
+        run: bun run build:cache
+      - name: Build player package
+        run: bun run build:player
       - name: Build website
-        run: yarn workspace website build
+        run: bun run build:website
       - name: Setup Pages
         uses: actions/configure-pages@v4
       - name: Upload artifact
