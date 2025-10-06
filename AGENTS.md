@@ -56,15 +56,35 @@ This is a Yarn workspace monorepo with the following key packages:
 
 ## 🌍 Internationalization (i18n)
 
-The Dashboard package includes a comprehensive i18n system:
+The Dashboard package includes a comprehensive i18n system with **mandatory** full localization.
 
 ### Location
 - **Main implementation**: `packages/dashboard/src/i18n/`
-- **Documentation**: `packages/dashboard/src/i18n/README.md`
+- **Detailed documentation**: `packages/dashboard/src/i18n/README.md`
+- **Agent best practices**: `packages/dashboard/AGENTS.md` ⭐ **READ THIS FOR ALL DASHBOARD PRs**
+
+### Critical Rules
+
+**⚠️ MANDATORY**: All user-facing text must be localized using the i18n system:
+
+```tsx
+// ❌ NEVER hardcode strings
+<button>Save</button>
+
+// ✅ ALWAYS use i18n
+const { t } = useI18n();
+<button>{t('common.save')}</button>
+```
+
+**⚠️ MANDATORY**: Add translations to ALL 9 languages when adding new features:
+- English (en), Spanish (es), Swedish (sv), German (de), French (fr)
+- Chinese (zh), Arabic (ar), Korean (ko), Japanese (ja)
+
+**⚠️ MANDATORY**: Run `yarn check-translations` before every commit
 
 ### Features
 - **9 Languages**: English, Spanish, Swedish, German, French, Chinese, Arabic (RTL), Korean, Japanese
-- **Complete Coverage**: All 9 languages are 100% translated (348 lines, 284 keys each)
+- **100% Coverage**: All languages fully translated (validated by CI)
 - **Text translation**: Simple `t('key')` function with parameter interpolation
 - **Pluralization**: `tp('key', count)` with locale-specific rules
 - **Date/time formatting**: Locale-aware dates using date-fns
@@ -75,8 +95,9 @@ The Dashboard package includes a comprehensive i18n system:
 ### Key Files
 - `i18n/i18n-context.tsx` - Main provider and hooks
 - `i18n/types.ts` - TypeScript types and locale mappings
-- `i18n/locales/*.json` - Translation files for each language (all 348 lines, 284 keys)
-- `components/language-selector/language-selector.tsx` - Language switcher with flag emojis
+- `i18n/locales/*.json` - Translation files for each language
+- `components/language-selector/language-selector.tsx` - Language switcher
+- `scripts/check-missing-translations.cjs` - Translation coverage validator
 
 ### Language Flags
 The language selector uses country flag emojis to represent each language:
@@ -110,6 +131,24 @@ function MyComponent() {
   );
 }
 ```
+
+### For AI Agents Working on Dashboard
+
+**BEFORE making ANY changes to dashboard code:**
+
+1. **Read** `packages/dashboard/AGENTS.md` - comprehensive i18n guide
+2. **Check** if your changes include user-facing text
+3. **Use** i18n functions (`t()`, `tp()`, etc.) for ALL text
+4. **Add** translation keys to ALL 9 language files
+5. **Test** by wrapping components in `I18nProvider`
+6. **Validate** with `yarn check-translations`
+
+**CI will fail if:**
+- Any user-facing text is hardcoded
+- Translations are missing from any language
+- Translation coverage is below 100%
+
+See `packages/dashboard/AGENTS.md` for complete guidelines.
 
 ### How to Localize New Features
 
@@ -259,6 +298,53 @@ Before submitting code with user-facing text:
 - Arabic has automatic RTL layout support
 - Language preference is persisted in localStorage
 - Keep translation keys descriptive but concise
+
+### Translation Coverage Validation
+
+**CI/CD Enforcement:**
+- GitHub Actions workflow runs on every PR (`.github/workflows/check-translations.yml`)
+- Automatically validates all 9 languages are 100% complete
+- Fails the build if any translations are missing or incomplete
+- Posts detailed coverage report as PR comment
+- Shows results in workflow summary
+
+**Local Validation:**
+```bash
+# Check all languages
+cd packages/dashboard
+yarn check-translations
+
+# Check specific language
+yarn check-translations es  # Spanish
+yarn check-translations de  # German
+yarn check-translations zh  # Chinese
+```
+
+**Coverage Report Format:**
+```
+Language    Coverage    Missing    Untranslated    Status
+----------------------------------------------------------
+ES          100%        0          0               ✓ Complete
+DE          98.5%       2          3               ⚠ Incomplete
+```
+
+- **Coverage**: % of translated keys vs English reference
+- **Missing**: Keys that don't exist in the language file
+- **Untranslated**: Keys with same value as English (not actually translated)
+- **Status**: ✓ Complete (100%) or ⚠ Incomplete (<100%)
+
+**Validation Script**: `packages/dashboard/scripts/check-missing-translations.cjs`
+- Compares all languages against English reference
+- Detects missing keys
+- Identifies untranslated strings (cognates are allowed, see script)
+- Provides detailed reports per language
+- Returns exit code 1 if any issues found
+
+**Before Every Commit:**
+1. Run `yarn check-translations` locally
+2. Fix any reported issues
+3. Ensure all languages show "✓ Complete"
+4. Only then commit and push
 
 ### Addon Components and i18n
 
