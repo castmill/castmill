@@ -173,6 +173,15 @@
     "confirmRemoveTeams": "Sind Sie sicher, dass Sie die folgenden Teams entfernen möchten?",
     "members": "Mitglieder",
     "invitations": "Einladungen",
+    "invitationAcceptSuccess": "Einladung erfolgreich angenommen",
+    "invitationDeleteSuccess": "Einladung erfolgreich gelöscht",
+    "invitationAcceptError": "Fehler beim Annehmen der Einladung",
+    "invitationDeleteError": "Fehler beim Löschen der Einladung",
+    "deleteSuccess": "Teams erfolgreich gelöscht",
+    "confirmDeleteInvitation": {
+      "title": "Einladung löschen",
+      "message": "Sind Sie sicher, dass Sie die Einladung für {{email}} löschen möchten?"
+    },
     "medias": "Medien",
     "playlists": "Playlists",
     "devices": "Geräte",

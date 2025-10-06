@@ -154,6 +154,15 @@
     "title": "팀",
     "members": "멤버",
     "invitations": "초대",
+    "invitationAcceptSuccess": "초대가 성공적으로 수락되었습니다",
+    "invitationDeleteSuccess": "초대가 성공적으로 삭제되었습니다",
+    "invitationAcceptError": "초대 수락에 실패했습니다",
+    "invitationDeleteError": "초대 삭제에 실패했습니다",
+    "deleteSuccess": "팀이 성공적으로 삭제되었습니다",
+    "confirmDeleteInvitation": {
+      "title": "초대 삭제",
+      "message": "{{email}}의 초대를 삭제하시겠습니까?"
+    },
     "medias": "미디어",
     "playlists": "재생목록",
     "devices": "기기",

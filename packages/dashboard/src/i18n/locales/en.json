@@ -173,6 +173,15 @@
     "confirmRemoveTeams": "Are you sure you want to remove the following teams?",
     "members": "Members",
     "invitations": "Invitations",
+    "invitationAcceptSuccess": "Invitation accepted successfully",
+    "invitationDeleteSuccess": "Invitation deleted successfully",
+    "invitationAcceptError": "Failed to accept invitation",
+    "invitationDeleteError": "Failed to delete invitation",
+    "deleteSuccess": "Teams deleted successfully",
+    "confirmDeleteInvitation": {
+      "title": "Delete Invitation",
+      "message": "Are you sure you want to delete the invitation for {{email}}?"
+    },
     "medias": "Medias",
     "playlists": "Playlists",
     "devices": "Devices",

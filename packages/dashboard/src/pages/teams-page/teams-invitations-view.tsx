@@ -141,7 +141,9 @@ export const TeamInvitationsView = (props: {
       );
 
       refreshData();
-      toast.success(`Invitation for ${invitation.email} removed successfully`);
+      toast.success(
+        t('teams.invitationRemovedSuccessfully', { email: invitation.email })
+      );
       setShowConfirmDialog(false);
     } catch (error) {
       toast.error((error as Error).message);
@@ -161,7 +163,7 @@ export const TeamInvitationsView = (props: {
       );
 
       refreshData();
-      toast.success('Invitations removed successfully');
+      toast.success(t('teams.invitationsRemovedSuccessfully'));
       setShowConfirmDialogMultiple(false);
     } catch (error) {
       toast.error((error as Error).message);
@@ -172,16 +174,18 @@ export const TeamInvitationsView = (props: {
     <>
       <ConfirmDialog
         show={showConfirmDialog()}
-        title={`Remove Invitation From Team`}
-        message={`Are you sure you want to remove the invitation of member "${currentInvitation()?.email}" from the team?`}
+        title={t('teams.removeInvitationFromTeam')}
+        message={t('teams.confirmRemoveInvitation', {
+          email: currentInvitation()?.email || '',
+        })}
         onClose={() => setShowConfirmDialog(false)}
         onConfirm={() => confirmRemoveInvitationFromTeam(currentInvitation())}
       />
 
       <ConfirmDialog
         show={showConfirmDialogMultiple()}
-        title={`Remove members From Team`}
-        message={`Are you sure you want to remove the following members from the team?`}
+        title={t('teams.removeMembersFromTeam')}
+        message={t('teams.confirmRemoveMembers')}
         onClose={() => setShowConfirmDialogMultiple(false)}
         onConfirm={() => confirmRemoveMultipleMembersFromTeam()}
       >

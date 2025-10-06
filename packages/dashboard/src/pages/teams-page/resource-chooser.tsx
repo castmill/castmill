@@ -89,7 +89,9 @@ export const ResourceChooser = (props: {
       props.onSelect([resource]);
       toast.success('Resource added to team successfully');
     } catch (error) {
-      toast.error(t('teams.errors.addResourceToTeam', { error: String(error) }));
+      toast.error(
+        t('teams.errors.addResourceToTeam', { error: String(error) })
+      );
     }
     setShowConfirmDialog(false);
   };
@@ -112,7 +114,9 @@ export const ResourceChooser = (props: {
       props.onSelect(resources);
       toast.success('Resources added to team successfully');
     } catch (error) {
-      toast.error(t('teams.errors.addResourceToTeam', { error: String(error) }));
+      toast.error(
+        t('teams.errors.addResourceToTeam', { error: String(error) })
+      );
     }
     setShowConfirmDialogMultiple(false);
   };

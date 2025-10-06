@@ -154,6 +154,15 @@
     "title": "Equipos",
     "members": "Miembros",
     "invitations": "Invitaciones",
+    "invitationAcceptSuccess": "Invitación aceptada exitosamente",
+    "invitationDeleteSuccess": "Invitación eliminada exitosamente",
+    "invitationAcceptError": "Error al aceptar la invitación",
+    "invitationDeleteError": "Error al eliminar la invitación",
+    "deleteSuccess": "Equipos eliminados exitosamente",
+    "confirmDeleteInvitation": {
+      "title": "Eliminar invitación",
+      "message": "¿Estás seguro de que quieres eliminar la invitación para {{email}}?"
+    },
     "medias": "Medios",
     "playlists": "Listas de reproducción",
     "devices": "Dispositivos",

@@ -154,6 +154,15 @@
     "title": "Team",
     "members": "Medlemmar",
     "invitations": "Inbjudningar",
+    "invitationAcceptSuccess": "Inbjudan accepterad framgångsrikt",
+    "invitationDeleteSuccess": "Inbjudan borttagen framgångsrikt",
+    "invitationAcceptError": "Misslyckades att acceptera inbjudan",
+    "invitationDeleteError": "Misslyckades att ta bort inbjudan",
+    "deleteSuccess": "Team borttagna framgångsrikt",
+    "confirmDeleteInvitation": {
+      "title": "Ta bort inbjudan",
+      "message": "Är du säker på att du vill ta bort inbjudan för {{email}}?"
+    },
     "medias": "Media",
     "playlists": "Spellistor",
     "devices": "Enheter",

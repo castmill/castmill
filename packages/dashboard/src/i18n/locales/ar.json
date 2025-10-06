@@ -154,6 +154,15 @@
     "title": "الفرق",
     "members": "الأعضاء",
     "invitations": "الدعوات",
+    "invitationAcceptSuccess": "تم قبول الدعوة بنجاح",
+    "invitationDeleteSuccess": "تم حذف الدعوة بنجاح",
+    "invitationAcceptError": "فشل في قبول الدعوة",
+    "invitationDeleteError": "فشل في حذف الدعوة",
+    "deleteSuccess": "تم حذف الفرق بنجاح",
+    "confirmDeleteInvitation": {
+      "title": "حذف الدعوة",
+      "message": "هل أنت متأكد من أنك تريد حذف الدعوة لـ {{email}}؟"
+    },
     "medias": "الوسائط",
     "playlists": "قوائم التشغيل",
     "devices": "الأجهزة",

@@ -154,6 +154,15 @@
     "title": "チーム",
     "members": "メンバー",
     "invitations": "招待",
+    "invitationAcceptSuccess": "招待が正常に承認されました",
+    "invitationDeleteSuccess": "招待が正常に削除されました",
+    "invitationAcceptError": "招待の承認に失敗しました",
+    "invitationDeleteError": "招待の削除に失敗しました",
+    "deleteSuccess": "チームが正常に削除されました",
+    "confirmDeleteInvitation": {
+      "title": "招待を削除",
+      "message": "{{email}}の招待を削除してもよろしいですか？"
+    },
     "medias": "メディア",
     "playlists": "プレイリスト",
     "devices": "デバイス",

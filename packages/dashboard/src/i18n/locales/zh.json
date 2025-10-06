@@ -154,6 +154,15 @@
     "title": "团队",
     "members": "成员",
     "invitations": "邀请",
+    "invitationAcceptSuccess": "邀请接受成功",
+    "invitationDeleteSuccess": "邀请删除成功",
+    "invitationAcceptError": "接受邀请失败",
+    "invitationDeleteError": "删除邀请失败",
+    "deleteSuccess": "团队删除成功",
+    "confirmDeleteInvitation": {
+      "title": "删除邀请",
+      "message": "您确定要删除 {{email}} 的邀请吗？"
+    },
     "medias": "媒体",
     "playlists": "播放列表",
     "devices": "设备",

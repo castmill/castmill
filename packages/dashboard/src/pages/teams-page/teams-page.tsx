@@ -160,7 +160,7 @@ const TeamsPage: Component = () => {
       );
 
       refreshData();
-      toast.success('Teams removed successfully');
+      toast.success(t('teams.teamsRemovedSuccessfully'));
       loadQuota(); // Reload quota after deletion
     } catch (error) {
       toast.error(t('teams.errors.removeTeams', { error: String(error) }));
