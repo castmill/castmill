@@ -11,6 +11,7 @@ interface FormItemProps {
   placeholder?: string;
   type?: string;
   disabled?: boolean;
+  autofocus?: boolean;
   description?: string;
 }
 
@@ -30,6 +31,7 @@ export const FormItem: Component<FormItemProps> = (props) => {
           type={props.type}
           onInput={props.onInput}
           placeholder={props.placeholder}
+          autofocus={props.autofocus}
           onFocus={handleFocus}
           onBlur={handleBlur}
           disabled={props.disabled}
