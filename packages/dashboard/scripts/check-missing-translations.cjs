@@ -54,24 +54,24 @@ const ALLOWED_IDENTICAL_STRINGS = new Set([
   'Passkey',
   'ID',
   '© 2011-2025 Castmill™',
-  'Error',  // Cognate in Spanish
-  'Total',   // Cognate in Spanish
-  'Status',  // Cognate in Swedish, German, French
+  'Error', // Cognate in Spanish
+  'Total', // Cognate in Spanish
+  'Status', // Cognate in Swedish, German, French
   'Version', // Cognate in Swedish, German, French
-  'Online',  // Cognate in Swedish, German, French
-  'Team "{{name}}"',  // Cognate in Swedish
-  'Name',    // Cognate in German
+  'Online', // Cognate in Swedish, German, French
+  'Team "{{name}}"', // Cognate in Swedish
+  'Name', // Cognate in German
   'Details', // Cognate in German
-  'Teams',   // Cognate in German
+  'Teams', // Cognate in German
   'Playlists', // Cognate in German
-  'Playlist "{{name}}"',  // Cognate in German
-  'Type',    // Cognate in French
+  'Playlist "{{name}}"', // Cognate in German
+  'Type', // Cognate in French
   'Actions', // Cognate in French
   'Message', // Cognate in French
   'Description', // Cognate in French
   'Maintenance', // Cognate in French
   'Notifications', // Cognate in French
-  'Invitations'  // Cognate in French
+  'Invitations', // Cognate in French
 ]);
 
 class TranslationChecker {
