@@ -319,32 +319,32 @@
     "dataSchema": "Datenschema"
   },
   "devices": {
-    "setDeviceChannel": "Set Device Channel",
-    "selectChannel": "Select Channel",
+    "setDeviceChannel": "Gerätekanal festlegen",
+    "selectChannel": "Kanal auswählen",
     "preview": {
-      "placeholder": "Preview"
+      "placeholder": "Vorschau"
     },
     "telemetry": {
-      "placeholder": "Traces, Logs, Metrics and Connectivity (WiFi quality, etc.)"
+      "placeholder": "Traces, Logs, Metriken und Konnektivität (WiFi-Qualität, etc.)"
     },
     "maintenance": {
-      "refresh": "Refresh",
-      "refreshDescription": "Refreshes the device. Useful if the device is still running but exhibiting anomalous behaviour",
-      "clearCache": "Clear Cache",
-      "clearCacheDescription": "Clear the cache to force download of all fresh content",
-      "restartApp": "Restart App",
-      "restartAppDescription": "Restarts the application",
-      "restartDevice": "Restart Device",
-      "restartDeviceDescription": "Performs a complete hardware shutdown and start of the device",
-      "checkUpdates": "Check for updates",
-      "checkUpdatesDescription": "Check for updates and install them. This will not restart the device",
-      "updateFirmware": "Update Firmware",
-      "updateFirmwareDescription": "Updates the firmware of the device",
-      "offlineMessage": "Device is offline, so no commands can be sent to it"
+      "refresh": "Aktualisieren",
+      "refreshDescription": "Aktualisiert das Gerät. Nützlich, wenn das Gerät noch läuft, aber ungewöhnliches Verhalten zeigt",
+      "clearCache": "Cache leeren",
+      "clearCacheDescription": "Cache leeren, um den Download aller frischen Inhalte zu erzwingen",
+      "restartApp": "App neu starten",
+      "restartAppDescription": "Startet die Anwendung neu",
+      "restartDevice": "Gerät neu starten",
+      "restartDeviceDescription": "Führt ein vollständiges Hardware-Herunterfahren und -Starten des Geräts durch",
+      "checkUpdates": "Nach Updates suchen",
+      "checkUpdatesDescription": "Nach Updates suchen und installieren. Dies startet das Gerät nicht neu",
+      "updateFirmware": "Firmware aktualisieren",
+      "updateFirmwareDescription": "Aktualisiert die Firmware des Geräts",
+      "offlineMessage": "Gerät ist offline, daher können keine Befehle gesendet werden"
     },
     "errors": {
-      "setChannelFailed": "Failed to set device channel: {{error}}",
-      "commandFailed": "An error occurred while processing your request"
+      "setChannelFailed": "Fehler beim Festlegen des Gerätekanals: {{error}}",
+      "commandFailed": "Bei der Verarbeitung Ihrer Anfrage ist ein Fehler aufgetreten"
     },
     "assignedChannels": "Zugewiesene Kanäle",
     "addChannel": "Kanal hinzufügen",

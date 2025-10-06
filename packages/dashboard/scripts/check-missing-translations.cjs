@@ -42,19 +42,37 @@ const LANGUAGES = ['es', 'sv', 'de', 'fr', 'zh', 'ar', 'ko', 'ja'];
 
 // Strings that are acceptable to be identical across languages
 // (cognates, proper nouns, technical terms, abbreviations)
-const ALLOWED_IDENTICAL_STRINGS = [
-  'Error',
+// Technical terms, proper nouns, and universal strings that are identical across languages
+const ALLOWED_IDENTICAL_STRINGS = new Set([
+  'Widgets',
+  'Widget',
+  'JSON',
+  'URL',
+  'Cache',
+  'WiFi',
+  'Passkeys',
+  'Passkey',
   'ID',
-  'N/A',
-  'OK',
-  'Total',
-  'Email',
-  'Castmill',
-  /^© \d{4}(-\d{4})? Castmill™$/, // Copyright notices
-  /^https?:\/\//, // URLs
-  /^\d+$/, // Pure numbers
-  /^[A-Z]{2,}$/, // Acronyms like ID, API, HTTP
-];
+  '© 2011-2025 Castmill™',
+  'Error',  // Cognate in Spanish
+  'Total',   // Cognate in Spanish
+  'Status',  // Cognate in Swedish, German, French
+  'Version', // Cognate in Swedish, German, French
+  'Online',  // Cognate in Swedish, German, French
+  'Team "{{name}}"',  // Cognate in Swedish
+  'Name',    // Cognate in German
+  'Details', // Cognate in German
+  'Teams',   // Cognate in German
+  'Playlists', // Cognate in German
+  'Playlist "{{name}}"',  // Cognate in German
+  'Type',    // Cognate in French
+  'Actions', // Cognate in French
+  'Message', // Cognate in French
+  'Description', // Cognate in French
+  'Maintenance', // Cognate in French
+  'Notifications', // Cognate in French
+  'Invitations'  // Cognate in French
+]);
 
 class TranslationChecker {
   constructor() {
@@ -118,6 +136,12 @@ class TranslationChecker {
       return true;
     }
 
+    // Check if it's an allowed cognate/proper noun/technical term FIRST
+    // (applies to ALL languages including non-Latin)
+    if (this.isAllowedIdentical(englishValue)) {
+      return true;
+    }
+
     // For non-Latin script languages (Chinese, Arabic, Korean, Japanese),
     // the translation MUST use non-Latin characters
     const nonLatinLanguages = ['zh', 'ar', 'ko', 'ja'];
@@ -125,9 +149,8 @@ class TranslationChecker {
       return this.usesNonLatinScript(translatedValue);
     }
 
-    // For Latin-based languages (Spanish, Swedish, German, French),
-    // check if it's an allowed cognate/proper noun
-    return this.isAllowedIdentical(englishValue);
+    // For Latin-based languages, it's already been checked above
+    return false;
   }
 
   /**

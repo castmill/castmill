@@ -29,16 +29,16 @@ The Dashboard is **fully internationalized** with support for 9 languages. Every
 ### Supported Languages
 
 | Code | Language | Native Name | Coverage | RTL |
-|------|----------|-------------|----------|-----|
-| `en` | English | English | 100% | No |
-| `es` | Spanish | Español | 100% | No |
-| `sv` | Swedish | Svenska | 100% | No |
-| `de` | German | Deutsch | 100% | No |
-| `fr` | French | Français | 100% | No |
-| `zh` | Chinese | 中文 | 100% | No |
-| `ar` | Arabic | العربية | 100% | Yes |
-| `ko` | Korean | 한국어 | 100% | No |
-| `ja` | Japanese | 日本語 | 100% | No |
+| ---- | -------- | ----------- | -------- | --- |
+| `en` | English  | English     | 100%     | No  |
+| `es` | Spanish  | Español     | 100%     | No  |
+| `sv` | Swedish  | Svenska     | 100%     | No  |
+| `de` | German   | Deutsch     | 100%     | No  |
+| `fr` | French   | Français    | 100%     | No  |
+| `zh` | Chinese  | 中文        | 100%     | No  |
+| `ar` | Arabic   | العربية     | 100%     | Yes |
+| `ko` | Korean   | 한국어      | 100%     | No  |
+| `ja` | Japanese | 日本語      | 100%     | No  |
 
 ---
 
@@ -47,6 +47,7 @@ The Dashboard is **fully internationalized** with support for 9 languages. Every
 ### ⚠️ MANDATORY: All User-Facing Text Must Be Localized
 
 **❌ NEVER do this:**
+
 ```tsx
 <button>Save</button>
 <h1>Settings</h1>
@@ -54,6 +55,7 @@ The Dashboard is **fully internationalized** with support for 9 languages. Every
 ```
 
 **✅ ALWAYS do this:**
+
 ```tsx
 const { t } = useI18n();
 
@@ -75,14 +77,14 @@ When adding a new translation key:
 
 Choose the right function for the job:
 
-| Use Case | Function | Example |
-|----------|----------|---------|
-| Simple text | `t(key)` | `t('common.save')` |
-| Text with params | `t(key, params)` | `t('welcome', { name: 'John' })` |
-| Plurals | `tp(key, count)` | `tp('plurals.items', 5)` |
-| Dates | `formatDate(date)` | `formatDate(new Date())` |
-| Numbers | `formatNumber(num)` | `formatNumber(1234.56)` |
-| Currency | `formatCurrency(val, cur)` | `formatCurrency(99.99, 'USD')` |
+| Use Case         | Function                   | Example                          |
+| ---------------- | -------------------------- | -------------------------------- |
+| Simple text      | `t(key)`                   | `t('common.save')`               |
+| Text with params | `t(key, params)`           | `t('welcome', { name: 'John' })` |
+| Plurals          | `tp(key, count)`           | `tp('plurals.items', 5)`         |
+| Dates            | `formatDate(date)`         | `formatDate(new Date())`         |
+| Numbers          | `formatNumber(num)`        | `formatNumber(1234.56)`          |
+| Currency         | `formatCurrency(val, cur)` | `formatCurrency(99.99, 'USD')`   |
 
 ---
 
@@ -112,6 +114,7 @@ packages/dashboard/src/i18n/
 ### Core Components
 
 #### 1. I18nProvider
+
 Wraps the entire application and provides i18n context.
 
 ```tsx
@@ -122,30 +125,32 @@ Wraps the entire application and provides i18n context.
 ```
 
 #### 2. useI18n Hook
+
 Primary interface for accessing i18n functions.
 
 ```tsx
 import { useI18n } from '../../i18n';
 
-const { 
-  locale,           // Current locale (Accessor<Locale>)
-  setLocale,        // Change language
-  t,                // Translate text
-  tp,               // Translate with pluralization
-  formatDate,       // Format dates
-  formatNumber,     // Format numbers
-  formatCurrency,   // Format currency
-  translations      // Raw translations object
+const {
+  locale, // Current locale (Accessor<Locale>)
+  setLocale, // Change language
+  t, // Translate text
+  tp, // Translate with pluralization
+  formatDate, // Format dates
+  formatNumber, // Format numbers
+  formatCurrency, // Format currency
+  translations, // Raw translations object
 } = useI18n();
 ```
 
 #### 3. Language Selector
+
 UI component for switching languages.
 
 ```tsx
 import LanguageSelector from '../../components/language-selector/language-selector';
 
-<LanguageSelector />
+<LanguageSelector />;
 ```
 
 ---
@@ -159,7 +164,7 @@ import { useI18n } from '../../i18n';
 
 function MyComponent() {
   const { t } = useI18n();
-  
+
   return (
     <div>
       <h1>{t('myComponent.title')}</h1>
@@ -170,6 +175,7 @@ function MyComponent() {
 ```
 
 **Translation file (en.json):**
+
 ```json
 {
   "myComponent": {
@@ -185,13 +191,14 @@ function MyComponent() {
 
 ```tsx
 const { t } = useI18n();
-const userName = "Alice";
+const userName = 'Alice';
 
-<p>{t('greeting.hello', { name: userName })}</p>
+<p>{t('greeting.hello', { name: userName })}</p>;
 // Output: "Hello, Alice!"
 ```
 
 **Translation file:**
+
 ```json
 {
   "greeting": {
@@ -206,12 +213,13 @@ const userName = "Alice";
 const { tp } = useI18n();
 const itemCount = 5;
 
-<p>{tp('plurals.items', itemCount)}</p>
+<p>{tp('plurals.items', itemCount)}</p>;
 // English: "5 items"
 // German: "5 Artikel"
 ```
 
 **Translation file:**
+
 ```json
 {
   "plurals": {
@@ -277,6 +285,7 @@ When adding a new component or feature:
    - Table headers, form labels
 
 2. **Add keys to English first**
+
    ```json
    // locales/en.json
    {
@@ -297,14 +306,15 @@ When adding a new component or feature:
    - Maintain the same JSON structure
 
 4. **Use translations in component**
+
    ```tsx
    const { t } = useI18n();
-   
+
    <div>
      <h1>{t('myFeature.title')}</h1>
      <p>{t('myFeature.description')}</p>
      <button>{t('myFeature.actions.submit')}</button>
-   </div>
+   </div>;
    ```
 
 5. **Validate before committing**
@@ -360,7 +370,7 @@ describe('MyComponent', () => {
         <MyComponent />
       </I18nProvider>
     ));
-    
+
     expect(screen.getByText('Settings')).toBeInTheDocument();
   });
 });
@@ -372,26 +382,24 @@ describe('MyComponent', () => {
 it('switches language correctly', async () => {
   function TestComponent() {
     const { locale, setLocale, t } = useI18n();
-    
+
     return (
       <div>
-        <button onClick={() => setLocale('es')}>
-          Switch to Spanish
-        </button>
+        <button onClick={() => setLocale('es')}>Switch to Spanish</button>
         <p data-testid="translation">{t('common.save')}</p>
       </div>
     );
   }
-  
+
   render(() => (
     <I18nProvider>
       <TestComponent />
     </I18nProvider>
   ));
-  
+
   // Initially English
   expect(screen.getByTestId('translation').textContent).toBe('Save');
-  
+
   // Switch to Spanish
   fireEvent.click(screen.getByText('Switch to Spanish'));
   await waitFor(() => {
@@ -415,13 +423,13 @@ it('formats plurals correctly', () => {
       </div>
     );
   }
-  
+
   render(() => (
     <I18nProvider>
       <TestComponent />
     </I18nProvider>
   ));
-  
+
   expect(screen.getByTestId('one').textContent).toBe('1 item');
   expect(screen.getByTestId('many').textContent).toBe('5 items');
 });
@@ -435,11 +443,11 @@ it('formats plurals correctly', () => {
 
 ```tsx
 // WRONG
-<button>Save Changes</button>
+<button>Save Changes</button>;
 
 // CORRECT
 const { t } = useI18n();
-<button>{t('common.saveChanges')}</button>
+<button>{t('common.saveChanges')}</button>;
 ```
 
 ### ❌ Pitfall 2: Missing Translations in Some Languages
@@ -459,11 +467,11 @@ locales/de.json: "newFeature.title": "Neue Funktion"
 
 ```tsx
 // WRONG - doesn't handle singular/plural
-<p>{count} items</p>
+<p>{count} items</p>;
 
 // CORRECT - uses locale-specific plural rules
 const { tp } = useI18n();
-<p>{tp('plurals.items', count)}</p>
+<p>{tp('plurals.items', count)}</p>;
 ```
 
 ### ❌ Pitfall 4: Manual Date/Number Formatting
@@ -511,6 +519,7 @@ yarn check-translations de
 ```
 
 This script:
+
 - Compares all languages against English reference
 - Identifies missing keys
 - Detects untranslated strings (same as English)
@@ -535,6 +544,7 @@ yarn build
 ### 3. CI/CD Validation
 
 GitHub Actions automatically:
+
 - Runs translation coverage check on every PR
 - Fails if any language is incomplete
 - Posts detailed report as PR comment
@@ -573,20 +583,21 @@ SV          97.6%       0          7               ⚠ Incomplete
 
 ```tsx
 const {
-  locale,           // Current language code
-  setLocale,        // Change language
-  t,                // Translate text
-  tp,               // Translate with plurals
-  formatDate,       // Format dates
-  formatNumber,     // Format numbers
-  formatCurrency,   // Format currency
-  translations      // Raw translations
+  locale, // Current language code
+  setLocale, // Change language
+  t, // Translate text
+  tp, // Translate with plurals
+  formatDate, // Format dates
+  formatNumber, // Format numbers
+  formatCurrency, // Format currency
+  translations, // Raw translations
 } = useI18n();
 ```
 
 ### Common Translation Keys
 
 Already defined in all languages:
+
 - `common.save`, `common.cancel`, `common.delete`
 - `common.edit`, `common.add`, `common.remove`
 - `common.close`, `common.confirm`, `common.back`
@@ -639,7 +650,7 @@ Already defined in all languages:
 ✅ All languages 100% complete  
 ✅ All tests passing  
 ✅ CI checks passing  
-✅ Proper i18n functions used  
+✅ Proper i18n functions used
 
 ---
 

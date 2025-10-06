@@ -97,9 +97,7 @@ const UsagePage: Component = () => {
       <div class={styles.container}>
         <header class={styles.header}>
           <h1 class={styles.title}>{t('usage.title')}</h1>
-          <p class={styles.subtitle}>
-            {t('usage.description')}
-          </p>
+          <p class={styles.subtitle}>{t('usage.description')}</p>
         </header>
 
         <Show when={loading()}>
