@@ -28,7 +28,10 @@ import { DevicesService } from '../services/devices.service';
 import { AddonStore } from '../../common/interfaces/addon-store';
 
 import { QuotaIndicator } from '../../common/components/quota-indicator';
-import { QuotasService, ResourceQuota } from '../../common/services/quotas.service';
+import {
+  QuotasService,
+  ResourceQuota,
+} from '../../common/services/quotas.service';
 
 interface DeviceTableItem extends Device {
   location: string;
@@ -40,7 +43,11 @@ const DevicesPage: Component<{
   store: AddonStore;
   params: any; //typeof useSearchParams;
 }> = (props) => {
+  // Get i18n functions from store
+  const t = (key: string, params?: Record<string, any>) =>
+    props.store.i18n?.t(key, params) || key;
   const toast = useToast();
+
   const [currentPage, setCurrentPage] = createSignal(1);
   const [totalItems, setTotalItems] = createSignal(0);
 
@@ -67,7 +74,7 @@ const DevicesPage: Component<{
   const [quota, setQuota] = createSignal<ResourceQuota | null>(null);
   const [quotaLoading, setQuotaLoading] = createSignal(false);
   const [showLoadingIndicator, setShowLoadingIndicator] = createSignal(false);
-  
+
   const quotasService = new QuotasService(props.store.env.baseUrl);
 
   let loadingTimeout: ReturnType<typeof setTimeout> | undefined;
@@ -75,14 +82,14 @@ const DevicesPage: Component<{
   const loadQuota = async () => {
     try {
       setQuotaLoading(true);
-      
+
       // Only show loading indicator if request takes more than 1 second
       loadingTimeout = setTimeout(() => {
         if (quotaLoading()) {
           setShowLoadingIndicator(true);
         }
       }, 1000);
-      
+
       const quotaData = await quotasService.getResourceQuota(
         props.store.organizations.selectedId,
         'devices'
@@ -181,7 +188,7 @@ const DevicesPage: Component<{
   };
 
   const columns = [
-    { key: 'name', title: 'Name', sortable: true },
+    { key: 'name', title: t('common.name'), sortable: true },
     {
       key: 'online',
       title: 'Online',
@@ -197,17 +204,17 @@ const DevicesPage: Component<{
         </svg>
       ),
     },
-    { key: 'timezone', title: 'TZ', sortable: true },
-    { key: 'version', title: 'Version', sortable: true },
-    { key: 'last_ip', title: 'IP', sortable: true },
-    { key: 'id', title: 'ID', sortable: true },
+    { key: 'timezone', title: t('common.timezone'), sortable: true },
+    { key: 'version', title: t('common.version'), sortable: true },
+    { key: 'last_ip', title: t('common.ip'), sortable: true },
+    { key: 'id', title: t('common.id'), sortable: true },
   ] as Column<DeviceTableItem>[];
 
   const actions: TableAction<DeviceTableItem>[] = [
     {
       icon: BsEye,
       handler: openModal,
-      label: 'View',
+      label: t('common.view'),
     },
     {
       icon: AiOutlineDelete,
@@ -215,7 +222,7 @@ const DevicesPage: Component<{
         setCurrentDevice(item);
         setShowConfirmDialog(true);
       },
-      label: 'Remove',
+      label: t('common.remove'),
     },
   ];
 
@@ -336,6 +343,7 @@ const DevicesPage: Component<{
           loading={loading()}
         >
           <RegisterDevice
+            store={props.store}
             pincode={pincode()}
             success={!!loadingSuccess()}
             onSubmit={handleDeviceRegistrationSubmit}
@@ -357,6 +365,7 @@ const DevicesPage: Component<{
             onChange={(device) => {
               updateItem(device.id, device);
             }}
+            t={t}
           />
         </Modal>
       </Show>
@@ -398,9 +407,9 @@ const DevicesPage: Component<{
           mainAction: (
             <div style="display: flex; align-items: center; gap: 1rem;">
               <Show when={quota()}>
-                <QuotaIndicator 
-                  used={quota()!.used} 
-                  total={quota()!.total} 
+                <QuotaIndicator
+                  used={quota()!.used}
+                  total={quota()!.total}
                   resourceName="Devices"
                   compact
                   isLoading={showLoadingIndicator()}
@@ -429,6 +438,7 @@ const DevicesPage: Component<{
         table={{
           columns,
           actions,
+          actionsLabel: t('common.actions'),
           onRowSelect,
           defaultRowAction: {
             icon: BsEye,
@@ -436,7 +446,7 @@ const DevicesPage: Component<{
               setCurrentDevice(item);
               setShowModal(true);
             },
-            label: 'View',
+            label: t('common.view'),
           },
         }}
         pagination={{ itemsPerPage }}

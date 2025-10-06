@@ -55,6 +55,7 @@ interface TableViewProps<
     }[];
     onSort?: (options: SortOptions) => void;
     actions?: TableAction<Item>[];
+    actionsLabel?: string; // Label for the Actions column header
     onRowSelect?: (selectedIds: Set<IdType>) => void;
     defaultRowAction?: TableAction<Item>;
     hideCheckboxes?: boolean;
@@ -271,6 +272,7 @@ export const TableView = <
             columns={props.table.columns}
             data={data()}
             actions={props.table.actions}
+            actionsLabel={props.table.actionsLabel}
             onRowSelect={props.table.onRowSelect}
             onSort={props.table.onSort}
             onRowClick={props.table.defaultRowAction?.handler}

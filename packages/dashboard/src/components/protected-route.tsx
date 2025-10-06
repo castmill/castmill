@@ -5,6 +5,8 @@ import { AddOn } from '../interfaces/addon.interface';
 import { AddonsService } from '../services/addons';
 import { store, setStore } from '../store/store';
 import { OrganizationsService } from '../services/organizations.service';
+
+import { useI18n } from '../i18n';
 import { useToast } from '@castmill/ui-common';
 
 interface ProtectedRouteProps {
@@ -21,6 +23,7 @@ function getRedirectUrl(location: string): string {
 const ProtectedRoute: Component<ProtectedRouteProps> = (
   props: ProtectedRouteProps
 ) => {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const location = useLocation();
   const toast = useToast();
@@ -90,7 +93,10 @@ const ProtectedRoute: Component<ProtectedRouteProps> = (
   });
 
   return (
-    <Show when={!store.loadingAddons} fallback={<div>Loading addons...</div>}>
+    <Show
+      when={!store.loadingAddons}
+      fallback={<div>{t('common.loadingAddons')}</div>}
+    >
       {props.children(store.addons)}
     </Show>
   );

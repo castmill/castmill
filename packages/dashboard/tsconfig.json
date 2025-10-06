@@ -13,8 +13,9 @@
       "@solidjs/testing-library",
       "@testing-library/jest-dom"
     ],
-    "lib": ["es2015", "dom"],
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "noEmit": true,
-    "isolatedModules": true
+    "isolatedModules": true,
+    "skipLibCheck": true
   }
 }

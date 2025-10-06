@@ -32,11 +32,16 @@ import { ChannelView } from './channel-view';
 
 import { baseUrl } from '../../env';
 import { ChannelAddForm } from './channel-add-form';
+
+import { useI18n } from '../../i18n';
+
 import { QuotaIndicator } from '../../components/quota-indicator';
 import { QuotasService, ResourceQuota } from '../../services/quotas.service';
 
 const ChannelsPage: Component = () => {
   const params = useSearchParams();
+  const { t } = useI18n();
+
   const toast = useToast();
 
   const itemsPerPage = 10; // Number of items to show per page
@@ -95,8 +100,8 @@ const ChannelsPage: Component = () => {
   };
 
   const columns = [
-    { key: 'id', title: 'ID', sortable: true },
-    { key: 'name', title: 'Name', sortable: true },
+    { key: 'id', title: t('common.id'), sortable: true },
+    { key: 'name', title: t('common.name'), sortable: true },
   ] as Column<JsonChannel>[];
 
   interface ChannelTableItem extends JsonChannel {}
@@ -108,7 +113,7 @@ const ChannelsPage: Component = () => {
         setCurrentChannel(item);
         setShowModal(true);
       },
-      label: 'View',
+      label: t('common.view'),
     },
     {
       icon: AiOutlineDelete,
@@ -116,7 +121,7 @@ const ChannelsPage: Component = () => {
         setCurrentChannel(item);
         setShowConfirmDialog(true);
       },
-      label: 'Remove',
+      label: t('common.remove'),
     },
   ];
 
@@ -167,7 +172,12 @@ const ChannelsPage: Component = () => {
       }
     } catch (error) {
       // Handle unexpected errors (network failures, server down, etc.)
-      toast.error(`Error removing channel ${channel.name}: ${error}`);
+      toast.error(
+        t('channels.errors.removeChannel', {
+          name: channel.name || '',
+          error: String(error),
+        })
+      );
     }
     setShowConfirmDialog(false);
   };
@@ -283,9 +293,11 @@ const ChannelsPage: Component = () => {
 
   createEffect(() => {
     if (currentChannel()?.id) {
-      setTitle(`Channel "${currentChannel()?.name}"`);
+      setTitle(
+        t('channels.channelTitle', { name: currentChannel()?.name || '' })
+      );
     } else {
-      setTitle('New Channel');
+      setTitle(t('channels.newChannel'));
     }
   });
 
@@ -295,7 +307,7 @@ const ChannelsPage: Component = () => {
         <Show when={showAddChannelModal()}>
           <Modal
             title={title()}
-            description="Details of your channel"
+            description={t('channels.description')}
             onClose={closeAddChannelModal}
           >
             <ChannelAddForm
@@ -316,7 +328,9 @@ const ChannelsPage: Component = () => {
                   refreshData();
                   toast.success(`Channel ${name} added successfully`);
                 } catch (error) {
-                  toast.error(`Error adding channel: ${error}`);
+                  toast.error(
+                    t('channels.errors.addChannel', { error: String(error) })
+                  );
                 }
               }}
             />
@@ -326,7 +340,7 @@ const ChannelsPage: Component = () => {
         <Show when={showModal()}>
           <Modal
             title={title()}
-            description="Details of your channel"
+            description={t('channels.description')}
             onClose={closeModal}
           >
             <ChannelView
@@ -358,7 +372,9 @@ const ChannelsPage: Component = () => {
                     return updatedTeam;
                   }
                 } catch (error) {
-                  toast.error(`Error saving channel: ${error}`);
+                  toast.error(
+                    t('channels.errors.saveChannel', { error: String(error) })
+                  );
                 }
               }}
             />
@@ -367,16 +383,18 @@ const ChannelsPage: Component = () => {
 
         <ConfirmDialog
           show={showConfirmDialog()}
-          title="Remove Channel"
-          message={`Are you sure you want to remove device "${currentChannel()?.name}"?`}
+          title={t('channels.removeChannel')}
+          message={t('channels.confirmRemoveChannel', {
+            name: currentChannel()?.name || '',
+          })}
           onClose={() => setShowConfirmDialog(false)}
           onConfirm={() => confirmRemoveChannel(currentChannel())}
         />
 
         <ConfirmDialog
           show={showConfirmDialogMultiple()}
-          title="Remove Channels"
-          message={'Are you sure you want to remove the following channels?'}
+          title={t('channels.removeChannels')}
+          message={t('channels.confirmRemoveChannels')}
           onClose={() => setShowConfirmDialogMultiple(false)}
           onConfirm={() => confirmRemoveMultipleChannels()}
         >
@@ -390,7 +408,7 @@ const ChannelsPage: Component = () => {
 
         <Show when={showErrorDialog()}>
           <Modal
-            title="Cannot Delete Channel"
+            title={t('channels.cannotDeleteChannel')}
             description={errorMessage()}
             onClose={() => setShowErrorDialog(false)}
           >
@@ -410,7 +428,7 @@ const ChannelsPage: Component = () => {
         </Show>
 
         <TableView
-          title="Channels"
+          title={t('channels.title')}
           resource="channels"
           params={params}
           fetchData={fetchData}
@@ -428,7 +446,7 @@ const ChannelsPage: Component = () => {
                   />
                 </Show>
                 <Button
-                  label="Add Channel"
+                  label={t('channels.addChannel')}
                   onClick={addChannel}
                   icon={BsCheckLg}
                   color="primary"
@@ -462,7 +480,7 @@ const ChannelsPage: Component = () => {
                 setCurrentChannel(item);
                 setShowModal(true);
               },
-              label: 'View',
+              label: t('common.view'),
             },
           }}
           pagination={{ itemsPerPage }}

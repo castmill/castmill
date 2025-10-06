@@ -16,6 +16,8 @@ import {
   TeamsService,
 } from '../../services/teams.service';
 import { ResourceChooser } from './resource-chooser';
+
+import { useI18n } from '../../i18n';
 import { QuotaIndicator } from '../../components/quota-indicator';
 import { QuotasService, ResourceQuota } from '../../services/quotas.service';
 
@@ -70,6 +72,27 @@ export const ResourcesView = (props: {
   resourceType: string;
   resourceName: string;
 }) => {
+  const { t } = useI18n();
+
+  const openModal = () => {
+    alert(t('teams.errors.openViewModal'));
+  };
+
+  const actions = [
+    {
+      icon: BsEye,
+      handler: openModal,
+      label: t('common.view'),
+    },
+    {
+      icon: AiOutlineDelete,
+      handler: (item: any) => {
+        setCurrentResource(item);
+        setShowConfirmDialog(true);
+      },
+      label: t('common.remove'),
+    },
+  ];
   const toast = useToast();
   const resourceKey = `${props.resourceName.toLowerCase()}`;
   const itemIdKey = `${props.resourceName.toLocaleLowerCase()}_id`;
@@ -137,7 +160,7 @@ export const ResourcesView = (props: {
       toast.success('Resource removed from team successfully');
       setShowConfirmDialog(false);
     } catch (error) {
-      toast.error(`Error removing resource from team: ${error}`);
+      toast.error(t('teams.errors.removeResource', { error: String(error) }));
     }
   };
 
@@ -161,7 +184,7 @@ export const ResourcesView = (props: {
       toast.success('Resources removed from team successfully');
       setShowConfirmDialogMultiple(false);
     } catch (error) {
-      toast.error(`Error removing resources from team: ${error}`);
+      toast.error(t('teams.errors.removeResources', { error: String(error) }));
     }
   };
 

@@ -15,6 +15,7 @@ defmodule Castmill.Addons.Content do
   def component_info() do
     %Castmill.Addons.ComponentInfo{
       name: "Content",
+      name_key: "sidebar.content",
       description: "Content management addon for Castmill",
       version: "0.1.0",
       path: "/content.js",

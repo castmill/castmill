@@ -12,22 +12,32 @@ import { TbChartHistogram } from 'solid-icons/tb';
 import { AiOutlineTeam } from 'solid-icons/ai';
 import { RiEditorOrganizationChart } from 'solid-icons/ri';
 import { BsCalendarWeek } from 'solid-icons/bs';
+import { useI18n } from '../../i18n';
 
 const addOnBasePath = `${baseUrl}/assets/addons`;
 
 const SidePanelTree: Component<{ node: AddOnNode; level: number }> = (
   props
 ) => {
+  const { t } = useI18n();
   const addon = props.node.addon;
   const children = Array.from(props.node.children || []);
+
+  // Get the translated name for the addon
+  const getAddonName = () => {
+    if (!addon) return '';
+    // If the addon provides a name_key, use it for translation
+    // Otherwise, fall back to the addon's name
+    return addon.name_key ? t(addon.name_key) : addon.name;
+  };
 
   return (
     <>
       <Show when={addon}>
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={<div>{t('common.loading')}</div>}>
           <PanelItem
             to={addon!.mount_path || ''}
-            text={addon!.name}
+            text={getAddonName()}
             level={props.level}
             icon={lazy(() => import(`${addOnBasePath}${addon?.icon}`))}
           />
@@ -45,6 +55,8 @@ const SidePanelTree: Component<{ node: AddOnNode; level: number }> = (
 };
 
 const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
+  const { t } = useI18n();
+
   /*
   Addons include a "mount_point" property that is a period separated string that 
   represents where in the application the addon should be mounted. For example, if
@@ -61,7 +73,7 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
     <div class="castmill-sidepanel">
       <div class="top">
         <Dropdown
-          label="Organization"
+          label={t('sidebar.organization')}
           items={store.organizations.data.map((org) => ({
             name: org.name,
             value: org.id,
@@ -77,7 +89,7 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
       <div class="links">
         <PanelItem
           to="/organization"
-          text="Organization"
+          text={t('sidebar.organization')}
           level={0}
           icon={RiEditorOrganizationChart}
         />
@@ -87,16 +99,26 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
         </Show>
         <PanelItem
           to="/channels"
-          text="Channels"
+          text={t('sidebar.channels')}
           level={0}
           icon={BsCalendarWeek}
         />
 
-        <PanelItem to="/teams" text="Teams" level={0} icon={AiOutlineTeam} />
-        <PanelItem to="/usage" text="Usage" level={0} icon={TbChartHistogram} />
+        <PanelItem
+          to="/teams"
+          text={t('sidebar.teams')}
+          level={0}
+          icon={AiOutlineTeam}
+        />
+        <PanelItem
+          to="/usage"
+          text={t('sidebar.usage')}
+          level={0}
+          icon={TbChartHistogram}
+        />
         <PanelItem
           to="/settings"
-          text="Settings"
+          text={t('common.settings')}
           level={0}
           icon={IoSettingsOutline}
         />

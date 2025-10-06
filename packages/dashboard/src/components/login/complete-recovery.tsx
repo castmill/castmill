@@ -3,11 +3,13 @@ import { useNavigate, useSearchParams } from '@solidjs/router';
 import { arrayBufferToBase64, base64URLToArrayBuffer } from '../utils';
 import { baseUrl, domain } from '../../env';
 import { loginUser } from '../auth';
+import { useI18n } from '../../i18n';
 import './login.scss';
 
 const encoder = new TextEncoder();
 
 const CompleteRecovery: Component = () => {
+  const { t } = useI18n();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
@@ -206,12 +208,12 @@ const CompleteRecovery: Component = () => {
   return (
     <div class="castmill-login">
       <Show when={loading()}>
-        <div class="loading-overlay">Loading...</div>
+        <div class="loading-overlay">{t('common.loading')}</div>
       </Show>
 
       <div class="login-container">
         <div class="login-box">
-          <h2>Recover Your Credentials</h2>
+          <h2>{t('credentialRecovery.title')}</h2>
 
           <Show when={error()}>
             <div class="error">{error()}</div>
@@ -220,7 +222,7 @@ const CompleteRecovery: Component = () => {
               onClick={() => navigate('/login')}
               style={{ 'margin-top': '20px' }}
             >
-              Back to Login
+              {t('common.backToLogin')}
             </button>
           </Show>
 
@@ -235,7 +237,7 @@ const CompleteRecovery: Component = () => {
               onClick={addNewPasskey}
               disabled={loading()}
             >
-              Add New Passkey
+              {t('credentialRecovery.addNewPasskey')}
             </button>
 
             <p class="status">Status: {status()}</p>

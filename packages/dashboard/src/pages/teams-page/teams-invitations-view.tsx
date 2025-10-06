@@ -16,6 +16,7 @@ import {
 import { TeamsService } from '../../services/teams.service';
 import { AiOutlineDelete } from 'solid-icons/ai';
 import { createSignal } from 'solid-js';
+import { useI18n } from '../../i18n';
 
 interface Invitation {
   id: number;
@@ -43,43 +44,45 @@ const onRowSelect = (rowsSelected: Set<number>) => {
 
 const itemsPerPage = 10;
 
-const columns = [
-  { key: 'email', title: 'Email', sortable: true },
-  { key: 'status', title: 'Status', sortable: true },
-  {
-    key: 'inserted_at',
-    title: 'Inserted At',
-    sortable: true,
-    render: (item: any) => (
-      <Timestamp value={item.inserted_at} mode="relative" />
-    ),
-  },
-  {
-    key: 'expires_at',
-    title: 'Expires At',
-    sortable: true,
-    render: (item: any) => (
-      <Timestamp value={item.expires_at} mode="relative" />
-    ),
-  },
-];
-
-const actions = [
-  {
-    icon: AiOutlineDelete,
-    handler: (item: any) => {
-      setCurrentInvitation(item);
-      setShowConfirmDialog(true);
-    },
-    label: 'Remove',
-  },
-];
-
 export const TeamInvitationsView = (props: {
   organizationId: string;
   teamId: number;
   onRemove: (invitation: Invitation) => void;
 }) => {
+  const { t } = useI18n();
+
+  const columns = [
+    { key: 'email', title: t('common.email'), sortable: true },
+    { key: 'status', title: t('common.status'), sortable: true },
+    {
+      key: 'inserted_at',
+      title: t('common.insertedAt'),
+      sortable: true,
+      render: (item: any) => (
+        <Timestamp value={item.inserted_at} mode="relative" />
+      ),
+    },
+    {
+      key: 'expires_at',
+      title: t('common.expiresAt'),
+      sortable: true,
+      render: (item: any) => (
+        <Timestamp value={item.expires_at} mode="relative" />
+      ),
+    },
+  ];
+
+  const actions = [
+    {
+      icon: AiOutlineDelete,
+      handler: (item: any) => {
+        setCurrentInvitation(item);
+        setShowConfirmDialog(true);
+      },
+      label: t('common.remove'),
+    },
+  ];
+
   const toast = useToast();
 
   const fetchData = async (opts: FetchDataOptions) => {
@@ -117,7 +120,9 @@ export const TeamInvitationsView = (props: {
       );
 
       refreshData();
-      toast.success(`Invitation for ${invitation.email} removed successfully`);
+      toast.success(
+        t('teams.invitationRemovedSuccessfully', { email: invitation.email })
+      );
       setShowConfirmDialog(false);
     } catch (error) {
       toast.error((error as Error).message);
@@ -137,7 +142,7 @@ export const TeamInvitationsView = (props: {
       );
 
       refreshData();
-      toast.success('Invitations removed successfully');
+      toast.success(t('teams.invitationsRemovedSuccessfully'));
       setShowConfirmDialogMultiple(false);
     } catch (error) {
       toast.error((error as Error).message);
@@ -148,16 +153,18 @@ export const TeamInvitationsView = (props: {
     <>
       <ConfirmDialog
         show={showConfirmDialog()}
-        title={`Remove Invitation From Team`}
-        message={`Are you sure you want to remove the invitation of member "${currentInvitation()?.email}" from the team?`}
+        title={t('teams.removeInvitationFromTeam')}
+        message={t('teams.confirmRemoveInvitation', {
+          email: currentInvitation()?.email || '',
+        })}
         onClose={() => setShowConfirmDialog(false)}
         onConfirm={() => confirmRemoveInvitationFromTeam(currentInvitation())}
       />
 
       <ConfirmDialog
         show={showConfirmDialogMultiple()}
-        title={`Remove members From Team`}
-        message={`Are you sure you want to remove the following members from the team?`}
+        title={t('teams.removeMembersFromTeam')}
+        message={t('teams.confirmRemoveMembers')}
         onClose={() => setShowConfirmDialogMultiple(false)}
         onConfirm={() => confirmRemoveMultipleMembersFromTeam()}
       >

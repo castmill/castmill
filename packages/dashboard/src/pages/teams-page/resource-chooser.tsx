@@ -15,6 +15,7 @@ import { baseUrl } from '../../env';
 import { FaSolidFolderPlus } from 'solid-icons/fa';
 import { TeamsService } from '../../services/teams.service';
 import { AccessSelector } from './access-selector';
+import { useI18n } from '../../i18n';
 
 type HandleResponseOptions = {
   parse?: boolean;
@@ -55,7 +56,9 @@ export const ResourceChooser = (props: {
   resourceName: string;
   onSelect: (resources: { id: string }[]) => void;
 }) => {
+  const { t } = useI18n();
   const toast = useToast();
+
   const [data, setData] = createSignal<any[]>([]);
   const [currentResource, setCurrentResource] = createSignal<any>();
   const [selectedResources, setSelectedResources] = createSignal(
@@ -86,7 +89,9 @@ export const ResourceChooser = (props: {
       props.onSelect([resource]);
       toast.success('Resource added to team successfully');
     } catch (error) {
-      toast.error(`Error adding resource to team: ${error}`);
+      toast.error(
+        t('teams.errors.addResourceToTeam', { error: String(error) })
+      );
     }
     setShowConfirmDialog(false);
   };
@@ -109,7 +114,9 @@ export const ResourceChooser = (props: {
       props.onSelect(resources);
       toast.success('Resources added to team successfully');
     } catch (error) {
-      toast.error(`Error adding resources to team: ${error}`);
+      toast.error(
+        t('teams.errors.addResourceToTeam', { error: String(error) })
+      );
     }
     setShowConfirmDialogMultiple(false);
   };
@@ -223,7 +230,7 @@ export const ResourceChooser = (props: {
     <div style="width: 50vw;display: flex; flex-direction: column;justify-content: flex-start; padding: 1em 0.5em 0 0.5em;">
       <ConfirmDialog
         show={showConfirmDialog()}
-        title="Add Resource to Team"
+        title={t('teams.addResourceToTeam')}
         message={`Are you sure you want to add resource "${currentResource()?.name}"?`}
         onClose={() => setShowConfirmDialog(false)}
         onConfirm={() => confirmChooseResource(currentResource(), access())}
@@ -237,8 +244,8 @@ export const ResourceChooser = (props: {
 
       <ConfirmDialog
         show={showConfirmDialogMultiple()}
-        title="Add Resources to Teams"
-        message={'Are you sure you want to add the following resources?'}
+        title={t('teams.addResourcesToTeams')}
+        message={t('teams.confirmAddResources')}
         onClose={() => setShowConfirmDialogMultiple(false)}
         onConfirm={() => confirmChooseMultipleResources(access())}
       >

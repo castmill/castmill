@@ -7,6 +7,7 @@ import { arrayBufferToBase64, base64URLToArrayBuffer } from '../utils';
 import './signup.scss';
 
 import { baseUrl, origin, domain } from '../../env';
+import { useI18n } from '../../i18n';
 
 /**
  * Sign Up Component.
@@ -28,6 +29,7 @@ interface SignUpQueryParams {
 }
 
 const SignUp: Component = () => {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const toast = useToast();
 
@@ -93,7 +95,7 @@ const SignUp: Component = () => {
 
     const credential = await navigator.credentials.create(createOptions);
     if (!credential) {
-      toast.error('Could not create credential');
+      toast.error(t('signup.errors.couldNotCreateCredential'));
       return;
     }
 
@@ -102,7 +104,7 @@ const SignUp: Component = () => {
       publicKeyCredential.response as AuthenticatorAttestationResponse;
     const publicKey = authAttestationResponse.getPublicKey();
     if (!publicKey) {
-      toast.error('Could not get public key');
+      toast.error(t('signup.errors.couldNotGetPublicKey'));
       return;
     }
 
@@ -118,7 +120,7 @@ const SignUp: Component = () => {
       ('crossOrigin' in clientData && clientData.crossOrigin) ||
       clientData.origin !== origin
     ) {
-      toast.error('Invalid credential');
+      toast.error(t('signup.errors.invalidCredential'));
       return;
     }
 
@@ -141,7 +143,7 @@ const SignUp: Component = () => {
 
     if (!result.ok) {
       toast.error(
-        `Something went wrong when signing up, contact support. ERROR: ${result.statusText}`
+        t('signup.errors.signupFailed', { error: result.statusText })
       );
     } else {
       toast.success('Account created successfully!');
@@ -163,7 +165,7 @@ const SignUp: Component = () => {
     <Show when={isMounted()}>
       <div class="castmill-signup">
         <div class="login-box">
-          <h2>Sign up</h2>
+          <h2>{t('signup.title')}</h2>
 
           <input type="text" placeholder={email} value={email} disabled />
           <button
@@ -171,7 +173,7 @@ const SignUp: Component = () => {
             onClick={signupWithPasskey}
             disabled={!supportsPasskeys()}
           >
-            Continue with Passkey
+            {t('signup.continueWithPasskey')}
           </button>
 
           <p class="status">Status: {status()}</p>
@@ -185,7 +187,7 @@ const SignUp: Component = () => {
           <div class="privacy">
             <p>
               We care about your privacy. Read our{' '}
-              <a href="#">Privacy Policy</a>.
+              <a href="#">{t('signup.privacyPolicy')}</a>.
             </p>
           </div>
         </div>

@@ -1,11 +1,13 @@
 import { Component } from 'solid-js';
 import './footer.scss';
+import { useI18n } from '../../i18n';
 
 const Footer: Component = () => {
+  const { t } = useI18n();
   return (
     <div class="castmill-footer">
       <div class="footer-links">
-        <p>© 2011-2025 Castmill™</p>
+        <p>{t('common.copyright')}</p>
         <a href="#">Privacy</a>
         <a href="#">Terms</a>
         <a href="#">Contact</a>

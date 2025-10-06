@@ -29,6 +29,7 @@ import { CalendarCell } from './calendar-cell';
 import { DefaultPlaylistComboBox } from './default-playlist-combobox';
 import { Modal, useToast } from '@castmill/ui-common';
 import { ChanneEntrylView } from './channel-entry-view';
+import { useI18n } from '../../i18n';
 
 export interface DropTargetData {
   dayIndex: number;
@@ -42,6 +43,7 @@ interface CalendarViewProps {
 }
 
 export const CalendarView: Component<CalendarViewProps> = (props) => {
+  const { t } = useI18n();
   const [showEntryModal, setShowEntryModal] = createSignal<CalendarEntry>();
 
   // Start date for a “week”
@@ -534,7 +536,7 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
       <Show when={showEntryModal()}>
         <Modal
           title={showEntryModal()?.playlist.name!}
-          description="Calendar entry details"
+          description={t('channels.calendarEntryDetails')}
           onClose={closeEntryModal}
         >
           <ChanneEntrylView
@@ -562,7 +564,11 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
                 setShowEntryModal();
                 toast.success('Channel entry updated successfully');
               } catch (error) {
-                toast.error(`Error updating channel entry: ${error}`);
+                toast.error(
+                  t('channels.errors.updateChannelEntry', {
+                    error: String(error),
+                  })
+                );
               }
             }}
           />

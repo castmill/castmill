@@ -1,0 +1,43 @@
+name: I18n Localization Check
+
+on:
+  pull_request:
+    branches: [main, next]
+    paths:
+      - 'packages/dashboard/src/**/*.tsx'
+      - 'packages/dashboard/src/**/*.ts'
+      - 'packages/dashboard/scripts/check-i18n.cjs'
+      - '.github/workflows/check-i18n.yml'
+
+jobs:
+  check-i18n:
+    runs-on: ubuntu-latest
+    name: Check for untranslated strings
+
+    defaults:
+      run:
+        working-directory: ./packages/dashboard
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Run i18n checker
+        run: node scripts/check-i18n.cjs
+
+      - name: Report results
+        if: failure()
+        run: |
+          echo "❌ Localization check failed!"
+          echo "Some strings are not localized. Please fix the issues above."
+          echo "Run 'cd packages/dashboard && node scripts/check-i18n.cjs' locally to see all issues."
+          exit 1

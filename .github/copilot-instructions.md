@@ -93,6 +93,8 @@ yarn workspace dashboard dev    # Dashboard
 - Use conventional commits format for all commit messages
 - Update `agents/` docs when making architectural changes
 - Maintain professional UI/UX standards for enterprise users
+- **Localize all user-facing strings** using the i18n system (see AGENTS.md for detailed guide)
+- Add translation keys to all 9 language files when adding new features
 
 ### DON'T:
 - Modify `yarn.lock` manually
@@ -101,18 +103,51 @@ yarn workspace dashboard dev    # Dashboard
 - Make changes without understanding cross-package impacts
 - Skip writing tests
 - Create unnecessary files in the root directory
+- **Commit hardcoded user-facing strings** - always use translation functions
 
-## 🎯 Focus Areas
+## � Internationalization (i18n)
+
+**CRITICAL**: The Dashboard package has a comprehensive i18n system supporting 9 languages. All user-facing text must be localized.
+
+### Quick Reference
+- **Location**: `packages/dashboard/src/i18n/`
+- **Supported Languages**: English, Spanish, Swedish, German, French, Chinese, Arabic (RTL), Korean, Japanese
+- **Documentation**: See `AGENTS.md` for complete i18n guide with examples
+
+### For Dashboard Core Components
+```typescript
+import { useI18n } from '../../i18n';
+
+const { t, tp, formatDate } = useI18n();
+// Use: t('common.save'), tp('plurals.items', count), formatDate(new Date())
+```
+
+### For Addon Components
+```typescript
+const t = (key: string, params?: Record<string, any>) =>
+  props.store.i18n?.t(key, params) || key;
+// Use: t('playlists.addPlaylist'), t('common.name')
+```
+
+### When Adding New Features
+1. Use `t('key')` for all user-facing strings
+2. Add keys to `packages/dashboard/src/i18n/locales/en.json` first
+3. Add translations to all 8 other language files
+4. Never commit hardcoded strings like "Add Item" or "Delete"
+5. See `AGENTS.md` for detailed step-by-step guide
+
+## �🎯 Focus Areas
 
 When providing assistance, prioritize:
 
 1. **Code correctness** - Ensure TypeScript compliance and proper error handling
 2. **Test coverage** - Write comprehensive tests with >90% coverage target
-3. **Architecture consistency** - Maintain existing patterns and structures
-4. **Performance** - Consider build times, bundle sizes, and runtime efficiency
-5. **User experience** - Prioritize accessibility and professional UI/UX
-6. **Maintainability** - Write clear, documented, testable code
-7. **Documentation currency** - Keep `agents/` docs updated with architectural changes
+3. **Internationalization** - Always localize user-facing text using the i18n system
+4. **Architecture consistency** - Maintain existing patterns and structures
+5. **Performance** - Consider build times, bundle sizes, and runtime efficiency
+6. **User experience** - Prioritize accessibility and professional UI/UX
+7. **Maintainability** - Write clear, documented, testable code
+8. **Documentation currency** - Keep `agents/` docs updated with architectural changes
 
 ## 📋 Quality Standards
 

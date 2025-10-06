@@ -24,7 +24,10 @@ import { JsonMedia } from '@castmill/player';
 import { MediasService } from '../services/medias.service';
 import { UploadComponent } from './upload';
 import { QuotaIndicator } from '../../common/components/quota-indicator';
-import { QuotasService, ResourceQuota } from '../../common/services/quotas.service';
+import {
+  QuotasService,
+  ResourceQuota,
+} from '../../common/services/quotas.service';
 
 import './medias.scss';
 import { MediaDetails } from './media-details';
@@ -34,7 +37,11 @@ const MediasPage: Component<{
   store: AddonStore;
   params: any; //typeof useSearchParams;
 }> = (props) => {
+  // Get i18n functions from store
+  const t = (key: string, params?: Record<string, any>) =>
+    props.store.i18n?.t(key, params) || key;
   const toast = useToast();
+
   const [data, setData] = createSignal<JsonMedia[]>([], {
     equals: false,
   });
@@ -117,7 +124,9 @@ const MediasPage: Component<{
   const [loadingError, setLoadingError] = createSignal('');
 
   const [quota, setQuota] = createSignal<ResourceQuota | null>(null);
-  const [storageQuota, setStorageQuota] = createSignal<ResourceQuota | null>(null);
+  const [storageQuota, setStorageQuota] = createSignal<ResourceQuota | null>(
+    null
+  );
   const [quotaLoading, setQuotaLoading] = createSignal(false);
   const [showLoadingIndicator, setShowLoadingIndicator] = createSignal(false);
 
@@ -127,17 +136,17 @@ const MediasPage: Component<{
 
   const loadQuota = async () => {
     if (!props.store.organizations.selectedId) return;
-    
+
     try {
       setQuotaLoading(true);
-      
+
       // Only show loading indicator if request takes more than 1 second
       loadingTimeout = setTimeout(() => {
         if (quotaLoading()) {
           setShowLoadingIndicator(true);
         }
       }, 1000);
-      
+
       // Load both media count and storage quotas
       const [quotaData, storageData] = await Promise.all([
         quotasService.getResourceQuota(
@@ -147,9 +156,9 @@ const MediasPage: Component<{
         quotasService.getResourceQuota(
           props.store.organizations.selectedId,
           'storage'
-        )
+        ),
       ]);
-      
+
       setQuota(quotaData);
       setStorageQuota(storageData);
     } catch (error) {
@@ -279,25 +288,29 @@ const MediasPage: Component<{
         </div>
       ),
     },
-    { key: 'name', title: 'Name', sortable: true },
+    { key: 'name', title: t('common.name'), sortable: true },
     {
       key: 'size',
-      title: 'Size',
+      title: t('common.size'),
       sortable: false,
       render: (item: JsonMedia) => formatBytes(item.size),
     },
-    { key: 'mimetype', title: 'Type', sortable: true },
-    { 
-      key: 'inserted_at', 
-      title: 'Created', 
+    { key: 'mimetype', title: t('common.type'), sortable: true },
+    {
+      key: 'inserted_at',
+      title: t('common.created'),
       sortable: true,
-      render: (item: JsonMedia) => <Timestamp value={item.inserted_at} mode="relative" />
+      render: (item: JsonMedia) => (
+        <Timestamp value={item.inserted_at} mode="relative" />
+      ),
     },
-    { 
-      key: 'updated_at', 
-      title: 'Updated', 
+    {
+      key: 'updated_at',
+      title: t('common.updated'),
       sortable: true,
-      render: (item: JsonMedia) => <Timestamp value={item.updated_at} mode="relative" />
+      render: (item: JsonMedia) => (
+        <Timestamp value={item.updated_at} mode="relative" />
+      ),
     },
   ] as Column<JsonMedia>[];
 
@@ -305,14 +318,14 @@ const MediasPage: Component<{
     {
       icon: BsEye,
       handler: openModal,
-      label: 'View',
+      label: t('common.view'),
     },
     {
       icon: AiOutlineDelete,
       handler: (item: JsonMedia) => {
         setShowConfirmDialog(item);
       },
-      label: 'Remove',
+      label: t('common.remove'),
     },
   ] as TableAction<JsonMedia>[];
 
@@ -331,6 +344,7 @@ const MediasPage: Component<{
           loading={loading()}
         >
           <UploadComponent
+            store={props.store}
             baseUrl={props.store.env.baseUrl}
             organizationId={props.store.organizations.selectedId}
             onFileUpload={(fileName: string, result: any) => {
@@ -355,6 +369,7 @@ const MediasPage: Component<{
           contentClass="medias-modal"
         >
           <MediaDetails
+            store={props.store}
             media={showModal()!}
             onSubmit={async (mediaUpdate) => {
               try {
@@ -365,10 +380,14 @@ const MediasPage: Component<{
                   mediaUpdate
                 );
                 refreshData();
-                toast.success(`Media "${showModal()?.name}" updated successfully`);
+                toast.success(
+                  `Media "${showModal()?.name}" updated successfully`
+                );
                 return true;
               } catch (error) {
-                toast.error(`Error updating media ${showModal()?.name}: ${error}`);
+                toast.error(
+                  `Error updating media ${showModal()?.name}: ${error}`
+                );
                 return false;
               }
             }}
@@ -409,18 +428,18 @@ const MediasPage: Component<{
           mainAction: (
             <div style="display: flex; align-items: center; gap: 1rem;">
               <Show when={quota()}>
-                <QuotaIndicator 
-                  used={quota()!.used} 
-                  total={quota()!.total} 
+                <QuotaIndicator
+                  used={quota()!.used}
+                  total={quota()!.total}
                   resourceName="Medias"
                   compact
                   isLoading={showLoadingIndicator()}
                 />
               </Show>
               <Show when={storageQuota()}>
-                <QuotaIndicator 
-                  used={storageQuota()!.used} 
-                  total={storageQuota()!.total} 
+                <QuotaIndicator
+                  used={storageQuota()!.used}
+                  total={storageQuota()!.total}
                   resourceName=""
                   compact
                   isLoading={showLoadingIndicator()}
@@ -450,13 +469,14 @@ const MediasPage: Component<{
         table={{
           columns,
           actions,
+          actionsLabel: t('common.actions'),
           onRowSelect,
           defaultRowAction: {
             icon: BsEye,
             handler: (item: JsonMedia) => {
               openModal(item);
             },
-            label: 'View',
+            label: t('common.view'),
           },
         }}
         pagination={{ itemsPerPage }}

@@ -1,5 +1,6 @@
 import { Component, createSignal } from 'solid-js';
 import { Button, Dropdown, FormItem } from '@castmill/ui-common';
+import { useI18n } from '../../i18n';
 
 import styles from './channel-add-form.module.scss';
 import { timeZones } from './timezones';
@@ -8,6 +9,7 @@ export const ChannelAddForm: Component<{
   onSubmit: (name: string, timezone: string) => Promise<void>;
   onClose: () => void;
 }> = (props) => {
+  const { t } = useI18n();
   const [name, setName] = createSignal('');
   const [errors, setErrors] = createSignal(new Map<string, string>());
   const [isFormModified, setIsFormModified] = createSignal(false);
@@ -43,10 +45,10 @@ export const ChannelAddForm: Component<{
     >
       <div class="add-channel">
         <FormItem
-          label="Name"
+          label={t('common.name')}
           id="name"
           value={name()!}
-          placeholder="Enter Channel name"
+          placeholder={t('channels.enterChannelName')}
           onInput={(value: string | number | boolean) => {
             const strValue = value as string;
             setIsFormModified(true);
