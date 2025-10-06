@@ -10,6 +10,7 @@ import {
   FetchDataOptions,
   ConfirmDialog,
   TableViewRef,
+  Timestamp,
   useToast,
 } from '@castmill/ui-common';
 import { TeamsService } from '../../services/teams.service';
@@ -45,8 +46,22 @@ const itemsPerPage = 10;
 const columns = [
   { key: 'email', title: 'Email', sortable: true },
   { key: 'status', title: 'Status', sortable: true },
-  { key: 'inserted_at', title: 'Inserted At', sortable: true },
-  { key: 'expires_at', title: 'Expires At', sortable: true },
+  {
+    key: 'inserted_at',
+    title: 'Inserted At',
+    sortable: true,
+    render: (item: any) => (
+      <Timestamp value={item.inserted_at} mode="relative" />
+    ),
+  },
+  {
+    key: 'expires_at',
+    title: 'Expires At',
+    sortable: true,
+    render: (item: any) => (
+      <Timestamp value={item.expires_at} mode="relative" />
+    ),
+  },
 ];
 
 const actions = [

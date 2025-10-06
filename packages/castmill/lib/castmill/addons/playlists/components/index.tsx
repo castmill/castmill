@@ -13,6 +13,7 @@ import {
   TableViewRef,
   FetchDataOptions,
   ConfirmDialog,
+  Timestamp,
   ToastProvider,
   useToast,
 } from '@castmill/ui-common';
@@ -145,8 +146,18 @@ const PlaylistsPage: Component<{
   const columns = [
     { key: 'name', title: 'Name', sortable: true },
     { key: 'status', title: 'Status', sortable: false },
-    { key: 'inserted_at', title: 'Created', sortable: true },
-    { key: 'updated_at', title: 'Updated', sortable: true },
+    { 
+      key: 'inserted_at', 
+      title: 'Created', 
+      sortable: true,
+      render: (item: JsonPlaylist) => <Timestamp value={item.inserted_at} mode="relative" />
+    },
+    { 
+      key: 'updated_at', 
+      title: 'Updated', 
+      sortable: true,
+      render: (item: JsonPlaylist) => <Timestamp value={item.updated_at} mode="relative" />
+    },
   ] as Column<JsonPlaylist>[];
 
   const actions: TableAction<JsonPlaylist>[] = [

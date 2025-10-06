@@ -16,6 +16,7 @@ import {
   ModalRef,
   CircularProgress,
   ResourcesObserver,
+  Timestamp,
   ToastProvider,
   useToast,
 } from '@castmill/ui-common';
@@ -286,8 +287,18 @@ const MediasPage: Component<{
       render: (item: JsonMedia) => formatBytes(item.size),
     },
     { key: 'mimetype', title: 'Type', sortable: true },
-    { key: 'inserted_at', title: 'Created', sortable: true },
-    { key: 'updated_at', title: 'Updated', sortable: true },
+    { 
+      key: 'inserted_at', 
+      title: 'Created', 
+      sortable: true,
+      render: (item: JsonMedia) => <Timestamp value={item.inserted_at} mode="relative" />
+    },
+    { 
+      key: 'updated_at', 
+      title: 'Updated', 
+      sortable: true,
+      render: (item: JsonMedia) => <Timestamp value={item.updated_at} mode="relative" />
+    },
   ] as Column<JsonMedia>[];
 
   const actions = [

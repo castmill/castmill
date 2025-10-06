@@ -11,8 +11,7 @@ import {
 } from '@castmill/player';
 import { BsCheckLg } from 'solid-icons/bs';
 import { BsX } from 'solid-icons/bs';
-import { FormItem, Button, ComboBox, useToast } from '@castmill/ui-common';
-
+import { FormItem, Button, ComboBox, useToast, Timestamp } from '@castmill/ui-common';
 import { ResourcesService } from '../services/resources.service';
 
 import './widget-config.scss';
@@ -285,9 +284,9 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
         <Show when={props.item.inserted_at}>
           <div style="font-size: 0.8em; color: darkgray;">
             <span>Created on </span>{' '}
-            <span>{`${props.item.inserted_at}`}. </span>
+            <Timestamp value={props.item.inserted_at} mode="relative" />.{' '}
             <span>Last updated on </span>
-            <span>{`${props.item.updated_at}`}</span>
+            <Timestamp value={props.item.updated_at} mode="relative" />
           </div>
         </Show>
         <form

@@ -1,6 +1,6 @@
 import { createSignal, createEffect } from 'solid-js';
 
-import { Button, FormItem } from '@castmill/ui-common';
+import { Button, FormItem, Timestamp } from '@castmill/ui-common';
 
 import { BsCheckLg, BsX } from 'solid-icons/bs';
 import { JsonMedia } from '@castmill/player';
@@ -47,9 +47,9 @@ export const MediaDetails = (props: {
   return (
     <>
       <div class="info">
-        <span>Added on </span> <span>{`${props.media.inserted_at}`}. </span>
+        <span>Added on </span> <Timestamp value={props.media.inserted_at} mode="relative" />.{' '}
         <span>Last updated on </span>
-        <span>{`${props.media.updated_at}`}</span>
+        <Timestamp value={props.media.updated_at} mode="relative" />
       </div>
       <form
         onSubmit={async (e) => {
