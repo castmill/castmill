@@ -65,6 +65,30 @@ defmodule Castmill.Accounts.UserNotifier do
   end
 
   @doc """
+  Deliver instructions to recover credentials (passkeys).
+  """
+  def deliver_recover_credentials_instructions(user, url) do
+    deliver(user.email, "Recover your credentials", """
+
+    ==============================
+
+    Hi #{user.email},
+
+    You requested to recover access to your Castmill account.
+
+    You can add a new passkey to your account by visiting the URL below:
+
+    #{url}
+
+    This link will expire in 5 minutes.
+
+    If you didn't request this, please ignore this email.
+
+    ==============================
+    """)
+  end
+
+  @doc """
   Deliver instructions to update a user email.
   """
   def deliver_update_email_instructions(user, url) do

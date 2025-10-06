@@ -335,6 +335,48 @@ defmodule Castmill.Accounts do
     User.password_changeset(user, attrs, hash_password: false)
   end
 
+  ## Recover credentials
+
+  @doc ~S"""
+  Delivers the recover credentials email to the given user.
+
+  ## Examples
+
+      iex> deliver_user_recover_credentials_instructions(user, &url(~p"/recover-credentials/#{&1}"))
+      {:ok, %{to: ..., body: ...}}
+
+  """
+  def deliver_user_recover_credentials_instructions(%User{} = user, recover_credentials_url_fun)
+      when is_function(recover_credentials_url_fun, 1) do
+    {encoded_token, user_token} = UserToken.build_email_token(user, "recover_credentials")
+    Repo.insert!(user_token)
+
+    UserNotifier.deliver_recover_credentials_instructions(
+      user,
+      recover_credentials_url_fun.(encoded_token)
+    )
+  end
+
+  @doc """
+  Gets the user by recover credentials token.
+
+  ## Examples
+
+      iex> get_user_by_recover_credentials_token("validtoken")
+      %User{}
+
+      iex> get_user_by_recover_credentials_token("invalidtoken")
+      nil
+  """
+  def get_user_by_recover_credentials_token(token) do
+    with {:ok, query} <- UserToken.verify_email_token_query(token, "recover_credentials"),
+         %User{} = user <- Repo.one(query) do
+      user
+    else
+      _ -> nil
+    end
+  end
+
   @doc """
     Creates a Signup and sends verification email with instructions.
   """

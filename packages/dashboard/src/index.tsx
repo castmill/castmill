@@ -31,6 +31,9 @@ import ChannelsPage from './pages/channels-page/channels-page';
 
 const Login = lazy(() => import('./components/login/login'));
 const SignUp = lazy(() => import('./components/signup/signup'));
+const CompleteRecovery = lazy(
+  () => import('./components/login/complete-recovery')
+);
 const NotFound = lazy(() => import('./components/not-found'));
 
 const root = document.getElementById('root');
@@ -116,6 +119,7 @@ render(() => {
       <Router root={App}>
         <Route path="/login" component={Login} />
         <Route path="/signup" component={SignUp} />
+        <Route path="/recover-credentials" component={CompleteRecovery} />
         <Route
           path="/"
           component={(props: any) => (
