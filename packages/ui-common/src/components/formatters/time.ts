@@ -16,7 +16,7 @@ export const formatDuration = (ms: number) => {
  */
 export const formatTimestamp = (timestamp: string | Date): string => {
   const date = typeof timestamp === 'string' ? new Date(timestamp) : timestamp;
-  
+
   // Format: "MMM d, yyyy, HH:mm UTC"
   const options: Intl.DateTimeFormatOptions = {
     year: 'numeric',
@@ -28,7 +28,7 @@ export const formatTimestamp = (timestamp: string | Date): string => {
     timeZone: 'UTC',
     timeZoneName: 'short',
   };
-  
+
   return new Intl.DateTimeFormat('en-US', options).format(date);
 };
 
@@ -41,7 +41,7 @@ export const formatRelativeTime = (timestamp: string | Date): string => {
   const date = typeof timestamp === 'string' ? new Date(timestamp) : timestamp;
   const now = new Date();
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-  
+
   // Future dates
   if (diffInSeconds < 0) {
     const absDiff = Math.abs(diffInSeconds);
@@ -52,7 +52,7 @@ export const formatRelativeTime = (timestamp: string | Date): string => {
     if (absDiff < 31536000) return `in ${Math.floor(absDiff / 2592000)} months`;
     return `in ${Math.floor(absDiff / 31536000)} years`;
   }
-  
+
   // Past dates
   if (diffInSeconds < 60) return 'just now';
   if (diffInSeconds < 3600) {

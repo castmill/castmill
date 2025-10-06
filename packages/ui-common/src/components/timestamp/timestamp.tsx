@@ -8,13 +8,13 @@ export interface TimestampProps {
    * The timestamp to display (ISO string or Date object)
    */
   value: string | Date;
-  
+
   /**
    * Display mode: 'relative' shows "2 hours ago", 'absolute' shows "May 10, 2025, 08:39 UTC"
    * @default 'relative'
    */
   mode?: 'relative' | 'absolute';
-  
+
   /**
    * Whether to show a tooltip with absolute time when hovering (only applies to relative mode)
    * @default true
@@ -30,7 +30,7 @@ export interface TimestampProps {
 export const Timestamp: Component<TimestampProps> = (props) => {
   const mode = () => props.mode ?? 'relative';
   const showTooltip = () => props.showTooltip ?? true;
-  
+
   // Compute display text based on mode
   const displayText = () => {
     if (mode() === 'relative') {
@@ -39,7 +39,7 @@ export const Timestamp: Component<TimestampProps> = (props) => {
       return formatTimestamp(props.value);
     }
   };
-  
+
   // Compute tooltip text (always absolute time)
   const tooltipText = () => {
     if (showTooltip()) {
@@ -47,9 +47,9 @@ export const Timestamp: Component<TimestampProps> = (props) => {
     }
     return '';
   };
-  
+
   const [tick, setTick] = createSignal(0);
-  
+
   // Update tick every minute for relative time to trigger re-render
   onMount(() => {
     if (mode() === 'relative') {
@@ -59,15 +59,15 @@ export const Timestamp: Component<TimestampProps> = (props) => {
       onCleanup(() => clearInterval(interval));
     }
   });
-  
+
   // Force re-computation by accessing tick (unused but triggers reactivity)
   const _ = tick();
-  
+
   // If tooltip is disabled or mode is absolute, render simple span
   if (!showTooltip() || mode() === 'absolute') {
     return <span class={styles.timestamp}>{displayText()}</span>;
   }
-  
+
   // Render with tooltip
   return (
     <span class={styles.timestampWithTooltip} title={tooltipText()}>

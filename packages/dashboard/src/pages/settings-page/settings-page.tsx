@@ -467,7 +467,11 @@ const SettingsPage: Component = () => {
                           <div class="passkey-details">
                             <span class="passkey-name">{credential.name}</span>
                             <span class="passkey-date">
-                              Added <Timestamp value={credential.inserted_at} mode="relative" />
+                              Added{' '}
+                              <Timestamp
+                                value={credential.inserted_at}
+                                mode="relative"
+                              />
                             </span>
                           </div>
                           <div class="passkey-actions">

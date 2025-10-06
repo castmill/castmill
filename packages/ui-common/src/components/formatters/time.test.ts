@@ -35,7 +35,7 @@ describe('formatRelativeTime', () => {
   beforeEach(() => {
     // Save the original Date
     originalDate = global.Date;
-    
+
     // Mock Date to return a fixed time: Jan 1, 2025, 12:00:00 UTC
     const mockNow = new Date('2025-01-01T12:00:00Z');
     global.Date = class extends originalDate {
@@ -64,7 +64,7 @@ describe('formatRelativeTime', () => {
   it('should format minutes correctly', () => {
     const timestamp = new Date('2025-01-01T11:55:00Z'); // 5 minutes ago
     expect(formatRelativeTime(timestamp)).toBe('5 minutes ago');
-    
+
     const timestamp2 = new Date('2025-01-01T11:59:00Z'); // 1 minute ago
     expect(formatRelativeTime(timestamp2)).toBe('1 minute ago');
   });
@@ -72,7 +72,7 @@ describe('formatRelativeTime', () => {
   it('should format hours correctly', () => {
     const timestamp = new Date('2025-01-01T10:00:00Z'); // 2 hours ago
     expect(formatRelativeTime(timestamp)).toBe('2 hours ago');
-    
+
     const timestamp2 = new Date('2025-01-01T11:00:00Z'); // 1 hour ago
     expect(formatRelativeTime(timestamp2)).toBe('1 hour ago');
   });
@@ -80,7 +80,7 @@ describe('formatRelativeTime', () => {
   it('should format days correctly', () => {
     const timestamp = new Date('2024-12-30T12:00:00Z'); // 2 days ago
     expect(formatRelativeTime(timestamp)).toBe('2 days ago');
-    
+
     const timestamp2 = new Date('2024-12-31T12:00:00Z'); // 1 day ago
     expect(formatRelativeTime(timestamp2)).toBe('1 day ago');
   });
@@ -88,7 +88,7 @@ describe('formatRelativeTime', () => {
   it('should format months correctly', () => {
     const timestamp = new Date('2024-11-01T12:00:00Z'); // ~2 months ago
     expect(formatRelativeTime(timestamp)).toBe('2 months ago');
-    
+
     const timestamp2 = new Date('2024-12-01T12:00:00Z'); // ~1 month ago
     expect(formatRelativeTime(timestamp2)).toBe('1 month ago');
   });
@@ -96,7 +96,7 @@ describe('formatRelativeTime', () => {
   it('should format years correctly', () => {
     const timestamp = new Date('2023-01-01T12:00:00Z'); // 2 years ago
     expect(formatRelativeTime(timestamp)).toBe('2 years ago');
-    
+
     const timestamp2 = new Date('2024-01-01T12:00:00Z'); // 1 year ago
     expect(formatRelativeTime(timestamp2)).toBe('1 year ago');
   });
@@ -104,7 +104,7 @@ describe('formatRelativeTime', () => {
   it('should handle future dates', () => {
     const timestamp = new Date('2025-01-01T12:05:00Z'); // 5 minutes in future
     expect(formatRelativeTime(timestamp)).toBe('in 5 minutes');
-    
+
     const timestamp2 = new Date('2025-01-01T14:00:00Z'); // 2 hours in future
     expect(formatRelativeTime(timestamp2)).toBe('in 2 hours');
   });

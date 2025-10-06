@@ -51,11 +51,13 @@ const itemsPerPage = 10;
 const columns = [
   { key: 'user.name', title: 'Name', sortable: true },
   { key: 'role', title: 'Role', sortable: true },
-  { 
-    key: 'inserted_at', 
-    title: 'Inserted At', 
+  {
+    key: 'inserted_at',
+    title: 'Inserted At',
     sortable: true,
-    render: (item: any) => <Timestamp value={item.inserted_at} mode="relative" />
+    render: (item: any) => (
+      <Timestamp value={item.inserted_at} mode="relative" />
+    ),
   },
 ];
 
