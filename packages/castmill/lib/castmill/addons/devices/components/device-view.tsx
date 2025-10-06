@@ -17,7 +17,10 @@ const DeviceView: Component<{
   device: Device;
   organization_id: string;
   onChange?: (device: Device) => void;
+  t?: (key: string, params?: Record<string, any>) => string;
 }> = (props) => {
+  const t = props.t || ((key: string) => key);
+
   const toast = useToast();
   const [loading, setLoading] = createSignal(false);
   const updateDevice = async (device: DeviceUpdate) => {
@@ -48,57 +51,63 @@ const DeviceView: Component<{
 
   const tabs = [
     {
-      title: 'Details',
+      title: t('common.details'),
       content: () => (
-        <DeviceDetails device={props.device} onSubmit={updateDevice} />
+        <DeviceDetails device={props.device} onSubmit={updateDevice} t={t} />
       ),
     },
     {
-      title: 'Channels',
+      title: t('common.channels'),
       content: () => (
         <div>
           <Channels
             baseUrl={props.baseUrl}
             organizationId={props.organization_id}
             device={props.device}
+            t={t}
           />
         </div>
       ),
     },
     {
-      title: 'Preview',
-      content: () => <div>Preview</div>,
+      title: t('common.preview'),
+      content: () => <div>{t('devices.preview.placeholder')}</div>,
     },
     {
-      title: 'Cache',
+      title: t('common.cache'),
       content: () => (
         <div>
-          <DeviceCache baseUrl={props.baseUrl} device={props.device} />
+          <DeviceCache
+            baseUrl={props.baseUrl}
+            device={props.device}
+            t={props.t}
+          />
         </div>
       ),
     },
     {
-      title: 'Maintainance',
+      title: t('common.maintainance'),
       content: () => (
         <div>
-          <Maintainance baseUrl={props.baseUrl} device={props.device} />
+          <Maintainance baseUrl={props.baseUrl} device={props.device} t={t} />
         </div>
       ),
     },
     {
-      title: 'Events',
+      title: t('common.events'),
       content: () => (
         <div>
-          <DeviceLogs baseUrl={props.baseUrl} device={props.device} />
+          <DeviceLogs
+            baseUrl={props.baseUrl}
+            device={props.device}
+            t={props.t}
+          />
         </div>
       ),
     },
     {
-      title: 'Telemetry',
-      content: () => (
-        // Telemetry consists of Traces, Logs and Metrics
-        <div>Traces, Logs, Metrics and Connectivity (as Wifi quality, etc)</div>
-      ),
+      title: t('common.telemetry'),
+      content: () => <div>{t('devices.telemetry.placeholder')}</div>,
     },
   ];
 

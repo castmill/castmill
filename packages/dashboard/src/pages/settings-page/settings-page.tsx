@@ -6,7 +6,7 @@ import {
   Show,
   For,
 } from 'solid-js';
-import { Button, FormItem } from '@castmill/ui-common';
+import { Button, FormItem, Timestamp } from '@castmill/ui-common';
 import { getUser } from '../../components/auth';
 import { UserService } from '../../services/user.service';
 import { User } from '../../interfaces/user.interface';
@@ -15,8 +15,10 @@ import {
   EmailVerificationState,
 } from '../../interfaces/credential.interface';
 import './settings-page.scss';
+import { useI18n, SUPPORTED_LOCALES } from '../../i18n';
 
 const SettingsPage: Component = () => {
+  const { t, locale, setLocale } = useI18n();
   const [user, setUser] = createSignal<User | null>(null);
   const [name, setName] = createSignal('');
   const [email, setEmail] = createSignal('');
@@ -343,34 +345,34 @@ const SettingsPage: Component = () => {
   return (
     <div class="castmill-settings">
       <div class="settings-header">
-        <h1>Account Settings</h1>
-        <p>Manage your account information and preferences</p>
+        <h1>{t('settings.title')}</h1>
+        <p>{t('settings.description')}</p>
       </div>
 
       <div class="settings-sections">
         {/* Profile Settings */}
         <section class="settings-section">
-          <h2>Profile Information</h2>
+          <h2>{t('settings.profile')}</h2>
           <div class="settings-content">
             <FormItem
-              label="Full Name"
+              label={t('settings.fullName')}
               id="name"
               value={name()}
               type="text"
-              placeholder="Enter your full name"
+              placeholder={t('settings.placeholderFullName')}
               onInput={(value) => setName(String(value))}
             >
               <></>
             </FormItem>
 
             <FormItem
-              label="Email Address"
+              label={t('settings.emailAddress')}
               id="email"
               value={email()}
               type="email"
-              placeholder="Enter your email address"
+              placeholder={t('settings.placeholderEmail')}
               onInput={(value) => setEmail(String(value))}
-              description="Changes to your email address require verification to prevent account lockout"
+              description={t('settings.emailChangeWarning')}
             >
               <></>
             </FormItem>
@@ -378,27 +380,26 @@ const SettingsPage: Component = () => {
             <Show when={emailVerification().verificationSent}>
               <div class="email-verification-notice">
                 <p>
-                  <strong>Email verification required!</strong>
+                  <strong>{t('settings.emailVerificationRequired')}</strong>
                 </p>
                 <p>
-                  To prevent account lockout, please verify your new email
-                  address ({emailVerification().pendingEmail}) by clicking the
-                  verification link we sent. Your email will only be updated
-                  after verification.
+                  {t('settings.emailVerificationMessage', {
+                    email: emailVerification().pendingEmail || '',
+                  })}
                 </p>
               </div>
             </Show>
 
             <div class="form-actions">
               <Button
-                label="Save Changes"
+                label={t('settings.saveChanges')}
                 onClick={handleSaveProfile}
                 disabled={!isDirty() || loading()}
                 color="primary"
               />
               <Show when={saveSuccess()}>
                 <span class="success-message">
-                  Profile updated successfully!
+                  {t('settings.profileUpdatedSuccess')}
                 </span>
               </Show>
               <Show when={error()}>
@@ -410,20 +411,16 @@ const SettingsPage: Component = () => {
 
         {/* Passkey Settings */}
         <section class="settings-section">
-          <h2>Security & Authentication</h2>
+          <h2>{t('settings.securityAuthentication')}</h2>
           <div class="settings-content">
             <div class="passkey-info">
-              <h3>Passkeys</h3>
-              <p>
-                Your account uses passkeys for secure, passwordless
-                authentication. Passkeys are stored securely on your device and
-                provide better security than traditional passwords.
-              </p>
+              <h3>{t('settings.passkeys')}</h3>
+              <p>{t('settings.passkeysDescription')}</p>
 
               <div class="passkey-list">
-                <h4>Your Passkeys</h4>
+                <h4>{t('settings.yourPasskeys')}</h4>
                 <Show when={credentialsLoading()}>
-                  <p>Loading passkeys...</p>
+                  <p>{t('settings.loadingPasskeys')}</p>
                 </Show>
                 <Show
                   when={
@@ -438,7 +435,7 @@ const SettingsPage: Component = () => {
                       when={!credentialsError().includes('session has expired')}
                     >
                       <Button
-                        label="Retry"
+                        label={t('settings.retry')}
                         onClick={() => {
                           const currentUser = user();
                           if (currentUser?.id) {
@@ -457,7 +454,7 @@ const SettingsPage: Component = () => {
                     credentials().length === 0
                   }
                 >
-                  <p>No passkeys found.</p>
+                  <p>{t('settings.noPasskeysFound')}</p>
                 </Show>
                 <For each={credentials()}>
                   {(credential) => (
@@ -467,20 +464,21 @@ const SettingsPage: Component = () => {
                           <div class="passkey-details">
                             <span class="passkey-name">{credential.name}</span>
                             <span class="passkey-date">
-                              Added{' '}
-                              {new Date(
-                                credential.inserted_at
-                              ).toLocaleDateString()}
+                              {t('settings.added')}{' '}
+                              <Timestamp
+                                value={credential.inserted_at}
+                                mode="relative"
+                              />
                             </span>
                           </div>
                           <div class="passkey-actions">
                             <Button
-                              label="Rename"
+                              label={t('settings.rename')}
                               onClick={() => startEditingCredential(credential)}
                               color="secondary"
                             />
                             <Button
-                              label="Remove"
+                              label={t('common.remove')}
                               onClick={() =>
                                 handleDeleteCredential(credential.id)
                               }
@@ -492,11 +490,11 @@ const SettingsPage: Component = () => {
                         <Show when={editingCredential() === credential.id}>
                           <div class="passkey-edit">
                             <FormItem
-                              label="Passkey Name"
+                              label={t('settings.passkeyName')}
                               id={`credential-name-${credential.id}`}
                               value={newCredentialName()}
                               type="text"
-                              placeholder="Enter a name for this passkey"
+                              placeholder={t('settings.placeholderPasskeyName')}
                               onInput={(value) =>
                                 setNewCredentialName(String(value))
                               }
@@ -505,14 +503,14 @@ const SettingsPage: Component = () => {
                             </FormItem>
                             <div class="edit-actions">
                               <Button
-                                label="Save"
+                                label={t('common.save')}
                                 onClick={() =>
                                   handleUpdateCredentialName(credential.id)
                                 }
                                 color="primary"
                               />
                               <Button
-                                label="Cancel"
+                                label={t('common.cancel')}
                                 onClick={cancelEditingCredential}
                                 color="secondary"
                               />
@@ -527,30 +525,54 @@ const SettingsPage: Component = () => {
 
               <div class="passkey-actions">
                 <Button
-                  label="Add New Passkey"
+                  label={t('settings.addNewPasskey')}
                   onClick={handleAddNewPasskey}
                   color="secondary"
                   disabled={false}
                 />
-                <small>Add a passkey for another device or browser</small>
+                <small>{t('settings.addPasskeyHelp')}</small>
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Language Settings */}
+        <section class="settings-section">
+          <h2>{t('settings.languageSettings')}</h2>
+          <div class="settings-content">
+            <p>{t('settings.selectLanguage')}</p>
+            <div class="language-options">
+              <For each={SUPPORTED_LOCALES}>
+                {(localeInfo) => (
+                  <button
+                    class="language-option"
+                    classList={{ active: locale() === localeInfo.code }}
+                    onClick={() => setLocale(localeInfo.code)}
+                  >
+                    <span class="language-code">
+                      {localeInfo.code.toUpperCase()}
+                    </span>
+                    <span class="language-name">{localeInfo.nativeName}</span>
+                    <Show when={locale() === localeInfo.code}>
+                      <span class="language-check">✓</span>
+                    </Show>
+                  </button>
+                )}
+              </For>
             </div>
           </div>
         </section>
 
         {/* Account Management */}
         <section class="settings-section danger-zone">
-          <h2>Account Management</h2>
+          <h2>{t('settings.accountManagement')}</h2>
           <div class="settings-content">
             <div class="danger-actions">
-              <h3>Delete Account</h3>
-              <p>
-                Permanently delete your account and all associated data. This
-                action cannot be undone.
-              </p>
+              <h3>{t('settings.deleteAccount')}</h3>
+              <p>{t('settings.deleteAccountDescription')}</p>
               <Show when={!showDeleteConfirm()}>
                 <Button
-                  label="Delete Account"
+                  label={t('settings.deleteAccountButton')}
                   onClick={() => setShowDeleteConfirm(true)}
                   color="danger"
                 />
@@ -558,18 +580,18 @@ const SettingsPage: Component = () => {
               <Show when={showDeleteConfirm()}>
                 <div class="delete-confirmation">
                   <p>
-                    <strong>Are you sure?</strong> This will permanently delete
-                    your account.
+                    <strong>{t('settings.deleteAccountConfirm')}</strong>{' '}
+                    {t('settings.deleteAccountWarning')}
                   </p>
                   <div class="confirmation-actions">
                     <Button
-                      label="Yes, Delete Account"
+                      label={t('settings.deleteAccountYes')}
                       onClick={handleDeleteAccount}
                       disabled={loading()}
                       color="danger"
                     />
                     <Button
-                      label="Cancel"
+                      label={t('common.cancel')}
                       onClick={() => setShowDeleteConfirm(false)}
                       color="secondary"
                     />

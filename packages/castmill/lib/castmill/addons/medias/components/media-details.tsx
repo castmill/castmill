@@ -1,16 +1,22 @@
 import { createSignal, createEffect } from 'solid-js';
 
-import { Button, FormItem } from '@castmill/ui-common';
+import { Button, FormItem, Timestamp } from '@castmill/ui-common';
 
 import { BsCheckLg, BsX } from 'solid-icons/bs';
 import { JsonMedia } from '@castmill/player';
 import { MediasUpdate } from '../services/medias.service';
 import { MediaPreview } from './media-preview';
+import { AddonStore } from '../../common/interfaces/addon-store';
 
 export const MediaDetails = (props: {
   media: JsonMedia;
+  store?: AddonStore;
   onSubmit: (mediaUpdate: Partial<MediasUpdate>) => Promise<boolean>;
 }) => {
+  // Get i18n functions from store
+  const t = (key: string, params?: Record<string, any>) =>
+    props.store?.i18n?.t(key, params) || key;
+
   const [name, setName] = createSignal(props.media.name);
 
   const [isFormModified, setIsFormModified] = createSignal(false);
@@ -47,9 +53,9 @@ export const MediaDetails = (props: {
   return (
     <>
       <div class="info">
-        <span>Added on </span> <span>{`${props.media.inserted_at}`}. </span>
+        <span>Added on </span> <Timestamp value={props.media.inserted_at} mode="relative" />.{' '}
         <span>Last updated on </span>
-        <span>{`${props.media.updated_at}`}</span>
+        <Timestamp value={props.media.updated_at} mode="relative" />
       </div>
       <form
         onSubmit={async (e) => {
@@ -63,7 +69,7 @@ export const MediaDetails = (props: {
       >
         <div class="form-inputs">
           <FormItem
-            label="Name"
+            label={t('common.name')}
             id="name"
             value={name()}
             placeholder="Enter media name"

@@ -15,8 +15,10 @@ import { FaSolidMagnifyingGlass } from 'solid-icons/fa';
 import { ImCancelCircle } from 'solid-icons/im';
 
 import { useNavigate } from '@solidjs/router';
+import { useI18n } from '../../i18n';
 
 const Search: Component = () => {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const [searchString, setSearchString] = createSignal('');
 
@@ -64,7 +66,7 @@ const Search: Component = () => {
       <FaSolidMagnifyingGlass />
       <input
         type="text"
-        placeholder="Search..."
+        placeholder={t('common.search')}
         value={searchString()}
         onInput={(e) => setSearchString(e.currentTarget.value)}
         onKeyDown={handleEnterKeyDown}

@@ -8,15 +8,18 @@ import { TabItem, Tabs } from '@castmill/ui-common';
 import { User } from '../../interfaces/user.interface';
 import { TeamMembersView } from './team-members-view';
 import { TeamInvitationsView } from './teams-invitations-view';
+import { useI18n } from '../../i18n';
 
 export const TeamResourcesView = (props: {
   organizationId: string;
   teamId: number;
   onRemove: (member: User) => void;
 }) => {
+  const { t } = useI18n();
+
   const resourcesTabs: TabItem[] = [
     {
-      title: 'Members',
+      title: t('teams.members'),
       content: () => (
         <TeamMembersView
           organizationId={props.organizationId}
@@ -28,7 +31,7 @@ export const TeamResourcesView = (props: {
       ),
     },
     {
-      title: 'Invitations',
+      title: t('teams.invitations'),
       content: () => (
         <TeamInvitationsView
           organizationId={props.organizationId}

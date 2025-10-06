@@ -34,11 +34,14 @@ import { ChannelView } from './channel-view';
 import { baseUrl } from '../../env';
 import { ChannelAddForm } from './channel-add-form';
 import { useTeamFilter } from '../../hooks';
+import { useI18n } from '../../i18n';
 import { QuotaIndicator } from '../../components/quota-indicator';
 import { QuotasService, ResourceQuota } from '../../services/quotas.service';
 
 const ChannelsPage: Component = () => {
   const params = useSearchParams();
+  const { t } = useI18n();
+
   const toast = useToast();
 
   const itemsPerPage = 10; // Number of items to show per page
@@ -102,8 +105,8 @@ const ChannelsPage: Component = () => {
   };
 
   const columns = [
-    { key: 'id', title: 'ID', sortable: true },
-    { key: 'name', title: 'Name', sortable: true },
+    { key: 'id', title: t('common.id'), sortable: true },
+    { key: 'name', title: t('common.name'), sortable: true },
   ] as Column<JsonChannel>[];
 
   interface ChannelTableItem extends JsonChannel {}
@@ -115,7 +118,7 @@ const ChannelsPage: Component = () => {
         setCurrentChannel(item);
         setShowModal(true);
       },
-      label: 'View',
+      label: t('common.view'),
     },
     {
       icon: AiOutlineDelete,
@@ -123,7 +126,7 @@ const ChannelsPage: Component = () => {
         setCurrentChannel(item);
         setShowConfirmDialog(true);
       },
-      label: 'Remove',
+      label: t('common.remove'),
     },
   ];
 
@@ -150,34 +153,110 @@ const ChannelsPage: Component = () => {
   const [showConfirmDialog, setShowConfirmDialog] = createSignal(false);
   const [showConfirmDialogMultiple, setShowConfirmDialogMultiple] =
     createSignal(false);
+  const [showErrorDialog, setShowErrorDialog] = createSignal(false);
+  const [errorMessage, setErrorMessage] = createSignal('');
+  const [errorDevices, setErrorDevices] = createSignal<string[]>([]);
 
   const confirmRemoveChannel = async (channel: JsonChannel | undefined) => {
     if (!channel) {
       return;
     }
     try {
-      await channelsService.removeChannel(channel.id);
-      refreshData();
-      toast.success(`Channel ${channel.name} removed successfully`);
+      const result = await channelsService.removeChannel(channel.id);
+
+      if (result.success) {
+        refreshData();
+        toast.success(`Channel ${channel.name} removed successfully`);
+      } else {
+        // Show error with device details
+        const devices = result.error?.devices || [];
+        setErrorMessage(
+          `Cannot delete channel "${channel.name}" because it is assigned to the following device${devices.length > 1 ? 's' : ''}:`
+        );
+        setErrorDevices(devices);
+        setShowErrorDialog(true);
+      }
     } catch (error) {
-      toast.error(`Error removing channel ${channel.name}: ${error}`);
+      // Handle unexpected errors (network failures, server down, etc.)
+      toast.error(
+        t('channels.errors.removeChannel', {
+          name: channel.name || '',
+          error: String(error),
+        })
+      );
     }
     setShowConfirmDialog(false);
   };
 
   const confirmRemoveMultipleChannels = async () => {
-    try {
-      await Promise.all(
-        Array.from(selectedChannels()).map((channelId) =>
-          channelsService.removeChannel(channelId)
-        )
-      );
+    const results = await Promise.allSettled(
+      Array.from(selectedChannels()).map((channelId) =>
+        channelsService.removeChannel(channelId)
+      )
+    );
 
-      refreshData();
+    const failedChannels: Array<{
+      id: number;
+      name: string;
+      devices: string[];
+    }> = [];
+    const unexpectedErrors: Array<{ id: number; name: string; error: string }> =
+      [];
+
+    results.forEach((result, index) => {
+      const channelId = Array.from(selectedChannels())[index];
+      const channel = data().find((c) => c.id === channelId);
+
+      if (result.status === 'fulfilled' && !result.value.success) {
+        // Business logic error (channel assigned to devices)
+        failedChannels.push({
+          id: channelId,
+          name: channel?.name || `Channel ${channelId}`,
+          devices: result.value.error?.devices || [],
+        });
+      } else if (result.status === 'rejected') {
+        // Unexpected error (network, server down, etc.)
+        unexpectedErrors.push({
+          id: channelId,
+          name: channel?.name || `Channel ${channelId}`,
+          error: String(result.reason),
+        });
+      }
+    });
+
+    if (failedChannels.length > 0 || unexpectedErrors.length > 0) {
+      // Build a detailed error message
+      const messages: string[] = [];
+
+      if (failedChannels.length > 0) {
+        messages.push(
+          ...failedChannels.map((fc) => {
+            if (fc.devices.length > 0) {
+              return `- ${fc.name} (assigned to: ${fc.devices.join(', ')})`;
+            }
+            return `- ${fc.name}`;
+          })
+        );
+      }
+
+      if (unexpectedErrors.length > 0) {
+        messages.push(
+          ...unexpectedErrors.map(
+            (err) => `- ${err.name} (error: ${err.error})`
+          )
+        );
+      }
+
+      setErrorMessage(
+        `The following channel${failedChannels.length + unexpectedErrors.length > 1 ? 's' : ''} could not be deleted:`
+      );
+      setErrorDevices(messages);
+      setShowErrorDialog(true);
+    } else {
       toast.success('Channels removed successfully');
-    } catch (error) {
-      toast.error(`Error removing channels: ${error}`);
     }
+
+    refreshData();
     setShowConfirmDialogMultiple(false);
   };
 
@@ -225,9 +304,11 @@ const ChannelsPage: Component = () => {
 
   createEffect(() => {
     if (currentChannel()?.id) {
-      setTitle(`Channel "${currentChannel()?.name}"`);
+      setTitle(
+        t('channels.channelTitle', { name: currentChannel()?.name || '' })
+      );
     } else {
-      setTitle('New Channel');
+      setTitle(t('channels.newChannel'));
     }
   });
 
@@ -237,7 +318,7 @@ const ChannelsPage: Component = () => {
         <Show when={showAddChannelModal()}>
           <Modal
             title={title()}
-            description="Details of your channel"
+            description={t('channels.description')}
             onClose={closeAddChannelModal}
           >
             <ChannelAddForm
@@ -258,7 +339,9 @@ const ChannelsPage: Component = () => {
                   refreshData();
                   toast.success(`Channel ${name} added successfully`);
                 } catch (error) {
-                  toast.error(`Error adding channel: ${error}`);
+                  toast.error(
+                    t('channels.errors.addChannel', { error: String(error) })
+                  );
                 }
               }}
             />
@@ -268,7 +351,7 @@ const ChannelsPage: Component = () => {
         <Show when={showModal()}>
           <Modal
             title={title()}
-            description="Details of your channel"
+            description={t('channels.description')}
             onClose={closeModal}
           >
             <ChannelView
@@ -300,7 +383,9 @@ const ChannelsPage: Component = () => {
                     return updatedTeam;
                   }
                 } catch (error) {
-                  toast.error(`Error saving channel: ${error}`);
+                  toast.error(
+                    t('channels.errors.saveChannel', { error: String(error) })
+                  );
                 }
               }}
             />
@@ -309,16 +394,18 @@ const ChannelsPage: Component = () => {
 
         <ConfirmDialog
           show={showConfirmDialog()}
-          title="Remove Channel"
-          message={`Are you sure you want to remove device "${currentChannel()?.name}"?`}
+          title={t('channels.removeChannel')}
+          message={t('channels.confirmRemoveChannel', {
+            name: currentChannel()?.name || '',
+          })}
           onClose={() => setShowConfirmDialog(false)}
           onConfirm={() => confirmRemoveChannel(currentChannel())}
         />
 
         <ConfirmDialog
           show={showConfirmDialogMultiple()}
-          title="Remove Channels"
-          message={'Are you sure you want to remove the following channels?'}
+          title={t('channels.removeChannels')}
+          message={t('channels.confirmRemoveChannels')}
           onClose={() => setShowConfirmDialogMultiple(false)}
           onConfirm={() => confirmRemoveMultipleChannels()}
         >
@@ -330,8 +417,29 @@ const ChannelsPage: Component = () => {
           </div>
         </ConfirmDialog>
 
+        <Show when={showErrorDialog()}>
+          <Modal
+            title={t('channels.cannotDeleteChannel')}
+            description={errorMessage()}
+            onClose={() => setShowErrorDialog(false)}
+          >
+            <div style="margin: 1.5em; line-height: 1.5em;">
+              {errorDevices().map((device) => (
+                <div>{device}</div>
+              ))}
+            </div>
+            <div style="margin-top: 1.5em; display: flex; justify-content: flex-end;">
+              <Button
+                label="OK"
+                color="primary"
+                onClick={() => setShowErrorDialog(false)}
+              />
+            </div>
+          </Modal>
+        </Show>
+
         <TableView
-          title="Channels"
+          title={t('channels.title')}
           resource="channels"
           params={params}
           fetchData={fetchData}
@@ -349,7 +457,7 @@ const ChannelsPage: Component = () => {
                   />
                 </Show>
                 <Button
-                  label="Add Channel"
+                  label={t('channels.addChannel')}
                   onClick={addChannel}
                   icon={BsCheckLg}
                   color="primary"
@@ -388,7 +496,7 @@ const ChannelsPage: Component = () => {
                 setCurrentChannel(item);
                 setShowModal(true);
               },
-              label: 'View',
+              label: t('common.view'),
             },
           }}
           pagination={{ itemsPerPage }}

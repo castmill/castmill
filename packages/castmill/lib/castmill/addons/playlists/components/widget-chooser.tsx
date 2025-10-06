@@ -11,6 +11,7 @@ import { JsonWidget } from '@castmill/player';
 import { IconWrapper } from '@castmill/ui-common';
 import { RiEditorDraggable } from 'solid-icons/ri';
 
+import { DEFAULT_WIDGET_ICON } from '../../common/constants';
 import './widget-chooser.scss';
 
 const WidgetItem: Component<{ widget: JsonWidget }> = (props) => {
@@ -35,6 +36,13 @@ const WidgetItem: Component<{ widget: JsonWidget }> = (props) => {
     }
   });
 
+  const isImageIcon =
+    props.widget.icon &&
+    (props.widget.icon.startsWith('data:image/') ||
+      props.widget.icon.startsWith('http://') ||
+      props.widget.icon.startsWith('https://') ||
+      props.widget.icon.startsWith('/'));
+
   return (
     <div
       ref={draggableRef}
@@ -42,7 +50,21 @@ const WidgetItem: Component<{ widget: JsonWidget }> = (props) => {
       style={{ opacity: dragging() ? 0.5 : 1.0 }}
     >
       <IconWrapper icon={RiEditorDraggable} />
-      <div>{props.widget.icon}</div>
+      <div class="widget-icon">
+        {isImageIcon ? (
+          <img
+            src={props.widget.icon}
+            alt={props.widget.name}
+            onError={(e) => {
+              (e.target as HTMLImageElement).style.display = 'none';
+              const fallback = document.createTextNode(DEFAULT_WIDGET_ICON);
+              e.target.parentNode?.appendChild(fallback);
+            }}
+          />
+        ) : (
+          <span>{props.widget.icon || DEFAULT_WIDGET_ICON}</span>
+        )}
+      </div>
       <div class="info">
         <div class="name">{props.widget.name}</div>
         <div class="description">{props.widget.description}</div>

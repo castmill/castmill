@@ -324,6 +324,6 @@ export const PlaylistsService = {
       }
     );
 
-    return handleResponse<JsonWidget[]>(response, { parse: true });
+    return handleResponse<{ data: JsonWidget[]; count: number }>(response, { parse: true });
   },
 };

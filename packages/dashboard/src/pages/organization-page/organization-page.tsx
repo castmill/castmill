@@ -9,9 +9,11 @@ import { BsCheckLg } from 'solid-icons/bs';
 import style from './organization-page.module.scss';
 import { OrganizationsService } from '../../services/organizations.service';
 import { OrganizationInvitationsView } from './organization-invitations-view';
+import { useI18n } from '../../i18n';
 
 const OrganizationPage: Component = () => {
   const params = useSearchParams();
+  const { t } = useI18n();
   const toast = useToast();
 
   const [name, setName] = createSignal(store.organizations.selectedName!);
@@ -27,9 +29,9 @@ const OrganizationPage: Component = () => {
     switch (fieldId) {
       case 'name':
         if (!value) {
-          error = 'Name is required';
+          error = t('validation.fieldRequired');
         } else if (value.length < 5) {
-          error = 'Name must be at least 5 characters';
+          error = t('validation.minLength', { min: 5 });
         }
         break;
       default:
@@ -65,6 +67,8 @@ const OrganizationPage: Component = () => {
         name: organization.name,
       });
 
+      // Clear any existing errors on success
+      setErrors(new Map());
       toast.success('Organization updated successfully');
 
       // Update the store with the new organization name
@@ -78,14 +82,30 @@ const OrganizationPage: Component = () => {
       if (store.organizations.selectedId === organization.id) {
         setStore('organizations', 'selectedName', organization.name);
       }
-    } catch (error) {
-      toast.error(`Error updating organization: ${error}`);
+    } catch (error: any) {
+      // Handle validation errors from the server
+      if (error.status === 422 && error.data?.errors) {
+        // Set server-side validation errors
+        const newErrors = new Map();
+        if (error.data.errors.name) {
+          // Errors come as arrays, join them with commas
+          const nameErrors = Array.isArray(error.data.errors.name)
+            ? error.data.errors.name
+            : [error.data.errors.name];
+          newErrors.set('name', nameErrors.join(', '));
+        }
+        setErrors(newErrors);
+      } else {
+        toast.error(
+          t('organization.errors.updateOrganization', { error: String(error) })
+        );
+      }
     }
   };
 
   const resourcesTabs: TabItem[] = [
     {
-      title: 'Users',
+      title: t('organization.users'),
       content: () => (
         <Show when={store.organizations.selectedId}>
           <OrganizationMembersView
@@ -97,7 +117,7 @@ const OrganizationPage: Component = () => {
       ),
     },
     {
-      title: 'Invitations',
+      title: t('organization.invitations'),
       content: () => (
         <Show when={store.organizations.selectedId}>
           <OrganizationInvitationsView
@@ -112,7 +132,7 @@ const OrganizationPage: Component = () => {
   return (
     <div class={style['organization-page']}>
       <div class={style['header']}>
-        <h1>Organization</h1>
+        <h1>{t('sidebar.organization')}</h1>
         <form
           onSubmit={async (e) => {
             e.preventDefault();
@@ -128,10 +148,10 @@ const OrganizationPage: Component = () => {
         >
           <div class={style['form-inputs']}>
             <FormItem
-              label="Name"
+              label={t('common.name')}
               id="name"
               value={name()!}
-              placeholder="Enter organization name"
+              placeholder={t('organization.placeholderName')}
               onInput={(value: string | number | boolean) => {
                 const strValue = value as string;
                 setName(strValue);
@@ -141,7 +161,7 @@ const OrganizationPage: Component = () => {
               <div class="error">{errors().get('name')}</div>
             </FormItem>
             <Button
-              label="Update"
+              label={t('organization.update')}
               type="submit"
               disabled={!isFormValid()}
               icon={BsCheckLg}

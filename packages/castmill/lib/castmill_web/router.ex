@@ -144,6 +144,15 @@ defmodule CastmillWeb.Router do
     get("/challenges", SessionController, :create_challenge)
   end
 
+  scope "/credentials", CastmillWeb do
+    pipe_through(:dashboard)
+
+    post("/recover", CredentialRecoveryController, :request_recovery)
+    get("/recover/verify", CredentialRecoveryController, :verify_token)
+    get("/recover/challenge", CredentialRecoveryController, :create_recovery_challenge)
+    post("/recover/credential", CredentialRecoveryController, :add_recovery_credential)
+  end
+
   scope "/dashboard", CastmillWeb do
     pipe_through([:dashboard, :authenticate_user])
 

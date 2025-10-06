@@ -9,11 +9,10 @@ import {
   IconButton,
   Modal,
   TableView,
-  FormItem,
   FetchDataOptions,
   ConfirmDialog,
   TableViewRef,
-  Dropdown,
+  Timestamp,
   useToast,
 } from '@castmill/ui-common';
 import { store, setStore } from '../../store/store';
@@ -24,6 +23,7 @@ import { User } from '../../interfaces/user.interface';
 import { OrganizationsService } from '../../services/organizations.service';
 import { OrganizationInviteForm } from './organization-invite-form';
 import { OrganizationRole } from '../../types/organization-role.type';
+import { useI18n } from '../../i18n';
 
 const [data, setData] = createSignal<{ user: User; user_id: string }[]>([], {
   equals: false,
@@ -47,23 +47,6 @@ const onRowSelect = (rowsSelected: Set<string>) => {
 
 const itemsPerPage = 10;
 
-const columns = [
-  { key: 'user.name', title: 'Name', sortable: true },
-  { key: 'role', title: 'Role', sortable: true },
-  { key: 'inserted_at', title: 'Inserted At', sortable: true },
-];
-
-const actions = [
-  {
-    icon: AiOutlineDelete,
-    handler: (item: any) => {
-      setCurrentMember(item);
-      setShowConfirmDialog(true);
-    },
-    label: 'Remove',
-  },
-];
-
 const addMember = () => {
   setShowAddMemberDialog(true);
 };
@@ -73,8 +56,33 @@ export const OrganizationMembersView = (props: {
   organizationName: string;
   onRemove: (member: User) => void;
 }) => {
-  const toast = useToast();
+  const { t } = useI18n();
 
+  const columns = [
+    { key: 'user.name', title: t('common.name'), sortable: true },
+    { key: 'role', title: t('common.role'), sortable: true },
+    {
+      key: 'inserted_at',
+      title: t('common.insertedAt'),
+      sortable: true,
+      render: (item: any) => (
+        <Timestamp value={item.inserted_at} mode="relative" />
+      ),
+    },
+  ];
+
+  const actions = [
+    {
+      icon: AiOutlineDelete,
+      handler: (item: any) => {
+        setCurrentMember(item);
+        setShowConfirmDialog(true);
+      },
+      label: t('common.remove'),
+    },
+  ];
+
+  const toast = useToast();
   const fetchData = async (opts: FetchDataOptions) => {
     const result = await OrganizationsService.fetchMembers(
       props.organizationId,
@@ -142,7 +150,7 @@ export const OrganizationMembersView = (props: {
     <>
       <Show when={showAddMemberDialog()}>
         <Modal
-          title="Invite Member"
+          title={t('organization.inviteMember')}
           description={`Add a new member to the organization ${props.organizationName}`}
           onClose={() => setShowAddMemberDialog(false)}
         >
@@ -200,7 +208,7 @@ export const OrganizationMembersView = (props: {
         toolbar={{
           mainAction: (
             <Button
-              label="Invite Member"
+              label={t('organization.inviteMember')}
               onClick={addMember}
               icon={BsCheckLg}
               color="primary"

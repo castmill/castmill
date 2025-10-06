@@ -12,12 +12,15 @@ import './login.scss';
 import { loginUser, resetSession } from '../auth';
 import { useNavigate } from '@solidjs/router';
 import SignUpEmailSent from '../signup/signup-email-sent';
+import RecoverCredentials from './recover-credentials';
 
 import { baseUrl, domain } from '../../env';
+import { useI18n } from '../../i18n';
 
 const encoder = new TextEncoder(); // Creates a new encoder
 
 const Login: Component = () => {
+  const { t } = useI18n();
   const [isMounted, setIsMounted] = createSignal<boolean>(false);
   const [loading, setLoading] = createSignal<boolean>(false);
   const [status, setStatus] = createSignal<string>('Ready');
@@ -26,6 +29,8 @@ const Login: Component = () => {
   const [email, setEmail] = createSignal<string>('');
   const [disabledSignUp, setDisabledSignUp] = createSignal<boolean>(true);
   const [showEmailSent, setShowEmailSent] = createSignal<boolean>(false);
+  const [showRecoverCredentials, setShowRecoverCredentials] =
+    createSignal<boolean>(false);
 
   const navigate = useNavigate();
 
@@ -176,68 +181,84 @@ const Login: Component = () => {
     <Show when={isMounted()}>
       <div class="castmill-login">
         <Show when={loading()}>
-          <div class="loading-overlay">Loading...</div>
+          <div class="loading-overlay">{t('common.loading')}</div>
         </Show>
 
         <div class="login-container">
-          <div class="login-box">
-            <Switch fallback={<SignUpEmailSent />}>
-              <Match when={error()}>
-                <div class="error">{error()}</div>
-              </Match>
-              <Match when={!showEmailSent()}>
-                <h2>Login</h2>
+          <Show
+            when={!showRecoverCredentials()}
+            fallback={
+              <RecoverCredentials
+                onBack={() => setShowRecoverCredentials(false)}
+              />
+            }
+          >
+            <div class="login-box">
+              <Switch fallback={<SignUpEmailSent />}>
+                <Match when={error()}>
+                  <div class="error">{error()}</div>
+                </Match>
+                <Match when={!showEmailSent()}>
+                  <h2>Login</h2>
 
-                <button
-                  class="signup-button"
-                  onClick={loginWithPasskey}
-                  disabled={!supportsPasskeys()}
-                >
-                  Login with Passkey
-                </button>
+                  <button
+                    class="signup-button"
+                    onClick={loginWithPasskey}
+                    disabled={!supportsPasskeys()}
+                  >
+                    {t('login.loginWithPasskey')}
+                  </button>
 
-                <div>
-                  <p>or</p>
-                </div>
+                  <div>
+                    <p>or</p>
+                  </div>
 
-                <h2>Sign Up</h2>
+                  <h2>{t('common.signUp')}</h2>
+                  <input
+                    type="text"
+                    placeholder="Email"
+                    value={email()}
+                    onChange={handleEmailChange}
+                  />
+                  <button
+                    class="login-button"
+                    onClick={startSignupProcess}
+                    disabled={disabledSignUp()}
+                  >
+                    Continue
+                  </button>
 
-                <input
-                  type="text"
-                  placeholder="Email"
-                  value={email()}
-                  onChange={handleEmailChange}
-                />
-                <button
-                  class="login-button"
-                  onClick={startSignupProcess}
-                  disabled={disabledSignUp()}
-                >
-                  Continue
-                </button>
+                  <p class="status">Status: {status()}</p>
+                  <Show when={!supportsPasskeys()}>
+                    <p class="warn">
+                      Your browser does not support Passkeys. Link here with
+                      more info...
+                    </p>
+                  </Show>
 
-                <p class="status">Status: {status()}</p>
-                <Show when={!supportsPasskeys()}>
-                  <p class="warn">
-                    Your browser does not support Passkeys. Link here with more
-                    info...
-                  </p>
-                </Show>
-
-                <div class="privacy">
-                  <p>
-                    We care about your privacy. Read our{' '}
-                    <a href="#">Privacy Policy</a>.
-                  </p>
-                </div>
-                <div>
-                  <p>
-                    <a href="#">Lost your credentials?</a>
-                  </p>
-                </div>
-              </Match>
-            </Switch>
-          </div>
+                  <div class="privacy">
+                    <p>
+                      We care about your privacy. Read our{' '}
+                      <a href="#">Privacy Policy</a>.
+                    </p>
+                  </div>
+                  <div>
+                    <p>
+                      <a
+                        href="#"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setShowRecoverCredentials(true);
+                        }}
+                      >
+                        {t('login.lostCredentials')}
+                      </a>
+                    </p>
+                  </div>
+                </Match>
+              </Switch>
+            </div>
+          </Show>
         </div>
       </div>
     </Show>

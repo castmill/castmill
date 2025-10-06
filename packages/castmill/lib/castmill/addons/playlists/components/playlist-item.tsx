@@ -12,15 +12,10 @@ import { RiEditorDraggable } from 'solid-icons/ri';
 import { AiOutlineEdit } from 'solid-icons/ai';
 import { BsTrash3 } from 'solid-icons/bs';
 
+import { DEFAULT_WIDGET_ICON } from '../../common/constants';
 import styles from './playlist-item.module.scss';
 
-import {
-  Component,
-  onMount,
-  createSignal,
-  onCleanup,
-  Show,
-} from 'solid-js';
+import { Component, onMount, createSignal, onCleanup, Show } from 'solid-js';
 import { JsonPlaylistItem } from '@castmill/player';
 
 // get thumbnail uri from playlist item
@@ -29,27 +24,59 @@ const getThumbnailUri = (item: JsonPlaylistItem) => {
   // TODO thumbnails for other widget types
   const image = item.config.options.image as any;
   return image?.files?.thumbnail?.uri;
-}
+};
 
 // get widget name from playlist item
-const getWidgetName = (item: JsonPlaylistItem) =>
-  item.widget.name;
+const getWidgetName = (item: JsonPlaylistItem) => item.widget.name;
 
 const Thumbnail: Component<{
   item: JsonPlaylistItem;
 }> = (props) => {
   const thumbnailUri = getThumbnailUri(props.item);
   const widgetName = getWidgetName(props.item);
+  const widgetIcon = props.item.widget.icon;
+
+  const isImageIcon =
+    widgetIcon &&
+    (widgetIcon.startsWith('data:image/') ||
+      widgetIcon.startsWith('http://') ||
+      widgetIcon.startsWith('https://') ||
+      widgetIcon.startsWith('/'));
 
   return (
     <Show
       when={thumbnailUri}
-      fallback={<div>{widgetName}</div>}
+      fallback={
+        <div class={styles.widgetIcon}>
+          <Show
+            when={isImageIcon}
+            fallback={<span>{widgetIcon || DEFAULT_WIDGET_ICON}</span>}
+          >
+            <img
+              draggable={false}
+              src={widgetIcon}
+              alt={widgetName}
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = 'none';
+                const fallback = document.createTextNode(DEFAULT_WIDGET_ICON);
+                e.target.parentNode?.appendChild(fallback);
+              }}
+            />
+          </Show>
+          <span class={styles.widgetName}>{widgetName}</span>
+        </div>
+      }
     >
-      <img draggable={false} src={thumbnailUri} class={styles.thumbnailImage} />
+      <div class={styles.thumbnailWrapper}>
+        <img
+          draggable={false}
+          src={thumbnailUri}
+          class={styles.thumbnailImage}
+        />
+      </div>
     </Show>
   );
-}
+};
 
 export const PlaylistItem: Component<{
   item: JsonPlaylistItem;
@@ -147,7 +174,7 @@ export const PlaylistItem: Component<{
             name="Duration"
             value={props.item.duration}
             min={1000}
-            max={Math.max(60000, props.item.duration)} 
+            max={Math.max(60000, props.item.duration)}
             step={1000}
             onSlideStop={handleDurationChange}
             formatValue={formatDuration}

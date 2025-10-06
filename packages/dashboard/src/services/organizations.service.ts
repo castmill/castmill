@@ -222,7 +222,12 @@ export const OrganizationsService = {
     );
 
     if (response.status !== 200) {
-      throw new Error('Failed to update organization');
+      // Try to parse error response
+      const errorData = await response.json().catch(() => ({}));
+      const error: any = new Error('Failed to update organization');
+      error.status = response.status;
+      error.data = errorData;
+      throw error;
     }
   },
 };

@@ -13,6 +13,7 @@ import {
   ConfirmDialog,
   TableViewRef,
   ComboBox,
+  Timestamp,
   useToast,
 } from '@castmill/ui-common';
 import { TeamsService } from '../../services/teams.service';
@@ -22,6 +23,7 @@ import { BsCheckLg } from 'solid-icons/bs';
 import { AiOutlineDelete } from 'solid-icons/ai';
 import { createSignal, Show } from 'solid-js';
 import { User } from '../../interfaces/user.interface';
+import { useI18n } from '../../i18n';
 
 const [data, setData] = createSignal<{ user: User; user_id: string }[]>([], {
   equals: false,
@@ -50,12 +52,6 @@ const onRowSelect = (rowsSelected: Set<string>) => {
 
 const itemsPerPage = 10;
 
-const columns = [
-  { key: 'user.name', title: 'Name', sortable: true },
-  { key: 'role', title: 'Role', sortable: true },
-  { key: 'inserted_at', title: 'Inserted At', sortable: true },
-];
-
 const actions = [
   {
     icon: AiOutlineDelete,
@@ -78,6 +74,21 @@ export const TeamMembersView = (props: {
   teamId: number;
   onRemove: (member: User) => void;
 }) => {
+  const { t } = useI18n();
+
+  const columns = [
+    { key: 'user.name', title: t('common.name'), sortable: true },
+    { key: 'role', title: t('common.role'), sortable: true },
+    {
+      key: 'inserted_at',
+      title: t('teams.insertedAt'),
+      sortable: true,
+      render: (item: any) => (
+        <Timestamp value={item.inserted_at} mode="relative" />
+      ),
+    },
+  ];
+
   const toast = useToast();
 
   const fetchData = async (opts: FetchDataOptions) => {
@@ -172,8 +183,8 @@ export const TeamMembersView = (props: {
     <>
       <Show when={showAddMemberDialog()}>
         <Modal
-          title="Invite Member"
-          description="Add a new member to the team"
+          title={t('teams.inviteMember')}
+          description={t('teams.inviteMemberDescription')}
           onClose={() => setShowAddMemberDialog(false)}
         >
           {/* Select a user from the organization to invite to the team */}
@@ -213,6 +224,7 @@ export const TeamMembersView = (props: {
               )}
               onSelect={handleUserSelect}
             />
+
             <div class="form-input"></div>
             <div class="form-actions">
               <Button
@@ -257,7 +269,7 @@ export const TeamMembersView = (props: {
         toolbar={{
           mainAction: (
             <Button
-              label="Invite Member"
+              label={t('teams.inviteMember')}
               onClick={addMember}
               icon={BsCheckLg}
               color="primary"

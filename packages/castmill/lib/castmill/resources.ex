@@ -894,10 +894,48 @@ defmodule Castmill.Resources do
   end
 
   @doc """
+  Checks if a channel has any devices assigned to it.
+  """
+  def channel_has_devices?(%Channel{id: channel_id}) do
+    channel_has_devices?(channel_id)
+  end
+
+  def channel_has_devices?(channel_id) when is_integer(channel_id) do
+    query =
+      from(dc in Castmill.Devices.DevicesChannels,
+        where: dc.channel_id == ^channel_id,
+        select: count(dc.device_id)
+      )
+
+    Repo.one(query) > 0
+  end
+
+  @doc """
+  Gets the devices that are using a specific channel.
+  Returns a list of maps with device id and name.
+  """
+  def get_devices_using_channel(channel_id) when is_integer(channel_id) do
+    query =
+      from(dc in Castmill.Devices.DevicesChannels,
+        join: d in Castmill.Devices.Device,
+        on: dc.device_id == d.id,
+        where: dc.channel_id == ^channel_id,
+        select: %{id: d.id, name: d.name}
+      )
+
+    Repo.all(query)
+  end
+
+  @doc """
   Removes a channel and all its entries.
+  Returns {:error, :channel_has_devices} if the channel is assigned to any devices.
   """
   def delete_channel(%Channel{} = channel) do
-    Repo.delete(channel)
+    if channel_has_devices?(channel) do
+      {:error, :channel_has_devices}
+    else
+      Repo.delete(channel)
+    end
   end
 end
 

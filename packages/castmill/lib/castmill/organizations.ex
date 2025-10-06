@@ -138,9 +138,30 @@ defmodule Castmill.Organizations do
 
   """
   def create_organization(attrs \\ %{}) do
-    %Organization{}
-    |> Organization.changeset(attrs)
-    |> Repo.insert()
+    network_id = attrs["network_id"] || attrs[:network_id]
+    name = attrs["name"] || attrs[:name]
+
+    Repo.transaction(fn ->
+      # Lock existing organizations with the same name_lower in this network
+      # This prevents race conditions when creating organizations with the same case-insensitive name
+      if network_id && name do
+        name_lower = String.downcase(String.trim(name))
+
+        from(o in Organization,
+          where: o.network_id == ^network_id and o.name_lower == ^name_lower,
+          lock: "FOR UPDATE"
+        )
+        |> Repo.all()
+      end
+
+      # Now insert - if there was a conflict, the lock ensures we see it
+      case %Organization{}
+           |> Organization.changeset(attrs)
+           |> Repo.insert() do
+        {:ok, organization} -> organization
+        {:error, changeset} -> Repo.rollback(changeset)
+      end
+    end)
   end
 
   @doc """
@@ -156,9 +177,28 @@ defmodule Castmill.Organizations do
 
   """
   def update_organization(%Organization{} = organization, attrs) do
-    organization
-    |> Organization.changeset(attrs)
-    |> Repo.update()
+    Repo.transaction(fn ->
+      # Lock existing organizations with the same name_lower in this network (if name is being changed)
+      # This prevents race conditions when updating to a name that conflicts (case-insensitive)
+      if attrs["name"] || attrs[:name] do
+        name = attrs["name"] || attrs[:name]
+        name_lower = String.downcase(String.trim(name))
+
+        from(o in Organization,
+          where: o.network_id == ^organization.network_id and o.name_lower == ^name_lower,
+          lock: "FOR UPDATE"
+        )
+        |> Repo.all()
+      end
+
+      # Now update - if there was a conflict, the lock ensures we see it
+      case organization
+           |> Organization.changeset(attrs)
+           |> Repo.update() do
+        {:ok, updated_organization} -> updated_organization
+        {:error, changeset} -> Repo.rollback(changeset)
+      end
+    end)
   end
 
   @doc """

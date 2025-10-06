@@ -1,18 +1,33 @@
-import { Component, createSignal, createMemo } from 'solid-js';
-import { Button, ComboBox, TableView, TableViewRef, Column, TableAction, useToast } from '@castmill/ui-common';
+import { Component, createSignal } from 'solid-js';
+import {
+  Button,
+  ComboBox,
+  TableView,
+  TableViewRef,
+  Column,
+  TableAction,
+  useToast,
+} from '@castmill/ui-common';
 import { Device } from '../interfaces/device.interface';
 import { AiOutlineDelete } from 'solid-icons/ai';
 import styles from './devices.module.scss';
 import { DevicesService, JsonChannel } from '../services/devices.service';
 
-export const Channels: Component<{ baseUrl: string; organizationId: string, device: Device }> = (
-  props
-) => {
+export const Channels: Component<{
+  baseUrl: string;
+  organizationId: string;
+  device: Device;
+  t?: (key: string, params?: Record<string, any>) => string;
+}> = (props) => {
+  const t = props.t || ((key: string) => key);
   const toast = useToast();
+
   // Store channels in a local state
   const [channels, setChannels] = createSignal<JsonChannel[]>([]);
-  const [selectedChannels, setSelectedChannels] = createSignal(new Set<number>());
-  
+  const [selectedChannels, setSelectedChannels] = createSignal(
+    new Set<number>()
+  );
+
   const itemsPerPage = 5; // Number of items to show per page
 
   // Setup table reference
@@ -28,27 +43,30 @@ export const Channels: Component<{ baseUrl: string; organizationId: string, devi
     }
   };
 
-  // Define table columns
+  // Define table columns with i18n
   const columns = [
-    { key: 'id', title: 'ID', sortable: false },
-    { key: 'name', title: 'Name', sortable: false },
-    { key: 'timezone', title: 'Timezone', sortable: false },
+    { key: 'id', title: t('common.id'), sortable: false },
+    { key: 'name', title: t('common.name'), sortable: false },
+    { key: 'timezone', title: t('common.timezone'), sortable: false },
   ] as Column<JsonChannel>[];
 
-  // Define table actions
+  // Define table actions with i18n
   const actions: TableAction<JsonChannel>[] = [
     {
       icon: AiOutlineDelete,
       handler: async (item: JsonChannel) => {
         await removeChannel(item.id);
       },
-      label: 'Remove',
+      label: t('common.remove'),
       props: (item: JsonChannel) => ({
         // Disable the delete button if this is the only channel
         disabled: channels().length <= 1,
-        title: channels().length <= 1 ? 'Cannot delete the last remaining channel.' : undefined
-      })
-    }
+        title:
+          channels().length <= 1
+            ? t('devices.cannotDeleteLastChannel')
+            : undefined,
+      }),
+    },
   ];
 
   // Handle row selection
@@ -74,14 +92,14 @@ export const Channels: Component<{ baseUrl: string; organizationId: string, devi
         props.baseUrl,
         props.device.id
       );
-      
+
       // Update the local channels state
       setChannels(deviceChannels.data);
-      
+
       // Return in the format expected by TableView
       return {
         data: deviceChannels.data,
-        count: deviceChannels.data.length
+        count: deviceChannels.data.length,
       };
     } catch (error) {
       console.error('Failed to fetch device channels:', error);
@@ -94,7 +112,9 @@ export const Channels: Component<{ baseUrl: string; organizationId: string, devi
   const addChannel = async (selectedChannel: JsonChannel) => {
     try {
       // Check if this channel is already assigned
-      const isAlreadyAssigned = channels().some(ch => ch.id === selectedChannel.id);
+      const isAlreadyAssigned = channels().some(
+        (ch) => ch.id === selectedChannel.id
+      );
       if (isAlreadyAssigned) {
         toast.error('This channel is already assigned to the device.');
         return;
@@ -106,7 +126,7 @@ export const Channels: Component<{ baseUrl: string; organizationId: string, devi
         props.device.id,
         selectedChannel.id
       );
-      
+
       // Refresh the table to show the updated list
       refreshData();
       toast.success(`Channel "${selectedChannel.name}" added successfully`);
@@ -129,7 +149,7 @@ export const Channels: Component<{ baseUrl: string; organizationId: string, devi
         props.device.id,
         channelId
       );
-      
+
       // Refresh the table to show the updated list
       refreshData();
       toast.success('Channel removed successfully');
@@ -141,9 +161,9 @@ export const Channels: Component<{ baseUrl: string; organizationId: string, devi
   return (
     <div class={styles.deviceDetails}>
       {/* Channel table */}
-      <h3>Assigned Channels</h3>
+      <h3>{t('devices.assignedChannels')}</h3>
       <TableView
-        title="Assigned Channels"
+        title={t('devices.assignedChannels')}
         resource="channels"
         fetchData={fetchChannelsData}
         ref={setRef}
@@ -151,36 +171,42 @@ export const Channels: Component<{ baseUrl: string; organizationId: string, devi
           columns,
           actions,
           onRowSelect,
-          hideCheckboxes: true
         }}
         pagination={{ itemsPerPage }}
-      
       />
 
       {/* Channel selector */}
       <div class={styles.addChannel}>
-        <h3>Add Channel</h3>
+        <h3>{t('devices.addChannel')}</h3>
         <ComboBox<JsonChannel>
           id="channel-selector"
-          label="Select Channel to Add"
-          placeholder="Select Channel"
+          label={t('devices.selectChannelToAdd')}
+          placeholder={t('devices.selectChannel')}
           renderItem={(item: JsonChannel) => (
             <div class={styles.channelCombobox}>
               <div>{item.name}</div>
             </div>
           )}
-          fetchItems={async (page: number, pageSize: number, search: string) => {
-            const channels = await DevicesService.fetchChannels(props.baseUrl, props.organizationId, {
-              page: {
-                num: page,
-                size: pageSize,
-              },
-              sortOptions: {
-                key: 'name',
-                direction: 'ascending',
-              },
-              search,
-            });
+          fetchItems={async (
+            page: number,
+            pageSize: number,
+            search: string
+          ) => {
+            const channels = await DevicesService.fetchChannels(
+              props.baseUrl,
+              props.organizationId,
+              {
+                page: {
+                  num: page,
+                  size: pageSize,
+                },
+                sortOptions: {
+                  key: 'name',
+                  direction: 'ascending',
+                },
+                search,
+              }
+            );
             return channels;
           }}
           onSelect={async (selectedChannel: JsonChannel) => {

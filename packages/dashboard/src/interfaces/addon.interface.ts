@@ -17,6 +17,12 @@ export interface AddOn {
   name: string;
 
   /**
+   * Optional translation key for the AddOn name.
+   * If provided, the UI will use this key to look up the localized name.
+   */
+  name_key?: string;
+
+  /**
    * The description of the AddOn.
    */
   description: string;

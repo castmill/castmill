@@ -10,11 +10,13 @@ import {
   FetchDataOptions,
   ConfirmDialog,
   TableViewRef,
+  Timestamp,
   useToast,
 } from '@castmill/ui-common';
 import { AiOutlineDelete } from 'solid-icons/ai';
 import { createSignal } from 'solid-js';
 import { OrganizationsService } from '../../services/organizations.service';
+import { useI18n } from '../../i18n';
 
 interface Invitation {
   id: number;
@@ -42,29 +44,44 @@ const onRowSelect = (rowsSelected: Set<number>) => {
 
 const itemsPerPage = 10;
 
-const columns = [
-  { key: 'email', title: 'Email', sortable: true },
-  { key: 'status', title: 'Status', sortable: true },
-  { key: 'role', title: 'Role', sortable: true },
-  { key: 'inserted_at', title: 'Inserted At', sortable: true },
-  { key: 'expires_at', title: 'Expires At', sortable: true },
-];
-
-const actions = [
-  {
-    icon: AiOutlineDelete,
-    handler: (item: any) => {
-      setCurrentInvitation(item);
-      setShowConfirmDialog(true);
-    },
-    label: 'Remove',
-  },
-];
-
 export const OrganizationInvitationsView = (props: {
   organizationId: string;
   onRemove: (invitation: Invitation) => void;
 }) => {
+  const { t } = useI18n();
+
+  const columns = [
+    { key: 'email', title: t('common.email'), sortable: true },
+    { key: 'status', title: t('common.status'), sortable: true },
+    { key: 'role', title: t('common.role'), sortable: true },
+    {
+      key: 'inserted_at',
+      title: t('common.insertedAt'),
+      sortable: true,
+      render: (item: any) => (
+        <Timestamp value={item.inserted_at} mode="relative" />
+      ),
+    },
+    {
+      key: 'expires_at',
+      title: t('common.expiresAt'),
+      sortable: true,
+      render: (item: any) => (
+        <Timestamp value={item.expires_at} mode="relative" />
+      ),
+    },
+  ];
+
+  const actions = [
+    {
+      icon: AiOutlineDelete,
+      handler: (item: any) => {
+        setCurrentInvitation(item);
+        setShowConfirmDialog(true);
+      },
+      label: t('common.remove'),
+    },
+  ];
   const toast = useToast();
 
   const fetchData = async (opts: FetchDataOptions) => {

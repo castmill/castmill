@@ -27,6 +27,7 @@
       display: flex;
       align-items: center;
       justify-content: flex-start;
+      gap: 0.75em;
       margin-right: 0.5em;
       width: 6em;
     }
@@ -44,9 +45,43 @@
     background-color: #e0e0ff; /* Highlight when dragged over */
   }
 
+  .thumbnail-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
   .thumbnail-image {
     width: 3em;
     height: 3em;
     object-fit: cover; // Ensures image fills the area without distortion
+    border-radius: 4px;
+  }
+
+  .widget-icon {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    
+    img {
+      width: 2em;
+      height: 2em;
+      object-fit: contain;
+      border-radius: 4px;
+    }
+
+    span {
+      font-size: 1.2em;
+      line-height: 1;
+    }
+
+    .widget-name {
+      font-size: 0.9em;
+      color: #fff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 8em;
+    }
   }
 }

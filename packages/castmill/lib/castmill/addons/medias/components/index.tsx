@@ -17,6 +17,7 @@ import {
   ResourcesObserver,
   TeamFilter,
   FetchDataOptions,
+  Timestamp,
   ToastProvider,
   useToast,
 } from '@castmill/ui-common';
@@ -38,7 +39,11 @@ const MediasPage: Component<{
   store: AddonStore;
   params: any; //typeof useSearchParams;
 }> = (props) => {
+  // Get i18n functions from store
+  const t = (key: string, params?: Record<string, any>) =>
+    props.store.i18n?.t(key, params) || key;
   const toast = useToast();
+
   const [data, setData] = createSignal<JsonMedia[]>([], {
     equals: false,
   });
@@ -291,30 +296,44 @@ const MediasPage: Component<{
         </div>
       ),
     },
-    { key: 'name', title: 'Name', sortable: true },
+    { key: 'name', title: t('common.name'), sortable: true },
     {
       key: 'size',
-      title: 'Size',
+      title: t('common.size'),
       sortable: false,
       render: (item: JsonMedia) => formatBytes(item.size),
     },
-    { key: 'mimetype', title: 'Type', sortable: true },
-    { key: 'inserted_at', title: 'Created', sortable: true },
-    { key: 'updated_at', title: 'Updated', sortable: true },
+    { key: 'mimetype', title: t('common.type'), sortable: true },
+    {
+      key: 'inserted_at',
+      title: t('common.created'),
+      sortable: true,
+      render: (item: JsonMedia) => (
+        <Timestamp value={item.inserted_at} mode="relative" />
+      ),
+    },
+    {
+      key: 'updated_at',
+      title: t('common.updated'),
+      sortable: true,
+      render: (item: JsonMedia) => (
+        <Timestamp value={item.updated_at} mode="relative" />
+      ),
+    },
   ] as Column<JsonMedia>[];
 
   const actions = [
     {
       icon: BsEye,
       handler: openModal,
-      label: 'View',
+      label: t('common.view'),
     },
     {
       icon: AiOutlineDelete,
       handler: (item: JsonMedia) => {
         setShowConfirmDialog(item);
       },
-      label: 'Remove',
+      label: t('common.remove'),
     },
   ] as TableAction<JsonMedia>[];
 
@@ -333,6 +352,7 @@ const MediasPage: Component<{
           loading={loading()}
         >
           <UploadComponent
+            store={props.store}
             baseUrl={props.store.env.baseUrl}
             organizationId={props.store.organizations.selectedId}
             onFileUpload={(fileName: string, result: any) => {
@@ -357,6 +377,7 @@ const MediasPage: Component<{
           contentClass="medias-modal"
         >
           <MediaDetails
+            store={props.store}
             media={showModal()!}
             onSubmit={async (mediaUpdate) => {
               try {
@@ -461,13 +482,14 @@ const MediasPage: Component<{
         table={{
           columns,
           actions,
+          actionsLabel: t('common.actions'),
           onRowSelect,
           defaultRowAction: {
             icon: BsEye,
             handler: (item: JsonMedia) => {
               openModal(item);
             },
-            label: 'View',
+            label: t('common.view'),
           },
         }}
         pagination={{ itemsPerPage }}
