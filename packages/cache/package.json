@@ -15,7 +15,7 @@
     "doc": "typedoc --out ./doc/ src/index.ts",
     "test": "vitest",
     "test:jest": "jest tests",
-    "build": "rimraf dist && yarn ts-types && yarn build:cache && yarn build:sw",
+    "build": "rimraf dist && bun run ts-types && bun run build:cache && bun run build:sw",
     "ts-types": "tsc --emitDeclarationOnly --outDir dist",
     "dev": "vite build --watch",
     "dev:sw": "VITE_LIB=sw vite build --watch",
@@ -23,7 +23,7 @@
     "build:cache": "vite build",
     "build:watch": "tsc --watch",
     "semantic-release": "semantic-release",
-    "prepare": "yarn build"
+    "prepare": "bun run build"
   },
   "repository": {
     "type": "git",

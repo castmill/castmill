@@ -16,7 +16,7 @@
     "write-heading-ids": "docusaurus write-heading-ids",
     "typecheck": "tsc",
     "social-cards": "node scripts/generate-social-images.js",
-    "build:full": "yarn build && yarn social-cards"
+    "build:full": "bun run build && bun run social-cards"
   },
   "dependencies": {
     "@castmill/cache": "*",

@@ -8,7 +8,7 @@
     "format:check": "prettier --check .",
     "start": "vite",
     "dev": "vite",
-    "build": "yarn tsc --noEmit && vite build && node build.js",
+    "build": "bun run tsc --noEmit && vite build && node build.js",
     "serve": "vite preview",
     "test": "vitest"
   },
