@@ -8,14 +8,16 @@ defmodule Castmill.NetworksFixtures do
   Generate a network.
   """
   def network_fixture(attrs \\ %{}) do
+    unique_id = System.unique_integer([:positive])
+
     {:ok, network} =
       attrs
       |> Enum.into(%{
         copyright: "some copyright",
-        domain: "http://localhost:3000",
+        domain: "http://localhost:#{3000 + unique_id}",
         email: "some@email.com",
         logo: "some logo",
-        name: "some name"
+        name: "some name #{unique_id}"
       })
       |> Castmill.Networks.create_network()
 

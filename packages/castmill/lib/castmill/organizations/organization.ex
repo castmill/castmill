@@ -8,6 +8,7 @@ defmodule Castmill.Organizations.Organization do
 
   schema "organizations" do
     field(:name, :string)
+    field(:name_lower, :string)
 
     field(:country, :string)
     field(:city, :string)
@@ -39,7 +40,24 @@ defmodule Castmill.Organizations.Organization do
     organization
     |> cast(attrs, [:name, :organization_id, :network_id])
     |> validate_required([:name, :network_id])
-    |> unique_constraint([:name, :network_id], name: :org_name_network_id_index)
+    |> update_change(:name, &String.trim/1)
+    |> put_name_lower()
+    |> unique_constraint([:name_lower, :network_id],
+      name: :org_name_lower_network_id_index,
+      message: "has already been taken"
+    )
+    |> unsafe_validate_unique([:name_lower, :network_id], Castmill.Repo,
+      error_key: :name,
+      message: "has already been taken"
+    )
+  end
+
+  # Private function to automatically populate name_lower from name
+  defp put_name_lower(changeset) do
+    case get_change(changeset, :name) do
+      nil -> changeset
+      name -> put_change(changeset, :name_lower, String.downcase(name))
+    end
   end
 
   def base_query() do
