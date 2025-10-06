@@ -297,6 +297,11 @@ const WidgetsPage: Component<{
         table={{
           columns,
           actions,
+          defaultRowAction: {
+            icon: BsEye,
+            handler: (widget: WidgetWithId) => setShowModal(widget),
+            label: 'View Details',
+          },
         }}
         pagination={{ itemsPerPage }}
       />

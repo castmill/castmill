@@ -72,11 +72,29 @@ defmodule Castmill.Quotas do
   end
 
   @doc """
+    Set the default plan for a network.
+    This plan will be used as fallback for all organizations in the network
+    that don't have a specific plan assigned.
+  """
+  def set_network_default_plan(network_id, plan_id) do
+    network = Repo.get!(Castmill.Networks.Network, network_id)
+
+    network
+    |> Castmill.Networks.Network.changeset(%{default_plan_id: plan_id})
+    |> Repo.update()
+  end
+
+  @doc """
     Returns the quota for a given resource in a given organization. The quota
-    is based on the organization's quotas if the organization has one,
-    otherwise it's done against the organization plan.
+    is resolved in the following order:
+    1. Organization-specific quota override
+    2. Organization's assigned plan quota
+    3. Network's default plan quota (using network.default_plan_id)
+    4. Network's direct quota
+    5. Returns zero as final fallback
   """
   def get_quota_for_organization(organization_id, resource) do
+    # 1. Check for organization-specific quota override
     organization_quota =
       Repo.one(
         from(quotas in QuotasOrganizations,
@@ -88,6 +106,7 @@ defmodule Castmill.Quotas do
     if organization_quota do
       organization_quota.max
     else
+      # 2. Check for organization's assigned plan
       po =
         Repo.one(
           from(plans_organizations in PlansOrganizations,
@@ -106,7 +125,51 @@ defmodule Castmill.Quotas do
             )
           )
 
-        plan_quotas.max
+        if plan_quotas do
+          plan_quotas.max
+        else
+          0
+        end
+      else
+        # 3. Fall back to network's default plan
+        get_quota_from_network_default_plan(organization_id, resource)
+      end
+    end
+  end
+
+  # Get quota from the network's default plan.
+  # Uses the network's default_plan_id field to find the default plan.
+  defp get_quota_from_network_default_plan(organization_id, resource) do
+    # Get the organization with its network preloaded
+    org =
+      Repo.one(
+        from(o in Castmill.Organizations.Organization,
+          where: o.id == ^organization_id,
+          join: n in assoc(o, :network),
+          preload: [network: n]
+        )
+      )
+
+    if org && org.network && org.network.default_plan_id do
+      # Get the quota from the default plan
+      plan_quota =
+        Repo.one(
+          from(plans_quotas in PlansQuotas,
+            where: plans_quotas.plan_id == ^org.network.default_plan_id,
+            where: plans_quotas.resource == ^resource
+          )
+        )
+
+      if plan_quota do
+        plan_quota.max
+      else
+        # Fall back to network's direct quotas
+        get_quota_for_network(org.network.id, resource)
+      end
+    else
+      # Fall back to network's direct quotas if no default plan
+      if org && org.network_id do
+        get_quota_for_network(org.network_id, resource)
       else
         0
       end
@@ -168,7 +231,27 @@ defmodule Castmill.Quotas do
   @doc """
     Check the amount of quota used for a given resource in a given organization.
     i.e. how many resources of a given type are used in a given organization.
+
+    For storage, returns the total file size in bytes.
+    For other resources, returns the count.
   """
+  def get_quota_used_for_organization(organization_id, :storage) do
+    # Sum the size of all files associated with media in the organization
+    from(m in Castmill.Resources.Media,
+      join: fm in Castmill.Files.FilesMedias,
+      on: fm.media_id == m.id,
+      join: f in Castmill.Files.File,
+      on: f.id == fm.file_id,
+      where: m.organization_id == ^organization_id,
+      select: sum(f.size)
+    )
+    |> Repo.one()
+    |> case do
+      nil -> 0
+      size -> size
+    end
+  end
+
   def get_quota_used_for_organization(organization_id, schema_module) do
     from(r in schema_module,
       where: r.organization_id == ^organization_id,

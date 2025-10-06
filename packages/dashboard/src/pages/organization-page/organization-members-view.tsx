@@ -15,6 +15,7 @@ import {
   TableViewRef,
   Dropdown,
   Timestamp,
+  useToast,
 } from '@castmill/ui-common';
 import { store, setStore } from '../../store/store';
 import { BsCheckLg } from 'solid-icons/bs';
@@ -80,6 +81,8 @@ export const OrganizationMembersView = (props: {
   organizationName: string;
   onRemove: (member: User) => void;
 }) => {
+  const toast = useToast();
+
   const fetchData = async (opts: FetchDataOptions) => {
     const result = await OrganizationsService.fetchMembers(
       props.organizationId,
@@ -117,10 +120,10 @@ export const OrganizationMembersView = (props: {
       );
 
       refreshData();
-
+      toast.success(`Member ${member.name} removed successfully`);
       setShowConfirmDialog(false);
     } catch (error) {
-      alert((error as Error).message);
+      toast.error((error as Error).message);
     }
   };
 
@@ -136,10 +139,10 @@ export const OrganizationMembersView = (props: {
       );
 
       refreshData();
-
+      toast.success('Members removed successfully');
       setShowConfirmDialogMultiple(false);
     } catch (error) {
-      alert((error as Error).message);
+      toast.error((error as Error).message);
     }
   };
 
@@ -162,9 +165,10 @@ export const OrganizationMembersView = (props: {
                 );
 
                 refreshData();
+                toast.success(`Invitation sent to ${email}`);
                 setShowAddMemberDialog(false);
               } catch (error) {
-                alert((error as Error).message);
+                toast.error((error as Error).message);
               }
             }}
           />

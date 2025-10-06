@@ -292,11 +292,23 @@ defmodule CastmillWeb.ResourceController do
       }) do
     create_attrs = Map.merge(media, %{"organization_id" => organization_id})
 
-    with {:ok, %Media{} = media} <- Castmill.Resources.create_media(create_attrs) do
-      conn
-      |> put_status(:created)
-      |> put_resp_header("location", ~p"/api/organizations/#{organization_id}/medias/#{media.id}")
-      |> render(:show, media: media)
+    case Castmill.Resources.create_media(create_attrs) do
+      {:ok, %Media{} = media} ->
+        conn
+        |> put_status(:created)
+        |> put_resp_header(
+          "location",
+          ~p"/api/organizations/#{organization_id}/medias/#{media.id}"
+        )
+        |> render(:show, media: media)
+
+      {:error, :quota_exceeded} ->
+        conn
+        |> put_status(:forbidden)
+        |> Phoenix.Controller.json(%{errors: %{quota: ["Media quota exceeded"]}})
+
+      {:error, changeset} ->
+        {:error, changeset}
     end
   end
 
@@ -307,14 +319,23 @@ defmodule CastmillWeb.ResourceController do
       }) do
     create_attrs = Map.merge(playlist, %{"organization_id" => organization_id})
 
-    with {:ok, %Playlist{} = playlist} <- Castmill.Resources.create_playlist(create_attrs) do
-      conn
-      |> put_status(:created)
-      |> put_resp_header(
-        "location",
-        ~p"/api/organizations/#{organization_id}/playlists/#{playlist.id}"
-      )
-      |> render(:show, playlist: playlist)
+    case Castmill.Resources.create_playlist(create_attrs) do
+      {:ok, %Playlist{} = playlist} ->
+        conn
+        |> put_status(:created)
+        |> put_resp_header(
+          "location",
+          ~p"/api/organizations/#{organization_id}/playlists/#{playlist.id}"
+        )
+        |> render(:show, playlist: playlist)
+
+      {:error, :quota_exceeded} ->
+        conn
+        |> put_status(:forbidden)
+        |> Phoenix.Controller.json(%{errors: %{quota: ["Playlist quota exceeded"]}})
+
+      {:error, changeset} ->
+        {:error, changeset}
     end
   end
 
@@ -343,14 +364,23 @@ defmodule CastmillWeb.ResourceController do
       }) do
     create_attrs = Map.merge(team, %{"organization_id" => organization_id})
 
-    with {:ok, %Team{} = team} <- Teams.create_team(create_attrs) do
-      conn
-      |> put_status(:created)
-      |> put_resp_header(
-        "location",
-        ~p"/api/organizations/#{organization_id}/teams/#{team.id}"
-      )
-      |> render(:show, team: team)
+    case Teams.create_team(create_attrs) do
+      {:ok, %Team{} = team} ->
+        conn
+        |> put_status(:created)
+        |> put_resp_header(
+          "location",
+          ~p"/api/organizations/#{organization_id}/teams/#{team.id}"
+        )
+        |> render(:show, team: team)
+
+      {:error, :quota_exceeded} ->
+        conn
+        |> put_status(:forbidden)
+        |> Phoenix.Controller.json(%{errors: %{quota: ["Team quota exceeded"]}})
+
+      {:error, changeset} ->
+        {:error, changeset}
     end
   end
 

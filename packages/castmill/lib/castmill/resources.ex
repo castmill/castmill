@@ -101,13 +101,40 @@ defmodule Castmill.Resources do
     def type(_value), do: "device"
   end
 
+  # Quota enforcement helper functions
+  defp check_resource_quota(organization_id, schema_module, resource_type) do
+    current_count = get_quota_used_for_organization(organization_id, schema_module)
+    max_quota = Castmill.Quotas.get_quota_for_organization(organization_id, resource_type)
+
+    if current_count < max_quota do
+      :ok
+    else
+      {:error, :quota_exceeded}
+    end
+  end
+
+  defp get_quota_used_for_organization(organization_id, schema_module) do
+    from(r in schema_module,
+      where: r.organization_id == ^organization_id,
+      select: count(r.id)
+    )
+    |> Repo.one()
+  end
+
   @doc """
   Creates a playlist
   """
   def create_playlist(attrs \\ %{}) do
-    %Playlist{}
-    |> Playlist.changeset(attrs)
-    |> Repo.insert()
+    organization_id = Map.get(attrs, "organization_id") || Map.get(attrs, :organization_id)
+
+    # Check quota before creating the playlist
+    with :ok <- check_resource_quota(organization_id, Playlist, :playlists) do
+      %Playlist{}
+      |> Playlist.changeset(attrs)
+      |> Repo.insert()
+    else
+      {:error, :quota_exceeded} -> {:error, :quota_exceeded}
+    end
   end
 
   @doc """
@@ -536,9 +563,16 @@ defmodule Castmill.Resources do
       {:error, %Ecto.Changeset{}}
   """
   def create_media(attrs \\ %{}) do
-    %Media{}
-    |> Media.changeset(attrs)
-    |> Repo.insert()
+    organization_id = Map.get(attrs, "organization_id") || Map.get(attrs, :organization_id)
+
+    # Check quota before creating the media
+    with :ok <- check_resource_quota(organization_id, Media, :medias) do
+      %Media{}
+      |> Media.changeset(attrs)
+      |> Repo.insert()
+    else
+      {:error, :quota_exceeded} -> {:error, :quota_exceeded}
+    end
   end
 
   @doc """
