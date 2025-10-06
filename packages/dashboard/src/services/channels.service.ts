@@ -8,6 +8,11 @@ type HandleResponseOptions = {
   parse?: boolean;
 };
 
+export interface ChannelDeleteError {
+  detail: string;
+  devices?: string[];
+}
+
 export interface JsonChannelEntry {
   id: number;
   name: string;
@@ -47,14 +52,27 @@ async function handleResponse<T = any>(
     }
   } else {
     let errMsg = '';
+    let errorData: any = null;
     try {
       const { errors } = await response.json();
-      errMsg = `${errors.detail || response.statusText}`;
+      errorData = errors;
+      // Handle both array errors and object errors with detail
+      if (Array.isArray(errors)) {
+        errMsg = errors.join(', ');
+      } else if (typeof errors === 'object' && errors.detail) {
+        errMsg = errors.detail;
+      } else {
+        errMsg = `${errors.detail || response.statusText}`;
+      }
     } catch (error) {
       errMsg = `${response.statusText}`;
     }
-    alert(errMsg);
-    throw new Error(errMsg);
+
+    // Create an error object that includes the parsed error data
+    const err: any = new Error(errMsg);
+    err.errorData = errorData;
+    err.status = response.status;
+    throw err;
   }
 }
 
@@ -252,8 +270,11 @@ export class ChannelsService {
 
   /**
    * Remove Channel
+   * Returns the error data if the channel cannot be removed
    */
-  async removeChannel(channelId: number) {
+  async removeChannel(
+    channelId: number
+  ): Promise<{ success: boolean; error?: ChannelDeleteError }> {
     const response = await fetch(
       `${this.baseUrl}/dashboard/organizations/${this.organizationId}/channels/${channelId}`,
       {
@@ -265,7 +286,34 @@ export class ChannelsService {
       }
     );
 
-    handleResponse(response);
+    if (response.status >= 200 && response.status < 300) {
+      return { success: true };
+    } else if (response.status === 409) {
+      try {
+        const { errors } = await response.json();
+        return {
+          success: false,
+          error: errors as ChannelDeleteError,
+        };
+      } catch (error) {
+        return {
+          success: false,
+          error: {
+            detail: 'Cannot delete channel that is assigned to devices',
+          },
+        };
+      }
+    } else {
+      try {
+        await handleResponse(response);
+        return { success: true };
+      } catch (error) {
+        return {
+          success: false,
+          error: { detail: (error as Error).message },
+        };
+      }
+    }
   }
 
   /**

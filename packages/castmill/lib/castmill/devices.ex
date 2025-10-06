@@ -30,9 +30,16 @@ defmodule Castmill.Devices do
   Creates a device.
   """
   def create_device(attrs \\ %{}) do
-    %Device{}
-    |> Device.changeset(attrs)
-    |> Repo.insert()
+    organization_id = Map.get(attrs, "organization_id") || Map.get(attrs, :organization_id)
+
+    # Check quota before creating the device
+    with :ok <- check_device_quota(organization_id) do
+      %Device{}
+      |> Device.changeset(attrs)
+      |> Repo.insert()
+    else
+      {:error, :quota_exceeded} -> {:error, :quota_exceeded}
+    end
   end
 
   @doc """
@@ -471,9 +478,26 @@ defmodule Castmill.Devices do
 
   @doc """
   Removes a device and all its entries.
+  Notifies the device via WebSocket if it's connected.
   """
   def delete_device(%Device{} = device) do
-    Repo.delete(device)
+    # Delete the device from the database first
+    result = Repo.delete(device)
+
+    # After successful deletion, notify the device so it can clear its data
+    # If the device is offline or the message fails, it will detect the deletion
+    # on next connection attempt when credentials are rejected
+    case result do
+      {:ok, deleted_device} ->
+        Phoenix.PubSub.broadcast(Castmill.PubSub, "devices:#{deleted_device.id}", %{
+          command: "device_removed"
+        })
+
+      {:error, _} ->
+        :ok
+    end
+
+    result
   end
 
   @doc """
@@ -581,5 +605,25 @@ defmodule Castmill.Devices do
     |> where([dl], dl.device_id == ^device_id)
     |> where_msg_like(search)
     |> Repo.aggregate(:count, :id)
+  end
+
+  # Quota enforcement helper functions
+  defp check_device_quota(organization_id) do
+    current_count = get_quota_used_for_organization(organization_id, Device)
+    max_quota = Castmill.Quotas.get_quota_for_organization(organization_id, :devices)
+
+    if current_count < max_quota do
+      :ok
+    else
+      {:error, :quota_exceeded}
+    end
+  end
+
+  defp get_quota_used_for_organization(organization_id, schema_module) do
+    from(r in schema_module,
+      where: r.organization_id == ^organization_id,
+      select: count(r.id)
+    )
+    |> Repo.one()
   end
 end

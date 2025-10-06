@@ -101,13 +101,40 @@ defmodule Castmill.Resources do
     def type(_value), do: "device"
   end
 
+  # Quota enforcement helper functions
+  defp check_resource_quota(organization_id, schema_module, resource_type) do
+    current_count = get_quota_used_for_organization(organization_id, schema_module)
+    max_quota = Castmill.Quotas.get_quota_for_organization(organization_id, resource_type)
+
+    if current_count < max_quota do
+      :ok
+    else
+      {:error, :quota_exceeded}
+    end
+  end
+
+  defp get_quota_used_for_organization(organization_id, schema_module) do
+    from(r in schema_module,
+      where: r.organization_id == ^organization_id,
+      select: count(r.id)
+    )
+    |> Repo.one()
+  end
+
   @doc """
   Creates a playlist
   """
   def create_playlist(attrs \\ %{}) do
-    %Playlist{}
-    |> Playlist.changeset(attrs)
-    |> Repo.insert()
+    organization_id = Map.get(attrs, "organization_id") || Map.get(attrs, :organization_id)
+
+    # Check quota before creating the playlist
+    with :ok <- check_resource_quota(organization_id, Playlist, :playlists) do
+      %Playlist{}
+      |> Playlist.changeset(attrs)
+      |> Repo.insert()
+    else
+      {:error, :quota_exceeded} -> {:error, :quota_exceeded}
+    end
   end
 
   @doc """
@@ -536,9 +563,16 @@ defmodule Castmill.Resources do
       {:error, %Ecto.Changeset{}}
   """
   def create_media(attrs \\ %{}) do
-    %Media{}
-    |> Media.changeset(attrs)
-    |> Repo.insert()
+    organization_id = Map.get(attrs, "organization_id") || Map.get(attrs, :organization_id)
+
+    # Check quota before creating the media
+    with :ok <- check_resource_quota(organization_id, Media, :medias) do
+      %Media{}
+      |> Media.changeset(attrs)
+      |> Repo.insert()
+    else
+      {:error, :quota_exceeded} -> {:error, :quota_exceeded}
+    end
   end
 
   @doc """
@@ -775,10 +809,48 @@ defmodule Castmill.Resources do
   end
 
   @doc """
+  Checks if a channel has any devices assigned to it.
+  """
+  def channel_has_devices?(%Channel{id: channel_id}) do
+    channel_has_devices?(channel_id)
+  end
+
+  def channel_has_devices?(channel_id) when is_integer(channel_id) do
+    query =
+      from(dc in Castmill.Devices.DevicesChannels,
+        where: dc.channel_id == ^channel_id,
+        select: count(dc.device_id)
+      )
+
+    Repo.one(query) > 0
+  end
+
+  @doc """
+  Gets the devices that are using a specific channel.
+  Returns a list of maps with device id and name.
+  """
+  def get_devices_using_channel(channel_id) when is_integer(channel_id) do
+    query =
+      from(dc in Castmill.Devices.DevicesChannels,
+        join: d in Castmill.Devices.Device,
+        on: dc.device_id == d.id,
+        where: dc.channel_id == ^channel_id,
+        select: %{id: d.id, name: d.name}
+      )
+
+    Repo.all(query)
+  end
+
+  @doc """
   Removes a channel and all its entries.
+  Returns {:error, :channel_has_devices} if the channel is assigned to any devices.
   """
   def delete_channel(%Channel{} = channel) do
-    Repo.delete(channel)
+    if channel_has_devices?(channel) do
+      {:error, :channel_has_devices}
+    else
+      Repo.delete(channel)
+    end
   end
 end
 

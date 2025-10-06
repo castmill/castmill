@@ -1,5 +1,5 @@
 import { JsonPlaylist } from '@castmill/player';
-import { ComboBox } from '@castmill/ui-common';
+import { ComboBox, useToast } from '@castmill/ui-common';
 import { Component, createEffect, createSignal } from 'solid-js';
 
 import { baseUrl } from '../../env';
@@ -14,6 +14,8 @@ export const DefaultPlaylistComboBox: Component<{
   channel: JsonChannel;
 }> = (props) => {
   const { t } = useI18n();
+  const toast = useToast();
+
   const [defaultPlaylist, setDefaultPlaylist] = createSignal<JsonPlaylist>();
 
   const channelsService = new ChannelsService(
@@ -65,8 +67,9 @@ export const DefaultPlaylistComboBox: Component<{
             default_playlist_id: playlist.id,
           });
           setDefaultPlaylist(playlist);
+          toast.success('Default playlist updated successfully');
         } catch (e) {
-          alert(
+          toast.error(
             t('channels.errors.updateDefaultPlaylist', { error: String(e) })
           );
         }

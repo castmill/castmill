@@ -1,22 +1,33 @@
-import { Component, createSignal, createEffect } from 'solid-js';
-import { Button, ComboBox, TableView, TableViewRef, Column, TableAction } from '@castmill/ui-common';
+import { Component, createSignal } from 'solid-js';
+import {
+  Button,
+  ComboBox,
+  TableView,
+  TableViewRef,
+  Column,
+  TableAction,
+  useToast,
+} from '@castmill/ui-common';
 import { Device } from '../interfaces/device.interface';
 import { AiOutlineDelete } from 'solid-icons/ai';
 import styles from './devices.module.scss';
 import { DevicesService, JsonChannel } from '../services/devices.service';
 
-export const Channels: Component<{ 
-  baseUrl: string; 
-  organizationId: string; 
+export const Channels: Component<{
+  baseUrl: string;
+  organizationId: string;
   device: Device;
   t?: (key: string, params?: Record<string, any>) => string;
 }> = (props) => {
   const t = props.t || ((key: string) => key);
-  
+  const toast = useToast();
+
   // Store channels in a local state
   const [channels, setChannels] = createSignal<JsonChannel[]>([]);
-  const [selectedChannels, setSelectedChannels] = createSignal(new Set<number>());
-  
+  const [selectedChannels, setSelectedChannels] = createSignal(
+    new Set<number>()
+  );
+
   const itemsPerPage = 5; // Number of items to show per page
 
   // Setup table reference
@@ -50,9 +61,12 @@ export const Channels: Component<{
       props: (item: JsonChannel) => ({
         // Disable the delete button if this is the only channel
         disabled: channels().length <= 1,
-        title: channels().length <= 1 ? t('devices.cannotDeleteLastChannel') : undefined
-      })
-    }
+        title:
+          channels().length <= 1
+            ? t('devices.cannotDeleteLastChannel')
+            : undefined,
+      }),
+    },
   ];
 
   // Handle row selection
@@ -78,17 +92,18 @@ export const Channels: Component<{
         props.baseUrl,
         props.device.id
       );
-      
+
       // Update the local channels state
       setChannels(deviceChannels.data);
-      
+
       // Return in the format expected by TableView
       return {
         data: deviceChannels.data,
-        count: deviceChannels.data.length
+        count: deviceChannels.data.length,
       };
     } catch (error) {
       console.error('Failed to fetch device channels:', error);
+      toast.error('Failed to fetch device channels');
       return { data: [], count: 0 };
     }
   };
@@ -97,9 +112,11 @@ export const Channels: Component<{
   const addChannel = async (selectedChannel: JsonChannel) => {
     try {
       // Check if this channel is already assigned
-      const isAlreadyAssigned = channels().some(ch => ch.id === selectedChannel.id);
+      const isAlreadyAssigned = channels().some(
+        (ch) => ch.id === selectedChannel.id
+      );
       if (isAlreadyAssigned) {
-        alert('This channel is already assigned to the device.');
+        toast.error('This channel is already assigned to the device.');
         return;
       }
 
@@ -109,11 +126,12 @@ export const Channels: Component<{
         props.device.id,
         selectedChannel.id
       );
-      
+
       // Refresh the table to show the updated list
       refreshData();
+      toast.success(`Channel "${selectedChannel.name}" added successfully`);
     } catch (e) {
-      alert(`Failed to add channel: ${e}`);
+      toast.error(`Failed to add channel: ${e}`);
     }
   };
 
@@ -121,7 +139,7 @@ export const Channels: Component<{
   const removeChannel = async (channelId: number) => {
     // Only allow removal if there will still be at least one channel remaining
     if (channels().length <= 1) {
-      alert('At least one channel must be assigned to the device.');
+      toast.error('At least one channel must be assigned to the device.');
       return;
     }
 
@@ -131,11 +149,12 @@ export const Channels: Component<{
         props.device.id,
         channelId
       );
-      
+
       // Refresh the table to show the updated list
       refreshData();
+      toast.success('Channel removed successfully');
     } catch (e) {
-      alert(`Failed to remove channel: ${e}`);
+      toast.error(`Failed to remove channel: ${e}`);
     }
   };
 
@@ -151,7 +170,7 @@ export const Channels: Component<{
         table={{
           columns,
           actions,
-          onRowSelect
+          onRowSelect,
         }}
         pagination={{ itemsPerPage }}
       />
@@ -168,18 +187,26 @@ export const Channels: Component<{
               <div>{item.name}</div>
             </div>
           )}
-          fetchItems={async (page: number, pageSize: number, search: string) => {
-            const channels = await DevicesService.fetchChannels(props.baseUrl, props.organizationId, {
-              page: {
-                num: page,
-                size: pageSize,
-              },
-              sortOptions: {
-                key: 'name',
-                direction: 'ascending',
-              },
-              search,
-            });
+          fetchItems={async (
+            page: number,
+            pageSize: number,
+            search: string
+          ) => {
+            const channels = await DevicesService.fetchChannels(
+              props.baseUrl,
+              props.organizationId,
+              {
+                page: {
+                  num: page,
+                  size: pageSize,
+                },
+                sortOptions: {
+                  key: 'name',
+                  direction: 'ascending',
+                },
+                search,
+              }
+            );
             return channels;
           }}
           onSelect={async (selectedChannel: JsonChannel) => {

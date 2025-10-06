@@ -1,7 +1,8 @@
 import { Component, createSignal, onMount, Show } from 'solid-js';
 import { useNavigate, useSearchParams } from '@solidjs/router';
+import { useToast } from '@castmill/ui-common';
 
-import { arrayBufferToBase64 } from '../utils';
+import { arrayBufferToBase64, base64URLToArrayBuffer } from '../utils';
 
 import './signup.scss';
 
@@ -30,6 +31,7 @@ interface SignUpQueryParams {
 const SignUp: Component = () => {
   const { t } = useI18n();
   const navigate = useNavigate();
+  const toast = useToast();
 
   const [isMounted, setIsMounted] = createSignal<boolean>(false);
   const [status, setStatus] = createSignal<string>('Ready');
@@ -77,7 +79,7 @@ const SignUp: Component = () => {
           { type: 'public-key', alg: -7 }, // ES256
           { type: 'public-key', alg: -257 }, // RS256
         ],
-        challenge: encoder.encode(searchParams.challenge!),
+        challenge: base64URLToArrayBuffer(searchParams.challenge!),
         authenticatorSelection: {
           userVerification: 'required',
           requireResidentKey: true,
@@ -93,7 +95,7 @@ const SignUp: Component = () => {
 
     const credential = await navigator.credentials.create(createOptions);
     if (!credential) {
-      alert(t('signup.errors.couldNotCreateCredential'));
+      toast.error(t('signup.errors.couldNotCreateCredential'));
       return;
     }
 
@@ -102,7 +104,7 @@ const SignUp: Component = () => {
       publicKeyCredential.response as AuthenticatorAttestationResponse;
     const publicKey = authAttestationResponse.getPublicKey();
     if (!publicKey) {
-      alert(t('signup.errors.couldNotGetPublicKey'));
+      toast.error(t('signup.errors.couldNotGetPublicKey'));
       return;
     }
 
@@ -118,7 +120,7 @@ const SignUp: Component = () => {
       ('crossOrigin' in clientData && clientData.crossOrigin) ||
       clientData.origin !== origin
     ) {
-      alert(t('signup.errors.invalidCredential'));
+      toast.error(t('signup.errors.invalidCredential'));
       return;
     }
 
@@ -134,16 +136,17 @@ const SignUp: Component = () => {
         credential_id: credential.id,
         public_key_spki: arrayBufferToBase64(publicKey),
         raw_id: arrayBufferToBase64(publicKeyCredential.rawId),
-        client_data_json: new Uint8Array(
-          authAttestationResponse.clientDataJSON
-        ),
+        client_data_json: clientDataJSON,
       }),
       credentials: 'include', // Essential for including cookies
     });
 
     if (!result.ok) {
-      alert(t('signup.errors.signupFailed', { error: result.statusText }));
+      toast.error(
+        t('signup.errors.signupFailed', { error: result.statusText })
+      );
     } else {
+      toast.success('Account created successfully!');
       navigate('/');
     }
   }

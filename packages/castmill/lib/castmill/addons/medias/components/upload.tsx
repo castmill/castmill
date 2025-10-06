@@ -7,7 +7,8 @@ import {
   AiOutlineDelete,
   AiOutlineCheck,
 } from 'solid-icons/ai';
-import { Button, IconButton, IconWrapper } from '@castmill/ui-common';
+
+import { Button, IconButton, IconWrapper, useToast } from '@castmill/ui-common';
 import { AddonStore } from '../../common/interfaces/addon-store';
 
 interface UploadComponentProps {
@@ -42,6 +43,7 @@ export const UploadComponent = (props: UploadComponentProps) => {
   // Get i18n functions from store
   const t = (key: string, params?: Record<string, any>) =>
     props.store?.i18n?.t(key, params) || key;
+  const toast = useToast();
 
   const [files, setFiles] = createSignal<File[]>([]);
   const [messages, setMessages] = createSignal<Messages>({});
@@ -136,7 +138,7 @@ export const UploadComponent = (props: UploadComponentProps) => {
         );
 
         if (droppedFiles.length === 0) {
-          alert('No supported files found in the dropped files.');
+          toast.error('No supported files found in the dropped files.');
           return;
         }
 

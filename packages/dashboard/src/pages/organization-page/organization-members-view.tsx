@@ -9,11 +9,11 @@ import {
   IconButton,
   Modal,
   TableView,
-  FormItem,
   FetchDataOptions,
   ConfirmDialog,
   TableViewRef,
-  Dropdown,
+  Timestamp,
+  useToast,
 } from '@castmill/ui-common';
 import { store, setStore } from '../../store/store';
 import { BsCheckLg } from 'solid-icons/bs';
@@ -61,7 +61,14 @@ export const OrganizationMembersView = (props: {
   const columns = [
     { key: 'user.name', title: t('common.name'), sortable: true },
     { key: 'role', title: t('common.role'), sortable: true },
-    { key: 'inserted_at', title: t('common.insertedAt'), sortable: true },
+    {
+      key: 'inserted_at',
+      title: t('common.insertedAt'),
+      sortable: true,
+      render: (item: any) => (
+        <Timestamp value={item.inserted_at} mode="relative" />
+      ),
+    },
   ];
 
   const actions = [
@@ -74,6 +81,8 @@ export const OrganizationMembersView = (props: {
       label: t('common.remove'),
     },
   ];
+
+  const toast = useToast();
   const fetchData = async (opts: FetchDataOptions) => {
     const result = await OrganizationsService.fetchMembers(
       props.organizationId,
@@ -111,10 +120,10 @@ export const OrganizationMembersView = (props: {
       );
 
       refreshData();
-
+      toast.success(`Member ${member.name} removed successfully`);
       setShowConfirmDialog(false);
     } catch (error) {
-      alert((error as Error).message);
+      toast.error((error as Error).message);
     }
   };
 
@@ -130,10 +139,10 @@ export const OrganizationMembersView = (props: {
       );
 
       refreshData();
-
+      toast.success('Members removed successfully');
       setShowConfirmDialogMultiple(false);
     } catch (error) {
-      alert((error as Error).message);
+      toast.error((error as Error).message);
     }
   };
 
@@ -156,9 +165,10 @@ export const OrganizationMembersView = (props: {
                 );
 
                 refreshData();
+                toast.success(`Invitation sent to ${email}`);
                 setShowAddMemberDialog(false);
               } catch (error) {
-                alert((error as Error).message);
+                toast.error((error as Error).message);
               }
             }}
           />

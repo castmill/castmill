@@ -1,5 +1,5 @@
 import { Component, createSignal, Show } from 'solid-js';
-import { Button } from '@castmill/ui-common';
+import { Button, useToast } from '@castmill/ui-common';
 import { Device } from '../interfaces/device.interface';
 import { DevicesService } from '../services/devices.service';
 
@@ -7,21 +7,23 @@ import './maintainance.scss';
 import { DeviceCommand } from '../types/device-command.type';
 
 // Modal component that will be used to display the device details and allow the user to edit the device
-export const Maintainance: Component<{ 
-  baseUrl: string; 
+export const Maintainance: Component<{
+  baseUrl: string;
   device: Device;
   t?: (key: string, params?: Record<string, any>) => string;
 }> = (props) => {
   const t = props.t || ((key: string) => key);
-  
+  const toast = useToast();
+
   const [handlingRequest, setHandlingRequest] = createSignal(false);
 
   const handleRequest = async (command: DeviceCommand) => {
     try {
       await DevicesService.sendCommand(props.baseUrl, props.device.id, command);
+      toast.success(`Command "${command}" sent successfully`);
     } catch (error) {
       console.error(error);
-      alert(t('devices.errors.commandFailed'));
+      toast.error(`An error occurred while processing your request: ${error}`);
     }
   };
 
@@ -41,9 +43,7 @@ export const Maintainance: Component<{
           />
         </div>
 
-        <p>
-          {t('devices.maintenance.refreshDescription')}
-        </p>
+        <p>{t('devices.maintenance.refreshDescription')}</p>
       </div>
       <div class="maintainance-row">
         <div class="button-wrapper">
@@ -89,9 +89,7 @@ export const Maintainance: Component<{
             onClick={() => handleRequest('update_app')}
           />
         </div>
-        <p>
-          {t('devices.maintenance.checkUpdatesDescription')}
-        </p>
+        <p>{t('devices.maintenance.checkUpdatesDescription')}</p>
       </div>
       <div class="maintainance-row">
         <div class="button-wrapper">

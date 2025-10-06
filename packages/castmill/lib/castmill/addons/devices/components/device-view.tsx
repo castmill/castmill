@@ -1,6 +1,6 @@
 import { Component, createSignal } from 'solid-js';
 import { Device } from '../interfaces/device.interface';
-import { Tabs, LoadingOverlay } from '@castmill/ui-common';
+import { Tabs, LoadingOverlay, useToast } from '@castmill/ui-common';
 import { Channels } from './channels';
 import { Maintainance } from './maintainance';
 import { DeviceLogs } from './device-events';
@@ -20,7 +20,8 @@ const DeviceView: Component<{
   t?: (key: string, params?: Record<string, any>) => string;
 }> = (props) => {
   const t = props.t || ((key: string) => key);
-  
+
+  const toast = useToast();
   const [loading, setLoading] = createSignal(false);
   const updateDevice = async (device: DeviceUpdate) => {
     setLoading(true);
@@ -35,9 +36,10 @@ const DeviceView: Component<{
         ),
         new Promise((resolve) => setTimeout(resolve, 300)),
       ]);
+      toast.success('Device updated successfully');
       return true;
     } catch (err) {
-      alert('Error updating device');
+      toast.error(`Error updating device: ${err}`);
       return false;
     } finally {
       setLoading(false);
@@ -105,9 +107,7 @@ const DeviceView: Component<{
     },
     {
       title: t('common.telemetry'),
-      content: () => (
-        <div>{t('devices.telemetry.placeholder')}</div>
-      ),
+      content: () => <div>{t('devices.telemetry.placeholder')}</div>,
     },
   ];
 

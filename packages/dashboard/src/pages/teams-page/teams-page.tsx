@@ -3,6 +3,7 @@ import {
   createEffect,
   createSignal,
   onCleanup,
+  onMount,
   Show,
 } from 'solid-js';
 
@@ -16,6 +17,7 @@ import {
   Modal,
   ConfirmDialog,
   FetchDataOptions,
+  useToast,
 } from '@castmill/ui-common';
 
 import { store, setStore } from '../../store/store';
@@ -29,10 +31,14 @@ import { useSearchParams } from '@solidjs/router';
 import { TeamsService, TeamUpdate } from '../../services/teams.service';
 import { TeamView } from './team-view';
 import { useI18n } from '../../i18n';
+import { QuotaIndicator } from '../../components/quota-indicator';
+import { QuotasService, ResourceQuota } from '../../services/quotas.service';
 
 const TeamsPage: Component = () => {
   const params = useSearchParams();
   const { t } = useI18n();
+
+  const toast = useToast();
 
   const itemsPerPage = 10; // Number of items to show per page
 
@@ -45,6 +51,35 @@ const TeamsPage: Component = () => {
   const [currentTeam, setCurrentTeam] = createSignal<TeamUpdate>();
 
   const [selectedTeams, setSelectedTeams] = createSignal(new Set<number>());
+
+  const [quota, setQuota] = createSignal<ResourceQuota | null>(null);
+  const [quotaLoading, setQuotaLoading] = createSignal(true);
+
+  const loadQuota = async () => {
+    if (!store.organizations.selectedId) return;
+
+    try {
+      setQuotaLoading(true);
+      const quotaData = await QuotasService.getResourceQuota(
+        store.organizations.selectedId,
+        'teams'
+      );
+      setQuota(quotaData);
+    } catch (error) {
+      console.error('Failed to fetch quota:', error);
+    } finally {
+      setQuotaLoading(false);
+    }
+  };
+
+  onMount(() => {
+    loadQuota();
+  });
+
+  const isQuotaReached = () => {
+    const q = quota();
+    return q ? q.used >= q.total : false;
+  };
 
   const columns = [
     { key: 'id', title: t('common.id'), sortable: true },
@@ -106,8 +141,10 @@ const TeamsPage: Component = () => {
     try {
       await TeamsService.removeTeam(store.organizations.selectedId!, team.id);
       refreshData();
+      toast.success(`Team ${team.name} removed successfully`);
+      loadQuota(); // Reload quota after deletion
     } catch (error) {
-      alert(
+      toast.error(
         t('teams.errors.removeTeam', { name: team.name, error: String(error) })
       );
     }
@@ -123,8 +160,10 @@ const TeamsPage: Component = () => {
       );
 
       refreshData();
+      toast.success('Teams removed successfully');
+      loadQuota(); // Reload quota after deletion
     } catch (error) {
-      alert(t('teams.errors.removeTeams', { error: String(error) }));
+      toast.error(t('teams.errors.removeTeams', { error: String(error) }));
     }
     setShowConfirmDialogMultiple(false);
   };
@@ -190,6 +229,10 @@ const TeamsPage: Component = () => {
                   );
                   setCurrentTeam({ id: newTeam.id, name: newTeam.name });
                   refreshData();
+
+                  toast.success(`Team ${newTeam.name} created successfully`);
+                  loadQuota(); // Reload quota after creation
+
                   return newTeam;
                 } else {
                   const updatedTeam = await TeamsService.updateTeam(
@@ -197,10 +240,13 @@ const TeamsPage: Component = () => {
                     team
                   );
                   updateItem(team.id, team);
+                  toast.success(`Team ${team.name} updated successfully`);
                   return updatedTeam;
                 }
               } catch (error) {
-                alert(t('teams.errors.saveTeam', { error: String(error) }));
+                toast.error(
+                  t('teams.errors.saveTeam', { error: String(error) })
+                );
               }
             }}
           />
@@ -241,12 +287,28 @@ const TeamsPage: Component = () => {
         toolbar={{
           filters: [],
           mainAction: (
-            <Button
-              label={t('teams.addTeam')}
-              onClick={addTeam}
-              icon={BsCheckLg}
-              color="primary"
-            />
+            <div style="display: flex; align-items: center; gap: 1rem;">
+              <Show when={quota() && !quotaLoading()}>
+                <QuotaIndicator
+                  used={quota()!.used}
+                  total={quota()!.total}
+                  resourceName="Teams"
+                  compact
+                />
+              </Show>
+              <Button
+                label={t('teams.addTeam')}
+                onClick={addTeam}
+                icon={BsCheckLg}
+                color="primary"
+                disabled={isQuotaReached()}
+                title={
+                  isQuotaReached()
+                    ? 'Quota limit reached for Teams. Cannot add more.'
+                    : 'Add a new Team'
+                }
+              />
+            </div>
           ),
           actions: (
             <div>

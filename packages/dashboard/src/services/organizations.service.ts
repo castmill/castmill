@@ -165,17 +165,21 @@ export const OrganizationsService = {
    * @param invitationId
    * @returns
    */
-  removeInvitationFromOrganization(
+  async removeInvitationFromOrganization(
     organizationId: string,
     invitationId: number
   ) {
-    return fetch(
+    const response = await fetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/invitations/${invitationId}`,
       {
         method: 'DELETE',
         credentials: 'include',
       }
     );
+
+    if (response.status !== 200) {
+      throw new Error('Failed to remove invitation from organization');
+    }
   },
 
   /**
@@ -218,7 +222,12 @@ export const OrganizationsService = {
     );
 
     if (response.status !== 200) {
-      throw new Error('Failed to update organization');
+      // Try to parse error response
+      const errorData = await response.json().catch(() => ({}));
+      const error: any = new Error('Failed to update organization');
+      error.status = response.status;
+      error.data = errorData;
+      throw error;
     }
   },
 };

@@ -10,6 +10,8 @@ import {
   FetchDataOptions,
   ConfirmDialog,
   TableViewRef,
+  Timestamp,
+  useToast,
 } from '@castmill/ui-common';
 import { TeamsService } from '../../services/teams.service';
 import { AiOutlineDelete } from 'solid-icons/ai';
@@ -42,6 +44,28 @@ const onRowSelect = (rowsSelected: Set<number>) => {
 
 const itemsPerPage = 10;
 
+
+const columns = [
+  { key: 'email', title: 'Email', sortable: true },
+  { key: 'status', title: 'Status', sortable: true },
+  {
+    key: 'inserted_at',
+    title: 'Inserted At',
+    sortable: true,
+    render: (item: any) => (
+      <Timestamp value={item.inserted_at} mode="relative" />
+    ),
+  },
+  {
+    key: 'expires_at',
+    title: 'Expires At',
+    sortable: true,
+    render: (item: any) => (
+      <Timestamp value={item.expires_at} mode="relative" />
+    ),
+  },
+];
+
 export const TeamInvitationsView = (props: {
   organizationId: string;
   teamId: number;
@@ -52,8 +76,12 @@ export const TeamInvitationsView = (props: {
   const columns = [
     { key: 'email', title: t('common.email'), sortable: true },
     { key: 'status', title: t('common.status'), sortable: true },
-    { key: 'inserted_at', title: t('common.insertedAt'), sortable: true },
-    { key: 'expires_at', title: t('common.expiresAt'), sortable: true },
+    { key: 'inserted_at', title: t('common.insertedAt'), sortable: true,  render: (item: any) => (
+      <Timestamp value={item.inserted_at} mode="relative" />
+    ), },
+    { key: 'expires_at', title: t('common.expiresAt'), sortable: true,  render: (item: any) => (
+      <Timestamp value={item.expires_at} mode="relative" />
+    ), },
   ];
 
   const actions = [
@@ -66,6 +94,8 @@ export const TeamInvitationsView = (props: {
       label: t('common.remove'),
     },
   ];
+
+  const toast = useToast();
 
   const fetchData = async (opts: FetchDataOptions) => {
     const result = await TeamsService.fetchInvitations(
@@ -102,10 +132,10 @@ export const TeamInvitationsView = (props: {
       );
 
       refreshData();
-
+      toast.success(`Invitation for ${invitation.email} removed successfully`);
       setShowConfirmDialog(false);
     } catch (error) {
-      alert((error as Error).message);
+      toast.error((error as Error).message);
     }
   };
 
@@ -122,10 +152,10 @@ export const TeamInvitationsView = (props: {
       );
 
       refreshData();
-
+      toast.success('Invitations removed successfully');
       setShowConfirmDialogMultiple(false);
     } catch (error) {
-      alert((error as Error).message);
+      toast.error((error as Error).message);
     }
   };
 

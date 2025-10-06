@@ -1,7 +1,7 @@
 import { BsCheckLg } from 'solid-icons/bs';
 import { BsEye } from 'solid-icons/bs';
 import { AiOutlineDelete } from 'solid-icons/ai';
-import { Component, createSignal, Show } from 'solid-js';
+import { Component, createSignal, Show, onMount } from 'solid-js';
 
 import {
   Button,
@@ -13,9 +13,17 @@ import {
   TableViewRef,
   FetchDataOptions,
   ConfirmDialog,
+  Timestamp,
+  ToastProvider,
+  useToast,
 } from '@castmill/ui-common';
 import { JsonPlaylist } from '@castmill/player';
 import { PlaylistsService } from '../services/playlists.service';
+import { QuotaIndicator } from '../../common/components/quota-indicator';
+import {
+  QuotasService,
+  ResourceQuota,
+} from '../../common/services/quotas.service';
 
 import './playlists.scss';
 import { PlaylistView } from './playlist-view';
@@ -26,6 +34,7 @@ const PlaylistsPage: Component<{
   store: AddonStore;
   params: any; //typeof useSearchParams;
 }> = (props) => {
+  const toast = useToast();
   const [data, setData] = createSignal<JsonPlaylist[]>([]);
   const [currentPlaylist, setCurrentPlaylist] = createSignal<JsonPlaylist>();
   const [showModal, setShowModal] = createSignal(false);
@@ -38,6 +47,51 @@ const PlaylistsPage: Component<{
   // Get i18n functions from store
   const t = (key: string, params?: Record<string, any>) =>
     props.store.i18n?.t(key, params) || key;
+  const [quota, setQuota] = createSignal<ResourceQuota | null>(null);
+  const [quotaLoading, setQuotaLoading] = createSignal(false);
+  const [showLoadingIndicator, setShowLoadingIndicator] = createSignal(false);
+
+  const quotasService = new QuotasService(props.store.env.baseUrl);
+
+  let loadingTimeout: ReturnType<typeof setTimeout> | undefined;
+
+  const loadQuota = async () => {
+    if (!props.store.organizations.selectedId) return;
+
+    try {
+      setQuotaLoading(true);
+
+      // Only show loading indicator if request takes more than 1 second
+      loadingTimeout = setTimeout(() => {
+        if (quotaLoading()) {
+          setShowLoadingIndicator(true);
+        }
+      }, 1000);
+
+      const quotaData = await quotasService.getResourceQuota(
+        props.store.organizations.selectedId,
+        'playlists'
+      );
+      setQuota(quotaData);
+    } catch (error) {
+      console.error('Failed to fetch quota:', error);
+    } finally {
+      if (loadingTimeout) {
+        clearTimeout(loadingTimeout);
+      }
+      setQuotaLoading(false);
+      setShowLoadingIndicator(false);
+    }
+  };
+
+  onMount(() => {
+    loadQuota();
+  });
+
+  const isQuotaReached = () => {
+    const q = quota();
+    return q ? q.used >= q.total : false;
+  };
 
   const onRowSelect = (rowsSelected: Set<number>) => {
     setSelectedPlaylists(rowsSelected);
@@ -98,8 +152,22 @@ const PlaylistsPage: Component<{
   const columns = [
     { key: 'name', title: t('common.name'), sortable: true },
     { key: 'status', title: t('common.status'), sortable: false },
-    { key: 'inserted_at', title: t('common.created'), sortable: true },
-    { key: 'updated_at', title: t('common.updated'), sortable: true },
+    {
+      key: 'inserted_at',
+      title: t('common.created'),
+      sortable: true,
+      render: (item: JsonPlaylist) => (
+        <Timestamp value={item.inserted_at} mode="relative" />
+      ),
+    },
+    {
+      key: 'updated_at',
+      title: t('common.updated'),
+      sortable: true,
+      render: (item: JsonPlaylist) => (
+        <Timestamp value={item.updated_at} mode="relative" />
+      ),
+    },
   ] as Column<JsonPlaylist>[];
 
   const actions: TableAction<JsonPlaylist>[] = [
@@ -139,13 +207,10 @@ const PlaylistsPage: Component<{
       );
 
       refreshData();
+      toast.success(`Playlist "${resource.name}" removed successfully`);
+      loadQuota(); // Reload quota after deletion
     } catch (error) {
-      alert(
-        t('playlists.errorRemovingPlaylist', {
-          name: resource.name,
-          error: String(error),
-        })
-      );
+      toast.error(`Error removing playlist ${resource.name}: ${error}`);
     }
     setShowConfirmDialog();
   };
@@ -163,8 +228,12 @@ const PlaylistsPage: Component<{
       );
 
       refreshData();
+      toast.success(
+        `${selectedPlaylists().size} playlist(s) removed successfully`
+      );
+      loadQuota(); // Reload quota after deletion
     } catch (error) {
-      alert(t('playlists.errorRemovingPlaylists', { error: String(error) }));
+      toast.error(`Error removing playlists: ${error}`);
     }
     setShowConfirmDialogMultiple(false);
     setSelectedPlaylists(new Set<number>());
@@ -181,16 +250,22 @@ const PlaylistsPage: Component<{
           <PlaylistAddForm
             t={t}
             onSubmit={async (name: string) => {
-              const result = await PlaylistsService.addPlaylist(
-                props.store.env.baseUrl,
-                props.store.organizations.selectedId,
-                name
-              );
-              setShowAddPlaylistModal(false);
-              if (result?.data) {
-                setCurrentPlaylist(result.data);
-                setShowModal(true);
-                refreshData();
+              try {
+                const result = await PlaylistsService.addPlaylist(
+                  props.store.env.baseUrl,
+                  props.store.organizations.selectedId,
+                  name
+                );
+                setShowAddPlaylistModal(false);
+                if (result?.data) {
+                  setCurrentPlaylist(result.data);
+                  setShowModal(true);
+                  refreshData();
+                  toast.success(`Playlist "${name}" created successfully`);
+                  loadQuota(); // Reload quota after creation
+                }
+              } catch (error) {
+                toast.error(`Error creating playlist: ${error}`);
               }
             }}
           />
@@ -250,12 +325,24 @@ const PlaylistsPage: Component<{
         ref={setRef}
         toolbar={{
           mainAction: (
-            <Button
-              label={t('playlists.addPlaylist')}
-              onClick={openAddPlaylistModal}
-              icon={BsCheckLg}
-              color="primary"
-            />
+            <div style="display: flex; align-items: center; gap: 1rem;">
+              <Show when={quota()}>
+                <QuotaIndicator
+                  used={quota()!.used}
+                  total={quota()!.total}
+                  resourceName="Playlists"
+                  compact
+                  isLoading={showLoadingIndicator()}
+                />
+              </Show>
+              <Button
+                label={t('playlists.addPlaylist')}
+                onClick={openAddPlaylistModal}
+                icon={BsCheckLg}
+                color="primary"
+                disabled={isQuotaReached()}
+              />
+            </div>
           ),
           actions: (
             <div>
@@ -287,4 +374,8 @@ const PlaylistsPage: Component<{
   );
 };
 
-export default PlaylistsPage;
+export default (props: any) => (
+  <ToastProvider>
+    <PlaylistsPage {...props} />
+  </ToastProvider>
+);

@@ -12,6 +12,7 @@ defmodule Castmill.Accounts.UserToken do
   @confirm_validity_in_days 7
   @change_email_validity_in_days 7
   @session_validity_in_days 60
+  @recover_credentials_validity_in_minutes 5
 
   schema "users_tokens" do
     field :token, :binary
@@ -112,12 +113,13 @@ defmodule Castmill.Accounts.UserToken do
     case Base.url_decode64(token, padding: false) do
       {:ok, decoded_token} ->
         hashed_token = :crypto.hash(@hash_algorithm, decoded_token)
-        days = days_for_context(context)
+        {time_value, time_unit} = time_for_context(context)
 
         query =
           from(token in token_and_context_query(hashed_token, context),
             join: user in assoc(token, :user),
-            where: token.inserted_at > ago(^days, "day") and token.sent_to == user.email,
+            where:
+              token.inserted_at > ago(^time_value, ^time_unit) and token.sent_to == user.email,
             select: user
           )
 
@@ -128,8 +130,11 @@ defmodule Castmill.Accounts.UserToken do
     end
   end
 
-  defp days_for_context("confirm"), do: @confirm_validity_in_days
-  defp days_for_context("reset_password"), do: @reset_password_validity_in_days
+  defp time_for_context("confirm"), do: {@confirm_validity_in_days, "day"}
+  defp time_for_context("reset_password"), do: {@reset_password_validity_in_days, "day"}
+
+  defp time_for_context("recover_credentials"),
+    do: {@recover_credentials_validity_in_minutes, "minute"}
 
   @doc """
   Checks if the token is valid and returns its underlying lookup query.

@@ -11,8 +11,7 @@ import {
 } from '@castmill/player';
 import { BsCheckLg } from 'solid-icons/bs';
 import { BsX } from 'solid-icons/bs';
-import { FormItem, Button, ComboBox } from '@castmill/ui-common';
-
+import { FormItem, Button, ComboBox, useToast, Timestamp } from '@castmill/ui-common';
 import { ResourcesService } from '../services/resources.service';
 
 import './widget-config.scss';
@@ -39,6 +38,7 @@ interface WidgetConfigProps {
 type FormTypes = 'text' | 'number' | 'boolean' | 'ref' | 'color' | 'url';
 
 export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
+  const toast = useToast();
   const [widgetConfig, setWidgetConfig] = createSignal(props.item.config);
   const [isFormModified, setIsFormModified] = createSignal(false);
   const [isFormValid, setIsFormValid] = createSignal(false);
@@ -284,9 +284,9 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
         <Show when={props.item.inserted_at}>
           <div style="font-size: 0.8em; color: darkgray;">
             <span>Created on </span>{' '}
-            <span>{`${props.item.inserted_at}`}. </span>
+            <Timestamp value={props.item.inserted_at} mode="relative" />.{' '}
             <span>Last updated on </span>
-            <span>{`${props.item.updated_at}`}</span>
+            <Timestamp value={props.item.updated_at} mode="relative" />
           </div>
         </Show>
         <form
@@ -312,7 +312,7 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
                   expandedOptions: widgetOptions(),
                 });
               } catch (err) {
-                alert(`Error submitting form ${(err as Error).message}`);
+                toast.error(`Error submitting form ${(err as Error).message}`);
               }
 
               setIsFormModified(false);

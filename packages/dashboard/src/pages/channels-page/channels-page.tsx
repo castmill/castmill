@@ -3,6 +3,7 @@ import {
   createEffect,
   createSignal,
   onCleanup,
+  onMount,
   Show,
 } from 'solid-js';
 
@@ -16,6 +17,7 @@ import {
   Modal,
   ConfirmDialog,
   FetchDataOptions,
+  useToast,
 } from '@castmill/ui-common';
 
 import { store } from '../../store/store';
@@ -30,11 +32,17 @@ import { ChannelView } from './channel-view';
 
 import { baseUrl } from '../../env';
 import { ChannelAddForm } from './channel-add-form';
+
 import { useI18n } from '../../i18n';
+
+import { QuotaIndicator } from '../../components/quota-indicator';
+import { QuotasService, ResourceQuota } from '../../services/quotas.service';
 
 const ChannelsPage: Component = () => {
   const params = useSearchParams();
   const { t } = useI18n();
+
+  const toast = useToast();
 
   const itemsPerPage = 10; // Number of items to show per page
 
@@ -49,17 +57,47 @@ const ChannelsPage: Component = () => {
     new Set<number>()
   );
 
+  const [quota, setQuota] = createSignal<ResourceQuota | null>(null);
+  const [quotaLoading, setQuotaLoading] = createSignal(true);
+
   let channelsService: ChannelsService = new ChannelsService(
     baseUrl,
     store.organizations.selectedId!
   );
+
+  const loadQuota = async () => {
+    if (!store.organizations.selectedId) return;
+
+    try {
+      setQuotaLoading(true);
+      const quotaData = await QuotasService.getResourceQuota(
+        store.organizations.selectedId,
+        'channels'
+      );
+      setQuota(quotaData);
+    } catch (error) {
+      console.error('Failed to fetch quota:', error);
+    } finally {
+      setQuotaLoading(false);
+    }
+  };
+
+  onMount(() => {
+    loadQuota();
+  });
 
   createEffect(() => {
     channelsService = new ChannelsService(
       baseUrl,
       store.organizations.selectedId!
     );
+    loadQuota();
   });
+
+  const isQuotaReached = () => {
+    const q = quota();
+    return q ? q.used >= q.total : false;
+  };
 
   const columns = [
     { key: 'id', title: t('common.id'), sortable: true },
@@ -109,16 +147,32 @@ const ChannelsPage: Component = () => {
   const [showConfirmDialog, setShowConfirmDialog] = createSignal(false);
   const [showConfirmDialogMultiple, setShowConfirmDialogMultiple] =
     createSignal(false);
+  const [showErrorDialog, setShowErrorDialog] = createSignal(false);
+  const [errorMessage, setErrorMessage] = createSignal('');
+  const [errorDevices, setErrorDevices] = createSignal<string[]>([]);
 
   const confirmRemoveChannel = async (channel: JsonChannel | undefined) => {
     if (!channel) {
       return;
     }
     try {
-      await channelsService.removeChannel(channel.id);
-      refreshData();
+      const result = await channelsService.removeChannel(channel.id);
+
+      if (result.success) {
+        refreshData();
+        toast.success(`Channel ${channel.name} removed successfully`);
+      } else {
+        // Show error with device details
+        const devices = result.error?.devices || [];
+        setErrorMessage(
+          `Cannot delete channel "${channel.name}" because it is assigned to the following device${devices.length > 1 ? 's' : ''}:`
+        );
+        setErrorDevices(devices);
+        setShowErrorDialog(true);
+      }
     } catch (error) {
-      alert(
+      // Handle unexpected errors (network failures, server down, etc.)
+      toast.error(
         t('channels.errors.removeChannel', {
           name: channel.name || '',
           error: String(error),
@@ -129,17 +183,74 @@ const ChannelsPage: Component = () => {
   };
 
   const confirmRemoveMultipleChannels = async () => {
-    try {
-      await Promise.all(
-        Array.from(selectedChannels()).map((channelId) =>
-          channelsService.removeChannel(channelId)
-        )
-      );
+    const results = await Promise.allSettled(
+      Array.from(selectedChannels()).map((channelId) =>
+        channelsService.removeChannel(channelId)
+      )
+    );
 
-      refreshData();
-    } catch (error) {
-      alert(t('channels.errors.removeChannels', { error: String(error) }));
+    const failedChannels: Array<{
+      id: number;
+      name: string;
+      devices: string[];
+    }> = [];
+    const unexpectedErrors: Array<{ id: number; name: string; error: string }> =
+      [];
+
+    results.forEach((result, index) => {
+      const channelId = Array.from(selectedChannels())[index];
+      const channel = data().find((c) => c.id === channelId);
+
+      if (result.status === 'fulfilled' && !result.value.success) {
+        // Business logic error (channel assigned to devices)
+        failedChannels.push({
+          id: channelId,
+          name: channel?.name || `Channel ${channelId}`,
+          devices: result.value.error?.devices || [],
+        });
+      } else if (result.status === 'rejected') {
+        // Unexpected error (network, server down, etc.)
+        unexpectedErrors.push({
+          id: channelId,
+          name: channel?.name || `Channel ${channelId}`,
+          error: String(result.reason),
+        });
+      }
+    });
+
+    if (failedChannels.length > 0 || unexpectedErrors.length > 0) {
+      // Build a detailed error message
+      const messages: string[] = [];
+
+      if (failedChannels.length > 0) {
+        messages.push(
+          ...failedChannels.map((fc) => {
+            if (fc.devices.length > 0) {
+              return `- ${fc.name} (assigned to: ${fc.devices.join(', ')})`;
+            }
+            return `- ${fc.name}`;
+          })
+        );
+      }
+
+      if (unexpectedErrors.length > 0) {
+        messages.push(
+          ...unexpectedErrors.map(
+            (err) => `- ${err.name} (error: ${err.error})`
+          )
+        );
+      }
+
+      setErrorMessage(
+        `The following channel${failedChannels.length + unexpectedErrors.length > 1 ? 's' : ''} could not be deleted:`
+      );
+      setErrorDevices(messages);
+      setShowErrorDialog(true);
+    } else {
+      toast.success('Channels removed successfully');
     }
+
+    refreshData();
     setShowConfirmDialogMultiple(false);
   };
 
@@ -215,8 +326,9 @@ const ChannelsPage: Component = () => {
                     refreshData();
                   }
                   refreshData();
+                  toast.success(`Channel ${name} added successfully`);
                 } catch (error) {
-                  alert(
+                  toast.error(
                     t('channels.errors.addChannel', { error: String(error) })
                   );
                 }
@@ -246,15 +358,21 @@ const ChannelsPage: Component = () => {
                     const newChannel = result.data;
                     setCurrentChannel(newChannel);
                     refreshData();
+                    toast.success(
+                      `Channel ${channel.name} created successfully`
+                    );
                     return newChannel;
                   } else {
                     const updatedTeam =
                       await channelsService.updateChannel(channel);
                     updateItem(channel.id, channel);
+                    toast.success(
+                      `Channel ${channel.name} updated successfully`
+                    );
                     return updatedTeam;
                   }
                 } catch (error) {
-                  alert(
+                  toast.error(
                     t('channels.errors.saveChannel', { error: String(error) })
                   );
                 }
@@ -288,6 +406,27 @@ const ChannelsPage: Component = () => {
           </div>
         </ConfirmDialog>
 
+        <Show when={showErrorDialog()}>
+          <Modal
+            title="Cannot Delete Channel"
+            description={errorMessage()}
+            onClose={() => setShowErrorDialog(false)}
+          >
+            <div style="margin: 1.5em; line-height: 1.5em;">
+              {errorDevices().map((device) => (
+                <div>{device}</div>
+              ))}
+            </div>
+            <div style="margin-top: 1.5em; display: flex; justify-content: flex-end;">
+              <Button
+                label="OK"
+                color="primary"
+                onClick={() => setShowErrorDialog(false)}
+              />
+            </div>
+          </Modal>
+        </Show>
+
         <TableView
           title={t('channels.title')}
           resource="channels"
@@ -297,12 +436,28 @@ const ChannelsPage: Component = () => {
           toolbar={{
             filters: [],
             mainAction: (
-              <Button
-                label={t('channels.addChannel')}
-                onClick={addChannel}
-                icon={BsCheckLg}
-                color="primary"
-              />
+              <div style="display: flex; align-items: center; gap: 1rem;">
+                <Show when={quota() && !quotaLoading()}>
+                  <QuotaIndicator
+                    used={quota()!.used}
+                    total={quota()!.total}
+                    resourceName="Channels"
+                    compact
+                  />
+                </Show>
+                <Button
+                  label={t('channels.addChannel')}
+                  onClick={addChannel}
+                  icon={BsCheckLg}
+                  color="primary"
+                  disabled={isQuotaReached()}
+                  title={
+                    isQuotaReached()
+                      ? 'Quota limit reached for Channels. Cannot add more.'
+                      : 'Add a new Channel'
+                  }
+                />
+              </div>
             ),
             actions: (
               <div>
