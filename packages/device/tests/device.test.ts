@@ -146,3 +146,73 @@ describe('Device - Start/Stop', () => {
     expect(playerStopSpy).toHaveBeenCalled();
   });
 });
+
+describe('Device - Commands', () => {
+  let device: Device;
+  let mockIntegration: any;
+  let mockStorageIntegration: any;
+  let mockCache: any;
+
+  beforeEach(() => {
+    mockIntegration = {
+      getCredentials: vi.fn(),
+      getMachineGUID: vi.fn(),
+      removeCredentials: vi.fn().mockResolvedValue(undefined),
+    };
+
+    mockStorageIntegration = {
+      getItem: vi.fn(),
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+    };
+
+    device = new Device(mockIntegration, mockStorageIntegration, {
+      cache: { maxItems: 100 },
+    });
+
+    // Mock the cache
+    mockCache = {
+      clean: vi.fn().mockResolvedValue(undefined),
+    };
+    device['cache'] = mockCache;
+  });
+
+  it('should handle device_removed command by clearing credentials and cache', async () => {
+    // Mock location.reload to prevent actual page reload in tests
+    const originalLocation = window.location;
+    delete (window as any).location;
+    window.location = { reload: vi.fn() } as any;
+
+    // Create a mock Phoenix channel
+    const mockChannel = {
+      on: vi.fn(),
+      push: vi.fn(),
+      join: vi.fn(),
+    };
+
+    // Get the command handler by calling initListeners
+    device['initListeners'](mockChannel as any);
+
+    // Find the 'command' event handler
+    const commandHandler = mockChannel.on.mock.calls.find(
+      (call) => call[0] === 'command'
+    )?.[1];
+
+    expect(commandHandler).toBeDefined();
+
+    // Simulate the device_removed command
+    await commandHandler({ command: 'device_removed' });
+
+    // Verify that credentials were removed
+    expect(mockIntegration.removeCredentials).toHaveBeenCalled();
+
+    // Verify that cache was cleaned
+    expect(mockCache.clean).toHaveBeenCalled();
+
+    // Verify that page reload was called
+    expect(window.location.reload).toHaveBeenCalled();
+
+    // Restore location
+    window.location = originalLocation;
+  });
+});
