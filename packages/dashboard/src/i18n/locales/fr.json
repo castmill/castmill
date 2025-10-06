@@ -67,7 +67,10 @@
     "cache": "Cache",
     "maintainance": "Maintenance",
     "events": "Événements",
-    "telemetry": "Télémétrie"
+    "telemetry": "Télémétrie",
+    "addonLoadingError": "Erreur de chargement de l'extension",
+    "addonError": "Erreur d'extension",
+    "backToLogin": "Retour à la connexion"
   },
   "topbar": {
     "help": "Aide",
@@ -146,6 +149,12 @@
     "used": "Utilisé",
     "total": "Total",
     "progress": "Progression",
+    "description": "Surveillez l'utilisation du quota de votre organisation sur toutes les ressources",
+    "loadingUsageData": "Chargement des données d'utilisation...",
+    "quotaLimitReached": "Limite de quota atteinte",
+    "approachingLimit": "Approche de la limite",
+    "noUsageData": "Aucune donnée d'utilisation disponible",
+    "unableToLoad": "Impossible de charger les informations d'utilisation des ressources",
     "errors": {
       "fetchUsageData": "Échec de la récupération des données d'utilisation : {{error}}"
     }
@@ -208,6 +217,11 @@
     "privacyPolicy": "Politique de confidentialité",
     "lostCredentials": "Identifiants perdus ?"
   },
+  "credentialRecovery": {
+    "title": "Récupérer vos identifiants",
+    "checkYourEmail": "Vérifiez votre e-mail",
+    "addNewPasskey": "Ajouter une nouvelle clé d'accès"
+  },
   "errors": {
     "generic": "Une erreur s'est produite. Veuillez réessayer.",
     "networkError": "Erreur réseau. Veuillez vérifier votre connexion.",
@@ -248,7 +262,8 @@
     "dragPlaylists": "Glisser les playlists",
     "repeatWeekly": "Répéter chaque semaine ?",
     "calendarEntryDetails": "Détails de l'entrée du calendrier",
-    "removeChannelEntry": "Supprimer l'entrée du canal"
+    "removeChannelEntry": "Supprimer l'entrée du canal",
+    "cannotDeleteChannel": "Impossible de supprimer le canal"
   },
   "organization": {
     "title": "Organisation",

@@ -99,7 +99,7 @@ const wrapLazyComponent = (addon: { path: string; name: string }) => {
         return {
           default: () => (
             <div class="addon-error">
-              <h2>Addon Loading Error</h2>
+              <h2>{i18n.t('common.addonLoadingError')}</h2>
               <p>
                 Failed to load the "{addon.name}" addon. Please contact your
                 administrator.
@@ -117,7 +117,7 @@ const wrapLazyComponent = (addon: { path: string; name: string }) => {
           toast.error(`Error in addon "${addon.name}": ${err.message}`);
           return (
             <div class="addon-error">
-              <h2>Addon Error</h2>
+              <h2>{i18n.t('common.addonError')}</h2>
               <p>An error occurred while rendering the "{addon.name}" addon.</p>
               <button onClick={reset}>Retry</button>
             </div>
@@ -146,7 +146,7 @@ render(() => {
           <Route
             path="/"
             component={(props: any) => (
-              <Suspense fallback={<div>Loading...</div>}>
+              <Suspense fallback={<LoadingFallback />}>
                 <ProtectedRoute>
                   {(addons) => (
                     <Dashboard {...props} addons={new AddOnTree(addons)} />

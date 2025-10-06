@@ -67,7 +67,10 @@
     "cache": "Caché",
     "maintainance": "Mantenimiento",
     "events": "Eventos",
-    "telemetry": "Telemetría"
+    "telemetry": "Telemetría",
+    "addonLoadingError": "Error al cargar complemento",
+    "addonError": "Error de complemento",
+    "backToLogin": "Volver al inicio de sesión"
   },
   "topbar": {
     "help": "Ayuda",
@@ -146,6 +149,12 @@
     "used": "Usado",
     "total": "Total",
     "progress": "Progreso",
+    "description": "Supervisa el uso de cuota de tu organización en todos los recursos",
+    "loadingUsageData": "Cargando datos de uso...",
+    "quotaLimitReached": "Límite de cuota alcanzado",
+    "approachingLimit": "Acercándose al límite",
+    "noUsageData": "No hay datos de uso disponibles",
+    "unableToLoad": "No se puede cargar la información de uso de recursos",
     "errors": {
       "fetchUsageData": "Error al obtener datos de uso: {{error}}"
     }
@@ -208,6 +217,11 @@
     "privacyPolicy": "Política de privacidad",
     "lostCredentials": "¿Perdiste tus credenciales?"
   },
+  "credentialRecovery": {
+    "title": "Recupera tus credenciales",
+    "checkYourEmail": "Revisa tu correo electrónico",
+    "addNewPasskey": "Añadir nueva llave de acceso"
+  },
   "errors": {
     "generic": "Se ha producido un error. Por favor, inténtalo de nuevo.",
     "networkError": "Error de red. Por favor, comprueba tu conexión.",
@@ -241,6 +255,7 @@
     "repeatWeekly": "¿Repetir semanalmente?",
     "calendarEntryDetails": "Detalles de la entrada del calendario",
     "removeChannelEntry": "Eliminar entrada del canal",
+    "cannotDeleteChannel": "No se puede eliminar el canal",
     "errors": {
       "removeChannel": "Error al eliminar el canal {{name}}: {{error}}",
       "removeChannels": "Error al eliminar canales: {{error}}",

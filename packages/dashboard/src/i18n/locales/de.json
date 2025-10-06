@@ -67,7 +67,10 @@
     "cache": "Cache",
     "maintainance": "Wartung",
     "events": "Ereignisse",
-    "telemetry": "Telemetrie"
+    "telemetry": "Telemetrie",
+    "addonLoadingError": "Add-on-Ladefehler",
+    "addonError": "Add-on-Fehler",
+    "backToLogin": "Zurück zur Anmeldung"
   },
   "sidebar": {
     "organization": "Organisation",
@@ -157,6 +160,12 @@
     "used": "Verwendet",
     "total": "Gesamt",
     "progress": "Fortschritt",
+    "description": "Überwachen Sie die Kontingentnutzung Ihrer Organisation über alle Ressourcen hinweg",
+    "loadingUsageData": "Lade Nutzungsdaten...",
+    "quotaLimitReached": "Kontingentgrenze erreicht",
+    "approachingLimit": "Nähert sich dem Limit",
+    "noUsageData": "Keine Nutzungsdaten verfügbar",
+    "unableToLoad": "Ressourcennutzungsinformationen können nicht geladen werden",
     "errors": {
       "fetchUsageData": "Fehler beim Abrufen der Nutzungsdaten: {{error}}"
     }
@@ -224,6 +233,7 @@
     "repeatWeekly": "Wöchentlich wiederholen?",
     "calendarEntryDetails": "Kalendereintragsdetails",
     "removeChannelEntry": "Kanaleintrag entfernen",
+    "cannotDeleteChannel": "Kanal kann nicht gelöscht werden",
     "errors": {
       "removeChannel": "Fehler beim Entfernen des Kanals {{name}}: {{error}}",
       "removeChannels": "Fehler beim Entfernen der Kanäle: {{error}}",
@@ -256,6 +266,11 @@
     "loginWithPasskey": "Mit Passkey anmelden",
     "privacyPolicy": "Datenschutzrichtlinie",
     "lostCredentials": "Anmeldedaten verloren?"
+  },
+  "credentialRecovery": {
+    "title": "Ihre Anmeldedaten wiederherstellen",
+    "checkYourEmail": "Überprüfen Sie Ihre E-Mail",
+    "addNewPasskey": "Neuen Passkey hinzufügen"
   },
   "signup": {
     "title": "Registrieren",

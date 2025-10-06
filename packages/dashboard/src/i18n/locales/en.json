@@ -48,6 +48,9 @@
     "progress": "Progress",
     "version": "Version",
     "timezone": "Timezone",
+    "addonLoadingError": "Addon Loading Error",
+    "addonError": "Addon Error",
+    "backToLogin": "Back to Login",
     "time": "Time",
     "message": "Message",
     "timestamp": "Timestamp",
@@ -157,6 +160,12 @@
     "used": "Used",
     "total": "Total",
     "progress": "Progress",
+    "description": "Monitor your organization's quota usage across all resources",
+    "loadingUsageData": "Loading usage data...",
+    "quotaLimitReached": "Quota limit reached",
+    "approachingLimit": "Approaching limit",
+    "noUsageData": "No usage data available",
+    "unableToLoad": "Unable to load resource usage information",
     "errors": {
       "fetchUsageData": "Failed to fetch usage data: {{error}}"
     }
@@ -224,6 +233,7 @@
     "repeatWeekly": "Repeat Weekly?",
     "calendarEntryDetails": "Calendar entry details",
     "removeChannelEntry": "Remove Channel Entry",
+    "cannotDeleteChannel": "Cannot Delete Channel",
     "errors": {
       "removeChannel": "Error removing channel {{name}}: {{error}}",
       "removeChannels": "Error removing channels: {{error}}",
@@ -256,6 +266,11 @@
     "loginWithPasskey": "Login with Passkey",
     "privacyPolicy": "Privacy Policy",
     "lostCredentials": "Lost your credentials?"
+  },
+  "credentialRecovery": {
+    "title": "Recover Your Credentials",
+    "checkYourEmail": "Check Your Email",
+    "addNewPasskey": "Add New Passkey"
   },
   "signup": {
     "title": "Sign up",

@@ -251,7 +251,7 @@ const Login: Component = () => {
                           setShowRecoverCredentials(true);
                         }}
                       >
-                        Lost your credentials?
+                        {t('login.lostCredentials')}
                       </a>
                     </p>
                   </div>

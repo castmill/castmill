@@ -98,14 +98,14 @@ const UsagePage: Component = () => {
         <header class={styles.header}>
           <h1 class={styles.title}>{t('usage.title')}</h1>
           <p class={styles.subtitle}>
-            Monitor your organization's quota usage across all resources
+            {t('usage.description')}
           </p>
         </header>
 
         <Show when={loading()}>
           <div class={styles.loadingState}>
             <div class={styles.spinner}></div>
-            <p>Loading usage data...</p>
+            <p>{t('usage.loadingUsageData')}</p>
           </div>
         </Show>
 
@@ -158,14 +158,14 @@ const UsagePage: Component = () => {
                       <Show when={state === 'full'}>
                         <div class={styles.alert}>
                           <span class={styles.alertIcon}>⚠️</span>
-                          <span>Quota limit reached</span>
+                          <span>{t('usage.quotaLimitReached')}</span>
                         </div>
                       </Show>
 
                       <Show when={state === 'warning'}>
                         <div class={styles.alert}>
                           <span class={styles.alertIcon}>⚡</span>
-                          <span>Approaching limit</span>
+                          <span>{t('usage.approachingLimit')}</span>
                         </div>
                       </Show>
                     </div>
@@ -179,8 +179,8 @@ const UsagePage: Component = () => {
         <Show when={!loading() && !usage()}>
           <div class={styles.emptyState}>
             <span class={styles.emptyIcon}>📊</span>
-            <h3>No usage data available</h3>
-            <p>Unable to load resource usage information</p>
+            <h3>{t('usage.noUsageData')}</h3>
+            <p>{t('usage.unableToLoad')}</p>
           </div>
         </Show>
       </div>

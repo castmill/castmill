@@ -67,7 +67,10 @@
     "cache": "キャッシュ",
     "maintainance": "メンテナンス",
     "events": "イベント",
-    "telemetry": "テレメトリ"
+    "telemetry": "テレメトリ",
+    "addonLoadingError": "アドオン読み込みエラー",
+    "addonError": "アドオンエラー",
+    "backToLogin": "ログインに戻る"
   },
   "topbar": {
     "help": "ヘルプ",
@@ -146,6 +149,12 @@
     "used": "使用済み",
     "total": "合計",
     "progress": "進捗",
+    "description": "すべてのリソースにわたる組織のクォータ使用量を監視",
+    "loadingUsageData": "使用量データを読み込んでいます...",
+    "quotaLimitReached": "クォータ制限に達しました",
+    "approachingLimit": "制限に近づいています",
+    "noUsageData": "利用可能な使用量データがありません",
+    "unableToLoad": "リソース使用量情報を読み込めません",
     "errors": {
       "fetchUsageData": "使用量データの取得に失敗しました：{{error}}"
     }
@@ -208,6 +217,11 @@
     "privacyPolicy": "プライバシーポリシー",
     "lostCredentials": "認証情報をお忘れですか？"
   },
+  "credentialRecovery": {
+    "title": "認証情報の回復",
+    "checkYourEmail": "メールを確認してください",
+    "addNewPasskey": "新しいパスキーを追加"
+  },
   "errors": {
     "generic": "エラーが発生しました。もう一度お試しください。",
     "networkError": "ネットワークエラーです。接続を確認してください。",
@@ -248,7 +262,8 @@
     "dragPlaylists": "プレイリストをドラッグ",
     "repeatWeekly": "毎週繰り返しますか？",
     "calendarEntryDetails": "カレンダーエントリーの詳細",
-    "removeChannelEntry": "チャンネルエントリーを削除"
+    "removeChannelEntry": "チャンネルエントリーを削除",
+    "cannotDeleteChannel": "チャンネルを削除できません"
   },
   "organization": {
     "title": "組織",

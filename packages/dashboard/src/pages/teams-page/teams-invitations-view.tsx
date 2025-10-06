@@ -44,27 +44,6 @@ const onRowSelect = (rowsSelected: Set<number>) => {
 
 const itemsPerPage = 10;
 
-const columns = [
-  { key: 'email', title: 'Email', sortable: true },
-  { key: 'status', title: 'Status', sortable: true },
-  {
-    key: 'inserted_at',
-    title: 'Inserted At',
-    sortable: true,
-    render: (item: any) => (
-      <Timestamp value={item.inserted_at} mode="relative" />
-    ),
-  },
-  {
-    key: 'expires_at',
-    title: 'Expires At',
-    sortable: true,
-    render: (item: any) => (
-      <Timestamp value={item.expires_at} mode="relative" />
-    ),
-  },
-];
-
 export const TeamInvitationsView = (props: {
   organizationId: string;
   teamId: number;

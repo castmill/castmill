@@ -1,5 +1,6 @@
 import { Component, createSignal, Show } from 'solid-js';
 import { baseUrl } from '../../env';
+import { useI18n } from '../../i18n';
 import './login.scss';
 
 interface RecoverCredentialsProps {
@@ -7,6 +8,7 @@ interface RecoverCredentialsProps {
 }
 
 const RecoverCredentials: Component<RecoverCredentialsProps> = (props) => {
+  const { t } = useI18n();
   const [email, setEmail] = createSignal<string>('');
   const [loading, setLoading] = createSignal<boolean>(false);
   const [emailSent, setEmailSent] = createSignal<boolean>(false);
@@ -65,7 +67,7 @@ const RecoverCredentials: Component<RecoverCredentialsProps> = (props) => {
         when={!emailSent()}
         fallback={
           <>
-            <h2>Check Your Email</h2>
+            <h2>{t('credentialRecovery.checkYourEmail')}</h2>
             <p class="info-message">
               If your email is in our system, you will receive instructions to
               recover your credentials shortly.
@@ -75,12 +77,12 @@ const RecoverCredentials: Component<RecoverCredentialsProps> = (props) => {
               to your account.
             </p>
             <button class="login-button" onClick={props.onBack}>
-              Back to Login
+              {t('common.backToLogin')}
             </button>
           </>
         }
       >
-        <h2>Recover Your Credentials</h2>
+        <h2>{t('credentialRecovery.title')}</h2>
         <p class="info-message">
           Enter your email address and we'll send you instructions to add a new
           passkey to your account.
@@ -108,7 +110,7 @@ const RecoverCredentials: Component<RecoverCredentialsProps> = (props) => {
         </button>
 
         <button class="signup-button" onClick={props.onBack}>
-          Back to Login
+          {t('common.backToLogin')}
         </button>
       </Show>
     </div>

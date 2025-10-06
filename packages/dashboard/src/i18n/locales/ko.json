@@ -67,7 +67,10 @@
     "cache": "캐시",
     "maintainance": "유지보수",
     "events": "이벤트",
-    "telemetry": "원격 측정"
+    "telemetry": "원격 측정",
+    "addonLoadingError": "애드온 로딩 오류",
+    "addonError": "애드온 오류",
+    "backToLogin": "로그인으로 돌아가기"
   },
   "topbar": {
     "help": "도움말",
@@ -146,6 +149,12 @@
     "used": "사용됨",
     "total": "전체",
     "progress": "진행률",
+    "description": "모든 리소스에 대한 조직의 할당량 사용량 모니터링",
+    "loadingUsageData": "사용량 데이터 로드 중...",
+    "quotaLimitReached": "할당량 한도에 도달했습니다",
+    "approachingLimit": "한도에 근접",
+    "noUsageData": "사용 가능한 사용량 데이터가 없습니다",
+    "unableToLoad": "리소스 사용량 정보를 로드할 수 없습니다",
     "errors": {
       "fetchUsageData": "사용량 데이터를 가져오는데 실패했습니다: {{error}}"
     }
@@ -208,6 +217,11 @@
     "privacyPolicy": "개인정보 처리방침",
     "lostCredentials": "자격 증명을 잃어버리셨나요?"
   },
+  "credentialRecovery": {
+    "title": "자격 증명 복구",
+    "checkYourEmail": "이메일을 확인하세요",
+    "addNewPasskey": "새 패스키 추가"
+  },
   "errors": {
     "generic": "오류가 발생했습니다. 다시 시도해 주세요.",
     "networkError": "네트워크 오류입니다. 연결을 확인해 주세요.",
@@ -248,7 +262,8 @@
     "dragPlaylists": "재생목록 드래그",
     "repeatWeekly": "매주 반복?",
     "calendarEntryDetails": "캘린더 항목 세부정보",
-    "removeChannelEntry": "채널 항목 제거"
+    "removeChannelEntry": "채널 항목 제거",
+    "cannotDeleteChannel": "채널을 삭제할 수 없습니다"
   },
   "organization": {
     "title": "조직",

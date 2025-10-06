@@ -408,7 +408,7 @@ const ChannelsPage: Component = () => {
 
         <Show when={showErrorDialog()}>
           <Modal
-            title="Cannot Delete Channel"
+            title={t('channels.cannotDeleteChannel')}
             description={errorMessage()}
             onClose={() => setShowErrorDialog(false)}
           >

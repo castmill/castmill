@@ -67,7 +67,10 @@
     "cache": "Cache",
     "maintainance": "Underhåll",
     "events": "Händelser",
-    "telemetry": "Telemetri"
+    "telemetry": "Telemetri",
+    "addonLoadingError": "Fel vid laddning av tillägg",
+    "addonError": "Tilläggsfel",
+    "backToLogin": "Tillbaka till inloggning"
   },
   "topbar": {
     "help": "Hjälp",
@@ -146,6 +149,12 @@
     "used": "Använd",
     "total": "Totalt",
     "progress": "Framsteg",
+    "description": "Övervaka din organisations kvotanvändning över alla resurser",
+    "loadingUsageData": "Laddar användningsdata...",
+    "quotaLimitReached": "Kvotgräns nådd",
+    "approachingLimit": "Närmar sig gränsen",
+    "noUsageData": "Ingen användningsdata tillgänglig",
+    "unableToLoad": "Kan inte ladda resursanvändningsinformation",
     "errors": {
       "fetchUsageData": "Misslyckades att hämta användningsdata: {{error}}"
     }
@@ -208,6 +217,11 @@
     "privacyPolicy": "Integritetspolicy",
     "lostCredentials": "Tappat bort dina inloggningsuppgifter?"
   },
+  "credentialRecovery": {
+    "title": "Återställ dina inloggningsuppgifter",
+    "checkYourEmail": "Kontrollera din e-post",
+    "addNewPasskey": "Lägg till ny nyckel"
+  },
   "errors": {
     "generic": "Ett fel uppstod. Försök igen.",
     "networkError": "Nätverksfel. Kontrollera din anslutning.",
@@ -248,7 +262,8 @@
     "dragPlaylists": "Dra spellistor",
     "repeatWeekly": "Upprepa varje vecka?",
     "calendarEntryDetails": "Kalenderinläggsdetaljer",
-    "removeChannelEntry": "Ta bort kanalinlägg"
+    "removeChannelEntry": "Ta bort kanalinlägg",
+    "cannotDeleteChannel": "Kan inte ta bort kanal"
   },
   "organization": {
     "title": "Organisation",

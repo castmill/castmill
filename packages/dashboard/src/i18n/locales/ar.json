@@ -67,7 +67,10 @@
     "cache": "ذاكرة التخزين المؤقت",
     "maintainance": "الصيانة",
     "events": "الأحداث",
-    "telemetry": "القياس عن بعد"
+    "telemetry": "القياس عن بعد",
+    "addonLoadingError": "خطأ في تحميل الإضافة",
+    "addonError": "خطأ في الإضافة",
+    "backToLogin": "العودة لتسجيل الدخول"
   },
   "topbar": {
     "help": "مساعدة",
@@ -146,6 +149,12 @@
     "used": "المستخدم",
     "total": "الإجمالي",
     "progress": "التقدم",
+    "description": "راقب استخدام الحصة النسبية لمؤسستك عبر جميع الموارد",
+    "loadingUsageData": "جاري تحميل بيانات الاستخدام...",
+    "quotaLimitReached": "تم الوصول إلى حد الحصة",
+    "approachingLimit": "الاقتراب من الحد",
+    "noUsageData": "لا توجد بيانات استخدام متاحة",
+    "unableToLoad": "تعذر تحميل معلومات استخدام الموارد",
     "errors": {
       "fetchUsageData": "فشل جلب بيانات الاستخدام: {{error}}"
     }
@@ -208,6 +217,11 @@
     "privacyPolicy": "سياسة الخصوصية",
     "lostCredentials": "هل فقدت بيانات الاعتماد؟"
   },
+  "credentialRecovery": {
+    "title": "استعادة بيانات الاعتماد الخاصة بك",
+    "checkYourEmail": "تحقق من بريدك الإلكتروني",
+    "addNewPasskey": "إضافة مفتاح مرور جديد"
+  },
   "errors": {
     "generic": "حدث خطأ. يرجى المحاولة مرة أخرى.",
     "networkError": "خطأ في الشبكة. يرجى التحقق من اتصالك.",
@@ -248,7 +262,8 @@
     "dragPlaylists": "اسحب قوائم التشغيل",
     "repeatWeekly": "التكرار أسبوعيًا؟",
     "calendarEntryDetails": "تفاصيل إدخال التقويم",
-    "removeChannelEntry": "إزالة إدخال القناة"
+    "removeChannelEntry": "إزالة إدخال القناة",
+    "cannotDeleteChannel": "لا يمكن حذف القناة"
   },
   "organization": {
     "title": "المنظمة",

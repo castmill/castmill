@@ -67,7 +67,10 @@
     "cache": "缓存",
     "maintainance": "维护",
     "events": "事件",
-    "telemetry": "遥测"
+    "telemetry": "遥测",
+    "addonLoadingError": "插件加载错误",
+    "addonError": "插件错误",
+    "backToLogin": "返回登录"
   },
   "topbar": {
     "help": "帮助",
@@ -146,6 +149,12 @@
     "used": "已使用",
     "total": "总计",
     "progress": "进度",
+    "description": "监控组织在所有资源中的配额使用情况",
+    "loadingUsageData": "正在加载使用数据...",
+    "quotaLimitReached": "已达到配额限制",
+    "approachingLimit": "接近限制",
+    "noUsageData": "没有可用的使用数据",
+    "unableToLoad": "无法加载资源使用信息",
     "errors": {
       "fetchUsageData": "获取使用数据失败：{{error}}"
     }
@@ -208,6 +217,11 @@
     "privacyPolicy": "隐私政策",
     "lostCredentials": "忘记凭据？"
   },
+  "credentialRecovery": {
+    "title": "恢复您的凭据",
+    "checkYourEmail": "检查您的电子邮件",
+    "addNewPasskey": "添加新密钥"
+  },
   "errors": {
     "generic": "发生错误。请重试。",
     "networkError": "网络错误。请检查您的连接。",
@@ -248,7 +262,8 @@
     "dragPlaylists": "拖动播放列表",
     "repeatWeekly": "每周重复？",
     "calendarEntryDetails": "日历条目详情",
-    "removeChannelEntry": "删除频道条目"
+    "removeChannelEntry": "删除频道条目",
+    "cannotDeleteChannel": "无法删除频道"
   },
   "organization": {
     "title": "组织",
