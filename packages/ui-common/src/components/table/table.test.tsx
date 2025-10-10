@@ -103,6 +103,21 @@ describe('Table Component', () => {
     expect(mockOnRowClick).not.toHaveBeenCalled();
   });
 
+  it('does not call onRowClick when checkbox label is clicked', async () => {
+    const mockOnRowClick = vi.fn();
+    const { container } = render(() => (
+      <Table columns={columns} data={data} onRowClick={mockOnRowClick} />
+    ));
+
+    // Find the label element (the touch target) for the first row checkbox
+    const label = container.querySelector('label[for="row-checkbox-1"]');
+    expect(label).toBeInTheDocument();
+
+    fireEvent.click(label!);
+
+    expect(mockOnRowClick).not.toHaveBeenCalled();
+  });
+
   it('does not call onRowClick when action button is clicked', async () => {
     const mockOnRowClick = vi.fn();
     render(() => (
