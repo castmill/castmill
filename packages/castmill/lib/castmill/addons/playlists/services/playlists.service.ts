@@ -1,4 +1,9 @@
-import { JsonPlaylist, JsonWidget, JsonWidgetConfig, JsonPlaylistItem } from '@castmill/player';
+import {
+  JsonPlaylist,
+  JsonWidget,
+  JsonWidgetConfig,
+  JsonPlaylistItem,
+} from '@castmill/player';
 import { SortOptions } from '@castmill/ui-common';
 
 export interface FetchPlaylistsOptions {
@@ -307,18 +312,26 @@ export const PlaylistsService = {
     handleResponse(response);
   },
 
-  async getWidgets(baseUrl: string, organizationId: string) {
-    const response = await fetch(
-      `${baseUrl}/dashboard/organizations/${organizationId}/widgets`,
-      {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+  async getWidgets(baseUrl: string, organizationId: string, search?: string) {
+    const query: Record<string, string> = {};
 
-    return handleResponse<{ data: JsonWidget[]; count: number }>(response, { parse: true });
+    if (search) {
+      query['search'] = search;
+    }
+
+    const queryString = new URLSearchParams(query).toString();
+    const url = `${baseUrl}/dashboard/organizations/${organizationId}/widgets${queryString ? `?${queryString}` : ''}`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    return handleResponse<{ data: JsonWidget[]; count: number }>(response, {
+      parse: true,
+    });
   },
 };

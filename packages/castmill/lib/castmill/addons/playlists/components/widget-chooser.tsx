@@ -10,6 +10,7 @@ import {
 import { JsonWidget } from '@castmill/player';
 import { IconWrapper } from '@castmill/ui-common';
 import { RiEditorDraggable } from 'solid-icons/ri';
+import { FaSolidMagnifyingGlass } from 'solid-icons/fa';
 
 import { DEFAULT_WIDGET_ICON } from '../../common/constants';
 import './widget-chooser.scss';
@@ -73,10 +74,54 @@ const WidgetItem: Component<{ widget: JsonWidget }> = (props) => {
   );
 };
 
+const SEARCH_DEBOUNCE_PERIOD = 300;
+
 export const WidgetChooser: Component<{
   widgets: JsonWidget[];
+  onSearch?: (searchText: string) => void;
 }> = (props) => {
+  const [searchText, setSearchText] = createSignal('');
+  const [debounceTimeout, setDebounceTimeout] = createSignal<any | undefined>(
+    undefined
+  );
+
+  const handleSearchChange = (e: Event) => {
+    const target = e.target as HTMLInputElement;
+    setSearchText(target.value);
+
+    // Clear the previous timeout
+    clearTimeout(debounceTimeout());
+
+    // Set up a new timeout
+    setDebounceTimeout(
+      setTimeout(() => {
+        props.onSearch?.(target.value);
+      }, SEARCH_DEBOUNCE_PERIOD)
+    );
+  };
+
+  // Cleanup to clear the timeout when the component unmounts
+  onCleanup(() => {
+    clearTimeout(debounceTimeout());
+  });
+
   return (
-    <For each={props.widgets}>{(widget) => <WidgetItem widget={widget} />}</For>
+    <div class="widget-chooser">
+      <div class="search-container">
+        <IconWrapper icon={FaSolidMagnifyingGlass} />
+        <input
+          type="text"
+          value={searchText()}
+          onInput={handleSearchChange}
+          placeholder="Search widgets..."
+          class="search-input"
+        />
+      </div>
+      <div class="items-container">
+        <For each={props.widgets}>
+          {(widget) => <WidgetItem widget={widget} />}
+        </For>
+      </div>
+    </div>
   );
 };
