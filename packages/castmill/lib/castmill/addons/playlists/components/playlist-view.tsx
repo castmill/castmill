@@ -46,6 +46,15 @@ export const PlaylistView: Component<{
     })();
   });
 
+  const handleWidgetSearch = async (searchText: string) => {
+    const result = await PlaylistsService.getWidgets(
+      props.baseUrl,
+      props.organizationId,
+      searchText
+    );
+    setWidgets(result.data);
+  };
+
   const onEditItem = async (
     item: JsonPlaylistItem,
     {
@@ -229,8 +238,7 @@ export const PlaylistView: Component<{
         duration,
       }
     );
-  }
-
+  };
 
   return (
     <Show when={!loading()}>
@@ -240,7 +248,7 @@ export const PlaylistView: Component<{
         </div>
         <div class="playlist-items-wrapper">
           <div class="widget-list">
-            <WidgetChooser widgets={widgets()} />
+            <WidgetChooser widgets={widgets()} onSearch={handleWidgetSearch} />
           </div>
           <PlaylistItems
             baseUrl={props.baseUrl}
