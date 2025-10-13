@@ -1,8 +1,12 @@
 /** @jsxImportSource solid-js */
 
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@solidjs/testing-library';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { render, screen, fireEvent, cleanup } from '@solidjs/testing-library';
 import { Dropdown } from './dropdown';
+
+afterEach(() => {
+  cleanup();
+});
 
 // Define a sample props to use in tests
 const sampleProps = {
@@ -35,7 +39,7 @@ describe('Dropdown Component', () => {
 
   it('supports placeholder state and emits null selection', async () => {
     const handleChange = vi.fn();
-    render(() => (
+    const { container } = render(() => (
       <Dropdown
         {...sampleProps}
         placeholder="Select"
@@ -44,7 +48,7 @@ describe('Dropdown Component', () => {
       />
     ));
 
-    const select = screen.getByRole('combobox');
+    const select = container.querySelector('select') as HTMLSelectElement;
     expect(select).toHaveClass('is-placeholder');
     expect(select).toHaveValue('');
 
