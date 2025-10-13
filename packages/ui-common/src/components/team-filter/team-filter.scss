@@ -1,5 +1,15 @@
 .castmill-team-filter {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.5em;
+
+  // Make the dropdown inside more compact
+  .castmill-dropdown {
+    margin: 0;
+    padding: 0.2em;
+
+    select {
+      font-size: 0.9em;
+    }
+  }
 }

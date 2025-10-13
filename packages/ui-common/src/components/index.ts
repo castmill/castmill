@@ -22,3 +22,4 @@ export * from './timestamp/timestamp';
 export * from './toast/toast';
 export * from './toast/toast-container';
 export * from './toast/toast-provider';
+export * from './permission-denied/permission-denied';

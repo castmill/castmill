@@ -5,7 +5,7 @@
  * not assigned to any team, and individual team options. Hides the dropdown when no teams exist.
  */
 
-import { Component, Show, createEffect, createSignal } from 'solid-js';
+import { Component, Show, createMemo } from 'solid-js';
 import { Dropdown } from '../dropdown/dropdown';
 
 import './team-filter.scss';
@@ -20,47 +20,46 @@ export interface TeamFilterProps {
   selectedTeamId?: number | null;
   onTeamChange: (teamId: number | null) => void;
   label?: string;
+  placeholder?: string;
+  clearLabel?: string;
 }
 
 export const TeamFilter: Component<TeamFilterProps> = (props) => {
-  const [items, setItems] = createSignal<Array<{ value: string; name: string }>>(
-    []
-  );
-
-  createEffect(() => {
-    const teamItems = props.teams.map((team) => ({
+  const items = createMemo(() =>
+    props.teams.map((team) => ({
       value: team.id.toString(),
       name: team.name,
-    }));
+    }))
+  );
 
-    // Add "Organization" option at the beginning for resources not in any team
-    setItems([{ value: 'null', name: 'Organization' }, ...teamItems]);
+  const currentValue = createMemo(() => {
+    const id = props.selectedTeamId;
+    return id === null || id === undefined ? null : id.toString();
   });
 
-  const handleChange = (value: string) => {
-    if (value === 'null') {
+  const handleChange = (value: string | null) => {
+    if (value === null) {
       props.onTeamChange(null);
-    } else {
-      props.onTeamChange(parseInt(value, 10));
+      return;
     }
-  };
 
-  const getDefaultValue = () => {
-    if (props.selectedTeamId === null || props.selectedTeamId === undefined) {
-      return 'null';
-    }
-    return props.selectedTeamId.toString();
+    props.onTeamChange(parseInt(value, 10));
   };
 
   // Only show dropdown if there are teams
   return (
     <Show when={props.teams.length > 0}>
-      <Dropdown
-        label={props.label || 'Team'}
-        items={items()}
-        onSelectChange={handleChange}
-        defaultValue={getDefaultValue()}
-      />
+      <div class="castmill-team-filter">
+        <Dropdown
+          label={props.label || 'Team'}
+          items={items()}
+          onSelectChange={handleChange}
+          value={currentValue()}
+          placeholder={props.placeholder}
+          clearable
+          clearLabel={props.clearLabel}
+        />
+      </div>
     </Show>
   );
 };

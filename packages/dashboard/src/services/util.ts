@@ -1,4 +1,4 @@
-import { FetchDataOptions } from '@castmill/ui-common';
+import { FetchDataOptions, HttpError } from '@castmill/ui-common';
 
 type HandleResponseOptions = {
   parse?: boolean;
@@ -23,13 +23,37 @@ export async function handleResponse<T = any>(
   } else {
     let errMsg = '';
     try {
-      const { errors } = await response.json();
-      errMsg = `${errors.detail || response.statusText}`;
+      const errorPayload = await response.json();
+      const { errors, error } = errorPayload ?? {};
+
+      if (typeof error === 'string' && error.trim().length > 0) {
+        errMsg = error.trim();
+      } else if (errors) {
+        if (typeof errors === 'string') {
+          errMsg = errors.trim();
+        } else if (errors.detail) {
+          errMsg = `${errors.detail}`;
+        } else if (typeof errors === 'object') {
+          const firstEntry = Object.entries(errors)[0];
+          if (firstEntry) {
+            const [field, fieldErrors] = firstEntry;
+            if (Array.isArray(fieldErrors) && fieldErrors.length > 0) {
+              errMsg = `${field}: ${fieldErrors[0]}`;
+            } else if (typeof fieldErrors === 'string') {
+              errMsg = `${field}: ${fieldErrors}`;
+            }
+          }
+        }
+      }
+
+      if (!errMsg) {
+        errMsg = `${response.statusText}`;
+      }
     } catch (error) {
       errMsg = `${response.statusText}`;
     }
-    // We should NOT throw an exception here. We should handle errors in a different way.
-    throw new Error(errMsg);
+    // Throw HttpError with status code for better error handling
+    throw new HttpError(errMsg, response.status);
   }
 }
 

@@ -10,8 +10,19 @@ defmodule CastmillWeb.TeamController do
 
   @impl CastmillWeb.AccessActorBehaviour
   def check_access(actor_id, action, %{"token" => token})
-      when action in [:show_invitation, :accept_invitation] do
+      when action in [:show_invitation, :accept_invitation, :reject_invitation] do
     validInvitation?(actor_id, token)
+  end
+
+  def check_access(actor_id, :remove_member, %{"team_id" => team_id, "user_id" => user_id}) do
+    if same_user?(actor_id, user_id) do
+      case isOrganizationMember?(team_id, actor_id) do
+        true -> {:ok, true}
+        false -> {:ok, false}
+      end
+    else
+      check_access(actor_id, :remove_member, %{"team_id" => team_id})
+    end
   end
 
   def check_access(actor_id, action, %{"team_id" => team_id})
@@ -71,7 +82,8 @@ defmodule CastmillWeb.TeamController do
       false
     else
       role = Castmill.Organizations.get_user_role(team.organization_id, user_id)
-      role == :admin
+      # Managers can manage team members, just like admins
+      role == :admin or role == :manager
     end
   end
 
@@ -83,7 +95,7 @@ defmodule CastmillWeb.TeamController do
     else
       role = Castmill.Organizations.get_user_role(team.organization_id, user_id)
 
-      if role == :admin or role == :regular do
+      if role == :admin or role == :manager or role == :member do
         true
       else
         false
@@ -118,7 +130,7 @@ defmodule CastmillWeb.TeamController do
   end
 
   def add_member(conn, %{"team_id" => team_id, "user_id" => user_id}) do
-    case Teams.add_user_to_team(team_id, user_id, "regular") do
+    case Teams.add_user_to_team(team_id, user_id, "member") do
       {:ok, _} ->
         conn
         |> put_status(:created)
@@ -150,14 +162,26 @@ defmodule CastmillWeb.TeamController do
     end
   end
 
-  def invite_user(conn, %{
-        "team_id" => team_id,
-        "organization_id" => organization_id,
-        "email" => email
-      }) do
+  def invite_user(
+        conn,
+        %{
+          "team_id" => team_id,
+          "organization_id" => organization_id,
+          "email" => email
+        } = params
+      ) do
     {team_id_int, _} = Integer.parse(team_id)
 
-    case Teams.add_invitation_to_team(organization_id, team_id_int, email) do
+    # Get role from params, default to :member if not provided
+    role =
+      case Map.get(params, "role") do
+        "admin" -> :admin
+        "member" -> :member
+        "installer" -> :installer
+        _ -> :member
+      end
+
+    case Teams.add_invitation_to_team(organization_id, team_id_int, email, role) do
       {:ok, _} ->
         conn
         |> put_status(:created)
@@ -229,6 +253,25 @@ defmodule CastmillWeb.TeamController do
         conn
         |> put_status(:unprocessable_entity)
         |> json(%{errors: errors})
+
+      {:error, _} ->
+        conn
+        |> put_status(:bad_request)
+        |> json(%{})
+    end
+  end
+
+  def reject_invitation(conn, %{"token" => token}) do
+    case Teams.reject_invitation(token) do
+      {:ok, _} ->
+        conn
+        |> put_status(:ok)
+        |> json(%{})
+
+      {:error, message} when is_binary(message) ->
+        conn
+        |> put_status(:bad_request)
+        |> json(%{error: message})
 
       {:error, _} ->
         conn
@@ -319,10 +362,19 @@ defmodule CastmillWeb.TeamController do
         |> put_status(:ok)
         |> json(%{})
 
+      {:error, :last_admin} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{error: "cannot_remove_last_team_admin"})
+
       {:error, _} ->
         conn
         |> put_status(:bad_request)
         |> json(%{})
     end
+  end
+
+  defp same_user?(actor_id, user_id) do
+    to_string(actor_id) == to_string(user_id)
   end
 end

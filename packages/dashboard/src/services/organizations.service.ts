@@ -1,7 +1,8 @@
 import { Organization } from '../interfaces/organization';
 import { baseUrl } from '../env';
-import { FetchDataOptions } from '@castmill/ui-common';
+import { FetchDataOptions, HttpError } from '@castmill/ui-common';
 import { fetchOptionsToQueryString, handleResponse } from './util';
+import { OrganizationRole } from '../types/organization-role.type';
 
 export const OrganizationsService = {
   /**
@@ -60,8 +61,30 @@ export const OrganizationsService = {
       }
     );
 
-    if (response.status !== 200) {
-      throw new Error('Failed to remove member from team');
+    if (!response.ok) {
+      let errorMessage = 'Failed to remove member from organization';
+
+      try {
+        const errorData = await response.json();
+        if (typeof errorData?.error === 'string') {
+          errorMessage = errorData.error;
+        }
+      } catch (error) {
+        console.error(
+          'Failed to parse remove organization member error response',
+          error
+        );
+      }
+
+      if (errorMessage === 'Failed to remove member from organization') {
+        if (response.status === 422) {
+          errorMessage = 'cannot_remove_last_organization_admin';
+        } else if (response.status === 404) {
+          errorMessage = 'member_not_found';
+        }
+      }
+
+      throw new HttpError(errorMessage, response.status);
     }
   },
 
@@ -72,7 +95,7 @@ export const OrganizationsService = {
   async addMemberToOrganization(
     organizationId: string,
     memberId: string,
-    role: 'admin' | 'regular' | 'guest'
+    role: 'admin' | 'member' | 'guest'
   ) {
     const response = await fetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/members/${memberId}`,
@@ -97,7 +120,7 @@ export const OrganizationsService = {
   async inviteUser(
     organizationId: string,
     email: string,
-    role: 'admin' | 'regular' | 'guest'
+    role: OrganizationRole
   ) {
     const response = await fetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/invitations`,
@@ -117,9 +140,9 @@ export const OrganizationsService = {
     return data;
   },
 
-  async getInvitation(email: string, token: string) {
+  async getInvitation(token: string) {
     const response = await fetch(
-      `${baseUrl}/dashboard/organizations_invitations/${token}?email=${email}`,
+      `${baseUrl}/dashboard/organizations_invitations/${token}`,
       {
         method: 'GET',
         credentials: 'include',
@@ -129,21 +152,40 @@ export const OrganizationsService = {
     if (response.status === 200) {
       return await response.json();
     } else {
-      throw new Error('Failed to fetch invitation');
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to fetch invitation');
+    }
+  },
+
+  /**
+   * Preview invitation without authentication (checks if user exists)
+   */
+  async previewInvitation(token: string) {
+    const response = await fetch(
+      `${baseUrl}/dashboard/organizations_invitations/${token}/preview`,
+      {
+        method: 'GET',
+        credentials: 'include',
+      }
+    );
+
+    if (response.status === 200) {
+      return await response.json();
+    } else {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to preview invitation');
     }
   },
 
   /**
    * Accept an invitation to an Organization.
    *
-   * @param email
-   *
    * @param token
    * @returns
    */
-  async acceptInvitation(email: string, token: string) {
+  async acceptInvitation(token: string) {
     const response = await fetch(
-      `${baseUrl}/dashboard/organizations_invitations/${token}/accept?email=${email}`,
+      `${baseUrl}/dashboard/organizations_invitations/${token}/accept`,
       {
         method: 'POST',
         credentials: 'include',
@@ -153,7 +195,8 @@ export const OrganizationsService = {
     if (response.status === 200) {
       return await response.json();
     } else {
-      throw new Error('Failed to accept invitation');
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to accept invitation');
     }
   },
 

@@ -19,6 +19,57 @@ defmodule CastmillWeb.SignUpControllerTest do
     {:ok, conn: conn}
   end
 
+  describe "create_challenge/2 - for invitation flow" do
+    test "creates signup challenge without sending email", %{conn: conn} do
+      origin = "https://example.com"
+      conn = put_req_header(conn, "origin", origin)
+      _network = network_fixture(%{domain: origin})
+
+      email = "newuser@example.com"
+      invitation_token = "test-invitation-token"
+
+      conn =
+        post(conn, Routes.sign_up_path(conn, :create_challenge), %{
+          email: email,
+          invitation_token: invitation_token
+        })
+
+      response = json_response(conn, 201)
+      assert response["signup_id"]
+      assert response["challenge"]
+
+      # Ensure NO email was sent (unlike regular signup)
+      refute_email_sent()
+    end
+
+    test "returns error when origin is missing", %{conn: conn} do
+      conn =
+        post(conn, Routes.sign_up_path(conn, :create_challenge), %{
+          email: "test@example.com",
+          invitation_token: "token"
+        })
+
+      response = json_response(conn, 422)
+      assert response["status"] == "error"
+      assert response["msg"] == "Missing origin"
+    end
+
+    test "returns error when network not found", %{conn: conn} do
+      origin = "https://unknown.com"
+      conn = put_req_header(conn, "origin", origin)
+
+      conn =
+        post(conn, Routes.sign_up_path(conn, :create_challenge), %{
+          email: "test@example.com",
+          invitation_token: "token"
+        })
+
+      response = json_response(conn, 422)
+      assert response["status"] == "error"
+      assert response["msg"] == "Network not found"
+    end
+  end
+
   describe "create/2" do
     test "returns error when origin header is missing", %{conn: conn} do
       email = "test@example.com"

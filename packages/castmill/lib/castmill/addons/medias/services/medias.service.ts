@@ -1,5 +1,5 @@
 import { JsonMedia } from '@castmill/player';
-import { SortOptions } from '@castmill/ui-common';
+import { SortOptions, HttpError } from '@castmill/ui-common';
 
 export interface FetchMediasOptions {
   page: number;
@@ -42,7 +42,8 @@ async function handleResponse<T = any>(
     } catch (error) {
       errMsg = `${response.statusText}`;
     }
-    throw new Error(errMsg);
+    // Throw HttpError with status code for better error handling
+    throw new HttpError(errMsg, response.status);
   }
 }
 

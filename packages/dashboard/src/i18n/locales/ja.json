@@ -38,6 +38,8 @@
     "loadingAddons": "アドオン読み込み中...",
     "notFound": "404 見つかりません",
     "pageNotFound": "申し訳ございません。お探しのページは存在しません。",
+    "requestedPath": "リクエストされたパス",
+    "goToDashboard": "ダッシュボードに移動",
     "copyright": "© 2011-2025 Castmill™",
     "invitedEmail": "招待メールアドレス：",
     "acceptInvitation": "招待を承諾",
@@ -68,7 +70,13 @@
     "maintainance": "メンテナンス",
     "events": "イベント",
     "telemetry": "テレメトリ",
+    "youIndicator": "(あなた)",
     "addonLoadingError": "アドオン読み込みエラー",
+    "filters": {
+      "teamLabel": "チーム",
+      "teamPlaceholder": "チームを選択",
+      "teamClear": "チームフィルターをクリア"
+    },
     "addonError": "アドオンエラー",
     "backToLogin": "ログインに戻る"
   },
@@ -172,6 +180,12 @@
       "title": "招待を削除",
       "message": "{{email}}の招待を削除してもよろしいですか？"
     },
+    "removeInvitationFromTeam": "チームから招待を削除",
+    "removeInvitationsFromTeam": "チームから招待を削除",
+    "confirmRemoveInvitation": "{{email}}の招待を削除してもよろしいですか？",
+    "confirmRemoveInvitations": "チームから以下の招待を削除してもよろしいですか？",
+    "invitationRemovedSuccessfully": "{{email}}の招待が正常に削除されました",
+    "invitationsRemovedSuccessfully": "招待が正常に削除されました",
     "medias": "メディア",
     "playlists": "プレイリスト",
     "devices": "デバイス",
@@ -192,6 +206,10 @@
     "inviteMember": "メンバーを招待",
     "inviteMemberDescription": "チームに新しいメンバーを追加",
     "enterMember": "メンバーを入力してください",
+    "leaveTeamTitle": "このチームを退出する",
+    "leaveTeamDescription": "退出すると、このチームのリソースへのアクセスは直ちに失われます。",
+    "leaveTeamAction": "チームを退出する",
+    "leaveTeamLastAdminWarning": "チームの管理を維持するため、退出する前に別の管理者を追加してください。",
     "addResourceToTeam": "チームにリソースを追加",
     "addResourcesToTeams": "チームにリソースを追加",
     "errors": {
@@ -201,9 +219,16 @@
       "openViewModal": "表示モーダルを開く",
       "removeResource": "チームからリソースを削除中にエラーが発生しました：{{error}}",
       "removeResources": "チームからリソースを削除中にエラーが発生しました：{{error}}",
-      "addResourceToTeam": "チームにリソースを追加中にエラーが発生しました：{{error}}"
+      "addResourceToTeam": "チームにリソースを追加中にエラーが発生しました：{{error}}",
+      "cannotRemoveLastAdmin": "チームの最後の管理者を削除することはできません。"
     },
-    "confirmAddResources": "以下のリソースを追加してもよろしいですか？"
+    "confirmAddResources": "以下のリソースを追加してもよろしいですか？",
+    "messages": {
+      "memberRemoved": "メンバー{{name}}を正常に削除しました",
+      "membersRemoved": "メンバーを正常に削除しました",
+      "invitationSent": "{{email}} に招待状を送信しました",
+      "leftTeam": "チーム{{name}}を退出しました"
+    }
   },
   "login": {
     "title": "ログイン",
@@ -271,11 +296,29 @@
     "invitations": "招待",
     "update": "更新",
     "placeholderName": "組織名を入力してください",
-    "errors": {
-      "updateOrganization": "組織の更新中にエラーが発生しました：{{error}}"
-    },
     "inviteMember": "メンバーを招待",
-    "enterMemberEmail": "メンバーのメールアドレスを入力してください"
+    "enterMemberEmail": "メンバーのメールアドレスを入力してください",
+    "role": "役割",
+    "roleAdmin": "管理者",
+    "roleManager": "マネージャー",
+    "roleMember": "メンバー",
+    "roleEditor": "エディター",
+    "rolePublisher": "パブリッシャー",
+    "roleDeviceManager": "デバイス管理者",
+    "roleGuest": "ゲスト",
+    "teamRoleAdmin": "チーム管理者",
+    "teamRoleMember": "チームメンバー",
+    "errors": {
+      "updateOrganization": "組織の更新中にエラーが発生しました：{{error}}",
+      "emailRequired": "メールアドレスは必須です",
+      "invalidEmail": "無効なメールアドレス",
+      "cannotRemoveLastAdmin": "組織の最後の管理者を削除することはできません。",
+      "invalidRole": "選択した役割はこの組織で有効ではありません。"
+    },
+    "messages": {
+      "memberRemoved": "メンバー{{name}}を正常に削除しました",
+      "membersRemoved": "メンバーを正常に削除しました"
+    }
   },
   "playlists": {
     "title": "プレイリスト",
@@ -378,5 +421,26 @@
   "search": {
     "title": "検索",
     "description": "検索ページです。ここですべての検索結果を見つけることができます..."
+  },
+  "permissions": {
+    "noPermission": "{{resource}}を{{action}}する権限がありません",
+    "noCreateTeams": "チームを作成する権限がありません",
+    "noUpdateTeams": "チームを編集する権限がありません",
+    "noDeleteTeams": "チームを削除する権限がありません",
+    "noCreateOrganizations": "組織メンバーを招待する権限がありません",
+    "noUpdateOrganizations": "組織設定を管理する権限がありません",
+    "noDeleteOrganizations": "組織メンバーを削除する権限がありません",
+    "noCreatePlaylists": "プレイリストを作成する権限がありません",
+    "noDeletePlaylists": "プレイリストを削除する権限がありません",
+    "noCreateMedias": "メディアファイルをアップロードする権限がありません",
+    "noDeleteMedias": "メディアファイルを削除する権限がありません",
+    "noCreateWidgets": "ウィジェットをアップロードする権限がありません",
+    "noDeleteWidgets": "ウィジェットを削除する権限がありません",
+    "noCreateDevices": "デバイスを登録する権限がありません",
+    "noDeleteDevices": "デバイスを削除する権限がありません",
+    "noCreateChannels": "チャンネルを作成する権限がありません",
+    "noDeleteChannels": "チャンネルを削除する権限がありません",
+    "contactAdmin": "アクセス権限をリクエストするには管理者にお問い合わせください",
+    "insufficientRole": "このアクションには{{role}}ロールが必要です"
   }
 }

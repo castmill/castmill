@@ -6,7 +6,8 @@
  *
  */
 
-import { Component, createSignal } from 'solid-js';
+import { Component, Show, createEffect, createSignal } from 'solid-js';
+import { ImCancelCircle } from 'solid-icons/im';
 
 import './dropdown.scss';
 
@@ -18,33 +19,107 @@ interface DropdownItem {
 interface DropdownProps {
   label: string;
   items: Array<DropdownItem>;
-  onSelectChange: (value: string, name?: string) => void; // Callback function for when selection changes
-  defaultValue?: string;
+  onSelectChange: (value: string | null, name?: string) => void; // Callback function for when selection changes
+  value?: string | null;
+  defaultValue?: string | null;
+  placeholder?: string;
+  clearable?: boolean;
+  clearLabel?: string;
+  onClear?: () => void;
 }
 
 export const Dropdown: Component<DropdownProps> = (props) => {
-  const [selectedValue, setSelectedValue] = createSignal(
-    props.defaultValue ?? (props.items[0]?.value || '')
+  const computeFallbackValue = () => {
+    if (props.defaultValue !== undefined) {
+      return props.defaultValue;
+    }
+
+    if (props.placeholder) {
+      return null;
+    }
+
+    return props.items[0]?.value ?? null;
+  };
+
+  const [selectedValue, setSelectedValue] = createSignal<string | null>(
+    props.value !== undefined ? props.value : computeFallbackValue()
   );
+
+  const getCurrentValue = () =>
+    props.value !== undefined ? props.value : selectedValue();
+
+  createEffect(() => {
+    if (props.value !== undefined) {
+      setSelectedValue(props.value);
+      return;
+    }
+
+    const nextValue = computeFallbackValue();
+    setSelectedValue((current) =>
+      current !== nextValue ? nextValue : current
+    );
+  });
 
   // Handle dropdown changes
   const handleChange = (event: Event) => {
     const target = event.target as HTMLSelectElement;
-    props.onSelectChange(
-      target.value,
-      props.items.find((item) => item.value === target.value)?.name
-    ); // Call the callback function with the new value
-    setSelectedValue(target.value);
+    const value = target.value;
+    const resolvedValue = value === '' ? null : value;
+    const resolvedName =
+      resolvedValue === null
+        ? props.placeholder
+        : props.items.find((item) => item.value === value)?.name;
+
+    props.onSelectChange(resolvedValue, resolvedName);
+
+    if (props.value === undefined) {
+      setSelectedValue(resolvedValue);
+    }
   };
+
+  const handleClear = () => {
+    props.onSelectChange(null, props.placeholder);
+    props.onClear?.();
+
+    if (props.value === undefined) {
+      setSelectedValue(null);
+    }
+  };
+
+  const shouldShowClear = () =>
+    props.clearable &&
+    getCurrentValue() !== null &&
+    getCurrentValue() !== undefined;
 
   return (
     <div class="castmill-dropdown">
       <span class="label">{props.label}</span>
-      <select onChange={handleChange} value={selectedValue()}>
-        {props.items.map((item) => (
-          <option value={item.value}>{item.name}</option>
-        ))}
-      </select>
+      <div class="castmill-dropdown__control">
+        <select
+          onChange={handleChange}
+          value={selectedValue() ?? ''}
+          classList={{ 'is-placeholder': selectedValue() === null }}
+        >
+          {props.placeholder && (
+            <option value="" disabled hidden aria-hidden="true">
+              {props.placeholder}
+            </option>
+          )}
+          {props.items.map((item) => (
+            <option value={item.value}>{item.name}</option>
+          ))}
+        </select>
+        <Show when={shouldShowClear()}>
+          <button
+            type="button"
+            class="clear-button"
+            aria-label={props.clearLabel || 'Clear selection'}
+            onClick={handleClear}
+          >
+            <ImCancelCircle class="clear-button__icon" />
+          </button>
+        </Show>
+      </div>
     </div>
   );
 };

@@ -9,6 +9,42 @@ defmodule CastmillWeb.SignUpController do
   action_fallback(CastmillWeb.FallbackController)
 
   @doc """
+    Create a challenge for signup (used for invitation flow - no email sent).
+  """
+  def create_challenge(conn, %{"email" => email, "invitation_token" => _invitation_token}) do
+    origin = List.first(Plug.Conn.get_req_header(conn, "origin"))
+
+    if is_nil(origin) do
+      conn
+      |> put_status(:unprocessable_entity)
+      |> json(%{status: :error, msg: "Missing origin"})
+    else
+      case Accounts.get_network_id_by_domain(origin) do
+        {:ok, network_id} ->
+          challenge = SessionUtils.new_challenge()
+          params = %{"email" => email, "challenge" => challenge, "network_id" => network_id}
+
+          case Accounts.create_signup(params) do
+            {:ok, signup} ->
+              conn
+              |> put_status(:created)
+              |> json(%{signup_id: signup.id, challenge: challenge})
+
+            {:error, _changeset} ->
+              conn
+              |> put_status(:unprocessable_entity)
+              |> json(%{status: :error})
+          end
+
+        {:error, :network_not_found} ->
+          conn
+          |> put_status(:unprocessable_entity)
+          |> json(%{status: :error, msg: "Network not found"})
+      end
+    end
+  end
+
+  @doc """
     Create a new signup. The Signup starts the signup process for a new user.
   """
   def create(conn, %{"email" => nil}) do

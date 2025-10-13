@@ -1,4 +1,4 @@
-import { Component, createSignal, onCleanup, onMount, Show } from 'solid-js';
+import { Component, createEffect, createSignal, onCleanup, onMount, Show, on } from 'solid-js';
 
 import {
   Button,
@@ -26,7 +26,7 @@ import styles from './devices.module.scss';
 
 import RegisterDevice from './register-device';
 import { DevicesService } from '../services/devices.service';
-import { AddonStore } from '../../common/interfaces/addon-store';
+import { AddonStore, AddonComponentProps } from '../../common/interfaces/addon-store';
 import { useTeamFilter } from '../../common/hooks';
 
 import { QuotaIndicator } from '../../common/components/quota-indicator';
@@ -41,14 +41,21 @@ interface DeviceTableItem extends Device {
   country: string;
 }
 
-const DevicesPage: Component<{
-  store: AddonStore;
-  params: any; //typeof useSearchParams;
-}> = (props) => {
+const DevicesPage: Component<AddonComponentProps> = (props) => {
   // Get i18n functions from store
-  const t = (key: string, params?: Record<string, any>) =>
-    props.store.i18n?.t(key, params) || key;
+  const t = (key: string, params?: Record<string, any>) => {
+    const result = props.store.i18n?.t(key, params) || key;
+    console.log('[Devices] Translation:', key, '=>', result, 'i18n available:', !!props.store.i18n);
+    return result;
+  };
   const toast = useToast();
+
+  // Helper function to check permissions
+  const canPerformAction = (resource: string, action: string): boolean => {
+    if (!props.store.permissions?.matrix) return false;
+    const allowedActions = props.store.permissions.matrix[resource as keyof typeof props.store.permissions.matrix];
+    return allowedActions?.includes(action as any) ?? false;
+  };
 
   const [currentPage, setCurrentPage] = createSignal(1);
   const [totalItems, setTotalItems] = createSignal(0);
@@ -56,6 +63,7 @@ const DevicesPage: Component<{
   const { teams, selectedTeamId, setSelectedTeamId } = useTeamFilter({
     baseUrl: props.store.env.baseUrl,
     organizationId: props.store.organizations.selectedId,
+    params: props.params, // Pass URL params for shareable filtered views
   });
 
   const itemsPerPage = 10; // Number of items to show per page
@@ -117,6 +125,22 @@ const DevicesPage: Component<{
     loadQuota();
   });
 
+  // Reload data when organization changes (using on() to defer execution)
+  createEffect(
+    on(
+      () => props.store.organizations.selectedId,
+      (orgId, prevOrgId) => {
+        // Only reload when org actually changes (not on first run when prevOrgId is undefined)
+        if (prevOrgId !== undefined && orgId !== prevOrgId) {
+          loadQuota();
+          if (tableViewRef) {
+            tableViewRef.reloadData();
+          }
+        }
+      }
+    )
+  );
+
   const isQuotaReached = () => {
     const currentQuota = quota();
     if (!currentQuota) return false;
@@ -160,12 +184,12 @@ const DevicesPage: Component<{
 
       refreshData();
       loadQuota(); // Reload quota after registration
-      setLoadingSuccess('Device registered successfully');
+      setLoadingSuccess(t('devices.deviceRegisteredSuccess'));
 
       // Update total items
       setTotalItems(totalItems() + 1);
     } catch (error) {
-      setRegisterError(`Error registering device: ${error}`);
+      setRegisterError(t('devices.errorRegisteringDevice', { error: String(error) }));
     } finally {
       setLoading(false);
     }
@@ -198,7 +222,7 @@ const DevicesPage: Component<{
     { key: 'name', title: t('common.name'), sortable: true },
     {
       key: 'online',
-      title: 'Online',
+      title: t('common.online'),
       sortable: true,
       render: (item: DeviceTableItem) => (
         <svg
@@ -226,6 +250,10 @@ const DevicesPage: Component<{
     {
       icon: AiOutlineDelete,
       handler: (item: DeviceTableItem) => {
+        if (!canPerformAction('devices', 'delete')) {
+          toast.error(t('permissions.noDeleteDevices') || "You don't have permission to delete devices");
+          return;
+        }
         setCurrentDevice(item);
         setShowConfirmDialog(true);
       },
@@ -283,10 +311,10 @@ const DevicesPage: Component<{
       );
 
       refreshData();
-      toast.success(`Device "${device.name}" removed successfully`);
+      toast.success(t('devices.deviceRemovedSuccess', { name: device.name }));
       loadQuota(); // Reload quota after deletion
     } catch (error) {
-      toast.error(`Error removing device ${device.name}: ${error}`);
+      toast.error(t('devices.errorRemovingDevice', { name: device.name, error: String(error) }));
     }
     setShowConfirmDialog(false);
   };
@@ -304,10 +332,10 @@ const DevicesPage: Component<{
       );
 
       refreshData();
-      toast.success(`${selectedDevices().size} device(s) removed successfully`);
+      toast.success(t('devices.devicesRemovedSuccess', { count: selectedDevices().size }));
       loadQuota(); // Reload quota after deletion
     } catch (error) {
-      toast.error(`Error removing devices: ${error}`);
+      toast.error(t('devices.errorRemovingDevices', { error: String(error) }));
     }
     setShowConfirmDialogMultiple(false);
   };
@@ -343,8 +371,8 @@ const DevicesPage: Component<{
     <div class={`${styles.devicesPage}`}>
       <Show when={showRegisterModal()}>
         <Modal
-          title="Register device"
-          description="And start displaying content on it"
+          title={t('devices.registerDevice')}
+          description={t('devices.registerDescription')}
           onClose={() => setShowRegisterModal(false)}
           successMessage={loadingSuccess()}
           errorMessage={registerError()}
@@ -363,7 +391,7 @@ const DevicesPage: Component<{
       <Show when={showModal()}>
         <Modal
           title={`Device "${currentDevice()?.name}"`}
-          description="Details of your device"
+          description={t('devices.deviceDetails')}
           onClose={closeModal}
         >
           <DeviceView
@@ -380,16 +408,16 @@ const DevicesPage: Component<{
 
       <ConfirmDialog
         show={showConfirmDialog()}
-        title="Remove Device"
-        message={`Are you sure you want to remove device "${currentDevice()?.name}"?`}
+        title={t('devices.removeDevice')}
+        message={t('devices.confirmRemove', { name: currentDevice()?.name || '' })}
         onClose={() => setShowConfirmDialog(false)}
         onConfirm={() => confirmRemoveDevice(currentDevice())}
       />
 
       <ConfirmDialog
         show={showConfirmDialogMultiple()}
-        title="Remove Devices"
-        message={'Are you sure you want to remove the following devices?'}
+        title={t('devices.removeDevices')}
+        message={t('devices.confirmRemoveMultiple')}
         onClose={() => setShowConfirmDialogMultiple(false)}
         onConfirm={() => confirmRemoveMultipleDevices()}
       >
@@ -402,15 +430,15 @@ const DevicesPage: Component<{
       </ConfirmDialog>
 
       <TableView
-        title="Devices"
+        title={t('devices.title')}
         resource="devices"
         params={props.params}
         fetchData={fetchData}
         ref={setRef}
         toolbar={{
           filters: [
-            { name: 'Online', key: 'online', isActive: true },
-            { name: 'Offline', key: 'offline', isActive: true },
+            { name: t('common.online'), key: 'online', isActive: true },
+            { name: t('common.offline'), key: 'offline', isActive: true },
           ],
           mainAction: (
             <div style="display: flex; align-items: center; gap: 1rem;">
@@ -418,17 +446,17 @@ const DevicesPage: Component<{
                 <QuotaIndicator
                   used={quota()!.used}
                   total={quota()!.total}
-                  resourceName="Devices"
+                  resourceName={t('devices.title')}
                   compact
                   isLoading={showLoadingIndicator()}
                 />
               </Show>
               <Button
-                label="Add Device"
+                label={t('devices.addDevice')}
                 onClick={openRegisterModal}
                 icon={BsCheckLg}
                 color="primary"
-                disabled={isQuotaReached()}
+                disabled={isQuotaReached() || !canPerformAction('devices', 'create')}
               />
             </div>
           ),
@@ -438,6 +466,9 @@ const DevicesPage: Component<{
                 teams={teams()}
                 selectedTeamId={selectedTeamId()}
                 onTeamChange={handleTeamChange}
+                label={t('filters.teamLabel')}
+                placeholder={t('filters.teamPlaceholder')}
+                clearLabel={t('filters.teamClear')}
               />
               <IconButton
                 onClick={() => setShowConfirmDialogMultiple(true)}

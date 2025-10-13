@@ -477,7 +477,8 @@ defmodule Castmill.Resources do
         search: search,
         filters: filters,
         team_id: team_id
-      }) when not is_nil(team_id) do
+      })
+      when not is_nil(team_id) do
     offset = (page_size && max((page - 1) * page_size, 0)) || 0
 
     preloads =
@@ -522,16 +523,11 @@ defmodule Castmill.Resources do
         []
       end
 
-    # Get the join module for this resource type to exclude resources in teams
-    {join_module, foreign_key} = get_team_join_info(resource)
-
-    # Build query excluding resources that are in any team
     resource.base_query()
     |> Organization.where_org_id(organization_id)
-    |> join(:left, [r], t in ^join_module, on: field(t, ^foreign_key) == r.id)
-    |> where([_, t], is_nil(t.team_id))
     |> QueryHelpers.apply_combined_filters(filters, resource)
     |> QueryHelpers.where_name_like(search)
+    |> Ecto.Query.distinct(true)
     |> Ecto.Query.order_by([d], asc: d.name)
     |> Ecto.Query.limit(^page_size)
     |> Ecto.Query.offset(^offset)
@@ -574,7 +570,8 @@ defmodule Castmill.Resources do
         search: search,
         filters: filters,
         team_id: team_id
-      }) when not is_nil(team_id) do
+      })
+      when not is_nil(team_id) do
     # Get the join module for this resource type
     {join_module, foreign_key} = get_team_join_info(resource)
 
@@ -592,13 +589,8 @@ defmodule Castmill.Resources do
         search: search,
         filters: filters
       }) do
-    # Get the join module for this resource type to exclude resources in teams
-    {join_module, foreign_key} = get_team_join_info(resource)
-
     resource.base_query()
     |> Organization.where_org_id(organization_id)
-    |> join(:left, [r], t in ^join_module, on: field(t, ^foreign_key) == r.id)
-    |> where([_, t], is_nil(t.team_id))
     |> QueryHelpers.apply_combined_filters(filters, resource)
     |> QueryHelpers.where_name_like(search)
     |> Repo.aggregate(:count, :id)

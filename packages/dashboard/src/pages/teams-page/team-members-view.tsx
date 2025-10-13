@@ -13,19 +13,30 @@ import {
   ConfirmDialog,
   TableViewRef,
   ComboBox,
+  Dropdown,
   Timestamp,
   useToast,
 } from '@castmill/ui-common';
 import { TeamsService } from '../../services/teams.service';
 import { OrganizationsService } from '../../services/organizations.service';
-import { store, setStore } from '../../store/store';
+import { PermissionButton } from '../../components/permission-button/permission-button';
+import { usePermissions } from '../../hooks/usePermissions';
 import { BsCheckLg } from 'solid-icons/bs';
 import { AiOutlineDelete } from 'solid-icons/ai';
-import { createSignal, Show } from 'solid-js';
+import { createMemo, createSignal, Show } from 'solid-js';
 import { User } from '../../interfaces/user.interface';
 import { useI18n } from '../../i18n';
+import { getUser } from '../../components/auth';
+import styles from './teams-page.module.scss';
 
-const [data, setData] = createSignal<{ user: User; user_id: string }[]>([], {
+interface TeamMemberRow {
+  user: User;
+  user_id: string;
+  role: string;
+  inserted_at?: string;
+}
+
+const [data, setData] = createSignal<TeamMemberRow[]>([], {
   equals: false,
 });
 
@@ -44,6 +55,9 @@ const [selectedMembers, setSelectedMembers] = createSignal(new Set<string>());
 const [selectedUser, setSelectedUser] = createSignal<User | undefined>(
   undefined
 );
+const [selectedRole, setSelectedRole] = createSignal<'member' | 'admin'>(
+  'member'
+);
 const [isFormValid, setIsFormValid] = createSignal(false);
 
 const onRowSelect = (rowsSelected: Set<string>) => {
@@ -52,32 +66,87 @@ const onRowSelect = (rowsSelected: Set<string>) => {
 
 const itemsPerPage = 10;
 
-const actions = [
-  {
-    icon: AiOutlineDelete,
-    handler: (item: any) => {
-      setCurrentMember(item);
-      setShowConfirmDialog(true);
-    },
-    label: 'Remove',
-  },
-];
-
-const addMember = () => {
-  setSelectedUser(undefined);
-  setIsFormValid(false);
-  setShowAddMemberDialog(true);
-};
-
 export const TeamMembersView = (props: {
   organizationId: string;
   teamId: number;
   onRemove: (member: User) => void;
+  onInvitationSent?: () => void;
 }) => {
   const { t } = useI18n();
+  const { canPerformAction } = usePermissions();
+  const toast = useToast();
+  const resolveRemoveMemberError = (message: string) => {
+    switch (message) {
+      case 'cannot_remove_last_team_admin':
+        return t('teams.errors.cannotRemoveLastAdmin');
+      default:
+        return message;
+    }
+  };
+  const currentUser = getUser();
+  const currentMembership = createMemo(() => {
+    if (!currentUser?.id) {
+      return undefined;
+    }
+    return data().find(
+      (entry: TeamMemberRow) => entry.user_id === currentUser.id
+    );
+  });
+
+  const adminCount = createMemo(
+    () => data().filter((entry: TeamMemberRow) => entry.role === 'admin').length
+  );
+
+  const canLeaveTeam = createMemo(() => {
+    const membership = currentMembership();
+    if (!membership) {
+      return false;
+    }
+
+    if (membership.role !== 'admin') {
+      return true;
+    }
+
+    return adminCount() > 1;
+  });
+
+  const addMember = () => {
+    setSelectedUser(undefined);
+    setSelectedRole('member');
+    setIsFormValid(false);
+    setShowAddMemberDialog(true);
+  };
+
+  const actions = [
+    {
+      icon: AiOutlineDelete,
+      handler: (item: any) => {
+        if (!canPerformAction('teams', 'update')) {
+          toast.error(
+            t('permissions.noUpdateTeams') ||
+              "You don't have permission to update teams"
+          );
+          return;
+        }
+        setCurrentMember(item);
+        setShowConfirmDialog(true);
+      },
+      label: t('common.remove'),
+    },
+  ];
 
   const columns = [
-    { key: 'user.name', title: t('common.name'), sortable: true },
+    {
+      key: 'user.name',
+      title: t('common.name'),
+      sortable: true,
+      render: (item: any) => {
+        const isCurrentUser = item.user_id === currentUser?.id;
+        return isCurrentUser
+          ? `${item.user.name} ${t('common.youIndicator')}`
+          : item.user.name;
+      },
+    },
     { key: 'role', title: t('common.role'), sortable: true },
     {
       key: 'inserted_at',
@@ -88,8 +157,6 @@ export const TeamMembersView = (props: {
       ),
     },
   ];
-
-  const toast = useToast();
 
   const fetchData = async (opts: FetchDataOptions) => {
     const result = await TeamsService.fetchMembers(
@@ -123,7 +190,7 @@ export const TeamMembersView = (props: {
       props.organizationId,
       {
         page: { num: page, size: pageSize },
-        sortOptions: {},
+        sortOptions: { key: 'name', direction: 'ascending' },
         search: searchQuery,
       }
     );
@@ -152,10 +219,12 @@ export const TeamMembersView = (props: {
       );
 
       refreshData();
-      toast.success(`Member ${member.name} removed successfully`);
+      toast.success(t('teams.messages.memberRemoved', { name: member.name }));
+      props.onRemove(member);
       setShowConfirmDialog(false);
     } catch (error) {
-      toast.error((error as Error).message);
+      const errorMessage = resolveRemoveMemberError((error as Error).message);
+      toast.error(errorMessage);
     }
   };
 
@@ -172,10 +241,43 @@ export const TeamMembersView = (props: {
       );
 
       refreshData();
-      toast.success('Members removed successfully');
+      toast.success(t('teams.messages.membersRemoved'));
+      Array.from(selectedMembers()).forEach((memberId) => {
+        const member = data().find(
+          (entry: TeamMemberRow) => entry.user_id === memberId
+        );
+        if (member) {
+          props.onRemove(member.user);
+        }
+      });
       setShowConfirmDialogMultiple(false);
     } catch (error) {
-      toast.error((error as Error).message);
+      const errorMessage = resolveRemoveMemberError((error as Error).message);
+      toast.error(errorMessage);
+    }
+  };
+
+  const leaveTeam = async () => {
+    const membership = currentMembership();
+    if (!membership) {
+      return;
+    }
+
+    try {
+      await TeamsService.removeMemberFromTeam(
+        props.organizationId,
+        props.teamId,
+        membership.user_id
+      );
+
+      refreshData();
+      toast.success(
+        t('teams.messages.leftTeam', { name: membership.user.name })
+      );
+      props.onRemove(membership.user);
+    } catch (error) {
+      const errorMessage = resolveRemoveMemberError((error as Error).message);
+      toast.error(errorMessage);
     }
   };
 
@@ -194,13 +296,15 @@ export const TeamMembersView = (props: {
               if (isFormValid() && selectedUser()) {
                 try {
                   await TeamsService.inviteUser(
-                    store.organizations.selectedId!,
+                    props.organizationId,
                     props.teamId,
-                    selectedUser()!.email
+                    selectedUser()!.email,
+                    selectedRole()
                   );
 
                   refreshData();
-                  toast.success(`Invitation sent to ${email()}`);
+                  toast.success(`Invitation sent to ${selectedUser()!.email}`);
+                  props.onInvitationSent?.();
                   setShowAddMemberDialog(false);
                 } catch (error) {
                   toast.error((error as Error).message);
@@ -225,8 +329,29 @@ export const TeamMembersView = (props: {
               onSelect={handleUserSelect}
             />
 
-            <div class="form-input"></div>
-            <div class="form-actions">
+            <div style="margin-top: 1em;">
+              <Dropdown
+                label={t('organizations.role')}
+                items={[
+                  {
+                    value: 'member',
+                    name: t('organizations.teamRoleMember'),
+                  },
+                  { value: 'admin', name: t('organizations.teamRoleAdmin') },
+                ]}
+                defaultValue={selectedRole()}
+                onSelectChange={(
+                  value: string | number | boolean | undefined
+                ) => {
+                  if (!value) {
+                    return;
+                  }
+                  setSelectedRole(value as 'member' | 'admin');
+                }}
+              />
+            </div>
+
+            <div style="margin-top: 1em;">
               <Button
                 label="Invite"
                 type="submit"
@@ -255,7 +380,9 @@ export const TeamMembersView = (props: {
       >
         <div style="margin: 1.5em; line-height: 1.5em;">
           {Array.from(selectedMembers()).map((memberId) => {
-            const member = data().find((d) => d.user_id === memberId);
+            const member = data().find(
+              (entry: TeamMemberRow) => entry.user_id === memberId
+            );
             return <div>{`- ${member?.user.name}`}</div>;
           })}
         </div>
@@ -268,7 +395,9 @@ export const TeamMembersView = (props: {
         ref={setRef}
         toolbar={{
           mainAction: (
-            <Button
+            <PermissionButton
+              resource="teams"
+              action="update"
               label={t('teams.inviteMember')}
               onClick={addMember}
               icon={BsCheckLg}
@@ -278,10 +407,22 @@ export const TeamMembersView = (props: {
           actions: (
             <div>
               <IconButton
-                onClick={() => setShowConfirmDialogMultiple(true)}
+                onClick={() => {
+                  if (!canPerformAction('teams', 'update')) {
+                    toast.error(
+                      t('permissions.noUpdateTeams') ||
+                        "You don't have permission to update teams"
+                    );
+                    return;
+                  }
+                  setShowConfirmDialogMultiple(true);
+                }}
                 icon={AiOutlineDelete}
                 color="primary"
-                disabled={selectedMembers().size === 0}
+                disabled={
+                  selectedMembers().size === 0 ||
+                  !canPerformAction('teams', 'update')
+                }
               />
             </div>
           ),
@@ -294,6 +435,26 @@ export const TeamMembersView = (props: {
         pagination={{ itemsPerPage }}
         itemIdKey="user_id"
       ></TableView>
+
+      <Show when={currentMembership()}>
+        <div class={styles.leaveTeamPanel}>
+          <div class={styles.leaveTeamContent}>
+            <h4>{t('teams.leaveTeamTitle')}</h4>
+            <p>{t('teams.leaveTeamDescription')}</p>
+            <Show when={!canLeaveTeam()}>
+              <p class={styles.leaveTeamWarning}>
+                {t('teams.leaveTeamLastAdminWarning')}
+              </p>
+            </Show>
+          </div>
+          <Button
+            label={t('teams.leaveTeamAction')}
+            color="danger"
+            onClick={leaveTeam}
+            disabled={!canLeaveTeam()}
+          />
+        </div>
+      </Show>
     </>
   );
 };

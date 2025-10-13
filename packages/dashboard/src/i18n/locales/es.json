@@ -38,6 +38,8 @@
     "loadingAddons": "Cargando complementos...",
     "notFound": "404 No encontrado",
     "pageNotFound": "Lo sentimos, la página que buscas no existe.",
+    "requestedPath": "Ruta solicitada",
+    "goToDashboard": "Ir al Panel",
     "copyright": "© 2011-2025 Castmill™",
     "invitedEmail": "Correo electrónico invitado:",
     "acceptInvitation": "Aceptar invitación",
@@ -68,7 +70,13 @@
     "maintainance": "Mantenimiento",
     "events": "Eventos",
     "telemetry": "Telemetría",
+    "youIndicator": "(tú)",
     "addonLoadingError": "Error al cargar complemento",
+    "filters": {
+      "teamLabel": "Equipo",
+      "teamPlaceholder": "Selecciona un equipo",
+      "teamClear": "Quitar filtro de equipo"
+    },
     "addonError": "Error de complemento",
     "backToLogin": "Volver al inicio de sesión"
   },
@@ -172,6 +180,12 @@
       "title": "Eliminar invitación",
       "message": "¿Estás seguro de que quieres eliminar la invitación para {{email}}?"
     },
+    "removeInvitationFromTeam": "Eliminar invitación del equipo",
+    "removeInvitationsFromTeam": "Eliminar invitaciones del equipo",
+    "confirmRemoveInvitation": "¿Estás seguro de que quieres eliminar la invitación para {{email}}?",
+    "confirmRemoveInvitations": "¿Estás seguro de que quieres eliminar las siguientes invitaciones del equipo?",
+    "invitationRemovedSuccessfully": "Invitación para {{email}} eliminada exitosamente",
+    "invitationsRemovedSuccessfully": "Invitaciones eliminadas exitosamente",
     "medias": "Medios",
     "playlists": "Listas de reproducción",
     "devices": "Dispositivos",
@@ -192,6 +206,10 @@
     "inviteMember": "Invitar miembro",
     "inviteMemberDescription": "Añadir un nuevo miembro al equipo",
     "enterMember": "Ingresa el miembro",
+    "leaveTeamTitle": "Salir de este equipo",
+    "leaveTeamDescription": "Al salir perderás inmediatamente el acceso a los recursos del equipo.",
+    "leaveTeamAction": "Salir del equipo",
+    "leaveTeamLastAdminWarning": "Añade otro administrador antes de salir para mantener este equipo gestionado.",
     "addResourceToTeam": "Añadir recurso al equipo",
     "addResourcesToTeams": "Añadir recursos a equipos",
     "confirmAddResources": "¿Estás seguro de que quieres añadir los siguientes recursos?",
@@ -202,7 +220,14 @@
       "openViewModal": "abrir modal de vista",
       "removeResource": "Error al eliminar recurso del equipo: {{error}}",
       "removeResources": "Error al eliminar recursos del equipo: {{error}}",
-      "addResourceToTeam": "Error al añadir recurso al equipo: {{error}}"
+      "addResourceToTeam": "Error al añadir recurso al equipo: {{error}}",
+      "cannotRemoveLastAdmin": "No puedes eliminar al último administrador del equipo."
+    },
+    "messages": {
+      "memberRemoved": "El miembro {{name}} se eliminó correctamente",
+      "membersRemoved": "Miembros eliminados correctamente",
+      "invitationSent": "Invitación enviada a {{email}}",
+      "leftTeam": "Saliste del equipo {{name}}"
     }
   },
   "login": {
@@ -273,8 +298,26 @@
     "placeholderName": "Ingresa el nombre de la organización",
     "inviteMember": "Invitar miembro",
     "enterMemberEmail": "Ingresa el correo electrónico del miembro",
+    "role": "Rol",
+    "roleAdmin": "Administrador",
+    "roleManager": "Gerente",
+    "roleMember": "Miembro",
+    "roleEditor": "Editor",
+    "rolePublisher": "Publicador",
+    "roleDeviceManager": "Administrador de dispositivos",
+    "roleGuest": "Invitado",
+    "teamRoleAdmin": "Administrador de equipo",
+    "teamRoleMember": "Miembro de equipo",
     "errors": {
-      "updateOrganization": "Error al actualizar la organización: {{error}}"
+      "updateOrganization": "Error al actualizar la organización: {{error}}",
+      "emailRequired": "El correo electrónico es obligatorio",
+      "invalidEmail": "Correo electrónico inválido",
+      "cannotRemoveLastAdmin": "No puedes eliminar al último administrador de la organización.",
+      "invalidRole": "El rol seleccionado no es válido para esta organización."
+    },
+    "messages": {
+      "memberRemoved": "El miembro {{name}} se eliminó correctamente",
+      "membersRemoved": "Miembros eliminados correctamente"
     }
   },
   "signup": {
@@ -378,5 +421,26 @@
       "one": "hace {{count}} día",
       "other": "hace {{count}} días"
     }
+  },
+  "permissions": {
+    "noPermission": "No tienes permiso para {{action}} {{resource}}",
+    "noCreateTeams": "No tienes permiso para crear equipos",
+    "noUpdateTeams": "No tienes permiso para editar equipos",
+    "noDeleteTeams": "No tienes permiso para eliminar equipos",
+    "noCreateOrganizations": "No tienes permiso para invitar miembros de la organización",
+    "noUpdateOrganizations": "No tienes permiso para gestionar la configuración de la organización",
+    "noDeleteOrganizations": "No tienes permiso para eliminar miembros de la organización",
+    "noCreatePlaylists": "No tienes permiso para crear listas de reproducción",
+    "noDeletePlaylists": "No tienes permiso para eliminar listas de reproducción",
+    "noCreateMedias": "No tienes permiso para cargar archivos multimedia",
+    "noDeleteMedias": "No tienes permiso para eliminar archivos multimedia",
+    "noCreateWidgets": "No tienes permiso para cargar widgets",
+    "noDeleteWidgets": "No tienes permiso para eliminar widgets",
+    "noCreateDevices": "No tienes permiso para registrar dispositivos",
+    "noDeleteDevices": "No tienes permiso para eliminar dispositivos",
+    "noCreateChannels": "No tienes permiso para crear canales",
+    "noDeleteChannels": "No tienes permiso para eliminar canales",
+    "contactAdmin": "Contacta a tu administrador para solicitar acceso",
+    "insufficientRole": "Esta acción requiere el rol {{role}}"
   }
 }

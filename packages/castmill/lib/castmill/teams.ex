@@ -5,6 +5,7 @@ defmodule Castmill.Teams do
   require Logger
 
   import Ecto.Query, warn: false
+  alias Ecto.Multi
 
   alias Swoosh.Email
 
@@ -12,7 +13,17 @@ defmodule Castmill.Teams do
   alias Castmill.Repo
 
   alias Castmill.Organizations.Organization
-  alias Castmill.Teams.{Team, TeamsUsers, TeamsMedias, TeamsPlaylists, TeamsChannels, TeamsDevices, Invitation}
+
+  alias Castmill.Teams.{
+    Team,
+    TeamsUsers,
+    TeamsMedias,
+    TeamsPlaylists,
+    TeamsChannels,
+    TeamsDevices,
+    Invitation
+  }
+
   alias Castmill.Resources.{Media, Playlist, Channel}
   alias Castmill.Devices.Device
   alias Castmill.QueryHelpers
@@ -93,17 +104,46 @@ defmodule Castmill.Teams do
       {:error, %Ecto.Changeset{}}
 
   """
-  def create_team(attrs \\ %{}) do
+  def create_team(attrs \\ %{}, creator \\ nil) do
     organization_id = Map.get(attrs, "organization_id") || Map.get(attrs, :organization_id)
+    creator_id = normalize_creator(creator)
 
     # Check quota before creating the team
     with :ok <- check_team_quota(organization_id) do
-      %Team{}
-      |> Team.changeset(attrs)
-      |> Repo.insert()
+      multi =
+        Multi.new()
+        |> Multi.insert(:team, Team.changeset(%Team{}, attrs))
+
+      multi =
+        if creator_id do
+          Multi.insert(multi, :membership, fn %{team: team} ->
+            TeamsUsers.changeset(%TeamsUsers{}, %{
+              team_id: team.id,
+              user_id: creator_id,
+              role: :admin
+            })
+          end)
+        else
+          multi
+        end
+
+      case Repo.transaction(multi) do
+        {:ok, %{team: team}} -> {:ok, team}
+        {:error, :team, changeset, _changes_so_far} -> {:error, changeset}
+        {:error, :membership, changeset, _changes_so_far} -> {:error, changeset}
+      end
     else
       {:error, :quota_exceeded} -> {:error, :quota_exceeded}
     end
+  end
+
+  defp normalize_creator(nil), do: nil
+  defp normalize_creator(%{id: id}) when is_binary(id), do: id
+  defp normalize_creator(id) when is_binary(id), do: id
+
+  defp normalize_creator(other) do
+    raise ArgumentError,
+          "expected creator to be a user struct with an :id or a UUID string, got: #{inspect(other)}"
   end
 
   defp check_team_quota(organization_id) do
@@ -233,9 +273,23 @@ defmodule Castmill.Teams do
       nil ->
         {:error, :not_found}
 
+      %TeamsUsers{role: :admin} = teams_user ->
+        if count_team_admins(team_id) <= 1 do
+          {:error, :last_admin}
+        else
+          Repo.delete(teams_user)
+        end
+
       teams_user ->
         Repo.delete(teams_user)
     end
+  end
+
+  defp count_team_admins(team_id) do
+    TeamsUsers.base_query()
+    |> TeamsUsers.where_team_id(team_id)
+    |> where([teams_users: tu], tu.role == :admin)
+    |> Repo.aggregate(:count, :user_id)
   end
 
   @doc """
@@ -292,7 +346,9 @@ defmodule Castmill.Teams do
       |> Ecto.Query.limit(^page_size)
       |> Ecto.Query.offset(^offset)
       |> select([teams_users: tu, user: u], %{
+        user_id: tu.user_id,
         role: tu.role,
+        inserted_at: tu.inserted_at,
         user: %{
           id: u.id,
           name: u.name,
@@ -494,7 +550,7 @@ defmodule Castmill.Teams do
     end
   end
 
-  def add_invitation_to_team(organization_id, team_id, email) do
+  def add_invitation_to_team(organization_id, team_id, email, role \\ :member) do
     token =
       :crypto.strong_rand_bytes(16)
       |> Base.url_encode64(padding: false)
@@ -508,7 +564,7 @@ defmodule Castmill.Teams do
         {:ok, :no_conflict}
       end
     end)
-    # 2) Check if there’s already an active “invited” row
+    # 2) Check if there's already an active "invited" row
     |> Ecto.Multi.run(:check_existing_invite, fn _repo, _changes ->
       existing =
         Repo.get_by(Invitation,
@@ -529,7 +585,8 @@ defmodule Castmill.Teams do
       |> Invitation.changeset(%{
         team_id: team_id,
         email: email,
-        token: token
+        token: token,
+        role: role
         # status defaults to "invited", unless you override it
       })
     end)
@@ -604,7 +661,8 @@ defmodule Castmill.Teams do
     from(i in Invitation,
       where: i.token == ^token,
       join: t in assoc(i, :team),
-      preload: [team: t]
+      join: o in assoc(t, :organization),
+      preload: [team: {t, organization: o}]
     )
     |> Repo.one()
   end
@@ -626,7 +684,10 @@ defmodule Castmill.Teams do
         {:error, "Invalid token"}
 
       invitation ->
-        case add_user_to_team(invitation.team_id, user_id, "regular") do
+        # Convert atom role to string for add_user_to_team
+        role = Atom.to_string(invitation.role)
+
+        case add_user_to_team(invitation.team_id, user_id, role) do
           {:ok, _} ->
             from(i in Invitation,
               where: i.token == ^token
@@ -637,6 +698,26 @@ defmodule Castmill.Teams do
 
           {:error, changeset} ->
             {:error, changeset}
+        end
+    end
+  end
+
+  # Rejects an invitation by updating the status to rejected
+  def reject_invitation(token) do
+    case get_invitation(token) do
+      nil ->
+        {:error, "Invalid token"}
+
+      invitation ->
+        if invitation.status != "invited" do
+          {:error, "Invitation already #{invitation.status}"}
+        else
+          from(i in Invitation,
+            where: i.token == ^token
+          )
+          |> Repo.update_all(set: [status: "rejected"])
+
+          {:ok, invitation}
         end
     end
   end

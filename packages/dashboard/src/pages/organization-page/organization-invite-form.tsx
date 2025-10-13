@@ -11,7 +11,7 @@ export const OrganizationInviteForm = (props: {
 }) => {
   const { t } = useI18n();
   const [email, setEmail] = createSignal('');
-  const [role, setRole] = createSignal<OrganizationRole>('regular');
+  const [role, setRole] = createSignal<OrganizationRole>('member');
 
   const [errors, setErrors] = createSignal(new Map());
   const [isFormValid, setIsFormValid] = createSignal(false);
@@ -19,9 +19,9 @@ export const OrganizationInviteForm = (props: {
   const validateField = (field: string, value: string) => {
     if (field === 'email') {
       if (value.length === 0) {
-        errors().set(field, 'Email is required');
+        errors().set(field, t('organization.errors.emailRequired'));
       } else if (!value.match(/^[\w-]+@([\w-]+\.)+[\w-]{2,4}$/)) {
-        errors().set(field, 'Invalid email');
+        errors().set(field, t('organization.errors.invalidEmail'));
       } else {
         errors().delete(field);
       }
@@ -58,29 +58,49 @@ export const OrganizationInviteForm = (props: {
       </FormItem>
       <div class={style['form-input']}>
         <Dropdown
-          label="Role"
+          label={t('organization.role')}
           items={[
             {
-              name: 'Admin',
+              name: t('organization.roleAdmin'),
               value: 'admin',
             },
             {
-              name: 'Regular',
-              value: 'regular',
+              name: t('organization.roleManager'),
+              value: 'manager',
             },
             {
-              name: 'Guest',
+              name: t('organization.roleEditor'),
+              value: 'editor',
+            },
+            {
+              name: t('organization.rolePublisher'),
+              value: 'publisher',
+            },
+            {
+              name: t('organization.roleDeviceManager'),
+              value: 'device_manager',
+            },
+            {
+              name: t('organization.roleMember'),
+              value: 'member',
+            },
+            {
+              name: t('organization.roleGuest'),
               value: 'guest',
             },
           ]}
-          onSelectChange={(value) => {
+          defaultValue={role()}
+          onSelectChange={(value: string | number | undefined) => {
+            if (!value) {
+              return;
+            }
             setRole(value as OrganizationRole);
           }}
         />
       </div>
-      <div class="form-actions">
+      <div class={style['form-actions']}>
         <Button
-          label="Add"
+          label={t('common.add')}
           type="submit"
           disabled={!isFormValid()}
           color="primary"

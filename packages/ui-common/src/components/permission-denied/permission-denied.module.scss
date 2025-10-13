@@ -1,0 +1,40 @@
+.permissionDenied {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3em;
+  text-align: center;
+  min-height: 300px;
+}
+
+.iconContainer {
+  margin-bottom: 1.5em;
+}
+
+.icon {
+  font-size: 4em;
+  color: #f59e0b; /* Amber color for warning */
+  opacity: 0.8;
+}
+
+.title {
+  font-size: 1.5em;
+  font-weight: 600;
+  color: #374151; /* Gray-700 */
+  margin: 0 0 0.75em 0;
+}
+
+.message {
+  font-size: 1em;
+  color: #6b7280; /* Gray-500 */
+  margin: 0 0 1em 0;
+  max-width: 500px;
+}
+
+.hint {
+  font-size: 0.875em;
+  color: #9ca3af; /* Gray-400 */
+  margin: 0;
+  font-style: italic;
+}
