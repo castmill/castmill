@@ -159,6 +159,21 @@
       "fetchUsageData": "Misslyckades att hämta användningsdata: {{error}}"
     }
   },
+  "content": {
+    "title": "Innehåll",
+    "description": "Översikt över dina innehållsresurser och kvotanvändning",
+    "playlists": "Spellistor",
+    "medias": "Mediefiler",
+    "storage": "Lagring",
+    "widgets": "Widgets",
+    "used": "Använd",
+    "total": "Totalt",
+    "loadingUsageData": "Laddar användningsdata...",
+    "quotaLimitReached": "Kvotgräns nådd",
+    "approachingLimit": "Närmar sig gränsen",
+    "noUsageData": "Ingen användningsdata tillgänglig",
+    "unableToLoad": "Kan inte ladda resursanvändningsinformation"
+  },
   "teams": {
     "title": "Team",
     "members": "Medlemmar",

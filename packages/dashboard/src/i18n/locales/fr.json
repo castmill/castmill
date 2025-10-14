@@ -159,6 +159,21 @@
       "fetchUsageData": "Échec de la récupération des données d'utilisation : {{error}}"
     }
   },
+  "content": {
+    "title": "Contenu",
+    "description": "Aperçu de vos ressources de contenu et de l'utilisation du quota",
+    "playlists": "Listes de lecture",
+    "medias": "Fichiers multimédias",
+    "storage": "Stockage",
+    "widgets": "Widgets",
+    "used": "Utilisé",
+    "total": "Total",
+    "loadingUsageData": "Chargement des données d'utilisation...",
+    "quotaLimitReached": "Limite de quota atteinte",
+    "approachingLimit": "Approche de la limite",
+    "noUsageData": "Aucune donnée d'utilisation disponible",
+    "unableToLoad": "Impossible de charger les informations d'utilisation des ressources"
+  },
   "teams": {
     "title": "Équipes",
     "members": "Membres",

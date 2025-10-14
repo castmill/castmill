@@ -159,6 +159,21 @@
       "fetchUsageData": "使用量データの取得に失敗しました：{{error}}"
     }
   },
+  "content": {
+    "title": "コンテンツ",
+    "description": "コンテンツリソースとクォータ使用量の概要",
+    "playlists": "プレイリスト",
+    "medias": "メディアファイル",
+    "storage": "ストレージ",
+    "widgets": "ウィジェット",
+    "used": "使用済み",
+    "total": "合計",
+    "loadingUsageData": "使用量データを読み込んでいます...",
+    "quotaLimitReached": "クォータ制限に達しました",
+    "approachingLimit": "制限に近づいています",
+    "noUsageData": "利用可能な使用量データがありません",
+    "unableToLoad": "リソース使用量情報を読み込めません"
+  },
   "teams": {
     "title": "チーム",
     "members": "メンバー",

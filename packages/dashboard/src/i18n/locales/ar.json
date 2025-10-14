@@ -159,6 +159,21 @@
       "fetchUsageData": "فشل جلب بيانات الاستخدام: {{error}}"
     }
   },
+  "content": {
+    "title": "المحتوى",
+    "description": "نظرة عامة على موارد المحتوى واستخدام الحصة",
+    "playlists": "قوائم التشغيل",
+    "medias": "ملفات الوسائط",
+    "storage": "التخزين",
+    "widgets": "الأدوات",
+    "used": "المستخدم",
+    "total": "الإجمالي",
+    "loadingUsageData": "جاري تحميل بيانات الاستخدام...",
+    "quotaLimitReached": "تم الوصول إلى حد الحصة",
+    "approachingLimit": "الاقتراب من الحد",
+    "noUsageData": "لا توجد بيانات استخدام متاحة",
+    "unableToLoad": "تعذر تحميل معلومات استخدام الموارد"
+  },
   "teams": {
     "title": "الفرق",
     "members": "الأعضاء",
