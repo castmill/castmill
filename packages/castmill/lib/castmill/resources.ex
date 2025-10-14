@@ -219,10 +219,72 @@ defmodule Castmill.Resources do
   end
 
   @doc """
+  Checks if a playlist is used in any channels (as default playlist or in channel entries).
+  """
+  def playlist_has_channels?(%Playlist{id: playlist_id}) do
+    playlist_has_channels?(playlist_id)
+  end
+
+  def playlist_has_channels?(playlist_id) when is_integer(playlist_id) do
+    # Check if used as default playlist
+    default_playlist_query =
+      from(c in Channel,
+        where: c.default_playlist_id == ^playlist_id,
+        select: count(c.id)
+      )
+
+    # Check if used in channel entries
+    channel_entry_query =
+      from(ce in ChannelEntry,
+        where: ce.playlist_id == ^playlist_id,
+        select: count(ce.id)
+      )
+
+    default_count = Repo.one(default_playlist_query)
+    entry_count = Repo.one(channel_entry_query)
+
+    default_count + entry_count > 0
+  end
+
+  @doc """
+  Gets the channels that are using a specific playlist.
+  Returns a list of maps with channel id and name.
+  """
+  def get_channels_using_playlist(playlist_id) when is_integer(playlist_id) do
+    # Get channels where playlist is the default playlist
+    default_playlist_channels =
+      from(c in Channel,
+        where: c.default_playlist_id == ^playlist_id,
+        select: %{id: c.id, name: c.name}
+      )
+      |> Repo.all()
+
+    # Get channels where playlist is used in channel entries
+    channel_entry_channels =
+      from(ce in ChannelEntry,
+        join: c in Channel,
+        on: ce.channel_id == c.id,
+        where: ce.playlist_id == ^playlist_id,
+        distinct: true,
+        select: %{id: c.id, name: c.name}
+      )
+      |> Repo.all()
+
+    # Combine and remove duplicates
+    (default_playlist_channels ++ channel_entry_channels)
+    |> Enum.uniq_by(& &1.id)
+  end
+
+  @doc """
     Removes a playlist.
+    Returns {:error, :playlist_has_channels} if the playlist is used in any channels.
   """
   def delete_playlist(%Playlist{} = playlist) do
-    Repo.delete(playlist)
+    if playlist_has_channels?(playlist) do
+      {:error, :playlist_has_channels}
+    else
+      Repo.delete(playlist)
+    end
   end
 
   @doc """

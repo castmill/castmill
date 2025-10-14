@@ -475,6 +475,19 @@ defmodule CastmillWeb.ResourceController do
         with {:ok, %Playlist{}} <- Castmill.Resources.delete_playlist(playlist) do
           send_resp(conn, :no_content, "")
         else
+          {:error, :playlist_has_channels} ->
+            channels = Castmill.Resources.get_channels_using_playlist(playlist.id)
+            channel_names = Enum.map(channels, & &1.name)
+
+            conn
+            |> put_status(:conflict)
+            |> Phoenix.Controller.json(%{
+              errors: %{
+                detail: "Cannot delete playlist that is used in channels",
+                channels: channel_names
+              }
+            })
+
           {:error, reason} ->
             send_resp(conn, 500, "Error deleting playlist: #{inspect(reason)}")
         end

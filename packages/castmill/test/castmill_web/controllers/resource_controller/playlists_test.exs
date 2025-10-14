@@ -225,6 +225,91 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
       response = json_response(conn, 404)
       assert %{"errors" => ["Playlist not found"]} = response
     end
+
+    test "fails to delete a playlist used as default playlist in a channel", %{
+      conn: conn,
+      organization: organization
+    } do
+      import Castmill.ChannelsFixtures
+
+      # Create a playlist
+      playlist =
+        playlist_fixture(%{
+          organization_id: organization.id,
+          name: "Test Playlist"
+        })
+
+      # Create a channel that uses this playlist as default
+      channel =
+        channel_fixture(%{
+          organization_id: organization.id,
+          name: "Test Channel",
+          timezone: "UTC",
+          default_playlist_id: playlist.id
+        })
+
+      # Attempt to delete the playlist
+      conn = delete(conn, "/api/organizations/#{organization.id}/playlists/#{playlist.id}")
+      assert response(conn, 409)
+
+      # Verify the error response contains channel information
+      response = json_response(conn, 409)
+
+      assert %{
+               "errors" => %{
+                 "detail" => "Cannot delete playlist that is used in channels",
+                 "channels" => channels
+               }
+             } = response
+
+      assert channel.name in channels
+    end
+
+    test "fails to delete a playlist used in a channel entry", %{
+      conn: conn,
+      organization: organization
+    } do
+      import Castmill.ChannelsFixtures
+
+      # Create a playlist
+      playlist =
+        playlist_fixture(%{
+          organization_id: organization.id,
+          name: "Test Playlist"
+        })
+
+      # Create a channel
+      channel =
+        channel_fixture(%{
+          organization_id: organization.id,
+          name: "Test Channel",
+          timezone: "UTC"
+        })
+
+      # Add the playlist to a channel entry
+      _entry =
+        channel_entry_fixture(channel.id, %{
+          playlist_id: playlist.id,
+          start: ~U[2024-01-01 10:00:00Z],
+          end: ~U[2024-01-01 12:00:00Z]
+        })
+
+      # Attempt to delete the playlist
+      conn = delete(conn, "/api/organizations/#{organization.id}/playlists/#{playlist.id}")
+      assert response(conn, 409)
+
+      # Verify the error response contains channel information
+      response = json_response(conn, 409)
+
+      assert %{
+               "errors" => %{
+                 "detail" => "Cannot delete playlist that is used in channels",
+                 "channels" => channels
+               }
+             } = response
+
+      assert channel.name in channels
+    end
   end
 
   describe "full playlist lifecycle" do
