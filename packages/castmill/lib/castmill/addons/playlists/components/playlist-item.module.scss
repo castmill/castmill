@@ -34,11 +34,45 @@
     }
 
     .playlist-item-duration {
+      min-width: 12em;
+      margin-right: 1.5em;
     }
 
     .playlist-item-actions {
       display: flex;
       flex-direction: row;
+      gap: 0.5em;
+      align-items: center;
+    }
+
+    .playlist-item-edit-icon,
+    .playlist-item-remove-icon {
+      button {
+        background: none;
+        border: none;
+        padding: 0.5em;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 0.375em;
+        transition: all 0.2s ease;
+        color: #999;
+
+        &:hover {
+          background-color: rgba(255, 255, 255, 0.1);
+          color: #fff;
+        }
+
+        &:active {
+          transform: scale(0.95);
+        }
+      }
+    }
+
+    .playlist-item-remove-icon button:hover {
+      background-color: rgba(239, 68, 68, 0.15);
+      color: #ef4444;
     }
   }
 
