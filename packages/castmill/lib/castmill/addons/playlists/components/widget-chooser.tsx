@@ -107,15 +107,17 @@ export const WidgetChooser: Component<{
 
   return (
     <div class="widget-chooser">
-      <div class="search-container">
-        <IconWrapper icon={FaSolidMagnifyingGlass} />
-        <input
-          type="text"
-          value={searchText()}
-          onInput={handleSearchChange}
-          placeholder="Search widgets..."
-          class="search-input"
-        />
+      <div class="widget-chooser-header">
+        <div class="search-container">
+          <IconWrapper icon={FaSolidMagnifyingGlass} />
+          <input
+            type="text"
+            value={searchText()}
+            onInput={handleSearchChange}
+            placeholder="Search widgets..."
+            class="search-input"
+          />
+        </div>
       </div>
       <div class="items-container">
         <For each={props.widgets}>

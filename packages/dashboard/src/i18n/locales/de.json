@@ -305,7 +305,8 @@
     "confirmRemovePlaylists": "Sind Sie sicher, dass Sie die folgenden Playlists entfernen möchten?",
     "errorRemovingPlaylist": "Fehler beim Entfernen der Playlist {{name}}: {{error}}",
     "errorRemovingPlaylists": "Fehler beim Entfernen der Playlists: {{error}}",
-    "enterPlaylistName": "Playlist-Namen eingeben"
+    "enterPlaylistName": "Playlist-Namen eingeben",
+    "dragToAdd": "Zum Hinzufügen ziehen"
   },
   "widgets": {
     "title": "Widgets",

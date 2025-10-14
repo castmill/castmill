@@ -289,7 +289,8 @@
     "confirmRemovePlaylists": "Är du säker på att du vill ta bort följande spellistor?",
     "errorRemovingPlaylist": "Fel vid borttagning av spellista {{name}}: {{error}}",
     "errorRemovingPlaylists": "Fel vid borttagning av spellistor: {{error}}",
-    "enterPlaylistName": "Ange spellistnamn"
+    "enterPlaylistName": "Ange spellistnamn",
+    "dragToAdd": "Dra för att lägga till"
   },
   "widgets": {
     "title": "Widgets",

@@ -284,6 +284,7 @@ const PlaylistsPage: Component<{
             baseUrl={props.store.env.baseUrl}
             organizationId={props.store.organizations.selectedId}
             playlistId={currentPlaylist()?.id!}
+            t={t}
             onChange={(playlist) => {
               console.log('Playlist changed', playlist);
             }}

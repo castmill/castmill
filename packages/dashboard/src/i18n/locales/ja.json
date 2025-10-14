@@ -289,7 +289,8 @@
     "confirmRemovePlaylists": "以下のプレイリストを削除してもよろしいですか？",
     "errorRemovingPlaylist": "プレイリスト{{name}}の削除中にエラーが発生しました：{{error}}",
     "errorRemovingPlaylists": "プレイリストの削除中にエラーが発生しました：{{error}}",
-    "enterPlaylistName": "プレイリスト名を入力してください"
+    "enterPlaylistName": "プレイリスト名を入力してください",
+    "dragToAdd": "ドラッグして追加"
   },
   "widgets": {
     "title": "Widgets",
