@@ -132,6 +132,7 @@ defmodule CastmillWeb.Router do
     pipe_through(:dashboard)
 
     post("/", SignUpController, :create)
+    post("/challenges", SignUpController, :create_challenge)
     post("/:id/users", SignUpController, :create_user)
   end
 
@@ -153,6 +154,13 @@ defmodule CastmillWeb.Router do
     post("/recover/credential", CredentialRecoveryController, :add_recovery_credential)
   end
 
+  # Public invitation routes (no authentication required)
+  scope "/dashboard", CastmillWeb do
+    pipe_through(:dashboard)
+
+    get("/organizations_invitations/:token/preview", OrganizationController, :preview_invitation)
+  end
+
   scope "/dashboard", CastmillWeb do
     pipe_through([:dashboard, :authenticate_user])
 
@@ -167,6 +175,9 @@ defmodule CastmillWeb.Router do
     # List all the widgets available for the organization
     get("/organizations/:organization_id/widgets", OrganizationController, :list_widgets)
     post("/organizations/:organization_id/widgets", OrganizationController, :create_widget)
+
+    # Get permissions matrix for current user in organization
+    get("/organizations/:organization_id/permissions", PermissionsController, :show)
 
     delete(
       "/organizations/:organization_id/widgets/:widget_id",
@@ -208,6 +219,7 @@ defmodule CastmillWeb.Router do
     # View and accept invitations
     get("/invitations/:token", TeamController, :show_invitation, as: :team_invitation)
     post("/invitations/:token/accept", TeamController, :accept_invitation, as: :team_invitation)
+    post("/invitations/:token/reject", TeamController, :reject_invitation, as: :team_invitation)
 
     resources "/organizations", OrganizationController, only: [:update] do
       post("/devices", OrganizationController, :register_device)

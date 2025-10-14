@@ -38,6 +38,8 @@
     "loadingAddons": "애드온 로딩 중...",
     "notFound": "404 찾을 수 없음",
     "pageNotFound": "죄송합니다. 찾으시는 페이지가 존재하지 않습니다.",
+    "requestedPath": "요청된 경로",
+    "goToDashboard": "대시보드로 이동",
     "copyright": "© 2011-2025 Castmill™",
     "invitedEmail": "초대된 이메일:",
     "acceptInvitation": "초대 수락",
@@ -68,7 +70,13 @@
     "maintainance": "유지보수",
     "events": "이벤트",
     "telemetry": "원격 측정",
+    "youIndicator": "(본인)",
     "addonLoadingError": "애드온 로딩 오류",
+    "filters": {
+      "teamLabel": "팀",
+      "teamPlaceholder": "팀 선택",
+      "teamClear": "팀 필터 지우기"
+    },
     "addonError": "애드온 오류",
     "backToLogin": "로그인으로 돌아가기"
   },
@@ -161,7 +169,10 @@
   },
   "teams": {
     "title": "팀",
-    "members": "멤버",
+    "members": {
+      "selectUser": "사용자 선택",
+      "searchUser": "사용자 검색..."
+    },
     "invitations": "초대",
     "invitationAcceptSuccess": "초대가 성공적으로 수락되었습니다",
     "invitationDeleteSuccess": "초대가 성공적으로 삭제되었습니다",
@@ -172,6 +183,12 @@
       "title": "초대 삭제",
       "message": "{{email}}의 초대를 삭제하시겠습니까?"
     },
+    "removeInvitationFromTeam": "팀에서 초대 제거",
+    "removeInvitationsFromTeam": "팀에서 초대 제거",
+    "confirmRemoveInvitation": "{{email}}의 초대를 제거하시겠습니까?",
+    "confirmRemoveInvitations": "팀에서 다음 초대를 제거하시겠습니까?",
+    "invitationRemovedSuccessfully": "{{email}}의 초대가 성공적으로 제거되었습니다",
+    "invitationsRemovedSuccessfully": "초대가 성공적으로 제거되었습니다",
     "medias": "미디어",
     "playlists": "재생목록",
     "devices": "기기",
@@ -192,6 +209,10 @@
     "inviteMember": "멤버 초대",
     "inviteMemberDescription": "팀에 새 멤버 추가",
     "enterMember": "멤버 입력",
+    "leaveTeamTitle": "이 팀 나가기",
+    "leaveTeamDescription": "나가면 팀 리소스에 대한 접근 권한이 즉시 제거됩니다.",
+    "leaveTeamAction": "팀 나가기",
+    "leaveTeamLastAdminWarning": "팀 관리를 위해 나가기 전에 다른 관리자를 추가하세요.",
     "addResourceToTeam": "팀에 리소스 추가",
     "addResourcesToTeams": "팀에 리소스 추가",
     "errors": {
@@ -201,9 +222,24 @@
       "openViewModal": "보기 모달 열기",
       "removeResource": "팀에서 리소스 제거 오류: {{error}}",
       "removeResources": "팀에서 리소스 제거 오류: {{error}}",
-      "addResourceToTeam": "팀에 리소스 추가 오류: {{error}}"
+      "addResourceToTeam": "팀에 리소스 추가 오류: {{error}}",
+      "cannotRemoveLastAdmin": "팀의 마지막 관리자를 제거할 수 없습니다."
     },
-    "confirmAddResources": "다음 리소스를 추가하시겠습니까?"
+    "confirmAddResources": "다음 리소스를 추가하시겠습니까?",
+    "messages": {
+      "memberRemoved": "구성원 {{name}}을(를) 성공적으로 제거했습니다",
+      "membersRemoved": "구성원을 성공적으로 제거했습니다",
+      "invitationSent": "{{email}}에게 초대장을 보냈습니다",
+      "leftTeam": "{{name}} 팀을 나갔습니다"
+    },
+    "invitation": {
+      "title": "팀 초대",
+      "emailAddress": "이메일 주소",
+      "teamRole": "팀 역할",
+      "expired": "이 초대가 만료되었습니다.",
+      "accepting": "수락 중...",
+      "accept": "초대 수락"
+    }
   },
   "login": {
     "title": "로그인",
@@ -271,11 +307,44 @@
     "invitations": "초대",
     "update": "업데이트",
     "placeholderName": "조직 이름 입력",
-    "errors": {
-      "updateOrganization": "조직 업데이트 오류: {{error}}"
-    },
     "inviteMember": "멤버 초대",
-    "enterMemberEmail": "멤버의 이메일 입력"
+    "enterMemberEmail": "멤버의 이메일 입력",
+    "role": "역할",
+    "roleAdmin": "관리자",
+    "roleManager": "매니저",
+    "roleMember": "멤버",
+    "roleEditor": "편집자",
+    "rolePublisher": "퍼블리셔",
+    "roleDeviceManager": "디바이스 관리자",
+    "roleGuest": "게스트",
+    "teamRoleAdmin": "팀 관리자",
+    "teamRoleMember": "팀 멤버",
+    "errors": {
+      "updateOrganization": "조직 업데이트 오류: {{error}}",
+      "emailRequired": "이메일은 필수입니다",
+      "invalidEmail": "유효하지 않은 이메일",
+      "cannotRemoveLastAdmin": "조직의 마지막 관리자를 제거할 수 없습니다.",
+      "invalidRole": "선택한 역할은 이 조직에 유효하지 않습니다."
+    },
+    "messages": {
+      "memberRemoved": "구성원 {{name}}을(를) 성공적으로 제거했습니다",
+      "membersRemoved": "구성원을 성공적으로 제거했습니다"
+    },
+    "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
+    "roleDescriptions": {
+      "admin": "조직 관리를 포함한 전체 액세스",
+      "manager": "팀 및 대부분의 리소스를 관리할 수 있음",
+      "member": "표준 사용자(기본값), 콘텐츠를 관리할 수 있음",
+      "editor": "전체 콘텐츠 관리, 팀을 관리할 수 없음",
+      "publisher": "편집자와 동일하며 게시 워크플로 작업 추가",
+      "device_manager": "전체 기기 및 채널 관리",
+      "guest": "리소스에 대한 읽기 전용 액세스"
+    },
+    "teamRoleDescriptions": {
+      "admin": "팀 구성원 및 리소스를 관리할 수 있음",
+      "member": "팀 리소스에 액세스하고 편집할 수 있음",
+      "installer": "기기 등록용 임시 토큰(24시간 후 만료)"
+    }
   },
   "playlists": {
     "title": "재생목록",
@@ -340,7 +409,22 @@
     "pincode": "PIN 코드",
     "enterPincode": "{{length}}자리 PIN 코드 입력",
     "pincodeDescription": "PIN 코드는 기기 화면에 표시됩니다.",
-    "register": "등록"
+    "register": "등록",
+    "title": "[TODO: Translate] Devices",
+    "addDevice": "[TODO: Translate] Add Device",
+    "registerDevice": "[TODO: Translate] Register device",
+    "registerDescription": "[TODO: Translate] And start displaying content on it",
+    "deviceDetails": "[TODO: Translate] Details of your device",
+    "removeDevice": "[TODO: Translate] Remove Device",
+    "removeDevices": "[TODO: Translate] Remove Devices",
+    "confirmRemove": "[TODO: Translate] Are you sure you want to remove device \"{{name}}\"?",
+    "confirmRemoveMultiple": "[TODO: Translate] Are you sure you want to remove the following devices?",
+    "deviceRegisteredSuccess": "[TODO: Translate] Device registered successfully",
+    "deviceRemovedSuccess": "[TODO: Translate] Device \"{{name}}\" removed successfully",
+    "devicesRemovedSuccess": "[TODO: Translate] {{count}} device(s) removed successfully",
+    "errorRegisteringDevice": "[TODO: Translate] Error registering device: {{error}}",
+    "errorRemovingDevice": "[TODO: Translate] Error removing device {{name}}: {{error}}",
+    "errorRemovingDevices": "[TODO: Translate] Error removing devices: {{error}}"
   },
   "validation": {
     "fieldRequired": "이 필드는 필수입니다",
@@ -379,5 +463,40 @@
   "search": {
     "title": "검색",
     "description": "검색 페이지입니다. 여기에서 모든 검색 결과를 찾을 수 있습니다..."
+  },
+  "permissions": {
+    "noPermission": "{{resource}}을(를) {{action}}할 권한이 없습니다",
+    "noCreateTeams": "팀을 생성할 권한이 없습니다",
+    "noUpdateTeams": "팀을 수정할 권한이 없습니다",
+    "noDeleteTeams": "팀을 삭제할 권한이 없습니다",
+    "noCreateOrganizations": "조직 구성원을 초대할 권한이 없습니다",
+    "noUpdateOrganizations": "조직 설정을 관리할 권한이 없습니다",
+    "noDeleteOrganizations": "조직 구성원을 제거할 권한이 없습니다",
+    "noCreatePlaylists": "재생 목록을 생성할 권한이 없습니다",
+    "noDeletePlaylists": "재생 목록을 삭제할 권한이 없습니다",
+    "noCreateMedias": "미디어 파일을 업로드할 권한이 없습니다",
+    "noDeleteMedias": "미디어 파일을 삭제할 권한이 없습니다",
+    "noCreateWidgets": "위젯을 업로드할 권한이 없습니다",
+    "noDeleteWidgets": "위젯을 삭제할 권한이 없습니다",
+    "noCreateDevices": "장치를 등록할 권한이 없습니다",
+    "noDeleteDevices": "장치를 삭제할 권한이 없습니다",
+    "noCreateChannels": "채널을 생성할 권한이 없습니다",
+    "noDeleteChannels": "채널을 삭제할 권한이 없습니다",
+    "contactAdmin": "액세스 권한을 요청하려면 관리자에게 문의하세요",
+    "insufficientRole": "이 작업에는 {{role}} 역할이 필요합니다"
+  },
+  "organizations": {
+    "invitation": {
+      "title": "조직 초대",
+      "emailAddress": "이메일 주소",
+      "expired": "이 초대가 만료되었습니다.",
+      "loginToAccept": "이 초대를 수락하려면 로그인하세요",
+      "createAccount": "이 초대를 수락하려면 계정을 만드세요"
+    }
+  },
+  "filters": {
+    "teamLabel": "팀",
+    "teamPlaceholder": "팀 선택",
+    "teamClear": "팀 필터 지우기"
   }
 }

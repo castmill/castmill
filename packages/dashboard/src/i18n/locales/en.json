@@ -38,6 +38,8 @@
     "loadingAddons": "Loading addons...",
     "notFound": "404 Not Found",
     "pageNotFound": "Sorry, the page you are looking for does not exist.",
+    "requestedPath": "Requested path",
+    "goToDashboard": "Go to Dashboard",
     "copyright": "© 2011-2025 Castmill™",
     "invitedEmail": "Invited Email:",
     "acceptInvitation": "Accept Invitation",
@@ -70,7 +72,13 @@
     "cache": "Cache",
     "maintainance": "Maintenance",
     "events": "Events",
-    "telemetry": "Telemetry"
+    "telemetry": "Telemetry",
+    "youIndicator": "(you)"
+  },
+  "filters": {
+    "teamLabel": "Team",
+    "teamPlaceholder": "Select team",
+    "teamClear": "Clear team filter"
   },
   "sidebar": {
     "organization": "Organization",
@@ -180,7 +188,10 @@
     "removeTeams": "Remove Teams",
     "confirmRemoveTeam": "Are you sure you want to remove team \"{{name}}\"?",
     "confirmRemoveTeams": "Are you sure you want to remove the following teams?",
-    "members": "Members",
+    "members": {
+      "selectUser": "Select User",
+      "searchUser": "Search for a user..."
+    },
     "invitations": "Invitations",
     "invitationAcceptSuccess": "Invitation accepted successfully",
     "invitationDeleteSuccess": "Invitation deleted successfully",
@@ -191,6 +202,12 @@
       "title": "Delete Invitation",
       "message": "Are you sure you want to delete the invitation for {{email}}?"
     },
+    "removeInvitationFromTeam": "Remove Invitation from Team",
+    "removeInvitationsFromTeam": "Remove Invitations from Team",
+    "confirmRemoveInvitation": "Are you sure you want to remove the invitation for {{email}}?",
+    "confirmRemoveInvitations": "Are you sure you want to remove the following invitations from the team?",
+    "invitationRemovedSuccessfully": "Invitation for {{email}} removed successfully",
+    "invitationsRemovedSuccessfully": "Invitations removed successfully",
     "medias": "Medias",
     "playlists": "Playlists",
     "devices": "Devices",
@@ -203,6 +220,10 @@
     "inviteMember": "Invite Member",
     "inviteMemberDescription": "Add a new member to the team",
     "enterMember": "Enter member",
+    "leaveTeamTitle": "Leave this team",
+    "leaveTeamDescription": "Leaving removes your access to team resources immediately.",
+    "leaveTeamAction": "Leave team",
+    "leaveTeamLastAdminWarning": "Add another admin before leaving to keep this team managed.",
     "addResourceToTeam": "Add Resource to Team",
     "addResourcesToTeams": "Add Resources to Teams",
     "confirmAddResources": "Are you sure you want to add the following resources?",
@@ -213,7 +234,22 @@
       "openViewModal": "open view modal",
       "removeResource": "Error removing resource from team: {{error}}",
       "removeResources": "Error removing resources from team: {{error}}",
-      "addResourceToTeam": "Error adding resource to team: {{error}}"
+      "addResourceToTeam": "Error adding resource to team: {{error}}",
+      "cannotRemoveLastAdmin": "You can't remove the last admin of a team."
+    },
+    "messages": {
+      "memberRemoved": "Member {{name}} removed successfully",
+      "membersRemoved": "Members removed successfully",
+      "invitationSent": "Invitation sent to {{email}}",
+      "leftTeam": "You left the team {{name}}"
+    },
+    "invitation": {
+      "title": "Team Invitation",
+      "emailAddress": "Email Address",
+      "teamRole": "Team Role",
+      "expired": "This invitation has expired.",
+      "accepting": "Accepting...",
+      "accept": "Accept Invitation"
     }
   },
   "channels": {
@@ -251,8 +287,41 @@
     "placeholderName": "Enter organization name",
     "inviteMember": "Invite Member",
     "enterMemberEmail": "Enter member's email",
+    "role": "Role",
+    "roleAdmin": "Admin",
+    "roleManager": "Manager",
+    "roleMember": "Member",
+    "roleEditor": "Editor",
+    "rolePublisher": "Publisher",
+    "roleDeviceManager": "Device Manager",
+    "roleGuest": "Guest",
+    "teamRoleAdmin": "Team Admin",
+    "teamRoleMember": "Team Member",
+    "teamRoleInstaller": "Installer (24h)",
+    "roleDescriptions": {
+      "admin": "Full access including organization management",
+      "manager": "Can manage teams and most resources",
+      "member": "Standard user (default), can manage content",
+      "editor": "Full content management, cannot manage teams",
+      "publisher": "Like editor plus publish workflow actions",
+      "device_manager": "Full device and channel management",
+      "guest": "Read-only access to resources"
+    },
+    "teamRoleDescriptions": {
+      "admin": "Can manage team members and resources",
+      "member": "Can access and edit team resources",
+      "installer": "Temporary token for device registration (expires in 24h)"
+    },
     "errors": {
-      "updateOrganization": "Error updating organization: {{error}}"
+      "updateOrganization": "Error updating organization: {{error}}",
+      "emailRequired": "Email is required",
+      "invalidEmail": "Invalid email",
+      "cannotRemoveLastAdmin": "You can't remove the last admin of an organization.",
+      "invalidRole": "The selected role is not valid for this organization."
+    },
+    "messages": {
+      "memberRemoved": "Member {{name}} removed successfully",
+      "membersRemoved": "Members removed successfully"
     }
   },
   "login": {
@@ -320,6 +389,21 @@
     "dataSchema": "Data Schema"
   },
   "devices": {
+    "title": "Devices",
+    "addDevice": "Add Device",
+    "registerDevice": "Register device",
+    "registerDescription": "And start displaying content on it",
+    "deviceDetails": "Details of your device",
+    "removeDevice": "Remove Device",
+    "removeDevices": "Remove Devices",
+    "confirmRemove": "Are you sure you want to remove device \"{{name}}\"?",
+    "confirmRemoveMultiple": "Are you sure you want to remove the following devices?",
+    "deviceRegisteredSuccess": "Device registered successfully",
+    "deviceRemovedSuccess": "Device \"{{name}}\" removed successfully",
+    "devicesRemovedSuccess": "{{count}} device(s) removed successfully",
+    "errorRegisteringDevice": "Error registering device: {{error}}",
+    "errorRemovingDevice": "Error removing device {{name}}: {{error}}",
+    "errorRemovingDevices": "Error removing devices: {{error}}",
     "setDeviceChannel": "Set Device Channel",
     "selectChannel": "Select Channel",
     "assignedChannels": "Assigned Channels",
@@ -378,6 +462,36 @@
     "daysAgo": {
       "one": "{{count}} day ago",
       "other": "{{count}} days ago"
+    }
+  },
+  "permissions": {
+    "noPermission": "You don't have permission to {{action}} {{resource}}",
+    "noCreateTeams": "You don't have permission to create teams",
+    "noUpdateTeams": "You don't have permission to edit teams",
+    "noDeleteTeams": "You don't have permission to delete teams",
+    "noCreateOrganizations": "You don't have permission to invite organization members",
+    "noUpdateOrganizations": "You don't have permission to manage organization settings",
+    "noDeleteOrganizations": "You don't have permission to remove organization members",
+    "noCreatePlaylists": "You don't have permission to create playlists",
+    "noDeletePlaylists": "You don't have permission to delete playlists",
+    "noCreateMedias": "You don't have permission to upload media files",
+    "noDeleteMedias": "You don't have permission to delete media files",
+    "noCreateWidgets": "You don't have permission to upload widgets",
+    "noDeleteWidgets": "You don't have permission to delete widgets",
+    "noCreateDevices": "You don't have permission to register devices",
+    "noDeleteDevices": "You don't have permission to delete devices",
+    "noCreateChannels": "You don't have permission to create channels",
+    "noDeleteChannels": "You don't have permission to delete channels",
+    "contactAdmin": "Contact your administrator to request access",
+    "insufficientRole": "This action requires {{role}} role"
+  },
+  "organizations": {
+    "invitation": {
+      "title": "Organization Invitation",
+      "emailAddress": "Email Address",
+      "expired": "This invitation has expired.",
+      "loginToAccept": "Login to accept this invitation",
+      "createAccount": "Create your account to accept this invitation"
     }
   }
 }

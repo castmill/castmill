@@ -12,6 +12,7 @@ This guide provides comprehensive information about internationalization in the 
 6. [Testing Requirements](#testing-requirements)
 7. [Common Pitfalls](#common-pitfalls)
 8. [Validation Tools](#validation-tools)
+9. [URL-Based Routing & Organization Switching](#url-based-routing--organization-switching)
 
 ---
 
@@ -655,3 +656,270 @@ Already defined in all languages:
 ---
 
 **Remember**: Internationalization is not optional. Every user-facing string must be localized for all 9 supported languages. The translation coverage check in CI will enforce this standard.
+
+---
+
+## URL-Based Routing & Organization Switching
+
+### Architecture Overview
+
+The Dashboard uses **URL-based routing** with organization context to ensure:
+
+- Organization selection persists across page refreshes
+- Deep linking works correctly
+- Browser back/forward buttons work as expected
+- Data reloads properly when switching organizations
+
+### URL Pattern
+
+All authenticated routes include the organization ID:
+
+```
+/org/:orgId/path
+```
+
+**Examples:**
+
+- `/org/abc-123/teams`
+- `/org/abc-123/content/playlists`
+- `/org/xyz-789/usage`
+
+### Critical Implementation Details
+
+#### 1. Route Structure
+
+Routes are defined with organization ID as a parameter:
+
+```tsx
+<Route path="/org/:orgId" component={...}>
+  <Route path="/teams" component={TeamsPage} />
+  <Route path="/channels" component={ChannelsPage} />
+  {/* Addon routes */}
+  <Route path="/content/playlists" component={PlaylistsAddon} />
+</Route>
+```
+
+#### 2. ProtectedRoute Synchronization
+
+The `ProtectedRoute` component syncs URL params to the global store:
+
+```tsx
+// In protected-route.tsx
+createEffect(() => {
+  const urlOrgId = params.orgId;
+  if (
+    store.organizations.loaded &&
+    urlOrgId &&
+    urlOrgId !== store.organizations.selectedId
+  ) {
+    const org = store.organizations.data.find((o) => o.id === urlOrgId);
+    if (org) {
+      setStore('organizations', {
+        selectedId: org.id,
+        selectedName: org.name,
+      });
+    }
+  }
+});
+```
+
+#### 3. Navigation with Organization Context
+
+All navigation must include the organization ID:
+
+```tsx
+// ✅ Correct - includes org ID
+navigate(`/org/${store.organizations.selectedId}/teams`);
+
+// ❌ Wrong - missing org ID
+navigate('/teams');
+```
+
+**Sidebar navigation example:**
+
+```tsx
+<PanelItem
+  to={`/org/${store.organizations.selectedId}/teams`}
+  label={t('sidebar.teams')}
+/>
+```
+
+**Organization dropdown:**
+
+```tsx
+const handleOrgChange = (value: string) => {
+  const currentPath = location.pathname.replace(/^\/org\/[^\/]+/, '');
+  navigate(`/org/${value}${currentPath || '/'}`);
+};
+```
+
+#### 4. Addon Component Remounting
+
+**CRITICAL:** Addon components must remount when organization changes.
+
+**Problem:** SolidJS Router doesn't remount components when route params change. Going from `/org/abc/content/playlists` to `/org/xyz/content/playlists` keeps the same component instance.
+
+**Solution:** Use `Show` with `keyed` attribute to force remounting:
+
+```tsx
+// In index.tsx - addon route wrapper
+const KeyedComponent = (props: any) => {
+  const params = useParams();
+  return (
+    <Show when={params.orgId} keyed>
+      {(orgId) => {
+        const Component = wrapLazyComponent(addon);
+        return <Component {...props} key={orgId} />;
+      }}
+    </Show>
+  );
+};
+
+<Route path={addon.mount_path} component={KeyedComponent} />;
+```
+
+This ensures:
+
+- Old component instance is **unmounted** when orgId changes
+- New component instance is **mounted** with fresh data
+- `onMount()` runs again, loading data for the new organization
+
+#### 5. Data Reloading Patterns
+
+**Dashboard Core Pages** (Teams, Channels, Usage):
+
+```tsx
+import { store } from '../../store/store';
+
+createEffect(
+  on(
+    () => store.organizations.selectedId,
+    (orgId, prevOrgId) => {
+      if (prevOrgId && orgId !== prevOrgId) {
+        // Reload data for new organization
+        loadData();
+        if (tableViewRef) {
+          tableViewRef.reloadData();
+        }
+      }
+    }
+  )
+);
+```
+
+**Addon Components** (Playlists, Medias, Devices):
+
+Since addons remount on org change, they just need `onMount()`:
+
+```tsx
+onMount(() => {
+  loadQuota();
+  // Data loads automatically on mount
+});
+```
+
+The `createEffect` pattern is still included as a fallback, but the `keyed Show` wrapper handles most cases.
+
+### Store Structure for Addons
+
+Addon components receive the store via props with i18n functions attached:
+
+```typescript
+// In store/store.tsx
+interface CastmillStore {
+  organizations: {
+    loaded: boolean;
+    loading: boolean;
+    data: Organization[];
+    selectedId: string | null;
+    selectedName: string;
+  };
+  // ... other fields
+  i18n?: {
+    t: (key: string, params?: Record<string, any>) => string;
+    tp: (key: string, count: number, params?: Record<string, any>) => string;
+    formatDate: (date: Date, format?: string) => string;
+    // ... other i18n functions
+  };
+}
+```
+
+The i18n functions are set using `setStore()` in the addon wrapper:
+
+```tsx
+// In index.tsx - wrapLazyComponent
+setStore('i18n', {
+  t: i18n.t,
+  tp: i18n.tp,
+  formatDate: i18n.formatDate,
+  // ... other i18n functions
+});
+```
+
+### Common Pitfalls
+
+❌ **Hardcoding organization ID**
+
+```tsx
+const orgId = 'abc-123'; // Wrong!
+```
+
+✅ **Using store or params**
+
+```tsx
+const orgId = store.organizations.selectedId;
+// or
+const params = useParams();
+const orgId = params.orgId;
+```
+
+❌ **Navigation without org ID**
+
+```tsx
+navigate('/teams'); // Wrong - will break routing
+```
+
+✅ **Including org ID in all navigation**
+
+```tsx
+navigate(`/org/${store.organizations.selectedId}/teams`);
+```
+
+❌ **Assuming components remount on param change**
+
+```tsx
+// This won't reload when orgId changes without keyed Show
+<Route path="/addon" component={AddonComponent} />
+```
+
+✅ **Using keyed Show for addons**
+
+```tsx
+<Show when={params.orgId} keyed>
+  {(orgId) => <AddonComponent key={orgId} />}
+</Show>
+```
+
+### Testing Organization Switching
+
+When testing organization-related features:
+
+1. ✅ Verify URL changes when switching organizations
+2. ✅ Check that data reloads for the new organization
+3. ✅ Confirm page refresh maintains selected organization
+4. ✅ Test browser back/forward buttons work correctly
+5. ✅ Ensure deep links work (e.g., sharing a URL to a specific org's page)
+
+### Debugging Checklist
+
+If organization switching isn't working:
+
+- [ ] Check URL contains `/org/:orgId/` pattern
+- [ ] Verify `ProtectedRoute` has `createEffect` that syncs params to store
+- [ ] Confirm all navigation includes organization ID
+- [ ] For addons: Check route uses `Show` with `keyed` wrapper
+- [ ] Verify `store.organizations.selectedId` updates when URL changes
+- [ ] Check component `onMount` or `createEffect` is loading data
+- [ ] Look for "Cannot mutate a Store directly" warnings (use `setStore`)
+
+---

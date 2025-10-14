@@ -5,12 +5,70 @@ defmodule CastmillWeb.OrganizationController do
   alias Castmill.Networks
   alias Castmill.Organizations
   alias Castmill.Organizations.Organization
+  alias Castmill.Organizations.OrganizationsInvitation
   alias Castmill.Plug.AuthorizeDash
   alias Castmill.Accounts
+  alias Castmill.Authorization.ResourceAccess
 
   action_fallback(CastmillWeb.FallbackController)
 
   @impl CastmillWeb.AccessActorBehaviour
+
+  # ============================================================================
+  # Generic Resource Access Control
+  # ============================================================================
+
+  # Generic check for listing resources of any type.
+  # Expects params: %{"organization_id" => org_id, "resource_type" => resource_type}
+  # Resource types: "playlists", "medias", "channels", "devices", "teams", "widgets"
+  def check_access(actor_id, :list_resources, %{
+        "organization_id" => organization_id,
+        "resource_type" => resource_type
+      }) do
+    resource_atom = String.to_existing_atom(resource_type)
+    ResourceAccess.check_resource_access(actor_id, organization_id, resource_atom, :list)
+  end
+
+  # Generic check for showing/viewing a single resource.
+  def check_access(actor_id, :show_resource, %{
+        "organization_id" => organization_id,
+        "resource_type" => resource_type
+      }) do
+    resource_atom = String.to_existing_atom(resource_type)
+    ResourceAccess.check_resource_access(actor_id, organization_id, resource_atom, :show)
+  end
+
+  # Generic check for creating resources.
+  def check_access(actor_id, :create_resource, %{
+        "organization_id" => organization_id,
+        "resource_type" => resource_type
+      }) do
+    resource_atom = String.to_existing_atom(resource_type)
+    ResourceAccess.check_resource_access(actor_id, organization_id, resource_atom, :create)
+  end
+
+  # Generic check for updating resources.
+  def check_access(actor_id, :update_resource, %{
+        "organization_id" => organization_id,
+        "resource_type" => resource_type
+      }) do
+    resource_atom = String.to_existing_atom(resource_type)
+    ResourceAccess.check_resource_access(actor_id, organization_id, resource_atom, :update)
+  end
+
+  # Generic check for deleting resources.
+  def check_access(actor_id, :delete_resource, %{
+        "organization_id" => organization_id,
+        "resource_type" => resource_type
+      }) do
+    resource_atom = String.to_existing_atom(resource_type)
+    ResourceAccess.check_resource_access(actor_id, organization_id, resource_atom, :delete)
+  end
+
+  # ============================================================================
+  # Specific Access Control (Legacy - consider migrating to generic methods)
+  # ============================================================================
+
   def check_access(actor_id, :list_users_organizations, %{"user_id" => user_id}) do
     {:ok, actor_id == user_id}
   end
@@ -22,7 +80,7 @@ defmodule CastmillWeb.OrganizationController do
   end
 
   def check_access(actor_id, :register_device, %{"organization_id" => organization_id}) do
-    if Organizations.has_access(organization_id, actor_id, "devices", "register") do
+    if Organizations.has_access(organization_id, actor_id, "devices", :create) do
       {:ok, true}
     else
       {:ok, false}
@@ -35,13 +93,19 @@ defmodule CastmillWeb.OrganizationController do
   end
 
   def check_access(actor_id, :create_widget, %{"organization_id" => organization_id}) do
-    # Only admins can create widgets for now
-    {:ok, Organizations.is_admin?(organization_id, actor_id)}
+    if Organizations.has_access(organization_id, actor_id, "widgets", :create) do
+      {:ok, true}
+    else
+      {:ok, false}
+    end
   end
 
   def check_access(actor_id, :delete_widget, %{"organization_id" => organization_id}) do
-    # Only admins can delete widgets for now
-    {:ok, Organizations.is_admin?(organization_id, actor_id)}
+    if Organizations.has_access(organization_id, actor_id, "widgets", :delete) do
+      {:ok, true}
+    else
+      {:ok, false}
+    end
   end
 
   def check_access(actor_id, :update_widget, %{"organization_id" => organization_id}) do
@@ -50,7 +114,7 @@ defmodule CastmillWeb.OrganizationController do
   end
 
   def check_access(actor_id, :list_members, %{"organization_id" => organization_id}) do
-    {:ok, Organizations.has_any_role?(organization_id, actor_id, [:admin, :regular])}
+    {:ok, Organizations.has_any_role?(organization_id, actor_id, [:admin, :manager, :member])}
   end
 
   def check_access(actor_id, :invite_member, %{"organization_id" => organization_id}) do
@@ -80,7 +144,7 @@ defmodule CastmillWeb.OrganizationController do
     {:ok, false}
   end
 
-  plug(AuthorizeDash)
+  plug(AuthorizeDash when action not in [:preview_invitation])
 
   defp validInvitation?(user_id, token) do
     user = Accounts.get_user(user_id)
@@ -358,10 +422,63 @@ defmodule CastmillWeb.OrganizationController do
     end
   end
 
+  def remove_member(conn, %{
+        "organization_id" => organization_id,
+        "user_id" => user_id
+      }) do
+    case Organizations.remove_user(organization_id, user_id) do
+      {:ok, _} ->
+        conn
+        |> put_status(:ok)
+        |> json(%{})
+
+      {:error, :last_admin} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{error: "cannot_remove_last_organization_admin"})
+
+      {:error, :not_found} ->
+        conn
+        |> put_status(:not_found)
+        |> json(%{error: "member_not_found"})
+
+      {:error, _} ->
+        conn
+        |> put_status(:bad_request)
+        |> json(%{})
+    end
+  end
+
   def show_invitation(conn, %{"token" => token}) do
     conn
     |> put_status(:ok)
     |> json(Organizations.get_invitation(token))
+  end
+
+  # Public endpoint to preview invitation and check if user exists (no auth required)
+  def preview_invitation(conn, %{"token" => token}) do
+    case Organizations.get_invitation(token) do
+      nil ->
+        conn
+        |> put_status(:not_found)
+        |> json(%{error: "Invalid or expired invitation"})
+
+      invitation ->
+        # Check if user with this email exists
+        user_exists = Accounts.get_user_by_email(invitation.email) != nil
+
+        conn
+        |> put_status(:ok)
+        |> json(%{
+          email: invitation.email,
+          organization_name: invitation.organization.name,
+          organization_id: invitation.organization_id,
+          status: invitation.status,
+          expires_at: invitation.expires_at,
+          user_exists: user_exists,
+          expired: OrganizationsInvitation.expired?(invitation)
+        })
+    end
   end
 
   def accept_invitation(conn, %{"token" => token}) do

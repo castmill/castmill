@@ -38,6 +38,8 @@
     "loadingAddons": "加载插件中...",
     "notFound": "404 未找到",
     "pageNotFound": "抱歉，您要查找的页面不存在。",
+    "requestedPath": "请求的路径",
+    "goToDashboard": "转到仪表板",
     "copyright": "© 2011-2025 Castmill™",
     "invitedEmail": "受邀邮箱：",
     "acceptInvitation": "接受邀请",
@@ -68,7 +70,13 @@
     "maintainance": "维护",
     "events": "事件",
     "telemetry": "遥测",
+    "youIndicator": "(你)",
     "addonLoadingError": "插件加载错误",
+    "filters": {
+      "teamLabel": "团队",
+      "teamPlaceholder": "选择团队",
+      "teamClear": "清除团队筛选"
+    },
     "addonError": "插件错误",
     "backToLogin": "返回登录"
   },
@@ -161,7 +169,10 @@
   },
   "teams": {
     "title": "团队",
-    "members": "成员",
+    "members": {
+      "selectUser": "选择用户",
+      "searchUser": "搜索用户..."
+    },
     "invitations": "邀请",
     "invitationAcceptSuccess": "邀请接受成功",
     "invitationDeleteSuccess": "邀请删除成功",
@@ -172,6 +183,12 @@
       "title": "删除邀请",
       "message": "您确定要删除 {{email}} 的邀请吗？"
     },
+    "removeInvitationFromTeam": "从团队中移除邀请",
+    "removeInvitationsFromTeam": "从团队中移除邀请",
+    "confirmRemoveInvitation": "您确定要移除 {{email}} 的邀请吗？",
+    "confirmRemoveInvitations": "您确定要从团队中移除以下邀请吗？",
+    "invitationRemovedSuccessfully": "{{email}} 的邀请已成功移除",
+    "invitationsRemovedSuccessfully": "邀请已成功移除",
     "medias": "媒体",
     "playlists": "播放列表",
     "devices": "设备",
@@ -192,6 +209,10 @@
     "inviteMember": "邀请成员",
     "inviteMemberDescription": "向团队添加新成员",
     "enterMember": "输入成员",
+    "leaveTeamTitle": "离开此团队",
+    "leaveTeamDescription": "离开后您将立即失去对团队资源的访问权限。",
+    "leaveTeamAction": "离开团队",
+    "leaveTeamLastAdminWarning": "离开前请先添加其他管理员，以确保团队有人管理。",
     "addResourceToTeam": "向团队添加资源",
     "addResourcesToTeams": "向团队添加资源",
     "errors": {
@@ -201,9 +222,24 @@
       "openViewModal": "打开查看模态框",
       "removeResource": "从团队中删除资源时出错：{{error}}",
       "removeResources": "从团队中删除资源时出错：{{error}}",
-      "addResourceToTeam": "向团队添加资源时出错：{{error}}"
+      "addResourceToTeam": "向团队添加资源时出错：{{error}}",
+      "cannotRemoveLastAdmin": "你不能移除团队最后一位管理员。"
     },
-    "confirmAddResources": "您确定要添加以下资源吗？"
+    "confirmAddResources": "您确定要添加以下资源吗？",
+    "messages": {
+      "memberRemoved": "已成功移除成员 {{name}}",
+      "membersRemoved": "已成功移除成员",
+      "invitationSent": "已向 {{email}} 发送邀请",
+      "leftTeam": "您已离开团队{{name}}"
+    },
+    "invitation": {
+      "title": "团队邀请",
+      "emailAddress": "电子邮件地址",
+      "teamRole": "团队角色",
+      "expired": "此邀请已过期。",
+      "accepting": "正在接受...",
+      "accept": "接受邀请"
+    }
   },
   "login": {
     "title": "登录",
@@ -271,11 +307,44 @@
     "invitations": "邀请",
     "update": "更新",
     "placeholderName": "输入组织名称",
-    "errors": {
-      "updateOrganization": "更新组织时出错：{{error}}"
-    },
     "inviteMember": "邀请成员",
-    "enterMemberEmail": "输入成员的电子邮件"
+    "enterMemberEmail": "输入成员的电子邮件",
+    "role": "角色",
+    "roleAdmin": "管理员",
+    "roleManager": "经理",
+    "roleMember": "成员",
+    "roleEditor": "编辑者",
+    "rolePublisher": "发布者",
+    "roleDeviceManager": "设备管理员",
+    "roleGuest": "访客",
+    "teamRoleAdmin": "团队管理员",
+    "teamRoleMember": "团队成员",
+    "errors": {
+      "updateOrganization": "更新组织时出错：{{error}}",
+      "emailRequired": "电子邮件为必填项",
+      "invalidEmail": "无效的电子邮件",
+      "cannotRemoveLastAdmin": "你不能移除组织最后一位管理员。",
+      "invalidRole": "所选角色对该组织无效。"
+    },
+    "messages": {
+      "memberRemoved": "已成功移除成员 {{name}}",
+      "membersRemoved": "已成功移除成员"
+    },
+    "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
+    "roleDescriptions": {
+      "admin": "完全访问权限，包括组织管理",
+      "manager": "可以管理团队和大多数资源",
+      "member": "标准用户（默认），可以管理内容",
+      "editor": "完整的内容管理，不能管理团队",
+      "publisher": "类似编辑者，加上发布工作流操作",
+      "device_manager": "完整的设备和频道管理",
+      "guest": "对资源的只读访问权限"
+    },
+    "teamRoleDescriptions": {
+      "admin": "可以管理团队成员和资源",
+      "member": "可以访问和编辑团队资源",
+      "installer": "用于设备注册的临时令牌（24小时后过期）"
+    }
   },
   "playlists": {
     "title": "播放列表",
@@ -340,7 +409,22 @@
     "pincode": "PIN码",
     "enterPincode": "输入{{length}}位PIN码",
     "pincodeDescription": "PIN码将显示在设备屏幕上。",
-    "register": "注册"
+    "register": "注册",
+    "title": "[TODO: Translate] Devices",
+    "addDevice": "[TODO: Translate] Add Device",
+    "registerDevice": "[TODO: Translate] Register device",
+    "registerDescription": "[TODO: Translate] And start displaying content on it",
+    "deviceDetails": "[TODO: Translate] Details of your device",
+    "removeDevice": "[TODO: Translate] Remove Device",
+    "removeDevices": "[TODO: Translate] Remove Devices",
+    "confirmRemove": "[TODO: Translate] Are you sure you want to remove device \"{{name}}\"?",
+    "confirmRemoveMultiple": "[TODO: Translate] Are you sure you want to remove the following devices?",
+    "deviceRegisteredSuccess": "[TODO: Translate] Device registered successfully",
+    "deviceRemovedSuccess": "[TODO: Translate] Device \"{{name}}\" removed successfully",
+    "devicesRemovedSuccess": "[TODO: Translate] {{count}} device(s) removed successfully",
+    "errorRegisteringDevice": "[TODO: Translate] Error registering device: {{error}}",
+    "errorRemovingDevice": "[TODO: Translate] Error removing device {{name}}: {{error}}",
+    "errorRemovingDevices": "[TODO: Translate] Error removing devices: {{error}}"
   },
   "validation": {
     "fieldRequired": "此字段为必填项",
@@ -379,5 +463,40 @@
   "search": {
     "title": "搜索",
     "description": "这是搜索页面。您可以在这里找到所有搜索结果..."
+  },
+  "permissions": {
+    "noPermission": "您没有权限{{action}}{{resource}}",
+    "noCreateTeams": "您没有权限创建团队",
+    "noUpdateTeams": "您没有权限编辑团队",
+    "noDeleteTeams": "您没有权限删除团队",
+    "noCreateOrganizations": "您没有权限邀请组织成员",
+    "noUpdateOrganizations": "您没有权限管理组织设置",
+    "noDeleteOrganizations": "您没有权限移除组织成员",
+    "noCreatePlaylists": "您没有权限创建播放列表",
+    "noDeletePlaylists": "您没有权限删除播放列表",
+    "noCreateMedias": "您没有权限上传媒体文件",
+    "noDeleteMedias": "您没有权限删除媒体文件",
+    "noCreateWidgets": "您没有权限上传小部件",
+    "noDeleteWidgets": "您没有权限删除小部件",
+    "noCreateDevices": "您没有权限注册设备",
+    "noDeleteDevices": "您没有权限删除设备",
+    "noCreateChannels": "您没有权限创建频道",
+    "noDeleteChannels": "您没有权限删除频道",
+    "contactAdmin": "请联系管理员申请访问权限",
+    "insufficientRole": "此操作需要{{role}}角色"
+  },
+  "organizations": {
+    "invitation": {
+      "title": "组织邀请",
+      "emailAddress": "电子邮件地址",
+      "expired": "此邀请已过期。",
+      "loginToAccept": "登录以接受此邀请",
+      "createAccount": "创建您的帐户以接受此邀请"
+    }
+  },
+  "filters": {
+    "teamLabel": "团队",
+    "teamPlaceholder": "选择团队",
+    "teamClear": "清除团队筛选"
   }
 }

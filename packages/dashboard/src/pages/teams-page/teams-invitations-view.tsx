@@ -15,7 +15,7 @@ import {
 } from '@castmill/ui-common';
 import { TeamsService } from '../../services/teams.service';
 import { AiOutlineDelete } from 'solid-icons/ai';
-import { createSignal } from 'solid-js';
+import { createEffect, createSignal } from 'solid-js';
 import { useI18n } from '../../i18n';
 
 interface Invitation {
@@ -48,6 +48,7 @@ export const TeamInvitationsView = (props: {
   organizationId: string;
   teamId: number;
   onRemove: (invitation: Invitation) => void;
+  refreshKey?: number;
 }) => {
   const { t } = useI18n();
 
@@ -123,6 +124,7 @@ export const TeamInvitationsView = (props: {
       toast.success(
         t('teams.invitationRemovedSuccessfully', { email: invitation.email })
       );
+      props.onRemove(invitation);
       setShowConfirmDialog(false);
     } catch (error) {
       toast.error((error as Error).message);
@@ -143,11 +145,29 @@ export const TeamInvitationsView = (props: {
 
       refreshData();
       toast.success(t('teams.invitationsRemovedSuccessfully'));
+      Array.from(selectedInvitations()).forEach((invitationId) => {
+        const invitation = data().find((d) => d.id === invitationId);
+        if (invitation) {
+          props.onRemove(invitation);
+        }
+      });
       setShowConfirmDialogMultiple(false);
     } catch (error) {
       toast.error((error as Error).message);
     }
   };
+
+  createEffect(() => {
+    // Trigger refresh when team changes
+    props.teamId;
+    refreshData();
+  });
+
+  createEffect(() => {
+    if (props.refreshKey !== undefined) {
+      refreshData();
+    }
+  });
 
   return (
     <>
@@ -163,8 +183,8 @@ export const TeamInvitationsView = (props: {
 
       <ConfirmDialog
         show={showConfirmDialogMultiple()}
-        title={t('teams.removeMembersFromTeam')}
-        message={t('teams.confirmRemoveMembers')}
+        title={t('teams.removeInvitationsFromTeam')}
+        message={t('teams.confirmRemoveInvitations')}
         onClose={() => setShowConfirmDialogMultiple(false)}
         onConfirm={() => confirmRemoveMultipleMembersFromTeam()}
       >
@@ -199,7 +219,7 @@ export const TeamInvitationsView = (props: {
           onRowSelect,
         }}
         pagination={{ itemsPerPage }}
-        itemIdKey="user_id"
+        itemIdKey="id"
       ></TableView>
     </>
   );

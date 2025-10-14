@@ -20,7 +20,9 @@ import {
   useToast,
 } from '@castmill/ui-common';
 
-import { store, setStore } from '../../store/store';
+import { store } from '../../store/store';
+import { PermissionButton } from '../../components/permission-button/permission-button';
+import { usePermissions } from '../../hooks/usePermissions';
 
 import { BsCheckLg, BsEye } from 'solid-icons/bs';
 import { AiOutlineDelete } from 'solid-icons/ai';
@@ -37,6 +39,7 @@ import { QuotasService, ResourceQuota } from '../../services/quotas.service';
 const TeamsPage: Component = () => {
   const params = useSearchParams();
   const { t } = useI18n();
+  const { canPerformAction } = usePermissions();
 
   const toast = useToast();
 
@@ -76,6 +79,15 @@ const TeamsPage: Component = () => {
     loadQuota();
   });
 
+  // Reload data when organization changes
+  createEffect(() => {
+    const orgId = store.organizations.selectedId;
+    if (orgId && tableViewRef) {
+      tableViewRef.reloadData();
+      loadQuota();
+    }
+  });
+
   const isQuotaReached = () => {
     const q = quota();
     return q ? q.used >= q.total : false;
@@ -100,6 +112,13 @@ const TeamsPage: Component = () => {
     {
       icon: AiOutlineDelete,
       handler: (item: TeamTableItem) => {
+        if (!canPerformAction('teams', 'delete')) {
+          toast.error(
+            t('permissions.noDeleteTeams') ||
+              "You don't have permission to delete teams"
+          );
+          return;
+        }
         setCurrentTeam(item);
         setShowConfirmDialog(true);
       },
@@ -113,8 +132,12 @@ const TeamsPage: Component = () => {
     search,
     filters,
   }: FetchDataOptions) => {
+    if (!store.organizations.selectedId) {
+      return { count: 0, data: [] };
+    }
+
     const result = await TeamsService.fetchTeams(
-      store.organizations.selectedId!,
+      store.organizations.selectedId,
       {
         page,
         sortOptions,
@@ -296,27 +319,36 @@ const TeamsPage: Component = () => {
                   compact
                 />
               </Show>
-              <Button
+              <PermissionButton
+                resource="teams"
+                action="create"
                 label={t('teams.addTeam')}
                 onClick={addTeam}
                 icon={BsCheckLg}
                 color="primary"
-                disabled={isQuotaReached()}
-                title={
-                  isQuotaReached()
-                    ? 'Quota limit reached for Teams. Cannot add more.'
-                    : 'Add a new Team'
-                }
+                forceDisabled={isQuotaReached()}
               />
             </div>
           ),
           actions: (
             <div>
               <IconButton
-                onClick={() => setShowConfirmDialogMultiple(true)}
+                onClick={() => {
+                  if (!canPerformAction('teams', 'delete')) {
+                    toast.error(
+                      t('permissions.noDeleteTeams') ||
+                        "You don't have permission to delete teams"
+                    );
+                    return;
+                  }
+                  setShowConfirmDialogMultiple(true);
+                }}
                 icon={AiOutlineDelete}
                 color="primary"
-                disabled={selectedTeams().size === 0}
+                disabled={
+                  selectedTeams().size === 0 ||
+                  !canPerformAction('teams', 'delete')
+                }
               />
             </div>
           ),

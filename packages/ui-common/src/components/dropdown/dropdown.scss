@@ -23,7 +23,15 @@
     text-transform: capitalize;
   }
 
+  &__control {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    width: 100%;
+  }
+
   select {
+    flex: 1 1 auto;
     width: 100%;
     padding: 0;
     margin: 0;
@@ -35,6 +43,35 @@
     &:focus {
       outline: none;
     }
+
+    &.is-placeholder {
+      color: #6a5da2;
+      font-style: italic;
+    }
+  }
+
+  .clear-button {
+    flex: 0 0 auto;
+    border: none;
+    background: transparent;
+    color: #b1b1b1;
+    font-size: 0.9em;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover,
+    &:focus {
+      color: #ffffff;
+      outline: none;
+    }
+  }
+
+  .clear-button__icon {
+    pointer-events: none;
   }
 
   .description {

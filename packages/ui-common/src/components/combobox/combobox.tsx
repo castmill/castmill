@@ -57,6 +57,7 @@ export const ComboBox = <T extends { id: string | number }>(
 
   const pageSize = 10; // Set page size as needed
   const scrollThreshold = 100;
+  let debounceTimer: number | undefined;
 
   const reset = () => {
     setPage(1);
@@ -120,6 +121,9 @@ export const ComboBox = <T extends { id: string | number }>(
 
   onCleanup(() => {
     document.removeEventListener('click', handleClick);
+    if (debounceTimer) {
+      clearTimeout(debounceTimer);
+    }
   });
 
   const handleSelect = (item: T) => {
@@ -130,9 +134,17 @@ export const ComboBox = <T extends { id: string | number }>(
   };
 
   const search = (query: string) => {
-    setSearchQuery(query);
-    setPage(1);
-    fetchMoreItems();
+    // Clear existing timer
+    if (debounceTimer) {
+      clearTimeout(debounceTimer);
+    }
+
+    // Set new timer to delay search
+    debounceTimer = setTimeout(() => {
+      setSearchQuery(query);
+      setPage(1);
+      fetchMoreItems();
+    }, 300) as unknown as number; // 300ms debounce delay
   };
 
   return (

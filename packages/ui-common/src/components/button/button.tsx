@@ -12,12 +12,14 @@ export const Button: Component<{
   type?: 'button' | 'submit' | 'reset';
   label?: string;
   color?: 'primary' | 'secondary' | 'danger' | 'success' | 'info';
+  title?: string;
 }> = (props) => {
   const defaultProps = mergeProps(
     {
       type: 'button',
       disabled: false,
       color: 'primary', // Default color
+      title: undefined as string | undefined,
     },
     props
   );
@@ -50,6 +52,8 @@ export const Button: Component<{
     ].join(' ');
   };
 
+  const ariaLabel = () => defaultProps.label || defaultProps.title;
+
   return (
     <button
       ref={(el) => (buttonElement = el)} // Attach ref to the button
@@ -57,7 +61,8 @@ export const Button: Component<{
       class={getClassNames()}
       onClick={handleClick}
       disabled={defaultProps.disabled}
-      aria-label={`${defaultProps.label}`}
+      title={defaultProps.title}
+      aria-label={ariaLabel()}
     >
       <Show when={defaultProps.icon}>
         <IconWrapper icon={defaultProps.icon!} />

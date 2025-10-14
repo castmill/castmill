@@ -36,6 +36,13 @@ const WidgetsPage: Component<{
   const t = (key: string, params?: Record<string, any>) =>
     props.store.i18n?.t(key, params) || key;
 
+  // Helper function to check permissions
+  const canPerformAction = (resource: string, action: string): boolean => {
+    if (!props.store.permissions?.matrix) return false;
+    const allowedActions = props.store.permissions.matrix[resource as keyof typeof props.store.permissions.matrix];
+    return allowedActions?.includes(action as any) ?? false;
+  };
+
   const itemsPerPage = 10;
 
   const [showModal, setShowModal] = createSignal<WidgetWithId | undefined>();
@@ -299,6 +306,7 @@ const WidgetsPage: Component<{
               onClick={openUploadModal}
               icon={AiOutlineUpload}
               color="primary"
+              disabled={!canPerformAction('widgets', 'create')}
             />
           ),
         }}

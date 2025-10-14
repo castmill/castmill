@@ -1,7 +1,7 @@
 import { BsCheckLg } from 'solid-icons/bs';
 import { BsEye } from 'solid-icons/bs';
 import { AiOutlineDelete } from 'solid-icons/ai';
-import { Component, createSignal, Show, onMount } from 'solid-js';
+import { Component, createEffect, createSignal, Show, onMount, on } from 'solid-js';
 
 import {
   Button,
@@ -13,6 +13,7 @@ import {
   TableViewRef,
   FetchDataOptions,
   ConfirmDialog,
+  TeamFilter,
   Timestamp,
   ToastProvider,
   useToast,
@@ -27,17 +28,21 @@ import {
 
 import './playlists.scss';
 import { PlaylistView } from './playlist-view';
-import { AddonStore } from '../../common/interfaces/addon-store';
+import { AddonStore, AddonComponentProps } from '../../common/interfaces/addon-store';
 import { PlaylistAddForm } from './playlist-add-form';
+import { useTeamFilter } from '../../common/hooks';
 
-const PlaylistsPage: Component<{
-  store: AddonStore;
-  params: any; //typeof useSearchParams;
-}> = (props) => {
+const PlaylistsPage: Component<AddonComponentProps> = (props) => {
   const toast = useToast();
   const [data, setData] = createSignal<JsonPlaylist[]>([]);
   const [currentPlaylist, setCurrentPlaylist] = createSignal<JsonPlaylist>();
   const [showModal, setShowModal] = createSignal(false);
+
+  const { teams, selectedTeamId, setSelectedTeamId } = useTeamFilter({
+    baseUrl: props.store.env.baseUrl,
+    organizationId: props.store.organizations.selectedId,
+    params: props.params, // Pass URL params for shareable filtered views
+  });
 
   const [showAddPlaylistModal, setShowAddPlaylistModal] = createSignal(false);
   const [selectedPlaylists, setSelectedPlaylists] = createSignal(
@@ -47,6 +52,14 @@ const PlaylistsPage: Component<{
   // Get i18n functions from store
   const t = (key: string, params?: Record<string, any>) =>
     props.store.i18n?.t(key, params) || key;
+  
+  // Helper function to check permissions
+  const canPerformAction = (resource: string, action: string): boolean => {
+    if (!props.store.permissions?.matrix) return false;
+    const allowedActions = props.store.permissions.matrix[resource as keyof typeof props.store.permissions.matrix];
+    return allowedActions?.includes(action as any) ?? false;
+  };
+  
   const [quota, setQuota] = createSignal<ResourceQuota | null>(null);
   const [quotaLoading, setQuotaLoading] = createSignal(false);
   const [showLoadingIndicator, setShowLoadingIndicator] = createSignal(false);
@@ -88,6 +101,22 @@ const PlaylistsPage: Component<{
     loadQuota();
   });
 
+  // Reload data when organization changes (using on() to defer execution)
+  createEffect(
+    on(
+      () => props.store.organizations.selectedId,
+      (orgId, prevOrgId) => {
+        // Only reload when org actually changes (not on first run when prevOrgId is undefined)
+        if (prevOrgId !== undefined && orgId !== prevOrgId) {
+          loadQuota();
+          if (tableViewRef) {
+            tableViewRef.reloadData();
+          }
+        }
+      }
+    )
+  );
+
   const isQuotaReached = () => {
     const q = quota();
     return q ? q.used >= q.total : false;
@@ -111,6 +140,11 @@ const PlaylistsPage: Component<{
     }
   };
 
+  const handleTeamChange = (teamId: number | null) => {
+    setSelectedTeamId(teamId);
+    refreshData();
+  };
+
   const fetchData = async ({
     page,
     sortOptions,
@@ -126,6 +160,7 @@ const PlaylistsPage: Component<{
         sortOptions,
         search,
         filters,
+        team_id: selectedTeamId(),
       }
     );
 
@@ -179,6 +214,10 @@ const PlaylistsPage: Component<{
     {
       icon: AiOutlineDelete,
       handler: (item: JsonPlaylist) => {
+        if (!canPerformAction('playlists', 'delete')) {
+          toast.error(t('permissions.noDeletePlaylists') || "You don't have permission to delete playlists");
+          return;
+        }
         setCurrentPlaylist(item);
         setShowConfirmDialog(item);
       },
@@ -249,12 +288,14 @@ const PlaylistsPage: Component<{
         >
           <PlaylistAddForm
             t={t}
-            onSubmit={async (name: string) => {
+            teamId={selectedTeamId()}
+            onSubmit={async (name: string, teamId?: number | null) => {
               try {
                 const result = await PlaylistsService.addPlaylist(
                   props.store.env.baseUrl,
                   props.store.organizations.selectedId,
-                  name
+                  name,
+                  teamId
                 );
                 setShowAddPlaylistModal(false);
                 if (result?.data) {
@@ -341,12 +382,20 @@ const PlaylistsPage: Component<{
                 onClick={openAddPlaylistModal}
                 icon={BsCheckLg}
                 color="primary"
-                disabled={isQuotaReached()}
+                disabled={isQuotaReached() || !canPerformAction('playlists', 'create')}
               />
             </div>
           ),
           actions: (
-            <div>
+            <div style="display: flex; gap: 1rem; align-items: center;">
+              <TeamFilter
+                teams={teams()}
+                selectedTeamId={selectedTeamId()}
+                onTeamChange={handleTeamChange}
+                label={t('filters.teamLabel')}
+                placeholder={t('filters.teamPlaceholder')}
+                clearLabel={t('filters.teamClear')}
+              />
               <IconButton
                 onClick={() => setShowConfirmDialogMultiple(true)}
                 icon={AiOutlineDelete}

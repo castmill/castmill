@@ -38,6 +38,8 @@
     "loadingAddons": "Chargement des modules complémentaires...",
     "notFound": "404 Non trouvé",
     "pageNotFound": "Désolé, la page que vous recherchez n'existe pas.",
+    "requestedPath": "Chemin demandé",
+    "goToDashboard": "Aller au tableau de bord",
     "copyright": "© 2011-2025 Castmill™",
     "invitedEmail": "E-mail invité :",
     "acceptInvitation": "Accepter l'invitation",
@@ -68,7 +70,13 @@
     "maintainance": "Maintenance",
     "events": "Événements",
     "telemetry": "Télémétrie",
+    "youIndicator": "(vous)",
     "addonLoadingError": "Erreur de chargement de l'extension",
+    "filters": {
+      "teamLabel": "Équipe",
+      "teamPlaceholder": "Sélectionner une équipe",
+      "teamClear": "Effacer le filtre d'équipe"
+    },
     "addonError": "Erreur d'extension",
     "backToLogin": "Retour à la connexion"
   },
@@ -161,7 +169,10 @@
   },
   "teams": {
     "title": "Équipes",
-    "members": "Membres",
+    "members": {
+      "selectUser": "Sélectionner un utilisateur",
+      "searchUser": "Rechercher un utilisateur..."
+    },
     "invitations": "Invitations",
     "invitationAcceptSuccess": "Invitation acceptée avec succès",
     "invitationDeleteSuccess": "Invitation supprimée avec succès",
@@ -172,6 +183,12 @@
       "title": "Supprimer l'invitation",
       "message": "Êtes-vous sûr de vouloir supprimer l'invitation pour {{email}} ?"
     },
+    "removeInvitationFromTeam": "Retirer l'invitation de l'équipe",
+    "removeInvitationsFromTeam": "Retirer les invitations de l'équipe",
+    "confirmRemoveInvitation": "Êtes-vous sûr de vouloir retirer l'invitation pour {{email}} ?",
+    "confirmRemoveInvitations": "Êtes-vous sûr de vouloir retirer les invitations suivantes de l'équipe ?",
+    "invitationRemovedSuccessfully": "Invitation pour {{email}} retirée avec succès",
+    "invitationsRemovedSuccessfully": "Invitations retirées avec succès",
     "medias": "Médias",
     "playlists": "Listes de lecture",
     "devices": "Appareils",
@@ -192,6 +209,10 @@
     "inviteMember": "Inviter un membre",
     "inviteMemberDescription": "Ajouter un nouveau membre à l'équipe",
     "enterMember": "Entrez le membre",
+    "leaveTeamTitle": "Quitter cette équipe",
+    "leaveTeamDescription": "En partant, vous perdez immédiatement l'accès aux ressources de l'équipe.",
+    "leaveTeamAction": "Quitter l'équipe",
+    "leaveTeamLastAdminWarning": "Ajoutez un autre administrateur avant de partir pour que l'équipe reste gérée.",
     "addResourceToTeam": "Ajouter une ressource à l'équipe",
     "addResourcesToTeams": "Ajouter des ressources aux équipes",
     "errors": {
@@ -201,9 +222,24 @@
       "openViewModal": "ouvrir la fenêtre de visualisation",
       "removeResource": "Erreur lors de la suppression de la ressource de l'équipe : {{error}}",
       "removeResources": "Erreur lors de la suppression des ressources de l'équipe : {{error}}",
-      "addResourceToTeam": "Erreur lors de l'ajout de la ressource à l'équipe : {{error}}"
+      "addResourceToTeam": "Erreur lors de l'ajout de la ressource à l'équipe : {{error}}",
+      "cannotRemoveLastAdmin": "Vous ne pouvez pas supprimer le dernier administrateur de l'équipe."
     },
-    "confirmAddResources": "Êtes-vous sûr de vouloir ajouter les ressources suivantes ?"
+    "confirmAddResources": "Êtes-vous sûr de vouloir ajouter les ressources suivantes ?",
+    "messages": {
+      "memberRemoved": "Le membre {{name}} a été supprimé avec succès",
+      "membersRemoved": "Les membres ont été supprimés avec succès",
+      "invitationSent": "Invitation envoyée à {{email}}",
+      "leftTeam": "Vous avez quitté l'équipe {{name}}"
+    },
+    "invitation": {
+      "title": "Invitation à l'équipe",
+      "emailAddress": "Adresse e-mail",
+      "teamRole": "Rôle dans l'équipe",
+      "expired": "Cette invitation a expiré.",
+      "accepting": "Acceptation...",
+      "accept": "Accepter l'invitation"
+    }
   },
   "login": {
     "title": "Connexion",
@@ -271,11 +307,44 @@
     "invitations": "Invitations",
     "update": "Mettre à jour",
     "placeholderName": "Entrez le nom de l'organisation",
-    "errors": {
-      "updateOrganization": "Erreur lors de la mise à jour de l'organisation : {{error}}"
-    },
     "inviteMember": "Inviter un membre",
-    "enterMemberEmail": "Entrez l'e-mail du membre"
+    "enterMemberEmail": "Entrez l'e-mail du membre",
+    "role": "Rôle",
+    "roleAdmin": "Administrateur",
+    "roleManager": "Gestionnaire",
+    "roleMember": "Membre",
+    "roleEditor": "Éditeur",
+    "rolePublisher": "Publieur",
+    "roleDeviceManager": "Gestionnaire d'appareils",
+    "roleGuest": "Invité",
+    "teamRoleAdmin": "Administrateur d'équipe",
+    "teamRoleMember": "Membre de l'équipe",
+    "errors": {
+      "updateOrganization": "Erreur lors de la mise à jour de l'organisation : {{error}}",
+      "emailRequired": "L'e-mail est requis",
+      "invalidEmail": "E-mail invalide",
+      "cannotRemoveLastAdmin": "Vous ne pouvez pas supprimer le dernier administrateur de l'organisation.",
+      "invalidRole": "Le rôle sélectionné n'est pas valide pour cette organisation."
+    },
+    "messages": {
+      "memberRemoved": "Le membre {{name}} a été supprimé avec succès",
+      "membersRemoved": "Les membres ont été supprimés avec succès"
+    },
+    "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
+    "roleDescriptions": {
+      "admin": "Accès complet incluant la gestion de l'organisation",
+      "manager": "Peut gérer les équipes et la plupart des ressources",
+      "member": "Utilisateur standard (par défaut), peut gérer le contenu",
+      "editor": "Gestion complète du contenu, ne peut pas gérer les équipes",
+      "publisher": "Comme éditeur plus actions de flux de publication",
+      "device_manager": "Gestion complète des appareils et canaux",
+      "guest": "Accès en lecture seule aux ressources"
+    },
+    "teamRoleDescriptions": {
+      "admin": "Peut gérer les membres de l'équipe et les ressources",
+      "member": "Peut accéder et modifier les ressources de l'équipe",
+      "installer": "Jeton temporaire pour l'enregistrement d'appareil (expire dans 24h)"
+    }
   },
   "playlists": {
     "title": "Playlists",
@@ -340,7 +409,22 @@
     "pincode": "Code PIN",
     "enterPincode": "Entrez le code PIN à {{length}} caractères",
     "pincodeDescription": "Le code PIN sera affiché sur l'écran de l'appareil.",
-    "register": "Enregistrer"
+    "register": "Enregistrer",
+    "title": "[TODO: Translate] Devices",
+    "addDevice": "[TODO: Translate] Add Device",
+    "registerDevice": "[TODO: Translate] Register device",
+    "registerDescription": "[TODO: Translate] And start displaying content on it",
+    "deviceDetails": "[TODO: Translate] Details of your device",
+    "removeDevice": "[TODO: Translate] Remove Device",
+    "removeDevices": "[TODO: Translate] Remove Devices",
+    "confirmRemove": "[TODO: Translate] Are you sure you want to remove device \"{{name}}\"?",
+    "confirmRemoveMultiple": "[TODO: Translate] Are you sure you want to remove the following devices?",
+    "deviceRegisteredSuccess": "[TODO: Translate] Device registered successfully",
+    "deviceRemovedSuccess": "[TODO: Translate] Device \"{{name}}\" removed successfully",
+    "devicesRemovedSuccess": "[TODO: Translate] {{count}} device(s) removed successfully",
+    "errorRegisteringDevice": "[TODO: Translate] Error registering device: {{error}}",
+    "errorRemovingDevice": "[TODO: Translate] Error removing device {{name}}: {{error}}",
+    "errorRemovingDevices": "[TODO: Translate] Error removing devices: {{error}}"
   },
   "validation": {
     "fieldRequired": "Ce champ est requis",
@@ -379,5 +463,40 @@
   "search": {
     "title": "Recherche",
     "description": "Ceci est la page de recherche. Vous pouvez trouver tous les résultats de recherche ici..."
+  },
+  "permissions": {
+    "noPermission": "Vous n'avez pas la permission de {{action}} {{resource}}",
+    "noCreateTeams": "Vous n'avez pas la permission de créer des équipes",
+    "noUpdateTeams": "Vous n'avez pas la permission de modifier des équipes",
+    "noDeleteTeams": "Vous n'avez pas la permission de supprimer des équipes",
+    "noCreateOrganizations": "Vous n'avez pas la permission d'inviter des membres de l'organisation",
+    "noUpdateOrganizations": "Vous n'avez pas la permission de gérer les paramètres de l'organisation",
+    "noDeleteOrganizations": "Vous n'avez pas la permission de retirer des membres de l'organisation",
+    "noCreatePlaylists": "Vous n'avez pas la permission de créer des listes de lecture",
+    "noDeletePlaylists": "Vous n'avez pas la permission de supprimer des listes de lecture",
+    "noCreateMedias": "Vous n'avez pas la permission de télécharger des médias",
+    "noDeleteMedias": "Vous n'avez pas la permission de supprimer des médias",
+    "noCreateWidgets": "Vous n'avez pas la permission de télécharger des widgets",
+    "noDeleteWidgets": "Vous n'avez pas la permission de supprimer des widgets",
+    "noCreateDevices": "Vous n'avez pas la permission d'enregistrer des appareils",
+    "noDeleteDevices": "Vous n'avez pas la permission de supprimer des appareils",
+    "noCreateChannels": "Vous n'avez pas la permission de créer des canaux",
+    "noDeleteChannels": "Vous n'avez pas la permission de supprimer des canaux",
+    "contactAdmin": "Contactez votre administrateur pour demander l'accès",
+    "insufficientRole": "Cette action nécessite le rôle {{role}}"
+  },
+  "organizations": {
+    "invitation": {
+      "title": "Invitation à l'organisation",
+      "emailAddress": "Adresse e-mail",
+      "expired": "Cette invitation a expiré.",
+      "loginToAccept": "Connectez-vous pour accepter cette invitation",
+      "createAccount": "Créez votre compte pour accepter cette invitation"
+    }
+  },
+  "filters": {
+    "teamLabel": "Équipe",
+    "teamPlaceholder": "Sélectionner une équipe",
+    "teamClear": "Effacer le filtre d'équipe"
   }
 }

@@ -5,7 +5,6 @@
  */
 
 import {
-  Button,
   IconButton,
   Modal,
   TableView,
@@ -13,9 +12,12 @@ import {
   ConfirmDialog,
   TableViewRef,
   Timestamp,
+  HttpError,
   useToast,
 } from '@castmill/ui-common';
 import { store, setStore } from '../../store/store';
+import { PermissionButton } from '../../components/permission-button/permission-button';
+import { usePermissions } from '../../hooks/usePermissions';
 import { BsCheckLg } from 'solid-icons/bs';
 import { AiOutlineDelete } from 'solid-icons/ai';
 import { createEffect, createSignal, Show } from 'solid-js';
@@ -24,6 +26,7 @@ import { OrganizationsService } from '../../services/organizations.service';
 import { OrganizationInviteForm } from './organization-invite-form';
 import { OrganizationRole } from '../../types/organization-role.type';
 import { useI18n } from '../../i18n';
+import { getUser } from '../../components/auth';
 
 const [data, setData] = createSignal<{ user: User; user_id: string }[]>([], {
   equals: false,
@@ -47,19 +50,50 @@ const onRowSelect = (rowsSelected: Set<string>) => {
 
 const itemsPerPage = 10;
 
-const addMember = () => {
-  setShowAddMemberDialog(true);
-};
-
 export const OrganizationMembersView = (props: {
   organizationId: string;
   organizationName: string;
   onRemove: (member: User) => void;
 }) => {
   const { t } = useI18n();
+  const { canPerformAction } = usePermissions();
+  const toast = useToast();
+  const resolveRemoveMemberError = (error: unknown) => {
+    if (error instanceof HttpError) {
+      switch (error.status) {
+        case 422:
+          return t('organization.errors.cannotRemoveLastAdmin');
+        case 404:
+          return t('errors.generic');
+        default:
+          return error.message;
+      }
+    }
+
+    const message = (error as Error)?.message ?? t('errors.generic');
+    return message === 'cannot_remove_last_organization_admin'
+      ? t('organization.errors.cannotRemoveLastAdmin')
+      : message;
+  };
+
+  const addMember = () => {
+    setShowAddMemberDialog(true);
+  };
+
+  const currentUser = getUser();
 
   const columns = [
-    { key: 'user.name', title: t('common.name'), sortable: true },
+    {
+      key: 'user.name',
+      title: t('common.name'),
+      sortable: true,
+      render: (item: any) => {
+        const isCurrentUser = item.user_id === currentUser?.id;
+        return isCurrentUser
+          ? `${item.user.name} ${t('common.youIndicator')}`
+          : item.user.name;
+      },
+    },
     { key: 'role', title: t('common.role'), sortable: true },
     {
       key: 'inserted_at',
@@ -75,6 +109,13 @@ export const OrganizationMembersView = (props: {
     {
       icon: AiOutlineDelete,
       handler: (item: any) => {
+        if (!canPerformAction('organizations', 'delete')) {
+          toast.error(
+            t('permissions.noDeleteOrganizations') ||
+              "You don't have permission to remove organization members"
+          );
+          return;
+        }
         setCurrentMember(item);
         setShowConfirmDialog(true);
       },
@@ -82,7 +123,6 @@ export const OrganizationMembersView = (props: {
     },
   ];
 
-  const toast = useToast();
   const fetchData = async (opts: FetchDataOptions) => {
     const result = await OrganizationsService.fetchMembers(
       props.organizationId,
@@ -120,10 +160,13 @@ export const OrganizationMembersView = (props: {
       );
 
       refreshData();
-      toast.success(`Member ${member.name} removed successfully`);
+      toast.success(
+        t('organization.messages.memberRemoved', { name: member.name })
+      );
       setShowConfirmDialog(false);
     } catch (error) {
-      toast.error((error as Error).message);
+      const errorMessage = resolveRemoveMemberError(error);
+      toast.error(errorMessage);
     }
   };
 
@@ -139,10 +182,11 @@ export const OrganizationMembersView = (props: {
       );
 
       refreshData();
-      toast.success('Members removed successfully');
+      toast.success(t('organization.messages.membersRemoved'));
       setShowConfirmDialogMultiple(false);
     } catch (error) {
-      toast.error((error as Error).message);
+      const errorMessage = resolveRemoveMemberError(error);
+      toast.error(errorMessage);
     }
   };
 
@@ -165,9 +209,21 @@ export const OrganizationMembersView = (props: {
                 );
 
                 refreshData();
-                toast.success(`Invitation sent to ${email}`);
+                toast.success(
+                  t('organization.messages.invitationSent', { email })
+                );
                 setShowAddMemberDialog(false);
               } catch (error) {
+                if (error instanceof HttpError) {
+                  const normalizedMessage =
+                    error.message === 'role: is invalid'
+                      ? t('organization.errors.invalidRole')
+                      : error.message;
+
+                  toast.error(normalizedMessage);
+                  return;
+                }
+
                 toast.error((error as Error).message);
               }
             }}
@@ -207,7 +263,9 @@ export const OrganizationMembersView = (props: {
         ref={setRef}
         toolbar={{
           mainAction: (
-            <Button
+            <PermissionButton
+              resource="organizations"
+              action="create"
               label={t('organization.inviteMember')}
               onClick={addMember}
               icon={BsCheckLg}
@@ -217,10 +275,22 @@ export const OrganizationMembersView = (props: {
           actions: (
             <div>
               <IconButton
-                onClick={() => setShowConfirmDialogMultiple(true)}
+                onClick={() => {
+                  if (!canPerformAction('organizations', 'delete')) {
+                    toast.error(
+                      t('permissions.noDeleteOrganizations') ||
+                        "You don't have permission to remove organization members"
+                    );
+                    return;
+                  }
+                  setShowConfirmDialogMultiple(true);
+                }}
                 icon={AiOutlineDelete}
                 color="primary"
-                disabled={selectedMembers().size === 0}
+                disabled={
+                  selectedMembers().size === 0 ||
+                  !canPerformAction('organizations', 'delete')
+                }
               />
             </div>
           ),

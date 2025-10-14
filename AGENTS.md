@@ -619,13 +619,92 @@ When providing assistance, prioritize:
 1. **Code correctness** - Ensure TypeScript compliance and proper error handling
 2. **Test coverage** - Write comprehensive tests (unit, integration, e2e) with >90% coverage target
 3. **Internationalization** - Always localize user-facing text using the i18n system
-4. **Architecture consistency** - Maintain existing patterns and structures  
-5. **Performance** - Consider build times, bundle sizes, and runtime efficiency
-6. **User experience** - Prioritize accessibility and professional UI/UX
-7. **Maintainability** - Write clear, documented, testable code
-8. **Documentation currency** - Keep `agents/` docs updated with any architectural changes
+4. **URL-based routing** - Maintain organization context in URLs for proper state management
+5. **Architecture consistency** - Maintain existing patterns and structures  
+6. **Performance** - Consider build times, bundle sizes, and runtime efficiency
+7. **User experience** - Prioritize accessibility and professional UI/UX
+8. **Maintainability** - Write clear, documented, testable code
+9. **Documentation currency** - Keep `agents/` docs updated with any architectural changes
 
-## � Additional Context
+## 🔀 URL-Based Routing & Organization Switching
+
+The Dashboard uses **URL-based routing** to maintain organization context across navigation and page refreshes.
+
+### Key Architecture Decisions
+
+**URL Pattern**: All authenticated routes include organization ID
+```
+/org/:orgId/path
+```
+
+**Examples**:
+- `/org/abc-123/teams`
+- `/org/abc-123/content/playlists`
+- `/org/xyz-789/usage`
+
+### Critical Implementation Points
+
+1. **ProtectedRoute Sync**: The `ProtectedRoute` component syncs URL params to global store
+   ```tsx
+   createEffect(() => {
+     const urlOrgId = params.orgId;
+     if (store.organizations.loaded && urlOrgId !== store.organizations.selectedId) {
+       // Update store from URL
+     }
+   });
+   ```
+
+2. **Navigation Must Include Org ID**: All `navigate()` calls must include organization context
+   ```tsx
+   // ✅ Correct
+   navigate(`/org/${store.organizations.selectedId}/teams`);
+   
+   // ❌ Wrong
+   navigate('/teams');
+   ```
+
+3. **Addon Component Remounting**: Addons must remount when organization changes
+   
+   **Problem**: SolidJS Router doesn't remount components when route params change
+   
+   **Solution**: Use `Show` with `keyed` attribute to force remounting
+   ```tsx
+   <Show when={params.orgId} keyed>
+     {(orgId) => <AddonComponent key={orgId} />}
+   </Show>
+   ```
+
+4. **Store Structure**: The global store includes i18n functions for addon components
+   ```typescript
+   interface CastmillStore {
+     organizations: {
+       selectedId: string | null;
+       selectedName: string;
+       // ...
+     };
+     i18n?: {
+       t: (key: string, params?: Record<string, any>) => string;
+       // ... other i18n functions
+     };
+   }
+   ```
+
+### Common Pitfalls
+
+❌ Navigation without org ID breaks routing  
+❌ Assuming components remount on param change  
+❌ Mutating store directly (use `setStore()`)  
+❌ Hardcoding organization IDs
+
+### Detailed Documentation
+
+See `packages/dashboard/AGENTS.md` section "URL-Based Routing & Organization Switching" for:
+- Complete implementation patterns
+- Data reloading strategies
+- Debugging checklist
+- Testing guidelines
+
+## 📚 Additional Context
 
 This is a professional digital signage platform serving enterprise customers. Code quality, reliability, and professional presentation are critical. The `agents/` documentation system ensures AI assistants can provide contextually appropriate suggestions and maintain the high standards expected in enterprise software.
 
