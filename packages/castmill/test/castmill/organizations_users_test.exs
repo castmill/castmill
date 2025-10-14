@@ -40,25 +40,42 @@ defmodule Castmill.OrganizationsUsersTest do
       assert result == expected_result
     end
 
-    test "remove_user/2 removes the user from the organization" do
+    test "remove_user/2 removes the user from the organization when multiple users exist" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+      user = user_fixture()
+      admin = user_fixture()
+
+      Organizations.add_user(organization.id, admin.id, :admin)
+      Organizations.add_user(organization.id, user.id, :member)
+
+      assert {:ok, "User successfully removed."} =
+               Organizations.remove_user(organization.id, user.id)
+
+      remaining_users = Organizations.list_users(%{organization_id: organization.id})
+      assert length(remaining_users) == 1
+    end
+
+    test "remove_user/2 prevents removing the last user from organization" do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
       user = user_fixture()
 
       Organizations.add_user(organization.id, user.id, :member)
 
-      assert {:ok, "User successfully removed."} =
-               Organizations.remove_user(organization.id, user.id)
+      assert {:error, :last_user} = Organizations.remove_user(organization.id, user.id)
 
-      assert [] == Organizations.list_users(%{organization_id: organization.id})
+      assert length(Organizations.list_users(%{organization_id: organization.id})) == 1
     end
 
-    test "remove_user/2 prevents removing the last admin" do
+    test "remove_user/2 prevents removing the last admin even with other members" do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
       admin = user_fixture()
+      member = user_fixture()
 
       Organizations.add_user(organization.id, admin.id, :admin)
+      Organizations.add_user(organization.id, member.id, :member)
 
       assert {:error, :last_admin} = Organizations.remove_user(organization.id, admin.id)
 
@@ -66,7 +83,7 @@ defmodule Castmill.OrganizationsUsersTest do
         Organizations.list_users(%{organization_id: organization.id})
         |> Enum.map(& &1.role)
 
-      assert [:admin] = remaining_roles
+      assert :admin in remaining_roles
     end
 
     test "remove_user/2 allows removing an admin when another admin remains" do
