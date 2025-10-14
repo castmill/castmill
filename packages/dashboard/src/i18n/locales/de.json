@@ -72,11 +72,6 @@
     "telemetry": "Telemetrie",
     "youIndicator": "(du)",
     "addonLoadingError": "Add-on-Ladefehler",
-    "filters": {
-      "teamLabel": "Team",
-      "teamPlaceholder": "Team auswählen",
-      "teamClear": "Teamfilter zurücksetzen"
-    },
     "addonError": "Add-on-Fehler",
     "backToLogin": "Zurück zur Anmeldung"
   },
@@ -292,7 +287,7 @@
     "roleManager": "Verwalter",
     "roleMember": "Mitglied",
     "roleEditor": "Redakteur",
-    "rolePublisher": "Publisher",
+    "rolePublisher": "Veröffentlicher",
     "roleDeviceManager": "Geräteverwalter",
     "roleGuest": "Gast",
     "teamRoleAdmin": "Team-Administrator",
@@ -307,6 +302,21 @@
     "messages": {
       "memberRemoved": "Mitglied {{name}} wurde erfolgreich entfernt",
       "membersRemoved": "Mitglieder wurden erfolgreich entfernt"
+    },
+    "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
+    "roleDescriptions": {
+      "admin": "Vollzugriff einschließlich Organisationsverwaltung",
+      "manager": "Kann Teams und die meisten Ressourcen verwalten",
+      "member": "Standardbenutzer (Standard), kann Inhalte verwalten",
+      "editor": "Vollständige Inhaltsverwaltung, kann keine Teams verwalten",
+      "publisher": "Wie Redakteur plus Veröffentlichungs-Workflow-Aktionen",
+      "device_manager": "Vollständige Geräte- und Kanalverwaltung",
+      "guest": "Nur-Lese-Zugriff auf Ressourcen"
+    },
+    "teamRoleDescriptions": {
+      "admin": "Kann Teammitglieder und Ressourcen verwalten",
+      "member": "Kann auf Teamressourcen zugreifen und diese bearbeiten",
+      "installer": "Temporäres Token für Geräteregistrierung (läuft in 24h ab)"
     }
   },
   "login": {
@@ -409,7 +419,22 @@
     "pincode": "PIN-Code",
     "enterPincode": "{{length}}-stelligen PIN-Code eingeben",
     "pincodeDescription": "Der PIN-Code wird auf dem Bildschirm des Geräts angezeigt.",
-    "register": "Registrieren"
+    "register": "Registrieren",
+    "title": "[TODO: Translate] Devices",
+    "addDevice": "[TODO: Translate] Add Device",
+    "registerDevice": "[TODO: Translate] Register device",
+    "registerDescription": "[TODO: Translate] And start displaying content on it",
+    "deviceDetails": "[TODO: Translate] Details of your device",
+    "removeDevice": "[TODO: Translate] Remove Device",
+    "removeDevices": "[TODO: Translate] Remove Devices",
+    "confirmRemove": "[TODO: Translate] Are you sure you want to remove device \"{{name}}\"?",
+    "confirmRemoveMultiple": "[TODO: Translate] Are you sure you want to remove the following devices?",
+    "deviceRegisteredSuccess": "[TODO: Translate] Device registered successfully",
+    "deviceRemovedSuccess": "[TODO: Translate] Device \"{{name}}\" removed successfully",
+    "devicesRemovedSuccess": "[TODO: Translate] {{count}} device(s) removed successfully",
+    "errorRegisteringDevice": "[TODO: Translate] Error registering device: {{error}}",
+    "errorRemovingDevice": "[TODO: Translate] Error removing device {{name}}: {{error}}",
+    "errorRemovingDevices": "[TODO: Translate] Error removing devices: {{error}}"
   },
   "validation": {
     "fieldRequired": "Dieses Feld ist erforderlich",
@@ -462,5 +487,10 @@
       "loginToAccept": "Melden Sie sich an, um diese Einladung anzunehmen",
       "createAccount": "Erstellen Sie Ihr Konto, um diese Einladung anzunehmen"
     }
+  },
+  "filters": {
+    "teamLabel": "Mannschaft",
+    "teamPlaceholder": "Mannschaft auswählen",
+    "teamClear": "Mannschaftsfilter löschen"
   }
 }

@@ -329,6 +329,21 @@
     "messages": {
       "memberRemoved": "تمت إزالة العضو {{name}} بنجاح",
       "membersRemoved": "تمت إزالة الأعضاء بنجاح"
+    },
+    "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
+    "roleDescriptions": {
+      "admin": "وصول كامل بما في ذلك إدارة المنظمة",
+      "manager": "يمكنه إدارة الفرق ومعظم الموارد",
+      "member": "مستخدم قياسي (افتراضي)، يمكنه إدارة المحتوى",
+      "editor": "إدارة كاملة للمحتوى، لا يمكنه إدارة الفرق",
+      "publisher": "مثل المحرر بالإضافة إلى إجراءات سير عمل النشر",
+      "device_manager": "إدارة كاملة للأجهزة والقنوات",
+      "guest": "وصول للقراءة فقط إلى الموارد"
+    },
+    "teamRoleDescriptions": {
+      "admin": "يمكنه إدارة أعضاء الفريق والموارد",
+      "member": "يمكنه الوصول وتحرير موارد الفريق",
+      "installer": "رمز مؤقت لتسجيل الجهاز (ينتهي خلال 24 ساعة)"
     }
   },
   "playlists": {
@@ -393,7 +408,22 @@
     "pincode": "رمز PIN",
     "enterPincode": "أدخل رمز PIN المكون من {{length}} أحرف",
     "pincodeDescription": "سيتم عرض رمز PIN على شاشة الجهاز.",
-    "register": "تسجيل"
+    "register": "تسجيل",
+    "title": "[TODO: Translate] Devices",
+    "addDevice": "[TODO: Translate] Add Device",
+    "registerDevice": "[TODO: Translate] Register device",
+    "registerDescription": "[TODO: Translate] And start displaying content on it",
+    "deviceDetails": "[TODO: Translate] Details of your device",
+    "removeDevice": "[TODO: Translate] Remove Device",
+    "removeDevices": "[TODO: Translate] Remove Devices",
+    "confirmRemove": "[TODO: Translate] Are you sure you want to remove device \"{{name}}\"?",
+    "confirmRemoveMultiple": "[TODO: Translate] Are you sure you want to remove the following devices?",
+    "deviceRegisteredSuccess": "[TODO: Translate] Device registered successfully",
+    "deviceRemovedSuccess": "[TODO: Translate] Device \"{{name}}\" removed successfully",
+    "devicesRemovedSuccess": "[TODO: Translate] {{count}} device(s) removed successfully",
+    "errorRegisteringDevice": "[TODO: Translate] Error registering device: {{error}}",
+    "errorRemovingDevice": "[TODO: Translate] Error removing device {{name}}: {{error}}",
+    "errorRemovingDevices": "[TODO: Translate] Error removing devices: {{error}}"
   },
   "validation": {
     "fieldRequired": "هذا الحقل مطلوب",
@@ -462,5 +492,10 @@
       "loginToAccept": "تسجيل الدخول لقبول هذه الدعوة",
       "createAccount": "أنشئ حسابك لقبول هذه الدعوة"
     }
+  },
+  "filters": {
+    "teamLabel": "الفريق",
+    "teamPlaceholder": "اختر فريق",
+    "teamClear": "مسح فلتر الفريق"
   }
 }

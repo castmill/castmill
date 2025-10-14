@@ -72,11 +72,6 @@
     "telemetry": "Telemetri",
     "youIndicator": "(du)",
     "addonLoadingError": "Fel vid laddning av tillägg",
-    "filters": {
-      "teamLabel": "Lag",
-      "teamPlaceholder": "Välj lag",
-      "teamClear": "Rensa lagfilter"
-    },
     "addonError": "Tilläggsfel",
     "backToLogin": "Tillbaka till inloggning"
   },
@@ -329,6 +324,21 @@
     "messages": {
       "memberRemoved": "Medlemmen {{name}} togs bort med framgång",
       "membersRemoved": "Medlemmarna togs bort med framgång"
+    },
+    "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
+    "roleDescriptions": {
+      "admin": "Full åtkomst inklusive organisationshantering",
+      "manager": "Kan hantera team och de flesta resurser",
+      "member": "Standardanvändare (standard), kan hantera innehåll",
+      "editor": "Full innehållshantering, kan inte hantera team",
+      "publisher": "Som redaktör plus arbetsflödesåtgärder för publicering",
+      "device_manager": "Full enhets- och kanalhantering",
+      "guest": "Läsbehörighet till resurser"
+    },
+    "teamRoleDescriptions": {
+      "admin": "Kan hantera teammedlemmar och resurser",
+      "member": "Kan komma åt och redigera teamresurser",
+      "installer": "Tillfällig token för enhetsregistrering (utgår om 24h)"
     }
   },
   "playlists": {
@@ -393,7 +403,22 @@
     "pincode": "PIN-kod",
     "enterPincode": "Ange {{length}}-siffrig PIN-kod",
     "pincodeDescription": "PIN-koden kommer att visas på enhetens skärm.",
-    "register": "Registrera"
+    "register": "Registrera",
+    "title": "[TODO: Translate] Devices",
+    "addDevice": "[TODO: Translate] Add Device",
+    "registerDevice": "[TODO: Translate] Register device",
+    "registerDescription": "[TODO: Translate] And start displaying content on it",
+    "deviceDetails": "[TODO: Translate] Details of your device",
+    "removeDevice": "[TODO: Translate] Remove Device",
+    "removeDevices": "[TODO: Translate] Remove Devices",
+    "confirmRemove": "[TODO: Translate] Are you sure you want to remove device \"{{name}}\"?",
+    "confirmRemoveMultiple": "[TODO: Translate] Are you sure you want to remove the following devices?",
+    "deviceRegisteredSuccess": "[TODO: Translate] Device registered successfully",
+    "deviceRemovedSuccess": "[TODO: Translate] Device \"{{name}}\" removed successfully",
+    "devicesRemovedSuccess": "[TODO: Translate] {{count}} device(s) removed successfully",
+    "errorRegisteringDevice": "[TODO: Translate] Error registering device: {{error}}",
+    "errorRemovingDevice": "[TODO: Translate] Error removing device {{name}}: {{error}}",
+    "errorRemovingDevices": "[TODO: Translate] Error removing devices: {{error}}"
   },
   "validation": {
     "fieldRequired": "Detta fält är obligatoriskt",
@@ -462,5 +487,10 @@
       "loginToAccept": "Logga in för att acceptera denna inbjudan",
       "createAccount": "Skapa ditt konto för att acceptera denna inbjudan"
     }
+  },
+  "filters": {
+    "teamLabel": "Lag",
+    "teamPlaceholder": "Välj lag",
+    "teamClear": "Rensa lagfilter"
   }
 }

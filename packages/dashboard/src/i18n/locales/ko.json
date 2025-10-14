@@ -313,7 +313,7 @@
     "roleAdmin": "관리자",
     "roleManager": "매니저",
     "roleMember": "멤버",
-    "roleEditor": "에디터",
+    "roleEditor": "편집자",
     "rolePublisher": "퍼블리셔",
     "roleDeviceManager": "디바이스 관리자",
     "roleGuest": "게스트",
@@ -329,6 +329,21 @@
     "messages": {
       "memberRemoved": "구성원 {{name}}을(를) 성공적으로 제거했습니다",
       "membersRemoved": "구성원을 성공적으로 제거했습니다"
+    },
+    "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
+    "roleDescriptions": {
+      "admin": "조직 관리를 포함한 전체 액세스",
+      "manager": "팀 및 대부분의 리소스를 관리할 수 있음",
+      "member": "표준 사용자(기본값), 콘텐츠를 관리할 수 있음",
+      "editor": "전체 콘텐츠 관리, 팀을 관리할 수 없음",
+      "publisher": "편집자와 동일하며 게시 워크플로 작업 추가",
+      "device_manager": "전체 기기 및 채널 관리",
+      "guest": "리소스에 대한 읽기 전용 액세스"
+    },
+    "teamRoleDescriptions": {
+      "admin": "팀 구성원 및 리소스를 관리할 수 있음",
+      "member": "팀 리소스에 액세스하고 편집할 수 있음",
+      "installer": "기기 등록용 임시 토큰(24시간 후 만료)"
     }
   },
   "playlists": {
@@ -393,7 +408,22 @@
     "pincode": "PIN 코드",
     "enterPincode": "{{length}}자리 PIN 코드 입력",
     "pincodeDescription": "PIN 코드는 기기 화면에 표시됩니다.",
-    "register": "등록"
+    "register": "등록",
+    "title": "[TODO: Translate] Devices",
+    "addDevice": "[TODO: Translate] Add Device",
+    "registerDevice": "[TODO: Translate] Register device",
+    "registerDescription": "[TODO: Translate] And start displaying content on it",
+    "deviceDetails": "[TODO: Translate] Details of your device",
+    "removeDevice": "[TODO: Translate] Remove Device",
+    "removeDevices": "[TODO: Translate] Remove Devices",
+    "confirmRemove": "[TODO: Translate] Are you sure you want to remove device \"{{name}}\"?",
+    "confirmRemoveMultiple": "[TODO: Translate] Are you sure you want to remove the following devices?",
+    "deviceRegisteredSuccess": "[TODO: Translate] Device registered successfully",
+    "deviceRemovedSuccess": "[TODO: Translate] Device \"{{name}}\" removed successfully",
+    "devicesRemovedSuccess": "[TODO: Translate] {{count}} device(s) removed successfully",
+    "errorRegisteringDevice": "[TODO: Translate] Error registering device: {{error}}",
+    "errorRemovingDevice": "[TODO: Translate] Error removing device {{name}}: {{error}}",
+    "errorRemovingDevices": "[TODO: Translate] Error removing devices: {{error}}"
   },
   "validation": {
     "fieldRequired": "이 필드는 필수입니다",
@@ -462,5 +492,10 @@
       "loginToAccept": "이 초대를 수락하려면 로그인하세요",
       "createAccount": "이 초대를 수락하려면 계정을 만드세요"
     }
+  },
+  "filters": {
+    "teamLabel": "팀",
+    "teamPlaceholder": "팀 선택",
+    "teamClear": "팀 필터 지우기"
   }
 }

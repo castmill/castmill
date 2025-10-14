@@ -313,7 +313,7 @@
     "roleAdmin": "管理者",
     "roleManager": "マネージャー",
     "roleMember": "メンバー",
-    "roleEditor": "エディター",
+    "roleEditor": "編集者",
     "rolePublisher": "パブリッシャー",
     "roleDeviceManager": "デバイス管理者",
     "roleGuest": "ゲスト",
@@ -329,6 +329,21 @@
     "messages": {
       "memberRemoved": "メンバー{{name}}を正常に削除しました",
       "membersRemoved": "メンバーを正常に削除しました"
+    },
+    "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
+    "roleDescriptions": {
+      "admin": "組織管理を含む完全なアクセス権",
+      "manager": "チームとほとんどのリソースを管理できます",
+      "member": "標準ユーザー（デフォルト）、コンテンツを管理できます",
+      "editor": "完全なコンテンツ管理、チームは管理できません",
+      "publisher": "編集者と同様に公開ワークフローアクションが追加されます",
+      "device_manager": "完全なデバイスとチャンネル管理",
+      "guest": "リソースへの読み取り専用アクセス"
+    },
+    "teamRoleDescriptions": {
+      "admin": "チームメンバーとリソースを管理できます",
+      "member": "チームリソースにアクセスして編集できます",
+      "installer": "デバイス登録用の一時トークン（24時間後に期限切れ）"
     }
   },
   "playlists": {
@@ -393,7 +408,22 @@
     "pincode": "PIN コード",
     "enterPincode": "{{length}}文字のPINコードを入力",
     "pincodeDescription": "PIN コードはデバイスの画面に表示されます。",
-    "register": "登録"
+    "register": "登録",
+    "title": "[TODO: Translate] Devices",
+    "addDevice": "[TODO: Translate] Add Device",
+    "registerDevice": "[TODO: Translate] Register device",
+    "registerDescription": "[TODO: Translate] And start displaying content on it",
+    "deviceDetails": "[TODO: Translate] Details of your device",
+    "removeDevice": "[TODO: Translate] Remove Device",
+    "removeDevices": "[TODO: Translate] Remove Devices",
+    "confirmRemove": "[TODO: Translate] Are you sure you want to remove device \"{{name}}\"?",
+    "confirmRemoveMultiple": "[TODO: Translate] Are you sure you want to remove the following devices?",
+    "deviceRegisteredSuccess": "[TODO: Translate] Device registered successfully",
+    "deviceRemovedSuccess": "[TODO: Translate] Device \"{{name}}\" removed successfully",
+    "devicesRemovedSuccess": "[TODO: Translate] {{count}} device(s) removed successfully",
+    "errorRegisteringDevice": "[TODO: Translate] Error registering device: {{error}}",
+    "errorRemovingDevice": "[TODO: Translate] Error removing device {{name}}: {{error}}",
+    "errorRemovingDevices": "[TODO: Translate] Error removing devices: {{error}}"
   },
   "validation": {
     "fieldRequired": "この項目は必須です",
@@ -462,5 +492,10 @@
       "loginToAccept": "この招待を承認するにはログインしてください",
       "createAccount": "この招待を承認するにはアカウントを作成してください"
     }
+  },
+  "filters": {
+    "teamLabel": "チーム",
+    "teamPlaceholder": "チームを選択",
+    "teamClear": "チームフィルターをクリア"
   }
 }

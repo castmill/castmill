@@ -313,7 +313,7 @@
     "roleAdmin": "管理员",
     "roleManager": "经理",
     "roleMember": "成员",
-    "roleEditor": "编辑",
+    "roleEditor": "编辑者",
     "rolePublisher": "发布者",
     "roleDeviceManager": "设备管理员",
     "roleGuest": "访客",
@@ -329,6 +329,21 @@
     "messages": {
       "memberRemoved": "已成功移除成员 {{name}}",
       "membersRemoved": "已成功移除成员"
+    },
+    "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
+    "roleDescriptions": {
+      "admin": "完全访问权限，包括组织管理",
+      "manager": "可以管理团队和大多数资源",
+      "member": "标准用户（默认），可以管理内容",
+      "editor": "完整的内容管理，不能管理团队",
+      "publisher": "类似编辑者，加上发布工作流操作",
+      "device_manager": "完整的设备和频道管理",
+      "guest": "对资源的只读访问权限"
+    },
+    "teamRoleDescriptions": {
+      "admin": "可以管理团队成员和资源",
+      "member": "可以访问和编辑团队资源",
+      "installer": "用于设备注册的临时令牌（24小时后过期）"
     }
   },
   "playlists": {
@@ -393,7 +408,22 @@
     "pincode": "PIN码",
     "enterPincode": "输入{{length}}位PIN码",
     "pincodeDescription": "PIN码将显示在设备屏幕上。",
-    "register": "注册"
+    "register": "注册",
+    "title": "[TODO: Translate] Devices",
+    "addDevice": "[TODO: Translate] Add Device",
+    "registerDevice": "[TODO: Translate] Register device",
+    "registerDescription": "[TODO: Translate] And start displaying content on it",
+    "deviceDetails": "[TODO: Translate] Details of your device",
+    "removeDevice": "[TODO: Translate] Remove Device",
+    "removeDevices": "[TODO: Translate] Remove Devices",
+    "confirmRemove": "[TODO: Translate] Are you sure you want to remove device \"{{name}}\"?",
+    "confirmRemoveMultiple": "[TODO: Translate] Are you sure you want to remove the following devices?",
+    "deviceRegisteredSuccess": "[TODO: Translate] Device registered successfully",
+    "deviceRemovedSuccess": "[TODO: Translate] Device \"{{name}}\" removed successfully",
+    "devicesRemovedSuccess": "[TODO: Translate] {{count}} device(s) removed successfully",
+    "errorRegisteringDevice": "[TODO: Translate] Error registering device: {{error}}",
+    "errorRemovingDevice": "[TODO: Translate] Error removing device {{name}}: {{error}}",
+    "errorRemovingDevices": "[TODO: Translate] Error removing devices: {{error}}"
   },
   "validation": {
     "fieldRequired": "此字段为必填项",
@@ -462,5 +492,10 @@
       "loginToAccept": "登录以接受此邀请",
       "createAccount": "创建您的帐户以接受此邀请"
     }
+  },
+  "filters": {
+    "teamLabel": "团队",
+    "teamPlaceholder": "选择团队",
+    "teamClear": "清除团队筛选"
   }
 }
