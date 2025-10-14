@@ -17,7 +17,7 @@ defmodule CastmillWeb.ResourceController.MediasTest do
     user = user_fixture(%{organization_id: organization.id})
 
     team = team_fixture(%{organization_id: organization.id})
-    {:ok, _result} = Teams.add_user_to_team(team.id, user.id, :regular)
+    {:ok, _result} = Teams.add_user_to_team(team.id, user.id, :member)
     # {:ok, _result} = Teams.add_resource_to_team(team.id, media.id, :media, [:read])
 
     # TODO: change this to a non-root user

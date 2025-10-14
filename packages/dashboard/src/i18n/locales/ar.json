@@ -38,6 +38,8 @@
     "loadingAddons": "جاري تحميل الإضافات...",
     "notFound": "404 غير موجود",
     "pageNotFound": "عذرًا، الصفحة التي تبحث عنها غير موجودة.",
+    "requestedPath": "المسار المطلوب",
+    "goToDashboard": "انتقل إلى لوحة التحكم",
     "copyright": "© 2011-2025 Castmill™",
     "invitedEmail": "البريد الإلكتروني المدعو:",
     "acceptInvitation": "قبول الدعوة",
@@ -68,7 +70,13 @@
     "maintainance": "الصيانة",
     "events": "الأحداث",
     "telemetry": "القياس عن بعد",
+    "youIndicator": "(أنت)",
     "addonLoadingError": "خطأ في تحميل الإضافة",
+    "filters": {
+      "teamLabel": "الفريق",
+      "teamPlaceholder": "اختر فريقًا",
+      "teamClear": "مسح تصفية الفريق"
+    },
     "addonError": "خطأ في الإضافة",
     "backToLogin": "العودة لتسجيل الدخول"
   },
@@ -161,7 +169,10 @@
   },
   "teams": {
     "title": "الفرق",
-    "members": "الأعضاء",
+    "members": {
+      "selectUser": "اختر مستخدمًا",
+      "searchUser": "البحث عن مستخدم..."
+    },
     "invitations": "الدعوات",
     "invitationAcceptSuccess": "تم قبول الدعوة بنجاح",
     "invitationDeleteSuccess": "تم حذف الدعوة بنجاح",
@@ -172,6 +183,12 @@
       "title": "حذف الدعوة",
       "message": "هل أنت متأكد من أنك تريد حذف الدعوة لـ {{email}}؟"
     },
+    "removeInvitationFromTeam": "إزالة الدعوة من الفريق",
+    "removeInvitationsFromTeam": "إزالة الدعوات من الفريق",
+    "confirmRemoveInvitation": "هل أنت متأكد من أنك تريد إزالة الدعوة لـ {{email}}؟",
+    "confirmRemoveInvitations": "هل أنت متأكد من أنك تريد إزالة الدعوات التالية من الفريق؟",
+    "invitationRemovedSuccessfully": "تمت إزالة الدعوة لـ {{email}} بنجاح",
+    "invitationsRemovedSuccessfully": "تمت إزالة الدعوات بنجاح",
     "medias": "الوسائط",
     "playlists": "قوائم التشغيل",
     "devices": "الأجهزة",
@@ -192,6 +209,10 @@
     "inviteMember": "دعوة عضو",
     "inviteMemberDescription": "إضافة عضو جديد إلى الفريق",
     "enterMember": "أدخل العضو",
+    "leaveTeamTitle": "مغادرة هذا الفريق",
+    "leaveTeamDescription": "عند المغادرة ستفقد الوصول إلى موارد الفريق فورًا.",
+    "leaveTeamAction": "غادر الفريق",
+    "leaveTeamLastAdminWarning": "أضف مسؤولاً آخر قبل المغادرة لضمان إدارة هذا الفريق.",
     "addResourceToTeam": "إضافة مورد إلى الفريق",
     "addResourcesToTeams": "إضافة موارد إلى الفرق",
     "errors": {
@@ -201,9 +222,24 @@
       "openViewModal": "فتح نافذة العرض",
       "removeResource": "خطأ في إزالة المورد من الفريق: {{error}}",
       "removeResources": "خطأ في إزالة الموارد من الفريق: {{error}}",
-      "addResourceToTeam": "خطأ في إضافة المورد إلى الفريق: {{error}}"
+      "addResourceToTeam": "خطأ في إضافة المورد إلى الفريق: {{error}}",
+      "cannotRemoveLastAdmin": "لا يمكنك إزالة آخر مشرف للفريق."
     },
-    "confirmAddResources": "هل أنت متأكد من أنك تريد إضافة الموارد التالية؟"
+    "confirmAddResources": "هل أنت متأكد من أنك تريد إضافة الموارد التالية؟",
+    "messages": {
+      "memberRemoved": "تمت إزالة العضو {{name}} بنجاح",
+      "membersRemoved": "تمت إزالة الأعضاء بنجاح",
+      "invitationSent": "تم إرسال الدعوة إلى {{email}}",
+      "leftTeam": "لقد غادرت الفريق {{name}}"
+    },
+    "invitation": {
+      "title": "دعوة الفريق",
+      "emailAddress": "عنوان البريد الإلكتروني",
+      "teamRole": "دور الفريق",
+      "expired": "انتهت صلاحية هذه الدعوة.",
+      "accepting": "جاري القبول...",
+      "accept": "قبول الدعوة"
+    }
   },
   "login": {
     "title": "تسجيل الدخول",
@@ -271,11 +307,44 @@
     "invitations": "الدعوات",
     "update": "تحديث",
     "placeholderName": "أدخل اسم المنظمة",
-    "errors": {
-      "updateOrganization": "خطأ في تحديث المنظمة: {{error}}"
-    },
     "inviteMember": "دعوة عضو",
-    "enterMemberEmail": "أدخل البريد الإلكتروني للعضو"
+    "enterMemberEmail": "أدخل البريد الإلكتروني للعضو",
+    "role": "الدور",
+    "roleAdmin": "مسؤول",
+    "roleManager": "مدير",
+    "roleMember": "عضو",
+    "roleEditor": "محرر",
+    "rolePublisher": "ناشر",
+    "roleDeviceManager": "مسؤول الأجهزة",
+    "roleGuest": "ضيف",
+    "teamRoleAdmin": "مسؤول الفريق",
+    "teamRoleMember": "عضو الفريق",
+    "errors": {
+      "updateOrganization": "خطأ في تحديث المنظمة: {{error}}",
+      "emailRequired": "البريد الإلكتروني مطلوب",
+      "invalidEmail": "بريد إلكتروني غير صالح",
+      "cannotRemoveLastAdmin": "لا يمكنك إزالة آخر مشرف للمؤسسة.",
+      "invalidRole": "الدور المحدد غير صالح لهذه المؤسسة."
+    },
+    "messages": {
+      "memberRemoved": "تمت إزالة العضو {{name}} بنجاح",
+      "membersRemoved": "تمت إزالة الأعضاء بنجاح"
+    },
+    "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
+    "roleDescriptions": {
+      "admin": "وصول كامل بما في ذلك إدارة المنظمة",
+      "manager": "يمكنه إدارة الفرق ومعظم الموارد",
+      "member": "مستخدم قياسي (افتراضي)، يمكنه إدارة المحتوى",
+      "editor": "إدارة كاملة للمحتوى، لا يمكنه إدارة الفرق",
+      "publisher": "مثل المحرر بالإضافة إلى إجراءات سير عمل النشر",
+      "device_manager": "إدارة كاملة للأجهزة والقنوات",
+      "guest": "وصول للقراءة فقط إلى الموارد"
+    },
+    "teamRoleDescriptions": {
+      "admin": "يمكنه إدارة أعضاء الفريق والموارد",
+      "member": "يمكنه الوصول وتحرير موارد الفريق",
+      "installer": "رمز مؤقت لتسجيل الجهاز (ينتهي خلال 24 ساعة)"
+    }
   },
   "playlists": {
     "title": "قوائم التشغيل",
@@ -339,7 +408,22 @@
     "pincode": "رمز PIN",
     "enterPincode": "أدخل رمز PIN المكون من {{length}} أحرف",
     "pincodeDescription": "سيتم عرض رمز PIN على شاشة الجهاز.",
-    "register": "تسجيل"
+    "register": "تسجيل",
+    "title": "[TODO: Translate] Devices",
+    "addDevice": "[TODO: Translate] Add Device",
+    "registerDevice": "[TODO: Translate] Register device",
+    "registerDescription": "[TODO: Translate] And start displaying content on it",
+    "deviceDetails": "[TODO: Translate] Details of your device",
+    "removeDevice": "[TODO: Translate] Remove Device",
+    "removeDevices": "[TODO: Translate] Remove Devices",
+    "confirmRemove": "[TODO: Translate] Are you sure you want to remove device \"{{name}}\"?",
+    "confirmRemoveMultiple": "[TODO: Translate] Are you sure you want to remove the following devices?",
+    "deviceRegisteredSuccess": "[TODO: Translate] Device registered successfully",
+    "deviceRemovedSuccess": "[TODO: Translate] Device \"{{name}}\" removed successfully",
+    "devicesRemovedSuccess": "[TODO: Translate] {{count}} device(s) removed successfully",
+    "errorRegisteringDevice": "[TODO: Translate] Error registering device: {{error}}",
+    "errorRemovingDevice": "[TODO: Translate] Error removing device {{name}}: {{error}}",
+    "errorRemovingDevices": "[TODO: Translate] Error removing devices: {{error}}"
   },
   "validation": {
     "fieldRequired": "هذا الحقل مطلوب",
@@ -378,5 +462,40 @@
   "search": {
     "title": "بحث",
     "description": "هذه هي صفحة البحث. يمكنك العثور على جميع نتائج البحث هنا..."
+  },
+  "permissions": {
+    "noPermission": "ليس لديك إذن {{action}} {{resource}}",
+    "noCreateTeams": "ليس لديك إذن لإنشاء الفرق",
+    "noUpdateTeams": "ليس لديك إذن لتعديل الفرق",
+    "noDeleteTeams": "ليس لديك إذن لحذف الفرق",
+    "noCreateOrganizations": "ليس لديك إذن لدعوة أعضاء المؤسسة",
+    "noUpdateOrganizations": "ليس لديك إذن لإدارة إعدادات المؤسسة",
+    "noDeleteOrganizations": "ليس لديك إذن لإزالة أعضاء المؤسسة",
+    "noCreatePlaylists": "ليس لديك إذن لإنشاء قوائم التشغيل",
+    "noDeletePlaylists": "ليس لديك إذن لحذف قوائم التشغيل",
+    "noCreateMedias": "ليس لديك إذن لرفع ملفات الوسائط",
+    "noDeleteMedias": "ليس لديك إذن لحذف ملفات الوسائط",
+    "noCreateWidgets": "ليس لديك إذن لرفع الأدوات",
+    "noDeleteWidgets": "ليس لديك إذن لحذف الأدوات",
+    "noCreateDevices": "ليس لديك إذن لتسجيل الأجهزة",
+    "noDeleteDevices": "ليس لديك إذن لحذف الأجهزة",
+    "noCreateChannels": "ليس لديك إذن لإنشاء القنوات",
+    "noDeleteChannels": "ليس لديك إذن لحذف القنوات",
+    "contactAdmin": "اتصل بالمسؤول لطلب الوصول",
+    "insufficientRole": "يتطلب هذا الإجراء دور {{role}}"
+  },
+  "organizations": {
+    "invitation": {
+      "title": "دعوة المنظمة",
+      "emailAddress": "عنوان البريد الإلكتروني",
+      "expired": "انتهت صلاحية هذه الدعوة.",
+      "loginToAccept": "تسجيل الدخول لقبول هذه الدعوة",
+      "createAccount": "أنشئ حسابك لقبول هذه الدعوة"
+    }
+  },
+  "filters": {
+    "teamLabel": "الفريق",
+    "teamPlaceholder": "اختر فريق",
+    "teamClear": "مسح فلتر الفريق"
   }
 }

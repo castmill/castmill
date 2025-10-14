@@ -9,7 +9,7 @@ defmodule Castmill.Repo.Migrations.CreateOrganizationsInvitations do
         null: false,
         primary_key: true
 
-      add :role, :string, default: "regular", null: false
+      add :role, :string, default: "member", null: false
 
       add :token, :string, null: false
       add :status, :string, default: "invited", null: false

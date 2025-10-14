@@ -26,8 +26,15 @@ const Login: Component = () => {
   const [status, setStatus] = createSignal<string>('Ready');
   const [error, setError] = createSignal<string>('');
   const [supportsPasskeys, setSupportsPasskeys] = createSignal<boolean>(false);
-  const [email, setEmail] = createSignal<string>('');
-  const [disabledSignUp, setDisabledSignUp] = createSignal<boolean>(true);
+
+  // Check for email parameter in URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const emailParam = urlParams.get('email') || '';
+
+  const [email, setEmail] = createSignal<string>(emailParam);
+  const [disabledSignUp, setDisabledSignUp] = createSignal<boolean>(
+    emailParam ? false : true
+  );
   const [showEmailSent, setShowEmailSent] = createSignal<boolean>(false);
   const [showRecoverCredentials, setShowRecoverCredentials] =
     createSignal<boolean>(false);
@@ -213,7 +220,7 @@ const Login: Component = () => {
                     <p>or</p>
                   </div>
 
-                  <h2>{t('common.signUp')}</h2>
+                  <h2>{t('common.signup')}</h2>
                   <input
                     type="text"
                     placeholder="Email"

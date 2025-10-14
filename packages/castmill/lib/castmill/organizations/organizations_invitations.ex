@@ -7,8 +7,11 @@ defmodule Castmill.Organizations.OrganizationsInvitation do
 
   schema "organizations_invitations" do
     field :email, :string
-    field :role, Ecto.Enum, values: [:admin, :regular, :guest]
     field :token, :string
+
+    field :role, Ecto.Enum,
+      values: [:admin, :manager, :member, :editor, :publisher, :device_manager, :guest]
+
     field :status, :string, default: "invited"
     field :expires_at, :utc_datetime
 
@@ -24,6 +27,7 @@ defmodule Castmill.Organizations.OrganizationsInvitation do
     invitation
     |> cast(attrs, [:email, :role, :organization_id, :token, :status, :expires_at])
     |> validate_required([:email, :organization_id, :token])
+    |> validate_not_expired()
     |> unique_constraint(:token)
     |> unique_constraint([:organization_id, :email],
       name: :unique_organization_email_invite_active
@@ -32,6 +36,17 @@ defmodule Castmill.Organizations.OrganizationsInvitation do
     |> maybe_set_default_expiration()
     # Optionally truncate the timestamp to the second:
     |> maybe_truncate_timestamp()
+  end
+
+  # Validate that the invitation has not expired.
+  defp validate_not_expired(changeset) do
+    expires_at = get_field(changeset, :expires_at)
+
+    if expires_at && DateTime.compare(DateTime.utc_now(), expires_at) == :gt do
+      add_error(changeset, :expires_at, "invitation has expired")
+    else
+      changeset
+    end
   end
 
   # no expiration set

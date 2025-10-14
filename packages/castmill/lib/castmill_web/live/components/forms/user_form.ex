@@ -23,7 +23,7 @@ defmodule CastmillWeb.Live.Admin.UserForm do
         <.input
           field={@form[:role]}
           type="select"
-          options={[regular: :regular, admin: :admin, guest: :guest]}
+          options={[member: :member, admin: :admin, guest: :guest]}
           label="Role"
         />
 

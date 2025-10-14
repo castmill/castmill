@@ -18,6 +18,22 @@ defmodule Castmill.Organizations.Organization do
 
     field(:meta, :map)
 
+    # Castmill 2.0 Permission System Fields
+    # Default role for new users joining this organization
+    field(:default_role, Ecto.Enum,
+      values: [:admin, :manager, :member, :editor, :publisher, :device_manager, :guest],
+      default: :member
+    )
+
+    # Visibility mode for hierarchical organization access
+    # - :full - Parent can see and edit all child org resources
+    # - :read_only_parent - Parent can read child resources, child can edit shared parent resources
+    # - :isolated - Complete isolation, parent cannot see child resources
+    field(:visibility_mode, Ecto.Enum,
+      values: [:full, :read_only_parent, :isolated],
+      default: :full
+    )
+
     belongs_to(:network, Castmill.Networks.Network, foreign_key: :network_id, type: Ecto.UUID)
     belongs_to(:organization, Castmill.Organizations.Organization, type: Ecto.UUID)
 
@@ -38,8 +54,18 @@ defmodule Castmill.Organizations.Organization do
   @doc false
   def changeset(organization, attrs) do
     organization
-    |> cast(attrs, [:name, :organization_id, :network_id])
+    |> cast(attrs, [:name, :organization_id, :network_id, :default_role, :visibility_mode])
     |> validate_required([:name, :network_id])
+    |> validate_inclusion(:default_role, [
+      :admin,
+      :manager,
+      :member,
+      :editor,
+      :publisher,
+      :device_manager,
+      :guest
+    ])
+    |> validate_inclusion(:visibility_mode, [:full, :read_only_parent, :isolated])
     |> update_change(:name, &String.trim/1)
     |> put_name_lower()
     |> unique_constraint([:name_lower, :network_id],

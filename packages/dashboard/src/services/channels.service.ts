@@ -2,6 +2,7 @@ import { JsonPlaylist } from '@castmill/player';
 import {
   FetchDataOptions,
   fetchOptionsToQueryString,
+  HttpError,
 } from '@castmill/ui-common';
 
 type HandleResponseOptions = {
@@ -68,11 +69,8 @@ async function handleResponse<T = any>(
       errMsg = `${response.statusText}`;
     }
 
-    // Create an error object that includes the parsed error data
-    const err: any = new Error(errMsg);
-    err.errorData = errorData;
-    err.status = response.status;
-    throw err;
+    // Throw HttpError with status code and error data for better error handling
+    throw new HttpError(errMsg, response.status, errorData);
   }
 }
 
@@ -128,7 +126,15 @@ export class ChannelsService {
    *
    * @returns Channel
    */
-  async addChannel(name: string, timezone: string) {
+  async addChannel(name: string, timezone: string, teamId?: number | null) {
+    const channelData: { name: string; timezone: string; team_id?: number } = {
+      name,
+      timezone,
+    };
+    if (teamId !== null && teamId !== undefined) {
+      channelData.team_id = teamId;
+    }
+
     const response = await fetch(
       `${this.baseUrl}/dashboard/organizations/${this.organizationId}/channels`,
       {
@@ -137,7 +143,7 @@ export class ChannelsService {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ channel: { name, timezone } }),
+        body: JSON.stringify({ channel: channelData }),
       }
     );
 
@@ -159,11 +165,9 @@ export class ChannelsService {
       }
     );
 
-    if (response.status === 200) {
-      return await response.json();
-    } else {
-      throw new Error('Failed to fetch channels');
-    }
+    return handleResponse<{ data: JsonChannel[]; count: number }>(response, {
+      parse: true,
+    });
   }
 
   async getChannel(channelId: number): Promise<JsonChannel> {

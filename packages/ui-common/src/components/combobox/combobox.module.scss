@@ -114,6 +114,7 @@
 
       .item {
         cursor: pointer;
+        padding: 0.4em 1em;
       }
 
       .item:hover {
@@ -122,10 +123,12 @@
 
       .item:nth-child(odd) {
         background-color: #18191e;
+        padding: 0.4em 1em;
       }
 
       .item:nth-child(even) {
         background-color: #1e1f25; /* Lighter grey background for even items */
+        padding: 0.4em 1em;
       }
     }
 

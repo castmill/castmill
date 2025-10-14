@@ -25,6 +25,7 @@ defmodule Castmill.OrganizationsUsersTest do
 
       expected_result = [
         %{
+          user_id: user.id,
           user: %{
             avatar: user.avatar,
             email: user.email,
@@ -44,12 +45,47 @@ defmodule Castmill.OrganizationsUsersTest do
       organization = organization_fixture(%{network_id: network.id})
       user = user_fixture()
 
-      Organizations.add_user(organization.id, user.id, :admin)
+      Organizations.add_user(organization.id, user.id, :member)
 
       assert {:ok, "User successfully removed."} =
                Organizations.remove_user(organization.id, user.id)
 
       assert [] == Organizations.list_users(%{organization_id: organization.id})
+    end
+
+    test "remove_user/2 prevents removing the last admin" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+      admin = user_fixture()
+
+      Organizations.add_user(organization.id, admin.id, :admin)
+
+      assert {:error, :last_admin} = Organizations.remove_user(organization.id, admin.id)
+
+      remaining_roles =
+        Organizations.list_users(%{organization_id: organization.id})
+        |> Enum.map(& &1.role)
+
+      assert [:admin] = remaining_roles
+    end
+
+    test "remove_user/2 allows removing an admin when another admin remains" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+      admin_one = user_fixture()
+      admin_two = user_fixture()
+
+      Organizations.add_user(organization.id, admin_one.id, :admin)
+      Organizations.add_user(organization.id, admin_two.id, :admin)
+
+      assert {:ok, "User successfully removed."} =
+               Organizations.remove_user(organization.id, admin_one.id)
+
+      remaining_roles =
+        Organizations.list_users(%{organization_id: organization.id})
+        |> Enum.map(& &1.role)
+
+      assert [:admin] = remaining_roles
     end
 
     test "create_user/1 with valid data creates a user" do
@@ -72,6 +108,18 @@ defmodule Castmill.OrganizationsUsersTest do
     test "change_user/1 returns a user changeset" do
       user = user_fixture()
       assert %Ecto.Changeset{} = Organizations.change_user(user)
+    end
+
+    test "has_any_role?/3 matches member role" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+      user = user_fixture()
+
+      Organizations.add_user(organization.id, user.id, :member)
+
+      assert Organizations.has_any_role?(organization.id, user.id, [:admin, :member])
+      assert Organizations.has_any_role?(organization.id, user.id, ["member"])
+      refute Organizations.has_any_role?(organization.id, user.id, [:admin])
     end
   end
 end
