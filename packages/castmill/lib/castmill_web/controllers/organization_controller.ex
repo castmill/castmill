@@ -237,6 +237,13 @@ defmodule CastmillWeb.OrganizationController do
            add_default_channel: true
          }) do
       {:ok, {device, _token}} ->
+        # Send notification to organization members about new device
+        Castmill.Notifications.Events.notify_device_registration(
+          device.name,
+          device.id,
+          organization_id
+        )
+
         conn
         |> put_status(:created)
         |> put_resp_header("location", ~p"/devices/#{device.id}")
