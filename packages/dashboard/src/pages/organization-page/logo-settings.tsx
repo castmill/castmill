@@ -2,7 +2,6 @@ import { Component, createSignal, Show, For, createEffect } from 'solid-js';
 import { Button, Modal, ModalRef, useToast } from '@castmill/ui-common';
 import { JsonMedia } from '@castmill/player';
 import { OrganizationsService } from '../../services/organizations.service';
-import { MediasService } from '../../../castmill/lib/castmill/addons/medias/services/medias.service';
 import { store, setStore } from '../../store';
 import { useI18n } from '../../i18n';
 
@@ -18,7 +17,7 @@ interface LogoSettingsProps {
 export const LogoSettings: Component<LogoSettingsProps> = (props) => {
   const { t } = useI18n();
   const toast = useToast();
-  
+
   let modalRef: ModalRef | undefined;
 
   const [medias, setMedias] = createSignal<JsonMedia[]>([]);
@@ -45,7 +44,7 @@ export const LogoSettings: Component<LogoSettingsProps> = (props) => {
             credentials: 'include',
           }
         );
-        
+
         if (response.ok) {
           const media = await response.json();
           // Get the thumbnail or main file URL
@@ -65,18 +64,32 @@ export const LogoSettings: Component<LogoSettingsProps> = (props) => {
   const loadMedias = async () => {
     setLoading(true);
     try {
-      const result = await MediasService.fetchMedias(
-        store.env.baseUrl,
-        props.organizationId,
+      // Fetch image medias using the API
+      const queryParams = new URLSearchParams({
+        page: '1',
+        page_size: '50',
+        key: 'name',
+        direction: 'ascending',
+      });
+
+      const response = await fetch(
+        `${store.env.baseUrl}/dashboard/organizations/${props.organizationId}/medias?${queryParams}`,
         {
-          page: 1,
-          page_size: 50,
-          sortOptions: { key: 'name', direction: 'ascending' },
-          search: '',
-          filters: { mimetype: 'image' }, // Only show images
+          method: 'GET',
+          credentials: 'include',
         }
       );
-      setMedias(result.data || []);
+
+      if (response.ok) {
+        const result = await response.json();
+        // Filter for image types only
+        const imageMedias = (result.data || []).filter((media: JsonMedia) =>
+          media.mimetype?.startsWith('image/')
+        );
+        setMedias(imageMedias);
+      } else {
+        toast.error(t('organization.errors.loadMedias'));
+      }
     } catch (error) {
       toast.error(t('organization.errors.loadMedias'));
       console.error('Error loading medias:', error);
@@ -96,9 +109,9 @@ export const LogoSettings: Component<LogoSettingsProps> = (props) => {
       await OrganizationsService.update(props.organizationId, {
         logo_media_id: mediaId || undefined,
       });
-      
+
       props.onLogoUpdate(mediaId);
-      
+
       // Update store
       setStore('organizations', 'data', (orgs) =>
         orgs.map((org) =>
@@ -107,11 +120,13 @@ export const LogoSettings: Component<LogoSettingsProps> = (props) => {
             : org
         )
       );
-      
+
       toast.success(t('organization.logoUpdated'));
       modalRef?.close();
     } catch (error) {
-      toast.error(t('organization.errors.updateOrganization', { error: String(error) }));
+      toast.error(
+        t('organization.errors.updateOrganization', { error: String(error) })
+      );
     }
   };
 
@@ -120,10 +135,10 @@ export const LogoSettings: Component<LogoSettingsProps> = (props) => {
       await OrganizationsService.update(props.organizationId, {
         logo_media_id: undefined,
       });
-      
+
       setSelectedMediaId(null);
       props.onLogoUpdate(null);
-      
+
       // Update store
       setStore('organizations', 'data', (orgs) =>
         orgs.map((org) =>
@@ -132,10 +147,12 @@ export const LogoSettings: Component<LogoSettingsProps> = (props) => {
             : org
         )
       );
-      
+
       toast.success(t('organization.logoRemoved'));
     } catch (error) {
-      toast.error(t('organization.errors.updateOrganization', { error: String(error) }));
+      toast.error(
+        t('organization.errors.updateOrganization', { error: String(error) })
+      );
     }
   };
 
@@ -143,7 +160,7 @@ export const LogoSettings: Component<LogoSettingsProps> = (props) => {
     <div class="logo-settings">
       <h3>{t('organization.logoSettings')}</h3>
       <p class="logo-description">{t('organization.logoDescription')}</p>
-      
+
       <div class="logo-preview-container">
         <Show
           when={logoUrl()}
@@ -183,11 +200,11 @@ export const LogoSettings: Component<LogoSettingsProps> = (props) => {
           <Show when={loading()}>
             <div class="loading">{t('common.loading')}</div>
           </Show>
-          
+
           <Show when={!loading() && medias().length === 0}>
             <div class="no-medias">{t('organization.noMediasAvailable')}</div>
           </Show>
-          
+
           <div class="media-grid">
             <For each={medias()}>
               {(media) => (
@@ -198,11 +215,15 @@ export const LogoSettings: Component<LogoSettingsProps> = (props) => {
                 >
                   <div class="media-thumbnail">
                     <Show
-                      when={media.files?.thumbnail?.uri || media.files?.main?.uri}
+                      when={
+                        media.files?.thumbnail?.uri || media.files?.main?.uri
+                      }
                       fallback={<div class="no-preview">No preview</div>}
                     >
                       <img
-                        src={media.files?.thumbnail?.uri || media.files?.main?.uri}
+                        src={
+                          media.files?.thumbnail?.uri || media.files?.main?.uri
+                        }
                         alt={media.name}
                       />
                     </Show>

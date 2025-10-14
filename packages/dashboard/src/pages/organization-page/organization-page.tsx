@@ -21,8 +21,9 @@ const OrganizationPage: Component = () => {
 
   const [name, setName] = createSignal(store.organizations.selectedName!);
   const [logoMediaId, setLogoMediaId] = createSignal<string | null>(
-    store.organizations.data.find((org) => org.id === store.organizations.selectedId)
-      ?.logo_media_id || null
+    store.organizations.data.find(
+      (org) => org.id === store.organizations.selectedId
+    )?.logo_media_id || null
   );
   const [previousOrgId, setPreviousOrgId] = createSignal(
     store.organizations.selectedId

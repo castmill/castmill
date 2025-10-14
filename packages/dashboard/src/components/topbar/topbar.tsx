@@ -48,7 +48,7 @@ const Topbar: Component = () => {
     const selectedOrg = store.organizations.data.find(
       (org) => org.id === store.organizations.selectedId
     );
-    
+
     if (selectedOrg?.logo_media_id) {
       try {
         const response = await fetch(
@@ -58,7 +58,7 @@ const Topbar: Component = () => {
             credentials: 'include',
           }
         );
-        
+
         if (response.ok) {
           const media = await response.json();
           const fileUrl = media.files?.thumbnail?.uri || media.files?.main?.uri;
@@ -96,7 +96,11 @@ const Topbar: Component = () => {
           <Show when={orgLogoUrl()}>
             <div class="org-logo-separator" />
             <div class="org-logo-container">
-              <img src={orgLogoUrl()!} alt={store.organizations.selectedName} class="org-logo" />
+              <img
+                src={orgLogoUrl()!}
+                alt={store.organizations.selectedName}
+                class="org-logo"
+              />
             </div>
           </Show>
         </nav>
