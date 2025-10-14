@@ -491,9 +491,7 @@
       "emailAddress": "عنوان البريد الإلكتروني",
       "expired": "انتهت صلاحية هذه الدعوة.",
       "loginToAccept": "تسجيل الدخول لقبول هذه الدعوة",
-      "createAccount": "أنشئ حسابك لقبول هذه الدعوة",
-      "reject": "Reject Invitation",
-      "rejecting": "Rejecting..."
+      "createAccount": "أنشئ حسابك لقبول هذه الدعوة"
     }
   },
   "filters": {

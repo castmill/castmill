@@ -32,6 +32,8 @@ const OrganizationsInvitationPage = () => {
   const [loading, setLoading] = createSignal<boolean>(true);
   const [signingUp, setSigningUp] = createSignal<boolean>(false);
   const [loggingIn, setLoggingIn] = createSignal<boolean>(false);
+  const [accepting, setAccepting] = createSignal<boolean>(false);
+  const [rejecting, setRejecting] = createSignal<boolean>(false);
 
   const encoder = new TextEncoder();
 
@@ -240,11 +242,12 @@ const OrganizationsInvitationPage = () => {
 
   // 4. Accept the invitation
   async function acceptInvitation() {
-    // Additional checks (e.g. is invitation expired?) can be done here or by your backend
+    setAccepting(true);
     try {
       const result = await OrganizationsService.acceptInvitation(token);
 
       console.log(result);
+      toast.success(t('common.acceptInvitation'));
 
       // Redirect to the organization that the user was invited to
       const orgId = invitation()?.organization_id;
@@ -256,10 +259,29 @@ const OrganizationsInvitationPage = () => {
       }
     } catch (error: any) {
       setErrorMessage(error.message || 'Error accepting invitation.');
+      toast.error(error.message || 'Error accepting invitation.');
+    } finally {
+      setAccepting(false);
     }
   }
 
-  // 4. On mount, preview invitation first (no auth needed)
+  // 5. Reject the invitation
+  async function rejectInvitation() {
+    setRejecting(true);
+    try {
+      await OrganizationsService.rejectInvitation(token);
+      toast.success('Invitation rejected successfully');
+      
+      // Redirect to root or login page
+      navigate('/');
+    } catch (error: any) {
+      toast.error(error.message || 'Error rejecting invitation.');
+    } finally {
+      setRejecting(false);
+    }
+  }
+
+  // 6. On mount, preview invitation first (no auth needed)
   onMount(async () => {
     await previewInvitation();
 
@@ -398,11 +420,61 @@ const OrganizationsInvitationPage = () => {
                 !invitation()?.expired && invitation()?.status === 'invited'
               }
             >
-              {/* Logged in state - show accept button */}
+              {/* Logged in state - show accept and reject buttons */}
               <Show when={checkAuth() && getUser()?.email}>
-                <button onClick={acceptInvitation} class="invitation-button">
-                  {t('common.acceptInvitation')}
-                </button>
+                <div class="action-buttons">
+                  <button
+                    onClick={acceptInvitation}
+                    disabled={accepting() || rejecting()}
+                    class="btn-accept"
+                  >
+                    <Show
+                      when={!accepting()}
+                      fallback={<span>{t('common.loading')}</span>}
+                    >
+                      <svg
+                        class="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                      <span>{t('common.acceptInvitation')}</span>
+                    </Show>
+                  </button>
+
+                  <button
+                    onClick={rejectInvitation}
+                    disabled={accepting() || rejecting()}
+                    class="btn-reject"
+                  >
+                    <Show
+                      when={!rejecting()}
+                      fallback={<span>{t('organizations.invitation.rejecting')}</span>}
+                    >
+                      <svg
+                        class="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M6 18L18 6M6 6l12 12"
+                        />
+                      </svg>
+                      <span>{t('organizations.invitation.reject')}</span>
+                    </Show>
+                  </button>
+                </div>
               </Show>
 
               {/* Not logged in - show login or signup */}

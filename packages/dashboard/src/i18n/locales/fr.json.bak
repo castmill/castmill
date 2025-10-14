@@ -491,9 +491,7 @@
       "emailAddress": "Adresse e-mail",
       "expired": "Cette invitation a expiré.",
       "loginToAccept": "Connectez-vous pour accepter cette invitation",
-      "createAccount": "Créez votre compte pour accepter cette invitation",
-      "reject": "Reject Invitation",
-      "rejecting": "Rejecting..."
+      "createAccount": "Créez votre compte pour accepter cette invitation"
     }
   },
   "filters": {

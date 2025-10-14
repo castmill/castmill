@@ -491,7 +491,9 @@
       "emailAddress": "Email Address",
       "expired": "This invitation has expired.",
       "loginToAccept": "Login to accept this invitation",
-      "createAccount": "Create your account to accept this invitation"
+      "createAccount": "Create your account to accept this invitation",
+      "reject": "Reject Invitation",
+      "rejecting": "Rejecting..."
     }
   }
 }

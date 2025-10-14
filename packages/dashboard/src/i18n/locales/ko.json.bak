@@ -491,9 +491,7 @@
       "emailAddress": "이메일 주소",
       "expired": "이 초대가 만료되었습니다.",
       "loginToAccept": "이 초대를 수락하려면 로그인하세요",
-      "createAccount": "이 초대를 수락하려면 계정을 만드세요",
-      "reject": "Reject Invitation",
-      "rejecting": "Rejecting..."
+      "createAccount": "이 초대를 수락하려면 계정을 만드세요"
     }
   },
   "filters": {

@@ -491,9 +491,7 @@
       "emailAddress": "メールアドレス",
       "expired": "この招待は期限切れです。",
       "loginToAccept": "この招待を承認するにはログインしてください",
-      "createAccount": "この招待を承認するにはアカウントを作成してください",
-      "reject": "Reject Invitation",
-      "rejecting": "Rejecting..."
+      "createAccount": "この招待を承認するにはアカウントを作成してください"
     }
   },
   "filters": {

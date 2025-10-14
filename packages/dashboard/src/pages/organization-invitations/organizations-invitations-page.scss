@@ -107,6 +107,52 @@
     }
   }
 
+  .action-buttons {
+    display: flex;
+    gap: 0.75em;
+    width: 100%;
+    margin-top: 1.5em;
+
+    button {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5em;
+      padding: 0.75em 1.5em;
+      border-radius: 8px;
+      font-weight: 500;
+      font-size: 1em;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      &.btn-accept {
+        background: #6366f1;
+        color: white;
+
+        &:hover:not(:disabled) {
+          background: #4f46e5;
+        }
+      }
+
+      &.btn-reject {
+        background: transparent;
+        color: #ef4444;
+        border: 1px solid #ef4444;
+
+        &:hover:not(:disabled) {
+          background: rgba(239, 68, 68, 0.1);
+        }
+      }
+    }
+  }
+
   .invitation-button {
     width: 100%;
     padding: 12px 24px;

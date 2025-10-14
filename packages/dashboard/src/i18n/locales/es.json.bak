@@ -486,9 +486,7 @@
       "emailAddress": "Dirección de correo electrónico",
       "expired": "Esta invitación ha expirado.",
       "loginToAccept": "Inicia sesión para aceptar esta invitación",
-      "createAccount": "Crea tu cuenta para aceptar esta invitación",
-      "reject": "Reject Invitation",
-      "rejecting": "Rejecting..."
+      "createAccount": "Crea tu cuenta para aceptar esta invitación"
     }
   },
   "filters": {

@@ -510,6 +510,25 @@ defmodule CastmillWeb.OrganizationController do
     end
   end
 
+  def reject_invitation(conn, %{"token" => token}) do
+    case Organizations.reject_invitation(token) do
+      {:ok, _} ->
+        conn
+        |> put_status(:ok)
+        |> json(%{})
+
+      {:error, message} when is_binary(message) ->
+        conn
+        |> put_status(:bad_request)
+        |> json(%{error: message})
+
+      {:error, _} ->
+        conn
+        |> put_status(:bad_request)
+        |> json(%{})
+    end
+  end
+
   def remove_invitation(conn, %{
         "organization_id" => organization_id,
         "invitation_id" => invitation_id

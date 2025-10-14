@@ -491,9 +491,7 @@
       "emailAddress": "电子邮件地址",
       "expired": "此邀请已过期。",
       "loginToAccept": "登录以接受此邀请",
-      "createAccount": "创建您的帐户以接受此邀请",
-      "reject": "Reject Invitation",
-      "rejecting": "Rejecting..."
+      "createAccount": "创建您的帐户以接受此邀请"
     }
   },
   "filters": {

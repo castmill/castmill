@@ -486,9 +486,7 @@
       "emailAddress": "E-postadress",
       "expired": "Denna inbjudan har utgått.",
       "loginToAccept": "Logga in för att acceptera denna inbjudan",
-      "createAccount": "Skapa ditt konto för att acceptera denna inbjudan",
-      "reject": "Reject Invitation",
-      "rejecting": "Rejecting..."
+      "createAccount": "Skapa ditt konto för att acceptera denna inbjudan"
     }
   },
   "filters": {
