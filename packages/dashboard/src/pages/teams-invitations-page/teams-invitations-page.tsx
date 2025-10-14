@@ -163,7 +163,9 @@ const TeamsInvitationPage = () => {
                   />
                 </svg>
               </div>
-              <h2 class="text-2xl font-bold mb-2">Team Invitation</h2>
+              <h2 class="text-2xl font-bold mb-2">
+                {t('teams.invitation.title')}
+              </h2>
               <p class="text-gray-600">
                 You've been invited to join the team{' '}
                 <span class="font-semibold text-indigo-600">
@@ -184,7 +186,7 @@ const TeamsInvitationPage = () => {
             {/* Email display */}
             <div class="email-box">
               <label class="block text-sm font-medium text-gray-700 mb-2">
-                Email Address
+                {t('teams.invitation.emailAddress')}
               </label>
               <div class="flex items-center gap-2">
                 <svg
@@ -208,7 +210,7 @@ const TeamsInvitationPage = () => {
             <Show when={invitation()?.role}>
               <div class="email-box">
                 <label class="block text-sm font-medium text-gray-700 mb-2">
-                  Team Role
+                  {t('teams.invitation.teamRole')}
                 </label>
                 <div class="flex items-center gap-2">
                   <svg
@@ -249,7 +251,7 @@ const TeamsInvitationPage = () => {
                     d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-                <p>This invitation has expired.</p>
+                <p>{t('teams.invitation.expired')}</p>
               </div>
             </Show>
 
@@ -285,7 +287,7 @@ const TeamsInvitationPage = () => {
                 >
                   <Show
                     when={!accepting()}
-                    fallback={<span>Accepting...</span>}
+                    fallback={<span>{t('teams.invitation.accepting')}</span>}
                   >
                     <svg
                       class="w-5 h-5"
@@ -300,7 +302,7 @@ const TeamsInvitationPage = () => {
                         d="M5 13l4 4L19 7"
                       />
                     </svg>
-                    <span>Accept Invitation</span>
+                    <span>{t('teams.invitation.accept')}</span>
                   </Show>
                 </button>
 

@@ -169,7 +169,10 @@
   },
   "teams": {
     "title": "Team",
-    "members": "Medlemmar",
+    "members": {
+      "selectUser": "Välj användare",
+      "searchUser": "Sök efter en användare..."
+    },
     "invitations": "Inbjudningar",
     "invitationAcceptSuccess": "Inbjudan accepterad framgångsrikt",
     "invitationDeleteSuccess": "Inbjudan borttagen framgångsrikt",
@@ -228,6 +231,14 @@
       "membersRemoved": "Medlemmarna togs bort med framgång",
       "invitationSent": "Inbjudan skickades till {{email}}",
       "leftTeam": "Du lämnade teamet {{name}}"
+    },
+    "invitation": {
+      "title": "Teaminbjudan",
+      "emailAddress": "E-postadress",
+      "teamRole": "Teamroll",
+      "expired": "Denna inbjudan har utgått.",
+      "accepting": "Accepterar...",
+      "accept": "Acceptera inbjudan"
     }
   },
   "login": {
@@ -442,5 +453,14 @@
     "noDeleteChannels": "Du har inte behörighet att ta bort kanaler",
     "contactAdmin": "Kontakta din administratör för att begära åtkomst",
     "insufficientRole": "Denna åtgärd kräver rollen {{role}}"
+  },
+  "organizations": {
+    "invitation": {
+      "title": "Organisationsinbjudan",
+      "emailAddress": "E-postadress",
+      "expired": "Denna inbjudan har utgått.",
+      "loginToAccept": "Logga in för att acceptera denna inbjudan",
+      "createAccount": "Skapa ditt konto för att acceptera denna inbjudan"
+    }
   }
 }

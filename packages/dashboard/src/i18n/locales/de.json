@@ -188,7 +188,10 @@
     "removeTeams": "Teams entfernen",
     "confirmRemoveTeam": "Sind Sie sicher, dass Sie das Team \"{{name}}\" entfernen möchten?",
     "confirmRemoveTeams": "Sind Sie sicher, dass Sie die folgenden Teams entfernen möchten?",
-    "members": "Mitglieder",
+    "members": {
+      "selectUser": "Benutzer auswählen",
+      "searchUser": "Nach einem Benutzer suchen..."
+    },
     "invitations": "Einladungen",
     "invitationAcceptSuccess": "Einladung erfolgreich angenommen",
     "invitationDeleteSuccess": "Einladung erfolgreich gelöscht",
@@ -239,6 +242,14 @@
       "membersRemoved": "Mitglieder wurden erfolgreich entfernt",
       "invitationSent": "Einladung an {{email}} gesendet",
       "leftTeam": "Du hast das Team {{name}} verlassen"
+    },
+    "invitation": {
+      "title": "Team-Einladung",
+      "emailAddress": "E-Mail-Adresse",
+      "teamRole": "Teamrolle",
+      "expired": "Diese Einladung ist abgelaufen.",
+      "accepting": "Wird angenommen...",
+      "accept": "Einladung annehmen"
     }
   },
   "channels": {
@@ -442,5 +453,14 @@
     "noDeleteChannels": "Sie haben keine Berechtigung, Kanäle zu löschen",
     "contactAdmin": "Wenden Sie sich an Ihren Administrator, um Zugriff anzufordern",
     "insufficientRole": "Diese Aktion erfordert die Rolle {{role}}"
+  },
+  "organizations": {
+    "invitation": {
+      "title": "Organisationseinladung",
+      "emailAddress": "E-Mail-Adresse",
+      "expired": "Diese Einladung ist abgelaufen.",
+      "loginToAccept": "Melden Sie sich an, um diese Einladung anzunehmen",
+      "createAccount": "Erstellen Sie Ihr Konto, um diese Einladung anzunehmen"
+    }
   }
 }

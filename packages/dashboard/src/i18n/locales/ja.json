@@ -169,7 +169,10 @@
   },
   "teams": {
     "title": "チーム",
-    "members": "メンバー",
+    "members": {
+      "selectUser": "ユーザーを選択",
+      "searchUser": "ユーザーを検索..."
+    },
     "invitations": "招待",
     "invitationAcceptSuccess": "招待が正常に承認されました",
     "invitationDeleteSuccess": "招待が正常に削除されました",
@@ -228,6 +231,14 @@
       "membersRemoved": "メンバーを正常に削除しました",
       "invitationSent": "{{email}} に招待状を送信しました",
       "leftTeam": "チーム{{name}}を退出しました"
+    },
+    "invitation": {
+      "title": "チーム招待",
+      "emailAddress": "メールアドレス",
+      "teamRole": "チームの役割",
+      "expired": "この招待は期限切れです。",
+      "accepting": "承認中...",
+      "accept": "招待を承認"
     }
   },
   "login": {
@@ -442,5 +453,14 @@
     "noDeleteChannels": "チャンネルを削除する権限がありません",
     "contactAdmin": "アクセス権限をリクエストするには管理者にお問い合わせください",
     "insufficientRole": "このアクションには{{role}}ロールが必要です"
+  },
+  "organizations": {
+    "invitation": {
+      "title": "組織の招待",
+      "emailAddress": "メールアドレス",
+      "expired": "この招待は期限切れです。",
+      "loginToAccept": "この招待を承認するにはログインしてください",
+      "createAccount": "この招待を承認するにはアカウントを作成してください"
+    }
   }
 }

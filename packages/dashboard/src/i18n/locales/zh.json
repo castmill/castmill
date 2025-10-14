@@ -169,7 +169,10 @@
   },
   "teams": {
     "title": "团队",
-    "members": "成员",
+    "members": {
+      "selectUser": "选择用户",
+      "searchUser": "搜索用户..."
+    },
     "invitations": "邀请",
     "invitationAcceptSuccess": "邀请接受成功",
     "invitationDeleteSuccess": "邀请删除成功",
@@ -228,6 +231,14 @@
       "membersRemoved": "已成功移除成员",
       "invitationSent": "已向 {{email}} 发送邀请",
       "leftTeam": "您已离开团队{{name}}"
+    },
+    "invitation": {
+      "title": "团队邀请",
+      "emailAddress": "电子邮件地址",
+      "teamRole": "团队角色",
+      "expired": "此邀请已过期。",
+      "accepting": "正在接受...",
+      "accept": "接受邀请"
     }
   },
   "login": {
@@ -442,5 +453,14 @@
     "noDeleteChannels": "您没有权限删除频道",
     "contactAdmin": "请联系管理员申请访问权限",
     "insufficientRole": "此操作需要{{role}}角色"
+  },
+  "organizations": {
+    "invitation": {
+      "title": "组织邀请",
+      "emailAddress": "电子邮件地址",
+      "expired": "此邀请已过期。",
+      "loginToAccept": "登录以接受此邀请",
+      "createAccount": "创建您的帐户以接受此邀请"
+    }
   }
 }

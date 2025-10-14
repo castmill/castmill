@@ -169,7 +169,10 @@
   },
   "teams": {
     "title": "팀",
-    "members": "멤버",
+    "members": {
+      "selectUser": "사용자 선택",
+      "searchUser": "사용자 검색..."
+    },
     "invitations": "초대",
     "invitationAcceptSuccess": "초대가 성공적으로 수락되었습니다",
     "invitationDeleteSuccess": "초대가 성공적으로 삭제되었습니다",
@@ -228,6 +231,14 @@
       "membersRemoved": "구성원을 성공적으로 제거했습니다",
       "invitationSent": "{{email}}에게 초대장을 보냈습니다",
       "leftTeam": "{{name}} 팀을 나갔습니다"
+    },
+    "invitation": {
+      "title": "팀 초대",
+      "emailAddress": "이메일 주소",
+      "teamRole": "팀 역할",
+      "expired": "이 초대가 만료되었습니다.",
+      "accepting": "수락 중...",
+      "accept": "초대 수락"
     }
   },
   "login": {
@@ -442,5 +453,14 @@
     "noDeleteChannels": "채널을 삭제할 권한이 없습니다",
     "contactAdmin": "액세스 권한을 요청하려면 관리자에게 문의하세요",
     "insufficientRole": "이 작업에는 {{role}} 역할이 필요합니다"
+  },
+  "organizations": {
+    "invitation": {
+      "title": "조직 초대",
+      "emailAddress": "이메일 주소",
+      "expired": "이 초대가 만료되었습니다.",
+      "loginToAccept": "이 초대를 수락하려면 로그인하세요",
+      "createAccount": "이 초대를 수락하려면 계정을 만드세요"
+    }
   }
 }

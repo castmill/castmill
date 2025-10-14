@@ -169,7 +169,10 @@
   },
   "teams": {
     "title": "Équipes",
-    "members": "Membres",
+    "members": {
+      "selectUser": "Sélectionner un utilisateur",
+      "searchUser": "Rechercher un utilisateur..."
+    },
     "invitations": "Invitations",
     "invitationAcceptSuccess": "Invitation acceptée avec succès",
     "invitationDeleteSuccess": "Invitation supprimée avec succès",
@@ -228,6 +231,14 @@
       "membersRemoved": "Les membres ont été supprimés avec succès",
       "invitationSent": "Invitation envoyée à {{email}}",
       "leftTeam": "Vous avez quitté l'équipe {{name}}"
+    },
+    "invitation": {
+      "title": "Invitation à l'équipe",
+      "emailAddress": "Adresse e-mail",
+      "teamRole": "Rôle dans l'équipe",
+      "expired": "Cette invitation a expiré.",
+      "accepting": "Acceptation...",
+      "accept": "Accepter l'invitation"
     }
   },
   "login": {
@@ -442,5 +453,14 @@
     "noDeleteChannels": "Vous n'avez pas la permission de supprimer des canaux",
     "contactAdmin": "Contactez votre administrateur pour demander l'accès",
     "insufficientRole": "Cette action nécessite le rôle {{role}}"
+  },
+  "organizations": {
+    "invitation": {
+      "title": "Invitation à l'organisation",
+      "emailAddress": "Adresse e-mail",
+      "expired": "Cette invitation a expiré.",
+      "loginToAccept": "Connectez-vous pour accepter cette invitation",
+      "createAccount": "Créez votre compte pour accepter cette invitation"
+    }
   }
 }

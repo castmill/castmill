@@ -320,7 +320,9 @@ const OrganizationsInvitationPage = () => {
                   />
                 </svg>
               </div>
-              <h2 class="text-2xl font-bold mb-2">Organization Invitation</h2>
+              <h2 class="text-2xl font-bold mb-2">
+                {t('organizations.invitation.title')}
+              </h2>
               <p class="text-gray-600">
                 You've been invited to join{' '}
                 <span class="font-semibold text-indigo-600">
@@ -332,7 +334,7 @@ const OrganizationsInvitationPage = () => {
             {/* Email display */}
             <div class="email-box">
               <label class="block text-sm font-medium text-gray-700 mb-2">
-                Email Address
+                {t('organizations.invitation.emailAddress')}
               </label>
               <div class="flex items-center gap-2">
                 <svg
@@ -368,7 +370,7 @@ const OrganizationsInvitationPage = () => {
                     d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-                <p>This invitation has expired.</p>
+                <p>{t('organizations.invitation.expired')}</p>
               </div>
             </Show>
 
@@ -408,7 +410,7 @@ const OrganizationsInvitationPage = () => {
                 <Show when={invitation()?.user_exists}>
                   {/* Existing user - login */}
                   <p class="text-center text-gray-600 mb-4">
-                    Login to accept this invitation
+                    {t('organizations.invitation.loginToAccept')}
                   </p>
                   <button
                     onClick={loginExistingUserWithPasskey}
@@ -424,7 +426,7 @@ const OrganizationsInvitationPage = () => {
                 <Show when={!invitation()?.user_exists}>
                   {/* New user - signup with passkey directly */}
                   <p class="text-center text-gray-600 mb-4">
-                    Create your account to accept this invitation
+                    {t('organizations.invitation.createAccount')}
                   </p>
                   <button
                     onClick={signupWithPasskey}

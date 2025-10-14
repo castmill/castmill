@@ -169,7 +169,10 @@
   },
   "teams": {
     "title": "الفرق",
-    "members": "الأعضاء",
+    "members": {
+      "selectUser": "اختر مستخدمًا",
+      "searchUser": "البحث عن مستخدم..."
+    },
     "invitations": "الدعوات",
     "invitationAcceptSuccess": "تم قبول الدعوة بنجاح",
     "invitationDeleteSuccess": "تم حذف الدعوة بنجاح",
@@ -228,6 +231,14 @@
       "membersRemoved": "تمت إزالة الأعضاء بنجاح",
       "invitationSent": "تم إرسال الدعوة إلى {{email}}",
       "leftTeam": "لقد غادرت الفريق {{name}}"
+    },
+    "invitation": {
+      "title": "دعوة الفريق",
+      "emailAddress": "عنوان البريد الإلكتروني",
+      "teamRole": "دور الفريق",
+      "expired": "انتهت صلاحية هذه الدعوة.",
+      "accepting": "جاري القبول...",
+      "accept": "قبول الدعوة"
     }
   },
   "login": {
@@ -442,5 +453,14 @@
     "noDeleteChannels": "ليس لديك إذن لحذف القنوات",
     "contactAdmin": "اتصل بالمسؤول لطلب الوصول",
     "insufficientRole": "يتطلب هذا الإجراء دور {{role}}"
+  },
+  "organizations": {
+    "invitation": {
+      "title": "دعوة المنظمة",
+      "emailAddress": "عنوان البريد الإلكتروني",
+      "expired": "انتهت صلاحية هذه الدعوة.",
+      "loginToAccept": "تسجيل الدخول لقبول هذه الدعوة",
+      "createAccount": "أنشئ حسابك لقبول هذه الدعوة"
+    }
   }
 }

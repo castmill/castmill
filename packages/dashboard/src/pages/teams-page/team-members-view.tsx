@@ -314,8 +314,8 @@ export const TeamMembersView = (props: {
           >
             <ComboBox
               id="user-selector"
-              label="Select User"
-              placeholder="Search for a user..."
+              label={t('teams.members.selectUser')}
+              placeholder={t('teams.members.searchUser')}
               value={selectedUser()}
               fetchItems={fetchUsers}
               renderItem={(user: User) => (

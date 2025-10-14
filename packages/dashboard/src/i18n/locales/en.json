@@ -188,7 +188,10 @@
     "removeTeams": "Remove Teams",
     "confirmRemoveTeam": "Are you sure you want to remove team \"{{name}}\"?",
     "confirmRemoveTeams": "Are you sure you want to remove the following teams?",
-    "members": "Members",
+    "members": {
+      "selectUser": "Select User",
+      "searchUser": "Search for a user..."
+    },
     "invitations": "Invitations",
     "invitationAcceptSuccess": "Invitation accepted successfully",
     "invitationDeleteSuccess": "Invitation deleted successfully",
@@ -239,6 +242,14 @@
       "membersRemoved": "Members removed successfully",
       "invitationSent": "Invitation sent to {{email}}",
       "leftTeam": "You left the team {{name}}"
+    },
+    "invitation": {
+      "title": "Team Invitation",
+      "emailAddress": "Email Address",
+      "teamRole": "Team Role",
+      "expired": "This invitation has expired.",
+      "accepting": "Accepting...",
+      "accept": "Accept Invitation"
     }
   },
   "channels": {
@@ -472,5 +483,14 @@
     "noDeleteChannels": "You don't have permission to delete channels",
     "contactAdmin": "Contact your administrator to request access",
     "insufficientRole": "This action requires {{role}} role"
+  },
+  "organizations": {
+    "invitation": {
+      "title": "Organization Invitation",
+      "emailAddress": "Email Address",
+      "expired": "This invitation has expired.",
+      "loginToAccept": "Login to accept this invitation",
+      "createAccount": "Create your account to accept this invitation"
+    }
   }
 }
