@@ -16,9 +16,47 @@ The Castmill dashboard supports 9 languages:
 - Korean (ko)
 - Japanese (ja)
 
-The `translation-helper.cjs` tool provides a unified interface for managing translations across all these languages.
+## Available Scripts
 
-## translation-helper.cjs
+### find-missing-keys.cjs
+
+**NEW**: Scans the codebase for translation keys used in code and reports any keys that don't exist in the English translation file.
+
+**Usage:**
+
+```bash
+node scripts/i18n/find-missing-keys.cjs
+```
+
+**What it does:**
+
+- Scans all TypeScript/TSX files for `t()` and `tp()` function calls
+- Extracts translation keys from the code
+- Compares them against the English translation file (en.json)
+- Reports missing keys (used in code but not in en.json)
+- Optionally shows unused keys (in en.json but not found in code)
+- Ignores test files and comments to avoid false positives
+
+**When to use:**
+
+- Before committing code changes that add new UI text
+- To find translation keys that are referenced but not defined
+- To detect typos in translation key names
+- As part of CI/CD to prevent missing translations
+
+**Example output:**
+
+```
+Finding Missing Translation Keys
+Scanning source code for translation key usage...
+
+English translation keys: 414
+Translation keys found in code: 206
+
+✅ No missing translation keys found
+```
+
+### translation-helper.cjs
 
 A comprehensive CLI tool for translation management.
 
@@ -383,6 +421,7 @@ Translation file structure:
 ### DO:
 
 - ✅ Always use the `translation-helper.cjs` tool for managing translations
+- ✅ Run `find-missing-keys.cjs` before committing to detect missing keys
 - ✅ Use nested keys for logical grouping
 - ✅ Add English translations first, then translate to other languages
 - ✅ Use TODO markers to track incomplete translations
@@ -398,6 +437,33 @@ Translation file structure:
 - ❌ Duplicate translations across sections
 - ❌ Forget to add keys to all language files
 - ❌ Use concatenation for dynamic messages (use parameters instead)
+- ❌ Reference translation keys in code before adding them to en.json
+
+## Workflow for Adding New Translations
+
+1. **Add the key to English first:**
+   ```bash
+   node scripts/i18n/translation-helper.cjs add organization.messages.myNewKey "My new message"
+   ```
+
+2. **Verify the key exists in code:**
+   ```bash
+   node scripts/i18n/find-missing-keys.cjs
+   ```
+
+3. **Sync to all languages:**
+   ```bash
+   node scripts/i18n/translation-helper.cjs sync
+   ```
+
+4. **Check for missing translations:**
+   ```bash
+   node scripts/check-missing-translations.cjs
+   ```
+
+5. **Translate the TODO markers** in each language file
+
+6. **Commit your changes**
 
 ## CI/CD Integration
 
