@@ -493,5 +493,10 @@
     "teamLabel": "Mannschaft",
     "teamPlaceholder": "Mannschaft auswählen",
     "teamClear": "Mannschaftsfilter löschen"
+  },
+  "notifications": {
+    "title": "Benachrichtigungen",
+    "empty": "Noch keine Benachrichtigungen",
+    "markAllRead": "Alle als gelesen markieren"
   }
 }

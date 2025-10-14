@@ -498,5 +498,10 @@
     "teamLabel": "الفريق",
     "teamPlaceholder": "اختر فريق",
     "teamClear": "مسح فلتر الفريق"
+  },
+  "notifications": {
+    "title": "الإشعارات",
+    "empty": "لا توجد إشعارات بعد",
+    "markAllRead": "وضع علامة مقروء على الكل"
   }
 }

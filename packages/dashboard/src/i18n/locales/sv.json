@@ -493,5 +493,10 @@
     "teamLabel": "Lag",
     "teamPlaceholder": "Välj lag",
     "teamClear": "Rensa lagfilter"
+  },
+  "notifications": {
+    "title": "Notifikationer",
+    "empty": "Inga notifikationer än",
+    "markAllRead": "Markera alla som lästa"
   }
 }

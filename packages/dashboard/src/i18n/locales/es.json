@@ -493,5 +493,10 @@
     "teamLabel": "Equipo",
     "teamPlaceholder": "Seleccionar equipo",
     "teamClear": "Limpiar filtro de equipo"
+  },
+  "notifications": {
+    "title": "Notificaciones",
+    "empty": "No hay notificaciones aún",
+    "markAllRead": "Marcar todas como leídas"
   }
 }

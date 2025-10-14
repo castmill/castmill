@@ -492,6 +492,11 @@
       "expired": "This invitation has expired.",
       "loginToAccept": "Login to accept this invitation",
       "createAccount": "Create your account to accept this invitation"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "empty": "No notifications yet",
+      "markAllRead": "Mark all as read"
     }
   }
 }

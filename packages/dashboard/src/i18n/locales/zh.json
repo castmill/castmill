@@ -498,5 +498,10 @@
     "teamLabel": "团队",
     "teamPlaceholder": "选择团队",
     "teamClear": "清除团队筛选"
+  },
+  "notifications": {
+    "title": "通知",
+    "empty": "暂无通知",
+    "markAllRead": "标记全部为已读"
   }
 }

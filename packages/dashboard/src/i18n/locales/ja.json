@@ -498,5 +498,10 @@
     "teamLabel": "チーム",
     "teamPlaceholder": "チームを選択",
     "teamClear": "チームフィルターをクリア"
+  },
+  "notifications": {
+    "title": "通知",
+    "empty": "まだ通知はありません",
+    "markAllRead": "すべて既読にする"
   }
 }
