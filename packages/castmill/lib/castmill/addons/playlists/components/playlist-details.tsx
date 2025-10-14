@@ -51,7 +51,8 @@ export const PlaylistDetails = (props: {
   return (
     <>
       <div class="info">
-        <span>Added on </span> <Timestamp value={props.playlist.inserted_at} mode="relative" />.{' '}
+        <span>Added on </span>{' '}
+        <Timestamp value={props.playlist.inserted_at} mode="relative" />.{' '}
         <span>Last updated on </span>
         <Timestamp value={props.playlist.updated_at} mode="relative" />
       </div>
