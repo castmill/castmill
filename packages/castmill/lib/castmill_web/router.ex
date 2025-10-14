@@ -284,6 +284,12 @@ defmodule CastmillWeb.Router do
     # Endpoint to remove a channel from a device in the dashboard scope
     delete("/devices/:device_id/channels/:channel_id", DeviceController, :remove_channel)
 
+    # Notification routes
+    get("/notifications", NotificationController, :index)
+    get("/notifications/unread_count", NotificationController, :unread_count)
+    patch("/notifications/:id/read", NotificationController, :mark_read)
+    post("/notifications/mark_all_read", NotificationController, :mark_all_read)
+
     # User credential and email management routes (session-authenticated)
     get("/users/:id/credentials", UserController, :list_credentials)
     post("/users/:id/credentials/challenge", UserController, :create_credential_challenge)
