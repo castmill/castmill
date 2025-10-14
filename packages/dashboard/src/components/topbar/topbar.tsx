@@ -21,6 +21,7 @@ import { store } from '../../store/store';
 
 const Topbar: Component = () => {
   const [triggerLogout, setTriggerLogout] = createSignal(false);
+  const [orgLogoUrl, setOrgLogoUrl] = createSignal<string | null>(null);
   const { t } = useI18n();
 
   const navigate = useNavigate();
@@ -42,6 +43,42 @@ const Topbar: Component = () => {
     }
   };
 
+  // Fetch organization logo when selected organization changes
+  createEffect(async () => {
+    const selectedOrg = store.organizations.data.find(
+      (org) => org.id === store.organizations.selectedId
+    );
+    
+    if (selectedOrg?.logo_media_id) {
+      try {
+        const response = await fetch(
+          `${baseUrl}/dashboard/organizations/${selectedOrg.id}/medias/${selectedOrg.logo_media_id}`,
+          {
+            method: 'GET',
+            credentials: 'include',
+          }
+        );
+        
+        if (response.ok) {
+          const media = await response.json();
+          const fileUrl = media.files?.thumbnail?.uri || media.files?.main?.uri;
+          if (fileUrl) {
+            setOrgLogoUrl(fileUrl);
+          } else {
+            setOrgLogoUrl(null);
+          }
+        } else {
+          setOrgLogoUrl(null);
+        }
+      } catch (error) {
+        console.error('Error fetching organization logo:', error);
+        setOrgLogoUrl(null);
+      }
+    } else {
+      setOrgLogoUrl(null);
+    }
+  });
+
   createEffect(async () => {
     if (triggerLogout()) {
       await logout();
@@ -56,6 +93,12 @@ const Topbar: Component = () => {
           <a href="/">
             <img src={logo} alt="Castmill" />
           </a>
+          <Show when={orgLogoUrl()}>
+            <div class="org-logo-separator" />
+            <div class="org-logo-container">
+              <img src={orgLogoUrl()!} alt={store.organizations.selectedName} class="org-logo" />
+            </div>
+          </Show>
         </nav>
 
         <nav class="right">

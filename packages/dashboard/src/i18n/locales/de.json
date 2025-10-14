@@ -297,7 +297,9 @@
       "emailRequired": "E-Mail ist erforderlich",
       "invalidEmail": "Ungültige E-Mail",
       "cannotRemoveLastAdmin": "Du kannst den letzten Administrator einer Organisation nicht entfernen.",
-      "invalidRole": "Die ausgewählte Rolle ist für diese Organisation nicht gültig."
+      "invalidRole": "Die ausgewählte Rolle ist für diese Organisation nicht gültig.",
+      "mediaInUseAsLogo": "Medien, die als Organisationslogo verwendet werden, können nicht gelöscht werden",
+      "loadMedias": "Fehler beim Laden von Medien"
     },
     "messages": {
       "memberRemoved": "Mitglied {{name}} wurde erfolgreich entfernt",
@@ -317,7 +319,16 @@
       "admin": "Kann Teammitglieder und Ressourcen verwalten",
       "member": "Kann auf Teamressourcen zugreifen und diese bearbeiten",
       "installer": "Temporäres Token für Geräteregistrierung (läuft in 24h ab)"
-    }
+    },
+    "logo": "Logo",
+    "logoSettings": "Logo-Einstellungen",
+    "selectLogo": "Logo auswählen",
+    "removeLogo": "Logo entfernen",
+    "logoDescription": "Wählen Sie eine Mediendatei als Logo Ihrer Organisation. Es wird in der oberen Leiste angezeigt.",
+    "logoUpdated": "Logo erfolgreich aktualisiert",
+    "logoRemoved": "Logo erfolgreich entfernt",
+    "noLogo": "Kein Logo ausgewählt",
+    "noMediasAvailable": "Keine Bilder verfügbar. Bitte laden Sie zuerst ein Bild hoch."
   },
   "login": {
     "title": "Anmelden",

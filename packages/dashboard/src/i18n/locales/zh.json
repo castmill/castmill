@@ -324,7 +324,9 @@
       "emailRequired": "电子邮件为必填项",
       "invalidEmail": "无效的电子邮件",
       "cannotRemoveLastAdmin": "你不能移除组织最后一位管理员。",
-      "invalidRole": "所选角色对该组织无效。"
+      "invalidRole": "所选角色对该组织无效。",
+      "mediaInUseAsLogo": "无法删除正在用作组织标志的媒体",
+      "loadMedias": "加载媒体失败"
     },
     "messages": {
       "memberRemoved": "已成功移除成员 {{name}}",
@@ -344,7 +346,16 @@
       "admin": "可以管理团队成员和资源",
       "member": "可以访问和编辑团队资源",
       "installer": "用于设备注册的临时令牌（24小时后过期）"
-    }
+    },
+    "logo": "标志",
+    "logoSettings": "标志设置",
+    "selectLogo": "选择标志",
+    "removeLogo": "删除标志",
+    "logoDescription": "选择一个媒体文件作为您的组织标志。它将显示在顶部栏中。",
+    "logoUpdated": "标志更新成功",
+    "logoRemoved": "标志删除成功",
+    "noLogo": "未选择标志",
+    "noMediasAvailable": "没有可用的图像。请先上传图像。"
   },
   "playlists": {
     "title": "播放列表",

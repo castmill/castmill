@@ -324,7 +324,9 @@
       "emailRequired": "メールアドレスは必須です",
       "invalidEmail": "無効なメールアドレス",
       "cannotRemoveLastAdmin": "組織の最後の管理者を削除することはできません。",
-      "invalidRole": "選択した役割はこの組織で有効ではありません。"
+      "invalidRole": "選択した役割はこの組織で有効ではありません。",
+      "mediaInUseAsLogo": "組織のロゴとして使用されているメディアは削除できません",
+      "loadMedias": "メディアの読み込みに失敗しました"
     },
     "messages": {
       "memberRemoved": "メンバー{{name}}を正常に削除しました",
@@ -344,7 +346,16 @@
       "admin": "チームメンバーとリソースを管理できます",
       "member": "チームリソースにアクセスして編集できます",
       "installer": "デバイス登録用の一時トークン（24時間後に期限切れ）"
-    }
+    },
+    "logo": "ロゴ",
+    "logoSettings": "ロゴ設定",
+    "selectLogo": "ロゴを選択",
+    "removeLogo": "ロゴを削除",
+    "logoDescription": "組織のロゴとして使用するメディアファイルを選択してください。トップバーに表示されます。",
+    "logoUpdated": "ロゴが正常に更新されました",
+    "logoRemoved": "ロゴが正常に削除されました",
+    "noLogo": "ロゴが選択されていません",
+    "noMediasAvailable": "利用可能な画像がありません。まず画像をアップロードしてください。"
   },
   "playlists": {
     "title": "プレイリスト",

@@ -317,12 +317,23 @@
       "emailRequired": "Email is required",
       "invalidEmail": "Invalid email",
       "cannotRemoveLastAdmin": "You can't remove the last admin of an organization.",
-      "invalidRole": "The selected role is not valid for this organization."
+      "invalidRole": "The selected role is not valid for this organization.",
+      "mediaInUseAsLogo": "Cannot delete media that is being used as an organization logo",
+      "loadMedias": "Failed to load medias"
     },
     "messages": {
       "memberRemoved": "Member {{name}} removed successfully",
       "membersRemoved": "Members removed successfully"
-    }
+    },
+    "logo": "Logo",
+    "logoSettings": "Logo Settings",
+    "selectLogo": "Select Logo",
+    "removeLogo": "Remove Logo",
+    "logoDescription": "Choose a media file to use as your organization logo. It will be displayed in the top bar.",
+    "logoUpdated": "Logo updated successfully",
+    "logoRemoved": "Logo removed successfully",
+    "noLogo": "No logo selected",
+    "noMediasAvailable": "No image medias available. Please upload an image first."
   },
   "login": {
     "title": "Login",

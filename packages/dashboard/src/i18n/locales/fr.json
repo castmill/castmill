@@ -324,7 +324,9 @@
       "emailRequired": "L'e-mail est requis",
       "invalidEmail": "E-mail invalide",
       "cannotRemoveLastAdmin": "Vous ne pouvez pas supprimer le dernier administrateur de l'organisation.",
-      "invalidRole": "Le rôle sélectionné n'est pas valide pour cette organisation."
+      "invalidRole": "Le rôle sélectionné n'est pas valide pour cette organisation.",
+      "mediaInUseAsLogo": "Impossible de supprimer un média utilisé comme logo d'organisation",
+      "loadMedias": "Échec du chargement des médias"
     },
     "messages": {
       "memberRemoved": "Le membre {{name}} a été supprimé avec succès",
@@ -344,7 +346,16 @@
       "admin": "Peut gérer les membres de l'équipe et les ressources",
       "member": "Peut accéder et modifier les ressources de l'équipe",
       "installer": "Jeton temporaire pour l'enregistrement d'appareil (expire dans 24h)"
-    }
+    },
+    "logo": "Logo",
+    "logoSettings": "Paramètres du logo",
+    "selectLogo": "Sélectionner le logo",
+    "removeLogo": "Supprimer le logo",
+    "logoDescription": "Choisissez un fichier média à utiliser comme logo de votre organisation. Il sera affiché dans la barre supérieure.",
+    "logoUpdated": "Logo mis à jour avec succès",
+    "logoRemoved": "Logo supprimé avec succès",
+    "noLogo": "Aucun logo sélectionné",
+    "noMediasAvailable": "Aucune image disponible. Veuillez d'abord télécharger une image."
   },
   "playlists": {
     "title": "Playlists",

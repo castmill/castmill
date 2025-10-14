@@ -319,7 +319,9 @@
       "emailRequired": "E-post är obligatoriskt",
       "invalidEmail": "Ogiltig e-post",
       "cannotRemoveLastAdmin": "Du kan inte ta bort organisationens sista administratör.",
-      "invalidRole": "Den valda rollen är inte giltig för den här organisationen."
+      "invalidRole": "Den valda rollen är inte giltig för den här organisationen.",
+      "mediaInUseAsLogo": "Kan inte ta bort media som används som organisationslogotyp",
+      "loadMedias": "Kunde inte ladda media"
     },
     "messages": {
       "memberRemoved": "Medlemmen {{name}} togs bort med framgång",
@@ -339,7 +341,16 @@
       "admin": "Kan hantera teammedlemmar och resurser",
       "member": "Kan komma åt och redigera teamresurser",
       "installer": "Tillfällig token för enhetsregistrering (utgår om 24h)"
-    }
+    },
+    "logo": "Logotyp",
+    "logoSettings": "Logotypinställningar",
+    "selectLogo": "Välj logotyp",
+    "removeLogo": "Ta bort logotyp",
+    "logoDescription": "Välj en mediafil som ska användas som din organisations logotyp. Den kommer att visas i toppfältet.",
+    "logoUpdated": "Logotyp uppdaterad",
+    "logoRemoved": "Logotyp borttagen",
+    "noLogo": "Ingen logotyp vald",
+    "noMediasAvailable": "Inga bilder tillgängliga. Vänligen ladda upp en bild först."
   },
   "playlists": {
     "title": "Spellistor",
