@@ -483,7 +483,8 @@
     "messages": {
       "memberRemoved": "メンバー{{name}}を正常に削除しました",
       "membersRemoved": "メンバーを正常に削除しました",
-      "leftOrganization": "組織 {{name}} を離れました"
+      "leftOrganization": "組織 {{name}} を離れました",
+      "noOrganizationsRemaining": "最後の組織を離れました。組織に招待されるには管理者にお問い合わせください。"
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {

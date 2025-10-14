@@ -22,6 +22,7 @@ import { OrganizationInviteForm } from './organization-invite-form';
 import { OrganizationRole } from '../../types/organization-role.type';
 import { useI18n } from '../../i18n';
 import { getUser } from '../../components/auth';
+import { useNavigate } from '@solidjs/router';
 import styles from './organization-page.module.scss';
 
 const [data, setData] = createSignal<
@@ -56,6 +57,7 @@ export const OrganizationMembersView = (props: {
   const { t } = useI18n();
   const { canPerformAction } = usePermissions();
   const toast = useToast();
+  const navigate = useNavigate();
   const resolveRemoveMemberError = (error: unknown) => {
     if (error instanceof HttpError) {
       switch (error.status) {
@@ -226,12 +228,41 @@ export const OrganizationMembersView = (props: {
         membership.user_id
       );
 
-      refreshData();
       toast.success(
         t('organization.messages.leftOrganization', {
           name: props.organizationName,
         })
       );
+
+      // Reload organizations to get updated list
+      const user = getUser();
+      if (!user?.id) {
+        // Shouldn't happen, but handle gracefully
+        navigate('/login', { replace: true });
+        return;
+      }
+
+      const updatedOrganizations = await OrganizationsService.getAll(user.id);
+
+      // Update store with new organizations list
+      setStore('organizations', {
+        data: updatedOrganizations,
+        loaded: true,
+        loading: false,
+        selectedId: null,
+        selectedName: '',
+      });
+
+      // Navigate to another organization or login page
+      if (updatedOrganizations.length > 0) {
+        // Navigate to the first available organization
+        const nextOrg = updatedOrganizations[0];
+        navigate(`/org/${nextOrg.id}`, { replace: true });
+      } else {
+        // User has no organizations left - redirect to login with message
+        toast.info(t('organization.messages.noOrganizationsRemaining'));
+        navigate('/login', { replace: true });
+      }
     } catch (error) {
       const errorMessage = resolveRemoveMemberError(error);
       toast.error(errorMessage);

@@ -483,7 +483,8 @@
     "messages": {
       "memberRemoved": "تمت إزالة العضو {{name}} بنجاح",
       "membersRemoved": "تمت إزالة الأعضاء بنجاح",
-      "leftOrganization": "لقد غادرت المنظمة {{name}}"
+      "leftOrganization": "لقد غادرت المنظمة {{name}}",
+      "noOrganizationsRemaining": "لقد غادرت منظمتك الأخيرة. يرجى الاتصال بالمسؤول ليتم دعوتك إلى منظمة."
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {

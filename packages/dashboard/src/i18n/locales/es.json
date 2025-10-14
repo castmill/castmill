@@ -478,7 +478,8 @@
     "messages": {
       "memberRemoved": "El miembro {{name}} se eliminó correctamente",
       "membersRemoved": "Miembros eliminados correctamente",
-      "leftOrganization": "Ha abandonado la organización {{name}}"
+      "leftOrganization": "Ha abandonado la organización {{name}}",
+      "noOrganizationsRemaining": "Ha abandonado su última organización. Póngase en contacto con un administrador para ser invitado a una organización."
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {

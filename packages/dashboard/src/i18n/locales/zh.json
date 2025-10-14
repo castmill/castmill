@@ -483,7 +483,8 @@
     "messages": {
       "memberRemoved": "已成功移除成员 {{name}}",
       "membersRemoved": "已成功移除成员",
-      "leftOrganization": "您已离开组织 {{name}}"
+      "leftOrganization": "您已离开组织 {{name}}",
+      "noOrganizationsRemaining": "您已离开最后一个组织。请联系管理员以被邀请加入组织。"
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {

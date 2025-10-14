@@ -483,7 +483,8 @@
     "messages": {
       "memberRemoved": "Le membre {{name}} a été supprimé avec succès",
       "membersRemoved": "Les membres ont été supprimés avec succès",
-      "leftOrganization": "Vous avez quitté l'organisation {{name}}"
+      "leftOrganization": "Vous avez quitté l'organisation {{name}}",
+      "noOrganizationsRemaining": "Vous avez quitté votre dernière organisation. Veuillez contacter un administrateur pour être invité à une organisation."
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {

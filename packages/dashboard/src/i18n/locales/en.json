@@ -493,7 +493,8 @@
     "messages": {
       "memberRemoved": "Member {{name}} removed successfully",
       "membersRemoved": "Members removed successfully",
-      "leftOrganization": "You left the organization {{name}}"
+      "leftOrganization": "You left the organization {{name}}",
+      "noOrganizationsRemaining": "You have left your last organization. Please contact an administrator to be invited to an organization."
     },
     "leaveOrganizationTitle": "Leave this organization",
     "leaveOrganizationDescription": "Leaving removes your access to organization resources immediately.",

@@ -478,7 +478,8 @@
     "messages": {
       "memberRemoved": "Medlemmen {{name}} togs bort med framgång",
       "membersRemoved": "Medlemmarna togs bort med framgång",
-      "leftOrganization": "Du har lämnat organisationen {{name}}"
+      "leftOrganization": "Du har lämnat organisationen {{name}}",
+      "noOrganizationsRemaining": "Du har lämnat din sista organisation. Kontakta en administratör för att bli inbjuden till en organisation."
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {
