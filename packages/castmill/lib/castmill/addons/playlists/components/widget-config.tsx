@@ -213,16 +213,28 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
           </FormItem>
         );
       case 'ref':
-        // Only images supported for now
+        // Parse collection string to extract resource type and filters
+        // Format: "resource|filter1:value1|filter2:value2"
         const collection = (schema as ReferenceAttributes).collection;
-        switch (collection) {
-          case 'medias|type:image':
+        const [resourceType, ...filterParts] = collection.split('|');
+        const filters: Record<string, string> = {};
+        
+        filterParts.forEach(part => {
+          const [key, value] = part.split(':');
+          if (key && value) {
+            filters[key] = value;
+          }
+        });
+
+        switch (resourceType) {
+          case 'medias':
+            const placeholderText = filters.type === 'image' ? 'Select an Image' : 'Select a Media';
             return (
               <>
                 <ComboBox<JsonMedia>
                   id={key}
                   label={key}
-                  placeholder={'Select an Image'}
+                  placeholder={placeholderText}
                   value={getValue(key, schema as FieldAttributes)}
                   renderItem={(item: JsonMedia) => {
                     return (
@@ -245,11 +257,12 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
                     return ResourcesService.fetch<JsonMedia>(
                       props.baseUrl,
                       props.organizationId,
-                      'medias',
+                      resourceType,
                       {
                         page,
                         page_size: pageSize,
                         search,
+                        filters: Object.keys(filters).length > 0 ? filters : undefined,
                       }
                     );
                   }}
@@ -263,7 +276,7 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
               </>
             );
           default:
-            throw new Error(`Unknown collection: ${collection}`);
+            throw new Error(`Unknown resource type: ${resourceType}`);
         }
       case 'map':
       case 'list':
