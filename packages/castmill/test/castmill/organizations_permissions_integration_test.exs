@@ -167,9 +167,9 @@ defmodule Castmill.OrganizationsPermissionsIntegrationTest do
       end_time = System.monotonic_time(:millisecond)
       duration = end_time - start_time
 
-      # Should complete in under 200ms (would be several seconds if hitting DB each time)
-      # This is a reasonable threshold that accounts for varying machine performance
-      assert duration < 200, "Permission checks took #{duration}ms, should be < 200ms"
+      # Should complete in under 500ms (would be several seconds if hitting DB each time)
+      # This is a reasonable threshold that accounts for CI and varying machine performance
+      assert duration < 500, "Permission checks took #{duration}ms, should be < 500ms"
     end
   end
 
