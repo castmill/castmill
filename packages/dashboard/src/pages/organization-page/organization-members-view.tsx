@@ -60,10 +60,6 @@ export const OrganizationMembersView = (props: {
     if (error instanceof HttpError) {
       switch (error.status) {
         case 422:
-          // Check the error message to determine which validation failed
-          if (error.message === 'cannot_remove_last_organization_user') {
-            return t('organization.errors.cannotRemoveLastUser');
-          }
           return t('organization.errors.cannotRemoveLastAdmin');
         case 404:
           return t('errors.generic');
@@ -73,12 +69,9 @@ export const OrganizationMembersView = (props: {
     }
 
     const message = (error as Error)?.message ?? t('errors.generic');
-    if (message === 'cannot_remove_last_organization_admin') {
-      return t('organization.errors.cannotRemoveLastAdmin');
-    } else if (message === 'cannot_remove_last_organization_user') {
-      return t('organization.errors.cannotRemoveLastUser');
-    }
-    return message;
+    return message === 'cannot_remove_last_organization_admin'
+      ? t('organization.errors.cannotRemoveLastAdmin')
+      : message;
   };
 
   const addMember = () => {
@@ -98,20 +91,13 @@ export const OrganizationMembersView = (props: {
     () => data().filter((entry) => entry.role === 'admin').length
   );
 
-  const memberCount = createMemo(() => data().length);
-
   const canLeaveOrganization = createMemo(() => {
     const membership = currentMembership();
     if (!membership) {
       return false;
     }
 
-    // Can't leave if only one member
-    if (memberCount() <= 1) {
-      return false;
-    }
-
-    // Non-admins can leave if there's more than one member
+    // Non-admins can always leave (assuming there's at least one admin)
     if (membership.role !== 'admin') {
       return true;
     }
@@ -373,9 +359,7 @@ export const OrganizationMembersView = (props: {
             <p>{t('organization.leaveOrganizationDescription')}</p>
             <Show when={!canLeaveOrganization()}>
               <p class={styles.leaveOrganizationWarning}>
-                {memberCount() <= 1
-                  ? t('organization.leaveOrganizationLastUserWarning')
-                  : t('organization.leaveOrganizationLastAdminWarning')}
+                {t('organization.leaveOrganizationLastAdminWarning')}
               </p>
             </Show>
           </div>

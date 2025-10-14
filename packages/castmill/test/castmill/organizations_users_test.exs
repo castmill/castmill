@@ -56,18 +56,6 @@ defmodule Castmill.OrganizationsUsersTest do
       assert length(remaining_users) == 1
     end
 
-    test "remove_user/2 prevents removing the last user from organization" do
-      network = network_fixture()
-      organization = organization_fixture(%{network_id: network.id})
-      user = user_fixture()
-
-      Organizations.add_user(organization.id, user.id, :member)
-
-      assert {:error, :last_user} = Organizations.remove_user(organization.id, user.id)
-
-      assert length(Organizations.list_users(%{organization_id: organization.id})) == 1
-    end
-
     test "remove_user/2 prevents removing the last admin even with other members" do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})

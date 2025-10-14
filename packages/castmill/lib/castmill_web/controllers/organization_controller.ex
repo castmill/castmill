@@ -441,11 +441,6 @@ defmodule CastmillWeb.OrganizationController do
         |> put_status(:ok)
         |> json(%{})
 
-      {:error, :last_user} ->
-        conn
-        |> put_status(:unprocessable_entity)
-        |> json(%{error: "cannot_remove_last_organization_user"})
-
       {:error, :last_admin} ->
         conn
         |> put_status(:unprocessable_entity)

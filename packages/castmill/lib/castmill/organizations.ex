@@ -969,16 +969,12 @@ defmodule Castmill.Organizations do
              organization_id: organization_id,
              user_id: user_id
            ),
-         :ok <- ensure_not_last_user(organization_id),
          :ok <- ensure_additional_org_admins(organization_id, org_user),
          {:ok, _} <- Repo.delete(org_user) do
       {:ok, "User successfully removed."}
     else
       nil ->
         {:error, :not_found}
-
-      {:error, :last_user} ->
-        {:error, :last_user}
 
       {:error, :last_admin} ->
         {:error, :last_admin}
@@ -1247,18 +1243,6 @@ defmodule Castmill.Organizations do
         sharing
         |> ResourceSharing.changeset(attrs)
         |> Repo.update()
-    end
-  end
-
-  defp ensure_not_last_user(organization_id) do
-    user_count = OrganizationsUsers.base_query()
-    |> OrganizationsUsers.where_organization_id(organization_id)
-    |> Repo.aggregate(:count, :user_id)
-
-    if user_count <= 1 do
-      {:error, :last_user}
-    else
-      :ok
     end
   end
 

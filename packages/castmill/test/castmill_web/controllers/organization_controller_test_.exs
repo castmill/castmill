@@ -181,33 +181,6 @@ defmodule CastmillWeb.OrganizationControllerTest do
       assert %{"error" => "cannot_remove_last_organization_admin"} = json_response(conn, 422)
     end
 
-    test "prevents user from leaving when they are the only member", %{organization: organization} do
-      sole_user = user_fixture()
-      Castmill.Organizations.add_user(organization.id, sole_user.id, :member)
-
-      user_token =
-        access_token_fixture(%{
-          user_id: sole_user.id,
-          secret: "user:sole",
-          is_root: false
-        })
-
-      user_conn =
-        build_conn()
-        |> Map.put(:endpoint, CastmillWeb.Endpoint)
-        |> put_req_header("accept", "application/json")
-        |> put_req_header("authorization", "Bearer #{user_token.secret}")
-
-      conn =
-        delete(
-          user_conn,
-          ~p"/dashboard/organizations/#{organization.id}/members/#{sole_user.id}"
-        )
-
-      assert conn.status == 422
-      assert %{"error" => "cannot_remove_last_organization_user"} = json_response(conn, 422)
-    end
-
     test "prevents a member from removing another member", %{organization: organization} do
       acting_member = user_fixture()
       target_member = user_fixture()

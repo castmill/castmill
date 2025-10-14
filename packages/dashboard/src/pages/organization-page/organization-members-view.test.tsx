@@ -161,32 +161,6 @@ describe('OrganizationMembersView - leave organization', () => {
     ).toBeInTheDocument();
   });
 
-  it('disables the leave button when user is the only member', async () => {
-    vi.mocked(OrganizationsService.fetchMembers).mockResolvedValue({
-      count: 1,
-      data: [
-        {
-          user: { id: 'user-1', name: 'Alice', email: 'admin@example.com' },
-          user_id: 'user-1',
-          role: 'admin',
-        },
-      ],
-    });
-
-    renderComponent();
-
-    const leaveButton = await screen.findByRole('button', {
-      name: /leave organization/i,
-    });
-
-    await waitFor(() => {
-      expect(leaveButton).toBeDisabled();
-    });
-    expect(
-      await screen.findByText(/you cannot leave as you are the only member/i)
-    ).toBeInTheDocument();
-  });
-
   it('does not show leave button for non-members', async () => {
     vi.mocked(getUser).mockReturnValue({
       id: 'user-3',
