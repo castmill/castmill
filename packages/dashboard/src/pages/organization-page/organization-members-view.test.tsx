@@ -41,7 +41,9 @@ describe('OrganizationMembersView - leave organization', () => {
     toastSpies.success.mockClear();
     toastSpies.error.mockClear();
     vi.mocked(OrganizationsService.fetchMembers).mockClear();
-    vi.mocked(OrganizationsService.removeMemberFromOrganization).mockResolvedValue(undefined);
+    vi.mocked(
+      OrganizationsService.removeMemberFromOrganization
+    ).mockResolvedValue(undefined);
     vi.mocked(getUser).mockReturnValue({
       id: 'user-1',
       name: 'Alice',
@@ -92,10 +94,9 @@ describe('OrganizationMembersView - leave organization', () => {
     fireEvent.click(leaveButton);
 
     await waitFor(() => {
-      expect(OrganizationsService.removeMemberFromOrganization).toHaveBeenCalledWith(
-        'org-1',
-        'user-1'
-      );
+      expect(
+        OrganizationsService.removeMemberFromOrganization
+      ).toHaveBeenCalledWith('org-1', 'user-1');
     });
 
     await waitFor(() => {
@@ -212,7 +213,9 @@ describe('OrganizationMembersView - leave organization', () => {
     renderComponent();
 
     await waitFor(() => {
-      expect(screen.queryByRole('button', { name: /leave organization/i })).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole('button', { name: /leave organization/i })
+      ).not.toBeInTheDocument();
     });
   });
 });

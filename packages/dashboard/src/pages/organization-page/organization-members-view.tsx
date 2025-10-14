@@ -24,7 +24,9 @@ import { useI18n } from '../../i18n';
 import { getUser } from '../../components/auth';
 import styles from './organization-page.module.scss';
 
-const [data, setData] = createSignal<{ user: User; user_id: string; role: string }[]>([], {
+const [data, setData] = createSignal<
+  { user: User; user_id: string; role: string }[]
+>([], {
   equals: false,
 });
 
@@ -84,14 +86,12 @@ export const OrganizationMembersView = (props: {
   };
 
   const currentUser = getUser();
-  
+
   const currentMembership = createMemo(() => {
     if (!currentUser?.id) {
       return undefined;
     }
-    return data().find(
-      (entry) => entry.user_id === currentUser.id
-    );
+    return data().find((entry) => entry.user_id === currentUser.id);
   });
 
   const adminCount = createMemo(
@@ -242,7 +242,9 @@ export const OrganizationMembersView = (props: {
 
       refreshData();
       toast.success(
-        t('organization.messages.leftOrganization', { name: props.organizationName })
+        t('organization.messages.leftOrganization', {
+          name: props.organizationName,
+        })
       );
     } catch (error) {
       const errorMessage = resolveRemoveMemberError(error);
