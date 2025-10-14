@@ -166,14 +166,14 @@ defmodule CastmillWeb.ResourceController.MediasTest do
         organization_id: organization.id,
         name: "image1",
         uri: "http://example.com/image1.jpg",
-        mime_type: "image/jpeg"
+        mimetype: "image/jpeg"
       })
 
       media_fixture(%{
         organization_id: organization.id,
         name: "image2",
         uri: "http://example.com/image2.png",
-        mime_type: "image/png"
+        mimetype: "image/png"
       })
 
       # Create video media items
@@ -181,7 +181,7 @@ defmodule CastmillWeb.ResourceController.MediasTest do
         organization_id: organization.id,
         name: "video1",
         uri: "http://example.com/video1.mp4",
-        mime_type: "video/mp4"
+        mimetype: "video/mp4"
       })
 
       # Filter for image type only
