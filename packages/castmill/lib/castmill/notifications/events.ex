@@ -58,14 +58,16 @@ defmodule Castmill.Notifications.Events do
     - device_name: The name of the device
     - device_id: The ID of the device
     - organization_id: The ID of the organization
+    - roles: Optional list of roles to restrict notification (e.g., ["admin", "device_manager"])
   """
-  def notify_device_registration(device_name, device_id, organization_id) do
+  def notify_device_registration(device_name, device_id, organization_id, roles \\ []) do
     Notifications.create_organization_notification(%{
       organization_id: organization_id,
       title: "New Device Registered",
       description: "Device '#{device_name}' has been registered",
       link: "/org/#{organization_id}/devices?device=#{device_id}",
       type: "device_registration",
+      roles: roles,
       metadata: %{
         device_id: device_id,
         device_name: device_name
@@ -150,5 +152,125 @@ defmodule Castmill.Notifications.Events do
       true ->
         {:error, :missing_recipient}
     end
+  end
+
+  @doc """
+  Notifies when a device goes offline unexpectedly.
+  This is part of the monitoring and alert system.
+  
+  ## Parameters
+    - device_name: The name of the device
+    - device_id: The ID of the device
+    - organization_id: The ID of the organization
+    - roles: Optional list of roles to restrict notification (e.g., ["admin", "device_manager"])
+    - metadata: Additional alert metadata (e.g., expected_online_time, last_seen)
+  """
+  def notify_device_offline_alert(device_name, device_id, organization_id, roles \\ ["admin", "device_manager"], metadata \\ %{}) do
+    Notifications.create_organization_notification(%{
+      organization_id: organization_id,
+      title: "Device Offline Alert",
+      description: "Device '#{device_name}' is offline when it should be online",
+      link: "/org/#{organization_id}/devices?device=#{device_id}",
+      type: "device_offline_alert",
+      roles: roles,
+      metadata: Map.merge(%{
+        device_id: device_id,
+        device_name: device_name,
+        alert_type: "device_offline",
+        severity: "warning"
+      }, metadata)
+    })
+  end
+
+  @doc """
+  Notifies when a device comes back online after being offline.
+  
+  ## Parameters
+    - device_name: The name of the device
+    - device_id: The ID of the device
+    - organization_id: The ID of the organization
+    - roles: Optional list of roles to restrict notification
+    - offline_duration: How long the device was offline (in seconds)
+  """
+  def notify_device_online_alert(device_name, device_id, organization_id, roles \\ ["admin", "device_manager"], offline_duration \\ nil) do
+    description = if offline_duration do
+      "Device '#{device_name}' is back online (was offline for #{format_duration(offline_duration)})"
+    else
+      "Device '#{device_name}' is back online"
+    end
+
+    Notifications.create_organization_notification(%{
+      organization_id: organization_id,
+      title: "Device Online",
+      description: description,
+      link: "/org/#{organization_id}/devices?device=#{device_id}",
+      type: "device_online_alert",
+      roles: roles,
+      metadata: %{
+        device_id: device_id,
+        device_name: device_name,
+        alert_type: "device_online",
+        severity: "info",
+        offline_duration: offline_duration
+      }
+    })
+  end
+
+  @doc """
+  Notifies when a media upload completes.
+  Can be user-specific or organization-wide with role filtering.
+  
+  ## Parameters
+    - user_id: The ID of the user who uploaded (nil for org-wide)
+    - organization_id: The ID of the organization (for org-wide notifications)
+    - media_name: The name of the media file
+    - media_id: The ID of the media
+    - roles: Optional list of roles for org-wide notifications
+  """
+  def notify_media_uploaded(user_id \\ nil, organization_id, media_name, media_id, roles \\ []) do
+    cond do
+      user_id != nil ->
+        # User-specific notification
+        Notifications.create_user_notification(%{
+          user_id: user_id,
+          title: "Media Upload Complete",
+          description: "Media '#{media_name}' has been uploaded successfully",
+          link: "/org/#{organization_id}/medias?media=#{media_id}",
+          type: "media_uploaded",
+          metadata: %{
+            media_id: media_id,
+            media_name: media_name
+          }
+        })
+
+      organization_id != nil ->
+        # Organization-wide notification with optional role filtering
+        Notifications.create_organization_notification(%{
+          organization_id: organization_id,
+          title: "New Media Uploaded",
+          description: "Media '#{media_name}' has been uploaded",
+          link: "/org/#{organization_id}/medias?media=#{media_id}",
+          type: "media_uploaded",
+          roles: roles,
+          metadata: %{
+            media_id: media_id,
+            media_name: media_name
+          }
+        })
+
+      true ->
+        {:error, :missing_recipient}
+    end
+  end
+
+  # Helper to format duration in human-readable format
+  defp format_duration(seconds) when seconds < 60, do: "#{seconds} seconds"
+  defp format_duration(seconds) when seconds < 3600 do
+    minutes = div(seconds, 60)
+    "#{minutes} minute#{if minutes > 1, do: "s", else: ""}"
+  end
+  defp format_duration(seconds) do
+    hours = div(seconds, 3600)
+    "#{hours} hour#{if hours > 1, do: "s", else: ""}"
   end
 end

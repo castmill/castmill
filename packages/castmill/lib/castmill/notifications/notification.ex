@@ -12,6 +12,8 @@ defmodule Castmill.Notifications.Notification do
     field :type, :string
     field :read, :boolean, default: false
     field :metadata, :map, default: %{}
+    # Optional: restrict notification to specific roles within an organization/team
+    field :roles, {:array, :string}, default: []
 
     belongs_to :user, Castmill.Accounts.User
     belongs_to :organization, Castmill.Organizations.Organization
@@ -23,7 +25,7 @@ defmodule Castmill.Notifications.Notification do
   @doc false
   def changeset(notification, attrs) do
     notification
-    |> cast(attrs, [:title, :description, :link, :type, :read, :user_id, :organization_id, :team_id, :metadata])
+    |> cast(attrs, [:title, :description, :link, :type, :read, :user_id, :organization_id, :team_id, :metadata, :roles])
     |> validate_required([:title, :type])
     |> validate_recipient()
     |> foreign_key_constraint(:user_id)

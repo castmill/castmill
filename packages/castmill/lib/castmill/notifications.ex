@@ -49,43 +49,130 @@ defmodule Castmill.Notifications do
   @doc """
   Lists notifications for a specific user with pagination.
   Includes organization and team notifications.
+  Filters organization/team notifications by user's role if roles are specified.
   """
   def list_user_notifications(user_id, opts \\ []) do
     page = Keyword.get(opts, :page, 1)
     page_size = Keyword.get(opts, :page_size, 20)
     offset = max((page - 1) * page_size, 0)
 
-    # Get user's organizations and teams
+    # Get user's organizations and teams with roles
     user = Repo.get(User, user_id) |> Repo.preload([:organizations, :teams])
+    
+    # Get organization IDs and user's roles in those organizations
+    org_roles = get_user_organization_roles(user_id, user.organizations)
     org_ids = Enum.map(user.organizations, & &1.id)
+    
+    # Get team IDs and user's roles in those teams
+    team_roles = get_user_team_roles(user_id, user.teams)
     team_ids = Enum.map(user.teams, & &1.id)
 
+    # Build query with role filtering
     query =
       from n in Notification,
-        where: n.user_id == ^user_id or n.organization_id in ^org_ids or n.team_id in ^team_ids,
+        where:
+          # User-specific notifications
+          n.user_id == ^user_id or
+          # Organization notifications
+          (n.organization_id in ^org_ids) or
+          # Team notifications
+          (n.team_id in ^team_ids),
         order_by: [desc: n.inserted_at],
         limit: ^page_size,
         offset: ^offset
 
+    # Get all notifications and filter by roles in application code
     Repo.all(query)
+    |> Enum.filter(fn notification ->
+      cond do
+        # User-specific notifications always included
+        notification.user_id == user_id -> true
+        
+        # Organization notifications - check role if roles specified
+        notification.organization_id && notification.organization_id in org_ids ->
+          role_matches?(notification.roles, Map.get(org_roles, notification.organization_id))
+        
+        # Team notifications - check role if roles specified
+        notification.team_id && notification.team_id in team_ids ->
+          role_matches?(notification.roles, Map.get(team_roles, notification.team_id))
+        
+        true -> false
+      end
+    end)
+  end
+
+  # Check if user's role matches notification role requirements
+  defp role_matches?([], _user_role), do: true  # No role restriction
+  defp role_matches?(_roles, nil), do: false     # User has no role
+  defp role_matches?(roles, user_role) do
+    Enum.member?(roles, Atom.to_string(user_role))
+  end
+
+  # Get user's roles in organizations
+  defp get_user_organization_roles(user_id, organizations) do
+    org_ids = Enum.map(organizations, & &1.id)
+    
+    from(ou in Castmill.Organizations.OrganizationsUsers,
+      where: ou.user_id == ^user_id and ou.organization_id in ^org_ids,
+      select: {ou.organization_id, ou.role}
+    )
+    |> Repo.all()
+    |> Enum.into(%{})
+  end
+
+  # Get user's roles in teams
+  defp get_user_team_roles(user_id, teams) do
+    team_ids = Enum.map(teams, & &1.id)
+    
+    from(tu in Castmill.Teams.TeamsUsers,
+      where: tu.user_id == ^user_id and tu.team_id in ^team_ids,
+      select: {tu.team_id, tu.role}
+    )
+    |> Repo.all()
+    |> Enum.into(%{})
   end
 
   @doc """
   Counts unread notifications for a user.
+  Includes role-based filtering for organization/team notifications.
   """
   def count_unread_notifications(user_id) do
-    # Get user's organizations and teams
+    # Get user's organizations and teams with roles
     user = Repo.get(User, user_id) |> Repo.preload([:organizations, :teams])
+    
+    # Get organization IDs and user's roles in those organizations
+    org_roles = get_user_organization_roles(user_id, user.organizations)
     org_ids = Enum.map(user.organizations, & &1.id)
+    
+    # Get team IDs and user's roles in those teams
+    team_roles = get_user_team_roles(user_id, user.teams)
     team_ids = Enum.map(user.teams, & &1.id)
 
     query =
       from n in Notification,
         where:
-          (n.user_id == ^user_id or n.organization_id in ^org_ids or n.team_id in ^team_ids) and
-            n.read == false
+          ((n.user_id == ^user_id or n.organization_id in ^org_ids or n.team_id in ^team_ids) and
+            n.read == false)
 
-    Repo.aggregate(query, :count, :id)
+    # Get all unread notifications and filter by roles
+    Repo.all(query)
+    |> Enum.filter(fn notification ->
+      cond do
+        # User-specific notifications always included
+        notification.user_id == user_id -> true
+        
+        # Organization notifications - check role if roles specified
+        notification.organization_id && notification.organization_id in org_ids ->
+          role_matches?(notification.roles, Map.get(org_roles, notification.organization_id))
+        
+        # Team notifications - check role if roles specified
+        notification.team_id && notification.team_id in team_ids ->
+          role_matches?(notification.roles, Map.get(team_roles, notification.team_id))
+        
+        true -> false
+      end
+    end)
+    |> length()
   end
 
   @doc """
