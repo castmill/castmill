@@ -358,7 +358,8 @@
     "confirmRemovePlaylists": "Êtes-vous sûr de vouloir supprimer les playlists suivantes ?",
     "errorRemovingPlaylist": "Erreur lors de la suppression de la playlist {{name}} : {{error}}",
     "errorRemovingPlaylists": "Erreur lors de la suppression des playlists : {{error}}",
-    "enterPlaylistName": "Entrez le nom de la playlist"
+    "enterPlaylistName": "Entrez le nom de la playlist",
+    "dragToAdd": "Glisser pour ajouter"
   },
   "widgets": {
     "title": "Widgets",

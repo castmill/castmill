@@ -369,7 +369,8 @@
     "confirmRemovePlaylists": "¿Estás seguro de que quieres eliminar las siguientes listas de reproducción?",
     "errorRemovingPlaylist": "Error al eliminar la lista de reproducción {{name}}: {{error}}",
     "errorRemovingPlaylists": "Error al eliminar listas de reproducción: {{error}}",
-    "enterPlaylistName": "Ingresa el nombre de la lista de reproducción"
+    "enterPlaylistName": "Ingresa el nombre de la lista de reproducción",
+    "dragToAdd": "Arrastra para añadir"
   },
   "widgets": {
     "title": "Widgets",

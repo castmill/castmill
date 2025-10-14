@@ -358,7 +358,8 @@
     "confirmRemovePlaylists": "您确定要删除以下播放列表吗？",
     "errorRemovingPlaylist": "删除播放列表 {{name}} 时出错：{{error}}",
     "errorRemovingPlaylists": "删除播放列表时出错：{{error}}",
-    "enterPlaylistName": "输入播放列表名称"
+    "enterPlaylistName": "输入播放列表名称",
+    "dragToAdd": "拖动以添加"
   },
   "widgets": {
     "title": "Widgets",

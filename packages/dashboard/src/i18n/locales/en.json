@@ -374,7 +374,8 @@
     "confirmRemovePlaylists": "Are you sure you want to remove the following playlists?",
     "errorRemovingPlaylist": "Error removing playlist {{name}}: {{error}}",
     "errorRemovingPlaylists": "Error removing playlists: {{error}}",
-    "enterPlaylistName": "Enter Playlist name"
+    "enterPlaylistName": "Enter Playlist name",
+    "dragToAdd": "Drag to add"
   },
   "widgets": {
     "title": "Widgets",

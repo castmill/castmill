@@ -12,10 +12,10 @@
   resolved "https://registry.yarnpkg.com/@adobe/css-tools/-/css-tools-4.4.4.tgz#2856c55443d3d461693f32d2b96fb6ea92e1ffa9"
   integrity sha512-Elp+iwUx5rN5+Y8xLt5/GRoG20WGoDCQ/1Fb+1LiGtvwbDavuSk0jhD/eZdckHAuzcDzccnkv+rEjyWfRx18gg==
 
-"@ai-sdk/gateway@1.0.39":
-  version "1.0.39"
-  resolved "https://registry.yarnpkg.com/@ai-sdk/gateway/-/gateway-1.0.39.tgz#1f259fda75c7a72bf99a958194ae6275fa3f7d5a"
-  integrity sha512-ijYCKG2sbn2RBVfIgaXNXvzHAf2HpFXxQODtjMI+T7Z4CLryflytchsZZ9qrGtsjiQVopKOV6m6kj4lq5fnbsg==
+"@ai-sdk/gateway@1.0.40":
+  version "1.0.40"
+  resolved "https://registry.yarnpkg.com/@ai-sdk/gateway/-/gateway-1.0.40.tgz#81a554edbb11b286fb657587710047f169d13b2a"
+  integrity sha512-zlixM9jac0w0jjYl5gwNq+w9nydvraAmLaZQbbh+QpHU+OPkTIZmyBcKeTq5eGQKQxhi+oquHxzCSKyJx3egGw==
   dependencies:
     "@ai-sdk/provider" "2.0.0"
     "@ai-sdk/provider-utils" "3.0.12"
@@ -38,12 +38,12 @@
     json-schema "^0.4.0"
 
 "@ai-sdk/react@^2.0.30":
-  version "2.0.69"
-  resolved "https://registry.yarnpkg.com/@ai-sdk/react/-/react-2.0.69.tgz#66e46a1c849a296f5433f90943524ac04abd7155"
-  integrity sha512-/9d+p82R7b3poaNjp1rPuyuh+w8P/ikYllYu5b22OWk74WoL8Aw7HjfXDdVIzCRiV9EK0sNfcXpa+ghiMh78Hw==
+  version "2.0.70"
+  resolved "https://registry.yarnpkg.com/@ai-sdk/react/-/react-2.0.70.tgz#1ede8e28899028ddd6ecf986b839ea9541f7a334"
+  integrity sha512-84So0vv9R2eL+7XAS1xAoqCx1jQGKb2WH8miJV8rBvF1QF9G5otFm35LhPPwZyJDq68vuVsvhIde1yzDCw2B8A==
   dependencies:
     "@ai-sdk/provider-utils" "3.0.12"
-    ai "5.0.69"
+    ai "5.0.70"
     swr "^2.2.5"
     throttleit "2.1.0"
 
@@ -5931,12 +5931,12 @@ aggregate-error@^5.0.0:
     clean-stack "^5.2.0"
     indent-string "^5.0.0"
 
-ai@5.0.69, ai@^5.0.30:
-  version "5.0.69"
-  resolved "https://registry.yarnpkg.com/ai/-/ai-5.0.69.tgz#fb11611983087c61fde56f29eec921bd6d237951"
-  integrity sha512-b0Zy3/VCfVDVVjXCQqswzQifU2z7mHpJXwjoZMbk8KirZ0WoU/Trz8KWdlTRlsoBuHvE5tnW3+YrY+ghRb/Jkw==
+ai@5.0.70, ai@^5.0.30:
+  version "5.0.70"
+  resolved "https://registry.yarnpkg.com/ai/-/ai-5.0.70.tgz#2768cf3e0cd0d42701a633a8979d46a660ab7ac5"
+  integrity sha512-srJV++Ml1X8I33gTiiJQpq6GUbAv5ivjSzDzzF9SM4d25zq+/m+zTtHBb794tYKTz2PgbJ3oop9+gU50ZdCLbQ==
   dependencies:
-    "@ai-sdk/gateway" "1.0.39"
+    "@ai-sdk/gateway" "1.0.40"
     "@ai-sdk/provider" "2.0.0"
     "@ai-sdk/provider-utils" "3.0.12"
     "@opentelemetry/api" "1.9.0"
@@ -16931,9 +16931,9 @@ statuses@2.0.1:
   integrity sha512-OpZ3zP+jT1PI7I8nemJX4AKmAX070ZkYPVWV/AaKTJl+tXCTGyVdC1a4SL8RUQYEwk/f34ZX8UTykN68FwrqAA==
 
 std-env@^3.5.0, std-env@^3.7.0:
-  version "3.9.0"
-  resolved "https://registry.yarnpkg.com/std-env/-/std-env-3.9.0.tgz#1a6f7243b339dca4c9fd55e1c7504c77ef23e8f1"
-  integrity sha512-UGvjygr6F6tpH7o2qyqR6QYpwraIjKSdtzyBdyytFOHmPZY917kwdwLG0RbOjWOnKmnm3PeHjaoLLMie7kPLQw==
+  version "3.10.0"
+  resolved "https://registry.yarnpkg.com/std-env/-/std-env-3.10.0.tgz#d810b27e3a073047b2b5e40034881f5ea6f9c83b"
+  integrity sha512-5GS12FdOZNliM5mAOxFRg7Ir0pWz8MdpYm6AY6VPkGpbA7ZzmbzNcBJQ0GPvvyWgcY7QAhCgf9Uy89I03faLkg==
 
 stream-combiner2@~1.1.1:
   version "1.1.1"

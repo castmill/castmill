@@ -358,7 +358,8 @@
     "confirmRemovePlaylists": "다음 재생목록을 제거하시겠습니까?",
     "errorRemovingPlaylist": "재생목록 {{name}} 제거 오류: {{error}}",
     "errorRemovingPlaylists": "재생목록 제거 오류: {{error}}",
-    "enterPlaylistName": "재생목록 이름 입력"
+    "enterPlaylistName": "재생목록 이름 입력",
+    "dragToAdd": "드래그하여 추가"
   },
   "widgets": {
     "title": "Widgets",
