@@ -67,27 +67,66 @@ describe('WidgetConfig - Collection Parsing', () => {
     expect(filters).toEqual({});
   });
 
-  it('should generate correct placeholder text for video', () => {
+  it('should generate correct placeholder text for video with i18n', () => {
     const filters = { type: 'video' };
-    const mediaType = filters['type'] || 'media';
-    const placeholderText = `Select ${mediaType.charAt(0).toUpperCase() + mediaType.slice(1)}`;
+    const t = (key: string) => {
+      const translations: Record<string, string> = {
+        'common.selectVideo': 'Select a Video',
+        'common.selectImage': 'Select an Image',
+        'common.selectMedia': 'Select a Media',
+      };
+      return translations[key] || key;
+    };
 
-    expect(placeholderText).toBe('Select Video');
+    const placeholderText =
+      filters['type'] === 'image'
+        ? t('common.selectImage')
+        : filters['type'] === 'video'
+          ? t('common.selectVideo')
+          : t('common.selectMedia');
+
+    expect(placeholderText).toBe('Select a Video');
   });
 
-  it('should generate correct placeholder text for image', () => {
+  it('should generate correct placeholder text for image with i18n', () => {
     const filters = { type: 'image' };
-    const mediaType = filters['type'] || 'media';
-    const placeholderText = `Select ${mediaType.charAt(0).toUpperCase() + mediaType.slice(1)}`;
+    const t = (key: string) => {
+      const translations: Record<string, string> = {
+        'common.selectVideo': 'Select a Video',
+        'common.selectImage': 'Select an Image',
+        'common.selectMedia': 'Select a Media',
+      };
+      return translations[key] || key;
+    };
 
-    expect(placeholderText).toBe('Select Image');
+    const placeholderText =
+      filters['type'] === 'image'
+        ? t('common.selectImage')
+        : filters['type'] === 'video'
+          ? t('common.selectVideo')
+          : t('common.selectMedia');
+
+    expect(placeholderText).toBe('Select an Image');
   });
 
-  it('should generate default placeholder text when no type is specified', () => {
+  it('should generate default placeholder text when no type is specified with i18n', () => {
     const filters: Record<string, string | boolean> = {};
-    const mediaType = filters['type'] || 'media';
-    const placeholderText = `Select ${mediaType.charAt(0).toUpperCase() + mediaType.slice(1)}`;
+    const t = (key: string) => {
+      const translations: Record<string, string> = {
+        'common.selectVideo': 'Select a Video',
+        'common.selectImage': 'Select an Image',
+        'common.selectMedia': 'Select a Media',
+      };
+      return translations[key] || key;
+    };
 
-    expect(placeholderText).toBe('Select Media');
+    const placeholderText =
+      filters['type'] === 'image'
+        ? t('common.selectImage')
+        : filters['type'] === 'video'
+          ? t('common.selectVideo')
+          : t('common.selectMedia');
+
+    expect(placeholderText).toBe('Select a Media');
   });
 });

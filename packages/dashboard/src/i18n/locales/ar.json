@@ -70,7 +70,10 @@
     "telemetry": "القياس عن بعد",
     "addonLoadingError": "خطأ في تحميل الإضافة",
     "addonError": "خطأ في الإضافة",
-    "backToLogin": "العودة لتسجيل الدخول"
+    "backToLogin": "العودة لتسجيل الدخول",
+    "selectImage": "اختر صورة",
+    "selectVideo": "اختر فيديو",
+    "selectMedia": "اختر وسائط"
   },
   "topbar": {
     "help": "مساعدة",
@@ -225,7 +228,8 @@
   "errors": {
     "generic": "حدث خطأ. يرجى المحاولة مرة أخرى.",
     "networkError": "خطأ في الشبكة. يرجى التحقق من اتصالك.",
-    "unauthorized": "غير مصرح. يرجى تسجيل الدخول مرة أخرى."
+    "unauthorized": "غير مصرح. يرجى تسجيل الدخول مرة أخرى.",
+    "unknownResourceType": "نوع مورد غير معروف: {{resourceType}}"
   },
   "sidebar": {
     "organization": "المنظمة",

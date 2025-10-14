@@ -19,6 +19,7 @@ import {
   Timestamp,
 } from '@castmill/ui-common';
 import { ResourcesService } from '../services/resources.service';
+import { AddonStore } from '../../common/interfaces/addon-store';
 
 import './widget-config.scss';
 import { WidgetView } from './widget-view';
@@ -32,6 +33,7 @@ import { WidgetView } from './widget-view';
  */
 
 interface WidgetConfigProps {
+  store: AddonStore;
   baseUrl: string;
   item: JsonPlaylistItem;
   organizationId: string;
@@ -49,6 +51,10 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
   const [isFormModified, setIsFormModified] = createSignal(false);
   const [isFormValid, setIsFormValid] = createSignal(false);
   const [errors, setErrors] = createSignal(new Map());
+
+  // Get i18n functions from store
+  const t = (key: string, params?: Record<string, any>) =>
+    props.store.i18n?.t(key, params) || key;
 
   console.log('WidgetConfig', props.item, props.organizationId);
   const optionsSchema = props.item.widget.options_schema || {};
@@ -237,8 +243,12 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
         }
 
         // Determine media type for placeholder text
-        const mediaType = filters['type'] || 'media';
-        const placeholderText = `Select ${mediaType.charAt(0).toUpperCase() + mediaType.slice(1)}`;
+        const placeholderText =
+          filters['type'] === 'image'
+            ? t('common.selectImage')
+            : filters['type'] === 'video'
+              ? t('common.selectVideo')
+              : t('common.selectMedia');
 
         switch (collectionName) {
           case 'medias':
@@ -290,7 +300,9 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
               </>
             );
           default:
-            throw new Error(`Unknown collection: ${collection}`);
+            throw new Error(
+              t('errors.unknownResourceType', { resourceType: collectionName })
+            );
         }
       case 'map':
       case 'list':

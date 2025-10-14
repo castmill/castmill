@@ -21,9 +21,11 @@ import { JsonPlaylistItem } from '@castmill/player';
 // get thumbnail uri from playlist item
 const getThumbnailUri = (item: JsonPlaylistItem) => {
   // TODO improve typing
-  // TODO thumbnails for other widget types
   const image = item.config.options.image as any;
-  return image?.files?.thumbnail?.uri;
+  const video = item.config.options.video as any;
+
+  // Return video thumbnail if available, otherwise image thumbnail
+  return video?.files?.thumbnail?.uri || image?.files?.thumbnail?.uri;
 };
 
 // get widget name from playlist item

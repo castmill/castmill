@@ -70,7 +70,10 @@
     "telemetry": "遥测",
     "addonLoadingError": "插件加载错误",
     "addonError": "插件错误",
-    "backToLogin": "返回登录"
+    "backToLogin": "返回登录",
+    "selectImage": "选择图片",
+    "selectVideo": "选择视频",
+    "selectMedia": "选择媒体"
   },
   "topbar": {
     "help": "帮助",
@@ -225,7 +228,8 @@
   "errors": {
     "generic": "发生错误。请重试。",
     "networkError": "网络错误。请检查您的连接。",
-    "unauthorized": "未授权。请重新登录。"
+    "unauthorized": "未授权。请重新登录。",
+    "unknownResourceType": "未知资源类型：{{resourceType}}"
   },
   "sidebar": {
     "organization": "组织",

@@ -70,7 +70,10 @@
     "telemetry": "Telemetri",
     "addonLoadingError": "Fel vid laddning av tillägg",
     "addonError": "Tilläggsfel",
-    "backToLogin": "Tillbaka till inloggning"
+    "backToLogin": "Tillbaka till inloggning",
+    "selectImage": "Välj en bild",
+    "selectVideo": "Välj en video",
+    "selectMedia": "Välj ett media"
   },
   "topbar": {
     "help": "Hjälp",
@@ -225,7 +228,8 @@
   "errors": {
     "generic": "Ett fel uppstod. Försök igen.",
     "networkError": "Nätverksfel. Kontrollera din anslutning.",
-    "unauthorized": "Obehörig. Logga in igen."
+    "unauthorized": "Obehörig. Logga in igen.",
+    "unknownResourceType": "Okänd resurstyp: {{resourceType}}"
   },
   "sidebar": {
     "organization": "Organisation",

@@ -70,7 +70,10 @@
     "telemetry": "Telemetría",
     "addonLoadingError": "Error al cargar complemento",
     "addonError": "Error de complemento",
-    "backToLogin": "Volver al inicio de sesión"
+    "backToLogin": "Volver al inicio de sesión",
+    "selectImage": "Seleccionar una imagen",
+    "selectVideo": "Seleccionar un video",
+    "selectMedia": "Seleccionar un medio"
   },
   "topbar": {
     "help": "Ayuda",
@@ -225,7 +228,8 @@
   "errors": {
     "generic": "Se ha producido un error. Por favor, inténtalo de nuevo.",
     "networkError": "Error de red. Por favor, comprueba tu conexión.",
-    "unauthorized": "No autorizado. Por favor, inicia sesión de nuevo."
+    "unauthorized": "No autorizado. Por favor, inicia sesión de nuevo.",
+    "unknownResourceType": "Tipo de recurso desconocido: {{resourceType}}"
   },
   "sidebar": {
     "organization": "Organización",

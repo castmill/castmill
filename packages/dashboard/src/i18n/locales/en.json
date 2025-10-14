@@ -70,7 +70,10 @@
     "cache": "Cache",
     "maintainance": "Maintenance",
     "events": "Events",
-    "telemetry": "Telemetry"
+    "telemetry": "Telemetry",
+    "selectImage": "Select an Image",
+    "selectVideo": "Select a Video",
+    "selectMedia": "Select a Media"
   },
   "sidebar": {
     "organization": "Organization",
@@ -291,7 +294,8 @@
   "errors": {
     "generic": "An error occurred. Please try again.",
     "networkError": "Network error. Please check your connection.",
-    "unauthorized": "Unauthorized. Please log in again."
+    "unauthorized": "Unauthorized. Please log in again.",
+    "unknownResourceType": "Unknown resource type: {{resourceType}}"
   },
   "playlists": {
     "title": "Playlists",
