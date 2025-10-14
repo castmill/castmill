@@ -281,6 +281,7 @@ const PlaylistsPage: Component<{
           contentClass="playlist-modal"
         >
           <PlaylistView
+            store={props.store}
             baseUrl={props.store.env.baseUrl}
             organizationId={props.store.organizations.selectedId}
             playlistId={currentPlaylist()?.id!}

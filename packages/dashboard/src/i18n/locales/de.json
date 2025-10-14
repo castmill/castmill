@@ -70,7 +70,9 @@
     "telemetry": "Telemetrie",
     "addonLoadingError": "Add-on-Ladefehler",
     "addonError": "Add-on-Fehler",
-    "backToLogin": "Zurück zur Anmeldung"
+    "backToLogin": "Zurück zur Anmeldung",
+    "selectImage": "Bild auswählen",
+    "selectMedia": "Medien auswählen"
   },
   "sidebar": {
     "organization": "Organisation",
@@ -291,7 +293,8 @@
   "errors": {
     "generic": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
     "networkError": "Netzwerkfehler. Bitte überprüfen Sie Ihre Verbindung.",
-    "unauthorized": "Nicht autorisiert. Bitte melden Sie sich erneut an."
+    "unauthorized": "Nicht autorisiert. Bitte melden Sie sich erneut an.",
+    "unknownResourceType": "Unbekannter Ressourcentyp: {{resourceType}}"
   },
   "playlists": {
     "title": "Playlists",

@@ -13,6 +13,7 @@ import { BsCheckLg } from 'solid-icons/bs';
 import { BsX } from 'solid-icons/bs';
 import { FormItem, Button, ComboBox, useToast, Timestamp } from '@castmill/ui-common';
 import { ResourcesService } from '../services/resources.service';
+import { AddonStore } from '../../common/interfaces/addon-store';
 
 import './widget-config.scss';
 import { WidgetView } from './widget-view';
@@ -26,6 +27,7 @@ import { WidgetView } from './widget-view';
  */
 
 interface WidgetConfigProps {
+  store: AddonStore;
   baseUrl: string;
   item: JsonPlaylistItem;
   organizationId: string;
@@ -43,6 +45,10 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
   const [isFormModified, setIsFormModified] = createSignal(false);
   const [isFormValid, setIsFormValid] = createSignal(false);
   const [errors, setErrors] = createSignal(new Map());
+
+  // Get i18n functions from store
+  const t = (key: string, params?: Record<string, any>) =>
+    props.store.i18n?.t(key, params) || key;
 
   console.log('WidgetConfig', props.item, props.organizationId);
   const optionsSchema = props.item.widget.options_schema || {};
@@ -228,7 +234,7 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
 
         switch (resourceType) {
           case 'medias':
-            const placeholderText = filters.type === 'image' ? 'Select an Image' : 'Select a Media';
+            const placeholderText = filters.type === 'image' ? t('common.selectImage') : t('common.selectMedia');
             return (
               <>
                 <ComboBox<JsonMedia>
@@ -276,7 +282,7 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
               </>
             );
           default:
-            throw new Error(`Unknown resource type: ${resourceType}`);
+            throw new Error(t('errors.unknownResourceType', { resourceType }));
         }
       case 'map':
       case 'list':

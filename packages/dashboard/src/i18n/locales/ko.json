@@ -70,7 +70,9 @@
     "telemetry": "원격 측정",
     "addonLoadingError": "애드온 로딩 오류",
     "addonError": "애드온 오류",
-    "backToLogin": "로그인으로 돌아가기"
+    "backToLogin": "로그인으로 돌아가기",
+    "selectImage": "이미지 선택",
+    "selectMedia": "미디어 선택"
   },
   "topbar": {
     "help": "도움말",
@@ -225,7 +227,8 @@
   "errors": {
     "generic": "오류가 발생했습니다. 다시 시도해 주세요.",
     "networkError": "네트워크 오류입니다. 연결을 확인해 주세요.",
-    "unauthorized": "인증되지 않았습니다. 다시 로그인해 주세요."
+    "unauthorized": "인증되지 않았습니다. 다시 로그인해 주세요.",
+    "unknownResourceType": "알 수 없는 리소스 유형: {{resourceType}}"
   },
   "sidebar": {
     "organization": "조직",

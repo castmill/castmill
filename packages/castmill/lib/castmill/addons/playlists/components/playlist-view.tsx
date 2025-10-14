@@ -13,8 +13,10 @@ import { PlaylistsService } from '../services/playlists.service';
 import { WidgetChooser } from './widget-chooser';
 import { PlaylistItems } from './playlist-items';
 import { PlaylistPreview } from './playlist-preview';
+import { AddonStore } from '../../common/interfaces/addon-store';
 
 export const PlaylistView: Component<{
+  store: AddonStore;
   playlistId: number;
   organizationId: string;
   baseUrl: string;
@@ -243,6 +245,7 @@ export const PlaylistView: Component<{
             <WidgetChooser widgets={widgets()} />
           </div>
           <PlaylistItems
+            store={props.store}
             baseUrl={props.baseUrl}
             organizationId={props.organizationId}
             items={items()}
