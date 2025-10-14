@@ -279,51 +279,6 @@
       "updateChannelEntry": "Error updating channel entry: {{error}}"
     }
   },
-  "organization": {
-    "title": "Organization",
-    "users": "Users",
-    "invitations": "Invitations",
-    "update": "Update",
-    "placeholderName": "Enter organization name",
-    "inviteMember": "Invite Member",
-    "enterMemberEmail": "Enter member's email",
-    "role": "Role",
-    "roleAdmin": "Admin",
-    "roleManager": "Manager",
-    "roleMember": "Member",
-    "roleEditor": "Editor",
-    "rolePublisher": "Publisher",
-    "roleDeviceManager": "Device Manager",
-    "roleGuest": "Guest",
-    "teamRoleAdmin": "Team Admin",
-    "teamRoleMember": "Team Member",
-    "teamRoleInstaller": "Installer (24h)",
-    "roleDescriptions": {
-      "admin": "Full access including organization management",
-      "manager": "Can manage teams and most resources",
-      "member": "Standard user (default), can manage content",
-      "editor": "Full content management, cannot manage teams",
-      "publisher": "Like editor plus publish workflow actions",
-      "device_manager": "Full device and channel management",
-      "guest": "Read-only access to resources"
-    },
-    "teamRoleDescriptions": {
-      "admin": "Can manage team members and resources",
-      "member": "Can access and edit team resources",
-      "installer": "Temporary token for device registration (expires in 24h)"
-    },
-    "errors": {
-      "updateOrganization": "Error updating organization: {{error}}",
-      "emailRequired": "Email is required",
-      "invalidEmail": "Invalid email",
-      "cannotRemoveLastAdmin": "You can't remove the last admin of an organization.",
-      "invalidRole": "The selected role is not valid for this organization."
-    },
-    "messages": {
-      "memberRemoved": "Member {{name}} removed successfully",
-      "membersRemoved": "Members removed successfully"
-    }
-  },
   "login": {
     "title": "Login",
     "email": "Email",
@@ -493,5 +448,57 @@
       "loginToAccept": "Login to accept this invitation",
       "createAccount": "Create your account to accept this invitation"
     }
+  },
+  "organization": {
+    "title": "Organization",
+    "users": "Users",
+    "invitations": "Invitations",
+    "update": "Update",
+    "placeholderName": "Enter organization name",
+    "inviteMember": "Invite Member",
+    "enterMemberEmail": "Enter member's email",
+    "role": "Role",
+    "roleAdmin": "Admin",
+    "roleManager": "Manager",
+    "roleMember": "Member",
+    "roleEditor": "Editor",
+    "rolePublisher": "Publisher",
+    "roleDeviceManager": "Device Manager",
+    "roleGuest": "Guest",
+    "teamRoleAdmin": "Team Admin",
+    "teamRoleMember": "Team Member",
+    "teamRoleInstaller": "Installer (24h)",
+    "roleDescriptions": {
+      "admin": "Full access including organization management",
+      "manager": "Can manage teams and most resources",
+      "member": "Standard user (default), can manage content",
+      "editor": "Full content management, cannot manage teams",
+      "publisher": "Like editor plus publish workflow actions",
+      "device_manager": "Full device and channel management",
+      "guest": "Read-only access to resources"
+    },
+    "teamRoleDescriptions": {
+      "admin": "Can manage team members and resources",
+      "member": "Can access and edit team resources",
+      "installer": "Temporary token for device registration (expires in 24h)"
+    },
+    "errors": {
+      "updateOrganization": "Error updating organization: {{error}}",
+      "emailRequired": "Email is required",
+      "invalidEmail": "Invalid email",
+      "cannotRemoveLastAdmin": "You can't remove the last admin of an organization.",
+      "invalidRole": "The selected role is not valid for this organization.",
+      "cannotRemoveLastUser": "You cannot leave as you are the only member of this organization."
+    },
+    "messages": {
+      "memberRemoved": "Member {{name}} removed successfully",
+      "membersRemoved": "Members removed successfully",
+      "leftOrganization": "You left the organization {{name}}"
+    },
+    "leaveOrganizationTitle": "Leave this organization",
+    "leaveOrganizationDescription": "Leaving removes your access to organization resources immediately.",
+    "leaveOrganizationAction": "Leave organization",
+    "leaveOrganizationLastAdminWarning": "Add another admin before leaving to keep this organization managed.",
+    "leaveOrganizationLastUserWarning": "You cannot leave as you are the only member of this organization."
   }
 }

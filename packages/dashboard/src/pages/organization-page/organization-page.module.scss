@@ -21,3 +21,42 @@
     }
   }
 }
+
+.leave-organization-panel {
+  margin-top: 2em;
+  padding: 1.5em;
+  border-radius: 0.75em;
+  background: #181818;
+  border: 0.1em solid rgba(220, 38, 38, 0.25);
+  display: flex;
+  align-items: start;
+  gap: 2em;
+  flex-wrap: wrap;
+}
+
+.leave-organization-content {
+  flex: 1 1 20em;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75em;
+}
+
+.leave-organization-content h4 {
+  margin: 0;
+  font-size: 1.2em;
+  font-weight: 600;
+  color: #dc2626;
+}
+
+.leave-organization-content p {
+  margin: 0;
+  font-size: 0.95em;
+  color: var(--castmill-text-muted, #6b7280);
+}
+
+.leave-organization-warning {
+  color: #b91c1c;
+  font-weight: 500;
+  font-size: 0.95em;
+  margin: 0;
+}

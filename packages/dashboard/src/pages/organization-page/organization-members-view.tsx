@@ -1,10 +1,5 @@
-/**
- * Organizations Members View
- *
- * (c) Castmill 2025
- */
-
 import {
+  Button,
   IconButton,
   Modal,
   TableView,
@@ -20,15 +15,16 @@ import { PermissionButton } from '../../components/permission-button/permission-
 import { usePermissions } from '../../hooks/usePermissions';
 import { BsCheckLg } from 'solid-icons/bs';
 import { AiOutlineDelete } from 'solid-icons/ai';
-import { createEffect, createSignal, Show } from 'solid-js';
+import { createEffect, createMemo, createSignal, Show } from 'solid-js';
 import { User } from '../../interfaces/user.interface';
 import { OrganizationsService } from '../../services/organizations.service';
 import { OrganizationInviteForm } from './organization-invite-form';
 import { OrganizationRole } from '../../types/organization-role.type';
 import { useI18n } from '../../i18n';
 import { getUser } from '../../components/auth';
+import styles from './organization-page.module.scss';
 
-const [data, setData] = createSignal<{ user: User; user_id: string }[]>([], {
+const [data, setData] = createSignal<{ user: User; user_id: string; role: string }[]>([], {
   equals: false,
 });
 
@@ -62,6 +58,10 @@ export const OrganizationMembersView = (props: {
     if (error instanceof HttpError) {
       switch (error.status) {
         case 422:
+          // Check the error message to determine which validation failed
+          if (error.message === 'cannot_remove_last_organization_user') {
+            return t('organization.errors.cannotRemoveLastUser');
+          }
           return t('organization.errors.cannotRemoveLastAdmin');
         case 404:
           return t('errors.generic');
@@ -71,9 +71,12 @@ export const OrganizationMembersView = (props: {
     }
 
     const message = (error as Error)?.message ?? t('errors.generic');
-    return message === 'cannot_remove_last_organization_admin'
-      ? t('organization.errors.cannotRemoveLastAdmin')
-      : message;
+    if (message === 'cannot_remove_last_organization_admin') {
+      return t('organization.errors.cannotRemoveLastAdmin');
+    } else if (message === 'cannot_remove_last_organization_user') {
+      return t('organization.errors.cannotRemoveLastUser');
+    }
+    return message;
   };
 
   const addMember = () => {
@@ -81,6 +84,41 @@ export const OrganizationMembersView = (props: {
   };
 
   const currentUser = getUser();
+  
+  const currentMembership = createMemo(() => {
+    if (!currentUser?.id) {
+      return undefined;
+    }
+    return data().find(
+      (entry) => entry.user_id === currentUser.id
+    );
+  });
+
+  const adminCount = createMemo(
+    () => data().filter((entry) => entry.role === 'admin').length
+  );
+
+  const memberCount = createMemo(() => data().length);
+
+  const canLeaveOrganization = createMemo(() => {
+    const membership = currentMembership();
+    if (!membership) {
+      return false;
+    }
+
+    // Can't leave if only one member
+    if (memberCount() <= 1) {
+      return false;
+    }
+
+    // Non-admins can leave if there's more than one member
+    if (membership.role !== 'admin') {
+      return true;
+    }
+
+    // Admins can leave only if there's another admin
+    return adminCount() > 1;
+  });
 
   const columns = [
     {
@@ -184,6 +222,28 @@ export const OrganizationMembersView = (props: {
       refreshData();
       toast.success(t('organization.messages.membersRemoved'));
       setShowConfirmDialogMultiple(false);
+    } catch (error) {
+      const errorMessage = resolveRemoveMemberError(error);
+      toast.error(errorMessage);
+    }
+  };
+
+  const leaveOrganization = async () => {
+    const membership = currentMembership();
+    if (!membership) {
+      return;
+    }
+
+    try {
+      await OrganizationsService.removeMemberFromOrganization(
+        props.organizationId,
+        membership.user_id
+      );
+
+      refreshData();
+      toast.success(
+        t('organization.messages.leftOrganization', { name: props.organizationName })
+      );
     } catch (error) {
       const errorMessage = resolveRemoveMemberError(error);
       toast.error(errorMessage);
@@ -303,6 +363,28 @@ export const OrganizationMembersView = (props: {
         pagination={{ itemsPerPage }}
         itemIdKey="user_id"
       ></TableView>
+
+      <Show when={currentMembership()}>
+        <div class={styles.leaveOrganizationPanel}>
+          <div class={styles.leaveOrganizationContent}>
+            <h4>{t('organization.leaveOrganizationTitle')}</h4>
+            <p>{t('organization.leaveOrganizationDescription')}</p>
+            <Show when={!canLeaveOrganization()}>
+              <p class={styles.leaveOrganizationWarning}>
+                {memberCount() <= 1
+                  ? t('organization.leaveOrganizationLastUserWarning')
+                  : t('organization.leaveOrganizationLastAdminWarning')}
+              </p>
+            </Show>
+          </div>
+          <Button
+            label={t('organization.leaveOrganizationAction')}
+            color="danger"
+            onClick={leaveOrganization}
+            disabled={!canLeaveOrganization()}
+          />
+        </div>
+      </Show>
     </>
   );
 };
