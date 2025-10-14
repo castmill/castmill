@@ -197,10 +197,7 @@ export const NotificationDialog: Component<NotificationDialogProps> = (props) =>
                         </div>
                       </Show>
                       <div class="notification-time">
-                        {formatDate(new Date(notification.inserted_at), {
-                          dateStyle: 'medium',
-                          timeStyle: 'short',
-                        })}
+                        {formatDate(new Date(notification.inserted_at), 'PPp')}
                       </div>
                     </div>
                     <Show when={!notification.read}>
