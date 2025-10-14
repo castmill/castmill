@@ -72,5 +72,45 @@ describe.skip('DropdownMenu Component', () => {
     expect(screen.queryByText('Menu Item 1')).not.toBeVisible();
   });
 
-  // Add more tests here as needed...
+  it('closes the dropdown when clicking a menu item button', () => {
+    const handleClick = vi.fn();
+    const { getByText } = render(() => (
+      <DropdownMenu ButtonComponent={TestButtonComponent}>
+        <button onClick={handleClick}>Action Button</button>
+        <div>Menu Item 2</div>
+      </DropdownMenu>
+    ));
+
+    // Open the dropdown
+    fireEvent.click(getByText('Toggle'));
+    expect(screen.getByText('Action Button')).toBeVisible();
+
+    // Click the menu item button
+    fireEvent.click(getByText('Action Button'));
+
+    // Verify the button action was called
+    expect(handleClick).toHaveBeenCalledOnce();
+
+    // Verify the dropdown is closed
+    expect(screen.queryByText('Action Button')).not.toBeVisible();
+  });
+
+  it('closes the dropdown when clicking a menu item link', () => {
+    const { getByText } = render(() => (
+      <DropdownMenu ButtonComponent={TestButtonComponent}>
+        <a href="/test">Link Item</a>
+        <div>Menu Item 2</div>
+      </DropdownMenu>
+    ));
+
+    // Open the dropdown
+    fireEvent.click(getByText('Toggle'));
+    expect(screen.getByText('Link Item')).toBeVisible();
+
+    // Click the link
+    fireEvent.click(getByText('Link Item'));
+
+    // Verify the dropdown is closed
+    expect(screen.queryByText('Link Item')).not.toBeVisible();
+  });
 });
