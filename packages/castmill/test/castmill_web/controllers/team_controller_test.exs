@@ -134,7 +134,7 @@ defmodule CastmillWeb.TeamControllerTest do
 
     test "forbids non-admin org user from these actions", %{conn: conn, team: team} do
       member_user = user_fixture(%{})
-      {:ok, _} = Organizations.set_user_role(team.organization_id, member_user.id, :regular)
+      {:ok, _} = Organizations.set_user_role(team.organization_id, member_user.id, :member)
 
       conn =
         put(
@@ -156,7 +156,7 @@ defmodule CastmillWeb.TeamControllerTest do
       team: team,
       user: user
     } do
-      {:ok, _} = Organizations.set_user_role(team.organization_id, user.id, :regular)
+      {:ok, _} = Organizations.set_user_role(team.organization_id, user.id, :member)
 
       conn =
         get(
@@ -251,9 +251,9 @@ defmodule CastmillWeb.TeamControllerTest do
 
   describe "list_members/2" do
     test "lists existing team members", %{conn: conn, team: team, user: user} do
-      {:ok, _} = Organizations.set_user_role(team.organization_id, user.id, :regular)
+      {:ok, _} = Organizations.set_user_role(team.organization_id, user.id, :member)
 
-      {:ok, _} = Teams.add_user_to_team(team.id, user.id, "regular")
+      {:ok, _} = Teams.add_user_to_team(team.id, user.id, "member")
 
       conn =
         get(
@@ -285,7 +285,7 @@ defmodule CastmillWeb.TeamControllerTest do
     } do
       new_email = "invitee@example.com"
 
-      {:ok, _} = Organizations.set_user_role(team.organization_id, user.id, :regular)
+      {:ok, _} = Organizations.set_user_role(team.organization_id, user.id, :member)
 
       conn =
         post(
@@ -322,13 +322,41 @@ defmodule CastmillWeb.TeamControllerTest do
       assert invitation.status == "invited"
     end
 
+    test "invites a user with explicit member role", %{
+      conn: conn,
+      team: team,
+      organization: organization,
+      user: user
+    } do
+      {:ok, _} = Organizations.set_user_role(team.organization_id, user.id, :admin)
+      email = "member-role@example.com"
+
+      conn =
+        post(
+          conn,
+          Routes.organization_team_path(conn, :invite_user, team.organization_id, team.id),
+          %{
+            "team_id" => "#{team.id}",
+            "organization_id" => "#{organization.id}",
+            "email" => email,
+            "role" => "member"
+          }
+        )
+
+      assert conn.status == 201
+
+      invitation = Teams.get_invitation_by_email(email)
+      assert invitation
+      assert invitation.role == :member
+    end
+
     test "returns error if user is already a member", %{
       conn: conn,
       team: team,
       user: user
     } do
       # Add the user to the team
-      {:ok, _} = Teams.add_user_to_team(team.id, user.id, "regular")
+      {:ok, _} = Teams.add_user_to_team(team.id, user.id, "member")
 
       {:ok, _} = Organizations.set_user_role(team.organization_id, user.id, :admin)
 
@@ -515,7 +543,7 @@ defmodule CastmillWeb.TeamControllerTest do
       assert conn.status == 403
 
       # Try again with a user who is a member of the organization
-      Organizations.add_user(organization.id, user.id, :regular)
+      Organizations.add_user(organization.id, user.id, :member)
 
       conn =
         get(
@@ -576,7 +604,7 @@ defmodule CastmillWeb.TeamControllerTest do
   describe "remove_member/2" do
     test "removes a member from the team", %{conn: conn, team: team, user: user} do
       user2 = user_fixture()
-      Teams.add_user_to_team(team.id, user2.id, "regular")
+      Teams.add_user_to_team(team.id, user2.id, "member")
 
       {:ok, _} = Organizations.set_user_role(team.organization_id, user.id, :admin)
 
@@ -594,6 +622,82 @@ defmodule CastmillWeb.TeamControllerTest do
 
       assert conn.status == 200
       refute Teams.user_in_team?(team.id, user2.email)
+    end
+
+    test "allows a member to remove themselves", %{team: team, organization: organization} do
+      member_user = user_fixture()
+      {:ok, _} = Organizations.set_user_role(organization.id, member_user.id, :member)
+      {:ok, _} = Teams.add_user_to_team(team.id, member_user.id, "member")
+
+      member_token =
+        access_token_fixture(%{
+          user_id: member_user.id,
+          secret: "member:self",
+          is_root: false
+        })
+
+      member_conn =
+        build_conn()
+        |> Map.put(:endpoint, CastmillWeb.Endpoint)
+        |> put_req_header("accept", "application/json")
+        |> put_req_header("authorization", "Bearer #{member_token.secret}")
+
+      conn =
+        delete(
+          member_conn,
+          Routes.organization_team_path(
+            member_conn,
+            :remove_member,
+            team.organization_id,
+            team.id,
+            member_user.id
+          )
+        )
+
+      assert conn.status == 200
+      refute Teams.user_in_team?(team.id, member_user.email)
+    end
+
+    test "prevents a member from removing another member", %{
+      team: team,
+      organization: organization
+    } do
+      acting_member = user_fixture()
+      target_member = user_fixture()
+
+      {:ok, _} = Organizations.set_user_role(organization.id, acting_member.id, :member)
+      {:ok, _} = Organizations.set_user_role(organization.id, target_member.id, :member)
+
+      {:ok, _} = Teams.add_user_to_team(team.id, acting_member.id, "member")
+      {:ok, _} = Teams.add_user_to_team(team.id, target_member.id, "member")
+
+      acting_token =
+        access_token_fixture(%{
+          user_id: acting_member.id,
+          secret: "member:acting",
+          is_root: false
+        })
+
+      acting_conn =
+        build_conn()
+        |> Map.put(:endpoint, CastmillWeb.Endpoint)
+        |> put_req_header("accept", "application/json")
+        |> put_req_header("authorization", "Bearer #{acting_token.secret}")
+
+      conn =
+        delete(
+          acting_conn,
+          Routes.organization_team_path(
+            acting_conn,
+            :remove_member,
+            team.organization_id,
+            team.id,
+            target_member.id
+          )
+        )
+
+      assert conn.status == 403
+      assert Teams.user_in_team?(team.id, target_member.email)
     end
   end
 

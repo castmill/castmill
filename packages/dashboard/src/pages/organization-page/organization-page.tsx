@@ -4,6 +4,7 @@ import { Component, createEffect, createSignal, Show } from 'solid-js';
 import { Button, FormItem, TabItem, Tabs, useToast } from '@castmill/ui-common';
 import { OrganizationMembersView } from './organization-members-view';
 import { store, setStore } from '../../store';
+import { usePermissions } from '../../hooks/usePermissions';
 import { BsCheckLg } from 'solid-icons/bs';
 
 import style from './organization-page.module.scss';
@@ -14,6 +15,7 @@ import { useI18n } from '../../i18n';
 const OrganizationPage: Component = () => {
   const params = useSearchParams();
   const { t } = useI18n();
+  const { canPerformAction } = usePermissions();
   const toast = useToast();
 
   const [name, setName] = createSignal(store.organizations.selectedName!);
@@ -23,6 +25,9 @@ const OrganizationPage: Component = () => {
 
   const [isFormModified, setIsFormModified] = createSignal(false);
   const [errors, setErrors] = createSignal(new Map());
+
+  // Check if user can update organization settings
+  const canEdit = () => canPerformAction('organizations', 'update');
 
   const validateField = (fieldId: string, value: string) => {
     let error = '';
@@ -58,7 +63,9 @@ const OrganizationPage: Component = () => {
   });
 
   const isFormValid = () => {
-    return ![...errors().values()].some((e) => e) && isFormModified();
+    return (
+      ![...errors().values()].some((e) => e) && isFormModified() && canEdit()
+    );
   };
 
   const onSubmit = async (organization: { id: string; name: string }) => {
@@ -116,17 +123,22 @@ const OrganizationPage: Component = () => {
         </Show>
       ),
     },
-    {
-      title: t('organization.invitations'),
-      content: () => (
-        <Show when={store.organizations.selectedId}>
-          <OrganizationInvitationsView
-            organizationId={store.organizations.selectedId!}
-            onRemove={() => {}}
-          />
-        </Show>
-      ),
-    },
+    // Only show Invitations tab if user can invite members
+    ...(canPerformAction('organizations', 'create')
+      ? [
+          {
+            title: t('organization.invitations'),
+            content: () => (
+              <Show when={store.organizations.selectedId}>
+                <OrganizationInvitationsView
+                  organizationId={store.organizations.selectedId!}
+                  onRemove={() => {}}
+                />
+              </Show>
+            ),
+          },
+        ]
+      : []),
   ];
 
   return (
@@ -152,6 +164,7 @@ const OrganizationPage: Component = () => {
               id="name"
               value={name()!}
               placeholder={t('organization.placeholderName')}
+              disabled={!canEdit()}
               onInput={(value: string | number | boolean) => {
                 const strValue = value as string;
                 setName(strValue);

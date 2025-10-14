@@ -6,8 +6,13 @@ import styles from './channel-add-form.module.scss';
 import { timeZones } from './timezones';
 
 export const ChannelAddForm: Component<{
-  onSubmit: (name: string, timezone: string) => Promise<void>;
+  onSubmit: (
+    name: string,
+    timezone: string,
+    teamId?: number | null
+  ) => Promise<void>;
   onClose: () => void;
+  teamId?: number | null;
 }> = (props) => {
   const { t } = useI18n();
   const [name, setName] = createSignal('');
@@ -38,7 +43,7 @@ export const ChannelAddForm: Component<{
       onSubmit={async (e) => {
         e.preventDefault();
         if (isFormValid()) {
-          await props.onSubmit(name(), currentTimezone());
+          await props.onSubmit(name(), currentTimezone(), props.teamId);
           setIsFormModified(false);
         }
       }}
@@ -63,6 +68,9 @@ export const ChannelAddForm: Component<{
           items={timeZones.map((tz) => ({ name: tz, value: tz }))}
           defaultValue={currentTimezone()}
           onSelectChange={(value) => {
+            if (!value) {
+              return;
+            }
             setCurrentTimezone(value);
           }}
         ></Dropdown>

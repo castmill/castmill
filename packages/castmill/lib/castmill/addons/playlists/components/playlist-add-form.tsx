@@ -5,7 +5,8 @@ type TranslateFn = (key: string, params?: Record<string, any>) => string;
 
 export const PlaylistAddForm: Component<{
   t: TranslateFn;
-  onSubmit: (name: string) => Promise<void>;
+  onSubmit: (name: string, teamId?: number | null) => Promise<void>;
+  teamId?: number | null;
 }> = (props) => {
   const [name, setName] = createSignal('');
   const [errors, setErrors] = createSignal(new Map<string, string>());
@@ -32,7 +33,7 @@ export const PlaylistAddForm: Component<{
       onSubmit={async (e) => {
         e.preventDefault();
         if (isFormValid()) {
-          await props.onSubmit(name());
+          await props.onSubmit(name(), props.teamId);
           setIsFormModified(false);
         }
       }}

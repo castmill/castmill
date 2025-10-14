@@ -17,7 +17,7 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
     user = user_fixture(%{organization_id: organization.id})
 
     team = team_fixture(%{organization_id: organization.id})
-    {:ok, _result} = Teams.add_user_to_team(team.id, user.id, :regular)
+    {:ok, _result} = Teams.add_user_to_team(team.id, user.id, :member)
 
     access_token =
       access_token_fixture(%{secret: "testuser:testpass", user_id: user.id, is_root: true})

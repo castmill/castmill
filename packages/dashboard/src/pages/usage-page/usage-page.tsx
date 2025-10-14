@@ -1,6 +1,13 @@
 import styles from './usage-page.module.scss';
 
-import { Component, createSignal, For, onMount, Show } from 'solid-js';
+import {
+  Component,
+  createEffect,
+  createSignal,
+  For,
+  onMount,
+  Show,
+} from 'solid-js';
 import { UsageService } from '../../services/usage';
 import { store } from '../../store/store';
 import { Usage } from '../../interfaces/usage';
@@ -53,7 +60,7 @@ const UsagePage: Component = () => {
   const { t } = useI18n();
   const toast = useToast();
 
-  onMount(async () => {
+  const loadUsageData = async () => {
     const organizationId = store.organizations.selectedId;
     if (organizationId) {
       try {
@@ -65,6 +72,18 @@ const UsagePage: Component = () => {
       } finally {
         setLoading(false);
       }
+    }
+  };
+
+  onMount(() => {
+    loadUsageData();
+  });
+
+  // Reload data when organization changes
+  createEffect(() => {
+    const orgId = store.organizations.selectedId;
+    if (orgId) {
+      loadUsageData();
     }
   });
 

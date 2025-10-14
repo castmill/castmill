@@ -21,8 +21,10 @@ export const PlaylistView: Component<{
   organizationId: string;
   baseUrl: string;
   onChange?: (playlist: JsonPlaylist) => void;
+  t?: (key: string, params?: Record<string, any>) => string;
 }> = (props) => {
   const toast = useToast();
+  const t = props.t || ((key: string) => key);
   const [widgets, setWidgets] = createSignal<JsonWidget[]>([]);
   const [loading, setLoading] = createSignal(true);
   const [items, setItems] = createSignal<JsonPlaylistItem[]>([]);
@@ -47,6 +49,15 @@ export const PlaylistView: Component<{
       setLoading(false);
     })();
   });
+
+  const handleWidgetSearch = async (searchText: string) => {
+    const result = await PlaylistsService.getWidgets(
+      props.baseUrl,
+      props.organizationId,
+      searchText
+    );
+    setWidgets(result.data);
+  };
 
   const onEditItem = async (
     item: JsonPlaylistItem,
@@ -241,7 +252,14 @@ export const PlaylistView: Component<{
         </div>
         <div class="playlist-items-wrapper">
           <div class="widget-list">
-            <WidgetChooser widgets={widgets()} />
+            <WidgetChooser widgets={widgets()} onSearch={handleWidgetSearch} />
+          </div>
+          <div class="drag-indicator">
+            <div class="arrow-container">
+              <div class="arrow-line"></div>
+              <div class="arrow-head"></div>
+            </div>
+            <span class="drag-hint">{t('playlists.dragToAdd')}</span>
           </div>
           <PlaylistItems
             store={props.store}

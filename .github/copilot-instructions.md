@@ -1,6 +1,53 @@
 # Castmill Digital Signage Platform - Copilot Instructions
 
-You are working with the Castmill Digital Signage Platform, a comprehensive monorepo containing multiple TypeScript/JavaScript packages, an Elixir/Phoenix backend, and various platform-specific implementations serving enterprise customers.
+You are working with the Castmill Digital Signage Platform, a comprehensive mon## 🎯 Focus Areas
+
+When providing assistance, prioritize:
+
+1. **Code correctness** - Ensure TypeScript compliance and proper error handling
+2. **Test coverage** - Write comprehensive tests with >90% coverage target
+3. **Internationalization** - Always localize user-facing text using the i18n system
+4. **URL-based routing** - Maintain organization context in URLs for proper state management
+5. **Architecture consistency** - Maintain existing patterns and structures
+6. **Performance** - Consider build times, bundle sizes, and runtime efficiency
+7. **User experience** - Prioritize accessibility and professional UI/UX
+8. **Maintainability** - Write clear, documented, testable code
+9. **Documentation currency** - Keep `agents/` docs updated with architectural changes
+
+## 🔀 URL-Based Routing & Organization Switching
+
+**CRITICAL**: The Dashboard uses URL-based routing with organization context embedded in URLs.
+
+### Key Patterns
+
+**URL Structure**: `/org/:orgId/path`
+- Example: `/org/abc-123/teams`, `/org/abc-123/content/playlists`
+
+**Navigation Requirements**:
+```typescript
+// ✅ Always include organization ID
+navigate(`/org/${store.organizations.selectedId}/teams`);
+
+// ❌ Never navigate without org context
+navigate('/teams'); // WRONG!
+```
+
+**Addon Component Remounting**:
+- SolidJS Router doesn't remount on param changes
+- Use `Show` with `keyed` to force remount when org changes:
+  ```tsx
+  <Show when={params.orgId} keyed>
+    {(orgId) => <AddonComponent key={orgId} />}
+  </Show>
+  ```
+
+**Store Updates**:
+- Use `setStore()` for all store mutations
+- Never mutate store directly: `store.x = y` ❌
+
+See `AGENTS.md` "URL-Based Routing & Organization Switching" section for complete details.
+
+## 📋 Quality Standardsng multiple TypeScript/JavaScript packages, an Elixir/Phoenix backend, and various platform-specific implementations serving enterprise customers.
 
 ## 🏗️ Project Architecture
 
@@ -47,6 +94,7 @@ agents/
 - **Linting**: Follow existing ESLint/Prettier configurations
 - **Architecture**: Maintain consistency with existing patterns
 - **Commit Messages**: Follow conventional commits standard (e.g., `feat:`, `fix:`, `docs:`, `refactor:`)
+- **CSS Units**: Use `em` units instead of `px` for spacing, margins, and padding (improves scalability and accessibility)
 
 ### Key Technologies
 - **Frontend**: React 18, TypeScript, Vite, Tailwind CSS

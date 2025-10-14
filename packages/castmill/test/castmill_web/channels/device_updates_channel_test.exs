@@ -45,7 +45,7 @@ defmodule CastmillWeb.DeviceUpdatesChannelTest do
       device: device,
       organization: organization
     } do
-      Organizations.update_role(organization.id, user.id, :regular)
+      Organizations.update_role(organization.id, user.id, :member)
       Organizations.give_access(organization.id, user.id, "devices", "read")
 
       # Join the channel
@@ -62,7 +62,7 @@ defmodule CastmillWeb.DeviceUpdatesChannelTest do
     } do
       # device_id = "unauthorized_device_id"
 
-      Organizations.update_role(organization.id, user.id, :regular)
+      Organizations.update_role(organization.id, user.id, :member)
 
       # Attempt to join the channel
       assert {:error, %{reason: "unauthorized"}} ==

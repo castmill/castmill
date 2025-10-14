@@ -6,7 +6,9 @@ defmodule Castmill.Teams.TeamsUsers do
   @primary_key false
 
   schema "teams_users" do
-    field :role, Ecto.Enum, values: [:regular, :admin]
+    # Team roles: :admin (team manager), :manager (delegated manager),
+    # :member (standard member), :installer (temporary device registration)
+    field :role, Ecto.Enum, values: [:admin, :manager, :member, :installer]
 
     belongs_to :team, Castmill.Teams.Team, foreign_key: :team_id, primary_key: true
 
@@ -24,6 +26,8 @@ defmodule Castmill.Teams.TeamsUsers do
     |> cast(attrs, [:team_id, :user_id, :role])
     |> validate_required([:team_id, :user_id, :role])
     |> unique_constraint([:team_id, :user_id], name: :teams_users_pkey)
+    |> foreign_key_constraint(:user_id, name: :teams_users_user_id_fkey)
+    |> foreign_key_constraint(:team_id, name: :teams_users_team_id_fkey)
   end
 
   @doc """

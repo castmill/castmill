@@ -76,7 +76,10 @@ defmodule CastmillWeb.Live.Admin.TeamForm do
 
   # Create a team within an organization
   defp save(socket, :new, params) do
-    case Teams.create_team(Map.merge(params, %{"organization_id" => socket.assigns.resource.id})) do
+    create_attrs = Map.merge(params, %{"organization_id" => socket.assigns.resource.id})
+    creator = Map.get(socket.assigns, :current_user)
+
+    case Teams.create_team(create_attrs, creator) do
       {:ok, resource} ->
         notify_parent({:created, resource})
 
