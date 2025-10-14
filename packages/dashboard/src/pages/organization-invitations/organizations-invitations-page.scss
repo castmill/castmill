@@ -1,0 +1,295 @@
+@use '../../colors.scss';
+
+.castmill-invitation {
+  position: fixed; // Changed from relative to fixed
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  background: colors.$background; // Use app's dark background
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: auto; // Allow scrolling if content is too tall
+
+  .invitation-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+    width: 100%;
+  }
+
+  .invitation-box {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+    color: colors.$base-color;
+    background: colors.$component-background-color; // Dark mode card
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    text-align: center;
+    width: 28rem;
+    max-width: 90vw;
+
+    h2 {
+      margin-bottom: 10px;
+      font-size: 24px;
+      color: colors.$base-color;
+    }
+
+    p {
+      color: colors.$component-color;
+      margin: 10px 0;
+    }
+  }
+
+  .email-box {
+    background: #585d67;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 0 0 1em 0;
+    width: 90%;
+    text-align: left;
+
+    label {
+      font-size: 14px;
+      font-weight: 500;
+      color: #bcc7dc; // Lighter color for better contrast
+      margin-bottom: 6px; // Reduced margin
+      display: block;
+    }
+
+    .flex {
+      display: flex;
+      align-items: center; // Vertically center the content
+    }
+
+    span {
+      font-weight: 500;
+      color: colors.$base-color;
+    }
+  }
+
+  .alert-box {
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 20px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+
+    svg {
+      flex-shrink: 0;
+    }
+
+    p {
+      margin: 0;
+      font-weight: 500;
+    }
+
+    &.alert-error {
+      background: rgba(220, 38, 38, 0.15);
+      border: 1px solid rgba(220, 38, 38, 0.3);
+      color: #fca5a5;
+    }
+
+    &.alert-warning {
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      color: #fcd34d;
+    }
+  }
+
+  .invitation-button {
+    width: 100%;
+    padding: 12px 24px;
+    margin-top: 10px;
+    cursor: pointer;
+    border-radius: 8px;
+    border: none;
+    background-color: colors.$highlight-color; // Use app's highlight color
+    color: colors.$base-color;
+    font-size: 16px;
+    font-weight: 600;
+    transition: all 0.2s ease-in-out;
+
+    &:hover {
+      background-color: lighten(colors.$highlight-color, 10%);
+      transform: translateY(-2px);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+
+    &:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(87, 146, 238, 0.3);
+    }
+
+    &:disabled {
+      background-color: #4a4a4a;
+      color: #888;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+  }
+
+  .text-center {
+    text-align: center;
+  }
+
+  .flex {
+    display: flex;
+  }
+
+  .items-center {
+    align-items: center;
+  }
+
+  .justify-center {
+    justify-content: center;
+  }
+
+  .gap-2 {
+    gap: 0.5rem;
+  }
+
+  .mb-2 {
+    margin-bottom: 0.5rem;
+  }
+
+  .mb-4 {
+    margin-bottom: 1rem;
+  }
+
+  .mb-6 {
+    margin-bottom: 1.5rem;
+  }
+
+  .w-5 {
+    width: 1.25rem;
+  }
+
+  .h-5 {
+    height: 1.25rem;
+  }
+
+  .w-8 {
+    width: 2rem;
+  }
+
+  .h-8 {
+    height: 2rem;
+  }
+
+  .w-12 {
+    width: 3rem;
+  }
+
+  .h-12 {
+    height: 3rem;
+  }
+
+  .w-16 {
+    width: 4rem;
+  }
+
+  .h-16 {
+    height: 4rem;
+  }
+
+  .rounded-full {
+    border-radius: 9999px;
+  }
+
+  .bg-indigo-100 {
+    background-color: colors.$highlight-background-color;
+  }
+
+  .bg-red-100 {
+    background-color: rgba(220, 38, 38, 0.15);
+  }
+
+  .text-indigo-600 {
+    color: colors.$highlight-color;
+  }
+
+  .text-red-600 {
+    color: #fca5a5;
+  }
+
+  .text-gray-400 {
+    color: #bcc7dc; // Lighter color for better readability
+  }
+
+  .text-gray-600 {
+    color: colors.$component-color;
+  }
+
+  .text-gray-700 {
+    color: colors.$component-color;
+  }
+
+  .text-gray-800 {
+    color: colors.$base-color;
+  }
+
+  .font-medium {
+    font-weight: 500;
+  }
+
+  .font-semibold {
+    font-weight: 600;
+  }
+
+  .font-bold {
+    font-weight: 700;
+  }
+
+  .text-sm {
+    font-size: 0.875rem;
+  }
+
+  .text-xl {
+    font-size: 1.25rem;
+  }
+
+  .text-2xl {
+    font-size: 1.5rem;
+  }
+
+  .mx-auto {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .animate-spin {
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  .border-b-2 {
+    border-bottom-width: 2px;
+  }
+
+  .border-indigo-600 {
+    border-color: #4f46e5;
+  }
+}

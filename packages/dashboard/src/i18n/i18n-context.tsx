@@ -87,9 +87,21 @@ function getInitialLocale(): Locale {
   }
 
   // Try to detect from browser
-  const browserLang = navigator.language.split('-')[0];
-  if (SUPPORTED_LOCALES.some((l) => l.code === browserLang)) {
-    return browserLang as Locale;
+  if (typeof navigator !== 'undefined') {
+    const preferredLanguages =
+      (navigator.languages && navigator.languages.length > 0
+        ? navigator.languages
+        : [navigator.language]) ?? [];
+
+    const browserLang = preferredLanguages
+      .map((lang) =>
+        typeof lang === 'string' ? lang.split('-')[0] : undefined
+      )
+      .find((lang): lang is string => Boolean(lang));
+
+    if (browserLang && SUPPORTED_LOCALES.some((l) => l.code === browserLang)) {
+      return browserLang as Locale;
+    }
   }
 
   return DEFAULT_LOCALE;

@@ -1,5 +1,5 @@
 import { JsonMedia } from '@castmill/player';
-import { SortOptions } from '@castmill/ui-common';
+import { SortOptions, HttpError } from '@castmill/ui-common';
 
 export interface FetchMediasOptions {
   page: number;
@@ -7,6 +7,7 @@ export interface FetchMediasOptions {
   sortOptions: SortOptions;
   search?: string;
   filters?: Record<string, string | boolean>;
+  team_id?: number | null;
 }
 type HandleResponseOptions = {
   parse?: boolean;
@@ -41,7 +42,8 @@ async function handleResponse<T = any>(
     } catch (error) {
       errMsg = `${response.statusText}`;
     }
-    throw new Error(errMsg);
+    // Throw HttpError with status code for better error handling
+    throw new HttpError(errMsg, response.status);
   }
 }
 
@@ -75,7 +77,7 @@ export const MediasService = {
   async fetchMedias(
     baseUrl: string,
     organizationId: string,
-    { page, page_size, sortOptions, search, filters }: FetchMediasOptions
+    { page, page_size, sortOptions, search, filters, team_id }: FetchMediasOptions
   ) {
     const filtersToString = (filters: Record<string, string | boolean>) => {
       return Object.entries(filters)
@@ -97,6 +99,10 @@ export const MediasService = {
 
     if (filters) {
       query['filters'] = filtersToString(filters);
+    }
+
+    if (team_id !== undefined && team_id !== null) {
+      query['team_id'] = team_id.toString();
     }
 
     const queryString = new URLSearchParams(query).toString();

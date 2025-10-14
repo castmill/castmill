@@ -1,3 +1,5 @@
+import { HttpError } from '@castmill/ui-common';
+
 export interface ResourceQuota {
   used: number;
   total: number;
@@ -16,6 +18,7 @@ export interface QuotaUsage {
 
 export type ResourceType = keyof QuotaUsage;
 
+// Custom error class to include HTTP status code
 export class QuotasService {
   constructor(private baseUrl: string) {}
 
@@ -37,7 +40,14 @@ export class QuotasService {
     if (response.status === 200) {
       return (await response.json()) as QuotaUsage;
     } else {
-      throw new Error('Failed to fetch quota usage data');
+      let errMsg = '';
+      try {
+        const { errors } = await response.json();
+        errMsg = `${errors.detail || response.statusText}`;
+      } catch (error) {
+        errMsg = `${response.statusText}`;
+      }
+      throw new HttpError(errMsg, response.status);
     }
   }
 

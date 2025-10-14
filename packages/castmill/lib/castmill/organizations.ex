@@ -10,6 +10,7 @@ defmodule Castmill.Organizations do
   alias Castmill.Organizations.OrganizationsUsersAccess
   alias Castmill.Organizations.OrganizationsUsers
   alias Castmill.Organizations.OrganizationsInvitation
+  alias Castmill.Organizations.ResourceSharing
   alias Castmill.Protocol.Access
   alias Castmill.QueryHelpers
   alias Castmill.Mailer
@@ -269,10 +270,35 @@ defmodule Castmill.Organizations do
     role == :admin
   end
 
+  def is_manager?(organization_id, user_id) do
+    role = get_user_role(organization_id, user_id)
+    role == :manager
+  end
+
   def has_any_role?(organization_id, user_id, roles) do
     role = get_user_role(organization_id, user_id)
-    Enum.member?(roles, role)
+
+    roles
+    |> Enum.map(&normalize_role_input/1)
+    |> Enum.member?(role)
   end
+
+  defp normalize_role_input(nil), do: nil
+
+  defp normalize_role_input(role) when is_binary(role) do
+    case role do
+      "admin" -> :admin
+      "manager" -> :manager
+      "member" -> :member
+      "editor" -> :editor
+      "publisher" -> :publisher
+      "device_manager" -> :device_manager
+      "guest" -> :guest
+      _ -> role
+    end
+  end
+
+  defp normalize_role_input(role), do: role
 
   @doc """
     Gives access for a given resource type and action
@@ -306,28 +332,76 @@ defmodule Castmill.Organizations do
     organization or in any of its parents organizations hierarchy
   """
   def has_access(organization_id, user_id, resource_type, action) do
-    if is_admin?(organization_id, user_id) do
-      true
+    # Get user's role in the organization
+    role = get_user_role(organization_id, user_id)
+
+    # Convert string resource_type to atom for permission matrix
+    resource_atom =
+      case resource_type do
+        "playlists" -> :playlists
+        "medias" -> :medias
+        "channels" -> :channels
+        "devices" -> :devices
+        "teams" -> :teams
+        "widgets" -> :widgets
+        _ -> nil
+      end
+
+    # Convert action to atom safely and map controller actions to permission matrix actions
+    action_atom =
+      case action do
+        # Map controller index action to list permission
+        :index -> :list
+        :show -> :show
+        :create -> :create
+        :update -> :update
+        :delete -> :delete
+        "index" -> :list
+        "show" -> :show
+        "create" -> :create
+        "update" -> :update
+        "delete" -> :delete
+        # Keep other atoms as-is
+        a when is_atom(a) -> a
+        _ -> :unknown
+      end
+
+    # First check the new permission matrix if we have a valid role, resource, and recognized action
+    if role != nil and resource_atom != nil and action_atom != :unknown do
+      # Use the new centralized permission matrix
+      Castmill.Authorization.Permissions.can?(role, resource_atom, action_atom)
     else
-      query =
-        from(oua in OrganizationsUsersAccess,
-          join: o in Organization,
-          on: oua.organization_id == o.id,
-          where:
-            oua.user_id == ^user_id and oua.access == ^"#{resource_type}:#{action}" and
-              (o.id == ^organization_id or o.organization_id == ^organization_id),
-          select: oua
-        )
+      # Fallback to old behavior for legacy resources or explicit database permissions
+      cond do
+        is_admin?(organization_id, user_id) ->
+          true
 
-      if is_nil(Repo.one(query)) do
-        # Check if parent organization has access recursively
-        organization = Repo.get!(Organization, organization_id)
+        resource_type == "teams" and action == :create and is_manager?(organization_id, user_id) ->
+          true
 
-        if organization.organization_id != nil do
-          has_access(organization.organization_id, user_id, resource_type, action)
-        end
-      else
-        true
+        true ->
+          query =
+            from(oua in OrganizationsUsersAccess,
+              join: o in Organization,
+              on: oua.organization_id == o.id,
+              where:
+                oua.user_id == ^user_id and oua.access == ^"#{resource_type}:#{action}" and
+                  (o.id == ^organization_id or o.organization_id == ^organization_id),
+              select: oua
+            )
+
+          if is_nil(Repo.one(query)) do
+            # Check if parent organization has access recursively
+            organization = Repo.get!(Organization, organization_id)
+
+            if organization.organization_id != nil do
+              has_access(organization.organization_id, user_id, resource_type, action)
+            else
+              false
+            end
+          else
+            true
+          end
       end
     end
   end
@@ -379,6 +453,7 @@ defmodule Castmill.Organizations do
       |> Ecto.Query.limit(^page_size)
       |> Ecto.Query.offset(^offset)
       |> select([organizations_users: ou, user: u], %{
+        user_id: ou.user_id,
         role: ou.role,
         inserted_at: ou.inserted_at,
         user: %{
@@ -412,10 +487,69 @@ defmodule Castmill.Organizations do
       where: ilike(u.name, ^"%#{search}%")
   end
 
+  def create_organizations_user(attrs) when is_map(attrs) do
+    organization_id = Map.get(attrs, :organization_id) || Map.get(attrs, "organization_id")
+    user_id = Map.get(attrs, :user_id) || Map.get(attrs, "user_id")
+    role = Map.get(attrs, :role) || Map.get(attrs, "role")
+
+    role = normalize_role_value(role, :member)
+
+    add_user(organization_id, user_id, role)
+  end
+
+  def get_organizations_user(organization_id, user_id) do
+    Repo.get_by(OrganizationsUsers, organization_id: organization_id, user_id: user_id)
+  end
+
+  def create_organizations_invitation(attrs) when is_map(attrs) do
+    organization_id = Map.get(attrs, :organization_id) || Map.get(attrs, "organization_id")
+    email = Map.get(attrs, :email) || Map.get(attrs, "email")
+    role = Map.get(attrs, :role) || Map.get(attrs, "role")
+    expires_at = Map.get(attrs, :expires_at) || Map.get(attrs, "expires_at")
+    status = Map.get(attrs, :status) || Map.get(attrs, "status")
+    token = Map.get(attrs, :token) || Map.get(attrs, "token")
+
+    desired_expires_at =
+      case expires_at do
+        %DateTime{} = dt ->
+          if DateTime.compare(dt, DateTime.utc_now()) == :lt do
+            nil
+          else
+            dt
+          end
+
+        other ->
+          other
+      end
+
+    params =
+      %{
+        organization_id: organization_id,
+        email: email,
+        role: normalize_role_value(role, :member),
+        token: token || generate_invitation_token(),
+        expires_at: desired_expires_at,
+        status: status
+      }
+      |> Enum.reject(fn {_key, value} -> is_nil(value) end)
+      |> Map.new()
+
+    %OrganizationsInvitation{}
+    |> OrganizationsInvitation.changeset(params)
+    |> Repo.insert()
+    |> case do
+      {:ok, invitation} ->
+        updated_invitation = maybe_override_invitation_expiration(invitation, expires_at)
+        {:ok, updated_invitation}
+
+      error ->
+        error
+    end
+  end
+
   def invite_user(organization_id, email, role) do
-    token =
-      :crypto.strong_rand_bytes(16)
-      |> Base.url_encode64(padding: false)
+    token = generate_invitation_token()
+    normalized_role = normalize_role_value(role, :member)
 
     Ecto.Multi.new()
     # 1) Check if the user is already in the organization
@@ -448,7 +582,7 @@ defmodule Castmill.Organizations do
         organization_id: organization_id,
         email: email,
         token: token,
-        role: role
+        role: normalized_role
         # status defaults to "invited", unless you override it
       })
     end)
@@ -591,17 +725,26 @@ defmodule Castmill.Organizations do
         {:error, "Invalid token"}
 
       invitation ->
-        case add_user(invitation.organization_id, user_id, invitation.role) do
-          {:ok, _} ->
-            from(i in OrganizationsInvitation,
-              where: i.token == ^token
-            )
-            |> Repo.update_all(set: [status: "accepted"])
+        cond do
+          OrganizationsInvitation.expired?(invitation) ->
+            {:error, :expired}
 
-            {:ok, invitation}
+          invitation.status != "invited" ->
+            {:error, :invalid_status}
 
-          {:error, changeset} ->
-            {:error, changeset}
+          true ->
+            case add_user(invitation.organization_id, user_id, invitation.role) do
+              {:ok, _} ->
+                from(i in OrganizationsInvitation,
+                  where: i.token == ^token
+                )
+                |> Repo.update_all(set: [status: "accepted"])
+
+                {:ok, invitation}
+
+              {:error, changeset} ->
+                {:error, changeset}
+            end
         end
     end
   end
@@ -821,16 +964,26 @@ defmodule Castmill.Organizations do
     Remove a user from an organization.
   """
   def remove_user(organization_id, user_id) do
-    case Castmill.Repo.delete_all(
-           from(ou in Castmill.Organizations.OrganizationsUsers,
-             where: ou.organization_id == ^organization_id and ou.user_id == ^user_id
-           )
-         ) do
-      {1, nil} ->
-        {:ok, "User successfully removed."}
-
-      _ ->
+    with %OrganizationsUsers{} = org_user <-
+           Repo.get_by(OrganizationsUsers,
+             organization_id: organization_id,
+             user_id: user_id
+           ),
+         :ok <- ensure_additional_org_admins(organization_id, org_user),
+         {:ok, _} <- Repo.delete(org_user) do
+      {:ok, "User successfully removed."}
+    else
+      nil ->
         {:error, :not_found}
+
+      {:error, :last_admin} ->
+        {:error, :last_admin}
+
+      {:error, %Ecto.Changeset{} = changeset} ->
+        {:error, changeset}
+
+      {:error, other} ->
+        {:error, other}
     end
   end
 
@@ -846,6 +999,50 @@ defmodule Castmill.Organizations do
   def change_user(%User{} = user, attrs \\ %{}) do
     User.changeset(user, attrs)
   end
+
+  defp normalize_role_value(nil, default), do: default
+
+  defp normalize_role_value(role, _default) when is_atom(role), do: role
+
+  defp normalize_role_value(role, default) do
+    case normalize_role_input(role) do
+      nil -> default
+      value when is_atom(value) -> value
+      value when is_binary(value) -> string_to_role_atom(value, default)
+      _ -> default
+    end
+  end
+
+  defp generate_invitation_token do
+    :crypto.strong_rand_bytes(16)
+    |> Base.url_encode64(padding: false)
+  end
+
+  defp string_to_role_atom(value, default) do
+    try do
+      String.to_existing_atom(value)
+    rescue
+      ArgumentError ->
+        try do
+          String.to_atom(value)
+        rescue
+          ArgumentError -> default
+        end
+    end
+  end
+
+  defp maybe_override_invitation_expiration(invitation, %DateTime{} = expires_at) do
+    truncated = DateTime.truncate(expires_at, :second)
+
+    case invitation
+         |> Ecto.Changeset.change(%{expires_at: truncated})
+         |> Repo.update() do
+      {:ok, updated_invitation} -> updated_invitation
+      {:error, _changeset} -> invitation
+    end
+  end
+
+  defp maybe_override_invitation_expiration(invitation, _), do: invitation
 
   @doc """
     Subscribe to an organization.
@@ -870,5 +1067,201 @@ defmodule Castmill.Organizations do
   """
   def unsubscribe(organization_id) do
     Phoenix.PubSub.unsubscribe(Castmill.PubSub, "organization:#{organization_id}")
+  end
+
+  # ============================================================================
+  # Resource Sharing Functions (Castmill 2.0)
+  # ============================================================================
+
+  @doc """
+  Check if a user can access a specific resource, considering:
+  1. Organization-level permissions (role-based)
+  2. Visibility mode (parent/child org access)
+  3. Resource sharing (parent shared resources)
+  4. Team membership (team-scoped resources)
+
+  ## Parameters
+  - `user_id` - The user attempting access
+  - `organization_id` - The user's current organization context
+  - `resource_type` - Type: "media", "playlist", "channel", "device", "widget"
+  - `resource_id` - Specific resource ID
+  - `action` - Action to perform: :read, :update, :delete, etc.
+
+  ## Returns
+  `{:ok, true}` if access is granted, `{:ok, false}` otherwise
+  """
+  def can_access_resource?(user_id, organization_id, resource_type, resource_id, action) do
+    # First check if user has base permission for this resource type and action
+    unless has_access(organization_id, user_id, resource_type, action) do
+      {:ok, false}
+    else
+      # Get the actual resource to check its organization_id
+      resource_module =
+        case resource_type do
+          "media" -> Castmill.Resources.Media
+          "playlist" -> Castmill.Resources.Playlist
+          "channel" -> Castmill.Resources.Channel
+          "device" -> Castmill.Devices.Device
+          "widget" -> Castmill.Resources.Widget
+          _ -> nil
+        end
+
+      cond do
+        resource_module == nil ->
+          {:ok, false}
+
+        true ->
+          resource = Repo.get(resource_module, resource_id)
+
+          cond do
+            resource == nil ->
+              {:ok, false}
+
+            # Check if resource belongs to user's org
+            resource.organization_id == organization_id ->
+              {:ok, true}
+
+            # Resource belongs to different org - check visibility mode and sharing
+            true ->
+              check_cross_org_access(user_id, organization_id, resource, resource_type, action)
+          end
+      end
+    end
+  end
+
+  # Private helper for cross-organization access checking
+  defp check_cross_org_access(user_id, user_org_id, resource, resource_type, action) do
+    user_org = get_organization!(user_org_id)
+    resource_org = get_organization!(resource.organization_id)
+    user_role = get_user_role(user_org_id, user_id)
+
+    cond do
+      # Case 1: Resource is from parent org, check if shared with us
+      resource_org.id == user_org.organization_id ->
+        atom_resource_type = String.to_existing_atom(resource_type)
+
+        can_access =
+          Castmill.Authorization.VisibilityMode.can_access_parent_resource?(
+            user_org_id,
+            resource.id,
+            atom_resource_type,
+            action
+          )
+
+        {:ok, can_access}
+
+      # Case 2: Resource is from child org, check if we're admin with visibility rights
+      user_org.id == resource_org.organization_id and user_role == :admin ->
+        can_access =
+          Castmill.Authorization.VisibilityMode.can_access_child_resources?(
+            user_org_id,
+            resource.organization_id,
+            action
+          )
+
+        {:ok, can_access}
+
+      # Case 3: No relationship or insufficient permissions
+      true ->
+        {:ok, false}
+    end
+  end
+
+  @doc """
+  Share a resource with child organizations.
+
+  ## Parameters
+  - `resource_type` - Type of resource: "media", "playlist", "channel", "device", "widget"
+  - `resource_id` - ID of the specific resource
+  - `organization_id` - ID of the organization sharing the resource
+  - `opts` - Options:
+    - `:sharing_mode` - :children (default), :descendants, :network
+    - `:access_level` - :read (default), :read_write, :full
+
+  ## Examples
+
+      iex> share_resource("playlist", 123, org_id, sharing_mode: :children, access_level: :read)
+      {:ok, %ResourceSharing{}}
+  """
+  def share_resource(resource_type, resource_id, organization_id, opts \\ []) do
+    sharing_mode = Keyword.get(opts, :sharing_mode, :children)
+    access_level = Keyword.get(opts, :access_level, :read)
+
+    %ResourceSharing{}
+    |> ResourceSharing.changeset(%{
+      resource_type: resource_type,
+      resource_id: resource_id,
+      organization_id: organization_id,
+      sharing_mode: sharing_mode,
+      access_level: access_level
+    })
+    |> Repo.insert()
+  end
+
+  @doc """
+  Unshare a resource (remove from resource sharing).
+  """
+  def unshare_resource(resource_type, resource_id) do
+    case ResourceSharing.get_sharing(resource_type, resource_id) do
+      nil -> {:error, :not_shared}
+      sharing -> Repo.delete(sharing)
+    end
+  end
+
+  @doc """
+  Check if a resource is shared with child organizations.
+  """
+  def resource_shared?(resource_type, resource_id) do
+    ResourceSharing.is_shared?(resource_type, resource_id)
+  end
+
+  @doc """
+  Get all shared resources of a type for an organization.
+  Returns resource IDs that are shared by this org to its children.
+  """
+  def list_shared_resources(resource_type, organization_id) do
+    ResourceSharing.shared_resource_ids(resource_type, organization_id)
+  end
+
+  @doc """
+  Get resources accessible to a child organization from parent(s).
+  Returns map with resource_id, access_level, and parent_org_id.
+  """
+  def accessible_parent_resources(resource_type, child_org_id) do
+    ResourceSharing.accessible_from_parents(resource_type, child_org_id)
+  end
+
+  @doc """
+  Update sharing configuration for a resource.
+  """
+  def update_resource_sharing(resource_type, resource_id, attrs) do
+    case ResourceSharing.get_sharing(resource_type, resource_id) do
+      nil ->
+        {:error, :not_found}
+
+      sharing ->
+        sharing
+        |> ResourceSharing.changeset(attrs)
+        |> Repo.update()
+    end
+  end
+
+  defp ensure_additional_org_admins(_organization_id, %OrganizationsUsers{role: role})
+       when role != :admin,
+       do: :ok
+
+  defp ensure_additional_org_admins(organization_id, %OrganizationsUsers{role: :admin}) do
+    if count_org_admins(organization_id) <= 1 do
+      {:error, :last_admin}
+    else
+      :ok
+    end
+  end
+
+  defp count_org_admins(organization_id) do
+    OrganizationsUsers.base_query()
+    |> OrganizationsUsers.where_organization_id(organization_id)
+    |> where([organizations_users: ou], ou.role == :admin)
+    |> Repo.aggregate(:count, :user_id)
   end
 end

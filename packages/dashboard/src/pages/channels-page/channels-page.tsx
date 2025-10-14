@@ -5,6 +5,7 @@ import {
   onCleanup,
   onMount,
   Show,
+  on,
 } from 'solid-js';
 
 import {
@@ -17,6 +18,7 @@ import {
   Modal,
   ConfirmDialog,
   FetchDataOptions,
+  TeamFilter,
   useToast,
 } from '@castmill/ui-common';
 
@@ -32,15 +34,16 @@ import { ChannelView } from './channel-view';
 
 import { baseUrl } from '../../env';
 import { ChannelAddForm } from './channel-add-form';
-
+import { useTeamFilter } from '../../hooks';
 import { useI18n } from '../../i18n';
-
 import { QuotaIndicator } from '../../components/quota-indicator';
 import { QuotasService, ResourceQuota } from '../../services/quotas.service';
+import { usePermissions } from '../../hooks/usePermissions';
 
 const ChannelsPage: Component = () => {
-  const params = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { t } = useI18n();
+  const { canPerformAction } = usePermissions();
 
   const toast = useToast();
 
@@ -48,6 +51,12 @@ const ChannelsPage: Component = () => {
 
   const [data, setData] = createSignal<JsonChannel[]>([], {
     equals: false,
+  });
+
+  const { teams, selectedTeamId, setSelectedTeamId } = useTeamFilter({
+    baseUrl,
+    organizationId: store.organizations.selectedId!,
+    params: [searchParams, setSearchParams], // Pass URL params for shareable filtered views
   });
 
   const [showAddChannelModal, setShowAddChannelModal] = createSignal(false);
@@ -86,13 +95,21 @@ const ChannelsPage: Component = () => {
     loadQuota();
   });
 
-  createEffect(() => {
-    channelsService = new ChannelsService(
-      baseUrl,
-      store.organizations.selectedId!
-    );
-    loadQuota();
-  });
+  createEffect(
+    on(
+      () => store.organizations.selectedId,
+      (orgId, prevOrgId) => {
+        if (orgId) {
+          channelsService = new ChannelsService(baseUrl, orgId);
+          loadQuota();
+          // Only reload if organization actually changed and tableViewRef exists
+          if (prevOrgId && orgId !== prevOrgId && tableViewRef) {
+            tableViewRef.reloadData();
+          }
+        }
+      }
+    )
+  );
 
   const isQuotaReached = () => {
     const q = quota();
@@ -118,6 +135,13 @@ const ChannelsPage: Component = () => {
     {
       icon: AiOutlineDelete,
       handler: (item: ChannelTableItem) => {
+        if (!canPerformAction('channels', 'delete')) {
+          toast.error(
+            t('permissions.noDeleteChannels') ||
+              "You don't have permission to delete channels"
+          );
+          return;
+        }
         setCurrentChannel(item);
         setShowConfirmDialog(true);
       },
@@ -136,6 +160,7 @@ const ChannelsPage: Component = () => {
       sortOptions,
       search,
       filters,
+      team_id: selectedTeamId(),
     });
 
     setData(result.data);
@@ -270,6 +295,11 @@ const ChannelsPage: Component = () => {
     }
   };
 
+  const handleTeamChange = (teamId: number | null) => {
+    setSelectedTeamId(teamId);
+    refreshData();
+  };
+
   const updateItem = (itemId: number, item: JsonChannel) => {
     if (tableViewRef) {
       tableViewRef.updateItem(itemId, item);
@@ -312,11 +342,17 @@ const ChannelsPage: Component = () => {
           >
             <ChannelAddForm
               onClose={() => closeAddChannelModal()}
-              onSubmit={async (name: string, timezone: string) => {
+              teamId={selectedTeamId()}
+              onSubmit={async (
+                name: string,
+                timezone: string,
+                teamId?: number | null
+              ) => {
                 try {
                   const result = await channelsService.addChannel(
                     name,
-                    timezone
+                    timezone,
+                    teamId
                   );
 
                   setShowAddChannelModal(false);
@@ -430,7 +466,7 @@ const ChannelsPage: Component = () => {
         <TableView
           title={t('channels.title')}
           resource="channels"
-          params={params}
+          params={[searchParams, setSearchParams]}
           fetchData={fetchData}
           ref={setRef}
           toolbar={{
@@ -450,7 +486,9 @@ const ChannelsPage: Component = () => {
                   onClick={addChannel}
                   icon={BsCheckLg}
                   color="primary"
-                  disabled={isQuotaReached()}
+                  disabled={
+                    isQuotaReached() || !canPerformAction('channels', 'create')
+                  }
                   title={
                     isQuotaReached()
                       ? 'Quota limit reached for Channels. Cannot add more.'
@@ -460,7 +498,15 @@ const ChannelsPage: Component = () => {
               </div>
             ),
             actions: (
-              <div>
+              <div style="display: flex; gap: 1rem; align-items: center;">
+                <TeamFilter
+                  teams={teams()}
+                  selectedTeamId={selectedTeamId()}
+                  onTeamChange={handleTeamChange}
+                  label={t('filters.teamLabel')}
+                  placeholder={t('filters.teamPlaceholder')}
+                  clearLabel={t('filters.teamClear')}
+                />
                 <IconButton
                   onClick={() => setShowConfirmDialogMultiple(true)}
                   icon={AiOutlineDelete}

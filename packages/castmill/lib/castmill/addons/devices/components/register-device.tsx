@@ -134,3 +134,5 @@ const RegisterDevice: Component<{
     </div>
   );
 };
+
+export default RegisterDevice;

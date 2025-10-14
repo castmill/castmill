@@ -1,6 +1,7 @@
 import { createSignal, createEffect, Show } from 'solid-js';
 
 import { Button, FormItem } from '@castmill/ui-common';
+import { usePermissions } from '../../hooks/usePermissions';
 
 import { BsCheckLg, BsX } from 'solid-icons/bs';
 import { JsonTeam } from '../../interfaces/team';
@@ -16,11 +17,23 @@ export const TeamView = (props: {
   onSubmit: (teamUpdate: TeamUpdate) => Promise<JsonTeam | void>;
 }) => {
   const { t } = useI18n();
+  const { canPerformAction } = usePermissions();
   const [teamId, setTeamId] = createSignal<number | undefined>(props.team.id);
   const [name, setName] = createSignal(props.team.name);
 
   const [isFormModified, setIsFormModified] = createSignal(false);
   const [errors, setErrors] = createSignal(new Map());
+
+  // Check if user can update teams (for existing teams) or create teams (for new teams)
+  const canEdit = () => {
+    if (props.team.id) {
+      // Editing existing team requires update permission
+      return canPerformAction('teams', 'update');
+    } else {
+      // Creating new team requires create permission
+      return canPerformAction('teams', 'create');
+    }
+  };
 
   const validateField = (fieldId: string, value: string) => {
     let error = '';
@@ -47,7 +60,9 @@ export const TeamView = (props: {
   });
 
   const isFormValid = () => {
-    return ![...errors().values()].some((e) => e) && isFormModified();
+    return (
+      ![...errors().values()].some((e) => e) && isFormModified() && canEdit()
+    );
   };
 
   return (
@@ -84,6 +99,7 @@ export const TeamView = (props: {
             id="name"
             value={name()!}
             placeholder={t('teams.enterTeamName')}
+            disabled={!canEdit()}
             onInput={(value: string | number | boolean) => {
               const strValue = value as string;
               setName(strValue);
@@ -107,14 +123,15 @@ export const TeamView = (props: {
 
         <div class={styles['actions']}>
           <Button
-            label={props.team.id ? 'Update' : 'Create'}
+            label={props.team.id ? t('common.update') : t('common.create')}
             type="submit"
             disabled={!isFormValid()}
             icon={BsCheckLg}
             color="success"
           />
           <Button
-            label="Reset"
+            label={t('common.reset')}
+            disabled={!canEdit()}
             onClick={() => {
               setName(props.team.name);
               setIsFormModified(false);

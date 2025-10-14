@@ -39,7 +39,7 @@ agents/
 - **[SOCIAL-CARDS.md](./packages/website/SOCIAL-CARDS.md)** - Dynamic social media cards system with automated generation
 
 #### Castmill Backend (`packages/castmill/`)
-- *Coming soon: API architecture, database schema, real-time systems*
+- **[RBAC.md](./packages/castmill/RBAC.md)** - Backend permission matrix, roles, and controller flow
 
 #### Player Systems (`packages/player/`)
 - *Coming soon: Player architecture, widget systems, platform integrations*
