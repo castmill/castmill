@@ -138,9 +138,14 @@ export const NotificationDialog: Component<NotificationDialogProps> = (props) =>
       case 'device_removal':
         return '🗑️';
       case 'media_transcoded':
+      case 'media_uploaded':
         return '🎬';
       case 'invitation_accepted':
         return '✅';
+      case 'device_offline_alert':
+        return '⚠️';
+      case 'device_online_alert':
+        return '🟢';
       default:
         return '🔔';
     }

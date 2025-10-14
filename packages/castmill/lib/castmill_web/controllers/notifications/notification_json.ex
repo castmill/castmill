@@ -27,6 +27,7 @@ defmodule CastmillWeb.NotificationJSON do
       type: notification.type,
       read: notification.read,
       metadata: notification.metadata,
+      roles: notification.roles || [],
       inserted_at: notification.inserted_at,
       updated_at: notification.updated_at
     }
