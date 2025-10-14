@@ -7,6 +7,8 @@ import { JsonPlaylist } from '@castmill/player';
 import { PlaylistUpdate } from '../services/playlists.service';
 import { AddonStore } from '../../common/interfaces/addon-store';
 
+import './playlist-details.scss';
+
 export const PlaylistDetails = (props: {
   playlist: JsonPlaylist;
   store?: AddonStore;
@@ -49,12 +51,12 @@ export const PlaylistDetails = (props: {
   };
 
   return (
-    <>
+    <div class="playlist-details">
       <div class="info">
-        <span>Added on </span>{' '}
+        {t('common.addedOn')}{' '}
         <Timestamp value={props.playlist.inserted_at} mode="relative" />.{' '}
-        <span>Last updated on </span>
-        <Timestamp value={props.playlist.updated_at} mode="relative" />
+        {t('common.lastUpdatedOn')}{' '}
+        <Timestamp value={props.playlist.updated_at} mode="relative" />.
       </div>
       <form
         onSubmit={async (e) => {
@@ -100,6 +102,6 @@ export const PlaylistDetails = (props: {
           />
         </div>
       </form>
-    </>
+    </div>
   );
 };
