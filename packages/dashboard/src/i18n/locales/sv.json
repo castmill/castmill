@@ -39,6 +39,8 @@
     "loadingAddons": "Laddar tillägg...",
     "notFound": "404 Hittades inte",
     "pageNotFound": "Tyvärr, sidan du letar efter finns inte.",
+    "requestedPath": "Begärd sökväg",
+    "goToDashboard": "Gå till instrumentpanelen",
     "copyright": "© 2011-2025 Castmill™",
     "invitedEmail": "Inbjuden e-post:",
     "acceptInvitation": "Acceptera inbjudan",
@@ -69,6 +71,7 @@
     "maintainance": "Underhåll",
     "events": "Händelser",
     "telemetry": "Telemetri",
+    "youIndicator": "(du)",
     "addonLoadingError": "Fel vid laddning av tillägg",
     "addonError": "Tilläggsfel",
     "backToLogin": "Tillbaka till inloggning"
@@ -162,7 +165,10 @@
   },
   "teams": {
     "title": "Team",
-    "members": "Medlemmar",
+    "members": {
+      "selectUser": "Välj användare",
+      "searchUser": "Sök efter en användare..."
+    },
     "invitations": "Inbjudningar",
     "invitationAcceptSuccess": "Inbjudan accepterad framgångsrikt",
     "invitationDeleteSuccess": "Inbjudan borttagen framgångsrikt",
@@ -173,6 +179,12 @@
       "title": "Ta bort inbjudan",
       "message": "Är du säker på att du vill ta bort inbjudan för {{email}}?"
     },
+    "removeInvitationFromTeam": "Ta bort inbjudan från team",
+    "removeInvitationsFromTeam": "Ta bort inbjudningar från team",
+    "confirmRemoveInvitation": "Är du säker på att du vill ta bort inbjudan för {{email}}?",
+    "confirmRemoveInvitations": "Är du säker på att du vill ta bort följande inbjudningar från teamet?",
+    "invitationRemovedSuccessfully": "Inbjudan för {{email}} borttagen framgångsrikt",
+    "invitationsRemovedSuccessfully": "Inbjudningar borttagna framgångsrikt",
     "medias": "Media",
     "playlists": "Spellistor",
     "devices": "Enheter",
@@ -193,6 +205,10 @@
     "inviteMember": "Bjud in medlem",
     "inviteMemberDescription": "Lägg till en ny medlem i teamet",
     "enterMember": "Ange medlem",
+    "leaveTeamTitle": "Lämna det här teamet",
+    "leaveTeamDescription": "Om du lämnar förlorar du omedelbart åtkomsten till teamets resurser.",
+    "leaveTeamAction": "Lämna teamet",
+    "leaveTeamLastAdminWarning": "Lägg till en annan administratör innan du lämnar så att teamet fortsätter att hanteras.",
     "addResourceToTeam": "Lägg till resurs till team",
     "addResourcesToTeams": "Lägg till resurser till team",
     "errors": {
@@ -202,9 +218,24 @@
       "openViewModal": "öppna visningsmodal",
       "removeResource": "Fel vid borttagning av resurs från team: {{error}}",
       "removeResources": "Fel vid borttagning av resurser från team: {{error}}",
-      "addResourceToTeam": "Fel vid tillägg av resurs till team: {{error}}"
+      "addResourceToTeam": "Fel vid tillägg av resurs till team: {{error}}",
+      "cannotRemoveLastAdmin": "Du kan inte ta bort teamets sista administratör."
     },
-    "confirmAddResources": "Är du säker på att du vill lägga till följande resurser?"
+    "confirmAddResources": "Är du säker på att du vill lägga till följande resurser?",
+    "messages": {
+      "memberRemoved": "Medlemmen {{name}} togs bort med framgång",
+      "membersRemoved": "Medlemmarna togs bort med framgång",
+      "invitationSent": "Inbjudan skickades till {{email}}",
+      "leftTeam": "Du lämnade teamet {{name}}"
+    },
+    "invitation": {
+      "title": "Teaminbjudan",
+      "emailAddress": "E-postadress",
+      "teamRole": "Teamroll",
+      "expired": "Denna inbjudan har utgått.",
+      "accepting": "Accepterar...",
+      "accept": "Acceptera inbjudan"
+    }
   },
   "login": {
     "title": "Logga in",
@@ -272,11 +303,44 @@
     "invitations": "Inbjudningar",
     "update": "Uppdatera",
     "placeholderName": "Ange organisationsnamn",
-    "errors": {
-      "updateOrganization": "Fel vid uppdatering av organisation: {{error}}"
-    },
     "inviteMember": "Bjud in medlem",
-    "enterMemberEmail": "Ange medlemmens e-post"
+    "enterMemberEmail": "Ange medlemmens e-post",
+    "role": "Roll",
+    "roleAdmin": "Administratör",
+    "roleManager": "Chef",
+    "roleMember": "Medlem",
+    "roleEditor": "Redaktör",
+    "rolePublisher": "Publicerare",
+    "roleDeviceManager": "Enhetshanterare",
+    "roleGuest": "Gäst",
+    "teamRoleAdmin": "Teamadministratör",
+    "teamRoleMember": "Teammedlem",
+    "errors": {
+      "updateOrganization": "Fel vid uppdatering av organisation: {{error}}",
+      "emailRequired": "E-post är obligatoriskt",
+      "invalidEmail": "Ogiltig e-post",
+      "cannotRemoveLastAdmin": "Du kan inte ta bort organisationens sista administratör.",
+      "invalidRole": "Den valda rollen är inte giltig för den här organisationen."
+    },
+    "messages": {
+      "memberRemoved": "Medlemmen {{name}} togs bort med framgång",
+      "membersRemoved": "Medlemmarna togs bort med framgång"
+    },
+    "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
+    "roleDescriptions": {
+      "admin": "Full åtkomst inklusive organisationshantering",
+      "manager": "Kan hantera team och de flesta resurser",
+      "member": "Standardanvändare (standard), kan hantera innehåll",
+      "editor": "Full innehållshantering, kan inte hantera team",
+      "publisher": "Som redaktör plus arbetsflödesåtgärder för publicering",
+      "device_manager": "Full enhets- och kanalhantering",
+      "guest": "Läsbehörighet till resurser"
+    },
+    "teamRoleDescriptions": {
+      "admin": "Kan hantera teammedlemmar och resurser",
+      "member": "Kan komma åt och redigera teamresurser",
+      "installer": "Tillfällig token för enhetsregistrering (utgår om 24h)"
+    }
   },
   "playlists": {
     "title": "Spellistor",
@@ -293,7 +357,8 @@
     "confirmRemovePlaylists": "Är du säker på att du vill ta bort följande spellistor?",
     "errorRemovingPlaylist": "Fel vid borttagning av spellista {{name}}: {{error}}",
     "errorRemovingPlaylists": "Fel vid borttagning av spellistor: {{error}}",
-    "enterPlaylistName": "Ange spellistnamn"
+    "enterPlaylistName": "Ange spellistnamn",
+    "dragToAdd": "Dra för att lägga till"
   },
   "widgets": {
     "title": "Widgets",
@@ -343,7 +408,22 @@
     "pincode": "PIN-kod",
     "enterPincode": "Ange {{length}}-siffrig PIN-kod",
     "pincodeDescription": "PIN-koden kommer att visas på enhetens skärm.",
-    "register": "Registrera"
+    "register": "Registrera",
+    "title": "[TODO: Translate] Devices",
+    "addDevice": "[TODO: Translate] Add Device",
+    "registerDevice": "[TODO: Translate] Register device",
+    "registerDescription": "[TODO: Translate] And start displaying content on it",
+    "deviceDetails": "[TODO: Translate] Details of your device",
+    "removeDevice": "[TODO: Translate] Remove Device",
+    "removeDevices": "[TODO: Translate] Remove Devices",
+    "confirmRemove": "[TODO: Translate] Are you sure you want to remove device \"{{name}}\"?",
+    "confirmRemoveMultiple": "[TODO: Translate] Are you sure you want to remove the following devices?",
+    "deviceRegisteredSuccess": "[TODO: Translate] Device registered successfully",
+    "deviceRemovedSuccess": "[TODO: Translate] Device \"{{name}}\" removed successfully",
+    "devicesRemovedSuccess": "[TODO: Translate] {{count}} device(s) removed successfully",
+    "errorRegisteringDevice": "[TODO: Translate] Error registering device: {{error}}",
+    "errorRemovingDevice": "[TODO: Translate] Error removing device {{name}}: {{error}}",
+    "errorRemovingDevices": "[TODO: Translate] Error removing devices: {{error}}"
   },
   "validation": {
     "fieldRequired": "Detta fält är obligatoriskt",
@@ -382,5 +462,40 @@
   "search": {
     "title": "Sök",
     "description": "Detta är söksidan. Du kan hitta alla sökresultat här..."
+  },
+  "permissions": {
+    "noPermission": "Du har inte behörighet att {{action}} {{resource}}",
+    "noCreateTeams": "Du har inte behörighet att skapa team",
+    "noUpdateTeams": "Du har inte behörighet att redigera team",
+    "noDeleteTeams": "Du har inte behörighet att ta bort team",
+    "noCreateOrganizations": "Du har inte behörighet att bjuda in organisationsmedlemmar",
+    "noUpdateOrganizations": "Du har inte behörighet att hantera organisationsinställningar",
+    "noDeleteOrganizations": "Du har inte behörighet att ta bort organisationsmedlemmar",
+    "noCreatePlaylists": "Du har inte behörighet att skapa spellistor",
+    "noDeletePlaylists": "Du har inte behörighet att ta bort spellistor",
+    "noCreateMedias": "Du har inte behörighet att ladda upp mediafiler",
+    "noDeleteMedias": "Du har inte behörighet att ta bort mediafiler",
+    "noCreateWidgets": "Du har inte behörighet att ladda upp widgets",
+    "noDeleteWidgets": "Du har inte behörighet att ta bort widgets",
+    "noCreateDevices": "Du har inte behörighet att registrera enheter",
+    "noDeleteDevices": "Du har inte behörighet att ta bort enheter",
+    "noCreateChannels": "Du har inte behörighet att skapa kanaler",
+    "noDeleteChannels": "Du har inte behörighet att ta bort kanaler",
+    "contactAdmin": "Kontakta din administratör för att begära åtkomst",
+    "insufficientRole": "Denna åtgärd kräver rollen {{role}}"
+  },
+  "organizations": {
+    "invitation": {
+      "title": "Organisationsinbjudan",
+      "emailAddress": "E-postadress",
+      "expired": "Denna inbjudan har utgått.",
+      "loginToAccept": "Logga in för att acceptera denna inbjudan",
+      "createAccount": "Skapa ditt konto för att acceptera denna inbjudan"
+    }
+  },
+  "filters": {
+    "teamLabel": "Lag",
+    "teamPlaceholder": "Välj lag",
+    "teamClear": "Rensa lagfilter"
   }
 }

@@ -1,3 +1,5 @@
+/** @jsxImportSource solid-js */
+
 import { render, fireEvent, cleanup } from '@solidjs/testing-library';
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { Button } from './button';
@@ -53,5 +55,12 @@ describe('Button Component', () => {
     const { getByRole } = render(() => <Button color="danger" />);
     const button = getByRole('button');
     expect(button).toHaveClass(styles['button-danger']);
+  });
+
+  it('passes title and aria-label to the button element', () => {
+    const { getByRole } = render(() => <Button title="Do the thing" />);
+    const button = getByRole('button');
+    expect(button).toHaveAttribute('title', 'Do the thing');
+    expect(button).toHaveAttribute('aria-label', 'Do the thing');
   });
 });

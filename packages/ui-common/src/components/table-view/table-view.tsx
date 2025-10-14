@@ -7,6 +7,7 @@
  */
 import { JSX, Show, createEffect, createSignal, onMount } from 'solid-js';
 import { Filter, ItemBase, Pagination, Table, TableAction, ToolBar } from '../';
+import { PermissionDenied } from '../permission-denied/permission-denied';
 import { SortOptions } from '../../interfaces/sort-options.interface';
 
 import style from './table-view.module.scss';
@@ -16,6 +17,7 @@ export interface FetchDataOptions {
   sortOptions: SortOptions;
   search?: string;
   filters?: Record<string, string | boolean>;
+  team_id?: number | null;
 }
 
 export interface TableViewRef<
@@ -86,6 +88,7 @@ export const TableView = <
   const [totalItems, setTotalItems] = createSignal(0);
 
   const [loadingError, setLoadingError] = createSignal('');
+  const [errorStatus, setErrorStatus] = createSignal<number | null>(null);
 
   const [filters, setFilters] = createSignal<Filter[]>(
     props.toolbar?.filters || []
@@ -168,8 +171,14 @@ export const TableView = <
 
       setData(result.data);
       setTotalItems(result.count);
-    } catch (err) {
+    } catch (err: any) {
       console.log('error', err);
+
+      // Check if it's an HttpError with status code
+      if (err && typeof err.status === 'number') {
+        setErrorStatus(err.status);
+      }
+
       setLoadingError(`Error fetching ${props.resource}: ${err}`);
     }
   };
@@ -253,7 +262,14 @@ export const TableView = <
     <>
       <Show
         when={!loadingError()}
-        fallback={<div>Loading Error: {loadingError()}</div>}
+        fallback={
+          <Show
+            when={errorStatus() === 403}
+            fallback={<div>Loading Error: {loadingError()}</div>}
+          >
+            <PermissionDenied resource={props.resource} />
+          </Show>
+        }
       >
         <div class={style['table-view']}>
           <Show when={props.toolbar}>

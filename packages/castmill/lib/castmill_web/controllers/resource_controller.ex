@@ -49,7 +49,7 @@ defmodule CastmillWeb.ResourceController do
       if channel.organization_id != organization_id do
         {:ok, false}
       else
-        {:ok, Organizations.has_any_role?(organization_id, actor_id, [:admin, :regular])}
+        {:ok, Organizations.has_any_role?(organization_id, actor_id, [:admin, :member])}
       end
     end
   end
@@ -57,7 +57,7 @@ defmodule CastmillWeb.ResourceController do
   def check_access(actor_id, :list_channel_entries, %{
         "organization_id" => organization_id
       }) do
-    {:ok, Organizations.has_any_role?(organization_id, actor_id, [:admin, :regular, :guest])}
+    {:ok, Organizations.has_any_role?(organization_id, actor_id, [:admin, :member, :guest])}
   end
 
   def check_access(actor_id, action, %{
@@ -103,6 +103,7 @@ defmodule CastmillWeb.ResourceController do
     page: [type: :integer, number: [min: 1]],
     page_size: [type: :integer, number: [min: 1, max: 100]],
     search: :string,
+    team_id: :integer,
     filters: [
       type: :string,
       cast_func: &CastmillWeb.ResourceController.parse_filters/1
@@ -353,12 +354,39 @@ defmodule CastmillWeb.ResourceController do
   def create(conn, %{
         "resources" => "playlists",
         "organization_id" => organization_id,
-        "playlist" => playlist
+        "playlist" => playlist_params
       }) do
-    create_attrs = Map.merge(playlist, %{"organization_id" => organization_id})
+    # Extract team_id from params if present
+    team_id = Map.get(playlist_params, "team_id")
+
+    # Remove team_id from playlist params as it's not a playlist field
+    create_attrs =
+      playlist_params
+      |> Map.delete("team_id")
+      |> Map.merge(%{"organization_id" => organization_id})
 
     case Castmill.Resources.create_playlist(create_attrs) do
       {:ok, %Playlist{} = playlist} ->
+        # If team_id was provided, add the playlist to the team
+        if team_id do
+          case Castmill.Teams.add_resource_to_team(team_id, "playlists", playlist.id, [
+                 :read,
+                 :write,
+                 :delete
+               ]) do
+            {:ok, _} ->
+              :ok
+
+            {:error, reason} ->
+              # Log the error but don't fail the playlist creation
+              require Logger
+
+              Logger.warning(
+                "Failed to add playlist #{playlist.id} to team #{team_id}: #{inspect(reason)}"
+              )
+          end
+        end
+
         conn
         |> put_status(:created)
         |> put_resp_header(
@@ -380,11 +408,38 @@ defmodule CastmillWeb.ResourceController do
   def create(conn, %{
         "resources" => "channels",
         "organization_id" => organization_id,
-        "channel" => channel
+        "channel" => channel_params
       }) do
-    create_attrs = Map.merge(channel, %{"organization_id" => organization_id})
+    # Extract team_id from params if present
+    team_id = Map.get(channel_params, "team_id")
+
+    # Remove team_id from channel params as it's not a channel field
+    create_attrs =
+      channel_params
+      |> Map.delete("team_id")
+      |> Map.merge(%{"organization_id" => organization_id})
 
     with {:ok, %Channel{} = channel} <- Castmill.Resources.create_channel(create_attrs) do
+      # If team_id was provided, add the channel to the team
+      if team_id do
+        case Castmill.Teams.add_resource_to_team(team_id, "channels", channel.id, [
+               :read,
+               :write,
+               :delete
+             ]) do
+          {:ok, _} ->
+            :ok
+
+          {:error, reason} ->
+            # Log the error but don't fail the channel creation
+            require Logger
+
+            Logger.warning(
+              "Failed to add channel #{channel.id} to team #{team_id}: #{inspect(reason)}"
+            )
+        end
+      end
+
       conn
       |> put_status(:created)
       |> put_resp_header(
@@ -402,7 +457,7 @@ defmodule CastmillWeb.ResourceController do
       }) do
     create_attrs = Map.merge(team, %{"organization_id" => organization_id})
 
-    case Teams.create_team(create_attrs) do
+    case Teams.create_team(create_attrs, conn.assigns[:current_user]) do
       {:ok, %Team{} = team} ->
         conn
         |> put_status(:created)

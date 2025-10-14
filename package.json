@@ -40,9 +40,8 @@
     "build:platforms:electron": "cd packages/platforms/electron-player && yarn build",
     "build:platforms:legacy": "cd packages/platforms/legacy-adapter-player && yarn build",
     "build:platforms": "yarn run build:platforms:android && yarn run build:platforms:webos && yarn run build:platforms:electron && yarn run build:platforms:legacy",
-    "build:all": "yarn run build:ui-common && yarn run build:cache && yarn run build:player && yarn run build:device && yarn run build:dashboard && yarn run build:widged && yarn run build:platforms"
-  ,
-  "build:server": "yarn run build:ui-common && yarn run build:cache && yarn run build:player && yarn run build:device"
+    "build:all": "yarn run build:ui-common && yarn run build:cache && yarn run build:player && yarn run build:device && yarn run build:dashboard && yarn run build:widged && yarn run build:platforms",
+    "build:server": "yarn run build:ui-common && yarn run build:cache && yarn run build:player && yarn run build:device"
   },
   "workspaces": [
     "packages/cache",
@@ -74,6 +73,8 @@
     "uuid": "^9.0.1",
     "gauge": "^5.0.1",
     "are-we-there-yet": "^4.0.0",
-    "har-validator": "^5.1.5"
-  }
+    "har-validator": "^5.1.5",
+    "signal-exit": "^4.1.0"
+  },
+  "packageManager": "yarn@1.22.22"
 }

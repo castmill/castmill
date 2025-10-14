@@ -13,9 +13,11 @@ import { TbHelpCircle } from 'solid-icons/tb';
 import logo from '../../assets/castmill-logo-topbar.png';
 import DropdownMenu from '../dropdown-menu/dropdown-menu';
 import LanguageSelector from '../language-selector/language-selector';
+import { LoadingProgressBar } from '../loading-progress-bar/loading-progress-bar';
 
 import { baseUrl } from '../../env';
 import { useI18n } from '../../i18n';
+import { store } from '../../store/store';
 
 const Topbar: Component = () => {
   const [triggerLogout, setTriggerLogout] = createSignal(false);
@@ -47,41 +49,46 @@ const Topbar: Component = () => {
   });
 
   return (
-    <header class="castmill-header">
-      <nav class="main">
-        <a href="/">
-          <img src={logo} alt="Castmill" />
-        </a>
-      </nav>
+    <>
+      <LoadingProgressBar loading={store.loadingAddons} />
+      <header class="castmill-header">
+        <nav class="main">
+          <a href="/">
+            <img src={logo} alt="Castmill" />
+          </a>
+        </nav>
 
-      <nav class="right">
-        <Show when={checkAuth()}>
-          <Search />
+        <nav class="right">
+          <Show when={checkAuth()}>
+            <Search />
 
-          <TopbarLink
-            to="/help"
-            icon={TbHelpCircle}
-            text={t('topbar.help')}
-          ></TopbarLink>
+            <TopbarLink
+              to="/help"
+              icon={TbHelpCircle}
+              text={t('topbar.help')}
+            ></TopbarLink>
 
-          {/* Implement the Alert icon + Alerts page */}
-          <div style="margin: 0 1rem; margin: 0 1rem; display: flex; flex-direction: row; justify-content: center; align-items: center;">
-            <FaRegularBell />
-          </div>
+            {/* Implement the Alert icon + Alerts page */}
+            <div style="margin: 0 1rem; margin: 0 1rem; display: flex; flex-direction: row; justify-content: center; align-items: center;">
+              <FaRegularBell />
+            </div>
 
-          <div class="topbar-dropdowns">
-            <LanguageSelector />
-            <DropdownMenu ButtonComponent={() => <div>{getUser().name} </div>}>
-              <a href="/profile">{t('common.profile')}</a>
-              <a href="/settings">{t('common.settings')}</a>
-              <button class="logout" onClick={() => setTriggerLogout(true)}>
-                {t('common.logout')}
-              </button>
-            </DropdownMenu>
-          </div>
-        </Show>
-      </nav>
-    </header>
+            <div class="topbar-dropdowns">
+              <LanguageSelector />
+              <DropdownMenu
+                ButtonComponent={() => <div>{getUser().name} </div>}
+              >
+                <a href="/profile">{t('common.profile')}</a>
+                <a href="/settings">{t('common.settings')}</a>
+                <button class="logout" onClick={() => setTriggerLogout(true)}>
+                  {t('common.logout')}
+                </button>
+              </DropdownMenu>
+            </div>
+          </Show>
+        </nav>
+      </header>
+    </>
   );
 };
 

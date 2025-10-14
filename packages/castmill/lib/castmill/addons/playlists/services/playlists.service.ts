@@ -1,5 +1,11 @@
-import { JsonPlaylist, JsonWidget, JsonWidgetConfig, JsonPlaylistItem } from '@castmill/player';
-import { SortOptions } from '@castmill/ui-common';
+import {
+  JsonPlaylist,
+  JsonWidget,
+  JsonWidgetConfig,
+  JsonPlaylistItem,
+} from '@castmill/player';
+
+import { SortOptions, HttpError } from '@castmill/ui-common';
 
 export interface FetchPlaylistsOptions {
   page: number;
@@ -7,6 +13,7 @@ export interface FetchPlaylistsOptions {
   sortOptions: SortOptions;
   search?: string;
   filters?: Record<string, string | boolean>;
+  team_id?: number | null;
 }
 type HandleResponseOptions = {
   parse?: boolean;
@@ -49,8 +56,8 @@ async function handleResponse<T = any>(
     } catch (error) {
       errMsg = `${response.statusText}`;
     }
-    // We should NOT throw an exception here. We should handle errors in a different way.
-    throw new Error(errMsg);
+    // Throw HttpError with status code for better error handling
+    throw new HttpError(errMsg, response.status);
   }
 }
 
@@ -60,7 +67,12 @@ export const PlaylistsService = {
    *
    * @returns JsonPlaylist
    */
-  async addPlaylist(baseUrl: string, organizationId: string, name: string) {
+  async addPlaylist(baseUrl: string, organizationId: string, name: string, teamId?: number | null) {
+    const playlistData: { name: string; team_id?: number } = { name };
+    if (teamId !== null && teamId !== undefined) {
+      playlistData.team_id = teamId;
+    }
+    
     const response = await fetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/playlists`,
       {
@@ -69,7 +81,7 @@ export const PlaylistsService = {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ playlist: { name } }),
+        body: JSON.stringify({ playlist: playlistData }),
       }
     );
 
@@ -84,7 +96,7 @@ export const PlaylistsService = {
   async fetchPlaylists(
     baseUrl: string,
     organizationId: string,
-    { page, page_size, sortOptions, search, filters }: FetchPlaylistsOptions
+    { page, page_size, sortOptions, search, filters, team_id }: FetchPlaylistsOptions
   ) {
     const filtersToString = (filters: Record<string, string | boolean>) => {
       return Object.entries(filters)
@@ -106,6 +118,10 @@ export const PlaylistsService = {
 
     if (filters) {
       query['filters'] = filtersToString(filters);
+    }
+
+    if (team_id !== undefined && team_id !== null) {
+      query['team_id'] = team_id.toString();
     }
 
     const queryString = new URLSearchParams(query).toString();
@@ -307,18 +323,26 @@ export const PlaylistsService = {
     handleResponse(response);
   },
 
-  async getWidgets(baseUrl: string, organizationId: string) {
-    const response = await fetch(
-      `${baseUrl}/dashboard/organizations/${organizationId}/widgets`,
-      {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+  async getWidgets(baseUrl: string, organizationId: string, search?: string) {
+    const query: Record<string, string> = {};
 
-    return handleResponse<{ data: JsonWidget[]; count: number }>(response, { parse: true });
+    if (search) {
+      query['search'] = search;
+    }
+
+    const queryString = new URLSearchParams(query).toString();
+    const url = `${baseUrl}/dashboard/organizations/${organizationId}/widgets${queryString ? `?${queryString}` : ''}`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    return handleResponse<{ data: JsonWidget[]; count: number }>(response, {
+      parse: true,
+    });
   },
 };

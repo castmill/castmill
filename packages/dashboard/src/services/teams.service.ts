@@ -1,7 +1,12 @@
 import { baseUrl } from '../env';
 import { fetchOptionsToQueryString, handleResponse } from './util';
 import { JsonTeam, Team } from '../interfaces/team';
-import { FetchDataOptions, ItemBase, SortOptions } from '@castmill/ui-common';
+import {
+  FetchDataOptions,
+  HttpError,
+  ItemBase,
+  SortOptions,
+} from '@castmill/ui-common';
 
 export type TeamUpdate = Partial<Team> & { id: number };
 
@@ -81,7 +86,12 @@ export const TeamsService = {
   /**
    * Invite user to team
    */
-  async inviteUser(organizationId: string, teamId: number, email: string) {
+  async inviteUser(
+    organizationId: string,
+    teamId: number,
+    email: string,
+    role: 'member' | 'admin' = 'member'
+  ) {
     const response = await fetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/teams/${teamId}/invitations`,
       {
@@ -90,9 +100,27 @@ export const TeamsService = {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, role }),
       }
     );
+
+    if (!response.ok) {
+      // Handle specific error messages from the server
+      try {
+        const errorData = await response.json();
+        if (errorData.error === 'already_invited') {
+          throw new Error('This user has already been invited to this team');
+        }
+        throw new Error(
+          errorData.error || errorData.errors?.detail || response.statusText
+        );
+      } catch (e) {
+        if (e instanceof Error && e.message) {
+          throw e;
+        }
+        throw new Error(response.statusText);
+      }
+    }
 
     const { data } = await handleResponse<{ data: { id: number } }>(response, {
       parse: true,
@@ -142,8 +170,19 @@ export const TeamsService = {
       }
     );
 
-    if (response.status !== 200) {
-      throw new Error('Failed to remove member from team');
+    if (!response.ok) {
+      let errorMessage = 'Failed to remove member from team';
+
+      try {
+        const errorData = await response.json();
+        if (typeof errorData?.error === 'string') {
+          errorMessage = errorData.error;
+        }
+      } catch (error) {
+        console.error('Failed to parse remove member error response', error);
+      }
+
+      throw new HttpError(errorMessage, response.status);
     }
   },
 
@@ -233,11 +272,7 @@ export const TeamsService = {
       }
     );
 
-    if (response.status === 200) {
-      return await response.json();
-    } else {
-      throw new Error('Failed to fetch invitations');
-    }
+    return handleResponse(response, { parse: true });
   },
 
   async fetchTeams(organizationId: string, opts: FetchDataOptions) {
@@ -250,11 +285,7 @@ export const TeamsService = {
       }
     );
 
-    if (response.status === 200) {
-      return await response.json();
-    } else {
-      throw new Error('Failed to fetch teams');
-    }
+    return handleResponse(response, { parse: true });
   },
 
   async getTeam(organizationId: string, teamId: number) {
@@ -304,11 +335,7 @@ export const TeamsService = {
       }
     );
 
-    if (response.status === 200) {
-      return await response.json();
-    } else {
-      throw new Error('Failed to fetch members');
-    }
+    return handleResponse(response, { parse: true });
   },
 
   async fetchResourcesLegacy(
@@ -360,6 +387,22 @@ export const TeamsService = {
       return await response.json();
     } else {
       throw new Error('Failed to accept invitation');
+    }
+  },
+
+  async rejectInvitation(token: string) {
+    const response = await fetch(
+      `${baseUrl}/dashboard/invitations/${token}/reject`,
+      {
+        method: 'POST',
+        credentials: 'include',
+      }
+    );
+
+    if (response.status === 200) {
+      return await response.json();
+    } else {
+      throw new Error('Failed to reject invitation');
     }
   },
 

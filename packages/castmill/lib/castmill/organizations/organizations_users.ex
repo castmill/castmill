@@ -6,7 +6,16 @@ defmodule Castmill.Organizations.OrganizationsUsers do
   @primary_key false
 
   schema "organizations_users" do
-    field :role, Ecto.Enum, values: [:admin, :regular, :guest]
+    # Castmill 2.0 RBAC Roles:
+    # - :admin - Full access including org management
+    # - :manager - Elevated access, can manage teams
+    # - :member - Standard user (default), can manage content
+    # - :editor - Full CRUD on content, cannot manage teams/org
+    # - :publisher - Like editor + publish action
+    # - :device_manager - Full device/channel management
+    # - :guest - Read-only access
+    field :role, Ecto.Enum,
+      values: [:admin, :manager, :member, :editor, :publisher, :device_manager, :guest]
 
     belongs_to :organization, Castmill.Organizations.Organization,
       type: Ecto.UUID,

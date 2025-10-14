@@ -39,6 +39,8 @@
     "loadingAddons": "Cargando complementos...",
     "notFound": "404 No encontrado",
     "pageNotFound": "Lo sentimos, la página que buscas no existe.",
+    "requestedPath": "Ruta solicitada",
+    "goToDashboard": "Ir al Panel",
     "copyright": "© 2011-2025 Castmill™",
     "invitedEmail": "Correo electrónico invitado:",
     "acceptInvitation": "Aceptar invitación",
@@ -69,6 +71,7 @@
     "maintainance": "Mantenimiento",
     "events": "Eventos",
     "telemetry": "Telemetría",
+    "youIndicator": "(tú)",
     "addonLoadingError": "Error al cargar complemento",
     "addonError": "Error de complemento",
     "backToLogin": "Volver al inicio de sesión"
@@ -162,7 +165,10 @@
   },
   "teams": {
     "title": "Equipos",
-    "members": "Miembros",
+    "members": {
+      "selectUser": "Seleccionar usuario",
+      "searchUser": "Buscar un usuario..."
+    },
     "invitations": "Invitaciones",
     "invitationAcceptSuccess": "Invitación aceptada exitosamente",
     "invitationDeleteSuccess": "Invitación eliminada exitosamente",
@@ -173,6 +179,12 @@
       "title": "Eliminar invitación",
       "message": "¿Estás seguro de que quieres eliminar la invitación para {{email}}?"
     },
+    "removeInvitationFromTeam": "Eliminar invitación del equipo",
+    "removeInvitationsFromTeam": "Eliminar invitaciones del equipo",
+    "confirmRemoveInvitation": "¿Estás seguro de que quieres eliminar la invitación para {{email}}?",
+    "confirmRemoveInvitations": "¿Estás seguro de que quieres eliminar las siguientes invitaciones del equipo?",
+    "invitationRemovedSuccessfully": "Invitación para {{email}} eliminada exitosamente",
+    "invitationsRemovedSuccessfully": "Invitaciones eliminadas exitosamente",
     "medias": "Medios",
     "playlists": "Listas de reproducción",
     "devices": "Dispositivos",
@@ -193,6 +205,10 @@
     "inviteMember": "Invitar miembro",
     "inviteMemberDescription": "Añadir un nuevo miembro al equipo",
     "enterMember": "Ingresa el miembro",
+    "leaveTeamTitle": "Salir de este equipo",
+    "leaveTeamDescription": "Al salir perderás inmediatamente el acceso a los recursos del equipo.",
+    "leaveTeamAction": "Salir del equipo",
+    "leaveTeamLastAdminWarning": "Añade otro administrador antes de salir para mantener este equipo gestionado.",
     "addResourceToTeam": "Añadir recurso al equipo",
     "addResourcesToTeams": "Añadir recursos a equipos",
     "confirmAddResources": "¿Estás seguro de que quieres añadir los siguientes recursos?",
@@ -203,7 +219,22 @@
       "openViewModal": "abrir modal de vista",
       "removeResource": "Error al eliminar recurso del equipo: {{error}}",
       "removeResources": "Error al eliminar recursos del equipo: {{error}}",
-      "addResourceToTeam": "Error al añadir recurso al equipo: {{error}}"
+      "addResourceToTeam": "Error al añadir recurso al equipo: {{error}}",
+      "cannotRemoveLastAdmin": "No puedes eliminar al último administrador del equipo."
+    },
+    "messages": {
+      "memberRemoved": "El miembro {{name}} se eliminó correctamente",
+      "membersRemoved": "Miembros eliminados correctamente",
+      "invitationSent": "Invitación enviada a {{email}}",
+      "leftTeam": "Saliste del equipo {{name}}"
+    },
+    "invitation": {
+      "title": "Invitación al equipo",
+      "emailAddress": "Dirección de correo electrónico",
+      "teamRole": "Rol en el equipo",
+      "expired": "Esta invitación ha expirado.",
+      "accepting": "Aceptando...",
+      "accept": "Aceptar invitación"
     }
   },
   "login": {
@@ -274,8 +305,41 @@
     "placeholderName": "Ingresa el nombre de la organización",
     "inviteMember": "Invitar miembro",
     "enterMemberEmail": "Ingresa el correo electrónico del miembro",
+    "role": "Rol",
+    "roleAdmin": "Administrador",
+    "roleManager": "Gerente",
+    "roleMember": "Miembro",
+    "roleEditor": "Editor de Contenido",
+    "rolePublisher": "Publicador",
+    "roleDeviceManager": "Administrador de dispositivos",
+    "roleGuest": "Invitado",
+    "teamRoleAdmin": "Administrador de equipo",
+    "teamRoleMember": "Miembro de equipo",
     "errors": {
-      "updateOrganization": "Error al actualizar la organización: {{error}}"
+      "updateOrganization": "Error al actualizar la organización: {{error}}",
+      "emailRequired": "El correo electrónico es obligatorio",
+      "invalidEmail": "Correo electrónico inválido",
+      "cannotRemoveLastAdmin": "No puedes eliminar al último administrador de la organización.",
+      "invalidRole": "El rol seleccionado no es válido para esta organización."
+    },
+    "messages": {
+      "memberRemoved": "El miembro {{name}} se eliminó correctamente",
+      "membersRemoved": "Miembros eliminados correctamente"
+    },
+    "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
+    "roleDescriptions": {
+      "admin": "Acceso completo incluyendo gestión de la organización",
+      "manager": "Puede gestionar equipos y la mayoría de recursos",
+      "member": "Usuario estándar (predeterminado), puede gestionar contenido",
+      "editor": "Gestión completa de contenido, no puede gestionar equipos",
+      "publisher": "Como editor más acciones de flujo de publicación",
+      "device_manager": "Gestión completa de dispositivos y canales",
+      "guest": "Acceso de solo lectura a recursos"
+    },
+    "teamRoleDescriptions": {
+      "admin": "Puede gestionar miembros del equipo y recursos",
+      "member": "Puede acceder y editar recursos del equipo",
+      "installer": "Token temporal para registro de dispositivos (expira en 24h)"
     }
   },
   "signup": {
@@ -309,7 +373,8 @@
     "confirmRemovePlaylists": "¿Estás seguro de que quieres eliminar las siguientes listas de reproducción?",
     "errorRemovingPlaylist": "Error al eliminar la lista de reproducción {{name}}: {{error}}",
     "errorRemovingPlaylists": "Error al eliminar listas de reproducción: {{error}}",
-    "enterPlaylistName": "Ingresa el nombre de la lista de reproducción"
+    "enterPlaylistName": "Ingresa el nombre de la lista de reproducción",
+    "dragToAdd": "Arrastra para añadir"
   },
   "widgets": {
     "title": "Widgets",
@@ -359,7 +424,22 @@
     "pincode": "Código PIN",
     "enterPincode": "Ingrese el código PIN de {{length}} caracteres",
     "pincodeDescription": "El código PIN se mostrará en la pantalla del dispositivo.",
-    "register": "Registrar"
+    "register": "Registrar",
+    "title": "[TODO: Translate] Devices",
+    "addDevice": "[TODO: Translate] Add Device",
+    "registerDevice": "[TODO: Translate] Register device",
+    "registerDescription": "[TODO: Translate] And start displaying content on it",
+    "deviceDetails": "[TODO: Translate] Details of your device",
+    "removeDevice": "[TODO: Translate] Remove Device",
+    "removeDevices": "[TODO: Translate] Remove Devices",
+    "confirmRemove": "[TODO: Translate] Are you sure you want to remove device \"{{name}}\"?",
+    "confirmRemoveMultiple": "[TODO: Translate] Are you sure you want to remove the following devices?",
+    "deviceRegisteredSuccess": "[TODO: Translate] Device registered successfully",
+    "deviceRemovedSuccess": "[TODO: Translate] Device \"{{name}}\" removed successfully",
+    "devicesRemovedSuccess": "[TODO: Translate] {{count}} device(s) removed successfully",
+    "errorRegisteringDevice": "[TODO: Translate] Error registering device: {{error}}",
+    "errorRemovingDevice": "[TODO: Translate] Error removing device {{name}}: {{error}}",
+    "errorRemovingDevices": "[TODO: Translate] Error removing devices: {{error}}"
   },
   "validation": {
     "fieldRequired": "Este campo es obligatorio",
@@ -382,5 +462,40 @@
       "one": "hace {{count}} día",
       "other": "hace {{count}} días"
     }
+  },
+  "permissions": {
+    "noPermission": "No tienes permiso para {{action}} {{resource}}",
+    "noCreateTeams": "No tienes permiso para crear equipos",
+    "noUpdateTeams": "No tienes permiso para editar equipos",
+    "noDeleteTeams": "No tienes permiso para eliminar equipos",
+    "noCreateOrganizations": "No tienes permiso para invitar miembros de la organización",
+    "noUpdateOrganizations": "No tienes permiso para gestionar la configuración de la organización",
+    "noDeleteOrganizations": "No tienes permiso para eliminar miembros de la organización",
+    "noCreatePlaylists": "No tienes permiso para crear listas de reproducción",
+    "noDeletePlaylists": "No tienes permiso para eliminar listas de reproducción",
+    "noCreateMedias": "No tienes permiso para cargar archivos multimedia",
+    "noDeleteMedias": "No tienes permiso para eliminar archivos multimedia",
+    "noCreateWidgets": "No tienes permiso para cargar widgets",
+    "noDeleteWidgets": "No tienes permiso para eliminar widgets",
+    "noCreateDevices": "No tienes permiso para registrar dispositivos",
+    "noDeleteDevices": "No tienes permiso para eliminar dispositivos",
+    "noCreateChannels": "No tienes permiso para crear canales",
+    "noDeleteChannels": "No tienes permiso para eliminar canales",
+    "contactAdmin": "Contacta a tu administrador para solicitar acceso",
+    "insufficientRole": "Esta acción requiere el rol {{role}}"
+  },
+  "organizations": {
+    "invitation": {
+      "title": "Invitación a la organización",
+      "emailAddress": "Dirección de correo electrónico",
+      "expired": "Esta invitación ha expirado.",
+      "loginToAccept": "Inicia sesión para aceptar esta invitación",
+      "createAccount": "Crea tu cuenta para aceptar esta invitación"
+    }
+  },
+  "filters": {
+    "teamLabel": "Equipo",
+    "teamPlaceholder": "Seleccionar equipo",
+    "teamClear": "Limpiar filtro de equipo"
   }
 }

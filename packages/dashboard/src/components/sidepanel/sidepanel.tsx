@@ -13,6 +13,7 @@ import { AiOutlineTeam } from 'solid-icons/ai';
 import { RiEditorOrganizationChart } from 'solid-icons/ri';
 import { BsCalendarWeek } from 'solid-icons/bs';
 import { useI18n } from '../../i18n';
+import { useNavigate, useLocation } from '@solidjs/router';
 
 const addOnBasePath = `${baseUrl}/assets/addons`;
 
@@ -34,9 +35,9 @@ const SidePanelTree: Component<{ node: AddOnNode; level: number }> = (
   return (
     <>
       <Show when={addon}>
-        <Suspense fallback={<div>{t('common.loading')}</div>}>
+        <Suspense fallback={<div style="height: 2.5em;"></div>}>
           <PanelItem
-            to={addon!.mount_path || ''}
+            to={`/org/${store.organizations.selectedId}${addon!.mount_path || ''}`}
             text={getAddonName()}
             level={props.level}
             icon={lazy(() => import(`${addOnBasePath}${addon?.icon}`))}
@@ -56,6 +57,8 @@ const SidePanelTree: Component<{ node: AddOnNode; level: number }> = (
 
 const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
   const { t } = useI18n();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   /*
   Addons include a "mount_point" property that is a period separated string that 
@@ -78,7 +81,19 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
             name: org.name,
             value: org.id,
           }))}
+          defaultValue={store.organizations.selectedId ?? undefined}
           onSelectChange={(value, name) => {
+            if (!value) {
+              return;
+            }
+            // Extract current path without /org/:orgId prefix
+            const currentPath =
+              location.pathname.replace(/^\/org\/[^\/]+/, '') || '/';
+
+            // Navigate to new organization with same path
+            navigate(`/org/${value}${currentPath}`);
+
+            // Update store (will be synced from URL by protected route)
             setStore('organizations', {
               selectedId: value,
               selectedName: name,
@@ -88,7 +103,7 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
       </div>
       <div class="links">
         <PanelItem
-          to="/organization"
+          to={`/org/${store.organizations.selectedId}/organization`}
           text={t('sidebar.organization')}
           level={0}
           icon={RiEditorOrganizationChart}
@@ -98,26 +113,26 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
           <SidePanelTree node={addonsPanelTree!} level={-1} />
         </Show>
         <PanelItem
-          to="/channels"
+          to={`/org/${store.organizations.selectedId}/channels`}
           text={t('sidebar.channels')}
           level={0}
           icon={BsCalendarWeek}
         />
 
         <PanelItem
-          to="/teams"
+          to={`/org/${store.organizations.selectedId}/teams`}
           text={t('sidebar.teams')}
           level={0}
           icon={AiOutlineTeam}
         />
         <PanelItem
-          to="/usage"
+          to={`/org/${store.organizations.selectedId}/usage`}
           text={t('sidebar.usage')}
           level={0}
           icon={TbChartHistogram}
         />
         <PanelItem
-          to="/settings"
+          to={`/org/${store.organizations.selectedId}/settings`}
           text={t('common.settings')}
           level={0}
           icon={IoSettingsOutline}

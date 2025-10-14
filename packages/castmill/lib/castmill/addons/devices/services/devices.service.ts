@@ -2,6 +2,7 @@ import { Device } from '../interfaces/device.interface';
 import { SortOptions,
   FetchDataOptions,
   fetchOptionsToQueryString,
+  HttpError,
 } from '@castmill/ui-common';
 import { DeviceCommand } from '../types/device-command.type';
 import { DeviceEvent as DeviceEvent } from '../interfaces/device-event.interface';
@@ -13,6 +14,7 @@ export interface FetchDevicesOptions {
   sortOptions: SortOptions;
   search?: string;
   filters?: Record<string, string | boolean>;
+  team_id?: number | null;
 }
 type HandleResponseOptions = {
   parse?: boolean;
@@ -63,7 +65,8 @@ async function handleResponse<T = any>(
     } catch (error) {
       errMsg = `${response.statusText}`;
     }
-    throw new Error(errMsg);
+    // Throw HttpError with status code for better error handling
+    throw new HttpError(errMsg, response.status);
   }
 }
 
@@ -102,7 +105,7 @@ export const DevicesService = {
   async fetchDevices(
     baseUrl: string,
     organizationId: string,
-    { page, page_size, sortOptions, search, filters }: FetchDevicesOptions
+    { page, page_size, sortOptions, search, filters, team_id }: FetchDevicesOptions
   ) {
     const filtersToString = (filters: Record<string, string | boolean>) => {
       return Object.entries(filters)
@@ -112,21 +115,29 @@ export const DevicesService = {
         .join(',');
     };
 
-    const query = {
-      ...sortOptions,
+    const query = new URLSearchParams({
+      direction: sortOptions.direction,
       page_size: page_size.toString(),
       page: page.toString(),
-    };
+    });
+
+    if (sortOptions.key) {
+      query.set('key', sortOptions.key);
+    }
 
     if (search) {
-      query['search'] = search;
+      query.set('search', search);
     }
 
     if (filters) {
-      query['filters'] = filtersToString(filters);
+      query.set('filters', filtersToString(filters));
     }
 
-    const queryString = new URLSearchParams(query).toString();
+    if (team_id !== undefined && team_id !== null) {
+      query.set('team_id', team_id.toString());
+    }
+
+    const queryString = query.toString();
 
     const response = await fetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/devices?${queryString}`,

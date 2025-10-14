@@ -1,9 +1,28 @@
 defmodule CastmillWeb.UploadController do
   use CastmillWeb, :controller
+  use CastmillWeb.AccessActorBehaviour
+
   alias ExAws.S3
+  alias Castmill.Organizations
+  alias Castmill.Plug.AuthorizeDash
 
   # 5 MB
   @chunk_size 5 * 1024 * 1024
+
+  @impl CastmillWeb.AccessActorBehaviour
+  def check_access(actor_id, :create, %{"organization_id" => organization_id}) do
+    if Organizations.has_access(organization_id, actor_id, "medias", :create) do
+      {:ok, true}
+    else
+      {:ok, false}
+    end
+  end
+
+  def check_access(_actor_id, _action, _params) do
+    {:ok, false}
+  end
+
+  plug(AuthorizeDash)
 
   def create(conn, %{
         "organization_id" => organization_id,
