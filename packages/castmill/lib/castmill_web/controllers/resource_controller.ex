@@ -240,6 +240,44 @@ defmodule CastmillWeb.ResourceController do
     end
   end
 
+  @update_playlist_params_schema %{
+    organization_id: [type: :string, required: true],
+    id: [type: :integer, required: true],
+    update: :map
+  }
+
+  def update(
+        conn,
+        %{
+          "resources" => "playlists",
+          "id" => _id
+        } = params
+      ) do
+    with {:ok, params} <- Tarams.cast(params, @update_playlist_params_schema) do
+      playlist = Castmill.Resources.get_playlist(params.id)
+
+      Castmill.Resources.update(playlist, params.update)
+      |> case do
+        {:ok, playlist} ->
+          conn
+          |> put_status(:ok)
+          |> json(playlist)
+
+        {:error, errors} ->
+          conn
+          |> put_status(:bad_request)
+          |> Phoenix.Controller.json(%{errors: errors})
+          |> halt()
+      end
+    else
+      {:error, errors} ->
+        conn
+        |> put_status(:bad_request)
+        |> Phoenix.Controller.json(%{errors: errors})
+        |> halt()
+    end
+  end
+
   @update_channel_params_schema %{
     organization_id: [type: :string, required: true],
     id: [type: :integer, required: true],
