@@ -78,7 +78,8 @@
       "teamClear": "清除团队筛选"
     },
     "addonError": "插件错误",
-    "backToLogin": "返回登录"
+    "backToLogin": "返回登录",
+    "offline": "[TODO: Translate] Offline"
   },
   "topbar": {
     "help": "帮助",
@@ -169,10 +170,7 @@
   },
   "teams": {
     "title": "团队",
-    "members": {
-      "selectUser": "选择用户",
-      "searchUser": "搜索用户..."
-    },
+    "members": "TODO: Translate - Members",
     "invitations": "邀请",
     "invitationAcceptSuccess": "邀请接受成功",
     "invitationDeleteSuccess": "邀请删除成功",
@@ -239,7 +237,12 @@
       "expired": "此邀请已过期。",
       "accepting": "正在接受...",
       "accept": "接受邀请"
-    }
+    },
+    "memberSelection": {
+      "selectUser": "选择用户",
+      "searchUser": "搜索用户..."
+    },
+    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully"
   },
   "login": {
     "title": "登录",
@@ -272,7 +275,8 @@
     "content": "内容",
     "playlists": "播放列表",
     "medias": "媒体",
-    "widgets": "Widgets"
+    "widgets": "Widgets",
+    "members": "[TODO: Translate] Members"
   },
   "channels": {
     "title": "频道",
@@ -328,7 +332,8 @@
     },
     "messages": {
       "memberRemoved": "已成功移除成员 {{name}}",
-      "membersRemoved": "已成功移除成员"
+      "membersRemoved": "已成功移除成员",
+      "invitationSent": "[TODO: Translate] Invitation sent to {{email}}"
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {

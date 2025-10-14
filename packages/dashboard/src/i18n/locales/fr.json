@@ -78,7 +78,8 @@
       "teamClear": "Effacer le filtre d'équipe"
     },
     "addonError": "Erreur d'extension",
-    "backToLogin": "Retour à la connexion"
+    "backToLogin": "Retour à la connexion",
+    "offline": "[TODO: Translate] Offline"
   },
   "topbar": {
     "help": "Aide",
@@ -169,10 +170,7 @@
   },
   "teams": {
     "title": "Équipes",
-    "members": {
-      "selectUser": "Sélectionner un utilisateur",
-      "searchUser": "Rechercher un utilisateur..."
-    },
+    "members": "TODO: Translate - Members",
     "invitations": "Invitations",
     "invitationAcceptSuccess": "Invitation acceptée avec succès",
     "invitationDeleteSuccess": "Invitation supprimée avec succès",
@@ -239,7 +237,12 @@
       "expired": "Cette invitation a expiré.",
       "accepting": "Acceptation...",
       "accept": "Accepter l'invitation"
-    }
+    },
+    "memberSelection": {
+      "selectUser": "Sélectionner un utilisateur",
+      "searchUser": "Rechercher un utilisateur..."
+    },
+    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully"
   },
   "login": {
     "title": "Connexion",
@@ -272,7 +275,8 @@
     "content": "Contenu",
     "playlists": "Listes de lecture",
     "medias": "Médias",
-    "widgets": "Widgets"
+    "widgets": "Widgets",
+    "members": "[TODO: Translate] Members"
   },
   "channels": {
     "title": "Canaux",
@@ -328,7 +332,8 @@
     },
     "messages": {
       "memberRemoved": "Le membre {{name}} a été supprimé avec succès",
-      "membersRemoved": "Les membres ont été supprimés avec succès"
+      "membersRemoved": "Les membres ont été supprimés avec succès",
+      "invitationSent": "[TODO: Translate] Invitation sent to {{email}}"
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {

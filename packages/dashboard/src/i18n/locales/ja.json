@@ -78,7 +78,8 @@
       "teamClear": "チームフィルターをクリア"
     },
     "addonError": "アドオンエラー",
-    "backToLogin": "ログインに戻る"
+    "backToLogin": "ログインに戻る",
+    "offline": "[TODO: Translate] Offline"
   },
   "topbar": {
     "help": "ヘルプ",
@@ -169,10 +170,7 @@
   },
   "teams": {
     "title": "チーム",
-    "members": {
-      "selectUser": "ユーザーを選択",
-      "searchUser": "ユーザーを検索..."
-    },
+    "members": "TODO: Translate - Members",
     "invitations": "招待",
     "invitationAcceptSuccess": "招待が正常に承認されました",
     "invitationDeleteSuccess": "招待が正常に削除されました",
@@ -239,7 +237,12 @@
       "expired": "この招待は期限切れです。",
       "accepting": "承認中...",
       "accept": "招待を承認"
-    }
+    },
+    "memberSelection": {
+      "selectUser": "ユーザーを選択",
+      "searchUser": "ユーザーを検索..."
+    },
+    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully"
   },
   "login": {
     "title": "ログイン",
@@ -272,7 +275,8 @@
     "content": "コンテンツ",
     "playlists": "プレイリスト",
     "medias": "メディア",
-    "widgets": "Widgets"
+    "widgets": "Widgets",
+    "members": "[TODO: Translate] Members"
   },
   "channels": {
     "title": "チャンネル",
@@ -328,7 +332,8 @@
     },
     "messages": {
       "memberRemoved": "メンバー{{name}}を正常に削除しました",
-      "membersRemoved": "メンバーを正常に削除しました"
+      "membersRemoved": "メンバーを正常に削除しました",
+      "invitationSent": "[TODO: Translate] Invitation sent to {{email}}"
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {

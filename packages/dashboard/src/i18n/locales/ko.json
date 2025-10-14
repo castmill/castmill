@@ -78,7 +78,8 @@
       "teamClear": "팀 필터 지우기"
     },
     "addonError": "애드온 오류",
-    "backToLogin": "로그인으로 돌아가기"
+    "backToLogin": "로그인으로 돌아가기",
+    "offline": "[TODO: Translate] Offline"
   },
   "topbar": {
     "help": "도움말",
@@ -169,10 +170,7 @@
   },
   "teams": {
     "title": "팀",
-    "members": {
-      "selectUser": "사용자 선택",
-      "searchUser": "사용자 검색..."
-    },
+    "members": "TODO: Translate - Members",
     "invitations": "초대",
     "invitationAcceptSuccess": "초대가 성공적으로 수락되었습니다",
     "invitationDeleteSuccess": "초대가 성공적으로 삭제되었습니다",
@@ -239,7 +237,12 @@
       "expired": "이 초대가 만료되었습니다.",
       "accepting": "수락 중...",
       "accept": "초대 수락"
-    }
+    },
+    "memberSelection": {
+      "selectUser": "사용자 선택",
+      "searchUser": "사용자 검색..."
+    },
+    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully"
   },
   "login": {
     "title": "로그인",
@@ -272,7 +275,8 @@
     "content": "콘텐츠",
     "playlists": "재생 목록",
     "medias": "미디어",
-    "widgets": "Widgets"
+    "widgets": "Widgets",
+    "members": "[TODO: Translate] Members"
   },
   "channels": {
     "title": "채널",
@@ -328,7 +332,8 @@
     },
     "messages": {
       "memberRemoved": "구성원 {{name}}을(를) 성공적으로 제거했습니다",
-      "membersRemoved": "구성원을 성공적으로 제거했습니다"
+      "membersRemoved": "구성원을 성공적으로 제거했습니다",
+      "invitationSent": "[TODO: Translate] Invitation sent to {{email}}"
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {

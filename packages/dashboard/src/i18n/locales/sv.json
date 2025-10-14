@@ -73,7 +73,8 @@
     "youIndicator": "(du)",
     "addonLoadingError": "Fel vid laddning av tillägg",
     "addonError": "Tilläggsfel",
-    "backToLogin": "Tillbaka till inloggning"
+    "backToLogin": "Tillbaka till inloggning",
+    "offline": "[TODO: Translate] Offline"
   },
   "topbar": {
     "help": "Hjälp",
@@ -164,10 +165,7 @@
   },
   "teams": {
     "title": "Team",
-    "members": {
-      "selectUser": "Välj användare",
-      "searchUser": "Sök efter en användare..."
-    },
+    "members": "TODO: Translate - Members",
     "invitations": "Inbjudningar",
     "invitationAcceptSuccess": "Inbjudan accepterad framgångsrikt",
     "invitationDeleteSuccess": "Inbjudan borttagen framgångsrikt",
@@ -234,7 +232,12 @@
       "expired": "Denna inbjudan har utgått.",
       "accepting": "Accepterar...",
       "accept": "Acceptera inbjudan"
-    }
+    },
+    "memberSelection": {
+      "selectUser": "Välj användare",
+      "searchUser": "Sök efter en användare..."
+    },
+    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully"
   },
   "login": {
     "title": "Logga in",
@@ -267,7 +270,8 @@
     "content": "Innehåll",
     "playlists": "Spellistor",
     "medias": "Media",
-    "widgets": "Widgets"
+    "widgets": "Widgets",
+    "members": "[TODO: Translate] Members"
   },
   "channels": {
     "title": "Kanaler",
@@ -323,7 +327,8 @@
     },
     "messages": {
       "memberRemoved": "Medlemmen {{name}} togs bort med framgång",
-      "membersRemoved": "Medlemmarna togs bort med framgång"
+      "membersRemoved": "Medlemmarna togs bort med framgång",
+      "invitationSent": "[TODO: Translate] Invitation sent to {{email}}"
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {

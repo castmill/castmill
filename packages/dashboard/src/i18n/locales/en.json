@@ -62,6 +62,7 @@
     "ip": "IP Address",
     "description": "Description",
     "online": "Online",
+    "offline": "Offline",
     "update": "Update",
     "reset": "Reset",
     "addedOn": "Added on",
@@ -89,7 +90,8 @@
     "content": "Content",
     "playlists": "Playlists",
     "medias": "Medias",
-    "widgets": "Widgets"
+    "widgets": "Widgets",
+    "members": "Members"
   },
   "topbar": {
     "help": "Help",
@@ -188,7 +190,8 @@
     "removeTeams": "Remove Teams",
     "confirmRemoveTeam": "Are you sure you want to remove team \"{{name}}\"?",
     "confirmRemoveTeams": "Are you sure you want to remove the following teams?",
-    "members": {
+    "members": "Members",
+    "memberSelection": {
       "selectUser": "Select User",
       "searchUser": "Search for a user..."
     },
@@ -198,6 +201,7 @@
     "invitationAcceptError": "Failed to accept invitation",
     "invitationDeleteError": "Failed to delete invitation",
     "deleteSuccess": "Teams deleted successfully",
+    "teamsRemovedSuccessfully": "Teams removed successfully",
     "confirmDeleteInvitation": {
       "title": "Delete Invitation",
       "message": "Are you sure you want to delete the invitation for {{email}}?"
@@ -321,7 +325,8 @@
     },
     "messages": {
       "memberRemoved": "Member {{name}} removed successfully",
-      "membersRemoved": "Members removed successfully"
+      "membersRemoved": "Members removed successfully",
+      "invitationSent": "Invitation sent to {{email}}"
     }
   },
   "login": {

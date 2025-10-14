@@ -78,7 +78,8 @@
       "teamClear": "مسح تصفية الفريق"
     },
     "addonError": "خطأ في الإضافة",
-    "backToLogin": "العودة لتسجيل الدخول"
+    "backToLogin": "العودة لتسجيل الدخول",
+    "offline": "[TODO: Translate] Offline"
   },
   "topbar": {
     "help": "مساعدة",
@@ -169,10 +170,7 @@
   },
   "teams": {
     "title": "الفرق",
-    "members": {
-      "selectUser": "اختر مستخدمًا",
-      "searchUser": "البحث عن مستخدم..."
-    },
+    "members": "TODO: Translate - Members",
     "invitations": "الدعوات",
     "invitationAcceptSuccess": "تم قبول الدعوة بنجاح",
     "invitationDeleteSuccess": "تم حذف الدعوة بنجاح",
@@ -239,7 +237,12 @@
       "expired": "انتهت صلاحية هذه الدعوة.",
       "accepting": "جاري القبول...",
       "accept": "قبول الدعوة"
-    }
+    },
+    "memberSelection": {
+      "selectUser": "اختر مستخدمًا",
+      "searchUser": "البحث عن مستخدم..."
+    },
+    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully"
   },
   "login": {
     "title": "تسجيل الدخول",
@@ -272,7 +275,8 @@
     "content": "المحتوى",
     "playlists": "قوائم التشغيل",
     "medias": "الوسائط",
-    "widgets": "Widgets"
+    "widgets": "Widgets",
+    "members": "[TODO: Translate] Members"
   },
   "channels": {
     "title": "القنوات",
@@ -328,7 +332,8 @@
     },
     "messages": {
       "memberRemoved": "تمت إزالة العضو {{name}} بنجاح",
-      "membersRemoved": "تمت إزالة الأعضاء بنجاح"
+      "membersRemoved": "تمت إزالة الأعضاء بنجاح",
+      "invitationSent": "[TODO: Translate] Invitation sent to {{email}}"
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {
