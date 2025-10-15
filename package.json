@@ -42,6 +42,7 @@
     "build:platforms": "yarn run build:platforms:android && yarn run build:platforms:webos && yarn run build:platforms:electron && yarn run build:platforms:legacy",
     "build:all": "yarn run build:ui-common && yarn run build:cache && yarn run build:player && yarn run build:device && yarn run build:dashboard && yarn run build:widged && yarn run build:platforms",
     "build:server": "yarn run build:ui-common && yarn run build:cache && yarn run build:player && yarn run build:device",
+    "check-translations": "cd packages/dashboard && yarn check-translations",
     "prepare": "husky"
   },
   "workspaces": [
@@ -69,12 +70,15 @@
     "@docusaurus/preset-classic": "^3.9.1"
   },
   "lint-staged": {
-    "packages/{ui-common,cache,dashboard,device,player,widged,platforms/**}/**/*.{js,jsx,ts,tsx,json,css,md}": [
+    "packages/**/*.{js,jsx,ts,tsx,css,md}": "prettier --write",
+    "packages/**/*.json": [
       "prettier --write"
     ],
-    "packages/castmill/**/*.{ex,exs}": [
-      "cd packages/castmill && mix format"
-    ]
+    "packages/dashboard/src/i18n/locales/*.json": [
+      "prettier --write",
+      "cd packages/dashboard && node scripts/check-missing-translations.cjs"
+    ],
+    "packages/castmill/**/*.{ex,exs}": "cd packages/castmill && mix format && cd ../.."
   },
   "resolutions": {
     "glob": "^10.3.10",

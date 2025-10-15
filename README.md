@@ -22,19 +22,24 @@ The Castmill platform is composed of several packages:
 
 ## Development
 
-### Code Formatting
+### Code Formatting & Translation Validation
 
-This project uses **automatic code formatting** via Git hooks (Husky). When you commit code:
+This project uses **automatic code formatting and translation validation** via Git hooks (Husky). When you commit code:
 
 - **JavaScript/TypeScript** files are automatically formatted with Prettier
 - **Elixir** files in `packages/castmill/` are automatically formatted with `mix format`
+- **Translation files** (i18n) are automatically validated for 100% coverage across all 9 languages
 
-**No manual formatting needed!** Just `git commit` and your code will be formatted automatically.
+**No manual formatting or translation checking needed!** Just `git commit` and:
+1. Your code will be formatted automatically
+2. Translation coverage will be validated
+3. Commit will be blocked if translations are incomplete
 
-You can still format manually if needed:
+You can still format and validate manually if needed:
 ```bash
-yarn format:all              # Format all frontend packages
-cd packages/castmill && mix format  # Format Elixir code
+yarn format:all                         # Format all frontend packages
+cd packages/castmill && mix format      # Format Elixir code
+yarn check-translations                 # Validate i18n coverage
 ```
 
 See [.husky/README.md](./.husky/README.md) for more details.
