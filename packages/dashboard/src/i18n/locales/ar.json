@@ -257,6 +257,12 @@
       "expired": "انتهت صلاحية هذه الدعوة.",
       "accepting": "جاري القبول...",
       "accept": "قبول الدعوة"
+    },
+    "dialogs": {
+      "removeMemberTitle": "إزالة المستخدم من الفريق",
+      "removeMemberMessage": "هل أنت متأكد أنك تريد إزالة العضو \"{{name}}\" من الفريق؟",
+      "removeMembersTitle": "إزالة الأعضاء من الفريق",
+      "removeMembersMessage": "هل أنت متأكد أنك تريد إزالة الأعضاء التالية من الفريق؟"
     }
   },
   "login": {
@@ -280,7 +286,13 @@
     "generic": "حدث خطأ. يرجى المحاولة مرة أخرى.",
     "networkError": "خطأ في الشبكة. يرجى التحقق من اتصالك.",
     "unauthorized": "غير مصرح. يرجى تسجيل الدخول مرة أخرى.",
-    "unknownResourceType": "نوع مورد غير معروف: {{resourceType}}"
+    "unknownResourceType": "نوع مورد غير معروف: {{resourceType}}",
+    "serverUnreachable": "تعذر الاتصال بالخادم",
+    "serverUnreachableDescription": "الخادم الخلفي غير قابل للوصول حالياً. يعني هذا عادةً أن الخادم لا يعمل أو أن هناك مشكلة في الشبكة.",
+    "checkServerRunning": "تأكد من تشغيل خادم Castmill",
+    "checkNetworkConnection": "تحقق من اتصال الشبكة",
+    "checkServerUrl": "تحقق من عنوان URL للخادم في التكوين",
+    "retryConnection": "إعادة محاولة الاتصال"
   },
   "sidebar": {
     "organization": "المنظمة",
@@ -303,22 +315,28 @@
     "removeChannels": "إزالة القنوات",
     "confirmRemoveChannel": "هل أنت متأكد من أنك تريد إزالة القناة \"{{name}}\"؟",
     "confirmRemoveChannels": "هل أنت متأكد من أنك تريد إزالة القنوات التالية؟",
+    "enterChannelName": "أدخل اسم القناة",
+    "defaultPlaylist": "قائمة التشغيل الافتراضية",
+    "selectPlaylist": "اختر قائمة التشغيل",
+    "clearDefaultPlaylist": "مسح قائمة التشغيل الافتراضية",
+    "dragPlaylists": "اسحب قوائم التشغيل",
+    "repeatWeekly": "التكرار أسبوعيًا؟",
+    "calendarEntryDetails": "تفاصيل إدخال التقويم",
+    "removeChannelEntry": "إزالة إدخال القناة",
+    "cannotDeleteChannel": "لا يمكن حذف القناة",
+    "success": {
+      "updateDefaultPlaylist": "تم تحديث قائمة التشغيل الافتراضية بنجاح",
+      "clearDefaultPlaylist": "تم مسح قائمة التشغيل الافتراضية بنجاح"
+    },
     "errors": {
       "removeChannel": "خطأ في إزالة القناة {{name}}: {{error}}",
       "removeChannels": "خطأ في إزالة القنوات: {{error}}",
       "addChannel": "خطأ في إضافة القناة: {{error}}",
       "saveChannel": "خطأ في حفظ القناة: {{error}}",
       "updateDefaultPlaylist": "فشل تحديث قائمة التشغيل الافتراضية للقناة: {{error}}",
+      "clearDefaultPlaylist": "فشل مسح قائمة التشغيل الافتراضية للقناة: {{error}}",
       "updateChannelEntry": "خطأ في تحديث إدخال القناة: {{error}}"
-    },
-    "enterChannelName": "أدخل اسم القناة",
-    "defaultPlaylist": "قائمة التشغيل الافتراضية",
-    "selectPlaylist": "اختر قائمة التشغيل",
-    "dragPlaylists": "اسحب قوائم التشغيل",
-    "repeatWeekly": "التكرار أسبوعيًا؟",
-    "calendarEntryDetails": "تفاصيل إدخال التقويم",
-    "removeChannelEntry": "إزالة إدخال القناة",
-    "cannotDeleteChannel": "لا يمكن حذف القناة"
+    }
   },
   "organization": {
     "title": "المنظمة",
@@ -368,6 +386,12 @@
       "admin": "يمكنه إدارة أعضاء الفريق والموارد",
       "member": "يمكنه الوصول وتحرير موارد الفريق",
       "installer": "رمز مؤقت لتسجيل الجهاز (ينتهي خلال 24 ساعة)"
+    },
+    "dialogs": {
+      "removeMemberTitle": "إزالة المستخدم من المنظمة",
+      "removeMemberMessage": "هل أنت متأكد أنك تريد إزالة العضو \"{{name}}\" من المنظمة؟",
+      "removeMembersTitle": "إزالة الأعضاء من المنظمة",
+      "removeMembersMessage": "هل أنت متأكد أنك تريد إزالة الأعضاء التالية من المنظمة؟"
     }
   },
   "playlists": {

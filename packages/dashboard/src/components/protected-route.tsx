@@ -1,11 +1,19 @@
 import { useNavigate, useLocation, useParams } from '@solidjs/router';
-import { Component, JSX, Show, onMount, createEffect } from 'solid-js';
+import {
+  Component,
+  JSX,
+  Show,
+  onMount,
+  createEffect,
+  createSignal,
+} from 'solid-js';
 import { checkAuth, getUser, loginUser } from './auth'; // Import loginUser
 import { AddOn } from '../interfaces/addon.interface';
 import { AddonsService } from '../services/addons';
 import { store, setStore } from '../store/store';
 import { OrganizationsService } from '../services/organizations.service';
 import { usePermissions } from '../hooks/usePermissions';
+import { ServerError } from './server-error/server-error';
 
 import { useI18n } from '../i18n';
 import { useToast } from '@castmill/ui-common';
@@ -32,6 +40,12 @@ const ProtectedRoute: Component<ProtectedRouteProps> = (
   const params = useParams();
   const toast = useToast();
   const { loadPermissions } = usePermissions();
+  const [serverError, setServerError] = createSignal(false);
+
+  const handleRetry = () => {
+    setServerError(false);
+    window.location.reload();
+  };
 
   onMount(async () => {
     if (!checkAuth()) {
@@ -45,7 +59,20 @@ const ProtectedRoute: Component<ProtectedRouteProps> = (
       });
     } else {
       // First, ensure user session is loaded
-      await loginUser();
+      try {
+        await loginUser();
+      } catch (error) {
+        if (error instanceof Error && error.message === 'SERVER_UNREACHABLE') {
+          setServerError(true);
+          return;
+        }
+        // For other errors, show toast and redirect to login
+        toast.error(
+          `Authentication error: ${error instanceof Error ? error.message : 'Unknown error'}`
+        );
+        navigate('/login', { replace: true });
+        return;
+      }
 
       // Load organizations.
       setStore('organizations', {
@@ -152,12 +179,17 @@ const ProtectedRoute: Component<ProtectedRouteProps> = (
   });
 
   return (
-    <Show
-      when={!store.loadingAddons}
-      fallback={<div style="min-height: 20em;"></div>}
-    >
-      {props.children(store.addons)}
-    </Show>
+    <>
+      <Show when={serverError()}>
+        <ServerError onRetry={handleRetry} />
+      </Show>
+      <Show
+        when={!serverError() && !store.loadingAddons}
+        fallback={<div style="min-height: 20em;"></div>}
+      >
+        {props.children(store.addons)}
+      </Show>
+    </>
   );
 };
 

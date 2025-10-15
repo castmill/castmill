@@ -262,6 +262,12 @@
       "leftTeam": "You left the team {{name}}",
       "roleUpdated": "Role updated successfully for {{name}}"
     },
+    "dialogs": {
+      "removeMemberTitle": "Remove User From Team",
+      "removeMemberMessage": "Are you sure you want to remove member \"{{name}}\" from the team?",
+      "removeMembersTitle": "Remove Members From Team",
+      "removeMembersMessage": "Are you sure you want to remove the following members from the team?"
+    },
     "invitation": {
       "title": "Team Invitation",
       "emailAddress": "Email Address",
@@ -284,17 +290,23 @@
     "enterChannelName": "Enter Channel name",
     "defaultPlaylist": "Default playlist",
     "selectPlaylist": "Select Playlist",
+    "clearDefaultPlaylist": "Clear default playlist",
     "dragPlaylists": "Drag playlists",
     "repeatWeekly": "Repeat Weekly?",
     "calendarEntryDetails": "Calendar entry details",
     "removeChannelEntry": "Remove Channel Entry",
     "cannotDeleteChannel": "Cannot Delete Channel",
+    "success": {
+      "updateDefaultPlaylist": "Default playlist updated successfully",
+      "clearDefaultPlaylist": "Default playlist cleared successfully"
+    },
     "errors": {
       "removeChannel": "Error removing channel {{name}}: {{error}}",
       "removeChannels": "Error removing channels: {{error}}",
       "addChannel": "Error adding channel: {{error}}",
       "saveChannel": "Error saving channel: {{error}}",
       "updateDefaultPlaylist": "Failed to update channel default playlist: {{error}}",
+      "clearDefaultPlaylist": "Failed to clear channel default playlist: {{error}}",
       "updateChannelEntry": "Error updating channel entry: {{error}}"
     }
   },
@@ -342,7 +354,14 @@
     },
     "messages": {
       "memberRemoved": "Member {{name}} removed successfully",
-      "membersRemoved": "Members removed successfully"
+      "membersRemoved": "Members removed successfully",
+      "invitationSent": "Invitation sent to {{email}}"
+    },
+    "dialogs": {
+      "removeMemberTitle": "Remove User From Organization",
+      "removeMemberMessage": "Are you sure you want to remove member \"{{name}}\" from the organization?",
+      "removeMembersTitle": "Remove Members From Organization",
+      "removeMembersMessage": "Are you sure you want to remove the following members from the organization?"
     }
   },
   "login": {
@@ -382,7 +401,13 @@
     "generic": "An error occurred. Please try again.",
     "networkError": "Network error. Please check your connection.",
     "unauthorized": "Unauthorized. Please log in again.",
-    "unknownResourceType": "Unknown resource type: {{resourceType}}"
+    "unknownResourceType": "Unknown resource type: {{resourceType}}",
+    "serverUnreachable": "Cannot Connect to Server",
+    "serverUnreachableDescription": "The backend server is currently unreachable. This usually means the server is not running or there's a network issue.",
+    "checkServerRunning": "Make sure the Castmill server is running",
+    "checkNetworkConnection": "Check your network connection",
+    "checkServerUrl": "Verify the server URL in your configuration",
+    "retryConnection": "Retry Connection"
   },
   "playlists": {
     "title": "Playlists",
