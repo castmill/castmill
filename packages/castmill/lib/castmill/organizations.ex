@@ -597,6 +597,21 @@ defmodule Castmill.Organizations do
         network = Castmill.Networks.get_network(organization.network_id)
         send_invitation_email(network.domain, network.name, email, token)
 
+        # Check if user exists and send notification
+        case Castmill.Accounts.get_user_by_email(email) do
+          nil ->
+            # User doesn't exist yet, no notification to send
+            :ok
+
+          user ->
+            # User exists, send notification
+            Castmill.Notifications.Events.notify_organization_invitation(
+              user.id,
+              organization.name,
+              organization_id
+            )
+        end
+
         {:ok, invitation.token}
 
       # If membership check failed:
@@ -739,6 +754,16 @@ defmodule Castmill.Organizations do
                   where: i.token == ^token
                 )
                 |> Repo.update_all(set: [status: "accepted"])
+
+                # Send notification to organization members that invitation was accepted
+                user = Castmill.Accounts.get_user(user_id)
+
+                if user do
+                  Castmill.Notifications.Events.notify_invitation_accepted(
+                    user.name,
+                    invitation.organization_id
+                  )
+                end
 
                 {:ok, invitation}
 

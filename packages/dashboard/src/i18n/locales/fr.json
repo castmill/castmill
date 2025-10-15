@@ -520,5 +520,10 @@
     "teamLabel": "Équipe",
     "teamPlaceholder": "Sélectionner une équipe",
     "teamClear": "Effacer le filtre d'équipe"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "Pas encore de notifications",
+    "markAllRead": "Tout marquer comme lu"
   }
 }

@@ -9,6 +9,7 @@ defmodule CastmillWeb.UserSocket do
   channel("device_updates:*", CastmillWeb.DeviceUpdatesChannel)
   channel("resource:*", CastmillWeb.ResourceUpdatesChannel)
   channel("users:*", CastmillWeb.UsersChannel)
+  channel("notifications:*", CastmillWeb.NotificationsChannel)
 
   def connect(%{"token" => token}, socket, _connect_info) do
     with {:ok, user_id} <-
