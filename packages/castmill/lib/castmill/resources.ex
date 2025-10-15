@@ -219,10 +219,102 @@ defmodule Castmill.Resources do
   end
 
   @doc """
+  Checks if a playlist is used in any channels (as default playlist or in channel entries).
+  """
+  def playlist_has_channels?(%Playlist{id: playlist_id}) do
+    playlist_has_channels?(playlist_id)
+  end
+
+  def playlist_has_channels?(playlist_id) when is_integer(playlist_id) do
+    now = DateTime.utc_now()
+
+    # Check if used as default playlist
+    default_playlist_query =
+      from(c in Channel,
+        where: c.default_playlist_id == ^playlist_id,
+        select: count(c.id)
+      )
+
+    # Check if used in future/ongoing channel entries
+    # Only consider entries that end in the future or have future repeats
+    channel_entry_query =
+      from(ce in ChannelEntry,
+        where:
+          ce.playlist_id == ^playlist_id and
+            (ce.end > ^now or
+               (not is_nil(ce.repeat_weekly_until) and
+                  ce.repeat_weekly_until >= ^NaiveDateTime.to_date(now))),
+        select: count(ce.id)
+      )
+
+    default_count = Repo.one(default_playlist_query)
+    entry_count = Repo.one(channel_entry_query)
+
+    default_count + entry_count > 0
+  end
+
+  @doc """
+  Gets the channels that are using a specific playlist.
+  Returns a list of maps with channel id, name, usage type, and entry details if applicable.
+  Only considers future or ongoing channel entries (ignores past entries).
+  """
+  def get_channels_using_playlist(playlist_id) when is_integer(playlist_id) do
+    now = DateTime.utc_now()
+
+    # Get channels where playlist is the default playlist
+    default_playlist_channels =
+      from(c in Channel,
+        where: c.default_playlist_id == ^playlist_id,
+        select: %{
+          id: c.id,
+          name: c.name,
+          usage_type: "default",
+          entry_start: fragment("NULL"),
+          entry_end: fragment("NULL"),
+          repeat_until: fragment("NULL")
+        }
+      )
+      |> Repo.all()
+
+    # Get channels where playlist is used in future/ongoing channel entries
+    # An entry is considered active if:
+    # 1. It ends in the future (entry.end > now), OR
+    # 2. It has a repeat_weekly_until date in the future
+    channel_entry_channels =
+      from(ce in ChannelEntry,
+        join: c in Channel,
+        on: ce.channel_id == c.id,
+        where:
+          ce.playlist_id == ^playlist_id and
+            (ce.end > ^now or
+               (not is_nil(ce.repeat_weekly_until) and
+                  ce.repeat_weekly_until >= ^NaiveDateTime.to_date(now))),
+        distinct: true,
+        select: %{
+          id: c.id,
+          name: c.name,
+          usage_type: "scheduled",
+          entry_start: ce.start,
+          entry_end: ce.end,
+          repeat_until: ce.repeat_weekly_until
+        }
+      )
+      |> Repo.all()
+
+    # Combine results (no need to remove duplicates as they have different usage_type)
+    default_playlist_channels ++ channel_entry_channels
+  end
+
+  @doc """
     Removes a playlist.
+    Returns {:error, :playlist_has_channels} if the playlist is used in any channels.
   """
   def delete_playlist(%Playlist{} = playlist) do
-    Repo.delete(playlist)
+    if playlist_has_channels?(playlist) do
+      {:error, :playlist_has_channels}
+    else
+      Repo.delete(playlist)
+    end
   end
 
   @doc """

@@ -245,6 +245,12 @@
       "invitationSent": "Invitación enviada a {{email}}",
       "leftTeam": "Saliste del equipo {{name}}"
     },
+    "dialogs": {
+      "removeMemberTitle": "Eliminar Usuario del Equipo",
+      "removeMemberMessage": "¿Está seguro de que desea eliminar al miembro \"{{name}}\" del equipo?",
+      "removeMembersTitle": "Eliminar Miembros del Equipo",
+      "removeMembersMessage": "¿Está seguro de que desea eliminar los siguientes miembros del equipo?"
+    },
     "invitation": {
       "title": "Invitación al equipo",
       "emailAddress": "Dirección de correo electrónico",
@@ -275,7 +281,13 @@
     "generic": "Se ha producido un error. Por favor, inténtalo de nuevo.",
     "networkError": "Error de red. Por favor, comprueba tu conexión.",
     "unauthorized": "No autorizado. Por favor, inicia sesión de nuevo.",
-    "unknownResourceType": "Tipo de recurso desconocido: {{resourceType}}"
+    "unknownResourceType": "Tipo de recurso desconocido: {{resourceType}}",
+    "serverUnreachable": "No se Puede Conectar al Servidor",
+    "serverUnreachableDescription": "El servidor backend no está accesible actualmente. Esto generalmente significa que el servidor no está en funcionamiento o hay un problema de red.",
+    "checkServerRunning": "Asegúrate de que el servidor Castmill esté en funcionamiento",
+    "checkNetworkConnection": "Verifica tu conexión de red",
+    "checkServerUrl": "Verifica la URL del servidor en tu configuración",
+    "retryConnection": "Reintentar Conexión"
   },
   "sidebar": {
     "organization": "Organización",
@@ -301,17 +313,23 @@
     "enterChannelName": "Ingresa el nombre del canal",
     "defaultPlaylist": "Lista de reproducción predeterminada",
     "selectPlaylist": "Seleccionar lista de reproducción",
+    "clearDefaultPlaylist": "Limpiar lista de reproducción predeterminada",
     "dragPlaylists": "Arrastra listas de reproducción",
     "repeatWeekly": "¿Repetir semanalmente?",
     "calendarEntryDetails": "Detalles de la entrada del calendario",
     "removeChannelEntry": "Eliminar entrada del canal",
     "cannotDeleteChannel": "No se puede eliminar el canal",
+    "success": {
+      "updateDefaultPlaylist": "Lista de reproducción predeterminada actualizada correctamente",
+      "clearDefaultPlaylist": "Lista de reproducción predeterminada eliminada correctamente"
+    },
     "errors": {
       "removeChannel": "Error al eliminar el canal {{name}}: {{error}}",
       "removeChannels": "Error al eliminar canales: {{error}}",
       "addChannel": "Error al añadir canal: {{error}}",
       "saveChannel": "Error al guardar el canal: {{error}}",
       "updateDefaultPlaylist": "Error al actualizar la lista de reproducción predeterminada del canal: {{error}}",
+      "clearDefaultPlaylist": "Error al limpiar la lista de reproducción predeterminada del canal: {{error}}",
       "updateChannelEntry": "Error al actualizar la entrada del canal: {{error}}"
     }
   },

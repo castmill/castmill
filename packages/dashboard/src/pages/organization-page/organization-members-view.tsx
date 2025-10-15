@@ -44,9 +44,35 @@ const [showConfirmDialogMultiple, setShowConfirmDialogMultiple] =
 const [showConfirmDialog, setShowConfirmDialog] = createSignal(false);
 
 const [selectedMembers, setSelectedMembers] = createSignal(new Set<string>());
+const [selectedMembersMap, setSelectedMembersMap] = createSignal(
+  new Map<string, { user: User; user_id: string }>()
+);
 
 const onRowSelect = (rowsSelected: Set<string>) => {
+  const previousSelection = selectedMembers();
   setSelectedMembers(rowsSelected);
+
+  // Update the map: remove deselected items, add newly selected items
+  const newMap = new Map(selectedMembersMap());
+
+  // Remove deselected members
+  previousSelection.forEach((id) => {
+    if (!rowsSelected.has(id)) {
+      newMap.delete(id);
+    }
+  });
+
+  // Add newly selected members from current data
+  rowsSelected.forEach((memberId) => {
+    if (!newMap.has(memberId)) {
+      const member = data().find((d) => d.user_id === memberId);
+      if (member) {
+        newMap.set(memberId, member);
+      }
+    }
+  });
+
+  setSelectedMembersMap(newMap);
 };
 
 const itemsPerPage = 10;
@@ -259,6 +285,7 @@ export const OrganizationMembersView = (props: {
       refreshData();
       toast.success(t('organization.messages.membersRemoved'));
       setShowConfirmDialogMultiple(false);
+      setSelectedMembersMap(new Map());
     } catch (error) {
       const errorMessage = resolveRemoveMemberError(error);
       toast.error(errorMessage);
@@ -308,8 +335,10 @@ export const OrganizationMembersView = (props: {
 
       <ConfirmDialog
         show={showConfirmDialog()}
-        title={`Remove User From Organization`}
-        message={`Are you sure you want to remove member "${currentMember()?.user?.name}" from the organization?`}
+        title={t('organization.dialogs.removeMemberTitle')}
+        message={t('organization.dialogs.removeMemberMessage', {
+          name: currentMember()?.user?.name,
+        })}
         onClose={() => setShowConfirmDialog(false)}
         onConfirm={() =>
           confirmRemoveMemberFromOrganization(currentMember()?.user)
@@ -318,15 +347,14 @@ export const OrganizationMembersView = (props: {
 
       <ConfirmDialog
         show={showConfirmDialogMultiple()}
-        title={`Remove members From Organization`}
-        message={`Are you sure you want to remove the following members from the organization?`}
+        title={t('organization.dialogs.removeMembersTitle')}
+        message={t('organization.dialogs.removeMembersMessage')}
         onClose={() => setShowConfirmDialogMultiple(false)}
         onConfirm={() => confirmRemoveMultipleMembersFromOrganization()}
       >
         <div style="margin: 1.5em; line-height: 1.5em;">
-          {Array.from(selectedMembers()).map((memberId) => {
-            const member = data().find((d) => d.user_id === memberId);
-            return <div>{`- ${member?.user.name}`}</div>;
+          {Array.from(selectedMembersMap().values()).map((member) => {
+            return <div>{`- ${member.user.name}`}</div>;
           })}
         </div>
       </ConfirmDialog>
