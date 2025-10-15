@@ -325,7 +325,8 @@
     },
     "messages": {
       "memberRemoved": "Mitglied {{name}} wurde erfolgreich entfernt",
-      "membersRemoved": "Mitglieder wurden erfolgreich entfernt"
+      "membersRemoved": "Mitglieder wurden erfolgreich entfernt",
+      "invitationSent": "Einladung an {{email}} gesendet"
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {

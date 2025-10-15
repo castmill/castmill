@@ -353,7 +353,8 @@
     },
     "messages": {
       "memberRemoved": "Le membre {{name}} a été supprimé avec succès",
-      "membersRemoved": "Les membres ont été supprimés avec succès"
+      "membersRemoved": "Les membres ont été supprimés avec succès",
+      "invitationSent": "Invitation envoyée à {{email}}"
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {

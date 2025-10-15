@@ -353,7 +353,8 @@
     },
     "messages": {
       "memberRemoved": "已成功移除成员 {{name}}",
-      "membersRemoved": "已成功移除成员"
+      "membersRemoved": "已成功移除成员",
+      "invitationSent": "已向 {{email}} 发送邀请"
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {

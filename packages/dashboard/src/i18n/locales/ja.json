@@ -353,7 +353,8 @@
     },
     "messages": {
       "memberRemoved": "メンバー{{name}}を正常に削除しました",
-      "membersRemoved": "メンバーを正常に削除しました"
+      "membersRemoved": "メンバーを正常に削除しました",
+      "invitationSent": "{{email}}に招待状を送信しました"
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {

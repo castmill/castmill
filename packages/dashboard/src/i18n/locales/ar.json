@@ -353,7 +353,8 @@
     },
     "messages": {
       "memberRemoved": "تمت إزالة العضو {{name}} بنجاح",
-      "membersRemoved": "تمت إزالة الأعضاء بنجاح"
+      "membersRemoved": "تمت إزالة الأعضاء بنجاح",
+      "invitationSent": "تم إرسال الدعوة إلى {{email}}"
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {

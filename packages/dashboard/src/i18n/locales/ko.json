@@ -353,7 +353,8 @@
     },
     "messages": {
       "memberRemoved": "구성원 {{name}}을(를) 성공적으로 제거했습니다",
-      "membersRemoved": "구성원을 성공적으로 제거했습니다"
+      "membersRemoved": "구성원을 성공적으로 제거했습니다",
+      "invitationSent": "{{email}}에게 초대장을 보냈습니다"
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {

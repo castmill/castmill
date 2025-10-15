@@ -348,7 +348,8 @@
     },
     "messages": {
       "memberRemoved": "Medlemmen {{name}} togs bort med framgång",
-      "membersRemoved": "Medlemmarna togs bort med framgång"
+      "membersRemoved": "Medlemmarna togs bort med framgång",
+      "invitationSent": "Inbjudan skickad till {{email}}"
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {
