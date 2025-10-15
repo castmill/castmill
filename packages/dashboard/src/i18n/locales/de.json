@@ -144,8 +144,8 @@
     "deleteAccountDescription": "Löschen Sie Ihr Konto und alle zugehörigen Daten dauerhaft. Diese Aktion kann nicht rückgängig gemacht werden.",
     "deleteAccountButton": "Konto löschen",
     "deleteAccountConfirm": "Sind Sie sicher?",
-    "deleteAccountWarning": "Dies wird Ihr Konto dauerhaft löschen und alle Passkeys von unseren Servern entfernen. Allerdings bleiben auf Ihren Geräten gespeicherte Passkeys (in iCloud-Schlüsselbund, Google Password Manager, Windows Hello usw.) bestehen und müssen manuell entfernt werden.",
-    "deleteAccountPasskeyInfo": "Nach der Löschung schlägt der Versuch, sich mit einem alten Passkey anzumelden, fehl. Um Verwirrung zu vermeiden, entfernen Sie bitte die Passkeys dieses Kontos manuell aus den Geräteeinstellungen.",
+    "deleteAccountWarning": "Dies wird Ihr Konto dauerhaft löschen und alle Passkeys von unseren Servern entfernen. In modernen Browsern (Chrome 132+) werden Passkeys automatisch von Ihrem Gerät entfernt. In älteren Browsern bleiben auf Ihren Geräten gespeicherte Passkeys (in iCloud-Schlüsselbund, Google Password Manager, Windows Hello usw.) bestehen und müssen manuell entfernt werden.",
+    "deleteAccountPasskeyInfo": "Nach der Löschung schlägt der Versuch, sich mit einem alten Passkey anzumelden, fehl. In älteren Browsern entfernen Sie bitte die Passkeys dieses Kontos manuell aus den Geräteeinstellungen, um Verwirrung zu vermeiden.",
     "deleteAccountYes": "Ja, Konto löschen",
     "retry": "Erneut versuchen",
     "errors": {

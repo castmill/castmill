@@ -450,5 +450,59 @@ describe('SettingsPage', () => {
         expect(UserService.deleteAccount).toHaveBeenCalledWith('1');
       });
     });
+
+    it('uses Signal API to delete passkeys when supported', async () => {
+      // Mock Signal API support
+      const mockSignalUnknownCredential = vi.fn().mockResolvedValue(undefined);
+      (global as any).PublicKeyCredential = {
+        signalUnknownCredential: mockSignalUnknownCredential,
+      };
+
+      (UserService.getUserCredentials as any).mockResolvedValue({
+        credentials: [
+          {
+            id: 'cred1',
+            name: 'My Laptop',
+            inserted_at: '2024-01-01T00:00:00Z',
+          },
+          {
+            id: 'cred2',
+            name: 'My Phone',
+            inserted_at: '2024-01-02T00:00:00Z',
+          },
+        ],
+      });
+      (UserService.deleteAccount as any).mockResolvedValue({ status: 'ok' });
+
+      renderWithI18n(() => <SettingsPage />);
+
+      await waitFor(() => {
+        expect(screen.getByText('My Laptop')).toBeInTheDocument();
+      });
+
+      const deleteButton = screen.getByRole('button', {
+        name: 'Delete Account',
+      });
+      fireEvent.click(deleteButton);
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole('button', { name: 'Yes, Delete Account' })
+        ).toBeInTheDocument();
+      });
+
+      const confirmButton = screen.getByRole('button', {
+        name: 'Yes, Delete Account',
+      });
+      fireEvent.click(confirmButton);
+
+      await waitFor(() => {
+        expect(mockSignalUnknownCredential).toHaveBeenCalledTimes(2);
+        expect(UserService.deleteAccount).toHaveBeenCalledWith('1');
+      });
+
+      // Cleanup
+      delete (global as any).PublicKeyCredential;
+    });
   });
 });

@@ -138,8 +138,8 @@
     "deleteAccountDescription": "Supprimer définitivement votre compte et toutes les données associées. Cette action ne peut pas être annulée.",
     "deleteAccountButton": "Supprimer le compte",
     "deleteAccountConfirm": "Êtes-vous sûr ?",
-    "deleteAccountWarning": "Cela supprimera définitivement votre compte et supprimera toutes les clés d'accès de nos serveurs. Cependant, les clés d'accès stockées sur vos appareils (dans iCloud Keychain, Google Password Manager, Windows Hello, etc.) resteront et devront être supprimées manuellement.",
-    "deleteAccountPasskeyInfo": "Après la suppression, si vous essayez de vous connecter avec une ancienne clé d'accès, cela échouera. Pour éviter toute confusion, veuillez supprimer manuellement les clés d'accès de ce compte dans les paramètres de votre appareil.",
+    "deleteAccountWarning": "Cela supprimera définitivement votre compte et supprimera toutes les clés d'accès de nos serveurs. Sur les navigateurs modernes (Chrome 132+), les clés d'accès seront automatiquement supprimées de votre appareil. Sur les navigateurs plus anciens, les clés d'accès stockées sur vos appareils (dans iCloud Keychain, Google Password Manager, Windows Hello, etc.) resteront et devront être supprimées manuellement.",
+    "deleteAccountPasskeyInfo": "Après la suppression, si vous essayez de vous connecter avec une ancienne clé d'accès, cela échouera. Sur les navigateurs plus anciens, veuillez supprimer manuellement les clés d'accès de ce compte dans les paramètres de votre appareil pour éviter toute confusion.",
     "deleteAccountYes": "Oui, supprimer le compte",
     "retry": "Réessayer",
     "errors": {
