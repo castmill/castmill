@@ -148,7 +148,11 @@
       "sessionExpired": "Erreur d'authentification : Votre session a peut-être expiré. Veuillez actualiser la page et réessayer.",
       "addPasskeyFailed": "Échec de l'ajout de la clé d'accès : {{error}}",
       "addPasskey": "Échec de l'ajout de la nouvelle clé d'accès. Veuillez réessayer."
-    }
+    },
+    "deleteAccountSuccess": "Compte supprimé avec succès. Redirection...",
+    "deleteAccountError": "Échec de la suppression du compte. Veuillez réessayer.",
+    "soleAdministratorError": "Impossible de supprimer le compte. Vous êtes le seul administrateur de '{{orgName}}' qui a d'autres membres. Veuillez d'abord promouvoir un autre utilisateur en tant qu'administrateur.",
+    "soleAdministratorErrorGeneric": "Impossible de supprimer le compte. Vous êtes le seul administrateur d'une ou plusieurs organisations ayant d'autres membres. Veuillez d'abord promouvoir un autre utilisateur en tant qu'administrateur."
   },
   "usage": {
     "title": "Utilisation",

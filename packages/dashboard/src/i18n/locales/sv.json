@@ -143,7 +143,11 @@
       "sessionExpired": "Autentiseringsfel: Din session kan ha gått ut. Uppdatera sidan och försök igen.",
       "addPasskeyFailed": "Misslyckades att lägga till nyckel: {{error}}",
       "addPasskey": "Misslyckades att lägga till ny nyckel. Försök igen."
-    }
+    },
+    "deleteAccountSuccess": "Kontot har raderats. Omdirigerar...",
+    "deleteAccountError": "Det gick inte att radera kontot. Försök igen.",
+    "soleAdministratorError": "Kan inte radera kontot. Du är den enda administratören för '{{orgName}}' som har andra medlemmar. Befordra en annan användare till administratör först.",
+    "soleAdministratorErrorGeneric": "Kan inte radera kontot. Du är den enda administratören för en eller flera organisationer med andra medlemmar. Befordra en annan användare till administratör först."
   },
   "usage": {
     "title": "Användning",

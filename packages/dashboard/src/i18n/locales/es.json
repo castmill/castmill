@@ -149,7 +149,11 @@
       "sessionExpired": "Error de autenticación: Tu sesión puede haber expirado. Por favor, actualiza la página e inténtalo de nuevo.",
       "addPasskeyFailed": "Error al añadir la llave: {{error}}",
       "addPasskey": "Error al añadir nueva llave de acceso. Por favor, inténtalo de nuevo."
-    }
+    },
+    "deleteAccountSuccess": "Cuenta eliminada con éxito. Redirigiendo...",
+    "deleteAccountError": "Error al eliminar la cuenta. Por favor, inténtelo de nuevo.",
+    "soleAdministratorError": "No se puede eliminar la cuenta. Usted es el único administrador de '{{orgName}}' que tiene otros miembros. Por favor, promocione a otro usuario a administrador primero.",
+    "soleAdministratorErrorGeneric": "No se puede eliminar la cuenta. Usted es el único administrador de una o más organizaciones con otros miembros. Por favor, promocione a otro usuario a administrador primero."
   },
   "usage": {
     "title": "Uso",

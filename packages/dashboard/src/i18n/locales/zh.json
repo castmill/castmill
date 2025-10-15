@@ -148,7 +148,11 @@
       "sessionExpired": "身份验证错误：您的会话可能已过期。请刷新页面并重试。",
       "addPasskeyFailed": "添加密钥失败：{{error}}",
       "addPasskey": "添加新密钥失败。请重试。"
-    }
+    },
+    "deleteAccountSuccess": "账户已成功删除。正在重定向...",
+    "deleteAccountError": "删除账户失败。请重试。",
+    "soleAdministratorError": "无法删除账户。您是 '{{orgName}}' 的唯一管理员，该组织还有其他成员。请先将另一个用户提升为管理员。",
+    "soleAdministratorErrorGeneric": "无法删除账户。您是一个或多个有其他成员的组织的唯一管理员。请先将另一个用户提升为管理员。"
   },
   "usage": {
     "title": "使用情况",

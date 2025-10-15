@@ -154,7 +154,11 @@
       "sessionExpired": "Authentifizierungsfehler: Ihre Sitzung ist möglicherweise abgelaufen. Bitte aktualisieren Sie die Seite und versuchen Sie es erneut.",
       "addPasskeyFailed": "Fehler beim Hinzufügen des Passkeys: {{error}}",
       "addPasskey": "Fehler beim Hinzufügen eines neuen Passkeys. Bitte versuchen Sie es erneut."
-    }
+    },
+    "deleteAccountSuccess": "Konto erfolgreich gelöscht. Weiterleitung...",
+    "deleteAccountError": "Konto konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.",
+    "soleAdministratorError": "Konto kann nicht gelöscht werden. Sie sind der einzige Administrator von '{{orgName}}', das andere Mitglieder hat. Bitte befördern Sie zuerst einen anderen Benutzer zum Administrator.",
+    "soleAdministratorErrorGeneric": "Konto kann nicht gelöscht werden. Sie sind der einzige Administrator einer oder mehrerer Organisationen mit anderen Mitgliedern. Bitte befördern Sie zuerst einen anderen Benutzer zum Administrator."
   },
   "usage": {
     "title": "Nutzung",
