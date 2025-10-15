@@ -7,7 +7,7 @@ import {
   For,
 } from 'solid-js';
 import { Button, FormItem, Timestamp } from '@castmill/ui-common';
-import { getUser } from '../../components/auth';
+import { getUser, updateUser } from '../../components/auth';
 import { UserService } from '../../services/user.service';
 import { User } from '../../interfaces/user.interface';
 import {
@@ -122,8 +122,10 @@ const SettingsPage: Component = () => {
 
       if (Object.keys(updates).length > 0) {
         await UserService.updateProfile(currentUser.id, updates);
-        // Update the user signal with new values to reset isDirty state
+        // Update the local user signal with new values to reset isDirty state
         setUser({ ...currentUser, ...updates });
+        // Update the global user state so the topbar reacts to the change
+        updateUser(updates);
       }
 
       if (emailChanged) {

@@ -72,6 +72,10 @@ export function getUser() {
   return user();
 }
 
+export function updateUser(updates: Partial<User>) {
+  setUser({ ...user(), ...updates });
+}
+
 export function resetSession() {
   setIsAuthenticated(false);
   setUser({});
