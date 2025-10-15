@@ -261,6 +261,12 @@
       "expired": "此邀请已过期。",
       "accepting": "正在接受...",
       "accept": "接受邀请"
+    },
+    "dialogs": {
+      "removeMemberTitle": "从团队中移除用户",
+      "removeMemberMessage": "您确定要从团队中移除成员\"{{name}}\"吗？",
+      "removeMembersTitle": "从团队中移除成员",
+      "removeMembersMessage": "您确定要从团队中移除以下成员吗？"
     }
   },
   "login": {
@@ -284,7 +290,13 @@
     "generic": "发生错误。请重试。",
     "networkError": "网络错误。请检查您的连接。",
     "unauthorized": "未授权。请重新登录。",
-    "unknownResourceType": "未知资源类型：{{resourceType}}"
+    "unknownResourceType": "未知资源类型：{{resourceType}}",
+    "serverUnreachable": "无法连接到服务器",
+    "serverUnreachableDescription": "后端服务器当前无法访问。这通常意味着服务器未运行或存在网络问题。",
+    "checkServerRunning": "确保 Castmill 服务器正在运行",
+    "checkNetworkConnection": "检查您的网络连接",
+    "checkServerUrl": "验证配置中的服务器 URL",
+    "retryConnection": "重试连接"
   },
   "sidebar": {
     "organization": "组织",
@@ -307,22 +319,80 @@
     "removeChannels": "删除频道",
     "confirmRemoveChannel": "您确定要删除频道 \"{{name}}\" 吗？",
     "confirmRemoveChannels": "您确定要删除以下频道吗？",
+    "enterChannelName": "输入频道名称",
+    "defaultPlaylist": "默认播放列表",
+    "selectPlaylist": "选择播放列表",
+    "clearDefaultPlaylist": "清除默认播放列表",
+    "dragPlaylists": "拖动播放列表",
+    "repeatWeekly": "每周重复？",
+    "calendarEntryDetails": "日历条目详情",
+    "removeChannelEntry": "删除频道条目",
+    "cannotDeleteChannel": "无法删除频道",
+    "success": {
+      "updateDefaultPlaylist": "默认播放列表更新成功",
+      "clearDefaultPlaylist": "默认播放列表清除成功"
+    },
     "errors": {
       "removeChannel": "删除频道 {{name}} 时出错：{{error}}",
       "removeChannels": "删除频道时出错：{{error}}",
       "addChannel": "添加频道时出错：{{error}}",
       "saveChannel": "保存频道时出错：{{error}}",
       "updateDefaultPlaylist": "更新频道默认播放列表失败：{{error}}",
+      "clearDefaultPlaylist": "清除频道默认播放列表失败：{{error}}",
       "updateChannelEntry": "更新频道条目时出错：{{error}}"
+    }
+  },
+  "organization": {
+    "title": "组织",
+    "users": "用户",
+    "invitations": "邀请",
+    "update": "更新",
+    "placeholderName": "输入组织名称",
+    "inviteMember": "邀请成员",
+    "enterMemberEmail": "输入成员的电子邮件",
+    "role": "角色",
+    "roleAdmin": "管理员",
+    "roleManager": "经理",
+    "roleMember": "成员",
+    "roleEditor": "编辑者",
+    "rolePublisher": "发布者",
+    "roleDeviceManager": "设备管理员",
+    "roleGuest": "访客",
+    "teamRoleAdmin": "团队管理员",
+    "teamRoleMember": "团队成员",
+    "errors": {
+      "updateOrganization": "更新组织时出错：{{error}}",
+      "emailRequired": "电子邮件为必填项",
+      "invalidEmail": "无效的电子邮件",
+      "cannotRemoveLastAdmin": "你不能移除组织最后一位管理员。",
+      "invalidRole": "所选角色对该组织无效。"
     },
-    "enterChannelName": "输入频道名称",
-    "defaultPlaylist": "默认播放列表",
-    "selectPlaylist": "选择播放列表",
-    "dragPlaylists": "拖动播放列表",
-    "repeatWeekly": "每周重复？",
-    "calendarEntryDetails": "日历条目详情",
-    "removeChannelEntry": "删除频道条目",
-    "cannotDeleteChannel": "无法删除频道"
+    "messages": {
+      "memberRemoved": "已成功移除成员 {{name}}",
+      "membersRemoved": "已成功移除成员",
+      "invitationSent": "已向 {{email}} 发送邀请"
+    },
+    "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
+    "roleDescriptions": {
+      "admin": "完全访问权限，包括组织管理",
+      "manager": "可以管理团队和大多数资源",
+      "member": "标准用户（默认），可以管理内容",
+      "editor": "完整的内容管理，不能管理团队",
+      "publisher": "类似编辑者，加上发布工作流操作",
+      "device_manager": "完整的设备和频道管理",
+      "guest": "对资源的只读访问权限"
+    },
+    "teamRoleDescriptions": {
+      "admin": "可以管理团队成员和资源",
+      "member": "可以访问和编辑团队资源",
+      "installer": "用于设备注册的临时令牌（24小时后过期）"
+    },
+    "dialogs": {
+      "removeMemberTitle": "从组织中移除用户",
+      "removeMemberMessage": "您确定要从组织中移除成员\"{{name}}\"吗？",
+      "removeMembersTitle": "从组织中移除成员",
+      "removeMembersMessage": "您确定要从组织中移除以下成员吗？"
+    }
   },
   "playlists": {
     "title": "播放列表",

@@ -261,6 +261,12 @@
       "expired": "この招待は期限切れです。",
       "accepting": "承認中...",
       "accept": "招待を承認"
+    },
+    "dialogs": {
+      "removeMemberTitle": "チームからユーザーを削除",
+      "removeMemberMessage": "メンバー「{{name}}」をチームから削除してもよろしいですか？",
+      "removeMembersTitle": "チームからメンバーを削除",
+      "removeMembersMessage": "以下のメンバーをチームから削除してもよろしいですか？"
     }
   },
   "login": {
@@ -284,7 +290,13 @@
     "generic": "エラーが発生しました。もう一度お試しください。",
     "networkError": "ネットワークエラーです。接続を確認してください。",
     "unauthorized": "認証されていません。再度ログインしてください。",
-    "unknownResourceType": "不明なリソースタイプ: {{resourceType}}"
+    "unknownResourceType": "不明なリソースタイプ: {{resourceType}}",
+    "serverUnreachable": "サーバーに接続できません",
+    "serverUnreachableDescription": "バックエンドサーバーに現在アクセスできません。通常、サーバーが実行されていないか、ネットワークの問題があることを意味します。",
+    "checkServerRunning": "Castmill サーバーが実行されていることを確認してください",
+    "checkNetworkConnection": "ネットワーク接続を確認してください",
+    "checkServerUrl": "設定でサーバー URL を確認してください",
+    "retryConnection": "接続を再試行"
   },
   "sidebar": {
     "organization": "組織",
@@ -307,22 +319,80 @@
     "removeChannels": "チャンネルを削除",
     "confirmRemoveChannel": "チャンネル「{{name}}」を削除してもよろしいですか？",
     "confirmRemoveChannels": "以下のチャンネルを削除してもよろしいですか？",
+    "enterChannelName": "チャンネル名を入力してください",
+    "defaultPlaylist": "デフォルトプレイリスト",
+    "selectPlaylist": "プレイリストを選択",
+    "clearDefaultPlaylist": "デフォルトプレイリストをクリア",
+    "dragPlaylists": "プレイリストをドラッグ",
+    "repeatWeekly": "毎週繰り返しますか？",
+    "calendarEntryDetails": "カレンダーエントリーの詳細",
+    "removeChannelEntry": "チャンネルエントリーを削除",
+    "cannotDeleteChannel": "チャンネルを削除できません",
+    "success": {
+      "updateDefaultPlaylist": "デフォルトプレイリストの更新に成功しました",
+      "clearDefaultPlaylist": "デフォルトプレイリストのクリアに成功しました"
+    },
     "errors": {
       "removeChannel": "チャンネル{{name}}の削除中にエラーが発生しました：{{error}}",
       "removeChannels": "チャンネルの削除中にエラーが発生しました：{{error}}",
       "addChannel": "チャンネルの追加中にエラーが発生しました：{{error}}",
       "saveChannel": "チャンネルの保存中にエラーが発生しました：{{error}}",
       "updateDefaultPlaylist": "チャンネルのデフォルトプレイリストの更新に失敗しました：{{error}}",
+      "clearDefaultPlaylist": "チャンネルのデフォルトプレイリストのクリアに失敗しました：{{error}}",
       "updateChannelEntry": "チャンネルエントリーの更新中にエラーが発生しました：{{error}}"
+    }
+  },
+  "organization": {
+    "title": "組織",
+    "users": "ユーザー",
+    "invitations": "招待",
+    "update": "更新",
+    "placeholderName": "組織名を入力してください",
+    "inviteMember": "メンバーを招待",
+    "enterMemberEmail": "メンバーのメールアドレスを入力してください",
+    "role": "役割",
+    "roleAdmin": "管理者",
+    "roleManager": "マネージャー",
+    "roleMember": "メンバー",
+    "roleEditor": "編集者",
+    "rolePublisher": "パブリッシャー",
+    "roleDeviceManager": "デバイス管理者",
+    "roleGuest": "ゲスト",
+    "teamRoleAdmin": "チーム管理者",
+    "teamRoleMember": "チームメンバー",
+    "errors": {
+      "updateOrganization": "組織の更新中にエラーが発生しました：{{error}}",
+      "emailRequired": "メールアドレスは必須です",
+      "invalidEmail": "無効なメールアドレス",
+      "cannotRemoveLastAdmin": "組織の最後の管理者を削除することはできません。",
+      "invalidRole": "選択した役割はこの組織で有効ではありません。"
     },
-    "enterChannelName": "チャンネル名を入力してください",
-    "defaultPlaylist": "デフォルトプレイリスト",
-    "selectPlaylist": "プレイリストを選択",
-    "dragPlaylists": "プレイリストをドラッグ",
-    "repeatWeekly": "毎週繰り返しますか？",
-    "calendarEntryDetails": "カレンダーエントリーの詳細",
-    "removeChannelEntry": "チャンネルエントリーを削除",
-    "cannotDeleteChannel": "チャンネルを削除できません"
+    "messages": {
+      "memberRemoved": "メンバー{{name}}を正常に削除しました",
+      "membersRemoved": "メンバーを正常に削除しました",
+      "invitationSent": "{{email}}に招待状を送信しました"
+    },
+    "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
+    "roleDescriptions": {
+      "admin": "組織管理を含む完全なアクセス権",
+      "manager": "チームとほとんどのリソースを管理できます",
+      "member": "標準ユーザー（デフォルト）、コンテンツを管理できます",
+      "editor": "完全なコンテンツ管理、チームは管理できません",
+      "publisher": "編集者と同様に公開ワークフローアクションが追加されます",
+      "device_manager": "完全なデバイスとチャンネル管理",
+      "guest": "リソースへの読み取り専用アクセス"
+    },
+    "teamRoleDescriptions": {
+      "admin": "チームメンバーとリソースを管理できます",
+      "member": "チームリソースにアクセスして編集できます",
+      "installer": "デバイス登録用の一時トークン（24時間後に期限切れ）"
+    },
+    "dialogs": {
+      "removeMemberTitle": "組織からユーザーを削除",
+      "removeMemberMessage": "メンバー「{{name}}」を組織から削除してもよろしいですか？",
+      "removeMembersTitle": "組織からメンバーを削除",
+      "removeMembersMessage": "以下のメンバーを組織から削除してもよろしいですか？"
+    }
   },
   "playlists": {
     "title": "プレイリスト",
