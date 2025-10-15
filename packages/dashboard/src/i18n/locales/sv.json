@@ -133,7 +133,8 @@
     "deleteAccountDescription": "Ta bort ditt konto och all tillhörande data permanent. Denna åtgärd kan inte ångras.",
     "deleteAccountButton": "Ta bort konto",
     "deleteAccountConfirm": "Är du säker?",
-    "deleteAccountWarning": "Detta kommer permanent ta bort ditt konto.",
+    "deleteAccountWarning": "Detta kommer permanent ta bort ditt konto och ta bort alla nycklar från våra servrar. Dock kommer nycklar som är lagrade på dina enheter (i iCloud Keychain, Google Password Manager, Windows Hello, etc.) att finnas kvar och måste tas bort manuellt.",
+    "deleteAccountPasskeyInfo": "Efter borttagning kommer försök att logga in med en gammal nyckel att misslyckas. För att undvika förvirring, vänligen ta bort detta kontos nycklar manuellt från din enhets inställningar.",
     "deleteAccountYes": "Ja, ta bort konto",
     "retry": "Försök igen",
     "errors": {

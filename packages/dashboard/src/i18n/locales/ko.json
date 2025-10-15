@@ -138,7 +138,8 @@
     "deleteAccountDescription": "계정과 모든 관련 데이터를 영구적으로 삭제합니다. 이 작업은 취소할 수 없습니다.",
     "deleteAccountButton": "계정 삭제",
     "deleteAccountConfirm": "확실합니까?",
-    "deleteAccountWarning": "계정이 영구적으로 삭제됩니다.",
+    "deleteAccountWarning": "계정이 영구적으로 삭제되고 서버에서 모든 패스키가 제거됩니다. 그러나 기기에 저장된 패스키(iCloud 키체인, Google 비밀번호 관리자, Windows Hello 등)는 남아있으므로 수동으로 삭제해야 합니다.",
+    "deleteAccountPasskeyInfo": "삭제 후 오래된 패스키로 로그인을 시도하면 실패합니다. 혼란을 방지하려면 기기 설정에서 이 계정의 패스키를 수동으로 삭제하세요.",
     "deleteAccountYes": "예, 계정 삭제",
     "retry": "재시도",
     "errors": {

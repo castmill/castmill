@@ -138,7 +138,8 @@
     "deleteAccountDescription": "永久删除您的账户和所有相关数据。此操作无法撤销。",
     "deleteAccountButton": "删除账户",
     "deleteAccountConfirm": "您确定吗？",
-    "deleteAccountWarning": "这将永久删除您的账户。",
+    "deleteAccountWarning": "这将永久删除您的账户并从我们的服务器中删除所有密钥。但是，存储在您设备上的密钥（在iCloud钥匙串、Google密码管理器、Windows Hello等中）将保留，必须手动删除。",
+    "deleteAccountPasskeyInfo": "删除后，如果您尝试使用旧密钥登录，将会失败。为避免混淆，请从您的设备设置中手动删除此账户的密钥。",
     "deleteAccountYes": "是的，删除账户",
     "retry": "重试",
     "errors": {

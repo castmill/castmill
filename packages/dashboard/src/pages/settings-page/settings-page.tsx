@@ -583,6 +583,9 @@ const SettingsPage: Component = () => {
                     <strong>{t('settings.deleteAccountConfirm')}</strong>{' '}
                     {t('settings.deleteAccountWarning')}
                   </p>
+                  <p class="passkey-warning">
+                    ⚠️ {t('settings.deleteAccountPasskeyInfo')}
+                  </p>
                   <div class="confirmation-actions">
                     <Button
                       label={t('settings.deleteAccountYes')}

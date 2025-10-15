@@ -133,7 +133,8 @@
     "deleteAccountDescription": "Eliminar permanentemente tu cuenta y todos los datos asociados. Esta acción no se puede deshacer.",
     "deleteAccountButton": "Eliminar cuenta",
     "deleteAccountConfirm": "¿Estás seguro?",
-    "deleteAccountWarning": "Esto eliminará permanentemente tu cuenta.",
+    "deleteAccountWarning": "Esto eliminará permanentemente tu cuenta y eliminará todas las llaves de acceso de nuestros servidores. Sin embargo, las llaves almacenadas en tus dispositivos (en iCloud Keychain, Google Password Manager, Windows Hello, etc.) permanecerán y deben eliminarse manualmente.",
+    "deleteAccountPasskeyInfo": "Después de la eliminación, si intentas iniciar sesión con una llave antigua, fallará. Para evitar confusión, por favor elimina manualmente las llaves de acceso de esta cuenta de la configuración de tu dispositivo.",
     "deleteAccountYes": "Sí, eliminar cuenta",
     "retry": "Reintentar",
     "errors": {

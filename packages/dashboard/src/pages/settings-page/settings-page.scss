@@ -210,6 +210,16 @@
           color: #e74c3c;
         }
 
+        .passkey-warning {
+          margin: 1rem 0;
+          padding: 0.75rem;
+          background: colors.$background;
+          border-left: 3px solid #f39c12;
+          color: colors.$base-color;
+          font-size: 0.9rem;
+          line-height: 1.5;
+        }
+
         .confirmation-actions {
           display: flex;
           gap: 1rem;

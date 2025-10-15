@@ -138,7 +138,8 @@
     "deleteAccountDescription": "حذف حسابك وجميع البيانات المرتبطة بشكل دائم. لا يمكن التراجع عن هذا الإجراء.",
     "deleteAccountButton": "حذف الحساب",
     "deleteAccountConfirm": "هل أنت متأكد؟",
-    "deleteAccountWarning": "سيؤدي هذا إلى حذف حسابك بشكل دائم.",
+    "deleteAccountWarning": "سيؤدي هذا إلى حذف حسابك بشكل دائم وإزالة جميع مفاتيح المرور من خوادمنا. ومع ذلك، ستبقى مفاتيح المرور المخزنة على أجهزتك (في iCloud Keychain أو Google Password Manager أو Windows Hello وما إلى ذلك) ويجب إزالتها يدويًا.",
+    "deleteAccountPasskeyInfo": "بعد الحذف، إذا حاولت تسجيل الدخول باستخدام مفتاح مرور قديم، فسيفشل. لتجنب الارتباك، يرجى إزالة مفاتيح المرور لهذا الحساب يدويًا من إعدادات جهازك.",
     "deleteAccountYes": "نعم، احذف الحساب",
     "retry": "إعادة المحاولة",
     "errors": {
