@@ -26,9 +26,19 @@ interface DropdownProps {
   clearable?: boolean;
   clearLabel?: string;
   onClear?: () => void;
+  variant?: 'default' | 'inline'; // Inline variant for use in table cells
+  id?: string; // Optional id for the select element (for forms and accessibility)
+  name?: string; // Optional name for the select element (for forms)
 }
 
+// Generate a unique ID for the dropdown if not provided
+let dropdownIdCounter = 0;
+const generateDropdownId = () => `dropdown-${++dropdownIdCounter}`;
+
 export const Dropdown: Component<DropdownProps> = (props) => {
+  // Generate a unique ID for this instance if not provided
+  const dropdownId = props.id || generateDropdownId();
+  
   const computeFallbackValue = () => {
     if (props.defaultValue !== undefined) {
       return props.defaultValue;
@@ -91,14 +101,24 @@ export const Dropdown: Component<DropdownProps> = (props) => {
     getCurrentValue() !== null &&
     getCurrentValue() !== undefined;
 
+  const isInlineVariant = () => props.variant === 'inline';
+
   return (
-    <div class="castmill-dropdown">
-      <span class="label">{props.label}</span>
+    <div
+      class="castmill-dropdown"
+      classList={{ 'castmill-dropdown--inline': isInlineVariant() }}
+    >
+      <Show when={props.label && !isInlineVariant()}>
+        <span class="label">{props.label}</span>
+      </Show>
       <div class="castmill-dropdown__control">
         <select
+          id={dropdownId}
+          name={props.name || dropdownId}
           onChange={handleChange}
           value={selectedValue() ?? ''}
           classList={{ 'is-placeholder': selectedValue() === null }}
+          aria-label={props.label}
         >
           {props.placeholder && (
             <option value="" disabled hidden aria-hidden="true">

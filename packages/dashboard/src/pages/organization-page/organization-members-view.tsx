@@ -158,8 +158,11 @@ export const OrganizationMembersView = (props: {
         return (
           <Dropdown
             label=""
+            variant="inline"
             items={roleItems}
             value={item.role}
+            id={`member-role-${item.user_id}`}
+            name="member_role"
             onSelectChange={(value: string | null) =>
               handleRoleChange(item.user_id, item.user.name, value)
             }

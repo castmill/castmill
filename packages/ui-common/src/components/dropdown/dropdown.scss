@@ -16,6 +16,49 @@
     border-color: #b0b0b0;
   }
 
+  // Inline variant for use in table cells - minimal styling
+  &--inline {
+    border: none !important;
+    padding: 0 !important;
+    background-color: transparent !important;
+    min-height: auto !important;
+    display: inline-flex !important;
+    width: auto !important;
+    
+    &:hover {
+      border-color: transparent !important;
+    }
+
+    .castmill-dropdown__control {
+      gap: 0.25em;
+      width: auto;
+    }
+
+    select {
+      font-size: 0.9em !important;
+      padding: 0.4em 1.8em 0.4em 0.6em !important;
+      background-color: rgba(255, 255, 255, 0.03) !important;
+      border: 1px solid rgba(255, 255, 255, 0.15) !important;
+      border-radius: 4px !important;
+      width: auto !important;
+      min-width: 140px;
+      max-width: 200px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      
+      &:hover {
+        background-color: rgba(255, 255, 255, 0.06) !important;
+        border-color: rgba(255, 255, 255, 0.25) !important;
+      }
+
+      &:focus {
+        background-color: rgba(255, 255, 255, 0.08) !important;
+        border-color: rgba(87, 124, 187, 0.5) !important;
+        outline: none;
+      }
+    }
+  }
+
   .label {
     font-size: 0.8em;
     padding: 0 0 0.2em 3px;
