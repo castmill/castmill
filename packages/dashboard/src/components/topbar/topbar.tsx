@@ -76,7 +76,9 @@ const Topbar: Component = () => {
             <div class="topbar-dropdowns">
               <LanguageSelector />
               <DropdownMenu
-                ButtonComponent={(props) => <div {...props}>{getUser().name || getUser().email}</div>}
+                ButtonComponent={(props) => (
+                  <div {...props}>{getUser().name || getUser().email}</div>
+                )}
               >
                 <a href="/profile">{t('common.profile')}</a>
                 <a href="/settings">{t('common.settings')}</a>
