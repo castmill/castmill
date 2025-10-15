@@ -329,6 +329,7 @@
     "inviteMember": "Inviter un membre",
     "enterMemberEmail": "Entrez l'e-mail du membre",
     "role": "Rôle",
+    "changeRole": "Changer le Rôle",
     "roleAdmin": "Administrateur",
     "roleManager": "Gestionnaire",
     "roleMember": "Membre",
@@ -343,11 +344,15 @@
       "emailRequired": "L'e-mail est requis",
       "invalidEmail": "E-mail invalide",
       "cannotRemoveLastAdmin": "Vous ne pouvez pas supprimer le dernier administrateur de l'organisation.",
-      "invalidRole": "Le rôle sélectionné n'est pas valide pour cette organisation."
+      "invalidRole": "Le rôle sélectionné n'est pas valide pour cette organisation.",
+      "updateRoleFailed": "Échec de la mise à jour du rôle du membre"
     },
     "messages": {
       "memberRemoved": "Le membre {{name}} a été supprimé avec succès",
-      "membersRemoved": "Les membres ont été supprimés avec succès"
+      "membersRemoved": "Les membres ont été supprimés avec succès",
+      "invitationSent": "Invitation envoyée à {{email}}",
+      "leftTeam": "Vous avez quitté l'équipe {{name}}",
+      "roleUpdated": "Rôle mis à jour avec succès pour {{name}}"
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {

@@ -324,6 +324,7 @@
     "inviteMember": "Bjud in medlem",
     "enterMemberEmail": "Ange medlemmens e-post",
     "role": "Roll",
+    "changeRole": "Ändra Roll",
     "roleAdmin": "Administratör",
     "roleManager": "Chef",
     "roleMember": "Medlem",
@@ -338,11 +339,15 @@
       "emailRequired": "E-post är obligatoriskt",
       "invalidEmail": "Ogiltig e-post",
       "cannotRemoveLastAdmin": "Du kan inte ta bort organisationens sista administratör.",
-      "invalidRole": "Den valda rollen är inte giltig för den här organisationen."
+      "invalidRole": "Den valda rollen är inte giltig för den här organisationen.",
+      "updateRoleFailed": "Misslyckades med att uppdatera medlemsroll"
     },
     "messages": {
       "memberRemoved": "Medlemmen {{name}} togs bort med framgång",
-      "membersRemoved": "Medlemmarna togs bort med framgång"
+      "membersRemoved": "Medlemmarna togs bort med framgång",
+      "invitationSent": "Inbjudan skickad till {{email}}",
+      "leftTeam": "Du lämnade teamet {{name}}",
+      "roleUpdated": "Roll uppdaterad framgångsrikt för {{name}}"
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {

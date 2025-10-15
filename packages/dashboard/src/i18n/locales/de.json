@@ -301,6 +301,7 @@
     "inviteMember": "Mitglied einladen",
     "enterMemberEmail": "E-Mail des Mitglieds eingeben",
     "role": "Rolle",
+    "changeRole": "Rolle Ändern",
     "roleAdmin": "Administrator",
     "roleManager": "Verwalter",
     "roleMember": "Mitglied",
@@ -315,11 +316,15 @@
       "emailRequired": "E-Mail ist erforderlich",
       "invalidEmail": "Ungültige E-Mail",
       "cannotRemoveLastAdmin": "Du kannst den letzten Administrator einer Organisation nicht entfernen.",
-      "invalidRole": "Die ausgewählte Rolle ist für diese Organisation nicht gültig."
+      "invalidRole": "Die ausgewählte Rolle ist für diese Organisation nicht gültig.",
+      "updateRoleFailed": "Fehler beim Aktualisieren der Mitgliederrolle"
     },
     "messages": {
       "memberRemoved": "Mitglied {{name}} wurde erfolgreich entfernt",
-      "membersRemoved": "Mitglieder wurden erfolgreich entfernt"
+      "membersRemoved": "Mitglieder wurden erfolgreich entfernt",
+      "invitationSent": "Einladung an {{email}} gesendet",
+      "leftTeam": "Du hast das Team {{name}} verlassen",
+      "roleUpdated": "Rolle erfolgreich aktualisiert für {{name}}"
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {

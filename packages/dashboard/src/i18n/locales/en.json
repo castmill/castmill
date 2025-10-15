@@ -259,7 +259,8 @@
       "memberRemoved": "Member {{name}} removed successfully",
       "membersRemoved": "Members removed successfully",
       "invitationSent": "Invitation sent to {{email}}",
-      "leftTeam": "You left the team {{name}}"
+      "leftTeam": "You left the team {{name}}",
+      "roleUpdated": "Role updated successfully for {{name}}"
     },
     "invitation": {
       "title": "Team Invitation",
@@ -306,6 +307,7 @@
     "inviteMember": "Invite Member",
     "enterMemberEmail": "Enter member's email",
     "role": "Role",
+    "changeRole": "Change Role",
     "roleAdmin": "Admin",
     "roleManager": "Manager",
     "roleMember": "Member",
@@ -335,7 +337,8 @@
       "emailRequired": "Email is required",
       "invalidEmail": "Invalid email",
       "cannotRemoveLastAdmin": "You can't remove the last admin of an organization.",
-      "invalidRole": "The selected role is not valid for this organization."
+      "invalidRole": "The selected role is not valid for this organization.",
+      "updateRoleFailed": "Failed to update member role"
     },
     "messages": {
       "memberRemoved": "Member {{name}} removed successfully",

@@ -329,6 +329,7 @@
     "inviteMember": "دعوة عضو",
     "enterMemberEmail": "أدخل البريد الإلكتروني للعضو",
     "role": "الدور",
+    "changeRole": "تغيير الدور",
     "roleAdmin": "مسؤول",
     "roleManager": "مدير",
     "roleMember": "عضو",
@@ -343,11 +344,15 @@
       "emailRequired": "البريد الإلكتروني مطلوب",
       "invalidEmail": "بريد إلكتروني غير صالح",
       "cannotRemoveLastAdmin": "لا يمكنك إزالة آخر مشرف للمؤسسة.",
-      "invalidRole": "الدور المحدد غير صالح لهذه المؤسسة."
+      "invalidRole": "الدور المحدد غير صالح لهذه المؤسسة.",
+      "updateRoleFailed": "فشل تحديث دور العضو"
     },
     "messages": {
       "memberRemoved": "تمت إزالة العضو {{name}} بنجاح",
-      "membersRemoved": "تمت إزالة الأعضاء بنجاح"
+      "membersRemoved": "تمت إزالة الأعضاء بنجاح",
+      "invitationSent": "تم إرسال الدعوة إلى {{email}}",
+      "leftTeam": "لقد غادرت الفريق {{name}}",
+      "roleUpdated": "تم تحديث الدور بنجاح لـ {{name}}"
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {

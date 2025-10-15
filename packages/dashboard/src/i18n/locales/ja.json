@@ -329,6 +329,7 @@
     "inviteMember": "メンバーを招待",
     "enterMemberEmail": "メンバーのメールアドレスを入力してください",
     "role": "役割",
+    "changeRole": "役割を変更",
     "roleAdmin": "管理者",
     "roleManager": "マネージャー",
     "roleMember": "メンバー",
@@ -343,11 +344,15 @@
       "emailRequired": "メールアドレスは必須です",
       "invalidEmail": "無効なメールアドレス",
       "cannotRemoveLastAdmin": "組織の最後の管理者を削除することはできません。",
-      "invalidRole": "選択した役割はこの組織で有効ではありません。"
+      "invalidRole": "選択した役割はこの組織で有効ではありません。",
+      "updateRoleFailed": "メンバーの役割の更新に失敗しました"
     },
     "messages": {
       "memberRemoved": "メンバー{{name}}を正常に削除しました",
-      "membersRemoved": "メンバーを正常に削除しました"
+      "membersRemoved": "メンバーを正常に削除しました",
+      "invitationSent": "{{email}}に招待を送信しました",
+      "leftTeam": "チーム{{name}}から退出しました",
+      "roleUpdated": "{{name}}の役割を正常に更新しました"
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {
