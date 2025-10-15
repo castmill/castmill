@@ -289,17 +289,23 @@
     "enterChannelName": "Enter Channel name",
     "defaultPlaylist": "Default playlist",
     "selectPlaylist": "Select Playlist",
+    "clearDefaultPlaylist": "Clear default playlist",
     "dragPlaylists": "Drag playlists",
     "repeatWeekly": "Repeat Weekly?",
     "calendarEntryDetails": "Calendar entry details",
     "removeChannelEntry": "Remove Channel Entry",
     "cannotDeleteChannel": "Cannot Delete Channel",
+    "success": {
+      "updateDefaultPlaylist": "Default playlist updated successfully",
+      "clearDefaultPlaylist": "Default playlist cleared successfully"
+    },
     "errors": {
       "removeChannel": "Error removing channel {{name}}: {{error}}",
       "removeChannels": "Error removing channels: {{error}}",
       "addChannel": "Error adding channel: {{error}}",
       "saveChannel": "Error saving channel: {{error}}",
       "updateDefaultPlaylist": "Failed to update channel default playlist: {{error}}",
+      "clearDefaultPlaylist": "Failed to clear channel default playlist: {{error}}",
       "updateChannelEntry": "Error updating channel entry: {{error}}"
     }
   },
@@ -392,7 +398,13 @@
     "generic": "An error occurred. Please try again.",
     "networkError": "Network error. Please check your connection.",
     "unauthorized": "Unauthorized. Please log in again.",
-    "unknownResourceType": "Unknown resource type: {{resourceType}}"
+    "unknownResourceType": "Unknown resource type: {{resourceType}}",
+    "serverUnreachable": "Cannot Connect to Server",
+    "serverUnreachableDescription": "The backend server is currently unreachable. This usually means the server is not running or there's a network issue.",
+    "checkServerRunning": "Make sure the Castmill server is running",
+    "checkNetworkConnection": "Check your network connection",
+    "checkServerUrl": "Verify the server URL in your configuration",
+    "retryConnection": "Retry Connection"
   },
   "playlists": {
     "title": "Playlists",

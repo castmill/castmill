@@ -281,7 +281,13 @@
     "generic": "Ett fel uppstod. Försök igen.",
     "networkError": "Nätverksfel. Kontrollera din anslutning.",
     "unauthorized": "Obehörig. Logga in igen.",
-    "unknownResourceType": "Okänd resurstyp: {{resourceType}}"
+    "unknownResourceType": "Okänd resurstyp: {{resourceType}}",
+    "serverUnreachable": "Kan Inte Ansluta till Servern",
+    "serverUnreachableDescription": "Backend-servern är för närvarande onåbar. Detta innebär vanligtvis att servern inte körs eller att det finns ett nätverksproblem.",
+    "checkServerRunning": "Se till att Castmill-servern körs",
+    "checkNetworkConnection": "Kontrollera din nätverksanslutning",
+    "checkServerUrl": "Verifiera server-URL:en i din konfiguration",
+    "retryConnection": "Försök Ansluta Igen"
   },
   "sidebar": {
     "organization": "Organisation",
@@ -304,22 +310,28 @@
     "removeChannels": "Ta bort kanaler",
     "confirmRemoveChannel": "Är du säker på att du vill ta bort kanal \"{{name}}\"?",
     "confirmRemoveChannels": "Är du säker på att du vill ta bort följande kanaler?",
+    "enterChannelName": "Ange kanalnamn",
+    "defaultPlaylist": "Standardspellista",
+    "selectPlaylist": "Välj spellista",
+    "clearDefaultPlaylist": "Rensa standardspellista",
+    "dragPlaylists": "Dra spellistor",
+    "repeatWeekly": "Upprepa varje vecka?",
+    "calendarEntryDetails": "Kalenderinläggsdetaljer",
+    "removeChannelEntry": "Ta bort kanalinlägg",
+    "cannotDeleteChannel": "Kan inte ta bort kanal",
+    "success": {
+      "updateDefaultPlaylist": "Standardspellista uppdaterad",
+      "clearDefaultPlaylist": "Standardspellista rensad"
+    },
     "errors": {
       "removeChannel": "Fel vid borttagning av kanal {{name}}: {{error}}",
       "removeChannels": "Fel vid borttagning av kanaler: {{error}}",
       "addChannel": "Fel vid tillägg av kanal: {{error}}",
       "saveChannel": "Fel vid sparande av kanal: {{error}}",
       "updateDefaultPlaylist": "Misslyckades att uppdatera kanalens standardspellista: {{error}}",
+      "clearDefaultPlaylist": "Misslyckades att rensa kanalens standardspellista: {{error}}",
       "updateChannelEntry": "Fel vid uppdatering av kanalinlägg: {{error}}"
-    },
-    "enterChannelName": "Ange kanalnamn",
-    "defaultPlaylist": "Standardspellista",
-    "selectPlaylist": "Välj spellista",
-    "dragPlaylists": "Dra spellistor",
-    "repeatWeekly": "Upprepa varje vecka?",
-    "calendarEntryDetails": "Kalenderinläggsdetaljer",
-    "removeChannelEntry": "Ta bort kanalinlägg",
-    "cannotDeleteChannel": "Kan inte ta bort kanal"
+    }
   },
   "organization": {
     "title": "Organisation",

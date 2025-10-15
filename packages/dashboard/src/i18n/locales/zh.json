@@ -286,7 +286,13 @@
     "generic": "发生错误。请重试。",
     "networkError": "网络错误。请检查您的连接。",
     "unauthorized": "未授权。请重新登录。",
-    "unknownResourceType": "未知资源类型：{{resourceType}}"
+    "unknownResourceType": "未知资源类型：{{resourceType}}",
+    "serverUnreachable": "无法连接到服务器",
+    "serverUnreachableDescription": "后端服务器当前无法访问。这通常意味着服务器未运行或存在网络问题。",
+    "checkServerRunning": "确保 Castmill 服务器正在运行",
+    "checkNetworkConnection": "检查您的网络连接",
+    "checkServerUrl": "验证配置中的服务器 URL",
+    "retryConnection": "重试连接"
   },
   "sidebar": {
     "organization": "组织",
@@ -309,22 +315,28 @@
     "removeChannels": "删除频道",
     "confirmRemoveChannel": "您确定要删除频道 \"{{name}}\" 吗？",
     "confirmRemoveChannels": "您确定要删除以下频道吗？",
+    "enterChannelName": "输入频道名称",
+    "defaultPlaylist": "默认播放列表",
+    "selectPlaylist": "选择播放列表",
+    "clearDefaultPlaylist": "清除默认播放列表",
+    "dragPlaylists": "拖动播放列表",
+    "repeatWeekly": "每周重复？",
+    "calendarEntryDetails": "日历条目详情",
+    "removeChannelEntry": "删除频道条目",
+    "cannotDeleteChannel": "无法删除频道",
+    "success": {
+      "updateDefaultPlaylist": "默认播放列表更新成功",
+      "clearDefaultPlaylist": "默认播放列表清除成功"
+    },
     "errors": {
       "removeChannel": "删除频道 {{name}} 时出错：{{error}}",
       "removeChannels": "删除频道时出错：{{error}}",
       "addChannel": "添加频道时出错：{{error}}",
       "saveChannel": "保存频道时出错：{{error}}",
       "updateDefaultPlaylist": "更新频道默认播放列表失败：{{error}}",
+      "clearDefaultPlaylist": "清除频道默认播放列表失败：{{error}}",
       "updateChannelEntry": "更新频道条目时出错：{{error}}"
-    },
-    "enterChannelName": "输入频道名称",
-    "defaultPlaylist": "默认播放列表",
-    "selectPlaylist": "选择播放列表",
-    "dragPlaylists": "拖动播放列表",
-    "repeatWeekly": "每周重复？",
-    "calendarEntryDetails": "日历条目详情",
-    "removeChannelEntry": "删除频道条目",
-    "cannotDeleteChannel": "无法删除频道"
+    }
   },
   "organization": {
     "title": "组织",

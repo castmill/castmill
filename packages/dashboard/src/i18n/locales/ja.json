@@ -286,7 +286,13 @@
     "generic": "エラーが発生しました。もう一度お試しください。",
     "networkError": "ネットワークエラーです。接続を確認してください。",
     "unauthorized": "認証されていません。再度ログインしてください。",
-    "unknownResourceType": "不明なリソースタイプ: {{resourceType}}"
+    "unknownResourceType": "不明なリソースタイプ: {{resourceType}}",
+    "serverUnreachable": "サーバーに接続できません",
+    "serverUnreachableDescription": "バックエンドサーバーに現在アクセスできません。通常、サーバーが実行されていないか、ネットワークの問題があることを意味します。",
+    "checkServerRunning": "Castmill サーバーが実行されていることを確認してください",
+    "checkNetworkConnection": "ネットワーク接続を確認してください",
+    "checkServerUrl": "設定でサーバー URL を確認してください",
+    "retryConnection": "接続を再試行"
   },
   "sidebar": {
     "organization": "組織",
@@ -309,22 +315,28 @@
     "removeChannels": "チャンネルを削除",
     "confirmRemoveChannel": "チャンネル「{{name}}」を削除してもよろしいですか？",
     "confirmRemoveChannels": "以下のチャンネルを削除してもよろしいですか？",
+    "enterChannelName": "チャンネル名を入力してください",
+    "defaultPlaylist": "デフォルトプレイリスト",
+    "selectPlaylist": "プレイリストを選択",
+    "clearDefaultPlaylist": "デフォルトプレイリストをクリア",
+    "dragPlaylists": "プレイリストをドラッグ",
+    "repeatWeekly": "毎週繰り返しますか？",
+    "calendarEntryDetails": "カレンダーエントリーの詳細",
+    "removeChannelEntry": "チャンネルエントリーを削除",
+    "cannotDeleteChannel": "チャンネルを削除できません",
+    "success": {
+      "updateDefaultPlaylist": "デフォルトプレイリストの更新に成功しました",
+      "clearDefaultPlaylist": "デフォルトプレイリストのクリアに成功しました"
+    },
     "errors": {
       "removeChannel": "チャンネル{{name}}の削除中にエラーが発生しました：{{error}}",
       "removeChannels": "チャンネルの削除中にエラーが発生しました：{{error}}",
       "addChannel": "チャンネルの追加中にエラーが発生しました：{{error}}",
       "saveChannel": "チャンネルの保存中にエラーが発生しました：{{error}}",
       "updateDefaultPlaylist": "チャンネルのデフォルトプレイリストの更新に失敗しました：{{error}}",
+      "clearDefaultPlaylist": "チャンネルのデフォルトプレイリストのクリアに失敗しました：{{error}}",
       "updateChannelEntry": "チャンネルエントリーの更新中にエラーが発生しました：{{error}}"
-    },
-    "enterChannelName": "チャンネル名を入力してください",
-    "defaultPlaylist": "デフォルトプレイリスト",
-    "selectPlaylist": "プレイリストを選択",
-    "dragPlaylists": "プレイリストをドラッグ",
-    "repeatWeekly": "毎週繰り返しますか？",
-    "calendarEntryDetails": "カレンダーエントリーの詳細",
-    "removeChannelEntry": "チャンネルエントリーを削除",
-    "cannotDeleteChannel": "チャンネルを削除できません"
+    }
   },
   "organization": {
     "title": "組織",
