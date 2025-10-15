@@ -38,7 +38,7 @@ const generateDropdownId = () => `dropdown-${++dropdownIdCounter}`;
 export const Dropdown: Component<DropdownProps> = (props) => {
   // Generate a unique ID for this instance if not provided
   const dropdownId = props.id || generateDropdownId();
-  
+
   const computeFallbackValue = () => {
     if (props.defaultValue !== undefined) {
       return props.defaultValue;
