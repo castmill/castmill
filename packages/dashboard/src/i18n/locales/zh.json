@@ -4,6 +4,7 @@
     "cancel": "取消",
     "delete": "删除",
     "edit": "编辑",
+    "rename": "重命名",
     "add": "添加",
     "remove": "移除",
     "close": "关闭",
@@ -78,7 +79,9 @@
       "teamClear": "清除团队筛选"
     },
     "addonError": "插件错误",
-    "backToLogin": "返回登录"
+    "backToLogin": "返回登录",
+    "selectImage": "选择图片",
+    "selectMedia": "选择媒体"
   },
   "topbar": {
     "help": "帮助",
@@ -166,6 +169,21 @@
     "errors": {
       "fetchUsageData": "获取使用数据失败：{{error}}"
     }
+  },
+  "content": {
+    "title": "内容",
+    "description": "内容资源和配额使用概览",
+    "playlists": "播放列表",
+    "medias": "媒体文件",
+    "storage": "存储",
+    "widgets": "小部件",
+    "used": "已使用",
+    "total": "总计",
+    "loadingUsageData": "正在加载使用数据...",
+    "quotaLimitReached": "已达到配额限制",
+    "approachingLimit": "接近限制",
+    "noUsageData": "没有可用的使用数据",
+    "unableToLoad": "无法加载资源使用信息"
   },
   "teams": {
     "title": "团队",
@@ -261,7 +279,8 @@
   "errors": {
     "generic": "发生错误。请重试。",
     "networkError": "网络错误。请检查您的连接。",
-    "unauthorized": "未授权。请重新登录。"
+    "unauthorized": "未授权。请重新登录。",
+    "unknownResourceType": "未知资源类型：{{resourceType}}"
   },
   "sidebar": {
     "organization": "组织",
@@ -352,6 +371,9 @@
     "createNewPlaylist": "创建新播放列表",
     "playlistTitle": "播放列表 \"{{name}}\"",
     "buildPlaylist": "在此处创建您的播放列表",
+    "renamePlaylist": "重命名播放列表",
+    "playlistUpdated": "播放列表 \"{{name}}\" 已成功更新",
+    "errorUpdating": "更新播放列表 {{name}} 时出错：{{error}}",
     "removePlaylist": "删除播放列表",
     "removePlaylists": "删除播放列表",
     "confirmRemovePlaylist": "您确定要删除播放列表 \"{{name}}\" 吗？",

@@ -4,6 +4,7 @@
     "cancel": "Abbrechen",
     "delete": "Löschen",
     "edit": "Bearbeiten",
+    "rename": "Umbenennen",
     "add": "Hinzufügen",
     "remove": "Entfernen",
     "close": "Schließen",
@@ -73,7 +74,9 @@
     "youIndicator": "(du)",
     "addonLoadingError": "Add-on-Ladefehler",
     "addonError": "Add-on-Fehler",
-    "backToLogin": "Zurück zur Anmeldung"
+    "backToLogin": "Zurück zur Anmeldung",
+    "selectImage": "Bild auswählen",
+    "selectMedia": "Medien auswählen"
   },
   "sidebar": {
     "organization": "Organisation",
@@ -172,6 +175,21 @@
     "errors": {
       "fetchUsageData": "Fehler beim Abrufen der Nutzungsdaten: {{error}}"
     }
+  },
+  "content": {
+    "title": "Inhalt",
+    "description": "Übersicht über Ihre Inhaltsressourcen und Kontingentnutzung",
+    "playlists": "Wiedergabelisten",
+    "medias": "Mediendateien",
+    "storage": "Speicher",
+    "widgets": "Widgets",
+    "used": "Verwendet",
+    "total": "Gesamt",
+    "loadingUsageData": "Lade Nutzungsdaten...",
+    "quotaLimitReached": "Kontingentgrenze erreicht",
+    "approachingLimit": "Nähert sich dem Limit",
+    "noUsageData": "Keine Nutzungsdaten verfügbar",
+    "unableToLoad": "Ressourcennutzungsinformationen können nicht geladen werden"
   },
   "teams": {
     "title": "Teams",
@@ -355,7 +373,8 @@
   "errors": {
     "generic": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
     "networkError": "Netzwerkfehler. Bitte überprüfen Sie Ihre Verbindung.",
-    "unauthorized": "Nicht autorisiert. Bitte melden Sie sich erneut an."
+    "unauthorized": "Nicht autorisiert. Bitte melden Sie sich erneut an.",
+    "unknownResourceType": "Unbekannter Ressourcentyp: {{resourceType}}"
   },
   "playlists": {
     "title": "Playlists",
@@ -363,6 +382,9 @@
     "createNewPlaylist": "Neue Playlist erstellen",
     "playlistTitle": "Playlist \"{{name}}\"",
     "buildPlaylist": "Erstellen Sie hier Ihre Playlist",
+    "renamePlaylist": "Playlist umbenennen",
+    "playlistUpdated": "Playlist \"{{name}}\" erfolgreich aktualisiert",
+    "errorUpdating": "Fehler beim Aktualisieren der Playlist {{name}}: {{error}}",
     "removePlaylist": "Playlist entfernen",
     "removePlaylists": "Playlists entfernen",
     "confirmRemovePlaylist": "Sind Sie sicher, dass Sie die Playlist \"{{name}}\" entfernen möchten?",

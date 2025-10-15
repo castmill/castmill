@@ -4,6 +4,7 @@
     "cancel": "Cancel",
     "delete": "Delete",
     "edit": "Edit",
+    "rename": "Rename",
     "add": "Add",
     "remove": "Remove",
     "close": "Close",
@@ -73,6 +74,8 @@
     "maintainance": "Maintenance",
     "events": "Events",
     "telemetry": "Telemetry",
+    "selectImage": "Select an Image",
+    "selectMedia": "Select a Media",
     "youIndicator": "(you)"
   },
   "filters": {
@@ -177,6 +180,21 @@
     "errors": {
       "fetchUsageData": "Failed to fetch usage data: {{error}}"
     }
+  },
+  "content": {
+    "title": "Content",
+    "description": "Overview of your content resources and quota usage",
+    "playlists": "Playlists",
+    "medias": "Media Files",
+    "storage": "Storage",
+    "widgets": "Widgets",
+    "used": "Used",
+    "total": "Total",
+    "loadingUsageData": "Loading usage data...",
+    "quotaLimitReached": "Quota limit reached",
+    "approachingLimit": "Approaching limit",
+    "noUsageData": "No usage data available",
+    "unableToLoad": "Unable to load resource usage information"
   },
   "teams": {
     "title": "Teams",
@@ -360,7 +378,8 @@
   "errors": {
     "generic": "An error occurred. Please try again.",
     "networkError": "Network error. Please check your connection.",
-    "unauthorized": "Unauthorized. Please log in again."
+    "unauthorized": "Unauthorized. Please log in again.",
+    "unknownResourceType": "Unknown resource type: {{resourceType}}"
   },
   "playlists": {
     "title": "Playlists",
@@ -368,6 +387,9 @@
     "createNewPlaylist": "Create a new playlist",
     "playlistTitle": "Playlist \"{{name}}\"",
     "buildPlaylist": "Build your playlist here",
+    "renamePlaylist": "Rename Playlist",
+    "playlistUpdated": "Playlist \"{{name}}\" updated successfully",
+    "errorUpdating": "Error updating playlist {{name}}: {{error}}",
     "removePlaylist": "Remove Playlist",
     "removePlaylists": "Remove Playlists",
     "confirmRemovePlaylist": "Are you sure you want to remove playlist \"{{name}}\"?",

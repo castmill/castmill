@@ -4,6 +4,7 @@
     "cancel": "취소",
     "delete": "삭제",
     "edit": "편집",
+    "rename": "이름 변경",
     "add": "추가",
     "remove": "제거",
     "close": "닫기",
@@ -78,7 +79,9 @@
       "teamClear": "팀 필터 지우기"
     },
     "addonError": "애드온 오류",
-    "backToLogin": "로그인으로 돌아가기"
+    "backToLogin": "로그인으로 돌아가기",
+    "selectImage": "이미지 선택",
+    "selectMedia": "미디어 선택"
   },
   "topbar": {
     "help": "도움말",
@@ -166,6 +169,21 @@
     "errors": {
       "fetchUsageData": "사용량 데이터를 가져오는데 실패했습니다: {{error}}"
     }
+  },
+  "content": {
+    "title": "콘텐츠",
+    "description": "콘텐츠 리소스 및 할당량 사용 개요",
+    "playlists": "재생목록",
+    "medias": "미디어 파일",
+    "storage": "저장소",
+    "widgets": "위젯",
+    "used": "사용됨",
+    "total": "전체",
+    "loadingUsageData": "사용량 데이터 로드 중...",
+    "quotaLimitReached": "할당량 한도에 도달했습니다",
+    "approachingLimit": "한도에 근접",
+    "noUsageData": "사용 가능한 사용량 데이터가 없습니다",
+    "unableToLoad": "리소스 사용량 정보를 로드할 수 없습니다"
   },
   "teams": {
     "title": "팀",
@@ -261,7 +279,8 @@
   "errors": {
     "generic": "오류가 발생했습니다. 다시 시도해 주세요.",
     "networkError": "네트워크 오류입니다. 연결을 확인해 주세요.",
-    "unauthorized": "인증되지 않았습니다. 다시 로그인해 주세요."
+    "unauthorized": "인증되지 않았습니다. 다시 로그인해 주세요.",
+    "unknownResourceType": "알 수 없는 리소스 유형: {{resourceType}}"
   },
   "sidebar": {
     "organization": "조직",
@@ -352,6 +371,9 @@
     "createNewPlaylist": "새 재생목록 만들기",
     "playlistTitle": "재생목록 \"{{name}}\"",
     "buildPlaylist": "여기서 재생목록을 만드세요",
+    "renamePlaylist": "재생목록 이름 변경",
+    "playlistUpdated": "재생목록 \"{{name}}\"이(가) 성공적으로 업데이트되었습니다",
+    "errorUpdating": "재생목록 {{name}} 업데이트 오류: {{error}}",
     "removePlaylist": "재생목록 제거",
     "removePlaylists": "재생목록 제거",
     "confirmRemovePlaylist": "재생목록 \"{{name}}\"을(를) 제거하시겠습니까?",
