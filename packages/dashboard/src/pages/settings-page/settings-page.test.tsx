@@ -58,9 +58,7 @@ describe('SettingsPage', () => {
   const renderWithProviders = (component: () => any) => {
     return render(() => (
       <I18nProvider>
-        <ToastProvider>
-          {component()}
-        </ToastProvider>
+        <ToastProvider>{component()}</ToastProvider>
       </I18nProvider>
     ));
   };
