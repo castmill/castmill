@@ -174,6 +174,21 @@
       "fetchUsageData": "Fehler beim Abrufen der Nutzungsdaten: {{error}}"
     }
   },
+  "content": {
+    "title": "Inhalt",
+    "description": "Übersicht über Ihre Inhaltsressourcen und Kontingentnutzung",
+    "playlists": "Wiedergabelisten",
+    "medias": "Mediendateien",
+    "storage": "Speicher",
+    "widgets": "Widgets",
+    "used": "Verwendet",
+    "total": "Gesamt",
+    "loadingUsageData": "Lade Nutzungsdaten...",
+    "quotaLimitReached": "Kontingentgrenze erreicht",
+    "approachingLimit": "Nähert sich dem Limit",
+    "noUsageData": "Keine Nutzungsdaten verfügbar",
+    "unableToLoad": "Ressourcennutzungsinformationen können nicht geladen werden"
+  },
   "teams": {
     "title": "Teams",
     "addTeam": "Team hinzufügen",

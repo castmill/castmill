@@ -168,6 +168,21 @@
       "fetchUsageData": "获取使用数据失败：{{error}}"
     }
   },
+  "content": {
+    "title": "内容",
+    "description": "内容资源和配额使用概览",
+    "playlists": "播放列表",
+    "medias": "媒体文件",
+    "storage": "存储",
+    "widgets": "小部件",
+    "used": "已使用",
+    "total": "总计",
+    "loadingUsageData": "正在加载使用数据...",
+    "quotaLimitReached": "已达到配额限制",
+    "approachingLimit": "接近限制",
+    "noUsageData": "没有可用的使用数据",
+    "unableToLoad": "无法加载资源使用信息"
+  },
   "teams": {
     "title": "团队",
     "members": {

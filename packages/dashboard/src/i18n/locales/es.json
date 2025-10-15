@@ -163,6 +163,21 @@
       "fetchUsageData": "Error al obtener datos de uso: {{error}}"
     }
   },
+  "content": {
+    "title": "Contenido",
+    "description": "Resumen de tus recursos de contenido y uso de cuota",
+    "playlists": "Listas de reproducción",
+    "medias": "Archivos multimedia",
+    "storage": "Almacenamiento",
+    "widgets": "Widgets",
+    "used": "Usado",
+    "total": "Total",
+    "loadingUsageData": "Cargando datos de uso...",
+    "quotaLimitReached": "Límite de cuota alcanzado",
+    "approachingLimit": "Acercándose al límite",
+    "noUsageData": "No hay datos de uso disponibles",
+    "unableToLoad": "No se puede cargar la información de uso de recursos"
+  },
   "teams": {
     "title": "Equipos",
     "members": {

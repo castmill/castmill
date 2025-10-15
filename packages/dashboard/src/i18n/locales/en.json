@@ -179,6 +179,21 @@
       "fetchUsageData": "Failed to fetch usage data: {{error}}"
     }
   },
+  "content": {
+    "title": "Content",
+    "description": "Overview of your content resources and quota usage",
+    "playlists": "Playlists",
+    "medias": "Media Files",
+    "storage": "Storage",
+    "widgets": "Widgets",
+    "used": "Used",
+    "total": "Total",
+    "loadingUsageData": "Loading usage data...",
+    "quotaLimitReached": "Quota limit reached",
+    "approachingLimit": "Approaching limit",
+    "noUsageData": "No usage data available",
+    "unableToLoad": "Unable to load resource usage information"
+  },
   "teams": {
     "title": "Teams",
     "addTeam": "Add Team",
