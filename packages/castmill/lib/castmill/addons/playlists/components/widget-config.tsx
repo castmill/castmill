@@ -13,6 +13,7 @@ import { BsCheckLg } from 'solid-icons/bs';
 import { BsX } from 'solid-icons/bs';
 import { FormItem, Button, ComboBox, useToast, Timestamp } from '@castmill/ui-common';
 import { ResourcesService } from '../services/resources.service';
+import { AddonStore } from '../../common/interfaces/addon-store';
 
 import './widget-config.scss';
 import { WidgetView } from './widget-view';
@@ -26,6 +27,7 @@ import { WidgetView } from './widget-view';
  */
 
 interface WidgetConfigProps {
+  store: AddonStore;
   baseUrl: string;
   item: JsonPlaylistItem;
   organizationId: string;
@@ -43,6 +45,10 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
   const [isFormModified, setIsFormModified] = createSignal(false);
   const [isFormValid, setIsFormValid] = createSignal(false);
   const [errors, setErrors] = createSignal(new Map());
+
+  // Get i18n functions from store
+  const t = (key: string, params?: Record<string, any>) =>
+    props.store.i18n?.t(key, params) || key;
 
   console.log('WidgetConfig', props.item, props.organizationId);
   const optionsSchema = props.item.widget.options_schema || {};
@@ -213,16 +219,28 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
           </FormItem>
         );
       case 'ref':
-        // Only images supported for now
+        // Parse collection string to extract resource type and filters
+        // Format: "resource|filter1:value1|filter2:value2"
         const collection = (schema as ReferenceAttributes).collection;
-        switch (collection) {
-          case 'medias|type:image':
+        const [resourceType, ...filterParts] = collection.split('|');
+        const filters: Record<string, string> = {};
+        
+        filterParts.forEach(part => {
+          const [key, value] = part.split(':');
+          if (key && value) {
+            filters[key] = value;
+          }
+        });
+
+        switch (resourceType) {
+          case 'medias':
+            const placeholderText = filters.type === 'image' ? t('common.selectImage') : t('common.selectMedia');
             return (
               <>
                 <ComboBox<JsonMedia>
                   id={key}
                   label={key}
-                  placeholder={'Select an Image'}
+                  placeholder={placeholderText}
                   value={getValue(key, schema as FieldAttributes)}
                   renderItem={(item: JsonMedia) => {
                     return (
@@ -245,11 +263,12 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
                     return ResourcesService.fetch<JsonMedia>(
                       props.baseUrl,
                       props.organizationId,
-                      'medias',
+                      resourceType,
                       {
                         page,
                         page_size: pageSize,
                         search,
+                        filters: Object.keys(filters).length > 0 ? filters : undefined,
                       }
                     );
                   }}
@@ -263,7 +282,7 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
               </>
             );
           default:
-            throw new Error(`Unknown collection: ${collection}`);
+            throw new Error(t('errors.unknownResourceType', { resourceType }));
         }
       case 'map':
       case 'list':

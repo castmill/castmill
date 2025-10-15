@@ -217,20 +217,106 @@ defmodule Castmill.Accounts do
   @doc """
     Delete user by id.
 
-    TODO: If the user is the last user of an organization we need to delete the organization as well,
-    including all the resources associated with it, that includes medias, playlists, displays, etc, etc.
+    Before deleting:
+    - If user is the ONLY user in an organization, automatically delete that organization
+    - If user is the sole admin BUT there are other users, prevent deletion (must transfer admin first)
+    - Otherwise, allow deletion
+
+    This ensures no dangling organizations are left in the system.
   """
   def delete_user(user_id) do
-    case Repo.delete_all(
-           from(user in Castmill.Accounts.User,
-             where: user.id == ^user_id
-           )
-         ) do
-      {1, nil} ->
-        {:ok, "User successfully deleted."}
+    Repo.transaction(fn ->
+      # Get all organizations where user is a member
+      user_orgs =
+        from(ou in OrganizationsUsers,
+          where: ou.user_id == ^user_id,
+          select: %{org_id: ou.organization_id, role: ou.role}
+        )
+        |> Repo.all()
 
-      _ ->
+      # Check each organization and handle accordingly
+      Enum.each(user_orgs, fn %{org_id: org_id, role: role} ->
+        # Count total users in this organization
+        total_users =
+          from(ou in OrganizationsUsers,
+            where: ou.organization_id == ^org_id,
+            select: count(ou.user_id)
+          )
+          |> Repo.one()
+
+        cond do
+          # If this is the only user, delete the organization
+          total_users == 1 ->
+            case Repo.get(Organization, org_id) do
+              nil ->
+                :ok
+
+              org ->
+                # Delete the organization (will cascade delete org_user relationships)
+                case Repo.delete(org) do
+                  {:ok, _} ->
+                    :ok
+
+                  {:error, changeset} ->
+                    Repo.rollback("Failed to delete organization: #{inspect(changeset)}")
+                end
+            end
+
+          # If user is sole admin but there are other users, prevent deletion
+          role == :admin ->
+            admin_count =
+              from(ou in OrganizationsUsers,
+                where: ou.organization_id == ^org_id and ou.role == :admin,
+                select: count(ou.user_id)
+              )
+              |> Repo.one()
+
+            if admin_count == 1 do
+              org_name =
+                from(o in Organization,
+                  where: o.id == ^org_id,
+                  select: o.name
+                )
+                |> Repo.one()
+
+              Repo.rollback({:sole_administrator, org_name})
+            end
+
+          # User is not sole admin, safe to delete
+          true ->
+            :ok
+        end
+      end)
+
+      # Now delete the user (org_user relationships will be deleted via cascade or above)
+      case Repo.delete_all(
+             from(user in Castmill.Accounts.User,
+               where: user.id == ^user_id
+             )
+           ) do
+        {1, nil} ->
+          "User successfully deleted."
+
+        _ ->
+          Repo.rollback(:not_found)
+      end
+    end)
+    |> case do
+      {:ok, message} ->
+        {:ok, message}
+
+      {:error, :not_found} ->
         {:error, :not_found}
+
+      {:error, reason} when is_binary(reason) ->
+        {:error, reason}
+
+      {:error, {:sole_administrator, org_name}} ->
+        {:error,
+         "Cannot delete account. You are the sole administrator of '#{org_name}' which has other members"}
+
+      {:error, other} ->
+        {:error, "Failed to delete user: #{inspect(other)}"}
     end
   end
 
@@ -608,8 +694,24 @@ defmodule Castmill.Accounts do
            ) do
       {:ok, user}
     else
-      {:error, changeset} ->
-        {:error, inspect(changeset)}
+      {:error, %Ecto.Changeset{errors: errors} = changeset} ->
+        # Extract readable error message
+        error_message =
+          case errors do
+            [name: {msg, _}] when is_binary(msg) ->
+              "Organization #{msg}. This account may have been previously deleted. Please contact support."
+
+            [email: {msg, _}] when is_binary(msg) ->
+              "Email #{msg}."
+
+            _ ->
+              "Failed to create account: #{inspect(changeset)}"
+          end
+
+        {:error, error_message}
+
+      {:error, other} ->
+        {:error, "Failed to create account: #{inspect(other)}"}
     end
   end
 

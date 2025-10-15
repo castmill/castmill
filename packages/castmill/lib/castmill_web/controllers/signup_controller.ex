@@ -144,12 +144,20 @@ defmodule CastmillWeb.SignUpController do
         |> put_status(:created)
         |> json(%{status: :ok, user: user})
 
-      {:error, message} ->
+      {:error, message} when is_binary(message) ->
         conn
         |> put_status(:unprocessable_entity)
         |> json(%{
           status: :error,
           message: message
+        })
+
+      {:error, _other} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{
+          status: :error,
+          message: "Something went wrong during signup. Please contact support."
         })
     end
   end

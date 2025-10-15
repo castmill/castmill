@@ -1,0 +1,92 @@
+.server-error-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2em;
+  background-color: #151925;
+  z-index: 9999;
+}
+
+.server-error-content {
+  background: #2c303b;
+  border-radius: 1em;
+  padding: 3em;
+  max-width: 32em;
+  box-shadow: 0 1.25em 3.75em rgba(0, 0, 0, 0.3);
+  text-align: center;
+  border: 1px solid #363a45;
+}
+
+.server-error-icon {
+  color: #ef4444;
+  margin-bottom: 1.5em;
+}
+
+.server-error-icon svg {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.server-error-title {
+  font-size: 1.875em;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 0.667em;
+}
+
+.server-error-description {
+  font-size: 1.125em;
+  color: #b0b5c0;
+  margin-bottom: 1.778em;
+  line-height: 1.6;
+}
+
+.server-error-suggestions {
+  text-align: left;
+  list-style: disc;
+  padding-left: 1.5em;
+  margin-bottom: 2em;
+  color: #9ca3af;
+}
+
+.server-error-suggestions li {
+  margin-bottom: 0.5em;
+  line-height: 1.6;
+}
+
+.server-error-retry-button {
+  background: #5792ee;
+  color: white;
+  border: none;
+  padding: 0.75em 2em;
+  font-size: 1em;
+  font-weight: 600;
+  border-radius: 0.5em;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    transform 0.2s;
+}
+
+.server-error-retry-button:hover {
+  background: #4178d4;
+  transform: translateY(-0.125em);
+}
+
+.server-error-retry-button:active {
+  transform: translateY(0);
+}
