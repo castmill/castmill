@@ -495,13 +495,13 @@
       "reject": "Refuser l'Invitation",
       "rejecting": "Refus en cours...",
       "chooseAction": "Veuillez choisir d'accepter ou de refuser l'invitation",
-      "acceptSuccess": "Invitation accepted successfully",
-      "acceptError": "Error accepting invitation",
-      "rejectSuccess": "Invitation rejected successfully",
-      "rejectError": "Error rejecting invitation",
-      "accountCreated": "Account created successfully!",
-      "accountCreationFailed": "Failed to create account",
-      "passkeysNotSupported": "Passkeys are not supported in this browser"
+      "acceptSuccess": "Invitation acceptée avec succès",
+      "acceptError": "Erreur lors de l'acceptation de l'invitation",
+      "rejectSuccess": "Invitation refusée avec succès",
+      "rejectError": "Erreur lors du refus de l'invitation",
+      "accountCreated": "Compte créé avec succès !",
+      "accountCreationFailed": "Échec de la création du compte",
+      "passkeysNotSupported": "Les clés d'accès ne sont pas prises en charge dans ce navigateur"
     }
   },
   "filters": {

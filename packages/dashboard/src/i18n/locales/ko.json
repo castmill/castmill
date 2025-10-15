@@ -495,13 +495,13 @@
       "reject": "초대 거부",
       "rejecting": "거부 중...",
       "chooseAction": "초대를 수락하거나 거부하도록 선택하세요",
-      "acceptSuccess": "Invitation accepted successfully",
-      "acceptError": "Error accepting invitation",
-      "rejectSuccess": "Invitation rejected successfully",
-      "rejectError": "Error rejecting invitation",
-      "accountCreated": "Account created successfully!",
-      "accountCreationFailed": "Failed to create account",
-      "passkeysNotSupported": "Passkeys are not supported in this browser"
+      "acceptSuccess": "초대가 성공적으로 수락되었습니다",
+      "acceptError": "초대 수락 중 오류가 발생했습니다",
+      "rejectSuccess": "초대가 성공적으로 거부되었습니다",
+      "rejectError": "초대 거부 중 오류가 발생했습니다",
+      "accountCreated": "계정이 성공적으로 생성되었습니다!",
+      "accountCreationFailed": "계정 생성에 실패했습니다",
+      "passkeysNotSupported": "이 브라우저에서는 패스키가 지원되지 않습니다"
     }
   },
   "filters": {

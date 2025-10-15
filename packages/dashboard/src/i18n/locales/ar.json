@@ -495,13 +495,13 @@
       "reject": "رفض الدعوة",
       "rejecting": "جاري الرفض...",
       "chooseAction": "يرجى اختيار قبول أو رفض الدعوة",
-      "acceptSuccess": "Invitation accepted successfully",
-      "acceptError": "Error accepting invitation",
-      "rejectSuccess": "Invitation rejected successfully",
-      "rejectError": "Error rejecting invitation",
-      "accountCreated": "Account created successfully!",
-      "accountCreationFailed": "Failed to create account",
-      "passkeysNotSupported": "Passkeys are not supported in this browser"
+      "acceptSuccess": "تم قبول الدعوة بنجاح",
+      "acceptError": "خطأ في قبول الدعوة",
+      "rejectSuccess": "تم رفض الدعوة بنجاح",
+      "rejectError": "خطأ في رفض الدعوة",
+      "accountCreated": "تم إنشاء الحساب بنجاح!",
+      "accountCreationFailed": "فشل إنشاء الحساب",
+      "passkeysNotSupported": "مفاتيح المرور غير مدعومة في هذا المتصفح"
     }
   },
   "filters": {

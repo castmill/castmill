@@ -490,13 +490,13 @@
       "reject": "Rechazar Invitación",
       "rejecting": "Rechazando...",
       "chooseAction": "Por favor, elige aceptar o rechazar la invitación",
-      "acceptSuccess": "Invitation accepted successfully",
-      "acceptError": "Error accepting invitation",
-      "rejectSuccess": "Invitation rejected successfully",
-      "rejectError": "Error rejecting invitation",
-      "accountCreated": "Account created successfully!",
-      "accountCreationFailed": "Failed to create account",
-      "passkeysNotSupported": "Passkeys are not supported in this browser"
+      "acceptSuccess": "Invitación aceptada exitosamente",
+      "acceptError": "Error al aceptar la invitación",
+      "rejectSuccess": "Invitación rechazada exitosamente",
+      "rejectError": "Error al rechazar la invitación",
+      "accountCreated": "¡Cuenta creada exitosamente!",
+      "accountCreationFailed": "Error al crear la cuenta",
+      "passkeysNotSupported": "Las claves de acceso no son compatibles con este navegador"
     }
   },
   "filters": {
