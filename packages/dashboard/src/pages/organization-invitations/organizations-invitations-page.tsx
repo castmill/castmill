@@ -158,7 +158,9 @@ const OrganizationsInvitationPage = () => {
       await acceptInvitation();
     } catch (error: any) {
       console.error('Signup error:', error);
-      toast.error(error.message || t('organizations.invitation.accountCreationFailed'));
+      toast.error(
+        error.message || t('organizations.invitation.accountCreationFailed')
+      );
     } finally {
       setSigningUp(false);
     }
@@ -259,7 +261,9 @@ const OrganizationsInvitationPage = () => {
         navigate(`/`);
       }
     } catch (error: any) {
-      setErrorMessage(error.message || t('organizations.invitation.acceptError'));
+      setErrorMessage(
+        error.message || t('organizations.invitation.acceptError')
+      );
       toast.error(error.message || t('organizations.invitation.acceptError'));
     } finally {
       setAccepting(false);
