@@ -489,7 +489,11 @@
       "createAccount": "Crea tu cuenta para aceptar esta invitación",
       "reject": "Rechazar Invitación",
       "rejecting": "Rechazando...",
-      "chooseAction": "Por favor, elige aceptar o rechazar la invitación"
+      "chooseAction": "Por favor, elige aceptar o rechazar la invitación",
+      "acceptSuccess": "Invitation accepted successfully",
+      "acceptError": "Error accepting invitation",
+      "rejectSuccess": "Invitation rejected successfully",
+      "rejectError": "Error rejecting invitation"
     }
   },
   "filters": {

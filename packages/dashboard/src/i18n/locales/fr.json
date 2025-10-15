@@ -494,7 +494,11 @@
       "createAccount": "Créez votre compte pour accepter cette invitation",
       "reject": "Refuser l'Invitation",
       "rejecting": "Refus en cours...",
-      "chooseAction": "Veuillez choisir d'accepter ou de refuser l'invitation"
+      "chooseAction": "Veuillez choisir d'accepter ou de refuser l'invitation",
+      "acceptSuccess": "Invitation accepted successfully",
+      "acceptError": "Error accepting invitation",
+      "rejectSuccess": "Invitation rejected successfully",
+      "rejectError": "Error rejecting invitation"
     }
   },
   "filters": {

@@ -248,7 +248,7 @@ const OrganizationsInvitationPage = () => {
       const result = await OrganizationsService.acceptInvitation(token);
 
       console.log(result);
-      toast.success(t('common.acceptInvitation'));
+      toast.success(t('organizations.invitation.acceptSuccess'));
 
       // Redirect to the organization that the user was invited to
       const orgId = invitation()?.organization_id;
@@ -259,8 +259,8 @@ const OrganizationsInvitationPage = () => {
         navigate(`/`);
       }
     } catch (error: any) {
-      setErrorMessage(error.message || 'Error accepting invitation.');
-      toast.error(error.message || 'Error accepting invitation.');
+      setErrorMessage(error.message || t('organizations.invitation.acceptError'));
+      toast.error(error.message || t('organizations.invitation.acceptError'));
     } finally {
       setAccepting(false);
     }
@@ -271,12 +271,12 @@ const OrganizationsInvitationPage = () => {
     setRejecting(true);
     try {
       await OrganizationsService.rejectInvitation(token);
-      toast.success('Invitation rejected successfully');
+      toast.success(t('organizations.invitation.rejectSuccess'));
 
       // Redirect to root or login page
       navigate('/');
     } catch (error: any) {
-      toast.error(error.message || 'Error rejecting invitation.');
+      toast.error(error.message || t('organizations.invitation.rejectError'));
     } finally {
       setRejecting(false);
     }
