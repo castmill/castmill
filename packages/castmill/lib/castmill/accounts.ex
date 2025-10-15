@@ -305,6 +305,8 @@ defmodule Castmill.Accounts do
       {:ok, message} -> {:ok, message}
       {:error, :not_found} -> {:error, :not_found}
       {:error, reason} when is_binary(reason) -> {:error, reason}
+      {:error, {:sole_administrator, org_name}} ->
+        {:error, "Cannot delete account. You are the sole administrator of '#{org_name}' which has other members"}
       {:error, other} -> {:error, "Failed to delete user: #{inspect(other)}"}
     end
   end
