@@ -1,6 +1,7 @@
 import { BsCheckLg } from 'solid-icons/bs';
 import { BsEye } from 'solid-icons/bs';
-import { AiOutlineDelete } from 'solid-icons/ai';
+
+import { AiOutlineDelete, AiOutlineEdit } from 'solid-icons/ai';
 import { Component, createEffect, createSignal, Show, onMount, on } from 'solid-js';
 
 import {
@@ -30,6 +31,7 @@ import './playlists.scss';
 import { PlaylistView } from './playlist-view';
 import { AddonStore, AddonComponentProps } from '../../common/interfaces/addon-store';
 import { PlaylistAddForm } from './playlist-add-form';
+import { PlaylistDetails } from './playlist-details';
 import { useTeamFilter } from '../../common/hooks';
 
 const PlaylistsPage: Component<AddonComponentProps> = (props) => {
@@ -37,6 +39,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
   const [data, setData] = createSignal<JsonPlaylist[]>([]);
   const [currentPlaylist, setCurrentPlaylist] = createSignal<JsonPlaylist>();
   const [showModal, setShowModal] = createSignal(false);
+  const [showRenameModal, setShowRenameModal] = createSignal(false);
 
   const { teams, selectedTeamId, setSelectedTeamId } = useTeamFilter({
     baseUrl: props.store.env.baseUrl,
@@ -212,6 +215,14 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
       label: t('common.view'),
     },
     {
+      icon: AiOutlineEdit,
+      handler: (item: JsonPlaylist) => {
+        setCurrentPlaylist(item);
+        setShowRenameModal(true);
+      },
+      label: t('common.rename'),
+    },
+    {
       icon: AiOutlineDelete,
       handler: (item: JsonPlaylist) => {
         if (!canPerformAction('playlists', 'delete')) {
@@ -328,6 +339,46 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
             t={t}
             onChange={(playlist) => {
               console.log('Playlist changed', playlist);
+            }}
+          />
+        </Modal>
+      </Show>
+
+      <Show when={showRenameModal()}>
+        <Modal
+          title={t('playlists.renamePlaylist')}
+          description=""
+          onClose={() => setShowRenameModal(false)}
+          contentClass="playlist-rename-modal"
+        >
+          <PlaylistDetails
+            store={props.store}
+            playlist={currentPlaylist()!}
+            onSubmit={async (playlistUpdate) => {
+              try {
+                await PlaylistsService.updatePlaylist(
+                  props.store.env.baseUrl,
+                  props.store.organizations.selectedId,
+                  `${currentPlaylist()?.id}`,
+                  playlistUpdate
+                );
+                refreshData();
+                toast.success(
+                  t('playlists.playlistUpdated', {
+                    name: currentPlaylist()?.name,
+                  })
+                );
+                setShowRenameModal(false);
+                return true;
+              } catch (error) {
+                toast.error(
+                  t('playlists.errorUpdating', {
+                    name: currentPlaylist()?.name,
+                    error: String(error),
+                  })
+                );
+                return false;
+              }
             }}
           />
         </Modal>
