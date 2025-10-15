@@ -207,15 +207,28 @@ const translations = {
   },
 };
 
+function isForbiddenKey(key) {
+  return key === '__proto__' || key === 'constructor' || key === 'prototype';
+}
+
 function setNestedValue(obj, path, value) {
   const keys = path.split('.');
   let current = obj;
 
   for (let i = 0; i < keys.length - 1; i++) {
+    if (isForbiddenKey(keys[i])) {
+      // Skip assignment to forbidden keys for security
+      return;
+    }
     if (!current[keys[i]]) {
       current[keys[i]] = {};
     }
     current = current[keys[i]];
+  }
+
+  if (isForbiddenKey(keys[keys.length - 1])) {
+    // Skip assignment to forbidden keys for security
+    return;
   }
 
   current[keys[keys.length - 1]] = value;
