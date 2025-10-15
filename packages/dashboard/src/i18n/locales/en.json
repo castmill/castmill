@@ -74,6 +74,8 @@
     "maintainance": "Maintenance",
     "events": "Events",
     "telemetry": "Telemetry",
+    "selectImage": "Select an Image",
+    "selectMedia": "Select a Media",
     "youIndicator": "(you)"
   },
   "filters": {
@@ -376,7 +378,8 @@
   "errors": {
     "generic": "An error occurred. Please try again.",
     "networkError": "Network error. Please check your connection.",
-    "unauthorized": "Unauthorized. Please log in again."
+    "unauthorized": "Unauthorized. Please log in again.",
+    "unknownResourceType": "Unknown resource type: {{resourceType}}"
   },
   "playlists": {
     "title": "Playlists",

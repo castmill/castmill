@@ -79,7 +79,9 @@
       "teamClear": "Effacer le filtre d'équipe"
     },
     "addonError": "Erreur d'extension",
-    "backToLogin": "Retour à la connexion"
+    "backToLogin": "Retour à la connexion",
+    "selectImage": "Sélectionner une image",
+    "selectMedia": "Sélectionner un média"
   },
   "topbar": {
     "help": "Aide",
@@ -277,7 +279,8 @@
   "errors": {
     "generic": "Une erreur s'est produite. Veuillez réessayer.",
     "networkError": "Erreur réseau. Veuillez vérifier votre connexion.",
-    "unauthorized": "Non autorisé. Veuillez vous reconnecter."
+    "unauthorized": "Non autorisé. Veuillez vous reconnecter.",
+    "unknownResourceType": "Type de ressource inconnu: {{resourceType}}"
   },
   "sidebar": {
     "organization": "Organisation",
