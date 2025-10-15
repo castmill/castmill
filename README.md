@@ -20,6 +20,25 @@ The Castmill platform is composed of several packages:
 - [Cache](./packages/cache/README.md) - Cache and Resource Manager.
 - [Server](./packages/server/README.md) - The server component of the platform.
 
+## Development
+
+### Code Formatting
+
+This project uses **automatic code formatting** via Git hooks (Husky). When you commit code:
+
+- **JavaScript/TypeScript** files are automatically formatted with Prettier
+- **Elixir** files in `packages/castmill/` are automatically formatted with `mix format`
+
+**No manual formatting needed!** Just `git commit` and your code will be formatted automatically.
+
+You can still format manually if needed:
+```bash
+yarn format:all              # Format all frontend packages
+cd packages/castmill && mix format  # Format Elixir code
+```
+
+See [.husky/README.md](./.husky/README.md) for more details.
+
 ## Learn more
 
 - Official website: https://castmill.com/
