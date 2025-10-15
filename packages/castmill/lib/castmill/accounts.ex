@@ -279,9 +279,7 @@ defmodule Castmill.Accounts do
                 )
                 |> Repo.one()
 
-              Repo.rollback(
-                "Cannot delete account. You are the sole administrator of '#{org_name}' which has other members. Please promote another user to admin first."
-              )
+              Repo.rollback({:sole_administrator, org_name})
             end
 
           # User is not sole admin, safe to delete

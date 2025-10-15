@@ -102,15 +102,23 @@ defmodule CastmillWeb.UserController do
       {:error, :not_found} ->
         send_resp(conn, :not_found, "")
 
+      {:error, {:sole_administrator, org_name}} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{
+          error: "sole_administrator",
+          organization_name: org_name
+        })
+
       {:error, message} when is_binary(message) ->
         conn
         |> put_status(:unprocessable_entity)
-        |> json(%{status: :error, message: message})
+        |> json(%{error: message})
 
       {:error, _other} ->
         conn
         |> put_status(:unprocessable_entity)
-        |> json(%{status: :error, message: "Failed to delete user account."})
+        |> json(%{error: "failed_to_delete_account"})
     end
   end
 

@@ -8,7 +8,7 @@ import {
 } from 'solid-js';
 import { Button, FormItem, Timestamp, useToast } from '@castmill/ui-common';
 import { getUser, updateUser } from '../../components/auth';
-import { UserService } from '../../services/user.service';
+import { UserService, SoleAdministratorError } from '../../services/user.service';
 import { User } from '../../interfaces/user.interface';
 import {
   Credential,
@@ -160,26 +160,20 @@ const SettingsPage: Component = () => {
         window.location.href = '/login';
       }, 1500);
     } catch (err) {
-      // Extract error message from response if available
+      // Handle structured errors
       let errorMessage = t('settings.deleteAccountError');
 
-      if (err instanceof Error) {
-        const errorText = err.message;
-
-        // Check if it's the sole administrator error
-        if (errorText.includes('sole administrator')) {
-          // Extract organization name from error message
-          const match = errorText.match(/of '([^']+)'/);
-          const orgName = match ? match[1] : '';
-
-          if (orgName) {
-            errorMessage = t('settings.soleAdministratorError', { orgName });
-          } else {
-            errorMessage = t('settings.soleAdministratorErrorGeneric');
-          }
-        } else if (errorText) {
-          errorMessage = errorText;
+      if (err instanceof SoleAdministratorError) {
+        // Use the organization name from the error
+        if (err.organizationName) {
+          errorMessage = t('settings.soleAdministratorError', {
+            orgName: err.organizationName,
+          });
+        } else {
+          errorMessage = t('settings.soleAdministratorErrorGeneric');
         }
+      } else if (err instanceof Error) {
+        errorMessage = err.message || t('settings.deleteAccountError');
       }
 
       toast.error(errorMessage, 0); // No auto-dismiss for critical errors
