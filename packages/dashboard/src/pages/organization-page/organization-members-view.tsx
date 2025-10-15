@@ -50,17 +50,17 @@ const [selectedMembersMap, setSelectedMembersMap] = createSignal(
 const onRowSelect = (rowsSelected: Set<string>) => {
   const previousSelection = selectedMembers();
   setSelectedMembers(rowsSelected);
-  
+
   // Update the map: remove deselected items, add newly selected items
   const newMap = new Map(selectedMembersMap());
-  
+
   // Remove deselected members
   previousSelection.forEach((id) => {
     if (!rowsSelected.has(id)) {
       newMap.delete(id);
     }
   });
-  
+
   // Add newly selected members from current data
   rowsSelected.forEach((memberId) => {
     if (!newMap.has(memberId)) {
@@ -70,7 +70,7 @@ const onRowSelect = (rowsSelected: Set<string>) => {
       }
     }
   });
-  
+
   setSelectedMembersMap(newMap);
 };
 
