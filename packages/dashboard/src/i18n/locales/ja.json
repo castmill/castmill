@@ -490,10 +490,11 @@
       "title": "組織の招待",
       "emailAddress": "メールアドレス",
       "expired": "この招待は期限切れです。",
-      "loginToAccept": "この招待を承認するにはログインしてください",
-      "createAccount": "この招待を承認するにはアカウントを作成してください",
-      "reject": "Reject Invitation",
-      "rejecting": "Rejecting..."
+      "loginToAccept": "この招待を承諾するにはログインしてください",
+      "createAccount": "この招待を承諾するにはアカウントを作成してください",
+      "reject": "招待を拒否",
+      "rejecting": "拒否中...",
+      "chooseAction": "招待を承諾するか拒否するかを選択してください"
     }
   },
   "filters": {

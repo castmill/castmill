@@ -133,9 +133,18 @@ defmodule CastmillWeb.OrganizationController do
     {:ok, Organizations.is_admin?(organization_id, actor_id)}
   end
 
+  def check_access(actor_id, :remove_member, %{"organization_id" => organization_id}) do
+    {:ok, Organizations.is_admin?(organization_id, actor_id)}
+  end
+
   def check_access(actor_id, action, %{"token" => token})
       when action in [:show_invitation, :accept_invitation] do
     validInvitation?(actor_id, token)
+  end
+
+  def check_access(_actor_id, :reject_invitation, %{"token" => _token}) do
+    # Anyone with a valid token can reject an invitation (no auth required)
+    {:ok, true}
   end
 
   # Default implementation for other actions not explicitly handled above

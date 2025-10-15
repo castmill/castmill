@@ -461,11 +461,15 @@ defmodule CastmillWeb.OrganizationInvitationTest do
         conn
         |> Plug.Test.init_test_session(%{user_session_token: accepted_token})
 
-      conn = post(conn_accepted, ~p"/dashboard/organizations_invitations/#{invitation.token}/accept")
+      conn =
+        post(conn_accepted, ~p"/dashboard/organizations_invitations/#{invitation.token}/accept")
+
       assert json_response(conn, 200) == %{}
 
       # Try to reject already accepted invitation
-      conn = post(conn_accepted, ~p"/dashboard/organizations_invitations/#{invitation.token}/reject")
+      conn =
+        post(conn_accepted, ~p"/dashboard/organizations_invitations/#{invitation.token}/reject")
+
       assert response(conn, 400)
     end
 

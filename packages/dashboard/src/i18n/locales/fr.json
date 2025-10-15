@@ -492,8 +492,9 @@
       "expired": "Cette invitation a expiré.",
       "loginToAccept": "Connectez-vous pour accepter cette invitation",
       "createAccount": "Créez votre compte pour accepter cette invitation",
-      "reject": "Reject Invitation",
-      "rejecting": "Rejecting..."
+      "reject": "Refuser l'Invitation",
+      "rejecting": "Refus en cours...",
+      "chooseAction": "Veuillez choisir d'accepter ou de refuser l'invitation"
     }
   },
   "filters": {

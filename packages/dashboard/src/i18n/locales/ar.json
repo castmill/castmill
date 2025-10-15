@@ -492,8 +492,9 @@
       "expired": "انتهت صلاحية هذه الدعوة.",
       "loginToAccept": "تسجيل الدخول لقبول هذه الدعوة",
       "createAccount": "أنشئ حسابك لقبول هذه الدعوة",
-      "reject": "Reject Invitation",
-      "rejecting": "Rejecting..."
+      "reject": "رفض الدعوة",
+      "rejecting": "جاري الرفض...",
+      "chooseAction": "يرجى اختيار قبول أو رفض الدعوة"
     }
   },
   "filters": {

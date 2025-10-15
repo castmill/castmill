@@ -487,8 +487,9 @@
       "expired": "Esta invitación ha expirado.",
       "loginToAccept": "Inicia sesión para aceptar esta invitación",
       "createAccount": "Crea tu cuenta para aceptar esta invitación",
-      "reject": "Reject Invitation",
-      "rejecting": "Rejecting..."
+      "reject": "Rechazar Invitación",
+      "rejecting": "Rechazando...",
+      "chooseAction": "Por favor, elige aceptar o rechazar la invitación"
     }
   },
   "filters": {

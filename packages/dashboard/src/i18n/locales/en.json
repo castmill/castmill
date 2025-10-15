@@ -493,7 +493,8 @@
       "loginToAccept": "Login to accept this invitation",
       "createAccount": "Create your account to accept this invitation",
       "reject": "Reject Invitation",
-      "rejecting": "Rejecting..."
+      "rejecting": "Rejecting...",
+      "chooseAction": "Please choose to accept or reject the invitation"
     }
   }
 }

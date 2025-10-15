@@ -154,11 +154,12 @@ const OrganizationsInvitationPage = () => {
       // Login the user
       await loginUser();
 
-      // Accept invitation automatically
+      // Auto-accept invitation since user signed up specifically for this invitation
       await acceptInvitation();
     } catch (error: any) {
       console.error('Signup error:', error);
       toast.error(error.message || 'Failed to create account');
+    } finally {
       setSigningUp(false);
     }
   }
@@ -271,7 +272,7 @@ const OrganizationsInvitationPage = () => {
     try {
       await OrganizationsService.rejectInvitation(token);
       toast.success('Invitation rejected successfully');
-      
+
       // Redirect to root or login page
       navigate('/');
     } catch (error: any) {
@@ -456,7 +457,9 @@ const OrganizationsInvitationPage = () => {
                   >
                     <Show
                       when={!rejecting()}
-                      fallback={<span>{t('organizations.invitation.rejecting')}</span>}
+                      fallback={
+                        <span>{t('organizations.invitation.rejecting')}</span>
+                      }
                     >
                       <svg
                         class="w-5 h-5"

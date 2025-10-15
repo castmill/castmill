@@ -487,8 +487,9 @@
       "expired": "Denna inbjudan har utgått.",
       "loginToAccept": "Logga in för att acceptera denna inbjudan",
       "createAccount": "Skapa ditt konto för att acceptera denna inbjudan",
-      "reject": "Reject Invitation",
-      "rejecting": "Rejecting..."
+      "reject": "Avvisa Inbjudan",
+      "rejecting": "Avvisar...",
+      "chooseAction": "Välj att acceptera eller avvisa inbjudan"
     }
   },
   "filters": {

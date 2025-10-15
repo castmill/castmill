@@ -487,8 +487,9 @@
       "expired": "Diese Einladung ist abgelaufen.",
       "loginToAccept": "Melden Sie sich an, um diese Einladung anzunehmen",
       "createAccount": "Erstellen Sie Ihr Konto, um diese Einladung anzunehmen",
-      "reject": "Reject Invitation",
-      "rejecting": "Rejecting..."
+      "reject": "Einladung Ablehnen",
+      "rejecting": "Wird abgelehnt...",
+      "chooseAction": "Bitte wählen Sie, ob Sie die Einladung annehmen oder ablehnen möchten"
     }
   },
   "filters": {
