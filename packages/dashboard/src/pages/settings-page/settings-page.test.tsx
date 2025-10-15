@@ -238,7 +238,7 @@ describe('SettingsPage', () => {
       const { updateUser } = await import('../../components/auth');
       (UserService.updateProfile as any).mockResolvedValue({ status: 'ok' });
 
-      renderWithI18n(() => <SettingsPage />);
+      renderWithProviders(() => <SettingsPage />);
 
       const nameInput = screen.getByLabelText('Full Name') as HTMLInputElement;
       fireEvent.input(nameInput, { target: { value: 'Jane Doe' } });
