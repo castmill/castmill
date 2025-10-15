@@ -263,6 +263,12 @@
       "expired": "Diese Einladung ist abgelaufen.",
       "accepting": "Wird angenommen...",
       "accept": "Einladung annehmen"
+    },
+    "dialogs": {
+      "removeMemberTitle": "Benutzer aus Team entfernen",
+      "removeMemberMessage": "Sind Sie sicher, dass Sie das Mitglied \"{{name}}\" aus dem Team entfernen möchten?",
+      "removeMembersTitle": "Mitglieder aus Team entfernen",
+      "removeMembersMessage": "Sind Sie sicher, dass Sie die folgenden Mitglieder aus dem Team entfernen möchten?"
     }
   },
   "channels": {
@@ -335,6 +341,12 @@
       "admin": "Kann Teammitglieder und Ressourcen verwalten",
       "member": "Kann auf Teamressourcen zugreifen und diese bearbeiten",
       "installer": "Temporäres Token für Geräteregistrierung (läuft in 24h ab)"
+    },
+    "dialogs": {
+      "removeMemberTitle": "Benutzer aus Organisation entfernen",
+      "removeMemberMessage": "Sind Sie sicher, dass Sie das Mitglied \"{{name}}\" aus der Organisation entfernen möchten?",
+      "removeMembersTitle": "Mitglieder aus Organisation entfernen",
+      "removeMembersMessage": "Sind Sie sicher, dass Sie die folgenden Mitglieder aus der Organisation entfernen möchten?"
     }
   },
   "login": {

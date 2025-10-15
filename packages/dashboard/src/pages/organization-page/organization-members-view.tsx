@@ -260,8 +260,10 @@ export const OrganizationMembersView = (props: {
 
       <ConfirmDialog
         show={showConfirmDialog()}
-        title={`Remove User From Organization`}
-        message={`Are you sure you want to remove member "${currentMember()?.user?.name}" from the organization?`}
+        title={t('organization.dialogs.removeMemberTitle')}
+        message={t('organization.dialogs.removeMemberMessage', {
+          name: currentMember()?.user?.name,
+        })}
         onClose={() => setShowConfirmDialog(false)}
         onConfirm={() =>
           confirmRemoveMemberFromOrganization(currentMember()?.user)
@@ -270,8 +272,8 @@ export const OrganizationMembersView = (props: {
 
       <ConfirmDialog
         show={showConfirmDialogMultiple()}
-        title={`Remove members From Organization`}
-        message={`Are you sure you want to remove the following members from the organization?`}
+        title={t('organization.dialogs.removeMembersTitle')}
+        message={t('organization.dialogs.removeMembersMessage')}
         onClose={() => setShowConfirmDialogMultiple(false)}
         onConfirm={() => confirmRemoveMultipleMembersFromOrganization()}
       >

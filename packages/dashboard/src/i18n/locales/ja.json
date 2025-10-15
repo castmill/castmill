@@ -257,6 +257,12 @@
       "expired": "この招待は期限切れです。",
       "accepting": "承認中...",
       "accept": "招待を承認"
+    },
+    "dialogs": {
+      "removeMemberTitle": "チームからユーザーを削除",
+      "removeMemberMessage": "メンバー「{{name}}」をチームから削除してもよろしいですか？",
+      "removeMembersTitle": "チームからメンバーを削除",
+      "removeMembersMessage": "以下のメンバーをチームから削除してもよろしいですか？"
     }
   },
   "login": {
@@ -363,6 +369,12 @@
       "admin": "チームメンバーとリソースを管理できます",
       "member": "チームリソースにアクセスして編集できます",
       "installer": "デバイス登録用の一時トークン（24時間後に期限切れ）"
+    },
+    "dialogs": {
+      "removeMemberTitle": "組織からユーザーを削除",
+      "removeMemberMessage": "メンバー「{{name}}」を組織から削除してもよろしいですか？",
+      "removeMembersTitle": "組織からメンバーを削除",
+      "removeMembersMessage": "以下のメンバーを組織から削除してもよろしいですか？"
     }
   },
   "playlists": {

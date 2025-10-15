@@ -252,6 +252,12 @@
       "expired": "Denna inbjudan har utgått.",
       "accepting": "Accepterar...",
       "accept": "Acceptera inbjudan"
+    },
+    "dialogs": {
+      "removeMemberTitle": "Ta bort användare från team",
+      "removeMemberMessage": "Är du säker på att du vill ta bort medlemmen \"{{name}}\" från teamet?",
+      "removeMembersTitle": "Ta bort medlemmar från team",
+      "removeMembersMessage": "Är du säker på att du vill ta bort följande medlemmar från teamet?"
     }
   },
   "login": {
@@ -358,6 +364,12 @@
       "admin": "Kan hantera teammedlemmar och resurser",
       "member": "Kan komma åt och redigera teamresurser",
       "installer": "Tillfällig token för enhetsregistrering (utgår om 24h)"
+    },
+    "dialogs": {
+      "removeMemberTitle": "Ta bort användare från organisation",
+      "removeMemberMessage": "Är du säker på att du vill ta bort medlemmen \"{{name}}\" från organisationen?",
+      "removeMembersTitle": "Ta bort medlemmar från organisation",
+      "removeMembersMessage": "Är du säker på att du vill ta bort följande medlemmar från organisationen?"
     }
   },
   "playlists": {

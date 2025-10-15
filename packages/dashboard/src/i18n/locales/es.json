@@ -245,6 +245,12 @@
       "invitationSent": "Invitación enviada a {{email}}",
       "leftTeam": "Saliste del equipo {{name}}"
     },
+    "dialogs": {
+      "removeMemberTitle": "Eliminar Usuario del Equipo",
+      "removeMemberMessage": "¿Está seguro de que desea eliminar al miembro \"{{name}}\" del equipo?",
+      "removeMembersTitle": "Eliminar Miembros del Equipo",
+      "removeMembersMessage": "¿Está seguro de que desea eliminar los siguientes miembros del equipo?"
+    },
     "invitation": {
       "title": "Invitación al equipo",
       "emailAddress": "Dirección de correo electrónico",
@@ -342,7 +348,14 @@
     },
     "messages": {
       "memberRemoved": "El miembro {{name}} se eliminó correctamente",
-      "membersRemoved": "Miembros eliminados correctamente"
+      "membersRemoved": "Miembros eliminados correctamente",
+      "invitationSent": "Invitación enviada a {{email}}"
+    },
+    "dialogs": {
+      "removeMemberTitle": "Eliminar Usuario de la Organización",
+      "removeMemberMessage": "¿Está seguro de que desea eliminar al miembro \"{{name}}\" de la organización?",
+      "removeMembersTitle": "Eliminar Miembros de la Organización",
+      "removeMembersMessage": "¿Está seguro de que desea eliminar los siguientes miembros de la organización?"
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {

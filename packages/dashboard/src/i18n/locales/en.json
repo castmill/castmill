@@ -261,6 +261,12 @@
       "invitationSent": "Invitation sent to {{email}}",
       "leftTeam": "You left the team {{name}}"
     },
+    "dialogs": {
+      "removeMemberTitle": "Remove User From Team",
+      "removeMemberMessage": "Are you sure you want to remove member \"{{name}}\" from the team?",
+      "removeMembersTitle": "Remove Members From Team",
+      "removeMembersMessage": "Are you sure you want to remove the following members from the team?"
+    },
     "invitation": {
       "title": "Team Invitation",
       "emailAddress": "Email Address",
@@ -339,7 +345,14 @@
     },
     "messages": {
       "memberRemoved": "Member {{name}} removed successfully",
-      "membersRemoved": "Members removed successfully"
+      "membersRemoved": "Members removed successfully",
+      "invitationSent": "Invitation sent to {{email}}"
+    },
+    "dialogs": {
+      "removeMemberTitle": "Remove User From Organization",
+      "removeMemberMessage": "Are you sure you want to remove member \"{{name}}\" from the organization?",
+      "removeMembersTitle": "Remove Members From Organization",
+      "removeMembersMessage": "Are you sure you want to remove the following members from the organization?"
     }
   },
   "login": {

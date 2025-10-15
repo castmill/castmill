@@ -51,6 +51,9 @@ const [showConfirmDialogMultiple, setShowConfirmDialogMultiple] =
 const [showConfirmDialog, setShowConfirmDialog] = createSignal(false);
 
 const [selectedMembers, setSelectedMembers] = createSignal(new Set<string>());
+const [selectedMembersMap, setSelectedMembersMap] = createSignal(
+  new Map<string, TeamMemberRow>()
+);
 
 const [selectedUser, setSelectedUser] = createSignal<User | undefined>(
   undefined
@@ -61,7 +64,32 @@ const [selectedRole, setSelectedRole] = createSignal<'member' | 'admin'>(
 const [isFormValid, setIsFormValid] = createSignal(false);
 
 const onRowSelect = (rowsSelected: Set<string>) => {
+  const previousSelection = selectedMembers();
   setSelectedMembers(rowsSelected);
+  
+  // Update the map: remove deselected items, add newly selected items
+  const newMap = new Map(selectedMembersMap());
+  
+  // Remove deselected members
+  previousSelection.forEach((id) => {
+    if (!rowsSelected.has(id)) {
+      newMap.delete(id);
+    }
+  });
+  
+  // Add newly selected members from current data
+  rowsSelected.forEach((memberId) => {
+    if (!newMap.has(memberId)) {
+      const member = data().find(
+        (entry: TeamMemberRow) => entry.user_id === memberId
+      );
+      if (member) {
+        newMap.set(memberId, member);
+      }
+    }
+  });
+  
+  setSelectedMembersMap(newMap);
 };
 
 const itemsPerPage = 10;
@@ -242,15 +270,11 @@ export const TeamMembersView = (props: {
 
       refreshData();
       toast.success(t('teams.messages.membersRemoved'));
-      Array.from(selectedMembers()).forEach((memberId) => {
-        const member = data().find(
-          (entry: TeamMemberRow) => entry.user_id === memberId
-        );
-        if (member) {
-          props.onRemove(member.user);
-        }
+      Array.from(selectedMembersMap().values()).forEach((member) => {
+        props.onRemove(member.user);
       });
       setShowConfirmDialogMultiple(false);
+      setSelectedMembersMap(new Map());
     } catch (error) {
       const errorMessage = resolveRemoveMemberError((error as Error).message);
       toast.error(errorMessage);
@@ -365,25 +389,24 @@ export const TeamMembersView = (props: {
 
       <ConfirmDialog
         show={showConfirmDialog()}
-        title={`Remove User From Team`}
-        message={`Are you sure you want to remove member "${currentMember()?.user?.name}" from the team?`}
+        title={t('teams.dialogs.removeMemberTitle')}
+        message={t('teams.dialogs.removeMemberMessage', {
+          name: currentMember()?.user?.name,
+        })}
         onClose={() => setShowConfirmDialog(false)}
         onConfirm={() => confirmRemoveMemberFromTeam(currentMember()?.user)}
       />
 
       <ConfirmDialog
         show={showConfirmDialogMultiple()}
-        title={`Remove members From Team`}
-        message={`Are you sure you want to remove the following members from the team?`}
+        title={t('teams.dialogs.removeMembersTitle')}
+        message={t('teams.dialogs.removeMembersMessage')}
         onClose={() => setShowConfirmDialogMultiple(false)}
         onConfirm={() => confirmRemoveMultipleMembersFromTeam()}
       >
         <div style="margin: 1.5em; line-height: 1.5em;">
-          {Array.from(selectedMembers()).map((memberId) => {
-            const member = data().find(
-              (entry: TeamMemberRow) => entry.user_id === memberId
-            );
-            return <div>{`- ${member?.user.name}`}</div>;
+          {Array.from(selectedMembersMap().values()).map((member) => {
+            return <div>{`- ${member.user.name}`}</div>;
           })}
         </div>
       </ConfirmDialog>

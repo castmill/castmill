@@ -257,6 +257,12 @@
       "expired": "Cette invitation a expiré.",
       "accepting": "Acceptation...",
       "accept": "Accepter l'invitation"
+    },
+    "dialogs": {
+      "removeMemberTitle": "Retirer l'utilisateur de l'équipe",
+      "removeMemberMessage": "Êtes-vous sûr de vouloir retirer le membre \"{{name}}\" de l'équipe?",
+      "removeMembersTitle": "Retirer les membres de l'équipe",
+      "removeMembersMessage": "Êtes-vous sûr de vouloir retirer les membres suivants de l'équipe?"
     }
   },
   "login": {
@@ -363,6 +369,12 @@
       "admin": "Peut gérer les membres de l'équipe et les ressources",
       "member": "Peut accéder et modifier les ressources de l'équipe",
       "installer": "Jeton temporaire pour l'enregistrement d'appareil (expire dans 24h)"
+    },
+    "dialogs": {
+      "removeMemberTitle": "Retirer l'utilisateur de l'organisation",
+      "removeMemberMessage": "Êtes-vous sûr de vouloir retirer le membre \"{{name}}\" de l'organisation?",
+      "removeMembersTitle": "Retirer les membres de l'organisation",
+      "removeMembersMessage": "Êtes-vous sûr de vouloir retirer les membres suivants de l'organisation?"
     }
   },
   "playlists": {

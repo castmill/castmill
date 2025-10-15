@@ -257,6 +257,12 @@
       "expired": "此邀请已过期。",
       "accepting": "正在接受...",
       "accept": "接受邀请"
+    },
+    "dialogs": {
+      "removeMemberTitle": "从团队中移除用户",
+      "removeMemberMessage": "您确定要从团队中移除成员\"{{name}}\"吗？",
+      "removeMembersTitle": "从团队中移除成员",
+      "removeMembersMessage": "您确定要从团队中移除以下成员吗？"
     }
   },
   "login": {
@@ -363,6 +369,12 @@
       "admin": "可以管理团队成员和资源",
       "member": "可以访问和编辑团队资源",
       "installer": "用于设备注册的临时令牌（24小时后过期）"
+    },
+    "dialogs": {
+      "removeMemberTitle": "从组织中移除用户",
+      "removeMemberMessage": "您确定要从组织中移除成员\"{{name}}\"吗？",
+      "removeMembersTitle": "从组织中移除成员",
+      "removeMembersMessage": "您确定要从组织中移除以下成员吗？"
     }
   },
   "playlists": {
