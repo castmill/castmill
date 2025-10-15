@@ -366,4 +366,3 @@ defmodule Castmill.AccountsTest do
     end
   end
 end
-

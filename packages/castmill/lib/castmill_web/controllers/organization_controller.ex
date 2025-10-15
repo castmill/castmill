@@ -133,7 +133,10 @@ defmodule CastmillWeb.OrganizationController do
     {:ok, Organizations.is_admin?(organization_id, actor_id)}
   end
 
-  def check_access(actor_id, :remove_member, %{"organization_id" => organization_id, "user_id" => user_id}) do
+  def check_access(actor_id, :remove_member, %{
+        "organization_id" => organization_id,
+        "user_id" => user_id
+      }) do
     # Allow users to remove themselves OR admins to remove others
     if actor_id == user_id do
       {:ok, Organizations.has_any_role?(organization_id, actor_id, [:admin, :manager, :member])}

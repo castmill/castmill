@@ -220,7 +220,7 @@ export const OrganizationMembersView = (props: {
   const handleLeaveOrganizationClick = () => {
     // Check if this is the user's last organization
     const totalOrganizations = store.organizations.data.length;
-    
+
     if (totalOrganizations <= 1) {
       // Show warning dialog - this will effectively delete the account
       setShowLeaveWarningDialog(true);

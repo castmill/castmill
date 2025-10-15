@@ -39,12 +39,14 @@ vi.mock('@solidjs/router', () => ({
 // Create a mutable store mock that tests can modify
 const mockStore = {
   organizations: {
-    data: [{ 
-      id: 'org-1', 
-      name: 'Test Organization',
-      created_at: '2024-01-01T00:00:00Z',
-      updated_at: '2024-01-01T00:00:00Z',
-    }],
+    data: [
+      {
+        id: 'org-1',
+        name: 'Test Organization',
+        created_at: '2024-01-01T00:00:00Z',
+        updated_at: '2024-01-01T00:00:00Z',
+      },
+    ],
     loaded: true,
     loading: false,
     selectedId: 'org-1',
@@ -71,12 +73,12 @@ describe('OrganizationMembersView - leave organization', () => {
   beforeEach(() => {
     // Reset mockStore to single organization
     mockStore.organizations.data = [
-      { 
-        id: 'org-1', 
+      {
+        id: 'org-1',
         name: 'Test Organization',
         created_at: '2024-01-01T00:00:00Z',
         updated_at: '2024-01-01T00:00:00Z',
-      }
+      },
     ];
 
     toastSpies.success.mockClear();
@@ -113,14 +115,14 @@ describe('OrganizationMembersView - leave organization', () => {
   it('allows a member to leave when another admin exists and user has multiple orgs', async () => {
     // Set up store with multiple organizations
     mockStore.organizations.data = [
-      { 
-        id: 'org-1', 
+      {
+        id: 'org-1',
         name: 'Test Organization',
         created_at: '2024-01-01T00:00:00Z',
         updated_at: '2024-01-01T00:00:00Z',
       },
-      { 
-        id: 'org-2', 
+      {
+        id: 'org-2',
         name: 'Other Org',
         created_at: '2024-01-01T00:00:00Z',
         updated_at: '2024-01-01T00:00:00Z',
@@ -145,8 +147,8 @@ describe('OrganizationMembersView - leave organization', () => {
 
     // Mock getAll to return another organization after leaving
     vi.mocked(OrganizationsService.getAll).mockResolvedValue([
-      { 
-        id: 'org-2', 
+      {
+        id: 'org-2',
         name: 'Other Org',
         created_at: '2024-01-01T00:00:00Z',
         updated_at: '2024-01-01T00:00:00Z',
@@ -166,10 +168,9 @@ describe('OrganizationMembersView - leave organization', () => {
 
     // Should call API immediately (no warning dialog)
     await waitFor(() => {
-      expect(OrganizationsService.removeMemberFromOrganization).toHaveBeenCalledWith(
-        'org-1',
-        'user-1'
-      );
+      expect(
+        OrganizationsService.removeMemberFromOrganization
+      ).toHaveBeenCalledWith('org-1', 'user-1');
     });
 
     await waitFor(() => {
@@ -178,7 +179,9 @@ describe('OrganizationMembersView - leave organization', () => {
 
     // Should navigate to another organization
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/org/org-2', { replace: true });
+      expect(mockNavigate).toHaveBeenCalledWith('/org/org-2', {
+        replace: true,
+      });
     });
   });
 
@@ -213,11 +216,15 @@ describe('OrganizationMembersView - leave organization', () => {
 
     // Should show warning dialog
     await waitFor(() => {
-      expect(screen.getByText(/leave your last organization/i)).toBeInTheDocument();
+      expect(
+        screen.getByText(/leave your last organization/i)
+      ).toBeInTheDocument();
     });
 
     // Should NOT have called the API yet
-    expect(OrganizationsService.removeMemberFromOrganization).not.toHaveBeenCalled();
+    expect(
+      OrganizationsService.removeMemberFromOrganization
+    ).not.toHaveBeenCalled();
 
     // Click confirm in the dialog
     const confirmButton = screen.getByLabelText(/confirm/i);
@@ -225,10 +232,9 @@ describe('OrganizationMembersView - leave organization', () => {
 
     // Now it should call the API
     await waitFor(() => {
-      expect(OrganizationsService.removeMemberFromOrganization).toHaveBeenCalledWith(
-        'org-1',
-        'user-1'
-      );
+      expect(
+        OrganizationsService.removeMemberFromOrganization
+      ).toHaveBeenCalledWith('org-1', 'user-1');
     });
 
     // Should show info toast about no organizations

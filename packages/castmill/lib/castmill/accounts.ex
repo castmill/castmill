@@ -254,8 +254,11 @@ defmodule Castmill.Accounts do
               org ->
                 # Delete the organization (will cascade delete org_user relationships)
                 case Repo.delete(org) do
-                  {:ok, _} -> :ok
-                  {:error, changeset} -> Repo.rollback("Failed to delete organization: #{inspect(changeset)}")
+                  {:ok, _} ->
+                    :ok
+
+                  {:error, changeset} ->
+                    Repo.rollback("Failed to delete organization: #{inspect(changeset)}")
                 end
             end
 

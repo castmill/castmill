@@ -163,13 +163,13 @@ const SettingsPage: Component = () => {
 
       if (err instanceof Error) {
         const errorText = err.message;
-        
+
         // Check if it's the sole administrator error
         if (errorText.includes('sole administrator')) {
           // Extract organization name from error message
           const match = errorText.match(/of '([^']+)'/);
           const orgName = match ? match[1] : '';
-          
+
           if (orgName) {
             errorMessage = t('settings.soleAdministratorError', { orgName });
           } else {
