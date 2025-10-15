@@ -406,5 +406,49 @@ describe('SettingsPage', () => {
         ).toBeInTheDocument();
       });
     });
+
+    it('displays passkey cleanup warning in delete confirmation', async () => {
+      renderWithI18n(() => <SettingsPage />);
+
+      const deleteButton = screen.getByRole('button', {
+        name: 'Delete Account',
+      });
+      fireEvent.click(deleteButton);
+
+      await waitFor(() => {
+        expect(
+          screen.getByText(/passkeys stored on your devices/i)
+        ).toBeInTheDocument();
+        expect(
+          screen.getByText(/manually remove this account's passkeys/i)
+        ).toBeInTheDocument();
+      });
+    });
+
+    it('calls deleteAccount service when confirmed', async () => {
+      (UserService.deleteAccount as any).mockResolvedValue({ status: 'ok' });
+
+      renderWithI18n(() => <SettingsPage />);
+
+      const deleteButton = screen.getByRole('button', {
+        name: 'Delete Account',
+      });
+      fireEvent.click(deleteButton);
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole('button', { name: 'Yes, Delete Account' })
+        ).toBeInTheDocument();
+      });
+
+      const confirmButton = screen.getByRole('button', {
+        name: 'Yes, Delete Account',
+      });
+      fireEvent.click(confirmButton);
+
+      await waitFor(() => {
+        expect(UserService.deleteAccount).toHaveBeenCalledWith('1');
+      });
+    });
   });
 });
