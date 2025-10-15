@@ -28,10 +28,13 @@ defmodule Castmill.ChannelsFixtures do
         {key, value} -> {to_string(key), value}
       end)
       |> Enum.into(%{})
-      |> Map.merge(%{
-        "start" => "2020-01-01 00:00:00",
-        "end" => "2020-01-01 05:00:00"
-      }, fn _k, v1, _v2 -> v1 end)
+      |> Map.merge(
+        %{
+          "start" => "2020-01-01 00:00:00",
+          "end" => "2020-01-01 05:00:00"
+        },
+        fn _k, v1, _v2 -> v1 end
+      )
 
     {:ok, channel_entry} = Castmill.Resources.add_channel_entry(channel_id, attrs)
 
