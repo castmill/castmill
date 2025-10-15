@@ -257,6 +257,12 @@
       "expired": "이 초대가 만료되었습니다.",
       "accepting": "수락 중...",
       "accept": "초대 수락"
+    },
+    "dialogs": {
+      "removeMemberTitle": "팀에서 사용자 제거",
+      "removeMemberMessage": "멤버 \"{{name}}\"을(를) 팀에서 제거하시겠습니까?",
+      "removeMembersTitle": "팀에서 멤버 제거",
+      "removeMembersMessage": "다음 멤버들을 팀에서 제거하시겠습니까?"
     }
   },
   "login": {
@@ -347,7 +353,8 @@
     },
     "messages": {
       "memberRemoved": "구성원 {{name}}을(를) 성공적으로 제거했습니다",
-      "membersRemoved": "구성원을 성공적으로 제거했습니다"
+      "membersRemoved": "구성원을 성공적으로 제거했습니다",
+      "invitationSent": "{{email}}에게 초대장을 보냈습니다"
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {
@@ -363,6 +370,12 @@
       "admin": "팀 구성원 및 리소스를 관리할 수 있음",
       "member": "팀 리소스에 액세스하고 편집할 수 있음",
       "installer": "기기 등록용 임시 토큰(24시간 후 만료)"
+    },
+    "dialogs": {
+      "removeMemberTitle": "조직에서 사용자 제거",
+      "removeMemberMessage": "멤버 \"{{name}}\"을(를) 조직에서 제거하시겠습니까?",
+      "removeMembersTitle": "조직에서 멤버 제거",
+      "removeMembersMessage": "다음 멤버들을 조직에서 제거하시겠습니까?"
     }
   },
   "playlists": {
