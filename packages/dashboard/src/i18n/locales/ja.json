@@ -4,6 +4,7 @@
     "cancel": "キャンセル",
     "delete": "削除",
     "edit": "編集",
+    "rename": "名前を変更",
     "add": "追加",
     "remove": "削除",
     "close": "閉じる",
@@ -78,7 +79,9 @@
       "teamClear": "チームフィルターをクリア"
     },
     "addonError": "アドオンエラー",
-    "backToLogin": "ログインに戻る"
+    "backToLogin": "ログインに戻る",
+    "selectImage": "画像を選択",
+    "selectMedia": "メディアを選択"
   },
   "topbar": {
     "help": "ヘルプ",
@@ -170,6 +173,21 @@
     "errors": {
       "fetchUsageData": "使用量データの取得に失敗しました：{{error}}"
     }
+  },
+  "content": {
+    "title": "コンテンツ",
+    "description": "コンテンツリソースとクォータ使用量の概要",
+    "playlists": "プレイリスト",
+    "medias": "メディアファイル",
+    "storage": "ストレージ",
+    "widgets": "ウィジェット",
+    "used": "使用済み",
+    "total": "合計",
+    "loadingUsageData": "使用量データを読み込んでいます...",
+    "quotaLimitReached": "クォータ制限に達しました",
+    "approachingLimit": "制限に近づいています",
+    "noUsageData": "利用可能な使用量データがありません",
+    "unableToLoad": "リソース使用量情報を読み込めません"
   },
   "teams": {
     "title": "チーム",
@@ -265,7 +283,8 @@
   "errors": {
     "generic": "エラーが発生しました。もう一度お試しください。",
     "networkError": "ネットワークエラーです。接続を確認してください。",
-    "unauthorized": "認証されていません。再度ログインしてください。"
+    "unauthorized": "認証されていません。再度ログインしてください。",
+    "unknownResourceType": "不明なリソースタイプ: {{resourceType}}"
   },
   "sidebar": {
     "organization": "組織",
@@ -311,6 +330,9 @@
     "createNewPlaylist": "新しいプレイリストを作成",
     "playlistTitle": "プレイリスト「{{name}}」",
     "buildPlaylist": "ここでプレイリストを作成してください",
+    "renamePlaylist": "プレイリストの名前を変更",
+    "playlistUpdated": "プレイリスト「{{name}}」が正常に更新されました",
+    "errorUpdating": "プレイリスト{{name}}の更新中にエラーが発生しました：{{error}}",
     "removePlaylist": "プレイリストを削除",
     "removePlaylists": "プレイリストを削除",
     "confirmRemovePlaylist": "プレイリスト「{{name}}」を削除してもよろしいですか？",

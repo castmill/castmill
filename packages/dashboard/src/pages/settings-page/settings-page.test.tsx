@@ -11,6 +11,7 @@ vi.mock('../../components/auth', () => ({
     name: 'John Doe',
     email: 'john@example.com',
   })),
+  updateUser: vi.fn(),
 }));
 
 // Mock the user service
@@ -230,6 +231,25 @@ describe('SettingsPage', () => {
         expect(
           screen.getByText(/Email verification required/)
         ).toBeInTheDocument();
+      });
+    });
+
+    it('updates global user state when name is changed', async () => {
+      const { updateUser } = await import('../../components/auth');
+      (UserService.updateProfile as any).mockResolvedValue({ status: 'ok' });
+
+      renderWithI18n(() => <SettingsPage />);
+
+      const nameInput = screen.getByLabelText('Full Name') as HTMLInputElement;
+      fireEvent.input(nameInput, { target: { value: 'Jane Doe' } });
+
+      const saveButton = screen.getByRole('button', { name: 'Save Changes' });
+      fireEvent.click(saveButton);
+
+      await waitFor(() => {
+        expect(updateUser).toHaveBeenCalledWith({
+          name: 'Jane Doe',
+        });
       });
     });
   });

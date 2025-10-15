@@ -159,6 +159,48 @@ defmodule CastmillWeb.ResourceController.MediasTest do
       assert %{"data" => [%{"name" => "big media3"}, %{"name" => "big media4"}], "count" => 5} =
                response
     end
+
+    test "filters medias by type", %{conn: conn, organization: organization} do
+      # Create image media items
+      media_fixture(%{
+        organization_id: organization.id,
+        name: "image1",
+        uri: "http://example.com/image1.jpg",
+        mimetype: "image/jpeg"
+      })
+
+      media_fixture(%{
+        organization_id: organization.id,
+        name: "image2",
+        uri: "http://example.com/image2.png",
+        mimetype: "image/png"
+      })
+
+      # Create video media items
+      media_fixture(%{
+        organization_id: organization.id,
+        name: "video1",
+        uri: "http://example.com/video1.mp4",
+        mimetype: "video/mp4"
+      })
+
+      # Filter for image type only
+      conn = get(conn, "/api/organizations/#{organization.id}/medias", %{filters: "type:image"})
+      response = json_response(conn, 200)
+
+      # Assert only image media items are returned
+      assert %{"count" => 2} = response
+      assert %{"data" => data} = response
+      assert Enum.all?(data, fn media -> String.starts_with?(media["mimetype"], "image/") end)
+
+      # Filter for video type only
+      conn = get(conn, "/api/organizations/#{organization.id}/medias", %{filters: "type:video"})
+      response = json_response(conn, 200)
+
+      # Assert only video media items are returned
+      assert %{"count" => 1} = response
+      assert %{"data" => [%{"mimetype" => "video/mp4"}]} = response
+    end
   end
 
   describe "create medias" do

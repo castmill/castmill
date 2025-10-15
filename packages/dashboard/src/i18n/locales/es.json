@@ -4,6 +4,7 @@
     "cancel": "Cancelar",
     "delete": "Eliminar",
     "edit": "Editar",
+    "rename": "Renombrar",
     "add": "Añadir",
     "deleteAccountYes": "Sí, Eliminar Cuenta",
     "deleteAccountSuccess": "Cuenta eliminada exitosamente. Redirigiendo...",
@@ -79,7 +80,9 @@
     "youIndicator": "(tú)",
     "addonLoadingError": "Error al cargar complemento",
     "addonError": "Error de complemento",
-    "backToLogin": "Volver al inicio de sesión"
+    "backToLogin": "Volver al inicio de sesión",
+    "selectImage": "Seleccionar una imagen",
+    "selectMedia": "Seleccionar un medio"
   },
   "topbar": {
     "help": "Ayuda",
@@ -171,6 +174,21 @@
     "errors": {
       "fetchUsageData": "Error al obtener datos de uso: {{error}}"
     }
+  },
+  "content": {
+    "title": "Contenido",
+    "description": "Resumen de tus recursos de contenido y uso de cuota",
+    "playlists": "Listas de reproducción",
+    "medias": "Archivos multimedia",
+    "storage": "Almacenamiento",
+    "widgets": "Widgets",
+    "used": "Usado",
+    "total": "Total",
+    "loadingUsageData": "Cargando datos de uso...",
+    "quotaLimitReached": "Límite de cuota alcanzado",
+    "approachingLimit": "Acercándose al límite",
+    "noUsageData": "No hay datos de uso disponibles",
+    "unableToLoad": "No se puede cargar la información de uso de recursos"
   },
   "teams": {
     "title": "Equipos",
@@ -266,7 +284,8 @@
   "errors": {
     "generic": "Se ha producido un error. Por favor, inténtalo de nuevo.",
     "networkError": "Error de red. Por favor, comprueba tu conexión.",
-    "unauthorized": "No autorizado. Por favor, inicia sesión de nuevo."
+    "unauthorized": "No autorizado. Por favor, inicia sesión de nuevo.",
+    "unknownResourceType": "Tipo de recurso desconocido: {{resourceType}}"
   },
   "sidebar": {
     "organization": "Organización",
@@ -328,6 +347,9 @@
     "createNewPlaylist": "Crear nueva lista de reproducción",
     "playlistTitle": "Lista de reproducción \"{{name}}\"",
     "buildPlaylist": "Construye tu lista de reproducción aquí",
+    "renamePlaylist": "Renombrar lista de reproducción",
+    "playlistUpdated": "Lista de reproducción \"{{name}}\" actualizada exitosamente",
+    "errorUpdating": "Error al actualizar la lista de reproducción {{name}}: {{error}}",
     "removePlaylist": "Eliminar lista de reproducción",
     "removePlaylists": "Eliminar listas de reproducción",
     "confirmRemovePlaylist": "¿Estás seguro de que quieres eliminar la lista de reproducción \"{{name}}\"?",

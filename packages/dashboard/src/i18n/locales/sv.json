@@ -4,6 +4,7 @@
     "cancel": "Avbryt",
     "delete": "Ta bort",
     "edit": "Redigera",
+    "rename": "Byt namn",
     "add": "Lägg till",
     "remove": "Ta bort",
     "close": "Stäng",
@@ -73,7 +74,9 @@
     "youIndicator": "(du)",
     "addonLoadingError": "Fel vid laddning av tillägg",
     "addonError": "Tilläggsfel",
-    "backToLogin": "Tillbaka till inloggning"
+    "backToLogin": "Tillbaka till inloggning",
+    "selectImage": "Välj en bild",
+    "selectMedia": "Välj ett media"
   },
   "topbar": {
     "help": "Hjälp",
@@ -165,6 +168,21 @@
     "errors": {
       "fetchUsageData": "Misslyckades att hämta användningsdata: {{error}}"
     }
+  },
+  "content": {
+    "title": "Innehåll",
+    "description": "Översikt över dina innehållsresurser och kvotanvändning",
+    "playlists": "Spellistor",
+    "medias": "Mediefiler",
+    "storage": "Lagring",
+    "widgets": "Widgets",
+    "used": "Använd",
+    "total": "Totalt",
+    "loadingUsageData": "Laddar användningsdata...",
+    "quotaLimitReached": "Kvotgräns nådd",
+    "approachingLimit": "Närmar sig gränsen",
+    "noUsageData": "Ingen användningsdata tillgänglig",
+    "unableToLoad": "Kan inte ladda resursanvändningsinformation"
   },
   "teams": {
     "title": "Team",
@@ -260,7 +278,8 @@
   "errors": {
     "generic": "Ett fel uppstod. Försök igen.",
     "networkError": "Nätverksfel. Kontrollera din anslutning.",
-    "unauthorized": "Obehörig. Logga in igen."
+    "unauthorized": "Obehörig. Logga in igen.",
+    "unknownResourceType": "Okänd resurstyp: {{resourceType}}"
   },
   "sidebar": {
     "organization": "Organisation",
@@ -306,6 +325,9 @@
     "createNewPlaylist": "Skapa en ny spellista",
     "playlistTitle": "Spellista \"{{name}}\"",
     "buildPlaylist": "Bygg din spellista här",
+    "renamePlaylist": "Byt namn på spellista",
+    "playlistUpdated": "Spellista \"{{name}}\" uppdaterades",
+    "errorUpdating": "Fel vid uppdatering av spellista {{name}}: {{error}}",
     "removePlaylist": "Ta bort spellista",
     "removePlaylists": "Ta bort spellistor",
     "confirmRemovePlaylist": "Är du säker på att du vill ta bort spellista \"{{name}}\"?",

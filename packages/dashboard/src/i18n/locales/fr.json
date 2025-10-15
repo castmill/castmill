@@ -4,6 +4,7 @@
     "cancel": "Annuler",
     "delete": "Supprimer",
     "edit": "Modifier",
+    "rename": "Renommer",
     "add": "Ajouter",
     "remove": "Retirer",
     "close": "Fermer",
@@ -78,7 +79,9 @@
       "teamClear": "Effacer le filtre d'équipe"
     },
     "addonError": "Erreur d'extension",
-    "backToLogin": "Retour à la connexion"
+    "backToLogin": "Retour à la connexion",
+    "selectImage": "Sélectionner une image",
+    "selectMedia": "Sélectionner un média"
   },
   "topbar": {
     "help": "Aide",
@@ -170,6 +173,21 @@
     "errors": {
       "fetchUsageData": "Échec de la récupération des données d'utilisation : {{error}}"
     }
+  },
+  "content": {
+    "title": "Contenu",
+    "description": "Aperçu de vos ressources de contenu et de l'utilisation du quota",
+    "playlists": "Listes de lecture",
+    "medias": "Fichiers multimédias",
+    "storage": "Stockage",
+    "widgets": "Widgets",
+    "used": "Utilisé",
+    "total": "Total",
+    "loadingUsageData": "Chargement des données d'utilisation...",
+    "quotaLimitReached": "Limite de quota atteinte",
+    "approachingLimit": "Approche de la limite",
+    "noUsageData": "Aucune donnée d'utilisation disponible",
+    "unableToLoad": "Impossible de charger les informations d'utilisation des ressources"
   },
   "teams": {
     "title": "Équipes",
@@ -265,7 +283,8 @@
   "errors": {
     "generic": "Une erreur s'est produite. Veuillez réessayer.",
     "networkError": "Erreur réseau. Veuillez vérifier votre connexion.",
-    "unauthorized": "Non autorisé. Veuillez vous reconnecter."
+    "unauthorized": "Non autorisé. Veuillez vous reconnecter.",
+    "unknownResourceType": "Type de ressource inconnu: {{resourceType}}"
   },
   "sidebar": {
     "organization": "Organisation",
@@ -311,6 +330,9 @@
     "createNewPlaylist": "Créer une nouvelle playlist",
     "playlistTitle": "Playlist \"{{name}}\"",
     "buildPlaylist": "Créez votre playlist ici",
+    "renamePlaylist": "Renommer la playlist",
+    "playlistUpdated": "Playlist \"{{name}}\" mise à jour avec succès",
+    "errorUpdating": "Erreur lors de la mise à jour de la playlist {{name}} : {{error}}",
     "removePlaylist": "Supprimer la playlist",
     "removePlaylists": "Supprimer les playlists",
     "confirmRemovePlaylist": "Êtes-vous sûr de vouloir supprimer la playlist \"{{name}}\" ?",
