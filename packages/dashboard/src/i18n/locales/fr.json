@@ -309,22 +309,28 @@
     "removeChannels": "Supprimer les canaux",
     "confirmRemoveChannel": "Êtes-vous sûr de vouloir supprimer le canal \"{{name}}\" ?",
     "confirmRemoveChannels": "Êtes-vous sûr de vouloir supprimer les canaux suivants ?",
+    "enterChannelName": "Entrez le nom du canal",
+    "defaultPlaylist": "Playlist par défaut",
+    "selectPlaylist": "Sélectionner une playlist",
+    "clearDefaultPlaylist": "Effacer la playlist par défaut",
+    "dragPlaylists": "Glisser les playlists",
+    "repeatWeekly": "Répéter chaque semaine ?",
+    "calendarEntryDetails": "Détails de l'entrée du calendrier",
+    "removeChannelEntry": "Supprimer l'entrée du canal",
+    "cannotDeleteChannel": "Impossible de supprimer le canal",
+    "success": {
+      "updateDefaultPlaylist": "Playlist par défaut mise à jour avec succès",
+      "clearDefaultPlaylist": "Playlist par défaut effacée avec succès"
+    },
     "errors": {
       "removeChannel": "Erreur lors de la suppression du canal {{name}} : {{error}}",
       "removeChannels": "Erreur lors de la suppression des canaux : {{error}}",
       "addChannel": "Erreur lors de l'ajout du canal : {{error}}",
       "saveChannel": "Erreur lors de l'enregistrement du canal : {{error}}",
       "updateDefaultPlaylist": "Échec de la mise à jour de la playlist par défaut du canal : {{error}}",
+      "clearDefaultPlaylist": "Échec de l'effacement de la playlist par défaut du canal : {{error}}",
       "updateChannelEntry": "Erreur lors de la mise à jour de l'entrée du canal : {{error}}"
-    },
-    "enterChannelName": "Entrez le nom du canal",
-    "defaultPlaylist": "Playlist par défaut",
-    "selectPlaylist": "Sélectionner une playlist",
-    "dragPlaylists": "Glisser les playlists",
-    "repeatWeekly": "Répéter chaque semaine ?",
-    "calendarEntryDetails": "Détails de l'entrée du calendrier",
-    "removeChannelEntry": "Supprimer l'entrée du canal",
-    "cannotDeleteChannel": "Impossible de supprimer le canal"
+    }
   },
   "organization": {
     "title": "Organisation",

@@ -307,17 +307,23 @@
     "enterChannelName": "Ingresa el nombre del canal",
     "defaultPlaylist": "Lista de reproducción predeterminada",
     "selectPlaylist": "Seleccionar lista de reproducción",
+    "clearDefaultPlaylist": "Limpiar lista de reproducción predeterminada",
     "dragPlaylists": "Arrastra listas de reproducción",
     "repeatWeekly": "¿Repetir semanalmente?",
     "calendarEntryDetails": "Detalles de la entrada del calendario",
     "removeChannelEntry": "Eliminar entrada del canal",
     "cannotDeleteChannel": "No se puede eliminar el canal",
+    "success": {
+      "updateDefaultPlaylist": "Lista de reproducción predeterminada actualizada correctamente",
+      "clearDefaultPlaylist": "Lista de reproducción predeterminada eliminada correctamente"
+    },
     "errors": {
       "removeChannel": "Error al eliminar el canal {{name}}: {{error}}",
       "removeChannels": "Error al eliminar canales: {{error}}",
       "addChannel": "Error al añadir canal: {{error}}",
       "saveChannel": "Error al guardar el canal: {{error}}",
       "updateDefaultPlaylist": "Error al actualizar la lista de reproducción predeterminada del canal: {{error}}",
+      "clearDefaultPlaylist": "Error al limpiar la lista de reproducción predeterminada del canal: {{error}}",
       "updateChannelEntry": "Error al actualizar la entrada del canal: {{error}}"
     }
   },

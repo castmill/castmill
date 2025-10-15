@@ -278,17 +278,23 @@
     "enterChannelName": "Kanalnamen eingeben",
     "defaultPlaylist": "Standard-Playlist",
     "selectPlaylist": "Playlist auswählen",
+    "clearDefaultPlaylist": "Standard-Playlist löschen",
     "dragPlaylists": "Playlists ziehen",
     "repeatWeekly": "Wöchentlich wiederholen?",
     "calendarEntryDetails": "Kalendereintragsdetails",
     "removeChannelEntry": "Kanaleintrag entfernen",
     "cannotDeleteChannel": "Kanal kann nicht gelöscht werden",
+    "success": {
+      "updateDefaultPlaylist": "Standard-Playlist erfolgreich aktualisiert",
+      "clearDefaultPlaylist": "Standard-Playlist erfolgreich gelöscht"
+    },
     "errors": {
       "removeChannel": "Fehler beim Entfernen des Kanals {{name}}: {{error}}",
       "removeChannels": "Fehler beim Entfernen der Kanäle: {{error}}",
       "addChannel": "Fehler beim Hinzufügen des Kanals: {{error}}",
       "saveChannel": "Fehler beim Speichern des Kanals: {{error}}",
       "updateDefaultPlaylist": "Fehler beim Aktualisieren der Standard-Playlist des Kanals: {{error}}",
+      "clearDefaultPlaylist": "Fehler beim Löschen der Standard-Playlist des Kanals: {{error}}",
       "updateChannelEntry": "Fehler beim Aktualisieren des Kanaleintrags: {{error}}"
     }
   },

@@ -309,22 +309,28 @@
     "removeChannels": "إزالة القنوات",
     "confirmRemoveChannel": "هل أنت متأكد من أنك تريد إزالة القناة \"{{name}}\"؟",
     "confirmRemoveChannels": "هل أنت متأكد من أنك تريد إزالة القنوات التالية؟",
+    "enterChannelName": "أدخل اسم القناة",
+    "defaultPlaylist": "قائمة التشغيل الافتراضية",
+    "selectPlaylist": "اختر قائمة التشغيل",
+    "clearDefaultPlaylist": "مسح قائمة التشغيل الافتراضية",
+    "dragPlaylists": "اسحب قوائم التشغيل",
+    "repeatWeekly": "التكرار أسبوعيًا؟",
+    "calendarEntryDetails": "تفاصيل إدخال التقويم",
+    "removeChannelEntry": "إزالة إدخال القناة",
+    "cannotDeleteChannel": "لا يمكن حذف القناة",
+    "success": {
+      "updateDefaultPlaylist": "تم تحديث قائمة التشغيل الافتراضية بنجاح",
+      "clearDefaultPlaylist": "تم مسح قائمة التشغيل الافتراضية بنجاح"
+    },
     "errors": {
       "removeChannel": "خطأ في إزالة القناة {{name}}: {{error}}",
       "removeChannels": "خطأ في إزالة القنوات: {{error}}",
       "addChannel": "خطأ في إضافة القناة: {{error}}",
       "saveChannel": "خطأ في حفظ القناة: {{error}}",
       "updateDefaultPlaylist": "فشل تحديث قائمة التشغيل الافتراضية للقناة: {{error}}",
+      "clearDefaultPlaylist": "فشل مسح قائمة التشغيل الافتراضية للقناة: {{error}}",
       "updateChannelEntry": "خطأ في تحديث إدخال القناة: {{error}}"
-    },
-    "enterChannelName": "أدخل اسم القناة",
-    "defaultPlaylist": "قائمة التشغيل الافتراضية",
-    "selectPlaylist": "اختر قائمة التشغيل",
-    "dragPlaylists": "اسحب قوائم التشغيل",
-    "repeatWeekly": "التكرار أسبوعيًا؟",
-    "calendarEntryDetails": "تفاصيل إدخال التقويم",
-    "removeChannelEntry": "إزالة إدخال القناة",
-    "cannotDeleteChannel": "لا يمكن حذف القناة"
+    }
   },
   "organization": {
     "title": "المنظمة",

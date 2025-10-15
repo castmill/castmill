@@ -309,22 +309,28 @@
     "removeChannels": "채널 제거",
     "confirmRemoveChannel": "채널 \"{{name}}\"을(를) 제거하시겠습니까?",
     "confirmRemoveChannels": "다음 채널을 제거하시겠습니까?",
+    "enterChannelName": "채널 이름 입력",
+    "defaultPlaylist": "기본 재생목록",
+    "selectPlaylist": "재생목록 선택",
+    "clearDefaultPlaylist": "기본 재생목록 지우기",
+    "dragPlaylists": "재생목록 드래그",
+    "repeatWeekly": "매주 반복?",
+    "calendarEntryDetails": "캘린더 항목 세부정보",
+    "removeChannelEntry": "채널 항목 제거",
+    "cannotDeleteChannel": "채널을 삭제할 수 없습니다",
+    "success": {
+      "updateDefaultPlaylist": "기본 재생목록 업데이트 성공",
+      "clearDefaultPlaylist": "기본 재생목록 지우기 성공"
+    },
     "errors": {
       "removeChannel": "채널 {{name}} 제거 오류: {{error}}",
       "removeChannels": "채널 제거 오류: {{error}}",
       "addChannel": "채널 추가 오류: {{error}}",
       "saveChannel": "채널 저장 오류: {{error}}",
       "updateDefaultPlaylist": "채널 기본 재생목록 업데이트 실패: {{error}}",
+      "clearDefaultPlaylist": "채널 기본 재생목록 지우기 실패: {{error}}",
       "updateChannelEntry": "채널 항목 업데이트 오류: {{error}}"
-    },
-    "enterChannelName": "채널 이름 입력",
-    "defaultPlaylist": "기본 재생목록",
-    "selectPlaylist": "재생목록 선택",
-    "dragPlaylists": "재생목록 드래그",
-    "repeatWeekly": "매주 반복?",
-    "calendarEntryDetails": "캘린더 항목 세부정보",
-    "removeChannelEntry": "채널 항목 제거",
-    "cannotDeleteChannel": "채널을 삭제할 수 없습니다"
+    }
   },
   "organization": {
     "title": "조직",
