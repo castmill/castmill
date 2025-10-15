@@ -8,7 +8,10 @@ import {
 } from 'solid-js';
 import { Button, FormItem, Timestamp, useToast } from '@castmill/ui-common';
 import { getUser, updateUser } from '../../components/auth';
-import { UserService, SoleAdministratorError } from '../../services/user.service';
+import {
+  UserService,
+  SoleAdministratorError,
+} from '../../services/user.service';
 import { User } from '../../interfaces/user.interface';
 import {
   Credential,
