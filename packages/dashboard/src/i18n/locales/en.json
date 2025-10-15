@@ -498,7 +498,10 @@
       "acceptSuccess": "Invitation accepted successfully",
       "acceptError": "Error accepting invitation",
       "rejectSuccess": "Invitation rejected successfully",
-      "rejectError": "Error rejecting invitation"
+      "rejectError": "Error rejecting invitation",
+      "accountCreated": "Account created successfully!",
+      "accountCreationFailed": "Failed to create account",
+      "passkeysNotSupported": "Passkeys are not supported in this browser"
     }
   }
 }

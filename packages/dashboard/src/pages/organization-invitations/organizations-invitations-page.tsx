@@ -149,7 +149,7 @@ const OrganizationsInvitationPage = () => {
         throw new Error('Signup failed');
       }
 
-      toast.success('Account created successfully!');
+      toast.success(t('organizations.invitation.accountCreated'));
 
       // Login the user
       await loginUser();
@@ -158,7 +158,7 @@ const OrganizationsInvitationPage = () => {
       await acceptInvitation();
     } catch (error: any) {
       console.error('Signup error:', error);
-      toast.error(error.message || 'Failed to create account');
+      toast.error(error.message || t('organizations.invitation.accountCreationFailed'));
     } finally {
       setSigningUp(false);
     }
@@ -174,7 +174,7 @@ const OrganizationsInvitationPage = () => {
       !navigator.credentials ||
       typeof navigator.credentials.get !== 'function'
     ) {
-      toast.error('Passkeys are not supported in this browser');
+      toast.error(t('organizations.invitation.passkeysNotSupported'));
       return;
     }
 
