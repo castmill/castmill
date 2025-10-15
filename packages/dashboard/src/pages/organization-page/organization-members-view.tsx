@@ -40,6 +40,7 @@ const [showConfirmDialogMultiple, setShowConfirmDialogMultiple] =
   createSignal(false);
 
 const [showConfirmDialog, setShowConfirmDialog] = createSignal(false);
+const [showLeaveWarningDialog, setShowLeaveWarningDialog] = createSignal(false);
 
 const [selectedMembers, setSelectedMembers] = createSignal(new Set<string>());
 
@@ -213,6 +214,19 @@ export const OrganizationMembersView = (props: {
     } catch (error) {
       const errorMessage = resolveRemoveMemberError(error);
       toast.error(errorMessage);
+    }
+  };
+
+  const handleLeaveOrganizationClick = () => {
+    // Check if this is the user's last organization
+    const totalOrganizations = store.organizations.data.length;
+    
+    if (totalOrganizations <= 1) {
+      // Show warning dialog - this will effectively delete the account
+      setShowLeaveWarningDialog(true);
+    } else {
+      // Safe to leave - user has other organizations
+      leaveOrganization();
     }
   };
 
@@ -397,11 +411,22 @@ export const OrganizationMembersView = (props: {
           <Button
             label={t('organization.leaveOrganizationAction')}
             color="danger"
-            onClick={leaveOrganization}
+            onClick={handleLeaveOrganizationClick}
             disabled={!canLeaveOrganization()}
           />
         </div>
       </Show>
+
+      <ConfirmDialog
+        show={showLeaveWarningDialog()}
+        title={t('organization.leaveLastOrganizationWarningTitle')}
+        message={t('organization.leaveLastOrganizationWarningMessage')}
+        onClose={() => setShowLeaveWarningDialog(false)}
+        onConfirm={() => {
+          setShowLeaveWarningDialog(false);
+          leaveOrganization();
+        }}
+      />
     </>
   );
 };

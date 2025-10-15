@@ -505,6 +505,8 @@
     "leaveOrganizationDescription": "離れると、組織のリソースへのアクセスが即座に削除されます。",
     "leaveOrganizationAction": "組織を離れる",
     "leaveOrganizationLastAdminWarning": "この組織を管理し続けるために、離れる前に別の管理者を追加してください。",
-    "leaveOrganizationLastUserWarning": "この組織の唯一のメンバーであるため、離れることはできません。"
+    "leaveOrganizationLastUserWarning": "この組織の唯一のメンバーであるため、離れることはできません。",
+    "leaveLastOrganizationWarningTitle": "最後の組織を離れますか？",
+    "leaveLastOrganizationWarningMessage": "これはあなたの唯一の組織です。離れるとアカウントが削除され、Castmillへのすべてのアクセスが失われます。再度招待されるには管理者に連絡する必要があります。続行してもよろしいですか？"
   }
 }

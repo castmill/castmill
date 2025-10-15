@@ -148,6 +148,10 @@
     "deleteAccountConfirm": "Are you sure?",
     "deleteAccountWarning": "This will permanently delete your account.",
     "deleteAccountYes": "Yes, Delete Account",
+    "deleteAccountSuccess": "Account deleted successfully. Redirecting...",
+    "deleteAccountError": "Failed to delete account. Please try again.",
+    "soleAdministratorError": "Cannot delete account. You are the sole administrator of '{{orgName}}' which has other members. Please promote another user to admin first.",
+    "soleAdministratorErrorGeneric": "Cannot delete account. You are the sole administrator of one or more organizations with other members. Please promote another user to admin first.",
     "retry": "Retry",
     "errors": {
       "loadCredentials": "Failed to load credentials. Please try refreshing the page.",
@@ -500,6 +504,8 @@
     "leaveOrganizationDescription": "Leaving removes your access to organization resources immediately.",
     "leaveOrganizationAction": "Leave organization",
     "leaveOrganizationLastAdminWarning": "Add another admin before leaving to keep this organization managed.",
-    "leaveOrganizationLastUserWarning": "You cannot leave as you are the only member of this organization."
+    "leaveOrganizationLastUserWarning": "You cannot leave as you are the only member of this organization.",
+    "leaveLastOrganizationWarningTitle": "Leave your last organization?",
+    "leaveLastOrganizationWarningMessage": "This is your only organization. Leaving it will delete your account and you will lose all access to Castmill. You will need to contact an administrator to be invited back. Are you sure you want to proceed?"
   }
 }

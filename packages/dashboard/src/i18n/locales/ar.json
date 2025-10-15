@@ -505,6 +505,8 @@
     "leaveOrganizationDescription": "المغادرة تزيل وصولك إلى موارد المنظمة على الفور.",
     "leaveOrganizationAction": "مغادرة المنظمة",
     "leaveOrganizationLastAdminWarning": "أضف مسؤولاً آخر قبل المغادرة للحفاظ على إدارة هذه المنظمة.",
-    "leaveOrganizationLastUserWarning": "لا يمكنك المغادرة لأنك العضو الوحيد في هذه المنظمة."
+    "leaveOrganizationLastUserWarning": "لا يمكنك المغادرة لأنك العضو الوحيد في هذه المنظمة.",
+    "leaveLastOrganizationWarningTitle": "مغادرة منظمتك الأخيرة؟",
+    "leaveLastOrganizationWarningMessage": "هذه هي منظمتك الوحيدة. مغادرتها ستحذف حسابك وستفقد كل الوصول إلى Castmill. ستحتاج إلى الاتصال بمسؤول لتتم دعوتك مرة أخرى. هل أنت متأكد أنك تريد المتابعة؟"
   }
 }

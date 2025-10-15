@@ -4,8 +4,12 @@
     "cancel": "Cancelar",
     "delete": "Eliminar",
     "edit": "Editar",
-    "add": "Añadir",
-    "remove": "Quitar",
+    "add": "Añadir",    "deleteAccountYes": "Sí, Eliminar Cuenta",
+    "deleteAccountSuccess": "Cuenta eliminada exitosamente. Redirigiendo...",
+    "deleteAccountError": "Error al eliminar la cuenta. Por favor, inténtalo de nuevo.",
+    "soleAdministratorError": "No se puede eliminar la cuenta. Eres el único administrador de '{{orgName}}' que tiene otros miembros. Por favor, promociona a otro usuario a administrador primero.",
+    "soleAdministratorErrorGeneric": "No se puede eliminar la cuenta. Eres el único administrador de una o más organizaciones con otros miembros. Por favor, promociona a otro usuario a administrador primero.",
+    "retry": "Reintentar",   "remove": "Quitar",
     "close": "Cerrar",
     "confirm": "Confirmar",
     "back": "Atrás",
@@ -500,6 +504,8 @@
     "leaveOrganizationDescription": "Abandonar elimina su acceso a los recursos de la organización inmediatamente.",
     "leaveOrganizationAction": "Abandonar organización",
     "leaveOrganizationLastAdminWarning": "Agregue otro administrador antes de abandonar para mantener esta organización administrada.",
-    "leaveOrganizationLastUserWarning": "No puede abandonar porque es el único miembro de esta organización."
+    "leaveOrganizationLastUserWarning": "No puede abandonar porque es el único miembro de esta organización.",
+    "leaveLastOrganizationWarningTitle": "¿Abandonar su última organización?",
+    "leaveLastOrganizationWarningMessage": "Esta es su única organización. Abandonarla eliminará su cuenta y perderá todo acceso a Castmill. Necesitará que un administrador lo invite de nuevo. ¿Está seguro de que desea continuar?"
   }
 }

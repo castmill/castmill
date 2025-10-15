@@ -99,7 +99,18 @@ defmodule CastmillWeb.UserController do
     with {:ok, _} <- Castmill.Accounts.delete_user(id) do
       send_resp(conn, :no_content, "")
     else
-      {:error, :not_found} -> send_resp(conn, :not_found, "")
+      {:error, :not_found} ->
+        send_resp(conn, :not_found, "")
+
+      {:error, message} when is_binary(message) ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{status: :error, message: message})
+
+      {:error, _other} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{status: :error, message: "Failed to delete user account."})
     end
   end
 

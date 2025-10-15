@@ -505,6 +505,8 @@
     "leaveOrganizationDescription": "Quitter supprime votre accès aux ressources de l'organisation immédiatement.",
     "leaveOrganizationAction": "Quitter l'organisation",
     "leaveOrganizationLastAdminWarning": "Ajoutez un autre administrateur avant de partir pour garder cette organisation gérée.",
-    "leaveOrganizationLastUserWarning": "Vous ne pouvez pas partir car vous êtes le seul membre de cette organisation."
+    "leaveOrganizationLastUserWarning": "Vous ne pouvez pas partir car vous êtes le seul membre de cette organisation.",
+    "leaveLastOrganizationWarningTitle": "Quitter votre dernière organisation ?",
+    "leaveLastOrganizationWarningMessage": "Il s'agit de votre seule organisation. La quitter supprimera votre compte et vous perdrez tout accès à Castmill. Vous devrez contacter un administrateur pour être réinvité. Êtes-vous sûr de vouloir continuer ?"
   }
 }

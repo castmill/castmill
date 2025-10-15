@@ -29,7 +29,19 @@ export const UserService = {
     });
 
     if (response.status !== 204) {
-      throw new Error('Failed to delete account');
+      // Try to extract error message from response
+      let errorMessage = 'Failed to delete account';
+
+      try {
+        const errorData = await response.json();
+        if (errorData.message) {
+          errorMessage = errorData.message;
+        }
+      } catch {
+        // If JSON parsing fails, use default message
+      }
+
+      throw new Error(errorMessage);
     }
   },
 

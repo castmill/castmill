@@ -6,7 +6,7 @@ import {
   Show,
   For,
 } from 'solid-js';
-import { Button, FormItem, Timestamp } from '@castmill/ui-common';
+import { Button, FormItem, Timestamp, useToast } from '@castmill/ui-common';
 import { getUser } from '../../components/auth';
 import { UserService } from '../../services/user.service';
 import { User } from '../../interfaces/user.interface';
@@ -19,6 +19,7 @@ import { useI18n, SUPPORTED_LOCALES } from '../../i18n';
 
 const SettingsPage: Component = () => {
   const { t, locale, setLocale } = useI18n();
+  const toast = useToast();
   const [user, setUser] = createSignal<User | null>(null);
   const [name, setName] = createSignal('');
   const [email, setEmail] = createSignal('');
@@ -151,10 +152,35 @@ const SettingsPage: Component = () => {
 
     try {
       await UserService.deleteAccount(currentUser.id);
-      // Redirect to login or show success message
-      window.location.href = '/login';
+      toast.success(t('settings.deleteAccountSuccess'));
+      // Redirect to login after brief delay
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 1500);
     } catch (err) {
-      setError('Failed to delete account. Please try again.');
+      // Extract error message from response if available
+      let errorMessage = t('settings.deleteAccountError');
+
+      if (err instanceof Error) {
+        const errorText = err.message;
+        
+        // Check if it's the sole administrator error
+        if (errorText.includes('sole administrator')) {
+          // Extract organization name from error message
+          const match = errorText.match(/of '([^']+)'/);
+          const orgName = match ? match[1] : '';
+          
+          if (orgName) {
+            errorMessage = t('settings.soleAdministratorError', { orgName });
+          } else {
+            errorMessage = t('settings.soleAdministratorErrorGeneric');
+          }
+        } else if (errorText) {
+          errorMessage = errorText;
+        }
+      }
+
+      toast.error(errorMessage, 0); // No auto-dismiss for critical errors
       console.error('Account deletion error:', err);
     } finally {
       setLoading(false);

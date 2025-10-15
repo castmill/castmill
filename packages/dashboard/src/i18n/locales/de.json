@@ -500,6 +500,8 @@
     "leaveOrganizationDescription": "Das Verlassen entfernt Ihren Zugriff auf Organisationsressourcen sofort.",
     "leaveOrganizationAction": "Organisation verlassen",
     "leaveOrganizationLastAdminWarning": "Fügen Sie einen weiteren Administrator hinzu, bevor Sie gehen, um diese Organisation verwaltet zu halten.",
-    "leaveOrganizationLastUserWarning": "Sie können nicht gehen, da Sie das einzige Mitglied dieser Organisation sind."
+    "leaveOrganizationLastUserWarning": "Sie können nicht gehen, da Sie das einzige Mitglied dieser Organisation sind.",
+    "leaveLastOrganizationWarningTitle": "Ihre letzte Organisation verlassen?",
+    "leaveLastOrganizationWarningMessage": "Dies ist Ihre einzige Organisation. Wenn Sie sie verlassen, wird Ihr Konto gelöscht und Sie verlieren den gesamten Zugriff auf Castmill. Sie müssen einen Administrator kontaktieren, um erneut eingeladen zu werden. Sind Sie sicher, dass Sie fortfahren möchten?"
   }
 }

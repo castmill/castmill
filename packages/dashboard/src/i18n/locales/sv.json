@@ -500,6 +500,8 @@
     "leaveOrganizationDescription": "Att lämna tar bort din åtkomst till organisationens resurser omedelbart.",
     "leaveOrganizationAction": "Lämna organisation",
     "leaveOrganizationLastAdminWarning": "Lägg till en annan administratör innan du lämnar för att hålla denna organisation hanterad.",
-    "leaveOrganizationLastUserWarning": "Du kan inte lämna eftersom du är den enda medlemmen i denna organisation."
+    "leaveOrganizationLastUserWarning": "Du kan inte lämna eftersom du är den enda medlemmen i denna organisation.",
+    "leaveLastOrganizationWarningTitle": "Lämna din sista organisation?",
+    "leaveLastOrganizationWarningMessage": "Detta är din enda organisation. Att lämna den kommer att ta bort ditt konto och du kommer att förlora all åtkomst till Castmill. Du kommer att behöva kontakta en administratör för att bli inbjuden igen. Är du säker på att du vill fortsätta?"
   }
 }

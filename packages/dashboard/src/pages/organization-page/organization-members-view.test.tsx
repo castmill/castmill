@@ -36,15 +36,25 @@ vi.mock('@solidjs/router', () => ({
   useNavigate: () => mockNavigate,
 }));
 
+// Create a mutable store mock that tests can modify
+const mockStore = {
+  organizations: {
+    data: [{ 
+      id: 'org-1', 
+      name: 'Test Organization',
+      created_at: '2024-01-01T00:00:00Z',
+      updated_at: '2024-01-01T00:00:00Z',
+    }],
+    loaded: true,
+    loading: false,
+    selectedId: 'org-1',
+    selectedName: 'Test Organization',
+  },
+};
+
 vi.mock('../../store/store', () => ({
-  store: {
-    organizations: {
-      data: [],
-      loaded: false,
-      loading: false,
-      selectedId: null,
-      selectedName: '',
-    },
+  get store() {
+    return mockStore;
   },
   setStore: vi.fn(),
 }));
@@ -59,6 +69,16 @@ vi.mock('@castmill/ui-common', async () => {
 
 describe('OrganizationMembersView - leave organization', () => {
   beforeEach(() => {
+    // Reset mockStore to single organization
+    mockStore.organizations.data = [
+      { 
+        id: 'org-1', 
+        name: 'Test Organization',
+        created_at: '2024-01-01T00:00:00Z',
+        updated_at: '2024-01-01T00:00:00Z',
+      }
+    ];
+
     toastSpies.success.mockClear();
     toastSpies.error.mockClear();
     toastSpies.info.mockClear();
@@ -90,7 +110,23 @@ describe('OrganizationMembersView - leave organization', () => {
       </I18nProvider>
     ));
 
-  it('allows a member to leave when another admin exists', async () => {
+  it('allows a member to leave when another admin exists and user has multiple orgs', async () => {
+    // Set up store with multiple organizations
+    mockStore.organizations.data = [
+      { 
+        id: 'org-1', 
+        name: 'Test Organization',
+        created_at: '2024-01-01T00:00:00Z',
+        updated_at: '2024-01-01T00:00:00Z',
+      },
+      { 
+        id: 'org-2', 
+        name: 'Other Org',
+        created_at: '2024-01-01T00:00:00Z',
+        updated_at: '2024-01-01T00:00:00Z',
+      },
+    ];
+
     vi.mocked(OrganizationsService.fetchMembers).mockResolvedValue({
       count: 2,
       data: [
@@ -109,7 +145,12 @@ describe('OrganizationMembersView - leave organization', () => {
 
     // Mock getAll to return another organization after leaving
     vi.mocked(OrganizationsService.getAll).mockResolvedValue([
-      { id: 'org-2', name: 'Other Org' },
+      { 
+        id: 'org-2', 
+        name: 'Other Org',
+        created_at: '2024-01-01T00:00:00Z',
+        updated_at: '2024-01-01T00:00:00Z',
+      },
     ]);
 
     renderComponent();
@@ -120,8 +161,10 @@ describe('OrganizationMembersView - leave organization', () => {
 
     expect(leaveButton).not.toBeDisabled();
 
+    // Should leave directly without showing warning (has other orgs)
     fireEvent.click(leaveButton);
 
+    // Should call API immediately (no warning dialog)
     await waitFor(() => {
       expect(OrganizationsService.removeMemberFromOrganization).toHaveBeenCalledWith(
         'org-1',
@@ -139,7 +182,7 @@ describe('OrganizationMembersView - leave organization', () => {
     });
   });
 
-  it('redirects to login when leaving the last organization', async () => {
+  it('shows warning dialog when leaving the last organization', async () => {
     vi.mocked(OrganizationsService.fetchMembers).mockResolvedValue({
       count: 2,
       data: [
@@ -165,8 +208,22 @@ describe('OrganizationMembersView - leave organization', () => {
       name: /leave organization/i,
     });
 
+    // Click the leave button - should show warning dialog first
     fireEvent.click(leaveButton);
 
+    // Should show warning dialog
+    await waitFor(() => {
+      expect(screen.getByText(/leave your last organization/i)).toBeInTheDocument();
+    });
+
+    // Should NOT have called the API yet
+    expect(OrganizationsService.removeMemberFromOrganization).not.toHaveBeenCalled();
+
+    // Click confirm in the dialog
+    const confirmButton = screen.getByLabelText(/confirm/i);
+    fireEvent.click(confirmButton);
+
+    // Now it should call the API
     await waitFor(() => {
       expect(OrganizationsService.removeMemberFromOrganization).toHaveBeenCalledWith(
         'org-1',
