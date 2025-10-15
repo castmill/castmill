@@ -280,7 +280,13 @@
     "generic": "Une erreur s'est produite. Veuillez réessayer.",
     "networkError": "Erreur réseau. Veuillez vérifier votre connexion.",
     "unauthorized": "Non autorisé. Veuillez vous reconnecter.",
-    "unknownResourceType": "Type de ressource inconnu: {{resourceType}}"
+    "unknownResourceType": "Type de ressource inconnu: {{resourceType}}",
+    "serverUnreachable": "Impossible de Se Connecter au Serveur",
+    "serverUnreachableDescription": "Le serveur backend est actuellement inaccessible. Cela signifie généralement que le serveur n'est pas en cours d'exécution ou qu'il y a un problème réseau.",
+    "checkServerRunning": "Assurez-vous que le serveur Castmill est en cours d'exécution",
+    "checkNetworkConnection": "Vérifiez votre connexion réseau",
+    "checkServerUrl": "Vérifiez l'URL du serveur dans votre configuration",
+    "retryConnection": "Réessayer la Connexion"
   },
   "sidebar": {
     "organization": "Organisation",

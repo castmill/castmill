@@ -275,7 +275,13 @@
     "generic": "Ett fel uppstod. Försök igen.",
     "networkError": "Nätverksfel. Kontrollera din anslutning.",
     "unauthorized": "Obehörig. Logga in igen.",
-    "unknownResourceType": "Okänd resurstyp: {{resourceType}}"
+    "unknownResourceType": "Okänd resurstyp: {{resourceType}}",
+    "serverUnreachable": "Kan Inte Ansluta till Servern",
+    "serverUnreachableDescription": "Backend-servern är för närvarande onåbar. Detta innebär vanligtvis att servern inte körs eller att det finns ett nätverksproblem.",
+    "checkServerRunning": "Se till att Castmill-servern körs",
+    "checkNetworkConnection": "Kontrollera din nätverksanslutning",
+    "checkServerUrl": "Verifiera server-URL:en i din konfiguration",
+    "retryConnection": "Försök Ansluta Igen"
   },
   "sidebar": {
     "organization": "Organisation",

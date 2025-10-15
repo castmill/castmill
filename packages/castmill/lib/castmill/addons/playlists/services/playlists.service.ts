@@ -313,7 +313,7 @@ export const PlaylistsService = {
       }
     );
 
-    handleResponse(response);
+    await handleResponse(response);
   },
 
   /**
@@ -337,7 +337,7 @@ export const PlaylistsService = {
       }
     );
 
-    handleResponse(response);
+    await handleResponse(response);
   },
 
   async getWidgets(baseUrl: string, organizationId: string, search?: string) {

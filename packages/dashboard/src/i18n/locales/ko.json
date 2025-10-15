@@ -280,7 +280,13 @@
     "generic": "오류가 발생했습니다. 다시 시도해 주세요.",
     "networkError": "네트워크 오류입니다. 연결을 확인해 주세요.",
     "unauthorized": "인증되지 않았습니다. 다시 로그인해 주세요.",
-    "unknownResourceType": "알 수 없는 리소스 유형: {{resourceType}}"
+    "unknownResourceType": "알 수 없는 리소스 유형: {{resourceType}}",
+    "serverUnreachable": "서버에 연결할 수 없습니다",
+    "serverUnreachableDescription": "백엔드 서버에 현재 접근할 수 없습니다. 일반적으로 서버가 실행되지 않거나 네트워크 문제가 있음을 의미합니다.",
+    "checkServerRunning": "Castmill 서버가 실행 중인지 확인하세요",
+    "checkNetworkConnection": "네트워크 연결을 확인하세요",
+    "checkServerUrl": "구성에서 서버 URL을 확인하세요",
+    "retryConnection": "연결 재시도"
   },
   "sidebar": {
     "organization": "조직",

@@ -280,7 +280,13 @@
     "generic": "エラーが発生しました。もう一度お試しください。",
     "networkError": "ネットワークエラーです。接続を確認してください。",
     "unauthorized": "認証されていません。再度ログインしてください。",
-    "unknownResourceType": "不明なリソースタイプ: {{resourceType}}"
+    "unknownResourceType": "不明なリソースタイプ: {{resourceType}}",
+    "serverUnreachable": "サーバーに接続できません",
+    "serverUnreachableDescription": "バックエンドサーバーに現在アクセスできません。通常、サーバーが実行されていないか、ネットワークの問題があることを意味します。",
+    "checkServerRunning": "Castmill サーバーが実行されていることを確認してください",
+    "checkNetworkConnection": "ネットワーク接続を確認してください",
+    "checkServerUrl": "設定でサーバー URL を確認してください",
+    "retryConnection": "接続を再試行"
   },
   "sidebar": {
     "organization": "組織",

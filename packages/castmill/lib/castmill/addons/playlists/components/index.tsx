@@ -281,10 +281,26 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
         error?.errorData?.channels &&
         Array.isArray(error.errorData.channels)
       ) {
-        const channelList = error.errorData.channels.join(', ');
-        toast.error(`${error.message}. Affected channels: ${channelList}`, {
-          duration: 5000,
+        // Format channel usage information
+        const channelInfo = error.errorData.channels.map((ch: any) => {
+          if (ch.usage_type === 'default') {
+            return `${ch.name} (default playlist)`;
+          } else if (ch.usage_type === 'scheduled') {
+            const start = new Date(ch.entry_start).toLocaleString();
+            const end = new Date(ch.entry_end).toLocaleString();
+            const repeatInfo = ch.repeat_until
+              ? `, repeats until ${new Date(ch.repeat_until).toLocaleDateString()}`
+              : '';
+            return `${ch.name} (scheduled: ${start} - ${end}${repeatInfo})`;
+          }
+          return ch.name || ch;
         });
+
+        const channelList = channelInfo.join('\n• ');
+        toast.error(
+          `${error.message}:\n\n• ${channelList}\n\nPlease remove the playlist from these channels first.`,
+          8000
+        );
       } else {
         toast.error(`Error removing playlist ${resource.name}: ${error}`);
       }
@@ -330,7 +346,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
 
       toast.error(
         `Failed to remove ${failures.length} playlist(s):\n${errorMessages.join('\n')}`,
-        { duration: 7000 }
+        7000
       );
     }
 

@@ -275,7 +275,13 @@
     "generic": "Se ha producido un error. Por favor, inténtalo de nuevo.",
     "networkError": "Error de red. Por favor, comprueba tu conexión.",
     "unauthorized": "No autorizado. Por favor, inicia sesión de nuevo.",
-    "unknownResourceType": "Tipo de recurso desconocido: {{resourceType}}"
+    "unknownResourceType": "Tipo de recurso desconocido: {{resourceType}}",
+    "serverUnreachable": "No se Puede Conectar al Servidor",
+    "serverUnreachableDescription": "El servidor backend no está accesible actualmente. Esto generalmente significa que el servidor no está en funcionamiento o hay un problema de red.",
+    "checkServerRunning": "Asegúrate de que el servidor Castmill esté en funcionamiento",
+    "checkNetworkConnection": "Verifica tu conexión de red",
+    "checkServerUrl": "Verifica la URL del servidor en tu configuración",
+    "retryConnection": "Reintentar Conexión"
   },
   "sidebar": {
     "organization": "Organización",

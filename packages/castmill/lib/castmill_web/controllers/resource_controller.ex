@@ -515,14 +515,36 @@ defmodule CastmillWeb.ResourceController do
         else
           {:error, :playlist_has_channels} ->
             channels = Castmill.Resources.get_channels_using_playlist(playlist.id)
-            channel_names = Enum.map(channels, & &1.name)
+
+            # Format channel usage information
+            usage_info =
+              Enum.map(channels, fn channel ->
+                case channel.usage_type do
+                  "default" ->
+                    %{
+                      id: channel.id,
+                      name: channel.name,
+                      usage_type: "default"
+                    }
+
+                  "scheduled" ->
+                    %{
+                      id: channel.id,
+                      name: channel.name,
+                      usage_type: "scheduled",
+                      entry_start: channel.entry_start,
+                      entry_end: channel.entry_end,
+                      repeat_until: channel.repeat_until
+                    }
+                end
+              end)
 
             conn
             |> put_status(:conflict)
             |> Phoenix.Controller.json(%{
               errors: %{
                 detail: "Cannot delete playlist that is used in channels",
-                channels: channel_names
+                channels: usage_info
               }
             })
 

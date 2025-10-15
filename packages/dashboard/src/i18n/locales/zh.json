@@ -280,7 +280,13 @@
     "generic": "发生错误。请重试。",
     "networkError": "网络错误。请检查您的连接。",
     "unauthorized": "未授权。请重新登录。",
-    "unknownResourceType": "未知资源类型：{{resourceType}}"
+    "unknownResourceType": "未知资源类型：{{resourceType}}",
+    "serverUnreachable": "无法连接到服务器",
+    "serverUnreachableDescription": "后端服务器当前无法访问。这通常意味着服务器未运行或存在网络问题。",
+    "checkServerRunning": "确保 Castmill 服务器正在运行",
+    "checkNetworkConnection": "检查您的网络连接",
+    "checkServerUrl": "验证配置中的服务器 URL",
+    "retryConnection": "重试连接"
   },
   "sidebar": {
     "organization": "组织",

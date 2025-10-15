@@ -374,7 +374,13 @@
     "generic": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
     "networkError": "Netzwerkfehler. Bitte überprüfen Sie Ihre Verbindung.",
     "unauthorized": "Nicht autorisiert. Bitte melden Sie sich erneut an.",
-    "unknownResourceType": "Unbekannter Ressourcentyp: {{resourceType}}"
+    "unknownResourceType": "Unbekannter Ressourcentyp: {{resourceType}}",
+    "serverUnreachable": "Verbindung zum Server Nicht Möglich",
+    "serverUnreachableDescription": "Der Backend-Server ist derzeit nicht erreichbar. Dies bedeutet normalerweise, dass der Server nicht läuft oder ein Netzwerkproblem vorliegt.",
+    "checkServerRunning": "Stellen Sie sicher, dass der Castmill-Server läuft",
+    "checkNetworkConnection": "Überprüfen Sie Ihre Netzwerkverbindung",
+    "checkServerUrl": "Überprüfen Sie die Server-URL in Ihrer Konfiguration",
+    "retryConnection": "Verbindung Wiederholen"
   },
   "playlists": {
     "title": "Playlists",
