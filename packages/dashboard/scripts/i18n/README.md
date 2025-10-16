@@ -442,21 +442,25 @@ Translation file structure:
 ## Workflow for Adding New Translations
 
 1. **Add the key to English first:**
+
    ```bash
    node scripts/i18n/translation-helper.cjs add organization.messages.myNewKey "My new message"
    ```
 
 2. **Verify the key exists in code:**
+
    ```bash
    node scripts/i18n/find-missing-keys.cjs
    ```
 
 3. **Sync to all languages:**
+
    ```bash
    node scripts/i18n/translation-helper.cjs sync
    ```
 
 4. **Check for missing translations:**
+
    ```bash
    node scripts/check-missing-translations.cjs
    ```
