@@ -264,7 +264,7 @@
       "selectUser": "Sélectionner un utilisateur",
       "searchUser": "Rechercher un utilisateur..."
     },
-    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully"
+    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully",
     "dialogs": {
       "removeMemberTitle": "Retirer l'utilisateur de l'équipe",
       "removeMemberMessage": "Êtes-vous sûr de vouloir retirer le membre \"{{name}}\" de l'équipe?",

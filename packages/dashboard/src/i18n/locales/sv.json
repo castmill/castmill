@@ -260,7 +260,7 @@
       "selectUser": "Välj användare",
       "searchUser": "Sök efter en användare..."
     },
-    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully"
+    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully",
     "dialogs": {
       "removeMemberTitle": "Ta bort användare från team",
       "removeMemberMessage": "Är du säker på att du vill ta bort medlemmen \"{{name}}\" från teamet?",

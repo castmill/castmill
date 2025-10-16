@@ -265,7 +265,7 @@
       "selectUser": "选择用户",
       "searchUser": "搜索用户..."
     },
-    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully"
+    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully",
     "dialogs": {
       "removeMemberTitle": "从团队中移除用户",
       "removeMemberMessage": "您确定要从团队中移除成员\"{{name}}\"吗？",

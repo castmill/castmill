@@ -263,9 +263,9 @@
     },
     "memberSelection": {
       "selectUser": "اختر مستخدمًا",
-      "searchUser": "البحث عن مستخدم...",
+      "searchUser": "البحث عن مستخدم..."
     },
-    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully"
+    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully",
     "dialogs": {
       "removeMemberTitle": "إزالة المستخدم من الفريق",
       "removeMemberMessage": "هل أنت متأكد أنك تريد إزالة العضو \"{{name}}\" من الفريق؟",

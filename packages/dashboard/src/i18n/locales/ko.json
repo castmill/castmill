@@ -265,7 +265,7 @@
       "selectUser": "사용자 선택",
       "searchUser": "사용자 검색..."
     },
-    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully"
+    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully",
     "dialogs": {
       "removeMemberTitle": "팀에서 사용자 제거",
       "removeMemberMessage": "멤버 \"{{name}}\"을(를) 팀에서 제거하시겠습니까?",
