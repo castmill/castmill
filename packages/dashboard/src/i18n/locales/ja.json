@@ -80,6 +80,7 @@
     },
     "addonError": "アドオンエラー",
     "backToLogin": "ログインに戻る",
+    "selectVideo": "ビデオを選択",
     "offline": "[TODO: Translate] Offline",
     "selectImage": "画像を選択",
     "selectMedia": "メディアを選択"
@@ -380,7 +381,8 @@
     "messages": {
       "memberRemoved": "メンバー{{name}}を正常に削除しました",
       "membersRemoved": "メンバーを正常に削除しました",
-      "invitationSent": "{{email}}に招待を送信しました"
+      "leftOrganization": "組織 {{name}} を離れました",
+      "noOrganizationsRemaining": "最後の組織を離れました。組織に招待されるには管理者にお問い合わせください。"
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {
@@ -402,7 +404,14 @@
       "removeMemberMessage": "メンバー「{{name}}」を組織から削除してもよろしいですか？",
       "removeMembersTitle": "組織からメンバーを削除",
       "removeMembersMessage": "以下のメンバーを組織から削除してもよろしいですか？"
-    }
+    },
+    "leaveOrganizationTitle": "この組織を離れる",
+    "leaveOrganizationDescription": "離れると、組織のリソースへのアクセスが即座に削除されます。",
+    "leaveOrganizationAction": "組織を離れる",
+    "leaveOrganizationLastAdminWarning": "この組織を管理し続けるために、離れる前に別の管理者を追加してください。",
+    "leaveOrganizationLastUserWarning": "この組織の唯一のメンバーであるため、離れることはできません。",
+    "leaveLastOrganizationWarningTitle": "最後の組織を離れますか？",
+    "leaveLastOrganizationWarningMessage": "これはあなたの唯一の組織です。離れるとアカウントが削除され、Castmillへのすべてのアクセスが失われます。再度招待されるには管理者に連絡する必要があります。続行してもよろしいですか？"
   },
   "playlists": {
     "title": "プレイリスト",

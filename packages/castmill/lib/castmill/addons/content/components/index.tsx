@@ -1,6 +1,9 @@
 import { Component, createSignal, For, onMount, Show } from 'solid-js';
 import { AddonStore } from '../../common/interfaces/addon-store';
-import { QuotasService, QuotaUsage } from '../../common/services/quotas.service';
+import {
+  QuotasService,
+  QuotaUsage,
+} from '../../common/services/quotas.service';
 import { IoImagesOutline } from 'solid-icons/io';
 import { RiMediaPlayList2Fill } from 'solid-icons/ri';
 import { AiOutlineDatabase } from 'solid-icons/ai';
@@ -76,10 +79,10 @@ const ContentPage: Component<{
   const filteredResources = () => {
     const usage = quotaUsage();
     if (!usage) return [];
-    
+
     const resourceOrder = ['playlists', 'medias', 'storage', 'widgets'];
     return resourceOrder
-      .map(key => ({ key, value: usage[key] }))
+      .map((key) => ({ key, value: usage[key] }))
       .filter(({ value }) => value !== undefined);
   };
 
@@ -111,7 +114,8 @@ const ContentPage: Component<{
             <For each={filteredResources()}>
               {({ key, value }) => {
                 const { used, total } = value!;
-                const percentage = total > 0 ? Math.round((used / total) * 100) : 0;
+                const percentage =
+                  total > 0 ? Math.round((used / total) * 100) : 0;
                 const state = getUsageState(used, total);
 
                 return (
@@ -129,14 +133,18 @@ const ContentPage: Component<{
                     <div class="content-card-body">
                       <div class="content-stats">
                         <div class="content-stat">
-                          <span class="content-stat-label">{t('content.used')}</span>
+                          <span class="content-stat-label">
+                            {t('content.used')}
+                          </span>
                           <span class="content-stat-value">
                             {formatValue(key, used)}
                           </span>
                         </div>
                         <div class="content-stat-divider">/</div>
                         <div class="content-stat">
-                          <span class="content-stat-label">{t('content.total')}</span>
+                          <span class="content-stat-label">
+                            {t('content.total')}
+                          </span>
                           <span class="content-stat-value">
                             {formatValue(key, total)}
                           </span>

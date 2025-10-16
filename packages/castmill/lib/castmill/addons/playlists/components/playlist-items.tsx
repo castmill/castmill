@@ -126,7 +126,7 @@ export const PlaylistItems: Component<{
 
   const changeDuration = async (item: JsonPlaylistItem, duration: number) => {
     await props.onChangeDuration(item, duration);
-  }
+  };
 
   const [isDraggedOver, setIsDraggedOver] = createSignal(false);
   const [animationEnabled, setAnimationEnabled] = createSignal(true);
