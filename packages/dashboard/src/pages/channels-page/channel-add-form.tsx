@@ -64,6 +64,8 @@ export const ChannelAddForm: Component<{
           <div class="error">{errors().get('name')}</div>
         </FormItem>
         <Dropdown
+          id="channel-timezone"
+          name="timezone"
           label="Timezone"
           items={timeZones.map((tz) => ({ name: tz, value: tz }))}
           defaultValue={currentTimezone()}

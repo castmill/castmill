@@ -4,6 +4,7 @@
     "cancel": "取消",
     "delete": "删除",
     "edit": "编辑",
+    "rename": "重命名",
     "add": "添加",
     "remove": "移除",
     "close": "关闭",
@@ -79,7 +80,9 @@
     },
     "addonError": "插件错误",
     "backToLogin": "返回登录",
-    "offline": "[TODO: Translate] Offline"
+    "offline": "[TODO: Translate] Offline",
+    "selectImage": "选择图片",
+    "selectMedia": "选择媒体"
   },
   "topbar": {
     "help": "帮助",
@@ -149,7 +152,11 @@
       "sessionExpired": "身份验证错误：您的会话可能已过期。请刷新页面并重试。",
       "addPasskeyFailed": "添加密钥失败：{{error}}",
       "addPasskey": "添加新密钥失败。请重试。"
-    }
+    },
+    "deleteAccountSuccess": "账户已成功删除。正在重定向...",
+    "deleteAccountError": "删除账户失败。请重试。",
+    "soleAdministratorError": "无法删除账户。您是 '{{orgName}}' 的唯一管理员，该组织还有其他成员。请先将另一个用户提升为管理员。",
+    "soleAdministratorErrorGeneric": "无法删除账户。您是一个或多个有其他成员的组织的唯一管理员。请先将另一个用户提升为管理员。"
   },
   "usage": {
     "title": "使用情况",
@@ -167,6 +174,21 @@
     "errors": {
       "fetchUsageData": "获取使用数据失败：{{error}}"
     }
+  },
+  "content": {
+    "title": "内容",
+    "description": "内容资源和配额使用概览",
+    "playlists": "播放列表",
+    "medias": "媒体文件",
+    "storage": "存储",
+    "widgets": "小部件",
+    "used": "已使用",
+    "total": "总计",
+    "loadingUsageData": "正在加载使用数据...",
+    "quotaLimitReached": "已达到配额限制",
+    "approachingLimit": "接近限制",
+    "noUsageData": "没有可用的使用数据",
+    "unableToLoad": "无法加载资源使用信息"
   },
   "teams": {
     "title": "团队",
@@ -228,7 +250,8 @@
       "memberRemoved": "已成功移除成员 {{name}}",
       "membersRemoved": "已成功移除成员",
       "invitationSent": "已向 {{email}} 发送邀请",
-      "leftTeam": "您已离开团队{{name}}"
+      "leftTeam": "您已离开团队{{name}}",
+      "roleUpdated": "已成功为 {{name}} 更新角色"
     },
     "invitation": {
       "title": "团队邀请",
@@ -243,6 +266,12 @@
       "searchUser": "搜索用户..."
     },
     "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully"
+    "dialogs": {
+      "removeMemberTitle": "从团队中移除用户",
+      "removeMemberMessage": "您确定要从团队中移除成员\"{{name}}\"吗？",
+      "removeMembersTitle": "从团队中移除成员",
+      "removeMembersMessage": "您确定要从团队中移除以下成员吗？"
+    }
   },
   "login": {
     "title": "登录",
@@ -264,7 +293,14 @@
   "errors": {
     "generic": "发生错误。请重试。",
     "networkError": "网络错误。请检查您的连接。",
-    "unauthorized": "未授权。请重新登录。"
+    "unauthorized": "未授权。请重新登录。",
+    "unknownResourceType": "未知资源类型：{{resourceType}}",
+    "serverUnreachable": "无法连接到服务器",
+    "serverUnreachableDescription": "后端服务器当前无法访问。这通常意味着服务器未运行或存在网络问题。",
+    "checkServerRunning": "确保 Castmill 服务器正在运行",
+    "checkNetworkConnection": "检查您的网络连接",
+    "checkServerUrl": "验证配置中的服务器 URL",
+    "retryConnection": "重试连接"
   },
   "sidebar": {
     "organization": "组织",
@@ -288,22 +324,28 @@
     "removeChannels": "删除频道",
     "confirmRemoveChannel": "您确定要删除频道 \"{{name}}\" 吗？",
     "confirmRemoveChannels": "您确定要删除以下频道吗？",
+    "enterChannelName": "输入频道名称",
+    "defaultPlaylist": "默认播放列表",
+    "selectPlaylist": "选择播放列表",
+    "clearDefaultPlaylist": "清除默认播放列表",
+    "dragPlaylists": "拖动播放列表",
+    "repeatWeekly": "每周重复？",
+    "calendarEntryDetails": "日历条目详情",
+    "removeChannelEntry": "删除频道条目",
+    "cannotDeleteChannel": "无法删除频道",
+    "success": {
+      "updateDefaultPlaylist": "默认播放列表更新成功",
+      "clearDefaultPlaylist": "默认播放列表清除成功"
+    },
     "errors": {
       "removeChannel": "删除频道 {{name}} 时出错：{{error}}",
       "removeChannels": "删除频道时出错：{{error}}",
       "addChannel": "添加频道时出错：{{error}}",
       "saveChannel": "保存频道时出错：{{error}}",
       "updateDefaultPlaylist": "更新频道默认播放列表失败：{{error}}",
+      "clearDefaultPlaylist": "清除频道默认播放列表失败：{{error}}",
       "updateChannelEntry": "更新频道条目时出错：{{error}}"
-    },
-    "enterChannelName": "输入频道名称",
-    "defaultPlaylist": "默认播放列表",
-    "selectPlaylist": "选择播放列表",
-    "dragPlaylists": "拖动播放列表",
-    "repeatWeekly": "每周重复？",
-    "calendarEntryDetails": "日历条目详情",
-    "removeChannelEntry": "删除频道条目",
-    "cannotDeleteChannel": "无法删除频道"
+    }
   },
   "organization": {
     "title": "组织",
@@ -314,6 +356,7 @@
     "inviteMember": "邀请成员",
     "enterMemberEmail": "输入成员的电子邮件",
     "role": "角色",
+    "changeRole": "更改角色",
     "roleAdmin": "管理员",
     "roleManager": "经理",
     "roleMember": "成员",
@@ -328,12 +371,13 @@
       "emailRequired": "电子邮件为必填项",
       "invalidEmail": "无效的电子邮件",
       "cannotRemoveLastAdmin": "你不能移除组织最后一位管理员。",
-      "invalidRole": "所选角色对该组织无效。"
+      "invalidRole": "所选角色对该组织无效。",
+      "updateRoleFailed": "更新成员角色失败"
     },
     "messages": {
       "memberRemoved": "已成功移除成员 {{name}}",
       "membersRemoved": "已成功移除成员",
-      "invitationSent": "[TODO: Translate] Invitation sent to {{email}}"
+      "invitationSent": "邀请已发送至 {{email}}"
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {
@@ -349,6 +393,12 @@
       "admin": "可以管理团队成员和资源",
       "member": "可以访问和编辑团队资源",
       "installer": "用于设备注册的临时令牌（24小时后过期）"
+    },
+    "dialogs": {
+      "removeMemberTitle": "从组织中移除用户",
+      "removeMemberMessage": "您确定要从组织中移除成员\"{{name}}\"吗？",
+      "removeMembersTitle": "从组织中移除成员",
+      "removeMembersMessage": "您确定要从组织中移除以下成员吗？"
     }
   },
   "playlists": {
@@ -357,6 +407,9 @@
     "createNewPlaylist": "创建新播放列表",
     "playlistTitle": "播放列表 \"{{name}}\"",
     "buildPlaylist": "在此处创建您的播放列表",
+    "renamePlaylist": "重命名播放列表",
+    "playlistUpdated": "播放列表 \"{{name}}\" 已成功更新",
+    "errorUpdating": "更新播放列表 {{name}} 时出错：{{error}}",
     "removePlaylist": "删除播放列表",
     "removePlaylists": "删除播放列表",
     "confirmRemovePlaylist": "您确定要删除播放列表 \"{{name}}\" 吗？",
@@ -496,12 +549,77 @@
       "emailAddress": "电子邮件地址",
       "expired": "此邀请已过期。",
       "loginToAccept": "登录以接受此邀请",
-      "createAccount": "创建您的帐户以接受此邀请"
+      "createAccount": "创建您的帐户以接受此邀请",
+      "reject": "拒绝邀请",
+      "rejecting": "正在拒绝...",
+      "chooseAction": "请选择接受或拒绝邀请",
+      "acceptSuccess": "成功接受邀请",
+      "acceptError": "接受邀请时出错",
+      "rejectSuccess": "成功拒绝邀请",
+      "rejectError": "拒绝邀请时出错",
+      "accountCreated": "帐户创建成功！",
+      "accountCreationFailed": "创建帐户失败",
+      "passkeysNotSupported": "此浏览器不支持通行密钥"
     }
   },
   "filters": {
     "teamLabel": "团队",
     "teamPlaceholder": "选择团队",
     "teamClear": "清除团队筛选"
+  },
+  "organization": {
+    "title": "组织",
+    "users": "用户",
+    "invitations": "邀请",
+    "update": "更新",
+    "placeholderName": "输入组织名称",
+    "inviteMember": "邀请成员",
+    "enterMemberEmail": "输入成员的电子邮件",
+    "role": "角色",
+    "roleAdmin": "管理员",
+    "roleManager": "经理",
+    "roleMember": "成员",
+    "roleEditor": "编辑者",
+    "rolePublisher": "发布者",
+    "roleDeviceManager": "设备管理员",
+    "roleGuest": "访客",
+    "teamRoleAdmin": "团队管理员",
+    "teamRoleMember": "团队成员",
+    "errors": {
+      "updateOrganization": "更新组织时出错：{{error}}",
+      "emailRequired": "电子邮件为必填项",
+      "invalidEmail": "无效的电子邮件",
+      "cannotRemoveLastAdmin": "你不能移除组织最后一位管理员。",
+      "invalidRole": "所选角色对该组织无效。",
+      "cannotRemoveLastUser": "您无法离开，因为您是此组织的唯一成员。"
+    },
+    "messages": {
+      "memberRemoved": "已成功移除成员 {{name}}",
+      "membersRemoved": "已成功移除成员",
+      "leftOrganization": "您已离开组织 {{name}}",
+      "noOrganizationsRemaining": "您已离开最后一个组织。请联系管理员以被邀请加入组织。"
+    },
+    "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
+    "roleDescriptions": {
+      "admin": "完全访问权限，包括组织管理",
+      "manager": "可以管理团队和大多数资源",
+      "member": "标准用户（默认），可以管理内容",
+      "editor": "完整的内容管理，不能管理团队",
+      "publisher": "类似编辑者，加上发布工作流操作",
+      "device_manager": "完整的设备和频道管理",
+      "guest": "对资源的只读访问权限"
+    },
+    "teamRoleDescriptions": {
+      "admin": "可以管理团队成员和资源",
+      "member": "可以访问和编辑团队资源",
+      "installer": "用于设备注册的临时令牌（24小时后过期）"
+    },
+    "leaveOrganizationTitle": "离开此组织",
+    "leaveOrganizationDescription": "离开将立即删除您对组织资源的访问权限。",
+    "leaveOrganizationAction": "离开组织",
+    "leaveOrganizationLastAdminWarning": "在离开之前添加另一个管理员以保持此组织的管理。",
+    "leaveOrganizationLastUserWarning": "您无法离开，因为您是此组织的唯一成员。",
+    "leaveLastOrganizationWarningTitle": "离开您的最后一个组织？",
+    "leaveLastOrganizationWarningMessage": "这是您唯一的组织。离开它将删除您的账户，您将失去对Castmill的所有访问权限。您需要联系管理员才能重新被邀请。您确定要继续吗？"
   }
 }

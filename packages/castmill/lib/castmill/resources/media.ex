@@ -59,6 +59,19 @@ defmodule Castmill.Resources.Media do
     [files_medias: :file]
   end
 
+  def apply_filter({"type", type}) do
+    case type do
+      "image" ->
+        dynamic([media: m], like(m.mimetype, "image/%"))
+
+      "video" ->
+        dynamic([media: m], like(m.mimetype, "video/%"))
+
+      _ ->
+        nil
+    end
+  end
+
   def apply_filter(_) do
     # Return the query unchanged for unrecognized filters
     nil

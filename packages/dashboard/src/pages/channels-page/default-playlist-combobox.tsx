@@ -38,6 +38,8 @@ export const DefaultPlaylistComboBox: Component<{
       label={t('channels.defaultPlaylist')}
       placeholder={t('channels.selectPlaylist')}
       value={defaultPlaylist()}
+      clearable={true}
+      clearLabel={t('channels.clearDefaultPlaylist')}
       renderItem={(item: JsonPlaylist) => {
         return (
           <div class={styles['playlist-combobox']}>
@@ -67,10 +69,25 @@ export const DefaultPlaylistComboBox: Component<{
             default_playlist_id: playlist.id,
           });
           setDefaultPlaylist(playlist);
-          toast.success('Default playlist updated successfully');
+          toast.success(t('channels.success.updateDefaultPlaylist'));
         } catch (e) {
           toast.error(
             t('channels.errors.updateDefaultPlaylist', { error: String(e) })
+          );
+        }
+      }}
+      onClear={async () => {
+        try {
+          // Update the channel to remove default playlist
+          await channelsService.updateChannel({
+            id: props.channel.id,
+            default_playlist_id: null,
+          });
+          setDefaultPlaylist(undefined);
+          toast.success(t('channels.success.clearDefaultPlaylist'));
+        } catch (e) {
+          toast.error(
+            t('channels.errors.clearDefaultPlaylist', { error: String(e) })
           );
         }
       }}

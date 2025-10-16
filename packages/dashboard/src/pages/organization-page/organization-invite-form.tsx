@@ -58,6 +58,8 @@ export const OrganizationInviteForm = (props: {
       </FormItem>
       <div class={style['form-input']}>
         <Dropdown
+          id="invite-role"
+          name="role"
           label={t('organization.role')}
           items={[
             {
@@ -90,7 +92,7 @@ export const OrganizationInviteForm = (props: {
             },
           ]}
           defaultValue={role()}
-          onSelectChange={(value: string | number | undefined) => {
+          onSelectChange={(value: string | null) => {
             if (!value) {
               return;
             }

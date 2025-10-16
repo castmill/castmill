@@ -4,6 +4,7 @@
     "cancel": "Avbryt",
     "delete": "Ta bort",
     "edit": "Redigera",
+    "rename": "Byt namn",
     "add": "Lägg till",
     "remove": "Ta bort",
     "close": "Stäng",
@@ -74,7 +75,9 @@
     "addonLoadingError": "Fel vid laddning av tillägg",
     "addonError": "Tilläggsfel",
     "backToLogin": "Tillbaka till inloggning",
-    "offline": "[TODO: Translate] Offline"
+    "offline": "[TODO: Translate] Offline",
+    "selectImage": "Välj en bild",
+    "selectMedia": "Välj ett media"
   },
   "topbar": {
     "help": "Hjälp",
@@ -144,7 +147,11 @@
       "sessionExpired": "Autentiseringsfel: Din session kan ha gått ut. Uppdatera sidan och försök igen.",
       "addPasskeyFailed": "Misslyckades att lägga till nyckel: {{error}}",
       "addPasskey": "Misslyckades att lägga till ny nyckel. Försök igen."
-    }
+    },
+    "deleteAccountSuccess": "Kontot har raderats. Omdirigerar...",
+    "deleteAccountError": "Det gick inte att radera kontot. Försök igen.",
+    "soleAdministratorError": "Kan inte radera kontot. Du är den enda administratören för '{{orgName}}' som har andra medlemmar. Befordra en annan användare till administratör först.",
+    "soleAdministratorErrorGeneric": "Kan inte radera kontot. Du är den enda administratören för en eller flera organisationer med andra medlemmar. Befordra en annan användare till administratör först."
   },
   "usage": {
     "title": "Användning",
@@ -162,6 +169,21 @@
     "errors": {
       "fetchUsageData": "Misslyckades att hämta användningsdata: {{error}}"
     }
+  },
+  "content": {
+    "title": "Innehåll",
+    "description": "Översikt över dina innehållsresurser och kvotanvändning",
+    "playlists": "Spellistor",
+    "medias": "Mediefiler",
+    "storage": "Lagring",
+    "widgets": "Widgets",
+    "used": "Använd",
+    "total": "Totalt",
+    "loadingUsageData": "Laddar användningsdata...",
+    "quotaLimitReached": "Kvotgräns nådd",
+    "approachingLimit": "Närmar sig gränsen",
+    "noUsageData": "Ingen användningsdata tillgänglig",
+    "unableToLoad": "Kan inte ladda resursanvändningsinformation"
   },
   "teams": {
     "title": "Team",
@@ -223,7 +245,8 @@
       "memberRemoved": "Medlemmen {{name}} togs bort med framgång",
       "membersRemoved": "Medlemmarna togs bort med framgång",
       "invitationSent": "Inbjudan skickades till {{email}}",
-      "leftTeam": "Du lämnade teamet {{name}}"
+      "leftTeam": "Du lämnade teamet {{name}}",
+      "roleUpdated": "Roll uppdaterad framgångsrikt för {{name}}"
     },
     "invitation": {
       "title": "Teaminbjudan",
@@ -238,6 +261,12 @@
       "searchUser": "Sök efter en användare..."
     },
     "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully"
+    "dialogs": {
+      "removeMemberTitle": "Ta bort användare från team",
+      "removeMemberMessage": "Är du säker på att du vill ta bort medlemmen \"{{name}}\" från teamet?",
+      "removeMembersTitle": "Ta bort medlemmar från team",
+      "removeMembersMessage": "Är du säker på att du vill ta bort följande medlemmar från teamet?"
+    }
   },
   "login": {
     "title": "Logga in",
@@ -259,7 +288,14 @@
   "errors": {
     "generic": "Ett fel uppstod. Försök igen.",
     "networkError": "Nätverksfel. Kontrollera din anslutning.",
-    "unauthorized": "Obehörig. Logga in igen."
+    "unauthorized": "Obehörig. Logga in igen.",
+    "unknownResourceType": "Okänd resurstyp: {{resourceType}}",
+    "serverUnreachable": "Kan Inte Ansluta till Servern",
+    "serverUnreachableDescription": "Backend-servern är för närvarande onåbar. Detta innebär vanligtvis att servern inte körs eller att det finns ett nätverksproblem.",
+    "checkServerRunning": "Se till att Castmill-servern körs",
+    "checkNetworkConnection": "Kontrollera din nätverksanslutning",
+    "checkServerUrl": "Verifiera server-URL:en i din konfiguration",
+    "retryConnection": "Försök Ansluta Igen"
   },
   "sidebar": {
     "organization": "Organisation",
@@ -283,22 +319,28 @@
     "removeChannels": "Ta bort kanaler",
     "confirmRemoveChannel": "Är du säker på att du vill ta bort kanal \"{{name}}\"?",
     "confirmRemoveChannels": "Är du säker på att du vill ta bort följande kanaler?",
+    "enterChannelName": "Ange kanalnamn",
+    "defaultPlaylist": "Standardspellista",
+    "selectPlaylist": "Välj spellista",
+    "clearDefaultPlaylist": "Rensa standardspellista",
+    "dragPlaylists": "Dra spellistor",
+    "repeatWeekly": "Upprepa varje vecka?",
+    "calendarEntryDetails": "Kalenderinläggsdetaljer",
+    "removeChannelEntry": "Ta bort kanalinlägg",
+    "cannotDeleteChannel": "Kan inte ta bort kanal",
+    "success": {
+      "updateDefaultPlaylist": "Standardspellista uppdaterad",
+      "clearDefaultPlaylist": "Standardspellista rensad"
+    },
     "errors": {
       "removeChannel": "Fel vid borttagning av kanal {{name}}: {{error}}",
       "removeChannels": "Fel vid borttagning av kanaler: {{error}}",
       "addChannel": "Fel vid tillägg av kanal: {{error}}",
       "saveChannel": "Fel vid sparande av kanal: {{error}}",
       "updateDefaultPlaylist": "Misslyckades att uppdatera kanalens standardspellista: {{error}}",
+      "clearDefaultPlaylist": "Misslyckades att rensa kanalens standardspellista: {{error}}",
       "updateChannelEntry": "Fel vid uppdatering av kanalinlägg: {{error}}"
-    },
-    "enterChannelName": "Ange kanalnamn",
-    "defaultPlaylist": "Standardspellista",
-    "selectPlaylist": "Välj spellista",
-    "dragPlaylists": "Dra spellistor",
-    "repeatWeekly": "Upprepa varje vecka?",
-    "calendarEntryDetails": "Kalenderinläggsdetaljer",
-    "removeChannelEntry": "Ta bort kanalinlägg",
-    "cannotDeleteChannel": "Kan inte ta bort kanal"
+    }
   },
   "organization": {
     "title": "Organisation",
@@ -309,6 +351,7 @@
     "inviteMember": "Bjud in medlem",
     "enterMemberEmail": "Ange medlemmens e-post",
     "role": "Roll",
+    "changeRole": "Ändra Roll",
     "roleAdmin": "Administratör",
     "roleManager": "Chef",
     "roleMember": "Medlem",
@@ -323,12 +366,13 @@
       "emailRequired": "E-post är obligatoriskt",
       "invalidEmail": "Ogiltig e-post",
       "cannotRemoveLastAdmin": "Du kan inte ta bort organisationens sista administratör.",
-      "invalidRole": "Den valda rollen är inte giltig för den här organisationen."
+      "invalidRole": "Den valda rollen är inte giltig för den här organisationen.",
+      "updateRoleFailed": "Misslyckades med att uppdatera medlemsroll"
     },
     "messages": {
       "memberRemoved": "Medlemmen {{name}} togs bort med framgång",
       "membersRemoved": "Medlemmarna togs bort med framgång",
-      "invitationSent": "[TODO: Translate] Invitation sent to {{email}}"
+      "invitationSent": "Inbjudan skickad till {{email}}"
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {
@@ -344,6 +388,12 @@
       "admin": "Kan hantera teammedlemmar och resurser",
       "member": "Kan komma åt och redigera teamresurser",
       "installer": "Tillfällig token för enhetsregistrering (utgår om 24h)"
+    },
+    "dialogs": {
+      "removeMemberTitle": "Ta bort användare från organisation",
+      "removeMemberMessage": "Är du säker på att du vill ta bort medlemmen \"{{name}}\" från organisationen?",
+      "removeMembersTitle": "Ta bort medlemmar från organisation",
+      "removeMembersMessage": "Är du säker på att du vill ta bort följande medlemmar från organisationen?"
     }
   },
   "playlists": {
@@ -352,6 +402,9 @@
     "createNewPlaylist": "Skapa en ny spellista",
     "playlistTitle": "Spellista \"{{name}}\"",
     "buildPlaylist": "Bygg din spellista här",
+    "renamePlaylist": "Byt namn på spellista",
+    "playlistUpdated": "Spellista \"{{name}}\" uppdaterades",
+    "errorUpdating": "Fel vid uppdatering av spellista {{name}}: {{error}}",
     "removePlaylist": "Ta bort spellista",
     "removePlaylists": "Ta bort spellistor",
     "confirmRemovePlaylist": "Är du säker på att du vill ta bort spellista \"{{name}}\"?",
@@ -491,12 +544,77 @@
       "emailAddress": "E-postadress",
       "expired": "Denna inbjudan har utgått.",
       "loginToAccept": "Logga in för att acceptera denna inbjudan",
-      "createAccount": "Skapa ditt konto för att acceptera denna inbjudan"
+      "createAccount": "Skapa ditt konto för att acceptera denna inbjudan",
+      "reject": "Avvisa Inbjudan",
+      "rejecting": "Avvisar...",
+      "chooseAction": "Välj att acceptera eller avvisa inbjudan",
+      "acceptSuccess": "Inbjudan accepterad",
+      "acceptError": "Fel vid acceptering av inbjudan",
+      "rejectSuccess": "Inbjudan avvisad",
+      "rejectError": "Fel vid avvisning av inbjudan",
+      "accountCreated": "Konto skapat!",
+      "accountCreationFailed": "Misslyckades att skapa konto",
+      "passkeysNotSupported": "Passkeys stöds inte i denna webbläsare"
     }
   },
   "filters": {
     "teamLabel": "Lag",
     "teamPlaceholder": "Välj lag",
     "teamClear": "Rensa lagfilter"
+  },
+  "organization": {
+    "title": "Organisation",
+    "users": "Användare",
+    "invitations": "Inbjudningar",
+    "update": "Uppdatera",
+    "placeholderName": "Ange organisationsnamn",
+    "inviteMember": "Bjud in medlem",
+    "enterMemberEmail": "Ange medlemmens e-post",
+    "role": "Roll",
+    "roleAdmin": "Administratör",
+    "roleManager": "Chef",
+    "roleMember": "Medlem",
+    "roleEditor": "Redaktör",
+    "rolePublisher": "Publicerare",
+    "roleDeviceManager": "Enhetshanterare",
+    "roleGuest": "Gäst",
+    "teamRoleAdmin": "Teamadministratör",
+    "teamRoleMember": "Teammedlem",
+    "errors": {
+      "updateOrganization": "Fel vid uppdatering av organisation: {{error}}",
+      "emailRequired": "E-post är obligatoriskt",
+      "invalidEmail": "Ogiltig e-post",
+      "cannotRemoveLastAdmin": "Du kan inte ta bort organisationens sista administratör.",
+      "invalidRole": "Den valda rollen är inte giltig för den här organisationen.",
+      "cannotRemoveLastUser": "Du kan inte lämna eftersom du är den enda medlemmen i denna organisation."
+    },
+    "messages": {
+      "memberRemoved": "Medlemmen {{name}} togs bort med framgång",
+      "membersRemoved": "Medlemmarna togs bort med framgång",
+      "leftOrganization": "Du har lämnat organisationen {{name}}",
+      "noOrganizationsRemaining": "Du har lämnat din sista organisation. Kontakta en administratör för att bli inbjuden till en organisation."
+    },
+    "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
+    "roleDescriptions": {
+      "admin": "Full åtkomst inklusive organisationshantering",
+      "manager": "Kan hantera team och de flesta resurser",
+      "member": "Standardanvändare (standard), kan hantera innehåll",
+      "editor": "Full innehållshantering, kan inte hantera team",
+      "publisher": "Som redaktör plus arbetsflödesåtgärder för publicering",
+      "device_manager": "Full enhets- och kanalhantering",
+      "guest": "Läsbehörighet till resurser"
+    },
+    "teamRoleDescriptions": {
+      "admin": "Kan hantera teammedlemmar och resurser",
+      "member": "Kan komma åt och redigera teamresurser",
+      "installer": "Tillfällig token för enhetsregistrering (utgår om 24h)"
+    },
+    "leaveOrganizationTitle": "Lämna denna organisation",
+    "leaveOrganizationDescription": "Att lämna tar bort din åtkomst till organisationens resurser omedelbart.",
+    "leaveOrganizationAction": "Lämna organisation",
+    "leaveOrganizationLastAdminWarning": "Lägg till en annan administratör innan du lämnar för att hålla denna organisation hanterad.",
+    "leaveOrganizationLastUserWarning": "Du kan inte lämna eftersom du är den enda medlemmen i denna organisation.",
+    "leaveLastOrganizationWarningTitle": "Lämna din sista organisation?",
+    "leaveLastOrganizationWarningMessage": "Detta är din enda organisation. Att lämna den kommer att ta bort ditt konto och du kommer att förlora all åtkomst till Castmill. Du kommer att behöva kontakta en administratör för att bli inbjuden igen. Är du säker på att du vill fortsätta?"
   }
 }

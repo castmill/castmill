@@ -18,8 +18,10 @@ import { Modal } from '@castmill/ui-common';
 
 import { PlaylistItem } from './playlist-item';
 import { WidgetConfig } from './widget-config';
+import { AddonStore } from '../../common/interfaces/addon-store';
 
 export const PlaylistItems: Component<{
+  store: AddonStore;
   baseUrl: string;
   organizationId: string;
   items: JsonPlaylistItem[];
@@ -209,6 +211,7 @@ export const PlaylistItems: Component<{
           onClose={() => closeDialog()}
         >
           <WidgetConfig
+            store={props.store}
             baseUrl={props.baseUrl}
             item={showModal()!}
             onSubmit={async ({ config, expandedOptions }) => {

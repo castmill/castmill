@@ -1,5 +1,12 @@
 import '@testing-library/jest-dom';
 
+// Mock ResizeObserver for tests
+global.ResizeObserver = class ResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+};
+
 const ensureNavigatorProperty = (key: string, value: unknown) => {
   const navigatorRef = (globalThis.navigator ??= {} as Navigator);
   const currentValue = Reflect.get(navigatorRef, key);

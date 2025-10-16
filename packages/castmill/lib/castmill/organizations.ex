@@ -749,6 +749,26 @@ defmodule Castmill.Organizations do
     end
   end
 
+  # Rejects an invitation by updating the status to rejected
+  def reject_invitation(token) do
+    case get_invitation(token) do
+      nil ->
+        {:error, "Invalid token"}
+
+      invitation ->
+        if invitation.status != "invited" do
+          {:error, "Invitation already #{invitation.status}"}
+        else
+          from(i in OrganizationsInvitation,
+            where: i.token == ^token
+          )
+          |> Repo.update_all(set: [status: "rejected"])
+
+          {:ok, invitation}
+        end
+    end
+  end
+
   @doc """
   Removes an invitation from an organization by invitation ID.
   """
@@ -936,7 +956,13 @@ defmodule Castmill.Organizations do
   @doc """
     Update the role for a member of an organization.
   """
-  def update_role(organization_id, user_id, role) do
+  def update_role(organization_id, user_id, role) when is_binary(role) do
+    # Convert string role to atom (e.g., "editor" -> :editor)
+    role_atom = String.to_existing_atom(role)
+    update_role(organization_id, user_id, role_atom)
+  end
+
+  def update_role(organization_id, user_id, role) when is_atom(role) do
     %Castmill.Organizations.OrganizationsUsers{
       role: role,
       user_id: user_id,

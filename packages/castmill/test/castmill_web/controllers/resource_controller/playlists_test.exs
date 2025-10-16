@@ -225,6 +225,140 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
       response = json_response(conn, 404)
       assert %{"errors" => ["Playlist not found"]} = response
     end
+
+    test "fails to delete a playlist used as default playlist in a channel", %{
+      conn: conn,
+      organization: organization
+    } do
+      import Castmill.ChannelsFixtures
+
+      # Create a playlist
+      playlist =
+        playlist_fixture(%{
+          organization_id: organization.id,
+          name: "Test Playlist"
+        })
+
+      # Create a channel that uses this playlist as default
+      channel =
+        channel_fixture(%{
+          organization_id: organization.id,
+          name: "Test Channel",
+          timezone: "UTC",
+          default_playlist_id: playlist.id
+        })
+
+      # Attempt to delete the playlist
+      conn = delete(conn, "/api/organizations/#{organization.id}/playlists/#{playlist.id}")
+      assert response(conn, 409)
+
+      # Verify the error response contains channel information
+      response = json_response(conn, 409)
+
+      assert %{
+               "errors" => %{
+                 "detail" => "Cannot delete playlist that is used in channels",
+                 "channels" => channels
+               }
+             } = response
+
+      # Verify channel information is in the response
+      assert is_list(channels)
+      assert length(channels) == 1
+      [channel_info] = channels
+      assert channel_info["name"] == channel.name
+      assert channel_info["usage_type"] == "default"
+    end
+
+    test "allows deletion of a playlist used only in past channel entries", %{
+      conn: conn,
+      organization: organization
+    } do
+      import Castmill.ChannelsFixtures
+
+      # Create a playlist
+      playlist =
+        playlist_fixture(%{
+          organization_id: organization.id,
+          name: "Test Playlist"
+        })
+
+      # Create a channel
+      channel =
+        channel_fixture(%{
+          organization_id: organization.id,
+          name: "Test Channel",
+          timezone: "UTC"
+        })
+
+      # Add the playlist to a PAST channel entry
+      _entry =
+        channel_entry_fixture(channel.id, %{
+          playlist_id: playlist.id,
+          start: ~U[2024-01-01 10:00:00Z],
+          end: ~U[2024-01-01 12:00:00Z]
+        })
+
+      # Attempt to delete the playlist - should succeed since entry is in the past
+      conn = delete(conn, "/api/organizations/#{organization.id}/playlists/#{playlist.id}")
+      assert response(conn, 204)
+    end
+
+    test "fails to delete a playlist used in a channel entry", %{
+      conn: conn,
+      organization: organization
+    } do
+      import Castmill.ChannelsFixtures
+
+      # Create a playlist
+      playlist =
+        playlist_fixture(%{
+          organization_id: organization.id,
+          name: "Test Playlist"
+        })
+
+      # Create a channel
+      channel =
+        channel_fixture(%{
+          organization_id: organization.id,
+          name: "Test Channel",
+          timezone: "UTC"
+        })
+
+      # Add the playlist to a channel entry (use future date)
+      future_start = DateTime.utc_now() |> DateTime.add(24 * 3600, :second)
+      future_end = DateTime.utc_now() |> DateTime.add(26 * 3600, :second)
+
+      _entry =
+        channel_entry_fixture(channel.id, %{
+          playlist_id: playlist.id,
+          start: future_start,
+          end: future_end
+        })
+
+      # Attempt to delete the playlist
+      conn = delete(conn, "/api/organizations/#{organization.id}/playlists/#{playlist.id}")
+      assert response(conn, 409)
+
+      # Verify the error response contains channel information
+      response = json_response(conn, 409)
+
+      assert %{
+               "errors" => %{
+                 "detail" => "Cannot delete playlist that is used in channels",
+                 "channels" => channels
+               }
+             } = response
+
+      # Verify channel information is in the response
+      assert is_list(channels)
+      assert length(channels) == 1
+      [channel_info] = channels
+      assert channel_info["name"] == channel.name
+      assert channel_info["usage_type"] == "scheduled"
+      assert channel_info["entry_start"] != nil
+      assert channel_info["entry_end"] != nil
+    end
   end
 
   describe "full playlist lifecycle" do
