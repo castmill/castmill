@@ -248,7 +248,8 @@
       "memberRemoved": "تمت إزالة العضو {{name}} بنجاح",
       "membersRemoved": "تمت إزالة الأعضاء بنجاح",
       "invitationSent": "تم إرسال الدعوة إلى {{email}}",
-      "leftTeam": "لقد غادرت الفريق {{name}}"
+      "leftTeam": "لقد غادرت الفريق {{name}}",
+      "roleUpdated": "تم تحديث الدور بنجاح لـ {{name}}"
     },
     "invitation": {
       "title": "دعوة الفريق",
@@ -368,9 +369,7 @@
     "messages": {
       "memberRemoved": "تمت إزالة العضو {{name}} بنجاح",
       "membersRemoved": "تمت إزالة الأعضاء بنجاح",
-      "invitationSent": "تم إرسال الدعوة إلى {{email}}",
-      "leftTeam": "لقد غادرت الفريق {{name}}",
-      "roleUpdated": "تم تحديث الدور بنجاح لـ {{name}}"
+      "invitationSent": "تم إرسال الدعوة إلى {{email}}"
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {

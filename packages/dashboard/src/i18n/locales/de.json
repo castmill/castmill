@@ -254,7 +254,8 @@
       "memberRemoved": "Mitglied {{name}} wurde erfolgreich entfernt",
       "membersRemoved": "Mitglieder wurden erfolgreich entfernt",
       "invitationSent": "Einladung an {{email}} gesendet",
-      "leftTeam": "Du hast das Team {{name}} verlassen"
+      "leftTeam": "Du hast das Team {{name}} verlassen",
+      "roleUpdated": "Rolle erfolgreich aktualisiert für {{name}}"
     },
     "invitation": {
       "title": "Team-Einladung",
@@ -334,9 +335,7 @@
     "messages": {
       "memberRemoved": "Mitglied {{name}} wurde erfolgreich entfernt",
       "membersRemoved": "Mitglieder wurden erfolgreich entfernt",
-      "invitationSent": "Einladung an {{email}} gesendet",
-      "leftTeam": "Du hast das Team {{name}} verlassen",
-      "roleUpdated": "Rolle erfolgreich aktualisiert für {{name}}"
+      "invitationSent": "Einladung an {{email}} gesendet"
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {

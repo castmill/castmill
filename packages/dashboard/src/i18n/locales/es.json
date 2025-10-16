@@ -243,7 +243,8 @@
       "memberRemoved": "El miembro {{name}} se eliminó correctamente",
       "membersRemoved": "Miembros eliminados correctamente",
       "invitationSent": "Invitación enviada a {{email}}",
-      "leftTeam": "Saliste del equipo {{name}}"
+      "leftTeam": "Saliste del equipo {{name}}",
+      "roleUpdated": "Rol actualizado exitosamente para {{name}}"
     },
     "dialogs": {
       "removeMemberTitle": "Eliminar Usuario del Equipo",
@@ -363,9 +364,13 @@
     "messages": {
       "memberRemoved": "El miembro {{name}} se eliminó correctamente",
       "membersRemoved": "Miembros eliminados correctamente",
-      "invitationSent": "Invitación enviada a {{email}}",
-      "leftTeam": "Has salido del equipo {{name}}",
-      "roleUpdated": "Rol actualizado exitosamente para {{name}}"
+      "invitationSent": "Invitación enviada a {{email}}"
+    },
+    "dialogs": {
+      "removeMemberTitle": "Eliminar usuario de la organización",
+      "removeMemberMessage": "¿Está seguro de que desea eliminar al miembro \"{{name}}\" de la organización?",
+      "removeMembersTitle": "Eliminar miembros de la organización",
+      "removeMembersMessage": "¿Está seguro de que desea eliminar los siguientes miembros de la organización?"
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {

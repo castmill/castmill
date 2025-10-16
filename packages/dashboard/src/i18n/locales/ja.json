@@ -248,7 +248,8 @@
       "memberRemoved": "メンバー{{name}}を正常に削除しました",
       "membersRemoved": "メンバーを正常に削除しました",
       "invitationSent": "{{email}} に招待状を送信しました",
-      "leftTeam": "チーム{{name}}を退出しました"
+      "leftTeam": "チーム{{name}}を退出しました",
+      "roleUpdated": "{{name}}の役割を正常に更新しました"
     },
     "invitation": {
       "title": "チーム招待",
@@ -368,9 +369,7 @@
     "messages": {
       "memberRemoved": "メンバー{{name}}を正常に削除しました",
       "membersRemoved": "メンバーを正常に削除しました",
-      "invitationSent": "{{email}}に招待を送信しました",
-      "leftTeam": "チーム{{name}}から退出しました",
-      "roleUpdated": "{{name}}の役割を正常に更新しました"
+      "invitationSent": "{{email}}に招待を送信しました"
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {

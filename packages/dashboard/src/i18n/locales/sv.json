@@ -243,7 +243,8 @@
       "memberRemoved": "Medlemmen {{name}} togs bort med framgång",
       "membersRemoved": "Medlemmarna togs bort med framgång",
       "invitationSent": "Inbjudan skickades till {{email}}",
-      "leftTeam": "Du lämnade teamet {{name}}"
+      "leftTeam": "Du lämnade teamet {{name}}",
+      "roleUpdated": "Roll uppdaterad framgångsrikt för {{name}}"
     },
     "invitation": {
       "title": "Teaminbjudan",
@@ -363,9 +364,7 @@
     "messages": {
       "memberRemoved": "Medlemmen {{name}} togs bort med framgång",
       "membersRemoved": "Medlemmarna togs bort med framgång",
-      "invitationSent": "Inbjudan skickad till {{email}}",
-      "leftTeam": "Du lämnade teamet {{name}}",
-      "roleUpdated": "Roll uppdaterad framgångsrikt för {{name}}"
+      "invitationSent": "Inbjudan skickad till {{email}}"
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {
