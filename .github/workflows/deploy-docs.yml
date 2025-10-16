@@ -41,6 +41,10 @@ jobs:
           cache: 'yarn'
       - name: Install dependencies
         run: yarn install --frozen-lockfile
+      - name: Build cache package
+        run: yarn workspace @castmill/cache build
+      - name: Build player package
+        run: yarn workspace @castmill/player build
       - name: Build website
         run: yarn workspace website build
       - name: Setup Pages
