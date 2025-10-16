@@ -1,5 +1,5 @@
-import { Component, createSignal, Show, For, createEffect } from 'solid-js';
-import { Button, Modal, ModalRef, useToast } from '@castmill/ui-common';
+import { Component, createSignal, Show, createEffect } from 'solid-js';
+import { Button, useToast, MediaPicker } from '@castmill/ui-common';
 import { JsonMedia } from '@castmill/player';
 import { OrganizationsService } from '../../services/organizations.service';
 import { store, setStore } from '../../store';
@@ -9,8 +9,8 @@ import './logo-settings.scss';
 
 interface LogoSettingsProps {
   organizationId: string;
-  currentLogoMediaId?: string;
-  onLogoUpdate: (logoMediaId: string | null) => void;
+  currentLogoMediaId?: number;
+  onLogoUpdate: (logoMediaId: number | null) => void;
   disabled?: boolean;
 }
 
@@ -18,141 +18,221 @@ export const LogoSettings: Component<LogoSettingsProps> = (props) => {
   const { t } = useI18n();
   const toast = useToast();
 
-  let modalRef: ModalRef | undefined;
-
-  const [medias, setMedias] = createSignal<JsonMedia[]>([]);
-  const [loading, setLoading] = createSignal(false);
-  const [selectedMediaId, setSelectedMediaId] = createSignal<string | null>(
+  const [showMediaPicker, setShowMediaPicker] = createSignal(false);
+  const [selectedMediaId, setSelectedMediaId] = createSignal<number | null>(
     props.currentLogoMediaId || null
   );
   const [logoUrl, setLogoUrl] = createSignal<string | null>(null);
 
   // Update selected media when prop changes
   createEffect(() => {
-    setSelectedMediaId(props.currentLogoMediaId || null);
+    const newMediaId = props.currentLogoMediaId || null;
+    setSelectedMediaId(newMediaId);
   });
 
   // Fetch the logo URL when logo media ID changes
-  createEffect(async () => {
+  createEffect(() => {
     const mediaId = selectedMediaId();
+
     if (mediaId) {
-      try {
-        const response = await fetch(
-          `${store.env.baseUrl}/dashboard/organizations/${props.organizationId}/medias/${mediaId}`,
-          {
+      // Async operation inside effect
+      (async () => {
+        try {
+          const url = `${store.env.baseUrl}/dashboard/organizations/${props.organizationId}/medias/${mediaId}`;
+          const response = await fetch(url, {
             method: 'GET',
             credentials: 'include',
-          }
-        );
+          });
 
-        if (response.ok) {
-          const media = await response.json();
-          // Get the thumbnail or main file URL
-          const fileUrl = media.files?.thumbnail?.uri || media.files?.main?.uri;
-          if (fileUrl) {
-            setLogoUrl(fileUrl);
+          if (response.ok) {
+            const payload = await response.json();
+            const media = payload?.data;
+
+            if (media?.files) {
+              const files = media.files as Record<string, { uri?: string }>;
+              const preferredOrder = ['thumbnail', 'main', 'default'];
+
+              const preferredUrl = preferredOrder
+                .map((key) => files[key]?.uri)
+                .find((uri) => Boolean(uri));
+
+              const fallbackUrl = preferredUrl
+                ? preferredUrl
+                : Object.values(files)
+                    .map((file) => file?.uri)
+                    .find(Boolean);
+
+              if (fallbackUrl) {
+                setLogoUrl(fallbackUrl);
+                return;
+              }
+            }
+
+            setLogoUrl(null);
+          } else {
+            console.error(
+              'Failed to fetch media for logo preview. Status:',
+              response.status
+            );
+            setLogoUrl(null);
           }
+        } catch (error) {
+          console.error('Error fetching logo media:', error);
+          setLogoUrl(null);
         }
-      } catch (error) {
-        console.error('Error fetching logo media:', error);
-      }
+      })();
     } else {
       setLogoUrl(null);
     }
   });
 
-  const loadMedias = async () => {
-    setLoading(true);
-    try {
-      // Fetch image medias using the API
-      const queryParams = new URLSearchParams({
-        page: '1',
-        page_size: '50',
-        key: 'name',
-        direction: 'ascending',
-      });
+  // Fetch function for MediaPicker
+  const fetchMedia = async (
+    page: number,
+    pageSize: number,
+    search?: string
+  ): Promise<{ data: JsonMedia[]; count: number }> => {
+    const queryParams = new URLSearchParams({
+      page: page.toString(),
+      page_size: pageSize.toString(),
+      key: 'name',
+      direction: 'ascending',
+    });
 
-      const response = await fetch(
-        `${store.env.baseUrl}/dashboard/organizations/${props.organizationId}/medias?${queryParams}`,
+    if (search) {
+      queryParams.set('search', search);
+    }
+
+    const response = await fetch(
+      `${store.env.baseUrl}/dashboard/organizations/${props.organizationId}/medias?${queryParams}`,
+      {
+        method: 'GET',
+        credentials: 'include',
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error('Failed to fetch medias');
+    }
+
+    return await response.json();
+  };
+
+  const handleMediaSelect = async (mediaId: number) => {
+    try {
+      const updatedOrg = await OrganizationsService.update(
+        props.organizationId,
         {
-          method: 'GET',
-          credentials: 'include',
+          logo_media_id: mediaId,
         }
       );
 
-      if (response.ok) {
-        const result = await response.json();
-        // Filter for image types only
-        const imageMedias = (result.data || []).filter((media: JsonMedia) =>
-          media.mimetype?.startsWith('image/')
-        );
-        setMedias(imageMedias);
-      } else {
-        toast.error(t('organization.errors.loadMedias'));
-      }
-    } catch (error) {
-      toast.error(t('organization.errors.loadMedias'));
-      console.error('Error loading medias:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const openMediaSelector = async () => {
-    await loadMedias();
-    modalRef?.open();
-  };
-
-  const handleSelectMedia = async () => {
-    try {
-      const mediaId = selectedMediaId();
-      await OrganizationsService.update(props.organizationId, {
-        logo_media_id: mediaId || undefined,
-      });
-
+      setSelectedMediaId(mediaId);
       props.onLogoUpdate(mediaId);
 
-      // Update store
+      // Update store with the returned organization data
+      const updatedLogoId = updatedOrg?.data?.logo_media_id ?? mediaId;
       setStore('organizations', 'data', (orgs) =>
         orgs.map((org) =>
           org.id === props.organizationId
-            ? { ...org, logo_media_id: mediaId || undefined }
+            ? { ...org, logo_media_id: updatedLogoId }
             : org
         )
       );
 
       toast.success(t('organization.logoUpdated'));
-      modalRef?.close();
-    } catch (error) {
-      toast.error(
-        t('organization.errors.updateOrganization', { error: String(error) })
-      );
+      setShowMediaPicker(false);
+    } catch (error: any) {
+      // Extract validation errors from backend response
+      let errorMessage = t('organization.errors.updateOrganization', {
+        error: String(error),
+      });
+
+      if (error?.data?.errors) {
+        const validationErrors = error.data.errors;
+
+        // Handle logo_media_id specific errors
+        if (validationErrors.logo_media_id) {
+          const logoErrors = Array.isArray(validationErrors.logo_media_id)
+            ? validationErrors.logo_media_id.join(', ')
+            : validationErrors.logo_media_id;
+          errorMessage = `Logo: ${logoErrors}`;
+        } else {
+          // Format all validation errors
+          const errorMessages = Object.entries(validationErrors)
+            .map(([field, messages]) => {
+              const msgs = Array.isArray(messages)
+                ? messages.join(', ')
+                : messages;
+              return `${field}: ${msgs}`;
+            })
+            .join('; ');
+          errorMessage = errorMessages || errorMessage;
+        }
+      }
+
+      toast.error(errorMessage);
     }
   };
 
   const handleRemoveLogo = async () => {
     try {
-      await OrganizationsService.update(props.organizationId, {
-        logo_media_id: undefined,
-      });
+      const updatedOrg = await OrganizationsService.update(
+        props.organizationId,
+        {
+          logo_media_id: null,
+        }
+      );
 
       setSelectedMediaId(null);
       props.onLogoUpdate(null);
 
-      // Update store
+      // Update store with the returned organization data
+      const updatedLogoId = updatedOrg?.data?.logo_media_id ?? null;
       setStore('organizations', 'data', (orgs) =>
         orgs.map((org) =>
           org.id === props.organizationId
-            ? { ...org, logo_media_id: undefined }
+            ? { ...org, logo_media_id: updatedLogoId }
             : org
         )
       );
 
+      setStore('organizations', 'logos', props.organizationId, {
+        mediaId: null,
+        url: null,
+        loading: false,
+        error: false,
+      });
+
       toast.success(t('organization.logoRemoved'));
-    } catch (error) {
-      toast.error(
-        t('organization.errors.updateOrganization', { error: String(error) })
-      );
+    } catch (error: any) {
+      // Extract validation errors from backend response
+      let errorMessage = t('organization.errors.updateOrganization', {
+        error: String(error),
+      });
+
+      if (error?.data?.errors) {
+        const validationErrors = error.data.errors;
+
+        // Format all validation errors
+        const errorMessages = Object.entries(validationErrors)
+          .map(([field, messages]) => {
+            const msgs = Array.isArray(messages)
+              ? messages.join(', ')
+              : messages;
+            return `${field}: ${msgs}`;
+          })
+          .join('; ');
+        errorMessage = errorMessages || errorMessage;
+      }
+
+      const status = error?.status ?? error?.response?.status;
+      if (status === 409) {
+        toast.error(t('organization.errors.mediaInUseAsLogo'));
+        return;
+      }
+
+      toast.error(errorMessage);
     }
   };
 
@@ -177,7 +257,7 @@ export const LogoSettings: Component<LogoSettingsProps> = (props) => {
       <div class="logo-actions">
         <Button
           label={t('organization.selectLogo')}
-          onClick={openMediaSelector}
+          onClick={() => setShowMediaPicker(true)}
           color="primary"
           disabled={props.disabled}
         />
@@ -191,64 +271,22 @@ export const LogoSettings: Component<LogoSettingsProps> = (props) => {
         </Show>
       </div>
 
-      <Modal
-        ref={(ref) => (modalRef = ref)}
+      <MediaPicker
+        show={showMediaPicker()}
+        onClose={() => setShowMediaPicker(false)}
+        onSelect={handleMediaSelect}
+        fetchMedia={fetchMedia}
+        selectedMediaId={selectedMediaId() || undefined}
         title={t('organization.selectLogo')}
-        size="large"
-      >
-        <div class="media-selector">
-          <Show when={loading()}>
-            <div class="loading">{t('common.loading')}</div>
-          </Show>
-
-          <Show when={!loading() && medias().length === 0}>
-            <div class="no-medias">{t('organization.noMediasAvailable')}</div>
-          </Show>
-
-          <div class="media-grid">
-            <For each={medias()}>
-              {(media) => (
-                <div
-                  class="media-item"
-                  classList={{ selected: selectedMediaId() === media.id }}
-                  onClick={() => setSelectedMediaId(media.id)}
-                >
-                  <div class="media-thumbnail">
-                    <Show
-                      when={
-                        media.files?.thumbnail?.uri || media.files?.main?.uri
-                      }
-                      fallback={<div class="no-preview">No preview</div>}
-                    >
-                      <img
-                        src={
-                          media.files?.thumbnail?.uri || media.files?.main?.uri
-                        }
-                        alt={media.name}
-                      />
-                    </Show>
-                  </div>
-                  <div class="media-name">{media.name}</div>
-                </div>
-              )}
-            </For>
-          </div>
-
-          <div class="modal-actions">
-            <Button
-              label={t('common.cancel')}
-              onClick={() => modalRef?.close()}
-              color="secondary"
-            />
-            <Button
-              label={t('common.save')}
-              onClick={handleSelectMedia}
-              color="primary"
-              disabled={!selectedMediaId()}
-            />
-          </div>
-        </div>
-      </Modal>
+        description={t('organization.selectLogoDescription')}
+        searchPlaceholder={t('common.search')}
+        loadingText={t('common.loading')}
+        noMediaText={t('organization.noMediasAvailable')}
+        cancelLabel={t('common.cancel')}
+        selectLabel={t('common.save')}
+        filterFn={(media) => media.mimetype?.startsWith('image/')}
+        pageSize={30}
+      />
     </div>
   );
 };

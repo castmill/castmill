@@ -36,7 +36,7 @@ defmodule Castmill.Organizations.Organization do
 
     belongs_to(:network, Castmill.Networks.Network, foreign_key: :network_id, type: Ecto.UUID)
     belongs_to(:organization, Castmill.Organizations.Organization, type: Ecto.UUID)
-    belongs_to(:logo_media, Castmill.Resources.Media, foreign_key: :logo_media_id, type: Ecto.UUID)
+    belongs_to(:logo_media, Castmill.Resources.Media, foreign_key: :logo_media_id, type: :id)
 
     has_many(:devices, Castmill.Devices.Device)
     has_many(:teams, Castmill.Teams.Team)
@@ -55,7 +55,14 @@ defmodule Castmill.Organizations.Organization do
   @doc false
   def changeset(organization, attrs) do
     organization
-    |> cast(attrs, [:name, :organization_id, :network_id, :default_role, :visibility_mode, :logo_media_id])
+    |> cast(attrs, [
+      :name,
+      :organization_id,
+      :network_id,
+      :default_role,
+      :visibility_mode,
+      :logo_media_id
+    ])
     |> validate_required([:name, :network_id])
     |> validate_inclusion(:default_role, [
       :admin,

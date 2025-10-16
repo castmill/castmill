@@ -20,7 +20,7 @@ const OrganizationPage: Component = () => {
   const toast = useToast();
 
   const [name, setName] = createSignal(store.organizations.selectedName!);
-  const [logoMediaId, setLogoMediaId] = createSignal<string | null>(
+  const [logoMediaId, setLogoMediaId] = createSignal<number | null>(
     store.organizations.data.find(
       (org) => org.id === store.organizations.selectedId
     )?.logo_media_id || null
@@ -133,22 +133,40 @@ const OrganizationPage: Component = () => {
         </Show>
       ),
     },
-    // Only show Invitations tab if user can invite members
-    ...(canPerformAction('organizations', 'create')
-      ? [
-          {
-            title: t('organization.invitations'),
-            content: () => (
-              <Show when={store.organizations.selectedId}>
-                <OrganizationInvitationsView
-                  organizationId={store.organizations.selectedId!}
-                  onRemove={() => {}}
-                />
-              </Show>
-            ),
-          },
-        ]
-      : []),
+    {
+      title: t('organization.invitations'),
+      content: () => (
+        <Show
+          when={canPerformAction('organizations', 'create')}
+          fallback={
+            <div class={style['permission-warning']}>
+              {t('organization.noCreateOrganizations')}
+            </div>
+          }
+        >
+          <Show when={store.organizations.selectedId}>
+            <OrganizationInvitationsView
+              organizationId={store.organizations.selectedId!}
+              onRemove={() => {}}
+            />
+          </Show>
+        </Show>
+      ),
+    },
+    // Settings tab for organization configuration
+    {
+      title: t('organization.settings'),
+      content: () => (
+        <Show when={store.organizations.selectedId}>
+          <LogoSettings
+            organizationId={store.organizations.selectedId!}
+            currentLogoMediaId={logoMediaId() || undefined}
+            onLogoUpdate={(newLogoMediaId) => setLogoMediaId(newLogoMediaId)}
+            disabled={!canEdit()}
+          />
+        </Show>
+      ),
+    },
   ];
 
   return (
@@ -192,16 +210,6 @@ const OrganizationPage: Component = () => {
             />
           </div>
         </form>
-
-        {/* Logo Settings Section */}
-        <Show when={store.organizations.selectedId}>
-          <LogoSettings
-            organizationId={store.organizations.selectedId!}
-            currentLogoMediaId={logoMediaId() || undefined}
-            onLogoUpdate={(newLogoMediaId) => setLogoMediaId(newLogoMediaId)}
-            disabled={!canEdit()}
-          />
-        </Show>
       </div>
       <Tabs tabs={resourcesTabs} initialIndex={0} />
     </div>

@@ -3,7 +3,7 @@ defmodule Castmill.Repo.Migrations.AddLogoToOrganizations do
 
   def change do
     alter table(:organizations) do
-      add :logo_media_id, references(:medias, type: :uuid, on_delete: :nilify_all)
+      add :logo_media_id, references(:medias, on_delete: :nilify_all)
     end
 
     create index(:organizations, [:logo_media_id])

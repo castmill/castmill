@@ -692,11 +692,12 @@ defmodule Castmill.Resources do
   """
   def delete_media(%Media{} = media) do
     # Check if the media is being used as an organization logo
-    org_using_logo = Repo.one(
-      from o in Organization,
-      where: o.logo_media_id == ^media.id,
-      limit: 1
-    )
+    org_using_logo =
+      Repo.one(
+        from o in Organization,
+          where: o.logo_media_id == ^media.id,
+          limit: 1
+      )
 
     if org_using_logo do
       {:error, :media_in_use_as_logo}
