@@ -80,6 +80,7 @@
     },
     "addonError": "خطأ في الإضافة",
     "backToLogin": "العودة لتسجيل الدخول",
+    "offline": "[TODO: Translate] Offline",
     "selectImage": "اختر صورة",
     "selectMedia": "اختر وسائط"
   },
@@ -138,7 +139,10 @@
     "deleteAccountDescription": "حذف حسابك وجميع البيانات المرتبطة بشكل دائم. لا يمكن التراجع عن هذا الإجراء.",
     "deleteAccountButton": "حذف الحساب",
     "deleteAccountConfirm": "هل أنت متأكد؟",
-    "deleteAccountWarning": "سيؤدي هذا إلى حذف حسابك بشكل دائم.",
+    "deleteAccountWarning": "سيؤدي هذا إلى حذف حسابك بشكل دائم وإزالة جميع مفاتيح المرور من خوادمنا. ومع ذلك، ستبقى مفاتيح المرور المخزنة على أجهزتك (في iCloud Keychain أو Google Password Manager أو Windows Hello وما إلى ذلك) ويجب إزالتها يدويًا.",
+    "deleteAccountWarningWithSignalAPI": "سيؤدي هذا إلى حذف حسابك بشكل دائم وإزالة جميع مفاتيح المرور من خوادمنا. يدعم متصفحك الإزالة التلقائية لمفاتيح المرور.",
+    "deleteAccountPasskeyInfo": "بعد الحذف، إذا حاولت تسجيل الدخول باستخدام مفتاح مرور قديم، فسيفشل. لتجنب الارتباك، يرجى إزالة مفاتيح المرور لهذا الحساب يدويًا من إعدادات جهازك.",
+    "deleteAccountPasskeyInfoWithSignalAPI": "بعد الحذف، ستتم إزالة مفاتيح المرور تلقائيًا من جهازك. إذا حاولت تسجيل الدخول لاحقًا، فستحتاج إلى إنشاء حساب جديد.",
     "deleteAccountYes": "نعم، احذف الحساب",
     "retry": "إعادة المحاولة",
     "errors": {
@@ -191,10 +195,7 @@
   },
   "teams": {
     "title": "الفرق",
-    "members": {
-      "selectUser": "اختر مستخدمًا",
-      "searchUser": "البحث عن مستخدم..."
-    },
+    "members": "TODO: Translate - Members",
     "invitations": "الدعوات",
     "invitationAcceptSuccess": "تم قبول الدعوة بنجاح",
     "invitationDeleteSuccess": "تم حذف الدعوة بنجاح",
@@ -263,6 +264,11 @@
       "accepting": "جاري القبول...",
       "accept": "قبول الدعوة"
     },
+    "memberSelection": {
+      "selectUser": "اختر مستخدمًا",
+      "searchUser": "البحث عن مستخدم..."
+    },
+    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully",
     "dialogs": {
       "removeMemberTitle": "إزالة المستخدم من الفريق",
       "removeMemberMessage": "هل أنت متأكد أنك تريد إزالة العضو \"{{name}}\" من الفريق؟",
@@ -308,7 +314,8 @@
     "content": "المحتوى",
     "playlists": "قوائم التشغيل",
     "medias": "الوسائط",
-    "widgets": "Widgets"
+    "widgets": "Widgets",
+    "members": "[TODO: Translate] Members"
   },
   "channels": {
     "title": "القنوات",

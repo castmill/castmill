@@ -81,6 +81,7 @@
     "addonLoadingError": "Error al cargar complemento",
     "addonError": "Error de complemento",
     "backToLogin": "Volver al inicio de sesión",
+    "offline": "[TODO: Translate] Offline",
     "selectImage": "Seleccionar una imagen",
     "selectMedia": "Seleccionar un medio"
   },
@@ -139,7 +140,10 @@
     "deleteAccountDescription": "Eliminar permanentemente tu cuenta y todos los datos asociados. Esta acción no se puede deshacer.",
     "deleteAccountButton": "Eliminar cuenta",
     "deleteAccountConfirm": "¿Estás seguro?",
-    "deleteAccountWarning": "Esto eliminará permanentemente tu cuenta.",
+    "deleteAccountWarning": "Esto eliminará permanentemente tu cuenta y eliminará todas las llaves de acceso de nuestros servidores. Sin embargo, las llaves almacenadas en tus dispositivos (en iCloud Keychain, Google Password Manager, Windows Hello, etc.) permanecerán y deben eliminarse manualmente.",
+    "deleteAccountWarningWithSignalAPI": "Esto eliminará permanentemente tu cuenta y eliminará todas las llaves de acceso de nuestros servidores. Tu navegador admite la eliminación automática de llaves.",
+    "deleteAccountPasskeyInfo": "Después de la eliminación, si intentas iniciar sesión con una llave antigua, fallará. Para evitar confusión, por favor elimina manualmente las llaves de acceso de esta cuenta de la configuración de tu dispositivo.",
+    "deleteAccountPasskeyInfoWithSignalAPI": "Después de la eliminación, las llaves se eliminarán automáticamente de tu dispositivo. Si intentas iniciar sesión más tarde, necesitarás crear una nueva cuenta.",
     "deleteAccountYes": "Sí, eliminar cuenta",
     "retry": "Reintentar",
     "errors": {
@@ -192,10 +196,7 @@
   },
   "teams": {
     "title": "Equipos",
-    "members": {
-      "selectUser": "Seleccionar usuario",
-      "searchUser": "Buscar un usuario..."
-    },
+    "members": "TODO: Translate - Members",
     "invitations": "Invitaciones",
     "invitationAcceptSuccess": "Invitación aceptada exitosamente",
     "invitationDeleteSuccess": "Invitación eliminada exitosamente",
@@ -269,7 +270,12 @@
       "expired": "Esta invitación ha expirado.",
       "accepting": "Aceptando...",
       "accept": "Aceptar invitación"
-    }
+    },
+    "memberSelection": {
+      "selectUser": "Seleccionar usuario",
+      "searchUser": "Buscar un usuario..."
+    },
+    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully"
   },
   "login": {
     "title": "Iniciar sesión",
@@ -309,7 +315,8 @@
     "content": "Contenido",
     "playlists": "Listas de reproducción",
     "medias": "Medios",
-    "widgets": "Widgets"
+    "widgets": "Widgets",
+    "members": "[TODO: Translate] Members"
   },
   "channels": {
     "title": "Canales",

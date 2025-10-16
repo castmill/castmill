@@ -63,6 +63,7 @@
     "ip": "IP Address",
     "description": "Description",
     "online": "Online",
+    "offline": "Offline",
     "update": "Update",
     "reset": "Reset",
     "addedOn": "Added on",
@@ -92,7 +93,8 @@
     "content": "Content",
     "playlists": "Playlists",
     "medias": "Medias",
-    "widgets": "Widgets"
+    "widgets": "Widgets",
+    "members": "Members"
   },
   "topbar": {
     "help": "Help",
@@ -149,7 +151,10 @@
     "deleteAccountDescription": "Permanently delete your account and all associated data. This action cannot be undone.",
     "deleteAccountButton": "Delete Account",
     "deleteAccountConfirm": "Are you sure?",
-    "deleteAccountWarning": "This will permanently delete your account.",
+    "deleteAccountWarning": "This will permanently delete your account and remove all passkeys from our servers. However, passkeys stored on your devices (in iCloud Keychain, Google Password Manager, Windows Hello, etc.) will remain and must be manually removed.",
+    "deleteAccountWarningWithSignalAPI": "This will permanently delete your account and remove all passkeys from our servers. Your browser supports automatic passkey removal.",
+    "deleteAccountPasskeyInfo": "After deletion, if you try to log in using an old passkey, it will fail. To prevent confusion, please manually remove this account's passkeys from your device settings.",
+    "deleteAccountPasskeyInfoWithSignalAPI": "After deletion, passkeys will be automatically removed from your device. If you try to log in later, you'll need to create a new account.",
     "deleteAccountYes": "Yes, Delete Account",
     "deleteAccountSuccess": "Account deleted successfully. Redirecting...",
     "deleteAccountError": "Failed to delete account. Please try again.",
@@ -210,7 +215,8 @@
     "removeTeams": "Remove Teams",
     "confirmRemoveTeam": "Are you sure you want to remove team \"{{name}}\"?",
     "confirmRemoveTeams": "Are you sure you want to remove the following teams?",
-    "members": {
+    "members": "Members",
+    "memberSelection": {
       "selectUser": "Select User",
       "searchUser": "Search for a user..."
     },
@@ -220,6 +226,7 @@
     "invitationAcceptError": "Failed to accept invitation",
     "invitationDeleteError": "Failed to delete invitation",
     "deleteSuccess": "Teams deleted successfully",
+    "teamsRemovedSuccessfully": "Teams removed successfully",
     "confirmDeleteInvitation": {
       "title": "Delete Invitation",
       "message": "Are you sure you want to delete the invitation for {{email}}?"

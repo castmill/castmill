@@ -75,6 +75,7 @@
     "addonLoadingError": "Fel vid laddning av tillägg",
     "addonError": "Tilläggsfel",
     "backToLogin": "Tillbaka till inloggning",
+    "offline": "[TODO: Translate] Offline",
     "selectImage": "Välj en bild",
     "selectMedia": "Välj ett media"
   },
@@ -133,7 +134,10 @@
     "deleteAccountDescription": "Ta bort ditt konto och all tillhörande data permanent. Denna åtgärd kan inte ångras.",
     "deleteAccountButton": "Ta bort konto",
     "deleteAccountConfirm": "Är du säker?",
-    "deleteAccountWarning": "Detta kommer permanent ta bort ditt konto.",
+    "deleteAccountWarning": "Detta kommer permanent ta bort ditt konto och ta bort alla nycklar från våra servrar. Dock kommer nycklar som är lagrade på dina enheter (i iCloud Keychain, Google Password Manager, Windows Hello, etc.) att finnas kvar och måste tas bort manuellt.",
+    "deleteAccountWarningWithSignalAPI": "Detta kommer permanent ta bort ditt konto och ta bort alla nycklar från våra servrar. Din webbläsare stöder automatisk borttagning av nycklar.",
+    "deleteAccountPasskeyInfo": "Efter borttagning kommer försök att logga in med en gammal nyckel att misslyckas. För att undvika förvirring, vänligen ta bort detta kontos nycklar manuellt från din enhets inställningar.",
+    "deleteAccountPasskeyInfoWithSignalAPI": "Efter borttagning kommer nycklar automatiskt att tas bort från din enhet. Om du försöker logga in senare måste du skapa ett nytt konto.",
     "deleteAccountYes": "Ja, ta bort konto",
     "retry": "Försök igen",
     "errors": {
@@ -186,10 +190,7 @@
   },
   "teams": {
     "title": "Team",
-    "members": {
-      "selectUser": "Välj användare",
-      "searchUser": "Sök efter en användare..."
-    },
+    "members": "TODO: Translate - Members",
     "invitations": "Inbjudningar",
     "invitationAcceptSuccess": "Inbjudan accepterad framgångsrikt",
     "invitationDeleteSuccess": "Inbjudan borttagen framgångsrikt",
@@ -258,6 +259,11 @@
       "accepting": "Accepterar...",
       "accept": "Acceptera inbjudan"
     },
+    "memberSelection": {
+      "selectUser": "Välj användare",
+      "searchUser": "Sök efter en användare..."
+    },
+    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully",
     "dialogs": {
       "removeMemberTitle": "Ta bort användare från team",
       "removeMemberMessage": "Är du säker på att du vill ta bort medlemmen \"{{name}}\" från teamet?",
@@ -303,7 +309,8 @@
     "content": "Innehåll",
     "playlists": "Spellistor",
     "medias": "Media",
-    "widgets": "Widgets"
+    "widgets": "Widgets",
+    "members": "[TODO: Translate] Members"
   },
   "channels": {
     "title": "Kanaler",

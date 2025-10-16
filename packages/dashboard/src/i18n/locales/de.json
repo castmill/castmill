@@ -75,6 +75,7 @@
     "addonLoadingError": "Add-on-Ladefehler",
     "addonError": "Add-on-Fehler",
     "backToLogin": "Zurück zur Anmeldung",
+    "offline": "[TODO: Translate] Offline",
     "selectImage": "Bild auswählen",
     "selectMedia": "Medien auswählen"
   },
@@ -87,7 +88,8 @@
     "content": "Inhalt",
     "playlists": "Playlists",
     "medias": "Medien",
-    "widgets": "Widgets"
+    "widgets": "Widgets",
+    "members": "[TODO: Translate] Members"
   },
   "topbar": {
     "help": "Hilfe",
@@ -144,7 +146,10 @@
     "deleteAccountDescription": "Löschen Sie Ihr Konto und alle zugehörigen Daten dauerhaft. Diese Aktion kann nicht rückgängig gemacht werden.",
     "deleteAccountButton": "Konto löschen",
     "deleteAccountConfirm": "Sind Sie sicher?",
-    "deleteAccountWarning": "Dies wird Ihr Konto dauerhaft löschen.",
+    "deleteAccountWarning": "Dies wird Ihr Konto dauerhaft löschen und alle Passkeys von unseren Servern entfernen. Allerdings bleiben auf Ihren Geräten gespeicherte Passkeys (in iCloud-Schlüsselbund, Google Password Manager, Windows Hello usw.) bestehen und müssen manuell entfernt werden.",
+    "deleteAccountWarningWithSignalAPI": "Dies wird Ihr Konto dauerhaft löschen und alle Passkeys von unseren Servern entfernen. Ihr Browser unterstützt die automatische Entfernung von Passkeys.",
+    "deleteAccountPasskeyInfo": "Nach der Löschung schlägt der Versuch, sich mit einem alten Passkey anzumelden, fehl. Um Verwirrung zu vermeiden, entfernen Sie bitte die Passkeys dieses Kontos manuell aus den Geräteeinstellungen.",
+    "deleteAccountPasskeyInfoWithSignalAPI": "Nach der Löschung werden die Passkeys automatisch von Ihrem Gerät entfernt. Wenn Sie sich später anmelden möchten, müssen Sie ein neues Konto erstellen.",
     "deleteAccountYes": "Ja, Konto löschen",
     "retry": "Erneut versuchen",
     "errors": {
@@ -205,10 +210,7 @@
     "removeTeams": "Teams entfernen",
     "confirmRemoveTeam": "Sind Sie sicher, dass Sie das Team \"{{name}}\" entfernen möchten?",
     "confirmRemoveTeams": "Sind Sie sicher, dass Sie die folgenden Teams entfernen möchten?",
-    "members": {
-      "selectUser": "Benutzer auswählen",
-      "searchUser": "Nach einem Benutzer suchen..."
-    },
+    "members": "TODO: Translate - Members",
     "invitations": "Einladungen",
     "invitationAcceptSuccess": "Einladung erfolgreich angenommen",
     "invitationDeleteSuccess": "Einladung erfolgreich gelöscht",
@@ -269,6 +271,11 @@
       "accepting": "Wird angenommen...",
       "accept": "Einladung annehmen"
     },
+    "memberSelection": {
+      "selectUser": "Benutzer auswählen",
+      "searchUser": "Nach einem Benutzer suchen..."
+    },
+    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully",
     "dialogs": {
       "removeMemberTitle": "Benutzer aus Team entfernen",
       "removeMemberMessage": "Sind Sie sicher, dass Sie das Mitglied \"{{name}}\" aus dem Team entfernen möchten?",

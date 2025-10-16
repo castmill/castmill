@@ -60,6 +60,7 @@
     "ip": "Adresse IP",
     "description": "Description",
     "online": "En ligne",
+    "offline": "Hors ligne",
     "update": "Mettre à jour",
     "reset": "Réinitialiser",
     "addedOn": "Ajouté le",
@@ -138,7 +139,10 @@
     "deleteAccountDescription": "Supprimer définitivement votre compte et toutes les données associées. Cette action ne peut pas être annulée.",
     "deleteAccountButton": "Supprimer le compte",
     "deleteAccountConfirm": "Êtes-vous sûr ?",
-    "deleteAccountWarning": "Cela supprimera définitivement votre compte.",
+    "deleteAccountWarning": "Cela supprimera définitivement votre compte et supprimera toutes les clés d'accès de nos serveurs. Cependant, les clés d'accès stockées sur vos appareils (dans iCloud Keychain, Google Password Manager, Windows Hello, etc.) resteront et devront être supprimées manuellement.",
+    "deleteAccountWarningWithSignalAPI": "Cela supprimera définitivement votre compte et supprimera toutes les clés d'accès de nos serveurs. Votre navigateur prend en charge la suppression automatique des clés d'accès.",
+    "deleteAccountPasskeyInfo": "Après la suppression, si vous essayez de vous connecter avec une ancienne clé d'accès, cela échouera. Pour éviter toute confusion, veuillez supprimer manuellement les clés d'accès de ce compte dans les paramètres de votre appareil.",
+    "deleteAccountPasskeyInfoWithSignalAPI": "Après la suppression, les clés d'accès seront automatiquement supprimées de votre appareil. Si vous essayez de vous connecter plus tard, vous devrez créer un nouveau compte.",
     "deleteAccountYes": "Oui, supprimer le compte",
     "retry": "Réessayer",
     "errors": {
@@ -191,10 +195,7 @@
   },
   "teams": {
     "title": "Équipes",
-    "members": {
-      "selectUser": "Sélectionner un utilisateur",
-      "searchUser": "Rechercher un utilisateur..."
-    },
+    "members": "TODO: Translate - Members",
     "invitations": "Invitations",
     "invitationAcceptSuccess": "Invitation acceptée avec succès",
     "invitationDeleteSuccess": "Invitation supprimée avec succès",
@@ -263,6 +264,11 @@
       "accepting": "Acceptation...",
       "accept": "Accepter l'invitation"
     },
+    "memberSelection": {
+      "selectUser": "Sélectionner un utilisateur",
+      "searchUser": "Rechercher un utilisateur..."
+    },
+    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully",
     "dialogs": {
       "removeMemberTitle": "Retirer l'utilisateur de l'équipe",
       "removeMemberMessage": "Êtes-vous sûr de vouloir retirer le membre \"{{name}}\" de l'équipe?",
@@ -308,7 +314,8 @@
     "content": "Contenu",
     "playlists": "Listes de lecture",
     "medias": "Médias",
-    "widgets": "Widgets"
+    "widgets": "Widgets",
+    "members": "[TODO: Translate] Members"
   },
   "channels": {
     "title": "Canaux",
