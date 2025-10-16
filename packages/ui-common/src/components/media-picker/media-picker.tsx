@@ -11,7 +11,7 @@ import {
 import { Button } from '../button/button';
 import { Modal, ModalRef } from '../modal/modal';
 import { StyledInput } from '../styled-input/styled-input';
-import { JsonMedia } from '@castmill/player';
+import { MediaItem } from '../../types/media';
 
 import styles from './media-picker.module.scss';
 
@@ -42,7 +42,7 @@ export interface MediaPickerProps {
     page: number,
     pageSize: number,
     search?: string
-  ) => Promise<{ data: JsonMedia[]; count: number }>;
+  ) => Promise<{ data: MediaItem[]; count: number }>;
 
   /**
    * Currently selected media ID (optional)
@@ -63,7 +63,7 @@ export interface MediaPickerProps {
    * Filter function to only show certain media types
    * Default: only images
    */
-  filterFn?: (media: JsonMedia) => boolean;
+  filterFn?: (media: MediaItem) => boolean;
 
   /**
    * Number of items to fetch per page
@@ -101,7 +101,7 @@ export const MediaPicker: Component<MediaPickerProps> = (props) => {
   let modalRef: ModalRef | undefined;
   let gridRef: HTMLDivElement | undefined;
 
-  const [medias, setMedias] = createSignal<JsonMedia[]>([]);
+  const [medias, setMedias] = createSignal<MediaItem[]>([]);
   const [loading, setLoading] = createSignal(false);
   const [searchQuery, setSearchQuery] = createSignal('');
   const [isSearching, setIsSearching] = createSignal(false);
@@ -115,7 +115,7 @@ export const MediaPicker: Component<MediaPickerProps> = (props) => {
   const pageSize = props.pageSize || 30;
   const filterFn =
     props.filterFn ||
-    ((media: JsonMedia) => media.mimetype?.startsWith('image/'));
+    ((media: MediaItem) => media.mimetype?.startsWith('image/'));
 
   // Update selected media when prop changes
   createEffect(() => {
