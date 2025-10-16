@@ -22,6 +22,12 @@ type HandleResponseOptions = {
 export interface PlaylistUpdate {
   name: string;
   description: string;
+  settings?: {
+    aspect_ratio?: {
+      width: number;
+      height: number;
+    };
+  };
 }
 
 interface PlaylistItemInsertPayload {

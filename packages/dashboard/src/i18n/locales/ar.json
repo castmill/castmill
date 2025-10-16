@@ -352,7 +352,6 @@
     "inviteMember": "دعوة عضو",
     "enterMemberEmail": "أدخل البريد الإلكتروني للعضو",
     "role": "الدور",
-    "changeRole": "تغيير الدور",
     "roleAdmin": "مسؤول",
     "roleManager": "مدير",
     "roleMember": "عضو",
@@ -368,12 +367,13 @@
       "invalidEmail": "بريد إلكتروني غير صالح",
       "cannotRemoveLastAdmin": "لا يمكنك إزالة آخر مشرف للمؤسسة.",
       "invalidRole": "الدور المحدد غير صالح لهذه المؤسسة.",
-      "updateRoleFailed": "فشل تحديث دور العضو"
+      "cannotRemoveLastUser": "لا يمكنك المغادرة لأنك العضو الوحيد في هذه المنظمة."
     },
     "messages": {
       "memberRemoved": "تمت إزالة العضو {{name}} بنجاح",
       "membersRemoved": "تمت إزالة الأعضاء بنجاح",
-      "invitationSent": "تم إرسال الدعوة إلى {{email}}"
+      "leftOrganization": "لقد غادرت المنظمة {{name}}",
+      "noOrganizationsRemaining": "لقد غادرت منظمتك الأخيرة. يرجى الاتصال بالمسؤول ليتم دعوتك إلى منظمة."
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {
@@ -390,12 +390,13 @@
       "member": "يمكنه الوصول وتحرير موارد الفريق",
       "installer": "رمز مؤقت لتسجيل الجهاز (ينتهي خلال 24 ساعة)"
     },
-    "dialogs": {
-      "removeMemberTitle": "إزالة المستخدم من المنظمة",
-      "removeMemberMessage": "هل أنت متأكد أنك تريد إزالة العضو \"{{name}}\" من المنظمة؟",
-      "removeMembersTitle": "إزالة الأعضاء من المنظمة",
-      "removeMembersMessage": "هل أنت متأكد أنك تريد إزالة الأعضاء التالية من المنظمة؟"
-    }
+    "leaveOrganizationTitle": "مغادرة هذه المنظمة",
+    "leaveOrganizationDescription": "المغادرة تزيل وصولك إلى موارد المنظمة على الفور.",
+    "leaveOrganizationAction": "مغادرة المنظمة",
+    "leaveOrganizationLastAdminWarning": "أضف مسؤولاً آخر قبل المغادرة للحفاظ على إدارة هذه المنظمة.",
+    "leaveOrganizationLastUserWarning": "لا يمكنك المغادرة لأنك العضو الوحيد في هذه المنظمة.",
+    "leaveLastOrganizationWarningTitle": "مغادرة منظمتك الأخيرة؟",
+    "leaveLastOrganizationWarningMessage": "هذه هي منظمتك الوحيدة. مغادرتها ستحذف حسابك وستفقد كل الوصول إلى Castmill. ستحتاج إلى الاتصال بمسؤول لتتم دعوتك مرة أخرى. هل أنت متأكد أنك تريد المتابعة؟"
   },
   "playlists": {
     "title": "قوائم التشغيل",
@@ -413,7 +414,18 @@
     "errorRemovingPlaylist": "خطأ في إزالة قائمة التشغيل {{name}}: {{error}}",
     "errorRemovingPlaylists": "خطأ في إزالة قوائم التشغيل: {{error}}",
     "enterPlaylistName": "أدخل اسم قائمة التشغيل",
-    "dragToAdd": "اسحب للإضافة"
+    "dragToAdd": "اسحب للإضافة",
+    "aspectRatio": "نسبة العرض إلى الارتفاع",
+    "aspectRatioWidth": "العرض",
+    "aspectRatioHeight": "الارتفاع",
+    "errors": {
+      "nameRequired": "الاسم مطلوب",
+      "nameMinLength": "يجب أن يتكون الاسم من 3 أحرف على الأقل",
+      "aspectRatioNumber": "يجب أن يكون رقمًا",
+      "aspectRatioPositive": "يجب أن يكون رقمًا موجبًا",
+      "aspectRatioMax": "يجب أن تكون القيمة 100 أو أقل",
+      "aspectRatioExtreme": "نسبة العرض إلى الارتفاع متطرفة للغاية (الحد الأقصى 10:1)"
+    }
   },
   "widgets": {
     "title": "Widgets",
@@ -562,60 +574,5 @@
     "teamLabel": "الفريق",
     "teamPlaceholder": "اختر فريق",
     "teamClear": "مسح فلتر الفريق"
-  },
-  "organization": {
-    "title": "المنظمة",
-    "users": "المستخدمون",
-    "invitations": "الدعوات",
-    "update": "تحديث",
-    "placeholderName": "أدخل اسم المنظمة",
-    "inviteMember": "دعوة عضو",
-    "enterMemberEmail": "أدخل البريد الإلكتروني للعضو",
-    "role": "الدور",
-    "roleAdmin": "مسؤول",
-    "roleManager": "مدير",
-    "roleMember": "عضو",
-    "roleEditor": "محرر",
-    "rolePublisher": "ناشر",
-    "roleDeviceManager": "مسؤول الأجهزة",
-    "roleGuest": "ضيف",
-    "teamRoleAdmin": "مسؤول الفريق",
-    "teamRoleMember": "عضو الفريق",
-    "errors": {
-      "updateOrganization": "خطأ في تحديث المنظمة: {{error}}",
-      "emailRequired": "البريد الإلكتروني مطلوب",
-      "invalidEmail": "بريد إلكتروني غير صالح",
-      "cannotRemoveLastAdmin": "لا يمكنك إزالة آخر مشرف للمؤسسة.",
-      "invalidRole": "الدور المحدد غير صالح لهذه المؤسسة.",
-      "cannotRemoveLastUser": "لا يمكنك المغادرة لأنك العضو الوحيد في هذه المنظمة."
-    },
-    "messages": {
-      "memberRemoved": "تمت إزالة العضو {{name}} بنجاح",
-      "membersRemoved": "تمت إزالة الأعضاء بنجاح",
-      "leftOrganization": "لقد غادرت المنظمة {{name}}",
-      "noOrganizationsRemaining": "لقد غادرت منظمتك الأخيرة. يرجى الاتصال بالمسؤول ليتم دعوتك إلى منظمة."
-    },
-    "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
-    "roleDescriptions": {
-      "admin": "وصول كامل بما في ذلك إدارة المنظمة",
-      "manager": "يمكنه إدارة الفرق ومعظم الموارد",
-      "member": "مستخدم قياسي (افتراضي)، يمكنه إدارة المحتوى",
-      "editor": "إدارة كاملة للمحتوى، لا يمكنه إدارة الفرق",
-      "publisher": "مثل المحرر بالإضافة إلى إجراءات سير عمل النشر",
-      "device_manager": "إدارة كاملة للأجهزة والقنوات",
-      "guest": "وصول للقراءة فقط إلى الموارد"
-    },
-    "teamRoleDescriptions": {
-      "admin": "يمكنه إدارة أعضاء الفريق والموارد",
-      "member": "يمكنه الوصول وتحرير موارد الفريق",
-      "installer": "رمز مؤقت لتسجيل الجهاز (ينتهي خلال 24 ساعة)"
-    },
-    "leaveOrganizationTitle": "مغادرة هذه المنظمة",
-    "leaveOrganizationDescription": "المغادرة تزيل وصولك إلى موارد المنظمة على الفور.",
-    "leaveOrganizationAction": "مغادرة المنظمة",
-    "leaveOrganizationLastAdminWarning": "أضف مسؤولاً آخر قبل المغادرة للحفاظ على إدارة هذه المنظمة.",
-    "leaveOrganizationLastUserWarning": "لا يمكنك المغادرة لأنك العضو الوحيد في هذه المنظمة.",
-    "leaveLastOrganizationWarningTitle": "مغادرة منظمتك الأخيرة؟",
-    "leaveLastOrganizationWarningMessage": "هذه هي منظمتك الوحيدة. مغادرتها ستحذف حسابك وستفقد كل الوصول إلى Castmill. ستحتاج إلى الاتصال بمسؤول لتتم دعوتك مرة أخرى. هل أنت متأكد أنك تريد المتابعة؟"
   }
 }

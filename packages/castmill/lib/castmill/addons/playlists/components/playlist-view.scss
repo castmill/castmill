@@ -14,6 +14,12 @@
     background: black;
     justify-content: center;
     align-items: center;
+
+    // Portrait mode: adjust preview size
+    &.portrait {
+      width: 30%;
+      height: 60%;
+    }
   }
 
   .playlist-items-wrapper {
@@ -118,6 +124,13 @@
     justify-content: flex-start;
     align-items: center;
     gap: 0.4em;
+  }
+
+  // Portrait mode layout adjustments
+  &.portrait-layout {
+    .playlist-items-wrapper {
+      height: 35%;
+    }
   }
 }
 

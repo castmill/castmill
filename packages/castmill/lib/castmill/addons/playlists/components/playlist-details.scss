@@ -17,6 +17,33 @@
       width: 100%;
     }
 
+    .form-item {
+      margin-bottom: 1em;
+    }
+
+    .custom-aspect-ratio {
+      display: flex;
+      align-items: center;
+      gap: 0.5em;
+      margin-top: 0.5em;
+
+      .separator {
+        font-size: 1.2em;
+        font-weight: bold;
+        margin: 0 0.3em;
+        padding-top: 1.5em;
+      }
+
+      > div {
+        flex: 1;
+      }
+    }
+
+    .aspect-ratio-error {
+      margin-top: 0.5em;
+      width: 100%;
+    }
+
     .actions {
       display: flex;
       flex-direction: row;

@@ -353,7 +353,6 @@
     "inviteMember": "Invitar miembro",
     "enterMemberEmail": "Ingresa el correo electrónico del miembro",
     "role": "Rol",
-    "changeRole": "Cambiar Rol",
     "roleAdmin": "Administrador",
     "roleManager": "Gerente",
     "roleMember": "Miembro",
@@ -369,18 +368,13 @@
       "invalidEmail": "Correo electrónico inválido",
       "cannotRemoveLastAdmin": "No puedes eliminar al último administrador de la organización.",
       "invalidRole": "El rol seleccionado no es válido para esta organización.",
-      "updateRoleFailed": "Error al actualizar el rol del miembro"
+      "cannotRemoveLastUser": "No puede abandonar porque es el único miembro de esta organización."
     },
     "messages": {
       "memberRemoved": "El miembro {{name}} se eliminó correctamente",
       "membersRemoved": "Miembros eliminados correctamente",
-      "invitationSent": "Invitación enviada a {{email}}"
-    },
-    "dialogs": {
-      "removeMemberTitle": "Eliminar usuario de la organización",
-      "removeMemberMessage": "¿Está seguro de que desea eliminar al miembro \"{{name}}\" de la organización?",
-      "removeMembersTitle": "Eliminar miembros de la organización",
-      "removeMembersMessage": "¿Está seguro de que desea eliminar los siguientes miembros de la organización?"
+      "leftOrganization": "Ha abandonado la organización {{name}}",
+      "noOrganizationsRemaining": "Ha abandonado su última organización. Póngase en contacto con un administrador para ser invitado a una organización."
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {
@@ -396,7 +390,14 @@
       "admin": "Puede gestionar miembros del equipo y recursos",
       "member": "Puede acceder y editar recursos del equipo",
       "installer": "Token temporal para registro de dispositivos (expira en 24h)"
-    }
+    },
+    "leaveOrganizationTitle": "Abandonar esta organización",
+    "leaveOrganizationDescription": "Abandonar elimina su acceso a los recursos de la organización inmediatamente.",
+    "leaveOrganizationAction": "Abandonar organización",
+    "leaveOrganizationLastAdminWarning": "Agregue otro administrador antes de abandonar para mantener esta organización administrada.",
+    "leaveOrganizationLastUserWarning": "No puede abandonar porque es el único miembro de esta organización.",
+    "leaveLastOrganizationWarningTitle": "¿Abandonar su última organización?",
+    "leaveLastOrganizationWarningMessage": "Esta es su única organización. Abandonarla eliminará su cuenta y perderá todo acceso a Castmill. Necesitará que un administrador lo invite de nuevo. ¿Está seguro de que desea continuar?"
   },
   "signup": {
     "title": "Registrarse",
@@ -430,7 +431,18 @@
     "errorRemovingPlaylist": "Error al eliminar la lista de reproducción {{name}}: {{error}}",
     "errorRemovingPlaylists": "Error al eliminar listas de reproducción: {{error}}",
     "enterPlaylistName": "Ingresa el nombre de la lista de reproducción",
-    "dragToAdd": "Arrastra para añadir"
+    "dragToAdd": "Arrastra para añadir",
+    "aspectRatio": "Relación de Aspecto",
+    "aspectRatioWidth": "Ancho",
+    "aspectRatioHeight": "Alto",
+    "errors": {
+      "nameRequired": "El nombre es obligatorio",
+      "nameMinLength": "El nombre debe tener al menos 3 caracteres",
+      "aspectRatioNumber": "Debe ser un número",
+      "aspectRatioPositive": "Debe ser un número positivo",
+      "aspectRatioMax": "El valor debe ser 100 o menos",
+      "aspectRatioExtreme": "La relación de aspecto es demasiado extrema (máximo 10:1)"
+    }
   },
   "widgets": {
     "title": "Widgets",
@@ -563,60 +575,5 @@
     "teamLabel": "Equipo",
     "teamPlaceholder": "Seleccionar equipo",
     "teamClear": "Limpiar filtro de equipo"
-  },
-  "organization": {
-    "title": "Organización",
-    "users": "Usuarios",
-    "invitations": "Invitaciones",
-    "update": "Actualizar",
-    "placeholderName": "Ingresa el nombre de la organización",
-    "inviteMember": "Invitar miembro",
-    "enterMemberEmail": "Ingresa el correo electrónico del miembro",
-    "role": "Rol",
-    "roleAdmin": "Administrador",
-    "roleManager": "Gerente",
-    "roleMember": "Miembro",
-    "roleEditor": "Editor de Contenido",
-    "rolePublisher": "Publicador",
-    "roleDeviceManager": "Administrador de dispositivos",
-    "roleGuest": "Invitado",
-    "teamRoleAdmin": "Administrador de equipo",
-    "teamRoleMember": "Miembro de equipo",
-    "errors": {
-      "updateOrganization": "Error al actualizar la organización: {{error}}",
-      "emailRequired": "El correo electrónico es obligatorio",
-      "invalidEmail": "Correo electrónico inválido",
-      "cannotRemoveLastAdmin": "No puedes eliminar al último administrador de la organización.",
-      "invalidRole": "El rol seleccionado no es válido para esta organización.",
-      "cannotRemoveLastUser": "No puede abandonar porque es el único miembro de esta organización."
-    },
-    "messages": {
-      "memberRemoved": "El miembro {{name}} se eliminó correctamente",
-      "membersRemoved": "Miembros eliminados correctamente",
-      "leftOrganization": "Ha abandonado la organización {{name}}",
-      "noOrganizationsRemaining": "Ha abandonado su última organización. Póngase en contacto con un administrador para ser invitado a una organización."
-    },
-    "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
-    "roleDescriptions": {
-      "admin": "Acceso completo incluyendo gestión de la organización",
-      "manager": "Puede gestionar equipos y la mayoría de recursos",
-      "member": "Usuario estándar (predeterminado), puede gestionar contenido",
-      "editor": "Gestión completa de contenido, no puede gestionar equipos",
-      "publisher": "Como editor más acciones de flujo de publicación",
-      "device_manager": "Gestión completa de dispositivos y canales",
-      "guest": "Acceso de solo lectura a recursos"
-    },
-    "teamRoleDescriptions": {
-      "admin": "Puede gestionar miembros del equipo y recursos",
-      "member": "Puede acceder y editar recursos del equipo",
-      "installer": "Token temporal para registro de dispositivos (expira en 24h)"
-    },
-    "leaveOrganizationTitle": "Abandonar esta organización",
-    "leaveOrganizationDescription": "Abandonar elimina su acceso a los recursos de la organización inmediatamente.",
-    "leaveOrganizationAction": "Abandonar organización",
-    "leaveOrganizationLastAdminWarning": "Agregue otro administrador antes de abandonar para mantener esta organización administrada.",
-    "leaveOrganizationLastUserWarning": "No puede abandonar porque es el único miembro de esta organización.",
-    "leaveLastOrganizationWarningTitle": "¿Abandonar su última organización?",
-    "leaveLastOrganizationWarningMessage": "Esta es su única organización. Abandonarla eliminará su cuenta y perderá todo acceso a Castmill. Necesitará que un administrador lo invite de nuevo. ¿Está seguro de que desea continuar?"
   }
 }

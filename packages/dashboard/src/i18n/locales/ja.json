@@ -352,7 +352,6 @@
     "inviteMember": "メンバーを招待",
     "enterMemberEmail": "メンバーのメールアドレスを入力してください",
     "role": "役割",
-    "changeRole": "役割を変更",
     "roleAdmin": "管理者",
     "roleManager": "マネージャー",
     "roleMember": "メンバー",
@@ -368,12 +367,13 @@
       "invalidEmail": "無効なメールアドレス",
       "cannotRemoveLastAdmin": "組織の最後の管理者を削除することはできません。",
       "invalidRole": "選択した役割はこの組織で有効ではありません。",
-      "updateRoleFailed": "メンバーの役割の更新に失敗しました"
+      "cannotRemoveLastUser": "この組織の唯一のメンバーであるため、離れることはできません。"
     },
     "messages": {
       "memberRemoved": "メンバー{{name}}を正常に削除しました",
       "membersRemoved": "メンバーを正常に削除しました",
-      "invitationSent": "{{email}}に招待を送信しました"
+      "leftOrganization": "組織 {{name}} を離れました",
+      "noOrganizationsRemaining": "最後の組織を離れました。組織に招待されるには管理者にお問い合わせください。"
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {
@@ -390,12 +390,13 @@
       "member": "チームリソースにアクセスして編集できます",
       "installer": "デバイス登録用の一時トークン（24時間後に期限切れ）"
     },
-    "dialogs": {
-      "removeMemberTitle": "組織からユーザーを削除",
-      "removeMemberMessage": "メンバー「{{name}}」を組織から削除してもよろしいですか？",
-      "removeMembersTitle": "組織からメンバーを削除",
-      "removeMembersMessage": "以下のメンバーを組織から削除してもよろしいですか？"
-    }
+    "leaveOrganizationTitle": "この組織を離れる",
+    "leaveOrganizationDescription": "離れると、組織のリソースへのアクセスが即座に削除されます。",
+    "leaveOrganizationAction": "組織を離れる",
+    "leaveOrganizationLastAdminWarning": "この組織を管理し続けるために、離れる前に別の管理者を追加してください。",
+    "leaveOrganizationLastUserWarning": "この組織の唯一のメンバーであるため、離れることはできません。",
+    "leaveLastOrganizationWarningTitle": "最後の組織を離れますか？",
+    "leaveLastOrganizationWarningMessage": "これはあなたの唯一の組織です。離れるとアカウントが削除され、Castmillへのすべてのアクセスが失われます。再度招待されるには管理者に連絡する必要があります。続行してもよろしいですか？"
   },
   "playlists": {
     "title": "プレイリスト",
@@ -413,7 +414,18 @@
     "errorRemovingPlaylist": "プレイリスト{{name}}の削除中にエラーが発生しました：{{error}}",
     "errorRemovingPlaylists": "プレイリストの削除中にエラーが発生しました：{{error}}",
     "enterPlaylistName": "プレイリスト名を入力してください",
-    "dragToAdd": "ドラッグして追加"
+    "dragToAdd": "ドラッグして追加",
+    "aspectRatio": "アスペクト比",
+    "aspectRatioWidth": "幅",
+    "aspectRatioHeight": "高さ",
+    "errors": {
+      "nameRequired": "名前は必須です",
+      "nameMinLength": "名前は3文字以上である必要があります",
+      "aspectRatioNumber": "数値である必要があります",
+      "aspectRatioPositive": "正の数値である必要があります",
+      "aspectRatioMax": "値は100以下である必要があります",
+      "aspectRatioExtreme": "アスペクト比が極端すぎます（最大比率は10:1）"
+    }
   },
   "widgets": {
     "title": "Widgets",
@@ -562,60 +574,5 @@
     "teamLabel": "チーム",
     "teamPlaceholder": "チームを選択",
     "teamClear": "チームフィルターをクリア"
-  },
-  "organization": {
-    "title": "組織",
-    "users": "ユーザー",
-    "invitations": "招待",
-    "update": "更新",
-    "placeholderName": "組織名を入力してください",
-    "inviteMember": "メンバーを招待",
-    "enterMemberEmail": "メンバーのメールアドレスを入力してください",
-    "role": "役割",
-    "roleAdmin": "管理者",
-    "roleManager": "マネージャー",
-    "roleMember": "メンバー",
-    "roleEditor": "編集者",
-    "rolePublisher": "パブリッシャー",
-    "roleDeviceManager": "デバイス管理者",
-    "roleGuest": "ゲスト",
-    "teamRoleAdmin": "チーム管理者",
-    "teamRoleMember": "チームメンバー",
-    "errors": {
-      "updateOrganization": "組織の更新中にエラーが発生しました：{{error}}",
-      "emailRequired": "メールアドレスは必須です",
-      "invalidEmail": "無効なメールアドレス",
-      "cannotRemoveLastAdmin": "組織の最後の管理者を削除することはできません。",
-      "invalidRole": "選択した役割はこの組織で有効ではありません。",
-      "cannotRemoveLastUser": "この組織の唯一のメンバーであるため、離れることはできません。"
-    },
-    "messages": {
-      "memberRemoved": "メンバー{{name}}を正常に削除しました",
-      "membersRemoved": "メンバーを正常に削除しました",
-      "leftOrganization": "組織 {{name}} を離れました",
-      "noOrganizationsRemaining": "最後の組織を離れました。組織に招待されるには管理者にお問い合わせください。"
-    },
-    "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
-    "roleDescriptions": {
-      "admin": "組織管理を含む完全なアクセス権",
-      "manager": "チームとほとんどのリソースを管理できます",
-      "member": "標準ユーザー（デフォルト）、コンテンツを管理できます",
-      "editor": "完全なコンテンツ管理、チームは管理できません",
-      "publisher": "編集者と同様に公開ワークフローアクションが追加されます",
-      "device_manager": "完全なデバイスとチャンネル管理",
-      "guest": "リソースへの読み取り専用アクセス"
-    },
-    "teamRoleDescriptions": {
-      "admin": "チームメンバーとリソースを管理できます",
-      "member": "チームリソースにアクセスして編集できます",
-      "installer": "デバイス登録用の一時トークン（24時間後に期限切れ）"
-    },
-    "leaveOrganizationTitle": "この組織を離れる",
-    "leaveOrganizationDescription": "離れると、組織のリソースへのアクセスが即座に削除されます。",
-    "leaveOrganizationAction": "組織を離れる",
-    "leaveOrganizationLastAdminWarning": "この組織を管理し続けるために、離れる前に別の管理者を追加してください。",
-    "leaveOrganizationLastUserWarning": "この組織の唯一のメンバーであるため、離れることはできません。",
-    "leaveLastOrganizationWarningTitle": "最後の組織を離れますか？",
-    "leaveLastOrganizationWarningMessage": "これはあなたの唯一の組織です。離れるとアカウントが削除され、Castmillへのすべてのアクセスが失われます。再度招待されるには管理者に連絡する必要があります。続行してもよろしいですか？"
   }
 }
