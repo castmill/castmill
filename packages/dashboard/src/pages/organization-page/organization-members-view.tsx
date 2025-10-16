@@ -9,6 +9,7 @@ import {
   Timestamp,
   HttpError,
   useToast,
+  Dropdown,
 } from '@castmill/ui-common';
 import { store, setStore } from '../../store/store';
 import { PermissionButton } from '../../components/permission-button/permission-button';
@@ -109,6 +110,51 @@ export const OrganizationMembersView = (props: {
 
   const currentUser = getUser();
 
+  const roleItems = [
+    { name: t('organization.roleAdmin'), value: 'admin' },
+    { name: t('organization.roleManager'), value: 'manager' },
+    { name: t('organization.roleEditor'), value: 'editor' },
+    { name: t('organization.rolePublisher'), value: 'publisher' },
+    { name: t('organization.roleDeviceManager'), value: 'device_manager' },
+    { name: t('organization.roleMember'), value: 'member' },
+    { name: t('organization.roleGuest'), value: 'guest' },
+  ];
+
+  const handleRoleChange = async (
+    memberId: string,
+    memberName: string,
+    newRole: string | null
+  ) => {
+    if (!newRole) return;
+
+    if (!canPerformAction('organizations', 'update')) {
+      toast.error(
+        t('permissions.noUpdateOrganizations') ||
+          "You don't have permission to update member roles"
+      );
+      return;
+    }
+
+    try {
+      await OrganizationsService.updateMemberRole(
+        props.organizationId,
+        memberId,
+        newRole as OrganizationRole
+      );
+
+      refreshData();
+      toast.success(
+        t('organization.messages.roleUpdated', { name: memberName })
+      );
+    } catch (error) {
+      const errorMessage =
+        error instanceof HttpError
+          ? error.message
+          : t('organization.errors.updateRoleFailed');
+      toast.error(errorMessage);
+    }
+  };
+
   const currentMembership = createMemo(() => {
     if (!currentUser?.id) {
       return undefined;
@@ -147,7 +193,36 @@ export const OrganizationMembersView = (props: {
           : item.user.name;
       },
     },
-    { key: 'role', title: t('common.role'), sortable: true },
+    {
+      key: 'role',
+      title: t('common.role'),
+      sortable: true,
+      render: (item: any) => {
+        const isCurrentUser = item.user_id === currentUser?.id;
+        const canUpdate = canPerformAction('organizations', 'update');
+
+        // Disable role change for current user or if no permission
+        if (isCurrentUser || !canUpdate) {
+          const roleLabel =
+            roleItems.find((r) => r.value === item.role)?.name || item.role;
+          return <span>{roleLabel}</span>;
+        }
+
+        return (
+          <Dropdown
+            label=""
+            variant="inline"
+            items={roleItems}
+            value={item.role}
+            id={`member-role-${item.user_id}`}
+            name="member_role"
+            onSelectChange={(value: string | null) =>
+              handleRoleChange(item.user_id, item.user.name, value)
+            }
+          />
+        );
+      },
+    },
     {
       key: 'inserted_at',
       title: t('common.insertedAt'),

@@ -253,7 +253,8 @@
       "memberRemoved": "El miembro {{name}} se eliminó correctamente",
       "membersRemoved": "Miembros eliminados correctamente",
       "invitationSent": "Invitación enviada a {{email}}",
-      "leftTeam": "Saliste del equipo {{name}}"
+      "leftTeam": "Saliste del equipo {{name}}",
+      "roleUpdated": "Rol actualizado exitosamente para {{name}}"
     },
     "dialogs": {
       "removeMemberTitle": "Eliminar Usuario del Equipo",
@@ -352,6 +353,7 @@
     "inviteMember": "Invitar miembro",
     "enterMemberEmail": "Ingresa el correo electrónico del miembro",
     "role": "Rol",
+    "changeRole": "Cambiar Rol",
     "roleAdmin": "Administrador",
     "roleManager": "Gerente",
     "roleMember": "Miembro",
@@ -366,7 +368,8 @@
       "emailRequired": "El correo electrónico es obligatorio",
       "invalidEmail": "Correo electrónico inválido",
       "cannotRemoveLastAdmin": "No puedes eliminar al último administrador de la organización.",
-      "invalidRole": "El rol seleccionado no es válido para esta organización."
+      "invalidRole": "El rol seleccionado no es válido para esta organización.",
+      "updateRoleFailed": "Error al actualizar el rol del miembro"
     },
     "messages": {
       "memberRemoved": "El miembro {{name}} se eliminó correctamente",
@@ -374,9 +377,9 @@
       "invitationSent": "Invitación enviada a {{email}}"
     },
     "dialogs": {
-      "removeMemberTitle": "Eliminar Usuario de la Organización",
+      "removeMemberTitle": "Eliminar usuario de la organización",
       "removeMemberMessage": "¿Está seguro de que desea eliminar al miembro \"{{name}}\" de la organización?",
-      "removeMembersTitle": "Eliminar Miembros de la Organización",
+      "removeMembersTitle": "Eliminar miembros de la organización",
       "removeMembersMessage": "¿Está seguro de que desea eliminar los siguientes miembros de la organización?"
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",

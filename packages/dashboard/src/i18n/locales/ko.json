@@ -252,7 +252,8 @@
       "memberRemoved": "구성원 {{name}}을(를) 성공적으로 제거했습니다",
       "membersRemoved": "구성원을 성공적으로 제거했습니다",
       "invitationSent": "{{email}}에게 초대장을 보냈습니다",
-      "leftTeam": "{{name}} 팀을 나갔습니다"
+      "leftTeam": "{{name}} 팀을 나갔습니다",
+      "roleUpdated": "{{name}}의 역할이 성공적으로 업데이트되었습니다"
     },
     "invitation": {
       "title": "팀 초대",
@@ -351,6 +352,7 @@
     "inviteMember": "멤버 초대",
     "enterMemberEmail": "멤버의 이메일 입력",
     "role": "역할",
+    "changeRole": "역할 변경",
     "roleAdmin": "관리자",
     "roleManager": "매니저",
     "roleMember": "멤버",
@@ -365,12 +367,13 @@
       "emailRequired": "이메일은 필수입니다",
       "invalidEmail": "유효하지 않은 이메일",
       "cannotRemoveLastAdmin": "조직의 마지막 관리자를 제거할 수 없습니다.",
-      "invalidRole": "선택한 역할은 이 조직에 유효하지 않습니다."
+      "invalidRole": "선택한 역할은 이 조직에 유효하지 않습니다.",
+      "updateRoleFailed": "멤버 역할 업데이트 실패"
     },
     "messages": {
       "memberRemoved": "구성원 {{name}}을(를) 성공적으로 제거했습니다",
       "membersRemoved": "구성원을 성공적으로 제거했습니다",
-      "invitationSent": "{{email}}에게 초대장을 보냈습니다"
+      "invitationSent": "{{email}}에게 초대를 보냈습니다"
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {

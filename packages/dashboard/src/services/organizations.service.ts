@@ -296,4 +296,44 @@ export const OrganizationsService = {
       throw error;
     }
   },
+
+  /**
+   * Update a member's role in an Organization.
+   *
+   */
+  async updateMemberRole(
+    organizationId: string,
+    memberId: string,
+    role: OrganizationRole
+  ) {
+    const response = await fetch(`${baseUrl}/dashboard/users/${memberId}`, {
+      method: 'PUT',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        access: role,
+        organization_id: organizationId,
+      }),
+    });
+
+    if (!response.ok) {
+      let errorMessage = 'Failed to update member role';
+
+      try {
+        const errorData = await response.json();
+        if (typeof errorData?.error === 'string') {
+          errorMessage = errorData.error;
+        }
+      } catch (error) {
+        console.error(
+          'Failed to parse update member role error response',
+          error
+        );
+      }
+
+      throw new HttpError(errorMessage, response.status);
+    }
+  },
 };

@@ -252,7 +252,8 @@
       "memberRemoved": "已成功移除成员 {{name}}",
       "membersRemoved": "已成功移除成员",
       "invitationSent": "已向 {{email}} 发送邀请",
-      "leftTeam": "您已离开团队{{name}}"
+      "leftTeam": "您已离开团队{{name}}",
+      "roleUpdated": "已成功为 {{name}} 更新角色"
     },
     "invitation": {
       "title": "团队邀请",
@@ -351,6 +352,7 @@
     "inviteMember": "邀请成员",
     "enterMemberEmail": "输入成员的电子邮件",
     "role": "角色",
+    "changeRole": "更改角色",
     "roleAdmin": "管理员",
     "roleManager": "经理",
     "roleMember": "成员",
@@ -365,12 +367,13 @@
       "emailRequired": "电子邮件为必填项",
       "invalidEmail": "无效的电子邮件",
       "cannotRemoveLastAdmin": "你不能移除组织最后一位管理员。",
-      "invalidRole": "所选角色对该组织无效。"
+      "invalidRole": "所选角色对该组织无效。",
+      "updateRoleFailed": "更新成员角色失败"
     },
     "messages": {
       "memberRemoved": "已成功移除成员 {{name}}",
       "membersRemoved": "已成功移除成员",
-      "invitationSent": "已向 {{email}} 发送邀请"
+      "invitationSent": "邀请已发送至 {{email}}"
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {

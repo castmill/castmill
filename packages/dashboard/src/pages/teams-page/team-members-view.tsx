@@ -355,6 +355,8 @@ export const TeamMembersView = (props: {
 
             <div style="margin-top: 1em;">
               <Dropdown
+                id="team-member-role"
+                name="team_role"
                 label={t('organizations.role')}
                 items={[
                   {
@@ -364,9 +366,7 @@ export const TeamMembersView = (props: {
                   { value: 'admin', name: t('organizations.teamRoleAdmin') },
                 ]}
                 defaultValue={selectedRole()}
-                onSelectChange={(
-                  value: string | number | boolean | undefined
-                ) => {
+                onSelectChange={(value: string | null) => {
                   if (!value) {
                     return;
                   }

@@ -956,7 +956,13 @@ defmodule Castmill.Organizations do
   @doc """
     Update the role for a member of an organization.
   """
-  def update_role(organization_id, user_id, role) do
+  def update_role(organization_id, user_id, role) when is_binary(role) do
+    # Convert string role to atom (e.g., "editor" -> :editor)
+    role_atom = String.to_existing_atom(role)
+    update_role(organization_id, user_id, role_atom)
+  end
+
+  def update_role(organization_id, user_id, role) when is_atom(role) do
     %Castmill.Organizations.OrganizationsUsers{
       role: role,
       user_id: user_id,
