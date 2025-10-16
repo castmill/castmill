@@ -28,14 +28,72 @@ const getThumbnailUri = (item: JsonPlaylistItem) => {
   return video?.files?.thumbnail?.uri || image?.files?.thumbnail?.uri;
 };
 
-// get widget name from playlist item
+// get widget name from playlist item (used as title)
 const getWidgetName = (item: JsonPlaylistItem) => item.widget.name;
+
+// get subtitle from playlist item options
+// This function automatically extracts a meaningful subtitle from widget options
+const getWidgetSubtitle = (item: JsonPlaylistItem): string | null => {
+  const options = item.config.options;
+  const schema = item.widget.options_schema;
+
+  if (!options || Object.keys(options).length === 0) {
+    return null;
+  }
+
+  // Priority 1: Check for media references (image, video, etc.) and use their names
+  if (schema) {
+    for (const [key, schemaField] of Object.entries(schema)) {
+      const field = schemaField as any;
+      if (field.type === 'ref' && options[key]) {
+        const ref = options[key] as any;
+        // Check if it's a media reference with a name
+        if (ref?.name) {
+          return ref.name;
+        }
+      }
+    }
+  }
+
+  // Priority 2: Look for common field names that would make good subtitles
+  const priorityFields = [
+    'title',
+    'name',
+    'text',
+    'label',
+    'heading',
+    'description',
+    'message',
+    'content',
+  ];
+
+  for (const field of priorityFields) {
+    if (options[field] && typeof options[field] === 'string') {
+      const value = options[field] as string;
+      // Truncate if too long
+      return value.length > 50 ? value.substring(0, 47) + '...' : value;
+    }
+  }
+
+  // Priority 3: Use the first string value we find
+  for (const [key, value] of Object.entries(options)) {
+    if (typeof value === 'string' && value.trim().length > 0) {
+      const stringValue = value.trim();
+      return stringValue.length > 50
+        ? stringValue.substring(0, 47) + '...'
+        : stringValue;
+    }
+  }
+
+  return null;
+};
 
 const Thumbnail: Component<{
   item: JsonPlaylistItem;
 }> = (props) => {
   const thumbnailUri = getThumbnailUri(props.item);
   const widgetName = getWidgetName(props.item);
+  const widgetSubtitle = getWidgetSubtitle(props.item);
   const widgetIcon = props.item.widget.icon;
 
   const isImageIcon =
@@ -46,37 +104,49 @@ const Thumbnail: Component<{
       widgetIcon.startsWith('/'));
 
   return (
-    <Show
-      when={thumbnailUri}
-      fallback={
-        <div class={styles.widgetIcon}>
-          <Show
-            when={isImageIcon}
-            fallback={<span>{widgetIcon || DEFAULT_WIDGET_ICON}</span>}
-          >
-            <img
-              draggable={false}
-              src={widgetIcon}
-              alt={widgetName}
-              onError={(e) => {
-                (e.target as HTMLImageElement).style.display = 'none';
-                const fallback = document.createTextNode(DEFAULT_WIDGET_ICON);
-                e.target.parentNode?.appendChild(fallback);
-              }}
-            />
-          </Show>
-          <span class={styles.widgetName}>{widgetName}</span>
+    <div class={styles.thumbnailContainer}>
+      <Show
+        when={thumbnailUri}
+        fallback={
+          <div class={styles.widgetIconContainer}>
+            <Show
+              when={isImageIcon}
+              fallback={
+                <span class={styles.iconSymbol}>
+                  {widgetIcon || DEFAULT_WIDGET_ICON}
+                </span>
+              }
+            >
+              <img
+                draggable={false}
+                src={widgetIcon}
+                alt={widgetName}
+                class={styles.iconImage}
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                  const fallback = document.createTextNode(DEFAULT_WIDGET_ICON);
+                  e.target.parentNode?.appendChild(fallback);
+                }}
+              />
+            </Show>
+          </div>
+        }
+      >
+        <div class={styles.thumbnailWrapper}>
+          <img
+            draggable={false}
+            src={thumbnailUri}
+            class={styles.thumbnailImage}
+          />
         </div>
-      }
-    >
-      <div class={styles.thumbnailWrapper}>
-        <img
-          draggable={false}
-          src={thumbnailUri}
-          class={styles.thumbnailImage}
-        />
+      </Show>
+      <div class={styles.widgetInfo}>
+        <div class={styles.widgetTitle}>{widgetName}</div>
+        <Show when={widgetSubtitle}>
+          <div class={styles.widgetSubtitle}>{widgetSubtitle}</div>
+        </Show>
       </div>
-    </Show>
+    </div>
   );
 };
 

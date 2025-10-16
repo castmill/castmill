@@ -15,6 +15,7 @@ import {
 } from 'solid-js';
 import { RiArrowsArrowUpSLine, RiArrowsArrowDownSLine } from 'solid-icons/ri';
 import { AiOutlineSearch } from 'solid-icons/ai';
+import { ImCancelCircle } from 'solid-icons/im';
 
 import styles from './combobox.module.scss';
 import { IconWrapper } from '../icon-wrapper';
@@ -40,6 +41,9 @@ interface ComboBoxProps<T extends { id: string | number }> {
   ) => Promise<{ count: number; data: T[] }>;
   renderItem: (item: T) => JSX.Element;
   onSelect: (item: T) => void; // Callback function for when selection changes
+  clearable?: boolean;
+  clearLabel?: string;
+  onClear?: () => void;
 }
 
 export const ComboBox = <T extends { id: string | number }>(
@@ -133,6 +137,15 @@ export const ComboBox = <T extends { id: string | number }>(
     setIsOpen(false);
   };
 
+  const handleClear = () => {
+    setSelectedItem(undefined);
+    props.onClear?.();
+    setIsOpen(false);
+  };
+
+  const shouldShowClear = () =>
+    props.clearable && selectedItem() !== null && selectedItem() !== undefined;
+
   const search = (query: string) => {
     // Clear existing timer
     if (debounceTimer) {
@@ -160,20 +173,33 @@ export const ComboBox = <T extends { id: string | number }>(
           </div>
         </div>
 
-        <Show
-          when={isOpen()}
-          fallback={
+        <div class={styles['actions']}>
+          <Show when={shouldShowClear()}>
+            <button
+              type="button"
+              class={styles['clear-button']}
+              aria-label={props.clearLabel || 'Clear selection'}
+              onClick={handleClear}
+            >
+              <IconWrapper icon={ImCancelCircle} />
+            </button>
+          </Show>
+
+          <Show
+            when={isOpen()}
+            fallback={
+              <SimpleIconButton
+                icon={RiArrowsArrowDownSLine}
+                onClick={() => setIsOpen(true)}
+              />
+            }
+          >
             <SimpleIconButton
-              icon={RiArrowsArrowDownSLine}
-              onClick={() => setIsOpen(true)}
+              icon={RiArrowsArrowUpSLine}
+              onClick={() => setIsOpen(false)}
             />
-          }
-        >
-          <SimpleIconButton
-            icon={RiArrowsArrowUpSLine}
-            onClick={() => setIsOpen(false)}
-          />
-        </Show>
+          </Show>
+        </div>
       </div>
 
       <Show when={isOpen()}>

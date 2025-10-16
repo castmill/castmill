@@ -212,6 +212,7 @@ defmodule CastmillWeb.Router do
 
     get("/organizations_invitations/:token", OrganizationController, :show_invitation)
     post("/organizations_invitations/:token/accept", OrganizationController, :accept_invitation)
+    post("/organizations_invitations/:token/reject", OrganizationController, :reject_invitation)
 
     # Return Usage information for the organization
     get("/organizations/:organization_id/usage", OrganizationUsageController, :index)

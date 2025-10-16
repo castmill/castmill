@@ -20,7 +20,7 @@ import playIcon from '../icons/play.png';
 
 const controlsTemplate = (id: string) => `
 <div>
-  <div id="playerui-controls-${id}" style="z-index: 9999;
+  <div id="playerui-controls-${id}" style="z-index: 10000;
     position: absolute;
     bottom: 0;
     width: 100%;

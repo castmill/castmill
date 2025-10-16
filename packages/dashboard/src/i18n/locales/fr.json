@@ -4,6 +4,7 @@
     "cancel": "Annuler",
     "delete": "Supprimer",
     "edit": "Modifier",
+    "rename": "Renommer",
     "add": "Ajouter",
     "remove": "Retirer",
     "close": "Fermer",
@@ -59,6 +60,7 @@
     "ip": "Adresse IP",
     "description": "Description",
     "online": "En ligne",
+    "offline": "Hors ligne",
     "update": "Mettre à jour",
     "reset": "Réinitialiser",
     "addedOn": "Ajouté le",
@@ -80,7 +82,6 @@
     "addonError": "Erreur d'extension",
     "backToLogin": "Retour à la connexion",
     "selectImage": "Sélectionner une image",
-    "selectVideo": "Sélectionner une vidéo",
     "selectMedia": "Sélectionner un média"
   },
   "topbar": {
@@ -138,7 +139,10 @@
     "deleteAccountDescription": "Supprimer définitivement votre compte et toutes les données associées. Cette action ne peut pas être annulée.",
     "deleteAccountButton": "Supprimer le compte",
     "deleteAccountConfirm": "Êtes-vous sûr ?",
-    "deleteAccountWarning": "Cela supprimera définitivement votre compte.",
+    "deleteAccountWarning": "Cela supprimera définitivement votre compte et supprimera toutes les clés d'accès de nos serveurs. Cependant, les clés d'accès stockées sur vos appareils (dans iCloud Keychain, Google Password Manager, Windows Hello, etc.) resteront et devront être supprimées manuellement.",
+    "deleteAccountWarningWithSignalAPI": "Cela supprimera définitivement votre compte et supprimera toutes les clés d'accès de nos serveurs. Votre navigateur prend en charge la suppression automatique des clés d'accès.",
+    "deleteAccountPasskeyInfo": "Après la suppression, si vous essayez de vous connecter avec une ancienne clé d'accès, cela échouera. Pour éviter toute confusion, veuillez supprimer manuellement les clés d'accès de ce compte dans les paramètres de votre appareil.",
+    "deleteAccountPasskeyInfoWithSignalAPI": "Après la suppression, les clés d'accès seront automatiquement supprimées de votre appareil. Si vous essayez de vous connecter plus tard, vous devrez créer un nouveau compte.",
     "deleteAccountYes": "Oui, supprimer le compte",
     "retry": "Réessayer",
     "errors": {
@@ -151,7 +155,11 @@
       "sessionExpired": "Erreur d'authentification : Votre session a peut-être expiré. Veuillez actualiser la page et réessayer.",
       "addPasskeyFailed": "Échec de l'ajout de la clé d'accès : {{error}}",
       "addPasskey": "Échec de l'ajout de la nouvelle clé d'accès. Veuillez réessayer."
-    }
+    },
+    "deleteAccountSuccess": "Compte supprimé avec succès. Redirection...",
+    "deleteAccountError": "Échec de la suppression du compte. Veuillez réessayer.",
+    "soleAdministratorError": "Impossible de supprimer le compte. Vous êtes le seul administrateur de '{{orgName}}' qui a d'autres membres. Veuillez d'abord promouvoir un autre utilisateur en tant qu'administrateur.",
+    "soleAdministratorErrorGeneric": "Impossible de supprimer le compte. Vous êtes le seul administrateur d'une ou plusieurs organisations ayant d'autres membres. Veuillez d'abord promouvoir un autre utilisateur en tant qu'administrateur."
   },
   "usage": {
     "title": "Utilisation",
@@ -170,12 +178,24 @@
       "fetchUsageData": "Échec de la récupération des données d'utilisation : {{error}}"
     }
   },
+  "content": {
+    "title": "Contenu",
+    "description": "Aperçu de vos ressources de contenu et de l'utilisation du quota",
+    "playlists": "Listes de lecture",
+    "medias": "Fichiers multimédias",
+    "storage": "Stockage",
+    "widgets": "Widgets",
+    "used": "Utilisé",
+    "total": "Total",
+    "loadingUsageData": "Chargement des données d'utilisation...",
+    "quotaLimitReached": "Limite de quota atteinte",
+    "approachingLimit": "Approche de la limite",
+    "noUsageData": "Aucune donnée d'utilisation disponible",
+    "unableToLoad": "Impossible de charger les informations d'utilisation des ressources"
+  },
   "teams": {
     "title": "Équipes",
-    "members": {
-      "selectUser": "Sélectionner un utilisateur",
-      "searchUser": "Rechercher un utilisateur..."
-    },
+    "members": "TODO: Translate - Members",
     "invitations": "Invitations",
     "invitationAcceptSuccess": "Invitation acceptée avec succès",
     "invitationDeleteSuccess": "Invitation supprimée avec succès",
@@ -233,7 +253,8 @@
       "memberRemoved": "Le membre {{name}} a été supprimé avec succès",
       "membersRemoved": "Les membres ont été supprimés avec succès",
       "invitationSent": "Invitation envoyée à {{email}}",
-      "leftTeam": "Vous avez quitté l'équipe {{name}}"
+      "leftTeam": "Vous avez quitté l'équipe {{name}}",
+      "roleUpdated": "Rôle mis à jour avec succès pour {{name}}"
     },
     "invitation": {
       "title": "Invitation à l'équipe",
@@ -242,6 +263,17 @@
       "expired": "Cette invitation a expiré.",
       "accepting": "Acceptation...",
       "accept": "Accepter l'invitation"
+    },
+    "memberSelection": {
+      "selectUser": "Sélectionner un utilisateur",
+      "searchUser": "Rechercher un utilisateur..."
+    },
+    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully",
+    "dialogs": {
+      "removeMemberTitle": "Retirer l'utilisateur de l'équipe",
+      "removeMemberMessage": "Êtes-vous sûr de vouloir retirer le membre \"{{name}}\" de l'équipe?",
+      "removeMembersTitle": "Retirer les membres de l'équipe",
+      "removeMembersMessage": "Êtes-vous sûr de vouloir retirer les membres suivants de l'équipe?"
     }
   },
   "login": {
@@ -265,7 +297,24 @@
     "generic": "Une erreur s'est produite. Veuillez réessayer.",
     "networkError": "Erreur réseau. Veuillez vérifier votre connexion.",
     "unauthorized": "Non autorisé. Veuillez vous reconnecter.",
-    "unknownResourceType": "Type de ressource inconnu: {{resourceType}}"
+    "errors": {
+      "generic": "Une erreur s'est produite. Veuillez réessayer.",
+      "networkError": "Erreur réseau. Veuillez vérifier votre connexion.",
+      "unauthorized": "Non autorisé. Veuillez vous reconnecter.",
+      "unknownResourceType": "Type de ressource inconnu: {{resourceType}}",
+      "serverUnreachable": "Impossible de Se Connecter au Serveur",
+      "serverUnreachableDescription": "Le serveur backend est actuellement inaccessible. Cela signifie généralement que le serveur n'est pas en cours d'exécution ou qu'il y a un problème réseau.",
+      "checkServerRunning": "Assurez-vous que le serveur Castmill est en cours d'exécution",
+      "checkNetworkConnection": "Vérifiez votre connexion réseau",
+      "checkServerUrl": "Vérifiez l'URL du serveur dans votre configuration",
+      "retryConnection": "Réessayer la Connexion"
+    },
+    "serverUnreachable": "Impossible de Se Connecter au Serveur",
+    "serverUnreachableDescription": "Le serveur backend est actuellement inaccessible. Cela signifie généralement que le serveur n'est pas en cours d'exécution ou qu'il y a un problème réseau.",
+    "checkServerRunning": "Assurez-vous que le serveur Castmill est en cours d'exécution",
+    "checkNetworkConnection": "Vérifiez votre connexion réseau",
+    "checkServerUrl": "Vérifiez l'URL du serveur dans votre configuration",
+    "retryConnection": "Réessayer la Connexion"
   },
   "sidebar": {
     "organization": "Organisation",
@@ -276,7 +325,8 @@
     "content": "Contenu",
     "playlists": "Listes de lecture",
     "medias": "Médias",
-    "widgets": "Widgets"
+    "widgets": "Widgets",
+    "members": "[TODO: Translate] Members"
   },
   "channels": {
     "title": "Canaux",
@@ -288,22 +338,28 @@
     "removeChannels": "Supprimer les canaux",
     "confirmRemoveChannel": "Êtes-vous sûr de vouloir supprimer le canal \"{{name}}\" ?",
     "confirmRemoveChannels": "Êtes-vous sûr de vouloir supprimer les canaux suivants ?",
+    "enterChannelName": "Entrez le nom du canal",
+    "defaultPlaylist": "Playlist par défaut",
+    "selectPlaylist": "Sélectionner une playlist",
+    "clearDefaultPlaylist": "Effacer la playlist par défaut",
+    "dragPlaylists": "Glisser les playlists",
+    "repeatWeekly": "Répéter chaque semaine ?",
+    "calendarEntryDetails": "Détails de l'entrée du calendrier",
+    "removeChannelEntry": "Supprimer l'entrée du canal",
+    "cannotDeleteChannel": "Impossible de supprimer le canal",
+    "success": {
+      "updateDefaultPlaylist": "Playlist par défaut mise à jour avec succès",
+      "clearDefaultPlaylist": "Playlist par défaut effacée avec succès"
+    },
     "errors": {
       "removeChannel": "Erreur lors de la suppression du canal {{name}} : {{error}}",
       "removeChannels": "Erreur lors de la suppression des canaux : {{error}}",
       "addChannel": "Erreur lors de l'ajout du canal : {{error}}",
       "saveChannel": "Erreur lors de l'enregistrement du canal : {{error}}",
       "updateDefaultPlaylist": "Échec de la mise à jour de la playlist par défaut du canal : {{error}}",
+      "clearDefaultPlaylist": "Échec de l'effacement de la playlist par défaut du canal : {{error}}",
       "updateChannelEntry": "Erreur lors de la mise à jour de l'entrée du canal : {{error}}"
-    },
-    "enterChannelName": "Entrez le nom du canal",
-    "defaultPlaylist": "Playlist par défaut",
-    "selectPlaylist": "Sélectionner une playlist",
-    "dragPlaylists": "Glisser les playlists",
-    "repeatWeekly": "Répéter chaque semaine ?",
-    "calendarEntryDetails": "Détails de l'entrée du calendrier",
-    "removeChannelEntry": "Supprimer l'entrée du canal",
-    "cannotDeleteChannel": "Impossible de supprimer le canal"
+    }
   },
   "organization": {
     "title": "Organisation",
@@ -314,6 +370,7 @@
     "inviteMember": "Inviter un membre",
     "enterMemberEmail": "Entrez l'e-mail du membre",
     "role": "Rôle",
+    "changeRole": "Changer le Rôle",
     "roleAdmin": "Administrateur",
     "roleManager": "Gestionnaire",
     "roleMember": "Membre",
@@ -328,11 +385,14 @@
       "emailRequired": "L'e-mail est requis",
       "invalidEmail": "E-mail invalide",
       "cannotRemoveLastAdmin": "Vous ne pouvez pas supprimer le dernier administrateur de l'organisation.",
-      "invalidRole": "Le rôle sélectionné n'est pas valide pour cette organisation."
+      "invalidRole": "Le rôle sélectionné n'est pas valide pour cette organisation.",
+      "updateRoleFailed": "Échec de la mise à jour du rôle du membre"
     },
     "messages": {
       "memberRemoved": "Le membre {{name}} a été supprimé avec succès",
-      "membersRemoved": "Les membres ont été supprimés avec succès"
+      "membersRemoved": "Les membres ont été supprimés avec succès",
+      "leftOrganization": "Vous avez quitté l'organisation {{name}}",
+      "noOrganizationsRemaining": "Vous avez quitté votre dernière organisation. Veuillez contacter un administrateur pour être invité à une organisation."
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {
@@ -348,7 +408,20 @@
       "admin": "Peut gérer les membres de l'équipe et les ressources",
       "member": "Peut accéder et modifier les ressources de l'équipe",
       "installer": "Jeton temporaire pour l'enregistrement d'appareil (expire dans 24h)"
-    }
+    },
+    "dialogs": {
+      "removeMemberTitle": "Retirer l'utilisateur de l'organisation",
+      "removeMemberMessage": "Êtes-vous sûr de vouloir retirer le membre \"{{name}}\" de l'organisation?",
+      "removeMembersTitle": "Retirer les membres de l'organisation",
+      "removeMembersMessage": "Êtes-vous sûr de vouloir retirer les membres suivants de l'organisation?"
+    },
+    "leaveOrganizationTitle": "Quitter cette organisation",
+    "leaveOrganizationDescription": "Quitter supprime votre accès aux ressources de l'organisation immédiatement.",
+    "leaveOrganizationAction": "Quitter l'organisation",
+    "leaveOrganizationLastAdminWarning": "Ajoutez un autre administrateur avant de partir pour garder cette organisation gérée.",
+    "leaveOrganizationLastUserWarning": "Vous ne pouvez pas partir car vous êtes le seul membre de cette organisation.",
+    "leaveLastOrganizationWarningTitle": "Quitter votre dernière organisation ?",
+    "leaveLastOrganizationWarningMessage": "Il s'agit de votre seule organisation. La quitter supprimera votre compte et vous perdrez tout accès à Castmill. Vous devrez contacter un administrateur pour être réinvité. Êtes-vous sûr de vouloir continuer ?"
   },
   "playlists": {
     "title": "Playlists",
@@ -356,6 +429,9 @@
     "createNewPlaylist": "Créer une nouvelle playlist",
     "playlistTitle": "Playlist \"{{name}}\"",
     "buildPlaylist": "Créez votre playlist ici",
+    "renamePlaylist": "Renommer la playlist",
+    "playlistUpdated": "Playlist \"{{name}}\" mise à jour avec succès",
+    "errorUpdating": "Erreur lors de la mise à jour de la playlist {{name}} : {{error}}",
     "removePlaylist": "Supprimer la playlist",
     "removePlaylists": "Supprimer les playlists",
     "confirmRemovePlaylist": "Êtes-vous sûr de vouloir supprimer la playlist \"{{name}}\" ?",
@@ -495,7 +571,17 @@
       "emailAddress": "Adresse e-mail",
       "expired": "Cette invitation a expiré.",
       "loginToAccept": "Connectez-vous pour accepter cette invitation",
-      "createAccount": "Créez votre compte pour accepter cette invitation"
+      "createAccount": "Créez votre compte pour accepter cette invitation",
+      "reject": "Refuser l'Invitation",
+      "rejecting": "Refus en cours...",
+      "chooseAction": "Veuillez choisir d'accepter ou de refuser l'invitation",
+      "acceptSuccess": "Invitation acceptée avec succès",
+      "acceptError": "Erreur lors de l'acceptation de l'invitation",
+      "rejectSuccess": "Invitation refusée avec succès",
+      "rejectError": "Erreur lors du refus de l'invitation",
+      "accountCreated": "Compte créé avec succès !",
+      "accountCreationFailed": "Échec de la création du compte",
+      "passkeysNotSupported": "Les clés d'accès ne sont pas prises en charge dans ce navigateur"
     }
   },
   "filters": {

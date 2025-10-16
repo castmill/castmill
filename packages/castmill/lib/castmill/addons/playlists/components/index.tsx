@@ -1,7 +1,15 @@
 import { BsCheckLg } from 'solid-icons/bs';
 import { BsEye } from 'solid-icons/bs';
-import { AiOutlineDelete } from 'solid-icons/ai';
-import { Component, createEffect, createSignal, Show, onMount, on } from 'solid-js';
+
+import { AiOutlineDelete, AiOutlineEdit } from 'solid-icons/ai';
+import {
+  Component,
+  createEffect,
+  createSignal,
+  Show,
+  onMount,
+  on,
+} from 'solid-js';
 
 import {
   Button,
@@ -28,8 +36,12 @@ import {
 
 import './playlists.scss';
 import { PlaylistView } from './playlist-view';
-import { AddonStore, AddonComponentProps } from '../../common/interfaces/addon-store';
+import {
+  AddonStore,
+  AddonComponentProps,
+} from '../../common/interfaces/addon-store';
 import { PlaylistAddForm } from './playlist-add-form';
+import { PlaylistDetails } from './playlist-details';
 import { useTeamFilter } from '../../common/hooks';
 
 const PlaylistsPage: Component<AddonComponentProps> = (props) => {
@@ -37,6 +49,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
   const [data, setData] = createSignal<JsonPlaylist[]>([]);
   const [currentPlaylist, setCurrentPlaylist] = createSignal<JsonPlaylist>();
   const [showModal, setShowModal] = createSignal(false);
+  const [showRenameModal, setShowRenameModal] = createSignal(false);
 
   const { teams, selectedTeamId, setSelectedTeamId } = useTeamFilter({
     baseUrl: props.store.env.baseUrl,
@@ -52,14 +65,17 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
   // Get i18n functions from store
   const t = (key: string, params?: Record<string, any>) =>
     props.store.i18n?.t(key, params) || key;
-  
+
   // Helper function to check permissions
   const canPerformAction = (resource: string, action: string): boolean => {
     if (!props.store.permissions?.matrix) return false;
-    const allowedActions = props.store.permissions.matrix[resource as keyof typeof props.store.permissions.matrix];
+    const allowedActions =
+      props.store.permissions.matrix[
+        resource as keyof typeof props.store.permissions.matrix
+      ];
     return allowedActions?.includes(action as any) ?? false;
   };
-  
+
   const [quota, setQuota] = createSignal<ResourceQuota | null>(null);
   const [quotaLoading, setQuotaLoading] = createSignal(false);
   const [showLoadingIndicator, setShowLoadingIndicator] = createSignal(false);
@@ -212,10 +228,21 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
       label: t('common.view'),
     },
     {
+      icon: AiOutlineEdit,
+      handler: (item: JsonPlaylist) => {
+        setCurrentPlaylist(item);
+        setShowRenameModal(true);
+      },
+      label: t('common.rename'),
+    },
+    {
       icon: AiOutlineDelete,
       handler: (item: JsonPlaylist) => {
         if (!canPerformAction('playlists', 'delete')) {
-          toast.error(t('permissions.noDeletePlaylists') || "You don't have permission to delete playlists");
+          toast.error(
+            t('permissions.noDeletePlaylists') ||
+              "You don't have permission to delete playlists"
+          );
           return;
         }
         setCurrentPlaylist(item);
@@ -248,32 +275,81 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
       refreshData();
       toast.success(`Playlist "${resource.name}" removed successfully`);
       loadQuota(); // Reload quota after deletion
-    } catch (error) {
-      toast.error(`Error removing playlist ${resource.name}: ${error}`);
+    } catch (error: any) {
+      // Check if error has channel information (409 conflict error)
+      if (
+        error?.errorData?.channels &&
+        Array.isArray(error.errorData.channels)
+      ) {
+        // Format channel usage information
+        const channelInfo = error.errorData.channels.map((ch: any) => {
+          if (ch.usage_type === 'default') {
+            return `${ch.name} (default playlist)`;
+          } else if (ch.usage_type === 'scheduled') {
+            const start = new Date(ch.entry_start).toLocaleString();
+            const end = new Date(ch.entry_end).toLocaleString();
+            const repeatInfo = ch.repeat_until
+              ? `, repeats until ${new Date(ch.repeat_until).toLocaleDateString()}`
+              : '';
+            return `${ch.name} (scheduled: ${start} - ${end}${repeatInfo})`;
+          }
+          return ch.name || ch;
+        });
+
+        const channelList = channelInfo.join('\n• ');
+        toast.error(
+          `${error.message}:\n\n• ${channelList}\n\nPlease remove the playlist from these channels first.`,
+          8000
+        );
+      } else {
+        toast.error(`Error removing playlist ${resource.name}: ${error}`);
+      }
     }
     setShowConfirmDialog();
   };
 
   const confirmRemoveMultipleResources = async () => {
-    try {
-      await Promise.all(
-        Array.from(selectedPlaylists()).map((resourceId) =>
-          PlaylistsService.removePlaylist(
-            props.store.env.baseUrl,
-            props.store.organizations.selectedId,
-            resourceId
-          )
+    const results = await Promise.allSettled(
+      Array.from(selectedPlaylists()).map((resourceId) =>
+        PlaylistsService.removePlaylist(
+          props.store.env.baseUrl,
+          props.store.organizations.selectedId,
+          resourceId
         )
-      );
+      )
+    );
 
+    const failures = results.filter(
+      (result) => result.status === 'rejected'
+    ) as PromiseRejectedResult[];
+    const successes = results.filter((result) => result.status === 'fulfilled');
+
+    if (successes.length > 0) {
       refreshData();
-      toast.success(
-        `${selectedPlaylists().size} playlist(s) removed successfully`
-      );
+      toast.success(`${successes.length} playlist(s) removed successfully`);
       loadQuota(); // Reload quota after deletion
-    } catch (error) {
-      toast.error(`Error removing playlists: ${error}`);
     }
+
+    if (failures.length > 0) {
+      // Collect all error messages with channel information
+      const errorMessages = failures.map((failure) => {
+        const error = failure.reason;
+        if (
+          error?.errorData?.channels &&
+          Array.isArray(error.errorData.channels)
+        ) {
+          const channelList = error.errorData.channels.join(', ');
+          return `${error.message}. Channels: ${channelList}`;
+        }
+        return error?.message || String(error);
+      });
+
+      toast.error(
+        `Failed to remove ${failures.length} playlist(s):\n${errorMessages.join('\n')}`,
+        7000
+      );
+    }
+
     setShowConfirmDialogMultiple(false);
     setSelectedPlaylists(new Set<number>());
   };
@@ -334,6 +410,46 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
         </Modal>
       </Show>
 
+      <Show when={showRenameModal()}>
+        <Modal
+          title={t('playlists.renamePlaylist')}
+          description=""
+          onClose={() => setShowRenameModal(false)}
+          contentClass="playlist-rename-modal"
+        >
+          <PlaylistDetails
+            store={props.store}
+            playlist={currentPlaylist()!}
+            onSubmit={async (playlistUpdate) => {
+              try {
+                await PlaylistsService.updatePlaylist(
+                  props.store.env.baseUrl,
+                  props.store.organizations.selectedId,
+                  `${currentPlaylist()?.id}`,
+                  playlistUpdate
+                );
+                refreshData();
+                toast.success(
+                  t('playlists.playlistUpdated', {
+                    name: currentPlaylist()?.name,
+                  })
+                );
+                setShowRenameModal(false);
+                return true;
+              } catch (error) {
+                toast.error(
+                  t('playlists.errorUpdating', {
+                    name: currentPlaylist()?.name,
+                    error: String(error),
+                  })
+                );
+                return false;
+              }
+            }}
+          />
+        </Modal>
+      </Show>
+
       <ConfirmDialog
         show={!!showConfirmDialog()}
         title={t('playlists.removePlaylist')}
@@ -383,7 +499,9 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
                 onClick={openAddPlaylistModal}
                 icon={BsCheckLg}
                 color="primary"
-                disabled={isQuotaReached() || !canPerformAction('playlists', 'create')}
+                disabled={
+                  isQuotaReached() || !canPerformAction('playlists', 'create')
+                }
               />
             </div>
           ),
