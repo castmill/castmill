@@ -1,0 +1,29 @@
+.playlist-details {
+  .info {
+    font-size: 0.8em;
+    color: darkgray;
+    margin-top: 1em;
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    width: 100%;
+    gap: 0.7em;
+
+    .form-inputs {
+      width: 100%;
+    }
+
+    .actions {
+      display: flex;
+      flex-direction: row;
+      justify-content: flex-start;
+      align-items: center;
+      width: 100%;
+      gap: 1em;
+    }
+  }
+}

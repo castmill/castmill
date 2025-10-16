@@ -15,6 +15,7 @@ import { FaSolidAngleDown, FaSolidAngleUp } from 'solid-icons/fa';
 interface DropdownMenuProps {
   ButtonComponent: Component<{ onClick: () => void }>; // Define prop for custom button component
   children: JSX.Element;
+  onItemClick?: () => void; // Optional callback when a menu item is clicked
 }
 
 const DropdownMenu: Component<DropdownMenuProps> = (props) => {
@@ -27,6 +28,17 @@ const DropdownMenu: Component<DropdownMenuProps> = (props) => {
   const menuItems = children(() => props.children).toArray();
 
   const toggleDropdown = () => setIsOpen(!isOpen());
+
+  const closeDropdown = () => setIsOpen(false);
+
+  const handleMenuClick = (event: MouseEvent) => {
+    // Check if the click is on a menu item (button or link inside the menu)
+    const target = event.target as HTMLElement;
+    if (target.closest('button, a')) {
+      closeDropdown();
+      props.onItemClick?.();
+    }
+  };
 
   const handleClickOutside = (event: MouseEvent) => {
     if (
@@ -75,6 +87,7 @@ const DropdownMenu: Component<DropdownMenuProps> = (props) => {
           ref={menuRef!}
           style={positionStyle()}
           class={`${isOpen() ? 'open' : 'close'} menu`}
+          onClick={handleMenuClick}
         >
           <For each={menuItems}>{(item) => <li>{item}</li>}</For>
         </ul>

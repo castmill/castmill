@@ -241,6 +241,44 @@ defmodule CastmillWeb.ResourceController do
     end
   end
 
+  @update_playlist_params_schema %{
+    organization_id: [type: :string, required: true],
+    id: [type: :integer, required: true],
+    update: :map
+  }
+
+  def update(
+        conn,
+        %{
+          "resources" => "playlists",
+          "id" => _id
+        } = params
+      ) do
+    with {:ok, params} <- Tarams.cast(params, @update_playlist_params_schema) do
+      playlist = Castmill.Resources.get_playlist(params.id)
+
+      Castmill.Resources.update(playlist, params.update)
+      |> case do
+        {:ok, playlist} ->
+          conn
+          |> put_status(:ok)
+          |> json(playlist)
+
+        {:error, errors} ->
+          conn
+          |> put_status(:bad_request)
+          |> Phoenix.Controller.json(%{errors: errors})
+          |> halt()
+      end
+    else
+      {:error, errors} ->
+        conn
+        |> put_status(:bad_request)
+        |> Phoenix.Controller.json(%{errors: errors})
+        |> halt()
+    end
+  end
+
   @update_channel_params_schema %{
     organization_id: [type: :string, required: true],
     id: [type: :integer, required: true],
@@ -482,6 +520,41 @@ defmodule CastmillWeb.ResourceController do
         with {:ok, %Playlist{}} <- Castmill.Resources.delete_playlist(playlist) do
           send_resp(conn, :no_content, "")
         else
+          {:error, :playlist_has_channels} ->
+            channels = Castmill.Resources.get_channels_using_playlist(playlist.id)
+
+            # Format channel usage information
+            usage_info =
+              Enum.map(channels, fn channel ->
+                case channel.usage_type do
+                  "default" ->
+                    %{
+                      id: channel.id,
+                      name: channel.name,
+                      usage_type: "default"
+                    }
+
+                  "scheduled" ->
+                    %{
+                      id: channel.id,
+                      name: channel.name,
+                      usage_type: "scheduled",
+                      entry_start: channel.entry_start,
+                      entry_end: channel.entry_end,
+                      repeat_until: channel.repeat_until
+                    }
+                end
+              end)
+
+            conn
+            |> put_status(:conflict)
+            |> Phoenix.Controller.json(%{
+              errors: %{
+                detail: "Cannot delete playlist that is used in channels",
+                channels: usage_info
+              }
+            })
+
           {:error, reason} ->
             send_resp(conn, 500, "Error deleting playlist: #{inspect(reason)}")
         end

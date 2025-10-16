@@ -76,6 +76,8 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
     <div class="castmill-sidepanel">
       <div class="top">
         <Dropdown
+          id="organization-selector"
+          name="organization"
           label={t('sidebar.organization')}
           items={store.organizations.data.map((org) => ({
             name: org.name,

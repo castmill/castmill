@@ -12,6 +12,7 @@
     "serve": "vite preview",
     "test": "vitest",
     "check-i18n": "node scripts/check-i18n.cjs",
+    "check-translations": "node scripts/check-missing-translations.cjs",
     "lint:i18n": "node scripts/check-i18n.cjs"
   },
   "license": "MIT",

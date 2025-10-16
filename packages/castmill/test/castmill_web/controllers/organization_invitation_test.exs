@@ -411,4 +411,91 @@ defmodule CastmillWeb.OrganizationInvitationTest do
       assert response(conn, 400)
     end
   end
+
+  describe "reject_invitation/2" do
+    test "successfully rejects invitation", %{
+      conn: conn,
+      organization: organization
+    } do
+      # Create invitation
+      {:ok, invitation} =
+        Organizations.create_organizations_invitation(%{
+          organization_id: organization.id,
+          email: "reject@example.com",
+          role: :member
+        })
+
+      # Reject invitation
+      conn = post(conn, ~p"/dashboard/organizations_invitations/#{invitation.token}/reject")
+
+      assert json_response(conn, 200) == %{}
+
+      # Verify invitation status is rejected
+      rejected_invitation = Organizations.get_invitation(invitation.token)
+      assert rejected_invitation.status == "rejected"
+    end
+
+    test "cannot reject already accepted invitation", %{
+      conn: conn,
+      organization: organization,
+      network: network
+    } do
+      new_user =
+        user_fixture(%{
+          network_id: network.id,
+          email: "already-accepted@example.com",
+          name: "Already Accepted User"
+        })
+
+      {:ok, invitation} =
+        Organizations.create_organizations_invitation(%{
+          organization_id: organization.id,
+          email: new_user.email,
+          role: :member
+        })
+
+      # Accept the invitation first
+      accepted_token = Accounts.generate_user_session_token(new_user.id)
+
+      conn_accepted =
+        conn
+        |> Plug.Test.init_test_session(%{user_session_token: accepted_token})
+
+      conn =
+        post(conn_accepted, ~p"/dashboard/organizations_invitations/#{invitation.token}/accept")
+
+      assert json_response(conn, 200) == %{}
+
+      # Try to reject already accepted invitation
+      conn =
+        post(conn_accepted, ~p"/dashboard/organizations_invitations/#{invitation.token}/reject")
+
+      assert response(conn, 400)
+    end
+
+    test "cannot reject already rejected invitation", %{
+      conn: conn,
+      organization: organization
+    } do
+      {:ok, invitation} =
+        Organizations.create_organizations_invitation(%{
+          organization_id: organization.id,
+          email: "double-reject@example.com",
+          role: :member
+        })
+
+      # Reject once
+      conn = post(conn, ~p"/dashboard/organizations_invitations/#{invitation.token}/reject")
+      assert json_response(conn, 200) == %{}
+
+      # Try to reject again
+      conn = post(conn, ~p"/dashboard/organizations_invitations/#{invitation.token}/reject")
+      assert response(conn, 400)
+    end
+
+    test "returns error for invalid token", %{conn: conn} do
+      conn = post(conn, ~p"/dashboard/organizations_invitations/invalid-token/reject")
+      assert response(conn, 400)
+    end
+  end
 end
