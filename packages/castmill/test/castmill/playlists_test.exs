@@ -496,3 +496,71 @@ defmodule Castmill.PlaylistsTest do
     end
   end
 end
+
+  describe "playlist aspect ratio validation" do
+    test "accepts valid aspect ratio" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+
+      playlist =
+        playlist_fixture(%{
+          organization_id: organization.id,
+          settings: %{aspect_ratio: %{width: 16, height: 9}}
+        })
+
+      assert playlist.settings["aspect_ratio"]["width"] == 16
+      assert playlist.settings["aspect_ratio"]["height"] == 9
+    end
+
+    test "rejects extreme aspect ratios" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: organization.id})
+
+      # Try to create a playlist with extreme aspect ratio (100:1)
+      assert {:error, changeset} =
+               Castmill.Resources.create(Playlist, %{
+                 name: "Test Playlist",
+                 organization_id: organization.id,
+                 settings: %{aspect_ratio: %{width: 100, height: 1}}
+               })
+
+      assert changeset.errors[:settings] ==
+               {"aspect_ratio is too extreme (max ratio is 10:1)", []}
+    end
+
+    test "rejects aspect ratio with values over 100" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: organization.id})
+
+      assert {:error, changeset} =
+               Castmill.Resources.create(Playlist, %{
+                 name: "Test Playlist",
+                 organization_id: organization.id,
+                 settings: %{aspect_ratio: %{width: 150, height: 9}}
+               })
+
+      assert changeset.errors[:settings] ==
+               {"aspect_ratio values must be 100 or less (use simplified ratios like 16:9)",
+                []}
+    end
+
+    test "updates playlist aspect ratio" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+
+      playlist =
+        playlist_fixture(%{
+          organization_id: organization.id,
+          settings: %{aspect_ratio: %{width: 16, height: 9}}
+        })
+
+      {:ok, updated_playlist} =
+        Castmill.Resources.update(playlist, %{
+          settings: %{aspect_ratio: %{width: 9, height: 16}}
+        })
+
+      assert updated_playlist.settings["aspect_ratio"]["width"] == 9
+      assert updated_playlist.settings["aspect_ratio"]["height"] == 16
+    end
+  end
+end
