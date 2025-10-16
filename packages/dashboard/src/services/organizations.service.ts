@@ -201,6 +201,29 @@ export const OrganizationsService = {
   },
 
   /**
+   * Reject an invitation to an Organization.
+   *
+   * @param token
+   * @returns
+   */
+  async rejectInvitation(token: string) {
+    const response = await fetch(
+      `${baseUrl}/dashboard/organizations_invitations/${token}/reject`,
+      {
+        method: 'POST',
+        credentials: 'include',
+      }
+    );
+
+    if (response.status === 200) {
+      return await response.json();
+    } else {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to reject invitation');
+    }
+  },
+
+  /**
    *
    * Remove an invitation from an Organization.
    *

@@ -157,7 +157,11 @@
       "sessionExpired": "Authentifizierungsfehler: Ihre Sitzung ist möglicherweise abgelaufen. Bitte aktualisieren Sie die Seite und versuchen Sie es erneut.",
       "addPasskeyFailed": "Fehler beim Hinzufügen des Passkeys: {{error}}",
       "addPasskey": "Fehler beim Hinzufügen eines neuen Passkeys. Bitte versuchen Sie es erneut."
-    }
+    },
+    "deleteAccountSuccess": "Konto erfolgreich gelöscht. Weiterleitung...",
+    "deleteAccountError": "Konto konnte nicht gelöscht werden. Bitte versuchen Sie es erneut.",
+    "soleAdministratorError": "Konto kann nicht gelöscht werden. Sie sind der einzige Administrator von '{{orgName}}', das andere Mitglieder hat. Bitte befördern Sie zuerst einen anderen Benutzer zum Administrator.",
+    "soleAdministratorErrorGeneric": "Konto kann nicht gelöscht werden. Sie sind der einzige Administrator einer oder mehrerer Organisationen mit anderen Mitgliedern. Bitte befördern Sie zuerst einen anderen Benutzer zum Administrator."
   },
   "usage": {
     "title": "Nutzung",
@@ -536,12 +540,77 @@
       "emailAddress": "E-Mail-Adresse",
       "expired": "Diese Einladung ist abgelaufen.",
       "loginToAccept": "Melden Sie sich an, um diese Einladung anzunehmen",
-      "createAccount": "Erstellen Sie Ihr Konto, um diese Einladung anzunehmen"
+      "createAccount": "Erstellen Sie Ihr Konto, um diese Einladung anzunehmen",
+      "reject": "Einladung Ablehnen",
+      "rejecting": "Wird abgelehnt...",
+      "chooseAction": "Bitte wählen Sie, ob Sie die Einladung annehmen oder ablehnen möchten",
+      "acceptSuccess": "Einladung erfolgreich angenommen",
+      "acceptError": "Fehler beim Annehmen der Einladung",
+      "rejectSuccess": "Einladung erfolgreich abgelehnt",
+      "rejectError": "Fehler beim Ablehnen der Einladung",
+      "accountCreated": "Konto erfolgreich erstellt!",
+      "accountCreationFailed": "Konto konnte nicht erstellt werden",
+      "passkeysNotSupported": "Passkeys werden in diesem Browser nicht unterstützt"
     }
   },
   "filters": {
     "teamLabel": "Mannschaft",
     "teamPlaceholder": "Mannschaft auswählen",
     "teamClear": "Mannschaftsfilter löschen"
+  },
+  "organization": {
+    "title": "Organisation",
+    "users": "Benutzer",
+    "invitations": "Einladungen",
+    "update": "Aktualisieren",
+    "placeholderName": "Organisationsnamen eingeben",
+    "inviteMember": "Mitglied einladen",
+    "enterMemberEmail": "E-Mail des Mitglieds eingeben",
+    "role": "Rolle",
+    "roleAdmin": "Administrator",
+    "roleManager": "Verwalter",
+    "roleMember": "Mitglied",
+    "roleEditor": "Redakteur",
+    "rolePublisher": "Veröffentlicher",
+    "roleDeviceManager": "Geräteverwalter",
+    "roleGuest": "Gast",
+    "teamRoleAdmin": "Team-Administrator",
+    "teamRoleMember": "Teammitglied",
+    "errors": {
+      "updateOrganization": "Fehler beim Aktualisieren der Organisation: {{error}}",
+      "emailRequired": "E-Mail ist erforderlich",
+      "invalidEmail": "Ungültige E-Mail",
+      "cannotRemoveLastAdmin": "Du kannst den letzten Administrator einer Organisation nicht entfernen.",
+      "invalidRole": "Die ausgewählte Rolle ist für diese Organisation nicht gültig.",
+      "cannotRemoveLastUser": "Sie können nicht gehen, da Sie das einzige Mitglied dieser Organisation sind."
+    },
+    "messages": {
+      "memberRemoved": "Mitglied {{name}} wurde erfolgreich entfernt",
+      "membersRemoved": "Mitglieder wurden erfolgreich entfernt",
+      "leftOrganization": "Sie haben die Organisation {{name}} verlassen",
+      "noOrganizationsRemaining": "Sie haben Ihre letzte Organisation verlassen. Bitte kontaktieren Sie einen Administrator, um zu einer Organisation eingeladen zu werden."
+    },
+    "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
+    "roleDescriptions": {
+      "admin": "Vollzugriff einschließlich Organisationsverwaltung",
+      "manager": "Kann Teams und die meisten Ressourcen verwalten",
+      "member": "Standardbenutzer (Standard), kann Inhalte verwalten",
+      "editor": "Vollständige Inhaltsverwaltung, kann keine Teams verwalten",
+      "publisher": "Wie Redakteur plus Veröffentlichungs-Workflow-Aktionen",
+      "device_manager": "Vollständige Geräte- und Kanalverwaltung",
+      "guest": "Nur-Lese-Zugriff auf Ressourcen"
+    },
+    "teamRoleDescriptions": {
+      "admin": "Kann Teammitglieder und Ressourcen verwalten",
+      "member": "Kann auf Teamressourcen zugreifen und diese bearbeiten",
+      "installer": "Temporäres Token für Geräteregistrierung (läuft in 24h ab)"
+    },
+    "leaveOrganizationTitle": "Diese Organisation verlassen",
+    "leaveOrganizationDescription": "Das Verlassen entfernt Ihren Zugriff auf Organisationsressourcen sofort.",
+    "leaveOrganizationAction": "Organisation verlassen",
+    "leaveOrganizationLastAdminWarning": "Fügen Sie einen weiteren Administrator hinzu, bevor Sie gehen, um diese Organisation verwaltet zu halten.",
+    "leaveOrganizationLastUserWarning": "Sie können nicht gehen, da Sie das einzige Mitglied dieser Organisation sind.",
+    "leaveLastOrganizationWarningTitle": "Ihre letzte Organisation verlassen?",
+    "leaveLastOrganizationWarningMessage": "Dies ist Ihre einzige Organisation. Wenn Sie sie verlassen, wird Ihr Konto gelöscht und Sie verlieren den gesamten Zugriff auf Castmill. Sie müssen einen Administrator kontaktieren, um erneut eingeladen zu werden. Sind Sie sicher, dass Sie fortfahren möchten?"
   }
 }

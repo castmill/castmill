@@ -151,6 +151,10 @@
     "deleteAccountConfirm": "Are you sure?",
     "deleteAccountWarning": "This will permanently delete your account.",
     "deleteAccountYes": "Yes, Delete Account",
+    "deleteAccountSuccess": "Account deleted successfully. Redirecting...",
+    "deleteAccountError": "Failed to delete account. Please try again.",
+    "soleAdministratorError": "Cannot delete account. You are the sole administrator of '{{orgName}}' which has other members. Please promote another user to admin first.",
+    "soleAdministratorErrorGeneric": "Cannot delete account. You are the sole administrator of one or more organizations with other members. Please promote another user to admin first.",
     "retry": "Retry",
     "errors": {
       "loadCredentials": "Failed to load credentials. Please try refreshing the page.",
@@ -541,7 +545,72 @@
       "emailAddress": "Email Address",
       "expired": "This invitation has expired.",
       "loginToAccept": "Login to accept this invitation",
-      "createAccount": "Create your account to accept this invitation"
+      "createAccount": "Create your account to accept this invitation",
+      "reject": "Reject Invitation",
+      "rejecting": "Rejecting...",
+      "chooseAction": "Please choose to accept or reject the invitation",
+      "acceptSuccess": "Invitation accepted successfully",
+      "acceptError": "Error accepting invitation",
+      "rejectSuccess": "Invitation rejected successfully",
+      "rejectError": "Error rejecting invitation",
+      "accountCreated": "Account created successfully!",
+      "accountCreationFailed": "Failed to create account",
+      "passkeysNotSupported": "Passkeys are not supported in this browser"
     }
+  },
+  "organization": {
+    "title": "Organization",
+    "users": "Users",
+    "invitations": "Invitations",
+    "update": "Update",
+    "placeholderName": "Enter organization name",
+    "inviteMember": "Invite Member",
+    "enterMemberEmail": "Enter member's email",
+    "role": "Role",
+    "roleAdmin": "Admin",
+    "roleManager": "Manager",
+    "roleMember": "Member",
+    "roleEditor": "Editor",
+    "rolePublisher": "Publisher",
+    "roleDeviceManager": "Device Manager",
+    "roleGuest": "Guest",
+    "teamRoleAdmin": "Team Admin",
+    "teamRoleMember": "Team Member",
+    "teamRoleInstaller": "Installer (24h)",
+    "roleDescriptions": {
+      "admin": "Full access including organization management",
+      "manager": "Can manage teams and most resources",
+      "member": "Standard user (default), can manage content",
+      "editor": "Full content management, cannot manage teams",
+      "publisher": "Like editor plus publish workflow actions",
+      "device_manager": "Full device and channel management",
+      "guest": "Read-only access to resources"
+    },
+    "teamRoleDescriptions": {
+      "admin": "Can manage team members and resources",
+      "member": "Can access and edit team resources",
+      "installer": "Temporary token for device registration (expires in 24h)"
+    },
+    "errors": {
+      "updateOrganization": "Error updating organization: {{error}}",
+      "emailRequired": "Email is required",
+      "invalidEmail": "Invalid email",
+      "cannotRemoveLastAdmin": "You can't remove the last admin of an organization.",
+      "invalidRole": "The selected role is not valid for this organization.",
+      "cannotRemoveLastUser": "You cannot leave as you are the only member of this organization."
+    },
+    "messages": {
+      "memberRemoved": "Member {{name}} removed successfully",
+      "membersRemoved": "Members removed successfully",
+      "leftOrganization": "You left the organization {{name}}",
+      "noOrganizationsRemaining": "You have left your last organization. Please contact an administrator to be invited to an organization."
+    },
+    "leaveOrganizationTitle": "Leave this organization",
+    "leaveOrganizationDescription": "Leaving removes your access to organization resources immediately.",
+    "leaveOrganizationAction": "Leave organization",
+    "leaveOrganizationLastAdminWarning": "Add another admin before leaving to keep this organization managed.",
+    "leaveOrganizationLastUserWarning": "You cannot leave as you are the only member of this organization.",
+    "leaveLastOrganizationWarningTitle": "Leave your last organization?",
+    "leaveLastOrganizationWarningMessage": "This is your only organization. Leaving it will delete your account and you will lose all access to Castmill. You will need to contact an administrator to be invited back. Are you sure you want to proceed?"
   }
 }

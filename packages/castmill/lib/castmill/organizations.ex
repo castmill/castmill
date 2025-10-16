@@ -749,6 +749,26 @@ defmodule Castmill.Organizations do
     end
   end
 
+  # Rejects an invitation by updating the status to rejected
+  def reject_invitation(token) do
+    case get_invitation(token) do
+      nil ->
+        {:error, "Invalid token"}
+
+      invitation ->
+        if invitation.status != "invited" do
+          {:error, "Invitation already #{invitation.status}"}
+        else
+          from(i in OrganizationsInvitation,
+            where: i.token == ^token
+          )
+          |> Repo.update_all(set: [status: "rejected"])
+
+          {:ok, invitation}
+        end
+    end
+  end
+
   @doc """
   Removes an invitation from an organization by invitation ID.
   """

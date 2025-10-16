@@ -151,7 +151,11 @@
       "sessionExpired": "خطأ في المصادقة: ربما انتهت صلاحية جلستك. يرجى تحديث الصفحة والمحاولة مرة أخرى.",
       "addPasskeyFailed": "فشل إضافة مفتاح المرور: {{error}}",
       "addPasskey": "فشل إضافة مفتاح مرور جديد. يرجى المحاولة مرة أخرى."
-    }
+    },
+    "deleteAccountSuccess": "تم حذف الحساب بنجاح. جارٍ إعادة التوجيه...",
+    "deleteAccountError": "فشل حذف الحساب. يرجى المحاولة مرة أخرى.",
+    "soleAdministratorError": "لا يمكن حذف الحساب. أنت المسؤول الوحيد لـ '{{orgName}}' التي لديها أعضاء آخرون. يرجى ترقية مستخدم آخر إلى مسؤول أولاً.",
+    "soleAdministratorErrorGeneric": "لا يمكن حذف الحساب. أنت المسؤول الوحيد لواحدة أو أكثر من المنظمات التي لديها أعضاء آخرون. يرجى ترقية مستخدم آخر إلى مسؤول أولاً."
   },
   "usage": {
     "title": "الاستخدام",
@@ -541,12 +545,77 @@
       "emailAddress": "عنوان البريد الإلكتروني",
       "expired": "انتهت صلاحية هذه الدعوة.",
       "loginToAccept": "تسجيل الدخول لقبول هذه الدعوة",
-      "createAccount": "أنشئ حسابك لقبول هذه الدعوة"
+      "createAccount": "أنشئ حسابك لقبول هذه الدعوة",
+      "reject": "رفض الدعوة",
+      "rejecting": "جاري الرفض...",
+      "chooseAction": "يرجى اختيار قبول أو رفض الدعوة",
+      "acceptSuccess": "تم قبول الدعوة بنجاح",
+      "acceptError": "خطأ في قبول الدعوة",
+      "rejectSuccess": "تم رفض الدعوة بنجاح",
+      "rejectError": "خطأ في رفض الدعوة",
+      "accountCreated": "تم إنشاء الحساب بنجاح!",
+      "accountCreationFailed": "فشل إنشاء الحساب",
+      "passkeysNotSupported": "مفاتيح المرور غير مدعومة في هذا المتصفح"
     }
   },
   "filters": {
     "teamLabel": "الفريق",
     "teamPlaceholder": "اختر فريق",
     "teamClear": "مسح فلتر الفريق"
+  },
+  "organization": {
+    "title": "المنظمة",
+    "users": "المستخدمون",
+    "invitations": "الدعوات",
+    "update": "تحديث",
+    "placeholderName": "أدخل اسم المنظمة",
+    "inviteMember": "دعوة عضو",
+    "enterMemberEmail": "أدخل البريد الإلكتروني للعضو",
+    "role": "الدور",
+    "roleAdmin": "مسؤول",
+    "roleManager": "مدير",
+    "roleMember": "عضو",
+    "roleEditor": "محرر",
+    "rolePublisher": "ناشر",
+    "roleDeviceManager": "مسؤول الأجهزة",
+    "roleGuest": "ضيف",
+    "teamRoleAdmin": "مسؤول الفريق",
+    "teamRoleMember": "عضو الفريق",
+    "errors": {
+      "updateOrganization": "خطأ في تحديث المنظمة: {{error}}",
+      "emailRequired": "البريد الإلكتروني مطلوب",
+      "invalidEmail": "بريد إلكتروني غير صالح",
+      "cannotRemoveLastAdmin": "لا يمكنك إزالة آخر مشرف للمؤسسة.",
+      "invalidRole": "الدور المحدد غير صالح لهذه المؤسسة.",
+      "cannotRemoveLastUser": "لا يمكنك المغادرة لأنك العضو الوحيد في هذه المنظمة."
+    },
+    "messages": {
+      "memberRemoved": "تمت إزالة العضو {{name}} بنجاح",
+      "membersRemoved": "تمت إزالة الأعضاء بنجاح",
+      "leftOrganization": "لقد غادرت المنظمة {{name}}",
+      "noOrganizationsRemaining": "لقد غادرت منظمتك الأخيرة. يرجى الاتصال بالمسؤول ليتم دعوتك إلى منظمة."
+    },
+    "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
+    "roleDescriptions": {
+      "admin": "وصول كامل بما في ذلك إدارة المنظمة",
+      "manager": "يمكنه إدارة الفرق ومعظم الموارد",
+      "member": "مستخدم قياسي (افتراضي)، يمكنه إدارة المحتوى",
+      "editor": "إدارة كاملة للمحتوى، لا يمكنه إدارة الفرق",
+      "publisher": "مثل المحرر بالإضافة إلى إجراءات سير عمل النشر",
+      "device_manager": "إدارة كاملة للأجهزة والقنوات",
+      "guest": "وصول للقراءة فقط إلى الموارد"
+    },
+    "teamRoleDescriptions": {
+      "admin": "يمكنه إدارة أعضاء الفريق والموارد",
+      "member": "يمكنه الوصول وتحرير موارد الفريق",
+      "installer": "رمز مؤقت لتسجيل الجهاز (ينتهي خلال 24 ساعة)"
+    },
+    "leaveOrganizationTitle": "مغادرة هذه المنظمة",
+    "leaveOrganizationDescription": "المغادرة تزيل وصولك إلى موارد المنظمة على الفور.",
+    "leaveOrganizationAction": "مغادرة المنظمة",
+    "leaveOrganizationLastAdminWarning": "أضف مسؤولاً آخر قبل المغادرة للحفاظ على إدارة هذه المنظمة.",
+    "leaveOrganizationLastUserWarning": "لا يمكنك المغادرة لأنك العضو الوحيد في هذه المنظمة.",
+    "leaveLastOrganizationWarningTitle": "مغادرة منظمتك الأخيرة؟",
+    "leaveLastOrganizationWarningMessage": "هذه هي منظمتك الوحيدة. مغادرتها ستحذف حسابك وستفقد كل الوصول إلى Castmill. ستحتاج إلى الاتصال بمسؤول لتتم دعوتك مرة أخرى. هل أنت متأكد أنك تريد المتابعة؟"
   }
 }

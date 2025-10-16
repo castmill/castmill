@@ -146,7 +146,11 @@
       "sessionExpired": "Autentiseringsfel: Din session kan ha gått ut. Uppdatera sidan och försök igen.",
       "addPasskeyFailed": "Misslyckades att lägga till nyckel: {{error}}",
       "addPasskey": "Misslyckades att lägga till ny nyckel. Försök igen."
-    }
+    },
+    "deleteAccountSuccess": "Kontot har raderats. Omdirigerar...",
+    "deleteAccountError": "Det gick inte att radera kontot. Försök igen.",
+    "soleAdministratorError": "Kan inte radera kontot. Du är den enda administratören för '{{orgName}}' som har andra medlemmar. Befordra en annan användare till administratör först.",
+    "soleAdministratorErrorGeneric": "Kan inte radera kontot. Du är den enda administratören för en eller flera organisationer med andra medlemmar. Befordra en annan användare till administratör först."
   },
   "usage": {
     "title": "Användning",
@@ -536,12 +540,77 @@
       "emailAddress": "E-postadress",
       "expired": "Denna inbjudan har utgått.",
       "loginToAccept": "Logga in för att acceptera denna inbjudan",
-      "createAccount": "Skapa ditt konto för att acceptera denna inbjudan"
+      "createAccount": "Skapa ditt konto för att acceptera denna inbjudan",
+      "reject": "Avvisa Inbjudan",
+      "rejecting": "Avvisar...",
+      "chooseAction": "Välj att acceptera eller avvisa inbjudan",
+      "acceptSuccess": "Inbjudan accepterad",
+      "acceptError": "Fel vid acceptering av inbjudan",
+      "rejectSuccess": "Inbjudan avvisad",
+      "rejectError": "Fel vid avvisning av inbjudan",
+      "accountCreated": "Konto skapat!",
+      "accountCreationFailed": "Misslyckades att skapa konto",
+      "passkeysNotSupported": "Passkeys stöds inte i denna webbläsare"
     }
   },
   "filters": {
     "teamLabel": "Lag",
     "teamPlaceholder": "Välj lag",
     "teamClear": "Rensa lagfilter"
+  },
+  "organization": {
+    "title": "Organisation",
+    "users": "Användare",
+    "invitations": "Inbjudningar",
+    "update": "Uppdatera",
+    "placeholderName": "Ange organisationsnamn",
+    "inviteMember": "Bjud in medlem",
+    "enterMemberEmail": "Ange medlemmens e-post",
+    "role": "Roll",
+    "roleAdmin": "Administratör",
+    "roleManager": "Chef",
+    "roleMember": "Medlem",
+    "roleEditor": "Redaktör",
+    "rolePublisher": "Publicerare",
+    "roleDeviceManager": "Enhetshanterare",
+    "roleGuest": "Gäst",
+    "teamRoleAdmin": "Teamadministratör",
+    "teamRoleMember": "Teammedlem",
+    "errors": {
+      "updateOrganization": "Fel vid uppdatering av organisation: {{error}}",
+      "emailRequired": "E-post är obligatoriskt",
+      "invalidEmail": "Ogiltig e-post",
+      "cannotRemoveLastAdmin": "Du kan inte ta bort organisationens sista administratör.",
+      "invalidRole": "Den valda rollen är inte giltig för den här organisationen.",
+      "cannotRemoveLastUser": "Du kan inte lämna eftersom du är den enda medlemmen i denna organisation."
+    },
+    "messages": {
+      "memberRemoved": "Medlemmen {{name}} togs bort med framgång",
+      "membersRemoved": "Medlemmarna togs bort med framgång",
+      "leftOrganization": "Du har lämnat organisationen {{name}}",
+      "noOrganizationsRemaining": "Du har lämnat din sista organisation. Kontakta en administratör för att bli inbjuden till en organisation."
+    },
+    "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
+    "roleDescriptions": {
+      "admin": "Full åtkomst inklusive organisationshantering",
+      "manager": "Kan hantera team och de flesta resurser",
+      "member": "Standardanvändare (standard), kan hantera innehåll",
+      "editor": "Full innehållshantering, kan inte hantera team",
+      "publisher": "Som redaktör plus arbetsflödesåtgärder för publicering",
+      "device_manager": "Full enhets- och kanalhantering",
+      "guest": "Läsbehörighet till resurser"
+    },
+    "teamRoleDescriptions": {
+      "admin": "Kan hantera teammedlemmar och resurser",
+      "member": "Kan komma åt och redigera teamresurser",
+      "installer": "Tillfällig token för enhetsregistrering (utgår om 24h)"
+    },
+    "leaveOrganizationTitle": "Lämna denna organisation",
+    "leaveOrganizationDescription": "Att lämna tar bort din åtkomst till organisationens resurser omedelbart.",
+    "leaveOrganizationAction": "Lämna organisation",
+    "leaveOrganizationLastAdminWarning": "Lägg till en annan administratör innan du lämnar för att hålla denna organisation hanterad.",
+    "leaveOrganizationLastUserWarning": "Du kan inte lämna eftersom du är den enda medlemmen i denna organisation.",
+    "leaveLastOrganizationWarningTitle": "Lämna din sista organisation?",
+    "leaveLastOrganizationWarningMessage": "Detta är din enda organisation. Att lämna den kommer att ta bort ditt konto och du kommer att förlora all åtkomst till Castmill. Du kommer att behöva kontakta en administratör för att bli inbjuden igen. Är du säker på att du vill fortsätta?"
   }
 }

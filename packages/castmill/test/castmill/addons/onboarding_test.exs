@@ -1,7 +1,8 @@
 defmodule Castmill.Addons.OnboardingTest do
   use Castmill.DataCase
 
-  use ExUnit.Case, async: true
+  # Cannot be async when using Sandbox.allow with GenServer
+  use ExUnit.Case, async: false
   import Swoosh.TestAssertions
 
   # Import Mox and tell ExUnit to verify mocks on exit
@@ -13,10 +14,11 @@ defmodule Castmill.Addons.OnboardingTest do
   @moduletag :onboarding
 
   describe "register_hooks/0" do
-    # Skiping for now as I lack the knoledge to fix this error:
-    # ** (DBConnection.OwnershipError) cannot find ownership process for #PID<0.442.0>.
     @describetag :skip
     test "registers user_signup hook correctly" do
+      # Allow the Hooks GenServer to access the test database
+      Ecto.Adapters.SQL.Sandbox.allow(Castmill.Repo, self(), Process.whereis(Castmill.Hooks))
+
       user = user_fixture()
 
       # Register addon
