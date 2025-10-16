@@ -996,6 +996,7 @@ defmodule Castmill.Organizations do
              user_id: user_id
            ),
          :ok <- ensure_additional_org_admins(organization_id, org_user),
+         :ok <- ensure_user_has_other_organizations(organization_id, user_id),
          {:ok, _} <- Repo.delete(org_user) do
       {:ok, "User successfully removed."}
     else
@@ -1004,6 +1005,9 @@ defmodule Castmill.Organizations do
 
       {:error, :last_admin} ->
         {:error, :last_admin}
+
+      {:error, :last_organization} ->
+        {:error, :last_organization}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:error, changeset}
@@ -1279,6 +1283,21 @@ defmodule Castmill.Organizations do
   defp ensure_additional_org_admins(organization_id, %OrganizationsUsers{role: :admin}) do
     if count_org_admins(organization_id) <= 1 do
       {:error, :last_admin}
+    else
+      :ok
+    end
+  end
+
+  defp ensure_user_has_other_organizations(organization_id, user_id) do
+    # Count how many organizations the user belongs to
+    user_org_count =
+      OrganizationsUsers.base_query()
+      |> where([organizations_users: ou], ou.user_id == ^user_id)
+      |> Repo.aggregate(:count, :user_id)
+
+    # If this is the user's only organization, don't allow removal
+    if user_org_count <= 1 do
+      {:error, :last_organization}
     else
       :ok
     end

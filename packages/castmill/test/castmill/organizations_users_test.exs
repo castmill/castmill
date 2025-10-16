@@ -93,6 +93,54 @@ defmodule Castmill.OrganizationsUsersTest do
       assert [:admin] = remaining_roles
     end
 
+    test "remove_user/2 prevents removing a user from their last organization" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+      user = user_fixture()
+      admin = user_fixture()
+
+      # Add admin to the organization
+      Organizations.add_user(organization.id, admin.id, :admin)
+      # Add user to the organization (this is their only organization)
+      Organizations.add_user(organization.id, user.id, :member)
+
+      # Should not be able to remove the user since it's their only organization
+      assert {:error, :last_organization} = Organizations.remove_user(organization.id, user.id)
+
+      # Verify user is still in the organization
+      remaining_users = Organizations.list_users(%{organization_id: organization.id})
+      assert length(remaining_users) == 2
+    end
+
+    test "remove_user/2 allows removing a user when they have multiple organizations" do
+      network = network_fixture()
+      organization_one = organization_fixture(%{network_id: network.id})
+      organization_two = organization_fixture(%{network_id: network.id})
+      user = user_fixture()
+      admin_one = user_fixture()
+      admin_two = user_fixture()
+
+      # Add admins to both organizations
+      Organizations.add_user(organization_one.id, admin_one.id, :admin)
+      Organizations.add_user(organization_two.id, admin_two.id, :admin)
+
+      # Add user to both organizations
+      Organizations.add_user(organization_one.id, user.id, :member)
+      Organizations.add_user(organization_two.id, user.id, :member)
+
+      # Should be able to remove from one organization since user has another
+      assert {:ok, "User successfully removed."} =
+               Organizations.remove_user(organization_one.id, user.id)
+
+      # Verify user is removed from organization one
+      org_one_users = Organizations.list_users(%{organization_id: organization_one.id})
+      assert length(org_one_users) == 1
+
+      # Verify user is still in organization two
+      org_two_users = Organizations.list_users(%{organization_id: organization_two.id})
+      assert length(org_two_users) == 2
+    end
+
     test "create_user/1 with valid data creates a user" do
       valid_attrs = %{
         avatar: "https://example.com/avatar",

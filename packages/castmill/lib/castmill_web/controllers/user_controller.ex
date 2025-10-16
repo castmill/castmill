@@ -91,7 +91,23 @@ defmodule CastmillWeb.UserController do
     with {:ok, _} <- Organizations.remove_user(organization_id, id) do
       send_resp(conn, :no_content, "")
     else
-      {:error, :not_found} -> send_resp(conn, :not_found, "")
+      {:error, :not_found} ->
+        send_resp(conn, :not_found, "")
+
+      {:error, :last_admin} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{error: "cannot_remove_last_organization_admin"})
+
+      {:error, :last_organization} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{error: "cannot_remove_user_from_last_organization"})
+
+      {:error, _} ->
+        conn
+        |> put_status(:bad_request)
+        |> json(%{error: "failed_to_remove_user"})
     end
   end
 

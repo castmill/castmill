@@ -90,6 +90,10 @@ export const OrganizationMembersView = (props: {
     if (error instanceof HttpError) {
       switch (error.status) {
         case 422:
+          // Check if it's the specific error message for last organization
+          if (error.message === 'cannot_remove_user_from_last_organization') {
+            return t('organization.errors.cannotRemoveUserFromLastOrganization');
+          }
           return t('organization.errors.cannotRemoveLastAdmin');
         case 404:
           return t('errors.generic');
@@ -99,9 +103,13 @@ export const OrganizationMembersView = (props: {
     }
 
     const message = (error as Error)?.message ?? t('errors.generic');
-    return message === 'cannot_remove_last_organization_admin'
-      ? t('organization.errors.cannotRemoveLastAdmin')
-      : message;
+    if (message === 'cannot_remove_last_organization_admin') {
+      return t('organization.errors.cannotRemoveLastAdmin');
+    }
+    if (message === 'cannot_remove_user_from_last_organization') {
+      return t('organization.errors.cannotRemoveUserFromLastOrganization');
+    }
+    return message;
   };
 
   const addMember = () => {
