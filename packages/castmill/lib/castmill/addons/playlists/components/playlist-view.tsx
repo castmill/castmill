@@ -246,8 +246,22 @@ export const PlaylistView: Component<{
 
   return (
     <Show when={!loading()}>
-      <div class="playlist-view">
-        <div class="playlist-preview">
+      <div
+        class="playlist-view"
+        classList={{
+          'portrait-layout':
+            (playlist()?.settings?.aspect_ratio?.height || 9) >
+            (playlist()?.settings?.aspect_ratio?.width || 16),
+        }}
+      >
+        <div
+          class="playlist-preview"
+          classList={{
+            portrait:
+              (playlist()?.settings?.aspect_ratio?.height || 9) >
+              (playlist()?.settings?.aspect_ratio?.width || 16),
+          }}
+        >
           <PlaylistPreview playlist={playlist()!} />
         </div>
         <div class="playlist-items-wrapper">

@@ -31,6 +31,61 @@ defmodule Castmill.Resources.Playlist do
     playlist
     |> cast(attrs, [:name, :settings, :organization_id])
     |> validate_required([:name, :organization_id])
+    |> validate_aspect_ratio()
+  end
+
+  # Validates the aspect_ratio in settings if present
+  defp validate_aspect_ratio(changeset) do
+    settings = get_field(changeset, :settings)
+
+    if settings && Map.has_key?(settings, "aspect_ratio") do
+      aspect_ratio = Map.get(settings, "aspect_ratio")
+      validate_aspect_ratio_value(changeset, aspect_ratio)
+    else
+      changeset
+    end
+  end
+
+  defp validate_aspect_ratio_value(changeset, aspect_ratio) when is_map(aspect_ratio) do
+    width = Map.get(aspect_ratio, "width")
+    height = Map.get(aspect_ratio, "height")
+
+    cond do
+      # Both width and height must be present
+      is_nil(width) or is_nil(height) ->
+        add_error(changeset, :settings, "aspect_ratio must have both width and height")
+
+      # Must be positive integers
+      not is_integer(width) or not is_integer(height) or width <= 0 or height <= 0 ->
+        add_error(changeset, :settings, "aspect_ratio width and height must be positive integers")
+
+      # Prevent absurdly thin ratios (e.g., 100:1 or 1:100)
+      width / height > 10 or height / width > 10 ->
+        add_error(
+          changeset,
+          :settings,
+          "aspect_ratio is too extreme (max ratio is 10:1)"
+        )
+
+      # Prevent unnecessarily large numbers (use GCD to simplify)
+      width > 100 or height > 100 ->
+        add_error(
+          changeset,
+          :settings,
+          "aspect_ratio values must be 100 or less (use simplified ratios like 16:9)"
+        )
+
+      true ->
+        changeset
+    end
+  end
+
+  defp validate_aspect_ratio_value(changeset, _invalid) do
+    add_error(
+      changeset,
+      :settings,
+      "aspect_ratio must be a map with width and height fields"
+    )
   end
 
   @doc """

@@ -24,6 +24,7 @@ export const PlaylistPreview: Component<PlaylistPreviewProps> = (props) => {
 
   let controls: PlayerUIControls;
   let playerUI: PlayerUI;
+  let playerContainer: HTMLDivElement | undefined;
 
   onMount(async () => {
     await cache.init();
@@ -31,6 +32,25 @@ export const PlaylistPreview: Component<PlaylistPreviewProps> = (props) => {
 
   createEffect(() => {
     const playlist = Playlist.fromJSON(props.playlist, resourceManager);
+
+    // Get aspect ratio from playlist settings or default to 16:9
+    const aspectRatio = props.playlist.settings?.aspect_ratio || {
+      width: 16,
+      height: 9,
+    };
+    const aspectRatioValue = aspectRatio.width / aspectRatio.height;
+
+    // Apply aspect ratio to player container
+    if (playerContainer) {
+      playerContainer.style.aspectRatio = `${aspectRatio.width} / ${aspectRatio.height}`;
+      
+      // Add portrait class if aspect ratio is portrait (height > width)
+      if (aspectRatioValue < 1) {
+        playerContainer.classList.add('portrait');
+      } else {
+        playerContainer.classList.remove('portrait');
+      }
+    }
 
     if (controls) {
       controls.destroy();
@@ -65,7 +85,7 @@ export const PlaylistPreview: Component<PlaylistPreviewProps> = (props) => {
   });
 
   return (
-    <div class={styles.widgetView}>
+    <div class={styles.widgetView} ref={playerContainer}>
       <div id="player" class={styles.widgetPlayer}></div>
       <div id="controls" class={styles.widgetControls}></div>
     </div>
