@@ -33,7 +33,7 @@
     "build:device": "cd packages/device && yarn build",
     "build:dashboard": "cd packages/dashboard && yarn build",
     "build:widged": "cd packages/widged && yarn build",
-    "build:website": "cd packages/website && yarn build",
+    "build:website": "yarn run build:cache && yarn run build:player && cd packages/website && yarn build",
     "dev:website": "cd packages/website && yarn start",
     "build:platforms:android": "cd packages/platforms/android-player && yarn build",
     "build:platforms:webos": "cd packages/platforms/webos-player && yarn build",
