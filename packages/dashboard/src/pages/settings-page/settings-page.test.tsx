@@ -425,6 +425,33 @@ describe('SettingsPage', () => {
       });
     });
 
+    it('displays automatic deletion warning when Signal API is supported', async () => {
+      // Mock Signal API support
+      const mockSignalUnknownCredential = vi.fn().mockResolvedValue(undefined);
+      (global as any).PublicKeyCredential = {
+        signalUnknownCredential: mockSignalUnknownCredential,
+      };
+
+      renderWithI18n(() => <SettingsPage />);
+
+      const deleteButton = screen.getByRole('button', {
+        name: 'Delete Account',
+      });
+      fireEvent.click(deleteButton);
+
+      await waitFor(() => {
+        expect(
+          screen.getByText(/supports automatic passkey removal/i)
+        ).toBeInTheDocument();
+        expect(
+          screen.getByText(/automatically deleted from your device/i)
+        ).toBeInTheDocument();
+      });
+
+      // Cleanup
+      delete (global as any).PublicKeyCredential;
+    });
+
     it('calls deleteAccount service when confirmed', async () => {
       (UserService.deleteAccount as any).mockResolvedValue({ status: 'ok' });
 

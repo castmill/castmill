@@ -621,10 +621,15 @@ const SettingsPage: Component = () => {
                 <div class="delete-confirmation">
                   <p>
                     <strong>{t('settings.deleteAccountConfirm')}</strong>{' '}
-                    {t('settings.deleteAccountWarning')}
+                    {isSignalAPISupported()
+                      ? t('settings.deleteAccountWarningWithSignalAPI')
+                      : t('settings.deleteAccountWarning')}
                   </p>
                   <p class="passkey-warning">
-                    ⚠️ {t('settings.deleteAccountPasskeyInfo')}
+                    ⚠️{' '}
+                    {isSignalAPISupported()
+                      ? t('settings.deleteAccountPasskeyInfoWithSignalAPI')
+                      : t('settings.deleteAccountPasskeyInfo')}
                   </p>
                   <div class="confirmation-actions">
                     <Button
