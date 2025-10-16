@@ -433,7 +433,7 @@ describe('SettingsPage', () => {
     });
 
     it('displays passkey cleanup warning in delete confirmation', async () => {
-      renderWithI18n(() => <SettingsPage />);
+      renderWithProviders(() => <SettingsPage />);
 
       const deleteButton = screen.getByRole('button', {
         name: 'Delete Account',
@@ -457,7 +457,7 @@ describe('SettingsPage', () => {
         signalUnknownCredential: mockSignalUnknownCredential,
       };
 
-      renderWithI18n(() => <SettingsPage />);
+      renderWithProviders(() => <SettingsPage />);
 
       const deleteButton = screen.getByRole('button', {
         name: 'Delete Account',
@@ -469,7 +469,7 @@ describe('SettingsPage', () => {
           screen.getByText(/supports automatic passkey removal/i)
         ).toBeInTheDocument();
         expect(
-          screen.getByText(/automatically deleted from your device/i)
+          screen.getByText(/automatically removed from your device/i)
         ).toBeInTheDocument();
       });
 
@@ -480,7 +480,7 @@ describe('SettingsPage', () => {
     it('calls deleteAccount service when confirmed', async () => {
       (UserService.deleteAccount as any).mockResolvedValue({ status: 'ok' });
 
-      renderWithI18n(() => <SettingsPage />);
+      renderWithProviders(() => <SettingsPage />);
 
       const deleteButton = screen.getByRole('button', {
         name: 'Delete Account',
@@ -526,7 +526,7 @@ describe('SettingsPage', () => {
       });
       (UserService.deleteAccount as any).mockResolvedValue({ status: 'ok' });
 
-      renderWithI18n(() => <SettingsPage />);
+      renderWithProviders(() => <SettingsPage />);
 
       await waitFor(() => {
         expect(screen.getByText('My Laptop')).toBeInTheDocument();
