@@ -355,6 +355,7 @@
     "title": "Organización",
     "users": "Usuarios",
     "invitations": "Invitaciones",
+    "settings": "Configuración",
     "update": "Actualizar",
     "placeholderName": "Ingresa el nombre de la organización",
     "inviteMember": "Invitar miembro",
@@ -376,6 +377,8 @@
       "invalidEmail": "Correo electrónico inválido",
       "cannotRemoveLastAdmin": "No puedes eliminar al último administrador de la organización.",
       "invalidRole": "El rol seleccionado no es válido para esta organización.",
+      "mediaInUseAsLogo": "No se puede eliminar un medio que se está utilizando como logo de organización",
+      "loadMedias": "Error al cargar medios",
       "updateRoleFailed": "Error al actualizar el rol del miembro"
     },
     "messages": {
@@ -403,7 +406,16 @@
       "admin": "Puede gestionar miembros del equipo y recursos",
       "member": "Puede acceder y editar recursos del equipo",
       "installer": "Token temporal para registro de dispositivos (expira en 24h)"
-    }
+    },
+    "logo": "Logo",
+    "logoSettings": "Configuración del Logo",
+    "selectLogo": "Seleccionar Logo",
+    "removeLogo": "Eliminar Logo",
+    "logoDescription": "Elija un archivo de medios para usar como logo de su organización. Se mostrará en la barra superior.",
+    "logoUpdated": "Logo actualizado correctamente",
+    "logoRemoved": "Logo eliminado correctamente",
+    "noLogo": "Sin logo seleccionado",
+    "noMediasAvailable": "No hay imágenes disponibles. Por favor, suba una imagen primero."
   },
   "signup": {
     "title": "Registrarse",

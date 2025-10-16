@@ -15,7 +15,16 @@ export const formatDuration = (ms: number) => {
  * @returns Formatted date string like "May 10, 2025, 08:39 UTC"
  */
 export const formatTimestamp = (timestamp: string | Date): string => {
+  if (!timestamp) {
+    return '-';
+  }
+
   const date = typeof timestamp === 'string' ? new Date(timestamp) : timestamp;
+
+  // Check if date is valid
+  if (isNaN(date.getTime())) {
+    return '-';
+  }
 
   // Format: "MMM d, yyyy, HH:mm UTC"
   const options: Intl.DateTimeFormatOptions = {
@@ -38,7 +47,17 @@ export const formatTimestamp = (timestamp: string | Date): string => {
  * @returns Relative time string
  */
 export const formatRelativeTime = (timestamp: string | Date): string => {
+  if (!timestamp) {
+    return '-';
+  }
+
   const date = typeof timestamp === 'string' ? new Date(timestamp) : timestamp;
+
+  // Check if date is valid
+  if (isNaN(date.getTime())) {
+    return '-';
+  }
+
   const now = new Date();
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 

@@ -18,7 +18,8 @@ defmodule CastmillWeb.OrganizationJSON do
   defp data(%Organization{} = organization) do
     %{
       id: organization.id,
-      name: organization.name
+      name: organization.name,
+      logo_media_id: organization.logo_media_id
     }
   end
 end

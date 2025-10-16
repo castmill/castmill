@@ -131,10 +131,13 @@ export function I18nProvider(props: { children: JSX.Element }) {
   const [translations, setTranslations] = createSignal<Translations>(en);
 
   // Load translations when locale changes
-  createEffect(async () => {
+  createEffect(() => {
     const currentLocale = locale();
-    const loadedTranslations = await loadTranslations(currentLocale);
-    setTranslations(loadedTranslations);
+
+    // Load translations asynchronously
+    void loadTranslations(currentLocale).then((loadedTranslations) => {
+      setTranslations(loadedTranslations);
+    });
 
     // Set HTML lang attribute
     document.documentElement.lang = currentLocale;

@@ -14,6 +14,13 @@ import type {
   Action,
 } from '../services/permissions.service';
 
+interface OrganizationLogoState {
+  mediaId: number | null;
+  url: string | null | undefined;
+  loading?: boolean;
+  error?: boolean;
+}
+
 interface CastmillStore {
   loadedAddons: boolean;
   loadingAddons: boolean;
@@ -25,6 +32,7 @@ interface CastmillStore {
     data: Organization[];
     selectedId: string | null;
     selectedName: string;
+    logos: Record<string, OrganizationLogoState>;
   };
 
   // Permissions for the current organization
@@ -70,6 +78,7 @@ const [store, setStore] = createStore<CastmillStore>({
     data: [],
     selectedId: null,
     selectedName: '',
+    logos: {},
   },
 
   permissions: {

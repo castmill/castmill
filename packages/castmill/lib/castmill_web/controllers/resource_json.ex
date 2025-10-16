@@ -79,11 +79,31 @@ defmodule CastmillWeb.ResourceJSON do
       meta: media.meta,
       status: media.status,
       status_message: media.status_message,
-      files: []
+      files: %{}
     }
   end
 
   defp data(%Media{} = media) do
+    files =
+      case Map.get(media, :files) do
+        files when is_map(files) ->
+          files
+
+        _ ->
+          case media.files_medias do
+            %Ecto.Association.NotLoaded{} ->
+              %{}
+
+            files_medias ->
+              Enum.reduce(files_medias, %{}, fn files_media, acc ->
+                case Map.get(files_media, :file) do
+                  nil -> acc
+                  file -> Map.put(acc, files_media.context, file)
+                end
+              end)
+          end
+      end
+
     %{
       id: media.id,
       name: media.name,
@@ -91,7 +111,7 @@ defmodule CastmillWeb.ResourceJSON do
       meta: media.meta,
       status: media.status,
       status_message: media.status_message,
-      files: media.files_medias
+      files: files
     }
   end
 

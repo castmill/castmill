@@ -320,6 +320,7 @@
     "title": "Organisation",
     "users": "Benutzer",
     "invitations": "Einladungen",
+    "settings": "Einstellungen",
     "update": "Aktualisieren",
     "placeholderName": "Organisationsnamen eingeben",
     "inviteMember": "Mitglied einladen",
@@ -341,6 +342,8 @@
       "invalidEmail": "Ungültige E-Mail",
       "cannotRemoveLastAdmin": "Du kannst den letzten Administrator einer Organisation nicht entfernen.",
       "invalidRole": "Die ausgewählte Rolle ist für diese Organisation nicht gültig.",
+      "mediaInUseAsLogo": "Medien, die als Organisationslogo verwendet werden, können nicht gelöscht werden",
+      "loadMedias": "Fehler beim Laden von Medien",
       "updateRoleFailed": "Fehler beim Aktualisieren der Mitgliederrolle"
     },
     "messages": {
@@ -363,6 +366,15 @@
       "member": "Kann auf Teamressourcen zugreifen und diese bearbeiten",
       "installer": "Temporäres Token für Geräteregistrierung (läuft in 24h ab)"
     },
+    "logo": "Logo",
+    "logoSettings": "Logo-Einstellungen",
+    "selectLogo": "Logo auswählen",
+    "removeLogo": "Logo entfernen",
+    "logoDescription": "Wählen Sie eine Mediendatei als Logo Ihrer Organisation. Es wird in der oberen Leiste angezeigt.",
+    "logoUpdated": "Logo erfolgreich aktualisiert",
+    "logoRemoved": "Logo erfolgreich entfernt",
+    "noLogo": "Kein Logo ausgewählt",
+    "noMediasAvailable": "Keine Bilder verfügbar. Bitte laden Sie zuerst ein Bild hoch.",
     "dialogs": {
       "removeMemberTitle": "Benutzer aus Organisation entfernen",
       "removeMemberMessage": "Sind Sie sicher, dass Sie das Mitglied \"{{name}}\" aus der Organisation entfernen möchten?",

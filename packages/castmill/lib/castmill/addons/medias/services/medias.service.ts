@@ -160,7 +160,7 @@ export const MediasService = {
       }
     );
 
-    handleResponse(response);
+    await handleResponse(response);
   },
 
   /**
@@ -184,6 +184,6 @@ export const MediasService = {
       }
     );
 
-    handleResponse(response);
+    await handleResponse(response);
   },
 };
