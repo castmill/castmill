@@ -16,26 +16,34 @@ import { ImCancelCircle } from 'solid-icons/im';
 
 import { useNavigate } from '@solidjs/router';
 import { useI18n } from '../../i18n';
+import { useKeyboardShortcuts } from '../../hooks';
 
 const Search: Component = () => {
   const { t } = useI18n();
   const navigate = useNavigate();
+  const { registerShortcut, unregisterShortcut, formatShortcut, isMac } =
+    useKeyboardShortcuts();
   const [searchString, setSearchString] = createSignal('');
 
   let inputRef: HTMLInputElement | null = null;
 
-  const handleKeyDown = (event: KeyboardEvent) => {
-    // Check if Command+F (⌘F) was pressed
-    if (event.metaKey && event.key === 'f') {
-      event.preventDefault(); // Prevent the default action of ⌘F
-      inputRef!.focus();
-    }
-
-    // Check if Escape was pressed
-    if (event.key === 'Escape') {
-      inputRef!.blur();
-    }
+  const globalSearchShortcut = {
+    key: 'F',
+    ctrl: true,
+    description: t('shortcuts.globalSearch'),
+    category: 'search' as const,
+    action: () => {
+      inputRef?.focus();
+    },
   };
+
+  onMount(() => {
+    registerShortcut('global-search', globalSearchShortcut);
+  });
+
+  onCleanup(() => {
+    unregisterShortcut('global-search');
+  });
 
   const handleEnterKeyDown = (event: KeyboardEvent) => {
     // Navigate to /search?s=searchString when Enter is pressed
@@ -53,14 +61,6 @@ const Search: Component = () => {
     }
   };
 
-  onMount(() => {
-    window.addEventListener('keydown', handleKeyDown);
-  });
-
-  onCleanup(() => {
-    window.removeEventListener('keydown', handleKeyDown);
-  });
-
   return (
     <div class="castmill-search">
       <FaSolidMagnifyingGlass />
@@ -72,7 +72,7 @@ const Search: Component = () => {
         onKeyDown={handleEnterKeyDown}
         ref={inputRef!} // Use ref to access the input element
       />
-      <span class="keyboard-shortcut">&#8984;F</span>
+      <span class="keyboard-shortcut">{formatShortcut(globalSearchShortcut)}</span>
       <ImCancelCircle class="reset-icon" onClick={resetSearch} />
     </div>
   );

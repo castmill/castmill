@@ -318,7 +318,6 @@
     "inviteMember": "Mitglied einladen",
     "enterMemberEmail": "E-Mail des Mitglieds eingeben",
     "role": "Rolle",
-    "changeRole": "Rolle Ändern",
     "roleAdmin": "Administrator",
     "roleManager": "Verwalter",
     "roleMember": "Mitglied",
@@ -334,12 +333,13 @@
       "invalidEmail": "Ungültige E-Mail",
       "cannotRemoveLastAdmin": "Du kannst den letzten Administrator einer Organisation nicht entfernen.",
       "invalidRole": "Die ausgewählte Rolle ist für diese Organisation nicht gültig.",
-      "updateRoleFailed": "Fehler beim Aktualisieren der Mitgliederrolle"
+      "cannotRemoveLastUser": "Sie können nicht gehen, da Sie das einzige Mitglied dieser Organisation sind."
     },
     "messages": {
       "memberRemoved": "Mitglied {{name}} wurde erfolgreich entfernt",
       "membersRemoved": "Mitglieder wurden erfolgreich entfernt",
-      "invitationSent": "Einladung an {{email}} gesendet"
+      "leftOrganization": "Sie haben die Organisation {{name}} verlassen",
+      "noOrganizationsRemaining": "Sie haben Ihre letzte Organisation verlassen. Bitte kontaktieren Sie einen Administrator, um zu einer Organisation eingeladen zu werden."
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {
@@ -356,12 +356,13 @@
       "member": "Kann auf Teamressourcen zugreifen und diese bearbeiten",
       "installer": "Temporäres Token für Geräteregistrierung (läuft in 24h ab)"
     },
-    "dialogs": {
-      "removeMemberTitle": "Benutzer aus Organisation entfernen",
-      "removeMemberMessage": "Sind Sie sicher, dass Sie das Mitglied \"{{name}}\" aus der Organisation entfernen möchten?",
-      "removeMembersTitle": "Mitglieder aus Organisation entfernen",
-      "removeMembersMessage": "Sind Sie sicher, dass Sie die folgenden Mitglieder aus der Organisation entfernen möchten?"
-    }
+    "leaveOrganizationTitle": "Diese Organisation verlassen",
+    "leaveOrganizationDescription": "Das Verlassen entfernt Ihren Zugriff auf Organisationsressourcen sofort.",
+    "leaveOrganizationAction": "Organisation verlassen",
+    "leaveOrganizationLastAdminWarning": "Fügen Sie einen weiteren Administrator hinzu, bevor Sie gehen, um diese Organisation verwaltet zu halten.",
+    "leaveOrganizationLastUserWarning": "Sie können nicht gehen, da Sie das einzige Mitglied dieser Organisation sind.",
+    "leaveLastOrganizationWarningTitle": "Ihre letzte Organisation verlassen?",
+    "leaveLastOrganizationWarningMessage": "Dies ist Ihre einzige Organisation. Wenn Sie sie verlassen, wird Ihr Konto gelöscht und Sie verlieren den gesamten Zugriff auf Castmill. Sie müssen einen Administrator kontaktieren, um erneut eingeladen zu werden. Sind Sie sicher, dass Sie fortfahren möchten?"
   },
   "login": {
     "title": "Anmelden",
@@ -558,59 +559,24 @@
     "teamPlaceholder": "Mannschaft auswählen",
     "teamClear": "Mannschaftsfilter löschen"
   },
-  "organization": {
-    "title": "Organisation",
-    "users": "Benutzer",
-    "invitations": "Einladungen",
-    "update": "Aktualisieren",
-    "placeholderName": "Organisationsnamen eingeben",
-    "inviteMember": "Mitglied einladen",
-    "enterMemberEmail": "E-Mail des Mitglieds eingeben",
-    "role": "Rolle",
-    "roleAdmin": "Administrator",
-    "roleManager": "Verwalter",
-    "roleMember": "Mitglied",
-    "roleEditor": "Redakteur",
-    "rolePublisher": "Veröffentlicher",
-    "roleDeviceManager": "Geräteverwalter",
-    "roleGuest": "Gast",
-    "teamRoleAdmin": "Team-Administrator",
-    "teamRoleMember": "Teammitglied",
-    "errors": {
-      "updateOrganization": "Fehler beim Aktualisieren der Organisation: {{error}}",
-      "emailRequired": "E-Mail ist erforderlich",
-      "invalidEmail": "Ungültige E-Mail",
-      "cannotRemoveLastAdmin": "Du kannst den letzten Administrator einer Organisation nicht entfernen.",
-      "invalidRole": "Die ausgewählte Rolle ist für diese Organisation nicht gültig.",
-      "cannotRemoveLastUser": "Sie können nicht gehen, da Sie das einzige Mitglied dieser Organisation sind."
+  "shortcuts": {
+    "showShortcutsLegend": "Tastaturkürzel anzeigen",
+    "gotoPlaylists": "Zu Wiedergabelisten",
+    "gotoMedias": "Zu Medien",
+    "gotoChannels": "Zu Kanälen",
+    "gotoOrganization": "Zur Organisation",
+    "gotoTeams": "Zu Teams",
+    "gotoDevices": "Zu Geräten",
+    "globalSearch": "Globale Suche",
+    "categories": {
+      "global": "Global",
+      "navigation": "Navigation",
+      "actions": "Aktionen",
+      "search": "Suche"
     },
-    "messages": {
-      "memberRemoved": "Mitglied {{name}} wurde erfolgreich entfernt",
-      "membersRemoved": "Mitglieder wurden erfolgreich entfernt",
-      "leftOrganization": "Sie haben die Organisation {{name}} verlassen",
-      "noOrganizationsRemaining": "Sie haben Ihre letzte Organisation verlassen. Bitte kontaktieren Sie einen Administrator, um zu einer Organisation eingeladen zu werden."
-    },
-    "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
-    "roleDescriptions": {
-      "admin": "Vollzugriff einschließlich Organisationsverwaltung",
-      "manager": "Kann Teams und die meisten Ressourcen verwalten",
-      "member": "Standardbenutzer (Standard), kann Inhalte verwalten",
-      "editor": "Vollständige Inhaltsverwaltung, kann keine Teams verwalten",
-      "publisher": "Wie Redakteur plus Veröffentlichungs-Workflow-Aktionen",
-      "device_manager": "Vollständige Geräte- und Kanalverwaltung",
-      "guest": "Nur-Lese-Zugriff auf Ressourcen"
-    },
-    "teamRoleDescriptions": {
-      "admin": "Kann Teammitglieder und Ressourcen verwalten",
-      "member": "Kann auf Teamressourcen zugreifen und diese bearbeiten",
-      "installer": "Temporäres Token für Geräteregistrierung (läuft in 24h ab)"
-    },
-    "leaveOrganizationTitle": "Diese Organisation verlassen",
-    "leaveOrganizationDescription": "Das Verlassen entfernt Ihren Zugriff auf Organisationsressourcen sofort.",
-    "leaveOrganizationAction": "Organisation verlassen",
-    "leaveOrganizationLastAdminWarning": "Fügen Sie einen weiteren Administrator hinzu, bevor Sie gehen, um diese Organisation verwaltet zu halten.",
-    "leaveOrganizationLastUserWarning": "Sie können nicht gehen, da Sie das einzige Mitglied dieser Organisation sind.",
-    "leaveLastOrganizationWarningTitle": "Ihre letzte Organisation verlassen?",
-    "leaveLastOrganizationWarningMessage": "Dies ist Ihre einzige Organisation. Wenn Sie sie verlassen, wird Ihr Konto gelöscht und Sie verlieren den gesamten Zugriff auf Castmill. Sie müssen einen Administrator kontaktieren, um erneut eingeladen zu werden. Sind Sie sicher, dass Sie fortfahren möchten?"
+    "legend": {
+      "title": "Tastaturkürzel",
+      "description": "Verwenden Sie diese Tastenkombinationen für schnellere Navigation"
+    }
   }
 }

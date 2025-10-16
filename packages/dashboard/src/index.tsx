@@ -40,6 +40,7 @@ import OrganizationPage from './pages/organization-page/organization-page';
 import OrganizationsInvitationPage from './pages/organization-invitations/organizations-invitations-page';
 import ChannelsPage from './pages/channels-page/channels-page';
 import { I18nProvider, useI18n } from './i18n';
+import { KeyboardShortcutsProvider } from './hooks';
 
 const Login = lazy(() => import('./components/login/login'));
 const SignUp = lazy(() => import('./components/signup/signup'));
@@ -176,8 +177,9 @@ render(() => {
 
   return (
     <I18nProvider>
-      <ToastProvider>
-        <Router>
+      <KeyboardShortcutsProvider>
+        <ToastProvider>
+          <Router>
           {/* Routes without App wrapper (no Topbar/Footer) */}
           <Route path="/login" component={Login} />
           <Route path="/signup" component={SignUp} />
@@ -262,6 +264,7 @@ render(() => {
           </Route>
         </Router>
       </ToastProvider>
+      </KeyboardShortcutsProvider>
     </I18nProvider>
   );
 }, root!);

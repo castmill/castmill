@@ -352,7 +352,6 @@
     "inviteMember": "Inviter un membre",
     "enterMemberEmail": "Entrez l'e-mail du membre",
     "role": "Rôle",
-    "changeRole": "Changer le Rôle",
     "roleAdmin": "Administrateur",
     "roleManager": "Gestionnaire",
     "roleMember": "Membre",
@@ -368,12 +367,13 @@
       "invalidEmail": "E-mail invalide",
       "cannotRemoveLastAdmin": "Vous ne pouvez pas supprimer le dernier administrateur de l'organisation.",
       "invalidRole": "Le rôle sélectionné n'est pas valide pour cette organisation.",
-      "updateRoleFailed": "Échec de la mise à jour du rôle du membre"
+      "cannotRemoveLastUser": "Vous ne pouvez pas partir car vous êtes le seul membre de cette organisation."
     },
     "messages": {
       "memberRemoved": "Le membre {{name}} a été supprimé avec succès",
       "membersRemoved": "Les membres ont été supprimés avec succès",
-      "invitationSent": "Invitation envoyée à {{email}}"
+      "leftOrganization": "Vous avez quitté l'organisation {{name}}",
+      "noOrganizationsRemaining": "Vous avez quitté votre dernière organisation. Veuillez contacter un administrateur pour être invité à une organisation."
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {
@@ -390,12 +390,13 @@
       "member": "Peut accéder et modifier les ressources de l'équipe",
       "installer": "Jeton temporaire pour l'enregistrement d'appareil (expire dans 24h)"
     },
-    "dialogs": {
-      "removeMemberTitle": "Retirer l'utilisateur de l'organisation",
-      "removeMemberMessage": "Êtes-vous sûr de vouloir retirer le membre \"{{name}}\" de l'organisation?",
-      "removeMembersTitle": "Retirer les membres de l'organisation",
-      "removeMembersMessage": "Êtes-vous sûr de vouloir retirer les membres suivants de l'organisation?"
-    }
+    "leaveOrganizationTitle": "Quitter cette organisation",
+    "leaveOrganizationDescription": "Quitter supprime votre accès aux ressources de l'organisation immédiatement.",
+    "leaveOrganizationAction": "Quitter l'organisation",
+    "leaveOrganizationLastAdminWarning": "Ajoutez un autre administrateur avant de partir pour garder cette organisation gérée.",
+    "leaveOrganizationLastUserWarning": "Vous ne pouvez pas partir car vous êtes le seul membre de cette organisation.",
+    "leaveLastOrganizationWarningTitle": "Quitter votre dernière organisation ?",
+    "leaveLastOrganizationWarningMessage": "Il s'agit de votre seule organisation. La quitter supprimera votre compte et vous perdrez tout accès à Castmill. Vous devrez contacter un administrateur pour être réinvité. Êtes-vous sûr de vouloir continuer ?"
   },
   "playlists": {
     "title": "Playlists",
@@ -563,59 +564,24 @@
     "teamPlaceholder": "Sélectionner une équipe",
     "teamClear": "Effacer le filtre d'équipe"
   },
-  "organization": {
-    "title": "Organisation",
-    "users": "Utilisateurs",
-    "invitations": "Invitations",
-    "update": "Mettre à jour",
-    "placeholderName": "Entrez le nom de l'organisation",
-    "inviteMember": "Inviter un membre",
-    "enterMemberEmail": "Entrez l'e-mail du membre",
-    "role": "Rôle",
-    "roleAdmin": "Administrateur",
-    "roleManager": "Gestionnaire",
-    "roleMember": "Membre",
-    "roleEditor": "Éditeur",
-    "rolePublisher": "Publieur",
-    "roleDeviceManager": "Gestionnaire d'appareils",
-    "roleGuest": "Invité",
-    "teamRoleAdmin": "Administrateur d'équipe",
-    "teamRoleMember": "Membre de l'équipe",
-    "errors": {
-      "updateOrganization": "Erreur lors de la mise à jour de l'organisation : {{error}}",
-      "emailRequired": "L'e-mail est requis",
-      "invalidEmail": "E-mail invalide",
-      "cannotRemoveLastAdmin": "Vous ne pouvez pas supprimer le dernier administrateur de l'organisation.",
-      "invalidRole": "Le rôle sélectionné n'est pas valide pour cette organisation.",
-      "cannotRemoveLastUser": "Vous ne pouvez pas partir car vous êtes le seul membre de cette organisation."
+  "shortcuts": {
+    "showShortcutsLegend": "Afficher les raccourcis clavier",
+    "gotoPlaylists": "Aller aux Listes de lecture",
+    "gotoMedias": "Aller aux Médias",
+    "gotoChannels": "Aller aux Chaînes",
+    "gotoOrganization": "Aller à l'Organisation",
+    "gotoTeams": "Aller aux Équipes",
+    "gotoDevices": "Aller aux Appareils",
+    "globalSearch": "Recherche globale",
+    "categories": {
+      "global": "Global",
+      "navigation": "Navigation",
+      "actions": "Actions",
+      "search": "Recherche"
     },
-    "messages": {
-      "memberRemoved": "Le membre {{name}} a été supprimé avec succès",
-      "membersRemoved": "Les membres ont été supprimés avec succès",
-      "leftOrganization": "Vous avez quitté l'organisation {{name}}",
-      "noOrganizationsRemaining": "Vous avez quitté votre dernière organisation. Veuillez contacter un administrateur pour être invité à une organisation."
-    },
-    "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
-    "roleDescriptions": {
-      "admin": "Accès complet incluant la gestion de l'organisation",
-      "manager": "Peut gérer les équipes et la plupart des ressources",
-      "member": "Utilisateur standard (par défaut), peut gérer le contenu",
-      "editor": "Gestion complète du contenu, ne peut pas gérer les équipes",
-      "publisher": "Comme éditeur plus actions de flux de publication",
-      "device_manager": "Gestion complète des appareils et canaux",
-      "guest": "Accès en lecture seule aux ressources"
-    },
-    "teamRoleDescriptions": {
-      "admin": "Peut gérer les membres de l'équipe et les ressources",
-      "member": "Peut accéder et modifier les ressources de l'équipe",
-      "installer": "Jeton temporaire pour l'enregistrement d'appareil (expire dans 24h)"
-    },
-    "leaveOrganizationTitle": "Quitter cette organisation",
-    "leaveOrganizationDescription": "Quitter supprime votre accès aux ressources de l'organisation immédiatement.",
-    "leaveOrganizationAction": "Quitter l'organisation",
-    "leaveOrganizationLastAdminWarning": "Ajoutez un autre administrateur avant de partir pour garder cette organisation gérée.",
-    "leaveOrganizationLastUserWarning": "Vous ne pouvez pas partir car vous êtes le seul membre de cette organisation.",
-    "leaveLastOrganizationWarningTitle": "Quitter votre dernière organisation ?",
-    "leaveLastOrganizationWarningMessage": "Il s'agit de votre seule organisation. La quitter supprimera votre compte et vous perdrez tout accès à Castmill. Vous devrez contacter un administrateur pour être réinvité. Êtes-vous sûr de vouloir continuer ?"
+    "legend": {
+      "title": "Raccourcis clavier",
+      "description": "Utilisez ces raccourcis pour naviguer plus rapidement"
+    }
   }
 }
