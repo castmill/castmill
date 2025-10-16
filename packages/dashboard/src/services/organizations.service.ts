@@ -76,6 +76,7 @@ export const OrganizationsService = {
         );
       }
 
+      // Map specific error codes to user-friendly messages
       if (errorMessage === 'Failed to remove member from organization') {
         if (response.status === 422) {
           errorMessage = 'cannot_remove_last_organization_admin';
