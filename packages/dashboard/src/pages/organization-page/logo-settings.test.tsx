@@ -77,6 +77,12 @@ describe('LogoSettings', () => {
       ok: false,
       status: 404,
     } as Response);
+    // Suppress expected console.error messages in tests
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   describe('Logo Removal', () => {

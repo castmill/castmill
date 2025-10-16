@@ -27,6 +27,18 @@ describe('formatTimestamp', () => {
     expect(result).toMatch(/14:30/);
     expect(result).toMatch(/UTC/);
   });
+
+  it('should return "-" for undefined timestamp', () => {
+    expect(formatTimestamp(undefined as any)).toBe('-');
+  });
+
+  it('should return "-" for null timestamp', () => {
+    expect(formatTimestamp(null as any)).toBe('-');
+  });
+
+  it('should return "-" for invalid date string', () => {
+    expect(formatTimestamp('invalid-date')).toBe('-');
+  });
 });
 
 describe('formatRelativeTime', () => {
@@ -112,5 +124,17 @@ describe('formatRelativeTime', () => {
   it('should handle ISO string input', () => {
     const result = formatRelativeTime('2025-01-01T11:55:00Z');
     expect(result).toBe('5 minutes ago');
+  });
+
+  it('should return "-" for undefined timestamp', () => {
+    expect(formatRelativeTime(undefined as any)).toBe('-');
+  });
+
+  it('should return "-" for null timestamp', () => {
+    expect(formatRelativeTime(null as any)).toBe('-');
+  });
+
+  it('should return "-" for invalid date string', () => {
+    expect(formatRelativeTime('invalid-date')).toBe('-');
   });
 });
