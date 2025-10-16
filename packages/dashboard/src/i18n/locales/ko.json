@@ -80,6 +80,7 @@
     },
     "addonError": "애드온 오류",
     "backToLogin": "로그인으로 돌아가기",
+    "offline": "[TODO: Translate] Offline",
     "selectImage": "이미지 선택",
     "selectMedia": "미디어 선택"
   },
@@ -191,10 +192,7 @@
   },
   "teams": {
     "title": "팀",
-    "members": {
-      "selectUser": "사용자 선택",
-      "searchUser": "사용자 검색..."
-    },
+    "members": "TODO: Translate - Members",
     "invitations": "초대",
     "invitationAcceptSuccess": "초대가 성공적으로 수락되었습니다",
     "invitationDeleteSuccess": "초대가 성공적으로 삭제되었습니다",
@@ -263,6 +261,11 @@
       "accepting": "수락 중...",
       "accept": "초대 수락"
     },
+    "memberSelection": {
+      "selectUser": "사용자 선택",
+      "searchUser": "사용자 검색..."
+    },
+    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully",
     "dialogs": {
       "removeMemberTitle": "팀에서 사용자 제거",
       "removeMemberMessage": "멤버 \"{{name}}\"을(를) 팀에서 제거하시겠습니까?",
@@ -308,7 +311,8 @@
     "content": "콘텐츠",
     "playlists": "재생 목록",
     "medias": "미디어",
-    "widgets": "Widgets"
+    "widgets": "Widgets",
+    "members": "[TODO: Translate] Members"
   },
   "channels": {
     "title": "채널",

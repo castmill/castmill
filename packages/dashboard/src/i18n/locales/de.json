@@ -75,6 +75,7 @@
     "addonLoadingError": "Add-on-Ladefehler",
     "addonError": "Add-on-Fehler",
     "backToLogin": "Zurück zur Anmeldung",
+    "offline": "[TODO: Translate] Offline",
     "selectImage": "Bild auswählen",
     "selectMedia": "Medien auswählen"
   },
@@ -87,7 +88,8 @@
     "content": "Inhalt",
     "playlists": "Playlists",
     "medias": "Medien",
-    "widgets": "Widgets"
+    "widgets": "Widgets",
+    "members": "[TODO: Translate] Members"
   },
   "topbar": {
     "help": "Hilfe",
@@ -205,10 +207,7 @@
     "removeTeams": "Teams entfernen",
     "confirmRemoveTeam": "Sind Sie sicher, dass Sie das Team \"{{name}}\" entfernen möchten?",
     "confirmRemoveTeams": "Sind Sie sicher, dass Sie die folgenden Teams entfernen möchten?",
-    "members": {
-      "selectUser": "Benutzer auswählen",
-      "searchUser": "Nach einem Benutzer suchen..."
-    },
+    "members": "TODO: Translate - Members",
     "invitations": "Einladungen",
     "invitationAcceptSuccess": "Einladung erfolgreich angenommen",
     "invitationDeleteSuccess": "Einladung erfolgreich gelöscht",
@@ -269,6 +268,11 @@
       "accepting": "Wird angenommen...",
       "accept": "Einladung annehmen"
     },
+    "memberSelection": {
+      "selectUser": "Benutzer auswählen",
+      "searchUser": "Nach einem Benutzer suchen..."
+    },
+    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully",
     "dialogs": {
       "removeMemberTitle": "Benutzer aus Team entfernen",
       "removeMemberMessage": "Sind Sie sicher, dass Sie das Mitglied \"{{name}}\" aus dem Team entfernen möchten?",

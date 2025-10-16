@@ -75,6 +75,7 @@
     "addonLoadingError": "Fel vid laddning av tillägg",
     "addonError": "Tilläggsfel",
     "backToLogin": "Tillbaka till inloggning",
+    "offline": "[TODO: Translate] Offline",
     "selectImage": "Välj en bild",
     "selectMedia": "Välj ett media"
   },
@@ -186,10 +187,7 @@
   },
   "teams": {
     "title": "Team",
-    "members": {
-      "selectUser": "Välj användare",
-      "searchUser": "Sök efter en användare..."
-    },
+    "members": "TODO: Translate - Members",
     "invitations": "Inbjudningar",
     "invitationAcceptSuccess": "Inbjudan accepterad framgångsrikt",
     "invitationDeleteSuccess": "Inbjudan borttagen framgångsrikt",
@@ -258,6 +256,11 @@
       "accepting": "Accepterar...",
       "accept": "Acceptera inbjudan"
     },
+    "memberSelection": {
+      "selectUser": "Välj användare",
+      "searchUser": "Sök efter en användare..."
+    },
+    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully",
     "dialogs": {
       "removeMemberTitle": "Ta bort användare från team",
       "removeMemberMessage": "Är du säker på att du vill ta bort medlemmen \"{{name}}\" från teamet?",
@@ -303,7 +306,8 @@
     "content": "Innehåll",
     "playlists": "Spellistor",
     "medias": "Media",
-    "widgets": "Widgets"
+    "widgets": "Widgets",
+    "members": "[TODO: Translate] Members"
   },
   "channels": {
     "title": "Kanaler",

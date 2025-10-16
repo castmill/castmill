@@ -80,6 +80,7 @@
     },
     "addonError": "アドオンエラー",
     "backToLogin": "ログインに戻る",
+    "offline": "[TODO: Translate] Offline",
     "selectImage": "画像を選択",
     "selectMedia": "メディアを選択"
   },
@@ -191,10 +192,7 @@
   },
   "teams": {
     "title": "チーム",
-    "members": {
-      "selectUser": "ユーザーを選択",
-      "searchUser": "ユーザーを検索..."
-    },
+    "members": "TODO: Translate - Members",
     "invitations": "招待",
     "invitationAcceptSuccess": "招待が正常に承認されました",
     "invitationDeleteSuccess": "招待が正常に削除されました",
@@ -263,6 +261,11 @@
       "accepting": "承認中...",
       "accept": "招待を承認"
     },
+    "memberSelection": {
+      "selectUser": "ユーザーを選択",
+      "searchUser": "ユーザーを検索..."
+    },
+    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully",
     "dialogs": {
       "removeMemberTitle": "チームからユーザーを削除",
       "removeMemberMessage": "メンバー「{{name}}」をチームから削除してもよろしいですか？",
@@ -308,7 +311,8 @@
     "content": "コンテンツ",
     "playlists": "プレイリスト",
     "medias": "メディア",
-    "widgets": "Widgets"
+    "widgets": "Widgets",
+    "members": "[TODO: Translate] Members"
   },
   "channels": {
     "title": "チャンネル",

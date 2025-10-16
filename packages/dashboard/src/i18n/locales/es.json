@@ -81,6 +81,7 @@
     "addonLoadingError": "Error al cargar complemento",
     "addonError": "Error de complemento",
     "backToLogin": "Volver al inicio de sesión",
+    "offline": "[TODO: Translate] Offline",
     "selectImage": "Seleccionar una imagen",
     "selectMedia": "Seleccionar un medio"
   },
@@ -192,10 +193,7 @@
   },
   "teams": {
     "title": "Equipos",
-    "members": {
-      "selectUser": "Seleccionar usuario",
-      "searchUser": "Buscar un usuario..."
-    },
+    "members": "TODO: Translate - Members",
     "invitations": "Invitaciones",
     "invitationAcceptSuccess": "Invitación aceptada exitosamente",
     "invitationDeleteSuccess": "Invitación eliminada exitosamente",
@@ -269,7 +267,12 @@
       "expired": "Esta invitación ha expirado.",
       "accepting": "Aceptando...",
       "accept": "Aceptar invitación"
-    }
+    },
+    "memberSelection": {
+      "selectUser": "Seleccionar usuario",
+      "searchUser": "Buscar un usuario..."
+    },
+    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully"
   },
   "login": {
     "title": "Iniciar sesión",
@@ -309,7 +312,8 @@
     "content": "Contenido",
     "playlists": "Listas de reproducción",
     "medias": "Medios",
-    "widgets": "Widgets"
+    "widgets": "Widgets",
+    "members": "[TODO: Translate] Members"
   },
   "channels": {
     "title": "Canales",

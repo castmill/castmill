@@ -80,6 +80,7 @@
     },
     "addonError": "خطأ في الإضافة",
     "backToLogin": "العودة لتسجيل الدخول",
+    "offline": "[TODO: Translate] Offline",
     "selectImage": "اختر صورة",
     "selectMedia": "اختر وسائط"
   },
@@ -191,10 +192,7 @@
   },
   "teams": {
     "title": "الفرق",
-    "members": {
-      "selectUser": "اختر مستخدمًا",
-      "searchUser": "البحث عن مستخدم..."
-    },
+    "members": "TODO: Translate - Members",
     "invitations": "الدعوات",
     "invitationAcceptSuccess": "تم قبول الدعوة بنجاح",
     "invitationDeleteSuccess": "تم حذف الدعوة بنجاح",
@@ -263,6 +261,11 @@
       "accepting": "جاري القبول...",
       "accept": "قبول الدعوة"
     },
+    "memberSelection": {
+      "selectUser": "اختر مستخدمًا",
+      "searchUser": "البحث عن مستخدم..."
+    },
+    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully",
     "dialogs": {
       "removeMemberTitle": "إزالة المستخدم من الفريق",
       "removeMemberMessage": "هل أنت متأكد أنك تريد إزالة العضو \"{{name}}\" من الفريق؟",
@@ -308,7 +311,8 @@
     "content": "المحتوى",
     "playlists": "قوائم التشغيل",
     "medias": "الوسائط",
-    "widgets": "Widgets"
+    "widgets": "Widgets",
+    "members": "[TODO: Translate] Members"
   },
   "channels": {
     "title": "القنوات",

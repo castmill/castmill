@@ -60,6 +60,7 @@
     "ip": "Adresse IP",
     "description": "Description",
     "online": "En ligne",
+    "offline": "Hors ligne",
     "update": "Mettre à jour",
     "reset": "Réinitialiser",
     "addedOn": "Ajouté le",
@@ -191,10 +192,7 @@
   },
   "teams": {
     "title": "Équipes",
-    "members": {
-      "selectUser": "Sélectionner un utilisateur",
-      "searchUser": "Rechercher un utilisateur..."
-    },
+    "members": "TODO: Translate - Members",
     "invitations": "Invitations",
     "invitationAcceptSuccess": "Invitation acceptée avec succès",
     "invitationDeleteSuccess": "Invitation supprimée avec succès",
@@ -263,6 +261,11 @@
       "accepting": "Acceptation...",
       "accept": "Accepter l'invitation"
     },
+    "memberSelection": {
+      "selectUser": "Sélectionner un utilisateur",
+      "searchUser": "Rechercher un utilisateur..."
+    },
+    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully",
     "dialogs": {
       "removeMemberTitle": "Retirer l'utilisateur de l'équipe",
       "removeMemberMessage": "Êtes-vous sûr de vouloir retirer le membre \"{{name}}\" de l'équipe?",
@@ -308,7 +311,8 @@
     "content": "Contenu",
     "playlists": "Listes de lecture",
     "medias": "Médias",
-    "widgets": "Widgets"
+    "widgets": "Widgets",
+    "members": "[TODO: Translate] Members"
   },
   "channels": {
     "title": "Canaux",

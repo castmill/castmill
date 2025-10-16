@@ -80,6 +80,7 @@
     },
     "addonError": "插件错误",
     "backToLogin": "返回登录",
+    "offline": "[TODO: Translate] Offline",
     "selectImage": "选择图片",
     "selectMedia": "选择媒体"
   },
@@ -191,10 +192,7 @@
   },
   "teams": {
     "title": "团队",
-    "members": {
-      "selectUser": "选择用户",
-      "searchUser": "搜索用户..."
-    },
+    "members": "TODO: Translate - Members",
     "invitations": "邀请",
     "invitationAcceptSuccess": "邀请接受成功",
     "invitationDeleteSuccess": "邀请删除成功",
@@ -263,6 +261,11 @@
       "accepting": "正在接受...",
       "accept": "接受邀请"
     },
+    "memberSelection": {
+      "selectUser": "选择用户",
+      "searchUser": "搜索用户..."
+    },
+    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully",
     "dialogs": {
       "removeMemberTitle": "从团队中移除用户",
       "removeMemberMessage": "您确定要从团队中移除成员\"{{name}}\"吗？",
@@ -308,7 +311,8 @@
     "content": "内容",
     "playlists": "播放列表",
     "medias": "媒体",
-    "widgets": "Widgets"
+    "widgets": "Widgets",
+    "members": "[TODO: Translate] Members"
   },
   "channels": {
     "title": "频道",
