@@ -139,7 +139,7 @@
     "deleteAccountButton": "删除账户",
     "deleteAccountConfirm": "您确定吗？",
     "deleteAccountWarning": "这将永久删除您的账户并从我们的服务器中删除所有密钥。但是，存储在您设备上的密钥（在iCloud钥匙串、Google密码管理器、Windows Hello等中）将保留，必须手动删除。",
-    "deleteAccountWarningWithSignalAPI": "这将永久删除您的账户并从我们的服务器中删除所有密钥。您的浏览器支持自动删除密钥，因此密钥将自动从您的设备中删除。",
+    "deleteAccountWarningWithSignalAPI": "这将永久删除您的账户并从我们的服务器中删除所有密钥。您的浏览器支持自动删除密钥。",
     "deleteAccountPasskeyInfo": "删除后，如果您尝试使用旧密钥登录，将会失败。为避免混淆，请从您的设备设置中手动删除此账户的密钥。",
     "deleteAccountPasskeyInfoWithSignalAPI": "删除后，密钥将自动从您的设备中删除。如果您以后尝试登录，则需要创建新账户。",
     "deleteAccountYes": "是的，删除账户",

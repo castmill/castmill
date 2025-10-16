@@ -145,7 +145,7 @@
     "deleteAccountButton": "Konto löschen",
     "deleteAccountConfirm": "Sind Sie sicher?",
     "deleteAccountWarning": "Dies wird Ihr Konto dauerhaft löschen und alle Passkeys von unseren Servern entfernen. Allerdings bleiben auf Ihren Geräten gespeicherte Passkeys (in iCloud-Schlüsselbund, Google Password Manager, Windows Hello usw.) bestehen und müssen manuell entfernt werden.",
-    "deleteAccountWarningWithSignalAPI": "Dies wird Ihr Konto dauerhaft löschen und alle Passkeys von unseren Servern entfernen. Ihr Browser unterstützt die automatische Entfernung von Passkeys, daher werden die Passkeys automatisch von Ihrem Gerät gelöscht.",
+    "deleteAccountWarningWithSignalAPI": "Dies wird Ihr Konto dauerhaft löschen und alle Passkeys von unseren Servern entfernen. Ihr Browser unterstützt die automatische Entfernung von Passkeys.",
     "deleteAccountPasskeyInfo": "Nach der Löschung schlägt der Versuch, sich mit einem alten Passkey anzumelden, fehl. Um Verwirrung zu vermeiden, entfernen Sie bitte die Passkeys dieses Kontos manuell aus den Geräteeinstellungen.",
     "deleteAccountPasskeyInfoWithSignalAPI": "Nach der Löschung werden die Passkeys automatisch von Ihrem Gerät entfernt. Wenn Sie sich später anmelden möchten, müssen Sie ein neues Konto erstellen.",
     "deleteAccountYes": "Ja, Konto löschen",

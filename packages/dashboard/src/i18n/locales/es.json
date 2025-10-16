@@ -134,7 +134,7 @@
     "deleteAccountButton": "Eliminar cuenta",
     "deleteAccountConfirm": "¿Estás seguro?",
     "deleteAccountWarning": "Esto eliminará permanentemente tu cuenta y eliminará todas las llaves de acceso de nuestros servidores. Sin embargo, las llaves almacenadas en tus dispositivos (en iCloud Keychain, Google Password Manager, Windows Hello, etc.) permanecerán y deben eliminarse manualmente.",
-    "deleteAccountWarningWithSignalAPI": "Esto eliminará permanentemente tu cuenta y eliminará todas las llaves de acceso de nuestros servidores. Tu navegador admite la eliminación automática de llaves, por lo que las llaves se eliminarán automáticamente de tu dispositivo.",
+    "deleteAccountWarningWithSignalAPI": "Esto eliminará permanentemente tu cuenta y eliminará todas las llaves de acceso de nuestros servidores. Tu navegador admite la eliminación automática de llaves.",
     "deleteAccountPasskeyInfo": "Después de la eliminación, si intentas iniciar sesión con una llave antigua, fallará. Para evitar confusión, por favor elimina manualmente las llaves de acceso de esta cuenta de la configuración de tu dispositivo.",
     "deleteAccountPasskeyInfoWithSignalAPI": "Después de la eliminación, las llaves se eliminarán automáticamente de tu dispositivo. Si intentas iniciar sesión más tarde, necesitarás crear una nueva cuenta.",
     "deleteAccountYes": "Sí, eliminar cuenta",

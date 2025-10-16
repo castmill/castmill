@@ -134,7 +134,7 @@
     "deleteAccountButton": "Ta bort konto",
     "deleteAccountConfirm": "Är du säker?",
     "deleteAccountWarning": "Detta kommer permanent ta bort ditt konto och ta bort alla nycklar från våra servrar. Dock kommer nycklar som är lagrade på dina enheter (i iCloud Keychain, Google Password Manager, Windows Hello, etc.) att finnas kvar och måste tas bort manuellt.",
-    "deleteAccountWarningWithSignalAPI": "Detta kommer permanent ta bort ditt konto och ta bort alla nycklar från våra servrar. Din webbläsare stöder automatisk borttagning av nycklar, så nycklar kommer automatiskt att tas bort från din enhet.",
+    "deleteAccountWarningWithSignalAPI": "Detta kommer permanent ta bort ditt konto och ta bort alla nycklar från våra servrar. Din webbläsare stöder automatisk borttagning av nycklar.",
     "deleteAccountPasskeyInfo": "Efter borttagning kommer försök att logga in med en gammal nyckel att misslyckas. För att undvika förvirring, vänligen ta bort detta kontos nycklar manuellt från din enhets inställningar.",
     "deleteAccountPasskeyInfoWithSignalAPI": "Efter borttagning kommer nycklar automatiskt att tas bort från din enhet. Om du försöker logga in senare måste du skapa ett nytt konto.",
     "deleteAccountYes": "Ja, ta bort konto",
