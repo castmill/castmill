@@ -1,6 +1,17 @@
 import { User } from '../interfaces/user.interface';
 import { baseUrl } from '../env';
+import { HttpError } from '@castmill/ui-common';
 import { handleResponse } from './util';
+
+export class SoleAdministratorError extends Error {
+  constructor(
+    public organizationName?: string,
+    message?: string
+  ) {
+    super(message || 'Cannot delete account - sole administrator');
+    this.name = 'SoleAdministratorError';
+  }
+}
 
 export const UserService = {
   /**
@@ -29,7 +40,40 @@ export const UserService = {
     });
 
     if (response.status !== 204) {
-      throw new Error('Failed to delete account');
+      // Try to extract error information from response
+      try {
+        const errorData = await response.json();
+
+        // Check for structured error response
+        if (errorData.error === 'sole_administrator') {
+          throw new SoleAdministratorError(
+            errorData.organization_name,
+            `Cannot delete account. You are the sole administrator of '${errorData.organization_name}' which has other members.`
+          );
+        }
+
+        // Handle other error types
+        if (errorData.error) {
+          throw new HttpError(errorData.error, response.status);
+        }
+
+        // Legacy: handle old message format
+        if (errorData.message) {
+          throw new Error(errorData.message);
+        }
+      } catch (error) {
+        // If it's already our custom error, re-throw it
+        if (
+          error instanceof SoleAdministratorError ||
+          error instanceof HttpError
+        ) {
+          throw error;
+        }
+        // Otherwise, generic parsing error
+      }
+
+      // Fallback error
+      throw new HttpError('Failed to delete account', response.status);
     }
   },
 

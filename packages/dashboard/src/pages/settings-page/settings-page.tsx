@@ -6,9 +6,12 @@ import {
   Show,
   For,
 } from 'solid-js';
-import { Button, FormItem, Timestamp } from '@castmill/ui-common';
-import { getUser } from '../../components/auth';
-import { UserService } from '../../services/user.service';
+import { Button, FormItem, Timestamp, useToast } from '@castmill/ui-common';
+import { getUser, updateUser } from '../../components/auth';
+import {
+  UserService,
+  SoleAdministratorError,
+} from '../../services/user.service';
 import { User } from '../../interfaces/user.interface';
 import {
   Credential,
@@ -20,6 +23,7 @@ import { domain } from '../../env';
 
 const SettingsPage: Component = () => {
   const { t, locale, setLocale } = useI18n();
+  const toast = useToast();
   const [user, setUser] = createSignal<User | null>(null);
   const [name, setName] = createSignal('');
   const [email, setEmail] = createSignal('');
@@ -149,8 +153,10 @@ const SettingsPage: Component = () => {
 
       if (Object.keys(updates).length > 0) {
         await UserService.updateProfile(currentUser.id, updates);
-        // Update the user signal with new values to reset isDirty state
+        // Update the local user signal with new values to reset isDirty state
         setUser({ ...currentUser, ...updates });
+        // Update the global user state so the topbar reacts to the change
+        updateUser(updates);
       }
 
       if (emailChanged) {
@@ -191,10 +197,29 @@ const SettingsPage: Component = () => {
       // Delete account from server (this also deletes credentials in database)
       await UserService.deleteAccount(currentUser.id);
 
-      // Redirect to login or show success message
-      window.location.href = '/login';
+      toast.success(t('settings.deleteAccountSuccess'));
+      // Redirect to login after brief delay
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 1500);
     } catch (err) {
-      setError('Failed to delete account. Please try again.');
+      // Handle structured errors
+      let errorMessage = t('settings.deleteAccountError');
+
+      if (err instanceof SoleAdministratorError) {
+        // Use the organization name from the error
+        if (err.organizationName) {
+          errorMessage = t('settings.soleAdministratorError', {
+            orgName: err.organizationName,
+          });
+        } else {
+          errorMessage = t('settings.soleAdministratorErrorGeneric');
+        }
+      } else if (err instanceof Error) {
+        errorMessage = err.message || t('settings.deleteAccountError');
+      }
+
+      toast.error(errorMessage, 0); // No auto-dismiss for critical errors
       console.error('Account deletion error:', err);
     } finally {
       setLoading(false);

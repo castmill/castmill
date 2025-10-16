@@ -1,10 +1,5 @@
-/**
- * Organizations Members View
- *
- * (c) Castmill 2025
- */
-
 import {
+  Button,
   IconButton,
   Modal,
   TableView,
@@ -20,15 +15,19 @@ import { PermissionButton } from '../../components/permission-button/permission-
 import { usePermissions } from '../../hooks/usePermissions';
 import { BsCheckLg } from 'solid-icons/bs';
 import { AiOutlineDelete } from 'solid-icons/ai';
-import { createEffect, createSignal, Show } from 'solid-js';
+import { createEffect, createMemo, createSignal, Show } from 'solid-js';
 import { User } from '../../interfaces/user.interface';
 import { OrganizationsService } from '../../services/organizations.service';
 import { OrganizationInviteForm } from './organization-invite-form';
 import { OrganizationRole } from '../../types/organization-role.type';
 import { useI18n } from '../../i18n';
 import { getUser } from '../../components/auth';
+import { useNavigate } from '@solidjs/router';
+import styles from './organization-page.module.scss';
 
-const [data, setData] = createSignal<{ user: User; user_id: string }[]>([], {
+const [data, setData] = createSignal<
+  { user: User; user_id: string; role: string }[]
+>([], {
   equals: false,
 });
 
@@ -41,11 +40,38 @@ const [showConfirmDialogMultiple, setShowConfirmDialogMultiple] =
   createSignal(false);
 
 const [showConfirmDialog, setShowConfirmDialog] = createSignal(false);
+const [showLeaveWarningDialog, setShowLeaveWarningDialog] = createSignal(false);
 
 const [selectedMembers, setSelectedMembers] = createSignal(new Set<string>());
+const [selectedMembersMap, setSelectedMembersMap] = createSignal(
+  new Map<string, { user: User; user_id: string }>()
+);
 
 const onRowSelect = (rowsSelected: Set<string>) => {
+  const previousSelection = selectedMembers();
   setSelectedMembers(rowsSelected);
+
+  // Update the map: remove deselected items, add newly selected items
+  const newMap = new Map(selectedMembersMap());
+
+  // Remove deselected members
+  previousSelection.forEach((id) => {
+    if (!rowsSelected.has(id)) {
+      newMap.delete(id);
+    }
+  });
+
+  // Add newly selected members from current data
+  rowsSelected.forEach((memberId) => {
+    if (!newMap.has(memberId)) {
+      const member = data().find((d) => d.user_id === memberId);
+      if (member) {
+        newMap.set(memberId, member);
+      }
+    }
+  });
+
+  setSelectedMembersMap(newMap);
 };
 
 const itemsPerPage = 10;
@@ -58,6 +84,7 @@ export const OrganizationMembersView = (props: {
   const { t } = useI18n();
   const { canPerformAction } = usePermissions();
   const toast = useToast();
+  const navigate = useNavigate();
   const resolveRemoveMemberError = (error: unknown) => {
     if (error instanceof HttpError) {
       switch (error.status) {
@@ -81,6 +108,32 @@ export const OrganizationMembersView = (props: {
   };
 
   const currentUser = getUser();
+
+  const currentMembership = createMemo(() => {
+    if (!currentUser?.id) {
+      return undefined;
+    }
+    return data().find((entry) => entry.user_id === currentUser.id);
+  });
+
+  const adminCount = createMemo(
+    () => data().filter((entry) => entry.role === 'admin').length
+  );
+
+  const canLeaveOrganization = createMemo(() => {
+    const membership = currentMembership();
+    if (!membership) {
+      return false;
+    }
+
+    // Non-admins can always leave (assuming there's at least one admin)
+    if (membership.role !== 'admin') {
+      return true;
+    }
+
+    // Admins can leave only if there's another admin
+    return adminCount() > 1;
+  });
 
   const columns = [
     {
@@ -184,6 +237,73 @@ export const OrganizationMembersView = (props: {
       refreshData();
       toast.success(t('organization.messages.membersRemoved'));
       setShowConfirmDialogMultiple(false);
+      setSelectedMembersMap(new Map());
+    } catch (error) {
+      const errorMessage = resolveRemoveMemberError(error);
+      toast.error(errorMessage);
+    }
+  };
+
+  const handleLeaveOrganizationClick = () => {
+    // Check if this is the user's last organization
+    const totalOrganizations = store.organizations.data.length;
+
+    if (totalOrganizations <= 1) {
+      // Show warning dialog - this will effectively delete the account
+      setShowLeaveWarningDialog(true);
+    } else {
+      // Safe to leave - user has other organizations
+      leaveOrganization();
+    }
+  };
+
+  const leaveOrganization = async () => {
+    const membership = currentMembership();
+    if (!membership) {
+      return;
+    }
+
+    try {
+      await OrganizationsService.removeMemberFromOrganization(
+        props.organizationId,
+        membership.user_id
+      );
+
+      toast.success(
+        t('organization.messages.leftOrganization', {
+          name: props.organizationName,
+        })
+      );
+
+      // Reload organizations to get updated list
+      const user = getUser();
+      if (!user?.id) {
+        // Shouldn't happen, but handle gracefully
+        navigate('/login', { replace: true });
+        return;
+      }
+
+      const updatedOrganizations = await OrganizationsService.getAll(user.id);
+
+      // Update store with new organizations list
+      setStore('organizations', {
+        data: updatedOrganizations,
+        loaded: true,
+        loading: false,
+        selectedId: null,
+        selectedName: '',
+      });
+
+      // Navigate to another organization or login page
+      if (updatedOrganizations.length > 0) {
+        // Navigate to the first available organization
+        const nextOrg = updatedOrganizations[0];
+        navigate(`/org/${nextOrg.id}`, { replace: true });
+      } else {
+        // User has no organizations left - redirect to login with message
+        toast.info(t('organization.messages.noOrganizationsRemaining'));
+        navigate('/login', { replace: true });
+      }
     } catch (error) {
       const errorMessage = resolveRemoveMemberError(error);
       toast.error(errorMessage);
@@ -233,8 +353,10 @@ export const OrganizationMembersView = (props: {
 
       <ConfirmDialog
         show={showConfirmDialog()}
-        title={`Remove User From Organization`}
-        message={`Are you sure you want to remove member "${currentMember()?.user?.name}" from the organization?`}
+        title={t('organization.dialogs.removeMemberTitle')}
+        message={t('organization.dialogs.removeMemberMessage', {
+          name: currentMember()?.user?.name,
+        })}
         onClose={() => setShowConfirmDialog(false)}
         onConfirm={() =>
           confirmRemoveMemberFromOrganization(currentMember()?.user)
@@ -243,15 +365,14 @@ export const OrganizationMembersView = (props: {
 
       <ConfirmDialog
         show={showConfirmDialogMultiple()}
-        title={`Remove members From Organization`}
-        message={`Are you sure you want to remove the following members from the organization?`}
+        title={t('organization.dialogs.removeMembersTitle')}
+        message={t('organization.dialogs.removeMembersMessage')}
         onClose={() => setShowConfirmDialogMultiple(false)}
         onConfirm={() => confirmRemoveMultipleMembersFromOrganization()}
       >
         <div style="margin: 1.5em; line-height: 1.5em;">
-          {Array.from(selectedMembers()).map((memberId) => {
-            const member = data().find((d) => d.user_id === memberId);
-            return <div>{`- ${member?.user.name}`}</div>;
+          {Array.from(selectedMembersMap().values()).map((member) => {
+            return <div>{`- ${member.user.name}`}</div>;
           })}
         </div>
       </ConfirmDialog>
@@ -303,6 +424,37 @@ export const OrganizationMembersView = (props: {
         pagination={{ itemsPerPage }}
         itemIdKey="user_id"
       ></TableView>
+
+      <Show when={currentMembership()}>
+        <div class={styles.leaveOrganizationPanel}>
+          <div class={styles.leaveOrganizationContent}>
+            <h4>{t('organization.leaveOrganizationTitle')}</h4>
+            <p>{t('organization.leaveOrganizationDescription')}</p>
+            <Show when={!canLeaveOrganization()}>
+              <p class={styles.leaveOrganizationWarning}>
+                {t('organization.leaveOrganizationLastAdminWarning')}
+              </p>
+            </Show>
+          </div>
+          <Button
+            label={t('organization.leaveOrganizationAction')}
+            color="danger"
+            onClick={handleLeaveOrganizationClick}
+            disabled={!canLeaveOrganization()}
+          />
+        </div>
+      </Show>
+
+      <ConfirmDialog
+        show={showLeaveWarningDialog()}
+        title={t('organization.leaveLastOrganizationWarningTitle')}
+        message={t('organization.leaveLastOrganizationWarningMessage')}
+        onClose={() => setShowLeaveWarningDialog(false)}
+        onConfirm={() => {
+          setShowLeaveWarningDialog(false);
+          leaveOrganization();
+        }}
+      />
     </>
   );
 };

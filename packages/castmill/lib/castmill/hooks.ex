@@ -48,4 +48,19 @@ defmodule Castmill.Hooks do
     Enum.each(hooks, fn {_id, hook} -> hook.(args) end)
     {:noreply, state}
   end
+
+  # Handle unexpected messages (e.g., test emails from Swoosh.Adapters.Test)
+  # In test mode, when hooks send emails, Swoosh sends them as messages to the current process
+  # Since hooks run in the GenServer process, we receive them here and can safely ignore
+  def handle_info({:email, _email}, state) do
+    # Silently ignore test email messages - they're handled by Swoosh.TestAssertions
+    {:noreply, state}
+  end
+
+  # Catch-all for any other unexpected messages
+  def handle_info(msg, state) do
+    require Logger
+    Logger.warning("#{__MODULE__} received unexpected message: #{inspect(msg)}")
+    {:noreply, state}
+  end
 end

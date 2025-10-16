@@ -2,6 +2,7 @@ import { render, screen, fireEvent, waitFor } from '@solidjs/testing-library';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import SettingsPage from './settings-page';
 import { I18nProvider } from '../../i18n';
+import { ToastProvider } from '@castmill/ui-common';
 
 // Mock the auth module
 vi.mock('../../components/auth', () => ({
@@ -10,6 +11,7 @@ vi.mock('../../components/auth', () => ({
     name: 'John Doe',
     email: 'john@example.com',
   })),
+  updateUser: vi.fn(),
 }));
 
 // Mock the user service
@@ -53,9 +55,13 @@ Object.defineProperty(navigator, 'credentials', {
 describe('SettingsPage', () => {
   let UserService: any;
 
-  // Helper function to render with I18nProvider
-  const renderWithI18n = (component: () => any) => {
-    return render(() => <I18nProvider>{component()}</I18nProvider>);
+  // Helper function to render with I18nProvider and ToastProvider
+  const renderWithProviders = (component: () => any) => {
+    return render(() => (
+      <I18nProvider>
+        <ToastProvider>{component()}</ToastProvider>
+      </I18nProvider>
+    ));
   };
 
   beforeEach(async () => {
@@ -73,7 +79,7 @@ describe('SettingsPage', () => {
 
   describe('Basic Rendering', () => {
     it('renders the settings page with all sections', () => {
-      renderWithI18n(() => <SettingsPage />);
+      renderWithProviders(() => <SettingsPage />);
 
       expect(screen.getByText('Settings')).toBeInTheDocument();
       expect(
@@ -89,7 +95,7 @@ describe('SettingsPage', () => {
     });
 
     it('pre-populates form fields with user data', () => {
-      renderWithI18n(() => <SettingsPage />);
+      renderWithProviders(() => <SettingsPage />);
 
       const nameInput = screen.getByLabelText('Full Name') as HTMLInputElement;
       const emailInput = screen.getByLabelText(
@@ -103,7 +109,7 @@ describe('SettingsPage', () => {
 
   describe('Form Dirty State', () => {
     it('disables Save Changes button when form is not dirty', async () => {
-      renderWithI18n(() => <SettingsPage />);
+      renderWithProviders(() => <SettingsPage />);
 
       await waitFor(() => {
         const saveButton = screen.getByRole('button', { name: 'Save Changes' });
@@ -112,7 +118,7 @@ describe('SettingsPage', () => {
     });
 
     it('enables Save Changes button when name is changed', async () => {
-      renderWithI18n(() => <SettingsPage />);
+      renderWithProviders(() => <SettingsPage />);
 
       const nameInput = screen.getByLabelText('Full Name') as HTMLInputElement;
       fireEvent.input(nameInput, { target: { value: 'Jane Doe' } });
@@ -124,7 +130,7 @@ describe('SettingsPage', () => {
     });
 
     it('enables Save Changes button when email is changed', async () => {
-      renderWithI18n(() => <SettingsPage />);
+      renderWithProviders(() => <SettingsPage />);
 
       const emailInput = screen.getByLabelText(
         'Email Address'
@@ -140,7 +146,7 @@ describe('SettingsPage', () => {
     it('disables Save Changes button after successful save', async () => {
       (UserService.updateProfile as any).mockResolvedValue({ status: 'ok' });
 
-      renderWithI18n(() => <SettingsPage />);
+      renderWithProviders(() => <SettingsPage />);
 
       const nameInput = screen.getByLabelText('Full Name') as HTMLInputElement;
       fireEvent.input(nameInput, { target: { value: 'Jane Doe' } });
@@ -164,7 +170,7 @@ describe('SettingsPage', () => {
     it('calls updateProfile with name changes only', async () => {
       (UserService.updateProfile as any).mockResolvedValue({ status: 'ok' });
 
-      renderWithI18n(() => <SettingsPage />);
+      renderWithProviders(() => <SettingsPage />);
 
       const nameInput = screen.getByLabelText('Full Name') as HTMLInputElement;
       fireEvent.input(nameInput, { target: { value: 'Jane Doe' } });
@@ -182,7 +188,7 @@ describe('SettingsPage', () => {
     it('shows success message after profile update', async () => {
       (UserService.updateProfile as any).mockResolvedValue({ status: 'ok' });
 
-      renderWithI18n(() => <SettingsPage />);
+      renderWithProviders(() => <SettingsPage />);
 
       const nameInput = screen.getByLabelText('Full Name') as HTMLInputElement;
       fireEvent.input(nameInput, { target: { value: 'Jane Doe' } });
@@ -202,7 +208,7 @@ describe('SettingsPage', () => {
         status: 'ok',
       });
 
-      renderWithI18n(() => <SettingsPage />);
+      renderWithProviders(() => <SettingsPage />);
 
       const emailInput = screen.getByLabelText(
         'Email Address'
@@ -227,11 +233,30 @@ describe('SettingsPage', () => {
         ).toBeInTheDocument();
       });
     });
+
+    it('updates global user state when name is changed', async () => {
+      const { updateUser } = await import('../../components/auth');
+      (UserService.updateProfile as any).mockResolvedValue({ status: 'ok' });
+
+      renderWithProviders(() => <SettingsPage />);
+
+      const nameInput = screen.getByLabelText('Full Name') as HTMLInputElement;
+      fireEvent.input(nameInput, { target: { value: 'Jane Doe' } });
+
+      const saveButton = screen.getByRole('button', { name: 'Save Changes' });
+      fireEvent.click(saveButton);
+
+      await waitFor(() => {
+        expect(updateUser).toHaveBeenCalledWith({
+          name: 'Jane Doe',
+        });
+      });
+    });
   });
 
   describe('Passkey Management', () => {
     it('displays list of passkeys', async () => {
-      renderWithI18n(() => <SettingsPage />);
+      renderWithProviders(() => <SettingsPage />);
 
       await waitFor(() => {
         expect(screen.getByText('My Laptop')).toBeInTheDocument();
@@ -239,7 +264,7 @@ describe('SettingsPage', () => {
     });
 
     it('shows Add New Passkey button', async () => {
-      renderWithI18n(() => <SettingsPage />);
+      renderWithProviders(() => <SettingsPage />);
 
       await waitFor(() => {
         expect(
@@ -253,7 +278,7 @@ describe('SettingsPage', () => {
         status: 'ok',
       });
 
-      renderWithI18n(() => <SettingsPage />);
+      renderWithProviders(() => <SettingsPage />);
 
       await waitFor(() => {
         expect(screen.getByText('My Laptop')).toBeInTheDocument();
@@ -283,7 +308,7 @@ describe('SettingsPage', () => {
     });
 
     it('disables Remove button when only one passkey exists', async () => {
-      renderWithI18n(() => <SettingsPage />);
+      renderWithProviders(() => <SettingsPage />);
 
       await waitFor(() => {
         const removeButton = screen.getByRole('button', { name: 'Remove' });
@@ -307,7 +332,7 @@ describe('SettingsPage', () => {
         ],
       });
 
-      renderWithI18n(() => <SettingsPage />);
+      renderWithProviders(() => <SettingsPage />);
 
       await waitFor(() => {
         const removeButtons = screen.getAllByRole('button', { name: 'Remove' });
@@ -336,7 +361,7 @@ describe('SettingsPage', () => {
 
       const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
 
-      renderWithI18n(() => <SettingsPage />);
+      renderWithProviders(() => <SettingsPage />);
 
       await waitFor(() => {
         expect(screen.getByText('My Laptop')).toBeInTheDocument();
@@ -370,7 +395,7 @@ describe('SettingsPage', () => {
 
       const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
 
-      renderWithI18n(() => <SettingsPage />);
+      renderWithProviders(() => <SettingsPage />);
 
       await waitFor(() => {
         expect(screen.getByText('My Laptop')).toBeInTheDocument();
@@ -389,7 +414,7 @@ describe('SettingsPage', () => {
 
   describe('Delete Account', () => {
     it('shows delete account confirmation when delete button is clicked', async () => {
-      renderWithI18n(() => <SettingsPage />);
+      renderWithProviders(() => <SettingsPage />);
 
       const deleteButton = screen.getByRole('button', {
         name: 'Delete Account',

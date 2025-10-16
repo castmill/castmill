@@ -154,6 +154,10 @@
     "deleteAccountPasskeyInfo": "After deletion, if you try to log in using an old passkey, it will fail. To prevent confusion, please manually remove this account's passkeys from your device settings.",
     "deleteAccountPasskeyInfoWithSignalAPI": "After deletion, passkeys will be automatically removed from your device. If you try to log in later, you'll need to create a new account.",
     "deleteAccountYes": "Yes, Delete Account",
+    "deleteAccountSuccess": "Account deleted successfully. Redirecting...",
+    "deleteAccountError": "Failed to delete account. Please try again.",
+    "soleAdministratorError": "Cannot delete account. You are the sole administrator of '{{orgName}}' which has other members. Please promote another user to admin first.",
+    "soleAdministratorErrorGeneric": "Cannot delete account. You are the sole administrator of one or more organizations with other members. Please promote another user to admin first.",
     "retry": "Retry",
     "errors": {
       "loadCredentials": "Failed to load credentials. Please try refreshing the page.",
@@ -264,6 +268,12 @@
       "invitationSent": "Invitation sent to {{email}}",
       "leftTeam": "You left the team {{name}}"
     },
+    "dialogs": {
+      "removeMemberTitle": "Remove User From Team",
+      "removeMemberMessage": "Are you sure you want to remove member \"{{name}}\" from the team?",
+      "removeMembersTitle": "Remove Members From Team",
+      "removeMembersMessage": "Are you sure you want to remove the following members from the team?"
+    },
     "invitation": {
       "title": "Team Invitation",
       "emailAddress": "Email Address",
@@ -286,17 +296,23 @@
     "enterChannelName": "Enter Channel name",
     "defaultPlaylist": "Default playlist",
     "selectPlaylist": "Select Playlist",
+    "clearDefaultPlaylist": "Clear default playlist",
     "dragPlaylists": "Drag playlists",
     "repeatWeekly": "Repeat Weekly?",
     "calendarEntryDetails": "Calendar entry details",
     "removeChannelEntry": "Remove Channel Entry",
     "cannotDeleteChannel": "Cannot Delete Channel",
+    "success": {
+      "updateDefaultPlaylist": "Default playlist updated successfully",
+      "clearDefaultPlaylist": "Default playlist cleared successfully"
+    },
     "errors": {
       "removeChannel": "Error removing channel {{name}}: {{error}}",
       "removeChannels": "Error removing channels: {{error}}",
       "addChannel": "Error adding channel: {{error}}",
       "saveChannel": "Error saving channel: {{error}}",
       "updateDefaultPlaylist": "Failed to update channel default playlist: {{error}}",
+      "clearDefaultPlaylist": "Failed to clear channel default playlist: {{error}}",
       "updateChannelEntry": "Error updating channel entry: {{error}}"
     }
   },
@@ -342,7 +358,14 @@
     },
     "messages": {
       "memberRemoved": "Member {{name}} removed successfully",
-      "membersRemoved": "Members removed successfully"
+      "membersRemoved": "Members removed successfully",
+      "invitationSent": "Invitation sent to {{email}}"
+    },
+    "dialogs": {
+      "removeMemberTitle": "Remove User From Organization",
+      "removeMemberMessage": "Are you sure you want to remove member \"{{name}}\" from the organization?",
+      "removeMembersTitle": "Remove Members From Organization",
+      "removeMembersMessage": "Are you sure you want to remove the following members from the organization?"
     }
   },
   "login": {
@@ -382,7 +405,13 @@
     "generic": "An error occurred. Please try again.",
     "networkError": "Network error. Please check your connection.",
     "unauthorized": "Unauthorized. Please log in again.",
-    "unknownResourceType": "Unknown resource type: {{resourceType}}"
+    "unknownResourceType": "Unknown resource type: {{resourceType}}",
+    "serverUnreachable": "Cannot Connect to Server",
+    "serverUnreachableDescription": "The backend server is currently unreachable. This usually means the server is not running or there's a network issue.",
+    "checkServerRunning": "Make sure the Castmill server is running",
+    "checkNetworkConnection": "Check your network connection",
+    "checkServerUrl": "Verify the server URL in your configuration",
+    "retryConnection": "Retry Connection"
   },
   "playlists": {
     "title": "Playlists",
@@ -516,7 +545,72 @@
       "emailAddress": "Email Address",
       "expired": "This invitation has expired.",
       "loginToAccept": "Login to accept this invitation",
-      "createAccount": "Create your account to accept this invitation"
+      "createAccount": "Create your account to accept this invitation",
+      "reject": "Reject Invitation",
+      "rejecting": "Rejecting...",
+      "chooseAction": "Please choose to accept or reject the invitation",
+      "acceptSuccess": "Invitation accepted successfully",
+      "acceptError": "Error accepting invitation",
+      "rejectSuccess": "Invitation rejected successfully",
+      "rejectError": "Error rejecting invitation",
+      "accountCreated": "Account created successfully!",
+      "accountCreationFailed": "Failed to create account",
+      "passkeysNotSupported": "Passkeys are not supported in this browser"
     }
+  },
+  "organization": {
+    "title": "Organization",
+    "users": "Users",
+    "invitations": "Invitations",
+    "update": "Update",
+    "placeholderName": "Enter organization name",
+    "inviteMember": "Invite Member",
+    "enterMemberEmail": "Enter member's email",
+    "role": "Role",
+    "roleAdmin": "Admin",
+    "roleManager": "Manager",
+    "roleMember": "Member",
+    "roleEditor": "Editor",
+    "rolePublisher": "Publisher",
+    "roleDeviceManager": "Device Manager",
+    "roleGuest": "Guest",
+    "teamRoleAdmin": "Team Admin",
+    "teamRoleMember": "Team Member",
+    "teamRoleInstaller": "Installer (24h)",
+    "roleDescriptions": {
+      "admin": "Full access including organization management",
+      "manager": "Can manage teams and most resources",
+      "member": "Standard user (default), can manage content",
+      "editor": "Full content management, cannot manage teams",
+      "publisher": "Like editor plus publish workflow actions",
+      "device_manager": "Full device and channel management",
+      "guest": "Read-only access to resources"
+    },
+    "teamRoleDescriptions": {
+      "admin": "Can manage team members and resources",
+      "member": "Can access and edit team resources",
+      "installer": "Temporary token for device registration (expires in 24h)"
+    },
+    "errors": {
+      "updateOrganization": "Error updating organization: {{error}}",
+      "emailRequired": "Email is required",
+      "invalidEmail": "Invalid email",
+      "cannotRemoveLastAdmin": "You can't remove the last admin of an organization.",
+      "invalidRole": "The selected role is not valid for this organization.",
+      "cannotRemoveLastUser": "You cannot leave as you are the only member of this organization."
+    },
+    "messages": {
+      "memberRemoved": "Member {{name}} removed successfully",
+      "membersRemoved": "Members removed successfully",
+      "leftOrganization": "You left the organization {{name}}",
+      "noOrganizationsRemaining": "You have left your last organization. Please contact an administrator to be invited to an organization."
+    },
+    "leaveOrganizationTitle": "Leave this organization",
+    "leaveOrganizationDescription": "Leaving removes your access to organization resources immediately.",
+    "leaveOrganizationAction": "Leave organization",
+    "leaveOrganizationLastAdminWarning": "Add another admin before leaving to keep this organization managed.",
+    "leaveOrganizationLastUserWarning": "You cannot leave as you are the only member of this organization.",
+    "leaveLastOrganizationWarningTitle": "Leave your last organization?",
+    "leaveLastOrganizationWarningMessage": "This is your only organization. Leaving it will delete your account and you will lose all access to Castmill. You will need to contact an administrator to be invited back. Are you sure you want to proceed?"
   }
 }
