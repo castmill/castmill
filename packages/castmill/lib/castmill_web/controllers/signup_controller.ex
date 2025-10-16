@@ -109,13 +109,17 @@ defmodule CastmillWeb.SignUpController do
 
   @doc """
     Create a new user from a signup and passkey authentication.
+    Optionally accepts invitation_token to skip default organization creation.
   """
-  def create_user(conn, %{
-        "id" => signup_id,
-        "email" => email,
-        "credential_id" => credential_id,
-        "public_key_spki" => public_key_spki
-      }) do
+  def create_user(conn, params) do
+    %{
+      "id" => signup_id,
+      "email" => email,
+      "credential_id" => credential_id,
+      "public_key_spki" => public_key_spki
+    } = params
+
+    invitation_token = Map.get(params, "invitation_token")
     public_key_spki = Base.decode64!(public_key_spki)
 
     # Extract and parse User-Agent for device information
@@ -130,7 +134,8 @@ defmodule CastmillWeb.SignUpController do
            email,
            credential_id,
            public_key_spki,
-           device_info
+           device_info,
+           invitation_token
          ) do
       {:ok, %{id: user_id} = user} ->
         conn

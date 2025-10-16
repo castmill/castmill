@@ -1,5 +1,5 @@
 defmodule Castmill.HooksTest do
-  use ExUnit.Case
+  use Castmill.DataCase
 
   alias Castmill.Hooks
 
@@ -25,6 +25,9 @@ defmodule Castmill.HooksTest do
     @describetag :skip
 
     test "triggers a registered hook" do
+      # Allow the Hooks GenServer to access the test database
+      Ecto.Adapters.SQL.Sandbox.allow(Castmill.Repo, self(), Process.whereis(Castmill.Hooks))
+
       # Adjusted test_args to match the expected schema for :user_signup
       user = user_fixture()
       test_args = %{user_id: user.id, email: user.email}

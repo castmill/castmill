@@ -537,7 +537,17 @@
       "emailAddress": "E-postadress",
       "expired": "Denna inbjudan har utgått.",
       "loginToAccept": "Logga in för att acceptera denna inbjudan",
-      "createAccount": "Skapa ditt konto för att acceptera denna inbjudan"
+      "createAccount": "Skapa ditt konto för att acceptera denna inbjudan",
+      "reject": "Avvisa Inbjudan",
+      "rejecting": "Avvisar...",
+      "chooseAction": "Välj att acceptera eller avvisa inbjudan",
+      "acceptSuccess": "Inbjudan accepterad",
+      "acceptError": "Fel vid acceptering av inbjudan",
+      "rejectSuccess": "Inbjudan avvisad",
+      "rejectError": "Fel vid avvisning av inbjudan",
+      "accountCreated": "Konto skapat!",
+      "accountCreationFailed": "Misslyckades att skapa konto",
+      "passkeysNotSupported": "Passkeys stöds inte i denna webbläsare"
     }
   },
   "filters": {

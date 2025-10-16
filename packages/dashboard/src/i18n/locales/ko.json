@@ -542,7 +542,17 @@
       "emailAddress": "이메일 주소",
       "expired": "이 초대가 만료되었습니다.",
       "loginToAccept": "이 초대를 수락하려면 로그인하세요",
-      "createAccount": "이 초대를 수락하려면 계정을 만드세요"
+      "createAccount": "이 초대를 수락하려면 계정을 만드세요",
+      "reject": "초대 거부",
+      "rejecting": "거부 중...",
+      "chooseAction": "초대를 수락하거나 거부하도록 선택하세요",
+      "acceptSuccess": "초대가 성공적으로 수락되었습니다",
+      "acceptError": "초대 수락 중 오류가 발생했습니다",
+      "rejectSuccess": "초대가 성공적으로 거부되었습니다",
+      "rejectError": "초대 거부 중 오류가 발생했습니다",
+      "accountCreated": "계정이 성공적으로 생성되었습니다!",
+      "accountCreationFailed": "계정 생성에 실패했습니다",
+      "passkeysNotSupported": "이 브라우저에서는 패스키가 지원되지 않습니다"
     }
   },
   "filters": {

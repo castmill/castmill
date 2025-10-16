@@ -488,11 +488,13 @@ defmodule Castmill.Accounts do
         email,
         credential_id,
         public_key_spki,
-        device_info \\ %{}
+        device_info \\ %{},
+        invitation_token \\ nil
       ) do
     Repo.transaction(fn ->
       with {:ok, signup} <- validate_signup(signup_id, email),
-           {:ok, %{id: user_id} = user} <- create_user_and_organization(email, signup.network_id),
+           {:ok, %{id: user_id} = user} <-
+             create_user_with_optional_organization(email, signup.network_id, invitation_token),
            :ok <- create_user_credential(user_id, credential_id, public_key_spki, device_info),
            :ok <- update_signup_status(signup, user_id) do
         Castmill.Hooks.trigger_hook(:user_signup, %{user_id: user_id, email: email})
@@ -711,6 +713,19 @@ defmodule Castmill.Accounts do
       {:error, other} ->
         {:error, "Failed to create account: #{inspect(other)}"}
     end
+  end
+
+  # Creates a user, optionally with an organization
+  # If invitation_token is provided, skip organization creation (user will be added via invitation acceptance)
+  defp create_user_with_optional_organization(email, network_id, nil) do
+    # No invitation token - create user with default organization
+    create_user_and_organization(email, network_id)
+  end
+
+  defp create_user_with_optional_organization(email, network_id, _invitation_token) do
+    # Has invitation token - just create user, skip organization
+    # User will be added to organization when invitation is accepted
+    Repo.insert(User.changeset(%User{}, %{name: email, email: email, network_id: network_id}))
   end
 
   defp create_user_credential(user_id, credential_id, public_key_spki, device_info) do

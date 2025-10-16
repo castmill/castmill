@@ -537,7 +537,17 @@
       "emailAddress": "E-Mail-Adresse",
       "expired": "Diese Einladung ist abgelaufen.",
       "loginToAccept": "Melden Sie sich an, um diese Einladung anzunehmen",
-      "createAccount": "Erstellen Sie Ihr Konto, um diese Einladung anzunehmen"
+      "createAccount": "Erstellen Sie Ihr Konto, um diese Einladung anzunehmen",
+      "reject": "Einladung Ablehnen",
+      "rejecting": "Wird abgelehnt...",
+      "chooseAction": "Bitte wählen Sie, ob Sie die Einladung annehmen oder ablehnen möchten",
+      "acceptSuccess": "Einladung erfolgreich angenommen",
+      "acceptError": "Fehler beim Annehmen der Einladung",
+      "rejectSuccess": "Einladung erfolgreich abgelehnt",
+      "rejectError": "Fehler beim Ablehnen der Einladung",
+      "accountCreated": "Konto erfolgreich erstellt!",
+      "accountCreationFailed": "Konto konnte nicht erstellt werden",
+      "passkeysNotSupported": "Passkeys werden in diesem Browser nicht unterstützt"
     }
   },
   "filters": {

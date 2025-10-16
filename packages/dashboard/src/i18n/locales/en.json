@@ -542,7 +542,17 @@
       "emailAddress": "Email Address",
       "expired": "This invitation has expired.",
       "loginToAccept": "Login to accept this invitation",
-      "createAccount": "Create your account to accept this invitation"
+      "createAccount": "Create your account to accept this invitation",
+      "reject": "Reject Invitation",
+      "rejecting": "Rejecting...",
+      "chooseAction": "Please choose to accept or reject the invitation",
+      "acceptSuccess": "Invitation accepted successfully",
+      "acceptError": "Error accepting invitation",
+      "rejectSuccess": "Invitation rejected successfully",
+      "rejectError": "Error rejecting invitation",
+      "accountCreated": "Account created successfully!",
+      "accountCreationFailed": "Failed to create account",
+      "passkeysNotSupported": "Passkeys are not supported in this browser"
     }
   },
   "organization": {

@@ -542,7 +542,17 @@
       "emailAddress": "电子邮件地址",
       "expired": "此邀请已过期。",
       "loginToAccept": "登录以接受此邀请",
-      "createAccount": "创建您的帐户以接受此邀请"
+      "createAccount": "创建您的帐户以接受此邀请",
+      "reject": "拒绝邀请",
+      "rejecting": "正在拒绝...",
+      "chooseAction": "请选择接受或拒绝邀请",
+      "acceptSuccess": "成功接受邀请",
+      "acceptError": "接受邀请时出错",
+      "rejectSuccess": "成功拒绝邀请",
+      "rejectError": "拒绝邀请时出错",
+      "accountCreated": "帐户创建成功！",
+      "accountCreationFailed": "创建帐户失败",
+      "passkeysNotSupported": "此浏览器不支持通行密钥"
     }
   },
   "filters": {

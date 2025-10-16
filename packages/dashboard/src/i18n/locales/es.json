@@ -543,7 +543,17 @@
       "emailAddress": "Dirección de correo electrónico",
       "expired": "Esta invitación ha expirado.",
       "loginToAccept": "Inicia sesión para aceptar esta invitación",
-      "createAccount": "Crea tu cuenta para aceptar esta invitación"
+      "createAccount": "Crea tu cuenta para aceptar esta invitación",
+      "reject": "Rechazar Invitación",
+      "rejecting": "Rechazando...",
+      "chooseAction": "Por favor, elige aceptar o rechazar la invitación",
+      "acceptSuccess": "Invitación aceptada exitosamente",
+      "acceptError": "Error al aceptar la invitación",
+      "rejectSuccess": "Invitación rechazada exitosamente",
+      "rejectError": "Error al rechazar la invitación",
+      "accountCreated": "¡Cuenta creada exitosamente!",
+      "accountCreationFailed": "Error al crear la cuenta",
+      "passkeysNotSupported": "Las claves de acceso no son compatibles con este navegador"
     }
   },
   "filters": {

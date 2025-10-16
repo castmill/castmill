@@ -150,6 +150,11 @@ defmodule CastmillWeb.OrganizationController do
     validInvitation?(actor_id, token)
   end
 
+  def check_access(_actor_id, :reject_invitation, %{"token" => _token}) do
+    # Anyone with a valid token can reject an invitation (no auth required)
+    {:ok, true}
+  end
+
   # Default implementation for other actions not explicitly handled above
   def check_access(_actor_id, _action, _params) do
     # Default to false or implement your own logic based on other conditions
@@ -514,6 +519,25 @@ defmodule CastmillWeb.OrganizationController do
         conn
         |> put_status(:unprocessable_entity)
         |> json(%{errors: errors})
+
+      {:error, _} ->
+        conn
+        |> put_status(:bad_request)
+        |> json(%{})
+    end
+  end
+
+  def reject_invitation(conn, %{"token" => token}) do
+    case Organizations.reject_invitation(token) do
+      {:ok, _} ->
+        conn
+        |> put_status(:ok)
+        |> json(%{})
+
+      {:error, message} when is_binary(message) ->
+        conn
+        |> put_status(:bad_request)
+        |> json(%{error: message})
 
       {:error, _} ->
         conn

@@ -542,7 +542,17 @@
       "emailAddress": "Adresse e-mail",
       "expired": "Cette invitation a expiré.",
       "loginToAccept": "Connectez-vous pour accepter cette invitation",
-      "createAccount": "Créez votre compte pour accepter cette invitation"
+      "createAccount": "Créez votre compte pour accepter cette invitation",
+      "reject": "Refuser l'Invitation",
+      "rejecting": "Refus en cours...",
+      "chooseAction": "Veuillez choisir d'accepter ou de refuser l'invitation",
+      "acceptSuccess": "Invitation acceptée avec succès",
+      "acceptError": "Erreur lors de l'acceptation de l'invitation",
+      "rejectSuccess": "Invitation refusée avec succès",
+      "rejectError": "Erreur lors du refus de l'invitation",
+      "accountCreated": "Compte créé avec succès !",
+      "accountCreationFailed": "Échec de la création du compte",
+      "passkeysNotSupported": "Les clés d'accès ne sont pas prises en charge dans ce navigateur"
     }
   },
   "filters": {
