@@ -295,6 +295,29 @@ export const OrganizationsService = {
       error.data = errorData;
       throw error;
     }
+
+    return await response.json();
+  },
+
+  /**
+   * Fetch a specific media belonging to an organization.
+   */
+  async fetchMedia(organizationId: string, mediaId: number) {
+    const response = await fetch(
+      `${baseUrl}/dashboard/organizations/${organizationId}/medias/${mediaId}`,
+      {
+        method: 'GET',
+        credentials: 'include',
+      }
+    );
+
+    if (!response.ok) {
+      const error = new Error('Failed to fetch organization media');
+      (error as any).status = response.status;
+      throw error;
+    }
+
+    return await response.json();
   },
 
   /**

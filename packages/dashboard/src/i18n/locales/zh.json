@@ -354,6 +354,7 @@
     "title": "组织",
     "users": "用户",
     "invitations": "邀请",
+    "settings": "设置",
     "update": "更新",
     "placeholderName": "输入组织名称",
     "inviteMember": "邀请成员",
@@ -375,6 +376,8 @@
       "invalidEmail": "无效的电子邮件",
       "cannotRemoveLastAdmin": "你不能移除组织最后一位管理员。",
       "invalidRole": "所选角色对该组织无效。",
+      "mediaInUseAsLogo": "无法删除正在用作组织标志的媒体",
+      "loadMedias": "加载媒体失败",
       "updateRoleFailed": "更新成员角色失败"
     },
     "messages": {
@@ -397,6 +400,15 @@
       "member": "可以访问和编辑团队资源",
       "installer": "用于设备注册的临时令牌（24小时后过期）"
     },
+    "logo": "标志",
+    "logoSettings": "标志设置",
+    "selectLogo": "选择标志",
+    "removeLogo": "删除标志",
+    "logoDescription": "选择一个媒体文件作为您的组织标志。它将显示在顶部栏中。",
+    "logoUpdated": "标志更新成功",
+    "logoRemoved": "标志删除成功",
+    "noLogo": "未选择标志",
+    "noMediasAvailable": "没有可用的图像。请先上传图像。",
     "dialogs": {
       "removeMemberTitle": "从组织中移除用户",
       "removeMemberMessage": "您确定要从组织中移除成员\"{{name}}\"吗？",

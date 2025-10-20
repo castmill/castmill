@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { render, screen, cleanup } from '@solidjs/testing-library';
+import { render, screen, cleanup, waitFor } from '@solidjs/testing-library';
 import { I18nProvider, useI18n } from './i18n-context';
 import { LOCALE_STORAGE_KEY } from './types';
 
@@ -71,12 +71,18 @@ describe('I18n Context', () => {
     const button = screen.getByTestId('change-locale');
     button.click();
 
-    // Wait for translations to load
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    // Wait for locale to change
+    await waitFor(() => {
+      expect(screen.getByTestId('current-locale').textContent).toBe('es');
+    });
 
-    expect(screen.getByTestId('current-locale').textContent).toBe('es');
-    // Spanish translation should be loaded
-    expect(screen.getByTestId('translation').textContent).toBe('Guardar');
+    // Wait for Spanish translation to load
+    await waitFor(
+      () => {
+        expect(screen.getByTestId('translation').textContent).toBe('Guardar');
+      },
+      { timeout: 1000 }
+    );
   });
 
   it('handles missing translation keys gracefully', () => {
