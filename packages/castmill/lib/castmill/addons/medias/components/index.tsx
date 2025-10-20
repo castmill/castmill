@@ -19,6 +19,7 @@ import {
   FetchDataOptions,
   Timestamp,
   ToastProvider,
+  HttpError,
   useToast,
 } from '@castmill/ui-common';
 import { JsonMedia } from '@castmill/player';
@@ -102,7 +103,13 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
       toast.success(`Media "${resource.name}" removed successfully`);
       loadQuota(); // Reload quota after deletion
     } catch (error) {
-      toast.error(`Error removing media ${resource.name}: ${error}`);
+      if (error instanceof HttpError && error.status === 409) {
+        toast.error(t('organization.errors.mediaInUseAsLogo'));
+      } else {
+        const message =
+          error instanceof Error ? error.message : String(error);
+        toast.error(`Error removing media ${resource.name}: ${message}`);
+      }
     }
     setShowConfirmDialog();
   };
@@ -123,7 +130,13 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
       toast.success(`${selectedMedias().size} media(s) removed successfully`);
       loadQuota(); // Reload quota after deletion
     } catch (error) {
-      toast.error(`Error removing medias: ${error}`);
+      if (error instanceof HttpError && error.status === 409) {
+        toast.error(t('organization.errors.mediaInUseAsLogo'));
+      } else {
+        const message =
+          error instanceof Error ? error.message : String(error);
+        toast.error(`Error removing medias: ${message}`);
+      }
     }
     setShowConfirmDialogMultiple(false);
     setSelectedMedias(new Set<string>());

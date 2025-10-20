@@ -366,6 +366,7 @@
     "title": "Organisation",
     "users": "Utilisateurs",
     "invitations": "Invitations",
+    "settings": "Paramètres",
     "update": "Mettre à jour",
     "placeholderName": "Entrez le nom de l'organisation",
     "inviteMember": "Inviter un membre",
@@ -387,6 +388,8 @@
       "invalidEmail": "E-mail invalide",
       "cannotRemoveLastAdmin": "Vous ne pouvez pas supprimer le dernier administrateur de l'organisation.",
       "invalidRole": "Le rôle sélectionné n'est pas valide pour cette organisation.",
+      "mediaInUseAsLogo": "Impossible de supprimer un média utilisé comme logo d'organisation",
+      "loadMedias": "Échec du chargement des médias",
       "updateRoleFailed": "Échec de la mise à jour du rôle du membre"
     },
     "messages": {
@@ -410,6 +413,15 @@
       "member": "Peut accéder et modifier les ressources de l'équipe",
       "installer": "Jeton temporaire pour l'enregistrement d'appareil (expire dans 24h)"
     },
+    "logo": "Logo",
+    "logoSettings": "Paramètres du logo",
+    "selectLogo": "Sélectionner le logo",
+    "removeLogo": "Supprimer le logo",
+    "logoDescription": "Choisissez un fichier média à utiliser comme logo de votre organisation. Il sera affiché dans la barre supérieure.",
+    "logoUpdated": "Logo mis à jour avec succès",
+    "logoRemoved": "Logo supprimé avec succès",
+    "noLogo": "Aucun logo sélectionné",
+    "noMediasAvailable": "Aucune image disponible. Veuillez d'abord télécharger une image.",
     "dialogs": {
       "removeMemberTitle": "Retirer l'utilisateur de l'organisation",
       "removeMemberMessage": "Êtes-vous sûr de vouloir retirer le membre \"{{name}}\" de l'organisation?",

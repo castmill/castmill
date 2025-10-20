@@ -326,6 +326,7 @@
     "title": "Organization",
     "users": "Users",
     "invitations": "Invitations",
+    "settings": "Settings",
     "update": "Update",
     "placeholderName": "Enter organization name",
     "inviteMember": "Invite Member",
@@ -364,6 +365,9 @@
       "invalidRole": "The selected role is not valid for this organization.",
       "updateRoleFailed": "Failed to update member role",
       "cannotRemoveLastUser": "You cannot leave as you are the only member of this organization."
+      "mediaInUseAsLogo": "Cannot delete media that is being used as an organization logo",
+      "loadMedias": "Failed to load medias",
+      "updateRoleFailed": "Failed to update member role"
     },
     "messages": {
       "memberRemoved": "Member {{name}} removed successfully",
@@ -385,6 +389,15 @@
     "leaveOrganizationLastUserWarning": "You cannot leave as you are the only member of this organization.",
     "leaveLastOrganizationWarningTitle": "Leave your last organization?",
     "leaveLastOrganizationWarningMessage": "This is your only organization. Leaving it will delete your account and you will lose all access to Castmill. You will need to contact an administrator to be invited back. Are you sure you want to proceed?"
+    "logo": "Logo",
+    "logoSettings": "Logo Settings",
+    "selectLogo": "Select Logo",
+    "removeLogo": "Remove Logo",
+    "logoDescription": "Choose a media file to use as your organization logo. It will be displayed in the top bar.",
+    "logoUpdated": "Logo updated successfully",
+    "logoRemoved": "Logo removed successfully",
+    "noLogo": "No logo selected",
+    "noMediasAvailable": "No image medias available. Please upload an image first."
   },
   "login": {
     "title": "Login",

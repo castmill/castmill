@@ -350,6 +350,7 @@
     "title": "Organisation",
     "users": "Användare",
     "invitations": "Inbjudningar",
+    "settings": "Inställningar",
     "update": "Uppdatera",
     "placeholderName": "Ange organisationsnamn",
     "inviteMember": "Bjud in medlem",
@@ -371,6 +372,8 @@
       "invalidEmail": "Ogiltig e-post",
       "cannotRemoveLastAdmin": "Du kan inte ta bort organisationens sista administratör.",
       "invalidRole": "Den valda rollen är inte giltig för den här organisationen.",
+      "mediaInUseAsLogo": "Kan inte ta bort media som används som organisationslogotyp",
+      "loadMedias": "Kunde inte ladda media",
       "updateRoleFailed": "Misslyckades med att uppdatera medlemsroll"
     },
     "messages": {
@@ -394,6 +397,15 @@
       "member": "Kan komma åt och redigera teamresurser",
       "installer": "Tillfällig token för enhetsregistrering (utgår om 24h)"
     },
+    "logo": "Logotyp",
+    "logoSettings": "Logotypinställningar",
+    "selectLogo": "Välj logotyp",
+    "removeLogo": "Ta bort logotyp",
+    "logoDescription": "Välj en mediafil som ska användas som din organisations logotyp. Den kommer att visas i toppfältet.",
+    "logoUpdated": "Logotyp uppdaterad",
+    "logoRemoved": "Logotyp borttagen",
+    "noLogo": "Ingen logotyp vald",
+    "noMediasAvailable": "Inga bilder tillgängliga. Vänligen ladda upp en bild först.",
     "dialogs": {
       "removeMemberTitle": "Ta bort användare från organisation",
       "removeMemberMessage": "Är du säker på att du vill ta bort medlemmen \"{{name}}\" från organisationen?",

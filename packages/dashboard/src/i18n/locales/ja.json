@@ -355,6 +355,7 @@
     "title": "組織",
     "users": "ユーザー",
     "invitations": "招待",
+    "settings": "設定",
     "update": "更新",
     "placeholderName": "組織名を入力してください",
     "inviteMember": "メンバーを招待",
@@ -376,6 +377,8 @@
       "invalidEmail": "無効なメールアドレス",
       "cannotRemoveLastAdmin": "組織の最後の管理者を削除することはできません。",
       "invalidRole": "選択した役割はこの組織で有効ではありません。",
+      "mediaInUseAsLogo": "組織のロゴとして使用されているメディアは削除できません",
+      "loadMedias": "メディアの読み込みに失敗しました",
       "updateRoleFailed": "メンバーの役割の更新に失敗しました"
     },
     "messages": {
@@ -399,6 +402,15 @@
       "member": "チームリソースにアクセスして編集できます",
       "installer": "デバイス登録用の一時トークン（24時間後に期限切れ）"
     },
+    "logo": "ロゴ",
+    "logoSettings": "ロゴ設定",
+    "selectLogo": "ロゴを選択",
+    "removeLogo": "ロゴを削除",
+    "logoDescription": "組織のロゴとして使用するメディアファイルを選択してください。トップバーに表示されます。",
+    "logoUpdated": "ロゴが正常に更新されました",
+    "logoRemoved": "ロゴが正常に削除されました",
+    "noLogo": "ロゴが選択されていません",
+    "noMediasAvailable": "利用可能な画像がありません。まず画像をアップロードしてください。",
     "dialogs": {
       "removeMemberTitle": "組織からユーザーを削除",
       "removeMemberMessage": "メンバー「{{name}}」を組織から削除してもよろしいですか？",

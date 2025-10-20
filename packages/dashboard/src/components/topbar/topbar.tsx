@@ -18,10 +18,12 @@ import { LoadingProgressBar } from '../loading-progress-bar/loading-progress-bar
 import { baseUrl } from '../../env';
 import { useI18n } from '../../i18n';
 import { store } from '../../store/store';
+import { useSelectedOrganizationLogo } from '../../hooks/use-selected-organization-logo';
 
 const Topbar: Component = () => {
   const [triggerLogout, setTriggerLogout] = createSignal(false);
   const { t } = useI18n();
+  const { logoUrl: selectedOrgLogo } = useSelectedOrganizationLogo();
 
   const navigate = useNavigate();
 
@@ -56,6 +58,16 @@ const Topbar: Component = () => {
           <a href="/">
             <img src={logo} alt="Castmill" />
           </a>
+          <Show when={selectedOrgLogo()}>
+            <div class="org-logo-separator" />
+            <div class="org-logo-container">
+              <img
+                src={selectedOrgLogo()!}
+                alt={store.organizations.selectedName}
+                class="org-logo"
+              />
+            </div>
+          </Show>
         </nav>
 
         <nav class="right">
