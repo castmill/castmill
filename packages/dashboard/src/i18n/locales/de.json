@@ -76,6 +76,7 @@
     "addonLoadingError": "Add-on-Ladefehler",
     "addonError": "Add-on-Fehler",
     "backToLogin": "Zurück zur Anmeldung",
+    "offline": "[TODO: Translate] Offline",
     "selectImage": "Bild auswählen",
     "selectMedia": "Medien auswählen"
   },
@@ -88,7 +89,8 @@
     "content": "Inhalt",
     "playlists": "Playlists",
     "medias": "Medien",
-    "widgets": "Widgets"
+    "widgets": "Widgets",
+    "members": "[TODO: Translate] Members"
   },
   "topbar": {
     "help": "Hilfe",
@@ -145,7 +147,10 @@
     "deleteAccountDescription": "Löschen Sie Ihr Konto und alle zugehörigen Daten dauerhaft. Diese Aktion kann nicht rückgängig gemacht werden.",
     "deleteAccountButton": "Konto löschen",
     "deleteAccountConfirm": "Sind Sie sicher?",
-    "deleteAccountWarning": "Dies wird Ihr Konto dauerhaft löschen.",
+    "deleteAccountWarning": "Dies wird Ihr Konto dauerhaft löschen und alle Passkeys von unseren Servern entfernen. Allerdings bleiben auf Ihren Geräten gespeicherte Passkeys (in iCloud-Schlüsselbund, Google Password Manager, Windows Hello usw.) bestehen und müssen manuell entfernt werden.",
+    "deleteAccountWarningWithSignalAPI": "Dies wird Ihr Konto dauerhaft löschen und alle Passkeys von unseren Servern entfernen. Ihr Browser unterstützt die automatische Entfernung von Passkeys.",
+    "deleteAccountPasskeyInfo": "Nach der Löschung schlägt der Versuch, sich mit einem alten Passkey anzumelden, fehl. Um Verwirrung zu vermeiden, entfernen Sie bitte die Passkeys dieses Kontos manuell aus den Geräteeinstellungen.",
+    "deleteAccountPasskeyInfoWithSignalAPI": "Nach der Löschung werden die Passkeys automatisch von Ihrem Gerät entfernt. Wenn Sie sich später anmelden möchten, müssen Sie ein neues Konto erstellen.",
     "deleteAccountYes": "Ja, Konto löschen",
     "retry": "Erneut versuchen",
     "errors": {
@@ -206,10 +211,7 @@
     "removeTeams": "Teams entfernen",
     "confirmRemoveTeam": "Sind Sie sicher, dass Sie das Team \"{{name}}\" entfernen möchten?",
     "confirmRemoveTeams": "Sind Sie sicher, dass Sie die folgenden Teams entfernen möchten?",
-    "members": {
-      "selectUser": "Benutzer auswählen",
-      "searchUser": "Nach einem Benutzer suchen..."
-    },
+    "members": "TODO: Translate - Members",
     "invitations": "Einladungen",
     "invitationAcceptSuccess": "Einladung erfolgreich angenommen",
     "invitationDeleteSuccess": "Einladung erfolgreich gelöscht",
@@ -270,6 +272,11 @@
       "accepting": "Wird angenommen...",
       "accept": "Einladung annehmen"
     },
+    "memberSelection": {
+      "selectUser": "Benutzer auswählen",
+      "searchUser": "Nach einem Benutzer suchen..."
+    },
+    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully",
     "dialogs": {
       "removeMemberTitle": "Benutzer aus Team entfernen",
       "removeMemberMessage": "Sind Sie sicher, dass Sie das Mitglied \"{{name}}\" aus dem Team entfernen möchten?",
@@ -314,6 +321,7 @@
     "title": "Organisation",
     "users": "Benutzer",
     "invitations": "Einladungen",
+    "settings": "Einstellungen",
     "update": "Aktualisieren",
     "placeholderName": "Organisationsnamen eingeben",
     "inviteMember": "Mitglied einladen",
@@ -335,6 +343,9 @@
       "cannotRemoveLastAdmin": "Du kannst den letzten Administrator einer Organisation nicht entfernen.",
       "invalidRole": "Die ausgewählte Rolle ist für diese Organisation nicht gültig.",
       "cannotRemoveLastUser": "Sie können nicht gehen, da Sie das einzige Mitglied dieser Organisation sind."
+      "mediaInUseAsLogo": "Medien, die als Organisationslogo verwendet werden, können nicht gelöscht werden",
+      "loadMedias": "Fehler beim Laden von Medien",
+      "updateRoleFailed": "Fehler beim Aktualisieren der Mitgliederrolle"
     },
     "messages": {
       "memberRemoved": "Mitglied {{name}} wurde erfolgreich entfernt",
@@ -364,6 +375,21 @@
     "leaveOrganizationLastUserWarning": "Sie können nicht gehen, da Sie das einzige Mitglied dieser Organisation sind.",
     "leaveLastOrganizationWarningTitle": "Ihre letzte Organisation verlassen?",
     "leaveLastOrganizationWarningMessage": "Dies ist Ihre einzige Organisation. Wenn Sie sie verlassen, wird Ihr Konto gelöscht und Sie verlieren den gesamten Zugriff auf Castmill. Sie müssen einen Administrator kontaktieren, um erneut eingeladen zu werden. Sind Sie sicher, dass Sie fortfahren möchten?"
+    "logo": "Logo",
+    "logoSettings": "Logo-Einstellungen",
+    "selectLogo": "Logo auswählen",
+    "removeLogo": "Logo entfernen",
+    "logoDescription": "Wählen Sie eine Mediendatei als Logo Ihrer Organisation. Es wird in der oberen Leiste angezeigt.",
+    "logoUpdated": "Logo erfolgreich aktualisiert",
+    "logoRemoved": "Logo erfolgreich entfernt",
+    "noLogo": "Kein Logo ausgewählt",
+    "noMediasAvailable": "Keine Bilder verfügbar. Bitte laden Sie zuerst ein Bild hoch.",
+    "dialogs": {
+      "removeMemberTitle": "Benutzer aus Organisation entfernen",
+      "removeMemberMessage": "Sind Sie sicher, dass Sie das Mitglied \"{{name}}\" aus der Organisation entfernen möchten?",
+      "removeMembersTitle": "Mitglieder aus Organisation entfernen",
+      "removeMembersMessage": "Sind Sie sicher, dass Sie die folgenden Mitglieder aus der Organisation entfernen möchten?"
+    }
   },
   "login": {
     "title": "Anmelden",

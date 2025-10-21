@@ -338,8 +338,8 @@ export const TeamMembersView = (props: {
           >
             <ComboBox
               id="user-selector"
-              label={t('teams.members.selectUser')}
-              placeholder={t('teams.members.searchUser')}
+              label={t('teams.memberSelection.selectUser')}
+              placeholder={t('teams.memberSelection.searchUser')}
               value={selectedUser()}
               fetchItems={fetchUsers}
               renderItem={(user: User) => (
@@ -361,9 +361,9 @@ export const TeamMembersView = (props: {
                 items={[
                   {
                     value: 'member',
-                    name: t('organizations.teamRoleMember'),
+                    name: t('organization.teamRoleMember'),
                   },
-                  { value: 'admin', name: t('organizations.teamRoleAdmin') },
+                  { value: 'admin', name: t('organization.teamRoleAdmin') },
                 ]}
                 defaultValue={selectedRole()}
                 onSelectChange={(value: string | null) => {

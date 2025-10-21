@@ -82,6 +82,7 @@
     "addonLoadingError": "Error al cargar complemento",
     "addonError": "Error de complemento",
     "backToLogin": "Volver al inicio de sesión",
+    "offline": "[TODO: Translate] Offline",
     "selectImage": "Seleccionar una imagen",
     "selectMedia": "Seleccionar un medio"
   },
@@ -140,7 +141,10 @@
     "deleteAccountDescription": "Eliminar permanentemente tu cuenta y todos los datos asociados. Esta acción no se puede deshacer.",
     "deleteAccountButton": "Eliminar cuenta",
     "deleteAccountConfirm": "¿Estás seguro?",
-    "deleteAccountWarning": "Esto eliminará permanentemente tu cuenta.",
+    "deleteAccountWarning": "Esto eliminará permanentemente tu cuenta y eliminará todas las llaves de acceso de nuestros servidores. Sin embargo, las llaves almacenadas en tus dispositivos (en iCloud Keychain, Google Password Manager, Windows Hello, etc.) permanecerán y deben eliminarse manualmente.",
+    "deleteAccountWarningWithSignalAPI": "Esto eliminará permanentemente tu cuenta y eliminará todas las llaves de acceso de nuestros servidores. Tu navegador admite la eliminación automática de llaves.",
+    "deleteAccountPasskeyInfo": "Después de la eliminación, si intentas iniciar sesión con una llave antigua, fallará. Para evitar confusión, por favor elimina manualmente las llaves de acceso de esta cuenta de la configuración de tu dispositivo.",
+    "deleteAccountPasskeyInfoWithSignalAPI": "Después de la eliminación, las llaves se eliminarán automáticamente de tu dispositivo. Si intentas iniciar sesión más tarde, necesitarás crear una nueva cuenta.",
     "deleteAccountYes": "Sí, eliminar cuenta",
     "retry": "Reintentar",
     "errors": {
@@ -193,10 +197,7 @@
   },
   "teams": {
     "title": "Equipos",
-    "members": {
-      "selectUser": "Seleccionar usuario",
-      "searchUser": "Buscar un usuario..."
-    },
+    "members": "TODO: Translate - Members",
     "invitations": "Invitaciones",
     "invitationAcceptSuccess": "Invitación aceptada exitosamente",
     "invitationDeleteSuccess": "Invitación eliminada exitosamente",
@@ -270,7 +271,12 @@
       "expired": "Esta invitación ha expirado.",
       "accepting": "Aceptando...",
       "accept": "Aceptar invitación"
-    }
+    },
+    "memberSelection": {
+      "selectUser": "Seleccionar usuario",
+      "searchUser": "Buscar un usuario..."
+    },
+    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully"
   },
   "login": {
     "title": "Iniciar sesión",
@@ -310,7 +316,8 @@
     "content": "Contenido",
     "playlists": "Listas de reproducción",
     "medias": "Medios",
-    "widgets": "Widgets"
+    "widgets": "Widgets",
+    "members": "[TODO: Translate] Members"
   },
   "channels": {
     "title": "Canales",
@@ -349,6 +356,7 @@
     "title": "Organización",
     "users": "Usuarios",
     "invitations": "Invitaciones",
+    "settings": "Configuración",
     "update": "Actualizar",
     "placeholderName": "Ingresa el nombre de la organización",
     "inviteMember": "Invitar miembro",
@@ -370,6 +378,9 @@
       "cannotRemoveLastAdmin": "No puedes eliminar al último administrador de la organización.",
       "invalidRole": "El rol seleccionado no es válido para esta organización.",
       "cannotRemoveLastUser": "No puede abandonar porque es el único miembro de esta organización."
+      "mediaInUseAsLogo": "No se puede eliminar un medio que se está utilizando como logo de organización",
+      "loadMedias": "Error al cargar medios",
+      "updateRoleFailed": "Error al actualizar el rol del miembro"
     },
     "messages": {
       "memberRemoved": "El miembro {{name}} se eliminó correctamente",
@@ -399,6 +410,15 @@
     "leaveOrganizationLastUserWarning": "No puede abandonar porque es el único miembro de esta organización.",
     "leaveLastOrganizationWarningTitle": "¿Abandonar su última organización?",
     "leaveLastOrganizationWarningMessage": "Esta es su única organización. Abandonarla eliminará su cuenta y perderá todo acceso a Castmill. Necesitará que un administrador lo invite de nuevo. ¿Está seguro de que desea continuar?"
+    "logo": "Logo",
+    "logoSettings": "Configuración del Logo",
+    "selectLogo": "Seleccionar Logo",
+    "removeLogo": "Eliminar Logo",
+    "logoDescription": "Elija un archivo de medios para usar como logo de su organización. Se mostrará en la barra superior.",
+    "logoUpdated": "Logo actualizado correctamente",
+    "logoRemoved": "Logo eliminado correctamente",
+    "noLogo": "Sin logo seleccionado",
+    "noMediasAvailable": "No hay imágenes disponibles. Por favor, suba una imagen primero."
   },
   "signup": {
     "title": "Registrarse",

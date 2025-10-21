@@ -60,6 +60,7 @@
     "ip": "Adresse IP",
     "description": "Description",
     "online": "En ligne",
+    "offline": "Hors ligne",
     "update": "Mettre à jour",
     "reset": "Réinitialiser",
     "apply": "Appliquer",
@@ -139,7 +140,10 @@
     "deleteAccountDescription": "Supprimer définitivement votre compte et toutes les données associées. Cette action ne peut pas être annulée.",
     "deleteAccountButton": "Supprimer le compte",
     "deleteAccountConfirm": "Êtes-vous sûr ?",
-    "deleteAccountWarning": "Cela supprimera définitivement votre compte.",
+    "deleteAccountWarning": "Cela supprimera définitivement votre compte et supprimera toutes les clés d'accès de nos serveurs. Cependant, les clés d'accès stockées sur vos appareils (dans iCloud Keychain, Google Password Manager, Windows Hello, etc.) resteront et devront être supprimées manuellement.",
+    "deleteAccountWarningWithSignalAPI": "Cela supprimera définitivement votre compte et supprimera toutes les clés d'accès de nos serveurs. Votre navigateur prend en charge la suppression automatique des clés d'accès.",
+    "deleteAccountPasskeyInfo": "Après la suppression, si vous essayez de vous connecter avec une ancienne clé d'accès, cela échouera. Pour éviter toute confusion, veuillez supprimer manuellement les clés d'accès de ce compte dans les paramètres de votre appareil.",
+    "deleteAccountPasskeyInfoWithSignalAPI": "Après la suppression, les clés d'accès seront automatiquement supprimées de votre appareil. Si vous essayez de vous connecter plus tard, vous devrez créer un nouveau compte.",
     "deleteAccountYes": "Oui, supprimer le compte",
     "retry": "Réessayer",
     "errors": {
@@ -192,10 +196,7 @@
   },
   "teams": {
     "title": "Équipes",
-    "members": {
-      "selectUser": "Sélectionner un utilisateur",
-      "searchUser": "Rechercher un utilisateur..."
-    },
+    "members": "TODO: Translate - Members",
     "invitations": "Invitations",
     "invitationAcceptSuccess": "Invitation acceptée avec succès",
     "invitationDeleteSuccess": "Invitation supprimée avec succès",
@@ -264,6 +265,11 @@
       "accepting": "Acceptation...",
       "accept": "Accepter l'invitation"
     },
+    "memberSelection": {
+      "selectUser": "Sélectionner un utilisateur",
+      "searchUser": "Rechercher un utilisateur..."
+    },
+    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully",
     "dialogs": {
       "removeMemberTitle": "Retirer l'utilisateur de l'équipe",
       "removeMemberMessage": "Êtes-vous sûr de vouloir retirer le membre \"{{name}}\" de l'équipe?",
@@ -309,7 +315,8 @@
     "content": "Contenu",
     "playlists": "Listes de lecture",
     "medias": "Médias",
-    "widgets": "Widgets"
+    "widgets": "Widgets",
+    "members": "[TODO: Translate] Members"
   },
   "channels": {
     "title": "Canaux",
@@ -348,6 +355,7 @@
     "title": "Organisation",
     "users": "Utilisateurs",
     "invitations": "Invitations",
+    "settings": "Paramètres",
     "update": "Mettre à jour",
     "placeholderName": "Entrez le nom de l'organisation",
     "inviteMember": "Inviter un membre",
@@ -369,6 +377,9 @@
       "cannotRemoveLastAdmin": "Vous ne pouvez pas supprimer le dernier administrateur de l'organisation.",
       "invalidRole": "Le rôle sélectionné n'est pas valide pour cette organisation.",
       "cannotRemoveLastUser": "Vous ne pouvez pas partir car vous êtes le seul membre de cette organisation."
+      "mediaInUseAsLogo": "Impossible de supprimer un média utilisé comme logo d'organisation",
+      "loadMedias": "Échec du chargement des médias",
+      "updateRoleFailed": "Échec de la mise à jour du rôle du membre"
     },
     "messages": {
       "memberRemoved": "Le membre {{name}} a été supprimé avec succès",
@@ -398,6 +409,21 @@
     "leaveOrganizationLastUserWarning": "Vous ne pouvez pas partir car vous êtes le seul membre de cette organisation.",
     "leaveLastOrganizationWarningTitle": "Quitter votre dernière organisation ?",
     "leaveLastOrganizationWarningMessage": "Il s'agit de votre seule organisation. La quitter supprimera votre compte et vous perdrez tout accès à Castmill. Vous devrez contacter un administrateur pour être réinvité. Êtes-vous sûr de vouloir continuer ?"
+    "logo": "Logo",
+    "logoSettings": "Paramètres du logo",
+    "selectLogo": "Sélectionner le logo",
+    "removeLogo": "Supprimer le logo",
+    "logoDescription": "Choisissez un fichier média à utiliser comme logo de votre organisation. Il sera affiché dans la barre supérieure.",
+    "logoUpdated": "Logo mis à jour avec succès",
+    "logoRemoved": "Logo supprimé avec succès",
+    "noLogo": "Aucun logo sélectionné",
+    "noMediasAvailable": "Aucune image disponible. Veuillez d'abord télécharger une image.",
+    "dialogs": {
+      "removeMemberTitle": "Retirer l'utilisateur de l'organisation",
+      "removeMemberMessage": "Êtes-vous sûr de vouloir retirer le membre \"{{name}}\" de l'organisation?",
+      "removeMembersTitle": "Retirer les membres de l'organisation",
+      "removeMembersMessage": "Êtes-vous sûr de vouloir retirer les membres suivants de l'organisation?"
+    }
   },
   "playlists": {
     "title": "Playlists",

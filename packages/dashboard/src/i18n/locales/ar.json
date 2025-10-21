@@ -81,6 +81,7 @@
     },
     "addonError": "خطأ في الإضافة",
     "backToLogin": "العودة لتسجيل الدخول",
+    "offline": "[TODO: Translate] Offline",
     "selectImage": "اختر صورة",
     "selectMedia": "اختر وسائط"
   },
@@ -139,7 +140,10 @@
     "deleteAccountDescription": "حذف حسابك وجميع البيانات المرتبطة بشكل دائم. لا يمكن التراجع عن هذا الإجراء.",
     "deleteAccountButton": "حذف الحساب",
     "deleteAccountConfirm": "هل أنت متأكد؟",
-    "deleteAccountWarning": "سيؤدي هذا إلى حذف حسابك بشكل دائم.",
+    "deleteAccountWarning": "سيؤدي هذا إلى حذف حسابك بشكل دائم وإزالة جميع مفاتيح المرور من خوادمنا. ومع ذلك، ستبقى مفاتيح المرور المخزنة على أجهزتك (في iCloud Keychain أو Google Password Manager أو Windows Hello وما إلى ذلك) ويجب إزالتها يدويًا.",
+    "deleteAccountWarningWithSignalAPI": "سيؤدي هذا إلى حذف حسابك بشكل دائم وإزالة جميع مفاتيح المرور من خوادمنا. يدعم متصفحك الإزالة التلقائية لمفاتيح المرور.",
+    "deleteAccountPasskeyInfo": "بعد الحذف، إذا حاولت تسجيل الدخول باستخدام مفتاح مرور قديم، فسيفشل. لتجنب الارتباك، يرجى إزالة مفاتيح المرور لهذا الحساب يدويًا من إعدادات جهازك.",
+    "deleteAccountPasskeyInfoWithSignalAPI": "بعد الحذف، ستتم إزالة مفاتيح المرور تلقائيًا من جهازك. إذا حاولت تسجيل الدخول لاحقًا، فستحتاج إلى إنشاء حساب جديد.",
     "deleteAccountYes": "نعم، احذف الحساب",
     "retry": "إعادة المحاولة",
     "errors": {
@@ -192,10 +196,7 @@
   },
   "teams": {
     "title": "الفرق",
-    "members": {
-      "selectUser": "اختر مستخدمًا",
-      "searchUser": "البحث عن مستخدم..."
-    },
+    "members": "TODO: Translate - Members",
     "invitations": "الدعوات",
     "invitationAcceptSuccess": "تم قبول الدعوة بنجاح",
     "invitationDeleteSuccess": "تم حذف الدعوة بنجاح",
@@ -264,6 +265,11 @@
       "accepting": "جاري القبول...",
       "accept": "قبول الدعوة"
     },
+    "memberSelection": {
+      "selectUser": "اختر مستخدمًا",
+      "searchUser": "البحث عن مستخدم..."
+    },
+    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully",
     "dialogs": {
       "removeMemberTitle": "إزالة المستخدم من الفريق",
       "removeMemberMessage": "هل أنت متأكد أنك تريد إزالة العضو \"{{name}}\" من الفريق؟",
@@ -309,7 +315,8 @@
     "content": "المحتوى",
     "playlists": "قوائم التشغيل",
     "medias": "الوسائط",
-    "widgets": "Widgets"
+    "widgets": "Widgets",
+    "members": "[TODO: Translate] Members"
   },
   "channels": {
     "title": "القنوات",
@@ -348,6 +355,7 @@
     "title": "المنظمة",
     "users": "المستخدمون",
     "invitations": "الدعوات",
+    "settings": "الإعدادات",
     "update": "تحديث",
     "placeholderName": "أدخل اسم المنظمة",
     "inviteMember": "دعوة عضو",
@@ -369,6 +377,9 @@
       "cannotRemoveLastAdmin": "لا يمكنك إزالة آخر مشرف للمؤسسة.",
       "invalidRole": "الدور المحدد غير صالح لهذه المؤسسة.",
       "cannotRemoveLastUser": "لا يمكنك المغادرة لأنك العضو الوحيد في هذه المنظمة."
+      "mediaInUseAsLogo": "لا يمكن حذف الوسائط المستخدمة كشعار للمؤسسة",
+      "loadMedias": "فشل تحميل الوسائط",
+      "updateRoleFailed": "فشل تحديث دور العضو"
     },
     "messages": {
       "memberRemoved": "تمت إزالة العضو {{name}} بنجاح",
@@ -398,6 +409,21 @@
     "leaveOrganizationLastUserWarning": "لا يمكنك المغادرة لأنك العضو الوحيد في هذه المنظمة.",
     "leaveLastOrganizationWarningTitle": "مغادرة منظمتك الأخيرة؟",
     "leaveLastOrganizationWarningMessage": "هذه هي منظمتك الوحيدة. مغادرتها ستحذف حسابك وستفقد كل الوصول إلى Castmill. ستحتاج إلى الاتصال بمسؤول لتتم دعوتك مرة أخرى. هل أنت متأكد أنك تريد المتابعة؟"
+    "logo": "الشعار",
+    "logoSettings": "إعدادات الشعار",
+    "selectLogo": "اختر الشعار",
+    "removeLogo": "إزالة الشعار",
+    "logoDescription": "اختر ملف وسائط لاستخدامه كشعار لمؤسستك. سيتم عرضه في الشريط العلوي.",
+    "logoUpdated": "تم تحديث الشعار بنجاح",
+    "logoRemoved": "تم إزالة الشعار بنجاح",
+    "noLogo": "لم يتم اختيار شعار",
+    "noMediasAvailable": "لا توجد صور متاحة. يرجى تحميل صورة أولاً.",
+    "dialogs": {
+      "removeMemberTitle": "إزالة المستخدم من المنظمة",
+      "removeMemberMessage": "هل أنت متأكد أنك تريد إزالة العضو \"{{name}}\" من المنظمة؟",
+      "removeMembersTitle": "إزالة الأعضاء من المنظمة",
+      "removeMembersMessage": "هل أنت متأكد أنك تريد إزالة الأعضاء التالية من المنظمة؟"
+    }
   },
   "playlists": {
     "title": "قوائم التشغيل",

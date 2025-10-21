@@ -81,6 +81,7 @@
     },
     "addonError": "插件错误",
     "backToLogin": "返回登录",
+    "offline": "[TODO: Translate] Offline",
     "selectImage": "选择图片",
     "selectMedia": "选择媒体"
   },
@@ -139,7 +140,10 @@
     "deleteAccountDescription": "永久删除您的账户和所有相关数据。此操作无法撤销。",
     "deleteAccountButton": "删除账户",
     "deleteAccountConfirm": "您确定吗？",
-    "deleteAccountWarning": "这将永久删除您的账户。",
+    "deleteAccountWarning": "这将永久删除您的账户并从我们的服务器中删除所有密钥。但是，存储在您设备上的密钥（在iCloud钥匙串、Google密码管理器、Windows Hello等中）将保留，必须手动删除。",
+    "deleteAccountWarningWithSignalAPI": "这将永久删除您的账户并从我们的服务器中删除所有密钥。您的浏览器支持自动删除密钥。",
+    "deleteAccountPasskeyInfo": "删除后，如果您尝试使用旧密钥登录，将会失败。为避免混淆，请从您的设备设置中手动删除此账户的密钥。",
+    "deleteAccountPasskeyInfoWithSignalAPI": "删除后，密钥将自动从您的设备中删除。如果您以后尝试登录，则需要创建新账户。",
     "deleteAccountYes": "是的，删除账户",
     "retry": "重试",
     "errors": {
@@ -192,10 +196,7 @@
   },
   "teams": {
     "title": "团队",
-    "members": {
-      "selectUser": "选择用户",
-      "searchUser": "搜索用户..."
-    },
+    "members": "TODO: Translate - Members",
     "invitations": "邀请",
     "invitationAcceptSuccess": "邀请接受成功",
     "invitationDeleteSuccess": "邀请删除成功",
@@ -264,6 +265,11 @@
       "accepting": "正在接受...",
       "accept": "接受邀请"
     },
+    "memberSelection": {
+      "selectUser": "选择用户",
+      "searchUser": "搜索用户..."
+    },
+    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully",
     "dialogs": {
       "removeMemberTitle": "从团队中移除用户",
       "removeMemberMessage": "您确定要从团队中移除成员\"{{name}}\"吗？",
@@ -309,7 +315,8 @@
     "content": "内容",
     "playlists": "播放列表",
     "medias": "媒体",
-    "widgets": "Widgets"
+    "widgets": "Widgets",
+    "members": "[TODO: Translate] Members"
   },
   "channels": {
     "title": "频道",
@@ -348,6 +355,7 @@
     "title": "组织",
     "users": "用户",
     "invitations": "邀请",
+    "settings": "设置",
     "update": "更新",
     "placeholderName": "输入组织名称",
     "inviteMember": "邀请成员",
@@ -369,6 +377,9 @@
       "cannotRemoveLastAdmin": "你不能移除组织最后一位管理员。",
       "invalidRole": "所选角色对该组织无效。",
       "cannotRemoveLastUser": "您无法离开，因为您是此组织的唯一成员。"
+      "mediaInUseAsLogo": "无法删除正在用作组织标志的媒体",
+      "loadMedias": "加载媒体失败",
+      "updateRoleFailed": "更新成员角色失败"
     },
     "messages": {
       "memberRemoved": "已成功移除成员 {{name}}",
@@ -398,6 +409,21 @@
     "leaveOrganizationLastUserWarning": "您无法离开，因为您是此组织的唯一成员。",
     "leaveLastOrganizationWarningTitle": "离开您的最后一个组织？",
     "leaveLastOrganizationWarningMessage": "这是您唯一的组织。离开它将删除您的账户，您将失去对Castmill的所有访问权限。您需要联系管理员才能重新被邀请。您确定要继续吗？"
+    "logo": "标志",
+    "logoSettings": "标志设置",
+    "selectLogo": "选择标志",
+    "removeLogo": "删除标志",
+    "logoDescription": "选择一个媒体文件作为您的组织标志。它将显示在顶部栏中。",
+    "logoUpdated": "标志更新成功",
+    "logoRemoved": "标志删除成功",
+    "noLogo": "未选择标志",
+    "noMediasAvailable": "没有可用的图像。请先上传图像。",
+    "dialogs": {
+      "removeMemberTitle": "从组织中移除用户",
+      "removeMemberMessage": "您确定要从组织中移除成员\"{{name}}\"吗？",
+      "removeMembersTitle": "从组织中移除成员",
+      "removeMembersMessage": "您确定要从组织中移除以下成员吗？"
+    }
   },
   "playlists": {
     "title": "播放列表",

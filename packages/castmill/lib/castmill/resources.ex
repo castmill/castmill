@@ -783,35 +783,43 @@ defmodule Castmill.Resources do
   it will trigger a "delete" webhook event if such a webhook is configured.
   """
   def delete_media(%Media{} = media) do
-    # TODO: check if the media is used somewhere, if so, it cannot be
-    # deleted until the references are removed. (Maybe we can force
-    # delete the media and remove all itsreferences as well in this call)
+    # Check if the media is being used as an organization logo
+    org_using_logo =
+      Repo.one(
+        from o in Organization,
+          where: o.logo_media_id == ^media.id,
+          limit: 1
+      )
 
-    # Get all the files belonging to the media
-    media = get_media(media.id)
+    if org_using_logo do
+      {:error, :media_in_use_as_logo}
+    else
+      # Get all the files belonging to the media
+      media = get_media(media.id)
 
-    # Iterate through all the files and delete them
-    Enum.each(media.files, fn {_context, file} ->
-      delete_file_from_storage(file)
-    end)
+      # Iterate through all the files and delete them
+      Enum.each(media.files, fn {_context, file} ->
+        delete_file_from_storage(file)
+      end)
 
-    # Create a transaction for deleting the media and all its associated files
-    Repo.transaction(fn ->
-      # Delete all the file medias and files associated with the media
-      from(files_medias in FilesMedias, where: files_medias.media_id == ^media.id)
-      |> Repo.delete_all()
+      # Create a transaction for deleting the media and all its associated files
+      Repo.transaction(fn ->
+        # Delete all the file medias and files associated with the media
+        from(files_medias in FilesMedias, where: files_medias.media_id == ^media.id)
+        |> Repo.delete_all()
 
-      file_ids = Enum.map(media.files, fn {_context, file} -> file.id end)
+        file_ids = Enum.map(media.files, fn {_context, file} -> file.id end)
 
-      from(f in Castmill.Files.File, where: f.id in ^file_ids)
-      |> Repo.delete_all()
+        from(f in Castmill.Files.File, where: f.id in ^file_ids)
+        |> Repo.delete_all()
 
-      # Delete the media itself
-      case Repo.delete(media) do
-        {:ok, struct} -> struct
-        {:error, changeset} -> raise "Failed to delete media: #{inspect(changeset)}"
-      end
-    end)
+        # Delete the media itself
+        case Repo.delete(media) do
+          {:ok, struct} -> struct
+          {:error, changeset} -> raise "Failed to delete media: #{inspect(changeset)}"
+        end
+      end)
+    end
   end
 
   defp delete_file_from_storage(%Castmill.Files.File{uri: uri}) do
