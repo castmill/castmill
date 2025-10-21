@@ -379,7 +379,8 @@
       "invalidRole": "الدور المحدد غير صالح لهذه المؤسسة.",
       "mediaInUseAsLogo": "لا يمكن حذف الوسائط المستخدمة كشعار للمؤسسة",
       "loadMedias": "فشل تحميل الوسائط",
-      "updateRoleFailed": "فشل تحديث دور العضو"
+      "updateRoleFailed": "فشل تحديث دور العضو",
+      "cannotRemoveLastUser": "لا يمكنك المغادرة لأنك العضو الوحيد في هذه المنظمة."
     },
     "teamRoleDescriptions": {
       "admin": "يمكنه إدارة أعضاء الفريق والموارد",
@@ -416,11 +417,6 @@
     "leaveOrganizationLastUserWarning": "لا يمكنك المغادرة لأنك العضو الوحيد في هذه المنظمة.",
     "leaveLastOrganizationWarningTitle": "مغادرة منظمتك الأخيرة؟",
     "leaveLastOrganizationWarningMessage": "هذه هي منظمتك الوحيدة. مغادرتها ستحذف حسابك وستفقد كل الوصول إلى Castmill. ستحتاج إلى الاتصال بمسؤول لتتم دعوتك مرة أخرى. هل أنت متأكد أنك تريد المتابعة؟",
-    "teamRoleDescriptions": {
-      "admin": "يمكنه إدارة أعضاء الفريق والموارد",
-      "member": "يمكنه الوصول وتحرير موارد الفريق",
-      "installer": "رمز مؤقت لتسجيل الجهاز (ينتهي خلال 24 ساعة)"
-    },
     "logo": "الشعار",
     "logoSettings": "إعدادات الشعار",
     "selectLogo": "اختر الشعار",
@@ -429,13 +425,7 @@
     "logoUpdated": "تم تحديث الشعار بنجاح",
     "logoRemoved": "تم إزالة الشعار بنجاح",
     "noLogo": "لم يتم اختيار شعار",
-    "noMediasAvailable": "لا توجد صور متاحة. يرجى تحميل صورة أولاً.",
-    "dialogs": {
-      "removeMemberTitle": "إزالة المستخدم من المنظمة",
-      "removeMemberMessage": "هل أنت متأكد أنك تريد إزالة العضو \"{{name}}\" من المنظمة؟",
-      "removeMembersTitle": "إزالة الأعضاء من المنظمة",
-      "removeMembersMessage": "هل أنت متأكد أنك تريد إزالة الأعضاء التالية من المنظمة؟"
-    }
+    "noMediasAvailable": "لا توجد صور متاحة. يرجى تحميل صورة أولاً."
   },
   "playlists": {
     "title": "قوائم التشغيل",

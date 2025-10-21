@@ -345,13 +345,15 @@
       "invalidRole": "Die ausgewählte Rolle ist für diese Organisation nicht gültig.",
       "mediaInUseAsLogo": "Medien, die als Organisationslogo verwendet werden, können nicht gelöscht werden",
       "loadMedias": "Fehler beim Laden von Medien",
-      "updateRoleFailed": "Fehler beim Aktualisieren der Mitgliederrolle"
+      "updateRoleFailed": "Fehler beim Aktualisieren der Mitgliederrolle",
+      "cannotRemoveLastUser": "Sie können nicht aussteigen, da Sie das einzige Mitglied dieser Organisation sind."
     },
     "messages": {
       "memberRemoved": "Mitglied {{name}} wurde erfolgreich entfernt",
       "membersRemoved": "Mitglieder wurden erfolgreich entfernt",
       "leftOrganization": "Sie haben die Organisation {{name}} verlassen",
-      "noOrganizationsRemaining": "Sie haben Ihre letzte Organisation verlassen. Bitte kontaktieren Sie einen Administrator, um zu einer Organisation eingeladen zu werden."
+      "noOrganizationsRemaining": "Sie haben Ihre letzte Organisation verlassen. Bitte kontaktieren Sie einen Administrator, um zu einer Organisation eingeladen zu werden.",
+      "invitationSent": "Einladung an {{email}} gesendet"
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {
@@ -368,7 +370,7 @@
       "member": "Kann auf Teamressourcen zugreifen und diese bearbeiten",
       "installer": "Temporäres Token für Geräteregistrierung (läuft in 24h ab)"
     },
-    "logo": "Logo",
+    "logo": "Firmenlogo",
     "logoSettings": "Logo-Einstellungen",
     "selectLogo": "Logo auswählen",
     "removeLogo": "Logo entfernen",

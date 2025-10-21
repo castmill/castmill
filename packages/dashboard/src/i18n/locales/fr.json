@@ -315,7 +315,8 @@
     "checkServerRunning": "Assurez-vous que le serveur Castmill est en cours d'exécution",
     "checkNetworkConnection": "Vérifiez votre connexion réseau",
     "checkServerUrl": "Vérifiez l'URL du serveur dans votre configuration",
-    "retryConnection": "Réessayer la Connexion"
+    "retryConnection": "Réessayer la Connexion",
+    "unknownResourceType": "Type de ressource inconnu : {{resourceType}}"
   },
   "sidebar": {
     "organization": "Organisation",
@@ -390,13 +391,15 @@
       "invalidRole": "Le rôle sélectionné n'est pas valide pour cette organisation.",
       "mediaInUseAsLogo": "Impossible de supprimer un média utilisé comme logo d'organisation",
       "loadMedias": "Échec du chargement des médias",
-      "updateRoleFailed": "Échec de la mise à jour du rôle du membre"
+      "updateRoleFailed": "Échec de la mise à jour du rôle du membre",
+      "cannotRemoveLastUser": "Vous ne pouvez pas partir car vous êtes le seul membre de cette organisation."
     },
     "messages": {
       "memberRemoved": "Le membre {{name}} a été supprimé avec succès",
       "membersRemoved": "Les membres ont été supprimés avec succès",
       "leftOrganization": "Vous avez quitté l'organisation {{name}}",
-      "noOrganizationsRemaining": "Vous avez quitté votre dernière organisation. Veuillez contacter un administrateur pour être invité à une organisation."
+      "noOrganizationsRemaining": "Vous avez quitté votre dernière organisation. Veuillez contacter un administrateur pour être invité à une organisation.",
+      "invitationSent": "Invitation envoyée à {{email}}"
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {
@@ -413,7 +416,7 @@
       "member": "Peut accéder et modifier les ressources de l'équipe",
       "installer": "Jeton temporaire pour l'enregistrement d'appareil (expire dans 24h)"
     },
-    "logo": "Logo",
+    "logo": "Logo de l'organisation",
     "logoSettings": "Paramètres du logo",
     "selectLogo": "Sélectionner le logo",
     "removeLogo": "Supprimer le logo",

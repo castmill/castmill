@@ -379,13 +379,15 @@
       "invalidRole": "所选角色对该组织无效。",
       "mediaInUseAsLogo": "无法删除正在用作组织标志的媒体",
       "loadMedias": "加载媒体失败",
-      "updateRoleFailed": "更新成员角色失败"
+      "updateRoleFailed": "更新成员角色失败",
+      "cannotRemoveLastUser": "您无法离开，因为您是该组织的唯一成员。"
     },
     "messages": {
       "memberRemoved": "已成功移除成员 {{name}}",
       "membersRemoved": "已成功移除成员",
       "leftOrganization": "您已离开组织 {{name}}",
-      "noOrganizationsRemaining": "您已离开最后一个组织。请联系管理员以被邀请加入组织。"
+      "noOrganizationsRemaining": "您已离开最后一个组织。请联系管理员以被邀请加入组织。",
+      "invitationSent": "邀请已发送至 {{email}}"
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {
