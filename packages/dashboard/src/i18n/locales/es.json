@@ -393,8 +393,7 @@
       "invalidEmail": "Correo electrónico inválido",
       "cannotRemoveLastAdmin": "No puedes eliminar al último administrador de la organización.",
       "invalidRole": "El rol seleccionado no es válido para esta organización.",
-      "updateRoleFailed": "Error al actualizar el rol del miembro",
-      "cannotRemoveLastUser": "No puede abandonar porque es el único miembro de esta organización."
+      "cannotRemoveLastUser": "No puede abandonar porque es el único miembro de esta organización.",
       "mediaInUseAsLogo": "No se puede eliminar un medio que se está utilizando como logo de organización",
       "loadMedias": "Error al cargar medios",
       "updateRoleFailed": "Error al actualizar el rol del miembro"
@@ -418,22 +417,7 @@
     "leaveOrganizationLastAdminWarning": "Agregue otro administrador antes de abandonar para mantener esta organización administrada.",
     "leaveOrganizationLastUserWarning": "No puede abandonar porque es el único miembro de esta organización.",
     "leaveLastOrganizationWarningTitle": "¿Abandonar su última organización?",
-    "leaveLastOrganizationWarningMessage": "Esta es su única organización. Abandonarla eliminará su cuenta y perderá todo acceso a Castmill. Necesitará que un administrador lo invite de nuevo. ¿Está seguro de que desea continuar?"
-    "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
-    "roleDescriptions": {
-      "admin": "Acceso completo incluyendo gestión de la organización",
-      "manager": "Puede gestionar equipos y la mayoría de recursos",
-      "member": "Usuario estándar (predeterminado), puede gestionar contenido",
-      "editor": "Gestión completa de contenido, no puede gestionar equipos",
-      "publisher": "Como editor más acciones de flujo de publicación",
-      "device_manager": "Gestión completa de dispositivos y canales",
-      "guest": "Acceso de solo lectura a recursos"
-    },
-    "teamRoleDescriptions": {
-      "admin": "Puede gestionar miembros del equipo y recursos",
-      "member": "Puede acceder y editar recursos del equipo",
-      "installer": "Token temporal para registro de dispositivos (expira en 24h)"
-    },
+    "leaveLastOrganizationWarningMessage": "Esta es su única organización. Abandonarla eliminará su cuenta y perderá todo acceso a Castmill. Necesitará que un administrador lo invite de nuevo. ¿Está seguro de que desea continuar?",
     "logo": "Logo",
     "logoSettings": "Configuración del Logo",
     "selectLogo": "Seleccionar Logo",
