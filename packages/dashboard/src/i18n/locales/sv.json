@@ -371,7 +371,7 @@
       "invalidEmail": "Ogiltig e-post",
       "cannotRemoveLastAdmin": "Du kan inte ta bort organisationens sista administratör.",
       "invalidRole": "Den valda rollen är inte giltig för den här organisationen.",
-      "cannotRemoveLastUser": "Du kan inte lämna eftersom du är den enda medlemmen i denna organisation."
+      "cannotRemoveLastUser": "Du kan inte lämna eftersom du är den enda medlemmen i denna organisation.",
       "mediaInUseAsLogo": "Kan inte ta bort media som används som organisationslogotyp",
       "loadMedias": "Kunde inte ladda media",
       "updateRoleFailed": "Misslyckades med att uppdatera medlemsroll"
@@ -403,7 +403,7 @@
     "leaveOrganizationLastAdminWarning": "Lägg till en annan administratör innan du lämnar för att hålla denna organisation hanterad.",
     "leaveOrganizationLastUserWarning": "Du kan inte lämna eftersom du är den enda medlemmen i denna organisation.",
     "leaveLastOrganizationWarningTitle": "Lämna din sista organisation?",
-    "leaveLastOrganizationWarningMessage": "Detta är din enda organisation. Att lämna den kommer att ta bort ditt konto och du kommer att förlora all åtkomst till Castmill. Du kommer att behöva kontakta en administratör för att bli inbjuden igen. Är du säker på att du vill fortsätta?"
+    "leaveLastOrganizationWarningMessage": "Detta är din enda organisation. Att lämna den kommer att ta bort ditt konto och du kommer att förlora all åtkomst till Castmill. Du kommer att behöva kontakta en administratör för att bli inbjuden igen. Är du säker på att du vill fortsätta?",
     "logo": "Logotyp",
     "logoSettings": "Logotypinställningar",
     "selectLogo": "Välj logotyp",

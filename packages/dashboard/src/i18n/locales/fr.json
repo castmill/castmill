@@ -376,7 +376,7 @@
       "invalidEmail": "E-mail invalide",
       "cannotRemoveLastAdmin": "Vous ne pouvez pas supprimer le dernier administrateur de l'organisation.",
       "invalidRole": "Le rôle sélectionné n'est pas valide pour cette organisation.",
-      "cannotRemoveLastUser": "Vous ne pouvez pas partir car vous êtes le seul membre de cette organisation."
+      "cannotRemoveLastUser": "Vous ne pouvez pas partir car vous êtes le seul membre de cette organisation.",
       "mediaInUseAsLogo": "Impossible de supprimer un média utilisé comme logo d'organisation",
       "loadMedias": "Échec du chargement des médias",
       "updateRoleFailed": "Échec de la mise à jour du rôle du membre"
@@ -408,7 +408,7 @@
     "leaveOrganizationLastAdminWarning": "Ajoutez un autre administrateur avant de partir pour garder cette organisation gérée.",
     "leaveOrganizationLastUserWarning": "Vous ne pouvez pas partir car vous êtes le seul membre de cette organisation.",
     "leaveLastOrganizationWarningTitle": "Quitter votre dernière organisation ?",
-    "leaveLastOrganizationWarningMessage": "Il s'agit de votre seule organisation. La quitter supprimera votre compte et vous perdrez tout accès à Castmill. Vous devrez contacter un administrateur pour être réinvité. Êtes-vous sûr de vouloir continuer ?"
+    "leaveLastOrganizationWarningMessage": "Il s'agit de votre seule organisation. La quitter supprimera votre compte et vous perdrez tout accès à Castmill. Vous devrez contacter un administrateur pour être réinvité. Êtes-vous sûr de vouloir continuer ?",
     "logo": "Logo",
     "logoSettings": "Paramètres du logo",
     "selectLogo": "Sélectionner le logo",

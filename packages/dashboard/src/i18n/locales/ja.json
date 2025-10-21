@@ -376,7 +376,7 @@
       "invalidEmail": "無効なメールアドレス",
       "cannotRemoveLastAdmin": "組織の最後の管理者を削除することはできません。",
       "invalidRole": "選択した役割はこの組織で有効ではありません。",
-      "cannotRemoveLastUser": "この組織の唯一のメンバーであるため、離れることはできません。"
+      "cannotRemoveLastUser": "この組織の唯一のメンバーであるため、離れることはできません。",
       "mediaInUseAsLogo": "組織のロゴとして使用されているメディアは削除できません",
       "loadMedias": "メディアの読み込みに失敗しました",
       "updateRoleFailed": "メンバーの役割の更新に失敗しました"
@@ -408,7 +408,7 @@
     "leaveOrganizationLastAdminWarning": "この組織を管理し続けるために、離れる前に別の管理者を追加してください。",
     "leaveOrganizationLastUserWarning": "この組織の唯一のメンバーであるため、離れることはできません。",
     "leaveLastOrganizationWarningTitle": "最後の組織を離れますか？",
-    "leaveLastOrganizationWarningMessage": "これはあなたの唯一の組織です。離れるとアカウントが削除され、Castmillへのすべてのアクセスが失われます。再度招待されるには管理者に連絡する必要があります。続行してもよろしいですか？"
+    "leaveLastOrganizationWarningMessage": "これはあなたの唯一の組織です。離れるとアカウントが削除され、Castmillへのすべてのアクセスが失われます。再度招待されるには管理者に連絡する必要があります。続行してもよろしいですか？",
     "logo": "ロゴ",
     "logoSettings": "ロゴ設定",
     "selectLogo": "ロゴを選択",
