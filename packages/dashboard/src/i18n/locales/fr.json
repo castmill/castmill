@@ -409,7 +409,7 @@
     "leaveOrganizationLastUserWarning": "Vous ne pouvez pas partir car vous êtes le seul membre de cette organisation.",
     "leaveLastOrganizationWarningTitle": "Quitter votre dernière organisation ?",
     "leaveLastOrganizationWarningMessage": "Il s'agit de votre seule organisation. La quitter supprimera votre compte et vous perdrez tout accès à Castmill. Vous devrez contacter un administrateur pour être réinvité. Êtes-vous sûr de vouloir continuer ?",
-    "logo": "Logo",
+    "logo": "Logotype",
     "logoSettings": "Paramètres du logo",
     "selectLogo": "Sélectionner le logo",
     "removeLogo": "Supprimer le logo",

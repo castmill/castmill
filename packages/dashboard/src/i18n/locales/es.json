@@ -410,7 +410,13 @@
     "leaveOrganizationLastUserWarning": "No puede abandonar porque es el único miembro de esta organización.",
     "leaveLastOrganizationWarningTitle": "¿Abandonar su última organización?",
     "leaveLastOrganizationWarningMessage": "Esta es su única organización. Abandonarla eliminará su cuenta y perderá todo acceso a Castmill. Necesitará que un administrador lo invite de nuevo. ¿Está seguro de que desea continuar?",
-    "logo": "Logo",
+    "dialogs": {
+      "removeMemberTitle": "Eliminar Usuario de la Organización",
+      "removeMemberMessage": "¿Está seguro de que desea eliminar al miembro \"{{name}}\" de la organización?",
+      "removeMembersTitle": "Eliminar Miembros de la Organización",
+      "removeMembersMessage": "¿Está seguro de que desea eliminar a los siguientes miembros de la organización?"
+    },
+    "logo": "Logotipo",
     "logoSettings": "Configuración del Logo",
     "selectLogo": "Seleccionar Logo",
     "removeLogo": "Eliminar Logo",
