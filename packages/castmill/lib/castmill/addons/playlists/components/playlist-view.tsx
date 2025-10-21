@@ -5,7 +5,13 @@ import {
   JsonWidgetConfig,
   OptionsDict,
 } from '@castmill/player';
-import { Component, createEffect, createSignal, Show } from 'solid-js';
+import {
+  Component,
+  createEffect,
+  createSignal,
+  Show,
+  onCleanup,
+} from 'solid-js';
 import { useToast } from '@castmill/ui-common';
 
 import './playlist-view.scss';
@@ -29,6 +35,97 @@ export const PlaylistView: Component<{
   const [loading, setLoading] = createSignal(true);
   const [items, setItems] = createSignal<JsonPlaylistItem[]>([]);
   const [playlist, setPlaylist] = createSignal<JsonPlaylist>();
+
+  // Track whether to constrain by width or height based on container size
+  const [constrainByWidth, setConstrainByWidth] = createSignal(false);
+  const [refReady, setRefReady] = createSignal(false);
+  let previewWrapperRef: HTMLDivElement | undefined;
+  let containerRef: HTMLDivElement | undefined;
+  const [containerReady, setContainerReady] = createSignal(false);
+  const [containerHeight, setContainerHeight] = createSignal<number>();
+
+  const updatePlaylistItems = (nextItems: JsonPlaylistItem[]) => {
+    setItems(nextItems);
+    setPlaylist((prev) => (prev ? { ...prev, items: nextItems } : prev));
+  };
+
+  // Setup resize observer to dynamically adjust aspect ratio constraints
+  // based on container size (needed for portrait aspect ratios in narrow containers)
+  createEffect(() => {
+    const pl = playlist();
+    const isRefReady = refReady();
+
+    if (!pl || !isRefReady || !previewWrapperRef) return;
+
+    const targetAspectRatio = getCurrentAspectRatio();
+    const targetRatio = targetAspectRatio.width / targetAspectRatio.height;
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const { width, height } = entry.contentRect;
+        const containerRatio = width / height;
+
+        // If container aspect ratio is narrower than target aspect ratio,
+        // constrain by width instead of height to maintain aspect ratio
+        setConstrainByWidth(containerRatio < targetRatio);
+      }
+    });
+
+    resizeObserver.observe(previewWrapperRef);
+
+    onCleanup(() => {
+      resizeObserver.disconnect();
+    });
+  });
+
+  // Track the available height within the modal by calculating modalContent - modalHeader - padding
+  createEffect(() => {
+    if (!containerReady() || !containerRef) {
+      return;
+    }
+
+    const modalContent = containerRef.closest(
+      '[class*="modalContent"]'
+    ) as HTMLElement;
+    if (!modalContent) {
+      return;
+    }
+
+    const updateHeight = () => {
+      const modalHeader = modalContent.querySelector(
+        '[class*="modalHeader"]'
+      ) as HTMLElement;
+      if (!modalHeader) {
+        return;
+      }
+
+      const contentHeight = modalContent.clientHeight;
+      const headerHeight = modalHeader.clientHeight;
+      const contentStyles = window.getComputedStyle(modalContent);
+      const contentPaddingTop = parseFloat(contentStyles.paddingTop);
+      const contentPaddingBottom = parseFloat(contentStyles.paddingBottom);
+
+      const availableHeight =
+        contentHeight - headerHeight - contentPaddingTop - contentPaddingBottom;
+
+      if (availableHeight > 0) {
+        setContainerHeight(availableHeight);
+      }
+    };
+
+    updateHeight();
+
+    const resizeObserver = new ResizeObserver(() => updateHeight());
+    resizeObserver.observe(modalContent);
+
+    const handleWindowResize = () => updateHeight();
+    window.addEventListener('resize', handleWindowResize);
+
+    onCleanup(() => {
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', handleWindowResize);
+    });
+  });
 
   createEffect(() => {
     (async () => {
@@ -87,8 +184,7 @@ export const PlaylistView: Component<{
           : i
       );
 
-      setItems(newItems as JsonPlaylistItem[]);
-      setPlaylist((prevPlaylist) => ({ ...prevPlaylist, items: newItems }));
+      updatePlaylistItems(newItems as JsonPlaylistItem[]);
     } catch (err) {
       toast.error(`Error updating widget in playlist: ${err}`);
     }
@@ -134,11 +230,18 @@ export const PlaylistView: Component<{
         id: newItem.id,
         widget,
         duration,
-        config: { ...config, options: expandedOptions },
+        offset: 0,
+        slack: 0,
+        name: widget.name,
+        config: {
+          id: newItem.id,
+          widget_id: widget.id!,
+          options: expandedOptions,
+          data: config.data || {},
+        },
       });
 
-      setItems(newItems);
-      setPlaylist((prevPlaylist) => ({ ...prevPlaylist, items: newItems }));
+      updatePlaylistItems(newItems);
     } catch (err) {
       toast.error(`Error inserting widget into playlist: ${err}`);
     }
@@ -202,8 +305,7 @@ export const PlaylistView: Component<{
         targetItemId
       );
 
-      setItems(newItems);
-      setPlaylist((prevPlaylist) => ({ ...prevPlaylist, items: newItems }));
+      updatePlaylistItems(newItems);
     } catch (err) {
       toast.error(`Error moving widget in playlist: ${err}`);
     }
@@ -211,17 +313,15 @@ export const PlaylistView: Component<{
 
   const onRemoveItem = async (itemToRemove: JsonPlaylistItem) => {
     try {
-      const result = await PlaylistsService.removeItemFromPlaylist(
+      await PlaylistsService.removeItemFromPlaylist(
         props.baseUrl,
         props.organizationId,
         props.playlistId,
         itemToRemove.id
       );
 
-      setItems((prevItems) =>
-        prevItems.filter((item) => item !== itemToRemove)
-      );
-      setPlaylist((prevPlaylist) => ({ ...prevPlaylist, items: items() }));
+      const filteredItems = items().filter((item) => item !== itemToRemove);
+      updatePlaylistItems(filteredItems);
     } catch (err) {
       toast.error(`Error removing widget from playlist: ${err}`);
     }
@@ -231,8 +331,7 @@ export const PlaylistView: Component<{
     const newItems = items().map((i) =>
       i.id === item.id ? { ...i, duration } : i
     );
-    setItems(newItems);
-    setPlaylist((prevPlaylist) => ({ ...prevPlaylist, items: newItems }));
+    updatePlaylistItems(newItems);
     await PlaylistsService.updateItemInPlaylist(
       props.baseUrl,
       props.organizationId,
@@ -244,48 +343,70 @@ export const PlaylistView: Component<{
     );
   };
 
+  const getCurrentAspectRatio = () => {
+    const aspectRatio = playlist()?.settings?.aspect_ratio;
+    return {
+      width: aspectRatio?.width || 16,
+      height: aspectRatio?.height || 9,
+    };
+  };
+
   return (
     <Show when={!loading()}>
       <div
-        class="playlist-view"
-        classList={{
-          'portrait-layout':
-            (playlist()?.settings?.aspect_ratio?.height || 9) >
-            (playlist()?.settings?.aspect_ratio?.width || 16),
+        class="playlist-view-container"
+        ref={(el) => {
+          containerRef = el;
+          setContainerReady(true);
         }}
+        style={
+          containerHeight() ? { height: `${containerHeight()}px` } : undefined
+        }
       >
-        <div
-          class="playlist-preview"
-          classList={{
-            portrait:
-              (playlist()?.settings?.aspect_ratio?.height || 9) >
-              (playlist()?.settings?.aspect_ratio?.width || 16),
-          }}
-        >
-          <PlaylistPreview playlist={playlist()!} />
-        </div>
-        <div class="playlist-items-wrapper">
-          <div class="widget-list">
+        <div class="playlist-view">
+          <div class="playlist-items-wrapper">
             <WidgetChooser widgets={widgets()} onSearch={handleWidgetSearch} />
-          </div>
-          <div class="drag-indicator">
-            <div class="arrow-container">
-              <div class="arrow-line"></div>
-              <div class="arrow-head"></div>
+            <div class="drag-indicator">
+              <div class="arrow-container">
+                <div class="arrow-line"></div>
+                <div class="arrow-head"></div>
+              </div>
+              <span class="drag-hint">{t('playlists.dragToAdd')}</span>
             </div>
-            <span class="drag-hint">{t('playlists.dragToAdd')}</span>
+            <PlaylistItems
+              store={props.store}
+              baseUrl={props.baseUrl}
+              organizationId={props.organizationId}
+              items={items()}
+              onEditItem={onEditItem}
+              onInsertItem={onInsertItem}
+              onMoveItem={onMoveItem}
+              onRemoveItem={onRemoveItem}
+              onChangeDuration={onChangeDuration}
+            />
           </div>
-          <PlaylistItems
-            store={props.store}
-            baseUrl={props.baseUrl}
-            organizationId={props.organizationId}
-            items={items()}
-            onEditItem={onEditItem}
-            onInsertItem={onInsertItem}
-            onMoveItem={onMoveItem}
-            onRemoveItem={onRemoveItem}
-            onChangeDuration={onChangeDuration}
-          />
+
+          <div
+            ref={(el) => {
+              previewWrapperRef = el;
+              setRefReady(true);
+            }}
+            class="playlist-preview-wrapper"
+            classList={{
+              'constrain-by-width': constrainByWidth(),
+            }}
+          >
+            <div
+              class="playlist-preview"
+              style={{
+                'aspect-ratio': `${getCurrentAspectRatio().width} / ${
+                  getCurrentAspectRatio().height
+                }`,
+              }}
+            >
+              <PlaylistPreview playlist={playlist()!} />
+            </div>
+          </div>
         </div>
       </div>
     </Show>

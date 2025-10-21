@@ -62,6 +62,7 @@
     "online": "在线",
     "update": "更新",
     "reset": "重置",
+    "apply": "应用",
     "addedOn": "添加于",
     "lastUpdatedOn": "最后更新于",
     "details": "详情",
@@ -418,13 +419,28 @@
     "aspectRatio": "宽高比",
     "aspectRatioWidth": "宽度",
     "aspectRatioHeight": "高度",
+    "aspectRatioUpdated": "宽高比更新成功",
+    "customAspectRatio": "自定义宽高比",
+    "enterCustomRatio": "输入自定义宽高比",
+    "aspectRatioPresets": {
+      "16:9": "16:9 (横向)",
+      "9:16": "9:16 (竖向)",
+      "4:3": "4:3 (经典)",
+      "3:4": "3:4 (竖向)",
+      "21:9": "21:9 (超宽)",
+      "16:3": "16:3 (货架/滚动条)",
+      "3:16": "3:16 (货架/滚动条竖向)",
+      "1:1": "1:1 (方形)",
+      "custom": "自定义"
+    },
     "errors": {
       "nameRequired": "名称是必需的",
       "nameMinLength": "名称至少需要3个字符",
       "aspectRatioNumber": "必须是数字",
       "aspectRatioPositive": "必须是正数",
       "aspectRatioMax": "值必须为100或更少",
-      "aspectRatioExtreme": "宽高比太极端（最大比例为10:1）"
+      "aspectRatioExtreme": "宽高比太极端（最大比例为10:1）",
+      "updateAspectRatio": "更新宽高比时出错：{{error}}"
     }
   },
   "widgets": {

@@ -62,6 +62,7 @@
     "online": "Online",
     "update": "Aktualisieren",
     "reset": "Zurücksetzen",
+    "apply": "Anwenden",
     "addedOn": "Hinzugefügt am",
     "lastUpdatedOn": "Zuletzt aktualisiert am",
     "details": "Details",
@@ -429,13 +430,28 @@
     "aspectRatio": "Seitenverhältnis",
     "aspectRatioWidth": "Breite",
     "aspectRatioHeight": "Höhe",
+    "aspectRatioUpdated": "Seitenverhältnis erfolgreich aktualisiert",
+    "customAspectRatio": "Benutzerdefiniertes Seitenverhältnis",
+    "enterCustomRatio": "Benutzerdefiniertes Seitenverhältnis eingeben",
+    "aspectRatioPresets": {
+      "16:9": "16:9 (Querformat)",
+      "9:16": "9:16 (Hochformat)",
+      "4:3": "4:3 (Klassisch)",
+      "3:4": "3:4 (Hochformat)",
+      "21:9": "21:9 (Ultrabreit)",
+      "16:3": "16:3 (Regal/Ticker)",
+      "3:16": "3:16 (Regal/Ticker Hochformat)",
+      "1:1": "1:1 (Quadratisch)",
+      "custom": "Benutzerdefiniert"
+    },
     "errors": {
       "nameRequired": "Name ist erforderlich",
       "nameMinLength": "Name muss mindestens 3 Zeichen lang sein",
       "aspectRatioNumber": "Muss eine Zahl sein",
       "aspectRatioPositive": "Muss eine positive Zahl sein",
       "aspectRatioMax": "Wert muss 100 oder weniger sein",
-      "aspectRatioExtreme": "Seitenverhältnis ist zu extrem (max Verhältnis ist 10:1)"
+      "aspectRatioExtreme": "Seitenverhältnis ist zu extrem (max Verhältnis ist 10:1)",
+      "updateAspectRatio": "Fehler beim Aktualisieren des Seitenverhältnisses: {{error}}"
     }
   },
   "widgets": {

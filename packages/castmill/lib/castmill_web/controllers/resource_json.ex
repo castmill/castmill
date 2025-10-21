@@ -99,6 +99,7 @@ defmodule CastmillWeb.ResourceJSON do
     %{
       id: playlist.id,
       name: playlist.name,
+      settings: playlist.settings,
       # or some other default value
       items: []
     }
@@ -108,6 +109,7 @@ defmodule CastmillWeb.ResourceJSON do
     %{
       id: playlist.id,
       name: playlist.name,
+      settings: playlist.settings,
       items: playlist.items
     }
   end

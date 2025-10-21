@@ -68,6 +68,7 @@
     "online": "En línea",
     "update": "Actualizar",
     "reset": "Restablecer",
+    "apply": "Aplicar",
     "addedOn": "Agregado el",
     "lastUpdatedOn": "Última actualización el",
     "details": "Detalles",
@@ -435,13 +436,28 @@
     "aspectRatio": "Relación de Aspecto",
     "aspectRatioWidth": "Ancho",
     "aspectRatioHeight": "Alto",
+    "aspectRatioUpdated": "Relación de aspecto actualizada correctamente",
+    "customAspectRatio": "Relación de Aspecto Personalizada",
+    "enterCustomRatio": "Ingrese relación de aspecto personalizada",
+    "aspectRatioPresets": {
+      "16:9": "16:9 (Horizontal)",
+      "9:16": "9:16 (Vertical)",
+      "4:3": "4:3 (Clásico)",
+      "3:4": "3:4 (Vertical)",
+      "21:9": "21:9 (Ultraancho)",
+      "16:3": "16:3 (Estantería/Ticker)",
+      "3:16": "3:16 (Estantería/Ticker Vertical)",
+      "1:1": "1:1 (Cuadrado)",
+      "custom": "Personalizado"
+    },
     "errors": {
       "nameRequired": "El nombre es obligatorio",
       "nameMinLength": "El nombre debe tener al menos 3 caracteres",
       "aspectRatioNumber": "Debe ser un número",
       "aspectRatioPositive": "Debe ser un número positivo",
       "aspectRatioMax": "El valor debe ser 100 o menos",
-      "aspectRatioExtreme": "La relación de aspecto es demasiado extrema (máximo 10:1)"
+      "aspectRatioExtreme": "La relación de aspecto es demasiado extrema (máximo 10:1)",
+      "updateAspectRatio": "Error al actualizar la relación de aspecto: {{error}}"
     }
   },
   "widgets": {

@@ -62,6 +62,7 @@
     "online": "Online",
     "update": "Uppdatera",
     "reset": "Återställ",
+    "apply": "Tillämpa",
     "addedOn": "Tillagd den",
     "lastUpdatedOn": "Senast uppdaterad den",
     "details": "Detaljer",
@@ -413,13 +414,28 @@
     "aspectRatio": "Bildformat",
     "aspectRatioWidth": "Bredd",
     "aspectRatioHeight": "Höjd",
+    "aspectRatioUpdated": "Bildformat uppdaterat framgångsrikt",
+    "customAspectRatio": "Anpassat Bildformat",
+    "enterCustomRatio": "Ange anpassat bildformat",
+    "aspectRatioPresets": {
+      "16:9": "16:9 (Liggande)",
+      "9:16": "9:16 (Stående)",
+      "4:3": "4:3 (Klassisk)",
+      "3:4": "3:4 (Stående)",
+      "21:9": "21:9 (Ultrabredd)",
+      "16:3": "16:3 (Hylla/Ticker)",
+      "3:16": "3:16 (Hylla/Ticker Stående)",
+      "1:1": "1:1 (Fyrkantig)",
+      "custom": "Anpassad"
+    },
     "errors": {
       "nameRequired": "Namn krävs",
       "nameMinLength": "Namnet måste vara minst 3 tecken",
       "aspectRatioNumber": "Måste vara ett nummer",
       "aspectRatioPositive": "Måste vara ett positivt nummer",
       "aspectRatioMax": "Värdet måste vara 100 eller mindre",
-      "aspectRatioExtreme": "Bildformatet är för extremt (max förhållande är 10:1)"
+      "aspectRatioExtreme": "Bildformatet är för extremt (max förhållande är 10:1)",
+      "updateAspectRatio": "Fel vid uppdatering av bildformat: {{error}}"
     }
   },
   "widgets": {

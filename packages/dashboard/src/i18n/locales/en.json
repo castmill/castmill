@@ -65,6 +65,7 @@
     "online": "Online",
     "update": "Update",
     "reset": "Reset",
+    "apply": "Apply",
     "addedOn": "Added on",
     "lastUpdatedOn": "Last updated on",
     "details": "Details",
@@ -434,13 +435,28 @@
     "aspectRatio": "Aspect Ratio",
     "aspectRatioWidth": "Width",
     "aspectRatioHeight": "Height",
+    "aspectRatioUpdated": "Aspect ratio updated successfully",
+    "customAspectRatio": "Custom Aspect Ratio",
+    "enterCustomRatio": "Enter custom aspect ratio",
+    "aspectRatioPresets": {
+      "16:9": "16:9 (Landscape)",
+      "9:16": "9:16 (Portrait)",
+      "4:3": "4:3 (Classic)",
+      "3:4": "3:4 (Portrait)",
+      "21:9": "21:9 (Ultrawide)",
+      "16:3": "16:3 (Shelf/Ticker)",
+      "3:16": "3:16 (Shelf/Ticker Portrait)",
+      "1:1": "1:1 (Square)",
+      "custom": "Custom"
+    },
     "errors": {
       "nameRequired": "Name is required",
       "nameMinLength": "Name must be at least 3 characters",
       "aspectRatioNumber": "Must be a number",
       "aspectRatioPositive": "Must be a positive number",
       "aspectRatioMax": "Value must be 100 or less",
-      "aspectRatioExtreme": "Aspect ratio is too extreme (max ratio is 10:1)"
+      "aspectRatioExtreme": "Aspect ratio is too extreme (max ratio is 10:1)",
+      "updateAspectRatio": "Error updating aspect ratio: {{error}}"
     }
   },
   "widgets": {

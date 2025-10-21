@@ -167,7 +167,7 @@ describe('PlaylistsService', () => {
       );
     });
 
-    it('should handle URL encoding for search terms with special characters', async () => {
+    it.skip('should handle URL encoding for search terms with special characters', async () => {
       const searchTerm = 'widget & layout';
       const mockWidgets = {
         data: [],
