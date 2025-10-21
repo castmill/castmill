@@ -80,6 +80,7 @@
     },
     "addonError": "애드온 오류",
     "backToLogin": "로그인으로 돌아가기",
+    "selectVideo": "비디오 선택",
     "offline": "[TODO: Translate] Offline",
     "selectImage": "이미지 선택",
     "selectMedia": "미디어 선택"
@@ -378,12 +379,15 @@
       "invalidRole": "선택한 역할은 이 조직에 유효하지 않습니다.",
       "mediaInUseAsLogo": "조직 로고로 사용 중인 미디어는 삭제할 수 없습니다",
       "loadMedias": "미디어 로드 실패",
-      "updateRoleFailed": "멤버 역할 업데이트 실패"
+      "updateRoleFailed": "멤버 역할 업데이트 실패",
+      "cannotRemoveLastUser": "귀하는 이 조직의 유일한 회원이므로 탈퇴할 수 없습니다."
     },
     "messages": {
       "memberRemoved": "구성원 {{name}}을(를) 성공적으로 제거했습니다",
       "membersRemoved": "구성원을 성공적으로 제거했습니다",
-      "invitationSent": "{{email}}에게 초대를 보냈습니다"
+      "leftOrganization": "{{name}} 조직을 떠났습니다",
+      "noOrganizationsRemaining": "마지막 조직을 떠났습니다. 조직에 초대받으려면 관리자에게 문의하세요.",
+      "invitationSent": "{{email}}로 초대장을 보냈습니다"
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {
@@ -414,7 +418,14 @@
       "removeMemberMessage": "멤버 \"{{name}}\"을(를) 조직에서 제거하시겠습니까?",
       "removeMembersTitle": "조직에서 멤버 제거",
       "removeMembersMessage": "다음 멤버들을 조직에서 제거하시겠습니까?"
-    }
+    },
+    "leaveOrganizationTitle": "이 조직 떠나기",
+    "leaveOrganizationDescription": "떠나면 조직 리소스에 대한 액세스가 즉시 제거됩니다.",
+    "leaveOrganizationAction": "조직 떠나기",
+    "leaveOrganizationLastAdminWarning": "이 조직을 관리하려면 떠나기 전에 다른 관리자를 추가하세요.",
+    "leaveOrganizationLastUserWarning": "이 조직의 유일한 구성원이므로 떠날 수 없습니다.",
+    "leaveLastOrganizationWarningTitle": "마지막 조직을 떠나시겠습니까?",
+    "leaveLastOrganizationWarningMessage": "이것은 귀하의 유일한 조직입니다. 떠나면 계정이 삭제되고 Castmill에 대한 모든 액세스 권한을 잃게 됩니다. 다시 초대받으려면 관리자에게 문의해야 합니다. 계속하시겠습니까?"
   },
   "playlists": {
     "title": "재생목록",
@@ -581,60 +592,5 @@
     "teamLabel": "팀",
     "teamPlaceholder": "팀 선택",
     "teamClear": "팀 필터 지우기"
-  },
-  "organization": {
-    "title": "조직",
-    "users": "사용자",
-    "invitations": "초대",
-    "update": "업데이트",
-    "placeholderName": "조직 이름 입력",
-    "inviteMember": "멤버 초대",
-    "enterMemberEmail": "멤버의 이메일 입력",
-    "role": "역할",
-    "roleAdmin": "관리자",
-    "roleManager": "매니저",
-    "roleMember": "멤버",
-    "roleEditor": "편집자",
-    "rolePublisher": "퍼블리셔",
-    "roleDeviceManager": "디바이스 관리자",
-    "roleGuest": "게스트",
-    "teamRoleAdmin": "팀 관리자",
-    "teamRoleMember": "팀 멤버",
-    "errors": {
-      "updateOrganization": "조직 업데이트 오류: {{error}}",
-      "emailRequired": "이메일은 필수입니다",
-      "invalidEmail": "유효하지 않은 이메일",
-      "cannotRemoveLastAdmin": "조직의 마지막 관리자를 제거할 수 없습니다.",
-      "invalidRole": "선택한 역할은 이 조직에 유효하지 않습니다.",
-      "cannotRemoveLastUser": "이 조직의 유일한 구성원이므로 떠날 수 없습니다."
-    },
-    "messages": {
-      "memberRemoved": "구성원 {{name}}을(를) 성공적으로 제거했습니다",
-      "membersRemoved": "구성원을 성공적으로 제거했습니다",
-      "leftOrganization": "{{name}} 조직을 떠났습니다",
-      "noOrganizationsRemaining": "마지막 조직을 떠났습니다. 조직에 초대받으려면 관리자에게 문의하세요."
-    },
-    "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
-    "roleDescriptions": {
-      "admin": "조직 관리를 포함한 전체 액세스",
-      "manager": "팀 및 대부분의 리소스를 관리할 수 있음",
-      "member": "표준 사용자(기본값), 콘텐츠를 관리할 수 있음",
-      "editor": "전체 콘텐츠 관리, 팀을 관리할 수 없음",
-      "publisher": "편집자와 동일하며 게시 워크플로 작업 추가",
-      "device_manager": "전체 기기 및 채널 관리",
-      "guest": "리소스에 대한 읽기 전용 액세스"
-    },
-    "teamRoleDescriptions": {
-      "admin": "팀 구성원 및 리소스를 관리할 수 있음",
-      "member": "팀 리소스에 액세스하고 편집할 수 있음",
-      "installer": "기기 등록용 임시 토큰(24시간 후 만료)"
-    },
-    "leaveOrganizationTitle": "이 조직 떠나기",
-    "leaveOrganizationDescription": "떠나면 조직 리소스에 대한 액세스가 즉시 제거됩니다.",
-    "leaveOrganizationAction": "조직 떠나기",
-    "leaveOrganizationLastAdminWarning": "이 조직을 관리하려면 떠나기 전에 다른 관리자를 추가하세요.",
-    "leaveOrganizationLastUserWarning": "이 조직의 유일한 구성원이므로 떠날 수 없습니다.",
-    "leaveLastOrganizationWarningTitle": "마지막 조직을 떠나시겠습니까?",
-    "leaveLastOrganizationWarningMessage": "이것은 귀하의 유일한 조직입니다. 떠나면 계정이 삭제되고 Castmill에 대한 모든 액세스 권한을 잃게 됩니다. 다시 초대받으려면 관리자에게 문의해야 합니다. 계속하시겠습니까?"
   }
 }
