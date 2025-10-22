@@ -377,7 +377,6 @@
       "invalidEmail": "بريد إلكتروني غير صالح",
       "cannotRemoveLastAdmin": "لا يمكنك إزالة آخر مشرف للمؤسسة.",
       "invalidRole": "الدور المحدد غير صالح لهذه المؤسسة.",
-      "cannotRemoveLastUser": "لا يمكنك المغادرة لأنك العضو الوحيد في هذه المنظمة.",
       "mediaInUseAsLogo": "لا يمكن حذف الوسائط المستخدمة كشعار للمؤسسة",
       "loadMedias": "فشل تحميل الوسائط",
       "updateRoleFailed": "فشل تحديث دور العضو",

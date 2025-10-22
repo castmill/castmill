@@ -377,7 +377,6 @@
       "invalidEmail": "无效的电子邮件",
       "cannotRemoveLastAdmin": "你不能移除组织最后一位管理员。",
       "invalidRole": "所选角色对该组织无效。",
-      "cannotRemoveLastUser": "您无法离开，因为您是此组织的唯一成员。",
       "mediaInUseAsLogo": "无法删除正在用作组织标志的媒体",
       "loadMedias": "加载媒体失败",
       "updateRoleFailed": "更新成员角色失败",
@@ -426,14 +425,7 @@
       "removeMemberMessage": "您确定要从组织中移除成员\"{{name}}\"吗？",
       "removeMembersTitle": "从组织中移除成员",
       "removeMembersMessage": "您确定要从组织中移除以下成员吗？"
-    },
-    "leaveOrganizationTitle": "离开此组织",
-    "leaveOrganizationDescription": "离开将立即删除您对组织资源的访问权限。",
-    "leaveOrganizationAction": "离开组织",
-    "leaveOrganizationLastAdminWarning": "在离开之前添加另一个管理员以保持此组织的管理。",
-    "leaveOrganizationLastUserWarning": "您无法离开，因为您是此组织的唯一成员。",
-    "leaveLastOrganizationWarningTitle": "离开您的最后一个组织？",
-    "leaveLastOrganizationWarningMessage": "这是您唯一的组织。离开它将删除您的账户，您将失去对Castmill的所有访问权限。您需要联系管理员才能重新被邀请。您确定要继续吗？"
+    }
   },
   "playlists": {
     "title": "播放列表",

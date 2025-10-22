@@ -343,7 +343,6 @@
       "invalidEmail": "Ungültige E-Mail",
       "cannotRemoveLastAdmin": "Du kannst den letzten Administrator einer Organisation nicht entfernen.",
       "invalidRole": "Die ausgewählte Rolle ist für diese Organisation nicht gültig.",
-      "cannotRemoveLastUser": "Sie können nicht gehen, da Sie das einzige Mitglied dieser Organisation sind.",
       "mediaInUseAsLogo": "Medien, die als Organisationslogo verwendet werden, können nicht gelöscht werden",
       "loadMedias": "Fehler beim Laden von Medien",
       "updateRoleFailed": "Fehler beim Aktualisieren der Mitgliederrolle",

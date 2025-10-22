@@ -375,13 +375,6 @@
       "leftOrganization": "You left the organization {{name}}",
       "noOrganizationsRemaining": "You have left your last organization. Please contact an administrator to be invited to an organization."
     },
-    "leaveOrganizationTitle": "Leave this organization",
-    "leaveOrganizationDescription": "Leaving removes your access to organization resources immediately.",
-    "leaveOrganizationAction": "Leave organization",
-    "leaveOrganizationLastAdminWarning": "Add another admin before leaving to keep this organization managed.",
-    "leaveOrganizationLastUserWarning": "You cannot leave as you are the only member of this organization.",
-    "leaveLastOrganizationWarningTitle": "Leave your last organization?",
-    "leaveLastOrganizationWarningMessage": "This is your only organization. Leaving it will delete your account and you will lose all access to Castmill. You will need to contact an administrator to be invited back. Are you sure you want to proceed?",
     "dialogs": {
       "removeMemberTitle": "Remove User From Organization",
       "removeMemberMessage": "Are you sure you want to remove member \"{{name}}\" from the organization?",
