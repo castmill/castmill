@@ -487,16 +487,70 @@
       "expired": "Esta invitación ha expirado.",
       "loginToAccept": "Inicia sesión para aceptar esta invitación",
       "createAccount": "Crea tu cuenta para aceptar esta invitación"
+    },
+    "notifications": {
+      "title": "Notificaciones",
+      "empty": "No hay notificaciones aún",
+      "markAllRead": "Marcar todas como leídas",
+      "types": {
+        "organizationInvitation": {
+          "title": "Invitación a la Organización",
+          "description": "Has sido invitado a unirte a {{organization_name}}"
+        },
+        "teamInvitation": {
+          "title": "Invitación al Equipo",
+          "description": "Has sido invitado a unirte a {{team_name}}"
+        },
+        "deviceRegistration": {
+          "title": "Nuevo Dispositivo Registrado",
+          "description": "El dispositivo '{{device_name}}' ha sido registrado"
+        },
+        "deviceRemoval": {
+          "title": "Dispositivo Eliminado",
+          "description": "El dispositivo '{{device_name}}' ha sido eliminado"
+        },
+        "mediaTranscoded": {
+          "title": "Transcodificación de Media Completa",
+          "description": "El archivo '{{media_name}}' ha sido transcodificado exitosamente"
+        },
+        "mediaUploaded": {
+          "titleImage": "Nueva Imagen Subida",
+          "titleVideo": "Nuevo Video Subido",
+          "titleMedia": "Nuevo Archivo Subido",
+          "descriptionImage": "La imagen '{{media_name}}' ha sido subida exitosamente",
+          "descriptionVideo": "El video '{{media_name}}' ha sido subido exitosamente",
+          "descriptionMedia": "El archivo '{{media_name}}' ha sido subido exitosamente"
+        },
+        "invitationAccepted": {
+          "title": "Invitación Aceptada",
+          "descriptionOrg": "{{user_name}} se ha unido a la organización",
+          "descriptionTeam": "{{user_name}} se ha unido al equipo"
+        },
+        "deviceOfflineAlert": {
+          "title": "Alerta de Dispositivo Fuera de Línea",
+          "description": "El dispositivo '{{device_name}}' está fuera de línea cuando debería estar en línea"
+        },
+        "deviceOnlineAlert": {
+          "title": "Dispositivo En Línea",
+          "description": "El dispositivo '{{device_name}}' está de vuelta en línea",
+          "descriptionWithDuration": "El dispositivo '{{device_name}}' está de vuelta en línea (estuvo fuera de línea por {{offline_duration_formatted}})"
+        },
+        "memberRemoved": {
+          "title": "Miembro Eliminado",
+          "description": "{{user_name}} ha sido eliminado de la organización"
+        },
+        "teamMemberRemoved": {
+          "titleSelf": "Eliminado del equipo",
+          "descriptionSelf": "Has sido eliminado del equipo {{team_name}}",
+          "titleOthers": "Miembro del equipo eliminado",
+          "descriptionOthers": "{{user_name}} ha sido eliminado del equipo {{team_name}}"
+        }
+      }
     }
   },
   "filters": {
     "teamLabel": "Equipo",
     "teamPlaceholder": "Seleccionar equipo",
     "teamClear": "Limpiar filtro de equipo"
-  },
-  "notifications": {
-    "title": "Notificaciones",
-    "empty": "No hay notificaciones aún",
-    "markAllRead": "Marcar todas como leídas"
   }
 }

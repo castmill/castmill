@@ -2,7 +2,6 @@ defmodule CastmillWeb.NotificationController do
   use CastmillWeb, :controller
 
   alias Castmill.Notifications
-  alias Castmill.Notifications.Notification
 
   action_fallback CastmillWeb.FallbackController
 
@@ -11,11 +10,13 @@ defmodule CastmillWeb.NotificationController do
   Supports pagination with page and page_size query params.
   """
   def index(conn, params) do
-    user = conn.assigns.user
+    user = conn.assigns[:user] || conn.assigns[:current_user]
     page = Map.get(params, "page", "1") |> String.to_integer()
     page_size = Map.get(params, "page_size", "20") |> String.to_integer()
 
-    notifications = Notifications.list_user_notifications(user.id, page: page, page_size: page_size)
+    notifications =
+      Notifications.list_user_notifications(user.id, page: page, page_size: page_size)
+
     unread_count = Notifications.count_unread_notifications(user.id)
 
     render(conn, :index, notifications: notifications, unread_count: unread_count)
@@ -25,7 +26,7 @@ defmodule CastmillWeb.NotificationController do
   Gets count of unread notifications for the current user.
   """
   def unread_count(conn, _params) do
-    user = conn.assigns.user
+    user = conn.assigns[:user] || conn.assigns[:current_user]
     count = Notifications.count_unread_notifications(user.id)
 
     json(conn, %{count: count})
@@ -44,7 +45,7 @@ defmodule CastmillWeb.NotificationController do
   Marks all notifications as read for the current user.
   """
   def mark_all_read(conn, _params) do
-    user = conn.assigns.user
+    user = conn.assigns[:user] || conn.assigns[:current_user]
     {count, _} = Notifications.mark_all_as_read(user.id)
 
     json(conn, %{marked_read: count})

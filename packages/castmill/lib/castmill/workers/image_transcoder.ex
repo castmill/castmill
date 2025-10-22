@@ -2,6 +2,9 @@ defmodule Castmill.Workers.ImageTranscoder do
   use Oban.Worker, queue: :image_transcoder
   alias Castmill.Repo
   alias Castmill.Workers.Helpers
+  alias Castmill.Notifications.Events
+
+  require Logger
 
   @file_sizes_and_contexts [
     {128, "thumbnail"},
@@ -91,6 +94,31 @@ defmodule Castmill.Workers.ImageTranscoder do
           status: :ready,
           status_message: "100"
         })
+
+      # Get the full media record to access organization_id and name
+      media = Castmill.Resources.get_media(media_id)
+
+      # Only send notification for image files (not videos - video transcoder handles those)
+      if media.mimetype && String.starts_with?(media.mimetype, "image/") do
+        Logger.info(
+          "Sending media upload notification for image: #{media.id}, org: #{media.organization_id}, name: #{media.name}"
+        )
+
+        # Send organization-wide notification (Media doesn't track user_id)
+        result =
+          Events.notify_media_uploaded(
+            media.id,
+            media.name,
+            media.mimetype,
+            # org-wide notification (no user_id in Media schema)
+            nil,
+            media.organization_id,
+            # no role filter - all users in org will see it
+            []
+          )
+
+        Logger.info("Notification result: #{inspect(result)}")
+      end
 
       # Send a message to the medias observer channel to notify the user about the media progress
       Phoenix.PubSub.broadcast(Castmill.PubSub, "resource:media:#{media_id}", %{

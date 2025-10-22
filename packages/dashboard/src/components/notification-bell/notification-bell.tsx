@@ -1,7 +1,15 @@
-import { Component, createSignal, createEffect, Show, onCleanup } from 'solid-js';
+import {
+  Component,
+  createSignal,
+  createEffect,
+  Show,
+  onCleanup,
+} from 'solid-js';
 import { FaRegularBell, FaSolidBell } from 'solid-icons/fa';
 import { notificationsService } from '../../services/notifications.service';
 import { NotificationDialog } from '../notification-dialog/notification-dialog';
+import { getUser } from '../auth';
+import { store } from '../../store';
 import './notification-bell.scss';
 
 interface NotificationBellProps {}
@@ -9,7 +17,6 @@ interface NotificationBellProps {}
 const NotificationBell: Component<NotificationBellProps> = () => {
   const [unreadCount, setUnreadCount] = createSignal(0);
   const [showDialog, setShowDialog] = createSignal(false);
-  const [socket, setSocket] = createSignal<any>(null);
   const [channel, setChannel] = createSignal<any>(null);
 
   // Load initial unread count
@@ -22,102 +29,58 @@ const NotificationBell: Component<NotificationBellProps> = () => {
     }
   });
 
-  // Setup WebSocket connection
+  // Setup WebSocket connection - wait for both socket and user to be ready
   createEffect(() => {
-    const setupWebSocket = async () => {
-      try {
-        // @ts-ignore - Phoenix is loaded globally
-        const { Socket } = window.Phoenix || {};
-        if (!Socket) {
-          console.warn('Phoenix Socket not available');
-          return;
+    const existingSocket = store.socket;
+    const currentUser = getUser();
+
+    // Only proceed when both socket and user are available
+    if (!existingSocket || !currentUser?.id) {
+      return;
+    }
+
+    // Join notifications channel using the existing socket
+    const notifChannel = existingSocket.channel(
+      `notifications:${currentUser.id}`,
+      {}
+    );
+
+    notifChannel
+      .join()
+      .receive('ok', (resp: any) => {
+        console.log('Joined notifications channel', resp);
+        if (resp.unread_count !== undefined) {
+          setUnreadCount(resp.unread_count);
         }
+      })
+      .receive('error', (resp: any) => {
+        console.error('Failed to join notifications channel', resp);
+      });
 
-        // Get authentication token from cookie
-        const token = document.cookie
-          .split('; ')
-          .find((row) => row.startsWith('socket_token='))
-          ?.split('=')[1];
-
-        if (!token) {
-          console.warn('No socket token found');
-          return;
-        }
-
-        // Create socket connection
-        const newSocket = new Socket('/socket', {
-          params: { token },
-        });
-
-        newSocket.connect();
-        setSocket(newSocket);
-
-        // Get user ID from session/cookie or other source
-        const userId = getUserId();
-        if (!userId) {
-          console.warn('No user ID found');
-          return;
-        }
-
-        // Join notifications channel
-        const notifChannel = newSocket.channel(`notifications:${userId}`, {});
-
-        notifChannel
-          .join()
-          .receive('ok', (resp: any) => {
-            console.log('Joined notifications channel', resp);
-            if (resp.unread_count !== undefined) {
-              setUnreadCount(resp.unread_count);
-            }
-          })
-          .receive('error', (resp: any) => {
-            console.error('Failed to join notifications channel', resp);
-          });
-
-        // Listen for new notifications
-        notifChannel.on('new_notification', (payload: any) => {
-          console.log('New notification received:', payload);
-          if (payload.unread_count !== undefined) {
-            setUnreadCount(payload.unread_count);
-          }
-          // You can also show a toast notification here
-        });
-
-        setChannel(notifChannel);
-      } catch (error) {
-        console.error('Failed to setup WebSocket:', error);
+    // Listen for new notifications
+    notifChannel.on('new_notification', (payload: any) => {
+      console.log('New notification received:', payload);
+      if (payload.unread_count !== undefined) {
+        setUnreadCount(payload.unread_count);
       }
-    };
+      // You can also show a toast notification here
+    });
 
-    setupWebSocket();
+    setChannel(notifChannel);
   });
 
-  // Cleanup on unmount
+  // Cleanup on unmount - only leave the channel, don't disconnect the shared socket
   onCleanup(() => {
     const ch = channel();
-    const sock = socket();
-
     if (ch) {
       ch.leave();
     }
-
-    if (sock) {
-      sock.disconnect();
-    }
   });
 
-  // Helper to get user ID (update based on your auth implementation)
+  // Helper to get user ID from auth
   const getUserId = () => {
-    // Try to get from local storage or session
-    const user = localStorage.getItem('user');
-    if (user) {
-      try {
-        return JSON.parse(user).id;
-      } catch (e) {
-        console.error('Failed to parse user from localStorage', e);
-      }
-    }
-    return null;
+    const currentUser = getUser();
+    return currentUser?.id || null;
   };
 
   const handleClick = () => {

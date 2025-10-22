@@ -6,8 +6,8 @@ defmodule Castmill.Notifications.Notification do
   @foreign_key_type :binary_id
 
   schema "notifications" do
-    field :title, :string
-    field :description, :string
+    field :title_key, :string
+    field :description_key, :string
     field :link, :string
     field :type, :string
     field :read, :boolean, default: false
@@ -15,9 +15,13 @@ defmodule Castmill.Notifications.Notification do
     # Optional: restrict notification to specific roles within an organization/team
     field :roles, {:array, :string}, default: []
 
+    # Actor information (who/what triggered this notification)
+    field :actor_id, :string
+    field :actor_type, :string, default: "user"
+
     belongs_to :user, Castmill.Accounts.User
     belongs_to :organization, Castmill.Organizations.Organization
-    belongs_to :team, Castmill.Teams.Team
+    belongs_to :team, Castmill.Teams.Team, type: :integer
 
     timestamps()
   end
@@ -25,8 +29,21 @@ defmodule Castmill.Notifications.Notification do
   @doc false
   def changeset(notification, attrs) do
     notification
-    |> cast(attrs, [:title, :description, :link, :type, :read, :user_id, :organization_id, :team_id, :metadata, :roles])
-    |> validate_required([:title, :type])
+    |> cast(attrs, [
+      :title_key,
+      :description_key,
+      :link,
+      :type,
+      :read,
+      :user_id,
+      :organization_id,
+      :team_id,
+      :metadata,
+      :roles,
+      :actor_id,
+      :actor_type
+    ])
+    |> validate_required([:type])
     |> validate_recipient()
     |> foreign_key_constraint(:user_id)
     |> foreign_key_constraint(:organization_id)
@@ -40,7 +57,11 @@ defmodule Castmill.Notifications.Notification do
     team_id = get_field(changeset, :team_id)
 
     if is_nil(user_id) && is_nil(org_id) && is_nil(team_id) do
-      add_error(changeset, :base, "must have at least one recipient (user, organization, or team)")
+      add_error(
+        changeset,
+        :base,
+        "must have at least one recipient (user, organization, or team)"
+      )
     else
       changeset
     end

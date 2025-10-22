@@ -492,16 +492,70 @@
       "expired": "انتهت صلاحية هذه الدعوة.",
       "loginToAccept": "تسجيل الدخول لقبول هذه الدعوة",
       "createAccount": "أنشئ حسابك لقبول هذه الدعوة"
+    },
+    "notifications": {
+      "title": "الإشعارات",
+      "empty": "لا توجد إشعارات بعد",
+      "markAllRead": "وضع علامة مقروء على الكل",
+      "types": {
+        "organizationInvitation": {
+          "title": "دعوة المنظمة",
+          "description": "تمت دعوتك للانضمام إلى {{organization_name}}"
+        },
+        "teamInvitation": {
+          "title": "دعوة الفريق",
+          "description": "تمت دعوتك للانضمام إلى {{team_name}}"
+        },
+        "deviceRegistration": {
+          "title": "تم تسجيل جهاز جديد",
+          "description": "تم تسجيل الجهاز '{{device_name}}'"
+        },
+        "deviceRemoval": {
+          "title": "تمت إزالة الجهاز",
+          "description": "تمت إزالة الجهاز '{{device_name}}'"
+        },
+        "mediaTranscoded": {
+          "title": "اكتمل ترميز الوسائط",
+          "description": "تم ترميز الوسائط '{{media_name}}' بنجاح"
+        },
+        "mediaUploaded": {
+          "titleImage": "تم تحميل صورة جديدة",
+          "titleVideo": "تم تحميل فيديو جديد",
+          "titleMedia": "تم تحميل وسائط جديدة",
+          "descriptionImage": "تم تحميل الصورة '{{media_name}}' بنجاح",
+          "descriptionVideo": "تم تحميل الفيديو '{{media_name}}' بنجاح",
+          "descriptionMedia": "تم تحميل الوسائط '{{media_name}}' بنجاح"
+        },
+        "invitationAccepted": {
+          "title": "تم قبول الدعوة",
+          "descriptionOrg": "{{user_name}} انضم إلى المنظمة",
+          "descriptionTeam": "{{user_name}} انضم إلى الفريق"
+        },
+        "deviceOfflineAlert": {
+          "title": "تنبيه الجهاز غير متصل",
+          "description": "الجهاز '{{device_name}}' غير متصل بينما يجب أن يكون متصلاً"
+        },
+        "deviceOnlineAlert": {
+          "title": "الجهاز متصل",
+          "description": "الجهاز '{{device_name}}' متصل مرة أخرى",
+          "descriptionWithDuration": "الجهاز '{{device_name}}' متصل مرة أخرى (كان غير متصل لمدة {{offline_duration_formatted}})"
+        },
+        "memberRemoved": {
+          "title": "تمت إزالة العضو",
+          "description": "تمت إزالة {{user_name}} من المنظمة"
+        },
+        "teamMemberRemoved": {
+          "titleSelf": "تمت إزالتك من الفريق",
+          "descriptionSelf": "تمت إزالتك من الفريق {{team_name}}",
+          "titleOthers": "تمت إزالة عضو الفريق",
+          "descriptionOthers": "تمت إزالة {{user_name}} من الفريق {{team_name}}"
+        }
+      }
     }
   },
   "filters": {
     "teamLabel": "الفريق",
     "teamPlaceholder": "اختر فريق",
     "teamClear": "مسح فلتر الفريق"
-  },
-  "notifications": {
-    "title": "الإشعارات",
-    "empty": "لا توجد إشعارات بعد",
-    "markAllRead": "وضع علامة مقروء على الكل"
   }
 }

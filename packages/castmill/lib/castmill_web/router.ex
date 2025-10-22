@@ -341,6 +341,12 @@ defmodule CastmillWeb.Router do
 
     resources("/access_tokens", AccessTokenController, except: [:new, :edit])
 
+    # Notification routes
+    get("/notifications", NotificationController, :index)
+    get("/notifications/unread_count", NotificationController, :unread_count)
+    patch("/notifications/:id/read", NotificationController, :mark_as_read)
+    post("/notifications/mark_all_read", NotificationController, :mark_all_read)
+
     # These routes are here to avoid some warnings, but not sure they are needed.
     get("/medias/:media_id/files/:id", FileController, :show)
     get("/playlists/:playlist_id/items/:id", PlaylistController, :show_item)

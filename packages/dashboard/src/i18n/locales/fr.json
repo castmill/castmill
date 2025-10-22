@@ -492,16 +492,70 @@
       "expired": "Cette invitation a expiré.",
       "loginToAccept": "Connectez-vous pour accepter cette invitation",
       "createAccount": "Créez votre compte pour accepter cette invitation"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "empty": "Pas encore de notifications",
+      "markAllRead": "Tout marquer comme lu",
+      "types": {
+        "organizationInvitation": {
+          "title": "Invitation à l'Organisation",
+          "description": "Vous avez été invité à rejoindre {{organization_name}}"
+        },
+        "teamInvitation": {
+          "title": "Invitation à l'Équipe",
+          "description": "Vous avez été invité à rejoindre {{team_name}}"
+        },
+        "deviceRegistration": {
+          "title": "Nouveau Périphérique Enregistré",
+          "description": "Le périphérique '{{device_name}}' a été enregistré"
+        },
+        "deviceRemoval": {
+          "title": "Périphérique Supprimé",
+          "description": "Le périphérique '{{device_name}}' a été supprimé"
+        },
+        "mediaTranscoded": {
+          "title": "Transcodage Média Terminé",
+          "description": "Le média '{{media_name}}' a été transcodé avec succès"
+        },
+        "mediaUploaded": {
+          "titleImage": "Nouvelle Image Téléchargée",
+          "titleVideo": "Nouvelle Vidéo Téléchargée",
+          "titleMedia": "Nouveau Média Téléchargé",
+          "descriptionImage": "L'image '{{media_name}}' a été téléchargée avec succès",
+          "descriptionVideo": "La vidéo '{{media_name}}' a été téléchargée avec succès",
+          "descriptionMedia": "Le média '{{media_name}}' a été téléchargé avec succès"
+        },
+        "invitationAccepted": {
+          "title": "Invitation Acceptée",
+          "descriptionOrg": "{{user_name}} a rejoint l'organisation",
+          "descriptionTeam": "{{user_name}} a rejoint l'équipe"
+        },
+        "deviceOfflineAlert": {
+          "title": "Alerte Périphérique Hors Ligne",
+          "description": "Le périphérique '{{device_name}}' est hors ligne alors qu'il devrait être en ligne"
+        },
+        "deviceOnlineAlert": {
+          "title": "Périphérique En Ligne",
+          "description": "Le périphérique '{{device_name}}' est de nouveau en ligne",
+          "descriptionWithDuration": "Le périphérique '{{device_name}}' est de nouveau en ligne (était hors ligne pendant {{offline_duration_formatted}})"
+        },
+        "memberRemoved": {
+          "title": "Membre Supprimé",
+          "description": "{{user_name}} a été retiré de l'organisation"
+        },
+        "teamMemberRemoved": {
+          "titleSelf": "Retiré de l'équipe",
+          "descriptionSelf": "Vous avez été retiré de l'équipe {{team_name}}",
+          "titleOthers": "Membre de l'équipe retiré",
+          "descriptionOthers": "{{user_name}} a été retiré de l'équipe {{team_name}}"
+        }
+      }
     }
   },
   "filters": {
     "teamLabel": "Équipe",
     "teamPlaceholder": "Sélectionner une équipe",
     "teamClear": "Effacer le filtre d'équipe"
-  },
-  "notifications": {
-    "title": "Notifications",
-    "empty": "Pas encore de notifications",
-    "markAllRead": "Tout marquer comme lu"
   }
 }

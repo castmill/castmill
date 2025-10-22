@@ -5,6 +5,7 @@ defmodule Castmill.Workers.VideoTranscoder do
   alias Castmill.Resources.Media
   alias Castmill.Files
   alias Castmill.Workers.Helpers
+  alias Castmill.Notifications.Events
 
   require Logger
 
@@ -131,7 +132,7 @@ defmodule Castmill.Workers.VideoTranscoder do
           end)
         end)
 
-      notify_media_progress(media_id, 100.0, media_file_records, total_size)
+      notify_media_progress(media_id, 100.0, media_file_records, total_size, true)
     rescue
       e ->
         # Capture and format the error and stack trace
@@ -344,7 +345,13 @@ defmodule Castmill.Workers.VideoTranscoder do
     end
   end
 
-  defp notify_media_progress(media_id, progress, media_file_records \\ nil, total_size \\ nil) do
+  defp notify_media_progress(
+         media_id,
+         progress,
+         media_file_records \\ nil,
+         total_size \\ nil,
+         send_notification \\ false
+       ) do
     # Update media status and broadcast progress
     status = if progress == 100.0, do: :ready, else: :transcoding
 
@@ -353,6 +360,31 @@ defmodule Castmill.Workers.VideoTranscoder do
         status: status,
         status_message: "#{progress}"
       })
+
+    # Send notification only when explicitly requested (final 100% with files)
+    if send_notification && progress == 100.0 do
+      # Get the full media record to access organization_id, name, and mimetype
+      media = Resources.get_media(media_id)
+
+      Logger.info(
+        "Sending media upload notification for media: #{media.id}, org: #{media.organization_id}, name: #{media.name}"
+      )
+
+      # Send organization-wide notification (Media doesn't track user_id)
+      result =
+        Events.notify_media_uploaded(
+          media.id,
+          media.name,
+          media.mimetype,
+          # org-wide notification (no user_id in Media schema)
+          nil,
+          media.organization_id,
+          # no role filter - all users in org will see it
+          []
+        )
+
+      Logger.info("Notification result: #{inspect(result)}")
+    end
 
     Phoenix.PubSub.broadcast(Castmill.PubSub, "resource:media:#{media_id}", %{
       status_message: "#{progress}",

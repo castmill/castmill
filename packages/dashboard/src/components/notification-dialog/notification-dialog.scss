@@ -10,18 +10,41 @@
   align-items: flex-start;
   z-index: 1000;
   padding: 1em;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-1em) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .notification-dialog {
-  background: white;
+  background: #2c303b;
+  border: 1px solid #363a45;
   border-radius: 0.5em;
-  box-shadow: 0 0.25em 1em rgba(0, 0, 0, 0.2);
+  box-shadow: 0 0.5em 2em rgba(0, 0, 0, 0.5);
   width: 100%;
   max-width: 28em;
   max-height: 80vh;
   display: flex;
   flex-direction: column;
   margin-top: 4em;
+  animation: slideIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .notification-dialog-header {
@@ -29,12 +52,13 @@
   justify-content: space-between;
   align-items: center;
   padding: 1em;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid #363a45;
 
   h2 {
     margin: 0;
     font-size: 1.25em;
     font-weight: 600;
+    color: #ffffff;
   }
 }
 
@@ -47,14 +71,14 @@
 .notification-mark-all-read {
   background: none;
   border: none;
-  color: #2196f3;
+  color: #5792ee;
   cursor: pointer;
   font-size: 0.875em;
   padding: 0.25em 0.5em;
   border-radius: 0.25em;
 
   &:hover {
-    background-color: rgba(33, 150, 243, 0.1);
+    background-color: rgba(87, 146, 238, 0.15);
   }
 }
 
@@ -67,10 +91,11 @@
   align-items: center;
   justify-content: center;
   border-radius: 0.25em;
-  color: #666;
+  color: #bcc7dc;
 
   &:hover {
-    background-color: rgba(0, 0, 0, 0.05);
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
   }
 }
 
@@ -84,20 +109,20 @@
   display: flex;
   gap: 1em;
   padding: 1em;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid #363a45;
   cursor: pointer;
   transition: background-color 0.2s;
   position: relative;
 
   &:hover {
-    background-color: #f5f5f5;
+    background-color: rgba(88, 93, 103, 0.3);
   }
 
   &.unread {
-    background-color: #e3f2fd;
+    background-color: rgba(87, 146, 238, 0.15);
 
     &:hover {
-      background-color: #bbdefb;
+      background-color: rgba(87, 146, 238, 0.25);
     }
   }
 }
@@ -115,24 +140,24 @@
 .notification-title {
   font-weight: 600;
   margin-bottom: 0.25em;
-  color: #333;
+  color: #ffffff;
 }
 
 .notification-description {
   font-size: 0.875em;
-  color: #666;
+  color: #bcc7dc;
   margin-bottom: 0.25em;
 }
 
 .notification-time {
   font-size: 0.75em;
-  color: #999;
+  color: #9ca3af;
 }
 
 .notification-unread-indicator {
   width: 0.5em;
   height: 0.5em;
-  background-color: #2196f3;
+  background-color: #5792ee;
   border-radius: 50%;
   flex-shrink: 0;
   align-self: center;
@@ -143,7 +168,7 @@
   justify-content: center;
   align-items: center;
   padding: 3em 1em;
-  color: #999;
+  color: #9ca3af;
   text-align: center;
 }
 
@@ -152,5 +177,5 @@
   justify-content: center;
   align-items: center;
   padding: 1em;
-  color: #999;
+  color: #9ca3af;
 }

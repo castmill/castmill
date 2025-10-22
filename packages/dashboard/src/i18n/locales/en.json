@@ -496,7 +496,61 @@
     "notifications": {
       "title": "Notifications",
       "empty": "No notifications yet",
-      "markAllRead": "Mark all as read"
+      "markAllRead": "Mark all as read",
+      "types": {
+        "organizationInvitation": {
+          "title": "Organization Invitation",
+          "description": "You have been invited to join {{organization_name}}"
+        },
+        "teamInvitation": {
+          "title": "Team Invitation",
+          "description": "You have been invited to join {{team_name}}"
+        },
+        "deviceRegistration": {
+          "title": "New Device Registered",
+          "description": "Device '{{device_name}}' has been registered"
+        },
+        "deviceRemoval": {
+          "title": "Device Removed",
+          "description": "Device '{{device_name}}' has been removed"
+        },
+        "mediaTranscoded": {
+          "title": "Media Transcoding Complete",
+          "description": "Media '{{media_name}}' has been successfully transcoded"
+        },
+        "mediaUploaded": {
+          "titleImage": "New Image Uploaded",
+          "titleVideo": "New Video Uploaded",
+          "titleMedia": "New Media Uploaded",
+          "descriptionImage": "Image '{{media_name}}' has been uploaded successfully",
+          "descriptionVideo": "Video '{{media_name}}' has been uploaded successfully",
+          "descriptionMedia": "Media '{{media_name}}' has been uploaded successfully"
+        },
+        "invitationAccepted": {
+          "title": "Invitation Accepted",
+          "descriptionOrg": "{{user_name}} has joined the organization",
+          "descriptionTeam": "{{user_name}} has joined the team"
+        },
+        "deviceOfflineAlert": {
+          "title": "Device Offline Alert",
+          "description": "Device '{{device_name}}' is offline when it should be online"
+        },
+        "deviceOnlineAlert": {
+          "title": "Device Online",
+          "description": "Device '{{device_name}}' is back online",
+          "descriptionWithDuration": "Device '{{device_name}}' is back online (was offline for {{offline_duration_formatted}})"
+        },
+        "memberRemoved": {
+          "title": "Member Removed",
+          "description": "{{user_name}} has been removed from the organization"
+        },
+        "teamMemberRemoved": {
+          "titleSelf": "Removed from Team",
+          "descriptionSelf": "You have been removed from team {{team_name}}",
+          "titleOthers": "Team Member Removed",
+          "descriptionOthers": "{{user_name}} has been removed from team {{team_name}}"
+        }
+      }
     }
   }
 }

@@ -21,8 +21,8 @@ defmodule CastmillWeb.NotificationJSON do
   defp data(%Notification{} = notification) do
     %{
       id: notification.id,
-      title: notification.title,
-      description: notification.description,
+      title_key: notification.title_key,
+      description_key: notification.description_key,
       link: notification.link,
       type: notification.type,
       read: notification.read,

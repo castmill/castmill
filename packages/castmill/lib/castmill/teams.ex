@@ -277,11 +277,45 @@ defmodule Castmill.Teams do
         if count_team_admins(team_id) <= 1 do
           {:error, :last_admin}
         else
-          Repo.delete(teams_user)
+          result = Repo.delete(teams_user)
+
+          # Send notifications after successful removal
+          with {:ok, _} <- result do
+            team = get_team(team_id)
+            user = Castmill.Accounts.get_user(user_id)
+
+            if user && team do
+              Castmill.Notifications.Events.notify_team_member_removed(
+                user_id,
+                user.name,
+                team_id,
+                team.name
+              )
+            end
+          end
+
+          result
         end
 
       teams_user ->
-        Repo.delete(teams_user)
+        result = Repo.delete(teams_user)
+
+        # Send notifications after successful removal
+        with {:ok, _} <- result do
+          team = get_team(team_id)
+          user = Castmill.Accounts.get_user(user_id)
+
+          if user && team do
+            Castmill.Notifications.Events.notify_team_member_removed(
+              user_id,
+              user.name,
+              team_id,
+              team.name
+            )
+          end
+        end
+
+        result
     end
   end
 
@@ -611,7 +645,12 @@ defmodule Castmill.Teams do
 
           user ->
             # User exists, send notification
-            Castmill.Notifications.Events.notify_team_invitation(user.id, team.name, team_id)
+            Castmill.Notifications.Events.notify_team_invitation(
+              user.id,
+              team.name,
+              team_id,
+              token
+            )
         end
 
         {:ok, invitation.token}
@@ -709,9 +748,15 @@ defmodule Castmill.Teams do
 
             # Send notification to team members that invitation was accepted
             user = Castmill.Accounts.get_user(user_id)
+            team = get_team(invitation.team_id)
 
-            if user do
-              Castmill.Notifications.Events.notify_invitation_accepted(user.name, nil, invitation.team_id)
+            if user && team do
+              Castmill.Notifications.Events.notify_invitation_accepted(
+                user.name,
+                user_id,
+                nil,
+                invitation.team_id
+              )
             end
 
             {:ok, invitation}

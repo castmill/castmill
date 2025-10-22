@@ -487,16 +487,70 @@
       "expired": "Diese Einladung ist abgelaufen.",
       "loginToAccept": "Melden Sie sich an, um diese Einladung anzunehmen",
       "createAccount": "Erstellen Sie Ihr Konto, um diese Einladung anzunehmen"
+    },
+    "notifications": {
+      "title": "Benachrichtigungen",
+      "empty": "Noch keine Benachrichtigungen",
+      "markAllRead": "Alle als gelesen markieren",
+      "types": {
+        "organizationInvitation": {
+          "title": "Organisationseinladung",
+          "description": "Sie wurden eingeladen, {{organization_name}} beizutreten"
+        },
+        "teamInvitation": {
+          "title": "Team-Einladung",
+          "description": "Sie wurden eingeladen, {{team_name}} beizutreten"
+        },
+        "deviceRegistration": {
+          "title": "Neues Gerät Registriert",
+          "description": "Gerät '{{device_name}}' wurde registriert"
+        },
+        "deviceRemoval": {
+          "title": "Gerät Entfernt",
+          "description": "Gerät '{{device_name}}' wurde entfernt"
+        },
+        "mediaTranscoded": {
+          "title": "Medien-Transkodierung Abgeschlossen",
+          "description": "Medien '{{media_name}}' wurde erfolgreich transkodiert"
+        },
+        "mediaUploaded": {
+          "titleImage": "Neues Bild Hochgeladen",
+          "titleVideo": "Neues Video Hochgeladen",
+          "titleMedia": "Neue Medien Hochgeladen",
+          "descriptionImage": "Bild '{{media_name}}' wurde erfolgreich hochgeladen",
+          "descriptionVideo": "Video '{{media_name}}' wurde erfolgreich hochgeladen",
+          "descriptionMedia": "Medien '{{media_name}}' wurde erfolgreich hochgeladen"
+        },
+        "invitationAccepted": {
+          "title": "Einladung Angenommen",
+          "descriptionOrg": "{{user_name}} ist der Organisation beigetreten",
+          "descriptionTeam": "{{user_name}} ist dem Team beigetreten"
+        },
+        "deviceOfflineAlert": {
+          "title": "Gerät Offline-Warnung",
+          "description": "Gerät '{{device_name}}' ist offline, obwohl es online sein sollte"
+        },
+        "deviceOnlineAlert": {
+          "title": "Gerät Online",
+          "description": "Gerät '{{device_name}}' ist wieder online",
+          "descriptionWithDuration": "Gerät '{{device_name}}' ist wieder online (war offline für {{offline_duration_formatted}})"
+        },
+        "memberRemoved": {
+          "title": "Mitglied Entfernt",
+          "description": "{{user_name}} wurde aus der Organisation entfernt"
+        },
+        "teamMemberRemoved": {
+          "titleSelf": "Aus Team entfernt",
+          "descriptionSelf": "Sie wurden aus dem Team {{team_name}} entfernt",
+          "titleOthers": "Teammitglied entfernt",
+          "descriptionOthers": "{{user_name}} wurde aus dem Team {{team_name}} entfernt"
+        }
+      }
     }
   },
   "filters": {
     "teamLabel": "Mannschaft",
     "teamPlaceholder": "Mannschaft auswählen",
     "teamClear": "Mannschaftsfilter löschen"
-  },
-  "notifications": {
-    "title": "Benachrichtigungen",
-    "empty": "Noch keine Benachrichtigungen",
-    "markAllRead": "Alle als gelesen markieren"
   }
 }

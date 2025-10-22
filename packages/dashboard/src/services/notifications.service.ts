@@ -2,8 +2,8 @@ import { baseUrl } from '../env';
 
 export interface Notification {
   id: string;
-  title: string;
-  description?: string;
+  title_key: string;
+  description_key?: string;
   link?: string;
   type: string;
   read: boolean;
@@ -23,9 +23,12 @@ export class NotificationsService {
   /**
    * Fetches notifications for the current user with pagination
    */
-  async getNotifications(page = 1, pageSize = 20): Promise<NotificationsResponse> {
+  async getNotifications(
+    page = 1,
+    pageSize = 20
+  ): Promise<NotificationsResponse> {
     const response = await fetch(
-      `${this.baseUrl}/api/notifications?page=${page}&page_size=${pageSize}`,
+      `${this.baseUrl}/dashboard/notifications?page=${page}&page_size=${pageSize}`,
       {
         credentials: 'include',
       }
@@ -46,9 +49,12 @@ export class NotificationsService {
    * Gets the count of unread notifications
    */
   async getUnreadCount(): Promise<number> {
-    const response = await fetch(`${this.baseUrl}/api/notifications/unread_count`, {
-      credentials: 'include',
-    });
+    const response = await fetch(
+      `${this.baseUrl}/dashboard/notifications/unread_count`,
+      {
+        credentials: 'include',
+      }
+    );
 
     if (!response.ok) {
       throw new Error(`Failed to fetch unread count: ${response.statusText}`);
@@ -63,7 +69,7 @@ export class NotificationsService {
    */
   async markAsRead(notificationId: string): Promise<Notification> {
     const response = await fetch(
-      `${this.baseUrl}/api/notifications/${notificationId}/read`,
+      `${this.baseUrl}/dashboard/notifications/${notificationId}/read`,
       {
         method: 'PATCH',
         credentials: 'include',
@@ -71,7 +77,9 @@ export class NotificationsService {
     );
 
     if (!response.ok) {
-      throw new Error(`Failed to mark notification as read: ${response.statusText}`);
+      throw new Error(
+        `Failed to mark notification as read: ${response.statusText}`
+      );
     }
 
     const result = await response.json();
@@ -82,10 +90,13 @@ export class NotificationsService {
    * Marks all notifications as read
    */
   async markAllAsRead(): Promise<number> {
-    const response = await fetch(`${this.baseUrl}/api/notifications/mark_all_read`, {
-      method: 'POST',
-      credentials: 'include',
-    });
+    const response = await fetch(
+      `${this.baseUrl}/dashboard/notifications/mark_all_read`,
+      {
+        method: 'POST',
+        credentials: 'include',
+      }
+    );
 
     if (!response.ok) {
       throw new Error(`Failed to mark all as read: ${response.statusText}`);

@@ -492,16 +492,70 @@
       "expired": "此邀请已过期。",
       "loginToAccept": "登录以接受此邀请",
       "createAccount": "创建您的帐户以接受此邀请"
+    },
+    "notifications": {
+      "title": "通知",
+      "empty": "暂无通知",
+      "markAllRead": "标记全部为已读",
+      "types": {
+        "organizationInvitation": {
+          "title": "组织邀请",
+          "description": "您已被邀请加入 {{organization_name}}"
+        },
+        "teamInvitation": {
+          "title": "团队邀请",
+          "description": "您已被邀请加入 {{team_name}}"
+        },
+        "deviceRegistration": {
+          "title": "新设备已注册",
+          "description": "设备 '{{device_name}}' 已注册"
+        },
+        "deviceRemoval": {
+          "title": "设备已移除",
+          "description": "设备 '{{device_name}}' 已被移除"
+        },
+        "mediaTranscoded": {
+          "title": "媒体转码完成",
+          "description": "媒体 '{{media_name}}' 已成功转码"
+        },
+        "mediaUploaded": {
+          "titleImage": "新图片已上传",
+          "titleVideo": "新视频已上传",
+          "titleMedia": "新媒体已上传",
+          "descriptionImage": "图片 '{{media_name}}' 已成功上传",
+          "descriptionVideo": "视频 '{{media_name}}' 已成功上传",
+          "descriptionMedia": "媒体 '{{media_name}}' 已成功上传"
+        },
+        "invitationAccepted": {
+          "title": "邀请已接受",
+          "descriptionOrg": "{{user_name}} 已加入组织",
+          "descriptionTeam": "{{user_name}} 已加入团队"
+        },
+        "deviceOfflineAlert": {
+          "title": "设备离线警告",
+          "description": "设备 '{{device_name}}' 处于离线状态，但应该在线"
+        },
+        "deviceOnlineAlert": {
+          "title": "设备已上线",
+          "description": "设备 '{{device_name}}' 已恢复在线",
+          "descriptionWithDuration": "设备 '{{device_name}}' 已恢复在线（离线时长：{{offline_duration_formatted}}）"
+        },
+        "memberRemoved": {
+          "title": "成员已移除",
+          "description": "{{user_name}}已从组织中移除"
+        },
+        "teamMemberRemoved": {
+          "titleSelf": "已从团队中移除",
+          "descriptionSelf": "您已从团队 {{team_name}} 中移除",
+          "titleOthers": "团队成员已移除",
+          "descriptionOthers": "{{user_name}}已从团队 {{team_name}} 中移除"
+        }
+      }
     }
   },
   "filters": {
     "teamLabel": "团队",
     "teamPlaceholder": "选择团队",
     "teamClear": "清除团队筛选"
-  },
-  "notifications": {
-    "title": "通知",
-    "empty": "暂无通知",
-    "markAllRead": "标记全部为已读"
   }
 }

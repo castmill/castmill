@@ -487,16 +487,70 @@
       "expired": "Denna inbjudan har utgått.",
       "loginToAccept": "Logga in för att acceptera denna inbjudan",
       "createAccount": "Skapa ditt konto för att acceptera denna inbjudan"
+    },
+    "notifications": {
+      "title": "Notifikationer",
+      "empty": "Inga notifikationer än",
+      "markAllRead": "Markera alla som lästa",
+      "types": {
+        "organizationInvitation": {
+          "title": "Organisationsinbjudan",
+          "description": "Du har blivit inbjuden att gå med i {{organization_name}}"
+        },
+        "teamInvitation": {
+          "title": "Laginbjudan",
+          "description": "Du har blivit inbjuden att gå med i {{team_name}}"
+        },
+        "deviceRegistration": {
+          "title": "Ny Enhet Registrerad",
+          "description": "Enheten '{{device_name}}' har registrerats"
+        },
+        "deviceRemoval": {
+          "title": "Enhet Borttagen",
+          "description": "Enheten '{{device_name}}' har tagits bort"
+        },
+        "mediaTranscoded": {
+          "title": "Mediatranskodning Klar",
+          "description": "Median '{{media_name}}' har transkodats framgångsrikt"
+        },
+        "mediaUploaded": {
+          "titleImage": "Ny Bild Uppladdad",
+          "titleVideo": "Ny Video Uppladdad",
+          "titleMedia": "Ny Media Uppladdad",
+          "descriptionImage": "Bilden '{{media_name}}' har laddats upp framgångsrikt",
+          "descriptionVideo": "Videon '{{media_name}}' har laddats upp framgångsrikt",
+          "descriptionMedia": "Median '{{media_name}}' har laddats upp framgångsrikt"
+        },
+        "invitationAccepted": {
+          "title": "Inbjudan Accepterad",
+          "descriptionOrg": "{{user_name}} har gått med i organisationen",
+          "descriptionTeam": "{{user_name}} har gått med i laget"
+        },
+        "deviceOfflineAlert": {
+          "title": "Enheten Offline-varning",
+          "description": "Enheten '{{device_name}}' är offline när den borde vara online"
+        },
+        "deviceOnlineAlert": {
+          "title": "Enhet Online",
+          "description": "Enheten '{{device_name}}' är tillbaka online",
+          "descriptionWithDuration": "Enheten '{{device_name}}' är tillbaka online (var offline i {{offline_duration_formatted}})"
+        },
+        "memberRemoved": {
+          "title": "Medlem Borttagen",
+          "description": "{{user_name}} har tagits bort från organisationen"
+        },
+        "teamMemberRemoved": {
+          "titleSelf": "Borttagen från teamet",
+          "descriptionSelf": "Du har tagits bort från teamet {{team_name}}",
+          "titleOthers": "Teammedlem borttagen",
+          "descriptionOthers": "{{user_name}} har tagits bort från teamet {{team_name}}"
+        }
+      }
     }
   },
   "filters": {
     "teamLabel": "Lag",
     "teamPlaceholder": "Välj lag",
     "teamClear": "Rensa lagfilter"
-  },
-  "notifications": {
-    "title": "Notifikationer",
-    "empty": "Inga notifikationer än",
-    "markAllRead": "Markera alla som lästa"
   }
 }

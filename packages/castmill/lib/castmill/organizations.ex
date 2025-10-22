@@ -608,7 +608,8 @@ defmodule Castmill.Organizations do
             Castmill.Notifications.Events.notify_organization_invitation(
               user.id,
               organization.name,
-              organization_id
+              organization_id,
+              token
             )
         end
 
@@ -761,6 +762,7 @@ defmodule Castmill.Organizations do
                 if user do
                   Castmill.Notifications.Events.notify_invitation_accepted(
                     user.name,
+                    user_id,
                     invitation.organization_id
                   )
                 end
@@ -996,6 +998,13 @@ defmodule Castmill.Organizations do
            ),
          :ok <- ensure_additional_org_admins(organization_id, org_user),
          {:ok, _} <- Repo.delete(org_user) do
+      # Send notification to organization members
+      user = Castmill.Accounts.get_user(user_id)
+
+      if user do
+        Castmill.Notifications.Events.notify_member_removed(user.name, organization_id)
+      end
+
       {:ok, "User successfully removed."}
     else
       nil ->
