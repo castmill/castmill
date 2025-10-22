@@ -81,6 +81,7 @@
     },
     "addonError": "アドオンエラー",
     "backToLogin": "ログインに戻る",
+    "selectVideo": "ビデオを選択",
     "offline": "[TODO: Translate] Offline",
     "selectImage": "画像を選択",
     "selectMedia": "メディアを選択"
@@ -355,7 +356,6 @@
     "title": "組織",
     "users": "ユーザー",
     "invitations": "招待",
-    "settings": "設定",
     "update": "更新",
     "placeholderName": "組織名を入力してください",
     "inviteMember": "メンバーを招待",
@@ -385,7 +385,8 @@
       "memberRemoved": "メンバー{{name}}を正常に削除しました",
       "membersRemoved": "メンバーを正常に削除しました",
       "leftOrganization": "組織 {{name}} を離れました",
-      "noOrganizationsRemaining": "最後の組織を離れました。組織に招待されるには管理者にお問い合わせください。"
+      "noOrganizationsRemaining": "最後の組織を離れました。組織に招待されるには管理者にお問い合わせください。",
+      "invitationSent": "{{email}}に招待状を送信しました"
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {
@@ -409,6 +410,14 @@
     "leaveOrganizationLastUserWarning": "この組織の唯一のメンバーであるため、離れることはできません。",
     "leaveLastOrganizationWarningTitle": "最後の組織を離れますか？",
     "leaveLastOrganizationWarningMessage": "これはあなたの唯一の組織です。離れるとアカウントが削除され、Castmillへのすべてのアクセスが失われます。再度招待されるには管理者に連絡する必要があります。続行してもよろしいですか？",
+    "settings": "設定",
+    "changeRole": "役割を変更",
+    "dialogs": {
+      "removeMemberTitle": "組織からユーザーを削除",
+      "removeMemberMessage": "メンバー「{{name}}」を組織から削除してもよろしいですか？",
+      "removeMembersTitle": "組織からメンバーを削除",
+      "removeMembersMessage": "以下のメンバーを組織から削除してもよろしいですか？"
+    },
     "logo": "ロゴ",
     "logoSettings": "ロゴ設定",
     "selectLogo": "ロゴを選択",
@@ -417,13 +426,7 @@
     "logoUpdated": "ロゴが正常に更新されました",
     "logoRemoved": "ロゴが正常に削除されました",
     "noLogo": "ロゴが選択されていません",
-    "noMediasAvailable": "利用可能な画像がありません。まず画像をアップロードしてください。",
-    "dialogs": {
-      "removeMemberTitle": "組織からユーザーを削除",
-      "removeMemberMessage": "メンバー「{{name}}」を組織から削除してもよろしいですか？",
-      "removeMembersTitle": "組織からメンバーを削除",
-      "removeMembersMessage": "以下のメンバーを組織から削除してもよろしいですか？"
-    }
+    "noMediasAvailable": "画像メディアがありません。まず画像をアップロードしてください。"
   },
   "playlists": {
     "title": "プレイリスト",

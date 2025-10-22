@@ -76,6 +76,7 @@
     "addonLoadingError": "Add-on-Ladefehler",
     "addonError": "Add-on-Fehler",
     "backToLogin": "Zurück zur Anmeldung",
+    "selectVideo": "Video auswählen",
     "offline": "[TODO: Translate] Offline",
     "selectImage": "Bild auswählen",
     "selectMedia": "Medien auswählen"
@@ -345,13 +346,15 @@
       "cannotRemoveLastUser": "Sie können nicht gehen, da Sie das einzige Mitglied dieser Organisation sind.",
       "mediaInUseAsLogo": "Medien, die als Organisationslogo verwendet werden, können nicht gelöscht werden",
       "loadMedias": "Fehler beim Laden von Medien",
-      "updateRoleFailed": "Fehler beim Aktualisieren der Mitgliederrolle"
+      "updateRoleFailed": "Fehler beim Aktualisieren der Mitgliederrolle",
+      "cannotRemoveLastUser": "Sie können nicht aussteigen, da Sie das einzige Mitglied dieser Organisation sind."
     },
     "messages": {
       "memberRemoved": "Mitglied {{name}} wurde erfolgreich entfernt",
       "membersRemoved": "Mitglieder wurden erfolgreich entfernt",
       "leftOrganization": "Sie haben die Organisation {{name}} verlassen",
-      "noOrganizationsRemaining": "Sie haben Ihre letzte Organisation verlassen. Bitte kontaktieren Sie einen Administrator, um zu einer Organisation eingeladen zu werden."
+      "noOrganizationsRemaining": "Sie haben Ihre letzte Organisation verlassen. Bitte kontaktieren Sie einen Administrator, um zu einer Organisation eingeladen zu werden.",
+      "invitationSent": "Einladung an {{email}} gesendet"
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {
@@ -368,13 +371,6 @@
       "member": "Kann auf Teamressourcen zugreifen und diese bearbeiten",
       "installer": "Temporäres Token für Geräteregistrierung (läuft in 24h ab)"
     },
-    "leaveOrganizationTitle": "Diese Organisation verlassen",
-    "leaveOrganizationDescription": "Das Verlassen entfernt Ihren Zugriff auf Organisationsressourcen sofort.",
-    "leaveOrganizationAction": "Organisation verlassen",
-    "leaveOrganizationLastAdminWarning": "Fügen Sie einen weiteren Administrator hinzu, bevor Sie gehen, um diese Organisation verwaltet zu halten.",
-    "leaveOrganizationLastUserWarning": "Sie können nicht gehen, da Sie das einzige Mitglied dieser Organisation sind.",
-    "leaveLastOrganizationWarningTitle": "Ihre letzte Organisation verlassen?",
-    "leaveLastOrganizationWarningMessage": "Dies ist Ihre einzige Organisation. Wenn Sie sie verlassen, wird Ihr Konto gelöscht und Sie verlieren den gesamten Zugriff auf Castmill. Sie müssen einen Administrator kontaktieren, um erneut eingeladen zu werden. Sind Sie sicher, dass Sie fortfahren möchten?",
     "logo": "Firmenlogo",
     "logoSettings": "Logo-Einstellungen",
     "selectLogo": "Logo auswählen",
@@ -389,7 +385,14 @@
       "removeMemberMessage": "Sind Sie sicher, dass Sie das Mitglied \"{{name}}\" aus der Organisation entfernen möchten?",
       "removeMembersTitle": "Mitglieder aus Organisation entfernen",
       "removeMembersMessage": "Sind Sie sicher, dass Sie die folgenden Mitglieder aus der Organisation entfernen möchten?"
-    }
+    },
+    "leaveOrganizationTitle": "Diese Organisation verlassen",
+    "leaveOrganizationDescription": "Das Verlassen entfernt Ihren Zugriff auf Organisationsressourcen sofort.",
+    "leaveOrganizationAction": "Organisation verlassen",
+    "leaveOrganizationLastAdminWarning": "Fügen Sie einen weiteren Administrator hinzu, bevor Sie gehen, um diese Organisation verwaltet zu halten.",
+    "leaveOrganizationLastUserWarning": "Sie können nicht gehen, da Sie das einzige Mitglied dieser Organisation sind.",
+    "leaveLastOrganizationWarningTitle": "Ihre letzte Organisation verlassen?",
+    "leaveLastOrganizationWarningMessage": "Dies ist Ihre einzige Organisation. Wenn Sie sie verlassen, wird Ihr Konto gelöscht und Sie verlieren den gesamten Zugriff auf Castmill. Sie müssen einen Administrator kontaktieren, um erneut eingeladen zu werden. Sind Sie sicher, dass Sie fortfahren möchten?"
   },
   "login": {
     "title": "Anmelden",

@@ -77,6 +77,7 @@
     "events": "Events",
     "telemetry": "Telemetry",
     "selectImage": "Select an Image",
+    "selectVideo": "Select a Video",
     "selectMedia": "Select a Media",
     "youIndicator": "(you)"
   },
@@ -370,6 +371,7 @@
     "messages": {
       "memberRemoved": "Member {{name}} removed successfully",
       "membersRemoved": "Members removed successfully",
+      "invitationSent": "Invitation sent to {{email}}",
       "leftOrganization": "You left the organization {{name}}",
       "noOrganizationsRemaining": "You have left your last organization. Please contact an administrator to be invited to an organization."
     },
@@ -386,6 +388,13 @@
       "removeMembersTitle": "Remove Members From Organization",
       "removeMembersMessage": "Are you sure you want to remove the following members from the organization?"
     },
+    "leaveOrganizationTitle": "Leave this organization",
+    "leaveOrganizationDescription": "Leaving removes your access to organization resources immediately.",
+    "leaveOrganizationAction": "Leave organization",
+    "leaveOrganizationLastAdminWarning": "Add another admin before leaving to keep this organization managed.",
+    "leaveOrganizationLastUserWarning": "You cannot leave as you are the only member of this organization.",
+    "leaveLastOrganizationWarningTitle": "Leave your last organization?",
+    "leaveLastOrganizationWarningMessage": "This is your only organization. Leaving it will delete your account and you will lose all access to Castmill. You will need to contact an administrator to be invited back. Are you sure you want to proceed?",
     "logo": "Logo",
     "logoSettings": "Logo Settings",
     "selectLogo": "Select Logo",

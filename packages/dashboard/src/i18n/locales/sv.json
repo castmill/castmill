@@ -76,6 +76,7 @@
     "addonLoadingError": "Fel vid laddning av tillägg",
     "addonError": "Tilläggsfel",
     "backToLogin": "Tillbaka till inloggning",
+    "selectVideo": "Välj en video",
     "offline": "[TODO: Translate] Offline",
     "selectImage": "Välj en bild",
     "selectMedia": "Välj ett media"
@@ -374,13 +375,15 @@
       "cannotRemoveLastUser": "Du kan inte lämna eftersom du är den enda medlemmen i denna organisation.",
       "mediaInUseAsLogo": "Kan inte ta bort media som används som organisationslogotyp",
       "loadMedias": "Kunde inte ladda media",
-      "updateRoleFailed": "Misslyckades med att uppdatera medlemsroll"
+      "updateRoleFailed": "Misslyckades med att uppdatera medlemsroll",
+      "cannotRemoveLastUser": "Du kan inte lämna eftersom du är den enda medlemmen i denna organisation."
     },
     "messages": {
       "memberRemoved": "Medlemmen {{name}} togs bort med framgång",
       "membersRemoved": "Medlemmarna togs bort med framgång",
       "leftOrganization": "Du har lämnat organisationen {{name}}",
-      "noOrganizationsRemaining": "Du har lämnat din sista organisation. Kontakta en administratör för att bli inbjuden till en organisation."
+      "noOrganizationsRemaining": "Du har lämnat din sista organisation. Kontakta en administratör för att bli inbjuden till en organisation.",
+      "invitationSent": "Inbjudan skickad till {{email}}"
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {
@@ -418,7 +421,14 @@
       "removeMemberMessage": "Är du säker på att du vill ta bort medlemmen \"{{name}}\" från organisationen?",
       "removeMembersTitle": "Ta bort medlemmar från organisation",
       "removeMembersMessage": "Är du säker på att du vill ta bort följande medlemmar från organisationen?"
-    }
+    },
+    "leaveOrganizationTitle": "Lämna denna organisation",
+    "leaveOrganizationDescription": "Att lämna tar bort din åtkomst till organisationens resurser omedelbart.",
+    "leaveOrganizationAction": "Lämna organisation",
+    "leaveOrganizationLastAdminWarning": "Lägg till en annan administratör innan du lämnar för att hålla denna organisation hanterad.",
+    "leaveOrganizationLastUserWarning": "Du kan inte lämna eftersom du är den enda medlemmen i denna organisation.",
+    "leaveLastOrganizationWarningTitle": "Lämna din sista organisation?",
+    "leaveLastOrganizationWarningMessage": "Detta är din enda organisation. Att lämna den kommer att ta bort ditt konto och du kommer att förlora all åtkomst till Castmill. Du kommer att behöva kontakta en administratör för att bli inbjuden igen. Är du säker på att du vill fortsätta?"
   },
   "playlists": {
     "title": "Spellistor",

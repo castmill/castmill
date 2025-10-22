@@ -83,6 +83,7 @@
     "addonError": "Erreur d'extension",
     "backToLogin": "Retour à la connexion",
     "selectImage": "Sélectionner une image",
+    "selectVideo": "Sélectionner une vidéo",
     "selectMedia": "Sélectionner un média"
   },
   "topbar": {
@@ -298,13 +299,25 @@
     "generic": "Une erreur s'est produite. Veuillez réessayer.",
     "networkError": "Erreur réseau. Veuillez vérifier votre connexion.",
     "unauthorized": "Non autorisé. Veuillez vous reconnecter.",
-    "unknownResourceType": "Type de ressource inconnu: {{resourceType}}",
+    "errors": {
+      "generic": "Une erreur s'est produite. Veuillez réessayer.",
+      "networkError": "Erreur réseau. Veuillez vérifier votre connexion.",
+      "unauthorized": "Non autorisé. Veuillez vous reconnecter.",
+      "unknownResourceType": "Type de ressource inconnu: {{resourceType}}",
+      "serverUnreachable": "Impossible de Se Connecter au Serveur",
+      "serverUnreachableDescription": "Le serveur backend est actuellement inaccessible. Cela signifie généralement que le serveur n'est pas en cours d'exécution ou qu'il y a un problème réseau.",
+      "checkServerRunning": "Assurez-vous que le serveur Castmill est en cours d'exécution",
+      "checkNetworkConnection": "Vérifiez votre connexion réseau",
+      "checkServerUrl": "Vérifiez l'URL du serveur dans votre configuration",
+      "retryConnection": "Réessayer la Connexion"
+    },
     "serverUnreachable": "Impossible de Se Connecter au Serveur",
     "serverUnreachableDescription": "Le serveur backend est actuellement inaccessible. Cela signifie généralement que le serveur n'est pas en cours d'exécution ou qu'il y a un problème réseau.",
     "checkServerRunning": "Assurez-vous que le serveur Castmill est en cours d'exécution",
     "checkNetworkConnection": "Vérifiez votre connexion réseau",
     "checkServerUrl": "Vérifiez l'URL du serveur dans votre configuration",
-    "retryConnection": "Réessayer la Connexion"
+    "retryConnection": "Réessayer la Connexion",
+    "unknownResourceType": "Type de ressource inconnu : {{resourceType}}"
   },
   "sidebar": {
     "organization": "Organisation",
@@ -379,13 +392,15 @@
       "cannotRemoveLastUser": "Vous ne pouvez pas partir car vous êtes le seul membre de cette organisation.",
       "mediaInUseAsLogo": "Impossible de supprimer un média utilisé comme logo d'organisation",
       "loadMedias": "Échec du chargement des médias",
-      "updateRoleFailed": "Échec de la mise à jour du rôle du membre"
+      "updateRoleFailed": "Échec de la mise à jour du rôle du membre",
+      "cannotRemoveLastUser": "Vous ne pouvez pas partir car vous êtes le seul membre de cette organisation."
     },
     "messages": {
       "memberRemoved": "Le membre {{name}} a été supprimé avec succès",
       "membersRemoved": "Les membres ont été supprimés avec succès",
       "leftOrganization": "Vous avez quitté l'organisation {{name}}",
-      "noOrganizationsRemaining": "Vous avez quitté votre dernière organisation. Veuillez contacter un administrateur pour être invité à une organisation."
+      "noOrganizationsRemaining": "Vous avez quitté votre dernière organisation. Veuillez contacter un administrateur pour être invité à une organisation.",
+      "invitationSent": "Invitation envoyée à {{email}}"
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {
@@ -402,14 +417,7 @@
       "member": "Peut accéder et modifier les ressources de l'équipe",
       "installer": "Jeton temporaire pour l'enregistrement d'appareil (expire dans 24h)"
     },
-    "leaveOrganizationTitle": "Quitter cette organisation",
-    "leaveOrganizationDescription": "Quitter supprime votre accès aux ressources de l'organisation immédiatement.",
-    "leaveOrganizationAction": "Quitter l'organisation",
-    "leaveOrganizationLastAdminWarning": "Ajoutez un autre administrateur avant de partir pour garder cette organisation gérée.",
-    "leaveOrganizationLastUserWarning": "Vous ne pouvez pas partir car vous êtes le seul membre de cette organisation.",
-    "leaveLastOrganizationWarningTitle": "Quitter votre dernière organisation ?",
-    "leaveLastOrganizationWarningMessage": "Il s'agit de votre seule organisation. La quitter supprimera votre compte et vous perdrez tout accès à Castmill. Vous devrez contacter un administrateur pour être réinvité. Êtes-vous sûr de vouloir continuer ?",
-    "logo": "Logotype",
+    "logo": "Logo de l'organisation",
     "logoSettings": "Paramètres du logo",
     "selectLogo": "Sélectionner le logo",
     "removeLogo": "Supprimer le logo",
@@ -423,7 +431,14 @@
       "removeMemberMessage": "Êtes-vous sûr de vouloir retirer le membre \"{{name}}\" de l'organisation?",
       "removeMembersTitle": "Retirer les membres de l'organisation",
       "removeMembersMessage": "Êtes-vous sûr de vouloir retirer les membres suivants de l'organisation?"
-    }
+    },
+    "leaveOrganizationTitle": "Quitter cette organisation",
+    "leaveOrganizationDescription": "Quitter supprime votre accès aux ressources de l'organisation immédiatement.",
+    "leaveOrganizationAction": "Quitter l'organisation",
+    "leaveOrganizationLastAdminWarning": "Ajoutez un autre administrateur avant de partir pour garder cette organisation gérée.",
+    "leaveOrganizationLastUserWarning": "Vous ne pouvez pas partir car vous êtes le seul membre de cette organisation.",
+    "leaveLastOrganizationWarningTitle": "Quitter votre dernière organisation ?",
+    "leaveLastOrganizationWarningMessage": "Il s'agit de votre seule organisation. La quitter supprimera votre compte et vous perdrez tout accès à Castmill. Vous devrez contacter un administrateur pour être réinvité. Êtes-vous sûr de vouloir continuer ?"
   },
   "playlists": {
     "title": "Playlists",
