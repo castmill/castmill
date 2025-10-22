@@ -62,6 +62,7 @@
     "online": "在线",
     "update": "更新",
     "reset": "重置",
+    "apply": "应用",
     "addedOn": "添加于",
     "lastUpdatedOn": "最后更新于",
     "details": "详情",
@@ -361,7 +362,6 @@
     "inviteMember": "邀请成员",
     "enterMemberEmail": "输入成员的电子邮件",
     "role": "角色",
-    "changeRole": "更改角色",
     "roleAdmin": "管理员",
     "roleManager": "经理",
     "roleMember": "成员",
@@ -404,6 +404,13 @@
       "member": "可以访问和编辑团队资源",
       "installer": "用于设备注册的临时令牌（24小时后过期）"
     },
+    "leaveOrganizationTitle": "离开此组织",
+    "leaveOrganizationDescription": "离开将立即删除您对组织资源的访问权限。",
+    "leaveOrganizationAction": "离开组织",
+    "leaveOrganizationLastAdminWarning": "在离开之前添加另一个管理员以保持此组织的管理。",
+    "leaveOrganizationLastUserWarning": "您无法离开，因为您是此组织的唯一成员。",
+    "leaveLastOrganizationWarningTitle": "离开您的最后一个组织？",
+    "leaveLastOrganizationWarningMessage": "这是您唯一的组织。离开它将删除您的账户，您将失去对Castmill的所有访问权限。您需要联系管理员才能重新被邀请。您确定要继续吗？",
     "logo": "标志",
     "logoSettings": "标志设置",
     "selectLogo": "选择标志",
@@ -418,14 +425,7 @@
       "removeMemberMessage": "您确定要从组织中移除成员\"{{name}}\"吗？",
       "removeMembersTitle": "从组织中移除成员",
       "removeMembersMessage": "您确定要从组织中移除以下成员吗？"
-    },
-    "leaveOrganizationTitle": "离开此组织",
-    "leaveOrganizationDescription": "离开将立即删除您对组织资源的访问权限。",
-    "leaveOrganizationAction": "离开组织",
-    "leaveOrganizationLastAdminWarning": "在离开之前添加另一个管理员以保持此组织的管理。",
-    "leaveOrganizationLastUserWarning": "您无法离开，因为您是此组织的唯一成员。",
-    "leaveLastOrganizationWarningTitle": "离开您的最后一个组织？",
-    "leaveLastOrganizationWarningMessage": "这是您唯一的组织。离开它将删除您的账户，您将失去对Castmill的所有访问权限。您需要联系管理员才能重新被邀请。您确定要继续吗？"
+    }
   },
   "playlists": {
     "title": "播放列表",
@@ -443,7 +443,33 @@
     "errorRemovingPlaylist": "删除播放列表 {{name}} 时出错：{{error}}",
     "errorRemovingPlaylists": "删除播放列表时出错：{{error}}",
     "enterPlaylistName": "输入播放列表名称",
-    "dragToAdd": "拖动以添加"
+    "dragToAdd": "拖动以添加",
+    "aspectRatio": "宽高比",
+    "aspectRatioWidth": "宽度",
+    "aspectRatioHeight": "高度",
+    "aspectRatioUpdated": "宽高比更新成功",
+    "customAspectRatio": "自定义宽高比",
+    "enterCustomRatio": "输入自定义宽高比",
+    "aspectRatioPresets": {
+      "16:9": "16:9 (横向)",
+      "9:16": "9:16 (竖向)",
+      "4:3": "4:3 (经典)",
+      "3:4": "3:4 (竖向)",
+      "21:9": "21:9 (超宽)",
+      "16:3": "16:3 (货架/滚动条)",
+      "3:16": "3:16 (货架/滚动条竖向)",
+      "1:1": "1:1 (方形)",
+      "custom": "自定义"
+    },
+    "errors": {
+      "nameRequired": "名称是必需的",
+      "nameMinLength": "名称至少需要3个字符",
+      "aspectRatioNumber": "必须是数字",
+      "aspectRatioPositive": "必须是正数",
+      "aspectRatioMax": "值必须为100或更少",
+      "aspectRatioExtreme": "宽高比太极端（最大比例为10:1）",
+      "updateAspectRatio": "更新宽高比时出错：{{error}}"
+    }
   },
   "widgets": {
     "title": "Widgets",

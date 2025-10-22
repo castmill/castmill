@@ -22,6 +22,12 @@ type HandleResponseOptions = {
 export interface PlaylistUpdate {
   name: string;
   description: string;
+  settings?: {
+    aspect_ratio?: {
+      width: number;
+      height: number;
+    };
+  };
 }
 
 interface PlaylistItemInsertPayload {
@@ -76,11 +82,25 @@ export const PlaylistsService = {
     baseUrl: string,
     organizationId: string,
     name: string,
+    aspectRatio?: { width: number; height: number },
     teamId?: number | null
   ) {
-    const playlistData: { name: string; team_id?: number } = { name };
+    const playlistData: {
+      name: string;
+      team_id?: number;
+      settings?: {
+        aspect_ratio?: { width: number; height: number };
+      };
+    } = { name };
+
     if (teamId !== null && teamId !== undefined) {
       playlistData.team_id = teamId;
+    }
+
+    if (aspectRatio) {
+      playlistData.settings = {
+        aspect_ratio: aspectRatio,
+      };
     }
 
     const response = await fetch(

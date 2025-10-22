@@ -68,6 +68,7 @@
     "online": "En línea",
     "update": "Actualizar",
     "reset": "Restablecer",
+    "apply": "Aplicar",
     "addedOn": "Agregado el",
     "lastUpdatedOn": "Última actualización el",
     "details": "Detalles",
@@ -362,7 +363,6 @@
     "inviteMember": "Invitar miembro",
     "enterMemberEmail": "Ingresa el correo electrónico del miembro",
     "role": "Rol",
-    "changeRole": "Cambiar Rol",
     "roleAdmin": "Administrador",
     "roleManager": "Gerente",
     "roleMember": "Miembro",
@@ -372,21 +372,6 @@
     "roleGuest": "Invitado",
     "teamRoleAdmin": "Administrador de equipo",
     "teamRoleMember": "Miembro de equipo",
-    "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
-    "roleDescriptions": {
-      "admin": "Acceso completo incluyendo gestión de la organización",
-      "manager": "Puede gestionar equipos y la mayoría de recursos",
-      "member": "Usuario estándar (predeterminado), puede gestionar contenido",
-      "editor": "Gestión completa de contenido, no puede gestionar equipos",
-      "publisher": "Como editor más acciones de flujo de publicación",
-      "device_manager": "Gestión completa de dispositivos y canales",
-      "guest": "Acceso de solo lectura a recursos"
-    },
-    "teamRoleDescriptions": {
-      "admin": "Puede gestionar miembros del equipo y recursos",
-      "member": "Puede acceder y editar recursos del equipo",
-      "installer": "Token temporal para registro de dispositivos (expira en 24h)"
-    },
     "errors": {
       "updateOrganization": "Error al actualizar la organización: {{error}}",
       "emailRequired": "El correo electrónico es obligatorio",
@@ -426,7 +411,22 @@
     "logoUpdated": "Logo actualizado correctamente",
     "logoRemoved": "Logo eliminado correctamente",
     "noLogo": "Sin logo seleccionado",
-    "noMediasAvailable": "No hay imágenes disponibles. Por favor, suba una imagen primero."
+    "noMediasAvailable": "No hay imágenes disponibles. Por favor, suba una imagen primero.",
+    "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
+    "roleDescriptions": {
+      "admin": "Acceso completo incluyendo gestión de la organización",
+      "manager": "Puede gestionar equipos y la mayoría de recursos",
+      "member": "Usuario estándar (predeterminado), puede gestionar contenido",
+      "editor": "Gestión completa de contenido, no puede gestionar equipos",
+      "publisher": "Como editor más acciones de flujo de publicación",
+      "device_manager": "Gestión completa de dispositivos y canales",
+      "guest": "Acceso de solo lectura a recursos"
+    },
+    "teamRoleDescriptions": {
+      "admin": "Puede gestionar miembros del equipo y recursos",
+      "member": "Puede acceder y editar recursos del equipo",
+      "installer": "Token temporal para registro de dispositivos (expira en 24h)"
+    }
   },
   "signup": {
     "title": "Registrarse",
@@ -460,7 +460,33 @@
     "errorRemovingPlaylist": "Error al eliminar la lista de reproducción {{name}}: {{error}}",
     "errorRemovingPlaylists": "Error al eliminar listas de reproducción: {{error}}",
     "enterPlaylistName": "Ingresa el nombre de la lista de reproducción",
-    "dragToAdd": "Arrastra para añadir"
+    "dragToAdd": "Arrastra para añadir",
+    "aspectRatio": "Relación de Aspecto",
+    "aspectRatioWidth": "Ancho",
+    "aspectRatioHeight": "Alto",
+    "aspectRatioUpdated": "Relación de aspecto actualizada correctamente",
+    "customAspectRatio": "Relación de Aspecto Personalizada",
+    "enterCustomRatio": "Ingrese relación de aspecto personalizada",
+    "aspectRatioPresets": {
+      "16:9": "16:9 (Horizontal)",
+      "9:16": "9:16 (Vertical)",
+      "4:3": "4:3 (Clásico)",
+      "3:4": "3:4 (Vertical)",
+      "21:9": "21:9 (Ultraancho)",
+      "16:3": "16:3 (Estantería/Ticker)",
+      "3:16": "3:16 (Estantería/Ticker Vertical)",
+      "1:1": "1:1 (Cuadrado)",
+      "custom": "Personalizado"
+    },
+    "errors": {
+      "nameRequired": "El nombre es obligatorio",
+      "nameMinLength": "El nombre debe tener al menos 3 caracteres",
+      "aspectRatioNumber": "Debe ser un número",
+      "aspectRatioPositive": "Debe ser un número positivo",
+      "aspectRatioMax": "El valor debe ser 100 o menos",
+      "aspectRatioExtreme": "La relación de aspecto es demasiado extrema (máximo 10:1)",
+      "updateAspectRatio": "Error al actualizar la relación de aspecto: {{error}}"
+    }
   },
   "widgets": {
     "title": "Widgets",

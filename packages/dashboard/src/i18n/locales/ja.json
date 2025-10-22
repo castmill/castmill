@@ -62,6 +62,7 @@
     "online": "オンライン",
     "update": "更新",
     "reset": "リセット",
+    "apply": "適用",
     "addedOn": "追加日",
     "lastUpdatedOn": "最終更新日",
     "details": "詳細",
@@ -443,7 +444,33 @@
     "errorRemovingPlaylist": "プレイリスト{{name}}の削除中にエラーが発生しました：{{error}}",
     "errorRemovingPlaylists": "プレイリストの削除中にエラーが発生しました：{{error}}",
     "enterPlaylistName": "プレイリスト名を入力してください",
-    "dragToAdd": "ドラッグして追加"
+    "dragToAdd": "ドラッグして追加",
+    "aspectRatio": "アスペクト比",
+    "aspectRatioWidth": "幅",
+    "aspectRatioHeight": "高さ",
+    "aspectRatioUpdated": "アスペクト比が正常に更新されました",
+    "customAspectRatio": "カスタムアスペクト比",
+    "enterCustomRatio": "カスタムアスペクト比を入力",
+    "aspectRatioPresets": {
+      "16:9": "16:9 (横長)",
+      "9:16": "9:16 (縦長)",
+      "4:3": "4:3 (クラシック)",
+      "3:4": "3:4 (縦長)",
+      "21:9": "21:9 (ウルトラワイド)",
+      "16:3": "16:3 (棚/ティッカー)",
+      "3:16": "3:16 (棚/ティッカー縦長)",
+      "1:1": "1:1 (正方形)",
+      "custom": "カスタム"
+    },
+    "errors": {
+      "nameRequired": "名前は必須です",
+      "nameMinLength": "名前は3文字以上である必要があります",
+      "aspectRatioNumber": "数値である必要があります",
+      "aspectRatioPositive": "正の数値である必要があります",
+      "aspectRatioMax": "値は100以下である必要があります",
+      "aspectRatioExtreme": "アスペクト比が極端すぎます（最大比率は10:1）",
+      "updateAspectRatio": "アスペクト比の更新中にエラーが発生しました：{{error}}"
+    }
   },
   "widgets": {
     "title": "Widgets",

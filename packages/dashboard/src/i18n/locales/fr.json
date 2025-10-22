@@ -63,6 +63,7 @@
     "offline": "Hors ligne",
     "update": "Mettre à jour",
     "reset": "Réinitialiser",
+    "apply": "Appliquer",
     "addedOn": "Ajouté le",
     "lastUpdatedOn": "Dernière mise à jour le",
     "details": "Détails",
@@ -373,7 +374,6 @@
     "inviteMember": "Inviter un membre",
     "enterMemberEmail": "Entrez l'e-mail du membre",
     "role": "Rôle",
-    "changeRole": "Changer le Rôle",
     "roleAdmin": "Administrateur",
     "roleManager": "Gestionnaire",
     "roleMember": "Membre",
@@ -455,7 +455,33 @@
     "errorRemovingPlaylist": "Erreur lors de la suppression de la playlist {{name}} : {{error}}",
     "errorRemovingPlaylists": "Erreur lors de la suppression des playlists : {{error}}",
     "enterPlaylistName": "Entrez le nom de la playlist",
-    "dragToAdd": "Glisser pour ajouter"
+    "dragToAdd": "Glisser pour ajouter",
+    "aspectRatio": "Ratio d'aspect",
+    "aspectRatioWidth": "Largeur",
+    "aspectRatioHeight": "Hauteur",
+    "aspectRatioUpdated": "Ratio d'aspect mis à jour avec succès",
+    "customAspectRatio": "Ratio d'aspect personnalisé",
+    "enterCustomRatio": "Entrez le ratio d'aspect personnalisé",
+    "aspectRatioPresets": {
+      "16:9": "16:9 (Paysage)",
+      "9:16": "9:16 (Portrait)",
+      "4:3": "4:3 (Classique)",
+      "3:4": "3:4 (Portrait)",
+      "21:9": "21:9 (Ultra-large)",
+      "16:3": "16:3 (Étagère/Ticker)",
+      "3:16": "3:16 (Étagère/Ticker Portrait)",
+      "1:1": "1:1 (Carré)",
+      "custom": "Personnalisé"
+    },
+    "errors": {
+      "nameRequired": "Le nom est requis",
+      "nameMinLength": "Le nom doit contenir au moins 3 caractères",
+      "aspectRatioNumber": "Doit être un nombre",
+      "aspectRatioPositive": "Doit être un nombre positif",
+      "aspectRatioMax": "La valeur doit être 100 ou moins",
+      "aspectRatioExtreme": "Le ratio d'aspect est trop extrême (ratio max est 10:1)",
+      "updateAspectRatio": "Erreur lors de la mise à jour du ratio d'aspect : {{error}}"
+    }
   },
   "widgets": {
     "title": "Widgets",

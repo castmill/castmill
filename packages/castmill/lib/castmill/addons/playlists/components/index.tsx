@@ -25,6 +25,8 @@ import {
   Timestamp,
   ToastProvider,
   useToast,
+  FormItem,
+  Dropdown,
 } from '@castmill/ui-common';
 import { JsonPlaylist } from '@castmill/player';
 import { PlaylistsService } from '../services/playlists.service';
@@ -36,13 +38,14 @@ import {
 
 import './playlists.scss';
 import { PlaylistView } from './playlist-view';
-import {
-  AddonStore,
-  AddonComponentProps,
-} from '../../common/interfaces/addon-store';
-import { PlaylistAddForm } from './playlist-add-form';
-import { PlaylistDetails } from './playlist-details';
+import { AddonComponentProps } from '../../common/interfaces/addon-store';
+import { PlaylistAddForm, AspectRatio } from './playlist-add-form';
 import { useTeamFilter } from '../../common/hooks';
+import { ASPECT_RATIO_OPTIONS } from '../constants';
+import {
+  validateCustomRatioField,
+  validateAspectRatioExtreme as validateAspectRatioExtremeUtil,
+} from '../utils/aspect-ratio-validation';
 
 const PlaylistsPage: Component<AddonComponentProps> = (props) => {
   const toast = useToast();
@@ -200,8 +203,180 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
     setShowModal(false);
   };
 
+  const [customRatioModal, setCustomRatioModal] = createSignal<{
+    playlist: JsonPlaylist | null;
+    show: boolean;
+  }>({ playlist: null, show: false });
+
+  const [customWidth, setCustomWidth] = createSignal<string>('16');
+  const [customHeight, setCustomHeight] = createSignal<string>('9');
+  const [customRatioErrors, setCustomRatioErrors] = createSignal(
+    new Map<string, string>()
+  );
+
+  const validateCustomRatio = (field: string, value: string) => {
+    const errors = validateCustomRatioField(
+      field,
+      value,
+      t,
+      customRatioErrors()
+    );
+    setCustomRatioErrors(errors);
+    return !errors.has(field);
+  };
+
+  const validateCustomRatioExtreme = () => {
+    const result = validateAspectRatioExtremeUtil(
+      customWidth(),
+      customHeight(),
+      t,
+      customRatioErrors()
+    );
+    setCustomRatioErrors(result.errors);
+    return result.isValid;
+  };
+
+  const handleCustomRatioSubmit = async () => {
+    if (
+      !validateCustomRatio('width', customWidth()) ||
+      !validateCustomRatio('height', customHeight()) ||
+      !validateCustomRatioExtreme()
+    ) {
+      return;
+    }
+
+    const width = parseInt(customWidth(), 10);
+    const height = parseInt(customHeight(), 10);
+    const playlist = customRatioModal().playlist;
+
+    if (!playlist) {
+      return;
+    }
+
+    try {
+      await PlaylistsService.updatePlaylist(
+        props.store.env.baseUrl,
+        props.store.organizations.selectedId,
+        `${playlist.id}`,
+        {
+          name: playlist.name,
+          description: '',
+          settings: {
+            aspect_ratio: { width, height },
+          },
+        }
+      );
+
+      toast.success(t('playlists.aspectRatioUpdated'));
+      setCustomRatioModal({ playlist: null, show: false });
+      setCustomRatioErrors(new Map());
+      refreshData();
+    } catch (error) {
+      toast.error(
+        t('playlists.errors.updateAspectRatio', { error: String(error) })
+      );
+    }
+  };
+
+  const handleAspectRatioChange = async (
+    playlist: JsonPlaylist,
+    newRatio: string
+  ) => {
+    // If custom is selected, open modal for new custom input
+    if (newRatio === 'custom') {
+      const current = playlist.settings?.aspect_ratio;
+      setCustomWidth(String(current?.width || 16));
+      setCustomHeight(String(current?.height || 9));
+      setCustomRatioErrors(new Map());
+      setCustomRatioModal({ playlist, show: true });
+      return;
+    }
+
+    // Parse the ratio (could be a preset like "16:9" or a custom ratio like "5:4")
+    const [width, height] = newRatio.split(':').map(Number);
+
+    // If it's the same as current, do nothing
+    const current = playlist.settings?.aspect_ratio;
+    if (current && current.width === width && current.height === height) {
+      return;
+    }
+
+    try {
+      await PlaylistsService.updatePlaylist(
+        props.store.env.baseUrl,
+        props.store.organizations.selectedId,
+        `${playlist.id}`,
+        {
+          name: playlist.name,
+          description: '',
+          settings: {
+            aspect_ratio: { width, height },
+          },
+        }
+      );
+
+      toast.success(t('playlists.aspectRatioUpdated'));
+      refreshData();
+    } catch (error) {
+      toast.error(
+        t('playlists.errors.updateAspectRatio', { error: String(error) })
+      );
+    }
+  };
+
   const columns = [
     { key: 'name', title: t('common.name'), sortable: true },
+    {
+      key: 'aspect_ratio',
+      title: t('playlists.aspectRatio'),
+      sortable: false,
+      render: (item: JsonPlaylist) => {
+        const aspectRatio = item.settings?.aspect_ratio;
+        const currentRatio = aspectRatio
+          ? `${aspectRatio.width}:${aspectRatio.height}`
+          : '16:9';
+        const isStandardRatio = ASPECT_RATIO_OPTIONS.slice(0, -1).some(
+          (opt) => opt.value === currentRatio
+        );
+
+        // Build dropdown items - include current custom ratio if it exists
+        const dropdownItems = [...ASPECT_RATIO_OPTIONS];
+        if (!isStandardRatio && currentRatio !== '16:9') {
+          // Insert the current custom ratio before the "Custom" option
+          dropdownItems.splice(dropdownItems.length - 1, 0, {
+            value: currentRatio,
+            label: `${currentRatio} (${t('playlists.aspectRatioPresets.custom')})`,
+          });
+        }
+
+        return (
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              'font-size': '0.85em',
+              'line-height': '1.2',
+              width: '12em',
+              'text-align': 'center',
+              margin: '0 auto',
+            }}
+          >
+            <Dropdown
+              label=""
+              items={dropdownItems.map((opt) => ({
+                value: opt.value,
+                name: t(opt.label),
+              }))}
+              value={currentRatio}
+              onSelectChange={(value: string | null) => {
+                if (value) {
+                  handleAspectRatioChange(item, value);
+                }
+              }}
+            />
+          </div>
+        );
+      },
+    },
     { key: 'status', title: t('common.status'), sortable: false },
     {
       key: 'inserted_at',
@@ -356,6 +531,108 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
 
   return (
     <div class="playlists-page">
+      {/* Custom Aspect Ratio Modal */}
+      <Show when={customRatioModal().show}>
+        <Modal
+          title={t('playlists.customAspectRatio')}
+          description={t('playlists.enterCustomRatio')}
+          onClose={() => {
+            setCustomRatioModal({ playlist: null as any, show: false });
+            setCustomRatioErrors(new Map());
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              'flex-direction': 'column',
+              gap: '1.5em',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                gap: '1em',
+                'align-items': 'flex-start',
+              }}
+            >
+              <FormItem
+                label={t('playlists.aspectRatioWidth')}
+                id="customWidthTable"
+                value={customWidth()}
+                placeholder="16"
+                type="number"
+                onInput={(value: string | number | boolean) => {
+                  const strValue = String(value);
+                  setCustomWidth(strValue);
+                  validateCustomRatio('width', strValue);
+                }}
+              >
+                <div class="error">{customRatioErrors().get('width')}</div>
+              </FormItem>
+              <span
+                style={{
+                  'font-size': '1.5em',
+                  'font-weight': 'bold',
+                  'padding-top': '2em',
+                }}
+              >
+                :
+              </span>
+              <FormItem
+                label={t('playlists.aspectRatioHeight')}
+                id="customHeightTable"
+                value={customHeight()}
+                placeholder="9"
+                type="number"
+                onInput={(value: string | number | boolean) => {
+                  const strValue = String(value);
+                  setCustomHeight(strValue);
+                  validateCustomRatio('height', strValue);
+                }}
+              >
+                <div class="error">{customRatioErrors().get('height')}</div>
+              </FormItem>
+            </div>
+            <Show when={customRatioErrors().get('ratio')}>
+              <div
+                class="error"
+                style={{
+                  color: '#ef4444',
+                  padding: '0.5em',
+                  background: 'rgba(239, 68, 68, 0.1)',
+                  'border-radius': '0.25em',
+                }}
+              >
+                {customRatioErrors().get('ratio')}
+              </div>
+            </Show>
+            <div
+              style={{
+                display: 'flex',
+                gap: '1em',
+                'justify-content': 'flex-end',
+              }}
+            >
+              <Button
+                label={t('common.cancel')}
+                onClick={() => {
+                  setCustomRatioModal({ playlist: null as any, show: false });
+                  setCustomRatioErrors(new Map());
+                }}
+                color="secondary"
+              />
+              <Button
+                label={t('common.apply')}
+                onClick={handleCustomRatioSubmit}
+                color="primary"
+                icon={BsCheckLg}
+                disabled={customRatioErrors().size > 0}
+              />
+            </div>
+          </div>
+        </Modal>
+      </Show>
+
       <Show when={showAddPlaylistModal()}>
         <Modal
           title={t('playlists.addPlaylist')}
@@ -365,12 +642,17 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
           <PlaylistAddForm
             t={t}
             teamId={selectedTeamId()}
-            onSubmit={async (name: string, teamId?: number | null) => {
+            onSubmit={async (
+              name: string,
+              aspectRatio: AspectRatio,
+              teamId?: number | null
+            ) => {
               try {
                 const result = await PlaylistsService.addPlaylist(
                   props.store.env.baseUrl,
                   props.store.organizations.selectedId,
                   name,
+                  aspectRatio,
                   teamId
                 );
                 setShowAddPlaylistModal(false);
@@ -417,36 +699,61 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
           onClose={() => setShowRenameModal(false)}
           contentClass="playlist-rename-modal"
         >
-          <PlaylistDetails
-            store={props.store}
-            playlist={currentPlaylist()!}
-            onSubmit={async (playlistUpdate) => {
-              try {
-                await PlaylistsService.updatePlaylist(
-                  props.store.env.baseUrl,
-                  props.store.organizations.selectedId,
-                  `${currentPlaylist()?.id}`,
-                  playlistUpdate
+          <div class="playlist-rename-form">
+            <FormItem
+              label={t('common.name')}
+              id="renameName"
+              value={currentPlaylist()?.name || ''}
+              placeholder={t('playlists.enterPlaylistName')}
+              autofocus={true}
+              onInput={(value: string | number | boolean) => {
+                const strValue = value as string;
+                setCurrentPlaylist((prev) =>
+                  prev ? { ...prev, name: strValue } : prev
                 );
-                refreshData();
-                toast.success(
-                  t('playlists.playlistUpdated', {
-                    name: currentPlaylist()?.name,
-                  })
-                );
-                setShowRenameModal(false);
-                return true;
-              } catch (error) {
-                toast.error(
-                  t('playlists.errorUpdating', {
-                    name: currentPlaylist()?.name,
-                    error: String(error),
-                  })
-                );
-                return false;
-              }
-            }}
-          />
+              }}
+            >
+              <div></div>
+            </FormItem>
+            <div class="actions">
+              <Button
+                label={t('common.update')}
+                onClick={async () => {
+                  try {
+                    await PlaylistsService.updatePlaylist(
+                      props.store.env.baseUrl,
+                      props.store.organizations.selectedId,
+                      `${currentPlaylist()?.id}`,
+                      {
+                        name: currentPlaylist()?.name || '',
+                        description: '',
+                      }
+                    );
+                    refreshData();
+                    toast.success(
+                      t('playlists.playlistUpdated', {
+                        name: currentPlaylist()?.name,
+                      })
+                    );
+                    setShowRenameModal(false);
+                  } catch (error) {
+                    toast.error(
+                      t('playlists.errorUpdating', {
+                        name: currentPlaylist()?.name,
+                        error: String(error),
+                      })
+                    );
+                  }
+                }}
+                color="success"
+              />
+              <Button
+                label={t('common.cancel')}
+                onClick={() => setShowRenameModal(false)}
+                color="danger"
+              />
+            </div>
+          </div>
         </Modal>
       </Show>
 

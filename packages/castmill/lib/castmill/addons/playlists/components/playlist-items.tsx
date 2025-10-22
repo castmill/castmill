@@ -130,8 +130,10 @@ export const PlaylistItems: Component<{
 
   const [isDraggedOver, setIsDraggedOver] = createSignal(false);
   const [animationEnabled, setAnimationEnabled] = createSignal(true);
+  const [endZoneHovered, setEndZoneHovered] = createSignal(false);
 
   let droppableRef: HTMLDivElement | undefined = undefined;
+  let endZoneRef: HTMLDivElement | undefined = undefined;
 
   createEffect(() => {
     if (droppableRef) {
@@ -175,6 +177,23 @@ export const PlaylistItems: Component<{
     }
   });
 
+  // Setup drop zone for the end of the list
+  createEffect(() => {
+    if (endZoneRef) {
+      const cleanup = dropTargetForElements({
+        element: endZoneRef,
+        getData: () => ({ index: props.items.length }),
+        onDragEnter: () => setEndZoneHovered(true),
+        onDragLeave: () => setEndZoneHovered(false),
+        onDrop: () => setEndZoneHovered(false),
+      });
+
+      onCleanup(() => {
+        cleanup();
+      });
+    }
+  });
+
   return (
     <>
       <div
@@ -203,6 +222,13 @@ export const PlaylistItems: Component<{
           )}
         </For>
         {/*</TransitionGroup>*/}
+
+        {/* Expandable drop zone at the end of the list */}
+        <div
+          ref={endZoneRef}
+          class="playlist-end-drop-zone"
+          classList={{ hovered: endZoneHovered() }}
+        />
       </div>
       <Show when={showModal()}>
         <Modal

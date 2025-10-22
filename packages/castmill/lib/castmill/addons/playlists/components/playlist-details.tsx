@@ -19,22 +19,17 @@ export const PlaylistDetails = (props: {
     props.store?.i18n?.t(key, params) || key;
 
   const [name, setName] = createSignal(props.playlist.name);
-
   const [isFormModified, setIsFormModified] = createSignal(false);
   const [errors, setErrors] = createSignal(new Map());
 
   const validateField = (fieldId: string, value: string) => {
     let error = '';
-    switch (fieldId) {
-      case 'name':
-        if (!value) {
-          error = 'Name is required';
-        } else if (value.length < 3) {
-          error = 'Name must be at least 3 characters';
-        }
-        break;
-      default:
-        error = '';
+    if (fieldId === 'name') {
+      if (!value) {
+        error = t('playlists.errors.nameRequired');
+      } else if (value.length < 3) {
+        error = t('playlists.errors.nameMinLength');
+      }
     }
 
     setErrors((prev) => new Map(prev).set(fieldId, error));
@@ -47,7 +42,11 @@ export const PlaylistDetails = (props: {
   });
 
   const isFormValid = () => {
-    return ![...errors().values()].some((e) => e) && isFormModified();
+    // Just check name validity and if form is modified
+    const nameValue = name();
+    const hasValidName = nameValue.trim() !== '' && nameValue.length >= 3;
+    const hasNoErrors = ![...errors().values()].some((e) => e);
+    return hasValidName && hasNoErrors && isFormModified();
   };
 
   return (
@@ -61,8 +60,16 @@ export const PlaylistDetails = (props: {
       <form
         onSubmit={async (e) => {
           e.preventDefault();
+          // Validate name before submission
+          validateField('name', name());
+
           if (isFormValid()) {
-            if (await props.onSubmit({ name: name(), description: '' })) {
+            if (
+              await props.onSubmit({
+                name: name(),
+                description: '',
+              })
+            ) {
               setIsFormModified(false);
             }
           }
@@ -73,10 +80,11 @@ export const PlaylistDetails = (props: {
             label={t('common.name')}
             id="name"
             value={name()}
-            placeholder="Enter playlist name"
-            onInput={(value: string) => {
-              setName(value);
-              validateField('name', value);
+            placeholder={t('playlists.enterPlaylistName')}
+            onInput={(value: string | number | boolean) => {
+              const strValue = String(value);
+              setName(strValue);
+              validateField('name', strValue);
             }}
           >
             <div class="error">{errors().get('name')}</div>
@@ -85,17 +93,18 @@ export const PlaylistDetails = (props: {
 
         <div class="actions">
           <Button
-            label="Update"
+            label={t('common.update')}
             type="submit"
             disabled={!isFormValid()}
             icon={BsCheckLg}
             color="success"
           />
           <Button
-            label="Reset"
+            label={t('common.reset')}
             onClick={() => {
               setName(props.playlist.name);
               setIsFormModified(false);
+              setErrors(new Map());
             }}
             icon={BsX}
             color="danger"

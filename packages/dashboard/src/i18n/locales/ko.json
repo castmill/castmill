@@ -62,6 +62,7 @@
     "online": "온라인",
     "update": "업데이트",
     "reset": "재설정",
+    "apply": "적용",
     "addedOn": "추가됨",
     "lastUpdatedOn": "마지막 업데이트",
     "details": "세부정보",
@@ -361,7 +362,6 @@
     "inviteMember": "멤버 초대",
     "enterMemberEmail": "멤버의 이메일 입력",
     "role": "역할",
-    "changeRole": "역할 변경",
     "roleAdmin": "관리자",
     "roleManager": "매니저",
     "roleMember": "멤버",
@@ -443,7 +443,33 @@
     "errorRemovingPlaylist": "재생목록 {{name}} 제거 오류: {{error}}",
     "errorRemovingPlaylists": "재생목록 제거 오류: {{error}}",
     "enterPlaylistName": "재생목록 이름 입력",
-    "dragToAdd": "드래그하여 추가"
+    "dragToAdd": "드래그하여 추가",
+    "aspectRatio": "화면 비율",
+    "aspectRatioWidth": "너비",
+    "aspectRatioHeight": "높이",
+    "aspectRatioUpdated": "화면 비율이 성공적으로 업데이트되었습니다",
+    "customAspectRatio": "사용자 정의 화면 비율",
+    "enterCustomRatio": "사용자 정의 화면 비율 입력",
+    "aspectRatioPresets": {
+      "16:9": "16:9 (가로)",
+      "9:16": "9:16 (세로)",
+      "4:3": "4:3 (클래식)",
+      "3:4": "3:4 (세로)",
+      "21:9": "21:9 (울트라와이드)",
+      "16:3": "16:3 (선반/티커)",
+      "3:16": "3:16 (선반/티커 세로)",
+      "1:1": "1:1 (정사각형)",
+      "custom": "사용자 정의"
+    },
+    "errors": {
+      "nameRequired": "이름은 필수입니다",
+      "nameMinLength": "이름은 최소 3자 이상이어야 합니다",
+      "aspectRatioNumber": "숫자여야 합니다",
+      "aspectRatioPositive": "양수여야 합니다",
+      "aspectRatioMax": "값은 100 이하여야 합니다",
+      "aspectRatioExtreme": "화면 비율이 너무 극단적입니다 (최대 비율 10:1)",
+      "updateAspectRatio": "화면 비율 업데이트 중 오류 발생: {{error}}"
+    }
   },
   "widgets": {
     "title": "Widgets",
