@@ -1,11 +1,11 @@
 import { Component, createSignal, Show } from 'solid-js';
 import { Button, FormItem, Dropdown } from '@castmill/ui-common';
+import { ASPECT_RATIO_OPTIONS } from '../constants';
 import {
-  ASPECT_RATIO_OPTIONS,
-  MAX_ASPECT_RATIO_VALUE,
-  MAX_ASPECT_RATIO,
-  MIN_ASPECT_RATIO,
-} from '../constants';
+  validateCustomRatioField,
+  validateAspectRatioExtreme as validateAspectRatioExtremeUtil,
+  isValidAspectRatio,
+} from '../utils/aspect-ratio-validation';
 
 type TranslateFn = (key: string, params?: Record<string, any>) => string;
 
@@ -32,8 +32,8 @@ export const PlaylistAddForm: Component<{
   const [isFormModified, setIsFormModified] = createSignal(false);
 
   const validateField = (field: string, value: string) => {
-    const errorsMap = new Map(errors());
     if (field === 'name') {
+      const errorsMap = new Map(errors());
       if (value.trim() === '') {
         errorsMap.set(field, props.t('validation.fieldRequired'));
       } else if (value.length < 3) {
@@ -41,42 +41,28 @@ export const PlaylistAddForm: Component<{
       } else {
         errorsMap.delete(field);
       }
+      setErrors(errorsMap);
     } else if (field === 'customWidth' || field === 'customHeight') {
-      const num = parseInt(value, 10);
-      if (!value || isNaN(num)) {
-        errorsMap.set(field, props.t('playlists.errors.aspectRatioNumber'));
-      } else if (num <= 0) {
-        errorsMap.set(field, props.t('playlists.errors.aspectRatioPositive'));
-      } else if (num > MAX_ASPECT_RATIO_VALUE) {
-        errorsMap.set(field, props.t('playlists.errors.aspectRatioMax'));
-      } else {
-        errorsMap.delete(field);
-      }
+      const errorsMap = validateCustomRatioField(
+        field,
+        value,
+        props.t,
+        errors()
+      );
+      setErrors(errorsMap);
     }
-    setErrors(errorsMap);
   };
 
   const validateAspectRatioExtreme = () => {
     if (aspectRatioPreset() === 'custom') {
-      const width = parseInt(customWidth(), 10);
-      const height = parseInt(customHeight(), 10);
-
-      if (!isNaN(width) && !isNaN(height) && width > 0 && height > 0) {
-        const ratio = width / height;
-        if (ratio > MAX_ASPECT_RATIO || ratio < MIN_ASPECT_RATIO) {
-          const errorsMap = new Map(errors());
-          errorsMap.set(
-            'aspectRatio',
-            props.t('playlists.errors.aspectRatioExtreme')
-          );
-          setErrors(errorsMap);
-          return false;
-        } else {
-          const errorsMap = new Map(errors());
-          errorsMap.delete('aspectRatio');
-          setErrors(errorsMap);
-        }
-      }
+      const result = validateAspectRatioExtremeUtil(
+        customWidth(),
+        customHeight(),
+        props.t,
+        errors()
+      );
+      setErrors(result.errors);
+      return result.isValid;
     } else {
       const errorsMap = new Map(errors());
       errorsMap.delete('aspectRatio');
@@ -111,18 +97,7 @@ export const PlaylistAddForm: Component<{
     // Check if aspect ratio is valid (only for custom)
     let hasValidAspectRatio = true;
     if (aspectRatioPreset() === 'custom') {
-      const width = parseInt(customWidth(), 10);
-      const height = parseInt(customHeight(), 10);
-      const ratio = width / height;
-      hasValidAspectRatio =
-        !isNaN(width) &&
-        !isNaN(height) &&
-        width > 0 &&
-        height > 0 &&
-        width <= 100 &&
-        height <= 100 &&
-        ratio <= 10 &&
-        ratio >= 0.1;
+      hasValidAspectRatio = isValidAspectRatio(customWidth(), customHeight());
     }
 
     // Check there are no current errors and form has been modified

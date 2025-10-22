@@ -41,12 +41,11 @@ import { PlaylistView } from './playlist-view';
 import { AddonComponentProps } from '../../common/interfaces/addon-store';
 import { PlaylistAddForm, AspectRatio } from './playlist-add-form';
 import { useTeamFilter } from '../../common/hooks';
+import { ASPECT_RATIO_OPTIONS } from '../constants';
 import {
-  ASPECT_RATIO_OPTIONS,
-  MAX_ASPECT_RATIO_VALUE,
-  MAX_ASPECT_RATIO,
-  MIN_ASPECT_RATIO,
-} from '../constants';
+  validateCustomRatioField,
+  validateAspectRatioExtreme as validateAspectRatioExtremeUtil,
+} from '../utils/aspect-ratio-validation';
 
 const PlaylistsPage: Component<AddonComponentProps> = (props) => {
   const toast = useToast();
@@ -205,9 +204,9 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
   };
 
   const [customRatioModal, setCustomRatioModal] = createSignal<{
-    playlist: JsonPlaylist;
+    playlist: JsonPlaylist | null;
     show: boolean;
-  }>({ playlist: null as any, show: false });
+  }>({ playlist: null, show: false });
 
   const [customWidth, setCustomWidth] = createSignal<string>('16');
   const [customHeight, setCustomHeight] = createSignal<string>('9');
@@ -216,39 +215,25 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
   );
 
   const validateCustomRatio = (field: string, value: string) => {
-    const errors = new Map(customRatioErrors());
-    const num = parseInt(value, 10);
-    if (!value || isNaN(num)) {
-      errors.set(field, t('playlists.errors.aspectRatioNumber'));
-    } else if (num <= 0) {
-      errors.set(field, t('playlists.errors.aspectRatioPositive'));
-    } else if (num > MAX_ASPECT_RATIO_VALUE) {
-      errors.set(field, t('playlists.errors.aspectRatioMax'));
-    } else {
-      errors.delete(field);
-    }
+    const errors = validateCustomRatioField(
+      field,
+      value,
+      t,
+      customRatioErrors()
+    );
     setCustomRatioErrors(errors);
     return !errors.has(field);
   };
 
   const validateCustomRatioExtreme = () => {
-    const width = parseInt(customWidth(), 10);
-    const height = parseInt(customHeight(), 10);
-
-    if (!isNaN(width) && !isNaN(height) && width > 0 && height > 0) {
-      const ratio = width / height;
-      if (ratio > MAX_ASPECT_RATIO || ratio < MIN_ASPECT_RATIO) {
-        const errors = new Map(customRatioErrors());
-        errors.set('ratio', t('playlists.errors.aspectRatioExtreme'));
-        setCustomRatioErrors(errors);
-        return false;
-      } else {
-        const errors = new Map(customRatioErrors());
-        errors.delete('ratio');
-        setCustomRatioErrors(errors);
-      }
-    }
-    return true;
+    const result = validateAspectRatioExtremeUtil(
+      customWidth(),
+      customHeight(),
+      t,
+      customRatioErrors()
+    );
+    setCustomRatioErrors(result.errors);
+    return result.isValid;
   };
 
   const handleCustomRatioSubmit = async () => {
@@ -263,6 +248,10 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
     const width = parseInt(customWidth(), 10);
     const height = parseInt(customHeight(), 10);
     const playlist = customRatioModal().playlist;
+
+    if (!playlist) {
+      return;
+    }
 
     try {
       await PlaylistsService.updatePlaylist(
@@ -279,7 +268,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
       );
 
       toast.success(t('playlists.aspectRatioUpdated'));
-      setCustomRatioModal({ playlist: null as any, show: false });
+      setCustomRatioModal({ playlist: null, show: false });
       setCustomRatioErrors(new Map());
       refreshData();
     } catch (error) {
