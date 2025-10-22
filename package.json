@@ -33,7 +33,7 @@
     "build:device": "cd packages/device && yarn build",
     "build:dashboard": "cd packages/dashboard && yarn build",
     "build:widged": "cd packages/widged && yarn build",
-    "build:website": "cd packages/website && yarn build",
+    "build:website": "yarn run build:cache && yarn run build:player && cd packages/website && yarn build",
     "dev:website": "cd packages/website && yarn start",
     "build:platforms:android": "cd packages/platforms/android-player && yarn build",
     "build:platforms:webos": "cd packages/platforms/webos-player && yarn build",
@@ -41,7 +41,9 @@
     "build:platforms:legacy": "cd packages/platforms/legacy-adapter-player && yarn build",
     "build:platforms": "yarn run build:platforms:android && yarn run build:platforms:webos && yarn run build:platforms:electron && yarn run build:platforms:legacy",
     "build:all": "yarn run build:ui-common && yarn run build:cache && yarn run build:player && yarn run build:device && yarn run build:dashboard && yarn run build:widged && yarn run build:platforms",
-    "build:server": "yarn run build:ui-common && yarn run build:cache && yarn run build:player && yarn run build:device"
+    "build:server": "yarn run build:ui-common && yarn run build:cache && yarn run build:player && yarn run build:device",
+    "check-translations": "cd packages/dashboard && yarn check-translations",
+    "prepare": "husky"
   },
   "workspaces": [
     "packages/cache",
@@ -57,6 +59,8 @@
   "devDependencies": {
     "@eslint/js": "^9.20.0",
     "eslint": "^9.20.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.4",
     "typescript": "^5.0.0",
     "typescript-eslint": "^8.23.0"
   },
@@ -64,6 +68,17 @@
     "@docusaurus/core": "^3.9.1",
     "@docusaurus/module-type-aliases": "^3.9.1",
     "@docusaurus/preset-classic": "^3.9.1"
+  },
+  "lint-staged": {
+    "packages/**/*.{js,jsx,ts,tsx,css,md}": "prettier --write",
+    "packages/**/*.json": [
+      "prettier --write"
+    ],
+    "packages/dashboard/src/i18n/locales/*.json": [
+      "prettier --write",
+      "cd packages/dashboard && node scripts/check-missing-translations.cjs"
+    ],
+    "packages/castmill/**/*.{ex,exs}": "cd packages/castmill && mix format && cd ../.."
   },
   "resolutions": {
     "glob": "^10.3.10",

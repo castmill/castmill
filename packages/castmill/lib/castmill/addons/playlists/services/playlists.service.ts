@@ -22,6 +22,12 @@ type HandleResponseOptions = {
 export interface PlaylistUpdate {
   name: string;
   description: string;
+  settings?: {
+    aspect_ratio?: {
+      width: number;
+      height: number;
+    };
+  };
 }
 
 interface PlaylistItemInsertPayload {
@@ -50,14 +56,19 @@ async function handleResponse<T = any>(
     }
   } else {
     let errMsg = '';
+    let errorData: any = null;
     try {
-      const { errors } = await response.json();
-      errMsg = `${errors.detail || response.statusText}`;
+      const jsonResponse = await response.json();
+      errorData = jsonResponse.errors;
+      errMsg = `${errorData.detail || response.statusText}`;
     } catch (error) {
       errMsg = `${response.statusText}`;
     }
-    // Throw HttpError with status code for better error handling
-    throw new HttpError(errMsg, response.status);
+    // Throw HttpError with status code and error data for better error handling
+    const httpError = new HttpError(errMsg, response.status);
+    // Attach additional error data (like channels list) to the error object
+    (httpError as any).errorData = errorData;
+    throw httpError;
   }
 }
 
@@ -67,12 +78,31 @@ export const PlaylistsService = {
    *
    * @returns JsonPlaylist
    */
-  async addPlaylist(baseUrl: string, organizationId: string, name: string, teamId?: number | null) {
-    const playlistData: { name: string; team_id?: number } = { name };
+  async addPlaylist(
+    baseUrl: string,
+    organizationId: string,
+    name: string,
+    aspectRatio?: { width: number; height: number },
+    teamId?: number | null
+  ) {
+    const playlistData: {
+      name: string;
+      team_id?: number;
+      settings?: {
+        aspect_ratio?: { width: number; height: number };
+      };
+    } = { name };
+
     if (teamId !== null && teamId !== undefined) {
       playlistData.team_id = teamId;
     }
-    
+
+    if (aspectRatio) {
+      playlistData.settings = {
+        aspect_ratio: aspectRatio,
+      };
+    }
+
     const response = await fetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/playlists`,
       {
@@ -96,7 +126,14 @@ export const PlaylistsService = {
   async fetchPlaylists(
     baseUrl: string,
     organizationId: string,
-    { page, page_size, sortOptions, search, filters, team_id }: FetchPlaylistsOptions
+    {
+      page,
+      page_size,
+      sortOptions,
+      search,
+      filters,
+      team_id,
+    }: FetchPlaylistsOptions
   ) {
     const filtersToString = (filters: Record<string, string | boolean>) => {
       return Object.entries(filters)
@@ -296,7 +333,7 @@ export const PlaylistsService = {
       }
     );
 
-    handleResponse(response);
+    await handleResponse(response);
   },
 
   /**
@@ -320,7 +357,7 @@ export const PlaylistsService = {
       }
     );
 
-    handleResponse(response);
+    await handleResponse(response);
   },
 
   async getWidgets(baseUrl: string, organizationId: string, search?: string) {

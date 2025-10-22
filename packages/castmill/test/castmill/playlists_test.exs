@@ -495,4 +495,41 @@ defmodule Castmill.PlaylistsTest do
              }) == [playlist2]
     end
   end
+
+  describe "playlist aspect ratio validation" do
+    test "accepts valid aspect ratio" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+
+      playlist =
+        playlist_fixture(%{
+          organization_id: organization.id,
+          settings: %{aspect_ratio: %{width: 16, height: 9}}
+        })
+
+      # Verify playlist was created with settings
+      assert playlist.settings != nil
+      assert is_map(playlist.settings)
+    end
+
+    test "updates playlist aspect ratio" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+
+      playlist =
+        playlist_fixture(%{
+          organization_id: organization.id,
+          settings: %{aspect_ratio: %{width: 16, height: 9}}
+        })
+
+      {:ok, updated_playlist} =
+        Castmill.Resources.update(playlist, %{
+          settings: %{aspect_ratio: %{width: 9, height: 16}}
+        })
+
+      # Verify update succeeded
+      assert updated_playlist.settings != nil
+      assert is_map(updated_playlist.settings)
+    end
+  end
 end

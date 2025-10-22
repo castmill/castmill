@@ -3,6 +3,7 @@ import { Component, createEffect, createSignal, Show } from 'solid-js';
 
 import { Button, FormItem, TabItem, Tabs, useToast } from '@castmill/ui-common';
 import { OrganizationMembersView } from './organization-members-view';
+import { LogoSettings } from './logo-settings';
 import { store, setStore } from '../../store';
 import { usePermissions } from '../../hooks/usePermissions';
 import { BsCheckLg } from 'solid-icons/bs';
@@ -19,6 +20,11 @@ const OrganizationPage: Component = () => {
   const toast = useToast();
 
   const [name, setName] = createSignal(store.organizations.selectedName!);
+  const [logoMediaId, setLogoMediaId] = createSignal<number | null>(
+    store.organizations.data.find(
+      (org) => org.id === store.organizations.selectedId
+    )?.logo_media_id || null
+  );
   const [previousOrgId, setPreviousOrgId] = createSignal(
     store.organizations.selectedId
   );
@@ -51,6 +57,10 @@ const OrganizationPage: Component = () => {
     // Only reset the form when switching to a different organization
     if (store.organizations.selectedId !== previousOrgId()) {
       setName(store.organizations.selectedName);
+      const currentOrg = store.organizations.data.find(
+        (org) => org.id === store.organizations.selectedId
+      );
+      setLogoMediaId(currentOrg?.logo_media_id || null);
       setIsFormModified(false);
       setPreviousOrgId(store.organizations.selectedId);
     }
@@ -123,22 +133,40 @@ const OrganizationPage: Component = () => {
         </Show>
       ),
     },
-    // Only show Invitations tab if user can invite members
-    ...(canPerformAction('organizations', 'create')
-      ? [
-          {
-            title: t('organization.invitations'),
-            content: () => (
-              <Show when={store.organizations.selectedId}>
-                <OrganizationInvitationsView
-                  organizationId={store.organizations.selectedId!}
-                  onRemove={() => {}}
-                />
-              </Show>
-            ),
-          },
-        ]
-      : []),
+    {
+      title: t('organization.invitations'),
+      content: () => (
+        <Show
+          when={canPerformAction('organizations', 'create')}
+          fallback={
+            <div class={style['permission-warning']}>
+              {t('organization.noCreateOrganizations')}
+            </div>
+          }
+        >
+          <Show when={store.organizations.selectedId}>
+            <OrganizationInvitationsView
+              organizationId={store.organizations.selectedId!}
+              onRemove={() => {}}
+            />
+          </Show>
+        </Show>
+      ),
+    },
+    // Settings tab for organization configuration
+    {
+      title: t('organization.settings'),
+      content: () => (
+        <Show when={store.organizations.selectedId}>
+          <LogoSettings
+            organizationId={store.organizations.selectedId!}
+            currentLogoMediaId={logoMediaId() || undefined}
+            onLogoUpdate={(newLogoMediaId) => setLogoMediaId(newLogoMediaId)}
+            disabled={!canEdit()}
+          />
+        </Show>
+      ),
+    },
   ];
 
   return (

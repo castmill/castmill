@@ -4,6 +4,7 @@
     "cancel": "إلغاء",
     "delete": "حذف",
     "edit": "تعديل",
+    "rename": "إعادة تسمية",
     "add": "إضافة",
     "remove": "إزالة",
     "close": "إغلاق",
@@ -61,6 +62,7 @@
     "online": "متصل",
     "update": "تحديث",
     "reset": "إعادة تعيين",
+    "apply": "تطبيق",
     "addedOn": "تمت الإضافة في",
     "lastUpdatedOn": "آخر تحديث في",
     "details": "التفاصيل",
@@ -78,7 +80,11 @@
       "teamClear": "مسح تصفية الفريق"
     },
     "addonError": "خطأ في الإضافة",
-    "backToLogin": "العودة لتسجيل الدخول"
+    "backToLogin": "العودة لتسجيل الدخول",
+    "selectVideo": "اختر فيديو",
+    "offline": "[TODO: Translate] Offline",
+    "selectImage": "اختر صورة",
+    "selectMedia": "اختر وسائط"
   },
   "topbar": {
     "help": "مساعدة",
@@ -135,7 +141,10 @@
     "deleteAccountDescription": "حذف حسابك وجميع البيانات المرتبطة بشكل دائم. لا يمكن التراجع عن هذا الإجراء.",
     "deleteAccountButton": "حذف الحساب",
     "deleteAccountConfirm": "هل أنت متأكد؟",
-    "deleteAccountWarning": "سيؤدي هذا إلى حذف حسابك بشكل دائم.",
+    "deleteAccountWarning": "سيؤدي هذا إلى حذف حسابك بشكل دائم وإزالة جميع مفاتيح المرور من خوادمنا. ومع ذلك، ستبقى مفاتيح المرور المخزنة على أجهزتك (في iCloud Keychain أو Google Password Manager أو Windows Hello وما إلى ذلك) ويجب إزالتها يدويًا.",
+    "deleteAccountWarningWithSignalAPI": "سيؤدي هذا إلى حذف حسابك بشكل دائم وإزالة جميع مفاتيح المرور من خوادمنا. يدعم متصفحك الإزالة التلقائية لمفاتيح المرور.",
+    "deleteAccountPasskeyInfo": "بعد الحذف، إذا حاولت تسجيل الدخول باستخدام مفتاح مرور قديم، فسيفشل. لتجنب الارتباك، يرجى إزالة مفاتيح المرور لهذا الحساب يدويًا من إعدادات جهازك.",
+    "deleteAccountPasskeyInfoWithSignalAPI": "بعد الحذف، ستتم إزالة مفاتيح المرور تلقائيًا من جهازك. إذا حاولت تسجيل الدخول لاحقًا، فستحتاج إلى إنشاء حساب جديد.",
     "deleteAccountYes": "نعم، احذف الحساب",
     "retry": "إعادة المحاولة",
     "errors": {
@@ -148,7 +157,11 @@
       "sessionExpired": "خطأ في المصادقة: ربما انتهت صلاحية جلستك. يرجى تحديث الصفحة والمحاولة مرة أخرى.",
       "addPasskeyFailed": "فشل إضافة مفتاح المرور: {{error}}",
       "addPasskey": "فشل إضافة مفتاح مرور جديد. يرجى المحاولة مرة أخرى."
-    }
+    },
+    "deleteAccountSuccess": "تم حذف الحساب بنجاح. جارٍ إعادة التوجيه...",
+    "deleteAccountError": "فشل حذف الحساب. يرجى المحاولة مرة أخرى.",
+    "soleAdministratorError": "لا يمكن حذف الحساب. أنت المسؤول الوحيد لـ '{{orgName}}' التي لديها أعضاء آخرون. يرجى ترقية مستخدم آخر إلى مسؤول أولاً.",
+    "soleAdministratorErrorGeneric": "لا يمكن حذف الحساب. أنت المسؤول الوحيد لواحدة أو أكثر من المنظمات التي لديها أعضاء آخرون. يرجى ترقية مستخدم آخر إلى مسؤول أولاً."
   },
   "usage": {
     "title": "الاستخدام",
@@ -167,12 +180,24 @@
       "fetchUsageData": "فشل جلب بيانات الاستخدام: {{error}}"
     }
   },
+  "content": {
+    "title": "المحتوى",
+    "description": "نظرة عامة على موارد المحتوى واستخدام الحصة",
+    "playlists": "قوائم التشغيل",
+    "medias": "ملفات الوسائط",
+    "storage": "التخزين",
+    "widgets": "الأدوات",
+    "used": "المستخدم",
+    "total": "الإجمالي",
+    "loadingUsageData": "جاري تحميل بيانات الاستخدام...",
+    "quotaLimitReached": "تم الوصول إلى حد الحصة",
+    "approachingLimit": "الاقتراب من الحد",
+    "noUsageData": "لا توجد بيانات استخدام متاحة",
+    "unableToLoad": "تعذر تحميل معلومات استخدام الموارد"
+  },
   "teams": {
     "title": "الفرق",
-    "members": {
-      "selectUser": "اختر مستخدمًا",
-      "searchUser": "البحث عن مستخدم..."
-    },
+    "members": "TODO: Translate - Members",
     "invitations": "الدعوات",
     "invitationAcceptSuccess": "تم قبول الدعوة بنجاح",
     "invitationDeleteSuccess": "تم حذف الدعوة بنجاح",
@@ -230,7 +255,8 @@
       "memberRemoved": "تمت إزالة العضو {{name}} بنجاح",
       "membersRemoved": "تمت إزالة الأعضاء بنجاح",
       "invitationSent": "تم إرسال الدعوة إلى {{email}}",
-      "leftTeam": "لقد غادرت الفريق {{name}}"
+      "leftTeam": "لقد غادرت الفريق {{name}}",
+      "roleUpdated": "تم تحديث الدور بنجاح لـ {{name}}"
     },
     "invitation": {
       "title": "دعوة الفريق",
@@ -239,6 +265,17 @@
       "expired": "انتهت صلاحية هذه الدعوة.",
       "accepting": "جاري القبول...",
       "accept": "قبول الدعوة"
+    },
+    "memberSelection": {
+      "selectUser": "اختر مستخدمًا",
+      "searchUser": "البحث عن مستخدم..."
+    },
+    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully",
+    "dialogs": {
+      "removeMemberTitle": "إزالة المستخدم من الفريق",
+      "removeMemberMessage": "هل أنت متأكد أنك تريد إزالة العضو \"{{name}}\" من الفريق؟",
+      "removeMembersTitle": "إزالة الأعضاء من الفريق",
+      "removeMembersMessage": "هل أنت متأكد أنك تريد إزالة الأعضاء التالية من الفريق؟"
     }
   },
   "login": {
@@ -261,7 +298,14 @@
   "errors": {
     "generic": "حدث خطأ. يرجى المحاولة مرة أخرى.",
     "networkError": "خطأ في الشبكة. يرجى التحقق من اتصالك.",
-    "unauthorized": "غير مصرح. يرجى تسجيل الدخول مرة أخرى."
+    "unauthorized": "غير مصرح. يرجى تسجيل الدخول مرة أخرى.",
+    "unknownResourceType": "نوع مورد غير معروف: {{resourceType}}",
+    "serverUnreachable": "تعذر الاتصال بالخادم",
+    "serverUnreachableDescription": "الخادم الخلفي غير قابل للوصول حالياً. يعني هذا عادةً أن الخادم لا يعمل أو أن هناك مشكلة في الشبكة.",
+    "checkServerRunning": "تأكد من تشغيل خادم Castmill",
+    "checkNetworkConnection": "تحقق من اتصال الشبكة",
+    "checkServerUrl": "تحقق من عنوان URL للخادم في التكوين",
+    "retryConnection": "إعادة محاولة الاتصال"
   },
   "sidebar": {
     "organization": "المنظمة",
@@ -272,7 +316,8 @@
     "content": "المحتوى",
     "playlists": "قوائم التشغيل",
     "medias": "الوسائط",
-    "widgets": "Widgets"
+    "widgets": "Widgets",
+    "members": "[TODO: Translate] Members"
   },
   "channels": {
     "title": "القنوات",
@@ -284,27 +329,34 @@
     "removeChannels": "إزالة القنوات",
     "confirmRemoveChannel": "هل أنت متأكد من أنك تريد إزالة القناة \"{{name}}\"؟",
     "confirmRemoveChannels": "هل أنت متأكد من أنك تريد إزالة القنوات التالية؟",
+    "enterChannelName": "أدخل اسم القناة",
+    "defaultPlaylist": "قائمة التشغيل الافتراضية",
+    "selectPlaylist": "اختر قائمة التشغيل",
+    "clearDefaultPlaylist": "مسح قائمة التشغيل الافتراضية",
+    "dragPlaylists": "اسحب قوائم التشغيل",
+    "repeatWeekly": "التكرار أسبوعيًا؟",
+    "calendarEntryDetails": "تفاصيل إدخال التقويم",
+    "removeChannelEntry": "إزالة إدخال القناة",
+    "cannotDeleteChannel": "لا يمكن حذف القناة",
+    "success": {
+      "updateDefaultPlaylist": "تم تحديث قائمة التشغيل الافتراضية بنجاح",
+      "clearDefaultPlaylist": "تم مسح قائمة التشغيل الافتراضية بنجاح"
+    },
     "errors": {
       "removeChannel": "خطأ في إزالة القناة {{name}}: {{error}}",
       "removeChannels": "خطأ في إزالة القنوات: {{error}}",
       "addChannel": "خطأ في إضافة القناة: {{error}}",
       "saveChannel": "خطأ في حفظ القناة: {{error}}",
       "updateDefaultPlaylist": "فشل تحديث قائمة التشغيل الافتراضية للقناة: {{error}}",
+      "clearDefaultPlaylist": "فشل مسح قائمة التشغيل الافتراضية للقناة: {{error}}",
       "updateChannelEntry": "خطأ في تحديث إدخال القناة: {{error}}"
-    },
-    "enterChannelName": "أدخل اسم القناة",
-    "defaultPlaylist": "قائمة التشغيل الافتراضية",
-    "selectPlaylist": "اختر قائمة التشغيل",
-    "dragPlaylists": "اسحب قوائم التشغيل",
-    "repeatWeekly": "التكرار أسبوعيًا؟",
-    "calendarEntryDetails": "تفاصيل إدخال التقويم",
-    "removeChannelEntry": "إزالة إدخال القناة",
-    "cannotDeleteChannel": "لا يمكن حذف القناة"
+    }
   },
   "organization": {
     "title": "المنظمة",
     "users": "المستخدمون",
     "invitations": "الدعوات",
+    "settings": "الإعدادات",
     "update": "تحديث",
     "placeholderName": "أدخل اسم المنظمة",
     "inviteMember": "دعوة عضو",
@@ -324,11 +376,29 @@
       "emailRequired": "البريد الإلكتروني مطلوب",
       "invalidEmail": "بريد إلكتروني غير صالح",
       "cannotRemoveLastAdmin": "لا يمكنك إزالة آخر مشرف للمؤسسة.",
-      "invalidRole": "الدور المحدد غير صالح لهذه المؤسسة."
+      "invalidRole": "الدور المحدد غير صالح لهذه المؤسسة.",
+      "mediaInUseAsLogo": "لا يمكن حذف الوسائط المستخدمة كشعار للمؤسسة",
+      "loadMedias": "فشل تحميل الوسائط",
+      "updateRoleFailed": "فشل تحديث دور العضو",
+      "cannotRemoveLastUser": "لا يمكنك المغادرة لأنك العضو الوحيد في هذه المنظمة."
+    },
+    "teamRoleDescriptions": {
+      "admin": "يمكنه إدارة أعضاء الفريق والموارد",
+      "member": "يمكنه الوصول وتحرير موارد الفريق",
+      "installer": "رمز مؤقت لتسجيل الجهاز (ينتهي خلال 24 ساعة)"
+    },
+    "dialogs": {
+      "removeMemberTitle": "إزالة المستخدم من المنظمة",
+      "removeMemberMessage": "هل أنت متأكد أنك تريد إزالة العضو \"{{name}}\" من المنظمة؟",
+      "removeMembersTitle": "إزالة الأعضاء من المنظمة",
+      "removeMembersMessage": "هل أنت متأكد أنك تريد إزالة الأعضاء التالية من المنظمة؟"
     },
     "messages": {
       "memberRemoved": "تمت إزالة العضو {{name}} بنجاح",
-      "membersRemoved": "تمت إزالة الأعضاء بنجاح"
+      "membersRemoved": "تمت إزالة الأعضاء بنجاح",
+      "invitationSent": "تم إرسال الدعوة إلى {{email}}",
+      "leftOrganization": "لقد غادرت المنظمة {{name}}",
+      "noOrganizationsRemaining": "لقد غادرت منظمتك الأخيرة. يرجى الاتصال بالمسؤول ليتم دعوتك إلى منظمة."
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {
@@ -340,11 +410,22 @@
       "device_manager": "إدارة كاملة للأجهزة والقنوات",
       "guest": "وصول للقراءة فقط إلى الموارد"
     },
-    "teamRoleDescriptions": {
-      "admin": "يمكنه إدارة أعضاء الفريق والموارد",
-      "member": "يمكنه الوصول وتحرير موارد الفريق",
-      "installer": "رمز مؤقت لتسجيل الجهاز (ينتهي خلال 24 ساعة)"
-    }
+    "leaveOrganizationTitle": "مغادرة هذه المنظمة",
+    "leaveOrganizationDescription": "المغادرة تزيل وصولك إلى موارد المنظمة على الفور.",
+    "leaveOrganizationAction": "مغادرة المنظمة",
+    "leaveOrganizationLastAdminWarning": "أضف مسؤولاً آخر قبل المغادرة للحفاظ على إدارة هذه المنظمة.",
+    "leaveOrganizationLastUserWarning": "لا يمكنك المغادرة لأنك العضو الوحيد في هذه المنظمة.",
+    "leaveLastOrganizationWarningTitle": "مغادرة منظمتك الأخيرة؟",
+    "leaveLastOrganizationWarningMessage": "هذه هي منظمتك الوحيدة. مغادرتها ستحذف حسابك وستفقد كل الوصول إلى Castmill. ستحتاج إلى الاتصال بمسؤول لتتم دعوتك مرة أخرى. هل أنت متأكد أنك تريد المتابعة؟",
+    "logo": "الشعار",
+    "logoSettings": "إعدادات الشعار",
+    "selectLogo": "اختر الشعار",
+    "removeLogo": "إزالة الشعار",
+    "logoDescription": "اختر ملف وسائط لاستخدامه كشعار لمؤسستك. سيتم عرضه في الشريط العلوي.",
+    "logoUpdated": "تم تحديث الشعار بنجاح",
+    "logoRemoved": "تم إزالة الشعار بنجاح",
+    "noLogo": "لم يتم اختيار شعار",
+    "noMediasAvailable": "لا توجد صور متاحة. يرجى تحميل صورة أولاً."
   },
   "playlists": {
     "title": "قوائم التشغيل",
@@ -352,6 +433,9 @@
     "createNewPlaylist": "إنشاء قائمة تشغيل جديدة",
     "playlistTitle": "قائمة التشغيل \"{{name}}\"",
     "buildPlaylist": "أنشئ قائمة التشغيل هنا",
+    "renamePlaylist": "إعادة تسمية قائمة التشغيل",
+    "playlistUpdated": "تم تحديث قائمة التشغيل \"{{name}}\" بنجاح",
+    "errorUpdating": "خطأ في تحديث قائمة التشغيل {{name}}: {{error}}",
     "removePlaylist": "إزالة قائمة التشغيل",
     "removePlaylists": "إزالة قوائم التشغيل",
     "confirmRemovePlaylist": "هل أنت متأكد من أنك تريد إزالة قائمة التشغيل \"{{name}}\"؟",
@@ -359,7 +443,33 @@
     "errorRemovingPlaylist": "خطأ في إزالة قائمة التشغيل {{name}}: {{error}}",
     "errorRemovingPlaylists": "خطأ في إزالة قوائم التشغيل: {{error}}",
     "enterPlaylistName": "أدخل اسم قائمة التشغيل",
-    "dragToAdd": "اسحب للإضافة"
+    "dragToAdd": "اسحب للإضافة",
+    "aspectRatio": "نسبة العرض إلى الارتفاع",
+    "aspectRatioWidth": "العرض",
+    "aspectRatioHeight": "الارتفاع",
+    "aspectRatioUpdated": "تم تحديث نسبة العرض إلى الارتفاع بنجاح",
+    "customAspectRatio": "نسبة عرض مخصصة",
+    "enterCustomRatio": "أدخل نسبة العرض المخصصة",
+    "aspectRatioPresets": {
+      "16:9": "16:9 (أفقي)",
+      "9:16": "9:16 (عمودي)",
+      "4:3": "4:3 (كلاسيكي)",
+      "3:4": "3:4 (عمودي)",
+      "21:9": "21:9 (عريض جداً)",
+      "16:3": "16:3 (رف/شريط)",
+      "3:16": "3:16 (رف/شريط عمودي)",
+      "1:1": "1:1 (مربع)",
+      "custom": "مخصص"
+    },
+    "errors": {
+      "nameRequired": "الاسم مطلوب",
+      "nameMinLength": "يجب أن يتكون الاسم من 3 أحرف على الأقل",
+      "aspectRatioNumber": "يجب أن يكون رقمًا",
+      "aspectRatioPositive": "يجب أن يكون رقمًا موجبًا",
+      "aspectRatioMax": "يجب أن تكون القيمة 100 أو أقل",
+      "aspectRatioExtreme": "نسبة العرض إلى الارتفاع متطرفة للغاية (الحد الأقصى 10:1)",
+      "updateAspectRatio": "خطأ في تحديث نسبة العرض: {{error}}"
+    }
   },
   "widgets": {
     "title": "Widgets",
@@ -491,7 +601,17 @@
       "emailAddress": "عنوان البريد الإلكتروني",
       "expired": "انتهت صلاحية هذه الدعوة.",
       "loginToAccept": "تسجيل الدخول لقبول هذه الدعوة",
-      "createAccount": "أنشئ حسابك لقبول هذه الدعوة"
+      "createAccount": "أنشئ حسابك لقبول هذه الدعوة",
+      "reject": "رفض الدعوة",
+      "rejecting": "جاري الرفض...",
+      "chooseAction": "يرجى اختيار قبول أو رفض الدعوة",
+      "acceptSuccess": "تم قبول الدعوة بنجاح",
+      "acceptError": "خطأ في قبول الدعوة",
+      "rejectSuccess": "تم رفض الدعوة بنجاح",
+      "rejectError": "خطأ في رفض الدعوة",
+      "accountCreated": "تم إنشاء الحساب بنجاح!",
+      "accountCreationFailed": "فشل إنشاء الحساب",
+      "passkeysNotSupported": "مفاتيح المرور غير مدعومة في هذا المتصفح"
     },
     "notifications": {
       "title": "الإشعارات",

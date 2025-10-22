@@ -133,9 +133,26 @@ defmodule CastmillWeb.OrganizationController do
     {:ok, Organizations.is_admin?(organization_id, actor_id)}
   end
 
+  def check_access(actor_id, :remove_member, %{
+        "organization_id" => organization_id,
+        "user_id" => user_id
+      }) do
+    # Allow users to remove themselves OR admins to remove others
+    if actor_id == user_id do
+      {:ok, Organizations.has_any_role?(organization_id, actor_id, [:admin, :manager, :member])}
+    else
+      {:ok, Organizations.is_admin?(organization_id, actor_id)}
+    end
+  end
+
   def check_access(actor_id, action, %{"token" => token})
       when action in [:show_invitation, :accept_invitation] do
     validInvitation?(actor_id, token)
+  end
+
+  def check_access(_actor_id, :reject_invitation, %{"token" => _token}) do
+    # Anyone with a valid token can reject an invitation (no auth required)
+    {:ok, true}
   end
 
   # Default implementation for other actions not explicitly handled above
@@ -509,6 +526,25 @@ defmodule CastmillWeb.OrganizationController do
         conn
         |> put_status(:unprocessable_entity)
         |> json(%{errors: errors})
+
+      {:error, _} ->
+        conn
+        |> put_status(:bad_request)
+        |> json(%{})
+    end
+  end
+
+  def reject_invitation(conn, %{"token" => token}) do
+    case Organizations.reject_invitation(token) do
+      {:ok, _} ->
+        conn
+        |> put_status(:ok)
+        |> json(%{})
+
+      {:error, message} when is_binary(message) ->
+        conn
+        |> put_status(:bad_request)
+        |> json(%{error: message})
 
       {:error, _} ->
         conn

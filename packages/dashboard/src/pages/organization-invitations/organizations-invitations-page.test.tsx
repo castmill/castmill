@@ -433,11 +433,11 @@ describe('OrganizationsInvitationPage', () => {
       renderComponent();
 
       await waitFor(() => {
-        const acceptButton = screen.getByRole('button');
+        const acceptButton = screen.getByText('Accept Invitation');
         expect(acceptButton).toBeInTheDocument();
       });
 
-      const acceptButton = screen.getByRole('button');
+      const acceptButton = screen.getByText('Accept Invitation');
       fireEvent.click(acceptButton);
 
       await waitFor(() => {

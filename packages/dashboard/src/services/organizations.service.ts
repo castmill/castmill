@@ -201,6 +201,29 @@ export const OrganizationsService = {
   },
 
   /**
+   * Reject an invitation to an Organization.
+   *
+   * @param token
+   * @returns
+   */
+  async rejectInvitation(token: string) {
+    const response = await fetch(
+      `${baseUrl}/dashboard/organizations_invitations/${token}/reject`,
+      {
+        method: 'POST',
+        credentials: 'include',
+      }
+    );
+
+    if (response.status === 200) {
+      return await response.json();
+    } else {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Failed to reject invitation');
+    }
+  },
+
+  /**
    *
    * Remove an invitation from an Organization.
    *
@@ -271,6 +294,69 @@ export const OrganizationsService = {
       error.status = response.status;
       error.data = errorData;
       throw error;
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Fetch a specific media belonging to an organization.
+   */
+  async fetchMedia(organizationId: string, mediaId: number) {
+    const response = await fetch(
+      `${baseUrl}/dashboard/organizations/${organizationId}/medias/${mediaId}`,
+      {
+        method: 'GET',
+        credentials: 'include',
+      }
+    );
+
+    if (!response.ok) {
+      const error = new Error('Failed to fetch organization media');
+      (error as any).status = response.status;
+      throw error;
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Update a member's role in an Organization.
+   *
+   */
+  async updateMemberRole(
+    organizationId: string,
+    memberId: string,
+    role: OrganizationRole
+  ) {
+    const response = await fetch(`${baseUrl}/dashboard/users/${memberId}`, {
+      method: 'PUT',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        access: role,
+        organization_id: organizationId,
+      }),
+    });
+
+    if (!response.ok) {
+      let errorMessage = 'Failed to update member role';
+
+      try {
+        const errorData = await response.json();
+        if (typeof errorData?.error === 'string') {
+          errorMessage = errorData.error;
+        }
+      } catch (error) {
+        console.error(
+          'Failed to parse update member role error response',
+          error
+        );
+      }
+
+      throw new HttpError(errorMessage, response.status);
     }
   },
 };

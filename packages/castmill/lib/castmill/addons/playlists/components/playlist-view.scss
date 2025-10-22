@@ -1,41 +1,62 @@
-.playlist-view {
+.playlist-view-container {
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
-  align-items: center;
   width: 100%;
-  height: 94%;
-  gap: 1em;
+  flex: 1; // Fill available vertical space inside modal body
+  padding-top: 1em;
+  min-height: 0; // Allow shrinking inside flex chain
+  gap: 0;
+  box-sizing: border-box;
+}
 
-  .playlist-preview {
+.playlist-view {
+  display: flex;
+  flex-direction: row; // Always use row layout
+  width: 100%;
+  flex: 1; // Take remaining space after header
+  height: 100%;
+  min-height: 0; // Allow shrinking to fit container
+  overflow: hidden; // Prevent overflow
+  justify-content: flex-start;
+  align-items: stretch;
+  gap: 0.5em;
+
+  .playlist-preview-wrapper {
     display: flex;
-    width: 60%;
-    height: 40%;
-    background: black;
     justify-content: center;
     align-items: center;
+    flex: 1 1 auto; // Grow and shrink to fill remaining space
+    height: 100%;
+    min-width: 0;
+    min-height: 0;
+    align-self: stretch;
+
+    .playlist-preview {
+      display: flex;
+      background: black;
+      max-width: 100%;
+      max-height: 100%;
+      height: 100%;
+      width: auto;
+      position: relative; // Create positioning context for absolute children
+    }
+
+    // When container is narrower than target aspect ratio, constrain by width instead
+    &.constrain-by-width .playlist-preview {
+      width: 100%;
+      height: auto;
+    }
   }
 
   .playlist-items-wrapper {
     display: flex;
     flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    height: 55%;
-
-    .widget-list {
-      height: 100%;
-      background: gray;
-      margin-left: 2em;
-      display: flex;
-      padding: 0;
-      justify-content: flex-start;
-      align-items: stretch;
-      flex-direction: column;
-      overflow: hidden;
-      border-radius: 0.5em;
-    }
+    justify-content: flex-start;
+    align-items: stretch;
+    width: auto;
+    flex: 0 0 auto; // Don't grow or shrink
+    align-self: stretch; // Stretch to fill parent height
+    min-height: 0; // Allow shrinking
 
     .drag-indicator {
       display: flex;
@@ -43,7 +64,6 @@
       align-items: center;
       justify-content: center;
       gap: 0.5em;
-      margin: 0 1em;
       opacity: 0.7;
       transition: opacity 0.3s ease;
 
@@ -105,19 +125,71 @@
 
   .playlist-items {
     transition: background-color 0.3s ease;
-
-    overflow: auto;
-    width: 50%;
-    height: 100%;
+    padding: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-gutter: stable; // Reserve space for scrollbar always
+    flex: 1; // Grow to fill available space
+    min-height: 0; // Allow shrinking below content size
+    min-width: 24em;
     background: darkgray;
-    margin-right: 2em;
+    margin: 0em 0.7em;
     border-radius: 0.5em;
-
     flex-direction: column;
     display: flex;
     justify-content: flex-start;
-    align-items: center;
+    align-items: stretch;
     gap: 0.4em;
+
+    // Apply padding to first and last children instead of container
+    > :first-child {
+      margin-top: 0.5em;
+    }
+
+    > :last-child {
+      margin-bottom: 1em;
+    }
+
+    // Apply side margins to all direct children
+    > * {
+      margin-left: 1em;
+      margin-right: 1em; // Equal margins since scrollbar-gutter reserves space
+    }
+
+    .playlist-end-drop-zone {
+      width: calc(100% - 2em); // Account for left and right margins
+      flex: 1; // Fill all remaining space
+      background: transparent;
+      border-radius: 0.25em;
+      transition: all 0.3s ease;
+      position: relative;
+      min-height: 3em; // Minimum height to ensure it's visible
+
+      &.hovered {
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.05) 0%,
+          rgba(255, 255, 255, 0.15) 50%,
+          rgba(255, 255, 255, 0.05) 100%
+        );
+        border: 2px dashed rgba(255, 255, 255, 0.4);
+
+        &::after {
+          content: 'Drop here to add at the end';
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          font-size: 0.75em;
+          color: rgba(255, 255, 255, 0.7);
+          white-space: nowrap;
+          pointer-events: none;
+          text-transform: uppercase;
+          letter-spacing: 0.05em;
+          font-weight: 500;
+        }
+      }
+    }
   }
 }
 
@@ -150,7 +222,7 @@
   height: 1em;
 }
 
-.item[selected*=yes] {
+.item[selected*='yes'] {
   background: #f0f0f0;
   transition: none;
 }

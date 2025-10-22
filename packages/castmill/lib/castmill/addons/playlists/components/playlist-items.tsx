@@ -18,8 +18,10 @@ import { Modal } from '@castmill/ui-common';
 
 import { PlaylistItem } from './playlist-item';
 import { WidgetConfig } from './widget-config';
+import { AddonStore } from '../../common/interfaces/addon-store';
 
 export const PlaylistItems: Component<{
+  store: AddonStore;
   baseUrl: string;
   organizationId: string;
   items: JsonPlaylistItem[];
@@ -124,12 +126,14 @@ export const PlaylistItems: Component<{
 
   const changeDuration = async (item: JsonPlaylistItem, duration: number) => {
     await props.onChangeDuration(item, duration);
-  }
+  };
 
   const [isDraggedOver, setIsDraggedOver] = createSignal(false);
   const [animationEnabled, setAnimationEnabled] = createSignal(true);
+  const [endZoneHovered, setEndZoneHovered] = createSignal(false);
 
   let droppableRef: HTMLDivElement | undefined = undefined;
+  let endZoneRef: HTMLDivElement | undefined = undefined;
 
   createEffect(() => {
     if (droppableRef) {
@@ -173,6 +177,23 @@ export const PlaylistItems: Component<{
     }
   });
 
+  // Setup drop zone for the end of the list
+  createEffect(() => {
+    if (endZoneRef) {
+      const cleanup = dropTargetForElements({
+        element: endZoneRef,
+        getData: () => ({ index: props.items.length }),
+        onDragEnter: () => setEndZoneHovered(true),
+        onDragLeave: () => setEndZoneHovered(false),
+        onDrop: () => setEndZoneHovered(false),
+      });
+
+      onCleanup(() => {
+        cleanup();
+      });
+    }
+  });
+
   return (
     <>
       <div
@@ -201,6 +222,13 @@ export const PlaylistItems: Component<{
           )}
         </For>
         {/*</TransitionGroup>*/}
+
+        {/* Expandable drop zone at the end of the list */}
+        <div
+          ref={endZoneRef}
+          class="playlist-end-drop-zone"
+          classList={{ hovered: endZoneHovered() }}
+        />
       </div>
       <Show when={showModal()}>
         <Modal
@@ -209,6 +237,7 @@ export const PlaylistItems: Component<{
           onClose={() => closeDialog()}
         >
           <WidgetConfig
+            store={props.store}
             baseUrl={props.baseUrl}
             item={showModal()!}
             onSubmit={async ({ config, expandedOptions }) => {
