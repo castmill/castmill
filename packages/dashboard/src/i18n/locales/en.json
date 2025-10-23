@@ -63,8 +63,10 @@
     "ip": "IP Address",
     "description": "Description",
     "online": "Online",
+    "offline": "Offline",
     "update": "Update",
     "reset": "Reset",
+    "apply": "Apply",
     "addedOn": "Added on",
     "lastUpdatedOn": "Last updated on",
     "details": "Details",
@@ -75,6 +77,7 @@
     "events": "Events",
     "telemetry": "Telemetry",
     "selectImage": "Select an Image",
+    "selectVideo": "Select a Video",
     "selectMedia": "Select a Media",
     "youIndicator": "(you)"
   },
@@ -92,7 +95,8 @@
     "content": "Content",
     "playlists": "Playlists",
     "medias": "Medias",
-    "widgets": "Widgets"
+    "widgets": "Widgets",
+    "members": "Members"
   },
   "topbar": {
     "help": "Help",
@@ -149,7 +153,10 @@
     "deleteAccountDescription": "Permanently delete your account and all associated data. This action cannot be undone.",
     "deleteAccountButton": "Delete Account",
     "deleteAccountConfirm": "Are you sure?",
-    "deleteAccountWarning": "This will permanently delete your account.",
+    "deleteAccountWarning": "This will permanently delete your account and remove all passkeys from our servers. However, passkeys stored on your devices (in iCloud Keychain, Google Password Manager, Windows Hello, etc.) will remain and must be manually removed.",
+    "deleteAccountWarningWithSignalAPI": "This will permanently delete your account and remove all passkeys from our servers. Your browser supports automatic passkey removal.",
+    "deleteAccountPasskeyInfo": "After deletion, if you try to log in using an old passkey, it will fail. To prevent confusion, please manually remove this account's passkeys from your device settings.",
+    "deleteAccountPasskeyInfoWithSignalAPI": "After deletion, passkeys will be automatically removed from your device. If you try to log in later, you'll need to create a new account.",
     "deleteAccountYes": "Yes, Delete Account",
     "deleteAccountSuccess": "Account deleted successfully. Redirecting...",
     "deleteAccountError": "Failed to delete account. Please try again.",
@@ -210,7 +217,8 @@
     "removeTeams": "Remove Teams",
     "confirmRemoveTeam": "Are you sure you want to remove team \"{{name}}\"?",
     "confirmRemoveTeams": "Are you sure you want to remove the following teams?",
-    "members": {
+    "members": "Members",
+    "memberSelection": {
       "selectUser": "Select User",
       "searchUser": "Search for a user..."
     },
@@ -220,6 +228,7 @@
     "invitationAcceptError": "Failed to accept invitation",
     "invitationDeleteError": "Failed to delete invitation",
     "deleteSuccess": "Teams deleted successfully",
+    "teamsRemovedSuccessfully": "Teams removed successfully",
     "confirmDeleteInvitation": {
       "title": "Delete Invitation",
       "message": "Are you sure you want to delete the invitation for {{email}}?"
@@ -318,6 +327,7 @@
     "title": "Organization",
     "users": "Users",
     "invitations": "Invitations",
+    "settings": "Settings",
     "update": "Update",
     "placeholderName": "Enter organization name",
     "inviteMember": "Invite Member",
@@ -354,13 +364,23 @@
       "cannotRemoveLastAdmin": "You can't remove the last admin of an organization.",
       "invalidRole": "The selected role is not valid for this organization.",
       "cannotRemoveLastUser": "You cannot leave as you are the only member of this organization.",
-      "cannotRemoveUserFromLastOrganization": "Cannot remove this user as it is their only organization. Users must belong to at least one organization."
+      "cannotRemoveUserFromLastOrganization": "Cannot remove this user as it is their only organization. Users must belong to at least one organization.",
+      "mediaInUseAsLogo": "Cannot delete media that is being used as an organization logo",
+      "loadMedias": "Failed to load medias",
+      "updateRoleFailed": "Failed to update member role"
     },
     "messages": {
       "memberRemoved": "Member {{name}} removed successfully",
       "membersRemoved": "Members removed successfully",
+      "invitationSent": "Invitation sent to {{email}}",
       "leftOrganization": "You left the organization {{name}}",
       "noOrganizationsRemaining": "You have left your last organization. Please contact an administrator to be invited to an organization."
+    },
+    "dialogs": {
+      "removeMemberTitle": "Remove User From Organization",
+      "removeMemberMessage": "Are you sure you want to remove member \"{{name}}\" from the organization?",
+      "removeMembersTitle": "Remove Members From Organization",
+      "removeMembersMessage": "Are you sure you want to remove the following members from the organization?"
     },
     "leaveOrganizationTitle": "Leave this organization",
     "leaveOrganizationDescription": "Leaving removes your access to organization resources immediately.",
@@ -368,7 +388,16 @@
     "leaveOrganizationLastAdminWarning": "Add another admin before leaving to keep this organization managed.",
     "leaveOrganizationLastUserWarning": "You cannot leave as you are the only member of this organization.",
     "leaveLastOrganizationWarningTitle": "Leave your last organization?",
-    "leaveLastOrganizationWarningMessage": "This is your only organization. Leaving it will delete your account and you will lose all access to Castmill. You will need to contact an administrator to be invited back. Are you sure you want to proceed?"
+    "leaveLastOrganizationWarningMessage": "This is your only organization. Leaving it will delete your account and you will lose all access to Castmill. You will need to contact an administrator to be invited back. Are you sure you want to proceed?",
+    "logo": "Logo",
+    "logoSettings": "Logo Settings",
+    "selectLogo": "Select Logo",
+    "removeLogo": "Remove Logo",
+    "logoDescription": "Choose a media file to use as your organization logo. It will be displayed in the top bar.",
+    "logoUpdated": "Logo updated successfully",
+    "logoRemoved": "Logo removed successfully",
+    "noLogo": "No logo selected",
+    "noMediasAvailable": "No image medias available. Please upload an image first."
   },
   "login": {
     "title": "Login",
@@ -431,7 +460,33 @@
     "errorRemovingPlaylist": "Error removing playlist {{name}}: {{error}}",
     "errorRemovingPlaylists": "Error removing playlists: {{error}}",
     "enterPlaylistName": "Enter Playlist name",
-    "dragToAdd": "Drag to add"
+    "dragToAdd": "Drag to add",
+    "aspectRatio": "Aspect Ratio",
+    "aspectRatioWidth": "Width",
+    "aspectRatioHeight": "Height",
+    "aspectRatioUpdated": "Aspect ratio updated successfully",
+    "customAspectRatio": "Custom Aspect Ratio",
+    "enterCustomRatio": "Enter custom aspect ratio",
+    "aspectRatioPresets": {
+      "16:9": "16:9 (Landscape)",
+      "9:16": "9:16 (Portrait)",
+      "4:3": "4:3 (Classic)",
+      "3:4": "3:4 (Portrait)",
+      "21:9": "21:9 (Ultrawide)",
+      "16:3": "16:3 (Shelf/Ticker)",
+      "3:16": "3:16 (Shelf/Ticker Portrait)",
+      "1:1": "1:1 (Square)",
+      "custom": "Custom"
+    },
+    "errors": {
+      "nameRequired": "Name is required",
+      "nameMinLength": "Name must be at least 3 characters",
+      "aspectRatioNumber": "Must be a number",
+      "aspectRatioPositive": "Must be a positive number",
+      "aspectRatioMax": "Value must be 100 or less",
+      "aspectRatioExtreme": "Aspect ratio is too extreme (max ratio is 10:1)",
+      "updateAspectRatio": "Error updating aspect ratio: {{error}}"
+    }
   },
   "widgets": {
     "title": "Widgets",
@@ -558,6 +613,65 @@
       "accountCreated": "Account created successfully!",
       "accountCreationFailed": "Failed to create account",
       "passkeysNotSupported": "Passkeys are not supported in this browser"
+    },
+    "notifications": {
+      "title": "Notifications",
+      "empty": "No notifications yet",
+      "markAllRead": "Mark all as read",
+      "types": {
+        "organizationInvitation": {
+          "title": "Organization Invitation",
+          "description": "You have been invited to join {{organization_name}}"
+        },
+        "teamInvitation": {
+          "title": "Team Invitation",
+          "description": "You have been invited to join {{team_name}}"
+        },
+        "deviceRegistration": {
+          "title": "New Device Registered",
+          "description": "Device '{{device_name}}' has been registered"
+        },
+        "deviceRemoval": {
+          "title": "Device Removed",
+          "description": "Device '{{device_name}}' has been removed"
+        },
+        "mediaTranscoded": {
+          "title": "Media Transcoding Complete",
+          "description": "Media '{{media_name}}' has been successfully transcoded"
+        },
+        "mediaUploaded": {
+          "titleImage": "New Image Uploaded",
+          "titleVideo": "New Video Uploaded",
+          "titleMedia": "New Media Uploaded",
+          "descriptionImage": "Image '{{media_name}}' has been uploaded successfully",
+          "descriptionVideo": "Video '{{media_name}}' has been uploaded successfully",
+          "descriptionMedia": "Media '{{media_name}}' has been uploaded successfully"
+        },
+        "invitationAccepted": {
+          "title": "Invitation Accepted",
+          "descriptionOrg": "{{user_name}} has joined the organization",
+          "descriptionTeam": "{{user_name}} has joined the team"
+        },
+        "deviceOfflineAlert": {
+          "title": "Device Offline Alert",
+          "description": "Device '{{device_name}}' is offline when it should be online"
+        },
+        "deviceOnlineAlert": {
+          "title": "Device Online",
+          "description": "Device '{{device_name}}' is back online",
+          "descriptionWithDuration": "Device '{{device_name}}' is back online (was offline for {{offline_duration_formatted}})"
+        },
+        "memberRemoved": {
+          "title": "Member Removed",
+          "description": "{{user_name}} has been removed from the organization"
+        },
+        "teamMemberRemoved": {
+          "titleSelf": "Removed from Team",
+          "descriptionSelf": "You have been removed from team {{team_name}}",
+          "titleOthers": "Team Member Removed",
+          "descriptionOthers": "{{user_name}} has been removed from team {{team_name}}"
+        }
+      }
     }
   }
 }

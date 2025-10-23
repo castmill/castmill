@@ -3,6 +3,7 @@ export * from './form-item/form-item';
 export * from './icon-button/icon-button';
 export * from './icon-wrapper';
 export * from './modal/modal';
+export * from './media-picker/media-picker';
 export * from './pagination/pagination';
 export * from './styled-input/styled-input';
 export * from './table-view/table-view';

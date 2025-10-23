@@ -13,13 +13,28 @@
       flex-direction: row;
       justify-content: flex-start;
       align-items: center;
+      flex-wrap: wrap;
       gap: 1em;
 
       .form-input {
         margin-bottom: 1em;
       }
+
+      .form-item-wrapper {
+        flex: 1 1 30em;
+        min-width: min(100%, 28em);
+      }
     }
   }
+}
+
+.permission-warning {
+  padding: 1em;
+  border: 0.1em solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.5em;
+  background-color: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.9em;
 }
 
 .leave-organization-panel {

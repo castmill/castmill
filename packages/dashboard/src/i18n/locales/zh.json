@@ -81,7 +81,10 @@
     "addonError": "插件错误",
     "backToLogin": "返回登录",
     "selectImage": "选择图片",
-    "selectMedia": "选择媒体"
+    "selectMedia": "选择媒体",
+    "apply": "应用",
+    "selectVideo": "选择视频",
+    "offline": "[TODO: Translate] Offline"
   },
   "topbar": {
     "help": "帮助",
@@ -138,7 +141,7 @@
     "deleteAccountDescription": "永久删除您的账户和所有相关数据。此操作无法撤销。",
     "deleteAccountButton": "删除账户",
     "deleteAccountConfirm": "您确定吗？",
-    "deleteAccountWarning": "这将永久删除您的账户。",
+    "deleteAccountWarning": "这将永久删除您的账户并从我们的服务器中删除所有密钥。但是，存储在您设备上的密钥（在iCloud钥匙串、Google密码管理器、Windows Hello等中）将保留，必须手动删除。",
     "deleteAccountYes": "是的，删除账户",
     "retry": "重试",
     "errors": {
@@ -155,7 +158,10 @@
     "deleteAccountSuccess": "账户已成功删除。正在重定向...",
     "deleteAccountError": "删除账户失败。请重试。",
     "soleAdministratorError": "无法删除账户。您是 '{{orgName}}' 的唯一管理员，该组织还有其他成员。请先将另一个用户提升为管理员。",
-    "soleAdministratorErrorGeneric": "无法删除账户。您是一个或多个有其他成员的组织的唯一管理员。请先将另一个用户提升为管理员。"
+    "soleAdministratorErrorGeneric": "无法删除账户。您是一个或多个有其他成员的组织的唯一管理员。请先将另一个用户提升为管理员。",
+    "deleteAccountWarningWithSignalAPI": "这将永久删除您的账户并从我们的服务器中删除所有密钥。您的浏览器支持自动删除密钥。",
+    "deleteAccountPasskeyInfo": "删除后，如果您尝试使用旧密钥登录，将会失败。为避免混淆，请从您的设备设置中手动删除此账户的密钥。",
+    "deleteAccountPasskeyInfoWithSignalAPI": "删除后，密钥将自动从您的设备中删除。如果您以后尝试登录，则需要创建新账户。"
   },
   "usage": {
     "title": "使用情况",
@@ -191,10 +197,7 @@
   },
   "teams": {
     "title": "团队",
-    "members": {
-      "selectUser": "选择用户",
-      "searchUser": "搜索用户..."
-    },
+    "members": "TODO: Translate - Members",
     "invitations": "邀请",
     "invitationAcceptSuccess": "邀请接受成功",
     "invitationDeleteSuccess": "邀请删除成功",
@@ -268,7 +271,12 @@
       "removeMemberMessage": "您确定要从团队中移除成员\"{{name}}\"吗？",
       "removeMembersTitle": "从团队中移除成员",
       "removeMembersMessage": "您确定要从团队中移除以下成员吗？"
-    }
+    },
+    "memberSelection": {
+      "selectUser": "选择用户",
+      "searchUser": "搜索用户..."
+    },
+    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully"
   },
   "login": {
     "title": "登录",
@@ -308,7 +316,8 @@
     "content": "内容",
     "playlists": "播放列表",
     "medias": "媒体",
-    "widgets": "Widgets"
+    "widgets": "Widgets",
+    "members": "[TODO: Translate] Members"
   },
   "channels": {
     "title": "频道",
@@ -367,14 +376,18 @@
       "invalidEmail": "无效的电子邮件",
       "cannotRemoveLastAdmin": "你不能移除组织最后一位管理员。",
       "invalidRole": "所选角色对该组织无效。",
-      "cannotRemoveLastUser": "您无法离开，因为您是此组织的唯一成员。",
-      "cannotRemoveUserFromLastOrganization": "无法删除此用户，因为这是他们唯一的组织。用户必须至少属于一个组织。"
+      "cannotRemoveLastUser": "您无法离开，因为您是该组织的唯一成员。",
+      "cannotRemoveUserFromLastOrganization": "无法删除此用户，因为这是他们唯一的组织。用户必须至少属于一个组织。",
+      "mediaInUseAsLogo": "无法删除正在用作组织标志的媒体",
+      "loadMedias": "加载媒体失败",
+      "updateRoleFailed": "更新成员角色失败"
     },
     "messages": {
       "memberRemoved": "已成功移除成员 {{name}}",
       "membersRemoved": "已成功移除成员",
       "leftOrganization": "您已离开组织 {{name}}",
-      "noOrganizationsRemaining": "您已离开最后一个组织。请联系管理员以被邀请加入组织。"
+      "noOrganizationsRemaining": "您已离开最后一个组织。请联系管理员以被邀请加入组织。",
+      "invitationSent": "邀请已发送至 {{email}}"
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {
@@ -397,7 +410,23 @@
     "leaveOrganizationLastAdminWarning": "在离开之前添加另一个管理员以保持此组织的管理。",
     "leaveOrganizationLastUserWarning": "您无法离开，因为您是此组织的唯一成员。",
     "leaveLastOrganizationWarningTitle": "离开您的最后一个组织？",
-    "leaveLastOrganizationWarningMessage": "这是您唯一的组织。离开它将删除您的账户，您将失去对Castmill的所有访问权限。您需要联系管理员才能重新被邀请。您确定要继续吗？"
+    "leaveLastOrganizationWarningMessage": "这是您唯一的组织。离开它将删除您的账户，您将失去对Castmill的所有访问权限。您需要联系管理员才能重新被邀请。您确定要继续吗？",
+    "settings": "设置",
+    "logo": "标志",
+    "logoSettings": "标志设置",
+    "selectLogo": "选择标志",
+    "removeLogo": "删除标志",
+    "logoDescription": "选择一个媒体文件作为您的组织标志。它将显示在顶部栏中。",
+    "logoUpdated": "标志更新成功",
+    "logoRemoved": "标志删除成功",
+    "noLogo": "未选择标志",
+    "noMediasAvailable": "没有可用的图像。请先上传图像。",
+    "dialogs": {
+      "removeMemberTitle": "从组织中移除用户",
+      "removeMemberMessage": "您确定要从组织中移除成员\"{{name}}\"吗？",
+      "removeMembersTitle": "从组织中移除成员",
+      "removeMembersMessage": "您确定要从组织中移除以下成员吗？"
+    }
   },
   "playlists": {
     "title": "播放列表",
@@ -415,7 +444,33 @@
     "errorRemovingPlaylist": "删除播放列表 {{name}} 时出错：{{error}}",
     "errorRemovingPlaylists": "删除播放列表时出错：{{error}}",
     "enterPlaylistName": "输入播放列表名称",
-    "dragToAdd": "拖动以添加"
+    "dragToAdd": "拖动以添加",
+    "aspectRatio": "宽高比",
+    "aspectRatioWidth": "宽度",
+    "aspectRatioHeight": "高度",
+    "aspectRatioUpdated": "宽高比更新成功",
+    "customAspectRatio": "自定义宽高比",
+    "enterCustomRatio": "输入自定义宽高比",
+    "aspectRatioPresets": {
+      "16:9": "16:9 (横向)",
+      "9:16": "9:16 (竖向)",
+      "4:3": "4:3 (经典)",
+      "3:4": "3:4 (竖向)",
+      "21:9": "21:9 (超宽)",
+      "16:3": "16:3 (货架/滚动条)",
+      "3:16": "3:16 (货架/滚动条竖向)",
+      "1:1": "1:1 (方形)",
+      "custom": "自定义"
+    },
+    "errors": {
+      "nameRequired": "名称是必需的",
+      "nameMinLength": "名称至少需要3个字符",
+      "aspectRatioNumber": "必须是数字",
+      "aspectRatioPositive": "必须是正数",
+      "aspectRatioMax": "值必须为100或更少",
+      "aspectRatioExtreme": "宽高比太极端（最大比例为10:1）",
+      "updateAspectRatio": "更新宽高比时出错：{{error}}"
+    }
   },
   "widgets": {
     "title": "Widgets",
@@ -558,6 +613,65 @@
       "accountCreated": "帐户创建成功！",
       "accountCreationFailed": "创建帐户失败",
       "passkeysNotSupported": "此浏览器不支持通行密钥"
+    },
+    "notifications": {
+      "title": "通知",
+      "empty": "暂无通知",
+      "markAllRead": "标记全部为已读",
+      "types": {
+        "organizationInvitation": {
+          "title": "组织邀请",
+          "description": "您已被邀请加入 {{organization_name}}"
+        },
+        "teamInvitation": {
+          "title": "团队邀请",
+          "description": "您已被邀请加入 {{team_name}}"
+        },
+        "deviceRegistration": {
+          "title": "新设备已注册",
+          "description": "设备 '{{device_name}}' 已注册"
+        },
+        "deviceRemoval": {
+          "title": "设备已移除",
+          "description": "设备 '{{device_name}}' 已被移除"
+        },
+        "mediaTranscoded": {
+          "title": "媒体转码完成",
+          "description": "媒体 '{{media_name}}' 已成功转码"
+        },
+        "mediaUploaded": {
+          "titleImage": "新图片已上传",
+          "titleVideo": "新视频已上传",
+          "titleMedia": "新媒体已上传",
+          "descriptionImage": "图片 '{{media_name}}' 已成功上传",
+          "descriptionVideo": "视频 '{{media_name}}' 已成功上传",
+          "descriptionMedia": "媒体 '{{media_name}}' 已成功上传"
+        },
+        "invitationAccepted": {
+          "title": "邀请已接受",
+          "descriptionOrg": "{{user_name}} 已加入组织",
+          "descriptionTeam": "{{user_name}} 已加入团队"
+        },
+        "deviceOfflineAlert": {
+          "title": "设备离线警告",
+          "description": "设备 '{{device_name}}' 处于离线状态，但应该在线"
+        },
+        "deviceOnlineAlert": {
+          "title": "设备已上线",
+          "description": "设备 '{{device_name}}' 已恢复在线",
+          "descriptionWithDuration": "设备 '{{device_name}}' 已恢复在线（离线时长：{{offline_duration_formatted}}）"
+        },
+        "memberRemoved": {
+          "title": "成员已移除",
+          "description": "{{user_name}}已从组织中移除"
+        },
+        "teamMemberRemoved": {
+          "titleSelf": "已从团队中移除",
+          "descriptionSelf": "您已从团队 {{team_name}} 中移除",
+          "titleOthers": "团队成员已移除",
+          "descriptionOthers": "{{user_name}} 已从团队 {{team_name}} 中移除"
+        }
+      }
     }
   },
   "filters": {

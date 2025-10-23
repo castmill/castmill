@@ -13,6 +13,7 @@ defmodule Castmill.Devices do
 
   alias Castmill.Protocol.Access
   alias Castmill.QueryHelpers
+  alias Castmill.Notifications.Events
 
   alias CastmillWeb.Endpoint
 
@@ -492,6 +493,9 @@ defmodule Castmill.Devices do
         Phoenix.PubSub.broadcast(Castmill.PubSub, "devices:#{deleted_device.id}", %{
           command: "device_removed"
         })
+
+        # Notify organization users about device removal
+        Events.notify_device_removal(deleted_device.name, deleted_device.organization_id)
 
       {:error, _} ->
         :ok

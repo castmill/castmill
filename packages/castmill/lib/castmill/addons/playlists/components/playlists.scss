@@ -3,6 +3,40 @@
 }
 
 .playlist-modal {
-  width: 90%;
-  height: 90%;
+  width: 95vw;
+  height: 92vh;
+}
+
+.add-playlist {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5em; // Gap between form elements
+
+  .form-item {
+    width: 100%;
+  }
+
+  .custom-aspect-ratio {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+
+    .separator {
+      font-size: 1.2em;
+      font-weight: bold;
+      padding-top: 1.5em;
+    }
+  }
+
+  .error {
+    color: #ef4444;
+    font-size: 0.85em;
+    margin-top: 0.25em;
+
+    &.aspect-ratio-error {
+      padding: 0.5em;
+      background: rgba(239, 68, 68, 0.1);
+      border-radius: 0.25em;
+    }
+  }
 }

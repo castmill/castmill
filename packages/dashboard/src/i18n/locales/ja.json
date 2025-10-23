@@ -81,7 +81,10 @@
     "addonError": "アドオンエラー",
     "backToLogin": "ログインに戻る",
     "selectImage": "画像を選択",
-    "selectMedia": "メディアを選択"
+    "selectMedia": "メディアを選択",
+    "apply": "適用",
+    "selectVideo": "ビデオを選択",
+    "offline": "[TODO: Translate] Offline"
   },
   "topbar": {
     "help": "ヘルプ",
@@ -138,7 +141,7 @@
     "deleteAccountDescription": "アカウントと関連するすべてのデータを完全に削除します。この操作は取り消せません。",
     "deleteAccountButton": "アカウント削除",
     "deleteAccountConfirm": "本当によろしいですか？",
-    "deleteAccountWarning": "アカウントが完全に削除されます。",
+    "deleteAccountWarning": "アカウントが完全に削除され、サーバーからすべてのパスキーが削除されます。ただし、デバイスに保存されているパスキー（iCloudキーチェーン、Googleパスワードマネージャー、Windows Helloなど）は残るため、手動で削除する必要があります。",
     "deleteAccountYes": "はい、アカウントを削除します",
     "retry": "再試行",
     "errors": {
@@ -155,7 +158,10 @@
     "deleteAccountSuccess": "アカウントが正常に削除されました。リダイレクト中...",
     "deleteAccountError": "アカウントの削除に失敗しました。もう一度お試しください。",
     "soleAdministratorError": "アカウントを削除できません。他のメンバーがいる '{{orgName}}' の唯一の管理者です。まず別のユーザーを管理者に昇格させてください。",
-    "soleAdministratorErrorGeneric": "アカウントを削除できません。他のメンバーがいる1つ以上の組織の唯一の管理者です。まず別のユーザーを管理者に昇格させてください。"
+    "soleAdministratorErrorGeneric": "アカウントを削除できません。他のメンバーがいる1つ以上の組織の唯一の管理者です。まず別のユーザーを管理者に昇格させてください。",
+    "deleteAccountWarningWithSignalAPI": "アカウントが完全に削除され、サーバーからすべてのパスキーが削除されます。お使いのブラウザはパスキーの自動削除に対応しています。",
+    "deleteAccountPasskeyInfo": "削除後、古いパスキーでログインしようとすると失敗します。混乱を避けるため、デバイスの設定からこのアカウントのパスキーを手動で削除してください。",
+    "deleteAccountPasskeyInfoWithSignalAPI": "削除後、パスキーは自動的にデバイスから削除されます。後でログインする場合は、新しいアカウントを作成する必要があります。"
   },
   "usage": {
     "title": "使用量",
@@ -191,10 +197,7 @@
   },
   "teams": {
     "title": "チーム",
-    "members": {
-      "selectUser": "ユーザーを選択",
-      "searchUser": "ユーザーを検索..."
-    },
+    "members": "TODO: Translate - Members",
     "invitations": "招待",
     "invitationAcceptSuccess": "招待が正常に承認されました",
     "invitationDeleteSuccess": "招待が正常に削除されました",
@@ -268,7 +271,12 @@
       "removeMemberMessage": "メンバー「{{name}}」をチームから削除してもよろしいですか？",
       "removeMembersTitle": "チームからメンバーを削除",
       "removeMembersMessage": "以下のメンバーをチームから削除してもよろしいですか？"
-    }
+    },
+    "memberSelection": {
+      "selectUser": "ユーザーを選択",
+      "searchUser": "ユーザーを検索..."
+    },
+    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully"
   },
   "login": {
     "title": "ログイン",
@@ -308,7 +316,8 @@
     "content": "コンテンツ",
     "playlists": "プレイリスト",
     "medias": "メディア",
-    "widgets": "Widgets"
+    "widgets": "Widgets",
+    "members": "[TODO: Translate] Members"
   },
   "channels": {
     "title": "チャンネル",
@@ -368,13 +377,17 @@
       "cannotRemoveLastAdmin": "組織の最後の管理者を削除することはできません。",
       "invalidRole": "選択した役割はこの組織で有効ではありません。",
       "cannotRemoveLastUser": "この組織の唯一のメンバーであるため、離れることはできません。",
-      "cannotRemoveUserFromLastOrganization": "このユーザーは唯一の組織に属しているため、削除できません。ユーザーは少なくとも1つの組織に属している必要があります。"
+      "cannotRemoveUserFromLastOrganization": "このユーザーは唯一の組織に属しているため、削除できません。ユーザーは少なくとも1つの組織に属している必要があります。",
+      "mediaInUseAsLogo": "組織のロゴとして使用されているメディアは削除できません",
+      "loadMedias": "メディアの読み込みに失敗しました",
+      "updateRoleFailed": "メンバーの役割の更新に失敗しました"
     },
     "messages": {
       "memberRemoved": "メンバー{{name}}を正常に削除しました",
       "membersRemoved": "メンバーを正常に削除しました",
       "leftOrganization": "組織 {{name}} を離れました",
-      "noOrganizationsRemaining": "最後の組織を離れました。組織に招待されるには管理者にお問い合わせください。"
+      "noOrganizationsRemaining": "最後の組織を離れました。組織に招待されるには管理者にお問い合わせください。",
+      "invitationSent": "{{email}}に招待状を送信しました"
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {
@@ -397,7 +410,24 @@
     "leaveOrganizationLastAdminWarning": "この組織を管理し続けるために、離れる前に別の管理者を追加してください。",
     "leaveOrganizationLastUserWarning": "この組織の唯一のメンバーであるため、離れることはできません。",
     "leaveLastOrganizationWarningTitle": "最後の組織を離れますか？",
-    "leaveLastOrganizationWarningMessage": "これはあなたの唯一の組織です。離れるとアカウントが削除され、Castmillへのすべてのアクセスが失われます。再度招待されるには管理者に連絡する必要があります。続行してもよろしいですか？"
+    "leaveLastOrganizationWarningMessage": "これはあなたの唯一の組織です。離れるとアカウントが削除され、Castmillへのすべてのアクセスが失われます。再度招待されるには管理者に連絡する必要があります。続行してもよろしいですか？",
+    "settings": "設定",
+    "changeRole": "役割を変更",
+    "dialogs": {
+      "removeMemberTitle": "組織からユーザーを削除",
+      "removeMemberMessage": "メンバー「{{name}}」を組織から削除してもよろしいですか？",
+      "removeMembersTitle": "組織からメンバーを削除",
+      "removeMembersMessage": "以下のメンバーを組織から削除してもよろしいですか？"
+    },
+    "logo": "ロゴ",
+    "logoSettings": "ロゴ設定",
+    "selectLogo": "ロゴを選択",
+    "removeLogo": "ロゴを削除",
+    "logoDescription": "組織のロゴとして使用するメディアファイルを選択してください。トップバーに表示されます。",
+    "logoUpdated": "ロゴが正常に更新されました",
+    "logoRemoved": "ロゴが正常に削除されました",
+    "noLogo": "ロゴが選択されていません",
+    "noMediasAvailable": "画像メディアがありません。まず画像をアップロードしてください。"
   },
   "playlists": {
     "title": "プレイリスト",
@@ -415,7 +445,33 @@
     "errorRemovingPlaylist": "プレイリスト{{name}}の削除中にエラーが発生しました：{{error}}",
     "errorRemovingPlaylists": "プレイリストの削除中にエラーが発生しました：{{error}}",
     "enterPlaylistName": "プレイリスト名を入力してください",
-    "dragToAdd": "ドラッグして追加"
+    "dragToAdd": "ドラッグして追加",
+    "aspectRatio": "アスペクト比",
+    "aspectRatioWidth": "幅",
+    "aspectRatioHeight": "高さ",
+    "aspectRatioUpdated": "アスペクト比が正常に更新されました",
+    "customAspectRatio": "カスタムアスペクト比",
+    "enterCustomRatio": "カスタムアスペクト比を入力",
+    "aspectRatioPresets": {
+      "16:9": "16:9 (横長)",
+      "9:16": "9:16 (縦長)",
+      "4:3": "4:3 (クラシック)",
+      "3:4": "3:4 (縦長)",
+      "21:9": "21:9 (ウルトラワイド)",
+      "16:3": "16:3 (棚/ティッカー)",
+      "3:16": "3:16 (棚/ティッカー縦長)",
+      "1:1": "1:1 (正方形)",
+      "custom": "カスタム"
+    },
+    "errors": {
+      "nameRequired": "名前は必須です",
+      "nameMinLength": "名前は3文字以上である必要があります",
+      "aspectRatioNumber": "数値である必要があります",
+      "aspectRatioPositive": "正の数値である必要があります",
+      "aspectRatioMax": "値は100以下である必要があります",
+      "aspectRatioExtreme": "アスペクト比が極端すぎます（最大比率は10:1）",
+      "updateAspectRatio": "アスペクト比の更新中にエラーが発生しました：{{error}}"
+    }
   },
   "widgets": {
     "title": "Widgets",
@@ -558,6 +614,65 @@
       "accountCreated": "アカウントが正常に作成されました！",
       "accountCreationFailed": "アカウントの作成に失敗しました",
       "passkeysNotSupported": "このブラウザではパスキーがサポートされていません"
+    },
+    "notifications": {
+      "title": "通知",
+      "empty": "まだ通知はありません",
+      "markAllRead": "すべて既読にする",
+      "types": {
+        "organizationInvitation": {
+          "title": "組織への招待",
+          "description": "{{organization_name}}に招待されました"
+        },
+        "teamInvitation": {
+          "title": "チームへの招待",
+          "description": "{{team_name}}に招待されました"
+        },
+        "deviceRegistration": {
+          "title": "新しいデバイスが登録されました",
+          "description": "デバイス「{{device_name}}」が登録されました"
+        },
+        "deviceRemoval": {
+          "title": "デバイスが削除されました",
+          "description": "デバイス「{{device_name}}」が削除されました"
+        },
+        "mediaTranscoded": {
+          "title": "メディアトランスコード完了",
+          "description": "メディア「{{media_name}}」が正常にトランスコードされました"
+        },
+        "mediaUploaded": {
+          "titleImage": "新しい画像がアップロードされました",
+          "titleVideo": "新しい動画がアップロードされました",
+          "titleMedia": "新しいメディアがアップロードされました",
+          "descriptionImage": "画像「{{media_name}}」が正常にアップロードされました",
+          "descriptionVideo": "動画「{{media_name}}」が正常にアップロードされました",
+          "descriptionMedia": "メディア「{{media_name}}」が正常にアップロードされました"
+        },
+        "invitationAccepted": {
+          "title": "招待が承認されました",
+          "descriptionOrg": "{{user_name}}が組織に参加しました",
+          "descriptionTeam": "{{user_name}}がチームに参加しました"
+        },
+        "deviceOfflineAlert": {
+          "title": "デバイスオフライン警告",
+          "description": "デバイス「{{device_name}}」はオンラインであるべきですがオフラインです"
+        },
+        "deviceOnlineAlert": {
+          "title": "デバイスオンライン",
+          "description": "デバイス「{{device_name}}」が再びオンラインになりました",
+          "descriptionWithDuration": "デバイス「{{device_name}}」が再びオンラインになりました（{{offline_duration_formatted}}オフラインでした）"
+        },
+        "memberRemoved": {
+          "title": "メンバーが削除されました",
+          "description": "{{user_name}}が組織から削除されました"
+        },
+        "teamMemberRemoved": {
+          "titleSelf": "チームから削除されました",
+          "descriptionSelf": "チーム{{team_name}}から削除されました",
+          "titleOthers": "チームメンバーが削除されました",
+          "descriptionOthers": "{{user_name}}がチーム{{team_name}}から削除されました"
+        }
+      }
     }
   },
   "filters": {

@@ -81,7 +81,10 @@
     "addonError": "خطأ في الإضافة",
     "backToLogin": "العودة لتسجيل الدخول",
     "selectImage": "اختر صورة",
-    "selectMedia": "اختر وسائط"
+    "selectMedia": "اختر وسائط",
+    "apply": "تطبيق",
+    "selectVideo": "اختر فيديو",
+    "offline": "[TODO: Translate] Offline"
   },
   "topbar": {
     "help": "مساعدة",
@@ -138,7 +141,7 @@
     "deleteAccountDescription": "حذف حسابك وجميع البيانات المرتبطة بشكل دائم. لا يمكن التراجع عن هذا الإجراء.",
     "deleteAccountButton": "حذف الحساب",
     "deleteAccountConfirm": "هل أنت متأكد؟",
-    "deleteAccountWarning": "سيؤدي هذا إلى حذف حسابك بشكل دائم.",
+    "deleteAccountWarning": "سيؤدي هذا إلى حذف حسابك بشكل دائم وإزالة جميع مفاتيح المرور من خوادمنا. ومع ذلك، ستبقى مفاتيح المرور المخزنة على أجهزتك (في iCloud Keychain أو Google Password Manager أو Windows Hello وما إلى ذلك) ويجب إزالتها يدويًا.",
     "deleteAccountYes": "نعم، احذف الحساب",
     "retry": "إعادة المحاولة",
     "errors": {
@@ -155,7 +158,10 @@
     "deleteAccountSuccess": "تم حذف الحساب بنجاح. جارٍ إعادة التوجيه...",
     "deleteAccountError": "فشل حذف الحساب. يرجى المحاولة مرة أخرى.",
     "soleAdministratorError": "لا يمكن حذف الحساب. أنت المسؤول الوحيد لـ '{{orgName}}' التي لديها أعضاء آخرون. يرجى ترقية مستخدم آخر إلى مسؤول أولاً.",
-    "soleAdministratorErrorGeneric": "لا يمكن حذف الحساب. أنت المسؤول الوحيد لواحدة أو أكثر من المنظمات التي لديها أعضاء آخرون. يرجى ترقية مستخدم آخر إلى مسؤول أولاً."
+    "soleAdministratorErrorGeneric": "لا يمكن حذف الحساب. أنت المسؤول الوحيد لواحدة أو أكثر من المنظمات التي لديها أعضاء آخرون. يرجى ترقية مستخدم آخر إلى مسؤول أولاً.",
+    "deleteAccountWarningWithSignalAPI": "سيؤدي هذا إلى حذف حسابك بشكل دائم وإزالة جميع مفاتيح المرور من خوادمنا. يدعم متصفحك الإزالة التلقائية لمفاتيح المرور.",
+    "deleteAccountPasskeyInfo": "بعد الحذف، إذا حاولت تسجيل الدخول باستخدام مفتاح مرور قديم، فسيفشل. لتجنب الارتباك، يرجى إزالة مفاتيح المرور لهذا الحساب يدويًا من إعدادات جهازك.",
+    "deleteAccountPasskeyInfoWithSignalAPI": "بعد الحذف، ستتم إزالة مفاتيح المرور تلقائيًا من جهازك. إذا حاولت تسجيل الدخول لاحقًا، فستحتاج إلى إنشاء حساب جديد."
   },
   "usage": {
     "title": "الاستخدام",
@@ -191,10 +197,7 @@
   },
   "teams": {
     "title": "الفرق",
-    "members": {
-      "selectUser": "اختر مستخدمًا",
-      "searchUser": "البحث عن مستخدم..."
-    },
+    "members": "TODO: Translate - Members",
     "invitations": "الدعوات",
     "invitationAcceptSuccess": "تم قبول الدعوة بنجاح",
     "invitationDeleteSuccess": "تم حذف الدعوة بنجاح",
@@ -268,7 +271,12 @@
       "removeMemberMessage": "هل أنت متأكد أنك تريد إزالة العضو \"{{name}}\" من الفريق؟",
       "removeMembersTitle": "إزالة الأعضاء من الفريق",
       "removeMembersMessage": "هل أنت متأكد أنك تريد إزالة الأعضاء التالية من الفريق؟"
-    }
+    },
+    "memberSelection": {
+      "selectUser": "اختر مستخدمًا",
+      "searchUser": "البحث عن مستخدم..."
+    },
+    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully"
   },
   "login": {
     "title": "تسجيل الدخول",
@@ -308,7 +316,8 @@
     "content": "المحتوى",
     "playlists": "قوائم التشغيل",
     "medias": "الوسائط",
-    "widgets": "Widgets"
+    "widgets": "Widgets",
+    "members": "[TODO: Translate] Members"
   },
   "channels": {
     "title": "القنوات",
@@ -368,13 +377,17 @@
       "cannotRemoveLastAdmin": "لا يمكنك إزالة آخر مشرف للمؤسسة.",
       "invalidRole": "الدور المحدد غير صالح لهذه المؤسسة.",
       "cannotRemoveLastUser": "لا يمكنك المغادرة لأنك العضو الوحيد في هذه المنظمة.",
-      "cannotRemoveUserFromLastOrganization": "لا يمكن إزالة هذا المستخدم لأن هذه هي مؤسسته الوحيدة. يجب أن ينتمي المستخدمون إلى مؤسسة واحدة على الأقل."
+      "cannotRemoveUserFromLastOrganization": "لا يمكن إزالة هذا المستخدم لأن هذه هي مؤسسته الوحيدة. يجب أن ينتمي المستخدمون إلى مؤسسة واحدة على الأقل.",
+      "mediaInUseAsLogo": "لا يمكن حذف الوسائط المستخدمة كشعار للمؤسسة",
+      "loadMedias": "فشل تحميل الوسائط",
+      "updateRoleFailed": "فشل تحديث دور العضو"
     },
     "messages": {
       "memberRemoved": "تمت إزالة العضو {{name}} بنجاح",
       "membersRemoved": "تمت إزالة الأعضاء بنجاح",
       "leftOrganization": "لقد غادرت المنظمة {{name}}",
-      "noOrganizationsRemaining": "لقد غادرت منظمتك الأخيرة. يرجى الاتصال بالمسؤول ليتم دعوتك إلى منظمة."
+      "noOrganizationsRemaining": "لقد غادرت منظمتك الأخيرة. يرجى الاتصال بالمسؤول ليتم دعوتك إلى منظمة.",
+      "invitationSent": "تم إرسال الدعوة إلى {{email}}"
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {
@@ -397,7 +410,23 @@
     "leaveOrganizationLastAdminWarning": "أضف مسؤولاً آخر قبل المغادرة للحفاظ على إدارة هذه المنظمة.",
     "leaveOrganizationLastUserWarning": "لا يمكنك المغادرة لأنك العضو الوحيد في هذه المنظمة.",
     "leaveLastOrganizationWarningTitle": "مغادرة منظمتك الأخيرة؟",
-    "leaveLastOrganizationWarningMessage": "هذه هي منظمتك الوحيدة. مغادرتها ستحذف حسابك وستفقد كل الوصول إلى Castmill. ستحتاج إلى الاتصال بمسؤول لتتم دعوتك مرة أخرى. هل أنت متأكد أنك تريد المتابعة؟"
+    "leaveLastOrganizationWarningMessage": "هذه هي منظمتك الوحيدة. مغادرتها ستحذف حسابك وستفقد كل الوصول إلى Castmill. ستحتاج إلى الاتصال بمسؤول لتتم دعوتك مرة أخرى. هل أنت متأكد أنك تريد المتابعة؟",
+    "settings": "الإعدادات",
+    "dialogs": {
+      "removeMemberTitle": "إزالة المستخدم من المنظمة",
+      "removeMemberMessage": "هل أنت متأكد أنك تريد إزالة العضو \"{{name}}\" من المنظمة؟",
+      "removeMembersTitle": "إزالة الأعضاء من المنظمة",
+      "removeMembersMessage": "هل أنت متأكد أنك تريد إزالة الأعضاء التالية من المنظمة؟"
+    },
+    "logo": "الشعار",
+    "logoSettings": "إعدادات الشعار",
+    "selectLogo": "اختر الشعار",
+    "removeLogo": "إزالة الشعار",
+    "logoDescription": "اختر ملف وسائط لاستخدامه كشعار لمؤسستك. سيتم عرضه في الشريط العلوي.",
+    "logoUpdated": "تم تحديث الشعار بنجاح",
+    "logoRemoved": "تم إزالة الشعار بنجاح",
+    "noLogo": "لم يتم اختيار شعار",
+    "noMediasAvailable": "لا توجد صور متاحة. يرجى تحميل صورة أولاً."
   },
   "playlists": {
     "title": "قوائم التشغيل",
@@ -415,7 +444,33 @@
     "errorRemovingPlaylist": "خطأ في إزالة قائمة التشغيل {{name}}: {{error}}",
     "errorRemovingPlaylists": "خطأ في إزالة قوائم التشغيل: {{error}}",
     "enterPlaylistName": "أدخل اسم قائمة التشغيل",
-    "dragToAdd": "اسحب للإضافة"
+    "dragToAdd": "اسحب للإضافة",
+    "aspectRatio": "نسبة العرض إلى الارتفاع",
+    "aspectRatioWidth": "العرض",
+    "aspectRatioHeight": "الارتفاع",
+    "aspectRatioUpdated": "تم تحديث نسبة العرض إلى الارتفاع بنجاح",
+    "customAspectRatio": "نسبة عرض مخصصة",
+    "enterCustomRatio": "أدخل نسبة العرض المخصصة",
+    "aspectRatioPresets": {
+      "16:9": "16:9 (أفقي)",
+      "9:16": "9:16 (عمودي)",
+      "4:3": "4:3 (كلاسيكي)",
+      "3:4": "3:4 (عمودي)",
+      "21:9": "21:9 (عريض جداً)",
+      "16:3": "16:3 (رف/شريط)",
+      "3:16": "3:16 (رف/شريط عمودي)",
+      "1:1": "1:1 (مربع)",
+      "custom": "مخصص"
+    },
+    "errors": {
+      "nameRequired": "الاسم مطلوب",
+      "nameMinLength": "يجب أن يتكون الاسم من 3 أحرف على الأقل",
+      "aspectRatioNumber": "يجب أن يكون رقمًا",
+      "aspectRatioPositive": "يجب أن يكون رقمًا موجبًا",
+      "aspectRatioMax": "يجب أن تكون القيمة 100 أو أقل",
+      "aspectRatioExtreme": "نسبة العرض إلى الارتفاع متطرفة للغاية (الحد الأقصى 10:1)",
+      "updateAspectRatio": "خطأ في تحديث نسبة العرض: {{error}}"
+    }
   },
   "widgets": {
     "title": "Widgets",
@@ -558,6 +613,65 @@
       "accountCreated": "تم إنشاء الحساب بنجاح!",
       "accountCreationFailed": "فشل إنشاء الحساب",
       "passkeysNotSupported": "مفاتيح المرور غير مدعومة في هذا المتصفح"
+    },
+    "notifications": {
+      "title": "الإشعارات",
+      "empty": "لا توجد إشعارات بعد",
+      "markAllRead": "وضع علامة مقروء على الكل",
+      "types": {
+        "organizationInvitation": {
+          "title": "دعوة المنظمة",
+          "description": "تمت دعوتك للانضمام إلى {{organization_name}}"
+        },
+        "teamInvitation": {
+          "title": "دعوة الفريق",
+          "description": "تمت دعوتك للانضمام إلى {{team_name}}"
+        },
+        "deviceRegistration": {
+          "title": "تم تسجيل جهاز جديد",
+          "description": "تم تسجيل الجهاز '{{device_name}}'"
+        },
+        "deviceRemoval": {
+          "title": "تمت إزالة الجهاز",
+          "description": "تمت إزالة الجهاز '{{device_name}}'"
+        },
+        "mediaTranscoded": {
+          "title": "اكتمل ترميز الوسائط",
+          "description": "تم ترميز الوسائط '{{media_name}}' بنجاح"
+        },
+        "mediaUploaded": {
+          "titleImage": "تم تحميل صورة جديدة",
+          "titleVideo": "تم تحميل فيديو جديد",
+          "titleMedia": "تم تحميل وسائط جديدة",
+          "descriptionImage": "تم تحميل الصورة '{{media_name}}' بنجاح",
+          "descriptionVideo": "تم تحميل الفيديو '{{media_name}}' بنجاح",
+          "descriptionMedia": "تم تحميل الوسائط '{{media_name}}' بنجاح"
+        },
+        "invitationAccepted": {
+          "title": "تم قبول الدعوة",
+          "descriptionOrg": "{{user_name}} انضم إلى المنظمة",
+          "descriptionTeam": "{{user_name}} انضم إلى الفريق"
+        },
+        "deviceOfflineAlert": {
+          "title": "تنبيه الجهاز غير متصل",
+          "description": "الجهاز '{{device_name}}' غير متصل بينما يجب أن يكون متصلاً"
+        },
+        "deviceOnlineAlert": {
+          "title": "الجهاز متصل",
+          "description": "الجهاز '{{device_name}}' متصل مرة أخرى",
+          "descriptionWithDuration": "الجهاز '{{device_name}}' متصل مرة أخرى (كان غير متصل لمدة {{offline_duration_formatted}})"
+        },
+        "memberRemoved": {
+          "title": "تمت إزالة العضو",
+          "description": "تمت إزالة {{user_name}} من المنظمة"
+        },
+        "teamMemberRemoved": {
+          "titleSelf": "تمت إزالتك من الفريق",
+          "descriptionSelf": "تمت إزالتك من الفريق {{team_name}}",
+          "titleOthers": "تمت إزالة عضو الفريق",
+          "descriptionOthers": "تمت إزالة {{user_name}} من الفريق {{team_name}}"
+        }
+      }
     }
   },
   "filters": {
