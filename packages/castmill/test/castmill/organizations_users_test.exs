@@ -127,7 +127,10 @@ defmodule Castmill.OrganizationsUsersTest do
     test "remove_user/2 allows removing a user when they have multiple organizations" do
       network = network_fixture()
       organization_one = organization_fixture(%{network_id: network.id})
-      organization_two = organization_fixture(%{network_id: network.id, name: "second organization"})
+
+      organization_two =
+        organization_fixture(%{network_id: network.id, name: "second organization"})
+
       user = user_fixture()
       admin_one = user_fixture()
       admin_two = user_fixture()
