@@ -2,8 +2,7 @@ defmodule Castmill.Repo.Migrations.CreateNotifications do
   use Ecto.Migration
 
   def change do
-    create table(:notifications, primary_key: false) do
-      add :id, :binary_id, primary_key: true
+    create table(:notifications) do
       add :title_key, :string
       add :description_key, :string
       add :link, :string
@@ -28,13 +27,9 @@ defmodule Castmill.Repo.Migrations.CreateNotifications do
       timestamps()
     end
 
+    # Only index fields we'll be querying on
     create index(:notifications, [:user_id])
     create index(:notifications, [:organization_id])
     create index(:notifications, [:team_id])
-    create index(:notifications, [:type])
-    create index(:notifications, [:read])
-    create index(:notifications, [:inserted_at])
-    create index(:notifications, [:actor_type])
-    create index(:notifications, [:actor_id])
   end
 end
