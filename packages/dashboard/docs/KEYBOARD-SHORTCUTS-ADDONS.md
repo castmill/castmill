@@ -124,26 +124,30 @@ Add shortcut descriptions to your addon's translation keys:
 
 ### 1. **Don't Interfere with Global Shortcuts**
 
-The following shortcuts are reserved for global navigation:
+The following shortcuts are reserved for global navigation and actions:
 
+- `Shift+?` - Show shortcuts legend
 - `Cmd/Ctrl+F` - Global search
-- `Cmd/Ctrl+/` - Show shortcuts legend
-- `Cmd/Ctrl+Shift+P` - Go to Playlists
-- `Cmd/Ctrl+Shift+M` - Go to Medias
-- `Cmd/Ctrl+Shift+C` - Go to Channels
-- `Cmd/Ctrl+Shift+O` - Go to Organization
-- `Cmd/Ctrl+Shift+T` - Go to Teams
-- `Cmd/Ctrl+Shift+D` - Go to Devices
+- `S` - Search in current page
+- `Escape` - Close dialog / blur input
+- `C` - Create resource (context-aware)
+- `Cmd/Ctrl+P` - Go to Playlists
+- `Cmd/Ctrl+M` - Go to Medias
+- `Cmd/Ctrl+H` - Go to Channels
+- `Cmd/Ctrl+O` - Go to Organization
+- `Cmd/Ctrl+G` - Go to Teams
+- `Cmd/Ctrl+D` - Go to Devices
 
 ### 2. **Use Consistent Shortcuts**
 
 For common actions, use these standard shortcuts:
 
-- `Cmd/Ctrl+N` - Add new resource
+- `Cmd/Ctrl+N` - Add new resource (recommended for addons)
 - `Cmd/Ctrl+A` - Select all items
 - `Delete` or `Backspace` - Delete selected items
-- `Cmd/Ctrl+K` - Local search/filter
-- `Escape` - Close modal or blur input
+- `Escape` - Close modal or blur input (already handled globally)
+
+**Note:** The global `C` key is reserved for context-aware resource creation. Addons should use `Cmd/Ctrl+N` for their add/create actions.
 
 ### 3. **Check Permissions**
 

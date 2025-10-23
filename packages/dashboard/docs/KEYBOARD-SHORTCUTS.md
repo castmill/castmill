@@ -8,27 +8,29 @@ The Castmill Dashboard includes a comprehensive keyboard shortcuts system that e
 - **Mobile-Friendly**: Shortcuts are automatically hidden on mobile devices
 - **Internationalized**: All shortcut descriptions are fully localized in 9 languages
 - **Contextual**: Shortcuts can be conditionally enabled based on current state
-- **Centralized Legend**: View all available shortcuts with Cmd/Ctrl+/
+- **Centralized Legend**: View all available shortcuts with `Shift+?`
 
 ## Global Shortcuts
 
+### Global Actions
+
+- `Shift+?` - Show keyboard shortcuts legend
+- `Cmd/Ctrl+F` - Global search
+- `S` - Search in current page
+- `Escape` - Close dialog / blur input field
+
 ### Navigation
 
-- `Cmd/Ctrl+Shift+P` - Go to Playlists
-- `Cmd/Ctrl+Shift+M` - Go to Medias
-- `Cmd/Ctrl+Shift+C` - Go to Channels
-- `Cmd/Ctrl+Shift+O` - Go to Organization
-- `Cmd/Ctrl+Shift+T` - Go to Teams
-- `Cmd/Ctrl+Shift+D` - Go to Devices
+- `Cmd/Ctrl+P` - Go to Playlists
+- `Cmd/Ctrl+M` - Go to Medias
+- `Cmd/Ctrl+H` - Go to Channels
+- `Cmd/Ctrl+O` - Go to Organization
+- `Cmd/Ctrl+G` - Go to Teams
+- `Cmd/Ctrl+D` - Go to Devices
 
-### Search
+### Context Actions
 
-- `Cmd/Ctrl+F` - Global search
-- `Escape` - Clear search / blur input
-
-### Help
-
-- `Cmd/Ctrl+/` - Show keyboard shortcuts legend
+- `C` - Create resource (context-aware: works in Playlists, Medias, Channels, Devices, Teams pages)
 
 ## Architecture
 
@@ -63,13 +65,13 @@ import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 
 const MyComponent = () => {
   const { registerShortcut, unregisterShortcut } = useKeyboardShortcuts();
+  const { t } = useI18n();
 
   onMount(() => {
     registerShortcut('my-action', {
       key: 'S',
       ctrl: true,
-      shift: true,
-      description: t('shortcuts.myAction'),
+      description: () => t('shortcuts.myAction'), // Use function for reactive i18n
       category: 'actions',
       action: () => {
         // Perform action

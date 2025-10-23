@@ -14,14 +14,17 @@ This PR adds a comprehensive keyboard shortcuts system to the Castmill Dashboard
    - Conditional shortcuts support
 
 2. **Implemented Shortcuts**
+   - `Shift+?` - Show shortcuts legend
    - `Cmd/Ctrl+F` - Global search
-   - `Cmd/Ctrl+/` - Show shortcuts legend
-   - `Cmd/Ctrl+Shift+P` - Go to Playlists
-   - `Cmd/Ctrl+Shift+M` - Go to Medias
-   - `Cmd/Ctrl+Shift+C` - Go to Channels
-   - `Cmd/Ctrl+Shift+O` - Go to Organization
-   - `Cmd/Ctrl+Shift+T` - Go to Teams
-   - `Cmd/Ctrl+Shift+D` - Go to Devices
+   - `S` - Search in current page
+   - `Escape` - Close dialog / blur input field
+   - `C` - Create resource (context-aware: Playlists, Medias, Channels, Devices, Teams)
+   - `Cmd/Ctrl+P` - Go to Playlists
+   - `Cmd/Ctrl+M` - Go to Medias
+   - `Cmd/Ctrl+H` - Go to Channels
+   - `Cmd/Ctrl+O` - Go to Organization
+   - `Cmd/Ctrl+G` - Go to Teams
+   - `Cmd/Ctrl+D` - Go to Devices
 
 3. **User Interface**
    - Keyboard icon button in topbar
@@ -102,24 +105,32 @@ src/
 
 ## ⏭️ What's NOT Included
 
-The following features from the original issue require context-specific implementation at the addon level:
+The following features from the original issue are handled differently:
 
-- **Register a device** (`Cmd/Ctrl+Shift+D`) - Needs device registration modal
-- **Add resource** (`Cmd/Ctrl+N`) - Context varies by addon
-- **Delete resources** (`Delete/Backspace`) - Context varies by addon
-- **Mark all** (`Cmd/Ctrl+A`) - Context varies by addon
-- **Local resource search** (`Cmd/Ctrl+K`) - Context varies by addon
+- **Context-aware Create** (`C` key) - ✅ **IMPLEMENTED** - Works across Playlists, Medias, Channels, Devices, and Teams pages with multilingual button detection
+- **Register a device** - Works via the `C` key on the Devices page
+- **Add resource** - Works via the `C` key on relevant pages (Playlists, Medias, etc.)
+- **Delete resources** (`Delete/Backspace`) - Context varies by addon, documented in addon guide
+- **Mark all** (`Cmd/Ctrl+A`) - Context varies by addon, documented in addon guide
+- **Local resource search** - Use `S` key for page-level search (implemented globally)
 
-These features are **documented** in the addon developer guide (`KEYBOARD-SHORTCUTS-ADDONS.md`) and can be implemented by individual addon developers following the provided patterns.
+Addon-specific implementations (delete, select all) are **documented** in the addon developer guide (`KEYBOARD-SHORTCUTS-ADDONS.md`) and can be implemented by individual addon developers following the provided patterns.
 
 ## 🚀 How to Use
 
 ### For End Users
 
 1. Click the keyboard icon (⌨️) in the topbar
-2. Or press `Cmd/Ctrl+/` to open the shortcuts legend
-3. View all available shortcuts organized by category
+2. Or press `Shift+?` to open the shortcuts legend
+3. View all available shortcuts organized by category (Global, Navigation, Actions)
 4. Use shortcuts to navigate and perform actions
+
+**Quick Reference:**
+
+- `C` - Create/Add resource on current page
+- `S` - Search within current page
+- `Cmd/Ctrl+F` - Global search
+- `Cmd/Ctrl+[Letter]` - Quick navigation (P=Playlists, M=Medias, H=Channels, etc.)
 
 ### For Addon Developers
 
@@ -136,16 +147,17 @@ The shortcuts system is extensible. To add new shortcuts:
 
 ```typescript
 import { useKeyboardShortcuts } from '../../hooks';
+import { useI18n } from '../../i18n';
 
 const MyComponent = () => {
   const { registerShortcut, unregisterShortcut } = useKeyboardShortcuts();
+  const { t } = useI18n();
 
   onMount(() => {
     registerShortcut('my-action', {
       key: 'S',
       ctrl: true,
-      shift: true,
-      description: t('shortcuts.myAction'),
+      description: () => t('shortcuts.myAction'), // Use function for reactive i18n
       category: 'actions',
       action: () => {
         // Perform action
@@ -158,6 +170,8 @@ const MyComponent = () => {
   });
 };
 ```
+
+**Important:** Use `description: () => t('key')` (function) instead of `description: t('key')` (string) to ensure translations update reactively when language changes.
 
 ## 📊 Impact
 
@@ -185,11 +199,14 @@ const MyComponent = () => {
 This implementation provides a solid foundation for keyboard shortcuts in the Castmill Dashboard:
 
 ✅ Core system with platform detection  
-✅ 8 navigation shortcuts implemented  
-✅ Full i18n support (9 languages)  
+✅ 11 shortcuts implemented (navigation + actions)  
+✅ Context-aware Create shortcut (C key) with 9-language support  
+✅ Page search (S key) and global search (Cmd/Ctrl+F)  
+✅ Full i18n support (9 languages) with reactive translations  
 ✅ Comprehensive documentation  
 ✅ Extensible architecture for addons  
 ✅ No breaking changes  
-✅ All tests passing
+✅ All tests passing  
+✅ 100% translation coverage
 
-The remaining context-specific shortcuts (add, delete, mark all, etc.) are documented and ready for implementation by addon developers.
+The remaining context-specific shortcuts (delete, select all, etc.) are documented and ready for implementation by addon developers.
