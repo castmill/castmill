@@ -62,7 +62,6 @@
     "online": "온라인",
     "update": "업데이트",
     "reset": "재설정",
-    "apply": "적용",
     "addedOn": "추가됨",
     "lastUpdatedOn": "마지막 업데이트",
     "details": "세부정보",
@@ -81,10 +80,11 @@
     },
     "addonError": "애드온 오류",
     "backToLogin": "로그인으로 돌아가기",
-    "selectVideo": "비디오 선택",
-    "offline": "오프라인",
     "selectImage": "이미지 선택",
-    "selectMedia": "미디어 선택"
+    "selectMedia": "미디어 선택",
+    "apply": "적용",
+    "selectVideo": "비디오 선택",
+    "offline": "오프라인"
   },
   "topbar": {
     "help": "도움말",
@@ -142,9 +142,6 @@
     "deleteAccountButton": "계정 삭제",
     "deleteAccountConfirm": "확실합니까?",
     "deleteAccountWarning": "계정이 영구적으로 삭제되고 서버에서 모든 패스키가 제거됩니다. 그러나 기기에 저장된 패스키(iCloud 키체인, Google 비밀번호 관리자, Windows Hello 등)는 남아있으므로 수동으로 삭제해야 합니다.",
-    "deleteAccountWarningWithSignalAPI": "계정이 영구적으로 삭제되고 서버에서 모든 패스키가 제거됩니다. 귀하의 브라우저는 자동 패스키 삭제를 지원합니다.",
-    "deleteAccountPasskeyInfo": "삭제 후 오래된 패스키로 로그인을 시도하면 실패합니다. 혼란을 방지하려면 기기 설정에서 이 계정의 패스키를 수동으로 삭제하세요.",
-    "deleteAccountPasskeyInfoWithSignalAPI": "삭제 후 패스키가 기기에서 자동으로 삭제됩니다. 나중에 로그인하려면 새 계정을 만들어야 합니다.",
     "deleteAccountYes": "예, 계정 삭제",
     "retry": "재시도",
     "errors": {
@@ -161,7 +158,10 @@
     "deleteAccountSuccess": "계정이 성공적으로 삭제되었습니다. 리디렉션 중...",
     "deleteAccountError": "계정 삭제에 실패했습니다. 다시 시도해 주세요.",
     "soleAdministratorError": "계정을 삭제할 수 없습니다. 다른 구성원이 있는 '{{orgName}}'의 유일한 관리자입니다. 먼저 다른 사용자를 관리자로 승격시키세요.",
-    "soleAdministratorErrorGeneric": "계정을 삭제할 수 없습니다. 다른 구성원이 있는 하나 이상의 조직의 유일한 관리자입니다. 먼저 다른 사용자를 관리자로 승격시키세요."
+    "soleAdministratorErrorGeneric": "계정을 삭제할 수 없습니다. 다른 구성원이 있는 하나 이상의 조직의 유일한 관리자입니다. 먼저 다른 사용자를 관리자로 승격시키세요.",
+    "deleteAccountWarningWithSignalAPI": "계정이 영구적으로 삭제되고 서버에서 모든 패스키가 제거됩니다. 귀하의 브라우저는 자동 패스키 삭제를 지원합니다.",
+    "deleteAccountPasskeyInfo": "삭제 후 오래된 패스키로 로그인을 시도하면 실패합니다. 혼란을 방지하려면 기기 설정에서 이 계정의 패스키를 수동으로 삭제하세요.",
+    "deleteAccountPasskeyInfoWithSignalAPI": "삭제 후 패스키가 기기에서 자동으로 삭제됩니다. 나중에 로그인하려면 새 계정을 만들어야 합니다."
   },
   "usage": {
     "title": "사용량",
@@ -266,17 +266,17 @@
       "accepting": "수락 중...",
       "accept": "초대 수락"
     },
-    "memberSelection": {
-      "selectUser": "사용자 선택",
-      "searchUser": "사용자 검색..."
-    },
-    "teamsRemovedSuccessfully": "팀이 성공적으로 제거되었습니다",
     "dialogs": {
       "removeMemberTitle": "팀에서 사용자 제거",
       "removeMemberMessage": "멤버 \"{{name}}\"을(를) 팀에서 제거하시겠습니까?",
       "removeMembersTitle": "팀에서 멤버 제거",
       "removeMembersMessage": "다음 멤버들을 팀에서 제거하시겠습니까?"
-    }
+    },
+    "memberSelection": {
+      "selectUser": "사용자 선택",
+      "searchUser": "사용자 검색..."
+    },
+    "teamsRemovedSuccessfully": "팀이 성공적으로 제거되었습니다"
   },
   "login": {
     "title": "로그인",
@@ -356,7 +356,6 @@
     "title": "조직",
     "users": "사용자",
     "invitations": "초대",
-    "settings": "설정",
     "update": "업데이트",
     "placeholderName": "조직 이름 입력",
     "inviteMember": "멤버 초대",
@@ -377,10 +376,11 @@
       "invalidEmail": "유효하지 않은 이메일",
       "cannotRemoveLastAdmin": "조직의 마지막 관리자를 제거할 수 없습니다.",
       "invalidRole": "선택한 역할은 이 조직에 유효하지 않습니다.",
+      "cannotRemoveLastUser": "귀하는 이 조직의 유일한 회원이므로 탈퇴할 수 없습니다.",
+      "cannotRemoveUserFromLastOrganization": "이 사용자가 속한 유일한 조직이므로 제거할 수 없습니다. 사용자는 최소한 하나의 조직에 속해야 합니다.",
       "mediaInUseAsLogo": "조직 로고로 사용 중인 미디어는 삭제할 수 없습니다",
       "loadMedias": "미디어 로드 실패",
-      "updateRoleFailed": "멤버 역할 업데이트 실패",
-      "cannotRemoveLastUser": "귀하는 이 조직의 유일한 회원이므로 탈퇴할 수 없습니다."
+      "updateRoleFailed": "멤버 역할 업데이트 실패"
     },
     "messages": {
       "memberRemoved": "구성원 {{name}}을(를) 성공적으로 제거했습니다",
@@ -404,6 +404,14 @@
       "member": "팀 리소스에 액세스하고 편집할 수 있음",
       "installer": "기기 등록용 임시 토큰(24시간 후 만료)"
     },
+    "leaveOrganizationTitle": "이 조직 떠나기",
+    "leaveOrganizationDescription": "떠나면 조직 리소스에 대한 액세스가 즉시 제거됩니다.",
+    "leaveOrganizationAction": "조직 떠나기",
+    "leaveOrganizationLastAdminWarning": "이 조직을 관리하려면 떠나기 전에 다른 관리자를 추가하세요.",
+    "leaveOrganizationLastUserWarning": "이 조직의 유일한 구성원이므로 떠날 수 없습니다.",
+    "leaveLastOrganizationWarningTitle": "마지막 조직을 떠나시겠습니까?",
+    "leaveLastOrganizationWarningMessage": "이것은 귀하의 유일한 조직입니다. 떠나면 계정이 삭제되고 Castmill에 대한 모든 액세스 권한을 잃게 됩니다. 다시 초대받으려면 관리자에게 문의해야 합니다. 계속하시겠습니까?",
+    "settings": "설정",
     "logo": "로고",
     "logoSettings": "로고 설정",
     "selectLogo": "로고 선택",
@@ -418,14 +426,7 @@
       "removeMemberMessage": "멤버 \"{{name}}\"을(를) 조직에서 제거하시겠습니까?",
       "removeMembersTitle": "조직에서 멤버 제거",
       "removeMembersMessage": "다음 멤버들을 조직에서 제거하시겠습니까?"
-    },
-    "leaveOrganizationTitle": "이 조직 떠나기",
-    "leaveOrganizationDescription": "떠나면 조직 리소스에 대한 액세스가 즉시 제거됩니다.",
-    "leaveOrganizationAction": "조직 떠나기",
-    "leaveOrganizationLastAdminWarning": "이 조직을 관리하려면 떠나기 전에 다른 관리자를 추가하세요.",
-    "leaveOrganizationLastUserWarning": "이 조직의 유일한 구성원이므로 떠날 수 없습니다.",
-    "leaveLastOrganizationWarningTitle": "마지막 조직을 떠나시겠습니까?",
-    "leaveLastOrganizationWarningMessage": "이것은 귀하의 유일한 조직입니다. 떠나면 계정이 삭제되고 Castmill에 대한 모든 액세스 권한을 잃게 됩니다. 다시 초대받으려면 관리자에게 문의해야 합니다. 계속하시겠습니까?"
+    }
   },
   "playlists": {
     "title": "재생목록",

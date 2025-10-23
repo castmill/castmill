@@ -1015,6 +1015,7 @@ defmodule Castmill.Organizations do
 
   @doc """
     Remove a user from an organization.
+    If this is the user's last organization, their account will be deleted automatically.
   """
   def remove_user(organization_id, user_id) do
     with %OrganizationsUsers{} = org_user <-
@@ -1023,6 +1024,7 @@ defmodule Castmill.Organizations do
              user_id: user_id
            ),
          :ok <- ensure_additional_org_admins(organization_id, org_user),
+         :ok <- ensure_user_has_other_organizations(user_id, organization_id),
          {:ok, _} <- Repo.delete(org_user) do
       # Send notification to organization members
       user = Castmill.Accounts.get_user(user_id)
@@ -1038,6 +1040,9 @@ defmodule Castmill.Organizations do
 
       {:error, :last_admin} ->
         {:error, :last_admin}
+
+      {:error, :last_organization} ->
+        {:error, :last_organization}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:error, changeset}
@@ -1313,6 +1318,21 @@ defmodule Castmill.Organizations do
   defp ensure_additional_org_admins(organization_id, %OrganizationsUsers{role: :admin}) do
     if count_org_admins(organization_id) <= 1 do
       {:error, :last_admin}
+    else
+      :ok
+    end
+  end
+
+  defp ensure_user_has_other_organizations(user_id, _current_organization_id) do
+    # Count how many organizations the user belongs to
+    org_count =
+      OrganizationsUsers.base_query()
+      |> where([organizations_users: ou], ou.user_id == ^user_id)
+      |> Repo.aggregate(:count, :user_id)
+
+    # If user only belongs to 1 organization (the current one), prevent removal
+    if org_count <= 1 do
+      {:error, :last_organization}
     else
       :ok
     end

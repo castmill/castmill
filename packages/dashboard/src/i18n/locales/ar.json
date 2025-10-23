@@ -62,7 +62,6 @@
     "online": "متصل",
     "update": "تحديث",
     "reset": "إعادة تعيين",
-    "apply": "تطبيق",
     "addedOn": "تمت الإضافة في",
     "lastUpdatedOn": "آخر تحديث في",
     "details": "التفاصيل",
@@ -81,10 +80,11 @@
     },
     "addonError": "خطأ في الإضافة",
     "backToLogin": "العودة لتسجيل الدخول",
-    "selectVideo": "اختر فيديو",
-    "offline": "غير متصل",
     "selectImage": "اختر صورة",
-    "selectMedia": "اختر وسائط"
+    "selectMedia": "اختر وسائط",
+    "apply": "تطبيق",
+    "selectVideo": "اختر فيديو",
+    "offline": "غير متصل"
   },
   "topbar": {
     "help": "مساعدة",
@@ -142,9 +142,6 @@
     "deleteAccountButton": "حذف الحساب",
     "deleteAccountConfirm": "هل أنت متأكد؟",
     "deleteAccountWarning": "سيؤدي هذا إلى حذف حسابك بشكل دائم وإزالة جميع مفاتيح المرور من خوادمنا. ومع ذلك، ستبقى مفاتيح المرور المخزنة على أجهزتك (في iCloud Keychain أو Google Password Manager أو Windows Hello وما إلى ذلك) ويجب إزالتها يدويًا.",
-    "deleteAccountWarningWithSignalAPI": "سيؤدي هذا إلى حذف حسابك بشكل دائم وإزالة جميع مفاتيح المرور من خوادمنا. يدعم متصفحك الإزالة التلقائية لمفاتيح المرور.",
-    "deleteAccountPasskeyInfo": "بعد الحذف، إذا حاولت تسجيل الدخول باستخدام مفتاح مرور قديم، فسيفشل. لتجنب الارتباك، يرجى إزالة مفاتيح المرور لهذا الحساب يدويًا من إعدادات جهازك.",
-    "deleteAccountPasskeyInfoWithSignalAPI": "بعد الحذف، ستتم إزالة مفاتيح المرور تلقائيًا من جهازك. إذا حاولت تسجيل الدخول لاحقًا، فستحتاج إلى إنشاء حساب جديد.",
     "deleteAccountYes": "نعم، احذف الحساب",
     "retry": "إعادة المحاولة",
     "errors": {
@@ -161,7 +158,10 @@
     "deleteAccountSuccess": "تم حذف الحساب بنجاح. جارٍ إعادة التوجيه...",
     "deleteAccountError": "فشل حذف الحساب. يرجى المحاولة مرة أخرى.",
     "soleAdministratorError": "لا يمكن حذف الحساب. أنت المسؤول الوحيد لـ '{{orgName}}' التي لديها أعضاء آخرون. يرجى ترقية مستخدم آخر إلى مسؤول أولاً.",
-    "soleAdministratorErrorGeneric": "لا يمكن حذف الحساب. أنت المسؤول الوحيد لواحدة أو أكثر من المنظمات التي لديها أعضاء آخرون. يرجى ترقية مستخدم آخر إلى مسؤول أولاً."
+    "soleAdministratorErrorGeneric": "لا يمكن حذف الحساب. أنت المسؤول الوحيد لواحدة أو أكثر من المنظمات التي لديها أعضاء آخرون. يرجى ترقية مستخدم آخر إلى مسؤول أولاً.",
+    "deleteAccountWarningWithSignalAPI": "سيؤدي هذا إلى حذف حسابك بشكل دائم وإزالة جميع مفاتيح المرور من خوادمنا. يدعم متصفحك الإزالة التلقائية لمفاتيح المرور.",
+    "deleteAccountPasskeyInfo": "بعد الحذف، إذا حاولت تسجيل الدخول باستخدام مفتاح مرور قديم، فسيفشل. لتجنب الارتباك، يرجى إزالة مفاتيح المرور لهذا الحساب يدويًا من إعدادات جهازك.",
+    "deleteAccountPasskeyInfoWithSignalAPI": "بعد الحذف، ستتم إزالة مفاتيح المرور تلقائيًا من جهازك. إذا حاولت تسجيل الدخول لاحقًا، فستحتاج إلى إنشاء حساب جديد."
   },
   "usage": {
     "title": "الاستخدام",
@@ -266,17 +266,17 @@
       "accepting": "جاري القبول...",
       "accept": "قبول الدعوة"
     },
-    "memberSelection": {
-      "selectUser": "اختر مستخدمًا",
-      "searchUser": "البحث عن مستخدم..."
-    },
-    "teamsRemovedSuccessfully": "تمت إزالة الفرق بنجاح",
     "dialogs": {
       "removeMemberTitle": "إزالة المستخدم من الفريق",
       "removeMemberMessage": "هل أنت متأكد أنك تريد إزالة العضو \"{{name}}\" من الفريق؟",
       "removeMembersTitle": "إزالة الأعضاء من الفريق",
       "removeMembersMessage": "هل أنت متأكد أنك تريد إزالة الأعضاء التالية من الفريق؟"
-    }
+    },
+    "memberSelection": {
+      "selectUser": "اختر مستخدمًا",
+      "searchUser": "البحث عن مستخدم..."
+    },
+    "teamsRemovedSuccessfully": "تمت إزالة الفرق بنجاح"
   },
   "login": {
     "title": "تسجيل الدخول",
@@ -356,7 +356,6 @@
     "title": "المنظمة",
     "users": "المستخدمون",
     "invitations": "الدعوات",
-    "settings": "الإعدادات",
     "update": "تحديث",
     "placeholderName": "أدخل اسم المنظمة",
     "inviteMember": "دعوة عضو",
@@ -377,28 +376,18 @@
       "invalidEmail": "بريد إلكتروني غير صالح",
       "cannotRemoveLastAdmin": "لا يمكنك إزالة آخر مشرف للمؤسسة.",
       "invalidRole": "الدور المحدد غير صالح لهذه المؤسسة.",
+      "cannotRemoveLastUser": "لا يمكنك المغادرة لأنك العضو الوحيد في هذه المنظمة.",
+      "cannotRemoveUserFromLastOrganization": "لا يمكن إزالة هذا المستخدم لأن هذه هي مؤسسته الوحيدة. يجب أن ينتمي المستخدمون إلى مؤسسة واحدة على الأقل.",
       "mediaInUseAsLogo": "لا يمكن حذف الوسائط المستخدمة كشعار للمؤسسة",
       "loadMedias": "فشل تحميل الوسائط",
-      "updateRoleFailed": "فشل تحديث دور العضو",
-      "cannotRemoveLastUser": "لا يمكنك المغادرة لأنك العضو الوحيد في هذه المنظمة."
-    },
-    "teamRoleDescriptions": {
-      "admin": "يمكنه إدارة أعضاء الفريق والموارد",
-      "member": "يمكنه الوصول وتحرير موارد الفريق",
-      "installer": "رمز مؤقت لتسجيل الجهاز (ينتهي خلال 24 ساعة)"
-    },
-    "dialogs": {
-      "removeMemberTitle": "إزالة المستخدم من المنظمة",
-      "removeMemberMessage": "هل أنت متأكد أنك تريد إزالة العضو \"{{name}}\" من المنظمة؟",
-      "removeMembersTitle": "إزالة الأعضاء من المنظمة",
-      "removeMembersMessage": "هل أنت متأكد أنك تريد إزالة الأعضاء التالية من المنظمة؟"
+      "updateRoleFailed": "فشل تحديث دور العضو"
     },
     "messages": {
       "memberRemoved": "تمت إزالة العضو {{name}} بنجاح",
       "membersRemoved": "تمت إزالة الأعضاء بنجاح",
-      "invitationSent": "تم إرسال الدعوة إلى {{email}}",
       "leftOrganization": "لقد غادرت المنظمة {{name}}",
-      "noOrganizationsRemaining": "لقد غادرت منظمتك الأخيرة. يرجى الاتصال بالمسؤول ليتم دعوتك إلى منظمة."
+      "noOrganizationsRemaining": "لقد غادرت منظمتك الأخيرة. يرجى الاتصال بالمسؤول ليتم دعوتك إلى منظمة.",
+      "invitationSent": "تم إرسال الدعوة إلى {{email}}"
     },
     "teamRoleInstaller": "مُثبّت (24 ساعة)",
     "roleDescriptions": {
@@ -410,6 +399,11 @@
       "device_manager": "إدارة كاملة للأجهزة والقنوات",
       "guest": "وصول للقراءة فقط إلى الموارد"
     },
+    "teamRoleDescriptions": {
+      "admin": "يمكنه إدارة أعضاء الفريق والموارد",
+      "member": "يمكنه الوصول وتحرير موارد الفريق",
+      "installer": "رمز مؤقت لتسجيل الجهاز (ينتهي خلال 24 ساعة)"
+    },
     "leaveOrganizationTitle": "مغادرة هذه المنظمة",
     "leaveOrganizationDescription": "المغادرة تزيل وصولك إلى موارد المنظمة على الفور.",
     "leaveOrganizationAction": "مغادرة المنظمة",
@@ -417,6 +411,13 @@
     "leaveOrganizationLastUserWarning": "لا يمكنك المغادرة لأنك العضو الوحيد في هذه المنظمة.",
     "leaveLastOrganizationWarningTitle": "مغادرة منظمتك الأخيرة؟",
     "leaveLastOrganizationWarningMessage": "هذه هي منظمتك الوحيدة. مغادرتها ستحذف حسابك وستفقد كل الوصول إلى Castmill. ستحتاج إلى الاتصال بمسؤول لتتم دعوتك مرة أخرى. هل أنت متأكد أنك تريد المتابعة؟",
+    "settings": "الإعدادات",
+    "dialogs": {
+      "removeMemberTitle": "إزالة المستخدم من المنظمة",
+      "removeMemberMessage": "هل أنت متأكد أنك تريد إزالة العضو \"{{name}}\" من المنظمة؟",
+      "removeMembersTitle": "إزالة الأعضاء من المنظمة",
+      "removeMembersMessage": "هل أنت متأكد أنك تريد إزالة الأعضاء التالية من المنظمة؟"
+    },
     "logo": "الشعار",
     "logoSettings": "إعدادات الشعار",
     "selectLogo": "اختر الشعار",

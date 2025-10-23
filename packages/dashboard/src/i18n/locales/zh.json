@@ -62,7 +62,6 @@
     "online": "在线",
     "update": "更新",
     "reset": "重置",
-    "apply": "应用",
     "addedOn": "添加于",
     "lastUpdatedOn": "最后更新于",
     "details": "详情",
@@ -81,10 +80,11 @@
     },
     "addonError": "插件错误",
     "backToLogin": "返回登录",
-    "selectVideo": "选择视频",
-    "offline": "离线",
     "selectImage": "选择图片",
-    "selectMedia": "选择媒体"
+    "selectMedia": "选择媒体",
+    "apply": "应用",
+    "selectVideo": "选择视频",
+    "offline": "离线"
   },
   "topbar": {
     "help": "帮助",
@@ -142,9 +142,6 @@
     "deleteAccountButton": "删除账户",
     "deleteAccountConfirm": "您确定吗？",
     "deleteAccountWarning": "这将永久删除您的账户并从我们的服务器中删除所有密钥。但是，存储在您设备上的密钥（在iCloud钥匙串、Google密码管理器、Windows Hello等中）将保留，必须手动删除。",
-    "deleteAccountWarningWithSignalAPI": "这将永久删除您的账户并从我们的服务器中删除所有密钥。您的浏览器支持自动删除密钥。",
-    "deleteAccountPasskeyInfo": "删除后，如果您尝试使用旧密钥登录，将会失败。为避免混淆，请从您的设备设置中手动删除此账户的密钥。",
-    "deleteAccountPasskeyInfoWithSignalAPI": "删除后，密钥将自动从您的设备中删除。如果您以后尝试登录，则需要创建新账户。",
     "deleteAccountYes": "是的，删除账户",
     "retry": "重试",
     "errors": {
@@ -161,7 +158,10 @@
     "deleteAccountSuccess": "账户已成功删除。正在重定向...",
     "deleteAccountError": "删除账户失败。请重试。",
     "soleAdministratorError": "无法删除账户。您是 '{{orgName}}' 的唯一管理员，该组织还有其他成员。请先将另一个用户提升为管理员。",
-    "soleAdministratorErrorGeneric": "无法删除账户。您是一个或多个有其他成员的组织的唯一管理员。请先将另一个用户提升为管理员。"
+    "soleAdministratorErrorGeneric": "无法删除账户。您是一个或多个有其他成员的组织的唯一管理员。请先将另一个用户提升为管理员。",
+    "deleteAccountWarningWithSignalAPI": "这将永久删除您的账户并从我们的服务器中删除所有密钥。您的浏览器支持自动删除密钥。",
+    "deleteAccountPasskeyInfo": "删除后，如果您尝试使用旧密钥登录，将会失败。为避免混淆，请从您的设备设置中手动删除此账户的密钥。",
+    "deleteAccountPasskeyInfoWithSignalAPI": "删除后，密钥将自动从您的设备中删除。如果您以后尝试登录，则需要创建新账户。"
   },
   "usage": {
     "title": "使用情况",
@@ -266,17 +266,17 @@
       "accepting": "正在接受...",
       "accept": "接受邀请"
     },
-    "memberSelection": {
-      "selectUser": "选择用户",
-      "searchUser": "搜索用户..."
-    },
-    "teamsRemovedSuccessfully": "团队删除成功",
     "dialogs": {
       "removeMemberTitle": "从团队中移除用户",
       "removeMemberMessage": "您确定要从团队中移除成员\"{{name}}\"吗？",
       "removeMembersTitle": "从团队中移除成员",
       "removeMembersMessage": "您确定要从团队中移除以下成员吗？"
-    }
+    },
+    "memberSelection": {
+      "selectUser": "选择用户",
+      "searchUser": "搜索用户..."
+    },
+    "teamsRemovedSuccessfully": "团队删除成功"
   },
   "login": {
     "title": "登录",
@@ -356,7 +356,6 @@
     "title": "组织",
     "users": "用户",
     "invitations": "邀请",
-    "settings": "设置",
     "update": "更新",
     "placeholderName": "输入组织名称",
     "inviteMember": "邀请成员",
@@ -377,10 +376,11 @@
       "invalidEmail": "无效的电子邮件",
       "cannotRemoveLastAdmin": "你不能移除组织最后一位管理员。",
       "invalidRole": "所选角色对该组织无效。",
+      "cannotRemoveLastUser": "您无法离开，因为您是该组织的唯一成员。",
+      "cannotRemoveUserFromLastOrganization": "无法删除此用户，因为这是他们唯一的组织。用户必须至少属于一个组织。",
       "mediaInUseAsLogo": "无法删除正在用作组织标志的媒体",
       "loadMedias": "加载媒体失败",
-      "updateRoleFailed": "更新成员角色失败",
-      "cannotRemoveLastUser": "您无法离开，因为您是该组织的唯一成员。"
+      "updateRoleFailed": "更新成员角色失败"
     },
     "messages": {
       "memberRemoved": "已成功移除成员 {{name}}",
@@ -411,6 +411,7 @@
     "leaveOrganizationLastUserWarning": "您无法离开，因为您是此组织的唯一成员。",
     "leaveLastOrganizationWarningTitle": "离开您的最后一个组织？",
     "leaveLastOrganizationWarningMessage": "这是您唯一的组织。离开它将删除您的账户，您将失去对Castmill的所有访问权限。您需要联系管理员才能重新被邀请。您确定要继续吗？",
+    "settings": "设置",
     "logo": "标志",
     "logoSettings": "标志设置",
     "selectLogo": "选择标志",
