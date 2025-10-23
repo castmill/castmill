@@ -5,8 +5,6 @@ defmodule CastmillWeb.NotificationsChannelTest do
   import Castmill.NetworksFixtures
 
   alias Castmill.{Repo, Notifications}
-  alias Castmill.Accounts.User
-  alias Castmill.Organizations.Organization
   alias Castmill.Notifications.Notification
 
   setup do
@@ -146,7 +144,7 @@ defmodule CastmillWeb.NotificationsChannelTest do
           "notifications:#{user.id}"
         )
 
-      ref = push(socket, "mark_read", %{"id" => Ecto.UUID.generate()})
+      ref = push(socket, "mark_read", %{"id" => 999_999_999})
       assert_reply ref, :error, %{reason: "not_found"}
     end
   end

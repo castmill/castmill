@@ -5,8 +5,6 @@ defmodule CastmillWeb.NotificationControllerTest do
   import Castmill.OrganizationsFixtures
 
   alias Castmill.{Notifications, Repo}
-  alias Castmill.Accounts.User
-  alias Castmill.Organizations.Organization
 
   setup %{conn: conn} do
     network = network_fixture()
@@ -196,7 +194,7 @@ defmodule CastmillWeb.NotificationControllerTest do
     end
 
     test "returns error for non-existent notification", %{conn_session: conn} do
-      conn = patch(conn, "/dashboard/notifications/#{Ecto.UUID.generate()}/read")
+      conn = patch(conn, "/dashboard/notifications/999999999/read")
 
       assert json_response(conn, 404)
     end

@@ -4,9 +4,6 @@ defmodule Castmill.Workers.TranscoderNotificationTest do
 
   alias Castmill.{Repo, Notifications}
   alias Castmill.Resources.Media
-  alias Castmill.Workers.{VideoTranscoder, ImageTranscoder}
-  alias Castmill.Accounts.User
-  alias Castmill.Organizations.Organization
 
   import Castmill.NetworksFixtures
   import Castmill.OrganizationsFixtures
@@ -90,7 +87,7 @@ defmodule Castmill.Workers.TranscoderNotificationTest do
       assert length(notifications) == 1
     end
 
-    test "notification includes correct metadata", %{user: user, organization: org} do
+    test "notification includes correct metadata", %{organization: org} do
       {:ok, media} =
         %Media{}
         |> Media.changeset(%{
