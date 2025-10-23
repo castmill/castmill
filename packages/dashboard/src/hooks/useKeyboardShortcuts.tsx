@@ -8,7 +8,7 @@ import {
   onCleanup,
 } from 'solid-js';
 
-export type ShortcutCategory = 'global' | 'navigation' | 'actions' | 'search';
+export type ShortcutCategory = 'global' | 'navigation' | 'actions';
 
 export interface KeyboardShortcut {
   key: string;
@@ -16,7 +16,7 @@ export interface KeyboardShortcut {
   shift?: boolean;
   alt?: boolean;
   meta?: boolean;
-  description: string;
+  description: string | (() => string); // Support dynamic descriptions for i18n
   category: ShortcutCategory;
   action: () => void;
   condition?: () => boolean;
@@ -34,7 +34,9 @@ interface KeyboardShortcutsContextType {
 const KeyboardShortcutsContext = createContext<KeyboardShortcutsContextType>();
 
 export const KeyboardShortcutsProvider: Component<ParentProps> = (props) => {
-  const [shortcuts] = createSignal(new Map<string, KeyboardShortcut>());
+  const [shortcuts, setShortcuts] = createSignal(
+    new Map<string, KeyboardShortcut>()
+  );
 
   const isMac = () => {
     return (
@@ -53,11 +55,19 @@ export const KeyboardShortcutsProvider: Component<ParentProps> = (props) => {
   };
 
   const registerShortcut = (id: string, shortcut: KeyboardShortcut) => {
-    shortcuts().set(id, shortcut);
+    setShortcuts((prev) => {
+      const newMap = new Map(prev);
+      newMap.set(id, shortcut);
+      return newMap;
+    });
   };
 
   const unregisterShortcut = (id: string) => {
-    shortcuts().delete(id);
+    setShortcuts((prev) => {
+      const newMap = new Map(prev);
+      newMap.delete(id);
+      return newMap;
+    });
   };
 
   const getShortcuts = () => shortcuts();
@@ -81,18 +91,21 @@ export const KeyboardShortcutsProvider: Component<ParentProps> = (props) => {
 
     parts.push(shortcut.key.toUpperCase());
 
-    return parts.join(mac ? '' : '+');
+    // Use space on Mac for cleaner look, + on Windows/Linux
+    return parts.join(mac ? ' ' : '+');
   };
 
   const handleKeyDown = (event: KeyboardEvent) => {
-    // Don't trigger shortcuts when typing in input fields
     const target = event.target as HTMLElement;
-    if (
+    const isInInputField =
       target.tagName === 'INPUT' ||
       target.tagName === 'TEXTAREA' ||
       target.tagName === 'SELECT' ||
-      target.isContentEditable
-    ) {
+      target.isContentEditable;
+
+    // Allow ESC key even in input fields (to blur/exit)
+    // Block all other shortcuts when typing in input fields
+    if (isInInputField && event.key !== 'Escape') {
       return;
     }
 

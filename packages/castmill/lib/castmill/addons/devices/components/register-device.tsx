@@ -91,6 +91,7 @@ const RegisterDevice: Component<{
               id="name"
               value={name()}
               placeholder={t('devices.enterDeviceName')}
+              autofocus={true}
               onInput={(value: string) => {
                 setName(value);
                 validateField('name', value);

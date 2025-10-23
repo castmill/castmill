@@ -100,6 +100,7 @@ export const TeamView = (props: {
             value={name()!}
             placeholder={t('teams.enterTeamName')}
             disabled={!canEdit()}
+            autofocus={!props.team.id}
             onInput={(value: string | number | boolean) => {
               const strValue = value as string;
               setName(strValue);

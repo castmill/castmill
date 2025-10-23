@@ -197,7 +197,7 @@
   },
   "teams": {
     "title": "Équipes",
-    "members": "TODO: Translate - Members",
+    "members": "Membres",
     "invitations": "Invitations",
     "invitationAcceptSuccess": "Invitation acceptée avec succès",
     "invitationDeleteSuccess": "Invitation supprimée avec succès",
@@ -270,7 +270,7 @@
       "selectUser": "Sélectionner un utilisateur",
       "searchUser": "Rechercher un utilisateur..."
     },
-    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully",
+    "teamsRemovedSuccessfully": "Équipes supprimées avec succès",
     "dialogs": {
       "removeMemberTitle": "Retirer l'utilisateur de l'équipe",
       "removeMemberMessage": "Êtes-vous sûr de vouloir retirer le membre \"{{name}}\" de l'équipe?",
@@ -329,7 +329,7 @@
     "playlists": "Listes de lecture",
     "medias": "Médias",
     "widgets": "Widgets",
-    "members": "[TODO: Translate] Members"
+    "members": "Membres"
   },
   "channels": {
     "title": "Canaux",
@@ -401,7 +401,7 @@
       "noOrganizationsRemaining": "Vous avez quitté votre dernière organisation. Veuillez contacter un administrateur pour être invité à une organisation.",
       "invitationSent": "Invitation envoyée à {{email}}"
     },
-    "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
+    "teamRoleInstaller": "Installateur (24h)",
     "roleDescriptions": {
       "admin": "Accès complet incluant la gestion de l'organisation",
       "manager": "Peut gérer les équipes et la plupart des ressources",
@@ -532,21 +532,21 @@
     "enterPincode": "Entrez le code PIN à {{length}} caractères",
     "pincodeDescription": "Le code PIN sera affiché sur l'écran de l'appareil.",
     "register": "Enregistrer",
-    "title": "[TODO: Translate] Devices",
-    "addDevice": "[TODO: Translate] Add Device",
-    "registerDevice": "[TODO: Translate] Register device",
-    "registerDescription": "[TODO: Translate] And start displaying content on it",
-    "deviceDetails": "[TODO: Translate] Details of your device",
-    "removeDevice": "[TODO: Translate] Remove Device",
-    "removeDevices": "[TODO: Translate] Remove Devices",
-    "confirmRemove": "[TODO: Translate] Are you sure you want to remove device \"{{name}}\"?",
-    "confirmRemoveMultiple": "[TODO: Translate] Are you sure you want to remove the following devices?",
-    "deviceRegisteredSuccess": "[TODO: Translate] Device registered successfully",
-    "deviceRemovedSuccess": "[TODO: Translate] Device \"{{name}}\" removed successfully",
-    "devicesRemovedSuccess": "[TODO: Translate] {{count}} device(s) removed successfully",
-    "errorRegisteringDevice": "[TODO: Translate] Error registering device: {{error}}",
-    "errorRemovingDevice": "[TODO: Translate] Error removing device {{name}}: {{error}}",
-    "errorRemovingDevices": "[TODO: Translate] Error removing devices: {{error}}"
+    "title": "Appareils",
+    "addDevice": "Ajouter un appareil",
+    "registerDevice": "Enregistrer un appareil",
+    "registerDescription": "Et commencer à afficher du contenu dessus",
+    "deviceDetails": "Détails de votre appareil",
+    "removeDevice": "Supprimer l'appareil",
+    "removeDevices": "Supprimer les appareils",
+    "confirmRemove": "Êtes-vous sûr de vouloir supprimer l'appareil \"{{name}}\" ?",
+    "confirmRemoveMultiple": "Êtes-vous sûr de vouloir supprimer les appareils suivants ?",
+    "deviceRegisteredSuccess": "Appareil enregistré avec succès",
+    "deviceRemovedSuccess": "Appareil \"{{name}}\" supprimé avec succès",
+    "devicesRemovedSuccess": "{{count}} appareil(s) supprimé(s) avec succès",
+    "errorRegisteringDevice": "Erreur lors de l'enregistrement de l'appareil : {{error}}",
+    "errorRemovingDevice": "Erreur lors de la suppression de l'appareil {{name}} : {{error}}",
+    "errorRemovingDevices": "Erreur lors de la suppression des appareils : {{error}}"
   },
   "validation": {
     "fieldRequired": "Ce champ est requis",
@@ -692,18 +692,21 @@
   },
   "shortcuts": {
     "showShortcutsLegend": "Afficher les raccourcis clavier",
+    "closeDialog": "Fermer la boîte de dialogue",
+    "search": "Rechercher",
+    "globalSearch": "Recherche globale",
+    "pageSearch": "Rechercher dans la page actuelle",
+    "createResource": "Créer une ressource",
     "gotoPlaylists": "Aller aux Listes de lecture",
     "gotoMedias": "Aller aux Médias",
     "gotoChannels": "Aller aux Chaînes",
     "gotoOrganization": "Aller à l'Organisation",
     "gotoTeams": "Aller aux Équipes",
     "gotoDevices": "Aller aux Appareils",
-    "globalSearch": "Recherche globale",
     "categories": {
-      "global": "Global",
+      "global": "Général",
       "navigation": "Navigation",
-      "actions": "Actions",
-      "search": "Recherche"
+      "actions": "Actions"
     },
     "legend": {
       "title": "Raccourcis clavier",

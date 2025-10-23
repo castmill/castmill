@@ -72,7 +72,9 @@ const Search: Component = () => {
         onKeyDown={handleEnterKeyDown}
         ref={inputRef!} // Use ref to access the input element
       />
-      <span class="keyboard-shortcut">{formatShortcut(globalSearchShortcut)}</span>
+      <span class="keyboard-shortcut">
+        {formatShortcut(globalSearchShortcut)}
+      </span>
       <ImCancelCircle class="reset-icon" onClick={resetSearch} />
     </div>
   );

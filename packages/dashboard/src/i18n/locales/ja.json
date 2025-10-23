@@ -82,7 +82,7 @@
     "addonError": "アドオンエラー",
     "backToLogin": "ログインに戻る",
     "selectVideo": "ビデオを選択",
-    "offline": "[TODO: Translate] Offline",
+    "offline": "オフライン",
     "selectImage": "画像を選択",
     "selectMedia": "メディアを選択"
   },
@@ -197,7 +197,7 @@
   },
   "teams": {
     "title": "チーム",
-    "members": "TODO: Translate - Members",
+    "members": "メンバー",
     "invitations": "招待",
     "invitationAcceptSuccess": "招待が正常に承認されました",
     "invitationDeleteSuccess": "招待が正常に削除されました",
@@ -270,7 +270,7 @@
       "selectUser": "ユーザーを選択",
       "searchUser": "ユーザーを検索..."
     },
-    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully",
+    "teamsRemovedSuccessfully": "チームが正常に削除されました",
     "dialogs": {
       "removeMemberTitle": "チームからユーザーを削除",
       "removeMemberMessage": "メンバー「{{name}}」をチームから削除してもよろしいですか？",
@@ -317,7 +317,7 @@
     "playlists": "プレイリスト",
     "medias": "メディア",
     "widgets": "Widgets",
-    "members": "[TODO: Translate] Members"
+    "members": "メンバー"
   },
   "channels": {
     "title": "チャンネル",
@@ -388,7 +388,7 @@
       "noOrganizationsRemaining": "最後の組織を離れました。組織に招待されるには管理者にお問い合わせください。",
       "invitationSent": "{{email}}に招待状を送信しました"
     },
-    "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
+    "teamRoleInstaller": "インストーラー (24時間)",
     "roleDescriptions": {
       "admin": "組織管理を含む完全なアクセス権",
       "manager": "チームとほとんどのリソースを管理できます",
@@ -521,21 +521,21 @@
     "enterPincode": "{{length}}文字のPINコードを入力",
     "pincodeDescription": "PIN コードはデバイスの画面に表示されます。",
     "register": "登録",
-    "title": "[TODO: Translate] Devices",
-    "addDevice": "[TODO: Translate] Add Device",
-    "registerDevice": "[TODO: Translate] Register device",
-    "registerDescription": "[TODO: Translate] And start displaying content on it",
-    "deviceDetails": "[TODO: Translate] Details of your device",
-    "removeDevice": "[TODO: Translate] Remove Device",
-    "removeDevices": "[TODO: Translate] Remove Devices",
-    "confirmRemove": "[TODO: Translate] Are you sure you want to remove device \"{{name}}\"?",
-    "confirmRemoveMultiple": "[TODO: Translate] Are you sure you want to remove the following devices?",
-    "deviceRegisteredSuccess": "[TODO: Translate] Device registered successfully",
-    "deviceRemovedSuccess": "[TODO: Translate] Device \"{{name}}\" removed successfully",
-    "devicesRemovedSuccess": "[TODO: Translate] {{count}} device(s) removed successfully",
-    "errorRegisteringDevice": "[TODO: Translate] Error registering device: {{error}}",
-    "errorRemovingDevice": "[TODO: Translate] Error removing device {{name}}: {{error}}",
-    "errorRemovingDevices": "[TODO: Translate] Error removing devices: {{error}}"
+    "title": "デバイス",
+    "addDevice": "デバイスを追加",
+    "registerDevice": "デバイスを登録",
+    "registerDescription": "コンテンツの表示を開始",
+    "deviceDetails": "デバイスの詳細",
+    "removeDevice": "デバイスを削除",
+    "removeDevices": "デバイスを削除",
+    "confirmRemove": "デバイス「{{name}}」を削除してもよろしいですか？",
+    "confirmRemoveMultiple": "以下のデバイスを削除してもよろしいですか？",
+    "deviceRegisteredSuccess": "デバイスが正常に登録されました",
+    "deviceRemovedSuccess": "デバイス「{{name}}」が正常に削除されました",
+    "devicesRemovedSuccess": "{{count}}個のデバイスが正常に削除されました",
+    "errorRegisteringDevice": "デバイスの登録エラー: {{error}}",
+    "errorRemovingDevice": "デバイス{{name}}の削除エラー: {{error}}",
+    "errorRemovingDevices": "デバイスの削除エラー: {{error}}"
   },
   "validation": {
     "fieldRequired": "この項目は必須です",
@@ -681,18 +681,21 @@
   },
   "shortcuts": {
     "showShortcutsLegend": "キーボードショートカットを表示",
+    "closeDialog": "ダイアログを閉じる",
     "gotoPlaylists": "プレイリストに移動",
     "gotoMedias": "メディアに移動",
     "gotoChannels": "チャンネルに移動",
     "gotoOrganization": "組織に移動",
     "gotoTeams": "チームに移動",
     "gotoDevices": "デバイスに移動",
+    "search": "検索",
     "globalSearch": "グローバル検索",
+    "pageSearch": "現在のページで検索",
+    "createResource": "リソースを作成",
     "categories": {
       "global": "グローバル",
       "navigation": "ナビゲーション",
-      "actions": "アクション",
-      "search": "検索"
+      "actions": "アクション"
     },
     "legend": {
       "title": "キーボードショートカット",

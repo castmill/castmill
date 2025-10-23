@@ -77,7 +77,7 @@
     "addonError": "Add-on-Fehler",
     "backToLogin": "Zurück zur Anmeldung",
     "selectVideo": "Video auswählen",
-    "offline": "[TODO: Translate] Offline",
+    "offline": "Offline",
     "selectImage": "Bild auswählen",
     "selectMedia": "Medien auswählen"
   },
@@ -91,7 +91,7 @@
     "playlists": "Playlists",
     "medias": "Medien",
     "widgets": "Widgets",
-    "members": "[TODO: Translate] Members"
+    "members": "Mitglieder"
   },
   "topbar": {
     "help": "Hilfe",
@@ -212,7 +212,7 @@
     "removeTeams": "Teams entfernen",
     "confirmRemoveTeam": "Sind Sie sicher, dass Sie das Team \"{{name}}\" entfernen möchten?",
     "confirmRemoveTeams": "Sind Sie sicher, dass Sie die folgenden Teams entfernen möchten?",
-    "members": "TODO: Translate - Members",
+    "members": "Mitglieder",
     "invitations": "Einladungen",
     "invitationAcceptSuccess": "Einladung erfolgreich angenommen",
     "invitationDeleteSuccess": "Einladung erfolgreich gelöscht",
@@ -277,7 +277,7 @@
       "selectUser": "Benutzer auswählen",
       "searchUser": "Nach einem Benutzer suchen..."
     },
-    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully",
+    "teamsRemovedSuccessfully": "Teams erfolgreich entfernt",
     "dialogs": {
       "removeMemberTitle": "Benutzer aus Team entfernen",
       "removeMemberMessage": "Sind Sie sicher, dass Sie das Mitglied \"{{name}}\" aus dem Team entfernen möchten?",
@@ -355,7 +355,7 @@
       "noOrganizationsRemaining": "Sie haben Ihre letzte Organisation verlassen. Bitte kontaktieren Sie einen Administrator, um zu einer Organisation eingeladen zu werden.",
       "invitationSent": "Einladung an {{email}} gesendet"
     },
-    "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
+    "teamRoleInstaller": "Installateur (24h)",
     "roleDescriptions": {
       "admin": "Vollzugriff einschließlich Organisationsverwaltung",
       "manager": "Kann Teams und die meisten Ressourcen verwalten",
@@ -531,21 +531,21 @@
     "enterPincode": "{{length}}-stelligen PIN-Code eingeben",
     "pincodeDescription": "Der PIN-Code wird auf dem Bildschirm des Geräts angezeigt.",
     "register": "Registrieren",
-    "title": "[TODO: Translate] Devices",
-    "addDevice": "[TODO: Translate] Add Device",
-    "registerDevice": "[TODO: Translate] Register device",
-    "registerDescription": "[TODO: Translate] And start displaying content on it",
-    "deviceDetails": "[TODO: Translate] Details of your device",
-    "removeDevice": "[TODO: Translate] Remove Device",
-    "removeDevices": "[TODO: Translate] Remove Devices",
-    "confirmRemove": "[TODO: Translate] Are you sure you want to remove device \"{{name}}\"?",
-    "confirmRemoveMultiple": "[TODO: Translate] Are you sure you want to remove the following devices?",
-    "deviceRegisteredSuccess": "[TODO: Translate] Device registered successfully",
-    "deviceRemovedSuccess": "[TODO: Translate] Device \"{{name}}\" removed successfully",
-    "devicesRemovedSuccess": "[TODO: Translate] {{count}} device(s) removed successfully",
-    "errorRegisteringDevice": "[TODO: Translate] Error registering device: {{error}}",
-    "errorRemovingDevice": "[TODO: Translate] Error removing device {{name}}: {{error}}",
-    "errorRemovingDevices": "[TODO: Translate] Error removing devices: {{error}}"
+    "title": "Geräte",
+    "addDevice": "Gerät hinzufügen",
+    "registerDevice": "Gerät registrieren",
+    "registerDescription": "Und beginnen Sie, Inhalte darauf anzuzeigen",
+    "deviceDetails": "Details Ihres Geräts",
+    "removeDevice": "Gerät entfernen",
+    "removeDevices": "Geräte entfernen",
+    "confirmRemove": "Möchten Sie das Gerät \"{{name}}\" wirklich entfernen?",
+    "confirmRemoveMultiple": "Möchten Sie die folgenden Geräte wirklich entfernen?",
+    "deviceRegisteredSuccess": "Gerät erfolgreich registriert",
+    "deviceRemovedSuccess": "Gerät \"{{name}}\" erfolgreich entfernt",
+    "devicesRemovedSuccess": "{{count}} Gerät(e) erfolgreich entfernt",
+    "errorRegisteringDevice": "Fehler beim Registrieren des Geräts: {{error}}",
+    "errorRemovingDevice": "Fehler beim Entfernen des Geräts {{name}}: {{error}}",
+    "errorRemovingDevices": "Fehler beim Entfernen der Geräte: {{error}}"
   },
   "validation": {
     "fieldRequired": "Dieses Feld ist erforderlich",
@@ -675,18 +675,21 @@
   },
   "shortcuts": {
     "showShortcutsLegend": "Tastaturkürzel anzeigen",
+    "closeDialog": "Dialog schließen",
     "gotoPlaylists": "Zu Wiedergabelisten",
     "gotoMedias": "Zu Medien",
     "gotoChannels": "Zu Kanälen",
     "gotoOrganization": "Zur Organisation",
     "gotoTeams": "Zu Teams",
     "gotoDevices": "Zu Geräten",
+    "search": "Suchen",
     "globalSearch": "Globale Suche",
+    "pageSearch": "Auf aktueller Seite suchen",
+    "createResource": "Ressource erstellen",
     "categories": {
-      "global": "Global",
-      "navigation": "Navigation",
-      "actions": "Aktionen",
-      "search": "Suche"
+      "global": "Allgemein",
+      "navigation": "Navigierung",
+      "actions": "Aktionen"
     },
     "legend": {
       "title": "Tastaturkürzel",

@@ -82,7 +82,7 @@
     "addonError": "خطأ في الإضافة",
     "backToLogin": "العودة لتسجيل الدخول",
     "selectVideo": "اختر فيديو",
-    "offline": "[TODO: Translate] Offline",
+    "offline": "غير متصل",
     "selectImage": "اختر صورة",
     "selectMedia": "اختر وسائط"
   },
@@ -197,7 +197,7 @@
   },
   "teams": {
     "title": "الفرق",
-    "members": "TODO: Translate - Members",
+    "members": "الأعضاء",
     "invitations": "الدعوات",
     "invitationAcceptSuccess": "تم قبول الدعوة بنجاح",
     "invitationDeleteSuccess": "تم حذف الدعوة بنجاح",
@@ -270,7 +270,7 @@
       "selectUser": "اختر مستخدمًا",
       "searchUser": "البحث عن مستخدم..."
     },
-    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully",
+    "teamsRemovedSuccessfully": "تمت إزالة الفرق بنجاح",
     "dialogs": {
       "removeMemberTitle": "إزالة المستخدم من الفريق",
       "removeMemberMessage": "هل أنت متأكد أنك تريد إزالة العضو \"{{name}}\" من الفريق؟",
@@ -317,7 +317,7 @@
     "playlists": "قوائم التشغيل",
     "medias": "الوسائط",
     "widgets": "Widgets",
-    "members": "[TODO: Translate] Members"
+    "members": "الأعضاء"
   },
   "channels": {
     "title": "القنوات",
@@ -400,7 +400,7 @@
       "leftOrganization": "لقد غادرت المنظمة {{name}}",
       "noOrganizationsRemaining": "لقد غادرت منظمتك الأخيرة. يرجى الاتصال بالمسؤول ليتم دعوتك إلى منظمة."
     },
-    "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
+    "teamRoleInstaller": "مُثبّت (24 ساعة)",
     "roleDescriptions": {
       "admin": "وصول كامل بما في ذلك إدارة المنظمة",
       "manager": "يمكنه إدارة الفرق ومعظم الموارد",
@@ -520,21 +520,21 @@
     "enterPincode": "أدخل رمز PIN المكون من {{length}} أحرف",
     "pincodeDescription": "سيتم عرض رمز PIN على شاشة الجهاز.",
     "register": "تسجيل",
-    "title": "[TODO: Translate] Devices",
-    "addDevice": "[TODO: Translate] Add Device",
-    "registerDevice": "[TODO: Translate] Register device",
-    "registerDescription": "[TODO: Translate] And start displaying content on it",
-    "deviceDetails": "[TODO: Translate] Details of your device",
-    "removeDevice": "[TODO: Translate] Remove Device",
-    "removeDevices": "[TODO: Translate] Remove Devices",
-    "confirmRemove": "[TODO: Translate] Are you sure you want to remove device \"{{name}}\"?",
-    "confirmRemoveMultiple": "[TODO: Translate] Are you sure you want to remove the following devices?",
-    "deviceRegisteredSuccess": "[TODO: Translate] Device registered successfully",
-    "deviceRemovedSuccess": "[TODO: Translate] Device \"{{name}}\" removed successfully",
-    "devicesRemovedSuccess": "[TODO: Translate] {{count}} device(s) removed successfully",
-    "errorRegisteringDevice": "[TODO: Translate] Error registering device: {{error}}",
-    "errorRemovingDevice": "[TODO: Translate] Error removing device {{name}}: {{error}}",
-    "errorRemovingDevices": "[TODO: Translate] Error removing devices: {{error}}"
+    "title": "الأجهزة",
+    "addDevice": "إضافة جهاز",
+    "registerDevice": "تسجيل جهاز",
+    "registerDescription": "وابدأ عرض المحتوى عليه",
+    "deviceDetails": "تفاصيل جهازك",
+    "removeDevice": "إزالة الجهاز",
+    "removeDevices": "إزالة الأجهزة",
+    "confirmRemove": "هل أنت متأكد من أنك تريد إزالة الجهاز \"{{name}}\"؟",
+    "confirmRemoveMultiple": "هل أنت متأكد من أنك تريد إزالة الأجهزة التالية؟",
+    "deviceRegisteredSuccess": "تم تسجيل الجهاز بنجاح",
+    "deviceRemovedSuccess": "تمت إزالة الجهاز \"{{name}}\" بنجاح",
+    "devicesRemovedSuccess": "تمت إزالة {{count}} جهاز بنجاح",
+    "errorRegisteringDevice": "خطأ في تسجيل الجهاز: {{error}}",
+    "errorRemovingDevice": "خطأ في إزالة الجهاز {{name}}: {{error}}",
+    "errorRemovingDevices": "خطأ في إزالة الأجهزة: {{error}}"
   },
   "validation": {
     "fieldRequired": "هذا الحقل مطلوب",
@@ -680,18 +680,21 @@
   },
   "shortcuts": {
     "showShortcutsLegend": "عرض اختصارات لوحة المفاتيح",
+    "closeDialog": "إغلاق مربع الحوار",
     "gotoPlaylists": "الانتقال إلى قوائم التشغيل",
     "gotoMedias": "الانتقال إلى الوسائط",
     "gotoChannels": "الانتقال إلى القنوات",
     "gotoOrganization": "الانتقال إلى المنظمة",
     "gotoTeams": "الانتقال إلى الفرق",
     "gotoDevices": "الانتقال إلى الأجهزة",
-    "globalSearch": "البحث العام",
+    "search": "بحث",
+    "globalSearch": "بحث عام",
+    "pageSearch": "البحث في الصفحة الحالية",
+    "createResource": "إنشاء مورد",
     "categories": {
       "global": "عام",
       "navigation": "التنقل",
-      "actions": "الإجراءات",
-      "search": "بحث"
+      "actions": "الإجراءات"
     },
     "legend": {
       "title": "اختصارات لوحة المفاتيح",

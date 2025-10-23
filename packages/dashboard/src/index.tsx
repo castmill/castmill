@@ -180,90 +180,93 @@ render(() => {
       <KeyboardShortcutsProvider>
         <ToastProvider>
           <Router>
-          {/* Routes without App wrapper (no Topbar/Footer) */}
-          <Route path="/login" component={Login} />
-          <Route path="/signup" component={SignUp} />
-          <Route path="/recover-credentials" component={CompleteRecovery} />
-          <Route
-            path="/invite-organization"
-            component={OrganizationsInvitationPage}
-          />
-          <Route path="/invite" component={TeamsInvitationPage} />
-
-          {/* Routes with App wrapper (Topbar + Footer) */}
-          <Route path="/" component={App}>
+            {/* Routes without App wrapper (no Topbar/Footer) */}
+            <Route path="/login" component={Login} />
+            <Route path="/signup" component={SignUp} />
+            <Route path="/recover-credentials" component={CompleteRecovery} />
             <Route
-              path="/"
-              component={(props: any) => (
-                <Suspense fallback={<LoadingFallback />}>
-                  <ProtectedRoute>
-                    {(addons) => <RootRedirect />}
-                  </ProtectedRoute>
-                </Suspense>
-              )}
+              path="/invite-organization"
+              component={OrganizationsInvitationPage}
             />
+            <Route path="/invite" component={TeamsInvitationPage} />
 
-            <Route
-              path="/org/:orgId"
-              component={(props: any) => (
-                <Suspense fallback={<LoadingFallback />}>
-                  <ProtectedRoute>
-                    {(addons) => (
-                      <Dashboard {...props} addons={new AddOnTree(addons)} />
-                    )}
-                  </ProtectedRoute>
-                </Suspense>
-              )}
-            >
-              <Route path="/" component={EmptyComponent} />
-              <Route path="settings" component={SettingsPage} />
-              <Route path="search" component={SearchPage} />
-              <Route path="usage" component={UsagePage} />
-              <Route path="teams" component={TeamsPage} />
-              <Route path="organization" component={OrganizationPage} />
-              <Route path="channels" component={ChannelsPage} />
-              <Route path="invite" component={TeamsInvitationPage} />
+            {/* Routes with App wrapper (Topbar + Footer) */}
+            <Route path="/" component={App}>
+              <Route
+                path="/"
+                component={(props: any) => (
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ProtectedRoute>
+                      {(addons) => <RootRedirect />}
+                    </ProtectedRoute>
+                  </Suspense>
+                )}
+              />
 
-              {/* Dynamically generate routes for AddOns */}
-              <For each={store.addons}>
-                {(addon) => {
-                  if (!addon.mount_path) {
-                    return null;
-                  }
-                  // Wrap component to force remount when orgId changes
-                  const KeyedComponent = (props: any) => {
-                    const params = useParams();
+              <Route
+                path="/org/:orgId"
+                component={(props: any) => (
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ProtectedRoute>
+                      {(addons) => (
+                        <Dashboard {...props} addons={new AddOnTree(addons)} />
+                      )}
+                    </ProtectedRoute>
+                  </Suspense>
+                )}
+              >
+                <Route path="/" component={EmptyComponent} />
+                <Route path="settings" component={SettingsPage} />
+                <Route path="search" component={SearchPage} />
+                <Route path="usage" component={UsagePage} />
+                <Route path="teams" component={TeamsPage} />
+                <Route path="organization" component={OrganizationPage} />
+                <Route path="channels" component={ChannelsPage} />
+                <Route path="invite" component={TeamsInvitationPage} />
+
+                {/* Dynamically generate routes for AddOns */}
+                <For each={store.addons}>
+                  {(addon) => {
+                    if (!addon.mount_path) {
+                      return null;
+                    }
+                    // Wrap component to force remount when orgId changes
+                    const KeyedComponent = (props: any) => {
+                      const params = useParams();
+                      return (
+                        <Show when={params.orgId} keyed>
+                          {(orgId) => {
+                            const Component = wrapLazyComponent(addon);
+                            return <Component {...props} key={orgId} />;
+                          }}
+                        </Show>
+                      );
+                    };
+
                     return (
-                      <Show when={params.orgId} keyed>
-                        {(orgId) => {
-                          const Component = wrapLazyComponent(addon);
-                          return <Component {...props} key={orgId} />;
-                        }}
-                      </Show>
+                      <Route
+                        path={addon.mount_path}
+                        component={KeyedComponent}
+                      />
                     );
-                  };
+                  }}
+                </For>
 
-                  return (
-                    <Route path={addon.mount_path} component={KeyedComponent} />
-                  );
-                }}
-              </For>
+                <Route path="/*404" component={NotFound} />
+              </Route>
 
-              <Route path="/*404" component={NotFound} />
+              {/* Catch-all for any unmatched routes at root level */}
+              <Route
+                path="/*404"
+                component={(props: any) => (
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ProtectedRoute>{(addons) => <NotFound />}</ProtectedRoute>
+                  </Suspense>
+                )}
+              />
             </Route>
-
-            {/* Catch-all for any unmatched routes at root level */}
-            <Route
-              path="/*404"
-              component={(props: any) => (
-                <Suspense fallback={<LoadingFallback />}>
-                  <ProtectedRoute>{(addons) => <NotFound />}</ProtectedRoute>
-                </Suspense>
-              )}
-            />
-          </Route>
-        </Router>
-      </ToastProvider>
+          </Router>
+        </ToastProvider>
       </KeyboardShortcutsProvider>
     </I18nProvider>
   );

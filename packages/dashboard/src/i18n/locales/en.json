@@ -675,18 +675,21 @@
   },
   "shortcuts": {
     "showShortcutsLegend": "Show keyboard shortcuts",
+    "closeDialog": "Close dialog",
+    "search": "Search",
+    "globalSearch": "Global search",
+    "pageSearch": "Search in current page",
+    "createResource": "Create resource",
     "gotoPlaylists": "Go to Playlists",
     "gotoMedias": "Go to Medias",
     "gotoChannels": "Go to Channels",
     "gotoOrganization": "Go to Organization",
     "gotoTeams": "Go to Teams",
     "gotoDevices": "Go to Devices",
-    "globalSearch": "Global search",
     "categories": {
       "global": "Global",
       "navigation": "Navigation",
-      "actions": "Actions",
-      "search": "Search"
+      "actions": "Actions"
     },
     "legend": {
       "title": "Keyboard Shortcuts",

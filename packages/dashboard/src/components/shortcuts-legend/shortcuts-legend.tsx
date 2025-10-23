@@ -19,7 +19,6 @@ export const ShortcutsLegend: Component<ShortcutsLegendProps> = (props) => {
       global: new Map(),
       navigation: new Map(),
       actions: new Map(),
-      search: new Map(),
     };
 
     for (const [id, shortcut] of shortcuts) {
@@ -37,15 +36,18 @@ export const ShortcutsLegend: Component<ShortcutsLegendProps> = (props) => {
       global: t('shortcuts.categories.global'),
       navigation: t('shortcuts.categories.navigation'),
       actions: t('shortcuts.categories.actions'),
-      search: t('shortcuts.categories.search'),
     };
     return titles[category];
   };
 
+  // Don't show on mobile devices
+  if (isMobile()) {
+    return null;
+  }
+
   return (
-    <Show when={!isMobile()}>
+    <Show when={props.show}>
       <Modal
-        show={props.show}
         title={t('shortcuts.legend.title')}
         description={t('shortcuts.legend.description')}
         onClose={props.onClose}
@@ -62,7 +64,9 @@ export const ShortcutsLegend: Component<ShortcutsLegendProps> = (props) => {
                       {(shortcut) => (
                         <div class="shortcut-item">
                           <span class="shortcut-description">
-                            {shortcut.description}
+                            {typeof shortcut.description === 'function'
+                              ? shortcut.description()
+                              : shortcut.description}
                           </span>
                           <span class="shortcut-keys">
                             {formatShortcut(shortcut)}
