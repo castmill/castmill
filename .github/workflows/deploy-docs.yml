@@ -25,11 +25,8 @@ env:
   NODE_OPTIONS: --max-old-space-size=6144
 
 jobs:
-  # Single deploy job since we're just deploying
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  # Build job
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -39,6 +36,8 @@ jobs:
         with:
           node-version: 20.x
           cache: 'yarn'
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
       - name: Install dependencies
         run: yarn install --frozen-lockfile
       - name: Build cache package
@@ -47,13 +46,19 @@ jobs:
         run: yarn workspace @castmill/player build
       - name: Build website
         run: yarn workspace website build
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          # Upload entire repository
           path: packages/website/build
+
+  # Deploy job
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v3
