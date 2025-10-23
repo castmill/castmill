@@ -1015,6 +1015,7 @@ defmodule Castmill.Organizations do
 
   @doc """
     Remove a user from an organization.
+    If this is the user's last organization, their account will be deleted automatically.
   """
   def remove_user(organization_id, user_id) do
     with %OrganizationsUsers{} = org_user <-
@@ -1023,7 +1024,6 @@ defmodule Castmill.Organizations do
              user_id: user_id
            ),
          :ok <- ensure_additional_org_admins(organization_id, org_user),
-         :ok <- ensure_user_has_other_organizations(organization_id, user_id),
          {:ok, _} <- Repo.delete(org_user) do
       # Send notification to organization members
       user = Castmill.Accounts.get_user(user_id)
@@ -1032,16 +1032,31 @@ defmodule Castmill.Organizations do
         Castmill.Notifications.Events.notify_member_removed(user.name, organization_id)
       end
 
-      {:ok, "User successfully removed."}
+      # Check if user has any remaining organizations
+      remaining_orgs_count =
+        OrganizationsUsers.base_query()
+        |> where([organizations_users: ou], ou.user_id == ^user_id)
+        |> Repo.aggregate(:count, :user_id)
+
+      if remaining_orgs_count == 0 do
+        # User has no organizations left, delete their account
+        case Castmill.Accounts.delete_user(user_id) do
+          {:ok, _} ->
+            {:ok, "User removed and account deleted (no organizations remaining)."}
+
+          {:error, _} ->
+            # Account deletion failed, but user was already removed from org
+            {:ok, "User successfully removed."}
+        end
+      else
+        {:ok, "User successfully removed."}
+      end
     else
       nil ->
         {:error, :not_found}
 
       {:error, :last_admin} ->
         {:error, :last_admin}
-
-      {:error, :last_organization} ->
-        {:error, :last_organization}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:error, changeset}
@@ -1317,21 +1332,6 @@ defmodule Castmill.Organizations do
   defp ensure_additional_org_admins(organization_id, %OrganizationsUsers{role: :admin}) do
     if count_org_admins(organization_id) <= 1 do
       {:error, :last_admin}
-    else
-      :ok
-    end
-  end
-
-  defp ensure_user_has_other_organizations(organization_id, user_id) do
-    # Count how many organizations the user belongs to
-    user_org_count =
-      OrganizationsUsers.base_query()
-      |> where([organizations_users: ou], ou.user_id == ^user_id)
-      |> Repo.aggregate(:count, :user_id)
-
-    # If this is the user's only organization, don't allow removal
-    if user_org_count <= 1 do
-      {:error, :last_organization}
     else
       :ok
     end
