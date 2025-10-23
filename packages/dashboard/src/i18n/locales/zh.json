@@ -668,7 +668,7 @@
           "titleSelf": "已从团队中移除",
           "descriptionSelf": "您已从团队 {{team_name}} 中移除",
           "titleOthers": "团队成员已移除",
-          "descriptionOthers": "{{user_name}}已从团队 {{team_name}} 中移除"
+          "descriptionOthers": "{{user_name}} 已从团队 {{team_name}} 中移除"
         }
       }
     }
