@@ -4,10 +4,8 @@ defmodule Castmill.NotificationsTest do
   import Castmill.OrganizationsFixtures
   import Castmill.NetworksFixtures
 
-  alias Castmill.{Notifications, Repo}
+  alias Castmill.Notifications
   alias Castmill.Notifications.Notification
-  alias Castmill.Accounts.User
-  alias Castmill.Organizations.Organization
 
   setup do
     # Create network, user and organization using fixtures
@@ -265,7 +263,7 @@ defmodule Castmill.NotificationsTest do
     end
 
     test "returns error for non-existent notification" do
-      assert {:error, :not_found} = Notifications.mark_as_read(Ecto.UUID.generate())
+      assert {:error, :not_found} = Notifications.mark_as_read(999_999_999)
     end
   end
 
@@ -322,7 +320,7 @@ defmodule Castmill.NotificationsTest do
   end
 
   describe "mark_all_as_read/1" do
-    test "marks all user notifications as read", %{user: user, organization: org} do
+    test "marks all user notifications as read", %{user: user} do
       # Create multiple unread notifications
       {:ok, _n1} =
         Notifications.create_user_notification(%{
@@ -461,7 +459,6 @@ defmodule Castmill.NotificationsTest do
 
     test "does not mark other users' notifications as read", %{
       user: user,
-      organization: org,
       network: network
     } do
       # Create another user
