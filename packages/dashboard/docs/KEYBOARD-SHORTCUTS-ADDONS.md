@@ -4,22 +4,21 @@ This guide explains how addon developers can register keyboard shortcuts for the
 
 ## Overview
 
-The Dashboard provides a centralized keyboard shortcuts system that addons can integrate with. The system:
+The Dashboard provides a centralized keyboard shortcuts system through the `useKeyboardShortcuts` hook. The system:
 
 - Automatically handles platform-specific shortcuts (macOS uses ⌘, Windows/Linux use Ctrl)
 - Supports conditional shortcuts that are only active when certain conditions are met
 - Displays shortcuts in a centralized shortcuts legend (Cmd/Ctrl+/)
 - Hides shortcuts on mobile devices automatically
+- Prevents shortcuts from triggering when user is typing in input fields
 
 ## Accessing the Keyboard Shortcuts System
 
-Addons don't have direct access to the useKeyboardShortcuts hook because they're loaded in a different context. Instead, addons should expose their own keyboard shortcut handling.
+Addons receive the keyboard shortcuts registry through the `store.keyboardShortcuts` prop. This allows addons to register and unregister their own shortcuts that will be displayed in the global shortcuts legend.
 
 ## Implementation Pattern
 
-Here's the recommended pattern for implementing keyboard shortcuts in your addon:
-
-### 1. Register shortcuts in your component
+### 1. Register shortcuts in your addon component
 
 ```tsx
 import { Component, onMount, onCleanup } from 'solid-js';
@@ -30,33 +29,175 @@ const MyAddonPage: Component<AddonComponentProps> = (props) => {
     props.store.i18n?.t(key, params) || key;
 
   // Your addon state and logic
-  const [showAddModal, setShowAddModal] = createSignal(false);
+  const [items, setItems] = createSignal([]);
+  const [selectedItems, setSelectedItems] = createSignal<string[]>([]);
+
+  const handleCreate = () => {
+    // Your create logic
+    console.log('Creating new resource');
+  };
+
+  const handleDelete = () => {
+    // Your delete logic
+    if (selectedItems().length > 0) {
+      console.log('Deleting selected items:', selectedItems());
+    }
+  };
+
+  const handleSelectAll = () => {
+    // Your select all logic
+    setSelectedItems(items().map((item) => item.id));
+  };
 
   onMount(() => {
-    // Register keyboard event listener
-    window.addEventListener('keydown', handleKeyDown);
+    const { registerShortcut } = props.store.keyboardShortcuts || {};
+
+    if (registerShortcut) {
+      // Register create shortcut - Ctrl+N
+      registerShortcut('addon-create-resource', {
+        key: 'N',
+        ctrl: true,
+        description: () => t('shortcuts.createResource'),
+        category: 'actions',
+        action: handleCreate,
+        // Only active when on this addon's page
+        condition: () => window.location.pathname.includes('/my-addon'),
+      });
+
+      // Register delete shortcut - Delete key
+      registerShortcut('addon-delete-resources', {
+        key: 'Delete',
+        description: () => t('shortcuts.deleteSelected'),
+        category: 'actions',
+        action: handleDelete,
+        condition: () => {
+          return (
+            window.location.pathname.includes('/my-addon') &&
+            selectedItems().length > 0
+          );
+        },
+      });
+
+      // Register select all shortcut - Ctrl+A
+      registerShortcut('addon-select-all', {
+        key: 'A',
+        ctrl: true,
+        description: () => t('shortcuts.selectAll'),
+        category: 'actions',
+        action: handleSelectAll,
+        condition: () => {
+          return (
+            window.location.pathname.includes('/my-addon') && items().length > 0
+          );
+        },
+      });
+    }
   });
 
   onCleanup(() => {
-    // Clean up event listener
-    window.removeEventListener('keydown', handleKeyDown);
+    const { unregisterShortcut } = props.store.keyboardShortcuts || {};
+
+    if (unregisterShortcut) {
+      unregisterShortcut('addon-create-resource');
+      unregisterShortcut('addon-delete-resources');
+      unregisterShortcut('addon-select-all');
+    }
   });
 
-  const handleKeyDown = (event: KeyboardEvent) => {
-    // Check if user is typing in an input
-    const target = event.target as HTMLElement;
-    if (
-      target.tagName === 'INPUT' ||
-      target.tagName === 'TEXTAREA' ||
-      target.tagName === 'SELECT' ||
-      target.isContentEditable
-    ) {
-      // Allow Escape to blur
-      if (event.key === 'Escape') {
-        target.blur();
-      }
-      return;
+  return <div>{/* Your addon UI */}</div>;
+};
+
+export default MyAddonPage;
+```
+
+### 2. Register shortcuts for table/list search
+
+If your addon has a search feature in a table or list, register a shortcut for it:
+
+```tsx
+onMount(() => {
+  const { registerShortcut } = props.store.keyboardShortcuts || {};
+
+  if (registerShortcut) {
+    registerShortcut('addon-search', {
+      key: 'S',
+      description: () => t('shortcuts.searchInPage'),
+      category: 'actions',
+      action: () => {
+        // Focus your search input
+        const searchInput = document.querySelector(
+          '[data-search-input]'
+        ) as HTMLInputElement;
+        if (searchInput) {
+          searchInput.focus();
+          searchInput.select();
+        }
+      },
+      condition: () => window.location.pathname.includes('/my-addon'),
+    });
+  }
+});
+```
+
+**Best Practice:** Add a `data-search-input` attribute to your search input element instead of relying on class names or placeholders:
+
+```tsx
+<input
+  type="text"
+  data-search-input
+  placeholder={t('common.search')}
+  value={searchQuery()}
+  onInput={(e) => setSearchQuery(e.currentTarget.value)}
+/>
+```
+
+### 3. Register shortcuts for action buttons
+
+For action buttons (create, add, upload, etc.), register the shortcut where the button logic lives:
+
+```tsx
+const CreateButton: Component<AddonComponentProps> = (props) => {
+  const handleCreate = () => {
+    // Your create logic
+    setShowCreateModal(true);
+  };
+
+  onMount(() => {
+    const { registerShortcut } = props.store.keyboardShortcuts || {};
+
+    if (registerShortcut) {
+      registerShortcut('addon-create', {
+        key: 'C',
+        description: () => t('shortcuts.create'),
+        category: 'actions',
+        action: handleCreate,
+        condition: () => window.location.pathname.includes('/my-addon'),
+      });
     }
+  });
+
+  onCleanup(() => {
+    props.store.keyboardShortcuts?.unregisterShortcut('addon-create');
+  });
+
+  return (
+    <button onClick={handleCreate} data-action-button="create">
+      {t('common.create')}
+    </button>
+  );
+};
+```
+
+**Best Practice:** Add a `data-action-button` attribute to identify action buttons semantically instead of relying on text content.
+target.tagName === 'SELECT' ||
+target.isContentEditable
+) {
+// Allow Escape to blur
+if (event.key === 'Escape') {
+target.blur();
+}
+return;
+}
 
     // Platform detection
     const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
@@ -82,11 +223,13 @@ const MyAddonPage: Component<AddonComponentProps> = (props) => {
       event.preventDefault();
       confirmDeleteSelected();
     }
-  };
 
-  // ... rest of component
 };
-```
+
+// ... rest of component
+};
+
+````
 
 ### 2. Display shortcuts in your UI
 
@@ -102,7 +245,7 @@ const getShortcutDisplay = () => {
   {t('medias.addMedia')}{' '}
   <span class="keyboard-hint">{getShortcutDisplay()}</span>
 </Button>;
-```
+````
 
 ### 3. Add translations for shortcuts
 

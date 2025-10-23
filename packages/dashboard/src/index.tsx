@@ -40,7 +40,7 @@ import OrganizationPage from './pages/organization-page/organization-page';
 import OrganizationsInvitationPage from './pages/organization-invitations/organizations-invitations-page';
 import ChannelsPage from './pages/channels-page/channels-page';
 import { I18nProvider, useI18n } from './i18n';
-import { KeyboardShortcutsProvider } from './hooks';
+import { KeyboardShortcutsProvider, useKeyboardShortcuts } from './hooks';
 
 const Login = lazy(() => import('./components/login/login'));
 const SignUp = lazy(() => import('./components/signup/signup'));
@@ -81,6 +81,20 @@ const RootRedirect: Component = () => {
 };
 
 const App: Component<RouteSectionProps<unknown>> = (props) => {
+  const keyboardShortcuts = useKeyboardShortcuts();
+
+  // Inject keyboard shortcuts into store so addons can access them
+  onMount(() => {
+    setStore('keyboardShortcuts', {
+      registerShortcut: keyboardShortcuts.registerShortcut,
+      unregisterShortcut: keyboardShortcuts.unregisterShortcut,
+      getShortcuts: keyboardShortcuts.getShortcuts,
+      formatShortcut: keyboardShortcuts.formatShortcut,
+      isMac: keyboardShortcuts.isMac,
+      isMobile: keyboardShortcuts.isMobile,
+    });
+  });
+
   return (
     <div style={{ display: 'flex', 'flex-direction': 'column', flex: '1' }}>
       <Topbar />

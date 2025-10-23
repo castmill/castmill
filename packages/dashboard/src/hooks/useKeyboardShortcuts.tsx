@@ -95,6 +95,26 @@ export const KeyboardShortcutsProvider: Component<ParentProps> = (props) => {
     return parts.join(mac ? ' ' : '+');
   };
 
+  const checkModifierMatch = (
+    shortcut: KeyboardShortcut,
+    event: KeyboardEvent,
+    mac: boolean
+  ): boolean => {
+    // Check ctrl/cmd modifier
+    const ctrlPressed = mac ? event.metaKey : event.ctrlKey;
+    const ctrlMatch = shortcut.ctrl
+      ? ctrlPressed
+      : !event.ctrlKey && !event.metaKey;
+
+    // Check shift modifier
+    const shiftMatch = shortcut.shift ? event.shiftKey : !event.shiftKey;
+
+    // Check alt modifier
+    const altMatch = shortcut.alt ? event.altKey : !event.altKey;
+
+    return ctrlMatch && shiftMatch && altMatch;
+  };
+
   const handleKeyDown = (event: KeyboardEvent) => {
     const target = event.target as HTMLElement;
     const isInInputField =
@@ -123,15 +143,7 @@ export const KeyboardShortcutsProvider: Component<ParentProps> = (props) => {
       }
 
       // Check modifiers
-      const ctrlMatch = shortcut.ctrl
-        ? mac
-          ? event.metaKey
-          : event.ctrlKey
-        : !event.ctrlKey && !event.metaKey;
-      const shiftMatch = shortcut.shift ? event.shiftKey : !event.shiftKey;
-      const altMatch = shortcut.alt ? event.altKey : !event.altKey;
-
-      if (ctrlMatch && shiftMatch && altMatch) {
+      if (checkModifierMatch(shortcut, event, mac)) {
         event.preventDefault();
         shortcut.action();
         break;

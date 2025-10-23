@@ -31,7 +31,7 @@ const Search: Component = () => {
     key: 'F',
     ctrl: true,
     description: t('shortcuts.globalSearch'),
-    category: 'search' as const,
+    category: 'global' as const,
     action: () => {
       inputRef?.focus();
     },
