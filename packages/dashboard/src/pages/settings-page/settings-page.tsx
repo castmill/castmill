@@ -19,6 +19,7 @@ import {
 } from '../../interfaces/credential.interface';
 import './settings-page.scss';
 import { useI18n, SUPPORTED_LOCALES } from '../../i18n';
+import { domain } from '../../env';
 
 const SettingsPage: Component = () => {
   const { t, locale, setLocale } = useI18n();
@@ -66,6 +67,32 @@ const SettingsPage: Component = () => {
       await loadCredentials(currentUser.id);
     }
   });
+
+  // Helper function to check if WebAuthn Signal API is supported
+  const isSignalAPISupported = (): boolean => {
+    return (
+      typeof PublicKeyCredential !== 'undefined' &&
+      typeof (PublicKeyCredential as any).signalUnknownCredential === 'function'
+    );
+  };
+
+  // Helper function to signal credential deletion using Signal API
+  const signalCredentialDeletion = async (credentialId: string) => {
+    if (!isSignalAPISupported()) {
+      return false;
+    }
+
+    try {
+      await (PublicKeyCredential as any).signalUnknownCredential({
+        credentialId: credentialId,
+        rpId: domain,
+      });
+      return true;
+    } catch (error) {
+      console.warn('Failed to signal credential deletion:', error);
+      return false;
+    }
+  };
 
   const loadCredentials = async (userId: string) => {
     setCredentialsLoading(true);
@@ -156,7 +183,20 @@ const SettingsPage: Component = () => {
     setError('');
 
     try {
+      // Get all credentials before deleting the account
+      const currentCredentials = credentials();
+
+      // Try to delete credentials from browser using Signal API (if supported)
+      if (isSignalAPISupported() && currentCredentials.length > 0) {
+        const deletionPromises = currentCredentials.map((credential) =>
+          signalCredentialDeletion(credential.id)
+        );
+        await Promise.allSettled(deletionPromises);
+      }
+
+      // Delete account from server (this also deletes credentials in database)
       await UserService.deleteAccount(currentUser.id);
+
       toast.success(t('settings.deleteAccountSuccess'));
       // Redirect to login after brief delay
       setTimeout(() => {
@@ -606,7 +646,15 @@ const SettingsPage: Component = () => {
                 <div class="delete-confirmation">
                   <p>
                     <strong>{t('settings.deleteAccountConfirm')}</strong>{' '}
-                    {t('settings.deleteAccountWarning')}
+                    {isSignalAPISupported()
+                      ? t('settings.deleteAccountWarningWithSignalAPI')
+                      : t('settings.deleteAccountWarning')}
+                  </p>
+                  <p class="passkey-warning">
+                    ⚠️{' '}
+                    {isSignalAPISupported()
+                      ? t('settings.deleteAccountPasskeyInfoWithSignalAPI')
+                      : t('settings.deleteAccountPasskeyInfo')}
                   </p>
                   <div class="confirmation-actions">
                     <Button

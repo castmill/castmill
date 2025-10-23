@@ -77,7 +77,14 @@ export const MediasService = {
   async fetchMedias(
     baseUrl: string,
     organizationId: string,
-    { page, page_size, sortOptions, search, filters, team_id }: FetchMediasOptions
+    {
+      page,
+      page_size,
+      sortOptions,
+      search,
+      filters,
+      team_id,
+    }: FetchMediasOptions
   ) {
     const filtersToString = (filters: Record<string, string | boolean>) => {
       return Object.entries(filters)
@@ -160,7 +167,7 @@ export const MediasService = {
       }
     );
 
-    handleResponse(response);
+    await handleResponse(response);
   },
 
   /**
@@ -184,6 +191,6 @@ export const MediasService = {
       }
     );
 
-    handleResponse(response);
+    await handleResponse(response);
   },
 };

@@ -492,6 +492,13 @@ defmodule CastmillWeb.ResourceController do
         with {:ok, %Media{}} <- Castmill.Resources.delete_media(media) do
           send_resp(conn, :no_content, "")
         else
+          {:error, :media_in_use_as_logo} ->
+            conn
+            |> put_status(:conflict)
+            |> Phoenix.Controller.json(%{
+              error: "Cannot delete media that is being used as an organization logo"
+            })
+
           {:error, reason} ->
             send_resp(conn, 500, "Error deleting media: #{inspect(reason)}")
         end

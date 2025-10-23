@@ -62,6 +62,7 @@
     "online": "Online",
     "update": "Aktualisieren",
     "reset": "Zurücksetzen",
+    "apply": "Anwenden",
     "addedOn": "Hinzugefügt am",
     "lastUpdatedOn": "Zuletzt aktualisiert am",
     "details": "Details",
@@ -75,6 +76,8 @@
     "addonLoadingError": "Add-on-Ladefehler",
     "addonError": "Add-on-Fehler",
     "backToLogin": "Zurück zur Anmeldung",
+    "selectVideo": "Video auswählen",
+    "offline": "[TODO: Translate] Offline",
     "selectImage": "Bild auswählen",
     "selectMedia": "Medien auswählen"
   },
@@ -87,7 +90,8 @@
     "content": "Inhalt",
     "playlists": "Playlists",
     "medias": "Medien",
-    "widgets": "Widgets"
+    "widgets": "Widgets",
+    "members": "[TODO: Translate] Members"
   },
   "topbar": {
     "help": "Hilfe",
@@ -144,7 +148,10 @@
     "deleteAccountDescription": "Löschen Sie Ihr Konto und alle zugehörigen Daten dauerhaft. Diese Aktion kann nicht rückgängig gemacht werden.",
     "deleteAccountButton": "Konto löschen",
     "deleteAccountConfirm": "Sind Sie sicher?",
-    "deleteAccountWarning": "Dies wird Ihr Konto dauerhaft löschen.",
+    "deleteAccountWarning": "Dies wird Ihr Konto dauerhaft löschen und alle Passkeys von unseren Servern entfernen. Allerdings bleiben auf Ihren Geräten gespeicherte Passkeys (in iCloud-Schlüsselbund, Google Password Manager, Windows Hello usw.) bestehen und müssen manuell entfernt werden.",
+    "deleteAccountWarningWithSignalAPI": "Dies wird Ihr Konto dauerhaft löschen und alle Passkeys von unseren Servern entfernen. Ihr Browser unterstützt die automatische Entfernung von Passkeys.",
+    "deleteAccountPasskeyInfo": "Nach der Löschung schlägt der Versuch, sich mit einem alten Passkey anzumelden, fehl. Um Verwirrung zu vermeiden, entfernen Sie bitte die Passkeys dieses Kontos manuell aus den Geräteeinstellungen.",
+    "deleteAccountPasskeyInfoWithSignalAPI": "Nach der Löschung werden die Passkeys automatisch von Ihrem Gerät entfernt. Wenn Sie sich später anmelden möchten, müssen Sie ein neues Konto erstellen.",
     "deleteAccountYes": "Ja, Konto löschen",
     "retry": "Erneut versuchen",
     "errors": {
@@ -205,10 +212,7 @@
     "removeTeams": "Teams entfernen",
     "confirmRemoveTeam": "Sind Sie sicher, dass Sie das Team \"{{name}}\" entfernen möchten?",
     "confirmRemoveTeams": "Sind Sie sicher, dass Sie die folgenden Teams entfernen möchten?",
-    "members": {
-      "selectUser": "Benutzer auswählen",
-      "searchUser": "Nach einem Benutzer suchen..."
-    },
+    "members": "TODO: Translate - Members",
     "invitations": "Einladungen",
     "invitationAcceptSuccess": "Einladung erfolgreich angenommen",
     "invitationDeleteSuccess": "Einladung erfolgreich gelöscht",
@@ -269,6 +273,11 @@
       "accepting": "Wird angenommen...",
       "accept": "Einladung annehmen"
     },
+    "memberSelection": {
+      "selectUser": "Benutzer auswählen",
+      "searchUser": "Nach einem Benutzer suchen..."
+    },
+    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully",
     "dialogs": {
       "removeMemberTitle": "Benutzer aus Team entfernen",
       "removeMemberMessage": "Sind Sie sicher, dass Sie das Mitglied \"{{name}}\" aus dem Team entfernen möchten?",
@@ -313,6 +322,7 @@
     "title": "Organisation",
     "users": "Benutzer",
     "invitations": "Einladungen",
+    "settings": "Einstellungen",
     "update": "Aktualisieren",
     "placeholderName": "Organisationsnamen eingeben",
     "inviteMember": "Mitglied einladen",
@@ -333,13 +343,17 @@
       "invalidEmail": "Ungültige E-Mail",
       "cannotRemoveLastAdmin": "Du kannst den letzten Administrator einer Organisation nicht entfernen.",
       "invalidRole": "Die ausgewählte Rolle ist für diese Organisation nicht gültig.",
-      "cannotRemoveLastUser": "Sie können nicht gehen, da Sie das einzige Mitglied dieser Organisation sind."
+      "mediaInUseAsLogo": "Medien, die als Organisationslogo verwendet werden, können nicht gelöscht werden",
+      "loadMedias": "Fehler beim Laden von Medien",
+      "updateRoleFailed": "Fehler beim Aktualisieren der Mitgliederrolle",
+      "cannotRemoveLastUser": "Sie können nicht aussteigen, da Sie das einzige Mitglied dieser Organisation sind."
     },
     "messages": {
       "memberRemoved": "Mitglied {{name}} wurde erfolgreich entfernt",
       "membersRemoved": "Mitglieder wurden erfolgreich entfernt",
       "leftOrganization": "Sie haben die Organisation {{name}} verlassen",
-      "noOrganizationsRemaining": "Sie haben Ihre letzte Organisation verlassen. Bitte kontaktieren Sie einen Administrator, um zu einer Organisation eingeladen zu werden."
+      "noOrganizationsRemaining": "Sie haben Ihre letzte Organisation verlassen. Bitte kontaktieren Sie einen Administrator, um zu einer Organisation eingeladen zu werden.",
+      "invitationSent": "Einladung an {{email}} gesendet"
     },
     "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
     "roleDescriptions": {
@@ -355,6 +369,21 @@
       "admin": "Kann Teammitglieder und Ressourcen verwalten",
       "member": "Kann auf Teamressourcen zugreifen und diese bearbeiten",
       "installer": "Temporäres Token für Geräteregistrierung (läuft in 24h ab)"
+    },
+    "logo": "Firmenlogo",
+    "logoSettings": "Logo-Einstellungen",
+    "selectLogo": "Logo auswählen",
+    "removeLogo": "Logo entfernen",
+    "logoDescription": "Wählen Sie eine Mediendatei als Logo Ihrer Organisation. Es wird in der oberen Leiste angezeigt.",
+    "logoUpdated": "Logo erfolgreich aktualisiert",
+    "logoRemoved": "Logo erfolgreich entfernt",
+    "noLogo": "Kein Logo ausgewählt",
+    "noMediasAvailable": "Keine Bilder verfügbar. Bitte laden Sie zuerst ein Bild hoch.",
+    "dialogs": {
+      "removeMemberTitle": "Benutzer aus Organisation entfernen",
+      "removeMemberMessage": "Sind Sie sicher, dass Sie das Mitglied \"{{name}}\" aus der Organisation entfernen möchten?",
+      "removeMembersTitle": "Mitglieder aus Organisation entfernen",
+      "removeMembersMessage": "Sind Sie sicher, dass Sie die folgenden Mitglieder aus der Organisation entfernen möchten?"
     },
     "leaveOrganizationTitle": "Diese Organisation verlassen",
     "leaveOrganizationDescription": "Das Verlassen entfernt Ihren Zugriff auf Organisationsressourcen sofort.",
@@ -425,7 +454,33 @@
     "errorRemovingPlaylist": "Fehler beim Entfernen der Playlist {{name}}: {{error}}",
     "errorRemovingPlaylists": "Fehler beim Entfernen der Playlists: {{error}}",
     "enterPlaylistName": "Playlist-Namen eingeben",
-    "dragToAdd": "Zum Hinzufügen ziehen"
+    "dragToAdd": "Zum Hinzufügen ziehen",
+    "aspectRatio": "Seitenverhältnis",
+    "aspectRatioWidth": "Breite",
+    "aspectRatioHeight": "Höhe",
+    "aspectRatioUpdated": "Seitenverhältnis erfolgreich aktualisiert",
+    "customAspectRatio": "Benutzerdefiniertes Seitenverhältnis",
+    "enterCustomRatio": "Benutzerdefiniertes Seitenverhältnis eingeben",
+    "aspectRatioPresets": {
+      "16:9": "16:9 (Querformat)",
+      "9:16": "9:16 (Hochformat)",
+      "4:3": "4:3 (Klassisch)",
+      "3:4": "3:4 (Hochformat)",
+      "21:9": "21:9 (Ultrabreit)",
+      "16:3": "16:3 (Regal/Ticker)",
+      "3:16": "3:16 (Regal/Ticker Hochformat)",
+      "1:1": "1:1 (Quadratisch)",
+      "custom": "Benutzerdefiniert"
+    },
+    "errors": {
+      "nameRequired": "Name ist erforderlich",
+      "nameMinLength": "Name muss mindestens 3 Zeichen lang sein",
+      "aspectRatioNumber": "Muss eine Zahl sein",
+      "aspectRatioPositive": "Muss eine positive Zahl sein",
+      "aspectRatioMax": "Wert muss 100 oder weniger sein",
+      "aspectRatioExtreme": "Seitenverhältnis ist zu extrem (max Verhältnis ist 10:1)",
+      "updateAspectRatio": "Fehler beim Aktualisieren des Seitenverhältnisses: {{error}}"
+    }
   },
   "widgets": {
     "title": "Widgets",
@@ -552,6 +607,65 @@
       "accountCreated": "Konto erfolgreich erstellt!",
       "accountCreationFailed": "Konto konnte nicht erstellt werden",
       "passkeysNotSupported": "Passkeys werden in diesem Browser nicht unterstützt"
+    },
+    "notifications": {
+      "title": "Benachrichtigungen",
+      "empty": "Noch keine Benachrichtigungen",
+      "markAllRead": "Alle als gelesen markieren",
+      "types": {
+        "organizationInvitation": {
+          "title": "Organisationseinladung",
+          "description": "Sie wurden eingeladen, {{organization_name}} beizutreten"
+        },
+        "teamInvitation": {
+          "title": "Team-Einladung",
+          "description": "Sie wurden eingeladen, {{team_name}} beizutreten"
+        },
+        "deviceRegistration": {
+          "title": "Neues Gerät Registriert",
+          "description": "Gerät '{{device_name}}' wurde registriert"
+        },
+        "deviceRemoval": {
+          "title": "Gerät Entfernt",
+          "description": "Gerät '{{device_name}}' wurde entfernt"
+        },
+        "mediaTranscoded": {
+          "title": "Medien-Transkodierung Abgeschlossen",
+          "description": "Medien '{{media_name}}' wurde erfolgreich transkodiert"
+        },
+        "mediaUploaded": {
+          "titleImage": "Neues Bild Hochgeladen",
+          "titleVideo": "Neues Video Hochgeladen",
+          "titleMedia": "Neue Medien Hochgeladen",
+          "descriptionImage": "Bild '{{media_name}}' wurde erfolgreich hochgeladen",
+          "descriptionVideo": "Video '{{media_name}}' wurde erfolgreich hochgeladen",
+          "descriptionMedia": "Medien '{{media_name}}' wurde erfolgreich hochgeladen"
+        },
+        "invitationAccepted": {
+          "title": "Einladung Angenommen",
+          "descriptionOrg": "{{user_name}} ist der Organisation beigetreten",
+          "descriptionTeam": "{{user_name}} ist dem Team beigetreten"
+        },
+        "deviceOfflineAlert": {
+          "title": "Gerät Offline-Warnung",
+          "description": "Gerät '{{device_name}}' ist offline, obwohl es online sein sollte"
+        },
+        "deviceOnlineAlert": {
+          "title": "Gerät Online",
+          "description": "Gerät '{{device_name}}' ist wieder online",
+          "descriptionWithDuration": "Gerät '{{device_name}}' ist wieder online (war offline für {{offline_duration_formatted}})"
+        },
+        "memberRemoved": {
+          "title": "Mitglied Entfernt",
+          "description": "{{user_name}} wurde aus der Organisation entfernt"
+        },
+        "teamMemberRemoved": {
+          "titleSelf": "Aus Team entfernt",
+          "descriptionSelf": "Sie wurden aus dem Team {{team_name}} entfernt",
+          "titleOthers": "Teammitglied entfernt",
+          "descriptionOthers": "{{user_name}} wurde aus dem Team {{team_name}} entfernt"
+        }
+      }
     }
   },
   "filters": {

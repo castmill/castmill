@@ -72,6 +72,8 @@ const ALLOWED_IDENTICAL_STRINGS = new Set([
   'Maintenance', // Cognate in French
   'Notifications', // Cognate in French
   'Invitations', // Cognate in French
+  '9:16 (Portrait)', // Cognate in French
+  '3:4 (Portrait)', // Cognate in French
 ]);
 
 class TranslationChecker {

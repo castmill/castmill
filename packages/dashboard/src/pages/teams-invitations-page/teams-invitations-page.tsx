@@ -228,8 +228,8 @@ const TeamsInvitationPage = () => {
                   </svg>
                   <span class="font-medium">
                     {invitation()?.role === 'admin'
-                      ? t('organizations.teamRoleAdmin')
-                      : t('organizations.teamRoleMember')}
+                      ? t('organization.teamRoleAdmin')
+                      : t('organization.teamRoleMember')}
                   </span>
                 </div>
               </div>

@@ -32,17 +32,18 @@ defmodule Castmill.Application do
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: Castmill.Supervisor]
-    supervisor = Supervisor.start_link(children, opts)
 
-    # After starting the supervision tree, load the Widgets from JSON files
-    # Ensure that the Repo is started before this call
-    env = Application.get_env(:castmill, :env)
+    with {:ok, pid} <- Supervisor.start_link(children, opts) do
+      # After starting the supervision tree, load the Widgets from JSON files
+      # Ensure that the Repo is started before this call
+      env = Application.get_env(:castmill, :env)
 
-    if env != :test do
-      CastmillWeb.Widgets.WidgetsLoader.load_and_insert_json_data()
+      if env != :test do
+        CastmillWeb.Widgets.WidgetsLoader.load_and_insert_json_data()
+      end
+
+      {:ok, pid}
     end
-
-    supervisor
   end
 
   # Tell Phoenix to update the endpoint configuration

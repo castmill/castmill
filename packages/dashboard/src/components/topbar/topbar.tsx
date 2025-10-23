@@ -14,17 +14,20 @@ import logo from '../../assets/castmill-logo-topbar.png';
 import DropdownMenu from '../dropdown-menu/dropdown-menu';
 import LanguageSelector from '../language-selector/language-selector';
 import { LoadingProgressBar } from '../loading-progress-bar/loading-progress-bar';
+import NotificationBell from '../notification-bell/notification-bell';
 
 import { baseUrl } from '../../env';
 import { useI18n } from '../../i18n';
 import { store } from '../../store/store';
 import { ShortcutsLegend } from '../shortcuts-legend/shortcuts-legend';
 import { GlobalShortcuts } from '../global-shortcuts/global-shortcuts';
+import { useSelectedOrganizationLogo } from '../../hooks/use-selected-organization-logo';
 
 const Topbar: Component = () => {
   const [triggerLogout, setTriggerLogout] = createSignal(false);
   const [showShortcuts, setShowShortcuts] = createSignal(false);
   const { t } = useI18n();
+  const { logoUrl: selectedOrgLogo } = useSelectedOrganizationLogo();
 
   const navigate = useNavigate();
 
@@ -55,15 +58,25 @@ const Topbar: Component = () => {
     <>
       <LoadingProgressBar loading={store.loadingAddons} />
       <GlobalShortcuts onShowShortcuts={() => setShowShortcuts(true)} />
-      <ShortcutsLegend 
-        show={showShortcuts()} 
-        onClose={() => setShowShortcuts(false)} 
+      <ShortcutsLegend
+        show={showShortcuts()}
+        onClose={() => setShowShortcuts(false)}
       />
       <header class="castmill-header">
         <nav class="main">
           <a href="/">
             <img src={logo} alt="Castmill" />
           </a>
+          <Show when={selectedOrgLogo()}>
+            <div class="org-logo-separator" />
+            <div class="org-logo-container">
+              <img
+                src={selectedOrgLogo()!}
+                alt={store.organizations.selectedName}
+                class="org-logo"
+              />
+            </div>
+          </Show>
         </nav>
 
         <nav class="right">
@@ -76,8 +89,14 @@ const Topbar: Component = () => {
               text={t('topbar.help')}
             ></TopbarLink>
 
-            <Show when={!(/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent))}>
-              <div 
+            <Show
+              when={
+                !/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+                  navigator.userAgent
+                )
+              }
+            >
+              <div
                 class="keyboard-shortcuts-icon"
                 onClick={() => setShowShortcuts(true)}
                 title={t('shortcuts.showShortcutsLegend')}
@@ -86,10 +105,8 @@ const Topbar: Component = () => {
               </div>
             </Show>
 
-            {/* Implement the Alert icon + Alerts page */}
-            <div style="margin: 0 1rem; margin: 0 1rem; display: flex; flex-direction: row; justify-content: center; align-items: center;">
-              <FaRegularBell />
-            </div>
+            {/* Notification Bell */}
+            <NotificationBell />
 
             <div class="topbar-dropdowns">
               <LanguageSelector />

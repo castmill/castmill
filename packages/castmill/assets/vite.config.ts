@@ -5,8 +5,12 @@ export default defineConfig({
   plugins: [solidPlugin()],
   test: {
     environment: 'jsdom',
-    setupFiles: ['./test-setup.ts'],
+    setupFiles: ['./test-setup.tsx'],
     globals: true,
+    include: [
+      '**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
+      '../lib/**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
+    ],
   },
   esbuild: {
     jsx: 'automatic',

@@ -277,11 +277,45 @@ defmodule Castmill.Teams do
         if count_team_admins(team_id) <= 1 do
           {:error, :last_admin}
         else
-          Repo.delete(teams_user)
+          result = Repo.delete(teams_user)
+
+          # Send notifications after successful removal
+          with {:ok, _} <- result do
+            team = get_team(team_id)
+            user = Castmill.Accounts.get_user(user_id)
+
+            if user && team do
+              Castmill.Notifications.Events.notify_team_member_removed(
+                user_id,
+                user.name,
+                team_id,
+                team.name
+              )
+            end
+          end
+
+          result
         end
 
       teams_user ->
-        Repo.delete(teams_user)
+        result = Repo.delete(teams_user)
+
+        # Send notifications after successful removal
+        with {:ok, _} <- result do
+          team = get_team(team_id)
+          user = Castmill.Accounts.get_user(user_id)
+
+          if user && team do
+            Castmill.Notifications.Events.notify_team_member_removed(
+              user_id,
+              user.name,
+              team_id,
+              team.name
+            )
+          end
+        end
+
+        result
     end
   end
 
@@ -601,6 +635,24 @@ defmodule Castmill.Teams do
         network = Castmill.Networks.get_network(organization.network_id)
         send_invitation_email(network.domain, email, token)
 
+        # Get team info and send notification if user exists
+        team = get_team(team_id)
+
+        case Castmill.Accounts.get_user_by_email(email) do
+          nil ->
+            # User doesn't exist yet, no notification to send
+            :ok
+
+          user ->
+            # User exists, send notification
+            Castmill.Notifications.Events.notify_team_invitation(
+              user.id,
+              team.name,
+              team_id,
+              token
+            )
+        end
+
         {:ok, invitation.token}
 
       # If membership check failed:
@@ -693,6 +745,19 @@ defmodule Castmill.Teams do
               where: i.token == ^token
             )
             |> Repo.update_all(set: [status: "accepted"])
+
+            # Send notification to team members that invitation was accepted
+            user = Castmill.Accounts.get_user(user_id)
+            team = get_team(invitation.team_id)
+
+            if user && team do
+              Castmill.Notifications.Events.notify_invitation_accepted(
+                user.name,
+                user_id,
+                nil,
+                invitation.team_id
+              )
+            end
 
             {:ok, invitation}
 

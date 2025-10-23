@@ -24,6 +24,7 @@ export const PlaylistPreview: Component<PlaylistPreviewProps> = (props) => {
 
   let controls: PlayerUIControls;
   let playerUI: PlayerUI;
+  let playerContainer: HTMLDivElement | undefined;
 
   onMount(async () => {
     await cache.init();
@@ -65,7 +66,7 @@ export const PlaylistPreview: Component<PlaylistPreviewProps> = (props) => {
   });
 
   return (
-    <div class={styles.widgetView}>
+    <div class={styles.widgetView} ref={playerContainer}>
       <div id="player" class={styles.widgetPlayer}></div>
       <div id="controls" class={styles.widgetControls}></div>
     </div>

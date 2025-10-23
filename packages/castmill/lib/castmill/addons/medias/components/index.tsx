@@ -1,7 +1,15 @@
 import { BsCheckLg } from 'solid-icons/bs';
 import { BsEye } from 'solid-icons/bs';
 import { AiOutlineDelete } from 'solid-icons/ai';
-import { Component, createEffect, createSignal, onCleanup, Show, onMount, on } from 'solid-js';
+import {
+  Component,
+  createEffect,
+  createSignal,
+  onCleanup,
+  Show,
+  onMount,
+  on,
+} from 'solid-js';
 
 import {
   Button,
@@ -19,6 +27,7 @@ import {
   FetchDataOptions,
   Timestamp,
   ToastProvider,
+  HttpError,
   useToast,
 } from '@castmill/ui-common';
 import { JsonMedia } from '@castmill/player';
@@ -32,7 +41,10 @@ import {
 
 import './medias.scss';
 import { MediaDetails } from './media-details';
-import { AddonStore, AddonComponentProps } from '../../common/interfaces/addon-store';
+import {
+  AddonStore,
+  AddonComponentProps,
+} from '../../common/interfaces/addon-store';
 import { useTeamFilter } from '../../common/hooks';
 
 const MediasPage: Component<AddonComponentProps> = (props) => {
@@ -44,7 +56,10 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
   // Helper function to check permissions
   const canPerformAction = (resource: string, action: string): boolean => {
     if (!props.store.permissions?.matrix) return false;
-    const allowedActions = props.store.permissions.matrix[resource as keyof typeof props.store.permissions.matrix];
+    const allowedActions =
+      props.store.permissions.matrix[
+        resource as keyof typeof props.store.permissions.matrix
+      ];
     return allowedActions?.includes(action as any) ?? false;
   };
 
@@ -102,7 +117,12 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
       toast.success(`Media "${resource.name}" removed successfully`);
       loadQuota(); // Reload quota after deletion
     } catch (error) {
-      toast.error(`Error removing media ${resource.name}: ${error}`);
+      if (error instanceof HttpError && error.status === 409) {
+        toast.error(t('organization.errors.mediaInUseAsLogo'));
+      } else {
+        const message = error instanceof Error ? error.message : String(error);
+        toast.error(`Error removing media ${resource.name}: ${message}`);
+      }
     }
     setShowConfirmDialog();
   };
@@ -123,7 +143,12 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
       toast.success(`${selectedMedias().size} media(s) removed successfully`);
       loadQuota(); // Reload quota after deletion
     } catch (error) {
-      toast.error(`Error removing medias: ${error}`);
+      if (error instanceof HttpError && error.status === 409) {
+        toast.error(t('organization.errors.mediaInUseAsLogo'));
+      } else {
+        const message = error instanceof Error ? error.message : String(error);
+        toast.error(`Error removing medias: ${message}`);
+      }
     }
     setShowConfirmDialogMultiple(false);
     setSelectedMedias(new Set<string>());
@@ -353,7 +378,10 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
       icon: AiOutlineDelete,
       handler: (item: JsonMedia) => {
         if (!canPerformAction('medias', 'delete')) {
-          toast.error(t('permissions.noDeleteMedias') || "You don't have permission to delete media files");
+          toast.error(
+            t('permissions.noDeleteMedias') ||
+              "You don't have permission to delete media files"
+          );
           return;
         }
         setShowConfirmDialog(item);
@@ -484,7 +512,9 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
                 onClick={openAddMediasModal}
                 icon={BsCheckLg}
                 color="primary"
-                disabled={isQuotaReached() || !canPerformAction('medias', 'create')}
+                disabled={
+                  isQuotaReached() || !canPerformAction('medias', 'create')
+                }
               />
             </div>
           ),
