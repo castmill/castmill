@@ -18,7 +18,56 @@ Addons receive the keyboard shortcuts registry through the `store.keyboardShortc
 
 ## Implementation Pattern
 
-### 1. Register shortcuts in your addon component
+### 1. Register navigation shortcuts in your addon root component
+
+**Important**: Addons are responsible for registering their own navigation shortcuts. The core GlobalShortcuts component only registers shortcuts for core pages (Teams, Organization, Channels). If your addon has a main page that users should be able to navigate to via keyboard, register it when your addon loads.
+
+```tsx
+import { Component, onMount, onCleanup } from 'solid-js';
+import { useNavigate, useParams } from '@solidjs/router';
+import { AddonComponentProps } from '../../common/interfaces/addon-store';
+
+// Example: Playlists addon root component
+const PlaylistsAddon: Component<AddonComponentProps> = (props) => {
+  const navigate = useNavigate();
+  const params = useParams();
+  const t = (key: string, params?: Record<string, any>) =>
+    props.store.i18n?.t(key, params) || key;
+
+  onMount(() => {
+    const { registerShortcut } = props.store.keyboardShortcuts || {};
+
+    if (registerShortcut) {
+      // Register navigation shortcut for this addon's main page
+      registerShortcut('goto-playlists', {
+        key: 'P',
+        ctrl: true,
+        shift: true,
+        description: () => t('shortcuts.gotoPlaylists'),
+        category: 'navigation',
+        action: () => {
+          const orgId = params.orgId;
+          if (orgId) {
+            navigate(`/org/${orgId}/content/playlists`);
+          }
+        },
+        condition: () => !!params.orgId,
+      });
+    }
+  });
+
+  onCleanup(() => {
+    const { unregisterShortcut } = props.store.keyboardShortcuts || {};
+    if (unregisterShortcut) {
+      unregisterShortcut('goto-playlists');
+    }
+  });
+
+  return <div>{/* Your addon UI */}</div>;
+};
+```
+
+### 2. Register action shortcuts in your addon component
 
 ```tsx
 import { Component, onMount, onCleanup } from 'solid-js';

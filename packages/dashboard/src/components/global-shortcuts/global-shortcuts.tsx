@@ -10,13 +10,16 @@ interface GlobalShortcutsProps {
 /**
  * GlobalShortcuts Component
  *
- * Registers global keyboard shortcuts for navigation and common actions.
+ * Registers global keyboard shortcuts for navigation to CORE pages only.
  * This component only registers shortcuts that are truly global and not tied
- * to specific UI components or addons.
+ * to specific addons.
+ *
+ * Navigation shortcuts for addon pages (playlists, medias, devices, etc.)
+ * should be registered by the addons themselves to ensure proper decoupling
+ * and allow instances to work correctly even when certain addons are not loaded.
  *
  * For context-specific shortcuts (like creating resources, deleting items, etc.),
  * those should be registered by the components/addons that own those actions.
- * This ensures proper decoupling and allows addons to define their own shortcuts.
  */
 export const GlobalShortcuts: Component<GlobalShortcutsProps> = (props) => {
   const navigate = useNavigate();
@@ -38,36 +41,8 @@ export const GlobalShortcuts: Component<GlobalShortcutsProps> = (props) => {
       action: () => props.onShowShortcuts(),
     });
 
-    // Navigation shortcuts
-    registerShortcut('goto-playlists', {
-      key: 'P',
-      ctrl: true,
-      shift: true,
-      description: () => t('shortcuts.gotoPlaylists'),
-      category: 'navigation',
-      action: () => {
-        const orgId = getOrgId();
-        if (orgId) {
-          navigate(`/org/${orgId}/content/playlists`);
-        }
-      },
-      condition: () => !!getOrgId(),
-    });
-
-    registerShortcut('goto-medias', {
-      key: 'M',
-      ctrl: true,
-      shift: true,
-      description: () => t('shortcuts.gotoMedias'),
-      category: 'navigation',
-      action: () => {
-        const orgId = getOrgId();
-        if (orgId) {
-          navigate(`/org/${orgId}/content/medias`);
-        }
-      },
-      condition: () => !!getOrgId(),
-    });
+    // Core page navigation shortcuts (not addons)
+    // Addons like playlists, medias, devices should register their own shortcuts
 
     registerShortcut('goto-channels', {
       key: 'C',
@@ -113,31 +88,13 @@ export const GlobalShortcuts: Component<GlobalShortcutsProps> = (props) => {
       },
       condition: () => !!getOrgId(),
     });
-
-    registerShortcut('goto-devices', {
-      key: 'D',
-      ctrl: true,
-      shift: true,
-      description: () => t('shortcuts.gotoDevices'),
-      category: 'navigation',
-      action: () => {
-        const orgId = getOrgId();
-        if (orgId) {
-          navigate(`/org/${orgId}/devices`);
-        }
-      },
-      condition: () => !!getOrgId(),
-    });
   });
 
   onCleanup(() => {
     unregisterShortcut('show-shortcuts');
-    unregisterShortcut('goto-playlists');
-    unregisterShortcut('goto-medias');
     unregisterShortcut('goto-channels');
     unregisterShortcut('goto-organization');
     unregisterShortcut('goto-teams');
-    unregisterShortcut('goto-devices');
   });
 
   return null;
