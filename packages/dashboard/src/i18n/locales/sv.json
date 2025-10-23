@@ -62,7 +62,6 @@
     "online": "Online",
     "update": "Uppdatera",
     "reset": "Återställ",
-    "apply": "Tillämpa",
     "addedOn": "Tillagd den",
     "lastUpdatedOn": "Senast uppdaterad den",
     "details": "Detaljer",
@@ -76,10 +75,11 @@
     "addonLoadingError": "Fel vid laddning av tillägg",
     "addonError": "Tilläggsfel",
     "backToLogin": "Tillbaka till inloggning",
-    "selectVideo": "Välj en video",
-    "offline": "[TODO: Translate] Offline",
     "selectImage": "Välj en bild",
-    "selectMedia": "Välj ett media"
+    "selectMedia": "Välj ett media",
+    "apply": "Tillämpa",
+    "selectVideo": "Välj en video",
+    "offline": "[TODO: Translate] Offline"
   },
   "topbar": {
     "help": "Hjälp",
@@ -137,9 +137,6 @@
     "deleteAccountButton": "Ta bort konto",
     "deleteAccountConfirm": "Är du säker?",
     "deleteAccountWarning": "Detta kommer permanent ta bort ditt konto och ta bort alla nycklar från våra servrar. Dock kommer nycklar som är lagrade på dina enheter (i iCloud Keychain, Google Password Manager, Windows Hello, etc.) att finnas kvar och måste tas bort manuellt.",
-    "deleteAccountWarningWithSignalAPI": "Detta kommer permanent ta bort ditt konto och ta bort alla nycklar från våra servrar. Din webbläsare stöder automatisk borttagning av nycklar.",
-    "deleteAccountPasskeyInfo": "Efter borttagning kommer försök att logga in med en gammal nyckel att misslyckas. För att undvika förvirring, vänligen ta bort detta kontos nycklar manuellt från din enhets inställningar.",
-    "deleteAccountPasskeyInfoWithSignalAPI": "Efter borttagning kommer nycklar automatiskt att tas bort från din enhet. Om du försöker logga in senare måste du skapa ett nytt konto.",
     "deleteAccountYes": "Ja, ta bort konto",
     "retry": "Försök igen",
     "errors": {
@@ -156,7 +153,10 @@
     "deleteAccountSuccess": "Kontot har raderats. Omdirigerar...",
     "deleteAccountError": "Det gick inte att radera kontot. Försök igen.",
     "soleAdministratorError": "Kan inte radera kontot. Du är den enda administratören för '{{orgName}}' som har andra medlemmar. Befordra en annan användare till administratör först.",
-    "soleAdministratorErrorGeneric": "Kan inte radera kontot. Du är den enda administratören för en eller flera organisationer med andra medlemmar. Befordra en annan användare till administratör först."
+    "soleAdministratorErrorGeneric": "Kan inte radera kontot. Du är den enda administratören för en eller flera organisationer med andra medlemmar. Befordra en annan användare till administratör först.",
+    "deleteAccountWarningWithSignalAPI": "Detta kommer permanent ta bort ditt konto och ta bort alla nycklar från våra servrar. Din webbläsare stöder automatisk borttagning av nycklar.",
+    "deleteAccountPasskeyInfo": "Efter borttagning kommer försök att logga in med en gammal nyckel att misslyckas. För att undvika förvirring, vänligen ta bort detta kontos nycklar manuellt från din enhets inställningar.",
+    "deleteAccountPasskeyInfoWithSignalAPI": "Efter borttagning kommer nycklar automatiskt att tas bort från din enhet. Om du försöker logga in senare måste du skapa ett nytt konto."
   },
   "usage": {
     "title": "Användning",
@@ -261,17 +261,17 @@
       "accepting": "Accepterar...",
       "accept": "Acceptera inbjudan"
     },
-    "memberSelection": {
-      "selectUser": "Välj användare",
-      "searchUser": "Sök efter en användare..."
-    },
-    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully",
     "dialogs": {
       "removeMemberTitle": "Ta bort användare från team",
       "removeMemberMessage": "Är du säker på att du vill ta bort medlemmen \"{{name}}\" från teamet?",
       "removeMembersTitle": "Ta bort medlemmar från team",
       "removeMembersMessage": "Är du säker på att du vill ta bort följande medlemmar från teamet?"
-    }
+    },
+    "memberSelection": {
+      "selectUser": "Välj användare",
+      "searchUser": "Sök efter en användare..."
+    },
+    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully"
   },
   "login": {
     "title": "Logga in",
@@ -351,7 +351,6 @@
     "title": "Organisation",
     "users": "Användare",
     "invitations": "Inbjudningar",
-    "settings": "Inställningar",
     "update": "Uppdatera",
     "placeholderName": "Ange organisationsnamn",
     "inviteMember": "Bjud in medlem",
@@ -372,10 +371,11 @@
       "invalidEmail": "Ogiltig e-post",
       "cannotRemoveLastAdmin": "Du kan inte ta bort organisationens sista administratör.",
       "invalidRole": "Den valda rollen är inte giltig för den här organisationen.",
+      "cannotRemoveLastUser": "Du kan inte lämna eftersom du är den enda medlemmen i denna organisation.",
+      "cannotRemoveUserFromLastOrganization": "Kan inte ta bort denna användare eftersom det är deras enda organisation. Användare måste tillhöra minst en organisation.",
       "mediaInUseAsLogo": "Kan inte ta bort media som används som organisationslogotyp",
       "loadMedias": "Kunde inte ladda media",
-      "updateRoleFailed": "Misslyckades med att uppdatera medlemsroll",
-      "cannotRemoveLastUser": "Du kan inte lämna eftersom du är den enda medlemmen i denna organisation."
+      "updateRoleFailed": "Misslyckades med att uppdatera medlemsroll"
     },
     "messages": {
       "memberRemoved": "Medlemmen {{name}} togs bort med framgång",
@@ -399,6 +399,14 @@
       "member": "Kan komma åt och redigera teamresurser",
       "installer": "Tillfällig token för enhetsregistrering (utgår om 24h)"
     },
+    "leaveOrganizationTitle": "Lämna denna organisation",
+    "leaveOrganizationDescription": "Att lämna tar bort din åtkomst till organisationens resurser omedelbart.",
+    "leaveOrganizationAction": "Lämna organisation",
+    "leaveOrganizationLastAdminWarning": "Lägg till en annan administratör innan du lämnar för att hålla denna organisation hanterad.",
+    "leaveOrganizationLastUserWarning": "Du kan inte lämna eftersom du är den enda medlemmen i denna organisation.",
+    "leaveLastOrganizationWarningTitle": "Lämna din sista organisation?",
+    "leaveLastOrganizationWarningMessage": "Detta är din enda organisation. Att lämna den kommer att ta bort ditt konto och du kommer att förlora all åtkomst till Castmill. Du kommer att behöva kontakta en administratör för att bli inbjuden igen. Är du säker på att du vill fortsätta?",
+    "settings": "Inställningar",
     "logo": "Logotyp",
     "logoSettings": "Logotypinställningar",
     "selectLogo": "Välj logotyp",
@@ -413,14 +421,7 @@
       "removeMemberMessage": "Är du säker på att du vill ta bort medlemmen \"{{name}}\" från organisationen?",
       "removeMembersTitle": "Ta bort medlemmar från organisation",
       "removeMembersMessage": "Är du säker på att du vill ta bort följande medlemmar från organisationen?"
-    },
-    "leaveOrganizationTitle": "Lämna denna organisation",
-    "leaveOrganizationDescription": "Att lämna tar bort din åtkomst till organisationens resurser omedelbart.",
-    "leaveOrganizationAction": "Lämna organisation",
-    "leaveOrganizationLastAdminWarning": "Lägg till en annan administratör innan du lämnar för att hålla denna organisation hanterad.",
-    "leaveOrganizationLastUserWarning": "Du kan inte lämna eftersom du är den enda medlemmen i denna organisation.",
-    "leaveLastOrganizationWarningTitle": "Lämna din sista organisation?",
-    "leaveLastOrganizationWarningMessage": "Detta är din enda organisation. Att lämna den kommer att ta bort ditt konto och du kommer att förlora all åtkomst till Castmill. Du kommer att behöva kontakta en administratör för att bli inbjuden igen. Är du säker på att du vill fortsätta?"
+    }
   },
   "playlists": {
     "title": "Spellistor",

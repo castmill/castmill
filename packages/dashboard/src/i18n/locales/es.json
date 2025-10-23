@@ -379,6 +379,7 @@
       "cannotRemoveLastAdmin": "No puedes eliminar al último administrador de la organización.",
       "invalidRole": "El rol seleccionado no es válido para esta organización.",
       "cannotRemoveLastUser": "No puede abandonar porque es el único miembro de esta organización.",
+      "cannotRemoveUserFromLastOrganization": "No se puede eliminar a este usuario ya que es su única organización. Los usuarios deben pertenecer al menos a una organización.",
       "mediaInUseAsLogo": "No se puede eliminar un medio que se está utilizando como logo de organización",
       "loadMedias": "Error al cargar medios",
       "updateRoleFailed": "Error al actualizar el rol del miembro"

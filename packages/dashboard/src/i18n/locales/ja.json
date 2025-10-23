@@ -62,7 +62,6 @@
     "online": "オンライン",
     "update": "更新",
     "reset": "リセット",
-    "apply": "適用",
     "addedOn": "追加日",
     "lastUpdatedOn": "最終更新日",
     "details": "詳細",
@@ -81,10 +80,11 @@
     },
     "addonError": "アドオンエラー",
     "backToLogin": "ログインに戻る",
-    "selectVideo": "ビデオを選択",
-    "offline": "[TODO: Translate] Offline",
     "selectImage": "画像を選択",
-    "selectMedia": "メディアを選択"
+    "selectMedia": "メディアを選択",
+    "apply": "適用",
+    "selectVideo": "ビデオを選択",
+    "offline": "[TODO: Translate] Offline"
   },
   "topbar": {
     "help": "ヘルプ",
@@ -142,9 +142,6 @@
     "deleteAccountButton": "アカウント削除",
     "deleteAccountConfirm": "本当によろしいですか？",
     "deleteAccountWarning": "アカウントが完全に削除され、サーバーからすべてのパスキーが削除されます。ただし、デバイスに保存されているパスキー（iCloudキーチェーン、Googleパスワードマネージャー、Windows Helloなど）は残るため、手動で削除する必要があります。",
-    "deleteAccountWarningWithSignalAPI": "アカウントが完全に削除され、サーバーからすべてのパスキーが削除されます。お使いのブラウザはパスキーの自動削除に対応しています。",
-    "deleteAccountPasskeyInfo": "削除後、古いパスキーでログインしようとすると失敗します。混乱を避けるため、デバイスの設定からこのアカウントのパスキーを手動で削除してください。",
-    "deleteAccountPasskeyInfoWithSignalAPI": "削除後、パスキーは自動的にデバイスから削除されます。後でログインする場合は、新しいアカウントを作成する必要があります。",
     "deleteAccountYes": "はい、アカウントを削除します",
     "retry": "再試行",
     "errors": {
@@ -161,7 +158,10 @@
     "deleteAccountSuccess": "アカウントが正常に削除されました。リダイレクト中...",
     "deleteAccountError": "アカウントの削除に失敗しました。もう一度お試しください。",
     "soleAdministratorError": "アカウントを削除できません。他のメンバーがいる '{{orgName}}' の唯一の管理者です。まず別のユーザーを管理者に昇格させてください。",
-    "soleAdministratorErrorGeneric": "アカウントを削除できません。他のメンバーがいる1つ以上の組織の唯一の管理者です。まず別のユーザーを管理者に昇格させてください。"
+    "soleAdministratorErrorGeneric": "アカウントを削除できません。他のメンバーがいる1つ以上の組織の唯一の管理者です。まず別のユーザーを管理者に昇格させてください。",
+    "deleteAccountWarningWithSignalAPI": "アカウントが完全に削除され、サーバーからすべてのパスキーが削除されます。お使いのブラウザはパスキーの自動削除に対応しています。",
+    "deleteAccountPasskeyInfo": "削除後、古いパスキーでログインしようとすると失敗します。混乱を避けるため、デバイスの設定からこのアカウントのパスキーを手動で削除してください。",
+    "deleteAccountPasskeyInfoWithSignalAPI": "削除後、パスキーは自動的にデバイスから削除されます。後でログインする場合は、新しいアカウントを作成する必要があります。"
   },
   "usage": {
     "title": "使用量",
@@ -266,17 +266,17 @@
       "accepting": "承認中...",
       "accept": "招待を承認"
     },
-    "memberSelection": {
-      "selectUser": "ユーザーを選択",
-      "searchUser": "ユーザーを検索..."
-    },
-    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully",
     "dialogs": {
       "removeMemberTitle": "チームからユーザーを削除",
       "removeMemberMessage": "メンバー「{{name}}」をチームから削除してもよろしいですか？",
       "removeMembersTitle": "チームからメンバーを削除",
       "removeMembersMessage": "以下のメンバーをチームから削除してもよろしいですか？"
-    }
+    },
+    "memberSelection": {
+      "selectUser": "ユーザーを選択",
+      "searchUser": "ユーザーを検索..."
+    },
+    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully"
   },
   "login": {
     "title": "ログイン",
@@ -377,6 +377,7 @@
       "cannotRemoveLastAdmin": "組織の最後の管理者を削除することはできません。",
       "invalidRole": "選択した役割はこの組織で有効ではありません。",
       "cannotRemoveLastUser": "この組織の唯一のメンバーであるため、離れることはできません。",
+      "cannotRemoveUserFromLastOrganization": "このユーザーは唯一の組織に属しているため、削除できません。ユーザーは少なくとも1つの組織に属している必要があります。",
       "mediaInUseAsLogo": "組織のロゴとして使用されているメディアは削除できません",
       "loadMedias": "メディアの読み込みに失敗しました",
       "updateRoleFailed": "メンバーの役割の更新に失敗しました"
