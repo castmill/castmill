@@ -41,7 +41,8 @@ describe('MediasService', () => {
         ok: false,
         statusText: 'Conflict',
         json: vi.fn().mockResolvedValue({
-          error: 'Cannot delete media that is being used as an organization logo',
+          error:
+            'Cannot delete media that is being used as an organization logo',
         }),
       } as unknown as Response;
 

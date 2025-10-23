@@ -613,6 +613,65 @@
       "accountCreated": "アカウントが正常に作成されました！",
       "accountCreationFailed": "アカウントの作成に失敗しました",
       "passkeysNotSupported": "このブラウザではパスキーがサポートされていません"
+    },
+    "notifications": {
+      "title": "通知",
+      "empty": "まだ通知はありません",
+      "markAllRead": "すべて既読にする",
+      "types": {
+        "organizationInvitation": {
+          "title": "組織への招待",
+          "description": "{{organization_name}}に招待されました"
+        },
+        "teamInvitation": {
+          "title": "チームへの招待",
+          "description": "{{team_name}}に招待されました"
+        },
+        "deviceRegistration": {
+          "title": "新しいデバイスが登録されました",
+          "description": "デバイス「{{device_name}}」が登録されました"
+        },
+        "deviceRemoval": {
+          "title": "デバイスが削除されました",
+          "description": "デバイス「{{device_name}}」が削除されました"
+        },
+        "mediaTranscoded": {
+          "title": "メディアトランスコード完了",
+          "description": "メディア「{{media_name}}」が正常にトランスコードされました"
+        },
+        "mediaUploaded": {
+          "titleImage": "新しい画像がアップロードされました",
+          "titleVideo": "新しい動画がアップロードされました",
+          "titleMedia": "新しいメディアがアップロードされました",
+          "descriptionImage": "画像「{{media_name}}」が正常にアップロードされました",
+          "descriptionVideo": "動画「{{media_name}}」が正常にアップロードされました",
+          "descriptionMedia": "メディア「{{media_name}}」が正常にアップロードされました"
+        },
+        "invitationAccepted": {
+          "title": "招待が承認されました",
+          "descriptionOrg": "{{user_name}}が組織に参加しました",
+          "descriptionTeam": "{{user_name}}がチームに参加しました"
+        },
+        "deviceOfflineAlert": {
+          "title": "デバイスオフライン警告",
+          "description": "デバイス「{{device_name}}」はオンラインであるべきですがオフラインです"
+        },
+        "deviceOnlineAlert": {
+          "title": "デバイスオンライン",
+          "description": "デバイス「{{device_name}}」が再びオンラインになりました",
+          "descriptionWithDuration": "デバイス「{{device_name}}」が再びオンラインになりました（{{offline_duration_formatted}}オフラインでした）"
+        },
+        "memberRemoved": {
+          "title": "メンバーが削除されました",
+          "description": "{{user_name}}が組織から削除されました"
+        },
+        "teamMemberRemoved": {
+          "titleSelf": "チームから削除されました",
+          "descriptionSelf": "チーム{{team_name}}から削除されました",
+          "titleOthers": "チームメンバーが削除されました",
+          "descriptionOthers": "{{user_name}}がチーム{{team_name}}から削除されました"
+        }
+      }
     }
   },
   "filters": {

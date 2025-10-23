@@ -24,7 +24,8 @@ agents/
 ├── systems/                   # Cross-package system documentation
 │   ├── AUTHENTICATION.md     # Auth across all packages
 │   ├── MEDIA-PIPELINE.md     # Content processing pipeline
-│   └── REAL-TIME-SYNC.md     # Real-time communication
+│   ├── REAL-TIME-SYNC.md     # Real-time communication
+│   └── notifications.md      # Notification system architecture
 └── infrastructure/           # Deployment and DevOps
     ├── DEPLOYMENT.md         # CI/CD and deployment strategies
     ├── MONITORING.md         # Logging and observability
@@ -53,6 +54,7 @@ agents/
 ### System Documentation
 
 #### Cross-Package Systems (`systems/`)
+- **[notifications.md](./systems/notifications.md)** - Real-time notification system with WebSocket and REST API
 - *Coming soon: Authentication, media pipeline, real-time synchronization*
 
 #### Infrastructure (`infrastructure/`)

@@ -612,6 +612,65 @@
       "accountCreated": "계정이 성공적으로 생성되었습니다!",
       "accountCreationFailed": "계정 생성에 실패했습니다",
       "passkeysNotSupported": "이 브라우저에서는 패스키가 지원되지 않습니다"
+    },
+    "notifications": {
+      "title": "알림",
+      "empty": "아직 알림이 없습니다",
+      "markAllRead": "모두 읽음으로 표시",
+      "types": {
+        "organizationInvitation": {
+          "title": "조직 초대",
+          "description": "{{organization_name}}에 초대되었습니다"
+        },
+        "teamInvitation": {
+          "title": "팀 초대",
+          "description": "{{team_name}}에 초대되었습니다"
+        },
+        "deviceRegistration": {
+          "title": "새 기기 등록됨",
+          "description": "'{{device_name}}' 기기가 등록되었습니다"
+        },
+        "deviceRemoval": {
+          "title": "기기 제거됨",
+          "description": "'{{device_name}}' 기기가 제거되었습니다"
+        },
+        "mediaTranscoded": {
+          "title": "미디어 트랜스코딩 완료",
+          "description": "'{{media_name}}' 미디어가 성공적으로 트랜스코딩되었습니다"
+        },
+        "mediaUploaded": {
+          "titleImage": "새 이미지 업로드됨",
+          "titleVideo": "새 동영상 업로드됨",
+          "titleMedia": "새 미디어 업로드됨",
+          "descriptionImage": "'{{media_name}}' 이미지가 성공적으로 업로드되었습니다",
+          "descriptionVideo": "'{{media_name}}' 동영상이 성공적으로 업로드되었습니다",
+          "descriptionMedia": "'{{media_name}}' 미디어가 성공적으로 업로드되었습니다"
+        },
+        "invitationAccepted": {
+          "title": "초대 수락됨",
+          "descriptionOrg": "{{user_name}}님이 조직에 가입했습니다",
+          "descriptionTeam": "{{user_name}}님이 팀에 가입했습니다"
+        },
+        "deviceOfflineAlert": {
+          "title": "기기 오프라인 경고",
+          "description": "'{{device_name}}' 기기가 온라인 상태여야 하는데 오프라인입니다"
+        },
+        "deviceOnlineAlert": {
+          "title": "기기 온라인",
+          "description": "'{{device_name}}' 기기가 다시 온라인입니다",
+          "descriptionWithDuration": "'{{device_name}}' 기기가 다시 온라인입니다 ({{offline_duration_formatted}} 동안 오프라인이었습니다)"
+        },
+        "memberRemoved": {
+          "title": "멤버 제거됨",
+          "description": "{{user_name}}님이 조직에서 제거되었습니다"
+        },
+        "teamMemberRemoved": {
+          "titleSelf": "팀에서 제거됨",
+          "descriptionSelf": "{{team_name}} 팀에서 제거되었습니다",
+          "titleOthers": "팀 멤버 제거됨",
+          "descriptionOthers": "{{user_name}}님이 {{team_name}} 팀에서 제거되었습니다"
+        }
+      }
     }
   },
   "filters": {

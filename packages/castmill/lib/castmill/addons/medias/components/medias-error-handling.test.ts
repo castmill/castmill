@@ -55,7 +55,9 @@ describe('Medias Component Error Handling', () => {
         } else {
           const message =
             error instanceof Error ? error.message : String(error);
-          mockToast.error(`Error removing media ${mockResource.name}: ${message}`);
+          mockToast.error(
+            `Error removing media ${mockResource.name}: ${message}`
+          );
         }
       }
 
@@ -92,7 +94,9 @@ describe('Medias Component Error Handling', () => {
         } else {
           const message =
             error instanceof Error ? error.message : String(error);
-          mockToast.error(`Error removing media ${mockResource.name}: ${message}`);
+          mockToast.error(
+            `Error removing media ${mockResource.name}: ${message}`
+          );
         }
       }
 
@@ -128,7 +132,9 @@ describe('Medias Component Error Handling', () => {
         } else {
           const message =
             error instanceof Error ? error.message : String(error);
-          mockToast.error(`Error removing media ${mockResource.name}: ${message}`);
+          mockToast.error(
+            `Error removing media ${mockResource.name}: ${message}`
+          );
         }
       }
 
