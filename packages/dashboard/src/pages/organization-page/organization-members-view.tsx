@@ -92,7 +92,9 @@ export const OrganizationMembersView = (props: {
         case 422:
           // Check if it's the specific error message for last organization
           if (error.message === 'cannot_remove_user_from_last_organization') {
-            return t('organization.errors.cannotRemoveUserFromLastOrganization');
+            return t(
+              'organization.errors.cannotRemoveUserFromLastOrganization'
+            );
           }
           return t('organization.errors.cannotRemoveLastAdmin');
         case 404:
