@@ -685,6 +685,7 @@
     "closeDialog": "ダイアログを閉じる",
     "gotoPlaylists": "プレイリストに移動",
     "gotoMedias": "メディアに移動",
+    "gotoWidgets": "ウィジェットに移動",
     "gotoChannels": "チャンネルに移動",
     "gotoOrganization": "組織に移動",
     "gotoTeams": "チームに移動",
@@ -692,7 +693,9 @@
     "search": "検索",
     "globalSearch": "グローバル検索",
     "pageSearch": "現在のページで検索",
+    "searchResource": "現在のページで検索",
     "createResource": "リソースを作成",
+    "deleteSelected": "選択項目を削除",
     "categories": {
       "global": "グローバル",
       "navigation": "ナビゲーション",

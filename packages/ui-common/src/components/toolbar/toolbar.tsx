@@ -50,6 +50,13 @@ export function ToolBar(props: ToolBarProps) {
     );
   };
 
+  const handleSearchKeyDown = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      // Blur the search input when ESC is pressed
+      (e.target as HTMLInputElement).blur();
+    }
+  };
+
   const toggleFilter = (filterKey: string) => {
     const currentFilter = filters().find((filter) => filter.key === filterKey);
     if (!currentFilter) return; // safeguard against undefined filter
@@ -90,6 +97,7 @@ export function ToolBar(props: ToolBarProps) {
               type="text"
               value={searchText()}
               onInput={handleSearchChange}
+              onKeyDown={handleSearchKeyDown}
               placeholder="Search..."
               class="search-input"
             />

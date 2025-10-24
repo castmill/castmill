@@ -684,6 +684,7 @@
     "closeDialog": "إغلاق مربع الحوار",
     "gotoPlaylists": "الانتقال إلى قوائم التشغيل",
     "gotoMedias": "الانتقال إلى الوسائط",
+    "gotoWidgets": "الانتقال إلى الأدوات",
     "gotoChannels": "الانتقال إلى القنوات",
     "gotoOrganization": "الانتقال إلى المنظمة",
     "gotoTeams": "الانتقال إلى الفرق",
@@ -691,7 +692,9 @@
     "search": "بحث",
     "globalSearch": "بحث عام",
     "pageSearch": "البحث في الصفحة الحالية",
+    "searchResource": "البحث في الصفحة الحالية",
     "createResource": "إنشاء مورد",
+    "deleteSelected": "حذف المحدد",
     "categories": {
       "global": "عام",
       "navigation": "التنقل",

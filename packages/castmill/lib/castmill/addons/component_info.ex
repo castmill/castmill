@@ -1,6 +1,7 @@
 defmodule Castmill.Addons.ComponentInfo do
   @derive {Jason.Encoder,
            only: [
+             :id,
              :name,
              :name_key,
              :description,
@@ -8,14 +9,17 @@ defmodule Castmill.Addons.ComponentInfo do
              :icon,
              :path,
              :mount_point,
-             :mount_path
+             :mount_path,
+             :keyboard_shortcut
            ]}
-  defstruct name: nil,
+  defstruct id: nil,
+            name: nil,
             name_key: nil,
             description: nil,
             version: nil,
             icon: nil,
             path: nil,
             mount_point: nil,
-            mount_path: nil
+            mount_path: nil,
+            keyboard_shortcut: nil
 end

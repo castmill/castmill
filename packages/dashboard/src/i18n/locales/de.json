@@ -679,6 +679,7 @@
     "closeDialog": "Dialog schließen",
     "gotoPlaylists": "Zu Wiedergabelisten",
     "gotoMedias": "Zu Medien",
+    "gotoWidgets": "Zu Widgets",
     "gotoChannels": "Zu Kanälen",
     "gotoOrganization": "Zur Organisation",
     "gotoTeams": "Zu Teams",
@@ -686,7 +687,9 @@
     "search": "Suchen",
     "globalSearch": "Globale Suche",
     "pageSearch": "Auf aktueller Seite suchen",
+    "searchResource": "Auf aktueller Seite suchen",
     "createResource": "Ressource erstellen",
+    "deleteSelected": "Ausgewählte löschen",
     "categories": {
       "global": "Allgemein",
       "navigation": "Navigierung",

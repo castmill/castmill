@@ -211,6 +211,63 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
 
   onMount(() => {
     loadQuota();
+
+    // Register actions for generic shortcuts
+    // The shortcuts themselves are already registered globally in GlobalShortcuts
+    const { registerShortcutAction } = props.store.keyboardShortcuts || {};
+    if (registerShortcutAction) {
+      // Register create action
+      registerShortcutAction(
+        'generic-create',
+        () => {
+          if (canPerformAction('medias', 'create') && !isQuotaReached()) {
+            openAddMediasModal();
+          }
+        },
+        () =>
+          window.location.pathname.includes('/medias') &&
+          canPerformAction('medias', 'create') &&
+          !isQuotaReached()
+      );
+
+      // Register search action
+      registerShortcutAction(
+        'generic-search',
+        () => {
+          if (tableViewRef) {
+            tableViewRef.focusSearch();
+          }
+        },
+        () => window.location.pathname.includes('/medias')
+      );
+
+      // Register delete action
+      registerShortcutAction(
+        'generic-delete',
+        () => {
+          if (
+            selectedMedias().size > 0 &&
+            canPerformAction('medias', 'delete')
+          ) {
+            setShowConfirmDialogMultiple(true);
+          }
+        },
+        () =>
+          window.location.pathname.includes('/medias') &&
+          selectedMedias().size > 0 &&
+          canPerformAction('medias', 'delete')
+      );
+    }
+  });
+
+  onCleanup(() => {
+    // Unregister actions when leaving this addon
+    const { unregisterShortcutAction } = props.store.keyboardShortcuts || {};
+    if (unregisterShortcutAction) {
+      unregisterShortcutAction('generic-create');
+      unregisterShortcutAction('generic-search');
+      unregisterShortcutAction('generic-delete');
+    }
   });
 
   // Reload data when organization changes (using on() to defer execution)

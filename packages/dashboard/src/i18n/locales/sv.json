@@ -679,6 +679,7 @@
     "closeDialog": "Stäng dialogruta",
     "gotoPlaylists": "Gå till Spellistor",
     "gotoMedias": "Gå till Media",
+    "gotoWidgets": "Gå till Widgets",
     "gotoChannels": "Gå till Kanaler",
     "gotoOrganization": "Gå till Organisation",
     "gotoTeams": "Gå till Team",
@@ -686,7 +687,9 @@
     "search": "Sök",
     "globalSearch": "Global sökning",
     "pageSearch": "Sök på aktuell sida",
+    "searchResource": "Sök på aktuell sida",
     "createResource": "Skapa resurs",
+    "deleteSelected": "Radera valda",
     "categories": {
       "global": "Globalt",
       "navigation": "Navigering",

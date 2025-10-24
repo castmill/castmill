@@ -23,6 +23,7 @@ The Castmill Dashboard includes a comprehensive keyboard shortcuts system that e
 
 - `Cmd/Ctrl+P` - Go to Playlists
 - `Cmd/Ctrl+M` - Go to Medias
+- `Cmd/Ctrl+I` - Go to Widgets
 - `Cmd/Ctrl+H` - Go to Channels
 - `Cmd/Ctrl+O` - Go to Organization
 - `Cmd/Ctrl+G` - Go to Teams
@@ -30,7 +31,8 @@ The Castmill Dashboard includes a comprehensive keyboard shortcuts system that e
 
 ### Context Actions
 
-- `C` - Create resource (context-aware: works in Playlists, Medias, Channels, Devices, Teams pages)
+- `C` - Create resource (context-aware: works in Playlists, Medias, Widgets, Channels, Devices, Teams pages)
+- `Delete` - Delete selected items (context-aware)
 
 ## Architecture
 

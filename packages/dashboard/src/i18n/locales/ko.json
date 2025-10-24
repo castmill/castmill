@@ -684,6 +684,7 @@
     "closeDialog": "대화 상자 닫기",
     "gotoPlaylists": "재생 목록으로 이동",
     "gotoMedias": "미디어로 이동",
+    "gotoWidgets": "위젯으로 이동",
     "gotoChannels": "채널로 이동",
     "gotoOrganization": "조직으로 이동",
     "gotoTeams": "팀으로 이동",
@@ -691,7 +692,9 @@
     "search": "검색",
     "globalSearch": "전역 검색",
     "pageSearch": "현재 페이지에서 검색",
+    "searchResource": "현재 페이지에서 검색",
     "createResource": "리소스 생성",
+    "deleteSelected": "선택 항목 삭제",
     "categories": {
       "global": "전역",
       "navigation": "탐색",

@@ -1,4 +1,12 @@
-import { Component, createEffect, createSignal, onCleanup, onMount, Show, on } from 'solid-js';
+import {
+  Component,
+  createEffect,
+  createSignal,
+  onCleanup,
+  onMount,
+  Show,
+  on,
+} from 'solid-js';
 
 import {
   Button,
@@ -26,7 +34,10 @@ import styles from './devices.module.scss';
 
 import RegisterDevice from './register-device';
 import { DevicesService } from '../services/devices.service';
-import { AddonStore, AddonComponentProps } from '../../common/interfaces/addon-store';
+import {
+  AddonStore,
+  AddonComponentProps,
+} from '../../common/interfaces/addon-store';
 import { useTeamFilter } from '../../common/hooks';
 
 import { QuotaIndicator } from '../../common/components/quota-indicator';
@@ -45,7 +56,14 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
   // Get i18n functions from store
   const t = (key: string, params?: Record<string, any>) => {
     const result = props.store.i18n?.t(key, params) || key;
-    console.log('[Devices] Translation:', key, '=>', result, 'i18n available:', !!props.store.i18n);
+    console.log(
+      '[Devices] Translation:',
+      key,
+      '=>',
+      result,
+      'i18n available:',
+      !!props.store.i18n
+    );
     return result;
   };
   const toast = useToast();
@@ -53,7 +71,10 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
   // Helper function to check permissions
   const canPerformAction = (resource: string, action: string): boolean => {
     if (!props.store.permissions?.matrix) return false;
-    const allowedActions = props.store.permissions.matrix[resource as keyof typeof props.store.permissions.matrix];
+    const allowedActions =
+      props.store.permissions.matrix[
+        resource as keyof typeof props.store.permissions.matrix
+      ];
     return allowedActions?.includes(action as any) ?? false;
   };
 
@@ -123,6 +144,63 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
 
   onMount(() => {
     loadQuota();
+
+    // Register actions for generic shortcuts
+    // The shortcuts themselves are already registered globally in GlobalShortcuts
+    const { registerShortcutAction } = props.store.keyboardShortcuts || {};
+    if (registerShortcutAction) {
+      // Register create action
+      registerShortcutAction(
+        'generic-create',
+        () => {
+          if (canPerformAction('devices', 'create') && !isQuotaReached()) {
+            openRegisterModal();
+          }
+        },
+        () =>
+          window.location.pathname.includes('/devices') &&
+          canPerformAction('devices', 'create') &&
+          !isQuotaReached()
+      );
+
+      // Register search action
+      registerShortcutAction(
+        'generic-search',
+        () => {
+          if (tableViewRef) {
+            tableViewRef.focusSearch();
+          }
+        },
+        () => window.location.pathname.includes('/devices')
+      );
+
+      // Register delete action
+      registerShortcutAction(
+        'generic-delete',
+        () => {
+          if (
+            selectedDevices().size > 0 &&
+            canPerformAction('devices', 'delete')
+          ) {
+            setShowConfirmDialogMultiple(true);
+          }
+        },
+        () =>
+          window.location.pathname.includes('/devices') &&
+          selectedDevices().size > 0 &&
+          canPerformAction('devices', 'delete')
+      );
+    }
+  });
+
+  onCleanup(() => {
+    // Unregister actions when leaving this addon
+    const { unregisterShortcutAction } = props.store.keyboardShortcuts || {};
+    if (unregisterShortcutAction) {
+      unregisterShortcutAction('generic-create');
+      unregisterShortcutAction('generic-search');
+      unregisterShortcutAction('generic-delete');
+    }
   });
 
   // Reload data when organization changes (using on() to defer execution)
@@ -189,7 +267,9 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
       // Update total items
       setTotalItems(totalItems() + 1);
     } catch (error) {
-      setRegisterError(t('devices.errorRegisteringDevice', { error: String(error) }));
+      setRegisterError(
+        t('devices.errorRegisteringDevice', { error: String(error) })
+      );
     } finally {
       setLoading(false);
     }
@@ -251,7 +331,10 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
       icon: AiOutlineDelete,
       handler: (item: DeviceTableItem) => {
         if (!canPerformAction('devices', 'delete')) {
-          toast.error(t('permissions.noDeleteDevices') || "You don't have permission to delete devices");
+          toast.error(
+            t('permissions.noDeleteDevices') ||
+              "You don't have permission to delete devices"
+          );
           return;
         }
         setCurrentDevice(item);
@@ -314,7 +397,12 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
       toast.success(t('devices.deviceRemovedSuccess', { name: device.name }));
       loadQuota(); // Reload quota after deletion
     } catch (error) {
-      toast.error(t('devices.errorRemovingDevice', { name: device.name, error: String(error) }));
+      toast.error(
+        t('devices.errorRemovingDevice', {
+          name: device.name,
+          error: String(error),
+        })
+      );
     }
     setShowConfirmDialog(false);
   };
@@ -332,7 +420,9 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
       );
 
       refreshData();
-      toast.success(t('devices.devicesRemovedSuccess', { count: selectedDevices().size }));
+      toast.success(
+        t('devices.devicesRemovedSuccess', { count: selectedDevices().size })
+      );
       loadQuota(); // Reload quota after deletion
     } catch (error) {
       toast.error(t('devices.errorRemovingDevices', { error: String(error) }));
@@ -409,7 +499,9 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
       <ConfirmDialog
         show={showConfirmDialog()}
         title={t('devices.removeDevice')}
-        message={t('devices.confirmRemove', { name: currentDevice()?.name || '' })}
+        message={t('devices.confirmRemove', {
+          name: currentDevice()?.name || '',
+        })}
         onClose={() => setShowConfirmDialog(false)}
         onConfirm={() => confirmRemoveDevice(currentDevice())}
       />
@@ -456,7 +548,9 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
                 onClick={openRegisterModal}
                 icon={BsCheckLg}
                 color="primary"
-                disabled={isQuotaReached() || !canPerformAction('devices', 'create')}
+                disabled={
+                  isQuotaReached() || !canPerformAction('devices', 'create')
+                }
               />
             </div>
           ),

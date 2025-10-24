@@ -88,6 +88,8 @@ const App: Component<RouteSectionProps<unknown>> = (props) => {
     setStore('keyboardShortcuts', {
       registerShortcut: keyboardShortcuts.registerShortcut,
       unregisterShortcut: keyboardShortcuts.unregisterShortcut,
+      registerShortcutAction: keyboardShortcuts.registerShortcutAction,
+      unregisterShortcutAction: keyboardShortcuts.unregisterShortcutAction,
       getShortcuts: keyboardShortcuts.getShortcuts,
       formatShortcut: keyboardShortcuts.formatShortcut,
       isMac: keyboardShortcuts.isMac,
@@ -108,6 +110,7 @@ const wrapLazyComponent = (addon: { path: string; name: string }) => {
   return (props: any) => {
     const params = useSearchParams();
     const i18n = useI18n();
+    const navigate = useNavigate();
 
     // Update store with i18n functions using setStore (the proper way)
     setStore('i18n', {
@@ -118,6 +121,11 @@ const wrapLazyComponent = (addon: { path: string; name: string }) => {
       formatCurrency: i18n.formatCurrency,
       locale: i18n.locale,
       setLocale: i18n.setLocale,
+    });
+
+    // Update store with router utilities
+    setStore('router', {
+      navigate,
     });
 
     const toast = useToast();

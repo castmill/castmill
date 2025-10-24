@@ -71,10 +71,21 @@ interface CastmillStore {
   keyboardShortcuts?: {
     registerShortcut: (id: string, shortcut: KeyboardShortcut) => void;
     unregisterShortcut: (id: string) => void;
+    registerShortcutAction: (
+      id: string,
+      action: () => void,
+      condition?: () => boolean
+    ) => void;
+    unregisterShortcutAction: (id: string) => void;
     getShortcuts: () => Map<string, KeyboardShortcut>;
     formatShortcut: (shortcut: KeyboardShortcut) => string;
     isMac: () => boolean;
     isMobile: () => boolean;
+  };
+
+  // Router utilities (set by wrapLazyComponent)
+  router?: {
+    navigate: (path: string, options?: any) => void;
   };
 }
 

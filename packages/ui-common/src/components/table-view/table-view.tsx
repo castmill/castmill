@@ -5,7 +5,7 @@
  * Provides a common table view including pagination, searching, sorting, and selection.
  * (c) 2024 Castmill AB.
  */
-import { JSX, Show, createEffect, createSignal, onMount } from 'solid-js';
+import { JSX, Show, createSignal, onMount } from 'solid-js';
 import { Filter, ItemBase, Pagination, Table, TableAction, ToolBar } from '../';
 import { PermissionDenied } from '../permission-denied/permission-denied';
 import { SortOptions } from '../../interfaces/sort-options.interface';
@@ -26,6 +26,7 @@ export interface TableViewRef<
 > {
   reloadData: () => Promise<void>;
   updateItem: (itemId: IdType, item: Partial<Item>) => void;
+  focusSearch: () => void;
 }
 
 type Params = Record<string, string>;
@@ -251,6 +252,14 @@ export const TableView = <
           return prevItem;
         });
       });
+    },
+    focusSearch: () => {
+      const searchInput = document.querySelector(
+        '.search-input'
+      ) as HTMLInputElement;
+      if (searchInput) {
+        searchInput.focus();
+      }
     },
   };
 

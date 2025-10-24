@@ -684,6 +684,7 @@
     "closeDialog": "关闭对话框",
     "gotoPlaylists": "转到播放列表",
     "gotoMedias": "转到媒体",
+    "gotoWidgets": "转到小部件",
     "gotoChannels": "转到频道",
     "gotoOrganization": "转到组织",
     "gotoTeams": "转到团队",
@@ -691,7 +692,9 @@
     "search": "搜索",
     "globalSearch": "全局搜索",
     "pageSearch": "在当前页面搜索",
+    "searchResource": "在当前页面搜索",
     "createResource": "创建资源",
+    "deleteSelected": "删除所选",
     "categories": {
       "global": "全局",
       "navigation": "导航",

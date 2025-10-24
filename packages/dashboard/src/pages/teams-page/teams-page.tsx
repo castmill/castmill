@@ -35,11 +35,16 @@ import { TeamView } from './team-view';
 import { useI18n } from '../../i18n';
 import { QuotaIndicator } from '../../components/quota-indicator';
 import { QuotasService, ResourceQuota } from '../../services/quotas.service';
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
+import { useLocation } from '@solidjs/router';
 
 const TeamsPage: Component = () => {
   const params = useSearchParams();
   const { t } = useI18n();
   const { canPerformAction } = usePermissions();
+  const { registerShortcutAction, unregisterShortcutAction } =
+    useKeyboardShortcuts();
+  const location = useLocation();
 
   const toast = useToast();
 
@@ -77,6 +82,37 @@ const TeamsPage: Component = () => {
 
   onMount(() => {
     loadQuota();
+
+    // Register keyboard shortcuts
+    registerShortcutAction(
+      'generic-create',
+      () => {
+        if (!isQuotaReached() && canPerformAction('teams', 'create')) {
+          addTeam();
+        }
+      },
+      () => location.pathname.includes('/teams')
+    );
+
+    registerShortcutAction(
+      'generic-search',
+      () => {
+        if (tableViewRef) {
+          tableViewRef.focusSearch();
+        }
+      },
+      () => location.pathname.includes('/teams')
+    );
+
+    registerShortcutAction(
+      'generic-delete',
+      () => {
+        if (selectedTeams().size > 0 && canPerformAction('teams', 'delete')) {
+          setShowConfirmDialogMultiple(true);
+        }
+      },
+      () => location.pathname.includes('/teams')
+    );
   });
 
   // Reload data when organization changes
@@ -151,7 +187,11 @@ const TeamsPage: Component = () => {
     return result;
   };
 
-  onCleanup(() => {});
+  onCleanup(() => {
+    unregisterShortcutAction('generic-create');
+    unregisterShortcutAction('generic-search');
+    unregisterShortcutAction('generic-delete');
+  });
 
   const [showConfirmDialog, setShowConfirmDialog] = createSignal(false);
   const [showConfirmDialogMultiple, setShowConfirmDialogMultiple] =

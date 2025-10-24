@@ -18,13 +18,19 @@ export interface KeyboardShortcut {
   meta?: boolean;
   description: string | (() => string); // Support dynamic descriptions for i18n
   category: ShortcutCategory;
-  action: () => void;
+  action?: () => void; // Made optional - can be set separately via registerShortcutAction
   condition?: () => boolean;
 }
 
 interface KeyboardShortcutsContextType {
   registerShortcut: (id: string, shortcut: KeyboardShortcut) => void;
   unregisterShortcut: (id: string) => void;
+  registerShortcutAction: (
+    id: string,
+    action: () => void,
+    condition?: () => boolean
+  ) => void;
+  unregisterShortcutAction: (id: string) => void;
   getShortcuts: () => Map<string, KeyboardShortcut>;
   formatShortcut: (shortcut: KeyboardShortcut) => string;
   isMac: () => boolean;
@@ -66,6 +72,37 @@ export const KeyboardShortcutsProvider: Component<ParentProps> = (props) => {
     setShortcuts((prev) => {
       const newMap = new Map(prev);
       newMap.delete(id);
+      return newMap;
+    });
+  };
+
+  const registerShortcutAction = (
+    id: string,
+    action: () => void,
+    condition?: () => boolean
+  ) => {
+    setShortcuts((prev) => {
+      const newMap = new Map(prev);
+      const existing = newMap.get(id);
+      if (existing) {
+        newMap.set(id, { ...existing, action, condition });
+      }
+      return newMap;
+    });
+  };
+
+  const unregisterShortcutAction = (id: string) => {
+    setShortcuts((prev) => {
+      const newMap = new Map(prev);
+      const existing = newMap.get(id);
+      if (existing) {
+        // Remove action and condition, keep the shortcut registered for legend
+        newMap.set(id, {
+          ...existing,
+          action: undefined,
+          condition: undefined,
+        });
+      }
       return newMap;
     });
   };
@@ -117,15 +154,25 @@ export const KeyboardShortcutsProvider: Component<ParentProps> = (props) => {
 
   const handleKeyDown = (event: KeyboardEvent) => {
     const target = event.target as HTMLElement;
+
+    // Check if we're in an input field that should block shortcuts
     const isInInputField =
-      target.tagName === 'INPUT' ||
+      (target.tagName === 'INPUT' &&
+        (target as HTMLInputElement).type !== 'checkbox' &&
+        (target as HTMLInputElement).type !== 'radio') ||
       target.tagName === 'TEXTAREA' ||
       target.tagName === 'SELECT' ||
       target.isContentEditable;
 
     // Allow ESC key even in input fields (to blur/exit)
+    // Allow Delete key even when checkbox is focused
     // Block all other shortcuts when typing in input fields
-    if (isInInputField && event.key !== 'Escape') {
+    const isAllowedKey =
+      event.key === 'Escape' ||
+      event.key === 'Delete' ||
+      event.key === 'Backspace';
+
+    if (isInInputField && !isAllowedKey) {
       return;
     }
 
@@ -137,15 +184,29 @@ export const KeyboardShortcutsProvider: Component<ParentProps> = (props) => {
         continue;
       }
 
+      // Normalize key for comparison (handle Delete/Backspace equivalence)
+      let eventKey = event.key.toUpperCase();
+      let shortcutKey = shortcut.key.toUpperCase();
+
+      // On Mac, Backspace is the delete key, so treat them as equivalent
+      if (eventKey === 'BACKSPACE' && shortcutKey === 'DELETE') {
+        eventKey = 'DELETE';
+      } else if (eventKey === 'DELETE' && shortcutKey === 'BACKSPACE') {
+        eventKey = 'BACKSPACE';
+      }
+
       // Check if the key matches
-      if (event.key.toUpperCase() !== shortcut.key.toUpperCase()) {
+      if (eventKey !== shortcutKey) {
         continue;
       }
 
       // Check modifiers
       if (checkModifierMatch(shortcut, event, mac)) {
         event.preventDefault();
-        shortcut.action();
+        // Only invoke action if it exists (some shortcuts are placeholders)
+        if (shortcut.action) {
+          shortcut.action();
+        }
         break;
       }
     }
@@ -162,6 +223,8 @@ export const KeyboardShortcutsProvider: Component<ParentProps> = (props) => {
   const value: KeyboardShortcutsContextType = {
     registerShortcut,
     unregisterShortcut,
+    registerShortcutAction,
+    unregisterShortcutAction,
     getShortcuts,
     formatShortcut,
     isMac,

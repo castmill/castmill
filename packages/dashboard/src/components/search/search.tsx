@@ -25,7 +25,7 @@ const Search: Component = () => {
     useKeyboardShortcuts();
   const [searchString, setSearchString] = createSignal('');
 
-  let inputRef: HTMLInputElement | null = null;
+  let inputRef: HTMLInputElement | undefined;
 
   const globalSearchShortcut = {
     key: 'F',
@@ -49,7 +49,11 @@ const Search: Component = () => {
     // Navigate to /search?s=searchString when Enter is pressed
     if (event.key === 'Enter' && searchString() !== '') {
       navigate(`/search?s=${encodeURIComponent(searchString())}`);
-      inputRef!.blur();
+      inputRef?.blur();
+    }
+    // Blur the search input when ESC is pressed
+    if (event.key === 'Escape') {
+      inputRef?.blur();
     }
   };
 
@@ -70,7 +74,7 @@ const Search: Component = () => {
         value={searchString()}
         onInput={(e) => setSearchString(e.currentTarget.value)}
         onKeyDown={handleEnterKeyDown}
-        ref={inputRef!} // Use ref to access the input element
+        ref={inputRef} // Use ref to access the input element
       />
       <span class="keyboard-shortcut">
         {formatShortcut(globalSearchShortcut)}

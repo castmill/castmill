@@ -39,11 +39,16 @@ import { useI18n } from '../../i18n';
 import { QuotaIndicator } from '../../components/quota-indicator';
 import { QuotasService, ResourceQuota } from '../../services/quotas.service';
 import { usePermissions } from '../../hooks/usePermissions';
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
+import { useLocation } from '@solidjs/router';
 
 const ChannelsPage: Component = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { t } = useI18n();
   const { canPerformAction } = usePermissions();
+  const { registerShortcutAction, unregisterShortcutAction } =
+    useKeyboardShortcuts();
+  const location = useLocation();
 
   const toast = useToast();
 
@@ -93,6 +98,40 @@ const ChannelsPage: Component = () => {
 
   onMount(() => {
     loadQuota();
+
+    // Register keyboard shortcuts
+    registerShortcutAction(
+      'generic-create',
+      () => {
+        if (!isQuotaReached() && canPerformAction('channels', 'create')) {
+          addChannel();
+        }
+      },
+      () => location.pathname.includes('/channels')
+    );
+
+    registerShortcutAction(
+      'generic-search',
+      () => {
+        if (tableViewRef) {
+          tableViewRef.focusSearch();
+        }
+      },
+      () => location.pathname.includes('/channels')
+    );
+
+    registerShortcutAction(
+      'generic-delete',
+      () => {
+        if (
+          selectedChannels().size > 0 &&
+          canPerformAction('channels', 'delete')
+        ) {
+          setShowConfirmDialogMultiple(true);
+        }
+      },
+      () => location.pathname.includes('/channels')
+    );
   });
 
   createEffect(
@@ -167,7 +206,11 @@ const ChannelsPage: Component = () => {
     return result;
   };
 
-  onCleanup(() => {});
+  onCleanup(() => {
+    unregisterShortcutAction('generic-create');
+    unregisterShortcutAction('generic-search');
+    unregisterShortcutAction('generic-delete');
+  });
 
   const [showConfirmDialog, setShowConfirmDialog] = createSignal(false);
   const [showConfirmDialogMultiple, setShowConfirmDialogMultiple] =

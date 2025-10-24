@@ -4,13 +4,78 @@ This guide explains how addon developers can register keyboard shortcuts for the
 
 ## Overview
 
-The Dashboard provides a centralized keyboard shortcuts system through the `useKeyboardShortcuts` hook. The system:
+The Dashboard provides a centralized keyboard shortcuts system accessible to addons through the `store.keyboardShortcuts` prop. The system:
 
 - Automatically handles platform-specific shortcuts (macOS uses ⌘, Windows/Linux use Ctrl)
 - Supports conditional shortcuts that are only active when certain conditions are met
-- Displays shortcuts in a centralized shortcuts legend (Cmd/Ctrl+/)
+- Displays addon shortcuts in the centralized shortcuts legend (Shift+?)
 - Hides shortcuts on mobile devices automatically
 - Prevents shortcuts from triggering when user is typing in input fields
+- **Dynamically registers navigation shortcuts from addon metadata**
+
+## Addon Metadata-Based Navigation Shortcuts
+
+**NEW**: Addons now declare their keyboard shortcuts in their metadata, and the Dashboard automatically registers them. This eliminates the need for manual shortcut registration in addon code for navigation.
+
+### Declaring Shortcuts in Addon Metadata (Elixir)
+
+In your addon's `.addon.ex` file, add a `keyboard_shortcut` field to the `ComponentInfo`:
+
+```elixir
+defmodule Castmill.Addons.Playlists do
+  use Castmill.Addons.Addon
+
+  @impl Castmill.Addons.AddonBehaviour
+  def component_info() do
+    %Castmill.Addons.ComponentInfo{
+      id: "playlists",
+      name: "Playlists",
+      name_key: "sidebar.playlists",
+      description: "Playlists view addon for Castmill",
+      version: "0.1.0",
+      path: "/playlists.js",
+      mount_path: "/content/playlists",
+      mount_point: "sidepanel.content.playlists",
+      icon: "/playlists_icon.js",
+      keyboard_shortcut: %{
+        key: "P",
+        description_key: "shortcuts.gotoPlaylists"
+      }
+    }
+  end
+end
+```
+
+### Adding TypeScript Interface (Already Done)
+
+The `AddOn` interface in `packages/dashboard/src/interfaces/addon.interface.ts` already includes:
+
+```typescript
+export interface AddOn {
+  // ... other fields ...
+  keyboard_shortcut?: {
+    key: string;
+    description_key: string;
+  };
+}
+```
+
+### Translation Keys
+
+Add the description key to all language files in `packages/dashboard/src/i18n/locales/`:
+
+```json
+{
+  "shortcuts": {
+    "gotoPlaylists": "Go to Playlists",
+    "gotoMedias": "Go to Medias",
+    "gotoWidgets": "Go to Widgets",
+    "gotoDevices": "Go to Devices"
+  }
+}
+```
+
+**Important**: Navigation shortcuts are automatically registered as `Cmd/Ctrl+{key}` combinations.
 
 ## Accessing the Keyboard Shortcuts System
 
@@ -18,54 +83,81 @@ Addons receive the keyboard shortcuts registry through the `store.keyboardShortc
 
 ## Implementation Pattern
 
-### 1. Register navigation shortcuts in your addon root component
+### 1. Action Shortcuts (Create, Search, Delete)
 
-**Important**: Addons are responsible for registering their own navigation shortcuts. The core GlobalShortcuts component only registers shortcuts for core pages (Teams, Organization, Channels). If your addon has a main page that users should be able to navigate to via keyboard, register it when your addon loads.
+Addons should register action shortcuts using the `registerShortcutAction` helper:
 
 ```tsx
-import { Component, onMount, onCleanup } from 'solid-js';
-import { useNavigate, useParams } from '@solidjs/router';
-import { AddonComponentProps } from '../../common/interfaces/addon-store';
+import { Component, onMount } from 'solid-js';
+import { AddonStore } from '../../common/interfaces/addon-store';
+import { TableViewRef } from '@castmill/ui-common';
 
-// Example: Playlists addon root component
-const PlaylistsAddon: Component<AddonComponentProps> = (props) => {
-  const navigate = useNavigate();
-  const params = useParams();
+const WidgetsPage: Component<{
+  store: AddonStore;
+  params: any;
+}> = (props) => {
   const t = (key: string, params?: Record<string, any>) =>
     props.store.i18n?.t(key, params) || key;
 
-  onMount(() => {
-    const { registerShortcut } = props.store.keyboardShortcuts || {};
+  const [tableRef, setRef] = createSignal<TableViewRef<number, Widget>>();
 
-    if (registerShortcut) {
-      // Register navigation shortcut for this addon's main page
-      registerShortcut('goto-playlists', {
-        key: 'P',
-        ctrl: true,
-        shift: true,
-        description: () => t('shortcuts.gotoPlaylists'),
-        category: 'navigation',
-        action: () => {
-          const orgId = params.orgId;
-          if (orgId) {
-            navigate(`/org/${orgId}/content/playlists`);
+  const openUploadModal = () => {
+    setShowUploadModal(true);
+  };
+
+  const canPerformAction = (resource: string, action: string): boolean => {
+    if (!props.store.permissions?.matrix) return false;
+    const allowedActions = props.store.permissions.matrix[resource];
+    return allowedActions?.includes(action) ?? false;
+  };
+
+  // Register keyboard shortcuts
+  onMount(() => {
+    if (props.store.keyboardShortcuts) {
+      const { registerShortcutAction } = props.store.keyboardShortcuts;
+
+      // C key - Create/Upload widget
+      registerShortcutAction(
+        'generic-create',
+        () => {
+          if (canPerformAction('widgets', 'create')) {
+            openUploadModal();
           }
         },
-        condition: () => !!params.orgId,
-      });
+        () => window.location.pathname.includes('/widgets')
+      );
+
+      // S key - Focus search
+      registerShortcutAction(
+        'generic-search',
+        () => {
+          const currentTableRef = tableRef();
+          if (currentTableRef) {
+            currentTableRef.focusSearch();
+          }
+        },
+        () => window.location.pathname.includes('/widgets')
+      );
     }
   });
 
-  onCleanup(() => {
-    const { unregisterShortcut } = props.store.keyboardShortcuts || {};
-    if (unregisterShortcut) {
-      unregisterShortcut('goto-playlists');
-    }
-  });
-
-  return <div>{/* Your addon UI */}</div>;
+  return (
+    <div>
+      <TableView
+        ref={setRef}
+        // ... other props
+      />
+    </div>
+  );
 };
 ```
+
+**Key Points**:
+
+- Use `registerShortcutAction` for generic actions (create, search, delete)
+- Always check permissions before executing actions
+- Use `tableViewRef.focusSearch()` for search functionality
+- Condition shortcuts based on current pathname
 
 ### 2. Register action shortcuts in your addon component
 
@@ -314,88 +406,185 @@ Add shortcut descriptions to your addon's translation keys:
 
 ## Best Practices
 
-### 1. **Don't Interfere with Global Shortcuts**
+### 1. **Navigation Shortcuts via Metadata**
 
-The following shortcuts are reserved for global navigation and actions:
+Always declare navigation shortcuts in addon metadata rather than code:
 
-- `Shift+?` - Show shortcuts legend
-- `Cmd/Ctrl+F` - Global search
-- `S` - Search in current page
-- `Escape` - Close dialog / blur input
-- `C` - Create resource (context-aware)
-- `Cmd/Ctrl+P` - Go to Playlists
-- `Cmd/Ctrl+M` - Go to Medias
-- `Cmd/Ctrl+H` - Go to Channels
-- `Cmd/Ctrl+O` - Go to Organization
-- `Cmd/Ctrl+G` - Go to Teams
-- `Cmd/Ctrl+D` - Go to Devices
+✅ **Good** - Metadata-based (automatic registration):
 
-### 2. **Use Consistent Shortcuts**
-
-For common actions, use these standard shortcuts:
-
-- `Cmd/Ctrl+N` - Add new resource (recommended for addons)
-- `Cmd/Ctrl+A` - Select all items
-- `Delete` or `Backspace` - Delete selected items
-- `Escape` - Close modal or blur input (already handled globally)
-
-**Note:** The global `C` key is reserved for context-aware resource creation. Addons should use `Cmd/Ctrl+N` for their add/create actions.
-
-### 3. **Check Permissions**
-
-Always check if the user has permission before executing shortcut actions:
-
-```tsx
-const handleKeyDown = (event: KeyboardEvent) => {
-  // ... other code ...
-
-  // Only allow delete if user has delete permission
-  if (event.key === 'Delete' && canPerformAction('medias', 'delete')) {
-    event.preventDefault();
-    confirmDeleteSelected();
-  }
-};
-```
-
-### 4. **Handle Platform Differences**
-
-Always detect the platform and use the appropriate modifier key:
-
-```tsx
-const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
-const cmdOrCtrl = isMac ? event.metaKey : event.ctrlKey;
-```
-
-### 5. **Prevent Default Browser Behavior**
-
-Always call `preventDefault()` when handling shortcuts to prevent browser default actions:
-
-```tsx
-if (cmdOrCtrl && event.key === 'n') {
-  event.preventDefault(); // Prevent browser's "New Window"
-  setShowAddModal(true);
+```elixir
+keyboard_shortcut: %{
+  key: "I",
+  description_key: "shortcuts.gotoWidgets"
 }
 ```
 
-## Example: Complete Addon with Shortcuts
+❌ **Bad** - Manual registration (deprecated):
 
-See `/packages/castmill/lib/castmill/addons/medias/components/index.tsx` for a complete example of an addon that could implement keyboard shortcuts following this pattern.
+```tsx
+registerShortcut('goto-widgets', { ... });
+```
+
+### 2. **Use Generic Action IDs**
+
+For common actions, use the predefined generic action IDs:
+
+- `generic-create` - For create/add/upload actions (C key)
+- `generic-search` - For search/filter actions (S key)
+- `generic-delete` - For delete actions (Delete key)
+
+These automatically appear in the shortcuts legend with proper descriptions.
+
+### 3. **Avoid Key Conflicts**
+
+The following shortcuts are reserved globally:
+
+- `Shift+?` - Show shortcuts legend
+- `Cmd/Ctrl+F` - Global search
+- `Escape` - Close dialog / blur input
+- Navigation shortcuts defined in addon metadata (Cmd/Ctrl+key combinations)
+
+For addon-specific actions, use simple keys (C, S, Delete) with context conditions.
+
+### 4. **Use TableViewRef.focusSearch()**
+
+For search functionality, use the TableView's built-in `focusSearch()` method:
+
+✅ **Good**:
+
+```tsx
+tableRef()?.focusSearch();
+```
+
+❌ **Bad**:
+
+```tsx
+document.querySelector('.search-input')?.focus();
+```
+
+### 5. **Check Permissions**
+
+Always check permissions before executing actions:
+
+```tsx
+registerShortcutAction(
+  'generic-create',
+  () => {
+    if (canPerformAction('widgets', 'create')) {
+      openUploadModal();
+    }
+  },
+  () => window.location.pathname.includes('/widgets')
+);
+```
+
+### 6. **Avoid Browser Conflicts**
+
+Some key combinations conflict with browser shortcuts:
+
+- ❌ `Cmd/Ctrl+W` - Closes browser tab/window
+- ❌ `Cmd/Ctrl+N` - Opens new browser window
+- ❌ `Cmd/Ctrl+T` - Opens new browser tab
+
+Choose keys that don't conflict with common browser shortcuts.
+
+## Example: Complete Addon Implementation
+
+See `/packages/castmill/lib/castmill/addons/widgets/components/index.tsx` for a complete example showing:
+
+- Metadata-based navigation shortcuts
+- Action shortcuts using `registerShortcutAction`
+- Permission checking
+- TableView search integration
+
+## Migrating from Manual Registration
+
+If your addon manually registers navigation shortcuts, migrate to metadata-based approach:
+
+**Before** (deprecated):
+
+```tsx
+onMount(() => {
+  registerShortcut('goto-playlists', {
+    key: 'P',
+    ctrl: true,
+    description: () => t('shortcuts.gotoPlaylists'),
+    category: 'navigation',
+    action: () => navigate(`/org/${orgId}/content/playlists`),
+  });
+});
+```
+
+**After** (recommended):
+
+```elixir
+# In playlists.addon.ex
+keyboard_shortcut: %{
+  key: "P",
+  description_key: "shortcuts.gotoPlaylists"
+}
+```
+
+The Dashboard automatically handles registration, navigation, and cleanup.
 
 ## Testing Shortcuts
 
 When testing your addon:
 
-1. Test on both macOS and Windows/Linux to ensure shortcuts work correctly
-2. Test that shortcuts don't fire when typing in input fields
-3. Test that shortcuts respect permission checks
-4. Verify shortcuts are displayed correctly in your UI
+1. ✅ Verify navigation shortcut appears in shortcuts legend (Shift+?)
+2. ✅ Test that `Cmd/Ctrl+{key}` navigates to your addon page
+3. ✅ Test action shortcuts (C, S, Delete) work when on your page
+4. ✅ Test that shortcuts respect permission checks
+5. ✅ Verify shortcuts don't fire when typing in input fields
+6. ✅ Test on both macOS and Windows/Linux
+
+## Architecture Summary
+
+```
+┌─────────────────────────────────────────────────────────┐
+│ Elixir Backend (addon.ex)                               │
+│ ┌─────────────────────────────────────────────────────┐ │
+│ │ ComponentInfo with keyboard_shortcut metadata       │ │
+│ │ - key: "P"                                          │ │
+│ │ - description_key: "shortcuts.gotoPlaylists"        │ │
+│ └─────────────────────────────────────────────────────┘ │
+└──────────────────┬──────────────────────────────────────┘
+                   │ JSON API
+                   ▼
+┌─────────────────────────────────────────────────────────┐
+│ Dashboard (index.tsx / GlobalShortcuts)                 │
+│ ┌─────────────────────────────────────────────────────┐ │
+│ │ Automatically registers Cmd/Ctrl+{key} shortcuts    │ │
+│ │ - Reads from store.addons[]                         │ │
+│ │ - Creates navigation action                         │ │
+│ │ - Adds to shortcuts legend                          │ │
+│ └─────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────┘
+                   │
+                   ▼
+┌─────────────────────────────────────────────────────────┐
+│ Addon Component (index.tsx)                             │
+│ ┌─────────────────────────────────────────────────────┐ │
+│ │ Registers action shortcuts via store.keyboardShortcuts│
+│ │ - C key → openCreateModal()                         │ │
+│ │ - S key → tableRef.focusSearch()                    │ │
+│ │ - Delete key → deleteSelected()                     │ │
+│ └─────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────┘
+```
 
 ## Future Enhancements
 
-In the future, we may provide a centralized addon shortcut registration API that automatically:
+The current system provides:
 
-- Registers shortcuts in the global shortcuts legend
-- Handles platform detection automatically
-- Provides automatic permission checking
+- ✅ Metadata-based navigation shortcuts
+- ✅ Generic action shortcuts (C, S, Delete)
+- ✅ Automatic registration and cleanup
+- ✅ Centralized shortcuts legend
 
-For now, use the manual pattern described above.
+Potential future improvements:
+
+- Customizable shortcuts per user
+- Shortcut conflict detection
+- Visual shortcut hints in UI
+- Addon-specific shortcut categories
