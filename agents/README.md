@@ -57,6 +57,8 @@ agents/
 - **[notifications.md](./systems/notifications.md)** - Real-time notification system with WebSocket and REST API
 - **[WIDGET-INTEGRATIONS.md](./systems/WIDGET-INTEGRATIONS.md)** - Widget third-party integration system architecture
 - **[WIDGET-INTEGRATION-API.md](./systems/WIDGET-INTEGRATION-API.md)** - Widget integration API reference
+- **[WIDGET-INTEGRATION-GUIDE.md](./systems/WIDGET-INTEGRATION-GUIDE.md)** - Developer guide for creating integrations
+- **[WIDGET-TEMPLATE-INTEGRATION.md](./systems/WIDGET-TEMPLATE-INTEGRATION.md)** - How integrations work with widget templates
 - *Coming soon: Authentication, media pipeline, real-time synchronization*
 
 #### Infrastructure (`infrastructure/`)
