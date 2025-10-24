@@ -59,6 +59,7 @@ agents/
 - **[WIDGET-INTEGRATION-API.md](./systems/WIDGET-INTEGRATION-API.md)** - Widget integration API reference
 - **[WIDGET-INTEGRATION-GUIDE.md](./systems/WIDGET-INTEGRATION-GUIDE.md)** - Developer guide for creating integrations
 - **[WIDGET-TEMPLATE-INTEGRATION.md](./systems/WIDGET-TEMPLATE-INTEGRATION.md)** - How integrations work with widget templates
+- **[WIDGET-ASSETS.md](./systems/WIDGET-ASSETS.md)** - Widget asset management architecture (icons, fonts, images)
 - *Coming soon: Authentication, media pipeline, real-time synchronization*
 
 #### Infrastructure (`infrastructure/`)
