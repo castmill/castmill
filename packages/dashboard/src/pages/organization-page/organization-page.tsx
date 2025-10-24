@@ -1,5 +1,12 @@
 import { useSearchParams } from '@solidjs/router';
-import { Component, createEffect, createSignal, Show } from 'solid-js';
+import {
+  Component,
+  createEffect,
+  createSignal,
+  Show,
+  onMount,
+  onCleanup,
+} from 'solid-js';
 
 import { Button, FormItem, TabItem, Tabs, useToast } from '@castmill/ui-common';
 import { OrganizationMembersView } from './organization-members-view';
@@ -12,12 +19,17 @@ import style from './organization-page.module.scss';
 import { OrganizationsService } from '../../services/organizations.service';
 import { OrganizationInvitationsView } from './organization-invitations-view';
 import { useI18n } from '../../i18n';
+import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
+import { useLocation } from '@solidjs/router';
 
 const OrganizationPage: Component = () => {
   const params = useSearchParams();
   const { t } = useI18n();
   const { canPerformAction } = usePermissions();
   const toast = useToast();
+  const { registerShortcutAction, unregisterShortcutAction } =
+    useKeyboardShortcuts();
+  const location = useLocation();
 
   const [name, setName] = createSignal(store.organizations.selectedName!);
   const [logoMediaId, setLogoMediaId] = createSignal<number | null>(
@@ -34,6 +46,27 @@ const OrganizationPage: Component = () => {
 
   // Check if user can update organization settings
   const canEdit = () => canPerformAction('organizations', 'update');
+
+  onMount(() => {
+    // Register keyboard shortcut for search
+    registerShortcutAction(
+      'generic-search',
+      () => {
+        // Focus the search input in the currently active tab
+        const searchInput = document.querySelector(
+          '.search-input'
+        ) as HTMLInputElement;
+        if (searchInput) {
+          searchInput.focus();
+        }
+      },
+      () => location.pathname.includes('/organization')
+    );
+  });
+
+  onCleanup(() => {
+    unregisterShortcutAction('generic-search');
+  });
 
   const validateField = (fieldId: string, value: string) => {
     let error = '';

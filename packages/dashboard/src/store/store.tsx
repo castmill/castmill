@@ -13,6 +13,7 @@ import type {
   ResourceType,
   Action,
 } from '../services/permissions.service';
+import type { KeyboardShortcut } from '../hooks/useKeyboardShortcuts';
 
 interface OrganizationLogoState {
   mediaId: number | null;
@@ -64,6 +65,27 @@ interface CastmillStore {
     ) => string;
     locale: () => string;
     setLocale: (locale: any) => void; // Using any to match i18n context signature
+  };
+
+  // Keyboard shortcuts registry (set by index.tsx)
+  keyboardShortcuts?: {
+    registerShortcut: (id: string, shortcut: KeyboardShortcut) => void;
+    unregisterShortcut: (id: string) => void;
+    registerShortcutAction: (
+      id: string,
+      action: () => void,
+      condition?: () => boolean
+    ) => void;
+    unregisterShortcutAction: (id: string) => void;
+    getShortcuts: () => Map<string, KeyboardShortcut>;
+    formatShortcut: (shortcut: KeyboardShortcut) => string;
+    isMac: () => boolean;
+    isMobile: () => boolean;
+  };
+
+  // Router utilities (set by wrapLazyComponent)
+  router?: {
+    navigate: (path: string, options?: any) => void;
   };
 }
 

@@ -8,7 +8,7 @@ import Search from '../search/search';
 
 // Find any icon here: https://solid-icons.vercel.app/search/settings
 import { FaRegularBell } from 'solid-icons/fa';
-import { TbHelpCircle } from 'solid-icons/tb';
+import { TbHelpCircle, TbKeyboard } from 'solid-icons/tb';
 
 import logo from '../../assets/castmill-logo-topbar.png';
 import DropdownMenu from '../dropdown-menu/dropdown-menu';
@@ -19,10 +19,13 @@ import NotificationBell from '../notification-bell/notification-bell';
 import { baseUrl } from '../../env';
 import { useI18n } from '../../i18n';
 import { store } from '../../store/store';
+import { ShortcutsLegend } from '../shortcuts-legend/shortcuts-legend';
+import { GlobalShortcuts } from '../global-shortcuts/global-shortcuts';
 import { useSelectedOrganizationLogo } from '../../hooks/use-selected-organization-logo';
 
 const Topbar: Component = () => {
   const [triggerLogout, setTriggerLogout] = createSignal(false);
+  const [showShortcuts, setShowShortcuts] = createSignal(false);
   const { t } = useI18n();
   const { logoUrl: selectedOrgLogo } = useSelectedOrganizationLogo();
 
@@ -54,6 +57,11 @@ const Topbar: Component = () => {
   return (
     <>
       <LoadingProgressBar loading={store.loadingAddons} />
+      <GlobalShortcuts onShowShortcuts={() => setShowShortcuts(true)} />
+      <ShortcutsLegend
+        show={showShortcuts()}
+        onClose={() => setShowShortcuts(false)}
+      />
       <header class="castmill-header">
         <nav class="main">
           <a href="/">
@@ -80,6 +88,22 @@ const Topbar: Component = () => {
               icon={TbHelpCircle}
               text={t('topbar.help')}
             ></TopbarLink>
+
+            <Show
+              when={
+                !/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+                  navigator.userAgent
+                )
+              }
+            >
+              <div
+                class="keyboard-shortcuts-icon"
+                onClick={() => setShowShortcuts(true)}
+                title={t('shortcuts.showShortcutsLegend')}
+              >
+                <TbKeyboard />
+              </div>
+            </Show>
 
             {/* Notification Bell */}
             <NotificationBell />

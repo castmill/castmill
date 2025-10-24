@@ -1,6 +1,6 @@
 import { BsEye } from 'solid-icons/bs';
 import { AiOutlineUpload } from 'solid-icons/ai';
-import { Component, createSignal, createEffect, Show } from 'solid-js';
+import { Component, createSignal, createEffect, Show, onMount } from 'solid-js';
 
 import {
   Button,
@@ -39,7 +39,10 @@ const WidgetsPage: Component<{
   // Helper function to check permissions
   const canPerformAction = (resource: string, action: string): boolean => {
     if (!props.store.permissions?.matrix) return false;
-    const allowedActions = props.store.permissions.matrix[resource as keyof typeof props.store.permissions.matrix];
+    const allowedActions =
+      props.store.permissions.matrix[
+        resource as keyof typeof props.store.permissions.matrix
+      ];
     return allowedActions?.includes(action as any) ?? false;
   };
 
@@ -56,6 +59,34 @@ const WidgetsPage: Component<{
   const refreshData = () => {
     tableRef()?.reloadData();
   };
+
+  // Register keyboard shortcuts
+  onMount(() => {
+    if (props.store.keyboardShortcuts) {
+      const { registerShortcutAction } = props.store.keyboardShortcuts;
+
+      registerShortcutAction(
+        'generic-create',
+        () => {
+          if (canPerformAction('widgets', 'create')) {
+            openUploadModal();
+          }
+        },
+        () => window.location.pathname.includes('/widgets')
+      );
+
+      registerShortcutAction(
+        'generic-search',
+        () => {
+          const currentTableRef = tableRef();
+          if (currentTableRef) {
+            currentTableRef.focusSearch();
+          }
+        },
+        () => window.location.pathname.includes('/widgets')
+      );
+    }
+  });
 
   // Apply fixed width to modals when they're shown
   createEffect(() => {

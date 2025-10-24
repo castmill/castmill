@@ -14,6 +14,7 @@ defmodule Castmill.Addons.Content do
   @impl Castmill.Addons.AddonBehaviour
   def component_info() do
     %Castmill.Addons.ComponentInfo{
+      id: "content",
       name: "Content",
       name_key: "sidebar.content",
       description: "Content management addon for Castmill",

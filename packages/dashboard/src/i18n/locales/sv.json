@@ -79,7 +79,7 @@
     "selectMedia": "Välj ett media",
     "apply": "Tillämpa",
     "selectVideo": "Välj en video",
-    "offline": "[TODO: Translate] Offline"
+    "offline": "Offline"
   },
   "topbar": {
     "help": "Hjälp",
@@ -192,7 +192,7 @@
   },
   "teams": {
     "title": "Team",
-    "members": "TODO: Translate - Members",
+    "members": "Medlemmar",
     "invitations": "Inbjudningar",
     "invitationAcceptSuccess": "Inbjudan accepterad framgångsrikt",
     "invitationDeleteSuccess": "Inbjudan borttagen framgångsrikt",
@@ -271,7 +271,7 @@
       "selectUser": "Välj användare",
       "searchUser": "Sök efter en användare..."
     },
-    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully"
+    "teamsRemovedSuccessfully": "Team borttagna framgångsrikt"
   },
   "login": {
     "title": "Logga in",
@@ -312,7 +312,7 @@
     "playlists": "Spellistor",
     "medias": "Media",
     "widgets": "Widgets",
-    "members": "[TODO: Translate] Members"
+    "members": "Medlemmar"
   },
   "channels": {
     "title": "Kanaler",
@@ -384,7 +384,7 @@
       "noOrganizationsRemaining": "Du har lämnat din sista organisation. Kontakta en administratör för att bli inbjuden till en organisation.",
       "invitationSent": "Inbjudan skickad till {{email}}"
     },
-    "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
+    "teamRoleInstaller": "Installatör (24h)",
     "roleDescriptions": {
       "admin": "Full åtkomst inklusive organisationshantering",
       "manager": "Kan hantera team och de flesta resurser",
@@ -516,21 +516,21 @@
     "enterPincode": "Ange {{length}}-siffrig PIN-kod",
     "pincodeDescription": "PIN-koden kommer att visas på enhetens skärm.",
     "register": "Registrera",
-    "title": "[TODO: Translate] Devices",
-    "addDevice": "[TODO: Translate] Add Device",
-    "registerDevice": "[TODO: Translate] Register device",
-    "registerDescription": "[TODO: Translate] And start displaying content on it",
-    "deviceDetails": "[TODO: Translate] Details of your device",
-    "removeDevice": "[TODO: Translate] Remove Device",
-    "removeDevices": "[TODO: Translate] Remove Devices",
-    "confirmRemove": "[TODO: Translate] Are you sure you want to remove device \"{{name}}\"?",
-    "confirmRemoveMultiple": "[TODO: Translate] Are you sure you want to remove the following devices?",
-    "deviceRegisteredSuccess": "[TODO: Translate] Device registered successfully",
-    "deviceRemovedSuccess": "[TODO: Translate] Device \"{{name}}\" removed successfully",
-    "devicesRemovedSuccess": "[TODO: Translate] {{count}} device(s) removed successfully",
-    "errorRegisteringDevice": "[TODO: Translate] Error registering device: {{error}}",
-    "errorRemovingDevice": "[TODO: Translate] Error removing device {{name}}: {{error}}",
-    "errorRemovingDevices": "[TODO: Translate] Error removing devices: {{error}}"
+    "title": "Enheter",
+    "addDevice": "Lägg till enhet",
+    "registerDevice": "Registrera enhet",
+    "registerDescription": "Och börja visa innehåll på den",
+    "deviceDetails": "Detaljer om din enhet",
+    "removeDevice": "Ta bort enhet",
+    "removeDevices": "Ta bort enheter",
+    "confirmRemove": "Är du säker på att du vill ta bort enheten \"{{name}}\"?",
+    "confirmRemoveMultiple": "Är du säker på att du vill ta bort följande enheter?",
+    "deviceRegisteredSuccess": "Enheten registrerades framgångsrikt",
+    "deviceRemovedSuccess": "Enheten \"{{name}}\" togs bort framgångsrikt",
+    "devicesRemovedSuccess": "{{count}} enhet(er) togs bort framgångsrikt",
+    "errorRegisteringDevice": "Fel vid registrering av enhet: {{error}}",
+    "errorRemovingDevice": "Fel vid borttagning av enhet {{name}}: {{error}}",
+    "errorRemovingDevices": "Fel vid borttagning av enheter: {{error}}"
   },
   "validation": {
     "fieldRequired": "Detta fält är obligatoriskt",
@@ -673,5 +673,31 @@
     "teamLabel": "Lag",
     "teamPlaceholder": "Välj lag",
     "teamClear": "Rensa lagfilter"
+  },
+  "shortcuts": {
+    "showShortcutsLegend": "Visa tangentbordsgenvägar",
+    "closeDialog": "Stäng dialogruta",
+    "gotoPlaylists": "Gå till Spellistor",
+    "gotoMedias": "Gå till Media",
+    "gotoWidgets": "Gå till Widgets",
+    "gotoChannels": "Gå till Kanaler",
+    "gotoOrganization": "Gå till Organisation",
+    "gotoTeams": "Gå till Team",
+    "gotoDevices": "Gå till Enheter",
+    "search": "Sök",
+    "globalSearch": "Global sökning",
+    "pageSearch": "Sök på aktuell sida",
+    "searchResource": "Sök på aktuell sida",
+    "createResource": "Skapa resurs",
+    "deleteSelected": "Radera valda",
+    "categories": {
+      "global": "Globalt",
+      "navigation": "Navigering",
+      "actions": "Åtgärder"
+    },
+    "legend": {
+      "title": "Tangentbordsgenvägar",
+      "description": "Använd dessa genvägar för att navigera snabbare"
+    }
   }
 }

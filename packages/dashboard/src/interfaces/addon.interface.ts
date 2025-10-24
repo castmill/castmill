@@ -83,4 +83,19 @@ export interface AddOn {
    * An AddOn is a SolidJS component that is lazily loaded when the AddOn is mounted.
    */
   component: string;
+
+  /**
+   * Optional keyboard shortcut configuration.
+   * If provided, a global keyboard shortcut will be registered for this addon.
+   */
+  keyboard_shortcut?: {
+    /**
+     * The key for the shortcut (e.g., 'P', 'M', 'D')
+     */
+    key: string;
+    /**
+     * Translation key for the shortcut description (e.g., 'shortcuts.gotoPlaylists')
+     */
+    description_key: string;
+  };
 }

@@ -4,6 +4,7 @@ defmodule Castmill.Addons.Playlists do
   @impl Castmill.Addons.AddonBehaviour
   def component_info() do
     %Castmill.Addons.ComponentInfo{
+      id: "playlists",
       name: "Playlists",
       name_key: "sidebar.playlists",
       description: "Playlists view addon for Castmill",
@@ -11,7 +12,11 @@ defmodule Castmill.Addons.Playlists do
       path: "/playlists.js",
       mount_path: "/content/playlists",
       mount_point: "sidepanel.content.playlists",
-      icon: "/playlists_icon.js"
+      icon: "/playlists_icon.js",
+      keyboard_shortcut: %{
+        key: "P",
+        description_key: "shortcuts.gotoPlaylists"
+      }
     }
   end
 end

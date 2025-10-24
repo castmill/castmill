@@ -84,7 +84,7 @@
     "selectMedia": "미디어 선택",
     "apply": "적용",
     "selectVideo": "비디오 선택",
-    "offline": "[TODO: Translate] Offline"
+    "offline": "오프라인"
   },
   "topbar": {
     "help": "도움말",
@@ -197,7 +197,7 @@
   },
   "teams": {
     "title": "팀",
-    "members": "TODO: Translate - Members",
+    "members": "구성원",
     "invitations": "초대",
     "invitationAcceptSuccess": "초대가 성공적으로 수락되었습니다",
     "invitationDeleteSuccess": "초대가 성공적으로 삭제되었습니다",
@@ -276,7 +276,7 @@
       "selectUser": "사용자 선택",
       "searchUser": "사용자 검색..."
     },
-    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully"
+    "teamsRemovedSuccessfully": "팀이 성공적으로 제거되었습니다"
   },
   "login": {
     "title": "로그인",
@@ -317,7 +317,7 @@
     "playlists": "재생 목록",
     "medias": "미디어",
     "widgets": "Widgets",
-    "members": "[TODO: Translate] Members"
+    "members": "구성원"
   },
   "channels": {
     "title": "채널",
@@ -389,7 +389,7 @@
       "noOrganizationsRemaining": "마지막 조직을 떠났습니다. 조직에 초대받으려면 관리자에게 문의하세요.",
       "invitationSent": "{{email}}로 초대장을 보냈습니다"
     },
-    "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
+    "teamRoleInstaller": "설치자 (24시간)",
     "roleDescriptions": {
       "admin": "조직 관리를 포함한 전체 액세스",
       "manager": "팀 및 대부분의 리소스를 관리할 수 있음",
@@ -521,21 +521,21 @@
     "enterPincode": "{{length}}자리 PIN 코드 입력",
     "pincodeDescription": "PIN 코드는 기기 화면에 표시됩니다.",
     "register": "등록",
-    "title": "[TODO: Translate] Devices",
-    "addDevice": "[TODO: Translate] Add Device",
-    "registerDevice": "[TODO: Translate] Register device",
-    "registerDescription": "[TODO: Translate] And start displaying content on it",
-    "deviceDetails": "[TODO: Translate] Details of your device",
-    "removeDevice": "[TODO: Translate] Remove Device",
-    "removeDevices": "[TODO: Translate] Remove Devices",
-    "confirmRemove": "[TODO: Translate] Are you sure you want to remove device \"{{name}}\"?",
-    "confirmRemoveMultiple": "[TODO: Translate] Are you sure you want to remove the following devices?",
-    "deviceRegisteredSuccess": "[TODO: Translate] Device registered successfully",
-    "deviceRemovedSuccess": "[TODO: Translate] Device \"{{name}}\" removed successfully",
-    "devicesRemovedSuccess": "[TODO: Translate] {{count}} device(s) removed successfully",
-    "errorRegisteringDevice": "[TODO: Translate] Error registering device: {{error}}",
-    "errorRemovingDevice": "[TODO: Translate] Error removing device {{name}}: {{error}}",
-    "errorRemovingDevices": "[TODO: Translate] Error removing devices: {{error}}"
+    "title": "기기",
+    "addDevice": "기기 추가",
+    "registerDevice": "기기 등록",
+    "registerDescription": "콘텐츠 표시 시작",
+    "deviceDetails": "기기 세부 정보",
+    "removeDevice": "기기 제거",
+    "removeDevices": "기기 제거",
+    "confirmRemove": "기기 \"{{name}}\"을(를) 제거하시겠습니까?",
+    "confirmRemoveMultiple": "다음 기기를 제거하시겠습니까?",
+    "deviceRegisteredSuccess": "기기가 성공적으로 등록되었습니다",
+    "deviceRemovedSuccess": "기기 \"{{name}}\"이(가) 성공적으로 제거되었습니다",
+    "devicesRemovedSuccess": "{{count}}개의 기기가 성공적으로 제거되었습니다",
+    "errorRegisteringDevice": "기기 등록 오류: {{error}}",
+    "errorRemovingDevice": "기기 {{name}} 제거 오류: {{error}}",
+    "errorRemovingDevices": "기기 제거 오류: {{error}}"
   },
   "validation": {
     "fieldRequired": "이 필드는 필수입니다",
@@ -678,5 +678,31 @@
     "teamLabel": "팀",
     "teamPlaceholder": "팀 선택",
     "teamClear": "팀 필터 지우기"
+  },
+  "shortcuts": {
+    "showShortcutsLegend": "키보드 단축키 표시",
+    "closeDialog": "대화 상자 닫기",
+    "gotoPlaylists": "재생 목록으로 이동",
+    "gotoMedias": "미디어로 이동",
+    "gotoWidgets": "위젯으로 이동",
+    "gotoChannels": "채널로 이동",
+    "gotoOrganization": "조직으로 이동",
+    "gotoTeams": "팀으로 이동",
+    "gotoDevices": "기기로 이동",
+    "search": "검색",
+    "globalSearch": "전역 검색",
+    "pageSearch": "현재 페이지에서 검색",
+    "searchResource": "현재 페이지에서 검색",
+    "createResource": "리소스 생성",
+    "deleteSelected": "선택 항목 삭제",
+    "categories": {
+      "global": "전역",
+      "navigation": "탐색",
+      "actions": "작업"
+    },
+    "legend": {
+      "title": "키보드 단축키",
+      "description": "이 단축키를 사용하여 더 빠르게 탐색하세요"
+    }
   }
 }

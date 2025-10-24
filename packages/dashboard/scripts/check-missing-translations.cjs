@@ -59,6 +59,7 @@ const ALLOWED_IDENTICAL_STRINGS = new Set([
   'Status', // Cognate in Swedish, German, French
   'Version', // Cognate in Swedish, German, French
   'Online', // Cognate in Swedish, German, French
+  'Offline', // Cognate in Swedish, German
   'Team "{{name}}"', // Cognate in Swedish
   'Name', // Cognate in German
   'Details', // Cognate in German
@@ -72,6 +73,7 @@ const ALLOWED_IDENTICAL_STRINGS = new Set([
   'Maintenance', // Cognate in French
   'Notifications', // Cognate in French
   'Invitations', // Cognate in French
+  'Navigation', // Cognate in French
   '9:16 (Portrait)', // Cognate in French
   '3:4 (Portrait)', // Cognate in French
 ]);

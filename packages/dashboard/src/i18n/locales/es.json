@@ -82,7 +82,7 @@
     "addonLoadingError": "Error al cargar complemento",
     "addonError": "Error de complemento",
     "backToLogin": "Volver al inicio de sesión",
-    "offline": "[TODO: Translate] Offline",
+    "offline": "Fuera de línea",
     "selectImage": "Seleccionar una imagen",
     "selectVideo": "Seleccionar un video",
     "selectMedia": "Seleccionar un medio"
@@ -198,7 +198,7 @@
   },
   "teams": {
     "title": "Equipos",
-    "members": "TODO: Translate - Members",
+    "members": "Miembros",
     "invitations": "Invitaciones",
     "invitationAcceptSuccess": "Invitación aceptada exitosamente",
     "invitationDeleteSuccess": "Invitación eliminada exitosamente",
@@ -277,7 +277,7 @@
       "selectUser": "Seleccionar usuario",
       "searchUser": "Buscar un usuario..."
     },
-    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully"
+    "teamsRemovedSuccessfully": "Equipos eliminados exitosamente"
   },
   "login": {
     "title": "Iniciar sesión",
@@ -318,7 +318,7 @@
     "playlists": "Listas de reproducción",
     "medias": "Medios",
     "widgets": "Widgets",
-    "members": "[TODO: Translate] Members"
+    "members": "Miembros"
   },
   "channels": {
     "title": "Canales",
@@ -413,7 +413,7 @@
     "logoRemoved": "Logo eliminado correctamente",
     "noLogo": "Sin logo seleccionado",
     "noMediasAvailable": "No hay imágenes disponibles. Por favor, suba una imagen primero.",
-    "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
+    "teamRoleInstaller": "Instalador (24h)",
     "roleDescriptions": {
       "admin": "Acceso completo incluyendo gestión de la organización",
       "manager": "Puede gestionar equipos y la mayoría de recursos",
@@ -538,21 +538,21 @@
     "enterPincode": "Ingrese el código PIN de {{length}} caracteres",
     "pincodeDescription": "El código PIN se mostrará en la pantalla del dispositivo.",
     "register": "Registrar",
-    "title": "[TODO: Translate] Devices",
-    "addDevice": "[TODO: Translate] Add Device",
-    "registerDevice": "[TODO: Translate] Register device",
-    "registerDescription": "[TODO: Translate] And start displaying content on it",
-    "deviceDetails": "[TODO: Translate] Details of your device",
-    "removeDevice": "[TODO: Translate] Remove Device",
-    "removeDevices": "[TODO: Translate] Remove Devices",
-    "confirmRemove": "[TODO: Translate] Are you sure you want to remove device \"{{name}}\"?",
-    "confirmRemoveMultiple": "[TODO: Translate] Are you sure you want to remove the following devices?",
-    "deviceRegisteredSuccess": "[TODO: Translate] Device registered successfully",
-    "deviceRemovedSuccess": "[TODO: Translate] Device \"{{name}}\" removed successfully",
-    "devicesRemovedSuccess": "[TODO: Translate] {{count}} device(s) removed successfully",
-    "errorRegisteringDevice": "[TODO: Translate] Error registering device: {{error}}",
-    "errorRemovingDevice": "[TODO: Translate] Error removing device {{name}}: {{error}}",
-    "errorRemovingDevices": "[TODO: Translate] Error removing devices: {{error}}"
+    "title": "Dispositivos",
+    "addDevice": "Añadir dispositivo",
+    "registerDevice": "Registrar dispositivo",
+    "registerDescription": "Y comenzar a mostrar contenido en él",
+    "deviceDetails": "Detalles de su dispositivo",
+    "removeDevice": "Eliminar dispositivo",
+    "removeDevices": "Eliminar dispositivos",
+    "confirmRemove": "¿Está seguro de que desea eliminar el dispositivo \"{{name}}\"?",
+    "confirmRemoveMultiple": "¿Está seguro de que desea eliminar los siguientes dispositivos?",
+    "deviceRegisteredSuccess": "Dispositivo registrado exitosamente",
+    "deviceRemovedSuccess": "Dispositivo \"{{name}}\" eliminado exitosamente",
+    "devicesRemovedSuccess": "{{count}} dispositivo(s) eliminado(s) exitosamente",
+    "errorRegisteringDevice": "Error al registrar el dispositivo: {{error}}",
+    "errorRemovingDevice": "Error al eliminar el dispositivo {{name}}: {{error}}",
+    "errorRemovingDevices": "Error al eliminar los dispositivos: {{error}}"
   },
   "validation": {
     "fieldRequired": "Este campo es obligatorio",
@@ -679,5 +679,31 @@
     "teamLabel": "Equipo",
     "teamPlaceholder": "Seleccionar equipo",
     "teamClear": "Limpiar filtro de equipo"
+  },
+  "shortcuts": {
+    "showShortcutsLegend": "Mostrar atajos de teclado",
+    "closeDialog": "Cerrar diálogo",
+    "search": "Buscar",
+    "globalSearch": "Búsqueda global",
+    "pageSearch": "Buscar en la página actual",
+    "searchResource": "Buscar en la página actual",
+    "createResource": "Crear recurso",
+    "deleteSelected": "Eliminar seleccionados",
+    "gotoPlaylists": "Ir a Listas de reproducción",
+    "gotoMedias": "Ir a Medios",
+    "gotoWidgets": "Ir a Widgets",
+    "gotoChannels": "Ir a Canales",
+    "gotoOrganization": "Ir a Organización",
+    "gotoTeams": "Ir a Equipos",
+    "gotoDevices": "Ir a Dispositivos",
+    "categories": {
+      "global": "General",
+      "navigation": "Navegación",
+      "actions": "Acciones"
+    },
+    "legend": {
+      "title": "Atajos de teclado",
+      "description": "Usa estos atajos para navegar más rápido"
+    }
   }
 }

@@ -84,7 +84,7 @@
     "selectMedia": "选择媒体",
     "apply": "应用",
     "selectVideo": "选择视频",
-    "offline": "[TODO: Translate] Offline"
+    "offline": "离线"
   },
   "topbar": {
     "help": "帮助",
@@ -197,7 +197,7 @@
   },
   "teams": {
     "title": "团队",
-    "members": "TODO: Translate - Members",
+    "members": "成员",
     "invitations": "邀请",
     "invitationAcceptSuccess": "邀请接受成功",
     "invitationDeleteSuccess": "邀请删除成功",
@@ -276,7 +276,7 @@
       "selectUser": "选择用户",
       "searchUser": "搜索用户..."
     },
-    "teamsRemovedSuccessfully": "[TODO: Translate] Teams removed successfully"
+    "teamsRemovedSuccessfully": "团队删除成功"
   },
   "login": {
     "title": "登录",
@@ -317,7 +317,7 @@
     "playlists": "播放列表",
     "medias": "媒体",
     "widgets": "Widgets",
-    "members": "[TODO: Translate] Members"
+    "members": "成员"
   },
   "channels": {
     "title": "频道",
@@ -389,7 +389,7 @@
       "noOrganizationsRemaining": "您已离开最后一个组织。请联系管理员以被邀请加入组织。",
       "invitationSent": "邀请已发送至 {{email}}"
     },
-    "teamRoleInstaller": "[TODO: Translate] Installer (24h)",
+    "teamRoleInstaller": "安装人员 (24小时)",
     "roleDescriptions": {
       "admin": "完全访问权限，包括组织管理",
       "manager": "可以管理团队和大多数资源",
@@ -521,21 +521,21 @@
     "enterPincode": "输入{{length}}位PIN码",
     "pincodeDescription": "PIN码将显示在设备屏幕上。",
     "register": "注册",
-    "title": "[TODO: Translate] Devices",
-    "addDevice": "[TODO: Translate] Add Device",
-    "registerDevice": "[TODO: Translate] Register device",
-    "registerDescription": "[TODO: Translate] And start displaying content on it",
-    "deviceDetails": "[TODO: Translate] Details of your device",
-    "removeDevice": "[TODO: Translate] Remove Device",
-    "removeDevices": "[TODO: Translate] Remove Devices",
-    "confirmRemove": "[TODO: Translate] Are you sure you want to remove device \"{{name}}\"?",
-    "confirmRemoveMultiple": "[TODO: Translate] Are you sure you want to remove the following devices?",
-    "deviceRegisteredSuccess": "[TODO: Translate] Device registered successfully",
-    "deviceRemovedSuccess": "[TODO: Translate] Device \"{{name}}\" removed successfully",
-    "devicesRemovedSuccess": "[TODO: Translate] {{count}} device(s) removed successfully",
-    "errorRegisteringDevice": "[TODO: Translate] Error registering device: {{error}}",
-    "errorRemovingDevice": "[TODO: Translate] Error removing device {{name}}: {{error}}",
-    "errorRemovingDevices": "[TODO: Translate] Error removing devices: {{error}}"
+    "title": "设备",
+    "addDevice": "添加设备",
+    "registerDevice": "注册设备",
+    "registerDescription": "并开始在其上显示内容",
+    "deviceDetails": "您的设备详细信息",
+    "removeDevice": "删除设备",
+    "removeDevices": "删除设备",
+    "confirmRemove": "您确定要删除设备\"{{name}}\"吗？",
+    "confirmRemoveMultiple": "您确定要删除以下设备吗？",
+    "deviceRegisteredSuccess": "设备注册成功",
+    "deviceRemovedSuccess": "设备\"{{name}}\"已成功删除",
+    "devicesRemovedSuccess": "已成功删除{{count}}个设备",
+    "errorRegisteringDevice": "注册设备时出错：{{error}}",
+    "errorRemovingDevice": "删除设备{{name}}时出错：{{error}}",
+    "errorRemovingDevices": "删除设备时出错：{{error}}"
   },
   "validation": {
     "fieldRequired": "此字段为必填项",
@@ -678,5 +678,31 @@
     "teamLabel": "团队",
     "teamPlaceholder": "选择团队",
     "teamClear": "清除团队筛选"
+  },
+  "shortcuts": {
+    "showShortcutsLegend": "显示键盘快捷键",
+    "closeDialog": "关闭对话框",
+    "gotoPlaylists": "转到播放列表",
+    "gotoMedias": "转到媒体",
+    "gotoWidgets": "转到小部件",
+    "gotoChannels": "转到频道",
+    "gotoOrganization": "转到组织",
+    "gotoTeams": "转到团队",
+    "gotoDevices": "转到设备",
+    "search": "搜索",
+    "globalSearch": "全局搜索",
+    "pageSearch": "在当前页面搜索",
+    "searchResource": "在当前页面搜索",
+    "createResource": "创建资源",
+    "deleteSelected": "删除所选",
+    "categories": {
+      "global": "全局",
+      "navigation": "导航",
+      "actions": "操作"
+    },
+    "legend": {
+      "title": "键盘快捷键",
+      "description": "使用这些快捷键更快地导航"
+    }
   }
 }

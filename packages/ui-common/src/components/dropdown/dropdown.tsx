@@ -121,7 +121,7 @@ export const Dropdown: Component<DropdownProps> = (props) => {
           aria-label={props.label}
         >
           {props.placeholder && (
-            <option value="" disabled hidden aria-hidden="true">
+            <option value="" disabled hidden>
               {props.placeholder}
             </option>
           )}

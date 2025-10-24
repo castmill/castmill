@@ -673,5 +673,31 @@
         }
       }
     }
+  },
+  "shortcuts": {
+    "showShortcutsLegend": "Show keyboard shortcuts",
+    "closeDialog": "Close dialog",
+    "search": "Search",
+    "globalSearch": "Global search",
+    "pageSearch": "Search in current page",
+    "searchResource": "Search in current page",
+    "createResource": "Create resource",
+    "deleteSelected": "Delete selected",
+    "gotoPlaylists": "Go to Playlists",
+    "gotoMedias": "Go to Medias",
+    "gotoWidgets": "Go to Widgets",
+    "gotoChannels": "Go to Channels",
+    "gotoOrganization": "Go to Organization",
+    "gotoTeams": "Go to Teams",
+    "gotoDevices": "Go to Devices",
+    "categories": {
+      "global": "Global",
+      "navigation": "Navigation",
+      "actions": "Actions"
+    },
+    "legend": {
+      "title": "Keyboard Shortcuts",
+      "description": "Use these shortcuts to navigate faster"
+    }
   }
 }

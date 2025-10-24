@@ -54,6 +54,7 @@ export const ChannelAddForm: Component<{
           id="name"
           value={name()!}
           placeholder={t('channels.enterChannelName')}
+          autofocus={true}
           onInput={(value: string | number | boolean) => {
             const strValue = value as string;
             setIsFormModified(true);
