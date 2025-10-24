@@ -430,5 +430,77 @@ defmodule Castmill.QuotasTest do
       assert Quotas.has_organization_enough_quota?(organization.id, :storage, 11 * 1024 * 1024) ==
                false
     end
+
+    test "users quota calculation counts organization members" do
+      import Castmill.AccountsFixtures
+
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+
+      # Initially, should have 0 users (organization creator not counted in this test)
+      # Note: In practice, the organization creator is typically added as the first user
+      assert Quotas.get_quota_used_for_organization(
+               organization.id,
+               Castmill.Organizations.OrganizationsUsers
+             ) == 0
+
+      # Add users to the organization
+      user1 = user_fixture(%{email: "user1@test.com", network_id: network.id})
+      user2 = user_fixture(%{email: "user2@test.com", network_id: network.id})
+      user3 = user_fixture(%{email: "user3@test.com", network_id: network.id})
+
+      # Associate users with organization
+      Castmill.Repo.insert!(%Castmill.Organizations.OrganizationsUsers{
+        organization_id: organization.id,
+        user_id: user1.id,
+        role: :member
+      })
+
+      Castmill.Repo.insert!(%Castmill.Organizations.OrganizationsUsers{
+        organization_id: organization.id,
+        user_id: user2.id,
+        role: :member
+      })
+
+      Castmill.Repo.insert!(%Castmill.Organizations.OrganizationsUsers{
+        organization_id: organization.id,
+        user_id: user3.id,
+        role: :admin
+      })
+
+      # Should now have 3 users
+      assert Quotas.get_quota_used_for_organization(
+               organization.id,
+               Castmill.Organizations.OrganizationsUsers
+             ) == 3
+
+      # Test with another organization - should be isolated
+      organization2 = organization_fixture(%{name: "Another Org", network_id: network.id})
+
+      assert Quotas.get_quota_used_for_organization(
+               organization2.id,
+               Castmill.Organizations.OrganizationsUsers
+             ) == 0
+
+      # Add one user to organization2
+      user4 = user_fixture(%{email: "user4@test.com", network_id: network.id})
+
+      Castmill.Repo.insert!(%Castmill.Organizations.OrganizationsUsers{
+        organization_id: organization2.id,
+        user_id: user4.id,
+        role: :member
+      })
+
+      # organization2 should have 1 user, organization1 should still have 3
+      assert Quotas.get_quota_used_for_organization(
+               organization2.id,
+               Castmill.Organizations.OrganizationsUsers
+             ) == 1
+
+      assert Quotas.get_quota_used_for_organization(
+               organization.id,
+               Castmill.Organizations.OrganizationsUsers
+             ) == 3
+    end
   end
 end
