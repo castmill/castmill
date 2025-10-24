@@ -430,7 +430,11 @@
   },
   "search": {
     "title": "Search",
-    "description": "This is the search page. You can find all the search results here..."
+    "description": "This is the search page. You can find all the search results here...",
+    "enterQuery": "Enter a search query to find resources in your organization",
+    "noResults": "No results found for \"{{query}}\"",
+    "error": "An error occurred while searching. Please try again.",
+    "showingPage": "Showing page {{page}} of {{total}}"
   },
   "errors": {
     "generic": "An error occurred. Please try again.",
