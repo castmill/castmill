@@ -506,15 +506,93 @@ When translating to a new language:
 - **Monorepo**: Related packages share dependencies and build tooling
 - **Component-driven**: UI components in `ui-common` are shared across packages
 - **Plugin architecture**: Extensible widget and platform systems
+- **Widget Integrations**: Third-party service integration system with PULL/PUSH modes
 - **Modern tooling**: Vite for builds, Vitest for testing, modern React patterns
 
 ### Key Technologies
 - **Frontend**: React 18, TypeScript, Vite, Tailwind CSS, SolidJS (Dashboard)
-- **Backend**: Elixir/Phoenix, PostgreSQL, real-time channels
+- **Backend**: Elixir/Phoenix, PostgreSQL, real-time channels, Oban (background jobs)
 - **Documentation**: Docusaurus with custom plugins and social cards
 - **Testing**: Vitest, React Testing Library, Phoenix test framework
 - **Infrastructure**: Docker, GitHub Actions, automated deployments
 - **Internationalization**: Custom i18n system with date-fns for Dashboard
+- **Security**: AES-256-GCM encryption for credentials, organization-specific keys
+
+## 🔌 Widget Integration System
+
+Castmill includes a comprehensive third-party integration system for widgets. This system enables widgets to connect with external services securely and efficiently.
+
+### Key Features
+
+- **PULL Mode**: Backend periodically fetches data from third-party APIs and caches it
+- **PUSH Mode**: External services push updates via webhooks
+- **Dual Credential Scopes**: Organization-wide or widget-specific credentials
+- **Secure Storage**: AES-256-GCM encrypted credentials with organization keys
+- **Version Control**: Efficient polling with version-based caching (304 Not Modified)
+- **Extensible**: Easy to add new integration types
+
+### Documentation
+
+Complete documentation is available in the `agents/systems/` directory:
+
+- **[WIDGET-INTEGRATIONS.md](./agents/systems/WIDGET-INTEGRATIONS.md)** - Architecture and design specification
+- **[WIDGET-INTEGRATION-API.md](./agents/systems/WIDGET-INTEGRATION-API.md)** - Complete API reference
+- **[WIDGET-INTEGRATION-GUIDE.md](./agents/systems/WIDGET-INTEGRATION-GUIDE.md)** - Developer guide with examples
+
+### Quick Example
+
+```elixir
+# Create a weather widget integration
+{:ok, integration} = Castmill.Widgets.Integrations.create_integration(%{
+  widget_id: "weather-widget",
+  name: "openweather",
+  integration_type: "pull",
+  credential_scope: "organization",
+  pull_endpoint: "https://api.openweathermap.org/data/2.5/weather",
+  pull_interval_seconds: 1800
+})
+
+# Store encrypted credentials
+{:ok, _} = upsert_organization_credentials(organization_id, integration.id, %{
+  "api_key" => "your-api-key"
+})
+```
+
+### Integration Types
+
+1. **PULL**: Backend fetches data periodically
+   - Weather data, stock prices, RSS feeds
+   - Centralized rate limiting and caching
+   
+2. **PUSH**: Webhooks receive real-time updates
+   - Social media events, form submissions
+   - Near real-time data updates
+   
+3. **BOTH**: Hybrid approach with fallback
+
+### Database Schema
+
+- `widget_integrations` - Integration definitions
+- `widget_integration_credentials` - Encrypted credentials (org or widget scope)
+- `widget_integration_data` - Cached data with versioning
+
+### API Endpoints
+
+```
+# Integration Management
+GET  /organizations/:org_id/widgets/:widget_id/integrations
+GET  /organizations/:org_id/widget-integrations/:id
+
+# Credentials
+POST /organizations/:org_id/widget-integrations/:id/credentials
+POST /widget-configs/:config_id/credentials
+
+# Data Access (Players)
+GET  /widget-configs/:config_id/data?version=:version
+
+# Webhooks (Public)
+POST /webhooks/widgets/:integration_id/:widget_config_id
+```
 
 ## 🔧 Common Tasks
 
