@@ -28,7 +28,7 @@ The Widget Integration System provides a standardized way for widgets to connect
 
 ### PULL Mode
 
-The backend periodically fetches data from a third-party API and caches it. Players poll for updates.
+The backend periodically fetches data from a third-party API and caches it. Players receive updates via WebSocket channels when new data is available.
 
 **Use Cases:**
 - Weather data
@@ -40,6 +40,7 @@ The backend periodically fetches data from a third-party API and caches it. Play
 - Centralized rate limiting
 - Efficient for multiple players
 - Can cache and serve stale data
+- Real-time updates via WebSocket
 
 **Cons:**
 - Delayed updates (limited by pull interval)
@@ -47,7 +48,7 @@ The backend periodically fetches data from a third-party API and caches it. Play
 
 ### PUSH Mode
 
-Third-party services push data to a webhook when it changes. Players poll for the latest version.
+Third-party services push data to a webhook when it changes. Players receive updates via WebSocket channels.
 
 **Use Cases:**
 - Real-time event notifications
@@ -56,7 +57,7 @@ Third-party services push data to a webhook when it changes. Players poll for th
 - IoT sensor data
 
 **Pros:**
-- Near real-time updates
+- Real-time updates via WebSocket
 - No polling of third-party APIs
 - Event-driven architecture
 
@@ -66,12 +67,9 @@ Third-party services push data to a webhook when it changes. Players poll for th
 
 ### BOTH Mode
 
-Supports both PULL and PUSH. Use PULL for initial data and periodic fallback, PUSH for real-time updates.
-
-**Use Cases:**
-- Hybrid systems
-- Fallback scenarios
-- Mixed data sources
+**Note**: This mode is not recommended. Each widget integration should use either PULL or PUSH mode, not both. Choose the mode that best fits your use case:
+- Use **PULL** when you need to periodically fetch data from an API
+- Use **PUSH** when third-party services can notify you of changes via webhooks
 
 ## Credential Scopes
 
@@ -98,6 +96,51 @@ Each widget instance has its own credentials.
 **Example:** Facebook feed - each widget shows a different page
 
 ## Creating an Integration
+
+### Understanding Widget Templates
+
+Castmill widgets are defined using JSON templates with schemas. A widget has:
+
+1. **Template**: JSON structure defining the widget's UI layout
+2. **Options Schema**: Defines configuration options (e.g., location, refresh interval)
+3. **Data Schema**: Defines the structure of data consumed by the widget
+
+When creating an integration, you need to ensure the integration's data output matches the widget's `data_schema`.
+
+**Example Weather Widget**:
+
+```json
+{
+  "name": "Weather Widget",
+  "template": {
+    "type": "container",
+    "components": [
+      {"type": "text", "field": "temperature"},
+      {"type": "text", "field": "condition"}
+    ]
+  },
+  "options_schema": {
+    "latitude": {"type": "number", "required": true},
+    "longitude": {"type": "number", "required": true},
+    "units": {"type": "string", "default": "metric"}
+  },
+  "data_schema": {
+    "temperature": {"type": "number", "required": true},
+    "condition": {"type": "string", "required": true},
+    "location": {"type": "string"}
+  }
+}
+```
+
+The integration must provide data matching the `data_schema`:
+
+```json
+{
+  "temperature": 72,
+  "condition": "sunny",
+  "location": "Stockholm"
+}
+```
 
 ### Step 1: Define the Integration
 
@@ -216,96 +259,42 @@ export const WeatherIntegrationConfig: Component<IntegrationConfigProps> = (prop
 
 ### Backend Implementation
 
-The backend needs to implement the data fetching logic:
+For PULL mode integrations, you need to implement a data fetcher that:
+1. Fetches data from the third-party API
+2. Transforms it to match the widget's `data_schema`
+3. Caches the result
+4. Broadcasts updates to connected players via WebSocket
+
+The system provides a simplified integration API. You don't need to write the full worker implementation - just define how to fetch and transform the data.
+
+**Integration Definition**:
 
 ```elixir
-# packages/castmill/lib/castmill/widgets/integrations/pull_worker.ex
+# packages/castmill/lib/castmill/widgets/integrations/fetchers/openweather.ex
 
-defmodule Castmill.Widgets.Integrations.PullWorker do
+defmodule Castmill.Widgets.Integrations.Fetchers.OpenWeather do
   @moduledoc """
-  Background worker that periodically pulls data from third-party integrations.
+  Fetches weather data from OpenWeather API.
+  Transforms data to match the weather widget's data schema.
   """
-  use Oban.Worker, queue: :widget_integrations
-
-  alias Castmill.Widgets.Integrations
-  alias Castmill.Crypto
-  alias Castmill.Repo
-
-  @impl Oban.Worker
-  def perform(%Oban.Job{args: %{"widget_integration_data_id" => data_id}}) do
-    data = Integrations.get_integration_data_by_id(data_id)
-    data = Repo.preload(data, [:widget_integration, widget_config: [playlist_item: :playlist]])
-    
-    integration = data.widget_integration
-    widget_config = data.widget_config
-    
-    # Get credentials
-    credentials = get_credentials(integration, widget_config)
-    
-    # Fetch data from third-party API
-    case fetch_integration_data(integration, widget_config, credentials) do
-      {:ok, new_data} ->
-        # Update cached data
-        now = DateTime.utc_now()
-        refresh_at = DateTime.add(now, integration.pull_interval_seconds, :second)
-        
-        {:ok, _} = Integrations.upsert_integration_data(%{
-          widget_integration_id: integration.id,
-          widget_config_id: widget_config.id,
-          data: new_data,
-          fetched_at: now,
-          refresh_at: refresh_at,
-          status: "success"
-        })
-        
-        # Schedule next pull
-        schedule_next_pull(data_id, integration.pull_interval_seconds)
-        
-        :ok
-        
-      {:error, reason} ->
-        # Log error but keep stale data
-        Integrations.update_integration_data(data, %{
-          status: "error",
-          error_message: inspect(reason)
-        })
-        
-        # Retry with backoff
-        {:error, reason}
-    end
-  end
   
-  defp get_credentials(integration, widget_config) do
-    creds = if integration.credential_scope == "organization" do
-      organization_id = widget_config.playlist_item.playlist.organization_id
-      Integrations.get_credentials(integration, organization_id: organization_id)
-    else
-      Integrations.get_credentials(integration, widget_config_id: widget_config.id)
-    end
-    
-    if creds do
-      organization = get_organization(widget_config)
-      {:ok, encryption_key} = Crypto.decode_key(organization.encryption_key)
-      {:ok, decrypted} = Crypto.decrypt(creds.encrypted_credentials, encryption_key)
-      decrypted
-    else
-      nil
-    end
-  end
+  @behaviour Castmill.Widgets.Integrations.Fetcher
   
-  defp fetch_integration_data(integration, widget_config, credentials) do
-    # Build request URL with widget options
-    url = build_request_url(
-      integration.pull_endpoint, 
-      widget_config.options, 
-      credentials
-    )
+  @impl true
+  def fetch(credentials, options) do
+    # Build API URL using widget options and credentials
+    url = build_url(credentials["api_key"], options)
     
-    headers = build_headers(credentials)
-    
-    case HTTPoison.get(url, headers, timeout: integration.pull_config["timeout"] || 5000) do
+    # Fetch from third-party API
+    case HTTPoison.get(url) do
       {:ok, %{status_code: 200, body: body}} ->
-        Jason.decode(body)
+        # Transform API response to match widget data_schema
+        case Jason.decode(body) do
+          {:ok, response} ->
+            {:ok, transform_response(response, options)}
+          {:error, _} ->
+            {:error, "Invalid JSON response"}
+        end
         
       {:ok, %{status_code: status}} ->
         {:error, "HTTP #{status}"}
@@ -315,56 +304,85 @@ defmodule Castmill.Widgets.Integrations.PullWorker do
     end
   end
   
-  defp build_request_url(endpoint, options, credentials) do
-    # Example: OpenWeather API
+  defp build_url(api_key, options) do
     params = %{
       "lat" => options["latitude"],
       "lon" => options["longitude"],
       "units" => options["units"] || "metric",
-      "appid" => credentials["api_key"]
+      "appid" => api_key
     }
     
     query = URI.encode_query(params)
-    "#{endpoint}?#{query}"
+    "https://api.openweathermap.org/data/2.5/weather?#{query}"
   end
   
-  defp build_headers(_credentials) do
-    [
-      {"User-Agent", "Castmill/1.0"},
-      {"Accept", "application/json"}
-    ]
-  end
-  
-  defp schedule_next_pull(data_id, interval) do
-    %{widget_integration_data_id: data_id}
-    |> __MODULE__.new(schedule_in: interval)
-    |> Oban.insert()
+  defp transform_response(api_response, _options) do
+    # Transform OpenWeather API response to widget data_schema
+    %{
+      "temperature" => api_response["main"]["temp"],
+      "condition" => api_response["weather"] |> List.first() |> Map.get("main"),
+      "location" => api_response["name"],
+      "humidity" => api_response["main"]["humidity"],
+      "wind_speed" => api_response["wind"]["speed"]
+    }
   end
 end
 ```
 
-### Scheduling PULL Jobs
-
-When a widget is created with an integration, schedule the first pull:
+**Fetcher Behaviour** (defined by the system):
 
 ```elixir
-# When widget_config is created
-def create_widget_with_integration(attrs) do
-  with {:ok, widget_config} <- Widgets.new_widget_config(...),
-       {:ok, integration} <- get_integration_for_widget(widget_config.widget_id),
-       {:ok, integration_data} <- create_initial_integration_data(integration, widget_config) do
-    
-    # Schedule first pull
-    PullWorker.schedule_next_pull(integration_data.id, 0) # Run immediately
-    
-    {:ok, widget_config}
-  end
+# packages/castmill/lib/castmill/widgets/integrations/fetcher.ex
+
+defmodule Castmill.Widgets.Integrations.Fetcher do
+  @moduledoc """
+  Behaviour for integration data fetchers.
+  
+  Implement this behaviour to create a custom integration.
+  The system handles scheduling, caching, and WebSocket broadcasts.
+  """
+  
+  @callback fetch(credentials :: map(), options :: map()) ::
+    {:ok, data :: map()} | {:error, reason :: any()}
 end
+```
+
+**How It Works**:
+
+1. Integration developer implements the `Fetcher` behaviour
+2. System automatically:
+   - Schedules periodic fetches based on `pull_interval_seconds`
+   - Caches the result in `widget_integration_data`
+   - Increments the version number
+   - Broadcasts to WebSocket channel `widget_data:#{widget_config_id}`
+   - All connected players receive the update instantly
+
+**Registration**:
+
+```elixir
+# Register your fetcher when creating the integration
+{:ok, integration} = Integrations.create_integration(%{
+  widget_id: "weather-widget",
+  name: "openweather",
+  integration_type: "pull",
+  credential_scope: "organization",
+  pull_endpoint: "https://api.openweathermap.org/data/2.5/weather",
+  pull_interval_seconds: 1800,
+  pull_config: %{
+    "fetcher_module" => "Castmill.Widgets.Integrations.Fetchers.OpenWeather"
+  }
+})
 ```
 
 ## PUSH Mode Integration
 
 ### Webhook Handler
+
+When a webhook receives data, it should:
+1. Validate the webhook signature
+2. Transform the payload to match the widget's `data_schema`
+3. Cache the result
+4. Broadcast updates to connected players via WebSocket
 
 Implement custom webhook handlers for different integrations:
 
@@ -374,6 +392,7 @@ Implement custom webhook handlers for different integrations:
 defmodule Castmill.Widgets.Integrations.WebhookHandlers.Facebook do
   @moduledoc """
   Handles Facebook Page webhook events.
+  Transforms data to match widget data_schema.
   """
   
   @doc """
@@ -390,6 +409,7 @@ defmodule Castmill.Widgets.Integrations.WebhookHandlers.Facebook do
   
   @doc """
   Transforms Facebook webhook payload to widget data format.
+  Must match the widget's data_schema.
   """
   def transform_payload(payload) do
     # Extract relevant data from Facebook webhook
@@ -397,6 +417,7 @@ defmodule Castmill.Widgets.Integrations.WebhookHandlers.Facebook do
     changes = List.first(entry["changes"] || [])
     value = changes["value"]
     
+    # Transform to match widget data_schema
     %{
       "message" => value["message"],
       "created_time" => value["created_time"],
@@ -407,61 +428,93 @@ defmodule Castmill.Widgets.Integrations.WebhookHandlers.Facebook do
 end
 ```
 
-Update the webhook controller to use handlers:
+### WebSocket Broadcasting
+
+When the webhook controller receives data, it broadcasts to the WebSocket channel:
 
 ```elixir
 # In widget_integration_controller.ex
 
-defp verify_webhook_signature(conn, integration, params) do
-  handler = get_webhook_handler(integration.name)
-  
-  signature = get_req_header(conn, "x-hub-signature-256") |> List.first()
-  body = conn.assigns.raw_body # Need to capture raw body
-  
-  credentials = get_webhook_credentials(integration, params["widget_config_id"])
-  
-  if handler.verify_signature(body, signature, credentials) do
-    :ok
+def receive_webhook(conn, %{
+  "integration_id" => integration_id,
+  "widget_config_id" => widget_config_id
+} = params) do
+  with {:ok, integration} <- get_integration_or_error(integration_id),
+       :ok <- verify_webhook_signature(conn, integration, params),
+       {:ok, data} <- extract_webhook_data(params, integration),
+       now <- DateTime.utc_now(),
+       {:ok, integration_data} <-
+         Integrations.upsert_integration_data(%{
+           widget_integration_id: integration.id,
+           widget_config_id: widget_config_id,
+           data: data,
+           fetched_at: now,
+           status: "success"
+         }) do
+    
+    # Broadcast to WebSocket channel
+    CastmillWeb.Endpoint.broadcast(
+      "widget_data:#{widget_config_id}",
+      "data_updated",
+      %{
+        version: integration_data.version,
+        data: integration_data.data
+      }
+    )
+    
+    conn
+    |> put_status(:ok)
+    |> json(%{
+      success: true,
+      version: integration_data.version,
+      received_at: now
+    })
   else
-    {:error, :invalid_signature}
+    {:error, :invalid_signature} ->
+      conn
+      |> put_status(:unauthorized)
+      |> json(%{error: "Invalid webhook signature"})
+      
+    {:error, reason} ->
+      conn
+      |> put_status(:bad_request)
+      |> json(%{error: reason})
   end
-end
-
-defp extract_webhook_data(params, integration) do
-  handler = get_webhook_handler(integration.name)
-  {:ok, handler.transform_payload(params)}
 end
 ```
 
 ## Player Implementation
 
-### Polling for Updates
+### WebSocket-Based Updates
 
-Implement efficient polling in the player:
+Players receive updates via WebSocket channels, not polling. Polling is only used when a device comes back online:
 
 ```typescript
 // packages/player/src/widgets/integrated-widget.ts
 
 import { Widget } from './widget';
+import { Socket } from 'phoenix';
 
 export class IntegratedWidget extends Widget {
   private currentVersion: number = 0;
-  private pollInterval: number = 30000; // 30 seconds
-  private pollTimer?: number;
+  private socket?: Socket;
+  private channel?: any;
+  private reconnectJitter: number = Math.random() * 5000; // 0-5 seconds jitter
   
   constructor(
     protected widgetConfigId: string,
-    protected apiBase: string = '/api'
+    protected apiBase: string = '/api',
+    protected wsUrl: string = 'ws://localhost:4000/socket'
   ) {
     super();
   }
   
   async load(): Promise<void> {
-    // Initial data fetch
+    // Initial data fetch (on first load or after being offline)
     await this.fetchData();
     
-    // Start polling
-    this.startPolling();
+    // Connect to WebSocket for real-time updates
+    this.connectWebSocket();
   }
   
   private async fetchData(): Promise<void> {
@@ -496,6 +549,53 @@ export class IntegratedWidget extends Widget {
     }
   }
   
+  private connectWebSocket(): void {
+    // Connect to Phoenix WebSocket
+    this.socket = new Socket(this.wsUrl, {
+      params: { token: this.getAuthToken() }
+    });
+    
+    this.socket.connect();
+    
+    // Join the widget-specific channel
+    this.channel = this.socket.channel(`widget_data:${this.widgetConfigId}`, {});
+    
+    this.channel.on('data_updated', (payload: any) => {
+      if (payload.version > this.currentVersion) {
+        this.currentVersion = payload.version;
+        this.updateWidgetData(payload.data);
+        console.log(`Widget data pushed via WebSocket, version ${this.currentVersion}`);
+      }
+    });
+    
+    this.channel.join()
+      .receive('ok', () => {
+        console.log('Joined widget data channel');
+      })
+      .receive('error', (resp: any) => {
+        console.error('Failed to join channel:', resp);
+      });
+    
+    // Handle reconnection after being offline
+    this.socket.onError(() => {
+      console.log('WebSocket connection lost');
+    });
+    
+    this.socket.onOpen(() => {
+      console.log('WebSocket reconnected');
+      // Fetch latest data after coming back online (with jitter to prevent DDoS)
+      setTimeout(() => {
+        this.fetchData();
+      }, this.reconnectJitter);
+    });
+  }
+  
+  private getAuthToken(): string {
+    // Get device authentication token
+    // Implementation depends on device authentication mechanism
+    return localStorage.getItem('device_token') || '';
+  }
+  
   private updateWidgetData(data: any): void {
     // Update widget display with new data
     this.emit('data-updated', data);
@@ -506,21 +606,13 @@ export class IntegratedWidget extends Widget {
     this.emit('data-error', error);
   }
   
-  private startPolling(): void {
-    this.pollTimer = window.setInterval(() => {
-      this.fetchData();
-    }, this.pollInterval);
-  }
-  
-  private stopPolling(): void {
-    if (this.pollTimer) {
-      clearInterval(this.pollTimer);
-      this.pollTimer = undefined;
-    }
-  }
-  
   unload(): void {
-    this.stopPolling();
+    if (this.channel) {
+      this.channel.leave();
+    }
+    if (this.socket) {
+      this.socket.disconnect();
+    }
     super.unload();
   }
 }
