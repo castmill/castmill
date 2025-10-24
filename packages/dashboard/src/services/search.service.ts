@@ -1,5 +1,4 @@
 import { baseUrl } from '../env';
-import { handleResponse } from './util';
 
 export interface SearchResult {
   resource_type: string;
@@ -47,6 +46,10 @@ export const SearchService = {
       }
     );
 
-    return handleResponse(response);
+    if (!response.ok) {
+      throw new Error(`Search failed: ${response.statusText}`);
+    }
+
+    return await response.json();
   },
 };
