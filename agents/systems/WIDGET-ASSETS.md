@@ -1,348 +1,67 @@
-# Widget Assets Architecture
+# Widget Asset Management Architecture
+
+## Overview
+
+This document outlines the architecture for managing static assets (icons, fonts, images, styles) required by widget templates in the Castmill Digital Signage Platform.
+
+## Goals
+
+1. **User-Uploadable Widgets**: Enable Castmill users to create and upload their own widgets without requiring backend or frontend code changes
+2. **Secure Asset Handling**: Validate uploaded assets with schema validation, file size limits, and integrity checks
+3. **Flexible Serving**: Support multiple storage backends (filesystem, S3, CDN) with relative paths
+4. **Generic Integrations**: Provide reusable integrations (RSS, social feeds) that users can leverage
+5. **Complete Self-Service**: Users can implement any widget requirement by uploading JSON templates and assets
 
 ## Problem Statement
 
-Widgets often require static assets (icons, images, fonts, CSS files) to be bundled with their JSON template definitions. We need an elegant, scalable, and simple way to manage these assets.
+Widgets need bundled static assets:
+- **Icons**: Weather conditions, social media logos, status indicators
+- **Fonts**: Custom typography for branding
+- **Images**: Backgrounds, decorative elements, logos  
+- **Styles**: CSS for advanced layouts (optional)
 
-## Current System Analysis
+Current system lacks:
+- Standardized asset bundling mechanism
+- Secure upload and validation
+- Schema-driven asset definitions
+- Runtime URL resolution
 
-### Existing Asset Handling
-
-1. **Widget Icons** - Currently stored as string URLs:
-   ```elixir
-   schema "widgets" do
-     field(:icon, :string)
-     field(:small_icon, :string)
-   end
-   ```
-
-2. **Media References** - Widgets can reference uploaded media via the `ref` type:
-   ```elixir
-   data_schema: %{
-     "background_image" => %{
-       "type" => "ref",
-       "collection" => "medias"
-     }
-   }
-   ```
-
-3. **Organization Media** - Media files are organization-scoped and stored separately:
-   ```elixir
-   schema "medias" do
-     field(:name, :string)
-     field(:mimetype, :string)
-     field(:status, :enum)
-     belongs_to(:organization, Organization)
-   end
-   ```
-
-## Proposed Solution: Widget Assets Field
-
-Add an `assets` field to the widget schema that references a collection of bundled media files.
-
-### Architecture
-
-```elixir
-# Enhanced Widget Schema
-schema "widgets" do
-  field(:name, :string)
-  field(:template, :map)
-  field(:options_schema, :map)
-  field(:data_schema, :map)
-  
-  # Icon URLs (kept for backward compatibility)
-  field(:icon, :string)
-  field(:small_icon, :string)
-  
-  # NEW: Asset manifest
-  field(:assets, :map, default: %{})
-  
-  timestamps()
-end
-```
+## Architecture
 
 ### Asset Manifest Structure
 
-The `assets` field contains a manifest of widget-bundled assets:
+The `assets` field in the widget definition contains a manifest with **relative paths**. The system constructs absolute URLs at runtime based on the configured storage backend.
 
 ```json
 {
   "assets": {
     "icons": {
       "sunny": {
-        "url": "/widgets/weather/assets/sunny.svg",
+        "path": "icons/sunny.svg",
         "type": "image/svg+xml",
-        "size": 2048
-      },
-      "cloudy": {
-        "url": "/widgets/weather/assets/cloudy.svg",
-        "type": "image/svg+xml",
-        "size": 1856
-      },
-      "rainy": {
-        "url": "/widgets/weather/assets/rainy.svg",
-        "type": "image/svg+xml",
-        "size": 2304
+        "size": 2048,
+        "hash": "sha256:abc123..."
       }
     },
     "fonts": {
       "roboto": {
-        "url": "/widgets/weather/assets/Roboto-Regular.woff2",
+        "path": "fonts/Roboto-Regular.woff2",
         "type": "font/woff2",
-        "size": 67624
-      }
-    },
-    "images": {
-      "background": {
-        "url": "/widgets/weather/assets/gradient-bg.png",
-        "type": "image/png",
-        "size": 51200
-      }
-    },
-    "styles": {
-      "main": {
-        "url": "/widgets/weather/assets/styles.css",
-        "type": "text/css",
-        "size": 4096
+        "size": 67624,
+        "hash": "sha256:def456..."
       }
     }
   }
 }
 ```
 
-### Asset Storage Options
+### Widget Package Format
 
-#### Option 1: Static File Serving (Recommended)
-
-Store widget assets in the backend's static file directory:
-
-```
-packages/castmill/priv/static/widgets/
-├── weather/
-│   ├── assets/
-│   │   ├── sunny.svg
-│   │   ├── cloudy.svg
-│   │   ├── rainy.svg
-│   │   ├── Roboto-Regular.woff2
-│   │   └── gradient-bg.png
-│   └── manifest.json
-├── rss-feed/
-│   └── assets/
-│       └── feed-icon.svg
-└── clock/
-    └── assets/
-        └── digital-font.woff2
-```
-
-**Pros**:
-- Simple to implement
-- Fast serving via Phoenix static plug
-- Easy to version with widget updates
-- CDN-friendly
-
-**Cons**:
-- Assets bundled with backend code
-- Requires backend deployment for asset updates
-
-#### Option 2: Media Library Integration
-
-Store widget assets as special media entries:
-
-```elixir
-schema "medias" do
-  field(:name, :string)
-  field(:mimetype, :string)
-  field(:organization_id, :uuid)
-  
-  # NEW: Widget asset flag
-  field(:widget_id, :integer)
-  field(:is_widget_asset, :boolean, default: false)
-  field(:asset_key, :string)  # e.g., "icons.sunny"
-end
-```
-
-**Pros**:
-- Reuses existing media infrastructure
-- Asset upload/management via existing UI
-- Organization-specific asset customization possible
-
-**Cons**:
-- More complex implementation
-- Increases media table size
-- Harder to bundle assets with widget definition
-
-#### Option 3: Embedded Base64 (Not Recommended)
-
-Embed small assets directly in the widget JSON:
-
-```json
-{
-  "assets": {
-    "icons": {
-      "sunny": {
-        "data": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0i...",
-        "type": "image/svg+xml"
-      }
-    }
-  }
-}
-```
-
-**Pros**:
-- Self-contained widget definition
-- No separate asset loading
-
-**Cons**:
-- Large JSON payloads
-- Poor performance for large assets
-- Not suitable for fonts or multiple images
-
-## Recommended Implementation: Option 1 + Asset Manifest
-
-### 1. File Structure
-
-```
-packages/castmill/priv/static/widgets/{widget_slug}/
-├── assets/
-│   ├── icons/
-│   ├── images/
-│   ├── fonts/
-│   └── styles/
-└── manifest.json
-```
-
-### 2. Widget Creation with Assets
-
-```elixir
-# Create widget with asset manifest
-{:ok, widget} = Widgets.create_widget(%{
-  name: "Weather Widget",
-  slug: "weather",
-  template: %{
-    "type" => "container",
-    "style" => %{
-      "backgroundImage" => "asset:images.background",
-      "fontFamily" => "asset:fonts.roboto"
-    },
-    "components" => [
-      %{
-        "type" => "image",
-        "source" => "asset:icons.{data.condition_icon}",
-        "alt" => "Weather icon"
-      },
-      %{
-        "type" => "text",
-        "field" => "temperature",
-        "style" => %{"fontFamily" => "asset:fonts.roboto"}
-      }
-    ]
-  },
-  assets: %{
-    "icons" => %{
-      "sunny" => %{
-        "url" => "/widgets/weather/assets/icons/sunny.svg",
-        "type" => "image/svg+xml"
-      },
-      "cloudy" => %{
-        "url" => "/widgets/weather/assets/icons/cloudy.svg",
-        "type" => "image/svg+xml"
-      }
-    },
-    "fonts" => %{
-      "roboto" => %{
-        "url" => "/widgets/weather/assets/fonts/Roboto-Regular.woff2",
-        "type" => "font/woff2"
-      }
-    },
-    "images" => %{
-      "background" => %{
-        "url" => "/widgets/weather/assets/images/gradient-bg.png",
-        "type" => "image/png"
-      }
-    }
-  }
-})
-```
-
-### 3. Template Asset Resolution
-
-Templates reference assets using the `asset:` prefix:
-
-```json
-{
-  "type": "image",
-  "source": "asset:icons.sunny"
-}
-```
-
-The template engine resolves this to:
-```json
-{
-  "type": "image",
-  "source": "/widgets/weather/assets/icons/sunny.svg"
-}
-```
-
-Dynamic asset resolution based on data:
-```json
-{
-  "type": "image",
-  "source": "asset:icons.{data.condition_icon}"
-}
-```
-
-With data `{"condition_icon": "cloudy"}`, resolves to:
-```json
-{
-  "type": "image",
-  "source": "/widgets/weather/assets/icons/cloudy.svg"
-}
-```
-
-### 4. Asset Preloading
-
-Players can preload all widget assets:
-
-```typescript
-class TemplateWidget {
-  async preloadAssets(assets: AssetManifest): Promise<void> {
-    const assetUrls = this.getAllAssetUrls(assets);
-    
-    await Promise.all(
-      assetUrls.map(url => this.preloadAsset(url))
-    );
-  }
-  
-  private getAllAssetUrls(assets: AssetManifest): string[] {
-    const urls: string[] = [];
-    
-    for (const category of Object.values(assets)) {
-      for (const asset of Object.values(category)) {
-        urls.push(asset.url);
-      }
-    }
-    
-    return urls;
-  }
-  
-  private async preloadAsset(url: string): Promise<void> {
-    // Fetch and cache the asset
-    const response = await fetch(url);
-    const blob = await response.blob();
-    
-    // Store in cache for offline use
-    await this.cacheAsset(url, blob);
-  }
-}
-```
-
-### 5. Widget Package Format
-
-Widgets can be distributed as packages:
+Users upload widgets as `.zip` files with this structure:
 
 ```
 weather-widget.zip
-├── widget.json          # Widget definition
+├── widget.json          # Widget definition with manifest
 ├── assets/
 │   ├── icons/
 │   │   ├── sunny.svg
@@ -351,143 +70,61 @@ weather-widget.zip
 │   ├── fonts/
 │   │   └── Roboto-Regular.woff2
 │   └── images/
-│       └── gradient-bg.png
-└── README.md           # Widget documentation
+│       └── background.png
+└── README.md            # Optional documentation
 ```
 
-Import process:
-```elixir
-defmodule Castmill.Widgets.Importer do
-  def import_widget_package(zip_path) do
-    with {:ok, files} <- unzip_package(zip_path),
-         {:ok, widget_def} <- parse_widget_json(files["widget.json"]),
-         :ok <- copy_assets_to_static(files, widget_def.slug),
-         {:ok, asset_manifest} <- build_asset_manifest(files, widget_def.slug),
-         {:ok, widget} <- create_widget(widget_def, asset_manifest) do
-      {:ok, widget}
-    end
-  end
-  
-  defp copy_assets_to_static(files, widget_slug) do
-    target_dir = Path.join([
-      Application.app_dir(:castmill),
-      "priv",
-      "static",
-      "widgets",
-      widget_slug,
-      "assets"
-    ])
-    
-    File.mkdir_p!(target_dir)
-    
-    files
-    |> Enum.filter(fn {path, _} -> String.starts_with?(path, "assets/") end)
-    |> Enum.each(fn {path, content} ->
-      target_path = Path.join(target_dir, String.replace(path, "assets/", ""))
-      File.write!(target_path, content)
-    end)
-    
-    :ok
-  end
-  
-  defp build_asset_manifest(files, widget_slug) do
-    manifest = %{}
-    
-    files
-    |> Enum.filter(fn {path, _} -> String.starts_with?(path, "assets/") end)
-    |> Enum.reduce(manifest, fn {path, content}, acc ->
-      relative_path = String.replace(path, "assets/", "")
-      [category | rest] = String.split(relative_path, "/")
-      filename = List.last(rest)
-      name = Path.rootname(filename)
-      
-      asset_info = %{
-        "url" => "/widgets/#{widget_slug}/assets/#{relative_path}",
-        "type" => MIME.from_path(filename),
-        "size" => byte_size(content)
-      }
-      
-      put_in(acc, [category, name], asset_info)
-    end)
-    
-    {:ok, manifest}
-  end
-end
-```
+### Asset Schema
 
-### 6. Migration Strategy
+Define asset constraints in the widget schema:
 
-For existing widgets:
-
-```elixir
-# Migration to add assets field
-alter table(:widgets) do
-  add :assets, :map, default: %{}
-end
-
-# Migrate existing icon fields to assets
-def migrate_existing_icons do
-  Repo.all(Widget)
-  |> Enum.each(fn widget ->
-    assets = %{
-      "icons" => %{
-        "main" => %{
-          "url" => widget.icon,
-          "type" => "image/svg+xml"
-        },
-        "small" => %{
-          "url" => widget.small_icon,
-          "type" => "image/svg+xml"
+```json
+{
+  "assets_schema": {
+    "type": "object",
+    "properties": {
+      "icons": {
+        "type": "object",
+        "patternProperties": {
+          ".*": {
+            "type": "object",
+            "properties": {
+              "path": {"type": "string", "pattern": "^icons/.*\\.(svg|png|jpg)$"},
+              "type": {"type": "string", "enum": ["image/svg+xml", "image/png", "image/jpeg"]},
+              "size": {"type": "integer", "maximum": 102400},
+              "hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
+            },
+            "required": ["path", "type", "size", "hash"]
+          }
         }
-      }
-    }
-    
-    Widgets.update_widget(widget, %{assets: assets})
-  end)
-end
-```
-
-## Advanced Features
-
-### 1. Asset Versioning
-
-Include version in asset URLs for cache busting:
-
-```json
-{
-  "assets": {
-    "icons": {
-      "sunny": {
-        "url": "/widgets/weather/assets/icons/sunny.svg?v=1.2.0",
-        "type": "image/svg+xml",
-        "version": "1.2.0"
-      }
-    }
-  }
-}
-```
-
-### 2. Responsive Assets
-
-Support multiple sizes for responsive design:
-
-```json
-{
-  "assets": {
-    "images": {
-      "background": {
-        "variants": {
-          "small": {
-            "url": "/widgets/weather/assets/images/bg-sm.png",
-            "width": 640
-          },
-          "medium": {
-            "url": "/widgets/weather/assets/images/bg-md.png",
-            "width": 1024
-          },
-          "large": {
-            "url": "/widgets/weather/assets/images/bg-lg.png",
-            "width": 1920
+      },
+      "fonts": {
+        "type": "object",
+        "patternProperties": {
+          ".*": {
+            "type": "object",
+            "properties": {
+              "path": {"type": "string", "pattern": "^fonts/.*\\.(woff|woff2|ttf)$"},
+              "type": {"type": "string", "enum": ["font/woff", "font/woff2", "font/ttf"]},
+              "size": {"type": "integer", "maximum": 524288},
+              "hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
+            },
+            "required": ["path", "type", "size", "hash"]
+          }
+        }
+      },
+      "images": {
+        "type": "object",
+        "patternProperties": {
+          ".*": {
+            "type": "object",
+            "properties": {
+              "path": {"type": "string", "pattern": "^images/.*\\.(png|jpg|jpeg|webp)$"},
+              "type": {"type": "string", "enum": ["image/png", "image/jpeg", "image/webp"]},
+              "size": {"type": "integer", "maximum": 1048576},
+              "hash": {"type": "string", "pattern": "^sha256:[a-f0-9]{64}$"}
+            },
+            "required": ["path", "type", "size", "hash"]
           }
         }
       }
@@ -496,188 +133,553 @@ Support multiple sizes for responsive design:
 }
 ```
 
-### 3. Asset CDN Support
+### Upload Validation
 
-Allow CDN URLs for better performance:
+When a user uploads a widget package, the system performs comprehensive validation:
+
+#### 1. ZIP File Validation
+
+```elixir
+defmodule Castmill.Widgets.PackageValidator do
+  @max_package_size 10 * 1024 * 1024  # 10MB
+  @max_file_size %{
+    "icons" => 100 * 1024,    # 100KB per icon
+    "fonts" => 512 * 1024,    # 512KB per font
+    "images" => 1024 * 1024,  # 1MB per image
+    "styles" => 50 * 1024     # 50KB per stylesheet
+  }
+  @allowed_extensions %{
+    "icons" => ~w(.svg .png .jpg .jpeg),
+    "fonts" => ~w(.woff .woff2 .ttf),
+    "images" => ~w(.png .jpg .jpeg .webp .gif),
+    "styles" => ~w(.css)
+  }
+
+  def validate_package(zip_path) do
+    with :ok <- check_package_size(zip_path),
+         {:ok, files} <- extract_file_list(zip_path),
+         :ok <- validate_structure(files),
+         {:ok, widget_json} <- extract_widget_json(zip_path),
+         :ok <- validate_widget_definition(widget_json),
+         :ok <- validate_asset_files(zip_path, widget_json),
+         :ok <- verify_asset_hashes(zip_path, widget_json) do
+      {:ok, widget_json}
+    end
+  end
+
+  defp check_package_size(zip_path) do
+    case File.stat(zip_path) do
+      {:ok, %{size: size}} when size <= @max_package_size -> :ok
+      {:ok, %{size: size}} -> {:error, "Package too large: #{size} bytes (max: #{@max_package_size})"}
+      error -> error
+    end
+  end
+
+  defp validate_structure(files) do
+    required_files = ["widget.json"]
+    
+    if Enum.all?(required_files, &(&1 in files)) do
+      :ok
+    else
+      {:error, "Missing required files: #{inspect(required_files -- files)}"}
+    end
+  end
+
+  defp validate_asset_files(zip_path, widget_json) do
+    manifest = widget_json["assets"] || %{}
+    
+    Enum.reduce_while(manifest, :ok, fn {category, assets}, _acc ->
+      max_size = @max_file_size[category] || 1024 * 1024
+      allowed_exts = @allowed_extensions[category] || []
+      
+      case validate_category_assets(zip_path, assets, max_size, allowed_exts) do
+        :ok -> {:cont, :ok}
+        error -> {:halt, error}
+      end
+    end)
+  end
+
+  defp verify_asset_hashes(zip_path, widget_json) do
+    manifest = widget_json["assets"] || %{}
+    
+    Enum.reduce_while(manifest, :ok, fn {_category, assets}, _acc ->
+      case verify_category_hashes(zip_path, assets) do
+        :ok -> {:cont, :ok}
+        error -> {:halt, error}
+      end
+    end)
+  end
+
+  defp verify_category_hashes(zip_path, assets) do
+    Enum.reduce_while(assets, :ok, fn {_name, asset}, _acc ->
+      path = asset["path"]
+      expected_hash = asset["hash"]
+      
+      with {:ok, content} <- extract_file(zip_path, "assets/#{path}"),
+           actual_hash <- "sha256:" <> Base.encode16(:crypto.hash(:sha256, content), case: :lower) do
+        if actual_hash == expected_hash do
+          {:cont, :ok}
+        else
+          {:halt, {:error, "Hash mismatch for #{path}: expected #{expected_hash}, got #{actual_hash}"}}
+        end
+      end
+    end)
+  end
+end
+```
+
+#### 2. Content Security Validation
+
+```elixir
+defmodule Castmill.Widgets.AssetSecurityValidator do
+  def validate_asset_content(file_path, asset_type) do
+    with {:ok, content} <- File.read(file_path),
+         :ok <- check_magic_bytes(content, asset_type),
+         :ok <- scan_for_threats(content, asset_type) do
+      :ok
+    end
+  end
+
+  defp check_magic_bytes(content, "image/svg+xml") do
+    # Validate SVG structure, prevent XML bombs
+    case content do
+      <<"<?xml", _rest::binary>> -> validate_svg_content(content)
+      <<"<svg", _rest::binary>> -> validate_svg_content(content)
+      _ -> {:error, "Invalid SVG format"}
+    end
+  end
+
+  defp check_magic_bytes(content, "image/png") do
+    case content do
+      <<0x89, 0x50, 0x4E, 0x47, _rest::binary>> -> :ok
+      _ -> {:error, "Invalid PNG format"}
+    end
+  end
+
+  # Additional magic byte checks for other formats...
+
+  defp validate_svg_content(content) do
+    # Prevent XXE attacks, script injection
+    forbidden_patterns = [
+      ~r/<script/i,
+      ~r/javascript:/i,
+      ~r/on\w+\s*=/i,  # Event handlers
+      ~r/<!ENTITY/i     # Entity definitions
+    ]
+    
+    if Enum.any?(forbidden_patterns, &Regex.match?(&1, content)) do
+      {:error, "SVG contains forbidden content"}
+    else
+      :ok
+    end
+  end
+
+  defp scan_for_threats(content, _type) do
+    # Additional threat scanning
+    # Could integrate with ClamAV or similar
+    :ok
+  end
+end
+```
+
+### Storage and URL Resolution
+
+Assets are stored with relative paths and resolved at runtime:
+
+```elixir
+defmodule Castmill.Widgets.AssetResolver do
+  @doc """
+  Resolves asset manifest paths to absolute URLs based on storage backend
+  """
+  def resolve_asset_urls(widget, storage_config \\ nil) do
+    storage = storage_config || Application.get_env(:castmill, :asset_storage)
+    base_url = get_base_url(storage, widget.slug)
+    
+    resolved_assets = 
+      widget.assets
+      |> Enum.map(fn {category, assets} ->
+        resolved_category = 
+          assets
+          |> Enum.map(fn {name, asset} ->
+            {name, Map.put(asset, "url", "#{base_url}/#{asset["path"]}")}
+          end)
+          |> Map.new()
+        
+        {category, resolved_category}
+      end)
+      |> Map.new()
+    
+    %{widget | assets: resolved_assets}
+  end
+
+  defp get_base_url(%{type: :filesystem, base_path: base}, slug) do
+    "/widgets/#{slug}/assets"
+  end
+
+  defp get_base_url(%{type: :s3, bucket: bucket, region: region}, slug) do
+    "https://#{bucket}.s3.#{region}.amazonaws.com/widgets/#{slug}/assets"
+  end
+
+  defp get_base_url(%{type: :cdn, domain: domain}, slug) do
+    "https://#{domain}/widgets/#{slug}/assets"
+  end
+end
+```
+
+### Template Asset References
+
+Templates reference assets using the `{key: "path"}` binding syntax with `assets.` prefix:
 
 ```json
 {
+  "template": {
+    "type": "group",
+    "components": [
+      {
+        "type": "image",
+        "source": {
+          "key": "assets.icons.{data.condition_icon}.url"
+        },
+        "style": {
+          "width": 100,
+          "height": 100
+        }
+      },
+      {
+        "type": "text",
+        "text": {
+          "key": "data.temperature"
+        },
+        "style": {
+          "fontFamily": {
+            "key": "assets.fonts.roboto.url"
+          }
+        }
+      }
+    ]
+  }
+}
+```
+
+The player resolves these bindings at runtime:
+- `{key: "assets.icons.sunny.url"}` → `https://cdn.castmill.com/widgets/weather/assets/icons/sunny.svg`
+- `{key: "assets.icons.{data.condition_icon}.url"}` → Dynamically resolves based on `data.condition_icon` value
+
+## Complete Implementation Flow
+
+### 1. User Creates Widget
+
+User creates `weather-widget.zip`:
+
+```
+weather-widget.zip
+├── widget.json
+└── assets/
+    ├── icons/
+    │   ├── sunny.svg
+    │   ├── cloudy.svg
+    │   └── rainy.svg
+    └── fonts/
+        └── Roboto-Regular.woff2
+```
+
+**widget.json**:
+```json
+{
+  "name": "Weather Widget",
+  "slug": "weather",
+  "version": "1.0.0",
+  "description": "Display current weather conditions",
+  
+  "template": {
+    "type": "group",
+    "components": [
+      {
+        "type": "image",
+        "source": {"key": "assets.icons.{data.condition_icon}.url"}
+      },
+      {
+        "type": "text",
+        "text": {"key": "data.temperature"}
+      }
+    ]
+  },
+  
+  "options_schema": {
+    "latitude": {"type": "number", "required": true},
+    "longitude": {"type": "number", "required": true}
+  },
+  
+  "data_schema": {
+    "temperature": {"type": "number", "required": true},
+    "condition_icon": {"type": "string", "enum": ["sunny", "cloudy", "rainy"], "required": true}
+  },
+  
   "assets": {
+    "icons": {
+      "sunny": {
+        "path": "icons/sunny.svg",
+        "type": "image/svg+xml",
+        "size": 2048,
+        "hash": "sha256:abc123..."
+      },
+      "cloudy": {
+        "path": "icons/cloudy.svg",
+        "type": "image/svg+xml",
+        "size": 1856,
+        "hash": "sha256:def456..."
+      },
+      "rainy": {
+        "path": "icons/rainy.svg",
+        "type": "image/svg+xml",
+        "size": 2304,
+        "hash": "sha256:ghi789..."
+      }
+    },
     "fonts": {
       "roboto": {
-        "url": "https://cdn.castmill.com/widgets/weather/fonts/Roboto-Regular.woff2",
+        "path": "fonts/Roboto-Regular.woff2",
         "type": "font/woff2",
-        "cdn": true
+        "size": 67624,
+        "hash": "sha256:jkl012..."
       }
     }
   }
 }
 ```
 
-### 4. Organization Asset Overrides
+### 2. User Uploads via Dashboard
 
-Allow organizations to customize widget assets:
+```typescript
+// Dashboard upload component
+async function uploadWidget(file: File) {
+  const formData = new FormData();
+  formData.append('widget_package', file);
+  
+  const response = await fetch('/api/widgets/upload', {
+    method: 'POST',
+    body: formData
+  });
+  
+  return response.json();
+}
+```
+
+### 3. Backend Validates and Stores
 
 ```elixir
-schema "widget_asset_overrides" do
-  belongs_to(:widget, Widget)
-  belongs_to(:organization, Organization)
+defmodule CastmillWeb.WidgetController do
+  def upload(conn, %{"widget_package" => upload}) do
+    with {:ok, widget_def} <- PackageValidator.validate_package(upload.path),
+         {:ok, widget} <- Widgets.create_widget_from_package(upload.path, widget_def),
+         :ok <- store_assets(upload.path, widget) do
+      conn
+      |> put_status(:created)
+      |> json(%{
+        id: widget.id,
+        slug: widget.slug,
+        name: widget.name,
+        assets_url: "/widgets/#{widget.slug}/assets"
+      })
+    else
+      {:error, reason} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{error: reason})
+    end
+  end
+
+  defp store_assets(zip_path, widget) do
+    storage_path = Path.join([
+      Application.get_env(:castmill, :assets_root),
+      "widgets",
+      widget.slug,
+      "assets"
+    ])
+    
+    File.mkdir_p!(storage_path)
+    
+    # Extract assets from ZIP to storage
+    extract_assets(zip_path, storage_path)
+  end
+end
+```
+
+### 4. User Selects Generic Integration
+
+User can use built-in RSS integration without coding:
+
+```elixir
+# Pre-built generic integration
+defmodule Castmill.Widgets.Integrations.Fetchers.RSS do
+  @behaviour Castmill.Widgets.Integrations.Fetcher
   
-  field(:asset_key, :string)  # e.g., "icons.sunny"
-  field(:media_id, :integer)  # Reference to organization's media
+  def fetch(_credentials, options) do
+    url = options["feed_url"]
+    
+    with {:ok, %{body: body}} <- HTTPoison.get(url),
+         {:ok, feed} <- parse_rss(body) do
+      {:ok, %{
+        "items" => Enum.map(feed.items, fn item ->
+          %{
+            "title" => item.title,
+            "description" => item.description,
+            "link" => item.link,
+            "pubDate" => item.pubDate
+          }
+        end)
+      }}
+    end
+  end
+end
+```
+
+### 5. Player Renders Widget
+
+```typescript
+// Player resolves asset URLs
+class WeatherWidget {
+  async render(data, options, assets) {
+    // Assets already resolved to absolute URLs
+    const iconUrl = assets.icons[data.condition_icon].url;
+    // → "https://cdn.castmill.com/widgets/weather/assets/icons/sunny.svg"
+    
+    return `
+      <div class="weather-widget">
+        <img src="${iconUrl}" alt="${data.condition_icon}" />
+        <span class="temperature">${data.temperature}°C</span>
+      </div>
+    `;
+  }
+}
+```
+
+## Security Considerations
+
+### File Size Limits
+
+```elixir
+@max_limits %{
+  package: 10 * 1024 * 1024,    # 10MB total package
+  icon: 100 * 1024,              # 100KB per icon
+  font: 512 * 1024,              # 512KB per font
+  image: 1024 * 1024,            # 1MB per image
+  style: 50 * 1024,              # 50KB per stylesheet
+  total_assets: 5 * 1024 * 1024  # 5MB total assets
+}
+```
+
+### Allowed File Types
+
+- **Icons**: SVG, PNG, JPG (validated magic bytes)
+- **Fonts**: WOFF, WOFF2, TTF (validated format)
+- **Images**: PNG, JPG, WebP, GIF (validated magic bytes)
+- **Styles**: CSS (sanitized, no `@import` or `url()` with external sources)
+
+### Content Validation
+
+- **SVG**: Strip scripts, event handlers, entity definitions
+- **CSS**: Remove `@import`, validate `url()` references
+- **Hash Verification**: SHA-256 hash for each file
+- **Malware Scanning**: Optional ClamAV integration
+
+### Path Traversal Prevention
+
+```elixir
+defp validate_asset_path(path) do
+  normalized = Path.expand(path)
   
-  timestamps()
+  cond do
+    String.contains?(path, "..") ->
+      {:error, "Path traversal detected"}
+    
+    String.starts_with?(normalized, "/") ->
+      {:error, "Absolute paths not allowed"}
+    
+    true ->
+      :ok
+  end
 end
 ```
 
 ## Implementation Checklist
 
-- [ ] Add `assets` field to Widget schema
-- [ ] Create widget asset directory structure
-- [ ] Implement asset manifest builder
-- [ ] Add `asset:` prefix resolver in template engine
-- [ ] Create widget package importer
-- [ ] Update widget creation API to handle assets
-- [ ] Implement asset preloading in player
-- [ ] Add asset versioning support
-- [ ] Create migration for existing widgets
-- [ ] Document asset conventions and best practices
+### Backend
 
-## Best Practices
+- [ ] Add `assets` JSONB field to `widgets` table
+- [ ] Add `assets_schema` field for validation
+- [ ] Create `PackageValidator` module
+- [ ] Create `AssetSecurityValidator` module
+- [ ] Create `AssetResolver` module
+- [ ] Add `/api/widgets/upload` endpoint
+- [ ] Add asset storage configuration
+- [ ] Implement ZIP extraction and validation
+- [ ] Implement SHA-256 hash verification
+- [ ] Add magic byte validation
+- [ ] Create SVG sanitizer
+- [ ] Add asset serving routes
+- [ ] Implement CDN support
 
-1. **Keep Assets Small**: Optimize images, use SVG when possible, subset fonts
-2. **Use Descriptive Names**: `sunny.svg` not `icon1.svg`
-3. **Organize by Type**: Separate icons, images, fonts, styles
-4. **Version Assets**: Include version in URLs for cache control
-5. **Provide Fallbacks**: Include default assets for missing data
-6. **Test Offline**: Ensure assets work when cached
-7. **Document Assets**: Include README with widget package
-
-## Example: Complete Weather Widget with Assets
+### Database Migration
 
 ```elixir
-{:ok, weather_widget} = Widgets.create_widget(%{
-  name: "Weather Display",
-  slug: "weather",
-  
-  template: %{
-    "type" => "container",
-    "style" => %{
-      "backgroundImage" => "url(asset:images.background)",
-      "fontFamily" => "asset:fonts.roboto, sans-serif"
-    },
-    "components" => [
-      %{
-        "type" => "image",
-        "source" => "asset:icons.{data.condition_icon}",
-        "style" => %{"width" => "100px", "height" => "100px"}
-      },
-      %{
-        "type" => "text",
-        "field" => "temperature",
-        "style" => %{
-          "fontSize" => "48px",
-          "fontFamily" => "asset:fonts.roboto"
-        }
-      },
-      %{
-        "type" => "text",
-        "field" => "condition",
-        "style" => %{
-          "fontSize" => "24px",
-          "fontFamily" => "asset:fonts.roboto"
-        }
-      }
-    ]
-  },
-  
-  options_schema: %{
-    "latitude" => %{"type" => "number", "required" => true},
-    "longitude" => %{"type" => "number", "required" => true}
-  },
-  
-  data_schema: %{
-    "temperature" => %{"type" => "number", "required" => true},
-    "condition" => %{"type" => "string", "required" => true},
-    "condition_icon" => %{"type" => "string", "required" => true}
-  },
-  
-  assets: %{
-    "icons" => %{
-      "sunny" => %{
-        "url" => "/widgets/weather/assets/icons/sunny.svg",
-        "type" => "image/svg+xml",
-        "size" => 2048
-      },
-      "cloudy" => %{
-        "url" => "/widgets/weather/assets/icons/cloudy.svg",
-        "type" => "image/svg+xml",
-        "size" => 1856
-      },
-      "rainy" => %{
-        "url" => "/widgets/weather/assets/icons/rainy.svg",
-        "type" => "image/svg+xml",
-        "size" => 2304
-      }
-    },
-    "fonts" => %{
-      "roboto" => %{
-        "url" => "/widgets/weather/assets/fonts/Roboto-Regular.woff2",
-        "type" => "font/woff2",
-        "size" => 67624
-      }
-    },
-    "images" => %{
-      "background" => %{
-        "url" => "/widgets/weather/assets/images/gradient-bg.png",
-        "type" => "image/png",
-        "size" => 51200
-      }
-    }
-  }
-})
+defmodule Castmill.Repo.Migrations.AddWidgetAssets do
+  use Ecto.Migration
 
-# Integration provides condition_icon in data
-defmodule Castmill.Widgets.Integrations.Fetchers.OpenWeather do
-  def fetch(credentials, options) do
-    # ... fetch weather data ...
-    
-    # Map condition to icon name
-    icon_name = case api_data["weather"]["main"] do
-      "Clear" -> "sunny"
-      "Clouds" -> "cloudy"
-      "Rain" -> "rainy"
-      _ -> "cloudy"
+  def change do
+    alter table(:widgets) do
+      add :assets, :map, default: %{}
+      add :assets_schema, :map
+      add :package_hash, :string
+      add :package_size, :integer
     end
-    
-    {:ok, %{
-      "temperature" => api_data["main"]["temp"],
-      "condition" => api_data["weather"]["main"],
-      "condition_icon" => icon_name  # Resolves to asset:icons.sunny
-    }}
   end
 end
 ```
 
-## Summary
+### Dashboard UI
 
-**Recommended Approach**: Add an `assets` map field to the Widget schema that contains a manifest of asset URLs served from `priv/static/widgets/{slug}/assets/`.
+- [ ] Create widget upload component
+- [ ] Add drag-and-drop ZIP upload
+- [ ] Show upload progress
+- [ ] Display validation errors
+- [ ] Add asset preview
+- [ ] Show package size/limits
+- [ ] Create asset browser component
+- [ ] Add i18n translations
 
-**Key Benefits**:
-- Simple and elegant
-- Scalable for any number of assets
-- Compatible with CDN deployment
-- Supports widget packaging and distribution
-- Enables asset preloading and caching
-- Allows organization-specific overrides
+### Player
 
-**Trade-offs**:
-- Assets bundled with backend code (acceptable for widget definitions)
-- Requires file system access during widget creation (standard for static assets)
-- Version management requires careful planning (solvable with asset versioning)
+- [ ] Implement asset URL resolution
+- [ ] Add asset preloading
+- [ ] Create asset cache
+- [ ] Handle asset loading errors
+- [ ] Support offline asset access
 
-This approach provides a clean separation between:
-- **Widget definition** (JSON template + schemas + asset manifest)
-- **Widget assets** (static files served via Phoenix)
-- **Widget data** (dynamic content from integrations)
-- **Organization media** (user-uploaded content)
+### Documentation
+
+- [ ] Widget creation guide
+- [ ] Asset packaging guide
+- [ ] Security best practices
+- [ ] Generic integration usage
+- [ ] Example widget packages
+
+## Benefits
+
+1. **No Code Required**: Users create widgets with JSON and assets only
+2. **Secure**: Comprehensive validation prevents malicious uploads
+3. **Flexible**: Works with filesystem, S3, CDN storage
+4. **Scalable**: Generic integrations reusable across widgets
+5. **Complete**: End-to-end self-service widget creation
+
+## Example: Complete Weather Widget
+
+See above implementation flow for a complete working example that demonstrates:
+- Widget package structure
+- Asset manifest with hashes
+- Template asset references
+- Generic RSS integration usage
+- Secure upload and validation
+- Runtime URL resolution
+
+This architecture enables users to create any widget requirement without modifying Castmill's codebase.
