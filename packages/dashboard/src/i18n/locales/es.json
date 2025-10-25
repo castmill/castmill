@@ -443,7 +443,11 @@
   },
   "search": {
     "title": "Buscar",
-    "description": "Esta es la página de búsqueda. Puedes encontrar todos los resultados de búsqueda aquí..."
+    "description": "Esta es la página de búsqueda. Puedes encontrar todos los resultados de búsqueda aquí...",
+    "enterQuery": "Ingrese una consulta de búsqueda para encontrar recursos en su organización",
+    "noResults": "No se encontraron resultados para \"{{query}}\"",
+    "error": "Ocurrió un error durante la búsqueda. Por favor, inténtelo de nuevo.",
+    "showingPage": "Mostrando página {{page}} de {{total}}"
   },
   "playlists": {
     "title": "Listas de reproducción",

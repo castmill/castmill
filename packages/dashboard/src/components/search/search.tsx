@@ -46,9 +46,14 @@ const Search: Component = () => {
   });
 
   const handleEnterKeyDown = (event: KeyboardEvent) => {
-    // Navigate to /search?s=searchString when Enter is pressed
+    // Navigate to /org/:orgId/search?s=searchString when Enter is pressed
     if (event.key === 'Enter' && searchString() !== '') {
-      navigate(`/search?s=${encodeURIComponent(searchString())}`);
+      const orgId = window.location.pathname.match(/\/org\/([^/]+)/)?.[1];
+      if (orgId) {
+        navigate(`/org/${orgId}/search?s=${encodeURIComponent(searchString())}`);
+      } else {
+        navigate(`/search?s=${encodeURIComponent(searchString())}`);
+      }
       inputRef?.blur();
     }
     // Blur the search input when ESC is pressed
@@ -59,9 +64,14 @@ const Search: Component = () => {
 
   const resetSearch = () => {
     setSearchString('');
-    // If we are on the search page, navigate to /search
-    if (window.location.pathname === '/search') {
-      navigate(`/search`);
+    // If we are on the search page, navigate to current org search page
+    if (window.location.pathname.includes('/search')) {
+      const orgId = window.location.pathname.match(/\/org\/([^/]+)/)?.[1];
+      if (orgId) {
+        navigate(`/org/${orgId}/search`);
+      } else {
+        navigate(`/search`);
+      }
     }
   };
 

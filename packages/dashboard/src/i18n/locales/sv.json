@@ -568,7 +568,11 @@
   },
   "search": {
     "title": "Sök",
-    "description": "Detta är söksidan. Du kan hitta alla sökresultat här..."
+    "description": "Detta är söksidan. Du kan hitta alla sökresultat här...",
+    "enterQuery": "Ange en sökfråga för att hitta resurser i din organisation",
+    "noResults": "Inga resultat hittades för \"{{query}}\"",
+    "error": "Ett fel uppstod vid sökning. Försök igen.",
+    "showingPage": "Visar sida {{page}} av {{total}}"
   },
   "permissions": {
     "noPermission": "Du har inte behörighet att {{action}} {{resource}}",
