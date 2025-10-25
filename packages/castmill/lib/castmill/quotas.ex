@@ -252,6 +252,15 @@ defmodule Castmill.Quotas do
     end
   end
 
+  def get_quota_used_for_organization(organization_id, Castmill.Organizations.OrganizationsUsers) do
+    # Count users in the organization (via the join table)
+    from(ou in Castmill.Organizations.OrganizationsUsers,
+      where: ou.organization_id == ^organization_id,
+      select: count(ou.user_id)
+    )
+    |> Repo.one()
+  end
+
   def get_quota_used_for_organization(organization_id, schema_module) do
     from(r in schema_module,
       where: r.organization_id == ^organization_id,
