@@ -104,6 +104,17 @@ defmodule CastmillWeb.Router do
     post("/", DeviceController, :start_registration)
   end
 
+  # Public webhook endpoints for third-party integrations
+  pipeline :webhooks do
+    plug(:accepts, ["json"])
+  end
+
+  scope "/webhooks/widgets", CastmillWeb do
+    pipe_through(:webhooks)
+
+    post("/:integration_id/:widget_config_id", WidgetIntegrationController, :receive_webhook)
+  end
+
   scope "/devices", CastmillWeb do
     pipe_through([:device, :authenticate_device])
 
@@ -175,6 +186,39 @@ defmodule CastmillWeb.Router do
     # List all the widgets available for the organization
     get("/organizations/:organization_id/widgets", OrganizationController, :list_widgets)
     post("/organizations/:organization_id/widgets", OrganizationController, :create_widget)
+
+    # Widget Integration Management
+    get(
+      "/organizations/:organization_id/widgets/:widget_id/integrations",
+      WidgetIntegrationController,
+      :list_integrations
+    )
+
+    get(
+      "/organizations/:organization_id/widget-integrations/:integration_id",
+      WidgetIntegrationController,
+      :get_integration
+    )
+
+    # Organization-scoped credentials
+    post(
+      "/organizations/:organization_id/widget-integrations/:integration_id/credentials",
+      WidgetIntegrationController,
+      :upsert_organization_credentials
+    )
+
+    put(
+      "/organizations/:organization_id/widget-integrations/:integration_id/credentials",
+      WidgetIntegrationController,
+      :upsert_organization_credentials
+    )
+
+    # Test integration
+    post(
+      "/organizations/:organization_id/widget-integrations/:integration_id/test",
+      WidgetIntegrationController,
+      :test_integration
+    )
 
     # Get permissions matrix for current user in organization
     get("/organizations/:organization_id/permissions", PermissionsController, :show)
@@ -270,6 +314,28 @@ defmodule CastmillWeb.Router do
     # Routes for organization quotas
     resources("/organizations/:organization_id/quotas", OrganizationQuotaController,
       only: [:index, :show, :create, :update]
+    )
+
+    # Widget-scoped credentials (for widgets that require per-instance credentials)
+    post(
+      "/widget-configs/:widget_config_id/credentials",
+      WidgetIntegrationController,
+      :upsert_widget_credentials
+    )
+
+    put(
+      "/widget-configs/:widget_config_id/credentials",
+      WidgetIntegrationController,
+      :upsert_widget_credentials
+    )
+
+    # Widget data access (for players)
+    get("/widget-configs/:widget_config_id/data", WidgetIntegrationController, :get_widget_data)
+
+    post(
+      "/widget-configs/:widget_config_id/refresh",
+      WidgetIntegrationController,
+      :refresh_widget_data
     )
 
     post("/devices/:device_id/commands", DeviceController, :send_command)
