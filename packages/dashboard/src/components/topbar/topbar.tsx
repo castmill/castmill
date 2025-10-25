@@ -3,6 +3,7 @@ import './topbar.scss';
 
 import { checkAuth, getUser, resetSession } from '../auth';
 import { useNavigate } from '@solidjs/router';
+import TopbarLink from '../topbar-link/topbar-link';
 import Search from '../search/search';
 
 // Find any icon here: https://solid-icons.vercel.app/search/settings
@@ -82,16 +83,12 @@ const Topbar: Component = () => {
           <Show when={checkAuth()}>
             <Search />
 
-            <span class="castmill-topbar-link">
-              <a
-                href="https://docs.castmill.io"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <TbHelpCircle />
-                <span>{t('topbar.help')}</span>
-              </a>
-            </span>
+            <TopbarLink
+              to="https://docs.castmill.io"
+              icon={TbHelpCircle}
+              text={t('topbar.help')}
+              external={true}
+            />
 
             <Show
               when={
