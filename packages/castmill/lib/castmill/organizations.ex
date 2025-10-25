@@ -361,6 +361,12 @@ defmodule Castmill.Organizations do
         "create" -> :create
         "update" -> :update
         "delete" -> :delete
+        # Map device-specific actions to standard permission actions
+        :get_channels -> :show
+        :add_channel -> :update
+        :remove_channel -> :update
+        :send_command -> :update
+        :get_cache -> :show
         # Keep other atoms as-is
         a when is_atom(a) -> a
         _ -> :unknown
