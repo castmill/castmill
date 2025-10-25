@@ -589,7 +589,10 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
                 onClick={() => setShowConfirmDialogMultiple(true)}
                 icon={AiOutlineDelete}
                 color="primary"
-                disabled={selectedMedias().size === 0}
+                disabled={
+                  selectedMedias().size === 0 ||
+                  !canPerformAction('medias', 'delete')
+                }
               />
             </div>
           ),
