@@ -252,3 +252,157 @@ describe('TableView Component - Default Row Action', () => {
     expect(mockViewHandler).not.toHaveBeenCalled();
   });
 });
+
+describe('TableView Component - Sorting Functionality', () => {
+  afterEach(() => cleanup());
+
+  const columns = [
+    { key: 'name', title: 'Name', sortable: true },
+    { key: 'created', title: 'Created', sortable: true },
+    { key: 'type', title: 'Type', sortable: false },
+  ];
+
+  const mockData = [
+    { id: '1', name: 'Resource A', type: 'Image', created: '2024-01-01' },
+    { id: '2', name: 'Resource B', type: 'Video', created: '2024-01-02' },
+  ];
+
+  const mockFetchData = vi.fn().mockResolvedValue({
+    data: mockData,
+    count: 2,
+  });
+
+  const defaultProps = {
+    title: 'Test Resources',
+    resource: 'resources',
+    fetchData: mockFetchData,
+    table: {
+      columns,
+    },
+    pagination: {
+      itemsPerPage: 10,
+    },
+  };
+
+  it('calls fetchData with initial sort options', async () => {
+    render(() => <TableView {...defaultProps} />);
+
+    await waitFor(() => {
+      expect(mockFetchData).toHaveBeenCalled();
+    });
+
+    // Check that fetchData was called with default sort options
+    const callArgs = mockFetchData.mock.calls[0][0];
+    expect(callArgs.sortOptions).toEqual({
+      key: 'name',
+      direction: 'ascending',
+    });
+  });
+
+  it('updates sort options when column header is clicked', async () => {
+    mockFetchData.mockClear();
+    render(() => <TableView {...defaultProps} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Resource A')).toBeInTheDocument();
+    });
+
+    mockFetchData.mockClear();
+
+    // Click on the "Created" column header to sort
+    const createdHeader = screen.getByText('Created');
+    fireEvent.click(createdHeader);
+
+    // Wait for fetchData to be called with new sort options
+    await waitFor(() => {
+      expect(mockFetchData).toHaveBeenCalled();
+    });
+
+    const callArgs = mockFetchData.mock.calls[0][0];
+    expect(callArgs.sortOptions).toEqual({
+      key: 'created',
+      direction: 'ascending',
+    });
+  });
+
+  it('toggles sort direction when same column is clicked twice', async () => {
+    mockFetchData.mockClear();
+    render(() => <TableView {...defaultProps} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Resource A')).toBeInTheDocument();
+    });
+
+    const nameHeader = screen.getByText('Name');
+
+    // First click - should sort ascending (already default, but click triggers update)
+    mockFetchData.mockClear();
+    fireEvent.click(nameHeader);
+
+    await waitFor(() => {
+      expect(mockFetchData).toHaveBeenCalled();
+    });
+
+    let callArgs = mockFetchData.mock.calls[0][0];
+    expect(callArgs.sortOptions.direction).toBe('ascending');
+
+    // Second click - should toggle to descending
+    mockFetchData.mockClear();
+    fireEvent.click(nameHeader);
+
+    await waitFor(() => {
+      expect(mockFetchData).toHaveBeenCalled();
+    });
+
+    callArgs = mockFetchData.mock.calls[0][0];
+    expect(callArgs.sortOptions).toEqual({
+      key: 'name',
+      direction: 'descending',
+    });
+  });
+
+  it('resets to page 1 when sort changes', async () => {
+    mockFetchData.mockClear();
+    render(() => <TableView {...defaultProps} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Resource A')).toBeInTheDocument();
+    });
+
+    mockFetchData.mockClear();
+
+    // Click on a different column header
+    const createdHeader = screen.getByText('Created');
+    fireEvent.click(createdHeader);
+
+    await waitFor(() => {
+      expect(mockFetchData).toHaveBeenCalled();
+    });
+
+    // Verify that page is reset to 1
+    const callArgs = mockFetchData.mock.calls[0][0];
+    expect(callArgs.page.num).toBe(1);
+  });
+
+  it('does not sort when clicking non-sortable column', async () => {
+    mockFetchData.mockClear();
+    render(() => <TableView {...defaultProps} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Resource A')).toBeInTheDocument();
+    });
+
+    const initialCallCount = mockFetchData.mock.calls.length;
+    mockFetchData.mockClear();
+
+    // Click on the "Type" column header (non-sortable)
+    const typeHeader = screen.getByText('Type');
+    fireEvent.click(typeHeader);
+
+    // Wait a bit to ensure no additional calls are made
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    // fetchData should not be called again
+    expect(mockFetchData).not.toHaveBeenCalled();
+  });
+});
