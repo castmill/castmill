@@ -38,7 +38,7 @@ import {
   AddonStore,
   AddonComponentProps,
 } from '../../common/interfaces/addon-store';
-import { useTeamFilter } from '../../common/hooks';
+import { useTeamFilter, useModalFromUrl } from '../../common/hooks';
 
 import { QuotaIndicator } from '../../common/components/quota-indicator';
 import {
@@ -219,6 +219,32 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
     )
   );
 
+  // Function to close the modal and update URL
+  const closeModalAndClearUrl = () => {
+    // Clear URL FIRST (before animation starts) for immediate feedback
+    if (props.params) {
+      const [, setSearchParams] = props.params;
+      setSearchParams({ itemId: undefined }, { replace: true });
+    }
+
+    // Then close modal (triggers 300ms animation)
+    setShowModal(false);
+  };
+
+  // Sync modal state with URL itemId parameter
+  useModalFromUrl({
+    getItemIdFromUrl: () => props.params?.[0]?.itemId,
+    isModalOpen: () => showModal(),
+    closeModal: closeModalAndClearUrl,
+    openModal: (itemId) => {
+      const device = data().find((d) => String(d.id) === String(itemId));
+      if (device) {
+        setCurrentDevice(device);
+        setShowModal(true);
+      }
+    },
+  });
+
   const isQuotaReached = () => {
     const currentQuota = quota();
     if (!currentQuota) return false;
@@ -277,14 +303,18 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
 
   // Function to open the modal
   const openModal = (item: DeviceTableItem) => {
+    // Open modal immediately
     setCurrentDevice(item);
     setShowModal(true);
+
+    // Also update URL for shareability (use replace to avoid polluting browser history)
+    if (props.params) {
+      const [, setSearchParams] = props.params;
+      setSearchParams({ itemId: String(item.id) }, { replace: true });
+    }
   };
 
-  // Function to close the modal and remove blur
-  const closeModal = () => {
-    setShowModal(false);
-  };
+  const [showConfirmDialog, setShowConfirmDialog] = createSignal(false);
 
   // Function to open the register modal
   const openRegisterModal = () => {
@@ -378,7 +408,6 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
     resourcesObserver.cleanup();
   });
 
-  const [showConfirmDialog, setShowConfirmDialog] = createSignal(false);
   const [showConfirmDialogMultiple, setShowConfirmDialogMultiple] =
     createSignal(false);
 
@@ -482,7 +511,7 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
         <Modal
           title={`Device "${currentDevice()?.name}"`}
           description={t('devices.deviceDetails')}
-          onClose={closeModal}
+          onClose={closeModalAndClearUrl}
         >
           <DeviceView
             baseUrl={props.store.env.baseUrl}
@@ -581,8 +610,7 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
           defaultRowAction: {
             icon: BsEye,
             handler: (item: DeviceTableItem) => {
-              setCurrentDevice(item);
-              setShowModal(true);
+              openModal(item);
             },
             label: t('common.view'),
           },

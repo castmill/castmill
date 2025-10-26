@@ -108,7 +108,7 @@ const App: Component<RouteSectionProps<unknown>> = (props) => {
 
 const wrapLazyComponent = (addon: { path: string; name: string }) => {
   return (props: any) => {
-    const params = useSearchParams();
+    const [searchParams, setSearchParams] = useSearchParams();
     const i18n = useI18n();
     const navigate = useNavigate();
 
@@ -182,7 +182,7 @@ const wrapLazyComponent = (addon: { path: string; name: string }) => {
                 {...props}
                 store={store}
                 selectedOrgId={currentOrgId}
-                params={params}
+                params={[searchParams, setSearchParams]}
               />
             )}
           </Show>

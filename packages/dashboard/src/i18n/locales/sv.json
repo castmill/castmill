@@ -567,12 +567,15 @@
     }
   },
   "search": {
-    "title": "Sök",
+    "title": "Sökresultat",
     "description": "Detta är söksidan. Du kan hitta alla sökresultat här...",
     "enterQuery": "Ange en sökfråga för att hitta resurser i din organisation",
     "noResults": "Inga resultat hittades för \"{{query}}\"",
     "error": "Ett fel uppstod vid sökning. Försök igen.",
-    "showingPage": "Visar sida {{page}} av {{total}}"
+    "showingPage": "Visar sida {{page}} av {{total}}",
+    "resultsFor": "Resultat för \"{{query}}\"",
+    "foundResults": "Hittade {{count}} resultat",
+    "noResultsTitle": "Inga Resultat Hittades"
   },
   "permissions": {
     "noPermission": "Du har inte behörighet att {{action}} {{resource}}",

@@ -45,7 +45,7 @@ import {
   AddonStore,
   AddonComponentProps,
 } from '../../common/interfaces/addon-store';
-import { useTeamFilter } from '../../common/hooks';
+import { useTeamFilter, useModalFromUrl } from '../../common/hooks';
 
 const MediasPage: Component<AddonComponentProps> = (props) => {
   // Get i18n functions from store
@@ -78,6 +78,31 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
   const [showModal, setShowModal] = createSignal<JsonMedia | undefined>();
 
   const [showAddMediasModal, setShowAddMediasModal] = createSignal(false);
+
+  // Function to close the modal and update URL
+  const closeModalAndClearUrl = () => {
+    // Clear URL FIRST (before animation starts) for immediate feedback
+    if (props.params) {
+      const [, setSearchParams] = props.params;
+      setSearchParams({ itemId: undefined }, { replace: true });
+    }
+
+    // Then close modal (triggers 300ms animation)
+    setShowModal(undefined);
+  };
+
+  // Sync modal state with URL for shareable deep links and browser navigation
+  useModalFromUrl({
+    getItemIdFromUrl: () => props.params?.[0]?.itemId,
+    isModalOpen: () => !!showModal(),
+    closeModal: closeModalAndClearUrl,
+    openModal: (itemId) => {
+      const media = data().find((m) => String(m.id) === itemId);
+      if (media) {
+        setShowModal(media);
+      }
+    },
+  });
 
   const resourcesObserver = new ResourcesObserver<JsonMedia>(
     props.store.socket,
@@ -356,12 +381,14 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
 
   // Function to open the modal
   const openModal = (item: JsonMedia) => {
+    // Open modal immediately
     setShowModal(item);
-  };
 
-  // Function to close the modal and remove blur
-  const closeModal = () => {
-    setShowModal();
+    // Also update URL for shareability (use replace to avoid polluting browser history)
+    if (props.params) {
+      const [, setSearchParams] = props.params;
+      setSearchParams({ itemId: String(item.id) }, { replace: true });
+    }
   };
 
   function formatBytes(bytes: number) {
@@ -483,7 +510,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
         <Modal
           title={`Media "${showModal()?.name}"`}
           description=""
-          onClose={closeModal}
+          onClose={closeModalAndClearUrl}
           contentClass="medias-modal"
         >
           <MediaDetails

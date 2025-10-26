@@ -154,19 +154,15 @@ describe('SearchService', () => {
         json: async () => ({ error: 'Search failed' }),
       });
 
-      await expect(
-        SearchService.search('org123', 'test')
-      ).rejects.toThrow();
+      await expect(SearchService.search('org123', 'test')).rejects.toThrow();
     });
 
     it('handles network errors correctly', async () => {
-      (global.fetch as any).mockRejectedValueOnce(
-        new Error('Network error')
-      );
+      (global.fetch as any).mockRejectedValueOnce(new Error('Network error'));
 
-      await expect(
-        SearchService.search('org123', 'test')
-      ).rejects.toThrow('Network error');
+      await expect(SearchService.search('org123', 'test')).rejects.toThrow(
+        'Network error'
+      );
     });
 
     it('properly encodes special characters in search query', async () => {

@@ -24,8 +24,14 @@ describe('SearchPage', () => {
 
   describe('Resource Type Mapping', () => {
     it('should have translations for all resource types', async () => {
-      const resourceTypes = ['medias', 'playlists', 'channels', 'devices', 'teams'];
-      
+      const resourceTypes = [
+        'medias',
+        'playlists',
+        'channels',
+        'devices',
+        'teams',
+      ];
+
       // These translations are defined in the i18n locale files
       // and are tested as part of the i18n system
       expect(resourceTypes.length).toBe(5);

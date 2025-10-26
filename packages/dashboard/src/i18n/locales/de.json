@@ -424,12 +424,15 @@
     }
   },
   "search": {
-    "title": "Suche",
+    "title": "Suchergebnisse",
     "description": "Dies ist die Suchseite. Sie finden hier alle Suchergebnisse...",
     "enterQuery": "Geben Sie eine Suchanfrage ein, um Ressourcen in Ihrer Organisation zu finden",
     "noResults": "Keine Ergebnisse für \"{{query}}\" gefunden",
     "error": "Bei der Suche ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.",
-    "showingPage": "Seite {{page}} von {{total}} wird angezeigt"
+    "showingPage": "Seite {{page}} von {{total}} wird angezeigt",
+    "resultsFor": "Ergebnisse für \"{{query}}\"",
+    "foundResults": "{{count}} Ergebnis(se) gefunden",
+    "noResultsTitle": "Keine Ergebnisse Gefunden"
   },
   "errors": {
     "generic": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",

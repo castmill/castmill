@@ -50,7 +50,9 @@ const Search: Component = () => {
     if (event.key === 'Enter' && searchString() !== '') {
       const orgId = window.location.pathname.match(/\/org\/([^/]+)/)?.[1];
       if (orgId) {
-        navigate(`/org/${orgId}/search?s=${encodeURIComponent(searchString())}`);
+        navigate(
+          `/org/${orgId}/search?s=${encodeURIComponent(searchString())}`
+        );
       } else {
         navigate(`/search?s=${encodeURIComponent(searchString())}`);
       }
