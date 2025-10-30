@@ -584,8 +584,15 @@
     }
   },
   "search": {
-    "title": "Recherche",
-    "description": "Ceci est la page de recherche. Vous pouvez trouver tous les résultats de recherche ici..."
+    "title": "Résultats de Recherche",
+    "description": "Ceci est la page de recherche. Vous pouvez trouver tous les résultats de recherche ici...",
+    "enterQuery": "Entrez une requête de recherche pour trouver des ressources dans votre organisation",
+    "noResults": "Aucun résultat trouvé pour \"{{query}}\"",
+    "error": "Une erreur s'est produite lors de la recherche. Veuillez réessayer.",
+    "showingPage": "Affichage de la page {{page}} sur {{total}}",
+    "resultsFor": "Résultats pour \"{{query}}\"",
+    "foundResults": "{{count}} résultat(s) trouvé(s)",
+    "noResultsTitle": "Aucun Résultat Trouvé"
   },
   "permissions": {
     "noPermission": "Vous n'avez pas la permission de {{action}} {{resource}}",

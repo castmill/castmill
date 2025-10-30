@@ -572,8 +572,15 @@
     }
   },
   "search": {
-    "title": "搜索",
-    "description": "这是搜索页面。您可以在这里找到所有搜索结果..."
+    "title": "搜索结果",
+    "description": "这是搜索页面。您可以在这里找到所有搜索结果...",
+    "enterQuery": "输入搜索查询以查找组织中的资源",
+    "noResults": "未找到\"{{query}}\"的结果",
+    "error": "搜索时发生错误。请重试。",
+    "showingPage": "显示第 {{page}} 页，共 {{total}} 页",
+    "resultsFor": "\"{{query}}\"的结果",
+    "foundResults": "找到 {{count}} 个结果",
+    "noResultsTitle": "未找到结果"
   },
   "permissions": {
     "noPermission": "您没有权限{{action}}{{resource}}",

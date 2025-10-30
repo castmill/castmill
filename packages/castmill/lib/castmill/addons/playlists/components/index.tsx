@@ -8,6 +8,7 @@ import {
   createSignal,
   Show,
   onMount,
+  untrack,
   onCleanup,
   on,
 } from 'solid-js';
@@ -41,7 +42,7 @@ import './playlists.scss';
 import { PlaylistView } from './playlist-view';
 import { AddonComponentProps } from '../../common/interfaces/addon-store';
 import { PlaylistAddForm, AspectRatio } from './playlist-add-form';
-import { useTeamFilter } from '../../common/hooks';
+import { useTeamFilter, useModalFromUrl } from '../../common/hooks';
 import { ASPECT_RATIO_OPTIONS } from '../constants';
 import {
   validateCustomRatioField,
@@ -54,6 +55,52 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
   const [currentPlaylist, setCurrentPlaylist] = createSignal<JsonPlaylist>();
   const [showModal, setShowModal] = createSignal(false);
   const [showRenameModal, setShowRenameModal] = createSignal(false);
+
+  // Create a derived signal from props.params to make it reactive
+  // Access props.params[0] directly to maintain reactivity
+  const itemIdFromUrl = () => {
+    if (!props.params) return undefined;
+    return props.params[0]?.itemId;
+  };
+
+  // Function to close the modal and update URL
+  const closeModalAndClearUrl = () => {
+    // Clear URL FIRST (before animation starts) for immediate feedback
+    if (props.params) {
+      const [, setSearchParams] = props.params;
+      setSearchParams({ itemId: undefined }, { replace: true });
+    }
+
+    // Then close modal (triggers 300ms animation)
+    setShowModal(false);
+  };
+
+  // Helper function to open modal for a given itemId
+  const openModalFromItemId = (itemId: string) => {
+    const currentData = data();
+
+    // First check if item is in current page data
+    const playlist = currentData.find((p) => String(p.id) === String(itemId));
+    if (playlist) {
+      setCurrentPlaylist(playlist);
+      setShowModal(true);
+    } else if (currentData.length > 0 && props.store.organizations.selectedId) {
+      // Item not in current page - fetch it by ID
+      PlaylistsService.getPlaylist(
+        props.store.env.baseUrl,
+        props.store.organizations.selectedId,
+        Number(itemId)
+      )
+        .then((fetchedPlaylist) => {
+          setCurrentPlaylist(fetchedPlaylist);
+          setShowModal(true);
+        })
+        .catch((error) => {
+          console.error('Failed to fetch playlist by ID:', error);
+          // Silently fail - item might not exist, be deleted, or user has no access
+        });
+    }
+  };
 
   const { teams, selectedTeamId, setSelectedTeamId } = useTeamFilter({
     baseUrl: props.store.env.baseUrl,
@@ -79,6 +126,14 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
       ];
     return allowedActions?.includes(action as any) ?? false;
   };
+
+  // Sync modal state with URL for shareable deep links and browser navigation
+  useModalFromUrl({
+    getItemIdFromUrl: itemIdFromUrl,
+    isModalOpen: () => showModal(),
+    closeModal: closeModalAndClearUrl,
+    openModal: openModalFromItemId,
+  });
 
   const [quota, setQuota] = createSignal<ResourceQuota | null>(null);
   const [quotaLoading, setQuotaLoading] = createSignal(false);
@@ -252,12 +307,26 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
 
   // Function to open the modal
   const openModal = (item: JsonPlaylist) => {
+    // Open modal immediately
     setCurrentPlaylist(item);
     setShowModal(true);
+
+    // Also update URL for shareability (use replace to avoid polluting browser history)
+    if (props.params) {
+      const [searchParams, setSearchParams] = props.params;
+      setSearchParams({ itemId: String(item.id) }, { replace: true });
+    }
   };
 
   // Function to close the modal and remove blur
   const closeModal = () => {
+    // Clear URL FIRST (before animation starts) for immediate feedback
+    if (props.params) {
+      const [, setSearchParams] = props.params;
+      setSearchParams({ itemId: undefined }, { replace: true });
+    }
+
+    // Then close modal (triggers 300ms animation)
     setShowModal(false);
   };
 
@@ -896,8 +965,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
           defaultRowAction: {
             icon: BsEye,
             handler: (item: JsonPlaylist) => {
-              setCurrentPlaylist(item);
-              setShowModal(true);
+              openModal(item);
             },
             label: t('common.view'),
           },
