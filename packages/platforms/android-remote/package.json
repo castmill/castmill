@@ -1,0 +1,13 @@
+{
+  "name": "@castmill/android-remote",
+  "version": "1.0.0",
+  "description": "Castmill Android Remote Control Service",
+  "main": "index.js",
+  "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "build": "cd android && ./gradlew build"
+  },
+  "author": "Castmill AB",
+  "license": "AGPL-3.0-or-later"
+}
