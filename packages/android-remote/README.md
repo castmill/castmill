@@ -84,6 +84,46 @@ This service is designed to run on Android devices alongside the Castmill digita
 - WebSocket connections should be secured with authentication tokens
 - Network traffic should be encrypted (WSS protocol)
 
+## Device Identification
+
+### DeviceUtils
+
+The `DeviceUtils` class provides device-specific utility functions, including unique device identification.
+
+#### getDeviceId()
+
+Returns the unique device identifier, identical to what Capacitor's `Device.getId()` returns in the main Android player application.
+
+**Original Implementation Source:**
+- **Capacitor Device Plugin**: `@capacitor/device` npm package (version 6.0.1+)
+- **Used in Main Player**: `packages/platforms/android-player/src/ts/classes/android-machine.ts`
+  - Method: `getMachineGUID()` calls `Device.getId()`
+  - Returns: `deviceId.identifier`
+
+**Implementation Details:**
+- Uses `Settings.Secure.ANDROID_ID` for device identification
+- Returns a 64-bit number as a hexadecimal string
+- Remains constant for the lifetime of the device's operating system
+- Resets only on factory reset
+- Returns empty string if unavailable or on error
+
+**Location in this workspace:**
+- **Implementation**: `packages/android-remote/android/app/src/main/java/com/castmill/androidremote/DeviceUtils.kt`
+- **Tests**: `packages/android-remote/android/app/src/test/java/com/castmill/androidremote/DeviceUtilsTest.kt`
+
+**Usage Example:**
+```kotlin
+val deviceId = DeviceUtils.getDeviceId(context)
+// Returns: "1234567890abcdef" (16-character hex string)
+```
+
+**Testing:**
+Run the unit tests to verify the implementation:
+```bash
+cd android
+./gradlew test
+```
+
 ## Development
 
 The project is structured as a Yarn workspace within the Castmill monorepo:
@@ -96,9 +136,13 @@ packages/platforms/android-remote/
 │   │   │   ├── java/com/castmill/androidremote/
 │   │   │   │   ├── MainActivity.kt
 │   │   │   │   ├── RemoteControlService.kt
-│   │   │   │   └── RemoteAccessibilityService.kt
+│   │   │   │   ├── RemoteAccessibilityService.kt
+│   │   │   │   └── DeviceUtils.kt           # Device identification utilities
 │   │   │   ├── res/     # Android resources
 │   │   │   └── AndroidManifest.xml
+│   │   ├── src/test/    # Unit tests
+│   │   │   └── java/com/castmill/androidremote/
+│   │   │       └── DeviceUtilsTest.kt       # DeviceUtils tests
 │   │   └── build.gradle
 │   ├── build.gradle     # Root build configuration
 │   ├── settings.gradle
