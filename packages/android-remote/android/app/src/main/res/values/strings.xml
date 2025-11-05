@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Castmill Remote</string>
+    <string name="accessibility_service_description">Castmill Remote Control Service allows remote control of touch and key events on this device.</string>
+</resources>

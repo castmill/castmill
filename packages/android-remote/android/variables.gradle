@@ -1,0 +1,15 @@
+ext {
+    minSdkVersion = 26
+    compileSdkVersion = 34
+    targetSdkVersion = 34
+    kotlinVersion = '1.9.20'
+    androidxActivityVersion = '1.8.0'
+    androidxAppCompatVersion = '1.6.1'
+    androidxCoreVersion = '1.12.0'
+    androidxLifecycleVersion = '2.7.0'
+    kotlinxSerializationVersion = '1.6.2'
+    okhttpVersion = '4.12.0'
+    junitVersion = '4.13.2'
+    androidxJunitVersion = '1.1.5'
+    androidxEspressoCoreVersion = '3.5.1'
+}
