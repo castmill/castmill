@@ -127,9 +127,9 @@ fun testGetDeviceId_matchesCapacitorBehavior() {
 | Consistency | Same value on each call | Same value on each call | ✅ Yes |
 | Error Handling | Graceful | Graceful | ✅ Yes |
 
-## Usage Example
+## Usage Examples
 
-### In Main Android Player (Capacitor)
+### Basic Usage: In Main Android Player (Capacitor)
 
 ```typescript
 // TypeScript code in android-player
@@ -137,7 +137,7 @@ const deviceId = await Device.getId();
 console.log(deviceId.identifier); // e.g., "1234567890abcdef"
 ```
 
-### In Android Remote
+### Basic Usage: In Android Remote
 
 ```kotlin
 // Kotlin code in android-remote
@@ -146,6 +146,61 @@ println(deviceId) // e.g., "1234567890abcdef"
 ```
 
 Both will print the **exact same device ID** because they use the same underlying Android API.
+
+### Example: Send Device ID to Backend
+
+```kotlin
+/**
+ * Example: Get device ID and send it to backend
+ */
+fun sendDeviceIdToBackend(context: Context) {
+    // Get the unique device identifier
+    val deviceId = DeviceUtils.getDeviceId(context)
+    
+    // The deviceId can now be sent to the backend to identify which
+    // player's android-remote is connected
+    println("Device ID: $deviceId")
+    
+    // Example: Send to backend via WebSocket
+    websocket.send(json {
+        "type" = "device_info"
+        "deviceId" = deviceId
+    })
+}
+```
+
+### Example: Use Device ID for Logging
+
+```kotlin
+/**
+ * Example: Use device ID for logging
+ */
+fun useInLogging(context: Context) {
+    val deviceId = DeviceUtils.getDeviceId(context)
+    Log.i("AndroidRemote", "Android Remote started on device: $deviceId")
+}
+```
+
+### Example: Verify Capacitor Compatibility
+
+```kotlin
+/**
+ * Example: Verify device ID matches Capacitor behavior
+ * 
+ * This demonstrates that our getDeviceId() returns the same value
+ * as Capacitor's Device.getId() would return.
+ */
+fun verifyCapacitorCompatibility(context: Context) {
+    val ourDeviceId = DeviceUtils.getDeviceId(context)
+    
+    // In the main Android player app, Capacitor would return:
+    // const deviceId = await Device.getId();
+    // return deviceId.identifier;
+    //
+    // Both would return the same Settings.Secure.ANDROID_ID value
+    
+    println("Device ID (identical to Capacitor): $ourDeviceId")
+}
 
 ## Backend Integration
 
