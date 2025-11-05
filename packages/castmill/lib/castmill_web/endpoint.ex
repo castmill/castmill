@@ -43,6 +43,14 @@ defmodule CastmillWeb.Endpoint do
     ]
   )
 
+  # Socket used for remote control sessions (devices and dashboard RC windows)
+  socket("/ws", CastmillWeb.RcSocket,
+    websocket: [
+      check_origin: false,
+      connect_info: [:peer_data, :trace_context_headers, :x_headers, :uri]
+    ]
+  )
+
   # Serve at "/" the static files from "priv/static" directory.
   #
   # You should set gzip to true if you are running phx.digest

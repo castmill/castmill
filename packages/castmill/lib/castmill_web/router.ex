@@ -288,6 +288,11 @@ defmodule CastmillWeb.Router do
     # Endpoint to remove a channel from a device in the dashboard scope
     delete("/devices/:device_id/channels/:channel_id", DeviceController, :remove_channel)
 
+    # Remote control session routes
+    post("/devices/:device_id/rc/sessions", RcSessionController, :create)
+    post("/rc/sessions/:session_id/stop", RcSessionController, :stop)
+    get("/devices/:device_id/rc/status", RcSessionController, :status)
+
     # Notification routes
     get("/notifications", NotificationController, :index)
     get("/notifications/unread_count", NotificationController, :unread_count)
