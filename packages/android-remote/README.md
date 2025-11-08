@@ -15,19 +15,30 @@ This service enables:
 
 ## Technical Architecture
 
+## Technical Architecture
+
 ### Core Components
 
 1. **MainActivity**: Entry point and permission management
    - Handles MediaProjection permissions
    - Guides users through AccessibilityService setup
-2. **RemoteControlService**: Foreground service for screen capture
-   - Manages MediaProjection for screen recording
-   - Uses MediaCodec for efficient video encoding
-   - Maintains WebSocket connection for control commands
-3. **RemoteAccessibilityService**: Accessibility service for input injection
+2. **RemoteControlService**: Foreground service for remote control
+   - Maintains WebSocket connection to backend
+   - Manages device identification and authentication
+   - Runs as compliant Android 10+ foreground service
+   - Shows persistent notification with connection status
+3. **WebSocketManager**: WebSocket client implementation
+   - Connects to backend using Phoenix protocol
+   - Handles automatic reconnection with exponential backoff
+   - Routes control events and device events
+   - Maintains heartbeat to keep connection alive
+4. **RemoteAccessibilityService**: Accessibility service for input injection
    - Injects touch events and gestures
    - Performs global actions (back, home, recents)
    - Enables remote control of the device UI
+5. **DeviceUtils**: Device identification utilities
+   - Returns unique device identifier (same as main player)
+   - Uses Settings.Secure.ANDROID_ID for consistency
 
 ### Dependencies
 
@@ -76,6 +87,56 @@ To build a release APK:
 ## Usage
 
 This service is designed to run on Android devices alongside the Castmill digital signage player. It provides remote access capabilities for device management and troubleshooting.
+
+### Starting the Service
+
+The RemoteControlService can be started with the following parameters:
+
+```kotlin
+val intent = Intent(context, RemoteControlService::class.java).apply {
+    putExtra(RemoteControlService.EXTRA_SESSION_ID, sessionId)
+    putExtra(RemoteControlService.EXTRA_DEVICE_TOKEN, deviceToken)
+}
+
+if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+    startForegroundService(intent)
+} else {
+    startService(intent)
+}
+```
+
+**Required Parameters**:
+- `EXTRA_SESSION_ID`: RC session ID from backend
+- `EXTRA_DEVICE_TOKEN`: Device authentication token (persisted after first use)
+
+The service will:
+1. Compute the device ID using `DeviceUtils.getDeviceId()`
+2. Connect to the backend WebSocket at `device_rc:#{device_id}`
+3. Authenticate with the provided token and session ID
+4. Show a persistent notification indicating connection status
+5. Automatically reconnect if connection is lost
+
+### Backend Configuration
+
+The backend URL is configured in `res/values/strings.xml`:
+
+```xml
+<string name="backend_url">https://api.castmill.com</string>
+```
+
+For development, create `res/values-debug/strings.xml` with a different URL.
+
+### WebSocket Protocol
+
+The service uses the Phoenix WebSocket protocol to communicate with the backend:
+
+- **Endpoint**: `wss://api.castmill.com/socket/websocket`
+- **Channel**: `device_rc:#{device_id}`
+- **Auth**: Token and session ID sent on join
+- **Heartbeat**: Every 30 seconds
+- **Reconnect**: Automatic with exponential backoff (1s to 60s)
+
+See [IMPLEMENTATION.md](IMPLEMENTATION.md) for detailed documentation.
 
 ### Security Considerations
 
@@ -135,18 +196,21 @@ packages/platforms/android-remote/
 │   │   ├── src/main/    # Kotlin source code
 │   │   │   ├── java/com/castmill/androidremote/
 │   │   │   │   ├── MainActivity.kt
-│   │   │   │   ├── RemoteControlService.kt
+│   │   │   │   ├── RemoteControlService.kt     # Foreground service with WebSocket
+│   │   │   │   ├── WebSocketManager.kt         # Phoenix WebSocket client
 │   │   │   │   ├── RemoteAccessibilityService.kt
-│   │   │   │   └── DeviceUtils.kt           # Device identification utilities
+│   │   │   │   └── DeviceUtils.kt              # Device identification utilities
 │   │   │   ├── res/     # Android resources
 │   │   │   └── AndroidManifest.xml
 │   │   ├── src/test/    # Unit tests
 │   │   │   └── java/com/castmill/androidremote/
-│   │   │       └── DeviceUtilsTest.kt       # DeviceUtils tests
+│   │   │       ├── DeviceUtilsTest.kt          # DeviceUtils tests
+│   │   │       └── RemoteControlServiceTest.kt  # Service tests
 │   │   └── build.gradle
 │   ├── build.gradle     # Root build configuration
 │   ├── settings.gradle
 │   └── variables.gradle # Version configuration
+├── IMPLEMENTATION.md    # Detailed implementation documentation
 ├── package.json
 └── README.md
 ```
