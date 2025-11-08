@@ -201,6 +201,7 @@ fun verifyCapacitorCompatibility(context: Context) {
     
     println("Device ID (identical to Capacitor): $ourDeviceId")
 }
+```
 
 ## Backend Integration
 
