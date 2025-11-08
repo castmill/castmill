@@ -79,7 +79,8 @@
     "selectImage": "Select an Image",
     "selectVideo": "Select a Video",
     "selectMedia": "Select a Media",
-    "youIndicator": "(you)"
+    "youIndicator": "(you)",
+    "no": "No"
   },
   "filters": {
     "teamLabel": "Team",
@@ -558,6 +559,23 @@
     "errors": {
       "setChannelFailed": "Failed to set device channel: {{error}}",
       "commandFailed": "An error occurred while processing your request"
+    },
+    "remoteControl": {
+      "title": "Remote Control",
+      "status": "Status",
+      "online": "Online",
+      "offline": "Offline",
+      "lastCheckIn": "Last Check-In",
+      "activeSession": "Active Session",
+      "now": "Now",
+      "sessionSettings": "Session Settings",
+      "resolution": "Resolution",
+      "fps": "FPS",
+      "auto": "Auto",
+      "startSession": "Start RC Session",
+      "sessionStarted": "Remote control session started",
+      "sessionStartError": "Failed to start remote control session: {{error}}",
+      "deviceOfflineError": "Cannot start session - device is offline"
     }
   },
   "validation": {

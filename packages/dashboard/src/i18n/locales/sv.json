@@ -79,7 +79,8 @@
     "selectMedia": "Välj ett media",
     "apply": "Tillämpa",
     "selectVideo": "Välj en video",
-    "offline": "Offline"
+    "offline": "Offline",
+    "no": "Nej"
   },
   "topbar": {
     "help": "Hjälp",
@@ -530,7 +531,24 @@
     "devicesRemovedSuccess": "{{count}} enhet(er) togs bort framgångsrikt",
     "errorRegisteringDevice": "Fel vid registrering av enhet: {{error}}",
     "errorRemovingDevice": "Fel vid borttagning av enhet {{name}}: {{error}}",
-    "errorRemovingDevices": "Fel vid borttagning av enheter: {{error}}"
+    "errorRemovingDevices": "Fel vid borttagning av enheter: {{error}}",
+    "remoteControl": {
+      "title": "Fjärrkontroll",
+      "status": "Status",
+      "online": "Online",
+      "offline": "Offline",
+      "lastCheckIn": "Senaste anslutning",
+      "activeSession": "Aktiv session",
+      "now": "Nu",
+      "sessionSettings": "Sessionsinställningar",
+      "resolution": "Upplösning",
+      "fps": "FPS",
+      "auto": "Automatisk",
+      "startSession": "Starta RC-session",
+      "sessionStarted": "Fjärrkontrollsession startad",
+      "sessionStartError": "Misslyckades starta fjärrkontrollsession: {{error}}",
+      "deviceOfflineError": "Kan inte starta session - enheten är offline"
+    }
   },
   "validation": {
     "fieldRequired": "Detta fält är obligatoriskt",

@@ -7,6 +7,7 @@ import { DeviceLogs } from './device-events';
 import { DeviceDetails, DeviceUpdate } from './device-details';
 import { DevicesService } from '../services/devices.service';
 import { DeviceCache } from './device-cache';
+import { RemoteControl } from './remote-control';
 
 // Optionally we should allow using protonmaps
 // https://protomaps.com/
@@ -64,6 +65,19 @@ const DeviceView: Component<{
             baseUrl={props.baseUrl}
             organizationId={props.organization_id}
             device={props.device}
+            t={t}
+          />
+        </div>
+      ),
+    },
+    {
+      title: t('devices.remoteControl.title'),
+      content: () => (
+        <div>
+          <RemoteControl
+            baseUrl={props.baseUrl}
+            device={props.device}
+            organizationId={props.organization_id}
             t={t}
           />
         </div>

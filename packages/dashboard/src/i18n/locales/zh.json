@@ -84,7 +84,8 @@
     "selectMedia": "选择媒体",
     "apply": "应用",
     "selectVideo": "选择视频",
-    "offline": "离线"
+    "offline": "离线",
+    "no": "否"
   },
   "topbar": {
     "help": "帮助",
@@ -535,7 +536,24 @@
     "devicesRemovedSuccess": "已成功删除{{count}}个设备",
     "errorRegisteringDevice": "注册设备时出错：{{error}}",
     "errorRemovingDevice": "删除设备{{name}}时出错：{{error}}",
-    "errorRemovingDevices": "删除设备时出错：{{error}}"
+    "errorRemovingDevices": "删除设备时出错：{{error}}",
+    "remoteControl": {
+      "title": "远程控制",
+      "status": "状态",
+      "online": "在线",
+      "offline": "离线",
+      "lastCheckIn": "最后登录",
+      "activeSession": "活动会话",
+      "now": "现在",
+      "sessionSettings": "会话设置",
+      "resolution": "分辨率",
+      "fps": "FPS",
+      "auto": "自动",
+      "startSession": "启动远程控制会话",
+      "sessionStarted": "远程控制会话已启动",
+      "sessionStartError": "启动远程控制会话失败：{{error}}",
+      "deviceOfflineError": "无法启动会话 - 设备离线"
+    }
   },
   "validation": {
     "fieldRequired": "此字段为必填项",

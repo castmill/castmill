@@ -85,7 +85,8 @@
     "offline": "Fuera de línea",
     "selectImage": "Seleccionar una imagen",
     "selectVideo": "Seleccionar un video",
-    "selectMedia": "Seleccionar un medio"
+    "selectMedia": "Seleccionar un medio",
+    "no": "No"
   },
   "topbar": {
     "help": "Ayuda",
@@ -559,7 +560,24 @@
     "devicesRemovedSuccess": "{{count}} dispositivo(s) eliminado(s) exitosamente",
     "errorRegisteringDevice": "Error al registrar el dispositivo: {{error}}",
     "errorRemovingDevice": "Error al eliminar el dispositivo {{name}}: {{error}}",
-    "errorRemovingDevices": "Error al eliminar los dispositivos: {{error}}"
+    "errorRemovingDevices": "Error al eliminar los dispositivos: {{error}}",
+    "remoteControl": {
+      "title": "Control Remoto",
+      "status": "Estado",
+      "online": "En línea",
+      "offline": "Desconectado",
+      "lastCheckIn": "Última conexión",
+      "activeSession": "Sesión activa",
+      "now": "Ahora",
+      "sessionSettings": "Configuración de sesión",
+      "resolution": "Resolución",
+      "fps": "FPS",
+      "auto": "Automático",
+      "startSession": "Iniciar sesión RC",
+      "sessionStarted": "Sesión de control remoto iniciada",
+      "sessionStartError": "Error al iniciar sesión de control remoto: {{error}}",
+      "deviceOfflineError": "No se puede iniciar sesión - dispositivo desconectado"
+    }
   },
   "validation": {
     "fieldRequired": "Este campo es obligatorio",

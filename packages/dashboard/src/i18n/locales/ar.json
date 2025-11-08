@@ -84,7 +84,8 @@
     "selectMedia": "اختر وسائط",
     "apply": "تطبيق",
     "selectVideo": "اختر فيديو",
-    "offline": "غير متصل"
+    "offline": "غير متصل",
+    "no": "لا"
   },
   "topbar": {
     "help": "مساعدة",
@@ -535,7 +536,24 @@
     "devicesRemovedSuccess": "تمت إزالة {{count}} جهاز بنجاح",
     "errorRegisteringDevice": "خطأ في تسجيل الجهاز: {{error}}",
     "errorRemovingDevice": "خطأ في إزالة الجهاز {{name}}: {{error}}",
-    "errorRemovingDevices": "خطأ في إزالة الأجهزة: {{error}}"
+    "errorRemovingDevices": "خطأ في إزالة الأجهزة: {{error}}",
+    "remoteControl": {
+      "title": "التحكم عن بعد",
+      "status": "الحالة",
+      "online": "متصل",
+      "offline": "غير متصل",
+      "lastCheckIn": "آخر اتصال",
+      "activeSession": "الجلسة النشطة",
+      "now": "الآن",
+      "sessionSettings": "إعدادات الجلسة",
+      "resolution": "الدقة",
+      "fps": "FPS",
+      "auto": "تلقائي",
+      "startSession": "بدء جلسة التحكم عن بعد",
+      "sessionStarted": "تم بدء جلسة التحكم عن بعد",
+      "sessionStartError": "فشل بدء جلسة التحكم عن بعد: {{error}}",
+      "deviceOfflineError": "لا يمكن بدء الجلسة - الجهاز غير متصل"
+    }
   },
   "validation": {
     "fieldRequired": "هذا الحقل مطلوب",
