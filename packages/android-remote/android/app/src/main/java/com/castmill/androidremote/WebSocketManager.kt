@@ -2,16 +2,15 @@ package com.castmill.androidremote
 
 import android.util.Log
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import okhttp3.OkHttpClient
@@ -109,10 +108,15 @@ class WebSocketManager(
     /**
      * Send a device event to the backend
      */
-    fun sendDeviceEvent(eventType: String, data: Map<String, Any>) {
+    fun sendDeviceEvent(eventType: String, data: Map<String, String>) {
         val payload = buildJsonObject {
             put("event_type", eventType)
-            put("data", Json.encodeToJsonElement(kotlinx.serialization.serializer(), data))
+            // Convert map to JsonObject
+            put("data", buildJsonObject {
+                data.forEach { (key, value) ->
+                    put(key, value)
+                }
+            })
         }
         sendMessage("device_event", payload)
     }
@@ -131,16 +135,12 @@ class WebSocketManager(
         }
 
         try {
-            val jsonString = json.encodeToString(kotlinx.serialization.json.JsonArray.serializer(), message)
+            val jsonString = json.encodeToString(JsonArray.serializer(), message)
             Log.d(TAG, "Sending message: $jsonString")
             webSocket?.send(jsonString)
         } catch (e: Exception) {
             Log.e(TAG, "Error sending message", e)
         }
-    }
-
-    private fun buildJsonArray(builder: kotlinx.serialization.json.JsonArrayBuilder.() -> Unit): kotlinx.serialization.json.JsonArray {
-        return kotlinx.serialization.json.buildJsonArray(builder)
     }
 
     private fun joinChannel() {
@@ -210,7 +210,7 @@ class WebSocketManager(
 
             try {
                 // Phoenix protocol: [join_ref, ref, topic, event, payload]
-                val array = json.decodeFromString<kotlinx.serialization.json.JsonArray>(text)
+                val array = json.decodeFromString<JsonArray>(text)
                 
                 if (array.size >= 5) {
                     val event = array[3].toString().trim('"')
