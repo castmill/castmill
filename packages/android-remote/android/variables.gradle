@@ -12,4 +12,5 @@ ext {
     junitVersion = '4.13.2'
     androidxJunitVersion = '1.1.5'
     androidxEspressoCoreVersion = '3.5.1'
+    robolectricVersion = '4.11.1'
 }
