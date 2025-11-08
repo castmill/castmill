@@ -2,6 +2,7 @@ package com.castmill.androidremote
 
 import android.content.Intent
 import android.media.projection.MediaProjectionManager
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import androidx.appcompat.app.AppCompatActivity
@@ -17,6 +18,7 @@ import kotlinx.coroutines.launch
 class MainActivity : AppCompatActivity() {
 
     companion object {
+        private const val TAG = "MainActivity"
         private const val REQUEST_MEDIA_PROJECTION = 1001
         private const val REQUEST_ACCESSIBILITY = 1002
     }
@@ -33,6 +35,10 @@ class MainActivity : AppCompatActivity() {
         // For now, this is a minimal setup
         
         checkPermissions()
+        
+        // Display device ID for debugging
+        val deviceId = DeviceUtils.getDeviceId(this)
+        android.util.Log.i(TAG, "Device ID: $deviceId")
     }
 
     /**
@@ -75,6 +81,26 @@ class MainActivity : AppCompatActivity() {
     private fun requestScreenCapture() {
         val captureIntent = mediaProjectionManager.createScreenCaptureIntent()
         startActivityForResult(captureIntent, REQUEST_MEDIA_PROJECTION)
+    }
+
+    /**
+     * Start the RemoteControlService with required parameters
+     * 
+     * This is a helper method that can be called when a session is initiated.
+     * In a real implementation, the session ID and device token would come from
+     * the backend or be configured through the UI.
+     */
+    private fun startRemoteControlService(sessionId: String, deviceToken: String) {
+        val intent = Intent(this, RemoteControlService::class.java).apply {
+            putExtra(RemoteControlService.EXTRA_SESSION_ID, sessionId)
+            putExtra(RemoteControlService.EXTRA_DEVICE_TOKEN, deviceToken)
+        }
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent)
+        } else {
+            startService(intent)
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
