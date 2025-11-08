@@ -46,7 +46,7 @@ agents/
 - *Coming soon: Player architecture, widget systems, platform integrations*
 
 #### Dashboard (`packages/dashboard/`)  
-- *Coming soon: Management interface, user workflows, admin features*
+- **[REMOTE-CONTROL.md](./packages/dashboard/REMOTE-CONTROL.md)** - Device remote control feature with WebSocket streaming
 
 #### UI Common (`packages/ui-common/`)
 - *Coming soon: Shared component library, design system*
