@@ -52,7 +52,7 @@ defmodule CastmillWeb.DeviceRcChannel do
     # Forward control events from RC window to device
     # These events come through PubSub from the RC window channel
     broadcast_from(socket, "control_event", payload)
-    {:noreply, socket}
+    {:reply, :ok, socket}
   end
 
   @impl true
@@ -66,7 +66,7 @@ defmodule CastmillWeb.DeviceRcChannel do
       %{event: "device_event", payload: payload}
     )
 
-    {:noreply, socket}
+    {:reply, :ok, socket}
   end
 
   @impl true

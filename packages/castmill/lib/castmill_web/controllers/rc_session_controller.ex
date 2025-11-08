@@ -16,7 +16,7 @@ defmodule CastmillWeb.RcSessionController do
   """
   def create(conn, %{"device_id" => device_id}) do
     # Get the current user from conn assigns
-    user_id = conn.assigns[:current_user][:id]
+    user_id = get_in(conn.assigns, [:current_user, :id])
 
     if is_nil(user_id) do
       conn
@@ -67,7 +67,7 @@ defmodule CastmillWeb.RcSessionController do
   POST /rc/sessions/:session_id/stop
   """
   def stop(conn, %{"session_id" => session_id}) do
-    user_id = conn.assigns[:current_user][:id]
+    user_id = get_in(conn.assigns, [:current_user, :id])
 
     if is_nil(user_id) do
       conn

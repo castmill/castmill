@@ -16,5 +16,6 @@ defmodule Castmill.Repo.Migrations.CreateRcSessions do
     create index(:rc_sessions, [:device_id])
     create index(:rc_sessions, [:user_id])
     create index(:rc_sessions, [:status])
+    create index(:rc_sessions, [:device_id, :status])
   end
 end

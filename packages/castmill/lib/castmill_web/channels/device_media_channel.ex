@@ -67,7 +67,7 @@ defmodule CastmillWeb.DeviceMediaChannel do
       %{event: "media_frame", payload: payload}
     )
 
-    {:noreply, socket}
+    {:reply, :ok, socket}
   end
 
   @impl true
@@ -81,7 +81,7 @@ defmodule CastmillWeb.DeviceMediaChannel do
       %{event: "media_metadata", payload: payload}
     )
 
-    {:noreply, socket}
+    {:reply, :ok, socket}
   end
 
   @impl true

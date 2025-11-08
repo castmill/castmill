@@ -11,7 +11,6 @@ defmodule CastmillWeb.RcWindowChannel do
   use CastmillWeb, :channel
 
   alias Castmill.Devices.RcSessions
-  alias Castmill.Accounts
 
   @impl true
   def join("rc_window:" <> session_id, _params, socket) do
@@ -55,7 +54,7 @@ defmodule CastmillWeb.RcWindowChannel do
       %{event: "control_event", payload: payload}
     )
 
-    {:noreply, socket}
+    {:reply, :ok, socket}
   end
 
   @impl true
@@ -69,7 +68,7 @@ defmodule CastmillWeb.RcWindowChannel do
       %{event: "request_metadata"}
     )
 
-    {:noreply, socket}
+    {:reply, :ok, socket}
   end
 
   # Handle messages from PubSub (from device channels)

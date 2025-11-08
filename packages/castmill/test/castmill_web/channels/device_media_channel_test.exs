@@ -5,6 +5,7 @@ defmodule CastmillWeb.DeviceMediaChannelTest do
   import Castmill.OrganizationsFixtures
   import Castmill.DevicesFixtures
   import Castmill.RcSessionsFixtures
+  import Castmill.AccountsFixtures
 
   alias Castmill.Devices.RcSessions
 
@@ -166,20 +167,5 @@ defmodule CastmillWeb.DeviceMediaChannelTest do
       assert_receive %{event: "media_stream_disconnected", device_id: device_id}
       assert device_id == device.id
     end
-  end
-
-  # Helper to create a user fixture with organization
-  defp user_fixture(attrs \\ %{}) do
-    organization_id = attrs[:organization_id] || raise "organization_id is required"
-    
-    {:ok, user} =
-      attrs
-      |> Enum.into(%{
-        email: "user#{System.unique_integer([:positive])}@example.com",
-        organization_id: organization_id
-      })
-      |> Castmill.Accounts.create_user()
-
-    user
   end
 end

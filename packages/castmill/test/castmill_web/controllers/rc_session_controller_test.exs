@@ -173,19 +173,4 @@ defmodule CastmillWeb.RcSessionControllerTest do
       assert %{"error" => "Device not found"} = json_response(conn, 404)
     end
   end
-
-  # Helper to create a user fixture with organization
-  defp user_fixture(attrs \\ %{}) do
-    organization_id = attrs[:organization_id] || raise "organization_id is required"
-    
-    {:ok, user} =
-      attrs
-      |> Enum.into(%{
-        email: "user#{System.unique_integer([:positive])}@example.com",
-        organization_id: organization_id
-      })
-      |> Castmill.Accounts.create_user()
-
-    user
-  end
 end
