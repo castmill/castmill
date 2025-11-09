@@ -6,11 +6,20 @@ import {
   Show,
 } from 'solid-js';
 import { useParams, useSearchParams } from '@solidjs/router';
+import { Channel } from 'phoenix';
 import { store } from '../../store';
 import { useI18n } from '../../i18n';
 import './remote-control-window.scss';
 
 type ConnectionState = 'connecting' | 'connected' | 'disconnected' | 'error';
+
+interface FramePayload {
+  data: string; // base64 encoded image
+}
+
+interface StatusPayload {
+  status: 'connected' | 'disconnected';
+}
 
 const RemoteControlWindow: Component = () => {
   const { t } = useI18n();
@@ -20,7 +29,7 @@ const RemoteControlWindow: Component = () => {
   const [connectionState, setConnectionState] =
     createSignal<ConnectionState>('connecting');
   const [errorMessage, setErrorMessage] = createSignal<string>('');
-  const [channel, setChannel] = createSignal<any>(null);
+  const [channel, setChannel] = createSignal<Channel | null>(null);
   const [canvasRef, setCanvasRef] = createSignal<HTMLCanvasElement | null>(
     null
   );
@@ -28,6 +37,29 @@ const RemoteControlWindow: Component = () => {
 
   const deviceId = params.id;
   const sessionId = searchParams.session;
+
+  // Helper function to calculate canvas coordinates
+  const getCanvasCoordinates = (e: MouseEvent, canvas: HTMLCanvasElement) => {
+    const rect = canvas.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * canvas.width;
+    const y = ((e.clientY - rect.top) / rect.height) * canvas.height;
+    return { x: Math.round(x), y: Math.round(y) };
+  };
+
+  // Throttle function for mouse move events
+  const throttle = <T extends (...args: any[]) => void>(
+    func: T,
+    delay: number
+  ): ((...args: Parameters<T>) => void) => {
+    let lastCall = 0;
+    return (...args: Parameters<T>) => {
+      const now = Date.now();
+      if (now - lastCall >= delay) {
+        lastCall = now;
+        func(...args);
+      }
+    };
+  };
 
   // Initialize canvas context
   createEffect(() => {
@@ -75,9 +107,22 @@ const RemoteControlWindow: Component = () => {
       });
 
     // Listen for video frames
-    rcChannel.on('frame', (payload: any) => {
+    rcChannel.on('frame', (payload: FramePayload) => {
       const context = ctx();
       if (context && payload.data) {
+        // Validate base64 data format
+        if (!/^[A-Za-z0-9+/=]+$/.test(payload.data)) {
+          console.error('Invalid frame data format');
+          return;
+        }
+
+        // Check size (10MB limit)
+        const estimatedSize = (payload.data.length * 3) / 4;
+        if (estimatedSize > 10 * 1024 * 1024) {
+          console.error('Frame data too large');
+          return;
+        }
+
         // payload.data is expected to be a base64 encoded image
         const img = new Image();
         img.onload = () => {
@@ -99,7 +144,7 @@ const RemoteControlWindow: Component = () => {
     });
 
     // Listen for connection status updates
-    rcChannel.on('status', (payload: any) => {
+    rcChannel.on('status', (payload: StatusPayload) => {
       console.log('RC status update:', payload);
       if (payload.status === 'disconnected') {
         setConnectionState('disconnected');
@@ -108,6 +153,11 @@ const RemoteControlWindow: Component = () => {
     });
 
     setChannel(rcChannel);
+
+    // Cleanup when effect re-runs
+    onCleanup(() => {
+      rcChannel.leave();
+    });
   });
 
   // Cleanup on unmount
@@ -118,52 +168,17 @@ const RemoteControlWindow: Component = () => {
     }
   });
 
-  // Handle keyboard input
-  const handleKeyDown = (e: KeyboardEvent) => {
-    const ch = channel();
-    if (ch && connectionState() === 'connected') {
-      e.preventDefault();
-      ch.push('input', {
-        type: 'keydown',
-        key: e.key,
-        code: e.code,
-        shift: e.shiftKey,
-        ctrl: e.ctrlKey,
-        alt: e.altKey,
-        meta: e.metaKey,
-      });
-    }
-  };
-
-  const handleKeyUp = (e: KeyboardEvent) => {
-    const ch = channel();
-    if (ch && connectionState() === 'connected') {
-      e.preventDefault();
-      ch.push('input', {
-        type: 'keyup',
-        key: e.key,
-        code: e.code,
-        shift: e.shiftKey,
-        ctrl: e.ctrlKey,
-        alt: e.altKey,
-        meta: e.metaKey,
-      });
-    }
-  };
-
   // Handle mouse input
   const handleMouseDown = (e: MouseEvent) => {
     const ch = channel();
     const canvas = canvasRef();
     if (ch && canvas && connectionState() === 'connected') {
-      const rect = canvas.getBoundingClientRect();
-      const x = ((e.clientX - rect.left) / rect.width) * canvas.width;
-      const y = ((e.clientY - rect.top) / rect.height) * canvas.height;
+      const { x, y } = getCanvasCoordinates(e, canvas);
 
       ch.push('input', {
         type: 'mousedown',
-        x: Math.round(x),
-        y: Math.round(y),
+        x,
+        y,
         button: e.button,
       });
     }
@@ -173,47 +188,41 @@ const RemoteControlWindow: Component = () => {
     const ch = channel();
     const canvas = canvasRef();
     if (ch && canvas && connectionState() === 'connected') {
-      const rect = canvas.getBoundingClientRect();
-      const x = ((e.clientX - rect.left) / rect.width) * canvas.width;
-      const y = ((e.clientY - rect.top) / rect.height) * canvas.height;
+      const { x, y } = getCanvasCoordinates(e, canvas);
 
       ch.push('input', {
         type: 'mouseup',
-        x: Math.round(x),
-        y: Math.round(y),
+        x,
+        y,
         button: e.button,
       });
     }
   };
 
-  const handleMouseMove = (e: MouseEvent) => {
+  const handleMouseMove = throttle((e: MouseEvent) => {
     const ch = channel();
     const canvas = canvasRef();
     if (ch && canvas && connectionState() === 'connected') {
-      const rect = canvas.getBoundingClientRect();
-      const x = ((e.clientX - rect.left) / rect.width) * canvas.width;
-      const y = ((e.clientY - rect.top) / rect.height) * canvas.height;
+      const { x, y } = getCanvasCoordinates(e, canvas);
 
       ch.push('input', {
         type: 'mousemove',
-        x: Math.round(x),
-        y: Math.round(y),
+        x,
+        y,
       });
     }
-  };
+  }, 16); // ~60fps
 
   const handleClick = (e: MouseEvent) => {
     const ch = channel();
     const canvas = canvasRef();
     if (ch && canvas && connectionState() === 'connected') {
-      const rect = canvas.getBoundingClientRect();
-      const x = ((e.clientX - rect.left) / rect.width) * canvas.width;
-      const y = ((e.clientY - rect.top) / rect.height) * canvas.height;
+      const { x, y } = getCanvasCoordinates(e, canvas);
 
       ch.push('input', {
         type: 'click',
-        x: Math.round(x),
-        y: Math.round(y),
+        x,
+        y,
         button: e.button,
       });
     }
@@ -222,6 +231,38 @@ const RemoteControlWindow: Component = () => {
   // Attach keyboard listeners to window
   createEffect(() => {
     if (connectionState() === 'connected') {
+      const handleKeyDown = (e: KeyboardEvent) => {
+        const ch = channel();
+        if (ch && connectionState() === 'connected') {
+          e.preventDefault();
+          ch.push('input', {
+            type: 'keydown',
+            key: e.key,
+            code: e.code,
+            shift: e.shiftKey,
+            ctrl: e.ctrlKey,
+            alt: e.altKey,
+            meta: e.metaKey,
+          });
+        }
+      };
+
+      const handleKeyUp = (e: KeyboardEvent) => {
+        const ch = channel();
+        if (ch && connectionState() === 'connected') {
+          e.preventDefault();
+          ch.push('input', {
+            type: 'keyup',
+            key: e.key,
+            code: e.code,
+            shift: e.shiftKey,
+            ctrl: e.ctrlKey,
+            alt: e.altKey,
+            meta: e.metaKey,
+          });
+        }
+      };
+
       window.addEventListener('keydown', handleKeyDown);
       window.addEventListener('keyup', handleKeyUp);
 
@@ -308,6 +349,8 @@ const RemoteControlWindow: Component = () => {
               onMouseMove={handleMouseMove}
               onClick={handleClick}
               tabIndex={0}
+              role="img"
+              aria-label={t('remoteControl.window.canvasLabel')}
             />
           </div>
         </Show>

@@ -218,10 +218,10 @@ render(() => {
             {/* Remote Control Window - fullscreen without App wrapper */}
             <Route
               path="/org/:orgId/devices/:id/remote-control"
-              component={(props: any) => (
+              component={() => (
                 <Suspense fallback={<LoadingFallback />}>
                   <ProtectedRoute>
-                    {(addons) => <RemoteControlWindow {...props} />}
+                    {(addons) => <RemoteControlWindow />}
                   </ProtectedRoute>
                 </Suspense>
               )}

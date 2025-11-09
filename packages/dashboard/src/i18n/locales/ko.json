@@ -564,7 +564,8 @@
         "errorHint": "이 창을 닫고 새 세션을 시작해 주세요",
         "missingParams": "세션 또는 장치 매개변수가 누락되었습니다",
         "connectionError": "연결 오류: {{error}}",
-        "connectionTimeout": "연결 시간 초과 - 다시 시도해 주세요"
+        "connectionTimeout": "연결 시간 초과 - 다시 시도해 주세요",
+        "canvasLabel": "원격 장치 화면"
       }
     }
   },

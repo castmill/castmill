@@ -564,7 +564,8 @@
         "errorHint": "请关闭此窗口并尝试启动新会话",
         "missingParams": "缺少会话或设备参数",
         "connectionError": "连接错误：{{error}}",
-        "connectionTimeout": "连接超时 - 请重试"
+        "connectionTimeout": "连接超时 - 请重试",
+        "canvasLabel": "远程设备屏幕"
       }
     }
   },

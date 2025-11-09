@@ -576,7 +576,8 @@
         "errorHint": "Veuillez fermer cette fenêtre et essayer de démarrer une nouvelle session",
         "missingParams": "Paramètres de session ou d'appareil manquants",
         "connectionError": "Erreur de connexion: {{error}}",
-        "connectionTimeout": "Délai de connexion dépassé - veuillez réessayer"
+        "connectionTimeout": "Délai de connexion dépassé - veuillez réessayer",
+        "canvasLabel": "Écran de l'appareil distant"
       }
     }
   },

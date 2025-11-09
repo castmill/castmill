@@ -565,7 +565,8 @@
         "errorHint": "このウィンドウを閉じて新しいセッションを開始してください",
         "missingParams": "セッションまたはデバイスのパラメータがありません",
         "connectionError": "接続エラー：{{error}}",
-        "connectionTimeout": "接続タイムアウト - もう一度お試しください"
+        "connectionTimeout": "接続タイムアウト - もう一度お試しください",
+        "canvasLabel": "リモートデバイス画面"
       }
     }
   },

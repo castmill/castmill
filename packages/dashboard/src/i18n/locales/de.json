@@ -582,7 +582,8 @@
         "errorHint": "Bitte schließen Sie dieses Fenster und versuchen Sie, eine neue Sitzung zu starten",
         "missingParams": "Fehlende Sitzungs- oder Geräteparameter",
         "connectionError": "Verbindungsfehler: {{error}}",
-        "connectionTimeout": "Verbindungszeitüberschreitung - bitte erneut versuchen"
+        "connectionTimeout": "Verbindungszeitüberschreitung - bitte erneut versuchen",
+        "canvasLabel": "Ferngerätebildschirm"
       }
     }
   },

@@ -559,7 +559,8 @@
         "errorHint": "Stäng detta fönster och försök starta en ny session",
         "missingParams": "Saknar sessions- eller enhetsparametrar",
         "connectionError": "Anslutningsfel: {{error}}",
-        "connectionTimeout": "Anslutningen överskred tidsgränsen - försök igen"
+        "connectionTimeout": "Anslutningen överskred tidsgränsen - försök igen",
+        "canvasLabel": "Fjärrenhets skärm"
       }
     }
   },
