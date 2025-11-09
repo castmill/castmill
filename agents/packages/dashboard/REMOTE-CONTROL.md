@@ -63,6 +63,64 @@ Makes a POST request to `/dashboard/devices/{deviceId}/rc/sessions` with resolut
 
 The Remote Control tab is added to the device details tabs array, positioned after the Channels tab and before the Preview tab. This provides quick access to remote control functionality.
 
+### RemoteControlWindow Component
+
+**Location**: `packages/dashboard/src/pages/remote-control-window/remote-control-window.tsx`
+
+The RemoteControlWindow component provides a fullscreen interface for active remote control sessions. It is opened in a popup window when a user starts a remote control session from the RemoteControl component.
+
+#### Key Features
+
+1. **WebSocket Connection**
+   - Connects to Phoenix channel: `rc:{sessionId}`
+   - Joins channel with device_id parameter
+   - Handles connection states: connecting, connected, disconnected, error
+   - Automatic cleanup on component unmount
+
+2. **Video Stream Display**
+   - HTML5 canvas element for rendering device screen
+   - Receives frames via WebSocket as base64-encoded JPEG images
+   - Auto-resizes canvas to match frame dimensions
+   - Fullscreen display with centered canvas
+
+3. **Input Handling**
+   - **Keyboard Events**: Captures keydown/keyup with modifiers (shift, ctrl, alt, meta)
+   - **Mouse Events**: Captures click, mousedown, mouseup, mousemove
+   - Coordinates scaled to device resolution
+   - Events sent through WebSocket to device
+
+4. **Status Indicators**
+   - Visual connection status (connecting/connected/disconnected/error)
+   - Animated status indicator with color coding
+   - Device ID display in header
+   - Error messages with hints for recovery
+
+#### Component Architecture
+
+```typescript
+type ConnectionState = 'connecting' | 'connected' | 'disconnected' | 'error';
+
+// State Management
+const [connectionState, setConnectionState] = createSignal<ConnectionState>('connecting');
+const [channel, setChannel] = createSignal<any>(null);
+const [canvasRef, setCanvasRef] = createSignal<HTMLCanvasElement | null>(null);
+const [ctx, setCtx] = createSignal<CanvasRenderingContext2D | null>(null);
+
+// WebSocket Events Handled
+- 'frame': Receives and renders video frames
+- 'status': Updates connection status
+- 'input': Sends keyboard/mouse events to device
+```
+
+#### Styling
+
+**Location**: `packages/dashboard/src/pages/remote-control-window/remote-control-window.scss`
+
+- Fullscreen dark theme optimized for viewing device screens
+- Status indicators with color-coded animations
+- Responsive canvas scaling
+- Professional error states
+
 ## Internationalization (i18n)
 
 All user-facing text is localized using the i18n system with support for 9 languages:
@@ -98,7 +156,20 @@ Located in `packages/dashboard/src/i18n/locales/{lang}.json`:
       "startSession": "Start RC Session",
       "sessionStarted": "Remote control session started",
       "sessionStartError": "Failed to start remote control session: {{error}}",
-      "deviceOfflineError": "Cannot start session - device is offline"
+      "deviceOfflineError": "Cannot start session - device is offline",
+      "window": {
+        "connecting": "Connecting",
+        "connected": "Connected",
+        "disconnected": "Disconnected",
+        "error": "Error",
+        "device": "Device",
+        "connectingMessage": "Connecting to device...",
+        "deviceDisconnected": "Device has been disconnected",
+        "errorHint": "Please close this window and try starting a new session",
+        "missingParams": "Missing session or device parameters",
+        "connectionError": "Connection error: {{error}}",
+        "connectionTimeout": "Connection timeout - please try again"
+      }
     }
   },
   "common": {
@@ -120,8 +191,9 @@ The feature properly maintains organization context in URLs following the patter
 **Location**: 
 - `packages/castmill/lib/castmill/addons/devices/components/remote-control.test.tsx`
 - `packages/castmill/lib/castmill/addons/devices/services/devices.service.test.ts`
+- `packages/dashboard/src/pages/remote-control-window/remote-control-window.test.tsx`
 
-#### Test Coverage
+#### Test Coverage - RemoteControl Component
 
 1. **Component Rendering**
    - Status section for online/offline devices
@@ -144,15 +216,43 @@ The feature properly maintains organization context in URLs following the patter
    - Error handling for offline devices
    - Network error handling
 
+#### Test Coverage - RemoteControlWindow Component
+
+**Location**: `packages/dashboard/src/pages/remote-control-window/remote-control-window.test.tsx`
+
+1. **Basic Rendering** (3 tests)
+   - Component renders correctly
+   - Device ID displayed in header
+   - Shows connecting status initially
+
+2. **WebSocket Connection** (3 tests)
+   - Joins RC channel with correct parameters
+   - Displays connected status after successful join
+   - Leaves channel on cleanup
+
+3. **Video Frame Display** (3 tests)
+   - Renders canvas element when connected
+   - Sets up frame listener on channel
+   - Sets up status listener on channel
+
+4. **Input Handling** (3 tests)
+   - Sends keyboard input when keys are pressed
+   - Sends mouse click input when canvas is clicked
+   - Sends mouse move input when mouse moves over canvas
+
 ### Running Tests
 
 ```bash
-cd packages/castmill
-# Run all device addon tests
-yarn test devices
+# Run all dashboard tests
+cd packages/dashboard
+yarn test --run
 
 # Run specific test file
-yarn test remote-control.test.tsx
+yarn test remote-control-window.test.tsx --run
+
+# Run device addon tests
+cd packages/castmill
+yarn test devices
 ```
 
 ## Backend Requirements
@@ -165,7 +265,57 @@ The feature requires the backend to implement:
    - Authorization: User must have device access
 
 2. **WebSocket endpoint** for real-time remote control streaming
-   - Connection URL provided in session creation response
+   - Phoenix Channel: `rc:{sessionId}`
+   - Join parameters: `{ device_id: string }`
+
+### WebSocket Protocol
+
+#### Messages from Server to Client
+
+1. **frame** - Video frame data
+   ```json
+   {
+     "data": "base64-encoded-jpeg-image"
+   }
+   ```
+
+2. **status** - Connection status updates
+   ```json
+   {
+     "status": "disconnected" | "connected"
+   }
+   ```
+
+#### Messages from Client to Server
+
+**input** - User input events
+```json
+// Keyboard events
+{
+  "type": "keydown" | "keyup",
+  "key": "Enter",
+  "code": "Enter",
+  "shift": false,
+  "ctrl": false,
+  "alt": false,
+  "meta": false
+}
+
+// Mouse events
+{
+  "type": "click" | "mousedown" | "mouseup",
+  "x": 100,
+  "y": 200,
+  "button": 0
+}
+
+// Mouse move events
+{
+  "type": "mousemove",
+  "x": 50,
+  "y": 75
+}
+```
 
 ## Security Considerations
 
