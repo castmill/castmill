@@ -2,4 +2,13 @@
 <resources>
     <string name="app_name">Castmill Remote</string>
     <string name="accessibility_service_description">Castmill Remote Control Service allows remote control of touch and key events on this device.</string>
+    
+    <!-- Backend configuration -->
+    <!--
+        Default backend URL for the Castmill API. This should match the backend
+        used by the Android player application. For development environments,
+        override this value by creating 'res/values-debug/strings.xml' with a
+        different backend_url. See IMPLEMENTATION.md for details.
+    -->
+    <string name="backend_url" translatable="false">https://api.castmill.io</string>
 </resources>
