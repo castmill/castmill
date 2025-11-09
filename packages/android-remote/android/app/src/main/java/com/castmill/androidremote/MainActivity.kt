@@ -5,6 +5,7 @@ import android.media.projection.MediaProjectionManager
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
@@ -38,7 +39,7 @@ class MainActivity : AppCompatActivity() {
         
         // Display device ID for debugging
         val deviceId = DeviceUtils.getDeviceId(this)
-        android.util.Log.i(TAG, "Device ID: $deviceId")
+        Log.i(TAG, "Device ID: $deviceId")
     }
 
     /**

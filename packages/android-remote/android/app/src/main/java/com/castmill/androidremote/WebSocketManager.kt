@@ -162,7 +162,7 @@ class WebSocketManager(
         stopHeartbeat()
         heartbeatJob = coroutineScope.launch {
             while (isActive && webSocket != null) {
-                sendMessage("heartbeat", buildJsonObject {})
+                sendMessage("phx_heartbeat", buildJsonObject {})
                 delay(HEARTBEAT_INTERVAL_MS)
             }
         }

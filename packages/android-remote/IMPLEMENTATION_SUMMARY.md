@@ -17,7 +17,7 @@ This document summarizes the implementation of RemoteService as a foreground ser
 - Matches Capacitor Device.getId() behavior
 
 ✅ **Implemented**: WebSocket Control Channel
-- Connects to backend at configurable URL (default: https://api.castmill.com)
+- Connects to backend at configurable URL (default: https://api.castmill.io)
 - Uses Phoenix WebSocket protocol
 - Channel: `device_rc:#{device_id}`
 - Authentication with device token and session ID

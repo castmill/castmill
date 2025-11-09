@@ -15,8 +15,6 @@ This service enables:
 
 ## Technical Architecture
 
-## Technical Architecture
-
 ### Core Components
 
 1. **MainActivity**: Entry point and permission management
@@ -121,7 +119,7 @@ The service will:
 The backend URL is configured in `res/values/strings.xml`:
 
 ```xml
-<string name="backend_url">https://api.castmill.com</string>
+<string name="backend_url">https://api.castmill.io</string>
 ```
 
 For development, create `res/values-debug/strings.xml` with a different URL.
@@ -130,7 +128,7 @@ For development, create `res/values-debug/strings.xml` with a different URL.
 
 The service uses the Phoenix WebSocket protocol to communicate with the backend:
 
-- **Endpoint**: `wss://api.castmill.com/socket/websocket`
+- **Endpoint**: `wss://api.castmill.io/socket/websocket`
 - **Channel**: `device_rc:#{device_id}`
 - **Auth**: Token and session ID sent on join
 - **Heartbeat**: Every 30 seconds

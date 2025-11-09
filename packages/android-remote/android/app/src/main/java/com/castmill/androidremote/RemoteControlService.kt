@@ -9,6 +9,7 @@ import android.content.Intent
 import android.media.projection.MediaProjection
 import android.os.Build
 import android.os.IBinder
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.lifecycleScope
@@ -74,7 +75,7 @@ class RemoteControlService : LifecycleService() {
                 connectWebSocket(sessionId, deviceToken)
             }
         } else {
-            android.util.Log.e(TAG, "Missing required parameters: sessionId=$sessionId, token=${deviceToken != null}, deviceId=$deviceId")
+            Log.e(TAG, "Missing required parameters: sessionId=$sessionId, token=${deviceToken != null}, deviceId=$deviceId")
             updateNotification("Error: Missing configuration")
         }
         

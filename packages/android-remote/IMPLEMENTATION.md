@@ -62,7 +62,7 @@ The RemoteService implementation consists of three main components:
 **Usage**:
 ```kotlin
 val wsManager = WebSocketManager(
-    baseUrl = "https://api.castmill.com",
+    baseUrl = "https://api.castmill.io",
     deviceId = deviceId,
     deviceToken = token,
     coroutineScope = lifecycleScope
@@ -120,7 +120,7 @@ val deviceId = DeviceUtils.getDeviceId(context)
 
 ### WebSocket Endpoint
 
-**URL**: `wss://api.castmill.com/socket/websocket` (or configured backend URL)
+**URL**: `wss://api.castmill.io/socket/websocket` (or configured backend URL)
 
 ### Channel Join
 
@@ -162,7 +162,7 @@ val deviceId = DeviceUtils.getDeviceId(context)
 **File**: `res/values/strings.xml`
 
 ```xml
-<string name="backend_url">https://api.castmill.com</string>
+<string name="backend_url">https://api.castmill.io</string>
 ```
 
 To override for development:
