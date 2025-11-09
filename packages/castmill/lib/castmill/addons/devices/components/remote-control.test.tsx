@@ -39,6 +39,19 @@ global.window.open = mockWindowOpen;
 describe('RemoteControl Component', () => {
   const baseUrl = 'http://test.com';
   const organizationId = 'org-123';
+  
+  const mockStore = {
+    i18n: {
+      formatDate: (date: Date) => date.toLocaleDateString(),
+      t: (key: string) => key,
+      tp: (key: string, count: number) => key,
+      formatNumber: (num: number) => num.toString(),
+      formatCurrency: (val: number, cur: string) => `${cur}${val}`,
+      locale: () => 'en',
+      setLocale: (locale: string) => {},
+    },
+  } as any;
+  
   const mockDeviceOnline: Device = {
     id: 'device-123',
     name: 'Test Device',
@@ -90,6 +103,7 @@ describe('RemoteControl Component', () => {
     it('should render status section for online device', () => {
       render(() => (
         <RemoteControl
+          store={mockStore}
           baseUrl={baseUrl}
           device={mockDeviceOnline}
           organizationId={organizationId}
@@ -106,6 +120,7 @@ describe('RemoteControl Component', () => {
     it('should render status section for offline device', () => {
       render(() => (
         <RemoteControl
+          store={mockStore}
           baseUrl={baseUrl}
           device={mockDeviceOffline}
           organizationId={organizationId}
@@ -120,6 +135,7 @@ describe('RemoteControl Component', () => {
     it('should render session settings section', () => {
       render(() => (
         <RemoteControl
+          store={mockStore}
           baseUrl={baseUrl}
           device={mockDeviceOnline}
           organizationId={organizationId}
@@ -136,6 +152,7 @@ describe('RemoteControl Component', () => {
     it('should render resolution selector with correct options', () => {
       render(() => (
         <RemoteControl
+          store={mockStore}
           baseUrl={baseUrl}
           device={mockDeviceOnline}
           organizationId={organizationId}
@@ -151,6 +168,7 @@ describe('RemoteControl Component', () => {
     it('should render FPS selector with correct options', () => {
       render(() => (
         <RemoteControl
+          store={mockStore}
           baseUrl={baseUrl}
           device={mockDeviceOnline}
           organizationId={organizationId}
@@ -168,6 +186,7 @@ describe('RemoteControl Component', () => {
     it('should enable start button for online device', () => {
       render(() => (
         <RemoteControl
+          store={mockStore}
           baseUrl={baseUrl}
           device={mockDeviceOnline}
           organizationId={organizationId}
@@ -182,6 +201,7 @@ describe('RemoteControl Component', () => {
     it('should disable start button for offline device', () => {
       render(() => (
         <RemoteControl
+          store={mockStore}
           baseUrl={baseUrl}
           device={mockDeviceOffline}
           organizationId={organizationId}
@@ -196,6 +216,7 @@ describe('RemoteControl Component', () => {
     it('should change resolution when selector is changed', async () => {
       render(() => (
         <RemoteControl
+          store={mockStore}
           baseUrl={baseUrl}
           device={mockDeviceOnline}
           organizationId={organizationId}
@@ -214,6 +235,7 @@ describe('RemoteControl Component', () => {
     it('should change FPS when selector is changed', async () => {
       render(() => (
         <RemoteControl
+          store={mockStore}
           baseUrl={baseUrl}
           device={mockDeviceOnline}
           organizationId={organizationId}
@@ -243,6 +265,7 @@ describe('RemoteControl Component', () => {
 
       render(() => (
         <RemoteControl
+          store={mockStore}
           baseUrl={baseUrl}
           device={mockDeviceOnline}
           organizationId={organizationId}
@@ -275,6 +298,7 @@ describe('RemoteControl Component', () => {
 
       render(() => (
         <RemoteControl
+          store={mockStore}
           baseUrl={baseUrl}
           device={mockDeviceOnline}
           organizationId={organizationId}
@@ -306,6 +330,7 @@ describe('RemoteControl Component', () => {
 
       render(() => (
         <RemoteControl
+          store={mockStore}
           baseUrl={baseUrl}
           device={mockDeviceOnline}
           organizationId={organizationId}
@@ -340,6 +365,7 @@ describe('RemoteControl Component', () => {
 
       render(() => (
         <RemoteControl
+          store={mockStore}
           baseUrl={baseUrl}
           device={mockDeviceOnline}
           organizationId={organizationId}

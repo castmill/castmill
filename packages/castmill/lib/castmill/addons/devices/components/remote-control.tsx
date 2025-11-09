@@ -1,16 +1,20 @@
 import { Component, createSignal } from 'solid-js';
 import { Device } from '../interfaces/device.interface';
-import { Button, FormItem, useToast } from '@castmill/ui-common';
+import { Button, useToast } from '@castmill/ui-common';
 import { DevicesService } from '../services/devices.service';
 import { BsPlayFill } from 'solid-icons/bs';
+import { AddonStore } from '../../common/interfaces/addon-store';
 
 export const RemoteControl: Component<{
   baseUrl: string;
   device: Device;
   organizationId: string;
+  store?: AddonStore;
   t?: (key: string, params?: Record<string, any>) => string;
 }> = (props) => {
   const t = props.t || ((key: string) => key);
+  const formatDate =
+    props.store?.i18n?.formatDate || ((date: Date) => date.toLocaleString());
   const toast = useToast();
 
   const [resolution, setResolution] = createSignal('auto');
@@ -45,7 +49,7 @@ export const RemoteControl: Component<{
     if (props.device.online) {
       return t('devices.remoteControl.now');
     }
-    return new Date(props.device.last_online).toLocaleString();
+    return formatDate(new Date(props.device.last_online));
   };
 
   const handleStartSession = async () => {

@@ -18,6 +18,7 @@ const DeviceView: Component<{
   device: Device;
   organization_id: string;
   onChange?: (device: Device) => void;
+  store?: import('../../common/interfaces/addon-store').AddonStore;
   t?: (key: string, params?: Record<string, any>) => string;
 }> = (props) => {
   const t = props.t || ((key: string) => key);
@@ -78,6 +79,7 @@ const DeviceView: Component<{
             baseUrl={props.baseUrl}
             device={props.device}
             organizationId={props.organization_id}
+            store={props.store}
             t={t}
           />
         </div>
