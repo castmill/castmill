@@ -681,6 +681,17 @@
     "teamPlaceholder": "Välj lag",
     "teamClear": "Rensa lagfilter"
   },
+  "rc": {
+    "title": "Fjärrkontroll",
+    "connecting": "Ansluter...",
+    "connected": "Ansluten",
+    "disconnected": "Frånkopplad",
+    "notConnected": "Inte ansluten till enheten",
+    "connectionError": "Misslyckades att upprätta anslutning",
+    "enterFullscreen": "Fullskärm",
+    "exitFullscreen": "Avsluta fullskärm",
+    "instructions": "Klicka på visningsområdet för att fokusera, använd sedan tangentbord och mus för att styra fjärrenheten. Tryck på ESC för att avsluta."
+  },
   "shortcuts": {
     "showShortcutsLegend": "Visa tangentbordsgenvägar",
     "closeDialog": "Stäng dialogruta",

@@ -681,6 +681,17 @@
     "teamPlaceholder": "Mannschaft auswählen",
     "teamClear": "Mannschaftsfilter löschen"
   },
+  "rc": {
+    "title": "Fernsteuerung",
+    "connecting": "Verbinde...",
+    "connected": "Verbunden",
+    "disconnected": "Getrennt",
+    "notConnected": "Nicht mit Gerät verbunden",
+    "connectionError": "Verbindung konnte nicht hergestellt werden",
+    "enterFullscreen": "Vollbild",
+    "exitFullscreen": "Vollbild beenden",
+    "instructions": "Klicken Sie auf den Anzeigebereich zum Fokussieren und verwenden Sie dann Tastatur und Maus zur Steuerung des Remote-Geräts. Drücken Sie ESC zum Beenden."
+  },
   "shortcuts": {
     "showShortcutsLegend": "Tastaturkürzel anzeigen",
     "closeDialog": "Dialog schließen",

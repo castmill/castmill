@@ -686,6 +686,17 @@
     "teamPlaceholder": "选择团队",
     "teamClear": "清除团队筛选"
   },
+  "rc": {
+    "title": "远程控制",
+    "connecting": "连接中...",
+    "connected": "已连接",
+    "disconnected": "已断开",
+    "notConnected": "未连接到设备",
+    "connectionError": "建立连接失败",
+    "enterFullscreen": "全屏",
+    "exitFullscreen": "退出全屏",
+    "instructions": "点击显示区域以聚焦，然后使用键盘和鼠标控制远程设备。按 ESC 退出。"
+  },
   "shortcuts": {
     "showShortcutsLegend": "显示键盘快捷键",
     "closeDialog": "关闭对话框",

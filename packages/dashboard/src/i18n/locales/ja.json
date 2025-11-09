@@ -687,6 +687,17 @@
     "teamPlaceholder": "チームを選択",
     "teamClear": "チームフィルターをクリア"
   },
+  "rc": {
+    "title": "リモートコントロール",
+    "connecting": "接続中...",
+    "connected": "接続済み",
+    "disconnected": "切断済み",
+    "notConnected": "デバイスに接続されていません",
+    "connectionError": "接続の確立に失敗しました",
+    "enterFullscreen": "フルスクリーン",
+    "exitFullscreen": "フルスクリーン終了",
+    "instructions": "表示エリアをクリックしてフォーカスし、キーボードとマウスを使用してリモートデバイスを制御します。ESCキーを押して終了します。"
+  },
   "shortcuts": {
     "showShortcutsLegend": "キーボードショートカットを表示",
     "closeDialog": "ダイアログを閉じる",

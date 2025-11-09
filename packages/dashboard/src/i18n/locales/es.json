@@ -687,6 +687,17 @@
     "teamPlaceholder": "Seleccionar equipo",
     "teamClear": "Limpiar filtro de equipo"
   },
+  "rc": {
+    "title": "Control Remoto",
+    "connecting": "Conectando...",
+    "connected": "Conectado",
+    "disconnected": "Desconectado",
+    "notConnected": "No conectado al dispositivo",
+    "connectionError": "Error al establecer la conexión",
+    "enterFullscreen": "Pantalla completa",
+    "exitFullscreen": "Salir de pantalla completa",
+    "instructions": "Haz clic en el área de visualización para enfocar, luego usa el teclado y el ratón para controlar el dispositivo remoto. Presiona ESC para salir."
+  },
   "shortcuts": {
     "showShortcutsLegend": "Mostrar atajos de teclado",
     "closeDialog": "Cerrar diálogo",

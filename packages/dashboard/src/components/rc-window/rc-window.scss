@@ -1,0 +1,189 @@
+.rc-window-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+
+  &.active {
+    opacity: 1;
+  }
+}
+
+.rc-window-container {
+  background: var(--color-background, #1a1a1a);
+  border-radius: 0.5em;
+  width: 90vw;
+  max-width: 1400px;
+  height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 0.5em 2em rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  transform: scale(0.95);
+  transition: transform 0.3s ease;
+
+  .active & {
+    transform: scale(1);
+  }
+}
+
+.rc-window-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1em 1.5em;
+  background: var(--color-surface, #252525);
+  border-bottom: 1px solid var(--color-border, #333);
+}
+
+.rc-window-title {
+  display: flex;
+  align-items: center;
+  gap: 1em;
+
+  h2 {
+    margin: 0;
+    font-size: 1.125em;
+    font-weight: 600;
+    color: var(--color-text-primary, #ffffff);
+  }
+}
+
+.rc-window-status {
+  padding: 0.25em 0.75em;
+  border-radius: 1em;
+  font-size: 0.75em;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+
+  &-connecting {
+    background: var(--color-warning-bg, #fef3cd);
+    color: var(--color-warning-text, #856404);
+  }
+
+  &-connected {
+    background: var(--color-success-bg, #d4edda);
+    color: var(--color-success-text, #155724);
+  }
+
+  &-disconnected {
+    background: var(--color-error-bg, #f8d7da);
+    color: var(--color-error-text, #721c24);
+  }
+}
+
+.rc-window-controls {
+  display: flex;
+  gap: 0.5em;
+}
+
+.rc-window-control-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary, #aaa);
+  cursor: pointer;
+  padding: 0.5em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.25em;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: var(--color-hover, rgba(255, 255, 255, 0.1));
+    color: var(--color-text-primary, #fff);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+.rc-window-error {
+  background: var(--color-error-bg, #f8d7da);
+  color: var(--color-error-text, #721c24);
+  padding: 1em 1.5em;
+  border-bottom: 1px solid var(--color-border, #333);
+  font-size: 0.875em;
+}
+
+.rc-window-display {
+  flex: 1;
+  background: var(--color-background-dark, #000);
+  position: relative;
+  overflow: hidden;
+  cursor: crosshair;
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+
+  &:focus {
+    outline: 2px solid var(--color-primary, #007bff);
+    outline-offset: -2px;
+  }
+}
+
+.rc-window-loading,
+.rc-window-disconnected-message {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: var(--color-text-secondary, #aaa);
+
+  p {
+    margin: 1em 0 0;
+    font-size: 1em;
+  }
+}
+
+.rc-window-spinner {
+  width: 3em;
+  height: 3em;
+  border: 0.25em solid var(--color-border, #333);
+  border-top-color: var(--color-primary, #007bff);
+  border-radius: 50%;
+  animation: rc-spin 1s linear infinite;
+  margin: 0 auto;
+}
+
+@keyframes rc-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.rc-window-instructions {
+  padding: 0.75em 1.5em;
+  background: var(--color-surface, #252525);
+  border-top: 1px solid var(--color-border, #333);
+  font-size: 0.75em;
+  color: var(--color-text-secondary, #aaa);
+  text-align: center;
+
+  p {
+    margin: 0;
+  }
+}
+
+// Fullscreen mode adjustments
+.rc-window-container:fullscreen {
+  width: 100vw;
+  max-width: 100vw;
+  height: 100vh;
+  border-radius: 0;
+
+  .rc-window-header {
+    padding: 0.75em 1.5em;
+  }
+}

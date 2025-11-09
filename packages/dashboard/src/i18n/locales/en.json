@@ -681,6 +681,17 @@
       }
     }
   },
+  "rc": {
+    "title": "Remote Control",
+    "connecting": "Connecting...",
+    "connected": "Connected",
+    "disconnected": "Disconnected",
+    "notConnected": "Not connected to device",
+    "connectionError": "Failed to establish connection",
+    "enterFullscreen": "Enter fullscreen",
+    "exitFullscreen": "Exit fullscreen",
+    "instructions": "Click on the display area to focus, then use keyboard and mouse to control the remote device. Press ESC to exit."
+  },
   "shortcuts": {
     "showShortcutsLegend": "Show keyboard shortcuts",
     "closeDialog": "Close dialog",

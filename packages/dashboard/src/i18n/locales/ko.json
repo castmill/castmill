@@ -686,6 +686,17 @@
     "teamPlaceholder": "팀 선택",
     "teamClear": "팀 필터 지우기"
   },
+  "rc": {
+    "title": "원격 제어",
+    "connecting": "연결 중...",
+    "connected": "연결됨",
+    "disconnected": "연결 끊김",
+    "notConnected": "기기에 연결되지 않음",
+    "connectionError": "연결 설정 실패",
+    "enterFullscreen": "전체 화면",
+    "exitFullscreen": "전체 화면 종료",
+    "instructions": "표시 영역을 클릭하여 포커스한 다음 키보드와 마우스를 사용하여 원격 기기를 제어하세요. ESC를 눌러 종료합니다."
+  },
   "shortcuts": {
     "showShortcutsLegend": "키보드 단축키 표시",
     "closeDialog": "대화 상자 닫기",

@@ -698,6 +698,17 @@
     "teamPlaceholder": "Sélectionner une équipe",
     "teamClear": "Effacer le filtre d'équipe"
   },
+  "rc": {
+    "title": "Contrôle à distance",
+    "connecting": "Connexion...",
+    "connected": "Connecté",
+    "disconnected": "Déconnecté",
+    "notConnected": "Non connecté à l'appareil",
+    "connectionError": "Échec de l'établissement de la connexion",
+    "enterFullscreen": "Plein écran",
+    "exitFullscreen": "Quitter le plein écran",
+    "instructions": "Cliquez sur la zone d'affichage pour activer le focus, puis utilisez le clavier et la souris pour contrôler l'appareil distant. Appuyez sur ESC pour quitter."
+  },
   "shortcuts": {
     "showShortcutsLegend": "Afficher les raccourcis clavier",
     "closeDialog": "Fermer la boîte de dialogue",

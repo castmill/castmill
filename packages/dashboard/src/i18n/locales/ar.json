@@ -686,6 +686,17 @@
     "teamPlaceholder": "اختر الفريق",
     "teamClear": "مسح فلتر الفريق"
   },
+  "rc": {
+    "title": "التحكم عن بعد",
+    "connecting": "جارٍ الاتصال...",
+    "connected": "متصل",
+    "disconnected": "غير متصل",
+    "notConnected": "غير متصل بالجهاز",
+    "connectionError": "فشل في إنشاء الاتصال",
+    "enterFullscreen": "ملء الشاشة",
+    "exitFullscreen": "الخروج من ملء الشاشة",
+    "instructions": "انقر فوق منطقة العرض للتركيز، ثم استخدم لوحة المفاتيح والماوس للتحكم في الجهاز البعيد. اضغط ESC للخروج."
+  },
   "shortcuts": {
     "showShortcutsLegend": "عرض اختصارات لوحة المفاتيح",
     "closeDialog": "إغلاق مربع الحوار",
