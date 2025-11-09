@@ -63,7 +63,7 @@ deviceAspect = deviceWidth / deviceHeight
 
 #### 2. Scaling and Offset Determination
 
-**Case A: RC wider than device (pillarboxing)**
+**Case A: RC wider than device (letterboxing)**
 ```
 if rcAspect > deviceAspect:
     scaleX = deviceWidth / rcWidth
@@ -72,7 +72,7 @@ if rcAspect > deviceAspect:
     offsetY = (deviceHeight - rcHeight * scaleY) / 2
 ```
 
-**Case B: RC taller than device (letterboxing)**
+**Case B: RC taller than device (pillarboxing)**
 ```
 if rcAspect < deviceAspect:
     scaleY = deviceHeight / rcHeight
@@ -110,8 +110,8 @@ if deviceX < 0 or deviceX >= deviceWidth or
 
 When the RC window and device have different aspect ratios, black bars are added:
 
-- **Letterboxing**: Horizontal bars (top and bottom) when RC is wider
-- **Pillarboxing**: Vertical bars (left and right) when RC is taller
+- **Letterboxing**: Horizontal bars (top and bottom) when RC is wider than device
+- **Pillarboxing**: Vertical bars (left and right) when RC is taller than device
 
 The mapper accounts for these bars by:
 1. Using uniform scaling (scaleX = scaleY) to maintain aspect ratio

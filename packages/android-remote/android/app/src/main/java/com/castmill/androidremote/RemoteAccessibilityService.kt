@@ -188,7 +188,7 @@ class RemoteAccessibilityService : AccessibilityService() {
 
         // Map all points
         val devicePoints = if (gestureMapper != null) {
-            gestureMapper?.mapPoints(points)
+            gestureMapper.mapPoints(points)
         } else {
             // No mapper, convert directly to Points
             points.map { (x, y) -> Point(x.toInt(), y.toInt()) }

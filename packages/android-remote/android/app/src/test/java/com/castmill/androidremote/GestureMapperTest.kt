@@ -124,13 +124,15 @@ class GestureMapperTest {
         setDisplaySize(1920, 1080)
         val mapper = GestureMapper(context, 1280, 720)
         
-        // Act - Map exact boundaries
+        // Act - Map exact boundaries (0 to dimension-1 are valid)
         val topLeft = mapper.mapPoint(0f, 0f)
-        val bottomRight = mapper.mapPoint(1280f, 720f)
+        val bottomRight = mapper.mapPoint(1279f, 719f)
+        val outOfBounds = mapper.mapPoint(1280f, 720f)
         
         // Assert
         assertNotNull("Top-left should be valid", topLeft)
-        assertNotNull("Bottom-right should be valid", bottomRight)
+        assertNotNull("Bottom-right (dimension-1) should be valid", bottomRight)
+        assertNull("Coordinates at dimension should be out of bounds", outOfBounds)
         assertEquals("Top-left X should be 0", 0, topLeft!!.x)
         assertEquals("Top-left Y should be 0", 0, topLeft.y)
     }

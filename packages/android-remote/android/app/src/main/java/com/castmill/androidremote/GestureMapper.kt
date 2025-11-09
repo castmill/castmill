@@ -2,6 +2,7 @@ package com.castmill.androidremote
 
 import android.content.Context
 import android.graphics.Point
+import android.os.Build
 import android.util.Log
 import android.view.Surface
 import android.view.WindowManager
@@ -65,7 +66,10 @@ class GestureMapper(
      * Update display metrics to reflect current screen state.
      * Should be called when rotation or screen dimensions change.
      */
+    @Suppress("DEPRECATION")
     fun updateDisplayMetrics() {
+        // Note: Using deprecated API for compatibility with minSdk 26
+        // For API 30+, consider migrating to WindowMetrics when minSdk is raised
         val display = windowManager.defaultDisplay
         val size = Point()
         display.getRealSize(size)
@@ -92,7 +96,7 @@ class GestureMapper(
         val deviceAspect = deviceWidth.toFloat() / deviceHeight.toFloat()
         
         if (rcAspect > deviceAspect) {
-            // RC window is wider - pillarboxing (black bars on sides)
+            // RC window is wider - letterboxing (black bars on top/bottom)
             scaleX = deviceWidth.toFloat() / rcWidth.toFloat()
             scaleY = scaleX
             
@@ -100,7 +104,7 @@ class GestureMapper(
             offsetX = 0f
             offsetY = (deviceHeight - scaledHeight) / 2f
         } else if (rcAspect < deviceAspect) {
-            // RC window is taller - letterboxing (black bars on top/bottom)
+            // RC window is taller - pillarboxing (black bars on left/right)
             scaleY = deviceHeight.toFloat() / rcHeight.toFloat()
             scaleX = scaleY
             
@@ -121,13 +125,13 @@ class GestureMapper(
     /**
      * Map a single point from RC window coordinates to device coordinates.
      * 
-     * @param rcX X coordinate in RC window (0..rcWidth)
-     * @param rcY Y coordinate in RC window (0..rcHeight)
+     * @param rcX X coordinate in RC window (0 to rcWidth-1)
+     * @param rcY Y coordinate in RC window (0 to rcHeight-1)
      * @return Point with device coordinates, or null if out of bounds
      */
     fun mapPoint(rcX: Float, rcY: Float): Point? {
-        // Validate input coordinates
-        if (rcX < 0 || rcX > rcWidth || rcY < 0 || rcY > rcHeight) {
+        // Validate input coordinates (exclusive upper bound)
+        if (rcX < 0 || rcX >= rcWidth || rcY < 0 || rcY >= rcHeight) {
             Log.w(TAG, "RC coordinates out of bounds: ($rcX, $rcY)")
             return null
         }
