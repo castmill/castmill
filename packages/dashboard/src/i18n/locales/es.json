@@ -576,7 +576,20 @@
       "startSession": "Iniciar sesión RC",
       "sessionStarted": "Sesión de control remoto iniciada",
       "sessionStartError": "Error al iniciar sesión de control remoto: {{error}}",
-      "deviceOfflineError": "No se puede iniciar sesión - dispositivo desconectado"
+      "deviceOfflineError": "No se puede iniciar sesión - dispositivo desconectado",
+      "window": {
+        "connecting": "Conectando",
+        "connected": "Conectado",
+        "disconnected": "Desconectado",
+        "error": "Error",
+        "device": "Dispositivo",
+        "connectingMessage": "Conectando al dispositivo...",
+        "deviceDisconnected": "El dispositivo ha sido desconectado",
+        "errorHint": "Por favor cierre esta ventana e intente iniciar una nueva sesión",
+        "missingParams": "Faltan parámetros de sesión o dispositivo",
+        "connectionError": "Error de conexión: {{error}}",
+        "connectionTimeout": "Tiempo de conexión agotado - por favor intente nuevamente"
+      }
     }
   },
   "validation": {

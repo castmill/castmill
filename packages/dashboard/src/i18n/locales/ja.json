@@ -553,7 +553,20 @@
       "startSession": "RCセッションを開始",
       "sessionStarted": "リモートコントロールセッションが開始されました",
       "sessionStartError": "リモートコントロールセッションの開始に失敗しました：{{error}}",
-      "deviceOfflineError": "セッションを開始できません - デバイスがオフラインです"
+      "deviceOfflineError": "セッションを開始できません - デバイスがオフラインです",
+      "window": {
+        "connecting": "接続中",
+        "connected": "接続済み",
+        "disconnected": "切断済み",
+        "error": "エラー",
+        "device": "デバイス",
+        "connectingMessage": "デバイスに接続中...",
+        "deviceDisconnected": "デバイスが切断されました",
+        "errorHint": "このウィンドウを閉じて新しいセッションを開始してください",
+        "missingParams": "セッションまたはデバイスのパラメータがありません",
+        "connectionError": "接続エラー：{{error}}",
+        "connectionTimeout": "接続タイムアウト - もう一度お試しください"
+      }
     }
   },
   "validation": {

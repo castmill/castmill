@@ -552,7 +552,20 @@
       "startSession": "启动远程控制会话",
       "sessionStarted": "远程控制会话已启动",
       "sessionStartError": "启动远程控制会话失败：{{error}}",
-      "deviceOfflineError": "无法启动会话 - 设备离线"
+      "deviceOfflineError": "无法启动会话 - 设备离线",
+      "window": {
+        "connecting": "连接中",
+        "connected": "已连接",
+        "disconnected": "已断开",
+        "error": "错误",
+        "device": "设备",
+        "connectingMessage": "正在连接到设备...",
+        "deviceDisconnected": "设备已断开连接",
+        "errorHint": "请关闭此窗口并尝试启动新会话",
+        "missingParams": "缺少会话或设备参数",
+        "connectionError": "连接错误：{{error}}",
+        "connectionTimeout": "连接超时 - 请重试"
+      }
     }
   },
   "validation": {
