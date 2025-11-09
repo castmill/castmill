@@ -547,7 +547,21 @@
       "startSession": "Starta RC-session",
       "sessionStarted": "Fjärrkontrollsession startad",
       "sessionStartError": "Misslyckades starta fjärrkontrollsession: {{error}}",
-      "deviceOfflineError": "Kan inte starta session - enheten är offline"
+      "deviceOfflineError": "Kan inte starta session - enheten är offline",
+      "window": {
+        "connecting": "Ansluter",
+        "connected": "Ansluten",
+        "disconnected": "Frånkopplad",
+        "error": "Fel",
+        "device": "Enhet",
+        "connectingMessage": "Ansluter till enhet...",
+        "deviceDisconnected": "Enheten har kopplats från",
+        "errorHint": "Stäng detta fönster och försök starta en ny session",
+        "missingParams": "Saknar sessions- eller enhetsparametrar",
+        "connectionError": "Anslutningsfel: {{error}}",
+        "connectionTimeout": "Anslutningen överskred tidsgränsen - försök igen",
+        "canvasLabel": "Fjärrenhets skärm"
+      }
     }
   },
   "validation": {

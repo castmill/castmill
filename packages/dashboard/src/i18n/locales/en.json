@@ -575,7 +575,21 @@
       "startSession": "Start RC Session",
       "sessionStarted": "Remote control session started",
       "sessionStartError": "Failed to start remote control session: {{error}}",
-      "deviceOfflineError": "Cannot start session - device is offline"
+      "deviceOfflineError": "Cannot start session - device is offline",
+      "window": {
+        "connecting": "Connecting",
+        "connected": "Connected",
+        "disconnected": "Disconnected",
+        "error": "Error",
+        "device": "Device",
+        "connectingMessage": "Connecting to device...",
+        "deviceDisconnected": "Device has been disconnected",
+        "errorHint": "Please close this window and try starting a new session",
+        "missingParams": "Missing session or device parameters",
+        "connectionError": "Connection error: {{error}}",
+        "connectionTimeout": "Connection timeout - please try again",
+        "canvasLabel": "Remote device screen"
+      }
     }
   },
   "validation": {

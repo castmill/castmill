@@ -552,7 +552,21 @@
       "startSession": "بدء جلسة التحكم عن بعد",
       "sessionStarted": "تم بدء جلسة التحكم عن بعد",
       "sessionStartError": "فشل بدء جلسة التحكم عن بعد: {{error}}",
-      "deviceOfflineError": "لا يمكن بدء الجلسة - الجهاز غير متصل"
+      "deviceOfflineError": "لا يمكن بدء الجلسة - الجهاز غير متصل",
+      "window": {
+        "connecting": "جاري الاتصال",
+        "connected": "متصل",
+        "disconnected": "غير متصل",
+        "error": "خطأ",
+        "device": "الجهاز",
+        "connectingMessage": "جاري الاتصال بالجهاز...",
+        "deviceDisconnected": "تم قطع الاتصال بالجهاز",
+        "errorHint": "يرجى إغلاق هذه النافذة ومحاولة بدء جلسة جديدة",
+        "missingParams": "معلمات الجلسة أو الجهاز مفقودة",
+        "connectionError": "خطأ في الاتصال: {{error}}",
+        "connectionTimeout": "انتهت مهلة الاتصال - يرجى المحاولة مرة أخرى",
+        "canvasLabel": "شاشة الجهاز عن بعد"
+      }
     }
   },
   "validation": {

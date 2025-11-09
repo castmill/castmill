@@ -48,6 +48,9 @@ const CompleteRecovery = lazy(
   () => import('./components/login/complete-recovery')
 );
 const NotFound = lazy(() => import('./components/not-found'));
+const RemoteControlWindow = lazy(
+  () => import('./pages/remote-control-window/remote-control-window')
+);
 
 const root = document.getElementById('root');
 
@@ -211,6 +214,18 @@ render(() => {
               component={OrganizationsInvitationPage}
             />
             <Route path="/invite" component={TeamsInvitationPage} />
+
+            {/* Remote Control Window - fullscreen without App wrapper */}
+            <Route
+              path="/org/:orgId/devices/:id/remote-control"
+              component={() => (
+                <Suspense fallback={<LoadingFallback />}>
+                  <ProtectedRoute>
+                    {(addons) => <RemoteControlWindow />}
+                  </ProtectedRoute>
+                </Suspense>
+              )}
+            />
 
             {/* Routes with App wrapper (Topbar + Footer) */}
             <Route path="/" component={App}>

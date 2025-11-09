@@ -570,7 +570,21 @@
       "startSession": "RC-Sitzung starten",
       "sessionStarted": "Fernsteuerungssitzung gestartet",
       "sessionStartError": "Fehler beim Starten der Fernsteuerungssitzung: {{error}}",
-      "deviceOfflineError": "Sitzung kann nicht gestartet werden - Gerät offline"
+      "deviceOfflineError": "Sitzung kann nicht gestartet werden - Gerät offline",
+      "window": {
+        "connecting": "Verbinden",
+        "connected": "Verbunden",
+        "disconnected": "Getrennt",
+        "error": "Fehler",
+        "device": "Gerät",
+        "connectingMessage": "Verbindung zum Gerät wird hergestellt...",
+        "deviceDisconnected": "Gerät wurde getrennt",
+        "errorHint": "Bitte schließen Sie dieses Fenster und versuchen Sie, eine neue Sitzung zu starten",
+        "missingParams": "Fehlende Sitzungs- oder Geräteparameter",
+        "connectionError": "Verbindungsfehler: {{error}}",
+        "connectionTimeout": "Verbindungszeitüberschreitung - bitte erneut versuchen",
+        "canvasLabel": "Ferngerätebildschirm"
+      }
     }
   },
   "validation": {

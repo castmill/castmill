@@ -564,7 +564,21 @@
       "startSession": "Démarrer session RC",
       "sessionStarted": "Session de contrôle à distance démarrée",
       "sessionStartError": "Échec du démarrage de la session de contrôle à distance: {{error}}",
-      "deviceOfflineError": "Impossible de démarrer la session - appareil hors ligne"
+      "deviceOfflineError": "Impossible de démarrer la session - appareil hors ligne",
+      "window": {
+        "connecting": "Connexion",
+        "connected": "Connecté",
+        "disconnected": "Déconnecté",
+        "error": "Erreur",
+        "device": "Appareil",
+        "connectingMessage": "Connexion à l'appareil...",
+        "deviceDisconnected": "L'appareil a été déconnecté",
+        "errorHint": "Veuillez fermer cette fenêtre et essayer de démarrer une nouvelle session",
+        "missingParams": "Paramètres de session ou d'appareil manquants",
+        "connectionError": "Erreur de connexion: {{error}}",
+        "connectionTimeout": "Délai de connexion dépassé - veuillez réessayer",
+        "canvasLabel": "Écran de l'appareil distant"
+      }
     }
   },
   "validation": {

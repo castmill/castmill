@@ -1,0 +1,152 @@
+.remote-control-window {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  background-color: #1a1a1a;
+  color: #ffffff;
+  overflow: hidden;
+}
+
+.rc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1em;
+  background-color: #2d2d2d;
+  border-bottom: 1px solid #3d3d3d;
+}
+
+.rc-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
+.status-indicator {
+  display: inline-block;
+  width: 0.75em;
+  height: 0.75em;
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.status-connected .status-indicator {
+  background-color: #4ade80;
+  animation: none;
+}
+
+.status-connecting .status-indicator {
+  background-color: #fbbf24;
+}
+
+.status-disconnected .status-indicator,
+.status-error .status-indicator {
+  background-color: #f87171;
+  animation: none;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.status-text {
+  font-weight: 600;
+  font-size: 0.95em;
+}
+
+.rc-device-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  font-size: 0.9em;
+  color: #9ca3af;
+}
+
+.device-label {
+  font-weight: 500;
+}
+
+.device-id {
+  font-family: monospace;
+  color: #d1d5db;
+}
+
+.rc-content {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  position: relative;
+}
+
+.rc-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1em;
+  padding: 2em;
+  text-align: center;
+}
+
+.loading-spinner {
+  width: 3em;
+  height: 3em;
+  border: 0.3em solid #3d3d3d;
+  border-top-color: #4ade80;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.error-icon {
+  font-size: 3em;
+}
+
+.error-message {
+  font-size: 1.1em;
+  color: #f87171;
+  margin: 0;
+}
+
+.error-hint {
+  font-size: 0.9em;
+  color: #9ca3af;
+  margin: 0;
+}
+
+.rc-canvas-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 1em;
+}
+
+.rc-canvas {
+  max-width: 100%;
+  max-height: 100%;
+  border: 1px solid #3d3d3d;
+  box-shadow: 0 0.5em 2em rgba(0, 0, 0, 0.5);
+  cursor: crosshair;
+  background-color: #000000;
+}
+
+.rc-canvas:focus {
+  outline: 2px solid #4ade80;
+  outline-offset: 2px;
+}
