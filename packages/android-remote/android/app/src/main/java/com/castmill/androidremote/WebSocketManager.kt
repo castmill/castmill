@@ -196,6 +196,125 @@ class WebSocketManager(
         reconnectJob = null
     }
 
+    /**
+     * Handle control events received from the backend
+     */
+    private fun handleControlEvent(payload: JsonObject?) {
+        if (payload == null) {
+            Log.w(TAG, "Received null control event payload")
+            return
+        }
+
+        try {
+            val eventType = payload["event_type"]?.toString()?.trim('"')
+            val data = payload["data"] as? JsonObject
+
+            if (eventType == null || data == null) {
+                Log.w(TAG, "Invalid control event format: $payload")
+                return
+            }
+
+            val service = RemoteAccessibilityService.getInstance()
+            if (service == null) {
+                Log.w(TAG, "RemoteAccessibilityService not available, cannot inject gesture")
+                return
+            }
+
+            when (eventType) {
+                "tap" -> {
+                    val x = data["x"]?.toString()?.toFloatOrNull()
+                    val y = data["y"]?.toString()?.toFloatOrNull()
+                    val duration = data["duration"]?.toString()?.toLongOrNull() ?: 100L
+
+                    if (x != null && y != null) {
+                        service.injectTap(x, y, duration)
+                        Log.d(TAG, "Injected tap at ($x, $y)")
+                    } else {
+                        Log.w(TAG, "Invalid tap coordinates: x=$x, y=$y")
+                    }
+                }
+                "long_press" -> {
+                    val x = data["x"]?.toString()?.toFloatOrNull()
+                    val y = data["y"]?.toString()?.toFloatOrNull()
+                    val duration = data["duration"]?.toString()?.toLongOrNull() ?: 600L
+
+                    if (x != null && y != null) {
+                        service.injectLongPress(x, y, duration)
+                        Log.d(TAG, "Injected long press at ($x, $y)")
+                    } else {
+                        Log.w(TAG, "Invalid long press coordinates: x=$x, y=$y")
+                    }
+                }
+                "swipe" -> {
+                    val startX = data["start_x"]?.toString()?.toFloatOrNull()
+                    val startY = data["start_y"]?.toString()?.toFloatOrNull()
+                    val endX = data["end_x"]?.toString()?.toFloatOrNull()
+                    val endY = data["end_y"]?.toString()?.toFloatOrNull()
+                    val duration = data["duration"]?.toString()?.toLongOrNull() ?: 300L
+
+                    if (startX != null && startY != null && endX != null && endY != null) {
+                        service.injectSwipe(startX, startY, endX, endY, duration)
+                        Log.d(TAG, "Injected swipe from ($startX, $startY) to ($endX, $endY)")
+                    } else {
+                        Log.w(TAG, "Invalid swipe coordinates")
+                    }
+                }
+                "multi_step" -> {
+                    val pointsArray = data["points"] as? kotlinx.serialization.json.JsonArray
+                    val duration = data["duration"]?.toString()?.toLongOrNull() ?: 500L
+
+                    if (pointsArray != null) {
+                        val points = mutableListOf<Pair<Float, Float>>()
+                        for (pointElement in pointsArray) {
+                            val pointObj = pointElement as? JsonObject
+                            val x = pointObj?.get("x")?.toString()?.toFloatOrNull()
+                            val y = pointObj?.get("y")?.toString()?.toFloatOrNull()
+                            
+                            if (x != null && y != null) {
+                                points.add(Pair(x, y))
+                            }
+                        }
+
+                        if (points.isNotEmpty()) {
+                            service.injectMultiStepGesture(points, duration)
+                            Log.d(TAG, "Injected multi-step gesture with ${points.size} points")
+                        } else {
+                            Log.w(TAG, "No valid points in multi-step gesture")
+                        }
+                    } else {
+                        Log.w(TAG, "Invalid multi-step gesture format")
+                    }
+                }
+                "global_action" -> {
+                    val action = data["action"]?.toString()?.toIntOrNull()
+                    
+                    if (action != null) {
+                        val success = service.performAction(action)
+                        Log.d(TAG, "Performed global action $action: $success")
+                    } else {
+                        Log.w(TAG, "Invalid global action: ${data["action"]}")
+                    }
+                }
+                "init_mapper" -> {
+                    val rcWidth = data["rc_width"]?.toString()?.toIntOrNull()
+                    val rcHeight = data["rc_height"]?.toString()?.toIntOrNull()
+                    
+                    if (rcWidth != null && rcHeight != null) {
+                        service.initializeGestureMapper(rcWidth, rcHeight)
+                        Log.i(TAG, "Initialized gesture mapper: ${rcWidth}x${rcHeight}")
+                    } else {
+                        Log.w(TAG, "Invalid mapper dimensions: width=$rcWidth, height=$rcHeight")
+                    }
+                }
+                else -> {
+                    Log.w(TAG, "Unknown control event type: $eventType")
+                }
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error handling control event", e)
+        }
+    }
+
     private inner class WebSocketHandler : WebSocketListener() {
         override fun onOpen(webSocket: WebSocket, response: Response) {
             Log.i(TAG, "WebSocket connected")
@@ -231,7 +350,7 @@ class WebSocketManager(
                         "control_event" -> {
                             // Handle control events from the backend
                             Log.d(TAG, "Received control event: $payload")
-                            // TODO: Forward to RemoteAccessibilityService
+                            handleControlEvent(payload as? JsonObject)
                         }
                         "session_stopped" -> {
                             Log.i(TAG, "Session stopped by backend")

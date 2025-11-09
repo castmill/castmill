@@ -234,10 +234,20 @@ adb logcat -s WebSocketManager:V RemoteControlService:V
 ## Future Enhancements
 
 1. **Media Projection**: Screen capture and encoding
-2. **Input Injection**: Forward control events to RemoteAccessibilityService
-3. **Error Handling**: More robust error recovery
-4. **Metrics**: Connection quality and latency tracking
-5. **Configuration UI**: Allow users to configure backend URL and credentials
+2. **Error Handling**: More robust error recovery
+3. **Metrics**: Connection quality and latency tracking
+4. **Configuration UI**: Allow users to configure backend URL and credentials
+
+## Gesture Support
+
+The RemoteAccessibilityService provides comprehensive input injection capabilities including tap, long press, swipe, and multi-step gestures with automatic coordinate mapping from the remote control window to device screen.
+
+See [GESTURE_SUPPORT.md](GESTURE_SUPPORT.md) for detailed documentation on:
+- Gesture types and usage
+- Coordinate mapping algorithm
+- Handling display rotation and letterboxing
+- WebSocket message formats
+- Testing and troubleshooting
 
 ## Troubleshooting
 
