@@ -29,19 +29,21 @@ describe('RemoteControlWindow', () => {
   beforeEach(() => {
     // Setup store with mock socket
     setStore('socket', mockSocket as any);
-    
+
     // Reset mocks
     vi.clearAllMocks();
-    
+
     // Setup default channel behavior
     mockChannel.join.mockReturnThis();
-    mockChannel.receive.mockImplementation((event: string, callback: Function) => {
-      if (event === 'ok') {
-        // Simulate successful join
-        setTimeout(() => callback({ status: 'connected' }), 0);
+    mockChannel.receive.mockImplementation(
+      (event: string, callback: Function) => {
+        if (event === 'ok') {
+          // Simulate successful join
+          setTimeout(() => callback({ status: 'connected' }), 0);
+        }
+        return mockChannel;
       }
-      return mockChannel;
-    });
+    );
   });
 
   afterEach(() => {
@@ -59,18 +61,23 @@ describe('RemoteControlWindow', () => {
   describe('Basic Rendering', () => {
     it('renders the remote control window', async () => {
       renderWithProviders();
-      
+
       await waitFor(() => {
         // Check for device-id specifically
-        expect(screen.getByText((content, element) => {
-          return element?.classList.contains('device-id') && content === 'device-456';
-        })).toBeInTheDocument();
+        expect(
+          screen.getByText((content, element) => {
+            return (
+              element?.classList.contains('device-id') &&
+              content === 'device-456'
+            );
+          })
+        ).toBeInTheDocument();
       });
     });
 
     it('displays device ID in header', async () => {
       renderWithProviders();
-      
+
       await waitFor(() => {
         expect(screen.getByText('device-456')).toBeInTheDocument();
       });
@@ -78,110 +85,145 @@ describe('RemoteControlWindow', () => {
 
     it('shows connecting status initially', async () => {
       renderWithProviders();
-      
+
       // Should show connecting status - use a more specific selector
-      expect(screen.getByText((content, element) => {
-        return element?.classList.contains('status-text') && /connecting/i.test(content);
-      })).toBeInTheDocument();
+      expect(
+        screen.getByText((content, element) => {
+          return (
+            element?.classList.contains('status-text') &&
+            /connecting/i.test(content)
+          );
+        })
+      ).toBeInTheDocument();
     });
   });
 
   describe('WebSocket Connection', () => {
     it('joins the RC channel with correct parameters', async () => {
       renderWithProviders();
-      
+
       await waitFor(() => {
-        expect(mockSocket.channel).toHaveBeenCalledWith(
-          'rc:test-session-123',
-          { device_id: 'device-456' }
-        );
+        expect(mockSocket.channel).toHaveBeenCalledWith('rc:test-session-123', {
+          device_id: 'device-456',
+        });
         expect(mockChannel.join).toHaveBeenCalled();
       });
     });
 
     it('displays connected status after successful join', async () => {
-      mockChannel.receive.mockImplementation((event: string, callback: Function) => {
-        if (event === 'ok') {
-          setTimeout(() => callback({ status: 'connected' }), 0);
+      mockChannel.receive.mockImplementation(
+        (event: string, callback: Function) => {
+          if (event === 'ok') {
+            setTimeout(() => callback({ status: 'connected' }), 0);
+          }
+          return mockChannel;
         }
-        return mockChannel;
-      });
+      );
 
       renderWithProviders();
-      
-      await waitFor(() => {
-        // Use a specific selector for status text
-        expect(screen.getByText((content, element) => {
-          return element?.classList.contains('status-text') && /connected/i.test(content);
-        })).toBeInTheDocument();
-      }, { timeout: 1000 });
+
+      await waitFor(
+        () => {
+          // Use a specific selector for status text
+          expect(
+            screen.getByText((content, element) => {
+              return (
+                element?.classList.contains('status-text') &&
+                /connected/i.test(content)
+              );
+            })
+          ).toBeInTheDocument();
+        },
+        { timeout: 1000 }
+      );
     });
 
     it('leaves channel on cleanup', async () => {
       const { unmount } = renderWithProviders();
-      
+
       await waitFor(() => {
         expect(mockChannel.join).toHaveBeenCalled();
       });
 
       unmount();
-      
+
       expect(mockChannel.leave).toHaveBeenCalled();
     });
   });
 
   describe('Video Frame Display', () => {
     it('renders canvas element when connected', async () => {
-      mockChannel.receive.mockImplementation((event: string, callback: Function) => {
-        if (event === 'ok') {
-          setTimeout(() => callback({ status: 'connected' }), 0);
+      mockChannel.receive.mockImplementation(
+        (event: string, callback: Function) => {
+          if (event === 'ok') {
+            setTimeout(() => callback({ status: 'connected' }), 0);
+          }
+          return mockChannel;
         }
-        return mockChannel;
-      });
+      );
 
       renderWithProviders();
-      
-      await waitFor(() => {
-        const canvas = document.querySelector('canvas.rc-canvas');
-        expect(canvas).toBeInTheDocument();
-      }, { timeout: 1000 });
+
+      await waitFor(
+        () => {
+          const canvas = document.querySelector('canvas.rc-canvas');
+          expect(canvas).toBeInTheDocument();
+        },
+        { timeout: 1000 }
+      );
     });
 
     it('sets up frame listener on channel', async () => {
       renderWithProviders();
-      
+
       await waitFor(() => {
-        expect(mockChannel.on).toHaveBeenCalledWith('frame', expect.any(Function));
+        expect(mockChannel.on).toHaveBeenCalledWith(
+          'frame',
+          expect.any(Function)
+        );
       });
     });
 
     it('sets up status listener on channel', async () => {
       renderWithProviders();
-      
+
       await waitFor(() => {
-        expect(mockChannel.on).toHaveBeenCalledWith('status', expect.any(Function));
+        expect(mockChannel.on).toHaveBeenCalledWith(
+          'status',
+          expect.any(Function)
+        );
       });
     });
   });
 
   describe('Input Handling', () => {
     beforeEach(() => {
-      mockChannel.receive.mockImplementation((event: string, callback: Function) => {
-        if (event === 'ok') {
-          setTimeout(() => callback({ status: 'connected' }), 0);
+      mockChannel.receive.mockImplementation(
+        (event: string, callback: Function) => {
+          if (event === 'ok') {
+            setTimeout(() => callback({ status: 'connected' }), 0);
+          }
+          return mockChannel;
         }
-        return mockChannel;
-      });
+      );
     });
 
     it('sends keyboard input when keys are pressed', async () => {
       renderWithProviders();
-      
-      await waitFor(() => {
-        expect(screen.getByText((content, element) => {
-          return element?.classList.contains('status-text') && /connected/i.test(content);
-        })).toBeInTheDocument();
-      }, { timeout: 1000 });
+
+      await waitFor(
+        () => {
+          expect(
+            screen.getByText((content, element) => {
+              return (
+                element?.classList.contains('status-text') &&
+                /connected/i.test(content)
+              );
+            })
+          ).toBeInTheDocument();
+        },
+        { timeout: 1000 }
+      );
 
       // Simulate key press
       fireEvent.keyDown(window, {
@@ -208,18 +250,23 @@ describe('RemoteControlWindow', () => {
 
     it('sends mouse click input when canvas is clicked', async () => {
       renderWithProviders();
-      
-      await waitFor(() => {
-        const canvas = document.querySelector('canvas.rc-canvas');
-        expect(canvas).toBeInTheDocument();
-      }, { timeout: 1000 });
 
-      const canvas = document.querySelector('canvas.rc-canvas') as HTMLCanvasElement;
-      
+      await waitFor(
+        () => {
+          const canvas = document.querySelector('canvas.rc-canvas');
+          expect(canvas).toBeInTheDocument();
+        },
+        { timeout: 1000 }
+      );
+
+      const canvas = document.querySelector(
+        'canvas.rc-canvas'
+      ) as HTMLCanvasElement;
+
       // Mock canvas dimensions
       Object.defineProperty(canvas, 'width', { value: 1920, writable: true });
       Object.defineProperty(canvas, 'height', { value: 1080, writable: true });
-      
+
       // Mock getBoundingClientRect
       canvas.getBoundingClientRect = vi.fn(() => ({
         left: 0,
@@ -247,18 +294,23 @@ describe('RemoteControlWindow', () => {
 
     it('sends mouse move input when mouse moves over canvas', async () => {
       renderWithProviders();
-      
-      await waitFor(() => {
-        const canvas = document.querySelector('canvas.rc-canvas');
-        expect(canvas).toBeInTheDocument();
-      }, { timeout: 1000 });
 
-      const canvas = document.querySelector('canvas.rc-canvas') as HTMLCanvasElement;
-      
+      await waitFor(
+        () => {
+          const canvas = document.querySelector('canvas.rc-canvas');
+          expect(canvas).toBeInTheDocument();
+        },
+        { timeout: 1000 }
+      );
+
+      const canvas = document.querySelector(
+        'canvas.rc-canvas'
+      ) as HTMLCanvasElement;
+
       // Mock canvas dimensions
       Object.defineProperty(canvas, 'width', { value: 1920, writable: true });
       Object.defineProperty(canvas, 'height', { value: 1080, writable: true });
-      
+
       canvas.getBoundingClientRect = vi.fn(() => ({
         left: 0,
         top: 0,

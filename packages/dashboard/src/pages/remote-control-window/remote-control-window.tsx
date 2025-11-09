@@ -16,11 +16,14 @@ const RemoteControlWindow: Component = () => {
   const { t } = useI18n();
   const params = useParams();
   const [searchParams] = useSearchParams();
-  
-  const [connectionState, setConnectionState] = createSignal<ConnectionState>('connecting');
+
+  const [connectionState, setConnectionState] =
+    createSignal<ConnectionState>('connecting');
   const [errorMessage, setErrorMessage] = createSignal<string>('');
   const [channel, setChannel] = createSignal<any>(null);
-  const [canvasRef, setCanvasRef] = createSignal<HTMLCanvasElement | null>(null);
+  const [canvasRef, setCanvasRef] = createSignal<HTMLCanvasElement | null>(
+    null
+  );
   const [ctx, setCtx] = createSignal<CanvasRenderingContext2D | null>(null);
 
   const deviceId = params.id;
@@ -38,7 +41,7 @@ const RemoteControlWindow: Component = () => {
   // Setup WebSocket connection
   createEffect(() => {
     const existingSocket = store.socket;
-    
+
     if (!existingSocket || !sessionId || !deviceId) {
       setConnectionState('error');
       setErrorMessage(t('remoteControl.window.missingParams'));
@@ -46,10 +49,9 @@ const RemoteControlWindow: Component = () => {
     }
 
     // Join RC session channel
-    const rcChannel = existingSocket.channel(
-      `rc:${sessionId}`,
-      { device_id: deviceId }
-    );
+    const rcChannel = existingSocket.channel(`rc:${sessionId}`, {
+      device_id: deviceId,
+    });
 
     rcChannel
       .join()
@@ -60,7 +62,11 @@ const RemoteControlWindow: Component = () => {
       .receive('error', (resp: any) => {
         console.error('Failed to join RC channel', resp);
         setConnectionState('error');
-        setErrorMessage(t('remoteControl.window.connectionError', { error: resp.reason || 'Unknown error' }));
+        setErrorMessage(
+          t('remoteControl.window.connectionError', {
+            error: resp.reason || 'Unknown error',
+          })
+        );
       })
       .receive('timeout', () => {
         console.error('RC channel join timeout');
@@ -153,7 +159,7 @@ const RemoteControlWindow: Component = () => {
       const rect = canvas.getBoundingClientRect();
       const x = ((e.clientX - rect.left) / rect.width) * canvas.width;
       const y = ((e.clientY - rect.top) / rect.height) * canvas.height;
-      
+
       ch.push('input', {
         type: 'mousedown',
         x: Math.round(x),
@@ -170,7 +176,7 @@ const RemoteControlWindow: Component = () => {
       const rect = canvas.getBoundingClientRect();
       const x = ((e.clientX - rect.left) / rect.width) * canvas.width;
       const y = ((e.clientY - rect.top) / rect.height) * canvas.height;
-      
+
       ch.push('input', {
         type: 'mouseup',
         x: Math.round(x),
@@ -187,7 +193,7 @@ const RemoteControlWindow: Component = () => {
       const rect = canvas.getBoundingClientRect();
       const x = ((e.clientX - rect.left) / rect.width) * canvas.width;
       const y = ((e.clientY - rect.top) / rect.height) * canvas.height;
-      
+
       ch.push('input', {
         type: 'mousemove',
         x: Math.round(x),
@@ -203,7 +209,7 @@ const RemoteControlWindow: Component = () => {
       const rect = canvas.getBoundingClientRect();
       const x = ((e.clientX - rect.left) / rect.width) * canvas.width;
       const y = ((e.clientY - rect.top) / rect.height) * canvas.height;
-      
+
       ch.push('input', {
         type: 'click',
         x: Math.round(x),
@@ -218,7 +224,7 @@ const RemoteControlWindow: Component = () => {
     if (connectionState() === 'connected') {
       window.addEventListener('keydown', handleKeyDown);
       window.addEventListener('keyup', handleKeyUp);
-      
+
       onCleanup(() => {
         window.removeEventListener('keydown', handleKeyDown);
         window.removeEventListener('keyup', handleKeyUp);
@@ -280,7 +286,12 @@ const RemoteControlWindow: Component = () => {
                 <div class="loading-spinner"></div>
                 <p>{t('remoteControl.window.connectingMessage')}</p>
               </Show>
-              <Show when={connectionState() === 'error' || connectionState() === 'disconnected'}>
+              <Show
+                when={
+                  connectionState() === 'error' ||
+                  connectionState() === 'disconnected'
+                }
+              >
                 <div class="error-icon">⚠️</div>
                 <p class="error-message">{errorMessage()}</p>
                 <p class="error-hint">{t('remoteControl.window.errorHint')}</p>

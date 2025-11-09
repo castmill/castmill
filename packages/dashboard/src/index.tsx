@@ -214,7 +214,7 @@ render(() => {
               component={OrganizationsInvitationPage}
             />
             <Route path="/invite" component={TeamsInvitationPage} />
-            
+
             {/* Remote Control Window - fullscreen without App wrapper */}
             <Route
               path="/org/:orgId/devices/:id/remote-control"
