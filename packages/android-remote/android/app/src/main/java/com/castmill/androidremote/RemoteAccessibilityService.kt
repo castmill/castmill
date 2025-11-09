@@ -100,7 +100,7 @@ class RemoteAccessibilityService : AccessibilityService() {
         x: Float, 
         y: Float, 
         durationMs: Long = TAP_DURATION_MS,
-        callback: GestureResultCallback? = null
+        callback: AccessibilityService.GestureResultCallback? = null
     ): Boolean {
         val (deviceX, deviceY) = mapCoordinates(x, y) ?: return false
         
@@ -124,7 +124,7 @@ class RemoteAccessibilityService : AccessibilityService() {
         x: Float, 
         y: Float, 
         durationMs: Long = LONG_PRESS_DURATION_MS,
-        callback: GestureResultCallback? = null
+        callback: AccessibilityService.GestureResultCallback? = null
     ): Boolean {
         val (deviceX, deviceY) = mapCoordinates(x, y) ?: return false
         
@@ -152,7 +152,7 @@ class RemoteAccessibilityService : AccessibilityService() {
         endX: Float, 
         endY: Float, 
         durationMs: Long = SWIPE_DURATION_MS,
-        callback: GestureResultCallback? = null
+        callback: AccessibilityService.GestureResultCallback? = null
     ): Boolean {
         val (deviceStartX, deviceStartY) = mapCoordinates(startX, startY) ?: return false
         val (deviceEndX, deviceEndY) = mapCoordinates(endX, endY) ?: return false
@@ -179,7 +179,7 @@ class RemoteAccessibilityService : AccessibilityService() {
     fun injectMultiStepGesture(
         points: List<Pair<Float, Float>>,
         durationMs: Long,
-        callback: GestureResultCallback? = null
+        callback: AccessibilityService.GestureResultCallback? = null
     ): Boolean {
         if (points.isEmpty()) {
             Log.w(TAG, "Cannot inject gesture with no points")
@@ -258,28 +258,14 @@ class RemoteAccessibilityService : AccessibilityService() {
         path: Path,
         startTime: Long,
         duration: Long,
-        callback: GestureResultCallback?
+        callback: AccessibilityService.GestureResultCallback?
     ): Boolean {
         try {
             val gestureBuilder = GestureDescription.Builder()
             val stroke = GestureDescription.StrokeDescription(path, startTime, duration)
             val gesture = gestureBuilder.addStroke(stroke).build()
             
-            val gestureCallback = if (callback != null) {
-                object : GestureResultCallback() {
-                    override fun onCompleted(gestureDescription: GestureDescription?) {
-                        callback.onCompleted(gestureDescription)
-                    }
-                    
-                    override fun onCancelled(gestureDescription: GestureDescription?) {
-                        callback.onCancelled(gestureDescription)
-                    }
-                }
-            } else {
-                null
-            }
-            
-            return dispatchGesture(gesture, gestureCallback, null)
+            return dispatchGesture(gesture, callback, null)
         } catch (e: Exception) {
             Log.e(TAG, "Error dispatching gesture", e)
             return false

@@ -360,14 +360,17 @@ dispatchGesture(gesture, callback, handler)
 Gesture completion can be monitored via callbacks:
 
 ```kotlin
-service.injectTap(x, y) { gestureDescription ->
-    onCompleted = {
+val callback = object : AccessibilityService.GestureResultCallback() {
+    override fun onCompleted(gestureDescription: GestureDescription?) {
         Log.d(TAG, "Gesture completed successfully")
     }
-    onCancelled = {
+    
+    override fun onCancelled(gestureDescription: GestureDescription?) {
         Log.w(TAG, "Gesture was cancelled")
     }
 }
+
+service.injectTap(x, y, callback = callback)
 ```
 
 ### Thread Safety
