@@ -517,6 +517,7 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
             baseUrl={props.store.env.baseUrl}
             organization_id={props.store.organizations.selectedId}
             device={currentDevice()!}
+            store={props.store}
             onChange={(device) => {
               updateItem(device.id, device);
             }}

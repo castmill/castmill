@@ -84,7 +84,8 @@
     "selectMedia": "Sélectionner un média",
     "offline": "Hors ligne",
     "apply": "Appliquer",
-    "selectVideo": "Sélectionner une vidéo"
+    "selectVideo": "Sélectionner une vidéo",
+    "no": "Non"
   },
   "topbar": {
     "help": "Aide",
@@ -547,7 +548,24 @@
     "devicesRemovedSuccess": "{{count}} appareil(s) supprimé(s) avec succès",
     "errorRegisteringDevice": "Erreur lors de l'enregistrement de l'appareil : {{error}}",
     "errorRemovingDevice": "Erreur lors de la suppression de l'appareil {{name}} : {{error}}",
-    "errorRemovingDevices": "Erreur lors de la suppression des appareils : {{error}}"
+    "errorRemovingDevices": "Erreur lors de la suppression des appareils : {{error}}",
+    "remoteControl": {
+      "title": "Contrôle à distance",
+      "status": "Statut",
+      "online": "En ligne",
+      "offline": "Hors ligne",
+      "lastCheckIn": "Dernière connexion",
+      "activeSession": "Session active",
+      "now": "Maintenant",
+      "sessionSettings": "Paramètres de session",
+      "resolution": "Résolution",
+      "fps": "FPS",
+      "auto": "Automatique",
+      "startSession": "Démarrer session RC",
+      "sessionStarted": "Session de contrôle à distance démarrée",
+      "sessionStartError": "Échec du démarrage de la session de contrôle à distance: {{error}}",
+      "deviceOfflineError": "Impossible de démarrer la session - appareil hors ligne"
+    }
   },
   "validation": {
     "fieldRequired": "Ce champ est requis",

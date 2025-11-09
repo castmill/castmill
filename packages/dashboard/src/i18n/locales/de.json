@@ -79,7 +79,8 @@
     "selectVideo": "Video auswählen",
     "offline": "Offline",
     "selectImage": "Bild auswählen",
-    "selectMedia": "Medien auswählen"
+    "selectMedia": "Medien auswählen",
+    "no": "Nein"
   },
   "sidebar": {
     "organization": "Organisation",
@@ -553,7 +554,24 @@
     "devicesRemovedSuccess": "{{count}} Gerät(e) erfolgreich entfernt",
     "errorRegisteringDevice": "Fehler beim Registrieren des Geräts: {{error}}",
     "errorRemovingDevice": "Fehler beim Entfernen des Geräts {{name}}: {{error}}",
-    "errorRemovingDevices": "Fehler beim Entfernen der Geräte: {{error}}"
+    "errorRemovingDevices": "Fehler beim Entfernen der Geräte: {{error}}",
+    "remoteControl": {
+      "title": "Fernsteuerung",
+      "status": "Status",
+      "online": "Online",
+      "offline": "Offline",
+      "lastCheckIn": "Letzte Verbindung",
+      "activeSession": "Aktive Sitzung",
+      "now": "Jetzt",
+      "sessionSettings": "Sitzungseinstellungen",
+      "resolution": "Auflösung",
+      "fps": "FPS",
+      "auto": "Automatisch",
+      "startSession": "RC-Sitzung starten",
+      "sessionStarted": "Fernsteuerungssitzung gestartet",
+      "sessionStartError": "Fehler beim Starten der Fernsteuerungssitzung: {{error}}",
+      "deviceOfflineError": "Sitzung kann nicht gestartet werden - Gerät offline"
+    }
   },
   "validation": {
     "fieldRequired": "Dieses Feld ist erforderlich",

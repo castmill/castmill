@@ -84,7 +84,8 @@
     "selectMedia": "メディアを選択",
     "apply": "適用",
     "selectVideo": "ビデオを選択",
-    "offline": "オフライン"
+    "offline": "オフライン",
+    "no": "いいえ"
   },
   "topbar": {
     "help": "ヘルプ",
@@ -536,7 +537,24 @@
     "devicesRemovedSuccess": "{{count}}個のデバイスが正常に削除されました",
     "errorRegisteringDevice": "デバイスの登録エラー: {{error}}",
     "errorRemovingDevice": "デバイス{{name}}の削除エラー: {{error}}",
-    "errorRemovingDevices": "デバイスの削除エラー: {{error}}"
+    "errorRemovingDevices": "デバイスの削除エラー: {{error}}",
+    "remoteControl": {
+      "title": "リモートコントロール",
+      "status": "ステータス",
+      "online": "オンライン",
+      "offline": "オフライン",
+      "lastCheckIn": "最終接続",
+      "activeSession": "アクティブセッション",
+      "now": "今",
+      "sessionSettings": "セッション設定",
+      "resolution": "解像度",
+      "fps": "FPS",
+      "auto": "自動",
+      "startSession": "RCセッションを開始",
+      "sessionStarted": "リモートコントロールセッションが開始されました",
+      "sessionStartError": "リモートコントロールセッションの開始に失敗しました：{{error}}",
+      "deviceOfflineError": "セッションを開始できません - デバイスがオフラインです"
+    }
   },
   "validation": {
     "fieldRequired": "この項目は必須です",

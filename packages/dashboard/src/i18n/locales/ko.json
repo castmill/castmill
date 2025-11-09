@@ -84,7 +84,8 @@
     "selectMedia": "미디어 선택",
     "apply": "적용",
     "selectVideo": "비디오 선택",
-    "offline": "오프라인"
+    "offline": "오프라인",
+    "no": "아니오"
   },
   "topbar": {
     "help": "도움말",
@@ -535,7 +536,24 @@
     "devicesRemovedSuccess": "{{count}}개의 기기가 성공적으로 제거되었습니다",
     "errorRegisteringDevice": "기기 등록 오류: {{error}}",
     "errorRemovingDevice": "기기 {{name}} 제거 오류: {{error}}",
-    "errorRemovingDevices": "기기 제거 오류: {{error}}"
+    "errorRemovingDevices": "기기 제거 오류: {{error}}",
+    "remoteControl": {
+      "title": "원격 제어",
+      "status": "상태",
+      "online": "온라인",
+      "offline": "오프라인",
+      "lastCheckIn": "마지막 접속",
+      "activeSession": "활성 세션",
+      "now": "지금",
+      "sessionSettings": "세션 설정",
+      "resolution": "해상도",
+      "fps": "FPS",
+      "auto": "자동",
+      "startSession": "원격 제어 세션 시작",
+      "sessionStarted": "원격 제어 세션이 시작되었습니다",
+      "sessionStartError": "원격 제어 세션 시작 실패: {{error}}",
+      "deviceOfflineError": "세션을 시작할 수 없습니다 - 장치가 오프라인입니다"
+    }
   },
   "validation": {
     "fieldRequired": "이 필드는 필수입니다",

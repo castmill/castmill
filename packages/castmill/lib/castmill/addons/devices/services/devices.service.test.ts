@@ -239,4 +239,98 @@ describe('DevicesService - Multiple Channel Assignment', () => {
       ).rejects.toThrow('Bad Request');
     });
   });
+
+  describe('startRemoteControlSession', () => {
+    it('should successfully start a remote control session', async () => {
+      const resolution = '720p';
+      const fps = 30;
+      const mockSessionData = {
+        session_id: 'session-123',
+        url: 'ws://test.com/rc/session-123',
+      };
+      const mockResponse = new Response(JSON.stringify(mockSessionData), {
+        status: 200,
+      });
+
+      (global.fetch as any).mockResolvedValueOnce(mockResponse);
+
+      const result = await DevicesService.startRemoteControlSession(
+        baseUrl,
+        deviceId,
+        resolution,
+        fps
+      );
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        `${baseUrl}/dashboard/devices/${deviceId}/rc/sessions`,
+        expect.objectContaining({
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ resolution, fps }),
+        })
+      );
+      expect(result).toEqual(mockSessionData);
+    });
+
+    it('should handle auto resolution and fps', async () => {
+      const resolution = 'auto';
+      const fps = 0;
+      const mockSessionData = {
+        session_id: 'session-456',
+        url: 'ws://test.com/rc/session-456',
+      };
+      const mockResponse = new Response(JSON.stringify(mockSessionData), {
+        status: 200,
+      });
+
+      (global.fetch as any).mockResolvedValueOnce(mockResponse);
+
+      const result = await DevicesService.startRemoteControlSession(
+        baseUrl,
+        deviceId,
+        resolution,
+        fps
+      );
+
+      expect(result).toEqual(mockSessionData);
+    });
+
+    it('should throw an error when starting session fails', async () => {
+      const resolution = '720p';
+      const fps = 30;
+      const mockResponse = new Response(
+        JSON.stringify({ errors: { detail: 'Device is offline' } }),
+        { status: 400 }
+      );
+
+      (global.fetch as any).mockResolvedValueOnce(mockResponse);
+
+      await expect(
+        DevicesService.startRemoteControlSession(
+          baseUrl,
+          deviceId,
+          resolution,
+          fps
+        )
+      ).rejects.toThrow('Device is offline');
+    });
+
+    it('should handle network errors when starting session', async () => {
+      const resolution = '720p';
+      const fps = 30;
+      (global.fetch as any).mockRejectedValueOnce(new Error('Network error'));
+
+      await expect(
+        DevicesService.startRemoteControlSession(
+          baseUrl,
+          deviceId,
+          resolution,
+          fps
+        )
+      ).rejects.toThrow('Network error');
+    });
+  });
 });

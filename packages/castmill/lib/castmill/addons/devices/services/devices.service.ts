@@ -361,6 +361,38 @@ export const DevicesService = {
     channelId: number
   ) {
     return await removeChannelFromDevice(baseUrl, deviceId, channelId);
+  },
+
+  /**
+   * Start a remote control session for a device.
+   * 
+   * @param baseUrl API base URL
+   * @param deviceId Device ID
+   * @param resolution Resolution setting (auto, 480p, 720p)
+   * @param fps FPS setting (auto, 10, 15, 30)
+   * @returns Promise that resolves with the session data
+   */
+  async startRemoteControlSession(
+    baseUrl: string,
+    deviceId: string,
+    resolution: string,
+    fps: number
+  ) {
+    const response = await fetch(
+      `${baseUrl}/dashboard/devices/${deviceId}/rc/sessions`,
+      {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ resolution, fps }),
+      }
+    );
+
+    return handleResponse<{ session_id: string; url: string }>(response, {
+      parse: true,
+    });
   }
 };
 
