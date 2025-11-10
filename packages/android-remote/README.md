@@ -25,16 +25,29 @@ This service enables:
    - Manages device identification and authentication
    - Runs as compliant Android 10+ foreground service
    - Shows persistent notification with connection status
+   - Coordinates screen capture and encoding
 3. **WebSocketManager**: WebSocket client implementation
    - Connects to backend using Phoenix protocol
    - Handles automatic reconnection with exponential backoff
    - Routes control events and device events
    - Maintains heartbeat to keep connection alive
-4. **RemoteAccessibilityService**: Accessibility service for input injection
+   - Transmits video frames as binary WebSocket messages
+4. **ScreenCaptureManager**: Screen capture orchestration
+   - Creates VirtualDisplay from MediaProjection
+   - Manages video encoder lifecycle
+   - Implements automatic H.264 → MJPEG fallback
+5. **VideoEncoder**: H.264/AVC video encoding
+   - Encodes at 720p, 10-15 fps, 1.5-3 Mbps CBR
+   - Uses MediaCodec with hardware acceleration
+   - Outputs NAL units for WebSocket transmission
+6. **MjpegEncoder**: MJPEG fallback encoding
+   - Encodes JPEG frames at lower fps (5 fps)
+   - Software-based fallback when H.264 unavailable
+7. **RemoteAccessibilityService**: Accessibility service for input injection
    - Injects touch events and gestures
    - Performs global actions (back, home, recents)
    - Enables remote control of the device UI
-5. **DeviceUtils**: Device identification utilities
+8. **DeviceUtils**: Device identification utilities
    - Returns unique device identifier (same as main player)
    - Uses Settings.Secure.ANDROID_ID for consistency
 
@@ -133,8 +146,27 @@ The service uses the Phoenix WebSocket protocol to communicate with the backend:
 - **Auth**: Token and session ID sent on join
 - **Heartbeat**: Every 30 seconds
 - **Reconnect**: Automatic with exponential backoff (1s to 60s)
+- **Video Frames**: Binary WebSocket messages with metadata + NAL units
 
 See [IMPLEMENTATION.md](IMPLEMENTATION.md) for detailed documentation.
+
+### Video Capture and Encoding
+
+The service supports real-time screen capture and video encoding:
+
+- **Primary Codec**: H.264/AVC (baseline, level 3.1)
+  - 720p resolution (1280x720)
+  - 10-15 fps frame rate
+  - 1.5-3 Mbps CBR bitrate
+  - ~2 second keyframe interval
+- **Fallback Codec**: MJPEG (Motion JPEG)
+  - 720p resolution
+  - 5 fps frame rate (reduced for bandwidth)
+  - JPEG quality 75
+- **Automatic Fallback**: H.264 → MJPEG if encoding fails
+- **Transmission**: NAL units via WebSocket binary frames
+
+See [VIDEO_CAPTURE_IMPLEMENTATION.md](VIDEO_CAPTURE_IMPLEMENTATION.md) for complete video capture documentation.
 
 ### Security Considerations
 
