@@ -23,12 +23,20 @@ defmodule CastmillWeb.DeviceRcChannel do
             {:error, %{reason: "Session not found"}}
 
           session ->
-            if session.device_id == device.id and session.status == "active" do
+            if session.device_id == device.id and session.state in ["created", "starting", "streaming"] do
               socket = socket
                 |> assign(:device_id, device_id)
                 |> assign(:device, device)
                 |> assign(:session_id, session_id)
               
+              # Transition session to starting if it's still in created state
+              if session.state == "created" do
+                RcSessions.transition_to_starting(session_id)
+              end
+
+              # Update activity timestamp
+              RcSessions.update_activity(session_id)
+
               # Notify RC window that device is connected
               Phoenix.PubSub.broadcast(
                 Castmill.PubSub,
@@ -52,6 +60,10 @@ defmodule CastmillWeb.DeviceRcChannel do
     # Forward control events from RC window to device
     # These events come through PubSub from the RC window channel
     broadcast_from(socket, "control_event", payload)
+    
+    # Update activity timestamp
+    RcSessions.update_activity(socket.assigns.session_id)
+    
     {:reply, :ok, socket}
   end
 
@@ -66,6 +78,9 @@ defmodule CastmillWeb.DeviceRcChannel do
       %{event: "device_event", payload: payload}
     )
 
+    # Update activity timestamp
+    RcSessions.update_activity(session_id)
+
     {:reply, :ok, socket}
   end
 
@@ -73,6 +88,10 @@ defmodule CastmillWeb.DeviceRcChannel do
   def handle_info(%{event: "control_event", payload: payload}, socket) do
     # Received from PubSub, push to device WebSocket
     push(socket, "control_event", payload)
+    
+    # Update activity timestamp
+    RcSessions.update_activity(socket.assigns.session_id)
+    
     {:noreply, socket}
   end
 
@@ -80,6 +99,13 @@ defmodule CastmillWeb.DeviceRcChannel do
   def handle_info(%{event: "stop_session"}, socket) do
     # Session stopped, disconnect device
     push(socket, "session_stopped", %{})
+    {:stop, :normal, socket}
+  end
+
+  @impl true
+  def handle_info(%{event: "session_closed"}, socket) do
+    # Session closed (timeout or explicit close), disconnect device
+    push(socket, "session_closed", %{})
     {:stop, :normal, socket}
   end
 
