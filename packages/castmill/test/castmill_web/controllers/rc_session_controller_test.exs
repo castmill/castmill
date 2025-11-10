@@ -8,6 +8,28 @@ defmodule CastmillWeb.RcSessionControllerTest do
   import Castmill.RcSessionsFixtures
 
   alias Castmill.Devices.RcSessions
+  alias Castmill.Repo
+  alias Castmill.Organizations.OrganizationsUsers
+
+  # Helper to set user role in an organization
+  defp set_user_role(user_id, organization_id, role) do
+    # Find or create the organizations_users record
+    case Repo.get_by(OrganizationsUsers, user_id: user_id, organization_id: organization_id) do
+      nil ->
+        %OrganizationsUsers{}
+        |> OrganizationsUsers.changeset(%{
+          user_id: user_id,
+          organization_id: organization_id,
+          role: role
+        })
+        |> Repo.insert!()
+
+      org_user ->
+        org_user
+        |> OrganizationsUsers.changeset(%{role: role})
+        |> Repo.update!()
+    end
+  end
 
   setup %{conn: conn} do
     # Create test data
@@ -15,6 +37,9 @@ defmodule CastmillWeb.RcSessionControllerTest do
     organization = organization_fixture(%{network_id: network.id})
     user = user_fixture(%{organization_id: organization.id})
     device = device_fixture(%{organization_id: organization.id})
+
+    # Set user as device_manager by default
+    set_user_role(user.id, organization.id, :device_manager)
 
     # Create access token for authentication
     access_token = access_token_fixture(%{
@@ -28,27 +53,70 @@ defmodule CastmillWeb.RcSessionControllerTest do
       |> put_req_header("accept", "application/json")
       |> put_req_header("authorization", "Bearer #{access_token.secret}")
 
-    {:ok, conn: conn, user: user, device: device, organization: organization}
+    {:ok, conn: conn, user: user, device: device, organization: organization, network: network}
   end
 
   describe "POST /devices/:device_id/rc/sessions" do
-    test "creates a new RC session", %{conn: conn, device: device} do
+    test "creates a new RC session with device_manager role", %{conn: conn, device: device} do
       conn = post(conn, "/dashboard/devices/#{device.id}/rc/sessions")
       
+      response = json_response(conn, 201)
       assert %{
         "session_id" => session_id,
         "device_id" => device_id,
-        "status" => "active"
-      } = json_response(conn, 201)
+        "state" => state
+      } = response
 
       assert device_id == device.id
+      assert state in ["created", "starting"]
       assert is_binary(session_id)
 
       # Verify session was created in database
       session = RcSessions.get_session(session_id)
       assert session != nil
       assert session.device_id == device.id
-      assert session.status == "active"
+      assert session.state in ["created", "starting"]
+    end
+
+    test "creates a new RC session with admin role", %{conn: conn, device: device, user: user, organization: organization} do
+      set_user_role(user.id, organization.id, :admin)
+      
+      conn = post(conn, "/dashboard/devices/#{device.id}/rc/sessions")
+      assert json_response(conn, 201)
+    end
+
+    test "creates a new RC session with manager role", %{conn: conn, device: device, user: user, organization: organization} do
+      set_user_role(user.id, organization.id, :manager)
+      
+      conn = post(conn, "/dashboard/devices/#{device.id}/rc/sessions")
+      assert json_response(conn, 201)
+    end
+
+    test "rejects creation with member role", %{conn: conn, device: device, user: user, organization: organization} do
+      set_user_role(user.id, organization.id, :member)
+      
+      conn = post(conn, "/dashboard/devices/#{device.id}/rc/sessions")
+      
+      assert %{"error" => error} = json_response(conn, 403)
+      assert error =~ "device_manager"
+    end
+
+    test "rejects creation with guest role", %{conn: conn, device: device, user: user, organization: organization} do
+      set_user_role(user.id, organization.id, :guest)
+      
+      conn = post(conn, "/dashboard/devices/#{device.id}/rc/sessions")
+      
+      assert %{"error" => error} = json_response(conn, 403)
+      assert error =~ "device_manager"
+    end
+
+    test "rejects creation with editor role", %{conn: conn, device: device, user: user, organization: organization} do
+      set_user_role(user.id, organization.id, :editor)
+      
+      conn = post(conn, "/dashboard/devices/#{device.id}/rc/sessions")
+      
+      assert %{"error" => error} = json_response(conn, 403)
+      assert error =~ "device_manager"
     end
 
     test "returns conflict when device already has active session", %{conn: conn, device: device, user: user} do
@@ -86,19 +154,41 @@ defmodule CastmillWeb.RcSessionControllerTest do
 
       conn = post(conn, "/dashboard/rc/sessions/#{session.id}/stop")
       
+      response = json_response(conn, 200)
       assert %{
         "session_id" => session_id,
-        "status" => "stopped",
+        "state" => state,
         "stopped_at" => stopped_at
-      } = json_response(conn, 200)
+      } = response
 
       assert session_id == session.id
+      assert state == "closed"
       assert stopped_at != nil
 
       # Verify session was stopped in database
       updated_session = RcSessions.get_session(session.id)
-      assert updated_session.status == "stopped"
+      assert updated_session.state == "closed"
       assert updated_session.stopped_at != nil
+    end
+
+    test "allows admin to stop session with device_manager permission", %{conn: conn, device: device, user: user, organization: organization} do
+      set_user_role(user.id, organization.id, :admin)
+      session = rc_session_fixture(%{device_id: device.id, user_id: user.id})
+
+      conn = post(conn, "/dashboard/rc/sessions/#{session.id}/stop")
+      assert json_response(conn, 200)
+    end
+
+    test "rejects stopping with member role", %{conn: conn, device: device, user: user, organization: organization} do
+      session = rc_session_fixture(%{device_id: device.id, user_id: user.id})
+      
+      # Change role after session creation
+      set_user_role(user.id, organization.id, :member)
+
+      conn = post(conn, "/dashboard/rc/sessions/#{session.id}/stop")
+      
+      assert %{"error" => error} = json_response(conn, 403)
+      assert error =~ "device_manager"
     end
 
     test "returns not found for non-existent session", %{conn: conn} do
@@ -108,10 +198,9 @@ defmodule CastmillWeb.RcSessionControllerTest do
       assert %{"error" => "Session not found"} = json_response(conn, 404)
     end
 
-    test "returns forbidden when user doesn't own the session", %{conn: conn, device: device} do
+    test "returns forbidden when user doesn't own the session", %{conn: conn, device: device, network: network} do
       # Create a session with a different user
-      other_network = network_fixture()
-      other_org = organization_fixture(%{network_id: other_network.id})
+      other_org = organization_fixture(%{network_id: network.id})
       other_user = user_fixture(%{organization_id: other_org.id})
       
       session = rc_session_fixture(%{device_id: device.id, user_id: other_user.id})
@@ -139,15 +228,17 @@ defmodule CastmillWeb.RcSessionControllerTest do
 
       conn = get(conn, "/dashboard/devices/#{device.id}/rc/status")
       
+      response = json_response(conn, 200)
       assert %{
         "has_active_session" => true,
         "session_id" => session_id,
         "user_id" => user_id,
-        "started_at" => _started_at
-      } = json_response(conn, 200)
+        "state" => state
+      } = response
 
       assert session_id == session.id
       assert user_id == user.id
+      assert state in ["created", "starting", "streaming"]
     end
 
     test "returns no active session when device has no sessions", %{conn: conn, device: device} do
@@ -156,7 +247,7 @@ defmodule CastmillWeb.RcSessionControllerTest do
       assert %{"has_active_session" => false} = json_response(conn, 200)
     end
 
-    test "returns no active session when all sessions are stopped", %{conn: conn, device: device, user: user} do
+    test "returns no active session when all sessions are closed", %{conn: conn, device: device, user: user} do
       # Create and stop a session
       session = rc_session_fixture(%{device_id: device.id, user_id: user.id})
       {:ok, _} = RcSessions.stop_session(session.id)

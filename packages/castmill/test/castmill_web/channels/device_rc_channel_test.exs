@@ -41,6 +41,10 @@ defmodule CastmillWeb.DeviceRcChannelTest do
       # Should receive device_connected notification
       assert_receive %{event: "device_connected", device_id: device_id}
       assert device_id == device.id
+      
+      # Verify session transitioned to starting
+      updated_session = RcSessions.get_session(session.id)
+      assert updated_session.state in ["starting", "streaming"]
     end
 
     test "rejects join with invalid token", %{device: device, session: session} do
@@ -66,7 +70,7 @@ defmodule CastmillWeb.DeviceRcChannelTest do
     end
 
     test "rejects join with stopped session", %{device: device, session: session} do
-      # Stop the session
+      # Stop the session (transitions to closed)
       {:ok, _} = RcSessions.stop_session(session.id)
 
       assert {:error, %{reason: "Invalid session"}} = CastmillWeb.RcSocket
@@ -142,6 +146,28 @@ defmodule CastmillWeb.DeviceRcChannelTest do
 
       # Device should receive session_stopped message
       assert_push "session_stopped", %{}
+    end
+  end
+
+  describe "handle_info session_closed" do
+    test "disconnects device when session is closed (timeout)", %{device: device, session: session} do
+      {:ok, _, socket} = CastmillWeb.RcSocket
+        |> socket("device_id", %{})
+        |> subscribe_and_join(
+          CastmillWeb.DeviceRcChannel,
+          "device_rc:#{device.id}",
+          %{"token" => device.token, "session_id" => session.id}
+        )
+
+      # Broadcast session_closed event (e.g., from timeout)
+      Phoenix.PubSub.broadcast(
+        Castmill.PubSub,
+        "rc_session:#{session.id}",
+        %{event: "session_closed"}
+      )
+
+      # Device should receive session_closed message
+      assert_push "session_closed", %{}
     end
   end
 
