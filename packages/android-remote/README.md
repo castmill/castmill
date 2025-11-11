@@ -73,17 +73,19 @@ The app requires two critical permissions for full functionality:
 1. **AccessibilityService** - For remote gesture injection
    - Allows remote control of touch events (tap, swipe, etc.)
    - Must be manually enabled by user in Settings
-   - See [PERMISSIONS.md](PERMISSIONS.md) for setup instructions
+   - See [Quick Start Guide](QUICK_START_PERMISSIONS.md) for setup instructions
 
 2. **MediaProjection** - For screen capture
    - Allows remote viewing of device screen
    - User must grant permission for each session (manual consent)
    - Can be auto-granted via Device Owner policy (managed devices)
-   - See [PERMISSIONS.md](PERMISSIONS.md) for detailed information
+   - See [Device Owner Setup](PERMISSIONS.md#track-2-device-owner-auto-grant-managed-device-deployment)
 
 Both permissions involve sensitive capabilities and require explicit user consent or enterprise device management policies.
 
-**📖 For complete permission documentation, consent flows, and Device Owner setup, see [PERMISSIONS.md](PERMISSIONS.md)**
+**📖 Documentation:**
+- **[Quick Start Guide](QUICK_START_PERMISSIONS.md)** - Step-by-step setup instructions
+- **[PERMISSIONS.md](PERMISSIONS.md)** - Complete permission documentation, consent flows, and Device Owner setup
 
 ## Building
 
