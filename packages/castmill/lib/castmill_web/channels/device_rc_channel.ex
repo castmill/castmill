@@ -30,7 +30,9 @@ defmodule CastmillWeb.DeviceRcChannel do
                 |> assign(:session_id, session_id)
               
               # Transition session to starting if it's still in created state
-              if session.state == "created" do
+              # Re-fetch to avoid race conditions
+              current_session = RcSessions.get_session(session_id)
+              if current_session && current_session.state == "created" do
                 RcSessions.transition_to_starting(session_id)
               end
 

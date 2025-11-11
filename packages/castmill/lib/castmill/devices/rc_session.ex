@@ -21,6 +21,11 @@ defmodule Castmill.Devices.RcSession do
   - `streaming` → `stopping` - When stop is requested
   - `stopping` → `closed` - When cleanup is complete
   - Any state → `closed` - On timeout or error
+  
+  ## Fields
+  
+  - `status` - **DEPRECATED** Legacy field kept for backward compatibility during migration.
+              Will be removed in a future version. Use `state` field instead.
   """
   use Ecto.Schema
   import Ecto.Changeset

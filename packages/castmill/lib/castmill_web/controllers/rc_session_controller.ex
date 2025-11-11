@@ -9,7 +9,6 @@ defmodule CastmillWeb.RcSessionController do
   alias Castmill.Devices
   alias Castmill.Devices.RcSessions
   alias Castmill.Organizations
-  alias Castmill.Authorization.Permissions
 
   action_fallback CastmillWeb.FallbackController
 
@@ -53,7 +52,6 @@ defmodule CastmillWeb.RcSessionController do
                       session_id: session.id,
                       device_id: session.device_id,
                       state: session.state,
-                      status: session.status,
                       started_at: session.started_at,
                       timeout_at: session.timeout_at
                     })
@@ -133,7 +131,6 @@ defmodule CastmillWeb.RcSessionController do
                     |> json(%{
                       session_id: stopped_session.id,
                       state: stopped_session.state,
-                      status: stopped_session.status,
                       stopped_at: stopped_session.stopped_at
                     })
 

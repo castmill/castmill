@@ -24,15 +24,14 @@ defmodule Castmill.Devices.RcSessions do
     case get_active_session_for_device(device_id) do
       nil ->
         now = DateTime.utc_now()
-        timeout_at = DateTime.add(now, timeout_seconds, :second)
         
         attrs = %{
           device_id: device_id,
           user_id: user_id,
           state: "created",
-          status: "active",  # Keep for backward compatibility
+          status: "active",  # Keep for backward compatibility (DEPRECATED)
           last_activity_at: now,
-          timeout_at: timeout_at
+          timeout_at: nil  # Will be computed dynamically from last_activity_at + timeout_seconds
         }
 
         result = 
@@ -44,7 +43,9 @@ defmodule Castmill.Devices.RcSessions do
           {:ok, session} ->
             # Schedule timeout check
             schedule_timeout_check(session.id, timeout_seconds)
-            {:ok, session}
+            # Return session with computed timeout_at for API response
+            timeout_at = DateTime.add(now, timeout_seconds, :second)
+            {:ok, %{session | timeout_at: timeout_at}}
 
           error ->
             error
@@ -175,14 +176,16 @@ defmodule Castmill.Devices.RcSessions do
   Checks for timed-out sessions and closes them.
   
   This is called by the timeout checker process.
+  Timeout is based on last_activity_at + default_timeout_seconds.
   """
-  def check_and_close_timed_out_sessions do
+  def check_and_close_timed_out_sessions(timeout_seconds \\ @default_timeout_seconds) do
     now = DateTime.utc_now()
+    timeout_threshold = DateTime.add(now, -timeout_seconds, :second)
 
     timed_out_sessions =
       RcSession
       |> where([s], s.state in ^RcSession.active_states())
-      |> where([s], not is_nil(s.timeout_at) and s.timeout_at < ^now)
+      |> where([s], not is_nil(s.last_activity_at) and s.last_activity_at < ^timeout_threshold)
       |> Repo.all()
 
     Enum.each(timed_out_sessions, fn session ->
@@ -201,14 +204,15 @@ defmodule Castmill.Devices.RcSessions do
 
   @doc """
   Checks a specific session for timeout and closes it if needed.
+  Timeout is based on last_activity_at + timeout_seconds.
   """
-  def check_session_timeout(session_id) do
+  def check_session_timeout(session_id, timeout_seconds \\ @default_timeout_seconds) do
     case get_session(session_id) do
       nil ->
         {:error, :not_found}
 
       session ->
-        if RcSession.active_state?(session.state) && session_timed_out?(session) do
+        if RcSession.active_state?(session.state) && session_timed_out?(session, timeout_seconds) do
           transition_to_closed(session_id)
         else
           {:ok, session}
@@ -230,10 +234,12 @@ defmodule Castmill.Devices.RcSessions do
     end
   end
 
-  defp session_timed_out?(session) do
-    case session.timeout_at do
+  defp session_timed_out?(session, timeout_seconds \\ @default_timeout_seconds) do
+    case session.last_activity_at do
       nil -> false
-      timeout_at -> DateTime.compare(DateTime.utc_now(), timeout_at) == :gt
+      last_activity_at ->
+        timeout_threshold = DateTime.add(DateTime.utc_now(), -timeout_seconds, :second)
+        DateTime.compare(last_activity_at, timeout_threshold) == :lt
     end
   end
 
@@ -243,7 +249,7 @@ defmodule Castmill.Devices.RcSessions do
 
     Task.start(fn ->
       Process.sleep(check_after_ms)
-      check_session_timeout(session_id)
+      check_session_timeout(session_id, timeout_seconds)
     end)
   end
 end

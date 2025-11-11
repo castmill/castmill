@@ -20,7 +20,18 @@ defmodule Castmill.Repo.Migrations.UpdateRcSessionsWithStateMachine do
     END,
     last_activity_at = COALESCE(started_at, inserted_at)
     WHERE state IS NULL
-    """, ""
+    """, """
+    UPDATE rc_sessions
+    SET status = CASE
+      WHEN state = 'streaming' THEN 'active'
+      WHEN state = 'closed' THEN 'stopped'
+      WHEN state = 'created' THEN 'active'
+      WHEN state = 'starting' THEN 'active'
+      WHEN state = 'stopping' THEN 'stopped'
+      ELSE status
+    END
+    WHERE status IS NOT NULL
+    """
 
     # Now make state non-nullable and add index
     alter table(:rc_sessions) do

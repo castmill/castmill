@@ -31,13 +31,10 @@ defmodule CastmillWeb.RcWindowChannel do
             Phoenix.PubSub.subscribe(Castmill.PubSub, "rc_session:#{session_id}")
 
             # Transition session to starting if it's still in created state
-            if session.state == "created" do
+            # Re-fetch to avoid race conditions
+            current_session = RcSessions.get_session(session_id)
+            if current_session && current_session.state == "created" do
               RcSessions.transition_to_starting(session_id)
-            end
-
-            # If session is starting, try to transition to streaming
-            if session.state == "starting" do
-              RcSessions.transition_to_streaming(session_id)
             end
 
             # Update activity timestamp
@@ -94,6 +91,7 @@ defmodule CastmillWeb.RcWindowChannel do
   @impl true
   def handle_info(%{event: "device_connected", device_id: device_id}, socket) do
     # When device connects, try to transition to streaming if we're in starting state
+    # Re-fetch to ensure we have current state and avoid race conditions
     session_id = socket.assigns.session_id
     
     case RcSessions.get_session(session_id) do
