@@ -34,6 +34,10 @@ defmodule CastmillWeb.RcWindowChannelTest do
 
       assert socket.assigns.session_id == session.id
       assert socket.assigns.device_id == session.device_id
+      
+      # Verify session transitioned to starting or streaming
+      updated_session = RcSessions.get_session(session.id)
+      assert updated_session.state in ["starting", "streaming"]
     end
 
     test "rejects join without user_id" do
@@ -76,7 +80,7 @@ defmodule CastmillWeb.RcWindowChannelTest do
     end
 
     test "rejects join with stopped session", %{user: user, session: session} do
-      # Stop the session
+      # Stop the session (transitions to closed)
       {:ok, _} = RcSessions.stop_session(session.id)
 
       assert {:error, %{reason: "Unauthorized or invalid session"}} = CastmillWeb.RcSocket
@@ -227,6 +231,28 @@ defmodule CastmillWeb.RcWindowChannelTest do
       # RC window should receive the message
       assert_push "media_stream_ready", %{device_id: device_id}
       assert device_id == device.id
+    end
+  end
+
+  describe "handle_info session_closed" do
+    test "disconnects RC window when session is closed (timeout)", %{user: user, session: session} do
+      {:ok, _, _socket} = CastmillWeb.RcSocket
+        |> socket("user_socket", %{user_id: user.id})
+        |> subscribe_and_join(
+          CastmillWeb.RcWindowChannel,
+          "rc_window:#{session.id}",
+          %{}
+        )
+
+      # Broadcast session_closed event (e.g., from timeout)
+      Phoenix.PubSub.broadcast(
+        Castmill.PubSub,
+        "rc_session:#{session.id}",
+        %{event: "session_closed"}
+      )
+
+      # RC window should receive session_closed message
+      assert_push "session_closed", %{}
     end
   end
 end

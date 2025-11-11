@@ -26,9 +26,19 @@ defmodule CastmillWeb.RcWindowChannel do
           {:error, %{reason: "Session not found"}}
 
         session ->
-          if session.user_id == user_id and session.status == "active" do
+          if session.user_id == user_id and session.state in ["created", "starting", "streaming"] do
             # Subscribe to session PubSub topic to receive device events
             Phoenix.PubSub.subscribe(Castmill.PubSub, "rc_session:#{session_id}")
+
+            # Transition session to starting if it's still in created state
+            # Re-fetch to avoid race conditions
+            current_session = RcSessions.get_session(session_id)
+            if current_session && current_session.state == "created" do
+              RcSessions.transition_to_starting(session_id)
+            end
+
+            # Update activity timestamp
+            RcSessions.update_activity(session_id)
 
             socket =
               socket
@@ -54,6 +64,9 @@ defmodule CastmillWeb.RcWindowChannel do
       %{event: "control_event", payload: payload}
     )
 
+    # Update activity timestamp
+    RcSessions.update_activity(session_id)
+
     {:reply, :ok, socket}
   end
 
@@ -68,12 +81,26 @@ defmodule CastmillWeb.RcWindowChannel do
       %{event: "request_metadata"}
     )
 
+    # Update activity timestamp
+    RcSessions.update_activity(session_id)
+
     {:reply, :ok, socket}
   end
 
   # Handle messages from PubSub (from device channels)
   @impl true
   def handle_info(%{event: "device_connected", device_id: device_id}, socket) do
+    # When device connects, try to transition to streaming if we're in starting state
+    # Re-fetch to ensure we have current state and avoid race conditions
+    session_id = socket.assigns.session_id
+    
+    case RcSessions.get_session(session_id) do
+      %{state: "starting"} ->
+        RcSessions.transition_to_streaming(session_id)
+      _ ->
+        :ok
+    end
+
     push(socket, "device_connected", %{device_id: device_id})
     {:noreply, socket}
   end
@@ -87,6 +114,10 @@ defmodule CastmillWeb.RcWindowChannel do
   @impl true
   def handle_info(%{event: "device_event", payload: payload}, socket) do
     push(socket, "device_event", payload)
+    
+    # Update activity timestamp
+    RcSessions.update_activity(socket.assigns.session_id)
+    
     {:noreply, socket}
   end
 
@@ -113,6 +144,13 @@ defmodule CastmillWeb.RcWindowChannel do
   def handle_info(%{event: "media_metadata", payload: payload}, socket) do
     push(socket, "media_metadata", payload)
     {:noreply, socket}
+  end
+
+  @impl true
+  def handle_info(%{event: "session_closed"}, socket) do
+    # Session closed (timeout or explicit), disconnect window
+    push(socket, "session_closed", %{})
+    {:stop, :normal, socket}
   end
 
   @impl true
