@@ -300,7 +300,7 @@ defmodule CastmillWeb.RcWindowChannelTest do
       # Broadcast media_stream_ready via PubSub
       Phoenix.PubSub.broadcast(
         Castmill.PubSub,
-        "rc_session:#{session_id}",
+        "rc_session:#{session.id}",
         %{event: "media_stream_ready", device_id: device.id}
       )
 
