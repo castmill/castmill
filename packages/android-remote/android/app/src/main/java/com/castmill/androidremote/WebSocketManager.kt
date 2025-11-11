@@ -149,16 +149,21 @@ class WebSocketManager(
             // Write metadata
             combinedBuffer.put(metadataBytes)
             
-            // Write frame data
-            buffer.rewind()
-            combinedBuffer.put(buffer)
+            // Write frame data - use duplicate to avoid mutating input buffer
+            val bufferCopy = buffer.duplicate()
+            bufferCopy.rewind()
+            combinedBuffer.put(bufferCopy)
             
             // Send as binary WebSocket message
             combinedBuffer.rewind()
             val byteArray = ByteArray(combinedBuffer.remaining())
             combinedBuffer.get(byteArray)
             
-            webSocket?.send(okio.ByteString.of(*byteArray))
+            if (webSocket == null) {
+                Log.w(TAG, "WebSocket not connected, dropping video frame: size=${byteArray.size}, codec=$codecType, isKeyFrame=$isKeyFrame")
+                return
+            }
+            webSocket.send(okio.ByteString.of(*byteArray))
         } catch (e: Exception) {
             Log.e(TAG, "Error sending video frame", e)
         }

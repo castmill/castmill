@@ -29,8 +29,8 @@ class VideoEncoderTest {
     private var lastBufferInfo: MediaCodec.BufferInfo? = null
     private var lastIsKeyFrame: Boolean = false
     private var lastError: Exception? = null
-    private val frameLatch = CountDownLatch(1)
-    private val errorLatch = CountDownLatch(1)
+    private var frameLatch = CountDownLatch(1)
+    private var errorLatch = CountDownLatch(1)
 
     @Before
     fun setup() {
@@ -38,6 +38,8 @@ class VideoEncoderTest {
         lastBufferInfo = null
         lastIsKeyFrame = false
         lastError = null
+        frameLatch = CountDownLatch(1)
+        errorLatch = CountDownLatch(1)
     }
 
     @Test

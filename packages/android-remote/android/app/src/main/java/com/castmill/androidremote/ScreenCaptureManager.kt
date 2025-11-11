@@ -130,12 +130,10 @@ class ScreenCaptureManager(
                 },
                 onError = { exception ->
                     Log.e(TAG, "H.264 encoder error, falling back to MJPEG", exception)
-                    // Fallback to MJPEG
-                    encoderHandler?.post {
-                        stopH264Encoding()
-                        useH264 = false
-                        startMjpegEncoding()
-                    }
+                    // Fallback to MJPEG - execute synchronously to avoid race with handler shutdown
+                    stopH264Encoding()
+                    useH264 = false
+                    startMjpegEncoding()
                 }
             )
 
@@ -278,7 +276,11 @@ class ScreenCaptureManager(
 
         // Stop encoder thread
         encoderThread?.quitSafely()
-        encoderThread?.join()
+        try {
+            encoderThread?.join(5000) // 5 second timeout
+        } catch (e: InterruptedException) {
+            Log.w(TAG, "Interrupted while waiting for encoder thread to stop", e)
+        }
         encoderThread = null
         encoderHandler = null
     }
@@ -353,7 +355,15 @@ class ScreenCaptureManager(
     private fun getDisplayMetrics(): DisplayMetrics {
         val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
         val metrics = DisplayMetrics()
-        windowManager.defaultDisplay.getMetrics(metrics)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            context.display?.getMetrics(metrics) ?: run {
+                @Suppress("DEPRECATION")
+                windowManager.defaultDisplay.getMetrics(metrics)
+            }
+        } else {
+            @Suppress("DEPRECATION")
+            windowManager.defaultDisplay.getMetrics(metrics)
+        }
         return metrics
     }
 }

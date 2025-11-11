@@ -42,6 +42,7 @@ class VideoEncoder(
     }
 
     private var mediaCodec: MediaCodec? = null
+    private var inputSurfaceField: Surface? = null
     private var isEncoding = false
 
     /**
@@ -49,7 +50,7 @@ class VideoEncoder(
      * This surface should be used as the target for MediaProjection's VirtualDisplay.
      */
     val inputSurface: Surface?
-        get() = mediaCodec?.createInputSurface()
+        get() = inputSurfaceField
 
     /**
      * Initialize and start the encoder.
@@ -87,10 +88,10 @@ class VideoEncoder(
             // Create and configure encoder
             mediaCodec = MediaCodec.createEncoderByType(MIME_TYPE).apply {
                 configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
+                inputSurfaceField = createInputSurface()
             }
 
             Log.i(TAG, "VideoEncoder initialized: ${width}x${height} @ ${frameRate}fps, ${bitrate / 1_000_000}Mbps")
-            isEncoding = true
             return true
         } catch (e: Exception) {
             Log.e(TAG, "Failed to initialize VideoEncoder", e)
@@ -106,6 +107,7 @@ class VideoEncoder(
     fun startEncoder() {
         try {
             mediaCodec?.start()
+            isEncoding = true
             Log.i(TAG, "MediaCodec encoder started")
         } catch (e: Exception) {
             Log.e(TAG, "Failed to start MediaCodec", e)
@@ -201,6 +203,7 @@ class VideoEncoder(
             }
         } finally {
             mediaCodec = null
+            inputSurfaceField = null
         }
     }
 

@@ -112,8 +112,9 @@ class MainActivity : AppCompatActivity() {
                 if (resultCode == RESULT_OK && data != null) {
                     // Permission granted, can start the service with screen capture
                     Log.i(TAG, "MediaProjection permission granted")
-                    // Store result for later use when starting service
-                    // In a real implementation, this would be combined with session setup
+                    // Note: In a production implementation, this would be used with
+                    // startRemoteControlServiceWithCapture(sessionId, deviceToken, resultCode, data)
+                    // when the session is established. For now, this is a helper method for integration.
                 }
             }
             REQUEST_ACCESSIBILITY -> {

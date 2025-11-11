@@ -47,7 +47,6 @@ class MjpegEncoder(
     private var encoderHandler: Handler? = null
     private var isEncoding = false
     private var frameCount = 0L
-    private val frameIntervalMs = 1000L / frameRate
 
     /**
      * Initialize the MJPEG encoder.
@@ -169,7 +168,11 @@ class MjpegEncoder(
             imageReader = null
 
             encoderThread?.quitSafely()
-            encoderThread?.join()
+            try {
+                encoderThread?.join(5000) // 5 second timeout
+            } catch (e: InterruptedException) {
+                Log.w(TAG, "Interrupted while waiting for encoder thread to stop", e)
+            }
             encoderThread = null
             encoderHandler = null
 

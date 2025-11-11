@@ -83,26 +83,32 @@ Video frames are sent as binary WebSocket messages with this format:
 
 ### Example Backend Handler (Elixir/Phoenix)
 
+The Android client sends video frames as raw binary WebSocket messages, not Phoenix channel messages. You need to handle these in your Phoenix socket module using `websocket_handle`:
+
 ```elixir
-def handle_in("video_frame", payload, socket) do
-  # payload is a binary message
-  
+# In your Phoenix socket module (e.g., MyAppWeb.UserSocket)
+# Handle raw binary WebSocket frames sent by the Android client.
+
+def websocket_handle({:binary, payload}, state) do
+  # payload is a binary message in the format:
+  # [4 bytes: metadata length][N bytes: metadata JSON][M bytes: video data]
+
   <<metadata_length::32, rest::binary>> = payload
   <<metadata_json::binary-size(metadata_length), video_data::binary>> = rest
-  
+
   metadata = Jason.decode!(metadata_json)
-  
+
   # metadata contains:
   # - "type": "video_frame"
   # - "codec": "h264" or "mjpeg"
   # - "is_key_frame": true/false
   # - "timestamp": milliseconds
   # - "size": bytes
-  
+
   # Process video_data (NAL units for H.264, JPEG for MJPEG)
   process_video_frame(video_data, metadata)
-  
-  {:noreply, socket}
+
+  {:ok, state}
 end
 ```
 
