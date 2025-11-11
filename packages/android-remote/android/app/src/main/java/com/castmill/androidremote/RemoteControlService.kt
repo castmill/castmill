@@ -178,6 +178,10 @@ class RemoteControlService : LifecycleService() {
 
     /**
      * Create notification channel for Android O+
+     * 
+     * Creates a notification channel that meets Google Play Store requirements for
+     * foreground services. The channel uses IMPORTANCE_LOW to minimize user disruption
+     * while maintaining the required persistent notification.
      */
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -186,11 +190,17 @@ class RemoteControlService : LifecycleService() {
                 CHANNEL_NAME,
                 NotificationManager.IMPORTANCE_LOW
             ).apply {
-                description = "Remote control service notification"
+                description = getString(R.string.notification_channel_description)
+                // Disable sound and vibration for less intrusive notifications
+                setSound(null, null)
+                enableVibration(false)
+                enableLights(false)
             }
             
             val notificationManager = getSystemService(NotificationManager::class.java)
             notificationManager.createNotificationChannel(channel)
+            
+            Log.d(TAG, "Notification channel created: $CHANNEL_ID")
         }
     }
 
