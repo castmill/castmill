@@ -121,6 +121,54 @@ class WebSocketManager(
         sendMessage("device_event", payload)
     }
 
+    /**
+     * Send a video frame to the backend as binary WebSocket frame
+     */
+    fun sendVideoFrame(buffer: java.nio.ByteBuffer, isKeyFrame: Boolean, codecType: String) {
+        try {
+            // Create metadata header (JSON) + binary frame
+            // Format: [metadata_length (4 bytes)][metadata JSON][NAL unit data]
+            val metadata = buildJsonObject {
+                put("type", "video_frame")
+                put("codec", codecType)
+                put("is_key_frame", isKeyFrame)
+                put("timestamp", System.currentTimeMillis())
+                put("size", buffer.remaining())
+            }
+            
+            val metadataBytes = json.encodeToString(JsonObject.serializer(), metadata).toByteArray()
+            val metadataLength = metadataBytes.size
+            
+            // Create combined buffer with metadata length prefix
+            val totalSize = 4 + metadataLength + buffer.remaining()
+            val combinedBuffer = java.nio.ByteBuffer.allocate(totalSize)
+            
+            // Write metadata length (4 bytes, big-endian)
+            combinedBuffer.putInt(metadataLength)
+            
+            // Write metadata
+            combinedBuffer.put(metadataBytes)
+            
+            // Write frame data - use duplicate to avoid mutating input buffer
+            val bufferCopy = buffer.duplicate()
+            bufferCopy.rewind()
+            combinedBuffer.put(bufferCopy)
+            
+            // Send as binary WebSocket message
+            combinedBuffer.rewind()
+            val byteArray = ByteArray(combinedBuffer.remaining())
+            combinedBuffer.get(byteArray)
+            
+            if (webSocket == null) {
+                Log.w(TAG, "WebSocket not connected, dropping video frame: size=${byteArray.size}, codec=$codecType, isKeyFrame=$isKeyFrame")
+                return
+            }
+            webSocket.send(okio.ByteString.of(*byteArray))
+        } catch (e: Exception) {
+            Log.e(TAG, "Error sending video frame", e)
+        }
+    }
+
     private fun sendMessage(event: String, payload: JsonObject = buildJsonObject {}) {
         val topic = "device_rc:$deviceId"
         val ref = (++messageRef).toString()

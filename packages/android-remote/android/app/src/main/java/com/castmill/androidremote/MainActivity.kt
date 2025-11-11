@@ -110,16 +110,53 @@ class MainActivity : AppCompatActivity() {
         when (requestCode) {
             REQUEST_MEDIA_PROJECTION -> {
                 if (resultCode == RESULT_OK && data != null) {
-                    // Permission granted, can start the service
-                    // TODO: Start RemoteControlService with the result
+                    // Permission granted, can start the service with screen capture
+                    Log.i(TAG, "MediaProjection permission granted")
+                    // Note: In a production implementation, this would be used with
+                    // startRemoteControlServiceWithCapture(sessionId, deviceToken, resultCode, data)
+                    // when the session is established. For now, this is a helper method for integration.
                 }
             }
             REQUEST_ACCESSIBILITY -> {
                 // Check if accessibility service was enabled
                 if (isAccessibilityServiceEnabled()) {
                     // Service enabled
+                    Log.i(TAG, "Accessibility service enabled")
                 }
             }
         }
+    }
+
+    /**
+     * Start the RemoteControlService with screen capture enabled.
+     * 
+     * This method combines WebSocket connectivity with screen capture.
+     * Both the session parameters and MediaProjection permission are required.
+     * 
+     * @param sessionId RC session ID from backend
+     * @param deviceToken Device authentication token
+     * @param mediaProjectionResultCode Result code from MediaProjection permission
+     * @param mediaProjectionData Intent data from MediaProjection permission
+     */
+    private fun startRemoteControlServiceWithCapture(
+        sessionId: String,
+        deviceToken: String,
+        mediaProjectionResultCode: Int,
+        mediaProjectionData: Intent
+    ) {
+        val intent = Intent(this, RemoteControlService::class.java).apply {
+            putExtra(RemoteControlService.EXTRA_SESSION_ID, sessionId)
+            putExtra(RemoteControlService.EXTRA_DEVICE_TOKEN, deviceToken)
+            putExtra(RemoteControlService.EXTRA_MEDIA_PROJECTION_RESULT_CODE, mediaProjectionResultCode)
+            putExtra(RemoteControlService.EXTRA_MEDIA_PROJECTION_DATA, mediaProjectionData)
+        }
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent)
+        } else {
+            startService(intent)
+        }
+        
+        Log.i(TAG, "Starting RemoteControlService with screen capture")
     }
 }

@@ -35,16 +35,19 @@ class RemoteControlService : LifecycleService() {
         // Intent extras
         const val EXTRA_SESSION_ID = "session_id"
         const val EXTRA_DEVICE_TOKEN = "device_token"
+        const val EXTRA_MEDIA_PROJECTION_RESULT_CODE = "media_projection_result_code"
+        const val EXTRA_MEDIA_PROJECTION_DATA = "media_projection_data"
         
         // SharedPreferences
         private const val PREFS_NAME = "castmill_remote_prefs"
         private const val PREF_DEVICE_TOKEN = "device_token"
     }
 
-    private var mediaProjection: MediaProjection? = null
+    private var screenCaptureManager: ScreenCaptureManager? = null
     private var webSocketManager: WebSocketManager? = null
     private var deviceId: String? = null
     private var isConnected = false
+    private var isCapturing = false
 
     override fun onCreate() {
         super.onCreate()
@@ -74,6 +77,15 @@ class RemoteControlService : LifecycleService() {
             lifecycleScope.launch {
                 connectWebSocket(sessionId, deviceToken)
             }
+            
+            // Check if MediaProjection permission is provided
+            val resultCode = intent?.getIntExtra(EXTRA_MEDIA_PROJECTION_RESULT_CODE, -1) ?: -1
+            val projectionData = intent?.getParcelableExtra<Intent>(EXTRA_MEDIA_PROJECTION_DATA)
+            
+            if (resultCode != -1 && projectionData != null) {
+                // Start screen capture
+                startScreenCapture(resultCode, projectionData)
+            }
         } else {
             Log.e(TAG, "Missing required parameters: sessionId=$sessionId, token=${deviceToken != null}, deviceId=$deviceId")
             updateNotification("Error: Missing configuration")
@@ -94,8 +106,11 @@ class RemoteControlService : LifecycleService() {
         webSocketManager?.disconnect()
         webSocketManager = null
         
-        mediaProjection?.stop()
-        mediaProjection = null
+        screenCaptureManager?.stop()
+        screenCaptureManager = null
+        
+        isConnected = false
+        isCapturing = false
     }
 
     /**
@@ -114,6 +129,42 @@ class RemoteControlService : LifecycleService() {
         webSocketManager?.connect(sessionId)
         isConnected = true
         updateNotification("Connected to backend")
+    }
+
+    /**
+     * Start screen capture with MediaProjection
+     */
+    private fun startScreenCapture(resultCode: Int, data: Intent) {
+        try {
+            screenCaptureManager = ScreenCaptureManager(
+                context = this,
+                resultCode = resultCode,
+                data = data,
+                onFrameEncoded = { buffer, isKeyFrame, codecType ->
+                    // Send encoded frame via WebSocket
+                    webSocketManager?.sendVideoFrame(buffer, isKeyFrame, codecType)
+                },
+                onError = { exception ->
+                    Log.e(TAG, "Screen capture error", exception)
+                    updateNotification("Capture error: ${exception.message}")
+                }
+            )
+            
+            val started = screenCaptureManager?.start() ?: false
+            if (started) {
+                isCapturing = true
+                val encoderType = screenCaptureManager?.getEncoderType() ?: "Unknown"
+                updateNotification("Capturing with $encoderType")
+                Log.i(TAG, "Screen capture started with $encoderType")
+            } else {
+                Log.e(TAG, "Failed to start screen capture")
+                updateNotification("Failed to start capture")
+                screenCaptureManager = null
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error starting screen capture", e)
+            updateNotification("Error: ${e.message}")
+        }
     }
 
     /**
