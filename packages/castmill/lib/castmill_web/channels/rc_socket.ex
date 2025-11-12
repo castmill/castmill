@@ -43,7 +43,6 @@ defmodule CastmillWeb.RcSocket do
              token,
              max_age: 86_400
            ),
-         true <- not is_nil(user_id),
          user <- Accounts.get_user(user_id),
          true <- not is_nil(user) do
       {:ok, assign(socket, :user, user)}

@@ -40,16 +40,17 @@ defmodule CastmillWeb.RcWindowChannel do
             user_role = Organizations.get_user_role(device.organization_id, user.id)
 
             if has_rc_permission?(user_role) do
-              if session.user_id == user.id and
-                   session.state in ["created", "starting", "streaming"] do
+              # Re-fetch session to avoid race conditions and use latest state
+              current_session = RcSessions.get_session(session_id)
+
+              if current_session && 
+                 current_session.user_id == user.id and
+                 current_session.state in ["created", "starting", "streaming"] do
                 # Subscribe to session PubSub topic to receive device events
                 Phoenix.PubSub.subscribe(Castmill.PubSub, "rc_session:#{session_id}")
 
                 # Transition session to starting if it's still in created state
-                # Re-fetch to avoid race conditions
-                current_session = RcSessions.get_session(session_id)
-
-                if current_session && current_session.state == "created" do
+                if current_session.state == "created" do
                   RcSessions.transition_to_starting(session_id)
                 end
 
@@ -59,7 +60,7 @@ defmodule CastmillWeb.RcWindowChannel do
                 socket =
                   socket
                   |> assign(:session_id, session_id)
-                  |> assign(:device_id, session.device_id)
+                  |> assign(:device_id, current_session.device_id)
 
                 {:ok, socket}
               else

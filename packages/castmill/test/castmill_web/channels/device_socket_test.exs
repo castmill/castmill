@@ -25,7 +25,7 @@ defmodule CastmillWeb.DeviceSocketTest do
       }
 
       # Connect
-      assert {:ok, socket} = CastmillWeb.DeviceSocket.connect(params, socket(CastmillWeb.DeviceSocket, "device_socket"), connect_info)
+      assert {:ok, socket} = connect(CastmillWeb.DeviceSocket, params, connect_info)
       
       # Verify device info is assigned
       assert socket.assigns.device.device_id == device.id
@@ -47,7 +47,7 @@ defmodule CastmillWeb.DeviceSocketTest do
       }
 
       # Should connect successfully - validation happens in channel
-      assert {:ok, socket} = CastmillWeb.DeviceSocket.connect(params, socket(CastmillWeb.DeviceSocket, "device_socket"), connect_info)
+      assert {:ok, socket} = connect(CastmillWeb.DeviceSocket, params, connect_info)
       assert socket.assigns.device.device_id == "any_device_id"
     end
   end

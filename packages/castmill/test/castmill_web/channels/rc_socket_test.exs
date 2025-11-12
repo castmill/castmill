@@ -37,7 +37,9 @@ defmodule CastmillWeb.RcSocketTest do
       organization = organization_fixture(%{network_id: network.id})
       user = user_fixture(%{organization_id: organization.id})
 
-      # Generate an expired token (max_age is set to a very short duration)
+      # Generate a token with a backdated timestamp to simulate expiration
+      # The token is signed as if it was created 86,401 seconds ago (>24 hours)
+      # which exceeds the max_age of 86,400 seconds in authenticate_user
       token =
         Phoenix.Token.sign(
           CastmillWeb.Endpoint,
