@@ -26,7 +26,10 @@ defmodule Castmill.Application do
       Castmill.Hooks.Supervisor,
 
       # Start the Oban supervisor tree
-      {Oban, Application.fetch_env!(:castmill, Oban)}
+      {Oban, Application.fetch_env!(:castmill, Oban)},
+
+      # Start the Relay Session Manager
+      Castmill.Relay.SessionManager
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

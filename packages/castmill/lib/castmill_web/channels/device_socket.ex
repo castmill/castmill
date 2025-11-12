@@ -9,6 +9,7 @@ defmodule CastmillWeb.DeviceSocket do
   ## Channels
   channel "register:*", CastmillWeb.RegisterChannel
   channel "devices:*", CastmillWeb.DevicesChannel
+  channel "device_media:*", CastmillWeb.DeviceMediaChannel
 
   #
   # To create a channel file, use the mix task:

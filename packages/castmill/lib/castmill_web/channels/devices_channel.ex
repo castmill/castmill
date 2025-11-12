@@ -65,6 +65,24 @@ defmodule CastmillWeb.DevicesChannel do
     {:reply, {:ok, channels}, socket}
   end
 
+  @impl true
+  def handle_in("start_session", %{"session_id" => session_id} = payload, socket) do
+    %{:device_id => device_id} = socket.assigns.device
+
+    # Enqueue start_session command to device control channel
+    Phoenix.PubSub.broadcast(
+      Castmill.PubSub,
+      "device_control:#{device_id}",
+      Map.merge(payload, %{
+        type: "start_session",
+        device_id: device_id,
+        session_id: session_id
+      })
+    )
+
+    {:reply, {:ok, %{status: "session_started"}}, socket}
+  end
+
   # Handle all messages that are not handled by the
   # `handle_in/3` callbacks above
   @impl true
