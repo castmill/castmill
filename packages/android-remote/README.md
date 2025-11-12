@@ -121,9 +121,9 @@ Before installing the app, ensure:
 
 ### Installation Steps
 
-1. **Enable Installation from Unknown Sources**
-   - Go to Settings → Security → Install from Unknown Sources
-   - Enable for the browser or file manager you'll use to install
+1. **Enable "Install unknown apps" (Android 8.0+) or "Unknown sources" (earlier versions)**
+   - For Android 8.0 (Oreo, API 26) and above: Go to Settings → Apps & notifications → Special app access → Install unknown apps, then enable for the browser or file manager you'll use to install
+   - For Android 7.x and below: Go to Settings → Security → Unknown sources, then enable
    - On Android 8.0+, permission is granted per-app
 
 2. **Install the APK**

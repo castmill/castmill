@@ -224,34 +224,28 @@ class MainActivityTest {
 
     @Test
     fun testActivityRefreshesPermissionStateOnResume() {
-        // Arrange
-        activity = Robolectric.buildActivity(MainActivity::class.java)
+        // Arrange - Create controller and get activity instance
+        val controller = Robolectric.buildActivity(MainActivity::class.java)
             .create()
             .start()
             .resume()
-            .get()
+        
+        activity = controller.get()
         
         // Get initial status
         val tvStatus = activity.findViewById<TextView>(R.id.tvAccessibilityStatus)
         val initialStatus = tvStatus.text.toString()
         
-        // Enable service
+        // Pause the activity
+        controller.pause()
+        
+        // Enable service while activity is paused
         val serviceName = "${context.packageName}/${RemoteAccessibilityService::class.java.canonicalName}"
         Settings.Secure.putString(context.contentResolver, 
             Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES, serviceName)
         
-        // Act - Pause and resume to trigger refresh
-        val controller = Robolectric.buildActivity(MainActivity::class.java, activity.intent)
-            .create()
-            .start()
-            .resume()
-        activity = controller.get()
-        
-        // Create a new activity instance to simulate resume
-        activity = Robolectric.buildActivity(MainActivity::class.java)
-            .create()
-            .resume()
-            .get()
+        // Act - Resume the same activity
+        controller.resume()
         
         // Assert
         val updatedStatus = activity.findViewById<TextView>(R.id.tvAccessibilityStatus).text.toString()

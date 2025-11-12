@@ -21,7 +21,8 @@
             android:textSize="24sp"
             android:textStyle="bold"
             android:layout_marginTop="24dp"
-            android:layout_marginBottom="8dp" />
+            android:layout_marginBottom="8dp"
+            android:importantForAccessibility="no" />
 
         <TextView
             android:id="@+id/tvAppSubtitle"
@@ -30,7 +31,8 @@
             android:text="@string/app_subtitle"
             android:textSize="14sp"
             android:layout_marginBottom="32dp"
-            android:gravity="center" />
+            android:gravity="center"
+            android:importantForAccessibility="no" />
 
         <!-- Device ID Section -->
         <TextView
@@ -46,9 +48,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/device_id_loading"
-            android:textSize="12sp"
+            android:textSize="14sp"
             android:fontFamily="monospace"
-            android:layout_marginBottom="24dp" />
+            android:layout_marginBottom="24dp"
+            android:contentDescription="@string/device_id_content_description" />
 
         <!-- Permissions Section -->
         <TextView
@@ -95,7 +98,8 @@
                         android:layout_height="wrap_content"
                         android:text="@string/status_disabled"
                         android:textColor="#FF9800"
-                        android:textStyle="bold" />
+                        android:textStyle="bold"
+                        android:contentDescription="@string/accessibility_status_disabled" />
                 </LinearLayout>
 
                 <TextView
@@ -150,7 +154,8 @@
                         android:layout_height="wrap_content"
                         android:text="@string/status_not_granted"
                         android:textColor="#FF9800"
-                        android:textStyle="bold" />
+                        android:textStyle="bold"
+                        android:contentDescription="@string/screen_capture_status_not_granted" />
                 </LinearLayout>
 
                 <TextView

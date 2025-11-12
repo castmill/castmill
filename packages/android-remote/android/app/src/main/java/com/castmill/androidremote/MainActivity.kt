@@ -112,11 +112,13 @@ class MainActivity : AppCompatActivity() {
         val accessibilityEnabled = isAccessibilityServiceEnabled()
         if (accessibilityEnabled) {
             tvAccessibilityStatus.text = getString(R.string.status_enabled)
+            tvAccessibilityStatus.contentDescription = getString(R.string.accessibility_status_enabled)
             tvAccessibilityStatus.setTextColor(getColor(android.R.color.holo_green_dark))
             btnEnableAccessibility.isEnabled = false
             btnEnableAccessibility.text = getString(R.string.status_enabled)
         } else {
             tvAccessibilityStatus.text = getString(R.string.status_disabled)
+            tvAccessibilityStatus.contentDescription = getString(R.string.accessibility_status_disabled)
             tvAccessibilityStatus.setTextColor(getColor(android.R.color.holo_orange_dark))
             btnEnableAccessibility.isEnabled = true
             btnEnableAccessibility.text = getString(R.string.enable_accessibility_button)
@@ -125,9 +127,11 @@ class MainActivity : AppCompatActivity() {
         // Check screen capture permission (shows granted if previously granted in this session)
         if (mediaProjectionResultCode != -1 && mediaProjectionData != null) {
             tvScreenCaptureStatus.text = getString(R.string.status_granted)
+            tvScreenCaptureStatus.contentDescription = getString(R.string.screen_capture_status_granted)
             tvScreenCaptureStatus.setTextColor(getColor(android.R.color.holo_green_dark))
         } else {
             tvScreenCaptureStatus.text = getString(R.string.status_not_granted)
+            tvScreenCaptureStatus.contentDescription = getString(R.string.screen_capture_status_not_granted)
             tvScreenCaptureStatus.setTextColor(getColor(android.R.color.holo_orange_dark))
         }
         
@@ -218,9 +222,9 @@ class MainActivity : AppCompatActivity() {
                     Log.w(TAG, "MediaProjection permission denied")
                     // User denied permission - inform them why it's needed
                     AlertDialog.Builder(this)
-                        .setTitle("Permission Required")
-                        .setMessage("Screen capture permission is required for remote viewing. Without this permission, remote users will not be able to see the device screen.")
-                        .setPositiveButton("OK", null)
+                        .setTitle(getString(R.string.permission_required_title))
+                        .setMessage(getString(R.string.screen_capture_denied_message))
+                        .setPositiveButton(android.R.string.ok, null)
                         .show()
                 }
             }

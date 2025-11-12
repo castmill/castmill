@@ -16,6 +16,7 @@
     <!-- Main Activity UI Strings -->
     <string name="device_id_label">Device ID:</string>
     <string name="device_id_loading">Loading…</string>
+    <string name="device_id_content_description">Unique device identifier for backend configuration</string>
     <string name="permissions_header">Required Permissions</string>
     <string name="status_header">Service Status</string>
     
@@ -25,6 +26,8 @@
     <string name="enable_accessibility_button">Enable Accessibility Service</string>
     <string name="status_enabled">Enabled</string>
     <string name="status_disabled">Disabled</string>
+    <string name="accessibility_status_enabled">Accessibility Service: Enabled</string>
+    <string name="accessibility_status_disabled">Accessibility Service: Disabled</string>
     
     <!-- Screen Capture Permission -->
     <string name="screen_capture_permission_title">Screen Capture</string>
@@ -32,6 +35,12 @@
     <string name="request_screen_capture_button">Grant Screen Capture</string>
     <string name="status_granted">Granted</string>
     <string name="status_not_granted">Not Granted</string>
+    <string name="screen_capture_status_granted">Screen Capture: Granted</string>
+    <string name="screen_capture_status_not_granted">Screen Capture: Not Granted</string>
+    
+    <!-- Permission Error Messages -->
+    <string name="permission_required_title">Permission Required</string>
+    <string name="screen_capture_denied_message">Screen capture permission is required for remote viewing. Without this permission, remote users will not be able to see the device screen.</string>
     
     <!-- Service Status -->
     <string name="service_status_stopped">Remote control service is not running</string>

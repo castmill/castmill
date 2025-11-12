@@ -480,7 +480,7 @@ Both permissions provide significant device access:
 | Permission | Type | User Action | Device Owner | Persistent |
 |------------|------|-------------|--------------|------------|
 | AccessibilityService | Accessibility | Manual enable in Settings | No auto-grant | Yes, until disabled |
-| MediaProjection | Dangerous | Grant per session | Can auto-grant | No, per session |
+| MediaProjection | Dangerous | Grant per-session | Can auto-grant | No, per-session |
 | Foreground Service | Normal | Automatic | N/A | While service runs |
 
 **Track 1 (Manual Consent)**: Standard Android permission flows with clear UI guidance.
