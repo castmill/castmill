@@ -66,6 +66,27 @@ This service enables:
 - **Target SDK**: API 34 (Android 14)
 - **Application ID**: `com.castmill.androidremote`
 
+### Required Permissions
+
+The app requires two critical permissions for full functionality:
+
+1. **AccessibilityService** - For remote gesture injection
+   - Allows remote control of touch events (tap, swipe, etc.)
+   - Must be manually enabled by user in Settings
+   - See [Quick Start Guide](QUICK_START_PERMISSIONS.md) for setup instructions
+
+2. **MediaProjection** - For screen capture
+   - Allows remote viewing of device screen
+   - User must grant permission for each session (manual consent)
+   - Can be auto-granted via Device Owner policy (managed devices)
+   - See [Device Owner Setup](PERMISSIONS.md#track-2-device-owner-auto-grant-managed-device-deployment)
+
+Both permissions involve sensitive capabilities and require explicit user consent or enterprise device management policies.
+
+**📖 Documentation:**
+- **[Quick Start Guide](QUICK_START_PERMISSIONS.md)** - Step-by-step setup instructions
+- **[PERMISSIONS.md](PERMISSIONS.md)** - Complete permission documentation, consent flows, and Device Owner setup
+
 ## Building
 
 Build the Android app using Gradle:
@@ -89,11 +110,62 @@ To build a release APK:
 
 ## Installation
 
-1. Enable "Unknown Sources" or "Install from Unknown Sources" in device settings
-2. Install the APK on the target Android device
-3. Grant MediaProjection permission when prompted
-4. Enable the AccessibilityService in Android settings:
-   - Settings → Accessibility → Castmill Remote Control → Enable
+### Prerequisites
+
+Before installing the app, ensure:
+
+1. Android device running API 26+ (Android 8.0 Oreo or later)
+2. Device is either:
+   - Personally owned with user present to grant permissions, OR
+   - Managed device with Device Owner policy configured (see [PERMISSIONS.md](PERMISSIONS.md))
+
+### Installation Steps
+
+1. **Enable "Install unknown apps" (Android 8.0+) or "Unknown sources" (earlier versions)**
+   - For Android 8.0 (Oreo, API 26) and above: Go to Settings → Apps & notifications → Special app access → Install unknown apps, then enable for the browser or file manager you'll use to install
+   - For Android 7.x and below: Go to Settings → Security → Unknown sources, then enable
+   - On Android 8.0+, permission is granted per-app
+
+2. **Install the APK**
+   - Transfer the APK to the device
+   - Open the APK file
+   - Tap "Install"
+   - Wait for installation to complete
+
+3. **Grant Required Permissions**
+   
+   **A. Enable AccessibilityService** (Required for gesture control):
+   - Open the Castmill Remote app
+   - Tap "Enable Accessibility Service"
+   - Follow on-screen instructions
+   - In Android Settings → Accessibility:
+     - Find "Castmill Remote" in the list
+     - Toggle the switch to ON
+     - Accept the system warning dialog
+   - Return to the app to verify "Enabled" status
+
+   **B. Grant MediaProjection Permission** (Required for screen capture):
+   - In the Castmill Remote app
+   - Tap "Grant Screen Capture"
+   - Read the explanation dialog
+   - Tap "I Understand"
+   - When system dialog appears, tap "Start now"
+   - Permission is granted for the current session
+   
+   **Note**: MediaProjection must be re-granted each time the app restarts or a new remote session begins. This is an Android security requirement. For managed devices, see [Device Owner Auto-Grant](PERMISSIONS.md#track-2-device-owner-auto-grant-managed-device-deployment) to bypass this requirement.
+
+4. **Verify Setup**
+   - Both permission cards should show green "Enabled" or "Granted" status
+   - Device ID is displayed for backend configuration
+
+### Post-Installation
+
+- The app displays your unique Device ID - note this for backend configuration
+- Service status shows "Remote control service is not running" until a session is initiated
+- When a remote session is requested (from backend), the RemoteControlService starts automatically
+- A persistent notification appears when the service is active
+
+For troubleshooting permission issues, see [PERMISSIONS.md](PERMISSIONS.md#troubleshooting).
 
 ## Usage
 
@@ -174,6 +246,27 @@ See [VIDEO_CAPTURE_IMPLEMENTATION.md](VIDEO_CAPTURE_IMPLEMENTATION.md) for compl
 - Should only be installed on managed devices in controlled environments
 - WebSocket connections should be secured with authentication tokens
 - Network traffic should be encrypted (WSS protocol)
+- See [PERMISSIONS.md](PERMISSIONS.md#security-considerations) for detailed security information
+
+### Permission and Consent Flows
+
+The app implements two permission tracks:
+
+**Track 1: Manual Consent Flow (Standard Deployment)**
+- User must manually grant MediaProjection permission for each session
+- AccessibilityService must be manually enabled in Settings
+- Suitable for most deployments
+- Clear UI guidance helps users through the process
+- See [PERMISSIONS.md - Track 1](PERMISSIONS.md#track-1-manual-consent-flow-mvp---current-implementation)
+
+**Track 2: Device Owner Auto-Grant (Managed Device Deployment)**  
+- MediaProjection permission can be auto-granted via Device Owner policy
+- Suitable for fully managed corporate devices (kiosk mode, digital signage)
+- Requires device enrollment in MDM (Mobile Device Management)
+- AccessibilityService still requires manual enable (Android restriction)
+- See [PERMISSIONS.md - Track 2](PERMISSIONS.md#track-2-device-owner-auto-grant-managed-device-deployment)
+
+For complete documentation on permissions, consent flows, and enterprise deployment, see **[PERMISSIONS.md](PERMISSIONS.md)**.
 
 ## Device Identification
 
