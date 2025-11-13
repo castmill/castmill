@@ -14,3 +14,14 @@ export type {
   BackpressureConfig,
   BackpressureMetrics,
 } from './backpressure-handler';
+
+export {
+  SecureWebSocketConnection,
+  validateSecureEndpoint,
+  generateAuthParams,
+  validateCertificateFingerprint,
+} from './secure-websocket';
+export type {
+  SecureConnectionConfig,
+  ConnectionStatus,
+} from './secure-websocket';
