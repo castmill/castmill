@@ -145,7 +145,7 @@ defmodule CastmillWeb.RemoteControlChannel do
     :ok
   end
 
-  # Verify if the user is authorized to access this device
+  # We need to verify if the user is authorized to access this device.
   defp authorized?(actor_id, device_id) do
     device = Devices.get_device(device_id)
 
