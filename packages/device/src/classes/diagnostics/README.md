@@ -219,9 +219,9 @@ The `SecureWebSocketConnection` class provides secure, authenticated WebSocket c
 - **WSS Enforcement**: Requires wss:// in production (allows ws://localhost in development)
 - **TLS Certificate Validation**: Platform-level certificate validation
 - **Device Token Authentication**: Token-based authentication with each connection
-- **Replay Attack Prevention**: Timestamp included with auth parameters
+- **Replay Attack Prevention**: Timestamp included with auth parameters (requires server-side validation)
 - **Certificate Pinning Support**: Placeholder for native implementation
-- **Exponential Backoff**: Intelligent reconnection strategy
+- **Exponential Backoff**: Intelligent reconnection strategy (delays: 1s, 2s, 4s, 8s, then capped at 10s)
 
 ```typescript
 import { SecureWebSocketConnection } from '@castmill/device';

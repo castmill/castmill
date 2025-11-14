@@ -59,7 +59,25 @@ export function validateSecureEndpoint(endpoint: string): boolean {
         url.hostname === '127.0.0.1' ||
         url.hostname === '::1' ||
         url.hostname.startsWith('192.168.') ||
-        url.hostname.startsWith('10.');
+        url.hostname.startsWith('172.16.') ||
+        url.hostname.startsWith('172.17.') ||
+        url.hostname.startsWith('172.18.') ||
+        url.hostname.startsWith('172.19.') ||
+        url.hostname.startsWith('172.20.') ||
+        url.hostname.startsWith('172.21.') ||
+        url.hostname.startsWith('172.22.') ||
+        url.hostname.startsWith('172.23.') ||
+        url.hostname.startsWith('172.24.') ||
+        url.hostname.startsWith('172.25.') ||
+        url.hostname.startsWith('172.26.') ||
+        url.hostname.startsWith('172.27.') ||
+        url.hostname.startsWith('172.28.') ||
+        url.hostname.startsWith('172.29.') ||
+        url.hostname.startsWith('172.30.') ||
+        url.hostname.startsWith('172.31.') ||
+        url.hostname.startsWith('169.254.') ||
+        url.hostname.startsWith('10.') ||
+        url.hostname.startsWith('127.');
 
       if (isDevelopment && isLocalhost) {
         console.warn(
@@ -77,6 +95,11 @@ export function validateSecureEndpoint(endpoint: string): boolean {
 
 /**
  * Generates authentication parameters for WebSocket connection
+ * 
+ * Note: The timestamp parameter provides client-side replay attack prevention,
+ * but requires server-side validation to be effective:
+ * 1. Server must validate the timestamp is recent (within acceptable time window)
+ * 2. Server should track used timestamps/nonces to prevent replay
  */
 export function generateAuthParams(config: SecureConnectionConfig): {
   [key: string]: any;
@@ -154,13 +177,17 @@ export class SecureWebSocketConnection {
 
     // Set default reconnection strategy with exponential backoff
     if (!normalized.reconnectAfterMs) {
-      normalized.reconnectAfterMs = (tries: number) =>
-        Math.min(10000, 1000 * Math.pow(2, tries - 1));
+      normalized.reconnectAfterMs = (tries: number) => {
+        const safeTries = Math.max(1, tries);
+        return Math.min(10000, 1000 * Math.pow(2, safeTries - 1));
+      };
     }
 
     if (!normalized.rejoinAfterMs) {
-      normalized.rejoinAfterMs = (tries: number) =>
-        Math.min(10000, 1000 * Math.pow(2, tries - 1));
+      normalized.rejoinAfterMs = (tries: number) => {
+        const safeTries = Math.max(1, tries);
+        return Math.min(10000, 1000 * Math.pow(2, safeTries - 1));
+      };
     }
 
     return normalized;
@@ -193,9 +220,7 @@ export class SecureWebSocketConnection {
       // Attempt connection
       this.socket.connect();
 
-      this.status.state = 'connected';
-      this.status.lastSuccessfulConnect = Date.now();
-      this.status.certificateValid = true; // Assume valid if connection succeeds
+      // Connection status will be updated in the onOpen event handler
 
       return this.socket;
     } catch (error: any) {
@@ -213,6 +238,7 @@ export class SecureWebSocketConnection {
       console.log('WebSocket connection opened');
       this.status.state = 'connected';
       this.status.lastSuccessfulConnect = Date.now();
+      this.status.certificateValid = true; // Assume valid if connection succeeds
     });
 
     socket.onError((error: any) => {
@@ -268,12 +294,12 @@ export class SecureWebSocketConnection {
   /**
    * Update device token (for token rotation)
    */
-  updateToken(newToken: string): void {
+  async updateToken(newToken: string): Promise<void> {
     this.config.deviceToken = newToken;
     // If connected, disconnect and reconnect with new token
     if (this.socket && this.status.state === 'connected') {
       this.disconnect();
-      this.connect();
+      await this.connect();
     }
   }
 

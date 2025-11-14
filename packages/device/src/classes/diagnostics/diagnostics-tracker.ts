@@ -58,6 +58,10 @@ export interface DiagnosticsReport {
   network: NetworkMetrics;
 }
 
+// Constants for rolling window sizes
+const MAX_ROLLING_WINDOW_SIZE = 100; // Maximum samples for rolling averages
+const FPS_WINDOW_SIZE = 60; // Frame times for FPS calculation (1 second at 60fps)
+
 export class DiagnosticsTracker {
   private deviceId: string;
   private startTime: number;
@@ -120,8 +124,8 @@ export class DiagnosticsTracker {
    */
   recordHeartbeatResponse(latency: number): void {
     this.heartbeatLatencies.push(latency);
-    // Keep only last 100 measurements
-    if (this.heartbeatLatencies.length > 100) {
+    // Keep only last MAX_ROLLING_WINDOW_SIZE measurements
+    if (this.heartbeatLatencies.length > MAX_ROLLING_WINDOW_SIZE) {
       this.heartbeatLatencies.shift();
     }
   }
@@ -145,9 +149,14 @@ export class DiagnosticsTracker {
     this.connectionState = state;
 
     if (state === 'connected' && previousState !== 'connected') {
+      // Accumulate previous downtime period before reconnecting
+      if (this.lastConnectionTime > 0) {
+        this.totalDowntime += now - this.lastConnectionTime;
+        this.lastConnectionTime = 0;
+      }
       this.connectionStartTime = now;
     } else if (state !== 'connected' && previousState === 'connected') {
-      // Track downtime
+      // Start tracking downtime
       this.lastConnectionTime = now;
     }
 
@@ -178,8 +187,8 @@ export class DiagnosticsTracker {
     if (this.lastFrameTime > 0) {
       const frameDelta = now - this.lastFrameTime;
       this.frameTimes.push(frameDelta);
-      // Keep only last 60 frame times (1 second at 60fps)
-      if (this.frameTimes.length > 60) {
+      // Keep only last FPS_WINDOW_SIZE frame times (1 second at 60fps)
+      if (this.frameTimes.length > FPS_WINDOW_SIZE) {
         this.frameTimes.shift();
       }
 
@@ -193,7 +202,7 @@ export class DiagnosticsTracker {
 
     // Track bitrate
     this.bitrateHistory.push(bitrate);
-    if (this.bitrateHistory.length > 100) {
+    if (this.bitrateHistory.length > MAX_ROLLING_WINDOW_SIZE) {
       this.bitrateHistory.shift();
     }
     this.averageBitrate =
@@ -220,7 +229,7 @@ export class DiagnosticsTracker {
     this.bufferSize = size;
     this.jitterValues.push(jitter);
 
-    if (this.jitterValues.length > 100) {
+    if (this.jitterValues.length > MAX_ROLLING_WINDOW_SIZE) {
       this.jitterValues.shift();
     }
 
@@ -258,7 +267,7 @@ export class DiagnosticsTracker {
     if (metrics.roundTripTime !== undefined) {
       this.roundTripTime = metrics.roundTripTime;
       this.rttMeasurements.push(metrics.roundTripTime);
-      if (this.rttMeasurements.length > 100) {
+      if (this.rttMeasurements.length > MAX_ROLLING_WINDOW_SIZE) {
         this.rttMeasurements.shift();
       }
     }

@@ -89,6 +89,16 @@ describe('SecureWebSocketConnection', () => {
 
       await connection.connect();
 
+      // After connect is called, state should be 'connecting'
+      status = connection.getStatus();
+      expect(status.state).toBe('connecting');
+      
+      // Simulate the onOpen event
+      const socket = connection.getSocket();
+      const onOpenHandler = (socket?.onOpen as any).mock.calls[0][0];
+      onOpenHandler();
+      
+      // Now state should be 'connected'
       status = connection.getStatus();
       expect(status.state).toBe('connected');
       expect(status.lastSuccessfulConnect).toBeGreaterThan(0);
@@ -122,11 +132,25 @@ describe('SecureWebSocketConnection', () => {
     it('should allow token updates', async () => {
       const connection = new SecureWebSocketConnection(config);
       await connection.connect();
+      
+      // Simulate the onOpen event for first connection
+      let socket = connection.getSocket();
+      let onOpenHandler = (socket?.onOpen as any).mock.calls[0][0];
+      onOpenHandler();
 
-      connection.updateToken('new-token-789');
+      await connection.updateToken('new-token-789');
 
-      // Should reconnect with new token
-      const status = connection.getStatus();
+      // After updateToken, connection should be reconnecting
+      let status = connection.getStatus();
+      expect(status.state).toBe('connecting');
+      
+      // Simulate onOpen for the reconnection
+      socket = connection.getSocket();
+      onOpenHandler = (socket?.onOpen as any).mock.calls[0][0];
+      onOpenHandler();
+      
+      // Now should be connected again
+      status = connection.getStatus();
       expect(status.state).toBe('connected');
     });
 

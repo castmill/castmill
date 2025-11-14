@@ -43,7 +43,30 @@ export class BackpressureHandler {
   private lastIFrameTimestamp = 0;
 
   constructor(config?: Partial<BackpressureConfig>) {
-    this.config = { ...DEFAULT_CONFIG, ...config };
+    this.config = BackpressureHandler.validateConfig({
+      ...DEFAULT_CONFIG,
+      ...config,
+    });
+  }
+
+  /**
+   * Validates the BackpressureConfig object.
+   * Ensures dropThreshold is between 0 and 1 (inclusive).
+   * Throws an error if invalid.
+   */
+  private static validateConfig(
+    config: BackpressureConfig
+  ): BackpressureConfig {
+    if (
+      typeof config.dropThreshold !== 'number' ||
+      config.dropThreshold < 0 ||
+      config.dropThreshold > 1
+    ) {
+      throw new Error(
+        `Invalid dropThreshold: ${config.dropThreshold}. Must be a number between 0 and 1.`
+      );
+    }
+    return config;
   }
 
   /**
@@ -60,23 +83,41 @@ export class BackpressureHandler {
     }
 
     // Check if adding this frame would exceed capacity
-    const wouldExceedCapacity =
+    let wouldExceedCapacity =
       this.bufferedBytes + frame.size > this.config.maxBufferSize ||
       this.frameBuffer.length + 1 > this.config.maxFrames;
 
     // Check if adding this frame would exceed the drop threshold
-    const byteUtilizationAfter =
+    let byteUtilizationAfter =
       (this.bufferedBytes + frame.size) / this.config.maxBufferSize;
-    const frameUtilizationAfter =
+    let frameUtilizationAfter =
       (this.frameBuffer.length + 1) / this.config.maxFrames;
-    const wouldExceedThreshold =
+    let wouldExceedThreshold =
       byteUtilizationAfter >= this.config.dropThreshold ||
       frameUtilizationAfter >= this.config.dropThreshold;
 
     // Drop frames if needed
     if (wouldExceedThreshold || wouldExceedCapacity) {
       // Try dropping P-frames to make room
-      const dropped = this.dropOldestPFrames();
+      // Keep dropping until we're below threshold or no more P-frames to drop
+      while (wouldExceedThreshold || wouldExceedCapacity) {
+        const dropped = this.dropOldestPFrames();
+        if (dropped === 0) {
+          // No more P-frames to drop
+          break;
+        }
+        
+        // Recalculate after dropping
+        wouldExceedCapacity =
+          this.bufferedBytes + frame.size > this.config.maxBufferSize ||
+          this.frameBuffer.length + 1 > this.config.maxFrames;
+        
+        const byteUtil = (this.bufferedBytes + frame.size) / this.config.maxBufferSize;
+        const frameUtil = (this.frameBuffer.length + 1) / this.config.maxFrames;
+        wouldExceedThreshold =
+          byteUtil >= this.config.dropThreshold ||
+          frameUtil >= this.config.dropThreshold;
+      }
 
       // Check again if we can add the frame after dropping
       const canAddNow =
@@ -103,7 +144,7 @@ export class BackpressureHandler {
   getNextFrame(): FrameInfo | undefined {
     const frame = this.frameBuffer.shift();
     if (frame) {
-      this.bufferedBytes -= frame.size;
+      this.bufferedBytes = Math.max(0, this.bufferedBytes - frame.size);
     }
     return frame;
   }
@@ -162,7 +203,10 @@ export class BackpressureHandler {
    * Update configuration
    */
   updateConfig(config: Partial<BackpressureConfig>): void {
-    this.config = { ...this.config, ...config };
+    this.config = BackpressureHandler.validateConfig({
+      ...this.config,
+      ...config,
+    });
   }
 
   /**
@@ -179,17 +223,20 @@ export class BackpressureHandler {
   }
 
   /**
-   * Drop the oldest P-frames until we're below the drop threshold or at least one is dropped
+   * Drop the oldest P-frame to make room, then continue dropping until below threshold
    * Returns the number of frames dropped
    */
   private dropOldestPFrames(): number {
     let droppedCount = 0;
 
-    // Drop P-frames from oldest first until we're below threshold
-    // or we've dropped at least one frame
+    // Drop P-frames from oldest first
+    // Drop at least one P-frame (if available) to make room, then continue until below threshold
     let i = 0;
     while (i < this.frameBuffer.length) {
-      const needToDrop = this.shouldDropFrames() || droppedCount === 0;
+      // Check if we need to keep dropping
+      // If we haven't dropped any yet, try to drop at least one
+      // Otherwise, only continue if we're still above threshold
+      const needToDrop = droppedCount === 0 || this.shouldDropFrames();
       if (!needToDrop) {
         break;
       }
@@ -224,6 +271,10 @@ export class BackpressureHandler {
    * Check if an I-frame is needed based on timing
    */
   needsIFrame(): boolean {
+    // Explicitly handle the "no I-frame yet" case for clarity and consistency
+    if (this.lastIFrameTimestamp === 0) {
+      return true;
+    }
     return this.getTimeSinceLastIFrame() >= this.config.minIFrameInterval;
   }
 
