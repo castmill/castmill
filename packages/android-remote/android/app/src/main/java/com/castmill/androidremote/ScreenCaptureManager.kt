@@ -22,19 +22,23 @@ import java.nio.ByteBuffer
  * - Manages video encoding (H.264 or MJPEG fallback)
  * - Streams encoded frames via callback
  * - Handles lifecycle and resource cleanup
+ * - Integrates with DiagnosticsManager for metrics
+ * - Implements backpressure handling with FrameBuffer
  * 
  * @param context Application context
  * @param resultCode Result code from MediaProjection permission request
  * @param data Intent data from MediaProjection permission request
  * @param onFrameEncoded Callback when a frame is encoded and ready to send
  * @param onError Callback when an error occurs
+ * @param diagnosticsManager Optional diagnostics manager for metrics collection
  */
 class ScreenCaptureManager(
     private val context: Context,
     private val resultCode: Int,
     private val data: Intent,
     private val onFrameEncoded: (ByteBuffer, Boolean, String) -> Unit, // data, isKeyFrame, codecType
-    private val onError: (Exception) -> Unit
+    private val onError: (Exception) -> Unit,
+    private val diagnosticsManager: DiagnosticsManager? = null
 ) {
     companion object {
         private const val TAG = "ScreenCaptureManager"
@@ -50,6 +54,9 @@ class ScreenCaptureManager(
         
         // Drain interval for H.264 encoder (ms)
         private const val DRAIN_INTERVAL_MS = 33L // ~30fps drain rate
+        
+        // Frame buffer capacity (frames)
+        private const val FRAME_BUFFER_CAPACITY = 30 // ~2 seconds at 15fps
     }
 
     private var mediaProjection: MediaProjection? = null
@@ -61,6 +68,12 @@ class ScreenCaptureManager(
     private var isCapturing = false
     private var useH264 = true
     private var drainRunnable: Runnable? = null
+    private val frameBuffer = FrameBuffer(
+        maxCapacity = FRAME_BUFFER_CAPACITY,
+        onFrameDropped = {
+            diagnosticsManager?.recordFrameDropped()
+        }
+    )
 
     /**
      * Start screen capture and encoding.
@@ -126,10 +139,19 @@ class ScreenCaptureManager(
                 frameRate = H264_FRAME_RATE,
                 bitrate = H264_BITRATE,
                 onEncodedFrame = { buffer, bufferInfo, isKeyFrame ->
-                    onFrameEncoded(buffer, isKeyFrame, "h264")
+                    // Record frame in diagnostics
+                    diagnosticsManager?.recordFrameEncoded(bufferInfo.size, isKeyFrame)
+                    
+                    // Add to frame buffer with backpressure handling
+                    val added = frameBuffer.addFrame(buffer, isKeyFrame, "h264")
+                    if (added) {
+                        // Send buffered frames to avoid blocking encoder
+                        sendBufferedFrames()
+                    }
                 },
                 onError = { exception ->
                     Log.e(TAG, "H.264 encoder error, falling back to MJPEG", exception)
+                    diagnosticsManager?.recordEncodingError()
                     // Fallback to MJPEG - execute synchronously to avoid race with handler shutdown
                     stopH264Encoding()
                     useH264 = false
@@ -209,10 +231,18 @@ class ScreenCaptureManager(
                 frameRate = MJPEG_FRAME_RATE,
                 quality = MJPEG_QUALITY,
                 onEncodedFrame = { buffer, timestamp, isKeyFrame ->
-                    onFrameEncoded(buffer, isKeyFrame, "mjpeg")
+                    // Record frame in diagnostics
+                    diagnosticsManager?.recordFrameEncoded(buffer.remaining(), isKeyFrame)
+                    
+                    // Add to frame buffer with backpressure handling
+                    val added = frameBuffer.addFrame(buffer, isKeyFrame, "mjpeg")
+                    if (added) {
+                        sendBufferedFrames()
+                    }
                 },
                 onError = { exception ->
                     Log.e(TAG, "MJPEG encoder error", exception)
+                    diagnosticsManager?.recordEncodingError()
                     onError(exception)
                 }
             )
@@ -263,6 +293,16 @@ class ScreenCaptureManager(
     }
 
     /**
+     * Send buffered frames to the output callback
+     */
+    private fun sendBufferedFrames() {
+        while (!frameBuffer.isEmpty()) {
+            val frame = frameBuffer.getFrame() ?: break
+            onFrameEncoded(frame.buffer, frame.isKeyFrame, frame.codecType)
+        }
+    }
+
+    /**
      * Stop H.264 encoding and clean up resources.
      */
     private fun stopH264Encoding() {
@@ -302,6 +342,9 @@ class ScreenCaptureManager(
         isCapturing = false
         
         try {
+            // Clear frame buffer
+            frameBuffer.clear()
+            
             // Release virtual display
             virtualDisplay?.release()
             virtualDisplay = null
@@ -343,9 +386,14 @@ class ScreenCaptureManager(
             mjpegEncoder?.getEncoderInfo() ?: emptyMap()
         }
         
+        val bufferStats = frameBuffer.getStats()
+        
         return encoderInfo + mapOf(
             "isCapturing" to isCapturing,
-            "activeEncoder" to getEncoderType()
+            "activeEncoder" to getEncoderType(),
+            "buffer_size" to bufferStats["size"],
+            "buffer_capacity" to bufferStats["capacity"],
+            "buffer_utilization" to bufferStats["utilization_percent"]
         )
     }
 

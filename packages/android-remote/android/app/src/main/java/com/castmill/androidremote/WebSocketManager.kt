@@ -13,12 +13,18 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
+import okhttp3.CertificatePinner
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
+import java.security.cert.X509Certificate
 import java.util.concurrent.TimeUnit
+import javax.net.ssl.HostnameVerifier
+import javax.net.ssl.SSLContext
+import javax.net.ssl.TrustManager
+import javax.net.ssl.X509TrustManager
 
 /**
  * WebSocketManager handles the WebSocket connection to the Castmill backend
@@ -37,7 +43,9 @@ class WebSocketManager(
     private val baseUrl: String,
     private val deviceId: String,
     private val deviceToken: String,
-    private val coroutineScope: CoroutineScope
+    private val coroutineScope: CoroutineScope,
+    private val diagnosticsManager: DiagnosticsManager? = null,
+    private val certificatePins: Map<String, List<String>>? = null // hostname -> list of SHA-256 pins
 ) {
     companion object {
         private const val TAG = "WebSocketManager"
@@ -45,6 +53,7 @@ class WebSocketManager(
         private const val INITIAL_RECONNECT_DELAY_MS = 1000L // 1 second
         private const val MAX_RECONNECT_DELAY_MS = 60000L // 1 minute
         private const val RECONNECT_BACKOFF_MULTIPLIER = 2.0
+        private const val DIAGNOSTICS_REPORT_INTERVAL_MS = 10000L // 10 seconds
     }
 
     private val json = Json { 
@@ -52,19 +61,19 @@ class WebSocketManager(
         isLenient = true
     }
     
-    private val client = OkHttpClient.Builder()
-        .readTimeout(0, TimeUnit.MILLISECONDS)
-        .build()
+    private val client = buildOkHttpClient()
 
     private var webSocket: WebSocket? = null
     private var messageRef = 0
     private var joinRef: String? = null
     private var heartbeatJob: Job? = null
+    private var diagnosticsJob: Job? = null
     private var reconnectJob: Job? = null
     private var currentReconnectDelay = INITIAL_RECONNECT_DELAY_MS
     private var isConnecting = false
     private var shouldReconnect = true
     private var sessionId: String? = null
+    private var isAuthenticated = false
 
     /**
      * Connect to the WebSocket with the given session ID
@@ -85,9 +94,41 @@ class WebSocketManager(
 
         val request = Request.Builder()
             .url(url)
+            .addHeader("X-Device-ID", deviceId)
+            .addHeader("X-Device-Token", deviceToken)
             .build()
 
         webSocket = client.newWebSocket(request, WebSocketHandler())
+        diagnosticsManager?.recordConnectionStart()
+    }
+    
+    /**
+     * Build OkHttpClient with security configurations
+     */
+    private fun buildOkHttpClient(): OkHttpClient {
+        val builder = OkHttpClient.Builder()
+            .readTimeout(0, TimeUnit.MILLISECONDS)
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .writeTimeout(30, TimeUnit.SECONDS)
+            .pingInterval(30, TimeUnit.SECONDS)
+        
+        // Configure certificate pinning if pins are provided
+        certificatePins?.let { pins ->
+            val certificatePinnerBuilder = CertificatePinner.Builder()
+            pins.forEach { (hostname, pinList) ->
+                pinList.forEach { pin ->
+                    certificatePinnerBuilder.add(hostname, "sha256/$pin")
+                }
+            }
+            builder.certificatePinner(certificatePinnerBuilder.build())
+            Log.i(TAG, "Certificate pinning enabled for ${pins.keys.size} hostname(s)")
+        }
+        
+        // Use default SSL context for TLS certificate validation
+        // Android's default TrustManager validates the certificate chain
+        // No custom TrustManager needed - rely on system's certificate store
+        
+        return builder.build()
     }
 
     /**
@@ -96,13 +137,16 @@ class WebSocketManager(
     fun disconnect() {
         Log.i(TAG, "Disconnecting WebSocket")
         shouldReconnect = false
+        isAuthenticated = false
         stopHeartbeat()
+        stopDiagnosticsReporting()
         stopReconnect()
         webSocket?.close(1000, "Client disconnecting")
         webSocket = null
         isConnecting = false
         sessionId = null
         joinRef = null
+        diagnosticsManager?.recordDisconnection()
     }
 
     /**
@@ -169,7 +213,28 @@ class WebSocketManager(
         }
     }
 
+    /**
+     * Send diagnostics report to the backend
+     */
+    fun sendDiagnosticsReport() {
+        if (!isAuthenticated) {
+            Log.d(TAG, "Not authenticated, skipping diagnostics report")
+            return
+        }
+        
+        diagnosticsManager?.let { diag ->
+            val report = diag.getDiagnosticsReport()
+            sendMessage("stats_report", report)
+            Log.d(TAG, "Sent diagnostics report: FPS=${diag.getCurrentFps()}, Bitrate=${diag.getCurrentBitrate() / 1_000_000}Mbps")
+        }
+    }
+
     private fun sendMessage(event: String, payload: JsonObject = buildJsonObject {}) {
+        if (webSocket == null && event != "phx_join") {
+            Log.w(TAG, "WebSocket not connected, cannot send $event message")
+            return
+        }
+        
         val topic = "device_rc:$deviceId"
         val ref = (++messageRef).toString()
         
@@ -188,6 +253,7 @@ class WebSocketManager(
             webSocket?.send(jsonString)
         } catch (e: Exception) {
             Log.e(TAG, "Error sending message", e)
+            diagnosticsManager?.recordNetworkError()
         }
     }
 
@@ -211,7 +277,18 @@ class WebSocketManager(
         heartbeatJob = coroutineScope.launch {
             while (isActive && webSocket != null) {
                 sendMessage("phx_heartbeat", buildJsonObject {})
+                diagnosticsManager?.recordHeartbeat()
                 delay(HEARTBEAT_INTERVAL_MS)
+            }
+        }
+    }
+    
+    private fun startDiagnosticsReporting() {
+        stopDiagnosticsReporting()
+        diagnosticsJob = coroutineScope.launch {
+            while (isActive && webSocket != null && isAuthenticated) {
+                delay(DIAGNOSTICS_REPORT_INTERVAL_MS)
+                sendDiagnosticsReport()
             }
         }
     }
@@ -220,10 +297,16 @@ class WebSocketManager(
         heartbeatJob?.cancel()
         heartbeatJob = null
     }
+    
+    private fun stopDiagnosticsReporting() {
+        diagnosticsJob?.cancel()
+        diagnosticsJob = null
+    }
 
     private fun scheduleReconnect() {
         if (!shouldReconnect) return
 
+        diagnosticsManager?.recordReconnectAttempt()
         stopReconnect()
         reconnectJob = coroutineScope.launch {
             Log.i(TAG, "Reconnecting in ${currentReconnectDelay}ms")
@@ -368,6 +451,24 @@ class WebSocketManager(
             Log.i(TAG, "WebSocket connected")
             isConnecting = false
             currentReconnectDelay = INITIAL_RECONNECT_DELAY_MS
+            
+            // Verify TLS connection for WSS
+            if (baseUrl.startsWith("https://")) {
+                response.handshake?.let { handshake ->
+                    val peerCertificates = handshake.peerCertificates
+                    if (peerCertificates.isNotEmpty()) {
+                        Log.i(TAG, "TLS connection established with ${peerCertificates.size} certificate(s)")
+                        peerCertificates.forEachIndexed { index, cert ->
+                            if (cert is X509Certificate) {
+                                Log.d(TAG, "Certificate $index: Subject=${cert.subjectDN}, Issuer=${cert.issuerDN}")
+                            }
+                        }
+                    } else {
+                        Log.w(TAG, "No peer certificates found in handshake")
+                    }
+                } ?: Log.w(TAG, "No handshake information available")
+            }
+            
             joinChannel()
             startHeartbeat()
         }
@@ -388,11 +489,19 @@ class WebSocketManager(
                             Log.d(TAG, "Received reply: $payload")
                             val payloadObj = payload as? JsonObject
                             val status = payloadObj?.get("status")?.toString()?.trim('"')
+                            val response = payloadObj?.get("response") as? JsonObject
                             
                             if (status == "ok") {
-                                Log.i(TAG, "Successfully joined channel")
+                                Log.i(TAG, "Successfully joined channel and authenticated")
+                                isAuthenticated = true
+                                diagnosticsManager?.recordSuccessfulReconnect()
+                                startDiagnosticsReporting()
                             } else {
                                 Log.e(TAG, "Failed to join channel: $payload")
+                                isAuthenticated = false
+                                // Authentication failed - disconnect and don't retry automatically
+                                shouldReconnect = false
+                                disconnect()
                             }
                         }
                         "control_event" -> {
@@ -417,14 +526,19 @@ class WebSocketManager(
         override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
             Log.e(TAG, "WebSocket failure: ${t.message}", t)
             isConnecting = false
+            isAuthenticated = false
+            diagnosticsManager?.recordNetworkError()
             stopHeartbeat()
+            stopDiagnosticsReporting()
             scheduleReconnect()
         }
 
         override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
             Log.i(TAG, "WebSocket closed: $code - $reason")
             isConnecting = false
+            isAuthenticated = false
             stopHeartbeat()
+            stopDiagnosticsReporting()
             if (shouldReconnect) {
                 scheduleReconnect()
             }
