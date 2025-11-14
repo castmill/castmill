@@ -26,7 +26,11 @@ defmodule Castmill.Application do
       Castmill.Hooks.Supervisor,
 
       # Start the Oban supervisor tree
-      {Oban, Application.fetch_env!(:castmill, Oban)}
+      {Oban, Application.fetch_env!(:castmill, Oban)},
+
+      # Start the RC relay registry and supervisor
+      {Registry, keys: :unique, name: Castmill.Devices.RcRelayRegistry},
+      Castmill.Devices.RcRelaySupervisor
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

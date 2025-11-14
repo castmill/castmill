@@ -8,6 +8,7 @@ defmodule Castmill.Devices.RcSessions do
   import Ecto.Query, warn: false
   alias Castmill.Repo
   alias Castmill.Devices.RcSession
+  alias Castmill.Devices.RcRelaySupervisor
 
   # Default timeout for idle sessions (5 minutes)
   @default_timeout_seconds 300
@@ -41,11 +42,20 @@ defmodule Castmill.Devices.RcSessions do
 
         case result do
           {:ok, session} ->
-            # Schedule timeout check
-            schedule_timeout_check(session.id, timeout_seconds)
-            # Return session with computed timeout_at for API response
-            timeout_at = DateTime.add(now, timeout_seconds, :second)
-            {:ok, %{session | timeout_at: timeout_at}}
+            # Start the relay for this session
+            case RcRelaySupervisor.start_relay(session.id) do
+              {:ok, _pid} ->
+                # Schedule timeout check
+                schedule_timeout_check(session.id, timeout_seconds)
+                # Return session with computed timeout_at for API response
+                timeout_at = DateTime.add(now, timeout_seconds, :second)
+                {:ok, %{session | timeout_at: timeout_at}}
+
+              {:error, reason} ->
+                # Clean up session if relay fails to start
+                Repo.delete(session)
+                {:error, reason}
+            end
 
           error ->
             error
@@ -91,6 +101,9 @@ defmodule Castmill.Devices.RcSessions do
   def transition_to_closed(session_id) do
     case transition_state(session_id, "closed") do
       {:ok, session} ->
+        # Stop the relay
+        RcRelaySupervisor.stop_relay(session_id)
+        
         # Broadcast that session is closed
         Phoenix.PubSub.broadcast(
           Castmill.PubSub,

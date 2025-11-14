@@ -14,6 +14,7 @@ defmodule CastmillWeb.RcWindowChannel do
 
   alias Castmill.Devices
   alias Castmill.Devices.RcSessions
+  alias Castmill.Devices.RcRelay
   alias Castmill.Organizations
 
   @impl true
@@ -80,19 +81,24 @@ defmodule CastmillWeb.RcWindowChannel do
 
   @impl true
   def handle_in("control_event", payload, socket) do
-    # Forward control events to device via PubSub
+    # Forward control events to device via relay with queue management
     session_id = socket.assigns.session_id
 
-    Phoenix.PubSub.broadcast(
-      Castmill.PubSub,
-      "rc_session:#{session_id}",
-      %{event: "control_event", payload: payload}
-    )
+    case RcRelay.enqueue_control_event(session_id, payload) do
+      :ok ->
+        # Update activity timestamp
+        RcSessions.update_activity(session_id)
+        {:reply, :ok, socket}
 
-    # Update activity timestamp
-    RcSessions.update_activity(session_id)
+      {:error, :queue_full} ->
+        {:reply, {:error, %{reason: "Control queue full, try again"}}, socket}
 
-    {:reply, :ok, socket}
+      {:error, :invalid_message} ->
+        {:reply, {:error, %{reason: "Invalid control event message"}}, socket}
+
+      {:error, reason} ->
+        {:reply, {:error, %{reason: reason}}, socket}
+    end
   end
 
   @impl true
@@ -159,8 +165,15 @@ defmodule CastmillWeb.RcWindowChannel do
   end
 
   @impl true
+  def handle_info(%{event: "media_frame", payload: payload, source: :relay}, socket) do
+    # Forward media frames from relay to RC window
+    push(socket, "media_frame", payload)
+    {:noreply, socket}
+  end
+
+  @impl true
   def handle_info(%{event: "media_frame", payload: payload}, socket) do
-    # Forward media frames to RC window
+    # Legacy direct PubSub (backward compatibility)
     push(socket, "media_frame", payload)
     {:noreply, socket}
   end

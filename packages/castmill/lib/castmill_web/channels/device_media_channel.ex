@@ -3,8 +3,8 @@ defmodule CastmillWeb.DeviceMediaChannel do
   WebSocket channel for device media streaming in remote control sessions.
   
   This channel handles the relay of screen capture/media data from the device
-  to the RC window in the dashboard. Media data is forwarded via PubSub to
-  the RC session subscribers.
+  to the RC window in the dashboard. Media data is forwarded via the relay
+  with backpressure management to the RC session subscribers.
   
   Topics: "device_media:#{device_id}:#{session_id}"
   """
@@ -12,6 +12,7 @@ defmodule CastmillWeb.DeviceMediaChannel do
 
   alias Castmill.Devices
   alias Castmill.Devices.RcSessions
+  alias Castmill.Devices.RcRelay
 
   @impl true
   def join(
@@ -58,16 +59,20 @@ defmodule CastmillWeb.DeviceMediaChannel do
 
   @impl true
   def handle_in("media_frame", %{"data" => _data} = payload, socket) do
-    # Forward media frames to RC window via PubSub
+    # Forward media frames to RC window via relay with backpressure
     session_id = socket.assigns.session_id
 
-    Phoenix.PubSub.broadcast(
-      Castmill.PubSub,
-      "rc_session:#{session_id}",
-      %{event: "media_frame", payload: payload}
-    )
+    case RcRelay.enqueue_media_frame(session_id, payload) do
+      :ok ->
+        {:reply, :ok, socket}
+        
+      {:ok, :dropped} ->
+        # P-frame was dropped due to backpressure, still acknowledge
+        {:reply, :ok, socket}
 
-    {:reply, :ok, socket}
+      {:error, reason} ->
+        {:reply, {:error, %{reason: reason}}, socket}
+    end
   end
 
   @impl true
