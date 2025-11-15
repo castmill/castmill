@@ -127,7 +127,8 @@ class RemoteControlService : LifecycleService() {
         // Uncomment and configure for production deployment
         // val certificatePins = mapOf(
         //     "api.castmill.io" to listOf(
-        //         "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=" // Replace with actual SHA-256 pin
+        //         "YLh1dUR9y6Kja30RrAn7JKnbQG/uEtLMkBgFF2Fuihg=", // Example: Current cert (replace with actual SHA-256 pin)
+        //         "AfMENBVvOS8MnISprtvyPsjKlPooqh8nMB/pvCrpJpw="  // Example: Backup cert (replace with actual SHA-256 pin)
         //     )
         // )
         

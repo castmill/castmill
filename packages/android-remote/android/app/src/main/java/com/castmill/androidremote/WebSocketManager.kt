@@ -71,6 +71,7 @@ class WebSocketManager(
     private var reconnectJob: Job? = null
     private var currentReconnectDelay = INITIAL_RECONNECT_DELAY_MS
     private var isConnecting = false
+    private var isWebSocketOpen = false  // Track websocket connection state
     private var shouldReconnect = true
     private var sessionId: String? = null
     private var isAuthenticated = false
@@ -138,6 +139,7 @@ class WebSocketManager(
         Log.i(TAG, "Disconnecting WebSocket")
         shouldReconnect = false
         isAuthenticated = false
+        isWebSocketOpen = false
         stopHeartbeat()
         stopDiagnosticsReporting()
         stopReconnect()
@@ -230,7 +232,7 @@ class WebSocketManager(
     }
 
     private fun sendMessage(event: String, payload: JsonObject = buildJsonObject {}) {
-        if (webSocket == null && event != "phx_join") {
+        if (!isWebSocketOpen && event != "phx_join") {
             Log.w(TAG, "WebSocket not connected, cannot send $event message")
             return
         }
@@ -450,6 +452,7 @@ class WebSocketManager(
         override fun onOpen(webSocket: WebSocket, response: Response) {
             Log.i(TAG, "WebSocket connected")
             isConnecting = false
+            isWebSocketOpen = true
             currentReconnectDelay = INITIAL_RECONNECT_DELAY_MS
             
             // Verify TLS connection for WSS
@@ -526,6 +529,7 @@ class WebSocketManager(
         override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
             Log.e(TAG, "WebSocket failure: ${t.message}", t)
             isConnecting = false
+            isWebSocketOpen = false
             isAuthenticated = false
             diagnosticsManager?.recordNetworkError()
             stopHeartbeat()
@@ -536,6 +540,7 @@ class WebSocketManager(
         override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
             Log.i(TAG, "WebSocket closed: $code - $reason")
             isConnecting = false
+            isWebSocketOpen = false
             isAuthenticated = false
             stopHeartbeat()
             stopDiagnosticsReporting()

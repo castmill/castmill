@@ -2,7 +2,7 @@ package com.castmill.androidremote
 
 import android.util.Log
 import java.nio.ByteBuffer
-import java.util.concurrent.ConcurrentLinkedQueue
+import java.util.LinkedList
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
@@ -35,7 +35,8 @@ class FrameBuffer(
         val timestamp: Long = System.currentTimeMillis()
     )
     
-    private val queue = ConcurrentLinkedQueue<Frame>()
+    private val queue = LinkedList<Frame>()
+    private val queueLock = Any()
     private val currentSize = AtomicInteger(0)
     
     /**
@@ -47,46 +48,48 @@ class FrameBuffer(
      * @return true if frame was added, false if dropped
      */
     fun addFrame(buffer: ByteBuffer, isKeyFrame: Boolean, codecType: String): Boolean {
-        // Always add keyframes - they are critical for stream integrity
-        if (isKeyFrame) {
-            val frame = Frame(buffer, isKeyFrame, codecType)
-            queue.offer(frame)
-            currentSize.incrementAndGet()
-            Log.d(TAG, "Added keyframe. Buffer size: ${currentSize.get()}/$maxCapacity")
-            
-            // If buffer exceeded capacity after adding keyframe, drop oldest P-frame
-            if (currentSize.get() > maxCapacity) {
-                dropOldestPFrame()
-            }
-            
-            return true
-        }
-        
-        // Check capacity before adding P-frame
-        if (currentSize.get() >= maxCapacity) {
-            // Buffer is full - drop oldest P-frame to make room
-            if (dropOldestPFrame()) {
-                // Successfully dropped a P-frame, now add the new frame
+        synchronized(queueLock) {
+            // Always add keyframes - they are critical for stream integrity
+            if (isKeyFrame) {
                 val frame = Frame(buffer, isKeyFrame, codecType)
                 queue.offer(frame)
                 currentSize.incrementAndGet()
-                Log.d(TAG, "Added P-frame after drop. Buffer size: ${currentSize.get()}/$maxCapacity")
+                Log.d(TAG, "Added keyframe. Buffer size: ${currentSize.get()}/$maxCapacity")
+                
+                // If buffer exceeded capacity after adding keyframe, drop oldest P-frame
+                if (currentSize.get() > maxCapacity) {
+                    dropOldestPFrame()
+                }
+                
                 return true
-            } else {
-                // Could not drop a P-frame (buffer may contain only keyframes)
-                // Drop the new frame instead
-                onFrameDropped()
-                Log.w(TAG, "Dropped new P-frame (buffer full with keyframes). Size: ${currentSize.get()}")
-                return false
             }
+            
+            // Check capacity before adding P-frame
+            if (currentSize.get() >= maxCapacity) {
+                // Buffer is full - drop oldest P-frame to make room
+                if (dropOldestPFrame()) {
+                    // Successfully dropped a P-frame, now add the new frame
+                    val frame = Frame(buffer, isKeyFrame, codecType)
+                    queue.offer(frame)
+                    currentSize.incrementAndGet()
+                    Log.d(TAG, "Added P-frame after drop. Buffer size: ${currentSize.get()}/$maxCapacity")
+                    return true
+                } else {
+                    // Could not drop a P-frame (buffer may contain only keyframes)
+                    // Drop the new frame instead
+                    onFrameDropped()
+                    Log.w(TAG, "Dropped new P-frame (buffer full with keyframes). Size: ${currentSize.get()}")
+                    return false
+                }
+            }
+            
+            // Buffer has space - add the frame
+            val frame = Frame(buffer, isKeyFrame, codecType)
+            queue.offer(frame)
+            currentSize.incrementAndGet()
+            Log.v(TAG, "Added P-frame. Buffer size: ${currentSize.get()}/$maxCapacity")
+            return true
         }
-        
-        // Buffer has space - add the frame
-        val frame = Frame(buffer, isKeyFrame, codecType)
-        queue.offer(frame)
-        currentSize.incrementAndGet()
-        Log.v(TAG, "Added P-frame. Buffer size: ${currentSize.get()}/$maxCapacity")
-        return true
     }
     
     /**
@@ -95,12 +98,14 @@ class FrameBuffer(
      * @return Frame or null if buffer is empty
      */
     fun getFrame(): Frame? {
-        val frame = queue.poll()
-        if (frame != null) {
-            currentSize.decrementAndGet()
-            Log.v(TAG, "Retrieved frame. Buffer size: ${currentSize.get()}/$maxCapacity")
+        synchronized(queueLock) {
+            val frame = queue.poll()
+            if (frame != null) {
+                currentSize.decrementAndGet()
+                Log.v(TAG, "Retrieved frame. Buffer size: ${currentSize.get()}/$maxCapacity")
+            }
+            return frame
         }
-        return frame
     }
     
     /**
@@ -109,46 +114,35 @@ class FrameBuffer(
      * @return Frame or null if buffer is empty
      */
     fun peekFrame(): Frame? {
-        return queue.peek()
+        synchronized(queueLock) {
+            return queue.peek()
+        }
     }
     
     /**
      * Drop the oldest P-frame (non-keyframe) from the buffer
+     * Must be called within synchronized(queueLock) block
      * 
      * @return true if a P-frame was dropped, false otherwise
      */
     private fun dropOldestPFrame(): Boolean {
-        // Create a temporary list to find and remove oldest P-frame
-        val frames = mutableListOf<Frame>()
-        var droppedFrame: Frame? = null
-        
-        // Drain the queue
-        while (true) {
-            val frame = queue.poll() ?: break
-            frames.add(frame)
+        // Use iterator to find and remove the first P-frame efficiently
+        val iterator = queue.iterator()
+        while (iterator.hasNext()) {
+            val frame = iterator.next()
+            if (!frame.isKeyFrame) {
+                iterator.remove()
+                currentSize.decrementAndGet()
+                onFrameDropped()
+                
+                Log.d(TAG, "Dropped oldest P-frame. Buffer size: ${currentSize.get()}/$maxCapacity")
+                return true
+            }
         }
         
-        // Find the oldest P-frame
-        val pFrameIndex = frames.indexOfFirst { !it.isKeyFrame }
-        
-        if (pFrameIndex >= 0) {
-            // Remove the oldest P-frame
-            droppedFrame = frames.removeAt(pFrameIndex)
-            
-            // Put remaining frames back
-            frames.forEach { queue.offer(it) }
-            
-            currentSize.decrementAndGet()
-            onFrameDropped()
-            
-            Log.d(TAG, "Dropped oldest P-frame. Buffer size: ${currentSize.get()}/$maxCapacity")
-            return true
-        } else {
-            // No P-frames found - put everything back
-            frames.forEach { queue.offer(it) }
-            Log.d(TAG, "No P-frames to drop. Buffer contains only keyframes.")
-            return false
-        }
+        // No P-frames found
+        Log.d(TAG, "No P-frames to drop. Buffer contains only keyframes.")
+        return false
     }
     
     /**
@@ -159,7 +153,11 @@ class FrameBuffer(
     /**
      * Check if buffer is empty
      */
-    fun isEmpty(): Boolean = queue.isEmpty()
+    fun isEmpty(): Boolean {
+        synchronized(queueLock) {
+            return queue.isEmpty()
+        }
+    }
     
     /**
      * Check if buffer is full
@@ -177,8 +175,10 @@ class FrameBuffer(
      * Clear all frames from the buffer
      */
     fun clear() {
-        queue.clear()
-        currentSize.set(0)
+        synchronized(queueLock) {
+            queue.clear()
+            currentSize.set(0)
+        }
         Log.i(TAG, "Buffer cleared")
     }
     

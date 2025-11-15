@@ -41,6 +41,7 @@ class DiagnosticsManager {
     private val totalBytesEncoded = AtomicLong(0)
     
     // FPS tracking
+    private val frameTimestampsLock = Any()
     private var frameTimestamps = mutableListOf<Long>()
     private var lastFpsCalculation = 0L
     private var currentFps = 0.0
@@ -53,6 +54,7 @@ class DiagnosticsManager {
     // Jitter buffer stats
     private val jitterBufferUnderruns = AtomicInteger(0)
     private val jitterBufferOverflows = AtomicInteger(0)
+    private val jitterSamplesLock = Any()
     private var averageJitterMs = 0.0
     private val jitterSamples = mutableListOf<Long>()
     private val maxJitterSamples = 100
@@ -113,7 +115,7 @@ class DiagnosticsManager {
         }
         
         // Track frame timestamp for FPS calculation
-        synchronized(frameTimestamps) {
+        synchronized(frameTimestampsLock) {
             frameTimestamps.add(now)
             
             // Calculate FPS every second
@@ -143,7 +145,7 @@ class DiagnosticsManager {
      * Record jitter measurement (time delta between expected and actual frame arrival)
      */
     fun recordJitter(jitterMs: Long) {
-        synchronized(jitterSamples) {
+        synchronized(jitterSamplesLock) {
             jitterSamples.add(jitterMs)
             
             // Keep only recent samples
@@ -190,7 +192,7 @@ class DiagnosticsManager {
      * Calculate current FPS based on frame timestamps
      */
     private fun calculateFps(currentTime: Long) {
-        synchronized(frameTimestamps) {
+        synchronized(frameTimestampsLock) {
             // Remove timestamps older than 1 second
             val cutoffTime = currentTime - FPS_CALCULATION_WINDOW_MS
             frameTimestamps.removeAll { it < cutoffTime }
@@ -317,11 +319,11 @@ class DiagnosticsManager {
         totalKeyFrames.set(0)
         totalBytesEncoded.set(0)
         
-        synchronized(frameTimestamps) {
+        synchronized(frameTimestampsLock) {
             frameTimestamps.clear()
+            lastFpsCalculation = 0
+            currentFps = 0.0
         }
-        lastFpsCalculation = 0
-        currentFps = 0.0
         
         bytesInWindow.set(0)
         lastBitrateCalculation = 0
@@ -329,10 +331,10 @@ class DiagnosticsManager {
         
         jitterBufferUnderruns.set(0)
         jitterBufferOverflows.set(0)
-        synchronized(jitterSamples) {
+        synchronized(jitterSamplesLock) {
             jitterSamples.clear()
+            averageJitterMs = 0.0
         }
-        averageJitterMs = 0.0
         
         encodingErrors.set(0)
         networkErrors.set(0)

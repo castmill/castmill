@@ -294,11 +294,18 @@ class ScreenCaptureManager(
 
     /**
      * Send buffered frames to the output callback
+     * Note: This drains the entire buffer synchronously. In production, consider
+     * implementing rate limiting or async handling if onFrameEncoded blocks.
      */
     private fun sendBufferedFrames() {
-        while (!frameBuffer.isEmpty()) {
+        // Limit number of frames sent per call to prevent blocking encoder thread
+        var framesSent = 0
+        val maxFramesPerBatch = 5
+        
+        while (!frameBuffer.isEmpty() && framesSent < maxFramesPerBatch) {
             val frame = frameBuffer.getFrame() ?: break
             onFrameEncoded(frame.buffer, frame.isKeyFrame, frame.codecType)
+            framesSent++
         }
     }
 

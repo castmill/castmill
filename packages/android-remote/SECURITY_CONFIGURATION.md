@@ -110,8 +110,8 @@ private fun connectWebSocket(sessionId: String, deviceToken: String) {
     // Certificate pinning configuration
     val certificatePins = mapOf(
         "api.castmill.io" to listOf(
-            "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=",  // Primary certificate pin
-            "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB="   // Backup certificate pin
+            "YLh1dUR9y6Kja30RrAn7JKnbQG/uEtLMkBgFF2Fuihg=",  // Example primary certificate pin (replace with actual)
+            "AfMENBVvOS8MnISprtvyPsjKlPooqh8nMB/pvCrpJpw="   // Example backup certificate pin (replace with actual)
         )
     )
     
