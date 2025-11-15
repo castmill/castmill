@@ -13,6 +13,7 @@ defmodule CastmillWeb.DeviceMediaChannel do
   alias Castmill.Devices
   alias Castmill.Devices.RcSessions
   alias Castmill.Devices.RcRelay
+  alias Castmill.Devices.RcMessageSchemas
 
   @impl true
   def join(
@@ -70,6 +71,15 @@ defmodule CastmillWeb.DeviceMediaChannel do
         # P-frame was dropped due to backpressure, still acknowledge
         {:reply, :ok, socket}
 
+      {:error, :invalid_message} ->
+        {:reply, {:error, %{reason: "Invalid media frame message"}}, socket}
+
+      {:error, :session_not_found} ->
+        {:reply, {:error, %{reason: "Session not found"}}, socket}
+
+      {:error, reason} when is_atom(reason) ->
+        {:reply, {:error, %{reason: Atom.to_string(reason)}}, socket}
+
       {:error, reason} ->
         {:reply, {:error, %{reason: reason}}, socket}
     end
@@ -77,16 +87,22 @@ defmodule CastmillWeb.DeviceMediaChannel do
 
   @impl true
   def handle_in("media_metadata", payload, socket) do
-    # Forward media metadata (resolution, fps, etc.) to RC window
+    # Forward media metadata (resolution, fps, etc.) to RC window with validation
     session_id = socket.assigns.session_id
 
-    Phoenix.PubSub.broadcast(
-      Castmill.PubSub,
-      "rc_session:#{session_id}",
-      %{event: "media_metadata", payload: payload}
-    )
+    case RcMessageSchemas.validate_media_metadata(payload) do
+      {:ok, validated_payload} ->
+        Phoenix.PubSub.broadcast(
+          Castmill.PubSub,
+          "rc_session:#{session_id}",
+          %{event: "media_metadata", payload: validated_payload}
+        )
 
-    {:reply, :ok, socket}
+        {:reply, :ok, socket}
+
+      {:error, reason} ->
+        {:reply, {:error, %{reason: reason}}, socket}
+    end
   end
 
   @impl true

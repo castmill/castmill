@@ -32,6 +32,8 @@ defmodule Castmill.Devices.RcRelay do
   # Queue size limits
   @control_queue_max_size 100
   @media_queue_max_size 30
+  # Allow IDR frames up to 2x the normal queue size to prevent unbounded growth
+  @media_queue_max_size_with_idr @media_queue_max_size * 2
 
   # State structure
   defstruct [
@@ -78,7 +80,7 @@ defmodule Castmill.Devices.RcRelay do
   - IDR frames are always enqueued (may grow queue temporarily)
   - P-frames are dropped if queue is at capacity
   
-  Returns `:ok` or `{:error, reason}`.
+  Returns `:ok` if enqueued and forwarded, `{:ok, :dropped}` if P-frame was dropped due to backpressure, or `{:error, reason}` on validation or session errors.
   """
   def enqueue_media_frame(session_id, payload) do
     case RcMessageSchemas.validate_media_frame(payload) do
@@ -155,6 +157,9 @@ defmodule Castmill.Devices.RcRelay do
       Logger.warning("Control queue full for session #{state.session_id}, dropping message")
       {:reply, {:error, :queue_full}, %{state | stats: new_stats}}
     else
+      # Design note: Messages are forwarded immediately rather than buffered.
+      # The queue acts as a size counter to enforce backpressure limits.
+      # This provides immediate forwarding with bounded resource usage.
       # Enqueue and forward
       new_queue = :queue.in(payload, state.control_queue)
       new_stats = Map.update!(state.stats, :control_enqueued, &(&1 + 1))
@@ -176,8 +181,8 @@ defmodule Castmill.Devices.RcRelay do
     frame_type = get_frame_type(payload)
 
     cond do
-      # Always forward IDR frames regardless of queue size
-      frame_type == "idr" ->
+      # Always forward IDR frames, but up to 2x the normal queue size to prevent unbounded growth
+      frame_type == "idr" and queue_size < @media_queue_max_size_with_idr ->
         new_queue = :queue.in(payload, state.media_queue)
         new_stats =
           state.stats
@@ -192,6 +197,15 @@ defmodule Castmill.Devices.RcRelay do
         {_, final_queue} = :queue.out(new_queue)
 
         {:reply, :ok, %{state | media_queue: final_queue, stats: forwarded_stats}}
+
+      # Drop IDR frames if queue exceeds 2x limit (prevents unbounded memory growth)
+      frame_type == "idr" ->
+        new_stats =
+          state.stats
+          |> Map.update!(:media_dropped, &(&1 + 1))
+
+        Logger.warning("Media queue exceeded IDR limit for session #{state.session_id}, dropping IDR frame")
+        {:reply, {:ok, :dropped}, %{state | stats: new_stats}}
 
       # Drop P-frames if queue is at capacity
       queue_size >= @media_queue_max_size ->
@@ -226,7 +240,7 @@ defmodule Castmill.Devices.RcRelay do
       media_queue_size: :queue.len(state.media_queue)
     })
 
-    {:reply, stats, state}
+    {:reply, {:ok, stats}, state}
   end
 
   @impl true

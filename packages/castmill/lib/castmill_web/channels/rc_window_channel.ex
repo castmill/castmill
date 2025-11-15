@@ -96,6 +96,12 @@ defmodule CastmillWeb.RcWindowChannel do
       {:error, :invalid_message} ->
         {:reply, {:error, %{reason: "Invalid control event message"}}, socket}
 
+      {:error, :session_not_found} ->
+        {:reply, {:error, %{reason: "Session not found"}}, socket}
+
+      {:error, reason} when is_atom(reason) ->
+        {:reply, {:error, %{reason: Atom.to_string(reason)}}, socket}
+
       {:error, reason} ->
         {:reply, {:error, %{reason: reason}}, socket}
     end

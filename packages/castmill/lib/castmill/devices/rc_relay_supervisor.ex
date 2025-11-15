@@ -32,6 +32,13 @@ defmodule Castmill.Devices.RcRelaySupervisor do
   Stops a relay for a session.
   """
   def stop_relay(session_id) do
-    Castmill.Devices.RcRelay.stop(session_id)
+    case Castmill.Devices.RcRelay.stop(session_id) do
+      :ok -> 
+        :ok
+      {:error, :session_not_found} -> 
+        require Logger
+        Logger.debug("Attempted to stop relay for session #{session_id} but it was already stopped")
+        :ok
+    end
   end
 end

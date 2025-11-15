@@ -21,49 +21,48 @@ defmodule Castmill.Devices.RcSessions do
   def create_session(device_id, user_id, opts \\ []) do
     timeout_seconds = Keyword.get(opts, :timeout_seconds, @default_timeout_seconds)
     
-    # Check for existing active session
-    case get_active_session_for_device(device_id) do
-      nil ->
-        now = DateTime.utc_now()
-        
-        attrs = %{
-          device_id: device_id,
-          user_id: user_id,
-          state: "created",
-          status: "active",  # Keep for backward compatibility (DEPRECATED)
-          last_activity_at: now,
-          timeout_at: nil  # Will be computed dynamically from last_activity_at + timeout_seconds
-        }
+    # Use a transaction to ensure atomicity of session creation and relay startup
+    Repo.transaction(fn ->
+      # Check for existing active session
+      case get_active_session_for_device(device_id) do
+        nil ->
+          now = DateTime.utc_now()
+          
+          attrs = %{
+            device_id: device_id,
+            user_id: user_id,
+            state: "created",
+            status: "active",  # Keep for backward compatibility (DEPRECATED)
+            last_activity_at: now,
+            timeout_at: nil  # Will be computed dynamically from last_activity_at + timeout_seconds
+          }
 
-        result = 
-          %RcSession{}
-          |> RcSession.changeset(attrs)
-          |> Repo.insert()
+          case %RcSession{}
+               |> RcSession.changeset(attrs)
+               |> Repo.insert() do
+            {:ok, session} ->
+              # Start the relay for this session
+              case RcRelaySupervisor.start_relay(session.id) do
+                {:ok, _pid} ->
+                  # Schedule timeout check
+                  schedule_timeout_check(session.id, timeout_seconds)
+                  # Return session with computed timeout_at for API response
+                  timeout_at = DateTime.add(now, timeout_seconds, :second)
+                  %{session | timeout_at: timeout_at}
 
-        case result do
-          {:ok, session} ->
-            # Start the relay for this session
-            case RcRelaySupervisor.start_relay(session.id) do
-              {:ok, _pid} ->
-                # Schedule timeout check
-                schedule_timeout_check(session.id, timeout_seconds)
-                # Return session with computed timeout_at for API response
-                timeout_at = DateTime.add(now, timeout_seconds, :second)
-                {:ok, %{session | timeout_at: timeout_at}}
+                {:error, reason} ->
+                  # Rollback transaction if relay fails to start
+                  Repo.rollback(reason)
+              end
 
-              {:error, reason} ->
-                # Clean up session if relay fails to start
-                Repo.delete(session)
-                {:error, reason}
-            end
+            {:error, changeset} ->
+              Repo.rollback(changeset)
+          end
 
-          error ->
-            error
-        end
-
-      _existing_session ->
-        {:error, :device_has_active_session}
-    end
+        _existing_session ->
+          Repo.rollback(:device_has_active_session)
+      end
+    end)
   end
 
   @doc """
