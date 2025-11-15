@@ -74,6 +74,55 @@ defmodule CastmillWeb.Telemetry do
           "The time the connection spent waiting before being checked out for the query"
       ),
 
+      # RC Session Metrics
+      counter("castmill.rc_session.created.count",
+        description: "Total number of RC sessions created"
+      ),
+      counter("castmill.rc_session.closed.count",
+        description: "Total number of RC sessions closed"
+      ),
+      summary("castmill.rc_session.closed.duration",
+        unit: {:native, :millisecond},
+        description: "Duration of RC sessions from start to close"
+      ),
+      counter("castmill.rc_session.timeout.count",
+        description: "Total number of RC sessions that timed out",
+        tags: [:state]
+      ),
+      counter("castmill.rc_session.state_transition.count",
+        description: "RC session state transitions",
+        tags: [:from_state, :to_state]
+      ),
+      counter("castmill.rc_session.control_event.count",
+        description: "Total number of control events sent"
+      ),
+      summary("castmill.rc_session.control_event.latency",
+        unit: {:native, :microsecond},
+        description: "Latency of control event processing"
+      ),
+      counter("castmill.rc_session.media_frame.count",
+        description: "Total number of media frames received"
+      ),
+      summary("castmill.rc_session.media_frame.size",
+        unit: :byte,
+        description: "Size of media frames"
+      ),
+      last_value("castmill.rc_session.media_frame.fps",
+        description: "Frames per second for media streams"
+      ),
+      counter("castmill.rc_session.frames_dropped.count",
+        description: "Total number of frames dropped"
+      ),
+      counter("castmill.rc_session.relay_failed.count",
+        description: "Total number of relay start failures"
+      ),
+      counter("castmill.rc_session.queue_full.count",
+        description: "Total number of control queue full events"
+      ),
+      last_value("castmill.rc_session.active_sessions.count",
+        description: "Current number of active RC sessions"
+      ),
+
       # VM Metrics
       summary("vm.memory.total", unit: {:byte, :kilobyte}),
       summary("vm.total_run_queue_lengths.total"),

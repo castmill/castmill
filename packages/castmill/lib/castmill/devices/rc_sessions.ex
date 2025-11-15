@@ -9,6 +9,8 @@ defmodule Castmill.Devices.RcSessions do
   alias Castmill.Repo
   alias Castmill.Devices.RcSession
   alias Castmill.Devices.RcRelaySupervisor
+  alias Castmill.Devices.RcLogger
+  alias Castmill.Devices.RcTelemetry
 
   # Default timeout for idle sessions (5 minutes)
   @default_timeout_seconds 300
@@ -41,6 +43,15 @@ defmodule Castmill.Devices.RcSessions do
                |> RcSession.changeset(attrs)
                |> Repo.insert() do
             {:ok, session} ->
+              # Log session creation
+              RcLogger.info("RC session created", session.id, device_id, [
+                user_id: user_id,
+                timeout_seconds: timeout_seconds
+              ])
+
+              # Emit telemetry event
+              RcTelemetry.session_created(session.id, device_id, user_id)
+
               # Start the relay for this session
               case RcRelaySupervisor.start_relay(session.id) do
                 {:ok, _pid} ->
@@ -51,6 +62,11 @@ defmodule Castmill.Devices.RcSessions do
                   %{session | timeout_at: timeout_at}
 
                 {:error, reason} ->
+                  # Log and emit telemetry for relay failure
+                  RcLogger.error("Failed to start relay for RC session", session.id, device_id, [
+                    reason: inspect(reason)
+                  ])
+                  RcTelemetry.relay_start_failed(session.id, device_id, reason)
                   # Rollback transaction if relay fails to start
                   Repo.rollback(reason)
               end
@@ -100,6 +116,23 @@ defmodule Castmill.Devices.RcSessions do
   def transition_to_closed(session_id) do
     case transition_state(session_id, "closed") do
       {:ok, session} ->
+        # Calculate duration if started_at is available
+        duration_ms =
+          if session.started_at do
+            DateTime.diff(DateTime.utc_now(), session.started_at, :millisecond)
+          else
+            0
+          end
+
+        # Log session closure
+        RcLogger.info("RC session closed", session_id, session.device_id, [
+          duration_ms: duration_ms,
+          final_state: "closed"
+        ])
+
+        # Emit telemetry event
+        RcTelemetry.session_closed(session_id, session.device_id, duration_ms)
+
         # Stop the relay
         RcRelaySupervisor.stop_relay(session_id)
         
@@ -128,9 +161,15 @@ defmodule Castmill.Devices.RcSessions do
 
       session ->
         if RcSession.active_state?(session.state) do
-          session
-          |> Ecto.Changeset.change(%{last_activity_at: DateTime.utc_now()})
-          |> Repo.update()
+          result =
+            session
+            |> Ecto.Changeset.change(%{last_activity_at: DateTime.utc_now()})
+            |> Repo.update()
+
+          # Emit telemetry for activity
+          RcTelemetry.session_activity(session_id, session.device_id)
+
+          result
         else
           {:ok, session}
         end
@@ -201,6 +240,16 @@ defmodule Castmill.Devices.RcSessions do
       |> Repo.all()
 
     Enum.each(timed_out_sessions, fn session ->
+      # Log timeout alert
+      RcLogger.warning("RC session timed out", session.id, session.device_id, [
+        state: session.state,
+        last_activity_at: session.last_activity_at,
+        timeout_threshold: timeout_threshold
+      ])
+
+      # Emit telemetry for timeout
+      RcTelemetry.session_timeout(session.id, session.device_id, session.state)
+
       case transition_to_closed(session.id) do
         {:ok, _} ->
           :ok
@@ -240,9 +289,33 @@ defmodule Castmill.Devices.RcSessions do
         {:error, :not_found}
 
       session ->
-        session
-        |> RcSession.state_transition_changeset(new_state)
-        |> Repo.update()
+        old_state = session.state
+
+        result =
+          session
+          |> RcSession.state_transition_changeset(new_state)
+          |> Repo.update()
+
+        # Log and emit telemetry for successful transitions
+        case result do
+          {:ok, updated_session} ->
+            RcLogger.info("RC session state transition", session_id, session.device_id, [
+              from_state: old_state,
+              to_state: new_state
+            ])
+
+            RcTelemetry.session_state_transition(
+              session_id,
+              session.device_id,
+              old_state,
+              new_state
+            )
+
+            {:ok, updated_session}
+
+          error ->
+            error
+        end
     end
   end
 

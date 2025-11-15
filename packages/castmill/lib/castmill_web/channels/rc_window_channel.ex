@@ -16,6 +16,8 @@ defmodule CastmillWeb.RcWindowChannel do
   alias Castmill.Devices.RcSessions
   alias Castmill.Devices.RcRelay
   alias Castmill.Organizations
+  alias Castmill.Devices.RcLogger
+  alias Castmill.Devices.RcTelemetry
 
   @impl true
   def join("rc_window:" <> session_id, _params, socket) do
@@ -83,14 +85,27 @@ defmodule CastmillWeb.RcWindowChannel do
   def handle_in("control_event", payload, socket) do
     # Forward control events to device via relay with queue management
     session_id = socket.assigns.session_id
+    device_id = socket.assigns.device_id
+
+    # Measure latency
+    start_time = System.monotonic_time(:microsecond)
 
     case RcRelay.enqueue_control_event(session_id, payload) do
       :ok ->
+        # Calculate latency
+        latency_us = System.monotonic_time(:microsecond) - start_time
+
+        # Emit telemetry for control event
+        RcTelemetry.control_event_sent(session_id, device_id, latency_us)
+
         # Update activity timestamp
         RcSessions.update_activity(session_id)
         {:reply, :ok, socket}
 
       {:error, :queue_full} ->
+        # Log and emit telemetry for queue full
+        RcLogger.warning("Control queue full", session_id, device_id)
+        RcTelemetry.control_queue_full(session_id, device_id)
         {:reply, {:error, %{reason: "Control queue full, try again"}}, socket}
 
       {:error, :invalid_message} ->
@@ -173,6 +188,16 @@ defmodule CastmillWeb.RcWindowChannel do
   @impl true
   def handle_info(%{event: "media_frame", payload: payload, source: :relay}, socket) do
     # Forward media frames from relay to RC window
+    session_id = socket.assigns.session_id
+    device_id = socket.assigns.device_id
+
+    # Extract frame metadata for telemetry
+    frame_size = byte_size(payload[:data] || <<>>)
+    frame_metadata = Map.take(payload, [:fps, :timestamp])
+
+    # Emit telemetry for media frame
+    RcTelemetry.media_frame_received(session_id, device_id, frame_size, frame_metadata)
+
     push(socket, "media_frame", payload)
     {:noreply, socket}
   end
@@ -180,6 +205,16 @@ defmodule CastmillWeb.RcWindowChannel do
   @impl true
   def handle_info(%{event: "media_frame", payload: payload}, socket) do
     # Legacy direct PubSub (backward compatibility)
+    session_id = socket.assigns.session_id
+    device_id = socket.assigns.device_id
+
+    # Extract frame metadata for telemetry
+    frame_size = byte_size(payload[:data] || <<>>)
+    frame_metadata = Map.take(payload, [:fps, :timestamp])
+
+    # Emit telemetry for media frame
+    RcTelemetry.media_frame_received(session_id, device_id, frame_size, frame_metadata)
+
     push(socket, "media_frame", payload)
     {:noreply, socket}
   end
@@ -201,8 +236,12 @@ defmodule CastmillWeb.RcWindowChannel do
   def terminate(_reason, socket) do
     # Unsubscribe from PubSub when disconnecting
     session_id = socket.assigns[:session_id]
+    device_id = socket.assigns[:device_id]
 
     if session_id do
+      # Log RC window disconnection
+      RcLogger.info("RC window disconnected", session_id, device_id)
+
       Phoenix.PubSub.unsubscribe(Castmill.PubSub, "rc_session:#{session_id}")
     end
 

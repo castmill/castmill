@@ -1,5 +1,6 @@
 defmodule Castmill.Devices.RcSessionsTest do
   use Castmill.DataCase
+  import ExUnit.CaptureLog
 
   import Castmill.NetworksFixtures
   import Castmill.OrganizationsFixtures
@@ -15,6 +16,28 @@ defmodule Castmill.Devices.RcSessionsTest do
     organization = organization_fixture(%{network_id: network.id})
     user = user_fixture(%{organization_id: organization.id})
     device = device_fixture(%{organization_id: organization.id})
+
+    # Attach telemetry handler for tests
+    test_pid = self()
+    handler_id = "test-handler-#{:erlang.unique_integer([:positive])}"
+
+    :telemetry.attach_many(
+      handler_id,
+      [
+        [:castmill, :rc_session, :created],
+        [:castmill, :rc_session, :state_transition],
+        [:castmill, :rc_session, :closed],
+        [:castmill, :rc_session, :timeout],
+        [:castmill, :rc_session, :activity],
+        [:castmill, :rc_session, :relay_failed]
+      ],
+      fn event_name, measurements, metadata, _config ->
+        send(test_pid, {:telemetry_event, event_name, measurements, metadata})
+      end,
+      nil
+    )
+
+    on_exit(fn -> :telemetry.detach(handler_id) end)
 
     {:ok, device: device, user: user}
   end
@@ -57,6 +80,25 @@ defmodule Castmill.Devices.RcSessionsTest do
       timeout_diff = DateTime.diff(session.timeout_at, now, :second)
       assert timeout_diff >= 59 and timeout_diff <= 61
     end
+
+    test "emits telemetry and logs on session creation", %{device: device, user: user} do
+      log =
+        capture_log(fn ->
+          assert {:ok, session} = RcSessions.create_session(device.id, user.id)
+
+          # Should receive telemetry event
+          assert_receive {:telemetry_event, [:castmill, :rc_session, :created], measurements,
+                          metadata}
+
+          assert measurements.count == 1
+          assert metadata.session_id == session.id
+          assert metadata.device_id == device.id
+          assert metadata.user_id == user.id
+        end)
+
+      # Should log session creation
+      assert log =~ "RC session created"
+    end
   end
 
   describe "state transitions" do
@@ -66,10 +108,27 @@ defmodule Castmill.Devices.RcSessionsTest do
     end
 
     test "transition from created to starting", %{session: session} do
-      assert {:ok, updated} = RcSessions.transition_to_starting(session.id)
-      assert updated.state == "starting"
-      assert updated.started_at != nil
-      assert updated.last_activity_at != nil
+      log =
+        capture_log(fn ->
+          assert {:ok, updated} = RcSessions.transition_to_starting(session.id)
+          assert updated.state == "starting"
+          assert updated.started_at != nil
+          assert updated.last_activity_at != nil
+
+          # Should receive telemetry event for state transition
+          assert_receive {:telemetry_event, [:castmill, :rc_session, :state_transition],
+                          measurements, metadata}
+
+          assert measurements.count == 1
+          assert metadata.session_id == session.id
+          assert metadata.from_state == "created"
+          assert metadata.to_state == "starting"
+        end)
+
+      # Should log state transition
+      assert log =~ "RC session state transition"
+      assert log =~ "created"
+      assert log =~ "starting"
     end
 
     test "transition from starting to streaming", %{session: session} do
@@ -242,6 +301,36 @@ defmodule Castmill.Devices.RcSessionsTest do
       # Check timeout with the same timeout_seconds used at creation
       {:ok, checked} = RcSessions.check_session_timeout(session.id, 1)
       assert checked.state == "closed"
+    end
+
+    test "emits telemetry and logs on timeout", %{device: device, user: user} do
+      # Create a session with very short timeout
+      {:ok, session} = RcSessions.create_session(device.id, user.id, timeout_seconds: 1)
+
+      # Wait for timeout
+      Process.sleep(1500)
+
+      log =
+        capture_log(fn ->
+          # This should close all timed out sessions
+          count = RcSessions.check_and_close_timed_out_sessions(1)
+          assert count >= 1
+
+          # Should receive timeout telemetry event
+          assert_receive {:telemetry_event, [:castmill, :rc_session, :timeout], measurements,
+                          metadata}
+
+          assert measurements.count == 1
+          assert metadata.session_id == session.id
+          assert metadata.device_id == device.id
+
+          # Should also receive closed event
+          assert_receive {:telemetry_event, [:castmill, :rc_session, :closed], _measurements,
+                          _metadata}
+        end)
+
+      # Should log timeout warning
+      assert log =~ "RC session timed out"
     end
 
     test "check_session_timeout does not close active sessions", %{device: device, user: user} do
