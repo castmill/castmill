@@ -11,6 +11,7 @@ defmodule CastmillWeb.DeviceRcChannel do
 
   alias Castmill.Devices
   alias Castmill.Devices.RcSessions
+  alias Castmill.Devices.RcRelay
 
   @impl true
   def join("device_rc:" <> device_id, %{"token" => token, "session_id" => session_id}, socket) do
@@ -87,7 +88,19 @@ defmodule CastmillWeb.DeviceRcChannel do
   end
 
   @impl true
+  def handle_info(%{event: "control_event", payload: payload, source: :relay}, socket) do
+    # Received from relay (via PubSub), push to device WebSocket
+    push(socket, "control_event", payload)
+    
+    # Update activity timestamp
+    RcSessions.update_activity(socket.assigns.session_id)
+    
+    {:noreply, socket}
+  end
+
+  @impl true
   def handle_info(%{event: "control_event", payload: payload}, socket) do
+    # Legacy direct PubSub (backward compatibility)
     # Received from PubSub, push to device WebSocket
     push(socket, "control_event", payload)
     
