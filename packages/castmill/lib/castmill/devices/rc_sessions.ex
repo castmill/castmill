@@ -244,7 +244,7 @@ defmodule Castmill.Devices.RcSessions do
       RcLogger.warning("RC session timed out", session.id, session.device_id, [
         state: session.state,
         last_activity_at: session.last_activity_at,
-        timeout_threshold: timeout_threshold
+        timeout_seconds: timeout_seconds
       ])
 
       # Emit telemetry for timeout

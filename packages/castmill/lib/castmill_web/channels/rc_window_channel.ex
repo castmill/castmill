@@ -192,8 +192,13 @@ defmodule CastmillWeb.RcWindowChannel do
     device_id = socket.assigns.device_id
 
     # Extract frame metadata for telemetry
-    frame_size = byte_size(payload[:data] || <<>>)
-    frame_metadata = Map.take(payload, [:fps, :timestamp])
+    # Use Map.get to safely access payload data (payload is a map with string keys)
+    frame_size = byte_size(Map.get(payload, "data", <<>>))
+    
+    # Convert string keys to atom keys for telemetry
+    frame_metadata = %{}
+    frame_metadata = if Map.has_key?(payload, "fps"), do: Map.put(frame_metadata, :fps, payload["fps"]), else: frame_metadata
+    frame_metadata = if Map.has_key?(payload, "timestamp"), do: Map.put(frame_metadata, :timestamp, payload["timestamp"]), else: frame_metadata
 
     # Emit telemetry for media frame
     RcTelemetry.media_frame_received(session_id, device_id, frame_size, frame_metadata)
@@ -209,8 +214,13 @@ defmodule CastmillWeb.RcWindowChannel do
     device_id = socket.assigns.device_id
 
     # Extract frame metadata for telemetry
-    frame_size = byte_size(payload[:data] || <<>>)
-    frame_metadata = Map.take(payload, [:fps, :timestamp])
+    # Use Map.get to safely access payload data (payload is a map with string keys)
+    frame_size = byte_size(Map.get(payload, "data", <<>>))
+    
+    # Convert string keys to atom keys for telemetry
+    frame_metadata = %{}
+    frame_metadata = if Map.has_key?(payload, "fps"), do: Map.put(frame_metadata, :fps, payload["fps"]), else: frame_metadata
+    frame_metadata = if Map.has_key?(payload, "timestamp"), do: Map.put(frame_metadata, :timestamp, payload["timestamp"]), else: frame_metadata
 
     # Emit telemetry for media frame
     RcTelemetry.media_frame_received(session_id, device_id, frame_size, frame_metadata)
