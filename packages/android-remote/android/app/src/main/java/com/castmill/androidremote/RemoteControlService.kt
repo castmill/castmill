@@ -45,6 +45,7 @@ class RemoteControlService : LifecycleService() {
 
     private var screenCaptureManager: ScreenCaptureManager? = null
     private var webSocketManager: WebSocketManager? = null
+    private var diagnosticsManager: DiagnosticsManager? = null
     private var deviceId: String? = null
     private var isConnected = false
     private var isCapturing = false
@@ -54,6 +55,9 @@ class RemoteControlService : LifecycleService() {
         
         // Compute device ID
         deviceId = DeviceUtils.getDeviceId(this)
+        
+        // Initialize diagnostics manager
+        diagnosticsManager = DiagnosticsManager()
         
         createNotificationChannel()
         startForeground(NOTIFICATION_ID, createNotification("Initializing..."))
@@ -119,11 +123,22 @@ class RemoteControlService : LifecycleService() {
     private fun connectWebSocket(sessionId: String, deviceToken: String) {
         val backendUrl = getString(R.string.backend_url)
         
+        // Certificate pinning configuration (optional)
+        // Uncomment and configure for production deployment
+        // val certificatePins = mapOf(
+        //     "api.castmill.io" to listOf(
+        //         "YLh1dUR9y6Kja30RrAn7JKnbQG/uEtLMkBgFF2Fuihg=", // Example: Current cert (replace with actual SHA-256 pin)
+        //         "AfMENBVvOS8MnISprtvyPsjKlPooqh8nMB/pvCrpJpw="  // Example: Backup cert (replace with actual SHA-256 pin)
+        //     )
+        // )
+        
         webSocketManager = WebSocketManager(
             baseUrl = backendUrl,
             deviceId = deviceId!!,
             deviceToken = deviceToken,
-            coroutineScope = lifecycleScope
+            coroutineScope = lifecycleScope,
+            diagnosticsManager = diagnosticsManager,
+            certificatePins = null // Set to certificatePins map to enable pinning
         )
         
         webSocketManager?.connect(sessionId)
@@ -147,7 +162,8 @@ class RemoteControlService : LifecycleService() {
                 onError = { exception ->
                     Log.e(TAG, "Screen capture error", exception)
                     updateNotification("Capture error: ${exception.message}")
-                }
+                },
+                diagnosticsManager = diagnosticsManager
             )
             
             val started = screenCaptureManager?.start() ?: false
