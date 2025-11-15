@@ -27,8 +27,8 @@ class SessionLifecycleTest {
     }
 
     @Test
-    fun testStartSessionCallback() {
-        // Arrange
+    fun testStartSessionCallbackRegistration() {
+        // Verify that callback can be registered and manager created
         var callbackInvoked = false
         var receivedSessionId: String? = null
         
@@ -47,14 +47,15 @@ class SessionLifecycleTest {
             onStartSession = onStartSession
         )
 
-        // Assert - manager created with callback
+        // Manager should be created with callback registered
         assertNotNull("WebSocketManager should be created", manager)
-        assertFalse("Callback should not be invoked yet", callbackInvoked)
+        assertFalse("Callback should not be invoked during construction", callbackInvoked)
+        assertNull("Session ID should not be received during construction", receivedSessionId)
     }
 
     @Test
     fun testWebSocketManagerWithoutCallback() {
-        // Test that manager can be created without onStartSession callback
+        // Verify that manager can be created without onStartSession callback (optional parameter)
         val manager = WebSocketManager(
             baseUrl = "https://api.example.com",
             deviceId = "test-device-123",
@@ -66,26 +67,5 @@ class SessionLifecycleTest {
         )
 
         assertNotNull("WebSocketManager should be created without callback", manager)
-    }
-
-    @Test
-    fun testSessionIdFormat() {
-        // Test that session IDs follow expected format
-        val sessionId = "rc_session_123456789"
-        
-        assertTrue("Session ID should start with prefix", sessionId.startsWith("rc_session_"))
-        assertTrue("Session ID should have sufficient length", sessionId.length > 10)
-    }
-
-    @Test
-    fun testMediaWebSocketTopicFormat() {
-        // Test the media channel topic format
-        val deviceId = "device_abc"
-        val sessionId = "session_xyz"
-        val expectedTopic = "device_media:$deviceId:$sessionId"
-        
-        assertEquals("device_media:device_abc:session_xyz", expectedTopic)
-        assertTrue(expectedTopic.contains(deviceId))
-        assertTrue(expectedTopic.contains(sessionId))
     }
 }

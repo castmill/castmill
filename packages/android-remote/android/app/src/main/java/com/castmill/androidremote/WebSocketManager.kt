@@ -340,9 +340,10 @@ class WebSocketManager(
         }
 
         try {
-            val sid = sessionId
+            // Extract session ID from payload if available, fallback to stored sessionId
+            val sid = payload["session_id"]?.toString()?.trim('"') ?: sessionId
             if (sid == null) {
-                Log.e(TAG, "Cannot handle start_session: sessionId is null")
+                Log.e(TAG, "Cannot handle start_session: no session ID in payload or stored")
                 return
             }
 

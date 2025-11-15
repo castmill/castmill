@@ -132,6 +132,11 @@ class MediaWebSocketManager(
         webSocket = null
         isConnecting = false
         joinRef = null
+        
+        // Shut down the OkHttpClient to release resources
+        client.dispatcher.executorService.shutdown()
+        client.connectionPool.evictAll()
+        
         diagnosticsManager?.recordDisconnection()
     }
 
@@ -178,11 +183,14 @@ class MediaWebSocketManager(
             val byteArray = ByteArray(combinedBuffer.remaining())
             combinedBuffer.get(byteArray)
             
-            if (webSocket == null) {
+            // Use local reference to avoid race condition
+            val ws = webSocket
+            if (ws == null) {
                 Log.w(TAG, "WebSocket not connected, dropping video frame")
                 return
             }
-            webSocket?.send(okio.ByteString.of(*byteArray))
+            // Avoid spread operator for large arrays
+            ws.send(okio.ByteString.of(byteArray, 0, byteArray.size))
         } catch (e: Exception) {
             Log.e(TAG, "Error sending video frame", e)
         }

@@ -7,9 +7,9 @@ This implementation adds support for session lifecycle management and dedicated 
 ## Issue Requirements
 
 ✅ **On receiving start_session event:**
-- Initialize MediaProjection
-- Launch user consent if required
-- Start encoder
+- Initialize MediaProjection (if permission already granted)
+- 🚧 Launch user consent (requires MainActivity interaction - stored for future implementation)
+- Start encoder (H.264/MJPEG)
 - Open media WebSocket: `wss://<backend>/socket/websocket` on channel `device_media:#{device_id}:#{session_id}`
 
 ## Implementation Details

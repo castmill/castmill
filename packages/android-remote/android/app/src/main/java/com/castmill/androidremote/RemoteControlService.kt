@@ -52,6 +52,10 @@ class RemoteControlService : LifecycleService() {
     private var isConnected = false
     private var isCapturing = false
     private var pendingSessionId: String? = null // Track session waiting for MediaProjection
+    
+    // Store MediaProjection permission data for later use
+    private var mediaProjectionResultCode: Int = -1
+    private var mediaProjectionData: Intent? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -93,7 +97,11 @@ class RemoteControlService : LifecycleService() {
             val projectionData = intent?.getParcelableExtra<Intent>(EXTRA_MEDIA_PROJECTION_DATA)
             
             if (resultCode != -1 && projectionData != null) {
-                // Start screen capture immediately
+                // Store MediaProjection permission for later use
+                mediaProjectionResultCode = resultCode
+                mediaProjectionData = projectionData
+                
+                // Start screen capture immediately if we have permission
                 startScreenCapture(resultCode, projectionData)
             }
         } else {
@@ -169,19 +177,20 @@ class RemoteControlService : LifecycleService() {
         // Store the session ID
         pendingSessionId = sessionId
         
-        // Check if we already have MediaProjection permission from MainActivity
-        // If not, we need to request it through a notification or activity
-        // For now, log that we need permission
-        Log.w(TAG, "MediaProjection permission needed. User must grant permission via MainActivity first.")
-        updateNotification("Waiting for screen capture permission")
-        
-        // In a production app, you might:
-        // 1. Show a notification to open MainActivity
-        // 2. Use a transparent activity to request permission
-        // 3. Store the pending session and wait for permission grant
-        
-        // For this implementation, we expect MainActivity to have already granted permission
-        // and passed it via intent when starting the service
+        // Check if we already have MediaProjection permission
+        if (mediaProjectionResultCode != -1 && mediaProjectionData != null) {
+            Log.i(TAG, "MediaProjection permission already granted, starting media capture")
+            startMediaCapture(mediaProjectionResultCode, mediaProjectionData!!, sessionId)
+        } else {
+            // Permission not available - log and update notification
+            Log.w(TAG, "MediaProjection permission not available. User must grant permission via MainActivity.")
+            updateNotification("Waiting for screen capture permission")
+            
+            // In a production app, you might:
+            // 1. Show a notification to open MainActivity
+            // 2. Use a transparent activity to request permission
+            // 3. Store the pending session and wait for permission grant
+        }
     }
 
     /**
@@ -199,10 +208,17 @@ class RemoteControlService : LifecycleService() {
                 return
             }
             
+            val devId = deviceId
+            if (devId == null) {
+                Log.e(TAG, "No device ID available for media WebSocket")
+                updateNotification("Error: Missing device ID")
+                return
+            }
+            
             // Initialize media WebSocket first
             mediaWebSocketManager = MediaWebSocketManager(
                 baseUrl = backendUrl,
-                deviceId = deviceId!!,
+                deviceId = devId,
                 deviceToken = deviceToken,
                 sessionId = sessionId,
                 coroutineScope = lifecycleScope,
@@ -236,12 +252,21 @@ class RemoteControlService : LifecycleService() {
                 updateNotification("Streaming with $encoderType")
                 Log.i(TAG, "Media capture started with $encoderType")
                 
-                // Send media metadata
+                // Send media metadata with normalized codec name
                 val encoderInfo = screenCaptureManager?.getEncoderInfo() ?: emptyMap()
                 val width = (encoderInfo["width"] as? Int) ?: 1280
                 val height = (encoderInfo["height"] as? Int) ?: 720
                 val fps = (encoderInfo["fps"] as? Int) ?: 15
-                val codec = encoderType.lowercase()
+                
+                // Normalize codec name to backend-expected format
+                val codec = when (encoderType.uppercase()) {
+                    "H264", "H.264", "AVC" -> "h264"
+                    "MJPEG", "JPEG" -> "mjpeg"
+                    else -> {
+                        Log.w(TAG, "Unknown encoder type: $encoderType, using lowercase")
+                        encoderType.lowercase()
+                    }
+                }
                 
                 mediaWebSocketManager?.sendMediaMetadata(width, height, fps, codec)
             } else {

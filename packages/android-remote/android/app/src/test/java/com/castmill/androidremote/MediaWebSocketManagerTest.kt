@@ -16,11 +16,8 @@ import org.junit.Assert.*
  * Unit tests for MediaWebSocketManager.
  * 
  * These tests verify:
- * - Connection initialization
- * - Channel join with proper topic format
- * - Binary frame sending
- * - Metadata sending
- * - Disconnection and cleanup
+ * - Manager initialization with required parameters
+ * - Disconnection cleanup behavior
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class MediaWebSocketManagerTest {
@@ -43,13 +40,12 @@ class MediaWebSocketManagerTest {
 
     @Test
     fun testMediaWebSocketManagerCreation() {
-        // Arrange
+        // Verify manager can be created with all required parameters
         val baseUrl = "https://api.castmill.io"
         val deviceId = "test_device_123"
         val deviceToken = "test_token_456"
         val sessionId = "session_789"
 
-        // Act
         val manager = MediaWebSocketManager(
             baseUrl = baseUrl,
             deviceId = deviceId,
@@ -59,29 +55,12 @@ class MediaWebSocketManagerTest {
             diagnosticsManager = diagnosticsManager
         )
 
-        // Assert
-        assertNotNull(manager)
+        assertNotNull("MediaWebSocketManager should be created", manager)
     }
 
     @Test
-    fun testTopicFormat() {
-        // Arrange
-        val baseUrl = "https://api.castmill.io"
-        val deviceId = "test_device_123"
-        val sessionId = "session_789"
-        
-        // Act
-        val expectedTopic = "device_media:test_device_123:session_789"
-        
-        // Assert - topic format should match device_media:#{device_id}:#{session_id}
-        assertTrue(expectedTopic.startsWith("device_media:"))
-        assertTrue(expectedTopic.contains(deviceId))
-        assertTrue(expectedTopic.contains(sessionId))
-    }
-
-    @Test
-    fun testDisconnect() {
-        // Arrange
+    fun testDisconnectDoesNotThrow() {
+        // Verify disconnect can be called without errors even if never connected
         val manager = MediaWebSocketManager(
             baseUrl = "https://api.castmill.io",
             deviceId = "test_device",
@@ -91,10 +70,12 @@ class MediaWebSocketManagerTest {
             diagnosticsManager = diagnosticsManager
         )
 
-        // Act
-        manager.disconnect()
-
-        // Assert - should not throw exception
-        assertTrue(true)
+        // Should not throw exception when disconnecting without prior connection
+        try {
+            manager.disconnect()
+            // Test passes if no exception is thrown
+        } catch (e: Exception) {
+            fail("disconnect() should not throw exception: ${e.message}")
+        }
     }
 }
