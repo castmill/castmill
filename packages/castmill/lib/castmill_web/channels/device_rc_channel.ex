@@ -12,6 +12,8 @@ defmodule CastmillWeb.DeviceRcChannel do
   alias Castmill.Devices
   alias Castmill.Devices.RcSessions
   alias Castmill.Devices.RcRelay
+  alias Castmill.Devices.RcLogger
+  alias Castmill.Devices.RcTelemetry
 
   @impl true
   def join("device_rc:" <> device_id, %{"token" => token, "session_id" => session_id}, socket) do
@@ -30,6 +32,9 @@ defmodule CastmillWeb.DeviceRcChannel do
                 |> assign(:device, device)
                 |> assign(:session_id, session_id)
               
+              # Log device connection
+              RcLogger.info("Device connected to RC channel", session_id, device_id)
+
               # Transition session to starting if it's still in created state
               # Re-fetch to avoid race conditions
               current_session = RcSessions.get_session(session_id)
@@ -128,12 +133,16 @@ defmodule CastmillWeb.DeviceRcChannel do
   def terminate(_reason, socket) do
     # Notify RC window that device disconnected
     session_id = socket.assigns[:session_id]
+    device_id = socket.assigns[:device_id]
     
     if session_id do
+      # Log device disconnection
+      RcLogger.info("Device disconnected from RC channel", session_id, device_id)
+
       Phoenix.PubSub.broadcast(
         Castmill.PubSub,
         "rc_session:#{session_id}",
-        %{event: "device_disconnected", device_id: socket.assigns.device_id}
+        %{event: "device_disconnected", device_id: device_id}
       )
     end
 
