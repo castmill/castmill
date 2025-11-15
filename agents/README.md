@@ -41,6 +41,7 @@ agents/
 
 #### Castmill Backend (`packages/castmill/`)
 - **[RBAC.md](./packages/castmill/RBAC.md)** - Backend permission matrix, roles, and controller flow
+- **[RC-RELAY-ARCHITECTURE.md](./packages/castmill/RC-RELAY-ARCHITECTURE.md)** - Remote control relay system with backpressure and message schemas
 
 #### Player Systems (`packages/player/`)
 - *Coming soon: Player architecture, widget systems, platform integrations*
