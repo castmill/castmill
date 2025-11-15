@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Castmill Android Remote Control service enables remote control and monitoring of Android devices running the Castmill digital signage player. This companion app provides essential remote management capabilities for devices deployed in the field.
+The Castmill Android Remote Control service enables remote control and monitoring of Android devices running the Castmill digital signage player. This companion app provides essential remote management capabilities for devices deployed in the field with comprehensive diagnostics, resilience features, and security.
 
 ## Purpose
 
@@ -10,8 +10,9 @@ This service enables:
 
 - **Remote Screen Capture**: Stream the device screen in real-time using MediaProjection and MediaCodec
 - **Remote Input Control**: Inject touch events, swipes, and key presses via AccessibilityService
-- **Remote Monitoring**: WebSocket-based communication for bidirectional control
+- **Remote Monitoring**: WebSocket-based communication for bidirectional control with diagnostics reporting
 - **Device Management**: Enable remote troubleshooting and configuration of digital signage displays
+- **Performance Monitoring**: Real-time FPS, bitrate, frame drop, and connection metrics
 
 ## Technical Architecture
 
@@ -26,16 +27,20 @@ This service enables:
    - Runs as compliant Android 10+ foreground service
    - Shows persistent notification with connection status
    - Coordinates screen capture and encoding
+   - Integrates diagnostics and metrics collection
 3. **WebSocketManager**: WebSocket client implementation
    - Connects to backend using Phoenix protocol
    - Handles automatic reconnection with exponential backoff
    - Routes control events and device events
    - Maintains heartbeat to keep connection alive
    - Transmits video frames as binary WebSocket messages
+   - Sends periodic diagnostics reports to backend
+   - Implements TLS certificate validation and optional pinning
 4. **ScreenCaptureManager**: Screen capture orchestration
    - Creates VirtualDisplay from MediaProjection
    - Manages video encoder lifecycle
    - Implements automatic H.264 → MJPEG fallback
+   - Implements backpressure handling with frame buffering
 5. **VideoEncoder**: H.264/AVC video encoding
    - Encodes at 720p, 10-15 fps, 1.5-3 Mbps CBR
    - Uses MediaCodec with hardware acceleration
@@ -50,6 +55,17 @@ This service enables:
 8. **DeviceUtils**: Device identification utilities
    - Returns unique device identifier (same as main player)
    - Uses Settings.Secure.ANDROID_ID for consistency
+9. **DiagnosticsManager**: Metrics collection and reporting
+   - Tracks connection metrics (heartbeats, reconnects, uptime)
+   - Tracks video metrics (FPS, bitrate, frames, drops, keyframes)
+   - Tracks jitter buffer statistics
+   - Tracks error counts (encoding, network)
+   - Generates comprehensive diagnostics reports
+10. **FrameBuffer**: Backpressure and buffering management
+    - Bounded buffer with configurable capacity
+    - Drops oldest P-frames when full
+    - Preserves keyframes for stream integrity
+    - Thread-safe concurrent access
 
 ### Dependencies
 
@@ -237,16 +253,75 @@ The service supports real-time screen capture and video encoding:
   - JPEG quality 75
 - **Automatic Fallback**: H.264 → MJPEG if encoding fails
 - **Transmission**: NAL units via WebSocket binary frames
+- **Backpressure Handling**: Drops oldest P-frames when buffer is full (preserves keyframes)
+- **Buffer Capacity**: 30 frames (~2 seconds at 15fps)
 
 See [VIDEO_CAPTURE_IMPLEMENTATION.md](VIDEO_CAPTURE_IMPLEMENTATION.md) for complete video capture documentation.
+
+### Diagnostics and Monitoring
+
+The service includes comprehensive diagnostics and metrics collection:
+
+**Connection Metrics:**
+- Heartbeats sent
+- Reconnection attempts and successes
+- Connection uptime
+
+**Video Encoding Metrics:**
+- Current FPS (frames per second)
+- Current bitrate (bits per second, Mbps)
+- Total frames encoded
+- Total frames dropped
+- Frame drop rate percentage
+- Keyframe count
+
+**Jitter Buffer Statistics:**
+- Average jitter (milliseconds)
+- Buffer underruns
+- Buffer overflows
+
+**Error Tracking:**
+- Encoding errors
+- Network errors
+
+**Reporting:**
+- Diagnostics reports sent to backend every 10 seconds
+- Available via `stats_report` WebSocket message
+
+### Security Features
+
+The service implements multiple layers of security:
+
+**TLS/SSL Encryption:**
+- All WebSocket connections use WSS (WebSocket Secure)
+- Automatic certificate validation via Android's system trust store
+
+**Certificate Pinning** (optional):
+- SHA-256 pinning of server certificates
+- Multiple pins per hostname supported
+- Backup pin configuration recommended
+- See [SECURITY_CONFIGURATION.md](SECURITY_CONFIGURATION.md) for configuration guide
+
+**Authentication:**
+- Device token validation on connection
+- Session ID verification by backend
+- Token and session sent in join payload
+- Failed authentication prevents auto-reconnect
+
+**Headers:**
+- `X-Device-ID`: Device identifier
+- `X-Device-Token`: Secure authentication token
 
 ### Security Considerations
 
 - The service requires sensitive permissions (screen capture, accessibility)
 - Should only be installed on managed devices in controlled environments
-- WebSocket connections should be secured with authentication tokens
-- Network traffic should be encrypted (WSS protocol)
+- WebSocket connections are secured with WSS and authentication tokens
+- Network traffic is encrypted (WSS protocol)
+- TLS certificate validation ensures connection authenticity
+- Optional certificate pinning provides additional security
 - See [PERMISSIONS.md](PERMISSIONS.md#security-considerations) for detailed security information
+- See [SECURITY_CONFIGURATION.md](SECURITY_CONFIGURATION.md) for security configuration guide
 
 ### Permission and Consent Flows
 
