@@ -45,7 +45,8 @@ class WebSocketManager(
     private val deviceToken: String,
     private val coroutineScope: CoroutineScope,
     private val diagnosticsManager: DiagnosticsManager? = null,
-    private val certificatePins: Map<String, List<String>>? = null // hostname -> list of SHA-256 pins
+    private val certificatePins: Map<String, List<String>>? = null, // hostname -> list of SHA-256 pins
+    private val onStartSession: ((String) -> Unit)? = null // Callback when start_session is received with session_id
 ) {
     companion object {
         private const val TAG = "WebSocketManager"
@@ -330,6 +331,31 @@ class WebSocketManager(
     }
 
     /**
+     * Handle start_session event from the backend
+     */
+    private fun handleStartSession(payload: JsonObject?) {
+        if (payload == null) {
+            Log.w(TAG, "Received null start_session payload")
+            return
+        }
+
+        try {
+            val sid = sessionId
+            if (sid == null) {
+                Log.e(TAG, "Cannot handle start_session: sessionId is null")
+                return
+            }
+
+            Log.i(TAG, "Handling start_session for session: $sid")
+            
+            // Notify the service to initialize MediaProjection and start encoding
+            onStartSession?.invoke(sid)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error handling start_session event", e)
+        }
+    }
+
+    /**
      * Handle control events received from the backend
      */
     private fun handleControlEvent(payload: JsonObject?) {
@@ -511,6 +537,11 @@ class WebSocketManager(
                             // Handle control events from the backend
                             Log.d(TAG, "Received control event: $payload")
                             handleControlEvent(payload as? JsonObject)
+                        }
+                        "start_session" -> {
+                            // Session started by backend - trigger media capture
+                            Log.i(TAG, "Received start_session event")
+                            handleStartSession(payload as? JsonObject)
                         }
                         "session_stopped" -> {
                             Log.i(TAG, "Session stopped by backend")
