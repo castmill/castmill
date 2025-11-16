@@ -45,6 +45,7 @@
         </service>
 
         <!-- Foreground Service for screen capture and remote control -->
+        <!-- Notification channel is created programmatically in RemoteControlService.createNotificationChannel() -->
         <service
             android:name=".RemoteControlService"
             android:foregroundServiceType="mediaProjection"
