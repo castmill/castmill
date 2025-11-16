@@ -45,10 +45,17 @@ class RemoteControlService : LifecycleService() {
 
     private var screenCaptureManager: ScreenCaptureManager? = null
     private var webSocketManager: WebSocketManager? = null
+    private var mediaWebSocketManager: MediaWebSocketManager? = null
     private var diagnosticsManager: DiagnosticsManager? = null
     private var deviceId: String? = null
+    private var sessionId: String? = null // Current session ID
     private var isConnected = false
     private var isCapturing = false
+    private var pendingSessionId: String? = null // Track session waiting for MediaProjection
+    
+    // Store MediaProjection permission data for later use
+    private var mediaProjectionResultCode: Int = -1
+    private var mediaProjectionData: Intent? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -67,11 +74,14 @@ class RemoteControlService : LifecycleService() {
         super.onStartCommand(intent, flags, startId)
         
         // Get session ID and device token from intent
-        val sessionId = intent?.getStringExtra(EXTRA_SESSION_ID)
+        val sid = intent?.getStringExtra(EXTRA_SESSION_ID)
         val deviceToken = intent?.getStringExtra(EXTRA_DEVICE_TOKEN)
             ?: getStoredDeviceToken()
         
-        if (sessionId != null && deviceToken != null && deviceId != null) {
+        if (sid != null && deviceToken != null && deviceId != null) {
+            // Store session ID
+            sessionId = sid
+            
             // Store device token for future use
             if (intent?.hasExtra(EXTRA_DEVICE_TOKEN) == true) {
                 storeDeviceToken(deviceToken)
@@ -79,7 +89,7 @@ class RemoteControlService : LifecycleService() {
             
             // Initialize and connect WebSocket
             lifecycleScope.launch {
-                connectWebSocket(sessionId, deviceToken)
+                connectWebSocket(sid, deviceToken)
             }
             
             // Check if MediaProjection permission is provided
@@ -87,11 +97,15 @@ class RemoteControlService : LifecycleService() {
             val projectionData = intent?.getParcelableExtra<Intent>(EXTRA_MEDIA_PROJECTION_DATA)
             
             if (resultCode != -1 && projectionData != null) {
-                // Start screen capture
+                // Store MediaProjection permission for later use
+                mediaProjectionResultCode = resultCode
+                mediaProjectionData = projectionData
+                
+                // Start screen capture immediately if we have permission
                 startScreenCapture(resultCode, projectionData)
             }
         } else {
-            Log.e(TAG, "Missing required parameters: sessionId=$sessionId, token=${deviceToken != null}, deviceId=$deviceId")
+            Log.e(TAG, "Missing required parameters: sessionId=$sid, token=${deviceToken != null}, deviceId=$deviceId")
             updateNotification("Error: Missing configuration")
         }
         
@@ -109,6 +123,9 @@ class RemoteControlService : LifecycleService() {
         // Clean up resources
         webSocketManager?.disconnect()
         webSocketManager = null
+        
+        mediaWebSocketManager?.disconnect()
+        mediaWebSocketManager = null
         
         screenCaptureManager?.stop()
         screenCaptureManager = null
@@ -138,7 +155,11 @@ class RemoteControlService : LifecycleService() {
             deviceToken = deviceToken,
             coroutineScope = lifecycleScope,
             diagnosticsManager = diagnosticsManager,
-            certificatePins = null // Set to certificatePins map to enable pinning
+            certificatePins = null, // Set to certificatePins map to enable pinning
+            onStartSession = { sid ->
+                // Backend requested to start session - initiate media capture
+                handleStartSessionRequest(sid)
+            }
         )
         
         webSocketManager?.connect(sessionId)
@@ -147,17 +168,75 @@ class RemoteControlService : LifecycleService() {
     }
 
     /**
-     * Start screen capture with MediaProjection
+     * Handle start_session event from backend
+     * This requests MediaProjection permission and starts screen capture
      */
-    private fun startScreenCapture(resultCode: Int, data: Intent) {
+    private fun handleStartSessionRequest(sessionId: String) {
+        Log.i(TAG, "Received start_session request for session: $sessionId")
+        
+        // Store the session ID
+        pendingSessionId = sessionId
+        
+        // Check if we already have MediaProjection permission
+        if (mediaProjectionResultCode != -1 && mediaProjectionData != null) {
+            Log.i(TAG, "MediaProjection permission already granted, starting media capture")
+            startMediaCapture(mediaProjectionResultCode, mediaProjectionData!!, sessionId)
+        } else {
+            // Permission not available - log and update notification
+            Log.w(TAG, "MediaProjection permission not available. User must grant permission via MainActivity.")
+            updateNotification("Waiting for screen capture permission")
+            
+            // In a production app, you might:
+            // 1. Show a notification to open MainActivity
+            // 2. Use a transparent activity to request permission
+            // 3. Store the pending session and wait for permission grant
+        }
+    }
+
+    /**
+     * Start media capture and connect to media WebSocket
+     * Called after MediaProjection permission is granted
+     */
+    private fun startMediaCapture(resultCode: Int, data: Intent, sessionId: String) {
         try {
+            val backendUrl = getString(R.string.backend_url)
+            val deviceToken = getStoredDeviceToken()
+            
+            if (deviceToken == null) {
+                Log.e(TAG, "No device token available for media WebSocket")
+                updateNotification("Error: Missing device token")
+                return
+            }
+            
+            val devId = deviceId
+            if (devId == null) {
+                Log.e(TAG, "No device ID available for media WebSocket")
+                updateNotification("Error: Missing device ID")
+                return
+            }
+            
+            // Initialize media WebSocket first
+            mediaWebSocketManager = MediaWebSocketManager(
+                baseUrl = backendUrl,
+                deviceId = devId,
+                deviceToken = deviceToken,
+                sessionId = sessionId,
+                coroutineScope = lifecycleScope,
+                diagnosticsManager = diagnosticsManager,
+                certificatePins = null
+            )
+            
+            // Connect to media channel
+            mediaWebSocketManager?.connect()
+            
+            // Initialize screen capture manager
             screenCaptureManager = ScreenCaptureManager(
                 context = this,
                 resultCode = resultCode,
                 data = data,
                 onFrameEncoded = { buffer, isKeyFrame, codecType ->
-                    // Send encoded frame via WebSocket
-                    webSocketManager?.sendVideoFrame(buffer, isKeyFrame, codecType)
+                    // Send encoded frame via media WebSocket
+                    mediaWebSocketManager?.sendVideoFrame(buffer, isKeyFrame, codecType)
                 },
                 onError = { exception ->
                     Log.e(TAG, "Screen capture error", exception)
@@ -170,17 +249,53 @@ class RemoteControlService : LifecycleService() {
             if (started) {
                 isCapturing = true
                 val encoderType = screenCaptureManager?.getEncoderType() ?: "Unknown"
-                updateNotification("Capturing with $encoderType")
-                Log.i(TAG, "Screen capture started with $encoderType")
+                updateNotification("Streaming with $encoderType")
+                Log.i(TAG, "Media capture started with $encoderType")
+                
+                // Send media metadata with normalized codec name
+                val encoderInfo = screenCaptureManager?.getEncoderInfo() ?: emptyMap()
+                val width = (encoderInfo["width"] as? Int) ?: 1280
+                val height = (encoderInfo["height"] as? Int) ?: 720
+                val fps = (encoderInfo["fps"] as? Int) ?: 15
+                
+                // Normalize codec name to backend-expected format
+                val codec = when (encoderType.uppercase()) {
+                    "H264", "H.264", "AVC" -> "h264"
+                    "MJPEG", "JPEG" -> "mjpeg"
+                    else -> {
+                        Log.w(TAG, "Unknown encoder type: $encoderType, using lowercase")
+                        encoderType.lowercase()
+                    }
+                }
+                
+                mediaWebSocketManager?.sendMediaMetadata(width, height, fps, codec)
             } else {
                 Log.e(TAG, "Failed to start screen capture")
                 updateNotification("Failed to start capture")
                 screenCaptureManager = null
+                mediaWebSocketManager?.disconnect()
+                mediaWebSocketManager = null
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error starting screen capture", e)
+            Log.e(TAG, "Error starting media capture", e)
             updateNotification("Error: ${e.message}")
         }
+    }
+
+    /**
+     * Start screen capture with MediaProjection
+     * This is called when MediaProjection permission is provided via intent
+     */
+    private fun startScreenCapture(resultCode: Int, data: Intent) {
+        val sid = pendingSessionId ?: sessionId
+        if (sid == null) {
+            Log.e(TAG, "Cannot start screen capture: no session ID available")
+            updateNotification("Error: No session ID")
+            return
+        }
+        
+        Log.i(TAG, "Starting screen capture for session: $sid")
+        startMediaCapture(resultCode, data, sid)
     }
 
     /**

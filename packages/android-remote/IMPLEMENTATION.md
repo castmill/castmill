@@ -246,10 +246,75 @@ adb logcat -s WebSocketManager:V RemoteControlService:V
 
 The RemoteControlService now supports real-time screen capture and video encoding using MediaProjection and MediaCodec.
 
+### Session Lifecycle and Media Channel
+
+**Protocol Flow**:
+1. Device connects to `device_rc:#{device_id}` channel for control
+2. Backend sends `start_session` event when ready to begin media streaming
+3. Device initializes MediaProjection (requests user consent if needed)
+4. Device connects to `device_media:#{device_id}:#{session_id}` channel
+5. Device starts encoder and begins streaming video frames
+6. Frames are sent as binary WebSocket messages to media channel
+7. RC window receives frames via PubSub relay
+
+**Components**:
+
+1. **WebSocketManager** (Control Channel)
+   - Handles `device_rc:#{device_id}` channel
+   - Receives `start_session` event from backend
+   - Triggers MediaProjection initialization via callback
+   - Manages control events (tap, swipe, etc.)
+
+2. **MediaWebSocketManager** (Media Channel)
+   - Handles `device_media:#{device_id}:#{session_id}` channel
+   - Streams video frames as binary messages
+   - Sends media metadata (resolution, fps, codec)
+   - Independent reconnection logic
+
+3. **RemoteControlService** (Coordinator)
+   - Orchestrates control and media WebSockets
+   - Manages MediaProjection lifecycle
+   - Coordinates encoder startup
+   - Handles session state transitions
+
+**Start Session Flow**:
+```
+Backend → device_rc channel → start_session event
+                                       ↓
+                        WebSocketManager.onStartSession callback
+                                       ↓
+                        RemoteControlService.handleStartSessionRequest
+                                       ↓
+                        Request MediaProjection permission (if needed)
+                                       ↓
+                        Initialize MediaWebSocketManager
+                                       ↓
+                        Connect to device_media:#{device_id}:#{session_id}
+                                       ↓
+                        Start ScreenCaptureManager
+                                       ↓
+                        Stream frames → MediaWebSocketManager → Backend → RC Window
+```
+
+**Binary Frame Format**:
+```
+[metadata_length: 4 bytes][metadata JSON][video data]
+
+Metadata JSON:
+{
+  "type": "video_frame",
+  "codec": "h264" | "mjpeg",
+  "is_key_frame": true | false,
+  "timestamp": milliseconds,
+  "size": bytes
+}
+```
+
 ### Features
 - **H.264/AVC Encoding**: Hardware-accelerated encoding at 720p, 15 fps, 2 Mbps
 - **MJPEG Fallback**: Software JPEG encoding when H.264 unavailable
 - **Automatic Fallback**: Seamless transition from H.264 to MJPEG on errors
+- **Dual WebSocket**: Separate channels for control and media streaming
 - **WebSocket Streaming**: Binary frames with metadata + video data
 - **Low Latency**: ~16-33ms encoding latency for H.264
 
@@ -261,7 +326,8 @@ See [QUICK_START_VIDEO_CAPTURE.md](QUICK_START_VIDEO_CAPTURE.md) for integration
 - **VideoEncoder**: H.264/AVC encoding using MediaCodec
 - **MjpegEncoder**: MJPEG fallback using ImageReader + Bitmap
 - **ScreenCaptureManager**: MediaProjection orchestration and encoder management
-- **WebSocketManager**: Binary frame transmission with metadata
+- **WebSocketManager**: Control channel with start_session event handling
+- **MediaWebSocketManager**: Binary frame transmission on media channel
 
 See [VIDEO_CAPTURE_IMPLEMENTATION.md](VIDEO_CAPTURE_IMPLEMENTATION.md) for complete technical details.
 
