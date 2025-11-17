@@ -18,6 +18,23 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    flavorDimensions = ["deployment"]
+    productFlavors {
+        managed {
+            dimension "deployment"
+            applicationIdSuffix ".managed"
+            versionNameSuffix "-managed"
+            
+            // Managed flavor is for Device Owner deployments where the app is
+            // installed on fully managed corporate devices. This flavor is intended
+            // for enterprise MDM deployments where MediaProjection permissions can
+            // be auto-granted via Device Owner policies.
+            manifestPlaceholders = [
+                deploymentType: "managed"
+            ]
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false

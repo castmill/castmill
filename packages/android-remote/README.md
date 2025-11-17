@@ -105,6 +105,18 @@ Both permissions involve sensitive capabilities and require explicit user consen
 
 ## Building
 
+### Build Flavors
+
+The app is configured with a **managed** build flavor specifically designed for Device Owner deployments:
+
+- **managed**: For fully managed corporate devices enrolled in an MDM (Mobile Device Management) solution
+  - Application ID: `com.castmill.androidremote.managed`
+  - Version suffix: `-managed` (e.g., `1.0.0-managed`)
+  - Intended for enterprise deployments where MediaProjection permissions can be auto-granted via Device Owner policies
+  - Use this flavor for devices that are corporate-owned and under full device management control
+
+### Build Commands
+
 Build the Android app using Gradle:
 
 ```bash
@@ -112,17 +124,35 @@ cd android
 ./gradlew build
 ```
 
-To build a debug APK:
+To build a debug APK for the managed flavor:
 
 ```bash
-./gradlew assembleDebug
+./gradlew assembleManagedDebug
 ```
 
-To build a release APK:
+To build a release APK for the managed flavor:
 
 ```bash
-./gradlew assembleRelease
+./gradlew assembleManagedRelease
 ```
+
+### Play Store and Distribution
+
+**For Managed Deployments:**
+- The managed flavor is specifically designed for enterprise MDM distribution
+- Deploy through your organization's MDM solution (e.g., Google Workspace, VMware Workspace ONE, Microsoft Intune)
+- Can be distributed through Google Play's managed Google Play store for enterprise
+- Private distribution through enterprise app catalogs is recommended
+
+**Package Signing:**
+- Release builds must be signed with a production keystore
+- Configure signing in `app/build.gradle` or via Gradle properties
+- Use Android App Bundle (AAB) format for Play Store distribution
+- Use APK format for direct enterprise distribution
+
+**Build Variants:**
+- `managedDebug`: Debug build for testing (unsigned or debug-signed)
+- `managedRelease`: Production build (requires release signing configuration)
 
 ## Installation
 
