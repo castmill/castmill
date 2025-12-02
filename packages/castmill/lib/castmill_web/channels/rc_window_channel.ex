@@ -1,14 +1,14 @@
 defmodule CastmillWeb.RcWindowChannel do
   @moduledoc """
   WebSocket channel for remote control window in the dashboard.
-  
+
   This channel handles the dashboard side of remote control sessions.
   Dashboard users connect to this channel to control devices and receive
   media streams.
-  
+
   Requires device_manager role or higher (admin, manager).
-  
-  Topics: "rc_window:#{session_id}"
+
+  Topics: "rc_window:<session_id>"
   """
   use CastmillWeb, :channel
 
@@ -46,7 +46,7 @@ defmodule CastmillWeb.RcWindowChannel do
               # Re-fetch session to avoid race conditions and use latest state
               current_session = RcSessions.get_session(session_id)
 
-              if current_session && 
+              if current_session &&
                  current_session.user_id == user.id and
                  current_session.state in ["created", "starting", "streaming"] do
                 # Subscribe to session PubSub topic to receive device events
@@ -145,7 +145,7 @@ defmodule CastmillWeb.RcWindowChannel do
     # When device connects, try to transition to streaming if we're in starting state
     # Re-fetch to ensure we have current state and avoid race conditions
     session_id = socket.assigns.session_id
-    
+
     case RcSessions.get_session(session_id) do
       %{state: "starting"} ->
         RcSessions.transition_to_streaming(session_id)
@@ -166,10 +166,10 @@ defmodule CastmillWeb.RcWindowChannel do
   @impl true
   def handle_info(%{event: "device_event", payload: payload}, socket) do
     push(socket, "device_event", payload)
-    
+
     # Update activity timestamp
     RcSessions.update_activity(socket.assigns.session_id)
-    
+
     {:noreply, socket}
   end
 
@@ -194,7 +194,7 @@ defmodule CastmillWeb.RcWindowChannel do
     # Extract frame metadata for telemetry
     # Use Map.get to safely access payload data (payload is a map with string keys)
     frame_size = byte_size(Map.get(payload, "data", <<>>))
-    
+
     # Convert string keys to atom keys for telemetry
     frame_metadata = %{}
     frame_metadata = if Map.has_key?(payload, "fps"), do: Map.put(frame_metadata, :fps, payload["fps"]), else: frame_metadata
@@ -216,7 +216,7 @@ defmodule CastmillWeb.RcWindowChannel do
     # Extract frame metadata for telemetry
     # Use Map.get to safely access payload data (payload is a map with string keys)
     frame_size = byte_size(Map.get(payload, "data", <<>>))
-    
+
     # Convert string keys to atom keys for telemetry
     frame_metadata = %{}
     frame_metadata = if Map.has_key?(payload, "fps"), do: Map.put(frame_metadata, :fps, payload["fps"]), else: frame_metadata

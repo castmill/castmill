@@ -170,6 +170,32 @@ defmodule Castmill.Devices do
   end
 
   @doc """
+  Update the RC heartbeat timestamp for a device.
+  Called when the Android RC app sends a heartbeat to indicate it's running.
+  """
+  def update_rc_heartbeat(device_id) do
+    fast_update_device(device_id, %{rc_last_heartbeat: DateTime.utc_now()})
+  end
+
+  @doc """
+  Check if the device's RC app is available (has sent a heartbeat recently).
+  Returns true if the device has sent an RC heartbeat within the last 30 seconds.
+  """
+  @rc_heartbeat_timeout_seconds 30
+  def rc_app_available?(device_id) do
+    case get_device(device_id) do
+      nil -> false
+      device -> rc_heartbeat_recent?(device.rc_last_heartbeat)
+    end
+  end
+
+  defp rc_heartbeat_recent?(nil), do: false
+  defp rc_heartbeat_recent?(last_heartbeat) do
+    cutoff = DateTime.add(DateTime.utc_now(), -@rc_heartbeat_timeout_seconds, :second)
+    DateTime.compare(last_heartbeat, cutoff) == :gt
+  end
+
+  @doc """
     Fast device update without validations.
   """
   def fast_update_device(id, attrs) do

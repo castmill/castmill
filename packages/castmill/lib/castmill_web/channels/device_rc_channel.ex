@@ -1,11 +1,11 @@
 defmodule CastmillWeb.DeviceRcChannel do
   @moduledoc """
   WebSocket channel for device remote control communication.
-  
+
   This channel handles the device side of remote control sessions.
   The device connects to this channel when an RC session is active.
-  
-  Topics: "device_rc:#{device_id}"
+
+  Topics: "device_rc:<device_id>"
   """
   use CastmillWeb, :channel
 
@@ -31,7 +31,7 @@ defmodule CastmillWeb.DeviceRcChannel do
                 |> assign(:device_id, device_id)
                 |> assign(:device, device)
                 |> assign(:session_id, session_id)
-              
+
               # Log device connection
               RcLogger.info("Device connected to RC channel", session_id, device_id)
 
@@ -68,10 +68,10 @@ defmodule CastmillWeb.DeviceRcChannel do
     # Forward control events from RC window to device
     # These events come through PubSub from the RC window channel
     broadcast_from(socket, "control_event", payload)
-    
+
     # Update activity timestamp
     RcSessions.update_activity(socket.assigns.session_id)
-    
+
     {:reply, :ok, socket}
   end
 
@@ -79,7 +79,7 @@ defmodule CastmillWeb.DeviceRcChannel do
   def handle_in("device_event", payload, socket) do
     # Forward device events to RC window via PubSub
     session_id = socket.assigns.session_id
-    
+
     Phoenix.PubSub.broadcast(
       Castmill.PubSub,
       "rc_session:#{session_id}",
@@ -96,10 +96,10 @@ defmodule CastmillWeb.DeviceRcChannel do
   def handle_info(%{event: "control_event", payload: payload, source: :relay}, socket) do
     # Received from relay (via PubSub), push to device WebSocket
     push(socket, "control_event", payload)
-    
+
     # Update activity timestamp
     RcSessions.update_activity(socket.assigns.session_id)
-    
+
     {:noreply, socket}
   end
 
@@ -108,10 +108,10 @@ defmodule CastmillWeb.DeviceRcChannel do
     # Legacy direct PubSub (backward compatibility)
     # Received from PubSub, push to device WebSocket
     push(socket, "control_event", payload)
-    
+
     # Update activity timestamp
     RcSessions.update_activity(socket.assigns.session_id)
-    
+
     {:noreply, socket}
   end
 
@@ -134,7 +134,7 @@ defmodule CastmillWeb.DeviceRcChannel do
     # Notify RC window that device disconnected
     session_id = socket.assigns[:session_id]
     device_id = socket.assigns[:device_id]
-    
+
     if session_id do
       # Log device disconnection
       RcLogger.info("Device disconnected from RC channel", session_id, device_id)

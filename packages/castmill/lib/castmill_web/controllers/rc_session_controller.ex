@@ -1,7 +1,7 @@
 defmodule CastmillWeb.RcSessionController do
   @moduledoc """
   Controller for managing remote control sessions.
-  
+
   Requires device_manager role or higher (admin, manager) for all RC operations.
   """
   use CastmillWeb, :controller
@@ -14,14 +14,15 @@ defmodule CastmillWeb.RcSessionController do
 
   @doc """
   Creates a new RC session for a device.
-  
+
   POST /devices/:device_id/rc/sessions
-  
+
   Requires device_manager role or higher.
   """
   def create(conn, %{"device_id" => device_id}) do
     # Get the current user from conn assigns
-    user_id = get_in(conn.assigns, [:current_user, :id])
+    user = conn.assigns[:current_user]
+    user_id = if user, do: user.id, else: nil
 
     if is_nil(user_id) do
       conn
@@ -40,37 +41,44 @@ defmodule CastmillWeb.RcSessionController do
           user_role = Organizations.get_user_role(device.organization_id, user_id)
 
           if has_rc_permission?(user_role) do
-            # Check if there's already an active session for this device
-            case RcSessions.get_active_session_for_device(device_id) do
-              nil ->
-                # Create a new session
-                case RcSessions.create_session(device_id, user_id) do
-                  {:ok, session} ->
-                    conn
-                    |> put_status(:created)
-                    |> json(%{
-                      session_id: session.id,
-                      device_id: session.device_id,
-                      state: session.state,
-                      started_at: session.started_at,
-                      timeout_at: session.timeout_at
-                    })
+            # Check if the device's RC app is available (sending heartbeats)
+            if Devices.rc_app_available?(device_id) do
+              # Check if there's already an active session for this device
+              case RcSessions.get_active_session_for_device(device_id) do
+                nil ->
+                  # Create a new session
+                  case RcSessions.create_session(device_id, user_id) do
+                    {:ok, session} ->
+                      conn
+                      |> put_status(:created)
+                      |> json(%{
+                        session_id: session.id,
+                        device_id: session.device_id,
+                        state: session.state,
+                        started_at: session.started_at,
+                        timeout_at: session.timeout_at
+                      })
 
-                  {:error, :device_has_active_session} ->
-                    conn
-                    |> put_status(:conflict)
-                    |> json(%{error: "Device already has an active RC session"})
+                    {:error, :device_has_active_session} ->
+                      conn
+                      |> put_status(:conflict)
+                      |> json(%{error: "Device already has an active RC session"})
 
-                  {:error, changeset} ->
-                    conn
-                    |> put_status(:unprocessable_entity)
-                    |> json(%{error: "Failed to create session", details: changeset.errors})
-                end
+                    {:error, changeset} ->
+                      conn
+                      |> put_status(:unprocessable_entity)
+                      |> json(%{error: "Failed to create session", details: changeset.errors})
+                  end
 
-              _active_session ->
-                conn
-                |> put_status(:conflict)
-                |> json(%{error: "Device already has an active RC session"})
+                _active_session ->
+                  conn
+                  |> put_status(:conflict)
+                  |> json(%{error: "Device already has an active RC session"})
+              end
+            else
+              conn
+              |> put_status(:service_unavailable)
+              |> json(%{error: "Device RC app is not available. The device must have the RC app running to start a remote control session."})
             end
           else
             conn
@@ -83,13 +91,14 @@ defmodule CastmillWeb.RcSessionController do
 
   @doc """
   Stops an RC session.
-  
+
   POST /rc/sessions/:session_id/stop
-  
+
   Requires device_manager role or higher, and user must own the session.
   """
   def stop(conn, %{"session_id" => session_id}) do
-    user_id = get_in(conn.assigns, [:current_user, :id])
+    user = conn.assigns[:current_user]
+    user_id = if user, do: user.id, else: nil
 
     if is_nil(user_id) do
       conn
@@ -161,7 +170,7 @@ defmodule CastmillWeb.RcSessionController do
 
   @doc """
   Gets the RC status for a device.
-  
+
   GET /devices/:device_id/rc/status
   """
   def status(conn, %{"device_id" => device_id}) do

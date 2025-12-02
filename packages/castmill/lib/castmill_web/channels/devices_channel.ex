@@ -40,6 +40,16 @@ defmodule CastmillWeb.DevicesChannel do
   end
 
   @impl true
+  def handle_in("rc_heartbeat", _payload, socket) do
+    # Update the RC heartbeat timestamp for this device
+    # This indicates the Android RC app is running and ready to receive RC sessions
+    device_id = socket.assigns.device_id
+    Devices.update_rc_heartbeat(device_id)
+
+    {:reply, {:ok, %{status: "ok"}}, socket}
+  end
+
+  @impl true
   def handle_in("res:get", %{"ref" => ref, "page" => page}, socket) do
     # Convert the PID ref string back to a PID
     pid =

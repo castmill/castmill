@@ -24,6 +24,7 @@ defmodule Castmill.Devices.Device do
              :user_agent,
              :version,
              :volume,
+             :rc_last_heartbeat,
              :inserted_at,
              :updated_at
            ]}
@@ -46,6 +47,7 @@ defmodule Castmill.Devices.Device do
     field(:hardware_id, :string)
     field(:token_hash, :string)
     field(:mode, :string, default: "normal")
+    field(:rc_last_heartbeat, :utc_datetime)
 
     field(:token, :string, virtual: true)
 

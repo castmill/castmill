@@ -1,12 +1,12 @@
 defmodule CastmillWeb.DeviceMediaChannel do
   @moduledoc """
   WebSocket channel for device media streaming in remote control sessions.
-  
+
   This channel handles the relay of screen capture/media data from the device
   to the RC window in the dashboard. Media data is forwarded via the relay
   with backpressure management to the RC session subscribers.
-  
-  Topics: "device_media:#{device_id}:#{session_id}"
+
+  Topics: "device_media:<device_id>:<session_id>"
   """
   use CastmillWeb, :channel
 
@@ -66,7 +66,7 @@ defmodule CastmillWeb.DeviceMediaChannel do
     case RcRelay.enqueue_media_frame(session_id, payload) do
       :ok ->
         {:reply, :ok, socket}
-        
+
       {:ok, :dropped} ->
         # P-frame was dropped due to backpressure, still acknowledge
         {:reply, :ok, socket}
