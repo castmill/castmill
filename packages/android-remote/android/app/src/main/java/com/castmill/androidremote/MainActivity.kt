@@ -10,6 +10,8 @@ import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.TextView
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
@@ -39,8 +41,6 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         private const val TAG = "MainActivity"
-        private const val REQUEST_MEDIA_PROJECTION = 1001
-        private const val REQUEST_ACCESSIBILITY = 1002
     }
 
     private lateinit var mediaProjectionManager: MediaProjectionManager
@@ -54,12 +54,20 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnRequestScreenCapture: Button
     
     // Permission state
-    private var mediaProjectionResultCode: Int = -1
+    // Note: RESULT_OK = -1 in Android, so we use a different sentinel value
+    private var mediaProjectionResultCode: Int = Int.MIN_VALUE  // Sentinel for "not yet requested"
     private var mediaProjectionData: Intent? = null
+
+    // Activity Result Launchers (modern replacement for startActivityForResult)
+    private lateinit var mediaProjectionLauncher: ActivityResultLauncher<Intent>
+    private lateinit var accessibilitySettingsLauncher: ActivityResultLauncher<Intent>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        
+        // Register activity result launchers BEFORE any UI interaction
+        registerActivityResultLaunchers()
         
         // Initialize MediaProjection manager
         mediaProjectionManager = getSystemService(MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
@@ -74,6 +82,47 @@ class MainActivity : AppCompatActivity() {
         
         // Update permission states
         updatePermissionStates()
+    }
+
+    /**
+     * Register Activity Result Launchers for modern permission handling
+     */
+    private fun registerActivityResultLaunchers() {
+        // Media Projection permission launcher
+        mediaProjectionLauncher = registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { result ->
+            Log.d(TAG, "MediaProjection result: resultCode=${result.resultCode}, data=${result.data}")
+            if (result.resultCode == RESULT_OK && result.data != null) {
+                // Permission granted - store for potential service use
+                mediaProjectionResultCode = result.resultCode
+                mediaProjectionData = result.data
+                
+                Log.i(TAG, "MediaProjection permission granted")
+                updatePermissionStates()
+            } else {
+                Log.w(TAG, "MediaProjection permission denied: resultCode=${result.resultCode}")
+                // User denied permission - inform them why it's needed
+                AlertDialog.Builder(this)
+                    .setTitle(getString(R.string.permission_required_title))
+                    .setMessage(getString(R.string.screen_capture_denied_message))
+                    .setPositiveButton(android.R.string.ok, null)
+                    .show()
+            }
+        }
+
+        // Accessibility settings launcher
+        accessibilitySettingsLauncher = registerForActivityResult(
+            ActivityResultContracts.StartActivityForResult()
+        ) { _ ->
+            // Check if accessibility service was enabled after returning from settings
+            updatePermissionStates()
+            if (isAccessibilityServiceEnabled()) {
+                Log.i(TAG, "Accessibility service enabled")
+            } else {
+                Log.w(TAG, "Accessibility service not enabled")
+            }
+        }
     }
     
     override fun onResume() {
@@ -125,14 +174,19 @@ class MainActivity : AppCompatActivity() {
         }
         
         // Check screen capture permission (shows granted if previously granted in this session)
-        if (mediaProjectionResultCode != -1 && mediaProjectionData != null) {
+        // RESULT_OK = -1 in Android, so we check that resultCode is not the sentinel value
+        if (mediaProjectionResultCode == RESULT_OK && mediaProjectionData != null) {
             tvScreenCaptureStatus.text = getString(R.string.status_granted)
             tvScreenCaptureStatus.contentDescription = getString(R.string.screen_capture_status_granted)
             tvScreenCaptureStatus.setTextColor(getColor(android.R.color.holo_green_dark))
+            btnRequestScreenCapture.isEnabled = false
+            btnRequestScreenCapture.text = getString(R.string.status_granted)
         } else {
             tvScreenCaptureStatus.text = getString(R.string.status_not_granted)
             tvScreenCaptureStatus.contentDescription = getString(R.string.screen_capture_status_not_granted)
             tvScreenCaptureStatus.setTextColor(getColor(android.R.color.holo_orange_dark))
+            btnRequestScreenCapture.isEnabled = true
+            btnRequestScreenCapture.text = getString(R.string.request_screen_capture_button)
         }
         
         // Update service status (simplified for now)
@@ -184,7 +238,7 @@ class MainActivity : AppCompatActivity() {
      */
     private fun openAccessibilitySettings() {
         val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
-        startActivityForResult(intent, REQUEST_ACCESSIBILITY)
+        accessibilitySettingsLauncher.launch(intent)
     }
 
     /**
@@ -197,47 +251,9 @@ class MainActivity : AppCompatActivity() {
      * can be auto-granted. See README for details on Device Owner setup.
      */
     private fun requestScreenCapture() {
+        Log.d(TAG, "Requesting screen capture permission")
         val captureIntent = mediaProjectionManager.createScreenCaptureIntent()
-        startActivityForResult(captureIntent, REQUEST_MEDIA_PROJECTION)
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        
-        when (requestCode) {
-            REQUEST_MEDIA_PROJECTION -> {
-                if (resultCode == RESULT_OK && data != null) {
-                    // Permission granted - store for potential service use
-                    mediaProjectionResultCode = resultCode
-                    mediaProjectionData = data
-                    
-                    Log.i(TAG, "MediaProjection permission granted")
-                    updatePermissionStates()
-                    
-                    // Note: In a production implementation, this permission would typically be
-                    // used when starting a remote control session. The permission is stored
-                    // here but would be passed to RemoteControlService when needed via:
-                    // startRemoteControlServiceWithCapture(sessionId, deviceToken, resultCode, data)
-                } else {
-                    Log.w(TAG, "MediaProjection permission denied")
-                    // User denied permission - inform them why it's needed
-                    AlertDialog.Builder(this)
-                        .setTitle(getString(R.string.permission_required_title))
-                        .setMessage(getString(R.string.screen_capture_denied_message))
-                        .setPositiveButton(android.R.string.ok, null)
-                        .show()
-                }
-            }
-            REQUEST_ACCESSIBILITY -> {
-                // Check if accessibility service was enabled
-                updatePermissionStates()
-                if (isAccessibilityServiceEnabled()) {
-                    Log.i(TAG, "Accessibility service enabled")
-                } else {
-                    Log.w(TAG, "Accessibility service not enabled")
-                }
-            }
-        }
+        mediaProjectionLauncher.launch(captureIntent)
     }
 
     /**
