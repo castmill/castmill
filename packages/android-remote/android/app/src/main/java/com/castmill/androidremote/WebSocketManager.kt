@@ -10,6 +10,7 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -19,6 +20,7 @@ import okhttp3.Request
 import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
+import okio.ByteString.Companion.toByteString
 import java.security.cert.X509Certificate
 import java.util.concurrent.TimeUnit
 import javax.net.ssl.HostnameVerifier
@@ -206,11 +208,13 @@ class WebSocketManager(
             val byteArray = ByteArray(combinedBuffer.remaining())
             combinedBuffer.get(byteArray)
             
-            if (webSocket == null) {
+            // Use local reference to avoid smart cast issue
+            val ws = webSocket
+            if (ws == null) {
                 Log.w(TAG, "WebSocket not connected, dropping video frame: size=${byteArray.size}, codec=$codecType, isKeyFrame=$isKeyFrame")
                 return
             }
-            webSocket.send(okio.ByteString.of(*byteArray))
+            ws.send(byteArray.toByteString())
         } catch (e: Exception) {
             Log.e(TAG, "Error sending video frame", e)
         }
@@ -243,10 +247,10 @@ class WebSocketManager(
         
         // Phoenix protocol uses array format: [join_ref, ref, topic, event, payload]
         val message = buildJsonArray {
-            add(joinRef ?: "")
-            add(ref)
-            add(topic)
-            add(event)
+            add(JsonPrimitive(joinRef ?: ""))
+            add(JsonPrimitive(ref))
+            add(JsonPrimitive(topic))
+            add(JsonPrimitive(event))
             add(payload)
         }
 

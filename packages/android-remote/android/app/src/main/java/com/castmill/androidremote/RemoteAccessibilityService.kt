@@ -186,9 +186,10 @@ class RemoteAccessibilityService : AccessibilityService() {
             return false
         }
 
-        // Map all points
-        val devicePoints = if (gestureMapper != null) {
-            gestureMapper.mapPoints(points)
+        // Map all points - use local variable to enable smart cast
+        val mapper = gestureMapper
+        val devicePoints = if (mapper != null) {
+            mapper.mapPoints(points)
         } else {
             // No mapper, convert directly to Points
             points.map { (x, y) -> Point(x.toInt(), y.toInt()) }

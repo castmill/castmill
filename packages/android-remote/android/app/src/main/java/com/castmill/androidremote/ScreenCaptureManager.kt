@@ -7,6 +7,7 @@ import android.hardware.display.VirtualDisplay
 import android.media.MediaCodec
 import android.media.projection.MediaProjection
 import android.media.projection.MediaProjectionManager
+import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
 import android.util.DisplayMetrics
@@ -398,9 +399,9 @@ class ScreenCaptureManager(
         return encoderInfo + mapOf(
             "isCapturing" to isCapturing,
             "activeEncoder" to getEncoderType(),
-            "buffer_size" to bufferStats["size"],
-            "buffer_capacity" to bufferStats["capacity"],
-            "buffer_utilization" to bufferStats["utilization_percent"]
+            "buffer_size" to (bufferStats["size"] ?: 0),
+            "buffer_capacity" to (bufferStats["capacity"] ?: 0),
+            "buffer_utilization" to (bufferStats["utilization_percent"] ?: 0.0)
         )
     }
 

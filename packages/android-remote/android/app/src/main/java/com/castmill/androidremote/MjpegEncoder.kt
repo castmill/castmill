@@ -112,7 +112,7 @@ class MjpegEncoder(
     private fun encodeImageAsJpeg(image: Image) {
         try {
             val planes = image.planes
-            val buffer = planes[0].buffer
+            val imageBuffer = planes[0].buffer
             val pixelStride = planes[0].pixelStride
             val rowStride = planes[0].rowStride
             val rowPadding = rowStride - pixelStride * width
@@ -123,7 +123,7 @@ class MjpegEncoder(
                 height,
                 Bitmap.Config.ARGB_8888
             )
-            bitmap.copyPixelsFromBuffer(buffer)
+            bitmap.copyPixelsFromBuffer(imageBuffer)
 
             // Crop if there's row padding
             val croppedBitmap = if (rowPadding > 0) {
@@ -138,11 +138,11 @@ class MjpegEncoder(
             val jpegData = outputStream.toByteArray()
 
             // Create ByteBuffer and send to callback
-            val buffer = ByteBuffer.wrap(jpegData)
+            val jpegBuffer = ByteBuffer.wrap(jpegData)
             val timestamp = System.nanoTime() / 1000 // Convert to microseconds
             
             // Every frame is a "keyframe" in MJPEG
-            onEncodedFrame(buffer, timestamp, true)
+            onEncodedFrame(jpegBuffer, timestamp, true)
             
             frameCount++
 
