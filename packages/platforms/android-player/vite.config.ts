@@ -11,6 +11,7 @@ export default defineConfig({
     solidPlugin(),
   ],
   root: './src',
+  envDir: '..',
   build: {
     outDir: '../dist',
     minify: false,

@@ -75,10 +75,26 @@ class RemoteControlService : LifecycleService() {
         
         // Get session ID and device token from intent
         val sid = intent?.getStringExtra(EXTRA_SESSION_ID)
-        val deviceToken = intent?.getStringExtra(EXTRA_DEVICE_TOKEN)
+        val deviceToken: String? = intent?.getStringExtra(EXTRA_DEVICE_TOKEN)
             ?: getStoredDeviceToken()
         
-        if (sid != null && deviceToken != null && deviceId != null) {
+        // Check if this is a standby mode request (no session ID but has token)
+        val isStandbyMode = sid == null && deviceToken != null && deviceId != null
+        
+        if (isStandbyMode && deviceToken != null) {
+            // Standby mode - connect to send heartbeats only
+            Log.i(TAG, "Starting in standby mode (sending heartbeats)")
+            
+            // Store device token for future use
+            if (intent?.hasExtra(EXTRA_DEVICE_TOKEN) == true) {
+                storeDeviceToken(deviceToken)
+            }
+            
+            // Initialize and connect WebSocket in standby mode
+            lifecycleScope.launch {
+                connectWebSocketStandby(deviceToken)
+            }
+        } else if (sid != null && deviceToken != null && deviceId != null) {
             // Store session ID
             sessionId = sid
             
@@ -132,6 +148,31 @@ class RemoteControlService : LifecycleService() {
         
         isConnected = false
         isCapturing = false
+    }
+
+    /**
+     * Connect to the backend WebSocket in standby mode (no active session).
+     * In this mode, we only send heartbeats to indicate the RC app is available.
+     */
+    private fun connectWebSocketStandby(deviceToken: String) {
+        val backendUrl = getString(R.string.backend_url)
+        
+        webSocketManager = WebSocketManager(
+            baseUrl = backendUrl,
+            deviceId = deviceId!!,
+            deviceToken = deviceToken,
+            coroutineScope = lifecycleScope,
+            diagnosticsManager = diagnosticsManager,
+            certificatePins = null,
+            onStartSession = { sid ->
+                // Backend requested to start session - initiate media capture
+                handleStartSessionRequest(sid)
+            }
+        )
+        
+        webSocketManager?.connectStandby()
+        isConnected = true
+        updateNotification("Standby - waiting for RC session")
     }
 
     /**

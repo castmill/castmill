@@ -62,6 +62,7 @@ dependencies {
     implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
     implementation "androidx.activity:activity-ktx:$androidxActivityVersion"
     implementation "androidx.cardview:cardview:1.0.0"
+    implementation "com.google.android.material:material:1.11.0"
     
     // Lifecycle components
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:$androidxLifecycleVersion"

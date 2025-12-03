@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Debug backend URL pointing to local development server -->
+    <!-- Using 10.0.2.2 which is the Android emulator's alias for host machine localhost -->
+    <string name="backend_url" translatable="false">http://10.0.2.2:4000</string>
+</resources>

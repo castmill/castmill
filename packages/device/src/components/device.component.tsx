@@ -11,7 +11,7 @@ export function DeviceComponent(props: { device: Device }) {
   return (
     <>
       <Show
-        when="!loginOrRegister.loading && !loginOrRegister.error"
+        when={!loginOrRegister.loading && !loginOrRegister.error}
         fallback={<span>...loading...</span>}
       >
         <Switch>

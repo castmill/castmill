@@ -9,7 +9,9 @@ import android.provider.Settings
 import android.util.Log
 import android.view.View
 import android.widget.Button
+import android.widget.EditText
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -50,6 +52,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvAccessibilityStatus: TextView
     private lateinit var tvScreenCaptureStatus: TextView
     private lateinit var tvServiceStatus: TextView
+    private lateinit var etDeviceToken: EditText
+    private lateinit var btnSaveToken: Button
     private lateinit var btnEnableAccessibility: Button
     private lateinit var btnRequestScreenCapture: Button
     
@@ -82,6 +86,9 @@ class MainActivity : AppCompatActivity() {
         
         // Update permission states
         updatePermissionStates()
+        
+        // Try to start service in standby mode if device token is available
+        startStandbyServiceIfPossible()
     }
 
     /**
@@ -140,10 +147,22 @@ class MainActivity : AppCompatActivity() {
         tvAccessibilityStatus = findViewById(R.id.tvAccessibilityStatus)
         tvScreenCaptureStatus = findViewById(R.id.tvScreenCaptureStatus)
         tvServiceStatus = findViewById(R.id.tvServiceStatus)
+        etDeviceToken = findViewById(R.id.etDeviceToken)
+        btnSaveToken = findViewById(R.id.btnSaveToken)
         btnEnableAccessibility = findViewById(R.id.btnEnableAccessibility)
         btnRequestScreenCapture = findViewById(R.id.btnRequestScreenCapture)
         
+        // Populate token field with stored value if available
+        val storedToken = getStoredDeviceToken()
+        if (storedToken != null) {
+            etDeviceToken.setText(storedToken)
+        }
+        
         // Set up click listeners
+        btnSaveToken.setOnClickListener {
+            saveDeviceToken()
+        }
+        
         btnEnableAccessibility.setOnClickListener {
             showAccessibilityDialog()
         }
@@ -151,6 +170,34 @@ class MainActivity : AppCompatActivity() {
         btnRequestScreenCapture.setOnClickListener {
             showScreenCaptureDialog()
         }
+    }
+
+    /**
+     * Save device token and start standby service
+     */
+    private fun saveDeviceToken() {
+        val token = etDeviceToken.text.toString().trim()
+        if (token.isEmpty()) {
+            Toast.makeText(this, getString(R.string.token_empty_error), Toast.LENGTH_SHORT).show()
+            return
+        }
+        
+        // Store token
+        storeDeviceToken(token)
+        
+        // Start service in standby mode
+        startRemoteControlServiceStandby(token)
+        
+        Toast.makeText(this, getString(R.string.token_saved_message), Toast.LENGTH_SHORT).show()
+        Log.i(TAG, "Device token saved, starting standby service")
+    }
+
+    /**
+     * Store device token in SharedPreferences
+     */
+    private fun storeDeviceToken(token: String) {
+        val prefs = getSharedPreferences("castmill_remote_prefs", MODE_PRIVATE)
+        prefs.edit().putString("device_token", token).apply()
     }
 
     /**
@@ -309,5 +356,55 @@ class MainActivity : AppCompatActivity() {
         }
         
         Log.i(TAG, "Starting RemoteControlService with screen capture")
+    }
+
+    /**
+     * Try to start the remote control service in standby mode.
+     * 
+     * In standby mode, the service connects to the backend and sends periodic heartbeats
+     * to indicate the RC app is available, but doesn't start an active session.
+     * This allows the backend to know that this device can accept remote control sessions.
+     * 
+     * Requires a stored device token (from a previous session configuration).
+     */
+    private fun startStandbyServiceIfPossible() {
+        val storedToken = getStoredDeviceToken()
+        if (storedToken != null) {
+            Log.i(TAG, "Device token found, starting RC service in standby mode")
+            startRemoteControlServiceStandby(storedToken)
+        } else {
+            Log.i(TAG, "No device token found, cannot start standby mode. Token must be configured first.")
+        }
+    }
+
+    /**
+     * Start the RemoteControlService in standby mode (no active session)
+     * 
+     * Standby mode connects to the backend and sends heartbeats to indicate
+     * the RC app is running and available for remote control sessions.
+     * 
+     * @param deviceToken Device authentication token
+     */
+    private fun startRemoteControlServiceStandby(deviceToken: String) {
+        val intent = Intent(this, RemoteControlService::class.java).apply {
+            // No session ID - this triggers standby mode in the service
+            putExtra(RemoteControlService.EXTRA_DEVICE_TOKEN, deviceToken)
+        }
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent)
+        } else {
+            startService(intent)
+        }
+        
+        Log.i(TAG, "Starting RemoteControlService in standby mode")
+    }
+
+    /**
+     * Get stored device token from SharedPreferences
+     */
+    private fun getStoredDeviceToken(): String? {
+        val prefs = getSharedPreferences("castmill_remote_prefs", MODE_PRIVATE)
+        return prefs.getString("device_token", null)
     }
 }

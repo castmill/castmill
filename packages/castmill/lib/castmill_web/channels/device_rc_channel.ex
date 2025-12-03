@@ -3,7 +3,9 @@ defmodule CastmillWeb.DeviceRcChannel do
   WebSocket channel for device remote control communication.
 
   This channel handles the device side of remote control sessions.
-  The device connects to this channel when an RC session is active.
+  The device can connect in two modes:
+  1. Standby mode (no session_id) - Just sends heartbeats to indicate RC app is available
+  2. Session mode (with session_id) - Active RC session with full control
 
   Topics: "device_rc:<device_id>"
   """
@@ -14,6 +16,26 @@ defmodule CastmillWeb.DeviceRcChannel do
   alias Castmill.Devices.RcRelay
   alias Castmill.Devices.RcLogger
   alias Castmill.Devices.RcTelemetry
+
+  @impl true
+  # Standby mode - RC app is running but no active session
+  def join("device_rc:" <> device_id, %{"token" => token}, socket) when not is_map_key(socket.assigns, :session_id) do
+    case Devices.verify_device_token(device_id, token) do
+      {:ok, device} ->
+        socket = socket
+          |> assign(:device_id, device_id)
+          |> assign(:device, device)
+          |> assign(:standby_mode, true)
+
+        # Update RC heartbeat to indicate app is available
+        Devices.update_rc_heartbeat(device_id)
+
+        {:ok, socket}
+
+      {:error, reason} ->
+        {:error, %{reason: reason}}
+    end
+  end
 
   @impl true
   def join("device_rc:" <> device_id, %{"token" => token, "session_id" => session_id}, socket) do
@@ -64,13 +86,23 @@ defmodule CastmillWeb.DeviceRcChannel do
   end
 
   @impl true
+  def handle_in("rc_heartbeat", _payload, socket) do
+    # Update the RC heartbeat timestamp to indicate the RC app is still running
+    device_id = socket.assigns.device_id
+    Devices.update_rc_heartbeat(device_id)
+    {:reply, :ok, socket}
+  end
+
+  @impl true
   def handle_in("control_event", payload, socket) do
     # Forward control events from RC window to device
     # These events come through PubSub from the RC window channel
     broadcast_from(socket, "control_event", payload)
 
     # Update activity timestamp
-    RcSessions.update_activity(socket.assigns.session_id)
+    if socket.assigns[:session_id] do
+      RcSessions.update_activity(socket.assigns.session_id)
+    end
 
     {:reply, :ok, socket}
   end
@@ -78,16 +110,18 @@ defmodule CastmillWeb.DeviceRcChannel do
   @impl true
   def handle_in("device_event", payload, socket) do
     # Forward device events to RC window via PubSub
-    session_id = socket.assigns.session_id
+    session_id = socket.assigns[:session_id]
 
-    Phoenix.PubSub.broadcast(
-      Castmill.PubSub,
-      "rc_session:#{session_id}",
-      %{event: "device_event", payload: payload}
-    )
+    if session_id do
+      Phoenix.PubSub.broadcast(
+        Castmill.PubSub,
+        "rc_session:#{session_id}",
+        %{event: "device_event", payload: payload}
+      )
 
-    # Update activity timestamp
-    RcSessions.update_activity(session_id)
+      # Update activity timestamp
+      RcSessions.update_activity(session_id)
+    end
 
     {:reply, :ok, socket}
   end
@@ -98,7 +132,9 @@ defmodule CastmillWeb.DeviceRcChannel do
     push(socket, "control_event", payload)
 
     # Update activity timestamp
-    RcSessions.update_activity(socket.assigns.session_id)
+    if socket.assigns[:session_id] do
+      RcSessions.update_activity(socket.assigns.session_id)
+    end
 
     {:noreply, socket}
   end
@@ -110,7 +146,9 @@ defmodule CastmillWeb.DeviceRcChannel do
     push(socket, "control_event", payload)
 
     # Update activity timestamp
-    RcSessions.update_activity(socket.assigns.session_id)
+    if socket.assigns[:session_id] do
+      RcSessions.update_activity(socket.assigns.session_id)
+    end
 
     {:noreply, socket}
   end

@@ -78,6 +78,23 @@ class WebSocketManager(
     private var shouldReconnect = true
     private var sessionId: String? = null
     private var isAuthenticated = false
+    private var isStandbyMode = false
+    private var rcHeartbeatJob: Job? = null
+
+    /**
+     * Connect to the WebSocket in standby mode (no active session).
+     * In standby mode, the app just sends RC heartbeats to indicate it's available.
+     */
+    fun connectStandby() {
+        if (isConnecting || webSocket != null) {
+            Log.d(TAG, "Already connected or connecting")
+            return
+        }
+
+        this.sessionId = null
+        this.isStandbyMode = true
+        connectInternal()
+    }
 
     /**
      * Connect to the WebSocket with the given session ID
@@ -89,6 +106,11 @@ class WebSocketManager(
         }
 
         this.sessionId = sessionId
+        this.isStandbyMode = false
+        connectInternal()
+    }
+
+    private fun connectInternal() {
         isConnecting = true
 
         val wsUrl = baseUrl.replace("http://", "ws://").replace("https://", "wss://")
@@ -144,6 +166,7 @@ class WebSocketManager(
         isAuthenticated = false
         isWebSocketOpen = false
         stopHeartbeat()
+        stopRcHeartbeat()
         stopDiagnosticsReporting()
         stopReconnect()
         webSocket?.close(1000, "Client disconnecting")
@@ -151,6 +174,7 @@ class WebSocketManager(
         isConnecting = false
         sessionId = null
         joinRef = null
+        isStandbyMode = false
         diagnosticsManager?.recordDisconnection()
     }
 
@@ -265,16 +289,22 @@ class WebSocketManager(
     }
 
     private fun joinChannel() {
-        val sid = sessionId ?: run {
-            Log.e(TAG, "Cannot join channel: sessionId is null")
-            return
-        }
-
         joinRef = (++messageRef).toString()
         
-        val payload = buildJsonObject {
-            put("token", deviceToken)
-            put("session_id", sid)
+        val payload = if (isStandbyMode) {
+            // Standby mode - just token, no session_id
+            buildJsonObject {
+                put("token", deviceToken)
+            }
+        } else {
+            val sid = sessionId ?: run {
+                Log.e(TAG, "Cannot join channel: sessionId is null")
+                return
+            }
+            buildJsonObject {
+                put("token", deviceToken)
+                put("session_id", sid)
+            }
         }
         sendMessage("phx_join", payload)
     }
@@ -288,6 +318,30 @@ class WebSocketManager(
                 delay(HEARTBEAT_INTERVAL_MS)
             }
         }
+    }
+
+    /**
+     * Start sending RC heartbeats to indicate the RC app is available.
+     * This is separate from Phoenix protocol heartbeats.
+     */
+    private fun startRcHeartbeat() {
+        stopRcHeartbeat()
+        rcHeartbeatJob = coroutineScope.launch {
+            // Send initial heartbeat immediately
+            sendMessage("rc_heartbeat", buildJsonObject {})
+            Log.d(TAG, "Sent initial RC heartbeat")
+            
+            while (isActive && webSocket != null && isAuthenticated) {
+                delay(HEARTBEAT_INTERVAL_MS)
+                sendMessage("rc_heartbeat", buildJsonObject {})
+                Log.d(TAG, "Sent RC heartbeat")
+            }
+        }
+    }
+
+    private fun stopRcHeartbeat() {
+        rcHeartbeatJob?.cancel()
+        rcHeartbeatJob = null
     }
     
     private fun startDiagnosticsReporting() {
@@ -319,12 +373,16 @@ class WebSocketManager(
             Log.i(TAG, "Reconnecting in ${currentReconnectDelay}ms")
             delay(currentReconnectDelay)
 
-            if (isActive && shouldReconnect && sessionId != null) {
+            if (isActive && shouldReconnect) {
                 currentReconnectDelay = minOf(
                     (currentReconnectDelay * RECONNECT_BACKOFF_MULTIPLIER).toLong(),
                     MAX_RECONNECT_DELAY_MS
                 )
-                connect(sessionId!!)
+                if (isStandbyMode) {
+                    connectStandby()
+                } else if (sessionId != null) {
+                    connect(sessionId!!)
+                }
             }
         }
     }
@@ -530,6 +588,8 @@ class WebSocketManager(
                                 isAuthenticated = true
                                 diagnosticsManager?.recordSuccessfulReconnect()
                                 startDiagnosticsReporting()
+                                // Start RC heartbeat to indicate the app is available
+                                startRcHeartbeat()
                             } else {
                                 Log.e(TAG, "Failed to join channel: $payload")
                                 isAuthenticated = false

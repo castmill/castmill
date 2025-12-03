@@ -53,6 +53,38 @@
             android:layout_marginBottom="24dp"
             android:contentDescription="@string/device_id_content_description" />
 
+        <!-- Device Token Section (for pairing) -->
+        <TextView
+            android:id="@+id/tvDeviceTokenLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/device_token_label"
+            android:textStyle="bold"
+            android:layout_marginBottom="4dp" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etDeviceToken"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/device_token_hint"
+                android:inputType="text"
+                android:maxLines="1"
+                android:textSize="14sp"
+                android:fontFamily="monospace" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <Button
+            android:id="@+id/btnSaveToken"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/save_token_button"
+            android:layout_marginBottom="24dp" />
+
         <!-- Permissions Section -->
         <TextView
             android:id="@+id/tvPermissionsHeader"
