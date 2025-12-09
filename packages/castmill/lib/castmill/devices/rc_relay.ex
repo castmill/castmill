@@ -1,21 +1,21 @@
 defmodule Castmill.Devices.RcRelay do
   @moduledoc """
   GenServer that manages relay queues and backpressure for RC sessions.
-  
+
   This module coordinates message flow between device channels and RC window channels,
   implementing bounded queues and intelligent backpressure management for media frames.
-  
+
   ## Features
-  
+
   - Bounded control message queue (FIFO)
   - Media frame queue with backpressure:
     - Always forwards IDR (keyframe) frames
     - Drops P-frames (predictive frames) when queue is full
   - Session-scoped relay instances
   - Automatic cleanup on session termination
-  
+
   ## Architecture
-  
+
   Each active RC session has a relay GenServer that:
   1. Receives control events from RC window
   2. Queues and forwards them to device
@@ -47,7 +47,7 @@ defmodule Castmill.Devices.RcRelay do
 
   @doc """
   Starts a relay for the given session.
-  
+
   Returns `{:ok, pid}` or `{:error, reason}`.
   """
   def start_link(session_id) do
@@ -56,7 +56,7 @@ defmodule Castmill.Devices.RcRelay do
 
   @doc """
   Enqueues a control event to be sent to the device.
-  
+
   Returns `:ok` if enqueued, `{:error, :queue_full}` if queue is full.
   """
   def enqueue_control_event(session_id, payload) do
@@ -75,11 +75,11 @@ defmodule Castmill.Devices.RcRelay do
 
   @doc """
   Enqueues a media frame to be sent to the RC window.
-  
+
   Applies backpressure logic:
   - IDR frames are always enqueued (may grow queue temporarily)
   - P-frames are dropped if queue is at capacity
-  
+
   Returns `:ok` if enqueued and forwarded, `{:ok, :dropped}` if P-frame was dropped due to backpressure, or `{:error, reason}` on validation or session errors.
   """
   def enqueue_media_frame(session_id, payload) do
@@ -97,7 +97,7 @@ defmodule Castmill.Devices.RcRelay do
 
   @doc """
   Gets statistics for the relay queues.
-  
+
   Returns map with queue sizes and drop counts.
   """
   def get_stats(session_id) do
@@ -119,32 +119,29 @@ defmodule Castmill.Devices.RcRelay do
 
   @impl true
   def init(session_id) do
-    # Verify session exists
-    case RcSessions.get_session(session_id) do
-      nil ->
-        {:stop, :session_not_found}
+    # Note: We don't verify session exists here because the relay is started
+    # from within the session creation transaction, and the session won't be
+    # visible to other DB queries until the transaction commits.
+    # The session is guaranteed to exist since we just created it.
+    Logger.info("Starting RC relay for session #{session_id}")
 
-      session ->
-        Logger.info("Starting RC relay for session #{session_id}")
+    state = %__MODULE__{
+      session_id: session_id,
+      control_queue: :queue.new(),
+      media_queue: :queue.new(),
+      stats: %{
+        control_enqueued: 0,
+        control_forwarded: 0,
+        control_dropped: 0,
+        media_enqueued: 0,
+        media_forwarded: 0,
+        media_dropped: 0,
+        idr_frames: 0,
+        p_frames_dropped: 0
+      }
+    }
 
-        state = %__MODULE__{
-          session_id: session_id,
-          control_queue: :queue.new(),
-          media_queue: :queue.new(),
-          stats: %{
-            control_enqueued: 0,
-            control_forwarded: 0,
-            control_dropped: 0,
-            media_enqueued: 0,
-            media_forwarded: 0,
-            media_dropped: 0,
-            idr_frames: 0,
-            p_frames_dropped: 0
-          }
-        }
-
-        {:ok, state}
-    end
+    {:ok, state}
   end
 
   @impl true

@@ -64,10 +64,15 @@ defmodule CastmillWeb.RcSessionController do
                       |> put_status(:conflict)
                       |> json(%{error: "Device already has an active RC session"})
 
+                    {:error, reason} when is_atom(reason) ->
+                      conn
+                      |> put_status(:internal_server_error)
+                      |> json(%{error: "Failed to create session", details: to_string(reason)})
+
                     {:error, changeset} ->
                       conn
                       |> put_status(:unprocessable_entity)
-                      |> json(%{error: "Failed to create session", details: changeset.errors})
+                      |> json(%{error: "Failed to create session", details: inspect(changeset.errors)})
                   end
 
                 _active_session ->

@@ -78,24 +78,26 @@ class RemoteControlService : LifecycleService() {
         val deviceToken: String? = intent?.getStringExtra(EXTRA_DEVICE_TOKEN)
             ?: getStoredDeviceToken()
         
-        // Check if this is a standby mode request (no session ID but has token)
-        val isStandbyMode = sid == null && deviceToken != null && deviceId != null
+        // Check if this is a standby mode request (no session ID)
+        // Standby mode only needs deviceId (hardware_id) - no token required
+        val isStandbyMode = sid == null && deviceId != null
         
-        if (isStandbyMode && deviceToken != null) {
+        if (isStandbyMode) {
             // Standby mode - connect to send heartbeats only
+            // Only deviceId (hardware_id) is needed - no token required
             Log.i(TAG, "Starting in standby mode (sending heartbeats)")
             
-            // Store device token for future use
-            if (intent?.hasExtra(EXTRA_DEVICE_TOKEN) == true) {
+            // Store device token for future use if provided (for session mode later)
+            if (intent?.hasExtra(EXTRA_DEVICE_TOKEN) == true && deviceToken != null) {
                 storeDeviceToken(deviceToken)
             }
             
             // Initialize and connect WebSocket in standby mode
             lifecycleScope.launch {
-                connectWebSocketStandby(deviceToken)
+                connectWebSocketStandby()
             }
         } else if (sid != null && deviceToken != null && deviceId != null) {
-            // Store session ID
+            // Session mode - requires session ID and token
             sessionId = sid
             
             // Store device token for future use
@@ -153,14 +155,15 @@ class RemoteControlService : LifecycleService() {
     /**
      * Connect to the backend WebSocket in standby mode (no active session).
      * In this mode, we only send heartbeats to indicate the RC app is available.
+     * Only requires deviceId (hardware_id) - no token needed for standby.
      */
-    private fun connectWebSocketStandby(deviceToken: String) {
+    private fun connectWebSocketStandby() {
         val backendUrl = getString(R.string.backend_url)
         
         webSocketManager = WebSocketManager(
             baseUrl = backendUrl,
             deviceId = deviceId!!,
-            deviceToken = deviceToken,
+            // No token needed for standby mode - server verifies by hardware_id
             coroutineScope = lifecycleScope,
             diagnosticsManager = diagnosticsManager,
             certificatePins = null,

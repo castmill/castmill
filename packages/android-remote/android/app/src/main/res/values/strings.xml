@@ -17,11 +17,7 @@
     <string name="device_id_label">Device ID:</string>
     <string name="device_id_loading">Loading…</string>
     <string name="device_id_content_description">Unique device identifier for backend configuration</string>
-    <string name="device_token_label">Device Token:</string>
-    <string name="device_token_hint">Enter device token from dashboard</string>
-    <string name="save_token_button">Save Token &amp; Connect</string>
-    <string name="token_saved_message">Token saved. Starting standby service…</string>
-    <string name="token_empty_error">Please enter a device token</string>
+    <string name="device_id_info">This ID is shared with the player app and is used to identify your device on the Castmill server.</string>
     <string name="permissions_header">Required Permissions</string>
     <string name="status_header">Service Status</string>
     

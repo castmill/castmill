@@ -6,9 +6,10 @@ import {
   Show,
 } from 'solid-js';
 import { useParams, useSearchParams } from '@solidjs/router';
-import { Channel } from 'phoenix';
+import { Channel, Socket } from 'phoenix';
 import { store } from '../../store';
 import { useI18n } from '../../i18n';
+import { wsEndpoint } from '../../env';
 import './remote-control-window.scss';
 
 type ConnectionState = 'connecting' | 'connected' | 'disconnected' | 'error';
@@ -70,18 +71,24 @@ const RemoteControlWindow: Component = () => {
     }
   });
 
-  // Setup WebSocket connection
+  // Setup WebSocket connection to RC socket
   createEffect(() => {
-    const existingSocket = store.socket;
-
-    if (!existingSocket || !sessionId || !deviceId) {
+    if (!sessionId || !deviceId) {
       setConnectionState('error');
       setErrorMessage(t('remoteControl.window.missingParams'));
       return;
     }
 
+    // Create a separate socket connection to the RC socket endpoint (/ws)
+    // This is different from the main dashboard socket (/user_socket)
+    const rcSocket = new Socket(`${wsEndpoint}/ws`, {
+      params: () => ({}),
+    });
+    
+    rcSocket.connect();
+
     // Join RC session channel
-    const rcChannel = existingSocket.channel(`rc:${sessionId}`, {
+    const rcChannel = rcSocket.channel(`rc_window:${sessionId}`, {
       device_id: deviceId,
     });
 
@@ -157,6 +164,7 @@ const RemoteControlWindow: Component = () => {
     // Cleanup when effect re-runs
     onCleanup(() => {
       rcChannel.leave();
+      rcSocket.disconnect();
     });
   });
 

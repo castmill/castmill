@@ -40,11 +40,15 @@ import javax.net.ssl.X509TrustManager
  * 
  * Phoenix WebSocket Protocol:
  * Messages are arrays: [join_ref, ref, topic, event, payload]
+ * 
+ * Modes:
+ * - Standby mode: Only requires deviceId (hardware_id), sends heartbeats
+ * - Session mode: Requires deviceId, deviceToken, and sessionId for full RC
  */
 class WebSocketManager(
     private val baseUrl: String,
     private val deviceId: String,
-    private val deviceToken: String,
+    private val deviceToken: String = "", // Optional for standby mode
     private val coroutineScope: CoroutineScope,
     private val diagnosticsManager: DiagnosticsManager? = null,
     private val certificatePins: Map<String, List<String>>? = null, // hostname -> list of SHA-256 pins
@@ -114,7 +118,7 @@ class WebSocketManager(
         isConnecting = true
 
         val wsUrl = baseUrl.replace("http://", "ws://").replace("https://", "wss://")
-        val url = "$wsUrl/socket/websocket"
+        val url = "$wsUrl/ws/websocket"
 
         Log.i(TAG, "Connecting to WebSocket: $url")
 
@@ -269,17 +273,19 @@ class WebSocketManager(
         val topic = "device_rc:$deviceId"
         val ref = (++messageRef).toString()
         
-        // Phoenix protocol uses array format: [join_ref, ref, topic, event, payload]
-        val message = buildJsonArray {
-            add(JsonPrimitive(joinRef ?: ""))
-            add(JsonPrimitive(ref))
-            add(JsonPrimitive(topic))
-            add(JsonPrimitive(event))
-            add(payload)
+        // Phoenix V1 protocol uses JSON object format
+        val message = buildJsonObject {
+            put("topic", topic)
+            put("event", event)
+            put("payload", payload)
+            put("ref", ref)
+            if (joinRef != null) {
+                put("join_ref", joinRef)
+            }
         }
 
         try {
-            val jsonString = json.encodeToString(JsonArray.serializer(), message)
+            val jsonString = json.encodeToString(JsonObject.serializer(), message)
             Log.d(TAG, "Sending message: $jsonString")
             webSocket?.send(jsonString)
         } catch (e: Exception) {
@@ -292,9 +298,9 @@ class WebSocketManager(
         joinRef = (++messageRef).toString()
         
         val payload = if (isStandbyMode) {
-            // Standby mode - just token, no session_id
+            // Standby mode - just hardware_id (device_id), no token needed
             buildJsonObject {
-                put("token", deviceToken)
+                put("hardware_id", deviceId)
             }
         } else {
             val sid = sessionId ?: run {
@@ -569,52 +575,49 @@ class WebSocketManager(
             Log.d(TAG, "Received message: $text")
 
             try {
-                // Phoenix protocol: [join_ref, ref, topic, event, payload]
-                val array = json.decodeFromString<JsonArray>(text)
+                // Phoenix V1 protocol uses JSON object format
+                val message = json.decodeFromString<JsonObject>(text)
                 
-                if (array.size >= 5) {
-                    val event = array[3].toString().trim('"')
-                    val payload = array[4]
+                val event = message["event"]?.toString()?.trim('"') ?: return
+                val payload = message["payload"] as? JsonObject
 
-                    when (event) {
-                        "phx_reply" -> {
-                            Log.d(TAG, "Received reply: $payload")
-                            val payloadObj = payload as? JsonObject
-                            val status = payloadObj?.get("status")?.toString()?.trim('"')
-                            val response = payloadObj?.get("response") as? JsonObject
-                            
-                            if (status == "ok") {
-                                Log.i(TAG, "Successfully joined channel and authenticated")
-                                isAuthenticated = true
-                                diagnosticsManager?.recordSuccessfulReconnect()
-                                startDiagnosticsReporting()
-                                // Start RC heartbeat to indicate the app is available
-                                startRcHeartbeat()
-                            } else {
-                                Log.e(TAG, "Failed to join channel: $payload")
-                                isAuthenticated = false
-                                // Authentication failed - disconnect and don't retry automatically
-                                shouldReconnect = false
-                                disconnect()
-                            }
-                        }
-                        "control_event" -> {
-                            // Handle control events from the backend
-                            Log.d(TAG, "Received control event: $payload")
-                            handleControlEvent(payload as? JsonObject)
-                        }
-                        "start_session" -> {
-                            // Session started by backend - trigger media capture
-                            Log.i(TAG, "Received start_session event")
-                            handleStartSession(payload as? JsonObject)
-                        }
-                        "session_stopped" -> {
-                            Log.i(TAG, "Session stopped by backend")
+                when (event) {
+                    "phx_reply" -> {
+                        Log.d(TAG, "Received reply: $payload")
+                        val status = payload?.get("status")?.toString()?.trim('"')
+                        val response = payload?.get("response") as? JsonObject
+                        
+                        if (status == "ok") {
+                            Log.i(TAG, "Successfully joined channel and authenticated")
+                            isAuthenticated = true
+                            diagnosticsManager?.recordSuccessfulReconnect()
+                            startDiagnosticsReporting()
+                            // Start RC heartbeat to indicate the app is available
+                            startRcHeartbeat()
+                        } else {
+                            Log.e(TAG, "Failed to join channel: $payload")
+                            isAuthenticated = false
+                            // Authentication failed - disconnect and don't retry automatically
+                            shouldReconnect = false
                             disconnect()
                         }
-                        else -> {
-                            Log.d(TAG, "Unhandled event: $event")
-                        }
+                    }
+                    "control_event" -> {
+                        // Handle control events from the backend
+                        Log.d(TAG, "Received control event: $payload")
+                        handleControlEvent(payload)
+                    }
+                    "start_session" -> {
+                        // Session started by backend - trigger media capture
+                        Log.i(TAG, "Received start_session event")
+                        handleStartSession(payload)
+                    }
+                    "session_stopped" -> {
+                        Log.i(TAG, "Session stopped by backend")
+                        disconnect()
+                    }
+                    else -> {
+                        Log.d(TAG, "Unhandled event: $event")
                     }
                 }
             } catch (e: Exception) {

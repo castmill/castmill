@@ -1,7 +1,7 @@
 defmodule Castmill.Devices.RcSessions do
   @moduledoc """
   Context for managing remote control sessions.
-  
+
   Handles session lifecycle management with proper state machine transitions,
   timeout logic, and ensures only one active session per device.
   """
@@ -17,24 +17,25 @@ defmodule Castmill.Devices.RcSessions do
 
   @doc """
   Creates a new RC session for a device and user in the 'created' state.
-  
+
   Returns an error if the device already has an active session.
   """
   def create_session(device_id, user_id, opts \\ []) do
     timeout_seconds = Keyword.get(opts, :timeout_seconds, @default_timeout_seconds)
-    
+
     # Use a transaction to ensure atomicity of session creation and relay startup
     Repo.transaction(fn ->
       # Check for existing active session
       case get_active_session_for_device(device_id) do
         nil ->
           now = DateTime.utc_now()
-          
+
           attrs = %{
             device_id: device_id,
             user_id: user_id,
             state: "created",
             status: "active",  # Keep for backward compatibility (DEPRECATED)
+            started_at: now,
             last_activity_at: now,
             timeout_at: nil  # Will be computed dynamically from last_activity_at + timeout_seconds
           }
@@ -83,7 +84,7 @@ defmodule Castmill.Devices.RcSessions do
 
   @doc """
   Transitions a session to the 'starting' state.
-  
+
   This should be called when the first connection (device or RC window) joins.
   """
   def transition_to_starting(session_id) do
@@ -92,7 +93,7 @@ defmodule Castmill.Devices.RcSessions do
 
   @doc """
   Transitions a session to the 'streaming' state.
-  
+
   This should be called when both device and RC window are connected.
   """
   def transition_to_streaming(session_id) do
@@ -101,7 +102,7 @@ defmodule Castmill.Devices.RcSessions do
 
   @doc """
   Transitions a session to the 'stopping' state.
-  
+
   This is called when a stop is explicitly requested.
   """
   def transition_to_stopping(session_id) do
@@ -110,7 +111,7 @@ defmodule Castmill.Devices.RcSessions do
 
   @doc """
   Transitions a session to the 'closed' state.
-  
+
   This finalizes the session and marks it as fully terminated.
   """
   def transition_to_closed(session_id) do
@@ -135,7 +136,7 @@ defmodule Castmill.Devices.RcSessions do
 
         # Stop the relay
         RcRelaySupervisor.stop_relay(session_id)
-        
+
         # Broadcast that session is closed
         Phoenix.PubSub.broadcast(
           Castmill.PubSub,
@@ -151,7 +152,7 @@ defmodule Castmill.Devices.RcSessions do
 
   @doc """
   Updates the last activity timestamp for a session.
-  
+
   This should be called on any session activity to prevent premature timeout.
   """
   def update_activity(session_id) do
@@ -185,7 +186,7 @@ defmodule Castmill.Devices.RcSessions do
 
   @doc """
   Gets an active RC session for a device.
-  
+
   Active states are: created, starting, streaming
   """
   def get_active_session_for_device(device_id) do
@@ -198,7 +199,7 @@ defmodule Castmill.Devices.RcSessions do
 
   @doc """
   Stops an RC session (legacy method for backward compatibility).
-  
+
   Transitions through stopping to closed state.
   """
   def stop_session(session_id) do
@@ -225,7 +226,7 @@ defmodule Castmill.Devices.RcSessions do
 
   @doc """
   Checks for timed-out sessions and closes them.
-  
+
   This is called by the timeout checker process.
   Timeout is based on last_activity_at + default_timeout_seconds.
   """

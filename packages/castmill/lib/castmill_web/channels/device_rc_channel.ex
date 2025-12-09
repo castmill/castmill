@@ -5,7 +5,9 @@ defmodule CastmillWeb.DeviceRcChannel do
   This channel handles the device side of remote control sessions.
   The device can connect in two modes:
   1. Standby mode (no session_id) - Just sends heartbeats to indicate RC app is available
+     Only requires hardware_id for identification (same ID used by player app)
   2. Session mode (with session_id) - Active RC session with full control
+     Requires token authentication for security
 
   Topics: "device_rc:<device_id>"
   """
@@ -17,23 +19,41 @@ defmodule CastmillWeb.DeviceRcChannel do
   alias Castmill.Devices.RcLogger
   alias Castmill.Devices.RcTelemetry
 
+  require Logger
+
   @impl true
   # Standby mode - RC app is running but no active session
-  def join("device_rc:" <> device_id, %{"token" => token}, socket) when not is_map_key(socket.assigns, :session_id) do
-    case Devices.verify_device_token(device_id, token) do
-      {:ok, device} ->
-        socket = socket
-          |> assign(:device_id, device_id)
-          |> assign(:device, device)
-          |> assign(:standby_mode, true)
+  # Only requires hardware_id - verifies device exists in database
+  def join("device_rc:" <> device_id, %{"hardware_id" => hardware_id}, socket) do
+    Logger.info("RC channel join attempt: topic=device_rc:#{device_id}, hardware_id=#{hardware_id}")
 
-        # Update RC heartbeat to indicate app is available
-        Devices.update_rc_heartbeat(device_id)
+    try do
+      # Verify this hardware_id matches a registered device
+      case Devices.get_device_by_hardware_id(hardware_id) do
+        nil ->
+          Logger.warning("RC channel join failed: Device not registered with hardware_id=#{hardware_id}")
+          {:error, %{reason: "Device not registered"}}
 
-        {:ok, socket}
+        device ->
+          Logger.info("RC channel join success: device.id=#{device.id}, hardware_id=#{hardware_id}")
 
-      {:error, reason} ->
-        {:error, %{reason: reason}}
+          socket = socket
+            |> assign(:device_id, device.id)
+            |> assign(:hardware_id, hardware_id)
+            |> assign(:device, device)
+            |> assign(:standby_mode, true)
+
+          # Update RC heartbeat to indicate app is available
+          Logger.info("Updating RC heartbeat for device.id=#{device.id}")
+          result = Devices.update_rc_heartbeat(device.id)
+          Logger.info("RC heartbeat update result: #{inspect(result)}")
+
+          {:ok, socket}
+      end
+    rescue
+      e ->
+        Logger.error("RC channel join crashed: #{inspect(e)}")
+        {:error, %{reason: "Internal error"}}
     end
   end
 
@@ -83,6 +103,12 @@ defmodule CastmillWeb.DeviceRcChannel do
       {:error, reason} ->
         {:error, %{reason: reason}}
     end
+  end
+
+  @impl true
+  def handle_in("phx_heartbeat", _payload, socket) do
+    # Handle Phoenix protocol heartbeat - just reply ok to keep connection alive
+    {:reply, :ok, socket}
   end
 
   @impl true

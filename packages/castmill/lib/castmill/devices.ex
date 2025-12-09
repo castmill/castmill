@@ -67,6 +67,16 @@ defmodule Castmill.Devices do
 
   def get_device(_), do: nil
 
+  @doc """
+    Gets a device by hardware_id.
+    Used by RC app standby mode to verify the device is registered.
+  """
+  def get_device_by_hardware_id(hardware_id) when is_binary(hardware_id) do
+    Repo.get_by(Device, hardware_id: hardware_id)
+  end
+
+  def get_device_by_hardware_id(_), do: nil
+
   # compute online based on last_online date and online status
   # If online is false, then the device is offline
   # If online is true, and last_online is more than 1 minute ago, then the device is offline
