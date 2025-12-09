@@ -445,9 +445,13 @@ class MainActivity : AppCompatActivity() {
             (mediaProjectionResultCode != RESULT_OK || mediaProjectionData == null)) {
             Log.i(TAG, "Auto-requesting MediaProjection permission (previously granted)")
             // Small delay to ensure UI is ready
-            tvScreenCaptureStatus.postDelayed({
-                requestScreenCapture()
-            }, 500)
+            if (::tvScreenCaptureStatus.isInitialized) {
+                tvScreenCaptureStatus.postDelayed({
+                    requestScreenCapture()
+                }, 500)
+            } else {
+                Log.w(TAG, "Cannot auto-request: UI not initialized")
+            }
         }
     }
 }
