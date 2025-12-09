@@ -43,6 +43,8 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         private const val TAG = "MainActivity"
+        private const val PREFS_NAME = "castmill_remote_prefs"
+        private const val PREF_MEDIA_PROJECTION_GRANTED_BEFORE = "media_projection_granted_before"
     }
 
     private lateinit var mediaProjectionManager: MediaProjectionManager
@@ -87,6 +89,9 @@ class MainActivity : AppCompatActivity() {
         // Update permission states
         updatePermissionStates()
         
+        // Auto-request MediaProjection permission if previously granted
+        autoRequestMediaProjectionIfNeeded()
+        
         // Try to start service in standby mode if device token is available
         startStandbyServiceIfPossible()
     }
@@ -104,6 +109,9 @@ class MainActivity : AppCompatActivity() {
                 // Permission granted - store for potential service use
                 mediaProjectionResultCode = result.resultCode
                 mediaProjectionData = result.data
+                
+                // Mark that user has granted permission before (for auto-request on next launch)
+                markMediaProjectionGranted()
                 
                 Log.i(TAG, "MediaProjection permission granted")
                 updatePermissionStates()
@@ -196,7 +204,7 @@ class MainActivity : AppCompatActivity() {
      * Store device token in SharedPreferences
      */
     private fun storeDeviceToken(token: String) {
-        val prefs = getSharedPreferences("castmill_remote_prefs", MODE_PRIVATE)
+        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
         prefs.edit().putString("device_token", token).apply()
     }
 
@@ -404,7 +412,42 @@ class MainActivity : AppCompatActivity() {
      * Get stored device token from SharedPreferences
      */
     private fun getStoredDeviceToken(): String? {
-        val prefs = getSharedPreferences("castmill_remote_prefs", MODE_PRIVATE)
+        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
         return prefs.getString("device_token", null)
+    }
+    
+    /**
+     * Check if MediaProjection permission was granted before
+     */
+    private fun wasMediaProjectionGrantedBefore(): Boolean {
+        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        return prefs.getBoolean(PREF_MEDIA_PROJECTION_GRANTED_BEFORE, false)
+    }
+    
+    /**
+     * Mark that MediaProjection permission has been granted
+     */
+    private fun markMediaProjectionGranted() {
+        val prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+        prefs.edit().putBoolean(PREF_MEDIA_PROJECTION_GRANTED_BEFORE, true).apply()
+        Log.i(TAG, "Marked MediaProjection as previously granted")
+    }
+    
+    /**
+     * Auto-request MediaProjection permission if user granted it before
+     * This minimizes user friction on subsequent app launches
+     */
+    private fun autoRequestMediaProjectionIfNeeded() {
+        // Only auto-request if:
+        // 1. User has granted permission before (stored in SharedPreferences)
+        // 2. Permission is not already granted in this session
+        if (wasMediaProjectionGrantedBefore() && 
+            (mediaProjectionResultCode != RESULT_OK || mediaProjectionData == null)) {
+            Log.i(TAG, "Auto-requesting MediaProjection permission (previously granted)")
+            // Small delay to ensure UI is ready
+            tvScreenCaptureStatus.postDelayed({
+                requestScreenCapture()
+            }, 500)
+        }
     }
 }

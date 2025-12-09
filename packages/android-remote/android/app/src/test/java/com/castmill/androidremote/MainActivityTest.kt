@@ -377,4 +377,83 @@ class MainActivityTest {
                 btnEnableAccessibility.isEnabled)
         }
     }
+
+    @Test
+    fun testMediaProjectionAutoRequestOnFirstLaunch() {
+        // Arrange - Fresh install, no prior permission grants
+        val prefs = context.getSharedPreferences("castmill_remote_prefs", Context.MODE_PRIVATE)
+        prefs.edit().clear().apply()
+        
+        // Act
+        activity = Robolectric.buildActivity(MainActivity::class.java)
+            .create()
+            .resume()
+            .get()
+        
+        // Assert - Should NOT auto-request on first launch
+        assertFalse("Should not have prior permission grant flag", 
+            prefs.getBoolean("media_projection_granted_before", false))
+    }
+
+    @Test
+    fun testMediaProjectionAutoRequestAfterPreviousGrant() {
+        // Arrange - Simulate previous permission grant
+        val prefs = context.getSharedPreferences("castmill_remote_prefs", Context.MODE_PRIVATE)
+        prefs.edit()
+            .putBoolean("media_projection_granted_before", true)
+            .apply()
+        
+        // Act
+        activity = Robolectric.buildActivity(MainActivity::class.java)
+            .create()
+            .resume()
+            .get()
+        
+        // Assert - Flag should still be set
+        assertTrue("Should have prior permission grant flag", 
+            prefs.getBoolean("media_projection_granted_before", false))
+    }
+
+    @Test
+    fun testMediaProjectionGrantedFlagSetOnPermissionGrant() {
+        // Arrange
+        val prefs = context.getSharedPreferences("castmill_remote_prefs", Context.MODE_PRIVATE)
+        prefs.edit().clear().apply()
+        
+        activity = Robolectric.buildActivity(MainActivity::class.java)
+            .create()
+            .resume()
+            .get()
+        
+        // Verify flag is initially false
+        assertFalse("Flag should be false initially", 
+            prefs.getBoolean("media_projection_granted_before", false))
+        
+        // Act - Simulate permission grant
+        val resultIntent = Intent()
+        activity.onActivityResult(1001, android.app.Activity.RESULT_OK, resultIntent)
+        
+        // Assert - Flag should now be set
+        assertTrue("Flag should be set after permission grant", 
+            prefs.getBoolean("media_projection_granted_before", false))
+    }
+
+    @Test
+    fun testMediaProjectionGrantedFlagNotSetOnPermissionDenial() {
+        // Arrange
+        val prefs = context.getSharedPreferences("castmill_remote_prefs", Context.MODE_PRIVATE)
+        prefs.edit().clear().apply()
+        
+        activity = Robolectric.buildActivity(MainActivity::class.java)
+            .create()
+            .resume()
+            .get()
+        
+        // Act - Simulate permission denial
+        activity.onActivityResult(1001, android.app.Activity.RESULT_CANCELED, null)
+        
+        // Assert - Flag should still be false
+        assertFalse("Flag should remain false after denial", 
+            prefs.getBoolean("media_projection_granted_before", false))
+    }
 }

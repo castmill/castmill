@@ -48,7 +48,8 @@ Both permissions involve sensitive device capabilities and require explicit user
 **User Action Required**:
 - System shows permission dialog when requested
 - User must tap "Start now" or equivalent to grant
-- Permission is NOT persistent - must be re-requested for each session
+- Permission is NOT persistent by Android design - must be re-requested for each app session
+- **Auto-request on subsequent launches**: After first grant, permission is automatically re-requested on app launch to minimize user friction
 
 ## Consent Flows
 
@@ -94,8 +95,9 @@ Status updates to "Enabled" with green indicator
 
 #### MediaProjection Permission Flow
 
+**First Launch:**
 ```
-User opens MainActivity
+User opens MainActivity for the first time
     ↓
 Sees "Screen Capture" card with "Not Granted" status
     ↓
@@ -113,18 +115,39 @@ User taps "Start now" to grant permission
     ↓
 Permission granted for this session
     ↓
+App stores flag indicating user has granted permission before
+    ↓
+Status updates to "Granted" with green indicator
+```
+
+**Subsequent Launches (Auto-Request):**
+```
+User opens MainActivity (not first time)
+    ↓
+App detects user granted permission before
+    ↓
+App automatically requests MediaProjection permission (500ms delay)
+    ↓
+System shows MediaProjection permission dialog
+    ↓
+User taps "Start now" to grant permission
+    ↓
+Permission granted for this session
+    ↓
 Status updates to "Granted" with green indicator
 ```
 
 **Implementation Notes**:
 - Permission must be requested from an Activity (not a Service)
-- Permission is granted per-session, not persistent
+- Permission is granted per-session, not persistent (Android security design)
 - Must be re-requested when:
-  - App is restarted
+  - App is restarted (auto-requested if granted before)
   - Remote control session ends and new one begins
   - User revokes permission manually
 - `resultCode` and `data` Intent must be passed to RemoteControlService
 - Permission can be requested just-in-time when starting a remote session
+- **Auto-request feature**: After first grant, app automatically requests permission on launch to reduce user friction
+- Auto-request is tracked via SharedPreferences flag: `media_projection_granted_before`
 
 **Typical Integration Flow**:
 ```kotlin
@@ -477,13 +500,13 @@ Both permissions provide significant device access:
 
 ## Summary
 
-| Permission | Type | User Action | Device Owner | Persistent |
-|------------|------|-------------|--------------|------------|
-| AccessibilityService | Accessibility | Manual enable in Settings | No auto-grant | Yes, until disabled |
-| MediaProjection | Dangerous | Grant per-session | Can auto-grant | No, per-session |
-| Foreground Service | Normal | Automatic | N/A | While service runs |
+| Permission | Type | User Action | Device Owner | Persistent | Auto-Request |
+|------------|------|-------------|--------------|------------|--------------|
+| AccessibilityService | Accessibility | Manual enable in Settings | No auto-grant | Yes, until disabled | No |
+| MediaProjection | Dangerous | Grant per-session | Can auto-grant | No, per-session | Yes, after first grant |
+| Foreground Service | Normal | Automatic | N/A | While service runs | N/A |
 
-**Track 1 (Manual Consent)**: Standard Android permission flows with clear UI guidance.
+**Track 1 (Manual Consent)**: Standard Android permission flows with clear UI guidance. MediaProjection is automatically re-requested on app launch after first grant to minimize user friction.
 
 **Track 2 (Device Owner)**: Enterprise deployment with auto-granted MediaProjection for fully managed devices.
 
