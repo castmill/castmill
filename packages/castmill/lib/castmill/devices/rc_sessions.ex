@@ -28,7 +28,8 @@ defmodule Castmill.Devices.RcSessions do
       # Check for existing active session
       case get_active_session_for_device(device_id) do
         nil ->
-          now = DateTime.utc_now()
+          # Truncate to seconds since :utc_datetime doesn't support microseconds
+          now = DateTime.utc_now() |> DateTime.truncate(:second)
 
           attrs = %{
             device_id: device_id,
@@ -162,9 +163,12 @@ defmodule Castmill.Devices.RcSessions do
 
       session ->
         if RcSession.active_state?(session.state) do
+          # Truncate to seconds since :utc_datetime doesn't support microseconds
+          now = DateTime.utc_now() |> DateTime.truncate(:second)
+
           result =
             session
-            |> Ecto.Changeset.change(%{last_activity_at: DateTime.utc_now()})
+            |> Ecto.Changeset.change(%{last_activity_at: now})
             |> Repo.update()
 
           # Emit telemetry for activity

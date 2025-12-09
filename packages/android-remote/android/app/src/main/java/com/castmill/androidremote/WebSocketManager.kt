@@ -73,6 +73,7 @@ class WebSocketManager(
     private var webSocket: WebSocket? = null
     private var messageRef = 0
     private var joinRef: String? = null
+    private var joinMessageRef: String? = null  // Track the actual ref used for join message
     private var heartbeatJob: Job? = null
     private var diagnosticsJob: Job? = null
     private var reconnectJob: Job? = null
@@ -312,6 +313,9 @@ class WebSocketManager(
                 put("session_id", sid)
             }
         }
+        // Track the ref that will be used for the join message
+        // sendMessage will increment messageRef, so the join message ref will be messageRef + 1
+        joinMessageRef = (messageRef + 1).toString()
         sendMessage("phx_join", payload)
     }
 
@@ -586,21 +590,26 @@ class WebSocketManager(
                         Log.d(TAG, "Received reply: $payload")
                         val status = payload?.get("status")?.toString()?.trim('"')
                         val response = payload?.get("response") as? JsonObject
+                        val replyRef = message["ref"]?.toString()?.trim('"')
                         
-                        if (status == "ok") {
+                        // Only process join reply (ref matches joinMessageRef), not heartbeat replies
+                        if (status == "ok" && replyRef == joinMessageRef) {
                             Log.i(TAG, "Successfully joined channel and authenticated")
                             isAuthenticated = true
                             diagnosticsManager?.recordSuccessfulReconnect()
                             startDiagnosticsReporting()
                             // Start RC heartbeat to indicate the app is available
                             startRcHeartbeat()
-                        } else {
+                            // Clear joinMessageRef so we don't trigger again
+                            joinMessageRef = null
+                        } else if (status != "ok" && replyRef == joinMessageRef) {
                             Log.e(TAG, "Failed to join channel: $payload")
                             isAuthenticated = false
                             // Authentication failed - disconnect and don't retry automatically
                             shouldReconnect = false
                             disconnect()
                         }
+                        // Ignore OK replies for heartbeats and other messages
                     }
                     "control_event" -> {
                         // Handle control events from the backend

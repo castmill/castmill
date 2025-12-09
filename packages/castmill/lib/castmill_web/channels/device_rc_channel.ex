@@ -120,6 +120,13 @@ defmodule CastmillWeb.DeviceRcChannel do
   end
 
   @impl true
+  def handle_in("stats_report", _payload, socket) do
+    # Handle diagnostics/stats reports from the Android app
+    # For now, just acknowledge receipt - could be used for monitoring later
+    {:reply, :ok, socket}
+  end
+
+  @impl true
   def handle_in("control_event", payload, socket) do
     # Forward control events from RC window to device
     # These events come through PubSub from the RC window channel

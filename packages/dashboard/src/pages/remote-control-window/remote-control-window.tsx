@@ -79,92 +79,131 @@ const RemoteControlWindow: Component = () => {
       return;
     }
 
-    // Create a separate socket connection to the RC socket endpoint (/ws)
-    // This is different from the main dashboard socket (/user_socket)
-    const rcSocket = new Socket(`${wsEndpoint}/ws`, {
-      params: () => ({}),
-    });
-    
-    rcSocket.connect();
+    let rcSocket: Socket | null = null;
+    let rcChannel: Channel | null = null;
 
-    // Join RC session channel
-    const rcChannel = rcSocket.channel(`rc_window:${sessionId}`, {
-      device_id: deviceId,
-    });
+    // Fetch user token for RC socket authentication
+    const connectToRcSocket = async () => {
+      try {
+        const baseUrl = store.env?.baseUrl || 'http://localhost:4000';
+        const response = await fetch(`${baseUrl}/sessions/`, {
+          method: 'GET',
+          credentials: 'include',
+        });
 
-    rcChannel
-      .join()
-      .receive('ok', (resp: any) => {
-        console.log('Joined RC channel', resp);
-        setConnectionState('connected');
-      })
-      .receive('error', (resp: any) => {
-        console.error('Failed to join RC channel', resp);
+        if (!response.ok) {
+          throw new Error('Failed to get session token');
+        }
+
+        const { token } = await response.json();
+
+        if (!token) {
+          throw new Error('No token in session response');
+        }
+
+        // Create a separate socket connection to the RC socket endpoint (/ws)
+        // This is different from the main dashboard socket (/user_socket)
+        rcSocket = new Socket(`${wsEndpoint}/ws`, {
+          params: () => ({ token }),
+        });
+        
+        rcSocket.connect();
+
+        // Join RC session channel
+        rcChannel = rcSocket.channel(`rc_window:${sessionId}`, {
+          device_id: deviceId,
+        });
+
+        rcChannel
+          .join()
+          .receive('ok', (resp: any) => {
+            console.log('Joined RC channel', resp);
+            setConnectionState('connected');
+          })
+          .receive('error', (resp: any) => {
+            console.error('Failed to join RC channel', resp);
+            setConnectionState('error');
+            setErrorMessage(
+              t('remoteControl.window.connectionError', {
+                error: resp.reason || 'Unknown error',
+              })
+            );
+          })
+          .receive('timeout', () => {
+            console.error('RC channel join timeout');
+            setConnectionState('error');
+            setErrorMessage(t('remoteControl.window.connectionTimeout'));
+          });
+
+        // Listen for video frames
+        rcChannel.on('frame', (payload: FramePayload) => {
+          const context = ctx();
+          if (context && payload.data) {
+            // Validate base64 data format
+            if (!/^[A-Za-z0-9+/=]+$/.test(payload.data)) {
+              console.error('Invalid frame data format');
+              return;
+            }
+
+            // Check size (10MB limit)
+            const estimatedSize = (payload.data.length * 3) / 4;
+            if (estimatedSize > 10 * 1024 * 1024) {
+              console.error('Frame data too large');
+              return;
+            }
+
+            // payload.data is expected to be a base64 encoded image
+            const img = new Image();
+            img.onload = () => {
+              const canvas = canvasRef();
+              if (canvas) {
+                // Resize canvas to match image dimensions
+                if (canvas.width !== img.width || canvas.height !== img.height) {
+                  canvas.width = img.width;
+                  canvas.height = img.height;
+                }
+                context.drawImage(img, 0, 0);
+              }
+            };
+            img.onerror = () => {
+              console.error('Failed to load frame image');
+            };
+            img.src = `data:image/jpeg;base64,${payload.data}`;
+          }
+        });
+
+        // Listen for connection status updates
+        rcChannel.on('status', (payload: StatusPayload) => {
+          console.log('RC status update:', payload);
+          if (payload.status === 'disconnected') {
+            setConnectionState('disconnected');
+            setErrorMessage(t('remoteControl.window.deviceDisconnected'));
+          }
+        });
+
+        setChannel(rcChannel);
+
+      } catch (error) {
+        console.error('Failed to connect to RC socket:', error);
         setConnectionState('error');
         setErrorMessage(
           t('remoteControl.window.connectionError', {
-            error: resp.reason || 'Unknown error',
+            error: error instanceof Error ? error.message : 'Unknown error',
           })
         );
-      })
-      .receive('timeout', () => {
-        console.error('RC channel join timeout');
-        setConnectionState('error');
-        setErrorMessage(t('remoteControl.window.connectionTimeout'));
-      });
-
-    // Listen for video frames
-    rcChannel.on('frame', (payload: FramePayload) => {
-      const context = ctx();
-      if (context && payload.data) {
-        // Validate base64 data format
-        if (!/^[A-Za-z0-9+/=]+$/.test(payload.data)) {
-          console.error('Invalid frame data format');
-          return;
-        }
-
-        // Check size (10MB limit)
-        const estimatedSize = (payload.data.length * 3) / 4;
-        if (estimatedSize > 10 * 1024 * 1024) {
-          console.error('Frame data too large');
-          return;
-        }
-
-        // payload.data is expected to be a base64 encoded image
-        const img = new Image();
-        img.onload = () => {
-          const canvas = canvasRef();
-          if (canvas) {
-            // Resize canvas to match image dimensions
-            if (canvas.width !== img.width || canvas.height !== img.height) {
-              canvas.width = img.width;
-              canvas.height = img.height;
-            }
-            context.drawImage(img, 0, 0);
-          }
-        };
-        img.onerror = () => {
-          console.error('Failed to load frame image');
-        };
-        img.src = `data:image/jpeg;base64,${payload.data}`;
       }
-    });
+    };
 
-    // Listen for connection status updates
-    rcChannel.on('status', (payload: StatusPayload) => {
-      console.log('RC status update:', payload);
-      if (payload.status === 'disconnected') {
-        setConnectionState('disconnected');
-        setErrorMessage(t('remoteControl.window.deviceDisconnected'));
-      }
-    });
-
-    setChannel(rcChannel);
+    connectToRcSocket();
 
     // Cleanup when effect re-runs
     onCleanup(() => {
-      rcChannel.leave();
-      rcSocket.disconnect();
+      if (rcChannel) {
+        rcChannel.leave();
+      }
+      if (rcSocket) {
+        rcSocket.disconnect();
+      }
     });
   });
 

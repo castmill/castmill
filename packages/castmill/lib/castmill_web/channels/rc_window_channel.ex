@@ -19,10 +19,15 @@ defmodule CastmillWeb.RcWindowChannel do
   alias Castmill.Devices.RcLogger
   alias Castmill.Devices.RcTelemetry
 
+  require Logger
+
   @impl true
   def join("rc_window:" <> session_id, _params, socket) do
+    Logger.info("RC window join attempt: session_id=#{session_id}")
+
     # Get user from socket assigns (set by RcSocket authenticate_user)
     user = socket.assigns[:user]
+    Logger.info("RC window join: user=#{inspect(user)}")
 
     if is_nil(user) do
       {:error, %{reason: "Unauthorized"}}
