@@ -1,5 +1,6 @@
 package com.castmill.androidremote
 
+import android.app.Activity
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -57,7 +58,9 @@ class RemoteControlService : LifecycleService() {
     private var pendingSessionId: String? = null // Track session waiting for MediaProjection
     
     // Store MediaProjection permission data for later use
-    private var mediaProjectionResultCode: Int = -1
+    // Note: Activity.RESULT_OK = -1, so we use a boolean flag instead of checking resultCode
+    private var hasMediaProjectionPermission = false
+    private var mediaProjectionResultCode: Int = Activity.RESULT_CANCELED
     private var mediaProjectionData: Intent? = null
 
     override fun onCreate() {
@@ -78,11 +81,13 @@ class RemoteControlService : LifecycleService() {
         
         // Check if this is an action to update MediaProjection permission
         if (intent?.action == ACTION_UPDATE_MEDIA_PROJECTION) {
-            val resultCode = intent.getIntExtra(EXTRA_MEDIA_PROJECTION_RESULT_CODE, -1)
+            val resultCode = intent.getIntExtra(EXTRA_MEDIA_PROJECTION_RESULT_CODE, Activity.RESULT_CANCELED)
             val projectionData = intent.getParcelableExtra<Intent>(EXTRA_MEDIA_PROJECTION_DATA)
             
-            if (resultCode != -1 && projectionData != null) {
-                Log.i(TAG, "Received MediaProjection permission update")
+            // Activity.RESULT_OK = -1, so we check for that specifically
+            if (resultCode == Activity.RESULT_OK && projectionData != null) {
+                Log.i(TAG, "Received MediaProjection permission update (resultCode=$resultCode)")
+                hasMediaProjectionPermission = true
                 mediaProjectionResultCode = resultCode
                 mediaProjectionData = projectionData
                 updateNotification("Screen capture ready - waiting for session")
@@ -135,11 +140,13 @@ class RemoteControlService : LifecycleService() {
             }
             
             // Check if MediaProjection permission is provided
-            val resultCode = intent?.getIntExtra(EXTRA_MEDIA_PROJECTION_RESULT_CODE, -1) ?: -1
+            val resultCode = intent?.getIntExtra(EXTRA_MEDIA_PROJECTION_RESULT_CODE, Activity.RESULT_CANCELED) ?: Activity.RESULT_CANCELED
             val projectionData = intent?.getParcelableExtra<Intent>(EXTRA_MEDIA_PROJECTION_DATA)
             
-            if (resultCode != -1 && projectionData != null) {
+            // Activity.RESULT_OK = -1, so check for that specifically
+            if (resultCode == Activity.RESULT_OK && projectionData != null) {
                 // Store MediaProjection permission for later use
+                hasMediaProjectionPermission = true
                 mediaProjectionResultCode = resultCode
                 mediaProjectionData = projectionData
                 
@@ -246,12 +253,12 @@ class RemoteControlService : LifecycleService() {
         pendingSessionId = sessionId
         
         // Check if we already have MediaProjection permission
-        if (mediaProjectionResultCode != -1 && mediaProjectionData != null) {
+        if (hasMediaProjectionPermission && mediaProjectionData != null) {
             Log.i(TAG, "MediaProjection permission already granted, starting media capture")
             startMediaCapture(mediaProjectionResultCode, mediaProjectionData!!, sessionId)
         } else {
             // Permission not available - log and update notification
-            Log.w(TAG, "MediaProjection permission not available. User must grant permission via MainActivity.")
+            Log.w(TAG, "MediaProjection permission not available (hasPermission=$hasMediaProjectionPermission, data=${mediaProjectionData != null}). User must grant permission via MainActivity.")
             updateNotification("Waiting for screen capture permission")
             
             // In a production app, you might:

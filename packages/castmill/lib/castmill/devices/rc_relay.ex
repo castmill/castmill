@@ -110,7 +110,12 @@ defmodule Castmill.Devices.RcRelay do
   Stops the relay for the session.
   """
   def stop(session_id) do
-    GenServer.stop(via_tuple(session_id), :normal)
+    case Registry.lookup(Castmill.Devices.RcRelayRegistry, session_id) do
+      [{pid, _}] ->
+        GenServer.stop(pid, :normal)
+      [] ->
+        {:error, :session_not_found}
+    end
   rescue
     _ -> :ok
   end

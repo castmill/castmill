@@ -44,9 +44,23 @@ defmodule Castmill.Application do
 
       if env != :test do
         CastmillWeb.Widgets.WidgetsLoader.load_and_insert_json_data()
+
+        # Clean up any stale RC sessions from previous server runs
+        cleanup_stale_rc_sessions()
       end
 
       {:ok, pid}
+    end
+  end
+
+  # Clean up RC sessions that may have been left in active states
+  # when the server was shut down or crashed
+  defp cleanup_stale_rc_sessions do
+    require Logger
+    count = Castmill.Devices.RcSessions.check_and_close_timed_out_sessions()
+
+    if count > 0 do
+      Logger.info("Cleaned up #{count} stale RC sessions on startup")
     end
   end
 

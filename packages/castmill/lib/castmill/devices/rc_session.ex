@@ -138,7 +138,8 @@ defmodule Castmill.Devices.RcSession do
   end
 
   defp maybe_set_timestamps(changeset, new_state) do
-    now = DateTime.utc_now()
+    # Truncate to seconds since :utc_datetime doesn't support microseconds
+    now = DateTime.utc_now() |> DateTime.truncate(:second)
 
     case new_state do
       "starting" ->

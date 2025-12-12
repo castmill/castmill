@@ -77,6 +77,9 @@ defmodule CastmillWeb.DeviceRcChannel do
               # Log device connection
               RcLogger.info("Device connected to RC channel", session_id, device_id)
 
+              # Subscribe to session PubSub topic to receive control events from RC window
+              Phoenix.PubSub.subscribe(Castmill.PubSub, "rc_session:#{session_id}")
+
               # Transition session to starting if it's still in created state
               # Re-fetch to avoid race conditions
               current_session = RcSessions.get_session(session_id)
@@ -183,6 +186,24 @@ defmodule CastmillWeb.DeviceRcChannel do
       RcSessions.update_activity(socket.assigns.session_id)
     end
 
+    {:noreply, socket}
+  end
+
+  # Ignore media_frame events - they are meant for the RC window, not the device
+  # This happens because both device and RC window subscribe to the same session PubSub topic
+  @impl true
+  def handle_info(%{event: "media_frame"}, socket) do
+    {:noreply, socket}
+  end
+
+  # Ignore device_connected/disconnected events - we broadcast these, don't need to receive them
+  @impl true
+  def handle_info(%{event: "device_connected"}, socket) do
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_info(%{event: "device_disconnected"}, socket) do
     {:noreply, socket}
   end
 

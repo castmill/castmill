@@ -233,15 +233,20 @@ defmodule Castmill.Devices.RcSessions do
 
   This is called by the timeout checker process.
   Timeout is based on last_activity_at + default_timeout_seconds.
+  Also cleans up sessions where last_activity_at is nil but inserted_at is older than timeout.
   """
   def check_and_close_timed_out_sessions(timeout_seconds \\ @default_timeout_seconds) do
     now = DateTime.utc_now()
     timeout_threshold = DateTime.add(now, -timeout_seconds, :second)
 
+    # Find sessions timed out by last_activity_at OR inserted_at (for sessions that never had activity)
     timed_out_sessions =
       RcSession
       |> where([s], s.state in ^RcSession.active_states())
-      |> where([s], not is_nil(s.last_activity_at) and s.last_activity_at < ^timeout_threshold)
+      |> where([s],
+        (not is_nil(s.last_activity_at) and s.last_activity_at < ^timeout_threshold) or
+        (is_nil(s.last_activity_at) and s.inserted_at < ^timeout_threshold)
+      )
       |> Repo.all()
 
     Enum.each(timed_out_sessions, fn session ->

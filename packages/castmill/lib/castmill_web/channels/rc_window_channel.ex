@@ -103,12 +103,9 @@ defmodule CastmillWeb.RcWindowChannel do
     # Forward input events (mouse, keyboard) to device via relay
     # Input events are sent directly by the dashboard for real-time control
     session_id = socket.assigns.session_id
-    device_id = socket.assigns.device_id
 
-    # Wrap as control_event and forward to device
-    control_payload = %{"event_type" => "input", "data" => payload}
-
-    case RcRelay.enqueue_control_event(session_id, control_payload) do
+    # Forward input payload directly - it already has "type" field
+    case RcRelay.enqueue_control_event(session_id, payload) do
       :ok ->
         {:noreply, socket}
 
@@ -220,6 +217,13 @@ defmodule CastmillWeb.RcWindowChannel do
   @impl true
   def handle_info(%{event: "media_stream_disconnected", device_id: device_id}, socket) do
     push(socket, "media_stream_disconnected", %{device_id: device_id})
+    {:noreply, socket}
+  end
+
+  # Ignore control_events - they are meant for the device channel, not the RC window
+  # This happens because both device and RC window subscribe to the same session PubSub topic
+  @impl true
+  def handle_info(%{event: "control_event", source: :relay}, socket) do
     {:noreply, socket}
   end
 
