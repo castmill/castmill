@@ -11,4 +11,5 @@ export interface Device {
   inserted_at: Date;
   updated_at: Date;
   log_level: "info" | "warning" | "error" | "debug" | "critical" | "trace";
+  rc_last_heartbeat?: Date | string | null;
 }

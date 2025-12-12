@@ -554,6 +554,13 @@
       "sessionStarted": "リモートコントロールセッションが開始されました",
       "sessionStartError": "リモートコントロールセッションの開始に失敗しました：{{error}}",
       "deviceOfflineError": "セッションを開始できません - デバイスがオフラインです",
+      "never": "なし",
+      "rcAppStatus": "RCアプリ状態",
+      "rcAppAvailable": "利用可能",
+      "rcAppUnavailable": "利用不可",
+      "lastRcHeartbeat": "最終RCハートビート",
+      "playerStatus": "プレイヤー状態",
+      "rcAppNotAvailableError": "セッションを開始できません - デバイスでRCアプリが利用できません",
       "window": {
         "connecting": "接続中",
         "connected": "接続済み",
