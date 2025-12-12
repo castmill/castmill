@@ -103,6 +103,9 @@ class MainActivity : AppCompatActivity() {
                 
                 Log.i(TAG, "MediaProjection permission granted")
                 updatePermissionStates()
+                
+                // Send the MediaProjection permission to the running service
+                sendMediaProjectionToService(result.resultCode, result.data!!)
             } else {
                 Log.w(TAG, "MediaProjection permission denied: resultCode=${result.resultCode}")
                 // User denied permission - inform them why it's needed
@@ -324,6 +327,25 @@ class MainActivity : AppCompatActivity() {
     private fun startStandbyServiceIfPossible() {
         Log.i(TAG, "Starting RC service in standby mode (using device hardware_id)")
         startRemoteControlServiceStandby()
+    }
+
+    /**
+     * Send MediaProjection permission to the running service.
+     * This allows the service to start screen capture when a session is started.
+     */
+    private fun sendMediaProjectionToService(resultCode: Int, data: Intent) {
+        Log.i(TAG, "Sending MediaProjection permission to service")
+        val intent = Intent(this, RemoteControlService::class.java).apply {
+            action = RemoteControlService.ACTION_UPDATE_MEDIA_PROJECTION
+            putExtra(RemoteControlService.EXTRA_MEDIA_PROJECTION_RESULT_CODE, resultCode)
+            putExtra(RemoteControlService.EXTRA_MEDIA_PROJECTION_DATA, data)
+        }
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent)
+        } else {
+            startService(intent)
+        }
     }
 
     /**

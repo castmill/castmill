@@ -65,10 +65,22 @@ defmodule CastmillWeb.RcWindowChannel do
                 # Update activity timestamp
                 RcSessions.update_activity(session_id)
 
+                # Notify the device to start the RC session
+                # The device connects to device_rc:<hardware_id>, NOT device_rc:<uuid>
+                # So we must broadcast using the hardware_id from the device record
+                device_id = current_session.device_id
+                hardware_id = device.hardware_id
+                Logger.info("Sending start_session to device: hardware_id=#{hardware_id}, device_id=#{device_id}, session: #{session_id}")
+                CastmillWeb.Endpoint.broadcast(
+                  "device_rc:#{hardware_id}",
+                  "start_session",
+                  %{session_id: session_id}
+                )
+
                 socket =
                   socket
                   |> assign(:session_id, session_id)
-                  |> assign(:device_id, current_session.device_id)
+                  |> assign(:device_id, device_id)
 
                 {:ok, socket}
               else
@@ -83,6 +95,27 @@ defmodule CastmillWeb.RcWindowChannel do
             end
           end
       end
+    end
+  end
+
+  @impl true
+  def handle_in("input", payload, socket) do
+    # Forward input events (mouse, keyboard) to device via relay
+    # Input events are sent directly by the dashboard for real-time control
+    session_id = socket.assigns.session_id
+    device_id = socket.assigns.device_id
+
+    # Wrap as control_event and forward to device
+    control_payload = %{"event_type" => "input", "data" => payload}
+
+    case RcRelay.enqueue_control_event(session_id, control_payload) do
+      :ok ->
+        {:noreply, socket}
+
+      {:error, _reason} ->
+        # Don't reply with error for input events - just drop them if queue full
+        # This prevents flooding the dashboard with errors for high-frequency events
+        {:noreply, socket}
     end
   end
 

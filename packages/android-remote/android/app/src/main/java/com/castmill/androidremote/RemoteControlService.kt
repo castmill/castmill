@@ -32,6 +32,9 @@ class RemoteControlService : LifecycleService() {
         private const val CHANNEL_ID = "castmill_remote_control"
         private const val CHANNEL_NAME = "Castmill Remote Control"
         
+        // Intent actions
+        const val ACTION_UPDATE_MEDIA_PROJECTION = "com.castmill.androidremote.UPDATE_MEDIA_PROJECTION"
+        
         // Intent extras
         const val EXTRA_SESSION_ID = "session_id"
         const val EXTRA_DEVICE_TOKEN = "device_token"
@@ -72,6 +75,27 @@ class RemoteControlService : LifecycleService() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
+        
+        // Check if this is an action to update MediaProjection permission
+        if (intent?.action == ACTION_UPDATE_MEDIA_PROJECTION) {
+            val resultCode = intent.getIntExtra(EXTRA_MEDIA_PROJECTION_RESULT_CODE, -1)
+            val projectionData = intent.getParcelableExtra<Intent>(EXTRA_MEDIA_PROJECTION_DATA)
+            
+            if (resultCode != -1 && projectionData != null) {
+                Log.i(TAG, "Received MediaProjection permission update")
+                mediaProjectionResultCode = resultCode
+                mediaProjectionData = projectionData
+                updateNotification("Screen capture ready - waiting for session")
+                
+                // If we have a pending session, start capture now
+                if (pendingSessionId != null) {
+                    Log.i(TAG, "Starting delayed capture for pending session: $pendingSessionId")
+                    startMediaCapture(resultCode, projectionData, pendingSessionId!!)
+                    pendingSessionId = null
+                }
+            }
+            return START_STICKY
+        }
         
         // Get session ID and device token from intent
         val sid = intent?.getStringExtra(EXTRA_SESSION_ID)
