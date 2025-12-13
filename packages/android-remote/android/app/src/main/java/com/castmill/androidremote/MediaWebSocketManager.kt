@@ -8,10 +8,8 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import okhttp3.OkHttpClient
@@ -19,7 +17,6 @@ import okhttp3.Request
 import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
-import okio.ByteString.Companion.toByteString
 import java.nio.ByteBuffer
 import java.util.concurrent.TimeUnit
 
@@ -70,7 +67,8 @@ class MediaWebSocketManager(
     private var isJoined = false
 
     /**
-     * Connect to the media WebSocket
+     * Connect to the media WebSocket.
+     * The device_media channel is on the RcSocket at /ws endpoint.
      */
     fun connect() {
         if (isConnecting || webSocket != null) {
@@ -81,7 +79,8 @@ class MediaWebSocketManager(
         isConnecting = true
 
         val wsUrl = baseUrl.replace("http://", "ws://").replace("https://", "wss://")
-        val url = "$wsUrl/socket/websocket"
+        // Use /ws/websocket - device_media channel is on RcSocket, not DeviceSocket
+        val url = "$wsUrl/ws/websocket"
 
         Log.i(TAG, "Connecting to Media WebSocket: $url for session: $sessionId")
 
@@ -143,7 +142,8 @@ class MediaWebSocketManager(
     }
 
     /**
-     * Send a video frame as binary WebSocket message
+     * Send a video frame as a Phoenix channel event.
+     * Phoenix channels require JSON messages, so we Base64 encode the binary frame data.
      */
     fun sendVideoFrame(buffer: ByteBuffer, isKeyFrame: Boolean, codecType: String) {
         if (!isJoined) {
@@ -152,47 +152,28 @@ class MediaWebSocketManager(
         }
 
         try {
-            // Create metadata header (JSON) + binary frame
-            // Format: [metadata_length (4 bytes)][metadata JSON][NAL unit data]
-            val metadata = buildJsonObject {
-                put("type", "video_frame")
-                put("codec", codecType)
-                put("is_key_frame", isKeyFrame)
-                put("timestamp", System.currentTimeMillis())
-                put("size", buffer.remaining())
-            }
-            
-            val metadataBytes = json.encodeToString(JsonObject.serializer(), metadata).toByteArray()
-            val metadataLength = metadataBytes.size
-            
-            // Create combined buffer with metadata length prefix
-            val totalSize = 4 + metadataLength + buffer.remaining()
-            val combinedBuffer = ByteBuffer.allocate(totalSize)
-            
-            // Write metadata length (4 bytes, big-endian)
-            combinedBuffer.putInt(metadataLength)
-            
-            // Write metadata
-            combinedBuffer.put(metadataBytes)
-            
-            // Write frame data - use duplicate to avoid mutating input buffer
+            // Extract frame data as byte array
             val bufferCopy = buffer.duplicate()
             bufferCopy.rewind()
-            combinedBuffer.put(bufferCopy)
+            val frameData = ByteArray(bufferCopy.remaining())
+            bufferCopy.get(frameData)
             
-            // Send as binary WebSocket message
-            combinedBuffer.rewind()
-            val byteArray = ByteArray(combinedBuffer.remaining())
-            combinedBuffer.get(byteArray)
+            // Base64 encode the frame data for JSON transport
+            val base64Data = android.util.Base64.encodeToString(frameData, android.util.Base64.NO_WRAP)
             
-            // Use local reference to avoid race condition
-            val ws = webSocket
-            if (ws == null) {
-                Log.w(TAG, "WebSocket not connected, dropping video frame")
-                return
+            // Create payload for Phoenix channel event
+            // Use "frame_type" with "idr" or "p" as expected by backend schema
+            val frameType = if (isKeyFrame) "idr" else "p"
+            val payload = buildJsonObject {
+                put("data", base64Data)
+                put("frame_type", frameType)
+                put("codec", codecType)
+                put("timestamp", System.currentTimeMillis())
+                put("size", frameData.size)
             }
-            // Use extension function for ByteString conversion
-            ws.send(byteArray.toByteString(0, byteArray.size))
+            
+            // Send as a Phoenix channel event
+            sendMessage("media_frame", payload)
         } catch (e: Exception) {
             Log.e(TAG, "Error sending video frame", e)
         }
@@ -220,17 +201,17 @@ class MediaWebSocketManager(
         val topic = "device_media:$deviceId:$sessionId"
         val ref = (++messageRef).toString()
         
-        // Phoenix protocol uses array format: [join_ref, ref, topic, event, payload]
-        val message = buildJsonArray {
-            add(JsonPrimitive(joinRef ?: ""))
-            add(JsonPrimitive(ref))
-            add(JsonPrimitive(topic))
-            add(JsonPrimitive(event))
-            add(payload)
+        // Phoenix V1 JSON protocol uses object format: {topic, event, payload, ref, join_ref}
+        val message = buildJsonObject {
+            put("topic", topic)
+            put("event", event)
+            put("payload", payload)
+            put("ref", ref)
+            joinRef?.let { put("join_ref", it) }
         }
 
         try {
-            val jsonString = json.encodeToString(JsonArray.serializer(), message)
+            val jsonString = json.encodeToString(JsonObject.serializer(), message)
             Log.d(TAG, "Sending message: $jsonString")
             webSocket?.send(jsonString)
         } catch (e: Exception) {
@@ -303,38 +284,36 @@ class MediaWebSocketManager(
             Log.d(TAG, "Received message: $text")
 
             try {
-                // Phoenix protocol: [join_ref, ref, topic, event, payload]
-                val array = json.decodeFromString<JsonArray>(text)
+                // Phoenix V1 JSON protocol: {topic, event, payload, ref, join_ref}
+                val message = json.decodeFromString<JsonObject>(text)
                 
-                if (array.size >= 5) {
-                    val event = array[3].toString().trim('"')
-                    val payload = array[4]
+                val event = message["event"]?.toString()?.trim('"') ?: return
+                val payload = message["payload"]
 
-                    when (event) {
-                        "phx_reply" -> {
-                            Log.d(TAG, "Received reply: $payload")
-                            val payloadObj = payload as? JsonObject
-                            val status = payloadObj?.get("status")?.toString()?.trim('"')
-                            
-                            if (status == "ok") {
-                                Log.i(TAG, "Successfully joined media channel")
-                                isJoined = true
-                                diagnosticsManager?.recordSuccessfulReconnect()
-                            } else {
-                                Log.e(TAG, "Failed to join media channel: $payload")
-                                isJoined = false
-                                // Authentication failed - disconnect and don't retry automatically
-                                shouldReconnect = false
-                                disconnect()
-                            }
-                        }
-                        "session_stopped" -> {
-                            Log.i(TAG, "Session stopped by backend")
+                when (event) {
+                    "phx_reply" -> {
+                        Log.d(TAG, "Received reply: $payload")
+                        val payloadObj = payload as? JsonObject
+                        val status = payloadObj?.get("status")?.toString()?.trim('"')
+                        
+                        if (status == "ok") {
+                            Log.i(TAG, "Successfully joined media channel")
+                            isJoined = true
+                            diagnosticsManager?.recordSuccessfulReconnect()
+                        } else {
+                            Log.e(TAG, "Failed to join media channel: $payload")
+                            isJoined = false
+                            // Authentication failed - disconnect and don't retry automatically
+                            shouldReconnect = false
                             disconnect()
                         }
-                        else -> {
-                            Log.d(TAG, "Unhandled event: $event")
-                        }
+                    }
+                    "session_stopped" -> {
+                        Log.i(TAG, "Session stopped by backend")
+                        disconnect()
+                    }
+                    else -> {
+                        Log.d(TAG, "Unhandled event: $event")
                     }
                 }
             } catch (e: Exception) {

@@ -1,29 +1,29 @@
 defmodule Castmill.Devices.RcSession do
   @moduledoc """
   Schema for remote control sessions.
-  
+
   An RC session represents an active remote control connection from a dashboard user
   to a device. It manages the WebSocket connections between the device, the media relay,
   and the RC window in the dashboard.
-  
+
   ## Session States
-  
+
   - `created` - Session initialized but not yet started
   - `starting` - Device or RC window is connecting
   - `streaming` - Active session with both connections established
   - `stopping` - Session is being torn down
   - `closed` - Session fully terminated
-  
+
   ## State Transitions
-  
+
   - `created` → `starting` - When first connection (device or window) joins
   - `starting` → `streaming` - When both device and window are connected
   - `streaming` → `stopping` - When stop is requested
   - `stopping` → `closed` - When cleanup is complete
   - Any state → `closed` - On timeout or error
-  
+
   ## Fields
-  
+
   - `status` - **DEPRECATED** Legacy field kept for backward compatibility during migration.
               Will be removed in a future version. Use `state` field instead.
   """
@@ -40,10 +40,10 @@ defmodule Castmill.Devices.RcSession do
   schema "rc_sessions" do
     field :device_id, :binary_id
     field :user_id, :binary_id
-    
+
     # Legacy field - keep for backward compatibility during migration
     field :status, :string
-    
+
     # New state machine fields
     field :state, :string, default: "created"
     field :started_at, :utc_datetime
@@ -71,7 +71,7 @@ defmodule Castmill.Devices.RcSession do
 
   @doc """
   Validates if a state transition is allowed.
-  
+
   ## Valid Transitions
   - created → starting
   - starting → streaming
@@ -106,7 +106,7 @@ defmodule Castmill.Devices.RcSession do
   """
   def state_transition_changeset(rc_session, new_state, attrs \\ %{}) do
     attrs = Map.put(attrs, :state, new_state)
-    
+
     rc_session
     |> cast(attrs, [:state, :started_at, :stopped_at, :timeout_at, :last_activity_at])
     |> validate_required([:state])

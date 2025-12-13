@@ -45,6 +45,16 @@ import javax.net.ssl.X509TrustManager
  * - Standby mode: Only requires deviceId (hardware_id), sends heartbeats
  * - Session mode: Requires deviceId, deviceToken, and sessionId for full RC
  */
+
+/**
+ * Data class containing start_session event data
+ */
+data class StartSessionData(
+    val sessionId: String,
+    val sessionToken: String?,
+    val deviceId: String?
+)
+
 class WebSocketManager(
     private val baseUrl: String,
     private val deviceId: String,
@@ -52,7 +62,7 @@ class WebSocketManager(
     private val coroutineScope: CoroutineScope,
     private val diagnosticsManager: DiagnosticsManager? = null,
     private val certificatePins: Map<String, List<String>>? = null, // hostname -> list of SHA-256 pins
-    private val onStartSession: ((String) -> Unit)? = null // Callback when start_session is received with session_id
+    private val onStartSession: ((StartSessionData) -> Unit)? = null // Callback when start_session is received
 ) {
     companion object {
         private const val TAG = "WebSocketManager"
@@ -419,10 +429,19 @@ class WebSocketManager(
                 return
             }
 
-            Log.i(TAG, "Handling start_session for session: $sid")
+            // Extract session token and device ID from payload (sent by server for authentication)
+            val sessionToken = payload["session_token"]?.toString()?.trim('"')
+            val deviceIdFromPayload = payload["device_id"]?.toString()?.trim('"')
+
+            Log.i(TAG, "Handling start_session for session: $sid, hasToken=${sessionToken != null}, deviceId=$deviceIdFromPayload")
             
             // Notify the service to initialize MediaProjection and start encoding
-            onStartSession?.invoke(sid)
+            val startSessionData = StartSessionData(
+                sessionId = sid,
+                sessionToken = sessionToken,
+                deviceId = deviceIdFromPayload
+            )
+            onStartSession?.invoke(startSessionData)
         } catch (e: Exception) {
             Log.e(TAG, "Error handling start_session event", e)
         }

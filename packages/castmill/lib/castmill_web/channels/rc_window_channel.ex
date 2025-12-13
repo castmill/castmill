@@ -70,11 +70,19 @@ defmodule CastmillWeb.RcWindowChannel do
                 # So we must broadcast using the hardware_id from the device record
                 device_id = current_session.device_id
                 hardware_id = device.hardware_id
+
+                # Generate a session token for media WebSocket authentication
+                # This allows the RC app (which is in standby mode without device token) to authenticate
+                session_token = Phoenix.Token.sign(CastmillWeb.Endpoint, "rc_session", %{
+                  session_id: session_id,
+                  device_id: device_id
+                })
+
                 Logger.info("Sending start_session to device: hardware_id=#{hardware_id}, device_id=#{device_id}, session: #{session_id}")
                 CastmillWeb.Endpoint.broadcast(
                   "device_rc:#{hardware_id}",
                   "start_session",
-                  %{session_id: session_id}
+                  %{session_id: session_id, session_token: session_token, device_id: device_id}
                 )
 
                 socket =

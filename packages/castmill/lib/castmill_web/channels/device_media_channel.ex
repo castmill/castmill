@@ -7,6 +7,10 @@ defmodule CastmillWeb.DeviceMediaChannel do
   with backpressure management to the RC session subscribers.
 
   Topics: "device_media:<device_id>:<session_id>"
+
+  Authentication:
+  - Can use device token (traditional method)
+  - Can use session token (for RC app in standby mode, generated at session start)
   """
   use CastmillWeb, :channel
 
@@ -14,6 +18,8 @@ defmodule CastmillWeb.DeviceMediaChannel do
   alias Castmill.Devices.RcSessions
   alias Castmill.Devices.RcRelay
   alias Castmill.Devices.RcMessageSchemas
+
+  require Logger
 
   @impl true
   def join(
@@ -24,38 +30,80 @@ defmodule CastmillWeb.DeviceMediaChannel do
     # Parse device_id and session_id from topic
     [device_id, session_id] = String.split(device_session, ":", parts: 2)
 
-    # Verify the device token
-    case Devices.verify_device_token(device_id, token) do
+    # Try session token first (for RC app in standby mode), then fall back to device token
+    case verify_session_token(token, session_id, device_id) do
       {:ok, device} ->
-        # Verify the session exists and is active
-        case RcSessions.get_session(session_id) do
-          nil ->
-            {:error, %{reason: "Session not found"}}
+        setup_media_channel(socket, device, session_id)
 
-          session ->
-            if session.device_id == device.id and session.status == "active" do
-              socket =
-                socket
-                |> assign(:device_id, device_id)
-                |> assign(:device, device)
-                |> assign(:session_id, session_id)
+      {:error, :invalid_session_token} ->
+        # Fall back to device token verification
+        case Devices.verify_device_token(device_id, token) do
+          {:ok, device} ->
+            setup_media_channel(socket, device, session_id)
 
-              # Notify RC window that media stream is ready
-              Phoenix.PubSub.broadcast(
-                Castmill.PubSub,
-                "rc_session:#{session_id}",
-                %{event: "media_stream_ready", device_id: device_id}
-              )
+          {:error, reason} ->
+            {:error, %{reason: reason}}
+        end
+    end
+  end
 
-              {:ok, socket}
-            else
-              {:error, %{reason: "Invalid session"}}
-            end
+  # Verify session token (Phoenix.Token signed at session start)
+  defp verify_session_token(token, session_id, device_id) do
+    # Max age: 1 day (session should be closed before this)
+    max_age = 86400
+
+    case Phoenix.Token.verify(CastmillWeb.Endpoint, "rc_session", token, max_age: max_age) do
+      {:ok, %{session_id: ^session_id, device_id: ^device_id}} ->
+        # Token is valid and matches session/device
+        case Devices.get_device(device_id) do
+          nil -> {:error, :invalid_session_token}
+          device -> {:ok, device}
         end
 
-      {:error, reason} ->
-        {:error, %{reason: reason}}
+      {:ok, _claims} ->
+        # Token is valid but session_id or device_id doesn't match
+        Logger.warning("Session token mismatch: token claims don't match session/device")
+        {:error, :invalid_session_token}
+
+      {:error, _reason} ->
+        {:error, :invalid_session_token}
     end
+  end
+
+  defp setup_media_channel(socket, device, session_id) do
+    # Verify the session exists and is active
+    case RcSessions.get_session(session_id) do
+      nil ->
+        {:error, %{reason: "Session not found"}}
+
+      session ->
+        if session.device_id == device.id and session.status == "active" do
+          socket =
+            socket
+            |> assign(:device_id, device.id)
+            |> assign(:device, device)
+            |> assign(:session_id, session_id)
+
+          Logger.info("Media channel joined: device_id=#{device.id}, session_id=#{session_id}")
+
+          # Notify RC window that media stream is ready
+          Phoenix.PubSub.broadcast(
+            Castmill.PubSub,
+            "rc_session:#{session_id}",
+            %{event: "media_stream_ready", device_id: device.id}
+          )
+
+          {:ok, socket}
+        else
+          {:error, %{reason: "Invalid session"}}
+        end
+    end
+  end
+
+  @impl true
+  def handle_in("phx_heartbeat", _payload, socket) do
+    # Respond to Phoenix heartbeats to keep the connection alive
+    {:reply, :ok, socket}
   end
 
   @impl true

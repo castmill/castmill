@@ -9,7 +9,9 @@ import android.app.Service
 import android.content.Intent
 import android.media.projection.MediaProjection
 import android.os.Build
+import android.os.Handler
 import android.os.IBinder
+import android.os.Looper
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.LifecycleService
@@ -56,6 +58,8 @@ class RemoteControlService : LifecycleService() {
     private var isConnected = false
     private var isCapturing = false
     private var pendingSessionId: String? = null // Track session waiting for MediaProjection
+    private var pendingSessionToken: String? = null // Session token from start_session (for media auth)
+    private var pendingDeviceId: String? = null // Device ID from start_session
     
     // Store MediaProjection permission data for later use
     // Note: Activity.RESULT_OK = -1, so we use a boolean flag instead of checking resultCode
@@ -190,6 +194,7 @@ class RemoteControlService : LifecycleService() {
      */
     private fun connectWebSocketStandby() {
         val backendUrl = getString(R.string.backend_url)
+        val mainHandler = Handler(Looper.getMainLooper())
         
         webSocketManager = WebSocketManager(
             baseUrl = backendUrl,
@@ -198,9 +203,12 @@ class RemoteControlService : LifecycleService() {
             coroutineScope = lifecycleScope,
             diagnosticsManager = diagnosticsManager,
             certificatePins = null,
-            onStartSession = { sid ->
+            onStartSession = { startSessionData ->
                 // Backend requested to start session - initiate media capture
-                handleStartSessionRequest(sid)
+                // Must run on main thread for MediaProjection APIs
+                mainHandler.post {
+                    handleStartSessionRequest(startSessionData)
+                }
             }
         )
         
@@ -246,16 +254,32 @@ class RemoteControlService : LifecycleService() {
      * Handle start_session event from backend
      * This requests MediaProjection permission and starts screen capture
      */
-    private fun handleStartSessionRequest(sessionId: String) {
-        Log.i(TAG, "Received start_session request for session: $sessionId")
+    private fun handleStartSessionRequest(startSessionData: StartSessionData) {
+        Log.i(TAG, "Received start_session request for session: ${startSessionData.sessionId}")
         
-        // Store the session ID
-        pendingSessionId = sessionId
+        // Check if we're already capturing or setting up for this session
+        // Need to check both sessionId (active session) and pendingSessionId (starting up)
+        val currentSession = sessionId ?: pendingSessionId
+        if ((isCapturing || pendingSessionId != null) && currentSession == startSessionData.sessionId) {
+            Log.w(TAG, "Already capturing/setting up for session ${startSessionData.sessionId}, ignoring duplicate start_session")
+            return
+        }
+        
+        // Stop any existing capture first
+        if (isCapturing) {
+            Log.i(TAG, "Stopping previous capture before starting new session")
+            stopScreenCapture()
+        }
+        
+        // Store the session data for use when MediaProjection is ready
+        pendingSessionId = startSessionData.sessionId
+        pendingSessionToken = startSessionData.sessionToken
+        pendingDeviceId = startSessionData.deviceId
         
         // Check if we already have MediaProjection permission
         if (hasMediaProjectionPermission && mediaProjectionData != null) {
             Log.i(TAG, "MediaProjection permission already granted, starting media capture")
-            startMediaCapture(mediaProjectionResultCode, mediaProjectionData!!, sessionId)
+            startMediaCapture(mediaProjectionResultCode, mediaProjectionData!!, startSessionData.sessionId)
         } else {
             // Permission not available - log and update notification
             Log.w(TAG, "MediaProjection permission not available (hasPermission=$hasMediaProjectionPermission, data=${mediaProjectionData != null}). User must grant permission via MainActivity.")
@@ -275,26 +299,31 @@ class RemoteControlService : LifecycleService() {
     private fun startMediaCapture(resultCode: Int, data: Intent, sessionId: String) {
         try {
             val backendUrl = getString(R.string.backend_url)
-            val deviceToken = getStoredDeviceToken()
             
-            if (deviceToken == null) {
-                Log.e(TAG, "No device token available for media WebSocket")
-                updateNotification("Error: Missing device token")
+            // Use session token from start_session event (preferred) or fall back to stored device token
+            val authToken = pendingSessionToken ?: getStoredDeviceToken()
+            
+            if (authToken == null) {
+                Log.e(TAG, "No auth token available for media WebSocket (sessionToken=${pendingSessionToken != null}, deviceToken=${getStoredDeviceToken() != null})")
+                updateNotification("Error: Missing authentication token")
                 return
             }
             
-            val devId = deviceId
+            // Use device ID from start_session event (preferred) or fall back to local device ID
+            val devId = pendingDeviceId ?: deviceId
             if (devId == null) {
                 Log.e(TAG, "No device ID available for media WebSocket")
                 updateNotification("Error: Missing device ID")
                 return
             }
             
+            Log.i(TAG, "Starting media capture with deviceId=$devId, sessionId=$sessionId, usingSessionToken=${pendingSessionToken != null}")
+            
             // Initialize media WebSocket first
             mediaWebSocketManager = MediaWebSocketManager(
                 baseUrl = backendUrl,
                 deviceId = devId,
-                deviceToken = deviceToken,
+                deviceToken = authToken,
                 sessionId = sessionId,
                 coroutineScope = lifecycleScope,
                 diagnosticsManager = diagnosticsManager,
@@ -355,6 +384,30 @@ class RemoteControlService : LifecycleService() {
             Log.e(TAG, "Error starting media capture", e)
             updateNotification("Error: ${e.message}")
         }
+    }
+
+    /**
+     * Stop any ongoing screen capture and media WebSocket
+     */
+    private fun stopScreenCapture() {
+        Log.i(TAG, "Stopping screen capture")
+        
+        try {
+            screenCaptureManager?.stop()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error stopping screen capture", e)
+        }
+        screenCaptureManager = null
+        
+        try {
+            mediaWebSocketManager?.disconnect()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error disconnecting media WebSocket", e)
+        }
+        mediaWebSocketManager = null
+        
+        isCapturing = false
+        sessionId = null
     }
 
     /**

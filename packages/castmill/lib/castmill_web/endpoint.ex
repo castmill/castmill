@@ -44,10 +44,13 @@ defmodule CastmillWeb.Endpoint do
   )
 
   # Socket used for remote control sessions (devices and dashboard RC windows)
+  # Media frames can be large (up to several hundred KB), so we increase the max_frame_size
   socket("/ws", CastmillWeb.RcSocket,
     websocket: [
       check_origin: false,
-      connect_info: [:peer_data, :trace_context_headers, :x_headers, :uri]
+      connect_info: [:peer_data, :trace_context_headers, :x_headers, :uri],
+      max_frame_size: 1_000_000,  # 1MB to accommodate video frames
+      timeout: 60_000  # 60 second timeout for media streaming
     ]
   )
 

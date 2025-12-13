@@ -407,19 +407,15 @@ class ScreenCaptureManager(
 
     /**
      * Get display metrics for the device.
+     * Uses WindowManager.defaultDisplay which works for both Activity and Service contexts.
      */
     private fun getDisplayMetrics(): DisplayMetrics {
         val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
         val metrics = DisplayMetrics()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            context.display?.getMetrics(metrics) ?: run {
-                @Suppress("DEPRECATION")
-                windowManager.defaultDisplay.getMetrics(metrics)
-            }
-        } else {
-            @Suppress("DEPRECATION")
-            windowManager.defaultDisplay.getMetrics(metrics)
-        }
+        // Always use defaultDisplay for compatibility with Service context
+        // context.display throws UnsupportedOperationException from Services
+        @Suppress("DEPRECATION")
+        windowManager.defaultDisplay.getMetrics(metrics)
         return metrics
     }
 }
