@@ -241,6 +241,8 @@ defmodule CastmillWeb.RcWindowChannel do
     session_id = socket.assigns.session_id
     device_id = socket.assigns.device_id
 
+    Logger.debug("RcWindowChannel received media_frame from relay for session #{session_id}")
+
     # Extract frame metadata for telemetry
     # Use Map.get to safely access payload data (payload is a map with string keys)
     frame_size = byte_size(Map.get(payload, "data", <<>>))
@@ -253,6 +255,7 @@ defmodule CastmillWeb.RcWindowChannel do
     # Emit telemetry for media frame
     RcTelemetry.media_frame_received(session_id, device_id, frame_size, frame_metadata)
 
+    Logger.debug("RcWindowChannel pushing media_frame to client")
     push(socket, "media_frame", payload)
     {:noreply, socket}
   end

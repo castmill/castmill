@@ -67,7 +67,9 @@ class ScreenCaptureManager(
     private var encoderThread: HandlerThread? = null
     private var encoderHandler: Handler? = null
     private var isCapturing = false
-    private var useH264 = true
+    // Use MJPEG by default since it can be displayed directly in browser without WebCodecs
+    // Set to true if H.264 WebCodecs decoder is implemented in dashboard
+    private var useH264 = false
     private var drainRunnable: Runnable? = null
     private val frameBuffer = FrameBuffer(
         maxCapacity = FRAME_BUFFER_CAPACITY,

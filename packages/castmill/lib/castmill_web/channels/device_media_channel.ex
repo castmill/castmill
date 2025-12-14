@@ -111,8 +111,11 @@ defmodule CastmillWeb.DeviceMediaChannel do
     # Forward media frames to RC window via relay with backpressure
     session_id = socket.assigns.session_id
 
+    Logger.debug("DeviceMediaChannel received media_frame for session #{session_id}, frame_type: #{Map.get(payload, "frame_type", "unknown")}")
+
     case RcRelay.enqueue_media_frame(session_id, payload) do
       :ok ->
+        Logger.debug("DeviceMediaChannel: frame enqueued successfully")
         {:reply, :ok, socket}
 
       {:ok, :dropped} ->

@@ -273,6 +273,7 @@ defmodule Castmill.Devices.RcRelay do
   end
 
   defp forward_media_frame(session_id, payload) do
+    Logger.debug("RcRelay forwarding media_frame for session #{session_id} via PubSub")
     Phoenix.PubSub.broadcast(
       Castmill.PubSub,
       "rc_session:#{session_id}",

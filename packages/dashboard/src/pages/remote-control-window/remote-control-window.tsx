@@ -15,7 +15,11 @@ import './remote-control-window.scss';
 type ConnectionState = 'connecting' | 'connected' | 'disconnected' | 'error';
 
 interface FramePayload {
-  data: string; // base64 encoded image
+  data: string; // base64 encoded frame data
+  codec?: string; // 'h264', 'mjpeg', etc.
+  frame_type?: string; // 'idr' (keyframe) or 'p'
+  timestamp?: number;
+  size?: number;
 }
 
 interface StatusPayload {
@@ -135,8 +139,15 @@ const RemoteControlWindow: Component = () => {
             setErrorMessage(t('remoteControl.window.connectionTimeout'));
           });
 
-        // Listen for video frames
-        rcChannel.on('frame', (payload: FramePayload) => {
+        // Listen for video frames (media_frame event from backend)
+        rcChannel.on('media_frame', (payload: FramePayload) => {
+          console.log('Received media_frame:', {
+            codec: payload.codec,
+            frame_type: payload.frame_type,
+            size: payload.size,
+            dataLength: payload.data?.length,
+          });
+
           const context = ctx();
           if (context && payload.data) {
             // Validate base64 data format
@@ -152,12 +163,62 @@ const RemoteControlWindow: Component = () => {
               return;
             }
 
-            // payload.data is expected to be a base64 encoded image
+            // Handle different codecs
+            const codec = payload.codec?.toLowerCase() || 'mjpeg';
+            
+            if (codec === 'mjpeg' || codec === 'jpeg') {
+              // MJPEG frames can be displayed directly as images
+              const img = new Image();
+              img.onload = () => {
+                const canvas = canvasRef();
+                if (canvas) {
+                  // Resize canvas to match image dimensions
+                  if (canvas.width !== img.width || canvas.height !== img.height) {
+                    canvas.width = img.width;
+                    canvas.height = img.height;
+                  }
+                  context.drawImage(img, 0, 0);
+                }
+              };
+              img.onerror = () => {
+                console.error('Failed to load frame image');
+              };
+              img.src = `data:image/jpeg;base64,${payload.data}`;
+            } else if (codec === 'h264' || codec === 'avc') {
+              // H.264 frames need decoding via WebCodecs API
+              // For now, log that we received the frame but can't display it
+              // TODO: Implement H.264 decoding using WebCodecs VideoDecoder
+              console.log('Received H.264 frame - WebCodecs decoder needed');
+              
+              // Show a placeholder message on canvas
+              const canvas = canvasRef();
+              if (canvas && canvas.width > 0 && canvas.height > 0) {
+                context.fillStyle = '#1a1a2e';
+                context.fillRect(0, 0, canvas.width, canvas.height);
+                context.fillStyle = '#ffffff';
+                context.font = '16px sans-serif';
+                context.textAlign = 'center';
+                context.fillText(
+                  `Receiving H.264 stream (${payload.size} bytes)`,
+                  canvas.width / 2,
+                  canvas.height / 2
+                );
+              }
+            } else {
+              console.warn(`Unknown codec: ${codec}`);
+            }
+          }
+        });
+
+        // Also listen for legacy 'frame' event for backward compatibility
+        rcChannel.on('frame', (payload: FramePayload) => {
+          console.log('Received legacy frame event');
+          const context = ctx();
+          if (context && payload.data) {
             const img = new Image();
             img.onload = () => {
               const canvas = canvasRef();
               if (canvas) {
-                // Resize canvas to match image dimensions
                 if (canvas.width !== img.width || canvas.height !== img.height) {
                   canvas.width = img.width;
                   canvas.height = img.height;
@@ -165,11 +226,37 @@ const RemoteControlWindow: Component = () => {
                 context.drawImage(img, 0, 0);
               }
             };
-            img.onerror = () => {
-              console.error('Failed to load frame image');
-            };
             img.src = `data:image/jpeg;base64,${payload.data}`;
           }
+        });
+
+        // Listen for media metadata (resolution, fps, etc.)
+        rcChannel.on('media_metadata', (payload: { width: number; height: number; fps?: number; codec?: string }) => {
+          console.log('Received media_metadata:', payload);
+          const canvas = canvasRef();
+          if (canvas && payload.width && payload.height) {
+            canvas.width = payload.width;
+            canvas.height = payload.height;
+            // Fill with dark background initially
+            const context = ctx();
+            if (context) {
+              context.fillStyle = '#1a1a2e';
+              context.fillRect(0, 0, canvas.width, canvas.height);
+              context.fillStyle = '#ffffff';
+              context.font = '16px sans-serif';
+              context.textAlign = 'center';
+              context.fillText(
+                `Waiting for video stream (${payload.width}x${payload.height})...`,
+                canvas.width / 2,
+                canvas.height / 2
+              );
+            }
+          }
+        });
+
+        // Listen for media stream ready notification
+        rcChannel.on('media_stream_ready', (payload: { device_id: string }) => {
+          console.log('Media stream ready:', payload);
         });
 
         // Listen for connection status updates
