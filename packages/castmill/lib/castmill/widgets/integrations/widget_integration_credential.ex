@@ -1,7 +1,7 @@
 defmodule Castmill.Widgets.Integrations.WidgetIntegrationCredential do
   @moduledoc """
   Schema for widget integration credentials.
-  
+
   Stores encrypted authentication credentials for widget integrations.
   Credentials can be scoped to either an organization or a specific widget instance.
   """
@@ -30,7 +30,7 @@ defmodule Castmill.Widgets.Integrations.WidgetIntegrationCredential do
 
   schema "widget_integration_credentials" do
     belongs_to(:widget_integration, WidgetIntegration)
-    belongs_to(:organization, Organization)
+    belongs_to(:organization, Organization, type: :binary_id)
     belongs_to(:widget_config, WidgetConfig, type: :binary_id)
 
     # Encrypted credentials (binary data)

@@ -119,6 +119,21 @@ defmodule CastmillWeb.NotificationsChannel do
     {:noreply, socket}
   end
 
+  # Handle widget config data updates (for real-time widget preview updates)
+  # This is triggered when integration data (e.g., Spotify Now Playing) is updated
+  # Security: Users only receive this if they're members of the organization
+  # (they subscribed to organization:#{org_id} on join)
+  @impl true
+  def handle_info({:widget_config_data_update, payload}, socket) do
+    require Logger
+
+    Logger.debug("NotificationsChannel received widget_config_data_update: widget_id=#{payload.widget_id}")
+
+    push(socket, "widget_config_data_update", payload)
+
+    {:noreply, socket}
+  end
+
   # Catch-all for debugging - log any unhandled messages
   @impl true
   def handle_info(msg, socket) do

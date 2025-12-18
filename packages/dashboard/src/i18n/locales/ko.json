@@ -82,9 +82,13 @@
     "backToLogin": "로그인으로 돌아가기",
     "selectImage": "이미지 선택",
     "selectMedia": "미디어 선택",
+    "selectPlaylist": "재생목록 선택",
+    "playlist": "재생목록",
+    "addPlaylist": "재생목록 추가",
     "apply": "적용",
     "selectVideo": "비디오 선택",
-    "offline": "오프라인"
+    "offline": "오프라인",
+    "widget": "Widget"
   },
   "topbar": {
     "help": "도움말",
@@ -470,7 +474,11 @@
       "aspectRatioMax": "값은 100 이하여야 합니다",
       "aspectRatioExtreme": "화면 비율이 너무 극단적입니다 (최대 비율 10:1)",
       "updateAspectRatio": "화면 비율 업데이트 중 오류 발생: {{error}}"
-    }
+    },
+    "credentialsRequired": "자격 증명 필요",
+    "credentialsRequiredDescription": "Widget \"{{widget}}\"을(를) 재생 목록에 추가하려면 먼저 자격 증명을 구성해야 합니다.",
+    "missingIntegrations": "누락된 통합",
+    "goToIntegrations": "통합으로 이동"
   },
   "widgets": {
     "title": "Widgets",
@@ -481,7 +489,54 @@
     "viewDetails": "세부정보 보기",
     "template": "템플릿",
     "optionsSchema": "옵션 스키마",
-    "dataSchema": "데이터 스키마"
+    "dataSchema": "데이터 스키마",
+    "spotify": {
+      "title": "Spotify 연결",
+      "connectButton": "Spotify에 연결",
+      "disconnectButton": "연결 해제",
+      "connectDescription": "Spotify 계정을 연결하여 디지털 사이니지에 현재 재생 중인 트랙을 표시합니다.",
+      "connected": "연결됨",
+      "connectedSince": "{{date}}부터 연결됨",
+      "connectionSuccess": "Spotify에 성공적으로 연결되었습니다!",
+      "connectionFailed": "Spotify 연결에 실패했습니다. 다시 시도해 주세요.",
+      "disconnectNotSupported": "연결 해제는 아직 지원되지 않습니다. Spotify 계정 설정에서 액세스를 취소해 주세요."
+    },
+    "integrations": {
+      "title": "통합",
+      "noIntegrations": "이 Widget에 구성된 통합이 없습니다.",
+      "configure": "구성",
+      "configured": "구성됨",
+      "notConfigured": "구성되지 않음",
+      "requiresAuth": "인증 필요",
+      "authType": "인증 유형",
+      "oauth2": "OAuth 2.0",
+      "apiKey": "API 키",
+      "credentials": "자격 증명",
+      "saveCredentials": "자격 증명 저장",
+      "testConnection": "연결 테스트",
+      "testSuccess": "연결 테스트 성공!",
+      "testFailed": "연결 테스트 실패: {{error}}",
+      "credentialsSaved": "자격 증명이 성공적으로 저장되었습니다!",
+      "credentialsSaveFailed": "자격 증명 저장 실패: {{error}}",
+      "connectWith": "{{provider}}로 연결",
+      "connectedTo": "{{provider}}에 연결됨",
+      "disconnect": "연결 해제",
+      "reconnect": "다시 연결",
+      "lastValidated": "마지막 검증: {{date}}",
+      "scopeOrganization": "조직 전체",
+      "scopeWidget": "Widget 전용",
+      "pullMode": "데이터 가져오기",
+      "pushMode": "Webhook",
+      "pullInterval": "{{seconds}}초마다 업데이트",
+      "fieldRequired": "{{field}}은(는) 필수입니다",
+      "connectionStatus": "연결 상태",
+      "valid": "유효",
+      "invalid": "유효하지 않음",
+      "pending": "설정 대기 중",
+      "enterClientCredentials": "아래에 {{provider}} API 자격 증명을 입력하세요:",
+      "afterSavingCredentials": "자격 증명을 저장한 후 아래를 클릭하여 {{provider}}로 인증하세요:",
+      "networkCredentialsConfigured": "네트워크 관리자가 이미 {{provider}} 자격 증명을 구성했습니다. 아래 버튼을 클릭하여 계정을 연결하기만 하면 됩니다."
+    }
   },
   "devices": {
     "setDeviceChannel": "기기 채널 설정",

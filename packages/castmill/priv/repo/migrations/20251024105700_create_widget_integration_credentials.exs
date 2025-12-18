@@ -9,7 +9,7 @@ defmodule Castmill.Repo.Migrations.CreateWidgetIntegrationCredentials do
         null: false
 
       # Organization-scoped credentials (nullable)
-      add :organization_id, references(:organizations, on_delete: :delete_all)
+      add :organization_id, references(:organizations, type: :uuid, on_delete: :delete_all)
 
       # Widget-scoped credentials (nullable)
       add :widget_config_id, references(:widgets_config, type: :uuid, on_delete: :delete_all)

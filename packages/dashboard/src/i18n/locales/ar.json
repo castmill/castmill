@@ -82,9 +82,13 @@
     "backToLogin": "العودة لتسجيل الدخول",
     "selectImage": "اختر صورة",
     "selectMedia": "اختر وسائط",
+    "selectPlaylist": "اختر قائمة التشغيل",
+    "playlist": "قائمة التشغيل",
+    "addPlaylist": "إضافة قائمة تشغيل",
     "apply": "تطبيق",
     "selectVideo": "اختر فيديو",
-    "offline": "غير متصل"
+    "offline": "غير متصل",
+    "widget": "Widget"
   },
   "topbar": {
     "help": "مساعدة",
@@ -470,7 +474,11 @@
       "aspectRatioMax": "يجب أن تكون القيمة 100 أو أقل",
       "aspectRatioExtreme": "نسبة العرض إلى الارتفاع متطرفة للغاية (الحد الأقصى 10:1)",
       "updateAspectRatio": "خطأ في تحديث نسبة العرض: {{error}}"
-    }
+    },
+    "credentialsRequired": "بيانات الاعتماد مطلوبة",
+    "credentialsRequiredDescription": "يتطلب Widget \"{{widget}}\" تكوين بيانات الاعتماد قبل إضافته إلى قائمة التشغيل.",
+    "missingIntegrations": "التكاملات المفقودة",
+    "goToIntegrations": "الذهاب إلى التكاملات"
   },
   "widgets": {
     "title": "Widgets",
@@ -481,7 +489,54 @@
     "viewDetails": "عرض التفاصيل",
     "template": "القالب",
     "optionsSchema": "مخطط الخيارات",
-    "dataSchema": "مخطط البيانات"
+    "dataSchema": "مخطط البيانات",
+    "spotify": {
+      "title": "اتصال Spotify",
+      "connectButton": "الاتصال بـ Spotify",
+      "disconnectButton": "قطع الاتصال",
+      "connectDescription": "اربط حساب Spotify الخاص بك لعرض المقطع الصوتي قيد التشغيل على اللافتات الرقمية.",
+      "connected": "متصل",
+      "connectedSince": "متصل منذ {{date}}",
+      "connectionSuccess": "تم الاتصال بـ Spotify بنجاح!",
+      "connectionFailed": "فشل الاتصال بـ Spotify. يرجى المحاولة مرة أخرى.",
+      "disconnectNotSupported": "قطع الاتصال غير مدعوم حاليًا. يرجى إلغاء الوصول من إعدادات حساب Spotify."
+    },
+    "integrations": {
+      "title": "التكاملات",
+      "noIntegrations": "هذا الـ Widget ليس لديه تكاملات مُعدّة.",
+      "configure": "تكوين",
+      "configured": "مُعدّ",
+      "notConfigured": "غير مُعدّ",
+      "requiresAuth": "يتطلب المصادقة",
+      "authType": "نوع المصادقة",
+      "oauth2": "OAuth 2.0",
+      "apiKey": "مفتاح API",
+      "credentials": "بيانات الاعتماد",
+      "saveCredentials": "حفظ بيانات الاعتماد",
+      "testConnection": "اختبار الاتصال",
+      "testSuccess": "نجح اختبار الاتصال!",
+      "testFailed": "فشل اختبار الاتصال: {{error}}",
+      "credentialsSaved": "تم حفظ بيانات الاعتماد بنجاح!",
+      "credentialsSaveFailed": "فشل حفظ بيانات الاعتماد: {{error}}",
+      "connectWith": "الاتصال بـ {{provider}}",
+      "connectedTo": "متصل بـ {{provider}}",
+      "disconnect": "قطع الاتصال",
+      "reconnect": "إعادة الاتصال",
+      "lastValidated": "آخر تحقق: {{date}}",
+      "scopeOrganization": "على مستوى المنظمة",
+      "scopeWidget": "خاص بالـ Widget",
+      "pullMode": "جلب البيانات",
+      "pushMode": "Webhook",
+      "pullInterval": "يتم التحديث كل {{seconds}} ثانية",
+      "fieldRequired": "{{field}} مطلوب",
+      "connectionStatus": "حالة الاتصال",
+      "valid": "صالح",
+      "invalid": "غير صالح",
+      "pending": "في انتظار الإعداد",
+      "enterClientCredentials": "أدخل بيانات اعتماد API الخاصة بـ {{provider}} أدناه:",
+      "afterSavingCredentials": "بعد حفظ بيانات الاعتماد الخاصة بك، انقر أدناه للتفويض مع {{provider}}:",
+      "networkCredentialsConfigured": "قام مسؤول الشبكة لديك بالفعل بتكوين بيانات اعتماد {{provider}}. ما عليك سوى النقر على الزر أدناه لربط حسابك."
+    }
   },
   "devices": {
     "setDeviceChannel": "تعيين قناة الجهاز",

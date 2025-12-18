@@ -82,9 +82,13 @@
     "backToLogin": "Retour à la connexion",
     "selectImage": "Sélectionner une image",
     "selectMedia": "Sélectionner un média",
+    "selectPlaylist": "Sélectionner une playlist",
+    "playlist": "Playlist",
+    "addPlaylist": "Ajouter une playlist",
     "offline": "Hors ligne",
     "apply": "Appliquer",
-    "selectVideo": "Sélectionner une vidéo"
+    "selectVideo": "Sélectionner une vidéo",
+    "widget": "Widget"
   },
   "topbar": {
     "help": "Aide",
@@ -482,7 +486,11 @@
       "aspectRatioMax": "La valeur doit être 100 ou moins",
       "aspectRatioExtreme": "Le ratio d'aspect est trop extrême (ratio max est 10:1)",
       "updateAspectRatio": "Erreur lors de la mise à jour du ratio d'aspect : {{error}}"
-    }
+    },
+    "credentialsRequired": "Identifiants Requis",
+    "credentialsRequiredDescription": "Le widget \"{{widget}}\" nécessite la configuration d'identifiants avant de pouvoir être ajouté à une liste de lecture.",
+    "missingIntegrations": "Intégrations manquantes",
+    "goToIntegrations": "Aller aux Intégrations"
   },
   "widgets": {
     "title": "Widgets",
@@ -493,7 +501,54 @@
     "viewDetails": "Voir les détails",
     "template": "Modèle",
     "optionsSchema": "Schéma d'options",
-    "dataSchema": "Schéma de données"
+    "dataSchema": "Schéma de données",
+    "spotify": {
+      "title": "Connexion Spotify",
+      "connectButton": "Se connecter à Spotify",
+      "disconnectButton": "Déconnecter",
+      "connectDescription": "Connectez votre compte Spotify pour afficher le morceau en cours de lecture sur votre affichage numérique.",
+      "connected": "Connecté",
+      "connectedSince": "Connecté depuis le {{date}}",
+      "connectionSuccess": "Connecté à Spotify avec succès !",
+      "connectionFailed": "Échec de la connexion à Spotify. Veuillez réessayer.",
+      "disconnectNotSupported": "La déconnexion n'est pas encore prise en charge. Veuillez révoquer l'accès depuis les paramètres de votre compte Spotify."
+    },
+    "integrations": {
+      "title": "Intégrations",
+      "noIntegrations": "Ce widget n'a pas d'intégrations configurées.",
+      "configure": "Configurer",
+      "configured": "Configuré",
+      "notConfigured": "Non configuré",
+      "requiresAuth": "Authentification requise",
+      "authType": "Type d'authentification",
+      "oauth2": "OAuth 2.0",
+      "apiKey": "Clé API",
+      "credentials": "Identifiants",
+      "saveCredentials": "Enregistrer les identifiants",
+      "testConnection": "Tester la connexion",
+      "testSuccess": "Test de connexion réussi !",
+      "testFailed": "Échec du test de connexion : {{error}}",
+      "credentialsSaved": "Identifiants enregistrés avec succès !",
+      "credentialsSaveFailed": "Échec de l'enregistrement des identifiants : {{error}}",
+      "connectWith": "Se connecter avec {{provider}}",
+      "connectedTo": "Connecté à {{provider}}",
+      "disconnect": "Déconnecter",
+      "reconnect": "Reconnecter",
+      "lastValidated": "Dernière validation : {{date}}",
+      "scopeOrganization": "Toute l'organisation",
+      "scopeWidget": "Spécifique au widget",
+      "pullMode": "Récupération de données",
+      "pushMode": "Webhook",
+      "pullInterval": "Mise à jour toutes les {{seconds}} secondes",
+      "fieldRequired": "{{field}} est requis",
+      "connectionStatus": "État de la connexion",
+      "valid": "Valide",
+      "invalid": "Invalide",
+      "pending": "Configuration en attente",
+      "enterClientCredentials": "Entrez vos identifiants API {{provider}} ci-dessous :",
+      "afterSavingCredentials": "Après avoir enregistré vos identifiants, cliquez ci-dessous pour autoriser avec {{provider}} :",
+      "networkCredentialsConfigured": "Votre administrateur réseau a déjà configuré les identifiants {{provider}}. Cliquez simplement sur le bouton ci-dessous pour connecter votre compte."
+    }
   },
   "devices": {
     "setDeviceChannel": "Définir le canal de l'appareil",

@@ -77,9 +77,13 @@
     "backToLogin": "Tillbaka till inloggning",
     "selectImage": "Välj en bild",
     "selectMedia": "Välj ett media",
+    "selectPlaylist": "Välj en spellista",
+    "playlist": "Spellista",
+    "addPlaylist": "Lägg till spellista",
     "apply": "Tillämpa",
     "selectVideo": "Välj en video",
-    "offline": "Offline"
+    "offline": "Offline",
+    "widget": "Widget"
   },
   "topbar": {
     "help": "Hjälp",
@@ -465,7 +469,11 @@
       "aspectRatioMax": "Värdet måste vara 100 eller mindre",
       "aspectRatioExtreme": "Bildformatet är för extremt (max förhållande är 10:1)",
       "updateAspectRatio": "Fel vid uppdatering av bildformat: {{error}}"
-    }
+    },
+    "credentialsRequired": "Inloggningsuppgifter Krävs",
+    "credentialsRequiredDescription": "Widgeten \"{{widget}}\" kräver att inloggningsuppgifter konfigureras innan den kan läggas till i en spellista.",
+    "missingIntegrations": "Saknade integrationer",
+    "goToIntegrations": "Gå till Integrationer"
   },
   "widgets": {
     "title": "Widgets",
@@ -476,7 +484,54 @@
     "viewDetails": "Visa detaljer",
     "template": "Mall",
     "optionsSchema": "Alternativschema",
-    "dataSchema": "Dataschema"
+    "dataSchema": "Dataschema",
+    "spotify": {
+      "title": "Spotify-anslutning",
+      "connectButton": "Anslut till Spotify",
+      "disconnectButton": "Koppla från",
+      "connectDescription": "Anslut ditt Spotify-konto för att visa det aktuella spåret på din digitala skyltning.",
+      "connected": "Ansluten",
+      "connectedSince": "Ansluten sedan {{date}}",
+      "connectionSuccess": "Ansluten till Spotify!",
+      "connectionFailed": "Det gick inte att ansluta till Spotify. Försök igen.",
+      "disconnectNotSupported": "Frånkoppling stöds inte ännu. Återkalla åtkomst från dina Spotify-kontoinställningar."
+    },
+    "integrations": {
+      "title": "Integrationer",
+      "noIntegrations": "Denna widget har inga konfigurerade integrationer.",
+      "configure": "Konfigurera",
+      "configured": "Konfigurerad",
+      "notConfigured": "Ej konfigurerad",
+      "requiresAuth": "Kräver autentisering",
+      "authType": "Autentiseringstyp",
+      "oauth2": "OAuth 2.0",
+      "apiKey": "API-nyckel",
+      "credentials": "Autentiseringsuppgifter",
+      "saveCredentials": "Spara autentiseringsuppgifter",
+      "testConnection": "Testa anslutning",
+      "testSuccess": "Anslutningstestet lyckades!",
+      "testFailed": "Anslutningstestet misslyckades: {{error}}",
+      "credentialsSaved": "Autentiseringsuppgifter sparade!",
+      "credentialsSaveFailed": "Kunde inte spara autentiseringsuppgifter: {{error}}",
+      "connectWith": "Anslut med {{provider}}",
+      "connectedTo": "Ansluten till {{provider}}",
+      "disconnect": "Koppla från",
+      "reconnect": "Återanslut",
+      "lastValidated": "Senast validerad: {{date}}",
+      "scopeOrganization": "Organisationsomfattande",
+      "scopeWidget": "Widget-specifik",
+      "pullMode": "Datahämtning",
+      "pushMode": "Webhook",
+      "pullInterval": "Uppdateras var {{seconds}} sekund",
+      "fieldRequired": "{{field}} krävs",
+      "connectionStatus": "Anslutningsstatus",
+      "valid": "Giltig",
+      "invalid": "Ogiltig",
+      "pending": "Väntar på konfiguration",
+      "enterClientCredentials": "Ange dina {{provider}} API-uppgifter nedan:",
+      "afterSavingCredentials": "Efter att du sparat dina uppgifter, klicka nedan för att auktorisera med {{provider}}:",
+      "networkCredentialsConfigured": "Din nätverksadministratör har redan konfigurerat {{provider}}-uppgifter. Klicka bara på knappen nedan för att ansluta ditt konto."
+    }
   },
   "devices": {
     "setDeviceChannel": "Ställ in enhetskanal",

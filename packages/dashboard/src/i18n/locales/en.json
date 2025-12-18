@@ -79,7 +79,11 @@
     "selectImage": "Select an Image",
     "selectVideo": "Select a Video",
     "selectMedia": "Select a Media",
-    "youIndicator": "(you)"
+    "selectPlaylist": "Select a Playlist",
+    "playlist": "Playlist",
+    "addPlaylist": "Add Playlist",
+    "youIndicator": "(you)",
+    "widget": "Widget"
   },
   "filters": {
     "teamLabel": "Team",
@@ -486,7 +490,11 @@
       "aspectRatioMax": "Value must be 100 or less",
       "aspectRatioExtreme": "Aspect ratio is too extreme (max ratio is 10:1)",
       "updateAspectRatio": "Error updating aspect ratio: {{error}}"
-    }
+    },
+    "credentialsRequired": "Credentials Required",
+    "credentialsRequiredDescription": "The widget \"{{widget}}\" requires credentials to be configured before it can be added to a playlist.",
+    "missingIntegrations": "Missing integrations",
+    "goToIntegrations": "Go to Integrations"
   },
   "widgets": {
     "title": "Widgets",
@@ -497,7 +505,57 @@
     "viewDetails": "View Details",
     "template": "Template",
     "optionsSchema": "Options Schema",
-    "dataSchema": "Data Schema"
+    "dataSchema": "Data Schema",
+    "spotify": {
+      "title": "Spotify Connection",
+      "connectButton": "Connect to Spotify",
+      "disconnectButton": "Disconnect",
+      "connectDescription": "Connect your Spotify account to display the currently playing track on your digital signage.",
+      "connected": "Connected",
+      "connectedSince": "Connected since {{date}}",
+      "connectionSuccess": "Successfully connected to Spotify!",
+      "connectionFailed": "Failed to connect to Spotify. Please try again.",
+      "disconnectNotSupported": "Disconnecting is not yet supported. Please revoke access from your Spotify account settings."
+    },
+    "integrations": {
+      "title": "Integrations",
+      "noIntegrations": "This widget has no integrations configured.",
+      "configure": "Configure",
+      "configured": "Configured",
+      "notConfigured": "Not Configured",
+      "requiresAuth": "Requires Authentication",
+      "authType": "Authentication Type",
+      "oauth2": "OAuth 2.0",
+      "apiKey": "API Key",
+      "credentials": "Credentials",
+      "saveCredentials": "Save Credentials",
+      "testConnection": "Test Connection",
+      "testSuccess": "Connection test successful!",
+      "testFailed": "Connection test failed: {{error}}",
+      "credentialsSaved": "Credentials saved successfully!",
+      "credentialsSaveFailed": "Failed to save credentials: {{error}}",
+      "connectWith": "Connect with {{provider}}",
+      "connectedTo": "Connected to {{provider}}",
+      "disconnect": "Disconnect",
+      "confirmDisconnect": "Are you sure you want to disconnect from {{provider}}? You will need to reconnect to use this integration.",
+      "disconnected": "Disconnected from {{provider}}",
+      "disconnectFailed": "Failed to disconnect: {{error}}",
+      "reconnect": "Reconnect",
+      "lastValidated": "Last validated: {{date}}",
+      "scopeOrganization": "Organization-wide",
+      "scopeWidget": "Widget-specific",
+      "pullMode": "Data Fetching",
+      "pushMode": "Webhook",
+      "pullInterval": "Updates every {{seconds}} seconds",
+      "fieldRequired": "{{field}} is required",
+      "connectionStatus": "Connection Status",
+      "valid": "Valid",
+      "invalid": "Invalid",
+      "pending": "Pending Setup",
+      "enterClientCredentials": "Enter your {{provider}} API credentials below:",
+      "afterSavingCredentials": "After saving your credentials, click below to authorize with {{provider}}:",
+      "networkCredentialsConfigured": "Your network administrator has already configured {{provider}} credentials. Simply click the button below to connect your account."
+    }
   },
   "devices": {
     "title": "Devices",

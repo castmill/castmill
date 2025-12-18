@@ -437,3 +437,187 @@ describe('Repeat functionality', () => {
     expect(item.child.seek.getCall(1).args[0]).to.equal(1000);
   });
 });
+
+describe('remove with multiple items', () => {
+  let timeline: Timeline;
+  let item1: TimelineItem, item2: TimelineItem, item3: TimelineItem;
+
+  beforeEach(() => {
+    timeline = new Timeline('test');
+
+    item1 = {
+      start: 0,
+      duration: 3000,
+      child: {
+        play: () => {},
+        seek: () => {},
+        pause: () => {},
+        duration: () => 3000,
+      },
+    };
+    item2 = {
+      start: 1000,
+      duration: 4000,
+      child: {
+        play: () => {},
+        seek: () => {},
+        pause: () => {},
+        duration: () => 4000,
+      },
+    };
+    item3 = {
+      start: 2000,
+      duration: 5000,
+      child: {
+        play: () => {},
+        seek: () => {},
+        pause: () => {},
+        duration: () => 5000,
+      },
+    };
+
+    timeline.add(item1);
+    timeline.add(item2);
+    timeline.add(item3);
+  });
+
+  it('should remove the correct item when multiple items exist', () => {
+    expect(timeline.items).to.have.lengthOf(3);
+    expect(timeline.items).to.include(item1);
+    expect(timeline.items).to.include(item2);
+    expect(timeline.items).to.include(item3);
+
+    // Remove the middle item
+    timeline.remove(item2);
+
+    expect(timeline.items).to.have.lengthOf(2);
+    expect(timeline.items).to.include(item1);
+    expect(timeline.items).to.not.include(item2);
+    expect(timeline.items).to.include(item3);
+  });
+
+  it('should remove the first item correctly', () => {
+    timeline.remove(item1);
+
+    expect(timeline.items).to.have.lengthOf(2);
+    expect(timeline.items).to.not.include(item1);
+    expect(timeline.items).to.include(item2);
+    expect(timeline.items).to.include(item3);
+  });
+
+  it('should remove the last item correctly', () => {
+    timeline.remove(item3);
+
+    expect(timeline.items).to.have.lengthOf(2);
+    expect(timeline.items).to.include(item1);
+    expect(timeline.items).to.include(item2);
+    expect(timeline.items).to.not.include(item3);
+  });
+
+  it('should not remove anything if item is not in timeline', () => {
+    const otherItem: TimelineItem = {
+      start: 5000,
+      duration: 1000,
+      child: {
+        play: () => {},
+        seek: () => {},
+        pause: () => {},
+        duration: () => 1000,
+      },
+    };
+
+    timeline.remove(otherItem);
+
+    expect(timeline.items).to.have.lengthOf(3);
+    expect(timeline.items).to.include(item1);
+    expect(timeline.items).to.include(item2);
+    expect(timeline.items).to.include(item3);
+  });
+});
+
+describe('duration calculation', () => {
+  let timeline: Timeline;
+  let clock: SinonFakeTimers;
+
+  beforeEach(() => {
+    timeline = new Timeline('test');
+  });
+
+  afterEach(() => {
+    restore();
+  });
+
+  it('should calculate duration correctly with items in different states', () => {
+    const item1: TimelineItemSpy = {
+      start: 0,
+      duration: 5000,
+      child: {
+        play: spy(),
+        seek: spy(),
+        pause: spy(),
+        duration: () => 5000,
+      },
+    };
+    const item2: TimelineItemSpy = {
+      start: 3000,
+      duration: 7000,
+      child: {
+        play: spy(),
+        seek: spy(),
+        pause: spy(),
+        duration: () => 7000,
+      },
+    };
+
+    timeline.add(item1);
+    timeline.add(item2);
+
+    // Initially, all items are in 'items' array
+    expect(timeline.duration()).to.equal(10000);
+
+    stub(Date, 'now').returns(0);
+    clock = useFakeTimers();
+
+    timeline.play(0);
+
+    // After playing, item1 should be in 'playing' set
+    clock.tick(100);
+    expect(timeline.duration()).to.equal(10000); // Should still be 10000, not 15000
+
+    // After item1 ends and item2 is still playing
+    clock.tick(5000); // Now at 5100ms
+    expect(timeline.duration()).to.equal(10000); // Should still be 10000
+
+    timeline.pause();
+  });
+
+  it('should return max end time, not sum of durations', () => {
+    // This test specifically catches the bug where + was used instead of Math.max
+    const item1: TimelineItem = {
+      start: 0,
+      duration: 5000,
+      child: {
+        play: () => {},
+        seek: () => {},
+        pause: () => {},
+        duration: () => 5000,
+      },
+    };
+    const item2: TimelineItem = {
+      start: 0, // Both start at 0 (parallel items)
+      duration: 3000,
+      child: {
+        play: () => {},
+        seek: () => {},
+        pause: () => {},
+        duration: () => 3000,
+      },
+    };
+
+    timeline.add(item1);
+    timeline.add(item2);
+
+    // Duration should be max(5000, 3000) = 5000, not 5000 + 3000 = 8000
+    expect(timeline.duration()).to.equal(5000);
+  });
+});

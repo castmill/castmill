@@ -58,7 +58,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
   const { teams, selectedTeamId, setSelectedTeamId } = useTeamFilter({
     baseUrl: props.store.env.baseUrl,
     organizationId: props.store.organizations.selectedId,
-    params: props.params, // Pass URL params for shareable filtered views
+    params: props.params, // Pass URL search params for shareable filtered views
   });
 
   const [showAddPlaylistModal, setShowAddPlaylistModal] = createSignal(false);
@@ -746,6 +746,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
             onChange={(playlist) => {
               console.log('Playlist changed', playlist);
             }}
+            onNavigateAway={closeModal}
           />
         </Modal>
       </Show>

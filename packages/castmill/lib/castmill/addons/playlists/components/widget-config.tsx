@@ -1,6 +1,7 @@
 import { Component, For, createEffect, createSignal, Show } from 'solid-js';
 import {
   JsonPlaylistItem,
+  JsonPlaylist,
   JsonMedia,
   FieldAttributes,
   SimpleType,
@@ -37,13 +38,21 @@ interface WidgetConfigProps {
   baseUrl: string;
   item: JsonPlaylistItem;
   organizationId: string;
+  playlistId: number;
   onSubmit: (value: {
     config: Partial<JsonWidgetConfig>;
     expandedOptions: OptionsDict;
   }) => Promise<void>;
 }
 
-type FormTypes = 'text' | 'number' | 'boolean' | 'ref' | 'color' | 'url';
+type FormTypes =
+  | 'text'
+  | 'number'
+  | 'boolean'
+  | 'ref'
+  | 'color'
+  | 'url'
+  | 'select';
 
 export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
   const toast = useToast();
@@ -51,12 +60,37 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
   const [isFormModified, setIsFormModified] = createSignal(false);
   const [isFormValid, setIsFormValid] = createSignal(false);
   const [errors, setErrors] = createSignal(new Map());
+  // Initialize with current playlist ID to prevent self-selection immediately
+  const [excludedPlaylistIds, setExcludedPlaylistIds] = createSignal<number[]>([
+    props.playlistId,
+  ]);
 
   // Get i18n functions from store
   const t = (key: string, params?: Record<string, any>) =>
     props.store.i18n?.t(key, params) || key;
 
-  console.log('WidgetConfig', props.item, props.organizationId);
+  // Fetch ancestor playlist IDs to prevent circular references
+  createEffect(async () => {
+    try {
+      const response = await fetch(
+        `${props.baseUrl}/dashboard/organizations/${props.organizationId}/playlists/${props.playlistId}/ancestors`,
+        { credentials: 'include' }
+      );
+      if (response.ok) {
+        const data = await response.json();
+        // Include the current playlist and its ancestors in the exclusion list
+        setExcludedPlaylistIds([
+          props.playlistId,
+          ...(data.ancestor_ids || []),
+        ]);
+      }
+    } catch (error) {
+      console.error('Failed to fetch playlist ancestors:', error);
+      // At minimum, exclude the current playlist itself
+      setExcludedPlaylistIds([props.playlistId]);
+    }
+  });
+
   const optionsSchema = props.item.widget.options_schema || {};
 
   if (!optionsSchema) {
@@ -182,8 +216,27 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
     return options[key] || schema.default || '';
   };
 
+  /**
+   * Maps JSON Schema types to form field types.
+   * Also handles special cases like enums (which render as select dropdowns).
+   */
   const getType = (value: any): FormTypes => {
-    return value.type || value;
+    // If it's an object schema with enum, render as select
+    if (value && typeof value === 'object' && value.enum) {
+      return 'select';
+    }
+
+    const schemaType = value?.type || value;
+
+    // Map JSON Schema types to form types
+    switch (schemaType) {
+      case 'string':
+        return 'text';
+      case 'integer':
+        return 'number';
+      default:
+        return schemaType;
+    }
   };
 
   createEffect(() => {
@@ -223,6 +276,44 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
           >
             <div class="error">{errors().get(key)}</div>
           </FormItem>
+        );
+      case 'select':
+        // Handle enum fields as dropdown selects
+        const enumSchema = schema as {
+          enum?: string[];
+          default?: string;
+          description?: string;
+        };
+        const enumOptions = enumSchema.enum || [];
+        const currentValue = getValue(key, enumSchema) as string;
+
+        return (
+          <div class="form-item-wrapper">
+            <div class="form-item1">
+              <label for={key}>{key}</label>
+              <select
+                id={key}
+                value={currentValue}
+                onChange={(e) => {
+                  const newValue = e.currentTarget.value;
+                  setWidgetOptions({ ...widgetOptions(), [key]: newValue });
+                  setIsFormModified(true);
+                  setIsFormValid(checkFormValidity());
+                }}
+                class="styled-select"
+              >
+                {enumOptions.map((option) => (
+                  <option value={option} selected={option === currentValue}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+              <div class="error">{errors().get(key)}</div>
+            </div>
+            <Show when={enumSchema.description}>
+              <div class="description">{enumSchema.description}</div>
+            </Show>
+          </div>
         );
       case 'ref':
         const collection = (schema as ReferenceAttributes).collection;
@@ -299,14 +390,63 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
                 <div class="error">{errors().get(key)}</div>
               </>
             );
+          case 'playlists':
+            return (
+              <>
+                <ComboBox<JsonPlaylist>
+                  id={key}
+                  label={key}
+                  placeholder={t('common.selectPlaylist')}
+                  value={getValue(key, schema as FieldAttributes)}
+                  renderItem={(item: JsonPlaylist) => {
+                    return (
+                      <div class="playlist-item">
+                        <div>{item.name}</div>
+                      </div>
+                    );
+                  }}
+                  fetchItems={async (
+                    page: number,
+                    pageSize: number,
+                    search: string
+                  ) => {
+                    // Filter out playlists that would cause circular references
+                    const excluded = excludedPlaylistIds();
+                    const filterParams: Record<string, string | boolean> = {};
+                    if (excluded.length > 0) {
+                      filterParams.exclude_ids = excluded.join(',');
+                    }
+                    return ResourcesService.fetch<JsonPlaylist>(
+                      props.baseUrl,
+                      props.organizationId,
+                      collectionName,
+                      {
+                        page,
+                        page_size: pageSize,
+                        search,
+                        filters:
+                          Object.keys(filterParams).length > 0
+                            ? filterParams
+                            : undefined,
+                      }
+                    );
+                  }}
+                  onSelect={(playlist: JsonPlaylist) => {
+                    setWidgetOptions({ ...widgetOptions(), [key]: playlist });
+                    setIsFormModified(true);
+                    setIsFormValid(checkFormValidity());
+                  }}
+                />
+                <div class="error">{errors().get(key)}</div>
+              </>
+            );
           default:
             throw new Error(
               t('errors.unknownResourceType', { resourceType: collectionName })
             );
         }
       case 'map':
-      case 'list':
-        return <div>Not implemented yet</div>;
+        return <div>Map type not implemented yet</div>;
       default:
         throw new Error(`Unknown type: ${type}`);
     }
@@ -335,8 +475,9 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
               // For references we need to pick the ID, not the full expanded object
               const options = Object.entries(optionsSchema).reduce(
                 (acc: Record<string, any>, [key, schema]) => {
-                  if (getType(schema) === 'ref') {
-                    acc[key] = widgetOptions()[key].id;
+                  const type = getType(schema);
+                  if (type === 'ref') {
+                    acc[key] = widgetOptions()[key]?.id;
                   } else {
                     acc[key] = widgetOptions()[key];
                   }
@@ -387,13 +528,13 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
         </form>
       </div>
       <div class="preview">
-        <Show when={isFormValid()}>
-          <WidgetView
-            widget={props.item.widget}
-            config={widgetConfig()}
-            options={widgetOptions()}
-          />
-        </Show>
+        <WidgetView
+          widget={props.item.widget}
+          config={widgetConfig()}
+          options={widgetOptions()}
+          baseUrl={props.baseUrl}
+          socket={props.store.socket}
+        />
       </div>
     </div>
   );

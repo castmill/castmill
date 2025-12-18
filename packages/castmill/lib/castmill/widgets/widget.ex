@@ -15,6 +15,7 @@ defmodule Castmill.Widgets.Widget do
              :meta,
              :icon,
              :small_icon,
+             :aspect_ratio,
              :update_interval_seconds
            ]}
   schema "widgets" do
@@ -30,6 +31,9 @@ defmodule Castmill.Widgets.Widget do
 
     field(:icon, :string)
     field(:small_icon, :string)
+
+    # Preferred aspect ratio for the widget (e.g., "16:9", "9:16", "4:3", "1:1", or "liquid" for any)
+    field(:aspect_ratio, :string)
 
     # Not sure we need this field. Widgets should be either global, per network or per organization, not sure which
     # would be the best way to model this.
@@ -55,6 +59,7 @@ defmodule Castmill.Widgets.Widget do
       :options_schema,
       :data_schema,
       :meta,
+      :aspect_ratio,
       :update_interval_seconds,
       :icon,
       :small_icon,

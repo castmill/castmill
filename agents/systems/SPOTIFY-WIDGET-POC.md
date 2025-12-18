@@ -772,6 +772,290 @@ export function SpotifyOAuthSetup(props: { widgetConfigId: string }) {
    - Generic OAuth 2.0 helper module
    - Reusable for Google, Facebook, GitHub, etc.
 
+## Implementation Details & Troubleshooting
+
+### Actual Implementation Architecture
+
+The Spotify widget implementation uses the following key components:
+
+#### 1. SpotifyPoller Oban Worker
+
+**File**: `packages/castmill/lib/castmill/workers/spotify_poller.ex`
+
+The poller is an Oban worker that:
+- Polls Spotify API every 15 seconds (configurable via `pull_interval_seconds`)
+- Automatically refreshes OAuth tokens when expired
+- Stores data in `widget_integration_data` table
+- Reschedules itself after successful execution
+
+**Key Configuration**:
+```elixir
+use Oban.Worker,
+  queue: :integration_polling,
+  max_attempts: 3,
+  unique: [period: 10, keys: [:widget_config_id], states: [:available, :scheduled, :executing]]
+```
+
+#### 2. Organization-Level Data Sharing
+
+**Important**: All Spotify widgets in an organization share the same integration data. This is the "gym scenario" - multiple screens with different playlists but all showing the same "Now Playing" data.
+
+**Data lookup chain in `resources.ex`**:
+1. First tries widget-config-specific data: `get_integration_data_by_config(widget_config_id)`
+2. Falls back to organization-level shared data: `get_integration_data_for_widget_in_org(org_id, widget_id)`
+
+**Files involved**:
+- `lib/castmill/resources.ex` - `transform_item/2` function
+- `lib/castmill/widgets/integrations.ex` - `get_integration_data_for_widget_in_org/2`
+
+#### 3. Integration Data Merged into Config
+
+The integration data is merged into `config.data` for the player template system:
+```elixir
+# In transform_item/2
+merged_data = Map.merge(existing_data, integration_data.data || %{})
+Map.put(widget_config, :data, merged_data)
+```
+
+This makes data available to template bindings like `{key: "data.track_name"}`.
+
+### Widget Template System
+
+#### Style Binding Resolution
+
+The player resolves style bindings like `{key: "data.progress_percent"}`:
+
+**File**: `packages/player/src/components/item.tsx`
+
+```typescript
+const resolveStyleBindings = (style: any, model: Model): any => {
+  if (!style || typeof style !== 'object') return style;
+  
+  const resolved: any = {};
+  for (const [key, value] of Object.entries(style)) {
+    if (value && typeof value === 'object' && 'key' in value) {
+      // Resolve binding like {key: "data.progress_percent"}
+      resolved[key] = model.get((value as any).key) ?? '';
+    } else {
+      resolved[key] = value;
+    }
+  }
+  return resolved;
+};
+```
+
+#### Widget Aspect Ratio & Letterboxing
+
+Widgets can have an `aspect_ratio` field (e.g., "16:9") for proper letterboxing within playlists:
+
+**Schema**: `lib/castmill/widgets/widget.ex`
+```elixir
+field(:aspect_ratio, :string)
+```
+
+**Player Layer**: `packages/player/src/layer.ts`
+```typescript
+function computeWidgetStyle(widget?: JsonWidget): JSX.CSSProperties | undefined {
+  if (!widget?.aspect_ratio) return undefined;
+  
+  const [w, h] = widget.aspect_ratio.split(':').map(Number);
+  if (!w || !h || isNaN(w) || isNaN(h)) return undefined;
+  
+  return {
+    width: 'auto',
+    height: 'auto',
+    'max-width': '100%',
+    'max-height': '100%',
+    'aspect-ratio': `${w} / ${h}`,
+  };
+}
+```
+
+### Common Issues & Solutions
+
+#### Issue 1: Oban Jobs Not Running
+
+**Symptom**: Data shows stale/old values, `status: "not_playing"` despite active Spotify playback.
+
+**Diagnosis**:
+```elixir
+# Check for active Oban jobs
+import Ecto.Query
+Repo.all(from j in Oban.Job, where: j.queue == "integration_polling")
+```
+
+**Cause**: Jobs weren't scheduled (server restart, job failed to reschedule).
+
+**Solution**: Manually schedule a job:
+```elixir
+Castmill.Workers.SpotifyPoller.schedule("widget-config-uuid")
+```
+
+#### Issue 2: Token Expired
+
+**Symptom**: `SpotifyPoller: Token expired, refreshing...` followed by errors.
+
+**Diagnosis**:
+```elixir
+{:ok, creds} = Integrations.get_organization_credentials(org_id, integration_id)
+expires_at = creds["expires_at"]
+now = System.system_time(:second)
+IO.puts("Expired: #{expires_at < now}, Diff: #{expires_at - now}s")
+```
+
+**Cause**: Token refresh failed (invalid refresh_token, network issues).
+
+**Solution**: 
+1. Check client credentials are correct
+2. User may need to re-authorize via OAuth flow
+3. Verify network/integration credentials at network level
+
+#### Issue 3: Integration Data Not Showing
+
+**Symptom**: Widget preview shows nothing, API returns `data: null`.
+
+**Diagnosis**:
+```elixir
+# Check if data exists
+Integrations.get_integration_data_by_config("widget-config-uuid")
+
+# Check organization-level data
+Integrations.get_integration_data_for_widget_in_org(org_id, widget_id)
+```
+
+**Cause**: Data not being merged into config, or lookup failing.
+
+**Solution**: Verify `transform_item/2` is correctly merging data.
+
+#### Issue 4: UUID Cast Errors
+
+**Symptom**: `Ecto.Query.CastError` when integer widget config IDs are passed.
+
+**Cause**: Legacy code passing integer IDs instead of UUIDs.
+
+**Solution**: Added UUID validation:
+```elixir
+def get_integration_data_by_config(widget_config_id) do
+  case Ecto.UUID.cast(widget_config_id) do
+    {:ok, _uuid} -> # proceed with query
+    :error -> nil  # gracefully return nil for invalid IDs
+  end
+end
+```
+
+#### Issue 5: Association Not Loaded
+
+**Symptom**: `KeyError: key :organization_id not found in: #Ecto.Association.NotLoaded`
+
+**Cause**: Trying to access `item.playlist.organization_id` without preloading.
+
+**Solution**: Pass `organization_id` as parameter instead:
+```elixir
+# In get_playlist/1
+items = get_playlist_items(id)
+        |> Enum.map(&transform_item(&1, playlist.organization_id))
+
+# transform_item receives org_id directly
+defp transform_item(item, organization_id) do
+```
+
+#### Issue 6: Integration Data Not Loading When Adding Widget
+
+**Symptom**: When adding a Spotify widget to a playlist, the preview shows default/empty data. Only after closing and re-opening the playlist does the integration data appear.
+
+**Cause**: The `insert_item_into_playlist` API was returning only the playlist item ID, not the widget config ID. The frontend was incorrectly using the playlist item ID as the config ID, so the integration data fetch failed.
+
+**Solution**: Updated the API to return `widget_config_id`:
+
+1. **Backend** (`lib/castmill/resources.ex`):
+```elixir
+# Return both item and widget_config_id
+%{item | widget_config_id: widget_config.id}
+```
+
+2. **API Response** (`lib/castmill_web/controllers/playlist_json.ex`):
+```elixir
+def show(%{item: item}) do
+  %{
+    data: %{
+      id: item.id,
+      # ... other fields ...
+      widget_config_id: Map.get(item, :widget_config_id)
+    }
+  }
+end
+```
+
+3. **Frontend** (`playlist-view.tsx`):
+```typescript
+config: {
+  id: newItem.widget_config_id,  // Use widget_config_id, not item.id
+  widget_id: widget.id!,
+  options: expandedOptions,
+  data: config.data || {},
+},
+```
+
+### Manual Testing Commands
+
+```bash
+# Start Phoenix server
+cd packages/castmill && mix phx.server
+
+# In another terminal, manually trigger poller
+cd packages/castmill && mix run -e '
+Castmill.Workers.SpotifyPoller.schedule("92107900-577c-42a6-b6c8-79b3dcfcd443")
+'
+
+# Check Oban job queue
+mix run -e '
+import Ecto.Query
+Castmill.Repo.all(from j in Oban.Job, 
+  where: j.queue == "integration_polling",
+  select: %{id: j.id, state: j.state, args: j.args})
+|> IO.inspect()
+'
+
+# Check integration data
+mix run -e '
+Castmill.Widgets.Integrations.get_integration_data_by_config("widget-config-uuid")
+|> IO.inspect()
+'
+
+# Check token expiry
+mix run -e '
+{:ok, creds} = Castmill.Widgets.Integrations.get_organization_credentials(
+  "org-uuid", 1)
+expires_at = creds["expires_at"]
+now = System.system_time(:second)
+IO.puts("Expires in: #{expires_at - now} seconds")
+'
+```
+
+### Key Files Reference
+
+| File | Purpose |
+|------|---------|
+| `lib/castmill/workers/spotify_poller.ex` | Oban worker that polls Spotify API |
+| `lib/castmill/widgets/integrations/oauth/spotify.ex` | OAuth token exchange & refresh |
+| `lib/castmill/widgets/integrations.ex` | Integration data & credential management |
+| `lib/castmill/resources.ex` | Playlist/item loading with integration data |
+| `lib/castmill_web/controllers/widget_integration_controller.ex` | Dashboard API for integration data |
+| `packages/player/src/components/item.tsx` | Template rendering with style bindings |
+| `packages/player/src/layer.ts` | Widget aspect ratio & letterboxing |
+| `priv/repo/seeds/widgets/spotify_now_playing.exs` | Widget definition seed |
+
+### Database Tables
+
+| Table | Purpose |
+|-------|---------|
+| `widgets` | Widget definitions (template, schema, aspect_ratio) |
+| `widget_integrations` | Integration configs (poll interval, endpoints) |
+| `widget_integration_credentials` | Encrypted OAuth tokens per org/widget |
+| `widget_integration_data` | Cached Spotify data (track info, version) |
+| `widgets_config` | Widget instances in playlists |
+| `network_integration_credentials` | Client ID/Secret at network level |
+
 ## Conclusion
 
 The Spotify "Now Playing" widget proof of concept demonstrates that the current widget integration architecture is **production-ready** with only **minor enhancements** for OAuth 2.0 support.
@@ -780,9 +1064,11 @@ The Spotify "Now Playing" widget proof of concept demonstrates that the current 
 
 ✅ **No breaking changes** - OAuth support added via behaviour extension  
 ✅ **Widget-specific credentials work perfectly** - Each user has unique OAuth tokens  
+✅ **Organization-level data sharing** - All Spotify widgets in an org share same data  
 ✅ **PULL mode handles real-time updates** - 15-second polling with WebSocket push  
 ✅ **Secure token storage** - AES-256-GCM encryption with auto-refresh  
-✅ **Rich, modern UI** - Template system supports complex layouts  
+✅ **Rich, modern UI** - Template system supports complex layouts with style bindings  
+✅ **Widget aspect ratio** - Proper letterboxing within playlists  
 ✅ **Self-service ready** - Once OAuth flow is in dashboard, fully user-uploadable  
 
 ### Next Steps
@@ -791,6 +1077,7 @@ The Spotify "Now Playing" widget proof of concept demonstrates that the current 
 2. **Create dashboard OAuth components** for authorization flow
 3. **Add widget assets** (icons, placeholder image)
 4. **Write user documentation** for Spotify setup
-5. **Deploy to production** as built-in widget
+5. **Auto-schedule poller on server startup** for existing widget configs
+6. **Deploy to production** as built-in widget
 
 This POC validates the architecture and provides a template for future third-party integrations (YouTube, social media, RSS feeds, etc.).

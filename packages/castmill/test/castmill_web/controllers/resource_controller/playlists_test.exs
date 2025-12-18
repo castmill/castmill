@@ -398,4 +398,738 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
              } = retrieval_response
     end
   end
+
+  describe "get playlist ancestors" do
+    alias Castmill.Resources
+
+    setup %{organization: _organization} do
+      # Get or create the layout-portrait-3 widget for testing
+      # The system may or may not have it, so we ensure it exists
+      layout_widget =
+        case Castmill.Repo.get_by(Castmill.Widgets.Widget, slug: "layout-portrait-3") do
+          nil ->
+            Castmill.PlaylistsFixtures.widget_fixture(%{
+              name: "Layout Portrait 3",
+              slug: "layout-portrait-3",
+              template: %{
+                "type" => "layout",
+                "name" => "layout",
+                "opts" => %{"containers" => []}
+              },
+              options_schema: %{
+                "background" => "color",
+                "playlist_1" => %{"type" => "ref", "collection" => "playlists"},
+                "playlist_2" => %{"type" => "ref", "collection" => "playlists"},
+                "playlist_3" => %{"type" => "ref", "collection" => "playlists"}
+              }
+            })
+          existing_widget ->
+            existing_widget
+        end
+
+      {:ok, layout_widget: layout_widget}
+    end
+
+    test "returns empty ancestors for a standalone playlist", %{
+      conn: conn,
+      organization: organization,
+      team: team
+    } do
+      playlist =
+        playlist_fixture(%{
+          organization_id: organization.id,
+          name: "standalone_playlist"
+        })
+
+      {:ok, _result} = Teams.add_resource_to_team(team.id, "playlists", playlist.id, [:read])
+
+      conn = get(conn, "/api/organizations/#{organization.id}/playlists/#{playlist.id}/ancestors")
+      response = json_response(conn, 200)
+
+      assert %{"ancestor_ids" => []} = response
+    end
+
+    test "returns parent playlist when child is referenced in layout widget", %{
+      conn: conn,
+      organization: organization,
+      team: team,
+      layout_widget: layout_widget
+    } do
+      # Create parent playlist (the one containing the layout widget)
+      parent_playlist =
+        playlist_fixture(%{
+          organization_id: organization.id,
+          name: "parent_playlist"
+        })
+
+      # Create child playlist (the one being referenced)
+      child_playlist =
+        playlist_fixture(%{
+          organization_id: organization.id,
+          name: "child_playlist"
+        })
+
+      # Create filler playlists for required slots
+      filler1 = playlist_fixture(%{organization_id: organization.id, name: "filler1"})
+      filler2 = playlist_fixture(%{organization_id: organization.id, name: "filler2"})
+
+      # Add the layout widget to the parent playlist with reference to child
+      {:ok, _item} = Resources.insert_item_into_playlist(
+        parent_playlist.id,
+        nil,
+        layout_widget.id,
+        0,
+        10000,
+        %{"playlist_1" => child_playlist.id, "playlist_2" => filler1.id, "playlist_3" => filler2.id}
+      )
+
+      {:ok, _result} = Teams.add_resource_to_team(team.id, "playlists", child_playlist.id, [:read])
+      {:ok, _result} = Teams.add_resource_to_team(team.id, "playlists", parent_playlist.id, [:read])
+
+      # Get ancestors of child playlist
+      conn = get(conn, "/api/organizations/#{organization.id}/playlists/#{child_playlist.id}/ancestors")
+      response = json_response(conn, 200)
+
+      assert %{"ancestor_ids" => ancestor_ids} = response
+      assert parent_playlist.id in ancestor_ids
+      assert length(ancestor_ids) == 1
+    end
+
+    test "returns multiple ancestors in a chain (grandparent -> parent -> child)", %{
+      conn: conn,
+      organization: organization,
+      team: team,
+      layout_widget: layout_widget
+    } do
+      # Create grandparent playlist
+      grandparent_playlist =
+        playlist_fixture(%{
+          organization_id: organization.id,
+          name: "grandparent_playlist"
+        })
+
+      # Create parent playlist
+      parent_playlist =
+        playlist_fixture(%{
+          organization_id: organization.id,
+          name: "parent_playlist"
+        })
+
+      # Create child playlist
+      child_playlist =
+        playlist_fixture(%{
+          organization_id: organization.id,
+          name: "child_playlist"
+        })
+
+      # Create filler playlists for required slots
+      filler1 = playlist_fixture(%{organization_id: organization.id, name: "filler1"})
+      filler2 = playlist_fixture(%{organization_id: organization.id, name: "filler2"})
+      filler3 = playlist_fixture(%{organization_id: organization.id, name: "filler3"})
+      filler4 = playlist_fixture(%{organization_id: organization.id, name: "filler4"})
+
+      # Create link: grandparent -> parent
+      {:ok, _item} = Resources.insert_item_into_playlist(
+        grandparent_playlist.id,
+        nil,
+        layout_widget.id,
+        0,
+        10000,
+        %{"playlist_1" => parent_playlist.id, "playlist_2" => filler1.id, "playlist_3" => filler2.id}
+      )
+
+      # Create link: parent -> child
+      {:ok, _item} = Resources.insert_item_into_playlist(
+        parent_playlist.id,
+        nil,
+        layout_widget.id,
+        0,
+        10000,
+        %{"playlist_1" => filler3.id, "playlist_2" => child_playlist.id, "playlist_3" => filler4.id}
+      )
+
+      {:ok, _result} = Teams.add_resource_to_team(team.id, "playlists", child_playlist.id, [:read])
+
+      # Get ancestors of child playlist - should include both parent and grandparent
+      conn = get(conn, "/api/organizations/#{organization.id}/playlists/#{child_playlist.id}/ancestors")
+      response = json_response(conn, 200)
+
+      assert %{"ancestor_ids" => ancestor_ids} = response
+      assert parent_playlist.id in ancestor_ids
+      assert grandparent_playlist.id in ancestor_ids
+      assert length(ancestor_ids) == 2
+    end
+
+    test "returns multiple direct parents when playlist is referenced in multiple playlists", %{
+      conn: conn,
+      organization: organization,
+      team: team,
+      layout_widget: layout_widget
+    } do
+      # Create two parent playlists
+      parent1 =
+        playlist_fixture(%{
+          organization_id: organization.id,
+          name: "parent1"
+        })
+
+      parent2 =
+        playlist_fixture(%{
+          organization_id: organization.id,
+          name: "parent2"
+        })
+
+      # Create child playlist
+      child_playlist =
+        playlist_fixture(%{
+          organization_id: organization.id,
+          name: "child_playlist"
+        })
+
+      # Create filler playlists for required slots
+      filler1 = playlist_fixture(%{organization_id: organization.id, name: "filler1"})
+      filler2 = playlist_fixture(%{organization_id: organization.id, name: "filler2"})
+      filler3 = playlist_fixture(%{organization_id: organization.id, name: "filler3"})
+      filler4 = playlist_fixture(%{organization_id: organization.id, name: "filler4"})
+
+      # Parent1 references child via playlist_1
+      {:ok, _item} = Resources.insert_item_into_playlist(
+        parent1.id,
+        nil,
+        layout_widget.id,
+        0,
+        10000,
+        %{"playlist_1" => child_playlist.id, "playlist_2" => filler1.id, "playlist_3" => filler2.id}
+      )
+
+      # Parent2 references child via playlist_3
+      {:ok, _item} = Resources.insert_item_into_playlist(
+        parent2.id,
+        nil,
+        layout_widget.id,
+        0,
+        10000,
+        %{"playlist_1" => filler3.id, "playlist_2" => filler4.id, "playlist_3" => child_playlist.id}
+      )
+
+      {:ok, _result} = Teams.add_resource_to_team(team.id, "playlists", child_playlist.id, [:read])
+
+      conn = get(conn, "/api/organizations/#{organization.id}/playlists/#{child_playlist.id}/ancestors")
+      response = json_response(conn, 200)
+
+      assert %{"ancestor_ids" => ancestor_ids} = response
+      assert parent1.id in ancestor_ids
+      assert parent2.id in ancestor_ids
+      assert length(ancestor_ids) == 2
+    end
+
+    test "handles playlist referenced in multiple slots of same layout widget", %{
+      conn: conn,
+      organization: organization,
+      team: team,
+      layout_widget: layout_widget
+    } do
+      parent_playlist =
+        playlist_fixture(%{
+          organization_id: organization.id,
+          name: "parent_playlist"
+        })
+
+      child_playlist =
+        playlist_fixture(%{
+          organization_id: organization.id,
+          name: "child_playlist"
+        })
+
+      # Reference child in multiple slots
+      {:ok, _item} = Resources.insert_item_into_playlist(
+        parent_playlist.id,
+        nil,
+        layout_widget.id,
+        0,
+        10000,
+        %{
+          "playlist_1" => child_playlist.id,
+          "playlist_2" => child_playlist.id,
+          "playlist_3" => child_playlist.id
+        }
+      )
+
+      {:ok, _result} = Teams.add_resource_to_team(team.id, "playlists", child_playlist.id, [:read])
+
+      conn = get(conn, "/api/organizations/#{organization.id}/playlists/#{child_playlist.id}/ancestors")
+      response = json_response(conn, 200)
+
+      assert %{"ancestor_ids" => ancestor_ids} = response
+      # Should only return the parent once, not duplicated
+      assert parent_playlist.id in ancestor_ids
+      assert length(ancestor_ids) == 1
+    end
+
+    test "does not include non-layout widget references", %{
+      conn: conn,
+      organization: organization,
+      team: team
+    } do
+      # Create a non-layout widget (e.g., a regular widget)
+      regular_widget = Castmill.PlaylistsFixtures.widget_fixture(%{
+        name: "Regular Widget Test",
+        slug: "regular-widget-test",
+        template: %{"type" => "simple"},
+        options_schema: %{"playlist_1" => %{"type" => "ref", "collection" => "playlists"}}
+      })
+
+      parent_playlist =
+        playlist_fixture(%{
+          organization_id: organization.id,
+          name: "parent_playlist"
+        })
+
+      child_playlist =
+        playlist_fixture(%{
+          organization_id: organization.id,
+          name: "child_playlist"
+        })
+
+      # Create widget config with some reference (but not a layout widget)
+      {:ok, _item} = Resources.insert_item_into_playlist(
+        parent_playlist.id,
+        nil,
+        regular_widget.id,
+        0,
+        10000,
+        %{"playlist_1" => child_playlist.id}
+      )
+
+      {:ok, _result} = Teams.add_resource_to_team(team.id, "playlists", child_playlist.id, [:read])
+
+      conn = get(conn, "/api/organizations/#{organization.id}/playlists/#{child_playlist.id}/ancestors")
+      response = json_response(conn, 200)
+
+      # Should be empty because the widget is not a layout widget
+      assert %{"ancestor_ids" => []} = response
+    end
+
+    test "returns empty ancestors for non-existent playlist", %{
+      conn: conn,
+      organization: organization
+    } do
+      conn = get(conn, "/api/organizations/#{organization.id}/playlists/999999/ancestors")
+
+      # The endpoint returns 200 with empty array for non-existent playlist
+      # (since get_playlist_ancestors just returns empty for playlists with no parents)
+      response = json_response(conn, 200)
+      assert %{"ancestor_ids" => []} = response
+    end
+
+    test "handles diamond dependency (A->B, A->C, B->D, C->D)", %{
+      conn: conn,
+      organization: organization,
+      team: team,
+      layout_widget: layout_widget
+    } do
+      # Create diamond structure:
+      #     A (top)
+      #    / \
+      #   B   C
+      #    \ /
+      #     D (bottom)
+
+      playlist_a = playlist_fixture(%{organization_id: organization.id, name: "A"})
+      playlist_b = playlist_fixture(%{organization_id: organization.id, name: "B"})
+      playlist_c = playlist_fixture(%{organization_id: organization.id, name: "C"})
+      playlist_d = playlist_fixture(%{organization_id: organization.id, name: "D"})
+
+      # Create filler playlists for required slots
+      filler1 = playlist_fixture(%{organization_id: organization.id, name: "diamond_filler1"})
+      filler2 = playlist_fixture(%{organization_id: organization.id, name: "diamond_filler2"})
+      filler3 = playlist_fixture(%{organization_id: organization.id, name: "diamond_filler3"})
+      filler4 = playlist_fixture(%{organization_id: organization.id, name: "diamond_filler4"})
+
+      # A references B and C
+      {:ok, _item} = Resources.insert_item_into_playlist(
+        playlist_a.id,
+        nil,
+        layout_widget.id,
+        0,
+        10000,
+        %{"playlist_1" => playlist_b.id, "playlist_2" => playlist_c.id, "playlist_3" => filler1.id}
+      )
+
+      # B references D
+      {:ok, _item} = Resources.insert_item_into_playlist(
+        playlist_b.id,
+        nil,
+        layout_widget.id,
+        0,
+        10000,
+        %{"playlist_1" => playlist_d.id, "playlist_2" => filler2.id, "playlist_3" => filler3.id}
+      )
+
+      # C references D
+      {:ok, _item} = Resources.insert_item_into_playlist(
+        playlist_c.id,
+        nil,
+        layout_widget.id,
+        0,
+        10000,
+        %{"playlist_1" => playlist_d.id, "playlist_2" => filler4.id, "playlist_3" => filler1.id}
+      )
+
+      {:ok, _result} = Teams.add_resource_to_team(team.id, "playlists", playlist_d.id, [:read])
+
+      # Ancestors of D should include B, C, and A (all unique)
+      conn = get(conn, "/api/organizations/#{organization.id}/playlists/#{playlist_d.id}/ancestors")
+      response = json_response(conn, 200)
+
+      assert %{"ancestor_ids" => ancestor_ids} = response
+      assert playlist_a.id in ancestor_ids
+      assert playlist_b.id in ancestor_ids
+      assert playlist_c.id in ancestor_ids
+      # Should have exactly 3 ancestors, no duplicates
+      assert length(ancestor_ids) == 3
+    end
+
+    test "server-side validation prevents cyclic structures from being created", %{
+      organization: organization,
+      layout_widget: layout_widget
+    } do
+      # This test verifies that cycles cannot be created due to server-side validation
+      # The algorithm for get_playlist_ancestors still handles cycles gracefully (visited set)
+      # but they should never occur in practice thanks to atomic validation
+
+      playlist_a = playlist_fixture(%{organization_id: organization.id, name: "A_cycle"})
+      playlist_b = playlist_fixture(%{organization_id: organization.id, name: "B_cycle"})
+
+      # Create filler playlists for required slots
+      filler1 = playlist_fixture(%{organization_id: organization.id, name: "cycle_filler1"})
+      filler2 = playlist_fixture(%{organization_id: organization.id, name: "cycle_filler2"})
+      filler3 = playlist_fixture(%{organization_id: organization.id, name: "cycle_filler3"})
+      filler4 = playlist_fixture(%{organization_id: organization.id, name: "cycle_filler4"})
+
+      # A references B (should succeed)
+      {:ok, _item} = Resources.insert_item_into_playlist(
+        playlist_a.id,
+        nil,
+        layout_widget.id,
+        0,
+        10000,
+        %{"playlist_1" => playlist_b.id, "playlist_2" => filler1.id, "playlist_3" => filler2.id}
+      )
+
+      # B references A (should fail - would create a cycle)
+      result = Resources.insert_item_into_playlist(
+        playlist_b.id,
+        nil,
+        layout_widget.id,
+        0,
+        10000,
+        %{"playlist_1" => playlist_a.id, "playlist_2" => filler3.id, "playlist_3" => filler4.id}
+      )
+
+      # Server-side validation should prevent the cycle
+      assert {:error, :circular_reference} = result
+    end
+  end
+
+  describe "circular reference prevention (server-side validation)" do
+    alias Castmill.Resources
+
+    setup %{organization: _organization} do
+      # Get or create the layout-portrait-3 widget for testing
+      layout_widget =
+        case Castmill.Repo.get_by(Castmill.Widgets.Widget, slug: "layout-portrait-3") do
+          nil ->
+            Castmill.PlaylistsFixtures.widget_fixture(%{
+              name: "Layout Portrait 3",
+              slug: "layout-portrait-3",
+              template: %{
+                "type" => "layout",
+                "name" => "layout",
+                "opts" => %{"containers" => []}
+              },
+              options_schema: %{
+                "background" => "color",
+                "playlist_1" => %{"type" => "ref", "required" => true, "collection" => "playlists"},
+                "playlist_2" => %{"type" => "ref", "required" => true, "collection" => "playlists"},
+                "playlist_3" => %{"type" => "ref", "required" => true, "collection" => "playlists"}
+              }
+            })
+          existing_widget ->
+            existing_widget
+        end
+
+      {:ok, layout_widget: layout_widget}
+    end
+
+    test "prevents self-referencing playlist", %{
+      organization: organization,
+      layout_widget: layout_widget
+    } do
+      playlist = playlist_fixture(%{organization_id: organization.id, name: "self_ref_test"})
+      filler1 = playlist_fixture(%{organization_id: organization.id, name: "filler1"})
+      filler2 = playlist_fixture(%{organization_id: organization.id, name: "filler2"})
+
+      # Try to add a layout widget that references itself
+      result = Resources.insert_item_into_playlist(
+        playlist.id,
+        nil,
+        layout_widget.id,
+        0,
+        10000,
+        %{"playlist_1" => playlist.id, "playlist_2" => filler1.id, "playlist_3" => filler2.id}
+      )
+
+      assert {:error, :circular_reference} = result
+    end
+
+    test "prevents direct circular reference (A -> B -> A)", %{
+      organization: organization,
+      layout_widget: layout_widget
+    } do
+      playlist_a = playlist_fixture(%{organization_id: organization.id, name: "A"})
+      playlist_b = playlist_fixture(%{organization_id: organization.id, name: "B"})
+      filler1 = playlist_fixture(%{organization_id: organization.id, name: "filler1"})
+      filler2 = playlist_fixture(%{organization_id: organization.id, name: "filler2"})
+      filler3 = playlist_fixture(%{organization_id: organization.id, name: "filler3"})
+      filler4 = playlist_fixture(%{organization_id: organization.id, name: "filler4"})
+
+      # A -> B (this should succeed)
+      {:ok, _item} = Resources.insert_item_into_playlist(
+        playlist_a.id,
+        nil,
+        layout_widget.id,
+        0,
+        10000,
+        %{"playlist_1" => playlist_b.id, "playlist_2" => filler1.id, "playlist_3" => filler2.id}
+      )
+
+      # B -> A (this should fail - would create cycle)
+      result = Resources.insert_item_into_playlist(
+        playlist_b.id,
+        nil,
+        layout_widget.id,
+        0,
+        10000,
+        %{"playlist_1" => playlist_a.id, "playlist_2" => filler3.id, "playlist_3" => filler4.id}
+      )
+
+      assert {:error, :circular_reference} = result
+    end
+
+    test "prevents indirect circular reference (A -> B -> C -> A)", %{
+      organization: organization,
+      layout_widget: layout_widget
+    } do
+      playlist_a = playlist_fixture(%{organization_id: organization.id, name: "A"})
+      playlist_b = playlist_fixture(%{organization_id: organization.id, name: "B"})
+      playlist_c = playlist_fixture(%{organization_id: organization.id, name: "C"})
+      filler1 = playlist_fixture(%{organization_id: organization.id, name: "filler1"})
+      filler2 = playlist_fixture(%{organization_id: organization.id, name: "filler2"})
+
+      # A -> B (success)
+      {:ok, _item} = Resources.insert_item_into_playlist(
+        playlist_a.id,
+        nil,
+        layout_widget.id,
+        0,
+        10000,
+        %{"playlist_1" => playlist_b.id, "playlist_2" => filler1.id, "playlist_3" => filler2.id}
+      )
+
+      # B -> C (success)
+      {:ok, _item} = Resources.insert_item_into_playlist(
+        playlist_b.id,
+        nil,
+        layout_widget.id,
+        0,
+        10000,
+        %{"playlist_1" => playlist_c.id, "playlist_2" => filler1.id, "playlist_3" => filler2.id}
+      )
+
+      # C -> A (this should fail - would create cycle)
+      result = Resources.insert_item_into_playlist(
+        playlist_c.id,
+        nil,
+        layout_widget.id,
+        0,
+        10000,
+        %{"playlist_1" => playlist_a.id, "playlist_2" => filler1.id, "playlist_3" => filler2.id}
+      )
+
+      assert {:error, :circular_reference} = result
+    end
+
+    test "allows valid non-circular references", %{
+      organization: organization,
+      layout_widget: layout_widget
+    } do
+      # Create a tree structure: A -> B, A -> C, B -> D, C -> D
+      # This is NOT circular, just D has multiple parents
+      playlist_a = playlist_fixture(%{organization_id: organization.id, name: "A"})
+      playlist_b = playlist_fixture(%{organization_id: organization.id, name: "B"})
+      playlist_c = playlist_fixture(%{organization_id: organization.id, name: "C"})
+      playlist_d = playlist_fixture(%{organization_id: organization.id, name: "D"})
+      filler1 = playlist_fixture(%{organization_id: organization.id, name: "filler1"})
+
+      # A -> B, C
+      {:ok, _item} = Resources.insert_item_into_playlist(
+        playlist_a.id,
+        nil,
+        layout_widget.id,
+        0,
+        10000,
+        %{"playlist_1" => playlist_b.id, "playlist_2" => playlist_c.id, "playlist_3" => filler1.id}
+      )
+
+      # B -> D
+      {:ok, _item} = Resources.insert_item_into_playlist(
+        playlist_b.id,
+        nil,
+        layout_widget.id,
+        0,
+        10000,
+        %{"playlist_1" => playlist_d.id, "playlist_2" => filler1.id, "playlist_3" => filler1.id}
+      )
+
+      # C -> D (this should succeed - D is a shared child, not a cycle)
+      result = Resources.insert_item_into_playlist(
+        playlist_c.id,
+        nil,
+        layout_widget.id,
+        0,
+        10000,
+        %{"playlist_1" => playlist_d.id, "playlist_2" => filler1.id, "playlist_3" => filler1.id}
+      )
+
+      assert {:ok, _item} = result
+    end
+  end
+
+  describe "widget integration credentials validation" do
+    alias Castmill.Widgets
+    alias Castmill.Widgets.Integrations
+    alias Castmill.Resources
+
+    setup %{organization: organization, team: team} do
+      # Create a widget with integration that requires credentials
+      {:ok, widget_with_integration} =
+        Widgets.create_widget(%{
+          name: "Spotify Test Widget #{System.unique_integer([:positive])}",
+          slug: "spotify-test-#{System.unique_integer([:positive])}",
+          template: %{"html" => "<div>Spotify Test</div>"}
+        })
+
+      # Create an integration with credential_schema that requires auth
+      {:ok, integration} =
+        Integrations.create_integration(%{
+          widget_id: widget_with_integration.id,
+          name: "spotify",
+          description: "Spotify integration for testing",
+          integration_type: "pull",
+          credential_scope: "organization",
+          pull_endpoint: "https://api.spotify.com/v1/me/player",
+          pull_interval_seconds: 15,
+          credential_schema: %{
+            "auth_type" => "oauth2",
+            "fields" => %{
+              "client_id" => %{"type" => "string", "required" => true},
+              "client_secret" => %{"type" => "string", "required" => true}
+            }
+          }
+        })
+
+      # Create a playlist to test with
+      playlist =
+        playlist_fixture(%{
+          organization_id: organization.id,
+          name: "test_playlist_#{System.unique_integer([:positive])}"
+        })
+
+      {:ok, _result} = Teams.add_resource_to_team(team.id, "playlists", playlist.id, [:read, :write])
+
+      %{
+        widget_with_integration: widget_with_integration,
+        integration: integration,
+        playlist: playlist
+      }
+    end
+
+    test "prevents adding widget to playlist when integration credentials are not configured", %{
+      playlist: playlist,
+      widget_with_integration: widget
+    } do
+      # Try to add widget without credentials configured
+      result = Resources.insert_item_into_playlist(
+        playlist.id,
+        nil,
+        widget.id,
+        0,
+        10000,
+        %{}
+      )
+
+      assert {:error, :missing_integration_credentials} = result
+    end
+
+    test "allows adding widget to playlist when integration credentials are configured", %{
+      organization: organization,
+      playlist: playlist,
+      widget_with_integration: widget,
+      integration: integration
+    } do
+      # Store credentials for this organization
+      {:ok, _credential} = Integrations.upsert_credentials(%{
+        widget_integration_id: integration.id,
+        organization_id: organization.id,
+        encrypted_credentials: "test_encrypted_data"
+      })
+
+      # Now adding widget should succeed
+      result = Resources.insert_item_into_playlist(
+        playlist.id,
+        nil,
+        widget.id,
+        0,
+        10000,
+        %{}
+      )
+
+      assert {:ok, _item} = result
+    end
+
+    test "allows adding regular widget without integrations to playlist", %{
+      organization: organization,
+      team: team
+    } do
+      # Create a simple widget without any integrations
+      {:ok, simple_widget} =
+        Widgets.create_widget(%{
+          name: "Simple Widget #{System.unique_integer([:positive])}",
+          slug: "simple-#{System.unique_integer([:positive])}",
+          template: %{"html" => "<div>Simple</div>"}
+        })
+
+      # Create a new playlist
+      playlist =
+        playlist_fixture(%{
+          organization_id: organization.id,
+          name: "simple_test_playlist_#{System.unique_integer([:positive])}"
+        })
+
+      {:ok, _result} = Teams.add_resource_to_team(team.id, "playlists", playlist.id, [:read, :write])
+
+      # Adding widget without integrations should succeed
+      result = Resources.insert_item_into_playlist(
+        playlist.id,
+        nil,
+        simple_widget.id,
+        0,
+        10000,
+        %{}
+      )
+
+      assert {:ok, _item} = result
+    end
+  end
 end

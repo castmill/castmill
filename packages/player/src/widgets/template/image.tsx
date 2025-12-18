@@ -63,10 +63,8 @@ export const Image: Component<ImageProps> = (props: ImageProps) => {
   // const imageUrl = props.medias[props.opts.url];
   const imageUrl = props.opts.url;
 
-  if (!imageUrl) {
-    // TODO: Mechanism to report errors without breaking the whole template nor the playlist.
-    throw new Error(`Image ${props.opts.url} not found in medias`);
-  }
+  // Gracefully handle missing/empty image URLs - don't crash the player
+  const hasValidUrl = imageUrl && imageUrl.trim() !== '';
 
   const merged = mergeProps(
     {
@@ -75,6 +73,8 @@ export const Image: Component<ImageProps> = (props: ImageProps) => {
       'background-size': props.opts.size,
       'background-repeat': 'no-repeat',
       'background-position': 'center',
+      // Show a subtle placeholder background when no image
+      ...(hasValidUrl ? {} : { 'background-color': 'rgba(0,0,0,0.2)' }),
     },
     props.style
   );
@@ -93,12 +93,17 @@ export const Image: Component<ImageProps> = (props: ImageProps) => {
         );
       }
 
-      let imageUrl = await props.resourceManager.getMedia(props.opts.url);
-      if (!imageUrl) {
-        // TODO: report error properly
-        console.error(`Image ${props.opts.url} not found in cached medias`);
+      if (hasValidUrl) {
+        let cachedUrl = await props.resourceManager.getMedia(props.opts.url);
+        if (!cachedUrl) {
+          // Log warning but don't crash - use original URL as fallback
+          console.warn(
+            `Image ${props.opts.url} not found in cached medias, using original URL`
+          );
+        }
+        imageRef.style.backgroundImage = `url(${cachedUrl || props.opts.url})`;
       }
-      imageRef.style.backgroundImage = `url(${imageUrl || props.opts.url})`;
+      // If no valid URL, just leave the placeholder background
     }
     props.onReady();
   });

@@ -82,9 +82,13 @@
     "backToLogin": "ログインに戻る",
     "selectImage": "画像を選択",
     "selectMedia": "メディアを選択",
+    "selectPlaylist": "プレイリストを選択",
+    "playlist": "プレイリスト",
+    "addPlaylist": "プレイリストを追加",
     "apply": "適用",
     "selectVideo": "ビデオを選択",
-    "offline": "オフライン"
+    "offline": "オフライン",
+    "widget": "Widget"
   },
   "topbar": {
     "help": "ヘルプ",
@@ -471,7 +475,11 @@
       "aspectRatioMax": "値は100以下である必要があります",
       "aspectRatioExtreme": "アスペクト比が極端すぎます（最大比率は10:1）",
       "updateAspectRatio": "アスペクト比の更新中にエラーが発生しました：{{error}}"
-    }
+    },
+    "credentialsRequired": "認証情報が必要です",
+    "credentialsRequiredDescription": "Widget「{{widget}}」をプレイリストに追加する前に、認証情報を設定する必要があります。",
+    "missingIntegrations": "不足している統合",
+    "goToIntegrations": "統合に移動"
   },
   "widgets": {
     "title": "Widgets",
@@ -482,7 +490,54 @@
     "viewDetails": "詳細を表示",
     "template": "テンプレート",
     "optionsSchema": "オプションスキーマ",
-    "dataSchema": "データスキーマ"
+    "dataSchema": "データスキーマ",
+    "spotify": {
+      "title": "Spotify 接続",
+      "connectButton": "Spotify に接続",
+      "disconnectButton": "切断",
+      "connectDescription": "Spotify アカウントを接続して、デジタルサイネージに現在再生中のトラックを表示します。",
+      "connected": "接続済み",
+      "connectedSince": "{{date}} から接続",
+      "connectionSuccess": "Spotify への接続に成功しました！",
+      "connectionFailed": "Spotify への接続に失敗しました。もう一度お試しください。",
+      "disconnectNotSupported": "切断はまだサポートされていません。Spotify のアカウント設定からアクセスを取り消してください。"
+    },
+    "integrations": {
+      "title": "統合",
+      "noIntegrations": "このWidgetには設定された統合がありません。",
+      "configure": "設定",
+      "configured": "設定済み",
+      "notConfigured": "未設定",
+      "requiresAuth": "認証が必要",
+      "authType": "認証タイプ",
+      "oauth2": "OAuth 2.0",
+      "apiKey": "APIキー",
+      "credentials": "資格情報",
+      "saveCredentials": "資格情報を保存",
+      "testConnection": "接続テスト",
+      "testSuccess": "接続テスト成功！",
+      "testFailed": "接続テスト失敗：{{error}}",
+      "credentialsSaved": "資格情報が正常に保存されました！",
+      "credentialsSaveFailed": "資格情報の保存に失敗しました：{{error}}",
+      "connectWith": "{{provider}}で接続",
+      "connectedTo": "{{provider}}に接続済み",
+      "disconnect": "切断",
+      "reconnect": "再接続",
+      "lastValidated": "最終検証：{{date}}",
+      "scopeOrganization": "組織全体",
+      "scopeWidget": "Widget固有",
+      "pullMode": "データ取得",
+      "pushMode": "Webhook",
+      "pullInterval": "{{seconds}}秒ごとに更新",
+      "fieldRequired": "{{field}}は必須です",
+      "connectionStatus": "接続状態",
+      "valid": "有効",
+      "invalid": "無効",
+      "pending": "設定待ち",
+      "enterClientCredentials": "以下に{{provider}} APIの資格情報を入力してください：",
+      "afterSavingCredentials": "資格情報を保存した後、下のボタンをクリックして{{provider}}で認証してください：",
+      "networkCredentialsConfigured": "ネットワーク管理者が{{provider}}の資格情報を既に設定しています。下のボタンをクリックするだけでアカウントを接続できます。"
+    }
   },
   "devices": {
     "setDeviceChannel": "デバイスチャンネルを設定",

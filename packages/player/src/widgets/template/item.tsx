@@ -7,7 +7,7 @@ import { Image, ImageComponent } from './image';
 import { List, ListComponent } from './list';
 import { ImageCarousel, ImageCarouselComponent } from './image-carousel';
 import { Text, TextComponent, TextComponentOptions } from './text';
-import { TemplateConfig, resolveKey } from './binding';
+import { TemplateConfig, resolveKey, resolveOption } from './binding';
 import { Video, VideoComponent } from './video';
 import {
   TemplateComponent,
@@ -42,6 +42,27 @@ function checkFilter(
   return Object.keys(filter).every(
     (key) => filter[key] === resolveKey(key, config, context, globals)[0]
   );
+}
+
+/**
+ * Resolves bindings in style objects.
+ * Allows style properties to use bindings like { key: "data.progress_percent" }
+ */
+function resolveStyleBindings(
+  style: Record<string, any>,
+  config: TemplateConfig,
+  context: any,
+  globals: PlayerGlobals
+): Record<string, any> {
+  const resolvedStyle: Record<string, any> = {};
+  const keys = Object.keys(style);
+
+  for (let i = 0; i < keys.length; i++) {
+    const key = keys[i];
+    resolvedStyle[key] = resolveOption(style[key], config, context, globals);
+  }
+
+  return resolvedStyle;
 }
 
 const Empty: Component<{ onReady: () => void }> = (props) => {
@@ -83,6 +104,14 @@ export const Item: Component<{
       }
     }
   }
+
+  // Resolve any bindings in style properties (e.g., { key: "data.progress_percent" })
+  style = resolveStyleBindings(
+    style,
+    props.config,
+    props.context,
+    props.globals
+  );
 
   return (
     <Show

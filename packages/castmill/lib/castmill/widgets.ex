@@ -152,31 +152,172 @@ defmodule Castmill.Widgets do
   end
 
   def update_widget_config(playlist_id, playlist_item_id, options, data) do
-    # Define the current timestamp for the last_request_at field
-    current_timestamp = DateTime.utc_now()
+    # First, check for circular references if this is a layout widget with playlist references
+    with :ok <- validate_playlist_references(playlist_id, playlist_item_id, options) do
+      # Define the current timestamp for the last_request_at field
+      current_timestamp = DateTime.utc_now()
 
-    # Directly use keyword list for the update clause
-    {count, _} =
-      from(wc in WidgetConfig,
-        join: pi in assoc(wc, :playlist_item),
-        where: pi.playlist_id == ^playlist_id and pi.id == ^playlist_item_id,
-        update: [
-          set: [
-            options: ^options,
-            data: ^data,
-            last_request_at: ^current_timestamp,
-            version: fragment("version + 1")
+      # Directly use keyword list for the update clause
+      {count, _} =
+        from(wc in WidgetConfig,
+          join: pi in assoc(wc, :playlist_item),
+          where: pi.playlist_id == ^playlist_id and pi.id == ^playlist_item_id,
+          update: [
+            set: [
+              options: ^options,
+              data: ^data,
+              last_request_at: ^current_timestamp,
+              version: fragment("version + 1")
+            ]
           ]
-        ]
-      )
-      |> Repo.update_all([])
+        )
+        |> Repo.update_all([])
 
-    case count do
-      1 -> {:ok, "Widget configuration updated successfully"}
-      0 -> {:error, "No widget configuration found with the provided IDs"}
-      _ -> {:error, "Unexpected number of records updated"}
+      case count do
+        1 -> {:ok, "Widget configuration updated successfully"}
+        0 -> {:error, "No widget configuration found with the provided IDs"}
+        _ -> {:error, "Unexpected number of records updated"}
+      end
     end
   end
+
+  @doc """
+  Validates that playlist references in layout widgets don't create circular references.
+  This is the public entry point for validation before a playlist item is created.
+
+  Returns :ok if validation passes, or {:error, :circular_reference} if it would create a cycle.
+  """
+  def validate_playlist_references_for_widget(widget_id, playlist_id, options) do
+    widget = get_widget(widget_id)
+
+    if widget && is_layout_widget?(widget) do
+      # Extract playlist IDs from options
+      playlist_refs = extract_playlist_references(options)
+
+      # Validate each playlist reference
+      Enum.reduce_while(playlist_refs, :ok, fn ref_playlist_id, _acc ->
+        case Castmill.Resources.validate_no_circular_reference(playlist_id, ref_playlist_id) do
+          :ok -> {:cont, :ok}
+          {:error, :circular_reference} -> {:halt, {:error, :circular_reference}}
+        end
+      end)
+    else
+      :ok
+    end
+  end
+
+  @doc """
+  Validates that a widget's required integration credentials are configured for the organization.
+
+  Widgets with integrations that have a non-empty credential_schema require credentials
+  to be configured at the organization level before they can be added to a playlist.
+
+  Returns :ok if validation passes, or {:error, :missing_integration_credentials} if
+  credentials are required but not configured.
+
+  ## Parameters
+    - widget_id: The ID of the widget to validate
+    - organization_id: The organization ID to check credentials for
+
+  ## Examples
+
+      iex> validate_integration_credentials_for_widget("spotify-now-playing", "org-123")
+      :ok
+
+      iex> validate_integration_credentials_for_widget("spotify-now-playing", "org-without-creds")
+      {:error, :missing_integration_credentials}
+  """
+  def validate_integration_credentials_for_widget(widget_id, organization_id) do
+    alias Castmill.Widgets.Integrations
+
+    # Get all integrations for this widget
+    integrations = Integrations.list_integrations(widget_id: widget_id)
+
+    # Check each integration that requires credentials
+    Enum.reduce_while(integrations, :ok, fn integration, _acc ->
+      if integration_requires_credentials?(integration) do
+        # Check if credentials exist for this organization
+        case Integrations.get_credentials_by_scope(integration.id, organization_id: organization_id) do
+          nil -> {:halt, {:error, :missing_integration_credentials}}
+          _credential -> {:cont, :ok}
+        end
+      else
+        {:cont, :ok}
+      end
+    end)
+  end
+
+  # Checks if an integration requires credentials based on its credential_schema
+  defp integration_requires_credentials?(integration) do
+    credential_schema = integration.credential_schema
+
+    cond do
+      # No credential schema at all
+      is_nil(credential_schema) -> false
+      # Empty map
+      credential_schema == %{} -> false
+      # Has auth_type or fields defined
+      Map.has_key?(credential_schema, "auth_type") -> true
+      Map.has_key?(credential_schema, "fields") && credential_schema["fields"] != %{} -> true
+      # Otherwise, doesn't require credentials
+      true -> false
+    end
+  end
+
+  # Validates that playlist references in layout widgets don't create circular references
+  # This version is used for updating existing widget configs
+  defp validate_playlist_references(playlist_id, playlist_item_id, options) do
+    # Get the widget config to check if it's a layout widget
+    widget_config = get_widget_config_with_widget(playlist_id, playlist_item_id)
+
+    if widget_config && is_layout_widget?(widget_config.widget) do
+      # Extract playlist IDs from options
+      playlist_refs = extract_playlist_references(options)
+
+      # Validate each playlist reference
+      Enum.reduce_while(playlist_refs, :ok, fn ref_playlist_id, _acc ->
+        case Castmill.Resources.validate_no_circular_reference(playlist_id, ref_playlist_id) do
+          :ok -> {:cont, :ok}
+          {:error, :circular_reference} -> {:halt, {:error, :circular_reference}}
+        end
+      end)
+    else
+      :ok
+    end
+  end
+
+  defp get_widget_config_with_widget(playlist_id, playlist_item_id) do
+    from(wc in WidgetConfig,
+      join: pi in assoc(wc, :playlist_item),
+      join: w in assoc(wc, :widget),
+      where: pi.playlist_id == ^playlist_id and pi.id == ^playlist_item_id,
+      preload: [widget: w]
+    )
+    |> Repo.one()
+  end
+
+  defp is_layout_widget?(widget) do
+    widget && widget.slug in ["layout-portrait-3"]
+  end
+
+  defp extract_playlist_references(options) when is_map(options) do
+    # Layout widgets store playlist references as playlist_1, playlist_2, playlist_3
+    ["playlist_1", "playlist_2", "playlist_3"]
+    |> Enum.map(&Map.get(options, &1))
+    |> Enum.filter(&(&1 != nil))
+    |> Enum.map(fn
+      id when is_integer(id) -> id
+      id when is_binary(id) ->
+        case Integer.parse(id) do
+          {int_id, ""} -> int_id
+          _ -> nil
+        end
+      _ -> nil
+    end)
+    |> Enum.filter(&(&1 != nil))
+  end
+
+  defp extract_playlist_references(_), do: []
 
   def get_widget_config(playlist_id, playlist_item_id) do
     from(wc in WidgetConfig,
@@ -250,5 +391,68 @@ defmodule Castmill.Widgets do
   """
   def change_widget(%Widget{} = widget, attrs \\ %{}) do
     Widget.changeset(widget, attrs)
+  end
+
+  @doc """
+  Gets the organization ID for a widget config.
+
+  Traces through: WidgetConfig -> PlaylistItem -> Playlist -> Organization
+
+  Returns `nil` if the widget config doesn't exist or isn't linked to a playlist.
+
+  ## Examples
+
+      iex> get_organization_id_for_widget_config("config-uuid")
+      "org-uuid"
+
+      iex> get_organization_id_for_widget_config("nonexistent")
+      nil
+  """
+  def get_organization_id_for_widget_config(widget_config_id) do
+    # Validate that widget_config_id is a valid UUID before querying
+    # Some older widget configs have integer IDs which won't work with integrations
+    case Ecto.UUID.cast(widget_config_id) do
+      {:ok, _uuid} ->
+        query =
+          from wc in WidgetConfig,
+            join: pi in assoc(wc, :playlist_item),
+            join: p in assoc(pi, :playlist),
+            where: wc.id == ^widget_config_id,
+            select: p.organization_id
+
+        Repo.one(query)
+
+      :error ->
+        # Not a valid UUID (e.g., integer ID from older widget configs)
+        nil
+    end
+  end
+
+  @doc """
+  Gets the widget ID for a given widget config.
+
+  Returns `nil` if the widget config doesn't exist.
+
+  ## Examples
+
+      iex> get_widget_id_for_config("config-uuid")
+      7
+
+      iex> get_widget_id_for_config("nonexistent")
+      nil
+  """
+  def get_widget_id_for_config(widget_config_id) do
+    case Ecto.UUID.cast(widget_config_id) do
+      {:ok, _uuid} ->
+        query =
+          from wc in WidgetConfig,
+            where: wc.id == ^widget_config_id,
+            select: wc.widget_id
+
+        Repo.one(query)
+
+      :error ->
+        nil
+    end
   end
 end

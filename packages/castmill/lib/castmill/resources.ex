@@ -151,13 +151,13 @@ defmodule Castmill.Resources do
     else
       items =
         get_playlist_items(id)
-        |> Enum.map(&transform_item/1)
+        |> Enum.map(&transform_item(&1, playlist.organization_id))
 
       %{playlist | items: items}
     end
   end
 
-  defp transform_item(item) do
+  defp transform_item(item, organization_id) do
     # Resolve widget references and get the updated options
     resolved_options =
       resolve_widget_references(
@@ -172,13 +172,69 @@ defmodule Castmill.Resources do
     modified_widget_config_with_resolved_options =
       Map.put(modified_widget_config, :options, resolved_options)
 
+    # Apply defaults from data_schema to ensure all fields have values
+    # This is important for widgets like Spotify Now Playing that rely on default values
+    data_with_defaults = apply_data_schema_defaults(
+      item.widget_config.widget.data_schema || %{},
+      Map.get(modified_widget_config_with_resolved_options, :data, %{}) || %{}
+    )
+
+    modified_widget_config_with_defaults =
+      Map.put(modified_widget_config_with_resolved_options, :data, data_with_defaults)
+
+    # Fetch integration data if available and merge into config.data
+    # This makes integration data available to the player template system
+    # which resolves bindings like {key: "data.field_name"}
+    #
+    # Strategy:
+    # 1. First try widget-config-specific data
+    # 2. Fall back to organization-level shared data (e.g., all Spotify widgets
+    #    in an org share the same "Now Playing" data)
+    integration_data =
+      case Castmill.Widgets.Integrations.get_integration_data_by_config(item.widget_config.id) do
+        %Castmill.Widgets.Integrations.WidgetIntegrationData{} = data ->
+          data
+        nil ->
+          # Try organization-level shared data
+          widget_id = item.widget_config.widget.id
+          Castmill.Widgets.Integrations.get_integration_data_for_widget_in_org(organization_id, widget_id)
+      end
+
+    modified_widget_config_with_integration =
+      case integration_data do
+        %Castmill.Widgets.Integrations.WidgetIntegrationData{} = data ->
+          # Merge integration data into the existing data field (overrides defaults)
+          existing_data = Map.get(modified_widget_config_with_defaults, :data, %{}) || %{}
+          merged_data = Map.merge(existing_data, data.data || %{})
+          Map.put(modified_widget_config_with_defaults, :data, merged_data)
+        nil ->
+          modified_widget_config_with_defaults
+      end
+
     # Take required fields from item and merge the modified widget data and other info
     item
     |> Map.take([:id, :duration, :offset, :inserted_at, :updated_at])
     |> Map.merge(%{
-      config: modified_widget_config_with_resolved_options,
+      config: modified_widget_config_with_integration,
       widget: item.widget_config.widget
     })
+  end
+
+  # Apply default values from data_schema to the data map
+  defp apply_data_schema_defaults(data_schema, data) do
+    Enum.reduce(data_schema, data, fn {key, schema_def}, acc ->
+      case Map.get(acc, key) do
+        nil ->
+          # Field not set, apply default if available
+          case Map.get(schema_def, "default") do
+            nil -> acc
+            default -> Map.put(acc, key, default)
+          end
+        _ ->
+          # Field already has a value
+          acc
+      end
+    end)
   end
 
   defp resolve_widget_references(schema, data) do
@@ -201,6 +257,21 @@ defmodule Castmill.Resources do
       nil -> nil
       media_id -> get_media(media_id)
     end
+  end
+
+  defp fetch_widget_reference(data, key, "playlists") do
+    case Map.get(data, key) do
+      nil -> nil
+      playlist_id -> get_playlist(playlist_id)  # Fetch full playlist with items for player
+    end
+  end
+
+  @doc """
+  Get basic playlist info without items (to avoid circular references).
+  Used when resolving playlist references in layout widgets.
+  """
+  def get_playlist_basic(id) do
+    Repo.get(Playlist, id)
   end
 
   @doc """
@@ -318,6 +389,102 @@ defmodule Castmill.Resources do
   end
 
   @doc """
+  Gets all ancestor playlist IDs for a given playlist.
+  An ancestor is a playlist that contains the given playlist (directly or indirectly)
+  through layout widgets that reference playlists.
+
+  This is used to prevent circular references when configuring layout widgets.
+  """
+  def get_playlist_ancestors(playlist_id) when is_integer(playlist_id) do
+    get_playlist_ancestors_recursive(playlist_id, MapSet.new(), MapSet.new())
+    |> MapSet.to_list()
+  end
+
+  defp get_playlist_ancestors_recursive(playlist_id, visited, ancestors) do
+    if MapSet.member?(visited, playlist_id) do
+      # Already processed this playlist, return current ancestors
+      ancestors
+    else
+      # Mark this playlist as visited
+      new_visited = MapSet.put(visited, playlist_id)
+
+      # Find all playlists that contain this playlist through their widget configs
+      # Layout widgets store playlist references in their options as playlist_1, playlist_2, playlist_3
+      parent_playlist_ids = get_direct_parent_playlists(playlist_id)
+
+      # Recursively find ancestors of each parent
+      Enum.reduce(parent_playlist_ids, ancestors, fn parent_id, acc ->
+        # Add parent to ancestors
+        updated_ancestors = MapSet.put(acc, parent_id)
+        # Recurse to find parent's ancestors
+        get_playlist_ancestors_recursive(parent_id, new_visited, updated_ancestors)
+      end)
+    end
+  end
+
+  defp get_direct_parent_playlists(playlist_id) do
+    # Query for playlist items that have widget configs with this playlist_id in their options
+    # Layout widgets have options like: {"playlist_1": 123, "playlist_2": 456, ...}
+    # We need to find all playlists that contain items referencing our playlist_id
+
+    query = from(pi in PlaylistItem,
+      join: wc in assoc(pi, :widget_config),
+      join: w in assoc(wc, :widget),
+      where: w.slug in ["layout-portrait-3"] and  # Layout widgets that reference playlists
+             (fragment("(?->>'playlist_1')::integer = ?", wc.options, ^playlist_id) or
+              fragment("(?->>'playlist_2')::integer = ?", wc.options, ^playlist_id) or
+              fragment("(?->>'playlist_3')::integer = ?", wc.options, ^playlist_id)),
+      select: pi.playlist_id,
+      distinct: true
+    )
+
+    Repo.all(query)
+  end
+
+  @doc """
+  Validates that selecting a playlist would not create a circular reference.
+  Returns :ok if valid, or {:error, :circular_reference} if it would create a cycle.
+
+  A circular reference would occur if:
+  1. The current playlist tries to reference itself
+  2. The selected playlist is already an ancestor of the current playlist
+     (meaning the current playlist is already contained within the selected playlist,
+      so adding selected as a child would create: selected -> ... -> current -> selected)
+
+  ## Parameters
+    - current_playlist_id: The playlist where the layout widget is being configured
+    - selected_playlist_id: The playlist being selected for the layout widget
+  """
+  def validate_no_circular_reference(current_playlist_id, selected_playlist_id) do
+    # Ensure both IDs are integers
+    current_id = to_integer(current_playlist_id)
+    selected_id = to_integer(selected_playlist_id)
+
+    cond do
+      # Can't select the same playlist
+      current_id == selected_id ->
+        {:error, :circular_reference}
+
+      # Check if selected playlist is an ancestor of current playlist
+      # If so, adding selected as child would create: selected -> ... -> current -> selected
+      selected_id in get_playlist_ancestors(current_id) ->
+        {:error, :circular_reference}
+
+      true ->
+        :ok
+    end
+  end
+
+  # Helper to convert string or integer to integer
+  defp to_integer(id) when is_integer(id), do: id
+  defp to_integer(id) when is_binary(id) do
+    case Integer.parse(id) do
+      {int_id, ""} -> int_id
+      _ -> raise ArgumentError, "Invalid playlist ID: #{id}"
+    end
+  end
+
+  @doc """
     Creates a Playlist item
   """
   def create_playlist_item(attrs \\ %{}) do
@@ -340,6 +507,9 @@ defmodule Castmill.Resources do
    beginning of the list if nil is passed as the prev_item_id.
 
    The options passed must conform with the widget's schema, or an error will be returned.
+
+   For layout widgets, validates that the playlist references don't create circular references.
+   For widgets with integrations, validates that required credentials are configured.
   """
   def insert_item_into_playlist(
         playlist_id,
@@ -350,22 +520,35 @@ defmodule Castmill.Resources do
         options \\ %{}
       ) do
     Repo.transaction(fn ->
-      with {:ok, prev_item, next_item_id} <- get_prev_and_next_items(playlist_id, prev_item_id),
-           {:ok, item} <-
-             create_playlist_item(%{
-               playlist_id: playlist_id,
-               offset: offset,
-               duration: duration,
-               prev_item_id: prev_item && prev_item.id,
-               next_item_id: next_item_id
-             }),
-           {:ok, _widget_config} <-
-             Castmill.Widgets.new_widget_config(widget_id, item.id, options),
-           :ok <- link_playlist_items(prev_item, item) do
-        item
+      # First, get the playlist to access its organization_id
+      playlist = Repo.get(Playlist, playlist_id)
+
+      if is_nil(playlist) do
+        Repo.rollback("Playlist not found")
       else
-        {:error, reason} -> Repo.rollback(reason)
-        error -> Repo.rollback(to_string(error))
+        with {:ok, prev_item, next_item_id} <- get_prev_and_next_items(playlist_id, prev_item_id),
+             # Validate circular references BEFORE creating the playlist item
+             :ok <- Castmill.Widgets.validate_playlist_references_for_widget(widget_id, playlist_id, options),
+             # Validate that required integration credentials are configured
+             :ok <- Castmill.Widgets.validate_integration_credentials_for_widget(widget_id, playlist.organization_id),
+             {:ok, item} <-
+               create_playlist_item(%{
+                 playlist_id: playlist_id,
+                 offset: offset,
+                 duration: duration,
+                 prev_item_id: prev_item && prev_item.id,
+                 next_item_id: next_item_id
+               }),
+             {:ok, widget_config} <-
+               Castmill.Widgets.new_widget_config(widget_id, item.id, options),
+             :ok <- link_playlist_items(prev_item, item) do
+          # Return both item and widget_config_id for the frontend
+          # Use Map.put since PlaylistItem struct doesn't have widget_config_id field
+          Map.put(item, :widget_config_id, widget_config.id)
+        else
+          {:error, reason} -> Repo.rollback(reason)
+          error -> Repo.rollback(to_string(error))
+        end
       end
     end)
   end

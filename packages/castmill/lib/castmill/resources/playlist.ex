@@ -3,6 +3,8 @@ defmodule Castmill.Resources.Playlist do
   import Ecto.Changeset
   import Ecto.Query, warn: false
 
+  @behaviour Castmill.Behaviour.Filterable
+
   schema "playlists" do
     field(:name, :string)
     field(:status, Ecto.Enum, values: [:draft, :live])
@@ -99,6 +101,34 @@ defmodule Castmill.Resources.Playlist do
   def base_query() do
     from(playlist in Castmill.Resources.Playlist, as: :playlist)
   end
+
+  @doc """
+  Filter to exclude specific playlist IDs.
+  Accepts comma-separated IDs string: "exclude_ids:1,2,3"
+  """
+  @impl Castmill.Behaviour.Filterable
+  def apply_filter({"exclude_ids", ids_string}) when is_binary(ids_string) do
+    ids =
+      ids_string
+      |> String.split(",")
+      |> Enum.map(&String.trim/1)
+      |> Enum.filter(&(&1 != ""))
+      |> Enum.map(fn id_str ->
+        case Integer.parse(id_str) do
+          {id, ""} -> id
+          _ -> nil
+        end
+      end)
+      |> Enum.filter(&(&1 != nil))
+
+    if Enum.empty?(ids) do
+      nil
+    else
+      dynamic([playlist: p], p.id not in ^ids)
+    end
+  end
+
+  def apply_filter(_), do: nil
 end
 
 defimpl Jason.Encoder, for: Castmill.Resources.Playlist do

@@ -79,7 +79,11 @@
     "selectVideo": "Video auswählen",
     "offline": "Offline",
     "selectImage": "Bild auswählen",
-    "selectMedia": "Medien auswählen"
+    "selectMedia": "Medien auswählen",
+    "selectPlaylist": "Wiedergabeliste auswählen",
+    "playlist": "Wiedergabeliste",
+    "addPlaylist": "Wiedergabeliste hinzufügen",
+    "widget": "Widget"
   },
   "sidebar": {
     "organization": "Organisation",
@@ -481,7 +485,11 @@
       "aspectRatioMax": "Wert muss 100 oder weniger sein",
       "aspectRatioExtreme": "Seitenverhältnis ist zu extrem (max Verhältnis ist 10:1)",
       "updateAspectRatio": "Fehler beim Aktualisieren des Seitenverhältnisses: {{error}}"
-    }
+    },
+    "credentialsRequired": "Anmeldedaten Erforderlich",
+    "credentialsRequiredDescription": "Das Widget \"{{widget}}\" erfordert die Konfiguration von Anmeldedaten, bevor es einer Wiedergabeliste hinzugefügt werden kann.",
+    "missingIntegrations": "Fehlende Integrationen",
+    "goToIntegrations": "Zu Integrationen"
   },
   "widgets": {
     "title": "Widgets",
@@ -492,7 +500,54 @@
     "viewDetails": "Details anzeigen",
     "template": "Vorlage",
     "optionsSchema": "Optionsschema",
-    "dataSchema": "Datenschema"
+    "dataSchema": "Datenschema",
+    "spotify": {
+      "title": "Spotify-Verbindung",
+      "connectButton": "Mit Spotify verbinden",
+      "disconnectButton": "Trennen",
+      "connectDescription": "Verbinden Sie Ihr Spotify-Konto, um den aktuell gespielten Titel auf Ihrer digitalen Beschilderung anzuzeigen.",
+      "connected": "Verbunden",
+      "connectedSince": "Verbunden seit {{date}}",
+      "connectionSuccess": "Erfolgreich mit Spotify verbunden!",
+      "connectionFailed": "Verbindung zu Spotify fehlgeschlagen. Bitte versuchen Sie es erneut.",
+      "disconnectNotSupported": "Trennen wird noch nicht unterstützt. Bitte widerrufen Sie den Zugriff in Ihren Spotify-Kontoeinstellungen."
+    },
+    "integrations": {
+      "title": "Integrationen",
+      "noIntegrations": "Dieses Widget hat keine konfigurierten Integrationen.",
+      "configure": "Konfigurieren",
+      "configured": "Konfiguriert",
+      "notConfigured": "Nicht konfiguriert",
+      "requiresAuth": "Erfordert Authentifizierung",
+      "authType": "Authentifizierungstyp",
+      "oauth2": "OAuth 2.0",
+      "apiKey": "API-Schlüssel",
+      "credentials": "Anmeldedaten",
+      "saveCredentials": "Anmeldedaten speichern",
+      "testConnection": "Verbindung testen",
+      "testSuccess": "Verbindungstest erfolgreich!",
+      "testFailed": "Verbindungstest fehlgeschlagen: {{error}}",
+      "credentialsSaved": "Anmeldedaten erfolgreich gespeichert!",
+      "credentialsSaveFailed": "Fehler beim Speichern der Anmeldedaten: {{error}}",
+      "connectWith": "Mit {{provider}} verbinden",
+      "connectedTo": "Verbunden mit {{provider}}",
+      "disconnect": "Trennen",
+      "reconnect": "Neu verbinden",
+      "lastValidated": "Zuletzt validiert: {{date}}",
+      "scopeOrganization": "Organisationsweit",
+      "scopeWidget": "Widget-spezifisch",
+      "pullMode": "Datenabruf",
+      "pushMode": "Webhook",
+      "pullInterval": "Aktualisiert alle {{seconds}} Sekunden",
+      "fieldRequired": "{{field}} ist erforderlich",
+      "connectionStatus": "Verbindungsstatus",
+      "valid": "Gültig",
+      "invalid": "Ungültig",
+      "pending": "Einrichtung ausstehend",
+      "enterClientCredentials": "Geben Sie unten Ihre {{provider}} API-Anmeldedaten ein:",
+      "afterSavingCredentials": "Nachdem Sie Ihre Anmeldedaten gespeichert haben, klicken Sie unten, um sich bei {{provider}} zu autorisieren:",
+      "networkCredentialsConfigured": "Die {{provider}}-Integration wurde von Ihrem Netzwerkadministrator konfiguriert. Klicken Sie unten, um Ihr Konto zu autorisieren:"
+    }
   },
   "devices": {
     "setDeviceChannel": "Gerätekanal festlegen",

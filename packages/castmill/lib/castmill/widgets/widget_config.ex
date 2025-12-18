@@ -9,10 +9,13 @@ defmodule Castmill.Widgets.WidgetConfig do
   # for every organization. This since we don't want to store any potentially sensitive data in the database in plain text.
   # Organizations could have an "encryption_key" used for this purpose.
 
-  @derive {Jason.Encoder, only: [:id, :options, :data]}
+  # Note: Custom Jason.Encoder is implemented below to include integration data
   schema "widgets_config" do
     field(:options, :map, default: %{})
     field(:data, :map, default: %{})
+
+    # Virtual field to hold integration data when loaded
+    field(:integration_data, :map, virtual: true, default: nil)
 
     # Everytime the data is updated we must update the version number.
     field(:version, :integer, default: 1)
@@ -53,5 +56,24 @@ defmodule Castmill.Widgets.WidgetConfig do
           [{field, message}]
       end
     end)
+  end
+end
+
+defimpl Jason.Encoder, for: Castmill.Widgets.WidgetConfig do
+  def encode(%Castmill.Widgets.WidgetConfig{} = widget_config, opts) do
+    # Merge integration_data into data if present
+    data =
+      case widget_config.integration_data do
+        nil -> widget_config.data || %{}
+        integration_data -> Map.merge(widget_config.data || %{}, integration_data)
+      end
+
+    map = %{
+      id: widget_config.id,
+      options: widget_config.options,
+      data: data
+    }
+
+    Jason.Encode.map(map, opts)
   end
 end

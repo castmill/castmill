@@ -82,9 +82,13 @@
     "backToLogin": "返回登录",
     "selectImage": "选择图片",
     "selectMedia": "选择媒体",
+    "selectPlaylist": "选择播放列表",
+    "playlist": "播放列表",
+    "addPlaylist": "添加播放列表",
     "apply": "应用",
     "selectVideo": "选择视频",
-    "offline": "离线"
+    "offline": "离线",
+    "widget": "Widget"
   },
   "topbar": {
     "help": "帮助",
@@ -470,7 +474,11 @@
       "aspectRatioMax": "值必须为100或更少",
       "aspectRatioExtreme": "宽高比太极端（最大比例为10:1）",
       "updateAspectRatio": "更新宽高比时出错：{{error}}"
-    }
+    },
+    "credentialsRequired": "需要凭据",
+    "credentialsRequiredDescription": "Widget \"{{widget}}\" 在添加到播放列表之前需要配置凭据。",
+    "missingIntegrations": "缺少集成",
+    "goToIntegrations": "前往集成"
   },
   "widgets": {
     "title": "Widgets",
@@ -481,7 +489,54 @@
     "viewDetails": "查看详情",
     "template": "模板",
     "optionsSchema": "选项架构",
-    "dataSchema": "数据架构"
+    "dataSchema": "数据架构",
+    "spotify": {
+      "title": "Spotify 连接",
+      "connectButton": "连接到 Spotify",
+      "disconnectButton": "断开连接",
+      "connectDescription": "连接您的 Spotify 账户以在数字标牌上显示当前播放的曲目。",
+      "connected": "已连接",
+      "connectedSince": "自 {{date}} 起连接",
+      "connectionSuccess": "成功连接到 Spotify！",
+      "connectionFailed": "连接 Spotify 失败。请重试。",
+      "disconnectNotSupported": "暂不支持断开连接。请从 Spotify 账户设置中撤销访问权限。"
+    },
+    "integrations": {
+      "title": "集成",
+      "noIntegrations": "此 Widget 没有配置集成。",
+      "configure": "配置",
+      "configured": "已配置",
+      "notConfigured": "未配置",
+      "requiresAuth": "需要身份验证",
+      "authType": "身份验证类型",
+      "oauth2": "OAuth 2.0",
+      "apiKey": "API 密钥",
+      "credentials": "凭据",
+      "saveCredentials": "保存凭据",
+      "testConnection": "测试连接",
+      "testSuccess": "连接测试成功！",
+      "testFailed": "连接测试失败：{{error}}",
+      "credentialsSaved": "凭据保存成功！",
+      "credentialsSaveFailed": "保存凭据失败：{{error}}",
+      "connectWith": "使用 {{provider}} 连接",
+      "connectedTo": "已连接到 {{provider}}",
+      "disconnect": "断开连接",
+      "reconnect": "重新连接",
+      "lastValidated": "上次验证：{{date}}",
+      "scopeOrganization": "组织范围",
+      "scopeWidget": "Widget 特定",
+      "pullMode": "数据获取",
+      "pushMode": "Webhook",
+      "pullInterval": "每 {{seconds}} 秒更新",
+      "fieldRequired": "{{field}} 是必需的",
+      "connectionStatus": "连接状态",
+      "valid": "有效",
+      "invalid": "无效",
+      "pending": "等待设置",
+      "enterClientCredentials": "在下方输入您的 {{provider}} API 凭据：",
+      "afterSavingCredentials": "保存凭据后，点击下方按钮以授权 {{provider}}：",
+      "networkCredentialsConfigured": "您的网络管理员已配置 {{provider}} 凭据。只需点击下方按钮即可连接您的账户。"
+    }
   },
   "devices": {
     "setDeviceChannel": "设置设备频道",

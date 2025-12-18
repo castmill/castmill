@@ -70,6 +70,7 @@ defmodule CastmillWeb.Router do
         live("/networks/:id/:resource", Admin.NetworkShow, :show)
         live("/networks/:id/show/edit", Admin.NetworkShow, :edit)
         live("/networks/:id/:resource/new", Admin.NetworkShow, :new)
+        live("/networks/:id/integrations/:integration_id/configure", Admin.NetworkShow, :configure_integration)
 
         # Organizations
         live("/organizations/:id/", Admin.OrganizationShow, :show)
@@ -113,6 +114,29 @@ defmodule CastmillWeb.Router do
     pipe_through(:webhooks)
 
     post("/:integration_id/:widget_config_id", WidgetIntegrationController, :receive_webhook)
+  end
+
+  # OAuth routes for third-party widget integrations
+  # These routes use session for authentication (authorize endpoint)
+  # The callback endpoint validates signed state parameter instead
+  pipeline :oauth do
+    plug(:accepts, ["html", "json"])
+    plug(:fetch_session)
+    plug(:put_secure_browser_headers)
+    plug(:fetch_current_user)
+  end
+
+  # Generic OAuth routes for widget integrations
+  # These routes work with any OAuth provider based on credential_schema configuration
+  scope "/auth/widget-integrations", CastmillWeb do
+    pipe_through(:oauth)
+
+    # Initiate OAuth flow - reads config from integration's credential_schema
+    get("/:integration_id/authorize", WidgetOAuthController, :authorize)
+
+    # Fixed callback URL for all integrations - integration_id is in state parameter
+    # Use this URL when registering with OAuth providers (e.g., Spotify)
+    get("/callback", WidgetOAuthController, :callback_unified)
   end
 
   scope "/devices", CastmillWeb do
@@ -187,6 +211,20 @@ defmodule CastmillWeb.Router do
     get("/organizations/:organization_id/widgets", OrganizationController, :list_widgets)
     post("/organizations/:organization_id/widgets", OrganizationController, :create_widget)
 
+    # Get a widget by ID
+    get(
+      "/organizations/:organization_id/widgets/:widget_id",
+      OrganizationController,
+      :get_widget
+    )
+
+    # Check if a widget's integration credentials are configured
+    get(
+      "/organizations/:organization_id/widgets/:widget_id/credentials-status",
+      WidgetIntegrationController,
+      :check_widget_credentials
+    )
+
     # Widget Integration Management
     get(
       "/organizations/:organization_id/widgets/:widget_id/integrations",
@@ -211,6 +249,12 @@ defmodule CastmillWeb.Router do
       "/organizations/:organization_id/widget-integrations/:integration_id/credentials",
       WidgetIntegrationController,
       :upsert_organization_credentials
+    )
+
+    delete(
+      "/organizations/:organization_id/widget-integrations/:integration_id/credentials",
+      WidgetIntegrationController,
+      :delete_organization_credentials
     )
 
     # Test integration
@@ -284,6 +328,9 @@ defmodule CastmillWeb.Router do
 
       put("/playlists/:playlist_id/items/:item_id", PlaylistController, :move_item)
       delete("/playlists/:playlist_id/items/:item_id", PlaylistController, :delete_item)
+
+      # Get ancestor playlist IDs (for circular reference prevention in layout widgets)
+      get("/playlists/:playlist_id/ancestors", PlaylistController, :get_ancestors)
 
       # Channel Entries
       get("/channels/:channel_id/entries", ResourceController, :list_channel_entries)
@@ -402,6 +449,9 @@ defmodule CastmillWeb.Router do
 
       post("/playlists/:playlist_id/items", PlaylistController, :add_item)
       delete("/playlists/:playlist_id/items/:id", PlaylistController, :delete_item)
+
+      # Get ancestor playlist IDs (for circular reference prevention in layout widgets)
+      get("/playlists/:playlist_id/ancestors", PlaylistController, :get_ancestors)
     end
 
     resources("/users", UserController, except: [:new, :edit, :index])

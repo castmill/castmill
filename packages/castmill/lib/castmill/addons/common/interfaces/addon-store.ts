@@ -90,18 +90,25 @@ export interface AddonStore {
   // Router utilities passed from Dashboard
   router?: {
     navigate: (path: string, options?: any) => void;
+    location: () => { pathname: string; search: string; hash: string };
   };
 }
+
+// Route params from useParams() - includes dynamic route segments like :id and wildcards
+export type RouteParams = Record<string, string | undefined>;
 
 /**
  * Props passed to addon components from the Dashboard
  *
- * Addons receive these props when loaded dynamically. The params prop
- * provides access to URL search parameters from the parent route context,
- * enabling features like shareable filtered views (e.g., ?team_id=5).
+ * Addons receive these props when loaded dynamically:
+ * - params: URL search/query parameters (e.g., ?team_id=5) - tuple from useSearchParams()
+ * - routeParams: Route parameters from the URL path (e.g., :id, wildcards)
  */
 export interface AddonComponentProps {
   store: AddonStore;
   selectedOrgId: string;
+  /** URL search/query parameters for shareable filtered views - tuple from useSearchParams() */
   params: [SearchParams, SetSearchParams];
+  /** Route params from URL path (e.g., wildcard segments) */
+  routeParams?: RouteParams;
 }

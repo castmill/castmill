@@ -97,8 +97,16 @@ config :ex_aws, :s3,
 config :castmill, Oban,
   plugins: [{Oban.Plugins.Pruner, max_age: 300}],
   engine: Oban.Engines.Basic,
-  queues: [image_transcoder: 10, video_transcoder: 10],
+  queues: [image_transcoder: 10, video_transcoder: 10, integration_polling: 5],
   repo: Castmill.Repo
+
+# Configure Spotify OAuth (widget integration)
+# In production, set SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, and SPOTIFY_REDIRECT_URI
+config :castmill, :spotify_oauth,
+  client_id: System.get_env("SPOTIFY_CLIENT_ID"),
+  client_secret: System.get_env("SPOTIFY_CLIENT_SECRET"),
+  redirect_uri: System.get_env("SPOTIFY_REDIRECT_URI") || "http://localhost:4000/auth/spotify/callback",
+  scopes: ["user-read-currently-playing", "user-read-playback-state"]
 
 # Configure gettext
 config :castmill, CastmillWeb.Gettext, default_locale: "en"

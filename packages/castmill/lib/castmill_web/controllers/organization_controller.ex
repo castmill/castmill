@@ -92,6 +92,11 @@ defmodule CastmillWeb.OrganizationController do
     {:ok, true}
   end
 
+  def check_access(_actor_id, :get_widget, %{"organization_id" => _organization_id}) do
+    # Any authenticated user can view widget details
+    {:ok, true}
+  end
+
   def check_access(actor_id, :create_widget, %{"organization_id" => organization_id}) do
     if Organizations.has_access(organization_id, actor_id, "widgets", :create) do
       {:ok, true}
@@ -301,6 +306,21 @@ defmodule CastmillWeb.OrganizationController do
     conn
     |> put_status(:ok)
     |> json(response)
+  end
+
+  # Get a widget by its ID
+  def get_widget(conn, %{"organization_id" => _organization_id, "widget_id" => widget_id}) do
+    case Castmill.Widgets.get_widget(widget_id) do
+      nil ->
+        conn
+        |> put_status(:not_found)
+        |> json(%{errors: %{detail: "Widget not found"}})
+
+      widget ->
+        conn
+        |> put_status(:ok)
+        |> json(%{data: widget})
+    end
   end
 
   def create_widget(conn, %{"organization_id" => _organization_id, "widget" => widget_file}) do

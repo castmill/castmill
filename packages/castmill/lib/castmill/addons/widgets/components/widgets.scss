@@ -1,6 +1,6 @@
 .widgets-page {
   margin: 2em;
-  
+
   .widget-icon {
     display: flex;
     justify-content: center;
@@ -31,8 +31,62 @@
       min-width: 90vw !important;
     }
   }
+}
 
-  // Widget upload modal - compact with scrolling
+// Widget details modal content with tabs
+.widget-details-content {
+  padding: 1rem;
+  height: 70vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+
+  .widget-metadata {
+    margin-bottom: 1rem;
+    color: #f8f9fa;
+    background: #2d2d2d;
+    padding: 0.75rem 1rem;
+    border-radius: 4px;
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+    flex-grow: 0;
+
+    .metadata-item {
+      strong {
+        color: #9cdcfe;
+      }
+
+      .type-value {
+        color: #ce9178;
+      }
+
+      .interval-value {
+        color: #b5cea8;
+      }
+    }
+  }
+
+  // Target the Tabs component container (direct child div after metadata)
+  > div:not(.widget-metadata) {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+
+    // Tab content area should scroll
+    > div:last-child {
+      flex: 1;
+      overflow-y: auto;
+      min-height: 0;
+    }
+  }
+}
+
+// Widget upload modal - compact with scrolling
+:global {
   .widget-upload-modal {
     width: 50vw !important;
     max-width: 50vw !important;
@@ -64,7 +118,6 @@
   overflow-x: auto;
   overflow-y: auto;
   font-size: 0.85em;
-  max-height: 400px;
   max-width: 100%;
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
   line-height: 1.5;
@@ -78,26 +131,27 @@
     display: block;
     white-space: pre;
     max-width: 100%;
-  }
 
-  :global(.json-key) {
-    color: #9cdcfe;
-  }
+    // JSON syntax highlighting colors (VS Code dark theme)
+    .json-key {
+      color: #9cdcfe !important;
+    }
 
-  :global(.json-string) {
-    color: #ce9178;
-  }
+    .json-string {
+      color: #ce9178 !important;
+    }
 
-  :global(.json-number) {
-    color: #b5cea8;
-  }
+    .json-number {
+      color: #b5cea8 !important;
+    }
 
-  :global(.json-boolean) {
-    color: #569cd6;
-  }
+    .json-boolean {
+      color: #569cd6 !important;
+    }
 
-  :global(.json-null) {
-    color: #569cd6;
+    .json-null {
+      color: #569cd6 !important;
+    }
   }
 }
 
@@ -302,7 +356,7 @@
       overflow-y: auto;
       color: #d4d4d4;
       line-height: 1.4;
-      
+
       code {
         color: #d4d4d4;
       }
@@ -322,7 +376,7 @@
       background-color: #1e3a5f;
     }
 
-    input[type="file"] {
+    input[type='file'] {
       width: 100%;
       padding: 0.5rem;
       margin-bottom: 1rem;
@@ -379,7 +433,7 @@
         flex: 1;
         min-width: 0;
         font-size: 0.9em;
-        
+
         progress {
           width: 100%;
           height: 6px;

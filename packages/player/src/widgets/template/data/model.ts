@@ -113,7 +113,7 @@ export class Model {
 
         obj = array;
       } else {
-        if (obj[key] === undefined) {
+        if (obj === null || obj === undefined || obj[key] === undefined) {
           error = new Error(`Invalid key path: ${keypath}`);
           break;
         }

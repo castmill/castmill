@@ -85,6 +85,19 @@ export const StyledInput: Component<{
           autocomplete="off"
         />
       </Match>
+      <Match when={props.type === 'color'}>
+        <input
+          ref={inputRef}
+          id={props.id}
+          type="color"
+          class={styles['input-color']}
+          value={String(props.value || '#000000')}
+          onInput={(e) => props.onInput(e.currentTarget.value)}
+          disabled={props.disabled}
+          onFocus={props.onFocus}
+          onBlur={props.onBlur}
+        />
+      </Match>
       {/* Additional cases can be added here */}
     </Switch>
   );

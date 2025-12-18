@@ -294,6 +294,25 @@ defmodule Castmill.Widgets.Schema do
   defp validate_data_field(value, "boolean", field, acc_data) when is_boolean(value),
     do: {:cont, {:ok, Map.put(acc_data, field, value)}}
 
+  defp validate_data_field(value, "color", field, acc_data) when is_binary(value) do
+    if is_color(value) do
+      {:cont, {:ok, Map.put(acc_data, field, value)}}
+    else
+      {:halt, {:error, "Value is not a valid color (expected hex format like #RRGGBB)"}}
+    end
+  end
+
+  defp validate_data_field(value, "url", field, acc_data) when is_binary(value) do
+    if is_url(value) do
+      {:cont, {:ok, Map.put(acc_data, field, value)}}
+    else
+      {:halt, {:error, "Value is not a valid URL"}}
+    end
+  end
+
+  defp validate_data_field(value, "city", field, acc_data) when is_binary(value),
+    do: {:cont, {:ok, Map.put(acc_data, field, value)}}
+
   defp validate_data_field(value, %{"type" => "map", "schema" => sub_schema}, field, acc_data)
        when is_map(value) do
     case validate_data(sub_schema, value) do
@@ -351,7 +370,7 @@ defmodule Castmill.Widgets.Schema do
   end
 
   defp validate_data_field(value, %{"type" => type}, field, acc_data)
-       when type == "string" or type == "number" do
+       when type in ["string", "number", "boolean", "color", "url", "city"] do
     validate_data_field(value, type, field, acc_data)
   end
 

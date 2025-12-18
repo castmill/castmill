@@ -1,14 +1,11 @@
 /*
   Layer is the item that can be added to a playlist.
 
-  (Rename to WidgetContainer?)
-
-  (c) 2011-2023 Castmill AB All Rights Reserved
+  (c) 2011-2025 Castmill AB All Rights Reserved
 */
 import { JSX } from 'solid-js';
 import { ResourceManager } from '@castmill/cache';
 
-import { Status } from './playable';
 import { EventEmitter } from 'eventemitter3';
 import {
   TemplateComponentType,
@@ -20,30 +17,50 @@ import { of, Observable } from 'rxjs';
 import { catchError, last, map, takeUntil } from 'rxjs/operators';
 import { JsonLayer, JsonPlaylist } from './interfaces';
 import { Transition, fromJSON } from './transitions';
-import { applyCss } from './utils';
+import { applyCss, parseAspectRatio } from './utils';
 import { PlayerGlobals } from './interfaces/player-globals.interface';
 
+/**
+ * Computes style for a widget based on its aspect ratio.
+ * Returns a base style - the dynamic min-width/min-height adjustment
+ * is handled by the Layer's ResizeObserver.
+ */
+function computeWidgetStyle(
+  baseStyle: JSX.CSSProperties | undefined,
+  aspectRatio: string | undefined
+): JSX.CSSProperties {
+  const defaultStyle: JSX.CSSProperties = {
+    width: '100%',
+    height: '100%',
+  };
+
+  const ratio = parseAspectRatio(aspectRatio);
+  if (ratio === null) {
+    return baseStyle || defaultStyle;
+  }
+
+  // Base style for aspect-ratio widget
+  // The dynamic min-width OR min-height is set by ResizeObserver in Layer
+  return {
+    ...baseStyle,
+    width: 'auto',
+    height: 'auto',
+    'max-width': '100%',
+    'max-height': '100%',
+    'aspect-ratio': `${ratio}`,
+  };
+}
+
 export class Layer extends EventEmitter {
-  id: string = '';
-  widgetId: string = '';
-
-  opacity: string = '1';
-
-  rotation: number = 0;
-  zIndex: number = 0;
-
   el: HTMLElement;
-
-  status: Status = Status.NotReady;
   offset = 0;
-
   transition?: Transition;
-
   slack: number = 0;
 
   private widget?: Widget;
-  private proxyOffset: (position: number) => void;
   private _duration = 0;
+  private widgetAspectRatio: number | null = null;
+  private resizeObserver: ResizeObserver | null = null;
 
   /**
    * Creates a new Layer from a json deserialized object.
@@ -55,10 +72,16 @@ export class Layer extends EventEmitter {
     resourceManager: ResourceManager,
     globals: PlayerGlobals
   ): Layer {
+    // Compute widget style based on its aspect ratio
+    const widgetStyle = computeWidgetStyle(
+      json.style,
+      json.widget.aspect_ratio
+    );
+
     const widget = new TemplateWidget(resourceManager, {
       widget: json.widget,
       config: json.config,
-      style: json.style,
+      style: widgetStyle,
       globals,
     });
 
@@ -66,11 +89,9 @@ export class Layer extends EventEmitter {
       duration: json.duration,
       slack: json.slack,
       transition: json.transition && fromJSON(json.transition),
-      style: json.style || {
-        width: '100%',
-        height: '100%',
-      },
+      style: widgetStyle,
       widget,
+      widgetAspectRatio: json.widget.aspect_ratio,
     });
 
     return layer;
@@ -123,14 +144,14 @@ export class Layer extends EventEmitter {
         height: '100%',
       },
       config: {
-        id: 1,
+        id: 'layout-config-1',
         widget_id: 666,
         options: {},
         data: {},
       },
       globals,
     } as TemplateWidgetOptions);
-    const duration = widget.duration();
+
     return new Layer(playlist.name, {
       widget,
       duration: 10000, // Currently a hack, the duration should be the duration of the playlist
@@ -145,6 +166,7 @@ export class Layer extends EventEmitter {
       widget?: Widget;
       transition?: Transition;
       style?: JSX.CSSProperties;
+      widgetAspectRatio?: string;
     }
   ) {
     super();
@@ -153,6 +175,7 @@ export class Layer extends EventEmitter {
     this.slack = opts?.slack || 0;
     this.widget = opts?.widget;
     this.transition = opts?.transition;
+    this.widgetAspectRatio = parseAspectRatio(opts?.widgetAspectRatio);
 
     this.el = document.createElement('div');
 
@@ -171,42 +194,62 @@ export class Layer extends EventEmitter {
 
     dataset['layer'] = this.name;
 
-    this.proxyOffset = (offset: number) => this.emit('offset', offset);
+    // Set up ResizeObserver for dynamic aspect ratio adjustment
+    if (this.widgetAspectRatio !== null) {
+      this.setupResizeObserver();
+    }
+  }
+
+  /**
+   * Sets up a ResizeObserver to dynamically adjust widget sizing based on container dimensions.
+   * When the container's aspect ratio differs from the widget's, we need to set either
+   * min-width: 100% (for portrait containers) or min-height: 100% (for landscape containers).
+   */
+  private setupResizeObserver() {
+    this.resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        const { width, height } = entry.contentRect;
+        if (width === 0 || height === 0) continue;
+
+        const containerRatio = width / height;
+        const widgetRatio = this.widgetAspectRatio!;
+
+        // Find the widget element (first child of the layer)
+        const widgetEl = this.el.firstElementChild as HTMLElement;
+        if (!widgetEl) continue;
+
+        // If container is wider than widget ratio (landscape container, landscape widget)
+        // or container is portrait and widget is landscape, we need different strategies
+        if (containerRatio >= widgetRatio) {
+          // Container is wider/same ratio - height is the constraint
+          // Set min-height: 100% to fill vertically, width will scale proportionally
+          widgetEl.style.minHeight = '100%';
+          widgetEl.style.minWidth = '';
+        } else {
+          // Container is taller/narrower - width is the constraint
+          // Set min-width: 100% to fill horizontally, height will scale proportionally
+          widgetEl.style.minWidth = '100%';
+          widgetEl.style.minHeight = '';
+        }
+      }
+    });
+
+    this.resizeObserver.observe(this.el);
   }
 
   toggleDebug() {
     this.widget?.toggleDebug();
   }
 
-  /*
-  load() {
-    // const widgetSrc = this.getWidgetSrc();
-    // this.iframe = await utils.createIframe(this.el, widgetSrc);
-    // this.widget = new Proxy(window, this.iframe, widgetSrc);
-    // this.widget.on("offset", this.proxyOffset);
-
-    if (this.widget) {
-      return this.widget.load(this.el);
-    } else {
-      return of<string>("loaded");
-    }
-  }
-  */
-
   public unload() {
-    /*
-    utils.purgeIframe(this.iframe);
-    this.widget && this.widget.off("offset", this.proxyOffset);
-    */
+    // Cleanup ResizeObserver
+    if (this.resizeObserver) {
+      this.resizeObserver.disconnect();
+      this.resizeObserver = null;
+    }
+
     this.widget?.seek(0);
     return this.widget?.unload();
-  }
-
-  public toJSON(): {} {
-    return {
-      id: this.id,
-      widgetId: this.widgetId,
-    };
   }
 
   public play(timer$: Observable<number>): Observable<string | number> {
