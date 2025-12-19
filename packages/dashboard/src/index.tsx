@@ -21,7 +21,6 @@ import {
   ErrorBoundary,
   onMount,
   createEffect,
-  createMemo,
   Show,
 } from 'solid-js';
 import ProtectedRoute from './components/protected-route';
@@ -109,7 +108,7 @@ const App: Component<RouteSectionProps<unknown>> = (props) => {
 
 const wrapLazyComponent = (addon: { path: string; name: string }) => {
   return (props: any) => {
-    const params = useSearchParams();
+    const [searchParams, setSearchParams] = useSearchParams();
     const routeParams = props.routeParams;
     const i18n = useI18n();
     const navigate = useNavigate();
@@ -186,7 +185,7 @@ const wrapLazyComponent = (addon: { path: string; name: string }) => {
                 {...props}
                 store={store}
                 selectedOrgId={currentOrgId}
-                params={params}
+                params={searchParams}
                 routeParams={routeParams}
               />
             )}

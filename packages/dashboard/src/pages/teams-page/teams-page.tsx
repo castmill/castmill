@@ -37,9 +37,10 @@ import { QuotaIndicator } from '../../components/quota-indicator';
 import { QuotasService, ResourceQuota } from '../../services/quotas.service';
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
 import { useLocation } from '@solidjs/router';
+import { useModalFromUrl } from '../../hooks/useModalFromUrl';
 
 const TeamsPage: Component = () => {
-  const params = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { t } = useI18n();
   const { canPerformAction } = usePermissions();
   const { registerShortcutAction, unregisterShortcutAction } =
@@ -122,6 +123,20 @@ const TeamsPage: Component = () => {
       tableViewRef.reloadData();
       loadQuota();
     }
+  });
+
+  // Sync modal state with URL itemId parameter
+  useModalFromUrl({
+    getItemIdFromUrl: () => searchParams.itemId,
+    isModalOpen: () => showModal(),
+    closeModal: () => setShowModal(false),
+    openModal: (itemId: string) => {
+      const team = data().find((t) => String(t.id) === String(itemId));
+      if (team) {
+        setCurrentTeam(team);
+        setShowModal(true);
+      }
+    },
   });
 
   const isQuotaReached = () => {
@@ -254,7 +269,8 @@ const TeamsPage: Component = () => {
   };
   // Function to close the modal and remove blur
   const closeModal = () => {
-    setShowModal(false);
+    // Only clear URL - let createEffect handle closing the modal
+    setSearchParams({ itemId: undefined });
   };
 
   const addTeam = () => {
@@ -344,7 +360,7 @@ const TeamsPage: Component = () => {
       <TableView
         title={t('teams.title')}
         resource="teams"
-        params={params}
+        params={[searchParams, setSearchParams]}
         fetchData={fetchData}
         ref={setRef}
         toolbar={{
@@ -400,8 +416,7 @@ const TeamsPage: Component = () => {
           defaultRowAction: {
             icon: BsEye,
             handler: (item: TeamTableItem) => {
-              setCurrentTeam(item);
-              setShowModal(true);
+              setSearchParams({ itemId: String(item.id) });
             },
             label: t('common.view'),
           },

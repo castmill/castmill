@@ -202,6 +202,9 @@ defmodule CastmillWeb.Router do
     get("/addons", AddonsController, :index)
     get("/users/:user_id/organizations", OrganizationController, :list_users_organizations)
 
+    # Search endpoint
+    get("/organizations/:organization_id/search", SearchController, :search)
+
     # User profile management
     get("/users/:id", UserController, :show)
     put("/users/:id", UserController, :update)
