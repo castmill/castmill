@@ -47,7 +47,11 @@ defmodule Castmill.EncryptionTest do
 
   describe "decrypt/3" do
     test "decrypts data encrypted with encrypt_for_resource" do
-      original = %{"client_id" => "abc123", "client_secret" => "supersecret", "nested" => %{"key" => "value"}}
+      original = %{
+        "client_id" => "abc123",
+        "client_secret" => "supersecret",
+        "nested" => %{"key" => "value"}
+      }
 
       {:ok, encrypted} = Encryption.encrypt_for_resource(original, :organization, "org-uuid-123")
       {:ok, decrypted} = Encryption.decrypt(encrypted, :organization, "org-uuid-123")

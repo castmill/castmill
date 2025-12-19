@@ -156,7 +156,9 @@ defmodule Castmill.Workers.EncryptionRotation do
         :skipped
 
       {:ok, old_version} ->
-        Logger.debug("Rotating credential #{credential.id} from v#{old_version} to v#{current_version}")
+        Logger.debug(
+          "Rotating credential #{credential.id} from v#{old_version} to v#{current_version}"
+        )
 
         organization_id = credential.organization_id
 
@@ -174,7 +176,9 @@ defmodule Castmill.Workers.EncryptionRotation do
                      encrypted_credentials: new_encrypted
                    })
                  ) do
-              {:ok, _} -> :rotated
+              {:ok, _} ->
+                :rotated
+
               {:error, reason} ->
                 Logger.error("Failed to update credential #{credential.id}: #{inspect(reason)}")
                 :error

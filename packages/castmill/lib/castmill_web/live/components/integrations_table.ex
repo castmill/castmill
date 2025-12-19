@@ -19,7 +19,11 @@ defmodule CastmillWeb.Live.Admin.IntegrationsTable do
       <table class="min-w-full divide-y divide-gray-300">
         <thead class="bg-gray-50">
           <tr>
-            <th :for={col <- @cols} scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">
+            <th
+              :for={col <- @cols}
+              scope="col"
+              class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900"
+            >
               <%= col.name %>
             </th>
             <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">
@@ -33,7 +37,10 @@ defmodule CastmillWeb.Live.Admin.IntegrationsTable do
               <%= if col.field == :status do %>
                 <span class={[
                   "inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset",
-                  if(row.is_configured, do: "bg-green-50 text-green-700 ring-green-600/20", else: "bg-yellow-50 text-yellow-700 ring-yellow-600/20")
+                  if(row.is_configured,
+                    do: "bg-green-50 text-green-700 ring-green-600/20",
+                    else: "bg-yellow-50 text-yellow-700 ring-yellow-600/20"
+                  )
                 ]}>
                   <%= Map.get(row, col.field, "") %>
                 </span>

@@ -196,7 +196,14 @@ defmodule Castmill.Widgets.Integrations.OAuth.Generic do
          } <- data,
          widget_config_id = Map.get(data, "widget_config_id"),
          redirect_url = Map.get(data, "redirect_url"),
-         :ok <- validate_signature(integration_id, widget_config_id, organization_id, timestamp, signature),
+         :ok <-
+           validate_signature(
+             integration_id,
+             widget_config_id,
+             organization_id,
+             timestamp,
+             signature
+           ),
          :ok <- validate_not_expired(timestamp) do
       {:ok,
        %{

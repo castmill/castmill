@@ -92,7 +92,8 @@ defmodule Castmill.Widgets.Integrations.WidgetIntegrationData do
     |> validate_required([:widget_integration_id, :discriminator_id, :organization_id])
     |> validate_number(:version, greater_than: 0)
     |> unique_constraint([:widget_integration_id, :discriminator_id],
-         name: :widget_integration_data_discriminator_unique)
+      name: :widget_integration_data_discriminator_unique
+    )
   end
 
   def base_query() do

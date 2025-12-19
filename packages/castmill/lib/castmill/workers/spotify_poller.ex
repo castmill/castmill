@@ -80,7 +80,9 @@ defmodule Castmill.Workers.SpotifyPoller do
         Logger.warning("SpotifyPoller: Job already exists for organization_id=#{organization_id}")
 
       {:ok, job} ->
-        Logger.info("SpotifyPoller: Scheduled org poll in #{delay_seconds}s for org=#{organization_id} (job_id=#{job.id})")
+        Logger.info(
+          "SpotifyPoller: Scheduled org poll in #{delay_seconds}s for org=#{organization_id} (job_id=#{job.id})"
+        )
 
       {:error, reason} ->
         Logger.error("SpotifyPoller: Failed to schedule org job: #{inspect(reason)}")
@@ -117,7 +119,9 @@ defmodule Castmill.Workers.SpotifyPoller do
 
     case result do
       {:ok, %{conflict?: true}} ->
-        Logger.warning("SpotifyPoller: Job already exists for widget_config_id=#{widget_config_id}")
+        Logger.warning(
+          "SpotifyPoller: Job already exists for widget_config_id=#{widget_config_id}"
+        )
 
       {:ok, job} ->
         Logger.info("SpotifyPoller: Scheduled next poll in #{delay_seconds}s (job_id=#{job.id})")
@@ -160,26 +164,37 @@ defmodule Castmill.Workers.SpotifyPoller do
 
   # Organization-level polling
   @impl Oban.Worker
-  def perform(%Oban.Job{args: %{"organization_id" => organization_id}}) when is_binary(organization_id) do
+  def perform(%Oban.Job{args: %{"organization_id" => organization_id}})
+      when is_binary(organization_id) do
     Logger.info("SpotifyPoller: Polling for organization_id=#{organization_id}")
 
     with {:ok, integration, credentials} <- get_org_integration_and_credentials(organization_id),
-         {:ok, valid_credentials} <- ensure_valid_token_for_org(organization_id, integration, credentials),
+         {:ok, valid_credentials} <-
+           ensure_valid_token_for_org(organization_id, integration, credentials),
          {:ok, spotify_data} <- fetch_currently_playing(valid_credentials),
          {:ok, _data} <- store_org_integration_data(organization_id, integration.id, spotify_data) do
       # Schedule next poll
       poll_interval = integration.pull_interval_seconds || @default_poll_interval_seconds
       schedule_for_org(organization_id, delay_seconds: poll_interval)
 
-      Logger.info("SpotifyPoller: Successfully updated org data for organization_id=#{organization_id}")
+      Logger.info(
+        "SpotifyPoller: Successfully updated org data for organization_id=#{organization_id}"
+      )
+
       :ok
     else
       {:error, :no_credentials} ->
-        Logger.warning("SpotifyPoller: No credentials for organization_id=#{organization_id}, stopping")
+        Logger.warning(
+          "SpotifyPoller: No credentials for organization_id=#{organization_id}, stopping"
+        )
+
         :ok
 
       {:error, :credentials_invalid} ->
-        Logger.warning("SpotifyPoller: Credentials invalid for organization_id=#{organization_id}, stopping")
+        Logger.warning(
+          "SpotifyPoller: Credentials invalid for organization_id=#{organization_id}, stopping"
+        )
+
         :ok
 
       {:error, :token_refresh_failed} ->
@@ -188,7 +203,10 @@ defmodule Castmill.Workers.SpotifyPoller do
         :ok
 
       {:error, reason} ->
-        Logger.error("SpotifyPoller: Error for organization_id=#{organization_id}: #{inspect(reason)}")
+        Logger.error(
+          "SpotifyPoller: Error for organization_id=#{organization_id}: #{inspect(reason)}"
+        )
+
         {:error, reason}
     end
   end
@@ -198,31 +216,47 @@ defmodule Castmill.Workers.SpotifyPoller do
     Logger.info("SpotifyPoller: Polling for widget_config_id=#{widget_config_id}")
 
     with {:ok, integration, credentials} <- get_integration_and_credentials(widget_config_id),
-         {:ok, valid_credentials} <- ensure_valid_token(widget_config_id, integration, credentials),
+         {:ok, valid_credentials} <-
+           ensure_valid_token(widget_config_id, integration, credentials),
          {:ok, spotify_data} <- fetch_currently_playing(valid_credentials),
          {:ok, _data} <- store_integration_data(widget_config_id, integration.id, spotify_data) do
       # Schedule next poll
       poll_interval = integration.pull_interval_seconds || @default_poll_interval_seconds
       schedule(widget_config_id, delay_seconds: poll_interval)
 
-      Logger.info("SpotifyPoller: Successfully updated data for widget_config_id=#{widget_config_id}")
+      Logger.info(
+        "SpotifyPoller: Successfully updated data for widget_config_id=#{widget_config_id}"
+      )
+
       :ok
     else
       {:error, :no_credentials} ->
-        Logger.warning("SpotifyPoller: No credentials for widget_config_id=#{widget_config_id}, stopping")
+        Logger.warning(
+          "SpotifyPoller: No credentials for widget_config_id=#{widget_config_id}, stopping"
+        )
+
         :ok
 
       {:error, :credentials_invalid} ->
-        Logger.warning("SpotifyPoller: Credentials invalid for widget_config_id=#{widget_config_id}, stopping")
+        Logger.warning(
+          "SpotifyPoller: Credentials invalid for widget_config_id=#{widget_config_id}, stopping"
+        )
+
         :ok
 
       {:error, :token_refresh_failed} ->
-        Logger.error("SpotifyPoller: Token refresh failed for widget_config_id=#{widget_config_id}")
+        Logger.error(
+          "SpotifyPoller: Token refresh failed for widget_config_id=#{widget_config_id}"
+        )
+
         mark_credentials_invalid(widget_config_id)
         :ok
 
       {:error, reason} ->
-        Logger.error("SpotifyPoller: Error for widget_config_id=#{widget_config_id}: #{inspect(reason)}")
+        Logger.error(
+          "SpotifyPoller: Error for widget_config_id=#{widget_config_id}: #{inspect(reason)}"
+        )
+
         {:error, reason}
     end
   end
@@ -350,20 +384,21 @@ defmodule Castmill.Workers.SpotifyPoller do
 
       {:ok, %HTTPoison.Response{status_code: 204}} ->
         # No track currently playing - use empty strings to avoid template errors
-        {:ok, %{
-          "is_playing" => false,
-          "track_name" => "Not Playing",
-          "artist_name" => "",
-          "album_name" => "",
-          "album_art_url" => "",
-          "progress_ms" => 0,
-          "duration_ms" => 0,
-          "progress_percent" => "0%",
-          "progress_formatted" => "0:00",
-          "duration_formatted" => "0:00",
-          "remaining_seconds" => 0,
-          "timestamp" => System.system_time(:millisecond)
-        }}
+        {:ok,
+         %{
+           "is_playing" => false,
+           "track_name" => "Not Playing",
+           "artist_name" => "",
+           "album_name" => "",
+           "album_art_url" => "",
+           "progress_ms" => 0,
+           "duration_ms" => 0,
+           "progress_percent" => "0%",
+           "progress_formatted" => "0:00",
+           "duration_formatted" => "0:00",
+           "remaining_seconds" => 0,
+           "timestamp" => System.system_time(:millisecond)
+         }}
 
       {:ok, %HTTPoison.Response{status_code: 401}} ->
         # Token expired or invalid
@@ -390,20 +425,21 @@ defmodule Castmill.Workers.SpotifyPoller do
 
         if is_nil(track) do
           # Might be playing something that's not a track (podcast, etc.)
-          {:ok, %{
-            "is_playing" => data["is_playing"] || false,
-            "track_name" => "Not Playing",
-            "artist_name" => "",
-            "album_name" => "",
-            "album_art_url" => "",
-            "progress_ms" => data["progress_ms"] || 0,
-            "duration_ms" => 0,
-            "progress_percent" => "0%",
-            "progress_formatted" => "0:00",
-            "duration_formatted" => "0:00",
-            "remaining_seconds" => 0,
-            "timestamp" => System.system_time(:millisecond)
-          }}
+          {:ok,
+           %{
+             "is_playing" => data["is_playing"] || false,
+             "track_name" => "Not Playing",
+             "artist_name" => "",
+             "album_name" => "",
+             "album_art_url" => "",
+             "progress_ms" => data["progress_ms"] || 0,
+             "duration_ms" => 0,
+             "progress_percent" => "0%",
+             "progress_formatted" => "0:00",
+             "duration_formatted" => "0:00",
+             "remaining_seconds" => 0,
+             "timestamp" => System.system_time(:millisecond)
+           }}
         else
           # Extract album art (prefer 300x300 size)
           album_images = get_in(track, ["album", "images"]) || []
@@ -417,7 +453,9 @@ defmodule Castmill.Workers.SpotifyPoller do
           duration_ms = track["duration_ms"] || 0
 
           # Calculate progress percentage and remaining time for animation
-          progress_percent = if duration_ms > 0, do: round(progress_ms / duration_ms * 100), else: 0
+          progress_percent =
+            if duration_ms > 0, do: round(progress_ms / duration_ms * 100), else: 0
+
           remaining_ms = max(0, duration_ms - progress_ms)
           remaining_seconds = div(remaining_ms, 1000)
 
@@ -426,22 +464,23 @@ defmodule Castmill.Workers.SpotifyPoller do
           # This allows smooth progress bar updates without constant polling
           timestamp = System.system_time(:millisecond)
 
-          {:ok, %{
-            "is_playing" => data["is_playing"] || false,
-            "track_name" => track["name"],
-            "artist_name" => artist_name,
-            "album_name" => get_in(track, ["album", "name"]),
-            "album_art_url" => album_art_url,
-            "progress_ms" => progress_ms,
-            "duration_ms" => duration_ms,
-            "progress_percent" => "#{progress_percent}%",
-            "progress_formatted" => format_duration(progress_ms),
-            "duration_formatted" => format_duration(duration_ms),
-            "remaining_seconds" => remaining_seconds,
-            "spotify_url" => get_in(track, ["external_urls", "spotify"]),
-            "track_id" => track["id"],
-            "timestamp" => timestamp
-          }}
+          {:ok,
+           %{
+             "is_playing" => data["is_playing"] || false,
+             "track_name" => track["name"],
+             "artist_name" => artist_name,
+             "album_name" => get_in(track, ["album", "name"]),
+             "album_art_url" => album_art_url,
+             "progress_ms" => progress_ms,
+             "duration_ms" => duration_ms,
+             "progress_percent" => "#{progress_percent}%",
+             "progress_formatted" => format_duration(progress_ms),
+             "duration_formatted" => format_duration(duration_ms),
+             "remaining_seconds" => remaining_seconds,
+             "spotify_url" => get_in(track, ["external_urls", "spotify"]),
+             "track_id" => track["id"],
+             "timestamp" => timestamp
+           }}
         end
 
       {:error, _} ->
@@ -456,6 +495,7 @@ defmodule Castmill.Workers.SpotifyPoller do
     seconds = rem(total_seconds, 60)
     "#{minutes}:#{String.pad_leading(Integer.to_string(seconds), 2, "0")}"
   end
+
   defp format_duration(_), do: "0:00"
 
   # Get preferred image size (around 300x300)
@@ -492,12 +532,13 @@ defmodule Castmill.Workers.SpotifyPoller do
   defp store_org_integration_data(organization_id, integration_id, data) do
     status = if(data["is_playing"], do: "playing", else: "not_playing")
 
-    result = Integrations.upsert_organization_integration_data(
-      organization_id,
-      integration_id,
-      data,
-      status: status
-    )
+    result =
+      Integrations.upsert_organization_integration_data(
+        organization_id,
+        integration_id,
+        data,
+        status: status
+      )
 
     # Broadcast update to organization channel for real-time updates
     case result do
@@ -506,6 +547,7 @@ defmodule Castmill.Workers.SpotifyPoller do
         case Integrations.get_integration(integration_id) do
           %{widget_id: widget_id} ->
             discriminator_id = "org:#{organization_id}"
+
             Integrations.broadcast_widget_config_data_update(
               organization_id,
               widget_id,
@@ -513,9 +555,11 @@ defmodule Castmill.Workers.SpotifyPoller do
               data,
               discriminator_id
             )
+
           _ ->
             :ok
         end
+
       _ ->
         :ok
     end
@@ -562,7 +606,10 @@ defmodule Castmill.Workers.SpotifyPoller do
           end
 
         {:error, reason} ->
-          Logger.error("SpotifyPoller: Could not get client credentials for org: #{inspect(reason)}")
+          Logger.error(
+            "SpotifyPoller: Could not get client credentials for org: #{inspect(reason)}"
+          )
+
           {:error, :no_client_credentials}
       end
     else
@@ -576,7 +623,9 @@ defmodule Castmill.Workers.SpotifyPoller do
 
     if organization_id do
       case get_spotify_integration() do
-        nil -> :ok
+        nil ->
+          :ok
+
         integration ->
           Integrations.mark_credentials_invalid(organization_id, integration.id)
       end
@@ -586,7 +635,9 @@ defmodule Castmill.Workers.SpotifyPoller do
   # Mark org credentials as invalid when refresh fails
   defp mark_org_credentials_invalid(organization_id) do
     case get_spotify_integration() do
-      nil -> :ok
+      nil ->
+        :ok
+
       integration ->
         Integrations.mark_credentials_invalid(organization_id, integration.id)
     end

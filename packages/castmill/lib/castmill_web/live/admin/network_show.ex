@@ -128,7 +128,6 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
           }
         />
       <% end %>
-
       <!-- Integration Configuration Modal -->
       <.modal
         :if={@live_action == :configure_integration && @selected_integration != nil}
@@ -177,11 +176,7 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
                 These credentials will be available to all organizations in this network.
               </p>
             </div>
-            <.integrations_table
-              network_id={@resource.id}
-              cols={@resource_cols}
-              rows={@rows}
-            />
+            <.integrations_table network_id={@resource.id} cols={@resource_cols} rows={@rows} />
           </div>
         </.tabs>
       </div>
@@ -258,7 +253,10 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
   end
 
   # Handle integration form events
-  def handle_info({CastmillWeb.Live.Admin.NetworkIntegrationForm, {:saved, _integration_id}}, socket) do
+  def handle_info(
+        {CastmillWeb.Live.Admin.NetworkIntegrationForm, {:saved, _integration_id}},
+        socket
+      ) do
     # Refresh the integrations list
     {rows, _cols} = resources_for_network(socket.assigns.resource.id, "integrations")
 
@@ -268,7 +266,10 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
      |> stream(:rows, rows, reset: true)}
   end
 
-  def handle_info({CastmillWeb.Live.Admin.NetworkIntegrationForm, {:deleted, _integration_id}}, socket) do
+  def handle_info(
+        {CastmillWeb.Live.Admin.NetworkIntegrationForm, {:deleted, _integration_id}},
+        socket
+      ) do
     # Refresh the integrations list
     {rows, _cols} = resources_for_network(socket.assigns.resource.id, "integrations")
 
@@ -306,14 +307,17 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
       %{:streams => %{^key => existing_stream}} ->
         # Stream exists - get current items and delete them, then insert new ones
         # First delete all existing items
-        socket_cleared = existing_stream
-        |> Enum.reduce(socket, fn {_dom_id, item}, acc ->
-          stream_delete(acc, key, item)
-        end)
+        socket_cleared =
+          existing_stream
+          |> Enum.reduce(socket, fn {_dom_id, item}, acc ->
+            stream_delete(acc, key, item)
+          end)
+
         # Then insert new items
         Enum.reduce(data, socket_cleared, fn item, acc ->
           stream_insert(acc, key, item, at: -1)
         end)
+
       _ ->
         # Stream doesn't exist yet, create it
         stream(socket, key, data)
@@ -402,18 +406,19 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
     integrations = Integrations.list_system_integrations_requiring_credentials()
 
     # Enrich with network credential status
-    rows = Enum.map(integrations, fn integration ->
-      has_credentials = Integrations.has_network_credentials?(network_id, integration.id)
+    rows =
+      Enum.map(integrations, fn integration ->
+        has_credentials = Integrations.has_network_credentials?(network_id, integration.id)
 
-      %{
-        id: integration.id,
-        name: integration.name,
-        widget_name: integration.widget.name,
-        description: integration.description,
-        status: if(has_credentials, do: "Configured", else: "Not Configured"),
-        is_configured: has_credentials
-      }
-    end)
+        %{
+          id: integration.id,
+          name: integration.name,
+          widget_name: integration.widget.name,
+          description: integration.description,
+          status: if(has_credentials, do: "Configured", else: "Not Configured"),
+          is_configured: has_credentials
+        }
+      end)
 
     {rows,
      [

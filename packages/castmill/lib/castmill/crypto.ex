@@ -1,7 +1,7 @@
 defmodule Castmill.Crypto do
   @moduledoc """
   Encryption and decryption utilities for sensitive data.
-  
+
   Uses AES-256-GCM for authenticated encryption of credentials and other
   sensitive information. Each organization has its own encryption key.
   """

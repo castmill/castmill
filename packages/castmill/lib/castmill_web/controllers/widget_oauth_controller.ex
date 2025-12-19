@@ -103,12 +103,18 @@ defmodule CastmillWeb.WidgetOAuthController do
       {:error, :not_authenticated} ->
         conn
         |> put_status(:unauthorized)
-        |> json(%{error: "Authentication required", message: "Please log in to authorize this integration"})
+        |> json(%{
+          error: "Authentication required",
+          message: "Please log in to authorize this integration"
+        })
 
       {:error, :not_authorized} ->
         conn
         |> put_status(:forbidden)
-        |> json(%{error: "Not authorized", message: "You do not have access to this organization"})
+        |> json(%{
+          error: "Not authorized",
+          message: "You do not have access to this organization"
+        })
 
       {:error, :integration_not_found} ->
         conn
@@ -125,7 +131,8 @@ defmodule CastmillWeb.WidgetOAuthController do
         |> put_status(:bad_request)
         |> json(%{
           error: "Client credentials not configured",
-          message: "Please configure the OAuth client_id and client_secret in the integration settings"
+          message:
+            "Please configure the OAuth client_id and client_secret in the integration settings"
         })
 
       {:error, reason} ->
@@ -333,7 +340,9 @@ defmodule CastmillWeb.WidgetOAuthController do
         case integration.discriminator_type do
           "organization" ->
             # Organization-level polling - all widgets share the data
-            Logger.info("Scheduling #{poller_module} for organization_id=#{context.organization_id}")
+            Logger.info(
+              "Scheduling #{poller_module} for organization_id=#{context.organization_id}"
+            )
 
             if function_exported?(module, :schedule_for_org, 1) do
               apply(module, :schedule_for_org, [context.organization_id])
@@ -343,7 +352,9 @@ defmodule CastmillWeb.WidgetOAuthController do
 
           _ when not is_nil(context.widget_config_id) ->
             # Widget-config-level polling
-            Logger.info("Scheduling #{poller_module} for widget_config_id=#{context.widget_config_id}")
+            Logger.info(
+              "Scheduling #{poller_module} for widget_config_id=#{context.widget_config_id}"
+            )
 
             if function_exported?(module, :schedule, 1) do
               apply(module, :schedule, [context.widget_config_id])

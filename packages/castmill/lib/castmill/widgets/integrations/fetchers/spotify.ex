@@ -122,7 +122,7 @@ defmodule Castmill.Widgets.Integrations.Fetchers.Spotify do
     current_time = System.system_time(:second)
 
     # Refresh if token expires in next 5 minutes
-    if current_time >= (expires_at - 300) do
+    if current_time >= expires_at - 300 do
       case refresh_access_token(credentials) do
         {:ok, new_credentials} ->
           Logger.info("Spotify token refreshed successfully")
@@ -150,19 +150,21 @@ defmodule Castmill.Widgets.Integrations.Fetchers.Spotify do
         {"Authorization", "Basic " <> Base.encode64("#{client_id}:#{client_secret}")}
       ]
 
-      body = URI.encode_query(%{
-        "grant_type" => "refresh_token",
-        "refresh_token" => refresh_token
-      })
+      body =
+        URI.encode_query(%{
+          "grant_type" => "refresh_token",
+          "refresh_token" => refresh_token
+        })
 
       case HTTPoison.post(@token_endpoint, body, headers) do
         {:ok, %{status_code: 200, body: response_body}} ->
           response = Jason.decode!(response_body)
 
-          new_credentials = Map.merge(credentials, %{
-            "access_token" => response["access_token"],
-            "expires_at" => System.system_time(:second) + response["expires_in"]
-          })
+          new_credentials =
+            Map.merge(credentials, %{
+              "access_token" => response["access_token"],
+              "expires_at" => System.system_time(:second) + response["expires_in"]
+            })
 
           {:ok, new_credentials}
 
@@ -224,14 +226,16 @@ defmodule Castmill.Widgets.Integrations.Fetchers.Spotify do
     is_playing = spotify_data["is_playing"]
 
     # Get largest album artwork
-    album_art = item["album"]["images"]
-    |> Enum.sort_by(& &1["height"], :desc)
-    |> List.first()
+    album_art =
+      item["album"]["images"]
+      |> Enum.sort_by(& &1["height"], :desc)
+      |> List.first()
 
     # Format artist names
-    artists = item["artists"]
-    |> Enum.map(& &1["name"])
-    |> Enum.join(", ")
+    artists =
+      item["artists"]
+      |> Enum.map(& &1["name"])
+      |> Enum.join(", ")
 
     # Include timestamp for client-side progress interpolation
     # The client can calculate: current_progress = progress_ms + (Date.now() - timestamp)

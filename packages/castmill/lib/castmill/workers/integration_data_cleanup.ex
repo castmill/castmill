@@ -88,10 +88,16 @@ defmodule Castmill.Workers.IntegrationDataCleanup do
   def perform(%Oban.Job{args: args}) do
     days_old = args["days_old"] || @default_days_old
 
-    Logger.info("[IntegrationDataCleanup] Starting cleanup of entries older than #{days_old} days")
+    Logger.info(
+      "[IntegrationDataCleanup] Starting cleanup of entries older than #{days_old} days"
+    )
 
     {:ok, count} = Integrations.delete_stale_integration_data(days_old)
-    Logger.info("[IntegrationDataCleanup] Successfully deleted #{count} stale integration data entries")
+
+    Logger.info(
+      "[IntegrationDataCleanup] Successfully deleted #{count} stale integration data entries"
+    )
+
     :ok
   end
 end

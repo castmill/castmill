@@ -78,7 +78,8 @@ defmodule Castmill.Encryption do
       iex> Encryption.encrypt_for_resource(%{"key" => "value"}, :network, "uuid-here")
       {:ok, <<1, ...>>}
   """
-  @spec encrypt_for_resource(map(), resource_type(), String.t() | integer()) :: encryption_result()
+  @spec encrypt_for_resource(map(), resource_type(), String.t() | integer()) ::
+          encryption_result()
   def encrypt_for_resource(data, resource_type, resource_id) when is_map(data) do
     with {:ok, version} <- get_current_version(),
          {:ok, key} <- derive_key(version, resource_type, resource_id) do
@@ -110,7 +111,11 @@ defmodule Castmill.Encryption do
       {:ok, %{"key" => "value"}}
   """
   @spec decrypt(binary(), resource_type(), String.t() | integer()) :: decryption_result()
-  def decrypt(<<version::8, iv::binary-12, tag::binary-16, ciphertext::binary>>, resource_type, resource_id) do
+  def decrypt(
+        <<version::8, iv::binary-12, tag::binary-16, ciphertext::binary>>,
+        resource_type,
+        resource_id
+      ) do
     with {:ok, key} <- derive_key(version, resource_type, resource_id) do
       decrypt_aead(ciphertext, key, iv, tag)
     end
@@ -138,7 +143,7 @@ defmodule Castmill.Encryption do
     - `{:ok, :already_current}` - If already on current version
   """
   @spec re_encrypt(binary(), resource_type(), String.t() | integer()) ::
-    {:ok, binary()} | {:ok, :already_current} | {:error, atom()}
+          {:ok, binary()} | {:ok, :already_current} | {:error, atom()}
   def re_encrypt(<<version::8, _rest::binary>> = encrypted, resource_type, resource_id) do
     with {:ok, current_version} <- get_current_version() do
       if version == current_version do
@@ -207,9 +212,15 @@ defmodule Castmill.Encryption do
       iv = :crypto.strong_rand_bytes(12)
       json = Jason.encode!(data)
 
-      {ciphertext, tag} = :crypto.crypto_one_time_aead(
-        :aes_256_gcm, key, iv, json, @aad, true
-      )
+      {ciphertext, tag} =
+        :crypto.crypto_one_time_aead(
+          :aes_256_gcm,
+          key,
+          iv,
+          json,
+          @aad,
+          true
+        )
 
       # Version byte + IV + Tag + Ciphertext
       {:ok, <<version::8, iv::binary, tag::binary, ciphertext::binary>>}
@@ -274,9 +285,10 @@ defmodule Castmill.Encryption do
     keys =
       1..10
       |> Enum.reduce(%{}, fn version, acc ->
-        env_var = if version == 1,
-          do: "ENCRYPTION_MASTER_KEY",
-          else: "ENCRYPTION_MASTER_KEY_V#{version}"
+        env_var =
+          if version == 1,
+            do: "ENCRYPTION_MASTER_KEY",
+            else: "ENCRYPTION_MASTER_KEY_V#{version}"
 
         case get_key_from_env(env_var) do
           {:ok, key} -> Map.put(acc, version, key)
@@ -307,14 +319,20 @@ defmodule Castmill.Encryption do
 
   defp get_key_from_env(env_var) do
     case System.get_env(env_var) do
-      nil -> :not_set
-      "" -> :not_set
+      nil ->
+        :not_set
+
+      "" ->
+        :not_set
+
       value ->
         # Key can be raw 32 bytes or Base64 encoded
         case Base.decode64(value) do
           {:ok, key} when byte_size(key) == 32 -> {:ok, key}
-          {:ok, _} -> {:ok, :crypto.hash(:sha256, value)}  # Hash if wrong size
-          :error -> {:ok, :crypto.hash(:sha256, value)}    # Hash if not base64
+          # Hash if wrong size
+          {:ok, _} -> {:ok, :crypto.hash(:sha256, value)}
+          # Hash if not base64
+          :error -> {:ok, :crypto.hash(:sha256, value)}
         end
     end
   end

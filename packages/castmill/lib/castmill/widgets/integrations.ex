@@ -10,6 +10,7 @@ defmodule Castmill.Widgets.Integrations do
   require Logger
 
   alias Castmill.Repo
+
   alias Castmill.Widgets.Integrations.{
     WidgetIntegration,
     WidgetIntegrationCredential,
@@ -49,7 +50,13 @@ defmodule Castmill.Widgets.Integrations do
       iex> broadcast_widget_config_data_update(org_id, widget_id, integration_id, data, discriminator_id)
       :ok
   """
-  def broadcast_widget_config_data_update(organization_id, widget_id, integration_id, data, discriminator_id) do
+  def broadcast_widget_config_data_update(
+        organization_id,
+        widget_id,
+        integration_id,
+        data,
+        discriminator_id
+      ) do
     payload = %{
       type: "widget_config_data_update",
       widget_id: widget_id,
@@ -474,13 +481,19 @@ defmodule Castmill.Widgets.Integrations do
     - `{:ok, discriminator_id}` on success
     - `{:error, reason}` if required data is missing
   """
-  def compute_discriminator_id(%WidgetIntegration{} = integration, organization_id, widget_config_id \\ nil, widget_options \\ %{}) do
+  def compute_discriminator_id(
+        %WidgetIntegration{} = integration,
+        organization_id,
+        widget_config_id \\ nil,
+        widget_options \\ %{}
+      ) do
     case integration.discriminator_type do
       "organization" ->
         {:ok, "org:#{organization_id}"}
 
       "widget_option" ->
         key = integration.discriminator_key
+
         case Map.get(widget_options, key) || Map.get(widget_options, String.to_atom(key)) do
           nil -> {:error, {:missing_option, key}}
           value -> {:ok, "opt:#{value}"}
@@ -530,8 +543,13 @@ defmodule Castmill.Widgets.Integrations do
     widget_options = Keyword.get(opts, :widget_options, %{})
 
     with %WidgetIntegration{} = integration <- get_integration(integration_id),
-         {:ok, discriminator_id} <- compute_discriminator_id(integration, organization_id, widget_config_id, widget_options) do
-
+         {:ok, discriminator_id} <-
+           compute_discriminator_id(
+             integration,
+             organization_id,
+             widget_config_id,
+             widget_options
+           ) do
       # Check cache first
       cached = get_integration_data_by_discriminator(integration_id, discriminator_id)
 
@@ -565,7 +583,10 @@ defmodule Castmill.Widgets.Integrations do
   """
   def get_integration_data_by_discriminator(integration_id, discriminator_id) do
     WidgetIntegrationData.base_query()
-    |> where([wid], wid.widget_integration_id == ^integration_id and wid.discriminator_id == ^discriminator_id)
+    |> where(
+      [wid],
+      wid.widget_integration_id == ^integration_id and wid.discriminator_id == ^discriminator_id
+    )
     |> Repo.one()
   end
 
@@ -585,7 +606,12 @@ defmodule Castmill.Widgets.Integrations do
 
   This is called when cache is stale or missing.
   """
-  def fetch_and_cache_data(%WidgetIntegration{} = integration, organization_id, discriminator_id, widget_config_id) do
+  def fetch_and_cache_data(
+        %WidgetIntegration{} = integration,
+        organization_id,
+        discriminator_id,
+        widget_config_id
+      ) do
     # Get credentials for the fetch
     credentials_result = get_organization_credentials(organization_id, integration.id)
 
@@ -605,6 +631,7 @@ defmodule Castmill.Widgets.Integrations do
               last_used_at: DateTime.utc_now() |> DateTime.truncate(:second),
               status: "ok"
             })
+
             {:ok, data}
 
           {:error, reason} ->
@@ -620,6 +647,7 @@ defmodule Castmill.Widgets.Integrations do
               status: "error",
               error_message: inspect(reason)
             })
+
             {:error, reason}
         end
 
@@ -636,7 +664,11 @@ defmodule Castmill.Widgets.Integrations do
 
   Override this for specific integrations with custom logic.
   """
-  def do_fetch_integration_data(%WidgetIntegration{pull_endpoint: endpoint} = integration, credentials) when is_binary(endpoint) do
+  def do_fetch_integration_data(
+        %WidgetIntegration{pull_endpoint: endpoint} = integration,
+        credentials
+      )
+      when is_binary(endpoint) do
     # Build URL with any config parameters
     url = build_integration_url(endpoint, integration.pull_config, credentials)
     headers = build_integration_headers(integration.pull_config, credentials)
@@ -812,9 +844,15 @@ defmodule Castmill.Widgets.Integrations do
           nil ->
             # Fall back to finding any widget config data in this org
             WidgetIntegrationData.base_query()
-            |> join(:inner, [wid], wc in Castmill.Widgets.WidgetConfig, on: wid.widget_config_id == wc.id)
-            |> join(:inner, [wid, wc], pi in Castmill.Resources.PlaylistItem, on: wc.playlist_item_id == pi.id)
-            |> join(:inner, [wid, wc, pi], p in Castmill.Resources.Playlist, on: pi.playlist_id == p.id)
+            |> join(:inner, [wid], wc in Castmill.Widgets.WidgetConfig,
+              on: wid.widget_config_id == wc.id
+            )
+            |> join(:inner, [wid, wc], pi in Castmill.Resources.PlaylistItem,
+              on: wc.playlist_item_id == pi.id
+            )
+            |> join(:inner, [wid, wc, pi], p in Castmill.Resources.Playlist,
+              on: pi.playlist_id == p.id
+            )
             |> where([wid, wc, pi, p], p.organization_id == ^organization_id)
             |> where([wid], wid.widget_integration_id == ^wi.id)
             |> order_by([wid], desc: wid.updated_at)
@@ -1066,7 +1104,8 @@ defmodule Castmill.Widgets.Integrations do
       iex> upsert_network_credentials(network_id, integration_id, %{"client_id" => "xxx", "client_secret" => "yyy"})
       {:ok, %NetworkIntegrationCredential{}}
   """
-  def upsert_network_credentials(network_id, integration_id, credentials) when is_map(credentials) do
+  def upsert_network_credentials(network_id, integration_id, credentials)
+      when is_map(credentials) do
     case get_network_credentials(network_id, integration_id) do
       nil ->
         %NetworkIntegrationCredential{}
@@ -1086,7 +1125,8 @@ defmodule Castmill.Widgets.Integrations do
   @doc """
   Enables or disables network credentials for an integration.
   """
-  def set_network_credentials_enabled(network_id, integration_id, enabled) when is_boolean(enabled) do
+  def set_network_credentials_enabled(network_id, integration_id, enabled)
+      when is_boolean(enabled) do
     case get_network_credentials(network_id, integration_id) do
       nil ->
         {:error, :not_found}
@@ -1210,8 +1250,11 @@ defmodule Castmill.Widgets.Integrations do
       nil ->
         {:error, :not_found}
 
-      %WidgetIntegrationCredential{encrypted_credentials: encrypted, organization_id: organization_id}
-          when is_binary(encrypted) ->
+      %WidgetIntegrationCredential{
+        encrypted_credentials: encrypted,
+        organization_id: organization_id
+      }
+      when is_binary(encrypted) ->
         with {:ok, organization} <- fetch_organization(organization_id),
              {:ok, encryption_key} <- get_or_create_encryption_key(organization),
              {:ok, credentials} <- Castmill.Crypto.decrypt(encrypted, encryption_key) do

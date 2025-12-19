@@ -65,7 +65,8 @@ defmodule Castmill.Widgets.Integrations.NetworkIntegrationCredential do
 
     Changeset with encrypted credentials
   """
-  def changeset_with_encryption(credential, attrs, credentials_map) when is_map(credentials_map) do
+  def changeset_with_encryption(credential, attrs, credentials_map)
+      when is_map(credentials_map) do
     network_id = attrs[:network_id] || attrs["network_id"] || credential.network_id
 
     case Encryption.encrypt_for_resource(credentials_map, :network, network_id) do

@@ -51,7 +51,13 @@ defmodule CastmillWeb.Live.Admin.NetworkIntegrationForm do
 
         <:actions>
           <.button phx-disable-with="Saving...">Save Credentials</.button>
-          <.button :if={@has_existing} type="button" phx-click="delete" phx-target={@myself} class="bg-red-600 hover:bg-red-700">
+          <.button
+            :if={@has_existing}
+            type="button"
+            phx-click="delete"
+            phx-target={@myself}
+            class="bg-red-600 hover:bg-red-700"
+          >
             Delete Credentials
           </.button>
         </:actions>
@@ -85,9 +91,10 @@ defmodule CastmillWeb.Live.Admin.NetworkIntegrationForm do
     is_enabled = if existing_credential, do: existing_credential.is_enabled, else: true
 
     # Build a simple form for credentials
-    form_data = Enum.into(credential_fields, %{}, fn field ->
-      {field.key, initial_values[field.key] || ""}
-    end)
+    form_data =
+      Enum.into(credential_fields, %{}, fn field ->
+        {field.key, initial_values[field.key] || ""}
+      end)
 
     {:ok,
      socket
@@ -210,14 +217,17 @@ defmodule CastmillWeb.Live.Admin.NetworkIntegrationForm do
   end
 
   defp get_initial_values(nil, _fields), do: %{}
+
   defp get_initial_values(_credential, fields) do
     # For existing credentials, show masked values
     # We don't show actual values for security reasons
     Enum.into(fields, %{}, fn field ->
       if field.type == :password do
-        {field.key, ""}  # Don't show password values
+        # Don't show password values
+        {field.key, ""}
       else
-        {field.key, "••••••••"}  # Placeholder for existing values
+        # Placeholder for existing values
+        {field.key, "••••••••"}
       end
     end)
   end
@@ -271,15 +281,32 @@ defmodule CastmillWeb.Live.Admin.NetworkIntegrationForm do
     %{
       "fields" => [
         %{"name" => "client_id", "label" => "Client ID", "type" => "text", "required" => true},
-        %{"name" => "client_secret", "label" => "Client Secret", "type" => "password", "required" => true}
+        %{
+          "name" => "client_secret",
+          "label" => "Client Secret",
+          "type" => "password",
+          "required" => true
+        }
       ]
     }
   end
 
   defp default_oauth_fields do
     [
-      %{key: :client_id, label: "Client ID", type: :text, required: true, placeholder: "Enter Client ID"},
-      %{key: :client_secret, label: "Client Secret", type: :password, required: true, placeholder: "Enter Client Secret"}
+      %{
+        key: :client_id,
+        label: "Client ID",
+        type: :text,
+        required: true,
+        placeholder: "Enter Client ID"
+      },
+      %{
+        key: :client_secret,
+        label: "Client Secret",
+        type: :password,
+        required: true,
+        placeholder: "Enter Client Secret"
+      }
     ]
   end
 

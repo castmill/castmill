@@ -144,7 +144,11 @@ defmodule CastmillWeb.WidgetIntegrationController do
               integrations
               |> Enum.filter(&integration_requires_credentials?/1)
               |> Enum.filter(fn integration ->
-                is_nil(Integrations.get_credentials_by_scope(integration.id, organization_id: organization_id))
+                is_nil(
+                  Integrations.get_credentials_by_scope(integration.id,
+                    organization_id: organization_id
+                  )
+                )
               end)
               |> Enum.map(& &1.name)
 
@@ -176,7 +180,9 @@ defmodule CastmillWeb.WidgetIntegrationController do
   # Resolves a widget ID from either a numeric ID string or a slug
   defp resolve_widget_id(id_or_slug) do
     case Integer.parse(id_or_slug) do
-      {id, ""} -> id
+      {id, ""} ->
+        id
+
       _ ->
         # Not an integer, try to find by slug
         case Widgets.get_widget_by_slug(id_or_slug) do
@@ -464,11 +470,14 @@ defmodule CastmillWeb.WidgetIntegrationController do
       case Integrations.get_integration_data_by_config(widget_config_id) do
         %Integrations.WidgetIntegrationData{} = data ->
           data
+
         nil ->
           # Try organization-level shared data
           # Get the widget_id for this config to look up shared data
           case Widgets.get_widget_id_for_config(widget_config_id) do
-            nil -> nil
+            nil ->
+              nil
+
             widget_id ->
               Integrations.get_integration_data_for_widget_in_org(organization_id, widget_id)
           end

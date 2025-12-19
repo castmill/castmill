@@ -45,6 +45,9 @@ defmodule Castmill.Repo.Migrations.CreateWidgetIntegrationCredentials do
              :organization_id
            ])
 
-    create unique_index(:widget_integration_credentials, [:widget_integration_id, :widget_config_id])
+    create unique_index(:widget_integration_credentials, [
+             :widget_integration_id,
+             :widget_config_id
+           ])
   end
 end

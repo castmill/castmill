@@ -70,8 +70,8 @@ defmodule Castmill.Repo.Migrations.CreateWidgetIntegrationData do
 
     # Unique constraint: one data record per integration per discriminator
     create unique_index(:widget_integration_data, [:widget_integration_id, :discriminator_id],
-      where: "discriminator_id IS NOT NULL",
-      name: :widget_integration_data_discriminator_unique
-    )
+             where: "discriminator_id IS NOT NULL",
+             name: :widget_integration_data_discriminator_unique
+           )
   end
 end

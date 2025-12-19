@@ -237,7 +237,9 @@ defmodule Castmill.Widgets do
     Enum.reduce_while(integrations, :ok, fn integration, _acc ->
       if integration_requires_credentials?(integration) do
         # Check if credentials exist for this organization
-        case Integrations.get_credentials_by_scope(integration.id, organization_id: organization_id) do
+        case Integrations.get_credentials_by_scope(integration.id,
+               organization_id: organization_id
+             ) do
           nil -> {:halt, {:error, :missing_integration_credentials}}
           _credential -> {:cont, :ok}
         end
@@ -306,13 +308,17 @@ defmodule Castmill.Widgets do
     |> Enum.map(&Map.get(options, &1))
     |> Enum.filter(&(&1 != nil))
     |> Enum.map(fn
-      id when is_integer(id) -> id
+      id when is_integer(id) ->
+        id
+
       id when is_binary(id) ->
         case Integer.parse(id) do
           {int_id, ""} -> int_id
           _ -> nil
         end
-      _ -> nil
+
+      _ ->
+        nil
     end)
     |> Enum.filter(&(&1 != nil))
   end

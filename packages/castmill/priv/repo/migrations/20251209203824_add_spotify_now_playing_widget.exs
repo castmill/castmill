@@ -10,7 +10,8 @@ defmodule Castmill.Repo.Migrations.AddSpotifyNowPlayingWidget do
     widget_attrs = %{
       name: "Spotify Now Playing",
       slug: "spotify-now-playing",
-      description: "Displays the currently playing track from a Spotify account with album artwork, track information, and playback progress.",
+      description:
+        "Displays the currently playing track from a Spotify account with album artwork, track information, and playback progress.",
       icon: "/widgets/spotify-now-playing/icon.svg",
       small_icon: "/widgets/spotify-now-playing/icon-small.svg",
       is_system: true,
@@ -69,7 +70,8 @@ defmodule Castmill.Repo.Migrations.AddSpotifyNowPlayingWidget do
                   %{
                     "type" => "image",
                     "opts" => %{
-                      "url" => "https://storage.googleapis.com/pr-newsroom-wp/1/2023/05/Spotify_Primary_Logo_RGB_White.png",
+                      "url" =>
+                        "https://storage.googleapis.com/pr-newsroom-wp/1/2023/05/Spotify_Primary_Logo_RGB_White.png",
                       "size" => "contain"
                     },
                     "style" => %{
@@ -223,8 +225,11 @@ defmodule Castmill.Repo.Migrations.AddSpotifyNowPlayingWidget do
         "track_name" => %{"type" => "string", "default" => "Song Title"},
         "artist_name" => %{"type" => "string", "default" => "Artist Name"},
         "album_name" => %{"type" => "string", "default" => "Album Name"},
-        "album_art_url" => %{"type" => "string", "default" => "https://via.placeholder.com/400x400/1DB954/FFFFFF?text=♪"},
-        "duration_ms" => %{"type" => "number", "default" => 210000},
+        "album_art_url" => %{
+          "type" => "string",
+          "default" => "https://via.placeholder.com/400x400/1DB954/FFFFFF?text=♪"
+        },
+        "duration_ms" => %{"type" => "number", "default" => 210_000},
         "duration_formatted" => %{"type" => "string", "default" => "3:30"},
         "progress_ms" => %{"type" => "number", "default" => 90000},
         "progress_formatted" => %{"type" => "string", "default" => "1:30"},

@@ -423,6 +423,7 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
                 "playlist_3" => %{"type" => "ref", "collection" => "playlists"}
               }
             })
+
           existing_widget ->
             existing_widget
         end
@@ -474,20 +475,33 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
       filler2 = playlist_fixture(%{organization_id: organization.id, name: "filler2"})
 
       # Add the layout widget to the parent playlist with reference to child
-      {:ok, _item} = Resources.insert_item_into_playlist(
-        parent_playlist.id,
-        nil,
-        layout_widget.id,
-        0,
-        10000,
-        %{"playlist_1" => child_playlist.id, "playlist_2" => filler1.id, "playlist_3" => filler2.id}
-      )
+      {:ok, _item} =
+        Resources.insert_item_into_playlist(
+          parent_playlist.id,
+          nil,
+          layout_widget.id,
+          0,
+          10000,
+          %{
+            "playlist_1" => child_playlist.id,
+            "playlist_2" => filler1.id,
+            "playlist_3" => filler2.id
+          }
+        )
 
-      {:ok, _result} = Teams.add_resource_to_team(team.id, "playlists", child_playlist.id, [:read])
-      {:ok, _result} = Teams.add_resource_to_team(team.id, "playlists", parent_playlist.id, [:read])
+      {:ok, _result} =
+        Teams.add_resource_to_team(team.id, "playlists", child_playlist.id, [:read])
+
+      {:ok, _result} =
+        Teams.add_resource_to_team(team.id, "playlists", parent_playlist.id, [:read])
 
       # Get ancestors of child playlist
-      conn = get(conn, "/api/organizations/#{organization.id}/playlists/#{child_playlist.id}/ancestors")
+      conn =
+        get(
+          conn,
+          "/api/organizations/#{organization.id}/playlists/#{child_playlist.id}/ancestors"
+        )
+
       response = json_response(conn, 200)
 
       assert %{"ancestor_ids" => ancestor_ids} = response
@@ -529,29 +543,45 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
       filler4 = playlist_fixture(%{organization_id: organization.id, name: "filler4"})
 
       # Create link: grandparent -> parent
-      {:ok, _item} = Resources.insert_item_into_playlist(
-        grandparent_playlist.id,
-        nil,
-        layout_widget.id,
-        0,
-        10000,
-        %{"playlist_1" => parent_playlist.id, "playlist_2" => filler1.id, "playlist_3" => filler2.id}
-      )
+      {:ok, _item} =
+        Resources.insert_item_into_playlist(
+          grandparent_playlist.id,
+          nil,
+          layout_widget.id,
+          0,
+          10000,
+          %{
+            "playlist_1" => parent_playlist.id,
+            "playlist_2" => filler1.id,
+            "playlist_3" => filler2.id
+          }
+        )
 
       # Create link: parent -> child
-      {:ok, _item} = Resources.insert_item_into_playlist(
-        parent_playlist.id,
-        nil,
-        layout_widget.id,
-        0,
-        10000,
-        %{"playlist_1" => filler3.id, "playlist_2" => child_playlist.id, "playlist_3" => filler4.id}
-      )
+      {:ok, _item} =
+        Resources.insert_item_into_playlist(
+          parent_playlist.id,
+          nil,
+          layout_widget.id,
+          0,
+          10000,
+          %{
+            "playlist_1" => filler3.id,
+            "playlist_2" => child_playlist.id,
+            "playlist_3" => filler4.id
+          }
+        )
 
-      {:ok, _result} = Teams.add_resource_to_team(team.id, "playlists", child_playlist.id, [:read])
+      {:ok, _result} =
+        Teams.add_resource_to_team(team.id, "playlists", child_playlist.id, [:read])
 
       # Get ancestors of child playlist - should include both parent and grandparent
-      conn = get(conn, "/api/organizations/#{organization.id}/playlists/#{child_playlist.id}/ancestors")
+      conn =
+        get(
+          conn,
+          "/api/organizations/#{organization.id}/playlists/#{child_playlist.id}/ancestors"
+        )
+
       response = json_response(conn, 200)
 
       assert %{"ancestor_ids" => ancestor_ids} = response
@@ -593,28 +623,44 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
       filler4 = playlist_fixture(%{organization_id: organization.id, name: "filler4"})
 
       # Parent1 references child via playlist_1
-      {:ok, _item} = Resources.insert_item_into_playlist(
-        parent1.id,
-        nil,
-        layout_widget.id,
-        0,
-        10000,
-        %{"playlist_1" => child_playlist.id, "playlist_2" => filler1.id, "playlist_3" => filler2.id}
-      )
+      {:ok, _item} =
+        Resources.insert_item_into_playlist(
+          parent1.id,
+          nil,
+          layout_widget.id,
+          0,
+          10000,
+          %{
+            "playlist_1" => child_playlist.id,
+            "playlist_2" => filler1.id,
+            "playlist_3" => filler2.id
+          }
+        )
 
       # Parent2 references child via playlist_3
-      {:ok, _item} = Resources.insert_item_into_playlist(
-        parent2.id,
-        nil,
-        layout_widget.id,
-        0,
-        10000,
-        %{"playlist_1" => filler3.id, "playlist_2" => filler4.id, "playlist_3" => child_playlist.id}
-      )
+      {:ok, _item} =
+        Resources.insert_item_into_playlist(
+          parent2.id,
+          nil,
+          layout_widget.id,
+          0,
+          10000,
+          %{
+            "playlist_1" => filler3.id,
+            "playlist_2" => filler4.id,
+            "playlist_3" => child_playlist.id
+          }
+        )
 
-      {:ok, _result} = Teams.add_resource_to_team(team.id, "playlists", child_playlist.id, [:read])
+      {:ok, _result} =
+        Teams.add_resource_to_team(team.id, "playlists", child_playlist.id, [:read])
 
-      conn = get(conn, "/api/organizations/#{organization.id}/playlists/#{child_playlist.id}/ancestors")
+      conn =
+        get(
+          conn,
+          "/api/organizations/#{organization.id}/playlists/#{child_playlist.id}/ancestors"
+        )
+
       response = json_response(conn, 200)
 
       assert %{"ancestor_ids" => ancestor_ids} = response
@@ -642,22 +688,29 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
         })
 
       # Reference child in multiple slots
-      {:ok, _item} = Resources.insert_item_into_playlist(
-        parent_playlist.id,
-        nil,
-        layout_widget.id,
-        0,
-        10000,
-        %{
-          "playlist_1" => child_playlist.id,
-          "playlist_2" => child_playlist.id,
-          "playlist_3" => child_playlist.id
-        }
-      )
+      {:ok, _item} =
+        Resources.insert_item_into_playlist(
+          parent_playlist.id,
+          nil,
+          layout_widget.id,
+          0,
+          10000,
+          %{
+            "playlist_1" => child_playlist.id,
+            "playlist_2" => child_playlist.id,
+            "playlist_3" => child_playlist.id
+          }
+        )
 
-      {:ok, _result} = Teams.add_resource_to_team(team.id, "playlists", child_playlist.id, [:read])
+      {:ok, _result} =
+        Teams.add_resource_to_team(team.id, "playlists", child_playlist.id, [:read])
 
-      conn = get(conn, "/api/organizations/#{organization.id}/playlists/#{child_playlist.id}/ancestors")
+      conn =
+        get(
+          conn,
+          "/api/organizations/#{organization.id}/playlists/#{child_playlist.id}/ancestors"
+        )
+
       response = json_response(conn, 200)
 
       assert %{"ancestor_ids" => ancestor_ids} = response
@@ -672,12 +725,13 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
       team: team
     } do
       # Create a non-layout widget (e.g., a regular widget)
-      regular_widget = Castmill.PlaylistsFixtures.widget_fixture(%{
-        name: "Regular Widget Test",
-        slug: "regular-widget-test",
-        template: %{"type" => "simple"},
-        options_schema: %{"playlist_1" => %{"type" => "ref", "collection" => "playlists"}}
-      })
+      regular_widget =
+        Castmill.PlaylistsFixtures.widget_fixture(%{
+          name: "Regular Widget Test",
+          slug: "regular-widget-test",
+          template: %{"type" => "simple"},
+          options_schema: %{"playlist_1" => %{"type" => "ref", "collection" => "playlists"}}
+        })
 
       parent_playlist =
         playlist_fixture(%{
@@ -692,18 +746,25 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
         })
 
       # Create widget config with some reference (but not a layout widget)
-      {:ok, _item} = Resources.insert_item_into_playlist(
-        parent_playlist.id,
-        nil,
-        regular_widget.id,
-        0,
-        10000,
-        %{"playlist_1" => child_playlist.id}
-      )
+      {:ok, _item} =
+        Resources.insert_item_into_playlist(
+          parent_playlist.id,
+          nil,
+          regular_widget.id,
+          0,
+          10000,
+          %{"playlist_1" => child_playlist.id}
+        )
 
-      {:ok, _result} = Teams.add_resource_to_team(team.id, "playlists", child_playlist.id, [:read])
+      {:ok, _result} =
+        Teams.add_resource_to_team(team.id, "playlists", child_playlist.id, [:read])
 
-      conn = get(conn, "/api/organizations/#{organization.id}/playlists/#{child_playlist.id}/ancestors")
+      conn =
+        get(
+          conn,
+          "/api/organizations/#{organization.id}/playlists/#{child_playlist.id}/ancestors"
+        )
+
       response = json_response(conn, 200)
 
       # Should be empty because the widget is not a layout widget
@@ -747,39 +808,48 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
       filler4 = playlist_fixture(%{organization_id: organization.id, name: "diamond_filler4"})
 
       # A references B and C
-      {:ok, _item} = Resources.insert_item_into_playlist(
-        playlist_a.id,
-        nil,
-        layout_widget.id,
-        0,
-        10000,
-        %{"playlist_1" => playlist_b.id, "playlist_2" => playlist_c.id, "playlist_3" => filler1.id}
-      )
+      {:ok, _item} =
+        Resources.insert_item_into_playlist(
+          playlist_a.id,
+          nil,
+          layout_widget.id,
+          0,
+          10000,
+          %{
+            "playlist_1" => playlist_b.id,
+            "playlist_2" => playlist_c.id,
+            "playlist_3" => filler1.id
+          }
+        )
 
       # B references D
-      {:ok, _item} = Resources.insert_item_into_playlist(
-        playlist_b.id,
-        nil,
-        layout_widget.id,
-        0,
-        10000,
-        %{"playlist_1" => playlist_d.id, "playlist_2" => filler2.id, "playlist_3" => filler3.id}
-      )
+      {:ok, _item} =
+        Resources.insert_item_into_playlist(
+          playlist_b.id,
+          nil,
+          layout_widget.id,
+          0,
+          10000,
+          %{"playlist_1" => playlist_d.id, "playlist_2" => filler2.id, "playlist_3" => filler3.id}
+        )
 
       # C references D
-      {:ok, _item} = Resources.insert_item_into_playlist(
-        playlist_c.id,
-        nil,
-        layout_widget.id,
-        0,
-        10000,
-        %{"playlist_1" => playlist_d.id, "playlist_2" => filler4.id, "playlist_3" => filler1.id}
-      )
+      {:ok, _item} =
+        Resources.insert_item_into_playlist(
+          playlist_c.id,
+          nil,
+          layout_widget.id,
+          0,
+          10000,
+          %{"playlist_1" => playlist_d.id, "playlist_2" => filler4.id, "playlist_3" => filler1.id}
+        )
 
       {:ok, _result} = Teams.add_resource_to_team(team.id, "playlists", playlist_d.id, [:read])
 
       # Ancestors of D should include B, C, and A (all unique)
-      conn = get(conn, "/api/organizations/#{organization.id}/playlists/#{playlist_d.id}/ancestors")
+      conn =
+        get(conn, "/api/organizations/#{organization.id}/playlists/#{playlist_d.id}/ancestors")
+
       response = json_response(conn, 200)
 
       assert %{"ancestor_ids" => ancestor_ids} = response
@@ -808,24 +878,26 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
       filler4 = playlist_fixture(%{organization_id: organization.id, name: "cycle_filler4"})
 
       # A references B (should succeed)
-      {:ok, _item} = Resources.insert_item_into_playlist(
-        playlist_a.id,
-        nil,
-        layout_widget.id,
-        0,
-        10000,
-        %{"playlist_1" => playlist_b.id, "playlist_2" => filler1.id, "playlist_3" => filler2.id}
-      )
+      {:ok, _item} =
+        Resources.insert_item_into_playlist(
+          playlist_a.id,
+          nil,
+          layout_widget.id,
+          0,
+          10000,
+          %{"playlist_1" => playlist_b.id, "playlist_2" => filler1.id, "playlist_3" => filler2.id}
+        )
 
       # B references A (should fail - would create a cycle)
-      result = Resources.insert_item_into_playlist(
-        playlist_b.id,
-        nil,
-        layout_widget.id,
-        0,
-        10000,
-        %{"playlist_1" => playlist_a.id, "playlist_2" => filler3.id, "playlist_3" => filler4.id}
-      )
+      result =
+        Resources.insert_item_into_playlist(
+          playlist_b.id,
+          nil,
+          layout_widget.id,
+          0,
+          10000,
+          %{"playlist_1" => playlist_a.id, "playlist_2" => filler3.id, "playlist_3" => filler4.id}
+        )
 
       # Server-side validation should prevent the cycle
       assert {:error, :circular_reference} = result
@@ -850,11 +922,24 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
               },
               options_schema: %{
                 "background" => "color",
-                "playlist_1" => %{"type" => "ref", "required" => true, "collection" => "playlists"},
-                "playlist_2" => %{"type" => "ref", "required" => true, "collection" => "playlists"},
-                "playlist_3" => %{"type" => "ref", "required" => true, "collection" => "playlists"}
+                "playlist_1" => %{
+                  "type" => "ref",
+                  "required" => true,
+                  "collection" => "playlists"
+                },
+                "playlist_2" => %{
+                  "type" => "ref",
+                  "required" => true,
+                  "collection" => "playlists"
+                },
+                "playlist_3" => %{
+                  "type" => "ref",
+                  "required" => true,
+                  "collection" => "playlists"
+                }
               }
             })
+
           existing_widget ->
             existing_widget
         end
@@ -871,14 +956,15 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
       filler2 = playlist_fixture(%{organization_id: organization.id, name: "filler2"})
 
       # Try to add a layout widget that references itself
-      result = Resources.insert_item_into_playlist(
-        playlist.id,
-        nil,
-        layout_widget.id,
-        0,
-        10000,
-        %{"playlist_1" => playlist.id, "playlist_2" => filler1.id, "playlist_3" => filler2.id}
-      )
+      result =
+        Resources.insert_item_into_playlist(
+          playlist.id,
+          nil,
+          layout_widget.id,
+          0,
+          10000,
+          %{"playlist_1" => playlist.id, "playlist_2" => filler1.id, "playlist_3" => filler2.id}
+        )
 
       assert {:error, :circular_reference} = result
     end
@@ -895,24 +981,26 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
       filler4 = playlist_fixture(%{organization_id: organization.id, name: "filler4"})
 
       # A -> B (this should succeed)
-      {:ok, _item} = Resources.insert_item_into_playlist(
-        playlist_a.id,
-        nil,
-        layout_widget.id,
-        0,
-        10000,
-        %{"playlist_1" => playlist_b.id, "playlist_2" => filler1.id, "playlist_3" => filler2.id}
-      )
+      {:ok, _item} =
+        Resources.insert_item_into_playlist(
+          playlist_a.id,
+          nil,
+          layout_widget.id,
+          0,
+          10000,
+          %{"playlist_1" => playlist_b.id, "playlist_2" => filler1.id, "playlist_3" => filler2.id}
+        )
 
       # B -> A (this should fail - would create cycle)
-      result = Resources.insert_item_into_playlist(
-        playlist_b.id,
-        nil,
-        layout_widget.id,
-        0,
-        10000,
-        %{"playlist_1" => playlist_a.id, "playlist_2" => filler3.id, "playlist_3" => filler4.id}
-      )
+      result =
+        Resources.insert_item_into_playlist(
+          playlist_b.id,
+          nil,
+          layout_widget.id,
+          0,
+          10000,
+          %{"playlist_1" => playlist_a.id, "playlist_2" => filler3.id, "playlist_3" => filler4.id}
+        )
 
       assert {:error, :circular_reference} = result
     end
@@ -928,34 +1016,37 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
       filler2 = playlist_fixture(%{organization_id: organization.id, name: "filler2"})
 
       # A -> B (success)
-      {:ok, _item} = Resources.insert_item_into_playlist(
-        playlist_a.id,
-        nil,
-        layout_widget.id,
-        0,
-        10000,
-        %{"playlist_1" => playlist_b.id, "playlist_2" => filler1.id, "playlist_3" => filler2.id}
-      )
+      {:ok, _item} =
+        Resources.insert_item_into_playlist(
+          playlist_a.id,
+          nil,
+          layout_widget.id,
+          0,
+          10000,
+          %{"playlist_1" => playlist_b.id, "playlist_2" => filler1.id, "playlist_3" => filler2.id}
+        )
 
       # B -> C (success)
-      {:ok, _item} = Resources.insert_item_into_playlist(
-        playlist_b.id,
-        nil,
-        layout_widget.id,
-        0,
-        10000,
-        %{"playlist_1" => playlist_c.id, "playlist_2" => filler1.id, "playlist_3" => filler2.id}
-      )
+      {:ok, _item} =
+        Resources.insert_item_into_playlist(
+          playlist_b.id,
+          nil,
+          layout_widget.id,
+          0,
+          10000,
+          %{"playlist_1" => playlist_c.id, "playlist_2" => filler1.id, "playlist_3" => filler2.id}
+        )
 
       # C -> A (this should fail - would create cycle)
-      result = Resources.insert_item_into_playlist(
-        playlist_c.id,
-        nil,
-        layout_widget.id,
-        0,
-        10000,
-        %{"playlist_1" => playlist_a.id, "playlist_2" => filler1.id, "playlist_3" => filler2.id}
-      )
+      result =
+        Resources.insert_item_into_playlist(
+          playlist_c.id,
+          nil,
+          layout_widget.id,
+          0,
+          10000,
+          %{"playlist_1" => playlist_a.id, "playlist_2" => filler1.id, "playlist_3" => filler2.id}
+        )
 
       assert {:error, :circular_reference} = result
     end
@@ -973,34 +1064,41 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
       filler1 = playlist_fixture(%{organization_id: organization.id, name: "filler1"})
 
       # A -> B, C
-      {:ok, _item} = Resources.insert_item_into_playlist(
-        playlist_a.id,
-        nil,
-        layout_widget.id,
-        0,
-        10000,
-        %{"playlist_1" => playlist_b.id, "playlist_2" => playlist_c.id, "playlist_3" => filler1.id}
-      )
+      {:ok, _item} =
+        Resources.insert_item_into_playlist(
+          playlist_a.id,
+          nil,
+          layout_widget.id,
+          0,
+          10000,
+          %{
+            "playlist_1" => playlist_b.id,
+            "playlist_2" => playlist_c.id,
+            "playlist_3" => filler1.id
+          }
+        )
 
       # B -> D
-      {:ok, _item} = Resources.insert_item_into_playlist(
-        playlist_b.id,
-        nil,
-        layout_widget.id,
-        0,
-        10000,
-        %{"playlist_1" => playlist_d.id, "playlist_2" => filler1.id, "playlist_3" => filler1.id}
-      )
+      {:ok, _item} =
+        Resources.insert_item_into_playlist(
+          playlist_b.id,
+          nil,
+          layout_widget.id,
+          0,
+          10000,
+          %{"playlist_1" => playlist_d.id, "playlist_2" => filler1.id, "playlist_3" => filler1.id}
+        )
 
       # C -> D (this should succeed - D is a shared child, not a cycle)
-      result = Resources.insert_item_into_playlist(
-        playlist_c.id,
-        nil,
-        layout_widget.id,
-        0,
-        10000,
-        %{"playlist_1" => playlist_d.id, "playlist_2" => filler1.id, "playlist_3" => filler1.id}
-      )
+      result =
+        Resources.insert_item_into_playlist(
+          playlist_c.id,
+          nil,
+          layout_widget.id,
+          0,
+          10000,
+          %{"playlist_1" => playlist_d.id, "playlist_2" => filler1.id, "playlist_3" => filler1.id}
+        )
 
       assert {:ok, _item} = result
     end
@@ -1046,7 +1144,8 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
           name: "test_playlist_#{System.unique_integer([:positive])}"
         })
 
-      {:ok, _result} = Teams.add_resource_to_team(team.id, "playlists", playlist.id, [:read, :write])
+      {:ok, _result} =
+        Teams.add_resource_to_team(team.id, "playlists", playlist.id, [:read, :write])
 
       %{
         widget_with_integration: widget_with_integration,
@@ -1060,14 +1159,15 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
       widget_with_integration: widget
     } do
       # Try to add widget without credentials configured
-      result = Resources.insert_item_into_playlist(
-        playlist.id,
-        nil,
-        widget.id,
-        0,
-        10000,
-        %{}
-      )
+      result =
+        Resources.insert_item_into_playlist(
+          playlist.id,
+          nil,
+          widget.id,
+          0,
+          10000,
+          %{}
+        )
 
       assert {:error, :missing_integration_credentials} = result
     end
@@ -1079,21 +1179,23 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
       integration: integration
     } do
       # Store credentials for this organization
-      {:ok, _credential} = Integrations.upsert_credentials(%{
-        widget_integration_id: integration.id,
-        organization_id: organization.id,
-        encrypted_credentials: "test_encrypted_data"
-      })
+      {:ok, _credential} =
+        Integrations.upsert_credentials(%{
+          widget_integration_id: integration.id,
+          organization_id: organization.id,
+          encrypted_credentials: "test_encrypted_data"
+        })
 
       # Now adding widget should succeed
-      result = Resources.insert_item_into_playlist(
-        playlist.id,
-        nil,
-        widget.id,
-        0,
-        10000,
-        %{}
-      )
+      result =
+        Resources.insert_item_into_playlist(
+          playlist.id,
+          nil,
+          widget.id,
+          0,
+          10000,
+          %{}
+        )
 
       assert {:ok, _item} = result
     end
@@ -1117,17 +1219,19 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
           name: "simple_test_playlist_#{System.unique_integer([:positive])}"
         })
 
-      {:ok, _result} = Teams.add_resource_to_team(team.id, "playlists", playlist.id, [:read, :write])
+      {:ok, _result} =
+        Teams.add_resource_to_team(team.id, "playlists", playlist.id, [:read, :write])
 
       # Adding widget without integrations should succeed
-      result = Resources.insert_item_into_playlist(
-        playlist.id,
-        nil,
-        simple_widget.id,
-        0,
-        10000,
-        %{}
-      )
+      result =
+        Resources.insert_item_into_playlist(
+          playlist.id,
+          nil,
+          simple_widget.id,
+          0,
+          10000,
+          %{}
+        )
 
       assert {:ok, _item} = result
     end

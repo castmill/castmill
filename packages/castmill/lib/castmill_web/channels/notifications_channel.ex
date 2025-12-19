@@ -127,7 +127,9 @@ defmodule CastmillWeb.NotificationsChannel do
   def handle_info({:widget_config_data_update, payload}, socket) do
     require Logger
 
-    Logger.debug("NotificationsChannel received widget_config_data_update: widget_id=#{payload.widget_id}")
+    Logger.debug(
+      "NotificationsChannel received widget_config_data_update: widget_id=#{payload.widget_id}"
+    )
 
     push(socket, "widget_config_data_update", payload)
 

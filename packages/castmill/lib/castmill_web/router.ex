@@ -70,7 +70,12 @@ defmodule CastmillWeb.Router do
         live("/networks/:id/:resource", Admin.NetworkShow, :show)
         live("/networks/:id/show/edit", Admin.NetworkShow, :edit)
         live("/networks/:id/:resource/new", Admin.NetworkShow, :new)
-        live("/networks/:id/integrations/:integration_id/configure", Admin.NetworkShow, :configure_integration)
+
+        live(
+          "/networks/:id/integrations/:integration_id/configure",
+          Admin.NetworkShow,
+          :configure_integration
+        )
 
         # Organizations
         live("/organizations/:id/", Admin.OrganizationShow, :show)

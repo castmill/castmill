@@ -105,7 +105,8 @@ config :castmill, Oban,
 config :castmill, :spotify_oauth,
   client_id: System.get_env("SPOTIFY_CLIENT_ID"),
   client_secret: System.get_env("SPOTIFY_CLIENT_SECRET"),
-  redirect_uri: System.get_env("SPOTIFY_REDIRECT_URI") || "http://localhost:4000/auth/spotify/callback",
+  redirect_uri:
+    System.get_env("SPOTIFY_REDIRECT_URI") || "http://localhost:4000/auth/spotify/callback",
   scopes: ["user-read-currently-playing", "user-read-playback-state"]
 
 # Configure gettext

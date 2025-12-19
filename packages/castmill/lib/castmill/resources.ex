@@ -174,10 +174,11 @@ defmodule Castmill.Resources do
 
     # Apply defaults from data_schema to ensure all fields have values
     # This is important for widgets like Spotify Now Playing that rely on default values
-    data_with_defaults = apply_data_schema_defaults(
-      item.widget_config.widget.data_schema || %{},
-      Map.get(modified_widget_config_with_resolved_options, :data, %{}) || %{}
-    )
+    data_with_defaults =
+      apply_data_schema_defaults(
+        item.widget_config.widget.data_schema || %{},
+        Map.get(modified_widget_config_with_resolved_options, :data, %{}) || %{}
+      )
 
     modified_widget_config_with_defaults =
       Map.put(modified_widget_config_with_resolved_options, :data, data_with_defaults)
@@ -194,10 +195,15 @@ defmodule Castmill.Resources do
       case Castmill.Widgets.Integrations.get_integration_data_by_config(item.widget_config.id) do
         %Castmill.Widgets.Integrations.WidgetIntegrationData{} = data ->
           data
+
         nil ->
           # Try organization-level shared data
           widget_id = item.widget_config.widget.id
-          Castmill.Widgets.Integrations.get_integration_data_for_widget_in_org(organization_id, widget_id)
+
+          Castmill.Widgets.Integrations.get_integration_data_for_widget_in_org(
+            organization_id,
+            widget_id
+          )
       end
 
     modified_widget_config_with_integration =
@@ -207,6 +213,7 @@ defmodule Castmill.Resources do
           existing_data = Map.get(modified_widget_config_with_defaults, :data, %{}) || %{}
           merged_data = Map.merge(existing_data, data.data || %{})
           Map.put(modified_widget_config_with_defaults, :data, merged_data)
+
         nil ->
           modified_widget_config_with_defaults
       end
@@ -230,6 +237,7 @@ defmodule Castmill.Resources do
             nil -> acc
             default -> Map.put(acc, key, default)
           end
+
         _ ->
           # Field already has a value
           acc
@@ -262,7 +270,8 @@ defmodule Castmill.Resources do
   defp fetch_widget_reference(data, key, "playlists") do
     case Map.get(data, key) do
       nil -> nil
-      playlist_id -> get_playlist(playlist_id)  # Fetch full playlist with items for player
+      # Fetch full playlist with items for player
+      playlist_id -> get_playlist(playlist_id)
     end
   end
 
@@ -427,16 +436,19 @@ defmodule Castmill.Resources do
     # Layout widgets have options like: {"playlist_1": 123, "playlist_2": 456, ...}
     # We need to find all playlists that contain items referencing our playlist_id
 
-    query = from(pi in PlaylistItem,
-      join: wc in assoc(pi, :widget_config),
-      join: w in assoc(wc, :widget),
-      where: w.slug in ["layout-portrait-3"] and  # Layout widgets that reference playlists
-             (fragment("(?->>'playlist_1')::integer = ?", wc.options, ^playlist_id) or
-              fragment("(?->>'playlist_2')::integer = ?", wc.options, ^playlist_id) or
-              fragment("(?->>'playlist_3')::integer = ?", wc.options, ^playlist_id)),
-      select: pi.playlist_id,
-      distinct: true
-    )
+    query =
+      from(pi in PlaylistItem,
+        join: wc in assoc(pi, :widget_config),
+        join: w in assoc(wc, :widget),
+        # Layout widgets that reference playlists
+        where:
+          w.slug in ["layout-portrait-3"] and
+            (fragment("(?->>'playlist_1')::integer = ?", wc.options, ^playlist_id) or
+               fragment("(?->>'playlist_2')::integer = ?", wc.options, ^playlist_id) or
+               fragment("(?->>'playlist_3')::integer = ?", wc.options, ^playlist_id)),
+        select: pi.playlist_id,
+        distinct: true
+      )
 
     Repo.all(query)
   end
@@ -477,6 +489,7 @@ defmodule Castmill.Resources do
 
   # Helper to convert string or integer to integer
   defp to_integer(id) when is_integer(id), do: id
+
   defp to_integer(id) when is_binary(id) do
     case Integer.parse(id) do
       {int_id, ""} -> int_id
@@ -528,9 +541,18 @@ defmodule Castmill.Resources do
       else
         with {:ok, prev_item, next_item_id} <- get_prev_and_next_items(playlist_id, prev_item_id),
              # Validate circular references BEFORE creating the playlist item
-             :ok <- Castmill.Widgets.validate_playlist_references_for_widget(widget_id, playlist_id, options),
+             :ok <-
+               Castmill.Widgets.validate_playlist_references_for_widget(
+                 widget_id,
+                 playlist_id,
+                 options
+               ),
              # Validate that required integration credentials are configured
-             :ok <- Castmill.Widgets.validate_integration_credentials_for_widget(widget_id, playlist.organization_id),
+             :ok <-
+               Castmill.Widgets.validate_integration_credentials_for_widget(
+                 widget_id,
+                 playlist.organization_id
+               ),
              {:ok, item} <-
                create_playlist_item(%{
                  playlist_id: playlist_id,
