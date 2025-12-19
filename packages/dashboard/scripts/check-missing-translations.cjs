@@ -53,6 +53,8 @@ const ALLOWED_IDENTICAL_STRINGS = new Set([
   'Passkeys',
   'Passkey',
   'ID',
+  'OAuth 2.0',
+  'Webhook',
   '© 2011-2025 Castmill™',
   'Error', // Cognate in Spanish
   'Total', // Cognate in Spanish

@@ -90,4 +90,39 @@ if config_env() == :prod do
       port: port
     ],
     secret_key_base: secret_key_base
+
+  # Configure encryption for sensitive data (OAuth credentials, API keys, etc.)
+  # ENCRYPTION_MASTER_KEY is required in production.
+  # For key rotation, add ENCRYPTION_MASTER_KEY_V2, V3, etc. and set ENCRYPTION_CURRENT_VERSION
+  encryption_keys =
+    1..10
+    |> Enum.reduce(%{}, fn version, acc ->
+      env_var =
+        if version == 1,
+          do: "ENCRYPTION_MASTER_KEY",
+          else: "ENCRYPTION_MASTER_KEY_V#{version}"
+
+      case CastmillWeb.Secrets.get_encryption_key(env_var) do
+        {:ok, key} -> Map.put(acc, version, key)
+        :not_set -> acc
+      end
+    end)
+
+  if map_size(encryption_keys) == 0 do
+    raise """
+    ENCRYPTION_MASTER_KEY environment variable is required in production.
+    Generate one with: openssl rand -base64 32
+    """
+  end
+
+  current_version =
+    case System.get_env("ENCRYPTION_CURRENT_VERSION") do
+      nil -> Enum.max(Map.keys(encryption_keys))
+      v -> String.to_integer(v)
+    end
+
+  config :castmill, :encryption, %{
+    keys: encryption_keys,
+    current_version: current_version
+  }
 end

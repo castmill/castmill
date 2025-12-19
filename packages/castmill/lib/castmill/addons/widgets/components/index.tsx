@@ -1,6 +1,13 @@
 import { BsEye } from 'solid-icons/bs';
 import { AiOutlineUpload } from 'solid-icons/ai';
-import { Component, createSignal, createEffect, Show, onMount } from 'solid-js';
+import {
+  Component,
+  createSignal,
+  createEffect,
+  Show,
+  onMount,
+  batch,
+} from 'solid-js';
 
 import {
   Button,
@@ -11,27 +18,25 @@ import {
   TableView,
   TableViewRef,
   ModalRef,
+  Tabs,
 } from '@castmill/ui-common';
 import { JsonWidget } from '@castmill/player';
 import { WidgetsService } from '../services/widgets.service';
 import { UploadComponent } from './upload';
 import { JsonHighlight } from './json-highlight';
+import { IntegrationsList } from '../../common/components/integrations-list';
 
 import { DEFAULT_WIDGET_ICON } from '../../common/constants';
 import './widgets.scss';
 import { AddonStore } from '../../common/interfaces/addon-store';
 
-// Widget type with required ID for table display
-type WidgetWithId = JsonWidget & { id: number };
+// Widget type with required ID and slug for table display and API calls
+type WidgetWithId = JsonWidget & { id: number; slug: string };
 
 const WidgetsPage: Component<{
   store: AddonStore;
   params: any;
 }> = (props) => {
-  const [data, setData] = createSignal<WidgetWithId[]>([], {
-    equals: false,
-  });
-
   // Get i18n functions from store
   const t = (key: string, params?: Record<string, any>) =>
     props.store.i18n?.t(key, params) || key;
@@ -49,7 +54,7 @@ const WidgetsPage: Component<{
   const itemsPerPage = 10;
 
   const [showModal, setShowModal] = createSignal<WidgetWithId | undefined>();
-  let modalRef: ModalRef | undefined = undefined;
+  const [initialTabIndex, setInitialTabIndex] = createSignal(0);
 
   const [showUploadModal, setShowUploadModal] = createSignal(false);
   let uploadModalRef: ModalRef | undefined = undefined;
@@ -59,6 +64,109 @@ const WidgetsPage: Component<{
   const refreshData = () => {
     tableRef()?.reloadData();
   };
+
+  // Helper to open widget modal by ID with optional tab selection
+  const openWidgetById = async (widgetId: number, tab?: string) => {
+    try {
+      const widget = await WidgetsService.getWidgetById(
+        props.store.env.baseUrl,
+        props.store.organizations.selectedId,
+        widgetId
+      );
+
+      if (widget) {
+        // Calculate tab index based on available tabs
+        let tabIndex = 0;
+        if (tab) {
+          // The tab indices depend on which schemas exist for the widget
+          const tabNames = ['template'];
+          if (widget.options_schema) tabNames.push('options');
+          if (widget.data_schema) tabNames.push('data');
+          tabNames.push('integrations');
+
+          const foundIndex = tabNames.indexOf(tab);
+          if (foundIndex >= 0) {
+            tabIndex = foundIndex;
+          }
+        }
+
+        batch(() => {
+          setInitialTabIndex(tabIndex);
+          setShowModal(widget as WidgetWithId);
+        });
+      }
+    } catch (err) {
+      console.error('Failed to open widget:', err);
+    }
+  };
+
+  // Update URL when widget modal is opened/closed
+  const updateUrlForWidget = (widgetId: number | null, tab?: string) => {
+    const orgId = props.store.organizations.selectedId;
+    let url = `/org/${orgId}/content/widgets`;
+    if (widgetId !== null) {
+      url += `/${widgetId}`;
+      if (tab) {
+        url += `?tab=${tab}`;
+      }
+    }
+    window.history.pushState({}, '', url);
+  };
+
+  // Open widget modal and update URL
+  const openWidget = (widget: WidgetWithId, tabIndex: number = 0) => {
+    batch(() => {
+      setInitialTabIndex(tabIndex);
+      setShowModal(widget);
+    });
+    updateUrlForWidget(widget.id);
+  };
+
+  // Close widget modal and update URL
+  const closeWidget = () => {
+    setShowModal(undefined);
+    setInitialTabIndex(0);
+    updateUrlForWidget(null);
+  };
+
+  // Track last processed URL to avoid duplicate processing
+  let lastProcessedUrl = '';
+
+  // Check URL for deep links - reactive to location changes for soft navigation
+  // URL pattern: /org/:orgId/content/widgets/:widgetId?tab=integrations
+  createEffect(() => {
+    // Get location from router (reactive) or fall back to window.location
+    const location = props.store.router?.location?.();
+    const path = location?.pathname || window.location.pathname;
+    const search = location?.search || window.location.search;
+    const fullUrl = path + search;
+
+    // Skip if we already processed this URL
+    if (fullUrl === lastProcessedUrl) return;
+
+    // Check if this is a widgets path
+    if (!path.includes('/content/widgets')) return;
+
+    const match = path.match(/\/content\/widgets\/(\d+)/);
+
+    if (match) {
+      const widgetId = parseInt(match[1], 10);
+      if (!isNaN(widgetId)) {
+        // Get tab from query params
+        const urlParams = new URLSearchParams(search);
+        const tab = urlParams.get('tab') || undefined;
+        lastProcessedUrl = fullUrl;
+        openWidgetById(widgetId, tab);
+      }
+    } else {
+      // No widget ID in URL - close modal if open
+      if (showModal()) {
+        lastProcessedUrl = fullUrl;
+        setShowModal(undefined);
+        setInitialTabIndex(0);
+      }
+    }
+  });
 
   // Register keyboard shortcuts
   onMount(() => {
@@ -236,7 +344,7 @@ const WidgetsPage: Component<{
     {
       label: t('widgets.viewDetails'),
       icon: BsEye,
-      handler: (widget: WidgetWithId) => setShowModal(widget),
+      handler: (widget: WidgetWithId) => openWidget(widget),
     },
   ];
 
@@ -253,8 +361,8 @@ const WidgetsPage: Component<{
           <UploadComponent
             baseUrl={props.store.env.baseUrl}
             organizationId={props.store.organizations.selectedId}
-            onFileUpload={(fileName: string, result: any) => {
-              console.log('Widget uploaded', fileName, result);
+            onFileUpload={() => {
+              // File upload started
             }}
             onUploadComplete={() => {
               refreshData();
@@ -268,58 +376,71 @@ const WidgetsPage: Component<{
 
       <Show when={showModal()}>
         <Modal
-          ref={(ref: ModalRef) => (modalRef = ref)}
           title={showModal()!.name}
           description={showModal()!.description || t('widgets.widgetDetails')}
-          onClose={() => setShowModal(undefined)}
+          onClose={closeWidget}
           contentClass="widget-details-modal"
         >
-          <div style="padding: 1rem; max-height: 70vh; overflow-y: auto;">
-            <div style="margin-bottom: 1.5rem; color: #f8f9fa; background: #2d2d2d; padding: 1rem; border-radius: 4px;">
-              <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
-                <div>
-                  <strong style="color: #9cdcfe;">{t('common.type')}:</strong>{' '}
-                  <span style="color: #ce9178;">
-                    {showModal()!.template?.type || t('common.unknown')}
+          <div class="widget-details-content">
+            {/* Widget metadata header */}
+            <div class="widget-metadata">
+              <div class="metadata-item">
+                <strong>{t('common.type')}:</strong>{' '}
+                <span class="type-value">
+                  {showModal()!.template?.type || t('common.unknown')}
+                </span>
+              </div>
+              {showModal()!.update_interval_seconds && (
+                <div class="metadata-item">
+                  <strong>{t('widgets.updateInterval')}:</strong>{' '}
+                  <span class="interval-value">
+                    {showModal()!.update_interval_seconds}s
                   </span>
                 </div>
-                {showModal()!.update_interval_seconds && (
-                  <div>
-                    <strong style="color: #9cdcfe;">
-                      {t('widgets.updateInterval')}:
-                    </strong>{' '}
-                    <span style="color: #b5cea8;">
-                      {showModal()!.update_interval_seconds}s
-                    </span>
-                  </div>
-                )}
-              </div>
+              )}
             </div>
 
-            <div style="margin-bottom: 1.5rem;">
-              <h3 style="margin-bottom: 0.5rem; font-size: 1.1em; color: #d4d4d4;">
-                {t('widgets.template')}
-              </h3>
-              <JsonHighlight json={showModal()!.template} />
-            </div>
-
-            {showModal()!.options_schema && (
-              <div style="margin-bottom: 1.5rem;">
-                <h3 style="margin-bottom: 0.5rem; font-size: 1.1em; color: #d4d4d4;">
-                  {t('widgets.optionsSchema')}
-                </h3>
-                <JsonHighlight json={showModal()!.options_schema} />
-              </div>
-            )}
-
-            {showModal()!.data_schema && (
-              <div style="margin-bottom: 1.5rem;">
-                <h3 style="margin-bottom: 0.5rem; font-size: 1.1em; color: #d4d4d4;">
-                  {t('widgets.dataSchema')}
-                </h3>
-                <JsonHighlight json={showModal()!.data_schema} />
-              </div>
-            )}
+            {/* Tabs using ui-common Tabs component */}
+            <Tabs
+              tabs={[
+                {
+                  title: t('widgets.template'),
+                  content: () => <JsonHighlight json={showModal()!.template} />,
+                },
+                ...(showModal()!.options_schema
+                  ? [
+                      {
+                        title: t('widgets.optionsSchema'),
+                        content: () => (
+                          <JsonHighlight json={showModal()!.options_schema} />
+                        ),
+                      },
+                    ]
+                  : []),
+                ...(showModal()!.data_schema
+                  ? [
+                      {
+                        title: t('widgets.dataSchema'),
+                        content: () => (
+                          <JsonHighlight json={showModal()!.data_schema} />
+                        ),
+                      },
+                    ]
+                  : []),
+                {
+                  title: t('widgets.integrations.title'),
+                  content: () => (
+                    <IntegrationsList
+                      store={props.store}
+                      widgetId={showModal()!.id}
+                      widgetSlug={showModal()!.slug || ''}
+                      baseUrl={props.store.env.baseUrl}
+                    />
+                  ),
+                },
+              ]}
+              initialIndex={initialTabIndex()}
+            />
           </div>
         </Modal>
       </Show>
@@ -346,8 +467,8 @@ const WidgetsPage: Component<{
           actions,
           defaultRowAction: {
             icon: BsEye,
-            handler: (widget: WidgetWithId) => setShowModal(widget),
-            label: 'View Details',
+            handler: (widget: WidgetWithId) => openWidget(widget),
+            label: t('widgets.viewDetails'),
           },
         }}
         pagination={{ itemsPerPage }}

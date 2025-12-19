@@ -32,12 +32,19 @@ const SidePanelTree: Component<{ node: AddOnNode; level: number }> = (
     return addon.name_key ? t(addon.name_key) : addon.name;
   };
 
+  // Get the link path without wildcard suffixes (used for routes, not links)
+  const getLinkPath = () => {
+    if (!addon?.mount_path) return '';
+    // Remove wildcard suffixes like /* or /*rest from the path
+    return addon.mount_path.replace(/\/\*.*$/, '');
+  };
+
   return (
     <>
       <Show when={addon}>
         <Suspense fallback={<div style="height: 2.5em;"></div>}>
           <PanelItem
-            to={`/org/${store.organizations.selectedId}${addon!.mount_path || ''}`}
+            to={`/org/${store.organizations.selectedId}${getLinkPath()}`}
             text={getAddonName()}
             level={props.level}
             icon={lazy(() => import(`${addOnBasePath}${addon?.icon}`))}

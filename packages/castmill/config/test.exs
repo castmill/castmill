@@ -20,6 +20,15 @@ config :castmill, CastmillWeb.Endpoint,
   secret_key_base: "vQj/9DOCuLIfbd/SI7T2uxb0rVjBrP/eYAB33oWAjbIuhoJKgthj/+vt4Tr2XJKz",
   server: false
 
+# Encryption configuration for tests (deterministic key for reproducibility)
+# DO NOT use this key in production!
+config :castmill, :encryption, %{
+  keys: %{
+    1 => :crypto.hash(:sha256, "castmill-test-encryption-key-v1-not-for-production")
+  },
+  current_version: 1
+}
+
 # In test we don't send emails.
 config :castmill, Castmill.Mailer, adapter: Swoosh.Adapters.Test
 

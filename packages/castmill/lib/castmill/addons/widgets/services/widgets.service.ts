@@ -185,4 +185,38 @@ export const WidgetsService = {
 
     return handleResponse<JsonWidget>(response, { parse: true });
   },
+
+  /**
+   * Get a widget by its ID.
+   *
+   * @param baseUrl - The base URL of the server
+   * @param organizationId - The organization ID
+   * @param widgetId - The widget ID
+   * @returns Promise resolving to the widget or null if not found
+   */
+  async getWidgetById(
+    baseUrl: string,
+    organizationId: string,
+    widgetId: number
+  ): Promise<JsonWidget | null> {
+    const response = await fetch(
+      `${baseUrl}/dashboard/organizations/${organizationId}/widgets/${widgetId}`,
+      {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    if (response.status === 404) {
+      return null;
+    }
+
+    const result = await handleResponse<{ data: JsonWidget }>(response, {
+      parse: true,
+    });
+    return result.data;
+  },
 };

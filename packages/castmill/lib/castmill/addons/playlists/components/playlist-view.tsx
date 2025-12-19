@@ -12,12 +12,12 @@ import {
   Show,
   onCleanup,
 } from 'solid-js';
-import { useToast } from '@castmill/ui-common';
+import { useToast, Modal, Button } from '@castmill/ui-common';
 
 import './playlist-view.scss';
 import { PlaylistsService } from '../services/playlists.service';
 import { WidgetChooser } from './widget-chooser';
-import { PlaylistItems } from './playlist-items';
+import { PlaylistItems, CredentialsError } from './playlist-items';
 import { PlaylistPreview } from './playlist-preview';
 import { AddonStore } from '../../common/interfaces/addon-store';
 
@@ -27,6 +27,7 @@ export const PlaylistView: Component<{
   organizationId: string;
   baseUrl: string;
   onChange?: (playlist: JsonPlaylist) => void;
+  onNavigateAway?: () => void;
   t?: (key: string, params?: Record<string, any>) => string;
 }> = (props) => {
   const toast = useToast();
@@ -35,6 +36,8 @@ export const PlaylistView: Component<{
   const [loading, setLoading] = createSignal(true);
   const [items, setItems] = createSignal<JsonPlaylistItem[]>([]);
   const [playlist, setPlaylist] = createSignal<JsonPlaylist>();
+  const [credentialsError, setCredentialsError] =
+    createSignal<CredentialsError | null>(null);
 
   // Track whether to constrain by width or height based on container size
   const [constrainByWidth, setConstrainByWidth] = createSignal(false);
@@ -47,6 +50,34 @@ export const PlaylistView: Component<{
   const updatePlaylistItems = (nextItems: JsonPlaylistItem[]) => {
     setItems(nextItems);
     setPlaylist((prev) => (prev ? { ...prev, items: nextItems } : prev));
+  };
+
+  // Handle credentials error from widget insertion
+  const handleCredentialsError = (error: CredentialsError) => {
+    setCredentialsError(error);
+  };
+
+  // Navigate to widget integrations page
+  const goToWidgetIntegrations = () => {
+    const error = credentialsError();
+    if (error?.widget?.id) {
+      // Close the credentials error modal first
+      setCredentialsError(null);
+
+      // Close the parent playlist modal before navigating
+      props.onNavigateAway?.();
+
+      // Navigate to the widgets addon with widget ID in path (RESTful)
+      // URL pattern: /org/:orgId/content/widgets/:widgetId?tab=integrations
+      const url = `/org/${props.organizationId}/content/widgets/${error.widget.id}?tab=integrations`;
+
+      // Use soft navigation if available, otherwise fall back to hard redirect
+      if (props.store.router?.navigate) {
+        props.store.router.navigate(url);
+      } else {
+        window.location.href = url;
+      }
+    }
   };
 
   // Setup resize observer to dynamically adjust aspect ratio constraints
@@ -234,7 +265,7 @@ export const PlaylistView: Component<{
         slack: 0,
         name: widget.name,
         config: {
-          id: newItem.id,
+          id: newItem.widget_config_id, // Use the widget_config_id from the server
           widget_id: widget.id!,
           options: expandedOptions,
           data: config.data || {},
@@ -377,12 +408,14 @@ export const PlaylistView: Component<{
               store={props.store}
               baseUrl={props.baseUrl}
               organizationId={props.organizationId}
+              playlistId={props.playlistId}
               items={items()}
               onEditItem={onEditItem}
               onInsertItem={onInsertItem}
               onMoveItem={onMoveItem}
               onRemoveItem={onRemoveItem}
               onChangeDuration={onChangeDuration}
+              onCredentialsError={handleCredentialsError}
             />
           </div>
 
@@ -409,6 +442,45 @@ export const PlaylistView: Component<{
           </div>
         </div>
       </div>
+
+      {/* Credentials Error Modal */}
+      <Show when={credentialsError()}>
+        <Modal
+          title={t('playlists.credentialsRequired')}
+          description={t('playlists.credentialsRequiredDescription', {
+            widget: credentialsError()?.widget?.name || t('common.widget'),
+          })}
+          onClose={() => setCredentialsError(null)}
+        >
+          <div
+            style={{ display: 'flex', 'flex-direction': 'column', gap: '1em' }}
+          >
+            <p style={{ margin: 0 }}>
+              {t('playlists.missingIntegrations')}:{' '}
+              <strong>
+                {credentialsError()?.missingIntegrations?.join(', ')}
+              </strong>
+            </p>
+            <div
+              style={{
+                display: 'flex',
+                gap: '0.5em',
+                'justify-content': 'flex-end',
+              }}
+            >
+              <Button
+                label={t('common.cancel')}
+                color="secondary"
+                onClick={() => setCredentialsError(null)}
+              />
+              <Button
+                label={t('playlists.goToIntegrations')}
+                onClick={goToWidgetIntegrations}
+              />
+            </div>
+          </div>
+        </Modal>
+      </Show>
     </Show>
   );
 };

@@ -49,7 +49,7 @@ export type SetItemCacheOptions = StoreOptions & { force: boolean };
 
 export class Cache extends Dexie {
   items!: Dexie.Table<ItemMetadata, string>;
-  caching: { [index: string]: Promise<StorageItem | undefined> } = {};
+  caching: { [index: string]: Promise<ItemMetadata | undefined> } = {};
   totalSize: number = 0;
 
   constructor(
@@ -174,9 +174,9 @@ export class Cache extends Dexie {
     mimeType: string,
     opts: SetItemCacheOptions = { force: false }
   ) {
-    // Check if we are already caching the item.
+    // Check if we are already caching the item - if so, return that promise
     if (!!this.caching[url]) {
-      return;
+      return this.caching[url];
     }
 
     // Check if the item  is not  already cached
@@ -255,7 +255,9 @@ export class Cache extends Dexie {
               cachedUrl,
               mimeType,
             };
-            await this.items.add(item);
+            // Use put instead of add to handle race conditions where the same
+            // URL might be cached simultaneously from multiple sources
+            await this.items.put(item);
             return item;
           }
           throw new Error(

@@ -74,11 +74,17 @@ const controlsTemplate = (id: string) => `
 </div>
 `;
 
-const template = (id: string) => `
-  <div id="playerui-${id}">
-    <div id="player-${id}" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; overflow: hidden;"></div>
-  </div>
-`;
+function createPlayerElement(id: string): HTMLDivElement {
+  const el = document.createElement('div');
+  el.id = `player-${id}`;
+  el.style.position = 'absolute';
+  el.style.top = '0';
+  el.style.left = '0';
+  el.style.right = '0';
+  el.style.bottom = '0';
+  el.style.overflow = 'hidden';
+  return el;
+}
 
 function htmlToElement(html: string) {
   const template = document.createElement('template');
@@ -279,16 +285,11 @@ export class PlayerUI {
     private playlist: Playlist,
     private opts: PlayerUIOptions = {}
   ) {
-    this.ui = document.createElement('div');
-    this.ui.innerHTML = template(this.id);
+    this.ui = createPlayerElement(this.id);
 
     document.querySelector(`#${id}`)?.appendChild(this.ui);
 
-    const playerElement = this.ui.querySelector(
-      `#player-${id}`
-    ) as HTMLDivElement;
-
-    const renderer = (this.renderer = new Renderer(playerElement));
+    const renderer = (this.renderer = new Renderer(this.ui));
 
     this.player = new Player(this.playlist, renderer, opts.viewport);
 

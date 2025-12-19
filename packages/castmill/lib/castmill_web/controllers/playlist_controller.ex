@@ -79,6 +79,12 @@ defmodule CastmillWeb.PlaylistController do
         conn
         |> send_resp(:no_content, "")
 
+      {:error, :circular_reference} ->
+        conn
+        |> put_status(:bad_request)
+        |> json(%{error: "Cannot select this playlist as it would create a circular reference"})
+        |> halt()
+
       {:error, _} = error ->
         conn
         |> put_status(:internal_server_error)
@@ -144,5 +150,19 @@ defmodule CastmillWeb.PlaylistController do
 
     conn
     |> send_resp(:no_content, "")
+  end
+
+  @doc """
+  Returns the list of ancestor playlist IDs for a given playlist.
+  Ancestors are playlists that contain layout widgets referencing this playlist.
+  This is used to prevent circular references when configuring layout widgets.
+  """
+  def get_ancestors(conn, %{"playlist_id" => playlist_id}) do
+    playlist_id = String.to_integer(playlist_id)
+    ancestor_ids = Resources.get_playlist_ancestors(playlist_id)
+
+    conn
+    |> put_status(:ok)
+    |> json(%{ancestor_ids: ancestor_ids})
   end
 end

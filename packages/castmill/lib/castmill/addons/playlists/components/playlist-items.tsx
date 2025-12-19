@@ -19,11 +19,18 @@ import { Modal } from '@castmill/ui-common';
 import { PlaylistItem } from './playlist-item';
 import { WidgetConfig } from './widget-config';
 import { AddonStore } from '../../common/interfaces/addon-store';
+import { PlaylistsService } from '../services/playlists.service';
+
+export interface CredentialsError {
+  widget: JsonWidget;
+  missingIntegrations: string[];
+}
 
 export const PlaylistItems: Component<{
   store: AddonStore;
   baseUrl: string;
   organizationId: string;
+  playlistId: number;
   items: JsonPlaylistItem[];
   onEditItem: (
     item: JsonPlaylistItem,
@@ -47,6 +54,7 @@ export const PlaylistItems: Component<{
   ) => Promise<void>;
   onRemoveItem: (item: JsonPlaylistItem) => Promise<void>;
   onChangeDuration: (item: JsonPlaylistItem, duration: number) => Promise<void>;
+  onCredentialsError?: (error: CredentialsError) => void;
 }> = (props) => {
   const [showModal, setShowModal] = createSignal<JsonPlaylistItem>();
   const [promiseResolve, setPromiseResolve] = createSignal<{
@@ -104,6 +112,29 @@ export const PlaylistItems: Component<{
   };
 
   const insertItem = async (widget: JsonWidget, index: number) => {
+    // First check if widget requires credentials that aren't configured
+    if (widget.id) {
+      try {
+        const credentialsStatus = await PlaylistsService.checkWidgetCredentials(
+          props.baseUrl,
+          props.organizationId,
+          widget.id
+        );
+
+        if (!credentialsStatus.configured) {
+          // Notify parent about the credentials error
+          props.onCredentialsError?.({
+            widget,
+            missingIntegrations: credentialsStatus.missing_integrations,
+          });
+          return;
+        }
+      } catch (err) {
+        // If the check fails, continue anyway - the server will validate
+        console.warn('Failed to check widget credentials:', err);
+      }
+    }
+
     const item = {
       duration: 10_000,
       widget,
@@ -244,6 +275,7 @@ export const PlaylistItems: Component<{
               closeDialog({ config, expandedOptions });
             }}
             organizationId={props.organizationId}
+            playlistId={props.playlistId}
           />
         </Modal>
       </Show>

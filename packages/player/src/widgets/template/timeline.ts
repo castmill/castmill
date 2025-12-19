@@ -34,7 +34,7 @@ export class Timeline implements TimelineBasic {
   playing: Set<TimelineItem> = new Set();
   nextEndTick: number = 0;
 
-  intervalTimer: any;
+  intervalTimer: ReturnType<typeof setInterval> | undefined;
 
   private opts: { loop?: boolean; duration?: number };
 
@@ -62,21 +62,26 @@ export class Timeline implements TimelineBasic {
     this.time = offset;
     let prevPosition = 0;
 
-    const duration = this.duration();
-
-    if (!(duration > 0)) {
-      throw new Error('Timeline duration must be greater than 0');
-    }
+    // If duration is 0 (e.g., empty timeline or items not yet added),
+    // still proceed - items may be added dynamically (like LayoutContainers)
 
     const tick = () => {
       try {
+        // Recalculate duration each tick since items may be added dynamically
+        const currentDuration = this.duration();
+
         let time = Date.now() - basetime + offset;
-        if (time >= duration && !this.opts.loop) {
+        if (currentDuration > 0 && time >= currentDuration && !this.opts.loop) {
           this.pause();
           return;
         }
 
-        const position = (this.time = this.hasRepeat ? time : time % duration);
+        // Use time directly if duration is 0 or if we have repeat items
+        // (repeat items don't use modulo, they just keep playing)
+        const position = (this.time =
+          this.hasRepeat || currentDuration === 0
+            ? time
+            : time % currentDuration);
 
         // Check if we have looped around.
         if (position < prevPosition) {
@@ -132,15 +137,28 @@ export class Timeline implements TimelineBasic {
 
       this.items.splice(this.items.indexOf(item), 1);
       this.playing.add(item);
-      this.nextEndTick = Math.min(this.nextEndTick, item.start + duration);
 
-      item.child.play(
-        item.child instanceof gsap.core.Timeline
-          ? effectivePosition / 1000
-          : item.repeat
-            ? effectivePosition % duration
-            : effectivePosition
-      );
+      // Only update nextEndTick if duration > 0
+      if (duration > 0) {
+        this.nextEndTick = Math.min(this.nextEndTick, item.start + duration);
+      }
+
+      // Calculate the offset to pass to the child
+      // For GSAP timelines, convert ms to seconds
+      // For repeat items, use modulo (but only if duration > 0 to avoid NaN)
+      // For regular items, use effectivePosition directly
+      let childOffset: number;
+      if (item.child instanceof gsap.core.Timeline) {
+        childOffset = effectivePosition / 1000;
+      } else if (item.repeat && duration > 0) {
+        childOffset = effectivePosition % duration;
+      } else {
+        // For repeat items with duration 0, just use 0 as offset
+        // (the child timeline will start from the beginning)
+        childOffset = duration > 0 ? effectivePosition : 0;
+      }
+
+      item.child.play(childOffset);
     });
   }
 
@@ -180,8 +198,9 @@ export class Timeline implements TimelineBasic {
 
   private childDuration(item: TimelineItem) {
     const duration = item.child.duration();
-    item.child instanceof gsap.core.Timeline ? duration * 1000 : duration;
-    return duration;
+    return item.child instanceof gsap.core.Timeline
+      ? duration * 1000
+      : duration;
   }
 
   pause() {
@@ -201,7 +220,7 @@ export class Timeline implements TimelineBasic {
   }
 
   remove(item: TimelineItem) {
-    const index = this.items.findIndex((_item) => item === item);
+    const index = this.items.findIndex((_item) => _item === item);
     if (index >= 0) {
       this.items.splice(index, 1);
       this.hasRepeat = this.items.some((item) => item.repeat);
@@ -212,28 +231,33 @@ export class Timeline implements TimelineBasic {
     return this.playing.has(item);
   }
 
+  /**
+   * Check if this timeline is currently running (has an active interval timer).
+   */
+  isRunning() {
+    return !!this.intervalTimer;
+  }
+
   duration() {
     // Since a timeline item could change its duration after it has been added
     // we have no other option than to recalculate the duration every time.
-    return (
-      this.opts.duration ||
-      this.items.reduce(
-        (acc: number, item) =>
-          Math.max(
-            acc,
-            item.start + (item.duration || this.childDuration(item))
-          ),
-        0
-      ) +
-        [...this.playing].reduce(
-          (acc: number, item) =>
-            Math.max(
-              acc,
-              item.start + (item.duration || this.childDuration(item))
-            ),
-          0
-        )
+    if (this.opts.duration) {
+      return this.opts.duration;
+    }
+
+    const itemsDuration = this.items.reduce(
+      (acc: number, item) =>
+        Math.max(acc, item.start + (item.duration || this.childDuration(item))),
+      0
     );
+
+    const playingDuration = [...this.playing].reduce(
+      (acc: number, item) =>
+        Math.max(acc, item.start + (item.duration || this.childDuration(item))),
+      0
+    );
+
+    return Math.max(itemsDuration, playingDuration);
   }
 
   private clearInterval() {

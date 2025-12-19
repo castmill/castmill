@@ -27,6 +27,63 @@
         color: #a10000;
       }
 
+      // Styling for select dropdowns (enum fields)
+      .form-item-wrapper {
+        margin: 0.75em 0;
+
+        .form-item1 {
+          border: 1px solid #555;
+          border-radius: 0.3em;
+          margin-bottom: 0.3em;
+          padding: 0.5em 1.1em;
+          background-color: #151320;
+
+          label {
+            font-size: 0.8em;
+            color: #577cbb;
+            text-transform: capitalize;
+            text-align: left;
+            display: block;
+          }
+
+          &:hover {
+            border-color: #b0b0b0;
+          }
+
+          &:focus-within {
+            border-color: #4a90e2;
+          }
+
+          .styled-select {
+            width: 100%;
+            padding: 0.5em 0;
+            font-size: 1em;
+            color: #ffffff;
+            background-color: transparent;
+            border: none;
+            outline: none;
+            cursor: pointer;
+
+            option {
+              background-color: #151320;
+              color: #ffffff;
+            }
+          }
+
+          .error {
+            color: #e74c3c;
+            font-size: 0.85em;
+            margin-top: 0.3em;
+          }
+        }
+
+        .description {
+          padding-top: 0.2em;
+          color: #6a5da2;
+          font-size: 0.8em;
+        }
+      }
+
       .media-item {
         display: flex;
         flex-direction: row;
@@ -49,6 +106,15 @@
           align-items: center;
           overflow: hidden;
         }
+      }
+
+      .playlist-item {
+        display: flex;
+        flex-direction: row;
+        justify-content: flex-start;
+        align-items: center;
+        padding: 0.3em;
+        width: 100%;
       }
 
       .form-actions {

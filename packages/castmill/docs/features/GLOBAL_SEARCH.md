@@ -14,9 +14,11 @@ The Castmill platform implements a comprehensive global search feature that allo
 ### Backend Components
 
 #### Search Controller (`SearchController`)
+
 Location: `packages/castmill/lib/castmill_web/controllers/search_controller.ex`
 
 The search controller provides a single endpoint that:
+
 1. Searches built-in resources (medias, playlists, channels, devices, teams)
 2. Searches addon resources (if they implement the search callback)
 3. Returns paginated results grouped by resource type
@@ -24,11 +26,13 @@ The search controller provides a single endpoint that:
 **Endpoint**: `GET /dashboard/organizations/:organization_id/search`
 
 **Query Parameters**:
+
 - `query` (required): The search string
 - `page` (optional, default: 1): Page number for pagination
 - `page_size` (optional, default: 20): Number of results per page
 
 **Response Format**:
+
 ```json
 {
   "query": "search term",
@@ -62,6 +66,7 @@ The search controller provides a single endpoint that:
 ```
 
 #### Addon Search Interface
+
 Location: `packages/castmill/lib/castmill/addons/addon_behaviour.ex`
 
 Addons can optionally implement the `search/3` callback:
@@ -75,6 +80,7 @@ Addons can optionally implement the `search/3` callback:
 ```
 
 **Parameters**:
+
 - `organization_id`: The organization to search within
 - `query`: The search query string
 - `opts`: Options map containing `page` and `page_size`
@@ -98,21 +104,23 @@ The addon should return a list of search result groups in the same format as the
 ### Frontend Components
 
 #### Search Service
+
 Location: `packages/dashboard/src/services/search.service.ts`
 
 TypeScript service that calls the backend search endpoint:
 
 ```typescript
-SearchService.search(organizationId, query, page, pageSize)
-  .then(response => {
-    // Handle search results
-  });
+SearchService.search(organizationId, query, page, pageSize).then((response) => {
+  // Handle search results
+});
 ```
 
 #### Search Page Component
+
 Location: `packages/dashboard/src/pages/search-page/search-page.tsx`
 
 SolidJS component that:
+
 - Reads the search query from URL parameters (`?s=query`)
 - Displays loading states
 - Shows results grouped by resource type
@@ -121,9 +129,11 @@ SolidJS component that:
 - Provides click-to-navigate functionality for each result
 
 #### Search Input Component
+
 Location: `packages/dashboard/src/components/search/search.tsx`
 
 The global search input in the topbar:
+
 - Keyboard shortcut: `Ctrl+F` (or `Cmd+F` on Mac)
 - Navigate to search page on Enter
 - Maintains organization context in the URL
@@ -142,11 +152,11 @@ defmodule Castmill.Addons.MyCustomAddon do
   def search(organization_id, query, opts) do
     page = Map.get(opts, :page, 1)
     page_size = Map.get(opts, :page_size, 20)
-    
+
     # Search your custom resources
     results = MyCustomResource.search(organization_id, query, page, page_size)
     total_count = MyCustomResource.count_search_results(organization_id, query)
-    
+
     {:ok, [
       %{
         resource_type: "my_custom_resources",
@@ -166,6 +176,7 @@ end
 Add your resource type labels to all language files:
 
 **English** (`packages/dashboard/src/i18n/locales/en.json`):
+
 ```json
 {
   "sidebar": {
@@ -207,7 +218,7 @@ yarn test search-page.test.tsx
 
 ### Using Global Search
 
-1. **Access Search**: 
+1. **Access Search**:
    - Click the search input in the topbar
    - Or press `Ctrl+F` (Windows/Linux) or `Cmd+F` (Mac)
 

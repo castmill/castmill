@@ -84,7 +84,7 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
   const { teams, selectedTeamId, setSelectedTeamId } = useTeamFilter({
     baseUrl: props.store.env.baseUrl,
     organizationId: props.store.organizations.selectedId,
-    params: props.params, // Pass URL params for shareable filtered views
+    params: props.params, // Pass URL search params for shareable filtered views
   });
 
   const itemsPerPage = 10; // Number of items to show per page
