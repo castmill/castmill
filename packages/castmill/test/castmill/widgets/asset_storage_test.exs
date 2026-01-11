@@ -32,7 +32,9 @@ defmodule Castmill.Widgets.AssetStorageTest do
       fonts = Enum.sort_by(fonts, & &1["name"])
 
       assert Enum.at(fonts, 0)["name"] == "Lato"
-      assert Enum.at(fonts, 0)["url"] =~ "/widget_assets/test-widget/assets/fonts/Lato-Regular.woff2"
+
+      assert Enum.at(fonts, 0)["url"] =~
+               "/widget_assets/test-widget/assets/fonts/Lato-Regular.woff2"
 
       assert Enum.at(fonts, 1)["name"] == "Montserrat"
 
@@ -58,7 +60,9 @@ defmodule Castmill.Widgets.AssetStorageTest do
 
       assert length(fonts) == 1
       assert Enum.at(fonts, 0)["name"] == "My Custom Font"
-      assert Enum.at(fonts, 0)["url"] =~ "/widget_assets/test-widget/assets/fonts/MyCustomFont.woff2"
+
+      assert Enum.at(fonts, 0)["url"] =~
+               "/widget_assets/test-widget/assets/fonts/MyCustomFont.woff2"
     end
 
     test "returns empty list when no fonts are defined" do
