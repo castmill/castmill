@@ -18,7 +18,8 @@ defmodule Castmill.Quotas.QuotasNetworks do
         :devices,
         :users,
         :teams,
-        :storage
+        :storage,
+        :layouts
       ],
       primary_key: true
 

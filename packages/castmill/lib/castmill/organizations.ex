@@ -837,6 +837,11 @@ defmodule Castmill.Organizations do
     Castmill.Resources.list_resources(Castmill.Devices.Device, params)
   end
 
+  def list_resources(%{resources: "layouts"} = params) do
+    # Use specialized list_layouts to include system layouts
+    Castmill.Resources.list_layouts(params)
+  end
+
   def list_resources(%{resources: "teams"} = params) do
     Castmill.Teams.list_teams(params)
   end
@@ -858,6 +863,11 @@ defmodule Castmill.Organizations do
 
   def count_resources(%{resources: "devices"} = params) do
     Castmill.Resources.count_resources(Castmill.Devices.Device, params)
+  end
+
+  def count_resources(%{resources: "layouts"} = params) do
+    # Use specialized count_layouts to include system layouts
+    Castmill.Resources.count_layouts(params)
   end
 
   def count_resources(%{resources: "teams"} = params) do
@@ -920,6 +930,34 @@ defmodule Castmill.Organizations do
   """
   def count_playlists(params) do
     Castmill.Resources.count_resources(Castmill.Resources.Playlist, params)
+  end
+
+  @doc """
+  Returns the list of layouts.
+  Includes both organization-specific layouts and system layouts.
+
+  ## Examples
+
+      iex> list_layouts()
+      [%Layout{}, ...]
+
+  """
+  def list_layouts(params) do
+    Castmill.Resources.list_layouts(params)
+  end
+
+  @doc """
+  Returns number of matching layouts.
+  Includes both organization-specific layouts and system layouts.
+
+  ## Examples
+
+      iex> count_layouts()
+      2
+
+  """
+  def count_layouts(params) do
+    Castmill.Resources.count_layouts(params)
   end
 
   @doc """

@@ -16,7 +16,9 @@ defmodule Castmill.Widgets.Widget do
              :icon,
              :small_icon,
              :aspect_ratio,
-             :update_interval_seconds
+             :update_interval_seconds,
+             :fonts,
+             :assets
            ]}
   schema "widgets" do
     field(:name, :string)
@@ -45,6 +47,12 @@ defmodule Castmill.Widgets.Widget do
     # Granularity in seconds for how often the widget should ask the server for updates.
     field(:update_interval_seconds, :integer, default: 60)
 
+    # Custom fonts included with the widget (list of %{"url" => string, "name" => string})
+    field(:fonts, {:array, :map}, default: [])
+
+    # Original assets definition from widget.json (icons, images, fonts metadata)
+    field(:assets, :map, default: %{})
+
     timestamps()
   end
 
@@ -64,7 +72,9 @@ defmodule Castmill.Widgets.Widget do
       :icon,
       :small_icon,
       :is_system,
-      :webhook_url
+      :webhook_url,
+      :fonts,
+      :assets
     ])
     |> validate_required([:name, :template])
     |> unique_constraint(:name)

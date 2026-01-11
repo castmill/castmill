@@ -403,24 +403,25 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
     alias Castmill.Resources
 
     setup %{organization: _organization} do
-      # Get or create the layout-portrait-3 widget for testing
+      # Get or create the layout-widget widget for testing
       # The system may or may not have it, so we ensure it exists
       layout_widget =
-        case Castmill.Repo.get_by(Castmill.Widgets.Widget, slug: "layout-portrait-3") do
+        case Castmill.Repo.get_by(Castmill.Widgets.Widget, slug: "layout-widget") do
           nil ->
             Castmill.PlaylistsFixtures.widget_fixture(%{
-              name: "Layout Portrait 3",
-              slug: "layout-portrait-3",
+              name: "Layout Widget",
+              slug: "layout-widget",
               template: %{
                 "type" => "layout",
-                "name" => "layout",
-                "opts" => %{"containers" => []}
+                "name" => "layout-ref-widget",
+                "opts" => %{"layoutRef" => %{"key" => "options.layoutRef"}}
               },
               options_schema: %{
-                "background" => "color",
-                "playlist_1" => %{"type" => "ref", "collection" => "playlists"},
-                "playlist_2" => %{"type" => "ref", "collection" => "playlists"},
-                "playlist_3" => %{"type" => "ref", "collection" => "playlists"}
+                "layoutRef" => %{
+                  "type" => "layout-ref",
+                  "required" => true,
+                  "description" => "Select a layout and assign playlists to each zone"
+                }
               }
             })
 
@@ -470,10 +471,6 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
           name: "child_playlist"
         })
 
-      # Create filler playlists for required slots
-      filler1 = playlist_fixture(%{organization_id: organization.id, name: "filler1"})
-      filler2 = playlist_fixture(%{organization_id: organization.id, name: "filler2"})
-
       # Add the layout widget to the parent playlist with reference to child
       {:ok, _item} =
         Resources.insert_item_into_playlist(
@@ -483,9 +480,11 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
           0,
           10000,
           %{
-            "playlist_1" => child_playlist.id,
-            "playlist_2" => filler1.id,
-            "playlist_3" => filler2.id
+            "layoutRef" => %{
+              "layoutId" => 1,
+              "aspectRatio" => "9:16",
+              "zonePlaylistMap" => %{"zone-1" => %{"playlistId" => child_playlist.id}}
+            }
           }
         )
 
@@ -536,12 +535,6 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
           name: "child_playlist"
         })
 
-      # Create filler playlists for required slots
-      filler1 = playlist_fixture(%{organization_id: organization.id, name: "filler1"})
-      filler2 = playlist_fixture(%{organization_id: organization.id, name: "filler2"})
-      filler3 = playlist_fixture(%{organization_id: organization.id, name: "filler3"})
-      filler4 = playlist_fixture(%{organization_id: organization.id, name: "filler4"})
-
       # Create link: grandparent -> parent
       {:ok, _item} =
         Resources.insert_item_into_playlist(
@@ -551,9 +544,11 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
           0,
           10000,
           %{
-            "playlist_1" => parent_playlist.id,
-            "playlist_2" => filler1.id,
-            "playlist_3" => filler2.id
+            "layoutRef" => %{
+              "layoutId" => 1,
+              "aspectRatio" => "9:16",
+              "zonePlaylistMap" => %{"zone-1" => %{"playlistId" => parent_playlist.id}}
+            }
           }
         )
 
@@ -566,9 +561,11 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
           0,
           10000,
           %{
-            "playlist_1" => filler3.id,
-            "playlist_2" => child_playlist.id,
-            "playlist_3" => filler4.id
+            "layoutRef" => %{
+              "layoutId" => 1,
+              "aspectRatio" => "9:16",
+              "zonePlaylistMap" => %{"zone-1" => %{"playlistId" => child_playlist.id}}
+            }
           }
         )
 
@@ -616,13 +613,7 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
           name: "child_playlist"
         })
 
-      # Create filler playlists for required slots
-      filler1 = playlist_fixture(%{organization_id: organization.id, name: "filler1"})
-      filler2 = playlist_fixture(%{organization_id: organization.id, name: "filler2"})
-      filler3 = playlist_fixture(%{organization_id: organization.id, name: "filler3"})
-      filler4 = playlist_fixture(%{organization_id: organization.id, name: "filler4"})
-
-      # Parent1 references child via playlist_1
+      # Parent1 references child
       {:ok, _item} =
         Resources.insert_item_into_playlist(
           parent1.id,
@@ -631,13 +622,15 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
           0,
           10000,
           %{
-            "playlist_1" => child_playlist.id,
-            "playlist_2" => filler1.id,
-            "playlist_3" => filler2.id
+            "layoutRef" => %{
+              "layoutId" => 1,
+              "aspectRatio" => "9:16",
+              "zonePlaylistMap" => %{"zone-1" => %{"playlistId" => child_playlist.id}}
+            }
           }
         )
 
-      # Parent2 references child via playlist_3
+      # Parent2 references child
       {:ok, _item} =
         Resources.insert_item_into_playlist(
           parent2.id,
@@ -646,9 +639,11 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
           0,
           10000,
           %{
-            "playlist_1" => filler3.id,
-            "playlist_2" => filler4.id,
-            "playlist_3" => child_playlist.id
+            "layoutRef" => %{
+              "layoutId" => 1,
+              "aspectRatio" => "9:16",
+              "zonePlaylistMap" => %{"zone-1" => %{"playlistId" => child_playlist.id}}
+            }
           }
         )
 
@@ -687,7 +682,7 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
           name: "child_playlist"
         })
 
-      # Reference child in multiple slots
+      # Reference child in multiple zones
       {:ok, _item} =
         Resources.insert_item_into_playlist(
           parent_playlist.id,
@@ -696,9 +691,15 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
           0,
           10000,
           %{
-            "playlist_1" => child_playlist.id,
-            "playlist_2" => child_playlist.id,
-            "playlist_3" => child_playlist.id
+            "layoutRef" => %{
+              "layoutId" => 1,
+              "aspectRatio" => "9:16",
+              "zonePlaylistMap" => %{
+                "zone-1" => %{"playlistId" => child_playlist.id},
+                "zone-2" => %{"playlistId" => child_playlist.id},
+                "zone-3" => %{"playlistId" => child_playlist.id}
+              }
+            }
           }
         )
 
@@ -801,12 +802,6 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
       playlist_c = playlist_fixture(%{organization_id: organization.id, name: "C"})
       playlist_d = playlist_fixture(%{organization_id: organization.id, name: "D"})
 
-      # Create filler playlists for required slots
-      filler1 = playlist_fixture(%{organization_id: organization.id, name: "diamond_filler1"})
-      filler2 = playlist_fixture(%{organization_id: organization.id, name: "diamond_filler2"})
-      filler3 = playlist_fixture(%{organization_id: organization.id, name: "diamond_filler3"})
-      filler4 = playlist_fixture(%{organization_id: organization.id, name: "diamond_filler4"})
-
       # A references B and C
       {:ok, _item} =
         Resources.insert_item_into_playlist(
@@ -816,9 +811,14 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
           0,
           10000,
           %{
-            "playlist_1" => playlist_b.id,
-            "playlist_2" => playlist_c.id,
-            "playlist_3" => filler1.id
+            "layoutRef" => %{
+              "layoutId" => 1,
+              "aspectRatio" => "9:16",
+              "zonePlaylistMap" => %{
+                "zone-1" => %{"playlistId" => playlist_b.id},
+                "zone-2" => %{"playlistId" => playlist_c.id}
+              }
+            }
           }
         )
 
@@ -830,7 +830,13 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
           layout_widget.id,
           0,
           10000,
-          %{"playlist_1" => playlist_d.id, "playlist_2" => filler2.id, "playlist_3" => filler3.id}
+          %{
+            "layoutRef" => %{
+              "layoutId" => 1,
+              "aspectRatio" => "9:16",
+              "zonePlaylistMap" => %{"zone-1" => %{"playlistId" => playlist_d.id}}
+            }
+          }
         )
 
       # C references D
@@ -841,7 +847,13 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
           layout_widget.id,
           0,
           10000,
-          %{"playlist_1" => playlist_d.id, "playlist_2" => filler4.id, "playlist_3" => filler1.id}
+          %{
+            "layoutRef" => %{
+              "layoutId" => 1,
+              "aspectRatio" => "9:16",
+              "zonePlaylistMap" => %{"zone-1" => %{"playlistId" => playlist_d.id}}
+            }
+          }
         )
 
       {:ok, _result} = Teams.add_resource_to_team(team.id, "playlists", playlist_d.id, [:read])
@@ -871,12 +883,6 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
       playlist_a = playlist_fixture(%{organization_id: organization.id, name: "A_cycle"})
       playlist_b = playlist_fixture(%{organization_id: organization.id, name: "B_cycle"})
 
-      # Create filler playlists for required slots
-      filler1 = playlist_fixture(%{organization_id: organization.id, name: "cycle_filler1"})
-      filler2 = playlist_fixture(%{organization_id: organization.id, name: "cycle_filler2"})
-      filler3 = playlist_fixture(%{organization_id: organization.id, name: "cycle_filler3"})
-      filler4 = playlist_fixture(%{organization_id: organization.id, name: "cycle_filler4"})
-
       # A references B (should succeed)
       {:ok, _item} =
         Resources.insert_item_into_playlist(
@@ -885,7 +891,13 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
           layout_widget.id,
           0,
           10000,
-          %{"playlist_1" => playlist_b.id, "playlist_2" => filler1.id, "playlist_3" => filler2.id}
+          %{
+            "layoutRef" => %{
+              "layoutId" => 1,
+              "aspectRatio" => "9:16",
+              "zonePlaylistMap" => %{"zone-1" => %{"playlistId" => playlist_b.id}}
+            }
+          }
         )
 
       # B references A (should fail - would create a cycle)
@@ -896,55 +908,17 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
           layout_widget.id,
           0,
           10000,
-          %{"playlist_1" => playlist_a.id, "playlist_2" => filler3.id, "playlist_3" => filler4.id}
+          %{
+            "layoutRef" => %{
+              "layoutId" => 1,
+              "aspectRatio" => "9:16",
+              "zonePlaylistMap" => %{"zone-1" => %{"playlistId" => playlist_a.id}}
+            }
+          }
         )
 
       # Server-side validation should prevent the cycle
       assert {:error, :circular_reference} = result
-    end
-  end
-
-  describe "circular reference prevention (server-side validation)" do
-    alias Castmill.Resources
-
-    setup %{organization: _organization} do
-      # Get or create the layout-portrait-3 widget for testing
-      layout_widget =
-        case Castmill.Repo.get_by(Castmill.Widgets.Widget, slug: "layout-portrait-3") do
-          nil ->
-            Castmill.PlaylistsFixtures.widget_fixture(%{
-              name: "Layout Portrait 3",
-              slug: "layout-portrait-3",
-              template: %{
-                "type" => "layout",
-                "name" => "layout",
-                "opts" => %{"containers" => []}
-              },
-              options_schema: %{
-                "background" => "color",
-                "playlist_1" => %{
-                  "type" => "ref",
-                  "required" => true,
-                  "collection" => "playlists"
-                },
-                "playlist_2" => %{
-                  "type" => "ref",
-                  "required" => true,
-                  "collection" => "playlists"
-                },
-                "playlist_3" => %{
-                  "type" => "ref",
-                  "required" => true,
-                  "collection" => "playlists"
-                }
-              }
-            })
-
-          existing_widget ->
-            existing_widget
-        end
-
-      {:ok, layout_widget: layout_widget}
     end
 
     test "prevents self-referencing playlist", %{
@@ -952,8 +926,6 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
       layout_widget: layout_widget
     } do
       playlist = playlist_fixture(%{organization_id: organization.id, name: "self_ref_test"})
-      filler1 = playlist_fixture(%{organization_id: organization.id, name: "filler1"})
-      filler2 = playlist_fixture(%{organization_id: organization.id, name: "filler2"})
 
       # Try to add a layout widget that references itself
       result =
@@ -963,7 +935,13 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
           layout_widget.id,
           0,
           10000,
-          %{"playlist_1" => playlist.id, "playlist_2" => filler1.id, "playlist_3" => filler2.id}
+          %{
+            "layoutRef" => %{
+              "layoutId" => 1,
+              "aspectRatio" => "9:16",
+              "zonePlaylistMap" => %{"zone-1" => %{"playlistId" => playlist.id}}
+            }
+          }
         )
 
       assert {:error, :circular_reference} = result
@@ -975,10 +953,6 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
     } do
       playlist_a = playlist_fixture(%{organization_id: organization.id, name: "A"})
       playlist_b = playlist_fixture(%{organization_id: organization.id, name: "B"})
-      filler1 = playlist_fixture(%{organization_id: organization.id, name: "filler1"})
-      filler2 = playlist_fixture(%{organization_id: organization.id, name: "filler2"})
-      filler3 = playlist_fixture(%{organization_id: organization.id, name: "filler3"})
-      filler4 = playlist_fixture(%{organization_id: organization.id, name: "filler4"})
 
       # A -> B (this should succeed)
       {:ok, _item} =
@@ -988,7 +962,13 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
           layout_widget.id,
           0,
           10000,
-          %{"playlist_1" => playlist_b.id, "playlist_2" => filler1.id, "playlist_3" => filler2.id}
+          %{
+            "layoutRef" => %{
+              "layoutId" => 1,
+              "aspectRatio" => "9:16",
+              "zonePlaylistMap" => %{"zone-1" => %{"playlistId" => playlist_b.id}}
+            }
+          }
         )
 
       # B -> A (this should fail - would create cycle)
@@ -999,7 +979,13 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
           layout_widget.id,
           0,
           10000,
-          %{"playlist_1" => playlist_a.id, "playlist_2" => filler3.id, "playlist_3" => filler4.id}
+          %{
+            "layoutRef" => %{
+              "layoutId" => 1,
+              "aspectRatio" => "9:16",
+              "zonePlaylistMap" => %{"zone-1" => %{"playlistId" => playlist_a.id}}
+            }
+          }
         )
 
       assert {:error, :circular_reference} = result
@@ -1012,8 +998,6 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
       playlist_a = playlist_fixture(%{organization_id: organization.id, name: "A"})
       playlist_b = playlist_fixture(%{organization_id: organization.id, name: "B"})
       playlist_c = playlist_fixture(%{organization_id: organization.id, name: "C"})
-      filler1 = playlist_fixture(%{organization_id: organization.id, name: "filler1"})
-      filler2 = playlist_fixture(%{organization_id: organization.id, name: "filler2"})
 
       # A -> B (success)
       {:ok, _item} =
@@ -1023,7 +1007,13 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
           layout_widget.id,
           0,
           10000,
-          %{"playlist_1" => playlist_b.id, "playlist_2" => filler1.id, "playlist_3" => filler2.id}
+          %{
+            "layoutRef" => %{
+              "layoutId" => 1,
+              "aspectRatio" => "9:16",
+              "zonePlaylistMap" => %{"zone-1" => %{"playlistId" => playlist_b.id}}
+            }
+          }
         )
 
       # B -> C (success)
@@ -1034,7 +1024,13 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
           layout_widget.id,
           0,
           10000,
-          %{"playlist_1" => playlist_c.id, "playlist_2" => filler1.id, "playlist_3" => filler2.id}
+          %{
+            "layoutRef" => %{
+              "layoutId" => 1,
+              "aspectRatio" => "9:16",
+              "zonePlaylistMap" => %{"zone-1" => %{"playlistId" => playlist_c.id}}
+            }
+          }
         )
 
       # C -> A (this should fail - would create cycle)
@@ -1045,7 +1041,13 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
           layout_widget.id,
           0,
           10000,
-          %{"playlist_1" => playlist_a.id, "playlist_2" => filler1.id, "playlist_3" => filler2.id}
+          %{
+            "layoutRef" => %{
+              "layoutId" => 1,
+              "aspectRatio" => "9:16",
+              "zonePlaylistMap" => %{"zone-1" => %{"playlistId" => playlist_a.id}}
+            }
+          }
         )
 
       assert {:error, :circular_reference} = result
@@ -1061,7 +1063,6 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
       playlist_b = playlist_fixture(%{organization_id: organization.id, name: "B"})
       playlist_c = playlist_fixture(%{organization_id: organization.id, name: "C"})
       playlist_d = playlist_fixture(%{organization_id: organization.id, name: "D"})
-      filler1 = playlist_fixture(%{organization_id: organization.id, name: "filler1"})
 
       # A -> B, C
       {:ok, _item} =
@@ -1072,9 +1073,14 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
           0,
           10000,
           %{
-            "playlist_1" => playlist_b.id,
-            "playlist_2" => playlist_c.id,
-            "playlist_3" => filler1.id
+            "layoutRef" => %{
+              "layoutId" => 1,
+              "aspectRatio" => "9:16",
+              "zonePlaylistMap" => %{
+                "zone-1" => %{"playlistId" => playlist_b.id},
+                "zone-2" => %{"playlistId" => playlist_c.id}
+              }
+            }
           }
         )
 
@@ -1086,7 +1092,13 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
           layout_widget.id,
           0,
           10000,
-          %{"playlist_1" => playlist_d.id, "playlist_2" => filler1.id, "playlist_3" => filler1.id}
+          %{
+            "layoutRef" => %{
+              "layoutId" => 1,
+              "aspectRatio" => "9:16",
+              "zonePlaylistMap" => %{"zone-1" => %{"playlistId" => playlist_d.id}}
+            }
+          }
         )
 
       # C -> D (this should succeed - D is a shared child, not a cycle)
@@ -1097,7 +1109,13 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
           layout_widget.id,
           0,
           10000,
-          %{"playlist_1" => playlist_d.id, "playlist_2" => filler1.id, "playlist_3" => filler1.id}
+          %{
+            "layoutRef" => %{
+              "layoutId" => 1,
+              "aspectRatio" => "9:16",
+              "zonePlaylistMap" => %{"zone-1" => %{"playlistId" => playlist_d.id}}
+            }
+          }
         )
 
       assert {:ok, _item} = result

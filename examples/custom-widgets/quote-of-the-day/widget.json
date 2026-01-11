@@ -1,0 +1,323 @@
+{
+  "name": "Quote of the Day",
+  "slug": "quote-of-the-day",
+  "description": "Displays inspirational quotes with elegant typography. Features custom Montserrat and Lato fonts. Perfect for lobbies, waiting rooms, and corporate environments.",
+  "icon": "assets/icons/quote-icon.svg",
+  "aspect_ratio": "16:9",
+  "version": "1.1.0",
+  "author": {
+    "name": "Castmill",
+    "url": "https://castmill.com"
+  },
+  "assets": {
+    "icons": {
+      "quote": {
+        "path": "assets/icons/quote-icon.svg",
+        "type": "image/svg+xml",
+        "description": "Quote widget icon"
+      },
+      "quote-mark": {
+        "path": "assets/icons/quote-mark.svg",
+        "type": "image/svg+xml",
+        "description": "Decorative quotation mark"
+      }
+    },
+    "images": {
+      "background": {
+        "path": "assets/images/gradient-bg.svg",
+        "type": "image/svg+xml",
+        "description": "Elegant gradient background"
+      }
+    },
+    "fonts": {
+      "montserrat-regular": {
+        "path": "assets/fonts/Montserrat-Regular.woff2",
+        "name": "Montserrat",
+        "type": "font/woff2",
+        "description": "Montserrat Regular font for author names"
+      },
+      "montserrat-bold": {
+        "path": "assets/fonts/Montserrat-Bold.woff2",
+        "name": "Montserrat Bold",
+        "type": "font/woff2",
+        "description": "Montserrat Bold font for headings"
+      },
+      "lato-regular": {
+        "path": "assets/fonts/Lato-Regular.woff2",
+        "name": "Lato",
+        "type": "font/woff2",
+        "description": "Lato Regular font for body text"
+      }
+    }
+  },
+  "template": {
+    "type": "group",
+    "name": "quote-widget",
+    "style": {
+      "width": "100%",
+      "height": "100%",
+      "display": "flex",
+      "flex-direction": "column",
+      "justify-content": "center",
+      "align-items": "center",
+      "background-image": "url({{asset:images.background}})",
+      "background-size": "cover",
+      "padding": "5%",
+      "box-sizing": "border-box",
+      "font-size": "16px"
+    },
+    "animations": [
+      {
+        "keyframes": [
+          { "from": { "opacity": 0 }, "to": { "opacity": 1, "duration": 1, "ease": "power2.out" } }
+        ]
+      },
+      {
+        "start": -1000,
+        "keyframes": [
+          { "to": { "opacity": 0, "duration": 1, "ease": "power2.in" } }
+        ]
+      }
+    ],
+    "components": [
+      {
+        "type": "group",
+        "name": "quote-container",
+        "style": {
+          "display": "flex",
+          "flex-direction": "column",
+          "align-items": "center",
+          "max-width": "80%",
+          "text-align": "center"
+        },
+        "components": [
+          {
+            "type": "image",
+            "name": "opening-quote",
+            "opts": {
+              "src": "{{asset:icons.quote-mark}}"
+            },
+            "style": {
+              "width": "2em",
+              "height": "2em",
+              "opacity": "0.3",
+              "margin-bottom": "0.5em"
+            },
+            "animations": [
+              {
+                "keyframes": [
+                  { "from": { "scale": 0, "rotation": -180, "opacity": 0 }, "to": { "scale": 1, "rotation": 0, "opacity": 0.3, "duration": 0.8, "ease": "back.out(1.7)", "delay": 0.3 } }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "text",
+            "name": "quote-text",
+            "opts": {
+              "text": {"key": "data.quote"}
+            },
+            "style": {
+              "font-family": "'Lato', Georgia, serif",
+              "font-size": {"key": "options.font_size", "default": "1.5em"},
+              "font-weight": "400",
+              "font-style": "italic",
+              "color": {"key": "options.text_color", "default": "#2c3e50"},
+              "line-height": "1.3",
+              "margin-bottom": "0.5em",
+              "text-shadow": "0 2px 4px rgba(0,0,0,0.1)"
+            },
+            "animations": [
+              {
+                "keyframes": [
+                  { "from": { "y": 30, "opacity": 0 }, "to": { "y": 0, "opacity": 1, "duration": 1, "ease": "power3.out", "delay": 0.5 } }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "group",
+            "name": "attribution",
+            "style": {
+              "display": "flex",
+              "flex-direction": "column",
+              "align-items": "center",
+              "gap": "0.25em"
+            },
+            "animations": [
+              {
+                "keyframes": [
+                  { "from": { "y": 20, "opacity": 0 }, "to": { "y": 0, "opacity": 1, "duration": 0.8, "ease": "power2.out", "delay": 1 } }
+                ]
+              }
+            ],
+            "components": [
+              {
+                "type": "group",
+                "name": "divider",
+                "style": {
+                  "width": "4em",
+                  "height": "2px",
+                  "background": "linear-gradient(90deg, transparent, rgba(44,62,80,0.3), transparent)",
+                  "margin-bottom": "0.75em"
+                },
+                "animations": [
+                  {
+                    "keyframes": [
+                      { "from": { "scaleX": 0 }, "to": { "scaleX": 1, "duration": 0.6, "ease": "power2.inOut", "delay": 1.2 } }
+                    ]
+                  }
+                ],
+                "components": []
+              },
+              {
+                "type": "text",
+                "name": "author-name",
+                "opts": {
+                  "text": {"key": "data.author"}
+                },
+                "style": {
+                  "font-family": "'Montserrat', 'Helvetica Neue', Arial, sans-serif",
+                  "font-size": "1.25em",
+                  "font-weight": "400",
+                  "color": {"key": "options.author_color", "default": "#7f8c8d"},
+                  "letter-spacing": "0.15em",
+                  "text-transform": "uppercase"
+                },
+                "animations": [
+                  {
+                    "keyframes": [
+                      { "from": { "y": 10, "opacity": 0 }, "to": { "y": 0, "opacity": 1, "duration": 0.6, "ease": "power2.out", "delay": 1.4 } }
+                    ]
+                  }
+                ]
+              },
+              {
+                "type": "text",
+                "name": "author-title",
+                "opts": {
+                  "text": {"key": "data.title", "default": ""}
+                },
+                "style": {
+                  "font-family": "'Lato', 'Helvetica Neue', sans-serif",
+                  "font-size": "1em",
+                  "font-weight": "300",
+                  "color": {"key": "options.author_color", "default": "#95a5a6"},
+                  "font-style": "italic"
+                },
+                "animations": [
+                  {
+                    "keyframes": [
+                      { "from": { "y": 10, "opacity": 0 }, "to": { "y": 0, "opacity": 1, "duration": 0.6, "ease": "power2.out", "delay": 1.6 } }
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "type": "group",
+        "name": "category-badge",
+        "style": {
+          "position": "absolute",
+          "bottom": "5%",
+          "right": "5%",
+          "display": "flex",
+          "align-items": "center",
+          "gap": "0.5em",
+          "padding": "0.5em 1em",
+          "background": "rgba(255,255,255,0.1)",
+          "border-radius": "1em",
+          "backdrop-filter": "blur(10px)"
+        },
+        "animations": [
+          {
+            "keyframes": [
+              { "from": { "x": 50, "opacity": 0 }, "to": { "x": 0, "opacity": 1, "duration": 0.8, "ease": "power2.out", "delay": 1.8 } }
+            ]
+          }
+        ],
+        "components": [
+          {
+            "type": "text",
+            "name": "category",
+            "opts": {
+              "text": {"key": "data.category", "default": "Inspiration"}
+            },
+            "style": {
+              "font-family": "'Lato', sans-serif",
+              "font-size": "0.875em",
+              "font-weight": "300",
+              "color": "rgba(44,62,80,0.6)",
+              "letter-spacing": "0.1em",
+              "text-transform": "uppercase"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "options_schema": {
+    "font_size": {
+      "type": "string",
+      "required": false,
+      "default": "1.5em",
+      "enum": ["1em", "1.5em", "2em", "2.5em"],
+      "description": "Quote text size (Small, Medium, Large, Extra Large)",
+      "order": 1
+    },
+    "text_color": {
+      "type": "color",
+      "required": false,
+      "default": "#2c3e50",
+      "description": "Quote text color",
+      "order": 2
+    },
+    "author_color": {
+      "type": "color",
+      "required": false,
+      "default": "#7f8c8d",
+      "description": "Author text color",
+      "order": 3
+    },
+    "display_duration": {
+      "type": "number",
+      "required": false,
+      "default": 15,
+      "min": 5,
+      "max": 60,
+      "description": "Seconds to display each quote",
+      "order": 4
+    }
+  },
+  "data_schema": {
+    "quote": {
+      "type": "string",
+      "description": "The quote text",
+      "default": "The only way to do great work is to love what you do."
+    },
+    "author": {
+      "type": "string",
+      "description": "Quote author name",
+      "default": "Steve Jobs"
+    },
+    "title": {
+      "type": "string",
+      "description": "Author's title or context",
+      "default": "Co-founder of Apple"
+    },
+    "category": {
+      "type": "string",
+      "description": "Quote category",
+      "default": "Inspiration"
+    }
+  },
+  "meta": {
+    "category": "content",
+    "tags": ["quotes", "inspiration", "motivation", "typography", "custom-fonts"],
+    "license": "MIT",
+    "repository": "https://github.com/castmill/castmill"
+  }
+}

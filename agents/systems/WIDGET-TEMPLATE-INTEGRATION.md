@@ -263,7 +263,18 @@ channel.on('data_updated', (payload) => {
 
 ## Schema Validation
 
-The system validates data at multiple levels:
+The system validates data at multiple levels.
+
+### ⚠️ Important Schema Rules
+
+Before creating widgets, understand these validation rules:
+
+1. **Use `"list"` NOT `"array"`** for array types
+2. **`"label"` is NOT a valid attribute** - use `"description"` instead
+3. **Valid simple types:** `string`, `number`, `boolean`, `url`, `color`, `city`
+4. **Valid complex types:** `list`, `map`, `ref`, `layout`, `layout-ref`
+
+See [WIDGET-ASSETS.md](./WIDGET-ASSETS.md) for complete schema reference.
 
 ### 1. Widget Creation
 ```elixir
@@ -275,6 +286,11 @@ The system validates data at multiple levels:
 
 {:error, changeset} = Widgets.create_widget(%{
   options_schema: %{"latitude" => "invalid"}  # ERROR: not a recognized type
+})
+
+# Common mistake: using "array" instead of "list"
+{:error, changeset} = Widgets.create_widget(%{
+  data_schema: %{"items" => %{"type" => "array"}}  # ERROR: use "list" instead
 })
 ```
 

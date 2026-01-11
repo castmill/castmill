@@ -262,6 +262,12 @@ export interface PlayerUIOptions {
   controls?: PlayerUIControls;
   controlsMaster?: boolean;
   synced?: boolean;
+  /**
+   * Initial seek position in milliseconds.
+   * If provided, the player will start at this position instead of 0.
+   * Useful for editor mode to skip intro animations.
+   */
+  initialSeekPosition?: number;
 }
 
 export class PlayerUI {
@@ -285,6 +291,9 @@ export class PlayerUI {
     private playlist: Playlist,
     private opts: PlayerUIOptions = {}
   ) {
+    // Set initial time from options (for editor mode to skip intro animations)
+    this.time = opts.initialSeekPosition ?? 0;
+
     this.ui = createPlayerElement(this.id);
 
     document.querySelector(`#${id}`)?.appendChild(this.ui);
@@ -354,8 +363,26 @@ export class PlayerUI {
       this.stop();
       this.seek(0);
     });
-    this.playlist.seek(0);
-    this.playlist.show(this.renderer).subscribe(() => void 0);
+
+    // Use initialSeekPosition if provided (for editor mode to skip intro animations)
+    const startPosition = this.opts.initialSeekPosition ?? 0;
+    this.time = startPosition;
+
+    // Chain seek and show - must wait for seek to complete before showing
+    this.playlist
+      .seek(startPosition)
+      .pipe(switchMap(() => this.playlist.show(this.renderer)))
+      .subscribe(() => {
+        // Update the controls duration after the widgets have loaded.
+        // This is important for widgets like video that determine their duration dynamically.
+        if (this.opts.controls) {
+          this.opts.controls.setTimeDuration(
+            this.time,
+            this.playlist.duration(),
+            this.loop
+          );
+        }
+      });
   }
 
   get position(): number {

@@ -60,8 +60,12 @@ defmodule Castmill.Widgets.Schema do
   end
 
   # Color validation using a regular expression
+  # Accepts hex colors (#RGB, #RRGGBB) and rgba/rgb functional notation
   def is_color(value) when is_binary(value) do
-    Regex.match?(~r/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/, value)
+    hex_regex = ~r/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/
+    rgba_regex = ~r/^rgba?\s*\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*(,\s*[\d.]+\s*)?\)$/
+
+    Regex.match?(hex_regex, value) or Regex.match?(rgba_regex, value)
   end
 
   # Define a map of validations for simple types
@@ -72,7 +76,11 @@ defmodule Castmill.Widgets.Schema do
     "url" => &Castmill.Widgets.Schema.is_url/1,
     "color" => &Castmill.Widgets.Schema.is_color/1,
     # Simplistic assumption that cities are just strings
-    "city" => &is_binary/1
+    "city" => &is_binary/1,
+    # Layout type for dynamic multi-zone layouts (value is a map with aspectRatio and zones)
+    "layout" => &is_map/1,
+    # Layout reference type - references an existing layout by ID (value is a number/integer)
+    "layout-ref" => &is_number/1
   }
   def validate_schema(schema) when map_size(schema) > 0 do
     schema
@@ -94,13 +102,13 @@ defmodule Castmill.Widgets.Schema do
     validator = @type_validations[type]
 
     if is_nil(validator) do
-      is_valid_default_for_schema = fn v -> valid_data?(map["schema"], v) end
-
       case type do
         "ref" ->
           validate_complex_field(map, field, &is_binary/1, "binary", ["collection"])
 
         "map" ->
+          is_valid_default_for_schema = fn v -> valid_data?(map["schema"], v) end
+
           validate_complex_field(
             map,
             field,
@@ -110,7 +118,10 @@ defmodule Castmill.Widgets.Schema do
           )
 
         "list" ->
-          validate_complex_field(map, field, is_valid_default_for_schema, "list", ["items"])
+          # For list types, the items schema is under "items", not "schema"
+          # We just validate that the default is a list - detailed item validation
+          # happens during actual data validation
+          validate_complex_field(map, field, &is_list/1, "list", ["items"])
 
         _ ->
           {:halt, {:error, "Invalid type #{inspect(type)} for field #{inspect(field)}"}}
@@ -129,7 +140,12 @@ defmodule Castmill.Widgets.Schema do
       "help",
       "placeholder",
       "min",
-      "max" | required_keys
+      "max",
+      "order",
+      # Enum options for string fields
+      "enum",
+      # Layout-specific options
+      "aspectRatios" | required_keys
     ]
 
     keys = Map.keys(map)
@@ -372,6 +388,88 @@ defmodule Castmill.Widgets.Schema do
   defp validate_data_field(value, %{"type" => type}, field, acc_data)
        when type in ["string", "number", "boolean", "color", "url", "city"] do
     validate_data_field(value, type, field, acc_data)
+  end
+
+  # Layout type validation for dynamic multi-zone layouts
+  # Layout value should be a map with:
+  # - aspectRatio: string like "16:9"
+  # - zones: list of zone objects, each with id, name, rect, zIndex
+  defp validate_data_field(value, %{"type" => "layout"}, field, acc_data)
+       when is_map(value) do
+    cond do
+      not is_binary(value["aspectRatio"]) ->
+        {:halt, {:error, "Layout field #{inspect(field)} must have an aspectRatio string"}}
+
+      not is_list(value["zones"]) ->
+        {:halt, {:error, "Layout field #{inspect(field)} must have a zones list"}}
+
+      true ->
+        # Validate each zone in the zones list
+        zones_valid =
+          Enum.all?(value["zones"], fn zone ->
+            is_map(zone) and
+              is_binary(zone["id"]) and
+              is_binary(zone["name"]) and
+              is_map(zone["rect"]) and
+              is_number(zone["rect"]["x"]) and
+              is_number(zone["rect"]["y"]) and
+              is_number(zone["rect"]["width"]) and
+              is_number(zone["rect"]["height"]) and
+              is_number(zone["zIndex"])
+          end)
+
+        if zones_valid do
+          {:cont, {:ok, Map.put(acc_data, field, value)}}
+        else
+          {:halt,
+           {:error,
+            "Invalid zone structure in layout field #{inspect(field)}. Each zone must have id (string), name (string), rect (map with x, y, width, height as numbers), and zIndex (number)"}}
+        end
+    end
+  end
+
+  defp validate_data_field(_value, %{"type" => "layout"}, field, _acc_data) do
+    {:halt, {:error, "Layout field #{inspect(field)} must be a map with aspectRatio and zones"}}
+  end
+
+  # Layout-ref value should be a map with:
+  # - layoutId: integer referencing a layout
+  # - aspectRatio: string like "16:9"
+  # - zones: optional map containing zone definitions
+  # - zonePlaylistMap: map of zone IDs to playlist assignments
+  defp validate_data_field(value, %{"type" => "layout-ref"}, field, acc_data)
+       when is_map(value) do
+    cond do
+      not is_integer(value["layoutId"]) ->
+        {:halt, {:error, "Layout-ref field #{inspect(field)} must have a layoutId integer"}}
+
+      not is_binary(value["aspectRatio"]) ->
+        {:halt, {:error, "Layout-ref field #{inspect(field)} must have an aspectRatio string"}}
+
+      not is_map(value["zonePlaylistMap"]) ->
+        {:halt, {:error, "Layout-ref field #{inspect(field)} must have a zonePlaylistMap"}}
+
+      true ->
+        # zonePlaylistMap validation: each entry should have playlistId
+        zones_valid =
+          Enum.all?(value["zonePlaylistMap"], fn {_zone_id, assignment} ->
+            is_map(assignment) and is_integer(assignment["playlistId"])
+          end)
+
+        if zones_valid do
+          {:cont, {:ok, Map.put(acc_data, field, value)}}
+        else
+          {:halt,
+           {:error,
+            "Invalid zone assignment in layout-ref field #{inspect(field)}. Each zone assignment must have playlistId (integer)"}}
+        end
+    end
+  end
+
+  defp validate_data_field(_value, %{"type" => "layout-ref"}, field, _acc_data) do
+    {:halt,
+     {:error,
+      "Layout-ref field #{inspect(field)} must be a map with layoutId, aspectRatio, and zonePlaylistMap"}}
   end
 
   # We need to add two more catch-all clauses for cases when the data does not match the schema type

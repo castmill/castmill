@@ -2,7 +2,7 @@ import { Component, For, JSX, mergeProps, onCleanup, onMount } from 'solid-js';
 import { TemplateConfig, resolveOption } from './binding';
 import { Subscription, share, switchMap, take } from 'rxjs';
 import { TemplateComponent, TemplateComponentType } from './template';
-import { JsonPlaylist } from '../../interfaces';
+import { JsonPlaylist, LayoutOptionValue } from '../../interfaces';
 import { Playlist } from '../../playlist';
 import { ResourceManager } from '@castmill/cache';
 import { Renderer } from '../../renderer';
@@ -11,17 +11,11 @@ import { timer } from '../../player';
 import { ComponentAnimation } from './animation';
 import { BaseComponentProps } from './interfaces/base-component-props';
 import { PlayerGlobals } from '../../interfaces/player-globals.interface';
+import { rectToStyle, zoneToStyle, LayoutRect } from './layout-utils';
 
-/**
- * Rect defines the positioning of a container within the layout.
- * Values are typically percentages (e.g., "33.33%", "100%").
- */
-export interface LayoutRect {
-  width: string;
-  height: string;
-  top: string;
-  left: string;
-}
+// Re-export from layout-utils for external use
+export { rectToStyle, zoneToStyle } from './layout-utils';
+export type { LayoutRect } from './layout-utils';
 
 export interface LayoutContainer {
   playlist: JsonPlaylist;
@@ -34,16 +28,40 @@ export interface LayoutComponentOptions {
 }
 
 /**
- * Converts a rect object to CSS style properties for absolute positioning.
+ * Converts LayoutOptionValue (zone-based format) to LayoutContainer array.
+ * This bridges the zone-based format with the existing container-based rendering.
+ *
+ * Note: Zones can specify either:
+ * - A `playlist` binding (e.g., {"key": "options.playlist_zone1"}) which gets resolved
+ * - A `playlistId` for direct reference (requires config to contain playlist mapping)
  */
-function rectToStyle(rect: LayoutRect): JSX.CSSProperties {
-  return {
-    position: 'absolute',
-    width: rect.width,
-    height: rect.height,
-    top: rect.top,
-    left: rect.left,
-  };
+function zonesToContainers(
+  layoutValue: LayoutOptionValue,
+  config: TemplateConfig,
+  context: any,
+  globals: PlayerGlobals
+): LayoutContainer[] {
+  return layoutValue.zones.map((zone) => {
+    // If the zone has a playlist binding, resolve it
+    // This matches the existing container format for playlist resolution
+    let resolvedPlaylist: JsonPlaylist | null = null;
+
+    if ((zone as any).playlist) {
+      // Zone has a playlist binding - resolve it
+      resolvedPlaylist = resolveOption(
+        (zone as any).playlist,
+        config,
+        context,
+        globals
+      );
+    }
+
+    return {
+      playlist: resolvedPlaylist as JsonPlaylist,
+      // Cast to JSX.CSSProperties as zoneToStyle returns compatible style properties
+      style: zoneToStyle(zone) as JSX.CSSProperties,
+    };
+  });
 }
 
 export class LayoutComponent implements TemplateComponent {
@@ -98,6 +116,49 @@ export class LayoutComponent implements TemplateComponent {
     context: any,
     globals: PlayerGlobals
   ): LayoutComponentOptions {
+    // Check for layout-ref format (from Layout Widget with layout reference)
+    // The layoutRef has layoutId and zonePlaylistMap with playlist assignments
+    if (opts.layoutRef) {
+      const layoutRef = resolveOption(opts.layoutRef, config, context, globals);
+      if (layoutRef?.zonePlaylistMap) {
+        // Convert zonePlaylistMap to containers
+        // We need the layout zones info - this should come from the stored layout data
+        const containers: LayoutContainer[] = [];
+
+        // Get zones from the layout (they should be stored with the layoutRef)
+        const zones = layoutRef.zones?.zones || [];
+
+        for (const zone of zones) {
+          const zoneAssignment = layoutRef.zonePlaylistMap[zone.id];
+          containers.push({
+            playlist: zoneAssignment?.playlist || null,
+            style: zoneToStyle(zone) as JSX.CSSProperties,
+          });
+        }
+
+        return { containers };
+      }
+    }
+
+    // Check if this is the zone-based format
+    // This format has 'zones' array and 'aspectRatio' property
+    if (opts.zones && Array.isArray(opts.zones)) {
+      const layoutValue = resolveOption(
+        opts,
+        config,
+        context,
+        globals
+      ) as LayoutOptionValue;
+      const containers = zonesToContainers(
+        layoutValue,
+        config,
+        context,
+        globals
+      );
+      return { containers };
+    }
+
+    // Legacy format: template-based containers
     const resolvedContainers = resolveOption(
       opts.containers,
       config,
@@ -142,7 +203,7 @@ interface LayoutProps extends BaseComponentProps {
 }
 
 export const Layout: Component<LayoutProps> = (props) => {
-  const timeline = new Timeline('layout');
+  const timeline = new Timeline('layout', { loop: true });
 
   // Override play to safeguard against NaN offset (can happen if parent timeline had duration 0)
   const originalPlay = timeline.play.bind(timeline);
@@ -152,7 +213,7 @@ export const Layout: Component<LayoutProps> = (props) => {
   };
 
   const timelineItem = {
-    start: props.timeline.duration(),
+    start: 0,
     child: timeline,
     repeat: true, // Layout should always be considered for playing
   };
@@ -265,16 +326,27 @@ const LayoutContainer: Component<{
   });
 
   onMount(() => {
-    const playlistDuration = playlist.duration();
-
+    // Don't pass a fixed duration - let the timeline calculate it dynamically
+    // from its children (e.g., scroller items). This allows the duration to
+    // be determined after all widgets are mounted and their durations are known.
     timeline = new Timeline('layout-container', {
       loop: true,
-      duration: playlistDuration,
     });
+
+    // Override duration to return the playlist's actual duration
+    // This allows the parent timeline to calculate the correct max duration
+    const originalDuration = timeline.duration.bind(timeline);
+    timeline.duration = () => {
+      const playlistDur = playlist.duration();
+      return playlistDur > 0 ? playlistDur : originalDuration();
+    };
+
+    // Mark as repeat so parent timeline knows to keep it playing during loops
+    // The duration is 0/dynamic but it should continue playing
     timelineItem = {
       start: 0,
-      duration: playlistDuration,
       child: timeline,
+      repeat: true,
     };
 
     props.timeline.add(timelineItem);
@@ -288,45 +360,60 @@ const LayoutContainer: Component<{
       let isPlaying = false;
       let isReady = false;
       let pendingPlayOffset: number | null = null;
+      let isSeeking = false;
+      let seekTarget: number = 0;
 
-      // Helper to start/restart playback from a given time
-      const startPlayback = (startTime: number = 0) => {
-        // Clean up previous playback
+      // Helper to unsubscribe from playback subscriptions
+      const unsubscribePlaying = () => {
         playing$?.unsubscribe();
         timerSubscription?.unsubscribe();
+      };
 
-        // Reset playlist time
-        playlist.time = startTime;
+      // Helper to start/restart playback from a given time (synchronous, assumes seek is done)
+      const startPlaybackImmediate = (startTime: number = 0) => {
+        // Clean up previous playback
+        unsubscribePlaying();
 
-        // Seek to the start position first to ensure layers are properly initialized
-        playlist.seek(startTime).subscribe(() => {
-          const timer$ = timer(
-            Date.now(),
-            startTime,
-            100,
-            playlist.duration()
-          ).pipe(share());
+        const playlistDur = playlist.duration();
 
-          timerSubscription = timer$.subscribe();
+        const timer$ = timer(Date.now(), startTime, 100, playlistDur).pipe(
+          share()
+        );
 
-          playing$ = playlist
-            .play(renderer!, timer$, { loop: true })
-            .subscribe((evt) => void 0);
+        timerSubscription = timer$.subscribe();
+
+        playing$ = playlist.play(renderer!, timer$, { loop: true }).subscribe({
+          error: (err) =>
+            console.error('[LayoutContainer] playlist.play error:', err),
         });
       };
 
       const originalSeek = timeline.seek.bind(timeline);
       (timeline as any).seek = (time: number) => {
-        // When seeking (e.g., during loop restart), restart playback from the new position
+        // Track that we're seeking and to what position
+        isSeeking = true;
+        seekTarget = time;
+
+        // Stop current playback before seeking - this is critical!
+        // Without this, nested widgets' timelines may still be in "playing" state
+        // and will throw "Cannot seek while playing"
+        unsubscribePlaying();
+
+        // When seeking (e.g., during loop restart), prepare playlist for the new position
         seekingSubscription?.unsubscribe();
+
+        // Reset playlist time immediately
+        playlist.time = time;
+
         seekingSubscription = playlist
           .seek(time)
           .pipe(switchMap(() => playlist.show(renderer!)))
           .subscribe(() => {
+            isSeeking = false;
             originalSeek(time);
-            // If we were playing, restart playback from the seek position
+            // If we should be playing, start playback from the seek position
             if (isPlaying) {
-              startPlayback(time);
+              startPlaybackImmediate(time);
             }
           });
       };
@@ -340,8 +427,12 @@ const LayoutContainer: Component<{
             isReady = true;
             // If play was called before show completed, start playback now
             if (pendingPlayOffset !== null) {
-              startPlayback(pendingPlayOffset);
+              const offset = pendingPlayOffset;
               pendingPlayOffset = null;
+              playlist.time = offset;
+              playlist.seek(offset).subscribe(() => {
+                startPlaybackImmediate(offset);
+              });
             }
           },
           error: (err) => {
@@ -352,8 +443,20 @@ const LayoutContainer: Component<{
       const originalPlay = timeline.play.bind(timeline);
       (timeline as any).play = (offset: number = 0) => {
         isPlaying = true;
+
+        // If we're in the middle of a seek operation, don't start playback here.
+        // The seek callback will start playback when it completes.
+        if (isSeeking) {
+          originalPlay(offset);
+          return;
+        }
+
         if (isReady) {
-          startPlayback(offset);
+          // Seek first, then start playback
+          playlist.time = offset;
+          playlist.seek(offset).subscribe(() => {
+            startPlaybackImmediate(offset);
+          });
         } else {
           // Defer playback until show completes
           pendingPlayOffset = offset;

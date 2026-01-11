@@ -238,6 +238,17 @@ GET /widget-configs/:widget_config_id/data?version=:current_version
 }
 ```
 
+**Auto-refresh semantics:**
+
+- Each cached record stores a `refresh_at` timestamp that is derived from the
+  integration's `pull_interval_seconds`.
+- Whenever this endpoint is called and the cached row is past `refresh_at`, the
+  backend returns the last snapshot **and** immediately queues an
+  `IntegrationPoller` job (delay `0`) for the relevant discriminator so a fresh
+  payload arrives shortly after.
+- This ensures players never display stale data for longer than their polling
+  interval, even if the periodic worker was delayed.
+
 **Response (when version matches):**
 ```
 HTTP 304 Not Modified

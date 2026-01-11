@@ -85,7 +85,8 @@ export const Group: Component<GroupProps> = (props) => {
       cleanUpAnimations = applyAnimations(
         props.timeline,
         props.animations,
-        groupRef
+        groupRef,
+        props.timeline.duration()
       );
     }
     // If group has no children, call onReady immediately

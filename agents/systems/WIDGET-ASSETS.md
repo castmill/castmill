@@ -26,6 +26,110 @@ Current system lacks:
 - Schema-driven asset definitions
 - Runtime URL resolution
 
+## ⚠️ Widget Schema Validation Rules
+
+When creating custom widgets, the `options_schema` and `data_schema` fields are validated against strict rules. Understanding these rules is critical to avoid upload errors.
+
+### Valid Schema Types
+
+| Type | Description | Example |
+|------|-------------|---------|
+| `string` | Text values | `"title": "string"` |
+| `number` | Numeric values (int or float) | `"score": "number"` |
+| `boolean` | True/false values | `"enabled": "boolean"` |
+| `url` | URL strings | `"link": "url"` |
+| `color` | Color values (hex #RGB/#RRGGBB, rgba) | `"bg_color": "color"` |
+| `city` | City name strings | `"location": "city"` |
+| `layout` | Layout configuration object | `"layout": "layout"` |
+| `layout-ref` | Reference to existing layout by ID | `"layout_id": "layout-ref"` |
+| `list` | Array of items (NOT "array"!) | See below |
+| `map` | Nested object structure | See below |
+| `ref` | Reference to another entity | See below |
+
+### ⚠️ Common Mistakes
+
+1. **Using `"type": "array"` instead of `"type": "list"`**
+   ```json
+   // ❌ WRONG - will cause validation error
+   "items": { "type": "array" }
+   
+   // ✅ CORRECT
+   "items": { "type": "list", "items": { ... } }
+   ```
+
+2. **Using `"label"` attribute (not allowed)**
+   ```json
+   // ❌ WRONG - "label" is not a valid attribute
+   "scroll_speed": { "type": "number", "label": "Speed" }
+   
+   // ✅ CORRECT - use "description" instead
+   "scroll_speed": { "type": "number", "description": "Scroll speed" }
+   ```
+
+### Allowed Field Attributes
+
+| Attribute | Type | Description |
+|-----------|------|-------------|
+| `type` | string | **Required** - The data type |
+| `required` | boolean | Whether the field is required |
+| `default` | varies | Default value if not provided |
+| `description` | string | Human-readable description |
+| `help` | string | Additional help text |
+| `placeholder` | string | Placeholder text for inputs |
+| `min` | number | Minimum value (for numbers) |
+| `max` | number | Maximum value (for numbers) |
+| `order` | number | Display order in UI |
+| `enum` | array | Allowed values for strings |
+| `aspectRatios` | array | For layout types |
+| `schema` | object | For `map` types - nested schema |
+| `items` | object | For `list` types - item schema |
+| `collection` | string | For `ref` types - target collection |
+
+### List Schema Example
+
+```json
+"data_schema": {
+  "items": {
+    "type": "list",
+    "description": "News items",
+    "items": {
+      "type": "map",
+      "schema": {
+        "title": "string",
+        "pubDate": "string",
+        "score": "number"
+      }
+    },
+    "default": []
+  }
+}
+```
+
+### Map Schema Example
+
+```json
+"data_schema": {
+  "weather": {
+    "type": "map",
+    "schema": {
+      "temperature": { "type": "number", "required": true },
+      "humidity": { "type": "number", "required": false }
+    }
+  }
+}
+```
+
+### Reference Schema Example
+
+```json
+"data_schema": {
+  "background_image": {
+    "type": "ref",
+    "collection": "medias"
+  }
+}
+```
+
 ## Architecture
 
 ### Asset Manifest Structure
@@ -671,6 +775,62 @@ end
 3. **Flexible**: Works with filesystem, S3, CDN storage
 4. **Scalable**: Generic integrations reusable across widgets
 5. **Complete**: End-to-end self-service widget creation
+
+## Widget Lifecycle Management
+
+### Widget Deletion
+
+Widgets uploaded to an organization can be deleted. The deletion process includes:
+
+1. **Usage Check**: Before deletion, the system checks if the widget is used in any playlists
+2. **Cascade Deletion**: If confirmed, all widget_configs (instances) are deleted first
+3. **Asset Cleanup**: Widget assets are removed from storage
+4. **Widget Removal**: Finally, the widget record is deleted
+
+#### API Endpoints
+
+```
+# Check widget usage
+GET /dashboard/organizations/:org_id/widgets/:widget_id/usage
+
+Response:
+{
+  "data": [
+    {
+      "playlist_id": 123,
+      "playlist_name": "My Playlist",
+      "playlist_item_id": "uuid",
+      "widget_config_id": "uuid"
+    }
+  ],
+  "count": 1
+}
+
+# Delete widget (cascade deletes all instances)
+DELETE /dashboard/organizations/:org_id/widgets/:widget_id
+```
+
+#### Backend Functions
+
+```elixir
+# Get widget usage information
+Castmill.Widgets.get_widget_usage(widget_id)
+
+# Delete widget with cascade (deletes widget_configs first)
+Castmill.Widgets.delete_widget_with_cascade(widget)
+```
+
+#### Frontend UI
+
+The widgets page includes a delete action in the table row menu:
+- Shows confirmation dialog with usage warning
+- Lists all playlists where the widget is used
+- Warns that instances will be removed from playlists
+- Requires delete permission for widgets
+
+#### Permissions
+
+Widget deletion requires the `widgets:delete` permission on the organization.
 
 ## Example: Complete Weather Widget
 

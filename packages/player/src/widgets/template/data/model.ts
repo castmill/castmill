@@ -77,6 +77,12 @@ export class Model {
     let error;
 
     for (const key of keys) {
+      // Check for null/undefined before attempting any property access
+      if (obj === null || obj === undefined) {
+        error = new Error(`Invalid key path: ${keypath}`);
+        break;
+      }
+
       let { variable, indexes } = getArrayIndexes(key);
       if (variable && indexes) {
         let array = obj[variable];

@@ -665,57 +665,95 @@ export const CredentialConfig: Component<CredentialConfigProps> = (props) => {
 
         {/* Non-OAuth credential form */}
         <Show when={!isOAuth() && Object.keys(fields()).length > 0}>
-          <div class="credential-form">
-            <For each={Object.entries(fields())}>
-              {([key, field]) => (
-                <div class="form-field">
-                  <label for={`field-${key}`}>
-                    {getLocalizedText(field.label, key)}
-                    <Show when={field.required}>
-                      <span class="required">*</span>
-                    </Show>
-                  </label>
-                  <Show when={field.description}>
-                    <p class="field-description">
-                      {getLocalizedText(field.description)}
-                    </p>
-                  </Show>
-                  <input
-                    id={`field-${key}`}
-                    type={
-                      field.sensitive || field.secret
-                        ? 'password'
-                        : field.input_type || 'text'
-                    }
-                    value={formValues()[key] || ''}
-                    placeholder={getLocalizedText(field.placeholder)}
-                    onInput={(e) => updateField(key, e.currentTarget.value)}
-                    class={formErrors()[key] ? 'error' : ''}
+          <Show
+            when={isConfigured()}
+            fallback={
+              <div class="credential-form">
+                <For each={Object.entries(fields())}>
+                  {([key, field]) => (
+                    <div class="form-field">
+                      <label for={`field-${key}`}>
+                        {getLocalizedText(field.label, key)}
+                        <Show when={field.required}>
+                          <span class="required">*</span>
+                        </Show>
+                      </label>
+                      <Show when={field.description}>
+                        <p class="field-description">
+                          {getLocalizedText(field.description)}
+                        </p>
+                      </Show>
+                      <input
+                        id={`field-${key}`}
+                        type={
+                          field.sensitive || field.secret
+                            ? 'password'
+                            : field.input_type || 'text'
+                        }
+                        value={formValues()[key] || ''}
+                        placeholder={getLocalizedText(field.placeholder)}
+                        onInput={(e) => updateField(key, e.currentTarget.value)}
+                        class={formErrors()[key] ? 'error' : ''}
+                      />
+                      <Show when={formErrors()[key]}>
+                        <span class="error-message">{formErrors()[key]}</span>
+                      </Show>
+                    </div>
+                  )}
+                </For>
+
+                <div class="form-actions">
+                  <Button
+                    label={t('widgets.integrations.saveCredentials')}
+                    onClick={saveCredentials}
+                    disabled={isSaving()}
+                    color="primary"
                   />
-                  <Show when={formErrors()[key]}>
-                    <span class="error-message">{formErrors()[key]}</span>
+                </div>
+              </div>
+            }
+          >
+            {/* Configured state for non-OAuth credentials */}
+            <div class="credential-configured">
+              <div class="configured-info">
+                <span class="configured-icon">✓</span>
+                <div class="configured-details">
+                  <span class="configured-label">
+                    {t('widgets.integrations.credentialsConfigured')}
+                  </span>
+                  <Show when={formatValidatedDate()}>
+                    <span class="validated-date">
+                      {t('widgets.integrations.lastValidated', {
+                        date: formatValidatedDate(),
+                      })}
+                    </span>
                   </Show>
                 </div>
-              )}
-            </For>
-
-            <div class="form-actions">
-              <Button
-                label={t('widgets.integrations.saveCredentials')}
-                onClick={saveCredentials}
-                disabled={isSaving()}
-                color="primary"
-              />
-              <Show when={isConfigured()}>
+              </div>
+              <div class="configured-actions">
                 <Button
                   label={t('widgets.integrations.testConnection')}
                   onClick={testConnection}
                   disabled={isTesting()}
                   color="info"
                 />
-              </Show>
+                <Button
+                  label={t('widgets.integrations.updateCredentials')}
+                  onClick={() => {
+                    setCredentialInfo(null);
+                    setFormValues({});
+                  }}
+                  color="secondary"
+                />
+                <Button
+                  label={t('widgets.integrations.deleteCredentials')}
+                  onClick={disconnect}
+                  disabled={isDisconnecting()}
+                  color="danger"
+                />
+              </div>
             </div>
-          </div>
+          </Show>
         </Show>
 
         {/* Integration metadata */}

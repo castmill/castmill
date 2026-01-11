@@ -823,6 +823,28 @@ defmodule Castmill.Widgets.Integrations do
       %WidgetIntegrationData{}
   """
   def get_integration_data_for_widget_in_org(organization_id, widget_id) do
+    get_integration_data_for_widget_with_options(organization_id, widget_id, %{})
+  end
+
+  @doc """
+  Gets the most relevant integration data for a widget using widget options.
+
+  This is the preferred method for fetching integration data as it handles
+  discriminator-based caching properly.
+
+  Strategy:
+  1. First try discriminator-based lookup using widget options
+  2. Fall back to organization-level data
+  3. Fall back to finding any widget config data in this org
+
+  Returns `nil` if no integration or data found.
+
+  ## Examples
+
+      iex> get_integration_data_for_widget_with_options("org-123", 7, %{"symbols" => "AAPL,GOOGL"})
+      %WidgetIntegrationData{}
+  """
+  def get_integration_data_for_widget_with_options(organization_id, widget_id, widget_options) do
     # First, find the integration for this widget
     integration =
       WidgetIntegration.base_query()
@@ -834,31 +856,54 @@ defmodule Castmill.Widgets.Integrations do
         nil
 
       %WidgetIntegration{} = wi ->
-        # First, try to get organization-level data (directly associated with org)
-        org_level_data = get_organization_integration_data(organization_id, wi.id)
+        # Try discriminator-based lookup first
+        discriminator_id = build_discriminator_id(wi, widget_options, organization_id)
 
-        case org_level_data do
+        case get_integration_data_by_discriminator(wi.id, discriminator_id) do
           %WidgetIntegrationData{} = data ->
             data
 
           nil ->
-            # Fall back to finding any widget config data in this org
-            WidgetIntegrationData.base_query()
-            |> join(:inner, [wid], wc in Castmill.Widgets.WidgetConfig,
-              on: wid.widget_config_id == wc.id
-            )
-            |> join(:inner, [wid, wc], pi in Castmill.Resources.PlaylistItem,
-              on: wc.playlist_item_id == pi.id
-            )
-            |> join(:inner, [wid, wc, pi], p in Castmill.Resources.Playlist,
-              on: pi.playlist_id == p.id
-            )
-            |> where([wid, wc, pi, p], p.organization_id == ^organization_id)
-            |> where([wid], wid.widget_integration_id == ^wi.id)
-            |> order_by([wid], desc: wid.updated_at)
-            |> limit(1)
-            |> Repo.one()
+            # Fall back to organization-level data
+            case get_organization_integration_data(organization_id, wi.id) do
+              %WidgetIntegrationData{} = data ->
+                data
+
+              nil ->
+                # Fall back to finding any widget config data in this org
+                WidgetIntegrationData.base_query()
+                |> join(:inner, [wid], wc in Castmill.Widgets.WidgetConfig,
+                  on: wid.widget_config_id == wc.id
+                )
+                |> join(:inner, [wid, wc], pi in Castmill.Resources.PlaylistItem,
+                  on: wc.playlist_item_id == pi.id
+                )
+                |> join(:inner, [wid, wc, pi], p in Castmill.Resources.Playlist,
+                  on: pi.playlist_id == p.id
+                )
+                |> where([wid, wc, pi, p], p.organization_id == ^organization_id)
+                |> where([wid], wid.widget_integration_id == ^wi.id)
+                |> order_by([wid], desc: wid.updated_at)
+                |> limit(1)
+                |> Repo.one()
+            end
         end
+    end
+  end
+
+  # Build discriminator ID based on integration configuration
+  defp build_discriminator_id(%WidgetIntegration{} = integration, options, organization_id) do
+    case integration.discriminator_type do
+      "widget_option" ->
+        key = integration.discriminator_key || "id"
+        value = Map.get(options, key) || Map.get(options, String.to_atom(key)) || "default"
+        "#{key}:#{value}"
+
+      "organization" ->
+        "org:#{organization_id}"
+
+      _ ->
+        "default"
     end
   end
 
@@ -929,7 +974,21 @@ defmodule Castmill.Widgets.Integrations do
       {:ok, %WidgetIntegrationData{}}
   """
   def upsert_integration_data(attrs) do
-    existing = get_integration_data(attrs[:widget_integration_id], attrs[:widget_config_id])
+    # Look up existing data - prefer discriminator_id lookup if provided, otherwise widget_config_id
+    existing =
+      cond do
+        attrs[:discriminator_id] && attrs[:widget_integration_id] ->
+          get_integration_data_by_discriminator(
+            attrs[:widget_integration_id],
+            attrs[:discriminator_id]
+          )
+
+        attrs[:widget_config_id] && attrs[:widget_integration_id] ->
+          get_integration_data(attrs[:widget_integration_id], attrs[:widget_config_id])
+
+        true ->
+          nil
+      end
 
     if existing do
       # Increment version on update

@@ -71,6 +71,7 @@ config :castmill, :addons, [
   Castmill.Addons.Onboarding,
   Castmill.Addons.Content,
   Castmill.Addons.Playlists,
+  Castmill.Addons.Layouts,
   Castmill.Addons.Medias,
   Castmill.Addons.Widgets,
   Castmill.Addons.Devices
@@ -97,7 +98,7 @@ config :ex_aws, :s3,
 config :castmill, Oban,
   plugins: [{Oban.Plugins.Pruner, max_age: 300}],
   engine: Oban.Engines.Basic,
-  queues: [image_transcoder: 10, video_transcoder: 10, integration_polling: 5],
+  queues: [image_transcoder: 10, video_transcoder: 10, integration_polling: 5, integrations: 5],
   repo: Castmill.Repo
 
 # Configure Spotify OAuth (widget integration)

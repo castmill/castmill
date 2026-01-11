@@ -4,11 +4,17 @@ import { ResourceManager } from '@castmill/cache';
 
 import { Group, GroupComponent } from './group';
 import { Image, ImageComponent } from './image';
-import { List, ListComponent } from './list';
+import {
+  PaginatedList,
+  PaginatedListComponent,
+  ListComponent,
+} from './paginated-list';
+import { Scroller, ScrollerComponent } from './scroller';
 import { ImageCarousel, ImageCarouselComponent } from './image-carousel';
 import { Text, TextComponent, TextComponentOptions } from './text';
 import { TemplateConfig, resolveKey, resolveOption } from './binding';
 import { Video, VideoComponent } from './video';
+import { QRCode, QRCodeComponent } from './qr-code';
 import {
   TemplateComponent,
   TemplateComponentType,
@@ -200,17 +206,38 @@ export const Item: Component<{
             onReady={props.onReady}
           />
         </Match>
-        <Match when={props.component.type == TemplateComponentType.List}>
-          <List
+        {/* Note: 'list' type is handled by fromJSON which returns PaginatedListComponent */}
+        <Match
+          when={props.component.type == TemplateComponentType.PaginatedList}
+        >
+          <PaginatedList
             name={props.component.name}
             config={props.config}
-            opts={ListComponent.resolveOptions(
+            opts={PaginatedListComponent.resolveOptions(
               props.component.opts,
               props.config,
               props.context,
               props.globals
             )}
-            component={(props.component as ListComponent).component}
+            component={(props.component as PaginatedListComponent).component}
+            style={style}
+            timeline={props.timeline}
+            resourceManager={props.resourceManager}
+            globals={props.globals}
+            onReady={props.onReady}
+          />
+        </Match>
+        <Match when={props.component.type == TemplateComponentType.Scroller}>
+          <Scroller
+            name={props.component.name}
+            config={props.config}
+            opts={ScrollerComponent.resolveOptions(
+              props.component.opts,
+              props.config,
+              props.context,
+              props.globals
+            )}
+            component={(props.component as ScrollerComponent).component}
             style={style}
             timeline={props.timeline}
             resourceManager={props.resourceManager}
@@ -235,6 +262,21 @@ export const Item: Component<{
             timeline={props.timeline}
             resourceManager={props.resourceManager}
             globals={props.globals}
+            onReady={props.onReady}
+          />
+        </Match>
+        <Match when={props.component.type == TemplateComponentType.QRCode}>
+          <QRCode
+            name={props.component.name}
+            opts={QRCodeComponent.resolveOptions(
+              props.component.opts,
+              props.config,
+              props.context,
+              props.globals
+            )}
+            style={style}
+            animations={props.component.animations}
+            timeline={props.timeline}
             onReady={props.onReady}
           />
         </Match>

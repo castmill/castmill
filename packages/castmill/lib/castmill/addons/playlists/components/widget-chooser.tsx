@@ -15,7 +15,9 @@ import { FaSolidMagnifyingGlass } from 'solid-icons/fa';
 import { DEFAULT_WIDGET_ICON } from '../../common/constants';
 import './widget-chooser.scss';
 
-const WidgetItem: Component<{ widget: JsonWidget }> = (props) => {
+const WidgetItem: Component<{ widget: JsonWidget; baseUrl: string }> = (
+  props
+) => {
   const [dragging, setDragging] = createSignal(false);
 
   let draggableRef: HTMLDivElement | undefined = undefined;
@@ -37,12 +39,21 @@ const WidgetItem: Component<{ widget: JsonWidget }> = (props) => {
     }
   });
 
-  const isImageIcon =
+  const isImageIcon = () =>
     props.widget.icon &&
     (props.widget.icon.startsWith('data:image/') ||
       props.widget.icon.startsWith('http://') ||
       props.widget.icon.startsWith('https://') ||
       props.widget.icon.startsWith('/'));
+
+  // Resolve icon URL - prepend baseUrl for relative paths starting with /
+  const getIconUrl = () => {
+    if (!props.widget.icon) return '';
+    if (props.widget.icon.startsWith('/')) {
+      return `${props.baseUrl}${props.widget.icon}`;
+    }
+    return props.widget.icon;
+  };
 
   return (
     <div
@@ -52,9 +63,9 @@ const WidgetItem: Component<{ widget: JsonWidget }> = (props) => {
     >
       <IconWrapper icon={RiEditorDraggable} />
       <div class="widget-icon">
-        {isImageIcon ? (
+        {isImageIcon() ? (
           <img
-            src={props.widget.icon}
+            src={getIconUrl()}
             alt={props.widget.name}
             onError={(e) => {
               (e.target as HTMLImageElement).style.display = 'none';
@@ -78,6 +89,7 @@ const SEARCH_DEBOUNCE_PERIOD = 300;
 
 export const WidgetChooser: Component<{
   widgets: JsonWidget[];
+  baseUrl: string;
   onSearch?: (searchText: string) => void;
 }> = (props) => {
   const [searchText, setSearchText] = createSignal('');
@@ -121,7 +133,7 @@ export const WidgetChooser: Component<{
       </div>
       <div class="items-container">
         <For each={props.widgets}>
-          {(widget) => <WidgetItem widget={widget} />}
+          {(widget) => <WidgetItem widget={widget} baseUrl={props.baseUrl} />}
         </For>
       </div>
     </div>

@@ -22,8 +22,8 @@ import { PlayerGlobals } from './interfaces/player-globals.interface';
 
 /**
  * Computes style for a widget based on its aspect ratio.
- * Returns a base style - the dynamic min-width/min-height adjustment
- * is handled by the Layer's ResizeObserver.
+ * Returns a base style with 100% width and height - the widget's
+ * actual dimensions are computed dynamically by the Layer's ResizeObserver.
  */
 function computeWidgetStyle(
   baseStyle: JSX.CSSProperties | undefined,
@@ -39,15 +39,12 @@ function computeWidgetStyle(
     return baseStyle || defaultStyle;
   }
 
-  // Base style for aspect-ratio widget
-  // The dynamic min-width OR min-height is set by ResizeObserver in Layer
+  // Base style - actual dimensions will be computed by ResizeObserver
+  // Using 100% width/height as initial values, will be overridden
   return {
     ...baseStyle,
-    width: 'auto',
-    height: 'auto',
-    'max-width': '100%',
-    'max-height': '100%',
-    'aspect-ratio': `${ratio}`,
+    width: '100%',
+    height: '100%',
   };
 }
 
@@ -63,6 +60,34 @@ export class Layer extends EventEmitter {
   private resizeObserver: ResizeObserver | null = null;
 
   /**
+   * Gets the effective aspect ratio for a widget.
+   * For widgets with a layoutRef in options (like Layout Widget), uses the layout's aspect ratio.
+   * Otherwise falls back to the widget's default aspect ratio.
+   */
+  private static getEffectiveAspectRatio(json: JsonLayer): string | undefined {
+    // Check if there's a layoutRef in the options with an aspectRatio
+    const options = json.config?.options;
+    if (options) {
+      const keys = Object.keys(options);
+      for (let i = 0; i < keys.length; i++) {
+        const value = options[keys[i]];
+        if (
+          value &&
+          typeof value === 'object' &&
+          'aspectRatio' in value &&
+          'layoutId' in value
+        ) {
+          // This is a layoutRef value - use its aspect ratio
+          return (value as { aspectRatio: string }).aspectRatio;
+        }
+      }
+    }
+
+    // Fall back to widget's default aspect ratio
+    return json.widget.aspect_ratio;
+  }
+
+  /**
    * Creates a new Layer from a json deserialized object.
    *
    * @param json
@@ -72,17 +97,19 @@ export class Layer extends EventEmitter {
     resourceManager: ResourceManager,
     globals: PlayerGlobals
   ): Layer {
-    // Compute widget style based on its aspect ratio
-    const widgetStyle = computeWidgetStyle(
-      json.style,
-      json.widget.aspect_ratio
-    );
+    // Get effective aspect ratio (from layoutRef if present, otherwise widget default)
+    const effectiveAspectRatio = Layer.getEffectiveAspectRatio(json);
+
+    // Compute widget style based on effective aspect ratio
+    const widgetStyle = computeWidgetStyle(json.style, effectiveAspectRatio);
 
     const widget = new TemplateWidget(resourceManager, {
       widget: json.widget,
       config: json.config,
       style: widgetStyle,
       globals,
+      // Pass fonts from widget definition for FontFace API loading
+      fonts: json.widget.fonts,
     });
 
     const layer = new Layer(json.name, {
@@ -91,7 +118,7 @@ export class Layer extends EventEmitter {
       transition: json.transition && fromJSON(json.transition),
       style: widgetStyle,
       widget,
-      widgetAspectRatio: json.widget.aspect_ratio,
+      widgetAspectRatio: effectiveAspectRatio,
     });
 
     return layer;
@@ -114,7 +141,8 @@ export class Layer extends EventEmitter {
   ): Layer {
     const widget: TemplateWidget = new TemplateWidget(resourceManager, {
       name: 'layout',
-      duration: 10000, // Currently a hack, the duration should be the duration of the playlist
+      // Don't set a fixed duration - let the widget calculate it dynamically
+      // based on its content (e.g., scroller duration, video length, etc.)
       widget: {
         id: 666,
         name: 'layout-1-1',
@@ -152,9 +180,10 @@ export class Layer extends EventEmitter {
       globals,
     } as TemplateWidgetOptions);
 
+    // Don't pass explicit duration - let Layer.duration() use widget.duration()
+    // which will calculate based on the actual content
     return new Layer(playlist.name, {
       widget,
-      duration: 10000, // Currently a hack, the duration should be the duration of the playlist
     });
   }
 
@@ -201,9 +230,9 @@ export class Layer extends EventEmitter {
   }
 
   /**
-   * Sets up a ResizeObserver to dynamically adjust widget sizing based on container dimensions.
-   * When the container's aspect ratio differs from the widget's, we need to set either
-   * min-width: 100% (for portrait containers) or min-height: 100% (for landscape containers).
+   * Sets up a ResizeObserver to dynamically compute widget dimensions based on container size.
+   * Computes actual width/height values that maintain the widget's aspect ratio while fitting
+   * within the container (object-fit: contain behavior).
    */
   private setupResizeObserver() {
     this.resizeObserver = new ResizeObserver((entries) => {
@@ -218,19 +247,24 @@ export class Layer extends EventEmitter {
         const widgetEl = this.el.firstElementChild as HTMLElement;
         if (!widgetEl) continue;
 
-        // If container is wider than widget ratio (landscape container, landscape widget)
-        // or container is portrait and widget is landscape, we need different strategies
-        if (containerRatio >= widgetRatio) {
-          // Container is wider/same ratio - height is the constraint
-          // Set min-height: 100% to fill vertically, width will scale proportionally
-          widgetEl.style.minHeight = '100%';
-          widgetEl.style.minWidth = '';
+        // Calculate dimensions to fit within container while maintaining aspect ratio
+        let computedWidth: number;
+        let computedHeight: number;
+
+        if (widgetRatio > containerRatio) {
+          // Widget is wider relative to container - width is the constraint
+          computedWidth = width;
+          computedHeight = width / widgetRatio;
         } else {
-          // Container is taller/narrower - width is the constraint
-          // Set min-width: 100% to fill horizontally, height will scale proportionally
-          widgetEl.style.minWidth = '100%';
-          widgetEl.style.minHeight = '';
+          // Widget is taller relative to container - height is the constraint
+          computedHeight = height;
+          computedWidth = height * widgetRatio;
         }
+
+        // Apply computed dimensions
+        widgetEl.style.width = `${computedWidth}px`;
+        widgetEl.style.height = `${computedHeight}px`;
+        widgetEl.style.minWidth = `${computedWidth}px`;
       }
     });
 

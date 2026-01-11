@@ -113,6 +113,14 @@ defmodule CastmillWeb.OrganizationController do
     end
   end
 
+  def check_access(actor_id, :get_widget_usage, %{"organization_id" => organization_id}) do
+    if Organizations.has_access(organization_id, actor_id, "widgets", :delete) do
+      {:ok, true}
+    else
+      {:ok, false}
+    end
+  end
+
   def check_access(actor_id, :update_widget, %{"organization_id" => organization_id}) do
     # Only admins can update widgets for now
     {:ok, Organizations.is_admin?(organization_id, actor_id)}
@@ -324,38 +332,111 @@ defmodule CastmillWeb.OrganizationController do
   end
 
   def create_widget(conn, %{"organization_id" => _organization_id, "widget" => widget_file}) do
-    with {:ok, content} <- File.read(widget_file.path),
-         {:ok, widget_data} <- Jason.decode(content),
+    alias Castmill.Widgets.PackageProcessor
+    alias Castmill.Widgets.AssetStorage
+
+    with {:ok, widget_data, assets} <- PackageProcessor.process_upload(widget_file),
+         # Get the slug from widget data (or generate one from name)
+         widget_slug <- widget_data["slug"] || slugify(widget_data["name"]),
+         # Store assets permanently
+         {:ok, stored_assets} <- AssetStorage.store_assets(widget_slug, assets),
+         # Resolve icon path to full URL
+         widget_data <- resolve_widget_icon(widget_data, widget_slug, stored_assets),
+         # Extract and resolve fonts from widget assets
+         widget_data <- resolve_widget_fonts(widget_data, widget_slug, stored_assets),
          {:ok, widget} <- Castmill.Widgets.create_widget(widget_data) do
+      # Clean up temporary asset files
+      PackageProcessor.cleanup_assets(assets)
+
       conn
       |> put_status(:created)
       |> json(widget)
     else
-      {:error, :enoent} ->
-        conn
-        |> put_status(:bad_request)
-        |> json(%{error: "Failed to read uploaded file"})
-
-      {:error, %Jason.DecodeError{}} ->
-        conn
-        |> put_status(:bad_request)
-        |> json(%{error: "Invalid JSON format"})
-
       {:error, %Ecto.Changeset{} = changeset} ->
+        # Convert changeset errors to a serializable format
+        errors =
+          Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
+            Regex.replace(~r"%{(\w+)}", msg, fn _, key ->
+              opts |> Keyword.get(String.to_existing_atom(key), key) |> to_string()
+            end)
+          end)
+
         conn
         |> put_status(:unprocessable_entity)
-        |> json(%{errors: changeset})
+        |> json(%{errors: errors})
+
+      {:error, reason} when is_binary(reason) ->
+        conn
+        |> put_status(:bad_request)
+        |> json(%{error: reason})
 
       {:error, reason} ->
         conn
         |> put_status(:bad_request)
-        |> json(%{error: to_string(reason)})
+        |> json(%{error: inspect(reason)})
+    end
+  end
+
+  defp slugify(name) when is_binary(name) do
+    name
+    |> String.downcase()
+    |> String.replace(~r/[^a-z0-9\s-]/, "")
+    |> String.replace(~r/\s+/, "-")
+    |> String.trim("-")
+  end
+
+  defp slugify(_), do: "widget-#{:rand.uniform(100_000)}"
+
+  defp resolve_widget_icon(widget_data, widget_slug, stored_assets) do
+    case widget_data["icon"] do
+      nil ->
+        widget_data
+
+      icon when is_binary(icon) ->
+        resolved_icon =
+          Castmill.Widgets.AssetStorage.resolve_icon(icon, widget_slug, stored_assets)
+
+        Map.put(widget_data, "icon", resolved_icon)
+
+      _ ->
+        widget_data
+    end
+  end
+
+  defp resolve_widget_fonts(widget_data, widget_slug, stored_assets) do
+    fonts = Castmill.Widgets.AssetStorage.extract_fonts(widget_data, widget_slug, stored_assets)
+
+    if Enum.empty?(fonts) do
+      widget_data
+    else
+      Map.put(widget_data, "fonts", fonts)
+    end
+  end
+
+  @doc """
+  Gets the usage information for a widget, showing all playlists where it's being used.
+  """
+  def get_widget_usage(conn, %{"organization_id" => _organization_id, "widget_id" => widget_id}) do
+    case Castmill.Widgets.get_widget(widget_id) do
+      nil ->
+        conn
+        |> put_status(:not_found)
+        |> json(%{error: "Widget not found"})
+
+      _widget ->
+        usage = Castmill.Widgets.get_widget_usage(widget_id)
+
+        conn
+        |> put_status(:ok)
+        |> json(%{data: usage, count: length(usage)})
     end
   end
 
   def delete_widget(conn, %{"organization_id" => _organization_id, "widget_id" => widget_id}) do
     with widget when not is_nil(widget) <- Castmill.Widgets.get_widget(widget_id),
-         {:ok, _} <- Castmill.Widgets.delete_widget(widget) do
+         {:ok, _} <- Castmill.Widgets.delete_widget_with_cascade(widget) do
+      # Also delete the widget's assets
+      Castmill.Widgets.AssetStorage.delete_assets(widget.slug)
       send_resp(conn, :no_content, "")
     else
       nil ->

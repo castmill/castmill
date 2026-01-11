@@ -169,12 +169,42 @@ defmodule CastmillWeb.WidgetIntegrationController do
     credential_schema = integration.credential_schema
 
     cond do
-      is_nil(credential_schema) -> false
-      credential_schema == %{} -> false
-      Map.has_key?(credential_schema, "auth_type") -> true
-      Map.has_key?(credential_schema, "fields") && credential_schema["fields"] != %{} -> true
-      true -> false
+      # No credential schema at all
+      is_nil(credential_schema) ->
+        false
+
+      # Empty map
+      credential_schema == %{} ->
+        false
+
+      # "optional" auth_type means credentials are not required upfront
+      # (e.g., RSS feeds that work without auth but optionally support Basic Auth)
+      Map.get(credential_schema, "auth_type") == "optional" ->
+        false
+
+      # Has required auth_type (e.g., "oauth2", "api_key", "basic")
+      Map.has_key?(credential_schema, "auth_type") ->
+        true
+
+      # Has fields with at least one required field
+      Map.has_key?(credential_schema, "fields") &&
+          has_required_fields?(credential_schema["fields"]) ->
+        true
+
+      # Otherwise, doesn't require credentials
+      true ->
+        false
     end
+  end
+
+  # Checks if any field in the credential schema is required
+  defp has_required_fields?(nil), do: false
+  defp has_required_fields?(fields) when fields == %{}, do: false
+
+  defp has_required_fields?(fields) when is_map(fields) do
+    Enum.any?(fields, fn {_key, field_def} ->
+      is_map(field_def) && Map.get(field_def, "required", false) == true
+    end)
   end
 
   # Resolves a widget ID from either a numeric ID string or a slug
@@ -465,6 +495,18 @@ defmodule CastmillWeb.WidgetIntegrationController do
   defp fetch_and_return_widget_data(conn, widget_config_id, organization_id, params) do
     current_version = params["version"] && String.to_integer(params["version"])
 
+    # Get the widget config to access its options for discriminator-based lookup
+    widget_config = Widgets.get_widget_config_by_id(widget_config_id)
+    widget_options = (widget_config && widget_config.options) || %{}
+
+    widget_id =
+      cond do
+        widget_config && widget_config.widget_id -> widget_config.widget_id
+        true -> Widgets.get_widget_id_for_config(widget_config_id)
+      end
+
+    integration = get_widget_integration(widget_id)
+
     # Try widget-config-specific data first, then fall back to org-level shared data
     integration_data =
       case Integrations.get_integration_data_by_config(widget_config_id) do
@@ -472,16 +514,35 @@ defmodule CastmillWeb.WidgetIntegrationController do
           data
 
         nil ->
-          # Try organization-level shared data
-          # Get the widget_id for this config to look up shared data
-          case Widgets.get_widget_id_for_config(widget_config_id) do
+          # Try organization-level shared data using widget options for discriminator
+          case widget_id do
             nil ->
               nil
 
             widget_id ->
-              Integrations.get_integration_data_for_widget_in_org(organization_id, widget_id)
+              # Use options for proper discriminator lookup (e.g., feed_url for RSS)
+              case Integrations.get_integration_data_for_widget_with_options(
+                     organization_id,
+                     widget_id,
+                     widget_options
+                   ) do
+                nil ->
+                  # No cached data - try on-demand fetch for PULL integrations
+                  try_on_demand_fetch(organization_id, widget_config_id, widget_id)
+
+                data ->
+                  data
+              end
           end
       end
+
+    maybe_schedule_refresh(
+      integration_data,
+      integration,
+      widget_options,
+      organization_id,
+      widget_id
+    )
 
     case integration_data do
       nil ->
@@ -498,15 +559,271 @@ defmodule CastmillWeb.WidgetIntegrationController do
         |> text("")
 
       data ->
+        # Apply max_items filtering based on widget options
+        # This ensures each widget instance gets the correct number of items
+        filtered_data = apply_max_items_filter(data.data, widget_options)
+
         # Return new data with version
         conn
         |> put_status(:ok)
         |> json(%{
-          data: data.data,
+          data: filtered_data,
           version: data.version,
           fetched_at: data.fetched_at,
           status: data.status
         })
+    end
+  end
+
+  # Default max_items to use when not explicitly set in widget options
+  @default_max_items 10
+
+  # Apply max_items filtering to data containing an "items" array.
+  # This allows each widget instance to have its own max_items setting
+  # while sharing the same cached data (which may contain more items).
+  defp apply_max_items_filter(data, widget_options) when is_map(data) do
+    max_items =
+      Map.get(widget_options, "max_items") ||
+        Map.get(widget_options, :max_items) ||
+        @default_max_items
+
+    items = Map.get(data, "items")
+
+    cond do
+      is_nil(items) ->
+        data
+
+      is_list(items) and is_integer(max_items) and max_items > 0 ->
+        filtered_items = Enum.take(items, max_items)
+        Map.put(data, "items", filtered_items)
+
+      true ->
+        data
+    end
+  end
+
+  defp apply_max_items_filter(data, _widget_options), do: data
+
+  # Attempts to fetch data on-demand for PULL integrations when no cached data exists
+  defp try_on_demand_fetch(organization_id, widget_config_id, widget_id) do
+    alias Castmill.Widgets
+
+    # Get the widget's integration
+    case Integrations.list_integrations(widget_id: widget_id) do
+      [] ->
+        nil
+
+      [integration | _] ->
+        # Only handle PULL integrations with fetcher modules
+        if integration.integration_type == "pull" do
+          pull_config = integration.pull_config || %{}
+          credential_schema = integration.credential_schema || %{}
+          fetcher_module_name = Map.get(pull_config, "fetcher_module")
+
+          if fetcher_module_name do
+            # Get credentials (already decrypted) or use empty map for optional auth
+            # auth_type can be in pull_config or credential_schema
+            auth_type =
+              Map.get(pull_config, "auth_type") ||
+                Map.get(credential_schema, "auth_type") ||
+                "required"
+
+            credentials =
+              case Integrations.get_organization_credentials(organization_id, integration.id) do
+                {:ok, creds} ->
+                  creds
+
+                {:error, _reason} when auth_type in ["optional", "none"] ->
+                  %{}
+
+                {:error, _reason} ->
+                  nil
+              end
+
+            if credentials do
+              # Get widget config options
+              case Widgets.get_widget_config_by_id(widget_config_id) do
+                nil ->
+                  nil
+
+                widget_config ->
+                  # Try to fetch data using the fetcher
+                  case fetch_with_module(
+                         fetcher_module_name,
+                         credentials,
+                         widget_config.options || %{}
+                       ) do
+                    {:ok, data, _creds} ->
+                      # Store the data and return it
+                      discriminator_id =
+                        build_discriminator_id(integration, widget_config.options || %{})
+
+                      case store_fetched_data(
+                             organization_id,
+                             widget_id,
+                             integration,
+                             discriminator_id,
+                             data
+                           ) do
+                        {:ok, integration_data} ->
+                          # Schedule background polling for future updates
+                          schedule_polling(
+                            organization_id,
+                            widget_id,
+                            integration,
+                            discriminator_id,
+                            widget_config.options || %{}
+                          )
+
+                          integration_data
+
+                        {:error, _reason} ->
+                          nil
+                      end
+
+                    {:error, _reason} ->
+                      nil
+                  end
+              end
+            else
+              nil
+            end
+          else
+            nil
+          end
+        else
+          nil
+        end
+    end
+  end
+
+  defp fetch_with_module(module_name, credentials, options) when is_binary(module_name) do
+    allowed_prefixes = [
+      "Castmill.Widgets.Integrations.Fetchers.",
+      "Elixir.Castmill.Widgets.Integrations.Fetchers."
+    ]
+
+    if Enum.any?(allowed_prefixes, &String.starts_with?(module_name, &1)) do
+      try do
+        # Ensure module name starts with Elixir.
+        full_module_name =
+          if String.starts_with?(module_name, "Elixir.") do
+            module_name
+          else
+            "Elixir.#{module_name}"
+          end
+
+        module = String.to_existing_atom(full_module_name)
+
+        # Credentials are already decrypted by get_organization_credentials
+        module.fetch(credentials, options)
+      rescue
+        ArgumentError ->
+          {:error, :invalid_fetcher_module}
+      end
+    else
+      {:error, :unauthorized_fetcher_module}
+    end
+  end
+
+  defp build_discriminator_id(integration, options) do
+    case integration.discriminator_type do
+      "widget_option" ->
+        key = integration.discriminator_key || "id"
+        value = Map.get(options, key, "default")
+        "#{key}:#{value}"
+
+      "organization" ->
+        "org"
+
+      _ ->
+        "default"
+    end
+  end
+
+  defp store_fetched_data(organization_id, widget_id, integration, discriminator_id, data) do
+    now = DateTime.utc_now()
+    interval = integration.pull_interval_seconds || 300
+    refresh_at = DateTime.add(now, interval, :second)
+
+    Integrations.upsert_integration_data(%{
+      widget_integration_id: integration.id,
+      organization_id: organization_id,
+      widget_id: widget_id,
+      discriminator_id: discriminator_id,
+      data: data,
+      status: "active",
+      fetched_at: now,
+      last_used_at: now,
+      refresh_at: refresh_at,
+      version: System.system_time(:second)
+    })
+  end
+
+  defp schedule_polling(
+         organization_id,
+         widget_id,
+         integration,
+         discriminator_id,
+         widget_options,
+         opts \\ []
+       ) do
+    # Only schedule if not already running (the unique constraint in the worker will handle this)
+    delay = Keyword.get(opts, :delay, integration.pull_interval_seconds || 30)
+
+    Castmill.Workers.IntegrationPoller.schedule_poll(
+      %{
+        organization_id: organization_id,
+        widget_id: widget_id,
+        integration_id: integration.id,
+        discriminator_id: discriminator_id,
+        widget_options: widget_options
+      },
+      delay: delay
+    )
+  end
+
+  defp maybe_schedule_refresh(
+         %Integrations.WidgetIntegrationData{} = data,
+         integration,
+         widget_options,
+         organization_id,
+         widget_id
+       )
+       when not is_nil(integration) and not is_nil(widget_id) do
+    now = DateTime.utc_now()
+    interval = integration.pull_interval_seconds || 300
+
+    refresh_due =
+      cond do
+        data.refresh_at -> DateTime.compare(data.refresh_at, now) != :gt
+        data.fetched_at -> DateTime.diff(now, data.fetched_at) >= interval
+        true -> true
+      end
+
+    if refresh_due do
+      discriminator_id = build_discriminator_id(integration, widget_options || %{})
+
+      schedule_polling(
+        organization_id,
+        widget_id,
+        integration,
+        discriminator_id,
+        widget_options || %{},
+        delay: 0
+      )
+    end
+  end
+
+  defp maybe_schedule_refresh(_data, _integration, _options, _organization_id, _widget_id),
+    do: :ok
+
+  defp get_widget_integration(nil), do: nil
+
+  defp get_widget_integration(widget_id) do
+    case Integrations.list_integrations(widget_id: widget_id) do
+      [integration | _] -> integration
+      _ -> nil
     end
   end
 

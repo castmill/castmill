@@ -223,7 +223,10 @@ const TeamsPage: Component = () => {
       loadQuota(); // Reload quota after deletion
     } catch (error) {
       toast.error(
-        t('teams.errors.removeTeam', { name: team.name, error: String(error) })
+        t('teams.errors.removeTeam', {
+          name: team.name || '',
+          error: String(error),
+        })
       );
     }
     setShowConfirmDialog(false);

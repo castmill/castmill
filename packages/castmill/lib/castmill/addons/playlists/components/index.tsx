@@ -510,7 +510,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
       title: t('common.created'),
       sortable: true,
       render: (item: JsonPlaylist) => (
-        <Timestamp value={item.inserted_at} mode="relative" />
+        <Timestamp value={item.inserted_at!} mode="relative" />
       ),
     },
     {
@@ -518,7 +518,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
       title: t('common.updated'),
       sortable: true,
       render: (item: JsonPlaylist) => (
-        <Timestamp value={item.updated_at} mode="relative" />
+        <Timestamp value={item.updated_at!} mode="relative" />
       ),
     },
   ] as Column<JsonPlaylist>[];

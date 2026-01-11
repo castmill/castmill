@@ -128,7 +128,6 @@ const wrapLazyComponent = (addon: { path: string; name: string }) => {
     // Update store with router utilities
     setStore('router', {
       navigate,
-      location: () => location,
     });
 
     const toast = useToast();
@@ -185,7 +184,7 @@ const wrapLazyComponent = (addon: { path: string; name: string }) => {
                 {...props}
                 store={store}
                 selectedOrgId={currentOrgId}
-                params={searchParams}
+                params={[searchParams, setSearchParams]}
                 routeParams={routeParams}
               />
             )}

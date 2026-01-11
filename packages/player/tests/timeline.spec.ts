@@ -547,6 +547,91 @@ describe('duration calculation', () => {
     restore();
   });
 
+  it('should include repeat items with explicit duration in duration calculation', () => {
+    // Repeat items with explicit duration should contribute (one loop cycle)
+    const normalItem: TimelineItem = {
+      start: 0,
+      duration: 5000,
+      child: {
+        play: () => {},
+        seek: () => {},
+        pause: () => {},
+        duration: () => 5000,
+      },
+    };
+    const repeatItem: TimelineItem = {
+      start: 1000,
+      duration: 8000, // Explicit duration represents one loop cycle
+      repeat: true,
+      child: {
+        play: () => {},
+        seek: () => {},
+        pause: () => {},
+        duration: () => 8000,
+      },
+    };
+
+    timeline.add(normalItem);
+    timeline.add(repeatItem);
+
+    // Duration should be 9000 (repeatItem at 1000 + 8000 is longer than normalItem at 5000)
+    // Repeat items with explicit duration represent one loop cycle
+    expect(timeline.duration()).to.equal(9000);
+  });
+
+  it('should not include repeat items without explicit duration in duration calculation', () => {
+    // Repeat items without explicit duration play indefinitely
+    const normalItem: TimelineItem = {
+      start: 0,
+      duration: 5000,
+      child: {
+        play: () => {},
+        seek: () => {},
+        pause: () => {},
+        duration: () => 8000, // child duration, but no item.duration
+      },
+    };
+    const repeatItemNoDuration: TimelineItem = {
+      start: 1000,
+      repeat: true,
+      // No explicit duration - plays indefinitely
+      child: {
+        play: () => {},
+        seek: () => {},
+        pause: () => {},
+        duration: () => 10000, // Should be ignored for repeat items
+      },
+    };
+
+    timeline.add(normalItem);
+    timeline.add(repeatItemNoDuration);
+
+    // Duration should be 5000 (from normalItem), repeat item without explicit duration is ignored
+    expect(timeline.duration()).to.equal(5000);
+  });
+
+  it('should use timeline opts.duration when set, ignoring items', () => {
+    const timelineWithDuration = new Timeline('test-with-duration', {
+      duration: 10000,
+    });
+
+    const item: TimelineItem = {
+      start: 0,
+      duration: 5000,
+      child: {
+        play: () => {},
+        seek: () => {},
+        pause: () => {},
+        duration: () => 5000,
+      },
+    };
+
+    timelineWithDuration.add(item);
+
+    // Should use opts.duration, not calculated duration
+    expect(timelineWithDuration.duration()).to.equal(10000);
+  });
+
   it('should calculate duration correctly with items in different states', () => {
     const item1: TimelineItemSpy = {
       start: 0,

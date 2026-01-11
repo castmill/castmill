@@ -22,6 +22,7 @@ import {
 import { ResourceManager, Cache, StorageDummy } from '@castmill/cache';
 
 import styles from './widget-view.module.scss';
+import { safeStringify } from './utils';
 
 interface WidgetViewProps {
   widget: JsonWidget;
@@ -76,13 +77,28 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
   let playerUI: PlayerUI;
   let notificationChannel: Channel | null = null;
   let integrationUpdateRef: number | null = null;
+  let containerRef: HTMLDivElement | undefined;
+  let resizeObserver: ResizeObserver | undefined;
+
+  // Signal for calculated dimensions based on container and aspect ratio
+  const [containerSize, setContainerSize] = createSignal<{
+    width: number;
+    height: number;
+  }>({ width: 0, height: 0 });
 
   // Signal to store integration data
   const [integrationData, setIntegrationData] = createSignal<Record<
     string,
     any
   > | null>(null);
-  const [dataLoaded, setDataLoaded] = createSignal(false);
+  // Start with dataLoaded=true so preview renders immediately with defaults
+  // The fetch effect will set it to false only when actually fetching
+  const [dataLoaded, setDataLoaded] = createSignal(true);
+
+  // Track the current seek position to restore it when options change
+  // Start at 0 on first render; user can manually seek to skip intro animations
+  let currentSeekPosition = 0;
+  let isFirstRender = true;
 
   // Fetch integration data if widget config has an ID
   const fetchIntegrationData = async () => {
@@ -134,7 +150,8 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
         updated_at: string;
       }) => {
         // Check if this update is for our widget type
-        if (payload.widget_id === props.widget.id) {
+        // widget_id in payload is a string, props.widget.id is a number
+        if (payload.widget_id === String(props.widget.id)) {
           setIntegrationData(payload.data);
         }
       }
@@ -143,35 +160,76 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
 
   onMount(async () => {
     await cache.init();
-    await fetchIntegrationData();
     subscribeToWidgetConfigUpdates();
+  });
+
+  // Fetch integration data reactively when config changes
+  // This ensures data is fetched:
+  // 1. On initial mount when config.id is available
+  // 2. When a new widget is added and receives its widget_config_id
+  // 3. When config.options change after a save (affects the discriminator)
+  createEffect(() => {
+    // Track these props for reactivity - accessing them inside the effect
+    // ensures SolidJS tracks them as dependencies
+    const configId = props.config.id;
+    const configOptions = props.config.options;
+
+    // Only set loading state if we have something to fetch
+    // For new widgets without an ID, we skip fetching and use defaults
+    if (configId && props.baseUrl) {
+      setDataLoaded(false);
+    }
+
+    // Trigger async fetch (will be a no-op if no configId)
+    (async () => {
+      await fetchIntegrationData();
+    })();
   });
 
   createEffect(() => {
     // Wait until data loading is complete
     if (!dataLoaded()) return;
 
+    // IMPORTANT: Explicitly access these props at the top level for proper
+    // SolidJS dependency tracking. Accessing them inside nested objects or
+    // spreads may not register them as dependencies.
+    const currentWidget = props.widget;
+    const currentConfig = props.config;
+    const currentOptions = props.options;
+
+    // Force SolidJS to track deep changes in options by serializing
+    // This ensures the effect re-runs when any nested property changes
+    // (e.g., when a playlist reference is selected in a Layout widget)
+    const _optionsFingerprint = safeStringify(currentOptions);
+
     // Generate default data from data_schema for preview mode
-    const defaultData = getDefaultDataFromSchema(props.widget.data_schema);
+    const defaultData = getDefaultDataFromSchema(currentWidget.data_schema);
 
     // Priority: integration data > config data > default data
     const integration = integrationData();
     const configData =
-      props.config.data && Object.keys(props.config.data).length > 0
-        ? props.config.data
+      currentConfig.data && Object.keys(currentConfig.data).length > 0
+        ? currentConfig.data
         : null;
     const effectiveData = integration || configData || defaultData;
 
+    // Calculate duration from options (supports 'duration' or 'display_duration')
+    // Convert from seconds to milliseconds, default to 10 seconds
+    const durationFromOptions =
+      currentOptions.duration ?? currentOptions.display_duration ?? null;
+    const previewDuration =
+      typeof durationFromOptions === 'number' ? durationFromOptions * 1000 : 0;
+
     const dummyJsonPlaylistItem: JsonPlaylistItem = {
       id: 123, // Dummy ID
-      duration: 10000, // Dummy duration
+      duration: previewDuration, // Use duration from options, or let widget determine it
       offset: 0, // Dummy offset
-      widget: props.widget,
-      slack: 1000, // Dummy slack
+      widget: currentWidget,
+      slack: 0, // No slack for preview
       name: 'widget-layer', // Dummy name
       config: {
-        ...props.config,
-        options: props.options,
+        ...currentConfig,
+        options: currentOptions,
         data: effectiveData,
       },
     };
@@ -185,23 +243,44 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
 
     const playlist = Playlist.fromJSON(jsonPlaylist, resourceManager);
 
+    // Preserve current playback position before swapping instances
+    // Use controls.seek (slider value) as it's more reliable than playerUI.position
     if (controls) {
-      controls.destroy();
+      const sliderValue = controls.seek;
+      if (typeof sliderValue === 'number' && sliderValue > 0) {
+        currentSeekPosition = sliderValue;
+      }
     }
+
+    const previousPlayerUI = playerUI;
+    const previousControls = controls;
 
     controls = new PlayerUIControls('controls-widget', {
       position: {
-        bottom: '4em',
+        bottom: '0',
       },
     });
 
-    if (playerUI) {
-      playerUI.destroy();
-    }
+    // On first render start at 0; on subsequent renders (option edits) restore saved position
+    const initialPosition = isFirstRender ? 0 : currentSeekPosition;
+    isFirstRender = false;
 
     playerUI = new PlayerUI('player-widget', playlist, {
       controls,
       controlsMaster: true,
+      initialSeekPosition: initialPosition,
+    });
+
+    // After seek completes, clean up old instances
+    playerUI.seek(initialPosition).subscribe({
+      complete: () => {
+        previousPlayerUI?.destroy();
+        previousControls?.destroy();
+      },
+      error: () => {
+        previousPlayerUI?.destroy();
+        previousControls?.destroy();
+      },
     });
   });
 
@@ -221,21 +300,117 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
     if (controls) {
       controls.destroy();
     }
+
+    if (resizeObserver) {
+      resizeObserver.disconnect();
+    }
   });
 
-  // Calculate container style based on widget's aspect ratio
-  const containerStyle = createMemo(() => {
-    const ratio = parseAspectRatio(props.widget.aspect_ratio);
-    if (ratio) {
-      // Use CSS aspect-ratio property for proper sizing
-      // Set height to auto so aspect-ratio can control the height
-      return { 'aspect-ratio': `${ratio}`, height: 'auto' };
+  // Get the effective aspect ratio from options or widget definition
+  const getEffectiveAspectRatio = (): number => {
+    // Check all options for any that might be a layout-ref value with aspectRatio
+    // This handles widgets where the layout-ref field may have any key name
+    if (props.options) {
+      for (const value of Object.values(props.options)) {
+        if (
+          value &&
+          typeof value === 'object' &&
+          'aspectRatio' in value &&
+          'layoutId' in value
+        ) {
+          // This looks like a LayoutRefValue
+          const ratio = parseAspectRatio(
+            (value as { aspectRatio: string }).aspectRatio
+          );
+          if (ratio) return ratio;
+        }
+      }
     }
-    return {};
+
+    // Fall back to widget's own aspect ratio, default to 1:1
+    return parseAspectRatio(props.widget.aspect_ratio) || 1;
+  };
+
+  // Calculate dimensions to fit within container while maintaining aspect ratio (contain behavior)
+  const calculateContainDimensions = (
+    containerWidth: number,
+    containerHeight: number,
+    aspectRatio: number
+  ) => {
+    const containerAspect = containerWidth / containerHeight;
+
+    if (aspectRatio > containerAspect) {
+      // Width-constrained: content is wider relative to container
+      return {
+        width: containerWidth,
+        height: containerWidth / aspectRatio,
+      };
+    } else {
+      // Height-constrained: content is taller relative to container
+      return {
+        width: containerHeight * aspectRatio,
+        height: containerHeight,
+      };
+    }
+  };
+
+  // Helper to update container size from parent
+  const updateContainerSize = () => {
+    const parent = containerRef?.parentElement;
+    if (parent) {
+      const parentRect = parent.getBoundingClientRect();
+      const style = getComputedStyle(parent);
+      const paddingX =
+        parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+      const paddingY =
+        parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
+      const availableWidth = parentRect.width - paddingX;
+      const availableHeight = parentRect.height - paddingY;
+
+      if (availableWidth > 0 && availableHeight > 0) {
+        setContainerSize({ width: availableWidth, height: availableHeight });
+      }
+    }
+  };
+
+  // Set up ResizeObserver to track parent container size
+  onMount(() => {
+    // Schedule for next frame to ensure DOM is ready
+    requestAnimationFrame(() => {
+      if (containerRef?.parentElement) {
+        resizeObserver = new ResizeObserver(() => {
+          updateContainerSize();
+        });
+        resizeObserver.observe(containerRef.parentElement);
+        updateContainerSize(); // Initial measurement
+      }
+    });
+  });
+
+  // Calculate container style based on aspect ratio and available space
+  // This is reactive to both containerSize and props.options changes
+  const containerStyle = createMemo(() => {
+    const size = containerSize();
+    const aspectRatio = getEffectiveAspectRatio();
+
+    if (size.width > 0 && size.height > 0) {
+      const dims = calculateContainDimensions(
+        size.width,
+        size.height,
+        aspectRatio
+      );
+      return {
+        width: `${dims.width}px`,
+        height: `${dims.height}px`,
+      };
+    }
+
+    // Fallback to CSS aspect-ratio if parent dimensions not yet available
+    return { 'aspect-ratio': `${aspectRatio}`, width: '100%', height: 'auto' };
   });
 
   return (
-    <div class={styles.widgetView} style={containerStyle()}>
+    <div ref={containerRef} class={styles.widgetView} style={containerStyle()}>
       <div id="player-widget" class={styles.widgetPlayer}></div>
       <div id="controls-widget" class={styles.widgetControls}></div>
     </div>

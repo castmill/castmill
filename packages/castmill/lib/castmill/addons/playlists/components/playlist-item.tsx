@@ -9,7 +9,7 @@ import { debounce } from 'lodash';
 
 import { IconWrapper, Slider, formatDuration } from '@castmill/ui-common';
 import { RiEditorDraggable } from 'solid-icons/ri';
-import { AiOutlineEdit } from 'solid-icons/ai';
+import { AiOutlineEdit, AiOutlineWarning } from 'solid-icons/ai';
 import { BsTrash3 } from 'solid-icons/bs';
 
 import { DEFAULT_WIDGET_ICON } from '../../common/constants';
@@ -36,9 +36,69 @@ const getWidgetName = (item: JsonPlaylistItem) => item.widget.name;
 const getWidgetSubtitle = (item: JsonPlaylistItem): string | null => {
   const options = item.config.options;
   const schema = item.widget.options_schema;
+  const widgetSlug = item.widget.slug;
 
   if (!options || Object.keys(options).length === 0) {
     return null;
+  }
+
+  // Helper to check if a value looks like a color (hex color)
+  const isColorValue = (value: string): boolean => {
+    return /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$/.test(value);
+  };
+
+  // Helper to check if a key looks like it's for a color option
+  const isColorKey = (key: string): boolean => {
+    const colorKeywords = [
+      'color',
+      'background',
+      'bg',
+      'fill',
+      'stroke',
+      'border',
+    ];
+    const lowerKey = key.toLowerCase();
+    return colorKeywords.some((keyword) => lowerKey.includes(keyword));
+  };
+
+  // Helper to extract a display-friendly name from a URL
+  const getUrlDisplayName = (url: string): string => {
+    try {
+      const urlObj = new URL(url);
+      // Return hostname without www. prefix
+      return urlObj.hostname.replace(/^www\./, '');
+    } catch {
+      // If URL parsing fails, return truncated original
+      return url.length > 40 ? url.substring(0, 37) + '...' : url;
+    }
+  };
+
+  // Special handling for layout-widget: show aspect ratio and zone count
+  if (widgetSlug === 'layout-widget') {
+    const layoutRef = options.layoutRef as any;
+    if (layoutRef) {
+      const parts: string[] = [];
+      if (layoutRef.aspectRatio) {
+        parts.push(layoutRef.aspectRatio);
+      }
+      if (layoutRef?.zones?.zones) {
+        const zoneCount = layoutRef.zones.zones.length;
+        parts.push(`${zoneCount} zone${zoneCount !== 1 ? 's' : ''}`);
+      }
+      return parts.length > 0 ? parts.join(' • ') : null;
+    }
+    return null;
+  }
+
+  // Special handling for stock-ticker: show symbols
+  if (widgetSlug === 'stock-ticker' && options.symbols) {
+    const symbols = options.symbols as string;
+    return symbols.length > 40 ? symbols.substring(0, 37) + '...' : symbols;
+  }
+
+  // Special handling for RSS/feed widgets: show feed URL domain
+  if (options.feed_url && typeof options.feed_url === 'string') {
+    return getUrlDisplayName(options.feed_url);
   }
 
   // Priority 1: Check for media references (image, video, etc.) and use their names
@@ -65,22 +125,35 @@ const getWidgetSubtitle = (item: JsonPlaylistItem): string | null => {
     'description',
     'message',
     'content',
+    'url',
+    'symbols',
   ];
 
   for (const field of priorityFields) {
     if (options[field] && typeof options[field] === 'string') {
       const value = options[field] as string;
+      // Skip color values
+      if (isColorValue(value)) continue;
+      // For URL fields, show just the domain
+      if (field === 'url') {
+        return getUrlDisplayName(value);
+      }
       // Truncate if too long
-      return value.length > 50 ? value.substring(0, 47) + '...' : value;
+      return value.length > 40 ? value.substring(0, 37) + '...' : value;
     }
   }
 
-  // Priority 3: Use the first string value we find
+  // Priority 3: Use the first non-color string value we find
   for (const [key, value] of Object.entries(options)) {
+    // Skip color-related keys
+    if (isColorKey(key)) continue;
+
     if (typeof value === 'string' && value.trim().length > 0) {
       const stringValue = value.trim();
-      return stringValue.length > 50
-        ? stringValue.substring(0, 47) + '...'
+      // Skip color values
+      if (isColorValue(stringValue)) continue;
+      return stringValue.length > 40
+        ? stringValue.substring(0, 37) + '...'
         : stringValue;
     }
   }
@@ -88,20 +161,35 @@ const getWidgetSubtitle = (item: JsonPlaylistItem): string | null => {
   return null;
 };
 
+// Helper to construct full icon URL with baseUrl
+const getIconUrl = (
+  icon: string | undefined,
+  baseUrl: string
+): string | undefined => {
+  if (!icon) return undefined;
+  // If icon starts with /, prepend baseUrl (relative to server)
+  if (icon.startsWith('/')) {
+    return `${baseUrl}${icon}`;
+  }
+  return icon;
+};
+
 const Thumbnail: Component<{
   item: JsonPlaylistItem;
+  baseUrl: string;
 }> = (props) => {
   const thumbnailUri = getThumbnailUri(props.item);
   const widgetName = getWidgetName(props.item);
   const widgetSubtitle = getWidgetSubtitle(props.item);
   const widgetIcon = props.item.widget.icon;
+  const iconUrl = getIconUrl(widgetIcon, props.baseUrl);
+  const integrationError = () => props.item.integration_error;
 
   const isImageIcon =
-    widgetIcon &&
-    (widgetIcon.startsWith('data:image/') ||
-      widgetIcon.startsWith('http://') ||
-      widgetIcon.startsWith('https://') ||
-      widgetIcon.startsWith('/'));
+    iconUrl &&
+    (iconUrl.startsWith('data:image/') ||
+      iconUrl.startsWith('http://') ||
+      iconUrl.startsWith('https://'));
 
   return (
     <div class={styles.thumbnailContainer}>
@@ -119,7 +207,7 @@ const Thumbnail: Component<{
             >
               <img
                 draggable={false}
-                src={widgetIcon}
+                src={iconUrl}
                 alt={widgetName}
                 class={styles.iconImage}
                 onError={(e) => {
@@ -142,21 +230,71 @@ const Thumbnail: Component<{
       </Show>
       <div class={styles.widgetInfo}>
         <div class={styles.widgetTitle}>{widgetName}</div>
-        <Show when={widgetSubtitle}>
+        <Show when={widgetSubtitle && !integrationError()}>
           <div class={styles.widgetSubtitle}>{widgetSubtitle}</div>
+        </Show>
+        <Show when={integrationError()}>
+          <div class={styles.integrationError} title={integrationError()}>
+            <IconWrapper icon={AiOutlineWarning} />
+            <span>{integrationError()}</span>
+          </div>
         </Show>
       </div>
     </div>
   );
 };
 
+/**
+ * Recursively check if a template contains a component with dynamic duration
+ * (video, scroller, layout, or paginated-list). These components determine their duration at runtime
+ * based on content (video length, scroll distance/speed, contained playlists, or number of items).
+ */
+const containsDynamicDurationComponent = (template: any): boolean => {
+  if (!template) return false;
+
+  const type = template.type;
+  // Layout, video, scroller, and paginated-list all have dynamic durations determined at runtime
+  if (
+    type === 'video' ||
+    type === 'scroller' ||
+    type === 'layout' ||
+    type === 'paginated-list'
+  ) {
+    return true;
+  }
+
+  // Check nested components array (for group, layout, etc.)
+  if (template.components && Array.isArray(template.components)) {
+    return template.components.some(containsDynamicDurationComponent);
+  }
+
+  // Check single nested component (for scroller's item template)
+  if (template.component) {
+    return containsDynamicDurationComponent(template.component);
+  }
+
+  return false;
+};
+
+/**
+ * Check if a widget has dynamic duration (determined by content, not user input).
+ * Video and scroller widgets calculate their duration based on content length/scroll speed.
+ * This checks recursively since the dynamic component may be nested (e.g., scroller inside a group).
+ */
+const hasDynamicDuration = (item: JsonPlaylistItem): boolean => {
+  return containsDynamicDurationComponent(item.widget.template);
+};
+
 export const PlaylistItem: Component<{
   item: JsonPlaylistItem;
   index: number;
+  baseUrl: string;
+  dynamicDuration?: number;
   onEdit: () => void;
   onRemove: (item: JsonPlaylistItem) => void;
   onChangeDuration: (item: JsonPlaylistItem, duration: number) => void;
   onDragStart: () => void;
+  onClick?: () => void;
   animate: boolean;
 }> = (props) => {
   let itemRef: HTMLDivElement | undefined = undefined;
@@ -222,6 +360,32 @@ export const PlaylistItem: Component<{
     props.onChangeDuration(props.item, value);
   }, 500);
 
+  const isDynamicDuration = () => hasDynamicDuration(props.item);
+
+  const resolvedDuration = () => {
+    if (typeof props.item.duration === 'number' && props.item.duration > 0) {
+      return props.item.duration;
+    }
+
+    if (
+      typeof props.dynamicDuration === 'number' &&
+      props.dynamicDuration > 0
+    ) {
+      return props.dynamicDuration;
+    }
+
+    return 0;
+  };
+
+  const readableDuration = () => {
+    const duration = resolvedDuration();
+    // For dynamic duration widgets, show "Auto" while waiting for actual duration
+    if (duration === 0 && isDynamicDuration()) {
+      return 'Auto';
+    }
+    return formatDuration(duration);
+  };
+
   const wrapperClasses = () => {
     return `${styles.playlistItemWrapper} ${isDraggedOver() ? styles.draggedOver : ''}`;
   };
@@ -239,18 +403,41 @@ export const PlaylistItem: Component<{
       <div ref={draggingRef} class={styles.playlistItem}>
         <div ref={handleRef} class={styles.playlistItemDragHandle}>
           <IconWrapper icon={RiEditorDraggable} />
-          <Thumbnail item={props.item} />
+          <div
+            onClick={(e) => {
+              // Only trigger onClick if not dragging
+              if (!isDragging()) {
+                e.stopPropagation();
+                props.onClick?.();
+              }
+            }}
+            style={{ cursor: props.onClick ? 'pointer' : 'default' }}
+          >
+            <Thumbnail item={props.item} baseUrl={props.baseUrl} />
+          </div>
         </div>
         <div class={styles.playlistItemDuration}>
-          <Slider
-            name="Duration"
-            value={props.item.duration}
-            min={1000}
-            max={Math.max(60000, props.item.duration)}
-            step={1000}
-            onSlideStop={handleDurationChange}
-            formatValue={formatDuration}
-          />
+          <Show
+            when={!isDynamicDuration()}
+            fallback={
+              <div class={styles.autoDuration}>
+                <span class={styles.autoDurationLabel}>Duration</span>
+                <span class={styles.autoDurationValue}>
+                  {readableDuration()}
+                </span>
+              </div>
+            }
+          >
+            <Slider
+              name="Duration"
+              value={props.item.duration || 10000}
+              min={1000}
+              max={Math.max(60000, props.item.duration || 10000)}
+              step={1000}
+              onSlideStop={handleDurationChange}
+              formatValue={formatDuration}
+            />
+          </Show>
         </div>
         <div class={styles.playlistItemActions}>
           <div class={styles.playlistItemEditIcon}>

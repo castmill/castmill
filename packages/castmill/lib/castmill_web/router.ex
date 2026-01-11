@@ -103,6 +103,11 @@ defmodule CastmillWeb.Router do
     plug(:accepts, ["json"])
   end
 
+  # Public route for serving widget assets (icons, fonts, images, etc.)
+  scope "/widget_assets", CastmillWeb do
+    get("/:slug/*path", WidgetAssetsController, :show)
+  end
+
   # This is most likely not used anymore as registrations go through the dashboard.
   scope "/registrations", CastmillWeb do
     pipe_through(:register)
@@ -274,6 +279,13 @@ defmodule CastmillWeb.Router do
 
     # Get permissions matrix for current user in organization
     get("/organizations/:organization_id/permissions", PermissionsController, :show)
+
+    # Get widget usage before deletion
+    get(
+      "/organizations/:organization_id/widgets/:widget_id/usage",
+      OrganizationController,
+      :get_widget_usage
+    )
 
     delete(
       "/organizations/:organization_id/widgets/:widget_id",

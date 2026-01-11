@@ -1,10 +1,12 @@
-import { BsEye } from 'solid-icons/bs';
+import { BsEye, BsTrash } from 'solid-icons/bs';
 import { AiOutlineUpload } from 'solid-icons/ai';
 import {
   Component,
   createSignal,
   createEffect,
+  createMemo,
   Show,
+  For,
   onMount,
   batch,
 } from 'solid-js';
@@ -19,11 +21,13 @@ import {
   TableViewRef,
   ModalRef,
   Tabs,
+  ConfirmDialog,
 } from '@castmill/ui-common';
 import { JsonWidget } from '@castmill/player';
-import { WidgetsService } from '../services/widgets.service';
+import { WidgetsService, WidgetUsage } from '../services/widgets.service';
 import { UploadComponent } from './upload';
 import { JsonHighlight } from './json-highlight';
+import { AssetsList } from './assets-list';
 import { IntegrationsList } from '../../common/components/integrations-list';
 
 import { DEFAULT_WIDGET_ICON } from '../../common/constants';
@@ -55,11 +59,84 @@ const WidgetsPage: Component<{
 
   const [showModal, setShowModal] = createSignal<WidgetWithId | undefined>();
   const [initialTabIndex, setInitialTabIndex] = createSignal(0);
+  const [widgetHasIntegrations, setWidgetHasIntegrations] = createSignal(false);
+
+  // Delete confirmation state
+  const [showDeleteConfirm, setShowDeleteConfirm] = createSignal(false);
+  const [widgetToDelete, setWidgetToDelete] = createSignal<
+    WidgetWithId | undefined
+  >();
+  const [widgetUsage, setWidgetUsage] = createSignal<WidgetUsage[]>([]);
+  const [isLoadingUsage, setIsLoadingUsage] = createSignal(false);
+  const [isDeleting, setIsDeleting] = createSignal(false);
+
+  // Flag to prevent URL effect from interfering while opening modal programmatically
+  let isOpeningModal = false;
 
   const [showUploadModal, setShowUploadModal] = createSignal(false);
   let uploadModalRef: ModalRef | undefined = undefined;
 
   const [tableRef, setRef] = createSignal<TableViewRef<number, WidgetWithId>>();
+
+  // Memoized tabs array that reacts to widgetHasIntegrations changes
+  const modalTabs = createMemo(() => {
+    const widget = showModal();
+    const hasIntegrations = widgetHasIntegrations();
+
+    if (!widget) return [];
+
+    const tabs = [
+      {
+        title: t('widgets.template'),
+        content: () => <JsonHighlight json={widget.template} />,
+      },
+    ];
+
+    if (widget.options_schema) {
+      tabs.push({
+        title: t('widgets.optionsSchema'),
+        content: () => <JsonHighlight json={widget.options_schema} />,
+      });
+    }
+
+    if (widget.data_schema) {
+      tabs.push({
+        title: t('widgets.dataSchema'),
+        content: () => <JsonHighlight json={widget.data_schema} />,
+      });
+    }
+
+    // Add assets tab if widget has assets
+    if (widget.assets && Object.keys(widget.assets).length > 0) {
+      tabs.push({
+        title: t('widgets.assets.title'),
+        content: () => (
+          <AssetsList
+            assets={widget.assets}
+            widgetSlug={widget.slug}
+            baseUrl={props.store.env.baseUrl}
+            t={t}
+          />
+        ),
+      });
+    }
+
+    if (hasIntegrations) {
+      tabs.push({
+        title: t('widgets.integrations.title'),
+        content: () => (
+          <IntegrationsList
+            store={props.store}
+            widgetId={widget.id}
+            widgetSlug={widget.slug}
+            baseUrl={props.store.env.baseUrl}
+          />
+        ),
+      });
+    }
+
+    return tabs;
+  });
 
   const refreshData = () => {
     tableRef()?.reloadData();
@@ -75,6 +152,14 @@ const WidgetsPage: Component<{
       );
 
       if (widget) {
+        // Check if widget has integrations
+        const integrations = await WidgetsService.getWidgetIntegrations(
+          props.store.env.baseUrl,
+          props.store.organizations.selectedId,
+          (widget as WidgetWithId).slug
+        );
+        const hasIntegrations = integrations.length > 0;
+
         // Calculate tab index based on available tabs
         let tabIndex = 0;
         if (tab) {
@@ -82,7 +167,9 @@ const WidgetsPage: Component<{
           const tabNames = ['template'];
           if (widget.options_schema) tabNames.push('options');
           if (widget.data_schema) tabNames.push('data');
-          tabNames.push('integrations');
+          if (widget.assets && Object.keys(widget.assets).length > 0)
+            tabNames.push('assets');
+          if (hasIntegrations) tabNames.push('integrations');
 
           const foundIndex = tabNames.indexOf(tab);
           if (foundIndex >= 0) {
@@ -91,6 +178,7 @@ const WidgetsPage: Component<{
         }
 
         batch(() => {
+          setWidgetHasIntegrations(hasIntegrations);
           setInitialTabIndex(tabIndex);
           setShowModal(widget as WidgetWithId);
         });
@@ -114,18 +202,42 @@ const WidgetsPage: Component<{
   };
 
   // Open widget modal and update URL
-  const openWidget = (widget: WidgetWithId, tabIndex: number = 0) => {
+  const openWidget = async (widget: WidgetWithId, tabIndex: number = 0) => {
+    // Set flag to prevent URL effect from interfering
+    isOpeningModal = true;
+
+    // Check if widget has integrations
+    const integrations = await WidgetsService.getWidgetIntegrations(
+      props.store.env.baseUrl,
+      props.store.organizations.selectedId,
+      widget.slug
+    );
+    const hasIntegrations = integrations.length > 0;
+
+    // Update URL FIRST to prevent the createEffect from closing the modal
+    // The effect checks lastProcessedUrl to avoid duplicate processing
+    const orgId = props.store.organizations.selectedId;
+    const newUrl = `/org/${orgId}/content/widgets/${widget.id}`;
+    lastProcessedUrl = newUrl;
+    window.history.pushState({}, '', newUrl);
+
     batch(() => {
+      setWidgetHasIntegrations(hasIntegrations);
       setInitialTabIndex(tabIndex);
       setShowModal(widget);
     });
-    updateUrlForWidget(widget.id);
+
+    // Reset flag after a microtask to ensure effect has run
+    queueMicrotask(() => {
+      isOpeningModal = false;
+    });
   };
 
   // Close widget modal and update URL
   const closeWidget = () => {
     setShowModal(undefined);
     setInitialTabIndex(0);
+    setWidgetHasIntegrations(false);
     updateUrlForWidget(null);
   };
 
@@ -135,6 +247,9 @@ const WidgetsPage: Component<{
   // Check URL for deep links - reactive to location changes for soft navigation
   // URL pattern: /org/:orgId/content/widgets/:widgetId?tab=integrations
   createEffect(() => {
+    // Skip if we're in the middle of programmatically opening a modal
+    if (isOpeningModal) return;
+
     // Get location from router (reactive) or fall back to window.location
     const location = props.store.router?.location?.();
     const path = location?.pathname || window.location.pathname;
@@ -231,6 +346,53 @@ const WidgetsPage: Component<{
     setShowUploadModal(true);
   };
 
+  // Delete handlers
+  const openDeleteConfirm = async (widget: WidgetWithId) => {
+    setWidgetToDelete(widget);
+    setIsLoadingUsage(true);
+    setShowDeleteConfirm(true);
+
+    try {
+      const usage = await WidgetsService.getWidgetUsage(
+        props.store.env.baseUrl,
+        props.store.organizations.selectedId,
+        widget.id
+      );
+      setWidgetUsage(usage.data);
+    } catch (error) {
+      console.error('Failed to fetch widget usage:', error);
+      setWidgetUsage([]);
+    } finally {
+      setIsLoadingUsage(false);
+    }
+  };
+
+  const closeDeleteConfirm = () => {
+    setShowDeleteConfirm(false);
+    setWidgetToDelete(undefined);
+    setWidgetUsage([]);
+    setIsDeleting(false);
+  };
+
+  const handleDeleteWidget = async () => {
+    const widget = widgetToDelete();
+    if (!widget) return;
+
+    setIsDeleting(true);
+    try {
+      await WidgetsService.removeWidget(
+        props.store.env.baseUrl,
+        props.store.organizations.selectedId,
+        String(widget.id)
+      );
+      refreshData();
+      closeDeleteConfirm();
+    } catch (error) {
+      console.error('Failed to delete widget:', error);
+      setIsDeleting(false);
+    }
+  };
+
   const fetchData = async ({
     page,
     sortOptions,
@@ -274,12 +436,17 @@ const WidgetsPage: Component<{
             widget.icon.startsWith('https://') ||
             widget.icon.startsWith('/'));
 
+        // Resolve icon URL - prepend baseUrl for relative paths starting with /
+        const iconUrl = widget.icon?.startsWith('/')
+          ? `${props.store.env.baseUrl}${widget.icon}`
+          : widget.icon;
+
         return (
           <div style="display: flex; align-items: flex-start; gap: 8px;">
             <div style="font-size: 1.5em; min-width: 32px; line-height: 1; display: flex; align-items: center; justify-content: center;">
               {isImageIcon ? (
                 <img
-                  src={widget.icon}
+                  src={iconUrl}
                   alt={widget.name}
                   style="width: 32px; height: 32px; object-fit: contain; border-radius: 4px;"
                   onError={(e) => {
@@ -346,10 +513,56 @@ const WidgetsPage: Component<{
       icon: BsEye,
       handler: (widget: WidgetWithId) => openWidget(widget),
     },
+    // Only include delete action if user has delete permission
+    ...(canPerformAction('widgets', 'delete')
+      ? [
+          {
+            label: t('widgets.delete'),
+            icon: BsTrash,
+            handler: (widget: WidgetWithId) => openDeleteConfirm(widget),
+          },
+        ]
+      : []),
   ];
 
   return (
     <div class="widgets-page">
+      {/* Delete confirmation dialog */}
+      <ConfirmDialog
+        show={showDeleteConfirm()}
+        title={t('widgets.deleteConfirmTitle')}
+        message={
+          widgetUsage().length > 0
+            ? t('widgets.deleteConfirmUsageWarning', {
+                widget: widgetToDelete()?.name,
+                count: widgetUsage().length,
+              })
+            : t('widgets.deleteConfirmMessage', {
+                widget: widgetToDelete()?.name,
+              })
+        }
+        onConfirm={handleDeleteWidget}
+        onClose={closeDeleteConfirm}
+      >
+        <Show when={isLoadingUsage()}>
+          <div class="usage-loading">{t('common.loading')}</div>
+        </Show>
+        <Show when={!isLoadingUsage() && widgetUsage().length > 0}>
+          <div class="usage-warning">
+            <p class="usage-warning-text">{t('widgets.usedInPlaylists')}</p>
+            <ul class="usage-list">
+              <For each={widgetUsage()}>
+                {(usage) => <li class="usage-item">{usage.playlist_name}</li>}
+              </For>
+            </ul>
+            <p class="usage-cascade-note">{t('widgets.deleteCascadeNote')}</p>
+          </div>
+        </Show>
+        <Show when={isDeleting()}>
+          <div class="deleting-indicator">{t('common.deleting')}</div>
+        </Show>
+      </ConfirmDialog>
+
       <Show when={showUploadModal()}>
         <Modal
           ref={(ref: ModalRef) => (uploadModalRef = ref)}
@@ -401,46 +614,7 @@ const WidgetsPage: Component<{
             </div>
 
             {/* Tabs using ui-common Tabs component */}
-            <Tabs
-              tabs={[
-                {
-                  title: t('widgets.template'),
-                  content: () => <JsonHighlight json={showModal()!.template} />,
-                },
-                ...(showModal()!.options_schema
-                  ? [
-                      {
-                        title: t('widgets.optionsSchema'),
-                        content: () => (
-                          <JsonHighlight json={showModal()!.options_schema} />
-                        ),
-                      },
-                    ]
-                  : []),
-                ...(showModal()!.data_schema
-                  ? [
-                      {
-                        title: t('widgets.dataSchema'),
-                        content: () => (
-                          <JsonHighlight json={showModal()!.data_schema} />
-                        ),
-                      },
-                    ]
-                  : []),
-                {
-                  title: t('widgets.integrations.title'),
-                  content: () => (
-                    <IntegrationsList
-                      store={props.store}
-                      widgetId={showModal()!.id}
-                      widgetSlug={showModal()!.slug || ''}
-                      baseUrl={props.store.env.baseUrl}
-                    />
-                  ),
-                },
-              ]}
-              initialIndex={initialTabIndex()}
-            />
+            <Tabs tabs={modalTabs()} initialIndex={initialTabIndex()} />
           </div>
         </Modal>
       </Show>

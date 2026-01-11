@@ -117,13 +117,69 @@ schema "widget_integration_data" do
   # When data should be refreshed (for PULL mode)
   field :refresh_at, :utc_datetime
   
+  # Automatically scheduled when data is fetched. Every pull writes a future
+  # refresh_at based on the integration's pull_interval_seconds. When players
+  # request data and refresh_at is in the past, the backend immediately queues a
+  # background poll (in addition to the regular scheduler) so stale caches are
+  # refreshed on-demand.
+
   # HTTP status or error information
   field :status, :string
   field :error_message, :string
   
   timestamps()
 end
+
+### Stale Cache Detection
+
+- `refresh_at` is computed every time new data is persisted (either by the
+  IntegrationPoller or by an on-demand fetch). It represents the next time a
+  background poll should occur.
+- The IntegrationPoller periodically selects rows where `refresh_at <= now` and
+  schedules pulls so that long-running players continue to receive updates even
+  with no viewer activity.
+- When a player (or preview in the dashboard) requests widget data and the
+  cached record is already past `refresh_at`, the controller immediately enqueues
+  a zero-delay poll for the matching discriminator. This keeps signage devices
+  up to date even if the background worker is delayed, while still returning the
+  last known data to avoid empty screens.
 ```
+
+### Serve-Time Filtering (max_items)
+
+Widget integrations support **serve-time filtering** to allow multiple widget instances
+to share the same cached data while each displaying a different number of items:
+
+```elixir
+# In resources.ex and widget_integration_controller.ex
+@default_max_items 10
+
+defp apply_max_items_filter(data, widget_options) when is_map(data) do
+  max_items = Map.get(widget_options, "max_items") || 
+              Map.get(widget_options, :max_items) ||
+              @default_max_items
+  items = Map.get(data, "items")
+  
+  cond do
+    is_nil(items) -> data
+    is_list(items) and is_integer(max_items) and max_items > 0 ->
+      Map.put(data, "items", Enum.take(items, max_items))
+    true -> data
+  end
+end
+```
+
+**Key behaviors:**
+- Fetchers (e.g., RSS) cache a large number of items (e.g., 100) to enable sharing
+- Each widget instance specifies its own `max_items` in widget options
+- Filtering happens at serve-time, not fetch-time
+- Default is 10 items when not specified
+- Items are assumed to be pre-sorted (newest first) from the fetcher
+
+**Benefits:**
+- Single cache entry shared by multiple widget instances with same feed URL
+- Reduced API calls to third-party services
+- Flexible per-widget display configuration
 
 ## Integration Flows
 
@@ -142,11 +198,13 @@ end
    - Player polls Castmill API: `GET /api/widgets/:widget_config_id/data`
    - Returns cached data with version number
    
-4. **Periodic Refresh**
-   - Background job checks `refresh_at` timestamps
-   - Pulls fresh data from third-party API
-   - Increments version number
-   - Players detect version change and update
+4. **Periodic Refresh & On-Demand Resync**
+  - Background job checks `refresh_at` timestamps and queues polls when due
+  - When a player requests data and `refresh_at` is already in the past, the
+    request triggers an immediate polling job while still returning the last
+    cached payload
+  - Fresh data replaces the cache and increments the version number
+  - Players detect version change and update automatically
 
 5. **Player Polling**
    - Player includes current version in request

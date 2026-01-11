@@ -47,7 +47,11 @@ export interface KeyboardShortcut {
 
 // URL search params types (matching @solidjs/router useSearchParams)
 export type SearchParams = Record<string, string | undefined>;
-export type SetSearchParams = (params: SearchParams, options?: any) => void;
+export type SetSearchParamsValue = string | number | boolean | undefined;
+export type SetSearchParams = (
+  params: Record<string, SetSearchParamsValue>,
+  options?: any
+) => void;
 
 export interface AddonStore {
   organizations: { selectedId: string };

@@ -1,4 +1,11 @@
-import { Component, Switch, Match, onMount } from 'solid-js';
+import {
+  Component,
+  Switch,
+  Match,
+  onMount,
+  createEffect,
+  createSignal,
+} from 'solid-js';
 import styles from './styled-input.module.scss';
 
 export const StyledInput: Component<{
@@ -12,21 +19,34 @@ export const StyledInput: Component<{
   onFocus?: () => void;
   onBlur?: () => void;
 }> = (props) => {
-  let inputRef: HTMLInputElement | undefined;
+  const [inputEl, setInputEl] = createSignal<HTMLInputElement | null>(null);
 
   onMount(() => {
-    if (props.autofocus && inputRef) {
+    const el = inputEl();
+    if (props.autofocus && el) {
       // Use setTimeout to ensure the modal/dialog animation is complete
       setTimeout(() => {
-        inputRef?.focus();
+        el?.focus();
       }, 100);
     }
   });
+
+  // Keep input value in sync with props.value (for controlled inputs)
+  createEffect(() => {
+    const el = inputEl();
+    if (el && props.type !== 'boolean') {
+      const newValue = String(props.value);
+      if (el.value !== newValue) {
+        el.value = newValue;
+      }
+    }
+  });
+
   return (
     <Switch
       fallback={
         <input
-          ref={inputRef}
+          ref={setInputEl}
           id={props.id}
           type="text"
           class={styles['input-text']}
@@ -42,7 +62,7 @@ export const StyledInput: Component<{
     >
       <Match when={props.type === 'boolean'}>
         <input
-          ref={inputRef}
+          ref={setInputEl}
           id={props.id}
           type="checkbox"
           class={styles['input-checkbox']}
@@ -57,7 +77,7 @@ export const StyledInput: Component<{
       </Match>
       <Match when={props.type === 'number'}>
         <input
-          ref={inputRef}
+          ref={setInputEl}
           id={props.id}
           type="number"
           class={styles['input-number']}
@@ -72,7 +92,7 @@ export const StyledInput: Component<{
       </Match>
       <Match when={props.type === 'email'}>
         <input
-          ref={inputRef}
+          ref={setInputEl}
           id={props.id}
           type="email"
           class={styles['input-email']}
@@ -87,7 +107,7 @@ export const StyledInput: Component<{
       </Match>
       <Match when={props.type === 'color'}>
         <input
-          ref={inputRef}
+          ref={setInputEl}
           id={props.id}
           type="color"
           class={styles['input-color']}

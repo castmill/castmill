@@ -420,4 +420,33 @@ export const PlaylistsService = {
 
     return result.data;
   },
+
+  /**
+   * Fetch integration data for a widget config.
+   * This triggers an on-demand fetch if no cached data exists.
+   *
+   * @param baseUrl - The base URL of the server
+   * @param widgetConfigId - The widget config ID
+   * @returns Promise with the integration data or null if not available
+   */
+  async fetchWidgetConfigData(
+    baseUrl: string,
+    widgetConfigId: string
+  ): Promise<Record<string, any> | null> {
+    try {
+      const url = `${baseUrl}/dashboard/widget-configs/${widgetConfigId}/data`;
+      const response = await fetch(url, { credentials: 'include' });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.data) {
+          return result.data;
+        }
+      }
+      return null;
+    } catch (error) {
+      console.warn('Failed to fetch widget config data:', error);
+      return null;
+    }
+  },
 };

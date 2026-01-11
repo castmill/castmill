@@ -18,6 +18,13 @@ export interface WidgetsUpdate {
   description: string;
 }
 
+export interface WidgetUsage {
+  playlist_id: number;
+  playlist_name: string;
+  playlist_item_id: string;
+  widget_config_id: string;
+}
+
 async function handleResponse<T = any>(
   response: Response,
   options: { parse: true }
@@ -157,6 +164,35 @@ export const WidgetsService = {
   },
 
   /**
+   * Get widget usage information - playlists where the widget is being used.
+   *
+   * @param baseUrl - The base URL of the server
+   * @param organizationId - The organization ID
+   * @param widgetId - The widget ID to check usage for
+   * @returns Promise resolving to usage data including count and playlist details
+   */
+  async getWidgetUsage(
+    baseUrl: string,
+    organizationId: string,
+    widgetId: number
+  ): Promise<{ data: WidgetUsage[]; count: number }> {
+    const response = await fetch(
+      `${baseUrl}/dashboard/organizations/${organizationId}/widgets/${widgetId}/usage`,
+      {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    return handleResponse<{ data: WidgetUsage[]; count: number }>(response, {
+      parse: true,
+    });
+  },
+
+  /**
    * Update a widget.
    *
    * @param baseUrl - The base URL of the server
@@ -218,5 +254,42 @@ export const WidgetsService = {
       parse: true,
     });
     return result.data;
+  },
+
+  /**
+   * Get integrations for a widget.
+   *
+   * @param baseUrl - The base URL of the server
+   * @param organizationId - The organization ID
+   * @param widgetSlug - The widget slug
+   * @returns Promise resolving to the widget integrations or empty array
+   */
+  async getWidgetIntegrations(
+    baseUrl: string,
+    organizationId: string,
+    widgetSlug: string
+  ): Promise<any[]> {
+    try {
+      const response = await fetch(
+        `${baseUrl}/dashboard/organizations/${organizationId}/widgets/${widgetSlug}/integrations`,
+        {
+          method: 'GET',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      if (!response.ok) {
+        return [];
+      }
+
+      const result = await response.json();
+      return result.data || [];
+    } catch (error) {
+      console.error('Failed to fetch widget integrations:', error);
+      return [];
+    }
   },
 };

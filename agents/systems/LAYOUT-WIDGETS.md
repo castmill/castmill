@@ -6,40 +6,28 @@ Layout widgets allow users to create complex multi-zone displays by embedding pl
 
 ## Layout Widget Architecture
 
-### Layout Portrait 3 (`layout-portrait-3`)
+### Layout Widget (`layout-widget`)
 
-A system widget for portrait displays with 3 vertical zones:
+The system widget for creating multi-zone displays using reusable layouts:
 
-- **Aspect Ratio**: 9:16 (portrait orientation)
-- **Zones**: 3 containers, each at 33.33% height
-- **Playlist Slots**: `playlist_1`, `playlist_2`, `playlist_3` (all required)
-- **Background**: Configurable background color
+- **Aspect Ratio**: Inherited from the selected layout
+- **Zones**: Dynamic, defined by the selected layout
+- **Configuration**: Uses `layout-ref` option type to select a layout and assign playlists to zones
 
 #### Template Structure
 
 ```json
 {
   "type": "layout",
-  "name": "layout",
+  "name": "layout-ref-widget",
   "style": {
-    "background": { "key": "options.background" },
-    "color": { "key": "options.color" }
+    "width": "100%",
+    "height": "100%",
+    "position": "relative",
+    "overflow": "hidden"
   },
   "opts": {
-    "containers": [
-      {
-        "playlist": { "key": "options.playlist_1" },
-        "rect": { "width": "100%", "height": "33.33%", "top": "0%", "left": "0%" }
-      },
-      {
-        "playlist": { "key": "options.playlist_2" },
-        "rect": { "width": "100%", "height": "33.33%", "top": "33.33%", "left": "0%" }
-      },
-      {
-        "playlist": { "key": "options.playlist_3" },
-        "rect": { "width": "100%", "height": "33.34%", "top": "66.66%", "left": "0%" }
-      }
-    ]
+    "layoutRef": { "key": "options.layoutRef" }
   }
 }
 ```
@@ -48,27 +36,37 @@ A system widget for portrait displays with 3 vertical zones:
 
 ```json
 {
-  "background": "color",
-  "playlist_1": {
-    "type": "ref",
+  "layoutRef": {
+    "type": "layout-ref",
     "required": true,
-    "collection": "playlists",
-    "description": "Top playlist"
-  },
-  "playlist_2": {
-    "type": "ref",
-    "required": true,
-    "collection": "playlists",
-    "description": "Middle playlist"
-  },
-  "playlist_3": {
-    "type": "ref",
-    "required": true,
-    "collection": "playlists",
-    "description": "Bottom playlist"
+    "description": "Select a layout and assign playlists to each zone"
   }
 }
 ```
+
+#### Layout Reference Value Structure
+
+The `layoutRef` option stores:
+
+```json
+{
+  "layoutId": 123,
+  "aspectRatio": "9:16",
+  "zones": [...],
+  "zonePlaylistMap": {
+    "zone-1": 456,
+    "zone-2": 789
+  }
+}
+```
+
+### System Layouts
+
+System layouts are available to all organizations and cannot be deleted:
+
+- **Portrait 3 Zones**: Three horizontal zones stacked vertically (9:16 aspect ratio)
+  - Each zone takes 1/3 of the screen height
+  - Suitable for portrait displays showing multiple content streams
 
 ## Circular Reference Prevention
 
