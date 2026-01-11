@@ -1,8 +1,6 @@
 defmodule Castmill.Repo.Migrations.AddSystemLayoutsAndRemoveLayoutPortrait3 do
   use Ecto.Migration
 
-  import Ecto.Query
-
   alias Castmill.Repo
 
   def up do

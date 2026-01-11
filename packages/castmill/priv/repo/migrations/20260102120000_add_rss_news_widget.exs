@@ -2,11 +2,11 @@ defmodule Castmill.Repo.Migrations.AddRssNewsWidget do
   use Ecto.Migration
   import Ecto.Query, only: [from: 2]
 
-  @widget_id "rss-news"
+  @widget_slug "rss-news"
   @widget_name "RSS News"
 
   def up do
-    widget_id = @widget_id
+    widget_slug = @widget_slug
     widget_name = @widget_name
 
     template = build_template()
@@ -19,50 +19,25 @@ defmodule Castmill.Repo.Migrations.AddRssNewsWidget do
     execute(fn ->
       repo().insert_all("widgets", [
         %{
-          id: widget_id,
+          slug: widget_slug,
           name: widget_name,
           template: template,
           options_schema: options_schema,
           data_schema: data_schema,
+          is_system: true,
           inserted_at: now,
           updated_at: now
         }
       ])
     end)
-
-    # Insert the widget integration linking RSS feeds to this widget
-    execute(fn ->
-      # First get the integration_id for rss_feed
-      integration_query = from(i in "integrations", where: i.type == "rss_feed", select: i.id)
-
-      case repo().one(integration_query) do
-        nil ->
-          IO.puts("Warning: RSS Feed integration not found, skipping widget integration creation")
-
-        integration_id ->
-          repo().insert_all("widget_integrations", [
-            %{
-              widget_id: widget_id,
-              integration_id: integration_id,
-              fetcher_module: "Elixir.Castmill.Integrations.RSSFetcher",
-              inserted_at: now,
-              updated_at: now
-            }
-          ])
-      end
-    end)
   end
 
   def down do
-    widget_id = @widget_id
+    widget_slug = @widget_slug
 
     execute(fn ->
-      # First delete any widget_integrations referencing this widget
-      delete_query = from(wi in "widget_integrations", where: wi.widget_id == ^widget_id)
-      repo().delete_all(delete_query)
-
-      # Then delete the widget itself
-      widget_delete_query = from(w in "widgets", where: w.id == ^widget_id)
+      # Delete the widget by slug
+      widget_delete_query = from(w in "widgets", where: w.slug == ^widget_slug)
       repo().delete_all(widget_delete_query)
     end)
   end
@@ -188,7 +163,6 @@ defmodule Castmill.Repo.Migrations.AddRssNewsWidget do
         }
       ]
     }
-    |> Jason.encode!()
   end
 
   defp build_news_card do
@@ -500,7 +474,6 @@ defmodule Castmill.Repo.Migrations.AddRssNewsWidget do
         }
       }
     }
-    |> Jason.encode!()
   end
 
   defp build_data_schema do
@@ -523,6 +496,5 @@ defmodule Castmill.Repo.Migrations.AddRssNewsWidget do
         }
       }
     }
-    |> Jason.encode!()
   end
 end
