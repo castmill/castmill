@@ -36,7 +36,7 @@ defmodule Castmill.Widgets.AssetStorage do
 
   Returns {:ok, stored_assets} with updated paths, or {:error, reason}
   """
-  def store_assets(widget_slug, %{dir: temp_dir, files: files}) when map_size(files) > 0 do
+  def store_assets(widget_slug, %{dir: _temp_dir, files: files}) when map_size(files) > 0 do
     target_dir = widget_assets_dir(widget_slug)
 
     # Clean up existing assets for this widget
@@ -81,7 +81,7 @@ defmodule Castmill.Widgets.AssetStorage do
   @doc """
   Resolves the icon field to a full URL if it's a relative asset path.
   """
-  def resolve_icon(icon, widget_slug, stored_assets) when is_binary(icon) do
+  def resolve_icon(icon, widget_slug, _stored_assets) when is_binary(icon) do
     cond do
       # Already a data URL or absolute URL
       String.starts_with?(icon, "data:") or String.starts_with?(icon, "http") ->
