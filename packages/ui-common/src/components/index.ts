@@ -1,4 +1,5 @@
 export * from './button/button';
+export * from './compact-number-input/compact-number-input';
 export * from './form-item/form-item';
 export * from './icon-button/icon-button';
 export * from './icon-wrapper';

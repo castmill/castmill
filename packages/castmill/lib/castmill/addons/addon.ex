@@ -9,11 +9,13 @@ defmodule Castmill.Addons.Addon do
       def mount_routes(_router, _base_path), do: :ok
       def register_hooks(), do: :ok
       def component_info(), do: nil
+      def search(_organization_id, _query, _opts), do: {:ok, []}
 
       # Make init overridable in case consuming modules want their own implementation
       defoverridable mount_routes: 2
       defoverridable register_hooks: 0
       defoverridable component_info: 0
+      defoverridable search: 3
 
       # Injected GenServer callbacks
       def start_link(opts) do

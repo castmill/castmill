@@ -34,7 +34,7 @@ import { ChannelView } from './channel-view';
 
 import { baseUrl } from '../../env';
 import { ChannelAddForm } from './channel-add-form';
-import { useTeamFilter } from '../../hooks';
+import { useTeamFilter, useModalFromUrl } from '../../hooks';
 import { useI18n } from '../../i18n';
 import { QuotaIndicator } from '../../components/quota-indicator';
 import { QuotasService, ResourceQuota } from '../../services/quotas.service';
@@ -149,6 +149,20 @@ const ChannelsPage: Component = () => {
       }
     )
   );
+
+  // Sync modal state with URL itemId parameter
+  useModalFromUrl({
+    getItemIdFromUrl: () => searchParams.itemId,
+    isModalOpen: () => showModal(),
+    closeModal: () => setShowModal(false),
+    openModal: (itemId: string) => {
+      const channel = data().find((c) => String(c.id) === String(itemId));
+      if (channel) {
+        setCurrentChannel(channel);
+        setShowModal(true);
+      }
+    },
+  });
 
   const isQuotaReached = () => {
     const q = quota();
@@ -350,7 +364,8 @@ const ChannelsPage: Component = () => {
   };
   // Function to close the modal and remove blur
   const closeModal = () => {
-    setShowModal(false);
+    // Only clear URL - let createEffect handle closing the modal
+    setSearchParams({ itemId: undefined });
   };
 
   const addChannel = () => {
@@ -424,8 +439,8 @@ const ChannelsPage: Component = () => {
           >
             <ChannelView
               organizationId={store.organizations.selectedId!}
-              channel={currentChannel() || { name: '' }}
-              onSubmit={async (channel: JsonChannel) => {
+              channel={currentChannel()!}
+              onSubmit={async (channel: Partial<JsonChannel>) => {
                 try {
                   const browserTimezone =
                     Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -441,10 +456,10 @@ const ChannelsPage: Component = () => {
                       `Channel ${channel.name} created successfully`
                     );
                     return newChannel;
-                  } else {
+                  } else if (channel.id) {
                     const updatedTeam =
                       await channelsService.updateChannel(channel);
-                    updateItem(channel.id, channel);
+                    updateItem(channel.id, channel as JsonChannel);
                     toast.success(
                       `Channel ${channel.name} updated successfully`
                     );
@@ -566,8 +581,7 @@ const ChannelsPage: Component = () => {
             defaultRowAction: {
               icon: BsEye,
               handler: (item: ChannelTableItem) => {
-                setCurrentChannel(item);
-                setShowModal(true);
+                setSearchParams({ itemId: String(item.id) });
               },
               label: t('common.view'),
             },

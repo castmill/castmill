@@ -82,7 +82,7 @@ export const DeviceCache: Component<{
     {
       icon: AiOutlineDelete,
       handler: (item: DeviceTableCacheItem) => {
-        console.log('Delete device', item);
+        // TODO: Implement delete handler
       },
     },
   ];

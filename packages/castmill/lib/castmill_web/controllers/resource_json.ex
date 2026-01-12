@@ -1,6 +1,7 @@
 defmodule CastmillWeb.ResourceJSON do
   alias Castmill.Resources.Media
   alias Castmill.Resources.Playlist
+  alias Castmill.Resources.Layout
   alias Castmill.Resources.Channel
   alias Castmill.Resources.ChannelEntry
   alias Castmill.Devices.Device
@@ -44,6 +45,13 @@ defmodule CastmillWeb.ResourceJSON do
     }
   end
 
+  def index(%{layouts: layouts, count: count}) do
+    %{
+      count: count,
+      data: for(layout <- layouts, do: data(layout))
+    }
+  end
+
   @doc """
   Renders a single media.
   """
@@ -69,6 +77,10 @@ defmodule CastmillWeb.ResourceJSON do
 
   def show(%{team: team}) do
     %{data: data(team)}
+  end
+
+  def show(%{layout_data: layout}) do
+    %{data: data(layout)}
   end
 
   defp data(%Media{files_medias: %Ecto.Association.NotLoaded{}} = media) do
@@ -178,6 +190,16 @@ defmodule CastmillWeb.ResourceJSON do
       id: team.id,
       name: team.name,
       organization_id: team.organization_id
+    }
+  end
+
+  defp data(%Layout{} = layout) do
+    %{
+      id: layout.id,
+      name: layout.name,
+      description: layout.description,
+      aspect_ratio: layout.aspect_ratio,
+      zones: layout.zones
     }
   end
 end

@@ -1,0 +1,83 @@
+.layouts-page {
+  margin: 2em;
+
+  .layouts-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5em;
+
+    .layouts-header-left {
+      display: flex;
+      align-items: center;
+      gap: 1em;
+
+      h1 {
+        display: flex;
+        align-items: center;
+        gap: 0.5em;
+        margin: 0;
+        font-size: 1.5em;
+      }
+    }
+
+    .layouts-header-right {
+      display: flex;
+      align-items: center;
+      gap: 1em;
+    }
+  }
+}
+
+.layouts-actions {
+  display: flex;
+  gap: 0.5em;
+}
+
+.layout-modal {
+  width: 95vw;
+  height: 92vh;
+}
+
+.add-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5em;
+
+  .form-item {
+    width: 100%;
+  }
+
+  .form-actions {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 1em;
+    margin-top: 0.5em;
+  }
+
+  .custom-aspect-ratio {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+
+    .separator {
+      font-size: 1.2em;
+      font-weight: bold;
+      padding-top: 1.5em;
+    }
+  }
+
+  .error {
+    color: #ef4444;
+    font-size: 0.85em;
+    margin-top: 0.25em;
+
+    &.aspect-ratio-error {
+      padding: 0.5em;
+      background: rgba(239, 68, 68, 0.1);
+      border-radius: 0.25em;
+    }
+  }
+}

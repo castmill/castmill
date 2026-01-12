@@ -10,6 +10,7 @@ import {
   useSearchParams,
   useNavigate,
   useParams,
+  useLocation,
 } from '@solidjs/router';
 
 import {
@@ -20,7 +21,6 @@ import {
   ErrorBoundary,
   onMount,
   createEffect,
-  createMemo,
   Show,
 } from 'solid-js';
 import ProtectedRoute from './components/protected-route';
@@ -108,9 +108,11 @@ const App: Component<RouteSectionProps<unknown>> = (props) => {
 
 const wrapLazyComponent = (addon: { path: string; name: string }) => {
   return (props: any) => {
-    const params = useSearchParams();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const routeParams = props.routeParams;
     const i18n = useI18n();
     const navigate = useNavigate();
+    const location = useLocation();
 
     // Update store with i18n functions using setStore (the proper way)
     setStore('i18n', {
@@ -182,7 +184,8 @@ const wrapLazyComponent = (addon: { path: string; name: string }) => {
                 {...props}
                 store={store}
                 selectedOrgId={currentOrgId}
-                params={params}
+                params={[searchParams, setSearchParams]}
+                routeParams={routeParams}
               />
             )}
           </Show>
@@ -254,12 +257,19 @@ render(() => {
                     }
                     // Wrap component to force remount when orgId changes
                     const KeyedComponent = (props: any) => {
-                      const params = useParams();
+                      const routeParams = useParams();
                       return (
-                        <Show when={params.orgId} keyed>
+                        <Show when={routeParams.orgId} keyed>
                           {(orgId) => {
                             const Component = wrapLazyComponent(addon);
-                            return <Component {...props} key={orgId} />;
+                            // Pass routeParams from this context where wildcard is available
+                            return (
+                              <Component
+                                {...props}
+                                key={orgId}
+                                routeParams={routeParams}
+                              />
+                            );
                           }}
                         </Show>
                       );

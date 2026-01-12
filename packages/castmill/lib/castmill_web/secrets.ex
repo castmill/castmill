@@ -40,6 +40,30 @@ defmodule CastmillWeb.Secrets do
     get_env_or_file_value("MAILGUN_API_KEY")
   end
 
+  @doc """
+  Gets an encryption key from environment variable.
+
+  The key can be:
+  - Base64 encoded 32-byte key (recommended)
+  - Raw string (will be hashed to 32 bytes)
+
+  Returns {:ok, key} or :not_set
+  """
+  def get_encryption_key(env_var) do
+    case get_env_or_file_value(env_var, :not_set) do
+      :not_set -> :not_set
+      value -> parse_encryption_key(value)
+    end
+  end
+
+  defp parse_encryption_key(value) do
+    case Base.decode64(value) do
+      {:ok, key} when byte_size(key) == 32 -> {:ok, key}
+      {:ok, _} -> {:ok, :crypto.hash(:sha256, value)}
+      :error -> {:ok, :crypto.hash(:sha256, value)}
+    end
+  end
+
   defp get_env_or_file_value(env_var_name, default \\ nil) do
     case System.get_env(env_var_name) do
       value when value in [nil, "", false] ->

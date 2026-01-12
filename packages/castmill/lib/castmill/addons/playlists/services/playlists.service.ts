@@ -222,7 +222,9 @@ export const PlaylistsService = {
       }
     );
 
-    const { data } = await handleResponse<{ data: { id: number } }>(response, {
+    const { data } = await handleResponse<{
+      data: { id: number; widget_config_id: string };
+    }>(response, {
       parse: true,
     });
     return data;
@@ -381,5 +383,70 @@ export const PlaylistsService = {
     return handleResponse<{ data: JsonWidget[]; count: number }>(response, {
       parse: true,
     });
+  },
+
+  /**
+   * Check if a widget's integration credentials are configured.
+   *
+   * @param baseUrl - The base URL of the server
+   * @param organizationId - The organization ID
+   * @param widgetId - The widget ID to check
+   * @returns Promise with credentials status
+   */
+  async checkWidgetCredentials(
+    baseUrl: string,
+    organizationId: string,
+    widgetId: number
+  ): Promise<{
+    configured: boolean;
+    missing_integrations: string[];
+  }> {
+    const url = `${baseUrl}/dashboard/organizations/${organizationId}/widgets/${widgetId}/credentials-status`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    const result = await handleResponse<{
+      data: {
+        configured: boolean;
+        missing_integrations: string[];
+      };
+    }>(response, { parse: true });
+
+    return result.data;
+  },
+
+  /**
+   * Fetch integration data for a widget config.
+   * This triggers an on-demand fetch if no cached data exists.
+   *
+   * @param baseUrl - The base URL of the server
+   * @param widgetConfigId - The widget config ID
+   * @returns Promise with the integration data or null if not available
+   */
+  async fetchWidgetConfigData(
+    baseUrl: string,
+    widgetConfigId: string
+  ): Promise<Record<string, any> | null> {
+    try {
+      const url = `${baseUrl}/dashboard/widget-configs/${widgetConfigId}/data`;
+      const response = await fetch(url, { credentials: 'include' });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.data) {
+          return result.data;
+        }
+      }
+      return null;
+    } catch (error) {
+      console.warn('Failed to fetch widget config data:', error);
+      return null;
+    }
   },
 };

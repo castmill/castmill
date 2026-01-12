@@ -32,13 +32,14 @@ export class GroupComponent implements TemplateComponent {
     resourceManager: ResourceManager,
     globals: PlayerGlobals
   ): GroupComponent {
+    const components = json.components || [];
     return new GroupComponent(
       json.name,
       json.config,
       json.context,
       json.opts,
       json.style,
-      json.components.map((component: any) =>
+      components.map((component: any) =>
         TemplateComponent.fromJSON(component, resourceManager, globals)
       ),
       json.animations,
@@ -84,8 +85,13 @@ export const Group: Component<GroupProps> = (props) => {
       cleanUpAnimations = applyAnimations(
         props.timeline,
         props.animations,
-        groupRef
+        groupRef,
+        props.timeline.duration()
       );
+    }
+    // If group has no children, call onReady immediately
+    if (props.components.length === 0) {
+      props.onReady();
     }
   });
 
