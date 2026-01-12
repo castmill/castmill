@@ -300,8 +300,18 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
   end
 
   # Reset stream with new data - handles both existing and new streams
-  # In LiveView 0.18.x, we can't use reset: true if stream already exists
-  # So we manually clear and repopulate
+  #
+  # LIVEVIEW VERSION CONSTRAINT (0.18.x):
+  # In LiveView 0.18.x, streams don't support `reset: true` on an existing stream.
+  # We work around this by manually deleting all existing items and re-inserting new ones.
+  #
+  # This approach is inefficient for large datasets (O(n) deletions + O(n) insertions)
+  # because each operation triggers DOM updates.
+  #
+  # TODO: When upgrading to LiveView 0.20+, simplify this to:
+  #   stream(socket, key, data, reset: true)
+  # which efficiently replaces all stream items in a single operation.
+  # See: https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html#stream/4
   defp reset_stream(socket, key, data) do
     case socket.assigns do
       %{:streams => %{^key => existing_stream}} ->

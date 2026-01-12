@@ -153,8 +153,15 @@ defmodule Castmill.Widgets.Integrations.OAuth.Generic do
     }
 
     # Add PKCE if configured
+    # NOTE: PKCE support is currently incomplete - verifier storage is not implemented.
+    # This will fail at the callback stage. See store_pkce_verifier/2 for details.
     params =
       if oauth_config.pkce do
+        Logger.warning(
+          "PKCE is enabled but verifier storage is not implemented. " <>
+            "OAuth callback will fail. Disable PKCE in credential_schema or implement storage."
+        )
+
         {challenge, verifier} = generate_pkce()
         store_pkce_verifier(state, verifier)
 
@@ -492,7 +499,28 @@ defmodule Castmill.Widgets.Integrations.OAuth.Generic do
   end
 
   defp store_pkce_verifier(_state, _verifier) do
-    # TODO: Store in ETS or cache for retrieval during callback
+    # TODO: PKCE verifier storage is not implemented.
+    #
+    # To complete PKCE support, implement storage using one of these approaches:
+    #
+    # Option 1: ETS table (simple, single-node)
+    #   - Create an ETS table in application startup
+    #   - Store: :ets.insert(:pkce_verifiers, {state, verifier, expiry})
+    #   - Retrieve: :ets.lookup(:pkce_verifiers, state)
+    #   - Add periodic cleanup for expired entries
+    #
+    # Option 2: Cachex (distributed, recommended for multi-node)
+    #   - Add {:cachex, "~> 3.6"} to deps
+    #   - Start cache: Cachex.start_link(name: :pkce_cache, expiration: [default: :timer.minutes(10)])
+    #   - Store: Cachex.put(:pkce_cache, state, verifier)
+    #   - Retrieve: Cachex.get(:pkce_cache, state)
+    #
+    # Also update exchange_code/5 to:
+    # 1. Accept state parameter
+    # 2. Retrieve verifier: get_pkce_verifier(state)
+    # 3. Include "code_verifier" => verifier in the token request body
+    #
+    # Until implemented, PKCE flows will fail at callback stage with "invalid_grant" error.
     :ok
   end
 end

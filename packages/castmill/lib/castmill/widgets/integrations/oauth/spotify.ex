@@ -403,13 +403,22 @@ defmodule Castmill.Widgets.Integrations.OAuth.Spotify do
   end
 
   # Private functions
+  #
+  # Note: The signature functions follow the same parameter order as Generic OAuth module:
+  # (integration_id, widget_config_id, organization_id, timestamp)
+  # For Spotify, integration_id is always "spotify" since this is a dedicated implementation.
+
+  @spotify_integration_id "spotify"
 
   defp generate_state(widget_config_id, organization_id) do
     timestamp = System.system_time(:second)
-    signature = compute_signature(widget_config_id, organization_id, timestamp)
+
+    signature =
+      compute_signature(@spotify_integration_id, widget_config_id, organization_id, timestamp)
 
     data =
       Jason.encode!(%{
+        "integration_id" => @spotify_integration_id,
         "widget_config_id" => widget_config_id,
         "organization_id" => organization_id,
         "timestamp" => timestamp,
@@ -419,16 +428,20 @@ defmodule Castmill.Widgets.Integrations.OAuth.Spotify do
     Base.url_encode64(data, padding: false)
   end
 
-  defp compute_signature(widget_config_id, organization_id, timestamp) do
+  defp compute_signature(integration_id, widget_config_id, organization_id, timestamp) do
     secret = get_signing_secret()
-    data = "#{widget_config_id}:#{organization_id}:#{timestamp}"
+
+    # Signature format matches Generic OAuth: "integration_id:widget_config_id:organization_id:timestamp"
+    data = "#{integration_id}:#{widget_config_id}:#{organization_id}:#{timestamp}"
 
     :crypto.mac(:hmac, :sha256, secret, data)
     |> Base.encode64()
   end
 
   defp valid_signature?(widget_config_id, organization_id, timestamp, signature) do
-    expected = compute_signature(widget_config_id, organization_id, timestamp)
+    expected =
+      compute_signature(@spotify_integration_id, widget_config_id, organization_id, timestamp)
+
     Plug.Crypto.secure_compare(expected, signature)
   end
 

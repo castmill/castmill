@@ -242,6 +242,12 @@ defmodule Castmill.Widgets.Integrations.Fetchers.Spotify do
     # This allows smooth progress bar updates without constant polling
     timestamp = System.system_time(:millisecond)
 
+    # Guard against division by zero for progress percentage
+    progress_percent =
+      if duration_ms > 0,
+        do: "#{Float.round(progress_ms / duration_ms * 100, 1)}%",
+        else: "0%"
+
     %{
       "track_name" => item["name"],
       "artist_name" => artists,
@@ -251,7 +257,7 @@ defmodule Castmill.Widgets.Integrations.Fetchers.Spotify do
       "duration_formatted" => format_time(duration_ms),
       "progress_ms" => progress_ms,
       "progress_formatted" => format_time(progress_ms),
-      "progress_percent" => "#{Float.round(progress_ms / duration_ms * 100, 1)}%",
+      "progress_percent" => progress_percent,
       "is_playing" => is_playing,
       # Timestamp when this data was fetched - used for client-side interpolation
       "timestamp" => timestamp
