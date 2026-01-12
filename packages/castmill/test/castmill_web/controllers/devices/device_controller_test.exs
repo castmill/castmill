@@ -130,10 +130,64 @@ defmodule CastmillWeb.DeviceControllerTest do
     end
   end
 
-  describe "authorization for non-admin user" do
+  describe "manager role authorization" do
     @describetag device_controller: true
 
-    test "member role can view device channels", %{organization: organization} do
+    test "manager can view and manage device channels", %{organization: organization} do
+      # Create a manager user
+      manager_user = user_fixture(%{organization_id: organization.id, email: "manager@test.com"})
+      :ok = Organizations.set_user_role(organization.id, manager_user.id, "manager")
+
+      # Create access token for manager
+      manager_token =
+        access_token_fixture(%{
+          secret: "manager:testpass",
+          user_id: manager_user.id,
+          is_root: false
+        })
+
+      # Build authenticated conn for manager
+      manager_conn =
+        build_conn()
+        |> put_req_header("accept", "application/json")
+        |> put_req_header("authorization", "Bearer #{manager_token.secret}")
+
+      # Create a device
+      {:ok, devices_registration} =
+        device_registration_fixture(%{hardware_id: "test-hw-id-mgr-1", pincode: "123461"})
+
+      {:ok, {device, _token}} =
+        Castmill.Devices.register_device(organization.id, devices_registration.pincode, %{
+          name: "Test Device Manager"
+        })
+
+      # Create channels
+      channel1 = channel_fixture(%{organization_id: organization.id, timezone: "UTC"})
+      channel2 = channel_fixture(%{organization_id: organization.id, timezone: "Europe/London"})
+      Castmill.Devices.add_channel(device.id, channel1.id)
+
+      # Manager should be able to view channels (show permission)
+      conn = get(manager_conn, "/dashboard/devices/#{device.id}/channels")
+      assert json_response(conn, 200)
+
+      # Manager should be able to add channels (update permission)
+      conn =
+        post(manager_conn, "/dashboard/devices/#{device.id}/channels", %{
+          "channel_id" => channel2.id
+        })
+
+      assert response(conn, 200)
+
+      # Manager should be able to remove channels (update permission)
+      conn = delete(manager_conn, "/dashboard/devices/#{device.id}/channels/#{channel1.id}")
+      assert json_response(conn, 200)
+    end
+  end
+
+  describe "member role authorization" do
+    @describetag device_controller: true
+
+    test "member can view and manage device channels", %{organization: organization} do
       # Create a member user
       member_user = user_fixture(%{organization_id: organization.id, email: "member@test.com"})
       :ok = Organizations.set_user_role(organization.id, member_user.id, "member")
@@ -161,25 +215,205 @@ defmodule CastmillWeb.DeviceControllerTest do
           name: "Test Device 4"
         })
 
-      # Create and add a channel
-      channel = channel_fixture(%{organization_id: organization.id, timezone: "UTC"})
-      Castmill.Devices.add_channel(device.id, channel.id)
+      # Create channels
+      channel1 = channel_fixture(%{organization_id: organization.id, timezone: "UTC"})
+      channel2 = channel_fixture(%{organization_id: organization.id, timezone: "Europe/London"})
+      Castmill.Devices.add_channel(device.id, channel1.id)
 
       # Member should be able to view channels (show permission)
       conn = get(member_conn, "/dashboard/devices/#{device.id}/channels")
       assert json_response(conn, 200)
 
-      # Member should be able to update device (add/remove channels)
-      channel2 = channel_fixture(%{organization_id: organization.id, timezone: "Europe/London"})
+      # Member should be able to add channels (update permission)
       conn =
         post(member_conn, "/dashboard/devices/#{device.id}/channels", %{
           "channel_id" => channel2.id
         })
 
       assert response(conn, 200)
-    end
 
-    test "guest role cannot modify device channels", %{organization: organization} do
+      # Member should be able to remove channels (update permission)
+      conn = delete(member_conn, "/dashboard/devices/#{device.id}/channels/#{channel1.id}")
+      assert json_response(conn, 200)
+    end
+  end
+
+  describe "device_manager role authorization" do
+    @describetag device_controller: true
+
+    test "device_manager can view and manage device channels", %{organization: organization} do
+      # Create a device_manager user
+      device_mgr_user =
+        user_fixture(%{organization_id: organization.id, email: "device_mgr@test.com"})
+
+      :ok = Organizations.set_user_role(organization.id, device_mgr_user.id, "device_manager")
+
+      # Create access token for device_manager
+      device_mgr_token =
+        access_token_fixture(%{
+          secret: "device_mgr:testpass",
+          user_id: device_mgr_user.id,
+          is_root: false
+        })
+
+      # Build authenticated conn for device_manager
+      device_mgr_conn =
+        build_conn()
+        |> put_req_header("accept", "application/json")
+        |> put_req_header("authorization", "Bearer #{device_mgr_token.secret}")
+
+      # Create a device
+      {:ok, devices_registration} =
+        device_registration_fixture(%{hardware_id: "test-hw-id-dm-1", pincode: "123462"})
+
+      {:ok, {device, _token}} =
+        Castmill.Devices.register_device(organization.id, devices_registration.pincode, %{
+          name: "Test Device DM"
+        })
+
+      # Create channels
+      channel1 = channel_fixture(%{organization_id: organization.id, timezone: "UTC"})
+      channel2 = channel_fixture(%{organization_id: organization.id, timezone: "Europe/London"})
+      Castmill.Devices.add_channel(device.id, channel1.id)
+
+      # Device Manager should be able to view channels (show permission)
+      conn = get(device_mgr_conn, "/dashboard/devices/#{device.id}/channels")
+      assert json_response(conn, 200)
+
+      # Device Manager should be able to add channels (update permission)
+      conn =
+        post(device_mgr_conn, "/dashboard/devices/#{device.id}/channels", %{
+          "channel_id" => channel2.id
+        })
+
+      assert response(conn, 200)
+
+      # Device Manager should be able to remove channels (update permission)
+      conn = delete(device_mgr_conn, "/dashboard/devices/#{device.id}/channels/#{channel1.id}")
+      assert json_response(conn, 200)
+    end
+  end
+
+  describe "editor role authorization" do
+    @describetag device_controller: true
+
+    test "editor can view but not modify device channels", %{organization: organization} do
+      # Create an editor user
+      editor_user = user_fixture(%{organization_id: organization.id, email: "editor@test.com"})
+      :ok = Organizations.set_user_role(organization.id, editor_user.id, "editor")
+
+      # Create access token for editor
+      editor_token =
+        access_token_fixture(%{
+          secret: "editor:testpass",
+          user_id: editor_user.id,
+          is_root: false
+        })
+
+      # Build authenticated conn for editor
+      editor_conn =
+        build_conn()
+        |> put_req_header("accept", "application/json")
+        |> put_req_header("authorization", "Bearer #{editor_token.secret}")
+
+      # Create a device
+      {:ok, devices_registration} =
+        device_registration_fixture(%{hardware_id: "test-hw-id-editor-1", pincode: "123463"})
+
+      {:ok, {device, _token}} =
+        Castmill.Devices.register_device(organization.id, devices_registration.pincode, %{
+          name: "Test Device Editor"
+        })
+
+      # Create channels
+      channel1 = channel_fixture(%{organization_id: organization.id, timezone: "UTC"})
+      channel2 = channel_fixture(%{organization_id: organization.id, timezone: "Europe/London"})
+      Castmill.Devices.add_channel(device.id, channel1.id)
+      Castmill.Devices.add_channel(device.id, channel2.id)
+
+      # Editor should be able to view channels (show permission)
+      conn = get(editor_conn, "/dashboard/devices/#{device.id}/channels")
+      assert json_response(conn, 200)
+
+      # Editor should NOT be able to add channels (no update permission)
+      channel3 = channel_fixture(%{organization_id: organization.id, timezone: "Asia/Tokyo"})
+
+      conn =
+        post(editor_conn, "/dashboard/devices/#{device.id}/channels", %{
+          "channel_id" => channel3.id
+        })
+
+      assert json_response(conn, 403)
+
+      # Editor should NOT be able to remove channels (no update permission)
+      conn = delete(editor_conn, "/dashboard/devices/#{device.id}/channels/#{channel1.id}")
+      assert json_response(conn, 403)
+    end
+  end
+
+  describe "publisher role authorization" do
+    @describetag device_controller: true
+
+    test "publisher can view but not modify device channels", %{organization: organization} do
+      # Create a publisher user
+      publisher_user =
+        user_fixture(%{organization_id: organization.id, email: "publisher@test.com"})
+
+      :ok = Organizations.set_user_role(organization.id, publisher_user.id, "publisher")
+
+      # Create access token for publisher
+      publisher_token =
+        access_token_fixture(%{
+          secret: "publisher:testpass",
+          user_id: publisher_user.id,
+          is_root: false
+        })
+
+      # Build authenticated conn for publisher
+      publisher_conn =
+        build_conn()
+        |> put_req_header("accept", "application/json")
+        |> put_req_header("authorization", "Bearer #{publisher_token.secret}")
+
+      # Create a device
+      {:ok, devices_registration} =
+        device_registration_fixture(%{hardware_id: "test-hw-id-pub-1", pincode: "123464"})
+
+      {:ok, {device, _token}} =
+        Castmill.Devices.register_device(organization.id, devices_registration.pincode, %{
+          name: "Test Device Publisher"
+        })
+
+      # Create channels
+      channel1 = channel_fixture(%{organization_id: organization.id, timezone: "UTC"})
+      channel2 = channel_fixture(%{organization_id: organization.id, timezone: "Europe/London"})
+      Castmill.Devices.add_channel(device.id, channel1.id)
+      Castmill.Devices.add_channel(device.id, channel2.id)
+
+      # Publisher should be able to view channels (show permission)
+      conn = get(publisher_conn, "/dashboard/devices/#{device.id}/channels")
+      assert json_response(conn, 200)
+
+      # Publisher should NOT be able to add channels (no update permission)
+      channel3 = channel_fixture(%{organization_id: organization.id, timezone: "Asia/Tokyo"})
+
+      conn =
+        post(publisher_conn, "/dashboard/devices/#{device.id}/channels", %{
+          "channel_id" => channel3.id
+        })
+
+      assert json_response(conn, 403)
+
+      # Publisher should NOT be able to remove channels (no update permission)
+      conn = delete(publisher_conn, "/dashboard/devices/#{device.id}/channels/#{channel1.id}")
+      assert json_response(conn, 403)
+    end
+  end
+
+  describe "guest role authorization" do
+    @describetag device_controller: true
+
+    test "guest can view but not modify device channels", %{organization: organization} do
       # Create a guest user
       guest_user = user_fixture(%{organization_id: organization.id, email: "guest@test.com"})
       :ok = Organizations.set_user_role(organization.id, guest_user.id, "guest")
@@ -207,21 +441,28 @@ defmodule CastmillWeb.DeviceControllerTest do
           name: "Test Device 5"
         })
 
-      # Create and add a channel
-      channel = channel_fixture(%{organization_id: organization.id, timezone: "UTC"})
-      Castmill.Devices.add_channel(device.id, channel.id)
+      # Create channels
+      channel1 = channel_fixture(%{organization_id: organization.id, timezone: "UTC"})
+      channel2 = channel_fixture(%{organization_id: organization.id, timezone: "Europe/London"})
+      Castmill.Devices.add_channel(device.id, channel1.id)
+      Castmill.Devices.add_channel(device.id, channel2.id)
 
       # Guest should be able to view channels (show permission)
       conn = get(guest_conn, "/dashboard/devices/#{device.id}/channels")
       assert json_response(conn, 200)
 
       # Guest should NOT be able to add channels (no update permission)
-      channel2 = channel_fixture(%{organization_id: organization.id, timezone: "Europe/London"})
+      channel3 = channel_fixture(%{organization_id: organization.id, timezone: "Asia/Tokyo"})
+
       conn =
         post(guest_conn, "/dashboard/devices/#{device.id}/channels", %{
-          "channel_id" => channel2.id
+          "channel_id" => channel3.id
         })
 
+      assert json_response(conn, 403)
+
+      # Guest should NOT be able to remove channels (no update permission)
+      conn = delete(guest_conn, "/dashboard/devices/#{device.id}/channels/#{channel1.id}")
       assert json_response(conn, 403)
     end
   end
