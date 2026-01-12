@@ -9,4 +9,5 @@ export interface CalendarEntry {
   dayIndex: number;
   numDays: number;
   weekly: boolean;
+  isNewEntry?: boolean; // Used for drag-and-drop to indicate a new entry being created
 }

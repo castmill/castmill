@@ -84,10 +84,11 @@ const Topbar: Component = () => {
             <Search />
 
             <TopbarLink
-              to="/help"
+              to="https://docs.castmill.io"
               icon={TbHelpCircle}
               text={t('topbar.help')}
-            ></TopbarLink>
+              external={true}
+            />
 
             <Show
               when={

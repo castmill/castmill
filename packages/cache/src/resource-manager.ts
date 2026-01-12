@@ -170,6 +170,12 @@ export class ResourceManager {
    * @returns
    */
   async getMedia(url: string): Promise<string | void> {
+    // Guard against undefined/null urls
+    if (!url) {
+      console.warn('[ResourceManager] getMedia called with undefined/null url');
+      return;
+    }
+
     // We must not cache data uris
     if (url.startsWith('data:')) {
       return url;

@@ -98,10 +98,26 @@ export const Text: Component<TextProps> = (props) => {
   let scrollTimeline: gsap.core.Timeline;
   let cleanUpAnimations: () => void;
 
-  const merged = mergeProps(
-    { width: '100%', height: '100%', 'line-height': '1em' },
-    props.style
-  );
+  // Determine default sizing based on context:
+  // 1. Positioned elements (absolute/fixed) - no default size, auto-size to content
+  // 2. Flex items (have flex property) - let flex control sizing, don't override with 100%
+  // 3. Other elements - apply width/height 100% for autofit to work
+  const isPositioned =
+    props.style?.position === 'absolute' || props.style?.position === 'fixed';
+  const isFlexItem = props.style?.flex !== undefined;
+
+  let defaultStyle: JSX.CSSProperties;
+  if (isPositioned) {
+    // Positioned elements auto-size to content
+    defaultStyle = { 'line-height': '1em' };
+  } else if (isFlexItem) {
+    // Flex items: let flex control height, but keep width for autofit measurement
+    defaultStyle = { width: '100%', 'line-height': '1em' };
+  } else {
+    // Default: fill container for autofit to measure
+    defaultStyle = { width: '100%', height: '100%', 'line-height': '1em' };
+  }
+  const merged = mergeProps(defaultStyle, props.style);
 
   const spanStyle = {
     'line-height': merged['line-height'],
@@ -129,7 +145,8 @@ export const Text: Component<TextProps> = (props) => {
       cleanUpAnimations = applyAnimations(
         props.timeline,
         props.animations,
-        splittedText.chars || splittedText.words
+        splittedText.chars || splittedText.words,
+        props.timeline.duration()
       );
     }
 
@@ -158,7 +175,7 @@ export const Text: Component<TextProps> = (props) => {
         );
 
         timelineItem = {
-          start: props.timeline.duration(),
+          start: 0, // Text scroll animations should start immediately, not sequentially
           repeat: true,
           duration: scrollTimeline.duration() * 1000,
           child: scrollTimeline,
@@ -203,7 +220,14 @@ function autoFitText(div: HTMLDivElement, options: AutoFitOpts): number {
 
   const containerRect = parentElement.getBoundingClientRect();
   if (containerRect.width === 0 || containerRect.height === 0) {
-    return 0;
+    // Container not yet sized - use baseSize as fallback
+    if (options.baseSize) {
+      setSize(options.baseSize);
+      return options.baseSize;
+    }
+    // Default to 1em if no baseSize specified
+    setSize(1);
+    return 1;
   }
 
   const maxHeight = containerRect.height; // Math.ceil(containerRect.height);

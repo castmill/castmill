@@ -4,8 +4,8 @@ import { CalendarView } from './calendar-view';
 export const ChannelView = (props: {
   organizationId: string;
   channel: JsonChannel;
-  team: Omit<JsonChannel, 'id'> & { id?: number };
-  onSubmit: (
+  team?: Omit<JsonChannel, 'id'> & { id?: number };
+  onSubmit?: (
     channelUpdate: Partial<JsonChannel>
   ) => Promise<JsonChannel | void>;
 }) => {

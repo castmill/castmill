@@ -24,7 +24,13 @@ interface Messages {
   [key: string]: string | JSX.Element;
 }
 
-const supportedFileTypes = ['application/json', 'text/json'];
+const supportedJsonTypes = ['application/json', 'text/json'];
+const supportedZipTypes = [
+  'application/zip',
+  'application/x-zip-compressed',
+  'application/x-zip',
+];
+const supportedFileTypes = [...supportedJsonTypes, ...supportedZipTypes];
 
 export const UploadComponent = (props: UploadComponentProps) => {
   const [files, setFiles] = createSignal<File[]>([]);
@@ -52,11 +58,13 @@ export const UploadComponent = (props: UploadComponentProps) => {
   const addFiles = (newFiles: File[]) => {
     const validFiles = newFiles.filter((file) => {
       const isValidType =
-        supportedFileTypes.includes(file.type) || file.name.endsWith('.json');
+        supportedFileTypes.includes(file.type) ||
+        file.name.endsWith('.json') ||
+        file.name.endsWith('.zip');
       if (!isValidType) {
         setMessage(
           file.name,
-          'Invalid file type. Only JSON files are supported.'
+          'Invalid file type. Only JSON and ZIP files are supported.'
         );
       }
       return isValidType;
@@ -79,17 +87,25 @@ export const UploadComponent = (props: UploadComponentProps) => {
     });
   };
 
+  const isZipFile = (file: File): boolean => {
+    return file.name.endsWith('.zip') || supportedZipTypes.includes(file.type);
+  };
+
   const uploadFile = async (file: File) => {
     try {
-      // Read and validate JSON content
-      const jsonContent = await file.text();
-      const parsedJson = JSON.parse(jsonContent);
+      // For ZIP files, we skip client-side JSON validation
+      // The server will extract and validate the widget.json from the ZIP
+      if (!isZipFile(file)) {
+        // Read and validate JSON content
+        const jsonContent = await file.text();
+        const parsedJson = JSON.parse(jsonContent);
 
-      // Basic validation for widget JSON structure
-      if (!parsedJson.name || !parsedJson.template) {
-        throw new Error(
-          'Invalid widget JSON: must contain "name" and "template" fields'
-        );
+        // Basic validation for widget JSON structure
+        if (!parsedJson.name || !parsedJson.template) {
+          throw new Error(
+            'Invalid widget JSON: must contain "name" and "template" fields'
+          );
+        }
       }
 
       setProgress(file.name, 50);
@@ -259,10 +275,12 @@ export const UploadComponent = (props: UploadComponentProps) => {
           ref={fileInputRef}
           type="file"
           multiple
-          accept=".json,application/json"
+          accept=".json,.zip,application/json,application/zip"
           onChange={onFileChange}
         />
-        <div class="upload-hint">Or drag and drop JSON files here...</div>
+        <div class="upload-hint">
+          Or drag and drop JSON or ZIP files here...
+        </div>
       </div>
 
       <Show when={files().length}>

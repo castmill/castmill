@@ -46,10 +46,10 @@ export class Playlist extends EventEmitter {
     globals: PlayerGlobals = { target: 'preview' }
   ) {
     const playlist = new Playlist(json.name, resourceManager);
-    const layers = json.items || [];
+    const items = json.items || [];
 
-    for (let i = 0; i < layers.length; i++) {
-      const layer = Layer.fromJSON(json.items[i], resourceManager, globals);
+    for (let i = 0; i < items.length; i++) {
+      const layer = Layer.fromJSON(items[i], resourceManager, globals);
       playlist.add(layer);
     }
     return playlist;

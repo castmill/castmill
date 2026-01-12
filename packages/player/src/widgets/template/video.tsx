@@ -1,4 +1,12 @@
-import { Component, JSX, mergeProps, onCleanup, onMount } from 'solid-js';
+import {
+  Component,
+  JSX,
+  mergeProps,
+  onCleanup,
+  onMount,
+  createSignal,
+  Show,
+} from 'solid-js';
 import { TemplateConfig, resolveOption } from './binding';
 import {
   Observable,
@@ -62,8 +70,10 @@ export class VideoComponent implements TemplateComponent {
   }
 
   resolveDuration(medias: { [index: string]: string }): number {
-    // TODO: medias should include the duration of the video.
-    return 17000;
+    // Return a default fallback duration. The actual video duration is determined
+    // dynamically when the video loads and is added to the timeline.
+    // This fallback is only used if the video hasn't loaded yet.
+    return 10000;
   }
 
   static fromJSON(json: any): VideoComponent {
@@ -114,15 +124,26 @@ export const Video: Component<VideoProps> = (props) => {
   onCleanup(() => {
     seekingVideoSubscription?.unsubscribe();
     loadingSubscription?.unsubscribe();
-    props.timeline.remove(timelineItem);
+    if (timelineItem) {
+      props.timeline.remove(timelineItem);
+    }
     // timeline?.kill();
   });
 
   onMount(async () => {
     if (videoRef) {
+      // Check if URL is defined before trying to get media
+      if (!props.opts.url) {
+        // No video selected yet - this is normal when widget is first added
+        props.onReady();
+        return;
+      }
+
       const videoUrl = await props.resourceManager.getMedia(props.opts.url);
       if (!videoUrl) {
-        throw new Error(`Video ${props.opts.url} not found in medias`);
+        console.warn(`[Video] Video ${props.opts.url} not found in cache`);
+        props.onReady();
+        return;
       }
 
       videoRef.src = videoUrl;
@@ -131,7 +152,9 @@ export const Video: Component<VideoProps> = (props) => {
 
       const seekVideo = (time: number): Observable<[number, number]> => {
         if (videoRef && videoRef.readyState >= ReadyState.HAVE_METADATA) {
-          videoRef.currentTime = time;
+          // Convert from milliseconds to seconds for HTMLVideoElement.currentTime
+          const targetTime = time / 1000;
+          videoRef.currentTime = targetTime;
 
           const slow$ = of([time, 0]);
 
@@ -142,7 +165,9 @@ export const Video: Component<VideoProps> = (props) => {
               each: 500,
               with: () => slow$,
             }),
-            map((evt) => [time, 0])
+            map((evt) => {
+              return [time, 0];
+            })
           );
         }
         return of([time, 0]);
@@ -150,32 +175,19 @@ export const Video: Component<VideoProps> = (props) => {
 
       loadingSubscription?.unsubscribe();
 
-      let loading$: Observable<string>;
-      if (videoRef.readyState < ReadyState.HAVE_ENOUGH_DATA) {
-        loading$ = new Observable<string>((subscriber) => {
-          const handler = (ev: Event) => {
-            subscriber.next('video:loaded');
-            subscriber.complete();
-          };
+      // We need to handle two events:
+      // 1. loadedmetadata - provides duration info (fast)
+      // 2. canplaythrough - video is ready to play without buffering (slow)
+      //
+      // We add the timeline item on loadedmetadata so duration queries work,
+      // but only call onReady after canplaythrough to ensure smooth playback.
 
-          const errorHandler = (ev: Event) => {
-            subscriber.error('error');
-          };
+      let timelineAdded = false;
 
-          videoRef!.addEventListener('canplaythrough', handler);
-          videoRef!.addEventListener('error', errorHandler);
+      const addTimelineItem = () => {
+        if (timelineAdded || !videoRef) return;
+        timelineAdded = true;
 
-          return () => {
-            videoRef!.removeEventListener('canplaythrough', handler);
-            videoRef!.removeEventListener('error', errorHandler);
-          };
-        });
-        videoRef.load();
-      } else {
-        loading$ = of('vide0:loaded');
-      }
-
-      loadingSubscription = loading$.subscribe((ev) => {
         timeline = new Timeline('video');
 
         const child = {
@@ -185,7 +197,13 @@ export const Video: Component<VideoProps> = (props) => {
               (evt) => void 0
             );
           },
-          play: () => {
+          play: (offset: number = 0) => {
+            // Always seek to the offset before playing (offset is in milliseconds)
+            // This is important for looping - when offset is 0, we need to reset to start
+            if (videoRef!.readyState >= ReadyState.HAVE_METADATA) {
+              const targetTime = offset / 1000;
+              videoRef!.currentTime = targetTime;
+            }
             videoRef!.play();
           },
           pause: () => {
@@ -197,29 +215,91 @@ export const Video: Component<VideoProps> = (props) => {
         };
 
         timelineItem = {
-          start: props.timeline.duration(),
+          start: 0, // Videos should always start at the beginning of their timeline
           duration: videoRef!.duration * 1000,
           child,
         };
         props.timeline.add(timelineItem);
-
-        props.onReady();
-      });
-
-      videoRef.onended = () => {
-        props.timeline.pause();
       };
+
+      let loading$: Observable<string>;
+      if (videoRef.readyState < ReadyState.HAVE_ENOUGH_DATA) {
+        loading$ = new Observable<string>((subscriber) => {
+          const metadataHandler = (ev: Event) => {
+            // Add timeline item as soon as metadata is available
+            // This allows duration queries to return the real value
+            addTimelineItem();
+          };
+
+          const handler = (ev: Event) => {
+            // Ensure timeline is added (in case canplaythrough fires before/without metadata)
+            addTimelineItem();
+            subscriber.next('video:loaded');
+            subscriber.complete();
+          };
+
+          const errorHandler = (ev: Event) => {
+            subscriber.error('error');
+          };
+
+          videoRef!.addEventListener('loadedmetadata', metadataHandler);
+          videoRef!.addEventListener('canplaythrough', handler);
+          videoRef!.addEventListener('error', errorHandler);
+
+          return () => {
+            videoRef!.removeEventListener('loadedmetadata', metadataHandler);
+            videoRef!.removeEventListener('canplaythrough', handler);
+            videoRef!.removeEventListener('error', errorHandler);
+          };
+        });
+        videoRef.load();
+      } else {
+        // Video is already loaded, add timeline immediately
+        addTimelineItem();
+        loading$ = of('video:loaded');
+      }
+
+      loadingSubscription = loading$.subscribe({
+        next: (ev) => {
+          props.onReady();
+        },
+        error: (err) => {
+          console.error('[Video] Error loading video:', err);
+          props.onReady();
+        },
+      });
     }
   });
 
   return (
-    <video
-      ref={videoRef}
-      data-component="video"
-      data-name={props.name}
-      style={merged}
-      loop
-      playsinline
-    ></video>
+    <>
+      <Show when={!props.opts.url}>
+        <div
+          data-component="video-placeholder"
+          data-name={props.name}
+          style={{
+            ...merged,
+            display: 'flex',
+            'align-items': 'center',
+            'justify-content': 'center',
+            background: '#1a1a2e',
+            color: '#666',
+            'font-size': '1.5em',
+          }}
+        >
+          No video selected
+        </div>
+      </Show>
+      <video
+        ref={videoRef}
+        data-component="video"
+        data-name={props.name}
+        style={{
+          ...merged,
+          display: props.opts.url ? 'block' : 'none',
+        }}
+        playsinline
+      ></video>
+    </>
   );
 };

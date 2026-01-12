@@ -17,7 +17,7 @@ defmodule CastmillWeb do
   those modules here.
   """
 
-  def static_paths, do: ~w(assets fonts images favicon.ico robots.txt medias)
+  def static_paths, do: ~w(assets fonts images favicon.ico robots.txt medias widgets)
 
   def router do
     quote do

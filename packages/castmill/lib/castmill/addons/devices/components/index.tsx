@@ -34,11 +34,8 @@ import styles from './devices.module.scss';
 
 import RegisterDevice from './register-device';
 import { DevicesService } from '../services/devices.service';
-import {
-  AddonStore,
-  AddonComponentProps,
-} from '../../common/interfaces/addon-store';
-import { useTeamFilter } from '../../common/hooks';
+import { AddonComponentProps } from '../../common/interfaces/addon-store';
+import { useTeamFilter, useModalFromUrl } from '../../common/hooks';
 
 import { QuotaIndicator } from '../../common/components/quota-indicator';
 import {
@@ -56,14 +53,6 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
   // Get i18n functions from store
   const t = (key: string, params?: Record<string, any>) => {
     const result = props.store.i18n?.t(key, params) || key;
-    console.log(
-      '[Devices] Translation:',
-      key,
-      '=>',
-      result,
-      'i18n available:',
-      !!props.store.i18n
-    );
     return result;
   };
   const toast = useToast();
@@ -78,13 +67,12 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
     return allowedActions?.includes(action as any) ?? false;
   };
 
-  const [currentPage, setCurrentPage] = createSignal(1);
   const [totalItems, setTotalItems] = createSignal(0);
 
   const { teams, selectedTeamId, setSelectedTeamId } = useTeamFilter({
     baseUrl: props.store.env.baseUrl,
     organizationId: props.store.organizations.selectedId,
-    params: props.params, // Pass URL params for shareable filtered views
+    params: props.params, // Pass URL search params for shareable filtered views
   });
 
   const itemsPerPage = 10; // Number of items to show per page
@@ -219,6 +207,32 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
     )
   );
 
+  // Function to close the modal and update URL
+  const closeModalAndClearUrl = () => {
+    // Clear URL FIRST (before animation starts) for immediate feedback
+    if (props.params) {
+      const [, setSearchParams] = props.params;
+      setSearchParams({ itemId: undefined }, { replace: true });
+    }
+
+    // Then close modal (triggers 300ms animation)
+    setShowModal(false);
+  };
+
+  // Sync modal state with URL itemId parameter
+  useModalFromUrl({
+    getItemIdFromUrl: () => props.params?.[0]?.itemId,
+    isModalOpen: () => showModal(),
+    closeModal: closeModalAndClearUrl,
+    openModal: (itemId) => {
+      const device = data().find((d) => String(d.id) === String(itemId));
+      if (device) {
+        setCurrentDevice(device);
+        setShowModal(true);
+      }
+    },
+  });
+
   const isQuotaReached = () => {
     const currentQuota = quota();
     if (!currentQuota) return false;
@@ -277,14 +291,18 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
 
   // Function to open the modal
   const openModal = (item: DeviceTableItem) => {
+    // Open modal immediately
     setCurrentDevice(item);
     setShowModal(true);
+
+    // Also update URL for shareability (use replace to avoid polluting browser history)
+    if (props.params) {
+      const [, setSearchParams] = props.params;
+      setSearchParams({ itemId: String(item.id) }, { replace: true });
+    }
   };
 
-  // Function to close the modal and remove blur
-  const closeModal = () => {
-    setShowModal(false);
-  };
+  const [showConfirmDialog, setShowConfirmDialog] = createSignal(false);
 
   // Function to open the register modal
   const openRegisterModal = () => {
@@ -378,7 +396,6 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
     resourcesObserver.cleanup();
   });
 
-  const [showConfirmDialog, setShowConfirmDialog] = createSignal(false);
   const [showConfirmDialogMultiple, setShowConfirmDialogMultiple] =
     createSignal(false);
 
@@ -434,9 +451,9 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
     setSelectedDevices(rowsSelected);
   };
 
-  let tableViewRef: TableViewRef<DeviceTableItem>;
+  let tableViewRef: TableViewRef<string, DeviceTableItem>;
 
-  const setRef = (ref: TableViewRef<DeviceTableItem>) => {
+  const setRef = (ref: TableViewRef<string, DeviceTableItem>) => {
     tableViewRef = ref;
   };
 
@@ -482,7 +499,7 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
         <Modal
           title={`Device "${currentDevice()?.name}"`}
           description={t('devices.deviceDetails')}
-          onClose={closeModal}
+          onClose={closeModalAndClearUrl}
         >
           <DeviceView
             baseUrl={props.store.env.baseUrl}
@@ -581,8 +598,7 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
           defaultRowAction: {
             icon: BsEye,
             handler: (item: DeviceTableItem) => {
-              setCurrentDevice(item);
-              setShowModal(true);
+              openModal(item);
             },
             label: t('common.view'),
           },
