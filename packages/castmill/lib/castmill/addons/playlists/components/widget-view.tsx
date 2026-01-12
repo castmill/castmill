@@ -23,6 +23,7 @@ import { ResourceManager, Cache, StorageDummy } from '@castmill/cache';
 
 import styles from './widget-view.module.scss';
 import { safeStringify } from './utils';
+import { getDefaultDataFromSchema } from '../utils/schema-utils';
 
 interface WidgetViewProps {
   widget: JsonWidget;
@@ -30,39 +31,6 @@ interface WidgetViewProps {
   options: OptionsDict;
   baseUrl?: string;
   socket?: Socket;
-}
-
-/**
- * Extracts default values from a data_schema to use as placeholder data for preview.
- * This allows widgets with integration data (like Spotify) to render in preview mode.
- */
-function getDefaultDataFromSchema(
-  dataSchema: Record<string, any> | undefined
-): Record<string, any> {
-  if (!dataSchema) return {};
-
-  const defaults: Record<string, any> = {};
-
-  for (const [key, schema] of Object.entries(dataSchema)) {
-    if (typeof schema === 'object' && schema !== null && 'default' in schema) {
-      defaults[key] = schema.default;
-    } else if (typeof schema === 'string') {
-      // Simple type without default - provide sensible placeholder
-      switch (schema) {
-        case 'string':
-          defaults[key] = '';
-          break;
-        case 'number':
-          defaults[key] = 0;
-          break;
-        case 'boolean':
-          defaults[key] = false;
-          break;
-      }
-    }
-  }
-
-  return defaults;
 }
 
 export const WidgetView: Component<WidgetViewProps> = (props) => {

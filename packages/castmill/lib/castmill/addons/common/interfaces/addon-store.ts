@@ -45,11 +45,17 @@ export interface KeyboardShortcut {
   condition?: () => boolean;
 }
 
-// URL search params types (matching @solidjs/router useSearchParams)
+/**
+ * URL search params types (matching @solidjs/router useSearchParams)
+ */
 export type SearchParams = Record<string, string | undefined>;
-export type SetSearchParamsValue = string | number | boolean | undefined;
+
+/**
+ * Function to update URL search parameters.
+ * Accepts string, number, boolean values (converted to strings) or undefined to remove a param.
+ */
 export type SetSearchParams = (
-  params: Record<string, SetSearchParamsValue>,
+  params: Record<string, string | number | boolean | undefined>,
   options?: any
 ) => void;
 

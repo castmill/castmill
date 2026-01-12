@@ -162,12 +162,27 @@ const LAYOUT_TEMPLATES: LayoutTemplate[] = [
  * Fractional size options
  */
 /**
- * Maximum number of zones allowed per layout
+ * Maximum number of zones allowed per layout.
+ * This limit is set to ensure:
+ * 1. UI remains usable - too many zones make the editor cluttered and hard to manage
+ * 2. Performance - each zone renders content independently, more zones = more resources
+ * 3. Content legibility - displays have limited real estate; more than 6 zones
+ *    typically results in zones too small for effective content display
  */
 const MAX_ZONES = 6;
 
 /**
- * Snap threshold in percentage (zones snap when within this distance)
+ * Snap threshold for zone edge alignment, expressed as a percentage of the layout dimensions.
+ * When a zone edge is within this distance from another zone's edge or the layout boundary,
+ * it will "snap" to align perfectly.
+ *
+ * Value: 2% - This provides a good balance between:
+ * - Being large enough to make snapping discoverable and useful
+ * - Being small enough to allow precise manual positioning when needed
+ * - Working consistently across different screen sizes (percentage-based)
+ *
+ * Note: Using percentages ensures consistent snapping behavior regardless of the
+ * actual pixel dimensions of the editor canvas.
  */
 const SNAP_THRESHOLD = 2;
 

@@ -24,40 +24,8 @@ import {
   LayerOffset,
 } from './playlist-preview';
 import { AddonStore } from '../../common/interfaces/addon-store';
-
-/**
- * Extracts default values from a data_schema to use as initial data when adding a widget.
- * This ensures widgets with dynamic content (like scrollers with items) render properly
- * before integration data is fetched.
- */
-function getDefaultDataFromSchema(
-  dataSchema: Record<string, any> | undefined
-): Record<string, any> {
-  if (!dataSchema) return {};
-
-  const defaults: Record<string, any> = {};
-
-  for (const [key, schema] of Object.entries(dataSchema)) {
-    if (typeof schema === 'object' && schema !== null && 'default' in schema) {
-      defaults[key] = schema.default;
-    } else if (typeof schema === 'string') {
-      // Simple type without default - provide sensible placeholder
-      switch (schema) {
-        case 'string':
-          defaults[key] = '';
-          break;
-        case 'number':
-          defaults[key] = 0;
-          break;
-        case 'boolean':
-          defaults[key] = false;
-          break;
-      }
-    }
-  }
-
-  return defaults;
-}
+import { getDefaultDataFromSchema } from '../utils/schema-utils';
+import { containsDynamicDurationComponent } from '../utils/duration-utils';
 
 export const PlaylistView: Component<{
   store: AddonStore;
@@ -323,38 +291,6 @@ export const PlaylistView: Component<{
     } catch (err) {
       toast.error(`Error updating widget in playlist: ${err}`);
     }
-  };
-
-  /**
-   * Recursively check if a template contains a component with dynamic duration
-   * (video, scroller, layout, or paginated-list). These components determine their duration at runtime
-   * based on content (video length, scroll distance/speed, contained playlists, or page count).
-   */
-  const containsDynamicDurationComponent = (template: any): boolean => {
-    if (!template) return false;
-
-    const type = template.type;
-    // Layout, video, scroller, and paginated-list all have dynamic durations determined at runtime
-    if (
-      type === 'video' ||
-      type === 'scroller' ||
-      type === 'layout' ||
-      type === 'paginated-list'
-    ) {
-      return true;
-    }
-
-    // Check nested components array (for group, layout, etc.)
-    if (template.components && Array.isArray(template.components)) {
-      return template.components.some(containsDynamicDurationComponent);
-    }
-
-    // Check single nested component (for scroller's item template)
-    if (template.component) {
-      return containsDynamicDurationComponent(template.component);
-    }
-
-    return false;
   };
 
   const resolveWidgetDuration = (widget: JsonWidget, config: OptionsDict) => {

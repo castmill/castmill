@@ -13,6 +13,7 @@ import { RiEditorDraggable } from 'solid-icons/ri';
 import { FaSolidMagnifyingGlass } from 'solid-icons/fa';
 
 import { DEFAULT_WIDGET_ICON } from '../../common/constants';
+import { isImageIcon, getIconUrl } from '../utils/icon-utils';
 import './widget-chooser.scss';
 
 const WidgetItem: Component<{ widget: JsonWidget; baseUrl: string }> = (
@@ -39,21 +40,8 @@ const WidgetItem: Component<{ widget: JsonWidget; baseUrl: string }> = (
     }
   });
 
-  const isImageIcon = () =>
-    props.widget.icon &&
-    (props.widget.icon.startsWith('data:image/') ||
-      props.widget.icon.startsWith('http://') ||
-      props.widget.icon.startsWith('https://') ||
-      props.widget.icon.startsWith('/'));
-
-  // Resolve icon URL - prepend baseUrl for relative paths starting with /
-  const getIconUrl = () => {
-    if (!props.widget.icon) return '';
-    if (props.widget.icon.startsWith('/')) {
-      return `${props.baseUrl}${props.widget.icon}`;
-    }
-    return props.widget.icon;
-  };
+  const iconUrl = () => getIconUrl(props.widget.icon, props.baseUrl);
+  const showAsImage = () => isImageIcon(iconUrl());
 
   return (
     <div
@@ -63,9 +51,9 @@ const WidgetItem: Component<{ widget: JsonWidget; baseUrl: string }> = (
     >
       <IconWrapper icon={RiEditorDraggable} />
       <div class="widget-icon">
-        {isImageIcon() ? (
+        {showAsImage() ? (
           <img
-            src={getIconUrl()}
+            src={iconUrl()}
             alt={props.widget.name}
             onError={(e) => {
               (e.target as HTMLImageElement).style.display = 'none';

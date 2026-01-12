@@ -13,6 +13,8 @@ import { AiOutlineEdit, AiOutlineWarning } from 'solid-icons/ai';
 import { BsTrash3 } from 'solid-icons/bs';
 
 import { DEFAULT_WIDGET_ICON } from '../../common/constants';
+import { isImageIcon, getIconUrl } from '../utils/icon-utils';
+import { hasDynamicDuration } from '../utils/duration-utils';
 import styles from './playlist-item.module.scss';
 
 import { Component, onMount, createSignal, onCleanup, Show } from 'solid-js';
@@ -31,6 +33,46 @@ const getThumbnailUri = (item: JsonPlaylistItem) => {
 // get widget name from playlist item (used as title)
 const getWidgetName = (item: JsonPlaylistItem) => item.widget.name;
 
+// Regex for matching hex color values
+const HEX_COLOR_REGEX = /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$/;
+
+// Keywords that indicate a color-related option key
+const COLOR_KEYWORDS = [
+  'color',
+  'background',
+  'bg',
+  'fill',
+  'stroke',
+  'border',
+];
+
+/**
+ * Checks if a value looks like a hex color (#RGB, #RRGGBB, or #RRGGBBAA)
+ */
+export const isColorValue = (value: string): boolean => {
+  return HEX_COLOR_REGEX.test(value);
+};
+
+/**
+ * Checks if a key name suggests it's for a color option
+ */
+export const isColorKey = (key: string): boolean => {
+  const lowerKey = key.toLowerCase();
+  return COLOR_KEYWORDS.some((keyword) => lowerKey.includes(keyword));
+};
+
+/**
+ * Extracts a display-friendly name from a URL (hostname without www)
+ */
+export const getUrlDisplayName = (url: string): string => {
+  try {
+    const urlObj = new URL(url);
+    return urlObj.hostname.replace(/^www\./, '');
+  } catch {
+    return url.length > 40 ? url.substring(0, 37) + '...' : url;
+  }
+};
+
 // get subtitle from playlist item options
 // This function automatically extracts a meaningful subtitle from widget options
 const getWidgetSubtitle = (item: JsonPlaylistItem): string | null => {
@@ -41,37 +83,6 @@ const getWidgetSubtitle = (item: JsonPlaylistItem): string | null => {
   if (!options || Object.keys(options).length === 0) {
     return null;
   }
-
-  // Helper to check if a value looks like a color (hex color)
-  const isColorValue = (value: string): boolean => {
-    return /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$/.test(value);
-  };
-
-  // Helper to check if a key looks like it's for a color option
-  const isColorKey = (key: string): boolean => {
-    const colorKeywords = [
-      'color',
-      'background',
-      'bg',
-      'fill',
-      'stroke',
-      'border',
-    ];
-    const lowerKey = key.toLowerCase();
-    return colorKeywords.some((keyword) => lowerKey.includes(keyword));
-  };
-
-  // Helper to extract a display-friendly name from a URL
-  const getUrlDisplayName = (url: string): string => {
-    try {
-      const urlObj = new URL(url);
-      // Return hostname without www. prefix
-      return urlObj.hostname.replace(/^www\./, '');
-    } catch {
-      // If URL parsing fails, return truncated original
-      return url.length > 40 ? url.substring(0, 37) + '...' : url;
-    }
-  };
 
   // Special handling for layout-widget: show aspect ratio and zone count
   if (widgetSlug === 'layout-widget') {
@@ -161,19 +172,6 @@ const getWidgetSubtitle = (item: JsonPlaylistItem): string | null => {
   return null;
 };
 
-// Helper to construct full icon URL with baseUrl
-const getIconUrl = (
-  icon: string | undefined,
-  baseUrl: string
-): string | undefined => {
-  if (!icon) return undefined;
-  // If icon starts with /, prepend baseUrl (relative to server)
-  if (icon.startsWith('/')) {
-    return `${baseUrl}${icon}`;
-  }
-  return icon;
-};
-
 const Thumbnail: Component<{
   item: JsonPlaylistItem;
   baseUrl: string;
@@ -185,12 +183,6 @@ const Thumbnail: Component<{
   const iconUrl = getIconUrl(widgetIcon, props.baseUrl);
   const integrationError = () => props.item.integration_error;
 
-  const isImageIcon =
-    iconUrl &&
-    (iconUrl.startsWith('data:image/') ||
-      iconUrl.startsWith('http://') ||
-      iconUrl.startsWith('https://'));
-
   return (
     <div class={styles.thumbnailContainer}>
       <Show
@@ -198,7 +190,7 @@ const Thumbnail: Component<{
         fallback={
           <div class={styles.widgetIconContainer}>
             <Show
-              when={isImageIcon}
+              when={isImageIcon(iconUrl)}
               fallback={
                 <span class={styles.iconSymbol}>
                   {widgetIcon || DEFAULT_WIDGET_ICON}
@@ -242,47 +234,6 @@ const Thumbnail: Component<{
       </div>
     </div>
   );
-};
-
-/**
- * Recursively check if a template contains a component with dynamic duration
- * (video, scroller, layout, or paginated-list). These components determine their duration at runtime
- * based on content (video length, scroll distance/speed, contained playlists, or number of items).
- */
-const containsDynamicDurationComponent = (template: any): boolean => {
-  if (!template) return false;
-
-  const type = template.type;
-  // Layout, video, scroller, and paginated-list all have dynamic durations determined at runtime
-  if (
-    type === 'video' ||
-    type === 'scroller' ||
-    type === 'layout' ||
-    type === 'paginated-list'
-  ) {
-    return true;
-  }
-
-  // Check nested components array (for group, layout, etc.)
-  if (template.components && Array.isArray(template.components)) {
-    return template.components.some(containsDynamicDurationComponent);
-  }
-
-  // Check single nested component (for scroller's item template)
-  if (template.component) {
-    return containsDynamicDurationComponent(template.component);
-  }
-
-  return false;
-};
-
-/**
- * Check if a widget has dynamic duration (determined by content, not user input).
- * Video and scroller widgets calculate their duration based on content length/scroll speed.
- * This checks recursively since the dynamic component may be nested (e.g., scroller inside a group).
- */
-const hasDynamicDuration = (item: JsonPlaylistItem): boolean => {
-  return containsDynamicDurationComponent(item.widget.template);
 };
 
 export const PlaylistItem: Component<{

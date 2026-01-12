@@ -1,18 +1,41 @@
 /**
  * Safely stringify an object, handling circular references.
  * Returns a fingerprint string for dependency tracking purposes.
+ *
+ * Use case: This function is primarily used for SolidJS effect dependency tracking,
+ * where we need to serialize nested objects to detect deep changes. Circular references
+ * can occur in complex widget configurations (e.g., layout references, nested playlists).
+ *
+ * Performance notes:
+ * - First attempts standard JSON.stringify (fast path for non-circular data)
+ * - Falls back to circular-reference-safe version only when needed
+ * - The fast path avoids WeakSet allocation for the common case
+ *
+ * @param obj - The object to stringify
+ * @returns JSON string representation, with '[Circular]' for circular references
  */
 export function safeStringify(obj: unknown): string {
-  const seen = new WeakSet();
-  return JSON.stringify(obj, (_key, value) => {
-    if (typeof value === 'object' && value !== null) {
-      if (seen.has(value)) {
-        return '[Circular]';
-      }
-      seen.add(value);
+  // Fast path: try standard JSON.stringify first
+  // This handles the common case without WeakSet overhead
+  try {
+    return JSON.stringify(obj);
+  } catch (error) {
+    // If we get a circular reference error, fall back to safe version
+    if (error instanceof TypeError && error.message.includes('circular')) {
+      const seen = new WeakSet();
+      return JSON.stringify(obj, (_key, value) => {
+        if (typeof value === 'object' && value !== null) {
+          if (seen.has(value)) {
+            return '[Circular]';
+          }
+          seen.add(value);
+        }
+        return value;
+      });
     }
-    return value;
-  });
+    // Re-throw other errors
+    throw error;
+  }
 }
 
 /**
