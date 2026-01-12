@@ -174,7 +174,7 @@ defmodule Castmill.QuotasTest do
       # Organization should use its assigned plan, not the network default
       assert Quotas.get_quota_for_organization(organization.id, "medias") == 500
       assert Quotas.get_quota_for_organization(organization.id, "teams") == 25
-      
+
       # For resources not in the org plan, should fall back to network default plan
       assert Quotas.get_quota_for_organization(organization.id, "storage") == 1_073_741_824
       assert Quotas.get_quota_for_organization(organization.id, "users") == 50
