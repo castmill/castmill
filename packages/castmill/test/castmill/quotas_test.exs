@@ -463,8 +463,6 @@ defmodule Castmill.QuotasTest do
     end
 
     test "users quota calculation counts organization members" do
-      import Castmill.AccountsFixtures
-
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
 
@@ -475,10 +473,29 @@ defmodule Castmill.QuotasTest do
                Castmill.Organizations.OrganizationsUsers
              ) == 0
 
-      # Add users to the organization
-      user1 = user_fixture(%{email: "user1@test.com", network_id: network.id})
-      user2 = user_fixture(%{email: "user2@test.com", network_id: network.id})
-      user3 = user_fixture(%{email: "user3@test.com", network_id: network.id})
+      # Add users to the organization (use unique emails to avoid conflicts)
+      unique_id = System.unique_integer([:positive])
+
+      user1 =
+        user_fixture(%{
+          email: "user1_#{unique_id}@test.com",
+          name: "User1 #{unique_id}",
+          network_id: network.id
+        })
+
+      user2 =
+        user_fixture(%{
+          email: "user2_#{unique_id}@test.com",
+          name: "User2 #{unique_id}",
+          network_id: network.id
+        })
+
+      user3 =
+        user_fixture(%{
+          email: "user3_#{unique_id}@test.com",
+          name: "User3 #{unique_id}",
+          network_id: network.id
+        })
 
       # Associate users with organization
       Castmill.Repo.insert!(%Castmill.Organizations.OrganizationsUsers{

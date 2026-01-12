@@ -29,12 +29,14 @@ defmodule Castmill.OrganizationsFixtures do
   Generate a user
   """
   def user_fixture(attrs \\ %{}) do
+    unique_id = System.unique_integer([:positive])
+
     {:ok, user} =
       attrs
       |> Enum.into(%{
         avatar: "https://some.url.com",
-        email: "some@email.com",
-        name: "some name"
+        email: "user_#{unique_id}@email.com",
+        name: "User #{unique_id}"
       })
       |> Castmill.Accounts.create_user()
 

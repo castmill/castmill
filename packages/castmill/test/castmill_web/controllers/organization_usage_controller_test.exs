@@ -13,6 +13,11 @@ defmodule CastmillWeb.OrganizationUsageControllerTest do
   setup %{conn: conn} do
     network = network_fixture()
     organization = organization_fixture(%{network_id: network.id})
+    user = user_fixture(%{organization_id: organization.id})
+
+    # Create access token for authentication
+    access_token =
+      access_token_fixture(%{secret: "testuser:testpass", user_id: user.id, is_root: true})
 
     # Set up a plan with quotas for the organization
     plan =
@@ -28,10 +33,12 @@ defmodule CastmillWeb.OrganizationUsageControllerTest do
 
     Quotas.assign_plan_to_organization(plan.id, organization.id)
 
-    {:ok,
-     conn: put_req_header(conn, "accept", "application/json"),
-     organization: organization,
-     network: network}
+    conn =
+      conn
+      |> put_req_header("accept", "application/json")
+      |> put_req_header("authorization", "Bearer #{access_token.secret}")
+
+    {:ok, conn: conn, organization: organization, network: network, user: user}
   end
 
   describe "index" do
@@ -40,9 +47,22 @@ defmodule CastmillWeb.OrganizationUsageControllerTest do
       organization: organization,
       network: network
     } do
-      # Add some users to the organization
-      user1 = user_fixture(%{email: "user1@test.com", network_id: network.id})
-      user2 = user_fixture(%{email: "user2@test.com", network_id: network.id})
+      # Add some users to the organization (use unique emails to avoid conflicts)
+      unique_id = System.unique_integer([:positive])
+
+      user1 =
+        user_fixture(%{
+          email: "user1_#{unique_id}@test.com",
+          name: "User1 #{unique_id}",
+          network_id: network.id
+        })
+
+      user2 =
+        user_fixture(%{
+          email: "user2_#{unique_id}@test.com",
+          name: "User2 #{unique_id}",
+          network_id: network.id
+        })
 
       Castmill.Repo.insert!(%Castmill.Organizations.OrganizationsUsers{
         organization_id: organization.id,
