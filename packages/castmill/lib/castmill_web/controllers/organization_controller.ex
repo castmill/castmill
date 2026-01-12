@@ -200,7 +200,9 @@ defmodule CastmillWeb.OrganizationController do
     organization_id: [type: :string, required: true],
     page: [type: :integer, number: [min: 1]],
     page_size: [type: :integer, number: [min: 1, max: 100]],
-    search: :string
+    search: :string,
+    key: :string,
+    direction: :string
   }
 
   # TODO: We also need a Quota plug to check if the user has enough quota to create resources in

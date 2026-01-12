@@ -43,27 +43,50 @@ defmodule Castmill.Teams do
         search: search,
         page: page,
         page_size: page_size
-      }) do
+      } = params) do
     offset = if page_size == nil, do: 0, else: max((page - 1) * page_size, 0)
 
     Team.base_query()
     |> Organization.where_org_id(organization_id)
     |> QueryHelpers.where_name_like(search)
-    |> order_by([t], desc: t.id)
+    |> apply_sorting(params)
     |> Ecto.Query.limit(^page_size)
     |> Ecto.Query.offset(^offset)
     |> Repo.all()
   end
 
-  def list_teams(%{search: search, page: page, page_size: page_size}) do
-    list_teams(%{organization_id: nil, search: search, page: page, page_size: page_size})
+  def list_teams(%{search: _search, page: _page, page_size: _page_size} = params) do
+    list_teams(Map.put(params, :organization_id, nil))
   end
 
   def list_teams(organization_id) do
     Team.base_query()
     |> Organization.where_org_id(organization_id)
-    |> order_by([t], desc: t.id)
+    |> Ecto.Query.order_by([t], desc: t.id)
     |> Repo.all()
+  end
+
+  # Helper function to apply sorting to a query based on params
+  defp apply_sorting(query, params) do
+    sort_key = Map.get(params, :key)
+    sort_direction = Map.get(params, :direction, "ascending")
+
+    sort_dir =
+      case sort_direction do
+        "ascending" -> :asc
+        "descending" -> :desc
+        _ -> :asc
+      end
+
+    sort_field =
+      case sort_key do
+        "name" -> :name
+        "inserted_at" -> :inserted_at
+        "updated_at" -> :updated_at
+        _ -> :name
+      end
+
+    Ecto.Query.order_by(query, [{^sort_dir, ^sort_field}])
   end
 
   def count_teams(%{organization_id: organization_id, search: search}) do

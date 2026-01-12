@@ -1046,6 +1046,33 @@ defmodule Castmill.Resources do
     Repo.one(items_query)
   end
 
+  # Helper function to apply sorting to a query based on params
+  # Supports key (column name) and direction (ascending/descending)
+  defp apply_sorting(query, params) do
+    sort_key = Map.get(params, :key)
+    sort_direction = Map.get(params, :direction, "ascending")
+
+    # Convert sort direction string to atom
+    sort_dir =
+      case sort_direction do
+        "ascending" -> :asc
+        "descending" -> :desc
+        _ -> :asc
+      end
+
+    # Convert sort key string to atom, with validation
+    # Only allow sorting by known safe columns to prevent SQL injection
+    sort_field =
+      case sort_key do
+        "name" -> :name
+        "inserted_at" -> :inserted_at
+        "updated_at" -> :updated_at
+        _ -> :name
+      end
+
+    Ecto.Query.order_by(query, [{^sort_dir, ^sort_field}])
+  end
+
   @doc """
   Returns the list of a given resource for a given organization.
 
@@ -1061,7 +1088,7 @@ defmodule Castmill.Resources do
         search: search,
         filters: filters,
         team_id: team_id
-      })
+      } = params)
       when not is_nil(team_id) do
     offset = (page_size && max((page - 1) * page_size, 0)) || 0
 
@@ -1083,7 +1110,7 @@ defmodule Castmill.Resources do
       |> where([_, t], t.team_id == ^team_id)
       |> QueryHelpers.apply_combined_filters(filters, resource)
       |> QueryHelpers.where_name_like(search)
-      |> Ecto.Query.order_by([d], asc: d.name)
+      |> apply_sorting(params)
       |> Ecto.Query.limit(^page_size)
       |> Ecto.Query.offset(^offset)
       |> Ecto.Query.preload(^preloads)
@@ -1097,7 +1124,7 @@ defmodule Castmill.Resources do
         page_size: page_size,
         search: search,
         filters: filters
-      }) do
+      } = params) do
     offset = (page_size && max((page - 1) * page_size, 0)) || 0
 
     preloads =
@@ -1112,7 +1139,7 @@ defmodule Castmill.Resources do
     |> QueryHelpers.apply_combined_filters(filters, resource)
     |> QueryHelpers.where_name_like(search)
     |> Ecto.Query.distinct(true)
-    |> Ecto.Query.order_by([d], asc: d.name)
+    |> apply_sorting(params)
     |> Ecto.Query.limit(^page_size)
     |> Ecto.Query.offset(^offset)
     |> Ecto.Query.preload(^preloads)
@@ -1534,7 +1561,7 @@ defmodule Castmill.Resources do
         page_size: page_size,
         search: search,
         filters: filters
-      }) do
+      } = params) do
     offset = (page_size && max((page - 1) * page_size, 0)) || 0
 
     Layout.base_query()
@@ -1542,7 +1569,7 @@ defmodule Castmill.Resources do
     |> QueryHelpers.apply_combined_filters(filters, Layout)
     |> QueryHelpers.where_name_like(search)
     |> Ecto.Query.distinct(true)
-    |> Ecto.Query.order_by([d], asc: d.name)
+    |> apply_sorting(params)
     |> Ecto.Query.limit(^page_size)
     |> Ecto.Query.offset(^offset)
     |> Repo.all()
