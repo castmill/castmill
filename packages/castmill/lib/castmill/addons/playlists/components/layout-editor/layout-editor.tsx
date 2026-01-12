@@ -161,7 +161,7 @@ const FRACTIONAL_SIZES = [
  * Generates a unique ID for a new zone
  */
 const generateZoneId = (): string => {
-  return `zone-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  return `zone-${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
 };
 
 /**
@@ -330,9 +330,6 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
 
   // Add a new zone
   const addZone = () => {
-    console.log('[LayoutEditor] addZone called');
-    console.log('[LayoutEditor] current zones:', props.value.zones);
-
     const newZone: LayoutZone = {
       id: generateZoneId(),
       name: `Zone ${props.value.zones.length + 1}`,
@@ -340,14 +337,11 @@ export const LayoutEditor: Component<LayoutEditorProps> = (props) => {
       zIndex: props.value.zones.length + 1,
     };
 
-    console.log('[LayoutEditor] new zone:', newZone);
-
     const newValue = {
       ...props.value,
       zones: [...props.value.zones, newZone],
     };
 
-    console.log('[LayoutEditor] calling onChange with:', newValue);
     props.onChange(newValue);
 
     setSelectedZoneId(newZone.id);

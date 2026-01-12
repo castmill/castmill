@@ -233,8 +233,6 @@ export const PlaylistView: Component<{
   };
 
   const handleLayerOffsets = (offsets: LayerOffset[]) => {
-    console.log('[handleLayerOffsets] Received offsets:', offsets);
-
     if (!offsets || offsets.length === 0) {
       setDynamicDurations({});
       return;
@@ -242,11 +240,6 @@ export const PlaylistView: Component<{
 
     const durationMap: Record<number, number> = {};
     const currentItems = items();
-
-    console.log(
-      '[handleLayerOffsets] Current items:',
-      currentItems.map((i) => ({ id: i?.id, duration: i?.duration }))
-    );
 
     currentItems.forEach((item, index) => {
       if (!item?.id) {
@@ -260,13 +253,9 @@ export const PlaylistView: Component<{
       const runtime = offsets[index]?.duration;
       if (typeof runtime === 'number' && runtime > 0) {
         durationMap[item.id] = runtime;
-        console.log(
-          `[handleLayerOffsets] Mapping item ${item.id} (index ${index}) to duration ${runtime}ms`
-        );
       }
     });
 
-    console.log('[handleLayerOffsets] Final durationMap:', durationMap);
     setDynamicDurations(durationMap);
   };
 
@@ -451,7 +440,6 @@ export const PlaylistView: Component<{
 
       updatePlaylistItems(newItems);
     } catch (err) {
-      console.log(err);
       toast.error(`Error inserting widget into playlist: ${err}`);
     }
   };

@@ -812,8 +812,8 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
             organizationId={props.store.organizations.selectedId}
             playlistId={currentPlaylist()?.id!}
             t={t}
-            onChange={(playlist) => {
-              console.log('Playlist changed', playlist);
+            onChange={() => {
+              // Playlist changed
             }}
             onNavigateAway={closeModal}
           />
@@ -904,7 +904,6 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
       >
         <div style="margin: 1.5em; line-height: 1.5em;">
           {Array.from(selectedPlaylists()).map((resourceId) => {
-            console.log('Resource ID', resourceId);
             const resource = data().find((d) => d.id == resourceId);
             return <div>{`- ${resource?.name}`}</div>;
           })}

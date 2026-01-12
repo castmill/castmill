@@ -113,7 +113,6 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
     },
     /* onUpdate */
     (resource: JsonMedia, data: Partial<JsonMedia>) => {
-      console.log('Updating media', resource.id, data);
       updateItem(resource.id, data);
     }
   );
@@ -492,8 +491,8 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
             store={props.store}
             baseUrl={props.store.env.baseUrl}
             organizationId={props.store.organizations.selectedId}
-            onFileUpload={(fileName: string, result: any) => {
-              console.log('File uploaded', fileName, result);
+            onFileUpload={() => {
+              // File upload handled
             }}
             onUploadComplete={() => {
               // Refresh table
