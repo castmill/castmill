@@ -118,7 +118,10 @@ defmodule CastmillWeb.DeviceControllerTest do
 
       # Create two channels and add them to the device (need at least 2 to be able to remove one)
       channel1 = channel_fixture(%{organization_id: organization.id, timezone: "UTC"})
-      channel2 = channel_fixture(%{organization_id: organization.id, timezone: "America/New_York"})
+
+      channel2 =
+        channel_fixture(%{organization_id: organization.id, timezone: "America/New_York"})
+
       Castmill.Devices.add_channel(device.id, channel1.id)
       Castmill.Devices.add_channel(device.id, channel2.id)
 
