@@ -1,0 +1,140 @@
+/**
+ * Spotify Connect Component Styles
+ * 
+ * Provides styling for the Spotify OAuth connection component
+ * used in widget configuration.
+ */
+
+.spotify-connect {
+  padding: 1em;
+  border: 1px solid var(--color-border, #e0e0e0);
+  border-radius: 0.5em;
+  background: var(--color-bg-secondary, #f8f9fa);
+  margin-bottom: 1em;
+  
+  .spotify-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    margin-bottom: 1em;
+    
+    .spotify-icon {
+      color: #1db954; // Spotify green
+    }
+    
+    .spotify-title {
+      margin: 0;
+      font-size: 1.125em;
+      font-weight: 600;
+      color: var(--color-text-primary, #212529);
+    }
+  }
+  
+  .spotify-loading {
+    padding: 1em;
+    text-align: center;
+    color: var(--color-text-secondary, #6c757d);
+    font-style: italic;
+  }
+  
+  .spotify-description {
+    margin: 0 0 1em 0;
+    color: var(--color-text-secondary, #6c757d);
+    font-size: 0.875em;
+    line-height: 1.5;
+  }
+  
+  .spotify-disconnected {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    
+    .spotify-connect-button {
+      background: #1db954; // Spotify green
+      border-color: #1db954;
+      color: white;
+      
+      &:hover {
+        background: #1ed760;
+        border-color: #1ed760;
+      }
+      
+      &:active {
+        background: #1aa34a;
+        border-color: #1aa34a;
+      }
+    }
+  }
+  
+  .spotify-connected {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75em;
+    
+    .spotify-status {
+      display: flex;
+      align-items: center;
+      gap: 0.75em;
+      flex-wrap: wrap;
+      
+      .status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25em 0.75em;
+        border-radius: 1em;
+        font-size: 0.875em;
+        font-weight: 500;
+        
+        &.connected {
+          background: rgba(29, 185, 84, 0.15);
+          color: #1db954;
+          
+          &::before {
+            content: '●';
+            margin-right: 0.5em;
+            font-size: 0.75em;
+          }
+        }
+      }
+      
+      .connected-date {
+        font-size: 0.8125em;
+        color: var(--color-text-muted, #adb5bd);
+      }
+    }
+    
+    .spotify-disconnect-button {
+      align-self: flex-start;
+      background: transparent;
+      border: 1px solid var(--color-border, #dee2e6);
+      color: var(--color-text-secondary, #6c757d);
+      
+      &:hover {
+        background: rgba(220, 53, 69, 0.1);
+        border-color: #dc3545;
+        color: #dc3545;
+      }
+    }
+  }
+}
+
+// Dark mode support
+@media (prefers-color-scheme: dark) {
+  .spotify-connect {
+    border-color: var(--color-border-dark, #3d4450);
+    background: var(--color-bg-secondary-dark, #2a2d35);
+    
+    .spotify-header .spotify-title {
+      color: var(--color-text-primary-dark, #f8f9fa);
+    }
+    
+    .spotify-description,
+    .spotify-loading {
+      color: var(--color-text-secondary-dark, #adb5bd);
+    }
+    
+    .spotify-status .connected-date {
+      color: var(--color-text-muted-dark, #868e96);
+    }
+  }
+}

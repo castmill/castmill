@@ -12,14 +12,20 @@ import {
   Show,
   onCleanup,
 } from 'solid-js';
-import { useToast } from '@castmill/ui-common';
+import { useToast, Modal, Button } from '@castmill/ui-common';
 
 import './playlist-view.scss';
 import { PlaylistsService } from '../services/playlists.service';
 import { WidgetChooser } from './widget-chooser';
-import { PlaylistItems } from './playlist-items';
-import { PlaylistPreview } from './playlist-preview';
+import { PlaylistItems, CredentialsError } from './playlist-items';
+import {
+  PlaylistPreview,
+  PlaylistPreviewRef,
+  LayerOffset,
+} from './playlist-preview';
 import { AddonStore } from '../../common/interfaces/addon-store';
+import { getDefaultDataFromSchema } from '../utils/schema-utils';
+import { containsDynamicDurationComponent } from '../utils/duration-utils';
 
 export const PlaylistView: Component<{
   store: AddonStore;
@@ -27,6 +33,7 @@ export const PlaylistView: Component<{
   organizationId: string;
   baseUrl: string;
   onChange?: (playlist: JsonPlaylist) => void;
+  onNavigateAway?: () => void;
   t?: (key: string, params?: Record<string, any>) => string;
 }> = (props) => {
   const toast = useToast();
@@ -35,6 +42,11 @@ export const PlaylistView: Component<{
   const [loading, setLoading] = createSignal(true);
   const [items, setItems] = createSignal<JsonPlaylistItem[]>([]);
   const [playlist, setPlaylist] = createSignal<JsonPlaylist>();
+  const [credentialsError, setCredentialsError] =
+    createSignal<CredentialsError | null>(null);
+  const [dynamicDurations, setDynamicDurations] = createSignal<
+    Record<number, number>
+  >({});
 
   // Track whether to constrain by width or height based on container size
   const [constrainByWidth, setConstrainByWidth] = createSignal(false);
@@ -44,9 +56,41 @@ export const PlaylistView: Component<{
   const [containerReady, setContainerReady] = createSignal(false);
   const [containerHeight, setContainerHeight] = createSignal<number>();
 
+  // Store reference to playlist preview for seeking
+  let previewRef: PlaylistPreviewRef | null = null;
+  let seekDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+
   const updatePlaylistItems = (nextItems: JsonPlaylistItem[]) => {
     setItems(nextItems);
     setPlaylist((prev) => (prev ? { ...prev, items: nextItems } : prev));
+  };
+
+  // Handle credentials error from widget insertion
+  const handleCredentialsError = (error: CredentialsError) => {
+    setCredentialsError(error);
+  };
+
+  // Navigate to widget integrations page
+  const goToWidgetIntegrations = () => {
+    const error = credentialsError();
+    if (error?.widget?.id) {
+      // Close the credentials error modal first
+      setCredentialsError(null);
+
+      // Close the parent playlist modal before navigating
+      props.onNavigateAway?.();
+
+      // Navigate to the widgets addon with widget ID in path (RESTful)
+      // URL pattern: /org/:orgId/content/widgets/:widgetId?tab=integrations
+      const url = `/org/${props.organizationId}/content/widgets/${error.widget.id}?tab=integrations`;
+
+      // Use soft navigation if available, otherwise fall back to hard redirect
+      if (props.store.router?.navigate) {
+        props.store.router.navigate(url);
+      } else {
+        window.location.href = url;
+      }
+    }
   };
 
   // Setup resize observer to dynamically adjust aspect ratio constraints
@@ -156,6 +200,33 @@ export const PlaylistView: Component<{
     setWidgets(result.data);
   };
 
+  const handleLayerOffsets = (offsets: LayerOffset[]) => {
+    if (!offsets || offsets.length === 0) {
+      setDynamicDurations({});
+      return;
+    }
+
+    const durationMap: Record<number, number> = {};
+    const currentItems = items();
+
+    currentItems.forEach((item, index) => {
+      if (!item?.id) {
+        return;
+      }
+
+      if (typeof item.duration === 'number' && item.duration > 0) {
+        return;
+      }
+
+      const runtime = offsets[index]?.duration;
+      if (typeof runtime === 'number' && runtime > 0) {
+        durationMap[item.id] = runtime;
+      }
+    });
+
+    setDynamicDurations(durationMap);
+  };
+
   const onEditItem = async (
     item: JsonPlaylistItem,
     {
@@ -167,6 +238,9 @@ export const PlaylistView: Component<{
     }
   ) => {
     try {
+      // Recalculate duration based on updated options
+      const newDuration = resolveWidgetDuration(item.widget, expandedOptions);
+
       await PlaylistsService.updateWidgetConfig(
         props.baseUrl,
         props.organizationId,
@@ -178,9 +252,38 @@ export const PlaylistView: Component<{
         }
       );
 
+      // If duration changed, update it on the server
+      if (newDuration !== item.duration) {
+        await PlaylistsService.updateItemInPlaylist(
+          props.baseUrl,
+          props.organizationId,
+          props.playlistId,
+          item.id,
+          { duration: newDuration }
+        );
+      }
+
+      // Fetch integration data for the updated widget config
+      // This triggers on-demand fetch with the new options and returns fresh data
+      const widgetConfigId = item.config.id;
+      const integrationData = widgetConfigId
+        ? await PlaylistsService.fetchWidgetConfigData(
+            props.baseUrl,
+            widgetConfigId
+          )
+        : null;
+
       const newItems = items().map((i) =>
         i.id === item.id
-          ? { ...i, config: { ...config, options: expandedOptions } }
+          ? {
+              ...i,
+              duration: newDuration,
+              config: {
+                ...config,
+                options: expandedOptions,
+                data: integrationData || config.data || {},
+              },
+            }
           : i
       );
 
@@ -191,9 +294,26 @@ export const PlaylistView: Component<{
   };
 
   const resolveWidgetDuration = (widget: JsonWidget, config: OptionsDict) => {
-    if (widget.template.type === 'image') {
-      return config.duration ? (config.duration as number) * 1000 : 10000;
+    // Check for explicit duration settings in config options
+    // Common duration option names: duration, display_duration
+    const durationFromConfig =
+      config.duration ?? config.display_duration ?? null;
+
+    if (durationFromConfig !== null && typeof durationFromConfig === 'number') {
+      return durationFromConfig * 1000; // Convert seconds to ms
     }
+
+    if (widget.template.type === 'image') {
+      return 10000;
+    }
+
+    // For widgets containing video or scroller components, use duration 0
+    // to indicate the player should use the actual dynamic duration.
+    // The Layer class will fall back to widget.duration() when _duration is 0.
+    if (containsDynamicDurationComponent(widget.template)) {
+      return 0;
+    }
+
     return 10000;
   };
 
@@ -209,7 +329,8 @@ export const PlaylistView: Component<{
     }
   ) => {
     const prevItem = items()[index - 1];
-    const duration = resolveWidgetDuration(widget, config.options!);
+    // Use expandedOptions which includes default values from the schema
+    const duration = resolveWidgetDuration(widget, expandedOptions);
 
     try {
       const newItem = await PlaylistsService.insertWidgetIntoPlaylist(
@@ -225,6 +346,18 @@ export const PlaylistView: Component<{
         }
       );
 
+      // Fetch integration data for the new widget config
+      // This triggers on-demand fetch if needed and returns cached/fresh data
+      const integrationData = await PlaylistsService.fetchWidgetConfigData(
+        props.baseUrl,
+        newItem.widget_config_id
+      );
+
+      // Use integration data if available, otherwise fall back to default data from schema
+      // This ensures widgets like scrollers have data to render before integration fetches complete
+      const defaultData = getDefaultDataFromSchema(widget.data_schema);
+      const widgetData = integrationData || config.data || defaultData;
+
       const newItems = [...items()];
       newItems.splice(index ?? 0, 0, {
         id: newItem.id,
@@ -234,10 +367,10 @@ export const PlaylistView: Component<{
         slack: 0,
         name: widget.name,
         config: {
-          id: newItem.id,
+          id: newItem.widget_config_id, // Use the widget_config_id from the server
           widget_id: widget.id!,
           options: expandedOptions,
-          data: config.data || {},
+          data: widgetData,
         },
       });
 
@@ -351,6 +484,41 @@ export const PlaylistView: Component<{
     };
   };
 
+  // Calculate offset for a given item index and seek to it (debounced)
+  const seekToItem = (index: number) => {
+    // Clear any pending seek
+    if (seekDebounceTimer) {
+      clearTimeout(seekDebounceTimer);
+    }
+
+    // Debounce seeks to avoid queuing
+    seekDebounceTimer = setTimeout(() => {
+      if (!previewRef) {
+        return;
+      }
+
+      const currentItems = items();
+      if (index < 0 || index >= currentItems.length) {
+        return;
+      }
+
+      // Get the real offsets from the player (calculated from actual layer durations)
+      const layerOffsets = previewRef.getLayerOffsets();
+
+      if (index < layerOffsets.length) {
+        const offset = layerOffsets[index].start;
+        previewRef.seek(offset);
+      }
+    }, 100); // 100ms debounce
+  };
+
+  onCleanup(() => {
+    if (seekDebounceTimer) {
+      clearTimeout(seekDebounceTimer);
+      seekDebounceTimer = null;
+    }
+  });
+
   return (
     <Show when={!loading()}>
       <div
@@ -365,7 +533,11 @@ export const PlaylistView: Component<{
       >
         <div class="playlist-view">
           <div class="playlist-items-wrapper">
-            <WidgetChooser widgets={widgets()} onSearch={handleWidgetSearch} />
+            <WidgetChooser
+              widgets={widgets()}
+              baseUrl={props.baseUrl}
+              onSearch={handleWidgetSearch}
+            />
             <div class="drag-indicator">
               <div class="arrow-container">
                 <div class="arrow-line"></div>
@@ -377,12 +549,16 @@ export const PlaylistView: Component<{
               store={props.store}
               baseUrl={props.baseUrl}
               organizationId={props.organizationId}
+              playlistId={props.playlistId}
               items={items()}
+              dynamicDurations={dynamicDurations()}
               onEditItem={onEditItem}
               onInsertItem={onInsertItem}
               onMoveItem={onMoveItem}
               onRemoveItem={onRemoveItem}
               onChangeDuration={onChangeDuration}
+              onCredentialsError={handleCredentialsError}
+              onSeekToItem={seekToItem}
             />
           </div>
 
@@ -404,11 +580,58 @@ export const PlaylistView: Component<{
                 }`,
               }}
             >
-              <PlaylistPreview playlist={playlist()!} />
+              <PlaylistPreview
+                playlist={playlist()!}
+                onReady={async (ref) => {
+                  previewRef = ref;
+                  // Prime all layers to calculate their actual durations
+                  const offsets = await ref.primeAllLayers();
+                  handleLayerOffsets(offsets);
+                }}
+              />
             </div>
           </div>
         </div>
       </div>
+
+      {/* Credentials Error Modal */}
+      <Show when={credentialsError()}>
+        <Modal
+          title={t('playlists.credentialsRequired')}
+          description={t('playlists.credentialsRequiredDescription', {
+            widget: credentialsError()?.widget?.name || t('common.widget'),
+          })}
+          onClose={() => setCredentialsError(null)}
+        >
+          <div
+            style={{ display: 'flex', 'flex-direction': 'column', gap: '1em' }}
+          >
+            <p style={{ margin: 0 }}>
+              {t('playlists.missingIntegrations')}:{' '}
+              <strong>
+                {credentialsError()?.missingIntegrations?.join(', ')}
+              </strong>
+            </p>
+            <div
+              style={{
+                display: 'flex',
+                gap: '0.5em',
+                'justify-content': 'flex-end',
+              }}
+            >
+              <Button
+                label={t('common.cancel')}
+                color="secondary"
+                onClick={() => setCredentialsError(null)}
+              />
+              <Button
+                label={t('playlists.goToIntegrations')}
+                onClick={goToWidgetIntegrations}
+              />
+            </div>
+          </div>
+        </Modal>
+      </Show>
     </Show>
   );
 };

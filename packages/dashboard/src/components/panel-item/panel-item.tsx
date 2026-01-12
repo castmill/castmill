@@ -25,7 +25,7 @@ interface PanelItemProps {
 const PanelItem: Component<PanelItemProps> = (props) => {
   return (
     <span class={`castmill-panel-item item-level-${props.level}`}>
-      <A href={props.to}>
+      <A href={props.to} end={false}>
         {props.icon && <props.icon></props.icon>}
         <span>{props.text}</span>
       </A>

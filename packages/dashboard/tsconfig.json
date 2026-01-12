@@ -16,6 +16,8 @@
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "noEmit": true,
     "isolatedModules": true,
-    "skipLibCheck": true
-  }
+    "skipLibCheck": true,
+    "resolveJsonModule": true
+  },
+  "exclude": ["PERMISSIONS_ADDON_EXAMPLE.tsx"]
 }

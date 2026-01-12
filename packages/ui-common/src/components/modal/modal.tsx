@@ -205,11 +205,7 @@ export const Modal: Component<ModalProps> = (props) => {
               <h2>{props.title}</h2>
               <h3>{props.description}</h3>
             </div>
-            <IconButton
-              icon={VsClose}
-              onClick={props.onClose}
-              color="secondary"
-            />
+            <IconButton icon={VsClose} onClick={closeModal} color="secondary" />
           </div>
           {props.successMessage && (
             <div class={styles.modalSuccess}>{props.successMessage}</div>
@@ -224,7 +220,7 @@ export const Modal: Component<ModalProps> = (props) => {
           {isLoading() && <div class={styles.modalLoading}>Loading...</div>}
           <div class={styles.modalFooter}>
             {props.successMessage && (
-              <Button icon={BsCheckLg} label="Close" onClick={props.onClose} />
+              <Button icon={BsCheckLg} label="Close" onClick={closeModal} />
             )}
             {props.errorMessage && props.showRetryButton && (
               <Button

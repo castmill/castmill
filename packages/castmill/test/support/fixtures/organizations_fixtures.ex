@@ -4,16 +4,23 @@ defmodule Castmill.OrganizationsFixtures do
   entities via the `Castmill.Organizations` context.
   """
 
+  alias Castmill.NetworksFixtures
+
   @doc """
   Generate a organization.
   """
   def organization_fixture(attrs \\ %{}) do
-    {:ok, organization} =
+    network = Map.get(attrs, :network) || NetworksFixtures.network_fixture()
+
+    attrs =
       attrs
+      |> Map.delete(:network)
       |> Enum.into(%{
         name: "some name"
       })
-      |> Castmill.Organizations.create_organization()
+      |> Map.put_new(:network_id, network.id)
+
+    {:ok, organization} = Castmill.Organizations.create_organization(attrs)
 
     organization
   end

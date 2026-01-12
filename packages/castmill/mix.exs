@@ -58,6 +58,7 @@ defmodule Castmill.MixProject do
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:phoenix_live_view, "~> 0.18.16"},
       {:phoenix_live_dashboard, "~> 0.7.2"},
+      {:sweet_xml, "~> 0.7"},
       {:swoosh, "~> 1.3"},
       {:tailwind, "~> 0.2.0", runtime: Mix.env() == :dev},
       {:telemetry_metrics, "~> 0.6"},

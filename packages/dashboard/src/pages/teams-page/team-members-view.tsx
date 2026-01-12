@@ -391,7 +391,7 @@ export const TeamMembersView = (props: {
         show={showConfirmDialog()}
         title={t('teams.dialogs.removeMemberTitle')}
         message={t('teams.dialogs.removeMemberMessage', {
-          name: currentMember()?.user?.name,
+          name: currentMember()?.user?.name || '',
         })}
         onClose={() => setShowConfirmDialog(false)}
         onConfirm={() => confirmRemoveMemberFromTeam(currentMember()?.user)}

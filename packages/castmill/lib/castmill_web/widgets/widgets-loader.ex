@@ -37,13 +37,25 @@ defmodule CastmillWeb.Widgets.WidgetsLoader do
       slug = slugify(name)
       widget = Widget |> Repo.get_by(slug: slug)
 
+      # Preserve existing icon and small_icon if not provided in JSON
+      widget_data_with_icons =
+        case widget do
+          nil ->
+            widget_data
+
+          existing ->
+            widget_data
+            |> maybe_preserve_field("icon", existing.icon)
+            |> maybe_preserve_field("small_icon", existing.small_icon)
+        end
+
       changeset =
         case widget do
           nil ->
-            %Widget{} |> Widget.changeset(Map.put(widget_data, "slug", slug))
+            %Widget{} |> Widget.changeset(Map.put(widget_data_with_icons, "slug", slug))
 
           _ ->
-            Widget.changeset(widget, Map.put(widget_data, "slug", slug))
+            Widget.changeset(widget, Map.put(widget_data_with_icons, "slug", slug))
         end
 
       case Repo.insert_or_update(changeset) do
@@ -54,6 +66,15 @@ defmodule CastmillWeb.Widgets.WidgetsLoader do
           IO.puts("Failed to insert/update widget: #{inspect(changeset)}")
       end
     end)
+  end
+
+  # Preserve existing field value if not provided in new data
+  defp maybe_preserve_field(widget_data, field, existing_value) do
+    if Map.has_key?(widget_data, field) do
+      widget_data
+    else
+      Map.put(widget_data, field, existing_value)
+    end
   end
 
   defp slugify(name) do

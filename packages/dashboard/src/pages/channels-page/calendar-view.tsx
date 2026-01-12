@@ -44,6 +44,7 @@ interface CalendarViewProps {
 
 export const CalendarView: Component<CalendarViewProps> = (props) => {
   const { t } = useI18n();
+  const toast = useToast();
   const [showEntryModal, setShowEntryModal] = createSignal<CalendarEntry>();
 
   // Start date for a “week”
@@ -192,6 +193,7 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
       endHour,
       endMinute,
       title,
+      weekly: entry.weekly,
     };
   };
 
@@ -511,7 +513,7 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
     const top = (totalMinutes / minutesPerDay) * slotsPerDay * cellHeight;
 
     return {
-      position: 'absolute',
+      position: 'absolute' as const,
       top: `${top}px`,
       left: '10%', // Align with time column (10% width as per CSS)
       width: '90%', // Span across all day columns (90% width as per CSS)
@@ -556,7 +558,10 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
                 setEntries((all) =>
                   all.map((x) =>
                     x.id === showEntryModal()!.id
-                      ? { ...showEntryModal()!, weekly }
+                      ? {
+                          ...showEntryModal()!,
+                          weekly: weekly ?? showEntryModal()!.weekly,
+                        }
                       : x
                   )
                 );

@@ -7,9 +7,11 @@ import { ResourceManager } from '@castmill/cache';
 import { PlayerGlobals } from '../../interfaces/player-globals.interface';
 
 export interface ImageComponentOptions {
-  url: string;
-  size: 'cover' | 'contain';
+  url?: string;
+  size?: 'cover' | 'contain';
   duration?: number;
+  autozoom?: boolean;
+  fallbackUrl?: string;
 }
 
 export class ImageComponent implements TemplateComponent {
@@ -43,10 +45,22 @@ export class ImageComponent implements TemplateComponent {
     context: any,
     globals: PlayerGlobals
   ): ImageComponentOptions {
+    const resolvedUrl =
+      resolveOption(opts.url, config, context, globals) ||
+      resolveOption(opts.src, config, context, globals) ||
+      '';
+
+    const resolvedFallback =
+      resolveOption(opts.fallbackUrl, config, context, globals) ||
+      resolveOption(opts.fallback, config, context, globals) ||
+      '';
+
     return {
-      url: resolveOption(opts.url, config, context, globals),
+      url: resolvedUrl,
+      fallbackUrl: resolvedFallback,
       size: resolveOption(opts.size, config, context, globals),
       duration: resolveOption(opts.duration, config, context, globals),
+      autozoom: resolveOption(opts.autozoom, config, context, globals),
     };
   }
 }
@@ -60,21 +74,27 @@ export const Image: Component<ImageProps> = (props: ImageProps) => {
   let imageRef: HTMLDivElement | undefined;
   let cleanUpAnimations: () => void;
 
-  // const imageUrl = props.medias[props.opts.url];
-  const imageUrl = props.opts.url;
+  const primaryUrl = props.opts.url?.trim?.() || '';
+  const fallbackUrl = props.opts.fallbackUrl?.trim?.() || '';
+  const effectiveUrl = primaryUrl || fallbackUrl;
 
-  if (!imageUrl) {
-    // TODO: Mechanism to report errors without breaking the whole template nor the playlist.
-    throw new Error(`Image ${props.opts.url} not found in medias`);
-  }
+  // Gracefully handle missing/empty image URLs - don't crash the player
+  const hasValidUrl = effectiveUrl !== '';
+
+  // Determine background-size: autozoom uses 'cover' to fill container without black borders
+  const backgroundSize = props.opts.autozoom
+    ? 'cover'
+    : props.opts.size || 'contain';
 
   const merged = mergeProps(
     {
       width: '100%',
       height: '100%',
-      'background-size': props.opts.size,
+      'background-size': backgroundSize,
       'background-repeat': 'no-repeat',
       'background-position': 'center',
+      // Show a subtle placeholder background when no image
+      ...(hasValidUrl ? {} : { 'background-color': 'rgba(0,0,0,0.2)' }),
     },
     props.style
   );
@@ -89,16 +109,25 @@ export const Image: Component<ImageProps> = (props: ImageProps) => {
         cleanUpAnimations = applyAnimations(
           props.timeline,
           props.animations,
-          imageRef
+          imageRef,
+          props.timeline.duration()
         );
       }
 
-      let imageUrl = await props.resourceManager.getMedia(props.opts.url);
-      if (!imageUrl) {
-        // TODO: report error properly
-        console.error(`Image ${props.opts.url} not found in cached medias`);
+      if (hasValidUrl) {
+        const sourceUrl = primaryUrl || fallbackUrl;
+        let cachedUrl = sourceUrl
+          ? await props.resourceManager.getMedia(sourceUrl)
+          : null;
+        if (!cachedUrl) {
+          // Log warning but don't crash - use original URL as fallback
+          console.warn(
+            `Image ${sourceUrl} not found in cached medias, using original URL`
+          );
+        }
+        imageRef.style.backgroundImage = `url(${cachedUrl || sourceUrl})`;
       }
-      imageRef.style.backgroundImage = `url(${imageUrl || props.opts.url})`;
+      // If no valid URL, just leave the placeholder background
     }
     props.onReady();
   });

@@ -14,6 +14,7 @@ defmodule Castmill.Resources do
 
   alias Castmill.Resources.Media
   alias Castmill.Resources.Playlist
+  alias Castmill.Resources.Layout
   alias Castmill.Resources.PlaylistItem
   alias Castmill.Resources.Channel
   alias Castmill.Resources.ChannelEntry
@@ -77,6 +78,12 @@ defmodule Castmill.Resources do
     end
   end
 
+  defimpl Access, for: Layout do
+    def canAccess(resource, user, action) do
+      Castmill.Resources.canAccessResource(resource, user, action)
+    end
+  end
+
   # defimpl Access, for: Device do
   #  def canAccess(resource, user, action) do
   #    Castmill.Resources.canAccessResource(resource, user, action)
@@ -95,6 +102,10 @@ defmodule Castmill.Resources do
 
   defimpl Resource, for: Channel do
     def type(_value), do: "channel"
+  end
+
+  defimpl Resource, for: Layout do
+    def type(_value), do: "layout"
   end
 
   defimpl Resource, for: Device do
@@ -151,34 +162,303 @@ defmodule Castmill.Resources do
     else
       items =
         get_playlist_items(id)
-        |> Enum.map(&transform_item/1)
+        |> Enum.map(&transform_item(&1, playlist.organization_id))
 
       %{playlist | items: items}
     end
   end
 
-  defp transform_item(item) do
-    # Resolve widget references and get the updated options
-    resolved_options =
+  defp transform_item(item, organization_id) do
+    # Resolve widget references (media, playlist refs, etc.) and merge them into options
+    # resolve_widget_references only returns the resolved ref fields, so we merge them
+    # back into the original options to preserve all other option values
+    original_options = item.widget_config.options || %{}
+
+    resolved_refs =
       resolve_widget_references(
         item.widget_config.widget.options_schema || %{},
-        item.widget_config.options
+        original_options
       )
+
+    merged_options = Map.merge(original_options, resolved_refs)
 
     # Drop the :widget key from widget_config
     modified_widget_config = Map.drop(item.widget_config, [:widget])
 
-    # Merge the resolved options into modified_widget_config
+    # Put the merged options into modified_widget_config
     modified_widget_config_with_resolved_options =
-      Map.put(modified_widget_config, :options, resolved_options)
+      Map.put(modified_widget_config, :options, merged_options)
+
+    # Apply defaults from data_schema to ensure all fields have values
+    # This is important for widgets like Spotify Now Playing that rely on default values
+    data_with_defaults =
+      apply_data_schema_defaults(
+        item.widget_config.widget.data_schema || %{},
+        Map.get(modified_widget_config_with_resolved_options, :data, %{}) || %{}
+      )
+
+    modified_widget_config_with_defaults =
+      Map.put(modified_widget_config_with_resolved_options, :data, data_with_defaults)
+
+    # Fetch integration data if available and merge into config.data
+    # This makes integration data available to the player template system
+    # which resolves bindings like {key: "data.field_name"}
+    #
+    # Strategy:
+    # 1. First try widget-config-specific data
+    # 2. Try discriminator-based data (e.g., widgets with same symbols share data)
+    # 3. Fall back to organization-level shared data (e.g., all Spotify widgets
+    #    in an org share the same "Now Playing" data)
+    # 4. If no data found, trigger on-demand fetch for PULL integrations
+    #
+    # Extract widget_options here so it can be used both for looking up integration data
+    # and for filtering max_items when serving data to each widget instance
+    widget_options_for_filtering = modified_widget_config_with_defaults.options || %{}
+
+    integration_data =
+      case Castmill.Widgets.Integrations.get_integration_data_by_config(item.widget_config.id) do
+        %Castmill.Widgets.Integrations.WidgetIntegrationData{} = data ->
+          {:ok, data}
+
+        nil ->
+          # Try discriminator-based lookup using widget options
+          widget_id = item.widget_config.widget.id
+
+          case Castmill.Widgets.Integrations.get_integration_data_for_widget_with_options(
+                 organization_id,
+                 widget_id,
+                 widget_options_for_filtering
+               ) do
+            %Castmill.Widgets.Integrations.WidgetIntegrationData{} = data ->
+              {:ok, data}
+
+            nil ->
+              # No cached data - try on-demand fetch for PULL integrations
+              try_on_demand_fetch_for_item(
+                organization_id,
+                item.widget_config.id,
+                widget_id,
+                widget_options_for_filtering
+              )
+          end
+      end
+
+    # Handle integration data result, tracking any errors
+    {modified_widget_config_with_integration, integration_error} =
+      case integration_data do
+        {:ok, %Castmill.Widgets.Integrations.WidgetIntegrationData{} = data} ->
+          # Merge integration data into the existing data field (overrides defaults)
+          existing_data = Map.get(modified_widget_config_with_defaults, :data, %{}) || %{}
+          merged_data = Map.merge(existing_data, data.data || %{})
+
+          # Apply max_items filtering if the data has an "items" array
+          # This allows each widget instance to have its own max_items setting
+          # while sharing the same cached data
+          filtered_data = apply_max_items_filter(merged_data, widget_options_for_filtering)
+          {Map.put(modified_widget_config_with_defaults, :data, filtered_data), nil}
+
+        {:error, reason} ->
+          # Fetch failed - return defaults but track the error
+          {modified_widget_config_with_defaults, format_integration_error(reason)}
+
+        nil ->
+          {modified_widget_config_with_defaults, nil}
+      end
 
     # Take required fields from item and merge the modified widget data and other info
-    item
-    |> Map.take([:id, :duration, :offset, :inserted_at, :updated_at])
-    |> Map.merge(%{
-      config: modified_widget_config_with_resolved_options,
-      widget: item.widget_config.widget
-    })
+    result =
+      item
+      |> Map.take([:id, :duration, :offset, :inserted_at, :updated_at])
+      |> Map.merge(%{
+        config: modified_widget_config_with_integration,
+        widget: item.widget_config.widget
+      })
+
+    # Add integration_error field if there was an error fetching data
+    if integration_error do
+      Map.put(result, :integration_error, integration_error)
+    else
+      result
+    end
+  end
+
+  # Default max_items to use when not explicitly set in widget options
+  @default_max_items 10
+
+  # Apply max_items filtering to data containing an "items" array.
+  # This allows each widget instance to have its own max_items setting
+  # while sharing the same cached data (which may contain more items).
+  # Items are assumed to be already sorted by date (newest first) from the fetcher.
+  defp apply_max_items_filter(data, widget_options) when is_map(data) do
+    # Get max_items from widget options, falling back to default
+    max_items =
+      Map.get(widget_options, "max_items") ||
+        Map.get(widget_options, :max_items) ||
+        @default_max_items
+
+    items = Map.get(data, "items")
+
+    cond do
+      is_nil(items) ->
+        # No items array - return as-is
+        data
+
+      is_list(items) and is_integer(max_items) and max_items > 0 ->
+        # Filter to max_items
+        filtered_items = Enum.take(items, max_items)
+        Map.put(data, "items", filtered_items)
+
+      true ->
+        data
+    end
+  end
+
+  defp apply_max_items_filter(data, _widget_options), do: data
+
+  # Format integration error reason into a user-friendly message
+  defp format_integration_error(:unknown_feed_format),
+    do: "Invalid feed format - URL is not a valid RSS/Atom feed"
+
+  defp format_integration_error(:invalid_url), do: "Invalid URL"
+  defp format_integration_error(:not_found), do: "Feed not found (404)"
+  defp format_integration_error(:forbidden), do: "Access denied (403)"
+  defp format_integration_error(:unauthorized), do: "Authentication required"
+  defp format_integration_error(:no_credentials), do: "Credentials not configured"
+  defp format_integration_error(:storage_failed), do: "Failed to store fetched data"
+  defp format_integration_error(:timeout), do: "Request timed out"
+  defp format_integration_error(reason) when is_atom(reason), do: "Fetch failed: #{reason}"
+  defp format_integration_error(reason) when is_binary(reason), do: reason
+  defp format_integration_error(_reason), do: "Unknown error"
+
+  # Apply default values from data_schema to the data map
+  defp apply_data_schema_defaults(data_schema, data) do
+    Enum.reduce(data_schema, data, fn {key, schema_def}, acc ->
+      case Map.get(acc, key) do
+        nil ->
+          # Field not set, apply default if available
+          case Map.get(schema_def, "default") do
+            nil -> acc
+            default -> Map.put(acc, key, default)
+          end
+
+        _ ->
+          # Field already has a value
+          acc
+      end
+    end)
+  end
+
+  # Attempts to fetch data on-demand for PULL integrations when no cached data exists
+  # This is called from transform_item to ensure widgets show real data on first load
+  defp try_on_demand_fetch_for_item(organization_id, _widget_config_id, widget_id, widget_options) do
+    alias Castmill.Widgets.Integrations
+
+    # Get the widget's integration
+    case Integrations.list_integrations(widget_id: widget_id) do
+      [] ->
+        nil
+
+      [integration | _] ->
+        # Only handle PULL integrations with fetcher modules
+        if integration.integration_type == "pull" do
+          pull_config = integration.pull_config || %{}
+          credential_schema = integration.credential_schema || %{}
+          fetcher_module_name = Map.get(pull_config, "fetcher_module")
+
+          if fetcher_module_name do
+            # Get credentials or use empty map for optional auth
+            # auth_type can be in pull_config or credential_schema
+            auth_type =
+              Map.get(pull_config, "auth_type") ||
+                Map.get(credential_schema, "auth_type") ||
+                "required"
+
+            credentials =
+              case Integrations.get_organization_credentials(organization_id, integration.id) do
+                {:ok, creds} -> creds
+                {:error, _} when auth_type in ["optional", "none"] -> %{}
+                {:error, _} -> nil
+              end
+
+            if credentials do
+              # Try to fetch data using the fetcher
+              case fetch_with_module(fetcher_module_name, credentials, widget_options) do
+                {:ok, data, _creds} ->
+                  # Store the data and return it
+                  discriminator_id = build_discriminator_id(integration, widget_options)
+
+                  case Integrations.upsert_integration_data(%{
+                         widget_integration_id: integration.id,
+                         organization_id: organization_id,
+                         discriminator_id: discriminator_id,
+                         data: data,
+                         status: "active",
+                         fetched_at: DateTime.utc_now(),
+                         version: :os.system_time(:second)
+                       }) do
+                    {:ok, integration_data} ->
+                      {:ok, integration_data}
+
+                    {:error, _reason} ->
+                      {:error, :storage_failed}
+                  end
+
+                {:error, reason, _creds} ->
+                  # 3-tuple error format (returned by some fetchers with credentials)
+                  {:error, reason}
+
+                {:error, reason} ->
+                  # 2-tuple error format
+                  {:error, reason}
+              end
+            else
+              {:error, :no_credentials}
+            end
+          else
+            nil
+          end
+        else
+          nil
+        end
+    end
+  end
+
+  defp fetch_with_module(module_name, credentials, options) when is_binary(module_name) do
+    allowed_prefixes = [
+      "Castmill.Widgets.Integrations.Fetchers.",
+      "Elixir.Castmill.Widgets.Integrations.Fetchers."
+    ]
+
+    if Enum.any?(allowed_prefixes, &String.starts_with?(module_name, &1)) do
+      try do
+        full_module_name =
+          if String.starts_with?(module_name, "Elixir.") do
+            module_name
+          else
+            "Elixir.#{module_name}"
+          end
+
+        module = String.to_existing_atom(full_module_name)
+        module.fetch(credentials, options)
+      rescue
+        ArgumentError ->
+          {:error, :invalid_fetcher_module}
+      end
+    else
+      {:error, :unauthorized_module}
+    end
+  end
+
+  defp build_discriminator_id(integration, options) do
+    case integration.discriminator_type do
+      "widget_option" ->
+        key = integration.discriminator_key || "id"
+        value = Map.get(options, key) || Map.get(options, String.to_atom(key)) || "default"
+        "#{key}:#{value}"
+
+      _ ->
+        "default"
+    end
   end
 
   defp resolve_widget_references(schema, data) do
@@ -199,8 +479,26 @@ defmodule Castmill.Resources do
   defp fetch_widget_reference(data, key, "medias") do
     case Map.get(data, key) do
       nil -> nil
+      "" -> nil
       media_id -> get_media(media_id)
     end
+  end
+
+  defp fetch_widget_reference(data, key, "playlists") do
+    case Map.get(data, key) do
+      nil -> nil
+      "" -> nil
+      # Fetch full playlist with items for player
+      playlist_id -> get_playlist(playlist_id)
+    end
+  end
+
+  @doc """
+  Get basic playlist info without items (to avoid circular references).
+  Used when resolving playlist references in layout widgets.
+  """
+  def get_playlist_basic(id) do
+    Repo.get(Playlist, id)
   end
 
   @doc """
@@ -318,6 +616,175 @@ defmodule Castmill.Resources do
   end
 
   @doc """
+  Gets all ancestor playlist IDs for a given playlist.
+  An ancestor is a playlist that contains the given playlist (directly or indirectly)
+  through layout widgets that reference playlists.
+
+  This is used to prevent circular references when configuring layout widgets.
+  """
+  def get_playlist_ancestors(playlist_id) when is_integer(playlist_id) do
+    get_playlist_ancestors_recursive(playlist_id, MapSet.new(), MapSet.new())
+    |> MapSet.to_list()
+  end
+
+  defp get_playlist_ancestors_recursive(playlist_id, visited, ancestors) do
+    if MapSet.member?(visited, playlist_id) do
+      # Already processed this playlist, return current ancestors
+      ancestors
+    else
+      # Mark this playlist as visited
+      new_visited = MapSet.put(visited, playlist_id)
+
+      # Find all playlists that contain this playlist through their widget configs
+      # Layout widgets store playlist references in their options as playlist_1, playlist_2, playlist_3
+      parent_playlist_ids = get_direct_parent_playlists(playlist_id)
+
+      # Recursively find ancestors of each parent
+      Enum.reduce(parent_playlist_ids, ancestors, fn parent_id, acc ->
+        # Add parent to ancestors
+        updated_ancestors = MapSet.put(acc, parent_id)
+        # Recurse to find parent's ancestors
+        get_playlist_ancestors_recursive(parent_id, new_visited, updated_ancestors)
+      end)
+    end
+  end
+
+  defp get_direct_parent_playlists(playlist_id) do
+    # Query for playlist items that have widget configs with this playlist_id in their options
+    # New Layout Widget stores playlist references in options.layoutRef.zonePlaylistMap
+    # Format: {"layoutRef": {"zonePlaylistMap": {"zone-id": {"playlistId": 123}, ...}}}
+    # We need to find all playlists that contain items referencing our playlist_id
+
+    # Using JSONB query to check if playlist_id exists in zonePlaylistMap values
+    # Each zone value is an object with playlistId field
+    query =
+      from(pi in PlaylistItem,
+        join: wc in assoc(pi, :widget_config),
+        join: w in assoc(wc, :widget),
+        # Layout widgets that reference playlists via layoutRef.zonePlaylistMap
+        where:
+          w.slug == "layout-widget" and
+            fragment(
+              "EXISTS (SELECT 1 FROM jsonb_each(?->'layoutRef'->'zonePlaylistMap') AS kv WHERE (kv.value->>'playlistId')::integer = ?)",
+              wc.options,
+              ^playlist_id
+            ),
+        select: pi.playlist_id,
+        distinct: true
+      )
+
+    Repo.all(query)
+  end
+
+  @doc """
+  Validates that selecting a playlist would not create a circular reference.
+  Returns :ok if valid, or {:error, :circular_reference} if it would create a cycle.
+
+  A circular reference would occur if:
+  1. The current playlist tries to reference itself
+  2. The selected playlist is already an ancestor of the current playlist
+     (meaning the current playlist is already contained within the selected playlist,
+      so adding selected as a child would create: selected -> ... -> current -> selected)
+
+  ## Parameters
+    - current_playlist_id: The playlist where the layout widget is being configured
+    - selected_playlist_id: The playlist being selected for the layout widget
+  """
+  def validate_no_circular_reference(current_playlist_id, selected_playlist_id) do
+    # Ensure both IDs are integers
+    current_id = to_integer(current_playlist_id)
+    selected_id = to_integer(selected_playlist_id)
+
+    cond do
+      # Can't select the same playlist
+      current_id == selected_id ->
+        {:error, :circular_reference}
+
+      # Check if selected playlist is an ancestor of current playlist
+      # If so, adding selected as child would create: selected -> ... -> current -> selected
+      selected_id in get_playlist_ancestors(current_id) ->
+        {:error, :circular_reference}
+
+      true ->
+        :ok
+    end
+  end
+
+  # Helper to convert string or integer to integer
+  defp to_integer(id) when is_integer(id), do: id
+
+  defp to_integer(id) when is_binary(id) do
+    case Integer.parse(id) do
+      {int_id, ""} -> int_id
+      _ -> raise ArgumentError, "Invalid playlist ID: #{id}"
+    end
+  end
+
+  # ==========================================================================
+  # Layout CRUD Operations
+  # ==========================================================================
+
+  @doc """
+  Creates a layout.
+  """
+  def create_layout(attrs \\ %{}) do
+    organization_id = Map.get(attrs, "organization_id") || Map.get(attrs, :organization_id)
+
+    # Check quota before creating the layout
+    with :ok <- check_resource_quota(organization_id, Layout, :layouts) do
+      %Layout{}
+      |> Layout.changeset(attrs)
+      |> Repo.insert()
+    else
+      {:error, :quota_exceeded} -> {:error, :quota_exceeded}
+    end
+  end
+
+  @doc """
+  Gets a layout by ID.
+  """
+  def get_layout(id) do
+    Repo.get(Layout, id)
+  end
+
+  @doc """
+  Gets a layout by ID, raises if not found.
+  """
+  def get_layout!(id) do
+    Repo.get!(Layout, id)
+  end
+
+  @doc """
+  Updates a layout.
+  """
+  def update_layout(%Layout{} = layout, attrs) do
+    layout
+    |> Layout.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a layout.
+  """
+  def delete_layout(%Layout{} = layout) do
+    Repo.delete(layout)
+  end
+
+  @doc """
+  Returns a layout in player format (for widget usage).
+  """
+  def get_layout_for_player(layout_id) do
+    case get_layout(layout_id) do
+      nil -> nil
+      layout -> Layout.to_player_format(layout)
+    end
+  end
+
+  # ==========================================================================
+  # Playlist Item Operations
+  # ==========================================================================
+
+  @doc """
     Creates a Playlist item
   """
   def create_playlist_item(attrs \\ %{}) do
@@ -340,6 +807,9 @@ defmodule Castmill.Resources do
    beginning of the list if nil is passed as the prev_item_id.
 
    The options passed must conform with the widget's schema, or an error will be returned.
+
+   For layout widgets, validates that the playlist references don't create circular references.
+   For widgets with integrations, validates that required credentials are configured.
   """
   def insert_item_into_playlist(
         playlist_id,
@@ -350,22 +820,44 @@ defmodule Castmill.Resources do
         options \\ %{}
       ) do
     Repo.transaction(fn ->
-      with {:ok, prev_item, next_item_id} <- get_prev_and_next_items(playlist_id, prev_item_id),
-           {:ok, item} <-
-             create_playlist_item(%{
-               playlist_id: playlist_id,
-               offset: offset,
-               duration: duration,
-               prev_item_id: prev_item && prev_item.id,
-               next_item_id: next_item_id
-             }),
-           {:ok, _widget_config} <-
-             Castmill.Widgets.new_widget_config(widget_id, item.id, options),
-           :ok <- link_playlist_items(prev_item, item) do
-        item
+      # First, get the playlist to access its organization_id
+      playlist = Repo.get(Playlist, playlist_id)
+
+      if is_nil(playlist) do
+        Repo.rollback("Playlist not found")
       else
-        {:error, reason} -> Repo.rollback(reason)
-        error -> Repo.rollback(to_string(error))
+        with {:ok, prev_item, next_item_id} <- get_prev_and_next_items(playlist_id, prev_item_id),
+             # Validate circular references BEFORE creating the playlist item
+             :ok <-
+               Castmill.Widgets.validate_playlist_references_for_widget(
+                 widget_id,
+                 playlist_id,
+                 options
+               ),
+             # Validate that required integration credentials are configured
+             :ok <-
+               Castmill.Widgets.validate_integration_credentials_for_widget(
+                 widget_id,
+                 playlist.organization_id
+               ),
+             {:ok, item} <-
+               create_playlist_item(%{
+                 playlist_id: playlist_id,
+                 offset: offset,
+                 duration: duration,
+                 prev_item_id: prev_item && prev_item.id,
+                 next_item_id: next_item_id
+               }),
+             {:ok, widget_config} <-
+               Castmill.Widgets.new_widget_config(widget_id, item.id, options),
+             :ok <- link_playlist_items(prev_item, item) do
+          # Return both item and widget_config_id for the frontend
+          # Use Map.put since PlaylistItem struct doesn't have widget_config_id field
+          Map.put(item, :widget_config_id, widget_config.id)
+        else
+          {:error, reason} -> Repo.rollback(reason)
+          error -> Repo.rollback(to_string(error))
+        end
       end
     end)
   end
@@ -712,6 +1204,9 @@ defmodule Castmill.Resources do
       Castmill.Resources.Channel ->
         {Castmill.Teams.TeamsChannels, :channel_id}
 
+      Castmill.Resources.Layout ->
+        {Castmill.Teams.TeamsLayouts, :layout_id}
+
       Castmill.Devices.Device ->
         {Castmill.Teams.TeamsDevices, :device_id}
 
@@ -1028,6 +1523,73 @@ defmodule Castmill.Resources do
     else
       Repo.delete(channel)
     end
+  end
+
+  @doc """
+  Returns the list of layouts including both organization-specific and system layouts.
+  """
+  def list_layouts(%{
+        organization_id: organization_id,
+        page: page,
+        page_size: page_size,
+        search: search,
+        filters: filters
+      }) do
+    offset = (page_size && max((page - 1) * page_size, 0)) || 0
+
+    Layout.base_query()
+    |> Layout.where_org_id_or_system(organization_id)
+    |> QueryHelpers.apply_combined_filters(filters, Layout)
+    |> QueryHelpers.where_name_like(search)
+    |> Ecto.Query.distinct(true)
+    |> Ecto.Query.order_by([d], asc: d.name)
+    |> Ecto.Query.limit(^page_size)
+    |> Ecto.Query.offset(^offset)
+    |> Repo.all()
+  end
+
+  def list_layouts(%{organization_id: organization_id}) do
+    list_layouts(%{
+      organization_id: organization_id,
+      page: 1,
+      page_size: nil,
+      search: nil,
+      filters: nil
+    })
+  end
+
+  def list_layouts(%{organization_id: organization_id, filters: filters}) do
+    list_layouts(%{
+      organization_id: organization_id,
+      page: 1,
+      page_size: nil,
+      search: nil,
+      filters: filters
+    })
+  end
+
+  @doc """
+  Returns the count of layouts including both organization-specific and system layouts.
+  """
+  def count_layouts(%{
+        organization_id: organization_id,
+        search: search,
+        filters: filters
+      }) do
+    Layout.base_query()
+    |> Layout.where_org_id_or_system(organization_id)
+    |> QueryHelpers.apply_combined_filters(filters, Layout)
+    |> QueryHelpers.where_name_like(search)
+    |> Ecto.Query.distinct(true)
+    |> Repo.aggregate(:count)
+  end
+
+  def count_layouts(%{organization_id: organization_id}) do
+    count_layouts(%{
+      organization_id: organization_id,
+      search: nil,
+      filters: nil
+    })
   end
 end
 

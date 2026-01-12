@@ -1,0 +1,48 @@
+.layout-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 0.75em;
+  gap: 0.75em;
+
+  .layout-view-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75em;
+    flex-wrap: wrap;
+
+    .layout-info {
+      display: flex;
+      gap: 0.75em;
+      flex: 1;
+      min-width: 0;
+
+      .form-item {
+        flex: 1;
+        max-width: 250px;
+        min-width: 120px;
+
+        // Make form items more compact
+        label {
+          font-size: 0.8em;
+          margin-bottom: 0.25em;
+        }
+
+        input {
+          padding: 0.375em 0.5em;
+          font-size: 0.9em;
+        }
+      }
+    }
+
+    .layout-actions {
+      display: flex;
+      gap: 0.375em;
+      align-items: center;
+    }
+  }
+
+  // The LayoutEditor component will handle its own styling
+  // via layout-editor.scss
+}

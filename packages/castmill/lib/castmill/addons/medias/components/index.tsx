@@ -45,7 +45,7 @@ import {
   AddonStore,
   AddonComponentProps,
 } from '../../common/interfaces/addon-store';
-import { useTeamFilter } from '../../common/hooks';
+import { useTeamFilter, useModalFromUrl } from '../../common/hooks';
 
 const MediasPage: Component<AddonComponentProps> = (props) => {
   // Get i18n functions from store
@@ -70,7 +70,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
   const { teams, selectedTeamId, setSelectedTeamId } = useTeamFilter({
     baseUrl: props.store.env.baseUrl,
     organizationId: props.store.organizations.selectedId,
-    params: props.params, // Pass URL params for shareable filtered views
+    params: props.params, // Pass URL search params for shareable filtered views
   });
 
   const itemsPerPage = 10; // Number of items to show per page
@@ -78,6 +78,31 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
   const [showModal, setShowModal] = createSignal<JsonMedia | undefined>();
 
   const [showAddMediasModal, setShowAddMediasModal] = createSignal(false);
+
+  // Function to close the modal and update URL
+  const closeModalAndClearUrl = () => {
+    // Clear URL FIRST (before animation starts) for immediate feedback
+    if (props.params) {
+      const [, setSearchParams] = props.params;
+      setSearchParams({ itemId: undefined }, { replace: true });
+    }
+
+    // Then close modal (triggers 300ms animation)
+    setShowModal(undefined);
+  };
+
+  // Sync modal state with URL for shareable deep links and browser navigation
+  useModalFromUrl({
+    getItemIdFromUrl: () => props.params?.[0]?.itemId,
+    isModalOpen: () => !!showModal(),
+    closeModal: closeModalAndClearUrl,
+    openModal: (itemId) => {
+      const media = data().find((m) => String(m.id) === itemId);
+      if (media) {
+        setShowModal(media);
+      }
+    },
+  });
 
   const resourcesObserver = new ResourcesObserver<JsonMedia>(
     props.store.socket,
@@ -88,7 +113,6 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
     },
     /* onUpdate */
     (resource: JsonMedia, data: Partial<JsonMedia>) => {
-      console.log('Updating media', resource.id, data);
       updateItem(resource.id, data);
     }
   );
@@ -134,7 +158,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
           MediasService.removeMedia(
             props.store.env.baseUrl,
             props.store.organizations.selectedId,
-            resourceId
+            String(resourceId)
           )
         )
       );
@@ -151,10 +175,10 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
       }
     }
     setShowConfirmDialogMultiple(false);
-    setSelectedMedias(new Set<string>());
+    setSelectedMedias(new Set<number>());
   };
 
-  const [selectedMedias, setSelectedMedias] = createSignal(new Set<string>());
+  const [selectedMedias, setSelectedMedias] = createSignal(new Set<number>());
 
   const [loading, setLoading] = createSignal(false);
   const [loadingSuccess, setLoadingSuccess] = createSignal('');
@@ -293,13 +317,13 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
     return !!(q && q.used >= q.total) || !!(sq && sq.used >= sq.total);
   };
 
-  const onRowSelect = (rowsSelected: Set<string>) => {
+  const onRowSelect = (rowsSelected: Set<number>) => {
     setSelectedMedias(rowsSelected);
   };
 
-  let tableViewRef: TableViewRef<JsonMedia>;
+  let tableViewRef: TableViewRef<number, JsonMedia>;
 
-  const setRef = (ref: TableViewRef<JsonMedia>) => {
+  const setRef = (ref: TableViewRef<number, JsonMedia>) => {
     tableViewRef = ref;
   };
 
@@ -356,12 +380,14 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
 
   // Function to open the modal
   const openModal = (item: JsonMedia) => {
+    // Open modal immediately
     setShowModal(item);
-  };
 
-  // Function to close the modal and remove blur
-  const closeModal = () => {
-    setShowModal();
+    // Also update URL for shareability (use replace to avoid polluting browser history)
+    if (props.params) {
+      const [, setSearchParams] = props.params;
+      setSearchParams({ itemId: String(item.id) }, { replace: true });
+    }
   };
 
   function formatBytes(bytes: number) {
@@ -404,7 +430,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
       key: 'size',
       title: t('common.size'),
       sortable: false,
-      render: (item: JsonMedia) => formatBytes(item.size),
+      render: (item: JsonMedia) => formatBytes(item.size ?? 0),
     },
     { key: 'mimetype', title: t('common.type'), sortable: true },
     {
@@ -412,7 +438,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
       title: t('common.created'),
       sortable: true,
       render: (item: JsonMedia) => (
-        <Timestamp value={item.inserted_at} mode="relative" />
+        <Timestamp value={item.inserted_at!} mode="relative" />
       ),
     },
     {
@@ -420,7 +446,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
       title: t('common.updated'),
       sortable: true,
       render: (item: JsonMedia) => (
-        <Timestamp value={item.updated_at} mode="relative" />
+        <Timestamp value={item.updated_at!} mode="relative" />
       ),
     },
   ] as Column<JsonMedia>[];
@@ -465,8 +491,8 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
             store={props.store}
             baseUrl={props.store.env.baseUrl}
             organizationId={props.store.organizations.selectedId}
-            onFileUpload={(fileName: string, result: any) => {
-              console.log('File uploaded', fileName, result);
+            onFileUpload={() => {
+              // File upload handled
             }}
             onUploadComplete={() => {
               // Refresh table
@@ -483,7 +509,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
         <Modal
           title={`Media "${showModal()?.name}"`}
           description=""
-          onClose={closeModal}
+          onClose={closeModalAndClearUrl}
           contentClass="medias-modal"
         >
           <MediaDetails
@@ -530,18 +556,19 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
       >
         <div style="margin: 1.5em; line-height: 1.5em;">
           {Array.from(selectedMedias()).map((resourceId) => {
-            const resource = data().find((d) => `${d.id}` == resourceId);
+            const resource = data().find((d) => d.id === resourceId);
             return <div>{`- ${resource?.name}`}</div>;
           })}
         </div>
       </ConfirmDialog>
 
-      <TableView
+      <TableView<number, JsonMedia>
         title="Medias"
         resource="medias"
         params={props.params}
         fetchData={fetchData}
         ref={setRef}
+        itemIdKey="id"
         toolbar={{
           mainAction: (
             <div style="display: flex; align-items: center; gap: 1rem;">
