@@ -174,6 +174,10 @@ defmodule Castmill.QuotasTest do
       # Organization should use its assigned plan, not the network default
       assert Quotas.get_quota_for_organization(organization.id, "medias") == 500
       assert Quotas.get_quota_for_organization(organization.id, "teams") == 25
+      
+      # For resources not in the org plan, should fall back to network default plan
+      assert Quotas.get_quota_for_organization(organization.id, "storage") == 1_073_741_824
+      assert Quotas.get_quota_for_organization(organization.id, "users") == 50
     end
 
     test "get_quota_for_organization/2 prioritizes org-specific quota over all plans" do
@@ -240,6 +244,33 @@ defmodule Castmill.QuotasTest do
       assert Quotas.has_organization_enough_quota?(organization.id, "medias", 50) == true
       assert Quotas.has_organization_enough_quota?(organization.id, "medias", 1000) == true
       assert Quotas.has_organization_enough_quota?(organization.id, "medias", 1001) == false
+    end
+
+    test "get_quota_for_organization/2 falls back when assigned plan lacks specific resource" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+
+      # Create a plan with only medias quota (no storage or users)
+      limited_plan =
+        Quotas.create_plan("Limited Plan", network.id, [
+          %{max: 100, resource: :medias}
+        ])
+
+      Quotas.assign_plan_to_organization(limited_plan.id, organization.id)
+
+      # Organization should use its assigned plan for medias
+      assert Quotas.get_quota_for_organization(organization.id, "medias") == 100
+
+      # For storage and users (not in assigned plan), should fall back to network default plan
+      assert Quotas.get_quota_for_organization(organization.id, "storage") == 1_073_741_824
+      assert Quotas.get_quota_for_organization(organization.id, "users") == 50
+
+      # Verify this allows uploads to work even with partial plan definitions
+      assert Quotas.has_organization_enough_quota?(
+               organization.id,
+               "storage",
+               1024 * 1024
+             ) == true
     end
 
     test "team creation enforces quota from network default plan" do

@@ -88,10 +88,15 @@ defmodule Castmill.Quotas do
     Returns the quota for a given resource in a given organization. The quota
     is resolved in the following order:
     1. Organization-specific quota override
-    2. Organization's assigned plan quota
+    2. Organization's assigned plan quota (if the plan has this resource)
     3. Network's default plan quota (using network.default_plan_id)
     4. Network's direct quota
     5. Returns zero as final fallback
+    
+    Note: If an organization has an assigned plan but that plan doesn't define
+    a quota for the requested resource, it falls back to step 3 (network's default plan)
+    rather than returning 0. This ensures backward compatibility when new resource
+    types are added to the system.
   """
   def get_quota_for_organization(organization_id, resource) do
     # 1. Check for organization-specific quota override
@@ -128,7 +133,9 @@ defmodule Castmill.Quotas do
         if plan_quotas do
           plan_quotas.max
         else
-          0
+          # Plan exists but doesn't have this resource quota
+          # Fall back to network's default plan
+          get_quota_from_network_default_plan(organization_id, resource)
         end
       else
         # 3. Fall back to network's default plan
