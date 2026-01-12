@@ -34,10 +34,7 @@ import styles from './devices.module.scss';
 
 import RegisterDevice from './register-device';
 import { DevicesService } from '../services/devices.service';
-import {
-  AddonStore,
-  AddonComponentProps,
-} from '../../common/interfaces/addon-store';
+import { AddonComponentProps } from '../../common/interfaces/addon-store';
 import { useTeamFilter, useModalFromUrl } from '../../common/hooks';
 
 import { QuotaIndicator } from '../../common/components/quota-indicator';
@@ -56,14 +53,6 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
   // Get i18n functions from store
   const t = (key: string, params?: Record<string, any>) => {
     const result = props.store.i18n?.t(key, params) || key;
-    console.log(
-      '[Devices] Translation:',
-      key,
-      '=>',
-      result,
-      'i18n available:',
-      !!props.store.i18n
-    );
     return result;
   };
   const toast = useToast();
@@ -78,13 +67,12 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
     return allowedActions?.includes(action as any) ?? false;
   };
 
-  const [currentPage, setCurrentPage] = createSignal(1);
   const [totalItems, setTotalItems] = createSignal(0);
 
   const { teams, selectedTeamId, setSelectedTeamId } = useTeamFilter({
     baseUrl: props.store.env.baseUrl,
     organizationId: props.store.organizations.selectedId,
-    params: props.params, // Pass URL params for shareable filtered views
+    params: props.params, // Pass URL search params for shareable filtered views
   });
 
   const itemsPerPage = 10; // Number of items to show per page
@@ -463,9 +451,9 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
     setSelectedDevices(rowsSelected);
   };
 
-  let tableViewRef: TableViewRef<DeviceTableItem>;
+  let tableViewRef: TableViewRef<string, DeviceTableItem>;
 
-  const setRef = (ref: TableViewRef<DeviceTableItem>) => {
+  const setRef = (ref: TableViewRef<string, DeviceTableItem>) => {
     tableViewRef = ref;
   };
 

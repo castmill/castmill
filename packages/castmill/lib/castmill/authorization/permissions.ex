@@ -43,7 +43,14 @@ defmodule Castmill.Authorization.Permissions do
 
   @type role :: :admin | :manager | :member | :editor | :publisher | :device_manager | :guest
   @type resource_type ::
-          :playlists | :medias | :channels | :devices | :teams | :widgets | :organizations
+          :playlists
+          | :medias
+          | :channels
+          | :devices
+          | :teams
+          | :widgets
+          | :layouts
+          | :organizations
   @type action :: :list | :show | :create | :update | :delete | :publish
 
   # Permission Matrix
@@ -57,6 +64,7 @@ defmodule Castmill.Authorization.Permissions do
       devices: [:list, :show, :create, :update, :delete],
       teams: [:list, :show, :create, :update, :delete],
       widgets: [:list, :show, :create, :update, :delete],
+      layouts: [:list, :show, :create, :update, :delete],
       # Full org management
       organizations: [:list, :show, :create, :update, :delete]
     },
@@ -70,6 +78,7 @@ defmodule Castmill.Authorization.Permissions do
       # Managers can manage teams
       teams: [:list, :show, :create, :update, :delete],
       widgets: [:list, :show, :create, :update, :delete],
+      layouts: [:list, :show, :create, :update, :delete],
       # Read-only access to org members list
       organizations: [:list, :show]
     },
@@ -86,6 +95,8 @@ defmodule Castmill.Authorization.Permissions do
       teams: [:list, :show],
       # Read-only widgets
       widgets: [:list, :show],
+      # Full layout access
+      layouts: [:list, :show, :create, :update, :delete],
       # Read-only access to org members list
       organizations: [:list, :show]
     },
@@ -102,6 +113,8 @@ defmodule Castmill.Authorization.Permissions do
       teams: [:list, :show],
       # Full widget access
       widgets: [:list, :show, :create, :update, :delete],
+      # Full layout access
+      layouts: [:list, :show, :create, :update, :delete],
       # Read-only org
       organizations: [:list, :show]
     },
@@ -115,6 +128,7 @@ defmodule Castmill.Authorization.Permissions do
       devices: [:list, :show],
       teams: [:list, :show],
       widgets: [:list, :show, :create, :update, :delete],
+      layouts: [:list, :show, :create, :update, :delete],
       organizations: [:list, :show]
     },
 
@@ -130,6 +144,8 @@ defmodule Castmill.Authorization.Permissions do
       devices: [:list, :show, :create, :update, :delete],
       teams: [:list, :show],
       widgets: [:list, :show],
+      # Read-only layouts
+      layouts: [:list, :show],
       organizations: [:list, :show]
     },
 
@@ -141,6 +157,7 @@ defmodule Castmill.Authorization.Permissions do
       devices: [:list, :show],
       teams: [:list, :show],
       widgets: [:list, :show],
+      layouts: [:list, :show],
       organizations: [:list, :show]
     }
   }

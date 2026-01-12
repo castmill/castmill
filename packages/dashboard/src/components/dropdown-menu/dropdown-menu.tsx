@@ -22,8 +22,8 @@ const DropdownMenu: Component<DropdownMenuProps> = (props) => {
   const [isOpen, setIsOpen] = createSignal(false);
   const [positionStyle, setPositionStyle] = createSignal({});
 
-  let buttonRef: HTMLDivElement;
-  let menuRef: HTMLUListElement;
+  let buttonRef: HTMLDivElement | undefined;
+  let menuRef: HTMLUListElement | undefined;
 
   const menuItems = children(() => props.children).toArray();
 
@@ -44,6 +44,8 @@ const DropdownMenu: Component<DropdownMenuProps> = (props) => {
     if (
       event.target &&
       isOpen() &&
+      buttonRef &&
+      menuRef &&
       !buttonRef.contains(event.target as Node) &&
       !menuRef.contains(event.target as Node)
     ) {
@@ -54,6 +56,7 @@ const DropdownMenu: Component<DropdownMenuProps> = (props) => {
   onMount(() => {
     document.addEventListener('click', handleClickOutside);
 
+    if (!buttonRef) return;
     const buttonRect = buttonRef.getBoundingClientRect();
     const viewportHeight = window.innerHeight;
     const spaceBelow = viewportHeight - buttonRect.bottom;

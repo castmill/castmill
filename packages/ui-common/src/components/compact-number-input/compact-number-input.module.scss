@@ -1,0 +1,83 @@
+.container {
+  display: flex;
+  align-items: center;
+  gap: 0.25em;
+  padding: 0.25em 0.5em;
+  background: var(--cm-bg-secondary, #f5f5f5);
+  border: 1px solid var(--cm-border-color, #ddd);
+  border-radius: 0.25em;
+  cursor: ew-resize;
+  user-select: none;
+  transition:
+    border-color 0.15s,
+    background-color 0.15s;
+  min-width: 0;
+
+  &:hover:not(.disabled) {
+    border-color: var(--cm-primary, #0066cc);
+    background: var(--cm-bg-primary, #fff);
+  }
+
+  &.dragging {
+    border-color: var(--cm-primary, #0066cc);
+    background: var(--cm-bg-primary, #fff);
+  }
+
+  &.editing {
+    cursor: text;
+    border-color: var(--cm-primary, #0066cc);
+    background: var(--cm-bg-primary, #fff);
+  }
+
+  &.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.label {
+  font-size: 0.7em;
+  font-weight: 600;
+  color: var(--cm-text-secondary, #666);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  flex-shrink: 0;
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  border: none;
+  background: transparent;
+  font-size: 0.85em;
+  font-weight: 500;
+  color: var(--cm-text-primary, #333);
+  text-align: right;
+  padding: 0;
+  margin: 0;
+  cursor: inherit;
+  font-family: inherit;
+
+  // Remove number input spinners
+  -moz-appearance: textfield;
+  appearance: textfield;
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    appearance: none;
+    margin: 0;
+  }
+
+  &:focus {
+    outline: none;
+  }
+
+  .editing & {
+    cursor: text;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+  }
+}

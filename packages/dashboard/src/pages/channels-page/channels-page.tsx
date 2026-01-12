@@ -439,8 +439,8 @@ const ChannelsPage: Component = () => {
           >
             <ChannelView
               organizationId={store.organizations.selectedId!}
-              channel={currentChannel() || { name: '' }}
-              onSubmit={async (channel: JsonChannel) => {
+              channel={currentChannel()!}
+              onSubmit={async (channel: Partial<JsonChannel>) => {
                 try {
                   const browserTimezone =
                     Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -456,10 +456,10 @@ const ChannelsPage: Component = () => {
                       `Channel ${channel.name} created successfully`
                     );
                     return newChannel;
-                  } else {
+                  } else if (channel.id) {
                     const updatedTeam =
                       await channelsService.updateChannel(channel);
-                    updateItem(channel.id, channel);
+                    updateItem(channel.id, channel as JsonChannel);
                     toast.success(
                       `Channel ${channel.name} updated successfully`
                     );

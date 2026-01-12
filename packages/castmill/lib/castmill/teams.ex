@@ -21,10 +21,11 @@ defmodule Castmill.Teams do
     TeamsPlaylists,
     TeamsChannels,
     TeamsDevices,
+    TeamsLayouts,
     Invitation
   }
 
-  alias Castmill.Resources.{Media, Playlist, Channel}
+  alias Castmill.Resources.{Media, Playlist, Channel, Layout}
   alias Castmill.Devices.Device
   alias Castmill.QueryHelpers
 
@@ -525,6 +526,12 @@ defmodule Castmill.Teams do
         :device_id,
         Device,
         :device
+      },
+      "layouts" => {
+        TeamsLayouts,
+        :layout_id,
+        Layout,
+        :layout
       }
     }
   end

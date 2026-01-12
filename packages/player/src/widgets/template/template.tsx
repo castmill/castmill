@@ -7,9 +7,11 @@ import { GroupComponent } from './group';
 import { TextComponent } from './text';
 import { ImageComponent } from './image';
 import { VideoComponent } from './video';
-import { ListComponent } from './list';
+import { PaginatedListComponent, ListComponent } from './paginated-list';
+import { ScrollerComponent } from './scroller';
 import { ImageCarouselComponent } from './image-carousel';
 import { LayoutComponent } from './layout';
+import { QRCodeComponent } from './qr-code';
 import { Timeline } from './timeline';
 import { ComponentAnimation } from './animation';
 import { PlayerGlobals } from '../../interfaces/player-globals.interface';
@@ -18,10 +20,12 @@ export type TemplateComponentTypeUnion =
   | TextComponent
   | ImageComponent
   | VideoComponent
-  | ListComponent
+  | PaginatedListComponent
+  | ScrollerComponent
   | GroupComponent
   | LayoutComponent
-  | ImageCarouselComponent;
+  | ImageCarouselComponent
+  | QRCodeComponent;
 
 export enum TemplateComponentType {
   Template = 'template',
@@ -29,9 +33,13 @@ export enum TemplateComponentType {
   Text = 'text',
   Image = 'image',
   Video = 'video',
+  /** @deprecated Use PaginatedList instead */
   List = 'list',
+  PaginatedList = 'paginated-list',
+  Scroller = 'scroller',
   Group = 'group',
   ImageCarousel = 'image-carousel',
+  QRCode = 'qr-code',
 }
 
 export class TemplateComponent {
@@ -58,8 +66,12 @@ export class TemplateComponent {
     switch (json.type) {
       case TemplateComponentType.Group:
         return GroupComponent.fromJSON(json, resourceManager, globals);
+      // Support both 'list' (deprecated) and 'paginated-list'
       case TemplateComponentType.List:
-        return ListComponent.fromJSON(json, resourceManager, globals);
+      case TemplateComponentType.PaginatedList:
+        return PaginatedListComponent.fromJSON(json, resourceManager, globals);
+      case TemplateComponentType.Scroller:
+        return ScrollerComponent.fromJSON(json, resourceManager, globals);
       case TemplateComponentType.Layout:
         return LayoutComponent.fromJSON(json, resourceManager, globals);
       case TemplateComponentType.Text:
@@ -70,6 +82,8 @@ export class TemplateComponent {
         return VideoComponent.fromJSON(json);
       case TemplateComponentType.ImageCarousel:
         return ImageCarouselComponent.fromJSON(json);
+      case TemplateComponentType.QRCode:
+        return QRCodeComponent.fromJSON(json);
       default:
         throw new Error(`Unknown template component type: ${json.type}`);
     }

@@ -83,5 +83,14 @@ config :swoosh, :api_client, false
 config :castmill, :file_storage, :local
 # config :castmill, :file_storage, :s3
 
+# Encryption configuration for development (deterministic key for convenience)
+# DO NOT use this key in production!
+config :castmill, :encryption, %{
+  keys: %{
+    1 => :crypto.hash(:sha256, "castmill-dev-encryption-key-v1-not-for-production")
+  },
+  current_version: 1
+}
+
 # widgets json files
 config :castmill, CastmillWeb.Widgets.WidgetsLoader, json_dir: "../widged/dist/widgets"

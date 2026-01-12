@@ -226,4 +226,53 @@ defmodule CastmillWeb.OrganizationController.WidgetsTest do
       assert is_list(data)
     end
   end
+
+  describe "GET /organizations/:organization_id/widgets/:widget_id/usage" do
+    test "returns empty usage for widget not in any playlist", %{
+      conn: conn,
+      organization: organization,
+      widget1: widget1
+    } do
+      conn = get(conn, "/dashboard/organizations/#{organization.id}/widgets/#{widget1.id}/usage")
+      response = json_response(conn, 200)
+
+      assert %{"data" => data, "count" => count} = response
+      assert data == []
+      assert count == 0
+    end
+
+    test "returns 404 for non-existent widget", %{
+      conn: conn,
+      organization: organization
+    } do
+      conn = get(conn, "/dashboard/organizations/#{organization.id}/widgets/999999/usage")
+      response = json_response(conn, 404)
+
+      assert %{"error" => "Widget not found"} = response
+    end
+  end
+
+  describe "DELETE /organizations/:organization_id/widgets/:widget_id" do
+    test "successfully deletes a widget not in use", %{
+      conn: conn,
+      organization: organization,
+      widget3: widget3
+    } do
+      conn = delete(conn, "/dashboard/organizations/#{organization.id}/widgets/#{widget3.id}")
+      assert response(conn, 204)
+
+      # Verify widget is deleted
+      assert Widgets.get_widget(widget3.id) == nil
+    end
+
+    test "returns 404 for non-existent widget", %{
+      conn: conn,
+      organization: organization
+    } do
+      conn = delete(conn, "/dashboard/organizations/#{organization.id}/widgets/999999")
+      response = json_response(conn, 404)
+
+      assert %{"error" => "Widget not found"} = response
+    end
+  end
 end

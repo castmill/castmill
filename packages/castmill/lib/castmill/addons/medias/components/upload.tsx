@@ -55,7 +55,6 @@ export const UploadComponent = (props: UploadComponentProps) => {
       const selectedFiles = Array.from(target.files).filter((file) =>
         supportedFileTypes.includes(file.type)
       );
-      console.log({ selectedFiles });
       setFiles(selectedFiles);
       setProgresses({});
       setMessages({});
@@ -124,7 +123,6 @@ export const UploadComponent = (props: UploadComponentProps) => {
   const [isDraggedOver, setIsDraggedOver] = createSignal(false);
 
   const setDropZoneElement = (dropZoneElement: HTMLDivElement) => {
-    console.log('Creating drop zone effect', dropZoneElement);
     const cleanup = dropTargetForExternal({
       element: dropZoneElement,
       onDragEnter: () => setIsDraggedOver(true),

@@ -19,12 +19,20 @@ import { Modal } from '@castmill/ui-common';
 import { PlaylistItem } from './playlist-item';
 import { WidgetConfig } from './widget-config';
 import { AddonStore } from '../../common/interfaces/addon-store';
+import { PlaylistsService } from '../services/playlists.service';
+
+export interface CredentialsError {
+  widget: JsonWidget;
+  missingIntegrations: string[];
+}
 
 export const PlaylistItems: Component<{
   store: AddonStore;
   baseUrl: string;
   organizationId: string;
+  playlistId: number;
   items: JsonPlaylistItem[];
+  dynamicDurations?: Record<number, number>;
   onEditItem: (
     item: JsonPlaylistItem,
     opts: {
@@ -47,6 +55,8 @@ export const PlaylistItems: Component<{
   ) => Promise<void>;
   onRemoveItem: (item: JsonPlaylistItem) => Promise<void>;
   onChangeDuration: (item: JsonPlaylistItem, duration: number) => Promise<void>;
+  onCredentialsError?: (error: CredentialsError) => void;
+  onSeekToItem?: (index: number) => void;
 }> = (props) => {
   const [showModal, setShowModal] = createSignal<JsonPlaylistItem>();
   const [promiseResolve, setPromiseResolve] = createSignal<{
@@ -104,19 +114,55 @@ export const PlaylistItems: Component<{
   };
 
   const insertItem = async (widget: JsonWidget, index: number) => {
+    // First check if widget requires credentials that aren't configured
+    if (widget.id) {
+      try {
+        const credentialsStatus = await PlaylistsService.checkWidgetCredentials(
+          props.baseUrl,
+          props.organizationId,
+          widget.id
+        );
+
+        if (!credentialsStatus.configured) {
+          // Notify parent about the credentials error
+          props.onCredentialsError?.({
+            widget,
+            missingIntegrations: credentialsStatus.missing_integrations,
+          });
+          return;
+        }
+      } catch (err) {
+        // If the check fails, continue anyway - the server will validate
+        console.warn('Failed to check widget credentials:', err);
+      }
+    }
+
     const item = {
       duration: 10_000,
       widget,
       config: {},
     } as JsonPlaylistItem;
 
-    if (widget.options_schema) {
+    // Check if widget has any configurable options
+    const hasOptionsSchema =
+      widget.options_schema &&
+      (Array.isArray(widget.options_schema)
+        ? widget.options_schema.length > 0
+        : Object.keys(widget.options_schema).length > 0);
+
+    if (hasOptionsSchema) {
       const result = await openDialog(item);
       if (!result) {
         return;
       }
 
       await props.onInsertItem(widget, index, result);
+    } else {
+      // No configuration needed - insert directly with empty options
+      await props.onInsertItem(widget, index, {
+        config: { options: {} },
+        expandedOptions: {},
+      });
     }
   };
 
@@ -208,9 +254,16 @@ export const PlaylistItems: Component<{
           {(item, index) => (
             <PlaylistItem
               item={item}
+              baseUrl={props.baseUrl}
+              dynamicDuration={
+                typeof item.id === 'number'
+                  ? props.dynamicDurations?.[item.id]
+                  : undefined
+              }
               onRemove={removeItem}
               onChangeDuration={changeDuration}
               onEdit={() => editItem(item)}
+              onClick={() => props.onSeekToItem?.(index())}
               index={index()}
               onDragStart={() => {
                 setAnimationEnabled(false);
@@ -244,6 +297,7 @@ export const PlaylistItems: Component<{
               closeDialog({ config, expandedOptions });
             }}
             organizationId={props.organizationId}
+            playlistId={props.playlistId}
           />
         </Modal>
       </Show>

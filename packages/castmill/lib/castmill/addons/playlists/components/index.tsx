@@ -105,7 +105,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
   const { teams, selectedTeamId, setSelectedTeamId } = useTeamFilter({
     baseUrl: props.store.env.baseUrl,
     organizationId: props.store.organizations.selectedId,
-    params: props.params, // Pass URL params for shareable filtered views
+    params: props.params, // Pass URL search params for shareable filtered views
   });
 
   const [showAddPlaylistModal, setShowAddPlaylistModal] = createSignal(false);
@@ -510,7 +510,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
       title: t('common.created'),
       sortable: true,
       render: (item: JsonPlaylist) => (
-        <Timestamp value={item.inserted_at} mode="relative" />
+        <Timestamp value={item.inserted_at!} mode="relative" />
       ),
     },
     {
@@ -518,7 +518,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
       title: t('common.updated'),
       sortable: true,
       render: (item: JsonPlaylist) => (
-        <Timestamp value={item.updated_at} mode="relative" />
+        <Timestamp value={item.updated_at!} mode="relative" />
       ),
     },
   ] as Column<JsonPlaylist>[];
@@ -812,9 +812,10 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
             organizationId={props.store.organizations.selectedId}
             playlistId={currentPlaylist()?.id!}
             t={t}
-            onChange={(playlist) => {
-              console.log('Playlist changed', playlist);
+            onChange={() => {
+              // Playlist changed
             }}
+            onNavigateAway={closeModal}
           />
         </Modal>
       </Show>
@@ -903,7 +904,6 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
       >
         <div style="margin: 1.5em; line-height: 1.5em;">
           {Array.from(selectedPlaylists()).map((resourceId) => {
-            console.log('Resource ID', resourceId);
             const resource = data().find((d) => d.id == resourceId);
             return <div>{`- ${resource?.name}`}</div>;
           })}

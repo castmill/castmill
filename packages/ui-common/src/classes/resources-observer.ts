@@ -1,6 +1,6 @@
 import { Socket, Channel } from 'phoenix';
 
-export class ResourcesObserver<T extends { id: string }> {
+export class ResourcesObserver<T extends { id: string | number }> {
   channels: Record<string, Channel> = {};
 
   constructor(
@@ -12,7 +12,9 @@ export class ResourcesObserver<T extends { id: string }> {
   ) {}
 
   observe(resources: T[]) {
-    const resourceIds = new Set(resources.map((resource) => resource.id));
+    const resourceIds = new Set(
+      resources.map((resource) => String(resource.id))
+    );
 
     // Clean all the old unused channel subscriptions
     Object.keys(this.channels).forEach((id) => {
@@ -26,12 +28,13 @@ export class ResourcesObserver<T extends { id: string }> {
 
     // Join to every new device channel to get the online status
     resources.forEach((resource) => {
-      if (this.channels[resource.id]) {
+      const idStr = String(resource.id);
+      if (this.channels[idStr]) {
         return;
       } else {
         const topic = this.onJoin(resource);
         const channel = this.socket.channel(topic);
-        this.channels[resource.id] = channel;
+        this.channels[idStr] = channel;
 
         channel.on(this.updateRoom, (data: any) => {
           this.onUpdate(resource, data);

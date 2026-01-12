@@ -55,6 +55,13 @@ agents/
 
 #### Cross-Package Systems (`systems/`)
 - **[notifications.md](./systems/notifications.md)** - Real-time notification system with WebSocket and REST API
+- **[WIDGET-INTEGRATIONS.md](./systems/WIDGET-INTEGRATIONS.md)** - Widget third-party integration system architecture
+- **[WIDGET-INTEGRATION-API.md](./systems/WIDGET-INTEGRATION-API.md)** - Widget integration API reference
+- **[WIDGET-INTEGRATION-GUIDE.md](./systems/WIDGET-INTEGRATION-GUIDE.md)** - Developer guide for creating integrations
+- **[WIDGET-TEMPLATE-INTEGRATION.md](./systems/WIDGET-TEMPLATE-INTEGRATION.md)** - How integrations work with widget templates
+- **[WIDGET-ASSETS.md](./systems/WIDGET-ASSETS.md)** - Widget asset management architecture (icons, fonts, images)
+- **[LAYOUT-WIDGETS.md](./systems/LAYOUT-WIDGETS.md)** - Layout widgets with circular reference prevention
+- **[SPOTIFY-WIDGET-POC.md](./systems/SPOTIFY-WIDGET-POC.md)** - Spotify "Now Playing" widget proof of concept
 - *Coming soon: Authentication, media pipeline, real-time synchronization*
 
 #### Infrastructure (`infrastructure/`)

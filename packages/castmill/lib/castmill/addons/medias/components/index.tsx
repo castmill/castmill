@@ -70,7 +70,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
   const { teams, selectedTeamId, setSelectedTeamId } = useTeamFilter({
     baseUrl: props.store.env.baseUrl,
     organizationId: props.store.organizations.selectedId,
-    params: props.params, // Pass URL params for shareable filtered views
+    params: props.params, // Pass URL search params for shareable filtered views
   });
 
   const itemsPerPage = 10; // Number of items to show per page
@@ -113,7 +113,6 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
     },
     /* onUpdate */
     (resource: JsonMedia, data: Partial<JsonMedia>) => {
-      console.log('Updating media', resource.id, data);
       updateItem(resource.id, data);
     }
   );
@@ -159,7 +158,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
           MediasService.removeMedia(
             props.store.env.baseUrl,
             props.store.organizations.selectedId,
-            resourceId
+            String(resourceId)
           )
         )
       );
@@ -176,10 +175,10 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
       }
     }
     setShowConfirmDialogMultiple(false);
-    setSelectedMedias(new Set<string>());
+    setSelectedMedias(new Set<number>());
   };
 
-  const [selectedMedias, setSelectedMedias] = createSignal(new Set<string>());
+  const [selectedMedias, setSelectedMedias] = createSignal(new Set<number>());
 
   const [loading, setLoading] = createSignal(false);
   const [loadingSuccess, setLoadingSuccess] = createSignal('');
@@ -318,13 +317,13 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
     return !!(q && q.used >= q.total) || !!(sq && sq.used >= sq.total);
   };
 
-  const onRowSelect = (rowsSelected: Set<string>) => {
+  const onRowSelect = (rowsSelected: Set<number>) => {
     setSelectedMedias(rowsSelected);
   };
 
-  let tableViewRef: TableViewRef<JsonMedia>;
+  let tableViewRef: TableViewRef<number, JsonMedia>;
 
-  const setRef = (ref: TableViewRef<JsonMedia>) => {
+  const setRef = (ref: TableViewRef<number, JsonMedia>) => {
     tableViewRef = ref;
   };
 
@@ -431,7 +430,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
       key: 'size',
       title: t('common.size'),
       sortable: false,
-      render: (item: JsonMedia) => formatBytes(item.size),
+      render: (item: JsonMedia) => formatBytes(item.size ?? 0),
     },
     { key: 'mimetype', title: t('common.type'), sortable: true },
     {
@@ -439,7 +438,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
       title: t('common.created'),
       sortable: true,
       render: (item: JsonMedia) => (
-        <Timestamp value={item.inserted_at} mode="relative" />
+        <Timestamp value={item.inserted_at!} mode="relative" />
       ),
     },
     {
@@ -447,7 +446,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
       title: t('common.updated'),
       sortable: true,
       render: (item: JsonMedia) => (
-        <Timestamp value={item.updated_at} mode="relative" />
+        <Timestamp value={item.updated_at!} mode="relative" />
       ),
     },
   ] as Column<JsonMedia>[];
@@ -492,8 +491,8 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
             store={props.store}
             baseUrl={props.store.env.baseUrl}
             organizationId={props.store.organizations.selectedId}
-            onFileUpload={(fileName: string, result: any) => {
-              console.log('File uploaded', fileName, result);
+            onFileUpload={() => {
+              // File upload handled
             }}
             onUploadComplete={() => {
               // Refresh table
@@ -557,18 +556,19 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
       >
         <div style="margin: 1.5em; line-height: 1.5em;">
           {Array.from(selectedMedias()).map((resourceId) => {
-            const resource = data().find((d) => `${d.id}` == resourceId);
+            const resource = data().find((d) => d.id === resourceId);
             return <div>{`- ${resource?.name}`}</div>;
           })}
         </div>
       </ConfirmDialog>
 
-      <TableView
+      <TableView<number, JsonMedia>
         title="Medias"
         resource="medias"
         params={props.params}
         fetchData={fetchData}
         ref={setRef}
+        itemIdKey="id"
         toolbar={{
           mainAction: (
             <div style="display: flex; align-items: center; gap: 1rem;">

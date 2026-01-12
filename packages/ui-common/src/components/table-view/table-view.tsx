@@ -29,8 +29,9 @@ export interface TableViewRef<
   focusSearch: () => void;
 }
 
-type Params = Record<string, string>;
-type SetParams = Record<string, string | number | boolean | null | undefined>;
+// Type aliases for URL params that are compatible with both SolidJS router and internal usage
+type Params = Record<string, string | undefined>;
+type SetParams = Record<string, string | number | boolean | undefined>;
 
 interface TableViewProps<
   IdType = string,
@@ -39,7 +40,7 @@ interface TableViewProps<
   title: string;
   resource: string;
 
-  params?: [Partial<Params>, (params: SetParams, options?: any) => void]; // typeof useSearchParams;
+  params?: [Params, (params: SetParams, options?: any) => void]; // typeof useSearchParams;
 
   ref?: (ref: TableViewRef<IdType, Item>) => void;
 

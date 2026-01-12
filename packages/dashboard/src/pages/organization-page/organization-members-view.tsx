@@ -440,7 +440,7 @@ export const OrganizationMembersView = (props: {
         show={showConfirmDialog()}
         title={t('organization.dialogs.removeMemberTitle')}
         message={t('organization.dialogs.removeMemberMessage', {
-          name: currentMember()?.user?.name,
+          name: currentMember()?.user?.name || '',
         })}
         onClose={() => setShowConfirmDialog(false)}
         onConfirm={() =>

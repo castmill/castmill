@@ -8,6 +8,7 @@ defmodule CastmillWeb.ResourceController do
   alias Castmill.Resources.Media
   alias Castmill.Resources.Channel
   alias Castmill.Resources.Playlist
+  alias Castmill.Resources.Layout
   alias Castmill.Resources.ChannelEntry
   alias Castmill.Devices.Device
   alias Castmill.Devices
@@ -317,6 +318,44 @@ defmodule CastmillWeb.ResourceController do
     end
   end
 
+  @update_layout_params_schema %{
+    organization_id: [type: :string, required: true],
+    id: [type: :integer, required: true],
+    update: :map
+  }
+
+  def update(
+        conn,
+        %{
+          "resources" => "layouts",
+          "id" => _id
+        } = params
+      ) do
+    with {:ok, params} <- Tarams.cast(params, @update_layout_params_schema) do
+      layout = Castmill.Resources.get_layout(params.id)
+
+      Castmill.Resources.update_layout(layout, params.update)
+      |> case do
+        {:ok, layout} ->
+          conn
+          |> put_status(:ok)
+          |> json(layout)
+
+        {:error, errors} ->
+          conn
+          |> put_status(:bad_request)
+          |> Phoenix.Controller.json(%{errors: errors})
+          |> halt()
+      end
+    else
+      {:error, errors} ->
+        conn
+        |> put_status(:bad_request)
+        |> Phoenix.Controller.json(%{errors: errors})
+        |> halt()
+    end
+  end
+
   def update(conn, _params) do
     conn
     |> put_status(:bad_request)
@@ -471,6 +510,59 @@ defmodule CastmillWeb.ResourceController do
         conn
         |> put_status(:forbidden)
         |> Phoenix.Controller.json(%{errors: %{quota: ["Team quota exceeded"]}})
+
+      {:error, changeset} ->
+        {:error, changeset}
+    end
+  end
+
+  def create(conn, %{
+        "resources" => "layouts",
+        "organization_id" => organization_id,
+        "layout" => layout_params
+      }) do
+    # Extract team_id from params if present
+    team_id = Map.get(layout_params, "team_id")
+
+    # Remove team_id from layout params as it's not a layout field
+    create_attrs =
+      layout_params
+      |> Map.delete("team_id")
+      |> Map.merge(%{"organization_id" => organization_id})
+
+    case Castmill.Resources.create_layout(create_attrs) do
+      {:ok, %Layout{} = layout} ->
+        # If team_id was provided, add the layout to the team
+        if team_id do
+          case Castmill.Teams.add_resource_to_team(team_id, "layouts", layout.id, [
+                 :read,
+                 :write,
+                 :delete
+               ]) do
+            {:ok, _} ->
+              :ok
+
+            {:error, reason} ->
+              require Logger
+
+              Logger.warning(
+                "Failed to add layout #{layout.id} to team #{team_id}: #{inspect(reason)}"
+              )
+          end
+        end
+
+        conn
+        |> put_status(:created)
+        |> put_resp_header(
+          "location",
+          ~p"/api/organizations/#{organization_id}/layouts/#{layout.id}"
+        )
+        |> render(:show, layout_data: layout)
+
+      {:error, :quota_exceeded} ->
+        conn
+        |> put_status(:forbidden)
+        |> Phoenix.Controller.json(%{errors: %{quota: ["Layout quota exceeded"]}})
 
       {:error, changeset} ->
         {:error, changeset}
@@ -637,6 +729,27 @@ defmodule CastmillWeb.ResourceController do
     end
   end
 
+  def delete(conn, %{
+        "resources" => "layouts",
+        "id" => id
+      }) do
+    case Castmill.Resources.get_layout(id) do
+      nil ->
+        conn
+        |> put_status(:not_found)
+        |> Phoenix.Controller.json(%{errors: ["Layout not found"]})
+        |> halt()
+
+      layout ->
+        with {:ok, %Layout{}} <- Castmill.Resources.delete_layout(layout) do
+          send_resp(conn, :no_content, "")
+        else
+          {:error, reason} ->
+            send_resp(conn, 500, "Error deleting layout: #{inspect(reason)}")
+        end
+    end
+  end
+
   def show(conn, %{"resources" => "medias", "id" => id}) do
     case Castmill.Resources.get_media(id) do
       nil ->
@@ -676,6 +789,20 @@ defmodule CastmillWeb.ResourceController do
       playlist ->
         conn
         |> render(:show, playlist: playlist)
+    end
+  end
+
+  def show(conn, %{"resources" => "layouts", "id" => id}) do
+    case Castmill.Resources.get_layout(id) do
+      nil ->
+        conn
+        |> put_status(:not_found)
+        |> Phoenix.Controller.json(%{message: "Layout not found"})
+        |> halt()
+
+      layout ->
+        conn
+        |> render(:show, layout_data: layout)
     end
   end
 
