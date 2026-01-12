@@ -1081,14 +1081,17 @@ defmodule Castmill.Resources do
       iex> list_resources(Media, params)
       [%Media{}, ...]
   """
-  def list_resources(resource, %{
-        organization_id: organization_id,
-        page: page,
-        page_size: page_size,
-        search: search,
-        filters: filters,
-        team_id: team_id
-      } = params)
+  def list_resources(
+        resource,
+        %{
+          organization_id: organization_id,
+          page: page,
+          page_size: page_size,
+          search: search,
+          filters: filters,
+          team_id: team_id
+        } = params
+      )
       when not is_nil(team_id) do
     offset = (page_size && max((page - 1) * page_size, 0)) || 0
 
@@ -1118,13 +1121,16 @@ defmodule Castmill.Resources do
     Repo.all(query)
   end
 
-  def list_resources(resource, %{
-        organization_id: organization_id,
-        page: page,
-        page_size: page_size,
-        search: search,
-        filters: filters
-      } = params) do
+  def list_resources(
+        resource,
+        %{
+          organization_id: organization_id,
+          page: page,
+          page_size: page_size,
+          search: search,
+          filters: filters
+        } = params
+      ) do
     offset = (page_size && max((page - 1) * page_size, 0)) || 0
 
     preloads =
@@ -1555,13 +1561,15 @@ defmodule Castmill.Resources do
   @doc """
   Returns the list of layouts including both organization-specific and system layouts.
   """
-  def list_layouts(%{
-        organization_id: organization_id,
-        page: page,
-        page_size: page_size,
-        search: search,
-        filters: filters
-      } = params) do
+  def list_layouts(
+        %{
+          organization_id: organization_id,
+          page: page,
+          page_size: page_size,
+          search: search,
+          filters: filters
+        } = params
+      ) do
     offset = (page_size && max((page - 1) * page_size, 0)) || 0
 
     Layout.base_query()

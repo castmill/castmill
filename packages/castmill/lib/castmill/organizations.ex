@@ -459,12 +459,14 @@ defmodule Castmill.Organizations do
     do_list_users(merged_params)
   end
 
-  def do_list_users(%{
-        organization_id: organization_id,
-        search: search,
-        page: page,
-        page_size: page_size
-      } = params) do
+  def do_list_users(
+        %{
+          organization_id: organization_id,
+          search: search,
+          page: page,
+          page_size: page_size
+        } = params
+      ) do
     offset = if page_size == nil, do: 0, else: max((page - 1) * page_size, 0)
 
     users =

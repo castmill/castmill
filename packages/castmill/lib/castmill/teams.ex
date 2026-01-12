@@ -38,12 +38,14 @@ defmodule Castmill.Teams do
       [%Team{}, ...]
 
   """
-  def list_teams(%{
-        organization_id: organization_id,
-        search: search,
-        page: page,
-        page_size: page_size
-      } = params) do
+  def list_teams(
+        %{
+          organization_id: organization_id,
+          search: search,
+          page: page,
+          page_size: page_size
+        } = params
+      ) do
     offset = if page_size == nil, do: 0, else: max((page - 1) * page_size, 0)
 
     Team.base_query()
