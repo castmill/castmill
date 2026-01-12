@@ -377,18 +377,19 @@ defmodule CastmillWeb.WidgetOAuthController do
     # Use a fixed callback URL - integration ID is passed via state parameter
     # This allows registering a single redirect URI with OAuth providers
     #
-    # For local development, set OAUTH_REDIRECT_HOST=127.0.0.1 to use IP instead of localhost
-    # (required by Spotify which doesn't allow localhost, only 127.0.0.1)
+    # For local development, you can set OAUTH_REDIRECT_HOST to force a specific host
+    # or OAUTH_LOCALHOST_REPLACEMENT to control how "localhost" is rewritten (default: 127.0.0.1).
+    # Some providers (for example, Spotify) require 127.0.0.1 instead of localhost.
     configured_host = System.get_env("OAUTH_REDIRECT_HOST")
+    localhost_replacement = System.get_env("OAUTH_LOCALHOST_REPLACEMENT") || "127.0.0.1"
 
     host =
       if configured_host && configured_host != "" do
         configured_host
       else
-        # Replace localhost with 127.0.0.1 for local development
-        # Many OAuth providers (like Spotify) require 127.0.0.1 instead of localhost
+        # Replace localhost with a configurable IP for local development
         case conn.host do
-          "localhost" -> "127.0.0.1"
+          "localhost" -> localhost_replacement
           other -> other
         end
       end
