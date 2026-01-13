@@ -87,7 +87,7 @@ defmodule Castmill.Workers.BullMQHelper do
 
   defp execute_job_inline(queue, job_name, args) do
     # In testing mode, execute the job immediately
-    worker_module = worker_module_for_queue(queue)
+    worker_module = worker_module_for_queue(queue, job_name)
     
     # Create a job struct that matches BullMQ.Job
     job = %BullMQ.Job{
@@ -107,16 +107,17 @@ defmodule Castmill.Workers.BullMQHelper do
     end
   end
 
-  defp worker_module_for_queue(queue) do
+  defp worker_module_for_queue(queue, job_name) do
     queue_str = to_string(queue)
     
-    case queue_str do
-      "image_transcoder" -> Castmill.Workers.ImageTranscoder
-      "video_transcoder" -> Castmill.Workers.VideoTranscoder
-      "integration_polling" -> Castmill.Workers.SpotifyPoller
-      "integrations" -> Castmill.Workers.IntegrationPoller
-      "maintenance" -> Castmill.Workers.IntegrationDataCleanup
-      _ -> raise "Unknown queue: #{queue_str}"
+    case {queue_str, job_name} do
+      {"image_transcoder", _} -> Castmill.Workers.ImageTranscoder
+      {"video_transcoder", _} -> Castmill.Workers.VideoTranscoder
+      {"integration_polling", _} -> Castmill.Workers.SpotifyPoller
+      {"integrations", _} -> Castmill.Workers.IntegrationPoller
+      {"maintenance", "integration_data_cleanup"} -> Castmill.Workers.IntegrationDataCleanup
+      {"maintenance", "encryption_rotation"} -> Castmill.Workers.EncryptionRotation
+      _ -> raise "Unknown queue/job combination: queue=#{queue_str}, job_name=#{job_name}"
     end
   end
 

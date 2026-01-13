@@ -139,7 +139,7 @@ defmodule CastmillWeb.UploadController do
 
       ## Either starts with video or is an ASF file ( "application/vnd.ms-asf" )
       String.starts_with?(mime_type, "video/") or mime_type == "application/vnd.ms-asf" ->
-        Castmill.Workers.VideoTranscoder.schedule(media, destpath)
+        Castmill.Workers.VideoTranscoder.schedule(media, destpath, mime_type)
         :ok
 
       true ->

@@ -402,14 +402,19 @@ defmodule Castmill.Workers.VideoTranscoder do
   @doc """
   Schedules a video transcoding job.
   """
-  def schedule(media, filepath) do
+  def schedule(media, filepath, mime_type \\ nil) do
+    args = %{
+      "media" => media,
+      "filepath" => filepath
+    }
+    
+    # Add mime_type if provided (for compatibility)
+    args = if mime_type, do: Map.put(args, "mime_type", mime_type), else: args
+    
     BullMQHelper.add_job(
       @queue,
       "video_transcode",
-      %{
-        "media" => media,
-        "filepath" => filepath
-      }
+      args
     )
   end
 end
