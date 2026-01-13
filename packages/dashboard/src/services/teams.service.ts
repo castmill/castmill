@@ -365,7 +365,17 @@ export const TeamsService = {
     });
 
     if (response.status === 200) {
-      return await response.json();
+      const data = await response.json();
+      if (!data) {
+        throw new Error(
+          'This invitation link is invalid or the team no longer exists.'
+        );
+      }
+      return data;
+    } else if (response.status === 404) {
+      throw new Error(
+        'This invitation link is invalid or the team no longer exists.'
+      );
     } else if (response.status === 403) {
       throw new Error(
         'You do not have permission to view this invitation. Make sure you are logged in with the correct email address.'
