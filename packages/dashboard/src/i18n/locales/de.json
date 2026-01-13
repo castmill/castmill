@@ -818,5 +818,21 @@
       "title": "Tastaturkürzel",
       "description": "Verwenden Sie diese Tastenkombinationen für schnellere Navigation"
     }
+  },
+  "onboarding": {
+    "title": "Willkommen bei Castmill!",
+    "subtitle": "Lassen Sie uns beginnen, indem Sie Ihre Organisation benennen.",
+    "organizationNameLabel": "Organisationsname",
+    "organizationNamePlaceholder": "Geben Sie Ihren Organisationsnamen ein",
+    "helpText": "Dieser Name wird verwendet, um Ihren Arbeitsbereich zu identifizieren. Sie können ihn später in den Einstellungen ändern.",
+    "continueButton": "Fortfahren",
+    "success": "Organisationseinrichtung abgeschlossen!",
+    "errors": {
+      "organizationNameRequired": "Organisationsname ist erforderlich",
+      "organizationNameTooShort": "Der Organisationsname muss mindestens 2 Zeichen lang sein",
+      "organizationNameTooLong": "Der Organisationsname muss weniger als 50 Zeichen lang sein",
+      "organizationNameTaken": "Dieser Organisationsname ist bereits vergeben",
+      "failed": "Einrichtung fehlgeschlagen. Bitte versuchen Sie es erneut."
+    }
   }
 }

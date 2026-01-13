@@ -819,5 +819,21 @@
       "title": "Tangentbordsgenvägar",
       "description": "Använd dessa genvägar för att navigera snabbare"
     }
+  },
+  "onboarding": {
+    "title": "Välkommen till Castmill!",
+    "subtitle": "Låt oss börja med att namnge din organisation.",
+    "organizationNameLabel": "Organisationens namn",
+    "organizationNamePlaceholder": "Ange din organisations namn",
+    "helpText": "Detta namn kommer att användas för att identifiera din arbetsyta. Du kan ändra det senare i inställningarna.",
+    "continueButton": "Fortsätt",
+    "success": "Organisationsinställningen är klar!",
+    "errors": {
+      "organizationNameRequired": "Organisationsnamn krävs",
+      "organizationNameTooShort": "Organisationsnamnet måste vara minst 2 tecken",
+      "organizationNameTooLong": "Organisationsnamnet måste vara kortare än 50 tecken",
+      "organizationNameTaken": "Detta organisationsnamn är redan upptaget",
+      "failed": "Misslyckades med att slutföra installationen. Försök igen."
+    }
   }
 }

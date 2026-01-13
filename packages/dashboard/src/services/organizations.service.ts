@@ -360,4 +360,43 @@ export const OrganizationsService = {
       throw new HttpError(errorMessage, response.status);
     }
   },
+
+  /**
+   * Complete onboarding by setting the organization name.
+   *
+   */
+  async completeOnboarding(organizationId: string, name: string) {
+    const response = await fetch(
+      `${baseUrl}/dashboard/organizations/${organizationId}/complete-onboarding`,
+      {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name }),
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      let errorMessage = 'Failed to complete onboarding';
+
+      // Check for specific error messages
+      if (errorData.errors?.name) {
+        errorMessage = Array.isArray(errorData.errors.name)
+          ? errorData.errors.name[0]
+          : errorData.errors.name;
+      } else if (errorData.error) {
+        errorMessage = errorData.error;
+      }
+
+      const error: any = new Error(errorMessage);
+      error.status = response.status;
+      error.data = errorData;
+      throw error;
+    }
+
+    return await response.json();
+  },
 };
