@@ -48,12 +48,14 @@ vi.mock('../../hooks', () => ({
     selectedTeamId: () => null,
     setSelectedTeamId: vi.fn(),
   }),
+  useModalFromUrl: vi.fn(),
 }));
 
+const { mockUsePermissions } = vi.hoisted(() => ({
+  mockUsePermissions: vi.fn(),
+}));
 vi.mock('../../hooks/usePermissions', () => ({
-  usePermissions: () => ({
-    canPerformAction: vi.fn((resource: string, action: string) => true),
-  }),
+  usePermissions: mockUsePermissions,
 }));
 
 vi.mock('../../hooks/useKeyboardShortcuts', () => ({
@@ -93,9 +95,8 @@ describe('ChannelsPage - Delete Button Permission Tests', () => {
     } as any);
 
     // Get the mock function
-    const permissionsModule = await import('../../hooks/usePermissions');
     mockCanPerformAction = vi.fn((resource: string, action: string) => true);
-    vi.mocked(permissionsModule.usePermissions).mockReturnValue({
+    mockUsePermissions.mockReturnValue({
       canPerformAction: mockCanPerformAction,
     });
   });
