@@ -90,9 +90,7 @@
     "selectPlaylist": "プレイリストを選択",
     "playlist": "プレイリスト",
     "addPlaylist": "プレイリストを追加",
-    "apply": "適用",
     "selectVideo": "ビデオを選択",
-    "offline": "オフライン",
     "widget": "Widget"
   },
   "topbar": {
@@ -600,7 +598,13 @@
     "setDeviceChannel": "デバイスチャンネルを設定",
     "selectChannel": "チャンネルを選択",
     "preview": {
-      "placeholder": "プレビュー"
+      "placeholder": "プレビュー",
+      "noChannels": "このデバイスにチャンネルが割り当てられていません",
+      "noScheduledContent": "現在スケジュールされたコンテンツがありません",
+      "errorLoadingPlaylist": "プレイリストコンテンツの読み込みに失敗しました",
+      "errorInitializing": "プレビューの初期化に失敗しました",
+      "currentlyPlaying": "現在チャンネルからスケジュール中",
+      "note": "これは、チャンネルスケジュールに基づいてデバイスが現在再生すべき内容を示しており、デバイスに実際に表示されている内容とは限りません。"
     },
     "telemetry": {
       "placeholder": "トレース、ログ、メトリクス、および接続性(WiFi品質など)"
