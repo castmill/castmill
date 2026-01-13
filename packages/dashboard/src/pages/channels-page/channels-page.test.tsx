@@ -18,8 +18,12 @@ vi.mock('../../services/channels.service', () => ({
       })
     ),
     removeChannel: vi.fn(() => Promise.resolve({ success: true })),
-    addChannel: vi.fn(() => Promise.resolve({ data: { id: 3, name: 'New Channel' } })),
-    updateChannel: vi.fn(() => Promise.resolve({ id: 1, name: 'Updated Channel' })),
+    addChannel: vi.fn(() =>
+      Promise.resolve({ data: { id: 3, name: 'New Channel' } })
+    ),
+    updateChannel: vi.fn(() =>
+      Promise.resolve({ id: 1, name: 'Updated Channel' })
+    ),
   })),
   JsonChannel: {} as any,
 }));
@@ -238,7 +242,9 @@ describe('ChannelsPage - Delete Button Permission Tests', () => {
 
       await waitFor(() => {
         const buttons = screen.getAllByRole('button');
-        const addButton = buttons.find(btn => btn.textContent?.includes('Add Channel'));
+        const addButton = buttons.find((btn) =>
+          btn.textContent?.includes('Add Channel')
+        );
         expect(addButton).toBeDefined();
         if (addButton) {
           expect(addButton).not.toBeDisabled();
@@ -258,7 +264,9 @@ describe('ChannelsPage - Delete Button Permission Tests', () => {
 
       await waitFor(() => {
         const buttons = screen.getAllByRole('button');
-        const addButton = buttons.find(btn => btn.textContent?.includes('Add Channel'));
+        const addButton = buttons.find((btn) =>
+          btn.textContent?.includes('Add Channel')
+        );
         expect(addButton).toBeDefined();
         if (addButton) {
           expect(addButton).toBeDisabled();
