@@ -78,6 +78,8 @@ defmodule Castmill.Application do
     queues = Keyword.get(config, :queues, [])
     connection = Keyword.get(config, :connection, :castmill_redis)
 
+    # NOTE: BullMQ.Worker API based on v1.2 documentation
+    # See: https://hexdocs.pm/bullmq/BullMQ.Worker.html
     Enum.map(queues, fn {queue_name, opts} ->
       concurrency = if is_integer(opts), do: opts, else: Keyword.get(opts, :concurrency, 1)
 

@@ -33,6 +33,8 @@ defmodule Castmill.Workers.IntegrationPollerTest do
 
     discriminator = "feed_url:https://example.com/rss"
 
+    # Create a BullMQ job structure for testing
+    # NOTE: Based on BullMQ Elixir v1.2 Job structure
     job = %BullMQ.Job{
       id: "test-job-id",
       name: "integration_poll",

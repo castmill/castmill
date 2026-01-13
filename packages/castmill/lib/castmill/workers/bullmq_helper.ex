@@ -33,6 +33,8 @@ defmodule Castmill.Workers.BullMQHelper do
       execute_job_inline(queue, job_name, args)
     else
       # Normal mode - add to BullMQ queue
+      # NOTE: BullMQ API based on v1.2 documentation
+      # See: https://hexdocs.pm/bullmq/BullMQ.Queue.html#add/4
       connection = Keyword.get(opts, :connection, :castmill_redis)
       
       # Convert Oban-style options to BullMQ options
@@ -90,6 +92,9 @@ defmodule Castmill.Workers.BullMQHelper do
     worker_module = worker_module_for_queue(queue, job_name)
     
     # Create a job struct that matches BullMQ.Job
+    # NOTE: This structure is based on BullMQ Elixir v1.2 documentation
+    # If the BullMQ library is updated, this may need adjustment
+    # See: https://hexdocs.pm/bullmq/BullMQ.Job.html
     job = %BullMQ.Job{
       id: Ecto.UUID.generate(),
       name: job_name,
