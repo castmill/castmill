@@ -619,6 +619,25 @@
       "updateFirmwareDescription": "يحدث البرنامج الثابت للجهاز",
       "offlineMessage": "الجهاز غير متصل بالإنترنت، لذا لا يمكن إرسال أوامر إليه"
     },
+    "cache": {
+      "title": "ذاكرة التخزين المؤقت للجهاز",
+      "items": "عناصر ذاكرة التخزين المؤقت",
+      "dataTab": "البيانات",
+      "codeTab": "الكود",
+      "mediaTab": "الوسائط",
+      "deleteSelected": "حذف العناصر المحددة",
+      "clearAll": "مسح الكل",
+      "confirmDelete": "حذف إدخال ذاكرة التخزين المؤقت",
+      "confirmDeleteMessage": "هل أنت متأكد من أنك تريد حذف هذا الإدخال من ذاكرة التخزين المؤقت؟ عنوان URL: {{url}}",
+      "confirmDeleteMultiple": "حذف إدخالات متعددة",
+      "confirmDeleteMultipleMessage": "هل أنت متأكد من أنك تريد حذف {{count}} من إدخالات ذاكرة التخزين المؤقت؟",
+      "confirmClearAll": "مسح جميع ذاكرة التخزين المؤقت",
+      "confirmClearAllMessage": "هل أنت متأكد من أنك تريد مسح جميع إدخالات ذاكرة التخزين المؤقت {{type}}؟ لا يمكن التراجع عن هذا الإجراء.",
+      "deleteSuccess": "تم حذف إدخال ذاكرة التخزين المؤقت بنجاح",
+      "deleteMultipleSuccess": "تم حذف {{count}} من إدخالات ذاكرة التخزين المؤقت بنجاح",
+      "clearAllSuccess": "تم مسح جميع إدخالات ذاكرة التخزين المؤقت بنجاح",
+      "deleteError": "خطأ في حذف ذاكرة التخزين المؤقت: {{error}}"
+    },
     "errors": {
       "setChannelFailed": "فشل تعيين قناة الجهاز: {{error}}",
       "commandFailed": "حدث خطأ أثناء معالجة طلبك"

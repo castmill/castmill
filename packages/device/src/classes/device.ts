@@ -56,9 +56,19 @@ interface CachePage {
   type: ItemType;
 }
 
+interface CacheDeleteRequest {
+  type: ItemType | 'all';
+  urls: string[];
+}
+
 interface DeviceRequest {
   resource: 'cache';
   opts: CachePage & { ref: string };
+}
+
+interface DeviceDeleteRequest {
+  resource: 'cache';
+  opts: CacheDeleteRequest & { ref: string };
 }
 
 interface Credentials {
@@ -505,6 +515,16 @@ export class Device extends EventEmitter {
       }
     });
 
+    channel.on('delete', async (payload: DeviceDeleteRequest) => {
+      const { resource, opts } = payload;
+      switch (resource) {
+        case 'cache':
+          const result = await this.deleteCache(opts);
+          channel.push('res:delete', { result, ref: opts.ref });
+          break;
+      }
+    });
+
     channel.on('update', async (data: DeviceMessage) => {
       switch (data.resource) {
         case 'device':
@@ -528,6 +548,32 @@ export class Device extends EventEmitter {
     const count = await this.cache.count(type);
 
     return { data, count };
+  }
+
+  private async deleteCache({ type, urls }: CacheDeleteRequest) {
+    try {
+      let deleted = 0;
+      
+      if (type === 'all') {
+        // Clear all cache
+        await this.cache.clean();
+        const count = await this.cache.count(ItemType.Data) + 
+                     await this.cache.count(ItemType.Code) + 
+                     await this.cache.count(ItemType.Media);
+        deleted = count;
+      } else if (urls && urls.length > 0) {
+        // Delete specific URLs
+        for (const url of urls) {
+          await this.cache.del(url);
+          deleted++;
+        }
+      }
+
+      return { success: true, deleted };
+    } catch (error) {
+      console.error('Error deleting cache:', error);
+      return { success: false, error: String(error) };
+    }
   }
 
   private initHeartbeat(channel: PhoenixChannel) {

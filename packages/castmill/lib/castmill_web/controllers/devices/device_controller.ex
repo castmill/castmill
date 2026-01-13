@@ -15,7 +15,7 @@ defmodule CastmillWeb.DeviceController do
   @impl CastmillWeb.AccessActorBehaviour
 
   def check_access(actor_id, action, %{"device_id" => device_id})
-      when action in [:send_command, :get_cache, :get_channels, :add_channel, :remove_channel] do
+      when action in [:send_command, :get_cache, :delete_cache, :get_channels, :add_channel, :remove_channel] do
     # Device can access its own resources for these actions
     if actor_id == device_id do
       {:ok, true}
@@ -49,6 +49,7 @@ defmodule CastmillWeb.DeviceController do
     %{}
     when action in [
            :send_command,
+           :delete_cache,
            :add_channel,
            :remove_channel,
            :get_channels,
@@ -146,6 +147,56 @@ defmodule CastmillWeb.DeviceController do
           conn
           |> put_status(:bad_request)
           |> json(%{error: "No response from WebSocket client"})
+      end
+    else
+      {:error, errors} ->
+        conn
+        |> put_status(:bad_request)
+        |> Phoenix.Controller.json(%{errors: errors})
+        |> halt()
+    end
+  end
+
+  @delete_cache_schema %{
+    device_id: [type: :string],
+    type: [type: :string, allowed: ["code", "data", "media", "all"]],
+    urls: [type: {:array, :string}]
+  }
+
+  def delete_cache(conn, %{"device_id" => device_id} = params) do
+    with {:ok, params} <- Tarams.cast(params, @delete_cache_schema) do
+      pid = self()
+
+      # Serialize PID to a string and encode it to be used as a reference
+      ref =
+        pid
+        |> :erlang.term_to_binary()
+        |> Base.url_encode64()
+
+      # Broadcast delete command to the Device channel
+      Phoenix.PubSub.broadcast(Castmill.PubSub, "devices:#{device_id}", %{
+        delete: "cache",
+        payload: %{
+          resource: "cache",
+          opts: %{
+            type: params.type,
+            urls: params.urls,
+            ref: ref
+          }
+        }
+      })
+
+      # Wait for the response
+      receive do
+        {:device_response, data} ->
+          conn
+          |> put_status(:ok)
+          |> json(data)
+      after
+        5_000 ->
+          conn
+          |> put_status(:bad_request)
+          |> json(%{error: "No response from device"})
       end
     else
       {:error, errors} ->

@@ -620,6 +620,25 @@
       "updateFirmwareDescription": "デバイスのファームウェアを更新します",
       "offlineMessage": "デバイスがオフラインのため、コマンドを送信できません"
     },
+    "cache": {
+      "title": "デバイスキャッシュ",
+      "items": "キャッシュアイテム",
+      "dataTab": "データ",
+      "codeTab": "コード",
+      "mediaTab": "メディア",
+      "deleteSelected": "選択した項目を削除",
+      "clearAll": "すべてクリア",
+      "confirmDelete": "キャッシュエントリを削除",
+      "confirmDeleteMessage": "このキャッシュエントリを削除してもよろしいですか？URL: {{url}}",
+      "confirmDeleteMultiple": "複数のエントリを削除",
+      "confirmDeleteMultipleMessage": "{{count}}個のキャッシュエントリを削除してもよろしいですか？",
+      "confirmClearAll": "すべてのキャッシュをクリア",
+      "confirmClearAllMessage": "すべての{{type}}キャッシュエントリをクリアしてもよろしいですか？この操作は元に戻せません。",
+      "deleteSuccess": "キャッシュエントリが正常に削除されました",
+      "deleteMultipleSuccess": "{{count}}個のキャッシュエントリが正常に削除されました",
+      "clearAllSuccess": "すべてのキャッシュエントリが正常にクリアされました",
+      "deleteError": "キャッシュの削除中にエラーが発生しました: {{error}}"
+    },
     "errors": {
       "setChannelFailed": "デバイスチャンネルの設定に失敗しました: {{error}}",
       "commandFailed": "リクエストの処理中にエラーが発生しました"
