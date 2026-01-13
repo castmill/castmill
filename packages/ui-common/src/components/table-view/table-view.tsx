@@ -98,10 +98,18 @@ export const TableView = <
 
   // If props.params is defined, it’s `[searchParams, setSearchParams]` from useSearchParams
   // Otherwise use reactive signals (or store) as a fallback
+  // Track current sort options
+  const [sortOptions, setSortOptions] = createSignal<SortOptions>({
+    key: 'name',
+    direction: 'ascending',
+  });
+
   const [fallbackParams, setFallbackParams] = createSignal<{
     page?: number;
     search?: string;
     filters?: string;
+    sortKey?: string;
+    sortDirection?: string;
   }>({});
 
   const getSearchParams = () => {
@@ -116,6 +124,8 @@ export const TableView = <
     page?: number;
     search?: string;
     filters?: string;
+    sortKey?: string;
+    sortDirection?: string;
   }) => {
     if (props.params) {
       const [searchParams, setSearchParamsEx] = props.params;
@@ -133,6 +143,15 @@ export const TableView = <
     if (initialFilters) {
       filters().forEach((filter) => {
         filter.isActive = initialFilters.includes(filter.key);
+      });
+    }
+
+    // Get initial sort options from search params
+    const params = getSearchParams();
+    if (params.sortKey || params.sortDirection) {
+      setSortOptions({
+        key: params.sortKey,
+        direction: params.sortDirection as 'ascending' | 'descending',
       });
     }
 
@@ -163,10 +182,7 @@ export const TableView = <
 
       const result = await props.fetchData({
         page: { num: currentPage(), size: props.pagination.itemsPerPage },
-        sortOptions: {
-          key: 'name',
-          direction: 'ascending',
-        },
+        sortOptions: sortOptions(),
         search,
         filters: filters().length ? filtersObject : undefined,
       });
@@ -189,6 +205,8 @@ export const TableView = <
     page?: number;
     search?: string;
     filters?: string;
+    sortKey?: string;
+    sortDirection?: string;
   }) => {
     // Since it takes one event loop to update the search params, we need to wait for it.
     await new Promise<void>((resolve) =>
@@ -210,6 +228,14 @@ export const TableView = <
 
         if (typeof opts.filters != 'undefined') {
           params['filters'] = opts.filters;
+        }
+
+        if (typeof opts.sortKey != 'undefined') {
+          params['sortKey'] = opts.sortKey;
+        }
+
+        if (typeof opts.sortDirection != 'undefined') {
+          params['sortDirection'] = opts.sortDirection;
         }
 
         console.log('handleChange', params);
@@ -237,6 +263,15 @@ export const TableView = <
     await handleChange({
       filters: activeFilters().join(','),
       page: 1,
+    });
+  };
+
+  const handleSort = async (options: SortOptions) => {
+    setSortOptions(options);
+    await handleChange({
+      sortKey: options.key,
+      sortDirection: options.direction,
+      page: 1, // Reset to first page when sorting changes
     });
   };
 
@@ -300,7 +335,7 @@ export const TableView = <
             actions={props.table.actions}
             actionsLabel={props.table.actionsLabel}
             onRowSelect={props.table.onRowSelect}
-            onSort={props.table.onSort}
+            onSort={handleSort}
             onRowClick={props.table.defaultRowAction?.handler}
             itemIdKey={props.itemIdKey}
             hideCheckboxes={props.table.hideCheckboxes}

@@ -2,8 +2,25 @@ defmodule Castmill.Repo.Migrations.AddAssetsToWidgets do
   use Ecto.Migration
 
   def change do
-    alter table(:widgets) do
-      add :assets, :map, default: %{}
+    # Only add the column if it doesn't already exist
+    # This handles cases where the column was added manually or by a previous migration
+    unless column_exists?(:widgets, :assets) do
+      alter table(:widgets) do
+        add :assets, :map, default: %{}
+      end
     end
+  end
+
+  defp column_exists?(table, column) do
+    query = """
+    SELECT EXISTS (
+      SELECT 1
+      FROM information_schema.columns
+      WHERE table_name = '#{table}' AND column_name = '#{column}'
+    )
+    """
+
+    %{rows: [[exists]]} = Ecto.Adapters.SQL.query!(Castmill.Repo, query, [])
+    exists
   end
 end

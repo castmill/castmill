@@ -49,12 +49,12 @@ defmodule Castmill.Organizations do
       [%Organization{}, ...]
 
   """
-  def list_organizations(%{search: search, page: page, page_size: page_size}) do
+  def list_organizations(%{search: search, page: page, page_size: page_size} = params) do
     offset = if is_nil(page_size), do: 0, else: max((page - 1) * page_size, 0)
 
     Organization.base_query()
     |> QueryHelpers.where_name_like(search)
-    |> Ecto.Query.order_by([d], asc: d.name)
+    |> apply_sorting(params)
     |> Ecto.Query.limit(^page_size)
     |> Ecto.Query.offset(^offset)
     |> Repo.all()
@@ -72,6 +72,29 @@ defmodule Castmill.Organizations do
 
   def list_organizations do
     Repo.all(Organization)
+  end
+
+  # Helper function to apply sorting to a query based on params
+  defp apply_sorting(query, params) do
+    sort_key = Map.get(params, :key)
+    sort_direction = Map.get(params, :direction, "ascending")
+
+    sort_dir =
+      case sort_direction do
+        "ascending" -> :asc
+        "descending" -> :desc
+        _ -> :asc
+      end
+
+    sort_field =
+      case sort_key do
+        "name" -> :name
+        "inserted_at" -> :inserted_at
+        "updated_at" -> :updated_at
+        _ -> :name
+      end
+
+    Ecto.Query.order_by(query, [{^sort_dir, ^sort_field}])
   end
 
   def count_organizations(%{search: search}) do
@@ -436,12 +459,14 @@ defmodule Castmill.Organizations do
     do_list_users(merged_params)
   end
 
-  def do_list_users(%{
-        organization_id: organization_id,
-        search: search,
-        page: page,
-        page_size: page_size
-      }) do
+  def do_list_users(
+        %{
+          organization_id: organization_id,
+          search: search,
+          page: page,
+          page_size: page_size
+        } = params
+      ) do
     offset = if page_size == nil, do: 0, else: max((page - 1) * page_size, 0)
 
     users =
@@ -449,7 +474,7 @@ defmodule Castmill.Organizations do
       |> OrganizationsUsers.where_organization_id(organization_id)
       |> join(:inner, [ou], u in assoc(ou, :user), as: :user)
       |> maybe_search_by_user_name(search)
-      |> order_by([organizations_users: _ou, user: u], asc: u.name)
+      |> apply_users_sorting(params)
       |> Ecto.Query.limit(^page_size)
       |> Ecto.Query.offset(^offset)
       |> select([organizations_users: ou, user: u], %{
@@ -485,6 +510,36 @@ defmodule Castmill.Organizations do
   defp maybe_search_by_user_name(query, search) do
     from [user: u] in query,
       where: ilike(u.name, ^"%#{search}%")
+  end
+
+  # Helper function to apply sorting to organization users query
+  defp apply_users_sorting(query, params) do
+    sort_key = Map.get(params, :key)
+    sort_direction = Map.get(params, :direction, "ascending")
+
+    sort_dir =
+      case sort_direction do
+        "ascending" -> :asc
+        "descending" -> :desc
+        _ -> :asc
+      end
+
+    case sort_key do
+      "user.name" ->
+        Ecto.Query.order_by(query, [organizations_users: _ou, user: u], [{^sort_dir, u.name}])
+
+      "role" ->
+        Ecto.Query.order_by(query, [organizations_users: ou, user: _u], [{^sort_dir, ou.role}])
+
+      "inserted_at" ->
+        Ecto.Query.order_by(query, [organizations_users: ou, user: _u], [
+          {^sort_dir, ou.inserted_at}
+        ])
+
+      _ ->
+        # Default sorting by user name ascending
+        Ecto.Query.order_by(query, [organizations_users: _ou, user: u], asc: u.name)
+    end
   end
 
   def create_organizations_user(attrs) when is_map(attrs) do
