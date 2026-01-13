@@ -21,6 +21,9 @@ defmodule Castmill.Organizations.Organization do
     # Encryption key for sensitive data (Base64-encoded 32-byte key)
     field(:encryption_key, :string)
 
+    # Onboarding status - tracks if organization setup is complete
+    field(:onboarding_completed, :boolean, default: true)
+
     # Castmill 2.0 Permission System Fields
     # Default role for new users joining this organization
     field(:default_role, Ecto.Enum,
@@ -65,7 +68,8 @@ defmodule Castmill.Organizations.Organization do
       :default_role,
       :visibility_mode,
       :logo_media_id,
-      :encryption_key
+      :encryption_key,
+      :onboarding_completed
     ])
     |> validate_required([:name, :network_id])
     |> validate_inclusion(:default_role, [
