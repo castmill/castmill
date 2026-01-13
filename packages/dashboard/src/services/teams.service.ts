@@ -359,24 +359,27 @@ export const TeamsService = {
   },
 
   async getInvitation(email: string, token: string) {
-    const response = await fetch(
-      `${baseUrl}/dashboard/invitations/${token}?email=${email}`,
-      {
-        method: 'GET',
-        credentials: 'include',
-      }
-    );
+    const response = await fetch(`${baseUrl}/dashboard/invitations/${token}`, {
+      method: 'GET',
+      credentials: 'include',
+    });
 
     if (response.status === 200) {
       return await response.json();
+    } else if (response.status === 403) {
+      throw new Error(
+        'You do not have permission to view this invitation. Make sure you are logged in with the correct email address.'
+      );
+    } else if (response.status === 401) {
+      throw new Error('Please log in to view this invitation.');
     } else {
-      throw new Error('Failed to fetch invitation');
+      throw new Error('Failed to fetch invitation. Please try again later.');
     }
   },
 
   async acceptInvitation(email: string, token: string) {
     const response = await fetch(
-      `${baseUrl}/dashboard/invitations/${token}/accept?email=${email}`,
+      `${baseUrl}/dashboard/invitations/${token}/accept`,
       {
         method: 'POST',
         credentials: 'include',
@@ -385,8 +388,14 @@ export const TeamsService = {
 
     if (response.status === 200) {
       return await response.json();
+    } else if (response.status === 403) {
+      throw new Error(
+        'You do not have permission to accept this invitation. Make sure you are logged in with the correct email address.'
+      );
+    } else if (response.status === 401) {
+      throw new Error('Please log in to accept this invitation.');
     } else {
-      throw new Error('Failed to accept invitation');
+      throw new Error('Failed to accept invitation. Please try again later.');
     }
   },
 
@@ -401,8 +410,14 @@ export const TeamsService = {
 
     if (response.status === 200) {
       return await response.json();
+    } else if (response.status === 403) {
+      throw new Error(
+        'You do not have permission to reject this invitation. Make sure you are logged in with the correct email address.'
+      );
+    } else if (response.status === 401) {
+      throw new Error('Please log in to reject this invitation.');
     } else {
-      throw new Error('Failed to reject invitation');
+      throw new Error('Failed to reject invitation. Please try again later.');
     }
   },
 
