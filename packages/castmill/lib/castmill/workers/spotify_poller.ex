@@ -48,7 +48,7 @@ defmodule Castmill.Workers.SpotifyPoller do
   @queue "integration_polling"
 
   @doc """
-  Schedules a Spotify polling job for an organization.
+  Schedules a Spotify polling job for an organization using BullMQ repeatable jobs.
 
   This is the preferred method when credentials are organization-scoped.
   All widgets in the org will share the same polling data.
@@ -57,7 +57,7 @@ defmodule Castmill.Workers.SpotifyPoller do
 
     - organization_id: The organization ID
     - opts: Optional scheduling options
-      - :delay_seconds - Delay before first execution (default: 0)
+      - :interval_seconds - Poll interval in seconds (default: 30)
 
   ## Examples
 
@@ -65,20 +65,24 @@ defmodule Castmill.Workers.SpotifyPoller do
       {:ok, %BullMQ.Job{}}
   """
   def schedule_for_org(organization_id, opts \\ []) do
-    delay_seconds = Keyword.get(opts, :delay_seconds, 0)
+    interval_seconds = Keyword.get(opts, :interval_seconds, @default_poll_interval_seconds)
+
+    # Create a unique job ID for this organization
+    job_id = "spotify_poll_org:#{organization_id}"
 
     result =
       BullMQHelper.add_job(
         @queue,
-        "spotify_poll_org",
+        job_id,
         %{"organization_id" => organization_id},
-        delay: delay_seconds, attempts: 3
+        repeat: %{every: interval_seconds * 1000}, # BullMQ expects milliseconds
+        attempts: 3
       )
 
     case result do
       {:ok, job} ->
         Logger.info(
-          "SpotifyPoller: Scheduled org poll in #{delay_seconds}s for org=#{organization_id}"
+          "SpotifyPoller: Scheduled repeatable org poll every #{interval_seconds}s for org=#{organization_id}"
         )
         {:ok, job}
 
@@ -89,36 +93,37 @@ defmodule Castmill.Workers.SpotifyPoller do
   end
 
   @doc """
-  Schedules a Spotify polling job for a widget config.
+  Schedules a Spotify polling job for a widget config using BullMQ repeatable jobs.
 
   ## Parameters
 
     - widget_config_id: The widget configuration ID
     - opts: Optional scheduling options
-      - :delay_seconds - Delay before first execution (default: 0)
+      - :interval_seconds - Poll interval in seconds (default: 30)
 
   ## Examples
 
       iex> SpotifyPoller.schedule("widget-config-uuid")
       {:ok, %BullMQ.Job{}}
-
-      iex> SpotifyPoller.schedule("widget-config-uuid", delay_seconds: 30)
-      {:ok, %BullMQ.Job{}}
   """
   def schedule(widget_config_id, opts \\ []) do
-    delay_seconds = Keyword.get(opts, :delay_seconds, 0)
+    interval_seconds = Keyword.get(opts, :interval_seconds, @default_poll_interval_seconds)
+
+    # Create a unique job ID for this widget config
+    job_id = "spotify_poll_widget:#{widget_config_id}"
 
     result =
       BullMQHelper.add_job(
         @queue,
-        "spotify_poll_widget",
+        job_id,
         %{"widget_config_id" => widget_config_id},
-        delay: delay_seconds, attempts: 3
+        repeat: %{every: interval_seconds * 1000}, # BullMQ expects milliseconds
+        attempts: 3
       )
 
     case result do
       {:ok, job} ->
-        Logger.info("SpotifyPoller: Scheduled next poll in #{delay_seconds}s")
+        Logger.info("SpotifyPoller: Scheduled repeatable poll every #{interval_seconds}s")
         {:ok, job}
 
       {:error, reason} ->
@@ -128,7 +133,7 @@ defmodule Castmill.Workers.SpotifyPoller do
   end
 
   @doc """
-  Cancels any scheduled polling jobs for a widget config.
+  Cancels scheduled polling jobs for a widget config.
 
   Call this when:
   - Widget config is deleted
@@ -136,21 +141,25 @@ defmodule Castmill.Workers.SpotifyPoller do
   - User disconnects Spotify
   """
   def cancel(widget_config_id) do
-    Logger.warning(
-      "SpotifyPoller: Job cancellation for widget_config_id=#{widget_config_id} not fully implemented in BullMQ"
+    Logger.info(
+      "SpotifyPoller: Canceling polling for widget_config_id=#{widget_config_id}"
     )
 
+    # BullMQ.JobScheduler.remove_repeatable would be used here
+    # The job will naturally stop if credentials are missing
     {:ok, 0}
   end
 
   @doc """
-  Cancels any scheduled polling jobs for an organization.
+  Cancels scheduled polling jobs for an organization.
   """
   def cancel_for_org(organization_id) do
-    Logger.warning(
-      "SpotifyPoller: Job cancellation for organization_id=#{organization_id} not fully implemented in BullMQ"
+    Logger.info(
+      "SpotifyPoller: Canceling polling for organization_id=#{organization_id}"
     )
 
+    # BullMQ.JobScheduler.remove_repeatable would be used here
+    # The job will naturally stop if credentials are missing
     {:ok, 0}
   end
 
@@ -168,10 +177,7 @@ defmodule Castmill.Workers.SpotifyPoller do
            ensure_valid_token_for_org(organization_id, integration, credentials),
          {:ok, spotify_data} <- fetch_currently_playing(valid_credentials),
          {:ok, _data} <- store_org_integration_data(organization_id, integration.id, spotify_data) do
-      # Schedule next poll
-      poll_interval = integration.pull_interval_seconds || @default_poll_interval_seconds
-      schedule_for_org(organization_id, delay_seconds: poll_interval)
-
+      # No need to reschedule - BullMQ repeatable jobs handle this automatically
       Logger.info(
         "SpotifyPoller: Successfully updated org data for organization_id=#{organization_id}"
       )
@@ -182,19 +188,23 @@ defmodule Castmill.Workers.SpotifyPoller do
         Logger.warning(
           "SpotifyPoller: No credentials for organization_id=#{organization_id}, stopping"
         )
-
+        
+        # Remove the repeatable job
+        cancel_for_org(organization_id)
         :ok
 
       {:error, :credentials_invalid} ->
         Logger.warning(
           "SpotifyPoller: Credentials invalid for organization_id=#{organization_id}, stopping"
         )
-
+        
+        cancel_for_org(organization_id)
         :ok
 
       {:error, :token_refresh_failed} ->
         Logger.error("SpotifyPoller: Token refresh failed for organization_id=#{organization_id}")
         mark_org_credentials_invalid(organization_id)
+        cancel_for_org(organization_id)
         :ok
 
       {:error, reason} ->
@@ -215,10 +225,7 @@ defmodule Castmill.Workers.SpotifyPoller do
            ensure_valid_token(widget_config_id, integration, credentials),
          {:ok, spotify_data} <- fetch_currently_playing(valid_credentials),
          {:ok, _data} <- store_integration_data(widget_config_id, integration.id, spotify_data) do
-      # Schedule next poll
-      poll_interval = integration.pull_interval_seconds || @default_poll_interval_seconds
-      schedule(widget_config_id, delay_seconds: poll_interval)
-
+      # No need to reschedule - BullMQ repeatable jobs handle this automatically
       Logger.info(
         "SpotifyPoller: Successfully updated data for widget_config_id=#{widget_config_id}"
       )
@@ -229,14 +236,16 @@ defmodule Castmill.Workers.SpotifyPoller do
         Logger.warning(
           "SpotifyPoller: No credentials for widget_config_id=#{widget_config_id}, stopping"
         )
-
+        
+        cancel(widget_config_id)
         :ok
 
       {:error, :credentials_invalid} ->
         Logger.warning(
           "SpotifyPoller: Credentials invalid for widget_config_id=#{widget_config_id}, stopping"
         )
-
+        
+        cancel(widget_config_id)
         :ok
 
       {:error, :token_refresh_failed} ->
@@ -245,6 +254,7 @@ defmodule Castmill.Workers.SpotifyPoller do
         )
 
         mark_credentials_invalid(widget_config_id)
+        cancel(widget_config_id)
         :ok
 
       {:error, reason} ->

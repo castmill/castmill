@@ -144,6 +144,10 @@ defmodule Castmill.Workers.BullMQHelper do
       {:attempts, attempts}, acc ->
         [{:attempts, attempts} | acc]
       
+      {:repeat, repeat_opts}, acc when is_map(repeat_opts) ->
+        # Pass through repeat options for BullMQ repeatable jobs
+        [{:repeat, repeat_opts} | acc]
+      
       {_key, _value}, acc ->
         # Skip unknown options
         acc
