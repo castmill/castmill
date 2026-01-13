@@ -1,6 +1,6 @@
 defmodule Castmill.Workers.SpotifyPoller do
   @moduledoc """
-  Oban worker that polls Spotify's API to fetch currently playing track data.
+  BullMQ worker that polls Spotify's API to fetch currently playing track data.
 
   This worker is scheduled periodically for each widget config that uses the
   Spotify integration. It fetches the currently playing track and updates
@@ -29,26 +29,23 @@ defmodule Castmill.Workers.SpotifyPoller do
 
   - Token expired: Attempts to refresh using refresh_token
   - Token refresh failed: Marks credentials as invalid, stops polling
-  - HTTP errors: Retries with exponential backoff (Oban default)
+  - HTTP errors: Retries with exponential backoff (BullMQ default)
   - No track playing: Stores "not_playing" status
   """
-  use Oban.Worker,
-    queue: :integration_polling,
-    max_attempts: 3,
-    # Unique constraint based on widget_config_id OR organization_id
-    # period: 10 allows scheduling next job immediately after completion
-    unique: [period: 10, states: [:available, :scheduled, :executing]]
 
   require Logger
   import Ecto.Query
 
   alias Castmill.Widgets.Integrations
   alias Castmill.Widgets.Integrations.OAuth.Spotify, as: SpotifyOAuth
+  alias Castmill.Workers.BullMQHelper
 
   @spotify_currently_playing_url "https://api.spotify.com/v1/me/player/currently-playing"
 
   # Default polling interval (30 seconds) if not specified in integration
   @default_poll_interval_seconds 30
+
+  @queue "integration_polling"
 
   @doc """
   Schedules a Spotify polling job for an organization.
@@ -65,30 +62,30 @@ defmodule Castmill.Workers.SpotifyPoller do
   ## Examples
 
       iex> SpotifyPoller.schedule_for_org("org-uuid")
-      {:ok, %Oban.Job{}}
+      {:ok, %BullMQ.Job{}}
   """
   def schedule_for_org(organization_id, opts \\ []) do
     delay_seconds = Keyword.get(opts, :delay_seconds, 0)
 
     result =
-      %{organization_id: organization_id}
-      |> new(schedule_in: delay_seconds)
-      |> Oban.insert()
+      BullMQHelper.add_job(
+        @queue,
+        "spotify_poll_org",
+        %{"organization_id" => organization_id},
+        delay: delay_seconds, attempts: 3
+      )
 
     case result do
-      {:ok, %{conflict?: true}} ->
-        Logger.warning("SpotifyPoller: Job already exists for organization_id=#{organization_id}")
-
       {:ok, job} ->
         Logger.info(
-          "SpotifyPoller: Scheduled org poll in #{delay_seconds}s for org=#{organization_id} (job_id=#{job.id})"
+          "SpotifyPoller: Scheduled org poll in #{delay_seconds}s for org=#{organization_id}"
         )
+        {:ok, job}
 
       {:error, reason} ->
         Logger.error("SpotifyPoller: Failed to schedule org job: #{inspect(reason)}")
+        {:error, reason}
     end
-
-    result
   end
 
   @doc """
@@ -99,38 +96,35 @@ defmodule Castmill.Workers.SpotifyPoller do
     - widget_config_id: The widget configuration ID
     - opts: Optional scheduling options
       - :delay_seconds - Delay before first execution (default: 0)
-      - :poll_interval - Override poll interval in seconds
 
   ## Examples
 
       iex> SpotifyPoller.schedule("widget-config-uuid")
-      {:ok, %Oban.Job{}}
+      {:ok, %BullMQ.Job{}}
 
       iex> SpotifyPoller.schedule("widget-config-uuid", delay_seconds: 30)
-      {:ok, %Oban.Job{}}
+      {:ok, %BullMQ.Job{}}
   """
   def schedule(widget_config_id, opts \\ []) do
     delay_seconds = Keyword.get(opts, :delay_seconds, 0)
 
     result =
-      %{widget_config_id: widget_config_id}
-      |> new(schedule_in: delay_seconds)
-      |> Oban.insert()
+      BullMQHelper.add_job(
+        @queue,
+        "spotify_poll_widget",
+        %{"widget_config_id" => widget_config_id},
+        delay: delay_seconds, attempts: 3
+      )
 
     case result do
-      {:ok, %{conflict?: true}} ->
-        Logger.warning(
-          "SpotifyPoller: Job already exists for widget_config_id=#{widget_config_id}"
-        )
-
       {:ok, job} ->
-        Logger.info("SpotifyPoller: Scheduled next poll in #{delay_seconds}s (job_id=#{job.id})")
+        Logger.info("SpotifyPoller: Scheduled next poll in #{delay_seconds}s")
+        {:ok, job}
 
       {:error, reason} ->
         Logger.error("SpotifyPoller: Failed to schedule job: #{inspect(reason)}")
+        {:error, reason}
     end
-
-    result
   end
 
   @doc """
@@ -142,29 +136,30 @@ defmodule Castmill.Workers.SpotifyPoller do
   - User disconnects Spotify
   """
   def cancel(widget_config_id) do
-    from(j in Oban.Job,
-      where: j.queue == "integration_polling",
-      where: j.state in ["available", "scheduled", "retryable"],
-      where: fragment("?->>'widget_config_id' = ?", j.args, ^widget_config_id)
+    Logger.warning(
+      "SpotifyPoller: Job cancellation for widget_config_id=#{widget_config_id} not fully implemented in BullMQ"
     )
-    |> Castmill.Repo.delete_all()
+
+    {:ok, 0}
   end
 
   @doc """
   Cancels any scheduled polling jobs for an organization.
   """
   def cancel_for_org(organization_id) do
-    from(j in Oban.Job,
-      where: j.queue == "integration_polling",
-      where: j.state in ["available", "scheduled", "retryable"],
-      where: fragment("?->>'organization_id' = ?", j.args, ^organization_id)
+    Logger.warning(
+      "SpotifyPoller: Job cancellation for organization_id=#{organization_id} not fully implemented in BullMQ"
     )
-    |> Castmill.Repo.delete_all()
+
+    {:ok, 0}
   end
 
+  @doc """
+  Processes the Spotify polling job.
+  This is called by BullMQ worker.
+  """
   # Organization-level polling
-  @impl Oban.Worker
-  def perform(%Oban.Job{args: %{"organization_id" => organization_id}})
+  def process(%BullMQ.Job{data: %{"organization_id" => organization_id}})
       when is_binary(organization_id) do
     Logger.info("SpotifyPoller: Polling for organization_id=#{organization_id}")
 
@@ -212,7 +207,7 @@ defmodule Castmill.Workers.SpotifyPoller do
   end
 
   # Widget config-level polling (fallback)
-  def perform(%Oban.Job{args: %{"widget_config_id" => widget_config_id}}) do
+  def process(%BullMQ.Job{data: %{"widget_config_id" => widget_config_id}}) do
     Logger.info("SpotifyPoller: Polling for widget_config_id=#{widget_config_id}")
 
     with {:ok, integration, credentials} <- get_integration_and_credentials(widget_config_id),

@@ -1,21 +1,26 @@
 defmodule Castmill.Workers.VideoTranscoder do
-  use Oban.Worker, queue: :video_transcoder
+  require Logger
+
   alias Castmill.Repo
   alias Castmill.Resources
   alias Castmill.Resources.Media
   alias Castmill.Files
   alias Castmill.Workers.Helpers
+  alias Castmill.Workers.BullMQHelper
   alias Castmill.Notifications.Events
-
-  require Logger
 
   @file_sizes_and_contexts [
     {640, "preview"},
     {1920, "poster"}
   ]
 
-  @impl Oban.Worker
-  def perform(%Oban.Job{args: args} = job) do
+  @queue "video_transcoder"
+
+  @doc """
+  Processes the video transcoding job.
+  This is called by BullMQ worker.
+  """
+  def process(%BullMQ.Job{data: args} = job) do
     dbg(job)
 
     media = args["media"]
@@ -392,5 +397,19 @@ defmodule Castmill.Workers.VideoTranscoder do
       files: media_file_records,
       size: total_size
     })
+  end
+
+  @doc """
+  Schedules a video transcoding job.
+  """
+  def schedule(media, filepath) do
+    BullMQHelper.add_job(
+      @queue,
+      "video_transcode",
+      %{
+        "media" => media,
+        "filepath" => filepath
+      }
+    )
   end
 end

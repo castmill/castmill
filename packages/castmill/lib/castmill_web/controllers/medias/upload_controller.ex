@@ -132,22 +132,14 @@ defmodule CastmillWeb.UploadController do
   end
 
   defp queue_transcoding_job(media, destpath, mime_type) do
-    job_args = %{media: media, filepath: destpath, mime_type: mime_type}
-
     cond do
       String.starts_with?(mime_type, "image/") ->
-        job_args
-        |> Castmill.Workers.ImageTranscoder.new()
-        |> Oban.insert()
-
+        Castmill.Workers.ImageTranscoder.schedule(media, destpath, mime_type)
         :ok
 
       ## Either starts with video or is an ASF file ( "application/vnd.ms-asf" )
       String.starts_with?(mime_type, "video/") or mime_type == "application/vnd.ms-asf" ->
-        job_args
-        |> Castmill.Workers.VideoTranscoder.new()
-        |> Oban.insert()
-
+        Castmill.Workers.VideoTranscoder.schedule(media, destpath)
         :ok
 
       true ->

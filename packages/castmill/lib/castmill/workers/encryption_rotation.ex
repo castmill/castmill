@@ -1,6 +1,6 @@
 defmodule Castmill.Workers.EncryptionRotation do
   @moduledoc """
-  Oban worker for background re-encryption during key rotation.
+  BullMQ worker for background re-encryption during key rotation.
 
   This worker handles the migration of encrypted data from old key versions
   to the current key version. It processes records in batches to avoid
@@ -24,23 +24,23 @@ defmodule Castmill.Workers.EncryptionRotation do
     - offset: Starting offset for pagination
   """
 
-  use Oban.Worker,
-    queue: :maintenance,
-    max_attempts: 3,
-    priority: 3
-
   require Logger
 
   alias Castmill.Repo
   alias Castmill.Encryption
   alias Castmill.Widgets.Integrations.WidgetIntegrationCredential
+  alias Castmill.Workers.BullMQHelper
   import Ecto.Query
 
   @default_batch_size 100
+  @queue "maintenance"
 
-  @impl Oban.Worker
-  def perform(%Oban.Job{args: args}) do
-    resource_type = String.to_existing_atom(args["resource_type"])
+  @doc """
+  Processes the encryption rotation job.
+  This is called by BullMQ worker.
+  """
+  def process(%BullMQ.Job{data: args}) do
+    resource_type = String.to_existing_atom(args["resource_type"] || "organization")
     batch_size = args["batch_size"] || @default_batch_size
     offset = args["offset"] || 0
 
@@ -56,14 +56,20 @@ defmodule Castmill.Workers.EncryptionRotation do
   """
   def schedule_rotation(batch_size \\ @default_batch_size) do
     # Schedule organization credential rotation
-    %{resource_type: "organization", batch_size: batch_size, offset: 0}
-    |> __MODULE__.new()
-    |> Oban.insert()
+    BullMQHelper.add_job(
+      @queue,
+      "encryption_rotation",
+      %{resource_type: "organization", batch_size: batch_size, offset: 0},
+      priority: 3, attempts: 3
+    )
 
     # Network credentials will be scheduled when that table exists
-    # %{resource_type: "network", batch_size: batch_size, offset: 0}
-    # |> __MODULE__.new()
-    # |> Oban.insert()
+    # BullMQHelper.add_job(
+    #   @queue,
+    #   "encryption_rotation",
+    #   %{resource_type: "network", batch_size: batch_size, offset: 0},
+    #   priority: 3, attempts: 3
+    # )
 
     :ok
   end
@@ -134,9 +140,12 @@ defmodule Castmill.Workers.EncryptionRotation do
 
       # Schedule next batch if we processed a full batch
       if length(credentials) == batch_size do
-        %{resource_type: "organization", batch_size: batch_size, offset: offset + batch_size}
-        |> __MODULE__.new()
-        |> Oban.insert()
+        BullMQHelper.add_job(
+          @queue,
+          "encryption_rotation",
+          %{resource_type: "organization", batch_size: batch_size, offset: offset + batch_size},
+          priority: 3, attempts: 3
+        )
       end
 
       :ok

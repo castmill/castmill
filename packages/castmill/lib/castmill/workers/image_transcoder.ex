@@ -1,10 +1,10 @@
 defmodule Castmill.Workers.ImageTranscoder do
-  use Oban.Worker, queue: :image_transcoder
+  require Logger
+
   alias Castmill.Repo
   alias Castmill.Workers.Helpers
+  alias Castmill.Workers.BullMQHelper
   alias Castmill.Notifications.Events
-
-  require Logger
 
   @file_sizes_and_contexts [
     {128, "thumbnail"},
@@ -12,8 +12,13 @@ defmodule Castmill.Workers.ImageTranscoder do
     {1920, "poster"}
   ]
 
-  @impl Oban.Worker
-  def perform(%Oban.Job{args: args} = job) do
+  @queue "image_transcoder"
+
+  @doc """
+  Processes the image transcoding job.
+  This is called by BullMQ worker.
+  """
+  def process(%BullMQ.Job{data: args} = job) do
     dbg(job)
 
     media = args["media"]
@@ -128,6 +133,21 @@ defmodule Castmill.Workers.ImageTranscoder do
         size: new_size
       })
     end)
+  end
+
+  @doc """
+  Schedules an image transcoding job.
+  """
+  def schedule(media, filepath, mime_type) do
+    BullMQHelper.add_job(
+      @queue,
+      "image_transcode",
+      %{
+        "media" => media,
+        "filepath" => filepath,
+        "mime_type" => mime_type
+      }
+    )
   end
 
   # Upload to local directory or S3 depending on the configuration

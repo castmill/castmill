@@ -7,7 +7,13 @@ defmodule Castmill.Application do
 
   @impl true
   def start(_type, _args) do
-    children = [
+    # Get Redis configuration
+    redis_config = Application.get_env(:castmill, :redis, host: "localhost", port: 6379)
+    bullmq_config = Application.get_env(:castmill, :bullmq, [])
+    testing_mode = Keyword.get(bullmq_config, :testing) == :inline
+
+    # Build children list conditionally based on testing mode
+    base_children = [
       # Start the Telemetry supervisor
       CastmillWeb.Telemetry,
       # Start the Ecto repository
@@ -23,11 +29,24 @@ defmodule Castmill.Application do
       # {Castmill.Worker, arg}
 
       # Start the Hoos supervisor tree
-      Castmill.Hooks.Supervisor,
-
-      # Start the Oban supervisor tree
-      {Oban, Application.fetch_env!(:castmill, Oban)}
+      Castmill.Hooks.Supervisor
     ]
+
+    # Add Redis and BullMQ workers only if not in testing mode
+    children =
+      if testing_mode do
+        base_children
+      else
+        base_children ++
+          [
+            # Start Redis connection
+            {Redix,
+             name: :castmill_redis,
+             host: Keyword.get(redis_config, :host),
+             port: Keyword.get(redis_config, :port)}
+          ] ++
+          build_bullmq_workers(bullmq_config)
+      end
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
@@ -52,5 +71,31 @@ defmodule Castmill.Application do
   def config_change(changed, _new, removed) do
     CastmillWeb.Endpoint.config_change(changed, removed)
     :ok
+  end
+
+  # Build BullMQ worker specs from configuration
+  defp build_bullmq_workers(config) do
+    queues = Keyword.get(config, :queues, [])
+    connection = Keyword.get(config, :connection, :castmill_redis)
+
+    Enum.map(queues, fn {queue_name, opts} ->
+      concurrency = if is_integer(opts), do: opts, else: Keyword.get(opts, :concurrency, 1)
+
+      processor_module =
+        case queue_name do
+          :image_transcoder -> Castmill.Workers.ImageTranscoder
+          :video_transcoder -> Castmill.Workers.VideoTranscoder
+          :integration_polling -> Castmill.Workers.SpotifyPoller
+          :integrations -> Castmill.Workers.IntegrationPoller
+          :maintenance -> Castmill.Workers.IntegrationDataCleanup
+        end
+
+      {BullMQ.Worker,
+       queue: Atom.to_string(queue_name),
+       connection: connection,
+       processor: &processor_module.process/1,
+       concurrency: concurrency,
+       name: Module.concat(processor_module, Worker)}
+    end)
   end
 end
