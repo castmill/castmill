@@ -470,4 +470,127 @@ defmodule CastmillWeb.DeviceControllerTest do
       assert json_response(conn, 403)
     end
   end
+
+  describe "list_events authorization" do
+    @describetag device_controller: true
+
+    test "admin can list device events", %{conn: conn, organization: organization} do
+      # Create a device
+      {:ok, devices_registration} =
+        device_registration_fixture(%{hardware_id: "test-hw-id-events-1", pincode: "123465"})
+
+      {:ok, {device, _token}} =
+        Castmill.Devices.register_device(organization.id, devices_registration.pincode, %{
+          name: "Test Device Events"
+        })
+
+      # Make request to list device events
+      conn = get(conn, "/dashboard/devices/#{device.id}/events")
+
+      # Should return 200 OK for admin
+      assert json_response(conn, 200)
+      response = json_response(conn, 200)
+      assert Map.has_key?(response, "data")
+      assert is_list(response["data"])
+    end
+
+    test "manager can list device events", %{organization: organization} do
+      # Create a manager user
+      manager_user = user_fixture(%{organization_id: organization.id, email: "manager-events@test.com"})
+      {:ok, _} = Organizations.set_user_role(organization.id, manager_user.id, :manager)
+
+      # Create access token for manager
+      manager_token =
+        access_token_fixture(%{
+          secret: "manager-events:testpass",
+          user_id: manager_user.id,
+          is_root: false
+        })
+
+      # Build authenticated conn for manager
+      manager_conn =
+        build_conn()
+        |> put_req_header("accept", "application/json")
+        |> put_req_header("authorization", "Bearer #{manager_token.secret}")
+
+      # Create a device
+      {:ok, devices_registration} =
+        device_registration_fixture(%{hardware_id: "test-hw-id-events-2", pincode: "123466"})
+
+      {:ok, {device, _token}} =
+        Castmill.Devices.register_device(organization.id, devices_registration.pincode, %{
+          name: "Test Device Events Manager"
+        })
+
+      # Manager should be able to list events (show permission)
+      conn = get(manager_conn, "/dashboard/devices/#{device.id}/events")
+      assert json_response(conn, 200)
+    end
+
+    test "member can list device events", %{organization: organization} do
+      # Create a member user
+      member_user = user_fixture(%{organization_id: organization.id, email: "member-events@test.com"})
+      {:ok, _} = Organizations.set_user_role(organization.id, member_user.id, :member)
+
+      # Create access token for member
+      member_token =
+        access_token_fixture(%{
+          secret: "member-events:testpass",
+          user_id: member_user.id,
+          is_root: false
+        })
+
+      # Build authenticated conn for member
+      member_conn =
+        build_conn()
+        |> put_req_header("accept", "application/json")
+        |> put_req_header("authorization", "Bearer #{member_token.secret}")
+
+      # Create a device
+      {:ok, devices_registration} =
+        device_registration_fixture(%{hardware_id: "test-hw-id-events-3", pincode: "123467"})
+
+      {:ok, {device, _token}} =
+        Castmill.Devices.register_device(organization.id, devices_registration.pincode, %{
+          name: "Test Device Events Member"
+        })
+
+      # Member should be able to list events (show permission)
+      conn = get(member_conn, "/dashboard/devices/#{device.id}/events")
+      assert json_response(conn, 200)
+    end
+
+    test "guest can list device events", %{organization: organization} do
+      # Create a guest user
+      guest_user = user_fixture(%{organization_id: organization.id, email: "guest-events@test.com"})
+      {:ok, _} = Organizations.set_user_role(organization.id, guest_user.id, :guest)
+
+      # Create access token for guest
+      guest_token =
+        access_token_fixture(%{
+          secret: "guest-events:testpass",
+          user_id: guest_user.id,
+          is_root: false
+        })
+
+      # Build authenticated conn for guest
+      guest_conn =
+        build_conn()
+        |> put_req_header("accept", "application/json")
+        |> put_req_header("authorization", "Bearer #{guest_token.secret}")
+
+      # Create a device
+      {:ok, devices_registration} =
+        device_registration_fixture(%{hardware_id: "test-hw-id-events-4", pincode: "123468"})
+
+      {:ok, {device, _token}} =
+        Castmill.Devices.register_device(organization.id, devices_registration.pincode, %{
+          name: "Test Device Events Guest"
+        })
+
+      # Guest should be able to list events (show permission)
+      conn = get(guest_conn, "/dashboard/devices/#{device.id}/events")
+      assert json_response(conn, 200)
+    end
+  end
 end
