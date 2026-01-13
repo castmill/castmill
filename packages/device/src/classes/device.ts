@@ -557,10 +557,12 @@ export class Device extends EventEmitter {
       if (type === 'all') {
         // Clear all cache
         await this.cache.clean();
-        const count = await this.cache.count(ItemType.Data) + 
-                     await this.cache.count(ItemType.Code) + 
-                     await this.cache.count(ItemType.Media);
-        deleted = count;
+        const [dataCount, codeCount, mediaCount] = await Promise.all([
+          this.cache.count(ItemType.Data),
+          this.cache.count(ItemType.Code),
+          this.cache.count(ItemType.Media)
+        ]);
+        deleted = dataCount + codeCount + mediaCount;
       } else if (urls && urls.length > 0) {
         // Delete specific URLs
         for (const url of urls) {
