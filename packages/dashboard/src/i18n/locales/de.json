@@ -640,7 +640,7 @@
       "title": "Geräte-Cache",
       "items": "Cache-Einträge",
       "dataTab": "Daten",
-      "codeTab": "Code",
+      "codeTab": "Programmcode",
       "mediaTab": "Medien",
       "deleteSelected": "Ausgewählte Elemente löschen",
       "clearAll": "Alles Löschen",

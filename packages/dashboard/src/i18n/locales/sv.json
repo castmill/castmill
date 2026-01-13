@@ -617,9 +617,9 @@
     "cache": {
       "title": "Enhetscache",
       "items": "cacheobjekt",
-      "dataTab": "Data",
+      "dataTab": "Datakod",
       "codeTab": "Kod",
-      "mediaTab": "Media",
+      "mediaTab": "Mediefiler",
       "deleteSelected": "Ta bort valda objekt",
       "clearAll": "Rensa Allt",
       "confirmDelete": "Ta bort Cachepost",

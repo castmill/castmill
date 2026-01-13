@@ -635,7 +635,7 @@
       "title": "Cache de l'Appareil",
       "items": "éléments en cache",
       "dataTab": "Données",
-      "codeTab": "Code",
+      "codeTab": "Code source",
       "mediaTab": "Médias",
       "deleteSelected": "Supprimer les éléments sélectionnés",
       "clearAll": "Tout Effacer",
