@@ -1,6 +1,5 @@
 defmodule CastmillWeb.WidgetIntegrationControllerTest do
   use CastmillWeb.ConnCase, async: true
-  use Oban.Testing, repo: Castmill.Repo
 
   import Ecto.Query
   import Castmill.AccountsFixtures
@@ -10,7 +9,6 @@ defmodule CastmillWeb.WidgetIntegrationControllerTest do
 
   alias Castmill.{Organizations, Repo}
   alias Castmill.Widgets.Integrations.WidgetIntegrationData
-  alias Oban.{Job, Testing}
 
   setup %{conn: conn} do
     network = network_fixture()
@@ -42,7 +40,7 @@ defmodule CastmillWeb.WidgetIntegrationControllerTest do
       conn: conn,
       organization: organization
     } do
-      Testing.with_testing_mode(:manual, fn ->
+      
         suffix = System.unique_integer([:positive])
         feed_url = "https://news.example/#{suffix}.xml"
 
@@ -117,14 +115,14 @@ defmodule CastmillWeb.WidgetIntegrationControllerTest do
         if job.scheduled_at do
           refute DateTime.compare(job.scheduled_at, DateTime.utc_now()) == :gt
         end
-      end)
+      # Test now runs in inline mode by default
     end
 
     test "on-demand fetch stores refresh_at metadata", %{
       conn: conn,
       organization: organization
     } do
-      Testing.with_testing_mode(:manual, fn ->
+      
         suffix = System.unique_integer([:positive])
         feed_url = "https://fresh.example/#{suffix}.xml"
 
@@ -185,14 +183,14 @@ defmodule CastmillWeb.WidgetIntegrationControllerTest do
         assert data.refresh_at
         assert data.fetched_at
         assert_in_delta DateTime.diff(data.refresh_at, data.fetched_at), 150, 1
-      end)
+      # Test now runs in inline mode by default
     end
 
     test "max_items filtering limits returned items to widget config setting", %{
       conn: conn,
       organization: organization
     } do
-      Testing.with_testing_mode(:manual, fn ->
+      
         suffix = System.unique_integer([:positive])
         feed_url = "https://rss.example/#{suffix}.xml"
 
@@ -258,14 +256,14 @@ defmodule CastmillWeb.WidgetIntegrationControllerTest do
         assert length(items) == 5
         # Should be the first 5 items (sorted order preserved)
         assert Enum.map(items, & &1["index"]) == [1, 2, 3, 4, 5]
-      end)
+      # Test now runs in inline mode by default
     end
 
     test "max_items defaults to 10 when not specified", %{
       conn: conn,
       organization: organization
     } do
-      Testing.with_testing_mode(:manual, fn ->
+      
         suffix = System.unique_integer([:positive])
         feed_url = "https://rss.example/default-#{suffix}.xml"
 
@@ -329,7 +327,7 @@ defmodule CastmillWeb.WidgetIntegrationControllerTest do
 
         # Should default to 10 items
         assert length(items) == 10
-      end)
+      # Test now runs in inline mode by default
     end
   end
 end
