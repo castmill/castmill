@@ -19,7 +19,7 @@ defmodule CastmillWeb.DeviceControllerTest do
     user = user_fixture(%{organization_id: organization.id})
 
     # Set user as admin
-    :ok = Organizations.set_user_role(organization.id, user.id, "admin")
+    {:ok, _} = Organizations.set_user_role(organization.id, user.id, :admin)
 
     # Create an access token for the user
     access_token =
@@ -139,7 +139,7 @@ defmodule CastmillWeb.DeviceControllerTest do
     test "manager can view and manage device channels", %{organization: organization} do
       # Create a manager user
       manager_user = user_fixture(%{organization_id: organization.id, email: "manager@test.com"})
-      :ok = Organizations.set_user_role(organization.id, manager_user.id, "manager")
+      {:ok, _} = Organizations.set_user_role(organization.id, manager_user.id, :manager)
 
       # Create access token for manager
       manager_token =
@@ -193,7 +193,7 @@ defmodule CastmillWeb.DeviceControllerTest do
     test "member can view and manage device channels", %{organization: organization} do
       # Create a member user
       member_user = user_fixture(%{organization_id: organization.id, email: "member@test.com"})
-      :ok = Organizations.set_user_role(organization.id, member_user.id, "member")
+      {:ok, _} = Organizations.set_user_role(organization.id, member_user.id, :member)
 
       # Create access token for member
       member_token =
@@ -249,7 +249,8 @@ defmodule CastmillWeb.DeviceControllerTest do
       device_mgr_user =
         user_fixture(%{organization_id: organization.id, email: "device_mgr@test.com"})
 
-      :ok = Organizations.set_user_role(organization.id, device_mgr_user.id, "device_manager")
+      {:ok, _} =
+        Organizations.set_user_role(organization.id, device_mgr_user.id, :device_manager)
 
       # Create access token for device_manager
       device_mgr_token =
@@ -303,7 +304,7 @@ defmodule CastmillWeb.DeviceControllerTest do
     test "editor can view but not modify device channels", %{organization: organization} do
       # Create an editor user
       editor_user = user_fixture(%{organization_id: organization.id, email: "editor@test.com"})
-      :ok = Organizations.set_user_role(organization.id, editor_user.id, "editor")
+      {:ok, _} = Organizations.set_user_role(organization.id, editor_user.id, :editor)
 
       # Create access token for editor
       editor_token =
@@ -362,7 +363,7 @@ defmodule CastmillWeb.DeviceControllerTest do
       publisher_user =
         user_fixture(%{organization_id: organization.id, email: "publisher@test.com"})
 
-      :ok = Organizations.set_user_role(organization.id, publisher_user.id, "publisher")
+      {:ok, _} = Organizations.set_user_role(organization.id, publisher_user.id, :publisher)
 
       # Create access token for publisher
       publisher_token =
@@ -419,7 +420,7 @@ defmodule CastmillWeb.DeviceControllerTest do
     test "guest can view but not modify device channels", %{organization: organization} do
       # Create a guest user
       guest_user = user_fixture(%{organization_id: organization.id, email: "guest@test.com"})
-      :ok = Organizations.set_user_role(organization.id, guest_user.id, "guest")
+      {:ok, _} = Organizations.set_user_role(organization.id, guest_user.id, :guest)
 
       # Create access token for guest
       guest_token =
