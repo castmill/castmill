@@ -263,4 +263,155 @@ defmodule Castmill.Networks do
 
     Repo.all(query)
   end
+
+  # Network Invitations for creating new organizations
+  alias Castmill.Networks.NetworkInvitation
+  alias Castmill.Organizations
+
+  @doc """
+  Invites a user to create a new organization in the network as an admin.
+  Returns {:ok, invitation} or {:error, reason}
+  """
+  def invite_user_to_new_organization(network_id, email, organization_name) do
+    token = generate_invitation_token()
+
+    Ecto.Multi.new()
+    # 1) Check if user already exists in this network
+    |> Ecto.Multi.run(:check_existing_user, fn _repo, _changes ->
+      existing_user = 
+        from(u in Castmill.Accounts.User,
+          where: u.email == ^email and u.network_id == ^network_id
+        )
+        |> Repo.one()
+
+      if existing_user do
+        {:error, :user_already_exists}
+      else
+        {:ok, :no_conflict}
+      end
+    end)
+    # 2) Check if there's already an active invitation
+    |> Ecto.Multi.run(:check_existing_invite, fn _repo, _changes ->
+      existing =
+        Repo.get_by(NetworkInvitation,
+          network_id: network_id,
+          email: email,
+          status: "invited"
+        )
+
+      if existing do
+        {:error, :already_invited}
+      else
+        {:ok, :no_conflict}
+      end
+    end)
+    # 3) Insert the new invitation
+    |> Ecto.Multi.insert(:invitation, fn _changes ->
+      %NetworkInvitation{}
+      |> NetworkInvitation.changeset(%{
+        network_id: network_id,
+        email: email,
+        organization_name: organization_name,
+        token: token,
+        status: "invited"
+      })
+    end)
+    |> Repo.transaction()
+    |> case do
+      {:ok, %{invitation: invitation}} ->
+        # TODO: Send invitation email
+        {:ok, invitation}
+
+      {:error, :check_existing_user, :user_already_exists, _} ->
+        {:error, "User with this email already exists in the network"}
+
+      {:error, :check_existing_invite, :already_invited, _} ->
+        {:error, "An invitation for this email already exists"}
+
+      {:error, _step, changeset, _} ->
+        {:error, changeset}
+    end
+  end
+
+  @doc """
+  Gets a network invitation by token
+  """
+  def get_network_invitation_by_token(token) do
+    Repo.get_by(NetworkInvitation, token: token, status: "invited")
+  end
+
+  @doc """
+  Lists all active (invited) invitations for a network
+  """
+  def list_network_invitations(network_id) do
+    from(ni in NetworkInvitation,
+      where: ni.network_id == ^network_id and ni.status == "invited",
+      order_by: [desc: ni.inserted_at]
+    )
+    |> Repo.all()
+  end
+
+  @doc """
+  Accepts a network invitation, creating a new user and organization
+  """
+  def accept_network_invitation(token, user_id) do
+    Ecto.Multi.new()
+    |> Ecto.Multi.run(:invitation, fn _repo, _changes ->
+      case get_network_invitation_by_token(token) do
+        nil -> {:error, :invitation_not_found}
+        invitation ->
+          if NetworkInvitation.expired?(invitation) do
+            {:error, :invitation_expired}
+          else
+            {:ok, invitation}
+          end
+      end
+    end)
+    |> Ecto.Multi.run(:user, fn _repo, %{invitation: invitation} ->
+      case Repo.get(Castmill.Accounts.User, user_id) do
+        nil -> {:error, :user_not_found}
+        user ->
+          # Verify user email matches invitation
+          if user.email == invitation.email do
+            {:ok, user}
+          else
+            {:error, :email_mismatch}
+          end
+      end
+    end)
+    |> Ecto.Multi.run(:organization, fn _repo, %{invitation: invitation} ->
+      Organizations.create_organization(%{
+        name: invitation.organization_name,
+        network_id: invitation.network_id
+      })
+    end)
+    |> Ecto.Multi.run(:add_user, fn _repo, %{organization: organization, user: user} ->
+      Organizations.add_user(organization.id, user.id, :admin)
+    end)
+    |> Ecto.Multi.update(:mark_accepted, fn %{invitation: invitation} ->
+      NetworkInvitation.changeset(invitation, %{status: "accepted"})
+    end)
+    |> Repo.transaction()
+    |> case do
+      {:ok, %{organization: organization}} ->
+        {:ok, organization}
+
+      {:error, _step, reason, _} ->
+        {:error, reason}
+    end
+  end
+
+  @doc """
+  Cancels/deletes a network invitation
+  """
+  def delete_network_invitation(invitation_id) do
+    case Repo.get(NetworkInvitation, invitation_id) do
+      nil -> {:error, :not_found}
+      invitation -> Repo.delete(invitation)
+    end
+  end
+
+  defp generate_invitation_token do
+    :crypto.strong_rand_bytes(32) |> Base.url_encode64(padding: false)
+  end
 end

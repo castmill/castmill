@@ -38,6 +38,12 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
           form: CastmillWeb.Live.Admin.OrganizationForm
         },
         %{
+          name: "Invitations",
+          icon: "hero-envelope-solid",
+          href: "invitations",
+          form: nil
+        },
+        %{
           name: "Teams",
           icon: "hero-user-group-solid",
           href: "teams",
@@ -142,6 +148,24 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
           network_id={@resource.id}
           patch={~p"/admin/networks/#{@resource}/integrations"}
         />
+      </.modal>
+      <!-- Network Invitation Modal -->
+      <.modal
+        :if={@live_action == :new && @selected_tab == "invitations"}
+        id="invitation-modal"
+        show
+        on_cancel={JS.patch(~p"/admin/networks/#{@resource}/invitations")}
+      >
+        <.live_component
+          module={CastmillWeb.Live.Admin.NetworkInvitationForm}
+          id="new-invitation"
+          network_id={@resource.id}
+          patch={~p"/admin/networks/#{@resource}/invitations"}
+        />
+      </.modal>
+    </div>
+    """
+  end
       </.modal>
     </div>
     """
@@ -252,6 +276,16 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
     {:noreply, stream_insert(socket, :rows, resource)}
   end
 
+  # Handle network invitation form events
+  def handle_info({CastmillWeb.Live.Admin.NetworkInvitationForm, {:invited, _email}}, socket) do
+    # Refresh the invitations list
+    {rows, _cols} = resources_for_network(socket.assigns.resource.id, "invitations")
+
+    {:noreply,
+     socket
+     |> stream(:rows, rows, reset: true)}
+  end
+
   # Handle integration form events
   def handle_info(
         {CastmillWeb.Live.Admin.NetworkIntegrationForm, {:saved, _integration_id}},
@@ -287,6 +321,16 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
     {:ok, _} = Organizations.delete_organization(organization)
 
     {:noreply, stream_delete(socket, :rows, organization)}
+  end
+
+  def handle_event("delete", %{"id" => id, "resource" => "invitations"}, socket) do
+    case Networks.delete_network_invitation(id) do
+      {:ok, invitation} ->
+        {:noreply, stream_delete(socket, :rows, invitation)}
+      
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Failed to delete invitation")}
+    end
   end
 
   # TODO: This is a hack to avoid a bug in streams until the :reset option
@@ -443,6 +487,32 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
        %{
          name: "Status",
          field: :status
+       }
+     ]}
+  end
+
+  defp resources_for_network(network_id, "invitations") do
+    {Networks.list_network_invitations(network_id) || [],
+     [
+       %{
+         name: "Email",
+         field: :email
+       },
+       %{
+         name: "Organization Name",
+         field: :organization_name
+       },
+       %{
+         name: "Status",
+         field: :status
+       },
+       %{
+         name: "Created",
+         field: :inserted_at
+       },
+       %{
+         name: "Expires",
+         field: :expires_at
        }
      ]}
   end
