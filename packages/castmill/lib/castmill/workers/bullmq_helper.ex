@@ -91,7 +91,7 @@ defmodule Castmill.Workers.BullMQHelper do
     
     # Create a job struct that matches BullMQ.Job
     job = %BullMQ.Job{
-      id: UUID.uuid4(),
+      id: Ecto.UUID.generate(),
       name: job_name,
       data: args,
       opts: %{},

@@ -81,21 +81,46 @@ defmodule Castmill.Application do
     Enum.map(queues, fn {queue_name, opts} ->
       concurrency = if is_integer(opts), do: opts, else: Keyword.get(opts, :concurrency, 1)
 
-      processor_module =
-        case queue_name do
-          :image_transcoder -> Castmill.Workers.ImageTranscoder
-          :video_transcoder -> Castmill.Workers.VideoTranscoder
-          :integration_polling -> Castmill.Workers.SpotifyPoller
-          :integrations -> Castmill.Workers.IntegrationPoller
-          :maintenance -> Castmill.Workers.IntegrationDataCleanup
-        end
+      # Create a processor function that routes to the correct worker based on job name
+      processor_fn = fn job ->
+        route_job_to_worker(queue_name, job)
+      end
 
       {BullMQ.Worker,
        queue: Atom.to_string(queue_name),
        connection: connection,
-       processor: &processor_module.process/1,
+       processor: processor_fn,
        concurrency: concurrency,
-       name: Module.concat(processor_module, Worker)}
+       name: Module.concat([Castmill.Workers.BullMQ, queue_name])}
     end)
+  end
+
+  # Route a job to the appropriate worker module based on queue and job name
+  defp route_job_to_worker(queue_name, %BullMQ.Job{name: job_name} = job) do
+    worker_module =
+      case {queue_name, job_name} do
+        # Image transcoder queue
+        {:image_transcoder, _} -> Castmill.Workers.ImageTranscoder
+        
+        # Video transcoder queue
+        {:video_transcoder, _} -> Castmill.Workers.VideoTranscoder
+        
+        # Integration polling queue (for Spotify and similar OAuth pollers)
+        {:integration_polling, _} -> Castmill.Workers.SpotifyPoller
+        
+        # Integrations queue (for API key based integrations)
+        {:integrations, _} -> Castmill.Workers.IntegrationPoller
+        
+        # Maintenance queue - route based on job name
+        {:maintenance, "integration_data_cleanup"} -> Castmill.Workers.IntegrationDataCleanup
+        {:maintenance, "encryption_rotation"} -> Castmill.Workers.EncryptionRotation
+        
+        _ -> 
+          require Logger
+          Logger.error("Unknown job type: queue=#{queue_name}, name=#{job_name}")
+          raise "Unknown job type: queue=#{queue_name}, name=#{job_name}"
+      end
+
+    worker_module.process(job)
   end
 end
