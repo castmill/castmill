@@ -66,14 +66,22 @@ defmodule CastmillWeb.Live.Admin.NetworkInvitationForm do
          |> put_flash(:error, error)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        errors = 
-          changeset.errors
-          |> Enum.map(fn {field, {msg, _}} -> "#{field}: #{msg}" end)
-          |> Enum.join(", ")
+        errors = Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
+          Regex.replace(~r"%{(\w+)}", msg, fn _, key ->
+            opts |> Keyword.get(String.to_existing_atom(key), key) |> to_string()
+          end)
+        end)
+
+        error_msg = 
+          errors
+          |> Enum.map(fn {field, messages} ->
+            "#{field}: #{Enum.join(messages, ", ")}"
+          end)
+          |> Enum.join("; ")
 
         {:noreply,
          socket
-         |> put_flash(:error, "Failed to create invitation: #{errors}")}
+         |> put_flash(:error, "Failed to create invitation: #{error_msg}")}
 
       {:error, _} ->
         {:noreply,

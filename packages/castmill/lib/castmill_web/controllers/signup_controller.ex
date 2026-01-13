@@ -21,43 +21,69 @@ defmodule CastmillWeb.SignUpController do
     else
       case Accounts.get_network_id_by_domain(origin) do
         {:ok, network_id} ->
-          # Validate invitation token for network invitations
           network = Castmill.Networks.get_network(network_id)
           
-          valid_invitation = 
-            case Castmill.Networks.get_network_invitation_by_token(invitation_token) do
-              nil ->
-                # Try organization invitation as fallback
-                case Castmill.Organizations.get_invitation_by_token(invitation_token) do
-                  nil -> false
-                  org_invitation -> 
-                    org_invitation.email == email && !Castmill.Organizations.OrganizationsInvitation.expired?(org_invitation)
-                end
-              
-              net_invitation -> 
-                net_invitation.email == email && !Castmill.Networks.NetworkInvitation.expired?(net_invitation)
-            end
-          
-          # If network is invitation-only and no valid invitation, reject
-          if network.invitation_only && !valid_invitation do
-            conn
-            |> put_status(:forbidden)
-            |> json(%{status: :error, msg: "Valid invitation required for this network"})
-          else
-            challenge = SessionUtils.new_challenge()
-            params = %{"email" => email, "challenge" => challenge, "network_id" => network_id}
+          # Validate invitation token
+          case validate_invitation_token(invitation_token, email, network.invitation_only) do
+            :valid ->
+              challenge = SessionUtils.new_challenge()
+              params = %{"email" => email, "challenge" => challenge, "network_id" => network_id}
 
-            case Accounts.create_signup(params) do
-              {:ok, signup} ->
-                conn
-                |> put_status(:created)
-                |> json(%{signup_id: signup.id, challenge: challenge})
+              case Accounts.create_signup(params) do
+                {:ok, signup} ->
+                  conn
+                  |> put_status(:created)
+                  |> json(%{signup_id: signup.id, challenge: challenge})
 
-              {:error, _changeset} ->
-                conn
-                |> put_status(:unprocessable_entity)
-                |> json(%{status: :error})
-            end
+                {:error, _changeset} ->
+                  conn
+                  |> put_status(:unprocessable_entity)
+                  |> json(%{status: :error})
+              end
+            
+            {:error, message} ->
+              conn
+              |> put_status(:forbidden)
+              |> json(%{status: :error, msg: message})
+          end
+
+        {:error, :network_not_found} ->
+          conn
+          |> put_status(:unprocessable_entity)
+          |> json(%{status: :error, msg: "Network not found"})
+      end
+    end
+  end
+
+  # Validates that an invitation token is valid for the given email
+  # Returns :valid if invitation is valid, or {:error, message} otherwise
+  defp validate_invitation_token(token, email, invitation_only_mode) do
+    valid_invitation = check_invitation_validity(token, email)
+    
+    if invitation_only_mode && !valid_invitation do
+      {:error, "Valid invitation required for this network"}
+    else
+      :valid
+    end
+  end
+
+  # Checks if a given invitation token is valid for the email
+  defp check_invitation_validity(token, email) do
+    case Castmill.Networks.get_network_invitation_by_token(token) do
+      nil ->
+        # Try organization invitation as fallback
+        case Castmill.Organizations.get_invitation_by_token(token) do
+          nil -> false
+          org_invitation -> 
+            org_invitation.email == email && 
+            !Castmill.Organizations.OrganizationsInvitation.expired?(org_invitation)
+        end
+      
+      net_invitation -> 
+        net_invitation.email == email && 
+        !Castmill.Networks.NetworkInvitation.expired?(net_invitation)
+    end
+  end
           end
 
         {:error, :network_not_found} ->

@@ -278,16 +278,9 @@ defmodule Castmill.Networks do
     Ecto.Multi.new()
     # 1) Check if user already exists in this network
     |> Ecto.Multi.run(:check_existing_user, fn _repo, _changes ->
-      existing_user = 
-        from(u in Castmill.Accounts.User,
-          where: u.email == ^email and u.network_id == ^network_id
-        )
-        |> Repo.one()
-
-      if existing_user do
-        {:error, :user_already_exists}
-      else
-        {:ok, :no_conflict}
+      case get_user_by_email_and_network(email, network_id) do
+        nil -> {:ok, :no_conflict}
+        _user -> {:error, :user_already_exists}
       end
     end)
     # 2) Check if there's already an active invitation
@@ -428,5 +421,13 @@ defmodule Castmill.Networks do
 
   defp generate_invitation_token do
     :crypto.strong_rand_bytes(32) |> Base.url_encode64(padding: false)
+  end
+
+  # Helper function to get user by email and network ID
+  defp get_user_by_email_and_network(email, network_id) do
+    from(u in Castmill.Accounts.User,
+      where: u.email == ^email and u.network_id == ^network_id
+    )
+    |> Repo.one()
   end
 end

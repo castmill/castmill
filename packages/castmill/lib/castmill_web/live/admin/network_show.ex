@@ -166,10 +166,6 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
     </div>
     """
   end
-      </.modal>
-    </div>
-    """
-  end
 
   defp render_integrations_view(assigns) do
     ~H"""
