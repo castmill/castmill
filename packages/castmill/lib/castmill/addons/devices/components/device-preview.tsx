@@ -7,8 +7,7 @@ import {
   Renderer, 
   JsonPlaylist 
 } from '@castmill/player';
-import { ResourceManager, Cache } from '@castmill/cache';
-import { InMemoryStorageIntegration } from '@castmill/cache';
+import { ResourceManager, Cache, StorageDummy } from '@castmill/cache';
 import styles from './devices.module.scss';
 
 /**
@@ -161,8 +160,8 @@ export const DevicePreview: Component<{
         }
         playerContainer.innerHTML = '';
         
-        // Create a simple in-memory storage for the preview
-        const storage = new InMemoryStorageIntegration();
+        // Create a dummy storage for the preview (no actual caching needed)
+        const storage = new StorageDummy('preview');
         const cache = new Cache(storage);
         
         // Create a resource manager with the base URL for fetching assets
