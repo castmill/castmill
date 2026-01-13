@@ -200,6 +200,10 @@ const ProtectedRoute: Component<ProtectedRouteProps> = (
   createEffect(() => {
     if (store.organizations.loaded && !showOnboarding()) {
       loadAddons();
+    }
+  });
+
+  // Watch for URL param changes and update store
   createEffect(() => {
     const urlOrgId = params.orgId;
     // Only update if we have organizations loaded and URL org ID is different from store
