@@ -352,53 +352,68 @@ defmodule Castmill.Networks do
   end
 
   @doc """
-  Accepts a network invitation, creating a new user and organization
+  Accepts a network invitation, creating a new organization and adding user as admin
+  This function assumes it's being called within a transaction context.
+  For standalone usage, use accept_network_invitation_transactional/2
   """
   def accept_network_invitation(token, user_id) do
-    Ecto.Multi.new()
-    |> Ecto.Multi.run(:invitation, fn _repo, _changes ->
-      case get_network_invitation_by_token(token) do
-        nil -> {:error, :invitation_not_found}
-        invitation ->
-          if NetworkInvitation.expired?(invitation) do
-            {:error, :invitation_expired}
-          else
-            {:ok, invitation}
-          end
+    with {:ok, invitation} <- validate_network_invitation(token),
+         {:ok, user} <- validate_invitation_user(invitation, user_id),
+         {:ok, organization} <- create_invitation_organization(invitation),
+         {:ok, _} <- add_user_to_organization(organization, user) do
+      # Mark invitation as accepted
+      case Repo.update(NetworkInvitation.changeset(invitation, %{status: "accepted"})) do
+        {:ok, _} -> {:ok, organization}
+        {:error, changeset} -> {:error, changeset}
       end
-    end)
-    |> Ecto.Multi.run(:user, fn _repo, %{invitation: invitation} ->
-      case Repo.get(Castmill.Accounts.User, user_id) do
-        nil -> {:error, :user_not_found}
-        user ->
-          # Verify user email matches invitation
-          if user.email == invitation.email do
-            {:ok, user}
-          else
-            {:error, :email_mismatch}
-          end
-      end
-    end)
-    |> Ecto.Multi.run(:organization, fn _repo, %{invitation: invitation} ->
-      Organizations.create_organization(%{
-        name: invitation.organization_name,
-        network_id: invitation.network_id
-      })
-    end)
-    |> Ecto.Multi.run(:add_user, fn _repo, %{organization: organization, user: user} ->
-      Organizations.add_user(organization.id, user.id, :admin)
-    end)
-    |> Ecto.Multi.update(:mark_accepted, fn %{invitation: invitation} ->
-      NetworkInvitation.changeset(invitation, %{status: "accepted"})
-    end)
-    |> Repo.transaction()
-    |> case do
-      {:ok, %{organization: organization}} ->
-        {:ok, organization}
-
-      {:error, _step, reason, _} ->
-        {:error, reason}
     end
+  end
+
+  @doc """
+  Accepts a network invitation within its own transaction
+  """
+  def accept_network_invitation_transactional(token, user_id) do
+    Repo.transaction(fn ->
+      case accept_network_invitation(token, user_id) do
+        {:ok, organization} -> organization
+        {:error, reason} -> Repo.rollback(reason)
+      end
+    end)
+  end
+
+  defp validate_network_invitation(token) do
+    case get_network_invitation_by_token(token) do
+      nil -> {:error, :invitation_not_found}
+      invitation ->
+        if NetworkInvitation.expired?(invitation) do
+          {:error, :invitation_expired}
+        else
+          {:ok, invitation}
+        end
+    end
+  end
+
+  defp validate_invitation_user(invitation, user_id) do
+    case Repo.get(Castmill.Accounts.User, user_id) do
+      nil -> {:error, :user_not_found}
+      user ->
+        if user.email == invitation.email do
+          {:ok, user}
+        else
+          {:error, :email_mismatch}
+        end
+    end
+  end
+
+  defp create_invitation_organization(invitation) do
+    Organizations.create_organization(%{
+      name: invitation.organization_name,
+      network_id: invitation.network_id
+    })
+  end
+
+  defp add_user_to_organization(organization, user) do
+    Organizations.add_user(organization.id, user.id, :admin)
   end
 
   @doc """

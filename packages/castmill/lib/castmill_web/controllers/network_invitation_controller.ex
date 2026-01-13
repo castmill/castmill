@@ -77,7 +77,7 @@ defmodule CastmillWeb.NetworkInvitationController do
       |> put_status(:unauthorized)
       |> json(%{error: "Authentication required"})
     else
-      case Networks.accept_network_invitation(token, current_user.id) do
+      case Networks.accept_network_invitation_transactional(token, current_user.id) do
         {:ok, organization} ->
           conn
           |> put_status(:ok)
