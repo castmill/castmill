@@ -488,7 +488,6 @@ defmodule CastmillWeb.DeviceControllerTest do
       conn = get(conn, "/dashboard/devices/#{device.id}/events")
 
       # Should return 200 OK for admin
-      assert json_response(conn, 200)
       response = json_response(conn, 200)
       assert Map.has_key?(response, "data")
       assert is_list(response["data"])
