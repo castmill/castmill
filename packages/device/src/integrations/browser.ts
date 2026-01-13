@@ -129,7 +129,8 @@ export class BrowserMachine implements Machine {
 
     return {
       appType: browser.name,
-      appVersion: typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '1.0.0',
+      appVersion:
+        typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '1.0.0',
       os: os,
       hardware: navigator.platform || 'Unknown',
       userAgent: userAgent,
