@@ -13,6 +13,8 @@ import {
   LayoutOptionValue,
   LayoutRefFieldAttributes,
   LayoutRefValue,
+  LocationValue,
+  LocationFieldAttributes,
 } from '@castmill/player';
 import { BsCheckLg } from 'solid-icons/bs';
 import { BsX } from 'solid-icons/bs';
@@ -22,6 +24,7 @@ import {
   ComboBox,
   useToast,
   Timestamp,
+  LocationPicker,
 } from '@castmill/ui-common';
 import { ResourcesService } from '../services/resources.service';
 import { PlaylistsService } from '../services/playlists.service';
@@ -62,6 +65,7 @@ type FormTypes =
   | 'select'
   | 'layout'
   | 'layout-ref'
+  | 'location'
   | 'map'
   | 'list';
 
@@ -111,7 +115,8 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
     | ComplexFieldAttributes
     | ReferenceAttributes
     | LayoutFieldAttributes
-    | LayoutRefFieldAttributes;
+    | LayoutRefFieldAttributes
+    | LocationFieldAttributes;
 
   // Normalize options_schema to entries format: [[key, schema], ...]
   // Supports both list format (with "key" property) and map format
@@ -409,6 +414,7 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
       | ComplexFieldAttributes
       | LayoutFieldAttributes
       | LayoutRefFieldAttributes
+      | LocationFieldAttributes
   ) {
     const type = getType(schema);
     switch (type) {
@@ -680,6 +686,29 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
               baseUrl={props.baseUrl}
               t={t}
               excludedPlaylistIds={excludedPlaylistIds()}
+            />
+          </div>
+        );
+      case 'location':
+        const locationSchema = schema as LocationFieldAttributes;
+        const getCurrentLocation = () =>
+          (widgetOptions()[key] as LocationValue) || locationSchema.default || null;
+
+        return (
+          <div class="form-item-wrapper">
+            <label>{key}</label>
+            <Show when={locationSchema.description}>
+              <div class="description">{locationSchema.description}</div>
+            </Show>
+            <LocationPicker
+              value={getCurrentLocation()}
+              onChange={(newValue: LocationValue) => {
+                setWidgetOptions({ ...widgetOptions(), [key]: newValue });
+                setIsFormModified(true);
+                setIsFormValid(checkFormValidity());
+              }}
+              defaultZoom={locationSchema.defaultZoom}
+              placeholder={t('common.searchLocation')}
             />
           </div>
         );

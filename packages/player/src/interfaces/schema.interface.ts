@@ -5,6 +5,25 @@
 export type SimpleType = 'string' | 'number' | 'boolean';
 export type ComplexType = 'map' | 'list';
 
+/**
+ * Location value structure with coordinates and address information.
+ * Coordinates (lat/lng) are the source of truth.
+ */
+export interface LocationValue {
+  /** Latitude coordinate (-90 to 90) */
+  lat: number;
+  /** Longitude coordinate (-180 to 180) */
+  lng: number;
+  /** Human-readable address (optional) */
+  address?: string;
+  /** City name (optional) */
+  city?: string;
+  /** Country name (optional) */
+  country?: string;
+  /** Postal/ZIP code (optional) */
+  postalCode?: string;
+}
+
 export interface FieldAttributes {
   type: SimpleType;
   required?: boolean;
@@ -27,6 +46,21 @@ export interface ComplexFieldAttributes {
   schema: Schema;
   required?: boolean;
   default?: any;
+}
+
+/**
+ * Schema attributes for a location field.
+ * Allows selecting a geographic location with coordinates and address.
+ */
+export interface LocationFieldAttributes {
+  type: 'location';
+  required?: boolean;
+  description?: string;
+  order?: number;
+  /** Default location value */
+  default?: LocationValue;
+  /** Initial zoom level for the map (1-18, default: 13) */
+  defaultZoom?: number;
 }
 
 /**
@@ -121,5 +155,6 @@ export type Schema = {
     | ComplexFieldAttributes
     | ReferenceAttributes
     | LayoutFieldAttributes
-    | LayoutRefFieldAttributes;
+    | LayoutRefFieldAttributes
+    | LocationFieldAttributes;
 };
