@@ -7,6 +7,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
+import android.content.pm.ServiceInfo
 import android.media.projection.MediaProjection
 import android.os.Build
 import android.os.Handler
@@ -14,6 +15,7 @@ import android.os.IBinder
 import android.os.Looper
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import androidx.core.app.ServiceCompat
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
@@ -77,7 +79,19 @@ class RemoteControlService : LifecycleService() {
         diagnosticsManager = DiagnosticsManager()
         
         createNotificationChannel()
-        startForeground(NOTIFICATION_ID, createNotification("Initializing..."))
+        
+        // Start with SPECIAL_USE type since mediaProjection requires user consent first on Android 14+
+        // We'll upgrade to mediaProjection type when we have permission
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            ServiceCompat.startForeground(
+                this,
+                NOTIFICATION_ID,
+                createNotification("Initializing..."),
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+            )
+        } else {
+            startForeground(NOTIFICATION_ID, createNotification("Initializing..."))
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {

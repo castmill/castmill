@@ -1,21 +1,21 @@
 defmodule Castmill.Devices.RcMessageSchemas do
   @moduledoc """
   Message validation schemas for Remote Control WebSocket messages.
-  
+
   Defines and validates all message types used in the RC session flow
   to ensure type safety and proper message structure.
   """
 
   @doc """
   Validates a control event message from RC window to device.
-  
+
   Control events include keyboard and mouse interactions.
-  
+
   ## Examples
-  
+
       iex> validate_control_event(%{"type" => "keydown", "key" => "Enter"})
       {:ok, %{"type" => "keydown", "key" => "Enter"}}
-      
+
       iex> validate_control_event(%{"invalid" => "message"})
       {:error, "Invalid control event: missing required field 'type'"}
   """
@@ -27,11 +27,18 @@ defmodule Castmill.Devices.RcMessageSchemas do
       %{"type" => type} when type in ["click", "mousedown", "mouseup", "mousemove"] ->
         validate_mouse_event(payload)
 
+      # Android control event format: %{"event_type" => "tap", "data" => %{"x" => ..., "y" => ...}}
+      %{"event_type" => event_type, "data" => data} when is_map(data) and event_type in ["tap", "long_press", "swipe", "multi_step", "global_action", "init_mapper"] ->
+        {:ok, payload}
+
       %{"type" => _} ->
         {:error, "Invalid control event: unknown event type"}
 
+      %{"event_type" => _} ->
+        {:error, "Invalid control event: unknown Android event type or missing data"}
+
       _ ->
-        {:error, "Invalid control event: missing required field 'type'"}
+        {:error, "Invalid control event: missing required field 'type' or 'event_type'"}
     end
   end
 
@@ -39,12 +46,12 @@ defmodule Castmill.Devices.RcMessageSchemas do
 
   @doc """
   Validates a media frame message from device to RC window.
-  
+
   Media frames contain video data and frame metadata including frame type
   (IDR or P-frame) for backpressure management.
-  
+
   ## Examples
-  
+
       iex> validate_media_frame(%{"data" => "base64data", "frame_type" => "idr"})
       {:ok, %{"data" => "base64data", "frame_type" => "idr"}}
   """
@@ -61,11 +68,11 @@ defmodule Castmill.Devices.RcMessageSchemas do
 
   @doc """
   Validates media metadata message from device to RC window.
-  
+
   Contains information about the media stream such as resolution, FPS, codec.
-  
+
   ## Examples
-  
+
       iex> validate_media_metadata(%{"resolution" => "1920x1080", "fps" => 30})
       {:ok, %{"resolution" => "1920x1080", "fps" => 30}}
   """
@@ -79,11 +86,11 @@ defmodule Castmill.Devices.RcMessageSchemas do
 
   @doc """
   Validates a device event message from device to RC window.
-  
+
   Device events are status updates or notifications from the device.
-  
+
   ## Examples
-  
+
       iex> validate_device_event(%{"type" => "screen_update", "data" => "test"})
       {:ok, %{"type" => "screen_update", "data" => "test"}}
   """

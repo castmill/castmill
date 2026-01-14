@@ -265,6 +265,7 @@ defmodule Castmill.Devices.RcRelay do
   end
 
   defp forward_control_event(session_id, payload) do
+    Logger.debug("RcRelay: Broadcasting control_event to rc_session:#{session_id}")
     Phoenix.PubSub.broadcast(
       Castmill.PubSub,
       "rc_session:#{session_id}",

@@ -45,9 +45,9 @@ class ScreenCaptureManager(
         private const val TAG = "ScreenCaptureManager"
         private const val DISPLAY_NAME = "CastmillScreenCapture"
         
-        // Encoding parameters
-        private const val TARGET_WIDTH = 1280
-        private const val TARGET_HEIGHT = 720
+        // Encoding parameters - base dimensions (will be adjusted to match screen aspect ratio)
+        private const val TARGET_MAX_WIDTH = 1280
+        private const val TARGET_MAX_HEIGHT = 800
         private const val H264_FRAME_RATE = 15
         private const val H264_BITRATE = 2_000_000 // 2 Mbps
         private const val MJPEG_FRAME_RATE = 5
@@ -59,6 +59,10 @@ class ScreenCaptureManager(
         // Frame buffer capacity (frames)
         private const val FRAME_BUFFER_CAPACITY = 30 // ~2 seconds at 15fps
     }
+    
+    // Actual capture dimensions (calculated based on screen aspect ratio)
+    private var captureWidth = TARGET_MAX_WIDTH
+    private var captureHeight = TARGET_MAX_HEIGHT
 
     private var mediaProjection: MediaProjection? = null
     private var virtualDisplay: VirtualDisplay? = null
@@ -77,6 +81,34 @@ class ScreenCaptureManager(
             diagnosticsManager?.recordFrameDropped()
         }
     )
+    
+    /**
+     * Calculate capture dimensions that match the screen's aspect ratio.
+     * This prevents black bars (letterboxing/pillarboxing) in the captured video.
+     */
+    private fun calculateCaptureDimensions() {
+        val metrics = getDisplayMetrics()
+        val screenWidth = metrics.widthPixels.toFloat()
+        val screenHeight = metrics.heightPixels.toFloat()
+        val screenAspect = screenWidth / screenHeight
+        
+        // Calculate dimensions that fit within max bounds while preserving aspect ratio
+        if (screenAspect >= 1) {
+            // Landscape or square - width is the limiting factor
+            captureWidth = TARGET_MAX_WIDTH
+            captureHeight = (TARGET_MAX_WIDTH / screenAspect).toInt()
+            // Ensure height is even (required for video encoding)
+            captureHeight = (captureHeight / 2) * 2
+        } else {
+            // Portrait - height is the limiting factor
+            captureHeight = TARGET_MAX_HEIGHT
+            captureWidth = (TARGET_MAX_HEIGHT * screenAspect).toInt()
+            // Ensure width is even (required for video encoding)
+            captureWidth = (captureWidth / 2) * 2
+        }
+        
+        Log.i(TAG, "Screen: ${screenWidth.toInt()}x${screenHeight.toInt()} (aspect: $screenAspect), Capture: ${captureWidth}x${captureHeight}")
+    }
 
     /**
      * Start screen capture and encoding.
@@ -84,6 +116,9 @@ class ScreenCaptureManager(
      */
     fun start(): Boolean {
         try {
+            // Calculate capture dimensions based on screen aspect ratio
+            calculateCaptureDimensions()
+            
             // Get MediaProjection
             val projectionManager = context.getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
             mediaProjection = projectionManager.getMediaProjection(resultCode, data)
@@ -137,8 +172,8 @@ class ScreenCaptureManager(
 
             // Create video encoder
             videoEncoder = VideoEncoder(
-                width = TARGET_WIDTH,
-                height = TARGET_HEIGHT,
+                width = captureWidth,
+                height = captureHeight,
                 frameRate = H264_FRAME_RATE,
                 bitrate = H264_BITRATE,
                 onEncodedFrame = { buffer, bufferInfo, isKeyFrame ->
@@ -184,8 +219,8 @@ class ScreenCaptureManager(
             val metrics = getDisplayMetrics()
             virtualDisplay = mediaProjection?.createVirtualDisplay(
                 DISPLAY_NAME,
-                TARGET_WIDTH,
-                TARGET_HEIGHT,
+                captureWidth,
+                captureHeight,
                 metrics.densityDpi,
                 DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
                 inputSurface,
@@ -229,8 +264,8 @@ class ScreenCaptureManager(
         try {
             // Create MJPEG encoder
             mjpegEncoder = MjpegEncoder(
-                width = TARGET_WIDTH,
-                height = TARGET_HEIGHT,
+                width = captureWidth,
+                height = captureHeight,
                 frameRate = MJPEG_FRAME_RATE,
                 quality = MJPEG_QUALITY,
                 onEncodedFrame = { buffer, timestamp, isKeyFrame ->
@@ -270,8 +305,8 @@ class ScreenCaptureManager(
             val metrics = getDisplayMetrics()
             virtualDisplay = mediaProjection?.createVirtualDisplay(
                 DISPLAY_NAME,
-                TARGET_WIDTH,
-                TARGET_HEIGHT,
+                captureWidth,
+                captureHeight,
                 metrics.densityDpi,
                 DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
                 surface,

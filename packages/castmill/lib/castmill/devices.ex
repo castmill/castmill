@@ -189,9 +189,9 @@ defmodule Castmill.Devices do
 
   @doc """
   Check if the device's RC app is available (has sent a heartbeat recently).
-  Returns true if the device has sent an RC heartbeat within the last 30 seconds.
+  Returns true if the device has sent an RC heartbeat within the last 60 seconds.
   """
-  @rc_heartbeat_timeout_seconds 30
+  @rc_heartbeat_timeout_seconds 60
   def rc_app_available?(device_id) do
     case get_device(device_id) do
       nil -> false

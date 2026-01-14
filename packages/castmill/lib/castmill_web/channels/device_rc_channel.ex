@@ -21,6 +21,9 @@ defmodule CastmillWeb.DeviceRcChannel do
 
   require Logger
 
+  # Intercept start_session so we can subscribe to the session topic
+  intercept ["start_session"]
+
   @impl true
   # Standby mode - RC app is running but no active session
   # Only requires hardware_id - verifies device exists in database
@@ -165,6 +168,7 @@ defmodule CastmillWeb.DeviceRcChannel do
   @impl true
   def handle_info(%{event: "control_event", payload: payload, source: :relay}, socket) do
     # Received from relay (via PubSub), push to device WebSocket
+    Logger.debug("DeviceRcChannel: Received control_event from relay, pushing to device: #{inspect(payload)}")
     push(socket, "control_event", payload)
 
     # Update activity timestamp
@@ -196,6 +200,24 @@ defmodule CastmillWeb.DeviceRcChannel do
     {:noreply, socket}
   end
 
+  # Ignore media_stream_ready events - these are from the device itself, meant for RC window
+  @impl true
+  def handle_info(%{event: "media_stream_ready"}, socket) do
+    {:noreply, socket}
+  end
+
+  # Ignore media_stream_disconnected events - these are from the device itself, meant for RC window
+  @impl true
+  def handle_info(%{event: "media_stream_disconnected"}, socket) do
+    {:noreply, socket}
+  end
+
+  # Ignore media_metadata events - meant for RC window
+  @impl true
+  def handle_info(%{event: "media_metadata"}, socket) do
+    {:noreply, socket}
+  end
+
   # Ignore device_connected/disconnected events - we broadcast these, don't need to receive them
   @impl true
   def handle_info(%{event: "device_connected"}, socket) do
@@ -219,6 +241,31 @@ defmodule CastmillWeb.DeviceRcChannel do
     # Session closed (timeout or explicit close), disconnect device
     push(socket, "session_closed", %{})
     {:stop, :normal, socket}
+  end
+
+  # Handle outgoing start_session broadcasts - subscribe to session topic before pushing to client
+  @impl true
+  def handle_out("start_session", payload, socket) do
+    session_id = Map.get(payload, :session_id) || Map.get(payload, "session_id")
+    Logger.info("DeviceRcChannel intercepted start_session: session_id=#{inspect(session_id)}, payload=#{inspect(payload)}")
+
+    if session_id do
+      # Subscribe to the session's PubSub topic to receive control events
+      Phoenix.PubSub.subscribe(Castmill.PubSub, "rc_session:#{session_id}")
+      Logger.info("DeviceRcChannel subscribed to rc_session:#{session_id}")
+
+      # Update socket with session_id
+      socket = assign(socket, :session_id, session_id)
+
+      # Push the start_session to the client
+      push(socket, "start_session", payload)
+
+      {:noreply, socket}
+    else
+      Logger.warning("DeviceRcChannel: start_session missing session_id in payload")
+      push(socket, "start_session", payload)
+      {:noreply, socket}
+    end
   end
 
   @impl true

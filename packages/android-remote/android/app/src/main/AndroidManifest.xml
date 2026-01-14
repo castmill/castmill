@@ -5,6 +5,7 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     
     <!-- MediaProjection is required for screen capture -->
@@ -46,10 +47,15 @@
 
         <!-- Foreground Service for screen capture and remote control -->
         <!-- Notification channel is created programmatically in RemoteControlService.createNotificationChannel() -->
+        <!-- Start with specialUse type since mediaProjection requires user consent first on Android 14+ -->
         <service
             android:name=".RemoteControlService"
-            android:foregroundServiceType="mediaProjection"
-            android:exported="false" />
+            android:foregroundServiceType="specialUse|mediaProjection"
+            android:exported="false">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Remote control service for screen capture and input injection" />
+        </service>
 
     </application>
 

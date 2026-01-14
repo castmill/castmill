@@ -225,11 +225,365 @@ class RemoteAccessibilityService : AccessibilityService() {
     }
 
     /**
+     * Inject a key event.
+     * 
+     * For special keys like Backspace, Enter, Tab, Arrow keys, etc., we use
+     * AccessibilityNodeInfo actions. For regular character keys, we inject 
+     * the text into the focused input field.
+     * 
+     * @param action "down" or "up"
+     * @param key The key value (e.g., "a", "Enter", "Backspace")
+     * @param code The key code (e.g., "KeyA", "Enter", "Backspace")
+     * @param shift Whether Shift is held
+     * @param ctrl Whether Ctrl is held
+     * @param alt Whether Alt is held
+     * @param meta Whether Meta (Command) is held
+     * @return true if the key was injected successfully
+     */
+    fun injectKey(
+        action: String,
+        key: String,
+        code: String,
+        shift: Boolean,
+        ctrl: Boolean,
+        alt: Boolean,
+        meta: Boolean
+    ): Boolean {
+        // Only process key down events to avoid double input
+        // (Most systems send both keydown and keyup)
+        if (action != "down") {
+            return true
+        }
+
+        Log.d(TAG, "Injecting key: key=$key, code=$code, shift=$shift, ctrl=$ctrl, alt=$alt, meta=$meta")
+
+        // Handle special navigation/control keys first
+        when (code) {
+            "Backspace" -> {
+                return injectBackspace()
+            }
+            "Enter" -> {
+                return injectEnter()
+            }
+            "Tab" -> {
+                return focusNextInput()
+            }
+            "Escape" -> {
+                return performGlobalAction(GLOBAL_ACTION_BACK)
+            }
+            "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown" -> {
+                return injectArrowKey(code)
+            }
+            "Home" -> {
+                return performGlobalAction(GLOBAL_ACTION_HOME)
+            }
+        }
+
+        // Handle Ctrl+key shortcuts
+        if (ctrl) {
+            when (key.lowercase()) {
+                "a" -> return selectAll()
+                "c" -> return copyText()
+                "v" -> return pasteText()
+                "x" -> return cutText()
+                else -> {
+                    Log.d(TAG, "Unhandled Ctrl+$key shortcut")
+                    return false
+                }
+            }
+        }
+
+        // For regular character keys, inject the text
+        if (key.length == 1) {
+            return injectText(key)
+        }
+
+        // For space key
+        if (code == "Space") {
+            return injectText(" ")
+        }
+
+        Log.d(TAG, "Unhandled key: key=$key, code=$code")
+        return false
+    }
+
+    /**
+     * Inject text into the currently focused input field.
+     */
+    private fun injectText(text: String): Boolean {
+        val focusedNode = findFocusedInput()
+        if (focusedNode == null) {
+            Log.w(TAG, "No focused input found for text injection")
+            return false
+        }
+
+        try {
+            // Get current text
+            val currentText = focusedNode.text?.toString() ?: ""
+            
+            // Get cursor position if available
+            val selectionStart = focusedNode.textSelectionStart
+            val selectionEnd = focusedNode.textSelectionEnd
+            
+            val newText: String
+            if (selectionStart >= 0 && selectionEnd >= 0) {
+                // Replace selection or insert at cursor
+                val prefix = if (selectionStart > 0 && selectionStart <= currentText.length) {
+                    currentText.substring(0, selectionStart)
+                } else {
+                    currentText
+                }
+                val suffix = if (selectionEnd >= 0 && selectionEnd <= currentText.length) {
+                    currentText.substring(selectionEnd)
+                } else {
+                    ""
+                }
+                newText = prefix + text + suffix
+            } else {
+                // Append to end
+                newText = currentText + text
+            }
+
+            val args = android.os.Bundle()
+            args.putCharSequence(
+                android.view.accessibility.AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,
+                newText
+            )
+            val result = focusedNode.performAction(
+                android.view.accessibility.AccessibilityNodeInfo.ACTION_SET_TEXT,
+                args
+            )
+            
+            focusedNode.recycle()
+            Log.d(TAG, "Injected text '$text', result=$result")
+            return result
+        } catch (e: Exception) {
+            Log.e(TAG, "Error injecting text", e)
+            focusedNode.recycle()
+            return false
+        }
+    }
+
+    /**
+     * Handle backspace key - delete character before cursor.
+     */
+    private fun injectBackspace(): Boolean {
+        val focusedNode = findFocusedInput()
+        if (focusedNode == null) {
+            Log.w(TAG, "No focused input found for backspace")
+            return false
+        }
+
+        try {
+            val currentText = focusedNode.text?.toString() ?: ""
+            if (currentText.isEmpty()) {
+                focusedNode.recycle()
+                return true
+            }
+
+            val selectionStart = focusedNode.textSelectionStart
+            val selectionEnd = focusedNode.textSelectionEnd
+
+            val newText: String
+            if (selectionStart >= 0 && selectionEnd >= 0 && selectionStart != selectionEnd) {
+                // Delete selection
+                val prefix = if (selectionStart > 0) currentText.substring(0, selectionStart) else ""
+                val suffix = if (selectionEnd < currentText.length) currentText.substring(selectionEnd) else ""
+                newText = prefix + suffix
+            } else {
+                // Delete character before cursor
+                val cursor = if (selectionStart >= 0) selectionStart else currentText.length
+                if (cursor <= 0) {
+                    focusedNode.recycle()
+                    return true
+                }
+                newText = currentText.substring(0, cursor - 1) + currentText.substring(cursor)
+            }
+
+            val args = android.os.Bundle()
+            args.putCharSequence(
+                android.view.accessibility.AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE,
+                newText
+            )
+            val result = focusedNode.performAction(
+                android.view.accessibility.AccessibilityNodeInfo.ACTION_SET_TEXT,
+                args
+            )
+
+            focusedNode.recycle()
+            return result
+        } catch (e: Exception) {
+            Log.e(TAG, "Error handling backspace", e)
+            focusedNode.recycle()
+            return false
+        }
+    }
+
+    /**
+     * Handle Enter key - perform action on the input or add newline.
+     */
+    private fun injectEnter(): Boolean {
+        val focusedNode = findFocusedInput()
+        if (focusedNode == null) {
+            // No input focused, simulate enter as a click
+            Log.d(TAG, "No focused input for Enter, ignoring")
+            return false
+        }
+
+        try {
+            // Try to perform the input's default action (e.g., submit, search)
+            if (focusedNode.performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY)) {
+                focusedNode.recycle()
+                return true
+            }
+
+            // Otherwise, just add a newline if it's a multiline input
+            if (focusedNode.isMultiLine) {
+                val result = injectText("\n")
+                focusedNode.recycle()
+                return result
+            }
+
+            // For single-line inputs, try to click the "Done" or similar button
+            // by focusing the next element
+            focusedNode.recycle()
+            return focusNextInput()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error handling Enter", e)
+            focusedNode.recycle()
+            return false
+        }
+    }
+
+    /**
+     * Handle arrow keys for cursor navigation.
+     */
+    private fun injectArrowKey(code: String): Boolean {
+        val focusedNode = findFocusedInput() ?: return false
+        
+        try {
+            val granularity = android.view.accessibility.AccessibilityNodeInfo.MOVEMENT_GRANULARITY_CHARACTER
+            val args = android.os.Bundle()
+            args.putInt(
+                android.view.accessibility.AccessibilityNodeInfo.ACTION_ARGUMENT_MOVEMENT_GRANULARITY_INT,
+                granularity
+            )
+
+            val action = when (code) {
+                "ArrowLeft" -> android.view.accessibility.AccessibilityNodeInfo.ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY
+                "ArrowRight" -> android.view.accessibility.AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY
+                else -> {
+                    // Up/Down for multiline - move by line
+                    args.putInt(
+                        android.view.accessibility.AccessibilityNodeInfo.ACTION_ARGUMENT_MOVEMENT_GRANULARITY_INT,
+                        android.view.accessibility.AccessibilityNodeInfo.MOVEMENT_GRANULARITY_LINE
+                    )
+                    if (code == "ArrowUp") {
+                        android.view.accessibility.AccessibilityNodeInfo.ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY
+                    } else {
+                        android.view.accessibility.AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY
+                    }
+                }
+            }
+
+            val result = focusedNode.performAction(action, args)
+            focusedNode.recycle()
+            return result
+        } catch (e: Exception) {
+            Log.e(TAG, "Error handling arrow key", e)
+            focusedNode.recycle()
+            return false
+        }
+    }
+
+    /**
+     * Focus the next input element.
+     */
+    private fun focusNextInput(): Boolean {
+        val focusedNode = findFocusedInput()
+        if (focusedNode != null) {
+            val result = focusedNode.performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_NEXT_HTML_ELEMENT)
+            focusedNode.recycle()
+            if (result) return true
+        }
+        // Fallback to focus action
+        return performGlobalAction(GLOBAL_ACTION_ACCESSIBILITY_BUTTON)
+    }
+
+    /**
+     * Select all text in the focused input.
+     */
+    private fun selectAll(): Boolean {
+        val focusedNode = findFocusedInput() ?: return false
+        try {
+            val text = focusedNode.text?.toString() ?: ""
+            val args = android.os.Bundle()
+            args.putInt(android.view.accessibility.AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_START_INT, 0)
+            args.putInt(android.view.accessibility.AccessibilityNodeInfo.ACTION_ARGUMENT_SELECTION_END_INT, text.length)
+            val result = focusedNode.performAction(
+                android.view.accessibility.AccessibilityNodeInfo.ACTION_SET_SELECTION,
+                args
+            )
+            focusedNode.recycle()
+            return result
+        } catch (e: Exception) {
+            Log.e(TAG, "Error selecting all", e)
+            focusedNode.recycle()
+            return false
+        }
+    }
+
+    /**
+     * Copy selected text.
+     */
+    private fun copyText(): Boolean {
+        val focusedNode = findFocusedInput() ?: return false
+        val result = focusedNode.performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_COPY)
+        focusedNode.recycle()
+        return result
+    }
+
+    /**
+     * Paste text from clipboard.
+     */
+    private fun pasteText(): Boolean {
+        val focusedNode = findFocusedInput() ?: return false
+        val result = focusedNode.performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_PASTE)
+        focusedNode.recycle()
+        return result
+    }
+
+    /**
+     * Cut selected text.
+     */
+    private fun cutText(): Boolean {
+        val focusedNode = findFocusedInput() ?: return false
+        val result = focusedNode.performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_CUT)
+        focusedNode.recycle()
+        return result
+    }
+
+    /**
+     * Find the currently focused editable input field.
+     */
+    private fun findFocusedInput(): android.view.accessibility.AccessibilityNodeInfo? {
+        return try {
+            rootInActiveWindow?.findFocus(android.view.accessibility.AccessibilityNodeInfo.FOCUS_INPUT)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error finding focused input", e)
+            null
+        }
+    }
+
+    /**
      * Map coordinates from RC window to device screen.
      * 
-     * @param x X coordinate
-     * @param y Y coordinate
-     * @return Pair of device coordinates, or original if no mapper is set
+     * The video stream may have letterboxing (black bars) if the device screen
+     * aspect ratio differs from the video aspect ratio (1280x720 = 16:9).
+     * 
+     * @param x X coordinate in video space (0-1280)
+     * @param y Y coordinate in video space (0-720)
+     * @return Pair of device coordinates, or null if coordinates are in letterbox area
      */
     private fun mapCoordinates(x: Float, y: Float): Pair<Float, Float>? {
         val mapper = gestureMapper
@@ -239,11 +593,60 @@ class RemoteAccessibilityService : AccessibilityService() {
                 Log.e(TAG, "Failed to map coordinates: ($x, $y)")
                 return null
             }
+            Log.d(TAG, "Mapped coordinates: ($x, $y) -> (${point.x}, ${point.y})")
             return Pair(point.x.toFloat(), point.y.toFloat())
         }
         
-        // No mapper configured, use coordinates as-is
-        return Pair(x, y)
+        // No mapper configured, use fallback scaling based on video resolution
+        // Video resolution is 1280x720, but may contain letterboxing
+        val displayMetrics = resources.displayMetrics
+        val screenWidth = displayMetrics.widthPixels.toFloat()
+        val screenHeight = displayMetrics.heightPixels.toFloat()
+        
+        val videoWidth = 1280f
+        val videoHeight = 720f
+        
+        val screenAspect = screenWidth / screenHeight
+        val videoAspect = videoWidth / videoHeight
+        
+        // Calculate the actual content area within the video (accounting for letterboxing)
+        val contentWidth: Float
+        val contentHeight: Float
+        val contentOffsetX: Float
+        val contentOffsetY: Float
+        
+        if (screenAspect < videoAspect) {
+            // Screen is narrower than video - pillarboxing (black bars on left/right)
+            // Content fills video height, with bars on sides
+            contentHeight = videoHeight
+            contentWidth = videoHeight * screenAspect
+            contentOffsetX = (videoWidth - contentWidth) / 2f
+            contentOffsetY = 0f
+        } else {
+            // Screen is wider than video - letterboxing (black bars on top/bottom)
+            // Content fills video width, with bars on top/bottom
+            contentWidth = videoWidth
+            contentHeight = videoWidth / screenAspect
+            contentOffsetX = 0f
+            contentOffsetY = (videoHeight - contentHeight) / 2f
+        }
+        
+        // Check if click is within content area
+        if (x < contentOffsetX || x > contentOffsetX + contentWidth ||
+            y < contentOffsetY || y > contentOffsetY + contentHeight) {
+            Log.w(TAG, "Click at ($x, $y) is outside content area [offset: ($contentOffsetX, $contentOffsetY), size: ${contentWidth}x${contentHeight}]")
+            // Still process but coordinates may be outside actual screen
+        }
+        
+        // Map from video content area to screen coordinates
+        val relativeX = x - contentOffsetX
+        val relativeY = y - contentOffsetY
+        
+        val scaledX = (relativeX / contentWidth) * screenWidth
+        val scaledY = (relativeY / contentHeight) * screenHeight
+        
+        Log.d(TAG, "Fallback scaling: ($x, $y) -> ($scaledX, $scaledY) [content: ${contentWidth}x${contentHeight} at offset ($contentOffsetX, $contentOffsetY), screen: ${screenWidth}x${screenHeight}]")
+        return Pair(scaledX, scaledY)
     }
 
     /**

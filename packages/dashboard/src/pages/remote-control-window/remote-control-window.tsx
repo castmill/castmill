@@ -46,6 +46,21 @@ const RemoteControlWindow: Component = () => {
   // Helper function to calculate canvas coordinates
   const getCanvasCoordinates = (e: MouseEvent, canvas: HTMLCanvasElement) => {
     const rect = canvas.getBoundingClientRect();
+    
+    // Debug logging
+    console.log('Canvas coordinates debug:', {
+      clientX: e.clientX,
+      clientY: e.clientY,
+      rectLeft: rect.left,
+      rectTop: rect.top,
+      rectWidth: rect.width,
+      rectHeight: rect.height,
+      canvasWidth: canvas.width,
+      canvasHeight: canvas.height,
+      cssAspectRatio: rect.width / rect.height,
+      canvasAspectRatio: canvas.width / canvas.height,
+    });
+    
     const x = ((e.clientX - rect.left) / rect.width) * canvas.width;
     const y = ((e.clientY - rect.top) / rect.height) * canvas.height;
     return { x: Math.round(x), y: Math.round(y) };

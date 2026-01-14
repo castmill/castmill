@@ -40,7 +40,8 @@ defmodule CastmillWeb.DeviceJSON do
       inserted_at: device.inserted_at,
       updated_at: device.updated_at,
       loc_lat: device.loc_lat,
-      loc_long: device.loc_long
+      loc_long: device.loc_long,
+      rc_last_heartbeat: device.rc_last_heartbeat
     }
   end
 

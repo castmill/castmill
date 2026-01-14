@@ -66,7 +66,8 @@ class WebSocketManager(
 ) {
     companion object {
         private const val TAG = "WebSocketManager"
-        private const val HEARTBEAT_INTERVAL_MS = 30000L // 30 seconds
+        private const val HEARTBEAT_INTERVAL_MS = 30000L // 30 seconds (Phoenix protocol heartbeat)
+        private const val RC_HEARTBEAT_INTERVAL_MS = 15000L // 15 seconds (RC app availability heartbeat)
         private const val INITIAL_RECONNECT_DELAY_MS = 1000L // 1 second
         private const val MAX_RECONNECT_DELAY_MS = 60000L // 1 minute
         private const val RECONNECT_BACKOFF_MULTIPLIER = 2.0
@@ -352,7 +353,7 @@ class WebSocketManager(
             Log.d(TAG, "Sent initial RC heartbeat")
             
             while (isActive && webSocket != null && isAuthenticated) {
-                delay(HEARTBEAT_INTERVAL_MS)
+                delay(RC_HEARTBEAT_INTERVAL_MS)
                 sendMessage("rc_heartbeat", buildJsonObject {})
                 Log.d(TAG, "Sent RC heartbeat")
             }
@@ -555,6 +556,22 @@ class WebSocketManager(
                         Log.i(TAG, "Initialized gesture mapper: ${rcWidth}x${rcHeight}")
                     } else {
                         Log.w(TAG, "Invalid mapper dimensions: width=$rcWidth, height=$rcHeight")
+                    }
+                }
+                "key" -> {
+                    val action = data["action"]?.toString()?.trim('"')
+                    val key = data["key"]?.toString()?.trim('"') ?: ""
+                    val code = data["code"]?.toString()?.trim('"') ?: ""
+                    val shift = data["shift"]?.toString()?.toBooleanStrictOrNull() ?: false
+                    val ctrl = data["ctrl"]?.toString()?.toBooleanStrictOrNull() ?: false
+                    val alt = data["alt"]?.toString()?.toBooleanStrictOrNull() ?: false
+                    val meta = data["meta"]?.toString()?.toBooleanStrictOrNull() ?: false
+                    
+                    if (action != null) {
+                        service.injectKey(action, key, code, shift, ctrl, alt, meta)
+                        Log.d(TAG, "Injected key event: action=$action, key=$key, code=$code")
+                    } else {
+                        Log.w(TAG, "Invalid key event: missing action")
                     }
                 }
                 else -> {

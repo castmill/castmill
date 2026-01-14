@@ -6,7 +6,9 @@
   "scripts": {
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "build": "cd android && ./gradlew build"
+    "build": "cd android && ./gradlew build",
+    "emulator": "~/Library/Android/sdk/emulator/emulator -avd Medium_Tablet_API_30_Android_11",
+    "deploy": "cd android && ./gradlew assembleDebug && ~/Library/Android/sdk/platform-tools/adb install -r app/build/outputs/apk/managed/debug/app-managed-debug.apk && ~/Library/Android/sdk/platform-tools/adb shell am start -n com.castmill.androidremote.managed/com.castmill.androidremote.MainActivity"
   },
   "author": "Castmill AB",
   "license": "AGPL-3.0-or-later"

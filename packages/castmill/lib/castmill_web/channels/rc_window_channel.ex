@@ -112,16 +112,74 @@ defmodule CastmillWeb.RcWindowChannel do
     # Input events are sent directly by the dashboard for real-time control
     session_id = socket.assigns.session_id
 
-    # Forward input payload directly - it already has "type" field
-    case RcRelay.enqueue_control_event(session_id, payload) do
-      :ok ->
-        {:noreply, socket}
+    # Transform dashboard input events to Android control event format
+    # Dashboard sends: %{"type" => "click", "x" => 100, "y" => 200, "button" => 0}
+    # Android expects: %{"event_type" => "tap", "data" => %{"x" => 100, "y" => 200}}
+    transformed_payload = transform_input_to_control_event(payload)
 
-      {:error, _reason} ->
-        # Don't reply with error for input events - just drop them if queue full
-        # This prevents flooding the dashboard with errors for high-frequency events
-        {:noreply, socket}
+    if transformed_payload do
+      Logger.debug("RcWindowChannel: Transformed input to control event: #{inspect(transformed_payload)}")
+      case RcRelay.enqueue_control_event(session_id, transformed_payload) do
+        :ok ->
+          Logger.debug("RcWindowChannel: Control event enqueued successfully")
+          {:noreply, socket}
+
+        {:error, reason} ->
+          Logger.warning("RcWindowChannel: Failed to enqueue control event: #{inspect(reason)}")
+          # Don't reply with error for input events - just drop them if queue full
+          # This prevents flooding the dashboard with errors for high-frequency events
+          {:noreply, socket}
+      end
+    else
+      # Ignore events we don't transform (like mousedown/mouseup - we only act on click)
+      {:noreply, socket}
     end
+  end
+
+  # Transform dashboard input events to Android control event format
+  defp transform_input_to_control_event(%{"type" => "click", "x" => x, "y" => y}) do
+    %{
+      "event_type" => "tap",
+      "data" => %{"x" => x, "y" => y, "duration" => 100}
+    }
+  end
+
+  defp transform_input_to_control_event(%{"type" => "dblclick", "x" => x, "y" => y}) do
+    # Double-click becomes a long press on Android
+    %{
+      "event_type" => "long_press",
+      "data" => %{"x" => x, "y" => y, "duration" => 600}
+    }
+  end
+
+  # Keyboard events - keydown/keyup for text input
+  defp transform_input_to_control_event(%{
+         "type" => type,
+         "key" => key,
+         "code" => code
+       } = payload)
+       when type in ["keydown", "keyup"] do
+    %{
+      "event_type" => "key",
+      "data" => %{
+        "action" => if(type == "keydown", do: "down", else: "up"),
+        "key" => key,
+        "code" => code,
+        "shift" => Map.get(payload, "shift", false),
+        "ctrl" => Map.get(payload, "ctrl", false),
+        "alt" => Map.get(payload, "alt", false),
+        "meta" => Map.get(payload, "meta", false)
+      }
+    }
+  end
+
+  # Ignore mousedown, mouseup, mousemove - we only act on complete gestures
+  defp transform_input_to_control_event(%{"type" => type}) when type in ["mousedown", "mouseup", "mousemove"] do
+    nil
+  end
+
+  defp transform_input_to_control_event(_payload) do
+    nil
   end
 
   @impl true

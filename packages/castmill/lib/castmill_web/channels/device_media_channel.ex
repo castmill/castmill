@@ -143,11 +143,40 @@ defmodule CastmillWeb.DeviceMediaChannel do
 
     case RcMessageSchemas.validate_media_metadata(payload) do
       {:ok, validated_payload} ->
+        # Forward metadata to RC window
         Phoenix.PubSub.broadcast(
           Castmill.PubSub,
           "rc_session:#{session_id}",
           %{event: "media_metadata", payload: validated_payload}
         )
+
+        # Also send init_mapper control event to the device so it can scale coordinates
+        # The video resolution (width x height) is the RC window size that coordinates are based on
+        width = validated_payload["width"]
+        height = validated_payload["height"]
+
+        if width && height do
+          require Logger
+
+          Logger.debug(
+            "Sending init_mapper to device: #{width}x#{height} for session #{session_id}"
+          )
+
+          Phoenix.PubSub.broadcast(
+            Castmill.PubSub,
+            "rc_session:#{session_id}",
+            %{
+              event: "control_event",
+              payload: %{
+                "event_type" => "init_mapper",
+                "data" => %{
+                  "rc_width" => width,
+                  "rc_height" => height
+                }
+              }
+            }
+          )
+        end
 
         {:reply, :ok, socket}
 
