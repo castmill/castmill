@@ -5,6 +5,7 @@ import {
   onCleanup,
   Show,
   createEffect,
+  on,
 } from 'solid-js';
 import './location-picker.scss';
 
@@ -28,6 +29,25 @@ interface LocationPickerProps {
   disabled?: boolean;
 }
 
+// Leaflet types (minimal interface to avoid `any`)
+interface LeafletMap {
+  setView: (latlng: [number, number], zoom?: number) => LeafletMap;
+  on: (event: string, handler: (e: any) => void) => LeafletMap;
+  remove: () => void;
+}
+
+interface LeafletMarker {
+  addTo: (map: LeafletMap) => LeafletMarker;
+  on: (event: string, handler: (e: any) => void) => LeafletMarker;
+  setLatLng: (latlng: [number, number]) => LeafletMarker;
+}
+
+interface LeafletStatic {
+  map: (element: HTMLElement) => LeafletMap;
+  tileLayer: (url: string, options: any) => any;
+  marker: (latlng: [number, number], options?: any) => LeafletMarker;
+}
+
 /**
  * LocationPicker Component
  *
@@ -40,8 +60,9 @@ interface LocationPickerProps {
  */
 export const LocationPicker: Component<LocationPickerProps> = (props) => {
   let mapContainer: HTMLDivElement | undefined;
-  let map: any;
-  let marker: any;
+  let map: LeafletMap | undefined;
+  let marker: LeafletMarker | undefined;
+  let searchTimeoutId: number | undefined;
   
   const [searchQuery, setSearchQuery] = createSignal('');
   const [isSearching, setIsSearching] = createSignal(false);
@@ -54,22 +75,26 @@ export const LocationPicker: Component<LocationPickerProps> = (props) => {
   const zoom = props.defaultZoom || 13;
 
   // Initialize Leaflet dynamically
-  const loadLeaflet = async () => {
+  const loadLeaflet = async (): Promise<LeafletStatic> => {
     // Check if Leaflet is already loaded
     if (typeof window !== 'undefined' && (window as any).L) {
       return (window as any).L;
     }
 
-    // Load Leaflet CSS
-    const cssLink = document.createElement('link');
-    cssLink.rel = 'stylesheet';
-    cssLink.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
-    cssLink.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=';
-    cssLink.crossOrigin = '';
-    document.head.appendChild(cssLink);
+    // Check if CSS is already loaded
+    const existingLink = document.querySelector('link[href*="leaflet.css"]');
+    if (!existingLink) {
+      // Load Leaflet CSS
+      const cssLink = document.createElement('link');
+      cssLink.rel = 'stylesheet';
+      cssLink.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+      cssLink.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=';
+      cssLink.crossOrigin = '';
+      document.head.appendChild(cssLink);
+    }
 
     // Load Leaflet JS
-    return new Promise<any>((resolve, reject) => {
+    return new Promise<LeafletStatic>((resolve, reject) => {
       const script = document.createElement('script');
       script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
       script.integrity = 'sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=';
@@ -125,8 +150,13 @@ export const LocationPicker: Component<LocationPickerProps> = (props) => {
     }
   };
 
-  // Handle search input
+  // Handle search input with debouncing
   const handleSearch = async () => {
+    // Clear any pending search timeout
+    if (searchTimeoutId) {
+      clearTimeout(searchTimeoutId);
+    }
+
     const query = searchQuery();
     if (!query.trim()) {
       setSearchResults([]);
@@ -134,9 +164,12 @@ export const LocationPicker: Component<LocationPickerProps> = (props) => {
       return;
     }
 
-    const results = await geocodeAddress(query);
-    setSearchResults(results);
-    setShowResults(results.length > 0);
+    // Debounce search to avoid excessive API calls
+    searchTimeoutId = window.setTimeout(async () => {
+      const results = await geocodeAddress(query);
+      setSearchResults(results);
+      setShowResults(results.length > 0);
+    }, 500); // 500ms debounce
   };
 
   // Select a location from search results
@@ -241,16 +274,34 @@ export const LocationPicker: Component<LocationPickerProps> = (props) => {
   });
 
   // Update marker when value changes externally
-  createEffect(() => {
-    const value = props.value;
-    if (value && map && marker) {
-      map.setView([value.lat, value.lng]);
-      marker.setLatLng([value.lat, value.lng]);
-    }
-  });
+  // Use `on` to track specific dependencies and avoid unnecessary updates
+  createEffect(
+    on(
+      () => props.value,
+      (value, prevValue) => {
+        // Only update if coordinates actually changed
+        if (
+          value &&
+          map &&
+          marker &&
+          (!prevValue ||
+            value.lat !== prevValue.lat ||
+            value.lng !== prevValue.lng)
+        ) {
+          map.setView([value.lat, value.lng]);
+          marker.setLatLng([value.lat, value.lng]);
+        }
+      }
+    )
+  );
 
   // Cleanup
   onCleanup(() => {
+    // Clear any pending search timeout
+    if (searchTimeoutId) {
+      clearTimeout(searchTimeoutId);
+    }
+    
     if (map) {
       map.remove();
     }
@@ -264,10 +315,24 @@ export const LocationPicker: Component<LocationPickerProps> = (props) => {
           class="location-picker__search-input"
           placeholder={props.placeholder || 'Search for a location...'}
           value={searchQuery()}
-          onInput={(e) => setSearchQuery(e.currentTarget.value)}
+          onInput={(e) => {
+            setSearchQuery(e.currentTarget.value);
+            // Trigger debounced search on input
+            handleSearch();
+          }}
           onKeyPress={(e) => {
             if (e.key === 'Enter') {
-              handleSearch();
+              // Cancel debounce and search immediately on Enter
+              if (searchTimeoutId) {
+                clearTimeout(searchTimeoutId);
+              }
+              const query = searchQuery();
+              if (query.trim()) {
+                geocodeAddress(query).then((results) => {
+                  setSearchResults(results);
+                  setShowResults(results.length > 0);
+                });
+              }
             }
           }}
           disabled={props.disabled}
