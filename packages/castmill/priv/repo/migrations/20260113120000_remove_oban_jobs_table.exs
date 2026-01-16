@@ -4,7 +4,7 @@ defmodule Castmill.Repo.Migrations.RemoveObanJobsTable do
   def up do
     # Drop the Oban jobs table since we're moving to BullMQ (which uses Redis)
     # BullMQ stores all job data in Redis, so we don't need database tables
-    
+
     # Note: If Oban was never installed (e.g., fresh installation), this will safely do nothing
     drop_if_exists table("oban_jobs")
     drop_if_exists table("oban_peers")

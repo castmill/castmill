@@ -148,10 +148,17 @@ defmodule Castmill.Widgets do
         # Ensure integration exists for widgets with integration definitions
         case Castmill.Widgets.Integrations.ensure_integration_for_widget(widget) do
           {:ok, integration} ->
-            Logger.debug("new_widget_config: Found integration #{inspect(integration && integration.id)}")
+            Logger.debug(
+              "new_widget_config: Found integration #{inspect(integration && integration.id)}"
+            )
+
             integration
+
           other ->
-            Logger.debug("new_widget_config: ensure_integration_for_widget returned #{inspect(other)}")
+            Logger.debug(
+              "new_widget_config: ensure_integration_for_widget returned #{inspect(other)}"
+            )
+
             nil
         end
       else
@@ -181,7 +188,10 @@ defmodule Castmill.Widgets do
       schedule_auth_free_polling(org_id, widget_id, int, options)
     else
       other ->
-        Logger.debug("new_widget_config: Skipping schedule, with clause failed: #{inspect(other)}")
+        Logger.debug(
+          "new_widget_config: Skipping schedule, with clause failed: #{inspect(other)}"
+        )
+
         other
     end
 
@@ -190,8 +200,10 @@ defmodule Castmill.Widgets do
 
   defp is_auth_free_integration?(%Castmill.Widgets.Integrations.WidgetIntegration{} = integration) do
     # Check if the integration requires no authentication
-    auth_type = get_in(integration.pull_config, ["auth_type"]) ||
-                get_in(integration.credential_schema, ["auth_type"])
+    auth_type =
+      get_in(integration.pull_config, ["auth_type"]) ||
+        get_in(integration.credential_schema, ["auth_type"])
+
     auth_type == "none"
   end
 
@@ -199,20 +211,24 @@ defmodule Castmill.Widgets do
     # Build discriminator ID based on integration type
     discriminator_id = build_discriminator_id(integration, widget_options)
 
-    Logger.info("Scheduling auth-free polling for widget #{widget_id}, org #{organization_id}, discriminator: #{discriminator_id}")
+    Logger.info(
+      "Scheduling auth-free polling for widget #{widget_id}, org #{organization_id}, discriminator: #{discriminator_id}"
+    )
 
     # Spawn a separate process to schedule the poll, so that:
     # 1. It doesn't block the database transaction
     # 2. If Redis isn't available, it doesn't crash the transaction
     Task.start(fn ->
       try do
-        result = Castmill.Workers.IntegrationPoller.schedule_poll(%{
-          organization_id: organization_id,
-          widget_id: widget_id,
-          integration_id: integration.id,
-          discriminator_id: discriminator_id,
-          widget_options: widget_options
-        })
+        result =
+          Castmill.Workers.IntegrationPoller.schedule_poll(%{
+            organization_id: organization_id,
+            widget_id: widget_id,
+            integration_id: integration.id,
+            discriminator_id: discriminator_id,
+            widget_options: widget_options
+          })
+
         Logger.info("Schedule poll result: #{inspect(result)}")
       rescue
         e ->
@@ -233,7 +249,11 @@ defmodule Castmill.Widgets do
     case integration.discriminator_type do
       "widget_option" ->
         key = integration.discriminator_key || "id"
-        value = Map.get(merged_options, key) || Map.get(merged_options, String.to_atom(key)) || "default"
+
+        value =
+          Map.get(merged_options, key) || Map.get(merged_options, String.to_atom(key)) ||
+            "default"
+
         "#{key}:#{value}"
 
       "organization" ->

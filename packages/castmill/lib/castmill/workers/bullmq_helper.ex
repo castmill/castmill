@@ -108,22 +108,25 @@ defmodule Castmill.Workers.BullMQHelper do
     # Validate scheduler ID format - BullMQ treats IDs with 5+ colon-separated parts
     # as legacy repeatable jobs, which breaks the new job scheduler behavior
     colon_parts = String.split(scheduler_id, ":")
+
     if length(colon_parts) >= 5 do
       Logger.error(
         "[BullMQHelper] Scheduler ID '#{scheduler_id}' has #{length(colon_parts)} colon-separated parts. " <>
-        "BullMQ will misidentify this as a legacy repeatable job. Use fewer than 5 colon-separated parts."
+          "BullMQ will misidentify this as a legacy repeatable job. Use fewer than 5 colon-separated parts."
       )
     end
 
     if testing_mode?() do
       # In testing mode, don't actually create schedulers
       # Return a mock job struct for compatibility
-      mock_job = BullMQ.Job.new(
-        to_string(queue),
-        job_name,
-        job_data,
-        timestamp: System.system_time(:millisecond)
-      )
+      mock_job =
+        BullMQ.Job.new(
+          to_string(queue),
+          job_name,
+          job_data,
+          timestamp: System.system_time(:millisecond)
+        )
+
       {:ok, mock_job}
     else
       # BullMQ.JobScheduler uses Redix.command directly (not the connection pool)

@@ -127,8 +127,9 @@ defmodule Castmill.Workers.IntegrationPoller do
     integration_id = normalize_param(params, :integration_id)
 
     with {:ok, integration} <- get_integration(integration_id) do
-      interval_seconds = Keyword.get(opts, :interval) ||
-                        integration.pull_interval_seconds || 30
+      interval_seconds =
+        Keyword.get(opts, :interval) ||
+          integration.pull_interval_seconds || 30
 
       job_data = %{
         "organization_id" => normalize_param(params, :organization_id),
@@ -143,14 +144,18 @@ defmodule Castmill.Workers.IntegrationPoller do
       # which BullMQ would misidentify as legacy repeatable jobs.
       # The discriminator_id may contain colons (e.g., "org:uuid"), so we sanitize it.
       sanitized_discriminator = String.replace(job_data["discriminator_id"] || "", ":", "_")
-      scheduler_id = "int_poll_#{job_data["organization_id"]}_#{job_data["integration_id"]}_#{sanitized_discriminator}"
+
+      scheduler_id =
+        "int_poll_#{job_data["organization_id"]}_#{job_data["integration_id"]}_#{sanitized_discriminator}"
 
       # Use BullMQ JobScheduler for repeatable jobs (via helper for test mode support)
       BullMQHelper.upsert_scheduler(
         @queue,
         scheduler_id,
-        %{every: interval_seconds * 1000},  # BullMQ expects milliseconds
-        scheduler_id,  # job_name
+        # BullMQ expects milliseconds
+        %{every: interval_seconds * 1000},
+        # job_name
+        scheduler_id,
         job_data,
         attempts: 3
       )
@@ -176,9 +181,11 @@ defmodule Castmill.Workers.IntegrationPoller do
         {:ok, true} ->
           Logger.info("IntegrationPoller: Canceled polling for scheduler #{scheduler_id}")
           {:ok, 1}
+
         {:ok, false} ->
           Logger.info("IntegrationPoller: No scheduler found for #{scheduler_id}")
           {:ok, 0}
+
         {:error, reason} ->
           Logger.error("IntegrationPoller: Failed to cancel polling: #{inspect(reason)}")
           {:error, reason}
@@ -188,6 +195,7 @@ defmodule Castmill.Workers.IntegrationPoller do
       Logger.warning(
         "IntegrationPoller: Cannot cancel polling without discriminator_id for org=#{organization_id}, integration=#{integration_id}"
       )
+
       {:ok, 0}
     end
   end

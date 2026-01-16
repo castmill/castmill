@@ -458,7 +458,11 @@ defmodule Castmill.Resources do
     case integration.discriminator_type do
       "widget_option" ->
         key = integration.discriminator_key || "id"
-        value = Map.get(merged_options, key) || Map.get(merged_options, String.to_atom(key)) || "default"
+
+        value =
+          Map.get(merged_options, key) || Map.get(merged_options, String.to_atom(key)) ||
+            "default"
+
         "#{key}:#{value}"
 
       "organization" ->

@@ -252,20 +252,27 @@ defmodule Castmill.Application do
     worker_module =
       case {queue_name, job_name} do
         # Image transcoder queue
-        {:image_transcoder, _} -> Castmill.Workers.ImageTranscoder
+        {:image_transcoder, _} ->
+          Castmill.Workers.ImageTranscoder
 
         # Video transcoder queue
-        {:video_transcoder, _} -> Castmill.Workers.VideoTranscoder
+        {:video_transcoder, _} ->
+          Castmill.Workers.VideoTranscoder
 
         # Integration polling queue (for Spotify and similar OAuth pollers)
-        {:integration_polling, _} -> Castmill.Workers.SpotifyPoller
+        {:integration_polling, _} ->
+          Castmill.Workers.SpotifyPoller
 
         # Integrations queue (for API key based integrations)
-        {:integrations, _} -> Castmill.Workers.IntegrationPoller
+        {:integrations, _} ->
+          Castmill.Workers.IntegrationPoller
 
         # Maintenance queue - route based on job name
-        {:maintenance, "integration_data_cleanup"} -> Castmill.Workers.IntegrationDataCleanup
-        {:maintenance, "encryption_rotation"} -> Castmill.Workers.EncryptionRotation
+        {:maintenance, "integration_data_cleanup"} ->
+          Castmill.Workers.IntegrationDataCleanup
+
+        {:maintenance, "encryption_rotation"} ->
+          Castmill.Workers.EncryptionRotation
 
         _ ->
           require Logger
