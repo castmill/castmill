@@ -18,9 +18,7 @@ defmodule Castmill.Workers.ImageTranscoder do
   Processes the image transcoding job.
   This is called by BullMQ worker.
   """
-  def process(%BullMQ.Job{data: args} = job) do
-    dbg(job)
-
+  def process(%BullMQ.Job{data: args} = _job) do
     media = args["media"]
     organization_id = media["organization_id"]
     media_id = media["id"]
@@ -139,16 +137,31 @@ defmodule Castmill.Workers.ImageTranscoder do
   Schedules an image transcoding job.
   """
   def schedule(media, filepath, mime_type) do
+    # Convert Ecto struct to plain map with string keys for BullMQ serialization
+    media_map = media_to_map(media)
+
     BullMQHelper.add_job(
       @queue,
       "image_transcode",
       %{
-        "media" => media,
+        "media" => media_map,
         "filepath" => filepath,
         "mime_type" => mime_type
       }
     )
   end
+
+  defp media_to_map(%Castmill.Resources.Media{} = media) do
+    %{
+      "id" => media.id,
+      "organization_id" => media.organization_id,
+      "name" => media.name,
+      "mimetype" => media.mimetype,
+      "status" => media.status
+    }
+  end
+
+  defp media_to_map(media) when is_map(media), do: media
 
   # Upload to local directory or S3 depending on the configuration
   defp upload_image(image, organization_id, media_id, filename) do

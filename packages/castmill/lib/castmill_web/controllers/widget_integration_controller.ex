@@ -13,6 +13,8 @@ defmodule CastmillWeb.WidgetIntegrationController do
   use CastmillWeb, :controller
   use CastmillWeb.AccessActorBehaviour
 
+  require Logger
+
   alias Castmill.Widgets
   alias Castmill.Widgets.Integrations
   alias Castmill.Organizations
@@ -451,6 +453,200 @@ defmodule CastmillWeb.WidgetIntegrationController do
   end
 
   # ============================================================================
+  # Data Prefetching (for Dashboard UX improvement)
+  # ============================================================================
+
+  @doc """
+  Prefetches integration data for a widget before a widget_config exists.
+
+  POST /dashboard/organizations/:organization_id/widgets/:widget_id/prefetch-data
+
+  This endpoint is called when a user drags a widget into a playlist to warm up
+  the integration data cache. By fetching the data before the widget is actually
+  inserted, the UI can show the data immediately when the widget is added.
+
+  For widgets with organization-level discriminators (like HN, RSS feeds with
+  hardcoded URLs), this prefetch will populate the cache that all widget instances
+  will share.
+
+  Request body (optional):
+    - options: Widget options to use for discriminator calculation (for widget_option type)
+
+  Returns:
+    - 200 with data if successfully fetched
+    - 202 if fetch is in progress (for async fetches)
+    - 204 if widget has no integrations
+    - 404 if widget not found
+  """
+  def prefetch_widget_data(conn, %{
+        "organization_id" => organization_id,
+        "widget_id" => widget_id_or_slug
+      } = params) do
+    widget_id = resolve_widget_id(widget_id_or_slug)
+
+    case widget_id do
+      nil ->
+        conn
+        |> put_status(:not_found)
+        |> json(%{error: "Widget not found"})
+
+      id ->
+        widget_options = Map.get(params, "options", %{})
+        do_prefetch_widget_data(conn, organization_id, id, widget_options)
+    end
+  end
+
+  defp do_prefetch_widget_data(conn, organization_id, widget_id, widget_options) do
+    # Get the widget's integrations
+    case Integrations.list_integrations(widget_id: widget_id) do
+      [] ->
+        # No integrations - widget doesn't need prefetching
+        conn
+        |> put_status(:no_content)
+        |> text("")
+
+      [integration | _] ->
+        # Only handle PULL integrations with fetcher modules
+        if integration.integration_type == "pull" do
+          prefetch_pull_integration(conn, organization_id, widget_id, integration, widget_options)
+        else
+          # PUSH integrations don't support prefetching
+          conn
+          |> put_status(:no_content)
+          |> text("")
+        end
+    end
+  end
+
+  defp prefetch_pull_integration(conn, organization_id, widget_id, integration, widget_options) do
+    pull_config = integration.pull_config || %{}
+    credential_schema = integration.credential_schema || %{}
+    fetcher_module_name = Map.get(pull_config, "fetcher_module")
+
+    unless fetcher_module_name do
+      conn
+      |> put_status(:no_content)
+      |> text("")
+    else
+      # Check if we already have cached data for this discriminator
+      discriminator_id = build_discriminator_id(integration, widget_options)
+
+      case Integrations.get_integration_data_by_discriminator(integration.id, discriminator_id) do
+        %Integrations.WidgetIntegrationData{} = data ->
+          # Already have cached data - return it
+          filtered_data = apply_max_items_filter(data.data, widget_options)
+
+          conn
+          |> put_status(:ok)
+          |> json(%{
+            data: filtered_data,
+            version: data.version,
+            fetched_at: data.fetched_at,
+            status: "cached"
+          })
+
+        nil ->
+          # No cached data - fetch it now
+          fetch_and_cache_for_prefetch(
+            conn,
+            organization_id,
+            widget_id,
+            integration,
+            widget_options,
+            fetcher_module_name,
+            pull_config,
+            credential_schema
+          )
+      end
+    end
+  end
+
+  defp fetch_and_cache_for_prefetch(
+         conn,
+         organization_id,
+         widget_id,
+         integration,
+         widget_options,
+         fetcher_module_name,
+         pull_config,
+         credential_schema
+       ) do
+    # Get credentials or use empty map for optional auth
+    auth_type =
+      Map.get(pull_config, "auth_type") ||
+        Map.get(credential_schema, "auth_type") ||
+        "required"
+
+    credentials =
+      case Integrations.get_organization_credentials(organization_id, integration.id) do
+        {:ok, creds} ->
+          creds
+
+        {:error, _reason} when auth_type in ["optional", "none"] ->
+          %{}
+
+        {:error, _reason} ->
+          nil
+      end
+
+    if is_nil(credentials) do
+      conn
+      |> put_status(:ok)
+      |> json(%{
+        data: nil,
+        status: "credentials_required",
+        message: "Integration requires credentials that are not configured"
+      })
+    else
+      # Merge pull_config with widget_options for the fetcher
+      merged_options = Map.merge(pull_config, widget_options)
+
+      case fetch_with_module(fetcher_module_name, credentials, merged_options) do
+        {:ok, data, _creds} ->
+          # Store the data
+          discriminator_id = build_discriminator_id(integration, widget_options)
+
+          case store_fetched_data(organization_id, widget_id, integration, discriminator_id, data) do
+            {:ok, integration_data} ->
+              # Schedule background polling for future updates
+              schedule_polling(
+                organization_id,
+                widget_id,
+                integration,
+                discriminator_id,
+                widget_options
+              )
+
+              filtered_data = apply_max_items_filter(integration_data.data, widget_options)
+
+              conn
+              |> put_status(:ok)
+              |> json(%{
+                data: filtered_data,
+                version: integration_data.version,
+                fetched_at: integration_data.fetched_at,
+                status: "fetched"
+              })
+
+            {:error, reason} ->
+              Logger.error("Failed to store prefetched data: #{inspect(reason)}")
+
+              conn
+              |> put_status(:ok)
+              |> json(%{data: nil, status: "error", message: "Failed to cache data"})
+          end
+
+        {:error, reason} ->
+          Logger.warning("Prefetch failed for widget #{widget_id}: #{inspect(reason)}")
+
+          conn
+          |> put_status(:ok)
+          |> json(%{data: nil, status: "error", message: "Failed to fetch data"})
+      end
+    end
+  end
+
+  # ============================================================================
   # Data Access (for Players)
   # ============================================================================
 
@@ -647,11 +843,16 @@ defmodule CastmillWeb.WidgetIntegrationController do
                   nil
 
                 widget_config ->
+                  # Merge pull_config with widget_options so fetcher has access to both
+                  # pull_config contains integration-level settings (like feed_url for RSS)
+                  # widget_options contains widget instance settings (like max_items)
+                  merged_options = Map.merge(pull_config, widget_config.options || %{})
+
                   # Try to fetch data using the fetcher
                   case fetch_with_module(
                          fetcher_module_name,
                          credentials,
-                         widget_config.options || %{}
+                         merged_options
                        ) do
                     {:ok, data, _creds} ->
                       # Store the data and return it
@@ -727,10 +928,15 @@ defmodule CastmillWeb.WidgetIntegrationController do
   end
 
   defp build_discriminator_id(integration, options) do
+    # For widget_option discriminators, also check pull_config for hardcoded values
+    # (e.g., RSS widgets have feed_url in pull_config, not in widget_options)
+    pull_config = integration.pull_config || %{}
+    merged_options = Map.merge(pull_config, options || %{})
+
     case integration.discriminator_type do
       "widget_option" ->
         key = integration.discriminator_key || "id"
-        value = Map.get(options, key, "default")
+        value = Map.get(merged_options, key) || Map.get(merged_options, String.to_atom(key)) || "default"
         "#{key}:#{value}"
 
       "organization" ->
@@ -771,16 +977,29 @@ defmodule CastmillWeb.WidgetIntegrationController do
     # Only schedule if not already running (the unique constraint in the worker will handle this)
     delay = Keyword.get(opts, :delay, integration.pull_interval_seconds || 30)
 
-    Castmill.Workers.IntegrationPoller.schedule_poll(
-      %{
-        organization_id: organization_id,
-        widget_id: widget_id,
-        integration_id: integration.id,
-        discriminator_id: discriminator_id,
-        widget_options: widget_options
-      },
-      delay: delay
-    )
+    # Spawn a separate process to schedule the poll, so that:
+    # 1. It doesn't block the HTTP request
+    # 2. If Redis isn't available, it doesn't crash the request
+    Task.start(fn ->
+      try do
+        Castmill.Workers.IntegrationPoller.schedule_poll(
+          %{
+            organization_id: organization_id,
+            widget_id: widget_id,
+            integration_id: integration.id,
+            discriminator_id: discriminator_id,
+            widget_options: widget_options
+          },
+          delay: delay
+        )
+      rescue
+        e ->
+          Logger.warning("Failed to schedule polling: #{inspect(e)}")
+      catch
+        :exit, reason ->
+          Logger.warning("Failed to schedule polling (exit): #{inspect(reason)}")
+      end
+    end)
   end
 
   defp maybe_schedule_refresh(

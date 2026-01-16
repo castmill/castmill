@@ -34,7 +34,6 @@ defmodule Castmill.Workers.SpotifyPoller do
   """
 
   require Logger
-  import Ecto.Query
 
   alias Castmill.Widgets.Integrations
   alias Castmill.Widgets.Integrations.OAuth.Spotify, as: SpotifyOAuth
@@ -188,7 +187,7 @@ defmodule Castmill.Workers.SpotifyPoller do
         Logger.warning(
           "SpotifyPoller: No credentials for organization_id=#{organization_id}, stopping"
         )
-        
+
         # Remove the repeatable job
         cancel_for_org(organization_id)
         :ok
@@ -197,7 +196,7 @@ defmodule Castmill.Workers.SpotifyPoller do
         Logger.warning(
           "SpotifyPoller: Credentials invalid for organization_id=#{organization_id}, stopping"
         )
-        
+
         cancel_for_org(organization_id)
         :ok
 
@@ -236,7 +235,7 @@ defmodule Castmill.Workers.SpotifyPoller do
         Logger.warning(
           "SpotifyPoller: No credentials for widget_config_id=#{widget_config_id}, stopping"
         )
-        
+
         cancel(widget_config_id)
         :ok
 
@@ -244,7 +243,7 @@ defmodule Castmill.Workers.SpotifyPoller do
         Logger.warning(
           "SpotifyPoller: Credentials invalid for widget_config_id=#{widget_config_id}, stopping"
         )
-        
+
         cancel(widget_config_id)
         :ok
 

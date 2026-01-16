@@ -35,21 +35,19 @@ defmodule Castmill.Workers.IntegrationPollerTest do
 
     # Create a BullMQ job structure for testing
     # NOTE: Based on BullMQ Elixir v1.2 Job structure
-    job = %BullMQ.Job{
-      id: "test-job-id",
-      name: "integration_poll",
-      data: %{
-        "organization_id" => organization.id,
-        "widget_id" => widget.id,
-        "integration_id" => integration.id,
-        "discriminator_id" => discriminator,
-        "widget_options" => %{"feed_url" => "https://example.com/rss"}
-      },
-      opts: %{},
-      queue: "integrations",
-      timestamp: System.system_time(:millisecond),
-      attempts_made: 0
-    }
+    job =
+      BullMQ.Job.new(
+        "integrations",
+        "integration_poll",
+        %{
+          "organization_id" => organization.id,
+          "widget_id" => widget.id,
+          "integration_id" => integration.id,
+          "discriminator_id" => discriminator,
+          "widget_options" => %{"feed_url" => "https://example.com/rss"}
+        },
+        timestamp: System.system_time(:millisecond)
+      )
 
     assert :ok = IntegrationPoller.process(job)
 

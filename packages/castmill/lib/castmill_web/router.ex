@@ -287,6 +287,14 @@ defmodule CastmillWeb.Router do
       :get_widget_usage
     )
 
+    # Prefetch integration data for a widget (before widget_config exists)
+    # This allows the UI to warm up the cache while showing the widget details modal
+    post(
+      "/organizations/:organization_id/widgets/:widget_id/prefetch-data",
+      WidgetIntegrationController,
+      :prefetch_widget_data
+    )
+
     delete(
       "/organizations/:organization_id/widgets/:widget_id",
       OrganizationController,

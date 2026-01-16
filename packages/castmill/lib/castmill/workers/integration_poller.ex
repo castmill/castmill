@@ -125,12 +125,12 @@ defmodule Castmill.Workers.IntegrationPoller do
   def schedule_poll(params, opts \\ []) do
     # Get the integration to determine the polling interval
     integration_id = normalize_param(params, :integration_id)
-    
+
     with {:ok, integration} <- get_integration(integration_id) do
-      interval_seconds = Keyword.get(opts, :interval) || 
+      interval_seconds = Keyword.get(opts, :interval) ||
                         integration.pull_interval_seconds || 30
-      
-      args = %{
+
+      job_data = %{
         "organization_id" => normalize_param(params, :organization_id),
         "widget_id" => normalize_param(params, :widget_id),
         "integration_id" => normalize_param(params, :integration_id),
@@ -138,15 +138,20 @@ defmodule Castmill.Workers.IntegrationPoller do
         "widget_options" => normalize_param(params, :widget_options, %{})
       }
 
-      # Create a unique job ID based on the integration parameters
-      job_id = "integration_poll:#{args["organization_id"]}:#{args["integration_id"]}:#{args["discriminator_id"]}"
+      # Create a unique scheduler ID based on the integration parameters
+      # NOTE: Using underscores as separators to avoid having 5+ colon-separated parts,
+      # which BullMQ would misidentify as legacy repeatable jobs.
+      # The discriminator_id may contain colons (e.g., "org:uuid"), so we sanitize it.
+      sanitized_discriminator = String.replace(job_data["discriminator_id"] || "", ":", "_")
+      scheduler_id = "int_poll_#{job_data["organization_id"]}_#{job_data["integration_id"]}_#{sanitized_discriminator}"
 
-      # Use BullMQ repeatable jobs instead of manual rescheduling
-      BullMQHelper.add_job(
+      # Use BullMQ JobScheduler for repeatable jobs (via helper for test mode support)
+      BullMQHelper.upsert_scheduler(
         @queue,
-        job_id,
-        args,
-        repeat: %{every: interval_seconds * 1000}, # BullMQ expects milliseconds
+        scheduler_id,
+        %{every: interval_seconds * 1000},  # BullMQ expects milliseconds
+        scheduler_id,  # job_name
+        job_data,
         attempts: 3
       )
     else
@@ -157,22 +162,34 @@ defmodule Castmill.Workers.IntegrationPoller do
   end
 
   @doc """
-  Cancels all polling jobs for a specific organization and integration.
-  Uses BullMQ's removeRepeatable to stop the scheduled job.
+  Cancels polling jobs for a specific organization, integration, and discriminator.
+  Uses BullMQ's JobScheduler.remove to stop the scheduled job.
   """
-  def cancel_polling(organization_id, integration_id) do
-    # With repeatable jobs, we need to remove the job scheduler
-    # The job ID pattern we use for scheduling
-    discriminator_patterns = ["*"]  # We'd need to track actual discriminators
-    
-    # For now, log that we should implement proper removal
-    Logger.info(
-      "IntegrationPoller: Canceling polling for org=#{organization_id}, integration=#{integration_id}"
-    )
-    
-    # BullMQ.JobScheduler.remove_repeatable would be used here
-    # For now, return ok - the job will naturally stop if credentials are missing
-    {:ok, 0}
+  def cancel_polling(organization_id, integration_id, discriminator_id \\ nil) do
+    if discriminator_id do
+      # Remove specific scheduler
+      # NOTE: Must match the format used in schedule_poll - underscores instead of colons
+      sanitized_discriminator = String.replace(discriminator_id || "", ":", "_")
+      scheduler_id = "int_poll_#{organization_id}_#{integration_id}_#{sanitized_discriminator}"
+
+      case BullMQHelper.remove_scheduler(@queue, scheduler_id) do
+        {:ok, true} ->
+          Logger.info("IntegrationPoller: Canceled polling for scheduler #{scheduler_id}")
+          {:ok, 1}
+        {:ok, false} ->
+          Logger.info("IntegrationPoller: No scheduler found for #{scheduler_id}")
+          {:ok, 0}
+        {:error, reason} ->
+          Logger.error("IntegrationPoller: Failed to cancel polling: #{inspect(reason)}")
+          {:error, reason}
+      end
+    else
+      # Can't cancel without discriminator - would need to list and filter
+      Logger.warning(
+        "IntegrationPoller: Cannot cancel polling without discriminator_id for org=#{organization_id}, integration=#{integration_id}"
+      )
+      {:ok, 0}
+    end
   end
 
   # ===========================================================================
@@ -212,19 +229,24 @@ defmodule Castmill.Workers.IntegrationPoller do
     pull_config = integration.pull_config || %{}
     fetcher_module_name = Map.get(pull_config, "fetcher_module")
 
+    # Merge pull_config with widget_options so fetcher has access to both
+    # pull_config contains integration-level settings (like feed_url for RSS)
+    # widget_options contains widget instance settings (like max_items)
+    merged_options = Map.merge(pull_config, widget_options || %{})
+
     if fetcher_module_name do
       # Use custom fetcher module
       case get_fetcher_module(fetcher_module_name) do
         {:ok, module} ->
           # Credentials are already decrypted by get_organization_credentials
-          module.fetch(credentials, widget_options)
+          module.fetch(credentials, merged_options)
 
         {:error, reason} ->
           {:error, reason}
       end
     else
       # Use generic HTTP fetch
-      fetch_generic(integration, credentials, widget_options)
+      fetch_generic(integration, credentials, merged_options)
     end
   end
 

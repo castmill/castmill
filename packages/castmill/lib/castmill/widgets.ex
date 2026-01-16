@@ -3,6 +3,7 @@ defmodule Castmill.Widgets do
   The Widgets context.
   """
   import Ecto.Query, warn: false
+  require Logger
 
   alias Castmill.Repo
   alias Castmill.Protocol.Access
@@ -120,6 +121,9 @@ defmodule Castmill.Widgets do
   Instantiate a new widget.
   A widget instance is represented by a row in the widgets_config table.
 
+  If the widget has an integration definition in its meta field, this function
+  also ensures the integration record exists (creates it if needed).
+
   TODO:
   The data should be fetched from the widgets webhook endpoint, so a new widget instance will always have
   some valid data.
@@ -132,17 +136,113 @@ defmodule Castmill.Widgets do
       iex> new_widget_config("w_id", "pii_id", %{ "foo" => "bar" })
       %WidgetConfig{}
   """
-  def new_widget_config(widget_id, playlist_item_id, options, data \\ nil) do
-    %WidgetConfig{}
-    |> WidgetConfig.changeset(%{
-      widget_id: widget_id,
-      playlist_item_id: playlist_item_id,
-      options: options,
-      data: data,
-      version: 1,
-      last_request_at: nil
-    })
-    |> Repo.insert()
+  def new_widget_config(widget_id, playlist_item_id, options, data \\ nil, opts \\ []) do
+    # First ensure the integration exists if the widget has one defined
+    widget = get_widget(widget_id)
+    organization_id = Keyword.get(opts, :organization_id)
+
+    Logger.debug("new_widget_config: widget_id=#{widget_id}, org_id=#{inspect(organization_id)}")
+
+    integration =
+      if widget do
+        # Ensure integration exists for widgets with integration definitions
+        case Castmill.Widgets.Integrations.ensure_integration_for_widget(widget) do
+          {:ok, integration} ->
+            Logger.debug("new_widget_config: Found integration #{inspect(integration && integration.id)}")
+            integration
+          other ->
+            Logger.debug("new_widget_config: ensure_integration_for_widget returned #{inspect(other)}")
+            nil
+        end
+      else
+        Logger.debug("new_widget_config: Widget not found")
+        nil
+      end
+
+    # Create the widget config
+    result =
+      %WidgetConfig{}
+      |> WidgetConfig.changeset(%{
+        widget_id: widget_id,
+        playlist_item_id: playlist_item_id,
+        options: options,
+        data: data,
+        version: 1,
+        last_request_at: nil
+      })
+      |> Repo.insert()
+
+    # Schedule polling for auth-free integrations (like RSS)
+    with {:ok, _widget_config} <- result,
+         %Castmill.Widgets.Integrations.WidgetIntegration{} = int <- integration,
+         true <- is_auth_free_integration?(int),
+         org_id when not is_nil(org_id) <- organization_id do
+      Logger.info("new_widget_config: Scheduling polling for auth-free integration #{int.id}")
+      schedule_auth_free_polling(org_id, widget_id, int, options)
+    else
+      other ->
+        Logger.debug("new_widget_config: Skipping schedule, with clause failed: #{inspect(other)}")
+        other
+    end
+
+    result
+  end
+
+  defp is_auth_free_integration?(%Castmill.Widgets.Integrations.WidgetIntegration{} = integration) do
+    # Check if the integration requires no authentication
+    auth_type = get_in(integration.pull_config, ["auth_type"]) ||
+                get_in(integration.credential_schema, ["auth_type"])
+    auth_type == "none"
+  end
+
+  defp schedule_auth_free_polling(organization_id, widget_id, integration, widget_options) do
+    # Build discriminator ID based on integration type
+    discriminator_id = build_discriminator_id(integration, widget_options)
+
+    Logger.info("Scheduling auth-free polling for widget #{widget_id}, org #{organization_id}, discriminator: #{discriminator_id}")
+
+    # Spawn a separate process to schedule the poll, so that:
+    # 1. It doesn't block the database transaction
+    # 2. If Redis isn't available, it doesn't crash the transaction
+    Task.start(fn ->
+      try do
+        result = Castmill.Workers.IntegrationPoller.schedule_poll(%{
+          organization_id: organization_id,
+          widget_id: widget_id,
+          integration_id: integration.id,
+          discriminator_id: discriminator_id,
+          widget_options: widget_options
+        })
+        Logger.info("Schedule poll result: #{inspect(result)}")
+      rescue
+        e ->
+          Logger.warning("Failed to schedule auth-free polling: #{inspect(e)}")
+      catch
+        :exit, reason ->
+          Logger.warning("Failed to schedule auth-free polling (exit): #{inspect(reason)}")
+      end
+    end)
+  end
+
+  defp build_discriminator_id(integration, widget_options) do
+    # For widget_option discriminators, also check pull_config for hardcoded values
+    # (e.g., RSS widgets have feed_url in pull_config, not in widget_options)
+    pull_config = integration.pull_config || %{}
+    merged_options = Map.merge(pull_config, widget_options || %{})
+
+    case integration.discriminator_type do
+      "widget_option" ->
+        key = integration.discriminator_key || "id"
+        value = Map.get(merged_options, key) || Map.get(merged_options, String.to_atom(key)) || "default"
+        "#{key}:#{value}"
+
+      "organization" ->
+        "org"
+
+      _ ->
+        # widget_config or default
+        "default"
+    end
   end
 
   def get_widget_by_slug(slug) do
@@ -322,9 +422,9 @@ defmodule Castmill.Widgets do
       credential_schema == %{} ->
         false
 
-      # "optional" auth_type means credentials are not required upfront
-      # (e.g., RSS feeds that work without auth but optionally support Basic Auth)
-      Map.get(credential_schema, "auth_type") == "optional" ->
+      # "optional" or "none" auth_type means credentials are not required upfront
+      # (e.g., RSS feeds that work without auth)
+      Map.get(credential_schema, "auth_type") in ["optional", "none"] ->
         false
 
       # Has required auth_type (e.g., "oauth2", "api_key", "basic")

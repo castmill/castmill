@@ -28,15 +28,18 @@ Before deploying this change, ensure:
 ### 1. Dependencies
 
 **Removed:**
+
 - `{:oban, "~> 2.17"}`
 
 **Added:**
+
 - `{:bullmq, "~> 1.2"}`
 - `{:redix, "~> 1.3"}`
 
 ### 2. Infrastructure
 
 Added Redis service to `docker-compose.yaml`:
+
 ```yaml
 redis:
   image: redis:7-alpine
@@ -50,6 +53,7 @@ redis:
 ### 3. Configuration
 
 **config/config.exs:**
+
 ```elixir
 config :castmill, :redis,
   host: System.get_env("REDIS_HOST") || "localhost",
@@ -67,6 +71,7 @@ config :castmill, :bullmq,
 ```
 
 **config/test.exs:**
+
 ```elixir
 config :castmill, :bullmq, testing: :inline
 ```
@@ -84,6 +89,7 @@ All 7 workers have been converted from Oban to BullMQ:
 7. **BullMQHelper** - Helper module for unified job scheduling
 
 **Key Changes:**
+
 - Workers now implement `process(%BullMQ.Job{})` instead of `perform(%Oban.Job{})`
 - Job data accessed via `job.data` instead of `job.args`
 - Scheduling now uses `BullMQHelper.add_job/4` or worker-specific `schedule*` functions
@@ -91,6 +97,7 @@ All 7 workers have been converted from Oban to BullMQ:
 ### 5. Application Supervisor
 
 The application supervisor now:
+
 - Conditionally starts Redis connection (only in non-test environments)
 - Starts BullMQ workers with intelligent job routing
 - Routes jobs to correct workers based on queue name and job type
@@ -99,6 +106,7 @@ The application supervisor now:
 ### 6. Testing
 
 Tests have been updated to:
+
 - Remove `use Oban.Testing`
 - Use `BullMQ.Job` structs instead of `Oban.Job`
 - Run jobs inline automatically (no need for `Testing.with_testing_mode`)
@@ -108,28 +116,34 @@ Tests have been updated to:
 ### Development
 
 1. Pull the latest code:
+
    ```bash
    git pull origin main
    ```
 
 2. Install dependencies:
+
    ```bash
    cd packages/castmill
    mix deps.get
    ```
 
 3. Start Redis (if not already running):
+
    ```bash
    docker-compose up -d redis
    ```
 
 4. Run migrations:
+
    ```bash
    mix ecto.migrate
    ```
+
    This will remove the Oban tables from the database.
 
 5. Run tests:
+
    ```bash
    mix test
    ```
@@ -147,6 +161,7 @@ Tests have been updated to:
    - Set up Redis persistence (AOF recommended)
 
 2. **Set Environment Variables:**
+
    ```bash
    export REDIS_HOST=your-redis-host
    export REDIS_PORT=6379
@@ -157,9 +172,11 @@ Tests have been updated to:
    - Ensure the new dependencies are included in the release
 
 4. **Run Migration:**
+
    ```bash
    mix ecto.migrate
    ```
+
    **⚠️ Warning:** This will drop the `oban_jobs` table. Any pending Oban jobs will be lost.
 
 5. **Restart Application:**
@@ -181,6 +198,7 @@ Tests have been updated to:
 **⚠️ IMPORTANT**: Pending Oban jobs in the database will NOT be migrated to BullMQ. They will be lost when the `oban_jobs` table is dropped.
 
 **Mitigation:**
+
 - Before migrating, ensure all critical jobs have completed
 - Consider draining the Oban queue before migration:
   ```elixir
@@ -193,33 +211,85 @@ Tests have been updated to:
 ### 2. Redis Dependency
 
 The application now requires Redis to be running. If Redis is unavailable:
+
 - In production: The application will fail to start
 - In test mode: Jobs run inline, Redis not required
 
 ### 3. Job Cancellation
 
 Job cancellation (e.g., `IntegrationPoller.cancel_polling/2`) is currently limited:
+
 - **Oban**: Used SQL queries to find and cancel jobs
 - **BullMQ**: Would require enumerating jobs in Redis
 - **Current**: Logs a warning but doesn't cancel jobs
 
 This may be improved in future updates.
 
+### 4. Job Scheduler ID Format
+
+**⚠️ CRITICAL**: BullMQ scheduler IDs must have fewer than 5 colon-separated parts.
+
+BullMQ uses a heuristic to distinguish between new-style job schedulers and legacy repeatable jobs:
+
+- **< 5 colon parts**: Treated as new job scheduler (correct behavior)
+- **≥ 5 colon parts**: Treated as legacy repeatable job (broken - only first job runs!)
+
+**Incorrect (broken):**
+
+```elixir
+# This has 5+ colon parts when discriminator_id contains colons like "org:uuid"
+scheduler_id = "integration_poll:#{org_id}:#{integration_id}:#{discriminator_id}"
+# Result: "integration_poll:abc:123:org:550e8400..." = 5 parts → BROKEN!
+```
+
+**Correct:**
+
+```elixir
+# Use underscores as separators, sanitize any colons in dynamic values
+sanitized_discriminator = String.replace(discriminator_id || "", ":", "_")
+scheduler_id = "int_poll_#{org_id}_#{integration_id}_#{sanitized_discriminator}"
+# Result: "int_poll_abc_123_org_550e8400..." = 0 colon parts → Works!
+```
+
+**Validation:**
+The `BullMQHelper.upsert_scheduler/6` function logs an error if a scheduler ID has 5+ colon-separated parts. Monitor logs for:
+
+```
+[BullMQHelper] Scheduler ID '...' has X colon-separated parts. BullMQ will misidentify this...
+```
+
+**Cleanup:**
+If old schedulers with broken IDs exist in Redis, remove them:
+
+```bash
+# List all job schedulers
+redis-cli KEYS "bull:*:sc:*"
+
+# Remove specific broken scheduler
+redis-cli DEL "bull:integrations:sc:integration_poll:..."
+
+# Or remove all schedulers for a queue (use with caution!)
+redis-cli KEYS "bull:integrations:sc:*" | xargs redis-cli DEL
+```
+
 ## Rollback Plan
 
 If issues arise, you can rollback:
 
 1. **Revert Code:**
+
    ```bash
    git revert <migration-commit-hash>
    ```
 
 2. **Update Dependencies:**
+
    ```bash
    mix deps.get
    ```
 
 3. **Restore Oban Tables:**
+
    ```bash
    mix ecto.rollback
    ```
@@ -235,6 +305,7 @@ If issues arise, you can rollback:
 Consider setting up Bull Dashboard or Bull Board for visual monitoring:
 
 **Bull Board (Node.js):**
+
 ```javascript
 // In a separate Node.js app
 const { createBullBoard } = require('@bull-board/api');
@@ -249,13 +320,14 @@ createBullBoard({
     new BullMQAdapter(new Queue('video_transcoder')),
     // ... add all queues
   ],
-  serverAdapter
+  serverAdapter,
 });
 ```
 
 ### Redis Monitoring
 
 Monitor Redis performance:
+
 ```bash
 # Check memory usage
 redis-cli INFO memory
@@ -274,6 +346,7 @@ redis-cli LLEN bull:image_transcoder:wait
 **Error:** `Could not connect to Redis`
 
 **Solution:**
+
 - Verify Redis is running: `redis-cli ping`
 - Check `REDIS_HOST` and `REDIS_PORT` environment variables
 - Verify network connectivity
@@ -283,13 +356,16 @@ redis-cli LLEN bull:image_transcoder:wait
 **Symptom:** Jobs are added but never complete
 
 **Checks:**
+
 1. Verify BullMQ workers are running:
+
    ```elixir
    # In IEx
    Supervisor.which_children(Castmill.Supervisor)
    ```
 
 2. Check Redis for stuck jobs:
+
    ```bash
    redis-cli LLEN bull:image_transcoder:wait
    redis-cli LLEN bull:image_transcoder:active
@@ -303,6 +379,7 @@ redis-cli LLEN bull:image_transcoder:wait
 **Error:** Tests timeout or fail unexpectedly
 
 **Solution:**
+
 - Ensure `config :castmill, :bullmq, testing: :inline` is set in `test.exs`
 - Check that test files use `BullMQ.Job` format, not `Oban.Job`
 - Verify no `use Oban.Testing` in test files
@@ -316,6 +393,7 @@ redis-cli LLEN bull:image_transcoder:wait
 ## Support
 
 For issues or questions about this migration:
+
 1. Check this document first
 2. Review application logs
 3. Check Redis logs

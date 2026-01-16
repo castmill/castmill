@@ -892,15 +892,23 @@ defmodule Castmill.Widgets.Integrations do
   end
 
   # Build discriminator ID based on integration configuration
-  defp build_discriminator_id(%WidgetIntegration{} = integration, options, organization_id) do
+  # NOTE: discriminator does NOT
+  # include organization_id because all lookups are already scoped by organization.
+  # This keeps the discriminator consistent across all code paths.
+  defp build_discriminator_id(%WidgetIntegration{} = integration, options, _organization_id) do
+    # For widget_option discriminators, also check pull_config for hardcoded values
+    # (e.g., RSS widgets have feed_url in pull_config, not in widget_options)
+    pull_config = integration.pull_config || %{}
+    merged_options = Map.merge(pull_config, options || %{})
+
     case integration.discriminator_type do
       "widget_option" ->
         key = integration.discriminator_key || "id"
-        value = Map.get(options, key) || Map.get(options, String.to_atom(key)) || "default"
+        value = Map.get(merged_options, key) || Map.get(merged_options, String.to_atom(key)) || "default"
         "#{key}:#{value}"
 
       "organization" ->
-        "org:#{organization_id}"
+        "org"
 
       _ ->
         "default"
@@ -1345,6 +1353,191 @@ defmodule Castmill.Widgets.Integrations do
         credential
         |> WidgetIntegrationCredential.changeset(%{is_valid: false})
         |> Repo.update()
+    end
+  end
+
+  @doc """
+  Ensures a widget integration exists for a widget based on its meta.integration definition.
+
+  If the widget has an integration definition in its meta field and no integration
+  record exists yet, this function creates one.
+
+  This is called when a widget is added to a playlist (widget_config is created).
+
+  ## Parameters
+
+    - widget: The Widget struct with meta field potentially containing integration config
+
+  ## Returns
+
+    - {:ok, %WidgetIntegration{}} if integration exists or was created
+    - {:ok, nil} if widget has no integration definition
+    - {:error, changeset} if creation failed
+  """
+  def ensure_integration_for_widget(%Castmill.Widgets.Widget{} = widget) do
+    integration_config = get_in(widget.meta, ["integration"]) || get_in(widget.meta, [:integration])
+
+    case integration_config do
+      nil ->
+        # No integration defined in widget meta
+        {:ok, nil}
+
+      config when is_map(config) ->
+        # Check if integration already exists for this widget
+        integration_name = Map.get(config, "name") || Map.get(config, :name) || "default"
+
+        case get_integration_by_widget_and_name(widget.id, integration_name) do
+          %WidgetIntegration{} = existing ->
+            {:ok, existing}
+
+          nil ->
+            # Create the integration from the widget's meta config
+            create_integration_from_meta(widget.id, integration_name, config)
+        end
+
+      _ ->
+        {:ok, nil}
+    end
+  end
+
+  @doc """
+  Creates a widget integration from a widget's meta.integration configuration.
+
+  Maps the simplified widget.json integration format to the full WidgetIntegration schema.
+  """
+  def create_integration_from_meta(widget_id, name, config) do
+    integration_type = normalize_integration_type(config)
+    fetcher = Map.get(config, "fetcher") || Map.get(config, :fetcher)
+    fetcher_config = Map.get(config, "config") || Map.get(config, :config) || %{}
+
+    # Build the integration attributes
+    attrs = %{
+      widget_id: widget_id,
+      name: name,
+      description: Map.get(config, "description") || Map.get(config, :description) || "Auto-created from widget definition",
+      integration_type: integration_type,
+      credential_scope: determine_credential_scope(config),
+      discriminator_type: determine_discriminator_type(fetcher, fetcher_config),
+      discriminator_key: determine_discriminator_key(fetcher, fetcher_config),
+      pull_endpoint: determine_pull_endpoint(fetcher, fetcher_config),
+      pull_interval_seconds: Map.get(fetcher_config, "refresh_interval") || Map.get(fetcher_config, :refresh_interval) || 300,
+      pull_config: build_pull_config(fetcher, fetcher_config),
+      credential_schema: build_credential_schema(fetcher, config),
+      is_active: true
+    }
+
+    create_integration(attrs)
+  end
+
+  defp normalize_integration_type(config) do
+    type = Map.get(config, "type") || Map.get(config, :type) || "pull"
+
+    case String.downcase(to_string(type)) do
+      "pull" -> "pull"
+      "push" -> "push"
+      "both" -> "both"
+      _ -> "pull"
+    end
+  end
+
+  defp determine_credential_scope(config) do
+    scope = Map.get(config, "credential_scope") || Map.get(config, :credential_scope)
+
+    case scope do
+      s when s in ["organization", "widget"] -> s
+      _ -> "organization"
+    end
+  end
+
+  defp determine_discriminator_type(fetcher, config) do
+    # For RSS feeds, discriminate by feed_url so different feeds don't share data
+    case fetcher do
+      "rss" -> "widget_option"
+      _ ->
+        Map.get(config, "discriminator_type") || "organization"
+    end
+  end
+
+  defp determine_discriminator_key(fetcher, config) do
+    case fetcher do
+      "rss" -> "feed_url"
+      _ -> Map.get(config, "discriminator_key")
+    end
+  end
+
+  defp determine_pull_endpoint(fetcher, fetcher_config) do
+    # For RSS feeds, the endpoint is the feed URL
+    # For other integrations, look for an endpoint in the config
+    case fetcher do
+      "rss" -> Map.get(fetcher_config, "feed_url") || Map.get(fetcher_config, :feed_url)
+      _ -> Map.get(fetcher_config, "endpoint") || Map.get(fetcher_config, :endpoint)
+    end
+  end
+
+  defp build_pull_config(fetcher, fetcher_config) do
+    fetcher_module = resolve_fetcher_module(fetcher)
+
+    base_config = %{
+      "fetcher_module" => fetcher_module,
+      "auth_type" => determine_auth_type(fetcher)
+    }
+
+    # Merge any additional config from the widget definition
+    Map.merge(base_config, fetcher_config)
+  end
+
+  defp resolve_fetcher_module(fetcher) when is_binary(fetcher) do
+    # Map short fetcher names to full module names
+    case String.downcase(fetcher) do
+      "rss" -> "Castmill.Widgets.Integrations.Fetchers.Rss"
+      "spotify" -> "Castmill.Widgets.Integrations.Fetchers.Spotify"
+      "finnhub" -> "Castmill.Widgets.Integrations.Fetchers.Finnhub"
+      # If it already looks like a module name, use it as-is
+      name when byte_size(name) > 0 ->
+        if String.starts_with?(name, "Castmill.") or String.starts_with?(name, "Elixir.") do
+          name
+        else
+          # Try to construct a module name from the fetcher name
+          "Castmill.Widgets.Integrations.Fetchers.#{Macro.camelize(name)}"
+        end
+      _ -> nil
+    end
+  end
+
+  defp resolve_fetcher_module(_), do: nil
+
+  defp determine_auth_type(fetcher) do
+    # RSS feeds don't require authentication
+    case fetcher do
+      "rss" -> "none"
+      "spotify" -> "oauth"
+      "finnhub" -> "api_key"
+      _ -> "optional"
+    end
+  end
+
+  defp build_credential_schema(fetcher, _config) do
+    case fetcher do
+      "rss" ->
+        # RSS doesn't need credentials
+        %{"auth_type" => "none"}
+
+      "spotify" ->
+        %{
+          "auth_type" => "oauth",
+          "oauth_provider" => "spotify"
+        }
+
+      "finnhub" ->
+        %{
+          "auth_type" => "api_key",
+          "fields" => %{
+            "api_key" => %{"type" => "string", "required" => true, "label" => "API Key"}
+          }
+        }
+
+      _ ->
+        %{"auth_type" => "optional"}
     end
   end
 end

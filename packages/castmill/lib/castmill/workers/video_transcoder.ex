@@ -403,18 +403,33 @@ defmodule Castmill.Workers.VideoTranscoder do
   Schedules a video transcoding job.
   """
   def schedule(media, filepath, mime_type \\ nil) do
+    # Convert Ecto struct to plain map with string keys for BullMQ serialization
+    media_map = media_to_map(media)
+
     args = %{
-      "media" => media,
+      "media" => media_map,
       "filepath" => filepath
     }
-    
+
     # Add mime_type if provided (for compatibility)
     args = if mime_type, do: Map.put(args, "mime_type", mime_type), else: args
-    
+
     BullMQHelper.add_job(
       @queue,
       "video_transcode",
       args
     )
   end
+
+  defp media_to_map(%Castmill.Resources.Media{} = media) do
+    %{
+      "id" => media.id,
+      "organization_id" => media.organization_id,
+      "name" => media.name,
+      "mimetype" => media.mimetype,
+      "status" => media.status
+    }
+  end
+
+  defp media_to_map(media) when is_map(media), do: media
 end
