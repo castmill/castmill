@@ -26,7 +26,8 @@
         background-color: colors.$component-background-color-light;
       }
 
-      .dropdown-icon, svg {
+      .dropdown-icon,
+      svg {
         display: flex;
         align-items: center;
         pointer-events: none;

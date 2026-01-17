@@ -3,9 +3,7 @@ import { render, screen, fireEvent, cleanup } from '@solidjs/testing-library';
 import DropdownMenu from './dropdown-menu';
 
 // Simple ButtonComponent for testing
-const TestButtonComponent = () => (
-  <button>Toggle</button>
-);
+const TestButtonComponent = () => <button>Toggle</button>;
 
 // Skipping due to this issue: https://github.com/solidjs/solid-testing-library/issues/55
 describe.skip('DropdownMenu Component', () => {
