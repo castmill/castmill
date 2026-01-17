@@ -14,6 +14,7 @@ import { store, setStore } from '../store/store';
 import { OrganizationsService } from '../services/organizations.service';
 import { usePermissions } from '../hooks/usePermissions';
 import { ServerError } from './server-error/server-error';
+import { OnboardingDialog } from './onboarding-dialog/onboarding-dialog';
 
 import { useI18n } from '../i18n';
 import { useToast } from '@castmill/ui-common';
@@ -41,6 +42,10 @@ const ProtectedRoute: Component<ProtectedRouteProps> = (
   const toast = useToast();
   const { loadPermissions } = usePermissions();
   const [serverError, setServerError] = createSignal(false);
+  const [showOnboarding, setShowOnboarding] = createSignal(false);
+  const [onboardingOrgId, setOnboardingOrgId] = createSignal<string | null>(
+    null
+  );
 
   const handleRetry = () => {
     setServerError(false);
@@ -89,6 +94,27 @@ const ProtectedRoute: Component<ProtectedRouteProps> = (
 
         const organizations = await OrganizationsService.getAll(user.id!);
 
+        // Check if any organization needs onboarding
+        const incompleteOrg = organizations.find(
+          (org) => org.onboarding_completed === false
+        );
+
+        if (incompleteOrg) {
+          // Show onboarding dialog for this organization
+          setOnboardingOrgId(incompleteOrg.id);
+          setShowOnboarding(true);
+
+          // Still set the organizations in store, but user can't proceed until onboarding is complete
+          setStore('organizations', {
+            data: organizations,
+            loaded: true,
+            loading: false,
+            selectedId: incompleteOrg.id,
+            selectedName: incompleteOrg.name,
+          });
+          return;
+        }
+
         // Determine which organization to select
         const urlOrgId = params.orgId;
         let selectedOrg = organizations.find((org) => org.id === urlOrgId);
@@ -123,31 +149,57 @@ const ProtectedRoute: Component<ProtectedRouteProps> = (
       }
 
       // TODO: If we failed in loading organizations, we should redirect to the login page probably.
+    }
+  });
 
-      // We need to load the addons at the end as they may need stuff like organizations
-      // to be loaded first.
-      if (store.addons.length == 0 && !store.loadedAddons) {
-        setStore('loadingAddons', true);
-        try {
-          const loadedAddons = await AddonsService.getAll();
+  const handleOnboardingComplete = (organizationName: string) => {
+    // Update the organization name in the store
+    setStore('organizations', 'data', (orgs) =>
+      orgs.map((org) =>
+        org.id === onboardingOrgId()
+          ? { ...org, name: organizationName, onboarding_completed: true }
+          : org
+      )
+    );
+    setStore('organizations', 'selectedName', organizationName);
 
-          // Set the addons in the store
-          setStore('addons', loadedAddons);
-          setStore('loadedAddons', true);
-        } catch (error) {
-          toast.error(
-            `Failed to load addons: ${error instanceof Error ? error.message : 'Unknown error'}`
-          );
-          // Set empty addons array so the app can still function
-          setStore('addons', []);
-          setStore('loadedAddons', true);
-        } finally {
-          setStore('loadingAddons', false);
-        }
-      } else if (!store.loadedAddons) {
-        // If addons exist but loadedAddons is false (edge case), set it to true
+    // Hide the onboarding dialog
+    setShowOnboarding(false);
+    setOnboardingOrgId(null);
+
+    // Continue loading addons now that onboarding is complete
+    loadAddons();
+  };
+
+  const loadAddons = async () => {
+    if (store.addons.length == 0 && !store.loadedAddons) {
+      setStore('loadingAddons', true);
+      try {
+        const loadedAddons = await AddonsService.getAll();
+
+        // Set the addons in the store
+        setStore('addons', loadedAddons);
         setStore('loadedAddons', true);
+      } catch (error) {
+        toast.error(
+          `Failed to load addons: ${error instanceof Error ? error.message : 'Unknown error'}`
+        );
+        // Set empty addons array so the app can still function
+        setStore('addons', []);
+        setStore('loadedAddons', true);
+      } finally {
+        setStore('loadingAddons', false);
       }
+    } else if (!store.loadedAddons) {
+      // If addons exist but loadedAddons is false (edge case), set it to true
+      setStore('loadedAddons', true);
+    }
+  };
+
+  // Watch for organizations to be loaded and load addons if onboarding is not needed
+  createEffect(() => {
+    if (store.organizations.loaded && !showOnboarding()) {
+      loadAddons();
     }
   });
 
@@ -183,8 +235,14 @@ const ProtectedRoute: Component<ProtectedRouteProps> = (
       <Show when={serverError()}>
         <ServerError onRetry={handleRetry} />
       </Show>
+      <Show when={showOnboarding() && onboardingOrgId()}>
+        <OnboardingDialog
+          organizationId={onboardingOrgId()!}
+          onComplete={handleOnboardingComplete}
+        />
+      </Show>
       <Show
-        when={!serverError() && !store.loadingAddons}
+        when={!serverError() && !store.loadingAddons && !showOnboarding()}
         fallback={<div style="min-height: 20em;"></div>}
       >
         {props.children(store.addons)}

@@ -823,5 +823,21 @@
       "title": "Atajos de teclado",
       "description": "Usa estos atajos para navegar más rápido"
     }
+  },
+  "onboarding": {
+    "title": "¡Bienvenido a Castmill!",
+    "subtitle": "Comencemos dándole un nombre a tu organización.",
+    "organizationNameLabel": "Nombre de la organización",
+    "organizationNamePlaceholder": "Ingresa el nombre de tu organización",
+    "helpText": "Este nombre se usará para identificar tu espacio de trabajo. Puedes cambiarlo más tarde en la configuración.",
+    "continueButton": "Continuar",
+    "success": "¡Configuración de la organización completada!",
+    "errors": {
+      "organizationNameRequired": "El nombre de la organización es obligatorio",
+      "organizationNameTooShort": "El nombre de la organización debe tener al menos 2 caracteres",
+      "organizationNameTooLong": "El nombre de la organización debe tener menos de 50 caracteres",
+      "organizationNameTaken": "Este nombre de organización ya está en uso",
+      "failed": "Error al completar la configuración. Por favor, inténtalo de nuevo."
+    }
   }
 }

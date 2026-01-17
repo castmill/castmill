@@ -146,6 +146,10 @@ defmodule CastmillWeb.OrganizationController do
     {:ok, Organizations.is_admin?(organization_id, actor_id)}
   end
 
+  def check_access(actor_id, :complete_onboarding, %{"id" => organization_id}) do
+    {:ok, Organizations.is_admin?(organization_id, actor_id)}
+  end
+
   def check_access(actor_id, :remove_member, %{
         "organization_id" => organization_id,
         "user_id" => user_id
@@ -245,6 +249,30 @@ defmodule CastmillWeb.OrganizationController do
     with {:ok, %Organization{} = organization} <-
            Organizations.update_organization(organization, params) do
       render(conn, :show, organization: organization)
+    end
+  end
+
+  def complete_onboarding(conn, %{"id" => id, "name" => name}) do
+    with {:ok, %Organization{} = organization} <-
+           Organizations.complete_onboarding(id, name) do
+      render(conn, :show, organization: organization)
+    else
+      {:error, :not_found} ->
+        conn
+        |> put_status(:not_found)
+        |> json(%{error: "Organization not found"})
+
+      {:error, %Ecto.Changeset{} = changeset} ->
+        errors =
+          Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
+            Regex.replace(~r"%{(\w+)}", msg, fn _, key ->
+              opts |> Keyword.get(String.to_existing_atom(key), key) |> to_string()
+            end)
+          end)
+
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{errors: errors})
     end
   end
 

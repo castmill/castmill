@@ -836,5 +836,21 @@
       "title": "Raccourcis clavier",
       "description": "Utilisez ces raccourcis pour naviguer plus rapidement"
     }
+  },
+  "onboarding": {
+    "title": "Bienvenue sur Castmill !",
+    "subtitle": "Commençons par nommer votre organisation.",
+    "organizationNameLabel": "Nom de l'organisation",
+    "organizationNamePlaceholder": "Entrez le nom de votre organisation",
+    "helpText": "Ce nom sera utilisé pour identifier votre espace de travail. Vous pourrez le modifier ultérieurement dans les paramètres.",
+    "continueButton": "Continuer",
+    "success": "Configuration de l'organisation terminée !",
+    "errors": {
+      "organizationNameRequired": "Le nom de l'organisation est requis",
+      "organizationNameTooShort": "Le nom de l'organisation doit comporter au moins 2 caractères",
+      "organizationNameTooLong": "Le nom de l'organisation doit comporter moins de 50 caractères",
+      "organizationNameTaken": "Ce nom d'organisation est déjà pris",
+      "failed": "Échec de la configuration. Veuillez réessayer."
+    }
   }
 }

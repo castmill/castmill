@@ -1,0 +1,150 @@
+.onboarding-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: fadeIn 0.2s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.onboarding-dialog {
+  background: white;
+  border-radius: 0.5em;
+  padding: 2em;
+  max-width: 32em;
+  width: 90%;
+  box-shadow: 0 0.25em 1em rgba(0, 0, 0, 0.3);
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(2em);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.onboarding-dialog-header {
+  margin-bottom: 1.5em;
+}
+
+.onboarding-dialog-header h2 {
+  margin: 0 0 0.5em 0;
+  font-size: 1.75em;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.onboarding-dialog-subtitle {
+  margin: 0;
+  color: #666;
+  font-size: 1em;
+  line-height: 1.5;
+}
+
+.onboarding-dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5em;
+}
+
+.onboarding-dialog-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75em;
+}
+
+.onboarding-dialog-label {
+  font-weight: 500;
+  color: #333;
+  font-size: 0.95em;
+}
+
+.onboarding-dialog-input {
+  padding: 0.75em 1em;
+  border: 0.125em solid #ddd;
+  border-radius: 0.375em;
+  font-size: 1em;
+  transition: border-color 0.2s ease;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.onboarding-dialog-input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 0.1875em rgba(0, 123, 255, 0.1);
+}
+
+.onboarding-dialog-input:disabled {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+}
+
+.onboarding-dialog-error {
+  color: #dc3545;
+  font-size: 0.875em;
+  padding: 0.5em 0.75em;
+  background-color: #f8d7da;
+  border: 0.0625em solid #f5c6cb;
+  border-radius: 0.25em;
+}
+
+.onboarding-dialog-help {
+  margin: 0;
+  font-size: 0.875em;
+  color: #777;
+  line-height: 1.4;
+}
+
+.onboarding-dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.5em;
+}
+
+.onboarding-dialog-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 0.375em;
+  padding: 0.75em 2em;
+  font-size: 1em;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  min-width: 8em;
+}
+
+.onboarding-dialog-button:hover:not(:disabled) {
+  background-color: #0056b3;
+}
+
+.onboarding-dialog-button:disabled {
+  background-color: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.onboarding-dialog-button:focus {
+  outline: none;
+  box-shadow: 0 0 0 0.1875em rgba(0, 123, 255, 0.25);
+}

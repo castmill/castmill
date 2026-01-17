@@ -824,5 +824,21 @@
       "title": "键盘快捷键",
       "description": "使用这些快捷键更快地导航"
     }
+  },
+  "onboarding": {
+    "title": "欢迎使用 Castmill！",
+    "subtitle": "让我们从命名您的组织开始。",
+    "organizationNameLabel": "组织名称",
+    "organizationNamePlaceholder": "输入您的组织名称",
+    "helpText": "此名称将用于识别您的工作空间。您可以稍后在设置中更改它。",
+    "continueButton": "继续",
+    "success": "组织设置完成！",
+    "errors": {
+      "organizationNameRequired": "组织名称为必填项",
+      "organizationNameTooShort": "组织名称必须至少包含 2 个字符",
+      "organizationNameTooLong": "组织名称必须少于 50 个字符",
+      "organizationNameTaken": "此组织名称已被使用",
+      "failed": "设置失败。请重试。"
+    }
   }
 }
