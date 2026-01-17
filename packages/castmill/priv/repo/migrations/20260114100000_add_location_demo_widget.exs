@@ -11,7 +11,8 @@ defmodule Castmill.Repo.Migrations.AddLocationDemoWidget do
     widget_attrs = %{
       name: "Location Display",
       slug: "location-display-demo",
-      description: "Displays location information with coordinates and address. Demo widget for location picker functionality.",
+      description:
+        "Displays location information with coordinates and address. Demo widget for location picker functionality.",
       icon: "/widgets/location-display/icon.svg",
       small_icon: "/widgets/location-display/icon-small.svg",
       aspect_ratio: "16:9",

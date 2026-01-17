@@ -504,8 +504,7 @@ defmodule Castmill.Widgets.Schema do
   end
 
   defp validate_data_field(_value, %{"type" => "location"}, field, _acc_data) do
-    {:halt,
-     {:error, "Location field #{inspect(field)} must be a map with lat and lng numbers"}}
+    {:halt, {:error, "Location field #{inspect(field)} must be a map with lat and lng numbers"}}
   end
 
   # We need to add two more catch-all clauses for cases when the data does not match the schema type
