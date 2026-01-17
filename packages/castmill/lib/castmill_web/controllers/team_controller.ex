@@ -227,9 +227,17 @@ defmodule CastmillWeb.TeamController do
   end
 
   def show_invitation(conn, %{"token" => token}) do
-    conn
-    |> put_status(:ok)
-    |> json(Teams.get_invitation(token))
+    case Teams.get_invitation(token) do
+      nil ->
+        conn
+        |> put_status(:not_found)
+        |> json(%{error: "Invitation not found or team no longer exists"})
+
+      invitation ->
+        conn
+        |> put_status(:ok)
+        |> json(invitation)
+    end
   end
 
   def accept_invitation(conn, %{"token" => token}) do
