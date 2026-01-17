@@ -111,7 +111,7 @@ export const MenuComponent: Component<MenuProps> = (props) => {
     <>
       <p>Device ID: {shortDeviceId(deviceId()) || 'N/A'} </p>
       <p>Device Name: {deviceName()}</p>
-      <p>© 2024 Castmill AB</p>
+      <p>© 2011-{new Date().getFullYear()} Castmill AB</p>
     </>
   );
 
