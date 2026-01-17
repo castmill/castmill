@@ -7,6 +7,7 @@ import {
   createEffect,
   on,
 } from 'solid-js';
+import { ComboBox } from '../combobox/combobox';
 import './location-picker.scss';
 
 /**
@@ -21,19 +22,43 @@ export interface LocationValue {
   postalCode?: string;
 }
 
+/**
+ * Location search result from Nominatim API
+ */
+interface LocationSearchResult {
+  id: string;
+  lat: string;
+  lon: string;
+  display_name: string;
+  address?: {
+    city?: string;
+    town?: string;
+    village?: string;
+    country?: string;
+    postcode?: string;
+  };
+}
+
 interface LocationPickerProps {
   value?: LocationValue;
   onChange: (value: LocationValue) => void;
   placeholder?: string;
   defaultZoom?: number;
   disabled?: boolean;
+  searchLabel?: string;
 }
 
 // Leaflet types (minimal interface to avoid `any`)
 interface LeafletMap {
   setView: (latlng: [number, number], zoom?: number) => LeafletMap;
   on: (event: string, handler: (e: any) => void) => LeafletMap;
+  off: (event: string, handler?: (e: any) => void) => LeafletMap;
   remove: () => void;
+  scrollWheelZoom: {
+    enable: () => void;
+    disable: () => void;
+  };
+  getContainer: () => HTMLElement;
 }
 
 interface LeafletMarker {
@@ -43,7 +68,10 @@ interface LeafletMarker {
 }
 
 interface LeafletStatic {
-  map: (element: HTMLElement) => LeafletMap;
+  map: (
+    element: HTMLElement,
+    options?: { scrollWheelZoom?: boolean }
+  ) => LeafletMap;
   tileLayer: (url: string, options: any) => any;
   marker: (latlng: [number, number], options?: any) => LeafletMarker;
 }
@@ -54,7 +82,7 @@ interface LeafletStatic {
  * A map-based location picker using Leaflet and OpenStreetMap.
  * Supports:
  * - Map interaction with marker placement
- * - Address search (geocoding)
+ * - Address search (geocoding) using ComboBox
  * - Reverse geocoding when clicking on map
  * - Manual address editing
  */
@@ -62,12 +90,7 @@ export const LocationPicker: Component<LocationPickerProps> = (props) => {
   let mapContainer: HTMLDivElement | undefined;
   let map: LeafletMap | undefined;
   let marker: LeafletMarker | undefined;
-  let searchTimeoutId: number | undefined;
-  
-  const [searchQuery, setSearchQuery] = createSignal('');
-  const [isSearching, setIsSearching] = createSignal(false);
-  const [searchResults, setSearchResults] = createSignal<any[]>([]);
-  const [showResults, setShowResults] = createSignal(false);
+
   const [editingAddress, setEditingAddress] = createSignal(false);
   const [manualAddress, setManualAddress] = createSignal('');
 
@@ -105,15 +128,20 @@ export const LocationPicker: Component<LocationPickerProps> = (props) => {
     });
   };
 
-  // Geocode address to coordinates using Nominatim (OpenStreetMap)
-  const geocodeAddress = async (query: string) => {
-    if (!query.trim()) return [];
-    
-    setIsSearching(true);
+  // Fetch locations using Nominatim API (for ComboBox)
+  const fetchLocations = async (
+    _page: number,
+    _pageSize: number,
+    searchQuery: string
+  ): Promise<{ count: number; data: LocationSearchResult[] }> => {
+    if (!searchQuery.trim()) {
+      return { count: 0, data: [] };
+    }
+
     try {
       const response = await fetch(
         `https://nominatim.openstreetmap.org/search?` +
-        `format=json&q=${encodeURIComponent(query)}&limit=5&addressdetails=1`,
+          `format=json&q=${encodeURIComponent(searchQuery)}&limit=10&addressdetails=1`,
         {
           headers: {
             'User-Agent': 'Castmill Digital Signage Platform',
@@ -121,12 +149,39 @@ export const LocationPicker: Component<LocationPickerProps> = (props) => {
         }
       );
       const results = await response.json();
-      setIsSearching(false);
-      return results;
+      // Add unique IDs to results (Nominatim returns place_id)
+      const data = results.map((r: any) => ({
+        ...r,
+        id: r.place_id?.toString() || `${r.lat}-${r.lon}`,
+      }));
+      return { count: data.length, data };
     } catch (error) {
       console.error('Geocoding error:', error);
-      setIsSearching(false);
-      return [];
+      return { count: 0, data: [] };
+    }
+  };
+
+  // Handle location selection from ComboBox
+  const handleLocationSelect = (result: LocationSearchResult) => {
+    const lat = parseFloat(result.lat);
+    const lng = parseFloat(result.lon);
+
+    const location: LocationValue = {
+      lat,
+      lng,
+      address: result.display_name,
+      city:
+        result.address?.city || result.address?.town || result.address?.village,
+      country: result.address?.country,
+      postalCode: result.address?.postcode,
+    };
+
+    props.onChange(location);
+
+    // Update map
+    if (map && marker) {
+      map.setView([lat, lng], zoom);
+      marker.setLatLng([lat, lng]);
     }
   };
 
@@ -135,7 +190,7 @@ export const LocationPicker: Component<LocationPickerProps> = (props) => {
     try {
       const response = await fetch(
         `https://nominatim.openstreetmap.org/reverse?` +
-        `format=json&lat=${lat}&lon=${lng}&addressdetails=1`,
+          `format=json&lat=${lat}&lon=${lng}&addressdetails=1`,
         {
           headers: {
             'User-Agent': 'Castmill Digital Signage Platform',
@@ -148,54 +203,6 @@ export const LocationPicker: Component<LocationPickerProps> = (props) => {
       console.error('Reverse geocoding error:', error);
       return null;
     }
-  };
-
-  // Handle search input with debouncing
-  const handleSearch = async () => {
-    // Clear any pending search timeout
-    if (searchTimeoutId) {
-      clearTimeout(searchTimeoutId);
-    }
-
-    const query = searchQuery();
-    if (!query.trim()) {
-      setSearchResults([]);
-      setShowResults(false);
-      return;
-    }
-
-    // Debounce search to avoid excessive API calls
-    searchTimeoutId = window.setTimeout(async () => {
-      const results = await geocodeAddress(query);
-      setSearchResults(results);
-      setShowResults(results.length > 0);
-    }, 500); // 500ms debounce
-  };
-
-  // Select a location from search results
-  const selectLocation = async (result: any) => {
-    const lat = parseFloat(result.lat);
-    const lng = parseFloat(result.lon);
-    
-    const location: LocationValue = {
-      lat,
-      lng,
-      address: result.display_name,
-      city: result.address?.city || result.address?.town || result.address?.village,
-      country: result.address?.country,
-      postalCode: result.address?.postcode,
-    };
-
-    props.onChange(location);
-    
-    // Update map
-    if (map && marker) {
-      map.setView([lat, lng], zoom);
-      marker.setLatLng([lat, lng]);
-    }
-    
-    setShowResults(false);
-    setSearchQuery('');
   };
 
   // Handle map click
@@ -212,12 +219,15 @@ export const LocationPicker: Component<LocationPickerProps> = (props) => {
 
     // Reverse geocode to get address
     const result = await reverseGeocode(lat, lng);
-    
+
     const location: LocationValue = {
       lat,
       lng,
       address: result?.display_name,
-      city: result?.address?.city || result?.address?.town || result?.address?.village,
+      city:
+        result?.address?.city ||
+        result?.address?.town ||
+        result?.address?.village,
       country: result?.address?.country,
       postalCode: result?.address?.postcode,
     };
@@ -243,21 +253,41 @@ export const LocationPicker: Component<LocationPickerProps> = (props) => {
 
     const L = await loadLeaflet();
 
-    // Create map
-    map = L.map(mapContainer).setView(
-      props.value ? [props.value.lat, props.value.lng] : [defaultLocation.lat, defaultLocation.lng],
+    // Create map with scroll wheel zoom disabled by default
+    // This prevents scroll hijacking when users scroll past the map
+    map = L.map(mapContainer, { scrollWheelZoom: false }).setView(
+      props.value
+        ? [props.value.lat, props.value.lng]
+        : [defaultLocation.lat, defaultLocation.lng],
       zoom
     );
 
+    // Enable scroll wheel zoom only when map is focused (clicked)
+    const mapEl = map.getContainer();
+    mapEl.addEventListener('mouseenter', () => {
+      mapEl.addEventListener('click', enableScrollZoom);
+    });
+    mapEl.addEventListener('mouseleave', () => {
+      map?.scrollWheelZoom.disable();
+      mapEl.removeEventListener('click', enableScrollZoom);
+    });
+
+    const enableScrollZoom = () => {
+      map?.scrollWheelZoom.enable();
+    };
+
     // Add OpenStreetMap tile layer
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      attribution:
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       maxZoom: 19,
     }).addTo(map);
 
     // Add marker
     marker = L.marker(
-      props.value ? [props.value.lat, props.value.lng] : [defaultLocation.lat, defaultLocation.lng],
+      props.value
+        ? [props.value.lat, props.value.lng]
+        : [defaultLocation.lat, defaultLocation.lng],
       {
         draggable: !props.disabled,
       }
@@ -297,11 +327,6 @@ export const LocationPicker: Component<LocationPickerProps> = (props) => {
 
   // Cleanup
   onCleanup(() => {
-    // Clear any pending search timeout
-    if (searchTimeoutId) {
-      clearTimeout(searchTimeoutId);
-    }
-    
     if (map) {
       map.remove();
     }
@@ -310,66 +335,29 @@ export const LocationPicker: Component<LocationPickerProps> = (props) => {
   return (
     <div class="location-picker">
       <div class="location-picker__search">
-        <input
-          type="text"
-          class="location-picker__search-input"
+        <ComboBox<LocationSearchResult>
+          id="location-search"
+          label={props.searchLabel || 'Search Location'}
           placeholder={props.placeholder || 'Search for a location...'}
-          value={searchQuery()}
-          onInput={(e) => {
-            setSearchQuery(e.currentTarget.value);
-            // Trigger debounced search on input
-            handleSearch();
-          }}
-          onKeyPress={(e) => {
-            if (e.key === 'Enter') {
-              // Cancel debounce and search immediately on Enter
-              if (searchTimeoutId) {
-                clearTimeout(searchTimeoutId);
-              }
-              const query = searchQuery();
-              if (query.trim()) {
-                geocodeAddress(query).then((results) => {
-                  setSearchResults(results);
-                  setShowResults(results.length > 0);
-                });
-              }
-            }
-          }}
-          disabled={props.disabled}
+          fetchItems={fetchLocations}
+          renderItem={(item) => (
+            <div class="location-picker__result-item">{item.display_name}</div>
+          )}
+          onSelect={handleLocationSelect}
         />
-        <button
-          class="location-picker__search-button"
-          onClick={handleSearch}
-          disabled={props.disabled || isSearching()}
-        >
-          {isSearching() ? 'Searching...' : 'Search'}
-        </button>
-        
-        <Show when={showResults() && searchResults().length > 0}>
-          <div class="location-picker__results">
-            {searchResults().map((result) => (
-              <div
-                class="location-picker__result-item"
-                onClick={() => selectLocation(result)}
-              >
-                {result.display_name}
-              </div>
-            ))}
-          </div>
-        </Show>
       </div>
-
-      <div ref={mapContainer} class="location-picker__map"></div>
 
       <Show when={props.value}>
         <div class="location-picker__info">
           <div class="location-picker__coordinates">
-            <strong>Coordinates:</strong> {props.value?.lat.toFixed(6)}, {props.value?.lng.toFixed(6)}
+            <strong>Coordinates:</strong> {props.value?.lat.toFixed(6)},{' '}
+            {props.value?.lng.toFixed(6)}
           </div>
-          
+
           <Show when={!editingAddress()}>
             <div class="location-picker__address">
-              <strong>Address:</strong> {props.value?.address || 'No address available'}
+              <strong>Address:</strong>{' '}
+              {props.value?.address || 'No address available'}
               <button
                 class="location-picker__edit-button"
                 onClick={() => {
@@ -408,6 +396,8 @@ export const LocationPicker: Component<LocationPickerProps> = (props) => {
           </Show>
         </div>
       </Show>
+
+      <div ref={mapContainer} class="location-picker__map"></div>
     </div>
   );
 };

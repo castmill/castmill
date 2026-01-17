@@ -23,7 +23,7 @@ describe('LocationPicker Component', () => {
   beforeEach(() => {
     // Mock the Leaflet library
     (window as any).L = mockLeaflet;
-    
+
     // Mock fetch for geocoding
     global.fetch = vi.fn();
   });
@@ -49,10 +49,7 @@ describe('LocationPicker Component', () => {
   it('renders with custom placeholder', () => {
     const mockOnChange = vi.fn();
     render(() => (
-      <LocationPicker
-        onChange={mockOnChange}
-        placeholder="Find a place..."
-      />
+      <LocationPicker onChange={mockOnChange} placeholder="Find a place..." />
     ));
 
     const searchInput = screen.getByPlaceholderText('Find a place...');
@@ -67,16 +64,16 @@ describe('LocationPicker Component', () => {
       address: '10 Downing Street, London, UK',
     };
 
-    render(() => (
-      <LocationPicker onChange={mockOnChange} value={mockValue} />
-    ));
+    render(() => <LocationPicker onChange={mockOnChange} value={mockValue} />);
 
     // Check coordinates are displayed
     expect(screen.getByText(/51.507400/)).toBeInTheDocument();
     expect(screen.getByText(/-0.127800/)).toBeInTheDocument();
 
     // Check address is displayed
-    expect(screen.getByText(/10 Downing Street, London, UK/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/10 Downing Street, London, UK/)
+    ).toBeInTheDocument();
   });
 
   it('calls onChange when location value changes', async () => {
@@ -86,9 +83,7 @@ describe('LocationPicker Component', () => {
       lng: -0.1278,
     };
 
-    render(() => (
-      <LocationPicker onChange={mockOnChange} value={mockValue} />
-    ));
+    render(() => <LocationPicker onChange={mockOnChange} value={mockValue} />);
 
     // Click edit button
     const editButton = screen.getByText('Edit');
@@ -103,11 +98,11 @@ describe('LocationPicker Component', () => {
 
   it('disables interactions when disabled prop is true', () => {
     const mockOnChange = vi.fn();
-    render(() => (
-      <LocationPicker onChange={mockOnChange} disabled={true} />
-    ));
+    render(() => <LocationPicker onChange={mockOnChange} disabled={true} />);
 
-    const searchInput = screen.getByPlaceholderText('Search for a location...') as HTMLInputElement;
+    const searchInput = screen.getByPlaceholderText(
+      'Search for a location...'
+    ) as HTMLInputElement;
     const searchButton = screen.getByText('Search') as HTMLButtonElement;
 
     expect(searchInput.disabled).toBe(true);
@@ -135,8 +130,10 @@ describe('LocationPicker Component', () => {
 
     render(() => <LocationPicker onChange={mockOnChange} />);
 
-    const searchInput = screen.getByPlaceholderText('Search for a location...') as HTMLInputElement;
-    
+    const searchInput = screen.getByPlaceholderText(
+      'Search for a location...'
+    ) as HTMLInputElement;
+
     // Type in search input
     searchInput.value = 'London';
     searchInput.dispatchEvent(new Event('input', { bubbles: true }));
@@ -153,23 +150,24 @@ describe('LocationPicker Component', () => {
       lng: -0.1278,
     };
 
-    render(() => (
-      <LocationPicker onChange={mockOnChange} value={mockValue} />
-    ));
+    render(() => <LocationPicker onChange={mockOnChange} value={mockValue} />);
 
     expect(screen.getByText('No address available')).toBeInTheDocument();
   });
 
   it('initializes map on mount', async () => {
     const mockOnChange = vi.fn();
-    
+
     render(() => <LocationPicker onChange={mockOnChange} />);
 
     // Wait for async map initialization
-    await waitFor(() => {
-      // Map should be created with default location
-      expect(mockLeaflet.map).toHaveBeenCalled();
-    }, { timeout: 3000 });
+    await waitFor(
+      () => {
+        // Map should be created with default location
+        expect(mockLeaflet.map).toHaveBeenCalled();
+      },
+      { timeout: 3000 }
+    );
   });
 
   it('updates marker when value changes', async () => {
@@ -189,9 +187,7 @@ describe('LocationPicker Component', () => {
       lng: 2.3522,
     };
 
-    rerender(() => (
-      <LocationPicker onChange={mockOnChange} value={value} />
-    ));
+    rerender(() => <LocationPicker onChange={mockOnChange} value={value} />);
 
     await waitFor(() => {
       // Check that coordinates updated

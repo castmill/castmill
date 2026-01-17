@@ -692,11 +692,12 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
       case 'location':
         const locationSchema = schema as LocationFieldAttributes;
         const getCurrentLocation = () =>
-          (widgetOptions()[key] as LocationValue) || locationSchema.default || null;
+          (widgetOptions()[key] as LocationValue) ||
+          locationSchema.default ||
+          null;
 
         return (
           <div class="form-item-wrapper">
-            <label>{key}</label>
             <Show when={locationSchema.description}>
               <div class="description">{locationSchema.description}</div>
             </Show>
@@ -709,6 +710,7 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
               }}
               defaultZoom={locationSchema.defaultZoom}
               placeholder={t('common.searchLocation')}
+              searchLabel={key}
             />
           </div>
         );

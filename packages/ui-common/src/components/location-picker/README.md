@@ -73,17 +73,18 @@ interface LocationValue {
 
 ## Props
 
-| Prop | Type | Default | Description |
-|------|------|---------|-------------|
-| `value` | `LocationValue` | `undefined` | Current location value |
-| `onChange` | `(value: LocationValue) => void` | **required** | Callback when location changes |
-| `placeholder` | `string` | `'Search for a location...'` | Placeholder text for search input |
-| `defaultZoom` | `number` | `13` | Initial zoom level (1-18) |
-| `disabled` | `boolean` | `false` | Disables all interactions |
+| Prop          | Type                             | Default                      | Description                       |
+| ------------- | -------------------------------- | ---------------------------- | --------------------------------- |
+| `value`       | `LocationValue`                  | `undefined`                  | Current location value            |
+| `onChange`    | `(value: LocationValue) => void` | **required**                 | Callback when location changes    |
+| `placeholder` | `string`                         | `'Search for a location...'` | Placeholder text for search input |
+| `defaultZoom` | `number`                         | `13`                         | Initial zoom level (1-18)         |
+| `disabled`    | `boolean`                        | `false`                      | Disables all interactions         |
 
 ## Map Provider
 
 The LocationPicker uses:
+
 - **Leaflet**: Open-source JavaScript library for interactive maps
 - **OpenStreetMap**: Free, open-source map tiles
 - **Nominatim**: Free geocoding service by OpenStreetMap
@@ -95,9 +96,11 @@ These services are used via CDN and require no API keys, making them ideal for o
 The component provides two types of geocoding:
 
 ### Forward Geocoding (Address → Coordinates)
+
 When you search for an address, the component uses Nominatim's search API to find matching locations and their coordinates.
 
 ### Reverse Geocoding (Coordinates → Address)
+
 When you click on the map or drag the marker, the component uses Nominatim's reverse API to find the address for those coordinates.
 
 ## Styling
@@ -127,6 +130,7 @@ These are available in all 9 supported languages (English, Spanish, Swedish, Ger
 ## Accessibility
 
 The component is keyboard accessible:
+
 - Use Tab to navigate between interactive elements
 - Press Enter in the search field to trigger search
 - The map itself can be navigated with arrow keys (Leaflet default behavior)
@@ -142,7 +146,7 @@ The component is keyboard accessible:
     lng: 18.0686,
     address: 'Stockholm, Sweden',
     city: 'Stockholm',
-    country: 'Sweden'
+    country: 'Sweden',
   }}
   onChange={handleLocationChange}
 />
@@ -179,6 +183,7 @@ The component is keyboard accessible:
 ## Browser Support
 
 The LocationPicker works in all modern browsers that support:
+
 - ES6+ JavaScript features
 - Fetch API
 - CSS Grid/Flexbox
