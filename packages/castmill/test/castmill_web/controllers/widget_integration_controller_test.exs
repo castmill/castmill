@@ -40,70 +40,71 @@ defmodule CastmillWeb.WidgetIntegrationControllerTest do
       conn: conn,
       organization: organization
     } do
-      suffix = System.unique_integer([:positive])
-      feed_url = "https://news.example/#{suffix}.xml"
 
-      widget =
-        widget_fixture(%{
-          name: "Ticker #{suffix}",
-          slug: "ticker-#{suffix}",
-          template: %{"type" => "group"}
+        suffix = System.unique_integer([:positive])
+        feed_url = "https://news.example/#{suffix}.xml"
+
+        widget =
+          widget_fixture(%{
+            name: "Ticker #{suffix}",
+            slug: "ticker-#{suffix}",
+            template: %{"type" => "group"}
+          })
+
+        integration =
+          widget_integration_fixture(%{
+            widget_id: widget.id,
+            name: "rss-integration-#{suffix}",
+            pull_interval_seconds: 45,
+            pull_config: %{
+              "auth_type" => "optional",
+              "fetcher_module" => "Castmill.Widgets.Integrations.Fetchers.TestStub"
+            }
+          })
+
+        playlist = playlist_fixture(%{organization_id: organization.id})
+
+        playlist_item =
+          playlist_item_fixture(%{
+            playlist_id: playlist.id,
+            duration: 10,
+            offset: 0
+          })
+
+        widget_config =
+          widget_config_fixture(%{
+            widget_id: widget.id,
+            playlist_item_id: playlist_item.id,
+            options: %{"feed_url" => feed_url}
+          })
+
+        stale_time = DateTime.add(DateTime.utc_now(), -600, :second)
+
+        %WidgetIntegrationData{}
+        |> WidgetIntegrationData.changeset(%{
+          widget_integration_id: integration.id,
+          organization_id: organization.id,
+          widget_config_id: widget_config.id,
+          discriminator_id: "feed_url:#{feed_url}",
+          data: %{"items" => []},
+          status: "active",
+          version: 1,
+          fetched_at: stale_time,
+          last_used_at: stale_time,
+          refresh_at: DateTime.add(DateTime.utc_now(), -60, :second)
         })
+        |> Repo.insert!()
 
-      integration =
-        widget_integration_fixture(%{
-          widget_id: widget.id,
-          name: "rss-integration-#{suffix}",
-          pull_interval_seconds: 45,
-          pull_config: %{
-            "auth_type" => "optional",
-            "fetcher_module" => "Castmill.Widgets.Integrations.Fetchers.TestStub"
-          }
-        })
+        # In BullMQ inline testing mode, jobs run synchronously
+        # We just verify the endpoint returns success and the data is refreshed
 
-      playlist = playlist_fixture(%{organization_id: organization.id})
+        conn = get(conn, "/dashboard/widget-configs/#{widget_config.id}/data")
 
-      playlist_item =
-        playlist_item_fixture(%{
-          playlist_id: playlist.id,
-          duration: 10,
-          offset: 0
-        })
+        assert %{"data" => %{"items" => []}, "version" => 1} = json_response(conn, 200)
 
-      widget_config =
-        widget_config_fixture(%{
-          widget_id: widget.id,
-          playlist_item_id: playlist_item.id,
-          options: %{"feed_url" => feed_url}
-        })
-
-      stale_time = DateTime.add(DateTime.utc_now(), -600, :second)
-
-      %WidgetIntegrationData{}
-      |> WidgetIntegrationData.changeset(%{
-        widget_integration_id: integration.id,
-        organization_id: organization.id,
-        widget_config_id: widget_config.id,
-        discriminator_id: "feed_url:#{feed_url}",
-        data: %{"items" => []},
-        status: "active",
-        version: 1,
-        fetched_at: stale_time,
-        last_used_at: stale_time,
-        refresh_at: DateTime.add(DateTime.utc_now(), -60, :second)
-      })
-      |> Repo.insert!()
-
-      # In BullMQ inline testing mode, jobs run synchronously
-      # We just verify the endpoint returns success and the data is refreshed
-
-      conn = get(conn, "/dashboard/widget-configs/#{widget_config.id}/data")
-
-      assert %{"data" => %{"items" => []}, "version" => 1} = json_response(conn, 200)
-
-      # With BullMQ in inline mode, job executes immediately during request
-      # We verify the endpoint works correctly - job enqueueing is tested
-      # in the BullMQHelper and worker-specific tests
+        # With BullMQ in inline mode, job executes immediately during request
+        # We verify the endpoint works correctly - job enqueueing is tested
+        # in the BullMQHelper and worker-specific tests
       # Test now runs in inline mode by default
     end
 
@@ -111,66 +112,67 @@ defmodule CastmillWeb.WidgetIntegrationControllerTest do
       conn: conn,
       organization: organization
     } do
-      suffix = System.unique_integer([:positive])
-      feed_url = "https://fresh.example/#{suffix}.xml"
 
-      widget =
-        widget_fixture(%{
-          name: "Ticker #{suffix}",
-          slug: "ticker-#{suffix}",
-          template: %{"type" => "group"}
-        })
+        suffix = System.unique_integer([:positive])
+        feed_url = "https://fresh.example/#{suffix}.xml"
 
-      integration =
-        widget_integration_fixture(%{
-          widget_id: widget.id,
-          pull_interval_seconds: 150,
-          pull_config: %{
-            "auth_type" => "optional",
-            "fetcher_module" => "Castmill.Widgets.Integrations.Fetchers.TestStub"
-          }
-        })
+        widget =
+          widget_fixture(%{
+            name: "Ticker #{suffix}",
+            slug: "ticker-#{suffix}",
+            template: %{"type" => "group"}
+          })
 
-      playlist = playlist_fixture(%{organization_id: organization.id})
+        integration =
+          widget_integration_fixture(%{
+            widget_id: widget.id,
+            pull_interval_seconds: 150,
+            pull_config: %{
+              "auth_type" => "optional",
+              "fetcher_module" => "Castmill.Widgets.Integrations.Fetchers.TestStub"
+            }
+          })
 
-      playlist_item =
-        playlist_item_fixture(%{
-          playlist_id: playlist.id,
-          duration: 10,
-          offset: 0
-        })
+        playlist = playlist_fixture(%{organization_id: organization.id})
 
-      widget_config =
-        widget_config_fixture(%{
-          widget_id: widget.id,
-          playlist_item_id: playlist_item.id,
-          options: %{"feed_url" => feed_url}
-        })
+        playlist_item =
+          playlist_item_fixture(%{
+            playlist_id: playlist.id,
+            duration: 10,
+            offset: 0
+          })
 
-      Repo.delete_all(WidgetIntegrationData)
+        widget_config =
+          widget_config_fixture(%{
+            widget_id: widget.id,
+            playlist_item_id: playlist_item.id,
+            options: %{"feed_url" => feed_url}
+          })
 
-      conn = get(conn, "/dashboard/widget-configs/#{widget_config.id}/data")
+        Repo.delete_all(WidgetIntegrationData)
 
-      assert %{"data" => %{"items" => [%{"title" => "stub"}]}, "version" => version} =
-               json_response(conn, 200)
+        conn = get(conn, "/dashboard/widget-configs/#{widget_config.id}/data")
 
-      assert version > 0
+        assert %{"data" => %{"items" => [%{"title" => "stub"}]}, "version" => version} =
+                 json_response(conn, 200)
 
-      discriminator = "feed_url:#{feed_url}"
+        assert version > 0
 
-      data =
-        WidgetIntegrationData.base_query()
-        |> where(
-          [wid],
-          wid.widget_integration_id == ^integration.id and
-            wid.discriminator_id == ^discriminator
-        )
-        |> Repo.one()
+        discriminator = "feed_url:#{feed_url}"
 
-      refute is_nil(data)
-      assert data.refresh_at
-      assert data.fetched_at
-      assert_in_delta DateTime.diff(data.refresh_at, data.fetched_at), 150, 1
+        data =
+          WidgetIntegrationData.base_query()
+          |> where(
+            [wid],
+            wid.widget_integration_id == ^integration.id and
+              wid.discriminator_id == ^discriminator
+          )
+          |> Repo.one()
+
+        refute is_nil(data)
+        assert data.refresh_at
+        assert data.fetched_at
+        assert_in_delta DateTime.diff(data.refresh_at, data.fetched_at), 150, 1
       # Test now runs in inline mode by default
     end
 
@@ -178,71 +180,72 @@ defmodule CastmillWeb.WidgetIntegrationControllerTest do
       conn: conn,
       organization: organization
     } do
-      suffix = System.unique_integer([:positive])
-      feed_url = "https://rss.example/#{suffix}.xml"
 
-      widget =
-        widget_fixture(%{
-          name: "RSS Widget #{suffix}",
-          slug: "rss-#{suffix}",
-          template: %{"type" => "group"}
+        suffix = System.unique_integer([:positive])
+        feed_url = "https://rss.example/#{suffix}.xml"
+
+        widget =
+          widget_fixture(%{
+            name: "RSS Widget #{suffix}",
+            slug: "rss-#{suffix}",
+            template: %{"type" => "group"}
+          })
+
+        integration =
+          widget_integration_fixture(%{
+            widget_id: widget.id,
+            name: "rss-integration-#{suffix}",
+            pull_interval_seconds: 300,
+            pull_config: %{
+              "auth_type" => "optional",
+              "fetcher_module" => "Castmill.Widgets.Integrations.Fetchers.TestStub"
+            }
+          })
+
+        playlist = playlist_fixture(%{organization_id: organization.id})
+
+        playlist_item =
+          playlist_item_fixture(%{
+            playlist_id: playlist.id,
+            duration: 10,
+            offset: 0
+          })
+
+        # Set max_items to 5
+        widget_config =
+          widget_config_fixture(%{
+            widget_id: widget.id,
+            playlist_item_id: playlist_item.id,
+            options: %{"feed_url" => feed_url, "max_items" => 5}
+          })
+
+        # Store cached data with 20 items (simulating shared cache)
+        many_items = Enum.map(1..20, fn i -> %{"title" => "Item #{i}", "index" => i} end)
+
+        %WidgetIntegrationData{}
+        |> WidgetIntegrationData.changeset(%{
+          widget_integration_id: integration.id,
+          organization_id: organization.id,
+          widget_config_id: widget_config.id,
+          discriminator_id: "feed_url:#{feed_url}",
+          data: %{"items" => many_items},
+          status: "active",
+          version: 1,
+          fetched_at: DateTime.utc_now(),
+          last_used_at: DateTime.utc_now(),
+          refresh_at: DateTime.add(DateTime.utc_now(), 300, :second)
         })
+        |> Repo.insert!()
 
-      integration =
-        widget_integration_fixture(%{
-          widget_id: widget.id,
-          name: "rss-integration-#{suffix}",
-          pull_interval_seconds: 300,
-          pull_config: %{
-            "auth_type" => "optional",
-            "fetcher_module" => "Castmill.Widgets.Integrations.Fetchers.TestStub"
-          }
-        })
+        conn = get(conn, "/dashboard/widget-configs/#{widget_config.id}/data")
 
-      playlist = playlist_fixture(%{organization_id: organization.id})
+        response = json_response(conn, 200)
+        assert %{"data" => %{"items" => items}} = response
 
-      playlist_item =
-        playlist_item_fixture(%{
-          playlist_id: playlist.id,
-          duration: 10,
-          offset: 0
-        })
-
-      # Set max_items to 5
-      widget_config =
-        widget_config_fixture(%{
-          widget_id: widget.id,
-          playlist_item_id: playlist_item.id,
-          options: %{"feed_url" => feed_url, "max_items" => 5}
-        })
-
-      # Store cached data with 20 items (simulating shared cache)
-      many_items = Enum.map(1..20, fn i -> %{"title" => "Item #{i}", "index" => i} end)
-
-      %WidgetIntegrationData{}
-      |> WidgetIntegrationData.changeset(%{
-        widget_integration_id: integration.id,
-        organization_id: organization.id,
-        widget_config_id: widget_config.id,
-        discriminator_id: "feed_url:#{feed_url}",
-        data: %{"items" => many_items},
-        status: "active",
-        version: 1,
-        fetched_at: DateTime.utc_now(),
-        last_used_at: DateTime.utc_now(),
-        refresh_at: DateTime.add(DateTime.utc_now(), 300, :second)
-      })
-      |> Repo.insert!()
-
-      conn = get(conn, "/dashboard/widget-configs/#{widget_config.id}/data")
-
-      response = json_response(conn, 200)
-      assert %{"data" => %{"items" => items}} = response
-
-      # Should only return 5 items due to max_items filtering
-      assert length(items) == 5
-      # Should be the first 5 items (sorted order preserved)
-      assert Enum.map(items, & &1["index"]) == [1, 2, 3, 4, 5]
+        # Should only return 5 items due to max_items filtering
+        assert length(items) == 5
+        # Should be the first 5 items (sorted order preserved)
+        assert Enum.map(items, & &1["index"]) == [1, 2, 3, 4, 5]
       # Test now runs in inline mode by default
     end
 
@@ -250,69 +253,70 @@ defmodule CastmillWeb.WidgetIntegrationControllerTest do
       conn: conn,
       organization: organization
     } do
-      suffix = System.unique_integer([:positive])
-      feed_url = "https://rss.example/default-#{suffix}.xml"
 
-      widget =
-        widget_fixture(%{
-          name: "RSS Widget #{suffix}",
-          slug: "rss-default-#{suffix}",
-          template: %{"type" => "group"}
+        suffix = System.unique_integer([:positive])
+        feed_url = "https://rss.example/default-#{suffix}.xml"
+
+        widget =
+          widget_fixture(%{
+            name: "RSS Widget #{suffix}",
+            slug: "rss-default-#{suffix}",
+            template: %{"type" => "group"}
+          })
+
+        integration =
+          widget_integration_fixture(%{
+            widget_id: widget.id,
+            name: "rss-integration-default-#{suffix}",
+            pull_interval_seconds: 300,
+            pull_config: %{
+              "auth_type" => "optional",
+              "fetcher_module" => "Castmill.Widgets.Integrations.Fetchers.TestStub"
+            }
+          })
+
+        playlist = playlist_fixture(%{organization_id: organization.id})
+
+        playlist_item =
+          playlist_item_fixture(%{
+            playlist_id: playlist.id,
+            duration: 10,
+            offset: 0
+          })
+
+        # No max_items specified - should default to 10
+        widget_config =
+          widget_config_fixture(%{
+            widget_id: widget.id,
+            playlist_item_id: playlist_item.id,
+            options: %{"feed_url" => feed_url}
+          })
+
+        # Store cached data with 25 items
+        many_items = Enum.map(1..25, fn i -> %{"title" => "Item #{i}", "index" => i} end)
+
+        %WidgetIntegrationData{}
+        |> WidgetIntegrationData.changeset(%{
+          widget_integration_id: integration.id,
+          organization_id: organization.id,
+          widget_config_id: widget_config.id,
+          discriminator_id: "feed_url:#{feed_url}",
+          data: %{"items" => many_items},
+          status: "active",
+          version: 1,
+          fetched_at: DateTime.utc_now(),
+          last_used_at: DateTime.utc_now(),
+          refresh_at: DateTime.add(DateTime.utc_now(), 300, :second)
         })
+        |> Repo.insert!()
 
-      integration =
-        widget_integration_fixture(%{
-          widget_id: widget.id,
-          name: "rss-integration-default-#{suffix}",
-          pull_interval_seconds: 300,
-          pull_config: %{
-            "auth_type" => "optional",
-            "fetcher_module" => "Castmill.Widgets.Integrations.Fetchers.TestStub"
-          }
-        })
+        conn = get(conn, "/dashboard/widget-configs/#{widget_config.id}/data")
 
-      playlist = playlist_fixture(%{organization_id: organization.id})
+        response = json_response(conn, 200)
+        assert %{"data" => %{"items" => items}} = response
 
-      playlist_item =
-        playlist_item_fixture(%{
-          playlist_id: playlist.id,
-          duration: 10,
-          offset: 0
-        })
-
-      # No max_items specified - should default to 10
-      widget_config =
-        widget_config_fixture(%{
-          widget_id: widget.id,
-          playlist_item_id: playlist_item.id,
-          options: %{"feed_url" => feed_url}
-        })
-
-      # Store cached data with 25 items
-      many_items = Enum.map(1..25, fn i -> %{"title" => "Item #{i}", "index" => i} end)
-
-      %WidgetIntegrationData{}
-      |> WidgetIntegrationData.changeset(%{
-        widget_integration_id: integration.id,
-        organization_id: organization.id,
-        widget_config_id: widget_config.id,
-        discriminator_id: "feed_url:#{feed_url}",
-        data: %{"items" => many_items},
-        status: "active",
-        version: 1,
-        fetched_at: DateTime.utc_now(),
-        last_used_at: DateTime.utc_now(),
-        refresh_at: DateTime.add(DateTime.utc_now(), 300, :second)
-      })
-      |> Repo.insert!()
-
-      conn = get(conn, "/dashboard/widget-configs/#{widget_config.id}/data")
-
-      response = json_response(conn, 200)
-      assert %{"data" => %{"items" => items}} = response
-
-      # Should default to 10 items
-      assert length(items) == 10
+        # Should default to 10 items
+        assert length(items) == 10
       # Test now runs in inline mode by default
     end
   end

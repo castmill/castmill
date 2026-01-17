@@ -60,8 +60,7 @@ defmodule Castmill.Workers.EncryptionRotation do
       @queue,
       "encryption_rotation",
       %{resource_type: "organization", batch_size: batch_size, offset: 0},
-      priority: 3,
-      attempts: 3
+      priority: 3, attempts: 3
     )
 
     # Network credentials will be scheduled when that table exists
@@ -145,8 +144,7 @@ defmodule Castmill.Workers.EncryptionRotation do
           @queue,
           "encryption_rotation",
           %{resource_type: "organization", batch_size: batch_size, offset: offset + batch_size},
-          priority: 3,
-          attempts: 3
+          priority: 3, attempts: 3
         )
       end
 

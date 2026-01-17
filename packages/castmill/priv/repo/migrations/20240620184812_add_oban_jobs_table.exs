@@ -1,13 +1,19 @@
 defmodule Castmill.Repo.Migrations.AddObanJobsTable do
   use Ecto.Migration
 
+  # NOTE: This migration originally created Oban tables using Oban.Migration.up/1
+  # Oban has been replaced with BullMQ (which uses Redis instead of PostgreSQL).
+  # The oban_jobs and oban_peers tables are dropped in migration 20260113120000.
+  # This migration is now a no-op to allow fresh installations without Oban dependency.
+
   def up do
-    Oban.Migration.up(version: 12)
+    # No-op: Oban tables are no longer needed (BullMQ uses Redis)
+    # Tables will be dropped by migration 20260113120000_remove_oban_jobs_table.exs
+    :ok
   end
 
-  # We specify `version: 1` in `down`, ensuring that we'll roll all the way back down if
-  # necessary, regardless of which version we've migrated `up` to.
   def down do
-    Oban.Migration.down(version: 1)
+    # No-op: Tables were never created
+    :ok
   end
 end

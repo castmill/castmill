@@ -478,13 +478,10 @@ defmodule CastmillWeb.WidgetIntegrationController do
     - 204 if widget has no integrations
     - 404 if widget not found
   """
-  def prefetch_widget_data(
-        conn,
-        %{
-          "organization_id" => organization_id,
-          "widget_id" => widget_id_or_slug
-        } = params
-      ) do
+  def prefetch_widget_data(conn, %{
+        "organization_id" => organization_id,
+        "widget_id" => widget_id_or_slug
+      } = params) do
     widget_id = resolve_widget_id(widget_id_or_slug)
 
     case widget_id do
@@ -939,11 +936,7 @@ defmodule CastmillWeb.WidgetIntegrationController do
     case integration.discriminator_type do
       "widget_option" ->
         key = integration.discriminator_key || "id"
-
-        value =
-          Map.get(merged_options, key) || Map.get(merged_options, String.to_atom(key)) ||
-            "default"
-
+        value = Map.get(merged_options, key) || Map.get(merged_options, String.to_atom(key)) || "default"
         "#{key}:#{value}"
 
       "organization" ->
