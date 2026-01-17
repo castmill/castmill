@@ -11,7 +11,7 @@ defmodule CastmillWeb.SignUpController do
   @doc """
     Create a challenge for signup (used for invitation flow - no email sent).
   """
-  def create_challenge(conn, %{"email" => email, "invitation_token" => _invitation_token}) do
+  def create_challenge(conn, %{"email" => email, "invitation_token" => invitation_token}) do
     origin = List.first(Plug.Conn.get_req_header(conn, "origin"))
 
     if is_nil(origin) do
@@ -21,19 +21,69 @@ defmodule CastmillWeb.SignUpController do
     else
       case Accounts.get_network_id_by_domain(origin) do
         {:ok, network_id} ->
-          challenge = SessionUtils.new_challenge()
-          params = %{"email" => email, "challenge" => challenge, "network_id" => network_id}
+          network = Castmill.Networks.get_network(network_id)
+          
+          # Validate invitation token
+          case validate_invitation_token(invitation_token, email, network.invitation_only) do
+            :valid ->
+              challenge = SessionUtils.new_challenge()
+              params = %{"email" => email, "challenge" => challenge, "network_id" => network_id}
 
-          case Accounts.create_signup(params) do
-            {:ok, signup} ->
-              conn
-              |> put_status(:created)
-              |> json(%{signup_id: signup.id, challenge: challenge})
+              case Accounts.create_signup(params) do
+                {:ok, signup} ->
+                  conn
+                  |> put_status(:created)
+                  |> json(%{signup_id: signup.id, challenge: challenge})
 
-            {:error, _changeset} ->
+                {:error, _changeset} ->
+                  conn
+                  |> put_status(:unprocessable_entity)
+                  |> json(%{status: :error})
+              end
+            
+            {:error, message} ->
               conn
-              |> put_status(:unprocessable_entity)
-              |> json(%{status: :error})
+              |> put_status(:forbidden)
+              |> json(%{status: :error, msg: message})
+          end
+
+        {:error, :network_not_found} ->
+          conn
+          |> put_status(:unprocessable_entity)
+          |> json(%{status: :error, msg: "Network not found"})
+      end
+    end
+  end
+
+  # Validates that an invitation token is valid for the given email
+  # Returns :valid if invitation is valid, or {:error, message} otherwise
+  defp validate_invitation_token(token, email, invitation_only_mode) do
+    valid_invitation = check_invitation_validity(token, email)
+    
+    if invitation_only_mode && !valid_invitation do
+      {:error, "Valid invitation required for this network"}
+    else
+      :valid
+    end
+  end
+
+  # Checks if a given invitation token is valid for the email
+  defp check_invitation_validity(token, email) do
+    case Castmill.Networks.get_network_invitation_by_token(token) do
+      nil ->
+        # Try organization invitation as fallback
+        case Castmill.Organizations.get_invitation_by_token(token) do
+          nil -> false
+          org_invitation -> 
+            org_invitation.email == email && 
+            !Castmill.Organizations.OrganizationsInvitation.expired?(org_invitation)
+        end
+      
+      net_invitation -> 
+        net_invitation.email == email && 
+        !Castmill.Networks.NetworkInvitation.expired?(net_invitation)
+    end
+  end
           end
 
         {:error, :network_not_found} ->
@@ -63,40 +113,49 @@ defmodule CastmillWeb.SignUpController do
     else
       case Accounts.get_network_id_by_domain(origin) do
         {:ok, network_id} ->
-          challenge = SessionUtils.new_challenge()
-          params = %{"email" => email, "challenge" => challenge, "network_id" => network_id}
+          # Check if network requires invitation-only signup
+          network = Castmill.Networks.get_network(network_id)
+          
+          if network.invitation_only do
+            conn
+            |> put_status(:forbidden)
+            |> json(%{status: :error, msg: "This network requires an invitation to sign up"})
+          else
+            challenge = SessionUtils.new_challenge()
+            params = %{"email" => email, "challenge" => challenge, "network_id" => network_id}
 
-          case Accounts.create_signup(params) do
-            {:ok, signup} ->
-              case UserNotifier.deliver_signup_instructions(signup, origin) do
-                {:ok, _email} ->
-                  # Serialize the signup struct
-                  signup_data = %{
-                    id: signup.id,
-                    email: signup.email,
-                    inserted_at: signup.inserted_at,
-                    updated_at: signup.updated_at,
-                    challenge: signup.challenge,
-                    status_message: signup.status_message
-                  }
+            case Accounts.create_signup(params) do
+              {:ok, signup} ->
+                case UserNotifier.deliver_signup_instructions(signup, origin) do
+                  {:ok, _email} ->
+                    # Serialize the signup struct
+                    signup_data = %{
+                      id: signup.id,
+                      email: signup.email,
+                      inserted_at: signup.inserted_at,
+                      updated_at: signup.updated_at,
+                      challenge: signup.challenge,
+                      status_message: signup.status_message
+                    }
 
-                  conn
-                  |> put_status(:created)
-                  |> json(%{status: :ok, signup: signup_data})
+                    conn
+                    |> put_status(:created)
+                    |> json(%{status: :ok, signup: signup_data})
 
-                {:error, reason} ->
-                  # Optionally, you might want to delete the signup if email delivery fails
-                  # Accounts.delete_signup(signup)
+                  {:error, reason} ->
+                    # Optionally, you might want to delete the signup if email delivery fails
+                    # Accounts.delete_signup(signup)
 
-                  conn
-                  |> put_status(:unprocessable_entity)
-                  |> json(%{status: :error, msg: "Failed to send email", error: inspect(reason)})
-              end
+                    conn
+                    |> put_status(:unprocessable_entity)
+                    |> json(%{status: :error, msg: "Failed to send email", error: inspect(reason)})
+                end
 
-            {:error, _changeset} ->
-              conn
-              |> put_status(:unprocessable_entity)
-              |> json(%{status: :error})
+              {:error, _changeset} ->
+                conn
+                |> put_status(:unprocessable_entity)
+                |> json(%{status: :error})
+            end
           end
 
         {:error, :network_not_found} ->

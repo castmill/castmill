@@ -22,6 +22,20 @@ defmodule CastmillWeb.Live.Admin.NetworkForm do
         <.input field={@form[:domain]} type="text" label="Domain" />
         <.input field={@form[:logo]} type="text" label="Logo" />
         <.input field={@form[:copyright]} type="text" label="Copyright" />
+        
+        <div class="space-y-4 border-t pt-4 mt-4">
+          <h3 class="text-sm font-semibold text-gray-900">Invitation Settings</h3>
+          <.input 
+            field={@form[:invitation_only]} 
+            type="checkbox" 
+            label="Invitation Only Mode - Only invited users can sign up" 
+          />
+          <.input 
+            field={@form[:invitation_only_org_admins]} 
+            type="checkbox" 
+            label="Allow Organization Admins to Invite - Let org admins invite users to their organizations" 
+          />
+        </div>
 
         <:actions>
           <.button phx-disable-with="Saving...">Save Network</.button>
