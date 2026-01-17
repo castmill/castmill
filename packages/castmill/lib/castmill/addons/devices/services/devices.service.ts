@@ -242,6 +242,36 @@ export const DevicesService = {
   },
 
   /**
+   * Delete Device Cache Entries
+   * @param baseUrl API base URL
+   * @param deviceId Device ID
+   * @param type Cache type ('data', 'code', 'media', or 'all' to clear everything)
+   * @param urls Array of URLs to delete (empty array will delete all of the specified type)
+   */
+  async deleteDeviceCache(
+    baseUrl: string,
+    deviceId: string,
+    type: string,
+    urls: string[]
+  ) {
+    const response = await fetch(
+      `${baseUrl}/dashboard/devices/${deviceId}/cache`,
+      {
+        method: 'DELETE',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ type, urls }),
+      }
+    );
+
+    return handleResponse<{ success: boolean; deleted: number }>(response, {
+      parse: true,
+    });
+  },
+
+  /**
    * Remove Device.
    */
   async removeDevice(baseUrl: string, organizationId: string, deviceId: string) {

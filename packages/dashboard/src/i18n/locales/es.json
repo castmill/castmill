@@ -641,6 +641,25 @@
       "updateFirmwareDescription": "Actualiza el firmware del dispositivo",
       "offlineMessage": "El dispositivo está desconectado, por lo que no se le pueden enviar comandos"
     },
+    "cache": {
+      "title": "Caché del Dispositivo",
+      "items": "elementos de caché",
+      "dataTab": "Datos",
+      "codeTab": "Código",
+      "mediaTab": "Medios",
+      "deleteSelected": "Eliminar elementos seleccionados",
+      "clearAll": "Limpiar Todo",
+      "confirmDelete": "Eliminar Entrada de Caché",
+      "confirmDeleteMessage": "¿Está seguro de que desea eliminar esta entrada de caché? URL: {{url}}",
+      "confirmDeleteMultiple": "Eliminar Múltiples Entradas",
+      "confirmDeleteMultipleMessage": "¿Está seguro de que desea eliminar {{count}} entradas de caché?",
+      "confirmClearAll": "Limpiar Toda la Caché",
+      "confirmClearAllMessage": "¿Está seguro de que desea limpiar todas las entradas de caché de {{type}}? Esta acción no se puede deshacer.",
+      "deleteSuccess": "Entrada de caché eliminada exitosamente",
+      "deleteMultipleSuccess": "{{count}} entradas de caché eliminadas exitosamente",
+      "clearAllSuccess": "Todas las entradas de caché limpiadas exitosamente",
+      "deleteError": "Error al eliminar caché: {{error}}"
+    },
     "errors": {
       "setChannelFailed": "Error al establecer el canal del dispositivo: {{error}}",
       "commandFailed": "Se produjo un error al procesar su solicitud"

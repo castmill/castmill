@@ -614,6 +614,25 @@
       "updateFirmwareDescription": "Uppdaterar enhetens firmware",
       "offlineMessage": "Enheten är offline, så inga kommandon kan skickas till den"
     },
+    "cache": {
+      "title": "Enhetscache",
+      "items": "cacheobjekt",
+      "dataTab": "Data",
+      "codeTab": "Kod",
+      "mediaTab": "Media",
+      "deleteSelected": "Ta bort valda objekt",
+      "clearAll": "Rensa Allt",
+      "confirmDelete": "Ta bort Cachepost",
+      "confirmDeleteMessage": "Är du säker på att du vill ta bort denna cachepost? URL: {{url}}",
+      "confirmDeleteMultiple": "Ta bort Flera Poster",
+      "confirmDeleteMultipleMessage": "Är du säker på att du vill ta bort {{count}} cacheposter?",
+      "confirmClearAll": "Rensa All Cache",
+      "confirmClearAllMessage": "Är du säker på att du vill rensa alla {{type}} cacheposter? Denna åtgärd kan inte ångras.",
+      "deleteSuccess": "Cachepost borttagen framgångsrikt",
+      "deleteMultipleSuccess": "{{count}} cacheposter borttagna framgångsrikt",
+      "clearAllSuccess": "Alla cacheposter rensade framgångsrikt",
+      "deleteError": "Fel vid borttagning av cache: {{error}}"
+    },
     "errors": {
       "setChannelFailed": "Misslyckades att ställa in enhetskanal: {{error}}",
       "commandFailed": "Ett fel uppstod vid bearbetning av din begäran"

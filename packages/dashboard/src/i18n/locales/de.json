@@ -636,6 +636,25 @@
       "updateFirmwareDescription": "Aktualisiert die Firmware des Geräts",
       "offlineMessage": "Gerät ist offline, daher können keine Befehle gesendet werden"
     },
+    "cache": {
+      "title": "Geräte-Cache",
+      "items": "Cache-Einträge",
+      "dataTab": "Daten",
+      "codeTab": "Code",
+      "mediaTab": "Medien",
+      "deleteSelected": "Ausgewählte Elemente löschen",
+      "clearAll": "Alles Löschen",
+      "confirmDelete": "Cache-Eintrag Löschen",
+      "confirmDeleteMessage": "Möchten Sie diesen Cache-Eintrag wirklich löschen? URL: {{url}}",
+      "confirmDeleteMultiple": "Mehrere Einträge Löschen",
+      "confirmDeleteMultipleMessage": "Möchten Sie wirklich {{count}} Cache-Einträge löschen?",
+      "confirmClearAll": "Gesamten Cache Löschen",
+      "confirmClearAllMessage": "Möchten Sie wirklich alle {{type}} Cache-Einträge löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
+      "deleteSuccess": "Cache-Eintrag erfolgreich gelöscht",
+      "deleteMultipleSuccess": "{{count}} Cache-Einträge erfolgreich gelöscht",
+      "clearAllSuccess": "Alle Cache-Einträge erfolgreich gelöscht",
+      "deleteError": "Fehler beim Löschen des Cache: {{error}}"
+    },
     "errors": {
       "setChannelFailed": "Fehler beim Festlegen des Gerätekanals: {{error}}",
       "commandFailed": "Bei der Verarbeitung Ihrer Anfrage ist ein Fehler aufgetreten"
