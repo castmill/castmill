@@ -3,6 +3,7 @@ export * from './compact-number-input/compact-number-input';
 export * from './form-item/form-item';
 export * from './icon-button/icon-button';
 export * from './icon-wrapper';
+export * from './location-picker/location-picker';
 export * from './modal/modal';
 export * from './media-picker/media-picker';
 export * from './pagination/pagination';

@@ -148,8 +148,18 @@ defmodule Castmill.Repo.Migrations.AddDefaultWidgets do
               components: []
             },
             options_schema: %{
-              "lat" => "number",
-              "long" => "number"
+              "location" => %{
+                "type" => "location",
+                "required" => true,
+                "description" => "Select the location for weather information",
+                "default" => %{
+                  "lat" => 51.505,
+                  "lng" => -0.09,
+                  "address" => "London, United Kingdom"
+                },
+                "defaultZoom" => 10,
+                "order" => 1
+              }
             },
             data_schema: %{
               "icons" => %{
