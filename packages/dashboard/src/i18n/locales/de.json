@@ -81,7 +81,6 @@
     "addonError": "Add-on-Fehler",
     "backToLogin": "Zurück zur Anmeldung",
     "selectVideo": "Video auswählen",
-    "offline": "Offline",
     "selectImage": "Bild auswählen",
     "selectMedia": "Medien auswählen",
     "selectPlaylist": "Wiedergabeliste auswählen",
@@ -616,7 +615,13 @@
     "setDeviceChannel": "Gerätekanal festlegen",
     "selectChannel": "Kanal auswählen",
     "preview": {
-      "placeholder": "Vorschau"
+      "placeholder": "Vorschau",
+      "noChannels": "Diesem Gerät sind keine Kanäle zugewiesen",
+      "noScheduledContent": "Zu diesem Zeitpunkt ist kein Inhalt geplant",
+      "errorLoadingPlaylist": "Fehler beim Laden des Playlist-Inhalts",
+      "errorInitializing": "Fehler beim Initialisieren der Vorschau",
+      "currentlyPlaying": "Derzeit vom Kanal geplant",
+      "note": "Dies zeigt, was das Gerät jetzt basierend auf Kanalzeitplänen abspielen sollte, nicht unbedingt, was tatsächlich auf dem Gerät angezeigt wird."
     },
     "telemetry": {
       "placeholder": "Traces, Logs, Metriken und Konnektivität (WiFi-Qualität, etc.)"

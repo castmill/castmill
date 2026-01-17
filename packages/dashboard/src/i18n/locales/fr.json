@@ -90,8 +90,6 @@
     "selectPlaylist": "Sélectionner une liste de lecture",
     "playlist": "Liste de lecture",
     "addPlaylist": "Ajouter une liste de lecture",
-    "offline": "Hors ligne",
-    "apply": "Appliquer",
     "selectVideo": "Sélectionner une vidéo",
     "widget": "Widget"
   },
@@ -611,7 +609,13 @@
     "setDeviceChannel": "Définir le canal de l'appareil",
     "selectChannel": "Sélectionner un canal",
     "preview": {
-      "placeholder": "Aperçu"
+      "placeholder": "Aperçu",
+      "noChannels": "Aucun canal assigné à cet appareil",
+      "noScheduledContent": "Aucun contenu programmé pour le moment",
+      "errorLoadingPlaylist": "Échec du chargement du contenu de la liste de lecture",
+      "errorInitializing": "Échec de l'initialisation de l'aperçu",
+      "currentlyPlaying": "Actuellement programmé depuis le canal",
+      "note": "Ceci montre ce que l'appareil devrait jouer maintenant en fonction des horaires des canaux, pas nécessairement ce qui est réellement affiché sur l'appareil."
     },
     "telemetry": {
       "placeholder": "Traces, journaux, métriques et connectivité (qualité WiFi, etc.)"
