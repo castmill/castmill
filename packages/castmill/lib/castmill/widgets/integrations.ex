@@ -904,7 +904,11 @@ defmodule Castmill.Widgets.Integrations do
     case integration.discriminator_type do
       "widget_option" ->
         key = integration.discriminator_key || "id"
-        value = Map.get(merged_options, key) || Map.get(merged_options, String.to_atom(key)) || "default"
+
+        value =
+          Map.get(merged_options, key) || Map.get(merged_options, String.to_atom(key)) ||
+            "default"
+
         "#{key}:#{value}"
 
       "organization" ->
@@ -1375,7 +1379,8 @@ defmodule Castmill.Widgets.Integrations do
     - {:error, changeset} if creation failed
   """
   def ensure_integration_for_widget(%Castmill.Widgets.Widget{} = widget) do
-    integration_config = get_in(widget.meta, ["integration"]) || get_in(widget.meta, [:integration])
+    integration_config =
+      get_in(widget.meta, ["integration"]) || get_in(widget.meta, [:integration])
 
     case integration_config do
       nil ->
@@ -1414,13 +1419,17 @@ defmodule Castmill.Widgets.Integrations do
     attrs = %{
       widget_id: widget_id,
       name: name,
-      description: Map.get(config, "description") || Map.get(config, :description) || "Auto-created from widget definition",
+      description:
+        Map.get(config, "description") || Map.get(config, :description) ||
+          "Auto-created from widget definition",
       integration_type: integration_type,
       credential_scope: determine_credential_scope(config),
       discriminator_type: determine_discriminator_type(fetcher, fetcher_config),
       discriminator_key: determine_discriminator_key(fetcher, fetcher_config),
       pull_endpoint: determine_pull_endpoint(fetcher, fetcher_config),
-      pull_interval_seconds: Map.get(fetcher_config, "refresh_interval") || Map.get(fetcher_config, :refresh_interval) || 300,
+      pull_interval_seconds:
+        Map.get(fetcher_config, "refresh_interval") || Map.get(fetcher_config, :refresh_interval) ||
+          300,
       pull_config: build_pull_config(fetcher, fetcher_config),
       credential_schema: build_credential_schema(fetcher, config),
       is_active: true
@@ -1452,7 +1461,9 @@ defmodule Castmill.Widgets.Integrations do
   defp determine_discriminator_type(fetcher, config) do
     # For RSS feeds, discriminate by feed_url so different feeds don't share data
     case fetcher do
-      "rss" -> "widget_option"
+      "rss" ->
+        "widget_option"
+
       _ ->
         Map.get(config, "discriminator_type") || "organization"
     end
@@ -1489,9 +1500,15 @@ defmodule Castmill.Widgets.Integrations do
   defp resolve_fetcher_module(fetcher) when is_binary(fetcher) do
     # Map short fetcher names to full module names
     case String.downcase(fetcher) do
-      "rss" -> "Castmill.Widgets.Integrations.Fetchers.Rss"
-      "spotify" -> "Castmill.Widgets.Integrations.Fetchers.Spotify"
-      "finnhub" -> "Castmill.Widgets.Integrations.Fetchers.Finnhub"
+      "rss" ->
+        "Castmill.Widgets.Integrations.Fetchers.Rss"
+
+      "spotify" ->
+        "Castmill.Widgets.Integrations.Fetchers.Spotify"
+
+      "finnhub" ->
+        "Castmill.Widgets.Integrations.Fetchers.Finnhub"
+
       # If it already looks like a module name, use it as-is
       name when byte_size(name) > 0 ->
         if String.starts_with?(name, "Castmill.") or String.starts_with?(name, "Elixir.") do
@@ -1500,7 +1517,9 @@ defmodule Castmill.Widgets.Integrations do
           # Try to construct a module name from the fetcher name
           "Castmill.Widgets.Integrations.Fetchers.#{Macro.camelize(name)}"
         end
-      _ -> nil
+
+      _ ->
+        nil
     end
   end
 

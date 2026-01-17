@@ -74,7 +74,8 @@ defmodule Castmill.Workers.SpotifyPoller do
         @queue,
         job_id,
         %{"organization_id" => organization_id},
-        repeat: %{every: interval_seconds * 1000}, # BullMQ expects milliseconds
+        # BullMQ expects milliseconds
+        repeat: %{every: interval_seconds * 1000},
         attempts: 3
       )
 
@@ -83,6 +84,7 @@ defmodule Castmill.Workers.SpotifyPoller do
         Logger.info(
           "SpotifyPoller: Scheduled repeatable org poll every #{interval_seconds}s for org=#{organization_id}"
         )
+
         {:ok, job}
 
       {:error, reason} ->
@@ -116,7 +118,8 @@ defmodule Castmill.Workers.SpotifyPoller do
         @queue,
         job_id,
         %{"widget_config_id" => widget_config_id},
-        repeat: %{every: interval_seconds * 1000}, # BullMQ expects milliseconds
+        # BullMQ expects milliseconds
+        repeat: %{every: interval_seconds * 1000},
         attempts: 3
       )
 
@@ -140,9 +143,7 @@ defmodule Castmill.Workers.SpotifyPoller do
   - User disconnects Spotify
   """
   def cancel(widget_config_id) do
-    Logger.info(
-      "SpotifyPoller: Canceling polling for widget_config_id=#{widget_config_id}"
-    )
+    Logger.info("SpotifyPoller: Canceling polling for widget_config_id=#{widget_config_id}")
 
     # BullMQ.JobScheduler.remove_repeatable would be used here
     # The job will naturally stop if credentials are missing
@@ -153,9 +154,7 @@ defmodule Castmill.Workers.SpotifyPoller do
   Cancels scheduled polling jobs for an organization.
   """
   def cancel_for_org(organization_id) do
-    Logger.info(
-      "SpotifyPoller: Canceling polling for organization_id=#{organization_id}"
-    )
+    Logger.info("SpotifyPoller: Canceling polling for organization_id=#{organization_id}")
 
     # BullMQ.JobScheduler.remove_repeatable would be used here
     # The job will naturally stop if credentials are missing
