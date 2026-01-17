@@ -13,7 +13,7 @@ import { createSignal, onMount, Show } from 'solid-js';
 import { FaSolidAngleDown, FaSolidAngleUp } from 'solid-icons/fa';
 
 interface DropdownMenuProps {
-  ButtonComponent: Component<{ onClick: () => void }>; // Define prop for custom button component
+  ButtonComponent: Component<Record<string, never>>; // Define prop for custom button component
   children: JSX.Element;
   onItemClick?: () => void; // Optional callback when a menu item is clicked
 }
@@ -81,9 +81,18 @@ const DropdownMenu: Component<DropdownMenuProps> = (props) => {
     <div class="castmill-dropdown-menu">
       <div class="container">
         <div ref={buttonRef!} class="button-container" onClick={toggleDropdown}>
-          <props.ButtonComponent onClick={toggleDropdown} />
-          <Show when={isOpen()} fallback={<FaSolidAngleDown />}>
-            <FaSolidAngleUp />
+          <props.ButtonComponent />
+          <Show
+            when={isOpen()}
+            fallback={
+              <span class="dropdown-icon">
+                <FaSolidAngleDown />
+              </span>
+            }
+          >
+            <span class="dropdown-icon">
+              <FaSolidAngleUp />
+            </span>
           </Show>
         </div>
         <ul
