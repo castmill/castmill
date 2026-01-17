@@ -82,8 +82,17 @@ const DropdownMenu: Component<DropdownMenuProps> = (props) => {
       <div class="container">
         <div ref={buttonRef!} class="button-container" onClick={toggleDropdown}>
           <props.ButtonComponent />
-          <Show when={isOpen()} fallback={<FaSolidAngleDown />}>
-            <FaSolidAngleUp />
+          <Show
+            when={isOpen()}
+            fallback={
+              <span class="dropdown-icon">
+                <FaSolidAngleDown />
+              </span>
+            }
+          >
+            <span class="dropdown-icon">
+              <FaSolidAngleUp />
+            </span>
           </Show>
         </div>
         <ul
