@@ -1,6 +1,6 @@
 defmodule Castmill.Workers.IntegrationPoller do
   @moduledoc """
-  Oban worker for polling PULL-mode integrations with API key credentials.
+  BullMQ worker for polling PULL-mode integrations with API key credentials.
 
   This worker handles periodic data fetching for integrations that use
   API keys (not OAuth) to authenticate with third-party services.
@@ -35,23 +35,20 @@ defmodule Castmill.Workers.IntegrationPoller do
         widget_options: %{"symbols" => "AAPL,GOOGL,MSFT"}
       })
   """
-  use Oban.Worker,
-    queue: :integrations,
-    max_attempts: 3,
-    # Use discriminator to prevent duplicate jobs
-    unique: [
-      period: 20,
-      fields: [:args],
-      keys: [:organization_id, :integration_id, :discriminator_id]
-    ]
 
   require Logger
 
   alias Castmill.Widgets.Integrations
   alias Castmill.Widgets.Integrations.WidgetIntegration
+  alias Castmill.Workers.BullMQHelper
 
-  @impl Oban.Worker
-  def perform(%Oban.Job{args: args}) do
+  @queue "integrations"
+
+  @doc """
+  Processes the integration polling job.
+  This is called by BullMQ worker.
+  """
+  def process(%BullMQ.Job{data: args}) do
     %{
       "organization_id" => organization_id,
       "widget_id" => widget_id,
@@ -73,9 +70,7 @@ defmodule Castmill.Workers.IntegrationPoller do
       # Broadcast the update to connected clients
       broadcast_update(widget_id, integration_id, discriminator_id, data)
 
-      # Schedule next poll
-      schedule_next_poll(args, integration)
-
+      # No need to reschedule - BullMQ repeatable jobs handle this automatically
       :ok
     else
       {:error, :no_credentials} ->
@@ -83,7 +78,8 @@ defmodule Castmill.Workers.IntegrationPoller do
           "IntegrationPoller: No credentials found for org #{organization_id}, integration #{integration_id}. Stopping polling."
         )
 
-        # Don't reschedule - credentials were deleted or not configured
+        # Remove the repeatable job since credentials are gone
+        cancel_polling(organization_id, integration_id)
         :ok
 
       {:error, :integration_not_found} ->
@@ -111,7 +107,7 @@ defmodule Castmill.Workers.IntegrationPoller do
   end
 
   @doc """
-  Schedules a polling job for an integration.
+  Schedules a polling job for an integration using BullMQ repeatable jobs.
 
   ## Parameters
 
@@ -124,41 +120,84 @@ defmodule Castmill.Workers.IntegrationPoller do
 
   ## Options
 
-  - `delay`: Initial delay in seconds (default: 0)
+  - `interval`: Poll interval in seconds (default: fetched from integration config)
   """
   def schedule_poll(params, opts \\ []) do
-    delay = Keyword.get(opts, :delay, 0)
+    # Get the integration to determine the polling interval
+    integration_id = normalize_param(params, :integration_id)
 
-    args = %{
-      "organization_id" => normalize_param(params, :organization_id),
-      "widget_id" => normalize_param(params, :widget_id),
-      "integration_id" => normalize_param(params, :integration_id),
-      "discriminator_id" => normalize_param(params, :discriminator_id),
-      "widget_options" => normalize_param(params, :widget_options, %{})
-    }
+    with {:ok, integration} <- get_integration(integration_id) do
+      interval_seconds =
+        Keyword.get(opts, :interval) ||
+          integration.pull_interval_seconds || 30
 
-    job =
-      if delay > 0 do
-        new(args, schedule_in: delay)
-      else
-        new(args)
-      end
+      job_data = %{
+        "organization_id" => normalize_param(params, :organization_id),
+        "widget_id" => normalize_param(params, :widget_id),
+        "integration_id" => normalize_param(params, :integration_id),
+        "discriminator_id" => normalize_param(params, :discriminator_id),
+        "widget_options" => normalize_param(params, :widget_options, %{})
+      }
 
-    Oban.insert(job)
+      # Create a unique scheduler ID based on the integration parameters
+      # NOTE: Using underscores as separators to avoid having 5+ colon-separated parts,
+      # which BullMQ would misidentify as legacy repeatable jobs.
+      # The discriminator_id may contain colons (e.g., "org:uuid"), so we sanitize it.
+      sanitized_discriminator = String.replace(job_data["discriminator_id"] || "", ":", "_")
+
+      scheduler_id =
+        "int_poll_#{job_data["organization_id"]}_#{job_data["integration_id"]}_#{sanitized_discriminator}"
+
+      # Use BullMQ JobScheduler for repeatable jobs (via helper for test mode support)
+      BullMQHelper.upsert_scheduler(
+        @queue,
+        scheduler_id,
+        # BullMQ expects milliseconds
+        %{every: interval_seconds * 1000},
+        # job_name
+        scheduler_id,
+        job_data,
+        attempts: 3
+      )
+    else
+      {:error, reason} ->
+        Logger.error("IntegrationPoller: Failed to schedule poll: #{inspect(reason)}")
+        {:error, reason}
+    end
   end
 
   @doc """
-  Cancels all polling jobs for a specific organization and integration.
+  Cancels polling jobs for a specific organization, integration, and discriminator.
+  Uses BullMQ's JobScheduler.remove to stop the scheduled job.
   """
-  def cancel_polling(organization_id, integration_id) do
-    import Ecto.Query
+  def cancel_polling(organization_id, integration_id, discriminator_id \\ nil) do
+    if discriminator_id do
+      # Remove specific scheduler
+      # NOTE: Must match the format used in schedule_poll - underscores instead of colons
+      sanitized_discriminator = String.replace(discriminator_id || "", ":", "_")
+      scheduler_id = "int_poll_#{organization_id}_#{integration_id}_#{sanitized_discriminator}"
 
-    Oban.Job
-    |> where([j], j.worker == "Castmill.Workers.IntegrationPoller")
-    |> where([j], j.state in ["scheduled", "available", "executing"])
-    |> where([j], fragment("?->>'organization_id' = ?", j.args, ^to_string(organization_id)))
-    |> where([j], fragment("?->>'integration_id' = ?", j.args, ^to_string(integration_id)))
-    |> Castmill.Repo.delete_all()
+      case BullMQHelper.remove_scheduler(@queue, scheduler_id) do
+        {:ok, true} ->
+          Logger.info("IntegrationPoller: Canceled polling for scheduler #{scheduler_id}")
+          {:ok, 1}
+
+        {:ok, false} ->
+          Logger.info("IntegrationPoller: No scheduler found for #{scheduler_id}")
+          {:ok, 0}
+
+        {:error, reason} ->
+          Logger.error("IntegrationPoller: Failed to cancel polling: #{inspect(reason)}")
+          {:error, reason}
+      end
+    else
+      # Can't cancel without discriminator - would need to list and filter
+      Logger.warning(
+        "IntegrationPoller: Cannot cancel polling without discriminator_id for org=#{organization_id}, integration=#{integration_id}"
+      )
+
+      {:ok, 0}
+    end
   end
 
   # ===========================================================================
@@ -198,19 +237,24 @@ defmodule Castmill.Workers.IntegrationPoller do
     pull_config = integration.pull_config || %{}
     fetcher_module_name = Map.get(pull_config, "fetcher_module")
 
+    # Merge pull_config with widget_options so fetcher has access to both
+    # pull_config contains integration-level settings (like feed_url for RSS)
+    # widget_options contains widget instance settings (like max_items)
+    merged_options = Map.merge(pull_config, widget_options || %{})
+
     if fetcher_module_name do
       # Use custom fetcher module
       case get_fetcher_module(fetcher_module_name) do
         {:ok, module} ->
           # Credentials are already decrypted by get_organization_credentials
-          module.fetch(credentials, widget_options)
+          module.fetch(credentials, merged_options)
 
         {:error, reason} ->
           {:error, reason}
       end
     else
       # Use generic HTTP fetch
-      fetch_generic(integration, credentials, widget_options)
+      fetch_generic(integration, credentials, merged_options)
     end
   end
 
@@ -290,14 +334,6 @@ defmodule Castmill.Workers.IntegrationPoller do
          updated_at: DateTime.utc_now()
        }}
     )
-  end
-
-  defp schedule_next_poll(args, integration) do
-    # Get poll interval from integration config (default 30 seconds)
-    interval = integration.pull_interval_seconds || 30
-
-    # Schedule next poll
-    schedule_poll(args, delay: interval)
   end
 
   defp normalize_param(params, key, default \\ nil) do

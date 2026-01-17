@@ -346,6 +346,8 @@ defmodule CastmillWeb.OrganizationController do
          widget_data <- resolve_widget_icon(widget_data, widget_slug, stored_assets),
          # Extract and resolve fonts from widget assets
          widget_data <- resolve_widget_fonts(widget_data, widget_slug, stored_assets),
+         # Store integration definition in meta for later use
+         widget_data <- store_integration_in_meta(widget_data),
          {:ok, widget} <- Castmill.Widgets.create_widget(widget_data) do
       # Clean up temporary asset files
       PackageProcessor.cleanup_assets(assets)
@@ -412,6 +414,21 @@ defmodule CastmillWeb.OrganizationController do
       widget_data
     else
       Map.put(widget_data, "fonts", fonts)
+    end
+  end
+
+  # Stores the integration definition from widget.json into the meta field
+  # so it can be used later when the widget is added to a playlist
+  defp store_integration_in_meta(widget_data) do
+    integration = Map.get(widget_data, "integration")
+
+    if is_map(integration) do
+      # Merge integration into meta (create meta if it doesn't exist)
+      current_meta = Map.get(widget_data, "meta") || %{}
+      updated_meta = Map.put(current_meta, "integration", integration)
+      Map.put(widget_data, "meta", updated_meta)
+    else
+      widget_data
     end
   end
 

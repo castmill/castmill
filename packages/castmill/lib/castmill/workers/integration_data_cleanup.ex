@@ -1,6 +1,6 @@
 defmodule Castmill.Workers.IntegrationDataCleanup do
   @moduledoc """
-  Oban worker for cleaning up stale widget integration data.
+  BullMQ worker for cleaning up stale widget integration data.
 
   This worker periodically removes integration data cache entries that
   haven't been accessed in a configurable number of days. This prevents
@@ -14,15 +14,6 @@ defmodule Castmill.Workers.IntegrationDataCleanup do
       # In Application.start/2 or a migration
       Castmill.Workers.IntegrationDataCleanup.schedule()
 
-  Or configure via Oban cron plugin:
-
-      config :castmill, Oban,
-        plugins: [
-          {Oban.Plugins.Cron, crontab: [
-            {"0 3 * * *", Castmill.Workers.IntegrationDataCleanup}
-          ]}
-        ]
-
   ## Job Arguments
 
     - days_old: Number of days since last_used_at to consider stale (default: 30)
@@ -34,58 +25,19 @@ defmodule Castmill.Workers.IntegrationDataCleanup do
   - Does NOT delete entries that are actively being used by widgets
   """
 
-  use Oban.Worker,
-    queue: :maintenance,
-    max_attempts: 3,
-    priority: 3,
-    unique: [period: :infinity, states: [:available, :scheduled, :executing]]
-
   require Logger
 
   alias Castmill.Widgets.Integrations
+  alias Castmill.Workers.BullMQHelper
 
   @default_days_old 30
+  @queue "maintenance"
 
   @doc """
-  Schedules the cleanup job to run.
-
-  By default, schedules for immediate execution. Use the `:scheduled_at`
-  option to delay execution.
-
-  ## Options
-
-    - `:days_old` - Number of days to consider data stale (default: 30)
-    - `:scheduled_at` - When to run the job (default: now)
-
-  ## Examples
-
-      # Run immediately
-      IntegrationDataCleanup.schedule()
-
-      # Run with custom stale threshold
-      IntegrationDataCleanup.schedule(days_old: 7)
-
-      # Schedule for later
-      IntegrationDataCleanup.schedule(scheduled_at: ~U[2024-01-01 03:00:00Z])
+  Processes the integration data cleanup job.
+  This is called by BullMQ worker.
   """
-  def schedule(opts \\ []) do
-    days_old = Keyword.get(opts, :days_old, @default_days_old)
-
-    args = %{days_old: days_old}
-
-    job_opts =
-      case Keyword.get(opts, :scheduled_at) do
-        nil -> []
-        scheduled_at -> [scheduled_at: scheduled_at]
-      end
-
-    args
-    |> new(job_opts)
-    |> Oban.insert()
-  end
-
-  @impl Oban.Worker
-  def perform(%Oban.Job{args: args}) do
+  def process(%BullMQ.Job{data: args}) do
     days_old = args["days_old"] || @default_days_old
 
     Logger.info(
@@ -99,5 +51,39 @@ defmodule Castmill.Workers.IntegrationDataCleanup do
     )
 
     :ok
+  end
+
+  @doc """
+  Schedules the cleanup job to run.
+
+  By default, schedules for immediate execution. Use the `:delay`
+  option to delay execution.
+
+  ## Options
+
+    - `:days_old` - Number of days to consider data stale (default: 30)
+    - `:delay` - Delay in seconds before execution (default: 0)
+
+  ## Examples
+
+      # Run immediately
+      IntegrationDataCleanup.schedule()
+
+      # Run with custom stale threshold
+      IntegrationDataCleanup.schedule(days_old: 7)
+
+      # Schedule for later (in 1 hour)
+      IntegrationDataCleanup.schedule(delay: 3600)
+  """
+  def schedule(opts \\ []) do
+    days_old = Keyword.get(opts, :days_old, @default_days_old)
+    delay = Keyword.get(opts, :delay, 0)
+
+    args = %{days_old: days_old}
+
+    job_opts = [priority: 3, attempts: 3]
+    job_opts = if delay > 0, do: [{:delay, delay} | job_opts], else: job_opts
+
+    BullMQHelper.add_job(@queue, "integration_data_cleanup", args, job_opts)
   end
 end

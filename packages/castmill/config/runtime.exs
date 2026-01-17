@@ -125,4 +125,9 @@ if config_env() == :prod do
     keys: encryption_keys,
     current_version: current_version
   }
+
+  # Configure Redis for BullMQ in production
+  config :castmill, :redis,
+    host: System.get_env("REDIS_HOST") || "localhost",
+    port: String.to_integer(System.get_env("REDIS_PORT") || "6379")
 end

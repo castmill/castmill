@@ -422,6 +422,59 @@ export const PlaylistsService = {
   },
 
   /**
+   * Prefetch integration data for a widget before it's added to a playlist.
+   * This warms up the cache so that when the widget is actually inserted,
+   * the data is already available, improving perceived performance.
+   *
+   * @param baseUrl - The base URL of the server
+   * @param organizationId - The organization ID
+   * @param widgetId - The widget ID to prefetch data for
+   * @param options - Optional widget options for discriminator calculation
+   * @returns Promise with prefetch result (data, status, etc.)
+   */
+  async prefetchWidgetData(
+    baseUrl: string,
+    organizationId: string,
+    widgetId: number,
+    options?: Record<string, any>
+  ): Promise<{
+    data: Record<string, any> | null;
+    status:
+      | 'cached'
+      | 'fetched'
+      | 'error'
+      | 'credentials_required'
+      | 'no_integration';
+    message?: string;
+  }> {
+    try {
+      const url = `${baseUrl}/dashboard/organizations/${organizationId}/widgets/${widgetId}/prefetch-data`;
+      const response = await fetch(url, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ options: options || {} }),
+      });
+
+      if (response.status === 204) {
+        // No integrations for this widget
+        return { data: null, status: 'no_integration' };
+      }
+
+      if (response.ok) {
+        return await response.json();
+      }
+
+      return { data: null, status: 'error', message: 'Failed to prefetch' };
+    } catch (error) {
+      console.warn('Failed to prefetch widget data:', error);
+      return { data: null, status: 'error', message: String(error) };
+    }
+  },
+
+  /**
    * Fetch integration data for a widget config.
    * This triggers an on-demand fetch if no cached data exists.
    *

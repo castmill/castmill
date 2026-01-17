@@ -94,3 +94,8 @@ config :castmill, :encryption, %{
 
 # widgets json files
 config :castmill, CastmillWeb.Widgets.WidgetsLoader, json_dir: "../widged/dist/widgets"
+
+# BullMQ uses real Redis in dev (same as production)
+# Start Redis locally: docker run -d -p 6379:6379 redis:alpine
+# Or use inline mode for quick testing without Redis:
+# config :castmill, :bullmq, testing: :inline

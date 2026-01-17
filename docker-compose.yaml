@@ -10,6 +10,14 @@ services:
     ports:
       - '5432:5432'
 
+  redis:
+    image: redis:7-alpine
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+
   dashboard:
     build:
       context: ./
@@ -31,6 +39,7 @@ services:
       - '4000:4000'
     depends_on:
       - db
+      - redis
     environment:
       CASTMILL_SCHEME: ${CASTMILL_SCHEME:-http}
       CASTMILL_HOST: ${CASTMILL_HOST:-localhost}
@@ -65,6 +74,7 @@ services:
 
 volumes:
   postgres_data:
+  redis_data:
   assets:
   deps:
 
