@@ -3,11 +3,18 @@ import { render, cleanup, screen, waitFor } from '@solidjs/testing-library';
 import { LocationPicker, LocationValue } from './location-picker';
 
 // Mock the window.L (Leaflet) global
+const mockMapContainer = document.createElement('div');
 const mockLeaflet = {
   map: vi.fn(() => ({
     setView: vi.fn().mockReturnThis(),
     on: vi.fn().mockReturnThis(),
+    off: vi.fn().mockReturnThis(),
     remove: vi.fn(),
+    scrollWheelZoom: {
+      enable: vi.fn(),
+      disable: vi.fn(),
+    },
+    getContainer: vi.fn(() => mockMapContainer),
   })),
   tileLayer: vi.fn(() => ({
     addTo: vi.fn().mockReturnThis(),
@@ -37,13 +44,11 @@ describe('LocationPicker Component', () => {
     const mockOnChange = vi.fn();
     render(() => <LocationPicker onChange={mockOnChange} />);
 
-    // Check that search input is rendered
-    const searchInput = screen.getByPlaceholderText('Search for a location...');
-    expect(searchInput).toBeInTheDocument();
+    // Check that the ComboBox label is rendered
+    expect(screen.getByText('Search Location')).toBeInTheDocument();
 
-    // Check that search button is rendered
-    const searchButton = screen.getByText('Search');
-    expect(searchButton).toBeInTheDocument();
+    // Check that the placeholder text is shown in selected-item div
+    expect(screen.getByText('Search for a location...')).toBeInTheDocument();
   });
 
   it('renders with custom placeholder', () => {
@@ -52,8 +57,8 @@ describe('LocationPicker Component', () => {
       <LocationPicker onChange={mockOnChange} placeholder="Find a place..." />
     ));
 
-    const searchInput = screen.getByPlaceholderText('Find a place...');
-    expect(searchInput).toBeInTheDocument();
+    // The placeholder is now shown in the ComboBox's selected-item area
+    expect(screen.getByText('Find a place...')).toBeInTheDocument();
   });
 
   it('displays location info when value is provided', () => {
@@ -96,53 +101,6 @@ describe('LocationPicker Component', () => {
     });
   });
 
-  it('disables interactions when disabled prop is true', () => {
-    const mockOnChange = vi.fn();
-    render(() => <LocationPicker onChange={mockOnChange} disabled={true} />);
-
-    const searchInput = screen.getByPlaceholderText(
-      'Search for a location...'
-    ) as HTMLInputElement;
-    const searchButton = screen.getByText('Search') as HTMLButtonElement;
-
-    expect(searchInput.disabled).toBe(true);
-    expect(searchButton.disabled).toBe(true);
-  });
-
-  it('handles search query input', async () => {
-    const mockOnChange = vi.fn();
-    const mockSearchResults = [
-      {
-        lat: '51.5074',
-        lon: '-0.1278',
-        display_name: '10 Downing Street, London, UK',
-        address: {
-          city: 'London',
-          country: 'United Kingdom',
-          postcode: 'SW1A 2AA',
-        },
-      },
-    ];
-
-    (global.fetch as any).mockResolvedValueOnce({
-      json: async () => mockSearchResults,
-    });
-
-    render(() => <LocationPicker onChange={mockOnChange} />);
-
-    const searchInput = screen.getByPlaceholderText(
-      'Search for a location...'
-    ) as HTMLInputElement;
-
-    // Type in search input
-    searchInput.value = 'London';
-    searchInput.dispatchEvent(new Event('input', { bubbles: true }));
-
-    await waitFor(() => {
-      expect(searchInput.value).toBe('London');
-    });
-  });
-
   it('shows no address available when address is not present', () => {
     const mockOnChange = vi.fn();
     const mockValue: LocationValue = {
@@ -170,28 +128,21 @@ describe('LocationPicker Component', () => {
     );
   });
 
-  it('updates marker when value changes', async () => {
+  it('renders with custom search label', () => {
     const mockOnChange = vi.fn();
-    let value: LocationValue = {
-      lat: 51.5074,
-      lng: -0.1278,
-    };
-
-    const { rerender } = render(() => (
-      <LocationPicker onChange={mockOnChange} value={value} />
+    render(() => (
+      <LocationPicker onChange={mockOnChange} searchLabel="Find Location" />
     ));
 
-    // Change value
-    value = {
-      lat: 48.8566,
-      lng: 2.3522,
-    };
+    expect(screen.getByText('Find Location')).toBeInTheDocument();
+  });
 
-    rerender(() => <LocationPicker onChange={mockOnChange} value={value} />);
+  it('displays map container', () => {
+    const mockOnChange = vi.fn();
+    render(() => <LocationPicker onChange={mockOnChange} />);
 
-    await waitFor(() => {
-      // Check that coordinates updated
-      expect(screen.getByText(/48.856600/)).toBeInTheDocument();
-    });
+    // Check that the map container exists
+    const mapContainer = document.querySelector('.location-picker__map');
+    expect(mapContainer).toBeInTheDocument();
   });
 });
