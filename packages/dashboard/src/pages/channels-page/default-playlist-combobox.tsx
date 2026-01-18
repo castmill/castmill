@@ -30,6 +30,8 @@ export const DefaultPlaylistComboBox: Component<{
         props.channel.default_playlist_id
       );
       setDefaultPlaylist(result.data);
+    } else {
+      setDefaultPlaylist(undefined);
     }
   });
 
@@ -64,22 +66,23 @@ export const DefaultPlaylistComboBox: Component<{
       }}
       onSelect={async (playlist: JsonPlaylist) => {
         try {
-          // Update the channel
-          await channelsService.updateChannel({
-            id: props.channel.id,
-            default_playlist_id: playlist.id,
-          });
-          setDefaultPlaylist(playlist);
-          
-          // Notify parent about the update
+          // Notify parent about the update (parent will make the API call)
           if (props.onUpdate) {
             await props.onUpdate({
               id: props.channel.id,
               default_playlist_id: playlist.id,
             });
+            setDefaultPlaylist(playlist);
+            toast.success(t('channels.success.updateDefaultPlaylist'));
+          } else {
+            // Fallback: Update the channel directly if no parent handler
+            await channelsService.updateChannel({
+              id: props.channel.id,
+              default_playlist_id: playlist.id,
+            });
+            setDefaultPlaylist(playlist);
+            toast.success(t('channels.success.updateDefaultPlaylist'));
           }
-          
-          toast.success(t('channels.success.updateDefaultPlaylist'));
         } catch (e) {
           toast.error(
             t('channels.errors.updateDefaultPlaylist', { error: String(e) })
@@ -88,22 +91,23 @@ export const DefaultPlaylistComboBox: Component<{
       }}
       onClear={async () => {
         try {
-          // Update the channel to remove default playlist
-          await channelsService.updateChannel({
-            id: props.channel.id,
-            default_playlist_id: null,
-          });
-          setDefaultPlaylist(undefined);
-          
-          // Notify parent about the update
+          // Notify parent about the update (parent will make the API call)
           if (props.onUpdate) {
             await props.onUpdate({
               id: props.channel.id,
               default_playlist_id: null,
             });
+            setDefaultPlaylist(undefined);
+            toast.success(t('channels.success.clearDefaultPlaylist'));
+          } else {
+            // Fallback: Update the channel directly if no parent handler
+            await channelsService.updateChannel({
+              id: props.channel.id,
+              default_playlist_id: null,
+            });
+            setDefaultPlaylist(undefined);
+            toast.success(t('channels.success.clearDefaultPlaylist'));
           }
-          
-          toast.success(t('channels.success.clearDefaultPlaylist'));
         } catch (e) {
           toast.error(
             t('channels.errors.clearDefaultPlaylist', { error: String(e) })

@@ -460,6 +460,8 @@ const ChannelsPage: Component = () => {
                     const updatedTeam =
                       await channelsService.updateChannel(channel);
                     updateItem(channel.id, channel as JsonChannel);
+                    // Update currentChannel to reflect the changes in the modal
+                    setCurrentChannel((prev) => ({ ...prev!, ...channel }));
                     toast.success(
                       `Channel ${channel.name} updated successfully`
                     );
