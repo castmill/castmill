@@ -67,22 +67,21 @@ export const DefaultPlaylistComboBox: Component<{
       onSelect={async (playlist: JsonPlaylist) => {
         try {
           // Notify parent about the update (parent will make the API call)
+          // or fallback to updating directly if no parent handler
           if (props.onUpdate) {
             await props.onUpdate({
               id: props.channel.id,
               default_playlist_id: playlist.id,
             });
-            setDefaultPlaylist(playlist);
-            toast.success(t('channels.success.updateDefaultPlaylist'));
           } else {
-            // Fallback: Update the channel directly if no parent handler
             await channelsService.updateChannel({
               id: props.channel.id,
               default_playlist_id: playlist.id,
             });
-            setDefaultPlaylist(playlist);
-            toast.success(t('channels.success.updateDefaultPlaylist'));
           }
+          
+          setDefaultPlaylist(playlist);
+          toast.success(t('channels.success.updateDefaultPlaylist'));
         } catch (e) {
           toast.error(
             t('channels.errors.updateDefaultPlaylist', { error: String(e) })
@@ -92,22 +91,21 @@ export const DefaultPlaylistComboBox: Component<{
       onClear={async () => {
         try {
           // Notify parent about the update (parent will make the API call)
+          // or fallback to updating directly if no parent handler
           if (props.onUpdate) {
             await props.onUpdate({
               id: props.channel.id,
               default_playlist_id: null,
             });
-            setDefaultPlaylist(undefined);
-            toast.success(t('channels.success.clearDefaultPlaylist'));
           } else {
-            // Fallback: Update the channel directly if no parent handler
             await channelsService.updateChannel({
               id: props.channel.id,
               default_playlist_id: null,
             });
-            setDefaultPlaylist(undefined);
-            toast.success(t('channels.success.clearDefaultPlaylist'));
           }
+          
+          setDefaultPlaylist(undefined);
+          toast.success(t('channels.success.clearDefaultPlaylist'));
         } catch (e) {
           toast.error(
             t('channels.errors.clearDefaultPlaylist', { error: String(e) })
