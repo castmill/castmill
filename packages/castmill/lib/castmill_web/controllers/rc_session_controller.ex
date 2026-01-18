@@ -43,42 +43,34 @@ defmodule CastmillWeb.RcSessionController do
           if has_rc_permission?(user_role) do
             # Check if the device's RC app is available (sending heartbeats)
             if Devices.rc_app_available?(device_id) do
-              # Check if there's already an active session for this device
-              case RcSessions.get_active_session_for_device(device_id) do
-                nil ->
-                  # Create a new session
-                  case RcSessions.create_session(device_id, user_id) do
-                    {:ok, session} ->
-                      conn
-                      |> put_status(:created)
-                      |> json(%{
-                        session_id: session.id,
-                        device_id: session.device_id,
-                        state: session.state,
-                        started_at: session.started_at,
-                        timeout_at: session.timeout_at
-                      })
+              # Create a new session (will auto-terminate any existing session)
+              case RcSessions.create_session(device_id, user_id) do
+                {:ok, session} ->
+                  conn
+                  |> put_status(:created)
+                  |> json(%{
+                    session_id: session.id,
+                    device_id: session.device_id,
+                    state: session.state,
+                    started_at: session.started_at,
+                    timeout_at: session.timeout_at
+                  })
 
-                    {:error, :device_has_active_session} ->
-                      conn
-                      |> put_status(:conflict)
-                      |> json(%{error: "Device already has an active RC session"})
-
-                    {:error, reason} when is_atom(reason) ->
-                      conn
-                      |> put_status(:internal_server_error)
-                      |> json(%{error: "Failed to create session", details: to_string(reason)})
-
-                    {:error, changeset} ->
-                      conn
-                      |> put_status(:unprocessable_entity)
-                      |> json(%{error: "Failed to create session", details: inspect(changeset.errors)})
-                  end
-
-                _active_session ->
+                {:error, :device_has_active_session} ->
+                  # This should rarely happen now (only in race conditions)
                   conn
                   |> put_status(:conflict)
-                  |> json(%{error: "Device already has an active RC session"})
+                  |> json(%{error: "Device already has an active RC session. Please try again."})
+
+                {:error, reason} when is_atom(reason) ->
+                  conn
+                  |> put_status(:internal_server_error)
+                  |> json(%{error: "Failed to create session", details: to_string(reason)})
+
+                {:error, changeset} ->
+                  conn
+                  |> put_status(:unprocessable_entity)
+                  |> json(%{error: "Failed to create session", details: inspect(changeset.errors)})
               end
             else
               conn

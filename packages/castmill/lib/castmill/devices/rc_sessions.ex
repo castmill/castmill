@@ -18,14 +18,30 @@ defmodule Castmill.Devices.RcSessions do
   @doc """
   Creates a new RC session for a device and user in the 'created' state.
 
-  Returns an error if the device already has an active session.
+  If the device already has an active session, it will be automatically terminated
+  before creating the new session.
   """
   def create_session(device_id, user_id, opts \\ []) do
     timeout_seconds = Keyword.get(opts, :timeout_seconds, @default_timeout_seconds)
 
+    # First, terminate any existing active session for this device (outside transaction)
+    case get_active_session_for_device(device_id) do
+      nil ->
+        :ok
+
+      existing_session ->
+        RcLogger.info("Terminating existing session before creating new one", existing_session.id, device_id, [
+          user_id: user_id,
+          existing_state: existing_session.state
+        ])
+
+        # Terminate the existing session - this will broadcast to the device
+        terminate_session_forcefully(existing_session.id)
+    end
+
     # Use a transaction to ensure atomicity of session creation and relay startup
     Repo.transaction(fn ->
-      # Check for existing active session
+      # Double-check no active session exists (race condition protection)
       case get_active_session_for_device(device_id) do
         nil ->
           # Truncate to seconds since :utc_datetime doesn't support microseconds
@@ -78,6 +94,7 @@ defmodule Castmill.Devices.RcSessions do
           end
 
         _existing_session ->
+          # This should rarely happen - only in race conditions
           Repo.rollback(:device_has_active_session)
       end
     end)
@@ -231,6 +248,46 @@ defmodule Castmill.Devices.RcSessions do
             {:error, _reason} -> transition_to_closed(session_id)
           end
         end
+    end
+  end
+
+  @doc """
+  Forcefully terminates an RC session, notifying the device.
+
+  This is used when creating a new session for a device that already has an active session.
+  It ensures the device is notified to stop any ongoing capture and return to standby.
+  """
+  def terminate_session_forcefully(session_id) do
+    case get_session(session_id) do
+      nil ->
+        {:error, :not_found}
+
+      session ->
+        # Log the forceful termination
+        RcLogger.info("Forcefully terminating RC session", session_id, session.device_id, [
+          previous_state: session.state,
+          reason: "new_session_requested"
+        ])
+
+        # Broadcast stop_session to the device so it knows to stop capture
+        CastmillWeb.Endpoint.broadcast(
+          "rc_device:#{session.device_id}",
+          "stop_session",
+          %{session_id: session_id, reason: "replaced_by_new_session"}
+        )
+
+        # Also broadcast to the window channel if any dashboard is watching
+        CastmillWeb.Endpoint.broadcast(
+          "rc_window:#{session_id}",
+          "session_closed",
+          %{reason: "replaced_by_new_session"}
+        )
+
+        # Stop the relay if it's running
+        RcRelaySupervisor.stop_relay(session_id)
+
+        # Transition directly to closed state
+        transition_to_closed(session_id)
     end
   end
 

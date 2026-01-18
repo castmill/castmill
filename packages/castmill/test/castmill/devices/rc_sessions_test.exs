@@ -53,12 +53,20 @@ defmodule Castmill.Devices.RcSessionsTest do
       assert session.stopped_at == nil
     end
 
-    test "returns error when device already has active session", %{device: device, user: user} do
+    test "terminates existing session and creates new one when device already has active session", %{device: device, user: user} do
       # Create first session
-      {:ok, _session} = RcSessions.create_session(device.id, user.id)
+      {:ok, session1} = RcSessions.create_session(device.id, user.id)
 
-      # Try to create another session
-      assert {:error, :device_has_active_session} = RcSessions.create_session(device.id, user.id)
+      # Creating another session should terminate the first and succeed
+      {:ok, session2} = RcSessions.create_session(device.id, user.id)
+      
+      # Verify we got a new session
+      assert session2.id != session1.id
+      assert session2.state == "created"
+      
+      # Verify the old session was closed
+      old_session = RcSessions.get_session(session1.id)
+      assert old_session.state == "closed"
     end
 
     test "allows creating session after previous is closed", %{device: device, user: user} do
