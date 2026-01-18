@@ -33,8 +33,9 @@ export const DevicePreview: Component<{
   const [currentChannelName, setCurrentChannelName] = createSignal<string>('');
   const [player, setPlayer] = createSignal<Player | null>(null);
   
-  // Initialize ResourceManager once and reuse it
+  // Initialize ResourceManager once per component instance and reuse it
   let resourceManager: ResourceManager | null = null;
+  let resourceManagerPromise: Promise<ResourceManager> | null = null;
   let playerContainer: HTMLDivElement | undefined;
 
   /**
@@ -133,17 +134,33 @@ export const DevicePreview: Component<{
 
   /**
    * Initialize ResourceManager for the preview
+   * Protected against concurrent calls - only one initialization will occur
    */
-  const initializeResourceManager = async () => {
-    if (!resourceManager) {
+  const initializeResourceManager = async (): Promise<ResourceManager> => {
+    // If already initialized, return it
+    if (resourceManager) {
+      return resourceManager;
+    }
+    
+    // If initialization is in progress, wait for it
+    if (resourceManagerPromise) {
+      return resourceManagerPromise;
+    }
+    
+    // Start new initialization
+    resourceManagerPromise = (async () => {
       const storage = new StorageDummy('preview');
       const cache = new Cache(storage);
-      resourceManager = ResourceManager.createResourceManager(cache, {
+      const manager = ResourceManager.createResourceManager(cache, {
         baseUrl: props.baseUrl,
       });
-      await resourceManager.init();
-    }
-    return resourceManager;
+      await manager.init();
+      resourceManager = manager;
+      resourceManagerPromise = null; // Clear the promise after completion
+      return manager;
+    })();
+    
+    return resourceManagerPromise;
   };
 
   /**
