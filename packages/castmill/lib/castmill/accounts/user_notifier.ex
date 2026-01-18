@@ -180,7 +180,8 @@ defmodule Castmill.Accounts.UserNotifier do
     
     assigns = %{
       email: signup.email,
-      signup_url: url
+      signup_url: url,
+      year: DateTime.utc_now().year
     }
     
     html_body = render_signup_html(assigns)

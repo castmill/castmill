@@ -108,7 +108,7 @@
                       <a href="mailto:support@castmill.com" style="color: #667eea; text-decoration: none;">support@castmill.com</a>
                     </p>
                     <p style="margin: 0 0 10px 0; color: #a0aec0; font-size: 12px; line-height: 1.5;">
-                      © <%= DateTime.utc_now().year %> Castmill. All rights reserved.
+                      © <%= @year %> Castmill. All rights reserved.
                     </p>
                     <p style="margin: 0; color: #a0aec0; font-size: 12px; line-height: 1.5;">
                       This is an automated message, please do not reply to this email.

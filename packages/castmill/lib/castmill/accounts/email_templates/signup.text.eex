@@ -23,7 +23,7 @@ Need help?
 Visit our support center: https://castmill.com/support
 Contact us: support@castmill.com
 
-© <%= DateTime.utc_now().year %> Castmill. All rights reserved.
+© <%= @year %> Castmill. All rights reserved.
 
 This is an automated message, please do not reply to this email.
 
