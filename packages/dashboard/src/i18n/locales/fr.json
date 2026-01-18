@@ -849,7 +849,7 @@
       "organizationNameRequired": "Le nom de l'organisation est requis",
       "organizationNameTooShort": "Le nom de l'organisation doit comporter au moins 2 caractères",
       "organizationNameTooLong": "Le nom de l'organisation doit comporter moins de 50 caractères",
-      "organizationNameTaken": "Ce nom d'organisation est déjà pris",
+      "organizationNameTaken": "Ce nom d'organisation est déjà pris. Veuillez choisir un autre nom.",
       "failed": "Échec de la configuration. Veuillez réessayer."
     }
   }

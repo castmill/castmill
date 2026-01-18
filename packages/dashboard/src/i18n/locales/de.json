@@ -831,7 +831,7 @@
       "organizationNameRequired": "Organisationsname ist erforderlich",
       "organizationNameTooShort": "Der Organisationsname muss mindestens 2 Zeichen lang sein",
       "organizationNameTooLong": "Der Organisationsname muss weniger als 50 Zeichen lang sein",
-      "organizationNameTaken": "Dieser Organisationsname ist bereits vergeben",
+      "organizationNameTaken": "Dieser Organisationsname ist bereits vergeben. Bitte wählen Sie einen anderen Namen.",
       "failed": "Einrichtung fehlgeschlagen. Bitte versuchen Sie es erneut."
     }
   }

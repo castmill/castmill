@@ -837,7 +837,7 @@
       "organizationNameRequired": "اسم المؤسسة مطلوب",
       "organizationNameTooShort": "يجب أن يتكون اسم المؤسسة من حرفين على الأقل",
       "organizationNameTooLong": "يجب أن يكون اسم المؤسسة أقل من 50 حرفًا",
-      "organizationNameTaken": "اسم المؤسسة هذا مستخدم بالفعل",
+      "organizationNameTaken": "اسم المؤسسة هذا مستخدم بالفعل. يرجى اختيار اسم مختلف.",
       "failed": "فشل إكمال الإعداد. يرجى المحاولة مرة أخرى."
     }
   }

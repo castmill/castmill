@@ -837,7 +837,7 @@
       "organizationNameRequired": "조직 이름이 필요합니다",
       "organizationNameTooShort": "조직 이름은 최소 2자 이상이어야 합니다",
       "organizationNameTooLong": "조직 이름은 50자 미만이어야 합니다",
-      "organizationNameTaken": "이 조직 이름은 이미 사용 중입니다",
+      "organizationNameTaken": "이 조직 이름은 이미 사용 중입니다. 다른 이름을 선택해 주세요.",
       "failed": "설정을 완료하지 못했습니다. 다시 시도해 주세요."
     }
   }

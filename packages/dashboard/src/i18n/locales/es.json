@@ -836,7 +836,7 @@
       "organizationNameRequired": "El nombre de la organización es obligatorio",
       "organizationNameTooShort": "El nombre de la organización debe tener al menos 2 caracteres",
       "organizationNameTooLong": "El nombre de la organización debe tener menos de 50 caracteres",
-      "organizationNameTaken": "Este nombre de organización ya está en uso",
+      "organizationNameTaken": "Este nombre de organización ya está en uso. Por favor, elige un nombre diferente.",
       "failed": "Error al completar la configuración. Por favor, inténtalo de nuevo."
     }
   }

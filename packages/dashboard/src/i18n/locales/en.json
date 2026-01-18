@@ -830,7 +830,7 @@
       "organizationNameRequired": "Organization name is required",
       "organizationNameTooShort": "Organization name must be at least 2 characters",
       "organizationNameTooLong": "Organization name must be less than 50 characters",
-      "organizationNameTaken": "This organization name is already taken",
+      "organizationNameTaken": "This organization name is already taken. Please choose a different name.",
       "failed": "Failed to complete setup. Please try again."
     }
   }

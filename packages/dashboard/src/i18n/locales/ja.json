@@ -838,7 +838,7 @@
       "organizationNameRequired": "組織名は必須です",
       "organizationNameTooShort": "組織名は2文字以上である必要があります",
       "organizationNameTooLong": "組織名は50文字未満である必要があります",
-      "organizationNameTaken": "この組織名は既に使用されています",
+      "organizationNameTaken": "この組織名は既に使用されています。別の名前を選択してください。",
       "failed": "設定の完了に失敗しました。もう一度お試しください。"
     }
   }

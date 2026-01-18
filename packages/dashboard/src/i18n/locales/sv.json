@@ -832,7 +832,7 @@
       "organizationNameRequired": "Organisationsnamn krävs",
       "organizationNameTooShort": "Organisationsnamnet måste vara minst 2 tecken",
       "organizationNameTooLong": "Organisationsnamnet måste vara kortare än 50 tecken",
-      "organizationNameTaken": "Detta organisationsnamn är redan upptaget",
+      "organizationNameTaken": "Detta organisationsnamn är redan upptaget. Välj ett annat namn.",
       "failed": "Misslyckades med att slutföra installationen. Försök igen."
     }
   }

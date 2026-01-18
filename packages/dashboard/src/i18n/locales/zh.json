@@ -837,7 +837,7 @@
       "organizationNameRequired": "组织名称为必填项",
       "organizationNameTooShort": "组织名称必须至少包含 2 个字符",
       "organizationNameTooLong": "组织名称必须少于 50 个字符",
-      "organizationNameTaken": "此组织名称已被使用",
+      "organizationNameTaken": "此组织名称已被使用。请选择其他名称。",
       "failed": "设置失败。请重试。"
     }
   }
