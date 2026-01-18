@@ -1,8 +1,20 @@
 defmodule Castmill.Accounts.UserNotifier do
   import Swoosh.Email
   require Logger
+  require EEx
 
   alias Castmill.Mailer
+
+  # Compile email templates at compile time
+  @templates_dir Path.join([__DIR__, "email_templates"])
+  
+  EEx.function_from_file(:defp, :render_signup_html, 
+    Path.join(@templates_dir, "signup.html.eex"), 
+    [:assigns])
+  
+  EEx.function_from_file(:defp, :render_signup_text, 
+    Path.join(@templates_dir, "signup.text.eex"), 
+    [:assigns])
 
   # Delivers the email using the application mailer.
   defp deliver(recipient, subject, body) do
@@ -12,6 +24,27 @@ defmodule Castmill.Accounts.UserNotifier do
       |> from({"Castmill", System.get_env("MAILER_FROM") || "noreply@missing.email"})
       |> subject(subject)
       |> text_body(body)
+
+    case Mailer.deliver(email) do
+      {:ok, response} ->
+        Logger.info("Email sent successfully: #{inspect(response)}")
+        {:ok, email}
+
+      {:error, reason} ->
+        Logger.error("Failed to send email: #{inspect(reason)}")
+        {:error, reason}
+    end
+  end
+
+  # Delivers the email with both HTML and text body.
+  defp deliver_with_html(recipient, subject, text_body, html_body) do
+    email =
+      new()
+      |> to(recipient)
+      |> from({"Castmill", System.get_env("MAILER_FROM") || "noreply@missing.email"})
+      |> subject(subject)
+      |> text_body(text_body)
+      |> html_body(html_body)
 
     case Mailer.deliver(email) do
       {:ok, response} ->
@@ -143,20 +176,22 @@ defmodule Castmill.Accounts.UserNotifier do
   Deliver Signup instructions.
   """
   def deliver_signup_instructions(signup, dashboard_uri) do
-    deliver(signup.email, "Signup instructions", """
-
-    ==============================
-
-    Hi #{signup.email},
-
-    You can signup by visiting the URL below:
-
-    #{signup_url(signup, dashboard_uri)}
-
-    If you didn't request this, please ignore this.
-
-    ==============================
-    """)
+    url = signup_url(signup, dashboard_uri)
+    
+    assigns = %{
+      email: signup.email,
+      signup_url: url
+    }
+    
+    html_body = render_signup_html(assigns)
+    text_body = render_signup_text(assigns)
+    
+    deliver_with_html(
+      signup.email,
+      "Complete Your Castmill Signup",
+      text_body,
+      html_body
+    )
   end
 
   defp signup_url(
