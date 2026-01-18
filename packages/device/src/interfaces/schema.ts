@@ -2,6 +2,26 @@
  * Represents a schema for a document.
  *
  */
+
+/**
+ * Location value structure with coordinates and address information.
+ * Coordinates (lat/lng) are the source of truth.
+ */
+export interface LocationValue {
+  /** Latitude coordinate (-90 to 90) */
+  lat: number;
+  /** Longitude coordinate (-180 to 180) */
+  lng: number;
+  /** Human-readable address (optional) */
+  address?: string;
+  /** City name (optional) */
+  city?: string;
+  /** Country name (optional) */
+  country?: string;
+  /** Postal/ZIP code (optional) */
+  postalCode?: string;
+}
+
 type SimpleType =
   | 'string'
   | 'number'
@@ -114,6 +134,18 @@ interface LayoutRefFieldAttributes extends BaseAttributes {
   type: 'layout-ref';
 }
 
+/**
+ * Schema attributes for a location field.
+ * Allows selecting a geographic location with coordinates and address.
+ */
+interface LocationFieldAttributes extends BaseAttributes {
+  type: 'location';
+  /** Default location value */
+  default?: LocationValue;
+  /** Initial zoom level for the map (1-18, default: 13) */
+  defaultZoom?: number;
+}
+
 export type Schema = {
   [fieldName: string]:
     | SimpleType
@@ -121,5 +153,6 @@ export type Schema = {
     | ComplexFieldAttributes
     | ReferenceAttributes
     | LayoutFieldAttributes
-    | LayoutRefFieldAttributes;
+    | LayoutRefFieldAttributes
+    | LocationFieldAttributes;
 };

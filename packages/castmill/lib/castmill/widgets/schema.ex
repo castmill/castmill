@@ -80,7 +80,9 @@ defmodule Castmill.Widgets.Schema do
     # Layout type for dynamic multi-zone layouts (value is a map with aspectRatio and zones)
     "layout" => &is_map/1,
     # Layout reference type - references an existing layout by ID (value is a number/integer)
-    "layout-ref" => &is_number/1
+    "layout-ref" => &is_number/1,
+    # Location type for geographic coordinates (value is a map with lat, lng, and optional address fields)
+    "location" => &is_map/1
   }
   def validate_schema(schema) when map_size(schema) > 0 do
     schema
@@ -145,7 +147,9 @@ defmodule Castmill.Widgets.Schema do
       # Enum options for string fields
       "enum",
       # Layout-specific options
-      "aspectRatios" | required_keys
+      "aspectRatios",
+      # Location-specific options
+      "defaultZoom" | required_keys
     ]
 
     keys = Map.keys(map)
@@ -470,6 +474,37 @@ defmodule Castmill.Widgets.Schema do
     {:halt,
      {:error,
       "Layout-ref field #{inspect(field)} must be a map with layoutId, aspectRatio, and zonePlaylistMap"}}
+  end
+
+  # Location value should be a map with:
+  # - lat: number (latitude)
+  # - lng: number (longitude)
+  # - address: optional string
+  # - city: optional string
+  # - country: optional string
+  # - postalCode: optional string
+  defp validate_data_field(value, %{"type" => "location"}, field, acc_data)
+       when is_map(value) do
+    cond do
+      not is_number(value["lat"]) ->
+        {:halt, {:error, "Location field #{inspect(field)} must have a lat number"}}
+
+      not is_number(value["lng"]) ->
+        {:halt, {:error, "Location field #{inspect(field)} must have a lng number"}}
+
+      value["lat"] < -90 or value["lat"] > 90 ->
+        {:halt, {:error, "Location field #{inspect(field)} lat must be between -90 and 90"}}
+
+      value["lng"] < -180 or value["lng"] > 180 ->
+        {:halt, {:error, "Location field #{inspect(field)} lng must be between -180 and 180"}}
+
+      true ->
+        {:cont, {:ok, Map.put(acc_data, field, value)}}
+    end
+  end
+
+  defp validate_data_field(_value, %{"type" => "location"}, field, _acc_data) do
+    {:halt, {:error, "Location field #{inspect(field)} must be a map with lat and lng numbers"}}
   end
 
   # We need to add two more catch-all clauses for cases when the data does not match the schema type

@@ -90,6 +90,10 @@
     "selectVideo": "Seleccionar un video",
     "selectMedia": "Seleccionar un medio",
     "selectPlaylist": "Seleccionar una lista de reproducción",
+    "searchLocation": "Buscar una ubicación...",
+    "coordinates": "Coordenadas",
+    "address": "Dirección",
+    "noAddressAvailable": "No hay dirección disponible",
     "playlist": "Lista de reproducción",
     "addPlaylist": "Añadir lista de reproducción",
     "widget": "Widget"

@@ -85,6 +85,10 @@
     "selectImage": "Bild auswählen",
     "selectMedia": "Medien auswählen",
     "selectPlaylist": "Wiedergabeliste auswählen",
+    "searchLocation": "Nach einem Ort suchen...",
+    "coordinates": "Koordinaten",
+    "address": "Adresse",
+    "noAddressAvailable": "Keine Adresse verfügbar",
     "playlist": "Wiedergabeliste",
     "addPlaylist": "Wiedergabeliste hinzufügen",
     "widget": "Widget"
