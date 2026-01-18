@@ -644,6 +644,15 @@ class WebSocketManager(
                             // Authentication failed - disconnect and don't retry automatically
                             shouldReconnect = false
                             disconnect()
+                        } else if (status == "error") {
+                            // Check for "unmatched topic" error - this means we need to rejoin
+                            val reason = response?.get("reason")?.toString()?.trim('"')
+                            if (reason == "unmatched topic") {
+                                Log.w(TAG, "Channel disconnected (unmatched topic), triggering rejoin")
+                                isAuthenticated = false
+                                // Trigger rejoin by re-sending the join message
+                                joinChannel()
+                            }
                         }
                         // Ignore OK replies for heartbeats and other messages
                     }

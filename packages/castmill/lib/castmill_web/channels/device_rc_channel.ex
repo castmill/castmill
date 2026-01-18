@@ -168,7 +168,7 @@ defmodule CastmillWeb.DeviceRcChannel do
   @impl true
   def handle_info(%{event: "control_event", payload: payload, source: :relay}, socket) do
     # Received from relay (via PubSub), push to device WebSocket
-    Logger.debug("DeviceRcChannel: Received control_event from relay, pushing to device: #{inspect(payload)}")
+    Logger.info("DeviceRcChannel: Received control_event from relay for device #{socket.assigns.device_id}, payload: #{inspect(payload)}")
     push(socket, "control_event", payload)
 
     # Update activity timestamp
@@ -247,12 +247,14 @@ defmodule CastmillWeb.DeviceRcChannel do
   @impl true
   def handle_out("start_session", payload, socket) do
     session_id = Map.get(payload, :session_id) || Map.get(payload, "session_id")
-    Logger.info("DeviceRcChannel intercepted start_session: session_id=#{inspect(session_id)}, payload=#{inspect(payload)}")
+    Logger.info("DeviceRcChannel intercepted start_session: session_id=#{inspect(session_id)}, device_id=#{socket.assigns.device_id}, payload=#{inspect(payload)}")
 
     if session_id do
       # Subscribe to the session's PubSub topic to receive control events
-      Phoenix.PubSub.subscribe(Castmill.PubSub, "rc_session:#{session_id}")
-      Logger.info("DeviceRcChannel subscribed to rc_session:#{session_id}")
+      topic = "rc_session:#{session_id}"
+      Logger.info("DeviceRcChannel subscribing process #{inspect(self())} to #{topic}")
+      Phoenix.PubSub.subscribe(Castmill.PubSub, topic)
+      Logger.info("DeviceRcChannel subscribed to #{topic}")
 
       # Update socket with session_id
       socket = assign(socket, :session_id, session_id)

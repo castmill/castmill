@@ -597,55 +597,40 @@ class RemoteAccessibilityService : AccessibilityService() {
             return Pair(point.x.toFloat(), point.y.toFloat())
         }
         
-        // No mapper configured, use fallback scaling based on video resolution
-        // Video resolution is 1280x720, but may contain letterboxing
+        // No mapper configured, use simple direct scaling
+        // The video dimensions match the screen aspect ratio, so no letterboxing
         val displayMetrics = resources.displayMetrics
         val screenWidth = displayMetrics.widthPixels.toFloat()
         val screenHeight = displayMetrics.heightPixels.toFloat()
-        
-        val videoWidth = 1280f
-        val videoHeight = 720f
-        
         val screenAspect = screenWidth / screenHeight
-        val videoAspect = videoWidth / videoHeight
         
-        // Calculate the actual content area within the video (accounting for letterboxing)
-        val contentWidth: Float
-        val contentHeight: Float
-        val contentOffsetX: Float
-        val contentOffsetY: Float
+        // Calculate video dimensions the same way ScreenCaptureManager does
+        // TARGET_MAX_WIDTH = 1280, video maintains screen aspect ratio
+        val targetMaxWidth = 1280f
+        val targetMaxHeight = 720f
         
-        if (screenAspect < videoAspect) {
-            // Screen is narrower than video - pillarboxing (black bars on left/right)
-            // Content fills video height, with bars on sides
-            contentHeight = videoHeight
-            contentWidth = videoHeight * screenAspect
-            contentOffsetX = (videoWidth - contentWidth) / 2f
-            contentOffsetY = 0f
+        val videoWidth: Float
+        val videoHeight: Float
+        
+        if (screenAspect > targetMaxWidth / targetMaxHeight) {
+            // Screen is wider - height is constrained to 720
+            videoHeight = targetMaxHeight
+            videoWidth = (targetMaxHeight * screenAspect)
         } else {
-            // Screen is wider than video - letterboxing (black bars on top/bottom)
-            // Content fills video width, with bars on top/bottom
-            contentWidth = videoWidth
-            contentHeight = videoWidth / screenAspect
-            contentOffsetX = 0f
-            contentOffsetY = (videoHeight - contentHeight) / 2f
+            // Screen is taller or equal - width is constrained to 1280
+            videoWidth = targetMaxWidth
+            videoHeight = (targetMaxWidth / screenAspect)
         }
         
-        // Check if click is within content area
-        if (x < contentOffsetX || x > contentOffsetX + contentWidth ||
-            y < contentOffsetY || y > contentOffsetY + contentHeight) {
-            Log.w(TAG, "Click at ($x, $y) is outside content area [offset: ($contentOffsetX, $contentOffsetY), size: ${contentWidth}x${contentHeight}]")
-            // Still process but coordinates may be outside actual screen
-        }
+        // Round to even numbers (same as ScreenCaptureManager)
+        val actualVideoWidth = ((videoWidth / 2).toInt() * 2).toFloat()
+        val actualVideoHeight = ((videoHeight / 2).toInt() * 2).toFloat()
         
-        // Map from video content area to screen coordinates
-        val relativeX = x - contentOffsetX
-        val relativeY = y - contentOffsetY
+        // Simple direct scaling - video fills entire frame with no letterboxing
+        val scaledX = (x / actualVideoWidth) * screenWidth
+        val scaledY = (y / actualVideoHeight) * screenHeight
         
-        val scaledX = (relativeX / contentWidth) * screenWidth
-        val scaledY = (relativeY / contentHeight) * screenHeight
-        
-        Log.d(TAG, "Fallback scaling: ($x, $y) -> ($scaledX, $scaledY) [content: ${contentWidth}x${contentHeight} at offset ($contentOffsetX, $contentOffsetY), screen: ${screenWidth}x${screenHeight}]")
+        Log.d(TAG, "Direct scaling: ($x, $y) -> ($scaledX, $scaledY) [video: ${actualVideoWidth}x${actualVideoHeight}, screen: ${screenWidth}x${screenHeight}]")
         return Pair(scaledX, scaledY)
     }
 
@@ -669,7 +654,21 @@ class RemoteAccessibilityService : AccessibilityService() {
             val stroke = GestureDescription.StrokeDescription(path, startTime, duration)
             val gesture = gestureBuilder.addStroke(stroke).build()
             
-            return dispatchGesture(gesture, callback, null)
+            val resultCallback = object : AccessibilityService.GestureResultCallback() {
+                override fun onCompleted(gestureDescription: GestureDescription?) {
+                    Log.i(TAG, "Gesture completed successfully")
+                    callback?.onCompleted(gestureDescription)
+                }
+                
+                override fun onCancelled(gestureDescription: GestureDescription?) {
+                    Log.w(TAG, "Gesture was cancelled")
+                    callback?.onCancelled(gestureDescription)
+                }
+            }
+            
+            val dispatched = dispatchGesture(gesture, resultCallback, null)
+            Log.d(TAG, "dispatchGesture returned: $dispatched")
+            return dispatched
         } catch (e: Exception) {
             Log.e(TAG, "Error dispatching gesture", e)
             return false

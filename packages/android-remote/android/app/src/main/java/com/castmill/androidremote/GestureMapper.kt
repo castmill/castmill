@@ -86,38 +86,20 @@ class GestureMapper(
     /**
      * Calculate the coordinate transformation parameters.
      * 
-     * This method determines the scaling factors and offsets needed to map
-     * RC window coordinates to device coordinates, accounting for aspect ratio
-     * differences through letterboxing/pillarboxing.
+     * The video capture shows the app area (excluding system bars area in the frame)
+     * but includes a status bar offset since coordinates are in full screen space.
+     * We scale video coordinates directly to full screen coordinates.
      */
     private fun calculateTransform() {
-        // Calculate aspect ratios
-        val rcAspect = rcWidth.toFloat() / rcHeight.toFloat()
-        val deviceAspect = deviceWidth.toFloat() / deviceHeight.toFloat()
+        // Simple direct scaling - video is a 1:1 representation of the screen content
+        // Video captures at a scaled resolution but maintains aspect ratio with screen
+        scaleX = deviceWidth.toFloat() / rcWidth.toFloat()
+        scaleY = deviceHeight.toFloat() / rcHeight.toFloat()
         
-        if (rcAspect > deviceAspect) {
-            // RC window is wider - letterboxing (black bars on top/bottom)
-            scaleX = deviceWidth.toFloat() / rcWidth.toFloat()
-            scaleY = scaleX
-            
-            val scaledHeight = rcHeight * scaleY
-            offsetX = 0f
-            offsetY = (deviceHeight - scaledHeight) / 2f
-        } else if (rcAspect < deviceAspect) {
-            // RC window is taller - pillarboxing (black bars on left/right)
-            scaleY = deviceHeight.toFloat() / rcHeight.toFloat()
-            scaleX = scaleY
-            
-            val scaledWidth = rcWidth * scaleX
-            offsetX = (deviceWidth - scaledWidth) / 2f
-            offsetY = 0f
-        } else {
-            // Aspect ratios match - simple scaling
-            scaleX = deviceWidth.toFloat() / rcWidth.toFloat()
-            scaleY = deviceHeight.toFloat() / rcHeight.toFloat()
-            offsetX = 0f
-            offsetY = 0f
-        }
+        // No offset needed - video coordinate (0,0) maps to screen (0,0)
+        // The screen capture starts from the top of the display
+        offsetX = 0f
+        offsetY = 0f
         
         Log.d(TAG, "Transform calculated: scale=($scaleX, $scaleY), offset=($offsetX, $offsetY)")
     }

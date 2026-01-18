@@ -204,14 +204,33 @@ defmodule Castmill.Devices.RcSessions do
   @doc """
   Stops an RC session (legacy method for backward compatibility).
 
-  Transitions through stopping to closed state.
+  Transitions through stopping to closed state, or directly to closed if in created state.
   """
   def stop_session(session_id) do
-    with {:ok, session} <- transition_to_stopping(session_id),
-         {:ok, session} <- transition_to_closed(session_id) do
-      {:ok, session}
-    else
-      error -> error
+    # Log the caller to help debug who is closing sessions
+    Logger.info("stop_session called for #{session_id}, caller: #{inspect(Process.info(self(), :current_stacktrace))}")
+
+    case get_session(session_id) do
+      nil ->
+        {:error, :not_found}
+
+      session ->
+        Logger.info("stop_session: session state is #{session.state}")
+
+        # If session is in "created" state, go directly to closed
+        # because created -> stopping is not a valid transition
+        if session.state == "created" do
+          transition_to_closed(session_id)
+        else
+          # Normal flow: stopping -> closed
+          with {:ok, _session} <- transition_to_stopping(session_id),
+               {:ok, session} <- transition_to_closed(session_id) do
+            {:ok, session}
+          else
+            # If transition to stopping fails, try direct to closed
+            {:error, _reason} -> transition_to_closed(session_id)
+          end
+        end
     end
   end
 

@@ -50,6 +50,7 @@ defmodule CastmillWeb.RcWindowChannel do
             if has_rc_permission?(user_role) do
               # Re-fetch session to avoid race conditions and use latest state
               current_session = RcSessions.get_session(session_id)
+              Logger.info("RC window join: current_session=#{inspect(current_session)}, user.id=#{user.id}")
 
               if current_session &&
                  current_session.user_id == user.id and
@@ -92,6 +93,7 @@ defmodule CastmillWeb.RcWindowChannel do
 
                 {:ok, socket}
               else
+                Logger.warning("RC window join failed: current_session=#{inspect(current_session)}, user.id=#{user.id}, session state check failed")
                 {:error, %{reason: "Unauthorized or invalid session"}}
               end
             else
@@ -364,6 +366,21 @@ defmodule CastmillWeb.RcWindowChannel do
       RcLogger.info("RC window disconnected", session_id, device_id)
 
       Phoenix.PubSub.unsubscribe(Castmill.PubSub, "rc_session:#{session_id}")
+
+      # Stop the session when the RC window closes
+      # This ensures the session is properly cleaned up and a new one can be started
+      case RcSessions.stop_session(session_id) do
+        {:ok, _session} ->
+          Logger.info("RC session #{session_id} stopped on window close")
+          # Notify device that session has stopped
+          Phoenix.PubSub.broadcast(
+            Castmill.PubSub,
+            "rc_session:#{session_id}",
+            %{event: "stop_session"}
+          )
+        {:error, reason} ->
+          Logger.warning("Failed to stop RC session #{session_id} on window close: #{inspect(reason)}")
+      end
     end
 
     :ok
