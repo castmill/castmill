@@ -79,7 +79,7 @@ export const DefaultPlaylistComboBox: Component<{
               default_playlist_id: playlist.id,
             });
           }
-          
+
           setDefaultPlaylist(playlist);
           toast.success(t('channels.success.updateDefaultPlaylist'));
         } catch (e) {
@@ -103,7 +103,7 @@ export const DefaultPlaylistComboBox: Component<{
               default_playlist_id: null,
             });
           }
-          
+
           setDefaultPlaylist(undefined);
           toast.success(t('channels.success.clearDefaultPlaylist'));
         } catch (e) {
