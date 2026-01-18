@@ -12,6 +12,7 @@ import { useI18n } from '../../i18n';
 
 export const DefaultPlaylistComboBox: Component<{
   channel: JsonChannel;
+  onUpdate?: (channelUpdate: Partial<JsonChannel>) => Promise<JsonChannel | void>;
 }> = (props) => {
   const { t } = useI18n();
   const toast = useToast();
@@ -69,6 +70,15 @@ export const DefaultPlaylistComboBox: Component<{
             default_playlist_id: playlist.id,
           });
           setDefaultPlaylist(playlist);
+          
+          // Notify parent about the update
+          if (props.onUpdate) {
+            await props.onUpdate({
+              id: props.channel.id,
+              default_playlist_id: playlist.id,
+            });
+          }
+          
           toast.success(t('channels.success.updateDefaultPlaylist'));
         } catch (e) {
           toast.error(
@@ -84,6 +94,15 @@ export const DefaultPlaylistComboBox: Component<{
             default_playlist_id: null,
           });
           setDefaultPlaylist(undefined);
+          
+          // Notify parent about the update
+          if (props.onUpdate) {
+            await props.onUpdate({
+              id: props.channel.id,
+              default_playlist_id: null,
+            });
+          }
+          
           toast.success(t('channels.success.clearDefaultPlaylist'));
         } catch (e) {
           toast.error(

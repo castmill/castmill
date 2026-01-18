@@ -40,6 +40,7 @@ export interface DropTargetData {
 interface CalendarViewProps {
   channel: JsonChannel;
   timeZone: string;
+  onChannelUpdate?: (channelUpdate: Partial<JsonChannel>) => Promise<JsonChannel | void>;
 }
 
 export const CalendarView: Component<CalendarViewProps> = (props) => {
@@ -580,7 +581,10 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
         </Modal>
       </Show>
       <div class={styles['left-panel']}>
-        <DefaultPlaylistComboBox channel={props.channel} />
+        <DefaultPlaylistComboBox 
+          channel={props.channel} 
+          onUpdate={props.onChannelUpdate}
+        />
         <PlaylistChooser onDragOverCell={handleDragOverCell} />
       </div>
       <div class={styles['calendar-wrapper']}>
