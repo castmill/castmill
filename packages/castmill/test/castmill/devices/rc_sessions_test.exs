@@ -59,11 +59,11 @@ defmodule Castmill.Devices.RcSessionsTest do
 
       # Creating another session should terminate the first and succeed
       {:ok, session2} = RcSessions.create_session(device.id, user.id)
-      
+
       # Verify we got a new session
       assert session2.id != session1.id
       assert session2.state == "created"
-      
+
       # Verify the old session was closed
       old_session = RcSessions.get_session(session1.id)
       assert old_session.state == "closed"
@@ -82,7 +82,7 @@ defmodule Castmill.Devices.RcSessionsTest do
 
     test "accepts custom timeout", %{device: device, user: user} do
       {:ok, session} = RcSessions.create_session(device.id, user.id, timeout_seconds: 60)
-      
+
       # Timeout should be approximately 60 seconds from now
       now = DateTime.utc_now()
       timeout_diff = DateTime.diff(session.timeout_at, now, :second)
@@ -176,7 +176,7 @@ defmodule Castmill.Devices.RcSessionsTest do
     test "invalid transitions are rejected", %{session: session} do
       # Can't go from created to streaming directly
       result = RcSessions.transition_to_streaming(session.id)
-      
+
       case result do
         {:error, changeset} ->
           assert changeset.errors[:state] != nil
@@ -191,7 +191,7 @@ defmodule Castmill.Devices.RcSessionsTest do
   describe "get_session/1" do
     test "returns the session when it exists", %{device: device, user: user} do
       {:ok, created_session} = RcSessions.create_session(device.id, user.id)
-      
+
       session = RcSessions.get_session(created_session.id)
       assert session != nil
       assert session.id == created_session.id
@@ -207,7 +207,7 @@ defmodule Castmill.Devices.RcSessionsTest do
   describe "get_active_session_for_device/1" do
     test "returns the active session for a device", %{device: device, user: user} do
       {:ok, created_session} = RcSessions.create_session(device.id, user.id)
-      
+
       session = RcSessions.get_active_session_for_device(device.id)
       assert session != nil
       assert session.id == created_session.id
@@ -222,7 +222,7 @@ defmodule Castmill.Devices.RcSessionsTest do
     test "returns nil when all sessions are closed", %{device: device, user: user} do
       {:ok, created_session} = RcSessions.create_session(device.id, user.id)
       {:ok, _} = RcSessions.transition_to_closed(created_session.id)
-      
+
       session = RcSessions.get_active_session_for_device(device.id)
       assert session == nil
     end
@@ -231,10 +231,10 @@ defmodule Castmill.Devices.RcSessionsTest do
       # Create and close first session
       {:ok, session1} = RcSessions.create_session(device.id, user.id)
       {:ok, _} = RcSessions.transition_to_closed(session1.id)
-      
+
       # Create second session
       {:ok, session2} = RcSessions.create_session(device.id, user.id)
-      
+
       active_session = RcSessions.get_active_session_for_device(device.id)
       assert active_session.id == session2.id
     end
@@ -243,7 +243,7 @@ defmodule Castmill.Devices.RcSessionsTest do
   describe "stop_session/1" do
     test "stops an active session (transitions through stopping to closed)", %{device: device, user: user} do
       {:ok, session} = RcSessions.create_session(device.id, user.id)
-      
+
       assert {:ok, stopped_session} = RcSessions.stop_session(session.id)
       assert stopped_session.state == "closed"
       assert stopped_session.stopped_at != nil
@@ -256,14 +256,14 @@ defmodule Castmill.Devices.RcSessionsTest do
 
     test "can stop an already stopped session (idempotent)", %{device: device, user: user} do
       {:ok, session} = RcSessions.create_session(device.id, user.id)
-      
+
       # Stop once
       {:ok, stopped_once} = RcSessions.stop_session(session.id)
       first_stopped_at = stopped_once.stopped_at
-      
+
       # Stop again (should be idempotent or succeed)
       result = RcSessions.stop_session(session.id)
-      
+
       case result do
         {:ok, stopped_twice} ->
           assert stopped_twice.state == "closed"
@@ -280,10 +280,10 @@ defmodule Castmill.Devices.RcSessionsTest do
     test "updates last_activity_at for active sessions", %{device: device, user: user} do
       {:ok, session} = RcSessions.create_session(device.id, user.id)
       initial_activity = session.last_activity_at
-      
+
       # Wait a bit to ensure timestamp difference
       Process.sleep(100)
-      
+
       {:ok, updated} = RcSessions.update_activity(session.id)
       assert DateTime.compare(updated.last_activity_at, initial_activity) == :gt
     end
@@ -291,7 +291,7 @@ defmodule Castmill.Devices.RcSessionsTest do
     test "returns ok for closed sessions without updating", %{device: device, user: user} do
       {:ok, session} = RcSessions.create_session(device.id, user.id)
       {:ok, closed} = RcSessions.transition_to_closed(session.id)
-      
+
       {:ok, result} = RcSessions.update_activity(session.id)
       # Activity should not be updated for closed sessions
       assert result.state == "closed"
@@ -302,10 +302,10 @@ defmodule Castmill.Devices.RcSessionsTest do
     test "check_session_timeout closes timed out sessions", %{device: device, user: user} do
       # Create a session with a very short timeout
       {:ok, session} = RcSessions.create_session(device.id, user.id, timeout_seconds: 1)
-      
+
       # Wait for timeout
       Process.sleep(1500)
-      
+
       # Check timeout with the same timeout_seconds used at creation
       {:ok, checked} = RcSessions.check_session_timeout(session.id, 1)
       assert checked.state == "closed"
@@ -343,7 +343,7 @@ defmodule Castmill.Devices.RcSessionsTest do
 
     test "check_session_timeout does not close active sessions", %{device: device, user: user} do
       {:ok, session} = RcSessions.create_session(device.id, user.id, timeout_seconds: 300)
-      
+
       {:ok, checked} = RcSessions.check_session_timeout(session.id, 300)
       assert checked.state == "created"
     end
@@ -351,10 +351,10 @@ defmodule Castmill.Devices.RcSessionsTest do
     test "check_and_close_timed_out_sessions finds and closes timed out sessions", %{device: device, user: user} do
       # Create a session with very short timeout
       {:ok, _session1} = RcSessions.create_session(device.id, user.id, timeout_seconds: 1)
-      
+
       # Wait for timeout
       Process.sleep(1500)
-      
+
       # Check all timed out sessions
       count = RcSessions.check_and_close_timed_out_sessions(1)
       assert count >= 1
@@ -364,16 +364,16 @@ defmodule Castmill.Devices.RcSessionsTest do
   describe "get_device_rc_status/1" do
     test "returns no active session when device has no sessions", %{device: device} do
       status = RcSessions.get_device_rc_status(device.id)
-      
+
       assert status.has_active_session == false
       assert status.session == nil
     end
 
     test "returns active session when device has one", %{device: device, user: user} do
       {:ok, session} = RcSessions.create_session(device.id, user.id)
-      
+
       status = RcSessions.get_device_rc_status(device.id)
-      
+
       assert status.has_active_session == true
       assert status.session.id == session.id
       assert status.session.device_id == device.id
@@ -382,9 +382,9 @@ defmodule Castmill.Devices.RcSessionsTest do
     test "returns no active session when all sessions are closed", %{device: device, user: user} do
       {:ok, session} = RcSessions.create_session(device.id, user.id)
       {:ok, _} = RcSessions.transition_to_closed(session.id)
-      
+
       status = RcSessions.get_device_rc_status(device.id)
-      
+
       assert status.has_active_session == false
       assert status.session == nil
     end
