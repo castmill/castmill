@@ -19,9 +19,9 @@ export const OnboardingDialog: Component<OnboardingDialogProps> = (props) => {
 
   const handleSubmit = async (e: Event) => {
     e.preventDefault();
-    
+
     const name = organizationName().trim();
-    
+
     if (!name) {
       setError(t('onboarding.errors.organizationNameRequired'));
       return;
@@ -41,20 +41,19 @@ export const OnboardingDialog: Component<OnboardingDialogProps> = (props) => {
     setError('');
 
     try {
-      await OrganizationsService.completeOnboarding(
-        props.organizationId,
-        name
-      );
+      await OrganizationsService.completeOnboarding(props.organizationId, name);
       toast.success(t('onboarding.success'));
       props.onComplete(name);
-    } catch (err) {
-      if (err instanceof Error) {
-        // Check if it's a duplicate name error
-        if (err.message.includes('has already been taken')) {
-          setError(t('onboarding.errors.organizationNameTaken'));
-        } else {
-          setError(t('onboarding.errors.failed'));
-        }
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+
+      // Check if it's a duplicate name error (case-insensitive check)
+      if (
+        errorMessage.toLowerCase().includes('already been taken') ||
+        errorMessage.toLowerCase().includes('already taken') ||
+        errorMessage.toLowerCase().includes('already exists')
+      ) {
+        setError(t('onboarding.errors.organizationNameTaken'));
       } else {
         setError(t('onboarding.errors.failed'));
       }
@@ -76,32 +75,30 @@ export const OnboardingDialog: Component<OnboardingDialogProps> = (props) => {
         <div class="onboarding-dialog">
           <div class="onboarding-dialog-header">
             <h2>{t('onboarding.title')}</h2>
-            <p class="onboarding-dialog-subtitle">
-              {t('onboarding.subtitle')}
-            </p>
+            <p class="onboarding-dialog-subtitle">{t('onboarding.subtitle')}</p>
           </div>
 
           <form class="onboarding-dialog-form" onSubmit={handleSubmit}>
             <div class="onboarding-dialog-content">
-              <label for="organization-name" class="onboarding-dialog-label">
-                {t('onboarding.organizationNameLabel')}
-              </label>
-              <input
-                id="organization-name"
-                type="text"
-                class="onboarding-dialog-input"
-                value={organizationName()}
-                onInput={handleInputChange}
-                placeholder={t('onboarding.organizationNamePlaceholder')}
-                disabled={loading()}
-                autofocus
-              />
+              <div class="onboarding-dialog-field">
+                <label for="organization-name" class="onboarding-dialog-label">
+                  {t('onboarding.organizationNameLabel')}
+                </label>
+                <input
+                  id="organization-name"
+                  type="text"
+                  class="onboarding-dialog-input"
+                  value={organizationName()}
+                  onInput={handleInputChange}
+                  placeholder={t('onboarding.organizationNamePlaceholder')}
+                  disabled={loading()}
+                  autofocus
+                />
+              </div>
               <Show when={error()}>
                 <div class="onboarding-dialog-error">{error()}</div>
               </Show>
-              <p class="onboarding-dialog-help">
-                {t('onboarding.helpText')}
-              </p>
+              <p class="onboarding-dialog-help">{t('onboarding.helpText')}</p>
             </div>
 
             <div class="onboarding-dialog-footer">
@@ -110,7 +107,10 @@ export const OnboardingDialog: Component<OnboardingDialogProps> = (props) => {
                 class="onboarding-dialog-button"
                 disabled={loading() || !organizationName().trim()}
               >
-                <Show when={loading()} fallback={t('onboarding.continueButton')}>
+                <Show
+                  when={loading()}
+                  fallback={t('onboarding.continueButton')}
+                >
                   {t('common.loading')}
                 </Show>
               </button>
