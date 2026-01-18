@@ -33,6 +33,8 @@ export const DevicePreview: Component<{
   const [currentChannelName, setCurrentChannelName] = createSignal<string>('');
   const [player, setPlayer] = createSignal<Player | null>(null);
   
+  // Initialize ResourceManager once and reuse it
+  let resourceManager: ResourceManager | null = null;
   let playerContainer: HTMLDivElement | undefined;
 
   /**
@@ -130,6 +132,40 @@ export const DevicePreview: Component<{
   };
 
   /**
+   * Initialize ResourceManager for the preview
+   */
+  const initializeResourceManager = async () => {
+    if (!resourceManager) {
+      const storage = new StorageDummy('preview');
+      const cache = new Cache(storage);
+      resourceManager = ResourceManager.createResourceManager(cache, {
+        baseUrl: props.baseUrl,
+      });
+      await resourceManager.init();
+    }
+    return resourceManager;
+  };
+
+  /**
+   * Clean up player and its DOM elements properly
+   */
+  const cleanupPlayer = () => {
+    const currentPlayer = player();
+    if (currentPlayer) {
+      currentPlayer.stop();
+      setPlayer(null);
+    }
+    
+    // Clean up player container DOM
+    if (playerContainer) {
+      // Remove all child elements properly
+      while (playerContainer.firstChild) {
+        playerContainer.removeChild(playerContainer.firstChild);
+      }
+    }
+  };
+
+  /**
    * Fetch and display the playlist
    */
   const loadPlaylist = async (playlistId: number) => {
@@ -153,28 +189,15 @@ export const DevicePreview: Component<{
       setCurrentPlaylistName(playlistData.name || 'Unnamed Playlist');
       
       if (playerContainer) {
-        // Clear any existing player
-        const existingPlayer = player();
-        if (existingPlayer) {
-          existingPlayer.stop();
-        }
-        playerContainer.innerHTML = '';
+        // Clean up existing player properly
+        cleanupPlayer();
         
-        // Create a dummy storage for the preview (no actual caching needed)
-        const storage = new StorageDummy('preview');
-        const cache = new Cache(storage);
-        
-        // Create a resource manager with the base URL for fetching assets
-        const resourceManager = ResourceManager.createResourceManager(cache, {
-          baseUrl: props.baseUrl,
-        });
-        
-        // Initialize the resource manager
-        await resourceManager.init();
+        // Get or create resource manager (reuse if already initialized)
+        const manager = await initializeResourceManager();
         
         // Create a new renderer and player
         const renderer = new Renderer(playerContainer);
-        const playlist = Playlist.fromJSON(playlistData, resourceManager, { target: 'preview' });
+        const playlist = Playlist.fromJSON(playlistData, manager, { target: 'preview' });
         const newPlayer = new Player(playlist, renderer);
         
         // Start playing
@@ -220,10 +243,7 @@ export const DevicePreview: Component<{
 
   // Cleanup on unmount
   onCleanup(() => {
-    const currentPlayer = player();
-    if (currentPlayer) {
-      currentPlayer.stop();
-    }
+    cleanupPlayer();
   });
 
   return (
