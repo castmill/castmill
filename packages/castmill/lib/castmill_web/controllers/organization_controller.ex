@@ -146,7 +146,7 @@ defmodule CastmillWeb.OrganizationController do
     {:ok, Organizations.is_admin?(organization_id, actor_id)}
   end
 
-  def check_access(actor_id, :complete_onboarding, %{"id" => organization_id}) do
+  def check_access(actor_id, :complete_onboarding, %{"organization_id" => organization_id}) do
     {:ok, Organizations.is_admin?(organization_id, actor_id)}
   end
 
@@ -252,7 +252,7 @@ defmodule CastmillWeb.OrganizationController do
     end
   end
 
-  def complete_onboarding(conn, %{"id" => id, "name" => name}) do
+  def complete_onboarding(conn, %{"organization_id" => id, "name" => name}) do
     with {:ok, %Organization{} = organization} <-
            Organizations.complete_onboarding(id, name) do
       render(conn, :show, organization: organization)
