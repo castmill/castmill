@@ -1,12 +1,12 @@
 ========================================
-CASTMILL - Digital Signage Platform
+CASTMILL™ - Digital Signage Platform
 ========================================
 
-Welcome to Castmill! 👋
+Welcome to Castmill™! 👋
 
 Hi <%= @email %>,
 
-Thank you for signing up for Castmill! We're excited to have you on board.
+Thank you for signing up for Castmill™! We're excited to have you on board.
 
 To complete your registration and get started with our digital signage platform, please visit the following link:
 
@@ -15,7 +15,7 @@ To complete your registration and get started with our digital signage platform,
 ----------------------------------------
 
 🔒 SECURITY NOTICE:
-If you didn't create an account with Castmill, please ignore this email. This link will expire after use for your security.
+If you didn't create an account with Castmill™, please ignore this email. This link will expire after use for your security.
 
 ----------------------------------------
 
@@ -23,7 +23,7 @@ Need help?
 Visit our support center: https://castmill.com/support
 Contact us: support@castmill.com
 
-© <%= @year %> Castmill. All rights reserved.
+© <%= @year %> Castmill AB. All rights reserved.
 
 This is an automated message, please do not reply to this email.
 

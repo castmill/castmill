@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <title>Complete Your Castmill Signup</title>
+  <title>Complete Your Castmill™ Signup</title>
   <!--[if mso]>
   <style type="text/css">
     body, table, td {font-family: Arial, Helvetica, sans-serif !important;}
@@ -25,7 +25,7 @@
                 <tr>
                   <td align="center">
                     <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 600; letter-spacing: -0.5px;">
-                      Castmill
+                      Castmill™
                     </h1>
                     <p style="margin: 10px 0 0 0; color: #e0e7ff; font-size: 14px; font-weight: 400;">
                       Digital Signage Platform
@@ -43,13 +43,13 @@
                 <tr>
                   <td>
                     <h2 style="margin: 0 0 20px 0; color: #1a1a1a; font-size: 24px; font-weight: 600; line-height: 1.3;">
-                      Welcome to Castmill! 👋
+                      Welcome to Castmill™! 👋
                     </h2>
                     <p style="margin: 0 0 20px 0; color: #4a5568; font-size: 16px; line-height: 1.6;">
                       Hi <strong><%= @email %></strong>,
                     </p>
                     <p style="margin: 0 0 30px 0; color: #4a5568; font-size: 16px; line-height: 1.6;">
-                      Thank you for signing up for Castmill! We're excited to have you on board. To complete your registration and get started with our digital signage platform, please click the button below:
+                      Thank you for signing up for Castmill™! We're excited to have you on board. To complete your registration and get started with our digital signage platform, please click the button below:
                     </p>
                   </td>
                 </tr>
@@ -87,7 +87,7 @@
                 <tr>
                   <td style="padding: 20px; background-color: #f7fafc; border-left: 4px solid #667eea; border-radius: 4px;">
                     <p style="margin: 0; color: #4a5568; font-size: 14px; line-height: 1.5;">
-                      <strong>🔒 Security Notice:</strong> If you didn't create an account with Castmill, please ignore this email. This link will expire after use for your security.
+                      <strong>🔒 Security Notice:</strong> If you didn't create an account with Castmill™, please ignore this email. This link will expire after use for your security.
                     </p>
                   </td>
                 </tr>
@@ -108,7 +108,7 @@
                       <a href="mailto:support@castmill.com" style="color: #667eea; text-decoration: none;">support@castmill.com</a>
                     </p>
                     <p style="margin: 0 0 10px 0; color: #a0aec0; font-size: 12px; line-height: 1.5;">
-                      © <%= @year %> Castmill. All rights reserved.
+                      © <%= @year %> Castmill AB. All rights reserved.
                     </p>
                     <p style="margin: 0; color: #a0aec0; font-size: 12px; line-height: 1.5;">
                       This is an automated message, please do not reply to this email.
