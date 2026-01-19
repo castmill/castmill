@@ -158,6 +158,7 @@ export const Item: Component<{
             style={style}
             timeline={props.timeline}
             resourceManager={props.resourceManager}
+            globals={props.globals}
             onReady={props.onReady}
           />
         </Match>

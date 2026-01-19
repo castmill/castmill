@@ -1,18 +1,26 @@
-import { Component, createSignal, onMount, onCleanup, Show, For } from 'solid-js';
+import {
+  Component,
+  createSignal,
+  onMount,
+  onCleanup,
+  Show,
+  For,
+} from 'solid-js';
 import { Device } from '../interfaces/device.interface';
 import { DevicesService, JsonChannel } from '../services/devices.service';
-import { 
-  Player, 
-  Playlist, 
-  Renderer, 
-  JsonPlaylist 
+import {
+  Player,
+  Playlist,
+  Renderer,
+  Layer,
+  JsonPlaylist,
 } from '@castmill/player';
 import { ResourceManager, Cache, StorageDummy } from '@castmill/cache';
 import styles from './devices.module.scss';
 
 /**
  * DevicePreview Component
- * 
+ *
  * Shows a preview of what the device should be playing right now based on
  * its assigned channels and their schedules. This is not the actual content
  * being played on the device (which could be offline or crashed), but rather
@@ -24,15 +32,18 @@ export const DevicePreview: Component<{
   t?: (key: string, params?: Record<string, any>) => string;
 }> = (props) => {
   const t = props.t || ((key: string) => key);
-  
+
   const [loading, setLoading] = createSignal(true);
   const [error, setError] = createSignal<string | null>(null);
   const [channels, setChannels] = createSignal<JsonChannel[]>([]);
-  const [currentPlaylistId, setCurrentPlaylistId] = createSignal<number | null>(null);
-  const [currentPlaylistName, setCurrentPlaylistName] = createSignal<string>('');
+  const [currentPlaylistId, setCurrentPlaylistId] = createSignal<number | null>(
+    null
+  );
+  const [currentPlaylistName, setCurrentPlaylistName] =
+    createSignal<string>('');
   const [currentChannelName, setCurrentChannelName] = createSignal<string>('');
   const [player, setPlayer] = createSignal<Player | null>(null);
-  
+
   // Initialize ResourceManager once per component instance and reuse it
   let resourceManager: ResourceManager | null = null;
   let resourceManagerPromise: Promise<ResourceManager> | null = null;
@@ -42,14 +53,19 @@ export const DevicePreview: Component<{
    * Get the playlist that should be playing at a given timestamp
    * based on channel scheduling logic
    */
-  const getPlaylistAt = (channel: JsonChannel, timestamp: number): { 
-    playlist: number; 
-    endTime: number; 
-    nextTime: number | undefined 
-  } | undefined => {
+  const getPlaylistAt = (
+    channel: JsonChannel,
+    timestamp: number
+  ):
+    | {
+        playlist: number;
+        endTime: number;
+        nextTime: number | undefined;
+      }
+    | undefined => {
     const entries = channel.entries || [];
     const sortedEntries = [...entries].sort((a, b) => a.start - b.start);
-    
+
     for (let i = sortedEntries.length - 1; i >= 0; i--) {
       const entry = sortedEntries[i];
       if (
@@ -108,28 +124,33 @@ export const DevicePreview: Component<{
   };
 
   /**
-   * Determine which playlist should be playing right now
+   * Determine all playlists that should be playing right now from all channels
+   * Returns array of { channelName, playlistId } for all active channels
    */
-  const determineCurrentPlaylist = () => {
+  const determineCurrentPlaylists = (): {
+    channelName: string;
+    playlistId: number;
+  }[] => {
     const channelList = channels();
     if (channelList.length === 0) {
-      setError(t('devices.preview.noChannels'));
-      return null;
+      return [];
     }
 
     const now = Date.now();
-    
+    const activePlaylists: { channelName: string; playlistId: number }[] = [];
+
     // Check each channel to find what should be playing
     for (const channel of channelList) {
       const result = getPlaylistAt(channel, now);
       if (result) {
-        setCurrentChannelName(channel.name);
-        return result.playlist;
+        activePlaylists.push({
+          channelName: channel.name,
+          playlistId: result.playlist,
+        });
       }
     }
 
-    setError(t('devices.preview.noScheduledContent'));
-    return null;
+    return activePlaylists;
   };
 
   /**
@@ -141,12 +162,12 @@ export const DevicePreview: Component<{
     if (resourceManager) {
       return resourceManager;
     }
-    
+
     // If initialization is in progress, wait for it
     if (resourceManagerPromise) {
       return resourceManagerPromise;
     }
-    
+
     // Start new initialization
     resourceManagerPromise = (async () => {
       const storage = new StorageDummy('preview');
@@ -159,7 +180,7 @@ export const DevicePreview: Component<{
       resourceManagerPromise = null; // Clear the promise after completion
       return manager;
     })();
-    
+
     return resourceManagerPromise;
   };
 
@@ -167,12 +188,19 @@ export const DevicePreview: Component<{
    * Clean up player and its DOM elements properly
    */
   const cleanupPlayer = () => {
+    // Stop the main loop
+    closing = true;
+
     const currentPlayer = player();
     if (currentPlayer) {
       currentPlayer.stop();
       setPlayer(null);
     }
-    
+
+    // Clear the content queue
+    contentQueue = null;
+    fetchedPlaylists = [];
+
     // Clean up player container DOM
     if (playerContainer) {
       // Remove all child elements properly
@@ -183,9 +211,11 @@ export const DevicePreview: Component<{
   };
 
   /**
-   * Fetch and display the playlist
+   * Fetch a single playlist by ID
    */
-  const loadPlaylist = async (playlistId: number) => {
+  const fetchPlaylist = async (
+    playlistId: number
+  ): Promise<JsonPlaylist | null> => {
     try {
       const response = await fetch(
         `${props.baseUrl}/dashboard/devices/${props.device.id}/playlists/${playlistId}`,
@@ -202,28 +232,134 @@ export const DevicePreview: Component<{
         throw new Error('Failed to fetch playlist');
       }
 
-      const playlistData: JsonPlaylist = await response.json();
-      setCurrentPlaylistName(playlistData.name || 'Unnamed Playlist');
-      
-      if (playerContainer) {
-        // Clean up existing player properly
-        cleanupPlayer();
-        
-        // Get or create resource manager (reuse if already initialized)
-        const manager = await initializeResourceManager();
-        
-        // Create a new renderer and player
-        const renderer = new Renderer(playerContainer);
-        const playlist = Playlist.fromJSON(playlistData, manager, { target: 'preview' });
-        const newPlayer = new Player(playlist, renderer);
-        
-        // Start playing
-        newPlayer.play({ loop: true });
-        setPlayer(newPlayer);
+      return await response.json();
+    } catch (err) {
+      console.error(`Error fetching playlist ${playlistId}:`, err);
+      return null;
+    }
+  };
+
+  // Store fetched playlists and channel info for the main loop
+  let fetchedPlaylists: { channelName: string; playlist: JsonPlaylist }[] = [];
+  let channelIndex = 0;
+  let closing = false;
+  let contentQueue: Playlist | null = null;
+
+  /**
+   * Fetch all active playlists and start the player loop
+   * Uses the same architecture as the real device player:
+   * - Creates a content queue (Playlist) to hold layers
+   * - Uses Layer.fromPlaylist() to create layers from playlists
+   * - Main loop adds layers to queue when needed and cycles through channels
+   */
+  const loadPlaylists = async (
+    playlists: { channelName: string; playlistId: number }[]
+  ) => {
+    try {
+      // Clean up existing player FIRST before setting up new state
+      cleanupPlayer();
+
+      // Fetch all playlists in parallel
+      const playlistPromises = playlists.map(async (p) => {
+        const playlist = await fetchPlaylist(p.playlistId);
+        return playlist ? { channelName: p.channelName, playlist } : null;
+      });
+      const playlistResults = await Promise.all(playlistPromises);
+
+      // Filter out any failed fetches
+      fetchedPlaylists = playlistResults.filter(
+        (p): p is { channelName: string; playlist: JsonPlaylist } => p !== null
+      );
+
+      if (fetchedPlaylists.length === 0) {
+        setError(t('devices.preview.errorLoadingPlaylist'));
+        return;
+      }
+
+      const channelNames = fetchedPlaylists
+        .map((p) => p.channelName)
+        .join(', ');
+      const playlistNames = fetchedPlaylists
+        .map((p) => p.playlist.name || 'Unnamed')
+        .join(', ');
+
+      setCurrentChannelName(channelNames);
+      setCurrentPlaylistName(playlistNames);
+
+      if (!playerContainer) {
+        console.error('Player container not available');
+        setError(t('devices.preview.errorLoadingPlaylist'));
+        return;
+      }
+
+      // Get or create resource manager (reuse if already initialized)
+      const manager = await initializeResourceManager();
+
+      // Create a content queue (empty playlist) - same as the real device
+      contentQueue = new Playlist('content-queue', manager);
+
+      // Create renderer and player with the content queue
+      const renderer = new Renderer(playerContainer);
+      const newPlayer = new Player(contentQueue, renderer);
+      setPlayer(newPlayer);
+
+      // Start the main loop - same pattern as the real device
+      channelIndex = 0;
+      closing = false;
+      runMainLoop(manager, newPlayer);
+    } catch (err) {
+      console.error('Error loading playlists:', err);
+      setError(t('devices.preview.errorLoadingPlaylist'));
+    }
+  };
+
+  /**
+   * Main loop that cycles through channels - same as the real device player.
+   * Adds content to the queue when it has less than 2 items, cycles through channels.
+   */
+  const runMainLoop = async (
+    manager: ResourceManager,
+    currentPlayer: Player
+  ) => {
+    try {
+      while (!closing) {
+        // Add next content when queue is running low
+        if (
+          contentQueue &&
+          contentQueue.length < 2 &&
+          fetchedPlaylists.length > 0
+        ) {
+          const currentPlaylist = fetchedPlaylists[channelIndex];
+
+          // Create a layer from the playlist - same as the real device
+          // Use muted: true for browser preview to allow autoplay
+          const layer = Layer.fromPlaylist(currentPlaylist.playlist, manager, {
+            target: 'poster',
+            muted: true,
+          });
+
+          // Add layer to the content queue
+          contentQueue.add(layer);
+
+          // Start playing if not already
+          currentPlayer.play({ loop: true });
+
+          // Set up end handler to remove layer from queue - same as the real device
+          const onEnd = () => {
+            contentQueue?.remove(layer);
+            layer.off('end', onEnd);
+          };
+          layer.on('end', onEnd);
+
+          // Move to next channel
+          channelIndex = (channelIndex + 1) % fetchedPlaylists.length;
+        }
+
+        // Wait before next iteration - same as the real device (5 seconds)
+        await new Promise((resolve) => setTimeout(resolve, 5000));
       }
     } catch (err) {
-      console.error('Error loading playlist:', err);
-      setError(t('devices.preview.errorLoadingPlaylist'));
+      console.error('Error in preview main loop:', err);
     }
   };
 
@@ -243,17 +379,25 @@ export const DevicePreview: Component<{
 
       setChannels(channelsResponse.data || []);
 
-      // Determine which playlist should be playing
-      const playlistId = determineCurrentPlaylist();
-      
-      if (playlistId) {
-        setCurrentPlaylistId(playlistId);
-        await loadPlaylist(playlistId);
+      // Determine all playlists that should be playing from all channels
+      const activePlaylists = determineCurrentPlaylists();
+
+      if (activePlaylists.length > 0) {
+        // Use the first playlist ID for the signal (for conditional rendering)
+        setCurrentPlaylistId(activePlaylists[0].playlistId);
+        // Set loading to false first so the container is rendered
+        setLoading(false);
+        // Use requestAnimationFrame to ensure the DOM has updated
+        requestAnimationFrame(() => {
+          loadPlaylists(activePlaylists);
+        });
+      } else {
+        setError(t('devices.preview.noScheduledContent'));
+        setLoading(false);
       }
     } catch (err) {
       console.error('Error initializing preview:', err);
       setError(t('devices.preview.errorInitializing'));
-    } finally {
       setLoading(false);
     }
   });
@@ -280,14 +424,13 @@ export const DevicePreview: Component<{
       <Show when={!loading() && !error() && currentPlaylistId()}>
         <div class={styles.previewInfo}>
           <p>
-            <strong>{t('devices.preview.currentlyPlaying')}:</strong> {currentChannelName()}
+            <strong>{t('devices.preview.currentlyPlaying')}:</strong>{' '}
+            {currentChannelName()}
           </p>
           <p>
             <strong>{t('common.playlist')}:</strong> {currentPlaylistName()}
           </p>
-          <p class={styles.previewNote}>
-            {t('devices.preview.note')}
-          </p>
+          <p class={styles.previewNote}>{t('devices.preview.note')}</p>
         </div>
         <div class={styles.previewContainer} ref={playerContainer}></div>
       </Show>
