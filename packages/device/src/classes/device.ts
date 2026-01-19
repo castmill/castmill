@@ -50,6 +50,12 @@ export interface DeviceCommand {
     | 'device_removed';
 }
 
+export interface ChannelUpdatedMessage {
+  event: string;
+  channel_id: number;
+  default_playlist_id: number | null;
+}
+
 interface CachePage {
   page: number;
   page_size: number;
@@ -523,7 +529,7 @@ export class Device extends EventEmitter {
     });
 
     // Handle channel updates (e.g., when default playlist changes)
-    channel.on('channel_updated', async (message: { event: string; channel_id: number; default_playlist_id: number | null }) => {
+    channel.on('channel_updated', async (message: ChannelUpdatedMessage) => {
       this.logger.info(`Channel ${message.channel_id} updated, default playlist: ${message.default_playlist_id}`);
       
       // Find the channel that was updated

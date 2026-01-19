@@ -330,19 +330,25 @@ defmodule CastmillWeb.ResourceController do
   # This is done asynchronously to avoid blocking the HTTP response
   defp notify_devices_of_channel_update(channel_id, channel) do
     Task.start(fn ->
-      devices = Castmill.Resources.get_devices_using_channel(channel_id)
+      try do
+        devices = Castmill.Resources.get_devices_using_channel(channel_id)
 
-      Enum.each(devices, fn device ->
-        Phoenix.PubSub.broadcast(
-          Castmill.PubSub,
-          "devices:#{device.id}",
-          %{
-            event: "channel_updated",
-            channel_id: channel_id,
-            default_playlist_id: channel.default_playlist_id
-          }
-        )
-      end)
+        Enum.each(devices, fn device ->
+          Phoenix.PubSub.broadcast(
+            Castmill.PubSub,
+            "devices:#{device.id}",
+            %{
+              event: "channel_updated",
+              channel_id: channel_id,
+              default_playlist_id: channel.default_playlist_id
+            }
+          )
+        end)
+      rescue
+        error ->
+          require Logger
+          Logger.error("Failed to notify devices of channel update: #{inspect(error)}")
+      end
     end)
   end
 
