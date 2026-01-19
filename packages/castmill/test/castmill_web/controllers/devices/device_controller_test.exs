@@ -8,6 +8,7 @@ defmodule CastmillWeb.DeviceControllerTest do
   import Castmill.OrganizationsFixtures
   import Castmill.DevicesFixtures
   import Castmill.ChannelsFixtures
+  import Castmill.PlaylistsFixtures
 
   @moduletag :e2e
   @moduletag :device_controller
@@ -590,6 +591,317 @@ defmodule CastmillWeb.DeviceControllerTest do
       # Guest should be able to list events (show permission)
       conn = get(guest_conn, "/dashboard/devices/#{device.id}/events")
       assert json_response(conn, 200)
+    end
+  end
+
+  describe "get_playlist authorization (device preview)" do
+    @describetag device_controller: true
+
+    test "admin can get playlist assigned to device via channel entry", %{
+      conn: conn,
+      organization: organization
+    } do
+      # Create a device
+      {:ok, devices_registration} =
+        device_registration_fixture(%{hardware_id: "preview-hw-1", pincode: "preview1"})
+
+      {:ok, {device, _token}} =
+        Castmill.Devices.register_device(organization.id, devices_registration.pincode, %{
+          name: "Preview Test Device"
+        })
+
+      # Create a playlist and channel
+      playlist = playlist_fixture(%{organization_id: organization.id, name: "Test Playlist"})
+      channel = channel_fixture(%{organization_id: organization.id, timezone: "UTC"})
+
+      # Add playlist to channel via channel entry
+      entry_attrs = %{
+        "name" => "scheduled entry",
+        "start" => DateTime.to_unix(~U[2025-01-01 10:00:00Z]),
+        "end" => DateTime.to_unix(~U[2025-12-31 23:59:59Z]),
+        "playlist_id" => playlist.id
+      }
+
+      {:ok, _entry} = Castmill.Resources.add_channel_entry(channel.id, entry_attrs)
+
+      # Assign channel to device
+      Castmill.Devices.add_channel(device.id, channel.id)
+
+      # Admin should be able to get the playlist
+      conn = get(conn, "/dashboard/devices/#{device.id}/playlists/#{playlist.id}")
+      assert json_response(conn, 200)
+      response = json_response(conn, 200)
+      assert response["name"] == "Test Playlist"
+    end
+
+    test "admin can get default playlist assigned to device", %{
+      conn: conn,
+      organization: organization
+    } do
+      # Create a device
+      {:ok, devices_registration} =
+        device_registration_fixture(%{hardware_id: "preview-hw-2", pincode: "preview2"})
+
+      {:ok, {device, _token}} =
+        Castmill.Devices.register_device(organization.id, devices_registration.pincode, %{
+          name: "Preview Test Device 2"
+        })
+
+      # Create a playlist
+      playlist = playlist_fixture(%{organization_id: organization.id, name: "Default Playlist"})
+
+      # Create a channel with default playlist
+      channel =
+        channel_fixture(%{
+          organization_id: organization.id,
+          timezone: "UTC",
+          default_playlist_id: playlist.id
+        })
+
+      # Assign channel to device
+      Castmill.Devices.add_channel(device.id, channel.id)
+
+      # Admin should be able to get the playlist
+      conn = get(conn, "/dashboard/devices/#{device.id}/playlists/#{playlist.id}")
+      assert json_response(conn, 200)
+      response = json_response(conn, 200)
+      assert response["name"] == "Default Playlist"
+    end
+
+    test "manager can get playlist assigned to device", %{organization: organization} do
+      # Create a manager user
+      manager_user =
+        user_fixture(%{organization_id: organization.id, email: "manager-preview@test.com"})
+
+      {:ok, _} = Organizations.set_user_role(organization.id, manager_user.id, :manager)
+
+      # Create access token for manager
+      manager_token =
+        access_token_fixture(%{
+          secret: "manager-preview:testpass",
+          user_id: manager_user.id,
+          is_root: false
+        })
+
+      # Build authenticated conn for manager
+      manager_conn =
+        build_conn()
+        |> put_req_header("accept", "application/json")
+        |> put_req_header("authorization", "Bearer #{manager_token.secret}")
+
+      # Create a device
+      {:ok, devices_registration} =
+        device_registration_fixture(%{hardware_id: "preview-hw-3", pincode: "preview3"})
+
+      {:ok, {device, _token}} =
+        Castmill.Devices.register_device(organization.id, devices_registration.pincode, %{
+          name: "Preview Test Device 3"
+        })
+
+      # Create playlist and channel
+      playlist =
+        playlist_fixture(%{organization_id: organization.id, name: "Manager Test Playlist"})
+
+      channel =
+        channel_fixture(%{
+          organization_id: organization.id,
+          timezone: "UTC",
+          default_playlist_id: playlist.id
+        })
+
+      Castmill.Devices.add_channel(device.id, channel.id)
+
+      # Manager should be able to get the playlist
+      conn = get(manager_conn, "/dashboard/devices/#{device.id}/playlists/#{playlist.id}")
+      assert json_response(conn, 200)
+    end
+
+    test "member can get playlist assigned to device", %{organization: organization} do
+      # Create a member user
+      member_user =
+        user_fixture(%{organization_id: organization.id, email: "member-preview@test.com"})
+
+      {:ok, _} = Organizations.set_user_role(organization.id, member_user.id, :member)
+
+      # Create access token for member
+      member_token =
+        access_token_fixture(%{
+          secret: "member-preview:testpass",
+          user_id: member_user.id,
+          is_root: false
+        })
+
+      # Build authenticated conn for member
+      member_conn =
+        build_conn()
+        |> put_req_header("accept", "application/json")
+        |> put_req_header("authorization", "Bearer #{member_token.secret}")
+
+      # Create a device
+      {:ok, devices_registration} =
+        device_registration_fixture(%{hardware_id: "preview-hw-4", pincode: "preview4"})
+
+      {:ok, {device, _token}} =
+        Castmill.Devices.register_device(organization.id, devices_registration.pincode, %{
+          name: "Preview Test Device 4"
+        })
+
+      # Create playlist and channel
+      playlist = playlist_fixture(%{organization_id: organization.id, name: "Member Test Playlist"})
+
+      channel =
+        channel_fixture(%{
+          organization_id: organization.id,
+          timezone: "UTC",
+          default_playlist_id: playlist.id
+        })
+
+      Castmill.Devices.add_channel(device.id, channel.id)
+
+      # Member should be able to get the playlist
+      conn = get(member_conn, "/dashboard/devices/#{device.id}/playlists/#{playlist.id}")
+      assert json_response(conn, 200)
+    end
+
+    test "guest can get playlist assigned to device", %{organization: organization} do
+      # Create a guest user
+      guest_user = user_fixture(%{organization_id: organization.id, email: "guest-preview@test.com"})
+      {:ok, _} = Organizations.set_user_role(organization.id, guest_user.id, :guest)
+
+      # Create access token for guest
+      guest_token =
+        access_token_fixture(%{
+          secret: "guest-preview:testpass",
+          user_id: guest_user.id,
+          is_root: false
+        })
+
+      # Build authenticated conn for guest
+      guest_conn =
+        build_conn()
+        |> put_req_header("accept", "application/json")
+        |> put_req_header("authorization", "Bearer #{guest_token.secret}")
+
+      # Create a device
+      {:ok, devices_registration} =
+        device_registration_fixture(%{hardware_id: "preview-hw-5", pincode: "preview5"})
+
+      {:ok, {device, _token}} =
+        Castmill.Devices.register_device(organization.id, devices_registration.pincode, %{
+          name: "Preview Test Device 5"
+        })
+
+      # Create playlist and channel
+      playlist = playlist_fixture(%{organization_id: organization.id, name: "Guest Test Playlist"})
+
+      channel =
+        channel_fixture(%{
+          organization_id: organization.id,
+          timezone: "UTC",
+          default_playlist_id: playlist.id
+        })
+
+      Castmill.Devices.add_channel(device.id, channel.id)
+
+      # Guest should be able to get the playlist
+      conn = get(guest_conn, "/dashboard/devices/#{device.id}/playlists/#{playlist.id}")
+      assert json_response(conn, 200)
+    end
+
+    test "editor cannot get playlist assigned to device", %{organization: organization} do
+      # Create an editor user
+      editor_user = user_fixture(%{organization_id: organization.id, email: "editor-preview@test.com"})
+      {:ok, _} = Organizations.set_user_role(organization.id, editor_user.id, :editor)
+
+      # Create access token for editor
+      editor_token =
+        access_token_fixture(%{
+          secret: "editor-preview:testpass",
+          user_id: editor_user.id,
+          is_root: false
+        })
+
+      # Build authenticated conn for editor
+      editor_conn =
+        build_conn()
+        |> put_req_header("accept", "application/json")
+        |> put_req_header("authorization", "Bearer #{editor_token.secret}")
+
+      # Create a device
+      {:ok, devices_registration} =
+        device_registration_fixture(%{hardware_id: "preview-hw-6", pincode: "preview6"})
+
+      {:ok, {device, _token}} =
+        Castmill.Devices.register_device(organization.id, devices_registration.pincode, %{
+          name: "Preview Test Device 6"
+        })
+
+      # Create playlist and channel
+      playlist = playlist_fixture(%{organization_id: organization.id, name: "Editor Test Playlist"})
+
+      channel =
+        channel_fixture(%{
+          organization_id: organization.id,
+          timezone: "UTC",
+          default_playlist_id: playlist.id
+        })
+
+      Castmill.Devices.add_channel(device.id, channel.id)
+
+      # Editor should NOT be able to get the playlist (no show permission on devices)
+      conn = get(editor_conn, "/dashboard/devices/#{device.id}/playlists/#{playlist.id}")
+      assert json_response(conn, 403)
+    end
+
+    test "user from different organization cannot access device playlist", %{
+      organization: _organization
+    } do
+      # Create first organization setup
+      network1 = network_fixture(%{name: "Network 1"})
+      organization1 = organization_fixture(%{network_id: network1.id, name: "Org 1"})
+
+      # Create second organization with user
+      network2 = network_fixture(%{name: "Network 2"})
+      organization2 = organization_fixture(%{network_id: network2.id, name: "Org 2"})
+      other_user = user_fixture(%{organization_id: organization2.id, email: "other@test.com"})
+      {:ok, _} = Organizations.set_user_role(organization2.id, other_user.id, :admin)
+
+      other_token =
+        access_token_fixture(%{
+          secret: "other:testpass",
+          user_id: other_user.id,
+          is_root: false
+        })
+
+      other_conn =
+        build_conn()
+        |> put_req_header("accept", "application/json")
+        |> put_req_header("authorization", "Bearer #{other_token.secret}")
+
+      # Create device in first organization
+      {:ok, devices_registration} =
+        device_registration_fixture(%{hardware_id: "preview-hw-7", pincode: "preview7"})
+
+      {:ok, {device, _token}} =
+        Castmill.Devices.register_device(organization1.id, devices_registration.pincode, %{
+          name: "Org1 Device"
+        })
+
+      # Create playlist in first organization
+      playlist = playlist_fixture(%{organization_id: organization1.id, name: "Org1 Playlist"})
+
+      channel =
+        channel_fixture(%{
+          organization_id: organization1.id,
+          timezone: "UTC",
+          default_playlist_id: playlist.id
+        })
+
+      Castmill.Devices.add_channel(device.id, channel.id)
+
+      # User from other organization should NOT be able to access
+      conn = get(other_conn, "/dashboard/devices/#{device.id}/playlists/#{playlist.id}")
+      assert json_response(conn, 403)
     end
   end
 end
