@@ -87,6 +87,12 @@ defmodule CastmillWeb.DevicesChannel do
   end
 
   @impl true
+  def handle_info(%{event: "channel_updated"} = message, socket) do
+    push(socket, "channel_updated", message)
+    {:noreply, socket}
+  end
+
+  @impl true
   def handle_info(:check_heartbeat, socket) do
     device_id = socket.assigns.device.device_id
 

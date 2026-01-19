@@ -18,11 +18,7 @@ export const ChannelView = (props: {
 
   return (
     <div style={style}>
-      <CalendarView 
-        timeZone="Europe/Stockholm" 
-        channel={props.channel}
-        onChannelUpdate={props.onSubmit}
-      />
+      <CalendarView timeZone="Europe/Stockholm" channel={props.channel} />
     </div>
   );
 };

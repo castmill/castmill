@@ -300,10 +300,15 @@ defmodule CastmillWeb.ResourceController do
 
       Castmill.Resources.update_channel(channel, params.update)
       |> case do
-        {:ok, channel} ->
+        {:ok, updated_channel} ->
+          # If default_playlist_id was updated, notify all connected devices
+          if Map.has_key?(params.update, :default_playlist_id) do
+            notify_devices_of_channel_update(updated_channel.id, updated_channel)
+          end
+
           conn
           |> put_status(:ok)
-          |> json(channel)
+          |> json(updated_channel)
 
         {:error, errors} ->
           conn
@@ -318,6 +323,23 @@ defmodule CastmillWeb.ResourceController do
         |> Phoenix.Controller.json(%{errors: errors})
         |> halt()
     end
+  end
+
+  # Notify all devices assigned to a channel when it's updated
+  defp notify_devices_of_channel_update(channel_id, channel) do
+    devices = Castmill.Resources.get_devices_using_channel(channel_id)
+
+    Enum.each(devices, fn device ->
+      Phoenix.PubSub.broadcast(
+        Castmill.PubSub,
+        "devices:#{device.id}",
+        %{
+          event: "channel_updated",
+          channel_id: channel_id,
+          default_playlist_id: channel.default_playlist_id
+        }
+      )
+    end)
   end
 
   @update_layout_params_schema %{

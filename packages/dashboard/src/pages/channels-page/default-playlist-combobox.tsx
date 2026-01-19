@@ -12,7 +12,6 @@ import { useI18n } from '../../i18n';
 
 export const DefaultPlaylistComboBox: Component<{
   channel: JsonChannel;
-  onUpdate?: (channelUpdate: Partial<JsonChannel>) => Promise<JsonChannel | void>;
 }> = (props) => {
   const { t } = useI18n();
   const toast = useToast();
@@ -30,8 +29,6 @@ export const DefaultPlaylistComboBox: Component<{
         props.channel.default_playlist_id
       );
       setDefaultPlaylist(result.data);
-    } else {
-      setDefaultPlaylist(undefined);
     }
   });
 
@@ -66,20 +63,11 @@ export const DefaultPlaylistComboBox: Component<{
       }}
       onSelect={async (playlist: JsonPlaylist) => {
         try {
-          // Notify parent about the update (parent will make the API call)
-          // or fallback to updating directly if no parent handler
-          if (props.onUpdate) {
-            await props.onUpdate({
-              id: props.channel.id,
-              default_playlist_id: playlist.id,
-            });
-          } else {
-            await channelsService.updateChannel({
-              id: props.channel.id,
-              default_playlist_id: playlist.id,
-            });
-          }
-
+          // Update the channel
+          await channelsService.updateChannel({
+            id: props.channel.id,
+            default_playlist_id: playlist.id,
+          });
           setDefaultPlaylist(playlist);
           toast.success(t('channels.success.updateDefaultPlaylist'));
         } catch (e) {
@@ -90,20 +78,11 @@ export const DefaultPlaylistComboBox: Component<{
       }}
       onClear={async () => {
         try {
-          // Notify parent about the update (parent will make the API call)
-          // or fallback to updating directly if no parent handler
-          if (props.onUpdate) {
-            await props.onUpdate({
-              id: props.channel.id,
-              default_playlist_id: null,
-            });
-          } else {
-            await channelsService.updateChannel({
-              id: props.channel.id,
-              default_playlist_id: null,
-            });
-          }
-
+          // Update the channel to remove default playlist
+          await channelsService.updateChannel({
+            id: props.channel.id,
+            default_playlist_id: null,
+          });
           setDefaultPlaylist(undefined);
           toast.success(t('channels.success.clearDefaultPlaylist'));
         } catch (e) {
