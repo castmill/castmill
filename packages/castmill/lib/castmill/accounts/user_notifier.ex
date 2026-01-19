@@ -7,14 +7,20 @@ defmodule Castmill.Accounts.UserNotifier do
 
   # Compile email templates at compile time
   @templates_dir Path.join([__DIR__, "email_templates"])
-  
-  EEx.function_from_file(:defp, :render_signup_html, 
-    Path.join(@templates_dir, "signup.html.eex"), 
-    [:assigns])
-  
-  EEx.function_from_file(:defp, :render_signup_text, 
-    Path.join(@templates_dir, "signup.text.eex"), 
-    [:assigns])
+
+  EEx.function_from_file(
+    :defp,
+    :render_signup_html,
+    Path.join(@templates_dir, "signup.html.eex"),
+    [:assigns]
+  )
+
+  EEx.function_from_file(
+    :defp,
+    :render_signup_text,
+    Path.join(@templates_dir, "signup.text.eex"),
+    [:assigns]
+  )
 
   # Delivers the email using the application mailer.
   defp deliver(recipient, subject, body) do
@@ -177,16 +183,16 @@ defmodule Castmill.Accounts.UserNotifier do
   """
   def deliver_signup_instructions(signup, dashboard_uri) do
     url = signup_url(signup, dashboard_uri)
-    
+
     assigns = %{
       email: signup.email,
       signup_url: url,
       year: DateTime.utc_now().year
     }
-    
+
     html_body = render_signup_html(assigns)
     text_body = render_signup_text(assigns)
-    
+
     deliver_with_html(
       signup.email,
       "Complete Your Castmill Signup",
