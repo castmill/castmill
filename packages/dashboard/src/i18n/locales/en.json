@@ -649,7 +649,13 @@
     "pincodeDescription": "The pincode will be shown on the device's screen.",
     "register": "Register",
     "preview": {
-      "placeholder": "Preview"
+      "placeholder": "Preview",
+      "noChannels": "No channels assigned to this device",
+      "noScheduledContent": "No content scheduled at this time",
+      "errorLoadingPlaylist": "Failed to load playlist content",
+      "errorInitializing": "Failed to initialize preview",
+      "currentlyPlaying": "Currently scheduled from channel",
+      "note": "This shows what the device should be playing now based on channel schedules, not necessarily what is actually displayed on the device."
     },
     "telemetry": {
       "placeholder": "Traces, Logs, Metrics and Connectivity (WiFi quality, etc.)"

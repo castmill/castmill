@@ -352,6 +352,106 @@ defmodule Castmill.DevicesTest do
       assert Devices.has_access_to_playlist(device.id, playlist.id) == false
     end
 
+    test "has_access_to_playlist/2 checks if a device has access to a default playlist" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+
+      {:ok, devices_registration} =
+        device_registration_fixture(%{
+          hardware_id: "default-playlist-hw-id",
+          pincode: "default123"
+        })
+
+      assert {:ok, {device, _token}} =
+               Devices.register_device(organization.id, devices_registration.pincode, %{
+                 name: "device with default playlist"
+               })
+
+      assert Devices.list_channels(device.id) == []
+
+      # Create a playlist to be used as default
+      default_playlist =
+        playlist_fixture(%{organization_id: organization.id, name: "Default Playlist"})
+
+      # Create a channel with the default playlist
+      channel =
+        channel_fixture(%{
+          organization_id: organization.id,
+          timezone: "America/Sao_Paulo",
+          default_playlist_id: default_playlist.id
+        })
+
+      # Device should not have access before channel is assigned
+      assert Devices.has_access_to_playlist(device.id, default_playlist.id) == false
+
+      # Assign channel to device
+      Devices.add_channel(device.id, channel.id)
+
+      # Now device should have access to the default playlist
+      assert Devices.has_access_to_playlist(device.id, default_playlist.id)
+
+      # Remove channel from device
+      Devices.remove_channel(device.id, channel.id)
+
+      # Device should no longer have access
+      assert Devices.has_access_to_playlist(device.id, default_playlist.id) == false
+    end
+
+    test "has_access_to_playlist/2 grants access through either channel entry or default playlist" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+
+      {:ok, devices_registration} =
+        device_registration_fixture(%{
+          hardware_id: "combined-access-hw-id",
+          pincode: "combined123"
+        })
+
+      assert {:ok, {device, _token}} =
+               Devices.register_device(organization.id, devices_registration.pincode, %{
+                 name: "device with combined access"
+               })
+
+      # Create two playlists
+      default_playlist =
+        playlist_fixture(%{organization_id: organization.id, name: "Default Playlist"})
+
+      entry_playlist =
+        playlist_fixture(%{organization_id: organization.id, name: "Entry Playlist"})
+
+      # Create a channel with one playlist as default
+      channel =
+        channel_fixture(%{
+          organization_id: organization.id,
+          timezone: "Europe/Stockholm",
+          default_playlist_id: default_playlist.id
+        })
+
+      # Add a channel entry with the other playlist
+      entry_attrs = %{
+        "name" => "scheduled entry",
+        "start" => DateTime.to_unix(~U[2025-01-01 10:00:00Z]),
+        "end" => DateTime.to_unix(~U[2025-01-01 18:00:00Z]),
+        "playlist_id" => entry_playlist.id
+      }
+
+      assert {:ok, _entry} = Resources.add_channel_entry(channel.id, entry_attrs)
+
+      # Assign channel to device
+      Devices.add_channel(device.id, channel.id)
+
+      # Device should have access to both playlists
+      assert Devices.has_access_to_playlist(device.id, default_playlist.id)
+      assert Devices.has_access_to_playlist(device.id, entry_playlist.id)
+
+      # Create an unrelated playlist
+      unrelated_playlist =
+        playlist_fixture(%{organization_id: organization.id, name: "Unrelated"})
+
+      # Device should NOT have access to unrelated playlist
+      assert Devices.has_access_to_playlist(device.id, unrelated_playlist.id) == false
+    end
+
     test "add_channel/2 can assign multiple channels to a device" do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})

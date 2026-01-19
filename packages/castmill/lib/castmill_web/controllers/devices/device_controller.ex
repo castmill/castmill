@@ -32,6 +32,37 @@ defmodule CastmillWeb.DeviceController do
     end
   end
 
+  # For get_playlist action in dashboard context:
+  # - If actor is the device itself, check if playlist is assigned to it
+  # - If actor is a user, check if they have access to view the device
+  #   (users who can see devices can see the preview/playlist content)
+  def check_access(actor_id, :get_playlist, %{
+        "device_id" => device_id,
+        "playlist_id" => playlist_id
+      }) do
+    # Device can access its own assigned playlists
+    if actor_id == device_id do
+      {:ok, Devices.has_access_to_playlist(device_id, playlist_id)}
+    else
+      # For dashboard users: if they can view the device, they can view the preview
+      # But we still verify the playlist is actually assigned to this device for security
+      device = Devices.get_device(device_id)
+
+      if device do
+        organization_id = device.organization_id
+        # Use :get_channels action which maps to :show permission (viewing devices)
+        user_can_view_device =
+          Organizations.has_access(organization_id, actor_id, "devices", :get_channels)
+
+        playlist_assigned = Devices.has_access_to_playlist(device_id, playlist_id)
+
+        {:ok, user_can_view_device and playlist_assigned}
+      else
+        {:ok, false}
+      end
+    end
+  end
+
   # A device will have access for most actions on itself (but not all,
   # like sending commands to itself, removing itself, etc).
   # TODO: add when clause to limit the actions that are allowed
@@ -175,17 +206,24 @@ defmodule CastmillWeb.DeviceController do
   end
 
   @doc """
-    Returns the given playlists.
-    TODO: Add authorization check to ensure that the device has access to the playlist.
-    Basically check if the playlist is referenced by a channel that is associated to the device.
+    Returns the given playlist.
+    Authorization is handled by check_access/3 which verifies:
+    - For devices: the playlist is assigned to the device via a channel
+    - For dashboard users: the user can view the device AND the playlist is assigned to it
   """
   def get_playlist(conn, %{"device_id" => _device_id, "playlist_id" => playlist_id}) do
-    playlist = Resources.get_playlist(playlist_id)
+    case Resources.get_playlist(playlist_id) do
+      nil ->
+        conn
+        |> put_status(:not_found)
+        |> json(%{error: "Playlist not found"})
 
-    conn
-    |> put_status(:ok)
-    |> put_resp_header("content-type", "application/json")
-    |> json(playlist)
+      playlist ->
+        conn
+        |> put_status(:ok)
+        |> put_resp_header("content-type", "application/json")
+        |> json(playlist)
+    end
   end
 
   @doc """

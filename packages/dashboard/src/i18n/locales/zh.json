@@ -94,9 +94,7 @@
     "noAddressAvailable": "无可用地址",
     "playlist": "播放列表",
     "addPlaylist": "添加播放列表",
-    "apply": "应用",
     "selectVideo": "选择视频",
-    "offline": "离线",
     "widget": "Widget"
   },
   "topbar": {
@@ -603,7 +601,13 @@
     "setDeviceChannel": "设置设备频道",
     "selectChannel": "选择频道",
     "preview": {
-      "placeholder": "预览"
+      "placeholder": "预览",
+      "noChannels": "此设备未分配频道",
+      "noScheduledContent": "此时没有安排内容",
+      "errorLoadingPlaylist": "加载播放列表内容失败",
+      "errorInitializing": "初始化预览失败",
+      "currentlyPlaying": "当前从频道安排",
+      "note": "这显示设备现在根据频道时间表应该播放的内容，不一定是设备上实际显示的内容。"
     },
     "telemetry": {
       "placeholder": "跟踪、日志、指标和连接性(WiFi质量等)"

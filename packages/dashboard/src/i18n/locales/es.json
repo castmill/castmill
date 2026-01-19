@@ -625,7 +625,13 @@
     "setDeviceChannel": "Establecer canal del dispositivo",
     "selectChannel": "Seleccionar canal",
     "preview": {
-      "placeholder": "Vista previa"
+      "placeholder": "Vista previa",
+      "noChannels": "No hay canales asignados a este dispositivo",
+      "noScheduledContent": "No hay contenido programado en este momento",
+      "errorLoadingPlaylist": "Error al cargar el contenido de la lista de reproducción",
+      "errorInitializing": "Error al inicializar la vista previa",
+      "currentlyPlaying": "Actualmente programado desde el canal",
+      "note": "Esto muestra lo que el dispositivo debería estar reproduciendo ahora según los horarios del canal, no necesariamente lo que se muestra realmente en el dispositivo."
     },
     "telemetry": {
       "placeholder": "Trazas, registros, métricas y conectividad (calidad WiFi, etc.)"

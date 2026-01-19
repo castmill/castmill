@@ -94,9 +94,7 @@
     "noAddressAvailable": "لا يوجد عنوان متاح",
     "playlist": "قائمة التشغيل",
     "addPlaylist": "إضافة قائمة تشغيل",
-    "apply": "تطبيق",
     "selectVideo": "اختر فيديو",
-    "offline": "غير متصل",
     "widget": "Widget"
   },
   "topbar": {
@@ -603,7 +601,13 @@
     "setDeviceChannel": "تعيين قناة الجهاز",
     "selectChannel": "اختر القناة",
     "preview": {
-      "placeholder": "معاينة"
+      "placeholder": "معاينة",
+      "noChannels": "لا توجد قنوات مخصصة لهذا الجهاز",
+      "noScheduledContent": "لا يوجد محتوى مجدول في هذا الوقت",
+      "errorLoadingPlaylist": "فشل تحميل محتوى قائمة التشغيل",
+      "errorInitializing": "فشل تهيئة المعاينة",
+      "currentlyPlaying": "مجدول حاليا من القناة",
+      "note": "يوضح هذا ما يجب أن يعرضه الجهاز الآن بناءً على جداول القنوات، وليس بالضرورة ما يتم عرضه فعليًا على الجهاز."
     },
     "telemetry": {
       "placeholder": "التتبع والسجلات والمقاييس والاتصال (جودة WiFi وما إلى ذلك)"

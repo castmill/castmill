@@ -426,6 +426,9 @@ defmodule CastmillWeb.Router do
     # Endpoint to remove a channel from a device in the dashboard scope
     delete("/devices/:device_id/channels/:channel_id", DeviceController, :remove_channel)
 
+    # Endpoint to get a playlist for device preview in the dashboard scope
+    get("/devices/:device_id/playlists/:playlist_id", DeviceController, :get_playlist)
+
     # Notification routes
     get("/notifications", NotificationController, :index)
     get("/notifications/unread_count", NotificationController, :unread_count)

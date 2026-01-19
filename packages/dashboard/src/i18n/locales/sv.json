@@ -89,9 +89,7 @@
     "noAddressAvailable": "Ingen adress tillgänglig",
     "playlist": "Spellista",
     "addPlaylist": "Lägg till spellista",
-    "apply": "Tillämpa",
     "selectVideo": "Välj en video",
-    "offline": "Offline",
     "widget": "Widget"
   },
   "topbar": {
@@ -598,7 +596,13 @@
     "setDeviceChannel": "Ställ in enhetskanal",
     "selectChannel": "Välj kanal",
     "preview": {
-      "placeholder": "Förhandsvisning"
+      "placeholder": "Förhandsgranskning",
+      "noChannels": "Inga kanaler tilldelade till denna enhet",
+      "noScheduledContent": "Inget innehåll schemalagt just nu",
+      "errorLoadingPlaylist": "Misslyckades att ladda spellisteinnehåll",
+      "errorInitializing": "Misslyckades att initiera förhandsgranskning",
+      "currentlyPlaying": "För närvarande schemalagt från kanal",
+      "note": "Detta visar vad enheten borde spela nu baserat på kanalscheman, inte nödvändigtvis vad som faktiskt visas på enheten."
     },
     "telemetry": {
       "placeholder": "Spår, loggar, mätvärden och anslutning (WiFi-kvalitet osv.)"

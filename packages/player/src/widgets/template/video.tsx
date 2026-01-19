@@ -102,6 +102,7 @@ export class VideoComponent implements TemplateComponent {
 interface VideoProps extends BaseComponentProps {
   opts: VideoComponentOptions;
   resourceManager: ResourceManager;
+  globals: PlayerGlobals;
 }
 
 export const Video: Component<VideoProps> = (props) => {
@@ -299,6 +300,7 @@ export const Video: Component<VideoProps> = (props) => {
           display: props.opts.url ? 'block' : 'none',
         }}
         playsinline
+        muted={props.globals.muted ?? false}
       ></video>
     </>
   );
