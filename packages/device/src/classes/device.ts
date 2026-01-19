@@ -521,6 +521,19 @@ export class Device extends EventEmitter {
           break;
       }
     });
+
+    // Handle channel updates (e.g., when default playlist changes)
+    channel.on('channel_updated', async (message: { event: string; channel_id: number; default_playlist_id: number | null }) => {
+      this.logger.info(`Channel ${message.channel_id} updated, default playlist: ${message.default_playlist_id}`);
+      
+      // Find the channel that was updated
+      const updatedChannel = this.channels.find(ch => ch.attrs.id === String(message.channel_id));
+      if (updatedChannel) {
+        // Update the channel's default playlist ID
+        updatedChannel.attrs.default_playlist_id = message.default_playlist_id ? String(message.default_playlist_id) : undefined;
+        this.logger.info('Channel default playlist updated, will take effect on next schedule check');
+      }
+    });
   }
 
   private async getCache({ page, page_size: perPage, type }: CachePage) {
