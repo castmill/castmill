@@ -656,7 +656,7 @@ defmodule Castmill.Organizations do
         # now we can send the email outside the transaction.
         organization = Castmill.Organizations.get_organization(organization_id)
         network = Castmill.Networks.get_network(organization.network_id)
-        send_invitation_email(network.domain, network.name, email, token)
+        send_invitation_email(network.domain, network.name, organization.name, email, token)
 
         # Check if user exists and send notification
         case Castmill.Accounts.get_user_by_email(email) do
@@ -755,30 +755,31 @@ defmodule Castmill.Organizations do
       where: ilike(u.email, ^"%#{search}%")
   end
 
-  defp send_invitation_email(baseUrl, name, email, token) do
-    subject = "You have been invited to an Organization on #{name}"
+  defp send_invitation_email(baseUrl, network_name, organization_name, email, token) do
+    subject = "You have been invited to an Organization on #{network_name}"
 
-    body = """
-    Hello
+    {html_body, text_body} =
+      Castmill.EmailRenderer.render_organization_invite(
+        organization_name,
+        network_name,
+        email,
+        token,
+        baseUrl
+      )
 
-    You have been invited to join an organization on #{name}. Please click on the link below to accept the invitation.
-
-    #{baseUrl}/invite-organization/?token=#{token}
-
-    """
-
-    deliver(email, subject, body)
+    deliver(email, subject, html_body, text_body)
   end
 
   # Delivers the email using the application mailer.
-  defp deliver(recipient, subject, body) do
+  defp deliver(recipient, subject, html_body, text_body) do
     email =
       Email.new()
       |> Email.to(recipient)
       # TODO: fetch this info from the Network
       |> Email.from({"Castmill", "no-reply@castmill.com"})
       |> Email.subject(subject)
-      |> Email.text_body(body)
+      |> Email.html_body(html_body)
+      |> Email.text_body(text_body)
 
     with {:ok, _metadata} <- Mailer.deliver(email) do
       {:ok, email}
