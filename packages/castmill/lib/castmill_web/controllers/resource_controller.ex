@@ -301,8 +301,9 @@ defmodule CastmillWeb.ResourceController do
       Castmill.Resources.update_channel(channel, params.update)
       |> case do
         {:ok, updated_channel} ->
-          # If default_playlist_id was updated, notify all connected devices
-          if Map.has_key?(params.update, :default_playlist_id) do
+          # If default_playlist_id was updated and actually changed, notify all connected devices
+          if Map.has_key?(params.update, :default_playlist_id) and
+               channel.default_playlist_id != updated_channel.default_playlist_id do
             notify_devices_of_channel_update(updated_channel.id, updated_channel)
           end
 
@@ -325,20 +326,23 @@ defmodule CastmillWeb.ResourceController do
     end
   end
 
-  # Notify all devices assigned to a channel when it's updated
+  # Notify all devices assigned to a channel when its default playlist changes
+  # This is done asynchronously to avoid blocking the HTTP response
   defp notify_devices_of_channel_update(channel_id, channel) do
-    devices = Castmill.Resources.get_devices_using_channel(channel_id)
+    Task.start(fn ->
+      devices = Castmill.Resources.get_devices_using_channel(channel_id)
 
-    Enum.each(devices, fn device ->
-      Phoenix.PubSub.broadcast(
-        Castmill.PubSub,
-        "devices:#{device.id}",
-        %{
-          event: "channel_updated",
-          channel_id: channel_id,
-          default_playlist_id: channel.default_playlist_id
-        }
-      )
+      Enum.each(devices, fn device ->
+        Phoenix.PubSub.broadcast(
+          Castmill.PubSub,
+          "devices:#{device.id}",
+          %{
+            event: "channel_updated",
+            channel_id: channel_id,
+            default_playlist_id: channel.default_playlist_id
+          }
+        )
+      end)
     end)
   end
 
