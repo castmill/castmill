@@ -285,7 +285,9 @@
     },
     "memberSelection": {
       "selectUser": "اختر مستخدمًا",
-      "searchUser": "البحث عن مستخدم..."
+      "searchUser": "البحث عن مستخدم...",
+      "noUsersAvailable": "لا يوجد مستخدمون متاحون للدعوة.",
+      "inviteToOrgFirst": "يجب دعوة المستخدمين أولاً إلى المنظمة قبل إضافتهم إلى الفرق."
     },
     "teamsRemovedSuccessfully": "تمت إزالة الفرق بنجاح"
   },

@@ -285,7 +285,9 @@
     },
     "memberSelection": {
       "selectUser": "Sélectionner un utilisateur",
-      "searchUser": "Rechercher un utilisateur..."
+      "searchUser": "Rechercher un utilisateur...",
+      "noUsersAvailable": "Aucun utilisateur disponible à inviter.",
+      "inviteToOrgFirst": "Les utilisateurs doivent d'abord être invités à l'organisation avant de pouvoir être ajoutés aux équipes."
     },
     "teamsRemovedSuccessfully": "Équipes supprimées avec succès"
   },

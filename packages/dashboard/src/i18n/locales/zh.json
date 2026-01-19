@@ -285,7 +285,9 @@
     },
     "memberSelection": {
       "selectUser": "选择用户",
-      "searchUser": "搜索用户..."
+      "searchUser": "搜索用户...",
+      "noUsersAvailable": "没有可邀请的用户。",
+      "inviteToOrgFirst": "用户必须先被邀请加入组织，然后才能被添加到团队。"
     },
     "teamsRemovedSuccessfully": "团队删除成功"
   },

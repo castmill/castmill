@@ -285,7 +285,9 @@
     },
     "memberSelection": {
       "selectUser": "사용자 선택",
-      "searchUser": "사용자 검색..."
+      "searchUser": "사용자 검색...",
+      "noUsersAvailable": "초대할 수 있는 사용자가 없습니다.",
+      "inviteToOrgFirst": "사용자는 팀에 추가되기 전에 먼저 조직에 초대되어야 합니다."
     },
     "teamsRemovedSuccessfully": "팀이 성공적으로 제거되었습니다"
   },

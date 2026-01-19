@@ -232,7 +232,9 @@
     "members": "Members",
     "memberSelection": {
       "selectUser": "Select User",
-      "searchUser": "Search for a user..."
+      "searchUser": "Search for a user...",
+      "noUsersAvailable": "No users available to invite.",
+      "inviteToOrgFirst": "Users must first be invited to the organization before they can be added to teams."
     },
     "invitations": "Invitations",
     "invitationAcceptSuccess": "Invitation accepted successfully",

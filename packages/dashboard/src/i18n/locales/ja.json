@@ -285,7 +285,9 @@
     },
     "memberSelection": {
       "selectUser": "ユーザーを選択",
-      "searchUser": "ユーザーを検索..."
+      "searchUser": "ユーザーを検索...",
+      "noUsersAvailable": "招待できるユーザーがいません。",
+      "inviteToOrgFirst": "ユーザーをチームに追加する前に、まず組織に招待する必要があります。"
     },
     "teamsRemovedSuccessfully": "チームが正常に削除されました"
   },
