@@ -284,7 +284,9 @@
     },
     "memberSelection": {
       "selectUser": "Benutzer auswählen",
-      "searchUser": "Nach einem Benutzer suchen..."
+      "searchUser": "Nach einem Benutzer suchen...",
+      "noUsersAvailable": "Keine Benutzer zum Einladen verfügbar.",
+      "inviteToOrgFirst": "Benutzer müssen zuerst zur Organisation eingeladen werden, bevor sie zu Teams hinzugefügt werden können."
     },
     "teamsRemovedSuccessfully": "Teams erfolgreich entfernt",
     "dialogs": {

@@ -282,7 +282,9 @@
     },
     "memberSelection": {
       "selectUser": "Seleccionar usuario",
-      "searchUser": "Buscar un usuario..."
+      "searchUser": "Buscar un usuario...",
+      "noUsersAvailable": "No hay usuarios disponibles para invitar.",
+      "inviteToOrgFirst": "Los usuarios deben ser invitados primero a la organización antes de poder añadirlos a los equipos."
     },
     "teamsRemovedSuccessfully": "Equipos eliminados exitosamente"
   },

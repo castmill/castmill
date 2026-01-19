@@ -278,7 +278,9 @@
     },
     "memberSelection": {
       "selectUser": "Välj användare",
-      "searchUser": "Sök efter en användare..."
+      "searchUser": "Sök efter en användare...",
+      "noUsersAvailable": "Inga användare tillgängliga att bjuda in.",
+      "inviteToOrgFirst": "Användare måste först bjudas in till organisationen innan de kan läggas till i team."
     },
     "teamsRemovedSuccessfully": "Team borttagna framgångsrikt"
   },
