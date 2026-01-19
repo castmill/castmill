@@ -834,5 +834,21 @@
       "title": "اختصارات لوحة المفاتيح",
       "description": "استخدم هذه الاختصارات للتنقل بشكل أسرع"
     }
+  },
+  "onboarding": {
+    "title": "مرحبًا بك في Castmill!",
+    "subtitle": "لنبدأ بتسمية مؤسستك.",
+    "organizationNameLabel": "اسم المؤسسة",
+    "organizationNamePlaceholder": "أدخل اسم مؤسستك",
+    "helpText": "سيتم استخدام هذا الاسم لتحديد مساحة العمل الخاصة بك. يمكنك تغييره لاحقًا في الإعدادات.",
+    "continueButton": "متابعة",
+    "success": "اكتمل إعداد المؤسسة!",
+    "errors": {
+      "organizationNameRequired": "اسم المؤسسة مطلوب",
+      "organizationNameTooShort": "يجب أن يتكون اسم المؤسسة من حرفين على الأقل",
+      "organizationNameTooLong": "يجب أن يكون اسم المؤسسة أقل من 50 حرفًا",
+      "organizationNameTaken": "اسم المؤسسة هذا مستخدم بالفعل. يرجى اختيار اسم مختلف.",
+      "failed": "فشل إكمال الإعداد. يرجى المحاولة مرة أخرى."
+    }
   }
 }

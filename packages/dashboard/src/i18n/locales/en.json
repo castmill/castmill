@@ -829,5 +829,21 @@
       "title": "Keyboard Shortcuts",
       "description": "Use these shortcuts to navigate faster"
     }
+  },
+  "onboarding": {
+    "title": "Welcome to Castmill!",
+    "subtitle": "Let's get started by naming your organization.",
+    "organizationNameLabel": "Organization Name",
+    "organizationNamePlaceholder": "Enter your organization name",
+    "helpText": "This name will be used to identify your workspace. You can change it later in settings.",
+    "continueButton": "Continue",
+    "success": "Organization setup complete!",
+    "errors": {
+      "organizationNameRequired": "Organization name is required",
+      "organizationNameTooShort": "Organization name must be at least 2 characters",
+      "organizationNameTooLong": "Organization name must be less than 50 characters",
+      "organizationNameTaken": "This organization name is already taken. Please choose a different name.",
+      "failed": "Failed to complete setup. Please try again."
+    }
   }
 }

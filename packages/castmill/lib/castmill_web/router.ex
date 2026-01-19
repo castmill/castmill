@@ -339,6 +339,7 @@ defmodule CastmillWeb.Router do
     post("/invitations/:token/reject", TeamController, :reject_invitation, as: :team_invitation)
 
     resources "/organizations", OrganizationController, only: [:update] do
+      post("/complete-onboarding", OrganizationController, :complete_onboarding)
       post("/devices", OrganizationController, :register_device)
 
       # This route is used to upload media files to the server.

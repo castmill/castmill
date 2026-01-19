@@ -19,7 +19,8 @@ defmodule CastmillWeb.OrganizationJSON do
     %{
       id: organization.id,
       name: organization.name,
-      logo_media_id: organization.logo_media_id
+      logo_media_id: organization.logo_media_id,
+      onboarding_completed: organization.onboarding_completed
     }
   end
 end
