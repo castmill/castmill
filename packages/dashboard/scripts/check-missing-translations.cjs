@@ -55,6 +55,10 @@ const ALLOWED_IDENTICAL_STRINGS = new Set([
   'ID',
   'OAuth 2.0',
   'Webhook',
+  'Data', // Loanword in Swedish, German
+  'Media', // Loanword in Swedish, German, French
+  'Code', // Loanword in German, French
+  'Info', // Loanword in Swedish, German, French
   '© 2011-2025 Castmill™',
   'Error', // Cognate in Spanish
   'Total', // Cognate in Spanish
