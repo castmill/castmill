@@ -43,9 +43,14 @@ export const DeviceCache: Component<{
   ] as Column<DeviceTableCacheItem>[];
 
   const [selectedItems, setSelectedItems] = createSignal(new Set<string>());
-  const [currentType, setCurrentType] = createSignal<'data' | 'code' | 'media'>('data');
-  const [showConfirmDialog, setShowConfirmDialog] = createSignal<DeviceTableCacheItem | undefined>();
-  const [showConfirmDialogMultiple, setShowConfirmDialogMultiple] = createSignal(false);
+  const [currentType, setCurrentType] = createSignal<'data' | 'code' | 'media'>(
+    'data'
+  );
+  const [showConfirmDialog, setShowConfirmDialog] = createSignal<
+    DeviceTableCacheItem | undefined
+  >();
+  const [showConfirmDialogMultiple, setShowConfirmDialogMultiple] =
+    createSignal(false);
   const [showConfirmClearAll, setShowConfirmClearAll] = createSignal(false);
 
   const itemsPerPage = 10; // Number of items to show per page
@@ -114,7 +119,9 @@ export const DeviceCache: Component<{
         currentType(),
         urls
       );
-      toast.success(t('devices.cache.deleteMultipleSuccess', { count: urls.length }));
+      toast.success(
+        t('devices.cache.deleteMultipleSuccess', { count: urls.length })
+      );
       setSelectedItems(new Set<string>());
       refreshData();
     } catch (error) {
@@ -175,11 +182,10 @@ export const DeviceCache: Component<{
               />
               <Button
                 onClick={() => setShowConfirmClearAll(true)}
-                variant="outlined"
-                color="error"
-              >
-                <BsTrash /> {t('devices.cache.clearAll')}
-              </Button>
+                icon={BsTrash}
+                label={t('devices.cache.clearAll')}
+                color="danger"
+              />
             </div>
           ),
         }}
@@ -197,14 +203,16 @@ export const DeviceCache: Component<{
   return (
     <>
       <Tabs tabs={tabs} />
-      
+
       {/* Confirm dialog for single item deletion */}
       <ConfirmDialog
         isOpen={!!showConfirmDialog()}
         onConfirm={() => deleteCacheEntry(showConfirmDialog()!)}
         onCancel={() => setShowConfirmDialog(undefined)}
         title={t('devices.cache.confirmDelete')}
-        message={t('devices.cache.confirmDeleteMessage', { url: showConfirmDialog()?.url })}
+        message={t('devices.cache.confirmDeleteMessage', {
+          url: showConfirmDialog()?.url,
+        })}
         confirmText={t('common.delete')}
         cancelText={t('common.cancel')}
       />
@@ -215,7 +223,9 @@ export const DeviceCache: Component<{
         onConfirm={deleteMultipleCacheEntries}
         onCancel={() => setShowConfirmDialogMultiple(false)}
         title={t('devices.cache.confirmDeleteMultiple')}
-        message={t('devices.cache.confirmDeleteMultipleMessage', { count: selectedItems().size })}
+        message={t('devices.cache.confirmDeleteMultipleMessage', {
+          count: selectedItems().size,
+        })}
         confirmText={t('common.delete')}
         cancelText={t('common.cancel')}
       />
@@ -226,7 +236,9 @@ export const DeviceCache: Component<{
         onConfirm={clearAllCache}
         onCancel={() => setShowConfirmClearAll(false)}
         title={t('devices.cache.confirmClearAll')}
-        message={t('devices.cache.confirmClearAllMessage', { type: currentType() })}
+        message={t('devices.cache.confirmClearAllMessage', {
+          type: currentType(),
+        })}
         confirmText={t('devices.cache.clearAll')}
         cancelText={t('common.cancel')}
       />

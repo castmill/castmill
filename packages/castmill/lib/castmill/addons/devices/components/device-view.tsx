@@ -112,10 +112,10 @@ const DeviceView: Component<{
   ];
 
   return (
-    <>
+    <div style="width: 40em; min-height: 28em;">
       <Tabs tabs={tabs} />
       <LoadingOverlay show={loading()} />
-    </>
+    </div>
   );
 };
 

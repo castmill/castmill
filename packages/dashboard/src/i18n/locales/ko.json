@@ -638,6 +638,20 @@
       "clearAllSuccess": "모든 캐시 항목이 성공적으로 지워졌습니다",
       "deleteError": "캐시 삭제 중 오류 발생: {{error}}"
     },
+    "events": {
+      "title": "기기 이벤트",
+      "items": "이벤트",
+      "filterError": "오류",
+      "filterWarning": "경고",
+      "filterInfo": "정보",
+      "filterOnline": "온라인",
+      "filterOffline": "오프라인",
+      "clearAll": "모든 이벤트 지우기",
+      "confirmClearAll": "모든 이벤트 지우기",
+      "confirmClearAllMessage": "이 기기의 모든 이벤트를 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.",
+      "clearAllSuccess": "{{count}}개의 이벤트가 성공적으로 삭제되었습니다",
+      "deleteError": "이벤트 삭제 중 오류 발생: {{error}}"
+    },
     "errors": {
       "setChannelFailed": "기기 채널 설정 실패: {{error}}",
       "commandFailed": "요청 처리 중 오류가 발생했습니다"

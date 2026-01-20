@@ -638,6 +638,20 @@
       "clearAllSuccess": "تم مسح جميع إدخالات ذاكرة التخزين المؤقت بنجاح",
       "deleteError": "خطأ في حذف ذاكرة التخزين المؤقت: {{error}}"
     },
+    "events": {
+      "title": "أحداث الجهاز",
+      "items": "أحداث",
+      "filterError": "أخطاء",
+      "filterWarning": "تحذيرات",
+      "filterInfo": "معلومات",
+      "filterOnline": "متصل",
+      "filterOffline": "غير متصل",
+      "clearAll": "مسح جميع الأحداث",
+      "confirmClearAll": "مسح جميع الأحداث",
+      "confirmClearAllMessage": "هل أنت متأكد من أنك تريد حذف جميع الأحداث لهذا الجهاز؟ لا يمكن التراجع عن هذا الإجراء.",
+      "clearAllSuccess": "تم حذف {{count}} من الأحداث بنجاح",
+      "deleteError": "خطأ في حذف الأحداث: {{error}}"
+    },
     "errors": {
       "setChannelFailed": "فشل تعيين قناة الجهاز: {{error}}",
       "commandFailed": "حدث خطأ أثناء معالجة طلبك"

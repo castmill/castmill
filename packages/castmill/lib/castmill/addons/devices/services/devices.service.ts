@@ -1,5 +1,6 @@
 import { Device } from '../interfaces/device.interface';
-import { SortOptions,
+import {
+  SortOptions,
   FetchDataOptions,
   fetchOptionsToQueryString,
   HttpError,
@@ -105,7 +106,14 @@ export const DevicesService = {
   async fetchDevices(
     baseUrl: string,
     organizationId: string,
-    { page, page_size, sortOptions, search, filters, team_id }: FetchDevicesOptions
+    {
+      page,
+      page_size,
+      sortOptions,
+      search,
+      filters,
+      team_id,
+    }: FetchDevicesOptions
   ) {
     const filtersToString = (filters: Record<string, string | boolean>) => {
       return Object.entries(filters)
@@ -159,14 +167,17 @@ export const DevicesService = {
    * Send Command.
    */
   async sendCommand(baseUrl: string, deviceId: string, command: DeviceCommand) {
-    const response = await fetch(`${baseUrl}/dashboard/devices/${deviceId}/commands`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ command }),
-    });
+    const response = await fetch(
+      `${baseUrl}/dashboard/devices/${deviceId}/commands`,
+      {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ command }),
+      }
+    );
 
     handleResponse(response);
   },
@@ -179,13 +190,21 @@ export const DevicesService = {
     deviceId: string,
     page: number,
     page_size: number,
-    sortOptions: SortOptions
+    sortOptions: SortOptions,
+    types?: string[]
   ) {
-    const query = new URLSearchParams({
+    const params: Record<string, string> = {
       ...sortOptions,
       page_size: page_size.toString(),
       page: page.toString(),
-    }).toString();
+    };
+
+    // Add event type filters if provided
+    if (types && types.length > 0) {
+      params.types = types.join(',');
+    }
+
+    const query = new URLSearchParams(params).toString();
 
     const response = await fetch(
       `${baseUrl}/dashboard/devices/${deviceId}/events?${query}`,
@@ -199,6 +218,30 @@ export const DevicesService = {
     );
 
     return handleResponse<{ data: DeviceEvent[]; count: number }>(response, {
+      parse: true,
+    });
+  },
+
+  /**
+   * Delete Device Events
+   * @param baseUrl API base URL
+   * @param deviceId Device ID
+   * @param type Optional event type to delete ('o', 'x', 'e', 'w', 'i'). If not provided, deletes all events.
+   */
+  async deleteDeviceEvents(baseUrl: string, deviceId: string, type?: string) {
+    const params = type ? `?type=${encodeURIComponent(type)}` : '';
+    const response = await fetch(
+      `${baseUrl}/dashboard/devices/${deviceId}/events${params}`,
+      {
+        method: 'DELETE',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    return handleResponse<{ success: boolean; deleted: number }>(response, {
       parse: true,
     });
   },
@@ -274,7 +317,11 @@ export const DevicesService = {
   /**
    * Remove Device.
    */
-  async removeDevice(baseUrl: string, organizationId: string, deviceId: string) {
+  async removeDevice(
+    baseUrl: string,
+    organizationId: string,
+    deviceId: string
+  ) {
     const response = await fetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/devices/${deviceId}`,
       {
@@ -340,10 +387,7 @@ export const DevicesService = {
   /**
    * Get the current channel of a device
    */
-  async fetchChannelByDeviceId(
-    baseUrl: string,
-    deviceId: string
-  ) {
+  async fetchChannelByDeviceId(baseUrl: string, deviceId: string) {
     const response = await fetch(
       `${baseUrl}/dashboard/devices/${deviceId}/channels`,
       {
@@ -363,7 +407,7 @@ export const DevicesService = {
    * Add a channel to a device without replacing existing channels.
    * This method ensures that the specified channel is added to the device
    * while preserving any other channels already associated with it.
-   * 
+   *
    * @param baseUrl API base URL
    * @param deviceId Device ID
    * @param channelId Channel ID to add
@@ -379,8 +423,8 @@ export const DevicesService = {
 
   /**
    * Remove a channel from a device.
-   * 
-   * @param baseUrl API base URL 
+   *
+   * @param baseUrl API base URL
    * @param deviceId Device ID
    * @param channelId Channel ID to remove
    * @returns Promise that resolves when the channel is removed
@@ -391,12 +435,12 @@ export const DevicesService = {
     channelId: number
   ) {
     return await removeChannelFromDevice(baseUrl, deviceId, channelId);
-  }
+  },
 };
 
 /**
  * Adds a channel to a device.
- * 
+ *
  * @param baseUrl API base URL
  * @param deviceId Device ID
  * @param channelId Channel ID to add
@@ -420,11 +464,11 @@ const addChannelToDevice = async (
   );
 
   return handleResponse(response);
-}
+};
 
 /**
  * Removes a channel from a device.
- * 
+ *
  * @param baseUrl API base URL
  * @param deviceId Device ID
  * @param channelId Channel ID to remove
@@ -447,19 +491,16 @@ const removeChannelFromDevice = async (
   );
 
   return handleResponse(response);
-}
+};
 
 /**
  * Gets all channels of a device.
- * 
+ *
  * @param baseUrl API base URL
  * @param deviceId Device ID
  * @returns Promise that resolves with the channels of the device
  */
-const getChannelsOfDevice = async (
-  baseUrl: string,
-  deviceId: string
-) => {
+const getChannelsOfDevice = async (baseUrl: string, deviceId: string) => {
   const response = await fetch(
     `${baseUrl}/dashboard/devices/${deviceId}/channels`,
     {
@@ -472,4 +513,4 @@ const getChannelsOfDevice = async (
   );
 
   return handleResponse(response, { parse: true });
-}
+};

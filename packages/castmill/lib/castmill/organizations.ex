@@ -390,6 +390,9 @@ defmodule Castmill.Organizations do
         :remove_channel -> :update
         :send_command -> :update
         :get_cache -> :show
+        :delete_cache -> :update
+        :list_events -> :show
+        :delete_events -> :update
         # Keep other atoms as-is
         a when is_atom(a) -> a
         _ -> :unknown

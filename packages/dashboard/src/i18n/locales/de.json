@@ -655,6 +655,20 @@
       "clearAllSuccess": "Alle Cache-Einträge erfolgreich gelöscht",
       "deleteError": "Fehler beim Löschen des Cache: {{error}}"
     },
+    "events": {
+      "title": "Geräteereignisse",
+      "items": "Ereignisse",
+      "filterError": "Fehler",
+      "filterWarning": "Warnungen",
+      "filterInfo": "Info",
+      "filterOnline": "Online",
+      "filterOffline": "Offline",
+      "clearAll": "Alle Ereignisse löschen",
+      "confirmClearAll": "Alle Ereignisse löschen",
+      "confirmClearAllMessage": "Möchten Sie wirklich alle Ereignisse für dieses Gerät löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
+      "clearAllSuccess": "{{count}} Ereignisse erfolgreich gelöscht",
+      "deleteError": "Fehler beim Löschen der Ereignisse: {{error}}"
+    },
     "errors": {
       "setChannelFailed": "Fehler beim Festlegen des Gerätekanals: {{error}}",
       "commandFailed": "Bei der Verarbeitung Ihrer Anfrage ist ein Fehler aufgetreten"

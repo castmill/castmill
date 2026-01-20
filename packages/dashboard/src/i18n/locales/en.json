@@ -684,6 +684,20 @@
       "clearAllSuccess": "All cache entries cleared successfully",
       "deleteError": "Error deleting cache: {{error}}"
     },
+    "events": {
+      "title": "Device Events",
+      "items": "events",
+      "filterError": "Errors",
+      "filterWarning": "Warnings",
+      "filterInfo": "Info",
+      "filterOnline": "Online",
+      "filterOffline": "Offline",
+      "clearAll": "Clear All Events",
+      "confirmClearAll": "Clear All Events",
+      "confirmClearAllMessage": "Are you sure you want to delete all events for this device? This action cannot be undone.",
+      "clearAllSuccess": "Successfully deleted {{count}} events",
+      "deleteError": "Error deleting events: {{error}}"
+    },
     "errors": {
       "setChannelFailed": "Failed to set device channel: {{error}}",
       "commandFailed": "An error occurred while processing your request"

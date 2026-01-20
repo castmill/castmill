@@ -576,22 +576,48 @@ defmodule Castmill.Devices do
       iex> list_resources(Media, params)
       [%Media{}, ...]
   """
-  def list_devices_events(%{
-        device_id: device_id,
-        page: page,
-        page_size: page_size,
-        search: search
-      }) do
-    offset = if is_nil(page_size), do: 0, else: max((page - 1) * page_size, 0)
+  def list_devices_events(%{device_id: device_id} = params) do
+    page = Map.get(params, :page, 1)
+    page_size = Map.get(params, :page_size, 10)
+    search = Map.get(params, :search)
+    types = Map.get(params, :types)
+    offset = max((page - 1) * page_size, 0)
 
     Castmill.Devices.DevicesEvents.base_query()
     # Pin the device_id variable using ^
     |> where([dl], dl.device_id == ^device_id)
     |> where_msg_like(search)
-    |> Ecto.Query.order_by([d], desc: d.timestamp)
+    |> where_types(types)
+    |> apply_events_sorting(params)
     |> Ecto.Query.limit(^page_size)
     |> Ecto.Query.offset(^offset)
     |> Repo.all()
+  end
+
+  # Helper function to apply sorting to events query
+  defp apply_events_sorting(query, params) do
+    sort_key = Map.get(params, :key)
+    sort_direction = Map.get(params, :direction, "descending")
+
+    # Convert sort direction string to atom
+    sort_dir =
+      case sort_direction do
+        "ascending" -> :asc
+        "descending" -> :desc
+        _ -> :desc
+      end
+
+    # Convert sort key string to atom, with validation
+    # Only allow sorting by known safe columns
+    sort_field =
+      case sort_key do
+        "timestamp" -> :timestamp
+        "type_name" -> :type_name
+        "msg" -> :msg
+        _ -> :timestamp
+      end
+
+    Ecto.Query.order_by(query, [{^sort_dir, ^sort_field}])
   end
 
   defp where_msg_like(query, nil) do
@@ -604,11 +630,46 @@ defmodule Castmill.Devices do
     )
   end
 
-  def count_devices_events(%{device_id: device_id, search: search}) do
+  # Filter events by types (comma-separated string like "e,w,i")
+  defp where_types(query, nil), do: query
+  defp where_types(query, ""), do: query
+
+  defp where_types(query, types) when is_binary(types) do
+    type_list = String.split(types, ",") |> Enum.map(&String.trim/1)
+    from(e in query, where: e.type in ^type_list)
+  end
+
+  def count_devices_events(%{device_id: device_id} = params) do
+    search = Map.get(params, :search)
+    types = Map.get(params, :types)
+
     Castmill.Devices.DevicesEvents.base_query()
     |> where([dl], dl.device_id == ^device_id)
     |> where_msg_like(search)
+    |> where_types(types)
     |> Repo.aggregate(:count, :id)
+  end
+
+  @doc """
+  Deletes device events. Can delete all events or filter by type.
+  Returns the number of deleted events.
+  """
+  def delete_devices_events(%{device_id: device_id} = params) do
+    event_type = Map.get(params, :type)
+
+    query =
+      from(e in DevicesEvents, where: e.device_id == ^device_id)
+      |> maybe_filter_by_type(event_type)
+
+    {deleted_count, _} = Repo.delete_all(query)
+    deleted_count
+  end
+
+  defp maybe_filter_by_type(query, nil), do: query
+  defp maybe_filter_by_type(query, ""), do: query
+
+  defp maybe_filter_by_type(query, type) do
+    from(e in query, where: e.type == ^type)
   end
 
   # Quota enforcement helper functions

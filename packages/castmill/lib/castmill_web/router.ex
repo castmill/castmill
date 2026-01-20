@@ -407,6 +407,7 @@ defmodule CastmillWeb.Router do
 
     post("/devices/:device_id/commands", DeviceController, :send_command)
     get("/devices/:device_id/events", DeviceController, :list_events)
+    delete("/devices/:device_id/events", DeviceController, :delete_events)
     get("/devices/:device_id/cache", DeviceController, :get_cache)
     delete("/devices/:device_id/cache", DeviceController, :delete_cache)
 

@@ -650,6 +650,20 @@
       "clearAllSuccess": "Toutes les entrées du cache effacées avec succès",
       "deleteError": "Erreur lors de la suppression du cache : {{error}}"
     },
+    "events": {
+      "title": "Événements de l'appareil",
+      "items": "événements",
+      "filterError": "Erreurs",
+      "filterWarning": "Avertissements",
+      "filterInfo": "Info",
+      "filterOnline": "En ligne",
+      "filterOffline": "Hors ligne",
+      "clearAll": "Effacer tous les événements",
+      "confirmClearAll": "Effacer tous les événements",
+      "confirmClearAllMessage": "Êtes-vous sûr de vouloir supprimer tous les événements pour cet appareil ? Cette action ne peut pas être annulée.",
+      "clearAllSuccess": "{{count}} événements supprimés avec succès",
+      "deleteError": "Erreur lors de la suppression des événements : {{error}}"
+    },
     "errors": {
       "setChannelFailed": "Échec de la définition du canal de l'appareil : {{error}}",
       "commandFailed": "Une erreur s'est produite lors du traitement de votre demande"

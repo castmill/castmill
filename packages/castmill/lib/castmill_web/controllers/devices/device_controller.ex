@@ -15,7 +15,7 @@ defmodule CastmillWeb.DeviceController do
   @impl CastmillWeb.AccessActorBehaviour
 
   def check_access(actor_id, action, %{"device_id" => device_id})
-      when action in [:send_command, :get_cache, :delete_cache, :get_channels, :add_channel, :remove_channel] do
+      when action in [:send_command, :get_cache, :delete_cache, :get_channels, :add_channel, :remove_channel, :list_events, :delete_events] do
     # Device can access its own resources for these actions
     if actor_id == device_id do
       {:ok, true}
@@ -50,6 +50,7 @@ defmodule CastmillWeb.DeviceController do
     when action in [
            :send_command,
            :delete_cache,
+           :delete_events,
            :add_channel,
            :remove_channel,
            :get_channels,
@@ -327,9 +328,12 @@ defmodule CastmillWeb.DeviceController do
     with {:ok, params} <-
            Tarams.cast(params, %{
              device_id: [type: :string, required: true],
-             page: [type: :integer, number: [min: 1]],
-             page_size: [type: :integer, number: [min: 1, max: 100]],
-             search: :string
+             page: [type: :integer, number: [min: 1], default: 1],
+             page_size: [type: :integer, number: [min: 1, max: 100], default: 10],
+             search: :string,
+             key: [type: :string, default: "timestamp"],
+             direction: [type: :string, default: "descending"],
+             types: :string
            }) do
       response = %{
         data: Devices.list_devices_events(params),
@@ -339,6 +343,29 @@ defmodule CastmillWeb.DeviceController do
       conn
       |> put_status(:ok)
       |> json(response)
+    else
+      {:error, errors} ->
+        conn
+        |> put_status(:bad_request)
+        |> Phoenix.Controller.json(%{errors: errors})
+        |> halt()
+    end
+  end
+
+  @doc """
+    Deletes device events
+  """
+  def delete_events(conn, %{"device_id" => _device_id} = params) do
+    with {:ok, params} <-
+           Tarams.cast(params, %{
+             device_id: [type: :string, required: true],
+             type: [type: :string]
+           }) do
+      deleted_count = Devices.delete_devices_events(params)
+
+      conn
+      |> put_status(:ok)
+      |> json(%{success: true, deleted: deleted_count})
     else
       {:error, errors} ->
         conn

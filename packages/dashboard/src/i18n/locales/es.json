@@ -660,6 +660,20 @@
       "clearAllSuccess": "Todas las entradas de caché limpiadas exitosamente",
       "deleteError": "Error al eliminar caché: {{error}}"
     },
+    "events": {
+      "title": "Eventos del Dispositivo",
+      "items": "eventos",
+      "filterError": "Errores",
+      "filterWarning": "Advertencias",
+      "filterInfo": "Información",
+      "filterOnline": "En línea",
+      "filterOffline": "Fuera de línea",
+      "clearAll": "Limpiar Todos los Eventos",
+      "confirmClearAll": "Limpiar Todos los Eventos",
+      "confirmClearAllMessage": "¿Está seguro de que desea eliminar todos los eventos de este dispositivo? Esta acción no se puede deshacer.",
+      "clearAllSuccess": "Se eliminaron {{count}} eventos exitosamente",
+      "deleteError": "Error al eliminar eventos: {{error}}"
+    },
     "errors": {
       "setChannelFailed": "Error al establecer el canal del dispositivo: {{error}}",
       "commandFailed": "Se produjo un error al procesar su solicitud"

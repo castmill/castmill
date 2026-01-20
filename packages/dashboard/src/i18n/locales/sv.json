@@ -633,6 +633,20 @@
       "clearAllSuccess": "Alla cacheposter rensade framgångsrikt",
       "deleteError": "Fel vid borttagning av cache: {{error}}"
     },
+    "events": {
+      "title": "Enhetshändelser",
+      "items": "händelser",
+      "filterError": "Fel",
+      "filterWarning": "Varningar",
+      "filterInfo": "Info",
+      "filterOnline": "Online",
+      "filterOffline": "Offline",
+      "clearAll": "Rensa alla händelser",
+      "confirmClearAll": "Rensa alla händelser",
+      "confirmClearAllMessage": "Är du säker på att du vill ta bort alla händelser för denna enhet? Denna åtgärd kan inte ångras.",
+      "clearAllSuccess": "{{count}} händelser har tagits bort",
+      "deleteError": "Fel vid borttagning av händelser: {{error}}"
+    },
     "errors": {
       "setChannelFailed": "Misslyckades att ställa in enhetskanal: {{error}}",
       "commandFailed": "Ett fel uppstod vid bearbetning av din begäran"
