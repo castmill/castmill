@@ -648,7 +648,8 @@
       "deleteSuccess": "Entrée du cache supprimée avec succès",
       "deleteMultipleSuccess": "{{count}} entrées du cache supprimées avec succès",
       "clearAllSuccess": "Toutes les entrées du cache effacées avec succès",
-      "deleteError": "Erreur lors de la suppression du cache : {{error}}"
+      "deleteError": "Erreur lors de la suppression du cache : {{error}}",
+      "offlineWarning": "L'appareil est actuellement hors ligne. Les informations du cache ne peuvent pas être récupérées tant que l'appareil n'est pas de retour en ligne."
     },
     "events": {
       "title": "Événements de l'appareil",

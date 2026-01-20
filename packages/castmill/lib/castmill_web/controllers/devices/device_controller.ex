@@ -58,6 +58,7 @@ defmodule CastmillWeb.DeviceController do
     %{}
     when action in [
            :send_command,
+           :get_cache,
            :delete_cache,
            :delete_events,
            :add_channel,

@@ -1,12 +1,14 @@
 import { Component, mergeProps, Show } from 'solid-js';
 import { IconTypes } from 'solid-icons';
 import { IconWrapper } from '../icon-wrapper';
+import { VsLoading } from 'solid-icons/vs';
 
 import styles from './button.module.scss';
 
 export const Button: Component<{
   onClick?: () => void;
   disabled?: boolean;
+  loading?: boolean;
   icon?: IconTypes; // This can be any SVG component from solid-icons or other libraries
   iconProps?: Record<string, any>;
   type?: 'button' | 'submit' | 'reset';
@@ -18,6 +20,7 @@ export const Button: Component<{
     {
       type: 'button',
       disabled: false,
+      loading: false,
       color: 'primary', // Default color
       title: undefined as string | undefined,
     },
@@ -27,7 +30,7 @@ export const Button: Component<{
   let buttonElement: HTMLButtonElement | null = null;
 
   const handleClick = () => {
-    if (!buttonElement || defaultProps.disabled) return;
+    if (!buttonElement || defaultProps.disabled || defaultProps.loading) return;
 
     // Add the "pressed" class to the current button
     buttonElement.classList.add(styles[`button-${defaultProps.color}-active`]);
@@ -48,7 +51,10 @@ export const Button: Component<{
     return [
       styles.button,
       styles[`button-${defaultProps.color}`],
-      defaultProps.disabled ? styles['button-disabled'] : '',
+      defaultProps.disabled || defaultProps.loading
+        ? styles['button-disabled']
+        : '',
+      defaultProps.loading ? styles['button-loading'] : '',
     ].join(' ');
   };
 
@@ -60,15 +66,26 @@ export const Button: Component<{
       type={defaultProps.type as 'button' | 'submit' | 'reset'}
       class={getClassNames()}
       onClick={handleClick}
-      disabled={defaultProps.disabled}
+      disabled={defaultProps.disabled || defaultProps.loading}
       title={defaultProps.title}
       aria-label={ariaLabel()}
     >
-      <Show when={defaultProps.icon}>
-        <IconWrapper icon={defaultProps.icon!} />
+      <Show
+        when={defaultProps.loading}
+        fallback={
+          <>
+            <Show when={defaultProps.icon}>
+              <IconWrapper icon={defaultProps.icon!} />
+            </Show>
+            {defaultProps.label ? <span>{defaultProps.label}</span> : null}
+          </>
+        }
+      >
+        <span class={styles.spinner}>
+          <VsLoading />
+        </span>
+        {defaultProps.label ? <span>{defaultProps.label}</span> : null}
       </Show>
-
-      {defaultProps.label ? <span>{defaultProps.label}</span> : null}
     </button>
   );
 };

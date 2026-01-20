@@ -636,7 +636,8 @@
       "deleteSuccess": "缓存条目删除成功",
       "deleteMultipleSuccess": "成功删除 {{count}} 个缓存条目",
       "clearAllSuccess": "成功清除所有缓存条目",
-      "deleteError": "删除缓存时出错：{{error}}"
+      "deleteError": "删除缓存时出错：{{error}}",
+      "offlineWarning": "设备当前离线。在设备重新上线之前，无法获取缓存信息。"
     },
     "events": {
       "title": "设备事件",

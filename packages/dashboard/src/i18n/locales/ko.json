@@ -636,7 +636,8 @@
       "deleteSuccess": "캐시 항목이 성공적으로 삭제되었습니다",
       "deleteMultipleSuccess": "{{count}}개의 캐시 항목이 성공적으로 삭제되었습니다",
       "clearAllSuccess": "모든 캐시 항목이 성공적으로 지워졌습니다",
-      "deleteError": "캐시 삭제 중 오류 발생: {{error}}"
+      "deleteError": "캠시 삭제 중 오류 발생: {{error}}",
+      "offlineWarning": "기기가 현재 오프라인 상태입니다. 기기가 다시 온라인 상태가 될 때까지 캠시 정보를 가져올 수 없습니다."
     },
     "events": {
       "title": "기기 이벤트",

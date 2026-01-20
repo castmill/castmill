@@ -19,7 +19,7 @@ interface ToolBarProps {
   title?: string;
   filters?: Filter[];
   onFilterChange?: (filters: Filter[]) => void;
-  actions?: JSX.Element;
+  actions?: JSX.Element | (() => JSX.Element);
   onSearch?: (searchText: string) => void;
   initialSearchText?: string;
   mainAction?: JSX.Element; // Changed type to accept a JSX element
@@ -131,7 +131,11 @@ export function ToolBar(props: ToolBarProps) {
           </div>
         </Show>
 
-        <Show when={props.actions}>{props.actions}</Show>
+        <Show when={props.actions}>
+          {typeof props.actions === 'function'
+            ? props.actions()
+            : props.actions}
+        </Show>
       </div>
 
       <Show when={props.mainAction}>{props.mainAction}</Show>

@@ -658,7 +658,8 @@
       "deleteSuccess": "Entrada de caché eliminada exitosamente",
       "deleteMultipleSuccess": "{{count}} entradas de caché eliminadas exitosamente",
       "clearAllSuccess": "Todas las entradas de caché limpiadas exitosamente",
-      "deleteError": "Error al eliminar caché: {{error}}"
+      "deleteError": "Error al eliminar caché: {{error}}",
+      "offlineWarning": "El dispositivo está actualmente fuera de línea. La información de caché no se puede obtener hasta que el dispositivo vuelva a estar en línea."
     },
     "events": {
       "title": "Eventos del Dispositivo",

@@ -653,7 +653,8 @@
       "deleteSuccess": "Cache-Eintrag erfolgreich gelöscht",
       "deleteMultipleSuccess": "{{count}} Cache-Einträge erfolgreich gelöscht",
       "clearAllSuccess": "Alle Cache-Einträge erfolgreich gelöscht",
-      "deleteError": "Fehler beim Löschen des Cache: {{error}}"
+      "deleteError": "Fehler beim Löschen des Cache: {{error}}",
+      "offlineWarning": "Das Gerät ist derzeit offline. Cache-Informationen können nicht abgerufen werden, bis das Gerät wieder online ist."
     },
     "events": {
       "title": "Geräteereignisse",

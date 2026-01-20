@@ -1,6 +1,7 @@
-import { Component, createSignal } from 'solid-js';
+import { Component, createSignal, Show } from 'solid-js';
 import { AiOutlineDelete } from 'solid-icons/ai';
 import { BsTrash } from 'solid-icons/bs';
+import { IoReload } from 'solid-icons/io';
 
 import {
   Tabs,
@@ -34,10 +35,39 @@ export const DeviceCache: Component<{
   const t = props.t || ((key: string) => key);
   const toast = useToast();
 
+  // Helper function to format bytes to human-readable size
+  const formatBytes = (bytes: number): string => {
+    if (bytes === 0) return '0 B';
+    const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+    const k = 1024;
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    const size = bytes / Math.pow(k, i);
+    return `${size.toFixed(i > 0 ? 1 : 0)} ${units[i]}`;
+  };
+
+  // Helper function to format timestamp to local timezone
+  const formatTimestamp = (timestamp: number): string => {
+    return new Date(timestamp).toLocaleString();
+  };
+
   const columns = [
-    { key: 'timestamp', title: t('common.timestamp'), sortable: true },
+    {
+      key: 'timestamp',
+      title: t('common.timestamp'),
+      sortable: true,
+      render: (item: DeviceTableCacheItem) => (
+        <span>{formatTimestamp(item.timestamp)}</span>
+      ),
+    },
     { key: 'url', title: t('common.url'), sortable: true },
-    { key: 'size', title: t('common.size'), sortable: false },
+    {
+      key: 'size',
+      title: t('common.size'),
+      sortable: false,
+      render: (item: DeviceTableCacheItem) => (
+        <span>{formatBytes(item.size)}</span>
+      ),
+    },
     { key: 'accessed', title: t('common.accessed'), sortable: false },
     { key: 'mimeType', title: t('common.mimeType'), sortable: false },
   ] as Column<DeviceTableCacheItem>[];
@@ -52,6 +82,9 @@ export const DeviceCache: Component<{
   const [showConfirmDialogMultiple, setShowConfirmDialogMultiple] =
     createSignal(false);
   const [showConfirmClearAll, setShowConfirmClearAll] = createSignal(false);
+  const [loadingDelete, setLoadingDelete] = createSignal(false);
+  const [loadingClearAll, setLoadingClearAll] = createSignal(false);
+  const [loadingRefresh, setLoadingRefresh] = createSignal(false);
 
   const itemsPerPage = 10; // Number of items to show per page
 
@@ -82,19 +115,25 @@ export const DeviceCache: Component<{
     setSelectedItems(rowsSelected);
   };
 
-  let tableViewRef: TableViewRef;
+  const [tableViewRef, setTableViewRef] = createSignal<TableViewRef | null>(
+    null
+  );
 
-  const setRef = (ref: TableViewRef) => {
-    tableViewRef = ref;
-  };
-
-  const refreshData = () => {
-    if (tableViewRef) {
-      tableViewRef.reloadData();
+  const refreshData = async () => {
+    const ref = tableViewRef();
+    if (ref) {
+      setLoadingRefresh(true);
+      try {
+        await ref.reloadData();
+      } finally {
+        setLoadingRefresh(false);
+      }
     }
   };
 
   const deleteCacheEntry = async (item: DeviceTableCacheItem) => {
+    setShowConfirmDialog(undefined);
+    setLoadingDelete(true);
     try {
       await DevicesService.deleteDeviceCache(
         props.baseUrl,
@@ -106,11 +145,14 @@ export const DeviceCache: Component<{
       refreshData();
     } catch (error) {
       toast.error(t('devices.cache.deleteError', { error: String(error) }));
+    } finally {
+      setLoadingDelete(false);
     }
-    setShowConfirmDialog(undefined);
   };
 
   const deleteMultipleCacheEntries = async () => {
+    setShowConfirmDialogMultiple(false);
+    setLoadingDelete(true);
     try {
       const urls = Array.from(selectedItems());
       await DevicesService.deleteDeviceCache(
@@ -126,11 +168,14 @@ export const DeviceCache: Component<{
       refreshData();
     } catch (error) {
       toast.error(t('devices.cache.deleteError', { error: String(error) }));
+    } finally {
+      setLoadingDelete(false);
     }
-    setShowConfirmDialogMultiple(false);
   };
 
   const clearAllCache = async () => {
+    setShowConfirmClearAll(false);
+    setLoadingClearAll(true);
     try {
       await DevicesService.deleteDeviceCache(
         props.baseUrl,
@@ -143,8 +188,9 @@ export const DeviceCache: Component<{
       refreshData();
     } catch (error) {
       toast.error(t('devices.cache.deleteError', { error: String(error) }));
+    } finally {
+      setLoadingClearAll(false);
     }
-    setShowConfirmClearAll(false);
   };
 
   const actions = [
@@ -164,20 +210,29 @@ export const DeviceCache: Component<{
         title={t('devices.cache.title')}
         resource={t('devices.cache.items')}
         fetchData={(opts: any) => fetchCachePage(type, opts)}
-        ref={setRef}
+        ref={setTableViewRef}
         table={{
           columns,
           actions,
           onRowSelect,
         }}
         toolbar={{
-          actions: (
+          hideTitle: true,
+          hideSearch: true,
+          actions: () => (
             <div style="display: flex; gap: 1rem; align-items: center;">
+              <IconButton
+                onClick={refreshData}
+                icon={IoReload}
+                color="primary"
+                title={t('common.refresh')}
+                loading={loadingRefresh()}
+              />
               <IconButton
                 onClick={() => setShowConfirmDialogMultiple(true)}
                 icon={AiOutlineDelete}
                 color="primary"
-                disabled={selectedItems().size === 0}
+                disabled={selectedItems().size === 0 || loadingDelete()}
                 title={t('devices.cache.deleteSelected')}
               />
               <Button
@@ -185,6 +240,7 @@ export const DeviceCache: Component<{
                 icon={BsTrash}
                 label={t('devices.cache.clearAll')}
                 color="danger"
+                loading={loadingClearAll()}
               />
             </div>
           ),
@@ -202,45 +258,50 @@ export const DeviceCache: Component<{
 
   return (
     <>
-      <Tabs tabs={tabs} />
+      <Show
+        when={props.device.online}
+        fallback={
+          <div style="background-color: #3d3d3d; border-left: 4px solid #f0ad4e; padding: 0.8em 1em; border-radius: 4px;">
+            <p style="margin: 0; color: #f0ad4e;">
+              {t('devices.cache.offlineWarning')}
+            </p>
+          </div>
+        }
+      >
+        <Tabs tabs={tabs} />
+      </Show>
 
       {/* Confirm dialog for single item deletion */}
       <ConfirmDialog
-        isOpen={!!showConfirmDialog()}
+        show={!!showConfirmDialog()}
         onConfirm={() => deleteCacheEntry(showConfirmDialog()!)}
-        onCancel={() => setShowConfirmDialog(undefined)}
+        onClose={() => setShowConfirmDialog(undefined)}
         title={t('devices.cache.confirmDelete')}
         message={t('devices.cache.confirmDeleteMessage', {
           url: showConfirmDialog()?.url,
         })}
-        confirmText={t('common.delete')}
-        cancelText={t('common.cancel')}
       />
 
       {/* Confirm dialog for multiple items deletion */}
       <ConfirmDialog
-        isOpen={showConfirmDialogMultiple()}
+        show={showConfirmDialogMultiple()}
         onConfirm={deleteMultipleCacheEntries}
-        onCancel={() => setShowConfirmDialogMultiple(false)}
+        onClose={() => setShowConfirmDialogMultiple(false)}
         title={t('devices.cache.confirmDeleteMultiple')}
         message={t('devices.cache.confirmDeleteMultipleMessage', {
           count: selectedItems().size,
         })}
-        confirmText={t('common.delete')}
-        cancelText={t('common.cancel')}
       />
 
       {/* Confirm dialog for clearing all cache */}
       <ConfirmDialog
-        isOpen={showConfirmClearAll()}
+        show={showConfirmClearAll()}
         onConfirm={clearAllCache}
-        onCancel={() => setShowConfirmClearAll(false)}
+        onClose={() => setShowConfirmClearAll(false)}
         title={t('devices.cache.confirmClearAll')}
         message={t('devices.cache.confirmClearAllMessage', {
           type: currentType(),
         })}
-        confirmText={t('devices.cache.clearAll')}
-        cancelText={t('common.cancel')}
       />
     </>
   );

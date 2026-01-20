@@ -631,7 +631,8 @@
       "deleteSuccess": "Cachepost borttagen framgångsrikt",
       "deleteMultipleSuccess": "{{count}} cacheposter borttagna framgångsrikt",
       "clearAllSuccess": "Alla cacheposter rensade framgångsrikt",
-      "deleteError": "Fel vid borttagning av cache: {{error}}"
+      "deleteError": "Fel vid borttagning av cache: {{error}}",
+      "offlineWarning": "Enheten är för närvarande offline. Cacheinformation kan inte hämtas förrän enheten kommer tillbaka online."
     },
     "events": {
       "title": "Enhetshändelser",

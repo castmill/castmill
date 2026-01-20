@@ -682,7 +682,8 @@
       "deleteSuccess": "Cache entry deleted successfully",
       "deleteMultipleSuccess": "{{count}} cache entries deleted successfully",
       "clearAllSuccess": "All cache entries cleared successfully",
-      "deleteError": "Error deleting cache: {{error}}"
+      "deleteError": "Error deleting cache: {{error}}",
+      "offlineWarning": "The device is currently offline. Cache information cannot be retrieved until the device comes back online."
     },
     "events": {
       "title": "Device Events",
