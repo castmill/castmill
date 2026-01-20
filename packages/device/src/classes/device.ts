@@ -553,14 +553,14 @@ export class Device extends EventEmitter {
   private async deleteCache({ type, urls }: CacheDeleteRequest) {
     try {
       let deleted = 0;
-      
+
       if (type === 'all') {
         // Clear all cache
         await this.cache.clean();
         const [dataCount, codeCount, mediaCount] = await Promise.all([
           this.cache.count(ItemType.Data),
           this.cache.count(ItemType.Code),
-          this.cache.count(ItemType.Media)
+          this.cache.count(ItemType.Media),
         ]);
         deleted = dataCount + codeCount + mediaCount;
       } else if (urls && urls.length > 0) {
