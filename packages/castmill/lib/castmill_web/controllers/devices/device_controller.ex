@@ -15,7 +15,16 @@ defmodule CastmillWeb.DeviceController do
   @impl CastmillWeb.AccessActorBehaviour
 
   def check_access(actor_id, action, %{"device_id" => device_id})
-      when action in [:send_command, :get_cache, :delete_cache, :get_channels, :add_channel, :remove_channel, :list_events, :delete_events] do
+      when action in [
+             :send_command,
+             :get_cache,
+             :delete_cache,
+             :get_channels,
+             :add_channel,
+             :remove_channel,
+             :list_events,
+             :delete_events
+           ] do
     # Device can access its own resources for these actions
     if actor_id == device_id do
       {:ok, true}
