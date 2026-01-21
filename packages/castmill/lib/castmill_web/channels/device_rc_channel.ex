@@ -179,17 +179,10 @@ defmodule CastmillWeb.DeviceRcChannel do
     {:noreply, socket}
   end
 
+  # Ignore control_event messages without source: :relay (legacy, should not happen anymore)
+  # This prevents double-processing if someone sends events without the :relay source marker
   @impl true
-  def handle_info(%{event: "control_event", payload: payload}, socket) do
-    # Legacy direct PubSub (backward compatibility)
-    # Received from PubSub, push to device WebSocket
-    push(socket, "control_event", payload)
-
-    # Update activity timestamp
-    if socket.assigns[:session_id] do
-      RcSessions.update_activity(socket.assigns.session_id)
-    end
-
+  def handle_info(%{event: "control_event"}, socket) do
     {:noreply, socket}
   end
 
@@ -250,11 +243,14 @@ defmodule CastmillWeb.DeviceRcChannel do
     Logger.info("DeviceRcChannel intercepted start_session: session_id=#{inspect(session_id)}, device_id=#{socket.assigns.device_id}, payload=#{inspect(payload)}")
 
     if session_id do
-      # Subscribe to the session's PubSub topic to receive control events
-      topic = "rc_session:#{session_id}"
-      Logger.info("DeviceRcChannel subscribing process #{inspect(self())} to #{topic}")
-      Phoenix.PubSub.subscribe(Castmill.PubSub, topic)
-      Logger.info("DeviceRcChannel subscribed to #{topic}")
+      # Only subscribe if we haven't already subscribed (during join)
+      unless socket.assigns[:session_id] == session_id do
+        # Subscribe to the session's PubSub topic to receive control events
+        topic = "rc_session:#{session_id}"
+        Logger.info("DeviceRcChannel subscribing process #{inspect(self())} to #{topic}")
+        Phoenix.PubSub.subscribe(Castmill.PubSub, topic)
+        Logger.info("DeviceRcChannel subscribed to #{topic}")
+      end
 
       # Update socket with session_id
       socket = assign(socket, :session_id, session_id)
