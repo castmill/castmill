@@ -44,25 +44,32 @@ const RemoteControlWindow: Component = () => {
   const sessionId = searchParams.session;
 
   // Helper function to calculate canvas coordinates
+  // This handles CSS scaling of the canvas element properly
   const getCanvasCoordinates = (e: MouseEvent, canvas: HTMLCanvasElement) => {
     const rect = canvas.getBoundingClientRect();
     
+    // Calculate CSS vs internal canvas scaling
+    const cssScaleX = canvas.width / rect.width;
+    const cssScaleY = canvas.height / rect.height;
+    
+    // Convert mouse position relative to canvas CSS box to internal canvas coordinates
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    
+    // Apply CSS scaling to get canvas pixel coordinates
+    const x = mouseX * cssScaleX;
+    const y = mouseY * cssScaleY;
+    
     // Debug logging
     console.log('Canvas coordinates debug:', {
-      clientX: e.clientX,
-      clientY: e.clientY,
-      rectLeft: rect.left,
-      rectTop: rect.top,
-      rectWidth: rect.width,
-      rectHeight: rect.height,
-      canvasWidth: canvas.width,
-      canvasHeight: canvas.height,
-      cssAspectRatio: rect.width / rect.height,
-      canvasAspectRatio: canvas.width / canvas.height,
+      mouse: { clientX: e.clientX, clientY: e.clientY },
+      rect: { left: rect.left, top: rect.top, width: rect.width, height: rect.height },
+      canvas: { width: canvas.width, height: canvas.height },
+      cssScale: { x: cssScaleX, y: cssScaleY },
+      relativePos: { mouseX, mouseY },
+      canvasCoords: { x: Math.round(x), y: Math.round(y) },
     });
     
-    const x = ((e.clientX - rect.left) / rect.width) * canvas.width;
-    const y = ((e.clientY - rect.top) / rect.height) * canvas.height;
     return { x: Math.round(x), y: Math.round(y) };
   };
 

@@ -658,21 +658,21 @@ class RemoteAccessibilityService : AccessibilityService() {
         val screenAspect = screenWidth / screenHeight
         
         // Calculate video dimensions the same way ScreenCaptureManager does
-        // TARGET_MAX_WIDTH = 1280, video maintains screen aspect ratio
+        // Must match ScreenCaptureManager.kt constants exactly!
         val targetMaxWidth = 1280f
-        val targetMaxHeight = 720f
+        val targetMaxHeight = 800f  // Note: This must match ScreenCaptureManager.TARGET_MAX_HEIGHT
         
         val videoWidth: Float
         val videoHeight: Float
         
-        if (screenAspect > targetMaxWidth / targetMaxHeight) {
-            // Screen is wider - height is constrained to 720
-            videoHeight = targetMaxHeight
-            videoWidth = (targetMaxHeight * screenAspect)
-        } else {
-            // Screen is taller or equal - width is constrained to 1280
+        if (screenAspect >= 1) {
+            // Landscape or square - width is the limiting factor
             videoWidth = targetMaxWidth
             videoHeight = (targetMaxWidth / screenAspect)
+        } else {
+            // Portrait - height is the limiting factor
+            videoHeight = targetMaxHeight
+            videoWidth = (targetMaxHeight * screenAspect)
         }
         
         // Round to even numbers (same as ScreenCaptureManager)

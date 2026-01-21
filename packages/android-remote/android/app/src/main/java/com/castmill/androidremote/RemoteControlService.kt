@@ -417,6 +417,10 @@ class RemoteControlService : LifecycleService() {
                 val height = (encoderInfo["height"] as? Int) ?: 720
                 val fps = (encoderInfo["fps"] as? Int) ?: 15
                 
+                // Initialize the GestureMapper with video dimensions for accurate coordinate mapping
+                RemoteAccessibilityService.getInstance()?.initializeGestureMapper(width, height)
+                Log.i(TAG, "GestureMapper initialized with video dimensions: ${width}x${height}")
+                
                 // Normalize codec name to backend-expected format
                 val codec = when (encoderType.uppercase()) {
                     "H264", "H.264", "AVC" -> "h264"

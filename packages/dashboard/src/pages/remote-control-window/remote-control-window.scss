@@ -144,6 +144,9 @@
   box-shadow: 0 0.5em 2em rgba(0, 0, 0, 0.5);
   cursor: crosshair;
   background-color: #000000;
+  /* Prevent CSS scaling - canvas should use its native dimensions */
+  /* This ensures coordinate mapping from click to canvas pixels is 1:1 */
+  object-fit: contain;
 }
 
 .rc-canvas:focus {

@@ -444,15 +444,17 @@ class ScreenCaptureManager(
 
     /**
      * Get display metrics for the device.
-     * Uses WindowManager.defaultDisplay which works for both Activity and Service contexts.
+     * Uses getRealMetrics to get the full physical screen dimensions,
+     * including system bars (status bar, navigation bar).
+     * This is important because screen capture captures the full screen.
      */
     private fun getDisplayMetrics(): DisplayMetrics {
         val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
         val metrics = DisplayMetrics()
-        // Always use defaultDisplay for compatibility with Service context
-        // context.display throws UnsupportedOperationException from Services
+        // Use getRealMetrics to get full physical screen dimensions (including system bars)
+        // This matches what MediaProjection captures
         @Suppress("DEPRECATION")
-        windowManager.defaultDisplay.getMetrics(metrics)
+        windowManager.defaultDisplay.getRealMetrics(metrics)
         return metrics
     }
 }
