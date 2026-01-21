@@ -665,7 +665,7 @@ defmodule Castmill.Teams do
         # now we can send the email outside the transaction.
         organization = Castmill.Organizations.get_organization(organization_id)
         network = Castmill.Networks.get_network(organization.network_id)
-        
+
         # Get team info for email
         team = get_team(team_id)
         send_invitation_email(network.domain, team.name, email, token)
