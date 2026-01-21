@@ -154,6 +154,26 @@ defmodule CastmillWeb.RcWindowChannel do
     }
   end
 
+  # Drag gesture - transforms to swipe on Android
+  defp transform_input_to_control_event(%{
+         "type" => "drag",
+         "startX" => start_x,
+         "startY" => start_y,
+         "endX" => end_x,
+         "endY" => end_y
+       }) do
+    %{
+      "event_type" => "swipe",
+      "data" => %{
+        "start_x" => start_x,
+        "start_y" => start_y,
+        "end_x" => end_x,
+        "end_y" => end_y,
+        "duration" => 300
+      }
+    }
+  end
+
   # Keyboard events - keydown/keyup for text input
   defp transform_input_to_control_event(%{
          "type" => type,

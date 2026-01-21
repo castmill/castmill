@@ -43,6 +43,11 @@ const RemoteControlWindow: Component = () => {
   const deviceId = params.id;
   const sessionId = searchParams.session;
 
+  // Drag state tracking
+  const [isDragging, setIsDragging] = createSignal(false);
+  const [dragStart, setDragStart] = createSignal<{ x: number; y: number } | null>(null);
+  const DRAG_THRESHOLD = 10; // Minimum pixels to consider it a drag vs a click
+
   // Helper function to calculate canvas coordinates
   // This handles CSS scaling of the canvas element properly
   const getCanvasCoordinates = (e: MouseEvent, canvas: HTMLCanvasElement) => {
@@ -324,64 +329,75 @@ const RemoteControlWindow: Component = () => {
     }
   });
 
-  // Handle mouse input
+  // Handle mouse input with drag support
   const handleMouseDown = (e: MouseEvent) => {
-    const ch = channel();
     const canvas = canvasRef();
-    if (ch && canvas && connectionState() === 'connected') {
+    if (canvas && connectionState() === 'connected' && e.button === 0) {
       const { x, y } = getCanvasCoordinates(e, canvas);
-
-      ch.push('input', {
-        type: 'mousedown',
-        x,
-        y,
-        button: e.button,
-      });
+      setDragStart({ x, y });
+      setIsDragging(false);
     }
   };
 
   const handleMouseUp = (e: MouseEvent) => {
     const ch = channel();
     const canvas = canvasRef();
-    if (ch && canvas && connectionState() === 'connected') {
+    const start = dragStart();
+    
+    if (ch && canvas && connectionState() === 'connected' && e.button === 0 && start) {
       const { x, y } = getCanvasCoordinates(e, canvas);
-
-      ch.push('input', {
-        type: 'mouseup',
-        x,
-        y,
-        button: e.button,
-      });
+      
+      // Calculate distance moved
+      const distance = Math.sqrt(
+        Math.pow(x - start.x, 2) + Math.pow(y - start.y, 2)
+      );
+      
+      if (distance >= DRAG_THRESHOLD) {
+        // It's a drag/swipe gesture
+        ch.push('input', {
+          type: 'drag',
+          startX: start.x,
+          startY: start.y,
+          endX: x,
+          endY: y,
+        });
+        console.log('Drag gesture:', { start, end: { x, y }, distance });
+      } else {
+        // It's a click/tap
+        ch.push('input', {
+          type: 'click',
+          x: start.x,
+          y: start.y,
+          button: e.button,
+        });
+      }
     }
+    
+    setDragStart(null);
+    setIsDragging(false);
   };
 
   const handleMouseMove = throttle((e: MouseEvent) => {
-    const ch = channel();
     const canvas = canvasRef();
-    if (ch && canvas && connectionState() === 'connected') {
+    const start = dragStart();
+    
+    if (canvas && start) {
       const { x, y } = getCanvasCoordinates(e, canvas);
-
-      ch.push('input', {
-        type: 'mousemove',
-        x,
-        y,
-      });
+      const distance = Math.sqrt(
+        Math.pow(x - start.x, 2) + Math.pow(y - start.y, 2)
+      );
+      
+      if (distance >= DRAG_THRESHOLD) {
+        setIsDragging(true);
+      }
     }
   }, 16); // ~60fps
 
+  // Prevent default click when dragging
   const handleClick = (e: MouseEvent) => {
-    const ch = channel();
-    const canvas = canvasRef();
-    if (ch && canvas && connectionState() === 'connected') {
-      const { x, y } = getCanvasCoordinates(e, canvas);
-
-      ch.push('input', {
-        type: 'click',
-        x,
-        y,
-        button: e.button,
-      });
-    }
+    // Click is now handled in mouseUp based on drag distance
+    // This prevents duplicate events
+    e.preventDefault();
   };
 
   // Attach keyboard listeners to window

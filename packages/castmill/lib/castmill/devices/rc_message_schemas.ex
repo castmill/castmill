@@ -27,6 +27,9 @@ defmodule Castmill.Devices.RcMessageSchemas do
       %{"type" => type} when type in ["click", "mousedown", "mouseup", "mousemove"] ->
         validate_mouse_event(payload)
 
+      %{"type" => "drag"} ->
+        validate_drag_event(payload)
+
       # Android control event format: %{"event_type" => "tap", "data" => %{"x" => ..., "y" => ...}}
       # Also includes "key" for transformed keyboard events
       %{"event_type" => event_type, "data" => data} when is_map(data) and event_type in ["tap", "long_press", "swipe", "multi_step", "global_action", "init_mapper", "key"] ->
@@ -136,6 +139,17 @@ defmodule Castmill.Devices.RcMessageSchemas do
         else
           error -> error
         end
+    end
+  end
+
+  defp validate_drag_event(payload) do
+    with {:ok, _} <- validate_required_number_field(payload, "startX"),
+         {:ok, _} <- validate_required_number_field(payload, "startY"),
+         {:ok, _} <- validate_required_number_field(payload, "endX"),
+         {:ok, _} <- validate_required_number_field(payload, "endY") do
+      {:ok, payload}
+    else
+      error -> error
     end
   end
 
