@@ -56,6 +56,22 @@ export interface ChannelUpdatedMessage {
   default_playlist_id: number | null;
 }
 
+export interface ChannelAddedMessage {
+  event: string;
+  channel: {
+    id: number;
+    name: string;
+    timezone: string;
+    default_playlist_id: number | null;
+    entries: [];
+  };
+}
+
+export interface ChannelRemovedMessage {
+  event: string;
+  channel_id: number;
+}
+
 interface CachePage {
   page: number;
   page_size: number;
@@ -90,6 +106,7 @@ export class Device extends EventEmitter {
   private player?: Player;
   private channels: Channel[] = [];
   private channelIndex = 0;
+  private channelGeneration = 0; // Incremented when channels change, used to invalidate in-flight operations
   private logger: Logger = new Logger();
   private logDiv?: HTMLDivElement;
   private socket?: Socket;
@@ -184,6 +201,9 @@ export class Device extends EventEmitter {
       // Play until only one item remains in the playlist or the device is stopped.
       if (this.contentQueue.length < 2) {
         if (this.channels.length) {
+          // Capture current generation to detect if channels change during async operations
+          const currentGeneration = this.channelGeneration;
+
           const calendar = this.channels[this.channelIndex];
           const entry = calendar.getPlaylistAt(Date.now());
           if (entry) {
@@ -195,9 +215,20 @@ export class Device extends EventEmitter {
                 1000
               );
 
+            // Check if channels changed while we were fetching - if so, discard this content
+            if (this.channelGeneration !== currentGeneration) {
+              continue;
+            }
+
             if (jsonPlaylist) {
               const medias = this.getPlaylistMedias(jsonPlaylist);
               await this.cacheMedias(medias);
+
+              // Check again after caching
+              if (this.channelGeneration !== currentGeneration) {
+                continue;
+              }
+
               const layer = await Layer.fromPlaylist(
                 jsonPlaylist,
                 this.resourceManager,
@@ -205,6 +236,12 @@ export class Device extends EventEmitter {
                   target: 'poster',
                 }
               );
+
+              // Final check before adding to queue
+              if (this.channelGeneration !== currentGeneration) {
+                continue;
+              }
+
               this.contentQueue.add(layer);
 
               this.player.play({ loop: true });
@@ -530,14 +567,93 @@ export class Device extends EventEmitter {
 
     // Handle channel updates (e.g., when default playlist changes)
     channel.on('channel_updated', async (message: ChannelUpdatedMessage) => {
-      this.logger.info(`Channel ${message.channel_id} updated, default playlist: ${message.default_playlist_id}`);
-      
+      this.logger.info(
+        `Channel ${message.channel_id} updated, default playlist: ${message.default_playlist_id}`
+      );
+
       // Find the channel that was updated
-      const updatedChannel = this.channels.find(ch => ch.attrs.id === String(message.channel_id));
+      const updatedChannel = this.channels.find(
+        (ch) => ch.attrs.id === String(message.channel_id)
+      );
       if (updatedChannel) {
         // Update the channel's default playlist ID
-        updatedChannel.attrs.default_playlist_id = message.default_playlist_id ? String(message.default_playlist_id) : undefined;
-        this.logger.info('Channel default playlist updated, will take effect on next schedule check');
+        updatedChannel.attrs.default_playlist_id = message.default_playlist_id
+          ? String(message.default_playlist_id)
+          : undefined;
+        this.logger.info(
+          'Channel default playlist updated, will take effect on next schedule check'
+        );
+      }
+    });
+
+    // Handle channel added to device
+    channel.on('channel_added', async (message: ChannelAddedMessage) => {
+      this.logger.info(
+        `Channel ${message.channel.id} (${message.channel.name}) added to device`
+      );
+
+      // Increment generation to invalidate any in-flight content loading
+      this.channelGeneration++;
+
+      // Create a new Channel instance and add it to the channels list
+      const newChannel = new Channel({
+        id: String(message.channel.id),
+        name: message.channel.name,
+        description: undefined,
+        timezone: message.channel.timezone,
+        default_playlist_id: message.channel.default_playlist_id
+          ? String(message.channel.default_playlist_id)
+          : undefined,
+        entries: [],
+      });
+
+      this.channels.push(newChannel);
+      this.logger.info(`Device now has ${this.channels.length} channel(s)`);
+
+      // Stop player and clear content queue to force loading content from the updated channel list
+      if (this.player) {
+        this.player.stop();
+      }
+      if (this.contentQueue) {
+        while (this.contentQueue.length > 0) {
+          this.contentQueue.remove(this.contentQueue.layers[0]);
+        }
+      }
+    });
+
+    // Handle channel removed from device
+    channel.on('channel_removed', async (message: ChannelRemovedMessage) => {
+      this.logger.info(`Channel ${message.channel_id} removed from device`);
+
+      // Increment generation to invalidate any in-flight content loading
+      this.channelGeneration++;
+
+      // Find and remove the channel from the channels list
+      // Compare as strings to handle both string and number IDs
+      const channelIdToRemove = String(message.channel_id);
+      const channelIndex = this.channels.findIndex(
+        (ch) => String(ch.attrs.id) === channelIdToRemove
+      );
+
+      if (channelIndex !== -1) {
+        this.channels.splice(channelIndex, 1);
+
+        // Reset channel index if needed to prevent out-of-bounds access
+        if (this.channelIndex >= this.channels.length) {
+          this.channelIndex = 0;
+        }
+
+        this.logger.info(`Device now has ${this.channels.length} channel(s)`);
+
+        // Stop player and clear content queue to force loading content from the updated channel list
+        if (this.player) {
+          this.player.stop();
+        }
+        if (this.contentQueue) {
+          while (this.contentQueue.length > 0) {
+            this.contentQueue.remove(this.contentQueue.layers[0]);
+          }
+        }
       }
     });
   }
