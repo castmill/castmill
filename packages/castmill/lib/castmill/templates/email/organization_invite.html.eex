@@ -1,0 +1,32 @@
+<p style="color: #374151; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 1em; line-height: 1.6; margin: 0 0 1em 0;">
+  Hello,
+</p>
+
+<p style="color: #374151; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 1em; line-height: 1.6; margin: 0 0 1em 0;">
+  You have been invited to join the organization <strong><%= @organization_name %></strong> on <strong><%= @network_name %></strong>.
+</p>
+
+<p style="color: #374151; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 1em; line-height: 1.6; margin: 0 0 1em 0;">
+  Click the button below to accept the invitation and start collaborating with your team.
+</p>
+
+<table role="presentation" cellpadding="0" cellspacing="0" style="margin: 1.5em 0;">
+  <tr>
+    <td align="center">
+      <a href="<%= @invitation_url %>" style="background-color: #7c3aed; border-radius: 6px; color: #ffffff; display: inline-block; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 1em; font-weight: 600; padding: 1em 2em; text-decoration: none; text-align: center;">Accept Invitation</a>
+    </td>
+  </tr>
+</table>
+
+<p style="color: #6b7280; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 0.9em; line-height: 1.6; margin: 1.5em 0 0 0;">
+  Or copy and paste this link into your browser:
+</p>
+<p style="color: #7c3aed; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 0.9em; line-height: 1.6; margin: 0 0 1.5em 0; word-break: break-all;">
+  <%= @invitation_url %>
+</p>
+
+<div style="background-color: #f3f4f6; border-left: 4px solid #7c3aed; padding: 1em; margin: 1.5em 0;">
+  <p style="margin: 0; font-size: 0.9em; color: #6b7280; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6;">
+    <strong>Security Notice:</strong> This invitation was sent to <%= @email %>. If you did not expect this invitation, you can safely ignore this email.
+  </p>
+</div>

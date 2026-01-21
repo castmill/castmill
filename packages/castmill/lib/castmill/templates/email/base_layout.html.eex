@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="x-apple-disable-message-reformatting">
+  <title><%= @subject %></title>
+  <!--[if mso]>
+  <style type="text/css">
+    body, table, td {font-family: Arial, Helvetica, sans-serif !important;}
+  </style>
+  <![endif]-->
+  <style type="text/css">
+    /* Reset styles */
+    body {
+      margin: 0 !important;
+      padding: 0 !important;
+      background-color: #f4f4f4;
+    }
+    table {
+      border-collapse: collapse;
+      mso-table-lspace: 0pt;
+      mso-table-rspace: 0pt;
+    }
+    img {
+      border: 0;
+      height: auto;
+      line-height: 100%;
+      outline: none;
+      text-decoration: none;
+      -ms-interpolation-mode: bicubic;
+    }
+    
+    /* Main container */
+    .email-container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    
+    /* Header styles */
+    .header {
+      background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+      padding: 2em 1em;
+      text-align: center;
+    }
+    .header h1 {
+      color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      font-size: 2em;
+      font-weight: 600;
+      margin: 0;
+      letter-spacing: -0.5px;
+    }
+    
+    /* Content styles */
+    .content {
+      background-color: #ffffff;
+      padding: 2em;
+    }
+    .content p {
+      color: #374151;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      font-size: 1em;
+      line-height: 1.6;
+      margin: 0 0 1em 0;
+    }
+    
+    /* Button styles */
+    .button {
+      background-color: #7c3aed;
+      border-radius: 6px;
+      color: #ffffff;
+      display: inline-block;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      font-size: 1em;
+      font-weight: 600;
+      line-height: 1;
+      padding: 1em 2em;
+      text-decoration: none;
+      text-align: center;
+      margin: 1em 0;
+    }
+    
+    /* Info box styles */
+    .info-box {
+      background-color: #f3f4f6;
+      border-left: 4px solid #7c3aed;
+      padding: 1em;
+      margin: 1.5em 0;
+    }
+    .info-box p {
+      margin: 0;
+      font-size: 0.9em;
+      color: #6b7280;
+    }
+    
+    /* Footer styles */
+    .footer {
+      background-color: #1f2937;
+      color: #9ca3af;
+      padding: 2em 1em;
+      text-align: center;
+    }
+    .footer p {
+      color: #9ca3af;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      font-size: 0.875em;
+      line-height: 1.6;
+      margin: 0 0 0.5em 0;
+    }
+    .footer a {
+      color: #a855f7;
+      text-decoration: none;
+    }
+    
+    /* Responsive - Note: Limited support in some email clients (e.g., Outlook)
+       Table-based layout with inline styles provides the primary compatibility */
+    @media only screen and (max-width: 600px) {
+      .email-container {
+        width: 100% !important;
+      }
+      .content {
+        padding: 1.5em !important;
+      }
+      .header h1 {
+        font-size: 1.5em !important;
+      }
+    }
+  </style>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f4f4f4;">
+  <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #f4f4f4;" cellpadding="0" cellspacing="0">
+    <tr>
+      <td align="center" style="padding: 2em 0;">
+        <table role="presentation" class="email-container" style="width: 600px; border-collapse: collapse; background-color: #ffffff; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);" cellpadding="0" cellspacing="0">
+          <!-- Header -->
+          <tr>
+            <td class="header" style="background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%); padding: 2em 1em; text-align: center;">
+              <h1 style="color: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 2em; font-weight: 600; margin: 0; letter-spacing: -0.5px;">Castmill™</h1>
+            </td>
+          </tr>
+          
+          <!-- Content -->
+          <tr>
+            <td class="content" style="background-color: #ffffff; padding: 2em;">
+              <%= @body %>
+            </td>
+          </tr>
+          
+          <!-- Footer -->
+          <tr>
+            <td class="footer" style="background-color: #1f2937; color: #9ca3af; padding: 2em 1em; text-align: center;">
+              <p style="color: #9ca3af; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 0.875em; line-height: 1.6; margin: 0 0 0.5em 0;">
+                <strong>Castmill AB</strong><br>
+                Digital Signage Platform
+              </p>
+              <p style="color: #9ca3af; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 0.875em; line-height: 1.6; margin: 0 0 0.5em 0;">
+                Need help? <a href="https://castmill.com/support" style="color: #a855f7; text-decoration: none;">Contact Support</a>
+              </p>
+              <p style="color: #9ca3af; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 0.875em; line-height: 1.6; margin: 0;">
+                © <%= Calendar.strftime(DateTime.utc_now(), "%Y") %> Castmill AB. All rights reserved.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

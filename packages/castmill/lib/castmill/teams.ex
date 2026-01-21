@@ -665,11 +665,12 @@ defmodule Castmill.Teams do
         # now we can send the email outside the transaction.
         organization = Castmill.Organizations.get_organization(organization_id)
         network = Castmill.Networks.get_network(organization.network_id)
-        send_invitation_email(network.domain, email, token)
 
-        # Get team info and send notification if user exists
+        # Get team info for email
         team = get_team(team_id)
+        send_invitation_email(network.domain, team.name, email, token)
 
+        # Send notification if user exists
         case Castmill.Accounts.get_user_by_email(email) do
           nil ->
             # User doesn't exist yet, no notification to send
@@ -712,29 +713,29 @@ defmodule Castmill.Teams do
     |> Repo.exists?()
   end
 
-  defp send_invitation_email(baseUrl, email, token) do
-    subject = "You have been invited to a team on Castmill"
+  defp send_invitation_email(baseUrl, team_name, email, token) do
+    subject = "You have been invited to a Team on Castmill™"
 
-    body = """
-    Hello
+    {html_body, text_body} =
+      Castmill.EmailRenderer.render_team_invite(
+        team_name,
+        email,
+        token,
+        baseUrl
+      )
 
-    You have been invited to join a team on Castmill. Please click on the link below to accept the invitation.
-
-    #{baseUrl}/invite/?token=#{token}
-
-    """
-
-    deliver(email, subject, body)
+    deliver(email, subject, html_body, text_body)
   end
 
   # Delivers the email using the application mailer.
-  defp deliver(recipient, subject, body) do
+  defp deliver(recipient, subject, html_body, text_body) do
     email =
       Email.new()
       |> Email.to(recipient)
       |> Email.from({"Castmill", "no-reply@castmill.com"})
       |> Email.subject(subject)
-      |> Email.text_body(body)
+      |> Email.html_body(html_body)
+      |> Email.text_body(text_body)
 
     with {:ok, _metadata} <- Mailer.deliver(email) do
       {:ok, email}

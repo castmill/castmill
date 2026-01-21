@@ -1,0 +1,20 @@
+Hello,
+
+You have been invited to join the organization <%= @organization_name %> on <%= @network_name %>.
+
+Click the link below to accept the invitation and start collaborating with your team:
+
+<%= @invitation_url %>
+
+---
+
+Security Notice: This invitation was sent to <%= @email %>. If you did not expect this invitation, you can safely ignore this email.
+
+---
+
+Castmill AB
+Digital Signage Platform
+
+Need help? Visit https://castmill.com/support
+
+© <%= Calendar.strftime(DateTime.utc_now(), "%Y") %> Castmill AB. All rights reserved.
