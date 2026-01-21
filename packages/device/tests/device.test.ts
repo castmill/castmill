@@ -216,3 +216,276 @@ describe('Device - Commands', () => {
     window.location = originalLocation;
   });
 });
+
+describe('Device - Channel Updates', () => {
+  let device: Device;
+  let mockIntegration: any;
+  let mockStorageIntegration: any;
+
+  beforeEach(() => {
+    mockIntegration = {
+      getCredentials: vi.fn(),
+      getMachineGUID: vi.fn(),
+      removeCredentials: vi.fn().mockResolvedValue(undefined),
+    };
+
+    mockStorageIntegration = {
+      getItem: vi.fn(),
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+    };
+
+    device = new Device(mockIntegration, mockStorageIntegration, {
+      cache: { maxItems: 100 },
+    });
+  });
+
+  it('should handle channel_updated event and update channel default_playlist_id', async () => {
+    // Create a mock Phoenix channel
+    const mockChannel = {
+      on: vi.fn(),
+      push: vi.fn(),
+      join: vi.fn(),
+    };
+
+    // Set up mock channels on the device
+    device['channels'] = [
+      {
+        attrs: {
+          id: '123',
+          name: 'Test Channel',
+          default_playlist_id: '100',
+        },
+      } as any,
+      {
+        attrs: {
+          id: '456',
+          name: 'Another Channel',
+          default_playlist_id: '200',
+        },
+      } as any,
+    ];
+
+    // Call initListeners to set up the handlers
+    device['initListeners'](mockChannel as any);
+
+    // Find the 'channel_updated' event handler
+    const channelUpdatedHandler = mockChannel.on.mock.calls.find(
+      (call) => call[0] === 'channel_updated'
+    )?.[1];
+
+    expect(channelUpdatedHandler).toBeDefined();
+
+    // Simulate the channel_updated event
+    await channelUpdatedHandler({
+      event: 'channel_updated',
+      channel_id: 123,
+      default_playlist_id: 999,
+    });
+
+    // Verify that the channel's default_playlist_id was updated
+    expect(device['channels'][0].attrs.default_playlist_id).toBe('999');
+
+    // Verify that the other channel was not affected
+    expect(device['channels'][1].attrs.default_playlist_id).toBe('200');
+  });
+
+  it('should handle channel_updated event with null default_playlist_id', async () => {
+    const mockChannel = {
+      on: vi.fn(),
+      push: vi.fn(),
+      join: vi.fn(),
+    };
+
+    device['channels'] = [
+      {
+        attrs: {
+          id: '123',
+          name: 'Test Channel',
+          default_playlist_id: '100',
+        },
+      } as any,
+    ];
+
+    device['initListeners'](mockChannel as any);
+
+    const channelUpdatedHandler = mockChannel.on.mock.calls.find(
+      (call) => call[0] === 'channel_updated'
+    )?.[1];
+
+    expect(channelUpdatedHandler).toBeDefined();
+
+    // Simulate the channel_updated event with null default_playlist_id
+    await channelUpdatedHandler({
+      event: 'channel_updated',
+      channel_id: 123,
+      default_playlist_id: null,
+    });
+
+    // Verify that the channel's default_playlist_id was set to undefined
+    expect(device['channels'][0].attrs.default_playlist_id).toBeUndefined();
+  });
+
+  it('should not update if channel is not found', async () => {
+    const mockChannel = {
+      on: vi.fn(),
+      push: vi.fn(),
+      join: vi.fn(),
+    };
+
+    device['channels'] = [
+      {
+        attrs: {
+          id: '123',
+          name: 'Test Channel',
+          default_playlist_id: '100',
+        },
+      } as any,
+    ];
+
+    device['initListeners'](mockChannel as any);
+
+    const channelUpdatedHandler = mockChannel.on.mock.calls.find(
+      (call) => call[0] === 'channel_updated'
+    )?.[1];
+
+    expect(channelUpdatedHandler).toBeDefined();
+
+    // Simulate the channel_updated event for a non-existent channel
+    await channelUpdatedHandler({
+      event: 'channel_updated',
+      channel_id: 999,
+      default_playlist_id: 888,
+    });
+
+    // Verify that the existing channel was not affected
+    expect(device['channels'][0].attrs.default_playlist_id).toBe('100');
+  });
+
+  it('should handle channel_added event and add new channel to list', async () => {
+    const mockChannel = {
+      on: vi.fn(),
+      push: vi.fn(),
+      join: vi.fn(),
+    };
+
+    device['channels'] = [
+      {
+        attrs: {
+          id: '123',
+          name: 'Existing Channel',
+          default_playlist_id: '100',
+        },
+      } as any,
+    ];
+
+    device['initListeners'](mockChannel as any);
+
+    const channelAddedHandler = mockChannel.on.mock.calls.find(
+      (call) => call[0] === 'channel_added'
+    )?.[1];
+
+    expect(channelAddedHandler).toBeDefined();
+
+    // Simulate the channel_added event
+    await channelAddedHandler({
+      event: 'channel_added',
+      channel: {
+        id: 456,
+        name: 'New Channel',
+        timezone: 'Europe/Amsterdam',
+        default_playlist_id: 789,
+        entries: [],
+      },
+    });
+
+    // Verify that the new channel was added
+    expect(device['channels'].length).toBe(2);
+    expect(device['channels'][1].attrs.id).toBe('456');
+    expect(device['channels'][1].attrs.name).toBe('New Channel');
+    expect(device['channels'][1].attrs.default_playlist_id).toBe('789');
+  });
+
+  it('should handle channel_removed event and remove channel from list', async () => {
+    const mockChannel = {
+      on: vi.fn(),
+      push: vi.fn(),
+      join: vi.fn(),
+    };
+
+    device['channels'] = [
+      {
+        attrs: {
+          id: '123',
+          name: 'Channel 1',
+          default_playlist_id: '100',
+        },
+      } as any,
+      {
+        attrs: {
+          id: '456',
+          name: 'Channel 2',
+          default_playlist_id: '200',
+        },
+      } as any,
+    ];
+    device['channelIndex'] = 1;
+
+    device['initListeners'](mockChannel as any);
+
+    const channelRemovedHandler = mockChannel.on.mock.calls.find(
+      (call) => call[0] === 'channel_removed'
+    )?.[1];
+
+    expect(channelRemovedHandler).toBeDefined();
+
+    // Simulate the channel_removed event
+    await channelRemovedHandler({
+      event: 'channel_removed',
+      channel_id: 456,
+    });
+
+    // Verify that the channel was removed
+    expect(device['channels'].length).toBe(1);
+    expect(device['channels'][0].attrs.id).toBe('123');
+
+    // Verify that channelIndex was reset since it was pointing to the removed channel
+    expect(device['channelIndex']).toBe(0);
+  });
+
+  it('should not affect channels when removing non-existent channel', async () => {
+    const mockChannel = {
+      on: vi.fn(),
+      push: vi.fn(),
+      join: vi.fn(),
+    };
+
+    device['channels'] = [
+      {
+        attrs: {
+          id: '123',
+          name: 'Channel 1',
+          default_playlist_id: '100',
+        },
+      } as any,
+    ];
+
+    device['initListeners'](mockChannel as any);
+
+    const channelRemovedHandler = mockChannel.on.mock.calls.find(
+      (call) => call[0] === 'channel_removed'
+    )?.[1];
+
+    expect(channelRemovedHandler).toBeDefined();
+
+    // Simulate the channel_removed event for a non-existent channel
+    await channelRemovedHandler({
+      event: 'channel_removed',
+      channel_id: 999,
+    });
+
+    // Verify that the existing channel was not affected
+    expect(device['channels'].length).toBe(1);
+    expect(device['channels'][0].attrs.id).toBe('123');
+  });
+});

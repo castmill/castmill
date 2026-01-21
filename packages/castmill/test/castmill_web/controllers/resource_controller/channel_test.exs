@@ -162,4 +162,292 @@ defmodule CastmillWeb.ResourceController.ChannelsTest do
                retrieval_response
     end
   end
+
+  describe "update channel default_playlist_id" do
+    import Castmill.PlaylistsFixtures
+
+    test "updates channel default_playlist_id and broadcasts to devices", %{
+      conn: conn,
+      organization: organization
+    } do
+      # Create a playlist
+      playlist = playlist_fixture(%{organization_id: organization.id})
+
+      # Create a channel
+      channel =
+        channel_fixture(%{
+          organization_id: organization.id,
+          name: "Test Channel",
+          timezone: "Europe/Amsterdam"
+        })
+
+      channel_id = channel.id
+
+      # Register a device
+      {:ok, devices_registration} = device_registration_fixture()
+
+      {:ok, {device, _token}} =
+        Castmill.Devices.register_device(organization.id, devices_registration.pincode, %{
+          name: "Test Device"
+        })
+
+      # Add the channel to the device
+      Castmill.Devices.add_channel(device.id, channel.id)
+
+      # Subscribe to the device's PubSub topic to verify broadcast
+      Phoenix.PubSub.subscribe(Castmill.PubSub, "devices:#{device.id}")
+
+      # Update the channel's default_playlist_id
+      update_params = %{
+        "update" => %{"default_playlist_id" => playlist.id}
+      }
+
+      conn =
+        put(conn, "/api/organizations/#{organization.id}/channels/#{channel.id}", update_params)
+
+      response = json_response(conn, 200)
+
+      # Verify the update was successful
+      assert response["default_playlist_id"] == playlist.id
+
+      # Wait for the async task to broadcast the message
+      assert_receive %{
+                       event: "channel_updated",
+                       channel_id: ^channel_id,
+                       default_playlist_id: playlist_id
+                     },
+                     1000
+
+      assert playlist_id == playlist.id
+    end
+
+    test "does not broadcast when default_playlist_id is not changed", %{
+      conn: conn,
+      organization: organization
+    } do
+      # Create a playlist
+      playlist = playlist_fixture(%{organization_id: organization.id})
+
+      # Create a channel with the playlist already set
+      channel =
+        channel_fixture(%{
+          organization_id: organization.id,
+          name: "Test Channel",
+          timezone: "Europe/Amsterdam",
+          default_playlist_id: playlist.id
+        })
+
+      # Register a device
+      {:ok, devices_registration} = device_registration_fixture()
+
+      {:ok, {device, _token}} =
+        Castmill.Devices.register_device(organization.id, devices_registration.pincode, %{
+          name: "Test Device"
+        })
+
+      # Add the channel to the device
+      Castmill.Devices.add_channel(device.id, channel.id)
+
+      # Subscribe to the device's PubSub topic
+      Phoenix.PubSub.subscribe(Castmill.PubSub, "devices:#{device.id}")
+
+      # Update with the same default_playlist_id (no actual change)
+      update_params = %{
+        "update" => %{"default_playlist_id" => playlist.id}
+      }
+
+      conn =
+        put(conn, "/api/organizations/#{organization.id}/channels/#{channel.id}", update_params)
+
+      response = json_response(conn, 200)
+
+      # Verify the update was successful
+      assert response["default_playlist_id"] == playlist.id
+
+      # Should NOT receive a broadcast since value didn't change
+      refute_receive %{event: "channel_updated", channel_id: _, default_playlist_id: _}, 500
+    end
+
+    test "broadcasts when default_playlist_id is changed to a different playlist", %{
+      conn: conn,
+      organization: organization
+    } do
+      # Create two playlists
+      playlist1 = playlist_fixture(%{organization_id: organization.id, name: "Playlist 1"})
+      playlist2 = playlist_fixture(%{organization_id: organization.id, name: "Playlist 2"})
+
+      # Create a channel with playlist1
+      channel =
+        channel_fixture(%{
+          organization_id: organization.id,
+          name: "Test Channel",
+          timezone: "Europe/Amsterdam",
+          default_playlist_id: playlist1.id
+        })
+
+      channel_id = channel.id
+
+      # Register a device
+      {:ok, devices_registration} = device_registration_fixture()
+
+      {:ok, {device, _token}} =
+        Castmill.Devices.register_device(organization.id, devices_registration.pincode, %{
+          name: "Test Device"
+        })
+
+      # Add the channel to the device
+      Castmill.Devices.add_channel(device.id, channel.id)
+
+      # Subscribe to the device's PubSub topic
+      Phoenix.PubSub.subscribe(Castmill.PubSub, "devices:#{device.id}")
+
+      # Update to playlist2
+      update_params = %{
+        "update" => %{"default_playlist_id" => playlist2.id}
+      }
+
+      conn =
+        put(conn, "/api/organizations/#{organization.id}/channels/#{channel.id}", update_params)
+
+      response = json_response(conn, 200)
+
+      # Verify the update was successful
+      assert response["default_playlist_id"] == playlist2.id
+
+      # Should receive a broadcast since value changed
+      assert_receive %{
+                       event: "channel_updated",
+                       channel_id: ^channel_id,
+                       default_playlist_id: new_playlist_id
+                     },
+                     1000
+
+      assert new_playlist_id == playlist2.id
+    end
+
+    test "broadcasts to multiple devices using the same channel", %{
+      conn: conn,
+      organization: organization
+    } do
+      # Create a playlist
+      playlist = playlist_fixture(%{organization_id: organization.id})
+
+      # Create a channel
+      channel =
+        channel_fixture(%{
+          organization_id: organization.id,
+          name: "Test Channel",
+          timezone: "Europe/Amsterdam"
+        })
+
+      channel_id = channel.id
+
+      # Register two devices
+      {:ok, devices_registration1} = device_registration_fixture(%{hardware_id: "device1"})
+      {:ok, devices_registration2} = device_registration_fixture(%{hardware_id: "device2"})
+
+      {:ok, {device1, _token1}} =
+        Castmill.Devices.register_device(organization.id, devices_registration1.pincode, %{
+          name: "Test Device 1"
+        })
+
+      {:ok, {device2, _token2}} =
+        Castmill.Devices.register_device(organization.id, devices_registration2.pincode, %{
+          name: "Test Device 2"
+        })
+
+      # Add the channel to both devices
+      Castmill.Devices.add_channel(device1.id, channel.id)
+      Castmill.Devices.add_channel(device2.id, channel.id)
+
+      # Subscribe to both devices' PubSub topics
+      Phoenix.PubSub.subscribe(Castmill.PubSub, "devices:#{device1.id}")
+      Phoenix.PubSub.subscribe(Castmill.PubSub, "devices:#{device2.id}")
+
+      # Update the channel's default_playlist_id
+      update_params = %{
+        "update" => %{"default_playlist_id" => playlist.id}
+      }
+
+      conn =
+        put(conn, "/api/organizations/#{organization.id}/channels/#{channel.id}", update_params)
+
+      response = json_response(conn, 200)
+
+      # Verify the update was successful
+      assert response["default_playlist_id"] == playlist.id
+
+      # Both devices should receive the broadcast
+      assert_receive %{
+                       event: "channel_updated",
+                       channel_id: ^channel_id,
+                       default_playlist_id: playlist_id1
+                     },
+                     1000
+
+      assert_receive %{
+                       event: "channel_updated",
+                       channel_id: ^channel_id,
+                       default_playlist_id: playlist_id2
+                     },
+                     1000
+
+      assert playlist_id1 == playlist.id
+      assert playlist_id2 == playlist.id
+    end
+
+    test "broadcasts when default_playlist_id is set to nil", %{
+      conn: conn,
+      organization: organization
+    } do
+      # Create a playlist
+      playlist = playlist_fixture(%{organization_id: organization.id})
+
+      # Create a channel with a playlist
+      channel =
+        channel_fixture(%{
+          organization_id: organization.id,
+          name: "Test Channel",
+          timezone: "Europe/Amsterdam",
+          default_playlist_id: playlist.id
+        })
+
+      channel_id = channel.id
+
+      # Register a device
+      {:ok, devices_registration} = device_registration_fixture()
+
+      {:ok, {device, _token}} =
+        Castmill.Devices.register_device(organization.id, devices_registration.pincode, %{
+          name: "Test Device"
+        })
+
+      # Add the channel to the device
+      Castmill.Devices.add_channel(device.id, channel.id)
+
+      # Subscribe to the device's PubSub topic
+      Phoenix.PubSub.subscribe(Castmill.PubSub, "devices:#{device.id}")
+
+      # Update to nil (removing default playlist)
+      update_params = %{
+        "update" => %{"default_playlist_id" => nil}
+      }
+
+      conn =
+        put(conn, "/api/organizations/#{organization.id}/channels/#{channel.id}", update_params)
+
+      response = json_response(conn, 200)
+
+      # Verify the update was successful
+      assert response["default_playlist_id"] == nil
+
+      # Should receive a broadcast since value changed
+      assert_receive %{
+                       event: "channel_updated",
+                       channel_id: ^channel_id,
+                       default_playlist_id: nil
+                     },
+                     1000
+    end
+  end
 end

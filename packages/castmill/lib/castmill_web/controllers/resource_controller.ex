@@ -166,6 +166,32 @@ defmodule CastmillWeb.ResourceController do
     id: [type: :string, required: true],
     update: :map
   }
+
+  @update_playlist_params_schema %{
+    organization_id: [type: :string, required: true],
+    id: [type: :integer, required: true],
+    update: :map
+  }
+
+  @update_channel_params_schema %{
+    organization_id: [type: :string, required: true],
+    id: [type: :integer, required: true],
+    update: :map
+  }
+
+  @update_layout_params_schema %{
+    organization_id: [type: :string, required: true],
+    id: [type: :integer, required: true],
+    update: :map
+  }
+
+  @update_media_params_schema %{
+    organization_id: [type: :string, required: true],
+    resources: [type: :string, cast: :integer, required: true],
+    id: [type: :integer, required: true],
+    update: :map
+  }
+
   def update(
         conn,
         %{
@@ -202,12 +228,6 @@ defmodule CastmillWeb.ResourceController do
     end
   end
 
-  @update_media_params_schema %{
-    organization_id: [type: :string, required: true],
-    resources: [type: :string, cast: :integer, required: true],
-    id: [type: :integer, required: true],
-    update: :map
-  }
   def update(
         conn,
         %{
@@ -244,12 +264,6 @@ defmodule CastmillWeb.ResourceController do
     end
   end
 
-  @update_playlist_params_schema %{
-    organization_id: [type: :string, required: true],
-    id: [type: :integer, required: true],
-    update: :map
-  }
-
   def update(
         conn,
         %{
@@ -282,12 +296,6 @@ defmodule CastmillWeb.ResourceController do
     end
   end
 
-  @update_channel_params_schema %{
-    organization_id: [type: :string, required: true],
-    id: [type: :integer, required: true],
-    update: :map
-  }
-
   def update(
         conn,
         %{
@@ -300,10 +308,21 @@ defmodule CastmillWeb.ResourceController do
 
       Castmill.Resources.update_channel(channel, params.update)
       |> case do
-        {:ok, channel} ->
+        {:ok, updated_channel} ->
+          # If default_playlist_id was updated and actually changed, notify all connected devices
+          # Note: params.update may have string keys ("default_playlist_id") so check both
+          has_default_playlist_key =
+            Map.has_key?(params.update, :default_playlist_id) or
+              Map.has_key?(params.update, "default_playlist_id")
+
+          if has_default_playlist_key and
+               channel.default_playlist_id != updated_channel.default_playlist_id do
+            notify_devices_of_channel_update(updated_channel.id, updated_channel)
+          end
+
           conn
           |> put_status(:ok)
-          |> json(channel)
+          |> json(updated_channel)
 
         {:error, errors} ->
           conn
@@ -319,12 +338,6 @@ defmodule CastmillWeb.ResourceController do
         |> halt()
     end
   end
-
-  @update_layout_params_schema %{
-    organization_id: [type: :string, required: true],
-    id: [type: :integer, required: true],
-    update: :map
-  }
 
   def update(
         conn,
@@ -363,6 +376,32 @@ defmodule CastmillWeb.ResourceController do
     |> put_status(:bad_request)
     |> Phoenix.Controller.json(%{errors: ["Resource not found"]})
     |> halt()
+  end
+
+  # Notify all devices assigned to a channel when its default playlist changes
+  # This is done asynchronously to avoid blocking the HTTP response
+  defp notify_devices_of_channel_update(channel_id, channel) do
+    Task.start(fn ->
+      try do
+        devices = Castmill.Resources.get_devices_using_channel(channel_id)
+
+        Enum.each(devices, fn device ->
+          Phoenix.PubSub.broadcast(
+            Castmill.PubSub,
+            "devices:#{device.id}",
+            %{
+              event: "channel_updated",
+              channel_id: channel_id,
+              default_playlist_id: channel.default_playlist_id
+            }
+          )
+        end)
+      rescue
+        error ->
+          require Logger
+          Logger.error("Failed to notify devices of channel update: #{inspect(error)}")
+      end
+    end)
   end
 
   def create(conn, %{

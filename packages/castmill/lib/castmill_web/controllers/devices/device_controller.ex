@@ -293,6 +293,25 @@ defmodule CastmillWeb.DeviceController do
   """
   def add_channel(conn, %{"device_id" => device_id, "channel_id" => channel_id}) do
     with {:ok, _device} <- Devices.add_channel(device_id, channel_id) do
+      # Get the full channel data to send to the device
+      channel = Castmill.Resources.get_channel(channel_id)
+
+      # Notify the device about the new channel via WebSocket
+      Phoenix.PubSub.broadcast(
+        Castmill.PubSub,
+        "devices:#{device_id}",
+        %{
+          event: "channel_added",
+          channel: %{
+            id: channel.id,
+            name: channel.name,
+            timezone: channel.timezone,
+            default_playlist_id: channel.default_playlist_id,
+            entries: []
+          }
+        }
+      )
+
       conn
       |> put_status(:ok)
       |> send_resp(200, "")
@@ -304,6 +323,16 @@ defmodule CastmillWeb.DeviceController do
   """
   def remove_channel(conn, %{"device_id" => device_id, "channel_id" => channel_id}) do
     with {num_deleted, nil} <- Devices.remove_channel(device_id, channel_id) do
+      # Notify the device about the removed channel via WebSocket
+      Phoenix.PubSub.broadcast(
+        Castmill.PubSub,
+        "devices:#{device_id}",
+        %{
+          event: "channel_removed",
+          channel_id: String.to_integer(channel_id)
+        }
+      )
+
       conn
       |> put_status(:ok)
       |> json(%{message: "#{num_deleted} channels removed successfully"})
