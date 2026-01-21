@@ -320,15 +320,13 @@ defmodule CastmillWeb.Live.Admin.Resources do
 
   @impl true
   def handle_info({CastmillWeb.Live.Admin.NetworkForm, {:saved, row}}, socket) do
-    # Update the row in the rows list (not using streams)
-    rows = Enum.map(socket.assigns.rows, fn r -> if r.id == row.id, do: row, else: r end)
+    rows = update_or_insert_row(socket.assigns.rows, row)
     {:noreply, assign(socket, :rows, rows)}
   end
 
   @impl true
   def handle_info({CastmillWeb.Live.Admin.OrganizationForm, {:saved, row}}, socket) do
-    # Update the row in the rows list (not using streams)
-    rows = Enum.map(socket.assigns.rows, fn r -> if r.id == row.id, do: row, else: r end)
+    rows = update_or_insert_row(socket.assigns.rows, row)
     {:noreply, assign(socket, :rows, rows)}
   end
 
@@ -340,8 +338,7 @@ defmodule CastmillWeb.Live.Admin.Resources do
   def handle_event("delete", %{"id" => id, "resource" => "networks"}, socket) do
     network = Networks.get_network(id)
     {:ok, _} = Networks.delete_network(network)
-
-    rows = Enum.reject(socket.assigns.rows, fn r -> r.id == id end)
+    rows = Enum.reject(socket.assigns.rows, fn r -> r.id == network.id end)
     {:noreply, assign(socket, :rows, rows)}
   end
 
@@ -349,7 +346,7 @@ defmodule CastmillWeb.Live.Admin.Resources do
   def handle_event("delete", %{"id" => id, "resource" => "organizations"}, socket) do
     organization = Organizations.get_organization!(id)
     {:ok, _} = Organizations.delete_organization(organization)
-    rows = Enum.reject(socket.assigns.rows, fn r -> r.id == id end)
+    rows = Enum.reject(socket.assigns.rows, fn r -> r.id == organization.id end)
     {:noreply, assign(socket, :rows, rows)}
   end
 
@@ -477,5 +474,13 @@ defmodule CastmillWeb.Live.Admin.Resources do
     |> assign(:total_items, total_items)
     |> assign(:resource_name, resource_name)
     |> assign(:options, options)
+  end
+
+  # Helper to update an existing row or insert a new one
+  defp update_or_insert_row(rows, new_row) do
+    case Enum.find_index(rows, fn r -> r.id == new_row.id end) do
+      nil -> [new_row | rows]
+      index -> List.replace_at(rows, index, new_row)
+    end
   end
 end

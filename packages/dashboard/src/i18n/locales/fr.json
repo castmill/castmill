@@ -88,10 +88,12 @@
     "selectImage": "Sélectionner une image",
     "selectMedia": "Sélectionner un média",
     "selectPlaylist": "Sélectionner une liste de lecture",
+    "searchLocation": "Rechercher un lieu...",
+    "coordinates": "Coordonnées",
+    "address": "Adresse",
+    "noAddressAvailable": "Aucune adresse disponible",
     "playlist": "Liste de lecture",
     "addPlaylist": "Ajouter une liste de lecture",
-    "offline": "Hors ligne",
-    "apply": "Appliquer",
     "selectVideo": "Sélectionner une vidéo",
     "widget": "Widget"
   },
@@ -283,7 +285,9 @@
     },
     "memberSelection": {
       "selectUser": "Sélectionner un utilisateur",
-      "searchUser": "Rechercher un utilisateur..."
+      "searchUser": "Rechercher un utilisateur...",
+      "noUsersAvailable": "Aucun utilisateur disponible à inviter.",
+      "inviteToOrgFirst": "Les utilisateurs doivent d'abord être invités à l'organisation avant de pouvoir être ajoutés aux équipes."
     },
     "teamsRemovedSuccessfully": "Équipes supprimées avec succès"
   },
@@ -613,7 +617,13 @@
     "setDeviceChannel": "Définir le canal de l'appareil",
     "selectChannel": "Sélectionner un canal",
     "preview": {
-      "placeholder": "Aperçu"
+      "placeholder": "Aperçu",
+      "noChannels": "Aucun canal assigné à cet appareil",
+      "noScheduledContent": "Aucun contenu programmé pour le moment",
+      "errorLoadingPlaylist": "Échec du chargement du contenu de la liste de lecture",
+      "errorInitializing": "Échec de l'initialisation de l'aperçu",
+      "currentlyPlaying": "Actuellement programmé depuis le canal",
+      "note": "Ceci montre ce que l'appareil devrait jouer maintenant en fonction des horaires des canaux, pas nécessairement ce qui est réellement affiché sur l'appareil."
     },
     "telemetry": {
       "placeholder": "Traces, journaux, métriques et connectivité (qualité WiFi, etc.)"
@@ -632,6 +642,40 @@
       "updateFirmware": "Mettre à jour le firmware",
       "updateFirmwareDescription": "Met à jour le firmware de l'appareil",
       "offlineMessage": "L'appareil est hors ligne, aucune commande ne peut donc lui être envoyée"
+    },
+    "cache": {
+      "title": "Cache de l'Appareil",
+      "items": "éléments en cache",
+      "dataTab": "Données",
+      "codeTab": "Code",
+      "mediaTab": "Médias",
+      "deleteSelected": "Supprimer les éléments sélectionnés",
+      "clearAll": "Tout Effacer",
+      "confirmDelete": "Supprimer l'Entrée du Cache",
+      "confirmDeleteMessage": "Êtes-vous sûr de vouloir supprimer cette entrée du cache ? URL: {{url}}",
+      "confirmDeleteMultiple": "Supprimer Plusieurs Entrées",
+      "confirmDeleteMultipleMessage": "Êtes-vous sûr de vouloir supprimer {{count}} entrées du cache ?",
+      "confirmClearAll": "Effacer Tout le Cache",
+      "confirmClearAllMessage": "Êtes-vous sûr de vouloir effacer toutes les entrées du cache {{type}} ? Cette action ne peut pas être annulée.",
+      "deleteSuccess": "Entrée du cache supprimée avec succès",
+      "deleteMultipleSuccess": "{{count}} entrées du cache supprimées avec succès",
+      "clearAllSuccess": "Toutes les entrées du cache effacées avec succès",
+      "deleteError": "Erreur lors de la suppression du cache : {{error}}",
+      "offlineWarning": "L'appareil est actuellement hors ligne. Les informations du cache ne peuvent pas être récupérées tant que l'appareil n'est pas de retour en ligne."
+    },
+    "events": {
+      "title": "Événements de l'appareil",
+      "items": "événements",
+      "filterError": "Erreurs",
+      "filterWarning": "Avertissements",
+      "filterInfo": "Info",
+      "filterOnline": "En ligne",
+      "filterOffline": "Hors ligne",
+      "clearAll": "Effacer tous les événements",
+      "confirmClearAll": "Effacer tous les événements",
+      "confirmClearAllMessage": "Êtes-vous sûr de vouloir supprimer tous les événements pour cet appareil ? Cette action ne peut pas être annulée.",
+      "clearAllSuccess": "{{count}} événements supprimés avec succès",
+      "deleteError": "Erreur lors de la suppression des événements : {{error}}"
     },
     "errors": {
       "setChannelFailed": "Échec de la définition du canal de l'appareil : {{error}}",
@@ -837,6 +881,22 @@
     "legend": {
       "title": "Raccourcis clavier",
       "description": "Utilisez ces raccourcis pour naviguer plus rapidement"
+    }
+  },
+  "onboarding": {
+    "title": "Bienvenue sur Castmill !",
+    "subtitle": "Commençons par nommer votre organisation.",
+    "organizationNameLabel": "Nom de l'organisation",
+    "organizationNamePlaceholder": "Entrez le nom de votre organisation",
+    "helpText": "Ce nom sera utilisé pour identifier votre espace de travail. Vous pourrez le modifier ultérieurement dans les paramètres.",
+    "continueButton": "Continuer",
+    "success": "Configuration de l'organisation terminée !",
+    "errors": {
+      "organizationNameRequired": "Le nom de l'organisation est requis",
+      "organizationNameTooShort": "Le nom de l'organisation doit comporter au moins 2 caractères",
+      "organizationNameTooLong": "Le nom de l'organisation doit comporter moins de 50 caractères",
+      "organizationNameTaken": "Ce nom d'organisation est déjà pris. Veuillez choisir un autre nom.",
+      "failed": "Échec de la configuration. Veuillez réessayer."
     }
   }
 }

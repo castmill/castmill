@@ -19,10 +19,12 @@ interface ToolBarProps {
   title?: string;
   filters?: Filter[];
   onFilterChange?: (filters: Filter[]) => void;
-  actions?: JSX.Element;
+  actions?: JSX.Element | (() => JSX.Element);
   onSearch?: (searchText: string) => void;
   initialSearchText?: string;
   mainAction?: JSX.Element; // Changed type to accept a JSX element
+  requireOneActiveFilter?: boolean; // When true (default), at least one filter must remain active
+  hideSearch?: boolean; // When true, hides the search input
 }
 
 export function ToolBar(props: ToolBarProps) {
@@ -62,9 +64,14 @@ export function ToolBar(props: ToolBarProps) {
     if (!currentFilter) return; // safeguard against undefined filter
 
     const activeFilters = filters().filter((f) => f.isActive);
+    const requireOneActive = props.requireOneActiveFilter ?? true;
 
-    // Only toggle the filter if there will be at least one filter left active
-    if (currentFilter.isActive && activeFilters.length === 1) {
+    // Only toggle the filter if there will be at least one filter left active (when required)
+    if (
+      requireOneActive &&
+      currentFilter.isActive &&
+      activeFilters.length === 1
+    ) {
       return; // Prevent toggle if this is the only active filter
     }
 
@@ -89,7 +96,7 @@ export function ToolBar(props: ToolBarProps) {
         <Show when={props.title}>
           <h2 class="toolbar-title">{props.title}</h2>
         </Show>
-        <Show when="props.onSearch">
+        <Show when={props.onSearch && !props.hideSearch}>
           <div class="search-container">
             <IconWrapper icon={FaSolidMagnifyingGlass} />
 
@@ -113,6 +120,7 @@ export function ToolBar(props: ToolBarProps) {
                   key={filter.key}
                   isActive={filter.isActive}
                   disabled={
+                    (props.requireOneActiveFilter ?? true) &&
                     filter.isActive &&
                     filters().filter((f) => f.isActive).length === 1
                   }
@@ -123,7 +131,11 @@ export function ToolBar(props: ToolBarProps) {
           </div>
         </Show>
 
-        <Show when={props.actions}>{props.actions}</Show>
+        <Show when={props.actions}>
+          {typeof props.actions === 'function'
+            ? props.actions()
+            : props.actions}
+        </Show>
       </div>
 
       <Show when={props.mainAction}>{props.mainAction}</Show>

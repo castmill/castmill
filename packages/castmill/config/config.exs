@@ -94,12 +94,20 @@ config :ex_aws, :s3,
   access_key_id: System.get_env("AWS_ACCESS_KEY_ID"),
   secret_access_key: System.get_env("AWS_SECRET_ACCESS_KEY")
 
-# Configure Oban
-config :castmill, Oban,
-  plugins: [{Oban.Plugins.Pruner, max_age: 300}],
-  engine: Oban.Engines.Basic,
-  queues: [image_transcoder: 10, video_transcoder: 10, integration_polling: 5, integrations: 5],
-  repo: Castmill.Repo
+# Configure BullMQ
+config :castmill, :redis,
+  host: System.get_env("REDIS_HOST") || "localhost",
+  port: String.to_integer(System.get_env("REDIS_PORT") || "6379")
+
+config :castmill, :bullmq,
+  connection: :castmill_redis,
+  queues: [
+    {:image_transcoder, concurrency: 10},
+    {:video_transcoder, concurrency: 10},
+    {:integration_polling, concurrency: 5},
+    {:integrations, concurrency: 5},
+    {:maintenance, concurrency: 2}
+  ]
 
 # Configure Spotify OAuth (widget integration)
 # In production, set SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, and SPOTIFY_REDIRECT_URI

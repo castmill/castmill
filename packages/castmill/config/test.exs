@@ -44,5 +44,5 @@ config :phoenix, :plug_init_mode, :runtime
 # Ensure we use the mocks when testing
 config :castmill, accounts: Castmill.AccountsMock
 
-# To prevent Oban from running jobs and plugins during test runs, enable :testing mode
-config :castmill, Oban, testing: :inline
+# Configure BullMQ for tests - inline mode
+config :castmill, :bullmq, testing: :inline

@@ -585,7 +585,10 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
                 onClick={() => setShowConfirmDialogMultiple(true)}
                 icon={AiOutlineDelete}
                 color="primary"
-                disabled={selectedDevices().size === 0}
+                disabled={
+                  selectedDevices().size === 0 ||
+                  !canPerformAction('devices', 'delete')
+                }
               />
             </div>
           ),

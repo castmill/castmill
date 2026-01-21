@@ -146,6 +146,10 @@ defmodule CastmillWeb.OrganizationController do
     {:ok, Organizations.is_admin?(organization_id, actor_id)}
   end
 
+  def check_access(actor_id, :complete_onboarding, %{"organization_id" => organization_id}) do
+    {:ok, Organizations.is_admin?(organization_id, actor_id)}
+  end
+
   def check_access(actor_id, :remove_member, %{
         "organization_id" => organization_id,
         "user_id" => user_id
@@ -248,6 +252,30 @@ defmodule CastmillWeb.OrganizationController do
     end
   end
 
+  def complete_onboarding(conn, %{"organization_id" => id, "name" => name}) do
+    with {:ok, %Organization{} = organization} <-
+           Organizations.complete_onboarding(id, name) do
+      render(conn, :show, organization: organization)
+    else
+      {:error, :not_found} ->
+        conn
+        |> put_status(:not_found)
+        |> json(%{error: "Organization not found"})
+
+      {:error, %Ecto.Changeset{} = changeset} ->
+        errors =
+          Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
+            Regex.replace(~r"%{(\w+)}", msg, fn _, key ->
+              opts |> Keyword.get(String.to_existing_atom(key), key) |> to_string()
+            end)
+          end)
+
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{errors: errors})
+    end
+  end
+
   def delete(conn, %{"id" => id}) do
     organization = Organizations.get_organization!(id)
 
@@ -346,6 +374,8 @@ defmodule CastmillWeb.OrganizationController do
          widget_data <- resolve_widget_icon(widget_data, widget_slug, stored_assets),
          # Extract and resolve fonts from widget assets
          widget_data <- resolve_widget_fonts(widget_data, widget_slug, stored_assets),
+         # Store integration definition in meta for later use
+         widget_data <- store_integration_in_meta(widget_data),
          {:ok, widget} <- Castmill.Widgets.create_widget(widget_data) do
       # Clean up temporary asset files
       PackageProcessor.cleanup_assets(assets)
@@ -412,6 +442,21 @@ defmodule CastmillWeb.OrganizationController do
       widget_data
     else
       Map.put(widget_data, "fonts", fonts)
+    end
+  end
+
+  # Stores the integration definition from widget.json into the meta field
+  # so it can be used later when the widget is added to a playlist
+  defp store_integration_in_meta(widget_data) do
+    integration = Map.get(widget_data, "integration")
+
+    if is_map(integration) do
+      # Merge integration into meta (create meta if it doesn't exist)
+      current_meta = Map.get(widget_data, "meta") || %{}
+      updated_meta = Map.put(current_meta, "integration", integration)
+      Map.put(widget_data, "meta", updated_meta)
+    else
+      widget_data
     end
   end
 

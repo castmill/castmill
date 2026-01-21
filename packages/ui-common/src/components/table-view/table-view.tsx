@@ -73,6 +73,9 @@ interface TableViewProps<
     filters?: Filter[];
     mainAction?: JSX.Element;
     actions?: JSX.Element;
+    requireOneActiveFilter?: boolean; // When true (default), at least one filter must remain active
+    hideSearch?: boolean; // When true, hides the search input
+    hideTitle?: boolean; // When true, hides the title in the toolbar
   };
 
   itemIdKey?: string;
@@ -319,13 +322,15 @@ export const TableView = <
         <div class={style['table-view']}>
           <Show when={props.toolbar}>
             <ToolBar
-              title={props.title}
+              title={props.toolbar?.hideTitle ? undefined : props.title}
               filters={filters()}
               onFilterChange={handleFilterChange}
               initialSearchText={(getSearchParams().search as string) || ''}
               onSearch={handleSearch}
               mainAction={props.toolbar?.mainAction}
               actions={props.toolbar?.actions}
+              requireOneActiveFilter={props.toolbar?.requireOneActiveFilter}
+              hideSearch={props.toolbar?.hideSearch}
             />
           </Show>
 

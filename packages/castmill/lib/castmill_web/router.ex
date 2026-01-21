@@ -289,6 +289,14 @@ defmodule CastmillWeb.Router do
       :get_widget_usage
     )
 
+    # Prefetch integration data for a widget (before widget_config exists)
+    # This allows the UI to warm up the cache while showing the widget details modal
+    post(
+      "/organizations/:organization_id/widgets/:widget_id/prefetch-data",
+      WidgetIntegrationController,
+      :prefetch_widget_data
+    )
+
     delete(
       "/organizations/:organization_id/widgets/:widget_id",
       OrganizationController,
@@ -338,6 +346,7 @@ defmodule CastmillWeb.Router do
     post("/invitations/:token/reject", TeamController, :reject_invitation, as: :team_invitation)
 
     resources "/organizations", OrganizationController, only: [:update] do
+      post("/complete-onboarding", OrganizationController, :complete_onboarding)
       post("/devices", OrganizationController, :register_device)
 
       # This route is used to upload media files to the server.
@@ -414,7 +423,9 @@ defmodule CastmillWeb.Router do
 
     post("/devices/:device_id/commands", DeviceController, :send_command)
     get("/devices/:device_id/events", DeviceController, :list_events)
+    delete("/devices/:device_id/events", DeviceController, :delete_events)
     get("/devices/:device_id/cache", DeviceController, :get_cache)
+    delete("/devices/:device_id/cache", DeviceController, :delete_cache)
 
     # Endpoint to get all channels of a device in the dashboard scope
     get("/devices/:device_id/channels", DeviceController, :get_channels)
@@ -424,6 +435,9 @@ defmodule CastmillWeb.Router do
 
     # Endpoint to remove a channel from a device in the dashboard scope
     delete("/devices/:device_id/channels/:channel_id", DeviceController, :remove_channel)
+
+    # Endpoint to get a playlist for device preview in the dashboard scope
+    get("/devices/:device_id/playlists/:playlist_id", DeviceController, :get_playlist)
 
     # Notification routes
     get("/notifications", NotificationController, :index)

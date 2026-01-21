@@ -450,11 +450,23 @@ defmodule Castmill.Resources do
   end
 
   defp build_discriminator_id(integration, options) do
+    # For widget_option discriminators, also check pull_config for hardcoded values
+    # (e.g., RSS widgets have feed_url in pull_config, not in widget_options)
+    pull_config = integration.pull_config || %{}
+    merged_options = Map.merge(pull_config, options || %{})
+
     case integration.discriminator_type do
       "widget_option" ->
         key = integration.discriminator_key || "id"
-        value = Map.get(options, key) || Map.get(options, String.to_atom(key)) || "default"
+
+        value =
+          Map.get(merged_options, key) || Map.get(merged_options, String.to_atom(key)) ||
+            "default"
+
         "#{key}:#{value}"
+
+      "organization" ->
+        "org"
 
       _ ->
         "default"
@@ -849,7 +861,9 @@ defmodule Castmill.Resources do
                  next_item_id: next_item_id
                }),
              {:ok, widget_config} <-
-               Castmill.Widgets.new_widget_config(widget_id, item.id, options),
+               Castmill.Widgets.new_widget_config(widget_id, item.id, options, nil,
+                 organization_id: playlist.organization_id
+               ),
              :ok <- link_playlist_items(prev_item, item) do
           # Return both item and widget_config_id for the frontend
           # Use Map.put since PlaylistItem struct doesn't have widget_config_id field

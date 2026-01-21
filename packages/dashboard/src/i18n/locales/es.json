@@ -90,6 +90,10 @@
     "selectVideo": "Seleccionar un video",
     "selectMedia": "Seleccionar un medio",
     "selectPlaylist": "Seleccionar una lista de reproducción",
+    "searchLocation": "Buscar una ubicación...",
+    "coordinates": "Coordenadas",
+    "address": "Dirección",
+    "noAddressAvailable": "No hay dirección disponible",
     "playlist": "Lista de reproducción",
     "addPlaylist": "Añadir lista de reproducción",
     "widget": "Widget"
@@ -282,7 +286,9 @@
     },
     "memberSelection": {
       "selectUser": "Seleccionar usuario",
-      "searchUser": "Buscar un usuario..."
+      "searchUser": "Buscar un usuario...",
+      "noUsersAvailable": "No hay usuarios disponibles para invitar.",
+      "inviteToOrgFirst": "Los usuarios deben ser invitados primero a la organización antes de poder añadirlos a los equipos."
     },
     "teamsRemovedSuccessfully": "Equipos eliminados exitosamente"
   },
@@ -623,7 +629,13 @@
     "setDeviceChannel": "Establecer canal del dispositivo",
     "selectChannel": "Seleccionar canal",
     "preview": {
-      "placeholder": "Vista previa"
+      "placeholder": "Vista previa",
+      "noChannels": "No hay canales asignados a este dispositivo",
+      "noScheduledContent": "No hay contenido programado en este momento",
+      "errorLoadingPlaylist": "Error al cargar el contenido de la lista de reproducción",
+      "errorInitializing": "Error al inicializar la vista previa",
+      "currentlyPlaying": "Actualmente programado desde el canal",
+      "note": "Esto muestra lo que el dispositivo debería estar reproduciendo ahora según los horarios del canal, no necesariamente lo que se muestra realmente en el dispositivo."
     },
     "telemetry": {
       "placeholder": "Trazas, registros, métricas y conectividad (calidad WiFi, etc.)"
@@ -642,6 +654,40 @@
       "updateFirmware": "Actualizar firmware",
       "updateFirmwareDescription": "Actualiza el firmware del dispositivo",
       "offlineMessage": "El dispositivo está desconectado, por lo que no se le pueden enviar comandos"
+    },
+    "cache": {
+      "title": "Caché del Dispositivo",
+      "items": "elementos de caché",
+      "dataTab": "Datos",
+      "codeTab": "Código",
+      "mediaTab": "Medios",
+      "deleteSelected": "Eliminar elementos seleccionados",
+      "clearAll": "Limpiar Todo",
+      "confirmDelete": "Eliminar Entrada de Caché",
+      "confirmDeleteMessage": "¿Está seguro de que desea eliminar esta entrada de caché? URL: {{url}}",
+      "confirmDeleteMultiple": "Eliminar Múltiples Entradas",
+      "confirmDeleteMultipleMessage": "¿Está seguro de que desea eliminar {{count}} entradas de caché?",
+      "confirmClearAll": "Limpiar Toda la Caché",
+      "confirmClearAllMessage": "¿Está seguro de que desea limpiar todas las entradas de caché de {{type}}? Esta acción no se puede deshacer.",
+      "deleteSuccess": "Entrada de caché eliminada exitosamente",
+      "deleteMultipleSuccess": "{{count}} entradas de caché eliminadas exitosamente",
+      "clearAllSuccess": "Todas las entradas de caché limpiadas exitosamente",
+      "deleteError": "Error al eliminar caché: {{error}}",
+      "offlineWarning": "El dispositivo está actualmente fuera de línea. La información de caché no se puede obtener hasta que el dispositivo vuelva a estar en línea."
+    },
+    "events": {
+      "title": "Eventos del Dispositivo",
+      "items": "eventos",
+      "filterError": "Errores",
+      "filterWarning": "Advertencias",
+      "filterInfo": "Información",
+      "filterOnline": "En línea",
+      "filterOffline": "Fuera de línea",
+      "clearAll": "Limpiar Todos los Eventos",
+      "confirmClearAll": "Limpiar Todos los Eventos",
+      "confirmClearAllMessage": "¿Está seguro de que desea eliminar todos los eventos de este dispositivo? Esta acción no se puede deshacer.",
+      "clearAllSuccess": "Se eliminaron {{count}} eventos exitosamente",
+      "deleteError": "Error al eliminar eventos: {{error}}"
     },
     "errors": {
       "setChannelFailed": "Error al establecer el canal del dispositivo: {{error}}",
@@ -824,6 +870,22 @@
     "legend": {
       "title": "Atajos de teclado",
       "description": "Usa estos atajos para navegar más rápido"
+    }
+  },
+  "onboarding": {
+    "title": "¡Bienvenido a Castmill!",
+    "subtitle": "Comencemos dándole un nombre a tu organización.",
+    "organizationNameLabel": "Nombre de la organización",
+    "organizationNamePlaceholder": "Ingresa el nombre de tu organización",
+    "helpText": "Este nombre se usará para identificar tu espacio de trabajo. Puedes cambiarlo más tarde en la configuración.",
+    "continueButton": "Continuar",
+    "success": "¡Configuración de la organización completada!",
+    "errors": {
+      "organizationNameRequired": "El nombre de la organización es obligatorio",
+      "organizationNameTooShort": "El nombre de la organización debe tener al menos 2 caracteres",
+      "organizationNameTooLong": "El nombre de la organización debe tener menos de 50 caracteres",
+      "organizationNameTaken": "Este nombre de organización ya está en uso. Por favor, elige un nombre diferente.",
+      "failed": "Error al completar la configuración. Por favor, inténtalo de nuevo."
     }
   }
 }

@@ -675,15 +675,23 @@ defmodule Castmill.Accounts do
   end
 
   # Creates a user with the given email and network_id with a default organization
-  # with the same name as the user.
+  # The organization is created with a temporary name (user's email) and onboarding_completed set to false
+  # to trigger the onboarding flow where the user must provide a proper organization name.
   defp create_user_and_organization(email, network_id) do
+    # Generate a temporary organization name based on timestamp to avoid conflicts
+    temp_org_name = "org_#{:os.system_time(:millisecond)}"
+
     with {:ok, user} <-
            Repo.insert(
              User.changeset(%User{}, %{name: email, email: email, network_id: network_id})
            ),
          {:ok, organization} <-
            Repo.insert(
-             Organization.changeset(%Organization{}, %{name: email, network_id: network_id})
+             Organization.changeset(%Organization{}, %{
+               name: temp_org_name,
+               network_id: network_id,
+               onboarding_completed: false
+             })
            ),
          {:ok, _org_user} <-
            Repo.insert(

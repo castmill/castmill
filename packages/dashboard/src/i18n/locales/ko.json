@@ -88,11 +88,13 @@
     "selectImage": "이미지 선택",
     "selectMedia": "미디어 선택",
     "selectPlaylist": "재생목록 선택",
+    "searchLocation": "위치 검색...",
+    "coordinates": "좌표",
+    "address": "주소",
+    "noAddressAvailable": "사용 가능한 주소 없음",
     "playlist": "재생목록",
     "addPlaylist": "재생목록 추가",
-    "apply": "적용",
     "selectVideo": "비디오 선택",
-    "offline": "오프라인",
     "widget": "Widget"
   },
   "topbar": {
@@ -283,7 +285,9 @@
     },
     "memberSelection": {
       "selectUser": "사용자 선택",
-      "searchUser": "사용자 검색..."
+      "searchUser": "사용자 검색...",
+      "noUsersAvailable": "초대할 수 있는 사용자가 없습니다.",
+      "inviteToOrgFirst": "사용자는 팀에 추가되기 전에 먼저 조직에 초대되어야 합니다."
     },
     "teamsRemovedSuccessfully": "팀이 성공적으로 제거되었습니다"
   },
@@ -601,7 +605,13 @@
     "setDeviceChannel": "기기 채널 설정",
     "selectChannel": "채널 선택",
     "preview": {
-      "placeholder": "미리보기"
+      "placeholder": "미리보기",
+      "noChannels": "이 장치에 할당된 채널이 없습니다",
+      "noScheduledContent": "현재 예약된 콘텐츠가 없습니다",
+      "errorLoadingPlaylist": "재생 목록 콘텐츠를 로드하지 못했습니다",
+      "errorInitializing": "미리보기를 초기화하지 못했습니다",
+      "currentlyPlaying": "현재 채널에서 예약됨",
+      "note": "이것은 채널 일정에 따라 장치가 현재 재생해야 하는 내용을 보여주며, 장치에 실제로 표시되는 내용은 아닐 수 있습니다."
     },
     "telemetry": {
       "placeholder": "추적, 로그, 메트릭 및 연결성(WiFi 품질 등)"
@@ -620,6 +630,40 @@
       "updateFirmware": "펌웨어 업데이트",
       "updateFirmwareDescription": "기기의 펌웨어를 업데이트합니다",
       "offlineMessage": "기기가 오프라인 상태이므로 명령을 보낼 수 없습니다"
+    },
+    "cache": {
+      "title": "기기 캐시",
+      "items": "캐시 항목",
+      "dataTab": "데이터",
+      "codeTab": "코드",
+      "mediaTab": "미디어",
+      "deleteSelected": "선택한 항목 삭제",
+      "clearAll": "모두 지우기",
+      "confirmDelete": "캐시 항목 삭제",
+      "confirmDeleteMessage": "이 캐시 항목을 삭제하시겠습니까? URL: {{url}}",
+      "confirmDeleteMultiple": "여러 항목 삭제",
+      "confirmDeleteMultipleMessage": "{{count}}개의 캐시 항목을 삭제하시겠습니까?",
+      "confirmClearAll": "모든 캐시 지우기",
+      "confirmClearAllMessage": "모든 {{type}} 캐시 항목을 지우시겠습니까? 이 작업은 취소할 수 없습니다.",
+      "deleteSuccess": "캐시 항목이 성공적으로 삭제되었습니다",
+      "deleteMultipleSuccess": "{{count}}개의 캐시 항목이 성공적으로 삭제되었습니다",
+      "clearAllSuccess": "모든 캐시 항목이 성공적으로 지워졌습니다",
+      "deleteError": "캠시 삭제 중 오류 발생: {{error}}",
+      "offlineWarning": "기기가 현재 오프라인 상태입니다. 기기가 다시 온라인 상태가 될 때까지 캠시 정보를 가져올 수 없습니다."
+    },
+    "events": {
+      "title": "기기 이벤트",
+      "items": "이벤트",
+      "filterError": "오류",
+      "filterWarning": "경고",
+      "filterInfo": "정보",
+      "filterOnline": "온라인",
+      "filterOffline": "오프라인",
+      "clearAll": "모든 이벤트 지우기",
+      "confirmClearAll": "모든 이벤트 지우기",
+      "confirmClearAllMessage": "이 기기의 모든 이벤트를 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.",
+      "clearAllSuccess": "{{count}}개의 이벤트가 성공적으로 삭제되었습니다",
+      "deleteError": "이벤트 삭제 중 오류 발생: {{error}}"
     },
     "errors": {
       "setChannelFailed": "기기 채널 설정 실패: {{error}}",
@@ -825,6 +869,22 @@
     "legend": {
       "title": "키보드 단축키",
       "description": "이 단축키를 사용하여 더 빠르게 탐색하세요"
+    }
+  },
+  "onboarding": {
+    "title": "Castmill에 오신 것을 환영합니다!",
+    "subtitle": "조직 이름을 지정하는 것으로 시작하겠습니다.",
+    "organizationNameLabel": "조직 이름",
+    "organizationNamePlaceholder": "조직 이름을 입력하세요",
+    "helpText": "이 이름은 작업 공간을 식별하는 데 사용됩니다. 나중에 설정에서 변경할 수 있습니다.",
+    "continueButton": "계속",
+    "success": "조직 설정 완료!",
+    "errors": {
+      "organizationNameRequired": "조직 이름이 필요합니다",
+      "organizationNameTooShort": "조직 이름은 최소 2자 이상이어야 합니다",
+      "organizationNameTooLong": "조직 이름은 50자 미만이어야 합니다",
+      "organizationNameTaken": "이 조직 이름은 이미 사용 중입니다. 다른 이름을 선택해 주세요.",
+      "failed": "설정을 완료하지 못했습니다. 다시 시도해 주세요."
     }
   }
 }

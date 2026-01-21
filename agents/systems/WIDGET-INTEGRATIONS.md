@@ -211,6 +211,79 @@ end
    - Server returns 304 Not Modified if version unchanged
    - Server returns new data if version changed
 
+### Data Prefetching (Dashboard UX Optimization)
+
+To improve perceived performance when adding widgets to playlists, the dashboard
+implements a **prefetch mechanism** that warms up the integration data cache
+before the widget is actually inserted.
+
+#### How It Works
+
+1. **User Drags Widget** → Dashboard immediately calls prefetch endpoint
+2. **Prefetch Runs in Background** → While user configures widget options (if any)
+3. **Widget Inserted** → Data already cached, appears instantly
+
+#### Endpoint
+
+```
+POST /dashboard/organizations/:org_id/widgets/:widget_id/prefetch-data
+```
+
+**Request Body (optional):**
+```json
+{
+  "options": {
+    // Widget options for discriminator calculation
+    // (for widget_option discriminator type)
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "data": { /* integration data */ },
+  "status": "fetched|cached|error|credentials_required|no_integration",
+  "version": 1,
+  "fetched_at": "2026-01-16T10:30:00Z"
+}
+```
+
+#### Benefits
+
+- **No perceived delay** when adding widgets like HN, RSS feeds
+- **Cache warming** happens in parallel with credential checks and modal display
+- **Shared cache** benefits all widget instances using the same discriminator
+
+#### Flow Diagram
+
+```
+┌──────────────────┐     ┌───────────────────┐     ┌──────────────────┐
+│  User drags      │────▶│ prefetchWidgetData │────▶│ Cache populated  │
+│  widget          │     │ (background)       │     │ with feed data   │
+└──────────────────┘     └───────────────────┘     └──────────────────┘
+         │                        │
+         ▼                        │ (parallel)
+┌──────────────────┐              │
+│ Check credentials│◀─────────────┘
+│ & show modal     │
+└──────────────────┘
+         │
+         ▼
+┌──────────────────┐     ┌───────────────────┐
+│ User clicks      │────▶│ Insert widget     │
+│ "Update"         │     │ (data already     │
+└──────────────────┘     │  cached = FAST!)  │
+                         └───────────────────┘
+```
+
+#### Implementation Details
+
+- Triggered in `playlist-items.tsx` when `insertItem` is called
+- Runs as a fire-and-forget promise that completes before `onInsertItem`
+- Uses the same discriminator-based caching as regular data fetches
+- Works best with `organization` discriminator type (all instances share data)
+
 ### PUSH Mode Flow
 
 1. **Widget Instance Created**

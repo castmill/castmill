@@ -114,7 +114,23 @@ export const PlaylistItems: Component<{
   };
 
   const insertItem = async (widget: JsonWidget, index: number) => {
-    // First check if widget requires credentials that aren't configured
+    // Start prefetching integration data in the background immediately
+    // This warms up the cache while the user configures the widget or while
+    // credentials are being checked, improving perceived performance
+    let prefetchPromise: Promise<any> | null = null;
+    if (widget.id) {
+      prefetchPromise = PlaylistsService.prefetchWidgetData(
+        props.baseUrl,
+        props.organizationId,
+        widget.id
+      ).catch((err) => {
+        // Don't block on prefetch errors - it's just a performance optimization
+        console.warn('Widget data prefetch failed:', err);
+        return null;
+      });
+    }
+
+    // Check if widget requires credentials that aren't configured
     if (widget.id) {
       try {
         const credentialsStatus = await PlaylistsService.checkWidgetCredentials(
@@ -156,8 +172,18 @@ export const PlaylistItems: Component<{
         return;
       }
 
+      // Wait for prefetch to complete before inserting (it's likely done by now)
+      if (prefetchPromise) {
+        await prefetchPromise;
+      }
+
       await props.onInsertItem(widget, index, result);
     } else {
+      // Wait for prefetch to complete before inserting
+      if (prefetchPromise) {
+        await prefetchPromise;
+      }
+
       // No configuration needed - insert directly with empty options
       await props.onInsertItem(widget, index, {
         config: { options: {} },

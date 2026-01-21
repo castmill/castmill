@@ -49,7 +49,8 @@ defmodule Castmill.MixProject do
       {:jason, "~> 1.2"},
       {:mox, "~> 1.0", only: [:test]},
       {:multipart, "~> 0.4.0"},
-      {:oban, "~> 2.17"},
+      {:bullmq, "~> 1.2"},
+      {:redix, "~> 1.3"},
       {:phoenix, "~> 1.7.2"},
       {:phoenix_ecto, "~> 4.4"},
       {:plug_cowboy, "~> 2.5"},
@@ -65,7 +66,8 @@ defmodule Castmill.MixProject do
       {:telemetry_poller, "~> 1.0"},
       {:tarams, "~> 1.8.0"},
       {:tzdata, "~> 1.1"},
-      {:uuid, "~> 1.1"},
+      # Note: UUID functionality provided by elixir_uuid (transitive dep from bullmq)
+      # Both packages provide UUID.uuid4() - elixir_uuid is preferred to avoid conflicts
       {:wax_, "~> 0.6.0"}
     ]
   end

@@ -83,11 +83,13 @@
     "selectImage": "Välj en bild",
     "selectMedia": "Välj ett media",
     "selectPlaylist": "Välj en spellista",
+    "searchLocation": "Sök efter en plats...",
+    "coordinates": "Koordinater",
+    "address": "Adress",
+    "noAddressAvailable": "Ingen adress tillgänglig",
     "playlist": "Spellista",
     "addPlaylist": "Lägg till spellista",
-    "apply": "Tillämpa",
     "selectVideo": "Välj en video",
-    "offline": "Offline",
     "widget": "Widget"
   },
   "topbar": {
@@ -278,7 +280,9 @@
     },
     "memberSelection": {
       "selectUser": "Välj användare",
-      "searchUser": "Sök efter en användare..."
+      "searchUser": "Sök efter en användare...",
+      "noUsersAvailable": "Inga användare tillgängliga att bjuda in.",
+      "inviteToOrgFirst": "Användare måste först bjudas in till organisationen innan de kan läggas till i team."
     },
     "teamsRemovedSuccessfully": "Team borttagna framgångsrikt"
   },
@@ -596,7 +600,13 @@
     "setDeviceChannel": "Ställ in enhetskanal",
     "selectChannel": "Välj kanal",
     "preview": {
-      "placeholder": "Förhandsvisning"
+      "placeholder": "Förhandsgranskning",
+      "noChannels": "Inga kanaler tilldelade till denna enhet",
+      "noScheduledContent": "Inget innehåll schemalagt just nu",
+      "errorLoadingPlaylist": "Misslyckades att ladda spellisteinnehåll",
+      "errorInitializing": "Misslyckades att initiera förhandsgranskning",
+      "currentlyPlaying": "För närvarande schemalagt från kanal",
+      "note": "Detta visar vad enheten borde spela nu baserat på kanalscheman, inte nödvändigtvis vad som faktiskt visas på enheten."
     },
     "telemetry": {
       "placeholder": "Spår, loggar, mätvärden och anslutning (WiFi-kvalitet osv.)"
@@ -615,6 +625,40 @@
       "updateFirmware": "Uppdatera firmware",
       "updateFirmwareDescription": "Uppdaterar enhetens firmware",
       "offlineMessage": "Enheten är offline, så inga kommandon kan skickas till den"
+    },
+    "cache": {
+      "title": "Enhetscache",
+      "items": "cacheobjekt",
+      "dataTab": "Data",
+      "codeTab": "Kod",
+      "mediaTab": "Media",
+      "deleteSelected": "Ta bort valda objekt",
+      "clearAll": "Rensa Allt",
+      "confirmDelete": "Ta bort Cachepost",
+      "confirmDeleteMessage": "Är du säker på att du vill ta bort denna cachepost? URL: {{url}}",
+      "confirmDeleteMultiple": "Ta bort Flera Poster",
+      "confirmDeleteMultipleMessage": "Är du säker på att du vill ta bort {{count}} cacheposter?",
+      "confirmClearAll": "Rensa All Cache",
+      "confirmClearAllMessage": "Är du säker på att du vill rensa alla {{type}} cacheposter? Denna åtgärd kan inte ångras.",
+      "deleteSuccess": "Cachepost borttagen framgångsrikt",
+      "deleteMultipleSuccess": "{{count}} cacheposter borttagna framgångsrikt",
+      "clearAllSuccess": "Alla cacheposter rensade framgångsrikt",
+      "deleteError": "Fel vid borttagning av cache: {{error}}",
+      "offlineWarning": "Enheten är för närvarande offline. Cacheinformation kan inte hämtas förrän enheten kommer tillbaka online."
+    },
+    "events": {
+      "title": "Enhetshändelser",
+      "items": "händelser",
+      "filterError": "Fel",
+      "filterWarning": "Varningar",
+      "filterInfo": "Info",
+      "filterOnline": "Online",
+      "filterOffline": "Offline",
+      "clearAll": "Rensa alla händelser",
+      "confirmClearAll": "Rensa alla händelser",
+      "confirmClearAllMessage": "Är du säker på att du vill ta bort alla händelser för denna enhet? Denna åtgärd kan inte ångras.",
+      "clearAllSuccess": "{{count}} händelser har tagits bort",
+      "deleteError": "Fel vid borttagning av händelser: {{error}}"
     },
     "errors": {
       "setChannelFailed": "Misslyckades att ställa in enhetskanal: {{error}}",
@@ -820,6 +864,22 @@
     "legend": {
       "title": "Tangentbordsgenvägar",
       "description": "Använd dessa genvägar för att navigera snabbare"
+    }
+  },
+  "onboarding": {
+    "title": "Välkommen till Castmill!",
+    "subtitle": "Låt oss börja med att namnge din organisation.",
+    "organizationNameLabel": "Organisationens namn",
+    "organizationNamePlaceholder": "Ange din organisations namn",
+    "helpText": "Detta namn kommer att användas för att identifiera din arbetsyta. Du kan ändra det senare i inställningarna.",
+    "continueButton": "Fortsätt",
+    "success": "Organisationsinställningen är klar!",
+    "errors": {
+      "organizationNameRequired": "Organisationsnamn krävs",
+      "organizationNameTooShort": "Organisationsnamnet måste vara minst 2 tecken",
+      "organizationNameTooLong": "Organisationsnamnet måste vara kortare än 50 tecken",
+      "organizationNameTaken": "Detta organisationsnamn är redan upptaget. Välj ett annat namn.",
+      "failed": "Misslyckades med att slutföra installationen. Försök igen."
     }
   }
 }

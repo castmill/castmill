@@ -7,6 +7,7 @@ import { DeviceLogs } from './device-events';
 import { DeviceDetails, DeviceUpdate } from './device-details';
 import { DevicesService } from '../services/devices.service';
 import { DeviceCache } from './device-cache';
+import { DevicePreview } from './device-preview';
 
 // Optionally we should allow using protonmaps
 // https://protomaps.com/
@@ -71,7 +72,11 @@ const DeviceView: Component<{
     },
     {
       title: t('common.preview'),
-      content: () => <div>{t('devices.preview.placeholder')}</div>,
+      content: () => (
+        <div>
+          <DevicePreview baseUrl={props.baseUrl} device={props.device} t={t} />
+        </div>
+      ),
     },
     {
       title: t('common.cache'),
@@ -112,10 +117,10 @@ const DeviceView: Component<{
   ];
 
   return (
-    <>
+    <div style="width: 56em; min-height: 28em;">
       <Tabs tabs={tabs} />
       <LoadingOverlay show={loading()} />
-    </>
+    </div>
   );
 };
 

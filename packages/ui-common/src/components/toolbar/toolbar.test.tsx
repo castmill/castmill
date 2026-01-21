@@ -32,10 +32,20 @@ describe('ToolBar Component', () => {
     expect(screen.getByText('Test Toolbar')).toBeInTheDocument();
   });
 
-  it('renders the search input correctly', () => {
-    render(() => <ToolBar />);
+  it('renders the search input correctly when onSearch is provided', () => {
+    render(() => <ToolBar onSearch={() => {}} />);
     const searchInputs = screen.getAllByPlaceholderText('Search...');
     expect(searchInputs.length).toBe(1);
+  });
+
+  it('does not render the search input when onSearch is not provided', () => {
+    render(() => <ToolBar />);
+    expect(screen.queryByPlaceholderText('Search...')).not.toBeInTheDocument();
+  });
+
+  it('does not render the search input when hideSearch is true', () => {
+    render(() => <ToolBar onSearch={() => {}} hideSearch={true} />);
+    expect(screen.queryByPlaceholderText('Search...')).not.toBeInTheDocument();
   });
 
   it('triggers the onSearch callback with search text', async () => {
@@ -124,6 +134,30 @@ describe('ToolBar Filter Functionality', () => {
     await fireEvent.click(activeFilterCheckbox); // Attempt to disable the only active filter
 
     expect(mockOnFilterChange).not.toHaveBeenCalled();
+  });
+
+  it('should allow all filters to be disabled when requireOneActiveFilter is false', async () => {
+    cleanup();
+    const mockOnFilterChange = vi.fn();
+    render(() => (
+      <ToolBar
+        filters={initialFilters}
+        onFilterChange={mockOnFilterChange}
+        requireOneActiveFilter={false}
+      />
+    ));
+
+    const activeFilterCheckbox = screen.getByLabelText('Active');
+    expect(activeFilterCheckbox).toBeChecked();
+    await fireEvent.click(activeFilterCheckbox); // Should now be allowed
+
+    expect(mockOnFilterChange).toHaveBeenCalled();
+    expect(mockOnFilterChange).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        { key: 'active', name: 'Active', isActive: false },
+        { key: 'inactive', name: 'Inactive', isActive: false },
+      ])
+    );
   });
 });
 

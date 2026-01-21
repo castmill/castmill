@@ -1,4 +1,4 @@
-import { Component, For, createSignal, JSX } from 'solid-js';
+import { Component, For, createSignal, createUniqueId, JSX } from 'solid-js';
 import { FaSolidSortDown } from 'solid-icons/fa';
 import { FaSolidSortUp } from 'solid-icons/fa';
 import { FaSolidSort } from 'solid-icons/fa';
@@ -56,6 +56,10 @@ export const Table = <
 >(
   props: TableProps<IdType, Item>
 ): JSX.Element => {
+  // Generate a unique ID for this table instance to avoid checkbox ID conflicts
+  const tableId = createUniqueId();
+  const selectAllCheckboxId = `select-all-checkbox-${tableId}`;
+
   const [sortConfig, setSortConfig] = createSignal({
     key: undefined,
     direction: 'ascending',
@@ -122,13 +126,13 @@ export const Table = <
                 {/* Simple checkbox container */}
                 <input
                   type="checkbox"
-                  id="select-all-checkbox"
+                  id={selectAllCheckboxId}
                   onChange={handleSelectAll}
                   aria-label="Select all rows"
                   class={style['styled-checkbox']}
                 />
                 <label
-                  for="select-all-checkbox"
+                  for={selectAllCheckboxId}
                   aria-hidden="true"
                   class={style['checkbox-touch-target']}
                 ></label>
@@ -175,7 +179,7 @@ export const Table = <
                   <td class={style['checkbox-cell']}>
                     <input
                       type="checkbox"
-                      id={`row-checkbox-${getItemId(item)}`}
+                      id={`row-checkbox-${tableId}-${getItemId(item)}`}
                       checked={selectedRows().has(getItemId(item))}
                       onInput={(e) =>
                         handleSelectRow(getItemId(item), e.target.checked)
@@ -184,7 +188,7 @@ export const Table = <
                       class={style['styled-checkbox']}
                     />
                     <label
-                      for={`row-checkbox-${getItemId(item)}`}
+                      for={`row-checkbox-${tableId}-${getItemId(item)}`}
                       aria-hidden="true"
                       class={style['checkbox-touch-target']}
                     ></label>

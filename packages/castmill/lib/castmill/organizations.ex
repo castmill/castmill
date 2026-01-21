@@ -255,6 +255,23 @@ defmodule Castmill.Organizations do
   end
 
   @doc """
+    Complete the onboarding process for an organization by setting its name
+    and marking onboarding as completed.
+  """
+  def complete_onboarding(organization_id, name) do
+    case get_organization(organization_id) do
+      nil ->
+        {:error, :not_found}
+
+      organization ->
+        update_organization(organization, %{
+          name: name,
+          onboarding_completed: true
+        })
+    end
+  end
+
+  @doc """
     Sets the role of a user in an organization.
   """
   def set_user_role(organization_id, user_id, role) do
@@ -390,6 +407,9 @@ defmodule Castmill.Organizations do
         :remove_channel -> :update
         :send_command -> :update
         :get_cache -> :show
+        :delete_cache -> :update
+        :list_events -> :show
+        :delete_events -> :update
         # Keep other atoms as-is
         a when is_atom(a) -> a
         _ -> :unknown

@@ -119,7 +119,7 @@ defmodule CastmillWeb.SignUpControllerTest do
       refute Map.has_key?(signup, "password_hash")
 
       # Ensure an email was sent
-      assert_email_sent(subject: "Signup instructions")
+      assert_email_sent(subject: "Complete Your Castmill Signup")
     end
 
     test "successfully creates a signup and sends instructions", %{conn: conn} do
@@ -136,7 +136,7 @@ defmodule CastmillWeb.SignUpControllerTest do
       assert json_response(conn, 201)["status"] == "ok"
 
       # Use Swoosh test helpers to assert an email was sent
-      assert_email_sent(subject: "Signup instructions")
+      assert_email_sent(subject: "Complete Your Castmill Signup")
     end
 
     test "handles errors during signup creation", %{conn: conn} do

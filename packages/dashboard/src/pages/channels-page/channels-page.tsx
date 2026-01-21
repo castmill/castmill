@@ -569,7 +569,10 @@ const ChannelsPage: Component = () => {
                   onClick={() => setShowConfirmDialogMultiple(true)}
                   icon={AiOutlineDelete}
                   color="primary"
-                  disabled={selectedChannels().size === 0}
+                  disabled={
+                    selectedChannels().size === 0 ||
+                    !canPerformAction('channels', 'delete')
+                  }
                 />
               </div>
             ),

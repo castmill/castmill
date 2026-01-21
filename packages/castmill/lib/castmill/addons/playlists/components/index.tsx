@@ -953,7 +953,10 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
                 onClick={() => setShowConfirmDialogMultiple(true)}
                 icon={AiOutlineDelete}
                 color="primary"
-                disabled={selectedPlaylists().size === 0}
+                disabled={
+                  selectedPlaylists().size === 0 ||
+                  !canPerformAction('playlists', 'delete')
+                }
               />
             </div>
           ),

@@ -53,6 +53,21 @@ defmodule CastmillWeb.DevicesChannel do
     {:noreply, socket}
   end
 
+  @impl true
+  def handle_in("res:delete", %{"ref" => ref, "result" => result}, socket) do
+    IO.puts("Received res:delete with ref: #{inspect(ref)} and result: #{inspect(result)}")
+    # Convert the PID ref string back to a PID
+    pid =
+      ref
+      |> Base.url_decode64!()
+      |> :erlang.binary_to_term()
+
+    # Forward the response to the controller that made the request
+    send(pid, {:device_response, result})
+
+    {:noreply, socket}
+  end
+
   # Not sure we should use the socket connection for getting stufff, seems conterintuitive
   # Going to deprecate this
   @impl true
@@ -69,7 +84,8 @@ defmodule CastmillWeb.DevicesChannel do
   # `handle_in/3` callbacks above
   @impl true
   def handle_in(event, payload, socket) do
-    IO.puts("Unhandled event #{inspect(event)} #{inspect(payload)}")
+    IO.puts("Unhandled event: #{inspect(event)}")
+    IO.puts("Unhandled payload: #{inspect(payload)}")
     {:noreply, socket}
   end
 
@@ -77,6 +93,12 @@ defmodule CastmillWeb.DevicesChannel do
   @impl true
   def handle_info(%{get: _resource, payload: payload}, socket) do
     push(socket, "get", payload)
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_info(%{delete: _resource, payload: payload}, socket) do
+    push(socket, "delete", payload)
     {:noreply, socket}
   end
 

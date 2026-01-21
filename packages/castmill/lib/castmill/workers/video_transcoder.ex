@@ -1,21 +1,26 @@
 defmodule Castmill.Workers.VideoTranscoder do
-  use Oban.Worker, queue: :video_transcoder
+  require Logger
+
   alias Castmill.Repo
   alias Castmill.Resources
   alias Castmill.Resources.Media
   alias Castmill.Files
   alias Castmill.Workers.Helpers
+  alias Castmill.Workers.BullMQHelper
   alias Castmill.Notifications.Events
-
-  require Logger
 
   @file_sizes_and_contexts [
     {640, "preview"},
     {1920, "poster"}
   ]
 
-  @impl Oban.Worker
-  def perform(%Oban.Job{args: args} = job) do
+  @queue "video_transcoder"
+
+  @doc """
+  Processes the video transcoding job.
+  This is called by BullMQ worker.
+  """
+  def process(%BullMQ.Job{data: args} = job) do
     dbg(job)
 
     media = args["media"]
@@ -393,4 +398,38 @@ defmodule Castmill.Workers.VideoTranscoder do
       size: total_size
     })
   end
+
+  @doc """
+  Schedules a video transcoding job.
+  """
+  def schedule(media, filepath, mime_type \\ nil) do
+    # Convert Ecto struct to plain map with string keys for BullMQ serialization
+    media_map = media_to_map(media)
+
+    args = %{
+      "media" => media_map,
+      "filepath" => filepath
+    }
+
+    # Add mime_type if provided (for compatibility)
+    args = if mime_type, do: Map.put(args, "mime_type", mime_type), else: args
+
+    BullMQHelper.add_job(
+      @queue,
+      "video_transcode",
+      args
+    )
+  end
+
+  defp media_to_map(%Castmill.Resources.Media{} = media) do
+    %{
+      "id" => media.id,
+      "organization_id" => media.organization_id,
+      "name" => media.name,
+      "mimetype" => media.mimetype,
+      "status" => media.status
+    }
+  end
+
+  defp media_to_map(media) when is_map(media), do: media
 end

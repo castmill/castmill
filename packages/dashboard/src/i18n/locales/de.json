@@ -81,10 +81,13 @@
     "addonError": "Add-on-Fehler",
     "backToLogin": "Zurück zur Anmeldung",
     "selectVideo": "Video auswählen",
-    "offline": "Offline",
     "selectImage": "Bild auswählen",
     "selectMedia": "Medien auswählen",
     "selectPlaylist": "Wiedergabeliste auswählen",
+    "searchLocation": "Nach einem Ort suchen...",
+    "coordinates": "Koordinaten",
+    "address": "Adresse",
+    "noAddressAvailable": "Keine Adresse verfügbar",
     "playlist": "Wiedergabeliste",
     "addPlaylist": "Wiedergabeliste hinzufügen",
     "widget": "Widget"
@@ -284,7 +287,9 @@
     },
     "memberSelection": {
       "selectUser": "Benutzer auswählen",
-      "searchUser": "Nach einem Benutzer suchen..."
+      "searchUser": "Nach einem Benutzer suchen...",
+      "noUsersAvailable": "Keine Benutzer zum Einladen verfügbar.",
+      "inviteToOrgFirst": "Benutzer müssen zuerst zur Organisation eingeladen werden, bevor sie zu Teams hinzugefügt werden können."
     },
     "teamsRemovedSuccessfully": "Teams erfolgreich entfernt",
     "dialogs": {
@@ -618,7 +623,13 @@
     "setDeviceChannel": "Gerätekanal festlegen",
     "selectChannel": "Kanal auswählen",
     "preview": {
-      "placeholder": "Vorschau"
+      "placeholder": "Vorschau",
+      "noChannels": "Diesem Gerät sind keine Kanäle zugewiesen",
+      "noScheduledContent": "Zu diesem Zeitpunkt ist kein Inhalt geplant",
+      "errorLoadingPlaylist": "Fehler beim Laden des Playlist-Inhalts",
+      "errorInitializing": "Fehler beim Initialisieren der Vorschau",
+      "currentlyPlaying": "Derzeit vom Kanal geplant",
+      "note": "Dies zeigt, was das Gerät jetzt basierend auf Kanalzeitplänen abspielen sollte, nicht unbedingt, was tatsächlich auf dem Gerät angezeigt wird."
     },
     "telemetry": {
       "placeholder": "Traces, Logs, Metriken und Konnektivität (WiFi-Qualität, etc.)"
@@ -637,6 +648,40 @@
       "updateFirmware": "Firmware aktualisieren",
       "updateFirmwareDescription": "Aktualisiert die Firmware des Geräts",
       "offlineMessage": "Gerät ist offline, daher können keine Befehle gesendet werden"
+    },
+    "cache": {
+      "title": "Geräte-Cache",
+      "items": "Cache-Einträge",
+      "dataTab": "Daten",
+      "codeTab": "Code",
+      "mediaTab": "Medien",
+      "deleteSelected": "Ausgewählte Elemente löschen",
+      "clearAll": "Alles Löschen",
+      "confirmDelete": "Cache-Eintrag Löschen",
+      "confirmDeleteMessage": "Möchten Sie diesen Cache-Eintrag wirklich löschen? URL: {{url}}",
+      "confirmDeleteMultiple": "Mehrere Einträge Löschen",
+      "confirmDeleteMultipleMessage": "Möchten Sie wirklich {{count}} Cache-Einträge löschen?",
+      "confirmClearAll": "Gesamten Cache Löschen",
+      "confirmClearAllMessage": "Möchten Sie wirklich alle {{type}} Cache-Einträge löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
+      "deleteSuccess": "Cache-Eintrag erfolgreich gelöscht",
+      "deleteMultipleSuccess": "{{count}} Cache-Einträge erfolgreich gelöscht",
+      "clearAllSuccess": "Alle Cache-Einträge erfolgreich gelöscht",
+      "deleteError": "Fehler beim Löschen des Cache: {{error}}",
+      "offlineWarning": "Das Gerät ist derzeit offline. Cache-Informationen können nicht abgerufen werden, bis das Gerät wieder online ist."
+    },
+    "events": {
+      "title": "Geräteereignisse",
+      "items": "Ereignisse",
+      "filterError": "Fehler",
+      "filterWarning": "Warnungen",
+      "filterInfo": "Info",
+      "filterOnline": "Online",
+      "filterOffline": "Offline",
+      "clearAll": "Alle Ereignisse löschen",
+      "confirmClearAll": "Alle Ereignisse löschen",
+      "confirmClearAllMessage": "Möchten Sie wirklich alle Ereignisse für dieses Gerät löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
+      "clearAllSuccess": "{{count}} Ereignisse erfolgreich gelöscht",
+      "deleteError": "Fehler beim Löschen der Ereignisse: {{error}}"
     },
     "errors": {
       "setChannelFailed": "Fehler beim Festlegen des Gerätekanals: {{error}}",
@@ -819,6 +864,22 @@
     "legend": {
       "title": "Tastaturkürzel",
       "description": "Verwenden Sie diese Tastenkombinationen für schnellere Navigation"
+    }
+  },
+  "onboarding": {
+    "title": "Willkommen bei Castmill!",
+    "subtitle": "Lassen Sie uns beginnen, indem Sie Ihre Organisation benennen.",
+    "organizationNameLabel": "Organisationsname",
+    "organizationNamePlaceholder": "Geben Sie Ihren Organisationsnamen ein",
+    "helpText": "Dieser Name wird verwendet, um Ihren Arbeitsbereich zu identifizieren. Sie können ihn später in den Einstellungen ändern.",
+    "continueButton": "Fortfahren",
+    "success": "Organisationseinrichtung abgeschlossen!",
+    "errors": {
+      "organizationNameRequired": "Organisationsname ist erforderlich",
+      "organizationNameTooShort": "Der Organisationsname muss mindestens 2 Zeichen lang sein",
+      "organizationNameTooLong": "Der Organisationsname muss weniger als 50 Zeichen lang sein",
+      "organizationNameTaken": "Dieser Organisationsname ist bereits vergeben. Bitte wählen Sie einen anderen Namen.",
+      "failed": "Einrichtung fehlgeschlagen. Bitte versuchen Sie es erneut."
     }
   }
 }
