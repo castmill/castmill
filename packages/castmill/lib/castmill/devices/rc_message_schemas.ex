@@ -28,7 +28,8 @@ defmodule Castmill.Devices.RcMessageSchemas do
         validate_mouse_event(payload)
 
       # Android control event format: %{"event_type" => "tap", "data" => %{"x" => ..., "y" => ...}}
-      %{"event_type" => event_type, "data" => data} when is_map(data) and event_type in ["tap", "long_press", "swipe", "multi_step", "global_action", "init_mapper"] ->
+      # Also includes "key" for transformed keyboard events
+      %{"event_type" => event_type, "data" => data} when is_map(data) and event_type in ["tap", "long_press", "swipe", "multi_step", "global_action", "init_mapper", "key"] ->
         {:ok, payload}
 
       %{"type" => _} ->

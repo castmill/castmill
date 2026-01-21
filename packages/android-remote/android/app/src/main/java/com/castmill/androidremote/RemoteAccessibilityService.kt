@@ -309,11 +309,24 @@ class RemoteAccessibilityService : AccessibilityService() {
 
     /**
      * Inject text into the currently focused input field.
+     * Falls back to finding any editable node if no focused input.
      */
     private fun injectText(text: String): Boolean {
-        val focusedNode = findFocusedInput()
+        var focusedNode = findFocusedInput()
+        
+        // If no focused input, try to find any editable node
         if (focusedNode == null) {
-            Log.w(TAG, "No focused input found for text injection")
+            Log.d(TAG, "No focused input, searching for editable nodes...")
+            focusedNode = findAnyEditableNode()
+            if (focusedNode != null) {
+                // Focus and click the editable node
+                focusedNode.performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_FOCUS)
+                focusedNode.performAction(android.view.accessibility.AccessibilityNodeInfo.ACTION_CLICK)
+            }
+        }
+        
+        if (focusedNode == null) {
+            Log.w(TAG, "No editable input found for text injection")
             return false
         }
 
@@ -568,11 +581,51 @@ class RemoteAccessibilityService : AccessibilityService() {
      */
     private fun findFocusedInput(): android.view.accessibility.AccessibilityNodeInfo? {
         return try {
-            rootInActiveWindow?.findFocus(android.view.accessibility.AccessibilityNodeInfo.FOCUS_INPUT)
+            val node = rootInActiveWindow?.findFocus(android.view.accessibility.AccessibilityNodeInfo.FOCUS_INPUT)
+            if (node != null && node.isEditable) {
+                node
+            } else {
+                node?.recycle()
+                null
+            }
         } catch (e: Exception) {
             Log.e(TAG, "Error finding focused input", e)
             null
         }
+    }
+    
+    /**
+     * Find any editable node in the view hierarchy.
+     */
+    private fun findAnyEditableNode(): android.view.accessibility.AccessibilityNodeInfo? {
+        return try {
+            val root = rootInActiveWindow ?: return null
+            val result = findEditableNodeRecursive(root)
+            root.recycle()
+            result
+        } catch (e: Exception) {
+            Log.e(TAG, "Error finding editable node", e)
+            null
+        }
+    }
+    
+    /**
+     * Recursively search for an editable node.
+     */
+    private fun findEditableNodeRecursive(node: android.view.accessibility.AccessibilityNodeInfo): android.view.accessibility.AccessibilityNodeInfo? {
+        if (node.isEditable) {
+            return android.view.accessibility.AccessibilityNodeInfo.obtain(node)
+        }
+        
+        for (i in 0 until node.childCount) {
+            val child = node.getChild(i) ?: continue
+            val result = findEditableNodeRecursive(child)
+            child.recycle()
+            if (result != null) {
+                return result
+            }
+        }
+        return null
     }
 
     /**
