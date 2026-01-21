@@ -205,6 +205,7 @@ defmodule CastmillWeb.Router do
 
     get("/organizations_invitations/:token/preview", OrganizationController, :preview_invitation)
     get("/network_invitations/:token/preview", NetworkInvitationController, :preview_invitation)
+    get("/network/settings", NetworkSettingsController, :show)
   end
 
   scope "/dashboard", CastmillWeb do

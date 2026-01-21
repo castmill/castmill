@@ -417,7 +417,9 @@
     "loading": "Loading...",
     "loginWithPasskey": "Login with Passkey",
     "privacyPolicy": "Privacy Policy",
-    "lostCredentials": "Lost your credentials?"
+    "lostCredentials": "Lost your credentials?",
+    "invitationOnlyNotice": "Don't have an account? This service requires an invitation to register.",
+    "passkeysNotSupported": "Your browser does not support passkeys. Please use a modern browser to log in."
   },
   "credentialRecovery": {
     "title": "Recover Your Credentials",

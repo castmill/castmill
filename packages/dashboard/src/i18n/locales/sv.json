@@ -292,7 +292,9 @@
     "loading": "Laddar...",
     "loginWithPasskey": "Logga in med nyckel",
     "privacyPolicy": "Integritetspolicy",
-    "lostCredentials": "Tappat bort dina inloggningsuppgifter?"
+    "lostCredentials": "Tappat bort dina inloggningsuppgifter?",
+    "invitationOnlyNotice": "Saknar du ett konto? Denna tjänst kräver en inbjudan för att registrera sig.",
+    "passkeysNotSupported": "Din webbläsare stöder inte nycklar. Använd en modern webbläsare för att logga in."
   },
   "credentialRecovery": {
     "title": "Återställ dina inloggningsuppgifter",

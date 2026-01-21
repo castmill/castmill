@@ -320,12 +320,16 @@ defmodule CastmillWeb.Live.Admin.Resources do
 
   @impl true
   def handle_info({CastmillWeb.Live.Admin.NetworkForm, {:saved, row}}, socket) do
-    {:noreply, stream_insert(socket, :rows, row)}
+    # Update the row in the rows list (not using streams)
+    rows = Enum.map(socket.assigns.rows, fn r -> if r.id == row.id, do: row, else: r end)
+    {:noreply, assign(socket, :rows, rows)}
   end
 
   @impl true
   def handle_info({CastmillWeb.Live.Admin.OrganizationForm, {:saved, row}}, socket) do
-    {:noreply, stream_insert(socket, :rows, row)}
+    # Update the row in the rows list (not using streams)
+    rows = Enum.map(socket.assigns.rows, fn r -> if r.id == row.id, do: row, else: r end)
+    {:noreply, assign(socket, :rows, rows)}
   end
 
   def handle_event("search", %{"search" => search}, socket) do
@@ -337,27 +341,31 @@ defmodule CastmillWeb.Live.Admin.Resources do
     network = Networks.get_network(id)
     {:ok, _} = Networks.delete_network(network)
 
-    {:noreply, stream_delete(socket, :rows, network)}
+    rows = Enum.reject(socket.assigns.rows, fn r -> r.id == id end)
+    {:noreply, assign(socket, :rows, rows)}
   end
 
   @impl true
   def handle_event("delete", %{"id" => id, "resource" => "organizations"}, socket) do
     organization = Organizations.get_organization!(id)
     {:ok, _} = Organizations.delete_organization(organization)
-    {:noreply, stream_delete(socket, :rows, organization)}
+    rows = Enum.reject(socket.assigns.rows, fn r -> r.id == id end)
+    {:noreply, assign(socket, :rows, rows)}
   end
 
   @impl true
   def handle_event("delete", %{"id" => id, "resource" => "users"}, socket) do
     {:ok, _} = Accounts.delete_user(id)
-    {:noreply, stream_delete(socket, :rows, %Accounts.User{id: id})}
+    rows = Enum.reject(socket.assigns.rows, fn r -> r.id == id end)
+    {:noreply, assign(socket, :rows, rows)}
   end
 
   @impl true
   def handle_event("delete", %{"id" => id, "resource" => "devices"}, socket) do
     device = %Devices.Device{id: id}
     {:ok, _} = Devices.delete_device(device)
-    {:noreply, stream_delete(socket, :rows, device)}
+    rows = Enum.reject(socket.assigns.rows, fn r -> r.id == id end)
+    {:noreply, assign(socket, :rows, rows)}
   end
 
   # Networks

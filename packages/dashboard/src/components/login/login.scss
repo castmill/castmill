@@ -103,6 +103,24 @@
     line-height: 1.5;
   }
 
+  .invitation-only-notice {
+    margin: 20px 0;
+    padding: 15px 20px;
+    background-color: colors.$highlight-background-color;
+    border: 1px solid colors.$separator-color;
+    border-left: 4px solid colors.$highlight-color;
+    border-radius: 4px;
+    color: colors.$base-color;
+    font-size: 14px;
+    line-height: 1.5;
+    text-align: left;
+    max-width: 20em;
+
+    p {
+      margin: 0;
+    }
+  }
+
   input[type='email'] {
     width: 20em;
     padding: 10px 20px;

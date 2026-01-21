@@ -22,7 +22,7 @@ defmodule CastmillWeb.SignUpController do
       case Accounts.get_network_id_by_domain(origin) do
         {:ok, network_id} ->
           network = Castmill.Networks.get_network(network_id)
-          
+
           # Validate invitation token
           case validate_invitation_token(invitation_token, email, network.invitation_only) do
             :valid ->
@@ -40,7 +40,7 @@ defmodule CastmillWeb.SignUpController do
                   |> put_status(:unprocessable_entity)
                   |> json(%{status: :error})
               end
-            
+
             {:error, message} ->
               conn
               |> put_status(:forbidden)
@@ -59,7 +59,7 @@ defmodule CastmillWeb.SignUpController do
   # Returns :valid if invitation is valid, or {:error, message} otherwise
   defp validate_invitation_token(token, email, invitation_only_mode) do
     valid_invitation = check_invitation_validity(token, email)
-    
+
     if invitation_only_mode && !valid_invitation do
       {:error, "Valid invitation required for this network"}
     else
@@ -74,23 +74,14 @@ defmodule CastmillWeb.SignUpController do
         # Try organization invitation as fallback
         case Castmill.Organizations.get_invitation_by_token(token) do
           nil -> false
-          org_invitation -> 
-            org_invitation.email == email && 
+          org_invitation ->
+            org_invitation.email == email &&
             !Castmill.Organizations.OrganizationsInvitation.expired?(org_invitation)
         end
-      
-      net_invitation -> 
-        net_invitation.email == email && 
-        !Castmill.Networks.NetworkInvitation.expired?(net_invitation)
-    end
-  end
-          end
 
-        {:error, :network_not_found} ->
-          conn
-          |> put_status(:unprocessable_entity)
-          |> json(%{status: :error, msg: "Network not found"})
-      end
+      net_invitation ->
+        net_invitation.email == email &&
+        !Castmill.Networks.NetworkInvitation.expired?(net_invitation)
     end
   end
 
@@ -115,7 +106,7 @@ defmodule CastmillWeb.SignUpController do
         {:ok, network_id} ->
           # Check if network requires invitation-only signup
           network = Castmill.Networks.get_network(network_id)
-          
+
           if network.invitation_only do
             conn
             |> put_status(:forbidden)

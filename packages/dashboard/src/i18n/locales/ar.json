@@ -297,7 +297,9 @@
     "loading": "جاري التحميل...",
     "loginWithPasskey": "تسجيل الدخول باستخدام مفتاح المرور",
     "privacyPolicy": "سياسة الخصوصية",
-    "lostCredentials": "هل فقدت بيانات الاعتماد؟"
+    "lostCredentials": "هل فقدت بيانات الاعتماد؟",
+    "invitationOnlyNotice": "ليس لديك حساب؟ تتطلب هذه الخدمة دعوة للتسجيل.",
+    "passkeysNotSupported": "متصفحك لا يدعم مفاتيح المرور. يرجى استخدام متصفح حديث لتسجيل الدخول."
   },
   "credentialRecovery": {
     "title": "استعادة بيانات الاعتماد الخاصة بك",

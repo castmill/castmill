@@ -296,7 +296,9 @@
     "loading": "Cargando...",
     "loginWithPasskey": "Iniciar sesión con llave de acceso",
     "privacyPolicy": "Política de privacidad",
-    "lostCredentials": "¿Perdiste tus credenciales?"
+    "lostCredentials": "¿Perdiste tus credenciales?",
+    "invitationOnlyNotice": "¿No tienes una cuenta? Este servicio requiere una invitación para registrarse.",
+    "passkeysNotSupported": "Tu navegador no soporta llaves de acceso. Por favor usa un navegador moderno para iniciar sesión."
   },
   "credentialRecovery": {
     "title": "Recupera tus credenciales",

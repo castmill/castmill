@@ -297,7 +297,9 @@
     "loading": "Chargement...",
     "loginWithPasskey": "Se connecter avec une clé d'accès",
     "privacyPolicy": "Politique de confidentialité",
-    "lostCredentials": "Identifiants perdus ?"
+    "lostCredentials": "Identifiants perdus ?",
+    "invitationOnlyNotice": "Pas de compte ? Ce service nécessite une invitation pour s'inscrire.",
+    "passkeysNotSupported": "Votre navigateur ne prend pas en charge les clés d'accès. Veuillez utiliser un navigateur moderne pour vous connecter."
   },
   "credentialRecovery": {
     "title": "Récupérer vos identifiants",
