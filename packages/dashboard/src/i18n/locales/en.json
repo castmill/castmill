@@ -677,6 +677,40 @@
       "updateFirmwareDescription": "Updates the firmware of the device",
       "offlineMessage": "Device is offline, so no commands can be sent to it"
     },
+    "cache": {
+      "title": "Device Cache",
+      "items": "cache items",
+      "dataTab": "Data",
+      "codeTab": "Code",
+      "mediaTab": "Media",
+      "deleteSelected": "Delete selected items",
+      "clearAll": "Clear All",
+      "confirmDelete": "Delete Cache Entry",
+      "confirmDeleteMessage": "Are you sure you want to delete this cache entry? URL: {{url}}",
+      "confirmDeleteMultiple": "Delete Multiple Entries",
+      "confirmDeleteMultipleMessage": "Are you sure you want to delete {{count}} cache entries?",
+      "confirmClearAll": "Clear All Cache",
+      "confirmClearAllMessage": "Are you sure you want to clear all {{type}} cache entries? This action cannot be undone.",
+      "deleteSuccess": "Cache entry deleted successfully",
+      "deleteMultipleSuccess": "{{count}} cache entries deleted successfully",
+      "clearAllSuccess": "All cache entries cleared successfully",
+      "deleteError": "Error deleting cache: {{error}}",
+      "offlineWarning": "The device is currently offline. Cache information cannot be retrieved until the device comes back online."
+    },
+    "events": {
+      "title": "Device Events",
+      "items": "events",
+      "filterError": "Errors",
+      "filterWarning": "Warnings",
+      "filterInfo": "Info",
+      "filterOnline": "Online",
+      "filterOffline": "Offline",
+      "clearAll": "Clear All Events",
+      "confirmClearAll": "Clear All Events",
+      "confirmClearAllMessage": "Are you sure you want to delete all events for this device? This action cannot be undone.",
+      "clearAllSuccess": "Successfully deleted {{count}} events",
+      "deleteError": "Error deleting events: {{error}}"
+    },
     "errors": {
       "setChannelFailed": "Failed to set device channel: {{error}}",
       "commandFailed": "An error occurred while processing your request"

@@ -641,6 +641,40 @@
       "updateFirmwareDescription": "Met à jour le firmware de l'appareil",
       "offlineMessage": "L'appareil est hors ligne, aucune commande ne peut donc lui être envoyée"
     },
+    "cache": {
+      "title": "Cache de l'Appareil",
+      "items": "éléments en cache",
+      "dataTab": "Données",
+      "codeTab": "Code",
+      "mediaTab": "Médias",
+      "deleteSelected": "Supprimer les éléments sélectionnés",
+      "clearAll": "Tout Effacer",
+      "confirmDelete": "Supprimer l'Entrée du Cache",
+      "confirmDeleteMessage": "Êtes-vous sûr de vouloir supprimer cette entrée du cache ? URL: {{url}}",
+      "confirmDeleteMultiple": "Supprimer Plusieurs Entrées",
+      "confirmDeleteMultipleMessage": "Êtes-vous sûr de vouloir supprimer {{count}} entrées du cache ?",
+      "confirmClearAll": "Effacer Tout le Cache",
+      "confirmClearAllMessage": "Êtes-vous sûr de vouloir effacer toutes les entrées du cache {{type}} ? Cette action ne peut pas être annulée.",
+      "deleteSuccess": "Entrée du cache supprimée avec succès",
+      "deleteMultipleSuccess": "{{count}} entrées du cache supprimées avec succès",
+      "clearAllSuccess": "Toutes les entrées du cache effacées avec succès",
+      "deleteError": "Erreur lors de la suppression du cache : {{error}}",
+      "offlineWarning": "L'appareil est actuellement hors ligne. Les informations du cache ne peuvent pas être récupérées tant que l'appareil n'est pas de retour en ligne."
+    },
+    "events": {
+      "title": "Événements de l'appareil",
+      "items": "événements",
+      "filterError": "Erreurs",
+      "filterWarning": "Avertissements",
+      "filterInfo": "Info",
+      "filterOnline": "En ligne",
+      "filterOffline": "Hors ligne",
+      "clearAll": "Effacer tous les événements",
+      "confirmClearAll": "Effacer tous les événements",
+      "confirmClearAllMessage": "Êtes-vous sûr de vouloir supprimer tous les événements pour cet appareil ? Cette action ne peut pas être annulée.",
+      "clearAllSuccess": "{{count}} événements supprimés avec succès",
+      "deleteError": "Erreur lors de la suppression des événements : {{error}}"
+    },
     "errors": {
       "setChannelFailed": "Échec de la définition du canal de l'appareil : {{error}}",
       "commandFailed": "Une erreur s'est produite lors du traitement de votre demande"

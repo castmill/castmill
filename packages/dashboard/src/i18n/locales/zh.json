@@ -629,6 +629,40 @@
       "updateFirmwareDescription": "更新设备的固件",
       "offlineMessage": "设备处于离线状态,因此无法向其发送命令"
     },
+    "cache": {
+      "title": "设备缓存",
+      "items": "缓存项",
+      "dataTab": "数据",
+      "codeTab": "代码",
+      "mediaTab": "媒体",
+      "deleteSelected": "删除选定项",
+      "clearAll": "清除全部",
+      "confirmDelete": "删除缓存条目",
+      "confirmDeleteMessage": "确定要删除此缓存条目吗？URL：{{url}}",
+      "confirmDeleteMultiple": "删除多个条目",
+      "confirmDeleteMultipleMessage": "确定要删除 {{count}} 个缓存条目吗？",
+      "confirmClearAll": "清除所有缓存",
+      "confirmClearAllMessage": "确定要清除所有 {{type}} 缓存条目吗？此操作无法撤消。",
+      "deleteSuccess": "缓存条目删除成功",
+      "deleteMultipleSuccess": "成功删除 {{count}} 个缓存条目",
+      "clearAllSuccess": "成功清除所有缓存条目",
+      "deleteError": "删除缓存时出错：{{error}}",
+      "offlineWarning": "设备当前离线。在设备重新上线之前，无法获取缓存信息。"
+    },
+    "events": {
+      "title": "设备事件",
+      "items": "事件",
+      "filterError": "错误",
+      "filterWarning": "警告",
+      "filterInfo": "信息",
+      "filterOnline": "在线",
+      "filterOffline": "离线",
+      "clearAll": "清除所有事件",
+      "confirmClearAll": "清除所有事件",
+      "confirmClearAllMessage": "确定要删除此设备的所有事件吗？此操作无法撤消。",
+      "clearAllSuccess": "成功删除 {{count}} 个事件",
+      "deleteError": "删除事件时出错：{{error}}"
+    },
     "errors": {
       "setChannelFailed": "设置设备频道失败:{{error}}",
       "commandFailed": "处理您的请求时发生错误"

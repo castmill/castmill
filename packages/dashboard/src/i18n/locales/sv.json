@@ -624,6 +624,40 @@
       "updateFirmwareDescription": "Uppdaterar enhetens firmware",
       "offlineMessage": "Enheten är offline, så inga kommandon kan skickas till den"
     },
+    "cache": {
+      "title": "Enhetscache",
+      "items": "cacheobjekt",
+      "dataTab": "Data",
+      "codeTab": "Kod",
+      "mediaTab": "Media",
+      "deleteSelected": "Ta bort valda objekt",
+      "clearAll": "Rensa Allt",
+      "confirmDelete": "Ta bort Cachepost",
+      "confirmDeleteMessage": "Är du säker på att du vill ta bort denna cachepost? URL: {{url}}",
+      "confirmDeleteMultiple": "Ta bort Flera Poster",
+      "confirmDeleteMultipleMessage": "Är du säker på att du vill ta bort {{count}} cacheposter?",
+      "confirmClearAll": "Rensa All Cache",
+      "confirmClearAllMessage": "Är du säker på att du vill rensa alla {{type}} cacheposter? Denna åtgärd kan inte ångras.",
+      "deleteSuccess": "Cachepost borttagen framgångsrikt",
+      "deleteMultipleSuccess": "{{count}} cacheposter borttagna framgångsrikt",
+      "clearAllSuccess": "Alla cacheposter rensade framgångsrikt",
+      "deleteError": "Fel vid borttagning av cache: {{error}}",
+      "offlineWarning": "Enheten är för närvarande offline. Cacheinformation kan inte hämtas förrän enheten kommer tillbaka online."
+    },
+    "events": {
+      "title": "Enhetshändelser",
+      "items": "händelser",
+      "filterError": "Fel",
+      "filterWarning": "Varningar",
+      "filterInfo": "Info",
+      "filterOnline": "Online",
+      "filterOffline": "Offline",
+      "clearAll": "Rensa alla händelser",
+      "confirmClearAll": "Rensa alla händelser",
+      "confirmClearAllMessage": "Är du säker på att du vill ta bort alla händelser för denna enhet? Denna åtgärd kan inte ångras.",
+      "clearAllSuccess": "{{count}} händelser har tagits bort",
+      "deleteError": "Fel vid borttagning av händelser: {{error}}"
+    },
     "errors": {
       "setChannelFailed": "Misslyckades att ställa in enhetskanal: {{error}}",
       "commandFailed": "Ett fel uppstod vid bearbetning av din begäran"

@@ -629,6 +629,40 @@
       "updateFirmwareDescription": "يحدث البرنامج الثابت للجهاز",
       "offlineMessage": "الجهاز غير متصل بالإنترنت، لذا لا يمكن إرسال أوامر إليه"
     },
+    "cache": {
+      "title": "ذاكرة التخزين المؤقت للجهاز",
+      "items": "عناصر ذاكرة التخزين المؤقت",
+      "dataTab": "البيانات",
+      "codeTab": "الكود",
+      "mediaTab": "الوسائط",
+      "deleteSelected": "حذف العناصر المحددة",
+      "clearAll": "مسح الكل",
+      "confirmDelete": "حذف إدخال ذاكرة التخزين المؤقت",
+      "confirmDeleteMessage": "هل أنت متأكد من أنك تريد حذف هذا الإدخال من ذاكرة التخزين المؤقت؟ عنوان URL: {{url}}",
+      "confirmDeleteMultiple": "حذف إدخالات متعددة",
+      "confirmDeleteMultipleMessage": "هل أنت متأكد من أنك تريد حذف {{count}} من إدخالات ذاكرة التخزين المؤقت؟",
+      "confirmClearAll": "مسح جميع ذاكرة التخزين المؤقت",
+      "confirmClearAllMessage": "هل أنت متأكد من أنك تريد مسح جميع إدخالات ذاكرة التخزين المؤقت {{type}}؟ لا يمكن التراجع عن هذا الإجراء.",
+      "deleteSuccess": "تم حذف إدخال ذاكرة التخزين المؤقت بنجاح",
+      "deleteMultipleSuccess": "تم حذف {{count}} من إدخالات ذاكرة التخزين المؤقت بنجاح",
+      "clearAllSuccess": "تم مسح جميع إدخالات ذاكرة التخزين المؤقت بنجاح",
+      "deleteError": "خطأ في حذف ذاكرة التخزين المؤقت: {{error}}",
+      "offlineWarning": "الجهاز غير متصل حاليًا. لا يمكن استرداد معلومات ذاكرة التخزين المؤقت حتى يعود الجهاز متصلاً."
+    },
+    "events": {
+      "title": "أحداث الجهاز",
+      "items": "أحداث",
+      "filterError": "أخطاء",
+      "filterWarning": "تحذيرات",
+      "filterInfo": "معلومات",
+      "filterOnline": "متصل",
+      "filterOffline": "غير متصل",
+      "clearAll": "مسح جميع الأحداث",
+      "confirmClearAll": "مسح جميع الأحداث",
+      "confirmClearAllMessage": "هل أنت متأكد من أنك تريد حذف جميع الأحداث لهذا الجهاز؟ لا يمكن التراجع عن هذا الإجراء.",
+      "clearAllSuccess": "تم حذف {{count}} من الأحداث بنجاح",
+      "deleteError": "خطأ في حذف الأحداث: {{error}}"
+    },
     "errors": {
       "setChannelFailed": "فشل تعيين قناة الجهاز: {{error}}",
       "commandFailed": "حدث خطأ أثناء معالجة طلبك"

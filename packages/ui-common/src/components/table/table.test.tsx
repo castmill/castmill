@@ -110,7 +110,10 @@ describe('Table Component', () => {
     ));
 
     // Find the label element (the touch target) for the first row checkbox
-    const label = container.querySelector('label[for="row-checkbox-1"]');
+    // The label's "for" attribute contains the row ID pattern
+    const label = container.querySelector(
+      'label[for^="row-checkbox-"][for$="-1"]'
+    );
     expect(label).toBeInTheDocument();
 
     fireEvent.click(label!);

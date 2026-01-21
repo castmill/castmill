@@ -629,6 +629,40 @@
       "updateFirmwareDescription": "기기의 펌웨어를 업데이트합니다",
       "offlineMessage": "기기가 오프라인 상태이므로 명령을 보낼 수 없습니다"
     },
+    "cache": {
+      "title": "기기 캐시",
+      "items": "캐시 항목",
+      "dataTab": "데이터",
+      "codeTab": "코드",
+      "mediaTab": "미디어",
+      "deleteSelected": "선택한 항목 삭제",
+      "clearAll": "모두 지우기",
+      "confirmDelete": "캐시 항목 삭제",
+      "confirmDeleteMessage": "이 캐시 항목을 삭제하시겠습니까? URL: {{url}}",
+      "confirmDeleteMultiple": "여러 항목 삭제",
+      "confirmDeleteMultipleMessage": "{{count}}개의 캐시 항목을 삭제하시겠습니까?",
+      "confirmClearAll": "모든 캐시 지우기",
+      "confirmClearAllMessage": "모든 {{type}} 캐시 항목을 지우시겠습니까? 이 작업은 취소할 수 없습니다.",
+      "deleteSuccess": "캐시 항목이 성공적으로 삭제되었습니다",
+      "deleteMultipleSuccess": "{{count}}개의 캐시 항목이 성공적으로 삭제되었습니다",
+      "clearAllSuccess": "모든 캐시 항목이 성공적으로 지워졌습니다",
+      "deleteError": "캠시 삭제 중 오류 발생: {{error}}",
+      "offlineWarning": "기기가 현재 오프라인 상태입니다. 기기가 다시 온라인 상태가 될 때까지 캠시 정보를 가져올 수 없습니다."
+    },
+    "events": {
+      "title": "기기 이벤트",
+      "items": "이벤트",
+      "filterError": "오류",
+      "filterWarning": "경고",
+      "filterInfo": "정보",
+      "filterOnline": "온라인",
+      "filterOffline": "오프라인",
+      "clearAll": "모든 이벤트 지우기",
+      "confirmClearAll": "모든 이벤트 지우기",
+      "confirmClearAllMessage": "이 기기의 모든 이벤트를 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.",
+      "clearAllSuccess": "{{count}}개의 이벤트가 성공적으로 삭제되었습니다",
+      "deleteError": "이벤트 삭제 중 오류 발생: {{error}}"
+    },
     "errors": {
       "setChannelFailed": "기기 채널 설정 실패: {{error}}",
       "commandFailed": "요청 처리 중 오류가 발생했습니다"

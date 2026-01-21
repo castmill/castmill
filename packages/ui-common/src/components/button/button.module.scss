@@ -84,3 +84,21 @@
 .button-secondary-active {
   background-color: #545b62; // Darker shade of secondary color
 }
+
+.button-loading {
+  cursor: wait;
+}
+
+.spinner {
+  display: inline-flex;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

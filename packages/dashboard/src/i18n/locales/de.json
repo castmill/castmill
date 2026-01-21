@@ -647,6 +647,40 @@
       "updateFirmwareDescription": "Aktualisiert die Firmware des Geräts",
       "offlineMessage": "Gerät ist offline, daher können keine Befehle gesendet werden"
     },
+    "cache": {
+      "title": "Geräte-Cache",
+      "items": "Cache-Einträge",
+      "dataTab": "Daten",
+      "codeTab": "Code",
+      "mediaTab": "Medien",
+      "deleteSelected": "Ausgewählte Elemente löschen",
+      "clearAll": "Alles Löschen",
+      "confirmDelete": "Cache-Eintrag Löschen",
+      "confirmDeleteMessage": "Möchten Sie diesen Cache-Eintrag wirklich löschen? URL: {{url}}",
+      "confirmDeleteMultiple": "Mehrere Einträge Löschen",
+      "confirmDeleteMultipleMessage": "Möchten Sie wirklich {{count}} Cache-Einträge löschen?",
+      "confirmClearAll": "Gesamten Cache Löschen",
+      "confirmClearAllMessage": "Möchten Sie wirklich alle {{type}} Cache-Einträge löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
+      "deleteSuccess": "Cache-Eintrag erfolgreich gelöscht",
+      "deleteMultipleSuccess": "{{count}} Cache-Einträge erfolgreich gelöscht",
+      "clearAllSuccess": "Alle Cache-Einträge erfolgreich gelöscht",
+      "deleteError": "Fehler beim Löschen des Cache: {{error}}",
+      "offlineWarning": "Das Gerät ist derzeit offline. Cache-Informationen können nicht abgerufen werden, bis das Gerät wieder online ist."
+    },
+    "events": {
+      "title": "Geräteereignisse",
+      "items": "Ereignisse",
+      "filterError": "Fehler",
+      "filterWarning": "Warnungen",
+      "filterInfo": "Info",
+      "filterOnline": "Online",
+      "filterOffline": "Offline",
+      "clearAll": "Alle Ereignisse löschen",
+      "confirmClearAll": "Alle Ereignisse löschen",
+      "confirmClearAllMessage": "Möchten Sie wirklich alle Ereignisse für dieses Gerät löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
+      "clearAllSuccess": "{{count}} Ereignisse erfolgreich gelöscht",
+      "deleteError": "Fehler beim Löschen der Ereignisse: {{error}}"
+    },
     "errors": {
       "setChannelFailed": "Fehler beim Festlegen des Gerätekanals: {{error}}",
       "commandFailed": "Bei der Verarbeitung Ihrer Anfrage ist ein Fehler aufgetreten"
