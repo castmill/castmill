@@ -73,15 +73,17 @@ defmodule CastmillWeb.SignUpController do
       nil ->
         # Try organization invitation as fallback
         case Castmill.Organizations.get_invitation_by_token(token) do
-          nil -> false
+          nil ->
+            false
+
           org_invitation ->
             org_invitation.email == email &&
-            !Castmill.Organizations.OrganizationsInvitation.expired?(org_invitation)
+              !Castmill.Organizations.OrganizationsInvitation.expired?(org_invitation)
         end
 
       net_invitation ->
         net_invitation.email == email &&
-        !Castmill.Networks.NetworkInvitation.expired?(net_invitation)
+          !Castmill.Networks.NetworkInvitation.expired?(net_invitation)
     end
   end
 
@@ -139,7 +141,11 @@ defmodule CastmillWeb.SignUpController do
 
                     conn
                     |> put_status(:unprocessable_entity)
-                    |> json(%{status: :error, msg: "Failed to send email", error: inspect(reason)})
+                    |> json(%{
+                      status: :error,
+                      msg: "Failed to send email",
+                      error: inspect(reason)
+                    })
                 end
 
               {:error, _changeset} ->

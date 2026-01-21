@@ -212,6 +212,7 @@ defmodule Castmill.NetworksTest do
 
     test "get_network_invitation_by_token/1 returns invitation" do
       network = network_fixture()
+
       {:ok, invitation} =
         Networks.invite_user_to_new_organization(network.id, "test@example.com", "Test Org")
 
@@ -222,6 +223,7 @@ defmodule Castmill.NetworksTest do
 
     test "list_network_invitations/1 returns network invitations" do
       network = network_fixture()
+
       {:ok, _inv1} =
         Networks.invite_user_to_new_organization(network.id, "user1@example.com", "Org 1")
 
@@ -234,6 +236,7 @@ defmodule Castmill.NetworksTest do
 
     test "delete_network_invitation/1 removes invitation" do
       network = network_fixture()
+
       {:ok, invitation} =
         Networks.invite_user_to_new_organization(network.id, "delete@example.com", "Test Org")
 

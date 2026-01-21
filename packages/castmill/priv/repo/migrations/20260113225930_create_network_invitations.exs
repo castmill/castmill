@@ -16,7 +16,12 @@ defmodule Castmill.Repo.Migrations.CreateNetworkInvitations do
     end
 
     create unique_index(:network_invitations, [:token])
-    create unique_index(:network_invitations, [:network_id, :email], where: "status = 'invited'", name: :unique_network_email_invite_active)
+
+    create unique_index(:network_invitations, [:network_id, :email],
+             where: "status = 'invited'",
+             name: :unique_network_email_invite_active
+           )
+
     create index(:network_invitations, [:network_id])
     create index(:network_invitations, [:email])
   end

@@ -323,7 +323,7 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
     case Networks.delete_network_invitation(id) do
       {:ok, invitation} ->
         {:noreply, stream_delete(socket, :rows, invitation)}
-      
+
       {:error, _} ->
         {:noreply, put_flash(socket, :error, "Failed to delete invitation")}
     end

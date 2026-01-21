@@ -66,13 +66,14 @@ defmodule CastmillWeb.Live.Admin.NetworkInvitationForm do
          |> put_flash(:error, error)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        errors = Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
-          Regex.replace(~r"%{(\w+)}", msg, fn _, key ->
-            opts |> Keyword.get(String.to_existing_atom(key), key) |> to_string()
+        errors =
+          Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
+            Regex.replace(~r"%{(\w+)}", msg, fn _, key ->
+              opts |> Keyword.get(String.to_existing_atom(key), key) |> to_string()
+            end)
           end)
-        end)
 
-        error_msg = 
+        error_msg =
           errors
           |> Enum.map(fn {field, messages} ->
             "#{field}: #{Enum.join(messages, ", ")}"

@@ -33,10 +33,22 @@ defmodule Castmill.Networks.Network do
   @doc false
   def changeset(network, attrs) do
     network
-    |> cast(attrs, [:name, :copyright, :email, :logo, :domain, :meta, :default_plan_id, :invitation_only, :invitation_only_org_admins])
+    |> cast(attrs, [
+      :name,
+      :copyright,
+      :email,
+      :logo,
+      :domain,
+      :meta,
+      :default_plan_id,
+      :invitation_only,
+      :invitation_only_org_admins
+    ])
     |> validate_required([:name, :email, :domain])
     |> validate_format(:email, ~r/@/, message: "must be a valid email address")
-    |> validate_format(:domain, ~r/^https?:\/\/[^\s\/$.?#].[^\s]*$/i, message: "must be a valid URL (e.g., https://example.com)")
+    |> validate_format(:domain, ~r/^https?:\/\/[^\s\/$.?#].[^\s]*$/i,
+      message: "must be a valid URL (e.g., https://example.com)"
+    )
     |> unique_constraint(:name)
   end
 

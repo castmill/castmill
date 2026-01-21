@@ -15,8 +15,7 @@ defmodule Castmill.Networks.NetworkInvitation do
     field :status, :string, default: "invited"
     field :expires_at, :utc_datetime
 
-    belongs_to :network, Castmill.Networks.Network,
-      type: Ecto.UUID
+    belongs_to :network, Castmill.Networks.Network, type: Ecto.UUID
 
     timestamps()
   end

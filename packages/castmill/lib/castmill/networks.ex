@@ -376,7 +376,9 @@ defmodule Castmill.Networks do
 
   defp validate_network_invitation(token) do
     case get_network_invitation_by_token(token) do
-      nil -> {:error, :invitation_not_found}
+      nil ->
+        {:error, :invitation_not_found}
+
       invitation ->
         if NetworkInvitation.expired?(invitation) do
           {:error, :invitation_expired}
@@ -388,7 +390,9 @@ defmodule Castmill.Networks do
 
   defp validate_invitation_user(invitation, user_id) do
     case Repo.get(Castmill.Accounts.User, user_id) do
-      nil -> {:error, :user_not_found}
+      nil ->
+        {:error, :user_not_found}
+
       user ->
         if user.email == invitation.email do
           {:ok, user}
