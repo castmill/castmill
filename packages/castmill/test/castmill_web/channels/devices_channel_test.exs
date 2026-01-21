@@ -23,7 +23,9 @@ defmodule CastmillWeb.DevicesChannelTest do
     # Create socket with device assigns - device_ip must be a tuple
     socket =
       CastmillWeb.DeviceSocket
-      |> socket("device_id", %{device: %{device_id: device.id, hardware_id: "test", device_ip: {127, 0, 0, 1}}})
+      |> socket("device_id", %{
+        device: %{device_id: device.id, hardware_id: "test", device_ip: {127, 0, 0, 1}}
+      })
 
     %{socket: socket, device: device, token: token, organization: organization}
   end
@@ -51,7 +53,11 @@ defmodule CastmillWeb.DevicesChannelTest do
       }
     end
 
-    test "pushes channel_updated event with nil default_playlist_id", %{socket: socket, device: device, token: token} do
+    test "pushes channel_updated event with nil default_playlist_id", %{
+      socket: socket,
+      device: device,
+      token: token
+    } do
       # Join the channel first
       {:ok, _reply, socket} =
         subscribe_and_join(socket, DevicesChannel, "devices:#{device.id}", %{"token" => token})

@@ -303,8 +303,9 @@ defmodule CastmillWeb.ResourceController do
         {:ok, updated_channel} ->
           # If default_playlist_id was updated and actually changed, notify all connected devices
           # Note: params.update may have string keys ("default_playlist_id") so check both
-          has_default_playlist_key = Map.has_key?(params.update, :default_playlist_id) or
-                                     Map.has_key?(params.update, "default_playlist_id")
+          has_default_playlist_key =
+            Map.has_key?(params.update, :default_playlist_id) or
+              Map.has_key?(params.update, "default_playlist_id")
 
           if has_default_playlist_key and
                channel.default_playlist_id != updated_channel.default_playlist_id do

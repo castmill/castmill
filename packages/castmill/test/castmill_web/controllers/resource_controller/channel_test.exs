@@ -202,7 +202,9 @@ defmodule CastmillWeb.ResourceController.ChannelsTest do
         "update" => %{"default_playlist_id" => playlist.id}
       }
 
-      conn = put(conn, "/api/organizations/#{organization.id}/channels/#{channel.id}", update_params)
+      conn =
+        put(conn, "/api/organizations/#{organization.id}/channels/#{channel.id}", update_params)
+
       response = json_response(conn, 200)
 
       # Verify the update was successful
@@ -210,10 +212,11 @@ defmodule CastmillWeb.ResourceController.ChannelsTest do
 
       # Wait for the async task to broadcast the message
       assert_receive %{
-        event: "channel_updated",
-        channel_id: ^channel_id,
-        default_playlist_id: playlist_id
-      }, 1000
+                       event: "channel_updated",
+                       channel_id: ^channel_id,
+                       default_playlist_id: playlist_id
+                     },
+                     1000
 
       assert playlist_id == playlist.id
     end
@@ -253,7 +256,9 @@ defmodule CastmillWeb.ResourceController.ChannelsTest do
         "update" => %{"default_playlist_id" => playlist.id}
       }
 
-      conn = put(conn, "/api/organizations/#{organization.id}/channels/#{channel.id}", update_params)
+      conn =
+        put(conn, "/api/organizations/#{organization.id}/channels/#{channel.id}", update_params)
+
       response = json_response(conn, 200)
 
       # Verify the update was successful
@@ -301,7 +306,9 @@ defmodule CastmillWeb.ResourceController.ChannelsTest do
         "update" => %{"default_playlist_id" => playlist2.id}
       }
 
-      conn = put(conn, "/api/organizations/#{organization.id}/channels/#{channel.id}", update_params)
+      conn =
+        put(conn, "/api/organizations/#{organization.id}/channels/#{channel.id}", update_params)
+
       response = json_response(conn, 200)
 
       # Verify the update was successful
@@ -309,10 +316,11 @@ defmodule CastmillWeb.ResourceController.ChannelsTest do
 
       # Should receive a broadcast since value changed
       assert_receive %{
-        event: "channel_updated",
-        channel_id: ^channel_id,
-        default_playlist_id: new_playlist_id
-      }, 1000
+                       event: "channel_updated",
+                       channel_id: ^channel_id,
+                       default_playlist_id: new_playlist_id
+                     },
+                     1000
 
       assert new_playlist_id == playlist2.id
     end
@@ -361,7 +369,9 @@ defmodule CastmillWeb.ResourceController.ChannelsTest do
         "update" => %{"default_playlist_id" => playlist.id}
       }
 
-      conn = put(conn, "/api/organizations/#{organization.id}/channels/#{channel.id}", update_params)
+      conn =
+        put(conn, "/api/organizations/#{organization.id}/channels/#{channel.id}", update_params)
+
       response = json_response(conn, 200)
 
       # Verify the update was successful
@@ -369,16 +379,18 @@ defmodule CastmillWeb.ResourceController.ChannelsTest do
 
       # Both devices should receive the broadcast
       assert_receive %{
-        event: "channel_updated",
-        channel_id: ^channel_id,
-        default_playlist_id: playlist_id1
-      }, 1000
+                       event: "channel_updated",
+                       channel_id: ^channel_id,
+                       default_playlist_id: playlist_id1
+                     },
+                     1000
 
       assert_receive %{
-        event: "channel_updated",
-        channel_id: ^channel_id,
-        default_playlist_id: playlist_id2
-      }, 1000
+                       event: "channel_updated",
+                       channel_id: ^channel_id,
+                       default_playlist_id: playlist_id2
+                     },
+                     1000
 
       assert playlist_id1 == playlist.id
       assert playlist_id2 == playlist.id
@@ -421,7 +433,9 @@ defmodule CastmillWeb.ResourceController.ChannelsTest do
         "update" => %{"default_playlist_id" => nil}
       }
 
-      conn = put(conn, "/api/organizations/#{organization.id}/channels/#{channel.id}", update_params)
+      conn =
+        put(conn, "/api/organizations/#{organization.id}/channels/#{channel.id}", update_params)
+
       response = json_response(conn, 200)
 
       # Verify the update was successful
@@ -429,10 +443,11 @@ defmodule CastmillWeb.ResourceController.ChannelsTest do
 
       # Should receive a broadcast since value changed
       assert_receive %{
-        event: "channel_updated",
-        channel_id: ^channel_id,
-        default_playlist_id: nil
-      }, 1000
+                       event: "channel_updated",
+                       channel_id: ^channel_id,
+                       default_playlist_id: nil
+                     },
+                     1000
     end
   end
 end
