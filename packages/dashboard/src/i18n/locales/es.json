@@ -885,5 +885,53 @@
       "organizationNameTaken": "Este nombre de organización ya está en uso. Por favor, elige un nombre diferente.",
       "failed": "Error al completar la configuración. Por favor, inténtalo de nuevo."
     }
+  },
+  "onboardingTour": {
+    "title": "Tour de Introducción",
+    "progressText": "{{current}} de {{total}} pasos completados",
+    "markComplete": "Marcar como Completado",
+    "stepCompleted": "¡Paso completado!",
+    "stepCompletedBadge": "Completado",
+    "allStepsComplete": "¡Felicitaciones! Has completado todos los pasos de introducción.",
+    "dismissed": "Tour de introducción descartado. Puedes reiniciarlo en cualquier momento desde la configuración.",
+    "skip": "Omitir",
+    "finish": "Finalizar Tour",
+    "goToStep": "Ir al paso {{step}}",
+    "steps": {
+      "uploadMedia": {
+        "title": "Sube tu Primer Contenido",
+        "description": "Comienza subiendo imágenes, videos u otro contenido que desees mostrar en tus pantallas de señalización digital. Puedes arrastrar y soltar archivos o usar el botón de carga.",
+        "action": "Ir a la Biblioteca de Medios"
+      },
+      "createPlaylist": {
+        "title": "Crea tu Primera Lista de Reproducción",
+        "description": "Organiza tu contenido en listas de reproducción. Agrega archivos multimedia y widgets para crear secuencias de contenido atractivas. Puedes configurar duraciones de visualización y transiciones para cada elemento.",
+        "action": "Ir a Listas de Reproducción"
+      },
+      "createChannel": {
+        "title": "Configura un Canal",
+        "description": "Los canales combinan listas de reproducción y programaciones. Crea un canal y asigna una lista de reproducción predeterminada para controlar qué contenido se reproduce en diferentes momentos del día.",
+        "action": "Ir a Canales"
+      },
+      "registerDevice": {
+        "title": "Registra tu Primer Dispositivo",
+        "description": "Conecta tus reproductores de señalización digital (pantallas) a Castmill. Recibirás un código de registro único para cada dispositivo. Ingrésalo en tu reproductor para conectarlo.",
+        "action": "Ir a Dispositivos"
+      },
+      "assignChannel": {
+        "title": "Asigna un Canal al Dispositivo",
+        "description": "Vincula un canal a tu dispositivo para que sepa qué contenido mostrar. Cada dispositivo puede ser asignado a un canal a la vez, pero puedes cambiarlo en cualquier momento.",
+        "action": "Administrar Dispositivos"
+      },
+      "advancedPlaylist": {
+        "title": "Crea Listas de Reproducción Avanzadas con Diseños",
+        "description": "Lleva tu contenido al siguiente nivel usando diseños para mostrar múltiples elementos simultáneamente. Divide tu pantalla en zonas y muestra contenido diferente en cada área.",
+        "action": "Explorar Diseños"
+      }
+    },
+    "errors": {
+      "failedToCompleteStep": "No se pudo marcar el paso como completado. Por favor, inténtalo de nuevo.",
+      "failedToDismiss": "No se pudo descartar el tour. Por favor, inténtalo de nuevo."
+    }
   }
 }

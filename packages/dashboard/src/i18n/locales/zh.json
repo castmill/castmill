@@ -884,5 +884,53 @@
       "organizationNameTaken": "此组织名称已被使用。请选择其他名称。",
       "failed": "设置失败。请重试。"
     }
+  },
+  "onboardingTour": {
+    "title": "入门指南",
+    "progressText": "已完成 {{current}}/{{total}} 步",
+    "markComplete": "标记为完成",
+    "stepCompleted": "步骤已完成！",
+    "stepCompletedBadge": "已完成",
+    "allStepsComplete": "恭喜！您已完成所有入门步骤！",
+    "dismissed": "入门指南已关闭。您可以随时从设置中重新启动。",
+    "skip": "跳过",
+    "finish": "完成指南",
+    "goToStep": "前往第 {{step}} 步",
+    "steps": {
+      "uploadMedia": {
+        "title": "上传您的第一个媒体",
+        "description": "首先上传您想在数字标牌屏幕上显示的图片、视频或其他内容。您可以拖放文件或使用上传按钮。",
+        "action": "前往媒体库"
+      },
+      "createPlaylist": {
+        "title": "创建您的第一个播放列表",
+        "description": "将您的内容组织到播放列表中。添加媒体文件和小部件以创建引人入胜的内容序列。您可以为每个项目设置显示持续时间和过渡效果。",
+        "action": "前往播放列表"
+      },
+      "createChannel": {
+        "title": "设置频道",
+        "description": "频道结合了播放列表和时间表。创建频道并分配默认播放列表以控制一天中不同时间播放的内容。",
+        "action": "前往频道"
+      },
+      "registerDevice": {
+        "title": "注册您的第一台设备",
+        "description": "将您的数字标牌播放器（屏幕）连接到 Castmill。您将收到每台设备的唯一注册码。在播放器上输入该代码即可连接。",
+        "action": "前往设备"
+      },
+      "assignChannel": {
+        "title": "将频道分配给设备",
+        "description": "将频道链接到您的设备，使其知道要显示什么内容。每台设备一次只能分配一个频道，但您可以随时更改。",
+        "action": "管理设备"
+      },
+      "advancedPlaylist": {
+        "title": "使用布局创建高级播放列表",
+        "description": "通过使用布局同时显示多个项目，将您的内容提升到一个新的水平。将屏幕分成多个区域，在每个区域显示不同的内容。",
+        "action": "探索布局"
+      }
+    },
+    "errors": {
+      "failedToCompleteStep": "标记步骤为完成失败。请重试。",
+      "failedToDismiss": "关闭指南失败。请重试。"
+    }
   }
 }

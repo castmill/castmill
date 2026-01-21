@@ -884,5 +884,53 @@
       "organizationNameTaken": "이 조직 이름은 이미 사용 중입니다. 다른 이름을 선택해 주세요.",
       "failed": "설정을 완료하지 못했습니다. 다시 시도해 주세요."
     }
+  },
+  "onboardingTour": {
+    "title": "시작 가이드",
+    "progressText": "{{total}}단계 중 {{current}}단계 완료",
+    "markComplete": "완료로 표시",
+    "stepCompleted": "단계가 완료되었습니다!",
+    "stepCompletedBadge": "완료됨",
+    "allStepsComplete": "축하합니다! 모든 온보딩 단계를 완료했습니다!",
+    "dismissed": "온보딩 가이드가 닫혔습니다. 설정에서 언제든지 다시 시작할 수 있습니다.",
+    "skip": "건너뛰기",
+    "finish": "가이드 종료",
+    "goToStep": "{{step}}단계로 이동",
+    "steps": {
+      "uploadMedia": {
+        "title": "첫 번째 미디어 업로드",
+        "description": "디지털 사이니지 화면에 표시할 이미지, 동영상 또는 기타 콘텐츠를 업로드하여 시작하세요. 파일을 드래그 앤 드롭하거나 업로드 버튼을 사용할 수 있습니다.",
+        "action": "미디어 라이브러리로 이동"
+      },
+      "createPlaylist": {
+        "title": "첫 번째 재생목록 만들기",
+        "description": "콘텐츠를 재생목록으로 구성하세요. 미디어 파일과 위젯을 추가하여 매력적인 콘텐츠 시퀀스를 만들 수 있습니다. 각 항목의 표시 시간과 전환 효과를 설정할 수 있습니다.",
+        "action": "재생목록으로 이동"
+      },
+      "createChannel": {
+        "title": "채널 설정",
+        "description": "채널은 재생목록과 일정을 결합합니다. 채널을 만들고 기본 재생목록을 할당하여 하루 중 다른 시간에 재생할 콘텐츠를 제어하세요.",
+        "action": "채널로 이동"
+      },
+      "registerDevice": {
+        "title": "첫 번째 디바이스 등록",
+        "description": "디지털 사이니지 플레이어(화면)를 Castmill에 연결하세요. 각 디바이스에 대해 고유한 등록 코드를 받게 됩니다. 플레이어에 코드를 입력하여 연결하세요.",
+        "action": "디바이스로 이동"
+      },
+      "assignChannel": {
+        "title": "디바이스에 채널 할당",
+        "description": "디바이스가 표시할 콘텐츠를 알 수 있도록 채널을 연결하세요. 각 디바이스는 한 번에 하나의 채널에 할당할 수 있지만 언제든지 변경할 수 있습니다.",
+        "action": "디바이스 관리"
+      },
+      "advancedPlaylist": {
+        "title": "레이아웃을 사용한 고급 재생목록 만들기",
+        "description": "레이아웃을 사용하여 여러 항목을 동시에 표시함으로써 콘텐츠를 한 단계 업그레이드하세요. 화면을 영역으로 나누고 각 영역에 다른 콘텐츠를 표시하세요.",
+        "action": "레이아웃 탐색"
+      }
+    },
+    "errors": {
+      "failedToCompleteStep": "단계를 완료로 표시하지 못했습니다. 다시 시도해 주세요.",
+      "failedToDismiss": "가이드를 닫지 못했습니다. 다시 시도해 주세요."
+    }
   }
 }

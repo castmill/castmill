@@ -896,5 +896,53 @@
       "organizationNameTaken": "Ce nom d'organisation est déjà pris. Veuillez choisir un autre nom.",
       "failed": "Échec de la configuration. Veuillez réessayer."
     }
+  },
+  "onboardingTour": {
+    "title": "Visite Guidée de Démarrage",
+    "progressText": "{{current}} sur {{total}} étapes terminées",
+    "markComplete": "Marquer comme Terminé",
+    "stepCompleted": "Étape terminée !",
+    "stepCompletedBadge": "Terminé",
+    "allStepsComplete": "Félicitations ! Vous avez terminé toutes les étapes d'intégration !",
+    "dismissed": "Visite guidée fermée. Vous pouvez la redémarrer à tout moment depuis les paramètres.",
+    "skip": "Ignorer",
+    "finish": "Terminer la Visite",
+    "goToStep": "Aller à l'étape {{step}}",
+    "steps": {
+      "uploadMedia": {
+        "title": "Téléchargez Votre Premier Média",
+        "description": "Commencez par télécharger des images, des vidéos ou d'autres contenus que vous souhaitez afficher sur vos écrans d'affichage numérique. Vous pouvez glisser-déposer des fichiers ou utiliser le bouton de téléchargement.",
+        "action": "Aller à la Bibliothèque Multimédia"
+      },
+      "createPlaylist": {
+        "title": "Créez Votre Première Playlist",
+        "description": "Organisez votre contenu en playlists. Ajoutez des fichiers multimédias et des widgets pour créer des séquences de contenu engageantes. Vous pouvez définir des durées d'affichage et des transitions pour chaque élément.",
+        "action": "Aller aux Playlists"
+      },
+      "createChannel": {
+        "title": "Configurez une Chaîne",
+        "description": "Les chaînes combinent des playlists et des programmations. Créez une chaîne et assignez une playlist par défaut pour contrôler quel contenu est diffusé à différents moments de la journée.",
+        "action": "Aller aux Chaînes"
+      },
+      "registerDevice": {
+        "title": "Enregistrez Votre Premier Appareil",
+        "description": "Connectez vos lecteurs d'affichage numérique (écrans) à Castmill. Vous recevrez un code d'enregistrement unique pour chaque appareil. Entrez-le sur votre lecteur pour le connecter.",
+        "action": "Aller aux Appareils"
+      },
+      "assignChannel": {
+        "title": "Assignez une Chaîne à l'Appareil",
+        "description": "Liez une chaîne à votre appareil pour qu'il sache quel contenu afficher. Chaque appareil peut être assigné à une chaîne à la fois, mais vous pouvez le modifier à tout moment.",
+        "action": "Gérer les Appareils"
+      },
+      "advancedPlaylist": {
+        "title": "Créez des Playlists Avancées avec des Mises en Page",
+        "description": "Faites passer votre contenu au niveau supérieur en utilisant des mises en page pour afficher plusieurs éléments simultanément. Divisez votre écran en zones et affichez du contenu différent dans chaque zone.",
+        "action": "Explorer les Mises en Page"
+      }
+    },
+    "errors": {
+      "failedToCompleteStep": "Échec de la validation de l'étape. Veuillez réessayer.",
+      "failedToDismiss": "Échec de la fermeture de la visite. Veuillez réessayer."
+    }
   }
 }

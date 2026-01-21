@@ -879,5 +879,53 @@
       "organizationNameTaken": "Detta organisationsnamn är redan upptaget. Välj ett annat namn.",
       "failed": "Misslyckades med att slutföra installationen. Försök igen."
     }
+  },
+  "onboardingTour": {
+    "title": "Introduktionstur",
+    "progressText": "{{current}} av {{total}} steg slutförda",
+    "markComplete": "Markera som Slutförd",
+    "stepCompleted": "Steg slutfört!",
+    "stepCompletedBadge": "Slutförd",
+    "allStepsComplete": "Grattis! Du har slutfört alla introduktionssteg!",
+    "dismissed": "Introduktionsturen avvisad. Du kan starta om den när som helst från inställningarna.",
+    "skip": "Hoppa över",
+    "finish": "Avsluta Tur",
+    "goToStep": "Gå till steg {{step}}",
+    "steps": {
+      "uploadMedia": {
+        "title": "Ladda upp Ditt Första Media",
+        "description": "Börja med att ladda upp bilder, videor eller annat innehåll som du vill visa på dina digital signage-skärmar. Du kan dra och släppa filer eller använda uppladdningsknappen.",
+        "action": "Gå till Mediabiblioteket"
+      },
+      "createPlaylist": {
+        "title": "Skapa Din Första Spellista",
+        "description": "Organisera ditt innehåll i spellistor. Lägg till mediefiler och widgets för att skapa engagerande innehållssekvenser. Du kan ställa in visningstider och övergångar för varje objekt.",
+        "action": "Gå till Spellistor"
+      },
+      "createChannel": {
+        "title": "Konfigurera en Kanal",
+        "description": "Kanaler kombinerar spellistor och scheman. Skapa en kanal och tilldela en standardspellista för att styra vilket innehåll som spelas vid olika tider på dagen.",
+        "action": "Gå till Kanaler"
+      },
+      "registerDevice": {
+        "title": "Registrera Din Första Enhet",
+        "description": "Anslut dina digital signage-spelare (skärmar) till Castmill. Du får en unik registreringskod för varje enhet. Ange den på din spelare för att ansluta.",
+        "action": "Gå till Enheter"
+      },
+      "assignChannel": {
+        "title": "Tilldela Kanal till Enhet",
+        "description": "Länka en kanal till din enhet så att den vet vilket innehåll som ska visas. Varje enhet kan tilldelas en kanal åt gången, men du kan ändra det när som helst.",
+        "action": "Hantera Enheter"
+      },
+      "advancedPlaylist": {
+        "title": "Skapa Avancerade Spellistor med Layouter",
+        "description": "Ta ditt innehåll till nästa nivå genom att använda layouter för att visa flera objekt samtidigt. Dela upp din skärm i zoner och visa olika innehåll i varje område.",
+        "action": "Utforska Layouter"
+      }
+    },
+    "errors": {
+      "failedToCompleteStep": "Misslyckades med att markera steget som slutfört. Försök igen.",
+      "failedToDismiss": "Misslyckades med att avvisa turen. Försök igen."
+    }
   }
 }

@@ -1,0 +1,359 @@
+// Dark theme colors matching the application's visual language
+$modal-background: #211d32;
+$input-background: #151320;
+$text-color: #ffffff;
+$text-secondary: #a4a3b7;
+$label-color: #577cbb;
+$border-color: #555;
+$border-hover: #b0b0b0;
+$border-focus: #4a90e2;
+$primary-color: #007bff;
+$primary-hover: #0056b3;
+$secondary-color: #6c757d;
+$secondary-hover: #5a6268;
+$success-color: #28a745;
+$error-color: #ff4200;
+$overlay-color: rgba(0, 0, 0, 0.6);
+
+$animation-duration: 0.3s;
+
+.onboarding-tour-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  background-color: $overlay-color;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  opacity: 0;
+  animation: fadeIn $animation-duration ease forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.onboarding-tour {
+  background-color: $modal-background;
+  color: $text-color;
+  border-radius: 1em;
+  padding: 2em;
+  max-width: 42em;
+  width: 90%;
+  box-shadow: 0 0.5em 2em rgba(0, 0, 0, 0.5);
+  transform: translateY(-1.25em);
+  opacity: 0;
+  animation: slideUp $animation-duration ease forwards;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(-1.25em);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.onboarding-tour-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5em;
+  padding-bottom: 1em;
+  border-bottom: 1px solid #3d3d3d;
+
+  h2 {
+    margin: 0 0 0.5em 0;
+    font-size: 1.75em;
+    font-weight: 600;
+    color: $text-color;
+  }
+}
+
+.onboarding-tour-title-section {
+  flex: 1;
+}
+
+.onboarding-tour-progress-text {
+  font-size: 0.9em;
+  color: $text-secondary;
+  margin-top: 0.5em;
+}
+
+.onboarding-tour-close {
+  background: none;
+  border: none;
+  color: $text-secondary;
+  font-size: 2em;
+  cursor: pointer;
+  padding: 0;
+  width: 1.5em;
+  height: 1.5em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+  line-height: 1;
+  margin-left: 1em;
+
+  &:hover:not(:disabled) {
+    color: $text-color;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+}
+
+.onboarding-tour-progress-bar {
+  width: 100%;
+  height: 0.5em;
+  background-color: $input-background;
+  border-radius: 0.25em;
+  overflow: hidden;
+  margin-bottom: 2em;
+}
+
+.onboarding-tour-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, $primary-color, #4a90e2);
+  transition: width 0.3s ease;
+  border-radius: 0.25em;
+}
+
+.onboarding-tour-content {
+  min-height: 15em;
+  display: flex;
+  flex-direction: column;
+}
+
+.onboarding-tour-step {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+
+  h3 {
+    margin: 0;
+    font-size: 1.5em;
+    font-weight: 600;
+    color: $text-color;
+  }
+
+  p {
+    margin: 0;
+    font-size: 1em;
+    color: $text-secondary;
+    line-height: 1.6;
+  }
+}
+
+.onboarding-tour-step-number {
+  width: 3em;
+  height: 3em;
+  border-radius: 50%;
+  background-color: $input-background;
+  border: 2px solid $border-color;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25em;
+  font-weight: 600;
+  color: $text-color;
+  margin-bottom: 0.5em;
+
+  .step-checkmark {
+    color: $success-color;
+    font-size: 1.5em;
+  }
+}
+
+.onboarding-tour-actions {
+  display: flex;
+  gap: 1em;
+  margin-top: 1em;
+  flex-wrap: wrap;
+}
+
+.onboarding-tour-action-button {
+  padding: 0.75em 1.5em;
+  border: none;
+  border-radius: 0.5em;
+  font-size: 1em;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  &.primary {
+    background-color: $primary-color;
+    color: white;
+
+    &:hover:not(:disabled) {
+      background-color: $primary-hover;
+      box-shadow: 0 2px 8px rgba($primary-color, 0.4);
+    }
+  }
+
+  &.secondary {
+    background-color: $secondary-color;
+    color: white;
+
+    &:hover:not(:disabled) {
+      background-color: $secondary-hover;
+    }
+  }
+
+  &:disabled {
+    background-color: #444;
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  &:active:not(:disabled) {
+    transform: scale(0.98);
+  }
+}
+
+.onboarding-tour-completed-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.75em 1.5em;
+  background-color: rgba($success-color, 0.1);
+  border: 1px solid $success-color;
+  border-radius: 0.5em;
+  color: $success-color;
+  font-weight: 600;
+  margin-top: 1em;
+  width: fit-content;
+
+  span {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+  }
+}
+
+.onboarding-tour-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2em;
+  padding-top: 1.5em;
+  border-top: 1px solid #3d3d3d;
+  gap: 1em;
+}
+
+.onboarding-tour-nav-button {
+  background-color: transparent;
+  color: $text-color;
+  border: 1px solid $border-color;
+  border-radius: 0.5em;
+  padding: 0.5em 1em;
+  font-size: 1em;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+
+  &:hover:not(:disabled) {
+    background-color: rgba($primary-color, 0.1);
+    border-color: $primary-color;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.onboarding-tour-dots {
+  display: flex;
+  gap: 0.5em;
+  align-items: center;
+  justify-content: center;
+}
+
+.onboarding-tour-dot {
+  width: 0.75em;
+  height: 0.75em;
+  border-radius: 50%;
+  background-color: $input-background;
+  border: 2px solid $border-color;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+  padding: 0;
+
+  &.active {
+    background-color: $primary-color;
+    border-color: $primary-color;
+    transform: scale(1.3);
+  }
+
+  &.completed {
+    background-color: $success-color;
+    border-color: $success-color;
+  }
+
+  &:hover:not(:disabled) {
+    transform: scale(1.2);
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+  }
+}
+
+// Responsive design
+@media (max-width: 48em) {
+  .onboarding-tour {
+    padding: 1.5em;
+    width: 95%;
+
+    h2 {
+      font-size: 1.5em;
+    }
+  }
+
+  .onboarding-tour-actions {
+    flex-direction: column;
+
+    button {
+      width: 100%;
+    }
+  }
+
+  .onboarding-tour-footer {
+    flex-wrap: wrap;
+    gap: 0.75em;
+  }
+
+  .onboarding-tour-nav-button {
+    font-size: 0.9em;
+    padding: 0.5em 0.75em;
+  }
+}

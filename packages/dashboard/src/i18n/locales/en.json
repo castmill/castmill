@@ -879,5 +879,53 @@
       "organizationNameTaken": "This organization name is already taken. Please choose a different name.",
       "failed": "Failed to complete setup. Please try again."
     }
+  },
+  "onboardingTour": {
+    "title": "Getting Started Tour",
+    "progressText": "{{current}} of {{total}} steps completed",
+    "markComplete": "Mark as Complete",
+    "stepCompleted": "Step completed!",
+    "stepCompletedBadge": "Completed",
+    "allStepsComplete": "Congratulations! You've completed all onboarding steps!",
+    "dismissed": "Onboarding tour dismissed. You can restart it anytime from settings.",
+    "skip": "Skip",
+    "finish": "Finish Tour",
+    "goToStep": "Go to step {{step}}",
+    "steps": {
+      "uploadMedia": {
+        "title": "Upload Your First Media",
+        "description": "Start by uploading images, videos, or other content that you want to display on your digital signage screens. You can drag and drop files or use the upload button.",
+        "action": "Go to Media Library"
+      },
+      "createPlaylist": {
+        "title": "Create Your First Playlist",
+        "description": "Organize your content into playlists. Add media files and widgets to create engaging content sequences. You can set display durations and transitions for each item.",
+        "action": "Go to Playlists"
+      },
+      "createChannel": {
+        "title": "Set Up a Channel",
+        "description": "Channels combine playlists and schedules. Create a channel and assign a default playlist to control what content plays at different times of the day.",
+        "action": "Go to Channels"
+      },
+      "registerDevice": {
+        "title": "Register Your First Device",
+        "description": "Connect your digital signage players (screens) to Castmill. You'll receive a unique registration code for each device. Enter it on your player to connect.",
+        "action": "Go to Devices"
+      },
+      "assignChannel": {
+        "title": "Assign Channel to Device",
+        "description": "Link a channel to your device so it knows what content to display. Each device can be assigned to one channel at a time, but you can change it anytime.",
+        "action": "Manage Devices"
+      },
+      "advancedPlaylist": {
+        "title": "Create Advanced Playlists with Layouts",
+        "description": "Take your content to the next level by using layouts to display multiple items simultaneously. Split your screen into zones and show different content in each area.",
+        "action": "Explore Layouts"
+      }
+    },
+    "errors": {
+      "failedToCompleteStep": "Failed to mark step as complete. Please try again.",
+      "failedToDismiss": "Failed to dismiss tour. Please try again."
+    }
   }
 }
