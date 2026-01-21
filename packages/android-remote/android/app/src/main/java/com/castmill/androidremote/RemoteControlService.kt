@@ -223,6 +223,13 @@ class RemoteControlService : LifecycleService() {
                 mainHandler.post {
                     handleStartSessionRequest(startSessionData)
                 }
+            },
+            onSessionStopped = {
+                // Backend notified that session was stopped (RC window closed)
+                // Stop screen capture and return to standby mode
+                mainHandler.post {
+                    handleSessionStopped()
+                }
             }
         )
         
@@ -236,6 +243,7 @@ class RemoteControlService : LifecycleService() {
      */
     private fun connectWebSocket(sessionId: String, deviceToken: String) {
         val backendUrl = getString(R.string.backend_url)
+        val mainHandler = Handler(Looper.getMainLooper())
         
         // Certificate pinning configuration (optional)
         // Uncomment and configure for production deployment
@@ -255,13 +263,46 @@ class RemoteControlService : LifecycleService() {
             certificatePins = null, // Set to certificatePins map to enable pinning
             onStartSession = { sid ->
                 // Backend requested to start session - initiate media capture
-                handleStartSessionRequest(sid)
+                mainHandler.post {
+                    handleStartSessionRequest(sid)
+                }
+            },
+            onSessionStopped = {
+                // Backend notified that session was stopped (RC window closed)
+                // Stop screen capture and return to standby mode
+                mainHandler.post {
+                    handleSessionStopped()
+                }
             }
         )
         
         webSocketManager?.connect(sessionId)
         isConnected = true
         updateNotification("Connected to backend")
+    }
+
+    /**
+     * Handle session stopped notification from backend.
+     * This is called when the RC window is closed by the user.
+     */
+    private fun handleSessionStopped() {
+        Log.i(TAG, "Session stopped - stopping screen capture and returning to standby")
+        
+        // Stop screen capture
+        stopScreenCapture()
+        
+        // Also disconnect media WebSocket
+        mediaWebSocketManager?.disconnect()
+        mediaWebSocketManager = null
+        
+        // Clear session state
+        sessionId = null
+        pendingSessionId = null
+        pendingSessionToken = null
+        pendingDeviceId = null
+        
+        // Update notification
+        updateNotification("Standby - waiting for RC session")
     }
 
     /**

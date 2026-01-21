@@ -62,7 +62,8 @@ class WebSocketManager(
     private val coroutineScope: CoroutineScope,
     private val diagnosticsManager: DiagnosticsManager? = null,
     private val certificatePins: Map<String, List<String>>? = null, // hostname -> list of SHA-256 pins
-    private val onStartSession: ((StartSessionData) -> Unit)? = null // Callback when start_session is received
+    private val onStartSession: ((StartSessionData) -> Unit)? = null, // Callback when start_session is received
+    private val onSessionStopped: (() -> Unit)? = null // Callback when session is stopped (window closed, etc.)
 ) {
     companion object {
         private const val TAG = "WebSocketManager"
@@ -667,8 +668,13 @@ class WebSocketManager(
                         handleStartSession(payload)
                     }
                     "session_stopped" -> {
-                        Log.i(TAG, "Session stopped by backend")
-                        disconnect()
+                        Log.i(TAG, "Session stopped by backend (RC window closed)")
+                        // Notify service to stop screen capture
+                        onSessionStopped?.invoke()
+                        // Go back to standby mode - don't disconnect, just stop the session
+                        sessionId = null
+                        isStandbyMode = true
+                        Log.i(TAG, "Returning to standby mode")
                     }
                     else -> {
                         Log.d(TAG, "Unhandled event: $event")
