@@ -15,6 +15,9 @@ import { OrganizationsService } from '../services/organizations.service';
 import { usePermissions } from '../hooks/usePermissions';
 import { ServerError } from './server-error/server-error';
 import { OnboardingDialog } from './onboarding-dialog/onboarding-dialog';
+import { OnboardingTour } from './onboarding-tour/onboarding-tour';
+import { OnboardingService } from '../services/onboarding.service';
+import { OnboardingProgress } from '../interfaces/onboarding-progress.interface';
 
 import { useI18n } from '../i18n';
 import { useToast } from '@castmill/ui-common';
@@ -46,6 +49,9 @@ const ProtectedRoute: Component<ProtectedRouteProps> = (
   const [onboardingOrgId, setOnboardingOrgId] = createSignal<string | null>(
     null
   );
+  const [showOnboardingTour, setShowOnboardingTour] = createSignal(false);
+  const [onboardingProgress, setOnboardingProgress] =
+    createSignal<OnboardingProgress | null>(null);
 
   const handleRetry = () => {
     setServerError(false);
@@ -194,6 +200,37 @@ const ProtectedRoute: Component<ProtectedRouteProps> = (
       // If addons exist but loadedAddons is false (edge case), set it to true
       setStore('loadedAddons', true);
     }
+
+    // After addons are loaded, check if we should show the onboarding tour
+    loadOnboardingTour();
+  };
+
+  const loadOnboardingTour = async () => {
+    try {
+      const user = getUser();
+      if (!user || !user.id) return;
+
+      // Fetch onboarding progress
+      const progress = await OnboardingService.getProgress(user.id);
+
+      // Show tour if not dismissed and not completed
+      if (!progress.dismissed && !progress.is_completed) {
+        setOnboardingProgress(progress);
+        setShowOnboardingTour(true);
+      }
+    } catch (error) {
+      // Silently fail - onboarding tour is optional
+      console.error('Failed to load onboarding progress:', error);
+    }
+  };
+
+  const handleCloseTour = () => {
+    setShowOnboardingTour(false);
+  };
+
+  const handleCompleteTour = () => {
+    setShowOnboardingTour(false);
+    toast.success(t('onboardingTour.allStepsComplete'));
   };
 
   // Watch for organizations to be loaded and load addons if onboarding is not needed
@@ -239,6 +276,14 @@ const ProtectedRoute: Component<ProtectedRouteProps> = (
         <OnboardingDialog
           organizationId={onboardingOrgId()!}
           onComplete={handleOnboardingComplete}
+        />
+      </Show>
+      <Show when={showOnboardingTour() && onboardingProgress()}>
+        <OnboardingTour
+          userId={getUser().id!}
+          initialProgress={onboardingProgress()!}
+          onClose={handleCloseTour}
+          onComplete={handleCompleteTour}
         />
       </Show>
       <Show
