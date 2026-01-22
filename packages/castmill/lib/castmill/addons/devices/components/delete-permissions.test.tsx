@@ -45,7 +45,10 @@ vi.mock('./device-view', () => ({
 vi.mock('./register-device', () => ({
   default: (props: any) => (
     <div data-testid="register-device">
-      <button data-testid="register-submit" onClick={() => props.onSubmit({ name: 'Test Device', pincode: '1234' })}>
+      <button
+        data-testid="register-submit"
+        onClick={() => props.onSubmit({ name: 'Test Device', pincode: '1234' })}
+      >
         Submit
       </button>
     </div>
@@ -73,7 +76,9 @@ vi.mock('@castmill/ui-common', async () => {
 });
 
 describe('DevicesPage - Delete Button Permission Tests', () => {
-  const createMockStore = (permissions: string[] = ['create', 'read', 'update', 'delete']) => ({
+  const createMockStore = (
+    permissions: string[] = ['create', 'read', 'update', 'delete']
+  ) => ({
     env: { baseUrl: 'http://test.com' },
     organizations: { selectedId: 'org-123', selectedName: 'Test Org' },
     permissions: {
@@ -109,7 +114,8 @@ describe('DevicesPage - Delete Button Permission Tests', () => {
           'filters.teamLabel': 'Team',
           'filters.teamPlaceholder': 'Select team',
           'filters.teamClear': 'Clear',
-          'permissions.noDeleteDevices': "You don't have permission to delete devices",
+          'permissions.noDeleteDevices':
+            "You don't have permission to delete devices",
         };
         return translations[key] || key;
       },
@@ -144,7 +150,8 @@ describe('DevicesPage - Delete Button Permission Tests', () => {
           // Find the delete button in toolbar
           const buttons = screen.getAllByRole('button');
           const deleteButton = buttons.find(
-            (btn) => btn.querySelector('svg') && !btn.textContent?.includes('Add')
+            (btn) =>
+              btn.querySelector('svg') && !btn.textContent?.includes('Add')
           );
           expect(deleteButton).toBeDefined();
           if (deleteButton) {
@@ -197,7 +204,8 @@ describe('DevicesPage - Delete Button Permission Tests', () => {
           // Delete button should be disabled due to lack of permissions
           const buttons = screen.getAllByRole('button');
           const deleteButton = buttons.find(
-            (btn) => btn.querySelector('svg') && !btn.textContent?.includes('Add')
+            (btn) =>
+              btn.querySelector('svg') && !btn.textContent?.includes('Add')
           );
           expect(deleteButton).toBeDefined();
           if (deleteButton) {
@@ -247,7 +255,8 @@ describe('DevicesPage - Delete Button Permission Tests', () => {
           // Button should still be disabled due to lack of delete permission
           const buttons = screen.getAllByRole('button');
           const deleteButton = buttons.find(
-            (btn) => btn.querySelector('svg') && !btn.textContent?.includes('Add')
+            (btn) =>
+              btn.querySelector('svg') && !btn.textContent?.includes('Add')
           );
           expect(deleteButton).toBeDefined();
           if (deleteButton) {
@@ -267,7 +276,9 @@ describe('DevicesPage - Delete Button Permission Tests', () => {
       await waitFor(() => {
         // The button has the text inside it
         const buttons = screen.getAllByRole('button');
-        const addButton = buttons.find(btn => btn.textContent?.includes('Add Device'));
+        const addButton = buttons.find((btn) =>
+          btn.textContent?.includes('Add Device')
+        );
         expect(addButton).toBeDefined();
         if (addButton) {
           expect(addButton).not.toBeDisabled();
@@ -283,7 +294,9 @@ describe('DevicesPage - Delete Button Permission Tests', () => {
       await waitFor(() => {
         // The button has the text inside it
         const buttons = screen.getAllByRole('button');
-        const addButton = buttons.find(btn => btn.textContent?.includes('Add Device'));
+        const addButton = buttons.find((btn) =>
+          btn.textContent?.includes('Add Device')
+        );
         expect(addButton).toBeDefined();
         if (addButton) {
           expect(addButton).toBeDisabled();

@@ -66,7 +66,9 @@ vi.mock('./playlist-add-form', () => ({
     <div data-testid="playlist-add-form">
       <button
         data-testid="submit-form"
-        onClick={() => props.onSubmit('Test Playlist', { width: 16, height: 9 })}
+        onClick={() =>
+          props.onSubmit('Test Playlist', { width: 16, height: 9 })
+        }
       >
         Submit
       </button>
@@ -83,7 +85,9 @@ vi.mock('../../common/hooks', () => ({
 }));
 
 describe('PlaylistsPage - Delete Button Permission Tests', () => {
-  const createMockStore = (permissions: string[] = ['create', 'read', 'update', 'delete']) => ({
+  const createMockStore = (
+    permissions: string[] = ['create', 'read', 'update', 'delete']
+  ) => ({
     env: { baseUrl: 'http://test.com' },
     organizations: { selectedId: 'org-123', selectedName: 'Test Org' },
     permissions: {
@@ -113,7 +117,8 @@ describe('PlaylistsPage - Delete Button Permission Tests', () => {
           'filters.teamLabel': 'Team',
           'filters.teamPlaceholder': 'Select team',
           'filters.teamClear': 'Clear',
-          'permissions.noDeletePlaylists': "You don't have permission to delete playlists",
+          'permissions.noDeletePlaylists':
+            "You don't have permission to delete playlists",
         };
         return translations[key] || key;
       },
@@ -146,7 +151,8 @@ describe('PlaylistsPage - Delete Button Permission Tests', () => {
         await waitFor(() => {
           const buttons = screen.getAllByRole('button');
           const deleteButton = buttons.find(
-            (btn) => btn.querySelector('svg') && !btn.textContent?.includes('Add')
+            (btn) =>
+              btn.querySelector('svg') && !btn.textContent?.includes('Add')
           );
           expect(deleteButton).toBeDefined();
           if (deleteButton) {
@@ -196,7 +202,8 @@ describe('PlaylistsPage - Delete Button Permission Tests', () => {
         await waitFor(() => {
           const buttons = screen.getAllByRole('button');
           const deleteButton = buttons.find(
-            (btn) => btn.querySelector('svg') && !btn.textContent?.includes('Add')
+            (btn) =>
+              btn.querySelector('svg') && !btn.textContent?.includes('Add')
           );
           expect(deleteButton).toBeDefined();
           if (deleteButton) {
@@ -243,7 +250,8 @@ describe('PlaylistsPage - Delete Button Permission Tests', () => {
         await waitFor(() => {
           const buttons = screen.getAllByRole('button');
           const deleteButton = buttons.find(
-            (btn) => btn.querySelector('svg') && !btn.textContent?.includes('Add')
+            (btn) =>
+              btn.querySelector('svg') && !btn.textContent?.includes('Add')
           );
           expect(deleteButton).toBeDefined();
           if (deleteButton) {
@@ -262,7 +270,9 @@ describe('PlaylistsPage - Delete Button Permission Tests', () => {
 
       await waitFor(() => {
         const buttons = screen.getAllByRole('button');
-        const addButton = buttons.find(btn => btn.textContent?.includes('Add Playlist'));
+        const addButton = buttons.find((btn) =>
+          btn.textContent?.includes('Add Playlist')
+        );
         expect(addButton).toBeDefined();
         if (addButton) {
           expect(addButton).not.toBeDisabled();
@@ -277,7 +287,9 @@ describe('PlaylistsPage - Delete Button Permission Tests', () => {
 
       await waitFor(() => {
         const buttons = screen.getAllByRole('button');
-        const addButton = buttons.find(btn => btn.textContent?.includes('Add Playlist'));
+        const addButton = buttons.find((btn) =>
+          btn.textContent?.includes('Add Playlist')
+        );
         expect(addButton).toBeDefined();
         if (addButton) {
           expect(addButton).toBeDisabled();

@@ -37,7 +37,11 @@ vi.mock('../services/medias.service', () => ({
     ),
     removeMedia: vi.fn(() => Promise.resolve()),
     uploadMedia: vi.fn(() =>
-      Promise.resolve({ id: '3', name: 'New Media', uri: 'http://example.com/media3.png' })
+      Promise.resolve({
+        id: '3',
+        name: 'New Media',
+        uri: 'http://example.com/media3.png',
+      })
     ),
   },
 }));
@@ -63,7 +67,9 @@ vi.mock('./media-upload', () => ({
     <div data-testid="media-upload">
       <button
         data-testid="upload-submit"
-        onClick={() => props.onSubmit({ name: 'Test Media', file: new File([], 'test.png') })}
+        onClick={() =>
+          props.onSubmit({ name: 'Test Media', file: new File([], 'test.png') })
+        }
       >
         Upload
       </button>
@@ -80,7 +86,9 @@ vi.mock('../../common/hooks', () => ({
 }));
 
 describe('MediasPage - Delete Button Permission Tests', () => {
-  const createMockStore = (permissions: string[] = ['create', 'read', 'update', 'delete']) => ({
+  const createMockStore = (
+    permissions: string[] = ['create', 'read', 'update', 'delete']
+  ) => ({
     env: { baseUrl: 'http://test.com' },
     organizations: { selectedId: 'org-123', selectedName: 'Test Org' },
     permissions: {
@@ -114,7 +122,8 @@ describe('MediasPage - Delete Button Permission Tests', () => {
           'filters.images': 'Images',
           'filters.videos': 'Videos',
           'filters.all': 'All',
-          'permissions.noDeleteMedias': "You don't have permission to delete medias",
+          'permissions.noDeleteMedias':
+            "You don't have permission to delete medias",
         };
         return translations[key] || key;
       },
@@ -147,7 +156,8 @@ describe('MediasPage - Delete Button Permission Tests', () => {
         await waitFor(() => {
           const buttons = screen.getAllByRole('button');
           const deleteButton = buttons.find(
-            (btn) => btn.querySelector('svg') && !btn.textContent?.includes('Add')
+            (btn) =>
+              btn.querySelector('svg') && !btn.textContent?.includes('Add')
           );
           expect(deleteButton).toBeDefined();
           if (deleteButton) {
@@ -197,7 +207,8 @@ describe('MediasPage - Delete Button Permission Tests', () => {
         await waitFor(() => {
           const buttons = screen.getAllByRole('button');
           const deleteButton = buttons.find(
-            (btn) => btn.querySelector('svg') && !btn.textContent?.includes('Add')
+            (btn) =>
+              btn.querySelector('svg') && !btn.textContent?.includes('Add')
           );
           expect(deleteButton).toBeDefined();
           if (deleteButton) {
@@ -244,7 +255,8 @@ describe('MediasPage - Delete Button Permission Tests', () => {
         await waitFor(() => {
           const buttons = screen.getAllByRole('button');
           const deleteButton = buttons.find(
-            (btn) => btn.querySelector('svg') && !btn.textContent?.includes('Add')
+            (btn) =>
+              btn.querySelector('svg') && !btn.textContent?.includes('Add')
           );
           expect(deleteButton).toBeDefined();
           if (deleteButton) {
@@ -263,7 +275,9 @@ describe('MediasPage - Delete Button Permission Tests', () => {
 
       await waitFor(() => {
         const buttons = screen.getAllByRole('button');
-        const addButton = buttons.find(btn => btn.textContent?.includes('Add Media'));
+        const addButton = buttons.find((btn) =>
+          btn.textContent?.includes('Add Media')
+        );
         expect(addButton).toBeDefined();
         if (addButton) {
           expect(addButton).not.toBeDisabled();
@@ -278,7 +292,9 @@ describe('MediasPage - Delete Button Permission Tests', () => {
 
       await waitFor(() => {
         const buttons = screen.getAllByRole('button');
-        const addButton = buttons.find(btn => btn.textContent?.includes('Add Media'));
+        const addButton = buttons.find((btn) =>
+          btn.textContent?.includes('Add Media')
+        );
         expect(addButton).toBeDefined();
         if (addButton) {
           expect(addButton).toBeDisabled();

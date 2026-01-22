@@ -320,7 +320,9 @@
     "loading": "加载中...",
     "loginWithPasskey": "使用密钥登录",
     "privacyPolicy": "隐私政策",
-    "lostCredentials": "忘记凭据？"
+    "lostCredentials": "忘记凭据？",
+    "invitationOnlyNotice": "没有账户？此服务需要邀请才能注册。",
+    "passkeysNotSupported": "您的浏览器不支持密钥。请使用现代浏览器登录。"
   },
   "credentialRecovery": {
     "title": "恢复您的凭据",

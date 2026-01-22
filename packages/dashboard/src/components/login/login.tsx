@@ -19,13 +19,20 @@ import { useI18n } from '../../i18n';
 
 const encoder = new TextEncoder(); // Creates a new encoder
 
+interface NetworkSettings {
+  name: string;
+  invitation_only: boolean;
+  logo: string;
+}
+
 const Login: Component = () => {
   const { t } = useI18n();
   const [isMounted, setIsMounted] = createSignal<boolean>(false);
   const [loading, setLoading] = createSignal<boolean>(false);
-  const [status, setStatus] = createSignal<string>('Ready');
   const [error, setError] = createSignal<string>('');
   const [supportsPasskeys, setSupportsPasskeys] = createSignal<boolean>(false);
+  const [networkSettings, setNetworkSettings] =
+    createSignal<NetworkSettings | null>(null);
 
   // Check for email parameter in URL
   const urlParams = new URLSearchParams(window.location.search);
@@ -57,10 +64,26 @@ const Login: Component = () => {
     return conditional && userVerifiying;
   }
 
+  async function fetchNetworkSettings() {
+    try {
+      const response = await fetch(`${baseUrl}/dashboard/network/settings`, {
+        credentials: 'include',
+      });
+      if (response.ok) {
+        const settings = await response.json();
+        setNetworkSettings(settings);
+      }
+    } catch (error) {
+      console.error('Failed to fetch network settings:', error);
+    }
+  }
+
   onMount(async () => {
+    await fetchNetworkSettings();
+
     if (!(await checkPasskeysSupport())) {
-      setStatus('Passkey not supported');
-      return;
+      setSupportsPasskeys(false);
+      setError(t('login.passkeysNotSupported'));
     } else {
       setSupportsPasskeys(true);
     }
@@ -69,14 +92,16 @@ const Login: Component = () => {
 
   const loginWithPasskey = async (): Promise<void> => {
     try {
-      setStatus('Authenticating...');
+      setError('');
+      setLoading(true);
 
       const response = await fetch(`${baseUrl}/sessions/challenges`, {
         credentials: 'include', // Essential for including cookies
       });
       if (!response.ok) {
         console.error('Failed to get challenge');
-        setStatus('Authentication failed');
+        setError(t('login.errors.authenticationFailed'));
+        setLoading(false);
         return;
       }
 
@@ -94,7 +119,8 @@ const Login: Component = () => {
 
       if (!credential) {
         console.error('No credentials received');
-        setStatus('Authentication failed');
+        setError(t('login.errors.authenticationFailed'));
+        setLoading(false);
         return;
       }
 
@@ -127,11 +153,10 @@ const Login: Component = () => {
 
       if (!result.ok) {
         console.error('Failed to authenticate');
-        setStatus('Authentication failed');
+        setError(t('login.errors.authenticationFailed'));
+        setLoading(false);
         return;
       } else {
-        setStatus('Authenticated');
-
         await loginUser();
 
         // Redirect to page specified by the redirectTo query parameter of '/' if not present
@@ -141,7 +166,8 @@ const Login: Component = () => {
       }
     } catch (error) {
       console.error('Authentication error:', error);
-      setStatus('Authentication failed');
+      setError(t('login.errors.authenticationFailed'));
+      setLoading(false);
     }
   };
 
@@ -149,6 +175,7 @@ const Login: Component = () => {
     // Send the email to the server to start the signup process
     // The server will send a challenge to the email with a link to the SignUp component
     setLoading(true);
+    setError('');
 
     const result = await fetch(`${baseUrl}/signups`, {
       method: 'POST',
@@ -160,10 +187,9 @@ const Login: Component = () => {
     });
 
     if (!result.ok) {
-      setStatus('Failed to start signup process');
-      setError(`Failed to start signup process ${result.statusText}`);
+      const data = await result.json().catch(() => ({}));
+      setError(data.msg || t('login.errors.signupFailed'));
     } else {
-      setStatus('Check your email for the signup link');
       setShowEmailSent(true);
     }
     setLoading(false);
@@ -216,26 +242,34 @@ const Login: Component = () => {
                     {t('login.loginWithPasskey')}
                   </button>
 
-                  <div>
-                    <p>or</p>
-                  </div>
-
-                  <h2>{t('common.signup')}</h2>
-                  <input
-                    type="text"
-                    placeholder="Email"
-                    value={email()}
-                    onChange={handleEmailChange}
-                  />
-                  <button
-                    class="login-button"
-                    onClick={startSignupProcess}
-                    disabled={disabledSignUp()}
+                  <Show
+                    when={!networkSettings()?.invitation_only}
+                    fallback={
+                      <div class="invitation-only-notice">
+                        <p>{t('login.invitationOnlyNotice')}</p>
+                      </div>
+                    }
                   >
-                    Continue
-                  </button>
+                    <div>
+                      <p>or</p>
+                    </div>
 
-                  <p class="status">Status: {status()}</p>
+                    <h2>{t('common.signup')}</h2>
+                    <input
+                      type="text"
+                      placeholder="Email"
+                      value={email()}
+                      onChange={handleEmailChange}
+                    />
+                    <button
+                      class="login-button"
+                      onClick={startSignupProcess}
+                      disabled={disabledSignUp()}
+                    >
+                      Continue
+                    </button>
+                  </Show>
+
                   <Show when={!supportsPasskeys()}>
                     <p class="warn">
                       Your browser does not support Passkeys. Link here with

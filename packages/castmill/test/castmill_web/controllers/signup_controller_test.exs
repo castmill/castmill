@@ -159,7 +159,7 @@ defmodule CastmillWeb.SignUpControllerTest do
   describe "create_user/2" do
     setup do
       # Define or use a fixture function
-      network = network_fixture(%{domain: "example.com"})
+      network = network_fixture(%{domain: "https://example.com"})
       challenge = CastmillWeb.SessionUtils.new_challenge()
 
       signup =
@@ -204,6 +204,79 @@ defmodule CastmillWeb.SignUpControllerTest do
         )
 
       assert json_response(conn, 422)["status"] == "error"
+    end
+  end
+
+  describe "invitation_only mode" do
+    test "blocks signup when invitation_only is enabled", %{conn: conn} do
+      origin = "https://example.com"
+      conn = put_req_header(conn, "origin", origin)
+      _network = network_fixture(%{domain: origin, invitation_only: true})
+
+      email = "test@example.com"
+
+      conn =
+        post(conn, Routes.sign_up_path(conn, :create), %{email: email})
+
+      response = json_response(conn, 403)
+      assert response["status"] == "error"
+      assert response["msg"] =~ "invitation"
+    end
+
+    test "allows signup when invitation_only is disabled", %{conn: conn} do
+      origin = "https://example.com"
+      conn = put_req_header(conn, "origin", origin)
+      _network = network_fixture(%{domain: origin, invitation_only: false})
+
+      email = "test@example.com"
+
+      conn =
+        post(conn, Routes.sign_up_path(conn, :create), %{email: email})
+
+      response = json_response(conn, 201)
+      assert response["status"] == "ok"
+    end
+
+    test "allows challenge creation with valid invitation token", %{conn: conn} do
+      origin = "https://example.com"
+      conn = put_req_header(conn, "origin", origin)
+      network = network_fixture(%{domain: origin, invitation_only: true})
+
+      email = "invited@example.com"
+
+      # Create a network invitation
+      {:ok, invitation} =
+        Castmill.Networks.invite_user_to_new_organization(network.id, email, "New Org")
+
+      conn =
+        post(conn, Routes.sign_up_path(conn, :create_challenge), %{
+          email: email,
+          invitation_token: invitation.token
+        })
+
+      response = json_response(conn, 201)
+      assert response["signup_id"]
+      assert response["challenge"]
+    end
+
+    test "blocks challenge creation without valid invitation when invitation_only", %{
+      conn: conn
+    } do
+      origin = "https://example.com"
+      conn = put_req_header(conn, "origin", origin)
+      _network = network_fixture(%{domain: origin, invitation_only: true})
+
+      email = "uninvited@example.com"
+
+      conn =
+        post(conn, Routes.sign_up_path(conn, :create_challenge), %{
+          email: email,
+          invitation_token: "invalid-token"
+        })
+
+      response = json_response(conn, 403)
+      assert response["status"] == "error"
+      assert response["msg"] =~ "invitation required"
     end
   end
 end

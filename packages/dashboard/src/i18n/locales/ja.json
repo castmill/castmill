@@ -320,7 +320,9 @@
     "loading": "読み込み中...",
     "loginWithPasskey": "パスキーでログイン",
     "privacyPolicy": "プライバシーポリシー",
-    "lostCredentials": "認証情報をお忘れですか？"
+    "lostCredentials": "認証情報をお忘れですか？",
+    "invitationOnlyNotice": "アカウントをお持ちでないですか？このサービスは登録に招待が必要です。",
+    "passkeysNotSupported": "お使いのブラウザはパスキーに対応していません。ログインするには最新のブラウザをご利用ください。"
   },
   "credentialRecovery": {
     "title": "認証情報の回復",

@@ -320,7 +320,9 @@
     "loading": "로딩 중...",
     "loginWithPasskey": "패스키로 로그인",
     "privacyPolicy": "개인정보 처리방침",
-    "lostCredentials": "자격 증명을 잃어버리셨나요?"
+    "lostCredentials": "자격 증명을 잃어버리셨나요?",
+    "invitationOnlyNotice": "계정이 없으신가요? 이 서비스는 등록하려면 초대가 필요합니다.",
+    "passkeysNotSupported": "브라우저가 패스키를 지원하지 않습니다. 로그인하려면 최신 브라우저를 사용하세요."
   },
   "credentialRecovery": {
     "title": "자격 증명 복구",

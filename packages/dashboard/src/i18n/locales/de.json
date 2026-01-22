@@ -443,7 +443,9 @@
     "loading": "Wird geladen...",
     "loginWithPasskey": "Mit Passkey anmelden",
     "privacyPolicy": "Datenschutzrichtlinie",
-    "lostCredentials": "Anmeldedaten verloren?"
+    "lostCredentials": "Anmeldedaten verloren?",
+    "invitationOnlyNotice": "Kein Konto? Dieser Dienst erfordert eine Einladung zur Registrierung.",
+    "passkeysNotSupported": "Ihr Browser unterstützt keine Passkeys. Bitte verwenden Sie einen modernen Browser zum Anmelden."
   },
   "credentialRecovery": {
     "title": "Ihre Anmeldedaten wiederherstellen",

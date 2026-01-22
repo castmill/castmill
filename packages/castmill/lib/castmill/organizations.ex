@@ -815,6 +815,11 @@ defmodule Castmill.Organizations do
     |> Repo.one()
   end
 
+  @doc """
+  Gets an invitation by token (alias for get_invitation for consistency)
+  """
+  def get_invitation_by_token(token), do: get_invitation(token)
+
   # Accepts an invitation by updating the status of the invitation to accepted and
   # adding the user to the organization.
   def accept_invitation(token, user_id) do

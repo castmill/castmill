@@ -496,7 +496,8 @@ defmodule Castmill.Accounts do
            {:ok, %{id: user_id} = user} <-
              create_user_with_optional_organization(email, signup.network_id, invitation_token),
            :ok <- create_user_credential(user_id, credential_id, public_key_spki, device_info),
-           :ok <- update_signup_status(signup, user_id) do
+           :ok <- update_signup_status(signup, user_id),
+           :ok <- handle_invitation_acceptance(invitation_token, user_id) do
         Castmill.Hooks.trigger_hook(:user_signup, %{user_id: user_id, email: email})
 
         sanitize_user(user)
@@ -732,8 +733,39 @@ defmodule Castmill.Accounts do
 
   defp create_user_with_optional_organization(email, network_id, _invitation_token) do
     # Has invitation token - just create user, skip organization
-    # User will be added to organization when invitation is accepted
+    # Organization will be created/joined when invitation is accepted
     Repo.insert(User.changeset(%User{}, %{name: email, email: email, network_id: network_id}))
+  end
+
+  # Handles accepting invitations after user is created
+  defp handle_invitation_acceptance(nil, _user_id), do: :ok
+
+  defp handle_invitation_acceptance(invitation_token, user_id) do
+    # Try network invitation first
+    case Castmill.Networks.get_network_invitation_by_token(invitation_token) do
+      nil ->
+        # Try organization invitation
+        case Castmill.Organizations.get_invitation_by_token(invitation_token) do
+          nil ->
+            # No valid invitation found, but we already created the user
+            # This is okay - they might accept the invitation later
+            :ok
+
+          _org_invitation ->
+            # Accept organization invitation
+            case Castmill.Organizations.accept_invitation(invitation_token, user_id) do
+              {:ok, _} -> :ok
+              {:error, reason} -> {:error, reason}
+            end
+        end
+
+      _net_invitation ->
+        # Accept network invitation
+        case Castmill.Networks.accept_network_invitation(invitation_token, user_id) do
+          {:ok, _organization} -> :ok
+          {:error, reason} -> {:error, reason}
+        end
+    end
   end
 
   defp create_user_credential(user_id, credential_id, public_key_spki, device_info) do

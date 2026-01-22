@@ -204,6 +204,8 @@ defmodule CastmillWeb.Router do
     pipe_through(:dashboard)
 
     get("/organizations_invitations/:token/preview", OrganizationController, :preview_invitation)
+    get("/network_invitations/:token/preview", NetworkInvitationController, :preview_invitation)
+    get("/network/settings", NetworkSettingsController, :show)
   end
 
   scope "/dashboard", CastmillWeb do
@@ -342,6 +344,11 @@ defmodule CastmillWeb.Router do
     get("/organizations_invitations/:token", OrganizationController, :show_invitation)
     post("/organizations_invitations/:token/accept", OrganizationController, :accept_invitation)
     post("/organizations_invitations/:token/reject", OrganizationController, :reject_invitation)
+
+    # Network invitations
+    get("/network_invitations/:token", NetworkInvitationController, :show_invitation)
+    post("/network_invitations/:token/accept", NetworkInvitationController, :accept_invitation)
+    post("/network_invitations/:token/reject", NetworkInvitationController, :reject_invitation)
 
     # Return Usage information for the organization
     get("/organizations/:organization_id/usage", OrganizationUsageController, :index)

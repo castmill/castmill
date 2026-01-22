@@ -13,6 +13,9 @@ defmodule Castmill.Networks.Network do
     field(:logo, :string, default: "https://castmill.com/images/logo.png")
     field(:name, :string)
 
+    field(:invitation_only, :boolean, default: false)
+    field(:invitation_only_org_admins, :boolean, default: false)
+
     field(:meta, :map)
 
     has_many(:organizations, Castmill.Organizations.Organization)
@@ -30,9 +33,22 @@ defmodule Castmill.Networks.Network do
   @doc false
   def changeset(network, attrs) do
     network
-    |> cast(attrs, [:name, :copyright, :email, :logo, :domain, :meta, :default_plan_id])
-    |> validate_required([:name, :email])
-    |> validate_format(:email, ~r/@/)
+    |> cast(attrs, [
+      :name,
+      :copyright,
+      :email,
+      :logo,
+      :domain,
+      :meta,
+      :default_plan_id,
+      :invitation_only,
+      :invitation_only_org_admins
+    ])
+    |> validate_required([:name, :email, :domain])
+    |> validate_format(:email, ~r/@/, message: "must be a valid email address")
+    |> validate_format(:domain, ~r/^https?:\/\/[^\s\/$.?#].[^\s]*$/i,
+      message: "must be a valid URL (e.g., https://example.com)"
+    )
     |> unique_constraint(:name)
   end
 
