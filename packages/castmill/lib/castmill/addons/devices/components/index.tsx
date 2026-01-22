@@ -280,6 +280,9 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
 
       // Update total items
       setTotalItems(totalItems() + 1);
+
+      // Complete the onboarding step for device registration
+      props.store.onboarding?.completeStep?.('register_device');
     } catch (error) {
       setRegisterError(
         t('devices.errorRegisteringDevice', { error: String(error) })
@@ -316,30 +319,33 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
     setPincode('');
   };
 
-  const columns = [
-    { key: 'name', title: t('common.name'), sortable: true },
-    {
-      key: 'online',
-      title: t('common.online'),
-      sortable: true,
-      render: (item: DeviceTableItem) => (
-        <svg
-          width="16"
-          height="16"
-          fill={item.online ? 'green' : 'red'}
-          viewBox="0 0 16 16"
-        >
-          <circle cx="8" cy="8" r="6" />
-        </svg>
-      ),
-    },
-    { key: 'timezone', title: t('common.timezone'), sortable: true },
-    { key: 'version', title: t('common.version'), sortable: true },
-    { key: 'last_ip', title: t('common.ip'), sortable: true },
-    { key: 'id', title: t('common.id'), sortable: true },
-  ] as Column<DeviceTableItem>[];
+  // Use function to make columns reactive to i18n changes
+  const columns = () =>
+    [
+      { key: 'name', title: t('common.name'), sortable: true },
+      {
+        key: 'online',
+        title: t('common.online'),
+        sortable: true,
+        render: (item: DeviceTableItem) => (
+          <svg
+            width="16"
+            height="16"
+            fill={item.online ? 'green' : 'red'}
+            viewBox="0 0 16 16"
+          >
+            <circle cx="8" cy="8" r="6" />
+          </svg>
+        ),
+      },
+      { key: 'timezone', title: t('common.timezone'), sortable: true },
+      { key: 'version', title: t('common.version'), sortable: true },
+      { key: 'last_ip', title: t('common.ip'), sortable: true },
+      { key: 'id', title: t('common.id'), sortable: true },
+    ] as Column<DeviceTableItem>[];
 
-  const actions: TableAction<DeviceTableItem>[] = [
+  // Use function to make actions reactive to i18n changes
+  const actions = (): TableAction<DeviceTableItem>[] => [
     {
       icon: BsEye,
       handler: openModal,
@@ -505,6 +511,7 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
             baseUrl={props.store.env.baseUrl}
             organization_id={props.store.organizations.selectedId}
             device={currentDevice()!}
+            store={props.store}
             onChange={(device) => {
               updateItem(device.id, device);
             }}

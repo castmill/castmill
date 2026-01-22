@@ -29,7 +29,7 @@ $animation-duration: 0.3s;
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 10000;
+  z-index: 900;
   opacity: 0;
   animation: fadeIn $animation-duration ease forwards;
 }
@@ -160,6 +160,27 @@ $animation-duration: 0.3s;
     font-size: 1em;
     color: $text-secondary;
     line-height: 1.6;
+  }
+}
+
+.onboarding-tour-docs-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25em;
+  color: $label-color;
+  text-decoration: none;
+  font-size: 0.9em;
+  font-weight: 500;
+  transition: color 0.2s ease;
+  width: fit-content;
+
+  &:hover {
+    color: $primary-color;
+    text-decoration: underline;
+  }
+
+  .onboarding-tour-link-icon {
+    font-size: 1.1em;
   }
 }
 

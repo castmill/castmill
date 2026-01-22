@@ -99,7 +99,8 @@
   },
   "topbar": {
     "help": "ヘルプ",
-    "notifications": "通知"
+    "notifications": "通知",
+    "gettingStarted": "はじめに"
   },
   "settings": {
     "title": "設定",
@@ -124,6 +125,14 @@
     "failedLoadCredentials": "認証情報の読み込みに失敗しました。ページを更新してください。",
     "languageSettings": "言語設定",
     "selectLanguage": "お好みの言語を選択してください",
+    "onboardingTour": "オンボーディングツアー",
+    "onboardingTourDescription": "ツアーをリセットして、もう一度手順を進められるようにします。",
+    "onboardingTourResetButton": "ツアーをリセット",
+    "onboardingTourResetConfirmTitle": "オンボーディングツアーをリセットしますか？",
+    "onboardingTourResetConfirmDescription": "これにより進捗が消去され、ツアーが再表示されます。",
+    "onboardingTourResetAction": "ツアーをリセット",
+    "onboardingTourResetSuccess": "オンボーディングツアーをリセットしました。今すぐ再開できます。",
+    "onboardingTourResetError": "オンボーディングツアーのリセットに失敗しました。もう一度お試しください。",
     "description": "アカウント情報と設定を管理",
     "confirmDeletePasskey": "このパスキーを削除してもよろしいですか？\n\n注：アカウントからパスキーが削除されますが、デバイスの設定（iCloudキーチェーン、Googleパスワードマネージャー、Windows Helloなど）から手動で削除する必要がある場合があります。\n\nこのパスキーを削除する前に、他のパスキーが機能することをテストしてください。",
     "fullName": "フルネーム",
@@ -187,6 +196,16 @@
     "approachingLimit": "制限に近づいています",
     "noUsageData": "利用可能な使用量データがありません",
     "unableToLoad": "リソース使用量情報を読み込めません",
+    "resources": {
+      "medias": "メディアファイル",
+      "storage": "ストレージ",
+      "users": "ユーザー",
+      "devices": "デバイス",
+      "playlists": "プレイリスト",
+      "channels": "チャンネル",
+      "teams": "チーム",
+      "widgets": "ウィジェット"
+    },
     "errors": {
       "fetchUsageData": "使用量データの取得に失敗しました：{{error}}"
     }
@@ -353,8 +372,14 @@
     "removeChannelEntry": "チャンネルエントリーを削除",
     "cannotDeleteChannel": "チャンネルを削除できません",
     "success": {
+      "added": "チャンネル{{name}}を追加しました",
+      "created": "チャンネル{{name}}を作成しました",
+      "updated": "チャンネル{{name}}を更新しました",
       "updateDefaultPlaylist": "デフォルトプレイリストの更新に成功しました",
       "clearDefaultPlaylist": "デフォルトプレイリストのクリアに成功しました"
+    },
+    "info": {
+      "contentRequired": "コンテンツを表示するには、このチャンネルにデフォルトのプレイリストを設定するか、時間指定のエントリーを追加してください。"
     },
     "errors": {
       "removeChannel": "チャンネル{{name}}の削除中にエラーが発生しました：{{error}}",
@@ -894,10 +919,23 @@
     "stepCompletedBadge": "完了",
     "allStepsComplete": "おめでとうございます！すべてのオンボーディングステップが完了しました！",
     "dismissed": "オンボーディングツアーを閉じました。設定からいつでも再開できます。",
+    "dismissConfirmTitle": "オンボーディングツアーを閉じますか？",
+    "dismissConfirmMessage": "上部ツールバーのロケットアイコンからいつでも再開できます。",
     "skip": "スキップ",
     "finish": "ツアーを終了",
     "goToStep": "ステップ {{step}} に移動",
+    "learnMore": "詳しく見る",
     "steps": {
+      "findGuide": {
+        "title": "いつでもこのガイドを見つける",
+        "description": "上部ナビゲーションバーのロケットアイコンを探してください。いつでもクリックしてこのスタートガイドを再度開き、中断したところから続けることができます。",
+        "action": "見せて"
+      },
+      "chooseLanguage": {
+        "title": "言語を選択",
+        "description": "上部ナビゲーションバーのドロップダウンからお好みの言語を選択してください。これにより、アプリケーション全体のインターフェースが翻訳され、使いやすくなります。",
+        "action": "言語を選択"
+      },
       "uploadMedia": {
         "title": "最初のメディアをアップロード",
         "description": "デジタルサイネージ画面に表示したい画像、動画、その他のコンテンツをアップロードして始めましょう。ファイルをドラッグ＆ドロップするか、アップロードボタンを使用できます。",
@@ -915,7 +953,7 @@
       },
       "registerDevice": {
         "title": "最初のデバイスを登録",
-        "description": "デジタルサイネージプレーヤー（画面）をCastmillに接続します。各デバイスに固有の登録コードが発行されます。プレーヤーにコードを入力して接続します。",
+        "description": "まずプレーヤーを開いて登録コードを取得し、そのコードをここに入力してデバイスを登録します。ヒント：テスト用にPCのブラウザプレーヤーを開くことができます—{{playerUrl}} を使用してください。",
         "action": "デバイスへ"
       },
       "assignChannel": {

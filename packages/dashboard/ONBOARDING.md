@@ -17,9 +17,11 @@ The onboarding tour is a step-by-step guided experience that helps new users und
 ### Components
 
 #### 1. OnboardingTour Component
+
 **Location**: `src/components/onboarding-tour/onboarding-tour.tsx`
 
 The main UI component that displays the onboarding steps. Features:
+
 - Progress bar showing completion status
 - Step navigation (next, previous, skip)
 - Direct action buttons to navigate to relevant pages
@@ -28,6 +30,7 @@ The main UI component that displays the onboarding steps. Features:
 - Keyboard support (ESC to close)
 
 **Props**:
+
 ```typescript
 interface OnboardingTourProps {
   userId: string;
@@ -38,9 +41,11 @@ interface OnboardingTourProps {
 ```
 
 #### 2. OnboardingService
+
 **Location**: `src/services/onboarding.service.ts`
 
 Service layer for managing onboarding progress via API. Methods:
+
 - `getProgress(userId)`: Fetch user's current progress
 - `updateProgress(userId, progress)`: Update progress
 - `completeStep(userId, step)`: Mark a step as complete
@@ -50,6 +55,7 @@ Service layer for managing onboarding progress via API. Methods:
 ### Data Models
 
 #### OnboardingProgress Interface
+
 **Location**: `src/interfaces/onboarding-progress.interface.ts`
 
 ```typescript
@@ -62,6 +68,7 @@ export interface OnboardingProgress {
 ```
 
 #### OnboardingStep Enum
+
 ```typescript
 export enum OnboardingStep {
   UploadMedia = 'upload_media',
@@ -74,6 +81,7 @@ export enum OnboardingStep {
 ```
 
 #### OnboardingStepConfig Interface
+
 ```typescript
 export interface OnboardingStepConfig {
   id: OnboardingStep;
@@ -90,6 +98,7 @@ export interface OnboardingStepConfig {
 ### Configuration
 
 #### Step Configuration
+
 **Location**: `src/config/onboarding-steps.ts`
 
 The `ONBOARDING_STEPS` array defines all available steps. To add a new step:
@@ -108,6 +117,7 @@ The `ONBOARDING_STEPS` array defines all available steps. To add a new step:
 ```
 
 **Helper Functions**:
+
 - `getNextStep(completedSteps)`: Returns the next incomplete step
 - `getStepConfig(stepId)`: Gets configuration for a specific step
 - `isOnboardingComplete(completedSteps)`: Checks if all required steps are done
@@ -129,7 +139,7 @@ All user-facing text is localized in 9 languages. Translation keys are in:
         "title": "Upload Your First Media",
         "description": "Start by uploading images, videos...",
         "action": "Go to Media Library"
-      },
+      }
       // ... more steps
     }
   }
@@ -159,6 +169,7 @@ const loadOnboardingTour = async () => {
 **Location**: `src/components/onboarding-tour/onboarding-tour.scss`
 
 The styling follows the dashboard's dark theme with:
+
 - Overlay with semi-transparent background
 - Modal dialog with animations (fade in, slide up)
 - Progress bar with gradient
@@ -170,12 +181,14 @@ The styling follows the dashboard's dark theme with:
 The onboarding system requires the following backend API endpoints:
 
 ### 1. Get Onboarding Progress
+
 ```
 GET /dashboard/users/:userId/onboarding-progress
 Response: { data: OnboardingProgress }
 ```
 
 ### 2. Update Onboarding Progress
+
 ```
 PUT /dashboard/users/:userId/onboarding-progress
 Body: { completed_steps, current_step, is_completed, dismissed }
@@ -183,6 +196,7 @@ Response: { data: OnboardingProgress }
 ```
 
 ### 3. Complete Step
+
 ```
 POST /dashboard/users/:userId/onboarding-progress/complete-step
 Body: { step: string }
@@ -190,12 +204,14 @@ Response: { data: OnboardingProgress }
 ```
 
 ### 4. Dismiss Tour
+
 ```
 POST /dashboard/users/:userId/onboarding-progress/dismiss
 Response: { data: OnboardingProgress }
 ```
 
 ### 5. Reset Progress
+
 ```
 POST /dashboard/users/:userId/onboarding-progress/reset
 Response: { data: OnboardingProgress }
@@ -206,6 +222,7 @@ Response: { data: OnboardingProgress }
 To add a new onboarding step:
 
 1. **Add enum value** in `src/interfaces/onboarding-progress.interface.ts`:
+
 ```typescript
 export enum OnboardingStep {
   // ... existing steps
@@ -214,6 +231,7 @@ export enum OnboardingStep {
 ```
 
 2. **Add step configuration** in `src/config/onboarding-steps.ts`:
+
 ```typescript
 {
   id: OnboardingStep.NewFeature,
@@ -227,6 +245,7 @@ export enum OnboardingStep {
 ```
 
 3. **Add translations** to all locale files in `src/i18n/locales/`:
+
 ```json
 {
   "onboardingTour": {
@@ -242,10 +261,9 @@ export enum OnboardingStep {
 ```
 
 4. **Add data-onboarding attribute** to target element (optional):
+
 ```tsx
-<button data-onboarding="new-feature">
-  Action
-</button>
+<button data-onboarding="new-feature">Action</button>
 ```
 
 ## User Experience Flow
@@ -276,6 +294,7 @@ To test the onboarding tour:
 ## Future Enhancements
 
 Potential improvements:
+
 - Spotlight highlighting of specific UI elements
 - Interactive walkthroughs with element highlighting
 - Video tutorials embedded in steps

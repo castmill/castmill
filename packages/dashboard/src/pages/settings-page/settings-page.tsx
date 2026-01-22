@@ -12,6 +12,7 @@ import {
   UserService,
   SoleAdministratorError,
 } from '../../services/user.service';
+import { OnboardingService } from '../../services/onboarding.service';
 import { User } from '../../interfaces/user.interface';
 import {
   Credential,
@@ -20,6 +21,7 @@ import {
 import './settings-page.scss';
 import { useI18n, SUPPORTED_LOCALES } from '../../i18n';
 import { domain } from '../../env';
+import { setStore } from '../../store/store';
 
 const SettingsPage: Component = () => {
   const { t, locale, setLocale } = useI18n();
@@ -30,6 +32,9 @@ const SettingsPage: Component = () => {
   const [loading, setLoading] = createSignal(false);
   const [saveSuccess, setSaveSuccess] = createSignal(false);
   const [error, setError] = createSignal('');
+  const [showResetTourConfirm, setShowResetTourConfirm] = createSignal(false);
+  const [resettingTour, setResettingTour] = createSignal(false);
+  const dismissNoticeKey = 'castmill.onboarding.dismissedNoticeShown';
 
   // Track if form has unsaved changes
   const isDirty = createMemo(() => {
@@ -256,6 +261,32 @@ const SettingsPage: Component = () => {
       } else {
         setCredentialsError('Failed to delete passkey. Please try again.');
       }
+    }
+  };
+
+  const handleResetTour = async () => {
+    const currentUser = user();
+    if (!currentUser?.id) return;
+
+    setResettingTour(true);
+    try {
+      const updatedProgress = await OnboardingService.resetProgress(
+        currentUser.id
+      );
+      setStore('onboarding', 'progress', updatedProgress);
+      setStore('onboarding', 'showTour', true);
+      setStore('onboarding', 'highlightGuideButton', false);
+      try {
+        localStorage.removeItem(dismissNoticeKey);
+      } catch {
+        // ignore storage errors
+      }
+    } catch (err) {
+      toast.error(t('settings.onboardingTourResetError'));
+      console.error('Failed to reset onboarding tour:', err);
+    } finally {
+      setResettingTour(false);
+      setShowResetTourConfirm(false);
     }
   };
 
@@ -625,6 +656,44 @@ const SettingsPage: Component = () => {
                 )}
               </For>
             </div>
+          </div>
+        </section>
+
+        <section class="settings-section">
+          <h2>{t('settings.onboardingTour')}</h2>
+          <div class="settings-content">
+            <p>{t('settings.onboardingTourDescription')}</p>
+            <Show when={!showResetTourConfirm()}>
+              <Button
+                label={t('settings.onboardingTourResetButton')}
+                onClick={() => setShowResetTourConfirm(true)}
+                color="secondary"
+              />
+            </Show>
+            <Show when={showResetTourConfirm()}>
+              <div class="onboarding-reset-confirmation">
+                <p>
+                  <strong>
+                    {t('settings.onboardingTourResetConfirmTitle')}
+                  </strong>
+                </p>
+                <p>{t('settings.onboardingTourResetConfirmDescription')}</p>
+                <div class="onboarding-reset-actions">
+                  <Button
+                    label={t('settings.onboardingTourResetAction')}
+                    onClick={handleResetTour}
+                    disabled={resettingTour()}
+                    color="primary"
+                  />
+                  <Button
+                    label={t('common.cancel')}
+                    onClick={() => setShowResetTourConfirm(false)}
+                    disabled={resettingTour()}
+                    color="secondary"
+                  />
+                </div>
+              </div>
+            </Show>
           </div>
         </section>
 

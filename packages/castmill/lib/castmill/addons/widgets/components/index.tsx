@@ -423,7 +423,8 @@ const WidgetsPage: Component<{
     };
   };
 
-  const columns: Column<number, WidgetWithId>[] = [
+  // Use function to make columns reactive to i18n changes
+  const columns = (): Column<number, WidgetWithId>[] => [
     {
       key: 'name',
       title: t('common.name'),
@@ -507,7 +508,8 @@ const WidgetsPage: Component<{
     },
   ];
 
-  const actions: TableAction<WidgetWithId>[] = [
+  // Use function to make actions reactive to i18n changes
+  const actions = (): TableAction<WidgetWithId>[] => [
     {
       label: t('widgets.viewDetails'),
       icon: BsEye,

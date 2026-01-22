@@ -100,6 +100,9 @@ export const UploadComponent = (props: UploadComponentProps) => {
 
           props.onFileUpload?.(file.name, response);
 
+          // Complete the onboarding step for media upload
+          props.store?.onboarding?.completeStep?.('upload_media');
+
           if (Object.keys(messages()).length === files().length) {
             props.onUploadComplete?.();
           }

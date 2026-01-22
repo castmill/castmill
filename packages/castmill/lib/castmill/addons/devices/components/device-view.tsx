@@ -8,6 +8,7 @@ import { DeviceDetails, DeviceUpdate } from './device-details';
 import { DevicesService } from '../services/devices.service';
 import { DeviceCache } from './device-cache';
 import { DevicePreview } from './device-preview';
+import { AddonStore } from '../../common/interfaces/addon-store';
 
 // Optionally we should allow using protonmaps
 // https://protomaps.com/
@@ -17,6 +18,7 @@ const DeviceView: Component<{
   baseUrl: string;
   device: Device;
   organization_id: string;
+  store?: AddonStore;
   onChange?: (device: Device) => void;
   t?: (key: string, params?: Record<string, any>) => string;
 }> = (props) => {
@@ -65,6 +67,7 @@ const DeviceView: Component<{
             baseUrl={props.baseUrl}
             organizationId={props.organization_id}
             device={props.device}
+            store={props.store}
             t={t}
           />
         </div>
@@ -74,11 +77,7 @@ const DeviceView: Component<{
       title: t('common.preview'),
       content: () => (
         <div>
-          <DevicePreview
-            baseUrl={props.baseUrl}
-            device={props.device}
-            t={t}
-          />
+          <DevicePreview baseUrl={props.baseUrl} device={props.device} t={t} />
         </div>
       ),
     },

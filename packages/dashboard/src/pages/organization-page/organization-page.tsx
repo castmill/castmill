@@ -153,9 +153,10 @@ const OrganizationPage: Component = () => {
     }
   };
 
+  // Use functions for tab titles to make them reactive to i18n changes
   const resourcesTabs: TabItem[] = [
     {
-      title: t('organization.users'),
+      title: () => t('organization.users'),
       content: () => (
         <Show when={store.organizations.selectedId}>
           <OrganizationMembersView
@@ -167,7 +168,7 @@ const OrganizationPage: Component = () => {
       ),
     },
     {
-      title: t('organization.invitations'),
+      title: () => t('organization.invitations'),
       content: () => (
         <Show
           when={canPerformAction('organizations', 'create')}
@@ -188,7 +189,7 @@ const OrganizationPage: Component = () => {
     },
     // Settings tab for organization configuration
     {
-      title: t('organization.settings'),
+      title: () => t('organization.settings'),
       content: () => (
         <Show when={store.organizations.selectedId}>
           <LogoSettings

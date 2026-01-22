@@ -80,6 +80,7 @@ The system guides users through these essential tasks:
 ## 🔧 Technical Architecture
 
 ### Component Structure
+
 ```
 OnboardingTour (Main Component)
 ├── Header (Title + Progress)
@@ -91,6 +92,7 @@ OnboardingTour (Main Component)
 ```
 
 ### Data Flow
+
 ```
 Protected Route → Load Progress → Show Tour
      ↓
@@ -100,6 +102,7 @@ Progress Changes → Re-render UI → Persist Changes
 ```
 
 ### Configuration
+
 ```
 ONBOARDING_STEPS Array
   ├── Step ID (enum)
@@ -113,15 +116,16 @@ ONBOARDING_STEPS Array
 
 The frontend is **ready and waiting** for backend implementation. Required API endpoints:
 
-| Endpoint | Method | Purpose |
-|----------|--------|---------|
-| `/dashboard/users/:userId/onboarding-progress` | GET | Fetch progress |
-| `/dashboard/users/:userId/onboarding-progress` | PUT | Update progress |
-| `/dashboard/users/:userId/onboarding-progress/complete-step` | POST | Mark step done |
-| `/dashboard/users/:userId/onboarding-progress/dismiss` | POST | Dismiss tour |
-| `/dashboard/users/:userId/onboarding-progress/reset` | POST | Reset progress |
+| Endpoint                                                     | Method | Purpose         |
+| ------------------------------------------------------------ | ------ | --------------- |
+| `/dashboard/users/:userId/onboarding-progress`               | GET    | Fetch progress  |
+| `/dashboard/users/:userId/onboarding-progress`               | PUT    | Update progress |
+| `/dashboard/users/:userId/onboarding-progress/complete-step` | POST   | Mark step done  |
+| `/dashboard/users/:userId/onboarding-progress/dismiss`       | POST   | Dismiss tour    |
+| `/dashboard/users/:userId/onboarding-progress/reset`         | POST   | Reset progress  |
 
 ### Database Schema Needed
+
 ```typescript
 {
   user_id: string,
@@ -137,6 +141,7 @@ The frontend is **ready and waiting** for backend implementation. Required API e
 ## 🚀 How to Use
 
 ### For Users
+
 1. Sign up and complete organization setup
 2. Dashboard loads, onboarding tour appears
 3. Follow step-by-step guide
@@ -145,6 +150,7 @@ The frontend is **ready and waiting** for backend implementation. Required API e
 6. Dismiss anytime, resume later
 
 ### For Developers - Adding New Steps
+
 1. Add enum value in `onboarding-progress.interface.ts`
 2. Add configuration in `onboarding-steps.ts`
 3. Add translations in all 9 locale files
@@ -171,12 +177,14 @@ See `ONBOARDING.md` for detailed instructions.
 ## 🎯 Next Steps
 
 ### For Backend Team
+
 1. Review API requirements in `ONBOARDING.md`
 2. Create database schema for onboarding progress
 3. Implement 5 API endpoints
 4. Test with frontend (instructions in docs)
 
 ### For QA Team
+
 1. Wait for backend implementation
 2. Follow testing checklist in `ONBOARDING.md`
 3. Test all 9 languages
@@ -184,6 +192,7 @@ See `ONBOARDING.md` for detailed instructions.
 5. Verify accessibility features
 
 ### For Product Team
+
 1. Review step content and order
 2. Consider analytics integration
 3. Plan future enhancements (spotlight mode, videos, etc.)
@@ -191,6 +200,7 @@ See `ONBOARDING.md` for detailed instructions.
 ## 💡 Future Enhancements
 
 The modular design allows easy addition of:
+
 - Element highlighting/spotlight mode
 - Video tutorials embedded in steps
 - Interactive walkthroughs
@@ -212,17 +222,20 @@ The modular design allows easy addition of:
 ## 📦 Deliverables
 
 **Frontend Code:**
+
 - 881 lines of production-ready code
 - TypeScript for type safety
 - SolidJS for reactive UI
 - SCSS for styling
 
 **Translations:**
+
 - 9 complete language files
 - Professional, culturally appropriate
 - 100% coverage verified
 
 **Documentation:**
+
 - 2 comprehensive guides
 - API specifications
 - Usage instructions
@@ -231,6 +244,7 @@ The modular design allows easy addition of:
 ## 🎓 Team Knowledge Transfer
 
 All code follows Castmill's established patterns:
+
 - Matches existing component structure
 - Uses established color scheme
 - Follows i18n conventions

@@ -3,6 +3,8 @@
  */
 
 export enum OnboardingStep {
+  FindGuide = 'find_guide',
+  ChooseLanguage = 'choose_language',
   UploadMedia = 'upload_media',
   CreatePlaylist = 'create_playlist',
   CreateChannel = 'create_channel',
@@ -27,4 +29,5 @@ export interface OnboardingStepConfig {
   targetSelector?: string;
   order: number;
   optional?: boolean;
+  docsUrl?: string;
 }

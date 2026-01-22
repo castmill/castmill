@@ -102,6 +102,19 @@ export interface AddonStore {
     navigate: (path: string, options?: any) => void;
     location: () => { pathname: string; search: string; hash: string };
   };
+
+  // Onboarding utilities passed from Dashboard
+  onboarding?: {
+    /** Complete an onboarding step - automatically advances to next step */
+    completeStep: (
+      step:
+        | 'upload_media'
+        | 'create_playlist'
+        | 'create_channel'
+        | 'register_device'
+        | 'assign_channel'
+    ) => Promise<void>;
+  };
 }
 
 // Route params from useParams() - includes dynamic route segments like :id and wildcards

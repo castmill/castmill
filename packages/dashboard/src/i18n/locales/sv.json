@@ -94,7 +94,8 @@
   },
   "topbar": {
     "help": "Hjälp",
-    "notifications": "Notiser"
+    "notifications": "Notiser",
+    "gettingStarted": "Kom igång"
   },
   "settings": {
     "title": "Inställningar",
@@ -119,6 +120,14 @@
     "failedLoadCredentials": "Misslyckades med att ladda inloggningsuppgifter. Försök uppdatera sidan.",
     "languageSettings": "Språkinställningar",
     "selectLanguage": "Välj ditt föredragna språk",
+    "onboardingTour": "Introduktionstur",
+    "onboardingTourDescription": "Återställ turen så att du kan gå igenom stegen igen.",
+    "onboardingTourResetButton": "Återställ tur",
+    "onboardingTourResetConfirmTitle": "Återställa introduktionsturen?",
+    "onboardingTourResetConfirmDescription": "Detta rensar din turprogress och visar turen igen.",
+    "onboardingTourResetAction": "Återställ tur",
+    "onboardingTourResetSuccess": "Introduktionsturen har återställts. Du kan starta den igen nu.",
+    "onboardingTourResetError": "Det gick inte att återställa introduktionsturen. Försök igen.",
     "description": "Hantera din kontoinformation och inställningar",
     "confirmDeletePasskey": "Är du säker på att du vill ta bort denna nyckel?\n\nObs: Detta tar bort nyckeln från ditt konto, men du kan behöva ta bort den manuellt från enhetens inställningar (som iCloud Keychain, Google Password Manager eller Windows Hello).\n\nSe till att du har testat att dina andra nycklar fungerar innan du tar bort denna.",
     "fullName": "Fullständigt namn",
@@ -182,6 +191,16 @@
     "approachingLimit": "Närmar sig gränsen",
     "noUsageData": "Ingen användningsdata tillgänglig",
     "unableToLoad": "Kan inte ladda resursanvändningsinformation",
+    "resources": {
+      "medias": "Mediefiler",
+      "storage": "Lagring",
+      "users": "Användare",
+      "devices": "Enheter",
+      "playlists": "Spellistor",
+      "channels": "Kanaler",
+      "teams": "Team",
+      "widgets": "Widgets"
+    },
     "errors": {
       "fetchUsageData": "Misslyckades att hämta användningsdata: {{error}}"
     }
@@ -348,8 +367,14 @@
     "removeChannelEntry": "Ta bort kanalinlägg",
     "cannotDeleteChannel": "Kan inte ta bort kanal",
     "success": {
+      "added": "Kanal {{name}} har lagts till",
+      "created": "Kanal {{name}} skapades",
+      "updated": "Kanal {{name}} uppdaterades",
       "updateDefaultPlaylist": "Standardspellista uppdaterad",
       "clearDefaultPlaylist": "Standardspellista rensad"
+    },
+    "info": {
+      "contentRequired": "För att visa innehåll, ange en standardspellista eller lägg till ett schemalagt inlägg för den här kanalen."
     },
     "errors": {
       "removeChannel": "Fel vid borttagning av kanal {{name}}: {{error}}",
@@ -888,10 +913,23 @@
     "stepCompletedBadge": "Slutförd",
     "allStepsComplete": "Grattis! Du har slutfört alla introduktionssteg!",
     "dismissed": "Introduktionsturen avvisad. Du kan starta om den när som helst från inställningarna.",
+    "dismissConfirmTitle": "Avsluta introduktionsturen?",
+    "dismissConfirmMessage": "Du kan öppna den igen när som helst via raketikonen i det övre verktygsfältet.",
     "skip": "Hoppa över",
     "finish": "Avsluta Tur",
     "goToStep": "Gå till steg {{step}}",
+    "learnMore": "Läs mer",
     "steps": {
+      "findGuide": {
+        "title": "Hitta Denna Guide När Som Helst",
+        "description": "Leta efter raketikonen i den övre navigeringsfältet. Du kan klicka på den när som helst för att öppna denna startguide igen och fortsätta där du slutade.",
+        "action": "Visa Mig"
+      },
+      "chooseLanguage": {
+        "title": "Välj Ditt Språk",
+        "description": "Välj ditt föredragna språk i rullgardinsmenyn i den övre navigeringsfältet. Detta kommer att översätta hela applikationsgränssnittet för att underlätta användningen.",
+        "action": "Välj Språk"
+      },
       "uploadMedia": {
         "title": "Ladda upp Ditt Första Media",
         "description": "Börja med att ladda upp bilder, videor eller annat innehåll som du vill visa på dina digital signage-skärmar. Du kan dra och släppa filer eller använda uppladdningsknappen.",
@@ -909,7 +947,7 @@
       },
       "registerDevice": {
         "title": "Registrera Din Första Enhet",
-        "description": "Anslut dina digital signage-spelare (skärmar) till Castmill. Du får en unik registreringskod för varje enhet. Ange den på din spelare för att ansluta.",
+        "description": "Öppna först spelaren för att få en registreringskod och ange sedan koden här för att registrera enheten. Tips: du kan öppna en webbläsarspelare på din dator för testning—använd {{playerUrl}}.",
         "action": "Gå till Enheter"
       },
       "assignChannel": {

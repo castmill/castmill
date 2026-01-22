@@ -127,36 +127,49 @@ function getPluralForm(count: number, locale: Locale): PluralForm {
  * I18n Provider Component
  */
 export function I18nProvider(props: { children: JSX.Element }) {
-  const [locale, setLocaleSignal] = createSignal<Locale>(getInitialLocale());
+  const initialLocale = getInitialLocale();
+  const [requestedLocale, setRequestedLocale] =
+    createSignal<Locale>(initialLocale);
+  const [locale, setLocaleSignal] = createSignal<Locale>(initialLocale);
   const [translations, setTranslations] = createSignal<Translations>(en);
+  let loadId = 0;
 
   // Load translations when locale changes
   createEffect(() => {
-    const currentLocale = locale();
+    const targetLocale = requestedLocale();
+    const currentLoadId = ++loadId;
 
-    // Load translations asynchronously
-    void loadTranslations(currentLocale).then((loadedTranslations) => {
+    void loadTranslations(targetLocale).then((loadedTranslations) => {
+      // Ignore stale loads
+      if (currentLoadId !== loadId) {
+        return;
+      }
+
       setTranslations(loadedTranslations);
+      setLocaleSignal(targetLocale);
+
+      // Set HTML lang attribute
+      document.documentElement.lang = targetLocale;
+
+      // Set RTL direction for Arabic
+      const localeInfo = SUPPORTED_LOCALES.find((l) => l.code === targetLocale);
+      if (localeInfo?.rtl) {
+        document.documentElement.dir = 'rtl';
+      } else {
+        document.documentElement.dir = 'ltr';
+      }
     });
-
-    // Set HTML lang attribute
-    document.documentElement.lang = currentLocale;
-
-    // Set RTL direction for Arabic
-    const localeInfo = SUPPORTED_LOCALES.find((l) => l.code === currentLocale);
-    if (localeInfo?.rtl) {
-      document.documentElement.dir = 'rtl';
-    } else {
-      document.documentElement.dir = 'ltr';
-    }
   });
 
   /**
    * Set locale and persist to localStorage
    */
   const setLocale = (newLocale: Locale) => {
+    if (newLocale === requestedLocale()) {
+      return;
+    }
     localStorage.setItem(LOCALE_STORAGE_KEY, newLocale);
-    setLocaleSignal(newLocale);
+    setRequestedLocale(newLocale);
   };
 
   /**

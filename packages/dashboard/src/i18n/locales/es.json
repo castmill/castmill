@@ -100,7 +100,8 @@
   },
   "topbar": {
     "help": "Ayuda",
-    "notifications": "Notificaciones"
+    "notifications": "Notificaciones",
+    "gettingStarted": "Primeros pasos"
   },
   "settings": {
     "title": "Configuración",
@@ -125,6 +126,14 @@
     "failedLoadCredentials": "Error al cargar las credenciales. Por favor, intenta actualizar la página.",
     "languageSettings": "Configuración de idioma",
     "selectLanguage": "Selecciona tu idioma preferido",
+    "onboardingTour": "Tour de introducción",
+    "onboardingTourDescription": "Restablece el tour para poder recorrer los pasos de nuevo.",
+    "onboardingTourResetButton": "Restablecer tour",
+    "onboardingTourResetConfirmTitle": "¿Restablecer el tour de introducción?",
+    "onboardingTourResetConfirmDescription": "Esto borrará tu progreso del tour y lo mostrará de nuevo.",
+    "onboardingTourResetAction": "Restablecer tour",
+    "onboardingTourResetSuccess": "Tour de introducción restablecido. Puedes iniciarlo de nuevo ahora.",
+    "onboardingTourResetError": "No se pudo restablecer el tour de introducción. Por favor, inténtalo de nuevo.",
     "description": "Gestiona la información y preferencias de tu cuenta",
     "confirmDeletePasskey": "¿Estás seguro de que quieres eliminar esta llave de acceso?\n\nNota: Esto eliminará la llave de tu cuenta, pero es posible que necesites eliminarla manualmente de la configuración de tu dispositivo (como iCloud Keychain, Google Password Manager o Windows Hello).\n\nAsegúrate de haber probado que tu(s) otra(s) llave(s) funcionen antes de eliminar esta.",
     "fullName": "Nombre completo",
@@ -188,6 +197,16 @@
     "approachingLimit": "Acercándose al límite",
     "noUsageData": "No hay datos de uso disponibles",
     "unableToLoad": "No se puede cargar la información de uso de recursos",
+    "resources": {
+      "medias": "Archivos multimedia",
+      "storage": "Almacenamiento",
+      "users": "Usuarios",
+      "devices": "Dispositivos",
+      "playlists": "Listas de reproducción",
+      "channels": "Canales",
+      "teams": "Equipos",
+      "widgets": "Widgets"
+    },
     "errors": {
       "fetchUsageData": "Error al obtener datos de uso: {{error}}"
     }
@@ -354,8 +373,14 @@
     "removeChannelEntry": "Eliminar entrada del canal",
     "cannotDeleteChannel": "No se puede eliminar el canal",
     "success": {
+      "added": "Canal {{name}} añadido correctamente",
+      "created": "Canal {{name}} creado correctamente",
+      "updated": "Canal {{name}} actualizado correctamente",
       "updateDefaultPlaylist": "Lista de reproducción predeterminada actualizada correctamente",
       "clearDefaultPlaylist": "Lista de reproducción predeterminada eliminada correctamente"
+    },
+    "info": {
+      "contentRequired": "Para mostrar contenido, establece una lista de reproducción predeterminada o añade una entrada programada para este canal."
     },
     "errors": {
       "removeChannel": "Error al eliminar el canal {{name}}: {{error}}",
@@ -894,10 +919,23 @@
     "stepCompletedBadge": "Completado",
     "allStepsComplete": "¡Felicitaciones! Has completado todos los pasos de introducción.",
     "dismissed": "Tour de introducción descartado. Puedes reiniciarlo en cualquier momento desde la configuración.",
+    "dismissConfirmTitle": "¿Descartar el tour de introducción?",
+    "dismissConfirmMessage": "Puedes reabrirlo en cualquier momento desde el icono del cohete en la barra superior.",
     "skip": "Omitir",
     "finish": "Finalizar Tour",
     "goToStep": "Ir al paso {{step}}",
+    "learnMore": "Más información",
     "steps": {
+      "findGuide": {
+        "title": "Encuentra Esta Guía en Cualquier Momento",
+        "description": "Busca el icono del cohete en la barra de navegación superior. Puedes hacer clic en él en cualquier momento para volver a abrir esta guía de inicio y continuar donde lo dejaste.",
+        "action": "Mostrar"
+      },
+      "chooseLanguage": {
+        "title": "Elige tu Idioma",
+        "description": "Selecciona tu idioma preferido en el menú desplegable de la barra de navegación superior. Esto traducirá toda la interfaz de la aplicación para facilitarte su uso.",
+        "action": "Seleccionar Idioma"
+      },
       "uploadMedia": {
         "title": "Sube tu Primer Contenido",
         "description": "Comienza subiendo imágenes, videos u otro contenido que desees mostrar en tus pantallas de señalización digital. Puedes arrastrar y soltar archivos o usar el botón de carga.",
@@ -915,7 +953,7 @@
       },
       "registerDevice": {
         "title": "Registra tu Primer Dispositivo",
-        "description": "Conecta tus reproductores de señalización digital (pantallas) a Castmill. Recibirás un código de registro único para cada dispositivo. Ingrésalo en tu reproductor para conectarlo.",
+        "description": "Primero abre el reproductor para obtener un código de registro y luego introduce ese código aquí para registrar el dispositivo. Consejo: puedes abrir un reproductor en el navegador de tu computadora para pruebas—usa {{playerUrl}}.",
         "action": "Ir a Dispositivos"
       },
       "assignChannel": {

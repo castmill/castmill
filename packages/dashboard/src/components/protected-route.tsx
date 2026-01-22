@@ -17,7 +17,7 @@ import { ServerError } from './server-error/server-error';
 import { OnboardingDialog } from './onboarding-dialog/onboarding-dialog';
 import { OnboardingTour } from './onboarding-tour/onboarding-tour';
 import { OnboardingService } from '../services/onboarding.service';
-import { OnboardingProgress } from '../interfaces/onboarding-progress.interface';
+import { OnboardingStep } from '../interfaces/onboarding-progress.interface';
 
 import { useI18n } from '../i18n';
 import { useToast } from '@castmill/ui-common';
@@ -49,9 +49,6 @@ const ProtectedRoute: Component<ProtectedRouteProps> = (
   const [onboardingOrgId, setOnboardingOrgId] = createSignal<string | null>(
     null
   );
-  const [showOnboardingTour, setShowOnboardingTour] = createSignal(false);
-  const [onboardingProgress, setOnboardingProgress] =
-    createSignal<OnboardingProgress | null>(null);
 
   const handleRetry = () => {
     setServerError(false);
@@ -213,11 +210,43 @@ const ProtectedRoute: Component<ProtectedRouteProps> = (
       // Fetch onboarding progress
       const progress = await OnboardingService.getProgress(user.id);
 
-      // Show tour if not dismissed and not completed
-      if (!progress.dismissed && !progress.is_completed) {
-        setOnboardingProgress(progress);
-        setShowOnboardingTour(true);
-      }
+      // Store the progress in global store along with the completeStep helper
+      setStore('onboarding', {
+        progress,
+        showTour: !progress.dismissed && !progress.is_completed,
+        completeStep: async (step: OnboardingStep) => {
+          try {
+            const currentUser = getUser();
+            if (!currentUser || !currentUser.id) return;
+
+            // Only complete if not already completed
+            const currentProgress = store.onboarding.progress;
+            if (
+              currentProgress?.completed_steps.includes(step) ||
+              currentProgress?.is_completed
+            ) {
+              return;
+            }
+
+            const updatedProgress = await OnboardingService.completeStep(
+              currentUser.id,
+              step
+            );
+
+            // Update the store with new progress
+            setStore('onboarding', 'progress', updatedProgress);
+
+            // If all steps are complete, close the tour with a success message
+            if (updatedProgress.is_completed) {
+              setStore('onboarding', 'showTour', false);
+              toast.success(t('onboardingTour.allStepsComplete'));
+            }
+          } catch (error) {
+            // Silently fail - don't interrupt the user's flow
+            console.error('Failed to complete onboarding step:', error);
+          }
+        },
+      });
     } catch (error) {
       // Silently fail - onboarding tour is optional
       console.error('Failed to load onboarding progress:', error);
@@ -225,12 +254,11 @@ const ProtectedRoute: Component<ProtectedRouteProps> = (
   };
 
   const handleCloseTour = () => {
-    setShowOnboardingTour(false);
+    setStore('onboarding', 'showTour', false);
   };
 
   const handleCompleteTour = () => {
-    setShowOnboardingTour(false);
-    toast.success(t('onboardingTour.allStepsComplete'));
+    setStore('onboarding', 'showTour', false);
   };
 
   // Watch for organizations to be loaded and load addons if onboarding is not needed
@@ -278,10 +306,10 @@ const ProtectedRoute: Component<ProtectedRouteProps> = (
           onComplete={handleOnboardingComplete}
         />
       </Show>
-      <Show when={showOnboardingTour() && onboardingProgress()}>
+      <Show when={store.onboarding.showTour && store.onboarding.progress}>
         <OnboardingTour
           userId={getUser().id!}
-          initialProgress={onboardingProgress()!}
+          initialProgress={store.onboarding.progress!}
           onClose={handleCloseTour}
           onComplete={handleCompleteTour}
         />

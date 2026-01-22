@@ -12,6 +12,7 @@ import './language-selector.scss';
 
 interface LanguageSelectorProps {
   compact?: boolean;
+  onLanguageChange?: (locale: Locale) => void;
 }
 
 // Flag emoji mapping for each language
@@ -35,12 +36,16 @@ const LanguageSelector: Component<LanguageSelectorProps> = (props) => {
 
   const handleLocaleChange = (newLocale: Locale) => {
     setLocale(newLocale);
+    props.onLanguageChange?.(newLocale);
   };
 
   return (
     <DropdownMenu
       ButtonComponent={() => (
-        <div class="language-selector__button">
+        <div
+          class="language-selector__button"
+          data-onboarding="language-selector"
+        >
           <span class="language-selector__flag">
             {LANGUAGE_FLAGS[currentLocale()?.code || 'en']}
           </span>

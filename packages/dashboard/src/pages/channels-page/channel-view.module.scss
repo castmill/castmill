@@ -1,0 +1,12 @@
+@use '../../colors.scss';
+
+.notice {
+  margin: 0 0 1em 0;
+  padding: 0.75em 1em;
+  border: 1px solid colors.$highlight-color;
+  border-radius: 0.5em;
+  background: colors.$highlight-background-color;
+  color: colors.$base-color;
+  font-size: 0.95em;
+  line-height: 1.5;
+}

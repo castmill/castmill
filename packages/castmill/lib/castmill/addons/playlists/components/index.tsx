@@ -42,7 +42,11 @@ import './playlists.scss';
 import { PlaylistView } from './playlist-view';
 import { AddonComponentProps } from '../../common/interfaces/addon-store';
 import { PlaylistAddForm, AspectRatio } from './playlist-add-form';
-import { useTeamFilter, useModalFromUrl } from '../../common/hooks';
+import {
+  useTeamFilter,
+  useModalFromUrl,
+  useOnboardingHighlight,
+} from '../../common/hooks';
 import { ASPECT_RATIO_OPTIONS } from '../constants';
 import {
   validateCustomRatioField,
@@ -134,6 +138,9 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
     closeModal: closeModalAndClearUrl,
     openModal: openModalFromItemId,
   });
+
+  // Handle onboarding highlight for the Add Playlist button
+  useOnboardingHighlight(props.params);
 
   const [quota, setQuota] = createSignal<ResourceQuota | null>(null);
   const [quotaLoading, setQuotaLoading] = createSignal(false);
@@ -451,79 +458,82 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
     }
   };
 
-  const columns = [
-    { key: 'name', title: t('common.name'), sortable: true },
-    {
-      key: 'aspect_ratio',
-      title: t('playlists.aspectRatio'),
-      sortable: false,
-      render: (item: JsonPlaylist) => {
-        const aspectRatio = item.settings?.aspect_ratio;
-        const currentRatio = aspectRatio
-          ? `${aspectRatio.width}:${aspectRatio.height}`
-          : '16:9';
-        const isStandardRatio = ASPECT_RATIO_OPTIONS.slice(0, -1).some(
-          (opt) => opt.value === currentRatio
-        );
+  // Use function to make columns reactive to i18n changes
+  const columns = () =>
+    [
+      { key: 'name', title: () => t('common.name'), sortable: true },
+      {
+        key: 'aspect_ratio',
+        title: () => t('playlists.aspectRatio'),
+        sortable: false,
+        render: (item: JsonPlaylist) => {
+          const aspectRatio = item.settings?.aspect_ratio;
+          const currentRatio = aspectRatio
+            ? `${aspectRatio.width}:${aspectRatio.height}`
+            : '16:9';
+          const isStandardRatio = ASPECT_RATIO_OPTIONS.slice(0, -1).some(
+            (opt) => opt.value === currentRatio
+          );
 
-        // Build dropdown items - include current custom ratio if it exists
-        const dropdownItems = [...ASPECT_RATIO_OPTIONS];
-        if (!isStandardRatio && currentRatio !== '16:9') {
-          // Insert the current custom ratio before the "Custom" option
-          dropdownItems.splice(dropdownItems.length - 1, 0, {
-            value: currentRatio,
-            label: `${currentRatio} (${t('playlists.aspectRatioPresets.custom')})`,
-          });
-        }
+          // Build dropdown items - include current custom ratio if it exists
+          const dropdownItems = [...ASPECT_RATIO_OPTIONS];
+          if (!isStandardRatio && currentRatio !== '16:9') {
+            // Insert the current custom ratio before the "Custom" option
+            dropdownItems.splice(dropdownItems.length - 1, 0, {
+              value: currentRatio,
+              label: `${currentRatio} (${t('playlists.aspectRatioPresets.custom')})`,
+            });
+          }
 
-        return (
-          <div
-            onClick={(e) => e.stopPropagation()}
-            style={{
-              'font-size': '0.85em',
-              'line-height': '1.2',
-              width: '12em',
-              'text-align': 'center',
-              margin: '0 auto',
-            }}
-          >
-            <Dropdown
-              label=""
-              items={dropdownItems.map((opt) => ({
-                value: opt.value,
-                name: t(opt.label),
-              }))}
-              value={currentRatio}
-              onSelectChange={(value: string | null) => {
-                if (value) {
-                  handleAspectRatioChange(item, value);
-                }
+          return (
+            <div
+              onClick={(e) => e.stopPropagation()}
+              style={{
+                'font-size': '0.85em',
+                'line-height': '1.2',
+                width: '12em',
+                'text-align': 'center',
+                margin: '0 auto',
               }}
-            />
-          </div>
-        );
+            >
+              <Dropdown
+                label=""
+                items={dropdownItems.map((opt) => ({
+                  value: opt.value,
+                  name: t(opt.label),
+                }))}
+                value={currentRatio}
+                onSelectChange={(value: string | null) => {
+                  if (value) {
+                    handleAspectRatioChange(item, value);
+                  }
+                }}
+              />
+            </div>
+          );
+        },
       },
-    },
-    { key: 'status', title: t('common.status'), sortable: false },
-    {
-      key: 'inserted_at',
-      title: t('common.created'),
-      sortable: true,
-      render: (item: JsonPlaylist) => (
-        <Timestamp value={item.inserted_at!} mode="relative" />
-      ),
-    },
-    {
-      key: 'updated_at',
-      title: t('common.updated'),
-      sortable: true,
-      render: (item: JsonPlaylist) => (
-        <Timestamp value={item.updated_at!} mode="relative" />
-      ),
-    },
-  ] as Column<JsonPlaylist>[];
+      { key: 'status', title: () => t('common.status'), sortable: false },
+      {
+        key: 'inserted_at',
+        title: () => t('common.created'),
+        sortable: true,
+        render: (item: JsonPlaylist) => (
+          <Timestamp value={item.inserted_at!} mode="relative" />
+        ),
+      },
+      {
+        key: 'updated_at',
+        title: () => t('common.updated'),
+        sortable: true,
+        render: (item: JsonPlaylist) => (
+          <Timestamp value={item.updated_at!} mode="relative" />
+        ),
+      },
+    ] as Column<JsonPlaylist>[];
 
-  const actions: TableAction<JsonPlaylist>[] = [
+  // Use function to make actions reactive to i18n changes
+  const actions = (): TableAction<JsonPlaylist>[] => [
     {
       icon: BsEye,
       handler: openModal,
@@ -789,6 +799,9 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
                   refreshData();
                   toast.success(`Playlist "${name}" created successfully`);
                   loadQuota(); // Reload quota after creation
+
+                  // Complete the onboarding step for playlist creation
+                  props.store.onboarding?.completeStep?.('create_playlist');
                 }
               } catch (error) {
                 toast.error(`Error creating playlist: ${error}`);
@@ -936,6 +949,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
                 disabled={
                   isQuotaReached() || !canPerformAction('playlists', 'create')
                 }
+                data-onboarding="add-playlist"
               />
             </div>
           ),

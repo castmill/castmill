@@ -390,41 +390,44 @@ const LayoutsPage: Component<AddonComponentProps> = (props) => {
     }
   };
 
-  const columns = [
-    {
-      key: 'name',
-      title: t('common.name'),
-      sortable: true,
-    },
-    {
-      key: 'aspect_ratio',
-      title: t('layouts.aspectRatio') || 'Aspect Ratio',
-      sortable: true,
-      render: (item: JsonLayout) => item.aspect_ratio || '-',
-    },
-    {
-      key: 'zones',
-      title: t('layouts.zones') || 'Zones',
-      sortable: false,
-      render: (item: JsonLayout) => {
-        const zoneCount = item.zones?.zones?.length || 0;
-        return `${zoneCount} zone${zoneCount !== 1 ? 's' : ''}`;
+  // Use function to make columns reactive to i18n changes
+  const columns = () =>
+    [
+      {
+        key: 'name',
+        title: t('common.name'),
+        sortable: true,
       },
-    },
-    {
-      key: 'updated_at',
-      title: t('common.modified'),
-      sortable: true,
-      render: (item: JsonLayout) =>
-        item.updated_at ? (
-          <Timestamp value={item.updated_at} mode="relative" />
-        ) : (
-          '-'
-        ),
-    },
-  ] as Column<JsonLayout>[];
+      {
+        key: 'aspect_ratio',
+        title: t('layouts.aspectRatio') || 'Aspect Ratio',
+        sortable: true,
+        render: (item: JsonLayout) => item.aspect_ratio || '-',
+      },
+      {
+        key: 'zones',
+        title: t('layouts.zones') || 'Zones',
+        sortable: false,
+        render: (item: JsonLayout) => {
+          const zoneCount = item.zones?.zones?.length || 0;
+          return `${zoneCount} zone${zoneCount !== 1 ? 's' : ''}`;
+        },
+      },
+      {
+        key: 'updated_at',
+        title: t('common.modified'),
+        sortable: true,
+        render: (item: JsonLayout) =>
+          item.updated_at ? (
+            <Timestamp value={item.updated_at} mode="relative" />
+          ) : (
+            '-'
+          ),
+      },
+    ] as Column<JsonLayout>[];
 
-  const actions: TableAction<JsonLayout>[] = [
+  // Use function to make actions reactive to i18n changes
+  const actions = (): TableAction<JsonLayout>[] => [
     {
       icon: BsEye,
       label: t('common.view'),
