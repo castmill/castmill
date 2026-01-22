@@ -751,7 +751,7 @@ defmodule Castmill.Accounts do
             # This is okay - they might accept the invitation later
             :ok
 
-          org_invitation ->
+          _org_invitation ->
             # Accept organization invitation
             case Castmill.Organizations.accept_invitation(invitation_token, user_id) do
               {:ok, _} -> :ok
@@ -759,7 +759,7 @@ defmodule Castmill.Accounts do
             end
         end
 
-      net_invitation ->
+      _net_invitation ->
         # Accept network invitation
         case Castmill.Networks.accept_network_invitation(invitation_token, user_id) do
           {:ok, _organization} -> :ok
