@@ -99,7 +99,7 @@ defmodule Castmill.AccountsTest do
 
     setup do
       # Create a network for testing
-      network = network_fixture(%{name: "Test Network", domain: "test.example.com"})
+      network = network_fixture(%{name: "Test Network", domain: "https://test.example.com"})
       %{network: network}
     end
 

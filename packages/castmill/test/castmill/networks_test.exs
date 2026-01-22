@@ -30,7 +30,7 @@ defmodule Castmill.NetworksTest do
     test "create_network/1 with valid data creates a network" do
       valid_attrs = %{
         copyright: "some copyright",
-        domain: "some.domain.com",
+        domain: "https://some.domain.com",
         email: "some@email.com",
         logo: "some logo",
         name: "some name"
@@ -53,7 +53,7 @@ defmodule Castmill.NetworksTest do
 
       update_attrs = %{
         copyright: "some updated copyright",
-        domain: "some updated domain",
+        domain: "https://some-updated.domain",
         email: "some@updated.email.com",
         logo: "some updated logo",
         name: "some updated name"
@@ -89,7 +89,7 @@ defmodule Castmill.NetworksTest do
     test "create_network/1 automatically creates and assigns a default plan" do
       valid_attrs = %{
         copyright: "some copyright",
-        domain: "auto-plan-test.com",
+        domain: "https://auto-plan-test.com",
         email: "auto@plan.com",
         logo: "some logo",
         name: "Auto Plan Test Network"
@@ -115,7 +115,7 @@ defmodule Castmill.NetworksTest do
     test "organizations in new network inherit default plan quotas" do
       valid_attrs = %{
         copyright: "some copyright",
-        domain: "org-inherit-test.com",
+        domain: "https://org-inherit-test.com",
         email: "inherit@test.com",
         logo: "some logo",
         name: "Org Inherit Test Network"

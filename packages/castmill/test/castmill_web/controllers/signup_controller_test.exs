@@ -159,7 +159,7 @@ defmodule CastmillWeb.SignUpControllerTest do
   describe "create_user/2" do
     setup do
       # Define or use a fixture function
-      network = network_fixture(%{domain: "example.com"})
+      network = network_fixture(%{domain: "https://example.com"})
       challenge = CastmillWeb.SessionUtils.new_challenge()
 
       signup =
