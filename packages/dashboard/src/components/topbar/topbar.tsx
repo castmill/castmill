@@ -41,7 +41,7 @@ const Topbar: Component = () => {
 
   // Calculate onboarding progress for the circular indicator
   const onboardingProgress = createMemo(() => {
-    const progress = store.onboarding.progress;
+    const progress = store.onboarding?.progress;
     if (!progress) return { completed: 0, total: 1, percentage: 0 };
 
     const requiredSteps = ONBOARDING_STEPS.filter((step) => !step.optional);
@@ -136,7 +136,7 @@ const Topbar: Component = () => {
             <div
               class="getting-started-container"
               classList={{
-                'animate-pulse': store.onboarding.highlightGuideButton,
+                'animate-pulse': store.onboarding?.highlightGuideButton,
               }}
               data-onboarding="getting-started"
               onClick={() => {
