@@ -114,7 +114,7 @@ const wrapLazyComponent = (addon: { path: string; name: string }) => {
     const navigate = useNavigate();
     const location = useLocation();
 
-    // Update store with i18n functions using setStore (the proper way)
+    // Initial synchronous update of store with i18n functions
     setStore('i18n', {
       t: i18n.t,
       tp: i18n.tp,
@@ -123,6 +123,22 @@ const wrapLazyComponent = (addon: { path: string; name: string }) => {
       formatCurrency: i18n.formatCurrency,
       locale: i18n.locale,
       setLocale: i18n.setLocale,
+    });
+
+    // Also track locale changes to update store reactively when language changes
+    createEffect(() => {
+      // Access locale() to create reactive dependency
+      const currentLocale = i18n.locale();
+      // Update the store when locale changes
+      setStore('i18n', {
+        t: i18n.t,
+        tp: i18n.tp,
+        formatDate: i18n.formatDate,
+        formatNumber: i18n.formatNumber,
+        formatCurrency: i18n.formatCurrency,
+        locale: i18n.locale,
+        setLocale: i18n.setLocale,
+      });
     });
 
     // Update store with router utilities
@@ -155,12 +171,16 @@ const wrapLazyComponent = (addon: { path: string; name: string }) => {
       }
     });
 
-    // Create a wrapper component that tracks selectedOrgId reactively
+    // Create a wrapper component that tracks selectedOrgId and locale reactively
     const ReactiveWrapper: Component = () => {
-      // Access selectedOrgId in this component's render to create reactive dependency
+      // Access selectedOrgId and locale in this component's render to create reactive dependencies
       const orgId = () => store.organizations.selectedId;
+      const locale = () => i18n.locale();
 
-      // Use key to force remount when org changes
+      // Create a combined key that changes when org or locale changes
+      const componentKey = () => `${orgId()}-${locale()}`;
+
+      // Use key to force remount when org or locale changes
       return (
         <ErrorBoundary
           fallback={(err, reset) => {
@@ -177,18 +197,18 @@ const wrapLazyComponent = (addon: { path: string; name: string }) => {
             );
           }}
         >
-          {/* Use a Show with keyed to force re-render when orgId changes */}
-          <Show when={orgId()} keyed>
-            {(currentOrgId) => (
+          {/* Use For with a single-item array keyed by locale+orgId to force full remount on change */}
+          <For each={[componentKey()]}>
+            {(key) => (
               <LazyComponent
                 {...props}
                 store={store}
-                selectedOrgId={currentOrgId}
+                selectedOrgId={orgId()}
                 params={[searchParams, setSearchParams]}
                 routeParams={routeParams}
               />
             )}
-          </Show>
+          </For>
         </ErrorBoundary>
       );
     };

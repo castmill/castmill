@@ -1,4 +1,11 @@
-import { Component, For, createSignal, createUniqueId, JSX } from 'solid-js';
+import {
+  Component,
+  For,
+  createSignal,
+  createUniqueId,
+  createMemo,
+  JSX,
+} from 'solid-js';
 import { FaSolidSortDown } from 'solid-icons/fa';
 import { FaSolidSortUp } from 'solid-icons/fa';
 import { FaSolidSort } from 'solid-icons/fa';
@@ -13,14 +20,14 @@ export interface Column<
   Item extends ItemBase<IdType> = ItemBase<IdType>,
 > {
   key: string;
-  title: string;
+  title: string | (() => string); // Can be string or function for reactive translations
   sortable?: boolean;
   render?: (item: Item) => JSX.Element;
 }
 
 export interface TableAction<Item> {
   icon: Component | string;
-  label: string;
+  label: string | (() => string);
   props?: (item: Item) => Record<string, any>;
   handler: (item: Item) => void;
 }
@@ -29,11 +36,11 @@ export interface TableProps<
   IdType = string,
   Item extends ItemBase<IdType> = ItemBase<IdType>,
 > {
-  columns: Column<IdType, Item>[]; // Make sure to pass both generics
+  columns: Column<IdType, Item>[] | (() => Column<IdType, Item>[]); // Can be array or function returning array
   data: Item[];
   onSort?: (options: SortOptions) => void;
-  actions?: TableAction<Item>[];
-  actionsLabel?: string; // Label for the Actions column header
+  actions?: TableAction<Item>[] | (() => TableAction<Item>[]); // Can be array or function returning array
+  actionsLabel?: string | (() => string); // Label for the Actions column header
   onRowSelect?: (selectedIds: Set<IdType>) => void;
   onRowClick?: (item: Item) => void;
   itemIdKey?: string;
@@ -116,6 +123,30 @@ export const Table = <
 
   const getItemId = (item: Item): IdType => item[props.itemIdKey || 'id'];
 
+  // Helper to resolve column title - supports both string and function
+  const getColumnTitle = (column: Column<IdType, Item>) =>
+    typeof column.title === 'function' ? column.title() : column.title;
+
+  // Helper to resolve action label - supports both string and function
+  const getActionLabel = (action: TableAction<Item>) =>
+    typeof action.label === 'function' ? action.label() : action.label;
+
+  // Helper to resolve actions column label
+  const getActionsColumnLabel = () =>
+    typeof props.actionsLabel === 'function'
+      ? props.actionsLabel()
+      : props.actionsLabel;
+
+  // Use createMemo to make columns reactive - this tracks changes when columns is a function
+  const columns = createMemo(() =>
+    typeof props.columns === 'function' ? props.columns() : props.columns
+  );
+
+  // Use createMemo to make actions reactive - this tracks changes when actions is a function
+  const actions = createMemo(() =>
+    typeof props.actions === 'function' ? props.actions() : props.actions
+  );
+
   return (
     <div class={style['castmill-table']}>
       <table>
@@ -138,20 +169,20 @@ export const Table = <
                 ></label>
               </th>
             )}
-            <For each={props.columns}>
+            <For each={columns()}>
               {(column) => (
                 <th
                   onClick={() => column.sortable && handleSort(column.key)}
                   style={{ cursor: column.sortable ? 'pointer' : 'default' }}
                 >
                   <div class={style['table-header-title']}>
-                    {column.title}
+                    {getColumnTitle(column)}
                     {sortIcon(column)}
                   </div>
                 </th>
               )}
             </For>
-            {props.actions && <th>{props.actionsLabel || 'Actions'}</th>}
+            {actions() && <th>{getActionsColumnLabel() || 'Actions'}</th>}
           </tr>
         </thead>
         <tbody>
@@ -194,7 +225,7 @@ export const Table = <
                     ></label>
                   </td>
                 )}
-                <For each={props.columns}>
+                <For each={columns()}>
                   {(column) => (
                     <td>
                       {column.render
@@ -203,13 +234,13 @@ export const Table = <
                     </td>
                   )}
                 </For>
-                {props.actions && (
+                {actions() && (
                   <td>
                     <div class={style['table-actions']}>
-                      <For each={props.actions}>
+                      <For each={actions()}>
                         {(action) => (
                           <button
-                            aria-label={`${action.label} ${item.name}`} // Providing an aria-label for accessibility and testing
+                            aria-label={`${getActionLabel(action)} ${item.name}`} // Providing an aria-label for accessibility and testing
                             onClick={(e) => {
                               e.stopPropagation();
                               action.handler(item);

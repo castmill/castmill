@@ -399,79 +399,85 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
     return `${size} ${sizes[i]}`;
   }
 
-  const columns = [
-    {
-      key: 'thumbnail',
-      title: '',
-      sortable: false,
-      // Show thumbnail or progress circle (a circular progress bar with some % in the middle, or error if not a number)
-      render: (item: JsonMedia) => (
-        <div class="thumbnail">
-          <Show
-            when={
-              item.status == 'ready' && item.files && item.files['thumbnail']
-            }
-            fallback={
-              <Show
-                when={item['status'] == 'transcoding'}
-                fallback={<div class="error">{item.status_message}</div>}
-              >
-                <CircularProgress progress={parseFloat(item.status_message!)} />
-              </Show>
-            }
-          >
-            <img src={item.files['thumbnail'].uri} alt={item.name} />
-          </Show>
-        </div>
-      ),
-    },
-    { key: 'name', title: t('common.name'), sortable: true },
-    {
-      key: 'size',
-      title: t('common.size'),
-      sortable: false,
-      render: (item: JsonMedia) => formatBytes(item.size ?? 0),
-    },
-    { key: 'mimetype', title: t('common.type'), sortable: true },
-    {
-      key: 'inserted_at',
-      title: t('common.created'),
-      sortable: true,
-      render: (item: JsonMedia) => (
-        <Timestamp value={item.inserted_at!} mode="relative" />
-      ),
-    },
-    {
-      key: 'updated_at',
-      title: t('common.updated'),
-      sortable: true,
-      render: (item: JsonMedia) => (
-        <Timestamp value={item.updated_at!} mode="relative" />
-      ),
-    },
-  ] as Column<JsonMedia>[];
-
-  const actions = [
-    {
-      icon: BsEye,
-      handler: openModal,
-      label: t('common.view'),
-    },
-    {
-      icon: AiOutlineDelete,
-      handler: (item: JsonMedia) => {
-        if (!canPerformAction('medias', 'delete')) {
-          toast.error(
-            t('permissions.noDeleteMedias') ||
-              "You don't have permission to delete media files"
-          );
-          return;
-        }
-        setShowConfirmDialog(item);
+  // Use function to make columns reactive to i18n changes
+  const columns = () =>
+    [
+      {
+        key: 'thumbnail',
+        title: '',
+        sortable: false,
+        // Show thumbnail or progress circle (a circular progress bar with some % in the middle, or error if not a number)
+        render: (item: JsonMedia) => (
+          <div class="thumbnail">
+            <Show
+              when={
+                item.status == 'ready' && item.files && item.files['thumbnail']
+              }
+              fallback={
+                <Show
+                  when={item['status'] == 'transcoding'}
+                  fallback={<div class="error">{item.status_message}</div>}
+                >
+                  <CircularProgress
+                    progress={parseFloat(item.status_message!)}
+                  />
+                </Show>
+              }
+            >
+              <img src={item.files['thumbnail'].uri} alt={item.name} />
+            </Show>
+          </div>
+        ),
       },
-      label: t('common.remove'),
-    },
-  ] as TableAction<JsonMedia>[];
+      { key: 'name', title: t('common.name'), sortable: true },
+      {
+        key: 'size',
+        title: t('common.size'),
+        sortable: false,
+        render: (item: JsonMedia) => formatBytes(item.size ?? 0),
+      },
+      { key: 'mimetype', title: t('common.type'), sortable: true },
+      {
+        key: 'inserted_at',
+        title: t('common.created'),
+        sortable: true,
+        render: (item: JsonMedia) => (
+          <Timestamp value={item.inserted_at!} mode="relative" />
+        ),
+      },
+      {
+        key: 'updated_at',
+        title: t('common.updated'),
+        sortable: true,
+        render: (item: JsonMedia) => (
+          <Timestamp value={item.updated_at!} mode="relative" />
+        ),
+      },
+    ] as Column<JsonMedia>[];
+
+  // Use function to make actions reactive to i18n changes
+  const actions = () =>
+    [
+      {
+        icon: BsEye,
+        handler: openModal,
+        label: t('common.view'),
+      },
+      {
+        icon: AiOutlineDelete,
+        handler: (item: JsonMedia) => {
+          if (!canPerformAction('medias', 'delete')) {
+            toast.error(
+              t('permissions.noDeleteMedias') ||
+                "You don't have permission to delete media files"
+            );
+            return;
+          }
+          setShowConfirmDialog(item);
+        },
+        label: t('common.remove'),
+      },
+    ] as TableAction<JsonMedia>[];
 
   let addMediasModal: ModalRef | undefined = undefined;
 

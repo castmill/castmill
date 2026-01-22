@@ -37,13 +37,10 @@ interface TableViewProps<
   IdType = string,
   Item extends ItemBase<IdType> = ItemBase<IdType>,
 > {
-  title: string;
+  title?: string | (() => string);
   resource: string;
-
   params?: [Params, (params: SetParams, options?: any) => void]; // typeof useSearchParams;
-
   ref?: (ref: TableViewRef<IdType, Item>) => void;
-
   fetchData: (params: {
     page: { num: number; size: number };
     sortOptions: SortOptions;
@@ -52,14 +49,20 @@ interface TableViewProps<
   }) => Promise<{ data: Item[]; count: number }>;
 
   table: {
-    columns: {
-      key: string;
-      title: string;
-      sortable?: boolean;
-    }[];
+    columns:
+      | {
+          key: string;
+          title: string | (() => string);
+          sortable?: boolean;
+        }[]
+      | (() => {
+          key: string;
+          title: string | (() => string);
+          sortable?: boolean;
+        }[]);
     onSort?: (options: SortOptions) => void;
-    actions?: TableAction<Item>[];
-    actionsLabel?: string; // Label for the Actions column header
+    actions?: TableAction<Item>[] | (() => TableAction<Item>[]);
+    actionsLabel?: string | (() => string);
     onRowSelect?: (selectedIds: Set<IdType>) => void;
     defaultRowAction?: TableAction<Item>;
     hideCheckboxes?: boolean;
@@ -73,9 +76,9 @@ interface TableViewProps<
     filters?: Filter[];
     mainAction?: JSX.Element;
     actions?: JSX.Element;
-    requireOneActiveFilter?: boolean; // When true (default), at least one filter must remain active
-    hideSearch?: boolean; // When true, hides the search input
-    hideTitle?: boolean; // When true, hides the title in the toolbar
+    requireOneActiveFilter?: boolean;
+    hideSearch?: boolean;
+    hideTitle?: boolean;
   };
 
   itemIdKey?: string;
@@ -306,6 +309,9 @@ export const TableView = <
     props.ref(ref); // Assign the methods to the ref passed from the parent
   }
 
+  const getTitle = () =>
+    typeof props.title === 'function' ? props.title() : props.title;
+
   return (
     <>
       <Show
@@ -322,7 +328,7 @@ export const TableView = <
         <div class={style['table-view']}>
           <Show when={props.toolbar}>
             <ToolBar
-              title={props.toolbar?.hideTitle ? undefined : props.title}
+              title={props.toolbar?.hideTitle ? undefined : getTitle()}
               filters={filters()}
               onFilterChange={handleFilterChange}
               initialSearchText={(getSearchParams().search as string) || ''}

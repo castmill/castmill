@@ -107,7 +107,8 @@
   },
   "topbar": {
     "help": "Hilfe",
-    "notifications": "Benachrichtigungen"
+    "notifications": "Benachrichtigungen",
+    "gettingStarted": "Erste Schritte"
   },
   "settings": {
     "title": "Einstellungen",
@@ -133,6 +134,14 @@
     "failedLoadCredentials": "Fehler beim Laden der Anmeldedaten. Bitte aktualisieren Sie die Seite.",
     "languageSettings": "Spracheinstellungen",
     "selectLanguage": "Wählen Sie Ihre bevorzugte Sprache",
+    "onboardingTour": "Onboarding-Tour",
+    "onboardingTourDescription": "Setzen Sie die Tour zurück, damit Sie die Schritte erneut durchlaufen können.",
+    "onboardingTourResetButton": "Tour zurücksetzen",
+    "onboardingTourResetConfirmTitle": "Onboarding-Tour zurücksetzen?",
+    "onboardingTourResetConfirmDescription": "Dadurch wird Ihr Tour-Fortschritt gelöscht und die Tour erneut angezeigt.",
+    "onboardingTourResetAction": "Tour zurücksetzen",
+    "onboardingTourResetSuccess": "Onboarding-Tour zurückgesetzt. Sie können sie jetzt erneut starten.",
+    "onboardingTourResetError": "Onboarding-Tour konnte nicht zurückgesetzt werden. Bitte versuchen Sie es erneut.",
     "confirmDeletePasskey": "Sind Sie sicher, dass Sie diesen Passkey entfernen möchten?\n\nHinweis: Dies entfernt den Passkey von Ihrem Konto, aber Sie müssen ihn möglicherweise manuell aus den Einstellungen Ihres Geräts löschen (wie iCloud Keychain, Google Password Manager oder Windows Hello).\n\nStellen Sie sicher, dass Sie getestet haben, dass Ihre anderen Passkeys funktionieren, bevor Sie diesen entfernen.",
     "fullName": "Vollständiger Name",
     "emailAddress": "E-Mail-Adresse",
@@ -195,6 +204,16 @@
     "approachingLimit": "Nähert sich dem Limit",
     "noUsageData": "Keine Nutzungsdaten verfügbar",
     "unableToLoad": "Ressourcennutzungsinformationen können nicht geladen werden",
+    "resources": {
+      "medias": "Mediendateien",
+      "storage": "Speicher",
+      "users": "Benutzer",
+      "devices": "Geräte",
+      "playlists": "Wiedergabelisten",
+      "channels": "Kanäle",
+      "teams": "Teams",
+      "widgets": "Widgets"
+    },
     "errors": {
       "fetchUsageData": "Fehler beim Abrufen der Nutzungsdaten: {{error}}"
     }
@@ -319,8 +338,14 @@
     "removeChannelEntry": "Kanaleintrag entfernen",
     "cannotDeleteChannel": "Kanal kann nicht gelöscht werden",
     "success": {
+      "added": "Kanal {{name}} wurde erfolgreich hinzugefügt",
+      "created": "Kanal {{name}} wurde erfolgreich erstellt",
+      "updated": "Kanal {{name}} wurde erfolgreich aktualisiert",
       "updateDefaultPlaylist": "Standard-Playlist erfolgreich aktualisiert",
       "clearDefaultPlaylist": "Standard-Playlist erfolgreich gelöscht"
+    },
+    "info": {
+      "contentRequired": "Damit Inhalte angezeigt werden, legen Sie eine Standard-Playlist fest oder fügen Sie einen geplanten Eintrag für diesen Kanal hinzu."
     },
     "errors": {
       "removeChannel": "Fehler beim Entfernen des Kanals {{name}}: {{error}}",
@@ -878,6 +903,67 @@
       "organizationNameTooLong": "Der Organisationsname muss weniger als 50 Zeichen lang sein",
       "organizationNameTaken": "Dieser Organisationsname ist bereits vergeben. Bitte wählen Sie einen anderen Namen.",
       "failed": "Einrichtung fehlgeschlagen. Bitte versuchen Sie es erneut."
+    }
+  },
+  "onboardingTour": {
+    "title": "Einführungstour",
+    "progressText": "{{current}} von {{total}} Schritten abgeschlossen",
+    "markComplete": "Als abgeschlossen markieren",
+    "stepCompleted": "Schritt abgeschlossen!",
+    "stepCompletedBadge": "Abgeschlossen",
+    "allStepsComplete": "Herzlichen Glückwunsch! Sie haben alle Einführungsschritte abgeschlossen!",
+    "dismissed": "Einführungstour geschlossen. Sie können sie jederzeit in den Einstellungen neu starten.",
+    "dismissConfirmTitle": "Onboarding-Tour schließen?",
+    "dismissConfirmMessage": "Sie können sie jederzeit über das Raketen-Symbol in der oberen Leiste wieder öffnen.",
+    "skip": "Überspringen",
+    "finish": "Tour beenden",
+    "goToStep": "Zu Schritt {{step}} gehen",
+    "learnMore": "Mehr erfahren",
+    "steps": {
+      "findGuide": {
+        "title": "Finden Sie Diesen Leitfaden Jederzeit",
+        "description": "Suchen Sie nach dem Raketen-Symbol in der oberen Navigationsleiste. Sie können jederzeit darauf klicken, um diesen Startleitfaden wieder zu öffnen und dort fortzufahren, wo Sie aufgehört haben.",
+        "action": "Zeig Mir"
+      },
+      "chooseLanguage": {
+        "title": "Wählen Sie Ihre Sprache",
+        "description": "Wählen Sie Ihre bevorzugte Sprache aus dem Dropdown-Menü in der oberen Navigationsleiste. Dadurch wird die gesamte Anwendungsoberfläche übersetzt, um die Nutzung zu erleichtern.",
+        "action": "Sprache auswählen"
+      },
+      "uploadMedia": {
+        "title": "Laden Sie Ihre ersten Medien hoch",
+        "description": "Beginnen Sie mit dem Hochladen von Bildern, Videos oder anderen Inhalten, die Sie auf Ihren Digital Signage-Bildschirmen anzeigen möchten. Sie können Dateien per Drag & Drop hochladen oder die Upload-Schaltfläche verwenden.",
+        "action": "Zur Medienbibliothek"
+      },
+      "createPlaylist": {
+        "title": "Erstellen Sie Ihre erste Playlist",
+        "description": "Organisieren Sie Ihre Inhalte in Playlists. Fügen Sie Mediendateien und Widgets hinzu, um ansprechende Inhaltssequenzen zu erstellen. Sie können Anzeigedauern und Übergänge für jedes Element festlegen.",
+        "action": "Zu Playlists"
+      },
+      "createChannel": {
+        "title": "Richten Sie einen Kanal ein",
+        "description": "Kanäle kombinieren Playlists und Zeitpläne. Erstellen Sie einen Kanal und weisen Sie eine Standard-Playlist zu, um zu steuern, welche Inhalte zu verschiedenen Tageszeiten abgespielt werden.",
+        "action": "Zu Kanälen"
+      },
+      "registerDevice": {
+        "title": "Registrieren Sie Ihr erstes Gerät",
+        "description": "Öffnen Sie zuerst den Player, um einen Registrierungscode zu erhalten, und geben Sie diesen Code dann hier ein, um das Gerät zu registrieren. Tipp: Sie können einen Browser-Player auf Ihrem Computer zum Testen öffnen—verwenden Sie {{playerUrl}}.",
+        "action": "Zu Geräten"
+      },
+      "assignChannel": {
+        "title": "Kanal dem Gerät zuweisen",
+        "description": "Verknüpfen Sie einen Kanal mit Ihrem Gerät, damit es weiß, welche Inhalte angezeigt werden sollen. Jedes Gerät kann jeweils einem Kanal zugewiesen werden, aber Sie können es jederzeit ändern.",
+        "action": "Geräte verwalten"
+      },
+      "advancedPlaylist": {
+        "title": "Erstellen Sie erweiterte Playlists mit Layouts",
+        "description": "Bringen Sie Ihre Inhalte auf die nächste Stufe, indem Sie Layouts verwenden, um mehrere Elemente gleichzeitig anzuzeigen. Teilen Sie Ihren Bildschirm in Zonen auf und zeigen Sie unterschiedliche Inhalte in jedem Bereich an.",
+        "action": "Layouts erkunden"
+      }
+    },
+    "errors": {
+      "failedToCompleteStep": "Schritt konnte nicht als abgeschlossen markiert werden. Bitte versuchen Sie es erneut.",
+      "failedToDismiss": "Tour konnte nicht geschlossen werden. Bitte versuchen Sie es erneut."
     }
   }
 }

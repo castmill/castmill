@@ -191,10 +191,10 @@ export const OrganizationMembersView = (props: {
     return adminCount() > 1;
   });
 
-  const columns = [
+  const columns = () => [
     {
       key: 'user.name',
-      title: t('common.name'),
+      title: () => t('common.name'),
       sortable: true,
       render: (item: any) => {
         const isCurrentUser = item.user_id === currentUser?.id;
@@ -205,7 +205,7 @@ export const OrganizationMembersView = (props: {
     },
     {
       key: 'role',
-      title: t('common.role'),
+      title: () => t('common.role'),
       sortable: true,
       render: (item: any) => {
         const isCurrentUser = item.user_id === currentUser?.id;
@@ -235,7 +235,7 @@ export const OrganizationMembersView = (props: {
     },
     {
       key: 'inserted_at',
-      title: t('common.insertedAt'),
+      title: () => t('common.insertedAt'),
       sortable: true,
       render: (item: any) => (
         <Timestamp value={item.inserted_at} mode="relative" />
@@ -472,7 +472,7 @@ export const OrganizationMembersView = (props: {
             <PermissionButton
               resource="organizations"
               action="create"
-              label={t('organization.inviteMember')}
+              label={() => t('organization.inviteMember')}
               onClick={addMember}
               icon={BsCheckLg}
               color="primary"

@@ -41,16 +41,16 @@ const ResourceIcon = (props: { type: string }) => {
   return <Icon size={28} />;
 };
 
-// Display names for resources
-const resourceNames: Record<string, string> = {
-  medias: 'Media Files',
-  storage: 'Storage',
-  users: 'Users',
-  devices: 'Devices',
-  playlists: 'Playlists',
-  channels: 'Channels',
-  teams: 'Teams',
-  widgets: 'Widgets',
+// Map resource identifiers to translation keys for localized labels
+const resourceTranslationKeys: Record<string, string> = {
+  medias: 'usage.resources.medias',
+  storage: 'usage.resources.storage',
+  users: 'usage.resources.users',
+  devices: 'usage.resources.devices',
+  playlists: 'usage.resources.playlists',
+  channels: 'usage.resources.channels',
+  teams: 'usage.resources.teams',
+  widgets: 'usage.resources.widgets',
 };
 
 /**
@@ -141,7 +141,11 @@ const UsagePage: Component = () => {
                         <ResourceIcon type={resource} />
                       </div>
                       <div class={styles.cardTitle}>
-                        <h3>{resourceNames[resource] || resource}</h3>
+                        <h3>
+                          {resourceTranslationKeys[resource]
+                            ? t(resourceTranslationKeys[resource])
+                            : resource}
+                        </h3>
                         <span class={styles.percentage}>{percentage}%</span>
                       </div>
                     </div>
@@ -149,14 +153,18 @@ const UsagePage: Component = () => {
                     <div class={styles.cardBody}>
                       <div class={styles.stats}>
                         <div class={styles.stat}>
-                          <span class={styles.statLabel}>Used</span>
+                          <span class={styles.statLabel}>
+                            {t('usage.used')}
+                          </span>
                           <span class={styles.statValue}>
                             {formatValue(resource, used)}
                           </span>
                         </div>
                         <div class={styles.statDivider}>/</div>
                         <div class={styles.stat}>
-                          <span class={styles.statLabel}>Total</span>
+                          <span class={styles.statLabel}>
+                            {t('usage.total')}
+                          </span>
                           <span class={styles.statValue}>
                             {formatValue(resource, total)}
                           </span>

@@ -23,6 +23,7 @@ import {
 } from '@castmill/ui-common';
 
 import { store } from '../../store/store';
+import { OnboardingStep } from '../../interfaces/onboarding-progress.interface';
 
 import { BsCheckLg, BsEye } from 'solid-icons/bs';
 import { AiOutlineDelete } from 'solid-icons/ai';
@@ -233,6 +234,10 @@ const ChannelsPage: Component = () => {
   const [errorMessage, setErrorMessage] = createSignal('');
   const [errorDevices, setErrorDevices] = createSignal<string[]>([]);
 
+  const notifyChannelContentRequirement = () => {
+    toast.info(t('channels.info.contentRequired'));
+  };
+
   const confirmRemoveChannel = async (channel: JsonChannel | undefined) => {
     if (!channel) {
       return;
@@ -418,9 +423,15 @@ const ChannelsPage: Component = () => {
                     setCurrentChannel(result.data);
                     setShowModal(true);
                     refreshData();
+
+                    // Complete the onboarding step for channel creation
+                    store.onboarding.completeStep?.(
+                      OnboardingStep.CreateChannel
+                    );
                   }
                   refreshData();
-                  toast.success(`Channel ${name} added successfully`);
+                  toast.success(t('channels.success.added', { name }));
+                  notifyChannelContentRequirement();
                 } catch (error) {
                   toast.error(
                     t('channels.errors.addChannel', { error: String(error) })
@@ -453,15 +464,20 @@ const ChannelsPage: Component = () => {
                     setCurrentChannel(newChannel);
                     refreshData();
                     toast.success(
-                      `Channel ${channel.name} created successfully`
+                      t('channels.success.created', {
+                        name: channel.name,
+                      })
                     );
+                    notifyChannelContentRequirement();
                     return newChannel;
                   } else if (channel.id) {
                     const updatedTeam =
                       await channelsService.updateChannel(channel);
                     updateItem(channel.id, channel as JsonChannel);
                     toast.success(
-                      `Channel ${channel.name} updated successfully`
+                      t('channels.success.updated', {
+                        name: channel.name,
+                      })
                     );
                     return updatedTeam;
                   }

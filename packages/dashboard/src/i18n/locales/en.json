@@ -112,7 +112,8 @@
   },
   "topbar": {
     "help": "Help",
-    "notifications": "Notifications"
+    "notifications": "Notifications",
+    "gettingStarted": "Getting Started"
   },
   "settings": {
     "title": "Settings",
@@ -138,6 +139,14 @@
     "failedLoadCredentials": "Failed to load credentials. Please try refreshing the page.",
     "languageSettings": "Language Settings",
     "selectLanguage": "Select your preferred language",
+    "onboardingTour": "Onboarding Tour",
+    "onboardingTourDescription": "Reset the tour so you can go through the steps again.",
+    "onboardingTourResetButton": "Reset tour",
+    "onboardingTourResetConfirmTitle": "Reset the onboarding tour?",
+    "onboardingTourResetConfirmDescription": "This will clear your tour progress and show the tour again.",
+    "onboardingTourResetAction": "Reset tour",
+    "onboardingTourResetSuccess": "Onboarding tour reset. You can start it again now.",
+    "onboardingTourResetError": "Failed to reset onboarding tour. Please try again.",
     "confirmDeletePasskey": "Are you sure you want to remove this passkey?\n\nNote: This will remove the passkey from your account, but you may need to manually delete it from your device's settings (like iCloud Keychain, Google Password Manager, or Windows Hello).\n\nMake sure you have tested your other passkey(s) work before removing this one.",
     "fullName": "Full Name",
     "emailAddress": "Email Address",
@@ -200,6 +209,16 @@
     "approachingLimit": "Approaching limit",
     "noUsageData": "No usage data available",
     "unableToLoad": "Unable to load resource usage information",
+    "resources": {
+      "medias": "Media Files",
+      "storage": "Storage",
+      "users": "Users",
+      "devices": "Devices",
+      "playlists": "Playlists",
+      "channels": "Channels",
+      "teams": "Teams",
+      "widgets": "Widgets"
+    },
     "errors": {
       "fetchUsageData": "Failed to fetch usage data: {{error}}"
     }
@@ -324,8 +343,14 @@
     "removeChannelEntry": "Remove Channel Entry",
     "cannotDeleteChannel": "Cannot Delete Channel",
     "success": {
+      "added": "Channel {{name}} added successfully",
+      "created": "Channel {{name}} created successfully",
+      "updated": "Channel {{name}} updated successfully",
       "updateDefaultPlaylist": "Default playlist updated successfully",
       "clearDefaultPlaylist": "Default playlist cleared successfully"
+    },
+    "info": {
+      "contentRequired": "To display content, set a default playlist or add a scheduled entry for this channel."
     },
     "errors": {
       "removeChannel": "Error removing channel {{name}}: {{error}}",
@@ -878,6 +903,67 @@
       "organizationNameTooLong": "Organization name must be less than 50 characters",
       "organizationNameTaken": "This organization name is already taken. Please choose a different name.",
       "failed": "Failed to complete setup. Please try again."
+    }
+  },
+  "onboardingTour": {
+    "title": "Getting Started Tour",
+    "progressText": "{{current}} of {{total}} steps completed",
+    "markComplete": "Mark as Complete",
+    "stepCompleted": "Step completed!",
+    "stepCompletedBadge": "Completed",
+    "allStepsComplete": "Congratulations! You've completed all onboarding steps!",
+    "dismissed": "Onboarding tour dismissed. You can restart it anytime from settings.",
+    "dismissConfirmTitle": "Dismiss the onboarding tour?",
+    "dismissConfirmMessage": "You can reopen it anytime from the rocket icon in the top toolbar.",
+    "skip": "Skip",
+    "finish": "Finish Tour",
+    "goToStep": "Go to step {{step}}",
+    "learnMore": "Learn more",
+    "steps": {
+      "findGuide": {
+        "title": "Find This Guide Anytime",
+        "description": "Look for the rocket icon in the top navigation bar. You can click it anytime to reopen this getting started guide and continue where you left off.",
+        "action": "Show Me"
+      },
+      "chooseLanguage": {
+        "title": "Choose Your Language",
+        "description": "Select your preferred language from the dropdown in the top navigation bar. This will translate the entire application interface to make it easier for you to use.",
+        "action": "Select Language"
+      },
+      "uploadMedia": {
+        "title": "Upload Your First Media",
+        "description": "Start by uploading images, videos, or other content that you want to display on your digital signage screens. You can drag and drop files or use the upload button.",
+        "action": "Go to Media Library"
+      },
+      "createPlaylist": {
+        "title": "Create Your First Playlist",
+        "description": "Organize your content into playlists. Add media files and widgets to create engaging content sequences. You can set display durations and transitions for each item.",
+        "action": "Go to Playlists"
+      },
+      "createChannel": {
+        "title": "Set Up a Channel",
+        "description": "Channels combine playlists and schedules. Create a channel and assign a default playlist to control what content plays at different times of the day.",
+        "action": "Go to Channels"
+      },
+      "registerDevice": {
+        "title": "Register Your First Device",
+        "description": "Open the player first to get a registration code, then enter that code here to register the device. Tip: you can open a browser player on your computer for testing—use {{playerUrl}}.",
+        "action": "Go to Devices"
+      },
+      "assignChannel": {
+        "title": "Assign Channel to Device",
+        "description": "Link a channel to your device so it knows what content to display. Each device can be assigned to one channel at a time, but you can change it anytime.",
+        "action": "Manage Devices"
+      },
+      "advancedPlaylist": {
+        "title": "Create Advanced Playlists with Layouts",
+        "description": "Take your content to the next level by using layouts to display multiple items simultaneously. Split your screen into zones and show different content in each area.",
+        "action": "Explore Layouts"
+      }
+    },
+    "errors": {
+      "failedToCompleteStep": "Failed to mark step as complete. Please try again.",
+      "failedToDismiss": "Failed to dismiss tour. Please try again."
     }
   }
 }

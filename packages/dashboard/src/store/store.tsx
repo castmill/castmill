@@ -14,6 +14,10 @@ import type {
   Action,
 } from '../services/permissions.service';
 import type { KeyboardShortcut } from '../hooks/useKeyboardShortcuts';
+import type {
+  OnboardingProgress,
+  OnboardingStep,
+} from '../interfaces/onboarding-progress.interface';
 
 interface OrganizationLogoState {
   mediaId: number | null;
@@ -87,6 +91,16 @@ interface CastmillStore {
   router?: {
     navigate: (path: string, options?: any) => void;
   };
+
+  // Onboarding tour state
+  onboarding: {
+    showTour: boolean;
+    progress: OnboardingProgress | null;
+    /** Complete an onboarding step - automatically advances to next step */
+    completeStep?: (step: OnboardingStep) => Promise<void>;
+    /** Flag to highlight the guide button with animation */
+    highlightGuideButton?: boolean;
+  };
 }
 
 const [store, setStore] = createStore<CastmillStore>({
@@ -112,6 +126,11 @@ const [store, setStore] = createStore<CastmillStore>({
     baseUrl,
     origin,
     domain,
+  },
+
+  onboarding: {
+    showTour: false,
+    progress: null,
   },
 });
 

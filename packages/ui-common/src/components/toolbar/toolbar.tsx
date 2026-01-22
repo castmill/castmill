@@ -16,7 +16,7 @@ export interface Filter {
 }
 
 interface ToolBarProps {
-  title?: string;
+  title?: string | (() => string);
   filters?: Filter[];
   onFilterChange?: (filters: Filter[]) => void;
   actions?: JSX.Element | (() => JSX.Element);
@@ -90,11 +90,14 @@ export function ToolBar(props: ToolBarProps) {
     clearTimeout(debounceTimeout());
   });
 
+  const getTitle = () =>
+    typeof props.title === 'function' ? props.title() : props.title;
+
   return (
     <div class="toolbar-container">
       <div class="toolbar-left">
         <Show when={props.title}>
-          <h2 class="toolbar-title">{props.title}</h2>
+          <h2 class="toolbar-title">{getTitle()}</h2>
         </Show>
         <Show when={props.onSearch && !props.hideSearch}>
           <div class="search-container">

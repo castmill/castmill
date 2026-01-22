@@ -220,6 +220,19 @@ defmodule CastmillWeb.Router do
     put("/users/:id", UserController, :update)
     delete("/users/:id", UserController, :delete)
 
+    # Onboarding progress
+    get("/users/:user_id/onboarding-progress", OnboardingProgressController, :show)
+    put("/users/:user_id/onboarding-progress", OnboardingProgressController, :update)
+
+    post(
+      "/users/:user_id/onboarding-progress/complete-step",
+      OnboardingProgressController,
+      :complete_step
+    )
+
+    post("/users/:user_id/onboarding-progress/dismiss", OnboardingProgressController, :dismiss)
+    post("/users/:user_id/onboarding-progress/reset", OnboardingProgressController, :reset)
+
     # List all the widgets available for the organization
     get("/organizations/:organization_id/widgets", OrganizationController, :list_widgets)
     post("/organizations/:organization_id/widgets", OrganizationController, :create_widget)

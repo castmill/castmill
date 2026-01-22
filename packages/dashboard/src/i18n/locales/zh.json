@@ -99,7 +99,8 @@
   },
   "topbar": {
     "help": "帮助",
-    "notifications": "通知"
+    "notifications": "通知",
+    "gettingStarted": "快速入门"
   },
   "settings": {
     "title": "设置",
@@ -124,6 +125,14 @@
     "failedLoadCredentials": "加载凭据失败。请尝试刷新页面。",
     "languageSettings": "语言设置",
     "selectLanguage": "选择您的首选语言",
+    "onboardingTour": "新手引导",
+    "onboardingTourDescription": "重置引导，以便再次完成这些步骤。",
+    "onboardingTourResetButton": "重置引导",
+    "onboardingTourResetConfirmTitle": "重置新手引导？",
+    "onboardingTourResetConfirmDescription": "这将清除你的引导进度并重新显示引导。",
+    "onboardingTourResetAction": "重置引导",
+    "onboardingTourResetSuccess": "已重置新手引导。现在可以重新开始。",
+    "onboardingTourResetError": "重置新手引导失败。请重试。",
     "description": "管理您的账户信息和偏好设置",
     "confirmDeletePasskey": "您确定要删除此密钥吗？\n\n注意：这将从您的账户中删除该密钥，但您可能需要从设备的设置中手动删除它（如 iCloud 钥匙串、Google 密码管理器或 Windows Hello）。\n\n请确保在删除此密钥之前测试其他密钥是否正常工作。",
     "fullName": "全名",
@@ -187,6 +196,16 @@
     "approachingLimit": "接近限制",
     "noUsageData": "没有可用的使用数据",
     "unableToLoad": "无法加载资源使用信息",
+    "resources": {
+      "medias": "媒体文件",
+      "storage": "存储",
+      "users": "用户",
+      "devices": "设备",
+      "playlists": "播放列表",
+      "channels": "频道",
+      "teams": "团队",
+      "widgets": "小部件"
+    },
     "errors": {
       "fetchUsageData": "获取使用数据失败：{{error}}"
     }
@@ -353,8 +372,14 @@
     "removeChannelEntry": "删除频道条目",
     "cannotDeleteChannel": "无法删除频道",
     "success": {
+      "added": "频道 {{name}} 添加成功",
+      "created": "频道 {{name}} 创建成功",
+      "updated": "频道 {{name}} 更新成功",
       "updateDefaultPlaylist": "默认播放列表更新成功",
       "clearDefaultPlaylist": "默认播放列表清除成功"
+    },
+    "info": {
+      "contentRequired": "要显示内容，请为此频道设置默认播放列表或添加一个定时条目。"
     },
     "errors": {
       "removeChannel": "删除频道 {{name}} 时出错：{{error}}",
@@ -883,6 +908,67 @@
       "organizationNameTooLong": "组织名称必须少于 50 个字符",
       "organizationNameTaken": "此组织名称已被使用。请选择其他名称。",
       "failed": "设置失败。请重试。"
+    }
+  },
+  "onboardingTour": {
+    "title": "入门指南",
+    "progressText": "已完成 {{current}}/{{total}} 步",
+    "markComplete": "标记为完成",
+    "stepCompleted": "步骤已完成！",
+    "stepCompletedBadge": "已完成",
+    "allStepsComplete": "恭喜！您已完成所有入门步骤！",
+    "dismissed": "入门指南已关闭。您可以随时从设置中重新启动。",
+    "dismissConfirmTitle": "关闭入门指南？",
+    "dismissConfirmMessage": "您可以随时通过顶部工具栏中的火箭图标重新打开。",
+    "skip": "跳过",
+    "finish": "完成指南",
+    "goToStep": "前往第 {{step}} 步",
+    "learnMore": "了解更多",
+    "steps": {
+      "findGuide": {
+        "title": "随时找到此指南",
+        "description": "在顶部导航栏中找到火箭图标。您可以随时点击它重新打开此入门指南，继续上次的进度。",
+        "action": "展示给我看"
+      },
+      "chooseLanguage": {
+        "title": "选择您的语言",
+        "description": "从顶部导航栏的下拉菜单中选择您喜欢的语言。这将翻译整个应用程序界面，使您更容易使用。",
+        "action": "选择语言"
+      },
+      "uploadMedia": {
+        "title": "上传您的第一个媒体",
+        "description": "首先上传您想在数字标牌屏幕上显示的图片、视频或其他内容。您可以拖放文件或使用上传按钮。",
+        "action": "前往媒体库"
+      },
+      "createPlaylist": {
+        "title": "创建您的第一个播放列表",
+        "description": "将您的内容组织到播放列表中。添加媒体文件和小部件以创建引人入胜的内容序列。您可以为每个项目设置显示持续时间和过渡效果。",
+        "action": "前往播放列表"
+      },
+      "createChannel": {
+        "title": "设置频道",
+        "description": "频道结合了播放列表和时间表。创建频道并分配默认播放列表以控制一天中不同时间播放的内容。",
+        "action": "前往频道"
+      },
+      "registerDevice": {
+        "title": "注册您的第一台设备",
+        "description": "先打开播放器获取注册码，然后在这里输入该代码来注册设备。提示：可在电脑上打开浏览器播放器进行测试—使用 {{playerUrl}}。",
+        "action": "前往设备"
+      },
+      "assignChannel": {
+        "title": "将频道分配给设备",
+        "description": "将频道链接到您的设备，使其知道要显示什么内容。每台设备一次只能分配一个频道，但您可以随时更改。",
+        "action": "管理设备"
+      },
+      "advancedPlaylist": {
+        "title": "使用布局创建高级播放列表",
+        "description": "通过使用布局同时显示多个项目，将您的内容提升到一个新的水平。将屏幕分成多个区域，在每个区域显示不同的内容。",
+        "action": "探索布局"
+      }
+    },
+    "errors": {
+      "failedToCompleteStep": "标记步骤为完成失败。请重试。",
+      "failedToDismiss": "关闭指南失败。请重试。"
     }
   }
 }

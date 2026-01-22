@@ -144,10 +144,11 @@ const TeamsPage: Component = () => {
     return q ? q.used >= q.total : false;
   };
 
-  const columns = [
-    { key: 'id', title: t('common.id'), sortable: true },
-    { key: 'name', title: t('common.name'), sortable: true },
-  ] as Column<Team>[];
+  const columns = () =>
+    [
+      { key: 'id', title: () => t('common.id'), sortable: true },
+      { key: 'name', title: () => t('common.name'), sortable: true },
+    ] as Column<Team>[];
 
   interface TeamTableItem extends Team {}
 
@@ -158,7 +159,7 @@ const TeamsPage: Component = () => {
         setCurrentTeam(item);
         setShowModal(true);
       },
-      label: t('common.view'),
+      label: () => t('common.view'),
     },
     {
       icon: AiOutlineDelete,
@@ -173,7 +174,7 @@ const TeamsPage: Component = () => {
         setCurrentTeam(item);
         setShowConfirmDialog(true);
       },
-      label: t('common.remove'),
+      label: () => t('common.remove'),
     },
   ];
 
@@ -361,7 +362,7 @@ const TeamsPage: Component = () => {
       </ConfirmDialog>
 
       <TableView
-        title={t('teams.title')}
+        title={() => t('teams.title')}
         resource="teams"
         params={[searchParams, setSearchParams]}
         fetchData={fetchData}
@@ -381,7 +382,7 @@ const TeamsPage: Component = () => {
               <PermissionButton
                 resource="teams"
                 action="create"
-                label={t('teams.addTeam')}
+                label={() => t('teams.addTeam')}
                 onClick={addTeam}
                 icon={BsCheckLg}
                 color="primary"

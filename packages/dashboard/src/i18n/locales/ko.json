@@ -99,7 +99,8 @@
   },
   "topbar": {
     "help": "도움말",
-    "notifications": "알림"
+    "notifications": "알림",
+    "gettingStarted": "시작하기"
   },
   "settings": {
     "title": "설정",
@@ -124,6 +125,14 @@
     "failedLoadCredentials": "자격 증명을 불러오지 못했습니다. 페이지를 새로고침해 주세요.",
     "languageSettings": "언어 설정",
     "selectLanguage": "선호하는 언어를 선택하세요",
+    "onboardingTour": "온보딩 투어",
+    "onboardingTourDescription": "투어를 재설정하여 단계를 다시 진행할 수 있습니다.",
+    "onboardingTourResetButton": "투어 재설정",
+    "onboardingTourResetConfirmTitle": "온보딩 투어를 재설정할까요?",
+    "onboardingTourResetConfirmDescription": "이 작업은 투어 진행 상황을 초기화하고 투어를 다시 표시합니다.",
+    "onboardingTourResetAction": "투어 재설정",
+    "onboardingTourResetSuccess": "온보딩 투어가 재설정되었습니다. 지금 다시 시작할 수 있습니다.",
+    "onboardingTourResetError": "온보딩 투어 재설정에 실패했습니다. 다시 시도해 주세요.",
     "description": "계정 정보 및 환경 설정 관리",
     "confirmDeletePasskey": "이 패스키를 제거하시겠습니까?\n\n참고: 계정에서 패스키가 제거되지만, 기기 설정(예: iCloud 키체인, Google 비밀번호 관리자 또는 Windows Hello)에서 수동으로 삭제해야 할 수 있습니다.\n\n이 패스키를 제거하기 전에 다른 패스키가 작동하는지 테스트했는지 확인하세요.",
     "fullName": "전체 이름",
@@ -187,6 +196,16 @@
     "approachingLimit": "한도에 근접",
     "noUsageData": "사용 가능한 사용량 데이터가 없습니다",
     "unableToLoad": "리소스 사용량 정보를 로드할 수 없습니다",
+    "resources": {
+      "medias": "미디어 파일",
+      "storage": "저장소",
+      "users": "사용자",
+      "devices": "디바이스",
+      "playlists": "재생목록",
+      "channels": "채널",
+      "teams": "팀",
+      "widgets": "위젯"
+    },
     "errors": {
       "fetchUsageData": "사용량 데이터를 가져오는데 실패했습니다: {{error}}"
     }
@@ -353,8 +372,14 @@
     "removeChannelEntry": "채널 항목 제거",
     "cannotDeleteChannel": "채널을 삭제할 수 없습니다",
     "success": {
+      "added": "채널 {{name}}이(가) 성공적으로 추가되었습니다",
+      "created": "채널 {{name}}이(가) 생성되었습니다",
+      "updated": "채널 {{name}}이(가) 업데이트되었습니다",
       "updateDefaultPlaylist": "기본 재생목록 업데이트 성공",
       "clearDefaultPlaylist": "기본 재생목록 지우기 성공"
+    },
+    "info": {
+      "contentRequired": "콘텐츠를 표시하려면 이 채널에 기본 재생목록을 설정하거나 예약된 항목을 추가하세요."
     },
     "errors": {
       "removeChannel": "채널 {{name}} 제거 오류: {{error}}",
@@ -883,6 +908,67 @@
       "organizationNameTooLong": "조직 이름은 50자 미만이어야 합니다",
       "organizationNameTaken": "이 조직 이름은 이미 사용 중입니다. 다른 이름을 선택해 주세요.",
       "failed": "설정을 완료하지 못했습니다. 다시 시도해 주세요."
+    }
+  },
+  "onboardingTour": {
+    "title": "시작 가이드",
+    "progressText": "{{total}}단계 중 {{current}}단계 완료",
+    "markComplete": "완료로 표시",
+    "stepCompleted": "단계가 완료되었습니다!",
+    "stepCompletedBadge": "완료됨",
+    "allStepsComplete": "축하합니다! 모든 온보딩 단계를 완료했습니다!",
+    "dismissed": "온보딩 가이드가 닫혔습니다. 설정에서 언제든지 다시 시작할 수 있습니다.",
+    "dismissConfirmTitle": "시작 가이드를 닫으시겠어요?",
+    "dismissConfirmMessage": "상단 툴바의 로켓 아이콘에서 언제든지 다시 열 수 있습니다.",
+    "skip": "건너뛰기",
+    "finish": "가이드 종료",
+    "goToStep": "{{step}}단계로 이동",
+    "learnMore": "더 알아보기",
+    "steps": {
+      "findGuide": {
+        "title": "언제든지 이 가이드 찾기",
+        "description": "상단 탐색 바에서 로켓 아이콘을 찾으세요. 언제든지 클릭하여 이 시작 가이드를 다시 열고 중단한 부분부터 계속할 수 있습니다.",
+        "action": "보여주세요"
+      },
+      "chooseLanguage": {
+        "title": "언어 선택",
+        "description": "상단 탐색 바의 드롭다운에서 원하는 언어를 선택하세요. 이렇게 하면 전체 애플리케이션 인터페이스가 번역되어 사용이 더 쉬워집니다.",
+        "action": "언어 선택"
+      },
+      "uploadMedia": {
+        "title": "첫 번째 미디어 업로드",
+        "description": "디지털 사이니지 화면에 표시할 이미지, 동영상 또는 기타 콘텐츠를 업로드하여 시작하세요. 파일을 드래그 앤 드롭하거나 업로드 버튼을 사용할 수 있습니다.",
+        "action": "미디어 라이브러리로 이동"
+      },
+      "createPlaylist": {
+        "title": "첫 번째 재생목록 만들기",
+        "description": "콘텐츠를 재생목록으로 구성하세요. 미디어 파일과 위젯을 추가하여 매력적인 콘텐츠 시퀀스를 만들 수 있습니다. 각 항목의 표시 시간과 전환 효과를 설정할 수 있습니다.",
+        "action": "재생목록으로 이동"
+      },
+      "createChannel": {
+        "title": "채널 설정",
+        "description": "채널은 재생목록과 일정을 결합합니다. 채널을 만들고 기본 재생목록을 할당하여 하루 중 다른 시간에 재생할 콘텐츠를 제어하세요.",
+        "action": "채널로 이동"
+      },
+      "registerDevice": {
+        "title": "첫 번째 디바이스 등록",
+        "description": "먼저 플레이어를 열어 등록 코드를 받은 다음, 여기에서 해당 코드를 입력해 디바이스를 등록하세요. 팁: 테스트를 위해 컴퓨터에서 브라우저 플레이어를 열 수 있습니다—{{playerUrl}}을(를) 사용하세요.",
+        "action": "디바이스로 이동"
+      },
+      "assignChannel": {
+        "title": "디바이스에 채널 할당",
+        "description": "디바이스가 표시할 콘텐츠를 알 수 있도록 채널을 연결하세요. 각 디바이스는 한 번에 하나의 채널에 할당할 수 있지만 언제든지 변경할 수 있습니다.",
+        "action": "디바이스 관리"
+      },
+      "advancedPlaylist": {
+        "title": "레이아웃을 사용한 고급 재생목록 만들기",
+        "description": "레이아웃을 사용하여 여러 항목을 동시에 표시함으로써 콘텐츠를 한 단계 업그레이드하세요. 화면을 영역으로 나누고 각 영역에 다른 콘텐츠를 표시하세요.",
+        "action": "레이아웃 탐색"
+      }
+    },
+    "errors": {
+      "failedToCompleteStep": "단계를 완료로 표시하지 못했습니다. 다시 시도해 주세요.",
+      "failedToDismiss": "가이드를 닫지 못했습니다. 다시 시도해 주세요."
     }
   }
 }

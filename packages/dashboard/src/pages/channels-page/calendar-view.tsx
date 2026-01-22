@@ -579,133 +579,135 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
           />
         </Modal>
       </Show>
-      <div class={styles['left-panel']}>
-        <DefaultPlaylistComboBox channel={props.channel} />
-        <PlaylistChooser onDragOverCell={handleDragOverCell} />
-      </div>
-      <div class={styles['calendar-wrapper']}>
-        {/* Top bar: nav + range */}
-        <div class={styles['calendar-header']}>
-          <div>
-            <button onClick={goPrevWeek}>prev</button>
-            <button onClick={goToday}>today</button>
-            <button onClick={goNextWeek}>next</button>
-          </div>
-          <div style="font-size: 18px; font-weight: bold;">
-            {dateRangeText()}
-          </div>
-          <button>Events</button>
+      <div class={styles['calendar-layout']}>
+        <div class={styles['left-panel']}>
+          <DefaultPlaylistComboBox channel={props.channel} />
+          <PlaylistChooser onDragOverCell={handleDragOverCell} />
         </div>
+        <div class={styles['calendar-wrapper']}>
+          {/* Top bar: nav + range */}
+          <div class={styles['calendar-header']}>
+            <div>
+              <button onClick={goPrevWeek}>prev</button>
+              <button onClick={goToday}>today</button>
+              <button onClick={goNextWeek}>next</button>
+            </div>
+            <div style="font-size: 18px; font-weight: bold;">
+              {dateRangeText()}
+            </div>
+            <button>Events</button>
+          </div>
 
-        {/* Pinned header table */}
-        <div class={styles['header-table-container']}>
-          <table class={styles['header-table']}>
-            <thead>
-              <tr>
-                {/* Time column: 10% */}
-                <th class={styles['header-time-col']}>{props.timeZone}</th>
-                {/* 7 day columns => share 90% */}
-                <For each={dayLabels()}>{(label) => <th>{label}</th>}</For>
-              </tr>
-            </thead>
-          </table>
-        </div>
+          {/* Pinned header table */}
+          <div class={styles['header-table-container']}>
+            <table class={styles['header-table']}>
+              <thead>
+                <tr>
+                  {/* Time column: 10% */}
+                  <th class={styles['header-time-col']}>{props.timeZone}</th>
+                  {/* 7 day columns => share 90% */}
+                  <For each={dayLabels()}>{(label) => <th>{label}</th>}</For>
+                </tr>
+              </thead>
+            </table>
+          </div>
 
-        {/* Body table (scrollable) */}
-        <div
-          class={styles['body-table-container']}
-          ref={(el) => (scrollContainer = el)}
-        >
-          <table class={styles['body-table']}>
-            <tbody>
-              <For each={timeSlots()}>
-                {(slot, slotIndex) => (
-                  <tr>
-                    {/* Time column cell */}
-                    <td class={styles['body-time-col']}>
-                      {/* Show label only on top-of-hour rows */}
-                      {slot.minute === 0 ? slot.label : ''}
-                    </td>
+          {/* Body table (scrollable) */}
+          <div
+            class={styles['body-table-container']}
+            ref={(el) => (scrollContainer = el)}
+          >
+            <table class={styles['body-table']}>
+              <tbody>
+                <For each={timeSlots()}>
+                  {(slot, slotIndex) => (
+                    <tr>
+                      {/* Time column cell */}
+                      <td class={styles['body-time-col']}>
+                        {/* Show label only on top-of-hour rows */}
+                        {slot.minute === 0 ? slot.label : ''}
+                      </td>
 
-                    {/* 7 day cells */}
-                    <For each={[0, 1, 2, 3, 4, 5, 6]}>
-                      {(_, dayIndex) => {
-                        const key = `day-${dayIndex()}-slot-${slotIndex()}`;
-                        const dropData = {
-                          dayIndex: dayIndex(),
-                          hour: Math.floor(slotIndex() / 2),
-                          minute: slotIndex() % 2 === 0 ? 0 : 30,
-                        };
+                      {/* 7 day cells */}
+                      <For each={[0, 1, 2, 3, 4, 5, 6]}>
+                        {(_, dayIndex) => {
+                          const key = `day-${dayIndex()}-slot-${slotIndex()}`;
+                          const dropData = {
+                            dayIndex: dayIndex(),
+                            hour: Math.floor(slotIndex() / 2),
+                            minute: slotIndex() % 2 === 0 ? 0 : 30,
+                          };
 
-                        return (
-                          <CalendarCell
-                            key={key}
-                            dropData={dropData}
-                            isHovered={hoveredSet().has(key)}
-                            isCurrentDay={dayIndex() === currentDayIndex()}
-                            cellRefs={cellRefs}
-                            canDrop={canDrop}
-                            onDrop={onDrop}
-                          />
-                        );
-                      }}
-                    </For>
-                  </tr>
+                          return (
+                            <CalendarCell
+                              key={key}
+                              dropData={dropData}
+                              isHovered={hoveredSet().has(key)}
+                              isCurrentDay={dayIndex() === currentDayIndex()}
+                              cellRefs={cellRefs}
+                              canDrop={canDrop}
+                              onDrop={onDrop}
+                            />
+                          );
+                        }}
+                      </For>
+                    </tr>
+                  )}
+                </For>
+              </tbody>
+            </table>
+
+            {/* The event layer => absolutely positioned items */}
+            <div class={styles['event-layer']}>
+              <For each={entries}>
+                {(ev) => (
+                  <CalendarEntryBox
+                    entry={ev}
+                    cellGrid={cellRefs}
+                    onResizeComplete={onResizeComplete}
+                    onDelete={onDelete}
+                    onInfo={onInfo}
+                    onDragOverCell={handleDragOverCell}
+                    hasOverlap={(candidate) =>
+                      entries.some(
+                        (x) =>
+                          x.id !== candidate.id &&
+                          doEntriesOverlap(x, candidate)
+                      )
+                    }
+                  />
                 )}
               </For>
-            </tbody>
-          </table>
+            </div>
 
-          {/* The event layer => absolutely positioned items */}
-          <div class={styles['event-layer']}>
-            <For each={entries}>
-              {(ev) => (
-                // In CalendarView, inside the event-layer For loop
-                <CalendarEntryBox
-                  entry={ev}
-                  cellGrid={cellRefs}
-                  onResizeComplete={onResizeComplete}
-                  onDelete={onDelete}
-                  onInfo={onInfo}
-                  onDragOverCell={handleDragOverCell}
-                  hasOverlap={(candidate) =>
-                    entries.some(
-                      (x) =>
-                        x.id !== candidate.id && doEntriesOverlap(x, candidate)
-                    )
-                  }
-                />
-              )}
-            </For>
-          </div>
-
-          <div style={getTimeBarStyle()}>
-            <div
-              style={{
-                position: 'absolute',
-                left: '-4em',
-                top: '-0.5em',
-                width: '4em',
-                height: '1em',
-                background: '#007bff',
-                'border-radius': '30%',
-                'font-size': '0.8em',
-                'text-align': 'center',
-                padding: '0.2em',
-                display: 'flex',
-                'justify-content': 'center',
-                'align-items': 'center',
-              }}
-            >
-              {(() => {
-                const now = new Date();
-                const zonedNow = toZonedTime(now, props.timeZone);
-                return (
-                  zonedNow.getHours().toString().padStart(2, '0') +
-                  ':' +
-                  zonedNow.getMinutes().toString().padStart(2, '0')
-                );
-              })()}
+            <div style={getTimeBarStyle()}>
+              <div
+                style={{
+                  position: 'absolute',
+                  left: '-4em',
+                  top: '-0.5em',
+                  width: '4em',
+                  height: '1em',
+                  background: '#007bff',
+                  'border-radius': '30%',
+                  'font-size': '0.8em',
+                  'text-align': 'center',
+                  padding: '0.2em',
+                  display: 'flex',
+                  'justify-content': 'center',
+                  'align-items': 'center',
+                }}
+              >
+                {(() => {
+                  const now = new Date();
+                  const zonedNow = toZonedTime(now, props.timeZone);
+                  return (
+                    zonedNow.getHours().toString().padStart(2, '0') +
+                    ':' +
+                    zonedNow.getMinutes().toString().padStart(2, '0')
+                  );
+                })()}
+              </div>
             </div>
           </div>
         </div>

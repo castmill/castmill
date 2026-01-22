@@ -99,7 +99,8 @@
   },
   "topbar": {
     "help": "Aide",
-    "notifications": "Notifications"
+    "notifications": "Notifications",
+    "gettingStarted": "Prise en main"
   },
   "settings": {
     "title": "Paramètres",
@@ -124,6 +125,14 @@
     "failedLoadCredentials": "Échec du chargement des identifiants. Veuillez actualiser la page.",
     "languageSettings": "Paramètres de langue",
     "selectLanguage": "Sélectionnez votre langue préférée",
+    "onboardingTour": "Visite guidée de démarrage",
+    "onboardingTourDescription": "Réinitialisez la visite pour refaire les étapes.",
+    "onboardingTourResetButton": "Réinitialiser la visite",
+    "onboardingTourResetConfirmTitle": "Réinitialiser la visite guidée ?",
+    "onboardingTourResetConfirmDescription": "Cela effacera votre progression et réaffichera la visite.",
+    "onboardingTourResetAction": "Réinitialiser la visite",
+    "onboardingTourResetSuccess": "Visite guidée réinitialisée. Vous pouvez la recommencer maintenant.",
+    "onboardingTourResetError": "Échec de la réinitialisation de la visite guidée. Veuillez réessayer.",
     "description": "Gérer les informations et préférences de votre compte",
     "confirmDeletePasskey": "Êtes-vous sûr de vouloir supprimer cette clé d'accès ?\n\nRemarque : Cela supprimera la clé d'accès de votre compte, mais vous devrez peut-être la supprimer manuellement des paramètres de votre appareil (comme iCloud Keychain, Google Password Manager ou Windows Hello).\n\nAssurez-vous d'avoir testé que vos autres clés d'accès fonctionnent avant de supprimer celle-ci.",
     "fullName": "Nom complet",
@@ -187,6 +196,16 @@
     "approachingLimit": "Approche de la limite",
     "noUsageData": "Aucune donnée d'utilisation disponible",
     "unableToLoad": "Impossible de charger les informations d'utilisation des ressources",
+    "resources": {
+      "medias": "Fichiers multimédias",
+      "storage": "Stockage",
+      "users": "Utilisateurs",
+      "devices": "Appareils",
+      "playlists": "Listes de lecture",
+      "channels": "Chaînes",
+      "teams": "Équipes",
+      "widgets": "Widgets"
+    },
     "errors": {
       "fetchUsageData": "Échec de la récupération des données d'utilisation : {{error}}"
     }
@@ -365,8 +384,14 @@
     "removeChannelEntry": "Supprimer l'entrée du canal",
     "cannotDeleteChannel": "Impossible de supprimer le canal",
     "success": {
+      "added": "Canal {{name}} ajouté avec succès",
+      "created": "Canal {{name}} créé avec succès",
+      "updated": "Canal {{name}} mis à jour avec succès",
       "updateDefaultPlaylist": "Playlist par défaut mise à jour avec succès",
       "clearDefaultPlaylist": "Playlist par défaut effacée avec succès"
+    },
+    "info": {
+      "contentRequired": "Pour afficher du contenu, définissez une playlist par défaut ou ajoutez une entrée planifiée pour ce canal."
     },
     "errors": {
       "removeChannel": "Erreur lors de la suppression du canal {{name}} : {{error}}",
@@ -895,6 +920,67 @@
       "organizationNameTooLong": "Le nom de l'organisation doit comporter moins de 50 caractères",
       "organizationNameTaken": "Ce nom d'organisation est déjà pris. Veuillez choisir un autre nom.",
       "failed": "Échec de la configuration. Veuillez réessayer."
+    }
+  },
+  "onboardingTour": {
+    "title": "Visite Guidée de Démarrage",
+    "progressText": "{{current}} sur {{total}} étapes terminées",
+    "markComplete": "Marquer comme Terminé",
+    "stepCompleted": "Étape terminée !",
+    "stepCompletedBadge": "Terminé",
+    "allStepsComplete": "Félicitations ! Vous avez terminé toutes les étapes d'intégration !",
+    "dismissed": "Visite guidée fermée. Vous pouvez la redémarrer à tout moment depuis les paramètres.",
+    "dismissConfirmTitle": "Fermer la visite guidée ?",
+    "dismissConfirmMessage": "Vous pouvez la rouvrir à tout moment via l’icône fusée dans la barre supérieure.",
+    "skip": "Ignorer",
+    "finish": "Terminer la Visite",
+    "goToStep": "Aller à l'étape {{step}}",
+    "learnMore": "En savoir plus",
+    "steps": {
+      "findGuide": {
+        "title": "Retrouvez Ce Guide à Tout Moment",
+        "description": "Recherchez l'icône de fusée dans la barre de navigation supérieure. Vous pouvez cliquer dessus à tout moment pour rouvrir ce guide de démarrage et reprendre là où vous vous êtes arrêté.",
+        "action": "Montrez-Moi"
+      },
+      "chooseLanguage": {
+        "title": "Choisissez Votre Langue",
+        "description": "Sélectionnez votre langue préférée dans le menu déroulant de la barre de navigation supérieure. Cela traduira l'ensemble de l'interface de l'application pour faciliter son utilisation.",
+        "action": "Sélectionner la Langue"
+      },
+      "uploadMedia": {
+        "title": "Téléchargez Votre Premier Média",
+        "description": "Commencez par télécharger des images, des vidéos ou d'autres contenus que vous souhaitez afficher sur vos écrans d'affichage numérique. Vous pouvez glisser-déposer des fichiers ou utiliser le bouton de téléchargement.",
+        "action": "Aller à la Bibliothèque Multimédia"
+      },
+      "createPlaylist": {
+        "title": "Créez Votre Première Playlist",
+        "description": "Organisez votre contenu en playlists. Ajoutez des fichiers multimédias et des widgets pour créer des séquences de contenu engageantes. Vous pouvez définir des durées d'affichage et des transitions pour chaque élément.",
+        "action": "Aller aux Playlists"
+      },
+      "createChannel": {
+        "title": "Configurez une Chaîne",
+        "description": "Les chaînes combinent des playlists et des programmations. Créez une chaîne et assignez une playlist par défaut pour contrôler quel contenu est diffusé à différents moments de la journée.",
+        "action": "Aller aux Chaînes"
+      },
+      "registerDevice": {
+        "title": "Enregistrez Votre Premier Appareil",
+        "description": "Ouvrez d'abord le lecteur pour obtenir un code d'enregistrement, puis saisissez ce code ici pour enregistrer l'appareil. Astuce : vous pouvez ouvrir un lecteur dans le navigateur de votre ordinateur pour les tests—utilisez {{playerUrl}}.",
+        "action": "Aller aux Appareils"
+      },
+      "assignChannel": {
+        "title": "Assignez une Chaîne à l'Appareil",
+        "description": "Liez une chaîne à votre appareil pour qu'il sache quel contenu afficher. Chaque appareil peut être assigné à une chaîne à la fois, mais vous pouvez le modifier à tout moment.",
+        "action": "Gérer les Appareils"
+      },
+      "advancedPlaylist": {
+        "title": "Créez des Playlists Avancées avec des Mises en Page",
+        "description": "Faites passer votre contenu au niveau supérieur en utilisant des mises en page pour afficher plusieurs éléments simultanément. Divisez votre écran en zones et affichez du contenu différent dans chaque zone.",
+        "action": "Explorer les Mises en Page"
+      }
+    },
+    "errors": {
+      "failedToCompleteStep": "Échec de la validation de l'étape. Veuillez réessayer.",
+      "failedToDismiss": "Échec de la fermeture de la visite. Veuillez réessayer."
     }
   }
 }
