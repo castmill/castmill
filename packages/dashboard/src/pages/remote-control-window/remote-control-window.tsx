@@ -107,7 +107,7 @@ const RemoteControlWindow: Component = () => {
   createEffect(() => {
     if (!sessionId || !deviceId) {
       setConnectionState('error');
-      setErrorMessage(t('remoteControl.window.missingParams'));
+      setErrorMessage(t('devices.remoteControl.window.missingParams'));
       return;
     }
 
@@ -161,7 +161,7 @@ const RemoteControlWindow: Component = () => {
             console.error('Failed to join RC channel', resp);
             setConnectionState('error');
             setErrorMessage(
-              t('remoteControl.window.connectionError', {
+              t('devices.remoteControl.window.connectionError', {
                 error: resp.reason || 'Unknown error',
               })
             );
@@ -174,7 +174,7 @@ const RemoteControlWindow: Component = () => {
           .receive('timeout', () => {
             console.error('RC channel join timeout');
             setConnectionState('error');
-            setErrorMessage(t('remoteControl.window.connectionTimeout'));
+            setErrorMessage(t('devices.remoteControl.window.connectionTimeout'));
             // Disconnect socket on timeout as well
             if (rcSocket) {
               rcSocket.disconnect();
@@ -311,7 +311,7 @@ const RemoteControlWindow: Component = () => {
           console.log('RC status update:', payload);
           if (payload.status === 'disconnected') {
             setConnectionState('disconnected');
-            setErrorMessage(t('remoteControl.window.deviceDisconnected'));
+            setErrorMessage(t('devices.remoteControl.window.deviceDisconnected'));
           }
         });
 
@@ -321,7 +321,7 @@ const RemoteControlWindow: Component = () => {
         console.error('Failed to connect to RC socket:', error);
         setConnectionState('error');
         setErrorMessage(
-          t('remoteControl.window.connectionError', {
+          t('devices.remoteControl.window.connectionError', {
             error: error instanceof Error ? error.message : 'Unknown error',
           })
         );
@@ -485,13 +485,13 @@ const RemoteControlWindow: Component = () => {
     const state = connectionState();
     switch (state) {
       case 'connecting':
-        return t('remoteControl.window.connecting');
+        return t('devices.remoteControl.window.connecting');
       case 'connected':
-        return t('remoteControl.window.connected');
+        return t('devices.remoteControl.window.connected');
       case 'disconnected':
-        return t('remoteControl.window.disconnected');
+        return t('devices.remoteControl.window.disconnected');
       case 'error':
-        return t('remoteControl.window.error');
+        return t('devices.remoteControl.window.error');
       default:
         return '';
     }
@@ -505,7 +505,7 @@ const RemoteControlWindow: Component = () => {
           <span class="status-text">{getConnectionStatusText()}</span>
         </div>
         <div class="rc-device-info">
-          <span class="device-label">{t('remoteControl.window.device')}:</span>
+          <span class="device-label">{t('devices.remoteControl.window.device')}:</span>
           <span class="device-id">{deviceId}</span>
         </div>
       </div>
@@ -517,7 +517,7 @@ const RemoteControlWindow: Component = () => {
             <div class="rc-message">
               <Show when={connectionState() === 'connecting'}>
                 <div class="loading-spinner"></div>
-                <p>{t('remoteControl.window.connectingMessage')}</p>
+                <p>{t('devices.remoteControl.window.connectingMessage')}</p>
               </Show>
               <Show
                 when={
@@ -527,7 +527,7 @@ const RemoteControlWindow: Component = () => {
               >
                 <div class="error-icon">⚠️</div>
                 <p class="error-message">{errorMessage()}</p>
-                <p class="error-hint">{t('remoteControl.window.errorHint')}</p>
+                <p class="error-hint">{t('devices.remoteControl.window.errorHint')}</p>
               </Show>
             </div>
           }
@@ -536,7 +536,7 @@ const RemoteControlWindow: Component = () => {
             <Show when={!hasReceivedFrames()}>
               <div class="rc-waiting-overlay">
                 <div class="loading-spinner"></div>
-                <p>{t('remoteControl.window.waitingForFrames')}</p>
+                <p>{t('devices.remoteControl.window.waitingForFrames')}</p>
               </div>
             </Show>
             <canvas
@@ -549,7 +549,7 @@ const RemoteControlWindow: Component = () => {
               onClick={handleClick}
               tabIndex={0}
               role="img"
-              aria-label={t('remoteControl.window.canvasLabel')}
+              aria-label={t('devices.remoteControl.window.canvasLabel')}
             />
           </div>
         </Show>

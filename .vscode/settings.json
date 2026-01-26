@@ -1,5 +1,6 @@
 {
     "chat.tools.terminal.autoApprove": {
-        "~/Library/Android/sdk/platform-tools/adb": true
+        "~/Library/Android/sdk/platform-tools/adb": true,
+        "./gradlew": true
     }
 }

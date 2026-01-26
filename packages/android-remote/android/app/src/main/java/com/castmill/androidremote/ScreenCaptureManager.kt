@@ -379,9 +379,11 @@ class ScreenCaptureManager(
     }
 
     /**
-     * Stop screen capture and release all resources.
+     * Pause screen capture without releasing MediaProjection.
+     * This allows the MediaProjection permission to be reused for subsequent sessions.
+     * Call stop() to fully release all resources including MediaProjection.
      */
-    fun stop() {
+    fun pauseCapture() {
         if (!isCapturing) return
         
         isCapturing = false
@@ -401,11 +403,42 @@ class ScreenCaptureManager(
                 stopMjpegEncoding()
             }
 
-            // Stop media projection
+            // NOTE: Do NOT stop mediaProjection here - keep it alive for reuse
+            Log.i(TAG, "Screen capture paused (MediaProjection kept alive for reuse)")
+        } catch (e: Exception) {
+            Log.e(TAG, "Error pausing screen capture", e)
+        }
+    }
+
+    /**
+     * Stop screen capture and release all resources including MediaProjection.
+     * After calling this, a new MediaProjection permission must be granted.
+     */
+    fun stop() {
+        if (!isCapturing && mediaProjection == null) return
+        
+        isCapturing = false
+        
+        try {
+            // Clear frame buffer
+            frameBuffer.clear()
+            
+            // Release virtual display
+            virtualDisplay?.release()
+            virtualDisplay = null
+
+            // Stop encoders
+            if (useH264) {
+                stopH264Encoding()
+            } else {
+                stopMjpegEncoding()
+            }
+
+            // Stop media projection - this invalidates the permission
             mediaProjection?.stop()
             mediaProjection = null
 
-            Log.i(TAG, "Screen capture stopped")
+            Log.i(TAG, "Screen capture stopped and MediaProjection released")
         } catch (e: Exception) {
             Log.e(TAG, "Error stopping screen capture", e)
         }

@@ -387,12 +387,15 @@ class WebSocketManager(
     }
 
     private fun scheduleReconnect() {
-        if (!shouldReconnect) return
+        if (!shouldReconnect) {
+            Log.d(TAG, "Reconnect skipped: shouldReconnect=false")
+            return
+        }
 
         diagnosticsManager?.recordReconnectAttempt()
         stopReconnect()
         reconnectJob = coroutineScope.launch {
-            Log.i(TAG, "Reconnecting in ${currentReconnectDelay}ms")
+            Log.i(TAG, "Reconnecting in ${currentReconnectDelay}ms (isStandbyMode=$isStandbyMode, sessionId=$sessionId)")
             delay(currentReconnectDelay)
 
             if (isActive && shouldReconnect) {
@@ -401,9 +404,13 @@ class WebSocketManager(
                     MAX_RECONNECT_DELAY_MS
                 )
                 if (isStandbyMode) {
+                    Log.i(TAG, "Reconnecting in standby mode")
                     connectStandby()
                 } else if (sessionId != null) {
+                    Log.i(TAG, "Reconnecting with session: $sessionId")
                     connect(sessionId!!)
+                } else {
+                    Log.w(TAG, "Cannot reconnect: not in standby mode and no sessionId")
                 }
             }
         }
@@ -690,8 +697,14 @@ class WebSocketManager(
             isConnecting = false
             isWebSocketOpen = false
             isAuthenticated = false
+            // Clear the webSocket reference so reconnect can create a new one
+            this@WebSocketManager.webSocket = null
+            // Reset join refs for clean rejoin on reconnect
+            joinRef = null
+            joinMessageRef = null
             diagnosticsManager?.recordNetworkError()
             stopHeartbeat()
+            stopRcHeartbeat()
             stopDiagnosticsReporting()
             scheduleReconnect()
         }
@@ -701,7 +714,13 @@ class WebSocketManager(
             isConnecting = false
             isWebSocketOpen = false
             isAuthenticated = false
+            // Clear the webSocket reference so reconnect can create a new one
+            this@WebSocketManager.webSocket = null
+            // Reset join refs for clean rejoin on reconnect
+            joinRef = null
+            joinMessageRef = null
             stopHeartbeat()
+            stopRcHeartbeat()
             stopDiagnosticsReporting()
             if (shouldReconnect) {
                 scheduleReconnect()

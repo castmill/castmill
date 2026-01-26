@@ -6,6 +6,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.media.projection.MediaProjection
@@ -187,6 +188,8 @@ class RemoteControlService : LifecycleService() {
     override fun onDestroy() {
         super.onDestroy()
         
+        Log.i(TAG, "Service being destroyed, releasing all resources")
+        
         // Clean up resources
         webSocketManager?.disconnect()
         webSocketManager = null
@@ -194,11 +197,19 @@ class RemoteControlService : LifecycleService() {
         mediaWebSocketManager?.disconnect()
         mediaWebSocketManager = null
         
+        // Full stop - release MediaProjection completely
         screenCaptureManager?.stop()
         screenCaptureManager = null
         
+        // Invalidate MediaProjection permission since service is being destroyed
+        hasMediaProjectionPermission = false
+        mediaProjectionResultCode = Activity.RESULT_CANCELED
+        mediaProjectionData = null
+        
         isConnected = false
         isCapturing = false
+        
+        Log.i(TAG, "Service destroyed, MediaProjection permission invalidated")
     }
 
     /**
@@ -331,14 +342,24 @@ class RemoteControlService : LifecycleService() {
             Log.i(TAG, "MediaProjection permission already granted, starting media capture")
             startMediaCapture(mediaProjectionResultCode, mediaProjectionData!!, startSessionData.sessionId)
         } else {
-            // Permission not available - log and update notification
-            Log.w(TAG, "MediaProjection permission not available (hasPermission=$hasMediaProjectionPermission, data=${mediaProjectionData != null}). User must grant permission via MainActivity.")
-            updateNotification("Waiting for screen capture permission")
+            // Permission not available - launch MainActivity to request it
+            Log.w(TAG, "MediaProjection permission not available (hasPermission=$hasMediaProjectionPermission, data=${mediaProjectionData != null}). Launching MainActivity to request permission.")
+            updateNotification("Tap to grant screen capture permission")
             
-            // In a production app, you might:
-            // 1. Show a notification to open MainActivity
-            // 2. Use a transparent activity to request permission
-            // 3. Store the pending session and wait for permission grant
+            // Launch MainActivity to request MediaProjection permission
+            // The MainActivity will handle the system permission dialog and send
+            // the result back to the service via ACTION_UPDATE_MEDIA_PROJECTION
+            try {
+                val intent = Intent(this, MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                    putExtra("request_media_projection", true)
+                }
+                startActivity(intent)
+                Log.i(TAG, "Launched MainActivity to request MediaProjection permission")
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to launch MainActivity", e)
+                updateNotification("Error: Cannot request permission")
+            }
         }
     }
 
@@ -442,17 +463,21 @@ class RemoteControlService : LifecycleService() {
 
     /**
      * Stop any ongoing screen capture and media WebSocket.
-     * Note: This invalidates the MediaProjection permission since it's single-use.
-     * A new permission must be granted before starting another session.
+     * Note: This pauses capture but keeps MediaProjection alive for reuse.
+     * The MediaProjection permission is retained so subsequent sessions
+     * don't require re-granting permission.
      */
     private fun stopScreenCapture() {
-        Log.i(TAG, "Stopping screen capture")
+        Log.i(TAG, "Stopping screen capture (keeping MediaProjection for reuse)")
         
         try {
-            screenCaptureManager?.stop()
+            // Pause capture but keep MediaProjection alive
+            screenCaptureManager?.pauseCapture()
         } catch (e: Exception) {
-            Log.e(TAG, "Error stopping screen capture", e)
+            Log.e(TAG, "Error pausing screen capture", e)
         }
+        // Don't null out screenCaptureManager - we'll create new one for next session
+        // but the MediaProjection permission data is retained
         screenCaptureManager = null
         
         try {
@@ -465,12 +490,9 @@ class RemoteControlService : LifecycleService() {
         isCapturing = false
         sessionId = null
         
-        // IMPORTANT: Invalidate MediaProjection permission since it's single-use
-        // Once a MediaProjection is stopped, the permission token becomes invalid
-        hasMediaProjectionPermission = false
-        mediaProjectionResultCode = Activity.RESULT_CANCELED
-        mediaProjectionData = null
-        Log.i(TAG, "MediaProjection permission invalidated after screen capture stopped")
+        // NOTE: Do NOT invalidate MediaProjection permission here
+        // Keep hasMediaProjectionPermission = true so we can reuse it
+        Log.i(TAG, "Screen capture stopped, MediaProjection permission retained for reuse")
     }
 
     /**

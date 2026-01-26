@@ -85,6 +85,27 @@ class MainActivity : AppCompatActivity() {
         
         // Try to start service in standby mode if device token is available
         startStandbyServiceIfPossible()
+        
+        // Check if launched to request MediaProjection permission (from service)
+        handleMediaProjectionRequest(intent)
+    }
+    
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        // Handle when activity is already running and receives new intent
+        intent?.let { handleMediaProjectionRequest(it) }
+    }
+    
+    /**
+     * Handle request to show MediaProjection permission dialog.
+     * Called when the service launches this activity to request permission.
+     */
+    private fun handleMediaProjectionRequest(intent: Intent) {
+        if (intent.getBooleanExtra("request_media_projection", false)) {
+            Log.i(TAG, "Received request to show MediaProjection permission dialog")
+            // Automatically show the screen capture permission dialog
+            requestScreenCapturePermission()
+        }
     }
 
     /**
@@ -260,6 +281,15 @@ class MainActivity : AppCompatActivity() {
         Log.d(TAG, "Requesting screen capture permission")
         val captureIntent = mediaProjectionManager.createScreenCaptureIntent()
         mediaProjectionLauncher.launch(captureIntent)
+    }
+    
+    /**
+     * Request screen capture permission directly without showing explanatory dialog.
+     * Used when the service requests permission (user already initiated an RC session).
+     */
+    private fun requestScreenCapturePermission() {
+        Log.i(TAG, "Auto-requesting screen capture permission (service requested)")
+        requestScreenCapture()
     }
 
     /**
