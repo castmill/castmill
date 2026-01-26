@@ -62,15 +62,21 @@ defmodule Castmill.Devices.RcRelay do
   def enqueue_control_event(session_id, payload) do
     case RcMessageSchemas.validate_control_event(payload) do
       {:ok, validated_payload} ->
-        GenServer.call(via_tuple(session_id), {:enqueue_control, validated_payload})
+        try do
+          GenServer.call(via_tuple(session_id), {:enqueue_control, validated_payload})
+        catch
+          :exit, {:noproc, _} ->
+            Logger.debug("Relay process not found for session #{session_id}")
+            {:error, :session_not_found}
+          :exit, reason ->
+            Logger.warning("Relay call failed for session #{session_id}: #{inspect(reason)}")
+            {:error, :session_not_found}
+        end
 
       {:error, reason} ->
         Logger.warning("Invalid control event for session #{session_id}: #{reason}")
         {:error, :invalid_message}
     end
-  rescue
-    # If relay doesn't exist, session may be closed
-    _ -> {:error, :session_not_found}
   end
 
   @doc """
@@ -85,14 +91,21 @@ defmodule Castmill.Devices.RcRelay do
   def enqueue_media_frame(session_id, payload) do
     case RcMessageSchemas.validate_media_frame(payload) do
       {:ok, validated_payload} ->
-        GenServer.call(via_tuple(session_id), {:enqueue_media, validated_payload})
+        try do
+          GenServer.call(via_tuple(session_id), {:enqueue_media, validated_payload})
+        catch
+          :exit, {:noproc, _} ->
+            Logger.debug("Relay process not found for session #{session_id}")
+            {:error, :session_not_found}
+          :exit, reason ->
+            Logger.warning("Relay call failed for session #{session_id}: #{inspect(reason)}")
+            {:error, :session_not_found}
+        end
 
       {:error, reason} ->
         Logger.warning("Invalid media frame for session #{session_id}: #{reason}")
         {:error, :invalid_message}
     end
-  rescue
-    _ -> {:error, :session_not_found}
   end
 
   @doc """
@@ -101,9 +114,16 @@ defmodule Castmill.Devices.RcRelay do
   Returns map with queue sizes and drop counts.
   """
   def get_stats(session_id) do
-    GenServer.call(via_tuple(session_id), :get_stats)
-  rescue
-    _ -> {:error, :session_not_found}
+    try do
+      GenServer.call(via_tuple(session_id), :get_stats)
+    catch
+      :exit, {:noproc, _} ->
+        Logger.debug("Relay process not found for session #{session_id}")
+        {:error, :session_not_found}
+      :exit, reason ->
+        Logger.warning("Relay stats call failed for session #{session_id}: #{inspect(reason)}")
+        {:error, :session_not_found}
+    end
   end
 
   @doc """

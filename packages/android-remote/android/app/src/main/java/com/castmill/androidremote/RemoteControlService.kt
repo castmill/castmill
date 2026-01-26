@@ -288,15 +288,10 @@ class RemoteControlService : LifecycleService() {
     private fun handleSessionStopped() {
         Log.i(TAG, "Session stopped - stopping screen capture and returning to standby")
         
-        // Stop screen capture
+        // Stop screen capture (this also invalidates MediaProjection permission and clears sessionId)
         stopScreenCapture()
         
-        // Also disconnect media WebSocket
-        mediaWebSocketManager?.disconnect()
-        mediaWebSocketManager = null
-        
-        // Clear session state
-        sessionId = null
+        // Clear pending session state
         pendingSessionId = null
         pendingSessionToken = null
         pendingDeviceId = null
@@ -446,7 +441,9 @@ class RemoteControlService : LifecycleService() {
     }
 
     /**
-     * Stop any ongoing screen capture and media WebSocket
+     * Stop any ongoing screen capture and media WebSocket.
+     * Note: This invalidates the MediaProjection permission since it's single-use.
+     * A new permission must be granted before starting another session.
      */
     private fun stopScreenCapture() {
         Log.i(TAG, "Stopping screen capture")
@@ -467,6 +464,13 @@ class RemoteControlService : LifecycleService() {
         
         isCapturing = false
         sessionId = null
+        
+        // IMPORTANT: Invalidate MediaProjection permission since it's single-use
+        // Once a MediaProjection is stopped, the permission token becomes invalid
+        hasMediaProjectionPermission = false
+        mediaProjectionResultCode = Activity.RESULT_CANCELED
+        mediaProjectionData = null
+        Log.i(TAG, "MediaProjection permission invalidated after screen capture stopped")
     }
 
     /**

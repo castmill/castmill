@@ -387,20 +387,17 @@ defmodule CastmillWeb.RcWindowChannel do
 
       Phoenix.PubSub.unsubscribe(Castmill.PubSub, "rc_session:#{session_id}")
 
-      # Stop the session when the RC window closes
-      # This ensures the session is properly cleaned up and a new one can be started
-      case RcSessions.stop_session(session_id) do
-        {:ok, _session} ->
-          Logger.info("RC session #{session_id} stopped on window close")
-          # Notify device that session has stopped
-          Phoenix.PubSub.broadcast(
-            Castmill.PubSub,
-            "rc_session:#{session_id}",
-            %{event: "stop_session"}
-          )
-        {:error, reason} ->
-          Logger.warning("Failed to stop RC session #{session_id} on window close: #{inspect(reason)}")
-      end
+      # NOTE: We do NOT automatically stop the session when the RC window closes.
+      # This allows:
+      # 1. Multiple windows/tabs to connect to the same session
+      # 2. Brief disconnections without killing the session
+      # 3. The session to be reused if the user opens the RC window again quickly
+      #
+      # Sessions are cleaned up by:
+      # - Explicit user action (clicking stop button)
+      # - Timeout after inactivity (5 minutes default)
+      # - Creating a new session (which terminates the old one)
+      Logger.info("RC window closed for session #{session_id}, session remains active until timeout or explicit stop")
     end
 
     :ok

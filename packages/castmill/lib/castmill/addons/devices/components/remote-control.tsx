@@ -99,6 +99,8 @@ export const RemoteControl: Component<{
       );
 
       // Open RC window in popup
+      // Use a unique window name for each session to ensure a fresh window instance
+      // This prevents issues with SolidJS state persisting from previous sessions
       const rcUrl = `/org/${props.organizationId}/devices/${props.device.id}/remote-control?session=${result.session_id}`;
       const width = 1024;
       const height = 768;
@@ -106,7 +108,7 @@ export const RemoteControl: Component<{
       const top = (window.screen.height - height) / 2;
       window.open(
         rcUrl,
-        'RemoteControl',
+        `RemoteControl_${result.session_id}`,
         `width=${width},height=${height},left=${left},top=${top},toolbar=no,menubar=no,location=no,status=no`
       );
 

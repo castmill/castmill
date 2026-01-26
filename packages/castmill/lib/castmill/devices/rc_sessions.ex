@@ -5,6 +5,7 @@ defmodule Castmill.Devices.RcSessions do
   Handles session lifecycle management with proper state machine transitions,
   timeout logic, and ensures only one active session per device.
   """
+  require Logger
   import Ecto.Query, warn: false
   alias Castmill.Repo
   alias Castmill.Devices.RcSession
@@ -23,13 +24,19 @@ defmodule Castmill.Devices.RcSessions do
   """
   def create_session(device_id, user_id, opts \\ []) do
     timeout_seconds = Keyword.get(opts, :timeout_seconds, @default_timeout_seconds)
+    Logger.info("create_session called for device_id=#{device_id}, user_id=#{user_id}")
 
     # First, terminate any existing active session for this device (outside transaction)
-    case get_active_session_for_device(device_id) do
+    existing = get_active_session_for_device(device_id)
+    Logger.info("create_session: existing active session for device=#{inspect(existing && existing.id)}")
+
+    case existing do
       nil ->
+        Logger.info("create_session: no existing session to terminate")
         :ok
 
       existing_session ->
+        Logger.info("create_session: terminating existing session #{existing_session.id} (state=#{existing_session.state})")
         RcLogger.info("Terminating existing session before creating new one", existing_session.id, device_id, [
           user_id: user_id,
           existing_state: existing_session.state
@@ -37,12 +44,17 @@ defmodule Castmill.Devices.RcSessions do
 
         # Terminate the existing session - this will broadcast to the device
         terminate_session_forcefully(existing_session.id)
+        Logger.info("create_session: existing session #{existing_session.id} terminated")
     end
 
     # Use a transaction to ensure atomicity of session creation and relay startup
+    Logger.info("create_session: starting transaction")
     Repo.transaction(fn ->
       # Double-check no active session exists (race condition protection)
-      case get_active_session_for_device(device_id) do
+      double_check = get_active_session_for_device(device_id)
+      Logger.info("create_session: double-check active session=#{inspect(double_check && double_check.id)}")
+
+      case double_check do
         nil ->
           # Truncate to seconds since :utc_datetime doesn't support microseconds
           now = DateTime.utc_now() |> DateTime.truncate(:second)
@@ -61,6 +73,7 @@ defmodule Castmill.Devices.RcSessions do
                |> RcSession.changeset(attrs)
                |> Repo.insert() do
             {:ok, session} ->
+              Logger.info("create_session: session #{session.id} inserted successfully")
               # Log session creation
               RcLogger.info("RC session created", session.id, device_id, [
                 user_id: user_id,
@@ -73,13 +86,16 @@ defmodule Castmill.Devices.RcSessions do
               # Start the relay for this session
               case RcRelaySupervisor.start_relay(session.id) do
                 {:ok, _pid} ->
+                  Logger.info("create_session: relay started for session #{session.id}")
                   # Schedule timeout check
                   schedule_timeout_check(session.id, timeout_seconds)
                   # Return session with computed timeout_at for API response
                   timeout_at = DateTime.add(now, timeout_seconds, :second)
+                  Logger.info("create_session: returning session #{session.id} successfully")
                   %{session | timeout_at: timeout_at}
 
                 {:error, reason} ->
+                  Logger.error("create_session: failed to start relay for session #{session.id}: #{inspect(reason)}")
                   # Log and emit telemetry for relay failure
                   RcLogger.error("Failed to start relay for RC session", session.id, device_id, [
                     reason: inspect(reason)
@@ -90,11 +106,13 @@ defmodule Castmill.Devices.RcSessions do
               end
 
             {:error, changeset} ->
+              Logger.error("create_session: failed to insert session: #{inspect(changeset.errors)}")
               Repo.rollback(changeset)
           end
 
-        _existing_session ->
+        existing_in_tx ->
           # This should rarely happen - only in race conditions
+          Logger.warning("create_session: found active session in transaction - race condition! session=#{existing_in_tx.id}")
           Repo.rollback(:device_has_active_session)
       end
     end)
@@ -133,6 +151,9 @@ defmodule Castmill.Devices.RcSessions do
   This finalizes the session and marks it as fully terminated.
   """
   def transition_to_closed(session_id) do
+    # Log caller to debug unexpected closures
+    Logger.info("transition_to_closed called for #{session_id}, caller: #{inspect(Process.info(self(), :current_stacktrace))}")
+
     case transition_state(session_id, "closed") do
       {:ok, session} ->
         # Calculate duration if started_at is available

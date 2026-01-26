@@ -136,14 +136,19 @@ const RemoteControlWindow: Component = () => {
         // This is different from the main dashboard socket (/user_socket)
         rcSocket = new Socket(`${wsEndpoint}/ws`, {
           params: () => ({ token }),
+          // Disable automatic reconnection - we'll handle reconnection manually
+          // or close the window if session is no longer valid
+          reconnectAfterMs: () => null,
         });
         
         rcSocket.connect();
 
-        // Join RC session channel
+        // Join RC session channel - disable automatic rejoin
         rcChannel = rcSocket.channel(`rc_window:${sessionId}`, {
           device_id: deviceId,
         });
+        // Disable automatic rejoin on error (session might be closed)
+        rcChannel.rejoinUntilConnected = () => {};
 
         rcChannel
           .join()
@@ -159,11 +164,20 @@ const RemoteControlWindow: Component = () => {
                 error: resp.reason || 'Unknown error',
               })
             );
+            // Disconnect socket when join fails to prevent retry attempts
+            // The session is likely closed/invalid, user needs to start a new session
+            if (rcSocket) {
+              rcSocket.disconnect();
+            }
           })
           .receive('timeout', () => {
             console.error('RC channel join timeout');
             setConnectionState('error');
             setErrorMessage(t('remoteControl.window.connectionTimeout'));
+            // Disconnect socket on timeout as well
+            if (rcSocket) {
+              rcSocket.disconnect();
+            }
           });
 
         // Listen for video frames (media_frame event from backend)
