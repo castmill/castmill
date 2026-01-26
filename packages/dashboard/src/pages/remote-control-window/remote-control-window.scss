@@ -46,6 +46,10 @@
   animation: none;
 }
 
+.status-reconnecting .status-indicator {
+  background-color: #fbbf24;
+}
+
 @keyframes pulse {
   0%,
   100% {

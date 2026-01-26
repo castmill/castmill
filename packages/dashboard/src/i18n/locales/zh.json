@@ -565,15 +565,19 @@
         "connected": "已连接",
         "disconnected": "已断开",
         "error": "错误",
+        "reconnecting": "重新连接中 ({{attempt}}/{{max}})",
         "device": "设备",
         "connectingMessage": "正在连接到设备...",
+        "waitingForFrames": "等待来自设备的视频流...",
+        "reconnectingMessage": "连接丢失。正在重新连接...（第 {{attempt}} 次尝试，共 {{max}} 次）",
+        "reconnectFailed": "在 {{max}} 次尝试后重新连接失败",
+        "sessionClosed": "会话已关闭",
         "deviceDisconnected": "设备已断开连接",
         "errorHint": "请关闭此窗口并尝试启动新会话",
         "missingParams": "缺少会话或设备参数",
         "connectionError": "连接错误：{{error}}",
         "connectionTimeout": "连接超时 - 请重试",
-        "canvasLabel": "远程设备屏幕",
-        "waitingForFrames": "等待来自设备的视频流..."
+        "canvasLabel": "远程设备屏幕"
       }
     }
   },

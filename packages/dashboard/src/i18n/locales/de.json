@@ -583,15 +583,19 @@
         "connected": "Verbunden",
         "disconnected": "Getrennt",
         "error": "Fehler",
+        "reconnecting": "Wiederverbinden ({{attempt}}/{{max}})",
         "device": "Gerät",
         "connectingMessage": "Verbindung zum Gerät wird hergestellt...",
+        "waitingForFrames": "Warte auf Videostream vom Gerät...",
+        "reconnectingMessage": "Verbindung verloren. Wiederverbindung... (Versuch {{attempt}} von {{max}})",
+        "reconnectFailed": "Wiederverbindung nach {{max}} Versuchen fehlgeschlagen",
+        "sessionClosed": "Sitzung wurde geschlossen",
         "deviceDisconnected": "Gerät wurde getrennt",
         "errorHint": "Bitte schließen Sie dieses Fenster und versuchen Sie, eine neue Sitzung zu starten",
         "missingParams": "Fehlende Sitzungs- oder Geräteparameter",
         "connectionError": "Verbindungsfehler: {{error}}",
         "connectionTimeout": "Verbindungszeitüberschreitung - bitte erneut versuchen",
-        "canvasLabel": "Ferngerätebildschirm",
-        "waitingForFrames": "Warte auf Videostream vom Gerät..."
+        "canvasLabel": "Ferngerätebildschirm"
       }
     }
   },

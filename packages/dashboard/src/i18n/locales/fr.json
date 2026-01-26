@@ -577,15 +577,19 @@
         "connected": "Connecté",
         "disconnected": "Déconnecté",
         "error": "Erreur",
+        "reconnecting": "Reconnexion ({{attempt}}/{{max}})",
         "device": "Appareil",
         "connectingMessage": "Connexion à l'appareil...",
+        "waitingForFrames": "En attente du flux vidéo de l'appareil...",
+        "reconnectingMessage": "Connexion perdue. Reconnexion... (tentative {{attempt}} sur {{max}})",
+        "reconnectFailed": "Échec de la reconnexion après {{max}} tentatives",
+        "sessionClosed": "La session a été fermée",
         "deviceDisconnected": "L'appareil a été déconnecté",
         "errorHint": "Veuillez fermer cette fenêtre et essayer de démarrer une nouvelle session",
         "missingParams": "Paramètres de session ou d'appareil manquants",
         "connectionError": "Erreur de connexion: {{error}}",
         "connectionTimeout": "Délai de connexion dépassé - veuillez réessayer",
-        "canvasLabel": "Écran de l'appareil distant",
-        "waitingForFrames": "En attente du flux vidéo de l'appareil..."
+        "canvasLabel": "Écran de l'appareil distant"
       }
     }
   },

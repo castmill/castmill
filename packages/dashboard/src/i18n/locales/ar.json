@@ -565,15 +565,19 @@
         "connected": "متصل",
         "disconnected": "غير متصل",
         "error": "خطأ",
+        "reconnecting": "إعادة الاتصال ({{attempt}}/{{max}})",
         "device": "الجهاز",
         "connectingMessage": "جاري الاتصال بالجهاز...",
+        "waitingForFrames": "في انتظار بث الفيديو من الجهاز...",
+        "reconnectingMessage": "انقطع الاتصال. جاري إعادة الاتصال... (المحاولة {{attempt}} من {{max}})",
+        "reconnectFailed": "فشل إعادة الاتصال بعد {{max}} محاولات",
+        "sessionClosed": "تم إغلاق الجلسة",
         "deviceDisconnected": "تم قطع الاتصال بالجهاز",
         "errorHint": "يرجى إغلاق هذه النافذة ومحاولة بدء جلسة جديدة",
         "missingParams": "معلمات الجلسة أو الجهاز مفقودة",
         "connectionError": "خطأ في الاتصال: {{error}}",
         "connectionTimeout": "انتهت مهلة الاتصال - يرجى المحاولة مرة أخرى",
-        "canvasLabel": "شاشة الجهاز عن بعد",
-        "waitingForFrames": "في انتظار بث الفيديو من الجهاز..."
+        "canvasLabel": "شاشة الجهاز عن بعد"
       }
     }
   },

@@ -12,7 +12,7 @@ import { useI18n } from '../../i18n';
 import { wsEndpoint } from '../../env';
 import './remote-control-window.scss';
 
-type ConnectionState = 'connecting' | 'connected' | 'disconnected' | 'error';
+type ConnectionState = 'connecting' | 'connected' | 'disconnected' | 'error' | 'reconnecting';
 
 interface FramePayload {
   data: string; // base64 encoded frame data
@@ -40,6 +40,11 @@ const RemoteControlWindow: Component = () => {
   );
   const [ctx, setCtx] = createSignal<CanvasRenderingContext2D | null>(null);
   const [hasReceivedFrames, setHasReceivedFrames] = createSignal(false);
+  const [reconnectAttempt, setReconnectAttempt] = createSignal(0);
+
+  // Max reconnection attempts before giving up
+  const MAX_RECONNECT_ATTEMPTS = 5;
+  const RECONNECT_DELAY_MS = 2000;
 
   const deviceId = params.id;
   const sessionId = searchParams.session;
@@ -113,9 +118,34 @@ const RemoteControlWindow: Component = () => {
 
     let rcSocket: Socket | null = null;
     let rcChannel: Channel | null = null;
+    let reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
+    let isCleaningUp = false;
+
+    // Function to attempt reconnection
+    const attemptReconnect = () => {
+      if (isCleaningUp) return;
+      
+      const attempt = reconnectAttempt();
+      if (attempt >= MAX_RECONNECT_ATTEMPTS) {
+        console.error('Max reconnection attempts reached');
+        setConnectionState('error');
+        setErrorMessage(t('devices.remoteControl.window.reconnectFailed'));
+        return;
+      }
+      
+      setReconnectAttempt(attempt + 1);
+      setConnectionState('reconnecting');
+      console.log(`Reconnection attempt ${attempt + 1}/${MAX_RECONNECT_ATTEMPTS}`);
+      
+      reconnectTimeout = setTimeout(() => {
+        connectToRcSocket();
+      }, RECONNECT_DELAY_MS);
+    };
 
     // Fetch user token for RC socket authentication
     const connectToRcSocket = async () => {
+      if (isCleaningUp) return;
+      
       try {
         const baseUrl = store.env?.baseUrl || 'http://localhost:4000';
         const response = await fetch(`${baseUrl}/sessions/`, {
@@ -133,13 +163,34 @@ const RemoteControlWindow: Component = () => {
           throw new Error('No token in session response');
         }
 
+        // Clean up any existing socket
+        if (rcSocket) {
+          rcSocket.disconnect();
+        }
+
         // Create a separate socket connection to the RC socket endpoint (/ws)
         // This is different from the main dashboard socket (/user_socket)
         rcSocket = new Socket(`${wsEndpoint}/ws`, {
           params: () => ({ token }),
           // Disable automatic reconnection - we'll handle reconnection manually
-          // or close the window if session is no longer valid
           reconnectAfterMs: () => null,
+        });
+        
+        // Handle socket-level connection errors
+        rcSocket.onError(() => {
+          console.error('Socket connection error');
+          if (!isCleaningUp && connectionState() === 'connected') {
+            // Lost connection during active session - try to reconnect
+            attemptReconnect();
+          }
+        });
+        
+        rcSocket.onClose(() => {
+          console.log('Socket closed');
+          if (!isCleaningUp && connectionState() === 'connected') {
+            // Lost connection during active session - try to reconnect
+            attemptReconnect();
+          }
         });
         
         rcSocket.connect();
@@ -156,28 +207,39 @@ const RemoteControlWindow: Component = () => {
           .receive('ok', (resp: any) => {
             console.log('Joined RC channel', resp);
             setConnectionState('connected');
+            // Reset reconnect attempts on successful connection
+            setReconnectAttempt(0);
           })
           .receive('error', (resp: any) => {
             console.error('Failed to join RC channel', resp);
-            setConnectionState('error');
-            setErrorMessage(
-              t('devices.remoteControl.window.connectionError', {
-                error: resp.reason || 'Unknown error',
-              })
-            );
-            // Disconnect socket when join fails to prevent retry attempts
-            // The session is likely closed/invalid, user needs to start a new session
+            // If we were reconnecting and join fails, the session might be closed
+            if (connectionState() === 'reconnecting') {
+              setConnectionState('error');
+              setErrorMessage(t('devices.remoteControl.window.sessionClosed'));
+            } else {
+              setConnectionState('error');
+              setErrorMessage(
+                t('devices.remoteControl.window.connectionError', {
+                  error: resp.reason || 'Unknown error',
+                })
+              );
+            }
+            // Disconnect socket when join fails
             if (rcSocket) {
               rcSocket.disconnect();
             }
           })
           .receive('timeout', () => {
             console.error('RC channel join timeout');
-            setConnectionState('error');
-            setErrorMessage(t('devices.remoteControl.window.connectionTimeout'));
-            // Disconnect socket on timeout as well
-            if (rcSocket) {
-              rcSocket.disconnect();
+            // If reconnecting, try again
+            if (connectionState() === 'reconnecting') {
+              attemptReconnect();
+            } else {
+              setConnectionState('error');
+              setErrorMessage(t('devices.remoteControl.window.connectionTimeout'));
+              if (rcSocket) {
+                rcSocket.disconnect();
+              }
             }
           });
 
@@ -332,6 +394,10 @@ const RemoteControlWindow: Component = () => {
 
     // Cleanup when effect re-runs
     onCleanup(() => {
+      isCleaningUp = true;
+      if (reconnectTimeout) {
+        clearTimeout(reconnectTimeout);
+      }
       if (rcChannel) {
         rcChannel.leave();
       }
@@ -476,6 +542,8 @@ const RemoteControlWindow: Component = () => {
         return 'status-disconnected';
       case 'error':
         return 'status-error';
+      case 'reconnecting':
+        return 'status-reconnecting';
       default:
         return '';
     }
@@ -492,6 +560,8 @@ const RemoteControlWindow: Component = () => {
         return t('devices.remoteControl.window.disconnected');
       case 'error':
         return t('devices.remoteControl.window.error');
+      case 'reconnecting':
+        return t('devices.remoteControl.window.reconnecting', { attempt: reconnectAttempt(), max: MAX_RECONNECT_ATTEMPTS });
       default:
         return '';
     }
@@ -512,7 +582,7 @@ const RemoteControlWindow: Component = () => {
 
       <div class="rc-content">
         <Show
-          when={connectionState() === 'connected'}
+          when={connectionState() === 'connected' || connectionState() === 'reconnecting'}
           fallback={
             <div class="rc-message">
               <Show when={connectionState() === 'connecting'}>
@@ -533,10 +603,15 @@ const RemoteControlWindow: Component = () => {
           }
         >
           <div class="rc-canvas-container">
-            <Show when={!hasReceivedFrames()}>
+            <Show when={!hasReceivedFrames() || connectionState() === 'reconnecting'}>
               <div class="rc-waiting-overlay">
                 <div class="loading-spinner"></div>
-                <p>{t('devices.remoteControl.window.waitingForFrames')}</p>
+                <Show when={connectionState() === 'reconnecting'}>
+                  <p>{t('devices.remoteControl.window.reconnectingMessage', { attempt: reconnectAttempt(), max: MAX_RECONNECT_ATTEMPTS })}</p>
+                </Show>
+                <Show when={connectionState() !== 'reconnecting'}>
+                  <p>{t('devices.remoteControl.window.waitingForFrames')}</p>
+                </Show>
               </div>
             </Show>
             <canvas

@@ -560,15 +560,19 @@
         "connected": "Ansluten",
         "disconnected": "Frånkopplad",
         "error": "Fel",
+        "reconnecting": "Återansluter ({{attempt}}/{{max}})",
         "device": "Enhet",
         "connectingMessage": "Ansluter till enhet...",
+        "waitingForFrames": "Väntar på videoström från enheten...",
+        "reconnectingMessage": "Anslutningen förlorad. Återansluter... (försök {{attempt}} av {{max}})",
+        "reconnectFailed": "Kunde inte återansluta efter {{max}} försök",
+        "sessionClosed": "Sessionen har stängts",
         "deviceDisconnected": "Enheten har kopplats från",
         "errorHint": "Stäng detta fönster och försök starta en ny session",
         "missingParams": "Saknar sessions- eller enhetsparametrar",
         "connectionError": "Anslutningsfel: {{error}}",
         "connectionTimeout": "Anslutningen överskred tidsgränsen - försök igen",
-        "canvasLabel": "Fjärrenhets skärm",
-        "waitingForFrames": "Väntar på videoström från enheten..."
+        "canvasLabel": "Fjärrenhets skärm"
       }
     }
   },

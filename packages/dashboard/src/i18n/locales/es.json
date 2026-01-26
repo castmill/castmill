@@ -589,15 +589,19 @@
         "connected": "Conectado",
         "disconnected": "Desconectado",
         "error": "Error",
+        "reconnecting": "Reconectando ({{attempt}}/{{max}})",
         "device": "Dispositivo",
         "connectingMessage": "Conectando al dispositivo...",
+        "waitingForFrames": "Esperando transmisión de video del dispositivo...",
+        "reconnectingMessage": "Conexión perdida. Reconectando... (intento {{attempt}} de {{max}})",
+        "reconnectFailed": "No se pudo reconectar después de {{max}} intentos",
+        "sessionClosed": "La sesión ha sido cerrada",
         "deviceDisconnected": "El dispositivo ha sido desconectado",
         "errorHint": "Por favor cierre esta ventana e intente iniciar una nueva sesión",
         "missingParams": "Faltan parámetros de sesión o dispositivo",
         "connectionError": "Error de conexión: {{error}}",
         "connectionTimeout": "Tiempo de conexión agotado - por favor intente nuevamente",
-        "canvasLabel": "Pantalla del dispositivo remoto",
-        "waitingForFrames": "Esperando transmisión de video del dispositivo..."
+        "canvasLabel": "Pantalla del dispositivo remoto"
       }
     }
   },

@@ -566,15 +566,19 @@
         "connected": "接続済み",
         "disconnected": "切断済み",
         "error": "エラー",
+        "reconnecting": "再接続中 ({{attempt}}/{{max}})",
         "device": "デバイス",
         "connectingMessage": "デバイスに接続中...",
+        "waitingForFrames": "デバイスからのビデオストリームを待っています...",
+        "reconnectingMessage": "接続が切断されました。再接続中...（{{attempt}}回目/最大{{max}}回）",
+        "reconnectFailed": "{{max}}回の試行後、再接続に失敗しました",
+        "sessionClosed": "セッションが終了しました",
         "deviceDisconnected": "デバイスが切断されました",
         "errorHint": "このウィンドウを閉じて新しいセッションを開始してください",
         "missingParams": "セッションまたはデバイスのパラメータがありません",
         "connectionError": "接続エラー：{{error}}",
         "connectionTimeout": "接続タイムアウト - もう一度お試しください",
-        "canvasLabel": "リモートデバイス画面",
-        "waitingForFrames": "デバイスからのビデオストリームを待っています..."
+        "canvasLabel": "リモートデバイス画面"
       }
     }
   },
