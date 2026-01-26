@@ -326,6 +326,7 @@ class MediaWebSocketManager(
             isConnecting = false
             isWebSocketOpen = false
             isJoined = false
+            this@MediaWebSocketManager.webSocket = null  // Clear reference so connect() will work
             diagnosticsManager?.recordNetworkError()
             stopHeartbeat()
             scheduleReconnect()
@@ -336,6 +337,7 @@ class MediaWebSocketManager(
             isConnecting = false
             isWebSocketOpen = false
             isJoined = false
+            this@MediaWebSocketManager.webSocket = null  // Clear reference so connect() will work
             stopHeartbeat()
             if (shouldReconnect) {
                 scheduleReconnect()

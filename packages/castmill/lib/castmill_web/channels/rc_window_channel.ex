@@ -58,6 +58,10 @@ defmodule CastmillWeb.RcWindowChannel do
                 # Subscribe to session PubSub topic to receive device events
                 Phoenix.PubSub.subscribe(Castmill.PubSub, "rc_session:#{session_id}")
 
+                # Ensure the relay is running for this session
+                # This handles cases where the relay might have crashed or been stopped
+                ensure_relay_running(session_id)
+
                 # Transition session to starting if it's still in created state
                 if current_session.state == "created" do
                   RcSessions.transition_to_starting(session_id)
@@ -408,5 +412,31 @@ defmodule CastmillWeb.RcWindowChannel do
   defp has_rc_permission?(role) do
     # device_manager, manager, and admin roles can use RC features
     role in [:device_manager, :manager, :admin]
+  end
+
+  defp ensure_relay_running(session_id) do
+    # Check if relay is running by looking it up in the registry
+    case Registry.lookup(Castmill.Devices.RcRelayRegistry, session_id) do
+      [{_pid, _}] ->
+        # Relay is already running
+        Logger.debug("Relay already running for session #{session_id}")
+        :ok
+
+      [] ->
+        # Relay is not running, start it
+        Logger.info("Relay not found for session #{session_id}, starting it")
+        case Castmill.Devices.RcRelaySupervisor.start_relay(session_id) do
+          {:ok, _pid} ->
+            Logger.info("Relay started successfully for session #{session_id}")
+            :ok
+          {:error, {:already_started, _pid}} ->
+            # Race condition - relay was started between lookup and start
+            Logger.debug("Relay already started for session #{session_id}")
+            :ok
+          {:error, reason} ->
+            Logger.error("Failed to start relay for session #{session_id}: #{inspect(reason)}")
+            {:error, reason}
+        end
+    end
   end
 end

@@ -42,8 +42,8 @@ const RemoteControlWindow: Component = () => {
   const [hasReceivedFrames, setHasReceivedFrames] = createSignal(false);
   const [reconnectAttempt, setReconnectAttempt] = createSignal(0);
 
-  // Max reconnection attempts before giving up
-  const MAX_RECONNECT_ATTEMPTS = 5;
+  // Reconnection settings - keep trying while window is open
+  const MAX_RECONNECT_ATTEMPTS = 30; // Try for about 1 minute (30 * 2 seconds)
   const RECONNECT_DELAY_MS = 2000;
 
   const deviceId = params.id;
@@ -179,6 +179,7 @@ const RemoteControlWindow: Component = () => {
         // Handle socket-level connection errors
         rcSocket.onError(() => {
           console.error('Socket connection error');
+          // Only attempt reconnect if we were connected (not during initial connection or reconnection)
           if (!isCleaningUp && connectionState() === 'connected') {
             // Lost connection during active session - try to reconnect
             attemptReconnect();
@@ -187,6 +188,7 @@ const RemoteControlWindow: Component = () => {
         
         rcSocket.onClose(() => {
           console.log('Socket closed');
+          // Only attempt reconnect if we were connected (not during initial connection or reconnection)
           if (!isCleaningUp && connectionState() === 'connected') {
             // Lost connection during active session - try to reconnect
             attemptReconnect();
@@ -206,6 +208,11 @@ const RemoteControlWindow: Component = () => {
           .join()
           .receive('ok', (resp: any) => {
             console.log('Joined RC channel', resp);
+            // Clear any pending reconnect timeout
+            if (reconnectTimeout) {
+              clearTimeout(reconnectTimeout);
+              reconnectTimeout = null;
+            }
             setConnectionState('connected');
             // Reset reconnect attempts on successful connection
             setReconnectAttempt(0);
@@ -381,12 +388,15 @@ const RemoteControlWindow: Component = () => {
 
       } catch (error) {
         console.error('Failed to connect to RC socket:', error);
-        setConnectionState('error');
-        setErrorMessage(
-          t('devices.remoteControl.window.connectionError', {
-            error: error instanceof Error ? error.message : 'Unknown error',
-          })
-        );
+        // If we're already in reconnecting state or were connected, try to reconnect
+        // Otherwise, show the error (e.g., first connection attempt)
+        if (connectionState() === 'reconnecting' || reconnectAttempt() > 0) {
+          // Continue trying to reconnect
+          attemptReconnect();
+        } else {
+          // First connection attempt failed - start reconnection loop
+          attemptReconnect();
+        }
       }
     };
 

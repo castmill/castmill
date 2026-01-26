@@ -318,11 +318,17 @@ class RemoteControlService : LifecycleService() {
     private fun handleStartSessionRequest(startSessionData: StartSessionData) {
         Log.i(TAG, "Received start_session request for session: ${startSessionData.sessionId}")
         
-        // Check if we're already capturing or setting up for this session
-        // Need to check both sessionId (active session) and pendingSessionId (starting up)
+        // Check if we're already capturing for this same session
         val currentSession = sessionId ?: pendingSessionId
         if ((isCapturing || pendingSessionId != null) && currentSession == startSessionData.sessionId) {
-            Log.w(TAG, "Already capturing/setting up for session ${startSessionData.sessionId}, ignoring duplicate start_session")
+            Log.i(TAG, "Already capturing for session ${startSessionData.sessionId}")
+            
+            // Even if we're capturing, ensure the media WebSocket is connected
+            // This handles the case where the RC window reconnects after a disconnect
+            if (mediaWebSocketManager != null) {
+                Log.i(TAG, "Ensuring media WebSocket is connected for existing session")
+                mediaWebSocketManager?.connect()
+            }
             return
         }
         
