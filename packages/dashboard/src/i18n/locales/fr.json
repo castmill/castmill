@@ -584,7 +584,8 @@
         "missingParams": "Paramètres de session ou d'appareil manquants",
         "connectionError": "Erreur de connexion: {{error}}",
         "connectionTimeout": "Délai de connexion dépassé - veuillez réessayer",
-        "canvasLabel": "Écran de l'appareil distant"
+        "canvasLabel": "Écran de l'appareil distant",
+        "waitingForFrames": "En attente du flux vidéo de l'appareil..."
       }
     }
   },

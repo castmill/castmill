@@ -39,6 +39,7 @@ const RemoteControlWindow: Component = () => {
     null
   );
   const [ctx, setCtx] = createSignal<CanvasRenderingContext2D | null>(null);
+  const [hasReceivedFrames, setHasReceivedFrames] = createSignal(false);
 
   const deviceId = params.id;
   const sessionId = searchParams.session;
@@ -202,6 +203,11 @@ const RemoteControlWindow: Component = () => {
             if (estimatedSize > 10 * 1024 * 1024) {
               console.error('Frame data too large');
               return;
+            }
+
+            // Mark that we've received frames
+            if (!hasReceivedFrames()) {
+              setHasReceivedFrames(true);
             }
 
             // Handle different codecs
@@ -527,9 +533,16 @@ const RemoteControlWindow: Component = () => {
           }
         >
           <div class="rc-canvas-container">
+            <Show when={!hasReceivedFrames()}>
+              <div class="rc-waiting-overlay">
+                <div class="loading-spinner"></div>
+                <p>{t('remoteControl.window.waitingForFrames')}</p>
+              </div>
+            </Show>
             <canvas
               ref={setCanvasRef}
               class="rc-canvas"
+              classList={{ 'rc-canvas-hidden': !hasReceivedFrames() }}
               onMouseDown={handleMouseDown}
               onMouseUp={handleMouseUp}
               onMouseMove={handleMouseMove}

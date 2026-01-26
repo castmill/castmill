@@ -596,7 +596,8 @@
         "missingParams": "Faltan parámetros de sesión o dispositivo",
         "connectionError": "Error de conexión: {{error}}",
         "connectionTimeout": "Tiempo de conexión agotado - por favor intente nuevamente",
-        "canvasLabel": "Pantalla del dispositivo remoto"
+        "canvasLabel": "Pantalla del dispositivo remoto",
+        "waitingForFrames": "Esperando transmisión de video del dispositivo..."
       }
     }
   },

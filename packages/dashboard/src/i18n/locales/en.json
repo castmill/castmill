@@ -590,6 +590,7 @@
         "error": "Error",
         "device": "Device",
         "connectingMessage": "Connecting to device...",
+        "waitingForFrames": "Waiting for video stream from device...",
         "deviceDisconnected": "Device has been disconnected",
         "errorHint": "Please close this window and try starting a new session",
         "missingParams": "Missing session or device parameters",

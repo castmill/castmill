@@ -572,7 +572,8 @@
         "missingParams": "缺少会话或设备参数",
         "connectionError": "连接错误：{{error}}",
         "connectionTimeout": "连接超时 - 请重试",
-        "canvasLabel": "远程设备屏幕"
+        "canvasLabel": "远程设备屏幕",
+        "waitingForFrames": "等待来自设备的视频流..."
       }
     }
   },

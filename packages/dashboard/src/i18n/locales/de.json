@@ -590,7 +590,8 @@
         "missingParams": "Fehlende Sitzungs- oder Geräteparameter",
         "connectionError": "Verbindungsfehler: {{error}}",
         "connectionTimeout": "Verbindungszeitüberschreitung - bitte erneut versuchen",
-        "canvasLabel": "Ferngerätebildschirm"
+        "canvasLabel": "Ferngerätebildschirm",
+        "waitingForFrames": "Warte auf Videostream vom Gerät..."
       }
     }
   },

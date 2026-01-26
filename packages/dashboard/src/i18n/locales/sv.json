@@ -567,7 +567,8 @@
         "missingParams": "Saknar sessions- eller enhetsparametrar",
         "connectionError": "Anslutningsfel: {{error}}",
         "connectionTimeout": "Anslutningen överskred tidsgränsen - försök igen",
-        "canvasLabel": "Fjärrenhets skärm"
+        "canvasLabel": "Fjärrenhets skärm",
+        "waitingForFrames": "Väntar på videoström från enheten..."
       }
     }
   },

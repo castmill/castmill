@@ -135,6 +135,28 @@
   width: 100%;
   height: 100%;
   padding: 1em;
+  position: relative;
+}
+
+.rc-waiting-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1em;
+  background-color: #1a1a1a;
+  z-index: 10;
+
+  p {
+    font-size: 1.1em;
+    color: #9ca3af;
+    margin: 0;
+  }
 }
 
 .rc-canvas {
@@ -147,6 +169,11 @@
   /* Prevent CSS scaling - canvas should use its native dimensions */
   /* This ensures coordinate mapping from click to canvas pixels is 1:1 */
   object-fit: contain;
+}
+
+.rc-canvas-hidden {
+  visibility: hidden;
+  position: absolute;
 }
 
 .rc-canvas:focus {

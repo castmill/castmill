@@ -572,7 +572,8 @@
         "missingParams": "معلمات الجلسة أو الجهاز مفقودة",
         "connectionError": "خطأ في الاتصال: {{error}}",
         "connectionTimeout": "انتهت مهلة الاتصال - يرجى المحاولة مرة أخرى",
-        "canvasLabel": "شاشة الجهاز عن بعد"
+        "canvasLabel": "شاشة الجهاز عن بعد",
+        "waitingForFrames": "في انتظار بث الفيديو من الجهاز..."
       }
     }
   },
