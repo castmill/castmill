@@ -51,6 +51,28 @@ defmodule CastmillWeb.DeviceRcChannel do
           result = Devices.update_rc_heartbeat(device.id)
           Logger.info("RC heartbeat update result: #{inspect(result)}")
 
+          # Check if there's an active session waiting for this device
+          # This handles the case where start_session was sent before the device reconnected
+          case RcSessions.get_active_session_for_device(device.id) do
+            nil ->
+              Logger.info("No active session for device #{device.id}")
+
+            active_session ->
+              Logger.info("Found active session #{active_session.id} for device #{device.id}, sending start_session")
+              # Generate session token for media WebSocket authentication
+              session_token = Phoenix.Token.sign(CastmillWeb.Endpoint, "rc_session", %{
+                session_id: active_session.id,
+                device_id: device.id
+              })
+              # Send start_session to this device after join completes
+              # Use send_after to ensure socket is fully set up
+              Process.send_after(self(), {:send_pending_start_session, %{
+                session_id: active_session.id,
+                session_token: session_token,
+                device_id: device.id
+              }}, 100)
+          end
+
           {:ok, socket}
       end
     rescue
@@ -219,6 +241,25 @@ defmodule CastmillWeb.DeviceRcChannel do
 
   @impl true
   def handle_info(%{event: "device_disconnected"}, socket) do
+    {:noreply, socket}
+  end
+
+  # Handle pending start_session that was waiting for device to reconnect
+  @impl true
+  def handle_info({:send_pending_start_session, payload}, socket) do
+    session_id = payload.session_id
+    Logger.info("Sending pending start_session to device #{socket.assigns.device_id} for session #{session_id}")
+
+    # Subscribe to the session's PubSub topic
+    topic = "rc_session:#{session_id}"
+    Phoenix.PubSub.subscribe(Castmill.PubSub, topic)
+
+    # Update socket with session_id
+    socket = assign(socket, :session_id, session_id)
+
+    # Push start_session to the device
+    push(socket, "start_session", payload)
+
     {:noreply, socket}
   end
 
