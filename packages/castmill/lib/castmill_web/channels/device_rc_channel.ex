@@ -51,26 +51,34 @@ defmodule CastmillWeb.DeviceRcChannel do
           result = Devices.update_rc_heartbeat(device.id)
           Logger.info("RC heartbeat update result: #{inspect(result)}")
 
-          # Check if there's an active session waiting for this device
-          # This handles the case where start_session was sent before the device reconnected
+          # Check if there's an active session waiting for this device AND a relay is running
+          # The relay running means an RC window is actively connected and waiting for frames
+          # This handles the case where the device reconnects while an RC window is still open
           case RcSessions.get_active_session_for_device(device.id) do
             nil ->
               Logger.info("No active session for device #{device.id}")
 
             active_session ->
-              Logger.info("Found active session #{active_session.id} for device #{device.id}, sending start_session")
-              # Generate session token for media WebSocket authentication
-              session_token = Phoenix.Token.sign(CastmillWeb.Endpoint, "rc_session", %{
-                session_id: active_session.id,
-                device_id: device.id
-              })
-              # Send start_session to this device after join completes
-              # Use send_after to ensure socket is fully set up
-              Process.send_after(self(), {:send_pending_start_session, %{
-                session_id: active_session.id,
-                session_token: session_token,
-                device_id: device.id
-              }}, 100)
+              # Only send start_session if a relay is actually running (RC window connected)
+              case Registry.lookup(Castmill.Devices.RcRelayRegistry, active_session.id) do
+                [{_pid, _}] ->
+                  Logger.info("Found active session #{active_session.id} with running relay, sending start_session")
+                  # Generate session token for media WebSocket authentication
+                  session_token = Phoenix.Token.sign(CastmillWeb.Endpoint, "rc_session", %{
+                    session_id: active_session.id,
+                    device_id: device.id
+                  })
+                  # Send start_session to this device after join completes
+                  # Use send_after to ensure socket is fully set up
+                  Process.send_after(self(), {:send_pending_start_session, %{
+                    session_id: active_session.id,
+                    session_token: session_token,
+                    device_id: device.id
+                  }}, 100)
+
+                [] ->
+                  Logger.info("Found active session #{active_session.id} but no relay running (no RC window connected)")
+              end
           end
 
           {:ok, socket}
@@ -275,6 +283,14 @@ defmodule CastmillWeb.DeviceRcChannel do
     # Session closed (timeout or explicit close), disconnect device
     push(socket, "session_closed", %{})
     {:stop, :normal, socket}
+  end
+
+  @impl true
+  def handle_info(%{event: "rc_window_disconnected"} = msg, socket) do
+    # RC window disconnected - notify device to pause/stop capture but keep session alive
+    Logger.info("RC window disconnected for session #{msg.payload[:session_id]}, notifying device")
+    push(socket, "rc_window_disconnected", msg.payload)
+    {:noreply, socket}
   end
 
   # Handle outgoing start_session broadcasts - subscribe to session topic before pushing to client

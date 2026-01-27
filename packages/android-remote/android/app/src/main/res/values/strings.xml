@@ -44,8 +44,12 @@
     <string name="screen_capture_denied_message">Screen capture permission is required for remote viewing. Without this permission, remote users will not be able to see the device screen.</string>
     
     <!-- Service Status -->
-    <string name="service_status_stopped">Remote control service is not running</string>
+    <string name="service_status_stopped">Service not running</string>
     <string name="service_status_running">Remote control service is active</string>
+    <string name="service_status_no_network">No network connection (retrying…)</string>
+    <string name="service_status_connecting">Connecting to server…</string>
+    <string name="service_status_waiting">Connected - waiting for RC session</string>
+    <string name="service_status_rc_active">Remote control active</string>
     
     <!-- Info Text -->
     <string name="info_text">This app enables remote control of your device through the Castmill platform. Both permissions are required for full functionality.</string>

@@ -57,6 +57,14 @@ class MainActivity : AppCompatActivity() {
     // Note: RESULT_OK = -1 in Android, so we use a different sentinel value
     private var mediaProjectionResultCode: Int = Int.MIN_VALUE  // Sentinel for "not yet requested"
     private var mediaProjectionData: Intent? = null
+    
+    // Status listener for live updates
+    private val statusListener: (RemoteControlService.ConnectionStatus) -> Unit = { _ ->
+        // Run on main thread
+        runOnUiThread {
+            updateServiceStatusDisplay()
+        }
+    }
 
     // Activity Result Launchers (modern replacement for startActivityForResult)
     private lateinit var mediaProjectionLauncher: ActivityResultLauncher<Intent>
@@ -156,6 +164,14 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         // Refresh permission states when returning to the activity
         updatePermissionStates()
+        // Register for status updates
+        RemoteControlService.addStatusListener(statusListener)
+    }
+    
+    override fun onPause() {
+        super.onPause()
+        // Unregister status listener
+        RemoteControlService.removeStatusListener(statusListener)
     }
 
     /**
@@ -216,8 +232,43 @@ class MainActivity : AppCompatActivity() {
             btnRequestScreenCapture.text = getString(R.string.request_screen_capture_button)
         }
         
-        // Update service status (simplified for now)
-        tvServiceStatus.text = getString(R.string.service_status_stopped)
+        // Update service status with detailed connection state
+        updateServiceStatusDisplay()
+    }
+    
+    /**
+     * Update the service status display with detailed connection state
+     */
+    private fun updateServiceStatusDisplay() {
+        if (!RemoteControlService.isRunning) {
+            tvServiceStatus.text = getString(R.string.service_status_stopped)
+            tvServiceStatus.setTextColor(getColor(android.R.color.holo_orange_dark))
+            return
+        }
+        
+        // Service is running, show detailed connection status
+        when (RemoteControlService.connectionStatus) {
+            RemoteControlService.ConnectionStatus.NOT_RUNNING -> {
+                tvServiceStatus.text = getString(R.string.service_status_stopped)
+                tvServiceStatus.setTextColor(getColor(android.R.color.holo_orange_dark))
+            }
+            RemoteControlService.ConnectionStatus.NO_NETWORK -> {
+                tvServiceStatus.text = getString(R.string.service_status_no_network)
+                tvServiceStatus.setTextColor(getColor(android.R.color.holo_red_dark))
+            }
+            RemoteControlService.ConnectionStatus.CONNECTING -> {
+                tvServiceStatus.text = getString(R.string.service_status_connecting)
+                tvServiceStatus.setTextColor(getColor(android.R.color.holo_blue_dark))
+            }
+            RemoteControlService.ConnectionStatus.WAITING_FOR_RC -> {
+                tvServiceStatus.text = getString(R.string.service_status_waiting)
+                tvServiceStatus.setTextColor(getColor(android.R.color.holo_green_dark))
+            }
+            RemoteControlService.ConnectionStatus.RC_ACTIVE -> {
+                tvServiceStatus.text = getString(R.string.service_status_rc_active)
+                tvServiceStatus.setTextColor(getColor(android.R.color.holo_green_light))
+            }
+        }
     }
 
     /**

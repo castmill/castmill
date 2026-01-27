@@ -63,8 +63,19 @@ class WebSocketManager(
     private val diagnosticsManager: DiagnosticsManager? = null,
     private val certificatePins: Map<String, List<String>>? = null, // hostname -> list of SHA-256 pins
     private val onStartSession: ((StartSessionData) -> Unit)? = null, // Callback when start_session is received
-    private val onSessionStopped: (() -> Unit)? = null // Callback when session is stopped (window closed, etc.)
+    private val onSessionStopped: (() -> Unit)? = null, // Callback when session is stopped (window closed, etc.)
+    private val onConnectionStateChange: ((ConnectionState) -> Unit)? = null // Callback when connection state changes
 ) {
+    /**
+     * Connection state for status reporting
+     */
+    enum class ConnectionState {
+        DISCONNECTED,     // Not connected
+        CONNECTING,       // Attempting to connect
+        CONNECTED,        // Connected and authenticated, waiting for RC
+        RC_ACTIVE         // Remote control session is active
+    }
+    
     companion object {
         private const val TAG = "WebSocketManager"
         private const val HEARTBEAT_INTERVAL_MS = 30000L // 30 seconds (Phoenix protocol heartbeat)
@@ -129,6 +140,7 @@ class WebSocketManager(
 
     private fun connectInternal() {
         isConnecting = true
+        onConnectionStateChange?.invoke(ConnectionState.CONNECTING)
 
         val wsUrl = baseUrl.replace("http://", "ws://").replace("https://", "wss://")
         val url = "$wsUrl/ws/websocket"
@@ -150,10 +162,10 @@ class WebSocketManager(
      */
     private fun buildOkHttpClient(): OkHttpClient {
         val builder = OkHttpClient.Builder()
-            .readTimeout(0, TimeUnit.MILLISECONDS)
+            .readTimeout(60, TimeUnit.SECONDS) // Detect dead connections faster
             .connectTimeout(30, TimeUnit.SECONDS)
             .writeTimeout(30, TimeUnit.SECONDS)
-            .pingInterval(30, TimeUnit.SECONDS)
+            .pingInterval(10, TimeUnit.SECONDS) // More frequent pings for faster detection
         
         // Configure certificate pinning if pins are provided
         certificatePins?.let { pins ->
@@ -182,6 +194,7 @@ class WebSocketManager(
         shouldReconnect = false
         isAuthenticated = false
         isWebSocketOpen = false
+        onConnectionStateChange?.invoke(ConnectionState.DISCONNECTED)
         stopHeartbeat()
         stopRcHeartbeat()
         stopDiagnosticsReporting()
@@ -444,6 +457,9 @@ class WebSocketManager(
 
             Log.i(TAG, "Handling start_session for session: $sid, hasToken=${sessionToken != null}, deviceId=$deviceIdFromPayload")
             
+            // Update connection state to RC_ACTIVE
+            onConnectionStateChange?.invoke(ConnectionState.RC_ACTIVE)
+            
             // Notify the service to initialize MediaProjection and start encoding
             val startSessionData = StartSessionData(
                 sessionId = sid,
@@ -640,6 +656,7 @@ class WebSocketManager(
                         if (status == "ok" && replyRef == joinMessageRef) {
                             Log.i(TAG, "Successfully joined channel and authenticated")
                             isAuthenticated = true
+                            onConnectionStateChange?.invoke(ConnectionState.CONNECTED)
                             diagnosticsManager?.recordSuccessfulReconnect()
                             startDiagnosticsReporting()
                             // Start RC heartbeat to indicate the app is available
@@ -681,7 +698,18 @@ class WebSocketManager(
                         // Go back to standby mode - don't disconnect, just stop the session
                         sessionId = null
                         isStandbyMode = true
+                        Log.i(TAG, "Notifying state change to CONNECTED (session stopped, back to standby)")
+                        onConnectionStateChange?.invoke(ConnectionState.CONNECTED)
                         Log.i(TAG, "Returning to standby mode")
+                    }
+                    "rc_window_disconnected" -> {
+                        Log.i(TAG, "RC window disconnected - pausing capture")
+                        // Notify service to pause screen capture
+                        onSessionStopped?.invoke()
+                        // Go back to standby mode - session is still valid, just no viewer
+                        isStandbyMode = true
+                        Log.i(TAG, "Notifying state change to CONNECTED (RC window disconnected)")
+                        onConnectionStateChange?.invoke(ConnectionState.CONNECTED)
                     }
                     else -> {
                         Log.d(TAG, "Unhandled event: $event")
@@ -706,6 +734,8 @@ class WebSocketManager(
             stopHeartbeat()
             stopRcHeartbeat()
             stopDiagnosticsReporting()
+            Log.i(TAG, "Notifying state change to CONNECTING (will reconnect)")
+            onConnectionStateChange?.invoke(ConnectionState.CONNECTING) // Will be reconnecting
             scheduleReconnect()
         }
 
@@ -723,7 +753,12 @@ class WebSocketManager(
             stopRcHeartbeat()
             stopDiagnosticsReporting()
             if (shouldReconnect) {
+                Log.i(TAG, "Notifying state change to CONNECTING (will reconnect)")
+                onConnectionStateChange?.invoke(ConnectionState.CONNECTING) // Will be reconnecting
                 scheduleReconnect()
+            } else {
+                Log.i(TAG, "Notifying state change to DISCONNECTED (no reconnect)")
+                onConnectionStateChange?.invoke(ConnectionState.DISCONNECTED)
             }
         }
     }

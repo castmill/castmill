@@ -402,6 +402,23 @@ defmodule CastmillWeb.RcWindowChannel do
       # - Timeout after inactivity (5 minutes default)
       # - Creating a new session (which terminates the old one)
       Logger.info("RC window closed for session #{session_id}, session remains active until timeout or explicit stop")
+
+      # Notify the device that the RC window has disconnected so it can update its status
+      # The device will show "waiting for RC" instead of "RC active"
+      # Note: device_rc channel uses hardware_id, so we need to look up the device
+      if device_id do
+        case Castmill.Devices.get_device(device_id) do
+          nil ->
+            Logger.warning("Could not find device #{device_id} to send rc_window_disconnected")
+          device ->
+            Logger.info("Sending rc_window_disconnected to device_rc:#{device.hardware_id}")
+            CastmillWeb.Endpoint.broadcast(
+              "device_rc:#{device.hardware_id}",
+              "rc_window_disconnected",
+              %{session_id: session_id}
+            )
+        end
+      end
     end
 
     :ok

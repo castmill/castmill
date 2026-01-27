@@ -32,6 +32,17 @@ import kotlinx.coroutines.launch
  */
 class RemoteControlService : LifecycleService() {
 
+    /**
+     * Connection status states for UI display
+     */
+    enum class ConnectionStatus {
+        NOT_RUNNING,      // Service not started
+        NO_NETWORK,       // No network connectivity
+        CONNECTING,       // Attempting to connect to server
+        WAITING_FOR_RC,   // Connected, waiting for remote control session
+        RC_ACTIVE         // Remote control session is active
+    }
+
     companion object {
         private const val TAG = "RemoteControlService"
         private const val NOTIFICATION_ID = 1001
@@ -50,6 +61,32 @@ class RemoteControlService : LifecycleService() {
         // SharedPreferences
         private const val PREFS_NAME = "castmill_remote_prefs"
         private const val PREF_DEVICE_TOKEN = "device_token"
+        
+        // Service running state - can be checked from MainActivity
+        @Volatile
+        var isRunning = false
+            private set
+        
+        // Current connection status - can be checked from MainActivity
+        @Volatile
+        var connectionStatus = ConnectionStatus.NOT_RUNNING
+            private set
+        
+        // Status change listeners for UI updates
+        private val statusListeners = mutableListOf<(ConnectionStatus) -> Unit>()
+        
+        fun addStatusListener(listener: (ConnectionStatus) -> Unit) {
+            statusListeners.add(listener)
+        }
+        
+        fun removeStatusListener(listener: (ConnectionStatus) -> Unit) {
+            statusListeners.remove(listener)
+        }
+        
+        private fun notifyStatusChange(status: ConnectionStatus) {
+            connectionStatus = status
+            statusListeners.forEach { it(status) }
+        }
     }
 
     private var screenCaptureManager: ScreenCaptureManager? = null
@@ -72,6 +109,10 @@ class RemoteControlService : LifecycleService() {
 
     override fun onCreate() {
         super.onCreate()
+        
+        // Mark service as running and set initial status
+        isRunning = true
+        notifyStatusChange(ConnectionStatus.CONNECTING)
         
         // Compute device ID
         deviceId = DeviceUtils.getDeviceId(this)
@@ -190,6 +231,10 @@ class RemoteControlService : LifecycleService() {
         
         Log.i(TAG, "Service being destroyed, releasing all resources")
         
+        // Mark service as stopped and update status
+        isRunning = false
+        notifyStatusChange(ConnectionStatus.NOT_RUNNING)
+        
         // Clean up resources
         webSocketManager?.disconnect()
         webSocketManager = null
@@ -241,6 +286,12 @@ class RemoteControlService : LifecycleService() {
                 mainHandler.post {
                     handleSessionStopped()
                 }
+            },
+            onConnectionStateChange = { state ->
+                // Update companion object status based on WebSocketManager state
+                mainHandler.post {
+                    handleConnectionStateChange(state)
+                }
             }
         )
         
@@ -284,12 +335,42 @@ class RemoteControlService : LifecycleService() {
                 mainHandler.post {
                     handleSessionStopped()
                 }
+            },
+            onConnectionStateChange = { state ->
+                // Update companion object status based on WebSocketManager state
+                mainHandler.post {
+                    handleConnectionStateChange(state)
+                }
             }
         )
         
         webSocketManager?.connect(sessionId)
         isConnected = true
         updateNotification("Connected to backend")
+    }
+
+    /**
+     * Handle connection state changes from WebSocketManager.
+     * Maps WebSocketManager states to service ConnectionStatus.
+     */
+    private fun handleConnectionStateChange(state: WebSocketManager.ConnectionState) {
+        Log.i(TAG, "Connection state changed: $state")
+        val status = when (state) {
+            WebSocketManager.ConnectionState.DISCONNECTED -> ConnectionStatus.CONNECTING // Keep trying
+            WebSocketManager.ConnectionState.CONNECTING -> ConnectionStatus.CONNECTING
+            WebSocketManager.ConnectionState.CONNECTED -> ConnectionStatus.WAITING_FOR_RC
+            WebSocketManager.ConnectionState.RC_ACTIVE -> ConnectionStatus.RC_ACTIVE
+        }
+        Log.i(TAG, "Setting connection status to: $status")
+        notifyStatusChange(status)
+        
+        // Update notification based on state
+        when (status) {
+            ConnectionStatus.CONNECTING -> updateNotification("Connecting to server...")
+            ConnectionStatus.WAITING_FOR_RC -> updateNotification("Standby - waiting for RC session")
+            ConnectionStatus.RC_ACTIVE -> updateNotification("Remote control active")
+            else -> {}
+        }
     }
 
     /**
@@ -306,6 +387,9 @@ class RemoteControlService : LifecycleService() {
         pendingSessionId = null
         pendingSessionToken = null
         pendingDeviceId = null
+        
+        // Update status to waiting for RC (connection is still active)
+        notifyStatusChange(ConnectionStatus.WAITING_FOR_RC)
         
         // Update notification
         updateNotification("Standby - waiting for RC session")
