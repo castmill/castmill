@@ -35,7 +35,7 @@ export const WidgetView = () => {
         height: '100%',
       },
       config: {
-        id: 1234,
+        id: '1234',
         widget_id: widget.id,
         options: {},
         data: {},
