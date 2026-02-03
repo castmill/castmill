@@ -207,7 +207,9 @@ defmodule Castmill.Workers.VideoTranscoderTest do
       assert File.exists?(output_path)
     end
 
-    # Helper to receive all pending messages
+    # Helper to receive all pending messages from the process mailbox.
+    # Used in tests to collect messages sent during mock execution for verification.
+    # Recursively receives messages until the mailbox is empty (0ms timeout).
     defp receive_all_messages(acc) do
       receive do
         msg -> receive_all_messages([msg | acc])
