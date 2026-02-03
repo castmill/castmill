@@ -190,28 +190,36 @@ defmodule Castmill.Workers.VideoTranscoder do
   end
 
   defp extract_thumbnail(input_file, output_path) do
-    ffmpeg_args = [
-      "-i",
-      input_file,
-      "-ss",
-      "5",
-      "-vframes",
-      "1",
-      "-q:v",
-      "2",
-      "-y",
-      output_path
-    ]
+    # Try to extract at 5 seconds first, then at 1 second, then at 0 for very short videos
+    timestamps = ["5", "1", "0"]
 
-    # Run FFmpeg command
-    case System.cmd("ffmpeg", ffmpeg_args, stderr_to_stdout: true) do
-      {_output, 0} ->
-        :ok
+    Enum.reduce_while(timestamps, {:error, :ffmpeg_failed}, fn timestamp, _acc ->
+      ffmpeg_args = [
+        "-i",
+        input_file,
+        "-ss",
+        timestamp,
+        "-vframes",
+        "1",
+        "-q:v",
+        "2",
+        "-y",
+        output_path
+      ]
 
-      {output, _exit_code} ->
-        Logger.error("FFmpeg error: #{output}")
-        {:error, :ffmpeg_failed}
-    end
+      case System.cmd("ffmpeg", ffmpeg_args, stderr_to_stdout: true) do
+        {_output, 0} ->
+          if File.exists?(output_path) do
+            {:halt, :ok}
+          else
+            {:cont, {:error, :ffmpeg_failed}}
+          end
+
+        {output, _exit_code} ->
+          Logger.warning("FFmpeg thumbnail extraction at #{timestamp}s failed: #{output}")
+          {:cont, {:error, :ffmpeg_failed}}
+      end
+    end)
   end
 
   defp run_ffmpeg_with_progress(args, media_id, total_duration, acc_progress) do
@@ -300,6 +308,11 @@ defmodule Castmill.Workers.VideoTranscoder do
 
   defp upload_file(local_path, organization_id, media_id, filename) do
     dst_path = "#{organization_id}/#{media_id}/#{filename}"
+
+    # Verify source file exists before attempting upload
+    unless File.exists?(local_path) do
+      raise "Source file does not exist: #{local_path}"
+    end
 
     case Application.get_env(:castmill, :file_storage) do
       :local ->
