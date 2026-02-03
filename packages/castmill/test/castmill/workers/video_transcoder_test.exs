@@ -11,7 +11,13 @@ defmodule Castmill.Workers.VideoTranscoderTest do
   describe "extract_thumbnail/2" do
     setup do
       # Create a temporary directory for test outputs
-      test_dir = Path.join(System.tmp_dir!(), "video_transcoder_test_#{:rand.uniform(100000)}")
+      # Use unique integer to avoid collisions in concurrent test runs
+      test_dir =
+        Path.join(
+          System.tmp_dir!(),
+          "video_transcoder_test_#{System.unique_integer([:positive])}"
+        )
+
       File.mkdir_p!(test_dir)
 
       on_exit(fn ->
@@ -100,13 +106,14 @@ defmodule Castmill.Workers.VideoTranscoderTest do
     end
 
     @tag :requires_ffmpeg
-    test "returns error when all timestamps fail" do
+    test "returns error when all timestamps fail", %{test_dir: test_dir} do
       if @ffmpeg_available do
         # Use a non-existent file to ensure all attempts fail
-        # We don't need a test_dir fixture for this test
-        test_dir = System.tmp_dir!()
-        input_file = Path.join(test_dir, "nonexistent_#{:rand.uniform(100000)}.mp4")
-        output_path = Path.join(test_dir, "thumbnail_error_#{:rand.uniform(100000)}.jpg")
+        input_file =
+          Path.join(test_dir, "nonexistent_#{System.unique_integer([:positive])}.mp4")
+
+        output_path =
+          Path.join(test_dir, "thumbnail_error_#{System.unique_integer([:positive])}.jpg")
 
         log =
           capture_log(fn ->
