@@ -120,7 +120,6 @@ export const OnboardingTour: Component<OnboardingTourProps> = (props) => {
         toast.success(t('onboardingTour.allStepsComplete'));
         props.onComplete();
       } else {
-        toast.success(t('onboardingTour.stepCompleted'));
         handleNext();
       }
     } catch (error) {
