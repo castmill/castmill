@@ -166,6 +166,14 @@ const Login: Component = () => {
       }
     } catch (error) {
       console.error('Authentication error:', error);
+
+      // If user cancelled/aborted the passkey authentication, just reset loading state
+      // without showing an error - let them try again
+      if (error instanceof Error && error.name === 'NotAllowedError') {
+        setLoading(false);
+        return;
+      }
+
       setError(t('login.errors.authenticationFailed'));
       setLoading(false);
     }
