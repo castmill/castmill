@@ -311,7 +311,7 @@ defmodule Castmill.Workers.VideoTranscoder do
 
     # Verify source file exists before attempting upload
     unless File.exists?(local_path) do
-      raise "Source file does not exist: #{local_path}"
+      raise "Source file does not exist for upload: #{local_path} (#{filename})"
     end
 
     case Application.get_env(:castmill, :file_storage) do
