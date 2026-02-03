@@ -189,7 +189,10 @@ defmodule Castmill.Workers.VideoTranscoder do
     run_ffmpeg_with_progress(ffmpeg_args, media_id, total_duration, acc_progress)
   end
 
-  defp extract_thumbnail(input_file, output_path) do
+  @doc false
+  # This function is made public for testing purposes only.
+  # It extracts a thumbnail from a video file, trying multiple timestamps.
+  def extract_thumbnail(input_file, output_path) do
     # Try to extract at 5 seconds first, then at 1 second, then at 0 for very short videos
     timestamps = ["5", "1", "0"]
 
