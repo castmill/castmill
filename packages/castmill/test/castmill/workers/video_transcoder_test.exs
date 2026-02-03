@@ -192,18 +192,19 @@ defmodule Castmill.Workers.VideoTranscoderTest do
   end
 
   # Helper to create a test video file using ffmpeg
-  defp create_test_video(output_path, duration_seconds) do
+  defp create_test_video(output_path, duration) do
     # Create a simple test video using ffmpeg
     # This generates a video with a colored background and timer
+    # Duration can be a float (e.g., 0.5) or integer (e.g., 10)
     args = [
       "-f",
       "lavfi",
       "-i",
-      "testsrc=duration=#{duration_seconds}:size=320x240:rate=30",
+      "testsrc=duration=#{duration}:size=320x240:rate=30",
       "-f",
       "lavfi",
       "-i",
-      "sine=frequency=1000:duration=#{duration_seconds}",
+      "sine=frequency=1000:duration=#{duration}",
       "-pix_fmt",
       "yuv420p",
       "-c:v",
@@ -219,7 +220,8 @@ defmodule Castmill.Workers.VideoTranscoderTest do
         :ok
 
       {error, code} ->
-        raise "Failed to create test video: exit code #{code}, error: #{error}"
+        # Include FFmpeg output for debugging
+        raise "Failed to create test video (exit code #{code}): #{String.slice(error, 0, 500)}"
     end
   end
 end
