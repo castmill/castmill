@@ -167,7 +167,11 @@ defmodule Castmill.Workers.VideoTranscoderTest do
       input_file = Path.join(test_dir, "input_ordering.mp4")
       output_path = Path.join(test_dir, "thumbnail_ordering.jpg")
 
-      timestamps_tried = []
+      # Use a unique agent name for this test to avoid conflicts
+      agent_name = :"timestamp_tracker_#{System.unique_integer([:positive])}"
+
+      # Start agent to track timestamps before setting up mocks
+      {:ok, _pid} = Agent.start_link(fn -> [] end, name: agent_name)
 
       # Mock FFmpeg to track the order of timestamps tried
       expect(SystemCmdMock, :cmd, 2, fn "ffmpeg", args, _opts ->
@@ -175,7 +179,7 @@ defmodule Castmill.Workers.VideoTranscoderTest do
         timestamp = Enum.at(args, timestamp_index + 1)
 
         # Track which timestamp was tried
-        Agent.update(:timestamp_tracker, fn list -> list ++ [timestamp] end)
+        Agent.update(agent_name, fn list -> list ++ [timestamp] end)
 
         case timestamp do
           "5" ->
@@ -189,9 +193,6 @@ defmodule Castmill.Workers.VideoTranscoderTest do
         end
       end)
 
-      # Start agent to track timestamps
-      {:ok, _pid} = Agent.start_link(fn -> [] end, name: :timestamp_tracker)
-
       log =
         capture_log(fn ->
           result = VideoTranscoder.extract_thumbnail(input_file, output_path, SystemCmdMock)
@@ -199,10 +200,10 @@ defmodule Castmill.Workers.VideoTranscoderTest do
         end)
 
       # Verify timestamps were tried in order
-      tried = Agent.get(:timestamp_tracker, & &1)
+      tried = Agent.get(agent_name, & &1)
       assert tried == ["5", "1"]
 
-      Agent.stop(:timestamp_tracker)
+      Agent.stop(agent_name)
       assert File.exists?(output_path)
     end
 
