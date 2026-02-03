@@ -167,19 +167,13 @@ defmodule Castmill.Workers.VideoTranscoderTest do
       input_file = Path.join(test_dir, "input_ordering.mp4")
       output_path = Path.join(test_dir, "thumbnail_ordering.jpg")
 
-      # Use a unique agent name for this test to avoid conflicts
-      agent_name = :"timestamp_tracker_#{System.unique_integer([:positive])}"
-
-      # Start agent to track timestamps before setting up mocks
-      {:ok, _pid} = Agent.start_link(fn -> [] end, name: agent_name)
-
       # Mock FFmpeg to track the order of timestamps tried
       expect(SystemCmdMock, :cmd, 2, fn "ffmpeg", args, _opts ->
         timestamp_index = Enum.find_index(args, &(&1 == "-ss"))
         timestamp = Enum.at(args, timestamp_index + 1)
 
-        # Track which timestamp was tried
-        Agent.update(agent_name, fn list -> list ++ [timestamp] end)
+        # Send timestamp to test process
+        send(self(), {:timestamp_tried, timestamp})
 
         case timestamp do
           "5" ->
@@ -199,12 +193,27 @@ defmodule Castmill.Workers.VideoTranscoderTest do
           assert result == :ok
         end)
 
-      # Verify timestamps were tried in order
-      tried = Agent.get(agent_name, & &1)
-      assert tried == ["5", "1"]
+      # Collect timestamps tried from messages
+      timestamps_tried =
+        receive_all_messages([])
+        |> Enum.filter(fn
+          {:timestamp_tried, _} -> true
+          _ -> false
+        end)
+        |> Enum.map(fn {:timestamp_tried, ts} -> ts end)
 
-      Agent.stop(agent_name)
+      # Verify timestamps were tried in order: 5 then 1
+      assert timestamps_tried == ["5", "1"]
       assert File.exists?(output_path)
+    end
+
+    # Helper to receive all pending messages
+    defp receive_all_messages(acc) do
+      receive do
+        msg -> receive_all_messages([msg | acc])
+      after
+        0 -> Enum.reverse(acc)
+      end
     end
 
     test "handles special characters in file paths", %{test_dir: test_dir} do

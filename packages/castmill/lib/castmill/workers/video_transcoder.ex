@@ -16,7 +16,9 @@ defmodule Castmill.Workers.VideoTranscoder do
 
   @queue "video_transcoder"
 
-  # Allow injecting system command implementation for testing
+  # Allow injecting system command implementation for testing.
+  # Tests should pass SystemCmdMock as the third parameter to extract_thumbnail/3.
+  # Production code uses the default implementation (Castmill.Workers.SystemCmd).
   @system_cmd Application.compile_env(:castmill, :system_cmd, Castmill.Workers.SystemCmd)
 
   @doc """
