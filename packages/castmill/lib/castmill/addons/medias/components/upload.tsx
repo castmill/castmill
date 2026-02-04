@@ -39,6 +39,15 @@ const supportedFileTypes = [
   'video/x-ms-wmv',
 ];
 
+function formatBytes(bytes: number) {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  const size = parseFloat((bytes / Math.pow(k, i)).toFixed(2));
+  return `${size} ${sizes[i]}`;
+}
+
 export const UploadComponent = (props: UploadComponentProps) => {
   // Get i18n functions from store
   const t = (key: string, params?: Record<string, any>) =>
@@ -214,7 +223,7 @@ export const UploadComponent = (props: UploadComponentProps) => {
                       {file.name}
                     </td>
 
-                    <td>{file.size} Bytes</td>
+                    <td>{formatBytes(file.size)}</td>
                     <td>
                       <Show
                         when={messages()[file.name]}
