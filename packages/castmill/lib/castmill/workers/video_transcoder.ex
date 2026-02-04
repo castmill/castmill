@@ -16,6 +16,11 @@ defmodule Castmill.Workers.VideoTranscoder do
 
   @queue "video_transcoder"
 
+  # Allow injecting system command implementation for testing.
+  # Tests should pass SystemCmdMock as the third parameter to extract_thumbnail/3.
+  # Production code uses the default implementation (Castmill.Workers.SystemCmd).
+  @system_cmd Application.compile_env(:castmill, :system_cmd, Castmill.Workers.SystemCmd)
+
   @doc """
   Processes the video transcoding job.
   This is called by BullMQ worker.
@@ -189,7 +194,10 @@ defmodule Castmill.Workers.VideoTranscoder do
     run_ffmpeg_with_progress(ffmpeg_args, media_id, total_duration, acc_progress)
   end
 
-  defp extract_thumbnail(input_file, output_path) do
+  @doc false
+  # This function is made public for testing purposes only.
+  # It extracts a thumbnail from a video file, trying multiple timestamps.
+  def extract_thumbnail(input_file, output_path, system_cmd \\ @system_cmd) do
     # Try to extract at 5 seconds first, then at 1 second, then at 0 for very short videos
     timestamps = ["5", "1", "0"]
 
@@ -207,7 +215,7 @@ defmodule Castmill.Workers.VideoTranscoder do
         output_path
       ]
 
-      case System.cmd("ffmpeg", ffmpeg_args, stderr_to_stdout: true) do
+      case system_cmd.cmd("ffmpeg", ffmpeg_args, stderr_to_stdout: true) do
         {_output, 0} ->
           if File.exists?(output_path) do
             {:halt, :ok}
