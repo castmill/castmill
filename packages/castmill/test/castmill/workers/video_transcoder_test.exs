@@ -153,7 +153,7 @@ defmodule Castmill.Workers.VideoTranscoderTest do
         {"", 0}
       end)
 
-      log =
+      _log =
         capture_log(fn ->
           result = VideoTranscoder.extract_thumbnail(input_file, output_path, SystemCmdMock)
           # This should fail because file check will fail for all timestamps
@@ -187,7 +187,7 @@ defmodule Castmill.Workers.VideoTranscoderTest do
         end
       end)
 
-      log =
+      _log =
         capture_log(fn ->
           result = VideoTranscoder.extract_thumbnail(input_file, output_path, SystemCmdMock)
           assert result == :ok
