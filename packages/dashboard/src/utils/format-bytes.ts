@@ -1,7 +1,7 @@
 /**
  * Formats a byte value into a human-readable string with appropriate units.
  * 
- * @param bytes - The number of bytes to format
+ * @param bytes - The number of bytes to format (must be non-negative)
  * @returns A formatted string like "1.5 MB" or "256 KB"
  * 
  * @example
@@ -11,6 +11,9 @@
  * formatBytes(0) // "0 B"
  */
 export function formatBytes(bytes: number): string {
+  if (bytes < 0) {
+    throw new Error('formatBytes: bytes must be non-negative');
+  }
   if (bytes === 0) return '0 B';
   const k = 1024;
   const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
