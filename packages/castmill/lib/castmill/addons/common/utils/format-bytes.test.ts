@@ -97,7 +97,7 @@ describe('formatBytes', () => {
   });
 
   describe('decimal precision', () => {
-    it('should always use 2 decimal places', () => {
+    it('should use up to 2 decimal places', () => {
       expect(formatBytes(1024 * 1.1)).toBe('1.1 KB');
       expect(formatBytes(1024 * 1.11)).toBe('1.11 KB');
       expect(formatBytes(1024 * 1.111)).toBe('1.11 KB');
