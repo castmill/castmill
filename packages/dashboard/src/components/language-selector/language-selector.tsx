@@ -2,7 +2,7 @@
  * Language Selector Component
  *
  * Dropdown component for selecting the application language
- * Uses the shared DropdownMenu component with flag icons
+ * Displays languages in their native form
  */
 
 import { Component, For } from 'solid-js';
@@ -14,19 +14,6 @@ interface LanguageSelectorProps {
   compact?: boolean;
   onLanguageChange?: (locale: Locale) => void;
 }
-
-// Flag emoji mapping for each language
-const LANGUAGE_FLAGS: Record<string, string> = {
-  en: '🇬🇧',
-  es: '🇪🇸',
-  sv: '🇸🇪',
-  de: '🇩🇪',
-  fr: '🇫🇷',
-  zh: '🇨🇳',
-  ar: '🇸🇦',
-  ko: '🇰🇷',
-  ja: '🇯🇵',
-};
 
 const LanguageSelector: Component<LanguageSelectorProps> = (props) => {
   const { locale, setLocale } = useI18n();
@@ -46,8 +33,8 @@ const LanguageSelector: Component<LanguageSelectorProps> = (props) => {
           class="language-selector__button"
           data-onboarding="language-selector"
         >
-          <span class="language-selector__flag">
-            {LANGUAGE_FLAGS[currentLocale()?.code || 'en']}
+          <span class="language-selector__native-name">
+            {currentLocale()?.nativeName || 'English'}
           </span>
         </div>
       )}
@@ -59,14 +46,7 @@ const LanguageSelector: Component<LanguageSelectorProps> = (props) => {
             classList={{ active: locale() === localeInfo.code }}
             onClick={() => handleLocaleChange(localeInfo.code)}
           >
-            <div class="language-selector__option-content">
-              <span class="language-selector__flag">
-                {LANGUAGE_FLAGS[localeInfo.code]}
-              </span>
-              <span class="language-selector__name">
-                {localeInfo.nativeName}
-              </span>
-            </div>
+            <span class="language-selector__name">{localeInfo.nativeName}</span>
           </button>
         )}
       </For>
