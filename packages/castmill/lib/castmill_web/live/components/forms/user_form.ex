@@ -21,10 +21,11 @@ defmodule CastmillWeb.Live.Admin.UserForm do
         <.input field={@form[:name]} type="text" label="Name" />
         <.input field={@form[:email]} type="text" label="Email" />
         <.input
-          field={@form[:role]}
+          field={@form[:network_role]}
           type="select"
-          options={[member: :member, admin: :admin, guest: :guest]}
-          label="Role"
+          prompt="Select a role"
+          options={[{"Member", :member}, {"Admin", :admin}]}
+          label="Network Role"
         />
 
         <:actions>
@@ -37,7 +38,6 @@ defmodule CastmillWeb.Live.Admin.UserForm do
 
   @impl true
   def update(%{action: :new} = assigns, socket) do
-    # team = %Teams.Team{organization_id: socket.assigns.resource.id}
     user = %Accounts.User{}
     changeset = Accounts.change_user(user)
 
@@ -49,8 +49,19 @@ defmodule CastmillWeb.Live.Admin.UserForm do
   end
 
   @impl true
-  def update(_assigns, socket) do
-    {:ok, socket}
+  def update(%{resource: user} = assigns, socket) when not is_nil(user) do
+    changeset = Accounts.change_user(user)
+
+    {:ok,
+     socket
+     |> assign(assigns)
+     |> assign(:user, user)
+     |> assign_form(changeset)}
+  end
+
+  @impl true
+  def update(assigns, socket) do
+    {:ok, assign(socket, assigns)}
   end
 
   @impl true

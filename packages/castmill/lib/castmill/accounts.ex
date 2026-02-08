@@ -647,12 +647,8 @@ defmodule Castmill.Accounts do
 
   ## Addons
   def list_addons(_user_id) do
-    # Get all addons from the configuration
-    Application.get_env(:castmill, :addons)
-    # Call component_info/0 on each
-    |> Enum.map(& &1.component_info())
-    # Exclude addons that return nil
-    |> Enum.filter(&(&1 != nil))
+    # Use the supervisor to get all addons (internal and external)
+    Castmill.Addons.Supervisor.list_component_infos()
   end
 
   defp validate_signup(signup_id, email) do

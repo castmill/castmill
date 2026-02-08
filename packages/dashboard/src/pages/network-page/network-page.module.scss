@@ -1,0 +1,451 @@
+.network-page {
+  text-align: left;
+  margin: 1em;
+  max-width: 80em;
+  padding-bottom: 4em;
+
+  .page-header {
+    display: flex;
+    align-items: center;
+    gap: 1em;
+    margin-bottom: 2em;
+
+    h1 {
+      margin: 0;
+      font-size: 1.75em;
+      font-weight: 600;
+    }
+
+    .network-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5em;
+      padding: 0.35em 0.75em;
+      border-radius: 2em;
+      background: rgba(59, 130, 246, 0.15);
+      color: #3b82f6;
+      font-size: 0.85em;
+      font-weight: 500;
+    }
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(12em, 1fr));
+    gap: 1em;
+    margin-bottom: 2em;
+  }
+
+  .stat-card {
+    padding: 1.25em;
+    border-radius: 0.75em;
+    background: #1a1a1a;
+    border: 0.1em solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+
+    .stat-value {
+      font-size: 2em;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .stat-label {
+      font-size: 0.9em;
+      color: var(--castmill-text-muted, #6b7280);
+    }
+  }
+
+  .section {
+    margin-bottom: 2em;
+    padding: 1.5em;
+    border-radius: 0.75em;
+    background: #181818;
+    border: 0.1em solid rgba(255, 255, 255, 0.1);
+
+    h2 {
+      margin: 0 0 0.5em 0;
+      font-size: 1.25em;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    p {
+      margin: 0 0 1.5em 0;
+      font-size: 0.9em;
+      color: var(--castmill-text-muted, #6b7280);
+    }
+  }
+
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(20em, 1fr));
+    gap: 1.5em;
+  }
+
+  .help-text {
+    font-size: 0.8em;
+    color: var(--castmill-text-muted, #6b7280);
+    margin-top: 0.25em;
+  }
+
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1em;
+    border-radius: 0.5em;
+    background: rgba(255, 255, 255, 0.03);
+    margin-bottom: 1em;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    .toggle-info {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25em;
+
+      .toggle-label {
+        font-weight: 500;
+        color: #fff;
+      }
+
+      .toggle-description {
+        font-size: 0.85em;
+        color: var(--castmill-text-muted, #6b7280);
+      }
+    }
+  }
+
+  .domain-display {
+    display: flex;
+    align-items: center;
+    gap: 0.75em;
+    padding: 0.75em 1em;
+    border-radius: 0.5em;
+    background: rgba(255, 255, 255, 0.05);
+    border: 0.1em solid rgba(255, 255, 255, 0.1);
+
+    .domain-value {
+      font-family: monospace;
+      font-size: 0.95em;
+      color: #10b981;
+    }
+
+    .domain-note {
+      font-size: 0.8em;
+      color: var(--castmill-text-muted, #6b7280);
+    }
+  }
+
+  .actions {
+    display: flex;
+    gap: 1em;
+    margin-top: 1.5em;
+    justify-content: flex-end;
+  }
+
+  .loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4em;
+    gap: 1em;
+
+    .loading-text {
+      color: var(--castmill-text-muted, #6b7280);
+    }
+  }
+
+  .error-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4em;
+    gap: 1em;
+    text-align: center;
+
+    .error-icon {
+      font-size: 3em;
+      color: #ef4444;
+    }
+
+    .error-message {
+      font-size: 1.1em;
+      color: #ef4444;
+    }
+
+    .error-hint {
+      font-size: 0.9em;
+      color: var(--castmill-text-muted, #6b7280);
+    }
+  }
+
+  .not-admin-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4em;
+    gap: 1em;
+    text-align: center;
+
+    .not-admin-icon {
+      font-size: 3em;
+      color: #f59e0b;
+    }
+
+    .not-admin-title {
+      font-size: 1.25em;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .not-admin-message {
+      font-size: 0.95em;
+      color: var(--castmill-text-muted, #6b7280);
+      max-width: 30em;
+    }
+  }
+
+  // Organizations Tab
+  .organizations-tab,
+  .users-tab {
+    padding: 1em 0;
+
+    h3 {
+      margin: 0 0 1em 0;
+      font-size: 1.1em;
+      font-weight: 600;
+      color: #fff;
+    }
+  }
+
+  .create-org-form {
+    padding: 1.5em;
+    border-radius: 0.75em;
+    background: #181818;
+    border: 0.1em solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 2em;
+
+    h3 {
+      margin: 0 0 0.5em 0;
+    }
+
+    p {
+      margin: 0 0 1.5em 0;
+      font-size: 0.9em;
+      color: var(--castmill-text-muted, #6b7280);
+    }
+
+    .create-org-row {
+      display: flex;
+      gap: 1em;
+      align-items: flex-end;
+
+      > :first-child {
+        flex: 1;
+        max-width: 25em;
+      }
+
+      // Align button vertically centered with the input field
+      > button {
+        margin-bottom: 1em;
+      }
+    }
+  }
+
+  .org-list {
+    padding: 1.5em;
+    border-radius: 0.75em;
+    background: #181818;
+    border: 0.1em solid rgba(255, 255, 255, 0.1);
+    position: relative;
+
+    .loading-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(24, 24, 24, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      border-radius: 0.75em;
+      color: var(--castmill-text-muted, #6b7280);
+    }
+  }
+
+  .actions-row {
+    display: flex;
+    gap: 0.5em;
+    justify-content: flex-end;
+    align-items: center;
+  }
+
+  .status-active {
+    color: #10b981;
+    font-weight: 500;
+    font-size: 0.85em;
+  }
+
+  .status-blocked {
+    color: #ef4444;
+    font-weight: 500;
+    font-size: 0.85em;
+    cursor: help;
+  }
+
+  .blocked-row {
+    background: rgba(239, 68, 68, 0.05);
+
+    &:hover {
+      background: rgba(239, 68, 68, 0.1);
+    }
+  }
+
+  .pagination-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 1.5em;
+    padding-top: 1em;
+    border-top: 0.1em solid rgba(255, 255, 255, 0.1);
+    flex-wrap: wrap;
+    gap: 1em;
+
+    .pagination-info {
+      font-size: 0.85em;
+      color: var(--castmill-text-muted, #6b7280);
+    }
+  }
+
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+
+    th,
+    td {
+      padding: 0.75em 1em;
+      text-align: left;
+      border-bottom: 0.1em solid rgba(255, 255, 255, 0.1);
+    }
+
+    th {
+      font-weight: 600;
+      color: var(--castmill-text-muted, #6b7280);
+      font-size: 0.85em;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    td {
+      color: #fff;
+    }
+
+    tbody tr:hover {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    tbody tr:last-child td {
+      border-bottom: none;
+    }
+  }
+
+  .empty-list {
+    padding: 2em;
+    text-align: center;
+    color: var(--castmill-text-muted, #6b7280);
+    font-size: 0.95em;
+  }
+
+  .form-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+
+    label {
+      font-weight: 500;
+      color: #fff;
+      font-size: 0.9em;
+    }
+  }
+
+  // Invite section styles
+  .invite-section {
+    padding: 1.5em;
+    border-radius: 0.75em;
+    background: #181818;
+    border: 0.1em solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 1.5em;
+
+    h3 {
+      margin: 0 0 0.5em 0;
+      color: #fff;
+    }
+
+    p {
+      margin: 0 0 1em 0;
+      font-size: 0.9em;
+      color: var(--castmill-text-muted, #6b7280);
+    }
+  }
+
+  .users-list {
+    padding: 1.5em;
+    border-radius: 0.75em;
+    background: #181818;
+    border: 0.1em solid rgba(255, 255, 255, 0.1);
+
+    h3 {
+      margin: 0 0 1em 0;
+      color: #fff;
+    }
+  }
+}
+
+// Styles for Modal content (rendered in portal, outside .network-page)
+.invite-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+}
+
+.org-combobox-item {
+  padding: 0.25em 0;
+
+  .org-name {
+    font-weight: 500;
+    color: #fff;
+  }
+}
+
+.modal-actions {
+  display: flex;
+  gap: 1em;
+  justify-content: flex-end;
+  margin-top: 1.5em;
+  padding-top: 1em;
+  border-top: 0.1em solid rgba(255, 255, 255, 0.1);
+}
+
+.error-message {
+  color: var(--castmill-error, #ef4444);
+  font-size: 0.9em;
+  padding: 0.5em;
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: 0.25em;
+}
+
+.block-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+}

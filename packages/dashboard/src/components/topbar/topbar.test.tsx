@@ -79,6 +79,9 @@ vi.mock('../../store/store', () => ({
     organizations: {
       selectedName: 'Test Org',
     },
+    networkSettings: {
+      logo: null,
+    },
   },
 }));
 

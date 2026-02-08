@@ -68,16 +68,30 @@ defmodule CastmillWeb.SessionController do
          # outcommented as I am not sure what this is used for...
          # true <- (:binary.at(authenticator_data, 32) &&& 1) == 1,
          # Make sure the signed origin matches what we expect.
-         true <- :binary.part(authenticator_data, 0, 32) == :crypto.hash(:sha256, "localhost") do
+         true <- :binary.part(authenticator_data, 0, 32) == :crypto.hash(:sha256, "localhost"),
+         # Log in the user (returns {:error, reason} if blocked)
+         conn when is_map(conn) <-
+           SessionUtils.log_in_user(
+             conn |> delete_session(:webauthn_challenge),
+             credential.user_id
+           ) do
       conn
-      |> delete_session(:webauthn_challenge)
-      |> SessionUtils.log_in_user(credential.user_id)
       |> json(%{status: :ok})
     else
+      {:error, {:user_blocked, reason}} ->
+        conn
+        |> put_status(:forbidden)
+        |> json(%{status: :error, message: reason, code: "user_blocked"})
+
+      {:error, {:organization_blocked, reason}} ->
+        conn
+        |> put_status(:forbidden)
+        |> json(%{status: :error, message: reason, code: "organization_blocked"})
+
       _ ->
         conn
         |> put_status(:unauthorized)
-        |> json(%{status: :ok, message: "Invalid login attempt"})
+        |> json(%{status: :error, message: "Invalid login attempt"})
     end
   end
 

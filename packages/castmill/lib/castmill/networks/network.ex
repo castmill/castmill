@@ -12,6 +12,8 @@ defmodule Castmill.Networks.Network do
     field(:email, :string)
     field(:logo, :string, default: "https://castmill.com/images/logo.png")
     field(:name, :string)
+    field(:default_locale, :string, default: "en")
+    field(:privacy_policy_url, :string)
 
     field(:invitation_only, :boolean, default: false)
     field(:invitation_only_org_admins, :boolean, default: false)
@@ -41,6 +43,8 @@ defmodule Castmill.Networks.Network do
       :domain,
       :meta,
       :default_plan_id,
+      :default_locale,
+      :privacy_policy_url,
       :invitation_only,
       :invitation_only_org_admins
     ])

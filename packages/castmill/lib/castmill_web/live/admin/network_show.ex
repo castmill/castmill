@@ -41,7 +41,7 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
           name: "Invitations",
           icon: "hero-envelope-solid",
           href: "invitations",
-          form: nil
+          form: CastmillWeb.Live.Admin.NetworkInvitationForm
         },
         %{
           name: "Teams",
@@ -53,6 +53,12 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
           name: "Users",
           icon: "hero-users-solid",
           href: "users",
+          form: nil
+        },
+        %{
+          name: "Admins",
+          icon: "hero-shield-check-solid",
+          href: "admins",
           form: nil
         },
         %{
@@ -149,20 +155,6 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
           patch={~p"/admin/networks/#{@resource}/integrations"}
         />
       </.modal>
-      <!-- Network Invitation Modal -->
-      <.modal
-        :if={@live_action == :new && @selected_tab == "invitations"}
-        id="invitation-modal"
-        show
-        on_cancel={JS.patch(~p"/admin/networks/#{@resource}/invitations")}
-      >
-        <.live_component
-          module={CastmillWeb.Live.Admin.NetworkInvitationForm}
-          id="new-invitation"
-          network_id={@resource.id}
-          patch={~p"/admin/networks/#{@resource}/invitations"}
-        />
-      </.modal>
     </div>
     """
   end
@@ -247,10 +239,17 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
 
     {rows, cols} = resources_for_network(id, resource)
 
+    # Some resources (like invitations) don't have individual detail pages
+    base_resource_url =
+      case resource do
+        "invitations" -> nil
+        _ -> ~p"/admin/#{resource}"
+      end
+
     {:noreply,
      socket
      |> assign(:selected_integration, nil)
-     |> assign(:base_resource_url, ~p"/admin/#{resource}")
+     |> assign(:base_resource_url, base_resource_url)
      |> reset_stream(:rows, rows)
      |> assign(:selected_tab, resource)
      |> assign(:resource_cols, cols)}
@@ -326,6 +325,47 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
 
       {:error, _} ->
         {:noreply, put_flash(socket, :error, "Failed to delete invitation")}
+    end
+  end
+
+  def handle_event("promote_to_admin", %{"id" => user_id}, socket) do
+    network_id = socket.assigns.resource.id
+
+    case Networks.promote_to_network_admin(user_id, network_id) do
+      {:ok, _} ->
+        {:noreply,
+         socket
+         |> put_flash(:info, "User promoted to network admin")}
+
+      {:error, :user_not_found} ->
+        {:noreply, put_flash(socket, :error, "User not found")}
+
+      {:error, :user_not_in_network} ->
+        {:noreply, put_flash(socket, :error, "User does not belong to this network")}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Failed to promote user")}
+    end
+  end
+
+  def handle_event("demote_from_admin", %{"id" => user_id}, socket) do
+    network_id = socket.assigns.resource.id
+
+    case Networks.demote_from_network_admin(user_id, network_id) do
+      {:ok, _} ->
+        # Refresh the admins list
+        {rows, _cols} = resources_for_network(network_id, "admins")
+
+        {:noreply,
+         socket
+         |> stream(:rows, rows, reset: true)
+         |> put_flash(:info, "User demoted from network admin")}
+
+      {:error, :not_admin} ->
+        {:noreply, put_flash(socket, :error, "User is not an admin")}
+
+      {:error, _} ->
+        {:noreply, put_flash(socket, :error, "Failed to demote user")}
     end
   end
 
@@ -425,6 +465,32 @@ defmodule CastmillWeb.Live.Admin.NetworkShow do
        %{
          name: "Name",
          field: :name
+       },
+       %{
+         name: "Email",
+         field: :email
+       },
+       %{
+         name: "Created",
+         field: :inserted_at
+       }
+     ]}
+  end
+
+  defp resources_for_network(network_id, "admins") do
+    {Networks.list_network_admins(network_id) || [],
+     [
+       %{
+         name: "ID",
+         field: :id
+       },
+       %{
+         name: "Name",
+         field: :name
+       },
+       %{
+         name: "Email",
+         field: :email
        },
        %{
          name: "Created",

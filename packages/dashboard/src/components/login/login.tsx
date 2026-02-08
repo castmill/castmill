@@ -16,6 +16,11 @@ import RecoverCredentials from './recover-credentials';
 
 import { baseUrl, domain } from '../../env';
 import { useI18n } from '../../i18n';
+import {
+  LOCALE_STORAGE_KEY,
+  SUPPORTED_LOCALES,
+  Locale,
+} from '../../i18n/types';
 
 const encoder = new TextEncoder(); // Creates a new encoder
 
@@ -23,10 +28,12 @@ interface NetworkSettings {
   name: string;
   invitation_only: boolean;
   logo: string;
+  default_locale: string;
+  privacy_policy_url: string | null;
 }
 
 const Login: Component = () => {
-  const { t } = useI18n();
+  const { t, setLocale } = useI18n();
   const [isMounted, setIsMounted] = createSignal<boolean>(false);
   const [loading, setLoading] = createSignal<boolean>(false);
   const [error, setError] = createSignal<string>('');
@@ -66,12 +73,25 @@ const Login: Component = () => {
 
   async function fetchNetworkSettings() {
     try {
-      const response = await fetch(`${baseUrl}/dashboard/network/settings`, {
-        credentials: 'include',
-      });
+      const response = await fetch(
+        `${baseUrl}/dashboard/network/public-settings`,
+        {
+          credentials: 'include',
+        }
+      );
       if (response.ok) {
         const settings = await response.json();
         setNetworkSettings(settings);
+
+        // Apply network's default locale if user has no stored preference
+        const storedLocale = localStorage.getItem(LOCALE_STORAGE_KEY);
+        if (
+          !storedLocale &&
+          settings.default_locale &&
+          SUPPORTED_LOCALES.some((l) => l.code === settings.default_locale)
+        ) {
+          setLocale(settings.default_locale as Locale);
+        }
       }
     } catch (error) {
       console.error('Failed to fetch network settings:', error);
@@ -152,8 +172,25 @@ const Login: Component = () => {
       });
 
       if (!result.ok) {
-        console.error('Failed to authenticate');
-        setError(t('login.errors.authenticationFailed'));
+        // Try to parse the error response to get specific error codes
+        try {
+          const errorData = await result.json();
+          if (errorData.code === 'user_blocked') {
+            setError(
+              t('login.errors.userBlocked', { reason: errorData.message || '' })
+            );
+          } else if (errorData.code === 'organization_blocked') {
+            setError(
+              t('login.errors.organizationBlocked', {
+                reason: errorData.message || '',
+              })
+            );
+          } else {
+            setError(t('login.errors.authenticationFailed'));
+          }
+        } catch {
+          setError(t('login.errors.authenticationFailed'));
+        }
         setLoading(false);
         return;
       } else {
@@ -277,12 +314,21 @@ const Login: Component = () => {
                     </p>
                   </Show>
 
-                  <div class="privacy">
-                    <p>
-                      We care about your privacy. Read our{' '}
-                      <a href="#">Privacy Policy</a>.
-                    </p>
-                  </div>
+                  <Show when={networkSettings()?.privacy_policy_url}>
+                    <div class="privacy">
+                      <p>
+                        {t('login.privacyNotice')}{' '}
+                        <a
+                          href={networkSettings()?.privacy_policy_url || '#'}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {t('login.privacyPolicy')}
+                        </a>
+                        .
+                      </p>
+                    </div>
+                  </Show>
                   <div>
                     <p>
                       <a

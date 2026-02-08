@@ -70,6 +70,13 @@ defmodule CastmillWeb.Live.Admin.Resources do
         field: :network_id
       },
       %{
+        name: "Status",
+        field: :status,
+        render: fn org ->
+          if Organizations.Organization.blocked?(org), do: "Blocked", else: "Active"
+        end
+      },
+      %{
         name: "Created",
         field: :inserted_at
       }
@@ -122,12 +129,12 @@ defmodule CastmillWeb.Live.Admin.Resources do
         field: :email
       },
       %{
-        name: "Network ID",
-        field: :network_id
+        name: "Network Role",
+        field: :network_role
       },
       %{
-        name: "Organization ID",
-        field: :organization_id
+        name: "Network ID",
+        field: :network_id
       },
       %{
         name: "Created",
@@ -139,9 +146,11 @@ defmodule CastmillWeb.Live.Admin.Resources do
 
     {:noreply,
      socket
+     |> apply_action(socket.assigns.live_action, params)
      |> assign(:cols, columns)
      |> assign(:selected_link, "users")
-     |> assign(:page_title, "Users")}
+     |> assign(:page_title, "Users")
+     |> assign(:form_module, CastmillWeb.Live.Admin.UserForm)}
   end
 
   def handle_params(%{"resource" => "devices"} = params, _url, socket) do
@@ -330,6 +339,12 @@ defmodule CastmillWeb.Live.Admin.Resources do
     {:noreply, assign(socket, :rows, rows)}
   end
 
+  @impl true
+  def handle_info({CastmillWeb.Live.Admin.UserForm, {:saved, row}}, socket) do
+    rows = update_or_insert_row(socket.assigns.rows, row)
+    {:noreply, assign(socket, :rows, rows)}
+  end
+
   def handle_event("search", %{"search" => search}, socket) do
     {:noreply, assign(socket, search: search)}
   end
@@ -348,6 +363,34 @@ defmodule CastmillWeb.Live.Admin.Resources do
     {:ok, _} = Organizations.delete_organization(organization)
     rows = Enum.reject(socket.assigns.rows, fn r -> r.id == organization.id end)
     {:noreply, assign(socket, :rows, rows)}
+  end
+
+  @impl true
+  def handle_event("block", %{"id" => id, "resource" => "organizations"}, socket) do
+    organization = Organizations.get_organization!(id)
+
+    case Organizations.block_organization(organization, "Blocked via admin panel") do
+      {:ok, updated_org} ->
+        rows = update_or_insert_row(socket.assigns.rows, updated_org)
+        {:noreply, assign(socket, :rows, rows)}
+
+      {:error, _changeset} ->
+        {:noreply, put_flash(socket, :error, "Failed to block organization")}
+    end
+  end
+
+  @impl true
+  def handle_event("unblock", %{"id" => id, "resource" => "organizations"}, socket) do
+    organization = Organizations.get_organization!(id)
+
+    case Organizations.unblock_organization(organization) do
+      {:ok, updated_org} ->
+        rows = update_or_insert_row(socket.assigns.rows, updated_org)
+        {:noreply, assign(socket, :rows, rows)}
+
+      {:error, _changeset} ->
+        {:noreply, put_flash(socket, :error, "Failed to unblock organization")}
+    end
   end
 
   @impl true
@@ -376,6 +419,19 @@ defmodule CastmillWeb.Live.Admin.Resources do
     socket
     |> assign(:page_title, "Edit Network")
     |> assign(:resource, Networks.get_network(id))
+  end
+
+  # Users
+  defp apply_action(socket, :show, %{"id" => id, "resource" => "users"}) do
+    socket
+    |> assign(:page_title, "User Details")
+    |> assign(:resource, Castmill.Accounts.get_user(id))
+  end
+
+  defp apply_action(socket, :edit, %{"id" => id, "resource" => "users"}) do
+    socket
+    |> assign(:page_title, "Edit User")
+    |> assign(:resource, Castmill.Accounts.get_user(id))
   end
 
   # Organizations

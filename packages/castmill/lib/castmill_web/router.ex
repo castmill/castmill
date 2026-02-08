@@ -126,6 +126,15 @@ defmodule CastmillWeb.Router do
     post("/:integration_id/:widget_config_id", WidgetIntegrationController, :receive_webhook)
   end
 
+  # Webhook endpoints for addons
+  # Addons define their webhook handlers via the webhook_handlers/0 callback
+  scope "/webhooks/addons", CastmillWeb do
+    pipe_through(:webhooks)
+
+    # Catch-all route for addon webhooks: /webhooks/addons/:addon_id/*path
+    post("/:addon_id/*path", AddonWebhookController, :handle_webhook)
+  end
+
   # OAuth routes for third-party widget integrations
   # These routes use session for authentication (authorize endpoint)
   # The callback endpoint validates signed state parameter instead
@@ -205,7 +214,19 @@ defmodule CastmillWeb.Router do
 
     get("/organizations_invitations/:token/preview", OrganizationController, :preview_invitation)
     get("/network_invitations/:token/preview", NetworkInvitationController, :preview_invitation)
-    get("/network/settings", NetworkSettingsController, :show)
+    get("/network/public-settings", NetworkSettingsController, :show)
+  end
+
+  # Addon API routes - supports both public and authenticated endpoints
+  # Public routes (defined via public_api_routes/0) don't require authentication
+  # Routes are mounted under /api/addons/:addon_id/*path
+  scope "/api/addons", CastmillWeb do
+    pipe_through(:dashboard)
+
+    get("/:addon_id/*path", AddonApiController, :dispatch_get)
+    post("/:addon_id/*path", AddonApiController, :dispatch_post)
+    put("/:addon_id/*path", AddonApiController, :dispatch_put)
+    delete("/:addon_id/*path", AddonApiController, :dispatch_delete)
   end
 
   scope "/dashboard", CastmillWeb do
@@ -213,6 +234,42 @@ defmodule CastmillWeb.Router do
 
     get("/addons", AddonsController, :index)
     get("/users/:user_id/organizations", OrganizationController, :list_users_organizations)
+
+    # Network admin endpoints
+    get("/network/admin-status", NetworkDashboardController, :check_admin_status)
+    get("/network/settings", NetworkDashboardController, :show_settings)
+    put("/network/settings", NetworkDashboardController, :update_settings)
+    get("/network/stats", NetworkDashboardController, :show_stats)
+    get("/network/organizations", NetworkDashboardController, :list_organizations)
+    post("/network/organizations", NetworkDashboardController, :create_organization)
+    delete("/network/organizations/:id", NetworkDashboardController, :delete_organization)
+    get("/network/users", NetworkDashboardController, :list_users)
+    get("/network/invitations", NetworkDashboardController, :list_invitations)
+    delete("/network/invitations/:id", NetworkDashboardController, :delete_invitation)
+
+    post(
+      "/network/organizations/:organization_id/invitations",
+      NetworkDashboardController,
+      :invite_user_to_organization
+    )
+
+    # Network admin user management
+    post("/network/users/:user_id/block", NetworkDashboardController, :block_user)
+    delete("/network/users/:user_id/block", NetworkDashboardController, :unblock_user)
+    delete("/network/users/:user_id", NetworkDashboardController, :delete_user)
+
+    # Network admin organization management
+    post(
+      "/network/organizations/:organization_id/block",
+      NetworkDashboardController,
+      :block_organization
+    )
+
+    delete(
+      "/network/organizations/:organization_id/block",
+      NetworkDashboardController,
+      :unblock_organization
+    )
 
     # Search endpoint
     get("/organizations/:organization_id/search", SearchController, :search)
@@ -648,6 +705,7 @@ defmodule CastmillWeb.Router do
   end
 
   # Fetches the user from the session for dashboard API requests
+  # Also checks if the user or their organization is blocked
   defp fetch_dashboard_user(conn, _opts) do
     case get_session(conn, :user_session_token) do
       nil ->
@@ -655,7 +713,30 @@ defmodule CastmillWeb.Router do
 
       token ->
         user = Castmill.Accounts.get_user_by_session_token(token)
-        assign(conn, :current_user, user)
+
+        case CastmillWeb.SessionUtils.check_user_blocked_status(user) do
+          {:ok, _user} ->
+            assign(conn, :current_user, user)
+
+          {:error, {:user_blocked, reason}} ->
+            conn
+            |> delete_session(:user)
+            |> delete_session(:user_session_token)
+            |> put_status(:forbidden)
+            |> Phoenix.Controller.json(%{error: reason, code: "user_blocked"})
+            |> halt()
+
+          {:error, {:organization_blocked, reason}} ->
+            conn
+            |> delete_session(:user)
+            |> delete_session(:user_session_token)
+            |> put_status(:forbidden)
+            |> Phoenix.Controller.json(%{error: reason, code: "organization_blocked"})
+            |> halt()
+
+          {:error, _} ->
+            conn
+        end
     end
   end
 end

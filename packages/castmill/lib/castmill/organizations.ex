@@ -242,6 +242,48 @@ defmodule Castmill.Organizations do
   end
 
   @doc """
+  Blocks an organization with an optional reason.
+
+  ## Examples
+
+      iex> block_organization(organization, "Violation of terms")
+      {:ok, %Organization{}}
+
+      iex> block_organization(organization, "Violation of terms")
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def block_organization(%Organization{} = organization, reason \\ nil) do
+    organization
+    |> Organization.block_changeset(%{
+      blocked_at: DateTime.utc_now(),
+      blocked_reason: reason
+    })
+    |> Repo.update()
+  end
+
+  @doc """
+  Unblocks an organization.
+
+  ## Examples
+
+      iex> unblock_organization(organization)
+      {:ok, %Organization{}}
+
+      iex> unblock_organization(organization)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def unblock_organization(%Organization{} = organization) do
+    organization
+    |> Organization.block_changeset(%{
+      blocked_at: nil,
+      blocked_reason: nil
+    })
+    |> Repo.update()
+  end
+
+  @doc """
   Returns an `%Ecto.Changeset{}` for tracking organization changes.
 
   ## Examples

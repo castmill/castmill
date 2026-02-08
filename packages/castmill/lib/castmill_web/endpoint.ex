@@ -80,6 +80,10 @@ defmodule CastmillWeb.Endpoint do
   plug(Plug.MethodOverride)
   plug(Plug.Head)
   plug(Plug.Session, @session_options)
+
+  # Serve static files from external addon packages
+  plug(CastmillWeb.Plugs.AddonStatic)
+
   plug(CastmillWeb.Router)
 
   # The endpoints used exclusively by the player apps
