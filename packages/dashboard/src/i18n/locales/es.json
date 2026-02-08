@@ -218,6 +218,7 @@
       "description": "Configura la marca e identidad de tu red.",
       "name": "Nombre de Red",
       "namePlaceholder": "Ingresa el nombre de la red",
+      "nameHelp": "El nombre de tu red, mostrado en el encabezado del panel.",
       "email": "Email de Soporte",
       "emailPlaceholder": "soporte@ejemplo.com",
       "emailHelp": "Este email se muestra a los usuarios para consultas de soporte.",

@@ -226,6 +226,7 @@
       "description": "Konfigurieren Sie das Branding und die Identität Ihres Netzwerks.",
       "name": "Netzwerkname",
       "namePlaceholder": "Geben Sie den Netzwerknamen ein",
+      "nameHelp": "Der Name Ihres Netzwerks, angezeigt im Dashboard-Header.",
       "email": "Support-E-Mail",
       "emailPlaceholder": "support@beispiel.de",
       "emailHelp": "Diese E-Mail wird Benutzern bei Supportanfragen angezeigt.",

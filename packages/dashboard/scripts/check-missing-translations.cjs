@@ -82,6 +82,20 @@ const ALLOWED_IDENTICAL_STRINGS = new Set([
   'Navigation', // Cognate in French
   '9:16 (Portrait)', // Cognate in French
   '3:4 (Portrait)', // Cognate in French
+  'Contact', // Cognate in French
+  'Administrator', // Cognate in German
+  // Social media URLs and placeholders - intentionally identical
+  'GitHub URL',
+  'X (Twitter) URL',
+  'LinkedIn URL',
+  'Facebook URL',
+  'support@example.com',
+  'https://example.com/logo.png',
+  'https://example.com/privacy',
+  'https://github.com/yourcompany',
+  'https://x.com/yourcompany',
+  'https://linkedin.com/company/yourcompany',
+  'https://facebook.com/yourcompany',
 ]);
 
 class TranslationChecker {
