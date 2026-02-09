@@ -622,7 +622,7 @@ defmodule Castmill.Devices do
     sort_field =
       case sort_key do
         "timestamp" -> :timestamp
-        "type_name" -> :type_name
+        "type_name" -> :type
         "msg" -> :msg
         _ -> :timestamp
       end
