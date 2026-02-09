@@ -29,6 +29,7 @@ import {
   ToastProvider,
   HttpError,
   useToast,
+  formatBytes,
 } from '@castmill/ui-common';
 import { JsonMedia } from '@castmill/player';
 import { MediasService } from '../services/medias.service';
@@ -46,7 +47,6 @@ import {
   AddonComponentProps,
 } from '../../common/interfaces/addon-store';
 import { useTeamFilter, useModalFromUrl } from '../../common/hooks';
-import { formatBytes } from '../../common/utils';
 
 const MediasPage: Component<AddonComponentProps> = (props) => {
   // Get i18n functions from store

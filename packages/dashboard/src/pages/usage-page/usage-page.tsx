@@ -14,8 +14,7 @@ import { Usage } from '../../interfaces/usage';
 
 import { UsageComponent } from '../../components/usage/usage';
 import { useI18n } from '../../i18n';
-import { useToast } from '@castmill/ui-common';
-import { formatBytes } from '../../utils';
+import { useToast, formatBytes } from '@castmill/ui-common';
 import { IoImagesOutline } from 'solid-icons/io';
 import { RiMediaPlayList2Fill } from 'solid-icons/ri';
 import { HiOutlineTv } from 'solid-icons/hi';

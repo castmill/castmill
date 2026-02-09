@@ -4,7 +4,7 @@ import {
   QuotasService,
   QuotaUsage,
 } from '../../common/services/quotas.service';
-import { formatBytes } from '../../common/utils';
+import { formatBytes } from '@castmill/ui-common';
 import { IoImagesOutline } from 'solid-icons/io';
 import { RiMediaPlayList2Fill } from 'solid-icons/ri';
 import { AiOutlineDatabase } from 'solid-icons/ai';

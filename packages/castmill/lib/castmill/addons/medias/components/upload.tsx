@@ -8,9 +8,8 @@ import {
   AiOutlineCheck,
 } from 'solid-icons/ai';
 
-import { Button, IconButton, IconWrapper, useToast } from '@castmill/ui-common';
+import { Button, IconButton, IconWrapper, useToast, formatBytes } from '@castmill/ui-common';
 import { AddonStore } from '../../common/interfaces/addon-store';
-import { formatBytes } from '../../common/utils';
 
 interface UploadComponentProps {
   baseUrl: string;

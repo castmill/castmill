@@ -13,12 +13,12 @@ import {
   ConfirmDialog,
   useToast,
   Button,
+  formatBytes,
 } from '@castmill/ui-common';
 
 import { Device } from '../interfaces/device.interface';
 
 import { DevicesService } from '../services/devices.service';
-import { formatBytes } from '../../common/utils';
 
 interface DeviceTableCacheItem {
   timestamp: string;

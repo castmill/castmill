@@ -1,1 +1,1 @@
-export { formatBytes } from './format-bytes';
+// Utilities moved to @castmill/ui-common
