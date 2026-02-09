@@ -103,6 +103,21 @@
     line-height: 1.5;
   }
 
+  .error {
+    margin: 15px 0;
+    padding: 12px 16px;
+    background-color: #fef2f2;
+    border: 1px solid #fecaca;
+    border-left: 4px solid #ef4444;
+    border-radius: 4px;
+    color: #991b1b;
+    font-size: 14px;
+    line-height: 1.5;
+    text-align: left;
+    max-width: 20em;
+    word-wrap: break-word;
+  }
+
   .invitation-only-notice {
     margin: 20px 0;
     padding: 15px 20px;

@@ -10,7 +10,8 @@ defmodule Castmill.Addons.ComponentInfo do
              :path,
              :mount_point,
              :mount_path,
-             :keyboard_shortcut
+             :keyboard_shortcut,
+             :translations_path
            ]}
   defstruct id: nil,
             name: nil,
@@ -21,5 +22,6 @@ defmodule Castmill.Addons.ComponentInfo do
             path: nil,
             mount_point: nil,
             mount_path: nil,
-            keyboard_shortcut: nil
+            keyboard_shortcut: nil,
+            translations_path: nil
 end

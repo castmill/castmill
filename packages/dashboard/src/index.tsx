@@ -39,6 +39,7 @@ import TeamsInvitationPage from './pages/teams-invitations-page/teams-invitation
 import OrganizationPage from './pages/organization-page/organization-page';
 import OrganizationsInvitationPage from './pages/organization-invitations/organizations-invitations-page';
 import ChannelsPage from './pages/channels-page/channels-page';
+import { NetworkPage } from './pages/network-page';
 import { I18nProvider, useI18n } from './i18n';
 import { KeyboardShortcutsProvider, useKeyboardShortcuts } from './hooks';
 
@@ -268,6 +269,7 @@ render(() => {
                 <Route path="organization" component={OrganizationPage} />
                 <Route path="channels" component={ChannelsPage} />
                 <Route path="invite" component={TeamsInvitationPage} />
+                <Route path="network" component={NetworkPage} />
 
                 {/* Dynamically generate routes for AddOns */}
                 <For each={store.addons}>

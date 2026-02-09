@@ -11,15 +11,17 @@ import { baseUrl } from '../../env';
 import { TbChartHistogram } from 'solid-icons/tb';
 import { AiOutlineTeam } from 'solid-icons/ai';
 import { RiEditorOrganizationChart } from 'solid-icons/ri';
-import { BsCalendarWeek } from 'solid-icons/bs';
+import { BsCalendarWeek, BsBuilding } from 'solid-icons/bs';
 import { useI18n } from '../../i18n';
 import { useNavigate, useLocation } from '@solidjs/router';
 
 const addOnBasePath = `${baseUrl}/assets/addons`;
 
-const SidePanelTree: Component<{ node: AddOnNode; level: number }> = (
-  props
-) => {
+const SidePanelTree: Component<{
+  node: AddOnNode;
+  level: number;
+  skipKeys?: string[];
+}> = (props) => {
   const { t } = useI18n();
   const addon = props.node.addon;
   const children = Array.from(props.node.children || []);
@@ -53,8 +55,17 @@ const SidePanelTree: Component<{ node: AddOnNode; level: number }> = (
       </Show>
       <For each={children}>
         {([name, node]) => (
-          <Show when={node.children || node.addon}>
-            <SidePanelTree node={node} level={props.level + 1} />
+          <Show
+            when={
+              (node.children || node.addon) &&
+              !(props.skipKeys && props.skipKeys.includes(name))
+            }
+          >
+            <SidePanelTree
+              node={node}
+              level={props.level + 1}
+              skipKeys={props.skipKeys}
+            />
           </Show>
         )}
       </For>
@@ -78,6 +89,7 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
   example: "sidepanel.content.medias" create the proper entry in the panel.
   */
   const addonsPanelTree = props.addons.getSubTree('sidepanel');
+  const addonsBottomTree = props.addons.getSubTree('sidepanel.bottom');
 
   return (
     <div class="castmill-sidepanel">
@@ -119,7 +131,11 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
         />
 
         <Show when={addonsPanelTree}>
-          <SidePanelTree node={addonsPanelTree!} level={-1} />
+          <SidePanelTree
+            node={addonsPanelTree!}
+            level={-1}
+            skipKeys={['bottom']}
+          />
         </Show>
         <PanelItem
           to={`/org/${store.organizations.selectedId}/channels`}
@@ -146,6 +162,23 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
           level={0}
           icon={IoSettingsOutline}
         />
+
+        <Show when={addonsBottomTree}>
+          <SidePanelTree node={addonsBottomTree!} level={-1} />
+        </Show>
+
+        {/* Network Admin Section - only visible to network admins */}
+        <Show when={store.network.isAdmin}>
+          <div class="network-admin-section">
+            <div class="section-divider"></div>
+            <PanelItem
+              to={`/org/${store.organizations.selectedId}/network`}
+              text={t('sidebar.network')}
+              level={0}
+              icon={BsBuilding}
+            />
+          </div>
+        </Show>
       </div>
     </div>
   );

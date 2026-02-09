@@ -40,6 +40,10 @@ defmodule Castmill.Organizations.Organization do
       default: :full
     )
 
+    # Blocking fields - when blocked_at is set, all users in this org cannot login
+    field(:blocked_at, :utc_datetime_usec)
+    field(:blocked_reason, :string)
+
     belongs_to(:network, Castmill.Networks.Network, foreign_key: :network_id, type: Ecto.UUID)
     belongs_to(:organization, Castmill.Organizations.Organization, type: Ecto.UUID)
     belongs_to(:logo_media, Castmill.Resources.Media, foreign_key: :logo_media_id, type: :id)
@@ -119,4 +123,18 @@ defmodule Castmill.Organizations.Organization do
       where: e.organization_id == ^id
     )
   end
+
+  @doc """
+  Changeset for blocking/unblocking an organization.
+  """
+  def block_changeset(organization, attrs) do
+    organization
+    |> cast(attrs, [:blocked_at, :blocked_reason])
+  end
+
+  @doc """
+  Returns true if the organization is blocked.
+  """
+  def blocked?(%__MODULE__{blocked_at: nil}), do: false
+  def blocked?(%__MODULE__{blocked_at: _}), do: true
 end

@@ -18,6 +18,7 @@ import type {
   OnboardingProgress,
   OnboardingStep,
 } from '../interfaces/onboarding-progress.interface';
+import type { NetworkSettings, SocialLinks } from '../services/network.service';
 
 interface OrganizationLogoState {
   mediaId: number | null;
@@ -46,6 +47,27 @@ interface CastmillStore {
     loading: boolean;
     role?: Role;
     matrix?: Record<ResourceType, Action[]>;
+  };
+
+  // Network admin state
+  network: {
+    loaded: boolean;
+    loading: boolean;
+    isAdmin: boolean;
+    networkId: string | null;
+    access?: string;
+  };
+
+  // Network settings (loaded for all users, used for footer/topbar branding)
+  networkSettings: {
+    loaded: boolean;
+    loading: boolean;
+    logo: string;
+    copyright: string;
+    email: string;
+    defaultLocale: string;
+    socialLinks: SocialLinks;
+    data?: NetworkSettings;
   };
 
   socket?: Socket;
@@ -120,6 +142,23 @@ const [store, setStore] = createStore<CastmillStore>({
   permissions: {
     loaded: false,
     loading: false,
+  },
+
+  network: {
+    loaded: false,
+    loading: false,
+    isAdmin: false,
+    networkId: null,
+  },
+
+  networkSettings: {
+    loaded: false,
+    loading: false,
+    logo: '',
+    copyright: '© 2011-2025 Castmill™',
+    email: 'support@castmill.com',
+    defaultLocale: 'en',
+    socialLinks: {},
   },
 
   env: {

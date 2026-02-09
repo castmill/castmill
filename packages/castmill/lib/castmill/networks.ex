@@ -5,6 +5,7 @@ defmodule Castmill.Networks do
   import Ecto.Query, warn: false
   alias Castmill.Repo
   alias Castmill.Networks.Network
+  alias Castmill.Accounts.User
 
   alias Castmill.Protocol.Access
   alias Castmill.QueryHelpers
@@ -14,10 +15,8 @@ defmodule Castmill.Networks do
       if is_nil(user) do
         {:error, "No user provided"}
       else
-        network_admin =
-          Repo.get_by(Castmill.Networks.NetworksAdmins, network_id: network.id, user_id: user.id)
-
-        if network_admin !== nil do
+        # Check if user belongs to this network and is an admin
+        if user.network_id == network.id and user.network_role == :admin do
           {:ok, true}
         else
           {:ok, false}
@@ -188,6 +187,113 @@ defmodule Castmill.Networks do
     Network.changeset(network, attrs)
   end
 
+  # ============================================================================
+  # Network Admin Management
+  # ============================================================================
+
+  @doc """
+  Checks if a user is a network admin.
+
+  ## Examples
+
+      iex> is_network_admin?(user_id, network_id)
+      true
+
+      iex> is_network_admin?(user_id, other_network_id)
+      false
+  """
+  def is_network_admin?(user_id, network_id) do
+    query =
+      from(u in User,
+        where: u.id == ^user_id and u.network_id == ^network_id and u.network_role == :admin
+      )
+
+    Repo.exists?(query)
+  end
+
+  @doc """
+  Gets a user if they are a network admin.
+
+  Returns the user if they are an admin, nil otherwise.
+  """
+  def get_network_admin(user_id) do
+    from(u in User,
+      where: u.id == ^user_id and u.network_role == :admin
+    )
+    |> Repo.one()
+  end
+
+  @doc """
+  Promotes a user to network admin.
+
+  The user must belong to the network (user.network_id must match network_id).
+
+  ## Examples
+
+      iex> promote_to_network_admin(user_id, network_id)
+      {:ok, %User{}}
+
+      iex> promote_to_network_admin(invalid_user_id, network_id)
+      {:error, :user_not_found}
+  """
+  def promote_to_network_admin(user_id, network_id) do
+    case Repo.get(User, user_id) do
+      nil ->
+        {:error, :user_not_found}
+
+      user when user.network_id != network_id ->
+        {:error, :user_not_in_network}
+
+      user when user.network_role == :admin ->
+        # Already an admin
+        {:ok, user}
+
+      user ->
+        user
+        |> User.changeset(%{network_role: :admin})
+        |> Repo.update()
+    end
+  end
+
+  @doc """
+  Demotes a user from network admin to regular member.
+
+  ## Examples
+
+      iex> demote_from_network_admin(user_id, network_id)
+      {:ok, %User{}}
+
+      iex> demote_from_network_admin(non_admin_user_id, network_id)
+      {:error, :not_admin}
+  """
+  def demote_from_network_admin(user_id, network_id) do
+    case Repo.get(User, user_id) do
+      nil ->
+        {:error, :user_not_found}
+
+      user when user.network_id != network_id ->
+        {:error, :user_not_in_network}
+
+      user when user.network_role != :admin ->
+        {:error, :not_admin}
+
+      user ->
+        user
+        |> User.changeset(%{network_role: :member})
+        |> Repo.update()
+    end
+  end
+
+  @doc """
+  Lists all network admins for a given network.
+  """
+  def list_network_admins(network_id) do
+    from(u in User,
+      where: u.network_id == ^network_id and u.network_role == :admin
+    )
+    |> Repo.all()
+  end
+
   @doc """
     Returns the list of users of the given network
 
@@ -222,6 +328,54 @@ defmodule Castmill.Networks do
       )
 
     Repo.all(query)
+  end
+
+  @doc """
+  Returns the list of organizations of the given network with pagination and search.
+
+  ## Options
+  - `:page` - Page number (default: 1)
+  - `:page_size` - Items per page (default: 10)
+  - `:search` - Search term for organization name (optional)
+
+  ## Examples
+
+  iex> list_organizations_paginated(network_id, page: 1, page_size: 10)
+  {[%Organization{}, ...], total_count}
+  """
+  def list_organizations_paginated(network_id, opts \\ []) do
+    page = Keyword.get(opts, :page, 1)
+    page_size = Keyword.get(opts, :page_size, 10)
+    search = Keyword.get(opts, :search)
+
+    offset = max((page - 1) * page_size, 0)
+
+    base_query =
+      from(organization in Castmill.Organizations.Organization,
+        where: organization.network_id == ^network_id
+      )
+
+    # Apply search filter if provided
+    base_query =
+      if search && String.trim(search) != "" do
+        search_term = "%#{String.downcase(search)}%"
+        from(o in base_query, where: ilike(o.name, ^search_term))
+      else
+        base_query
+      end
+
+    # Get total count
+    total_count = Repo.aggregate(base_query, :count, :id)
+
+    # Get paginated results
+    organizations =
+      base_query
+      |> order_by([o], asc: o.name)
+      |> limit(^page_size)
+      |> offset(^offset)
+      |> Repo.all()
+
+    {organizations, total_count}
   end
 
   @doc """
@@ -411,6 +565,28 @@ defmodule Castmill.Networks do
 
   defp add_user_to_organization(organization, user) do
     Organizations.add_user(organization.id, user.id, :admin)
+  end
+
+  @doc """
+  Returns the total storage used by all organizations in the network (in bytes).
+
+  ## Examples
+
+      iex> get_total_storage(network_id)
+      123456789
+  """
+  def get_total_storage(network_id) do
+    from(f in Castmill.Files.File,
+      join: o in Castmill.Organizations.Organization,
+      on: f.organization_id == o.id,
+      where: o.network_id == ^network_id,
+      select: sum(f.size)
+    )
+    |> Repo.one()
+    |> case do
+      nil -> 0
+      size -> size
+    end
   end
 
   @doc """

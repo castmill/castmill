@@ -25,6 +25,7 @@ defmodule Castmill.Networks.NetworkInvitation do
     invitation
     |> cast(attrs, [:email, :organization_name, :network_id, :token, :status, :expires_at])
     |> validate_required([:email, :organization_name, :network_id, :token])
+    |> validate_email()
     |> validate_not_expired()
     |> unique_constraint(:token)
     |> unique_constraint([:network_id, :email],
@@ -32,6 +33,14 @@ defmodule Castmill.Networks.NetworkInvitation do
     )
     |> maybe_set_default_expiration()
     |> maybe_truncate_timestamp()
+  end
+
+  defp validate_email(changeset) do
+    changeset
+    |> validate_format(:email, ~r/^[^\s]+@[^\s]+\.[^\s]+$/,
+      message: "must be a valid email address"
+    )
+    |> validate_length(:email, max: 160)
   end
 
   # Validate that the invitation has not expired.

@@ -7,7 +7,8 @@ defmodule CastmillWeb.NetworkSettingsController do
 
   @doc """
   Returns public network settings based on the request origin.
-  This is used by the frontend to determine if signup is allowed.
+  This is used by the frontend to determine if signup is allowed,
+  and to display network-specific branding (copyright, social links).
   """
   def show(conn, _params) do
     origin = List.first(Plug.Conn.get_req_header(conn, "origin"))
@@ -26,7 +27,12 @@ defmodule CastmillWeb.NetworkSettingsController do
           |> json(%{
             name: network.name,
             invitation_only: network.invitation_only,
-            logo: network.logo
+            logo: network.logo,
+            copyright: network.copyright,
+            email: network.email,
+            default_locale: network.default_locale,
+            privacy_policy_url: network.privacy_policy_url,
+            social_links: get_in(network.meta, ["social_links"]) || %{}
           })
 
         {:error, :network_not_found} ->

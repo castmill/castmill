@@ -56,6 +56,11 @@ interface I18nContextValue {
     options?: Intl.NumberFormatOptions
   ) => string;
   translations: Accessor<Translations>;
+  /**
+   * Extend translations with addon-specific translations.
+   * Merges the provided translations into the current translations object.
+   */
+  extendTranslations: (addonTranslations: Record<string, any>) => void;
 }
 
 const I18nContext = createContext<I18nContextValue>();
@@ -310,6 +315,41 @@ export function I18nProvider(props: { children: JSX.Element }) {
     }
   };
 
+  /**
+   * Deep merge two objects, with source taking precedence
+   */
+  const deepMerge = (
+    target: Record<string, any>,
+    source: Record<string, any>
+  ): Record<string, any> => {
+    const result = { ...target };
+    for (const key of Object.keys(source)) {
+      if (
+        source[key] &&
+        typeof source[key] === 'object' &&
+        !Array.isArray(source[key]) &&
+        target[key] &&
+        typeof target[key] === 'object' &&
+        !Array.isArray(target[key])
+      ) {
+        result[key] = deepMerge(target[key], source[key]);
+      } else {
+        result[key] = source[key];
+      }
+    }
+    return result;
+  };
+
+  /**
+   * Extend translations with addon-specific translations.
+   * Merges the provided translations into the current translations object.
+   */
+  const extendTranslations = (addonTranslations: Record<string, any>) => {
+    setTranslations(
+      (current) => deepMerge(current, addonTranslations) as Translations
+    );
+  };
+
   const value: I18nContextValue = {
     locale,
     setLocale,
@@ -319,6 +359,7 @@ export function I18nProvider(props: { children: JSX.Element }) {
     formatNumber,
     formatCurrency,
     translations,
+    extendTranslations,
   };
 
   return (

@@ -2,6 +2,7 @@ defmodule CastmillWeb.Live.Admin.NetworkInvitationForm do
   use CastmillWeb, :live_component
 
   alias Castmill.Networks
+  alias Castmill.Networks.NetworkInvitation
 
   @impl true
   def render(assigns) do
@@ -33,61 +34,100 @@ defmodule CastmillWeb.Live.Admin.NetworkInvitationForm do
 
   @impl true
   def update(assigns, socket) do
-    form = to_form(%{"email" => "", "organization_name" => ""})
+    changeset = NetworkInvitation.changeset(%NetworkInvitation{}, %{})
+
+    # Extract network_id - could come from direct assignment or from resource struct
+    network_id = assigns[:network_id] || (assigns[:resource] && assigns[:resource].id)
 
     {:ok,
      socket
      |> assign(assigns)
-     |> assign(:form, form)}
+     |> assign(:network_id, network_id)
+     |> assign(:form, to_form(changeset))}
   end
 
   @impl true
-  def handle_event("validate", %{"email" => _email, "organization_name" => _org_name}, socket) do
-    {:noreply, socket}
+  def handle_event("validate", %{"network_invitation" => params}, socket) do
+    # Add a dummy token and network_id for validation purposes
+    params_with_required =
+      Map.merge(params, %{
+        "token" => "temp_token",
+        "network_id" => socket.assigns.network_id
+      })
+
+    changeset =
+      %NetworkInvitation{}
+      |> NetworkInvitation.changeset(params_with_required)
+      |> Map.put(:action, :validate)
+
+    {:noreply, assign(socket, :form, to_form(changeset))}
   end
 
+  # Handle old format for backwards compatibility
+  def handle_event("validate", %{"email" => email, "organization_name" => org_name}, socket) do
+    handle_event(
+      "validate",
+      %{"network_invitation" => %{"email" => email, "organization_name" => org_name}},
+      socket
+    )
+  end
+
+  def handle_event("save", %{"network_invitation" => params}, socket) do
+    email = params["email"]
+    organization_name = params["organization_name"]
+    do_save(socket, email, organization_name)
+  end
+
+  # Handle old format for backwards compatibility
   def handle_event("save", %{"email" => email, "organization_name" => organization_name}, socket) do
-    case Networks.invite_user_to_new_organization(
-           socket.assigns.network_id,
-           email,
-           organization_name
-         ) do
-      {:ok, _invitation} ->
-        notify_parent({:invited, email})
+    do_save(socket, email, organization_name)
+  end
 
-        {:noreply,
-         socket
-         |> put_flash(:info, "Invitation sent successfully to #{email}")
-         |> push_patch(to: socket.assigns.patch)}
+  defp do_save(socket, email, organization_name) do
+    # First validate the changeset locally to catch validation errors like invalid email
+    params = %{
+      "email" => email,
+      "organization_name" => organization_name,
+      "token" => "temp_validation",
+      "network_id" => socket.assigns.network_id
+    }
 
-      {:error, error} when is_binary(error) ->
-        {:noreply,
-         socket
-         |> put_flash(:error, error)}
+    changeset =
+      %NetworkInvitation{}
+      |> NetworkInvitation.changeset(params)
+      |> Map.put(:action, :validate)
 
-      {:error, %Ecto.Changeset{} = changeset} ->
-        errors =
-          Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
-            Regex.replace(~r"%{(\w+)}", msg, fn _, key ->
-              opts |> Keyword.get(String.to_existing_atom(key), key) |> to_string()
-            end)
-          end)
+    if changeset.valid? do
+      # Proceed with the actual invitation
+      case Networks.invite_user_to_new_organization(
+             socket.assigns.network_id,
+             email,
+             organization_name
+           ) do
+        {:ok, _invitation} ->
+          notify_parent({:invited, email})
 
-        error_msg =
-          errors
-          |> Enum.map(fn {field, messages} ->
-            "#{field}: #{Enum.join(messages, ", ")}"
-          end)
-          |> Enum.join("; ")
+          {:noreply,
+           socket
+           |> put_flash(:info, "Invitation sent successfully to #{email}")
+           |> push_patch(to: socket.assigns.patch)}
 
-        {:noreply,
-         socket
-         |> put_flash(:error, "Failed to create invitation: #{error_msg}")}
+        {:error, error} when is_binary(error) ->
+          {:noreply,
+           socket
+           |> put_flash(:error, error)}
 
-      {:error, _} ->
-        {:noreply,
-         socket
-         |> put_flash(:error, "Failed to create invitation")}
+        {:error, %Ecto.Changeset{} = changeset} ->
+          {:noreply, assign(socket, :form, to_form(changeset))}
+
+        {:error, _} ->
+          {:noreply,
+           socket
+           |> put_flash(:error, "Failed to create invitation")}
+      end
+    else
+      # Changeset has validation errors (e.g., invalid email)
+      {:noreply, assign(socket, :form, to_form(changeset))}
     end
   end
 

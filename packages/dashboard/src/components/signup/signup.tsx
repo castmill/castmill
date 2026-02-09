@@ -8,6 +8,11 @@ import './signup.scss';
 
 import { baseUrl, origin, domain } from '../../env';
 import { useI18n } from '../../i18n';
+import {
+  LOCALE_STORAGE_KEY,
+  SUPPORTED_LOCALES,
+  Locale,
+} from '../../i18n/types';
 
 /**
  * Sign Up Component.
@@ -28,14 +33,20 @@ interface SignUpQueryParams {
   challenge: string;
 }
 
+interface NetworkSettings {
+  privacy_policy_url: string | null;
+}
+
 const SignUp: Component = () => {
-  const { t } = useI18n();
+  const { t, setLocale } = useI18n();
   const navigate = useNavigate();
   const toast = useToast();
 
   const [isMounted, setIsMounted] = createSignal<boolean>(false);
   const [status, setStatus] = createSignal<string>('Ready');
   const [supportsPasskeys, setSupportsPasskeys] = createSignal<boolean>(false);
+  const [networkSettings, setNetworkSettings] =
+    createSignal<NetworkSettings | null>(null);
 
   const [searchParams, setSearchParams] = useSearchParams<SignUpQueryParams>();
 
@@ -45,6 +56,35 @@ const SignUp: Component = () => {
 
   if (!email || !signup_id || !challenge) {
     setStatus('Invalid query params');
+  }
+
+  async function fetchNetworkSettings() {
+    try {
+      const response = await fetch(
+        `${baseUrl}/dashboard/network/public-settings`,
+        {
+          credentials: 'include',
+        }
+      );
+      if (response.ok) {
+        const settings = await response.json();
+        setNetworkSettings({
+          privacy_policy_url: settings.privacy_policy_url,
+        });
+
+        // Apply network's default locale if user has no stored preference
+        const storedLocale = localStorage.getItem(LOCALE_STORAGE_KEY);
+        if (
+          !storedLocale &&
+          settings.default_locale &&
+          SUPPORTED_LOCALES.some((l) => l.code === settings.default_locale)
+        ) {
+          setLocale(settings.default_locale as Locale);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch network settings:', error);
+    }
   }
 
   async function checkPasskeysSupport() {
@@ -152,6 +192,9 @@ const SignUp: Component = () => {
   }
 
   onMount(async () => {
+    // Fetch network settings to apply default locale if needed
+    await fetchNetworkSettings();
+
     if (!(await checkPasskeysSupport())) {
       setStatus('Passkey not supported');
       return;
@@ -184,12 +227,21 @@ const SignUp: Component = () => {
             </p>
           </Show>
 
-          <div class="privacy">
-            <p>
-              We care about your privacy. Read our{' '}
-              <a href="#">{t('signup.privacyPolicy')}</a>.
-            </p>
-          </div>
+          <Show when={networkSettings()?.privacy_policy_url}>
+            <div class="privacy">
+              <p>
+                {t('signup.privacyNotice')}{' '}
+                <a
+                  href={networkSettings()?.privacy_policy_url || '#'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {t('signup.privacyPolicy')}
+                </a>
+                .
+              </p>
+            </div>
+          </Show>
         </div>
       </div>
     </Show>

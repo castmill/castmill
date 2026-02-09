@@ -2,6 +2,8 @@ defmodule CastmillWeb.SessionUtils do
   use CastmillWeb, :controller
 
   alias Castmill.Accounts
+  alias Castmill.Accounts.User
+  alias Castmill.Organizations.Organization
 
   @doc """
     Log-in a user and apply a redirect
@@ -16,16 +18,71 @@ defmodule CastmillWeb.SessionUtils do
 
   @doc """
     Log-in a user in the session.
+    Returns {:error, reason} if the user or any of their organizations are blocked.
   """
   def log_in_user(conn, user_id, params \\ %{}) do
-    token = accounts_module().generate_user_session_token(user_id)
     user = Accounts.get_user(user_id)
 
-    conn
-    |> renew_session()
-    |> put_session(:user, user)
-    |> put_token_in_session(token)
-    |> maybe_write_remember_me_cookie(token, params)
+    case check_user_blocked_status(user) do
+      {:ok, _user} ->
+        token = accounts_module().generate_user_session_token(user_id)
+
+        conn
+        |> renew_session()
+        |> put_session(:user, user)
+        |> put_token_in_session(token)
+        |> maybe_write_remember_me_cookie(token, params)
+
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
+  @doc """
+  Checks if a user or any of their organizations are blocked.
+  Returns {:ok, user} if not blocked, {:error, reason} if blocked.
+
+  Note: Network admins are exempt from organization blocking - they can always
+  login regardless of their organization's blocked status. This ensures admins
+  can never be accidentally locked out of the system.
+  """
+  def check_user_blocked_status(nil), do: {:error, :user_not_found}
+
+  def check_user_blocked_status(user) do
+    cond do
+      # Users can always be blocked directly
+      User.blocked?(user) ->
+        reason = user.blocked_reason || "Your account has been blocked"
+        {:error, {:user_blocked, reason}}
+
+      # Network admins are exempt from organization blocking
+      is_network_admin?(user) ->
+        {:ok, user}
+
+      # Regular users can be blocked via their organization
+      blocked_org = find_blocked_organization(user) ->
+        reason = blocked_org.blocked_reason || "Your organization has been blocked"
+        {:error, {:organization_blocked, reason}}
+
+      true ->
+        {:ok, user}
+    end
+  end
+
+  @doc """
+  Checks if a user is a network admin.
+  Network admins have special privileges and cannot be locked out via organization blocking.
+  """
+  def is_network_admin?(%User{network_role: :admin}), do: true
+  def is_network_admin?(_user), do: false
+
+  defp find_blocked_organization(user) do
+    # Preload organizations if not already loaded
+    user = Castmill.Repo.preload(user, :organizations)
+
+    Enum.find(user.organizations, fn org ->
+      Organization.blocked?(org)
+    end)
   end
 
   @doc """

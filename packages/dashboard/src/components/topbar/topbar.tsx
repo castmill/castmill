@@ -16,7 +16,7 @@ import Search from '../search/search';
 import { FaRegularBell } from 'solid-icons/fa';
 import { TbHelpCircle, TbKeyboard, TbRocket } from 'solid-icons/tb';
 
-import logo from '../../assets/castmill-logo-topbar.png';
+import defaultLogo from '../../assets/castmill-logo-topbar.png';
 import DropdownMenu from '../dropdown-menu/dropdown-menu';
 import LanguageSelector from '../language-selector/language-selector';
 import { LoadingProgressBar } from '../loading-progress-bar/loading-progress-bar';
@@ -36,6 +36,9 @@ const Topbar: Component = () => {
   const [showShortcuts, setShowShortcuts] = createSignal(false);
   const { t } = useI18n();
   const { logoUrl: selectedOrgLogo } = useSelectedOrganizationLogo();
+
+  // Use network logo if configured, otherwise fall back to default Castmill logo
+  const networkLogo = () => store.networkSettings.logo || defaultLogo;
 
   const navigate = useNavigate();
 
@@ -91,7 +94,7 @@ const Topbar: Component = () => {
       <header class="castmill-header">
         <nav class="main">
           <a href="/">
-            <img src={logo} alt="Castmill" />
+            <img src={networkLogo()} alt="Castmill" />
           </a>
           <Show when={selectedOrgLogo()}>
             <div class="org-logo-separator" />

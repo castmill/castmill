@@ -12,6 +12,7 @@ import { AddOn } from '../interfaces/addon.interface';
 import { AddonsService } from '../services/addons';
 import { store, setStore } from '../store/store';
 import { OrganizationsService } from '../services/organizations.service';
+import { NetworkService } from '../services/network.service';
 import { usePermissions } from '../hooks/usePermissions';
 import { ServerError } from './server-error/server-error';
 import { OnboardingDialog } from './onboarding-dialog/onboarding-dialog';
@@ -21,6 +22,7 @@ import { OnboardingStep } from '../interfaces/onboarding-progress.interface';
 
 import { useI18n } from '../i18n';
 import { useToast } from '@castmill/ui-common';
+import { baseUrl } from '../env';
 
 interface ProtectedRouteProps {
   children: (addons: AddOn[]) => JSX.Element; // children is now a function that accepts the addons array
@@ -38,7 +40,7 @@ export function buildRedirectUrl(pathname: string, search: string): string {
 const ProtectedRoute: Component<ProtectedRouteProps> = (
   props: ProtectedRouteProps
 ) => {
-  const { t } = useI18n();
+  const { t, locale, extendTranslations } = useI18n();
   const navigate = useNavigate();
   const location = useLocation();
   const params = useParams();
@@ -140,6 +142,12 @@ const ProtectedRoute: Component<ProtectedRouteProps> = (
           selectedId: selectedOrg?.id,
           selectedName: selectedOrg?.name,
         });
+
+        // Load network admin status
+        loadNetworkAdminStatus();
+
+        // Load public network settings for footer branding
+        loadPublicNetworkSettings();
       } catch (error) {
         toast.error(
           `Failed to load organizations: ${error instanceof Error ? error.message : 'Unknown error'}`
@@ -174,11 +182,86 @@ const ProtectedRoute: Component<ProtectedRouteProps> = (
     loadAddons();
   };
 
+  /**
+   * Load public network settings (available to all users).
+   * Used for footer branding.
+   */
+  const loadPublicNetworkSettings = async () => {
+    if (store.networkSettings.loaded || store.networkSettings.loading) {
+      return;
+    }
+
+    setStore('networkSettings', {
+      ...store.networkSettings,
+      loading: true,
+    });
+
+    try {
+      const settings = await NetworkService.getPublicSettings();
+      setStore('networkSettings', {
+        loaded: true,
+        loading: false,
+        logo: settings.logo || '',
+        copyright: settings.copyright || '© 2011-2025 Castmill™',
+        email: settings.email || 'support@castmill.com',
+        defaultLocale: settings.default_locale || 'en',
+        socialLinks: settings.social_links || {},
+      });
+    } catch (error) {
+      console.warn('Failed to load public network settings:', error);
+      setStore('networkSettings', {
+        loaded: true,
+        loading: false,
+        logo: '',
+        copyright: '© 2011-2025 Castmill™',
+        email: 'support@castmill.com',
+        defaultLocale: 'en',
+        socialLinks: {},
+      });
+    }
+  };
+
+  /**
+   * Load network admin status for the current user
+   */
+  const loadNetworkAdminStatus = async () => {
+    if (store.network.loaded || store.network.loading) {
+      return;
+    }
+
+    setStore('network', {
+      ...store.network,
+      loading: true,
+    });
+
+    try {
+      const status = await NetworkService.checkAdminStatus();
+      setStore('network', {
+        loaded: true,
+        loading: false,
+        isAdmin: status.is_admin,
+        networkId: status.network_id,
+        access: status.access,
+      });
+    } catch (error) {
+      console.warn('Failed to load network admin status:', error);
+      setStore('network', {
+        loaded: true,
+        loading: false,
+        isAdmin: false,
+        networkId: null,
+      });
+    }
+  };
+
   const loadAddons = async () => {
     if (store.addons.length == 0 && !store.loadedAddons) {
       setStore('loadingAddons', true);
       try {
         const loadedAddons = await AddonsService.getAll();
+
+        // Load translations for addons that have them
+        await loadAddonTranslations(loadedAddons, locale());
 
         // Set the addons in the store
         setStore('addons', loadedAddons);
@@ -200,6 +283,44 @@ const ProtectedRoute: Component<ProtectedRouteProps> = (
 
     // After addons are loaded, check if we should show the onboarding tour
     loadOnboardingTour();
+  };
+
+  /**
+   * Load translations for all addons that have a translations_path
+   */
+  const loadAddonTranslations = async (
+    addons: AddOn[],
+    currentLocale: string
+  ) => {
+    const addOnBasePath = `${baseUrl}/assets/addons`;
+
+    for (const addon of addons) {
+      if (addon.translations_path) {
+        try {
+          const translationUrl = `${addOnBasePath}${addon.translations_path}/${currentLocale}.json`;
+          const response = await fetch(translationUrl);
+          if (response.ok) {
+            const translations = await response.json();
+            extendTranslations(translations);
+          } else {
+            // Try loading English as fallback if the current locale is not available
+            if (currentLocale !== 'en') {
+              const fallbackUrl = `${addOnBasePath}${addon.translations_path}/en.json`;
+              const fallbackResponse = await fetch(fallbackUrl);
+              if (fallbackResponse.ok) {
+                const translations = await fallbackResponse.json();
+                extendTranslations(translations);
+              }
+            }
+          }
+        } catch (error) {
+          console.warn(
+            `Failed to load translations for addon ${addon.id}:`,
+            error
+          );
+        }
+      }
+    }
   };
 
   const loadOnboardingTour = async () => {
@@ -265,6 +386,15 @@ const ProtectedRoute: Component<ProtectedRouteProps> = (
   createEffect(() => {
     if (store.organizations.loaded && !showOnboarding()) {
       loadAddons();
+    }
+  });
+
+  // Reload addon translations when locale changes
+  createEffect(() => {
+    const currentLocale = locale();
+    // Only reload if addons are already loaded
+    if (store.loadedAddons && store.addons.length > 0) {
+      loadAddonTranslations(store.addons, currentLocale);
     }
   });
 
