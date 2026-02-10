@@ -129,6 +129,7 @@ defmodule Castmill.Networks do
       %{resource: :devices, max: 20},
       %{resource: :channels, max: 20},
       %{resource: :users, max: 50},
+      %{resource: :layouts, max: 10},
       # 1 GB in bytes
       %{resource: :storage, max: 1_073_741_824}
     ]
