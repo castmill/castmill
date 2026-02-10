@@ -176,29 +176,59 @@ defmodule Castmill.DevicesEventsTest do
 
     test "sorts events by type with timestamp as secondary sort", %{device: device} do
       # Insert multiple events with the same type at different times
-      # Using Process.sleep to ensure different timestamps
-      {:ok, event1} =
-        Devices.insert_event(%{device_id: device.id, type: "e", msg: "Error 1"}, @max_logs)
+      # Use explicit timestamps to ensure deterministic ordering
+      base_time = DateTime.utc_now()
+      
+      # Create events directly with explicit timestamps
+      event1 =
+        %Castmill.Devices.DevicesEvents{}
+        |> Castmill.Devices.DevicesEvents.changeset(%{
+          device_id: device.id,
+          type: "e",
+          msg: "Error 1",
+          timestamp: DateTime.add(base_time, -4, :second)
+        })
+        |> Repo.insert!()
 
-      Process.sleep(10)
+      event2 =
+        %Castmill.Devices.DevicesEvents{}
+        |> Castmill.Devices.DevicesEvents.changeset(%{
+          device_id: device.id,
+          type: "e",
+          msg: "Error 2",
+          timestamp: DateTime.add(base_time, -3, :second)
+        })
+        |> Repo.insert!()
 
-      {:ok, event2} =
-        Devices.insert_event(%{device_id: device.id, type: "e", msg: "Error 2"}, @max_logs)
+      event3 =
+        %Castmill.Devices.DevicesEvents{}
+        |> Castmill.Devices.DevicesEvents.changeset(%{
+          device_id: device.id,
+          type: "e",
+          msg: "Error 3",
+          timestamp: DateTime.add(base_time, -2, :second)
+        })
+        |> Repo.insert!()
 
-      Process.sleep(10)
+      event4 =
+        %Castmill.Devices.DevicesEvents{}
+        |> Castmill.Devices.DevicesEvents.changeset(%{
+          device_id: device.id,
+          type: "i",
+          msg: "Info 1",
+          timestamp: DateTime.add(base_time, -1, :second)
+        })
+        |> Repo.insert!()
 
-      {:ok, event3} =
-        Devices.insert_event(%{device_id: device.id, type: "e", msg: "Error 3"}, @max_logs)
-
-      Process.sleep(10)
-
-      {:ok, event4} =
-        Devices.insert_event(%{device_id: device.id, type: "i", msg: "Info 1"}, @max_logs)
-
-      Process.sleep(10)
-
-      {:ok, event5} =
-        Devices.insert_event(%{device_id: device.id, type: "i", msg: "Info 2"}, @max_logs)
+      event5 =
+        %Castmill.Devices.DevicesEvents{}
+        |> Castmill.Devices.DevicesEvents.changeset(%{
+          device_id: device.id,
+          type: "i",
+          msg: "Info 2",
+          timestamp: base_time
+        })
+        |> Repo.insert!()
 
       # Sort by type in ascending order (should use timestamp desc as secondary sort)
       params = %{
