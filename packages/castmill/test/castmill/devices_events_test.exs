@@ -178,7 +178,7 @@ defmodule Castmill.DevicesEventsTest do
       # Insert multiple events with the same type at different times
       # Use explicit timestamps to ensure deterministic ordering
       base_time = DateTime.utc_now()
-      
+
       # Create events directly with explicit timestamps
       event1 =
         %Castmill.Devices.DevicesEvents{}
