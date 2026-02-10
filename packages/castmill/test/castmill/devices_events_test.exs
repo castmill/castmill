@@ -147,7 +147,7 @@ defmodule Castmill.DevicesEventsTest do
       assert Enum.all?(matching_logs, fn event -> String.contains?(event.msg, "event") end)
     end
 
-    test "sorts events by type when type_name key is provided", %{device: device} do
+    test "sorts events by type", %{device: device} do
       # Insert events with different types
       Devices.insert_event(%{device_id: device.id, type: "w", msg: "Warning"}, @max_logs)
       Devices.insert_event(%{device_id: device.id, type: "e", msg: "Error"}, @max_logs)
@@ -155,8 +155,15 @@ defmodule Castmill.DevicesEventsTest do
       Devices.insert_event(%{device_id: device.id, type: "i", msg: "Info"}, @max_logs)
       Devices.insert_event(%{device_id: device.id, type: "x", msg: "Offline"}, @max_logs)
 
-      # Sort by type_name in ascending order (should sort by type column)
-      params = %{device_id: device.id, page: 1, page_size: 10, key: "type_name", direction: "ascending"}
+      # Sort by type in ascending order
+      params = %{
+        device_id: device.id,
+        page: 1,
+        page_size: 10,
+        key: "type",
+        direction: "ascending"
+      }
+
       sorted_logs = Devices.list_devices_events(params)
 
       # Verify events are returned (no SQL error)

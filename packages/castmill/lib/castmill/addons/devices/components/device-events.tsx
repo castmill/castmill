@@ -32,9 +32,24 @@ export const DeviceLogs: Component<{
   const t = props.t || ((key: string) => key);
   const toast = useToast();
 
+  const typeNameMap: Record<string, string> = {
+    e: t('devices.events.filterError'),
+    w: t('devices.events.filterWarning'),
+    i: t('devices.events.filterInfo'),
+    o: t('devices.events.filterOnline'),
+    x: t('devices.events.filterOffline'),
+  };
+
   const columns = [
     { key: 'timestamp', title: t('common.time'), sortable: true },
-    { key: 'type_name', title: t('common.type'), sortable: true },
+    {
+      key: 'type',
+      title: t('common.type'),
+      sortable: true,
+      render: (item: DeviceTableLogItem) => (
+        <span>{typeNameMap[item.type] || item.type}</span>
+      ),
+    },
     { key: 'msg', title: t('common.message'), sortable: false },
   ] as Column<DeviceTableLogItem>[];
 
