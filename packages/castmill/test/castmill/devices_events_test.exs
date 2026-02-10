@@ -173,5 +173,63 @@ defmodule Castmill.DevicesEventsTest do
       types = Enum.map(sorted_logs, & &1.type)
       assert types == ["e", "i", "o", "w", "x"]
     end
+
+    test "sorts events by type with timestamp as secondary sort", %{device: device} do
+      # Insert multiple events with the same type at different times
+      # Using Process.sleep to ensure different timestamps
+      {:ok, event1} =
+        Devices.insert_event(%{device_id: device.id, type: "e", msg: "Error 1"}, @max_logs)
+
+      Process.sleep(10)
+
+      {:ok, event2} =
+        Devices.insert_event(%{device_id: device.id, type: "e", msg: "Error 2"}, @max_logs)
+
+      Process.sleep(10)
+
+      {:ok, event3} =
+        Devices.insert_event(%{device_id: device.id, type: "e", msg: "Error 3"}, @max_logs)
+
+      Process.sleep(10)
+
+      {:ok, event4} =
+        Devices.insert_event(%{device_id: device.id, type: "i", msg: "Info 1"}, @max_logs)
+
+      Process.sleep(10)
+
+      {:ok, event5} =
+        Devices.insert_event(%{device_id: device.id, type: "i", msg: "Info 2"}, @max_logs)
+
+      # Sort by type in ascending order (should use timestamp desc as secondary sort)
+      params = %{
+        device_id: device.id,
+        page: 1,
+        page_size: 10,
+        key: "type",
+        direction: "ascending"
+      }
+
+      sorted_logs = Devices.list_devices_events(params)
+
+      # Verify events are returned
+      assert length(sorted_logs) == 5
+
+      # Verify primary sort by type (e before i)
+      types = Enum.map(sorted_logs, & &1.type)
+      assert Enum.take(types, 3) == ["e", "e", "e"]
+      assert Enum.drop(types, 3) == ["i", "i"]
+
+      # Verify secondary sort by timestamp descending within same type
+      # For type "e": event3 (newest) should come before event2, which should come before event1 (oldest)
+      error_events = Enum.filter(sorted_logs, fn e -> e.type == "e" end)
+      assert Enum.at(error_events, 0).id == event3.id
+      assert Enum.at(error_events, 1).id == event2.id
+      assert Enum.at(error_events, 2).id == event1.id
+
+      # For type "i": event5 (newest) should come before event4 (oldest)
+      info_events = Enum.filter(sorted_logs, fn e -> e.type == "i" end)
+      assert Enum.at(info_events, 0).id == event5.id
+      assert Enum.at(info_events, 1).id == event4.id
+    end
   end
 end
