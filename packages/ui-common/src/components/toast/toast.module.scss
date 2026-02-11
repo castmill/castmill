@@ -30,20 +30,23 @@
     transform: translateX(100%);
   }
 
-  &-icon {
+  &Icon {
     display: flex;
     align-items: center;
     font-size: 24px;
     flex-shrink: 0;
   }
 
-  &-message {
+  &Message {
     flex: 1;
     line-height: 1.4;
     word-break: break-word;
   }
 
-  &-close {
+  &Close {
+    position: absolute;
+    top: 0.25em;
+    right: 0.25em;
     display: flex;
     align-items: center;
     background: transparent;
@@ -72,7 +75,7 @@
       rgba(34, 139, 34, 0.95) 0%,
       rgba(50, 205, 50, 0.9) 100%
     );
-    border-left: 4px solid #32cd32;
+    border-left: 1px solid #32cd32;
   }
 
   // Error variant - red
@@ -82,7 +85,7 @@
       rgba(220, 38, 38, 0.95) 0%,
       rgba(239, 68, 68, 0.9) 100%
     );
-    border-left: 4px solid #ef4444;
+    border-left: 1px solid #ef4444;
   }
 
   // Info variant - blue
@@ -92,7 +95,7 @@
       rgba(37, 99, 235, 0.95) 0%,
       rgba(59, 130, 246, 0.9) 100%
     );
-    border-left: 4px solid #3b82f6;
+    border-left: 1px solid #3b82f6;
   }
 
   // Warning variant - orange/yellow
@@ -102,6 +105,6 @@
       rgba(234, 88, 12, 0.95) 0%,
       rgba(251, 146, 60, 0.9) 100%
     );
-    border-left: 4px solid #fb923c;
+    border-left: 1px solid #fb923c;
   }
 }
