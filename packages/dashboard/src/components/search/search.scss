@@ -59,18 +59,18 @@
       outline-offset: 2px;
       border-radius: 2px;
     }
+
+    &:hover .reset-icon {
+      color: colors.$highlight-color;
+    }
+
+    &:active .reset-icon {
+      color: colors.$highlight-color;
+    }
   }
 
   .reset-icon {
     font-size: 0.9em;
     color: colors.$base-color;
-
-    &:hover {
-      color: colors.$highlight-color;
-    }
-
-    &:active {
-      color: colors.$highlight-color;
-    }
   }
 }
