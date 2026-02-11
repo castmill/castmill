@@ -8,7 +8,7 @@ import {
   AiOutlineCheck,
 } from 'solid-icons/ai';
 
-import { Button, IconButton, IconWrapper, useToast } from '@castmill/ui-common';
+import { Button, IconButton, IconWrapper, useToast, formatBytes } from '@castmill/ui-common';
 import { AddonStore } from '../../common/interfaces/addon-store';
 
 interface UploadComponentProps {
@@ -214,7 +214,7 @@ export const UploadComponent = (props: UploadComponentProps) => {
                       {file.name}
                     </td>
 
-                    <td>{file.size} Bytes</td>
+                    <td>{formatBytes(file.size)}</td>
                     <td>
                       <Show
                         when={messages()[file.name]}
