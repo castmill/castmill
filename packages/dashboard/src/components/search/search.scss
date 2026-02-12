@@ -12,11 +12,11 @@
   color: colors.$component-color;
 
   svg {
-    margin-right: 0.5em;
     font-size: 1.2em;
   }
 
   input {
+    margin-left: 0.5em;
     background-color: #00000000;
     height: 3em;
     border: 0;
@@ -70,7 +70,7 @@
   }
 
   .reset-icon {
-    font-size: 0.9em;
-    color: colors.$base-color;
+    font-size: 1.3em;
+    color: colors.$component-color;
   }
 }
