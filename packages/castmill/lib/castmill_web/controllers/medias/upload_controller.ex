@@ -68,7 +68,7 @@ defmodule CastmillWeb.UploadController do
       |> put_status(:request_entity_too_large)
       |> json(%{
         error: "File too large",
-        message: "The file size exceeds the maximum upload size limit of #{format_bytes(max_upload_size)}",
+        message: "The file size exceeds the maximum upload size limit",
         max_size: max_upload_size,
         file_size: file_size
       })
@@ -215,21 +215,4 @@ defmodule CastmillWeb.UploadController do
     file_name = UUID.uuid4() <> ".tmp"
     Path.join(temp_dir, file_name)
   end
-
-  # Format bytes to human readable string
-  defp format_bytes(bytes) when is_integer(bytes) and bytes >= 0 do
-    units = ["B", "KB", "MB", "GB", "TB"]
-    k = 1024
-
-    if bytes == 0 do
-      "0 B"
-    else
-      i = min(floor(:math.log(bytes) / :math.log(k)), length(units) - 1)
-      size = bytes / :math.pow(k, i)
-      unit = Enum.at(units, i)
-      "#{Float.round(size, 2)} #{unit}"
-    end
-  end
-
-  defp format_bytes(_), do: "Unknown"
 end

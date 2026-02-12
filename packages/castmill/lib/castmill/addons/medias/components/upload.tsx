@@ -61,7 +61,6 @@ export const UploadComponent = (props: UploadComponentProps) => {
   const [progresses, setProgresses] = createSignal<Progresses>({});
   const [validations, setValidations] = createSignal<FileValidations>({});
   const [maxUploadSize, setMaxUploadSize] = createSignal<number>(2147483648); // Default 2GB
-  const [softLimit, setSoftLimit] = createSignal<number>(1073741824); // Default 1GB (50%)
 
   // Fetch quota information on mount
   onMount(async () => {
@@ -77,7 +76,6 @@ export const UploadComponent = (props: UploadComponentProps) => {
         const maxUploadQuota = quotas.find((q: any) => q.resource === 'max_upload_size');
         if (maxUploadQuota) {
           setMaxUploadSize(maxUploadQuota.max);
-          setSoftLimit(Math.floor(maxUploadQuota.max / 2));
         }
       }
     } catch (error) {
@@ -89,7 +87,7 @@ export const UploadComponent = (props: UploadComponentProps) => {
   createEffect(() => {
     const currentFiles = files();
     const maxSize = maxUploadSize();
-    const softLimitSize = softLimit();
+    const softLimitSize = Math.floor(maxSize / 2); // 50% of max size
     
     const newValidations: FileValidations = {};
     currentFiles.forEach((file) => {
@@ -131,7 +129,7 @@ export const UploadComponent = (props: UploadComponentProps) => {
     const validFiles = currentFiles.filter((file) => currentValidations[file.name]?.valid);
     
     if (validFiles.length === 0) {
-      setMessages({ global: 'No valid files to upload.' });
+      setMessages((m) => ({ ...m, global: 'No valid files to upload.' }));
       return;
     }
 
