@@ -1,4 +1,4 @@
-import { createSignal, onCleanup, For, Show, JSX } from 'solid-js';
+import { createSignal, onCleanup, For, Show, JSX, onMount, createEffect } from 'solid-js';
 import { dropTargetForExternal } from '@atlaskit/pragmatic-drag-and-drop/external/adapter';
 import './upload.scss';
 
@@ -6,6 +6,7 @@ import {
   AiOutlineUpload,
   AiOutlineDelete,
   AiOutlineCheck,
+  AiOutlineWarning,
 } from 'solid-icons/ai';
 
 import { Button, IconButton, IconWrapper, useToast, formatBytes } from '@castmill/ui-common';
@@ -28,6 +29,16 @@ interface Messages {
   [key: string]: string | JSX.Element;
 }
 
+interface FileValidation {
+  valid: boolean;
+  warning?: string;
+  error?: string;
+}
+
+interface FileValidations {
+  [key: string]: FileValidation;
+}
+
 const supportedFileTypes = [
   'image/png',
   'image/jpeg',
@@ -48,6 +59,57 @@ export const UploadComponent = (props: UploadComponentProps) => {
   const [files, setFiles] = createSignal<File[]>([]);
   const [messages, setMessages] = createSignal<Messages>({});
   const [progresses, setProgresses] = createSignal<Progresses>({});
+  const [validations, setValidations] = createSignal<FileValidations>({});
+  const [maxUploadSize, setMaxUploadSize] = createSignal<number>(2147483648); // Default 2GB
+  const [softLimit, setSoftLimit] = createSignal<number>(1073741824); // Default 1GB (50%)
+
+  // Fetch quota information on mount
+  onMount(async () => {
+    try {
+      const response = await fetch(
+        `${props.baseUrl}/dashboard/organizations/${props.organizationId}/quotas`,
+        {
+          credentials: 'include',
+        }
+      );
+      if (response.ok) {
+        const quotas = await response.json();
+        const maxUploadQuota = quotas.find((q: any) => q.resource === 'max_upload_size');
+        if (maxUploadQuota) {
+          setMaxUploadSize(maxUploadQuota.max);
+          setSoftLimit(Math.floor(maxUploadQuota.max / 2));
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch quotas:', error);
+    }
+  });
+
+  // Validate file sizes whenever files or max upload size changes
+  createEffect(() => {
+    const currentFiles = files();
+    const maxSize = maxUploadSize();
+    const softLimitSize = softLimit();
+    
+    const newValidations: FileValidations = {};
+    currentFiles.forEach((file) => {
+      if (file.size > maxSize) {
+        newValidations[file.name] = {
+          valid: false,
+          error: `File size (${formatBytes(file.size)}) exceeds the maximum upload limit of ${formatBytes(maxSize)}`
+        };
+      } else if (file.size > softLimitSize) {
+        newValidations[file.name] = {
+          valid: true,
+          warning: `Large file (${formatBytes(file.size)}). Upload may take a while.`
+        };
+      } else {
+        newValidations[file.name] = { valid: true };
+      }
+    });
+    
+    setValidations(newValidations);
+  });
 
   const handleFileChange = (e: Event) => {
     const target = e.target as HTMLInputElement;
@@ -63,12 +125,17 @@ export const UploadComponent = (props: UploadComponentProps) => {
 
   const handleUpload = async () => {
     const currentFiles = files();
-    if (currentFiles.length === 0) {
-      setMessages('Please select files first.');
+    const currentValidations = validations();
+    
+    // Filter out invalid files
+    const validFiles = currentFiles.filter((file) => currentValidations[file.name]?.valid);
+    
+    if (validFiles.length === 0) {
+      setMessages({ global: 'No valid files to upload.' });
       return;
     }
 
-    currentFiles.forEach((file) => {
+    validFiles.forEach((file) => {
       const formData = new FormData();
       formData.append('file', file);
 
@@ -167,6 +234,10 @@ export const UploadComponent = (props: UploadComponentProps) => {
       delete m[file.name];
       return m;
     });
+    setValidations((v) => {
+      delete v[file.name];
+      return v;
+    });
   };
 
   return (
@@ -208,38 +279,60 @@ export const UploadComponent = (props: UploadComponentProps) => {
             </thead>
             <tbody>
               <For each={files()}>
-                {(file) => (
-                  <tr class="file">
-                    <td class="filename-cell" title={file.name}>
-                      {file.name}
-                    </td>
+                {(file) => {
+                  const validation = validations()[file.name];
+                  const hasError = validation && !validation.valid;
+                  const hasWarning = validation && validation.valid && validation.warning;
+                  
+                  return (
+                    <tr class="file" classList={{ 'file-error': hasError, 'file-warning': hasWarning }}>
+                      <td class="filename-cell" title={file.name}>
+                        {file.name}
+                        <Show when={hasError || hasWarning}>
+                          <div class="validation-message">
+                            <Show when={hasError}>
+                              <span class="error">
+                                <IconWrapper icon={AiOutlineWarning} />
+                                {validation.error}
+                              </span>
+                            </Show>
+                            <Show when={hasWarning}>
+                              <span class="warning">
+                                <IconWrapper icon={AiOutlineWarning} />
+                                {validation.warning}
+                              </span>
+                            </Show>
+                          </div>
+                        </Show>
+                      </td>
 
-                    <td>{formatBytes(file.size)}</td>
-                    <td>
-                      <Show
-                        when={messages()[file.name]}
-                        fallback={
-                          <progress
-                            value={progresses()[file.name] || 0}
-                            max="100"
-                          >
-                            {progresses()[file.name]}%
-                          </progress>
-                        }
-                      >
-                        <div>{messages()[file.name]}</div>
-                      </Show>
-                    </td>
-                    <td>
-                      <IconButton
-                        onClick={() => onFileRemove(file)}
-                        icon={AiOutlineDelete}
-                        color="primary"
-                        disabled={progresses()[file.name] > 0}
-                      />
-                    </td>
-                  </tr>
-                )}
+                      <td>{formatBytes(file.size)}</td>
+                      <td>
+                        <Show
+                          when={messages()[file.name]}
+                          fallback={
+                            <progress
+                              value={progresses()[file.name] || 0}
+                              max="100"
+                            >
+                              {progresses()[file.name]}%
+                            </progress>
+                          }
+                        >
+                          <div>{messages()[file.name]}</div>
+                        </Show>
+                      </td>
+                      <td>
+                        <IconButton
+                          onClick={() => onFileRemove(file)}
+                          icon={AiOutlineDelete}
+                          color="primary"
+                          disabled={progresses()[file.name] > 0}
+                        />
+                      </td>
+                    </tr>
+                  );
+                }}
               </For>
             </tbody>
           </table>
