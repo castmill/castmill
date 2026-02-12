@@ -882,7 +882,7 @@ defmodule Castmill.Organizations do
                  ) do
               nil ->
                 # Invitation was accepted by a different user
-                {:error, :already_accepted}
+                {:error, :invitation_accepted_by_different_user}
 
               _org_user ->
                 # User is already in the organization, return success (idempotent)
