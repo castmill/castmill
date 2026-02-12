@@ -93,7 +93,14 @@ const Search: Component = () => {
           {formatShortcut(globalSearchShortcut)}
         </span>
       ) : (
-        <ImCancelCircle class="reset-icon" onClick={resetSearch} />
+        <button
+          type="button"
+          class="reset-button"
+          onClick={resetSearch}
+          aria-label={t('common.clear')}
+        >
+          <ImCancelCircle class="reset-icon" />
+        </button>
       )}
     </div>
   );
