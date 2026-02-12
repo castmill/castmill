@@ -131,7 +131,9 @@ defmodule Castmill.Networks do
       %{resource: :users, max: 50},
       %{resource: :layouts, max: 100},
       # 1 GB in bytes
-      %{resource: :storage, max: 1_073_741_824}
+      %{resource: :storage, max: 1_073_741_824},
+      # 2 GB in bytes (max upload size per file)
+      %{resource: :max_upload_size, max: 2_147_483_648}
     ]
 
     # Create the default plan

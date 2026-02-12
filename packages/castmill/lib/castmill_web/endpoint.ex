@@ -74,6 +74,9 @@ defmodule CastmillWeb.Endpoint do
   plug(Plug.Parsers,
     parsers: [:urlencoded, :multipart, :json],
     pass: ["*/*"],
+    # Set hard limit to 5GB for file uploads
+    # Individual organization limits are enforced in the upload controller
+    length: 5_368_709_120,
     json_decoder: Phoenix.json_library()
   )
 
