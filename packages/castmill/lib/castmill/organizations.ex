@@ -874,6 +874,21 @@ defmodule Castmill.Organizations do
           OrganizationsInvitation.expired?(invitation) ->
             {:error, :expired}
 
+          invitation.status == "accepted" ->
+            # Check if the user is already in the organization (idempotent case)
+            case Repo.get_by(OrganizationsUsers,
+                   organization_id: invitation.organization_id,
+                   user_id: user_id
+                 ) do
+              nil ->
+                # Invitation was accepted by a different user
+                {:error, :already_accepted}
+
+              _org_user ->
+                # User is already in the organization, return success (idempotent)
+                {:ok, invitation}
+            end
+
           invitation.status != "invited" ->
             {:error, :invalid_status}
 
