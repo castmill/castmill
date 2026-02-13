@@ -41,7 +41,6 @@ export const MediaDetails = (props: {
   };
 
   createEffect(() => {
-    // We need to check both fields or create effect will not detect the dependencies.
     const hasModifiedName = name() !== props.media.name;
     setIsFormModified(hasModifiedName);
   });
@@ -53,7 +52,8 @@ export const MediaDetails = (props: {
   return (
     <>
       <div class="info">
-        <span>Added on </span> <Timestamp value={props.media.inserted_at} mode="relative" />.{' '}
+        <span>Added on </span>{' '}
+        <Timestamp value={props.media.inserted_at} mode="relative" />.{' '}
         <span>Last updated on </span>
         <Timestamp value={props.media.updated_at} mode="relative" />
       </div>

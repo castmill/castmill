@@ -14,6 +14,8 @@ export interface FetchPlaylistsOptions {
   search?: string;
   filters?: Record<string, string | boolean>;
   team_id?: number | null;
+  tag_ids?: number[];
+  tag_filter_mode?: 'any' | 'all';
 }
 type HandleResponseOptions = {
   parse?: boolean;
@@ -133,6 +135,8 @@ export const PlaylistsService = {
       search,
       filters,
       team_id,
+      tag_ids,
+      tag_filter_mode,
     }: FetchPlaylistsOptions
   ) {
     const filtersToString = (filters: Record<string, string | boolean>) => {
@@ -159,6 +163,14 @@ export const PlaylistsService = {
 
     if (team_id !== undefined && team_id !== null) {
       query['team_id'] = team_id.toString();
+    }
+
+    if (tag_ids && tag_ids.length > 0) {
+      query['tag_ids'] = tag_ids.join(',');
+    }
+
+    if (tag_filter_mode) {
+      query['tag_filter_mode'] = tag_filter_mode;
     }
 
     const queryString = new URLSearchParams(query).toString();

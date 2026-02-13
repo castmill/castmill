@@ -6,7 +6,15 @@
  * (c) 2024 Castmill AB.
  */
 import { JSX, Show, createSignal, onMount } from 'solid-js';
-import { Filter, ItemBase, Pagination, Table, TableAction, ToolBar } from '../';
+import {
+  Filter,
+  ItemBase,
+  Pagination,
+  Table,
+  TableAction,
+  ToolBar,
+  SelectionActionBar,
+} from '../';
 import { PermissionDenied } from '../permission-denied/permission-denied';
 import { SortOptions } from '../../interfaces/sort-options.interface';
 
@@ -76,10 +84,23 @@ interface TableViewProps<
     filters?: Filter[];
     mainAction?: JSX.Element;
     actions?: JSX.Element;
+    titleActions?: JSX.Element;
     requireOneActiveFilter?: boolean;
     hideSearch?: boolean;
     hideTitle?: boolean;
   };
+
+  /** Render prop for bulk actions shown in the floating selection bar */
+  selectionActions?: (selection: {
+    count: number;
+    clear: () => void;
+  }) => JSX.Element;
+
+  /** Label for the selection bar — use {count} as placeholder */
+  selectionLabel?: string;
+
+  /** Hint message shown when no items are selected, guiding users to use checkboxes */
+  selectionHint?: string;
 
   itemIdKey?: string;
 }
@@ -101,6 +122,23 @@ export const TableView = <
   const [filters, setFilters] = createSignal<Filter[]>(
     props.toolbar?.filters || []
   );
+
+  // Track selection count for the floating action bar
+  const [selectedCount, setSelectedCount] = createSignal(0);
+  let clearSelectionRef: (() => void) | undefined;
+
+  const handleRowSelect = (selectedIds: Set<IdType>) => {
+    setSelectedCount(selectedIds.size);
+    props.table.onRowSelect?.(selectedIds);
+  };
+
+  const clearSelection = () => {
+    setSelectedCount(0);
+    // Notify parent to clear their selection state
+    props.table.onRowSelect?.(new Set<IdType>());
+    // Clear internal table checkboxes via reload workaround
+    clearSelectionRef?.();
+  };
 
   // If props.params is defined, it’s `[searchParams, setSearchParams]` from useSearchParams
   // Otherwise use reactive signals (or store) as a fallback
@@ -329,6 +367,7 @@ export const TableView = <
           <Show when={props.toolbar}>
             <ToolBar
               title={props.toolbar?.hideTitle ? undefined : getTitle()}
+              titleActions={props.toolbar?.titleActions}
               filters={filters()}
               onFilterChange={handleFilterChange}
               initialSearchText={(getSearchParams().search as string) || ''}
@@ -345,12 +384,29 @@ export const TableView = <
             data={data()}
             actions={props.table.actions}
             actionsLabel={props.table.actionsLabel}
-            onRowSelect={props.table.onRowSelect}
+            onRowSelect={handleRowSelect}
             onSort={handleSort}
             onRowClick={props.table.defaultRowAction?.handler}
             itemIdKey={props.itemIdKey}
             hideCheckboxes={props.table.hideCheckboxes}
+            clearSelectionRef={(fn) => {
+              clearSelectionRef = fn;
+            }}
           />
+
+          <Show when={props.selectionActions}>
+            <SelectionActionBar
+              count={selectedCount()}
+              onDeselectAll={clearSelection}
+              label={props.selectionLabel}
+              hintMessage={props.selectionHint}
+            >
+              {props.selectionActions?.({
+                count: selectedCount(),
+                clear: clearSelection,
+              })}
+            </SelectionActionBar>
+          </Show>
 
           <div
             class={`${style['pagination-wrapper']} ${totalItems() <= props.pagination.itemsPerPage ? style['hidden'] : ''}`}

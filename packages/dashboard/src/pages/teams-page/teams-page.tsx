@@ -390,29 +390,19 @@ const TeamsPage: Component = () => {
               />
             </div>
           ),
-          actions: (
-            <div>
-              <IconButton
-                onClick={() => {
-                  if (!canPerformAction('teams', 'delete')) {
-                    toast.error(
-                      t('permissions.noDeleteTeams') ||
-                        "You don't have permission to delete teams"
-                    );
-                    return;
-                  }
-                  setShowConfirmDialogMultiple(true);
-                }}
-                icon={AiOutlineDelete}
-                color="primary"
-                disabled={
-                  selectedTeams().size === 0 ||
-                  !canPerformAction('teams', 'delete')
-                }
-              />
-            </div>
-          ),
         }}
+        selectionHint={t('common.selectionHint')}
+        selectionLabel={t('common.selectionCount')}
+        selectionActions={({ count, clear }) => (
+          <button
+            class="selection-action-btn danger"
+            disabled={!canPerformAction('teams', 'delete')}
+            onClick={() => setShowConfirmDialogMultiple(true)}
+          >
+            <AiOutlineDelete />
+            {t('common.delete')}
+          </button>
+        )}
         table={{
           columns,
           actions,

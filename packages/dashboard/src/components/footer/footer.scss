@@ -1,7 +1,5 @@
 .castmill-footer {
-  position: fixed; /* Always at the bottom */
-  bottom: 0;
-  flex: 0 0 auto; /* Fixed height */
+  flex: 0 0 auto; /* Fixed height, don't grow or shrink */
 
   display: flex;
   flex-direction: row;

@@ -70,6 +70,7 @@ const ALLOWED_IDENTICAL_STRINGS = new Set([
   'Name', // Cognate in German
   'Details', // Cognate in German
   'Teams', // Cognate in German
+  'Tags', // Cognate in German
   'Playlists', // Cognate in German
   'Playlist "{{name}}"', // Cognate in German
   'Type', // Cognate in French

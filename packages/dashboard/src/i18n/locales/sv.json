@@ -98,7 +98,9 @@
     "playlist": "Spellista",
     "addPlaylist": "Lägg till spellista",
     "selectVideo": "Välj en video",
-    "widget": "Widget"
+    "widget": "Widget",
+    "selectionHint": "Använd kryssrutorna för att välja objekt för massåtgärder",
+    "selectionCount": "{count} valda"
   },
   "topbar": {
     "help": "Hjälp",
@@ -469,6 +471,70 @@
     },
     "teamsRemovedSuccessfully": "Team borttagna framgångsrikt"
   },
+  "tags": {
+    "title": "Taggar",
+    "addTag": "Lägg till tagg",
+    "createTag": "Skapa tagg",
+    "editTag": "Redigera tagg",
+    "deleteTag": "Ta bort tagg",
+    "newTag": "Ny tagg",
+    "tagName": "Taggnamn",
+    "tagColor": "Taggfärg",
+    "tagGroup": "Tagggrupp",
+    "assignedTags": "Tilldelade taggar",
+    "availableTags": "Tillgängliga taggar",
+    "noTags": "Inga taggar",
+    "noTagsAvailable": "Inga taggar tillgängliga",
+    "noMatchingTags": "Inga matchande taggar",
+    "allTagsAssigned": "Alla taggar tilldelade",
+    "addToResource": "Lägg till taggar",
+    "removeFromResource": "Ta bort tagg",
+    "filterByTags": "Filtrera efter taggar...",
+    "clearAll": "Rensa allt",
+    "manageTags": "Hantera taggar",
+    "colorPicker": "Välj färg",
+    "searchTags": "Sök taggar...",
+    "filterMode": {
+      "any": "Någon",
+      "all": "Alla",
+      "description": "Matcha resurser med någon eller alla valda taggar"
+    },
+    "confirmDelete": "Är du säker på att du vill ta bort taggen \"{{name}}\"?",
+    "confirmDeleteMultiple": "Är du säker på att du vill ta bort följande taggar?",
+    "confirmDeleteGroup": "Är du säker på att du vill ta bort tagggruppen \"{{name}}\"? Alla taggar i denna grupp kommer också att raderas permanent.",
+    "maxTagsReached": "Maximalt {{max}} taggar nått",
+    "groups": {
+      "title": "Tagggrupper",
+      "addGroup": "Lägg till grupp",
+      "newGroup": "Ny grupp",
+      "editGroup": "Redigera grupp",
+      "deleteGroup": "Ta bort grupp",
+      "noGroups": "Inga tagggrupper",
+      "ungrouped": "Ogrupperad"
+    },
+    "messages": {
+      "tagCreated": "Taggen \"{{name}}\" skapades framgångsrikt",
+      "tagUpdated": "Taggen \"{{name}}\" uppdaterades framgångsrikt",
+      "tagDeleted": "Taggen \"{{name}}\" togs bort framgångsrikt",
+      "tagAddedToResource": "Tagg tillagd framgångsrikt",
+      "tagRemovedFromResource": "Tagg borttagen framgångsrikt",
+      "tagsUpdated": "Taggar uppdaterade framgångsrikt",
+      "groupCreated": "Tagggruppen \"{{name}}\" skapades framgångsrikt",
+      "groupUpdated": "Tagggruppen \"{{name}}\" uppdaterades framgångsrikt",
+      "groupDeleted": "Tagggruppen \"{{name}}\" togs bort framgångsrikt"
+    },
+    "errors": {
+      "createTag": "Fel vid skapande av tagg: {{error}}",
+      "updateTag": "Fel vid uppdatering av tagg: {{error}}",
+      "deleteTag": "Fel vid borttagning av tagg: {{error}}",
+      "tagResource": "Fel vid tillägg av tagg till resurs: {{error}}",
+      "untagResource": "Fel vid borttagning av tagg från resurs: {{error}}",
+      "createGroup": "Fel vid skapande av tagggrupp: {{error}}",
+      "updateGroup": "Fel vid uppdatering av tagggrupp: {{error}}",
+      "deleteGroup": "Fel vid borttagning av tagggrupp: {{error}}",
+      "loadFailed": "Kunde inte ladda taggar"
+    }
+  },
   "login": {
     "title": "Logga in",
     "email": "E-post",
@@ -518,7 +584,8 @@
     "medias": "Media",
     "widgets": "Widgets",
     "members": "Medlemmar",
-    "network": "Nätverk"
+    "network": "Nätverk",
+    "tags": "Taggar"
   },
   "channels": {
     "title": "Kanaler",
@@ -1034,7 +1101,15 @@
   "filters": {
     "teamLabel": "Lag",
     "teamPlaceholder": "Välj lag",
-    "teamClear": "Rensa lagfilter"
+    "teamClear": "Rensa lagfilter",
+    "tagLabel": "Taggar",
+    "tagPlaceholder": "Filtrera efter taggar…",
+    "tagClear": "Rensa taggfilter",
+    "tagSearchPlaceholder": "Sök taggar…",
+    "tagFilterModeAny": "Någon",
+    "tagFilterModeAll": "Alla",
+    "noMatches": "Inga träffar",
+    "noItems": "Inga objekt"
   },
   "shortcuts": {
     "showShortcutsLegend": "Visa tangentbordsgenvägar",
@@ -1133,6 +1208,21 @@
         "title": "Skapa Avancerade Spellistor med Layouter",
         "description": "Ta ditt innehåll till nästa nivå genom att använda layouter för att visa flera objekt samtidigt. Dela upp din skärm i zoner och visa olika innehåll i varje område.",
         "action": "Utforska Layouter"
+      },
+      "createTagGroup": {
+        "title": "Organisera med Tagggrupper",
+        "description": "Gå till sidan Taggar och skapa din första tagggrupp—som 'Plats' eller 'Kampanj'. Grupper låter dig kategorisera taggar i meningsfulla dimensioner som driver trädvyn.",
+        "action": "Gå till Taggar"
+      },
+      "tagContent": {
+        "title": "Tagga ditt Innehåll",
+        "description": "Öppna valfritt medieobjekt och tilldela taggar till det. Taggar gör ditt innehåll sökbart, filtrerbart och organiserbart. Du kan också välja flera objekt och tagga dem alla på en gång.",
+        "action": "Gå till Mediabiblioteket"
+      },
+      "exploreTreeView": {
+        "title": "Utforska Trädvyn",
+        "description": "Byt till trädvy för att se ditt innehåll organiserat efter tagggrupper. Expandera taggar för att gå djupare, ändra ordning på dimensioner och upptäck ett helt nytt sätt att navigera ditt bibliotek.",
+        "action": "Prova Trädvyn"
       }
     },
     "errors": {

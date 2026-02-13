@@ -472,7 +472,7 @@ const LayoutsPage: Component<AddonComponentProps> = (props) => {
             </div>
           ),
           actions: (
-            <div style="display: flex; gap: 1rem; align-items: center;">
+            <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
               <TeamFilter
                 teams={teams() ?? []}
                 selectedTeamId={selectedTeamId()}
@@ -481,15 +481,21 @@ const LayoutsPage: Component<AddonComponentProps> = (props) => {
                 placeholder={t('filters.teamPlaceholder')}
                 clearLabel={t('filters.teamClear')}
               />
-              <IconButton
-                onClick={() => setShowConfirmDialogMultiple(true)}
-                icon={AiOutlineDelete}
-                color="primary"
-                disabled={selectedLayouts().size === 0}
-              />
             </div>
           ),
         }}
+        selectionHint={t('common.selectionHint')}
+        selectionLabel={t('common.selectionCount')}
+        selectionActions={({ count, clear }) => (
+          <button
+            class="selection-action-btn danger"
+            disabled={!canPerformAction('layouts', 'delete')}
+            onClick={() => setShowConfirmDialogMultiple(true)}
+          >
+            <AiOutlineDelete />
+            Delete
+          </button>
+        )}
         table={{
           columns,
           actions,

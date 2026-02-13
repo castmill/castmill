@@ -103,7 +103,9 @@
     "playlist": "播放列表",
     "addPlaylist": "添加播放列表",
     "selectVideo": "选择视频",
-    "widget": "Widget"
+    "widget": "Widget",
+    "selectionHint": "使用复选框选择项目以执行批量操作",
+    "selectionCount": "已选择 {count} 项"
   },
   "topbar": {
     "help": "帮助",
@@ -474,6 +476,70 @@
     },
     "teamsRemovedSuccessfully": "团队删除成功"
   },
+  "tags": {
+    "title": "标签",
+    "addTag": "添加标签",
+    "createTag": "创建标签",
+    "editTag": "编辑标签",
+    "deleteTag": "删除标签",
+    "newTag": "新标签",
+    "tagName": "标签名称",
+    "tagColor": "标签颜色",
+    "tagGroup": "标签组",
+    "assignedTags": "已分配标签",
+    "availableTags": "可用标签",
+    "noTags": "无标签",
+    "noTagsAvailable": "没有可用标签",
+    "noMatchingTags": "没有匹配的标签",
+    "allTagsAssigned": "所有标签已分配",
+    "addToResource": "添加标签",
+    "removeFromResource": "移除标签",
+    "filterByTags": "按标签筛选...",
+    "clearAll": "清除全部",
+    "manageTags": "管理标签",
+    "colorPicker": "选择颜色",
+    "searchTags": "搜索标签...",
+    "filterMode": {
+      "any": "任意",
+      "all": "全部",
+      "description": "匹配具有任意或全部所选标签的资源"
+    },
+    "confirmDelete": "您确定要删除标签 \"{{name}}\" 吗？",
+    "confirmDeleteMultiple": "您确定要删除以下标签吗？",
+    "confirmDeleteGroup": "您确定要删除标签组 \"{{name}}\" 吗？该组中的所有标签也将被永久删除。",
+    "maxTagsReached": "已达到最大 {{max}} 个标签",
+    "groups": {
+      "title": "标签组",
+      "addGroup": "添加组",
+      "newGroup": "新组",
+      "editGroup": "编辑组",
+      "deleteGroup": "删除组",
+      "noGroups": "无标签组",
+      "ungrouped": "未分组"
+    },
+    "messages": {
+      "tagCreated": "标签 \"{{name}}\" 创建成功",
+      "tagUpdated": "标签 \"{{name}}\" 更新成功",
+      "tagDeleted": "标签 \"{{name}}\" 删除成功",
+      "tagAddedToResource": "标签添加成功",
+      "tagRemovedFromResource": "标签移除成功",
+      "tagsUpdated": "标签更新成功",
+      "groupCreated": "标签组 \"{{name}}\" 创建成功",
+      "groupUpdated": "标签组 \"{{name}}\" 更新成功",
+      "groupDeleted": "标签组 \"{{name}}\" 删除成功"
+    },
+    "errors": {
+      "createTag": "创建标签时出错：{{error}}",
+      "updateTag": "更新标签时出错：{{error}}",
+      "deleteTag": "删除标签时出错：{{error}}",
+      "tagResource": "向资源添加标签时出错：{{error}}",
+      "untagResource": "从资源移除标签时出错：{{error}}",
+      "createGroup": "创建标签组时出错：{{error}}",
+      "updateGroup": "更新标签组时出错：{{error}}",
+      "deleteGroup": "删除标签组时出错：{{error}}",
+      "loadFailed": "加载标签失败"
+    }
+  },
   "login": {
     "title": "登录",
     "email": "电子邮件",
@@ -523,7 +589,8 @@
     "medias": "媒体",
     "widgets": "Widgets",
     "members": "成员",
-    "network": "网络"
+    "network": "网络",
+    "tags": "标签"
   },
   "channels": {
     "title": "频道",
@@ -1039,7 +1106,15 @@
   "filters": {
     "teamLabel": "团队",
     "teamPlaceholder": "选择团队",
-    "teamClear": "清除团队筛选"
+    "teamClear": "清除团队筛选",
+    "tagLabel": "标签",
+    "tagPlaceholder": "按标签筛选…",
+    "tagClear": "清除标签筛选",
+    "tagSearchPlaceholder": "搜索标签…",
+    "tagFilterModeAny": "任一",
+    "tagFilterModeAll": "全部",
+    "noMatches": "无匹配项",
+    "noItems": "无项目"
   },
   "shortcuts": {
     "showShortcutsLegend": "显示键盘快捷键",
@@ -1138,6 +1213,21 @@
         "title": "使用布局创建高级播放列表",
         "description": "通过使用布局同时显示多个项目，将您的内容提升到一个新的水平。将屏幕分成多个区域，在每个区域显示不同的内容。",
         "action": "探索布局"
+      },
+      "createTagGroup": {
+        "title": "使用标签组进行整理",
+        "description": "前往标签页面，创建您的第一个标签组——例如“位置”或“活动”。标签组让您将标签归类为有意义的维度，为树状视图提供支持。",
+        "action": "前往标签"
+      },
+      "tagContent": {
+        "title": "为您的内容添加标签",
+        "description": "打开任意媒体项目并为其分配标签。标签使您的内容可搜索、可筛选和可组织。您还可以选择多个项目并一次性为它们添加标签。",
+        "action": "前往媒体库"
+      },
+      "exploreTreeView": {
+        "title": "探索树状视图",
+        "description": "切换到树状视图，查看按标签组整理的内容。展开标签以深入浏览，重新排列维度，发现全新的资源库导航方式。",
+        "action": "尝试树状视图"
       }
     },
     "errors": {

@@ -170,6 +170,46 @@ export class ChannelsService {
     });
   }
 
+  /**
+   * Fetch channels with tag & team filtering (used by tree view).
+   */
+  async fetchChannelsFiltered(options: {
+    page: number;
+    page_size: number;
+    sortOptions: { key?: string; direction: string };
+    tag_ids?: number[];
+    tag_filter_mode?: 'any' | 'all';
+    team_id?: number | null;
+  }) {
+    const query = new URLSearchParams({
+      page: options.page.toString(),
+      page_size: options.page_size.toString(),
+      direction: options.sortOptions.direction,
+    });
+    if (options.sortOptions.key) {
+      query.set('key', options.sortOptions.key);
+    }
+    if (options.team_id !== undefined && options.team_id !== null) {
+      query.set('team_id', options.team_id.toString());
+    }
+    if (options.tag_ids && options.tag_ids.length > 0) {
+      query.set('tag_ids', options.tag_ids.join(','));
+    }
+    if (options.tag_filter_mode) {
+      query.set('tag_filter_mode', options.tag_filter_mode);
+    }
+    const response = await fetch(
+      `${this.baseUrl}/dashboard/organizations/${this.organizationId}/channels?${query}`,
+      {
+        method: 'GET',
+        credentials: 'include',
+      }
+    );
+    return handleResponse<{ data: JsonChannel[]; count: number }>(response, {
+      parse: true,
+    });
+  }
+
   async getChannel(channelId: number): Promise<JsonChannel> {
     const response = await fetch(
       `${this.baseUrl}/dashboard/organizations/${this.organizationId}/channels/${channelId}`,

@@ -1,8 +1,17 @@
-import { BsCheckLg } from 'solid-icons/bs';
-import { BsEye } from 'solid-icons/bs';
+import {
+  BsCheckLg,
+  BsEye,
+  BsTagFill,
+  BsFileEarmarkImage,
+  BsFileEarmarkPlay,
+  BsFileEarmarkMusic,
+  BsFileEarmark,
+} from 'solid-icons/bs';
 import { AiOutlineDelete } from 'solid-icons/ai';
 import {
   Component,
+  For,
+  batch,
   createEffect,
   createSignal,
   onCleanup,
@@ -24,11 +33,22 @@ import {
   CircularProgress,
   ResourcesObserver,
   TeamFilter,
+  TagFilter,
   FetchDataOptions,
   Timestamp,
   ToastProvider,
   HttpError,
   useToast,
+  useTagFilter,
+  ViewModeToggle,
+  ResourceTreeView,
+  TreeResourceItem,
+  TagsService,
+  Tag,
+  TagGroup,
+  TagBadge,
+  TagPopover,
+  ToolBar,
 } from '@castmill/ui-common';
 import { JsonMedia } from '@castmill/player';
 import { MediasService } from '../services/medias.service';
@@ -45,7 +65,11 @@ import {
   AddonStore,
   AddonComponentProps,
 } from '../../common/interfaces/addon-store';
-import { useTeamFilter, useModalFromUrl } from '../../common/hooks';
+import {
+  useTeamFilter,
+  useModalFromUrl,
+  useViewMode,
+} from '../../common/hooks';
 
 const MediasPage: Component<AddonComponentProps> = (props) => {
   // Get i18n functions from store
@@ -73,7 +97,254 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
     params: props.params, // Pass URL search params for shareable filtered views
   });
 
+  // Tag filtering for organization by campaigns, locations, etc.
+  const {
+    tags,
+    selectedTagIds,
+    setSelectedTagIds,
+    filterMode: tagFilterMode,
+    setFilterMode: setTagFilterMode,
+  } = useTagFilter({
+    baseUrl: props.store.env.baseUrl,
+    organizationId: props.store.organizations.selectedId,
+    params: props.params,
+  });
+
   const itemsPerPage = 10; // Number of items to show per page
+
+  // View mode: list (table) or tree – persisted in localStorage
+  const [viewMode, setViewMode] = useViewMode('medias');
+  const [tagGroups, setTagGroups] = createSignal<TagGroup[]>([]);
+  const [allTags, setAllTags] = createSignal<Tag[]>([]);
+  const [treeVersion, setTreeVersion] = createSignal(0);
+  const bumpTree = () => setTreeVersion((v) => v + 1);
+
+  // ---------------------------------------------------------------------------
+  // Per-resource tag state & popover targeting
+  // ---------------------------------------------------------------------------
+
+  // Map of resourceId → Tag[] for the currently visible page
+  const [resourceTagsMap, setResourceTagsMap] = createSignal<
+    Map<number, Tag[]>
+  >(new Map());
+
+  // Single-item tag popover target
+  const [tagPopoverTarget, setTagPopoverTarget] = createSignal<{
+    item: JsonMedia;
+    anchorEl: HTMLElement;
+  } | null>(null);
+
+  // Bulk tag popover anchor
+  const [bulkTagAnchorEl, setBulkTagAnchorEl] =
+    createSignal<HTMLElement | null>(null);
+
+  // Permission: only admin/manager can manage tags
+  const canManageTags = () => {
+    const role = props.store.permissions?.role;
+    return role === 'admin' || role === 'manager';
+  };
+
+  // Initialize TagsService and load tag groups for tree view
+  const tagsService = new TagsService(props.store.env.baseUrl);
+
+  const loadTagGroups = async () => {
+    if (!props.store.organizations.selectedId) return;
+    try {
+      const [groups, allTagsList] = await Promise.all([
+        tagsService.listTagGroups(props.store.organizations.selectedId, {
+          preloadTags: true,
+        }),
+        tagsService.listTags(props.store.organizations.selectedId),
+      ]);
+      batch(() => {
+        setTagGroups(groups);
+        setAllTags(allTagsList);
+      });
+    } catch (error) {
+      console.error('Failed to load tag groups:', error);
+    }
+  };
+
+  // Load tag groups when org changes (needed for tree view)
+  createEffect(
+    on(
+      () => props.store.organizations.selectedId,
+      () => loadTagGroups()
+    )
+  );
+
+  // ---------------------------------------------------------------------------
+  // Load tags for visible media items (runs whenever the table page changes)
+  // ---------------------------------------------------------------------------
+
+  const loadResourceTags = async (items: JsonMedia[]) => {
+    if (!items.length || !props.store.organizations.selectedId) {
+      setResourceTagsMap(new Map());
+      return;
+    }
+
+    const tagMap = new Map<number, Tag[]>();
+    await Promise.all(
+      items.map(async (item) => {
+        try {
+          const itemTags = await tagsService.getResourceTags(
+            props.store.organizations.selectedId,
+            'media',
+            item.id
+          );
+          tagMap.set(item.id, itemTags);
+        } catch {
+          tagMap.set(item.id, []);
+        }
+      })
+    );
+    setResourceTagsMap(tagMap);
+  };
+
+  createEffect(on(data, (items) => loadResourceTags(items)));
+
+  // ---------------------------------------------------------------------------
+  // Tag toggle handlers (single item + bulk)
+  // ---------------------------------------------------------------------------
+
+  const handleTagToggle = async (
+    item: JsonMedia,
+    tagId: number,
+    selected: boolean
+  ) => {
+    const orgId = props.store.organizations.selectedId;
+    if (!orgId) return;
+
+    // Optimistic local update
+    setResourceTagsMap((prev) => {
+      const next = new Map(prev);
+      const current = next.get(item.id) || [];
+      if (selected) {
+        const tag = allTags().find((t) => t.id === tagId);
+        if (tag) next.set(item.id, [...current, tag]);
+      } else {
+        next.set(
+          item.id,
+          current.filter((t) => t.id !== tagId)
+        );
+      }
+      return next;
+    });
+
+    try {
+      if (selected) {
+        await tagsService.tagResource(orgId, 'media', item.id, tagId);
+      } else {
+        await tagsService.untagResource(orgId, 'media', item.id, tagId);
+      }
+      bumpTree();
+    } catch (error) {
+      console.error('Failed to toggle tag:', error);
+      toast.error(t('tags.errors.tagResource', { error: String(error) }));
+      // Revert optimistic update by reloading from server
+      try {
+        const freshTags = await tagsService.getResourceTags(
+          orgId,
+          'media',
+          item.id
+        );
+        setResourceTagsMap((prev) => {
+          const next = new Map(prev);
+          next.set(item.id, freshTags);
+          return next;
+        });
+      } catch {
+        /* ignore reload failure */
+      }
+    }
+  };
+
+  const handleBulkTagToggle = async (tagId: number, selected: boolean) => {
+    const orgId = props.store.organizations.selectedId;
+    if (!orgId) return;
+
+    const resourceIds = Array.from(selectedMedias());
+    try {
+      if (selected) {
+        await tagsService.bulkTagResources(orgId, tagId, 'media', resourceIds);
+      } else {
+        await tagsService.bulkUntagResources(
+          orgId,
+          tagId,
+          'media',
+          resourceIds
+        );
+      }
+
+      // Refresh tags for affected items
+      const tagMap = new Map(resourceTagsMap());
+      await Promise.all(
+        resourceIds.map(async (id) => {
+          try {
+            const freshTags = await tagsService.getResourceTags(
+              orgId,
+              'media',
+              id
+            );
+            tagMap.set(id, freshTags);
+          } catch {
+            /* ignore */
+          }
+        })
+      );
+      setResourceTagsMap(tagMap);
+      bumpTree();
+    } catch (error) {
+      console.error('Failed to bulk toggle tag:', error);
+      toast.error(t('tags.errors.tagResource', { error: String(error) }));
+    }
+  };
+
+  // Compute tags that are common to ALL selected items (for bulk popover)
+  const bulkSelectedTagIds = () => {
+    const ids = Array.from(selectedMedias());
+    if (ids.length === 0) return [];
+
+    const allItemTags = ids.map((id) => resourceTagsMap().get(id) || []);
+    if (allItemTags.length === 0) return [];
+
+    const firstItemTagIds = new Set(allItemTags[0].map((t) => t.id));
+    return [...firstItemTagIds].filter((tagId) =>
+      allItemTags.every((tags) => tags.some((t) => t.id === tagId))
+    );
+  };
+
+  const handleCreateTag = async (name: string): Promise<Tag> => {
+    const newTag = await tagsService.createTag(
+      props.store.organizations.selectedId,
+      { name }
+    );
+    setAllTags([...allTags(), newTag]);
+    return newTag;
+  };
+
+  // Fetch resources for tree view nodes (filter by tag IDs in AND mode)
+  const fetchTreeResources = async (tagIds: number[]) => {
+    const result = await MediasService.fetchMedias(
+      props.store.env.baseUrl,
+      props.store.organizations.selectedId,
+      {
+        page: 1,
+        page_size: 100,
+        sortOptions: { key: 'name', direction: 'ascending' },
+        tag_ids: tagIds,
+        tag_filter_mode: 'all',
+        team_id: selectedTeamId(),
+      }
+    );
+    return {
+      data: result.data.map((m: JsonMedia) => ({
+        ...m,
+        thumbnail: m.files?.['thumbnail']?.uri,
+      })) as TreeResourceItem[],
+      count: result.count,
+    };
+  };
 
   const [showModal, setShowModal] = createSignal<JsonMedia | undefined>();
 
@@ -138,6 +409,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
       );
 
       refreshData();
+      bumpTree();
       toast.success(`Media "${resource.name}" removed successfully`);
       loadQuota(); // Reload quota after deletion
     } catch (error) {
@@ -164,6 +436,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
       );
 
       refreshData();
+      bumpTree();
       toast.success(`${selectedMedias().size} media(s) removed successfully`);
       loadQuota(); // Reload quota after deletion
     } catch (error) {
@@ -336,6 +609,13 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
   const handleTeamChange = (teamId: number | null) => {
     setSelectedTeamId(teamId);
     refreshData();
+    bumpTree();
+  };
+
+  const handleTagChange = (tagIds: number[]) => {
+    setSelectedTagIds(tagIds);
+    refreshData();
+    bumpTree();
   };
 
   const updateItem = (itemId: number, item: Partial<JsonMedia>) => {
@@ -360,6 +640,8 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
         search,
         filters,
         team_id: selectedTeamId(),
+        tag_ids: selectedTagIds(),
+        tag_filter_mode: tagFilterMode(),
       }
     );
 
@@ -429,14 +711,42 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
           </div>
         ),
       },
-      { key: 'name', title: t('common.name'), sortable: true },
+      {
+        key: 'name',
+        title: t('common.name'),
+        sortable: true,
+        render: (item: JsonMedia) => (
+          <span class="name-cell" title={item.name}>
+            {item.name}
+          </span>
+        ),
+      },
       {
         key: 'size',
         title: t('common.size'),
         sortable: false,
         render: (item: JsonMedia) => formatBytes(item.size ?? 0),
       },
-      { key: 'mimetype', title: t('common.type'), sortable: true },
+      {
+        key: 'mimetype',
+        title: t('common.type'),
+        sortable: true,
+        render: (item: JsonMedia) => {
+          const mime = item.mimetype || '';
+          const Icon = mime.startsWith('image/')
+            ? BsFileEarmarkImage
+            : mime.startsWith('video/')
+              ? BsFileEarmarkPlay
+              : mime.startsWith('audio/')
+                ? BsFileEarmarkMusic
+                : BsFileEarmark;
+          return (
+            <span class="mimetype-cell" title={mime}>
+              <Icon />
+            </span>
+          );
+        },
+      },
       {
         key: 'inserted_at',
         title: t('common.created'),
@@ -452,6 +762,38 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
         render: (item: JsonMedia) => (
           <Timestamp value={item.updated_at!} mode="relative" />
         ),
+      },
+      {
+        key: 'tags',
+        title: t('tags.title'),
+        sortable: false,
+        render: (item: JsonMedia) => {
+          const itemTags = () => resourceTagsMap().get(item.id) || [];
+          return (
+            <div class="tags-cell">
+              <For each={itemTags().slice(0, 3)}>
+                {(tag) => <TagBadge tag={tag} size="small" />}
+              </For>
+              <Show when={itemTags().length > 3}>
+                <span class="tags-overflow">+{itemTags().length - 3}</span>
+              </Show>
+              <button
+                class="tag-manage-btn"
+                data-onboarding="tag-content"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setTagPopoverTarget({
+                    item,
+                    anchorEl: e.currentTarget as HTMLElement,
+                  });
+                }}
+                title={t('tags.manageTags')}
+              >
+                <BsTagFill />
+              </button>
+            </div>
+          );
+        },
       },
     ] as Column<JsonMedia>[];
 
@@ -501,8 +843,9 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
               // File upload handled
             }}
             onUploadComplete={() => {
-              // Refresh table
+              // Refresh table and tree
               refreshData();
+              bumpTree();
               loadQuota(); // Reload quota after upload
             }}
             onCancel={() => {
@@ -530,6 +873,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
                   mediaUpdate
                 );
                 refreshData();
+                bumpTree();
                 toast.success(
                   `Media "${showModal()?.name}" updated successfully`
                 );
@@ -568,16 +912,133 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
         </div>
       </ConfirmDialog>
 
-      <TableView<number, JsonMedia>
-        title="Medias"
-        resource="medias"
-        params={props.params}
-        fetchData={fetchData}
-        ref={setRef}
-        itemIdKey="id"
-        toolbar={{
-          mainAction: (
-            <div style="display: flex; align-items: center; gap: 1rem;">
+      <Show when={viewMode() === 'list'}>
+        <TableView<number, JsonMedia>
+          title="Medias"
+          resource="medias"
+          params={props.params}
+          fetchData={fetchData}
+          ref={setRef}
+          itemIdKey="id"
+          toolbar={{
+            mainAction: (
+              <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                <Show when={quota()}>
+                  <QuotaIndicator
+                    used={quota()!.used}
+                    total={quota()!.total}
+                    resourceName="Medias"
+                    compact
+                    isLoading={showLoadingIndicator()}
+                  />
+                </Show>
+                <Show when={storageQuota()}>
+                  <QuotaIndicator
+                    used={storageQuota()!.used}
+                    total={storageQuota()!.total}
+                    resourceName=""
+                    compact
+                    isLoading={showLoadingIndicator()}
+                    formatValue={formatBytes}
+                  />
+                </Show>
+                <Button
+                  label="Upload Media"
+                  onClick={openAddMediasModal}
+                  icon={BsCheckLg}
+                  color="primary"
+                  disabled={
+                    isQuotaReached() || !canPerformAction('medias', 'create')
+                  }
+                />
+              </div>
+            ),
+            titleActions: (
+              <span data-onboarding="tree-view-toggle">
+                <ViewModeToggle mode={viewMode()} onChange={setViewMode} />
+              </span>
+            ),
+            actions: (
+              <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+                <TeamFilter
+                  teams={teams()}
+                  selectedTeamId={selectedTeamId()}
+                  onTeamChange={handleTeamChange}
+                  label={t('filters.teamLabel')}
+                  placeholder={t('filters.teamPlaceholder')}
+                  clearLabel={t('filters.teamClear')}
+                />
+                <TagFilter
+                  tags={tags()}
+                  selectedTagIds={selectedTagIds()}
+                  onTagChange={handleTagChange}
+                  filterMode={tagFilterMode()}
+                  onFilterModeChange={setTagFilterMode}
+                  label={t('filters.tagLabel')}
+                  placeholder={t('filters.tagPlaceholder')}
+                  clearLabel={t('filters.tagClear')}
+                  searchPlaceholder={t('filters.tagSearchPlaceholder')}
+                  filterModeLabels={{
+                    any: t('filters.tagFilterModeAny'),
+                    all: t('filters.tagFilterModeAll'),
+                  }}
+                  noMatchMessage={t('filters.noMatches')}
+                  emptyMessage={t('filters.noItems')}
+                />
+              </div>
+            ),
+          }}
+          selectionHint={t('common.selectionHint')}
+          selectionLabel={t('common.selectionCount')}
+          selectionActions={({ count, clear }) => (
+            <>
+              <Show when={canManageTags()}>
+                <button
+                  class="selection-action-btn"
+                  onClick={(e) => {
+                    setBulkTagAnchorEl(e.currentTarget as HTMLElement);
+                  }}
+                >
+                  <BsTagFill />
+                  {t('tags.manageTags')}
+                </button>
+              </Show>
+              <button
+                class="selection-action-btn danger"
+                disabled={!canPerformAction('medias', 'delete')}
+                onClick={() => setShowConfirmDialogMultiple(true)}
+              >
+                <AiOutlineDelete />
+                Delete
+              </button>
+            </>
+          )}
+          table={{
+            columns,
+            actions,
+            actionsLabel: t('common.actions'),
+            onRowSelect,
+            defaultRowAction: {
+              icon: BsEye,
+              handler: (item: JsonMedia) => {
+                openModal(item);
+              },
+              label: t('common.view'),
+            },
+          }}
+          pagination={{ itemsPerPage }}
+        ></TableView>
+      </Show>
+
+      <Show when={viewMode() === 'tree'}>
+        <ToolBar
+          title="Medias"
+          titleActions={
+            <ViewModeToggle mode={viewMode()} onChange={setViewMode} />
+          }
+          hideSearch
+          mainAction={
+            <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
               <Show when={quota()}>
                 <QuotaIndicator
                   used={quota()!.used}
@@ -585,16 +1046,6 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
                   resourceName="Medias"
                   compact
                   isLoading={showLoadingIndicator()}
-                />
-              </Show>
-              <Show when={storageQuota()}>
-                <QuotaIndicator
-                  used={storageQuota()!.used}
-                  total={storageQuota()!.total}
-                  resourceName=""
-                  compact
-                  isLoading={showLoadingIndicator()}
-                  formatValue={formatBytes}
                 />
               </Show>
               <Button
@@ -607,9 +1058,9 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
                 }
               />
             </div>
-          ),
-          actions: (
-            <div style="display: flex; gap: 1rem; align-items: center;">
+          }
+          actions={
+            <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
               <TeamFilter
                 teams={teams()}
                 selectedTeamId={selectedTeamId()}
@@ -618,33 +1069,114 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
                 placeholder={t('filters.teamPlaceholder')}
                 clearLabel={t('filters.teamClear')}
               />
-              <IconButton
-                onClick={() => setShowConfirmDialogMultiple(true)}
-                icon={AiOutlineDelete}
-                color="primary"
-                disabled={
-                  selectedMedias().size === 0 ||
-                  !canPerformAction('medias', 'delete')
-                }
-              />
             </div>
-          ),
-        }}
-        table={{
-          columns,
-          actions,
-          actionsLabel: t('common.actions'),
-          onRowSelect,
-          defaultRowAction: {
-            icon: BsEye,
-            handler: (item: JsonMedia) => {
-              openModal(item);
-            },
-            label: t('common.view'),
-          },
-        }}
-        pagination={{ itemsPerPage }}
-      ></TableView>
+          }
+        />
+        <ResourceTreeView
+          tagGroups={tagGroups()}
+          allTags={allTags()}
+          fetchResources={fetchTreeResources}
+          refreshKey={treeVersion()}
+          storageKey="medias"
+          onResourceClick={(item) => openModal(item as unknown as JsonMedia)}
+          renderResource={(item) => (
+            <div
+              class="media-tree-item"
+              onClick={() => openModal(item as unknown as JsonMedia)}
+            >
+              <Show when={(item as any).files?.['thumbnail']}>
+                <img
+                  class="media-tree-thumbnail"
+                  src={(item as any).files['thumbnail'].uri}
+                  alt={item.name}
+                />
+              </Show>
+              <div class="media-tree-info">
+                <span class="media-tree-name">{item.name}</span>
+                <span class="media-tree-meta">
+                  {(item as any).mimetype} ·{' '}
+                  {formatBytes((item as any).size ?? 0)}
+                </span>
+              </div>
+              <button
+                class="media-tree-tag-btn"
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  const media = item as unknown as JsonMedia;
+                  const orgId = props.store.organizations.selectedId;
+                  // Load tags for this item if not already in the map
+                  if (orgId && !resourceTagsMap().has(media.id)) {
+                    try {
+                      const itemTags = await tagsService.getResourceTags(
+                        orgId,
+                        'media',
+                        media.id
+                      );
+                      setResourceTagsMap((prev) => {
+                        const next = new Map(prev);
+                        next.set(media.id, itemTags);
+                        return next;
+                      });
+                    } catch {
+                      /* ignore */
+                    }
+                  }
+                  setTagPopoverTarget({
+                    item: media,
+                    anchorEl: e.currentTarget as HTMLElement,
+                  });
+                }}
+                title={t('tags.manageTags')}
+              >
+                <BsTagFill />
+              </button>
+            </div>
+          )}
+        />
+      </Show>
+
+      {/* Single-item tag popover */}
+      <Show when={tagPopoverTarget()}>
+        {(target) => (
+          <TagPopover
+            availableTags={allTags()}
+            tagGroups={tagGroups()}
+            selectedTagIds={(resourceTagsMap().get(target().item.id) || []).map(
+              (t) => t.id
+            )}
+            onToggle={(tagId, selected) =>
+              handleTagToggle(target().item, tagId, selected)
+            }
+            onCreateTag={canManageTags() ? handleCreateTag : undefined}
+            allowCreate={canManageTags()}
+            anchorEl={target().anchorEl}
+            onClose={() => setTagPopoverTarget(null)}
+            placeholder={t('tags.searchTags')}
+            ungroupedLabel={t('tags.groups.ungrouped')}
+            emptyLabel={t('tags.noTagsAvailable')}
+            noMatchLabel={t('tags.noMatchingTags')}
+          />
+        )}
+      </Show>
+
+      {/* Bulk tag popover */}
+      <Show when={bulkTagAnchorEl()}>
+        <TagPopover
+          availableTags={allTags()}
+          tagGroups={tagGroups()}
+          selectedTagIds={bulkSelectedTagIds()}
+          onToggle={handleBulkTagToggle}
+          onCreateTag={canManageTags() ? handleCreateTag : undefined}
+          allowCreate={canManageTags()}
+          anchorEl={bulkTagAnchorEl()!}
+          onClose={() => setBulkTagAnchorEl(null)}
+          title={t('tags.manageTags')}
+          placeholder={t('tags.searchTags')}
+          ungroupedLabel={t('tags.groups.ungrouped')}
+          emptyLabel={t('tags.noTagsAvailable')}
+          noMatchLabel={t('tags.noMatchingTags')}
+        />
+      </Show>
     </div>
   );
 };

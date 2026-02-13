@@ -15,7 +15,10 @@ defmodule Castmill.Accounts.OnboardingProgress do
     "create_channel",
     "register_device",
     "assign_channel",
-    "advanced_playlist"
+    "advanced_playlist",
+    "create_tag_group",
+    "tag_content",
+    "explore_tree_view"
   ]
 
   @derive {Jason.Encoder,
