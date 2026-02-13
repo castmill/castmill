@@ -136,6 +136,7 @@ defmodule Castmill.NetworksTest do
       assert Castmill.Quotas.get_quota_for_organization(org.id, "playlists") == 50
       assert Castmill.Quotas.get_quota_for_organization(org.id, "devices") == 20
       assert Castmill.Quotas.get_quota_for_organization(org.id, "channels") == 20
+      assert Castmill.Quotas.get_quota_for_organization(org.id, "layouts") == 100
     end
 
     test "invitation_only defaults to false" do

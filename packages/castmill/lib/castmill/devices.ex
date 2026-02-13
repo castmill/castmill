@@ -622,12 +622,17 @@ defmodule Castmill.Devices do
     sort_field =
       case sort_key do
         "timestamp" -> :timestamp
-        "type_name" -> :type_name
+        "type" -> :type
         "msg" -> :msg
         _ -> :timestamp
       end
 
-    Ecto.Query.order_by(query, [{^sort_dir, ^sort_field}])
+    order =
+      if sort_field == :timestamp,
+        do: [{sort_dir, sort_field}],
+        else: [{sort_dir, sort_field}, {:desc, :timestamp}]
+
+    Ecto.Query.order_by(query, ^order)
   end
 
   defp where_msg_like(query, nil) do
