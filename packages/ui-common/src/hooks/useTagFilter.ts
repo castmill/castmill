@@ -73,21 +73,6 @@ const parseTagIdsParam = (value: string | undefined): number[] => {
     .filter((id) => !Number.isNaN(id));
 };
 
-const normalizeTagIdsParamValue = (
-  value: string | undefined
-): string | undefined => {
-  if (
-    value === undefined ||
-    value === null ||
-    value === '' ||
-    value === 'null' ||
-    value === 'undefined'
-  ) {
-    return undefined;
-  }
-  return value;
-};
-
 /**
  * Get the localStorage key for a specific organization
  */

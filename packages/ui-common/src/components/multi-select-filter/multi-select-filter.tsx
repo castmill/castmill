@@ -188,7 +188,7 @@ export const MultiSelectFilter = <T extends MultiSelectItem>(
       <div
         class="castmill-msf"
         classList={{ disabled: !!props.disabled }}
-        ref={containerRef}
+        ref={(el) => (containerRef = el)}
         onKeyDown={onKeyDown}
       >
         {/* Trigger */}
@@ -325,9 +325,7 @@ export const MultiSelectFilter = <T extends MultiSelectItem>(
                 when={filteredItems().length > 0}
                 fallback={
                   <div class="msf-empty">
-                    {searchQuery()
-                      ? props.noMatchMessage || 'No matches'
-                      : props.emptyMessage || 'No items'}
+                    {props.noMatchMessage || 'No matches'}
                   </div>
                 }
               >

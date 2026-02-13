@@ -33,6 +33,7 @@ import {
   TagGroup,
   TagBadge,
   TagPopover,
+  useViewMode,
 } from '@castmill/ui-common';
 
 import { store } from '../../store/store';
@@ -49,7 +50,7 @@ import { ChannelView } from './channel-view';
 
 import { baseUrl } from '../../env';
 import { ChannelAddForm } from './channel-add-form';
-import { useTeamFilter, useModalFromUrl, useViewMode } from '../../hooks';
+import { useTeamFilter, useModalFromUrl } from '../../hooks';
 import { useI18n } from '../../i18n';
 import { QuotaIndicator } from '../../components/quota-indicator';
 import { QuotasService, ResourceQuota } from '../../services/quotas.service';

@@ -135,7 +135,7 @@ export const TagEditor: Component<TagEditorProps> = (props) => {
   return (
     <div
       class={`castmill-tag-editor ${props.disabled ? 'disabled' : ''} ${props.loading ? 'loading' : ''}`}
-      ref={dropdownRef}
+      ref={(el) => (dropdownRef = el)}
     >
       <Show when={props.label}>
         <label class="tag-editor-label">{props.label}</label>

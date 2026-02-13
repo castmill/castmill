@@ -266,7 +266,7 @@ export const TagPopover: Component<TagPopoverProps> = (props) => {
   return (
     <Portal>
       <div
-        ref={popoverRef}
+        ref={(el) => (popoverRef = el)}
         class={`castmill-tag-popover ${visible() ? 'visible' : ''}`}
         style={{
           top: `${position().top}px`,

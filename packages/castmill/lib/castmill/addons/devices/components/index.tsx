@@ -35,6 +35,7 @@ import {
   TagGroup,
   TagBadge,
   TagPopover,
+  useViewMode,
 } from '@castmill/ui-common';
 
 import { BsCheckLg, BsEye, BsTagFill } from 'solid-icons/bs';
@@ -48,11 +49,7 @@ import './devices.scss';
 import RegisterDevice from './register-device';
 import { DevicesService } from '../services/devices.service';
 import { AddonComponentProps } from '../../common/interfaces/addon-store';
-import {
-  useTeamFilter,
-  useModalFromUrl,
-  useViewMode,
-} from '../../common/hooks';
+import { useTeamFilter, useModalFromUrl } from '../../common/hooks';
 
 import { QuotaIndicator } from '../../common/components/quota-indicator';
 import {

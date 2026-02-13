@@ -373,13 +373,6 @@ export const ResourceTreeView: Component<ResourceTreeViewProps> = (props) => {
     }
   };
 
-  // Swap two dimensions
-  const swapDimension = (fromIndex: number, toIndex: number) => {
-    const dims = [...dimensions()];
-    [dims[fromIndex], dims[toIndex]] = [dims[toIndex], dims[fromIndex]];
-    setDimensions(dims);
-  };
-
   // Set a specific dimension at a level
   const setDimensionAt = (level: number, groupIndex: number) => {
     const dims = [...dimensions()];

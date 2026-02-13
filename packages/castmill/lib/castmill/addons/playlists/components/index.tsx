@@ -40,6 +40,7 @@ import {
   TagGroup,
   TagBadge,
   TagPopover,
+  useViewMode,
 } from '@castmill/ui-common';
 import { JsonPlaylist } from '@castmill/player';
 import { PlaylistsService } from '../services/playlists.service';
@@ -57,7 +58,6 @@ import {
   useTeamFilter,
   useModalFromUrl,
   useOnboardingHighlight,
-  useViewMode,
 } from '../../common/hooks';
 import { ASPECT_RATIO_OPTIONS } from '../constants';
 import {

@@ -118,7 +118,7 @@ describe('TagEditor', () => {
   });
 
   it('shows unselected tags in dropdown', async () => {
-    const { getByText, getAllByText } = render(() => (
+    const { getByText } = render(() => (
       <TagEditor
         availableTags={[tag1, tag2, tag3]}
         selectedTags={[tag1]}

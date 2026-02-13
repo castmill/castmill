@@ -3,7 +3,7 @@
  *
  * A toggle button for switching between list (table) and tree view modes.
  */
-import { Component, Show } from 'solid-js';
+import { Component } from 'solid-js';
 import { BsListUl } from 'solid-icons/bs';
 import { RiEditorOrganizationChart } from 'solid-icons/ri';
 import { IconWrapper } from '../icon-wrapper';

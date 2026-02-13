@@ -50,6 +50,7 @@ import {
   TagPopover,
   ToolBar,
   formatBytes,
+  useViewMode,
 } from '@castmill/ui-common';
 import { JsonMedia } from '@castmill/player';
 import { MediasService } from '../services/medias.service';
@@ -66,11 +67,7 @@ import {
   AddonStore,
   AddonComponentProps,
 } from '../../common/interfaces/addon-store';
-import {
-  useTeamFilter,
-  useModalFromUrl,
-  useViewMode,
-} from '../../common/hooks';
+import { useTeamFilter, useModalFromUrl } from '../../common/hooks';
 
 const MediasPage: Component<AddonComponentProps> = (props) => {
   // Get i18n functions from store
