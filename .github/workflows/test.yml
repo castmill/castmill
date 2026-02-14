@@ -93,7 +93,7 @@ jobs:
       - name: Use Node.js current
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 24
           cache: 'yarn'
       - name: Install workspace dependencies
         working-directory: ./
@@ -124,7 +124,7 @@ jobs:
       - name: Use Node.js current
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 24
           cache: 'yarn'
       - name: Install workspace dependencies
         working-directory: ./
@@ -177,7 +177,7 @@ jobs:
       - name: Use Node.js current
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 24
           cache: 'yarn'
       - name: Install workspace dependencies
         working-directory: ./
