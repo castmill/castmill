@@ -89,28 +89,39 @@ describe('File System', () => {
   describe('Downloading', () => {
     it('should download a file from a URL and write it to the file system', async () => {
       vi.mocked(stat).mockResolvedValueOnce({ size: 9 } as unknown as Stats);
+      const listeners: Record<string, ((...args: unknown[]) => void)[]> = {};
       const writeStream = {
-        write: vi.fn(() => {}),
-        on: vi.fn(() => {}),
-        end: vi.fn(),
+        write: vi.fn(),
+        on: vi.fn((event: string, cb: (...args: unknown[]) => void) => {
+          listeners[event] = listeners[event] || [];
+          listeners[event].push(cb);
+        }),
+        end: vi.fn(() => {
+          (listeners['finish'] || []).forEach((cb) => cb());
+        }),
       } as unknown as WriteStream;
       vi.mocked(createWriteStream).mockImplementationOnce(() => writeStream);
       vi.mocked(net.request).mockImplementationOnce(() => {
         return {
           on: (event: string, cb: (response) => void) => {
             if (event === 'response') {
+              const responseListeners: Record<
+                string,
+                ((...args: unknown[]) => void)[]
+              > = {};
               cb({
                 statusCode: 200,
-                on: (event: string, cb: (response: string) => void) => {
-                  switch (event) {
-                    case 'data':
-                      cb('test data');
-                      break;
-                    case 'end':
-                      cb('ok');
-                      break;
-                  }
+                on: (event: string, cb: (...args: unknown[]) => void) => {
+                  responseListeners[event] = responseListeners[event] || [];
+                  responseListeners[event].push(cb);
                 },
+              });
+              // Defer emitting data/end so that writeStream.on('finish') is registered first
+              queueMicrotask(() => {
+                (responseListeners['data'] || []).forEach((cb) =>
+                  cb('test data')
+                );
+                (responseListeners['end'] || []).forEach((cb) => cb());
               });
             }
           },
