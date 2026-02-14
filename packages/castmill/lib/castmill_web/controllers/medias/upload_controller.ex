@@ -77,10 +77,12 @@ defmodule CastmillWeb.UploadController do
       |> halt()
     else
       # Check storage quota before uploading
+      # Note: storage quota is stored in megabytes (MB)
       current_storage = Castmill.Quotas.get_quota_used_for_organization(organization_id, :storage)
-      storage_quota = Castmill.Quotas.get_quota_for_organization(organization_id, :storage)
+      storage_quota_mb = Castmill.Quotas.get_quota_for_organization(organization_id, :storage)
+      storage_quota_bytes = storage_quota_mb * 1024 * 1024
 
-      if current_storage + file_size > storage_quota do
+      if current_storage + file_size > storage_quota_bytes do
         conn
         |> put_status(:forbidden)
         |> json(%{

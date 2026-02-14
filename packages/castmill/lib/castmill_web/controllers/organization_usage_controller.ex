@@ -35,9 +35,11 @@ defmodule CastmillWeb.OrganizationUsageController do
       |> Map.new()
 
     # Add storage usage (special case - sums file sizes instead of counting)
+    # Note: storage quota is stored in MB, but usage is in bytes, so we convert
     storage_usage = Quotas.get_quota_used_for_organization(organization_id, :storage)
-    storage_total = Quotas.get_quota_for_organization(organization_id, "storage")
+    storage_quota_mb = Quotas.get_quota_for_organization(organization_id, "storage")
+    storage_total_bytes = storage_quota_mb * 1024 * 1024
 
-    Map.put(resource_usage, "storage", %{used: storage_usage, total: storage_total})
+    Map.put(resource_usage, "storage", %{used: storage_usage, total: storage_total_bytes})
   end
 end

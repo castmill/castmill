@@ -130,8 +130,8 @@ defmodule Castmill.Networks do
       %{resource: :channels, max: 20},
       %{resource: :users, max: 50},
       %{resource: :layouts, max: 100},
-      # 1 GB in bytes
-      %{resource: :storage, max: 1_073_741_824},
+      # 1024 MB (1 GB storage, stored in megabytes)
+      %{resource: :storage, max: 1024},
       # 2048 MB (2 GB max upload size per file, stored in megabytes)
       %{resource: :max_upload_size, max: 2048}
     ]
