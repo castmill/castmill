@@ -65,7 +65,7 @@ protocol.registerSchemesAsPrivileged([
       secure: true,
       standard: true,
       supportFetchAPI: true,
-      // stream: true, // Add this if you intend to use the protocol for streaming i.e. in video/audio html tags.
+      stream: true, // Required for video/audio elements to load media from this scheme
       // corsEnabled: true, // Add this if you need to enable cors for this protocol.
     },
   },
@@ -128,6 +128,25 @@ file: app.whenReady().then(() => {
 
   ipcMain.handle(Action.GET_MACHINE_GUID, () => {
     return api.getMachineGUID();
+  });
+
+  ipcMain.handle(Action.GET_LOCATION, async () => {
+    try {
+      const response = await net.fetch(
+        'http://ip-api.com/json/?fields=lat,lon'
+      );
+      if (!response.ok) {
+        throw new Error(`IP geolocation request failed: ${response.status}`);
+      }
+      const data = await response.json();
+      if (data.lat != null && data.lon != null) {
+        return { latitude: data.lat, longitude: data.lon };
+      }
+      return undefined;
+    } catch (error) {
+      console.error('Failed to get location:', error);
+      return undefined;
+    }
   });
 
   ipcMain.handle(

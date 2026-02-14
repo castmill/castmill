@@ -227,4 +227,140 @@ describe('BaseMenu component', () => {
     // Assert the menu is no longer visible
     expect(queryByRole('menu')).not.toBeInTheDocument();
   });
+
+  describe('radio buttons', () => {
+    let radioEntries: MenuEntry[];
+
+    beforeEach(() => {
+      radioEntries = [
+        {
+          name: 'Settings',
+          id: 'settings',
+          type: 'submenu',
+          children: [
+            {
+              name: 'Server',
+              id: 'server',
+              type: 'submenu',
+              children: [
+                {
+                  name: 'Production',
+                  description: 'https://api.castmill.io',
+                  groupId: 'base-url-group',
+                  id: 'https://api.castmill.io',
+                  type: 'radiobutton',
+                  state: true,
+                  action: vi.fn(),
+                },
+                {
+                  name: 'Dev',
+                  description: 'https://api.castmill.dev',
+                  groupId: 'base-url-group',
+                  id: 'https://api.castmill.dev',
+                  type: 'radiobutton',
+                  state: false,
+                  action: vi.fn(),
+                },
+                {
+                  name: 'Local',
+                  description: 'http://localhost:4000',
+                  groupId: 'base-url-group',
+                  id: 'http://localhost:4000',
+                  type: 'radiobutton',
+                  state: false,
+                  action: vi.fn(),
+                },
+              ],
+            },
+          ],
+        },
+      ];
+    });
+
+    it('renders radio button description when provided', () => {
+      const { queryByText } = render(() => (
+        <BaseMenu
+          header={<div>Menu Header</div>}
+          entries={radioEntries}
+          footer={<div />}
+        />
+      ));
+
+      // Show menu and expand submenus
+      fireEvent.click(window);
+      fireEvent.click(queryByText(/Settings/)!);
+      fireEvent.click(queryByText(/Server/)!);
+
+      // Check that server names are rendered
+      expect(queryByText('Production')).to.exist;
+      expect(queryByText('Dev')).to.exist;
+      expect(queryByText('Local')).to.exist;
+
+      // Check that descriptions (URLs) are rendered
+      expect(queryByText('https://api.castmill.io')).to.exist;
+      expect(queryByText('https://api.castmill.dev')).to.exist;
+      expect(queryByText('http://localhost:4000')).to.exist;
+    });
+
+    it('does not render description when not provided', () => {
+      const entriesWithoutDescription: MenuEntry[] = [
+        {
+          name: 'Option A',
+          groupId: 'test-group',
+          id: 'option-a',
+          type: 'radiobutton',
+          state: true,
+          action: vi.fn(),
+        },
+        {
+          name: 'Option B',
+          groupId: 'test-group',
+          id: 'option-b',
+          type: 'radiobutton',
+          state: false,
+          action: vi.fn(),
+        },
+      ];
+
+      const { queryByText, container } = render(() => (
+        <BaseMenu
+          header={<div>Menu Header</div>}
+          entries={entriesWithoutDescription}
+          footer={<div />}
+        />
+      ));
+
+      fireEvent.click(window);
+
+      expect(queryByText('Option A')).to.exist;
+      expect(queryByText('Option B')).to.exist;
+
+      // No description spans should be rendered
+      const descriptionSpans = container.querySelectorAll(
+        '[class*="radiobuttonDescription"]'
+      );
+      expect(descriptionSpans.length).toBe(0);
+    });
+
+    it('selects radio button and calls action with correct id', () => {
+      const { queryByText } = render(() => (
+        <BaseMenu
+          header={<div>Menu Header</div>}
+          entries={radioEntries}
+          footer={<div />}
+        />
+      ));
+
+      // Show menu and expand submenus
+      fireEvent.click(window);
+      fireEvent.click(queryByText(/Settings/)!);
+      fireEvent.click(queryByText(/Server/)!);
+
+      // Click the Dev radio button
+      fireEvent.click(queryByText('Dev')!);
+
+      const devEntry = (radioEntries[0] as any).children[0].children[1];
+      expect(devEntry.action).toHaveBeenCalledWith('https://api.castmill.dev');
+    });
+  });
 });

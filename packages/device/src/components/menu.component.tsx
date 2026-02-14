@@ -43,7 +43,7 @@ const createSubmenu = (name: string, entries: MenuEntry[]): MenuEntry => {
 
 // Helper function to create a menu entry for radio buttons
 const createRadioButtons = (
-  options: { name: string; id: string }[],
+  options: { name: string; id: string; description?: string }[],
   groupId: string,
   selectedId: string,
   action: (state: string) => void
@@ -51,6 +51,7 @@ const createRadioButtons = (
   return options.map((option) => {
     return {
       name: option.name,
+      description: option.description,
       groupId,
       id: option.id,
       type: 'radiobutton',
@@ -143,7 +144,11 @@ export const MenuComponent: Component<MenuProps> = (props) => {
         createSubmenu('Settings', [
           createSubmenu('Server', [
             ...createRadioButtons(
-              availableUrls().map(({ name, url }) => ({ name, id: url })),
+              availableUrls().map(({ name, url }) => ({
+                name,
+                id: url,
+                description: url,
+              })),
               'base-url-group',
               selectedUrl(),
               (state: string) => {

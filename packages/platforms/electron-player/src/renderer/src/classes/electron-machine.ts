@@ -28,21 +28,9 @@ export class ElectronMachine implements Machine {
   async getLocation(): Promise<
     undefined | { latitude: number; longitude: number }
   > {
-    try {
-      const location = await new Promise<GeolocationPosition>(
-        (resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject);
-        }
-      );
-
-      return {
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-      };
-    } catch (error) {
-      console.error(`Failed to get location: ${error}`);
-      return undefined;
-    }
+    // Delegate to main process via IPC to avoid CSP restrictions
+    // and the user gesture requirement for navigator.geolocation.
+    return window.api.getLocation();
   }
 
   async getTimezone(): Promise<string> {

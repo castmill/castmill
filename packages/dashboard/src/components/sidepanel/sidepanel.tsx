@@ -49,7 +49,9 @@ const SidePanelTree: Component<{
             to={`/org/${store.organizations.selectedId}${getLinkPath()}`}
             text={getAddonName()}
             level={props.level}
-            icon={lazy(() => import(`${addOnBasePath}${addon?.icon}`))}
+            icon={lazy(
+              () => import(/* @vite-ignore */ `${addOnBasePath}${addon?.icon}`)
+            )}
           />
         </Suspense>
       </Show>
