@@ -1,3 +1,124 @@
 .devices-page {
   margin: 2em;
 }
+
+.device-tree-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75em;
+  padding: 0.35em 0.5em;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: var(--hover-bg, rgba(0, 0, 0, 0.04));
+
+    .device-tree-tag-btn {
+      opacity: 1;
+    }
+  }
+}
+
+.device-tree-tag-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5em;
+  height: 1.5em;
+  margin-left: auto;
+  border: none;
+  border-radius: 0.25em;
+  background: transparent;
+  color: var(--text-tertiary, #6b7280);
+  cursor: pointer;
+  flex-shrink: 0;
+  opacity: 0;
+  transition:
+    opacity 0.15s ease,
+    color 0.15s ease,
+    background-color 0.15s ease;
+
+  svg {
+    width: 0.875em;
+    height: 0.875em;
+  }
+
+  &:hover {
+    color: var(--primary-color, #5792ee);
+    background: rgba(87, 146, 238, 0.1);
+  }
+}
+
+.device-tree-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15em;
+  min-width: 0;
+}
+
+.device-tree-name {
+  font-weight: 500;
+  font-size: 0.9em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.device-tree-meta {
+  font-size: 0.75em;
+  color: var(--text-secondary, #888);
+}
+
+@media (prefers-color-scheme: dark) {
+  .device-tree-item:hover {
+    background: var(--hover-bg, rgba(255, 255, 255, 0.06));
+  }
+
+  .device-tree-meta {
+    color: var(--text-secondary, #999);
+  }
+}
+
+.tags-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.25em;
+  flex-wrap: nowrap;
+  min-width: 0;
+
+  .tags-overflow {
+    font-size: 0.75em;
+    color: var(--text-tertiary, #6b7280);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .tag-manage-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5em;
+    height: 1.5em;
+    margin-left: 0.125em;
+    border: none;
+    border-radius: 0.25em;
+    background: transparent;
+    color: var(--text-tertiary, #6b7280);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition:
+      color 0.15s ease,
+      background-color 0.15s ease;
+
+    svg {
+      width: 0.875em;
+      height: 0.875em;
+    }
+
+    &:hover {
+      color: var(--primary-color, #5792ee);
+      background: rgba(87, 146, 238, 0.1);
+    }
+  }
+}

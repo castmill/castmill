@@ -459,6 +459,32 @@ defmodule CastmillWeb.Router do
       put("/teams/:team_id/:resource_type/:resource_id", TeamController, :add_resource)
       delete("/teams/:team_id/:resource_type/:resource_id", TeamController, :remove_resource)
 
+      # Tags - flexible resource organization
+      get("/tags", TagController, :list_tags)
+      post("/tags", TagController, :create_tag)
+      get("/tags/colors", TagController, :color_palette)
+      get("/tags/stats", TagController, :stats)
+      get("/tags/:id", TagController, :show_tag)
+      put("/tags/:id", TagController, :update_tag)
+      delete("/tags/:id", TagController, :delete_tag)
+
+      # Tag Groups
+      get("/tag-groups", TagController, :list_tag_groups)
+      post("/tag-groups", TagController, :create_tag_group)
+      get("/tag-groups/:id", TagController, :show_tag_group)
+      put("/tag-groups/:id", TagController, :update_tag_group)
+      delete("/tag-groups/:id", TagController, :delete_tag_group)
+
+      # Bulk tag operations
+      post("/tags/:tag_id/bulk", TagController, :bulk_tag)
+      delete("/tags/:tag_id/bulk", TagController, :bulk_untag)
+
+      # Resource tags (get/set tags for specific resources)
+      get("/:resource_type/:resource_id/tags", TagController, :get_resource_tags)
+      post("/:resource_type/:resource_id/tags", TagController, :tag_resource)
+      put("/:resource_type/:resource_id/tags", TagController, :set_resource_tags)
+      delete("/:resource_type/:resource_id/tags/:tag_id", TagController, :untag_resource)
+
       # Fall back route for all other resources
       resources "/:resources", ResourceController, except: [:new, :edit] do
       end

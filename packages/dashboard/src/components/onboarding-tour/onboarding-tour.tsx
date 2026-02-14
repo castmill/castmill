@@ -1,4 +1,11 @@
-import { Component, createSignal, Show, onMount, onCleanup } from 'solid-js';
+import {
+  Component,
+  createSignal,
+  createEffect,
+  Show,
+  onMount,
+  onCleanup,
+} from 'solid-js';
 import { Portal } from 'solid-js/web';
 import { useNavigate } from '@solidjs/router';
 import { useI18n } from '../../i18n';
@@ -66,16 +73,26 @@ export const OnboardingTour: Component<OnboardingTourProps> = (props) => {
     return t(step.descriptionKey);
   };
 
-  // Calculate current step based on progress
+  // Restore the last-viewed step on re-open, or fall back to the next
+  // incomplete step on first open.
   onMount(() => {
-    const completedSteps = progress().completed_steps;
-    const nextStep = getNextStep(completedSteps);
-    if (nextStep) {
-      const stepIndex = ONBOARDING_STEPS.findIndex(
-        (step) => step.id === nextStep
-      );
-      setCurrentStepIndex(stepIndex >= 0 ? stepIndex : 0);
+    if (store.onboarding.lastStepIndex !== undefined) {
+      setCurrentStepIndex(store.onboarding.lastStepIndex);
+    } else {
+      const completedSteps = progress().completed_steps;
+      const nextStep = getNextStep(completedSteps);
+      if (nextStep) {
+        const stepIndex = ONBOARDING_STEPS.findIndex(
+          (step) => step.id === nextStep
+        );
+        setCurrentStepIndex(stepIndex >= 0 ? stepIndex : 0);
+      }
     }
+  });
+
+  // Keep the store in sync so the position survives close / reopen.
+  createEffect(() => {
+    setStore('onboarding', 'lastStepIndex', currentStepIndex());
   });
 
   const currentStep = () => ONBOARDING_STEPS[currentStepIndex()];

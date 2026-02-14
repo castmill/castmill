@@ -177,18 +177,18 @@ export const OrganizationInvitationsView = (props: {
         resource="invitations"
         fetchData={fetchData}
         ref={setRef}
-        toolbar={{
-          actions: (
-            <div>
-              <IconButton
-                onClick={() => setShowConfirmDialogMultiple(true)}
-                icon={AiOutlineDelete}
-                color="primary"
-                disabled={selectedInvitations().size === 0}
-              />
-            </div>
-          ),
-        }}
+        toolbar={{}}
+        selectionHint={t('common.selectionHint')}
+        selectionLabel={t('common.selectionCount')}
+        selectionActions={({ count, clear }) => (
+          <button
+            class="selection-action-btn danger"
+            onClick={() => setShowConfirmDialogMultiple(true)}
+          >
+            <AiOutlineDelete />
+            {t('common.remove')}
+          </button>
+        )}
         table={{
           columns,
           actions,

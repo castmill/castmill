@@ -83,6 +83,34 @@ export const ONBOARDING_STEPS: OnboardingStepConfig[] = [
     order: 8,
     optional: true,
   },
+  {
+    id: OnboardingStep.CreateTagGroup,
+    titleKey: 'onboardingTour.steps.createTagGroup.title',
+    descriptionKey: 'onboardingTour.steps.createTagGroup.description',
+    actionKey: 'onboardingTour.steps.createTagGroup.action',
+    targetPath: '/org/:orgId/tags',
+    targetSelector: '[data-onboarding="create-tag-group"]',
+    order: 9,
+    docsUrl: 'https://docs.castmill.com/content/tags',
+  },
+  {
+    id: OnboardingStep.TagContent,
+    titleKey: 'onboardingTour.steps.tagContent.title',
+    descriptionKey: 'onboardingTour.steps.tagContent.description',
+    actionKey: 'onboardingTour.steps.tagContent.action',
+    targetPath: '/org/:orgId/content/medias',
+    targetSelector: '[data-onboarding="tag-content"]',
+    order: 10,
+  },
+  {
+    id: OnboardingStep.ExploreTreeView,
+    titleKey: 'onboardingTour.steps.exploreTreeView.title',
+    descriptionKey: 'onboardingTour.steps.exploreTreeView.description',
+    actionKey: 'onboardingTour.steps.exploreTreeView.action',
+    targetPath: '/org/:orgId/content/medias',
+    targetSelector: '[data-onboarding="tree-view-toggle"]',
+    order: 11,
+  },
 ];
 
 /**

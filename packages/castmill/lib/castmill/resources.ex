@@ -28,6 +28,8 @@ defmodule Castmill.Resources do
 
   alias Castmill.Files.FilesMedias
 
+  alias Castmill.Tags
+
   @doc """
     Can access the resource.
     User can only access a resource if he has access to the organization that owns the resource
@@ -1087,6 +1089,32 @@ defmodule Castmill.Resources do
     Ecto.Query.order_by(query, [{^sort_dir, ^sort_field}])
   end
 
+  # Helper to get the resource type atom from module for tag filtering
+  defp resource_type_for_module(resource) do
+    cond do
+      resource == Castmill.Resources.Media -> :media
+      resource == Castmill.Resources.Playlist -> :playlist
+      resource == Castmill.Resources.Channel -> :channel
+      resource == Castmill.Devices.Device -> :device
+      resource == Castmill.Resources.Layout -> :layout
+      true -> nil
+    end
+  end
+
+  # Apply tag filtering to a query if tag_ids are provided
+  defp apply_tag_filter(query, _resource, nil, _mode), do: query
+  defp apply_tag_filter(query, _resource, [], _mode), do: query
+
+  defp apply_tag_filter(query, resource, tag_ids, mode) when is_list(tag_ids) do
+    resource_type = resource_type_for_module(resource)
+
+    if resource_type do
+      Tags.filter_by_tags(query, resource_type, tag_ids, mode: mode || :any)
+    else
+      query
+    end
+  end
+
   @doc """
   Returns the list of a given resource for a given organization.
 
@@ -1109,6 +1137,10 @@ defmodule Castmill.Resources do
       when not is_nil(team_id) do
     offset = (page_size && max((page - 1) * page_size, 0)) || 0
 
+    # Extract tag filtering params
+    tag_ids = Map.get(params, :tag_ids, [])
+    tag_filter_mode = Map.get(params, :tag_filter_mode, "any") |> String.to_atom()
+
     preloads =
       if function_exported?(resource, :preloads, 0) do
         resource.preloads()
@@ -1125,6 +1157,7 @@ defmodule Castmill.Resources do
       |> Organization.where_org_id(organization_id)
       |> join(:inner, [r], t in ^join_module, on: field(t, ^foreign_key) == r.id)
       |> where([_, t], t.team_id == ^team_id)
+      |> apply_tag_filter(resource, tag_ids, tag_filter_mode)
       |> QueryHelpers.apply_combined_filters(filters, resource)
       |> QueryHelpers.where_name_like(search)
       |> apply_sorting(params)
@@ -1147,6 +1180,11 @@ defmodule Castmill.Resources do
       ) do
     offset = (page_size && max((page - 1) * page_size, 0)) || 0
 
+    # Extract tag filtering params
+    tag_ids = Map.get(params, :tag_ids, [])
+    tag_filter_mode_str = Map.get(params, :tag_filter_mode, "any") || "any"
+    tag_filter_mode = String.to_atom(tag_filter_mode_str)
+
     preloads =
       if function_exported?(resource, :preloads, 0) do
         resource.preloads()
@@ -1156,6 +1194,7 @@ defmodule Castmill.Resources do
 
     resource.base_query()
     |> Organization.where_org_id(organization_id)
+    |> apply_tag_filter(resource, tag_ids, tag_filter_mode)
     |> QueryHelpers.apply_combined_filters(filters, resource)
     |> QueryHelpers.where_name_like(search)
     |> Ecto.Query.distinct(true)
@@ -1196,13 +1235,21 @@ defmodule Castmill.Resources do
     })
   end
 
-  def count_resources(resource, %{
-        organization_id: organization_id,
-        search: search,
-        filters: filters,
-        team_id: team_id
-      })
+  def count_resources(
+        resource,
+        %{
+          organization_id: organization_id,
+          search: search,
+          filters: filters,
+          team_id: team_id
+        } = params
+      )
       when not is_nil(team_id) do
+    # Extract tag filtering params
+    tag_ids = Map.get(params, :tag_ids, [])
+    tag_filter_mode_str = Map.get(params, :tag_filter_mode, "any") || "any"
+    tag_filter_mode = String.to_atom(tag_filter_mode_str)
+
     # Get the join module for this resource type
     {join_module, foreign_key} = get_team_join_info(resource)
 
@@ -1210,18 +1257,28 @@ defmodule Castmill.Resources do
     |> Organization.where_org_id(organization_id)
     |> join(:inner, [r], t in ^join_module, on: field(t, ^foreign_key) == r.id)
     |> where([_, t], t.team_id == ^team_id)
+    |> apply_tag_filter(resource, tag_ids, tag_filter_mode)
     |> QueryHelpers.apply_combined_filters(filters, resource)
     |> QueryHelpers.where_name_like(search)
     |> Repo.aggregate(:count, :id)
   end
 
-  def count_resources(resource, %{
-        organization_id: organization_id,
-        search: search,
-        filters: filters
-      }) do
+  def count_resources(
+        resource,
+        %{
+          organization_id: organization_id,
+          search: search,
+          filters: filters
+        } = params
+      ) do
+    # Extract tag filtering params
+    tag_ids = Map.get(params, :tag_ids, [])
+    tag_filter_mode_str = Map.get(params, :tag_filter_mode, "any") || "any"
+    tag_filter_mode = String.to_atom(tag_filter_mode_str)
+
     resource.base_query()
     |> Organization.where_org_id(organization_id)
+    |> apply_tag_filter(resource, tag_ids, tag_filter_mode)
     |> QueryHelpers.apply_combined_filters(filters, resource)
     |> QueryHelpers.where_name_like(search)
     |> Repo.aggregate(:count, :id)

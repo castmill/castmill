@@ -478,29 +478,19 @@ export const OrganizationMembersView = (props: {
               color="primary"
             />
           ),
-          actions: (
-            <div>
-              <IconButton
-                onClick={() => {
-                  if (!canPerformAction('organizations', 'delete')) {
-                    toast.error(
-                      t('permissions.noDeleteOrganizations') ||
-                        "You don't have permission to remove organization members"
-                    );
-                    return;
-                  }
-                  setShowConfirmDialogMultiple(true);
-                }}
-                icon={AiOutlineDelete}
-                color="primary"
-                disabled={
-                  selectedMembers().size === 0 ||
-                  !canPerformAction('organizations', 'delete')
-                }
-              />
-            </div>
-          ),
         }}
+        selectionHint={t('common.selectionHint')}
+        selectionLabel={t('common.selectionCount')}
+        selectionActions={({ count, clear }) => (
+          <button
+            class="selection-action-btn danger"
+            disabled={!canPerformAction('organizations', 'delete')}
+            onClick={() => setShowConfirmDialogMultiple(true)}
+          >
+            <AiOutlineDelete />
+            {t('common.remove')}
+          </button>
+        )}
         table={{
           columns,
           actions,

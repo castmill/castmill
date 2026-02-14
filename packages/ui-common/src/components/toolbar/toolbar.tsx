@@ -17,6 +17,7 @@ export interface Filter {
 
 interface ToolBarProps {
   title?: string | (() => string);
+  titleActions?: JSX.Element; // Rendered on the same row as the title
   filters?: Filter[];
   onFilterChange?: (filters: Filter[]) => void;
   actions?: JSX.Element | (() => JSX.Element);
@@ -95,53 +96,62 @@ export function ToolBar(props: ToolBarProps) {
 
   return (
     <div class="toolbar-container">
-      <div class="toolbar-left">
-        <Show when={props.title}>
-          <h2 class="toolbar-title">{getTitle()}</h2>
-        </Show>
-        <Show when={props.onSearch && !props.hideSearch}>
-          <div class="search-container">
-            <IconWrapper icon={FaSolidMagnifyingGlass} />
+      <Show when={props.title || props.titleActions}>
+        <div class="toolbar-title-row">
+          <Show when={props.title}>
+            <h2 class="toolbar-title">{getTitle()}</h2>
+          </Show>
+          <Show when={props.titleActions}>{props.titleActions}</Show>
+        </div>
+      </Show>
+      <div class="toolbar-row">
+        <div class="toolbar-left">
+          <Show when={props.onSearch && !props.hideSearch}>
+            <div class="search-container">
+              <IconWrapper icon={FaSolidMagnifyingGlass} />
 
-            <input
-              type="text"
-              value={searchText()}
-              onInput={handleSearchChange}
-              onKeyDown={handleSearchKeyDown}
-              placeholder="Search..."
-              class="search-input"
-            />
-          </div>
-        </Show>
+              <input
+                type="text"
+                value={searchText()}
+                onInput={handleSearchChange}
+                onKeyDown={handleSearchKeyDown}
+                placeholder="Search..."
+                class="search-input"
+              />
+            </div>
+          </Show>
 
-        <Show when={props.filters && props.filters.length > 0}>
-          <div class="filter-container">
-            <For each={filters()}>
-              {(filter) => (
-                <Switch
-                  name={filter.name}
-                  key={filter.key}
-                  isActive={filter.isActive}
-                  disabled={
-                    (props.requireOneActiveFilter ?? true) &&
-                    filter.isActive &&
-                    filters().filter((f) => f.isActive).length === 1
-                  }
-                  onToggle={() => toggleFilter(filter.key)}
-                />
-              )}
-            </For>
-          </div>
-        </Show>
+          <Show when={props.filters && props.filters.length > 0}>
+            <div class="filter-container">
+              <For each={filters()}>
+                {(filter) => (
+                  <Switch
+                    name={filter.name}
+                    key={filter.key}
+                    isActive={filter.isActive}
+                    disabled={
+                      (props.requireOneActiveFilter ?? true) &&
+                      filter.isActive &&
+                      filters().filter((f) => f.isActive).length === 1
+                    }
+                    onToggle={() => toggleFilter(filter.key)}
+                  />
+                )}
+              </For>
+            </div>
+          </Show>
 
-        <Show when={props.actions}>
-          {typeof props.actions === 'function'
-            ? props.actions()
-            : props.actions}
+          <Show when={props.actions}>
+            {typeof props.actions === 'function'
+              ? props.actions()
+              : props.actions}
+          </Show>
+        </div>
+
+        <Show when={props.mainAction}>
+          <div class="toolbar-right">{props.mainAction}</div>
         </Show>
       </div>
-
-      <Show when={props.mainAction}>{props.mainAction}</Show>
     </div>
   );
 }

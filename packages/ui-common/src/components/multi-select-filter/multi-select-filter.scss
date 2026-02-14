@@ -1,0 +1,347 @@
+/* multi-select-filter.scss */
+@use '../../colors.scss';
+
+/* ─── Container ─────────────────────────────────────── */
+
+.castmill-msf {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  font-size: 0.9em;
+
+  &.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+}
+
+/* ─── Label (inside the trigger) ────────────────────── */
+
+.msf-label {
+  font-size: 0.8em;
+  color: #577cbb;
+  text-transform: capitalize;
+  padding: 0 0 0.15em 0;
+}
+
+/* ─── Trigger (the button that opens the panel) ─────── */
+
+.msf-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5em;
+  padding: 0.4em 0.625em 0.5em 0.625em;
+  border: 1px solid #555;
+  border-radius: 0.3em;
+  background: #151320;
+  color: #b1b1b1;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+  font: inherit;
+  text-align: left;
+  min-width: 10em;
+
+  &:hover {
+    border-color: #b0b0b0;
+  }
+
+  &:focus-visible {
+    outline: none;
+    border-color: colors.$highlight-color;
+    box-shadow: 0 0 0 2px rgba(87, 146, 238, 0.2);
+  }
+
+  &.open {
+    border-color: colors.$highlight-color;
+    box-shadow: 0 0 0 2px rgba(87, 146, 238, 0.15);
+  }
+}
+
+/* Inner wrapper: stacks label + content vertically */
+.msf-trigger-inner {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.msf-trigger-content {
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.msf-placeholder {
+  color: colors.$component-color;
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ─── Chips (selected items in the trigger) ─────────── */
+
+.msf-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25em;
+  align-items: center;
+}
+
+.msf-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2em;
+  background: colors.$highlight-background-color;
+  border: 1px solid rgba(87, 146, 238, 0.2);
+  border-radius: 0.25em;
+  padding: 0.1em 0.25em 0.1em 0.4em;
+  font-size: 0.85em;
+  color: #d0d5dd;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
+
+  &:hover {
+    background: rgba(87, 146, 238, 0.15);
+    border-color: rgba(87, 146, 238, 0.35);
+  }
+}
+
+.msf-chip-remove {
+  display: flex;
+  align-items: center;
+  font-size: 0.8em;
+  opacity: 0.5;
+  transition: opacity 0.15s ease;
+
+  .msf-chip:hover & {
+    opacity: 1;
+  }
+}
+
+.msf-chip-default {
+  font-size: 1em;
+}
+
+.msf-overflow {
+  font-size: 0.75em;
+  color: colors.$component-color;
+  background: colors.$component-background-color;
+  padding: 0.15em 0.5em;
+  border-radius: 9999px;
+  white-space: nowrap;
+}
+
+/* ─── Trigger actions (clear + arrow) ───────────────── */
+
+.msf-trigger-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.2em;
+  flex-shrink: 0;
+}
+
+.msf-clear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.15em;
+  border-radius: 0.25em;
+  color: colors.$component-color;
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    background 0.15s ease;
+
+  &:hover {
+    color: #e5e7eb;
+    background: rgba(255, 255, 255, 0.08);
+  }
+}
+
+.msf-arrow {
+  display: flex;
+  align-items: center;
+  color: colors.$component-color;
+  transition: transform 0.2s ease;
+
+  &.rotated {
+    transform: rotate(180deg);
+  }
+}
+
+/* ─── Floating panel ────────────────────────────────── */
+
+.msf-panel {
+  position: absolute;
+  top: calc(100% + 0.35em);
+  left: 0;
+  z-index: 50;
+  min-width: 100%;
+  width: max-content;
+  max-width: 22em;
+  border: 1px solid colors.$separator-color;
+  border-radius: 0.5em;
+  background: colors.$background;
+  box-shadow:
+    0 0.5em 1.5em rgba(0, 0, 0, 0.35),
+    0 0 0 1px rgba(255, 255, 255, 0.04);
+  overflow: hidden;
+
+  // Subtle entrance animation
+  animation: msf-panel-in 0.15s ease-out;
+}
+
+@keyframes msf-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ─── Search ────────────────────────────────────────── */
+
+.msf-search {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0.5em 0.625em;
+  border-bottom: 1px solid colors.$separator-color;
+
+  .msf-search-icon {
+    color: colors.$component-color;
+    font-size: 0.95em;
+    display: flex;
+    align-items: center;
+  }
+
+  input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    color: #d0d5dd;
+    font: inherit;
+    font-size: 0.9em;
+    padding: 0;
+    outline: none;
+
+    &::placeholder {
+      color: colors.$component-color;
+    }
+  }
+}
+
+/* ─── Filter-mode toggle bar ────────────────────────── */
+
+.msf-mode-bar {
+  display: flex;
+  gap: 0.25em;
+  padding: 0.375em 0.5em;
+  border-bottom: 1px solid colors.$separator-color;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.msf-mode-btn {
+  flex: 1;
+  border: 1px solid colors.$separator-color;
+  border-radius: 0.3em;
+  background: transparent;
+  color: colors.$component-color;
+  font: inherit;
+  font-size: 0.8em;
+  font-weight: 500;
+  padding: 0.25em 0.5em;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+
+  &:hover {
+    color: #d0d5dd;
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  &.active {
+    background: colors.$highlight-color;
+    border-color: colors.$highlight-color;
+    color: #fff;
+  }
+}
+
+/* ─── Item list ─────────────────────────────────────── */
+
+.msf-list {
+  max-height: 16em;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.msf-option {
+  display: flex;
+  align-items: center;
+  padding: 0.5em 0.625em;
+  cursor: pointer;
+  transition: background 0.12s ease;
+
+  &:hover {
+    background: colors.$highlight-background-color;
+  }
+
+  &.selected {
+    background: rgba(87, 146, 238, 0.08);
+  }
+
+  &:focus-visible {
+    outline: none;
+    background: colors.$highlight-background-color;
+    box-shadow: inset 2px 0 0 colors.$highlight-color;
+  }
+}
+
+/* ─── Default item renderer ─────────────────────────── */
+
+.msf-item-default {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 0.5em;
+}
+
+.msf-item-name {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: #d0d5dd;
+  font-size: 0.9em;
+}
+
+.msf-item-check {
+  color: colors.$highlight-color;
+  font-weight: 600;
+  font-size: 0.9em;
+  flex-shrink: 0;
+}
+
+/* ─── Empty state ───────────────────────────────────── */
+
+.msf-empty {
+  padding: 1em;
+  text-align: center;
+  color: colors.$component-color;
+  font-size: 0.85em;
+  font-style: italic;
+}

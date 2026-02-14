@@ -171,7 +171,7 @@ describe('ChannelsPage - Delete Button Permission Tests', () => {
       }
     });
 
-    it('should disable delete button when no items are selected even with permissions', async () => {
+    it('should not render delete button when no items are selected even with permissions', async () => {
       // Mock user WITH delete permissions
       mockCanPerformAction.mockImplementation(
         (resource: string, action: string) => {
@@ -186,21 +186,13 @@ describe('ChannelsPage - Delete Button Permission Tests', () => {
         expect(screen.getByText('Channels')).toBeInTheDocument();
       });
 
-      // Don't select any items
-      await waitFor(() => {
-        // Find the delete button - should be disabled due to no selection
-        const deleteButtons = screen.getAllByRole('button');
-        const deleteButton = deleteButtons.find((btn) =>
-          btn.querySelector('svg')
-        );
-        expect(deleteButton).toBeDefined();
-        if (deleteButton) {
-          expect(deleteButton).toBeDisabled();
-        }
-      });
+      // Don't select any items — the delete button lives inside selectionActions
+      // which only renders when items are selected, so it should be absent.
+      const deleteButton = screen.queryByText('common.delete');
+      expect(deleteButton).toBeNull();
     });
 
-    it('should disable delete button when user lacks delete permissions AND no items selected', async () => {
+    it('should not render delete button when user lacks delete permissions AND no items selected', async () => {
       // Mock user WITHOUT delete permissions
       mockCanPerformAction.mockImplementation(
         (resource: string, action: string) => {
@@ -215,18 +207,10 @@ describe('ChannelsPage - Delete Button Permission Tests', () => {
         expect(screen.getByText('Channels')).toBeInTheDocument();
       });
 
-      // Don't select any items
-      await waitFor(() => {
-        // Find the delete button - should be disabled for both reasons
-        const deleteButtons = screen.getAllByRole('button');
-        const deleteButton = deleteButtons.find((btn) =>
-          btn.querySelector('svg')
-        );
-        expect(deleteButton).toBeDefined();
-        if (deleteButton) {
-          expect(deleteButton).toBeDisabled();
-        }
-      });
+      // Don't select any items — the delete button lives inside selectionActions
+      // which only renders when items are selected, so it should be absent.
+      const deleteButton = screen.queryByText('common.delete');
+      expect(deleteButton).toBeNull();
     });
   });
 

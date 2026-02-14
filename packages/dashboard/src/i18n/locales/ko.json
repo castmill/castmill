@@ -103,7 +103,9 @@
     "playlist": "재생목록",
     "addPlaylist": "재생목록 추가",
     "selectVideo": "비디오 선택",
-    "widget": "Widget"
+    "widget": "Widget",
+    "selectionHint": "체크박스를 사용하여 항목을 선택하고 일괄 작업을 수행하세요",
+    "selectionCount": "{count}개 선택됨"
   },
   "topbar": {
     "help": "도움말",
@@ -474,6 +476,70 @@
     },
     "teamsRemovedSuccessfully": "팀이 성공적으로 제거되었습니다"
   },
+  "tags": {
+    "title": "태그",
+    "addTag": "태그 추가",
+    "createTag": "태그 생성",
+    "editTag": "태그 편집",
+    "deleteTag": "태그 삭제",
+    "newTag": "새 태그",
+    "tagName": "태그 이름",
+    "tagColor": "태그 색상",
+    "tagGroup": "태그 그룹",
+    "assignedTags": "할당된 태그",
+    "availableTags": "사용 가능한 태그",
+    "noTags": "태그 없음",
+    "noTagsAvailable": "사용 가능한 태그 없음",
+    "noMatchingTags": "일치하는 태그 없음",
+    "allTagsAssigned": "모든 태그 할당됨",
+    "addToResource": "태그 추가",
+    "removeFromResource": "태그 제거",
+    "filterByTags": "태그로 필터링...",
+    "clearAll": "모두 지우기",
+    "manageTags": "태그 관리",
+    "colorPicker": "색상 선택",
+    "searchTags": "태그 검색...",
+    "filterMode": {
+      "any": "일부",
+      "all": "전체",
+      "description": "선택한 태그 중 일부 또는 전체와 일치하는 리소스 찾기"
+    },
+    "confirmDelete": "태그 \"{{name}}\"을(를) 삭제하시겠습니까?",
+    "confirmDeleteMultiple": "다음 태그를 삭제하시겠습니까?",
+    "confirmDeleteGroup": "태그 그룹 \"{{name}}\"을(를) 삭제하시겠습니까? 이 그룹의 모든 태그도 영구적으로 삭제됩니다.",
+    "maxTagsReached": "최대 {{max}}개 태그 도달",
+    "groups": {
+      "title": "태그 그룹",
+      "addGroup": "그룹 추가",
+      "newGroup": "새 그룹",
+      "editGroup": "그룹 편집",
+      "deleteGroup": "그룹 삭제",
+      "noGroups": "태그 그룹 없음",
+      "ungrouped": "그룹 없음"
+    },
+    "messages": {
+      "tagCreated": "태그 \"{{name}}\"이(가) 성공적으로 생성되었습니다",
+      "tagUpdated": "태그 \"{{name}}\"이(가) 성공적으로 업데이트되었습니다",
+      "tagDeleted": "태그 \"{{name}}\"이(가) 성공적으로 삭제되었습니다",
+      "tagAddedToResource": "태그가 성공적으로 추가되었습니다",
+      "tagRemovedFromResource": "태그가 성공적으로 제거되었습니다",
+      "tagsUpdated": "태그가 성공적으로 업데이트되었습니다",
+      "groupCreated": "태그 그룹 \"{{name}}\"이(가) 성공적으로 생성되었습니다",
+      "groupUpdated": "태그 그룹 \"{{name}}\"이(가) 성공적으로 업데이트되었습니다",
+      "groupDeleted": "태그 그룹 \"{{name}}\"이(가) 성공적으로 삭제되었습니다"
+    },
+    "errors": {
+      "createTag": "태그 생성 오류: {{error}}",
+      "updateTag": "태그 업데이트 오류: {{error}}",
+      "deleteTag": "태그 삭제 오류: {{error}}",
+      "tagResource": "리소스에 태그 추가 오류: {{error}}",
+      "untagResource": "리소스에서 태그 제거 오류: {{error}}",
+      "createGroup": "태그 그룹 생성 오류: {{error}}",
+      "updateGroup": "태그 그룹 업데이트 오류: {{error}}",
+      "deleteGroup": "태그 그룹 삭제 오류: {{error}}",
+      "loadFailed": "태그 로드 실패"
+    }
+  },
   "login": {
     "title": "로그인",
     "email": "이메일",
@@ -523,7 +589,8 @@
     "medias": "미디어",
     "widgets": "Widgets",
     "members": "구성원",
-    "network": "네트워크"
+    "network": "네트워크",
+    "tags": "태그"
   },
   "channels": {
     "title": "채널",
@@ -1039,7 +1106,15 @@
   "filters": {
     "teamLabel": "팀",
     "teamPlaceholder": "팀 선택",
-    "teamClear": "팀 필터 지우기"
+    "teamClear": "팀 필터 지우기",
+    "tagLabel": "태그",
+    "tagPlaceholder": "태그로 필터링…",
+    "tagClear": "태그 필터 지우기",
+    "tagSearchPlaceholder": "태그 검색…",
+    "tagFilterModeAny": "하나라도",
+    "tagFilterModeAll": "모두",
+    "noMatches": "일치하는 항목 없음",
+    "noItems": "항목 없음"
   },
   "shortcuts": {
     "showShortcutsLegend": "키보드 단축키 표시",
@@ -1138,6 +1213,21 @@
         "title": "레이아웃을 사용한 고급 재생목록 만들기",
         "description": "레이아웃을 사용하여 여러 항목을 동시에 표시함으로써 콘텐츠를 한 단계 업그레이드하세요. 화면을 영역으로 나누고 각 영역에 다른 콘텐츠를 표시하세요.",
         "action": "레이아웃 탐색"
+      },
+      "createTagGroup": {
+        "title": "태그 그룹으로 정리하기",
+        "description": "태그 페이지로 이동하여 첫 번째 태그 그룹을 만드세요—'위치'나 '캐페인'처럼요. 그룹을 사용하면 태그를 의미 있는 차원으로 분류하여 트리 뷰를 구동할 수 있습니다.",
+        "action": "태그로 이동"
+      },
+      "tagContent": {
+        "title": "콘텐츠에 태그 지정",
+        "description": "미디어 항목을 열고 태그를 할당하세요. 태그는 콘텐츠를 검색, 필터링 및 정리할 수 있게 해줍니다. 여러 항목을 선택하여 한꺼번에 태그를 지정할 수도 있습니다.",
+        "action": "미디어 라이브러리로 이동"
+      },
+      "exploreTreeView": {
+        "title": "트리 뷰 탐색하기",
+        "description": "트리 뷰로 전환하여 태그 그룹별로 정리된 콘텐츠를 확인하세요. 태그를 펼쳐 세부 내용을 살펴보고, 차원을 재배치하고, 라이브러리를 탐색하는 완전히 새로운 방법을 발견하세요.",
+        "action": "트리 뷰 사용해보기"
       }
     },
     "errors": {
