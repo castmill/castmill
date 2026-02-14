@@ -83,7 +83,39 @@
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
+          text-align: left;
         }
+
+        .validation-message {
+          font-size: 0.85em;
+          margin-top: 0.25em;
+          display: flex;
+          align-items: center;
+          gap: 0.25em;
+          white-space: normal;
+
+          .error {
+            color: #d32f2f;
+            display: flex;
+            align-items: center;
+            gap: 0.25em;
+          }
+
+          .warning {
+            color: #f57c00;
+            display: flex;
+            align-items: center;
+            gap: 0.25em;
+          }
+        }
+      }
+
+      .file-error {
+        background-color: rgba(211, 47, 47, 0.1);
+      }
+
+      .file-warning {
+        background-color: rgba(245, 124, 0, 0.1);
       }
 
       .actions {

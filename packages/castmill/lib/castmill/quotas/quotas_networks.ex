@@ -19,7 +19,8 @@ defmodule Castmill.Quotas.QuotasNetworks do
         :users,
         :teams,
         :storage,
-        :layouts
+        :layouts,
+        :max_upload_size
       ],
       primary_key: true
 

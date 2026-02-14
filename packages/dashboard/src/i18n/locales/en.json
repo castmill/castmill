@@ -1229,5 +1229,13 @@
       "failedToCompleteStep": "Failed to mark step as complete. Please try again.",
       "failedToDismiss": "Failed to dismiss tour. Please try again."
     }
+  },
+  "medias": {
+    "upload": {
+      "fileTooLarge": "File size ({{fileSize}}) exceeds the maximum upload limit of {{maxSize}}",
+      "largeFileWarning": "Large file ({{fileSize}}). Upload may take a while.",
+      "noValidFiles": "No valid files to upload.",
+      "uploadError": "Error uploading file."
+    }
   }
 }

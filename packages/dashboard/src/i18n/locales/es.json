@@ -1235,5 +1235,13 @@
       "failedToCompleteStep": "No se pudo marcar el paso como completado. Por favor, inténtalo de nuevo.",
       "failedToDismiss": "No se pudo descartar el tour. Por favor, inténtalo de nuevo."
     }
+  },
+  "medias": {
+    "upload": {
+      "fileTooLarge": "El tamaño del archivo ({{fileSize}}) excede el límite máximo de carga de {{maxSize}}",
+      "largeFileWarning": "Archivo grande ({{fileSize}}). La carga puede tardar un poco.",
+      "noValidFiles": "No hay archivos válidos para cargar.",
+      "uploadError": "Error al cargar el archivo."
+    }
   }
 }

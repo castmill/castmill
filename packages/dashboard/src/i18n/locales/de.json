@@ -1229,5 +1229,13 @@
       "failedToCompleteStep": "Schritt konnte nicht als abgeschlossen markiert werden. Bitte versuchen Sie es erneut.",
       "failedToDismiss": "Tour konnte nicht geschlossen werden. Bitte versuchen Sie es erneut."
     }
+  },
+  "medias": {
+    "upload": {
+      "fileTooLarge": "Dateigröße ({{fileSize}}) überschreitet das maximale Upload-Limit von {{maxSize}}",
+      "largeFileWarning": "Große Datei ({{fileSize}}). Der Upload kann eine Weile dauern.",
+      "noValidFiles": "Keine gültigen Dateien zum Hochladen.",
+      "uploadError": "Fehler beim Hochladen der Datei."
+    }
   }
 }
