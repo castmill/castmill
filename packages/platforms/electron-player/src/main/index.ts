@@ -65,7 +65,7 @@ protocol.registerSchemesAsPrivileged([
       secure: true,
       standard: true,
       supportFetchAPI: true,
-      // stream: true, // Add this if you intend to use the protocol for streaming i.e. in video/audio html tags.
+      stream: true, // Required for video/audio elements to load media from this scheme
       // corsEnabled: true, // Add this if you need to enable cors for this protocol.
     },
   },

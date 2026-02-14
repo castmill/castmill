@@ -117,7 +117,7 @@ export async function storeFile(
       console.error('Failed to store file:', error);
 
       // Delete the temporary file if it exists
-      await unlink(tempPath);
+      await deleteFileIfExists(tempPath);
 
       throw error;
     }
@@ -235,6 +235,10 @@ function downloadFile(
         console.error('Failed to write file:', error);
         return reject(error);
       });
+    });
+    request.on('error', (error) => {
+      console.error('Failed to make request:', error);
+      return reject(error);
     });
     request.end();
   });
