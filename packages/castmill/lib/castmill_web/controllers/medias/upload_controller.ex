@@ -62,7 +62,9 @@ defmodule CastmillWeb.UploadController do
 
     # Check max upload size quota first
     # Note: max_upload_size quota is stored in megabytes (MB)
-    max_upload_size_mb = Castmill.Quotas.get_quota_for_organization(organization_id, :max_upload_size)
+    max_upload_size_mb =
+      Castmill.Quotas.get_quota_for_organization(organization_id, :max_upload_size)
+
     max_upload_size_bytes = max_upload_size_mb * 1024 * 1024
 
     if file_size > max_upload_size_bytes do

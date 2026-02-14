@@ -476,16 +476,12 @@ defmodule CastmillWeb.Router do
       get("/teams/:team_id/:resource_type", TeamController, :list_resources)
       put("/teams/:team_id/:resource_type/:resource_id", TeamController, :add_resource)
       delete("/teams/:team_id/:resource_type/:resource_id", TeamController, :remove_resource)
-
+      # Routes for organization quotas
+      resources "/quotas", OrganizationQuotaController, only: [:index, :show, :create, :update]
       # Fall back route for all other resources
       resources "/:resources", ResourceController, except: [:new, :edit] do
       end
     end
-
-    # Routes for organization quotas
-    resources("/organizations/:organization_id/quotas", OrganizationQuotaController,
-      only: [:index, :show, :create, :update]
-    )
 
     # Widget-scoped credentials (for widgets that require per-instance credentials)
     post(
