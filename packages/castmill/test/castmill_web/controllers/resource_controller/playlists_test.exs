@@ -330,7 +330,12 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
       now = DateTime.utc_now()
       days_until_wednesday = rem(10 - Date.day_of_week(now), 7)
       days_until_wednesday = if days_until_wednesday == 0, do: 7, else: days_until_wednesday
-      future_start = now |> DateTime.add(days_until_wednesday * 24 * 3600, :second) |> DateTime.truncate(:second)
+
+      future_start =
+        now
+        |> DateTime.add(days_until_wednesday * 24 * 3600, :second)
+        |> DateTime.truncate(:second)
+
       future_end = future_start |> DateTime.add(2 * 3600, :second)
 
       _entry =
