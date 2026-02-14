@@ -325,9 +325,13 @@ defmodule CastmillWeb.ResourceController.PlaylistsTest do
           timezone: "UTC"
         })
 
-      # Add the playlist to a channel entry (use future date)
-      future_start = DateTime.utc_now() |> DateTime.add(24 * 3600, :second)
-      future_end = DateTime.utc_now() |> DateTime.add(26 * 3600, :second)
+      # Add the playlist to a channel entry (use future date within the same ISO week)
+      # Find next Wednesday to ensure start and end are safely within the same week
+      now = DateTime.utc_now()
+      days_until_wednesday = rem(10 - Date.day_of_week(now), 7)
+      days_until_wednesday = if days_until_wednesday == 0, do: 7, else: days_until_wednesday
+      future_start = now |> DateTime.add(days_until_wednesday * 24 * 3600, :second) |> DateTime.truncate(:second)
+      future_end = future_start |> DateTime.add(2 * 3600, :second)
 
       _entry =
         channel_entry_fixture(channel.id, %{
