@@ -1145,5 +1145,13 @@
       "failedToCompleteStep": "ステップを完了としてマークできませんでした。もう一度お試しください。",
       "failedToDismiss": "ツアーを閉じることができませんでした。もう一度お試しください。"
     }
+  },
+  "medias": {
+    "upload": {
+      "fileTooLarge": "ファイルサイズ（{{fileSize}}）が最大アップロード制限（{{maxSize}}）を超えています",
+      "largeFileWarning": "大きなファイル（{{fileSize}}）。アップロードに時間がかかる場合があります。",
+      "noValidFiles": "アップロードする有効なファイルがありません。",
+      "uploadError": "ファイルのアップロード中にエラーが発生しました。"
+    }
   }
 }

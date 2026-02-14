@@ -60,7 +60,7 @@ export const UploadComponent = (props: UploadComponentProps) => {
   const [messages, setMessages] = createSignal<Messages>({});
   const [progresses, setProgresses] = createSignal<Progresses>({});
   const [validations, setValidations] = createSignal<FileValidations>({});
-  const [maxUploadSize, setMaxUploadSize] = createSignal<number>(2147483648); // Default 2GB
+  const [maxUploadSize, setMaxUploadSize] = createSignal<number>(2048 * 1024 * 1024); // Default 2GB in bytes
 
   // Fetch quota information on mount
   onMount(async () => {
@@ -75,7 +75,8 @@ export const UploadComponent = (props: UploadComponentProps) => {
         const quotas = await response.json();
         const maxUploadQuota = quotas.find((q: any) => q.resource === 'max_upload_size');
         if (maxUploadQuota) {
-          setMaxUploadSize(maxUploadQuota.max);
+          // Quota is stored in MB, convert to bytes
+          setMaxUploadSize(maxUploadQuota.max * 1024 * 1024);
         }
       }
     } catch (error) {
@@ -94,12 +95,17 @@ export const UploadComponent = (props: UploadComponentProps) => {
       if (file.size > maxSize) {
         newValidations[file.name] = {
           valid: false,
-          error: `File size (${formatBytes(file.size)}) exceeds the maximum upload limit of ${formatBytes(maxSize)}`
+          error: t('medias.upload.fileTooLarge', {
+            fileSize: formatBytes(file.size),
+            maxSize: formatBytes(maxSize),
+          })
         };
       } else if (file.size > softLimitSize) {
         newValidations[file.name] = {
           valid: true,
-          warning: `Large file (${formatBytes(file.size)}). Upload may take a while.`
+          warning: t('medias.upload.largeFileWarning', {
+            fileSize: formatBytes(file.size),
+          })
         };
       } else {
         newValidations[file.name] = { valid: true };
@@ -108,6 +114,12 @@ export const UploadComponent = (props: UploadComponentProps) => {
     
     setValidations(newValidations);
   });
+
+  // Helper to get count of valid files that can be uploaded
+  const getValidFilesCount = () => {
+    const currentValidations = validations();
+    return files().filter((file) => currentValidations[file.name]?.valid).length;
+  };
 
   const handleFileChange = (e: Event) => {
     const target = e.target as HTMLInputElement;
@@ -129,9 +141,13 @@ export const UploadComponent = (props: UploadComponentProps) => {
     const validFiles = currentFiles.filter((file) => currentValidations[file.name]?.valid);
     
     if (validFiles.length === 0) {
-      setMessages((m) => ({ ...m, global: 'No valid files to upload.' }));
+      setMessages((m) => ({ ...m, global: t('medias.upload.noValidFiles') }));
       return;
     }
+
+    // Track how many files we're uploading for completion check
+    let uploadedCount = 0;
+    const totalToUpload = validFiles.length;
 
     validFiles.forEach((file) => {
       const formData = new FormData();
@@ -168,7 +184,8 @@ export const UploadComponent = (props: UploadComponentProps) => {
           // Complete the onboarding step for media upload
           props.store?.onboarding?.completeStep?.('upload_media');
 
-          if (Object.keys(messages()).length === files().length) {
+          uploadedCount++;
+          if (uploadedCount === totalToUpload) {
             props.onUploadComplete?.();
           }
         } else {
@@ -177,11 +194,21 @@ export const UploadComponent = (props: UploadComponentProps) => {
             ...m,
             [file.name]: `Upload failed: ${errorData.error}`,
           }));
+          
+          uploadedCount++;
+          if (uploadedCount === totalToUpload) {
+            props.onUploadComplete?.();
+          }
         }
       };
 
       xhr.onerror = () => {
-        setMessages((m) => ({ ...m, [file.name]: 'Error uploading file.' }));
+        setMessages((m) => ({ ...m, [file.name]: t('medias.upload.uploadError') }));
+        
+        uploadedCount++;
+        if (uploadedCount === totalToUpload) {
+          props.onUploadComplete?.();
+        }
       };
 
       xhr.send(formData);
@@ -225,16 +252,19 @@ export const UploadComponent = (props: UploadComponentProps) => {
   const onFileRemove = (file: File) => {
     setFiles(files().filter((f) => f !== file));
     setProgresses((p) => {
-      delete p[file.name];
-      return p;
+      const newP = { ...p };
+      delete newP[file.name];
+      return newP;
     });
     setMessages((m) => {
-      delete m[file.name];
-      return m;
+      const newM = { ...m };
+      delete newM[file.name];
+      return newM;
     });
     setValidations((v) => {
-      delete v[file.name];
-      return v;
+      const newV = { ...v };
+      delete newV[file.name];
+      return newV;
     });
   };
 
@@ -341,7 +371,7 @@ export const UploadComponent = (props: UploadComponentProps) => {
           {/* Disable when files start to be uploaded */}
           <Button
             label={
-              Object.keys(messages()).length === files().length
+              Object.keys(messages()).length === getValidFilesCount()
                 ? 'Close'
                 : 'Cancel'
             }
@@ -349,13 +379,13 @@ export const UploadComponent = (props: UploadComponentProps) => {
             color="secondary"
             disabled={
               Object.keys(messages()).length > 0 &&
-              Object.keys(messages()).length !== files().length
+              Object.keys(messages()).length !== getValidFilesCount()
             }
           />
         </Show>
         {/* Change label to "Close" when all files have been uploaded */}
         <Button
-          disabled={Object.keys(messages()).length === files().length}
+          disabled={Object.keys(messages()).length === getValidFilesCount()}
           label="Upload"
           onClick={handleUpload}
           icon={AiOutlineUpload}

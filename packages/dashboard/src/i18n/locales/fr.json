@@ -1156,5 +1156,13 @@
       "failedToCompleteStep": "Échec de la validation de l'étape. Veuillez réessayer.",
       "failedToDismiss": "Échec de la fermeture de la visite. Veuillez réessayer."
     }
+  },
+  "medias": {
+    "upload": {
+      "fileTooLarge": "La taille du fichier ({{fileSize}}) dépasse la limite maximale de téléchargement de {{maxSize}}",
+      "largeFileWarning": "Fichier volumineux ({{fileSize}}). Le téléchargement peut prendre un certain temps.",
+      "noValidFiles": "Aucun fichier valide à télécharger.",
+      "uploadError": "Erreur lors du téléchargement du fichier."
+    }
   }
 }

@@ -1139,5 +1139,13 @@
       "failedToCompleteStep": "Misslyckades med att markera steget som slutfört. Försök igen.",
       "failedToDismiss": "Misslyckades med att avvisa turen. Försök igen."
     }
+  },
+  "medias": {
+    "upload": {
+      "fileTooLarge": "Filstorleken ({{fileSize}}) överskrider den maximala uppladdningsgränsen på {{maxSize}}",
+      "largeFileWarning": "Stor fil ({{fileSize}}). Uppladdningen kan ta en stund.",
+      "noValidFiles": "Inga giltiga filer att ladda upp.",
+      "uploadError": "Fel vid uppladdning av fil."
+    }
   }
 }

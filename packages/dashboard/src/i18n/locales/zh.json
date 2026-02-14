@@ -1144,5 +1144,13 @@
       "failedToCompleteStep": "标记步骤为完成失败。请重试。",
       "failedToDismiss": "关闭指南失败。请重试。"
     }
+  },
+  "medias": {
+    "upload": {
+      "fileTooLarge": "文件大小（{{fileSize}}）超过最大上传限制 {{maxSize}}",
+      "largeFileWarning": "大文件（{{fileSize}}）。上传可能需要一段时间。",
+      "noValidFiles": "没有有效的文件可上传。",
+      "uploadError": "上传文件时出错。"
+    }
   }
 }
