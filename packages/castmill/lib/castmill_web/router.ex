@@ -180,14 +180,21 @@ defmodule CastmillWeb.Router do
     plug(:fetch_session)
     plug(:fetch_dashboard_user)
     plug(:accepts, ["json"])
+    # Add multipart parsing for standard dashboard routes with 8MB limit
+    plug(Plug.Parsers,
+      parsers: [:multipart],
+      pass: ["*/*"],
+      length: 8_000_000
+    )
   end
 
   # Pipeline for large file uploads with 5GB limit
-  # Uses Plug.Parsers with increased body size limit for media uploads
+  # Authenticates before parsing to prevent unauthenticated large requests
   pipeline :large_upload do
     plug(:put_secure_browser_headers)
     plug(:fetch_session)
     plug(:fetch_dashboard_user)
+    plug(:authenticate_user)  # Check auth before parsing large bodies
     plug(:accepts, ["json"])
     plug(Plug.Parsers,
       parsers: [:multipart],
@@ -539,7 +546,7 @@ defmodule CastmillWeb.Router do
   # Large file upload routes - uses separate pipeline with 5GB limit
   # This prevents the large body limit from applying to all dashboard routes
   scope "/dashboard", CastmillWeb do
-    pipe_through([:large_upload, :authenticate_user])
+    pipe_through(:large_upload)
 
     # Media upload endpoint - requires large body size support
     post("/organizations/:organization_id/medias", UploadController, :create)

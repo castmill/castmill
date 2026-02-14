@@ -72,10 +72,10 @@ defmodule CastmillWeb.Endpoint do
   plug(Plug.Telemetry, event_prefix: [:phoenix, :endpoint])
 
   plug(Plug.Parsers,
-    parsers: [:urlencoded, :multipart, :json],
+    parsers: [:urlencoded, :json],
     pass: ["*/*"],
-    # Default limit for most request bodies (8MB)
-    # Upload routes use a separate pipeline with a larger limit
+    # Default limit for JSON and urlencoded bodies
+    # Multipart parsing is handled in router pipelines for better control
     length: 8_000_000,
     json_decoder: Phoenix.json_library()
   )
