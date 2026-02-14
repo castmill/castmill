@@ -224,6 +224,8 @@ function downloadFile(
       });
       response.on('end', () => {
         writeStream.end();
+      });
+      writeStream.on('finish', () => {
         return resolve(destPath);
       });
       response.on('error', (error) => {
