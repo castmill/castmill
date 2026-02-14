@@ -182,6 +182,20 @@ defmodule CastmillWeb.Router do
     plug(:accepts, ["json"])
   end
 
+  # Pipeline for large file uploads with 5GB limit
+  # Uses Plug.Parsers with increased body size limit for media uploads
+  pipeline :large_upload do
+    plug(:put_secure_browser_headers)
+    plug(:fetch_session)
+    plug(:fetch_dashboard_user)
+    plug(:accepts, ["json"])
+    plug(Plug.Parsers,
+      parsers: [:multipart],
+      pass: ["*/*"],
+      length: 5_368_709_120
+    )
+  end
+
   scope "/signups", CastmillWeb do
     pipe_through(:dashboard)
 
@@ -419,9 +433,6 @@ defmodule CastmillWeb.Router do
       post("/complete-onboarding", OrganizationController, :complete_onboarding)
       post("/devices", OrganizationController, :register_device)
 
-      # This route is used to upload media files to the server.
-      post("/medias", UploadController, :create)
-
       # Playlist specific routes
       post("/playlists/:playlist_id/items", PlaylistController, :add_item)
       patch("/playlists/:playlist_id/items/:item_id", PlaylistController, :update_item)
@@ -523,6 +534,15 @@ defmodule CastmillWeb.Router do
     put("/users/:id/credentials/:credential_id", UserController, :update_credential)
     post("/users/:id/send-email-verification", UserController, :send_email_verification)
     post("/verify-email", UserController, :verify_email)
+  end
+
+  # Large file upload routes - uses separate pipeline with 5GB limit
+  # This prevents the large body limit from applying to all dashboard routes
+  scope "/dashboard", CastmillWeb do
+    pipe_through([:large_upload, :authenticate_user])
+
+    # Media upload endpoint - requires large body size support
+    post("/organizations/:organization_id/medias", UploadController, :create)
   end
 
   # Other scopes may use custom stacks.

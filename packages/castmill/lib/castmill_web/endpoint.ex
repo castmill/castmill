@@ -74,12 +74,9 @@ defmodule CastmillWeb.Endpoint do
   plug(Plug.Parsers,
     parsers: [:urlencoded, :multipart, :json],
     pass: ["*/*"],
-    # Set hard limit to 5GB for file uploads
-    # Note: This limit applies to ALL request bodies (including JSON/urlencoded).
-    # Individual organization limits are enforced in the upload controller.
-    # For production deployments with high security requirements, consider using
-    # router pipelines to apply different limits to upload vs non-upload routes.
-    length: 5_368_709_120,
+    # Default limit for most request bodies (8MB)
+    # Upload routes use a separate pipeline with a larger limit
+    length: 8_000_000,
     json_decoder: Phoenix.json_library()
   )
 
