@@ -29,6 +29,7 @@ interface CheckboxMenuEntry {
 
 interface RadioButtonMenuEntry {
   name: string;
+  description?: string;
   groupId: string;
   id: string;
   type: 'radiobutton';
@@ -185,6 +186,11 @@ export const BaseMenu: Component<BaseMenuProps> = (props) => {
           content: (
             <div class={styles.radiobutton}>
               {entry.name}
+              {entry.description && (
+                <span class={styles.radiobuttonDescription}>
+                  {entry.description}
+                </span>
+              )}
               <input type="radio" checked={entry.state} />
             </div>
           ),
