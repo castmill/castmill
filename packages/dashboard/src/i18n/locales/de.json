@@ -98,7 +98,9 @@
     "noAddressAvailable": "Keine Adresse verfügbar",
     "playlist": "Wiedergabeliste",
     "addPlaylist": "Wiedergabeliste hinzufügen",
-    "widget": "Widget"
+    "widget": "Widget",
+    "selectionHint": "Verwenden Sie die Kontrollkästchen, um Elemente für Massenaktionen auszuwählen",
+    "selectionCount": "{count} ausgewählt"
   },
   "sidebar": {
     "organization": "Organisation",
@@ -112,7 +114,8 @@
     "medias": "Medien",
     "widgets": "Widgets",
     "members": "Mitglieder",
-    "network": "Netzwerk"
+    "network": "Netzwerk",
+    "tags": "Tags"
   },
   "topbar": {
     "help": "Hilfe",
@@ -481,6 +484,70 @@
       "removeMemberMessage": "Sind Sie sicher, dass Sie das Mitglied \"{{name}}\" aus dem Team entfernen möchten?",
       "removeMembersTitle": "Mitglieder aus Team entfernen",
       "removeMembersMessage": "Sind Sie sicher, dass Sie die folgenden Mitglieder aus dem Team entfernen möchten?"
+    }
+  },
+  "tags": {
+    "title": "Tags",
+    "addTag": "Tag hinzufügen",
+    "createTag": "Tag erstellen",
+    "editTag": "Tag bearbeiten",
+    "deleteTag": "Tag löschen",
+    "newTag": "Neuer Tag",
+    "tagName": "Tag-Name",
+    "tagColor": "Tag-Farbe",
+    "tagGroup": "Tag-Gruppe",
+    "assignedTags": "Zugewiesene Tags",
+    "availableTags": "Verfügbare Tags",
+    "noTags": "Keine Tags",
+    "noTagsAvailable": "Keine Tags verfügbar",
+    "noMatchingTags": "Keine passenden Tags",
+    "allTagsAssigned": "Alle Tags zugewiesen",
+    "addToResource": "Tags hinzufügen",
+    "removeFromResource": "Tag entfernen",
+    "filterByTags": "Nach Tags filtern...",
+    "clearAll": "Alle löschen",
+    "manageTags": "Tags verwalten",
+    "colorPicker": "Farbe wählen",
+    "searchTags": "Tags suchen...",
+    "filterMode": {
+      "any": "Beliebige",
+      "all": "Alle",
+      "description": "Ressourcen mit beliebigen oder allen ausgewählten Tags abgleichen"
+    },
+    "confirmDelete": "Sind Sie sicher, dass Sie den Tag \"{{name}}\" löschen möchten?",
+    "confirmDeleteMultiple": "Sind Sie sicher, dass Sie die folgenden Tags löschen möchten?",
+    "confirmDeleteGroup": "Sind Sie sicher, dass Sie die Tag-Gruppe \"{{name}}\" löschen möchten? Alle Tags in dieser Gruppe werden ebenfalls dauerhaft gelöscht.",
+    "maxTagsReached": "Maximum von {{max}} Tags erreicht",
+    "groups": {
+      "title": "Tag-Gruppen",
+      "addGroup": "Gruppe hinzufügen",
+      "newGroup": "Neue Gruppe",
+      "editGroup": "Gruppe bearbeiten",
+      "deleteGroup": "Gruppe löschen",
+      "noGroups": "Keine Tag-Gruppen",
+      "ungrouped": "Nicht gruppiert"
+    },
+    "messages": {
+      "tagCreated": "Tag \"{{name}}\" erfolgreich erstellt",
+      "tagUpdated": "Tag \"{{name}}\" erfolgreich aktualisiert",
+      "tagDeleted": "Tag \"{{name}}\" erfolgreich gelöscht",
+      "tagAddedToResource": "Tag erfolgreich hinzugefügt",
+      "tagRemovedFromResource": "Tag erfolgreich entfernt",
+      "tagsUpdated": "Tags erfolgreich aktualisiert",
+      "groupCreated": "Tag-Gruppe \"{{name}}\" erfolgreich erstellt",
+      "groupUpdated": "Tag-Gruppe \"{{name}}\" erfolgreich aktualisiert",
+      "groupDeleted": "Tag-Gruppe \"{{name}}\" erfolgreich gelöscht"
+    },
+    "errors": {
+      "createTag": "Fehler beim Erstellen des Tags: {{error}}",
+      "updateTag": "Fehler beim Aktualisieren des Tags: {{error}}",
+      "deleteTag": "Fehler beim Löschen des Tags: {{error}}",
+      "tagResource": "Fehler beim Hinzufügen des Tags zur Ressource: {{error}}",
+      "untagResource": "Fehler beim Entfernen des Tags von der Ressource: {{error}}",
+      "createGroup": "Fehler beim Erstellen der Tag-Gruppe: {{error}}",
+      "updateGroup": "Fehler beim Aktualisieren der Tag-Gruppe: {{error}}",
+      "deleteGroup": "Fehler beim Löschen der Tag-Gruppe: {{error}}",
+      "loadFailed": "Fehler beim Laden der Tags"
     }
   },
   "channels": {
@@ -1034,7 +1101,15 @@
   "filters": {
     "teamLabel": "Mannschaft",
     "teamPlaceholder": "Mannschaft auswählen",
-    "teamClear": "Mannschaftsfilter löschen"
+    "teamClear": "Mannschaftsfilter löschen",
+    "tagLabel": "Tags",
+    "tagPlaceholder": "Nach Tags filtern…",
+    "tagClear": "Tag-Filter löschen",
+    "tagSearchPlaceholder": "Tags suchen…",
+    "tagFilterModeAny": "Beliebig",
+    "tagFilterModeAll": "Alle",
+    "noMatches": "Keine Treffer",
+    "noItems": "Keine Einträge"
   },
   "shortcuts": {
     "showShortcutsLegend": "Tastaturkürzel anzeigen",
@@ -1133,6 +1208,21 @@
         "title": "Erstellen Sie erweiterte Playlists mit Layouts",
         "description": "Bringen Sie Ihre Inhalte auf die nächste Stufe, indem Sie Layouts verwenden, um mehrere Elemente gleichzeitig anzuzeigen. Teilen Sie Ihren Bildschirm in Zonen auf und zeigen Sie unterschiedliche Inhalte in jedem Bereich an.",
         "action": "Layouts erkunden"
+      },
+      "createTagGroup": {
+        "title": "Organisieren Sie mit Tag-Gruppen",
+        "description": "Gehen Sie zur Seite Tags und erstellen Sie Ihre erste Tag-Gruppe—wie 'Standort' oder 'Kampagne'. Gruppen ermöglichen es Ihnen, Tags in sinnvolle Dimensionen zu kategorisieren, die die Baumansicht antreiben.",
+        "action": "Zu Tags gehen"
+      },
+      "tagContent": {
+        "title": "Taggen Sie Ihre Inhalte",
+        "description": "Öffnen Sie ein beliebiges Medienelement und weisen Sie ihm Tags zu. Tags machen Ihre Inhalte durchsuchbar, filterbar und organisierbar. Sie können auch mehrere Elemente auswählen und alle auf einmal taggen.",
+        "action": "Zur Mediathek gehen"
+      },
+      "exploreTreeView": {
+        "title": "Entdecken Sie die Baumansicht",
+        "description": "Wechseln Sie zur Baumansicht, um Ihre Inhalte nach Tag-Gruppen organisiert zu sehen. Erweitern Sie Tags, um tiefer zu gehen, ordnen Sie Dimensionen neu an und entdecken Sie eine völlig neue Art, Ihre Bibliothek zu navigieren.",
+        "action": "Baumansicht ausprobieren"
       }
     },
     "errors": {

@@ -45,6 +45,7 @@ export interface TableProps<
   onRowClick?: (item: Item) => void;
   itemIdKey?: string;
   hideCheckboxes?: boolean;
+  clearSelectionRef?: (fn: () => void) => void;
 }
 
 // Helper function to safely read nested properties using a dot path (e.g. "user.name")
@@ -72,6 +73,11 @@ export const Table = <
     direction: 'ascending',
   } as SortOptions);
   const [selectedRows, setSelectedRows] = createSignal(new Set<IdType>());
+
+  // Expose a method for the parent to clear the selection
+  props.clearSelectionRef?.(() => {
+    setSelectedRows(new Set<IdType>());
+  });
 
   const handleSort = async (key: string) => {
     const direction =
@@ -160,6 +166,7 @@ export const Table = <
                   id={selectAllCheckboxId}
                   onChange={handleSelectAll}
                   aria-label="Select all rows"
+                  title="Select items for bulk actions"
                   class={style['styled-checkbox']}
                 />
                 <label

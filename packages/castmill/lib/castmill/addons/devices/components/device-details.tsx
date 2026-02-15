@@ -74,7 +74,8 @@ export const DeviceDetails = (props: {
   return (
     <>
       <div style="font-size: 0.8em; color: darkgray;">
-        <span>{t('common.addedOn')} </span> <span>{`${props.device.inserted_at}`}. </span>
+        <span>{t('common.addedOn')} </span>{' '}
+        <span>{`${props.device.inserted_at}`}. </span>
         <span>{t('common.lastUpdatedOn')} </span>
         <span>{`${props.device.updated_at}`}</span>
       </div>
@@ -128,6 +129,13 @@ export const DeviceDetails = (props: {
             label={t('common.ip')}
             id="last_ip"
             value={props.device.last_ip}
+            disabled={true}
+          ></FormItem>
+
+          <FormItem
+            label={t('common.id')}
+            id="device_id"
+            value={props.device.id}
             disabled={true}
           ></FormItem>
         </div>

@@ -12,11 +12,11 @@
   color: colors.$component-color;
 
   svg {
-    margin-right: 0.5em;
     font-size: 1.2em;
   }
 
   input {
+    margin-left: 0.5em;
     background-color: #00000000;
     height: 3em;
     border: 0;
@@ -37,23 +37,40 @@
     padding: 0.25em;
     margin-left: 1em;
     border-radius: 0.2em;
+    white-space: nowrap;
 
     color: colors.$base-color;
     background-color: colors.$component-background-color-light;
   }
 
-  .reset-icon {
+  .reset-button {
+    background: transparent;
+    border: none;
+    padding: 0;
+    margin: 0;
     margin-left: 1em;
-    font-size: 0.9em;
-    color: colors.$base-color;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    color: inherit;
 
-    &:hover {
+    &:focus {
+      outline: 2px solid colors.$highlight-color;
+      outline-offset: 2px;
+      border-radius: 2px;
+    }
+
+    &:hover .reset-icon {
       color: colors.$highlight-color;
     }
 
-    &:active {
+    &:active .reset-icon {
       color: colors.$highlight-color;
     }
+  }
+
+  .reset-icon {
+    font-size: 1.3em;
+    color: colors.$component-color;
   }
 }

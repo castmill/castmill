@@ -98,12 +98,22 @@
     "playlist": "Playlist",
     "addPlaylist": "Add Playlist",
     "youIndicator": "(you)",
-    "widget": "Widget"
+    "widget": "Widget",
+    "selectionHint": "Use checkboxes to select items for bulk actions",
+    "selectionCount": "{count} selected"
   },
   "filters": {
     "teamLabel": "Team",
     "teamPlaceholder": "Select team",
-    "teamClear": "Clear team filter"
+    "teamClear": "Clear team filter",
+    "tagLabel": "Tags",
+    "tagPlaceholder": "Filter by tags…",
+    "tagClear": "Clear tag filter",
+    "tagSearchPlaceholder": "Search tags…",
+    "tagFilterModeAny": "Any",
+    "tagFilterModeAll": "All",
+    "noMatches": "No matches",
+    "noItems": "No items"
   },
   "sidebar": {
     "organization": "Organization",
@@ -117,7 +127,8 @@
     "medias": "Medias",
     "widgets": "Widgets",
     "members": "Members",
-    "network": "Network"
+    "network": "Network",
+    "tags": "Tags"
   },
   "topbar": {
     "help": "Help",
@@ -486,6 +497,70 @@
       "expired": "This invitation has expired.",
       "accepting": "Accepting...",
       "accept": "Accept Invitation"
+    }
+  },
+  "tags": {
+    "title": "Tags",
+    "addTag": "Add Tag",
+    "createTag": "Create Tag",
+    "editTag": "Edit Tag",
+    "deleteTag": "Delete Tag",
+    "newTag": "New Tag",
+    "tagName": "Tag Name",
+    "tagColor": "Tag Color",
+    "tagGroup": "Tag Group",
+    "assignedTags": "Assigned Tags",
+    "availableTags": "Available Tags",
+    "noTags": "No tags",
+    "noTagsAvailable": "No tags available",
+    "noMatchingTags": "No matching tags",
+    "allTagsAssigned": "All tags assigned",
+    "addToResource": "Add Tags",
+    "removeFromResource": "Remove Tag",
+    "filterByTags": "Filter by tags...",
+    "clearAll": "Clear all",
+    "manageTags": "Manage Tags",
+    "colorPicker": "Choose Color",
+    "searchTags": "Search tags...",
+    "filterMode": {
+      "any": "Any",
+      "all": "All",
+      "description": "Match resources with any or all selected tags"
+    },
+    "confirmDelete": "Are you sure you want to delete tag \"{{name}}\"?",
+    "confirmDeleteMultiple": "Are you sure you want to delete the following tags?",
+    "confirmDeleteGroup": "Are you sure you want to delete tag group \"{{name}}\"? All tags in this group will also be permanently deleted.",
+    "maxTagsReached": "Maximum {{max}} tags reached",
+    "groups": {
+      "title": "Tag Groups",
+      "addGroup": "Add Group",
+      "newGroup": "New Group",
+      "editGroup": "Edit Group",
+      "deleteGroup": "Delete Group",
+      "noGroups": "No tag groups",
+      "ungrouped": "Ungrouped"
+    },
+    "messages": {
+      "tagCreated": "Tag \"{{name}}\" created successfully",
+      "tagUpdated": "Tag \"{{name}}\" updated successfully",
+      "tagDeleted": "Tag \"{{name}}\" deleted successfully",
+      "tagAddedToResource": "Tag added successfully",
+      "tagRemovedFromResource": "Tag removed successfully",
+      "tagsUpdated": "Tags updated successfully",
+      "groupCreated": "Tag group \"{{name}}\" created successfully",
+      "groupUpdated": "Tag group \"{{name}}\" updated successfully",
+      "groupDeleted": "Tag group \"{{name}}\" deleted successfully"
+    },
+    "errors": {
+      "createTag": "Error creating tag: {{error}}",
+      "updateTag": "Error updating tag: {{error}}",
+      "deleteTag": "Error deleting tag: {{error}}",
+      "tagResource": "Error adding tag to resource: {{error}}",
+      "untagResource": "Error removing tag from resource: {{error}}",
+      "createGroup": "Error creating tag group: {{error}}",
+      "updateGroup": "Error updating tag group: {{error}}",
+      "deleteGroup": "Error deleting tag group: {{error}}",
+      "loadFailed": "Failed to load tags"
     }
   },
   "channels": {
@@ -1133,6 +1208,21 @@
         "title": "Create Advanced Playlists with Layouts",
         "description": "Take your content to the next level by using layouts to display multiple items simultaneously. Split your screen into zones and show different content in each area.",
         "action": "Explore Layouts"
+      },
+      "createTagGroup": {
+        "title": "Organize with Tag Groups",
+        "description": "Head to the Tags page and create your first tag group—like 'Location' or 'Campaign'. Groups let you categorize tags into meaningful dimensions that power the tree view.",
+        "action": "Go to Tags"
+      },
+      "tagContent": {
+        "title": "Tag Your Content",
+        "description": "Open any media item and assign tags to it. Tags make your content searchable, filterable, and organizable. You can also select multiple items and tag them all at once.",
+        "action": "Go to Media Library"
+      },
+      "exploreTreeView": {
+        "title": "Explore the Tree View",
+        "description": "Switch to tree view to see your content organized by tag groups. Expand tags to drill down, rearrange dimensions, and discover a whole new way to navigate your library.",
+        "action": "Try Tree View"
       }
     },
     "errors": {

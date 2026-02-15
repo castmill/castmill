@@ -103,7 +103,9 @@
     "playlist": "Liste de lecture",
     "addPlaylist": "Ajouter une liste de lecture",
     "selectVideo": "Sélectionner une vidéo",
-    "widget": "Widget"
+    "widget": "Widget",
+    "selectionHint": "Utilisez les cases à cocher pour sélectionner des éléments et effectuer des actions groupées",
+    "selectionCount": "{count} sélectionnés"
   },
   "topbar": {
     "help": "Aide",
@@ -474,6 +476,70 @@
     },
     "teamsRemovedSuccessfully": "Équipes supprimées avec succès"
   },
+  "tags": {
+    "title": "Étiquettes",
+    "addTag": "Ajouter une étiquette",
+    "createTag": "Créer une étiquette",
+    "editTag": "Modifier l'étiquette",
+    "deleteTag": "Supprimer l'étiquette",
+    "newTag": "Nouvelle étiquette",
+    "tagName": "Nom de l'étiquette",
+    "tagColor": "Couleur de l'étiquette",
+    "tagGroup": "Groupe d'étiquettes",
+    "assignedTags": "Étiquettes attribuées",
+    "availableTags": "Étiquettes disponibles",
+    "noTags": "Aucune étiquette",
+    "noTagsAvailable": "Aucune étiquette disponible",
+    "noMatchingTags": "Aucune étiquette correspondante",
+    "allTagsAssigned": "Toutes les étiquettes attribuées",
+    "addToResource": "Ajouter des étiquettes",
+    "removeFromResource": "Retirer l'étiquette",
+    "filterByTags": "Filtrer par étiquettes...",
+    "clearAll": "Tout effacer",
+    "manageTags": "Gérer les étiquettes",
+    "colorPicker": "Choisir la couleur",
+    "searchTags": "Rechercher des étiquettes...",
+    "filterMode": {
+      "any": "N'importe laquelle",
+      "all": "Toutes",
+      "description": "Faire correspondre les ressources avec n'importe laquelle ou toutes les étiquettes sélectionnées"
+    },
+    "confirmDelete": "Êtes-vous sûr de vouloir supprimer l'étiquette \"{{name}}\" ?",
+    "confirmDeleteMultiple": "Êtes-vous sûr de vouloir supprimer les étiquettes suivantes ?",
+    "confirmDeleteGroup": "Êtes-vous sûr de vouloir supprimer le groupe d'étiquettes \"{{name}}\" ? Toutes les étiquettes de ce groupe seront également supprimées définitivement.",
+    "maxTagsReached": "Maximum de {{max}} étiquettes atteint",
+    "groups": {
+      "title": "Groupes d'étiquettes",
+      "addGroup": "Ajouter un groupe",
+      "newGroup": "Nouveau groupe",
+      "editGroup": "Modifier le groupe",
+      "deleteGroup": "Supprimer le groupe",
+      "noGroups": "Aucun groupe d'étiquettes",
+      "ungrouped": "Non groupé"
+    },
+    "messages": {
+      "tagCreated": "Étiquette \"{{name}}\" créée avec succès",
+      "tagUpdated": "Étiquette \"{{name}}\" mise à jour avec succès",
+      "tagDeleted": "Étiquette \"{{name}}\" supprimée avec succès",
+      "tagAddedToResource": "Étiquette ajoutée avec succès",
+      "tagRemovedFromResource": "Étiquette retirée avec succès",
+      "tagsUpdated": "Étiquettes mises à jour avec succès",
+      "groupCreated": "Groupe d'étiquettes \"{{name}}\" créé avec succès",
+      "groupUpdated": "Groupe d'étiquettes \"{{name}}\" mis à jour avec succès",
+      "groupDeleted": "Groupe d'étiquettes \"{{name}}\" supprimé avec succès"
+    },
+    "errors": {
+      "createTag": "Erreur lors de la création de l'étiquette : {{error}}",
+      "updateTag": "Erreur lors de la mise à jour de l'étiquette : {{error}}",
+      "deleteTag": "Erreur lors de la suppression de l'étiquette : {{error}}",
+      "tagResource": "Erreur lors de l'ajout de l'étiquette à la ressource : {{error}}",
+      "untagResource": "Erreur lors du retrait de l'étiquette de la ressource : {{error}}",
+      "createGroup": "Erreur lors de la création du groupe d'étiquettes : {{error}}",
+      "updateGroup": "Erreur lors de la mise à jour du groupe d'étiquettes : {{error}}",
+      "deleteGroup": "Erreur lors de la suppression du groupe d'étiquettes : {{error}}",
+      "loadFailed": "Échec du chargement des étiquettes"
+    }
+  },
   "login": {
     "title": "Connexion",
     "email": "E-mail",
@@ -535,7 +601,8 @@
     "medias": "Médias",
     "widgets": "Widgets",
     "members": "Membres",
-    "network": "Réseau"
+    "network": "Réseau",
+    "tags": "Étiquettes"
   },
   "channels": {
     "title": "Canaux",
@@ -1051,7 +1118,15 @@
   "filters": {
     "teamLabel": "Équipe",
     "teamPlaceholder": "Sélectionner une équipe",
-    "teamClear": "Effacer le filtre d'équipe"
+    "teamClear": "Effacer le filtre d'équipe",
+    "tagLabel": "Tags",
+    "tagPlaceholder": "Filtrer par tags…",
+    "tagClear": "Effacer le filtre de tags",
+    "tagSearchPlaceholder": "Rechercher des tags…",
+    "tagFilterModeAny": "N'importe lequel",
+    "tagFilterModeAll": "Tous",
+    "noMatches": "Aucun résultat",
+    "noItems": "Aucun élément"
   },
   "shortcuts": {
     "showShortcutsLegend": "Afficher les raccourcis clavier",
@@ -1150,6 +1225,21 @@
         "title": "Créez des Playlists Avancées avec des Mises en Page",
         "description": "Faites passer votre contenu au niveau supérieur en utilisant des mises en page pour afficher plusieurs éléments simultanément. Divisez votre écran en zones et affichez du contenu différent dans chaque zone.",
         "action": "Explorer les Mises en Page"
+      },
+      "createTagGroup": {
+        "title": "Organisez avec des Groupes de Tags",
+        "description": "Rendez-vous sur la page Tags et créez votre premier groupe de tags—comme 'Emplacement' ou 'Campagne'. Les groupes vous permettent de catégoriser les tags en dimensions significatives qui alimentent la vue arborescente.",
+        "action": "Aller aux Tags"
+      },
+      "tagContent": {
+        "title": "Taguez votre Contenu",
+        "description": "Ouvrez n'importe quel élément multimédia et attribuez-lui des tags. Les tags rendent votre contenu consultable, filtrable et organisable. Vous pouvez également sélectionner plusieurs éléments et les taguer tous en une fois.",
+        "action": "Aller à la Médiathèque"
+      },
+      "exploreTreeView": {
+        "title": "Explorez la Vue Arborescente",
+        "description": "Passez en vue arborescente pour voir votre contenu organisé par groupes de tags. Développez les tags pour approfondir, réorganisez les dimensions et découvrez une toute nouvelle façon de naviguer dans votre bibliothèque.",
+        "action": "Essayer la Vue Arborescente"
       }
     },
     "errors": {

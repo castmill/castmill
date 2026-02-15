@@ -98,6 +98,23 @@ defmodule CastmillWeb.ResourceController do
        end)}
   end
 
+  # Parse tag_ids from comma-separated string: "1,2,3" => [1, 2, 3]
+  def parse_tag_ids(nil), do: {:ok, []}
+  def parse_tag_ids(""), do: {:ok, []}
+
+  def parse_tag_ids(value) when is_binary(value) do
+    tag_ids =
+      value
+      |> String.split(",")
+      |> Enum.map(&String.trim/1)
+      |> Enum.filter(&(&1 != ""))
+      |> Enum.map(&String.to_integer/1)
+
+    {:ok, tag_ids}
+  rescue
+    _ -> {:error, "Invalid tag_ids format. Expected comma-separated integers."}
+  end
+
   @index_params_schema %{
     organization_id: [type: :string, required: true],
     resources: [type: :string, required: true],
@@ -110,7 +127,14 @@ defmodule CastmillWeb.ResourceController do
     filters: [
       type: :string,
       cast_func: &CastmillWeb.ResourceController.parse_filters/1
-    ]
+    ],
+    # Tag filtering support
+    tag_ids: [
+      type: :string,
+      cast_func: &CastmillWeb.ResourceController.parse_tag_ids/1
+    ],
+    # Filter mode: "any" (OR) or "all" (AND)
+    tag_filter_mode: [type: :string, in: ["any", "all"]]
   }
 
   # The only reason we have a specific index function for devices is that we need to

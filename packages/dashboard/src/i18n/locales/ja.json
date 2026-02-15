@@ -103,7 +103,9 @@
     "playlist": "プレイリスト",
     "addPlaylist": "プレイリストを追加",
     "selectVideo": "ビデオを選択",
-    "widget": "Widget"
+    "widget": "Widget",
+    "selectionHint": "チェックボックスを使用してアイテムを選択し、一括操作を実行します",
+    "selectionCount": "{count} 件選択中"
   },
   "topbar": {
     "help": "ヘルプ",
@@ -474,6 +476,70 @@
     },
     "teamsRemovedSuccessfully": "チームが正常に削除されました"
   },
+  "tags": {
+    "title": "タグ",
+    "addTag": "タグを追加",
+    "createTag": "タグを作成",
+    "editTag": "タグを編集",
+    "deleteTag": "タグを削除",
+    "newTag": "新しいタグ",
+    "tagName": "タグ名",
+    "tagColor": "タグの色",
+    "tagGroup": "タググループ",
+    "assignedTags": "割り当て済みタグ",
+    "availableTags": "利用可能なタグ",
+    "noTags": "タグなし",
+    "noTagsAvailable": "利用可能なタグがありません",
+    "noMatchingTags": "一致するタグがありません",
+    "allTagsAssigned": "すべてのタグが割り当て済み",
+    "addToResource": "タグを追加",
+    "removeFromResource": "タグを削除",
+    "filterByTags": "タグでフィルター...",
+    "clearAll": "すべてクリア",
+    "manageTags": "タグを管理",
+    "colorPicker": "色を選択",
+    "searchTags": "タグを検索...",
+    "filterMode": {
+      "any": "いずれか",
+      "all": "すべて",
+      "description": "選択したタグのいずれかまたはすべてに一致するリソースを検索"
+    },
+    "confirmDelete": "タグ「{{name}}」を削除してもよろしいですか？",
+    "confirmDeleteMultiple": "以下のタグを削除してもよろしいですか？",
+    "confirmDeleteGroup": "タググループ\"{{name}}\"を削除してもよろしいですか？このグループ内のすべてのタグも完全に削除されます。",
+    "maxTagsReached": "最大{{max}}タグに達しました",
+    "groups": {
+      "title": "タググループ",
+      "addGroup": "グループを追加",
+      "newGroup": "新しいグループ",
+      "editGroup": "グループを編集",
+      "deleteGroup": "グループを削除",
+      "noGroups": "タググループなし",
+      "ungrouped": "グループなし"
+    },
+    "messages": {
+      "tagCreated": "タグ「{{name}}」を正常に作成しました",
+      "tagUpdated": "タグ「{{name}}」を正常に更新しました",
+      "tagDeleted": "タグ「{{name}}」を正常に削除しました",
+      "tagAddedToResource": "タグを正常に追加しました",
+      "tagRemovedFromResource": "タグを正常に削除しました",
+      "tagsUpdated": "タグを正常に更新しました",
+      "groupCreated": "タググループ「{{name}}」を正常に作成しました",
+      "groupUpdated": "タググループ「{{name}}」を正常に更新しました",
+      "groupDeleted": "タググループ「{{name}}」を正常に削除しました"
+    },
+    "errors": {
+      "createTag": "タグの作成中にエラーが発生しました：{{error}}",
+      "updateTag": "タグの更新中にエラーが発生しました：{{error}}",
+      "deleteTag": "タグの削除中にエラーが発生しました：{{error}}",
+      "tagResource": "リソースへのタグ追加中にエラーが発生しました：{{error}}",
+      "untagResource": "リソースからのタグ削除中にエラーが発生しました：{{error}}",
+      "createGroup": "タググループの作成中にエラーが発生しました：{{error}}",
+      "updateGroup": "タググループの更新中にエラーが発生しました：{{error}}",
+      "deleteGroup": "タググループの削除中にエラーが発生しました：{{error}}",
+      "loadFailed": "タグの読み込みに失敗しました"
+    }
+  },
   "login": {
     "title": "ログイン",
     "email": "メールアドレス",
@@ -523,7 +589,8 @@
     "medias": "メディア",
     "widgets": "Widgets",
     "members": "メンバー",
-    "network": "ネットワーク"
+    "network": "ネットワーク",
+    "tags": "タグ"
   },
   "channels": {
     "title": "チャンネル",
@@ -1040,7 +1107,15 @@
   "filters": {
     "teamLabel": "チーム",
     "teamPlaceholder": "チームを選択",
-    "teamClear": "チームフィルターをクリア"
+    "teamClear": "チームフィルターをクリア",
+    "tagLabel": "タグ",
+    "tagPlaceholder": "タグでフィルター…",
+    "tagClear": "タグフィルターをクリア",
+    "tagSearchPlaceholder": "タグを検索…",
+    "tagFilterModeAny": "いずれか",
+    "tagFilterModeAll": "すべて",
+    "noMatches": "一致なし",
+    "noItems": "項目なし"
   },
   "shortcuts": {
     "showShortcutsLegend": "キーボードショートカットを表示",
@@ -1139,6 +1214,21 @@
         "title": "レイアウトを使用した高度なプレイリストを作成",
         "description": "レイアウトを使用して複数のアイテムを同時に表示し、コンテンツを次のレベルに引き上げましょう。画面をゾーンに分割し、各エリアに異なるコンテンツを表示します。",
         "action": "レイアウトを探索"
+      },
+      "createTagGroup": {
+        "title": "タググループで整理する",
+        "description": "タグページに移動して、最初のタググループを作成しましょう—「場所」や「キャンペーン」のように。グループを使用すると、タグを意味のある次元に分類でき、ツリービューを活用できます。",
+        "action": "タグへ移動"
+      },
+      "tagContent": {
+        "title": "コンテンツにタグ付け",
+        "description": "メディアアイテムを開いてタグを割り当てましょう。タグによりコンテンツが検索可能、フィルタリング可能、整理可能になります。複数のアイテムを選択して一括でタグ付けすることもできます。",
+        "action": "メディアライブラリへ移動"
+      },
+      "exploreTreeView": {
+        "title": "ツリービューを探索",
+        "description": "ツリービューに切り替えて、タググループ別に整理されたコンテンツを確認しましょう。タグを展開して掘り下げ、次元を並べ替え、ライブラリを閲覧するまったく新しい方法を発見してください。",
+        "action": "ツリービューを試す"
       }
     },
     "errors": {

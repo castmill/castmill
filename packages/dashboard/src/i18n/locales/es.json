@@ -104,7 +104,9 @@
     "noAddressAvailable": "No hay dirección disponible",
     "playlist": "Lista de reproducción",
     "addPlaylist": "Añadir lista de reproducción",
-    "widget": "Widget"
+    "widget": "Widget",
+    "selectionHint": "Usa las casillas para seleccionar elementos y realizar acciones masivas",
+    "selectionCount": "{count} seleccionados"
   },
   "topbar": {
     "help": "Ayuda",
@@ -475,6 +477,70 @@
     },
     "teamsRemovedSuccessfully": "Equipos eliminados exitosamente"
   },
+  "tags": {
+    "title": "Etiquetas",
+    "addTag": "Añadir etiqueta",
+    "createTag": "Crear etiqueta",
+    "editTag": "Editar etiqueta",
+    "deleteTag": "Eliminar etiqueta",
+    "newTag": "Nueva etiqueta",
+    "tagName": "Nombre de etiqueta",
+    "tagColor": "Color de etiqueta",
+    "tagGroup": "Grupo de etiquetas",
+    "assignedTags": "Etiquetas asignadas",
+    "availableTags": "Etiquetas disponibles",
+    "noTags": "Sin etiquetas",
+    "noTagsAvailable": "No hay etiquetas disponibles",
+    "noMatchingTags": "No hay etiquetas coincidentes",
+    "allTagsAssigned": "Todas las etiquetas asignadas",
+    "addToResource": "Añadir etiquetas",
+    "removeFromResource": "Quitar etiqueta",
+    "filterByTags": "Filtrar por etiquetas...",
+    "clearAll": "Limpiar todo",
+    "manageTags": "Gestionar etiquetas",
+    "colorPicker": "Elegir color",
+    "searchTags": "Buscar etiquetas...",
+    "filterMode": {
+      "any": "Cualquiera",
+      "all": "Todas",
+      "description": "Coincidir recursos con cualquiera o todas las etiquetas seleccionadas"
+    },
+    "confirmDelete": "¿Estás seguro de que deseas eliminar la etiqueta \"{{name}}\"?",
+    "confirmDeleteMultiple": "¿Estás seguro de que deseas eliminar las siguientes etiquetas?",
+    "confirmDeleteGroup": "¿Estás seguro de que deseas eliminar el grupo de etiquetas \"{{name}}\"? Todas las etiquetas de este grupo también se eliminarán permanentemente.",
+    "maxTagsReached": "Máximo de {{max}} etiquetas alcanzado",
+    "groups": {
+      "title": "Grupos de etiquetas",
+      "addGroup": "Añadir grupo",
+      "newGroup": "Nuevo grupo",
+      "editGroup": "Editar grupo",
+      "deleteGroup": "Eliminar grupo",
+      "noGroups": "Sin grupos de etiquetas",
+      "ungrouped": "Sin agrupar"
+    },
+    "messages": {
+      "tagCreated": "Etiqueta \"{{name}}\" creada exitosamente",
+      "tagUpdated": "Etiqueta \"{{name}}\" actualizada exitosamente",
+      "tagDeleted": "Etiqueta \"{{name}}\" eliminada exitosamente",
+      "tagAddedToResource": "Etiqueta añadida exitosamente",
+      "tagRemovedFromResource": "Etiqueta eliminada exitosamente",
+      "tagsUpdated": "Etiquetas actualizadas exitosamente",
+      "groupCreated": "Grupo de etiquetas \"{{name}}\" creado exitosamente",
+      "groupUpdated": "Grupo de etiquetas \"{{name}}\" actualizado exitosamente",
+      "groupDeleted": "Grupo de etiquetas \"{{name}}\" eliminado exitosamente"
+    },
+    "errors": {
+      "createTag": "Error al crear etiqueta: {{error}}",
+      "updateTag": "Error al actualizar etiqueta: {{error}}",
+      "deleteTag": "Error al eliminar etiqueta: {{error}}",
+      "tagResource": "Error al añadir etiqueta al recurso: {{error}}",
+      "untagResource": "Error al quitar etiqueta del recurso: {{error}}",
+      "createGroup": "Error al crear grupo de etiquetas: {{error}}",
+      "updateGroup": "Error al actualizar grupo de etiquetas: {{error}}",
+      "deleteGroup": "Error al eliminar grupo de etiquetas: {{error}}",
+      "loadFailed": "Error al cargar etiquetas"
+    }
+  },
   "login": {
     "title": "Iniciar sesión",
     "email": "Correo electrónico",
@@ -524,7 +590,8 @@
     "medias": "Medios",
     "widgets": "Widgets",
     "members": "Miembros",
-    "network": "Red"
+    "network": "Red",
+    "tags": "Etiquetas"
   },
   "channels": {
     "title": "Canales",
@@ -1040,7 +1107,15 @@
   "filters": {
     "teamLabel": "Equipo",
     "teamPlaceholder": "Seleccionar equipo",
-    "teamClear": "Limpiar filtro de equipo"
+    "teamClear": "Limpiar filtro de equipo",
+    "tagLabel": "Etiquetas",
+    "tagPlaceholder": "Filtrar por etiquetas…",
+    "tagClear": "Limpiar filtro de etiquetas",
+    "tagSearchPlaceholder": "Buscar etiquetas…",
+    "tagFilterModeAny": "Cualquiera",
+    "tagFilterModeAll": "Todas",
+    "noMatches": "Sin coincidencias",
+    "noItems": "Sin elementos"
   },
   "shortcuts": {
     "showShortcutsLegend": "Mostrar atajos de teclado",
@@ -1139,6 +1214,21 @@
         "title": "Crea Listas de Reproducción Avanzadas con Diseños",
         "description": "Lleva tu contenido al siguiente nivel usando diseños para mostrar múltiples elementos simultáneamente. Divide tu pantalla en zonas y muestra contenido diferente en cada área.",
         "action": "Explorar Diseños"
+      },
+      "createTagGroup": {
+        "title": "Organiza con Grupos de Etiquetas",
+        "description": "Ve a la página de Etiquetas y crea tu primer grupo de etiquetas, como 'Ubicación' o 'Campaña'. Los grupos te permiten categorizar etiquetas en dimensiones significativas que alimentan la vista de árbol.",
+        "action": "Ir a Etiquetas"
+      },
+      "tagContent": {
+        "title": "Etiqueta tu Contenido",
+        "description": "Abre cualquier elemento multimedia y asígnale etiquetas. Las etiquetas hacen que tu contenido sea buscable, filtrable y organizable. También puedes seleccionar varios elementos y etiquetarlos todos a la vez.",
+        "action": "Ir a Mediateca"
+      },
+      "exploreTreeView": {
+        "title": "Explora la Vista de Árbol",
+        "description": "Cambia a la vista de árbol para ver tu contenido organizado por grupos de etiquetas. Expande las etiquetas para profundizar, reorganiza las dimensiones y descubre una nueva forma de navegar tu biblioteca.",
+        "action": "Probar Vista de Árbol"
       }
     },
     "errors": {

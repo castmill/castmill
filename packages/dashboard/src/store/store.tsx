@@ -122,6 +122,8 @@ interface CastmillStore {
     completeStep?: (step: OnboardingStep) => Promise<void>;
     /** Flag to highlight the guide button with animation */
     highlightGuideButton?: boolean;
+    /** Last viewed step index — persists across tour open/close */
+    lastStepIndex?: number;
   };
 }
 
