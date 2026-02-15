@@ -10,8 +10,6 @@ export enum Action {
   SET_STORE_VALUE = 'SET_STORE_VALUE',
   DELETE_STORE_VALUE = 'DELETE_STORE_VALUE',
 
-  GET_LOCATION = 'GET_LOCATION',
-
   // File system
   FS_INIT = 'FS_INIT',
   FS_INFO = 'FS_INFO',
