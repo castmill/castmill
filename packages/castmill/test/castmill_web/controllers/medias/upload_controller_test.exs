@@ -170,7 +170,7 @@ defmodule CastmillWeb.UploadControllerTest do
 
   # Helper function to create a temporary file with specified size
   defp create_temp_file(size_bytes) do
-    temp_path = Path.join(System.tmp_dir!(), "test_#{:rand.uniform(1000000)}.mp4")
+    temp_path = Path.join(System.tmp_dir!(), "test_#{:rand.uniform(1_000_000)}.mp4")
 
     # Create a file with the specified size
     # Write in chunks to avoid memory issues
