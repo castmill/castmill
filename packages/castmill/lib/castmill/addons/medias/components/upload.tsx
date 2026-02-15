@@ -121,6 +121,12 @@ export const UploadComponent = (props: UploadComponentProps) => {
     return files().filter((file) => currentValidations[file.name]?.valid).length;
   };
 
+  // Helper to get count of completed file uploads (excluding global messages)
+  const getCompletedFilesCount = () => {
+    const msgs = messages();
+    return Object.keys(msgs).filter(key => key !== 'global').length;
+  };
+
   const handleFileChange = (e: Event) => {
     const target = e.target as HTMLInputElement;
     if (target.files) {
@@ -371,21 +377,21 @@ export const UploadComponent = (props: UploadComponentProps) => {
           {/* Disable when files start to be uploaded */}
           <Button
             label={
-              Object.keys(messages()).length === getValidFilesCount()
+              getCompletedFilesCount() === getValidFilesCount()
                 ? 'Close'
                 : 'Cancel'
             }
             onClick={() => props.onCancel?.()}
             color="secondary"
             disabled={
-              Object.keys(messages()).length > 0 &&
-              Object.keys(messages()).length !== getValidFilesCount()
+              getCompletedFilesCount() > 0 &&
+              getCompletedFilesCount() !== getValidFilesCount()
             }
           />
         </Show>
         {/* Change label to "Close" when all files have been uploaded */}
         <Button
-          disabled={Object.keys(messages()).length === getValidFilesCount()}
+          disabled={getCompletedFilesCount() === getValidFilesCount()}
           label="Upload"
           onClick={handleUpload}
           icon={AiOutlineUpload}
