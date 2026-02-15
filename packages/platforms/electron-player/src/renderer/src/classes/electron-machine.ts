@@ -28,9 +28,7 @@ export class ElectronMachine implements Machine {
   async getLocation(): Promise<
     undefined | { latitude: number; longitude: number }
   > {
-    // Delegate to main process via IPC to avoid CSP restrictions
-    // and the user gesture requirement for navigator.geolocation.
-    return window.api.getLocation();
+    return undefined;
   }
 
   async getTimezone(): Promise<string> {
