@@ -60,31 +60,26 @@ defmodule CastmillWeb.UploadController do
   defp process_file(conn, organization_id, filename, path, mime_type) do
     file_size = File.stat!(path).size
 
-    # Check max upload size quota first
-    # Note: max_upload_size quota is stored in megabytes (MB)
-    max_upload_size_mb =
+    # Check max upload size quota first (stored in bytes)
+    max_upload_size =
       Castmill.Quotas.get_quota_for_organization(organization_id, :max_upload_size)
 
-    max_upload_size_bytes = max_upload_size_mb * 1024 * 1024
-
-    if file_size > max_upload_size_bytes do
+    if file_size > max_upload_size do
       conn
       |> put_status(:request_entity_too_large)
       |> json(%{
         error: "File too large",
         message: "The file size exceeds the maximum upload size limit",
-        max_size: max_upload_size_bytes,
+        max_size: max_upload_size,
         file_size: file_size
       })
       |> halt()
     else
-      # Check storage quota before uploading
-      # Note: storage quota is stored in megabytes (MB)
+      # Check storage quota before uploading (stored in bytes)
       current_storage = Castmill.Quotas.get_quota_used_for_organization(organization_id, :storage)
-      storage_quota_mb = Castmill.Quotas.get_quota_for_organization(organization_id, :storage)
-      storage_quota_bytes = storage_quota_mb * 1024 * 1024
+      storage_quota = Castmill.Quotas.get_quota_for_organization(organization_id, :storage)
 
-      if current_storage + file_size > storage_quota_bytes do
+      if current_storage + file_size > storage_quota do
         conn
         |> put_status(:forbidden)
         |> json(%{

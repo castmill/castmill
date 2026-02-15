@@ -198,7 +198,8 @@ defmodule CastmillWeb.Router do
     plug(:authenticate_user)
     plug(:accepts, ["json"])
 
-    plug(Plug.Parsers,
+    # Use custom parser plug that returns JSON on RequestTooLargeError
+    plug(CastmillWeb.Plugs.LargeUploadParser,
       parsers: [:multipart],
       pass: ["*/*"],
       length: 5_368_709_120
@@ -250,6 +251,17 @@ defmodule CastmillWeb.Router do
     post("/:addon_id/*path", AddonApiController, :dispatch_post)
     put("/:addon_id/*path", AddonApiController, :dispatch_put)
     delete("/:addon_id/*path", AddonApiController, :dispatch_delete)
+  end
+
+  # Large file upload routes - uses separate pipeline with 5GB limit
+  # MUST be defined before the main dashboard scope to prevent the catch-all
+  # "/:resources" route from matching POST /organizations/:id/medias with
+  # the dashboard pipeline's 8MB multipart limit.
+  scope "/dashboard", CastmillWeb do
+    pipe_through(:large_upload)
+
+    # Media upload endpoint - requires large body size support
+    post("/organizations/:organization_id/medias", UploadController, :create)
   end
 
   scope "/dashboard", CastmillWeb do
@@ -539,15 +551,6 @@ defmodule CastmillWeb.Router do
     put("/users/:id/credentials/:credential_id", UserController, :update_credential)
     post("/users/:id/send-email-verification", UserController, :send_email_verification)
     post("/verify-email", UserController, :verify_email)
-  end
-
-  # Large file upload routes - uses separate pipeline with 5GB limit
-  # This prevents the large body limit from applying to all dashboard routes
-  scope "/dashboard", CastmillWeb do
-    pipe_through(:large_upload)
-
-    # Media upload endpoint - requires large body size support
-    post("/organizations/:organization_id/medias", UploadController, :create)
   end
 
   # Other scopes may use custom stacks.
