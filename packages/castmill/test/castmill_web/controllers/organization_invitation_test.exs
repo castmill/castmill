@@ -403,11 +403,15 @@ defmodule CastmillWeb.OrganizationInvitationTest do
         |> Plug.Test.init_test_session(%{user_session_token: duplicate_token})
 
       # Accept once
-      conn_result1 = post(conn_new, ~p"/dashboard/organizations_invitations/#{invitation.token}/accept")
+      conn_result1 =
+        post(conn_new, ~p"/dashboard/organizations_invitations/#{invitation.token}/accept")
+
       assert json_response(conn_result1, 200) == %{}
 
       # Accept again - should succeed (idempotent)
-      conn_result2 = post(conn_new, ~p"/dashboard/organizations_invitations/#{invitation.token}/accept")
+      conn_result2 =
+        post(conn_new, ~p"/dashboard/organizations_invitations/#{invitation.token}/accept")
+
       assert json_response(conn_result2, 200) == %{}
     end
 
@@ -437,7 +441,9 @@ defmodule CastmillWeb.OrganizationInvitationTest do
         conn
         |> Plug.Test.init_test_session(%{user_session_token: first_token})
 
-      conn_result = post(conn_first, ~p"/dashboard/organizations_invitations/#{invitation.token}/accept")
+      conn_result =
+        post(conn_first, ~p"/dashboard/organizations_invitations/#{invitation.token}/accept")
+
       assert json_response(conn_result, 200) == %{}
 
       # Create second user and try to accept the same invitation
