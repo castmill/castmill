@@ -4,7 +4,7 @@ defmodule Castmill.Repo.Migrations.ConvertStorageQuotaToMegabytes do
   def up do
     # Convert storage quotas from bytes to megabytes across all quota tables
     # This prevents int4 overflow when storage quotas exceed 2GB
-    
+
     # Convert plans_quotas storage values from bytes to MB
     execute """
     UPDATE plans_quotas 
@@ -29,7 +29,7 @@ defmodule Castmill.Repo.Migrations.ConvertStorageQuotaToMegabytes do
 
   def down do
     # Convert storage quotas back from megabytes to bytes
-    
+
     # Convert plans_quotas storage values from MB to bytes
     execute """
     UPDATE plans_quotas 

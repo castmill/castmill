@@ -194,8 +194,10 @@ defmodule CastmillWeb.Router do
     plug(:put_secure_browser_headers)
     plug(:fetch_session)
     plug(:fetch_dashboard_user)
-    plug(:authenticate_user)  # Check auth before parsing large bodies
+    # Check auth before parsing large bodies
+    plug(:authenticate_user)
     plug(:accepts, ["json"])
+
     plug(Plug.Parsers,
       parsers: [:multipart],
       pass: ["*/*"],

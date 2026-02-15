@@ -28,7 +28,10 @@ defmodule CastmillWeb.OrganizationUsageControllerTest do
         %{max: 10, resource: :channels},
         %{max: 5, resource: :teams},
         %{max: 10, resource: :users},
-        %{max: 1024 * 1024 * 100, resource: :storage}
+        # Storage quota is stored in MB (100 MB)
+        %{max: 100, resource: :storage},
+        # Max upload size is stored in MB (2 GB)
+        %{max: 2048, resource: :max_upload_size}
       ])
 
     Quotas.assign_plan_to_organization(plan.id, organization.id)
@@ -118,7 +121,8 @@ defmodule CastmillWeb.OrganizationUsageControllerTest do
       assert response["users"]["total"] == 10
 
       assert response["storage"]["used"] == 1024 * 1024
-      assert response["storage"]["total"] == 1024 * 1024 * 100
+      # Storage quota stored as 100 MB, controller converts to bytes
+      assert response["storage"]["total"] == 100 * 1024 * 1024
 
       # Resources with no usage
       assert response["playlists"]["used"] == 0
@@ -147,7 +151,8 @@ defmodule CastmillWeb.OrganizationUsageControllerTest do
       assert response["users"]["total"] == 10
 
       assert response["storage"]["used"] == 0
-      assert response["storage"]["total"] == 1024 * 1024 * 100
+      # Storage quota stored as 100 MB, controller converts to bytes
+      assert response["storage"]["total"] == 100 * 1024 * 1024
     end
   end
 end
