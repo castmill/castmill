@@ -180,11 +180,11 @@ defmodule CastmillWeb.Router do
     plug(:fetch_session)
     plug(:fetch_dashboard_user)
     plug(:accepts, ["json"])
-    # Add multipart parsing for standard dashboard routes with 8MB limit
+    # Add multipart parsing for standard dashboard routes with 10MB limit
     plug(Plug.Parsers,
       parsers: [:multipart],
       pass: ["*/*"],
-      length: 8_000_000
+      length: 10_000_000
     )
   end
 
