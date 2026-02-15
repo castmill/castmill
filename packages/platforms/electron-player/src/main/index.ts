@@ -130,25 +130,6 @@ file: app.whenReady().then(() => {
     return api.getMachineGUID();
   });
 
-  ipcMain.handle(Action.GET_LOCATION, async () => {
-    try {
-      const response = await net.fetch(
-        'http://ip-api.com/json/?fields=lat,lon'
-      );
-      if (!response.ok) {
-        throw new Error(`IP geolocation request failed: ${response.status}`);
-      }
-      const data = await response.json();
-      if (data.lat != null && data.lon != null) {
-        return { latitude: data.lat, longitude: data.lon };
-      }
-      return undefined;
-    } catch (error) {
-      console.error('Failed to get location:', error);
-      return undefined;
-    }
-  });
-
   ipcMain.handle(
     Action.GET_STORE_VALUE,
     (_event: IpcMainInvokeEvent, key: string) => {

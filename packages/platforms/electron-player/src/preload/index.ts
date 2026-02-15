@@ -13,10 +13,6 @@ const api: ApplicationAPI = {
   reboot: () => ipcRenderer.send(Action.REBOOT),
   update: () => ipcRenderer.send(Action.UPDATE),
   getMachineGUID: () => ipcRenderer.invoke(Action.GET_MACHINE_GUID),
-  getLocation: () =>
-    ipcRenderer.invoke(Action.GET_LOCATION) as Promise<
-      { latitude: number; longitude: number } | undefined
-    >,
   getItem: (key: string) => ipcRenderer.invoke(Action.GET_STORE_VALUE, key),
   setItem: (key: string, value: string) =>
     ipcRenderer.send(Action.SET_STORE_VALUE, key, value),

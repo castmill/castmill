@@ -13,9 +13,6 @@ export interface ApplicationAPI {
   reboot: () => void;
   update: () => void;
   getMachineGUID: () => Promise<string>;
-  getLocation: () => Promise<
-    { latitude: number; longitude: number } | undefined
-  >;
   setItem: (key: string, value: string) => void;
   getItem: (key: string) => Promise<string>;
   deleteItem: (key: string) => void;
