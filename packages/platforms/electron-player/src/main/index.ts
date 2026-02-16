@@ -104,10 +104,11 @@ file: app.whenReady().then(() => {
     (_webContents, permission, callback) => {
       if (permission === 'geolocation') {
         callback(true); // Always allow geolocation
-      } else {
-        // For other permissions, allow Electron's default behavior
-        callback(true);
+        return;
       }
+      // For other permissions, call callback(true) to use Electron's default
+      // auto-approval behavior, which is the expected behavior for Electron apps
+      callback(true);
     }
   );
 

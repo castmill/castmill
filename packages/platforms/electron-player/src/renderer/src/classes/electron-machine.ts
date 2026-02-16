@@ -46,7 +46,22 @@ export class ElectronMachine implements Machine {
         longitude: position.coords.longitude,
       };
     } catch (error) {
-      console.error('Failed to get location:', error);
+      // Provide detailed error context based on GeolocationPositionError
+      if (error && typeof error === 'object' && 'code' in error) {
+        const geoError = error as GeolocationPositionError;
+        const errorMessages = {
+          [GeolocationPositionError.PERMISSION_DENIED]:
+            'Geolocation permission denied',
+          [GeolocationPositionError.POSITION_UNAVAILABLE]:
+            'Position unavailable',
+          [GeolocationPositionError.TIMEOUT]: 'Geolocation request timed out',
+        };
+        console.error(
+          `Failed to get location: ${errorMessages[geoError.code] || 'Unknown error'} - ${geoError.message}`
+        );
+      } else {
+        console.error('Failed to get location:', error);
+      }
       return undefined;
     }
   }
