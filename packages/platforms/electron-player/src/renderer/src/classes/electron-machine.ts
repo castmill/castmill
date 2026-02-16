@@ -28,7 +28,23 @@ export class ElectronMachine implements Machine {
   async getLocation(): Promise<
     undefined | { latitude: number; longitude: number }
   > {
-    return undefined;
+    try {
+      // Use the browser's native Geolocation API
+      // Electron auto-approves geolocation without user interaction
+      const position = await new Promise<GeolocationPosition>(
+        (resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject);
+        }
+      );
+
+      return {
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+      };
+    } catch (error) {
+      console.error('Failed to get location:', error);
+      return undefined;
+    }
   }
 
   async getTimezone(): Promise<string> {
