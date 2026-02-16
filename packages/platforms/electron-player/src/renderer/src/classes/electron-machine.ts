@@ -33,7 +33,11 @@ export class ElectronMachine implements Machine {
       // Electron auto-approves geolocation without user interaction
       const position = await new Promise<GeolocationPosition>(
         (resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject);
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            timeout: 10000, // 10 second timeout
+            maximumAge: 0, // Don't use cached position
+            enableHighAccuracy: false, // Don't require high accuracy for performance
+          });
         }
       );
 
