@@ -31,15 +31,24 @@ export class ElectronMachine implements Machine {
     try {
       // Use the browser's native Geolocation API
       // Electron auto-approves geolocation without user interaction
-      const position = await new Promise<GeolocationPosition>(
-        (resolve, reject) => {
+
+      // Wrap with Promise.race to ensure we never hang, even if the API fails
+      const TIMEOUT_MS = 10000; // 10 seconds
+
+      const position = await Promise.race<GeolocationPosition>([
+        new Promise<GeolocationPosition>((resolve, reject) => {
           navigator.geolocation.getCurrentPosition(resolve, reject, {
-            timeout: 10000, // 10 second timeout
+            timeout: TIMEOUT_MS,
             maximumAge: 0, // Don't use cached position
             enableHighAccuracy: false, // Don't require high accuracy for performance
           });
-        }
-      );
+        }),
+        new Promise<GeolocationPosition>((_, reject) => {
+          setTimeout(() => {
+            reject(new Error('Geolocation request timed out'));
+          }, TIMEOUT_MS + 1000); // Extra 1s buffer beyond API timeout
+        }),
+      ]);
 
       return {
         latitude: position.coords.latitude,
