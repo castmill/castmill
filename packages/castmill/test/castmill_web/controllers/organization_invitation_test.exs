@@ -460,11 +460,11 @@ defmodule CastmillWeb.OrganizationInvitationTest do
         conn
         |> Plug.Test.init_test_session(%{user_session_token: second_token})
 
-      # Should fail with 400 because invitation was already accepted by a different user
+      # Should fail with 403 because the second user's email doesn't match the invitation
       conn_result =
         post(conn_second, ~p"/dashboard/organizations_invitations/#{invitation.token}/accept")
 
-      assert response(conn_result, 400)
+      assert response(conn_result, 403)
     end
   end
 
