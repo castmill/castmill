@@ -377,7 +377,7 @@ defmodule CastmillWeb.OrganizationInvitationTest do
   end
 
   describe "multiple invitations" do
-    test "user cannot accept same invitation twice", %{
+    test "user can accept same invitation twice (idempotent)", %{
       conn: conn,
       organization: organization,
       network: network
@@ -403,12 +403,68 @@ defmodule CastmillWeb.OrganizationInvitationTest do
         |> Plug.Test.init_test_session(%{user_session_token: duplicate_token})
 
       # Accept once
-      conn = post(conn_new, ~p"/dashboard/organizations_invitations/#{invitation.token}/accept")
-      assert json_response(conn, 200) == %{}
+      conn_result1 =
+        post(conn_new, ~p"/dashboard/organizations_invitations/#{invitation.token}/accept")
 
-      # Try to accept again
-      conn = post(conn_new, ~p"/dashboard/organizations_invitations/#{invitation.token}/accept")
-      assert response(conn, 400)
+      assert json_response(conn_result1, 200) == %{}
+
+      # Accept again - should succeed (idempotent)
+      conn_result2 =
+        post(conn_new, ~p"/dashboard/organizations_invitations/#{invitation.token}/accept")
+
+      assert json_response(conn_result2, 200) == %{}
+    end
+
+    test "different user cannot accept already-accepted invitation", %{
+      conn: conn,
+      organization: organization,
+      network: network
+    } do
+      # Create first user and accept invitation
+      first_user =
+        user_fixture(%{
+          network_id: network.id,
+          email: "first@example.com",
+          name: "First User"
+        })
+
+      {:ok, invitation} =
+        Organizations.create_organizations_invitation(%{
+          organization_id: organization.id,
+          email: first_user.email,
+          role: :member
+        })
+
+      first_token = Accounts.generate_user_session_token(first_user.id)
+
+      conn_first =
+        conn
+        |> Plug.Test.init_test_session(%{user_session_token: first_token})
+
+      conn_result =
+        post(conn_first, ~p"/dashboard/organizations_invitations/#{invitation.token}/accept")
+
+      assert json_response(conn_result, 200) == %{}
+
+      # Create second user and try to accept the same invitation
+      second_user =
+        user_fixture(%{
+          network_id: network.id,
+          email: "second@example.com",
+          name: "Second User"
+        })
+
+      second_token = Accounts.generate_user_session_token(second_user.id)
+
+      conn_second =
+        conn
+        |> Plug.Test.init_test_session(%{user_session_token: second_token})
+
+      # Should fail with 403 because the second user's email doesn't match the invitation
+      conn_result =
+        post(conn_second, ~p"/dashboard/organizations_invitations/#{invitation.token}/accept")
+
+      assert response(conn_result, 403)
     end
   end
 
