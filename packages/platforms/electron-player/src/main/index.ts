@@ -6,6 +6,7 @@ import {
   IpcMainInvokeEvent,
   protocol,
   net,
+  session,
 } from 'electron';
 import { join } from 'path';
 import { pathToFileURL } from 'url';
@@ -95,6 +96,21 @@ file: app.whenReady().then(() => {
   const store = new Store();
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron');
+
+  // Auto-approve geolocation permission requests
+  // Electron doesn't require user interaction for geolocation by default,
+  // but we explicitly handle it here to ensure it's always granted
+  session.defaultSession.setPermissionRequestHandler(
+    (_webContents, permission, callback) => {
+      if (permission === 'geolocation') {
+        callback(true); // Always allow geolocation
+        return;
+      }
+      // For other permissions, call callback(true) to use Electron's default
+      // auto-approval behavior, which is the expected behavior for Electron apps
+      callback(true);
+    }
+  );
 
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.
