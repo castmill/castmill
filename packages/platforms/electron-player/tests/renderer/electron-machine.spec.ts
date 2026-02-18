@@ -337,7 +337,8 @@ describe('ElectronMachine', () => {
 
     it('should use "unknown" when npm_package_version is missing', async () => {
       const originalVersion = window.electron.process.env.npm_package_version;
-      window.electron.process.env.npm_package_version = undefined as any;
+      window.electron.process.env.npm_package_version =
+        undefined as unknown as string;
 
       const info = await machine.getDeviceInfo();
 
