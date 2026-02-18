@@ -18,6 +18,15 @@ import { Action } from '../common';
 import icon from '../../resources/icon.png?asset';
 import { LOCAL_URL_SCHEME, CACHE_DIR } from './constants';
 
+// Set GOOGLE_API_KEY so Chromium's network location provider can resolve
+// geolocation requests. Without this, navigator.geolocation will time out
+// in Electron since it doesn't bundle a key like Chrome does.
+// The key is provided via VITE_GOOGLE_API_KEY at build time.
+const googleApiKey = import.meta.env.VITE_GOOGLE_API_KEY;
+if (googleApiKey) {
+  process.env.GOOGLE_API_KEY = googleApiKey;
+}
+
 function createWindow(): void {
   // Determine if the app is running in kiosk mode.
   const kiosk = import.meta.env.VITE_KIOSK === 'true';
@@ -97,17 +106,30 @@ file: app.whenReady().then(() => {
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron');
 
-  // Auto-approve geolocation permission requests
-  // Electron doesn't require user interaction for geolocation by default,
-  // but we explicitly handle it here to ensure it's always granted
+  // Auto-approve geolocation (and other) permission checks and requests.
+  // Both handlers are needed:
+  // - setPermissionCheckHandler handles the synchronous permission *check*
+  //   that Chromium performs before even issuing a request. Without it,
+  //   Chromium's default policy applies which requires a user gesture for
+  //   geolocation ("Only request geolocation information in response to a
+  //   user gesture" violation).
+  // - setPermissionRequestHandler handles the actual asynchronous permission
+  //   *request* that follows a successful check.
+  session.defaultSession.setPermissionCheckHandler(
+    (_webContents, permission) => {
+      if (permission === 'geolocation') {
+        return true; // Bypass user-gesture requirement for geolocation
+      }
+      return true;
+    }
+  );
+
   session.defaultSession.setPermissionRequestHandler(
     (_webContents, permission, callback) => {
       if (permission === 'geolocation') {
         callback(true); // Always allow geolocation
         return;
       }
-      // For other permissions, call callback(true) to use Electron's default
-      // auto-approval behavior, which is the expected behavior for Electron apps
       callback(true);
     }
   );

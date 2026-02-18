@@ -25,28 +25,30 @@ export class ElectronMachine implements Machine {
     window.api.deleteItem('castmill-credentials');
   }
 
+  /**
+   * Get the device's location using the browser's native Geolocation API.
+   * Requires VITE_GOOGLE_API_KEY to be set at build time so that Chromium's
+   * network location provider can authenticate with Google's service.
+   * Returns undefined if geolocation fails or is unavailable.
+   */
   async getLocation(): Promise<
     undefined | { latitude: number; longitude: number }
   > {
     try {
-      // Use the browser's native Geolocation API
-      // Electron auto-approves geolocation without user interaction
-
-      // Wrap with Promise.race to ensure we never hang, even if the API fails
-      const TIMEOUT_MS = 10000; // 10 seconds
+      const TIMEOUT_MS = 3000; // 3 seconds
 
       const position = await Promise.race<GeolocationPosition>([
         new Promise<GeolocationPosition>((resolve, reject) => {
           navigator.geolocation.getCurrentPosition(resolve, reject, {
             timeout: TIMEOUT_MS,
-            maximumAge: 0, // Don't use cached position
-            enableHighAccuracy: false, // Don't require high accuracy for performance
+            maximumAge: 0,
+            enableHighAccuracy: false,
           });
         }),
         new Promise<GeolocationPosition>((_, reject) => {
           setTimeout(() => {
             reject(new Error('Geolocation request timed out'));
-          }, TIMEOUT_MS + 1000); // Extra 1s buffer beyond API timeout
+          }, TIMEOUT_MS + 1000);
         }),
       ]);
 
@@ -55,15 +57,15 @@ export class ElectronMachine implements Machine {
         longitude: position.coords.longitude,
       };
     } catch (error) {
-      // Provide detailed error context based on GeolocationPositionError
       if (error && typeof error === 'object' && 'code' in error) {
         const geoError = error as GeolocationPositionError;
         const errorMessages = {
           [GeolocationPositionError.PERMISSION_DENIED]:
             'Geolocation permission denied',
           [GeolocationPositionError.POSITION_UNAVAILABLE]:
-            'Position unavailable',
-          [GeolocationPositionError.TIMEOUT]: 'Geolocation request timed out',
+            'Position unavailable (is VITE_GOOGLE_API_KEY set?)',
+          [GeolocationPositionError.TIMEOUT]:
+            'Geolocation request timed out (is VITE_GOOGLE_API_KEY set?)',
         };
         console.error(
           `Failed to get location: ${errorMessages[geoError.code] || 'Unknown error'} - ${geoError.message}`
