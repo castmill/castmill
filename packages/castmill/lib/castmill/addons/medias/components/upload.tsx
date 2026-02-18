@@ -1,4 +1,4 @@
-import { createSignal, onCleanup, For, Show, JSX } from 'solid-js';
+import { createSignal, onCleanup, For, Show, JSX, onMount, createEffect } from 'solid-js';
 import { dropTargetForExternal } from '@atlaskit/pragmatic-drag-and-drop/external/adapter';
 import './upload.scss';
 
@@ -6,6 +6,7 @@ import {
   AiOutlineUpload,
   AiOutlineDelete,
   AiOutlineCheck,
+  AiOutlineWarning,
 } from 'solid-icons/ai';
 
 import { Button, IconButton, IconWrapper, useToast, formatBytes } from '@castmill/ui-common';
@@ -28,6 +29,16 @@ interface Messages {
   [key: string]: string | JSX.Element;
 }
 
+interface FileValidation {
+  valid: boolean;
+  warning?: string;
+  error?: string;
+}
+
+interface FileValidations {
+  [key: string]: FileValidation;
+}
+
 const supportedFileTypes = [
   'image/png',
   'image/jpeg',
@@ -48,6 +59,73 @@ export const UploadComponent = (props: UploadComponentProps) => {
   const [files, setFiles] = createSignal<File[]>([]);
   const [messages, setMessages] = createSignal<Messages>({});
   const [progresses, setProgresses] = createSignal<Progresses>({});
+  const [validations, setValidations] = createSignal<FileValidations>({});
+  const [maxUploadSize, setMaxUploadSize] = createSignal<number>(2048 * 1024 * 1024); // Default 2GB in bytes
+
+  // Fetch quota information on mount
+  onMount(async () => {
+    try {
+      const response = await fetch(
+        `${props.baseUrl}/dashboard/organizations/${props.organizationId}/quotas`,
+        {
+          credentials: 'include',
+        }
+      );
+      if (response.ok) {
+        const quotas = await response.json();
+        const maxUploadQuota = quotas.find((q: any) => q.resource === 'max_upload_size');
+        if (maxUploadQuota) {
+          // Quota is stored in MB, convert to bytes
+          setMaxUploadSize(maxUploadQuota.max * 1024 * 1024);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch quotas:', error);
+    }
+  });
+
+  // Validate file sizes whenever files or max upload size changes
+  createEffect(() => {
+    const currentFiles = files();
+    const maxSize = maxUploadSize();
+    const softLimitSize = Math.floor(maxSize / 2); // 50% of max size
+    
+    const newValidations: FileValidations = {};
+    currentFiles.forEach((file) => {
+      if (file.size > maxSize) {
+        newValidations[file.name] = {
+          valid: false,
+          error: t('medias.upload.fileTooLarge', {
+            fileSize: formatBytes(file.size),
+            maxSize: formatBytes(maxSize),
+          })
+        };
+      } else if (file.size > softLimitSize) {
+        newValidations[file.name] = {
+          valid: true,
+          warning: t('medias.upload.largeFileWarning', {
+            fileSize: formatBytes(file.size),
+          })
+        };
+      } else {
+        newValidations[file.name] = { valid: true };
+      }
+    });
+    
+    setValidations(newValidations);
+  });
+
+  // Helper to get count of valid files that can be uploaded
+  const getValidFilesCount = () => {
+    const currentValidations = validations();
+    return files().filter((file) => currentValidations[file.name]?.valid).length;
+  };
+
+  // Helper to get count of completed file uploads (excluding global messages)
+  const getCompletedFilesCount = () => {
+    const msgs = messages();
+    return Object.keys(msgs).filter(key => key !== 'global').length;
+  };
 
   const handleFileChange = (e: Event) => {
     const target = e.target as HTMLInputElement;
@@ -63,12 +141,21 @@ export const UploadComponent = (props: UploadComponentProps) => {
 
   const handleUpload = async () => {
     const currentFiles = files();
-    if (currentFiles.length === 0) {
-      setMessages('Please select files first.');
+    const currentValidations = validations();
+    
+    // Filter out invalid files
+    const validFiles = currentFiles.filter((file) => currentValidations[file.name]?.valid);
+    
+    if (validFiles.length === 0) {
+      setMessages((m) => ({ ...m, global: t('medias.upload.noValidFiles') }));
       return;
     }
 
-    currentFiles.forEach((file) => {
+    // Track how many files we're uploading for completion check
+    let uploadedCount = 0;
+    const totalToUpload = validFiles.length;
+
+    validFiles.forEach((file) => {
       const formData = new FormData();
       formData.append('file', file);
 
@@ -103,7 +190,8 @@ export const UploadComponent = (props: UploadComponentProps) => {
           // Complete the onboarding step for media upload
           props.store?.onboarding?.completeStep?.('upload_media');
 
-          if (Object.keys(messages()).length === files().length) {
+          uploadedCount++;
+          if (uploadedCount === totalToUpload) {
             props.onUploadComplete?.();
           }
         } else {
@@ -112,11 +200,21 @@ export const UploadComponent = (props: UploadComponentProps) => {
             ...m,
             [file.name]: `Upload failed: ${errorData.error}`,
           }));
+          
+          uploadedCount++;
+          if (uploadedCount === totalToUpload) {
+            props.onUploadComplete?.();
+          }
         }
       };
 
       xhr.onerror = () => {
-        setMessages((m) => ({ ...m, [file.name]: 'Error uploading file.' }));
+        setMessages((m) => ({ ...m, [file.name]: t('medias.upload.uploadError') }));
+        
+        uploadedCount++;
+        if (uploadedCount === totalToUpload) {
+          props.onUploadComplete?.();
+        }
       };
 
       xhr.send(formData);
@@ -160,12 +258,19 @@ export const UploadComponent = (props: UploadComponentProps) => {
   const onFileRemove = (file: File) => {
     setFiles(files().filter((f) => f !== file));
     setProgresses((p) => {
-      delete p[file.name];
-      return p;
+      const newP = { ...p };
+      delete newP[file.name];
+      return newP;
     });
     setMessages((m) => {
-      delete m[file.name];
-      return m;
+      const newM = { ...m };
+      delete newM[file.name];
+      return newM;
+    });
+    setValidations((v) => {
+      const newV = { ...v };
+      delete newV[file.name];
+      return newV;
     });
   };
 
@@ -208,38 +313,60 @@ export const UploadComponent = (props: UploadComponentProps) => {
             </thead>
             <tbody>
               <For each={files()}>
-                {(file) => (
-                  <tr class="file">
-                    <td class="filename-cell" title={file.name}>
-                      {file.name}
-                    </td>
+                {(file) => {
+                  const validation = validations()[file.name];
+                  const hasError = validation && !validation.valid;
+                  const hasWarning = validation && validation.valid && validation.warning;
+                  
+                  return (
+                    <tr class="file" classList={{ 'file-error': hasError, 'file-warning': hasWarning }}>
+                      <td class="filename-cell" title={file.name}>
+                        {file.name}
+                        <Show when={hasError || hasWarning}>
+                          <div class="validation-message">
+                            <Show when={hasError}>
+                              <span class="error">
+                                <IconWrapper icon={AiOutlineWarning} />
+                                {validation.error}
+                              </span>
+                            </Show>
+                            <Show when={hasWarning}>
+                              <span class="warning">
+                                <IconWrapper icon={AiOutlineWarning} />
+                                {validation.warning}
+                              </span>
+                            </Show>
+                          </div>
+                        </Show>
+                      </td>
 
-                    <td>{formatBytes(file.size)}</td>
-                    <td>
-                      <Show
-                        when={messages()[file.name]}
-                        fallback={
-                          <progress
-                            value={progresses()[file.name] || 0}
-                            max="100"
-                          >
-                            {progresses()[file.name]}%
-                          </progress>
-                        }
-                      >
-                        <div>{messages()[file.name]}</div>
-                      </Show>
-                    </td>
-                    <td>
-                      <IconButton
-                        onClick={() => onFileRemove(file)}
-                        icon={AiOutlineDelete}
-                        color="primary"
-                        disabled={progresses()[file.name] > 0}
-                      />
-                    </td>
-                  </tr>
-                )}
+                      <td>{formatBytes(file.size)}</td>
+                      <td>
+                        <Show
+                          when={messages()[file.name]}
+                          fallback={
+                            <progress
+                              value={progresses()[file.name] || 0}
+                              max="100"
+                            >
+                              {progresses()[file.name]}%
+                            </progress>
+                          }
+                        >
+                          <div>{messages()[file.name]}</div>
+                        </Show>
+                      </td>
+                      <td>
+                        <IconButton
+                          onClick={() => onFileRemove(file)}
+                          icon={AiOutlineDelete}
+                          color="primary"
+                          disabled={progresses()[file.name] > 0}
+                        />
+                      </td>
+                    </tr>
+                  );
+                }}
               </For>
             </tbody>
           </table>
@@ -250,21 +377,21 @@ export const UploadComponent = (props: UploadComponentProps) => {
           {/* Disable when files start to be uploaded */}
           <Button
             label={
-              Object.keys(messages()).length === files().length
+              getCompletedFilesCount() === getValidFilesCount()
                 ? 'Close'
                 : 'Cancel'
             }
             onClick={() => props.onCancel?.()}
             color="secondary"
             disabled={
-              Object.keys(messages()).length > 0 &&
-              Object.keys(messages()).length !== files().length
+              getCompletedFilesCount() > 0 &&
+              getCompletedFilesCount() !== getValidFilesCount()
             }
           />
         </Show>
         {/* Change label to "Close" when all files have been uploaded */}
         <Button
-          disabled={Object.keys(messages()).length === files().length}
+          disabled={getCompletedFilesCount() === getValidFilesCount()}
           label="Upload"
           onClick={handleUpload}
           icon={AiOutlineUpload}

@@ -180,6 +180,30 @@ defmodule CastmillWeb.Router do
     plug(:fetch_session)
     plug(:fetch_dashboard_user)
     plug(:accepts, ["json"])
+    # Add multipart parsing for standard dashboard routes with 10MB limit
+    plug(Plug.Parsers,
+      parsers: [:multipart],
+      pass: ["*/*"],
+      length: 10_000_000
+    )
+  end
+
+  # Pipeline for large file uploads with 5GB limit
+  # Authenticates before parsing to prevent unauthenticated large requests
+  pipeline :large_upload do
+    plug(:put_secure_browser_headers)
+    plug(:fetch_session)
+    plug(:fetch_dashboard_user)
+    # Check auth before parsing large bodies
+    plug(:authenticate_user)
+    plug(:accepts, ["json"])
+
+    # Use custom parser plug that returns JSON on RequestTooLargeError
+    plug(CastmillWeb.Plugs.LargeUploadParser,
+      parsers: [:multipart],
+      pass: ["*/*"],
+      length: 5_368_709_120
+    )
   end
 
   scope "/signups", CastmillWeb do
@@ -227,6 +251,17 @@ defmodule CastmillWeb.Router do
     post("/:addon_id/*path", AddonApiController, :dispatch_post)
     put("/:addon_id/*path", AddonApiController, :dispatch_put)
     delete("/:addon_id/*path", AddonApiController, :dispatch_delete)
+  end
+
+  # Large file upload routes - uses separate pipeline with 5GB limit
+  # MUST be defined before the main dashboard scope to prevent the catch-all
+  # "/:resources" route from matching POST /organizations/:id/medias with
+  # the dashboard pipeline's 8MB multipart limit.
+  scope "/dashboard", CastmillWeb do
+    pipe_through(:large_upload)
+
+    # Media upload endpoint - requires large body size support
+    post("/organizations/:organization_id/medias", UploadController, :create)
   end
 
   scope "/dashboard", CastmillWeb do
@@ -419,9 +454,6 @@ defmodule CastmillWeb.Router do
       post("/complete-onboarding", OrganizationController, :complete_onboarding)
       post("/devices", OrganizationController, :register_device)
 
-      # This route is used to upload media files to the server.
-      post("/medias", UploadController, :create)
-
       # Playlist specific routes
       post("/playlists/:playlist_id/items", PlaylistController, :add_item)
       patch("/playlists/:playlist_id/items/:item_id", PlaylistController, :update_item)
@@ -458,6 +490,8 @@ defmodule CastmillWeb.Router do
       get("/teams/:team_id/:resource_type", TeamController, :list_resources)
       put("/teams/:team_id/:resource_type/:resource_id", TeamController, :add_resource)
       delete("/teams/:team_id/:resource_type/:resource_id", TeamController, :remove_resource)
+      # Routes for organization quotas
+      resources "/quotas", OrganizationQuotaController, only: [:index, :show, :create, :update]
 
       # Tags - flexible resource organization
       get("/tags", TagController, :list_tags)
@@ -489,11 +523,6 @@ defmodule CastmillWeb.Router do
       resources "/:resources", ResourceController, except: [:new, :edit] do
       end
     end
-
-    # Routes for organization quotas
-    resources("/organizations/:organization_id/quotas", OrganizationQuotaController,
-      only: [:index, :show, :create, :update]
-    )
 
     # Widget-scoped credentials (for widgets that require per-instance credentials)
     post(

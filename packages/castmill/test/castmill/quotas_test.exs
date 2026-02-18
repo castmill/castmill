@@ -176,6 +176,7 @@ defmodule Castmill.QuotasTest do
       assert Quotas.get_quota_for_organization(organization.id, "teams") == 25
 
       # For resources not in the org plan, should fall back to network default plan
+      # Storage quota in bytes (1 GB)
       assert Quotas.get_quota_for_organization(organization.id, "storage") == 1_073_741_824
       assert Quotas.get_quota_for_organization(organization.id, "users") == 50
     end
@@ -262,14 +263,16 @@ defmodule Castmill.QuotasTest do
       assert Quotas.get_quota_for_organization(organization.id, "medias") == 100
 
       # For storage and users (not in assigned plan), should fall back to network default plan
+      # Storage quota in bytes (1 GB)
       assert Quotas.get_quota_for_organization(organization.id, "storage") == 1_073_741_824
       assert Quotas.get_quota_for_organization(organization.id, "users") == 50
 
       # Verify this allows uploads to work even with partial plan definitions
+      # Storage quota is in bytes, so check against byte value
       assert Quotas.has_organization_enough_quota?(
                organization.id,
                "storage",
-               1024 * 1024
+               536_870_912
              ) == true
     end
 

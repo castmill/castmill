@@ -1234,5 +1234,13 @@
       "failedToCompleteStep": "단계를 완료로 표시하지 못했습니다. 다시 시도해 주세요.",
       "failedToDismiss": "가이드를 닫지 못했습니다. 다시 시도해 주세요."
     }
+  },
+  "medias": {
+    "upload": {
+      "fileTooLarge": "파일 크기({{fileSize}})가 최대 업로드 제한({{maxSize}})을 초과합니다",
+      "largeFileWarning": "대용량 파일({{fileSize}}). 업로드에 시간이 걸릴 수 있습니다.",
+      "noValidFiles": "업로드할 유효한 파일이 없습니다.",
+      "uploadError": "파일 업로드 중 오류가 발생했습니다."
+    }
   }
 }

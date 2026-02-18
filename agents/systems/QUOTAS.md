@@ -101,7 +101,7 @@ Castmill.Quotas.get_quota_used_for_organization(organization_id, :storage)
 # Create a plan with quotas
 Castmill.Quotas.create_plan("Pro", network_id, [
   %{resource: "devices", max: 100},
-  %{resource: "storage", max: 10_000_000_000}
+  %{resource: "storage", max: 10_737_418_240}
 ])
 
 # List plans
@@ -142,6 +142,10 @@ Resources are stored as strings. Common resource types include:
 | `"medias"` | `Castmill.Resources.Media` | Number of media items |
 | `"users"` | `Castmill.Organizations.OrganizationsUsers` | Number of users |
 | `:storage` | (special) | Total file storage in bytes |
+| `:max_upload_size` | (special) | Max upload size per file in bytes |
+
+> **Note:** The `max` column in all quota tables uses `bigint` (int8) to support
+> storing byte values for storage and max_upload_size without overflow.
 
 ## Integration with Billing (castmill-saas)
 
