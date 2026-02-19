@@ -221,14 +221,20 @@ defmodule Castmill.Devices do
     Gets a device registration.
   """
   def get_devices_registration(hardware_id, pincode) do
+    # Make pincode comparison case-insensitive
+    normalized_pincode = String.upcase(pincode)
+
     DevicesRegistrations
-    |> where([d], d.hardware_id == ^hardware_id and d.pincode == ^pincode)
+    |> where([d], d.hardware_id == ^hardware_id and d.pincode == ^normalized_pincode)
     |> Repo.one()
   end
 
   def get_devices_registration(pincode) do
+    # Make pincode comparison case-insensitive
+    normalized_pincode = String.upcase(pincode)
+
     DevicesRegistrations
-    |> where([d], d.pincode == ^pincode)
+    |> where([d], d.pincode == ^normalized_pincode)
     |> Repo.one()
   end
 
@@ -244,7 +250,9 @@ defmodule Castmill.Devices do
   """
   def register_device(organization_id, pincode, attrs \\ %{}, opts \\ %{}) do
     Repo.transaction(fn ->
-      devices_registration = Repo.get_by(DevicesRegistrations, pincode: pincode)
+      # Make pincode comparison case-insensitive
+      normalized_pincode = String.upcase(pincode)
+      devices_registration = Repo.get_by(DevicesRegistrations, pincode: normalized_pincode)
 
       if devices_registration do
         case DateTime.compare(devices_registration.expires_at, DateTime.utc_now()) do

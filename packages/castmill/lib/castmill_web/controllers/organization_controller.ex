@@ -314,8 +314,18 @@ defmodule CastmillWeb.OrganizationController do
         |> put_status(:forbidden)
         |> json(%{errors: %{quota: ["Device quota exceeded"]}})
 
-      {:error, _} = error ->
-        {:error, error}
+      {:error, :invalid_pincode} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{errors: %{pincode: ["Invalid pincode"]}})
+
+      {:error, :pincode_expired} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{errors: %{pincode: ["Pincode has expired"]}})
+
+      {:error, changeset} ->
+        {:error, changeset}
     end
   end
 

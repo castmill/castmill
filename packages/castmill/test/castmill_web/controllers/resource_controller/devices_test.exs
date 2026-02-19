@@ -103,6 +103,48 @@ defmodule CastmillWeb.ResourceController.DevicesTest do
       assert json_response(conn, 422)
     end
 
+    test "registers a device with case-insensitive pincode (lowercase)", %{
+      conn: conn,
+      organization: organization
+    } do
+      device_registration_fixture(%{hardware_id: "hardware_lowercase", pincode: "DEADBEEF"})
+
+      device_params = %{
+        "name" => "device_lowercase",
+        "pincode" => "deadbeef"
+      }
+
+      conn = post(conn, "/api/organizations/#{organization.id}/devices", device_params)
+      response = json_response(conn, 201)
+
+      assert %{
+               "data" => %{
+                 "name" => "device_lowercase"
+               }
+             } = response
+    end
+
+    test "registers a device with case-insensitive pincode (mixed case)", %{
+      conn: conn,
+      organization: organization
+    } do
+      device_registration_fixture(%{hardware_id: "hardware_mixed", pincode: "DEADBEEF"})
+
+      device_params = %{
+        "name" => "device_mixed",
+        "pincode" => "DeAdBeEf"
+      }
+
+      conn = post(conn, "/api/organizations/#{organization.id}/devices", device_params)
+      response = json_response(conn, 201)
+
+      assert %{
+               "data" => %{
+                 "name" => "device_mixed"
+               }
+             } = response
+    end
+
     test "fails to register a new device with missing parameters", %{
       conn: conn,
       organization: organization
