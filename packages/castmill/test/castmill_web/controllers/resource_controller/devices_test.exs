@@ -100,7 +100,38 @@ defmodule CastmillWeb.ResourceController.DevicesTest do
       }
 
       conn = post(conn, "/api/organizations/#{organization.id}/devices", device_params)
-      assert json_response(conn, 422)
+      response = json_response(conn, 422)
+
+      assert %{"errors" => %{"pincode" => ["Invalid pincode"]}} = response
+    end
+
+    test "fails to register a device with expired pincode", %{
+      conn: conn,
+      organization: organization
+    } do
+      # Create a device registration with an expired pincode
+      {:ok, expired_registration} =
+        device_registration_fixture(%{
+          hardware_id: "expired_hardware",
+          pincode: "EXPIRED1"
+        })
+
+      # Update the registration to set expires_at to the past
+      Castmill.Repo.update!(
+        Ecto.Changeset.change(expired_registration, %{
+          expires_at: DateTime.add(DateTime.utc_now(), -3600, :second)
+        })
+      )
+
+      device_params = %{
+        "name" => "expired_device",
+        "pincode" => "EXPIRED1"
+      }
+
+      conn = post(conn, "/api/organizations/#{organization.id}/devices", device_params)
+      response = json_response(conn, 422)
+
+      assert %{"errors" => %{"pincode" => ["Pincode has expired"]}} = response
     end
 
     test "registers a device with case-insensitive pincode (lowercase)", %{
