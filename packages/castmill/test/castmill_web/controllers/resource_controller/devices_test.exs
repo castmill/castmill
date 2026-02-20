@@ -117,9 +117,15 @@ defmodule CastmillWeb.ResourceController.DevicesTest do
         })
 
       # Update the registration to set expires_at to the past
+      # Use DateTime.truncate to remove microseconds for :utc_datetime fields
+      expired_datetime =
+        DateTime.utc_now()
+        |> DateTime.add(-3600, :second)
+        |> DateTime.truncate(:second)
+
       Castmill.Repo.update!(
         Ecto.Changeset.change(expired_registration, %{
-          expires_at: DateTime.add(DateTime.utc_now(), -3600, :second)
+          expires_at: expired_datetime
         })
       )
 

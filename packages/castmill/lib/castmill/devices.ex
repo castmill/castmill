@@ -221,7 +221,7 @@ defmodule Castmill.Devices do
     Gets a device registration.
   """
   def get_devices_registration(hardware_id, pincode) do
-    # Make pincode comparison case-insensitive
+    # Normalize pincode to uppercase for case-insensitive comparison
     normalized_pincode = String.upcase(pincode)
 
     DevicesRegistrations
@@ -230,7 +230,7 @@ defmodule Castmill.Devices do
   end
 
   def get_devices_registration(pincode) do
-    # Make pincode comparison case-insensitive
+    # Normalize pincode to uppercase for case-insensitive comparison
     normalized_pincode = String.upcase(pincode)
 
     DevicesRegistrations
