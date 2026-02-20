@@ -58,6 +58,13 @@
   justify-content: space-between;
 }
 
+.radiobuttonDescription {
+  font-size: 0.7em;
+  opacity: 0.6;
+  margin-left: auto;
+  padding-left: 0.6em;
+}
+
 .selected {
   background: #3a3a3a;
   color: #eee;
