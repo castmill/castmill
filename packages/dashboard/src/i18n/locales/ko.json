@@ -931,8 +931,8 @@
     "errors": {
       "setChannelFailed": "기기 채널 설정 실패: {{error}}",
       "commandFailed": "요청 처리 중 오류가 발생했습니다",
-      "invalidPincode": "Invalid pincode. Please check the pincode displayed on your device and try again.",
-      "pincodeExpired": "This pincode has expired. Please restart the device registration process."
+      "invalidPincode": "유효하지 않은 PIN 코드입니다. 기기에 표시된 PIN 코드를 확인한 후 다시 시도하세요.",
+      "pincodeExpired": "이 PIN 코드는 만료되었습니다. 기기 등록 과정을 다시 시작해 주세요."
     },
     "assignedChannels": "할당된 채널",
     "addChannel": "채널 추가",

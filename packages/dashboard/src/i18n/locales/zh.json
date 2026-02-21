@@ -931,8 +931,8 @@
     "errors": {
       "setChannelFailed": "设置设备频道失败:{{error}}",
       "commandFailed": "处理您的请求时发生错误",
-      "invalidPincode": "Invalid pincode. Please check the pincode displayed on your device and try again.",
-      "pincodeExpired": "This pincode has expired. Please restart the device registration process."
+      "invalidPincode": "PIN码无效。请检查设备上显示的 PIN 码，然后重试。",
+      "pincodeExpired": "该 PIN 码已过期。请重新开始设备注册流程。"
     },
     "assignedChannels": "已分配的频道",
     "addChannel": "添加频道",

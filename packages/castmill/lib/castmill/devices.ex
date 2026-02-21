@@ -220,7 +220,7 @@ defmodule Castmill.Devices do
   @doc """
     Gets a device registration.
   """
-  def get_devices_registration(hardware_id, pincode) do
+  def get_devices_registration(hardware_id, pincode) when is_binary(pincode) do
     # Normalize pincode to uppercase for case-insensitive comparison
     normalized_pincode = String.upcase(pincode)
 
@@ -229,7 +229,9 @@ defmodule Castmill.Devices do
     |> Repo.one()
   end
 
-  def get_devices_registration(pincode) do
+  def get_devices_registration(_hardware_id, _pincode), do: nil
+
+  def get_devices_registration(pincode) when is_binary(pincode) do
     # Normalize pincode to uppercase for case-insensitive comparison
     normalized_pincode = String.upcase(pincode)
 
@@ -237,6 +239,8 @@ defmodule Castmill.Devices do
     |> where([d], d.pincode == ^normalized_pincode)
     |> Repo.one()
   end
+
+  def get_devices_registration(_pincode), do: nil
 
   @doc """
   Registers a device.
@@ -248,7 +252,7 @@ defmodule Castmill.Devices do
     If there is a register, but the pincode is expired, return an error.
     Optionally, add a default channel to the device based on the `add_default_channel` option.
   """
-  def register_device(organization_id, pincode, attrs \\ %{}, opts \\ %{}) do
+  def register_device(organization_id, pincode, attrs \\ %{}, opts \\ %{}) when is_binary(pincode) do
     Repo.transaction(fn ->
       # Make pincode comparison case-insensitive
       normalized_pincode = String.upcase(pincode)
@@ -271,6 +275,10 @@ defmodule Castmill.Devices do
         Repo.rollback(:invalid_pincode)
       end
     end)
+  end
+
+  def register_device(_organization_id, _pincode, _attrs \\ %{}, _opts \\ %{}) do
+    {:error, :invalid_pincode}
   end
 
   defp handle_non_expired_device(devices_registration, organization_id, opts, attrs) do

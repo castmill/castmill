@@ -931,8 +931,8 @@
     "errors": {
       "setChannelFailed": "فشل تعيين قناة الجهاز: {{error}}",
       "commandFailed": "حدث خطأ أثناء معالجة طلبك",
-      "invalidPincode": "Invalid pincode. Please check the pincode displayed on your device and try again.",
-      "pincodeExpired": "This pincode has expired. Please restart the device registration process."
+      "invalidPincode": "رمز PIN غير صالح. يرجى التحقق من الرمز المعروض على جهازك والمحاولة مرة أخرى.",
+      "pincodeExpired": "انتهت صلاحية رمز PIN هذا. يرجى إعادة بدء عملية تسجيل الجهاز."
     },
     "assignedChannels": "القنوات المخصصة",
     "addChannel": "إضافة قناة",

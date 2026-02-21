@@ -66,7 +66,7 @@ async function handleResponse<T = any>(
     try {
       errorData = await response.json();
       const { errors } = errorData;
-      
+
       // Check for specific error fields (e.g., pincode errors)
       if (errors && typeof errors === 'object') {
         // If errors is an object with field-specific errors, extract the first error message
@@ -82,7 +82,7 @@ async function handleResponse<T = any>(
           }
         }
       }
-      
+
       // Fallback to detail or statusText
       errMsg = `${errors?.detail || response.statusText}`;
     } catch (error) {
