@@ -1,4 +1,4 @@
-# electron-player
+s# electron-player
 
 An Electron application with Solid and TypeScript
 
