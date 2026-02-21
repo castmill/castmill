@@ -942,7 +942,9 @@
     },
     "errors": {
       "setChannelFailed": "Échec de la définition du canal de l'appareil : {{error}}",
-      "commandFailed": "Une erreur s'est produite lors du traitement de votre demande"
+      "commandFailed": "Une erreur s'est produite lors du traitement de votre demande",
+      "invalidPincode": "Invalid pincode. Please check the pincode displayed on your device and try again.",
+      "pincodeExpired": "This pincode has expired. Please restart the device registration process."
     },
     "assignedChannels": "Canaux assignés",
     "addChannel": "Ajouter un canal",

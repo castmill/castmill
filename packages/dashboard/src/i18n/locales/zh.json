@@ -930,7 +930,9 @@
     },
     "errors": {
       "setChannelFailed": "设置设备频道失败:{{error}}",
-      "commandFailed": "处理您的请求时发生错误"
+      "commandFailed": "处理您的请求时发生错误",
+      "invalidPincode": "Invalid pincode. Please check the pincode displayed on your device and try again.",
+      "pincodeExpired": "This pincode has expired. Please restart the device registration process."
     },
     "assignedChannels": "已分配的频道",
     "addChannel": "添加频道",
