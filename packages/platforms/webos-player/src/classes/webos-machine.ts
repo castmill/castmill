@@ -10,6 +10,16 @@ import { simpleHash, getTimers, setTimers } from './utils';
 import { version } from '../../package.json';
 import { systemMonitor } from './system-monitor';
 
+// Network Information API types (not in standard TypeScript DOM types)
+interface NetworkInformation {
+  type?: string;
+  effectiveType?: string;
+}
+
+interface NavigatorWithConnection extends Navigator {
+  connection?: NetworkInformation;
+}
+
 // The update config is used to update the application on the device. We set this
 // to make sure the application updates from the correct source.
 const UPDATE_CONFIG = {
@@ -274,7 +284,7 @@ export class WebosMachine implements Machine {
 
     // Network info via Navigator API
     try {
-      const connection = (navigator as any).connection;
+      const connection = (navigator as NavigatorWithConnection).connection;
       if (connection) {
         telemetry.network = {
           type: connection.type || connection.effectiveType || undefined,
