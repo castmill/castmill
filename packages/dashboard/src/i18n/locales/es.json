@@ -902,7 +902,25 @@
       "note": "Esto muestra lo que el dispositivo debería estar reproduciendo ahora según los horarios del canal, no necesariamente lo que se muestra realmente en el dispositivo."
     },
     "telemetry": {
-      "placeholder": "Trazas, registros, métricas y conectividad (calidad WiFi, etc.)"
+      "placeholder": "Trazas, registros, métricas y conectividad (calidad WiFi, etc.)",
+      "storage": "Almacenamiento",
+      "memory": "Memoria",
+      "cpu": "Uso de CPU",
+      "cpuLoad": "Carga promedio de CPU",
+      "network": "Red",
+      "connectionType": "Conexión",
+      "wifiSignal": "Señal WiFi",
+      "temperature": "Temperatura",
+      "fanSpeed": "Velocidad del ventilador",
+      "battery": "Batería",
+      "charging": "Cargando",
+      "uptime": "Tiempo activo",
+      "refresh": "Actualizar telemetría",
+      "offlineWarning": "El dispositivo está desconectado. Los datos de telemetría solo están disponibles cuando el dispositivo está conectado.",
+      "noData": "No hay datos de telemetría disponibles para este dispositivo.",
+      "daysShort": "d",
+      "hoursShort": "h",
+      "minutesShort": "m"
     },
     "maintenance": {
       "refresh": "Actualizar",

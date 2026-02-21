@@ -327,6 +327,26 @@ export const DevicesService = {
   },
 
   /**
+   * Get telemetry data from the device (proxied through the backend WebSocket).
+   */
+  async getDeviceTelemetry(baseUrl: string, deviceId: string) {
+    const response = await fetch(
+      `${baseUrl}/dashboard/devices/${deviceId}/telemetry`,
+      {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    return handleResponse<Record<string, any>>(response, {
+      parse: true,
+    });
+  },
+
+  /**
    * Remove Device.
    */
   async removeDevice(
