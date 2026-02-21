@@ -987,7 +987,9 @@
     },
     "errors": {
       "setChannelFailed": "Failed to set device channel: {{error}}",
-      "commandFailed": "An error occurred while processing your request"
+      "commandFailed": "An error occurred while processing your request",
+      "invalidPincode": "Invalid pincode. Please check the pincode displayed on your device and try again.",
+      "pincodeExpired": "This pincode has expired. Please restart the device registration process."
     }
   },
   "validation": {

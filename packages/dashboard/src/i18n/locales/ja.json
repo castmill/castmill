@@ -931,7 +931,9 @@
     },
     "errors": {
       "setChannelFailed": "デバイスチャンネルの設定に失敗しました: {{error}}",
-      "commandFailed": "リクエストの処理中にエラーが発生しました"
+      "commandFailed": "リクエストの処理中にエラーが発生しました",
+      "invalidPincode": "Invalid pincode. Please check the pincode displayed on your device and try again.",
+      "pincodeExpired": "This pincode has expired. Please restart the device registration process."
     },
     "assignedChannels": "割り当てられたチャンネル",
     "addChannel": "チャンネルを追加",
