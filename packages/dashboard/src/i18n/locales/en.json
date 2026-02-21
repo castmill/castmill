@@ -934,7 +934,25 @@
       "note": "This shows what the device should be playing now based on channel schedules, not necessarily what is actually displayed on the device."
     },
     "telemetry": {
-      "placeholder": "Traces, Logs, Metrics and Connectivity (WiFi quality, etc.)"
+      "placeholder": "Traces, Logs, Metrics and Connectivity (WiFi quality, etc.)",
+      "storage": "Storage",
+      "memory": "Memory",
+      "cpu": "CPU Usage",
+      "cpuLoad": "CPU Load Average",
+      "network": "Network",
+      "connectionType": "Connection",
+      "wifiSignal": "WiFi Signal",
+      "temperature": "Temperature",
+      "fanSpeed": "Fan Speed",
+      "battery": "Battery",
+      "charging": "Charging",
+      "uptime": "Uptime",
+      "refresh": "Refresh telemetry",
+      "offlineWarning": "Device is offline. Telemetry data is only available when the device is connected.",
+      "noData": "No telemetry data available from this device.",
+      "daysShort": "d",
+      "hoursShort": "h",
+      "minutesShort": "m"
     },
     "maintenance": {
       "refresh": "Refresh",

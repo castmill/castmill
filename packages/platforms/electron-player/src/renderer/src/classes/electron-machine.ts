@@ -1,4 +1,9 @@
-import { Machine, DeviceInfo, SettingKey } from '@castmill/device';
+import {
+  Machine,
+  DeviceInfo,
+  SettingKey,
+  TelemetryData,
+} from '@castmill/device';
 
 export class ElectronMachine implements Machine {
   async setSetting(key: SettingKey, value: string): Promise<void> {
@@ -132,5 +137,9 @@ export class ElectronMachine implements Machine {
    */
   async update(): Promise<void> {
     window.api.update();
+  }
+
+  async getTelemetry(): Promise<TelemetryData> {
+    return window.api.getTelemetry();
   }
 }

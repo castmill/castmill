@@ -877,7 +877,25 @@
       "note": "이것은 채널 일정에 따라 장치가 현재 재생해야 하는 내용을 보여주며, 장치에 실제로 표시되는 내용은 아닐 수 있습니다."
     },
     "telemetry": {
-      "placeholder": "추적, 로그, 메트릭 및 연결성(WiFi 품질 등)"
+      "placeholder": "추적, 로그, 메트릭 및 연결성(WiFi 품질 등)",
+      "storage": "저장소",
+      "memory": "메모리",
+      "cpu": "CPU 사용률",
+      "cpuLoad": "CPU 평균 부하",
+      "network": "네트워크",
+      "connectionType": "연결 유형",
+      "wifiSignal": "WiFi 신호",
+      "temperature": "온도",
+      "fanSpeed": "팬 속도",
+      "battery": "배터리",
+      "charging": "충전 중",
+      "uptime": "가동 시간",
+      "refresh": "원격 측정 새로고침",
+      "offlineWarning": "장치가 오프라인입니다. 원격 측정 데이터는 장치가 연결된 경우에만 사용할 수 있습니다.",
+      "noData": "이 장치에서 사용 가능한 원격 측정 데이터가 없습니다.",
+      "daysShort": "일",
+      "hoursShort": "시",
+      "minutesShort": "분"
     },
     "maintenance": {
       "refresh": "새로고침",

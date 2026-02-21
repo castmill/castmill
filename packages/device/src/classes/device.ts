@@ -84,7 +84,7 @@ interface CacheDeleteRequest {
 }
 
 interface DeviceRequest {
-  resource: 'cache';
+  resource: 'cache' | 'telemetry';
   opts: CachePage & { ref: string };
 }
 
@@ -554,6 +554,10 @@ export class Device extends EventEmitter {
         case 'cache':
           const page = await this.getCache(opts);
           channel.push('res:get', { page, ref: opts.ref });
+          break;
+        case 'telemetry':
+          const telemetry = (await this.integration.getTelemetry?.()) ?? {};
+          channel.push('res:get', { telemetry, ref: opts.ref });
           break;
       }
     });

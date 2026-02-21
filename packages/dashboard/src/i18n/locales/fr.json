@@ -889,7 +889,25 @@
       "note": "Ceci montre ce que l'appareil devrait jouer maintenant en fonction des horaires des canaux, pas nécessairement ce qui est réellement affiché sur l'appareil."
     },
     "telemetry": {
-      "placeholder": "Traces, journaux, métriques et connectivité (qualité WiFi, etc.)"
+      "placeholder": "Traces, journaux, métriques et connectivité (qualité WiFi, etc.)",
+      "storage": "Stockage",
+      "memory": "Mémoire",
+      "cpu": "Utilisation CPU",
+      "cpuLoad": "Charge moyenne CPU",
+      "network": "Réseau",
+      "connectionType": "Connexion",
+      "wifiSignal": "Signal WiFi",
+      "temperature": "Température",
+      "fanSpeed": "Vitesse du ventilateur",
+      "battery": "Batterie",
+      "charging": "En charge",
+      "uptime": "Temps de fonctionnement",
+      "refresh": "Actualiser la télémétrie",
+      "offlineWarning": "L'appareil est hors ligne. Les données de télémétrie ne sont disponibles que lorsque l'appareil est connecté.",
+      "noData": "Aucune donnée de télémétrie disponible pour cet appareil.",
+      "daysShort": "j",
+      "hoursShort": "h",
+      "minutesShort": "m"
     },
     "maintenance": {
       "refresh": "Actualiser",

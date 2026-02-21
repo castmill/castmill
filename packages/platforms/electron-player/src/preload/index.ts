@@ -17,6 +17,7 @@ const api: ApplicationAPI = {
   setItem: (key: string, value: string) =>
     ipcRenderer.send(Action.SET_STORE_VALUE, key, value),
   deleteItem: (key: string) => ipcRenderer.send(Action.DELETE_STORE_VALUE, key),
+  getTelemetry: () => ipcRenderer.invoke(Action.GET_TELEMETRY),
 };
 
 const fsApi = {

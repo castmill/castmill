@@ -878,7 +878,25 @@
       "note": "これは、チャンネルスケジュールに基づいてデバイスが現在再生すべき内容を示しており、デバイスに実際に表示されている内容とは限りません。"
     },
     "telemetry": {
-      "placeholder": "トレース、ログ、メトリクス、および接続性(WiFi品質など)"
+      "placeholder": "トレース、ログ、メトリクス、および接続性(WiFi品質など)",
+      "storage": "ストレージ",
+      "memory": "メモリ",
+      "cpu": "CPU使用率",
+      "cpuLoad": "CPU負荷平均",
+      "network": "ネットワーク",
+      "connectionType": "接続タイプ",
+      "wifiSignal": "WiFi信号",
+      "temperature": "温度",
+      "fanSpeed": "ファン速度",
+      "battery": "バッテリー",
+      "charging": "充電中",
+      "uptime": "稼働時間",
+      "refresh": "テレメトリを更新",
+      "offlineWarning": "デバイスがオフラインです。テレメトリデータはデバイスが接続されている場合にのみ利用可能です。",
+      "noData": "このデバイスからのテレメトリデータはありません。",
+      "daysShort": "日",
+      "hoursShort": "時",
+      "minutesShort": "分"
     },
     "maintenance": {
       "refresh": "更新",

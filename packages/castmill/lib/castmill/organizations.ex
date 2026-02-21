@@ -452,6 +452,7 @@ defmodule Castmill.Organizations do
         :delete_cache -> :update
         :list_events -> :show
         :delete_events -> :update
+        :get_telemetry -> :show
         # Keep other atoms as-is
         a when is_atom(a) -> a
         _ -> :unknown
