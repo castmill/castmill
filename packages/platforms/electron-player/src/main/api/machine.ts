@@ -7,7 +7,7 @@ import { is } from '@electron-toolkit/utils';
 import { autoUpdater } from 'electron-updater';
 import { one } from 'macaddress';
 import { createHash } from 'crypto';
-import si from 'systeminformation';
+import si, { Systeminformation } from 'systeminformation';
 import type { TelemetryData } from '@castmill/device';
 
 /*
@@ -206,12 +206,15 @@ export const getTelemetry = async (): Promise<TelemetryData> => {
     try {
       const wifiNetworks = await si.wifiNetworks();
       const connected = Array.isArray(wifiNetworks)
-        ? wifiNetworks.find((w: any) => w.security && w.signalLevel)
+        ? wifiNetworks.find(
+            (w: Systeminformation.WifiNetworkData) =>
+              w.security && w.signalLevel
+          )
         : undefined;
       if (connected) {
-        networkData!.ssid = (connected as any).ssid;
+        networkData!.ssid = connected.ssid;
         // signalLevel is typically in dBm (-30 = excellent, -90 = poor)
-        const dbm = (connected as any).signalLevel || 0;
+        const dbm = connected.signalLevel || 0;
         const percent = Math.min(100, Math.max(0, 2 * (dbm + 100)));
         networkData!.wifiSignalStrengthPercent = percent;
       }
