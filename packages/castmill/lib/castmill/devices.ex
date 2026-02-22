@@ -252,7 +252,8 @@ defmodule Castmill.Devices do
     If there is a register, but the pincode is expired, return an error.
     Optionally, add a default channel to the device based on the `add_default_channel` option.
   """
-  def register_device(organization_id, pincode, attrs \\ %{}, opts \\ %{}) when is_binary(pincode) do
+  def register_device(organization_id, pincode, attrs \\ %{}, opts \\ %{})
+      when is_binary(pincode) do
     Repo.transaction(fn ->
       # Make pincode comparison case-insensitive
       normalized_pincode = String.upcase(pincode)
