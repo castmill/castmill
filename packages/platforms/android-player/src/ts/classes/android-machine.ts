@@ -203,9 +203,12 @@ export class AndroidMachine implements Machine {
       console.error('Error getting battery info:', error);
     }
 
-    // Network info via Navigator API
+    // Network info via Navigator API (Network Information API)
     try {
-      const connection = (navigator as any).connection;
+      const nav = navigator as Navigator & {
+        connection?: { type?: string; effectiveType?: string };
+      };
+      const connection = nav.connection;
       if (connection) {
         telemetry.network = {
           type: connection.type || connection.effectiveType || undefined,
