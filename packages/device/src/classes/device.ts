@@ -24,7 +24,8 @@ import { DivLogger, Logger, NullLogger, WebSocketLogger } from './logger';
 
 const HEARTBEAT_INTERVAL = 1000 * 30; // 30 seconds
 const DEFAULT_MAX_LOGS = 100;
-const MAX_RECONNECT_WAIT = 1000 * 60 * 5; // 5 minutes max wait for reconnection
+const MAX_CONNECTION_WAIT_SECONDS = 300; // 5 minutes max wait for connection
+const MAX_CONNECTION_WAIT_MS = MAX_CONNECTION_WAIT_SECONDS * 1000;
 
 // Socket reconnection error types
 const AUTH_ERROR_INVALID_DEVICE = 'invalid_device';
@@ -583,11 +584,11 @@ export class Device extends EventEmitter {
       maxWaitTimeout = setTimeout(() => {
         if (!settled) {
           this.logger.error(
-            `Failed to connect to server after ${MAX_RECONNECT_WAIT / 1000}s`
+            `Failed to connect to server after ${MAX_CONNECTION_WAIT_SECONDS}s`
           );
           safeReject(CONNECTION_TIMEOUT);
         }
-      }, MAX_RECONNECT_WAIT);
+      }, MAX_CONNECTION_WAIT_MS);
     });
   }
 
