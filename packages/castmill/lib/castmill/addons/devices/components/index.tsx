@@ -474,6 +474,31 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
     setPincode(searchParams.registrationCode);
   }
 
+  /**
+   * Maps backend error to user-friendly translated message
+   */
+  const mapErrorToMessage = (error: any): string => {
+    // Default error message
+    let errorMessage = t('devices.errorRegisteringDevice', { error: String(error) });
+
+    // Check if this is an HttpError with pincode-specific error
+    if (error?.details?.field === 'pincode' && error?.details?.errors?.pincode) {
+      const pincodeError = error.details.errors.pincode[0];
+
+      // Map backend error messages to translation keys
+      if (pincodeError === 'Invalid pincode') {
+        errorMessage = t('devices.errors.invalidPincode');
+      } else if (pincodeError === 'Pincode has expired') {
+        errorMessage = t('devices.errors.pincodeExpired');
+      } else {
+        // Use the error message from backend but in a more user-friendly way
+        errorMessage = pincodeError;
+      }
+    }
+
+    return errorMessage;
+  };
+
   const handleDeviceRegistrationSubmit = async (registrationData: {
     name: string;
     pincode: string;
@@ -497,24 +522,7 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
       // Complete the onboarding step for device registration
       props.store.onboarding?.completeStep?.('register_device');
     } catch (error: any) {
-      // Check if this is an HttpError with pincode-specific error
-      let errorMessage = t('devices.errorRegisteringDevice', { error: String(error) });
-      
-      if (error?.details?.field === 'pincode' && error?.details?.errors?.pincode) {
-        const pincodeError = error.details.errors.pincode[0];
-        
-        // Map backend error messages to translation keys
-        if (pincodeError === 'Invalid pincode') {
-          errorMessage = t('devices.errors.invalidPincode');
-        } else if (pincodeError === 'Pincode has expired') {
-          errorMessage = t('devices.errors.pincodeExpired');
-        } else {
-          // Use the error message from backend but in a more user-friendly way
-          errorMessage = pincodeError;
-        }
-      }
-      
-      setRegisterError(errorMessage);
+      setRegisterError(mapErrorToMessage(error));
     } finally {
       setLoading(false);
     }
