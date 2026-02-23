@@ -325,7 +325,10 @@ defmodule CastmillWeb.OrganizationController do
         |> json(%{errors: %{pincode: ["Pincode has expired"]}})
 
       {:error, changeset} ->
-        {:error, changeset}
+        conn
+        |> put_status(:unprocessable_entity)
+        |> put_view(CastmillWeb.ChangesetJSON)
+        |> render("error.json", changeset: changeset)
     end
   end
 
