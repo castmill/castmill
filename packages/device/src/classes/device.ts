@@ -24,6 +24,7 @@ import { DivLogger, Logger, NullLogger, WebSocketLogger } from './logger';
 
 const HEARTBEAT_INTERVAL = 1000 * 30; // 30 seconds
 const DEFAULT_MAX_LOGS = 100;
+const MAX_RECONNECT_WAIT = 1000 * 60 * 5; // 5 minutes max wait for reconnection
 
 const supportedDebugModes = ['remote', 'local', 'none'];
 
@@ -452,8 +453,14 @@ export class Device extends EventEmitter {
 
     let socket = new Socket(this.socketEndpoint, {
       params: { token: pincode },
-      reconnectAfterMs: (_tries: number) => 10_000,
-      rejoinAfterMs: (_tries: number) => 10_000,
+      reconnectAfterMs: (tries: number) => {
+        // Exponential backoff: 1s, 2s, 4s, 8s, 10s (capped at 10s)
+        return Math.min(1000 * Math.pow(2, tries - 1), 10_000);
+      },
+      rejoinAfterMs: (tries: number) => {
+        // Exponential backoff: 1s, 2s, 4s, 8s, 10s (capped at 10s)
+        return Math.min(1000 * Math.pow(2, tries - 1), 10_000);
+      },
     });
 
     socket.connect();
@@ -494,8 +501,14 @@ export class Device extends EventEmitter {
 
     const socket = (this.socket = new Socket(this.socketEndpoint, {
       params: { device_id: device.id, hardware_id: hardwareId },
-      reconnectAfterMs: (_tries: number) => 10_000,
-      rejoinAfterMs: (_tries: number) => 10_000,
+      reconnectAfterMs: (tries: number) => {
+        // Exponential backoff: 1s, 2s, 4s, 8s, 10s (capped at 10s)
+        return Math.min(1000 * Math.pow(2, tries - 1), 10_000);
+      },
+      rejoinAfterMs: (tries: number) => {
+        // Exponential backoff: 1s, 2s, 4s, 8s, 10s (capped at 10s)
+        return Math.min(1000 * Math.pow(2, tries - 1), 10_000);
+      },
     }));
 
     socket.connect();
@@ -509,11 +522,16 @@ export class Device extends EventEmitter {
       // Track if we've already resolved/rejected
       let settled = false;
       let stateCheckInterval: NodeJS.Timeout | null = null;
+      let maxWaitTimeout: NodeJS.Timeout | null = null;
 
       const cleanup = () => {
         if (stateCheckInterval) {
           clearInterval(stateCheckInterval);
           stateCheckInterval = null;
+        }
+        if (maxWaitTimeout) {
+          clearTimeout(maxWaitTimeout);
+          maxWaitTimeout = null;
         }
       };
 
@@ -558,6 +576,16 @@ export class Device extends EventEmitter {
           safeResolve(channel);
         }
       }, 1000);
+
+      // Set maximum wait time to prevent indefinite polling
+      maxWaitTimeout = setTimeout(() => {
+        if (!settled) {
+          this.logger.error(
+            `Failed to connect to server after ${MAX_RECONNECT_WAIT / 1000}s. Reloading page...`
+          );
+          safeReject('connection_timeout');
+        }
+      }, MAX_RECONNECT_WAIT);
     });
   }
 
