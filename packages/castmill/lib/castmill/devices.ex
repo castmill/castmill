@@ -278,7 +278,7 @@ defmodule Castmill.Devices do
     end)
   end
 
-  def register_device(_organization_id, _pincode, _attrs \\ %{}, _opts \\ %{}) do
+  def register_device(_organization_id, _pincode, _attrs, _opts) do
     {:error, :invalid_pincode}
   end
 
