@@ -34,7 +34,7 @@ const CONNECTION_TIMEOUT = 'connection_timeout';
 // Exponential backoff for socket reconnection
 // Returns delay in ms: 1s, 2s, 4s, 8s, capped at 10s
 const getReconnectDelay = (tries: number): number => {
-  return Math.min(1000 * Math.pow(2, tries - 1), 10_000);
+  return Math.min(1000 * Math.pow(2, Math.max(tries - 1, 0)), 10_000);
 };
 
 const supportedDebugModes = ['remote', 'local', 'none'];
@@ -520,8 +520,8 @@ export class Device extends EventEmitter {
     return new Promise<PhoenixChannel>((resolve, reject) => {
       // Track if we've already resolved/rejected
       let settled = false;
-      let stateCheckInterval: NodeJS.Timeout | null = null;
-      let maxWaitTimeout: NodeJS.Timeout | null = null;
+      let stateCheckInterval: ReturnType<typeof setInterval> | null = null;
+      let maxWaitTimeout: ReturnType<typeof setTimeout> | null = null;
 
       const cleanup = () => {
         if (stateCheckInterval) {
@@ -583,7 +583,7 @@ export class Device extends EventEmitter {
       maxWaitTimeout = setTimeout(() => {
         if (!settled) {
           this.logger.error(
-            `Failed to connect to server after ${MAX_RECONNECT_WAIT / 1000}s. Reloading page...`
+            `Failed to connect to server after ${MAX_RECONNECT_WAIT / 1000}s`
           );
           safeReject(CONNECTION_TIMEOUT);
         }
