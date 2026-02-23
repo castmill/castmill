@@ -452,6 +452,8 @@ export class Device extends EventEmitter {
 
     let socket = new Socket(this.socketEndpoint, {
       params: { token: pincode },
+      reconnectAfterMs: (_tries: number) => 10_000,
+      rejoinAfterMs: (_tries: number) => 10_000,
     });
 
     socket.connect();
@@ -469,6 +471,9 @@ export class Device extends EventEmitter {
       .receive('error', (resp) => {
         // TODO: Show error in UI.
         this.logger.error(`Unable to join ${resp}`);
+      })
+      .receive('timeout', () => {
+        this.logger.info('Registration channel join timeout, waiting for connection...');
       });
 
     channel.on('device:registered', async (payload) => {
@@ -501,14 +506,58 @@ export class Device extends EventEmitter {
     });
 
     return new Promise<PhoenixChannel>((resolve, reject) => {
+      // Track if we've already resolved/rejected
+      let settled = false;
+      let stateCheckInterval: NodeJS.Timeout | null = null;
+
+      const cleanup = () => {
+        if (stateCheckInterval) {
+          clearInterval(stateCheckInterval);
+          stateCheckInterval = null;
+        }
+      };
+
+      const safeResolve = (value: PhoenixChannel) => {
+        if (!settled) {
+          settled = true;
+          cleanup();
+          resolve(value);
+        }
+      };
+
+      const safeReject = (reason?: any) => {
+        if (!settled) {
+          settled = true;
+          cleanup();
+          reject(reason);
+        }
+      };
+
+      // Handle initial join attempt and rejoins after reconnection
       channel
         .join()
-        .receive('ok', (resp) => {
-          resolve(channel);
+        .receive('ok', () => {
+          safeResolve(channel);
         })
         .receive('error', (resp) => {
-          reject(resp);
+          // Only reject for auth errors, not connection failures
+          if (resp === 'invalid_device' || resp === 'unauthorized') {
+            safeReject(resp);
+          } else {
+            this.logger.error(`Channel join error: ${resp}, will keep trying...`);
+          }
+        })
+        .receive('timeout', () => {
+          this.logger.info('Channel join timeout, waiting for connection...');
         });
+
+      // Poll channel state to detect successful reconnection and rejoin
+      // This handles the case where the initial join times out but a rejoin succeeds
+      stateCheckInterval = setInterval(() => {
+        if (!settled && channel.state === 'joined') {
+          safeResolve(channel);
+        }
+      }, 1000);
     });
   }
 
