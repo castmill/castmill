@@ -46,6 +46,63 @@ export interface Timers {
   off: TimerEntry[];
 }
 
+/**
+ * Telemetry data collected from the device hardware.
+ * All properties are optional since availability varies by platform.
+ */
+export interface TelemetryData {
+  /** Storage usage information */
+  storage?: {
+    totalBytes: number;
+    usedBytes: number;
+  };
+
+  /** Memory (RAM) usage information */
+  memory?: {
+    totalBytes: number;
+    usedBytes: number;
+  };
+
+  /** Current CPU usage as a percentage (0-100) */
+  cpuUsagePercent?: number;
+
+  /** CPU load averages (1, 5, and 15 minute intervals) */
+  cpuLoadAvg?: {
+    one: number;
+    five: number;
+    fifteen: number;
+  };
+
+  /** Temperature readings from various sensors */
+  temperatures?: Array<{
+    label: string;
+    celsius: number;
+  }>;
+
+  /** Fan speed readings */
+  fanSpeeds?: Array<{
+    label: string;
+    rpm: number;
+  }>;
+
+  /** Network connection information */
+  network?: {
+    type?: string;
+    wifiSignalStrengthPercent?: number;
+    ssid?: string;
+    ipAddress?: string;
+  };
+
+  /** Battery information (for portable/tablet devices) */
+  battery?: {
+    levelPercent: number;
+    isCharging: boolean;
+  };
+
+  /** System uptime in seconds */
+  uptimeSeconds?: number;
+}
+
 // The keys of the settings that the machine can store. For type safety defined
 // as a union type.
 export type SettingKey = 'BASE_URL'; // Add more keys as needed
@@ -169,4 +226,11 @@ export interface Machine {
    * at specific times.
    */
   setTimers?(timers: Timers): Promise<void>;
+
+  /**
+   * Returns telemetry data from the device hardware, including storage, memory,
+   * CPU usage, temperatures, fan speeds, network info, battery status, and uptime.
+   * Availability of data varies by platform.
+   */
+  getTelemetry?(): Promise<TelemetryData>;
 }

@@ -2,7 +2,12 @@ import { Device } from '@capacitor/device';
 import { Toast } from '@capacitor/toast';
 import { App } from '@capacitor/app';
 import { Preferences } from '@capacitor/preferences';
-import { Machine, DeviceInfo, SettingKey } from '@castmill/device';
+import {
+  Machine,
+  DeviceInfo,
+  SettingKey,
+  TelemetryData,
+} from '@castmill/device';
 import { Castmill } from '../../plugins/castmill';
 import { delay } from '../utils';
 
@@ -146,5 +151,73 @@ export class AndroidMachine implements Machine {
   async update(): Promise<void> {
     //TODO: Implement
     console.log('Update');
+  }
+
+  /**
+   * Returns telemetry data from the Android device.
+   * Uses Capacitor Device plugin for disk, memory, and battery info.
+   */
+  async getTelemetry(): Promise<TelemetryData> {
+    const telemetry: TelemetryData = {};
+
+    try {
+      const info = await Device.getInfo();
+
+      // Storage info
+      if (info.realDiskTotal !== undefined && info.realDiskFree !== undefined) {
+        const totalBytes = info.realDiskTotal;
+        const freeBytes = info.realDiskFree;
+        telemetry.storage = {
+          totalBytes,
+          usedBytes: totalBytes - freeBytes,
+        };
+      } else if (info.diskTotal !== undefined && info.diskFree !== undefined) {
+        telemetry.storage = {
+          totalBytes: info.diskTotal,
+          usedBytes: info.diskTotal - info.diskFree,
+        };
+      }
+
+      // Memory info
+      if (info.memUsed !== undefined) {
+        // Capacitor only provides memUsed on Android, total memory isn't directly available
+        telemetry.memory = {
+          totalBytes: 0, // Not available via Capacitor
+          usedBytes: info.memUsed,
+        };
+      }
+    } catch (error) {
+      console.error('Error getting device info for telemetry:', error);
+    }
+
+    // Battery info
+    try {
+      const batteryInfo = await Device.getBatteryInfo();
+      if (batteryInfo.batteryLevel !== undefined) {
+        telemetry.battery = {
+          levelPercent: Math.round(batteryInfo.batteryLevel * 100),
+          isCharging: batteryInfo.isCharging ?? false,
+        };
+      }
+    } catch (error) {
+      console.error('Error getting battery info:', error);
+    }
+
+    // Network info via Navigator API (Network Information API)
+    try {
+      const nav = navigator as Navigator & {
+        connection?: { type?: string; effectiveType?: string };
+      };
+      const connection = nav.connection;
+      if (connection) {
+        telemetry.network = {
+          type: connection.type || connection.effectiveType || undefined,
+        };
+      }
+    } catch (error) {
+      console.error('Error getting network info:', error);
+    }
+
+    return telemetry;
   }
 }

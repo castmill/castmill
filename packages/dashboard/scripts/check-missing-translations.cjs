@@ -85,6 +85,10 @@ const ALLOWED_IDENTICAL_STRINGS = new Set([
   '3:4 (Portrait)', // Cognate in French
   'Contact', // Cognate in French
   'Administrator', // Cognate in German
+  // Time unit abbreviations - internationally recognized
+  'd', // days short
+  'h', // hours short
+  'm', // minutes short
   // Social media URLs and placeholders - intentionally identical
   'GitHub URL',
   'X (Twitter) URL',

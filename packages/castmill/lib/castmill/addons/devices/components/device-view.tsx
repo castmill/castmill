@@ -8,6 +8,7 @@ import { DeviceDetails, DeviceUpdate } from './device-details';
 import { DevicesService } from '../services/devices.service';
 import { DeviceCache } from './device-cache';
 import { DevicePreview } from './device-preview';
+import { DeviceTelemetry } from './device-telemetry';
 import { AddonStore } from '../../common/interfaces/addon-store';
 
 // Optionally we should allow using protonmaps
@@ -115,7 +116,9 @@ const DeviceView: Component<{
     },
     {
       title: t('common.telemetry'),
-      content: () => <div>{t('devices.telemetry.placeholder')}</div>,
+      content: () => (
+        <DeviceTelemetry baseUrl={props.baseUrl} device={props.device} t={t} />
+      ),
     },
   ];
 

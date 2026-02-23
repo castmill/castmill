@@ -896,7 +896,25 @@
       "note": "Dies zeigt, was das Gerät jetzt basierend auf Kanalzeitplänen abspielen sollte, nicht unbedingt, was tatsächlich auf dem Gerät angezeigt wird."
     },
     "telemetry": {
-      "placeholder": "Traces, Logs, Metriken und Konnektivität (WiFi-Qualität, etc.)"
+      "placeholder": "Traces, Logs, Metriken und Konnektivität (WiFi-Qualität, etc.)",
+      "storage": "Speicher",
+      "memory": "Arbeitsspeicher",
+      "cpu": "CPU-Auslastung",
+      "cpuLoad": "CPU-Durchschnittslast",
+      "network": "Netzwerk",
+      "connectionType": "Verbindung",
+      "wifiSignal": "WiFi-Signal",
+      "temperature": "Temperatur",
+      "fanSpeed": "Lüftergeschwindigkeit",
+      "battery": "Batterie",
+      "charging": "Wird geladen",
+      "uptime": "Betriebszeit",
+      "refresh": "Telemetrie aktualisieren",
+      "offlineWarning": "Das Gerät ist offline. Telemetriedaten sind nur verfügbar, wenn das Gerät verbunden ist.",
+      "noData": "Keine Telemetriedaten von diesem Gerät verfügbar.",
+      "daysShort": "T",
+      "hoursShort": "Std",
+      "minutesShort": "Min"
     },
     "maintenance": {
       "refresh": "Aktualisieren",

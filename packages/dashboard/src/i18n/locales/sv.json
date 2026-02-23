@@ -872,7 +872,25 @@
       "note": "Detta visar vad enheten borde spela nu baserat på kanalscheman, inte nödvändigtvis vad som faktiskt visas på enheten."
     },
     "telemetry": {
-      "placeholder": "Spår, loggar, mätvärden och anslutning (WiFi-kvalitet osv.)"
+      "placeholder": "Spår, loggar, mätvärden och anslutning (WiFi-kvalitet osv.)",
+      "storage": "Lagring",
+      "memory": "Minne",
+      "cpu": "CPU-användning",
+      "cpuLoad": "CPU-belastning",
+      "network": "Nätverk",
+      "connectionType": "Anslutning",
+      "wifiSignal": "WiFi-signal",
+      "temperature": "Temperatur",
+      "fanSpeed": "Fläkthastighet",
+      "battery": "Batteri",
+      "charging": "Laddar",
+      "uptime": "Drifttid",
+      "refresh": "Uppdatera telemetri",
+      "offlineWarning": "Enheten är offline. Telemetridata är bara tillgänglig när enheten är ansluten.",
+      "noData": "Ingen telemetridata tillgänglig från denna enhet.",
+      "daysShort": "d",
+      "hoursShort": "t",
+      "minutesShort": "m"
     },
     "maintenance": {
       "refresh": "Uppdatera",

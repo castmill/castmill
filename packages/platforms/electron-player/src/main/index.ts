@@ -235,6 +235,10 @@ file: app.whenReady().then(() => {
       api.deleteAllFiles(storagePath)
   );
 
+  ipcMain.handle(Action.GET_TELEMETRY, () => {
+    return api.getTelemetry();
+  });
+
   createWindow();
 
   app.on('activate', function () {
