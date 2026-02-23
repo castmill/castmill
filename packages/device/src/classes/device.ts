@@ -26,6 +26,17 @@ const HEARTBEAT_INTERVAL = 1000 * 30; // 30 seconds
 const DEFAULT_MAX_LOGS = 100;
 const MAX_RECONNECT_WAIT = 1000 * 60 * 5; // 5 minutes max wait for reconnection
 
+// Socket reconnection error types
+const AUTH_ERROR_INVALID_DEVICE = 'invalid_device';
+const AUTH_ERROR_UNAUTHORIZED = 'unauthorized';
+const CONNECTION_TIMEOUT = 'connection_timeout';
+
+// Exponential backoff for socket reconnection
+// Returns delay in ms: 1s, 2s, 4s, 8s, capped at 10s
+const getReconnectDelay = (tries: number): number => {
+  return Math.min(1000 * Math.pow(2, tries - 1), 10_000);
+};
+
 const supportedDebugModes = ['remote', 'local', 'none'];
 
 export enum Status {
@@ -424,7 +435,7 @@ export class Device extends EventEmitter {
         this.initListeners(phoenixChannel);
         this.initHeartbeat(phoenixChannel);
       } catch (error) {
-        if (error === 'invalid_device') {
+        if (error === AUTH_ERROR_INVALID_DEVICE) {
           // Clean all app data and refresh the page.
           await this.integration.removeCredentials();
           window.location.reload();
@@ -453,14 +464,8 @@ export class Device extends EventEmitter {
 
     let socket = new Socket(this.socketEndpoint, {
       params: { token: pincode },
-      reconnectAfterMs: (tries: number) => {
-        // Exponential backoff: 1s, 2s, 4s, 8s, 10s (capped at 10s)
-        return Math.min(1000 * Math.pow(2, tries - 1), 10_000);
-      },
-      rejoinAfterMs: (tries: number) => {
-        // Exponential backoff: 1s, 2s, 4s, 8s, 10s (capped at 10s)
-        return Math.min(1000 * Math.pow(2, tries - 1), 10_000);
-      },
+      reconnectAfterMs: getReconnectDelay,
+      rejoinAfterMs: getReconnectDelay,
     });
 
     socket.connect();
@@ -501,14 +506,8 @@ export class Device extends EventEmitter {
 
     const socket = (this.socket = new Socket(this.socketEndpoint, {
       params: { device_id: device.id, hardware_id: hardwareId },
-      reconnectAfterMs: (tries: number) => {
-        // Exponential backoff: 1s, 2s, 4s, 8s, 10s (capped at 10s)
-        return Math.min(1000 * Math.pow(2, tries - 1), 10_000);
-      },
-      rejoinAfterMs: (tries: number) => {
-        // Exponential backoff: 1s, 2s, 4s, 8s, 10s (capped at 10s)
-        return Math.min(1000 * Math.pow(2, tries - 1), 10_000);
-      },
+      reconnectAfterMs: getReconnectDelay,
+      rejoinAfterMs: getReconnectDelay,
     }));
 
     socket.connect();
@@ -559,7 +558,10 @@ export class Device extends EventEmitter {
         })
         .receive('error', (resp) => {
           // Only reject for auth errors, not connection failures
-          if (resp === 'invalid_device' || resp === 'unauthorized') {
+          if (
+            resp === AUTH_ERROR_INVALID_DEVICE ||
+            resp === AUTH_ERROR_UNAUTHORIZED
+          ) {
             safeReject(resp);
           } else {
             this.logger.error(`Channel join error: ${resp}, will keep trying...`);
@@ -583,7 +585,7 @@ export class Device extends EventEmitter {
           this.logger.error(
             `Failed to connect to server after ${MAX_RECONNECT_WAIT / 1000}s. Reloading page...`
           );
-          safeReject('connection_timeout');
+          safeReject(CONNECTION_TIMEOUT);
         }
       }, MAX_RECONNECT_WAIT);
     });
