@@ -582,12 +582,10 @@ export class Device extends EventEmitter {
 
       // Set maximum wait time to prevent indefinite polling
       maxWaitTimeout = setTimeout(() => {
-        if (!settled) {
-          this.logger.error(
-            `Failed to connect to server after ${MAX_CONNECTION_WAIT_SECONDS}s`
-          );
-          safeReject(CONNECTION_TIMEOUT);
-        }
+        this.logger.error(
+          `Failed to connect to server after ${MAX_CONNECTION_WAIT_SECONDS}s`
+        );
+        safeReject(CONNECTION_TIMEOUT);
       }, MAX_CONNECTION_WAIT_MS);
     });
   }
