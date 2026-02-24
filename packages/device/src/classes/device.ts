@@ -424,7 +424,7 @@ export class Device extends EventEmitter {
 
           // Refresh the page to initialize the player with the new credentials.
           window.location.reload();
-          // Return empty string as page will reload
+          // Unreachable: page will reload, but TypeScript requires a return value
           return '';
         } else {
           throw new Error(`Invalid status ${pincodeResponse.status}`);
@@ -439,7 +439,7 @@ export class Device extends EventEmitter {
       }
     }
 
-    throw new Error('Device is closing');
+    throw new Error('Pincode request cancelled: device is closing');
   }
 
   async loginOrRegister(): Promise<{ status: Status; pincode?: string }> {
