@@ -349,12 +349,33 @@ defmodule CastmillWeb.DeviceController do
     Not used?
   """
   def create(conn, %{"name" => name, "pincode" => pincode, "organization_id" => organization_id}) do
-    with {:ok, {device, _token}} <-
-           Castmill.Devices.register_device(organization_id, pincode, %{name: name}) do
-      conn
-      |> put_status(:created)
-      |> put_resp_header("location", ~p"/devices/#{device.id}")
-      |> render(:show, device: device)
+    case Castmill.Devices.register_device(organization_id, pincode, %{name: name}) do
+      {:ok, {device, _token}} ->
+        conn
+        |> put_status(:created)
+        |> put_resp_header("location", ~p"/devices/#{device.id}")
+        |> render(:show, device: device)
+
+      {:error, :invalid_pincode} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{errors: %{pincode: ["Invalid pincode"]}})
+
+      {:error, :pincode_expired} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{errors: %{pincode: ["Pincode has expired"]}})
+
+      {:error, :quota_exceeded} ->
+        conn
+        |> put_status(:forbidden)
+        |> json(%{errors: %{quota: ["Device quota exceeded"]}})
+
+      {:error, changeset} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> put_view(CastmillWeb.ChangesetJSON)
+        |> render("error.json", changeset: changeset)
     end
   end
 
