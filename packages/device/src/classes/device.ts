@@ -386,41 +386,60 @@ export class Device extends EventEmitter {
     );
   }
 
-  private async requestPincode(hardwareId: string) {
+  private async requestPincode(hardwareId: string): Promise<string> {
     const location = await this.integration.getLocation!();
-    const pincodeResponse = await fetch(`${this.baseUrl}/registrations`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        hardware_id: hardwareId,
-        location,
-        timezone: await this.integration.getTimezone!(),
-      }),
-    });
+    const timezone = await this.integration.getTimezone!();
 
-    if (pincodeResponse.status === 201) {
-      const { data } = await pincodeResponse.json();
-      return data.pincode;
-    } else if (pincodeResponse.status === 200) {
-      // Device was already registered, and we got the token to recover it.
-      const { data } = await pincodeResponse.json();
+    // Retry loop: keep trying to reach the server with exponential backoff
+    let tries = 0;
+    while (!this.closing) {
+      try {
+        const pincodeResponse = await fetch(`${this.baseUrl}/registrations`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            hardware_id: hardwareId,
+            location,
+            timezone,
+          }),
+        });
 
-      const credentials = {
-        device: {
-          id: data.id,
-          name: data.name,
-          token: data.token,
-        },
-      };
-      await this.integration.storeCredentials!(JSON.stringify(credentials));
+        if (pincodeResponse.status === 201) {
+          const { data } = await pincodeResponse.json();
+          return data.pincode;
+        } else if (pincodeResponse.status === 200) {
+          // Device was already registered, and we got the token to recover it.
+          const { data } = await pincodeResponse.json();
 
-      // Refresh the page to initialize the player with the new credentials.
-      window.location.reload();
-    } else {
-      throw new Error(`Invalid status ${pincodeResponse.status}`);
+          const credentials = {
+            device: {
+              id: data.id,
+              name: data.name,
+              token: data.token,
+            },
+          };
+          await this.integration.storeCredentials!(JSON.stringify(credentials));
+
+          // Refresh the page to initialize the player with the new credentials.
+          window.location.reload();
+          // Return empty string as page will reload
+          return '';
+        } else {
+          throw new Error(`Invalid status ${pincodeResponse.status}`);
+        }
+      } catch (error) {
+        tries++;
+        const delay = getReconnectDelay(tries);
+        this.logger.info(
+          `Failed to request pincode: ${error}. Retrying in ${delay / 1000}s...`
+        );
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
     }
+
+    throw new Error('Device is closing');
   }
 
   async loginOrRegister(): Promise<{ status: Status; pincode?: string }> {
