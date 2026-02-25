@@ -228,6 +228,9 @@
       "teams": "Teams",
       "storage": "Gesamtspeicher"
     },
+    "overview": {
+      "networkInfo": "Netzwerkinformationen"
+    },
     "identity": {
       "title": "Netzwerkidentität",
       "description": "Konfigurieren Sie das Branding und die Identität Ihres Netzwerks.",

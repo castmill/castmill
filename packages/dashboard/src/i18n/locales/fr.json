@@ -214,6 +214,9 @@
       "teams": "Équipes",
       "storage": "Stockage Total"
     },
+    "overview": {
+      "networkInfo": "Informations du Réseau"
+    },
     "identity": {
       "title": "Identité du Réseau",
       "description": "Configurez l'image de marque et l'identité de votre réseau.",

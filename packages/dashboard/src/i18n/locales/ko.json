@@ -214,6 +214,9 @@
       "teams": "팀",
       "storage": "총 저장소"
     },
+    "overview": {
+      "networkInfo": "네트워크 정보"
+    },
     "identity": {
       "title": "네트워크 아이덴티티",
       "description": "네트워크의 브랜드와 아이덴티티를 구성하세요.",

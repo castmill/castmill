@@ -241,6 +241,9 @@
       "teams": "Teams",
       "storage": "Total Storage"
     },
+    "overview": {
+      "networkInfo": "Network Information"
+    },
     "identity": {
       "title": "Network Identity",
       "description": "Configure the branding and identity of your network.",

@@ -214,6 +214,9 @@
       "teams": "团队",
       "storage": "总存储"
     },
+    "overview": {
+      "networkInfo": "网络信息"
+    },
     "identity": {
       "title": "网络身份",
       "description": "配置您网络的品牌和身份。",

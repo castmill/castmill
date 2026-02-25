@@ -209,6 +209,9 @@
       "teams": "Team",
       "storage": "Total Lagring"
     },
+    "overview": {
+      "networkInfo": "Nätverksinformation"
+    },
     "identity": {
       "title": "Nätverksidentitet",
       "description": "Konfigurera varumärke och identitet för ditt nätverk.",

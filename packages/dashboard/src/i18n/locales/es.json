@@ -215,6 +215,9 @@
       "teams": "Equipos",
       "storage": "Almacenamiento Total"
     },
+    "overview": {
+      "networkInfo": "Información de la Red"
+    },
     "identity": {
       "title": "Identidad de Red",
       "description": "Configura la marca e identidad de tu red.",

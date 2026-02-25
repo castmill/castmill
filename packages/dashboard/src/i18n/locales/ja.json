@@ -214,6 +214,9 @@
       "teams": "チーム",
       "storage": "合計ストレージ"
     },
+    "overview": {
+      "networkInfo": "ネットワーク情報"
+    },
     "identity": {
       "title": "ネットワークアイデンティティ",
       "description": "ネットワークのブランドとアイデンティティを設定します。",
