@@ -72,7 +72,11 @@ const SidePanelTree: Component<{
               node={node}
               level={props.level + 1}
               skipKeys={props.skipKeys}
-              basePath={props.basePath}
+              basePath={
+                addon?.mount_path
+                  ? `${getBasePath()}${getLinkPath()}`
+                  : props.basePath
+              }
             />
           </Show>
         )}
@@ -123,14 +127,14 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
               selectedName: name,
             });
 
-            // Only navigate if we're on an /org/ route
             if (location.pathname.startsWith('/org/')) {
-              // Extract current path without /org/:orgId prefix
+              // Preserve current sub-path within the new organization
               const currentPath =
                 location.pathname.replace(/^\/org\/[^\/]+/, '') || '/';
-
-              // Navigate to new organization with same path
               navigate(`/org/${value}${currentPath}`);
+            } else {
+              // On non-org routes (e.g., network admin), navigate to the new org's home
+              navigate(`/org/${value}`);
             }
           }}
         />

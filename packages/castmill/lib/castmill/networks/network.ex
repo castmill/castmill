@@ -57,7 +57,7 @@ defmodule Castmill.Networks.Network do
     |> validate_format(:email, ~r/@/, message: "must be a valid email address")
     |> validate_format(
       :domain,
-      ~r/^[a-zA-Z0-9][a-zA-Z0-9\-]*(\.[a-zA-Z0-9][a-zA-Z0-9\-]*)*(:\d+)?$/,
+      ~r/^[a-zA-Z0-9]([a-zA-Z0-9\-]*[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]*[a-zA-Z0-9])?)*(:\d+)?$/,
       message: "must be a valid domain (e.g., app.example.com or localhost:3000)"
     )
     |> unique_constraint(:name)

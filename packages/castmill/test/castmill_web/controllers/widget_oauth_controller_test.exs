@@ -1,6 +1,7 @@
 defmodule CastmillWeb.WidgetOAuthControllerTest do
   use CastmillWeb.ConnCase, async: false
 
+  import ExUnit.CaptureLog
   import Castmill.OrganizationsFixtures
   import Castmill.PlaylistsFixtures
   import Castmill.NetworksFixtures
@@ -262,13 +263,15 @@ defmodule CastmillWeb.WidgetOAuthControllerTest do
           }
         )
 
-      conn =
-        conn
-        |> get("/auth/widget-integrations/callback", %{
-          "error" => "access_denied",
-          "error_description" => "User denied access",
-          "state" => state
-        })
+      {conn, _log} =
+        with_log(fn ->
+          conn
+          |> get("/auth/widget-integrations/callback", %{
+            "error" => "access_denied",
+            "error_description" => "User denied access",
+            "state" => state
+          })
+        end)
 
       location = redirected_to(conn, 302)
       assert location =~ "oauth_status=error"
@@ -278,11 +281,13 @@ defmodule CastmillWeb.WidgetOAuthControllerTest do
     test "returns error for missing state parameter", %{
       conn: conn
     } do
-      conn =
-        conn
-        |> get("/auth/widget-integrations/callback", %{
-          "code" => "auth-code-123"
-        })
+      {conn, _log} =
+        with_log(fn ->
+          conn
+          |> get("/auth/widget-integrations/callback", %{
+            "code" => "auth-code-123"
+          })
+        end)
 
       location = redirected_to(conn, 302)
       assert location =~ "oauth_status=error"
@@ -292,12 +297,14 @@ defmodule CastmillWeb.WidgetOAuthControllerTest do
     test "returns error for invalid state parameter", %{
       conn: conn
     } do
-      conn =
-        conn
-        |> get("/auth/widget-integrations/callback", %{
-          "code" => "auth-code-123",
-          "state" => "invalid-state-data"
-        })
+      {conn, _log} =
+        with_log(fn ->
+          conn
+          |> get("/auth/widget-integrations/callback", %{
+            "code" => "auth-code-123",
+            "state" => "invalid-state-data"
+          })
+        end)
 
       location = redirected_to(conn, 302)
       assert location =~ "oauth_status=error"
@@ -359,12 +366,14 @@ defmodule CastmillWeb.WidgetOAuthControllerTest do
 
       # Use the callback with other_state - the integration_id in state will be validated against process_callback
       # This tests that extract_context_from_state properly extracts integration_id
-      conn =
-        conn
-        |> get("/auth/widget-integrations/callback", %{
-          "code" => "auth-code-123",
-          "state" => other_state
-        })
+      {conn, _log} =
+        with_log(fn ->
+          conn
+          |> get("/auth/widget-integrations/callback", %{
+            "code" => "auth-code-123",
+            "state" => other_state
+          })
+        end)
 
       # This should actually succeed at extraction but fail at token exchange (no mock)
       # For now, just verify we get some response
@@ -375,11 +384,13 @@ defmodule CastmillWeb.WidgetOAuthControllerTest do
     test "uses default redirect URL when error occurs and state is missing", %{
       conn: conn
     } do
-      conn =
-        conn
-        |> get("/auth/widget-integrations/callback", %{
-          "error" => "access_denied"
-        })
+      {conn, _log} =
+        with_log(fn ->
+          conn
+          |> get("/auth/widget-integrations/callback", %{
+            "error" => "access_denied"
+          })
+        end)
 
       # Should redirect to /dashboard by default
       location = redirected_to(conn, 302)

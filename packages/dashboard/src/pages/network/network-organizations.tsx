@@ -228,9 +228,7 @@ const NetworkOrganizations: Component = () => {
             value={newOrgName()}
             placeholder={t('network.organizations.namePlaceholder')}
             onInput={(value) => setNewOrgName(value as string)}
-          >
-            <></>
-          </FormItem>
+          />
           <Button
             label={creatingOrg() ? t('common.creating') : t('common.create')}
             onClick={handleCreateOrganization}
@@ -377,9 +375,7 @@ const NetworkOrganizations: Component = () => {
               value={blockOrgReason()}
               placeholder={t('network.blockReasonPlaceholder')}
               onInput={(value) => setBlockOrgReason(value as string)}
-            >
-              <></>
-            </FormItem>
+            />
             <div class="modal-actions">
               <Button
                 label={

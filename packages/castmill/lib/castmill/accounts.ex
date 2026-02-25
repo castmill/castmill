@@ -653,7 +653,13 @@ defmodule Castmill.Accounts do
   defp strip_protocol(origin) when is_binary(origin) do
     origin
     |> String.replace(~r{^https?://}, "")
-    |> String.trim_trailing("/")
+    |> then(fn s ->
+      # Keep only host and optional port, strip any path/query/fragment
+      case String.split(s, "/", parts: 2) do
+        [host_port | _] -> host_port
+        [] -> s
+      end
+    end)
   end
 
   ## Addons

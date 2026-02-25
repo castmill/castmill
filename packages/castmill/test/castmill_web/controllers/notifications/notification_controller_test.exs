@@ -274,7 +274,7 @@ defmodule CastmillWeb.NotificationControllerTest do
     test "user can only see their own notifications", %{
       conn_session: conn,
       organization: org,
-      user: user,
+      user: _user,
       network: network
     } do
       # Create another user using fixture

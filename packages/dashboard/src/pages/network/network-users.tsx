@@ -489,9 +489,7 @@ const NetworkUsers: Component = () => {
                 placeholder={t('network.users.inviteEmailPlaceholder')}
                 type="email"
                 onInput={(value) => setInviteEmail(String(value))}
-              >
-                <></>
-              </FormItem>
+              />
             </div>
 
             <div style="margin-top: 1em;">
@@ -569,9 +567,7 @@ const NetworkUsers: Component = () => {
               value={blockUserReason()}
               placeholder={t('network.blockReasonPlaceholder')}
               onInput={(value) => setBlockUserReason(value as string)}
-            >
-              <></>
-            </FormItem>
+            />
             <div class="modal-actions">
               <Button
                 label={

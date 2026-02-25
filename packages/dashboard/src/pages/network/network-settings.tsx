@@ -289,9 +289,7 @@ const NetworkSettings: Component = () => {
             value={socialGithub()}
             placeholder={t('network.socialLinks.githubPlaceholder')}
             onInput={(value) => setSocialGithub(value as string)}
-          >
-            <></>
-          </FormItem>
+          />
 
           <FormItem
             label={t('network.socialLinks.twitter')}
@@ -299,9 +297,7 @@ const NetworkSettings: Component = () => {
             value={socialTwitter()}
             placeholder={t('network.socialLinks.twitterPlaceholder')}
             onInput={(value) => setSocialTwitter(value as string)}
-          >
-            <></>
-          </FormItem>
+          />
 
           <FormItem
             label={t('network.socialLinks.linkedin')}
@@ -309,9 +305,7 @@ const NetworkSettings: Component = () => {
             value={socialLinkedin()}
             placeholder={t('network.socialLinks.linkedinPlaceholder')}
             onInput={(value) => setSocialLinkedin(value as string)}
-          >
-            <></>
-          </FormItem>
+          />
 
           <FormItem
             label={t('network.socialLinks.facebook')}
@@ -319,9 +313,7 @@ const NetworkSettings: Component = () => {
             value={socialFacebook()}
             placeholder={t('network.socialLinks.facebookPlaceholder')}
             onInput={(value) => setSocialFacebook(value as string)}
-          >
-            <></>
-          </FormItem>
+          />
         </div>
       </div>
 
