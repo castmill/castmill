@@ -406,3 +406,113 @@ describe('TableView Component - Sorting Functionality', () => {
     expect(mockFetchData).not.toHaveBeenCalled();
   });
 });
+
+describe('TableView Component - Tag Filter Notification', () => {
+  afterEach(() => cleanup());
+
+  const columns = [
+    { key: 'name', title: 'Name', sortable: true },
+    { key: 'type', title: 'Type', sortable: false },
+  ];
+
+  const mockData = [
+    { id: '1', name: 'Resource 1', type: 'Image' },
+    { id: '2', name: 'Resource 2', type: 'Video' },
+  ];
+
+  const mockFetchData = vi.fn().mockResolvedValue({
+    data: mockData,
+    count: 2,
+  });
+
+  const defaultProps = {
+    title: 'Test Resources',
+    resource: 'resources',
+    fetchData: mockFetchData,
+    table: {
+      columns,
+    },
+    pagination: {
+      itemsPerPage: 10,
+    },
+  };
+
+  it('does not show notification when tagFilterNotification is not provided', async () => {
+    render(() => <TableView {...defaultProps} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Resource 1')).toBeInTheDocument();
+    });
+
+    // Notification should not be present
+    expect(screen.queryByText(/items are hidden/i)).not.toBeInTheDocument();
+  });
+
+  it('does not show notification when tagFilterNotification.isActive is false', async () => {
+    const propsWithInactiveFilter = {
+      ...defaultProps,
+      tagFilterNotification: {
+        isActive: false,
+        message: 'Some items are hidden',
+        onClear: vi.fn(),
+      },
+    };
+
+    render(() => <TableView {...propsWithInactiveFilter} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Resource 1')).toBeInTheDocument();
+    });
+
+    // Notification should not be present
+    expect(screen.queryByText(/items are hidden/i)).not.toBeInTheDocument();
+  });
+
+  it('shows notification when tagFilterNotification.isActive is true', async () => {
+    const mockClear = vi.fn();
+    const propsWithActiveFilter = {
+      ...defaultProps,
+      tagFilterNotification: {
+        isActive: true,
+        message: 'Some items are hidden due to tag filtering',
+        onClear: mockClear,
+      },
+    };
+
+    render(() => <TableView {...propsWithActiveFilter} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Resource 1')).toBeInTheDocument();
+    });
+
+    // Notification should be present
+    expect(
+      screen.getByText('Some items are hidden due to tag filtering')
+    ).toBeInTheDocument();
+  });
+
+  it('calls onClear when clear button is clicked', async () => {
+    const mockClear = vi.fn();
+    const propsWithActiveFilter = {
+      ...defaultProps,
+      tagFilterNotification: {
+        isActive: true,
+        message: 'Some items are hidden due to tag filtering',
+        onClear: mockClear,
+      },
+    };
+
+    render(() => <TableView {...propsWithActiveFilter} />);
+
+    await waitFor(() => {
+      expect(screen.getByText('Resource 1')).toBeInTheDocument();
+    });
+
+    // Find and click the clear button (×)
+    const clearButton = screen.getByText('×');
+    fireEvent.click(clearButton);
+
+    // Verify onClear was called
+    expect(mockClear).toHaveBeenCalledTimes(1);
+  });
+});
