@@ -1141,7 +1141,9 @@
     "tagFilterModeAny": "أي",
     "tagFilterModeAll": "الكل",
     "noMatches": "لا توجد نتائج",
-    "noItems": "لا توجد عناصر"
+    "noItems": "لا توجد عناصر",
+    "itemsHiddenByTags": "بعض العناصر مخفية بسبب تصفية العلامات. انقر على × لرؤية جميع العناصر.",
+    "clearFilters": "مسح الفلاتر"
   },
   "shortcuts": {
     "showShortcutsLegend": "عرض اختصارات لوحة المفاتيح",

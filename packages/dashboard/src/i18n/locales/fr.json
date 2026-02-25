@@ -1153,7 +1153,9 @@
     "tagFilterModeAny": "N'importe lequel",
     "tagFilterModeAll": "Tous",
     "noMatches": "Aucun résultat",
-    "noItems": "Aucun élément"
+    "noItems": "Aucun élément",
+    "itemsHiddenByTags": "Certains éléments sont masqués en raison du filtrage par tags. Cliquez sur × pour voir tous les éléments.",
+    "clearFilters": "Effacer les filtres"
   },
   "shortcuts": {
     "showShortcutsLegend": "Afficher les raccourcis clavier",

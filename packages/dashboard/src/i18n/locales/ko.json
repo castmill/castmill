@@ -1141,7 +1141,9 @@
     "tagFilterModeAny": "하나라도",
     "tagFilterModeAll": "모두",
     "noMatches": "일치하는 항목 없음",
-    "noItems": "항목 없음"
+    "noItems": "항목 없음",
+    "itemsHiddenByTags": "태그 필터링으로 인해 일부 항목이 숨겨져 있습니다. 모든 항목을 보려면 ×를 클릭하세요.",
+    "clearFilters": "필터 지우기"
   },
   "shortcuts": {
     "showShortcutsLegend": "키보드 단축키 표시",

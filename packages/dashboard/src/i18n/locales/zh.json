@@ -1141,7 +1141,9 @@
     "tagFilterModeAny": "任一",
     "tagFilterModeAll": "全部",
     "noMatches": "无匹配项",
-    "noItems": "无项目"
+    "noItems": "无项目",
+    "itemsHiddenByTags": "由于标签筛选，某些项目已隐藏。单击 × 以查看所有项目。",
+    "clearFilters": "清除筛选"
   },
   "shortcuts": {
     "showShortcutsLegend": "显示键盘快捷键",

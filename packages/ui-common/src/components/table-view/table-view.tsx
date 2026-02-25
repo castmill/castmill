@@ -103,6 +103,13 @@ interface TableViewProps<
   selectionHint?: string;
 
   itemIdKey?: string;
+
+  /** Tag filter notification props */
+  tagFilterNotification?: {
+    isActive: boolean;
+    message: string;
+    onClear: () => void;
+  };
 }
 
 export const TableView = <
@@ -421,6 +428,21 @@ export const TableView = <
               Showing {data().length} of {totalItems()} {props.resource}
             </div>
           </div>
+
+          <Show when={props.tagFilterNotification?.isActive}>
+            <div class={style['filter-notification']}>
+              <span class={style['filter-notification-icon']}>ℹ️</span>
+              <span class={style['filter-notification-text']}>
+                {props.tagFilterNotification?.message}
+              </span>
+              <button
+                class={style['filter-notification-clear']}
+                onClick={props.tagFilterNotification?.onClear}
+              >
+                ×
+              </button>
+            </div>
+          </Show>
         </div>
       </Show>
     </>

@@ -31,4 +31,48 @@
       font-size: 0.8em;
     }
   }
+
+  .filter-notification {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5em;
+    padding: 0.75em 1em;
+    margin-top: 1em;
+    background-color: #e3f2fd;
+    border: 1px solid #2196f3;
+    border-radius: 0.25em;
+    color: #1565c0;
+    font-size: 0.9em;
+    
+    .filter-notification-icon {
+      font-size: 1.2em;
+    }
+    
+    .filter-notification-text {
+      flex: 1;
+      text-align: center;
+    }
+    
+    .filter-notification-clear {
+      background: none;
+      border: none;
+      font-size: 1.5em;
+      line-height: 1;
+      cursor: pointer;
+      color: #1565c0;
+      padding: 0;
+      width: 1.5em;
+      height: 1.5em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 0.2em;
+      transition: background-color 0.2s ease;
+      
+      &:hover {
+        background-color: rgba(33, 150, 243, 0.1);
+      }
+    }
+  }
 }

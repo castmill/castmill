@@ -1136,7 +1136,9 @@
     "tagFilterModeAny": "Någon",
     "tagFilterModeAll": "Alla",
     "noMatches": "Inga träffar",
-    "noItems": "Inga objekt"
+    "noItems": "Inga objekt",
+    "itemsHiddenByTags": "Vissa objekt är dolda på grund av taggfiltrering. Klicka på × för att se alla objekt.",
+    "clearFilters": "Rensa filter"
   },
   "shortcuts": {
     "showShortcutsLegend": "Visa tangentbordsgenvägar",

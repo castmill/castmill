@@ -113,7 +113,9 @@
     "tagFilterModeAny": "Any",
     "tagFilterModeAll": "All",
     "noMatches": "No matches",
-    "noItems": "No items"
+    "noItems": "No items",
+    "itemsHiddenByTags": "Some items are hidden due to tag filtering. Click × to see all items.",
+    "clearFilters": "Clear filters"
   },
   "sidebar": {
     "organization": "Organization",

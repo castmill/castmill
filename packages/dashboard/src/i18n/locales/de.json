@@ -1136,7 +1136,9 @@
     "tagFilterModeAny": "Beliebig",
     "tagFilterModeAll": "Alle",
     "noMatches": "Keine Treffer",
-    "noItems": "Keine Einträge"
+    "noItems": "Keine Einträge",
+    "itemsHiddenByTags": "Einige Einträge sind aufgrund der Tag-Filterung ausgeblendet. Klicken Sie auf ×, um alle Einträge anzuzeigen.",
+    "clearFilters": "Filter löschen"
   },
   "shortcuts": {
     "showShortcutsLegend": "Tastaturkürzel anzeigen",

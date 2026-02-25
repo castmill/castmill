@@ -1142,7 +1142,9 @@
     "tagFilterModeAny": "Cualquiera",
     "tagFilterModeAll": "Todas",
     "noMatches": "Sin coincidencias",
-    "noItems": "Sin elementos"
+    "noItems": "Sin elementos",
+    "itemsHiddenByTags": "Algunos elementos están ocultos debido al filtrado de etiquetas. Haz clic en × para ver todos los elementos.",
+    "clearFilters": "Limpiar filtros"
   },
   "shortcuts": {
     "showShortcutsLegend": "Mostrar atajos de teclado",

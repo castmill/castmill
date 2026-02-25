@@ -1142,7 +1142,9 @@
     "tagFilterModeAny": "いずれか",
     "tagFilterModeAll": "すべて",
     "noMatches": "一致なし",
-    "noItems": "項目なし"
+    "noItems": "項目なし",
+    "itemsHiddenByTags": "タグフィルタリングにより一部の項目が非表示になっています。すべての項目を表示するには×をクリックしてください。",
+    "clearFilters": "フィルターをクリア"
   },
   "shortcuts": {
     "showShortcutsLegend": "キーボードショートカットを表示",

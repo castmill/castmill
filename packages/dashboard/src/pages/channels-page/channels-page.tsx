@@ -618,6 +618,23 @@ const ChannelsPage: Component = () => {
     bumpTree();
   };
 
+  const handleClearTagFilters = () => {
+    setSelectedTagIds([]);
+    refreshData();
+    bumpTree();
+  };
+
+  const tagFilterNotification = () => {
+    const isActive = selectedTagIds().length > 0;
+    if (!isActive) return undefined;
+
+    return {
+      isActive,
+      message: t('filters.itemsHiddenByTags'),
+      onClear: handleClearTagFilters,
+    };
+  };
+
   // Fetch resources for tree view nodes (filter by tag IDs in AND mode)
   const fetchTreeResources = async (tagIds: number[]) => {
     const result = await channelsService.fetchChannelsFiltered({
@@ -916,6 +933,7 @@ const ChannelsPage: Component = () => {
               },
             }}
             pagination={{ itemsPerPage }}
+            tagFilterNotification={tagFilterNotification()}
           ></TableView>
         </Show>
 
