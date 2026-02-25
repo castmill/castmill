@@ -24,8 +24,7 @@ import { DivLogger, Logger, NullLogger, WebSocketLogger } from './logger';
 
 const HEARTBEAT_INTERVAL = 1000 * 30; // 30 seconds
 const DEFAULT_MAX_LOGS = 100;
-const MAX_CONNECTION_WAIT_SECONDS = 300; // 5 minutes max wait for connection
-const MAX_CONNECTION_WAIT_MS = MAX_CONNECTION_WAIT_SECONDS * 1000;
+const MAX_RECONNECT_DELAY_MS = 60_000; // 60 seconds max delay between reconnect attempts
 
 // Socket reconnection error types
 const AUTH_ERROR_INVALID_DEVICE = 'invalid_device';
@@ -35,7 +34,10 @@ const CONNECTION_TIMEOUT = 'connection_timeout';
 // Exponential backoff for socket reconnection
 // Returns delay in ms: 1s, 2s, 4s, 8s, capped at 10s
 const getReconnectDelay = (tries: number): number => {
-  return Math.min(1000 * Math.pow(2, Math.max(tries - 1, 0)), 10_000);
+  return Math.min(
+    1000 * Math.pow(2, Math.max(tries - 1, 0)),
+    MAX_RECONNECT_DELAY_MS
+  );
 };
 
 const supportedDebugModes = ['remote', 'local', 'none'];
@@ -572,16 +574,11 @@ export class Device extends EventEmitter {
       // Track if we've already resolved/rejected
       let settled = false;
       let stateCheckInterval: ReturnType<typeof setInterval> | null = null;
-      let maxWaitTimeout: ReturnType<typeof setTimeout> | null = null;
 
       const cleanup = () => {
         if (stateCheckInterval) {
           clearInterval(stateCheckInterval);
           stateCheckInterval = null;
-        }
-        if (maxWaitTimeout) {
-          clearTimeout(maxWaitTimeout);
-          maxWaitTimeout = null;
         }
       };
 
@@ -632,14 +629,6 @@ export class Device extends EventEmitter {
           safeResolve(channel);
         }
       }, 1000);
-
-      // Set maximum wait time to prevent indefinite polling
-      maxWaitTimeout = setTimeout(() => {
-        this.logger.error(
-          `Failed to connect to server after ${MAX_CONNECTION_WAIT_SECONDS}s`
-        );
-        safeReject(CONNECTION_TIMEOUT);
-      }, MAX_CONNECTION_WAIT_MS);
     });
   }
 
