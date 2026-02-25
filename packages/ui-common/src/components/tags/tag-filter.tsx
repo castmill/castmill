@@ -80,7 +80,7 @@ export const TagFilter: Component<TagFilterProps> = (props) => {
           />
           <span class="tag-option-name">{tag.name}</span>
           <Show when={selected}>
-            <span class="tag-option-check">\u2713</span>
+            <span class="tag-option-check">✓</span>
           </Show>
         </div>
       )}
