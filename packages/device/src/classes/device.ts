@@ -114,6 +114,13 @@ interface Credentials {
   };
 }
 
+export interface ProgressEvent {
+  step: number;
+  totalSteps: number;
+  percent: number;
+  label: string;
+}
+
 /**
  * Castmill Device
  *
@@ -197,15 +204,19 @@ export class Device extends EventEmitter {
       (channel: JsonChannel) => new Channel(channel)
     );
 
+    this.emitProgress(4, 5, 'Loading channels');
+
     this.id = device.id;
     this.name = device.name;
     this.logDiv = logDiv;
 
-    this.emit('started', device);
-
     // TODO: Should be able to pass the logger to the renderer and the player.
     const renderer = new Renderer(el);
     this.player = new Player(this.contentQueue, renderer, this.opts?.viewport);
+
+    this.emitProgress(5, 5, 'Starting player');
+
+    this.emit('started', device);
 
     // this.player.play({ loop: true });
 
@@ -387,6 +398,8 @@ export class Device extends EventEmitter {
   }
 
   private async requestPincode(hardwareId: string): Promise<string> {
+    this.emitProgress(2, 3, 'Connecting to server');
+
     const location = await this.integration.getLocation!();
     const timezone = await this.integration.getTimezone!();
 
@@ -442,12 +455,24 @@ export class Device extends EventEmitter {
     throw new Error('Pincode request cancelled: device is closing');
   }
 
+  private emitProgress(step: number, totalSteps: number, label: string) {
+    const percent = Math.round((step / totalSteps) * 100);
+    this.emit('progress', {
+      step,
+      totalSteps,
+      percent,
+      label,
+    } as ProgressEvent);
+  }
+
   async loginOrRegister(): Promise<{ status: Status; pincode?: string }> {
     // Get the hardware id of this device.
     const hardwareId = await this.integration.getMachineGUID();
 
     // Check if this device is registered by getting the credentials from the local storage (if they exist).
     let credentials = await this.getCredentials();
+
+    this.emitProgress(1, credentials ? 5 : 3, 'Identifying device');
 
     if (credentials) {
       try {
@@ -482,6 +507,8 @@ export class Device extends EventEmitter {
   async register(hardwareId: string) {
     const pincode = await this.requestPincode(hardwareId);
 
+    this.emitProgress(3, 3, 'Preparing registration');
+
     let socket = new Socket(this.socketEndpoint, {
       params: { token: pincode },
       reconnectAfterMs: getReconnectDelay,
@@ -505,7 +532,9 @@ export class Device extends EventEmitter {
         this.logger.error(`Unable to join ${resp}`);
       })
       .receive('timeout', () => {
-        this.logger.info('Registration channel join timeout, waiting for connection...');
+        this.logger.info(
+          'Registration channel join timeout, waiting for connection...'
+        );
       });
 
     channel.on('device:registered', async (payload) => {
@@ -523,6 +552,8 @@ export class Device extends EventEmitter {
 
   async login(credentials: Credentials, hardwareId: string) {
     const { device } = credentials;
+
+    this.emitProgress(2, 5, 'Connecting to server');
 
     const socket = (this.socket = new Socket(this.socketEndpoint, {
       params: { device_id: device.id, hardware_id: hardwareId },
@@ -558,6 +589,7 @@ export class Device extends EventEmitter {
         if (!settled) {
           settled = true;
           cleanup();
+          this.emitProgress(3, 5, 'Authenticating');
           resolve(value);
         }
       };
@@ -584,7 +616,9 @@ export class Device extends EventEmitter {
           ) {
             safeReject(resp);
           } else {
-            this.logger.error(`Channel join error: ${resp}, will keep trying...`);
+            this.logger.error(
+              `Channel join error: ${resp}, will keep trying...`
+            );
           }
         })
         .receive('timeout', () => {
