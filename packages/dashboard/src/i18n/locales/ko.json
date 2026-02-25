@@ -286,11 +286,11 @@
       "block": "차단",
       "unblock": "차단 해제",
       "blockTitle": "조직 차단",
-      "blockConfirmation": "\"{{name}}\"\uc744(를) 차단하시겠습니까? 이 조직의 모든 사용자가 로그인할 수 없게 됩니다.",
+      "blockConfirmation": "\"{{name}}\"을(를) 차단하시겠습니까? 이 조직의 모든 사용자가 로그인할 수 없게 됩니다.",
       "blockSuccess": "조직이 성공적으로 차단되었습니다",
       "blockError": "조직 차단에 실패했습니다",
       "unblockTitle": "조직 차단 해제",
-      "unblockConfirmation": "\"{{name}}\"\uc758 차단을 해제하시겠습니까? 사용자가 다시 로그인할 수 있게 됩니다.",
+      "unblockConfirmation": "\"{{name}}\"의 차단을 해제하시겠습니까? 사용자가 다시 로그인할 수 있게 됩니다.",
       "unblockSuccess": "조직 차단이 성공적으로 해제되었습니다",
       "unblockError": "조직 차단 해제에 실패했습니다"
     },
@@ -318,15 +318,15 @@
       "block": "차단",
       "unblock": "차단 해제",
       "blockTitle": "사용자 차단",
-      "blockConfirmation": "\"{{name}}\"\uc744(를) 차단하시겠습니까? 이 사용자는 로그인할 수 없게 됩니다.",
+      "blockConfirmation": "\"{{name}}\"을(를) 차단하시겠습니까? 이 사용자는 로그인할 수 없게 됩니다.",
       "blockSuccess": "사용자가 성공적으로 차단되었습니다",
       "blockError": "사용자 차단에 실패했습니다",
       "unblockTitle": "사용자 차단 해제",
-      "unblockConfirmation": "\"{{name}}\"\uc758 차단을 해제하시겠습니까? 이 사용자가 다시 로그인할 수 있게 됩니다.",
+      "unblockConfirmation": "\"{{name}}\"의 차단을 해제하시겠습니까? 이 사용자가 다시 로그인할 수 있게 됩니다.",
       "unblockSuccess": "사용자 차단이 성공적으로 해제되었습니다",
       "unblockError": "사용자 차단 해제에 실패했습니다",
       "deleteTitle": "사용자 삭제",
-      "deleteConfirmation": "\"{{name}}\"\uc744(를) 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
+      "deleteConfirmation": "\"{{name}}\"을(를) 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.",
       "deleteSuccess": "사용자가 성공적으로 삭제되었습니다",
       "deleteError": "사용자 삭제에 실패했습니다"
     },
@@ -948,7 +948,9 @@
     },
     "errors": {
       "setChannelFailed": "기기 채널 설정 실패: {{error}}",
-      "commandFailed": "요청 처리 중 오류가 발생했습니다"
+      "commandFailed": "요청 처리 중 오류가 발생했습니다",
+      "invalidPincode": "유효하지 않은 PIN 코드입니다. 기기에 표시된 PIN 코드를 확인한 후 다시 시도하세요.",
+      "pincodeExpired": "이 PIN 코드는 만료되었습니다. 기기 등록 과정을 다시 시작해 주세요."
     },
     "assignedChannels": "할당된 채널",
     "addChannel": "채널 추가",

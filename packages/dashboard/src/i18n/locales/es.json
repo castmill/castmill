@@ -973,7 +973,9 @@
     },
     "errors": {
       "setChannelFailed": "Error al establecer el canal del dispositivo: {{error}}",
-      "commandFailed": "Se produjo un error al procesar su solicitud"
+      "commandFailed": "Se produjo un error al procesar su solicitud",
+      "invalidPincode": "Código PIN no válido. Verifique el código PIN que se muestra en su dispositivo e inténtelo de nuevo.",
+      "pincodeExpired": "Este código PIN ha caducado. Reinicie el proceso de registro del dispositivo."
     },
     "assignedChannels": "Canales asignados",
     "addChannel": "Agregar canal",

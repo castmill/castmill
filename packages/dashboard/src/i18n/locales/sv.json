@@ -943,7 +943,9 @@
     },
     "errors": {
       "setChannelFailed": "Misslyckades att ställa in enhetskanal: {{error}}",
-      "commandFailed": "Ett fel uppstod vid bearbetning av din begäran"
+      "commandFailed": "Ett fel uppstod vid bearbetning av din begäran",
+      "invalidPincode": "Ogiltig PIN-kod. Kontrollera PIN-koden som visas på din enhet och försök igen.",
+      "pincodeExpired": "Denna PIN-kod har gått ut. Starta om registreringsprocessen för enheten."
     },
     "assignedChannels": "Tilldelade kanaler",
     "addChannel": "Lägg till kanal",

@@ -967,7 +967,9 @@
     },
     "errors": {
       "setChannelFailed": "Fehler beim Festlegen des Gerätekanals: {{error}}",
-      "commandFailed": "Bei der Verarbeitung Ihrer Anfrage ist ein Fehler aufgetreten"
+      "commandFailed": "Bei der Verarbeitung Ihrer Anfrage ist ein Fehler aufgetreten",
+      "invalidPincode": "Ungültiger PIN-Code. Bitte überprüfen Sie den auf Ihrem Gerät angezeigten PIN-Code und versuchen Sie es erneut.",
+      "pincodeExpired": "Dieser PIN-Code ist abgelaufen. Bitte starten Sie den Geräte-Registrierungsvorgang erneut."
     },
     "assignedChannels": "Zugewiesene Kanäle",
     "addChannel": "Kanal hinzufügen",

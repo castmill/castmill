@@ -100,7 +100,86 @@ defmodule CastmillWeb.ResourceController.DevicesTest do
       }
 
       conn = post(conn, "/api/organizations/#{organization.id}/devices", device_params)
-      assert json_response(conn, 422)
+      response = json_response(conn, 422)
+
+      assert %{"errors" => %{"pincode" => ["Invalid pincode"]}} = response
+    end
+
+    test "fails to register a device with expired pincode", %{
+      conn: conn,
+      organization: organization
+    } do
+      # Create a device registration with an expired pincode
+      {:ok, expired_registration} =
+        device_registration_fixture(%{
+          hardware_id: "expired_hardware",
+          pincode: "EXPIRED1"
+        })
+
+      # Update the registration to set expires_at to the past
+      # Use DateTime.truncate to remove microseconds for :utc_datetime fields
+      expired_datetime =
+        DateTime.utc_now()
+        |> DateTime.add(-3600, :second)
+        |> DateTime.truncate(:second)
+
+      Castmill.Repo.update!(
+        Ecto.Changeset.change(expired_registration, %{
+          expires_at: expired_datetime
+        })
+      )
+
+      device_params = %{
+        "name" => "expired_device",
+        "pincode" => "EXPIRED1"
+      }
+
+      conn = post(conn, "/api/organizations/#{organization.id}/devices", device_params)
+      response = json_response(conn, 422)
+
+      assert %{"errors" => %{"pincode" => ["Pincode has expired"]}} = response
+    end
+
+    test "registers a device with case-insensitive pincode (lowercase)", %{
+      conn: conn,
+      organization: organization
+    } do
+      device_registration_fixture(%{hardware_id: "hardware_lowercase", pincode: "DEADBEEF"})
+
+      device_params = %{
+        "name" => "device_lowercase",
+        "pincode" => "deadbeef"
+      }
+
+      conn = post(conn, "/api/organizations/#{organization.id}/devices", device_params)
+      response = json_response(conn, 201)
+
+      assert %{
+               "data" => %{
+                 "name" => "device_lowercase"
+               }
+             } = response
+    end
+
+    test "registers a device with case-insensitive pincode (mixed case)", %{
+      conn: conn,
+      organization: organization
+    } do
+      device_registration_fixture(%{hardware_id: "hardware_mixed", pincode: "DEADBEEF"})
+
+      device_params = %{
+        "name" => "device_mixed",
+        "pincode" => "DeAdBeEf"
+      }
+
+      conn = post(conn, "/api/organizations/#{organization.id}/devices", device_params)
+      response = json_response(conn, 201)
+
+      assert %{
+               "data" => %{
+                 "name" => "device_mixed"
+               }
+             } = response
     end
 
     test "fails to register a new device with missing parameters", %{
