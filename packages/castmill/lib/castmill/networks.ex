@@ -10,13 +10,20 @@ defmodule Castmill.Networks do
   alias Castmill.Protocol.Access
   alias Castmill.QueryHelpers
 
+  alias Castmill.Networks.NetworksUsers
+
   defimpl Access, for: Network do
     def canAccess(network, user, _action) do
       if is_nil(user) do
         {:error, "No user provided"}
       else
-        # Check if user belongs to this network and is an admin
-        if user.network_id == network.id and user.network_role == :admin do
+        # Check if user belongs to this network and is an admin via networks_users
+        query =
+          from(nu in Castmill.Networks.NetworksUsers,
+            where: nu.user_id == ^user.id and nu.network_id == ^network.id and nu.role == :admin
+          )
+
+        if Castmill.Repo.exists?(query) do
           {:ok, true}
         else
           {:ok, false}
@@ -207,53 +214,104 @@ defmodule Castmill.Networks do
   """
   def is_network_admin?(user_id, network_id) do
     query =
-      from(u in User,
-        where: u.id == ^user_id and u.network_id == ^network_id and u.network_role == :admin
+      from(nu in NetworksUsers,
+        where: nu.user_id == ^user_id and nu.network_id == ^network_id and nu.role == :admin
       )
 
     Repo.exists?(query)
   end
 
   @doc """
+  Gets a user's network membership (networks_users) for a given network.
+
+  Returns the NetworksUsers record or nil.
+  """
+  def get_network_membership(user_id, network_id) do
+    Repo.get_by(NetworksUsers, user_id: user_id, network_id: network_id)
+  end
+
+  @doc """
+  Checks if a user belongs to a network (any role).
+
+  Returns true if the user has a networks_users entry for the given network.
+  """
+  def is_network_member?(user_id, network_id) do
+    query =
+      from(nu in NetworksUsers,
+        where: nu.user_id == ^user_id and nu.network_id == ^network_id
+      )
+
+    Repo.exists?(query)
+  end
+
+  @doc """
+  Gets an admin network_id for a given user.
+
+  Returns {:ok, network_id} if the user is admin of exactly one network,
+  or {:ok, network_id} for the first admin network if they have multiple.
+  Returns {:error, :not_admin} if the user is not an admin of any network.
+  """
+  def get_admin_network_id(user_id) do
+    query =
+      from(nu in NetworksUsers,
+        where: nu.user_id == ^user_id and nu.role == :admin,
+        select: nu.network_id,
+        limit: 1
+      )
+
+    case Repo.one(query) do
+      nil -> {:error, :not_admin}
+      network_id -> {:ok, network_id}
+    end
+  end
+
+  @doc """
   Gets a user if they are a network admin.
 
-  Returns the user if they are an admin, nil otherwise.
+  Returns the user if they are an admin of any network, nil otherwise.
   """
   def get_network_admin(user_id) do
-    from(u in User,
-      where: u.id == ^user_id and u.network_role == :admin
-    )
-    |> Repo.one()
+    query =
+      from(nu in NetworksUsers,
+        where: nu.user_id == ^user_id and nu.role == :admin,
+        join: u in User,
+        on: u.id == nu.user_id,
+        select: u,
+        limit: 1
+      )
+
+    Repo.one(query)
   end
 
   @doc """
   Promotes a user to network admin.
 
-  The user must belong to the network (user.network_id must match network_id).
+  The user must already be a member of the network (must have a networks_users entry).
 
   ## Examples
 
       iex> promote_to_network_admin(user_id, network_id)
-      {:ok, %User{}}
+      {:ok, %NetworksUsers{}}
 
       iex> promote_to_network_admin(invalid_user_id, network_id)
       {:error, :user_not_found}
   """
   def promote_to_network_admin(user_id, network_id) do
-    case Repo.get(User, user_id) do
+    case Repo.get_by(NetworksUsers, user_id: user_id, network_id: network_id) do
       nil ->
-        {:error, :user_not_found}
+        # Check if user exists at all
+        case Repo.get(User, user_id) do
+          nil -> {:error, :user_not_found}
+          _user -> {:error, :user_not_in_network}
+        end
 
-      user when user.network_id != network_id ->
-        {:error, :user_not_in_network}
-
-      user when user.network_role == :admin ->
+      %NetworksUsers{role: :admin} = nu ->
         # Already an admin
-        {:ok, user}
+        {:ok, nu}
 
-      user ->
-        user
-        |> User.changeset(%{network_role: :admin})
+      nu ->
+        nu
+        |> NetworksUsers.changeset(%{role: :admin})
         |> Repo.update()
     end
   end
@@ -264,26 +322,26 @@ defmodule Castmill.Networks do
   ## Examples
 
       iex> demote_from_network_admin(user_id, network_id)
-      {:ok, %User{}}
+      {:ok, %NetworksUsers{}}
 
       iex> demote_from_network_admin(non_admin_user_id, network_id)
       {:error, :not_admin}
   """
   def demote_from_network_admin(user_id, network_id) do
-    case Repo.get(User, user_id) do
+    case Repo.get_by(NetworksUsers, user_id: user_id, network_id: network_id) do
       nil ->
-        {:error, :user_not_found}
+        case Repo.get(User, user_id) do
+          nil -> {:error, :user_not_found}
+          _user -> {:error, :user_not_in_network}
+        end
 
-      user when user.network_id != network_id ->
-        {:error, :user_not_in_network}
-
-      user when user.network_role != :admin ->
-        {:error, :not_admin}
-
-      user ->
-        user
-        |> User.changeset(%{network_role: :member})
+      %NetworksUsers{role: :admin} = nu ->
+        nu
+        |> NetworksUsers.changeset(%{role: :member})
         |> Repo.update()
+
+      _nu ->
+        {:error, :not_admin}
     end
   end
 
@@ -292,7 +350,10 @@ defmodule Castmill.Networks do
   """
   def list_network_admins(network_id) do
     from(u in User,
-      where: u.network_id == ^network_id and u.network_role == :admin
+      join: nu in NetworksUsers,
+      on: nu.user_id == u.id,
+      where: nu.network_id == ^network_id and nu.role == :admin,
+      select: u
     )
     |> Repo.all()
   end
@@ -307,12 +368,33 @@ defmodule Castmill.Networks do
   """
   def list_users(network_id) do
     query =
-      from(user in Castmill.Accounts.User,
-        where: user.network_id == ^network_id,
-        select: user
+      from(u in User,
+        join: nu in NetworksUsers,
+        on: nu.user_id == u.id,
+        where: nu.network_id == ^network_id,
+        select: u
       )
 
     Repo.all(query)
+  end
+
+  @doc """
+  Adds a user to a network with the given role.
+  """
+  def add_user_to_network(user_id, network_id, role \\ :member) do
+    %NetworksUsers{}
+    |> NetworksUsers.changeset(%{user_id: user_id, network_id: network_id, role: role})
+    |> Repo.insert()
+  end
+
+  @doc """
+  Removes a user from a network.
+  """
+  def remove_user_from_network(user_id, network_id) do
+    case Repo.get_by(NetworksUsers, user_id: user_id, network_id: network_id) do
+      nil -> {:error, :not_found}
+      nu -> Repo.delete(nu)
+    end
   end
 
   @doc """
@@ -606,10 +688,12 @@ defmodule Castmill.Networks do
     :crypto.strong_rand_bytes(32) |> Base.url_encode64(padding: false)
   end
 
-  # Helper function to get user by email and network ID
+  # Helper function to get user by email and network ID (via networks_users join)
   defp get_user_by_email_and_network(email, network_id) do
     from(u in Castmill.Accounts.User,
-      where: u.email == ^email and u.network_id == ^network_id
+      join: nu in NetworksUsers,
+      on: nu.user_id == u.id,
+      where: u.email == ^email and nu.network_id == ^network_id
     )
     |> Repo.one()
   end

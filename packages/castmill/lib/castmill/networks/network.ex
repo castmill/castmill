@@ -21,7 +21,12 @@ defmodule Castmill.Networks.Network do
     field(:meta, :map)
 
     has_many(:organizations, Castmill.Organizations.Organization)
-    has_many(:users, Castmill.Accounts.User)
+
+    many_to_many(:users, Castmill.Accounts.User,
+      join_through: "networks_users",
+      on_replace: :delete
+    )
+
     has_many(:plans, Castmill.Quotas.Plan)
 
     belongs_to(:default_plan, Castmill.Quotas.Plan,
@@ -50,8 +55,10 @@ defmodule Castmill.Networks.Network do
     ])
     |> validate_required([:name, :email, :domain])
     |> validate_format(:email, ~r/@/, message: "must be a valid email address")
-    |> validate_format(:domain, ~r/^https?:\/\/[^\s\/$.?#].[^\s]*$/i,
-      message: "must be a valid URL (e.g., https://example.com)"
+    |> validate_format(
+      :domain,
+      ~r/^[a-zA-Z0-9][a-zA-Z0-9\-]*(\.[a-zA-Z0-9][a-zA-Z0-9\-]*)*(:\d+)?$/,
+      message: "must be a valid domain (e.g., app.example.com or localhost:3000)"
     )
     |> unique_constraint(:name)
   end

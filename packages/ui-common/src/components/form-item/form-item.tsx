@@ -6,7 +6,7 @@ interface FormItemProps {
   label: string;
   id: string;
   value: string;
-  children: JSX.Element;
+  children?: JSX.Element;
   onInput: (value: string | boolean | number) => void;
   placeholder?: string;
   type?: string;

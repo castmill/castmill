@@ -602,6 +602,10 @@
     "widgets": "Widgets",
     "members": "Membres",
     "network": "Réseau",
+    "networkOverview": "Aperçu",
+    "networkSettings": "Paramètres",
+    "networkOrganizations": "Organisations",
+    "networkUsers": "Utilisateurs et invitations",
     "tags": "Étiquettes"
   },
   "channels": {
@@ -1271,6 +1275,12 @@
       "largeFileWarning": "Fichier volumineux ({{fileSize}}). Le téléchargement peut prendre un certain temps.",
       "noValidFiles": "Aucun fichier valide à télécharger.",
       "uploadError": "Erreur lors du téléchargement du fichier."
+    }
+  },
+  "dashboard": {
+    "noOrganizations": {
+      "title": "Aucune organisation",
+      "description": "Vous n'appartenez à aucune organisation dans ce réseau. Veuillez contacter votre administrateur réseau pour obtenir l'accès."
     }
   }
 }

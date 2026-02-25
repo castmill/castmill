@@ -67,6 +67,18 @@
     background-color: #117a8b; /* Darker shade of info color */
   }
 
+  &-warning {
+    background-color: #e6a817;
+    color: white;
+  }
+  &-warning:active {
+    background-color: #c48f13; /* Darker shade of warning color */
+  }
+
+  &-warning:hover {
+    background-color: #f0b829;
+  }
+
   &:not(.button-disabled):hover {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }

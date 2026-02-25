@@ -104,9 +104,13 @@ defmodule Castmill.Organizations do
   end
 
   @doc """
-    List all organizations a user is part of
+  List all organizations a user is part of.
+
+  When `network_id` is provided, only returns organizations belonging to that network.
+  This is used to scope results to the network the user is currently accessing
+  (determined by the request's Origin domain).
   """
-  def list_user_organizations(user_id) do
+  def list_user_organizations(user_id, network_id \\ nil) do
     query =
       from(ou in OrganizationsUsers,
         join: o in Organization,
@@ -114,6 +118,13 @@ defmodule Castmill.Organizations do
         where: ou.user_id == ^user_id,
         select: o
       )
+
+    query =
+      if network_id do
+        from([ou, o] in query, where: o.network_id == ^network_id)
+      else
+        query
+      end
 
     Repo.all(query)
   end

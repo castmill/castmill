@@ -590,6 +590,10 @@
     "widgets": "Widgets",
     "members": "成员",
     "network": "网络",
+    "networkOverview": "概览",
+    "networkSettings": "设置",
+    "networkOrganizations": "组织",
+    "networkUsers": "用户与邀请",
     "tags": "标签"
   },
   "channels": {
@@ -1259,6 +1263,12 @@
       "largeFileWarning": "大文件（{{fileSize}}）。上传可能需要一段时间。",
       "noValidFiles": "没有有效的文件可上传。",
       "uploadError": "上传文件时出错。"
+    }
+  },
+  "dashboard": {
+    "noOrganizations": {
+      "title": "没有组织",
+      "description": "您尚未加入此网络中的任何组织。请联系您的网络管理员以获取访问权限。"
     }
   }
 }

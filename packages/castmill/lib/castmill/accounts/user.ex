@@ -12,7 +12,6 @@ defmodule Castmill.Accounts.User do
              :name,
              :email,
              :role,
-             :network_role,
              :blocked_at,
              :blocked_reason,
              :inserted_at,
@@ -25,9 +24,6 @@ defmodule Castmill.Accounts.User do
 
     # Organization role (virtual, computed from organizations_users join table)
     field(:role, Ecto.Enum, values: [:admin, :manager, :member, :guest], virtual: true)
-
-    # Network role: admin can manage network settings, member is a regular user
-    field(:network_role, Ecto.Enum, values: [:admin, :member], default: :member)
 
     # Blocking fields - when blocked_at is set, user cannot login
     field(:blocked_at, :utc_datetime_usec)
@@ -42,7 +38,12 @@ defmodule Castmill.Accounts.User do
       on_replace: :delete
     )
 
-    belongs_to(:network, Castmill.Networks.Network, foreign_key: :network_id, type: Ecto.UUID)
+    many_to_many(
+      :networks,
+      Castmill.Networks.Network,
+      join_through: "networks_users",
+      on_replace: :delete
+    )
 
     has_many(:access_tokens, Castmill.Accounts.AccessToken)
 
@@ -52,7 +53,7 @@ defmodule Castmill.Accounts.User do
   @doc false
   def changeset(user, attrs) do
     user
-    |> cast(attrs, [:name, :avatar, :email, :network_id, :network_role])
+    |> cast(attrs, [:name, :avatar, :email])
     |> validate_required([:name, :email])
     |> validate_length(:name, min: 2, max: 50)
     |> validate_format(
@@ -60,7 +61,7 @@ defmodule Castmill.Accounts.User do
       ~r/^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/
     )
     |> validate_format(:email, ~r/@/)
-    |> unique_constraint([:email, :network_id], name: :users_name_network_id_index)
+    |> unique_constraint(:email, name: :users_email_index)
   end
 
   @doc """

@@ -1,3 +1,4 @@
+// Shared styles for all network sub-pages
 .network-page {
   text-align: left;
   margin: 1em;
@@ -84,6 +85,11 @@
     gap: 1.5em;
   }
 
+  .form-item {
+    display: flex;
+    flex-direction: column;
+  }
+
   .help-text {
     font-size: 0.8em;
     color: var(--castmill-text-muted, #6b7280);
@@ -146,6 +152,18 @@
     gap: 1em;
     margin-top: 1.5em;
     justify-content: flex-end;
+  }
+
+  .form-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+
+    label {
+      font-weight: 500;
+      color: #fff;
+      font-size: 0.9em;
+    }
   }
 
   .loading-container {
@@ -213,120 +231,7 @@
     }
   }
 
-  // Organizations Tab
-  .organizations-tab,
-  .users-tab {
-    padding: 1em 0;
-
-    h3 {
-      margin: 0 0 1em 0;
-      font-size: 1.1em;
-      font-weight: 600;
-      color: #fff;
-    }
-  }
-
-  .create-org-form {
-    padding: 1.5em;
-    border-radius: 0.75em;
-    background: #181818;
-    border: 0.1em solid rgba(255, 255, 255, 0.1);
-    margin-bottom: 2em;
-
-    h3 {
-      margin: 0 0 0.5em 0;
-    }
-
-    p {
-      margin: 0 0 1.5em 0;
-      font-size: 0.9em;
-      color: var(--castmill-text-muted, #6b7280);
-    }
-
-    .create-org-row {
-      display: flex;
-      gap: 1em;
-      align-items: flex-end;
-
-      > :first-child {
-        flex: 1;
-        max-width: 25em;
-      }
-
-      // Align button vertically centered with the input field
-      > button {
-        margin-bottom: 1em;
-      }
-    }
-  }
-
-  .org-list {
-    padding: 1.5em;
-    border-radius: 0.75em;
-    background: #181818;
-    border: 0.1em solid rgba(255, 255, 255, 0.1);
-    position: relative;
-
-    .loading-overlay {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(24, 24, 24, 0.8);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 10;
-      border-radius: 0.75em;
-      color: var(--castmill-text-muted, #6b7280);
-    }
-  }
-
-  .actions-row {
-    display: flex;
-    gap: 0.5em;
-    justify-content: flex-end;
-    align-items: center;
-  }
-
-  .status-active {
-    color: #10b981;
-    font-weight: 500;
-    font-size: 0.85em;
-  }
-
-  .status-blocked {
-    color: #ef4444;
-    font-weight: 500;
-    font-size: 0.85em;
-    cursor: help;
-  }
-
-  .blocked-row {
-    background: rgba(239, 68, 68, 0.05);
-
-    &:hover {
-      background: rgba(239, 68, 68, 0.1);
-    }
-  }
-
-  .pagination-container {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-top: 1.5em;
-    padding-top: 1em;
-    border-top: 0.1em solid rgba(255, 255, 255, 0.1);
-    flex-wrap: wrap;
-    gap: 1em;
-
-    .pagination-info {
-      font-size: 0.85em;
-      color: var(--castmill-text-muted, #6b7280);
-    }
-  }
-
+  // Lists and tables (shared by orgs, users, invitations)
   .data-table {
     width: 100%;
     border-collapse: collapse;
@@ -359,6 +264,44 @@
     }
   }
 
+  .actions-row {
+    display: flex;
+    gap: 0.5em;
+    justify-content: flex-end;
+    align-items: center;
+  }
+
+  .actions-column {
+    text-align: right;
+  }
+
+  .status-active {
+    color: #10b981;
+    font-weight: 500;
+    font-size: 0.85em;
+  }
+
+  .status-blocked {
+    color: #ef4444;
+    font-weight: 500;
+    font-size: 0.85em;
+    cursor: help;
+  }
+
+  .status-pending {
+    color: #f59e0b;
+    font-weight: 500;
+    font-size: 0.85em;
+  }
+
+  .blocked-row {
+    background: rgba(239, 68, 68, 0.05);
+
+    &:hover {
+      background: rgba(239, 68, 68, 0.1);
+    }
+  }
+
   .empty-list {
     padding: 2em;
     text-align: center;
@@ -366,19 +309,83 @@
     font-size: 0.95em;
   }
 
-  .form-row {
+  .pagination-container {
     display: flex;
-    flex-direction: column;
-    gap: 0.5em;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 1.5em;
+    padding-top: 1em;
+    border-top: 0.1em solid rgba(255, 255, 255, 0.1);
+    flex-wrap: wrap;
+    gap: 1em;
 
-    label {
-      font-weight: 500;
-      color: #fff;
-      font-size: 0.9em;
+    .pagination-info {
+      font-size: 0.85em;
+      color: var(--castmill-text-muted, #6b7280);
     }
   }
 
-  // Invite section styles
+  // Organization-specific
+  .create-org-form {
+    padding: 1.5em;
+    border-radius: 0.75em;
+    background: #181818;
+    border: 0.1em solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 2em;
+
+    h3 {
+      margin: 0 0 0.5em 0;
+      font-size: 1.1em;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    p {
+      margin: 0 0 1.5em 0;
+      font-size: 0.9em;
+      color: var(--castmill-text-muted, #6b7280);
+    }
+
+    .create-org-row {
+      display: flex;
+      gap: 1em;
+      align-items: flex-end;
+
+      > :first-child {
+        flex: 1;
+        max-width: 25em;
+      }
+
+      > button {
+        margin-bottom: 1em;
+      }
+    }
+  }
+
+  .org-list {
+    padding: 1.5em;
+    border-radius: 0.75em;
+    background: #181818;
+    border: 0.1em solid rgba(255, 255, 255, 0.1);
+    position: relative;
+
+    .loading-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(24, 24, 24, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      border-radius: 0.75em;
+      color: var(--castmill-text-muted, #6b7280);
+    }
+  }
+
+  // Users-specific
   .invite-section {
     padding: 1.5em;
     border-radius: 0.75em;
@@ -388,6 +395,8 @@
 
     h3 {
       margin: 0 0 0.5em 0;
+      font-size: 1.1em;
+      font-weight: 600;
       color: #fff;
     }
 
@@ -398,7 +407,8 @@
     }
   }
 
-  .users-list {
+  .users-list,
+  .invitations-list {
     padding: 1.5em;
     border-radius: 0.75em;
     background: #181818;
@@ -406,6 +416,45 @@
 
     h3 {
       margin: 0 0 1em 0;
+      font-size: 1.1em;
+      font-weight: 600;
+      color: #fff;
+    }
+  }
+
+  .invitations-header {
+    margin-bottom: 1.5em;
+
+    h3 {
+      margin: 0 0 0.5em 0;
+      font-size: 1.1em;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    p {
+      margin: 0;
+      font-size: 0.9em;
+      color: var(--castmill-text-muted, #6b7280);
+    }
+  }
+
+  .loading-invitations {
+    padding: 2em;
+    text-align: center;
+    color: var(--castmill-text-muted, #6b7280);
+  }
+
+  // Section within a page
+  .organizations-tab,
+  .users-tab,
+  .invitations-tab {
+    padding: 0;
+
+    h3 {
+      margin: 0 0 1em 0;
+      font-size: 1.1em;
+      font-weight: 600;
       color: #fff;
     }
   }

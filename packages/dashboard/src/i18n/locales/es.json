@@ -591,6 +591,10 @@
     "widgets": "Widgets",
     "members": "Miembros",
     "network": "Red",
+    "networkOverview": "Resumen",
+    "networkSettings": "Configuración",
+    "networkOrganizations": "Organizaciones",
+    "networkUsers": "Usuarios e invitaciones",
     "tags": "Etiquetas"
   },
   "channels": {
@@ -1260,6 +1264,12 @@
       "largeFileWarning": "Archivo grande ({{fileSize}}). La carga puede tardar un poco.",
       "noValidFiles": "No hay archivos válidos para cargar.",
       "uploadError": "Error al cargar el archivo."
+    }
+  },
+  "dashboard": {
+    "noOrganizations": {
+      "title": "Sin organizaciones",
+      "description": "Aún no perteneces a ninguna organización en esta red. Contacta con el administrador de la red para obtener acceso."
     }
   }
 }

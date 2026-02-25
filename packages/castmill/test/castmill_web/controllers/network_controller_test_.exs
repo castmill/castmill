@@ -7,14 +7,14 @@ defmodule CastmillWeb.NetworkControllerTest do
 
   @create_attrs %{
     copyright: "some copyright",
-    domain: "https://some.domain",
+    domain: "some.domain",
     email: "some email",
     logo: "some logo",
     name: "some name"
   }
   @update_attrs %{
     copyright: "some updated copyright",
-    domain: "https://some-updated.domain",
+    domain: "some-updated.domain",
     email: "some updated email",
     logo: "some updated logo",
     name: "some updated name"
@@ -42,7 +42,7 @@ defmodule CastmillWeb.NetworkControllerTest do
       assert %{
                "id" => ^id,
                "copyright" => "some copyright",
-               "domain" => "https://some.domain",
+               "domain" => "some.domain",
                "email" => "some email",
                "logo" => "some logo",
                "name" => "some name"
@@ -67,7 +67,7 @@ defmodule CastmillWeb.NetworkControllerTest do
       assert %{
                "id" => ^id,
                "copyright" => "some updated copyright",
-               "domain" => "https://some-updated.domain",
+               "domain" => "some-updated.domain",
                "email" => "some updated email",
                "logo" => "some updated logo",
                "name" => "some updated name"

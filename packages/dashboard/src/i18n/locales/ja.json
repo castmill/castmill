@@ -590,6 +590,10 @@
     "widgets": "Widgets",
     "members": "メンバー",
     "network": "ネットワーク",
+    "networkOverview": "概要",
+    "networkSettings": "設定",
+    "networkOrganizations": "組織",
+    "networkUsers": "ユーザーと招待",
     "tags": "タグ"
   },
   "channels": {
@@ -1260,6 +1264,12 @@
       "largeFileWarning": "大きなファイル（{{fileSize}}）。アップロードに時間がかかる場合があります。",
       "noValidFiles": "アップロードする有効なファイルがありません。",
       "uploadError": "ファイルのアップロード中にエラーが発生しました。"
+    }
+  },
+  "dashboard": {
+    "noOrganizations": {
+      "title": "組織がありません",
+      "description": "このネットワークのどの組織にもまだ所属していません。ネットワーク管理者に連絡してアクセス権を取得してください。"
     }
   }
 }

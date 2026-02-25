@@ -129,14 +129,6 @@ defmodule CastmillWeb.Live.Admin.Resources do
         field: :email
       },
       %{
-        name: "Network Role",
-        field: :network_role
-      },
-      %{
-        name: "Network ID",
-        field: :network_id
-      },
-      %{
         name: "Created",
         field: :inserted_at
       }

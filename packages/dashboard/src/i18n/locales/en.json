@@ -128,6 +128,10 @@
     "widgets": "Widgets",
     "members": "Members",
     "network": "Network",
+    "networkOverview": "Overview",
+    "networkSettings": "Settings",
+    "networkOrganizations": "Organizations",
+    "networkUsers": "Users & Invitations",
     "tags": "Tags"
   },
   "topbar": {
@@ -1254,6 +1258,12 @@
       "largeFileWarning": "Large file ({{fileSize}}). Upload may take a while.",
       "noValidFiles": "No valid files to upload.",
       "uploadError": "Error uploading file."
+    }
+  },
+  "dashboard": {
+    "noOrganizations": {
+      "title": "No Organizations",
+      "description": "You don't belong to any organization in this network yet. Please contact your network administrator to get access."
     }
   }
 }

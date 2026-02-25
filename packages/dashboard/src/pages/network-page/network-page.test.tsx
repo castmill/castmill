@@ -60,6 +60,7 @@ const mockSettings = {
   invitation_only: false,
   invitation_only_org_admins: true,
   default_locale: 'en',
+  privacy_policy_url: null,
   inserted_at: '2024-01-01T00:00:00Z',
   updated_at: '2024-01-01T00:00:00Z',
 };

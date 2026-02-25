@@ -273,10 +273,10 @@ const Login: Component = () => {
           >
             <div class="login-box">
               <Switch fallback={<SignUpEmailSent />}>
-                <Match when={error()}>
-                  <div class="error">{error()}</div>
-                </Match>
                 <Match when={!showEmailSent()}>
+                  <Show when={error()}>
+                    <div class="error">{error()}</div>
+                  </Show>
                   <h2>Login</h2>
 
                   <button
