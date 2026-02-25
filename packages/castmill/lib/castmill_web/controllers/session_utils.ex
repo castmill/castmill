@@ -70,10 +70,21 @@ defmodule CastmillWeb.SessionUtils do
   end
 
   @doc """
-  Checks if a user is a network admin.
+  Checks if a user is a network admin of any network.
   Network admins have special privileges and cannot be locked out via organization blocking.
   """
-  def is_network_admin?(%User{network_role: :admin}), do: true
+  def is_network_admin?(%User{} = user) do
+    # Query networks_users to check if the user is admin of any network
+    import Ecto.Query
+    alias Castmill.Networks.NetworksUsers
+
+    Castmill.Repo.exists?(
+      from(nu in NetworksUsers,
+        where: nu.user_id == ^user.id and nu.role == :admin
+      )
+    )
+  end
+
   def is_network_admin?(_user), do: false
 
   defp find_blocked_organization(user) do
@@ -131,7 +142,7 @@ defmodule CastmillWeb.SessionUtils do
         "origin" => origin
       })
       when type in ["webauthn.get", "webauthn.create"] do
-    # Check if there is a network matching the origin
+    # Check if there is a network matching the origin (protocol is stripped internally)
     network_id = Accounts.get_network_id_by_domain(origin)
 
     if network_id do

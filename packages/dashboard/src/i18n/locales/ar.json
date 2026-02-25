@@ -214,6 +214,9 @@
       "teams": "الفرق",
       "storage": "إجمالي التخزين"
     },
+    "overview": {
+      "networkInfo": "معلومات الشبكة"
+    },
     "identity": {
       "title": "هوية الشبكة",
       "description": "قم بتكوين العلامة التجارية وهوية شبكتك.",
@@ -590,6 +593,10 @@
     "widgets": "Widgets",
     "members": "الأعضاء",
     "network": "الشبكة",
+    "networkOverview": "نظرة عامة",
+    "networkSettings": "الإعدادات",
+    "networkOrganizations": "المنظمات",
+    "networkUsers": "المستخدمون والدعوات",
     "tags": "العلامات"
   },
   "channels": {
@@ -1261,6 +1268,12 @@
       "largeFileWarning": "ملف كبير ({{fileSize}}). قد يستغرق التحميل بعض الوقت.",
       "noValidFiles": "لا توجد ملفات صالحة للتحميل.",
       "uploadError": "خطأ في تحميل الملف."
+    }
+  },
+  "dashboard": {
+    "noOrganizations": {
+      "title": "لا توجد منظمات",
+      "description": "أنت لا تنتمي إلى أي منظمة في هذه الشبكة بعد. يرجى الاتصال بمسؤول الشبكة للحصول على حق الوصول."
     }
   }
 }

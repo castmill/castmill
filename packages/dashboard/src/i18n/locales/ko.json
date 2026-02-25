@@ -214,6 +214,9 @@
       "teams": "팀",
       "storage": "총 저장소"
     },
+    "overview": {
+      "networkInfo": "네트워크 정보"
+    },
     "identity": {
       "title": "네트워크 아이덴티티",
       "description": "네트워크의 브랜드와 아이덴티티를 구성하세요.",
@@ -590,6 +593,10 @@
     "widgets": "Widgets",
     "members": "구성원",
     "network": "네트워크",
+    "networkOverview": "개요",
+    "networkSettings": "설정",
+    "networkOrganizations": "조직",
+    "networkUsers": "사용자 및 초대",
     "tags": "태그"
   },
   "channels": {
@@ -1261,6 +1268,12 @@
       "largeFileWarning": "대용량 파일({{fileSize}}). 업로드에 시간이 걸릴 수 있습니다.",
       "noValidFiles": "업로드할 유효한 파일이 없습니다.",
       "uploadError": "파일 업로드 중 오류가 발생했습니다."
+    }
+  },
+  "dashboard": {
+    "noOrganizations": {
+      "title": "조직 없음",
+      "description": "아직 이 네트워크의 조직에 소속되어 있지 않습니다. 네트워크 관리자에게 연락하여 액세스 권한을 받으세요."
     }
   }
 }

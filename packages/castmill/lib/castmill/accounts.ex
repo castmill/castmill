@@ -288,7 +288,7 @@ defmodule Castmill.Accounts do
         end
       end)
 
-      # Now delete the user (org_user relationships will be deleted via cascade or above)
+      # Delete the user (network memberships and org_user relationships cascade automatically)
       case Repo.delete_all(
              from(user in Castmill.Accounts.User,
                where: user.id == ^user_id
@@ -631,7 +631,10 @@ defmodule Castmill.Accounts do
     end
   end
 
-  def get_network_id_by_domain(domain) do
+  def get_network_id_by_domain(origin) do
+    # Strip protocol (http:// or https://) from Origin header to match stored domains
+    domain = strip_protocol(origin)
+
     case from(network in Castmill.Networks.Network,
            where: network.domain == ^domain,
            select: network.id
@@ -643,6 +646,20 @@ defmodule Castmill.Accounts do
       network_id ->
         {:ok, network_id}
     end
+  end
+
+  defp strip_protocol(nil), do: ""
+
+  defp strip_protocol(origin) when is_binary(origin) do
+    origin
+    |> String.replace(~r{^https?://}, "")
+    |> then(fn s ->
+      # Keep only host and optional port, strip any path/query/fragment
+      case String.split(s, "/", parts: 2) do
+        [host_port | _] -> host_port
+        [] -> s
+      end
+    end)
   end
 
   ## Addons
@@ -674,12 +691,20 @@ defmodule Castmill.Accounts do
   # The organization is created with a temporary name (user's email) and onboarding_completed set to false
   # to trigger the onboarding flow where the user must provide a proper organization name.
   defp create_user_and_organization(email, network_id) do
+    alias Castmill.Networks.NetworksUsers
+
     # Generate a temporary organization name based on timestamp to avoid conflicts
     temp_org_name = "org_#{:os.system_time(:millisecond)}"
 
     with {:ok, user} <-
+           Repo.insert(User.changeset(%User{}, %{name: email, email: email})),
+         {:ok, _nu} <-
            Repo.insert(
-             User.changeset(%User{}, %{name: email, email: email, network_id: network_id})
+             NetworksUsers.changeset(%NetworksUsers{}, %{
+               role: :member,
+               network_id: network_id,
+               user_id: user.id
+             })
            ),
          {:ok, organization} <-
            Repo.insert(
@@ -728,9 +753,22 @@ defmodule Castmill.Accounts do
   end
 
   defp create_user_with_optional_organization(email, network_id, _invitation_token) do
-    # Has invitation token - just create user, skip organization
+    alias Castmill.Networks.NetworksUsers
+
+    # Has invitation token - just create user + network membership, skip organization
     # Organization will be created/joined when invitation is accepted
-    Repo.insert(User.changeset(%User{}, %{name: email, email: email, network_id: network_id}))
+    with {:ok, user} <-
+           Repo.insert(User.changeset(%User{}, %{name: email, email: email})),
+         {:ok, _nu} <-
+           Repo.insert(
+             NetworksUsers.changeset(%NetworksUsers{}, %{
+               role: :member,
+               network_id: network_id,
+               user_id: user.id
+             })
+           ) do
+      {:ok, user}
+    end
   end
 
   # Handles accepting invitations after user is created

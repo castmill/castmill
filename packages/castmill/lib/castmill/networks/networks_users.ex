@@ -5,13 +5,14 @@ defmodule Castmill.Networks.NetworksUsers do
   @moduledoc """
   Schema for the networks_users join table.
 
-  This table links users to networks with a specific role:
+  This is the **single source of truth** for user↔network membership.
+
+  Roles:
   - :admin - Network administrator, can manage network settings
   - :member - Regular network member
 
-  Note: Every user also has a `network_id` foreign key in the users table,
-  indicating which network they belong to. This table is for explicit
-  role assignments within a network.
+  A user may belong to multiple networks (each with its own role).
+  Every user must belong to at least one network.
   """
 
   schema "networks_users" do

@@ -737,7 +737,7 @@ const ChannelsPage: Component = () => {
                     refreshData();
                     toast.success(
                       t('channels.success.created', {
-                        name: channel.name,
+                        name: channel.name || '',
                       })
                     );
                     notifyChannelContentRequirement();
@@ -748,7 +748,7 @@ const ChannelsPage: Component = () => {
                     updateItem(channel.id, channel as JsonChannel);
                     toast.success(
                       t('channels.success.updated', {
-                        name: channel.name,
+                        name: channel.name || '',
                       })
                     );
                     return updatedTeam;

@@ -209,6 +209,9 @@
       "teams": "Team",
       "storage": "Total Lagring"
     },
+    "overview": {
+      "networkInfo": "Nätverksinformation"
+    },
     "identity": {
       "title": "Nätverksidentitet",
       "description": "Konfigurera varumärke och identitet för ditt nätverk.",
@@ -585,6 +588,10 @@
     "widgets": "Widgets",
     "members": "Medlemmar",
     "network": "Nätverk",
+    "networkOverview": "Översikt",
+    "networkSettings": "Inställningar",
+    "networkOrganizations": "Organisationer",
+    "networkUsers": "Användare & inbjudningar",
     "tags": "Taggar"
   },
   "channels": {
@@ -1256,6 +1263,12 @@
       "largeFileWarning": "Stor fil ({{fileSize}}). Uppladdningen kan ta en stund.",
       "noValidFiles": "Inga giltiga filer att ladda upp.",
       "uploadError": "Fel vid uppladdning av fil."
+    }
+  },
+  "dashboard": {
+    "noOrganizations": {
+      "title": "Inga organisationer",
+      "description": "Du tillhör inte någon organisation i detta nätverk ännu. Kontakta din nätverksadministratör för att få åtkomst."
     }
   }
 }

@@ -115,6 +115,10 @@
     "widgets": "Widgets",
     "members": "Mitglieder",
     "network": "Netzwerk",
+    "networkOverview": "Übersicht",
+    "networkSettings": "Einstellungen",
+    "networkOrganizations": "Organisationen",
+    "networkUsers": "Benutzer & Einladungen",
     "tags": "Tags"
   },
   "topbar": {
@@ -223,6 +227,9 @@
       "devices": "Geräte",
       "teams": "Teams",
       "storage": "Gesamtspeicher"
+    },
+    "overview": {
+      "networkInfo": "Netzwerkinformationen"
     },
     "identity": {
       "title": "Netzwerkidentität",
@@ -1256,6 +1263,12 @@
       "largeFileWarning": "Große Datei ({{fileSize}}). Der Upload kann eine Weile dauern.",
       "noValidFiles": "Keine gültigen Dateien zum Hochladen.",
       "uploadError": "Fehler beim Hochladen der Datei."
+    }
+  },
+  "dashboard": {
+    "noOrganizations": {
+      "title": "Keine Organisationen",
+      "description": "Sie gehören noch keiner Organisation in diesem Netzwerk an. Bitte kontaktieren Sie Ihren Netzwerkadministrator, um Zugang zu erhalten."
     }
   }
 }

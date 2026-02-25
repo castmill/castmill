@@ -213,7 +213,8 @@ defmodule CastmillWeb.OrganizationController do
   # the organization. This is not implemented yet.
 
   def list_users_organizations(conn, %{"user_id" => user_id}) do
-    organizations = Organizations.list_user_organizations(user_id)
+    network_id = conn.assigns[:network_id]
+    organizations = Organizations.list_user_organizations(user_id, network_id)
     render(conn, :index, organizations: organizations)
   end
 
