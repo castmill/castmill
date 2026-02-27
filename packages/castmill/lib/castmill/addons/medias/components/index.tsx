@@ -616,6 +616,12 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
     bumpTree();
   };
 
+  const handleClearTagFilters = () => {
+    setSelectedTagIds([]);
+    refreshData();
+    bumpTree();
+  };
+
   const updateItem = (itemId: number, item: Partial<JsonMedia>) => {
     if (tableViewRef) {
       tableViewRef.updateItem(itemId, item);
@@ -1016,6 +1022,15 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
             },
           }}
           pagination={{ itemsPerPage }}
+          tagFilterNotification={
+            selectedTagIds().length > 0
+              ? {
+                  isActive: true,
+                  message: t('filters.itemsHiddenByTags'),
+                  onClear: handleClearTagFilters,
+                }
+              : undefined
+          }
         ></TableView>
       </Show>
 

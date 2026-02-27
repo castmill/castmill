@@ -479,10 +479,15 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
    */
   const mapErrorToMessage = (error: any): string => {
     // Default error message
-    let errorMessage = t('devices.errorRegisteringDevice', { error: String(error) });
+    let errorMessage = t('devices.errorRegisteringDevice', {
+      error: String(error),
+    });
 
     // Check if this is an HttpError with pincode-specific error
-    if (error?.details?.field === 'pincode' && error?.details?.errors?.pincode) {
+    if (
+      error?.details?.field === 'pincode' &&
+      error?.details?.errors?.pincode
+    ) {
       const pincodeError = error.details.errors.pincode[0];
 
       // Map backend error messages to translation keys
@@ -749,6 +754,12 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
     bumpTree();
   };
 
+  const handleClearTagFilters = () => {
+    setSelectedTagIds([]);
+    refreshData();
+    bumpTree();
+  };
+
   // Fetch resources for tree view nodes (filter by tag IDs in AND mode)
   const fetchTreeResources = async (tagIds: number[]) => {
     const result = await DevicesService.fetchDevices(
@@ -946,6 +957,15 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
             },
           }}
           pagination={{ itemsPerPage }}
+          tagFilterNotification={
+            selectedTagIds().length > 0
+              ? {
+                  isActive: true,
+                  message: t('filters.itemsHiddenByTags'),
+                  onClear: handleClearTagFilters,
+                }
+              : undefined
+          }
         ></TableView>
       </Show>
 

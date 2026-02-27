@@ -506,6 +506,12 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
     bumpTree();
   };
 
+  const handleClearTagFilters = () => {
+    setSelectedTagIds([]);
+    refreshData();
+    bumpTree();
+  };
+
   // Fetch resources for tree view nodes (filter by tag IDs in AND mode)
   const fetchTreeResources = async (tagIds: number[]) => {
     const result = await PlaylistsService.fetchPlaylists(
@@ -1273,6 +1279,15 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
             },
           }}
           pagination={{ itemsPerPage }}
+          tagFilterNotification={
+            selectedTagIds().length > 0
+              ? {
+                  isActive: true,
+                  message: t('filters.itemsHiddenByTags'),
+                  onClear: handleClearTagFilters,
+                }
+              : undefined
+          }
         ></TableView>
       </Show>
 
