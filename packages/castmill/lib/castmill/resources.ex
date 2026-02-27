@@ -1101,7 +1101,10 @@ defmodule Castmill.Resources do
     end
   end
 
-  # Parse tag filter mode string to atom safely
+  # Parse tag filter mode string to atom safely.
+  # Uses explicit pattern matching instead of String.to_atom/1 to prevent
+  # atom table exhaustion from user-provided input. Defaults to :any for
+  # invalid or non-binary inputs.
   defp parse_tag_filter_mode(mode_str) when is_binary(mode_str) do
     case mode_str do
       "any" -> :any
