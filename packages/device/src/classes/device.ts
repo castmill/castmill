@@ -29,10 +29,9 @@ const MAX_RECONNECT_DELAY_MS = 60_000; // 60 seconds max delay between reconnect
 // Socket reconnection error types
 const AUTH_ERROR_INVALID_DEVICE = 'invalid_device';
 const AUTH_ERROR_UNAUTHORIZED = 'unauthorized';
-const CONNECTION_TIMEOUT = 'connection_timeout';
 
 // Exponential backoff for socket reconnection
-// Returns delay in ms: 1s, 2s, 4s, 8s, capped at 10s
+// Returns delay in ms: 1s, 2s, 4s, 8s, …, capped at 60s
 const getReconnectDelay = (tries: number): number => {
   return Math.min(
     1000 * Math.pow(2, Math.max(tries - 1, 0)),
@@ -488,10 +487,6 @@ export class Device extends EventEmitter {
           window.location.reload();
         } else {
           this.logger.error(`Unable to login ${error}`);
-
-          // Wait 5 seconds and refresh
-          await new Promise((resolve) => setTimeout(resolve, 5000));
-          window.location.reload();
         }
       }
 
