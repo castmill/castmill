@@ -68,7 +68,7 @@ defmodule Castmill.Accounts do
     if is_nil(token) do
       {:error, "No token provided"}
     else
-      secret_hash = :crypto.hash(:sha256, token) |> Base.encode16()
+      secret_hash = :crypto.hash(:sha256, token) |> Base.encode16(case: :lower)
 
       from(at in AccessToken, where: at.secret_hash == ^secret_hash, select: at)
       |> Repo.update_all(
