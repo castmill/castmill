@@ -464,6 +464,8 @@ const ChannelsPage: Component = () => {
       search,
       filters,
       team_id: selectedTeamId(),
+      tag_ids: selectedTagIds(),
+      tag_filter_mode: tagFilterMode() as 'any' | 'all',
     });
 
     setData(result.data);

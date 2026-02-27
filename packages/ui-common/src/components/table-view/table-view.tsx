@@ -26,6 +26,8 @@ export interface FetchDataOptions {
   search?: string;
   filters?: Record<string, string | boolean>;
   team_id?: number | null;
+  tag_ids?: number[];
+  tag_filter_mode?: 'any' | 'all';
 }
 
 export interface TableViewRef<
