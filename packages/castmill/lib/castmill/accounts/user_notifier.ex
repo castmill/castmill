@@ -31,14 +31,20 @@ defmodule Castmill.Accounts.UserNotifier do
       |> subject(subject)
       |> text_body(body)
 
-    case Mailer.deliver(email) do
-      {:ok, response} ->
-        Logger.info("Email sent successfully: #{inspect(response)}")
-        {:ok, email}
+    try do
+      case Mailer.deliver(email) do
+        {:ok, response} ->
+          Logger.info("Email sent successfully: #{inspect(response)}")
+          {:ok, email}
 
-      {:error, reason} ->
-        Logger.error("Failed to send email: #{inspect(reason)}")
-        {:error, reason}
+        {:error, reason} ->
+          Logger.error("Failed to send email: #{inspect(reason)}")
+          {:error, reason}
+      end
+    rescue
+      exception ->
+        Logger.error("Failed to send email: #{Exception.message(exception)}")
+        {:error, exception}
     end
   end
 
@@ -52,14 +58,20 @@ defmodule Castmill.Accounts.UserNotifier do
       |> text_body(text_body)
       |> html_body(html_body)
 
-    case Mailer.deliver(email) do
-      {:ok, response} ->
-        Logger.info("Email sent successfully: #{inspect(response)}")
-        {:ok, email}
+    try do
+      case Mailer.deliver(email) do
+        {:ok, response} ->
+          Logger.info("Email sent successfully: #{inspect(response)}")
+          {:ok, email}
 
-      {:error, reason} ->
-        Logger.error("Failed to send email: #{inspect(reason)}")
-        {:error, reason}
+        {:error, reason} ->
+          Logger.error("Failed to send email: #{inspect(reason)}")
+          {:error, reason}
+      end
+    rescue
+      exception ->
+        Logger.error("Failed to send email: #{Exception.message(exception)}")
+        {:error, exception}
     end
   end
 
@@ -198,6 +210,39 @@ defmodule Castmill.Accounts.UserNotifier do
       "Complete Your Castmill Signup",
       text_body,
       html_body
+    )
+  end
+
+  @doc """
+  Deliver network invitation instructions.
+  """
+  def deliver_network_invitation_instructions(invitation, dashboard_uri) do
+    invitation_url =
+      "#{dashboard_uri}/?email=#{URI.encode_www_form(invitation.email)}"
+
+    deliver(
+      invitation.email,
+      "You're invited to join #{invitation.organization_name} on Castmill",
+      """
+
+      ==============================
+
+      Hi,
+
+      You've been invited to create and manage the organization \"#{invitation.organization_name}\".
+
+      To continue, open the dashboard:
+
+      #{invitation_url}
+
+      Then continue with this invitation token:
+
+      #{invitation.token}
+
+      This invitation expires at: #{invitation.expires_at}
+
+      ==============================
+      """
     )
   end
 
