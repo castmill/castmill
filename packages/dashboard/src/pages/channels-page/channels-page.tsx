@@ -619,9 +619,7 @@ const ChannelsPage: Component = () => {
   };
 
   const handleClearTagFilters = () => {
-    setSelectedTagIds([]);
-    refreshData();
-    bumpTree();
+    handleTagChange([]);
   };
 
   // Fetch resources for tree view nodes (filter by tag IDs in AND mode)

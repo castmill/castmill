@@ -617,9 +617,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
   };
 
   const handleClearTagFilters = () => {
-    setSelectedTagIds([]);
-    refreshData();
-    bumpTree();
+    handleTagChange([]);
   };
 
   const updateItem = (itemId: number, item: Partial<JsonMedia>) => {
