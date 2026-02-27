@@ -479,10 +479,15 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
    */
   const mapErrorToMessage = (error: any): string => {
     // Default error message
-    let errorMessage = t('devices.errorRegisteringDevice', { error: String(error) });
+    let errorMessage = t('devices.errorRegisteringDevice', {
+      error: String(error),
+    });
 
     // Check if this is an HttpError with pincode-specific error
-    if (error?.details?.field === 'pincode' && error?.details?.errors?.pincode) {
+    if (
+      error?.details?.field === 'pincode' &&
+      error?.details?.errors?.pincode
+    ) {
       const pincodeError = error.details.errors.pincode[0];
 
       // Map backend error messages to translation keys
@@ -743,10 +748,21 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
     bumpTree();
   };
 
+  // Reactively refresh table & tree when tag selection or filter mode changes
+  // (covers both user interaction and initial load from URL/localStorage)
+  createEffect(
+    on(
+      () => [selectedTagIds(), tagFilterMode()] as const,
+      () => {
+        refreshData();
+        bumpTree();
+      },
+      { defer: true }
+    )
+  );
+
   const handleTagChange = (tagIds: number[]) => {
     setSelectedTagIds(tagIds);
-    refreshData();
-    bumpTree();
   };
 
   // Fetch resources for tree view nodes (filter by tag IDs in AND mode)
