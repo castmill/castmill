@@ -1140,7 +1140,13 @@ defmodule Castmill.Resources do
     # Extract tag filtering params
     tag_ids = Map.get(params, :tag_ids, [])
     tag_filter_mode_str = Map.get(params, :tag_filter_mode, "any") || "any"
-    tag_filter_mode = String.to_atom(tag_filter_mode_str)
+
+    tag_filter_mode =
+      case tag_filter_mode_str do
+        "any" -> :any
+        "all" -> :all
+        _ -> :any
+      end
 
     preloads =
       if function_exported?(resource, :preloads, 0) do
@@ -1184,7 +1190,13 @@ defmodule Castmill.Resources do
     # Extract tag filtering params
     tag_ids = Map.get(params, :tag_ids, [])
     tag_filter_mode_str = Map.get(params, :tag_filter_mode, "any") || "any"
-    tag_filter_mode = String.to_atom(tag_filter_mode_str)
+
+    tag_filter_mode =
+      case tag_filter_mode_str do
+        "any" -> :any
+        "all" -> :all
+        _ -> :any
+      end
 
     preloads =
       if function_exported?(resource, :preloads, 0) do
@@ -1249,7 +1261,13 @@ defmodule Castmill.Resources do
     # Extract tag filtering params
     tag_ids = Map.get(params, :tag_ids, [])
     tag_filter_mode_str = Map.get(params, :tag_filter_mode, "any") || "any"
-    tag_filter_mode = String.to_atom(tag_filter_mode_str)
+
+    tag_filter_mode =
+      case tag_filter_mode_str do
+        "any" -> :any
+        "all" -> :all
+        _ -> :any
+      end
 
     # Get the join module for this resource type
     {join_module, foreign_key} = get_team_join_info(resource)
@@ -1275,7 +1293,13 @@ defmodule Castmill.Resources do
     # Extract tag filtering params
     tag_ids = Map.get(params, :tag_ids, [])
     tag_filter_mode_str = Map.get(params, :tag_filter_mode, "any") || "any"
-    tag_filter_mode = String.to_atom(tag_filter_mode_str)
+
+    tag_filter_mode =
+      case tag_filter_mode_str do
+        "any" -> :any
+        "all" -> :all
+        _ -> :any
+      end
 
     resource.base_query()
     |> Organization.where_org_id(organization_id)
