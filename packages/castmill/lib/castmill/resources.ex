@@ -1139,7 +1139,8 @@ defmodule Castmill.Resources do
 
     # Extract tag filtering params
     tag_ids = Map.get(params, :tag_ids, [])
-    tag_filter_mode = Map.get(params, :tag_filter_mode, "any") |> String.to_atom()
+    tag_filter_mode_str = Map.get(params, :tag_filter_mode, "any") || "any"
+    tag_filter_mode = String.to_atom(tag_filter_mode_str)
 
     preloads =
       if function_exported?(resource, :preloads, 0) do
