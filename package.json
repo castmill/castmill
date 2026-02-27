@@ -77,7 +77,8 @@
     "packages/dashboard/src/i18n/locales/*.json": [
       "prettier --write",
       "cd packages/dashboard && node scripts/check-missing-translations.cjs"
-    ]
+    ],
+    "packages/castmill/**/*.{ex,exs}": "cd packages/castmill && mix format && cd ../.."
   },
   "resolutions": {
     "glob": "^10.3.10",
