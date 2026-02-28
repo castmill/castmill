@@ -1101,6 +1101,20 @@ defmodule Castmill.Resources do
     end
   end
 
+  # Parse tag filter mode string to atom safely.
+  # Uses explicit pattern matching instead of String.to_atom/1 to prevent
+  # atom table exhaustion from user-provided input. Defaults to :any for
+  # invalid or non-binary inputs.
+  defp parse_tag_filter_mode(mode_str) when is_binary(mode_str) do
+    case mode_str do
+      "any" -> :any
+      "all" -> :all
+      _ -> :any
+    end
+  end
+
+  defp parse_tag_filter_mode(_), do: :any
+
   # Apply tag filtering to a query if tag_ids are provided
   defp apply_tag_filter(query, _resource, nil, _mode), do: query
   defp apply_tag_filter(query, _resource, [], _mode), do: query
@@ -1140,7 +1154,7 @@ defmodule Castmill.Resources do
     # Extract tag filtering params
     tag_ids = Map.get(params, :tag_ids, [])
     tag_filter_mode_str = Map.get(params, :tag_filter_mode, "any") || "any"
-    tag_filter_mode = String.to_atom(tag_filter_mode_str)
+    tag_filter_mode = parse_tag_filter_mode(tag_filter_mode_str)
 
     preloads =
       if function_exported?(resource, :preloads, 0) do
@@ -1184,7 +1198,7 @@ defmodule Castmill.Resources do
     # Extract tag filtering params
     tag_ids = Map.get(params, :tag_ids, [])
     tag_filter_mode_str = Map.get(params, :tag_filter_mode, "any") || "any"
-    tag_filter_mode = String.to_atom(tag_filter_mode_str)
+    tag_filter_mode = parse_tag_filter_mode(tag_filter_mode_str)
 
     preloads =
       if function_exported?(resource, :preloads, 0) do
@@ -1249,7 +1263,7 @@ defmodule Castmill.Resources do
     # Extract tag filtering params
     tag_ids = Map.get(params, :tag_ids, [])
     tag_filter_mode_str = Map.get(params, :tag_filter_mode, "any") || "any"
-    tag_filter_mode = String.to_atom(tag_filter_mode_str)
+    tag_filter_mode = parse_tag_filter_mode(tag_filter_mode_str)
 
     # Get the join module for this resource type
     {join_module, foreign_key} = get_team_join_info(resource)
@@ -1275,7 +1289,7 @@ defmodule Castmill.Resources do
     # Extract tag filtering params
     tag_ids = Map.get(params, :tag_ids, [])
     tag_filter_mode_str = Map.get(params, :tag_filter_mode, "any") || "any"
-    tag_filter_mode = String.to_atom(tag_filter_mode_str)
+    tag_filter_mode = parse_tag_filter_mode(tag_filter_mode_str)
 
     resource.base_query()
     |> Organization.where_org_id(organization_id)
