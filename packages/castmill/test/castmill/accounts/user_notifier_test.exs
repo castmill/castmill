@@ -1,5 +1,14 @@
+defmodule Castmill.Accounts.UserNotifierRaisingAdapter do
+  use Swoosh.Adapter, required_config: []
+
+  @impl true
+  def deliver(_email, _config) do
+    raise ArgumentError, "forced mailer error for notifier test"
+  end
+end
+
 defmodule Castmill.Accounts.UserNotifierTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case, async: false
 
   alias Castmill.Accounts.SignUp
   alias Castmill.Accounts.UserNotifier
@@ -12,8 +21,7 @@ defmodule Castmill.Accounts.UserNotifierTest do
     end)
 
     Application.put_env(:castmill, Castmill.Mailer,
-      adapter: Swoosh.Adapters.AmazonSES,
-      region: "eu-central-1"
+      adapter: Castmill.Accounts.UserNotifierRaisingAdapter
     )
 
     signup = %SignUp{
@@ -22,7 +30,7 @@ defmodule Castmill.Accounts.UserNotifierTest do
       challenge: "challenge"
     }
 
-    assert {:error, %ArgumentError{}} =
+    assert {:error, %ArgumentError{message: "forced mailer error for notifier test"}} =
              UserNotifier.deliver_signup_instructions(signup, "https://app.castmill.dev")
   end
 end
