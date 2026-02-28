@@ -236,7 +236,7 @@ defmodule Castmill.Widgets do
       end
     end
 
-    if Application.get_env(:castmill, :async_background_tasks, true) do
+    if Application.get_env(:castmill, :async_poll_scheduling, true) do
       # Spawn a separate process to schedule the poll, so that:
       # 1. It doesn't block the database transaction
       # 2. If Redis isn't available, it doesn't crash the transaction

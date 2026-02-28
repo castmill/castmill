@@ -703,7 +703,7 @@ defmodule Castmill.Networks do
     UserNotifier.deliver_network_invitation_instructions(
       invitation,
       dashboard_url,
-      context: "network_invitation",
+      context: "networks.invitation",
       metadata: %{
         invitation_id: invitation.id,
         email: invitation.email,
