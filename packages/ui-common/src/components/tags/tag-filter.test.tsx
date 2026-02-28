@@ -139,6 +139,25 @@ describe('TagFilter', () => {
     expect(colorDots.length).toBeGreaterThan(0);
   });
 
+  it('renders checkmark character for selected tags', async () => {
+    const { getByText, container } = render(() => (
+      <TagFilter
+        tags={[tag1, tag2]}
+        selectedTagIds={[1]}
+        onTagChange={vi.fn()}
+      />
+    ));
+
+    // Open the dropdown - the selected tag "London" should appear as a chip
+    const trigger = container.querySelector('.msf-trigger') as HTMLElement;
+    await fireEvent.click(trigger);
+
+    // Check that the checkmark element exists and contains the actual character
+    const checkmark = container.querySelector('.tag-option-check');
+    expect(checkmark).toBeTruthy();
+    expect(checkmark?.textContent).toBe('✓');
+  });
+
   // ===========================================================================
   // Disabled State
   // ===========================================================================
