@@ -489,3 +489,133 @@ describe('Device - Channel Updates', () => {
     expect(device['channels'][0].attrs.id).toBe('123');
   });
 });
+
+describe('Device - Pincode Polling', () => {
+  let device: Device;
+  let mockIntegration: any;
+  let mockStorageIntegration: any;
+  let fetchSpy: ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+
+    mockIntegration = {
+      getCredentials: vi.fn(),
+      getSetting: vi.fn(),
+      getMachineGUID: vi.fn().mockResolvedValue('test-hardware-id'),
+      removeCredentials: vi.fn(),
+      storeCredentials: vi.fn(),
+      getLocation: vi.fn().mockResolvedValue({ latitude: 0, longitude: 0 }),
+      getTimezone: vi.fn().mockResolvedValue('UTC'),
+    };
+
+    mockStorageIntegration = {
+      getItem: vi.fn(),
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+    };
+
+    device = new Device(mockIntegration, mockStorageIntegration, {
+      cache: { maxItems: 100 },
+    });
+    device['baseUrl'] = 'http://localhost:4000';
+
+    fetchSpy = vi.fn();
+    vi.stubGlobal('fetch', fetchSpy);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.restoreAllMocks();
+  });
+
+  it('should keep retrying pincode request when network is unavailable', async () => {
+    // First 3 calls fail with network error, 4th succeeds
+    fetchSpy
+      .mockRejectedValueOnce(new TypeError('Failed to fetch'))
+      .mockRejectedValueOnce(new TypeError('Failed to fetch'))
+      .mockRejectedValueOnce(new TypeError('Failed to fetch'))
+      .mockResolvedValueOnce({
+        status: 201,
+        json: async () => ({ data: { pincode: 'ABC123' } }),
+      });
+
+    // Start the pincode request (it will await the first fetch which rejects)
+    const pincodePromise = device['requestPincode']('test-hardware-id');
+
+    // Advance through the backoff delays for each retry
+    // Retry 1: 1s delay (1000 * 2^0)
+    await vi.advanceTimersByTimeAsync(1000);
+    // Retry 2: 2s delay (1000 * 2^1)
+    await vi.advanceTimersByTimeAsync(2000);
+    // Retry 3: 4s delay (1000 * 2^2)
+    await vi.advanceTimersByTimeAsync(4000);
+
+    const pincode = await pincodePromise;
+
+    expect(pincode).toBe('ABC123');
+    expect(fetchSpy).toHaveBeenCalledTimes(4);
+
+    // Verify all calls were to the registrations endpoint
+    for (const call of fetchSpy.mock.calls) {
+      expect(call[0]).toBe('http://localhost:4000/registrations');
+    }
+  });
+
+  it('should stop retrying when device is closing', async () => {
+    // All calls fail
+    fetchSpy.mockRejectedValue(new TypeError('Failed to fetch'));
+
+    const pincodePromise = device['requestPincode']('test-hardware-id');
+
+    // Attach a catch handler immediately to prevent unhandled rejection
+    const resultPromise = pincodePromise.catch((e) => e);
+
+    // Let the first retry happen
+    await vi.advanceTimersByTimeAsync(1000);
+
+    // Signal closing
+    device['closing'] = true;
+
+    // Advance past the next backoff so the loop checks `closing`
+    await vi.advanceTimersByTimeAsync(2000);
+
+    const error = await resultPromise;
+    expect(error).toBeInstanceOf(Error);
+    expect(error.message).toBe('Pincode request cancelled: device is closing');
+  });
+
+  it('should use exponential backoff between retries', async () => {
+    const setTimeoutSpy = vi.spyOn(globalThis, 'setTimeout');
+
+    // Fail 3 times then succeed
+    fetchSpy
+      .mockRejectedValueOnce(new TypeError('Failed to fetch'))
+      .mockRejectedValueOnce(new TypeError('Failed to fetch'))
+      .mockRejectedValueOnce(new TypeError('Failed to fetch'))
+      .mockResolvedValueOnce({
+        status: 201,
+        json: async () => ({ data: { pincode: 'XYZ789' } }),
+      });
+
+    const pincodePromise = device['requestPincode']('test-hardware-id');
+
+    // Advance through each backoff delay
+    await vi.advanceTimersByTimeAsync(1000); // 1st retry: 1s
+    await vi.advanceTimersByTimeAsync(2000); // 2nd retry: 2s
+    await vi.advanceTimersByTimeAsync(4000); // 3rd retry: 4s
+
+    await pincodePromise;
+
+    // Find the setTimeout calls used for backoff delays
+    const backoffCalls = setTimeoutSpy.mock.calls.filter(
+      (call) => typeof call[1] === 'number' && call[1] >= 1000
+    );
+
+    // Verify exponential backoff: 1s, 2s, 4s
+    expect(backoffCalls.length).toBeGreaterThanOrEqual(3);
+    expect(backoffCalls[0][1]).toBe(1000);
+    expect(backoffCalls[1][1]).toBe(2000);
+    expect(backoffCalls[2][1]).toBe(4000);
+  });
+});

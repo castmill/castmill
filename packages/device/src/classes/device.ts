@@ -24,6 +24,20 @@ import { DivLogger, Logger, NullLogger, WebSocketLogger } from './logger';
 
 const HEARTBEAT_INTERVAL = 1000 * 30; // 30 seconds
 const DEFAULT_MAX_LOGS = 100;
+const MAX_RECONNECT_DELAY_MS = 60_000; // 60 seconds max delay between reconnect attempts
+
+// Socket reconnection error types
+const AUTH_ERROR_INVALID_DEVICE = 'invalid_device';
+const AUTH_ERROR_UNAUTHORIZED = 'unauthorized';
+
+// Exponential backoff for socket reconnection
+// Returns delay in ms: 1s, 2s, 4s, 8s, …, capped at 60s
+const getReconnectDelay = (tries: number): number => {
+  return Math.min(
+    1000 * Math.pow(2, Math.max(tries - 1, 0)),
+    MAX_RECONNECT_DELAY_MS
+  );
+};
 
 const supportedDebugModes = ['remote', 'local', 'none'];
 
@@ -99,6 +113,13 @@ interface Credentials {
     name: string;
     token: string;
   };
+}
+
+export interface ProgressEvent {
+  step: number;
+  totalSteps: number;
+  percent: number;
+  label: string;
 }
 
 /**
@@ -184,15 +205,19 @@ export class Device extends EventEmitter {
       (channel: JsonChannel) => new Channel(channel)
     );
 
+    this.emitProgress(4, 5, 'Loading channels');
+
     this.id = device.id;
     this.name = device.name;
     this.logDiv = logDiv;
 
-    this.emit('started', device);
-
     // TODO: Should be able to pass the logger to the renderer and the player.
     const renderer = new Renderer(el);
     this.player = new Player(this.contentQueue, renderer, this.opts?.viewport);
+
+    this.emitProgress(5, 5, 'Starting player');
+
+    this.emit('started', device);
 
     // this.player.play({ loop: true });
 
@@ -373,41 +398,72 @@ export class Device extends EventEmitter {
     );
   }
 
-  private async requestPincode(hardwareId: string) {
+  private async requestPincode(hardwareId: string): Promise<string> {
+    this.emitProgress(2, 3, 'Connecting to server');
+
     const location = await this.integration.getLocation!();
-    const pincodeResponse = await fetch(`${this.baseUrl}/registrations`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        hardware_id: hardwareId,
-        location,
-        timezone: await this.integration.getTimezone!(),
-      }),
-    });
+    const timezone = await this.integration.getTimezone!();
 
-    if (pincodeResponse.status === 201) {
-      const { data } = await pincodeResponse.json();
-      return data.pincode;
-    } else if (pincodeResponse.status === 200) {
-      // Device was already registered, and we got the token to recover it.
-      const { data } = await pincodeResponse.json();
+    // Retry loop: keep trying to reach the server with exponential backoff
+    let tries = 0;
+    while (!this.closing) {
+      try {
+        const pincodeResponse = await fetch(`${this.baseUrl}/registrations`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            hardware_id: hardwareId,
+            location,
+            timezone,
+          }),
+        });
 
-      const credentials = {
-        device: {
-          id: data.id,
-          name: data.name,
-          token: data.token,
-        },
-      };
-      await this.integration.storeCredentials!(JSON.stringify(credentials));
+        if (pincodeResponse.status === 201) {
+          const { data } = await pincodeResponse.json();
+          return data.pincode;
+        } else if (pincodeResponse.status === 200) {
+          // Device was already registered, and we got the token to recover it.
+          const { data } = await pincodeResponse.json();
 
-      // Refresh the page to initialize the player with the new credentials.
-      window.location.reload();
-    } else {
-      throw new Error(`Invalid status ${pincodeResponse.status}`);
+          const credentials = {
+            device: {
+              id: data.id,
+              name: data.name,
+              token: data.token,
+            },
+          };
+          await this.integration.storeCredentials!(JSON.stringify(credentials));
+
+          // Refresh the page to initialize the player with the new credentials.
+          window.location.reload();
+          // Unreachable: page will reload, but TypeScript requires a return value
+          return '';
+        } else {
+          throw new Error(`Invalid status ${pincodeResponse.status}`);
+        }
+      } catch (error) {
+        tries++;
+        const delay = getReconnectDelay(tries);
+        this.logger.info(
+          `Failed to request pincode: ${error}. Retrying in ${delay / 1000}s...`
+        );
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      }
     }
+
+    throw new Error('Pincode request cancelled: device is closing');
+  }
+
+  private emitProgress(step: number, totalSteps: number, label: string) {
+    const percent = Math.round((step / totalSteps) * 100);
+    this.emit('progress', {
+      step,
+      totalSteps,
+      percent,
+      label,
+    } as ProgressEvent);
   }
 
   async loginOrRegister(): Promise<{ status: Status; pincode?: string }> {
@@ -417,22 +473,20 @@ export class Device extends EventEmitter {
     // Check if this device is registered by getting the credentials from the local storage (if they exist).
     let credentials = await this.getCredentials();
 
+    this.emitProgress(1, credentials ? 5 : 3, 'Identifying device');
+
     if (credentials) {
       try {
         const phoenixChannel = await this.login(credentials, hardwareId);
         this.initListeners(phoenixChannel);
         this.initHeartbeat(phoenixChannel);
       } catch (error) {
-        if (error === 'invalid_device') {
+        if (error === AUTH_ERROR_INVALID_DEVICE) {
           // Clean all app data and refresh the page.
           await this.integration.removeCredentials();
           window.location.reload();
         } else {
           this.logger.error(`Unable to login ${error}`);
-
-          // Wait 5 seconds and refresh
-          await new Promise((resolve) => setTimeout(resolve, 5000));
-          window.location.reload();
         }
       }
 
@@ -450,8 +504,12 @@ export class Device extends EventEmitter {
   async register(hardwareId: string) {
     const pincode = await this.requestPincode(hardwareId);
 
+    this.emitProgress(3, 3, 'Preparing registration');
+
     let socket = new Socket(this.socketEndpoint, {
       params: { token: pincode },
+      reconnectAfterMs: getReconnectDelay,
+      rejoinAfterMs: getReconnectDelay,
     });
 
     socket.connect();
@@ -469,6 +527,11 @@ export class Device extends EventEmitter {
       .receive('error', (resp) => {
         // TODO: Show error in UI.
         this.logger.error(`Unable to join ${resp}`);
+      })
+      .receive('timeout', () => {
+        this.logger.info(
+          'Registration channel join timeout, waiting for connection...'
+        );
       });
 
     channel.on('device:registered', async (payload) => {
@@ -487,10 +550,12 @@ export class Device extends EventEmitter {
   async login(credentials: Credentials, hardwareId: string) {
     const { device } = credentials;
 
+    this.emitProgress(2, 5, 'Connecting to server');
+
     const socket = (this.socket = new Socket(this.socketEndpoint, {
       params: { device_id: device.id, hardware_id: hardwareId },
-      reconnectAfterMs: (_tries: number) => 10_000,
-      rejoinAfterMs: (_tries: number) => 10_000,
+      reconnectAfterMs: getReconnectDelay,
+      rejoinAfterMs: getReconnectDelay,
     }));
 
     socket.connect();
@@ -501,14 +566,64 @@ export class Device extends EventEmitter {
     });
 
     return new Promise<PhoenixChannel>((resolve, reject) => {
+      // Track if we've already resolved/rejected
+      let settled = false;
+      let stateCheckInterval: ReturnType<typeof setInterval> | null = null;
+
+      const cleanup = () => {
+        if (stateCheckInterval) {
+          clearInterval(stateCheckInterval);
+          stateCheckInterval = null;
+        }
+      };
+
+      const safeResolve = (value: PhoenixChannel) => {
+        if (!settled) {
+          settled = true;
+          cleanup();
+          this.emitProgress(3, 5, 'Authenticating');
+          resolve(value);
+        }
+      };
+
+      const safeReject = (reason?: any) => {
+        if (!settled) {
+          settled = true;
+          cleanup();
+          reject(reason);
+        }
+      };
+
+      // Handle initial join attempt and rejoins after reconnection
       channel
         .join()
-        .receive('ok', (resp) => {
-          resolve(channel);
+        .receive('ok', () => {
+          safeResolve(channel);
         })
         .receive('error', (resp) => {
-          reject(resp);
+          // Only reject for auth errors, not connection failures
+          if (
+            resp === AUTH_ERROR_INVALID_DEVICE ||
+            resp === AUTH_ERROR_UNAUTHORIZED
+          ) {
+            safeReject(resp);
+          } else {
+            this.logger.error(
+              `Channel join error: ${resp}, will keep trying...`
+            );
+          }
+        })
+        .receive('timeout', () => {
+          this.logger.info('Channel join timeout, waiting for connection...');
         });
+
+      // Poll channel state to detect successful reconnection and rejoin
+      // This handles the case where the initial join times out but a rejoin succeeds
+      stateCheckInterval = setInterval(() => {
+        if (!settled && channel.state === 'joined') {
+          safeResolve(channel);
+        }
+      }, 1000);
     });
   }
 
