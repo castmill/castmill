@@ -72,11 +72,7 @@ const SidePanelTree: Component<{
               node={node}
               level={props.level + 1}
               skipKeys={props.skipKeys}
-              basePath={
-                addon?.mount_path
-                  ? `${getBasePath()}${getLinkPath()}`
-                  : props.basePath
-              }
+              basePath={props.basePath}
             />
           </Show>
         )}

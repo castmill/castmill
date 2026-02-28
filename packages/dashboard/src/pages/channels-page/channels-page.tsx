@@ -464,6 +464,8 @@ const ChannelsPage: Component = () => {
       search,
       filters,
       team_id: selectedTeamId(),
+      tag_ids: selectedTagIds(),
+      tag_filter_mode: tagFilterMode() as 'any' | 'all',
     });
 
     setData(result.data);
@@ -612,10 +614,21 @@ const ChannelsPage: Component = () => {
     bumpTree();
   };
 
+  // Reactively refresh table & tree when tag selection or filter mode changes
+  // (covers both user interaction and initial load from URL/localStorage)
+  createEffect(
+    on(
+      () => [selectedTagIds(), tagFilterMode()] as const,
+      () => {
+        refreshData();
+        bumpTree();
+      },
+      { defer: true }
+    )
+  );
+
   const handleTagChange = (tagIds: number[]) => {
     setSelectedTagIds(tagIds);
-    refreshData();
-    bumpTree();
   };
 
   // Fetch resources for tree view nodes (filter by tag IDs in AND mode)
