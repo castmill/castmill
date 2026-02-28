@@ -1,6 +1,15 @@
 defmodule Castmill.NetworksTest do
   use Castmill.DataCase
 
+  import ExUnit.CaptureLog
+
+  defmodule RaisingMailerAdapter do
+    use Swoosh.Adapter, required_config: []
+
+    @impl true
+    def deliver(_email, _config), do: raise(ArgumentError, "forced mailer failure")
+  end
+
   alias Castmill.Networks
 
   @moduletag :networks
@@ -164,6 +173,16 @@ defmodule Castmill.NetworksTest do
   describe "network invitations" do
     import Castmill.NetworksFixtures
 
+    setup do
+      previous_mailer_config = Application.get_env(:castmill, Castmill.Mailer)
+
+      on_exit(fn ->
+        Application.put_env(:castmill, Castmill.Mailer, previous_mailer_config)
+      end)
+
+      :ok
+    end
+
     test "invite_user_to_new_organization/3 creates an invitation" do
       network = network_fixture()
       email = "newuser@example.com"
@@ -244,6 +263,32 @@ defmodule Castmill.NetworksTest do
 
       assert {:ok, _} = Networks.delete_network_invitation(invitation.id)
       assert Networks.get_network_invitation_by_token(invitation.token) == nil
+    end
+
+    test "invite_user_to_new_organization/3 returns ok even when email delivery fails" do
+      Application.put_env(:castmill, Castmill.Mailer, adapter: RaisingMailerAdapter)
+
+      network = network_fixture()
+      email = "delivery-fail@example.com"
+
+      capture_log(fn ->
+        assert {:ok, invitation} =
+                 Networks.invite_user_to_new_organization(network.id, email, "New Org")
+
+        send(self(), {:invitation, invitation})
+      end)
+
+      invitation =
+        receive do
+          {:invitation, invitation} -> invitation
+        end
+
+      assert invitation.email == email
+
+      persisted = Networks.get_network_invitation_by_token(invitation.token)
+      assert persisted != nil
+      assert persisted.email == email
+      assert persisted.status == "invited"
     end
   end
 end

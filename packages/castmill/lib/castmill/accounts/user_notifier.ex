@@ -1,9 +1,8 @@
 defmodule Castmill.Accounts.UserNotifier do
   import Swoosh.Email
-  require Logger
   require EEx
 
-  alias Castmill.Mailer
+  alias Castmill.EmailDelivery
 
   # Compile email templates at compile time
   @templates_dir Path.join([__DIR__, "email_templates"])
@@ -31,21 +30,7 @@ defmodule Castmill.Accounts.UserNotifier do
       |> subject(subject)
       |> text_body(body)
 
-    try do
-      case Mailer.deliver(email) do
-        {:ok, response} ->
-          Logger.info("Email sent successfully: #{inspect(response)}")
-          {:ok, email}
-
-        {:error, reason} ->
-          Logger.error("Failed to send email: #{inspect(reason)}")
-          {:error, reason}
-      end
-    rescue
-      exception ->
-        Logger.error("Failed to send email: #{Exception.message(exception)}")
-        {:error, exception}
-    end
+    EmailDelivery.deliver(email, context: "user_notifier.text")
   end
 
   # Delivers the email with both HTML and text body.
@@ -58,21 +43,7 @@ defmodule Castmill.Accounts.UserNotifier do
       |> text_body(text_body)
       |> html_body(html_body)
 
-    try do
-      case Mailer.deliver(email) do
-        {:ok, response} ->
-          Logger.info("Email sent successfully: #{inspect(response)}")
-          {:ok, email}
-
-        {:error, reason} ->
-          Logger.error("Failed to send email: #{inspect(reason)}")
-          {:error, reason}
-      end
-    rescue
-      exception ->
-        Logger.error("Failed to send email: #{Exception.message(exception)}")
-        {:error, exception}
-    end
+    EmailDelivery.deliver(email, context: "user_notifier.html")
   end
 
   @doc """

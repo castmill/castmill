@@ -10,6 +10,8 @@ end
 defmodule Castmill.Accounts.UserNotifierTest do
   use ExUnit.Case, async: false
 
+  import ExUnit.CaptureLog
+
   alias Castmill.Accounts.SignUp
   alias Castmill.Accounts.UserNotifier
 
@@ -30,7 +32,9 @@ defmodule Castmill.Accounts.UserNotifierTest do
       challenge: "challenge"
     }
 
-    assert {:error, %ArgumentError{message: "forced mailer error for notifier test"}} =
-             UserNotifier.deliver_signup_instructions(signup, "https://app.castmill.dev")
+    capture_log(fn ->
+      assert {:error, %ArgumentError{message: "forced mailer error for notifier test"}} =
+               UserNotifier.deliver_signup_instructions(signup, "https://app.castmill.dev")
+    end)
   end
 end

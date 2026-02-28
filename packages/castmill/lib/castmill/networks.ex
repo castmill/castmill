@@ -3,6 +3,7 @@ defmodule Castmill.Networks do
   The Networks context.
   """
   import Ecto.Query, warn: false
+  require Logger
   alias Castmill.Repo
   alias Castmill.Networks.Network
   alias Castmill.Accounts.User
@@ -557,7 +558,11 @@ defmodule Castmill.Networks do
             {:ok, invitation}
 
           {:error, reason} ->
-            {:error, "Invitation created but email delivery failed: #{inspect(reason)}"}
+            Logger.warning(
+              "Network invitation email delivery failed for #{invitation.email} (invitation_id=#{invitation.id}): #{inspect(reason)}"
+            )
+
+            {:ok, invitation}
         end
 
       {:error, :check_existing_user, :user_already_exists, _} ->
