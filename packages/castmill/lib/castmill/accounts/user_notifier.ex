@@ -22,7 +22,10 @@ defmodule Castmill.Accounts.UserNotifier do
   )
 
   # Delivers the email using the application mailer.
-  defp deliver(recipient, subject, body) do
+  defp deliver(recipient, subject, body, opts \\ []) do
+    context = Keyword.get(opts, :context, "user_notifier.text")
+    metadata = Keyword.get(opts, :metadata, %{})
+
     email =
       new()
       |> to(recipient)
@@ -30,11 +33,14 @@ defmodule Castmill.Accounts.UserNotifier do
       |> subject(subject)
       |> text_body(body)
 
-    EmailDelivery.deliver(email, context: "user_notifier.text")
+    EmailDelivery.deliver(email, context: context, metadata: metadata)
   end
 
   # Delivers the email with both HTML and text body.
-  defp deliver_with_html(recipient, subject, text_body, html_body) do
+  defp deliver_with_html(recipient, subject, text_body, html_body, opts \\ []) do
+    context = Keyword.get(opts, :context, "user_notifier.html")
+    metadata = Keyword.get(opts, :metadata, %{})
+
     email =
       new()
       |> to(recipient)
@@ -43,7 +49,7 @@ defmodule Castmill.Accounts.UserNotifier do
       |> text_body(text_body)
       |> html_body(html_body)
 
-    EmailDelivery.deliver(email, context: "user_notifier.html")
+    EmailDelivery.deliver(email, context: context, metadata: metadata)
   end
 
   @doc """
@@ -187,7 +193,7 @@ defmodule Castmill.Accounts.UserNotifier do
   @doc """
   Deliver network invitation instructions.
   """
-  def deliver_network_invitation_instructions(invitation, dashboard_uri) do
+  def deliver_network_invitation_instructions(invitation, dashboard_uri, opts \\ []) do
     invitation_url =
       "#{dashboard_uri}/?email=#{URI.encode_www_form(invitation.email)}"
 
@@ -213,7 +219,8 @@ defmodule Castmill.Accounts.UserNotifier do
       This invitation expires at: #{invitation.expires_at}
 
       ==============================
-      """
+      """,
+      opts
     )
   end
 

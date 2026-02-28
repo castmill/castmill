@@ -2,6 +2,7 @@ defmodule Castmill.NetworksTest do
   use Castmill.DataCase
 
   import ExUnit.CaptureLog
+  import Swoosh.TestAssertions
 
   defmodule RaisingMailerAdapter do
     use Swoosh.Adapter, required_config: []
@@ -198,6 +199,22 @@ defmodule Castmill.NetworksTest do
       assert invitation.token != nil
     end
 
+    test "invite_user_to_new_organization/3 sends invitation email on success" do
+      network = network_fixture()
+      email = "invitation-success@example.com"
+      org_name = "Success Org"
+
+      assert {:ok, invitation} =
+               Networks.invite_user_to_new_organization(network.id, email, org_name)
+
+      assert invitation.email == email
+
+      assert_email_sent(
+        to: email,
+        subject: "You're invited to join #{org_name} on Castmill"
+      )
+    end
+
     test "invite_user_to_new_organization/3 fails for existing user" do
       network = network_fixture()
       # Create a user and add them to the network
@@ -271,17 +288,12 @@ defmodule Castmill.NetworksTest do
       network = network_fixture()
       email = "delivery-fail@example.com"
 
-      capture_log(fn ->
-        assert {:ok, invitation} =
-                 Networks.invite_user_to_new_organization(network.id, email, "New Org")
+      {result, _log} =
+        with_log(fn ->
+          Networks.invite_user_to_new_organization(network.id, email, "New Org")
+        end)
 
-        send(self(), {:invitation, invitation})
-      end)
-
-      invitation =
-        receive do
-          {:invitation, invitation} -> invitation
-        end
+      assert {:ok, invitation} = result
 
       assert invitation.email == email
 

@@ -3,7 +3,6 @@ defmodule Castmill.Networks do
   The Networks context.
   """
   import Ecto.Query, warn: false
-  require Logger
   alias Castmill.Repo
   alias Castmill.Networks.Network
   alias Castmill.Accounts.User
@@ -557,11 +556,7 @@ defmodule Castmill.Networks do
           {:ok, _} ->
             {:ok, invitation}
 
-          {:error, reason} ->
-            Logger.warning(
-              "Network invitation email delivery failed for #{invitation.email} (invitation_id=#{invitation.id}): #{inspect(reason)}"
-            )
-
+          {:error, _reason} ->
             {:ok, invitation}
         end
 
@@ -705,7 +700,12 @@ defmodule Castmill.Networks do
         System.get_env("DASHBOARD_URL") ||
         "http://localhost:3000"
 
-    UserNotifier.deliver_network_invitation_instructions(invitation, dashboard_url)
+    UserNotifier.deliver_network_invitation_instructions(
+      invitation,
+      dashboard_url,
+      context: "network_invitation",
+      metadata: %{invitation_id: invitation.id, email: invitation.email, network_id: invitation.network_id}
+    )
   end
 
   # Helper function to get user by email and network ID (via networks_users join)
