@@ -1,9 +1,8 @@
 defmodule Castmill.Accounts.UserNotifier do
   import Swoosh.Email
-  require Logger
   require EEx
 
-  alias Castmill.Mailer
+  alias Castmill.EmailDelivery
 
   # Compile email templates at compile time
   @templates_dir Path.join([__DIR__, "email_templates"])
@@ -23,7 +22,10 @@ defmodule Castmill.Accounts.UserNotifier do
   )
 
   # Delivers the email using the application mailer.
-  defp deliver(recipient, subject, body) do
+  defp deliver(recipient, subject, body, opts \\ []) do
+    context = Keyword.get(opts, :context, "user_notifier.text")
+    metadata = Keyword.get(opts, :metadata, %{})
+
     email =
       new()
       |> to(recipient)
@@ -31,19 +33,14 @@ defmodule Castmill.Accounts.UserNotifier do
       |> subject(subject)
       |> text_body(body)
 
-    case Mailer.deliver(email) do
-      {:ok, response} ->
-        Logger.info("Email sent successfully: #{inspect(response)}")
-        {:ok, email}
-
-      {:error, reason} ->
-        Logger.error("Failed to send email: #{inspect(reason)}")
-        {:error, reason}
-    end
+    EmailDelivery.deliver(email, context: context, metadata: metadata)
   end
 
   # Delivers the email with both HTML and text body.
-  defp deliver_with_html(recipient, subject, text_body, html_body) do
+  defp deliver_with_html(recipient, subject, text_body, html_body, opts \\ []) do
+    context = Keyword.get(opts, :context, "user_notifier.html")
+    metadata = Keyword.get(opts, :metadata, %{})
+
     email =
       new()
       |> to(recipient)
@@ -52,15 +49,7 @@ defmodule Castmill.Accounts.UserNotifier do
       |> text_body(text_body)
       |> html_body(html_body)
 
-    case Mailer.deliver(email) do
-      {:ok, response} ->
-        Logger.info("Email sent successfully: #{inspect(response)}")
-        {:ok, email}
-
-      {:error, reason} ->
-        Logger.error("Failed to send email: #{inspect(reason)}")
-        {:error, reason}
-    end
+    EmailDelivery.deliver(email, context: context, metadata: metadata)
   end
 
   @doc """
@@ -198,6 +187,40 @@ defmodule Castmill.Accounts.UserNotifier do
       "Complete Your Castmill Signup",
       text_body,
       html_body
+    )
+  end
+
+  @doc """
+  Deliver network invitation instructions.
+  """
+  def deliver_network_invitation_instructions(invitation, dashboard_uri, opts \\ []) do
+    invitation_url =
+      "#{dashboard_uri}/?email=#{URI.encode_www_form(invitation.email)}"
+
+    deliver(
+      invitation.email,
+      "You're invited to join #{invitation.organization_name} on Castmill",
+      """
+
+      ==============================
+
+      Hi,
+
+      You've been invited to create and manage the organization \"#{invitation.organization_name}\".
+
+      To continue, open the dashboard:
+
+      #{invitation_url}
+
+      Then continue with this invitation token:
+
+      #{invitation.token}
+
+      This invitation expires at: #{invitation.expires_at}
+
+      ==============================
+      """,
+      opts
     )
   end
 

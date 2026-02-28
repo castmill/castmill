@@ -3,7 +3,7 @@ defmodule Castmill.Addons.Onboarding do
   require Logger
 
   import Swoosh.Email
-  alias Castmill.Mailer
+  alias Castmill.EmailDelivery
 
   @impl Castmill.Addons.AddonBehaviour
   def register_hooks() do
@@ -48,8 +48,6 @@ defmodule Castmill.Addons.Onboarding do
       |> subject(subject)
       |> text_body(body)
 
-    with {:ok, _metadata} <- Mailer.deliver(email) do
-      {:ok, email}
-    end
+    EmailDelivery.deliver(email, context: "onboarding.welcome")
   end
 end

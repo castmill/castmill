@@ -215,10 +215,7 @@ defmodule Castmill.Widgets do
       "Scheduling auth-free polling for widget #{widget_id}, org #{organization_id}, discriminator: #{discriminator_id}"
     )
 
-    # Spawn a separate process to schedule the poll, so that:
-    # 1. It doesn't block the database transaction
-    # 2. If Redis isn't available, it doesn't crash the transaction
-    Task.start(fn ->
+    schedule_fn = fn ->
       try do
         result =
           Castmill.Workers.IntegrationPoller.schedule_poll(%{
@@ -237,7 +234,16 @@ defmodule Castmill.Widgets do
         :exit, reason ->
           Logger.warning("Failed to schedule auth-free polling (exit): #{inspect(reason)}")
       end
-    end)
+    end
+
+    if Application.get_env(:castmill, :async_poll_scheduling, true) do
+      # Spawn a separate process to schedule the poll, so that:
+      # 1. It doesn't block the database transaction
+      # 2. If Redis isn't available, it doesn't crash the transaction
+      Task.start(schedule_fn)
+    else
+      schedule_fn.()
+    end
   end
 
   defp build_discriminator_id(integration, widget_options) do
