@@ -704,7 +704,11 @@ defmodule Castmill.Networks do
       invitation,
       dashboard_url,
       context: "network_invitation",
-      metadata: %{invitation_id: invitation.id, email: invitation.email, network_id: invitation.network_id}
+      metadata: %{
+        invitation_id: invitation.id,
+        email: invitation.email,
+        network_id: invitation.network_id
+      }
     )
   end
 
