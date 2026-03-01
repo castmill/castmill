@@ -2,6 +2,9 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { createRoot, createSignal } from 'solid-js';
 import { useTagFilterEffect } from './useTagFilterEffect';
 
+// Time to wait for SolidJS effects to settle
+const EFFECT_SETTLE_TIME = 10;
+
 describe('useTagFilterEffect', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -100,7 +103,7 @@ describe('useTagFilterEffect', () => {
         });
 
         // Wait for effects to settle
-        await new Promise((r) => setTimeout(r, 10));
+        await new Promise((r) => setTimeout(r, EFFECT_SETTLE_TIME));
 
         expect(onRefreshData).not.toHaveBeenCalled();
         expect(onRefreshTree).not.toHaveBeenCalled();
@@ -109,7 +112,7 @@ describe('useTagFilterEffect', () => {
         handleTagChange([1, 2]);
 
         // Wait for effect to run
-        await new Promise((r) => setTimeout(r, 10));
+        await new Promise((r) => setTimeout(r, EFFECT_SETTLE_TIME));
 
         expect(onRefreshData).toHaveBeenCalledTimes(1);
         expect(onRefreshTree).toHaveBeenCalledTimes(1);
@@ -141,7 +144,7 @@ describe('useTagFilterEffect', () => {
         });
 
         // Wait for effects to settle
-        await new Promise((r) => setTimeout(r, 10));
+        await new Promise((r) => setTimeout(r, EFFECT_SETTLE_TIME));
 
         expect(onRefreshData).not.toHaveBeenCalled();
         expect(onRefreshTree).not.toHaveBeenCalled();
@@ -150,7 +153,7 @@ describe('useTagFilterEffect', () => {
         setTagFilterMode('all');
 
         // Wait for effect to run
-        await new Promise((r) => setTimeout(r, 10));
+        await new Promise((r) => setTimeout(r, EFFECT_SETTLE_TIME));
 
         expect(onRefreshData).toHaveBeenCalledTimes(1);
         expect(onRefreshTree).toHaveBeenCalledTimes(1);
@@ -180,14 +183,14 @@ describe('useTagFilterEffect', () => {
         });
 
         // Wait for effects to settle
-        await new Promise((r) => setTimeout(r, 10));
+        await new Promise((r) => setTimeout(r, EFFECT_SETTLE_TIME));
 
         // Change both at once
         setSelectedTagIds([1, 2]);
         setTagFilterMode('all');
 
         // Wait for effect to run
-        await new Promise((r) => setTimeout(r, 10));
+        await new Promise((r) => setTimeout(r, EFFECT_SETTLE_TIME));
 
         // Should trigger refresh (both signals tracked in the same effect)
         expect(onRefreshData).toHaveBeenCalled();
@@ -218,25 +221,25 @@ describe('useTagFilterEffect', () => {
         });
 
         // Wait for effects to settle
-        await new Promise((r) => setTimeout(r, 10));
+        await new Promise((r) => setTimeout(r, EFFECT_SETTLE_TIME));
 
         // First change
         handleTagChange([1]);
-        await new Promise((r) => setTimeout(r, 10));
+        await new Promise((r) => setTimeout(r, EFFECT_SETTLE_TIME));
 
         expect(onRefreshData).toHaveBeenCalledTimes(1);
         expect(onRefreshTree).toHaveBeenCalledTimes(1);
 
         // Second change
         handleTagChange([1, 2]);
-        await new Promise((r) => setTimeout(r, 10));
+        await new Promise((r) => setTimeout(r, EFFECT_SETTLE_TIME));
 
         expect(onRefreshData).toHaveBeenCalledTimes(2);
         expect(onRefreshTree).toHaveBeenCalledTimes(2);
 
         // Third change (mode)
         setTagFilterMode('all');
-        await new Promise((r) => setTimeout(r, 10));
+        await new Promise((r) => setTimeout(r, EFFECT_SETTLE_TIME));
 
         expect(onRefreshData).toHaveBeenCalledTimes(3);
         expect(onRefreshTree).toHaveBeenCalledTimes(3);
@@ -266,14 +269,14 @@ describe('useTagFilterEffect', () => {
         });
 
         // Wait for effects to settle
-        await new Promise((r) => setTimeout(r, 10));
+        await new Promise((r) => setTimeout(r, EFFECT_SETTLE_TIME));
 
         expect(selectedTagIds()).toEqual([1, 2]);
 
         // Clear selection
         handleTagChange([]);
 
-        await new Promise((r) => setTimeout(r, 10));
+        await new Promise((r) => setTimeout(r, EFFECT_SETTLE_TIME));
 
         expect(selectedTagIds()).toEqual([]);
         expect(onRefreshData).toHaveBeenCalledTimes(1);
@@ -301,12 +304,12 @@ describe('useTagFilterEffect', () => {
           onRefreshTree,
         });
 
-        await new Promise((r) => setTimeout(r, 10));
+        await new Promise((r) => setTimeout(r, EFFECT_SETTLE_TIME));
 
         // Add tags
         handleTagChange([5, 10]);
 
-        await new Promise((r) => setTimeout(r, 10));
+        await new Promise((r) => setTimeout(r, EFFECT_SETTLE_TIME));
 
         expect(selectedTagIds()).toEqual([5, 10]);
         expect(onRefreshData).toHaveBeenCalledTimes(1);
@@ -334,14 +337,14 @@ describe('useTagFilterEffect', () => {
           onRefreshTree,
         });
 
-        await new Promise((r) => setTimeout(r, 10));
+        await new Promise((r) => setTimeout(r, EFFECT_SETTLE_TIME));
 
         // Rapid changes
         handleTagChange([1]);
         handleTagChange([1, 2]);
         handleTagChange([1, 2, 3]);
 
-        await new Promise((r) => setTimeout(r, 10));
+        await new Promise((r) => setTimeout(r, EFFECT_SETTLE_TIME));
 
         // Final state should be correct
         expect(selectedTagIds()).toEqual([1, 2, 3]);
@@ -374,18 +377,18 @@ describe('useTagFilterEffect', () => {
           onRefreshTree,
         });
 
-        await new Promise((r) => setTimeout(r, 10));
+        await new Promise((r) => setTimeout(r, EFFECT_SETTLE_TIME));
 
         // Change first signal
         setSelectedTagIds([1]);
-        await new Promise((r) => setTimeout(r, 10));
+        await new Promise((r) => setTimeout(r, EFFECT_SETTLE_TIME));
 
         const callCount1 = onRefreshData.mock.calls.length;
         expect(callCount1).toBe(1);
 
         // Change second signal
         setTagFilterMode('all');
-        await new Promise((r) => setTimeout(r, 10));
+        await new Promise((r) => setTimeout(r, EFFECT_SETTLE_TIME));
 
         const callCount2 = onRefreshData.mock.calls.length;
         expect(callCount2).toBe(2);
@@ -413,11 +416,11 @@ describe('useTagFilterEffect', () => {
           onRefreshTree,
         });
 
-        await new Promise((r) => setTimeout(r, 10));
+        await new Promise((r) => setTimeout(r, EFFECT_SETTLE_TIME));
 
         handleTagChange([1]);
 
-        await new Promise((r) => setTimeout(r, 10));
+        await new Promise((r) => setTimeout(r, EFFECT_SETTLE_TIME));
 
         // Both should be called, data before tree
         expect(callOrder).toEqual(['data', 'tree']);
@@ -448,12 +451,12 @@ describe('useTagFilterEffect', () => {
           onRefreshTree,
         });
 
-        await new Promise((r) => setTimeout(r, 10));
+        await new Promise((r) => setTimeout(r, EFFECT_SETTLE_TIME));
 
         // Clear tags (common operation)
         handleTagChange([]);
 
-        await new Promise((r) => setTimeout(r, 10));
+        await new Promise((r) => setTimeout(r, EFFECT_SETTLE_TIME));
 
         expect(selectedTagIds()).toEqual([]);
         expect(onRefreshData).toHaveBeenCalledTimes(1);
@@ -483,12 +486,12 @@ describe('useTagFilterEffect', () => {
           onRefreshTree,
         });
 
-        await new Promise((r) => setTimeout(r, 10));
+        await new Promise((r) => setTimeout(r, EFFECT_SETTLE_TIME));
 
         // Set to same value (but new array instance)
         handleTagChange([1, 2]);
 
-        await new Promise((r) => setTimeout(r, 10));
+        await new Promise((r) => setTimeout(r, EFFECT_SETTLE_TIME));
 
         // SolidJS triggers effects for new array instances by default
         expect(onRefreshData).toHaveBeenCalledTimes(1);
@@ -518,11 +521,11 @@ describe('useTagFilterEffect', () => {
           onRefreshTree,
         });
 
-        await new Promise((r) => setTimeout(r, 10));
+        await new Promise((r) => setTimeout(r, EFFECT_SETTLE_TIME));
 
         setTagFilterMode('any');
 
-        await new Promise((r) => setTimeout(r, 10));
+        await new Promise((r) => setTimeout(r, EFFECT_SETTLE_TIME));
 
         expect(onRefreshData).toHaveBeenCalledTimes(1);
         expect(onRefreshTree).toHaveBeenCalledTimes(1);
@@ -551,20 +554,20 @@ describe('useTagFilterEffect', () => {
           onRefreshTree,
         });
 
-        await new Promise((r) => setTimeout(r, 10));
+        await new Promise((r) => setTimeout(r, EFFECT_SETTLE_TIME));
 
         // Multiple cycles
         handleTagChange([1]);
-        await new Promise((r) => setTimeout(r, 10));
+        await new Promise((r) => setTimeout(r, EFFECT_SETTLE_TIME));
 
         handleTagChange([1, 2]);
-        await new Promise((r) => setTimeout(r, 10));
+        await new Promise((r) => setTimeout(r, EFFECT_SETTLE_TIME));
 
         setTagFilterMode('all');
-        await new Promise((r) => setTimeout(r, 10));
+        await new Promise((r) => setTimeout(r, EFFECT_SETTLE_TIME));
 
         handleTagChange([2]);
-        await new Promise((r) => setTimeout(r, 10));
+        await new Promise((r) => setTimeout(r, EFFECT_SETTLE_TIME));
 
         expect(onRefreshData).toHaveBeenCalledTimes(4);
         expect(onRefreshTree).toHaveBeenCalledTimes(4);
@@ -591,13 +594,13 @@ describe('useTagFilterEffect', () => {
           onRefreshTree,
         });
 
-        await new Promise((r) => setTimeout(r, 10));
+        await new Promise((r) => setTimeout(r, EFFECT_SETTLE_TIME));
 
         // Large array
         const largeArray = Array.from({ length: 100 }, (_, i) => i + 1);
         handleTagChange(largeArray);
 
-        await new Promise((r) => setTimeout(r, 10));
+        await new Promise((r) => setTimeout(r, EFFECT_SETTLE_TIME));
 
         expect(selectedTagIds()).toEqual(largeArray);
         expect(onRefreshData).toHaveBeenCalledTimes(1);
