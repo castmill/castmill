@@ -1465,6 +1465,7 @@ defmodule Castmill.Resources do
     # Two modes:
     # - Production (media_public_base_url set): CDN URL like "https://cdn.castmill.dev/org/media/file"
     #   → bucket from AWS_S3_BUCKET env var, full path is the object key
+    #   Note: No backward compatibility with old format - only new CDN URLs are supported
     # - Local dev (no base URL): S3/MinIO URL like "http://localhost:9000/bucket/org/media/file"
     #   → bucket is the first path segment
     parsed = URI.parse(uri)
