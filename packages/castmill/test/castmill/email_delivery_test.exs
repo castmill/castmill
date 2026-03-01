@@ -130,4 +130,48 @@ defmodule Castmill.EmailDeliveryTest do
     assert data["context"] == "test"
     assert data["metadata"] == %{id: 1}
   end
+
+  # ---------------------------------------------------------------------------
+  # Validation — deliver/2 rejects invalid emails
+  # ---------------------------------------------------------------------------
+
+  describe "deliver/2 validation" do
+    test "returns {:error, {:invalid_email, _}} when from is nil" do
+      email = new() |> to("to@example.com") |> subject("Test")
+
+      assert {:error, {:invalid_email, "from is required"}} = EmailDelivery.deliver(email)
+    end
+
+    test "returns {:error, {:invalid_email, _}} when to is empty list" do
+      email = %{new() | to: []} |> from("noreply@castmill.com") |> subject("Test")
+
+      assert {:error, {:invalid_email, "to is required"}} = EmailDelivery.deliver(email)
+    end
+
+    test "returns {:error, {:invalid_email, _}} when to is nil" do
+      email = %{new() | to: nil} |> from("noreply@castmill.com") |> subject("Test")
+
+      assert {:error, {:invalid_email, "to is required"}} = EmailDelivery.deliver(email)
+    end
+
+    test "accepts valid email with binary from and to" do
+      email =
+        new()
+        |> to("to@example.com")
+        |> from("noreply@castmill.com")
+        |> subject("Valid")
+
+      assert {:ok, :queued} = EmailDelivery.deliver(email)
+    end
+
+    test "accepts valid email with tuple from and to" do
+      email =
+        new()
+        |> to({"Recipient", "to@example.com"})
+        |> from({"Castmill", "noreply@castmill.com"})
+        |> subject("Valid")
+
+      assert {:ok, :queued} = EmailDelivery.deliver(email)
+    end
+  end
 end

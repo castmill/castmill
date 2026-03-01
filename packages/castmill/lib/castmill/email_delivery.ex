@@ -41,11 +41,13 @@ defmodule Castmill.EmailDelivery do
   """
   @spec deliver(Swoosh.Email.t(), keyword()) :: {:ok, :queued} | {:error, term()}
   def deliver(email, opts \\ []) do
-    job_data = serialize_email(email, opts)
+    with :ok <- validate_email(email) do
+      job_data = serialize_email(email, opts)
 
-    case BullMQHelper.add_job(@queue, "send_email", job_data) do
-      {:ok, _job} -> {:ok, :queued}
-      {:error, reason} -> {:error, reason}
+      case BullMQHelper.add_job(@queue, "send_email", job_data) do
+        {:ok, _job} -> {:ok, :queued}
+        {:error, reason} -> {:error, reason}
+      end
     end
   end
 
@@ -129,6 +131,16 @@ defmodule Castmill.EmailDelivery do
   end
 
   # ---------------------------------------------------------------------------
+  # Validation
+  # ---------------------------------------------------------------------------
+
+  defp validate_email(%{from: nil}), do: {:error, {:invalid_email, "from is required"}}
+  defp validate_email(%{to: []}), do: {:error, {:invalid_email, "to is required"}}
+  defp validate_email(%{to: nil}), do: {:error, {:invalid_email, "to is required"}}
+  defp validate_email(%{from: _, to: _}), do: :ok
+  defp validate_email(_), do: {:error, {:invalid_email, "invalid email struct"}}
+
+  # ---------------------------------------------------------------------------
   # Private helpers
   # ---------------------------------------------------------------------------
 
@@ -142,6 +154,9 @@ defmodule Castmill.EmailDelivery do
 
   defp serialize_recipient(address) when is_binary(address),
     do: %{"name" => "", "address" => address}
+
+  defp serialize_recipient(other),
+    do: raise(ArgumentError, "invalid email recipient: #{inspect(other)}")
 
   defp deserialize_recipients(recipients) when is_list(recipients),
     do: Enum.map(recipients, &deserialize_recipient/1)
