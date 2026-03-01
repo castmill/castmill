@@ -1459,7 +1459,8 @@ defmodule Castmill.Resources do
         end).()
   end
 
-  defp get_s3_file_path(uri) do
+  @doc false
+  def get_s3_file_path(uri) do
     # Extract bucket and object path from a stored URI.
     #
     # Two modes:
