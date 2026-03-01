@@ -23,6 +23,7 @@ import {
   TeamFilter,
   TagFilter,
   useTagFilter,
+  useTagFilterEffect,
   FetchDataOptions,
   ToastProvider,
   useToast,
@@ -748,22 +749,14 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
     bumpTree();
   };
 
-  // Reactively refresh table & tree when tag selection or filter mode changes
-  // (covers both user interaction and initial load from URL/localStorage)
-  createEffect(
-    on(
-      () => [selectedTagIds(), tagFilterMode()] as const,
-      () => {
-        refreshData();
-        bumpTree();
-      },
-      { defer: true }
-    )
-  );
-
-  const handleTagChange = (tagIds: number[]) => {
-    setSelectedTagIds(tagIds);
-  };
+  // Use hook to manage tag filter effects
+  const { handleTagChange } = useTagFilterEffect({
+    selectedTagIds,
+    setSelectedTagIds,
+    tagFilterMode,
+    onRefreshData: refreshData,
+    onRefreshTree: bumpTree,
+  });
 
   // Fetch resources for tree view nodes (filter by tag IDs in AND mode)
   const fetchTreeResources = async (tagIds: number[]) => {
