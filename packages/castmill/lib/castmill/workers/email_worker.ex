@@ -24,7 +24,7 @@ defmodule Castmill.Workers.EmailWorker do
   def process(%BullMQ.Job{data: data} = _job) do
     email = EmailDelivery.deserialize_email(data)
     context = data["context"] || "email"
-    metadata = atomize_metadata(data["metadata"])
+    metadata = sanitize_metadata(data["metadata"])
     success_log_level = parse_log_level(data["success_log_level"])
 
     case EmailDelivery.deliver_now(email,
@@ -37,10 +37,10 @@ defmodule Castmill.Workers.EmailWorker do
     end
   end
 
-  # Convert string keys from JSON back to atom keys for metadata
-  defp atomize_metadata(nil), do: %{}
-  defp atomize_metadata(map) when is_map(map), do: map
-  defp atomize_metadata(_), do: %{}
+  # Normalize metadata from JSON: ensure it's always a map (string keys preserved as-is).
+  defp sanitize_metadata(nil), do: %{}
+  defp sanitize_metadata(map) when is_map(map), do: map
+  defp sanitize_metadata(_), do: %{}
 
   defp parse_log_level("debug"), do: :debug
   defp parse_log_level("info"), do: :info
