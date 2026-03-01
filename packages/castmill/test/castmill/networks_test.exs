@@ -1,6 +1,16 @@
 defmodule Castmill.NetworksTest do
   use Castmill.DataCase
 
+  import ExUnit.CaptureLog
+  import Swoosh.TestAssertions
+
+  defmodule RaisingMailerAdapter do
+    use Swoosh.Adapter, required_config: []
+
+    @impl true
+    def deliver(_email, _config), do: raise(ArgumentError, "forced mailer failure")
+  end
+
   alias Castmill.Networks
 
   @moduletag :networks
@@ -164,6 +174,16 @@ defmodule Castmill.NetworksTest do
   describe "network invitations" do
     import Castmill.NetworksFixtures
 
+    setup do
+      previous_mailer_config = Application.get_env(:castmill, Castmill.Mailer)
+
+      on_exit(fn ->
+        Application.put_env(:castmill, Castmill.Mailer, previous_mailer_config)
+      end)
+
+      :ok
+    end
+
     test "invite_user_to_new_organization/3 creates an invitation" do
       network = network_fixture()
       email = "newuser@example.com"
@@ -177,6 +197,22 @@ defmodule Castmill.NetworksTest do
       assert invitation.network_id == network.id
       assert invitation.status == "invited"
       assert invitation.token != nil
+    end
+
+    test "invite_user_to_new_organization/3 sends invitation email on success" do
+      network = network_fixture()
+      email = "invitation-success@example.com"
+      org_name = "Success Org"
+
+      assert {:ok, invitation} =
+               Networks.invite_user_to_new_organization(network.id, email, org_name)
+
+      assert invitation.email == email
+
+      assert_email_sent(
+        to: email,
+        subject: "You're invited to join #{org_name} on Castmill"
+      )
     end
 
     test "invite_user_to_new_organization/3 fails for existing user" do
@@ -244,6 +280,27 @@ defmodule Castmill.NetworksTest do
 
       assert {:ok, _} = Networks.delete_network_invitation(invitation.id)
       assert Networks.get_network_invitation_by_token(invitation.token) == nil
+    end
+
+    test "invite_user_to_new_organization/3 returns ok even when email delivery fails" do
+      Application.put_env(:castmill, Castmill.Mailer, adapter: RaisingMailerAdapter)
+
+      network = network_fixture()
+      email = "delivery-fail@example.com"
+
+      {result, _log} =
+        with_log(fn ->
+          Networks.invite_user_to_new_organization(network.id, email, "New Org")
+        end)
+
+      assert {:ok, invitation} = result
+
+      assert invitation.email == email
+
+      persisted = Networks.get_network_invitation_by_token(invitation.token)
+      assert persisted != nil
+      assert persisted.email == email
+      assert persisted.status == "invited"
     end
   end
 end

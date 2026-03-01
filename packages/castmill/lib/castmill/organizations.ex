@@ -13,7 +13,7 @@ defmodule Castmill.Organizations do
   alias Castmill.Organizations.ResourceSharing
   alias Castmill.Protocol.Access
   alias Castmill.QueryHelpers
-  alias Castmill.Mailer
+  alias Castmill.EmailDelivery
 
   alias Swoosh.Email
 
@@ -855,9 +855,7 @@ defmodule Castmill.Organizations do
       |> Email.html_body(html_body)
       |> Email.text_body(text_body)
 
-    with {:ok, _metadata} <- Mailer.deliver(email) do
-      {:ok, email}
-    end
+    EmailDelivery.deliver(email, context: "organizations.invitation")
   end
 
   def get_invitation(token) do

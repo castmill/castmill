@@ -198,8 +198,10 @@ defmodule CastmillWeb.UploadControllerTest do
 
       chunk_data = :crypto.strong_rand_bytes(chunk_size)
 
-      for _ <- 1..full_chunks do
-        IO.binwrite(file, chunk_data)
+      if full_chunks > 0 do
+        for _ <- 1..full_chunks do
+          IO.binwrite(file, chunk_data)
+        end
       end
 
       if remainder > 0 do

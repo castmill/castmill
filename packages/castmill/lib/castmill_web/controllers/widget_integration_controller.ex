@@ -984,10 +984,7 @@ defmodule CastmillWeb.WidgetIntegrationController do
     # Only schedule if not already running (the unique constraint in the worker will handle this)
     delay = Keyword.get(opts, :delay, integration.pull_interval_seconds || 30)
 
-    # Spawn a separate process to schedule the poll, so that:
-    # 1. It doesn't block the HTTP request
-    # 2. If Redis isn't available, it doesn't crash the request
-    Task.start(fn ->
+    schedule_fn = fn ->
       try do
         Castmill.Workers.IntegrationPoller.schedule_poll(
           %{
@@ -1006,7 +1003,19 @@ defmodule CastmillWeb.WidgetIntegrationController do
         :exit, reason ->
           Logger.warning("Failed to schedule polling (exit): #{inspect(reason)}")
       end
-    end)
+    end
+
+    run_async = Application.get_env(:castmill, :async_poll_scheduling, true)
+
+    if run_async do
+      # Spawn a separate process to schedule the poll, so that:
+      # 1. It doesn't block the HTTP request
+      # 2. If Redis isn't available, it doesn't crash the request
+      Task.start(schedule_fn)
+    else
+      # In tests, run inline to avoid detached tasks outliving SQL sandbox owners.
+      schedule_fn.()
+    end
   end
 
   defp maybe_schedule_refresh(

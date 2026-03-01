@@ -48,3 +48,10 @@ config :castmill, accounts: Castmill.AccountsMock
 
 # Configure BullMQ for tests - inline mode
 config :castmill, :bullmq, testing: :inline
+
+# Run integration poll scheduling inline in tests to avoid detached tasks
+# outliving SQL sandbox owners.
+config :castmill, :async_poll_scheduling, false
+
+# Run other background tasks inline in tests to avoid SQL sandbox disconnect noise.
+config :castmill, :async_background_tasks, false

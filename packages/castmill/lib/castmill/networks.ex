@@ -506,6 +506,7 @@ defmodule Castmill.Networks do
   # Network Invitations for creating new organizations
   alias Castmill.Networks.NetworkInvitation
   alias Castmill.Organizations
+  alias Castmill.Accounts.UserNotifier
 
   @doc """
   Invites a user to create a new organization in the network as an admin.
@@ -551,8 +552,13 @@ defmodule Castmill.Networks do
     |> Repo.transaction()
     |> case do
       {:ok, %{invitation: invitation}} ->
-        # TODO: Send invitation email
-        {:ok, invitation}
+        case send_network_invitation_email(invitation) do
+          {:ok, _} ->
+            {:ok, invitation}
+
+          {:error, _reason} ->
+            {:ok, invitation}
+        end
 
       {:error, :check_existing_user, :user_already_exists, _} ->
         {:error, "User with this email already exists in the network"}
@@ -686,6 +692,24 @@ defmodule Castmill.Networks do
 
   defp generate_invitation_token do
     :crypto.strong_rand_bytes(32) |> Base.url_encode64(padding: false)
+  end
+
+  defp send_network_invitation_email(invitation) do
+    dashboard_url =
+      System.get_env("CASTMILL_DASHBOARD_URI") ||
+        System.get_env("DASHBOARD_URL") ||
+        "http://localhost:3000"
+
+    UserNotifier.deliver_network_invitation_instructions(
+      invitation,
+      dashboard_url,
+      context: "networks.invitation",
+      metadata: %{
+        invitation_id: invitation.id,
+        email: invitation.email,
+        network_id: invitation.network_id
+      }
+    )
   end
 
   # Helper function to get user by email and network ID (via networks_users join)
