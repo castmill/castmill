@@ -91,7 +91,7 @@ file: app.whenReady().then(() => {
     const localPath = request.url.slice(LOCAL_URL_SCHEME.length + 3); // 3 for '://
 
     const fullPath = pathToFileURL(
-      join(__dirname, CACHE_DIR, localPath)
+      join(app.getPath('userData'), CACHE_DIR, localPath)
     ).toString();
 
     try {

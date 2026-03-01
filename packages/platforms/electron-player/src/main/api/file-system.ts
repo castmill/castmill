@@ -10,7 +10,7 @@ import { mkdir, readdir, unlink, stat, rename } from 'fs/promises';
 import { createWriteStream } from 'fs';
 import { join, extname } from 'path';
 import { URL } from 'url';
-import { net } from 'electron';
+import { app, net } from 'electron';
 import { LOCAL_URL_SCHEME, CACHE_DIR } from '../constants';
 
 const LOCAL_URL_PREFIX = `${LOCAL_URL_SCHEME}://`;
@@ -19,7 +19,7 @@ const LOCAL_URL_PREFIX = `${LOCAL_URL_SCHEME}://`;
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const checkDiskSpace = require('check-disk-space').default;
 
-const BASE_DIR = join(__dirname, CACHE_DIR);
+const BASE_DIR = join(app.getPath('userData'), CACHE_DIR);
 
 function getTempPath(path: string): string {
   return `${path}-${Date.now()}.tmp`;
