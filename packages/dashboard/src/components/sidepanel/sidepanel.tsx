@@ -3,7 +3,7 @@ import './sidepanel.scss';
 import PanelItem from '../panel-item/panel-item';
 import { Dropdown } from '@castmill/ui-common';
 
-import { IoSettingsOutline } from 'solid-icons/io';
+import { IoSettingsOutline, IoPersonOutline } from 'solid-icons/io';
 import { AddOnTree } from '../../classes/addon-tree';
 import { AddOnNode } from '../../interfaces/addon-node.interface';
 import { store, setStore } from '../../store/store';
@@ -21,6 +21,7 @@ const SidePanelTree: Component<{
   node: AddOnNode;
   level: number;
   skipKeys?: string[];
+  basePath?: string;
 }> = (props) => {
   const { t } = useI18n();
   const addon = props.node.addon;
@@ -41,12 +42,16 @@ const SidePanelTree: Component<{
     return addon.mount_path.replace(/\/\*.*$/, '');
   };
 
+  // Resolve base path: use provided basePath or default to org-scoped path
+  const getBasePath = () =>
+    props.basePath ?? `/org/${store.organizations.selectedId}`;
+
   return (
     <>
       <Show when={addon}>
         <Suspense fallback={<div style="height: 2.5em;"></div>}>
           <PanelItem
-            to={`/org/${store.organizations.selectedId}${getLinkPath()}`}
+            to={`${getBasePath()}${getLinkPath()}`}
             text={getAddonName()}
             level={props.level}
             icon={lazy(
@@ -67,6 +72,11 @@ const SidePanelTree: Component<{
               node={node}
               level={props.level + 1}
               skipKeys={props.skipKeys}
+              basePath={
+                addon?.mount_path
+                  ? `${getBasePath()}${getLinkPath()}`
+                  : props.basePath
+              }
             />
           </Show>
         )}
@@ -92,6 +102,7 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
   */
   const addonsPanelTree = props.addons.getSubTree('sidepanel');
   const addonsBottomTree = props.addons.getSubTree('sidepanel.bottom');
+  const addonsNetworkTree = props.addons.getSubTree('network');
 
   return (
     <div class="castmill-sidepanel">
@@ -109,18 +120,22 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
             if (!value) {
               return;
             }
-            // Extract current path without /org/:orgId prefix
-            const currentPath =
-              location.pathname.replace(/^\/org\/[^\/]+/, '') || '/';
 
-            // Navigate to new organization with same path
-            navigate(`/org/${value}${currentPath}`);
-
-            // Update store (will be synced from URL by protected route)
+            // Update store
             setStore('organizations', {
               selectedId: value,
               selectedName: name,
             });
+
+            if (location.pathname.startsWith('/org/')) {
+              // Preserve current sub-path within the new organization
+              const currentPath =
+                location.pathname.replace(/^\/org\/[^\/]+/, '') || '/';
+              navigate(`/org/${value}${currentPath}`);
+            } else {
+              // On non-org routes (e.g., network admin), navigate to the new org's home
+              navigate(`/org/${value}`);
+            }
           }}
         />
       </div>
@@ -180,11 +195,36 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
           <div class="network-admin-section">
             <div class="section-divider"></div>
             <PanelItem
-              to={`/org/${store.organizations.selectedId}/network`}
+              to="/network"
               text={t('sidebar.network')}
               level={0}
               icon={BsBuilding}
             />
+            <PanelItem
+              to="/network/settings"
+              text={t('sidebar.networkSettings')}
+              level={1}
+              icon={IoSettingsOutline}
+            />
+            <PanelItem
+              to="/network/organizations"
+              text={t('sidebar.networkOrganizations')}
+              level={1}
+              icon={RiEditorOrganizationChart}
+            />
+            <PanelItem
+              to="/network/users"
+              text={t('sidebar.networkUsers')}
+              level={1}
+              icon={IoPersonOutline}
+            />
+            <Show when={addonsNetworkTree}>
+              <SidePanelTree
+                node={addonsNetworkTree!}
+                level={0}
+                basePath="/network"
+              />
+            </Show>
           </div>
         </Show>
       </div>

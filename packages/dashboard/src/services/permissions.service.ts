@@ -16,9 +16,18 @@ export type ResourceType =
   | 'devices'
   | 'teams'
   | 'widgets'
+  | 'layouts'
+  | 'tags'
   | 'organizations';
 
-export type Action = 'list' | 'show' | 'create' | 'update' | 'delete';
+export type Action =
+  | 'list'
+  | 'show'
+  | 'create'
+  | 'update'
+  | 'delete'
+  | 'publish'
+  | 'manage';
 
 export interface PermissionsResponse {
   role: Role;

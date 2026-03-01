@@ -207,7 +207,7 @@ defmodule Castmill.QuotasTest do
         Castmill.Networks.Network.changeset(%Castmill.Networks.Network{}, %{
           name: "No Default Plan Network",
           email: "test@nodefault.com",
-          domain: "https://nodefault.test.com"
+          domain: "nodefault.test.com"
         })
         |> Castmill.Repo.insert()
 
@@ -226,7 +226,7 @@ defmodule Castmill.QuotasTest do
         Castmill.Networks.Network.changeset(%Castmill.Networks.Network{}, %{
           name: "Zero Quota Network",
           email: "test@zeroquota.com",
-          domain: "https://zeroquota.test.com"
+          domain: "zeroquota.test.com"
         })
         |> Castmill.Repo.insert()
 

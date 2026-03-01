@@ -13,10 +13,11 @@ defmodule CastmillWeb.NetworkDashboardControllerTest do
     {:ok, user} =
       Accounts.create_user(%{
         email: "admin_#{System.unique_integer([:positive])}@example.com",
-        name: "Network Admin",
-        network_id: network.id,
-        network_role: :admin
+        name: "Network Admin"
       })
+
+    # Add user to network as admin via networks_users
+    {:ok, _} = Networks.add_user_to_network(user.id, network.id, :admin)
 
     user
   end
@@ -28,9 +29,11 @@ defmodule CastmillWeb.NetworkDashboardControllerTest do
     {:ok, user} =
       Accounts.create_user(%{
         email: "regular_#{unique_id}@example.com",
-        name: "Regular User #{unique_id}",
-        network_id: network.id
+        name: "Regular User #{unique_id}"
       })
+
+    # Add user to network as member
+    {:ok, _} = Networks.add_user_to_network(user.id, network.id)
 
     # Add user to organization
     Organizations.add_user(organization.id, user.id, :member)
@@ -39,11 +42,12 @@ defmodule CastmillWeb.NetworkDashboardControllerTest do
   end
 
   # Helper to authenticate a connection with a user
-  defp authenticate_conn(conn, user) do
+  defp authenticate_conn(conn, user, network) do
     conn
     |> Plug.Test.init_test_session(user_id: user.id)
     |> assign(:current_user, user)
     |> put_req_header("accept", "application/json")
+    |> put_req_header("origin", network.domain)
   end
 
   describe "check_admin_status/2" do
@@ -56,7 +60,7 @@ defmodule CastmillWeb.NetworkDashboardControllerTest do
 
     test "returns is_admin: true for network admin", %{conn: conn, network: network} do
       admin = create_network_admin(network)
-      conn = authenticate_conn(conn, admin)
+      conn = authenticate_conn(conn, admin, network)
 
       conn = get(conn, "/dashboard/network/admin-status")
 
@@ -73,13 +77,13 @@ defmodule CastmillWeb.NetworkDashboardControllerTest do
       organization: organization
     } do
       user = create_regular_user(network, organization)
-      conn = authenticate_conn(conn, user)
+      conn = authenticate_conn(conn, user, network)
 
       conn = get(conn, "/dashboard/network/admin-status")
 
       assert json_response(conn, 200) == %{
                "is_admin" => false,
-               "network_id" => network.id
+               "network_id" => nil
              }
     end
 
@@ -99,7 +103,7 @@ defmodule CastmillWeb.NetworkDashboardControllerTest do
         network_fixture(%{
           name: "Test Network",
           email: "support@test.com",
-          domain: "https://test.example.com"
+          domain: "test.example.com"
         })
 
       organization = organization_fixture(%{network_id: network.id})
@@ -109,7 +113,7 @@ defmodule CastmillWeb.NetworkDashboardControllerTest do
 
     test "returns network settings for network admin", %{conn: conn, network: network} do
       admin = create_network_admin(network)
-      conn = authenticate_conn(conn, admin)
+      conn = authenticate_conn(conn, admin, network)
 
       conn = get(conn, "/dashboard/network/settings")
 
@@ -125,7 +129,7 @@ defmodule CastmillWeb.NetworkDashboardControllerTest do
       organization: organization
     } do
       user = create_regular_user(network, organization)
-      conn = authenticate_conn(conn, user)
+      conn = authenticate_conn(conn, user, network)
 
       conn = get(conn, "/dashboard/network/settings")
 
@@ -145,7 +149,7 @@ defmodule CastmillWeb.NetworkDashboardControllerTest do
 
     test "updates network settings for network admin", %{conn: conn, network: network} do
       admin = create_network_admin(network)
-      conn = authenticate_conn(conn, admin)
+      conn = authenticate_conn(conn, admin, network)
 
       conn =
         put(conn, "/dashboard/network/settings", %{
@@ -166,7 +170,7 @@ defmodule CastmillWeb.NetworkDashboardControllerTest do
       organization: organization
     } do
       user = create_regular_user(network, organization)
-      conn = authenticate_conn(conn, user)
+      conn = authenticate_conn(conn, user, network)
 
       conn =
         put(conn, "/dashboard/network/settings", %{
@@ -180,7 +184,7 @@ defmodule CastmillWeb.NetworkDashboardControllerTest do
 
     test "returns validation error for invalid email", %{conn: conn, network: network} do
       admin = create_network_admin(network)
-      conn = authenticate_conn(conn, admin)
+      conn = authenticate_conn(conn, admin, network)
 
       conn =
         put(conn, "/dashboard/network/settings", %{
@@ -201,7 +205,7 @@ defmodule CastmillWeb.NetworkDashboardControllerTest do
 
     test "returns network statistics for network admin", %{conn: conn, network: network} do
       admin = create_network_admin(network)
-      conn = authenticate_conn(conn, admin)
+      conn = authenticate_conn(conn, admin, network)
 
       conn = get(conn, "/dashboard/network/stats")
 
@@ -219,7 +223,7 @@ defmodule CastmillWeb.NetworkDashboardControllerTest do
       organization: organization
     } do
       user = create_regular_user(network, organization)
-      conn = authenticate_conn(conn, user)
+      conn = authenticate_conn(conn, user, network)
 
       conn = get(conn, "/dashboard/network/stats")
 
@@ -243,7 +247,7 @@ defmodule CastmillWeb.NetworkDashboardControllerTest do
       org2: _org2
     } do
       admin = create_network_admin(network)
-      conn = authenticate_conn(conn, admin)
+      conn = authenticate_conn(conn, admin, network)
 
       conn = get(conn, "/dashboard/network/organizations")
 
@@ -259,7 +263,7 @@ defmodule CastmillWeb.NetworkDashboardControllerTest do
 
     test "returns 403 for non-admin user", %{conn: conn, network: network, org1: org1} do
       user = create_regular_user(network, org1)
-      conn = authenticate_conn(conn, user)
+      conn = authenticate_conn(conn, user, network)
 
       conn = get(conn, "/dashboard/network/organizations")
 
@@ -277,7 +281,7 @@ defmodule CastmillWeb.NetworkDashboardControllerTest do
 
     test "creates organization for network admin", %{conn: conn, network: network} do
       admin = create_network_admin(network)
-      conn = authenticate_conn(conn, admin)
+      conn = authenticate_conn(conn, admin, network)
 
       conn =
         post(conn, "/dashboard/network/organizations", %{
@@ -300,7 +304,7 @@ defmodule CastmillWeb.NetworkDashboardControllerTest do
       organization: organization
     } do
       user = create_regular_user(network, organization)
-      conn = authenticate_conn(conn, user)
+      conn = authenticate_conn(conn, user, network)
 
       conn =
         post(conn, "/dashboard/network/organizations", %{
@@ -318,7 +322,7 @@ defmodule CastmillWeb.NetworkDashboardControllerTest do
 
     test "returns validation error for missing name", %{conn: conn, network: network} do
       admin = create_network_admin(network)
-      conn = authenticate_conn(conn, admin)
+      conn = authenticate_conn(conn, admin, network)
 
       conn =
         post(conn, "/dashboard/network/organizations", %{
@@ -357,7 +361,7 @@ defmodule CastmillWeb.NetworkDashboardControllerTest do
       user1 = create_regular_user(network, organization)
       user2 = create_regular_user(network, organization)
 
-      conn = authenticate_conn(conn, admin)
+      conn = authenticate_conn(conn, admin, network)
 
       conn = get(conn, "/dashboard/network/users")
 
@@ -376,7 +380,7 @@ defmodule CastmillWeb.NetworkDashboardControllerTest do
       organization: organization
     } do
       user = create_regular_user(network, organization)
-      conn = authenticate_conn(conn, user)
+      conn = authenticate_conn(conn, user, network)
 
       conn = get(conn, "/dashboard/network/users")
 
@@ -401,7 +405,7 @@ defmodule CastmillWeb.NetworkDashboardControllerTest do
       network1: network1
     } do
       admin1 = create_network_admin(network1)
-      conn = authenticate_conn(conn, admin1)
+      conn = authenticate_conn(conn, admin1, network1)
 
       conn = get(conn, "/dashboard/network/organizations")
 
@@ -418,7 +422,7 @@ defmodule CastmillWeb.NetworkDashboardControllerTest do
       network2: _network2
     } do
       admin1 = create_network_admin(network1)
-      conn = authenticate_conn(conn, admin1)
+      conn = authenticate_conn(conn, admin1, network1)
 
       conn = get(conn, "/dashboard/network/settings")
 

@@ -13,7 +13,7 @@ export type ButtonProps = JSX.ButtonHTMLAttributes<HTMLButtonElement> & {
   iconProps?: Record<string, any>;
   type?: 'button' | 'submit' | 'reset';
   label?: string | (() => string);
-  color?: 'primary' | 'secondary' | 'danger' | 'success' | 'info';
+  color?: 'primary' | 'secondary' | 'danger' | 'success' | 'info' | 'warning';
   title?: string;
 };
 

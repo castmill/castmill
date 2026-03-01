@@ -24,9 +24,9 @@ defmodule CastmillWeb.UserController do
   end
 
   def create(conn, %{"user" => user_params, "network_id" => network_id}) do
-    create_attrs = Map.merge(user_params, %{"network_id" => network_id})
-
-    with {:ok, %User{} = user} <- Castmill.Accounts.create_user(create_attrs) do
+    # Create user without network_id, then add to network via networks_users
+    with {:ok, %User{} = user} <- Castmill.Accounts.create_user(user_params),
+         {:ok, _nu} <- Castmill.Networks.add_user_to_network(user.id, network_id) do
       conn
       |> put_status(:created)
       |> put_resp_header("location", ~p"/api/networks/#{network_id}/users/#{user}")
@@ -45,9 +45,8 @@ defmodule CastmillWeb.UserController do
     organization = Organizations.get_organization!(organization_id)
     network_id = organization.network_id
 
-    create_attrs = Map.merge(user, %{"network_id" => network_id})
-
-    with {:ok, user} <- Castmill.Accounts.create_user(create_attrs) do
+    with {:ok, user} <- Castmill.Accounts.create_user(user),
+         {:ok, _nu} <- Castmill.Networks.add_user_to_network(user.id, network_id) do
       update(conn, %{"id" => user.id, "access" => access, "organization_id" => organization_id})
     end
   end

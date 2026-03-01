@@ -11,7 +11,9 @@ config :castmill, Castmill.Repo,
   hostname: System.get_env("POSTGRES_HOST") || "localhost",
   database: "castmill_test#{System.get_env("MIX_TEST_PARTITION")}",
   pool: Ecto.Adapters.SQL.Sandbox,
-  pool_size: 10
+  pool_size: 20,
+  queue_target: 5000,
+  queue_interval: 5000
 
 # We don't run a server during test. If one is required,
 # you can enable the server option below.
@@ -46,3 +48,10 @@ config :castmill, accounts: Castmill.AccountsMock
 
 # Configure BullMQ for tests - inline mode
 config :castmill, :bullmq, testing: :inline
+
+# Run integration poll scheduling inline in tests to avoid detached tasks
+# outliving SQL sandbox owners.
+config :castmill, :async_poll_scheduling, false
+
+# Run other background tasks inline in tests to avoid SQL sandbox disconnect noise.
+config :castmill, :async_background_tasks, false

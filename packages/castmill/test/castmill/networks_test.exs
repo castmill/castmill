@@ -1,6 +1,16 @@
 defmodule Castmill.NetworksTest do
   use Castmill.DataCase
 
+  import ExUnit.CaptureLog
+  import Swoosh.TestAssertions
+
+  defmodule RaisingMailerAdapter do
+    use Swoosh.Adapter, required_config: []
+
+    @impl true
+    def deliver(_email, _config), do: raise(ArgumentError, "forced mailer failure")
+  end
+
   alias Castmill.Networks
 
   @moduletag :networks
@@ -30,7 +40,7 @@ defmodule Castmill.NetworksTest do
     test "create_network/1 with valid data creates a network" do
       valid_attrs = %{
         copyright: "some copyright",
-        domain: "https://some.domain.com",
+        domain: "some.domain.com",
         email: "some@email.com",
         logo: "some logo",
         name: "some name"
@@ -53,7 +63,7 @@ defmodule Castmill.NetworksTest do
 
       update_attrs = %{
         copyright: "some updated copyright",
-        domain: "https://some-updated.domain",
+        domain: "some-updated.domain",
         email: "some@updated.email.com",
         logo: "some updated logo",
         name: "some updated name"
@@ -89,7 +99,7 @@ defmodule Castmill.NetworksTest do
     test "create_network/1 automatically creates and assigns a default plan" do
       valid_attrs = %{
         copyright: "some copyright",
-        domain: "https://auto-plan-test.com",
+        domain: "auto-plan-test.com",
         email: "auto@plan.com",
         logo: "some logo",
         name: "Auto Plan Test Network"
@@ -115,7 +125,7 @@ defmodule Castmill.NetworksTest do
     test "organizations in new network inherit default plan quotas" do
       valid_attrs = %{
         copyright: "some copyright",
-        domain: "https://org-inherit-test.com",
+        domain: "org-inherit-test.com",
         email: "inherit@test.com",
         logo: "some logo",
         name: "Org Inherit Test Network"
@@ -164,6 +174,16 @@ defmodule Castmill.NetworksTest do
   describe "network invitations" do
     import Castmill.NetworksFixtures
 
+    setup do
+      previous_mailer_config = Application.get_env(:castmill, Castmill.Mailer)
+
+      on_exit(fn ->
+        Application.put_env(:castmill, Castmill.Mailer, previous_mailer_config)
+      end)
+
+      :ok
+    end
+
     test "invite_user_to_new_organization/3 creates an invitation" do
       network = network_fixture()
       email = "newuser@example.com"
@@ -179,15 +199,32 @@ defmodule Castmill.NetworksTest do
       assert invitation.token != nil
     end
 
+    test "invite_user_to_new_organization/3 sends invitation email on success" do
+      network = network_fixture()
+      email = "invitation-success@example.com"
+      org_name = "Success Org"
+
+      assert {:ok, invitation} =
+               Networks.invite_user_to_new_organization(network.id, email, org_name)
+
+      assert invitation.email == email
+
+      assert_email_sent(
+        to: email,
+        subject: "You're invited to join #{org_name} on Castmill"
+      )
+    end
+
     test "invite_user_to_new_organization/3 fails for existing user" do
       network = network_fixture()
-      # Create a user in the network
-      {:ok, _user} =
+      # Create a user and add them to the network
+      {:ok, user} =
         Castmill.Accounts.create_user(%{
           name: "Test User",
-          email: "existing@example.com",
-          network_id: network.id
+          email: "existing@example.com"
         })
+
+      {:ok, _} = Networks.add_user_to_network(user.id, network.id, :member)
 
       assert {:error, message} =
                Networks.invite_user_to_new_organization(
@@ -243,6 +280,27 @@ defmodule Castmill.NetworksTest do
 
       assert {:ok, _} = Networks.delete_network_invitation(invitation.id)
       assert Networks.get_network_invitation_by_token(invitation.token) == nil
+    end
+
+    test "invite_user_to_new_organization/3 returns ok even when email delivery fails" do
+      Application.put_env(:castmill, Castmill.Mailer, adapter: RaisingMailerAdapter)
+
+      network = network_fixture()
+      email = "delivery-fail@example.com"
+
+      {result, _log} =
+        with_log(fn ->
+          Networks.invite_user_to_new_organization(network.id, email, "New Org")
+        end)
+
+      assert {:ok, invitation} = result
+
+      assert invitation.email == email
+
+      persisted = Networks.get_network_invitation_by_token(invitation.token)
+      assert persisted != nil
+      assert persisted.email == email
+      assert persisted.status == "invited"
     end
   end
 end

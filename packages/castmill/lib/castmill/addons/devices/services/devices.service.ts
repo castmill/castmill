@@ -62,10 +62,33 @@ async function handleResponse<T = any>(
     }
   } else {
     let errMsg = '';
+    let errorData: any = null;
     try {
-      const { errors } = await response.json();
-      errMsg = `${errors.detail || response.statusText}`;
+      errorData = await response.json();
+      const { errors } = errorData;
+
+      // Check for specific error fields (e.g., pincode errors)
+      if (errors && typeof errors === 'object') {
+        // If errors is an object with field-specific errors, extract the first error message
+        const errorFields = Object.keys(errors);
+        if (errorFields.length > 0) {
+          const firstField = errorFields[0];
+          const fieldErrors = errors[firstField];
+          if (Array.isArray(fieldErrors) && fieldErrors.length > 0) {
+            // Pass both the error message and field name for translation
+            errMsg = fieldErrors[0];
+            // Throw HttpError with both message and error details
+            throw new HttpError(errMsg, response.status, { field: firstField, errors: errorData.errors });
+          }
+        }
+      }
+
+      // Fallback to detail or statusText
+      errMsg = `${errors?.detail || response.statusText}`;
     } catch (error) {
+      if (error instanceof HttpError) {
+        throw error;
+      }
       errMsg = `${response.statusText}`;
     }
     // Throw HttpError with status code for better error handling

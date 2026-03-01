@@ -214,6 +214,9 @@
       "teams": "团队",
       "storage": "总存储"
     },
+    "overview": {
+      "networkInfo": "网络信息"
+    },
     "identity": {
       "title": "网络身份",
       "description": "配置您网络的品牌和身份。",
@@ -590,6 +593,10 @@
     "widgets": "Widgets",
     "members": "成员",
     "network": "网络",
+    "networkOverview": "概览",
+    "networkSettings": "设置",
+    "networkOrganizations": "组织",
+    "networkUsers": "用户与邀请",
     "tags": "标签"
   },
   "channels": {
@@ -948,7 +955,9 @@
     },
     "errors": {
       "setChannelFailed": "设置设备频道失败:{{error}}",
-      "commandFailed": "处理您的请求时发生错误"
+      "commandFailed": "处理您的请求时发生错误",
+      "invalidPincode": "PIN码无效。请检查设备上显示的 PIN 码，然后重试。",
+      "pincodeExpired": "该 PIN 码已过期。请重新开始设备注册流程。"
     },
     "assignedChannels": "已分配的频道",
     "addChannel": "添加频道",
@@ -1259,6 +1268,12 @@
       "largeFileWarning": "大文件（{{fileSize}}）。上传可能需要一段时间。",
       "noValidFiles": "没有有效的文件可上传。",
       "uploadError": "上传文件时出错。"
+    }
+  },
+  "dashboard": {
+    "noOrganizations": {
+      "title": "没有组织",
+      "description": "您尚未加入此网络中的任何组织。请联系您的网络管理员以获取访问权限。"
     }
   }
 }

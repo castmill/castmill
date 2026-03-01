@@ -57,8 +57,11 @@ defmodule CastmillWeb.Endpoint do
   # Code reloading can be explicitly enabled under the
   # :code_reloader configuration of your endpoint.
   if code_reloading? do
-    socket("/phoenix/live_reload/socket", Phoenix.LiveReloader.Socket)
-    plug(Phoenix.LiveReloader)
+    if Code.ensure_loaded?(Phoenix.LiveReloader) do
+      socket("/phoenix/live_reload/socket", Phoenix.LiveReloader.Socket)
+      plug(Phoenix.LiveReloader)
+    end
+
     plug(Phoenix.CodeReloader)
     plug(Phoenix.Ecto.CheckRepoStatus, otp_app: :castmill)
   end
@@ -74,6 +77,8 @@ defmodule CastmillWeb.Endpoint do
   plug(Plug.Parsers,
     parsers: [:urlencoded, :json],
     pass: ["*/*"],
+    # Cache the raw body for webhook signature verification (e.g., Stripe)
+    body_reader: {CastmillWeb.Plugs.CacheBodyReader, :read_body, []},
     # Default limit for JSON and urlencoded bodies
     # Multipart parsing is handled in router pipelines for better control
     length: 8_000_000,
@@ -99,7 +104,12 @@ defmodule CastmillWeb.Endpoint do
     if Enum.member?(@player_endpoints, conn.request_path) do
       ["*"]
     else
+      # Domains are stored without protocol, but CORS needs full origins.
+      # Return both http:// and https:// variants for each domain.
       Castmill.Networks.list_network_domains()
+      |> Enum.flat_map(fn domain ->
+        ["http://" <> domain, "https://" <> domain]
+      end)
     end
   end
 end

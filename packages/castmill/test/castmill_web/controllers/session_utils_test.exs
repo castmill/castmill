@@ -210,9 +210,9 @@ defmodule CastmillWeb.SessionUtilsTest do
   end
 
   describe "is_network_admin?/1" do
-    test "returns true for network admin", %{network: network, organization: org} do
+    test "returns true for network admin", %{network: network} do
       admin_user =
-        user_fixture(%{organization_id: org.id, network_id: network.id, network_role: :admin})
+        user_fixture(%{network_id: network.id, network_role: :admin})
 
       assert SessionUtils.is_network_admin?(admin_user) == true
     end
@@ -221,8 +221,8 @@ defmodule CastmillWeb.SessionUtilsTest do
       assert SessionUtils.is_network_admin?(user) == false
     end
 
-    test "returns false for nil network_role" do
-      user = %User{network_role: nil}
+    test "returns false for user not in any network" do
+      user = user_fixture(%{email: "no_network@test.com", name: "No Network"})
       assert SessionUtils.is_network_admin?(user) == false
     end
   end

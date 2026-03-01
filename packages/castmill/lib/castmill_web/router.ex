@@ -120,6 +120,11 @@ defmodule CastmillWeb.Router do
     plug(:accepts, ["json"])
   end
 
+  # Health check endpoint (no auth, no pipeline) for load balancer probes
+  scope "/api", CastmillWeb do
+    get("/health", HealthController, :check)
+  end
+
   scope "/webhooks/widgets", CastmillWeb do
     pipe_through(:webhooks)
 
@@ -179,6 +184,7 @@ defmodule CastmillWeb.Router do
     plug(:put_secure_browser_headers)
     plug(:fetch_session)
     plug(:fetch_dashboard_user)
+    plug(CastmillWeb.Plugs.ResolveNetwork)
     plug(:accepts, ["json"])
     # Add multipart parsing for standard dashboard routes with 10MB limit
     plug(Plug.Parsers,
@@ -722,7 +728,6 @@ defmodule CastmillWeb.Router do
   defp assign_user(conn, user) do
     conn
     |> assign(:current_user, user)
-    |> assign(:network, user.network)
   end
 
   defp respond_with_error(conn, message) do

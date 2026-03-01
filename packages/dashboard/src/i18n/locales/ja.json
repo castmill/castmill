@@ -214,6 +214,9 @@
       "teams": "チーム",
       "storage": "合計ストレージ"
     },
+    "overview": {
+      "networkInfo": "ネットワーク情報"
+    },
     "identity": {
       "title": "ネットワークアイデンティティ",
       "description": "ネットワークのブランドとアイデンティティを設定します。",
@@ -590,6 +593,10 @@
     "widgets": "Widgets",
     "members": "メンバー",
     "network": "ネットワーク",
+    "networkOverview": "概要",
+    "networkSettings": "設定",
+    "networkOrganizations": "組織",
+    "networkUsers": "ユーザーと招待",
     "tags": "タグ"
   },
   "channels": {
@@ -949,7 +956,9 @@
     },
     "errors": {
       "setChannelFailed": "デバイスチャンネルの設定に失敗しました: {{error}}",
-      "commandFailed": "リクエストの処理中にエラーが発生しました"
+      "commandFailed": "リクエストの処理中にエラーが発生しました",
+      "invalidPincode": "無効なPINコードです。デバイスに表示されているPINコードを確認して、もう一度お試しください。",
+      "pincodeExpired": "このPINコードの有効期限が切れました。デバイスの登録プロセスを最初からやり直してください."
     },
     "assignedChannels": "割り当てられたチャンネル",
     "addChannel": "チャンネルを追加",
@@ -1260,6 +1269,12 @@
       "largeFileWarning": "大きなファイル（{{fileSize}}）。アップロードに時間がかかる場合があります。",
       "noValidFiles": "アップロードする有効なファイルがありません。",
       "uploadError": "ファイルのアップロード中にエラーが発生しました。"
+    }
+  },
+  "dashboard": {
+    "noOrganizations": {
+      "title": "組織がありません",
+      "description": "このネットワークのどの組織にもまだ所属していません。ネットワーク管理者に連絡してアクセス権を取得してください。"
     }
   }
 }

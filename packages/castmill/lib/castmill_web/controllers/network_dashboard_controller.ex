@@ -25,8 +25,9 @@ defmodule CastmillWeb.NetworkDashboardController do
   """
   def check_admin_status(conn, _params) do
     user = conn.assigns[:current_user]
+    network_id = conn.assigns[:network_id]
 
-    {:ok, status} = get_user_network_admin_status(user)
+    {:ok, status} = get_user_network_admin_status(user, network_id)
 
     conn
     |> put_status(:ok)
@@ -38,9 +39,7 @@ defmodule CastmillWeb.NetworkDashboardController do
   Only accessible to network admins.
   """
   def show_settings(conn, _params) do
-    user = conn.assigns[:current_user]
-
-    with {:ok, network_id} <- get_admin_network_id(user),
+    with {:ok, network_id} <- get_admin_network_id(conn),
          network when not is_nil(network) <- Networks.get_network(network_id) do
       conn
       |> put_status(:ok)
@@ -63,9 +62,7 @@ defmodule CastmillWeb.NetworkDashboardController do
   Only accessible to network admins.
   """
   def update_settings(conn, %{"network" => network_params}) do
-    user = conn.assigns[:current_user]
-
-    with {:ok, network_id} <- get_admin_network_id(user),
+    with {:ok, network_id} <- get_admin_network_id(conn),
          network when not is_nil(network) <- Networks.get_network(network_id),
          {:ok, updated_network} <-
            Networks.update_network(network, sanitize_params(network_params)) do
@@ -95,9 +92,7 @@ defmodule CastmillWeb.NetworkDashboardController do
   Only accessible to network admins.
   """
   def show_stats(conn, _params) do
-    user = conn.assigns[:current_user]
-
-    with {:ok, network_id} <- get_admin_network_id(user) do
+    with {:ok, network_id} <- get_admin_network_id(conn) do
       stats = get_network_stats(network_id)
 
       conn
@@ -116,10 +111,8 @@ defmodule CastmillWeb.NetworkDashboardController do
   Only accessible to network admins.
   """
   def create_organization(conn, %{"organization" => org_params}) do
-    user = conn.assigns[:current_user]
-
-    with {:ok, network_id} <- get_admin_network_id(user),
-         {:ok, organization} <- create_organization_for_network(network_id, user, org_params) do
+    with {:ok, network_id} <- get_admin_network_id(conn),
+         {:ok, organization} <- create_organization_for_network(network_id, org_params) do
       conn
       |> put_status(:created)
       |> json(organization_to_json(organization))
@@ -147,9 +140,7 @@ defmodule CastmillWeb.NetworkDashboardController do
   - search: Search term for organization name
   """
   def list_organizations(conn, params) do
-    user = conn.assigns[:current_user]
-
-    with {:ok, network_id} <- get_admin_network_id(user) do
+    with {:ok, network_id} <- get_admin_network_id(conn) do
       page = parse_int(params["page"], 1)
       page_size = min(parse_int(params["page_size"], 10), 100)
       search = params["search"]
@@ -186,10 +177,9 @@ defmodule CastmillWeb.NetworkDashboardController do
   Only accessible to network admins.
   """
   def delete_organization(conn, %{"id" => org_id}) do
-    user = conn.assigns[:current_user]
     alias Castmill.Organizations
 
-    with {:ok, network_id} <- get_admin_network_id(user),
+    with {:ok, network_id} <- get_admin_network_id(conn),
          organization when not is_nil(organization) <- Organizations.get_organization(org_id),
          true <- organization.network_id == network_id,
          {:ok, _} <- Organizations.delete_organization(organization) do
@@ -224,9 +214,7 @@ defmodule CastmillWeb.NetworkDashboardController do
   Only accessible to network admins.
   """
   def list_users(conn, _params) do
-    user = conn.assigns[:current_user]
-
-    with {:ok, network_id} <- get_admin_network_id(user) do
+    with {:ok, network_id} <- get_admin_network_id(conn) do
       users = Networks.list_users(network_id)
 
       conn
@@ -245,9 +233,7 @@ defmodule CastmillWeb.NetworkDashboardController do
   Only accessible to network admins.
   """
   def list_invitations(conn, _params) do
-    user = conn.assigns[:current_user]
-
-    with {:ok, network_id} <- get_admin_network_id(user) do
+    with {:ok, network_id} <- get_admin_network_id(conn) do
       invitations = Networks.list_network_invitations(network_id)
 
       conn
@@ -266,9 +252,7 @@ defmodule CastmillWeb.NetworkDashboardController do
   Only accessible to network admins.
   """
   def delete_invitation(conn, %{"id" => id}) do
-    user = conn.assigns[:current_user]
-
-    with {:ok, network_id} <- get_admin_network_id(user),
+    with {:ok, network_id} <- get_admin_network_id(conn),
          {:ok, invitation} <- Networks.delete_network_invitation(id),
          true <- invitation.network_id == network_id do
       conn
@@ -301,10 +285,9 @@ defmodule CastmillWeb.NetworkDashboardController do
         "email" => email,
         "role" => role
       }) do
-    user = conn.assigns[:current_user]
     alias Castmill.Organizations
 
-    with {:ok, network_id} <- get_admin_network_id(user),
+    with {:ok, network_id} <- get_admin_network_id(conn),
          organization when not is_nil(organization) <- Organizations.get_organization(org_id),
          true <- organization.network_id == network_id,
          {:ok, token} <- Organizations.invite_user(org_id, email, role) do
@@ -355,9 +338,9 @@ defmodule CastmillWeb.NetworkDashboardController do
 
     reason = params["reason"]
 
-    with {:ok, network_id} <- get_admin_network_id(user),
+    with {:ok, network_id} <- get_admin_network_id(conn),
          target_user when not is_nil(target_user) <- Accounts.get_user(user_id),
-         true <- target_user.network_id == network_id,
+         true <- Networks.is_network_member?(target_user.id, network_id),
          false <- target_user.id == user.id,
          false <- Networks.is_network_admin?(target_user.id, network_id),
          {:ok, updated_user} <- block_user_in_db(target_user, reason) do
@@ -402,12 +385,11 @@ defmodule CastmillWeb.NetworkDashboardController do
   Only accessible to network admins.
   """
   def unblock_user(conn, %{"user_id" => user_id}) do
-    user = conn.assigns[:current_user]
     alias Castmill.Accounts
 
-    with {:ok, network_id} <- get_admin_network_id(user),
+    with {:ok, network_id} <- get_admin_network_id(conn),
          target_user when not is_nil(target_user) <- Accounts.get_user(user_id),
-         true <- target_user.network_id == network_id,
+         true <- Networks.is_network_member?(target_user.id, network_id),
          {:ok, updated_user} <- unblock_user_in_db(target_user) do
       conn
       |> put_status(:ok)
@@ -448,9 +430,9 @@ defmodule CastmillWeb.NetworkDashboardController do
     user = conn.assigns[:current_user]
     alias Castmill.Accounts
 
-    with {:ok, network_id} <- get_admin_network_id(user),
+    with {:ok, network_id} <- get_admin_network_id(conn),
          target_user when not is_nil(target_user) <- Accounts.get_user(user_id),
-         true <- target_user.network_id == network_id,
+         true <- Networks.is_network_member?(target_user.id, network_id),
          false <- target_user.id == user.id,
          false <- Networks.is_network_admin?(target_user.id, network_id),
          {:ok, _} <- Accounts.delete_user(target_user.id) do
@@ -491,12 +473,11 @@ defmodule CastmillWeb.NetworkDashboardController do
   Only accessible to network admins.
   """
   def block_organization(conn, %{"organization_id" => org_id} = params) do
-    user = conn.assigns[:current_user]
     alias Castmill.Organizations
 
     reason = params["reason"]
 
-    with {:ok, network_id} <- get_admin_network_id(user),
+    with {:ok, network_id} <- get_admin_network_id(conn),
          organization when not is_nil(organization) <- Organizations.get_organization(org_id),
          true <- organization.network_id == network_id,
          {:ok, updated_org} <- block_organization_in_db(organization, reason) do
@@ -535,10 +516,9 @@ defmodule CastmillWeb.NetworkDashboardController do
   Only accessible to network admins.
   """
   def unblock_organization(conn, %{"organization_id" => org_id}) do
-    user = conn.assigns[:current_user]
     alias Castmill.Organizations
 
-    with {:ok, network_id} <- get_admin_network_id(user),
+    with {:ok, network_id} <- get_admin_network_id(conn),
          organization when not is_nil(organization) <- Organizations.get_organization(org_id),
          true <- organization.network_id == network_id,
          {:ok, updated_org} <- unblock_organization_in_db(organization) do
@@ -576,38 +556,41 @@ defmodule CastmillWeb.NetworkDashboardController do
   # Private Functions
   # ============================================================================
 
-  defp get_user_network_admin_status(user) when is_nil(user) do
+  defp get_user_network_admin_status(_user, nil) do
     {:ok, %{is_admin: false, network_id: nil}}
   end
 
-  defp get_user_network_admin_status(user) do
-    # Check if user has admin role via their network_role field
-    if user.network_role == :admin do
+  defp get_user_network_admin_status(user, _network_id) when is_nil(user) do
+    {:ok, %{is_admin: false, network_id: nil}}
+  end
+
+  defp get_user_network_admin_status(user, network_id) do
+    # Check if user is admin of the current network (resolved from Origin)
+    if Networks.is_network_admin?(user.id, network_id) do
       {:ok,
        %{
          is_admin: true,
-         network_id: user.network_id,
-         access: to_string(user.network_role)
+         network_id: network_id,
+         access: "admin"
        }}
     else
-      {:ok, %{is_admin: false, network_id: user.network_id}}
+      {:ok, %{is_admin: false, network_id: nil}}
     end
   end
 
-  defp get_admin_network_id(user) when is_nil(user) do
-    {:error, :not_admin}
-  end
+  defp get_admin_network_id(conn) do
+    user = conn.assigns[:current_user]
+    network_id = conn.assigns[:network_id]
 
-  defp get_admin_network_id(user) do
-    # Check if user has admin role via their network_role field
-    if user.network_role == :admin do
-      {:ok, user.network_id}
-    else
-      {:error, :not_admin}
+    cond do
+      is_nil(user) -> {:error, :not_admin}
+      is_nil(network_id) -> {:error, :not_admin}
+      Networks.is_network_admin?(user.id, network_id) -> {:ok, network_id}
+      true -> {:error, :not_admin}
     end
   end
 
-  defp create_organization_for_network(network_id, _admin_user, params) do
+  defp create_organization_for_network(network_id, params) do
     alias Castmill.Organizations
 
     org_attrs = Map.merge(params, %{"network_id" => network_id})

@@ -213,7 +213,8 @@ defmodule CastmillWeb.OrganizationController do
   # the organization. This is not implemented yet.
 
   def list_users_organizations(conn, %{"user_id" => user_id}) do
-    organizations = Organizations.list_user_organizations(user_id)
+    network_id = conn.assigns[:network_id]
+    organizations = Organizations.list_user_organizations(user_id, network_id)
     render(conn, :index, organizations: organizations)
   end
 
@@ -314,8 +315,21 @@ defmodule CastmillWeb.OrganizationController do
         |> put_status(:forbidden)
         |> json(%{errors: %{quota: ["Device quota exceeded"]}})
 
-      {:error, _} = error ->
-        {:error, error}
+      {:error, :invalid_pincode} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{errors: %{pincode: ["Invalid pincode"]}})
+
+      {:error, :pincode_expired} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{errors: %{pincode: ["Pincode has expired"]}})
+
+      {:error, changeset} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> put_view(CastmillWeb.ChangesetJSON)
+        |> render("error.json", changeset: changeset)
     end
   end
 

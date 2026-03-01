@@ -65,13 +65,13 @@ defmodule CastmillWeb.NotificationsChannelTest do
       assert response.unread_count == 2
     end
 
-    test "rejects unauthorized users", %{user: user} do
+    test "rejects unauthorized users", %{user: user, network: network} do
       # Create another user
       another_user =
         user_fixture(%{
           email: "other@example.com",
           name: "Other User",
-          network_id: user.network_id
+          network_id: network.id
         })
 
       assert {:error, %{reason: "unauthorized"}} =

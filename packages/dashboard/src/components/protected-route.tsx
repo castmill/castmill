@@ -127,11 +127,13 @@ const ProtectedRoute: Component<ProtectedRouteProps> = (
         // If URL org ID doesn't exist in user's organizations, use first one
         if (!selectedOrg && organizations.length > 0) {
           selectedOrg = organizations[0];
-          // Redirect to correct org URL
-          const currentPath = location.pathname.replace(/^\/org\/[^\/]+/, '');
-          navigate(`/org/${selectedOrg.id}${currentPath || '/'}`, {
-            replace: true,
-          });
+          // Only redirect if we're on an /org/ route with an invalid org ID
+          if (urlOrgId) {
+            const currentPath = location.pathname.replace(/^\/org\/[^\/]+/, '');
+            navigate(`/org/${selectedOrg.id}${currentPath || '/'}`, {
+              replace: true,
+            });
+          }
         }
 
         // Set the organizations in the store

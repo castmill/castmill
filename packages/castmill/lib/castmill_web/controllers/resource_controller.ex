@@ -405,7 +405,7 @@ defmodule CastmillWeb.ResourceController do
   # Notify all devices assigned to a channel when its default playlist changes
   # This is done asynchronously to avoid blocking the HTTP response
   defp notify_devices_of_channel_update(channel_id, channel) do
-    Task.start(fn ->
+    notify_fn = fn ->
       try do
         devices = Castmill.Resources.get_devices_using_channel(channel_id)
 
@@ -425,7 +425,13 @@ defmodule CastmillWeb.ResourceController do
           require Logger
           Logger.error("Failed to notify devices of channel update: #{inspect(error)}")
       end
-    end)
+    end
+
+    if Application.get_env(:castmill, :async_background_tasks, true) do
+      Task.start(notify_fn)
+    else
+      notify_fn.()
+    end
   end
 
   def create(conn, %{

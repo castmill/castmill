@@ -40,7 +40,13 @@ import OrganizationPage from './pages/organization-page/organization-page';
 import OrganizationsInvitationPage from './pages/organization-invitations/organizations-invitations-page';
 import ChannelsPage from './pages/channels-page/channels-page';
 import TagsPage from './pages/tags-page/tags-page';
-import { NetworkPage } from './pages/network-page';
+import {
+  NetworkProvider,
+  NetworkOverview,
+  NetworkSettings,
+  NetworkOrganizations,
+  NetworkUsers,
+} from './pages/network';
 import { I18nProvider, useI18n } from './i18n';
 import { KeyboardShortcutsProvider, useKeyboardShortcuts } from './hooks';
 
@@ -71,6 +77,7 @@ const LoadingFallback: Component = () => {
 
 const RootRedirect: Component = () => {
   const navigate = useNavigate();
+  const { t } = useI18n();
 
   // Use createEffect to reactively watch for organizations to load
   createEffect(() => {
@@ -79,7 +86,29 @@ const RootRedirect: Component = () => {
     }
   });
 
-  return <LoadingFallback />;
+  return (
+    <Show
+      when={store.organizations.loaded && store.organizations.data.length === 0}
+      fallback={<LoadingFallback />}
+    >
+      <div
+        style={{
+          display: 'flex',
+          'flex-direction': 'column',
+          'align-items': 'center',
+          'justify-content': 'center',
+          flex: '1',
+          padding: '2em',
+          'text-align': 'center',
+        }}
+      >
+        <h2>{t('dashboard.noOrganizations.title')}</h2>
+        <p style={{ 'max-width': '30em', color: '#666' }}>
+          {t('dashboard.noOrganizations.description')}
+        </p>
+      </div>
+    </Show>
+  );
 };
 
 const App: Component<RouteSectionProps<unknown>> = (props) => {
@@ -273,7 +302,6 @@ render(() => {
                 <Route path="organization" component={OrganizationPage} />
                 <Route path="channels" component={ChannelsPage} />
                 <Route path="invite" component={TeamsInvitationPage} />
-                <Route path="network" component={NetworkPage} />
 
                 {/* Dynamically generate routes for AddOns */}
                 <For each={store.addons}>
@@ -305,6 +333,80 @@ render(() => {
                       <Route
                         path={addon.mount_path}
                         component={KeyedComponent}
+                      />
+                    );
+                  }}
+                </For>
+
+                <Route path="/*404" component={NotFound} />
+              </Route>
+
+              {/* Network admin routes (top-level, not scoped to org) */}
+              <Route
+                path="/network"
+                component={(props: any) => (
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ProtectedRoute>
+                      {(addons) => (
+                        <Dashboard {...props} addons={new AddOnTree(addons)} />
+                      )}
+                    </ProtectedRoute>
+                  </Suspense>
+                )}
+              >
+                <Route
+                  path="/"
+                  component={() => (
+                    <NetworkProvider>
+                      <NetworkOverview />
+                    </NetworkProvider>
+                  )}
+                />
+                <Route
+                  path="/settings"
+                  component={() => (
+                    <NetworkProvider>
+                      <NetworkSettings />
+                    </NetworkProvider>
+                  )}
+                />
+                <Route
+                  path="/organizations"
+                  component={() => (
+                    <NetworkProvider>
+                      <NetworkOrganizations />
+                    </NetworkProvider>
+                  )}
+                />
+                <Route
+                  path="/users"
+                  component={() => (
+                    <NetworkProvider>
+                      <NetworkUsers />
+                    </NetworkProvider>
+                  )}
+                />
+
+                {/* Dynamically generate routes for network AddOns */}
+                <For
+                  each={store.addons.filter((a) =>
+                    a.mount_point?.startsWith('network.')
+                  )}
+                >
+                  {(addon) => {
+                    if (!addon.mount_path) {
+                      return null;
+                    }
+                    const NetworkAddonComponent = (props: any) => {
+                      const routeParams = useParams();
+                      const Component = wrapLazyComponent(addon);
+                      return <Component {...props} routeParams={routeParams} />;
+                    };
+
+                    return (
+                      <Route
+                        path={addon.mount_path}
+                        component={NetworkAddonComponent}
                       />
                     );
                   }}
