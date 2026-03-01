@@ -180,6 +180,7 @@ defmodule Castmill.Workers.BullMQHelper do
       Castmill.Workers.IntegrationPoller -> "integrations"
       Castmill.Workers.IntegrationDataCleanup -> "maintenance"
       Castmill.Workers.EncryptionRotation -> "maintenance"
+      Castmill.Workers.EmailWorker -> "email"
       _ -> "default"
     end
   end
@@ -224,6 +225,7 @@ defmodule Castmill.Workers.BullMQHelper do
       {"integrations", _} -> Castmill.Workers.IntegrationPoller
       {"maintenance", "integration_data_cleanup"} -> Castmill.Workers.IntegrationDataCleanup
       {"maintenance", "encryption_rotation"} -> Castmill.Workers.EncryptionRotation
+      {"email", _} -> Castmill.Workers.EmailWorker
       _ -> raise "Unknown queue/job combination: queue=#{queue_str}, job_name=#{job_name}"
     end
   end

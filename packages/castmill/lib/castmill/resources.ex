@@ -1460,19 +1460,27 @@ defmodule Castmill.Resources do
   end
 
   defp get_s3_file_path(uri) do
-    # Assuming your URIs are built with get_s3_uri/2 function
-    # Example: "https://s3.amazonaws.com:443/my-bucket/path/to/file"
-    # We need to extract the bucket and file path
-    uri
-    |> URI.parse()
-    |> then(fn %URI{path: path} ->
-      # The path includes the bucket and the file path, e.g., "/my-bucket/path/to/file"
-      # Split the path into the bucket and the file path
-      [_slash, bucket | object_parts] = String.split(path, "/", parts: 3)
-      object_path = Enum.join(object_parts, "/")
+    # Extract bucket and object path from a stored URI.
+    #
+    # Two modes:
+    # - Production (media_public_base_url set): CDN URL like "https://cdn.castmill.dev/org/media/file"
+    #   → bucket from AWS_S3_BUCKET env var, full path is the object key
+    # - Local dev (no base URL): S3/MinIO URL like "http://localhost:9000/bucket/org/media/file"
+    #   → bucket is the first path segment
+    parsed = URI.parse(uri)
 
-      {bucket, object_path}
-    end)
+    case Application.get_env(:castmill, :media_public_base_url) do
+      nil ->
+        # Local dev: bucket is in the URL path
+        [_slash, bucket | object_parts] = String.split(parsed.path, "/", parts: 3)
+        {bucket, Enum.join(object_parts, "/")}
+
+      _base_url ->
+        # Production: bucket from env var, entire path is the object key
+        bucket = System.get_env("AWS_S3_BUCKET")
+        object_path = String.trim_leading(parsed.path, "/")
+        {bucket, object_path}
+    end
   end
 
   @doc """

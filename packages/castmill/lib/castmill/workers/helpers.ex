@@ -106,10 +106,14 @@ defmodule Castmill.Workers.Helpers do
     |> ExAws.S3.upload(bucket, dst_path, part_size: @chunk_size)
     |> ExAws.request!()
 
-    uri = get_s3_uri(bucket, dst_path)
+    uri = get_public_uri(bucket, dst_path)
     {uri, size}
   end
 
+  @doc """
+  Generates the internal S3 API URI for a file. Used for S3 API operations.
+  For URIs stored in the DB (served to browsers), use `get_public_uri/2` instead.
+  """
   def get_s3_uri(bucket, dst_path) do
     # Generate URI dynamically based on the ExAws configuration
     s3_config = ExAws.Config.new(:s3)
@@ -120,6 +124,25 @@ defmodule Castmill.Workers.Helpers do
     port = s3_config[:port] || 443
 
     "#{scheme}#{host}:#{port}/#{bucket}/#{dst_path}"
+  end
+
+  @doc """
+  Generates the public-facing URI for a media file.
+
+  When `:media_public_base_url` is configured (e.g., `https://cdn.castmill.dev`),
+  returns a CDN URL without the bucket in the path, since CDN custom domains
+  serve directly from the bucket root.
+
+  When not configured, falls back to `get_s3_uri/2` (works for local dev with MinIO).
+  """
+  def get_public_uri(bucket, dst_path) do
+    case Application.get_env(:castmill, :media_public_base_url) do
+      nil ->
+        get_s3_uri(bucket, dst_path)
+
+      base_url ->
+        "#{String.trim_trailing(base_url, "/")}/#{dst_path}"
+    end
   end
 
   def get_endpoint_url do
