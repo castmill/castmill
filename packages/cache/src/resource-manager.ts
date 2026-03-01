@@ -148,10 +148,23 @@ export class ResourceManager {
     const age = item ? Date.now() - item.timestamp : Infinity;
 
     if (!item || age > freshness) {
-      item = await this.cache.set(url, ItemType.Data, 'application/json', {
-        headers: this.getAuthHeader(),
-        force: true,
-      });
+      try {
+        const freshItem = await this.cache.set(
+          url,
+          ItemType.Data,
+          'application/json',
+          {
+            headers: this.getAuthHeader(),
+            force: true,
+          }
+        );
+        if (freshItem) {
+          item = freshItem;
+        }
+      } catch (err) {
+        // Network fetch failed — fall back to stale cached data if available.
+        // cache.set preserves the old entry on failure, so `item` is still valid.
+      }
     }
     if (item) {
       return this.fetchJson(item.cachedUrl) as Promise<T>;

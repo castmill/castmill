@@ -163,6 +163,123 @@ describe('Cache', () => {
       expect(isRemoved).to.be.false;
     }
   });
+  it('should preserve old cached data when force-refresh fails (stale fallback)', async () => {
+    const url = 'https://example.com/data.json';
+    const initialData = '{ "foo": "bar" }';
+
+    const filesFixture: { [index: string]: string } = {
+      [url]: initialData,
+    };
+
+    const storage = new StorageMockup(filesFixture);
+    const cache = new Cache(storage, 'test-stale-fallback', 10);
+
+    // Cache the initial data
+    const item = await cache.set(url, ItemType.Data, 'application/json');
+    expect(item).toBeDefined();
+
+    const cachedUrl = item!.cachedUrl;
+
+    // Now remove the fixture so the next fetch will fail
+    delete filesFixture[url];
+
+    // Force-refresh should fail but the old entry should still be preserved
+    await expect(
+      cache.set(url, ItemType.Data, 'application/json', { force: true })
+    ).rejects.toThrow();
+
+    // The original cached entry should still be in the cache
+    const preserved = await cache.get(url);
+    expect(preserved).toBeDefined();
+    expect(preserved!.cachedUrl).toBe(cachedUrl);
+  });
+
+  it('should clean up old file after successful force-refresh', async () => {
+    const url = 'https://example.com/data.json';
+    const initialData = '{ "version": 1 }';
+    const updatedData = '{ "version": 2 }';
+
+    const filesFixture: { [index: string]: string } = {
+      [url]: initialData,
+    };
+
+    const storage = new StorageMockup(filesFixture);
+    const deleteFileSpy = vi.spyOn(storage, 'deleteFile');
+    const cache = new Cache(storage, 'test-force-cleanup', 10);
+
+    // Cache the initial data
+    const oldItem = await cache.set(url, ItemType.Data, 'application/json');
+    expect(oldItem).toBeDefined();
+    const oldCachedUrl = oldItem!.cachedUrl;
+
+    // Update the fixture data
+    filesFixture[url] = updatedData;
+
+    // Force-refresh should succeed and clean up the old file
+    const newItem = await cache.set(url, ItemType.Data, 'application/json', {
+      force: true,
+    });
+    expect(newItem).toBeDefined();
+    expect(newItem!.cachedUrl).not.toBe(oldCachedUrl);
+
+    // The old cached file should have been deleted
+    expect(deleteFileSpy).toHaveBeenCalledWith(oldCachedUrl);
+  });
+
+  it('should not delete pre-existing item on cache error', async () => {
+    const url = 'https://example.com/data.json';
+    const initialData = '{ "foo": "bar" }';
+
+    const filesFixture: { [index: string]: string } = {
+      [url]: initialData,
+    };
+
+    const storage = new StorageMockup(filesFixture);
+    const cache = new Cache(storage, 'test-no-delete-on-error', 10);
+
+    // First, cache the item successfully
+    await cache.set(url, ItemType.Data, 'application/json');
+
+    // Verify it's cached
+    const item = await cache.get(url);
+    expect(item).toBeDefined();
+
+    // Remove fixture to simulate network failure on force-refresh
+    delete filesFixture[url];
+
+    // Force-refresh should fail
+    await expect(
+      cache.set(url, ItemType.Data, 'application/json', { force: true })
+    ).rejects.toThrow();
+
+    // The item should still be in the cache (not deleted)
+    const preserved = await cache.get(url);
+    expect(preserved).toBeDefined();
+    expect(preserved!.mimeType).toBe('application/json');
+  });
+
+  it('should delete new entry on cache error when no pre-existing item', async () => {
+    const url = 'https://example.com/missing.json';
+
+    // Create a storage that will fail on storeFile
+    const storage = {
+      init: vi.fn(),
+      listFiles: async () => [],
+      storeFile: vi.fn().mockRejectedValue(new Error('Network error')),
+      deleteFile: vi.fn(),
+      retrieveFile: vi.fn(),
+      deleteAllFiles: vi.fn(),
+      close: vi.fn(),
+    } as unknown as StorageIntegration;
+
+    const cache = new Cache(storage, 'test-delete-on-error-no-existing', 10);
+
+    // There is no pre-existing item, so cache.set should fail and clean up
+    await expect(
+      cache.set(url, ItemType.Data, 'application/json')
+    ).rejects.toThrow();
+  });
+
   it('should remove older cached items if the cache is full (maxSize)', () => {});
   it('should not download the same file again if already in the process of caching', () => {});
 

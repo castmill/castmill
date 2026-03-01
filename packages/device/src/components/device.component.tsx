@@ -28,7 +28,7 @@ export function DeviceComponent(props: { device: Device }) {
   // Show progress bar while loading or while login's start() is still running
   const showProgress = () => {
     if (loginOrRegister.loading) return true;
-    if (loginOrRegister()?.status === Status.Login && !ready()) return true;
+    if (loginOrRegister()?.status === Status.Ready && !ready()) return true;
     return false;
   };
 
@@ -45,7 +45,7 @@ export function DeviceComponent(props: { device: Device }) {
           <Match when={loginOrRegister.error}>
             <span>{String(loginOrRegister.error)}</span>
           </Match>
-          <Match when={loginOrRegister()?.status === Status.Login}>
+          <Match when={loginOrRegister()?.status === Status.Ready}>
             <PlayerComponent device={props.device} />
           </Match>
           <Match when={loginOrRegister()?.status === Status.Registering}>

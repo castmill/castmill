@@ -43,7 +43,7 @@ const supportedDebugModes = ['remote', 'local', 'none'];
 
 export enum Status {
   Registering = 'registering',
-  Login = 'login', // Loggedin?
+  Ready = 'ready', // Player is ready to play content, but may be offline
 }
 
 export interface DeviceMessage {
@@ -476,21 +476,24 @@ export class Device extends EventEmitter {
     this.emitProgress(1, credentials ? 5 : 3, 'Identifying device');
 
     if (credentials) {
-      try {
-        const phoenixChannel = await this.login(credentials, hardwareId);
-        this.initListeners(phoenixChannel);
-        this.initHeartbeat(phoenixChannel);
-      } catch (error) {
-        if (error === AUTH_ERROR_INVALID_DEVICE) {
-          // Clean all app data and refresh the page.
-          await this.integration.removeCredentials();
-          window.location.reload();
-        } else {
-          this.logger.error(`Unable to login ${error}`);
-        }
-      }
+      // Start login in the background so the player can begin playing cached
+      // content immediately, even when the device is offline.
+      this.login(credentials, hardwareId)
+        .then((phoenixChannel) => {
+          this.initListeners(phoenixChannel);
+          this.initHeartbeat(phoenixChannel);
+        })
+        .catch(async (error) => {
+          if (error === AUTH_ERROR_INVALID_DEVICE) {
+            // Clean all app data and refresh the page.
+            await this.integration.removeCredentials();
+            window.location.reload();
+          } else {
+            this.logger.error(`Unable to login ${error}`);
+          }
+        });
 
-      return { status: Status.Login };
+      return { status: Status.Ready };
     } else {
       const pincode = await this.register(hardwareId);
       return { status: Status.Registering, pincode };
@@ -546,7 +549,6 @@ export class Device extends EventEmitter {
 
     return pincode;
   }
-
   async login(credentials: Credentials, hardwareId: string) {
     const { device } = credentials;
 
