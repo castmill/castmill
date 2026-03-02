@@ -1262,7 +1262,10 @@
       "fileTooLarge": "Dateigröße ({{fileSize}}) überschreitet das maximale Upload-Limit von {{maxSize}}",
       "largeFileWarning": "Große Datei ({{fileSize}}). Der Upload kann eine Weile dauern.",
       "noValidFiles": "Keine gültigen Dateien zum Hochladen.",
-      "uploadError": "Fehler beim Hochladen der Datei."
+      "uploadError": "Fehler beim Hochladen der Datei.",
+      "uploadFailed": "Upload fehlgeschlagen: {{error}}",
+      "serverError": "Serverfehler (Status {{status}})",
+      "unknownError": "Unbekannter Fehler"
     }
   },
   "dashboard": {

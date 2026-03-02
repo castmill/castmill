@@ -60,11 +60,8 @@ defmodule CastmillWeb.UploadController do
   defp process_file(conn, organization_id, filename, path, mime_type) do
     file_size = File.stat!(path).size
 
-    # Max upload size quota is stored in MB, convert to bytes for comparison
-    max_upload_size_mb =
-      Castmill.Quotas.get_quota_for_organization(organization_id, :max_upload_size)
-
-    max_upload_size = max_upload_size_mb * 1_024 * 1_024
+    max_upload_size =
+      Castmill.Quotas.get_quota_for_organization_bytes(organization_id, :max_upload_size)
 
     if file_size > max_upload_size do
       conn
@@ -77,10 +74,9 @@ defmodule CastmillWeb.UploadController do
       })
       |> halt()
     else
-      # Storage quota is stored in MB, convert to bytes for comparison
+      # Check storage quota
       current_storage = Castmill.Quotas.get_quota_used_for_organization(organization_id, :storage)
-      storage_quota_mb = Castmill.Quotas.get_quota_for_organization(organization_id, :storage)
-      storage_quota = storage_quota_mb * 1_024 * 1_024
+      storage_quota = Castmill.Quotas.get_quota_for_organization_bytes(organization_id, :storage)
 
       if current_storage + file_size > storage_quota do
         conn

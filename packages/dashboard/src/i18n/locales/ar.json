@@ -1267,7 +1267,10 @@
       "fileTooLarge": "حجم الملف ({{fileSize}}) يتجاوز الحد الأقصى للتحميل وهو {{maxSize}}",
       "largeFileWarning": "ملف كبير ({{fileSize}}). قد يستغرق التحميل بعض الوقت.",
       "noValidFiles": "لا توجد ملفات صالحة للتحميل.",
-      "uploadError": "خطأ في تحميل الملف."
+      "uploadError": "خطأ في تحميل الملف.",
+      "uploadFailed": "فشل التحميل: {{error}}",
+      "serverError": "خطأ في الخادم (الحالة {{status}})",
+      "unknownError": "خطأ غير معروف"
     }
   },
   "dashboard": {

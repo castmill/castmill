@@ -553,5 +553,36 @@ defmodule Castmill.QuotasTest do
                Castmill.Organizations.OrganizationsUsers
              ) == 3
     end
+
+    test "get_quota_for_organization_bytes/2 converts MB resources to bytes" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+
+      plan =
+        Quotas.create_plan("bytes test plan", network.id, [
+          %{max: 100, resource: :storage},
+          %{max: 2048, resource: :max_upload_size},
+          %{max: 50, resource: :medias}
+        ])
+
+      Quotas.assign_plan_to_organization(plan.id, organization.id)
+
+      # Storage (100 MB) should be returned as bytes
+      assert Quotas.get_quota_for_organization_bytes(organization.id, :storage) ==
+               100 * 1_024 * 1_024
+
+      assert Quotas.get_quota_for_organization_bytes(organization.id, "storage") ==
+               100 * 1_024 * 1_024
+
+      # Max upload size (2048 MB = 2 GB) should be returned as bytes
+      assert Quotas.get_quota_for_organization_bytes(organization.id, :max_upload_size) ==
+               2048 * 1_024 * 1_024
+
+      assert Quotas.get_quota_for_organization_bytes(organization.id, "max_upload_size") ==
+               2048 * 1_024 * 1_024
+
+      # Non-MB resources should be returned unchanged
+      assert Quotas.get_quota_for_organization_bytes(organization.id, "medias") == 50
+    end
   end
 end

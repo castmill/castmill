@@ -223,14 +223,17 @@ export const UploadComponent = (props: UploadComponentProps) => {
               errorData.error ||
               errorData.message ||
               xhr.statusText ||
-              'Unknown error';
+              t('medias.upload.unknownError');
           } catch {
             errorMessage =
-              xhr.statusText || `Server error (status ${xhr.status})`;
+              xhr.statusText ||
+              t('medias.upload.serverError', { status: xhr.status });
           }
           setMessages((m) => ({
             ...m,
-            [file.name]: `Upload failed: ${errorMessage}`,
+            [file.name]: t('medias.upload.uploadFailed', {
+              error: errorMessage,
+            }),
           }));
 
           uploadedCount++;

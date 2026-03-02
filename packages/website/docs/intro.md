@@ -19,7 +19,7 @@ The Castmill Server is a standalone application that can be installed on any Lin
 
 ## Using Docker Compose
 
-If you want to get a quick an easy installation, either for testing or for running in any Docker compatible infrastructure, you can use the provided docker compose file, that will easily get you a complete functional Castmill instance.
+If you want to get a quick and easy installation, either for testing or for running in any Docker compatible infrastructure, you can use the provided docker compose file, that will easily get you a complete functional Castmill instance.
 
 In order to use the docker compose file you are going to need to clone the castmill repository to the machine where you want to run the service:
 
@@ -53,7 +53,7 @@ user is created in the database in a migration step.
 
 ### Sign up into the Dashboard
 
-The dasboard is the main interface that the users will use to interact with Castmill, the content and the devices. By default any users
+The dashboard is the main interface that the users will use to interact with Castmill, the content and the devices. By default any users
 can just sign up and start using the dashboard (we will offer an "invitation only" mode in the future).
 
 The signup process is based on passkeys ([read more about passkeys](https://fidoalliance.org/passkeys/)). Passkeys are a modern and secure way to authenticate users, and they are based on the device's biosignature. This means that the user will need to use the same device to sign up and login into the dashboard, however it will be possible to associate different devices to the same account.
@@ -134,9 +134,9 @@ mix phx.server
 Point your browser to localhost:4000/admin
 A login window will appear, by default the admin user and pass are: info@castmill.com and 1234567890
 
-Before you can use Castmill you need to create at least one network. Since we are testing we will create a "localhost" network. Go to Networks and click on "Create". A modal will appear that you can fill with test data, the important field that you need to change is Domain, you must use "localhost", as that will be the domain you use when you test from your local machine.
+Before you can use Castmill you need to create at least one network. Since we are testing we will create a "localhost" network. Go to Networks and click on "Create". A modal will appear that you can fill with test data. The important field is **Domain** — you must set it to `localhost:3000` (including the port), because the dashboard runs on `http://localhost:3000` and the server uses this domain to build the CORS allowed-origins list. If the domain doesn't match the dashboard's origin exactly, API calls from the dashboard will fail due to CORS.
 
-### Start the dasboard
+### Start the dashboard
 
 Start the dashboard going to packages/dashboard and run "yarn && yarn dev". A dev server will be started at http://localhost:3000.
 

@@ -11,6 +11,11 @@ defmodule Castmill.Quotas do
   alias Castmill.Quotas.QuotasNetworks
   alias Castmill.Quotas.QuotasOrganizations
 
+  # Resources whose plan/quota max values are stored in MB
+  @mb_resources ~w(storage max_upload_size)a ++ ~w(storage max_upload_size)
+
+  defp mb_to_bytes(mb), do: mb * 1_024 * 1_024
+
   @doc """
     Create a plan based on a list of resource types and their max values.
   """
@@ -144,6 +149,25 @@ defmodule Castmill.Quotas do
     end
   end
 
+  @doc """
+    Returns the quota for a given resource in a given organization, normalised to
+    bytes for storage-related resources (`:storage`, `"storage"`,
+    `:max_upload_size`, `"max_upload_size"`).
+
+    For all other resources the raw count is returned unchanged.
+    This is the preferred API when you need to **compare** a quota limit with
+    actual byte-level usage (file sizes, upload sizes, etc.).
+  """
+  def get_quota_for_organization_bytes(organization_id, resource) do
+    raw = get_quota_for_organization(organization_id, resource)
+
+    if resource in @mb_resources do
+      mb_to_bytes(raw)
+    else
+      raw
+    end
+  end
+
   # Get quota from the network's default plan.
   # Uses the network's default_plan_id field to find the default plan.
   defp get_quota_from_network_default_plan(organization_id, resource) do
@@ -240,9 +264,11 @@ defmodule Castmill.Quotas do
     i.e. how many resources of a given type are used in a given organization.
 
     For storage, returns the total file size in bytes.
-    Note: storage and max_upload_size quotas (plan max values) are stored in MB,
-    so callers must convert between bytes and MB when comparing usage vs quota.
     For other resources, returns the count.
+
+    To compare usage against a quota limit, pair this with
+    `get_quota_for_organization_bytes/2` which returns storage/max_upload_size
+    quotas already converted to bytes.
   """
   def get_quota_used_for_organization(organization_id, :storage) do
     # Sum the size of all files associated with media in the organization
