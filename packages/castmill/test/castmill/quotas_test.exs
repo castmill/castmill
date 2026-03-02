@@ -176,8 +176,8 @@ defmodule Castmill.QuotasTest do
       assert Quotas.get_quota_for_organization(organization.id, "teams") == 25
 
       # For resources not in the org plan, should fall back to network default plan
-      # Storage quota in bytes (1 GB)
-      assert Quotas.get_quota_for_organization(organization.id, "storage") == 1_073_741_824
+      # Storage quota in MB (1 GB = 1024 MB)
+      assert Quotas.get_quota_for_organization(organization.id, "storage") == 1024
       assert Quotas.get_quota_for_organization(organization.id, "users") == 50
     end
 
@@ -263,16 +263,16 @@ defmodule Castmill.QuotasTest do
       assert Quotas.get_quota_for_organization(organization.id, "medias") == 100
 
       # For storage and users (not in assigned plan), should fall back to network default plan
-      # Storage quota in bytes (1 GB)
-      assert Quotas.get_quota_for_organization(organization.id, "storage") == 1_073_741_824
+      # Storage quota in MB (1 GB = 1024 MB)
+      assert Quotas.get_quota_for_organization(organization.id, "storage") == 1024
       assert Quotas.get_quota_for_organization(organization.id, "users") == 50
 
       # Verify this allows uploads to work even with partial plan definitions
-      # Storage quota is in bytes, so check against byte value
+      # Storage quota is in MB, so check against MB value (512 MB)
       assert Quotas.has_organization_enough_quota?(
                organization.id,
                "storage",
-               536_870_912
+               512
              ) == true
     end
 
@@ -443,25 +443,25 @@ defmodule Castmill.QuotasTest do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
 
-      # Create a plan with 10 MB storage quota
+      # Create a plan with 10 MB storage quota (stored in MB)
       plan =
         Quotas.create_plan("Storage Plan", network.id, [
           # 10 MB
-          %{max: 10 * 1024 * 1024, resource: :storage}
+          %{max: 10, resource: :storage}
         ])
 
       Quotas.assign_plan_to_organization(plan.id, organization.id)
 
       # Should have enough for 5 MB
-      assert Quotas.has_organization_enough_quota?(organization.id, :storage, 5 * 1024 * 1024) ==
+      assert Quotas.has_organization_enough_quota?(organization.id, :storage, 5) ==
                true
 
       # Should have enough for exactly 10 MB
-      assert Quotas.has_organization_enough_quota?(organization.id, :storage, 10 * 1024 * 1024) ==
+      assert Quotas.has_organization_enough_quota?(organization.id, :storage, 10) ==
                true
 
       # Should NOT have enough for 11 MB
-      assert Quotas.has_organization_enough_quota?(organization.id, :storage, 11 * 1024 * 1024) ==
+      assert Quotas.has_organization_enough_quota?(organization.id, :storage, 11) ==
                false
     end
 

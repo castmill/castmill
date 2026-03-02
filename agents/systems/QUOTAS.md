@@ -141,11 +141,14 @@ Resources are stored as strings. Common resource types include:
 | `"playlists"` | `Castmill.Resources.Playlist` | Number of playlists |
 | `"medias"` | `Castmill.Resources.Media` | Number of media items |
 | `"users"` | `Castmill.Organizations.OrganizationsUsers` | Number of users |
-| `:storage` | (special) | Total file storage in bytes |
-| `:max_upload_size` | (special) | Max upload size per file in bytes |
+| `:storage` | (special) | Total file storage in MB |
+| `:max_upload_size` | (special) | Max upload size per file in MB |
 
-> **Note:** The `max` column in all quota tables uses `bigint` (int8) to support
-> storing byte values for storage and max_upload_size without overflow.
+> **Note:** Storage and max_upload_size quotas are stored in **megabytes (MB)**.
+> The `max` column uses `bigint` (int8) for future flexibility.
+> The `get_quota_used_for_organization(:storage)` function still returns **bytes**
+> (sum of file sizes), so controllers must convert between MB and bytes when comparing.
+> The `organization_usage_controller` converts `total` to bytes for consistent frontend display.
 
 ## Integration with Billing (castmill-saas)
 

@@ -92,7 +92,7 @@ defmodule Castmill.Quotas do
     3. Network's default plan quota (using network.default_plan_id)
     4. Network's direct quota
     5. Returns zero as final fallback
-    
+
     Note: If an organization has an assigned plan but that plan doesn't define
     a quota for the requested resource, it falls back to step 3 (network's default plan)
     rather than returning 0. This ensures backward compatibility when new resource
@@ -240,6 +240,8 @@ defmodule Castmill.Quotas do
     i.e. how many resources of a given type are used in a given organization.
 
     For storage, returns the total file size in bytes.
+    Note: storage and max_upload_size quotas (plan max values) are stored in MB,
+    so callers must convert between bytes and MB when comparing usage vs quota.
     For other resources, returns the count.
   """
   def get_quota_used_for_organization(organization_id, :storage) do

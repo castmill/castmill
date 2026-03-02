@@ -106,10 +106,21 @@ defmodule CastmillWeb.Endpoint do
     else
       # Domains are stored without protocol, but CORS needs full origins.
       # Return both http:// and https:// variants for each domain.
-      Castmill.Networks.list_network_domains()
-      |> Enum.flat_map(fn domain ->
-        ["http://" <> domain, "https://" <> domain]
-      end)
+      network_origins =
+        Castmill.Networks.list_network_domains()
+        |> Enum.flat_map(fn domain ->
+          ["http://" <> domain, "https://" <> domain]
+        end)
+
+      # Also allow the dashboard URI (e.g., https://app.castmill.dev) which may
+      # not match any network domain but is always a valid origin for API calls.
+      dashboard_origin =
+        case System.get_env("CASTMILL_DASHBOARD_URI") do
+          nil -> []
+          uri -> [uri]
+        end
+
+      network_origins ++ dashboard_origin
     end
   end
 end
