@@ -695,10 +695,15 @@ defmodule Castmill.Networks do
   end
 
   defp send_network_invitation_email(invitation) do
+    # Derive the dashboard URL from the network's domain
+    network = Repo.get(Castmill.Networks.Network, invitation.network_id)
+
     dashboard_url =
-      System.get_env("CASTMILL_DASHBOARD_URI") ||
-        System.get_env("DASHBOARD_URL") ||
+      if network && network.domain && network.domain != "" do
+        "https://#{network.domain}"
+      else
         "http://localhost:3000"
+      end
 
     UserNotifier.deliver_network_invitation_instructions(
       invitation,

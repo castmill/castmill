@@ -112,15 +112,7 @@ defmodule CastmillWeb.Endpoint do
           ["http://" <> domain, "https://" <> domain]
         end)
 
-      # Also allow the dashboard URI (e.g., https://app.castmill.dev) which may
-      # not match any network domain but is always a valid origin for API calls.
-      dashboard_origin =
-        case System.get_env("CASTMILL_DASHBOARD_URI") do
-          nil -> []
-          uri -> [uri]
-        end
-
-      network_origins ++ dashboard_origin
+      network_origins
     end
   end
 end
