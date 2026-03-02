@@ -207,7 +207,7 @@ defmodule Castmill.Workers.ImageTranscoder do
             {"Content-Length", value} -> String.to_integer(value)
           end
 
-        uri = Helpers.get_s3_uri(bucket, filepath)
+        uri = Helpers.get_public_uri(bucket, filepath)
 
         {uri, size}
     end

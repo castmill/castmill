@@ -274,6 +274,10 @@ defmodule Castmill.Application do
         {:maintenance, "encryption_rotation"} ->
           Castmill.Workers.EncryptionRotation
 
+        # Email queue
+        {:email, _} ->
+          Castmill.Workers.EmailWorker
+
         _ ->
           require Logger
           Logger.error("Unknown job type: queue=#{queue_name}, name=#{job_name}")

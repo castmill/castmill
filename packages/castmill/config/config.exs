@@ -106,7 +106,8 @@ config :castmill, :bullmq,
     {:video_transcoder, concurrency: 10},
     {:integration_polling, concurrency: 5},
     {:integrations, concurrency: 5},
-    {:maintenance, concurrency: 2}
+    {:maintenance, concurrency: 2},
+    {:email, concurrency: 5}
   ]
 
 # Configure Spotify OAuth (widget integration)
