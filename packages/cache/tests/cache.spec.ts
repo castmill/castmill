@@ -2,9 +2,10 @@
 
 import 'fake-indexeddb/auto';
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 
 import { Cache, ItemType } from '../src/cache';
+import { StorageIntegration } from '../src/storage.integration';
 import { StorageMockup } from './storage.mockup';
 
 describe('Cache', () => {

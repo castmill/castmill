@@ -438,8 +438,8 @@ export class Device extends EventEmitter {
 
           // Refresh the page to initialize the player with the new credentials.
           window.location.reload();
-          // Unreachable: page will reload, but TypeScript requires a return value
-          return '';
+          // If reload is blocked or no-op, prevent continuing with an invalid pincode.
+          throw new Error('Page reload was blocked after device recovery');
         } else {
           throw new Error(`Invalid status ${pincodeResponse.status}`);
         }
@@ -484,7 +484,10 @@ export class Device extends EventEmitter {
           this.initHeartbeat(phoenixChannel);
         })
         .catch(async (error) => {
-          if (error === AUTH_ERROR_INVALID_DEVICE) {
+          if (
+            error === AUTH_ERROR_INVALID_DEVICE ||
+            error === AUTH_ERROR_UNAUTHORIZED
+          ) {
             // Clean all app data and refresh the page.
             await this.integration.removeCredentials();
             window.location.reload();
@@ -622,6 +625,15 @@ export class Device extends EventEmitter {
       // Poll channel state to detect successful reconnection and rejoin
       // This handles the case where the initial join times out but a rejoin succeeds
       stateCheckInterval = setInterval(() => {
+        // If the device is closing while we're still trying to log in, cancel the attempt
+        if (this.closing) {
+          this.logger.info(
+            'Device is closing while waiting for login, cancelling login attempt.'
+          );
+          safeReject(new Error('Login cancelled because device is closing'));
+          return;
+        }
+
         if (!settled && channel.state === 'joined') {
           safeResolve(channel);
         }

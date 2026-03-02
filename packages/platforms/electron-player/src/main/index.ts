@@ -8,7 +8,7 @@ import {
   net,
   session,
 } from 'electron';
-import { join } from 'path';
+import { join, normalize, resolve } from 'path';
 import { pathToFileURL } from 'url';
 import { electronApp, optimizer, is } from '@electron-toolkit/utils';
 import Store from 'electron-store';
@@ -88,11 +88,21 @@ protocol.registerSchemesAsPrivileged([
 // eslint-disable-next-line no-unused-labels
 file: app.whenReady().then(() => {
   protocol.handle(LOCAL_URL_SCHEME, async (request: Request) => {
-    const localPath = request.url.slice(LOCAL_URL_SCHEME.length + 3); // 3 for '://
+    const localPath = decodeURIComponent(
+      request.url.slice(LOCAL_URL_SCHEME.length + 3) // 3 for '://
+    );
 
-    const fullPath = pathToFileURL(
-      join(app.getPath('userData'), CACHE_DIR, localPath)
-    ).toString();
+    // Sanitize: resolve to an absolute path and ensure it stays within the cache root
+    const cacheRoot = resolve(app.getPath('userData'), CACHE_DIR);
+    const resolvedPath = resolve(cacheRoot, normalize(localPath));
+
+    if (!resolvedPath.startsWith(cacheRoot)) {
+      throw new Error(
+        `Path traversal blocked: ${localPath} resolves outside cache directory`
+      );
+    }
+
+    const fullPath = pathToFileURL(resolvedPath).toString();
 
     try {
       return net.fetch(fullPath);
