@@ -137,10 +137,10 @@ defmodule Castmill.Networks do
       %{resource: :channels, max: 20},
       %{resource: :users, max: 50},
       %{resource: :layouts, max: 100},
-      # 1 GB storage (in bytes)
-      %{resource: :storage, max: 1_073_741_824},
-      # 2 GB max upload size per file (in bytes)
-      %{resource: :max_upload_size, max: 2_147_483_648}
+      # 1 GB storage (in MB)
+      %{resource: :storage, max: 1024},
+      # 2 GB max upload size per file (in MB)
+      %{resource: :max_upload_size, max: 2048}
     ]
 
     # Create the default plan
@@ -695,10 +695,15 @@ defmodule Castmill.Networks do
   end
 
   defp send_network_invitation_email(invitation) do
+    # Derive the dashboard URL from the network's domain
+    network = Repo.get(Castmill.Networks.Network, invitation.network_id)
+
     dashboard_url =
-      System.get_env("CASTMILL_DASHBOARD_URI") ||
-        System.get_env("DASHBOARD_URL") ||
+      if network && network.domain && network.domain != "" do
+        "https://#{network.domain}"
+      else
         "http://localhost:3000"
+      end
 
     UserNotifier.deliver_network_invitation_instructions(
       invitation,

@@ -30,9 +30,8 @@ defmodule CastmillWeb.UploadControllerTest do
       conn: conn,
       organization: organization
     } do
-      # Set max_upload_size quota to 1 MB (in bytes)
-      max_upload_bytes = 1 * 1024 * 1024
-      Quotas.add_quota_to_organization(organization.id, :max_upload_size, max_upload_bytes)
+      # Set max_upload_size quota to 1 MB (quotas are stored in MB)
+      Quotas.add_quota_to_organization(organization.id, :max_upload_size, 1)
 
       # Create a temporary JPEG file larger than 1 MB (2 MB)
       temp_file_path = create_temp_jpeg_file(2 * 1024 * 1024)
@@ -54,8 +53,9 @@ defmodule CastmillWeb.UploadControllerTest do
 
       assert response["error"] == "File too large"
       assert response["message"] =~ "exceeds the maximum upload size limit"
-      assert response["max_size"] == max_upload_bytes
-      assert response["file_size"] > max_upload_bytes
+      # max_size is returned in bytes by the controller
+      assert response["max_size"] == 1 * 1024 * 1024
+      assert response["file_size"] > 1 * 1024 * 1024
 
       # Cleanup
       File.rm(temp_file_path)
@@ -65,8 +65,8 @@ defmodule CastmillWeb.UploadControllerTest do
       conn: conn,
       organization: organization
     } do
-      # Set max_upload_size quota to 10 MB (in bytes)
-      Quotas.add_quota_to_organization(organization.id, :max_upload_size, 10 * 1024 * 1024)
+      # Set max_upload_size quota to 10 MB (quotas are stored in MB)
+      Quotas.add_quota_to_organization(organization.id, :max_upload_size, 10)
 
       # Create a temporary JPEG file smaller than 10 MB (1 MB)
       temp_file_path = create_temp_jpeg_file(1 * 1024 * 1024)
@@ -111,11 +111,11 @@ defmodule CastmillWeb.UploadControllerTest do
       conn: conn,
       organization: organization
     } do
-      # Set max_upload_size quota to 10 MB in bytes (allows the file)
-      Quotas.add_quota_to_organization(organization.id, :max_upload_size, 10 * 1024 * 1024)
+      # Set max_upload_size quota to 10 MB (quotas are stored in MB, allows the file)
+      Quotas.add_quota_to_organization(organization.id, :max_upload_size, 10)
 
-      # Set storage quota to 1 MB in bytes (will be exceeded)
-      Quotas.add_quota_to_organization(organization.id, :storage, 1 * 1024 * 1024)
+      # Set storage quota to 1 MB (quotas are stored in MB, will be exceeded)
+      Quotas.add_quota_to_organization(organization.id, :storage, 1)
 
       # Create a temporary JPEG file: 2 MB (within max_upload_size, exceeds storage)
       temp_file_path = create_temp_jpeg_file(2 * 1024 * 1024)
@@ -146,8 +146,11 @@ defmodule CastmillWeb.UploadControllerTest do
       conn: _conn,
       organization: organization
     } do
-      # Organization should have default 2 GB quota (stored in bytes)
-      max_upload_bytes = Quotas.get_quota_for_organization(organization.id, :max_upload_size)
+      # Organization should have default 2 GB quota (stored as 2048 MB)
+      # Use get_quota_for_organization_bytes to get the value in bytes
+      max_upload_bytes =
+        Quotas.get_quota_for_organization_bytes(organization.id, :max_upload_size)
+
       assert max_upload_bytes == 2_147_483_648
     end
   end

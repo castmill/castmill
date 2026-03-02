@@ -1267,7 +1267,10 @@
       "fileTooLarge": "파일 크기({{fileSize}})가 최대 업로드 제한({{maxSize}})을 초과합니다",
       "largeFileWarning": "대용량 파일({{fileSize}}). 업로드에 시간이 걸릴 수 있습니다.",
       "noValidFiles": "업로드할 유효한 파일이 없습니다.",
-      "uploadError": "파일 업로드 중 오류가 발생했습니다."
+      "uploadError": "파일 업로드 중 오류가 발생했습니다.",
+      "uploadFailed": "업로드 실패: {{error}}",
+      "serverError": "서버 오류 (상태 {{status}})",
+      "unknownError": "알 수 없는 오류"
     }
   },
   "dashboard": {

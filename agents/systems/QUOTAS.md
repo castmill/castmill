@@ -90,10 +90,26 @@ Castmill.Quotas.has_organization_enough_quota?(organization_id, resource, amount
 # Check if network has enough quota
 Castmill.Quotas.has_network_enough_quota?(network_id, resource, amount)
 
-# Get current usage for a resource
+# Get current usage for a resource (count for most resources, bytes for :storage)
 Castmill.Quotas.get_quota_used_for_organization(organization_id, schema_module)
 Castmill.Quotas.get_quota_used_for_organization(organization_id, :storage)
 ```
+
+### Byte-safe Quota Lookups
+
+Storage and max_upload_size quotas are stored in **MB** in the database, but file
+sizes and usage are measured in **bytes**. Use `get_quota_for_organization_bytes/2`
+to get quotas already converted to bytes so comparisons are unit-safe:
+
+```elixir
+# Returns bytes for storage/max_upload_size, raw count for everything else
+Castmill.Quotas.get_quota_for_organization_bytes(organization_id, :storage)
+Castmill.Quotas.get_quota_for_organization_bytes(organization_id, :max_upload_size)
+Castmill.Quotas.get_quota_for_organization_bytes(organization_id, "medias")  # unchanged
+```
+
+Prefer this over `get_quota_for_organization/2` whenever you are comparing a quota
+limit with byte-level usage (uploads, storage totals, etc.).
 
 ### Managing Plans
 
@@ -101,7 +117,7 @@ Castmill.Quotas.get_quota_used_for_organization(organization_id, :storage)
 # Create a plan with quotas
 Castmill.Quotas.create_plan("Pro", network_id, [
   %{resource: "devices", max: 100},
-  %{resource: "storage", max: 10_737_418_240}
+  %{resource: "storage", max: 1024}       # 1024 MB = 1 GB
 ])
 
 # List plans
@@ -132,20 +148,33 @@ Castmill.Quotas.update_quota(quotas_organization, %{max: new_max})
 
 ## Resource Types
 
-Resources are stored as strings. Common resource types include:
+The `resource` column in all quota tables uses `Ecto.Enum`, which means:
 
-| Resource | Schema Module | Description |
-|----------|---------------|-------------|
-| `"devices"` | `Castmill.Devices.Device` | Number of devices |
-| `"channels"` | `Castmill.Resources.Channel` | Number of channels |
-| `"playlists"` | `Castmill.Resources.Playlist` | Number of playlists |
-| `"medias"` | `Castmill.Resources.Media` | Number of media items |
-| `"users"` | `Castmill.Organizations.OrganizationsUsers` | Number of users |
-| `:storage` | (special) | Total file storage in bytes |
-| `:max_upload_size` | (special) | Max upload size per file in bytes |
+- **In Elixir code**: resources are **atoms** (`:medias`, `:storage`, `:max_upload_size`, etc.)
+- **In the database**: Ecto.Enum stores them as their **string** representation (`"medias"`, `"storage"`, etc.)
+- **In queries**: both atoms and strings work — Ecto.Enum coerces strings to the matching atom before querying, so `get_quota_for_organization(org_id, "medias")` and `get_quota_for_organization(org_id, :medias)` are equivalent.
 
-> **Note:** The `max` column in all quota tables uses `bigint` (int8) to support
-> storing byte values for storage and max_upload_size without overflow.
+The full list of allowed values (defined identically in `PlansQuotas`, `QuotasNetworks`, and `QuotasOrganizations`):
+
+| Resource | Atom | Description | Unit |
+|----------|------|-------------|------|
+| organizations | `:organizations` | Number of organizations | count |
+| medias | `:medias` | Number of media items | count |
+| playlists | `:playlists` | Number of playlists | count |
+| channels | `:channels` | Number of channels | count |
+| channels_entries | `:channels_entries` | Number of channel entries | count |
+| devices | `:devices` | Number of devices | count |
+| users | `:users` | Number of users | count |
+| teams | `:teams` | Number of teams | count |
+| layouts | `:layouts` | Number of layouts | count |
+| storage | `:storage` | Total file storage quota | **MB** |
+| max_upload_size | `:max_upload_size` | Max upload size per file | **MB** |
+
+> **MB vs bytes**: The `max` value for `storage` and `max_upload_size` is stored
+> in megabytes. However, `get_quota_used_for_organization(:storage)` returns
+> **bytes** (sum of file sizes). Use `get_quota_for_organization_bytes/2` for
+> comparisons — it converts MB resources to bytes automatically and passes
+> through count-based resources unchanged.
 
 ## Integration with Billing (castmill-saas)
 

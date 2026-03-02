@@ -1268,7 +1268,10 @@
       "fileTooLarge": "ファイルサイズ（{{fileSize}}）が最大アップロード制限（{{maxSize}}）を超えています",
       "largeFileWarning": "大きなファイル（{{fileSize}}）。アップロードに時間がかかる場合があります。",
       "noValidFiles": "アップロードする有効なファイルがありません。",
-      "uploadError": "ファイルのアップロード中にエラーが発生しました。"
+      "uploadError": "ファイルのアップロード中にエラーが発生しました。",
+      "uploadFailed": "アップロード失敗：{{error}}",
+      "serverError": "サーバーエラー（ステータス {{status}}）",
+      "unknownError": "不明なエラー"
     }
   },
   "dashboard": {
