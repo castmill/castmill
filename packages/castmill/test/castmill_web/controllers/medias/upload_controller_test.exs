@@ -148,7 +148,9 @@ defmodule CastmillWeb.UploadControllerTest do
     } do
       # Organization should have default 2 GB quota (stored as 2048 MB)
       # Use get_quota_for_organization_bytes to get the value in bytes
-      max_upload_bytes = Quotas.get_quota_for_organization_bytes(organization.id, :max_upload_size)
+      max_upload_bytes =
+        Quotas.get_quota_for_organization_bytes(organization.id, :max_upload_size)
+
       assert max_upload_bytes == 2_147_483_648
     end
   end
