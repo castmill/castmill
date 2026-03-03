@@ -46,8 +46,19 @@ export const DeviceTimers: Component<{
         props.baseUrl,
         props.device.id
       );
-      setOnTimers(timers.on || []);
-      setOffTimers(timers.off || []);
+      // Cast the weekDays from string[] to WeekDay[]
+      setOnTimers(
+        (timers.on || []).map((t) => ({
+          ...t,
+          weekDays: t.weekDays as WeekDay[],
+        }))
+      );
+      setOffTimers(
+        (timers.off || []).map((t) => ({
+          ...t,
+          weekDays: t.weekDays as WeekDay[],
+        }))
+      );
       setIsModified(false);
     } catch (err) {
       toast.error(t('deviceTimers.timersLoadError'));
@@ -170,8 +181,7 @@ export const DeviceTimers: Component<{
     };
 
     const handleWeekDayToggle = (day: WeekDay, checked: boolean) => {
-      const timers =
-        rowProps.type === 'on' ? onTimers() : offTimers();
+      const timers = rowProps.type === 'on' ? onTimers() : offTimers();
       const newWeekDays = toggleWeekDay(timers, rowProps.index, day, checked);
       rowProps.onUpdate(rowProps.index, 'weekDays', newWeekDays);
     };
@@ -337,9 +347,7 @@ export const DeviceTimers: Component<{
       </div>
 
       <Show when={loading()}>
-        <div style="margin-top: 1em; color: #666;">
-          {t('common.loading')}
-        </div>
+        <div style="margin-top: 1em; color: #666;">{t('common.loading')}</div>
       </Show>
     </div>
   );
