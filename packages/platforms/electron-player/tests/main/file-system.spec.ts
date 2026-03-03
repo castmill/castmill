@@ -24,6 +24,9 @@ vi.mock('fs', () => ({
 }));
 
 vi.mock('electron', () => ({
+  app: {
+    getPath: vi.fn(() => '/mock/user/data'),
+  },
   net: {
     request: vi.fn(() => ({})),
   },
