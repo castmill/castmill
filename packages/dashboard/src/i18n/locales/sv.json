@@ -1276,7 +1276,7 @@
     }
   },
   "deviceTimers": {
-    "title": "Enhets Stromtimers",
+    "title": "Enhets Strömtimers",
     "description": "Konfigurera när enheten slås på och av automatiskt",
     "onTimers": "Slå på Timers",
     "offTimers": "Slå av Timers",

@@ -53,6 +53,7 @@ export function PlayerComponent(props: { device: Device }) {
               'border-radius': '10px',
             }}
           >
+            {/* TODO: Add i18n support to device package for translating this message */}
             <div style={{ 'margin-bottom': '1em' }}>
               Playback turned off by timer
             </div>

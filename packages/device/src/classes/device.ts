@@ -150,6 +150,7 @@ export class Device extends EventEmitter {
   private logger: Logger = new Logger();
   private logDiv?: HTMLDivElement;
   private socket?: Socket;
+  private timerCheckInterval?: NodeJS.Timeout;
 
   // The base url is the url of the Castmill API. By default it is assumed that the API is
   // hosted at the same domain as this device and accessible through a relative path.
@@ -1066,7 +1067,7 @@ export class Device extends EventEmitter {
         return false;
       }
       return (
-        timer.weekDays.includes(currentDay as any) ||
+        timer.weekDays.includes(currentDay as WeekDay) ||
         timer.weekDays.includes('ALL')
       );
     };
@@ -1176,8 +1177,6 @@ export class Device extends EventEmitter {
     }
     return null;
   }
-
-  private timerCheckInterval?: NodeJS.Timeout;
 
   setLogMode(logMode: 'remote' | 'local' | 'none') {
     if (supportedDebugModes.indexOf(logMode) !== -1) {

@@ -127,7 +127,7 @@ export const DeviceTimers: Component<{
   const updateOnTimer = (
     index: number,
     field: keyof TimerEntry,
-    value: any
+    value: TimerEntry[keyof TimerEntry]
   ) => {
     const timers = [...onTimers()];
     timers[index] = { ...timers[index], [field]: value };
@@ -138,7 +138,7 @@ export const DeviceTimers: Component<{
   const updateOffTimer = (
     index: number,
     field: keyof TimerEntry,
-    value: any
+    value: TimerEntry[keyof TimerEntry]
   ) => {
     const timers = [...offTimers()];
     timers[index] = { ...timers[index], [field]: value };
@@ -169,7 +169,11 @@ export const DeviceTimers: Component<{
   const TimerRow: Component<{
     timer: TimerEntry;
     index: number;
-    onUpdate: (index: number, field: keyof TimerEntry, value: any) => void;
+    onUpdate: (
+      index: number,
+      field: keyof TimerEntry,
+      value: TimerEntry[keyof TimerEntry]
+    ) => void;
     onRemove: (index: number) => void;
     type: 'on' | 'off';
   }> = (rowProps) => {

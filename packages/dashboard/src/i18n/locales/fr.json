@@ -1293,7 +1293,7 @@
     }
   },
   "deviceTimers": {
-    "title": "Minuteurs d'Alimentation du Appareil",
+    "title": "Minuteurs d'Alimentation de l'Appareil",
     "description": "Configurez quand l'appareil s'allume et s'éteint automatiquement",
     "onTimers": "Minuteurs d'Allumage",
     "offTimers": "Minuteurs d'Extinction",
