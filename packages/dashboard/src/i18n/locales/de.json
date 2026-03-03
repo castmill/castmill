@@ -84,6 +84,7 @@
     "maintainance": "Wartung",
     "events": "Ereignisse",
     "telemetry": "Telemetrie",
+    "timers": "Timer",
     "youIndicator": "(du)",
     "addonLoadingError": "Add-on-Ladefehler",
     "addonError": "Add-on-Fehler",
@@ -1273,5 +1274,33 @@
       "title": "Keine Organisationen",
       "description": "Sie gehören noch keiner Organisation in diesem Netzwerk an. Bitte kontaktieren Sie Ihren Netzwerkadministrator, um Zugang zu erhalten."
     }
+  },
+  "deviceTimers": {
+    "title": "Geräte-Stromtimer",
+    "description": "Konfigurieren Sie, wann sich das Gerät automatisch ein- und ausschaltet",
+    "onTimers": "Einschalttimer",
+    "offTimers": "Ausschalttimer",
+    "addOnTimer": "Einschalttimer Hinzufügen",
+    "addOffTimer": "Ausschalttimer Hinzufügen",
+    "time": "Zeit",
+    "days": "Tage",
+    "deleteTimer": "Timer Löschen",
+    "saveTimers": "Timer Speichern",
+    "maxTimersReached": "Maximum von 6 Timern erreicht",
+    "monday": "Mo",
+    "tuesday": "Di",
+    "wednesday": "Mi",
+    "thursday": "Do",
+    "friday": "Fr",
+    "saturday": "Sa",
+    "sunday": "So",
+    "allDays": "Alle Tage",
+    "noTimers": "Keine Timer konfiguriert",
+    "timersSaved": "Timer erfolgreich gespeichert",
+    "timersLoadError": "Fehler beim Laden der Timer",
+    "timersSaveError": "Fehler beim Speichern der Timer",
+    "playerOffByTimer": "Wiedergabe nach Timer ausgeschaltet",
+    "nextOnTime": "Nächste geplante Einschaltzeit: {time}",
+    "notSupported": "Timer-Hardware-Steuerung wird auf diesem Gerät nicht unterstützt. Verwende Software-Fallback."
   }
 }

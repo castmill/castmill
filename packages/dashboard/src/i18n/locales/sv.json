@@ -84,6 +84,7 @@
     "maintainance": "Underhåll",
     "events": "Händelser",
     "telemetry": "Telemetri",
+    "timers": "Timers",
     "youIndicator": "(du)",
     "addonLoadingError": "Fel vid laddning av tillägg",
     "addonError": "Tilläggsfel",
@@ -1273,5 +1274,33 @@
       "title": "Inga organisationer",
       "description": "Du tillhör inte någon organisation i detta nätverk ännu. Kontakta din nätverksadministratör för att få åtkomst."
     }
+  },
+  "deviceTimers": {
+    "title": "Enhets Stromtimers",
+    "description": "Konfigurera när enheten slås på och av automatiskt",
+    "onTimers": "Slå på Timers",
+    "offTimers": "Slå av Timers",
+    "addOnTimer": "Lägg till Slå på Timer",
+    "addOffTimer": "Lägg till Slå av Timer",
+    "time": "Tid",
+    "days": "Dagar",
+    "deleteTimer": "Ta bort Timer",
+    "saveTimers": "Spara Timers",
+    "maxTimersReached": "Maximum av 6 timers nådd",
+    "monday": "Mån",
+    "tuesday": "Tis",
+    "wednesday": "Ons",
+    "thursday": "Tor",
+    "friday": "Fre",
+    "saturday": "Lör",
+    "sunday": "Sön",
+    "allDays": "Alla Dagar",
+    "noTimers": "Inga timers konfigurerade",
+    "timersSaved": "Timers sparade framgångsrikt",
+    "timersLoadError": "Fel vid inläsning av timers",
+    "timersSaveError": "Fel vid sparande av timers",
+    "playerOffByTimer": "Uppspelning stängd av timer",
+    "nextOnTime": "Nästa schemalagda start: {time}",
+    "notSupported": "Timer-maskinvarukontroll stöds inte på denna enhet. Använder programvarubackup."
   }
 }
