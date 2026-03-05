@@ -40,6 +40,7 @@ import {
   HttpError,
   useToast,
   useTagFilter,
+  useTagFilterEffect,
   ViewModeToggle,
   ResourceTreeView,
   TreeResourceItem,
@@ -610,11 +611,14 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
     bumpTree();
   };
 
-  const handleTagChange = (tagIds: number[]) => {
-    setSelectedTagIds(tagIds);
-    refreshData();
-    bumpTree();
-  };
+  // Use hook to manage tag filter effects
+  const { handleTagChange } = useTagFilterEffect({
+    selectedTagIds,
+    setSelectedTagIds,
+    tagFilterMode,
+    onRefreshData: refreshData,
+    onRefreshTree: bumpTree,
+  });
 
   const updateItem = (itemId: number, item: Partial<JsonMedia>) => {
     if (tableViewRef) {

@@ -26,6 +26,7 @@ import {
   TeamFilter,
   TagFilter,
   useTagFilter,
+  useTagFilterEffect,
   Timestamp,
   ToastProvider,
   useToast,
@@ -500,11 +501,14 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
     bumpTree();
   };
 
-  const handleTagChange = (tagIds: number[]) => {
-    setSelectedTagIds(tagIds);
-    refreshData();
-    bumpTree();
-  };
+  // Use hook to manage tag filter effects
+  const { handleTagChange } = useTagFilterEffect({
+    selectedTagIds,
+    setSelectedTagIds,
+    tagFilterMode,
+    onRefreshData: refreshData,
+    onRefreshTree: bumpTree,
+  });
 
   // Fetch resources for tree view nodes (filter by tag IDs in AND mode)
   const fetchTreeResources = async (tagIds: number[]) => {

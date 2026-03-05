@@ -23,6 +23,7 @@ import {
   TeamFilter,
   TagFilter,
   useTagFilter,
+  useTagFilterEffect,
   FetchDataOptions,
   ToastProvider,
   useToast,
@@ -479,10 +480,15 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
    */
   const mapErrorToMessage = (error: any): string => {
     // Default error message
-    let errorMessage = t('devices.errorRegisteringDevice', { error: String(error) });
+    let errorMessage = t('devices.errorRegisteringDevice', {
+      error: String(error),
+    });
 
     // Check if this is an HttpError with pincode-specific error
-    if (error?.details?.field === 'pincode' && error?.details?.errors?.pincode) {
+    if (
+      error?.details?.field === 'pincode' &&
+      error?.details?.errors?.pincode
+    ) {
       const pincodeError = error.details.errors.pincode[0];
 
       // Map backend error messages to translation keys
@@ -743,11 +749,14 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
     bumpTree();
   };
 
-  const handleTagChange = (tagIds: number[]) => {
-    setSelectedTagIds(tagIds);
-    refreshData();
-    bumpTree();
-  };
+  // Use hook to manage tag filter effects
+  const { handleTagChange } = useTagFilterEffect({
+    selectedTagIds,
+    setSelectedTagIds,
+    tagFilterMode,
+    onRefreshData: refreshData,
+    onRefreshTree: bumpTree,
+  });
 
   // Fetch resources for tree view nodes (filter by tag IDs in AND mode)
   const fetchTreeResources = async (tagIds: number[]) => {
