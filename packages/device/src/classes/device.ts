@@ -15,7 +15,7 @@ import {
   StorageIntegration,
   ItemType,
 } from '@castmill/cache';
-import { Machine, DeviceInfo } from '../interfaces/machine';
+import { Machine, DeviceInfo, Timers, TimerEntry } from '../interfaces/machine';
 import { getCastmillIntro } from './intro';
 import { Channel, JsonChannel } from './channel';
 import { Schema } from '../interfaces';
@@ -98,8 +98,17 @@ interface CacheDeleteRequest {
 }
 
 interface DeviceRequest {
-  resource: 'cache' | 'telemetry';
+  resource: 'cache' | 'telemetry' | 'timers';
   opts: CachePage & { ref: string };
+}
+
+interface DeviceSetRequest {
+  resource: 'timers';
+  timers: {
+    on: Array<{ hours: number; minutes: number; weekDays: string[] }>;
+    off: Array<{ hours: number; minutes: number; weekDays: string[] }>;
+  };
+  opts: { ref: string };
 }
 
 interface DeviceDeleteRequest {
@@ -141,6 +150,7 @@ export class Device extends EventEmitter {
   private logger: Logger = new Logger();
   private logDiv?: HTMLDivElement;
   private socket?: Socket;
+  private timerCheckInterval?: NodeJS.Timeout;
 
   // The base url is the url of the Castmill API. By default it is assumed that the API is
   // hosted at the same domain as this device and accessible through a relative path.
@@ -218,6 +228,8 @@ export class Device extends EventEmitter {
     this.emitProgress(5, 5, 'Starting player');
 
     this.emit('started', device);
+    // Start timer checks if using software fallback
+    this.scheduleTimerChecks();
 
     // this.player.play({ loop: true });
 
@@ -688,6 +700,24 @@ export class Device extends EventEmitter {
           const telemetry = (await this.integration.getTelemetry?.()) ?? {};
           channel.push('res:get', { telemetry, ref: opts.ref });
           break;
+        case 'timers':
+          const timers = await this.getTimers();
+          channel.push('res:get', { timers, ref: opts.ref });
+          break;
+      }
+    });
+
+    channel.on('set', async (payload: DeviceSetRequest) => {
+      const { resource, timers, opts } = payload;
+      switch (resource) {
+        case 'timers':
+          try {
+            await this.setTimers(timers as Timers);
+            channel.push('res:set', { success: true, ref: opts.ref });
+          } catch (error) {
+            channel.push('res:set', { success: false, ref: opts.ref });
+          }
+          break;
       }
     });
 
@@ -945,6 +975,207 @@ export class Device extends EventEmitter {
 
   updateFirmware() {
     return this.integration.updateFirmware?.();
+  }
+
+  /**
+   * Get timers. If the hardware supports getTimers, use that.
+   * Otherwise, use the fallback implementation that stores timers in settings.
+   */
+  async getTimers(): Promise<Timers> {
+    // Try hardware implementation first
+    if (this.integration.getTimers) {
+      try {
+        return await this.integration.getTimers();
+      } catch (error) {
+        console.warn('Hardware getTimers failed, using fallback:', error);
+      }
+    }
+
+    // Fallback: read from settings
+    const timersJson = await this.integration.getSetting('TIMERS');
+    if (timersJson) {
+      try {
+        return JSON.parse(timersJson);
+      } catch {
+        return { on: [], off: [] };
+      }
+    }
+    return { on: [], off: [] };
+  }
+
+  /**
+   * Set timers. If the hardware supports setTimers, use that.
+   * Otherwise, use the fallback implementation that stores timers in settings
+   * and implements software-based on/off control.
+   */
+  async setTimers(timers: Timers): Promise<void> {
+    // Try hardware implementation first
+    if (this.integration.setTimers) {
+      try {
+        await this.integration.setTimers(timers);
+        // Also save to settings as backup
+        await this.integration.setSetting('TIMERS', JSON.stringify(timers));
+        return;
+      } catch (error) {
+        console.warn('Hardware setTimers failed, using fallback:', error);
+      }
+    }
+
+    // Fallback: store in settings
+    await this.integration.setSetting('TIMERS', JSON.stringify(timers));
+    
+    // Schedule timer checks
+    this.scheduleTimerChecks();
+  }
+
+  /**
+   * Schedule periodic checks for software timer implementation
+   */
+  private scheduleTimerChecks() {
+    // Check timers every minute
+    if (this.timerCheckInterval) {
+      clearInterval(this.timerCheckInterval);
+    }
+
+    this.timerCheckInterval = setInterval(() => {
+      this.checkTimers();
+    }, 60000); // Check every minute
+
+    // Also check immediately
+    this.checkTimers();
+  }
+
+  /**
+   * Check if any timer should trigger now (software fallback implementation)
+   */
+  private async checkTimers() {
+    // Only use software timers if hardware doesn't support them
+    if (this.integration.setTimers) {
+      return;
+    }
+
+    const timers = await this.getTimers();
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    const currentDay = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'][
+      now.getDay()
+    ];
+
+    const isTimerActive = (timer: TimerEntry) => {
+      if (timer.hours !== currentHour || timer.minutes !== currentMinute) {
+        return false;
+      }
+      return (
+        timer.weekDays.includes(currentDay as WeekDay) ||
+        timer.weekDays.includes('ALL')
+      );
+    };
+
+    // Check off timers
+    const shouldTurnOff = timers.off.some(isTimerActive);
+    if (shouldTurnOff) {
+      await this.integration.setSetting('TIMER_OFF', 'true');
+      await this.integration.setSetting(
+        'TIMER_OFF_TIME',
+        now.toISOString()
+      );
+      // Find next on timer
+      const nextOn = this.findNextTimer(timers.on, now);
+      if (nextOn) {
+        await this.integration.setSetting(
+          'TIMER_NEXT_ON',
+          nextOn.toISOString()
+        );
+      }
+      // Stop player and show black screen
+      if (this.player) {
+        await this.player.stop();
+      }
+      return;
+    }
+
+    // Check on timers
+    const shouldTurnOn = timers.on.some(isTimerActive);
+    if (shouldTurnOn) {
+      const wasOff = await this.integration.getSetting('TIMER_OFF');
+      if (wasOff === 'true') {
+        await this.integration.setSetting('TIMER_OFF', 'false');
+        // Reload to start fresh
+        location.reload();
+      }
+    }
+  }
+
+  /**
+   * Find the next timer occurrence after the given time
+   */
+  private findNextTimer(timers: TimerEntry[], after: Date): Date | null {
+    if (timers.length === 0) return null;
+
+    const dayMap: Record<string, number> = {
+      SUN: 0,
+      MON: 1,
+      TUE: 2,
+      WED: 3,
+      THU: 4,
+      FRI: 5,
+      SAT: 6,
+    };
+
+    let closestTime: Date | null = null;
+    let minDiff = Infinity;
+
+    for (const timer of timers) {
+      const days =
+        timer.weekDays.includes('ALL')
+          ? [0, 1, 2, 3, 4, 5, 6]
+          : timer.weekDays.map((d) => dayMap[d]);
+
+      for (const day of days) {
+        const timerDate = new Date(after);
+        timerDate.setHours(timer.hours, timer.minutes, 0, 0);
+
+        // Adjust to correct day of week
+        const currentDay = after.getDay();
+        let daysToAdd = day - currentDay;
+        if (daysToAdd < 0 || (daysToAdd === 0 && timerDate <= after)) {
+          daysToAdd += 7;
+        }
+        timerDate.setDate(timerDate.getDate() + daysToAdd);
+
+        const diff = timerDate.getTime() - after.getTime();
+        if (diff > 0 && diff < minDiff) {
+          minDiff = diff;
+          closestTime = timerDate;
+        }
+      }
+    }
+
+    return closestTime;
+  }
+
+  /**
+   * Check if player is currently off due to timer
+   */
+  async isTimerOff(): Promise<boolean> {
+    const timerOff = await this.integration.getSetting('TIMER_OFF');
+    return timerOff === 'true';
+  }
+
+  /**
+   * Get next scheduled on time
+   */
+  async getNextOnTime(): Promise<Date | null> {
+    const nextOnStr = await this.integration.getSetting('TIMER_NEXT_ON');
+    if (nextOnStr) {
+      try {
+        return new Date(nextOnStr);
+      } catch {
+        return null;
+      }
+    }
+    return null;
   }
 
   setLogMode(logMode: 'remote' | 'local' | 'none') {

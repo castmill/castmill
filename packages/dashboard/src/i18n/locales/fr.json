@@ -84,6 +84,7 @@
     "maintainance": "Maintenance",
     "events": "Événements",
     "telemetry": "Télémétrie",
+    "timers": "Minuteurs",
     "youIndicator": "(vous)",
     "addonLoadingError": "Erreur de chargement de l'extension",
     "filters": {
@@ -1290,5 +1291,33 @@
       "title": "Aucune organisation",
       "description": "Vous n'appartenez à aucune organisation dans ce réseau. Veuillez contacter votre administrateur réseau pour obtenir l'accès."
     }
+  },
+  "deviceTimers": {
+    "title": "Minuteurs d'Alimentation de l'Appareil",
+    "description": "Configurez quand l'appareil s'allume et s'éteint automatiquement",
+    "onTimers": "Minuteurs d'Allumage",
+    "offTimers": "Minuteurs d'Extinction",
+    "addOnTimer": "Ajouter un Minuteur d'Allumage",
+    "addOffTimer": "Ajouter un Minuteur d'Extinction",
+    "time": "Heure",
+    "days": "Jours",
+    "deleteTimer": "Supprimer le Minuteur",
+    "saveTimers": "Enregistrer les Minuteurs",
+    "maxTimersReached": "Maximum de 6 minuteurs atteint",
+    "monday": "Lun",
+    "tuesday": "Mar",
+    "wednesday": "Mer",
+    "thursday": "Jeu",
+    "friday": "Ven",
+    "saturday": "Sam",
+    "sunday": "Dim",
+    "allDays": "Tous les Jours",
+    "noTimers": "Aucun minuteur configuré",
+    "timersSaved": "Minuteurs enregistrés avec succès",
+    "timersLoadError": "Erreur lors du chargement des minuteurs",
+    "timersSaveError": "Erreur lors de l'enregistrement des minuteurs",
+    "playerOffByTimer": "Lecture éteinte par minuteur",
+    "nextOnTime": "Prochain allumage programmé: {time}",
+    "notSupported": "Contrôle matériel du minuteur non supporté sur cet appareil. Utilisation du secours logiciel."
   }
 }

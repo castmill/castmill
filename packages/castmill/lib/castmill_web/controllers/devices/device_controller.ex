@@ -24,7 +24,9 @@ defmodule CastmillWeb.DeviceController do
              :remove_channel,
              :list_events,
              :delete_events,
-             :get_telemetry
+             :get_telemetry,
+             :get_timers,
+             :set_timers
            ] do
     # Device can access its own resources for these actions
     if actor_id == device_id do
@@ -98,7 +100,9 @@ defmodule CastmillWeb.DeviceController do
            :get_channels,
            :get_playlist,
            :list_events,
-           :get_telemetry
+           :get_telemetry,
+           :get_timers,
+           :set_timers
          ]
   )
 
@@ -279,6 +283,86 @@ defmodule CastmillWeb.DeviceController do
         conn
         |> put_status(:request_timeout)
         |> json(%{error: "No response from device. It may be offline."})
+    end
+  end
+
+  def get_timers(conn, %{"device_id" => device_id}) do
+    pid = self()
+
+    ref =
+      pid
+      |> :erlang.term_to_binary()
+      |> Base.url_encode64()
+
+    Phoenix.PubSub.broadcast(Castmill.PubSub, "devices:#{device_id}", %{
+      get: "timers",
+      payload: %{
+        resource: "timers",
+        opts: %{
+          ref: ref
+        }
+      }
+    })
+
+    receive do
+      {:device_response, data} ->
+        conn
+        |> put_status(:ok)
+        |> json(data)
+    after
+      5_000 ->
+        conn
+        |> put_status(:request_timeout)
+        |> json(%{error: "No response from device. It may be offline."})
+    end
+  end
+
+  @set_timers_schema %{
+    device_id: [type: :string],
+    on: [type: {:array, :map}],
+    off: [type: {:array, :map}]
+  }
+
+  def set_timers(conn, %{"device_id" => device_id} = params) do
+    with {:ok, params} <- Tarams.cast(params, @set_timers_schema) do
+      pid = self()
+
+      ref =
+        pid
+        |> :erlang.term_to_binary()
+        |> Base.url_encode64()
+
+      Phoenix.PubSub.broadcast(Castmill.PubSub, "devices:#{device_id}", %{
+        set: "timers",
+        payload: %{
+          resource: "timers",
+          timers: %{
+            on: params.on,
+            off: params.off
+          },
+          opts: %{
+            ref: ref
+          }
+        }
+      })
+
+      receive do
+        {:device_response, data} ->
+          conn
+          |> put_status(:ok)
+          |> json(data)
+      after
+        5_000 ->
+          conn
+          |> put_status(:request_timeout)
+          |> json(%{error: "No response from device. It may be offline."})
+      end
+    else
+      {:error, errors} ->
+        conn
+        |> put_status(:bad_request)
+        |> Phoenix.Controller.json(%{errors: errors})
+        |> halt()
     end
   end
 

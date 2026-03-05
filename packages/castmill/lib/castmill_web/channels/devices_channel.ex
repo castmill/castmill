@@ -66,6 +66,30 @@ defmodule CastmillWeb.DevicesChannel do
   end
 
   @impl true
+  def handle_in("res:get", %{"ref" => ref, "timers" => timers}, socket) do
+    pid =
+      ref
+      |> Base.url_decode64!()
+      |> :erlang.binary_to_term()
+
+    send(pid, {:device_response, timers})
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_in("res:set", %{"ref" => ref, "success" => success}, socket) do
+    pid =
+      ref
+      |> Base.url_decode64!()
+      |> :erlang.binary_to_term()
+
+    send(pid, {:device_response, %{success: success}})
+
+    {:noreply, socket}
+  end
+
+  @impl true
   def handle_in("res:delete", %{"ref" => ref, "result" => result}, socket) do
     IO.puts("Received res:delete with ref: #{inspect(ref)} and result: #{inspect(result)}")
     # Convert the PID ref string back to a PID
@@ -105,6 +129,12 @@ defmodule CastmillWeb.DevicesChannel do
   @impl true
   def handle_info(%{get: _resource, payload: payload}, socket) do
     push(socket, "get", payload)
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_info(%{set: _resource, payload: payload}, socket) do
+    push(socket, "set", payload)
     {:noreply, socket}
   end
 

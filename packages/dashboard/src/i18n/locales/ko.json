@@ -84,6 +84,7 @@
     "maintainance": "유지보수",
     "events": "이벤트",
     "telemetry": "원격 측정",
+    "timers": "타이머",
     "youIndicator": "(본인)",
     "addonLoadingError": "애드온 로딩 오류",
     "filters": {
@@ -1278,5 +1279,33 @@
       "title": "조직 없음",
       "description": "아직 이 네트워크의 조직에 소속되어 있지 않습니다. 네트워크 관리자에게 연락하여 액세스 권한을 받으세요."
     }
+  },
+  "deviceTimers": {
+    "title": "기기 전원 타이머",
+    "description": "기기가 자동으로 켜지고 꺼지는 시간을 설정하십시오",
+    "onTimers": "켜짐 타이머",
+    "offTimers": "꺼짐 타이머",
+    "addOnTimer": "켜짐 타이머 추가",
+    "addOffTimer": "꺼짐 타이머 추가",
+    "time": "시간",
+    "days": "요일",
+    "deleteTimer": "타이머 삭제",
+    "saveTimers": "타이머 저장",
+    "maxTimersReached": "최대 6개의 타이머에 도달했습니다",
+    "monday": "월",
+    "tuesday": "화",
+    "wednesday": "수",
+    "thursday": "목",
+    "friday": "금",
+    "saturday": "토",
+    "sunday": "일",
+    "allDays": "모든 요일",
+    "noTimers": "구성된 타이머 없음",
+    "timersSaved": "타이머가 성공적으로 저장되었습니다",
+    "timersLoadError": "타이머 로드 오류",
+    "timersSaveError": "타이머 저장 오류",
+    "playerOffByTimer": "재생이 타이머에 의해 꺼졌습니다",
+    "nextOnTime": "다음 예약된 켜짐: {time}",
+    "notSupported": "이 기기에서는 타이머 하드웨어 제어가 지원되지 않습니다. 소프트웨어 폴백을 사용합니다."
   }
 }

@@ -84,6 +84,7 @@
     "maintainance": "メンテナンス",
     "events": "イベント",
     "telemetry": "テレメトリ",
+    "timers": "タイマー",
     "youIndicator": "(あなた)",
     "addonLoadingError": "アドオン読み込みエラー",
     "filters": {
@@ -1279,5 +1280,33 @@
       "title": "組織がありません",
       "description": "このネットワークのどの組織にもまだ所属していません。ネットワーク管理者に連絡してアクセス権を取得してください。"
     }
+  },
+  "deviceTimers": {
+    "title": "デバイス電源タイマー",
+    "description": "デバイスが自動的にオン/オフになる時間を設定します",
+    "onTimers": "オンタイマー",
+    "offTimers": "オフタイマー",
+    "addOnTimer": "オンタイマーを追加",
+    "addOffTimer": "オフタイマーを追加",
+    "time": "時間",
+    "days": "曜日",
+    "deleteTimer": "タイマーを削除",
+    "saveTimers": "タイマーを保存",
+    "maxTimersReached": "最大6つのタイマーに達しました",
+    "monday": "月",
+    "tuesday": "火",
+    "wednesday": "水",
+    "thursday": "木",
+    "friday": "金",
+    "saturday": "土",
+    "sunday": "日",
+    "allDays": "全日",
+    "noTimers": "構成されたタイマーなし",
+    "timersSaved": "タイマーが正常に保存されました",
+    "timersLoadError": "タイマーの読み込みエラー",
+    "timersSaveError": "タイマーの保存エラー",
+    "playerOffByTimer": "タイマーで再生が終了しました",
+    "nextOnTime": "次のスケジュールオン時間: {time}",
+    "notSupported": "このデバイスではタイマーハードウェア制御がサポートされていません。ソフトウェアフォールバックを使用しています。"
   }
 }

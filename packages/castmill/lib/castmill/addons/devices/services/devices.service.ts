@@ -370,6 +370,73 @@ export const DevicesService = {
   },
 
   /**
+   * Get device timers (proxied through the backend WebSocket).
+   */
+  async getDeviceTimers(baseUrl: string, deviceId: string) {
+    const response = await fetch(
+      `${baseUrl}/dashboard/devices/${deviceId}/timers`,
+      {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    return handleResponse<{
+      on: Array<{
+        hours: number;
+        minutes: number;
+        weekDays: string[];
+      }>;
+      off: Array<{
+        hours: number;
+        minutes: number;
+        weekDays: string[];
+      }>;
+    }>(response, {
+      parse: true,
+    });
+  },
+
+  /**
+   * Set device timers (proxied through the backend WebSocket).
+   */
+  async setDeviceTimers(
+    baseUrl: string,
+    deviceId: string,
+    timers: {
+      on: Array<{
+        hours: number;
+        minutes: number;
+        weekDays: string[];
+      }>;
+      off: Array<{
+        hours: number;
+        minutes: number;
+        weekDays: string[];
+      }>;
+    }
+  ) {
+    const response = await fetch(
+      `${baseUrl}/dashboard/devices/${deviceId}/timers`,
+      {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(timers),
+      }
+    );
+
+    return handleResponse<{ success: boolean }>(response, {
+      parse: true,
+    });
+  },
+
+  /**
    * Remove Device.
    */
   async removeDevice(
