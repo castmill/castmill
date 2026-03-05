@@ -67,8 +67,12 @@ defmodule CastmillWeb.SessionController do
          # Check the user presence bit is set.
          # outcommented as I am not sure what this is used for...
          # true <- (:binary.at(authenticator_data, 32) &&& 1) == 1,
-         # Make sure the signed origin matches what we expect.
-         true <- :binary.part(authenticator_data, 0, 32) == :crypto.hash(:sha256, "localhost"),
+         # Make sure the signed RP ID matches the origin from client_data_json.
+         # The browser sets the RP ID to window.location.hostname and hashes it
+         # into the first 32 bytes of authenticator_data. We derive the expected
+         # RP ID from the already-validated origin in client_data_json.
+         rp_id when is_binary(rp_id) <- URI.parse(client_data_json["origin"]).host,
+         true <- :binary.part(authenticator_data, 0, 32) == :crypto.hash(:sha256, rp_id),
          # Log in the user (returns {:error, reason} if blocked)
          conn when is_map(conn) <-
            SessionUtils.log_in_user(
