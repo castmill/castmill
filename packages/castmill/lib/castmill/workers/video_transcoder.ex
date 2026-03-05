@@ -154,7 +154,7 @@ defmodule Castmill.Workers.VideoTranscoder do
 
         {:ok, _media} =
           Resources.update_media(%Media{id: media_id}, %{
-            status: :error,
+            status: :failed,
             status_message: "Error: #{inspect(e)}"
           })
 
@@ -248,6 +248,10 @@ defmodule Castmill.Workers.VideoTranscoder do
     listen_for_progress(port, media_id, total_duration, acc_progress)
   end
 
+  # Timeout for receiving FFmpeg progress data. If no data is received within this
+  # period, FFmpeg is assumed to have been killed (e.g., OOM on constrained containers).
+  @ffmpeg_receive_timeout_ms 120_000
+
   defp listen_for_progress(port, media_id, total_duration, acc_progress) do
     receive do
       {^port, {:data, data}} ->
@@ -265,6 +269,22 @@ defmodule Castmill.Workers.VideoTranscoder do
         else
           {:error, :ffmpeg_failed}
         end
+    after
+      @ffmpeg_receive_timeout_ms ->
+        # FFmpeg stopped sending data — likely OOM-killed or hung.
+        # Try to kill the port to clean up, then fail the job.
+        Logger.error(
+          "FFmpeg timed out after #{@ffmpeg_receive_timeout_ms}ms with no output for media #{media_id}. " <>
+            "The process may have been OOM-killed."
+        )
+
+        try do
+          Port.close(port)
+        catch
+          _, _ -> :ok
+        end
+
+        {:error, :ffmpeg_timeout}
     end
   end
 
@@ -438,7 +458,8 @@ defmodule Castmill.Workers.VideoTranscoder do
     BullMQHelper.add_job(
       @queue,
       "video_transcode",
-      args
+      args,
+      job_id: "video_transcode:#{media_map["id"]}"
     )
   end
 

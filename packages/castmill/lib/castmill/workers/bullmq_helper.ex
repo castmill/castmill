@@ -248,6 +248,9 @@ defmodule Castmill.Workers.BullMQHelper do
       {:attempts, attempts}, acc ->
         [{:attempts, attempts} | acc]
 
+      {:job_id, job_id}, acc ->
+        [{:job_id, job_id} | acc]
+
       {_key, _value}, acc ->
         # Skip unknown options (including :repeat - use upsert_scheduler for repeatable jobs)
         acc
