@@ -130,4 +130,9 @@ if config_env() == :prod do
   config :castmill, :redis,
     host: System.get_env("REDIS_HOST") || "localhost",
     port: String.to_integer(System.get_env("REDIS_PORT") || "6379")
+
+  # Mailer "from" address — override via MAILER_FROM env var
+  if mailer_from = System.get_env("MAILER_FROM") do
+    config :castmill, :mailer_from, {"Castmill", mailer_from}
+  end
 end

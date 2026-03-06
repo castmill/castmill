@@ -33,6 +33,9 @@ config :castmill, CastmillWeb.Endpoint,
 # at the `config/runtime.exs`.
 config :castmill, Castmill.Mailer, adapter: Swoosh.Adapters.Local
 
+# Default sender address for outgoing emails
+config :castmill, :mailer_from, {"Castmill", "no-reply@castmill.com"}
+
 # Configure esbuild (the version is required)
 config :esbuild,
   version: "0.17.11",

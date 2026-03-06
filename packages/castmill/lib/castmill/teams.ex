@@ -732,7 +732,7 @@ defmodule Castmill.Teams do
     email =
       Email.new()
       |> Email.to(recipient)
-      |> Email.from({"Castmill", "no-reply@castmill.com"})
+      |> Email.from(Application.get_env(:castmill, :mailer_from))
       |> Email.subject(subject)
       |> Email.html_body(html_body)
       |> Email.text_body(text_body)

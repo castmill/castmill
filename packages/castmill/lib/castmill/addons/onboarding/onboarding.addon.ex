@@ -44,7 +44,7 @@ defmodule Castmill.Addons.Onboarding do
     email =
       new()
       |> to(recipient)
-      |> from({"Castmill", "no-reply@castmill.com"})
+      |> from(Application.get_env(:castmill, :mailer_from))
       |> subject(subject)
       |> text_body(body)
 

@@ -42,8 +42,18 @@ defmodule Castmill.Application do
     # Add Redis and BullMQ workers only if not in testing mode
     children =
       if testing_mode do
+        Logger.info(
+          "BullMQ running in inline testing mode; no Redis/BullMQ workers will be started"
+        )
+
         base_children
       else
+        queue_specs = Keyword.get(bullmq_config, :queues, [])
+
+        Logger.info(
+          "Starting BullMQ workers for queues: #{inspect(Enum.map(queue_specs, fn {q, _} -> q end))}"
+        )
+
         base_children ++
           [
             # Start BullMQ Redis connection pool (includes NimblePool + Registry)
@@ -73,6 +83,16 @@ defmodule Castmill.Application do
 
       if env != :test do
         load_widgets_with_retry()
+      end
+
+      # Run job recovery after startup (non-blocking).
+      # Uses deterministic job IDs so BullMQ dedup prevents duplicates.
+      unless testing_mode do
+        Task.start(fn ->
+          # Give BullMQ workers a moment to fully initialize
+          Process.sleep(5_000)
+          Castmill.Workers.JobRecovery.recover_all()
+        end)
       end
 
       {:ok, pid}
@@ -227,6 +247,10 @@ defmodule Castmill.Application do
     Enum.map(queues, fn {queue_name, opts} ->
       concurrency = if is_integer(opts), do: opts, else: Keyword.get(opts, :concurrency, 1)
 
+      Logger.info(
+        "Configuring BullMQ worker queue=#{queue_name} concurrency=#{concurrency} connection=#{inspect(connection)}"
+      )
+
       # Create a processor function that routes to the correct worker based on job name
       processor_fn = fn job ->
         route_job_to_worker(queue_name, job)
@@ -241,6 +265,14 @@ defmodule Castmill.Application do
          connection: connection,
          processor: processor_fn,
          concurrency: concurrency,
+         on_error: fn error ->
+           Logger.error("BullMQ worker error queue=#{queue_name}: #{inspect(error)}")
+         end,
+         on_failed: fn job, reason ->
+           Logger.error(
+             "BullMQ job failed queue=#{queue_name} job=#{job.name} id=#{job.id}: #{inspect(reason)}"
+           )
+         end,
          name: worker_id},
         id: worker_id
       )
