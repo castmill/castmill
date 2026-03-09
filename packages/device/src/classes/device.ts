@@ -251,8 +251,10 @@ export class Device extends EventEmitter {
     this.emitProgress(5, 5, 'Starting player');
 
     this.emit('ready', device);
-    // Start timer checks if using software fallback
-    this.timerManager.scheduleTimerChecks();
+    // Start timer checks only if using software fallback
+    if (!this.integration.setTimers) {
+      this.timerManager.scheduleTimerChecks();
+    }
 
     // this.player.play({ loop: true });
 
@@ -741,25 +743,23 @@ export class Device extends EventEmitter {
           try {
             // Idempotency check: skip if timers haven't changed
             const currentTimers = await this.getTimers();
-            const incoming = JSON.stringify(
-              timers,
-              Object.keys(timers)
-                .sort()
-                .concat(['hours', 'minutes', 'weekDays'])
-            );
-            const current = JSON.stringify(
-              currentTimers,
-              Object.keys(currentTimers)
-                .sort()
-                .concat(['hours', 'minutes', 'weekDays'])
-            );
+            const normalize = (t: Timers) =>
+              JSON.stringify({
+                on: [...t.on].sort(
+                  (a, b) => a.hours - b.hours || a.minutes - b.minutes
+                ),
+                off: [...t.off].sort(
+                  (a, b) => a.hours - b.hours || a.minutes - b.minutes
+                ),
+              });
 
-            if (incoming === current) {
+            if (normalize(timers as Timers) === normalize(currentTimers)) {
               console.log('[Device] Timers unchanged, skipping update');
               channel.push('res:set', { success: true, ref: opts.ref });
             } else {
-              await this.setTimers(timers as Timers);
+              // Send ack before reload to avoid WebSocket timeout
               channel.push('res:set', { success: true, ref: opts.ref });
+              await this.setTimers(timers as Timers);
             }
           } catch (error) {
             channel.push('res:set', { success: false, ref: opts.ref });

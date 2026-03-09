@@ -9,7 +9,7 @@ import { DevicesService } from '../services/devices.service';
 import { DeviceCache } from './device-cache';
 import { DevicePreview } from './device-preview';
 import { DeviceTelemetry } from './device-telemetry';
-import { DeviceTimers } from './device-timers';
+import { DeviceSchedule } from './device-schedule';
 import { AddonStore } from '../../common/interfaces/addon-store';
 
 // Optionally we should allow using protonmaps
@@ -125,7 +125,7 @@ const DeviceView: Component<{
       title: t('deviceSchedule.title'),
       content: () => (
         <div>
-          <DeviceTimers baseUrl={props.baseUrl} device={props.device} t={t} />
+          <DeviceSchedule baseUrl={props.baseUrl} device={props.device} t={t} />
         </div>
       ),
     },

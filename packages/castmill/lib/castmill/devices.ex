@@ -786,16 +786,32 @@ defmodule Castmill.Devices do
         weekdays = Enum.map(days, fn d -> Map.get(@weekday_names, d, "MON") end)
 
         on_timer = %{hours: start_hour, minutes: start_minute, weekDays: weekdays}
-        off_timer = %{hours: end_hour, minutes: end_minute, weekDays: weekdays}
+
+        # Normalize endHour 24 to 0:00 on the next day (shift weekdays by +1)
+        {off_hours, off_minutes, off_weekdays} =
+          if end_hour >= 24 do
+            next_days = Enum.map(days, fn d -> rem(d + 1, 7) end)
+            next_weekdays = Enum.map(next_days, fn d -> Map.get(@weekday_names, d, "MON") end)
+            {0, 0, next_weekdays}
+          else
+            {end_hour, end_minute, weekdays}
+          end
+
+        off_timer = %{hours: off_hours, minutes: off_minutes, weekDays: off_weekdays}
 
         {[on_timer | on_acc], [off_timer | off_acc]}
       end)
 
     # Merge timers with the same hour so we don't send duplicates
-    %{
-      on: merge_timers(on_timers),
-      off: merge_timers(off_timers)
-    }
+    merged_on = merge_timers(on_timers)
+    merged_off = merge_timers(off_timers)
+
+    # Cancel out on/off timers that fire at the same time and weekdays.
+    # E.g. MON-FRI 23-24 produces off@0:00 TUE-SAT, while TUE-SAT 00-03
+    # produces on@0:00 TUE-SAT. These cancel, leaving the player on 23-03.
+    {cancelled_on, cancelled_off} = cancel_matching_timers(merged_on, merged_off)
+
+    %{on: cancelled_on, off: cancelled_off}
   end
 
   defp merge_timers(timers) do
@@ -805,5 +821,57 @@ defmodule Castmill.Devices do
       all_days = group |> Enum.flat_map(& &1.weekDays) |> Enum.uniq() |> Enum.sort()
       %{hours: hours, minutes: minutes, weekDays: all_days}
     end)
+  end
+
+  # When an on-timer and off-timer fire at the same time on the same weekday,
+  # they cancel each other out (the device would turn off and immediately on).
+  # Remove overlapping weekdays from both; drop timers that become empty.
+  defp cancel_matching_timers(on_timers, off_timers) do
+    on_map = Map.new(on_timers, fn t -> {{t.hours, t.minutes}, t.weekDays} end)
+    off_map = Map.new(off_timers, fn t -> {{t.hours, t.minutes}, t.weekDays} end)
+
+    all_times =
+      (Map.keys(on_map) ++ Map.keys(off_map))
+      |> Enum.uniq()
+
+    {new_on_map, new_off_map} =
+      Enum.reduce(all_times, {on_map, off_map}, fn time, {on_acc, off_acc} ->
+        on_days = Map.get(on_acc, time, [])
+        off_days = Map.get(off_acc, time, [])
+
+        overlap = MapSet.intersection(MapSet.new(on_days), MapSet.new(off_days))
+
+        if MapSet.size(overlap) == 0 do
+          {on_acc, off_acc}
+        else
+          overlap_list = MapSet.to_list(overlap)
+          remaining_on = on_days -- overlap_list
+          remaining_off = off_days -- overlap_list
+
+          on_acc =
+            if remaining_on == [],
+              do: Map.delete(on_acc, time),
+              else: Map.put(on_acc, time, remaining_on)
+
+          off_acc =
+            if remaining_off == [],
+              do: Map.delete(off_acc, time),
+              else: Map.put(off_acc, time, remaining_off)
+
+          {on_acc, off_acc}
+        end
+      end)
+
+    on_result =
+      Enum.map(new_on_map, fn {{hours, minutes}, days} ->
+        %{hours: hours, minutes: minutes, weekDays: Enum.sort(days)}
+      end)
+
+    off_result =
+      Enum.map(new_off_map, fn {{hours, minutes}, days} ->
+        %{hours: hours, minutes: minutes, weekDays: Enum.sort(days)}
+      end)
+
+    {on_result, off_result}
   end
 end

@@ -104,7 +104,9 @@ defmodule CastmillWeb.DeviceController do
            :list_events,
            :get_telemetry,
            :get_timers,
-           :set_timers
+           :set_timers,
+           :get_schedule,
+           :set_schedule
          ]
   )
 

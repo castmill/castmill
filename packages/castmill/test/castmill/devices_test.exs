@@ -584,4 +584,249 @@ defmodule Castmill.DevicesTest do
       refute channel2.id in channel_ids
     end
   end
+
+  describe "schedule_to_timers/1" do
+    alias Castmill.Devices
+
+    test "returns empty timers for nil" do
+      assert Devices.schedule_to_timers(nil) == %{on: [], off: []}
+    end
+
+    test "returns empty timers for empty list" do
+      assert Devices.schedule_to_timers([]) == %{on: [], off: []}
+    end
+
+    test "converts a basic schedule entry to on/off timers" do
+      entries = [
+        %{
+          "startHour" => 8,
+          "startMinute" => 0,
+          "endHour" => 17,
+          "endMinute" => 0,
+          "days" => [0, 1, 2, 3, 4]
+        }
+      ]
+
+      result = Devices.schedule_to_timers(entries)
+
+      assert length(result.on) == 1
+      assert length(result.off) == 1
+
+      [on_timer] = result.on
+      assert on_timer.hours == 8
+      assert on_timer.minutes == 0
+      assert Enum.sort(on_timer.weekDays) == ["FRI", "MON", "THU", "TUE", "WED"]
+
+      [off_timer] = result.off
+      assert off_timer.hours == 17
+      assert off_timer.minutes == 0
+      assert Enum.sort(off_timer.weekDays) == ["FRI", "MON", "THU", "TUE", "WED"]
+    end
+
+    test "normalizes endHour 24 to 0:00 on the next day with shifted weekdays" do
+      # Mon-Fri schedule ending at 24:00 (midnight)
+      entries = [
+        %{
+          "startHour" => 8,
+          "startMinute" => 0,
+          "endHour" => 24,
+          "endMinute" => 0,
+          "days" => [0, 1, 2, 3, 4]
+        }
+      ]
+
+      result = Devices.schedule_to_timers(entries)
+
+      [on_timer] = result.on
+      assert on_timer.hours == 8
+      assert on_timer.minutes == 0
+      assert Enum.sort(on_timer.weekDays) == ["FRI", "MON", "THU", "TUE", "WED"]
+
+      # Off timer should be at 0:00 with weekdays shifted by +1 (Tue-Sat)
+      [off_timer] = result.off
+      assert off_timer.hours == 0
+      assert off_timer.minutes == 0
+      assert Enum.sort(off_timer.weekDays) == ["FRI", "SAT", "THU", "TUE", "WED"]
+    end
+
+    test "normalizes endHour 24 wraps Sunday to Monday" do
+      # Sunday (6) schedule ending at 24:00 should wrap to Monday (0)
+      entries = [
+        %{"startHour" => 9, "startMinute" => 0, "endHour" => 24, "endMinute" => 0, "days" => [6]}
+      ]
+
+      result = Devices.schedule_to_timers(entries)
+
+      [on_timer] = result.on
+      assert on_timer.hours == 9
+      assert Enum.sort(on_timer.weekDays) == ["SUN"]
+
+      # Sunday + 1 = day 0 = Monday
+      [off_timer] = result.off
+      assert off_timer.hours == 0
+      assert off_timer.minutes == 0
+      assert off_timer.weekDays == ["MON"]
+    end
+
+    test "merges timers with the same hour across entries" do
+      entries = [
+        %{
+          "startHour" => 8,
+          "startMinute" => 0,
+          "endHour" => 17,
+          "endMinute" => 0,
+          "days" => [0, 1, 2]
+        },
+        %{
+          "startHour" => 8,
+          "startMinute" => 0,
+          "endHour" => 17,
+          "endMinute" => 0,
+          "days" => [3, 4]
+        }
+      ]
+
+      result = Devices.schedule_to_timers(entries)
+
+      # Should merge into single on/off timers
+      assert length(result.on) == 1
+      assert length(result.off) == 1
+
+      [on_timer] = result.on
+      assert Enum.sort(on_timer.weekDays) == ["FRI", "MON", "THU", "TUE", "WED"]
+    end
+
+    test "unwraps entries map format" do
+      schedule = %{
+        "entries" => [
+          %{
+            "startHour" => 9,
+            "startMinute" => 30,
+            "endHour" => 18,
+            "endMinute" => 0,
+            "days" => [0]
+          }
+        ]
+      }
+
+      result = Devices.schedule_to_timers(schedule)
+
+      [on_timer] = result.on
+      assert on_timer.hours == 9
+      assert on_timer.minutes == 30
+    end
+
+    test "MON-FRI 23-24 and TUE-SAT 00-03 merge into continuous 23-03 schedule" do
+      # Entry 1: MON-FRI 23:00-24:00
+      #   on@23:00 [MON..FRI], off@0:00 [TUE..SAT] (day-shifted)
+      # Entry 2: TUE-SAT 00:00-03:00
+      #   on@0:00 [TUE..SAT], off@3:00 [TUE..SAT]
+      #
+      # The on@0:00 and off@0:00 both have [TUE..SAT], so they cancel out.
+      # Result: on@23:00 [MON..FRI], off@3:00 [TUE..SAT]
+      entries = [
+        %{
+          "startHour" => 23,
+          "startMinute" => 0,
+          "endHour" => 24,
+          "endMinute" => 0,
+          "days" => [0, 1, 2, 3, 4]
+        },
+        %{
+          "startHour" => 0,
+          "startMinute" => 0,
+          "endHour" => 3,
+          "endMinute" => 0,
+          "days" => [1, 2, 3, 4, 5]
+        }
+      ]
+
+      result = Devices.schedule_to_timers(entries)
+
+      # Only one on timer remains: 23:00 MON-FRI
+      assert length(result.on) == 1
+      [on_timer] = result.on
+      assert on_timer.hours == 23
+      assert on_timer.minutes == 0
+      assert Enum.sort(on_timer.weekDays) == ["FRI", "MON", "THU", "TUE", "WED"]
+
+      # Only one off timer remains: 03:00 TUE-SAT (midnight ones cancelled)
+      assert length(result.off) == 1
+      [off_timer] = result.off
+      assert off_timer.hours == 3
+      assert off_timer.minutes == 0
+      assert Enum.sort(off_timer.weekDays) == ["FRI", "SAT", "THU", "TUE", "WED"]
+    end
+
+    test "week wrap-around: SUN 23-24 and MON 00-03 merge across week boundary" do
+      # Entry 1: SUN 23:00-24:00
+      #   on@23:00 [SUN], off@0:00 [MON] (day 6+1=0=MON)
+      # Entry 2: MON 00:00-03:00
+      #   on@0:00 [MON], off@3:00 [MON]
+      #
+      # on@0:00[MON] and off@0:00[MON] cancel → player on from SUN 23 to MON 03
+      entries = [
+        %{
+          "startHour" => 23,
+          "startMinute" => 0,
+          "endHour" => 24,
+          "endMinute" => 0,
+          "days" => [6]
+        },
+        %{"startHour" => 0, "startMinute" => 0, "endHour" => 3, "endMinute" => 0, "days" => [0]}
+      ]
+
+      result = Devices.schedule_to_timers(entries)
+
+      # Only on@23:00 SUN remains
+      assert length(result.on) == 1
+      [on_timer] = result.on
+      assert on_timer.hours == 23
+      assert on_timer.weekDays == ["SUN"]
+
+      # Only off@3:00 MON remains (midnight pair cancelled)
+      assert length(result.off) == 1
+      [off_timer] = result.off
+      assert off_timer.hours == 3
+      assert off_timer.weekDays == ["MON"]
+    end
+
+    test "partial weekday overlap cancels only matching days" do
+      # Entry 1: MON-WED 23:00-24:00
+      #   off@0:00 [TUE,WED,THU]
+      # Entry 2: TUE-SAT 00:00-03:00
+      #   on@0:00 [TUE,WED,THU,FRI,SAT]
+      #
+      # Overlap at 0:00 is [TUE,WED,THU] → cancel those
+      # Remaining: on@0:00 [FRI,SAT], off@0:00 is empty (deleted)
+      entries = [
+        %{
+          "startHour" => 23,
+          "startMinute" => 0,
+          "endHour" => 24,
+          "endMinute" => 0,
+          "days" => [0, 1, 2]
+        },
+        %{
+          "startHour" => 0,
+          "startMinute" => 0,
+          "endHour" => 3,
+          "endMinute" => 0,
+          "days" => [1, 2, 3, 4, 5]
+        }
+      ]
+
+      result = Devices.schedule_to_timers(entries)
+
+      # on timers: 23:00 [MON,TUE,WED] and 0:00 [FRI,SAT] (remaining after cancel)
+      on_by_hour = Map.new(result.on, fn t -> {t.hours, t} end)
+      assert Enum.sort(on_by_hour[23].weekDays) == ["MON", "TUE", "WED"]
+      assert Enum.sort(on_by_hour[0].weekDays) == ["FRI", "SAT"]
+
+      # off timers: only 3:00 [TUE-SAT] (midnight ones fully cancelled)
+      off_by_hour = Map.new(result.off, fn t -> {t.hours, t} end)
+      assert off_by_hour[0] == nil
+      assert Enum.sort(off_by_hour[3].weekDays) == ["FRI", "SAT", "THU", "TUE", "WED"]
+    end
+  end
 end

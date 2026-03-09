@@ -41,7 +41,12 @@ export class TimerManager {
     const timersJson = await this.integration.getSetting('TIMERS');
     if (timersJson) {
       try {
-        return JSON.parse(timersJson);
+        const parsed = JSON.parse(timersJson);
+        // Validate shape - ensure on/off arrays exist
+        return {
+          on: Array.isArray(parsed?.on) ? parsed.on : [],
+          off: Array.isArray(parsed?.off) ? parsed.off : [],
+        };
       } catch {
         return { on: [], off: [] };
       }

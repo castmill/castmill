@@ -1,4 +1,4 @@
-import { onMount, Show } from 'solid-js';
+import { onMount } from 'solid-js';
 import { Device } from '../classes';
 
 export function PlayerComponent(props: { device: Device }) {

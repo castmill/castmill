@@ -466,6 +466,8 @@ defmodule Castmill.Organizations do
         :get_telemetry -> :show
         :get_timers -> :show
         :set_timers -> :update
+        :get_schedule -> :show
+        :set_schedule -> :update
         # Keep other atoms as-is
         a when is_atom(a) -> a
         _ -> :unknown

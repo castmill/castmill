@@ -10,7 +10,7 @@ import {
 import { Device } from '../interfaces/device.interface';
 import { Button, useToast } from '@castmill/ui-common';
 import { DevicesService } from '../services/devices.service';
-import './device-timers.scss';
+import './device-schedule.scss';
 
 // ── Types ──────────────────────────────────────────────────
 
@@ -18,8 +18,8 @@ export interface ScheduleEntry {
   id: string;
   startHour: number; // 0-23
   startMinute: number; // 0-59
-  endHour: number; // 0-23
-  endMinute: number; // 0-59
+  endHour: number; // 0-24 (24 represents midnight/end of day)
+  endMinute: number; // 0-59 (ignored when endHour is 24)
   days: number[]; // 0=Mon .. 6=Sun
 }
 
@@ -67,9 +67,11 @@ const toMinutes = (h: number, m: number) => h * 60 + m;
 const fmtTime = (h: number, m: number) =>
   `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 
-/** Format as HH:MM value for <input type="time"> */
+/** Format as HH:MM value for <input type="time"> (clamp 24:00 to 23:59 for HTML input) */
 const toTimeInputValue = (h: number, m: number) =>
-  `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+  h >= 24
+    ? '23:59'
+    : `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 
 /** Check if two entries overlap */
 function entriesOverlap(a: ScheduleEntry, b: ScheduleEntry): boolean {
@@ -178,7 +180,7 @@ function formatDayRange(days: number[], labels: string[]): string {
 
 // ── Component ──────────────────────────────────────────────
 
-export const DeviceTimers: Component<{
+export const DeviceSchedule: Component<{
   baseUrl: string;
   device: Device;
   t?: (key: string, params?: Record<string, any>) => string;
@@ -503,8 +505,8 @@ export const DeviceTimers: Component<{
         Math.min(23, ds.originalEntry.startHour + hourDelta)
       );
       const duration = ds.originalEntry.endHour - ds.originalEntry.startHour;
-      const newEnd = Math.min(23, newStart + duration);
-      const adjustedStart = newEnd === 23 ? 23 - duration : newStart;
+      const newEnd = Math.min(24, newStart + duration);
+      const adjustedStart = newEnd === 24 ? 24 - duration : newStart;
 
       const newDays = ds.originalEntry.days
         .map((d) => d + dayDelta)
@@ -515,7 +517,7 @@ export const DeviceTimers: Component<{
           id: ds.entryId,
           startHour: adjustedStart,
           startMinute: ds.originalEntry.startMinute,
-          endHour: Math.min(23, adjustedStart + duration),
+          endHour: Math.min(24, adjustedStart + duration),
           endMinute: ds.originalEntry.endMinute,
           days: newDays,
         };
@@ -558,7 +560,7 @@ export const DeviceTimers: Component<{
     if (ds.mode === 'resize-bottom' && ds.entryId && ds.originalEntry) {
       const newEnd = Math.max(
         ds.originalEntry.startHour + 1,
-        Math.min(23, cell.hour + 1)
+        Math.min(24, cell.hour + 1)
       );
       const candidate: ScheduleEntry = {
         ...ds.originalEntry,
@@ -630,7 +632,7 @@ export const DeviceTimers: Component<{
         id: genId(),
         startHour: hourMin,
         startMinute: 0,
-        endHour: Math.min(23, hourMax),
+        endHour: Math.min(24, hourMax),
         endMinute: 0,
         days,
       };
