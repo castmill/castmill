@@ -122,14 +122,10 @@ const DeviceView: Component<{
       ),
     },
     {
-      title: t('common.timers'),
+      title: t('deviceSchedule.title'),
       content: () => (
         <div>
-          <DeviceTimers
-            baseUrl={props.baseUrl}
-            device={props.device}
-            t={t}
-          />
+          <DeviceTimers baseUrl={props.baseUrl} device={props.device} t={t} />
         </div>
       ),
     },

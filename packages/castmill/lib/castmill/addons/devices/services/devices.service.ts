@@ -78,7 +78,10 @@ async function handleResponse<T = any>(
             // Pass both the error message and field name for translation
             errMsg = fieldErrors[0];
             // Throw HttpError with both message and error details
-            throw new HttpError(errMsg, response.status, { field: firstField, errors: errorData.errors });
+            throw new HttpError(errMsg, response.status, {
+              field: firstField,
+              errors: errorData.errors,
+            });
           }
         }
       }
@@ -434,6 +437,68 @@ export const DevicesService = {
     return handleResponse<{ success: boolean }>(response, {
       parse: true,
     });
+  },
+
+  /**
+   * Get device schedule from the database.
+   */
+  async getDeviceSchedule(baseUrl: string, deviceId: string) {
+    const response = await fetch(
+      `${baseUrl}/dashboard/devices/${deviceId}/schedule`,
+      {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    return handleResponse<{
+      entries: Array<{
+        startHour: number;
+        startMinute?: number;
+        endHour: number;
+        endMinute?: number;
+        days: number[];
+      }>;
+    }>(response, {
+      parse: true,
+    });
+  },
+
+  /**
+   * Set device schedule in the database and push timers to device.
+   */
+  async setDeviceSchedule(
+    baseUrl: string,
+    deviceId: string,
+    entries: Array<{
+      startHour: number;
+      startMinute: number;
+      endHour: number;
+      endMinute: number;
+      days: number[];
+    }>
+  ) {
+    const response = await fetch(
+      `${baseUrl}/dashboard/devices/${deviceId}/schedule`,
+      {
+        method: 'PUT',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ entries }),
+      }
+    );
+
+    return handleResponse<{ success: boolean; timers_sent: boolean }>(
+      response,
+      {
+        parse: true,
+      }
+    );
   },
 
   /**
