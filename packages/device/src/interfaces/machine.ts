@@ -105,7 +105,7 @@ export interface TelemetryData {
 
 // The keys of the settings that the machine can store. For type safety defined
 // as a union type.
-export type SettingKey = 'BASE_URL' | 'TIMERS' | 'TIMER_OFF' | 'TIMER_OFF_TIME' | 'TIMER_NEXT_ON'; // Add more keys as needed
+export type SettingKey = 'BASE_URL' | 'TIMERS' | 'TIMER_OFF'; // Add more keys as needed
 
 export interface Machine {
   /**
