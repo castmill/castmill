@@ -187,10 +187,11 @@ defmodule CastmillWeb.DevicesChannel do
         {:noreply, socket}
 
       {:ok, schedule} ->
-        entries = case schedule do
-          %{"entries" => e} when is_list(e) and length(e) > 0 -> e
-          _ -> nil
-        end
+        entries =
+          case schedule do
+            %{"entries" => e} when is_list(e) and length(e) > 0 -> e
+            _ -> nil
+          end
 
         if entries do
           timers = Devices.schedule_to_timers(entries)

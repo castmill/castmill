@@ -376,10 +376,11 @@ defmodule CastmillWeb.DeviceController do
   def get_schedule(conn, %{"device_id" => device_id}) do
     case Devices.get_device_schedule(device_id) do
       {:ok, schedule} ->
-        entries = case schedule do
-          %{"entries" => e} -> e
-          _ -> []
-        end
+        entries =
+          case schedule do
+            %{"entries" => e} -> e
+            _ -> []
+          end
 
         conn
         |> put_status(:ok)

@@ -727,7 +727,15 @@ defmodule Castmill.Devices do
 
   # ── Schedule ──────────────────────────────────────────────
 
-  @weekday_names %{0 => "MON", 1 => "TUE", 2 => "WED", 3 => "THU", 4 => "FRI", 5 => "SAT", 6 => "SUN"}
+  @weekday_names %{
+    0 => "MON",
+    1 => "TUE",
+    2 => "WED",
+    3 => "THU",
+    4 => "FRI",
+    5 => "SAT",
+    6 => "SUN"
+  }
 
   @doc """
   Get the schedule for a device. Returns the schedule entries list or nil.
