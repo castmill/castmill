@@ -724,4 +724,78 @@ defmodule Castmill.Devices do
     )
     |> Repo.one()
   end
+
+  # ── Schedule ──────────────────────────────────────────────
+
+  @weekday_names %{0 => "MON", 1 => "TUE", 2 => "WED", 3 => "THU", 4 => "FRI", 5 => "SAT", 6 => "SUN"}
+
+  @doc """
+  Get the schedule for a device. Returns the schedule entries list or nil.
+  """
+  def get_device_schedule(device_id) do
+    case get_device(device_id) do
+      nil -> {:error, :not_found}
+      device -> {:ok, device.schedule}
+    end
+  end
+
+  @doc """
+  Set the schedule for a device.
+  `schedule_entries` is a list of maps: `[%{"startHour" => 8, "endHour" => 17, "days" => [0,1,2,3,4]}]`
+  """
+  def set_device_schedule(device_id, schedule_entries) do
+    case get_device(device_id) do
+      nil ->
+        {:error, :not_found}
+
+      device ->
+        update_device(device, %{schedule: %{"entries" => schedule_entries || []}})
+    end
+  end
+
+  @doc """
+  Convert schedule entries (ON windows) to the device timer format `%{on: [...], off: [...]}`.
+
+  Each schedule entry produces:
+  - One ON timer at `startHour:00` for the specified days
+  - One OFF timer at `endHour:00` for the specified days
+
+  If no schedule entries exist, returns empty timers (device stays always on).
+  """
+  def schedule_to_timers(nil), do: %{on: [], off: []}
+  def schedule_to_timers(%{"entries" => entries}), do: schedule_to_timers(entries)
+
+  def schedule_to_timers(entries) when is_list(entries) do
+    {on_timers, off_timers} =
+      entries
+      |> Enum.reduce({[], []}, fn entry, {on_acc, off_acc} ->
+        start_hour = entry["startHour"] || entry[:startHour]
+        start_minute = entry["startMinute"] || entry[:startMinute] || 0
+        end_hour = entry["endHour"] || entry[:endHour]
+        end_minute = entry["endMinute"] || entry[:endMinute] || 0
+        days = entry["days"] || entry[:days] || []
+
+        weekdays = Enum.map(days, fn d -> Map.get(@weekday_names, d, "MON") end)
+
+        on_timer = %{hours: start_hour, minutes: start_minute, weekDays: weekdays}
+        off_timer = %{hours: end_hour, minutes: end_minute, weekDays: weekdays}
+
+        {[on_timer | on_acc], [off_timer | off_acc]}
+      end)
+
+    # Merge timers with the same hour so we don't send duplicates
+    %{
+      on: merge_timers(on_timers),
+      off: merge_timers(off_timers)
+    }
+  end
+
+  defp merge_timers(timers) do
+    timers
+    |> Enum.group_by(fn t -> {t.hours, t.minutes} end)
+    |> Enum.map(fn {{hours, minutes}, group} ->
+      all_days = group |> Enum.flat_map(& &1.weekDays) |> Enum.uniq() |> Enum.sort()
+      %{hours: hours, minutes: minutes, weekDays: all_days}
+    end)
+  end
 end

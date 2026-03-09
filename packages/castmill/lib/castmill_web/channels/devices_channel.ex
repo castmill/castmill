@@ -22,6 +22,9 @@ defmodule CastmillWeb.DevicesChannel do
         # Schedule the heartbeat check
         socket = schedule_heartbeat_check(self(), socket)
 
+        # Push saved schedule timers to device after a short delay
+        Process.send_after(self(), :sync_schedule, 1_000)
+
         {:ok, socket}
 
       {:error, reason} ->
@@ -166,6 +169,49 @@ defmodule CastmillWeb.DevicesChannel do
   def handle_info(%{event: "channel_removed"} = message, socket) do
     push(socket, "channel_removed", message)
     {:noreply, socket}
+  end
+
+  @impl true
+  def handle_info({:device_response, _data}, socket) do
+    # Silently discard timer sync responses sent back to the channel process
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_info(:sync_schedule, socket) do
+    device_id = socket.assigns.device.device_id
+
+    case Devices.get_device_schedule(device_id) do
+      {:ok, nil} ->
+        # No schedule set — device stays always on, nothing to push
+        {:noreply, socket}
+
+      {:ok, schedule} ->
+        entries = case schedule do
+          %{"entries" => e} when is_list(e) and length(e) > 0 -> e
+          _ -> nil
+        end
+
+        if entries do
+          timers = Devices.schedule_to_timers(entries)
+
+          ref =
+            self()
+            |> :erlang.term_to_binary()
+            |> Base.url_encode64()
+
+          push(socket, "set", %{
+            resource: "timers",
+            timers: %{on: timers.on, off: timers.off},
+            opts: %{ref: ref}
+          })
+        end
+
+        {:noreply, socket}
+
+      {:error, _} ->
+        {:noreply, socket}
+    end
   end
 
   @impl true

@@ -559,6 +559,8 @@ defmodule CastmillWeb.Router do
     get("/devices/:device_id/telemetry", DeviceController, :get_telemetry)
     get("/devices/:device_id/timers", DeviceController, :get_timers)
     post("/devices/:device_id/timers", DeviceController, :set_timers)
+    get("/devices/:device_id/schedule", DeviceController, :get_schedule)
+    put("/devices/:device_id/schedule", DeviceController, :set_schedule)
     delete("/devices/:device_id/cache", DeviceController, :delete_cache)
 
     # Endpoint to get all channels of a device in the dashboard scope

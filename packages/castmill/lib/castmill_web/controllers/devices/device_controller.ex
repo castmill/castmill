@@ -26,7 +26,9 @@ defmodule CastmillWeb.DeviceController do
              :delete_events,
              :get_telemetry,
              :get_timers,
-             :set_timers
+             :set_timers,
+             :get_schedule,
+             :set_schedule
            ] do
     # Device can access its own resources for these actions
     if actor_id == device_id do
@@ -363,6 +365,96 @@ defmodule CastmillWeb.DeviceController do
         |> put_status(:bad_request)
         |> Phoenix.Controller.json(%{errors: errors})
         |> halt()
+    end
+  end
+
+  # ── Schedule endpoints ──────────────────────────────────────────────
+
+  @doc """
+  Get the schedule for a device from the database.
+  """
+  def get_schedule(conn, %{"device_id" => device_id}) do
+    case Devices.get_device_schedule(device_id) do
+      {:ok, schedule} ->
+        entries = case schedule do
+          %{"entries" => e} -> e
+          _ -> []
+        end
+
+        conn
+        |> put_status(:ok)
+        |> json(%{entries: entries})
+
+      {:error, :not_found} ->
+        conn
+        |> put_status(:not_found)
+        |> json(%{error: "Device not found"})
+    end
+  end
+
+  @set_schedule_schema %{
+    device_id: [type: :string],
+    entries: [type: {:array, :map}]
+  }
+
+  @doc """
+  Set the schedule for a device. Saves to DB and pushes timers to the device.
+  """
+  def set_schedule(conn, %{"device_id" => device_id} = params) do
+    with {:ok, params} <- Tarams.cast(params, @set_schedule_schema) do
+      entries = params.entries || []
+
+      case Devices.set_device_schedule(device_id, entries) do
+        {:ok, _device} ->
+          # Convert schedule to timers and push to device
+          timers = Devices.schedule_to_timers(entries)
+          timers_sent = push_timers_to_device(device_id, timers)
+
+          conn
+          |> put_status(:ok)
+          |> json(%{success: true, timers_sent: timers_sent})
+
+        {:error, reason} ->
+          conn
+          |> put_status(:bad_request)
+          |> json(%{error: inspect(reason)})
+      end
+    else
+      {:error, errors} ->
+        conn
+        |> put_status(:bad_request)
+        |> json(%{errors: errors})
+    end
+  end
+
+  defp push_timers_to_device(device_id, timers) do
+    pid = self()
+
+    ref =
+      pid
+      |> :erlang.term_to_binary()
+      |> Base.url_encode64()
+
+    Phoenix.PubSub.broadcast(Castmill.PubSub, "devices:#{device_id}", %{
+      set: "timers",
+      payload: %{
+        resource: "timers",
+        timers: %{
+          on: timers.on,
+          off: timers.off
+        },
+        opts: %{
+          ref: ref
+        }
+      }
+    })
+
+    receive do
+      {:device_response, _data} ->
+        true
+    after
+      5_000 ->
+        false
     end
   end
 
