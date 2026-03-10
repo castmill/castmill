@@ -983,7 +983,16 @@
     "devicesRemovedSuccess": "已成功删除{{count}}个设备",
     "errorRegisteringDevice": "注册设备时出错：{{error}}",
     "errorRemovingDevice": "删除设备{{name}}时出错：{{error}}",
-    "errorRemovingDevices": "删除设备时出错：{{error}}"
+    "errorRemovingDevices": "删除设备时出错：{{error}}",
+    "settings": {
+      "brightnessTitle": "屏幕亮度",
+      "brightness": "亮度",
+      "brightnessDescription": "设置屏幕亮度级别 (0-100)",
+      "brightnessNotSupported": "此设备不支持屏幕亮度控制",
+      "brightnessSaveSuccess": "亮度设置保存成功",
+      "brightnessSaveError": "保存亮度设置失败：{{error}}",
+      "offlineMessage": "设备已离线。只有在设备连接时才能更改设置。"
+    }
   },
   "validation": {
     "fieldRequired": "此字段为必填项",

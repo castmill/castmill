@@ -24,7 +24,9 @@ defmodule CastmillWeb.DeviceController do
              :remove_channel,
              :list_events,
              :delete_events,
-             :get_telemetry
+             :get_telemetry,
+             :get_brightness,
+             :set_brightness
            ] do
     # Device can access its own resources for these actions
     if actor_id == device_id do
@@ -98,7 +100,9 @@ defmodule CastmillWeb.DeviceController do
            :get_channels,
            :get_playlist,
            :list_events,
-           :get_telemetry
+           :get_telemetry,
+           :get_brightness,
+           :set_brightness
          ]
   )
 
@@ -279,6 +283,82 @@ defmodule CastmillWeb.DeviceController do
         conn
         |> put_status(:request_timeout)
         |> json(%{error: "No response from device. It may be offline."})
+    end
+  end
+
+  def get_brightness(conn, %{"device_id" => device_id}) do
+    pid = self()
+
+    ref =
+      pid
+      |> :erlang.term_to_binary()
+      |> Base.url_encode64()
+
+    Phoenix.PubSub.broadcast(Castmill.PubSub, "devices:#{device_id}", %{
+      get: "brightness",
+      payload: %{
+        resource: "brightness",
+        opts: %{
+          ref: ref
+        }
+      }
+    })
+
+    receive do
+      {:device_response, data} ->
+        conn
+        |> put_status(:ok)
+        |> json(%{brightness: data})
+    after
+      5_000 ->
+        conn
+        |> put_status(:request_timeout)
+        |> json(%{error: "No response from device. It may be offline."})
+    end
+  end
+
+  @set_brightness_schema %{
+    device_id: [type: :string, required: true],
+    brightness: [type: :integer, number: [min: 0, max: 100], required: true]
+  }
+
+  def set_brightness(conn, %{"device_id" => device_id} = params) do
+    with {:ok, params} <- Tarams.cast(params, @set_brightness_schema) do
+      pid = self()
+
+      ref =
+        pid
+        |> :erlang.term_to_binary()
+        |> Base.url_encode64()
+
+      Phoenix.PubSub.broadcast(Castmill.PubSub, "devices:#{device_id}", %{
+        set: "brightness",
+        payload: %{
+          resource: "brightness",
+          opts: %{
+            brightness: params.brightness,
+            ref: ref
+          }
+        }
+      })
+
+      receive do
+        {:device_response, _result} ->
+          conn
+          |> put_status(:ok)
+          |> json(%{ok: true})
+      after
+        5_000 ->
+          conn
+          |> put_status(:request_timeout)
+          |> json(%{error: "No response from device. It may be offline."})
+      end
+    else
+      {:error, errors} ->
+        conn
+        |> put_status(:bad_request)
+        |> Phoenix.Controller.json(%{errors: errors})
+        |> halt()
     end
   end
 

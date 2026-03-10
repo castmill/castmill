@@ -9,6 +9,7 @@ import { DevicesService } from '../services/devices.service';
 import { DeviceCache } from './device-cache';
 import { DevicePreview } from './device-preview';
 import { DeviceTelemetry } from './device-telemetry';
+import { DeviceSettings } from './device-settings';
 import { AddonStore } from '../../common/interfaces/addon-store';
 
 // Optionally we should allow using protonmaps
@@ -118,6 +119,16 @@ const DeviceView: Component<{
       title: t('common.telemetry'),
       content: () => (
         <DeviceTelemetry baseUrl={props.baseUrl} device={props.device} t={t} />
+      ),
+    },
+    {
+      title: t('common.settings'),
+      content: () => (
+        <DeviceSettings
+          baseUrl={props.baseUrl}
+          device={props.device}
+          t={props.t}
+        />
       ),
     },
   ];

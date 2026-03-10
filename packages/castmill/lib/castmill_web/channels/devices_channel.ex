@@ -80,6 +80,30 @@ defmodule CastmillWeb.DevicesChannel do
     {:noreply, socket}
   end
 
+  @impl true
+  def handle_in("res:get", %{"ref" => ref, "brightness" => brightness}, socket) do
+    pid =
+      ref
+      |> Base.url_decode64!()
+      |> :erlang.binary_to_term()
+
+    send(pid, {:device_response, brightness})
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_in("res:set", %{"ref" => ref, "result" => result}, socket) do
+    pid =
+      ref
+      |> Base.url_decode64!()
+      |> :erlang.binary_to_term()
+
+    send(pid, {:device_response, result})
+
+    {:noreply, socket}
+  end
+
   # Not sure we should use the socket connection for getting stufff, seems conterintuitive
   # Going to deprecate this
   @impl true
@@ -105,6 +129,12 @@ defmodule CastmillWeb.DevicesChannel do
   @impl true
   def handle_info(%{get: _resource, payload: payload}, socket) do
     push(socket, "get", payload)
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_info(%{set: _resource, payload: payload}, socket) do
+    push(socket, "set", payload)
     {:noreply, socket}
   end
 

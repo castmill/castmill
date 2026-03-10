@@ -1008,7 +1008,16 @@
     "devicesRemovedSuccess": "{{count}} dispositivo(s) eliminado(s) exitosamente",
     "errorRegisteringDevice": "Error al registrar el dispositivo: {{error}}",
     "errorRemovingDevice": "Error al eliminar el dispositivo {{name}}: {{error}}",
-    "errorRemovingDevices": "Error al eliminar los dispositivos: {{error}}"
+    "errorRemovingDevices": "Error al eliminar los dispositivos: {{error}}",
+    "settings": {
+      "brightnessTitle": "Brillo de pantalla",
+      "brightness": "Brillo",
+      "brightnessDescription": "Establece el nivel de brillo de pantalla (0-100)",
+      "brightnessNotSupported": "El control de brillo de pantalla no está soportado en este dispositivo",
+      "brightnessSaveSuccess": "Configuración de brillo guardada correctamente",
+      "brightnessSaveError": "Error al guardar la configuración de brillo: {{error}}",
+      "offlineMessage": "El dispositivo está desconectado. Los ajustes solo se pueden cambiar cuando el dispositivo está conectado."
+    }
   },
   "validation": {
     "fieldRequired": "Este campo es obligatorio",

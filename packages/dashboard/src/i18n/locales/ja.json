@@ -984,7 +984,16 @@
     "devicesRemovedSuccess": "{{count}}個のデバイスが正常に削除されました",
     "errorRegisteringDevice": "デバイスの登録エラー: {{error}}",
     "errorRemovingDevice": "デバイス{{name}}の削除エラー: {{error}}",
-    "errorRemovingDevices": "デバイスの削除エラー: {{error}}"
+    "errorRemovingDevices": "デバイスの削除エラー: {{error}}",
+    "settings": {
+      "brightnessTitle": "画面の明るさ",
+      "brightness": "明るさ",
+      "brightnessDescription": "画面の明るさレベルを設定します (0-100)",
+      "brightnessNotSupported": "このデバイスでは画面の明るさ制御はサポートされていません",
+      "brightnessSaveSuccess": "明るさの設定が正常に保存されました",
+      "brightnessSaveError": "明るさの設定の保存に失敗しました: {{error}}",
+      "offlineMessage": "デバイスはオフラインです。デバイスが接続されているときのみ設定を変更できます。"
+    }
   },
   "validation": {
     "fieldRequired": "この項目は必須です",

@@ -98,8 +98,13 @@ interface CacheDeleteRequest {
 }
 
 interface DeviceRequest {
-  resource: 'cache' | 'telemetry';
+  resource: 'cache' | 'telemetry' | 'brightness';
   opts: CachePage & { ref: string };
+}
+
+interface DeviceSetRequest {
+  resource: 'brightness';
+  opts: { brightness: number; ref: string };
 }
 
 interface DeviceDeleteRequest {
@@ -687,6 +692,20 @@ export class Device extends EventEmitter {
         case 'telemetry':
           const telemetry = (await this.integration.getTelemetry?.()) ?? {};
           channel.push('res:get', { telemetry, ref: opts.ref });
+          break;
+        case 'brightness':
+          const brightness = (await this.integration.getBrightness?.()) ?? null;
+          channel.push('res:get', { brightness, ref: opts.ref });
+          break;
+      }
+    });
+
+    channel.on('set', async (payload: DeviceSetRequest) => {
+      const { resource, opts } = payload;
+      switch (resource) {
+        case 'brightness':
+          await this.integration.setBrightness?.(opts.brightness);
+          channel.push('res:set', { result: 'ok', ref: opts.ref });
           break;
       }
     });

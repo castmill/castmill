@@ -995,7 +995,16 @@
     "devicesRemovedSuccess": "{{count}} appareil(s) supprimé(s) avec succès",
     "errorRegisteringDevice": "Erreur lors de l'enregistrement de l'appareil : {{error}}",
     "errorRemovingDevice": "Erreur lors de la suppression de l'appareil {{name}} : {{error}}",
-    "errorRemovingDevices": "Erreur lors de la suppression des appareils : {{error}}"
+    "errorRemovingDevices": "Erreur lors de la suppression des appareils : {{error}}",
+    "settings": {
+      "brightnessTitle": "Luminosité de l'écran",
+      "brightness": "Luminosité",
+      "brightnessDescription": "Définir le niveau de luminosité de l'écran (0-100)",
+      "brightnessNotSupported": "Le contrôle de la luminosité de l'écran n'est pas pris en charge sur cet appareil",
+      "brightnessSaveSuccess": "Paramètre de luminosité enregistré avec succès",
+      "brightnessSaveError": "Échec de l'enregistrement du paramètre de luminosité : {{error}}",
+      "offlineMessage": "L'appareil est hors ligne. Les paramètres ne peuvent être modifiés que lorsque l'appareil est connecté."
+    }
   },
   "validation": {
     "fieldRequired": "Ce champ est requis",
