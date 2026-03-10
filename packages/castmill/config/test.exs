@@ -34,6 +34,9 @@ config :castmill, :encryption, %{
 # In test we don't send emails.
 config :castmill, Castmill.Mailer, adapter: Swoosh.Adapters.Test
 
+# Test sender address
+config :castmill, :mailer_from, {"Castmill", "no-reply@castmill.com"}
+
 # Disable swoosh api client as it is only required for production adapters.
 config :swoosh, :api_client, false
 

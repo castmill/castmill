@@ -29,7 +29,7 @@ defmodule Castmill.Accounts.UserNotifier do
     email =
       new()
       |> to(recipient)
-      |> from({"Castmill", System.get_env("MAILER_FROM") || "noreply@missing.email"})
+      |> from(Application.get_env(:castmill, :mailer_from))
       |> subject(subject)
       |> text_body(body)
 
@@ -44,7 +44,7 @@ defmodule Castmill.Accounts.UserNotifier do
     email =
       new()
       |> to(recipient)
-      |> from({"Castmill", System.get_env("MAILER_FROM") || "noreply@missing.email"})
+      |> from(Application.get_env(:castmill, :mailer_from))
       |> subject(subject)
       |> text_body(text_body)
       |> html_body(html_body)
