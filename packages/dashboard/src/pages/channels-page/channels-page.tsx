@@ -23,6 +23,7 @@ import {
   TeamFilter,
   TagFilter,
   useTagFilter,
+  useTagFilterEffect,
   useToast,
   ViewModeToggle,
   ResourceTreeView,
@@ -464,6 +465,8 @@ const ChannelsPage: Component = () => {
       search,
       filters,
       team_id: selectedTeamId(),
+      tag_ids: selectedTagIds(),
+      tag_filter_mode: tagFilterMode() as 'any' | 'all',
     });
 
     setData(result.data);
@@ -612,11 +615,14 @@ const ChannelsPage: Component = () => {
     bumpTree();
   };
 
-  const handleTagChange = (tagIds: number[]) => {
-    setSelectedTagIds(tagIds);
-    refreshData();
-    bumpTree();
-  };
+  // Use hook to manage tag filter effects
+  const { handleTagChange } = useTagFilterEffect({
+    selectedTagIds,
+    setSelectedTagIds,
+    tagFilterMode,
+    onRefreshData: refreshData,
+    onRefreshTree: bumpTree,
+  });
 
   // Fetch resources for tree view nodes (filter by tag IDs in AND mode)
   const fetchTreeResources = async (tagIds: number[]) => {
