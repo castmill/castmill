@@ -147,7 +147,8 @@ defmodule Castmill.Workers.ImageTranscoder do
         "media" => media_map,
         "filepath" => filepath,
         "mime_type" => mime_type
-      }
+      },
+      job_id: "image_transcode:#{media_map["id"]}"
     )
   end
 
