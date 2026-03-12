@@ -1,5 +1,5 @@
 defmodule Castmill.Workers.VideoTranscoderTest do
-  use Castmill.DataCase, async: true
+  use Castmill.DataCase, async: false
 
   alias Castmill.Repo
   alias Castmill.Resources.Media

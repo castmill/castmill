@@ -76,11 +76,20 @@ defmodule Castmill.Workers.VideoTranscoder do
     output_image_filename = "thumbnail.jpg"
     output_image_path = Path.join("/tmp", "#{media_id}_#{output_image_filename}")
 
-    with :ok <- extract_thumbnail(input_file, output_image_path),
-         {thumbnail_uri, thumbnail_size} <-
-           upload_file(output_image_path, organization_id, media_id, output_image_filename) do
-      File.rm(output_image_path)
+    thumbnail_result =
+      try do
+        with :ok <- extract_thumbnail(input_file, output_image_path),
+             {thumbnail_uri, thumbnail_size} <-
+               upload_file(output_image_path, organization_id, media_id, output_image_filename) do
+          {:ok, thumbnail_uri, thumbnail_size}
+        else
+          {:error, reason} -> {:error, "Thumbnail extraction failed: #{inspect(reason)}"}
+        end
+      after
+        cleanup_temp_file(output_image_path)
+      end
 
+    with {:ok, thumbnail_uri, thumbnail_size} <- thumbnail_result do
       transcoded_files_metadata = %{"thumbnail" => {thumbnail_uri, thumbnail_size, "image/jpeg"}}
 
       Enum.reduce_while(
@@ -90,29 +99,38 @@ defmodule Castmill.Workers.VideoTranscoder do
           output_filename = "#{context}.mp4"
           output_path = Path.join("/tmp", "#{media_id}_#{output_filename}")
 
-          case transcode_video(
-                 input_file,
-                 output_path,
-                 width,
-                 media_id,
-                 total_duration,
-                 acc_progress
-               ) do
-            :ok ->
-              {uri, size} = upload_file(output_path, organization_id, media_id, output_filename)
+          step_result =
+            try do
+              case transcode_video(
+                     input_file,
+                     output_path,
+                     width,
+                     media_id,
+                     total_duration,
+                     acc_progress
+                   ) do
+                :ok ->
+                  {uri, size} =
+                    upload_file(output_path, organization_id, media_id, output_filename)
 
-              new_progress =
-                Float.floor(acc_progress + 100 / length(@file_sizes_and_contexts))
+                  new_progress =
+                    Float.floor(acc_progress + 100 / length(@file_sizes_and_contexts))
 
-              notify_media_progress(media_id, new_progress)
-              File.rm(output_path)
+                  notify_media_progress(media_id, new_progress)
 
-              {:cont,
-               {:ok, new_progress, Map.put(acc_files, context, {uri, size, "video/mp4"}),
-                acc_size + size}}
+                  {:ok, new_progress,
+                   Map.put(acc_files, context, {uri, size, "video/mp4"}), acc_size + size}
 
-            {:error, reason} ->
-              {:halt, {:error, "Transcoding failed: #{inspect(reason)}"}}
+                {:error, reason} ->
+                  {:error, "Transcoding failed: #{inspect(reason)}"}
+              end
+            after
+              cleanup_temp_file(output_path)
+            end
+
+          case step_result do
+            {:ok, new_progress, files, size} -> {:cont, {:ok, new_progress, files, size}}
+            {:error, _} = error -> {:halt, error}
           end
         end
       )
@@ -121,28 +139,50 @@ defmodule Castmill.Workers.VideoTranscoder do
         {:error, _} = error -> error
       end
     else
-      {:error, reason} -> {:error, "Thumbnail extraction failed: #{inspect(reason)}"}
+      {:error, _} = error -> error
     end
   end
 
   defp persist_transcoded_files(transcoded_files_metadata, media_id, organization_id) do
     Repo.transaction(fn ->
       Enum.reduce(transcoded_files_metadata, %{}, fn {context, {uri, size, mimetype}}, acc ->
-        {:ok, file} =
-          Files.create_file(%{
-            media_id: media_id,
-            name: "#{media_id}-#{context}",
-            uri: uri,
-            size: size,
-            organization_id: organization_id,
-            mimetype: mimetype
-          })
+        attrs = %{
+          media_id: media_id,
+          name: "#{media_id}-#{context}",
+          uri: uri,
+          size: size,
+          organization_id: organization_id,
+          mimetype: mimetype
+        }
 
-        Files.add_file_to_media(file.id, media_id, context)
+        with {:ok, file} <- Files.create_file(attrs),
+             {:ok, _file_media} <- Files.add_file_to_media(file.id, media_id, context) do
+          Map.put(acc, context, file)
+        else
+          {:error, %Ecto.Changeset{} = changeset} ->
+            reason = "Failed to persist transcoded #{context} file"
 
-        Map.put(acc, context, file)
+            Logger.error(
+              "#{reason} for media #{media_id}: #{format_changeset_errors(changeset)}"
+            )
+
+            Repo.rollback(reason)
+
+          {:error, reason} ->
+            formatted_reason = normalize_error_message(reason)
+
+            Logger.error(
+              "Failed to associate transcoded #{context} file for media #{media_id}: #{formatted_reason}"
+            )
+
+            Repo.rollback("Failed to associate transcoded #{context} file")
+        end
       end)
     end)
+    |> case do
+      {:ok, media_file_records} -> {:ok, media_file_records}
+      {:error, reason} -> {:error, reason}
+    end
   end
 
   defp get_input_file(input_uri) do
@@ -157,6 +197,22 @@ defmodule Castmill.Workers.VideoTranscoder do
     if input_file != input_uri && File.exists?(input_file) do
       File.rm(input_file)
     end
+  end
+
+  defp cleanup_temp_file(path) do
+    if File.exists?(path) do
+      File.rm(path)
+    end
+  end
+
+  defp format_changeset_errors(changeset) do
+    changeset
+    |> Ecto.Changeset.traverse_errors(fn {message, opts} ->
+      Enum.reduce(opts, message, fn {key, value}, acc ->
+        String.replace(acc, "%{#{key}}", to_string(value))
+      end)
+    end)
+    |> inspect()
   end
 
   defp handle_process_result(_media_id, :ok), do: :ok
