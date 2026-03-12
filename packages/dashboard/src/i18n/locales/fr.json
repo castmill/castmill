@@ -1283,6 +1283,10 @@
       "uploadFailed": "Échec du téléchargement : {{error}}",
       "serverError": "Erreur serveur (statut {{status}})",
       "unknownError": "Erreur inconnue"
+    },
+    "thumbnail": {
+      "failedTitle": "Échec du transcodage",
+      "failedDefaultMessage": "L’aperçu n’a pas pu être généré automatiquement."
     }
   },
   "dashboard": {

@@ -621,9 +621,42 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
   });
 
   const updateItem = (itemId: number, item: Partial<JsonMedia>) => {
+    setData((prev) =>
+      prev.map((existing) =>
+        existing.id === itemId ? { ...existing, ...item } : existing
+      )
+    );
+
+    setShowModal((current) =>
+      current && current.id === itemId ? { ...current, ...item } : current
+    );
+
     if (tableViewRef) {
       tableViewRef.updateItem(itemId, item);
     }
+  };
+
+  const renderThumbnailFallback = (item: JsonMedia) => {
+    const progress = Number.parseFloat(item.status_message || '');
+
+    if (item.status === 'transcoding' && Number.isFinite(progress)) {
+      return <CircularProgress progress={progress} />;
+    }
+
+    const message =
+      item.status_message || t('medias.thumbnail.failedDefaultMessage');
+
+    return (
+      <div class="thumbnail-error" title={message}>
+        <div class="thumbnail-error-icon">!</div>
+        <div class="thumbnail-error-content">
+          <div class="thumbnail-error-title">
+            {t('medias.thumbnail.failedTitle')}
+          </div>
+          <div class="thumbnail-error-message">{message}</div>
+        </div>
+      </div>
+    );
   };
 
   const fetchData = async ({
@@ -688,16 +721,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
               when={
                 item.status == 'ready' && item.files && item.files['thumbnail']
               }
-              fallback={
-                <Show
-                  when={item['status'] == 'transcoding'}
-                  fallback={<div class="error">{item.status_message}</div>}
-                >
-                  <CircularProgress
-                    progress={parseFloat(item.status_message!)}
-                  />
-                </Show>
-              }
+              fallback={renderThumbnailFallback(item)}
             >
               <img src={item.files['thumbnail'].uri} alt={item.name} />
             </Show>
@@ -788,7 +812,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
           );
         },
       },
-    ] as Column<JsonMedia>[];
+    ] as Column<number, JsonMedia>[];
 
   // Use function to make actions reactive to i18n changes
   const actions = () =>

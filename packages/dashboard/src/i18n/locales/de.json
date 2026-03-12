@@ -1266,6 +1266,10 @@
       "uploadFailed": "Upload fehlgeschlagen: {{error}}",
       "serverError": "Serverfehler (Status {{status}})",
       "unknownError": "Unbekannter Fehler"
+    },
+    "thumbnail": {
+      "failedTitle": "Die Transkodierung ist fehlgeschlagen",
+      "failedDefaultMessage": "Die Vorschau konnte nicht automatisch generiert werden."
     }
   },
   "dashboard": {

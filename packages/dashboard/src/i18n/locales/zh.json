@@ -1271,6 +1271,10 @@
       "uploadFailed": "上传失败：{{error}}",
       "serverError": "服务器错误（状态 {{status}}）",
       "unknownError": "未知错误"
+    },
+    "thumbnail": {
+      "failedTitle": "转码失败",
+      "failedDefaultMessage": "无法自动生成预览。"
     }
   },
   "dashboard": {

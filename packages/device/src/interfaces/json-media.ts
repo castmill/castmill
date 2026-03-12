@@ -4,7 +4,7 @@ export interface JsonMedia {
   id: number;
   mimetype: string;
   name: string;
-  status: 'ready' | 'transcoding' | 'error';
+  status: 'ready' | 'transcoding' | 'failed' | 'error';
   status_message: string | null;
   meta: any;
   files: { [context: string]: JsonFile };

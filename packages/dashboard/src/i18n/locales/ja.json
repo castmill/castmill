@@ -1272,6 +1272,10 @@
       "uploadFailed": "アップロード失敗：{{error}}",
       "serverError": "サーバーエラー（ステータス {{status}}）",
       "unknownError": "不明なエラー"
+    },
+    "thumbnail": {
+      "failedTitle": "トランスコードに失敗しました",
+      "failedDefaultMessage": "プレビューを自動生成できませんでした。"
     }
   },
   "dashboard": {
