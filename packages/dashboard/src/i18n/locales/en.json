@@ -1266,6 +1266,10 @@
       "uploadFailed": "Upload failed: {{error}}",
       "serverError": "Server error (status {{status}})",
       "unknownError": "Unknown error"
+    },
+    "thumbnail": {
+      "failedTitle": "Transcoding failed",
+      "failedDefaultMessage": "The preview could not be generated automatically."
     }
   },
   "dashboard": {

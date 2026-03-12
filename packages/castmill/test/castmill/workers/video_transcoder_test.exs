@@ -1,9 +1,13 @@
 defmodule Castmill.Workers.VideoTranscoderTest do
-  use Castmill.DataCase, async: true
+  use Castmill.DataCase, async: false
 
+  alias Castmill.Repo
+  alias Castmill.Resources.Media
   alias Castmill.Workers.VideoTranscoder
   alias Castmill.Workers.SystemCmdMock
 
+  import Castmill.NetworksFixtures
+  import Castmill.OrganizationsFixtures
   import ExUnit.CaptureLog
   import Mox
 
@@ -236,6 +240,91 @@ defmodule Castmill.Workers.VideoTranscoderTest do
 
       assert result == :ok
       assert File.exists?(output_path)
+    end
+  end
+
+  describe "process/1 failure handling" do
+    setup do
+      Application.put_env(:castmill, :system_cmd, SystemCmdMock)
+
+      on_exit(fn ->
+        Application.delete_env(:castmill, :system_cmd)
+      end)
+
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+
+      {:ok, media} =
+        %Media{}
+        |> Media.changeset(%{
+          name: "broken-video.mp4",
+          mimetype: "video/mp4",
+          organization_id: organization.id,
+          status: :uploading
+        })
+        |> Repo.insert()
+
+      Phoenix.PubSub.subscribe(Castmill.PubSub, "resource:media:#{media.id}")
+
+      %{media: media}
+    end
+
+    test "marks media as failed and broadcasts when ffprobe returns an error", %{media: media} do
+      expect(SystemCmdMock, :cmd, fn "ffprobe", _args, _opts ->
+        {"invalid data", 1}
+      end)
+
+      job =
+        BullMQ.Job.new("video_transcoder", "video_transcode", %{
+          "media" => %{
+            "id" => media.id,
+            "organization_id" => media.organization_id,
+            "name" => media.name,
+            "mimetype" => media.mimetype,
+            "status" => media.status
+          },
+          "filepath" => "/tmp/nonexistent-input.mp4"
+        })
+
+      assert {:error, "Could not determine video duration"} = VideoTranscoder.process(job)
+
+      failed_media = Repo.get!(Media, media.id)
+      assert failed_media.status == :failed
+      assert failed_media.status_message == "Could not determine video duration"
+
+      assert_received %{
+        status: :failed,
+        status_message: "Could not determine video duration"
+      }
+    end
+
+    test "marks media as failed when ffprobe command crashes", %{media: media} do
+      expect(SystemCmdMock, :cmd, fn "ffprobe", _args, _opts ->
+        raise RuntimeError, "ffprobe executable is not available"
+      end)
+
+      job =
+        BullMQ.Job.new("video_transcoder", "video_transcode", %{
+          "media" => %{
+            "id" => media.id,
+            "organization_id" => media.organization_id,
+            "name" => media.name,
+            "mimetype" => media.mimetype,
+            "status" => media.status
+          },
+          "filepath" => "/tmp/nonexistent-input.mp4"
+        })
+
+      assert {:error, "ffprobe executable is not available"} = VideoTranscoder.process(job)
+
+      failed_media = Repo.get!(Media, media.id)
+      assert failed_media.status == :failed
+      assert failed_media.status_message == "ffprobe executable is not available"
+
+      assert_received %{
+        status: :failed,
+        status_message: "ffprobe executable is not available"
+      }
     end
   end
 end

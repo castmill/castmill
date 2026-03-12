@@ -1266,6 +1266,10 @@
       "uploadFailed": "Uppladdning misslyckades: {{error}}",
       "serverError": "Serverfel (status {{status}})",
       "unknownError": "Okänt fel"
+    },
+    "thumbnail": {
+      "failedTitle": "Transkodningen misslyckades",
+      "failedDefaultMessage": "Förhandsvisningen kunde inte genereras automatiskt."
     }
   },
   "dashboard": {

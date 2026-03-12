@@ -11,7 +11,7 @@
  * - Provides handleTagChange callback for TagFilter component
  */
 
-import { Accessor, createEffect, on, Setter } from 'solid-js';
+import { Accessor, createEffect, on } from 'solid-js';
 
 export interface UseTagFilterEffectProps {
   /**
@@ -22,7 +22,7 @@ export interface UseTagFilterEffectProps {
   /**
    * Signal setter for selected tag IDs
    */
-  setSelectedTagIds: Setter<number[]>;
+  setSelectedTagIds: (tagIds: number[]) => void;
 
   /**
    * Signal accessor for tag filter mode ('any' or 'all')

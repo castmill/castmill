@@ -1272,6 +1272,10 @@
       "uploadFailed": "Error de carga: {{error}}",
       "serverError": "Error del servidor (estado {{status}})",
       "unknownError": "Error desconocido"
+    },
+    "thumbnail": {
+      "failedTitle": "La transcodificación falló",
+      "failedDefaultMessage": "No se pudo generar la vista previa automáticamente."
     }
   },
   "dashboard": {

@@ -1271,6 +1271,10 @@
       "uploadFailed": "فشل التحميل: {{error}}",
       "serverError": "خطأ في الخادم (الحالة {{status}})",
       "unknownError": "خطأ غير معروف"
+    },
+    "thumbnail": {
+      "failedTitle": "فشل تحويل الوسائط",
+      "failedDefaultMessage": "تعذر إنشاء المعاينة تلقائيًا."
     }
   },
   "dashboard": {
