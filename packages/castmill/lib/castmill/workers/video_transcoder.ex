@@ -118,8 +118,8 @@ defmodule Castmill.Workers.VideoTranscoder do
 
                   notify_media_progress(media_id, new_progress)
 
-                  {:ok, new_progress,
-                   Map.put(acc_files, context, {uri, size, "video/mp4"}), acc_size + size}
+                  {:ok, new_progress, Map.put(acc_files, context, {uri, size, "video/mp4"}),
+                   acc_size + size}
 
                 {:error, reason} ->
                   {:error, "Transcoding failed: #{inspect(reason)}"}
@@ -162,9 +162,7 @@ defmodule Castmill.Workers.VideoTranscoder do
           {:error, %Ecto.Changeset{} = changeset} ->
             reason = "Failed to persist transcoded #{context} file"
 
-            Logger.error(
-              "#{reason} for media #{media_id}: #{format_changeset_errors(changeset)}"
-            )
+            Logger.error("#{reason} for media #{media_id}: #{format_changeset_errors(changeset)}")
 
             Repo.rollback(reason)
 
