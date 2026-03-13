@@ -1277,5 +1277,8 @@
       "title": "Inga organisationer",
       "description": "Du tillhör inte någon organisation i detta nätverk ännu. Kontakta din nätverksadministratör för att få åtkomst."
     }
+  },
+  "aspectRatio": {
+    "custom": "Anpassad"
   }
 }
