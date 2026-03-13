@@ -74,6 +74,7 @@ export const UploadComponent = (props: UploadComponentProps) => {
   const [messages, setMessages] = createSignal<Messages>({});
   const [progresses, setProgresses] = createSignal<Progresses>({});
   const [validations, setValidations] = createSignal<FileValidations>({});
+  const [isUploading, setIsUploading] = createSignal(false);
   const [maxUploadSize, setMaxUploadSize] = createSignal<number>(
     2048 * 1024 * 1024
   ); // Default 2GB in bytes
@@ -172,7 +173,7 @@ export const UploadComponent = (props: UploadComponentProps) => {
       return;
     }
 
-    // Track how many files we're uploading for completion check
+    setIsUploading(true);
     let uploadedCount = 0;
     const totalToUpload = validFiles.length;
 
@@ -213,6 +214,7 @@ export const UploadComponent = (props: UploadComponentProps) => {
 
           uploadedCount++;
           if (uploadedCount === totalToUpload) {
+            setIsUploading(false);
             props.onUploadComplete?.();
           }
         } else {
@@ -238,6 +240,7 @@ export const UploadComponent = (props: UploadComponentProps) => {
 
           uploadedCount++;
           if (uploadedCount === totalToUpload) {
+            setIsUploading(false);
             props.onUploadComplete?.();
           }
         }
@@ -251,6 +254,7 @@ export const UploadComponent = (props: UploadComponentProps) => {
 
         uploadedCount++;
         if (uploadedCount === totalToUpload) {
+          setIsUploading(false);
           props.onUploadComplete?.();
         }
       };
@@ -436,7 +440,9 @@ export const UploadComponent = (props: UploadComponentProps) => {
         </Show>
         {/* Change label to "Close" when all files have been uploaded */}
         <Button
-          disabled={getCompletedFilesCount() === getValidFilesCount()}
+          disabled={
+            isUploading() || getCompletedFilesCount() === getValidFilesCount()
+          }
           label="Upload"
           onClick={handleUpload}
           icon={AiOutlineUpload}
