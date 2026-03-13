@@ -373,7 +373,8 @@
       "playlists": "プレイリスト",
       "channels": "チャンネル",
       "teams": "チーム",
-      "widgets": "ウィジェット"
+      "widgets": "ウィジェット",
+      "layouts": "レイアウト"
     },
     "errors": {
       "fetchUsageData": "使用量データの取得に失敗しました：{{error}}"

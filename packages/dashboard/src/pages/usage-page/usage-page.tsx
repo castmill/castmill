@@ -51,6 +51,7 @@ const resourceTranslationKeys: Record<string, string> = {
   channels: 'usage.resources.channels',
   teams: 'usage.resources.teams',
   widgets: 'usage.resources.widgets',
+  layouts: 'usage.resources.layouts',
 };
 
 /**

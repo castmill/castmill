@@ -373,7 +373,8 @@
       "playlists": "播放列表",
       "channels": "频道",
       "teams": "团队",
-      "widgets": "小部件"
+      "widgets": "小部件",
+      "layouts": "布局"
     },
     "errors": {
       "fetchUsageData": "获取使用数据失败：{{error}}"

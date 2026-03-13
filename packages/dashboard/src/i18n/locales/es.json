@@ -374,7 +374,8 @@
       "playlists": "Listas de reproducción",
       "channels": "Canales",
       "teams": "Equipos",
-      "widgets": "Widgets"
+      "widgets": "Widgets",
+      "layouts": "Diseños"
     },
     "errors": {
       "fetchUsageData": "Error al obtener datos de uso: {{error}}"
