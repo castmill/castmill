@@ -1283,5 +1283,8 @@
       "title": "Sin organizaciones",
       "description": "Aún no perteneces a ninguna organización en esta red. Contacta con el administrador de la red para obtener acceso."
     }
+  },
+  "aspectRatio": {
+    "custom": "Personalizado"
   }
 }

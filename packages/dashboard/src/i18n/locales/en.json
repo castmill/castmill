@@ -1277,5 +1277,8 @@
       "title": "No Organizations",
       "description": "You don't belong to any organization in this network yet. Please contact your network administrator to get access."
     }
+  },
+  "aspectRatio": {
+    "custom": "Custom"
   }
 }

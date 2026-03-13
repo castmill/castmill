@@ -1294,5 +1294,8 @@
       "title": "Aucune organisation",
       "description": "Vous n'appartenez à aucune organisation dans ce réseau. Veuillez contacter votre administrateur réseau pour obtenir l'accès."
     }
+  },
+  "aspectRatio": {
+    "custom": "Personnalisé"
   }
 }

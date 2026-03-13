@@ -1277,5 +1277,8 @@
       "title": "Keine Organisationen",
       "description": "Sie gehören noch keiner Organisation in diesem Netzwerk an. Bitte kontaktieren Sie Ihren Netzwerkadministrator, um Zugang zu erhalten."
     }
+  },
+  "aspectRatio": {
+    "custom": "Benutzerdefiniert"
   }
 }
