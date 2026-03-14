@@ -58,6 +58,8 @@ package-lock.json
 
 # Build artifacts
 packages/platforms/electron-player/out/
+packages/platforms/android-player/android/.gradle/
+packages/platforms/android-player/android/gradle/wrapper/gradle-wrapper.jar
 
 # Temporary config files
 *.timestamp-*
