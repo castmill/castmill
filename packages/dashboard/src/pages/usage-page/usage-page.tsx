@@ -18,31 +18,18 @@ import { useToast, formatBytes } from '@castmill/ui-common';
 import { IoImagesOutline } from 'solid-icons/io';
 import { RiMediaPlayList2Fill } from 'solid-icons/ri';
 import { HiOutlineTv } from 'solid-icons/hi';
-import { BsCalendarWeek } from 'solid-icons/bs';
-import { AiOutlineTeam, AiOutlineDatabase } from 'solid-icons/ai';
+import { BsCalendarWeek, BsGrid } from 'solid-icons/bs';
+import {
+  AiOutlineTeam,
+  AiOutlineDatabase,
+  AiOutlineAppstore,
+} from 'solid-icons/ai';
 
 const [usage, setUsage] = createSignal<Usage>();
 const [loading, setLoading] = createSignal(true);
 
-// Icon component using the same icons as the sidebar
-const ResourceIcon = (props: { type: string }) => {
-  const icons: Record<string, any> = {
-    medias: IoImagesOutline,
-    storage: AiOutlineDatabase,
-    users: AiOutlineTeam, // Using team icon for users
-    devices: HiOutlineTv,
-    playlists: RiMediaPlayList2Fill,
-    channels: BsCalendarWeek,
-    teams: AiOutlineTeam,
-  };
-
-  const Icon = icons[props.type] || IoImagesOutline;
-
-  return <Icon size={28} />;
-};
-
 // Map resource identifiers to translation keys for localized labels
-const resourceTranslationKeys: Record<string, string> = {
+const resourceTranslationKeys = {
   medias: 'usage.resources.medias',
   storage: 'usage.resources.storage',
   users: 'usage.resources.users',
@@ -52,6 +39,27 @@ const resourceTranslationKeys: Record<string, string> = {
   teams: 'usage.resources.teams',
   widgets: 'usage.resources.widgets',
   layouts: 'usage.resources.layouts',
+} as const;
+
+type ResourceType = keyof typeof resourceTranslationKeys;
+
+// Icon component using the same icons as the sidebar
+const ResourceIcon = (props: { type: ResourceType }) => {
+  const icons: Record<ResourceType, any> = {
+    medias: IoImagesOutline,
+    storage: AiOutlineDatabase,
+    users: AiOutlineTeam,
+    devices: HiOutlineTv,
+    playlists: RiMediaPlayList2Fill,
+    channels: BsCalendarWeek,
+    teams: AiOutlineTeam,
+    widgets: AiOutlineAppstore,
+    layouts: BsGrid,
+  };
+
+  const Icon = icons[props.type] || IoImagesOutline;
+
+  return <Icon size={28} />;
 };
 
 /**
@@ -121,7 +129,14 @@ const UsagePage: Component = () => {
 
         <Show when={!loading() && usage()}>
           <div class={styles.grid}>
-            <For each={Object.entries(usage() || {})}>
+            <For
+              each={
+                Object.entries(usage() || {}) as [
+                  ResourceType,
+                  { used: number; total: number },
+                ][]
+              }
+            >
               {([resource, { used, total }]) => {
                 const percentage =
                   total > 0 ? Math.round((used / total) * 100) : 0;
