@@ -109,18 +109,26 @@ public class CastmillPlugin extends Plugin {
             return;
         }
 
-        Window window = getActivity() != null ? getActivity().getWindow() : null;
-        if (window == null) {
+        if (getActivity() == null) {
             call.reject("Unable to access activity window");
             return;
         }
 
         float normalizedBrightness = brightness / 100f;
         getActivity().runOnUiThread(() -> {
-            WindowManager.LayoutParams layoutParams = window.getAttributes();
-            layoutParams.screenBrightness = normalizedBrightness;
-            window.setAttributes(layoutParams);
-            call.resolve();
+            try {
+                if (getActivity() == null || getActivity().isFinishing()) {
+                    call.reject("Unable to apply brightness, activity is not available");
+                    return;
+                }
+                Window window = getActivity().getWindow();
+                WindowManager.LayoutParams layoutParams = window.getAttributes();
+                layoutParams.screenBrightness = normalizedBrightness;
+                window.setAttributes(layoutParams);
+                call.resolve();
+            } catch (Exception e) {
+                call.reject("Failed to set brightness", e);
+            }
         });
     }
 }

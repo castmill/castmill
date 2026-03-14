@@ -1,6 +1,6 @@
 // Purpose: API for the main process to interact with the renderer process.
 // Any actions required to be performed by the main process should be defined here.
-import { exec } from 'child_process';
+import { exec, execFile } from 'child_process';
 import os from 'os';
 import { app } from 'electron';
 import { is } from '@electron-toolkit/utils';
@@ -10,9 +10,9 @@ import { createHash } from 'crypto';
 import si, { Systeminformation } from 'systeminformation';
 import type { TelemetryData } from '@castmill/device';
 
-const execAsync = (command: string): Promise<string> => {
+const execFileAsync = (file: string, args: string[]): Promise<string> => {
   return new Promise((resolve, reject) => {
-    exec(command, (error, stdout) => {
+    execFile(file, args, (error, stdout) => {
       if (error) {
         reject(error);
         return;
@@ -21,6 +21,12 @@ const execAsync = (command: string): Promise<string> => {
     });
   });
 };
+
+const POWERSHELL_GET_BRIGHTNESS =
+  '(Get-CimInstance -Namespace root/WMI -ClassName WmiMonitorBrightness | Select-Object -First 1 -ExpandProperty CurrentBrightness)';
+
+const POWERSHELL_SET_BRIGHTNESS =
+  '(Get-CimInstance -Namespace root/WMI -ClassName WmiMonitorBrightnessMethods | Select-Object -First 1).WmiSetBrightness(1,[int]$args[0])';
 
 /*
  * show a toast notification
@@ -258,32 +264,37 @@ export const getTelemetry = async (): Promise<TelemetryData> => {
 export const getBrightness = async (): Promise<number | null> => {
   try {
     if (process.platform === 'win32') {
-      const output = await execAsync(
-        'powershell -NoProfile -Command "(Get-CimInstance -Namespace root/WMI -ClassName WmiMonitorBrightness | Select-Object -First 1 -ExpandProperty CurrentBrightness)"'
-      );
+      const output = await execFileAsync('powershell', [
+        '-NoProfile',
+        '-Command',
+        POWERSHELL_GET_BRIGHTNESS,
+      ]);
       const parsed = Number.parseInt(output, 10);
       return Number.isFinite(parsed) ? parsed : null;
     }
 
     if (process.platform === 'linux') {
-      const output = await execAsync(
-        "xrandr --verbose --current | grep -m1 -i 'Brightness:' | awk '{print $2}'"
-      );
-      const parsed = Number.parseFloat(output);
+      const output = await execFileAsync('xrandr', ['--verbose', '--current']);
+      const match = output.match(/Brightness:\s*([0-9.]+)/i);
+      if (!match) return null;
+      const parsed = Number.parseFloat(match[1]);
       return Number.isFinite(parsed)
         ? Math.max(0, Math.min(100, Math.round(parsed * 100)))
         : null;
     }
 
     if (process.platform === 'darwin') {
-      const output = await execAsync(
-        'sh -c "command -v brightness >/dev/null 2>&1 && brightness -l | awk \'/brightness/ {print $4; exit}\' || echo unsupported"'
-      );
-      if (output === 'unsupported') return null;
-      const parsed = Number.parseFloat(output);
-      return Number.isFinite(parsed)
-        ? Math.max(0, Math.min(100, Math.round(parsed * 100)))
-        : null;
+      try {
+        const output = await execFileAsync('brightness', ['-l']);
+        const match = output.match(/brightness\s+([0-9.]+)/i);
+        if (!match) return null;
+        const parsed = Number.parseFloat(match[1]);
+        return Number.isFinite(parsed)
+          ? Math.max(0, Math.min(100, Math.round(parsed * 100)))
+          : null;
+      } catch {
+        return null;
+      }
     }
 
     return null;
@@ -296,30 +307,39 @@ export const setBrightness = async (brightness: number): Promise<void> => {
   const clampedBrightness = Math.max(0, Math.min(100, Math.round(brightness)));
 
   if (process.platform === 'win32') {
-    await execAsync(
-      `powershell -NoProfile -Command "(Get-CimInstance -Namespace root/WMI -ClassName WmiMonitorBrightnessMethods | Select-Object -First 1).WmiSetBrightness(1,${clampedBrightness})"`
-    );
+    await execFileAsync('powershell', [
+      '-NoProfile',
+      '-Command',
+      POWERSHELL_SET_BRIGHTNESS,
+      String(clampedBrightness),
+    ]);
     return;
   }
 
   if (process.platform === 'linux') {
-    const displayOutput = await execAsync(
-      "xrandr --current | awk '/ connected/ {print $1; exit}'"
-    );
-    const display = displayOutput.trim();
-    if (!display || !/^[a-zA-Z0-9._:-]+$/.test(display)) {
+    const displayOutput = await execFileAsync('xrandr', ['--current']);
+    const displayMatch = displayOutput.match(/^([^\s]+)\s+connected\b/m);
+    const display = displayMatch?.[1];
+    if (!display) {
       throw new Error('Could not determine connected display');
     }
     const normalized = (clampedBrightness / 100).toFixed(2);
-    await execAsync(`xrandr --output ${display} --brightness ${normalized}`);
+    await execFileAsync('xrandr', [
+      '--output',
+      display,
+      '--brightness',
+      normalized,
+    ]);
     return;
   }
 
   if (process.platform === 'darwin') {
     const normalized = (clampedBrightness / 100).toFixed(2);
-    await execAsync(
-      `sh -c "command -v brightness >/dev/null 2>&1 && brightness ${normalized} || exit 1"`
-    );
+    try {
+      await execFileAsync('brightness', [normalized]);
+    } catch {
+      throw new Error('Brightness control not supported on this platform');
+    }
     return;
   }
 

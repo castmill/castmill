@@ -141,7 +141,7 @@ export class ElectronMachine implements Machine {
 
   async getBrightness(): Promise<number> {
     const brightness = await window.api.getBrightness();
-    if (brightness === null || brightness === undefined) {
+    if (brightness === null) {
       throw new Error('Brightness control not supported on this platform');
     }
     return brightness;
