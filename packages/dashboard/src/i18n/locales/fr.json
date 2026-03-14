@@ -373,7 +373,8 @@
       "playlists": "Listes de lecture",
       "channels": "Chaînes",
       "teams": "Équipes",
-      "widgets": "Widgets"
+      "widgets": "Widgets",
+      "layouts": "Mises en page"
     },
     "errors": {
       "fetchUsageData": "Échec de la récupération des données d'utilisation : {{error}}"

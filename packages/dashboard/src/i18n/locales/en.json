@@ -400,7 +400,8 @@
       "playlists": "Playlists",
       "channels": "Channels",
       "teams": "Teams",
-      "widgets": "Widgets"
+      "widgets": "Widgets",
+      "layouts": "Layouts"
     },
     "errors": {
       "fetchUsageData": "Failed to fetch usage data: {{error}}"
