@@ -1,6 +1,6 @@
 // Purpose: API for the main process to interact with the renderer process.
 // Any actions required to be performed by the main process should be defined here.
-import { exec } from 'child_process';
+import { exec, execFile } from 'child_process';
 import os from 'os';
 import { app } from 'electron';
 import { is } from '@electron-toolkit/utils';
@@ -9,6 +9,24 @@ import { one } from 'macaddress';
 import { createHash } from 'crypto';
 import si, { Systeminformation } from 'systeminformation';
 import type { TelemetryData } from '@castmill/device';
+
+const execFileAsync = (file: string, args: string[]): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    execFile(file, args, (error, stdout) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+      resolve(stdout.toString().trim());
+    });
+  });
+};
+
+const POWERSHELL_GET_BRIGHTNESS =
+  '(Get-CimInstance -Namespace root/WMI -ClassName WmiMonitorBrightness | Select-Object -First 1 -ExpandProperty CurrentBrightness)';
+
+const POWERSHELL_SET_BRIGHTNESS =
+  '(Get-CimInstance -Namespace root/WMI -ClassName WmiMonitorBrightnessMethods | Select-Object -First 1).WmiSetBrightness(1,[int]$args[0])';
 
 /*
  * show a toast notification
@@ -241,4 +259,89 @@ export const getTelemetry = async (): Promise<TelemetryData> => {
   }
 
   return telemetry;
+};
+
+export const getBrightness = async (): Promise<number | null> => {
+  try {
+    if (process.platform === 'win32') {
+      const output = await execFileAsync('powershell', [
+        '-NoProfile',
+        '-Command',
+        POWERSHELL_GET_BRIGHTNESS,
+      ]);
+      const parsed = Number.parseInt(output, 10);
+      return Number.isFinite(parsed) ? parsed : null;
+    }
+
+    if (process.platform === 'linux') {
+      const output = await execFileAsync('xrandr', ['--verbose', '--current']);
+      const match = output.match(/Brightness:\s*([0-9.]+)/i);
+      if (!match) return null;
+      const parsed = Number.parseFloat(match[1]);
+      return Number.isFinite(parsed)
+        ? Math.max(0, Math.min(100, Math.round(parsed * 100)))
+        : null;
+    }
+
+    if (process.platform === 'darwin') {
+      try {
+        const output = await execFileAsync('brightness', ['-l']);
+        const match = output.match(/brightness\s+([0-9.]+)/i);
+        if (!match) return null;
+        const parsed = Number.parseFloat(match[1]);
+        return Number.isFinite(parsed)
+          ? Math.max(0, Math.min(100, Math.round(parsed * 100)))
+          : null;
+      } catch {
+        return null;
+      }
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+};
+
+export const setBrightness = async (brightness: number): Promise<void> => {
+  const clampedBrightness = Math.max(0, Math.min(100, Math.round(brightness)));
+
+  if (process.platform === 'win32') {
+    await execFileAsync('powershell', [
+      '-NoProfile',
+      '-Command',
+      POWERSHELL_SET_BRIGHTNESS,
+      String(clampedBrightness),
+    ]);
+    return;
+  }
+
+  if (process.platform === 'linux') {
+    const displayOutput = await execFileAsync('xrandr', ['--current']);
+    const displayMatch = displayOutput.match(/^([^\s]+)\s+connected\b/m);
+    const display = displayMatch?.[1];
+    if (!display) {
+      throw new Error('Could not determine connected display');
+    }
+    const normalized = (clampedBrightness / 100).toFixed(2);
+    await execFileAsync('xrandr', [
+      '--output',
+      display,
+      '--brightness',
+      normalized,
+    ]);
+    return;
+  }
+
+  if (process.platform === 'darwin') {
+    const normalized = (clampedBrightness / 100).toFixed(2);
+    try {
+      await execFileAsync('brightness', [normalized]);
+    } catch {
+      throw new Error('Brightness control not supported on this platform');
+    }
+    return;
+  }
+
+  throw new Error('Brightness control not supported on this platform');
 };

@@ -1,0 +1,71 @@
+.device-settings {
+  max-width: 30em;
+
+  .device-settings-section {
+    padding: 0.5em 0;
+  }
+
+  .device-settings-section-title {
+    font-size: 1em;
+    font-weight: 600;
+    margin-bottom: 1em;
+  }
+
+  .device-settings-row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+    margin-bottom: 1.5em;
+  }
+
+  .device-settings-label {
+    font-size: 0.9em;
+    font-weight: 500;
+  }
+
+  .device-settings-slider-container {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 1em;
+  }
+
+  .device-settings-slider {
+    flex: 1;
+    cursor: pointer;
+  }
+
+  .device-settings-value {
+    font-size: 0.9em;
+    min-width: 3em;
+    text-align: right;
+  }
+
+  .device-settings-description {
+    font-size: 0.8em;
+    color: #666;
+    margin: 0;
+  }
+
+  .device-settings-actions {
+    display: flex;
+    flex-direction: row;
+    gap: 0.5em;
+  }
+
+  .device-settings-offline-message {
+    color: red;
+    font-size: 0.9em;
+  }
+
+  .device-settings-loading {
+    font-size: 0.9em;
+    color: #666;
+  }
+
+  .device-settings-not-supported {
+    font-size: 0.9em;
+    color: #888;
+    font-style: italic;
+  }
+}

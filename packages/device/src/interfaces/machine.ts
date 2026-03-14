@@ -228,6 +228,18 @@ export interface Machine {
   setTimers?(timers: Timers): Promise<void>;
 
   /**
+   * Returns the current screen brightness level (0-100).
+   * Not all platforms support this feature.
+   */
+  getBrightness?(): Promise<number>;
+
+  /**
+   * Sets the screen brightness level (0-100).
+   * Not all platforms support this feature.
+   */
+  setBrightness?(brightness: number): Promise<void>;
+
+  /**
    * Returns telemetry data from the device hardware, including storage, memory,
    * CPU usage, temperatures, fan speeds, network info, battery status, and uptime.
    * Availability of data varies by platform.

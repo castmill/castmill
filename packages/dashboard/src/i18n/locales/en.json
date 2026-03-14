@@ -1015,6 +1015,15 @@
       "commandFailed": "An error occurred while processing your request",
       "invalidPincode": "Invalid pincode. Please check the pincode displayed on your device and try again.",
       "pincodeExpired": "This pincode has expired. Please restart the device registration process."
+    },
+    "settings": {
+      "brightnessTitle": "Screen Brightness",
+      "brightness": "Brightness",
+      "brightnessDescription": "Set the screen brightness level (0-100)",
+      "brightnessNotSupported": "Screen brightness control is not supported on this device",
+      "brightnessSaveSuccess": "Brightness setting saved successfully",
+      "brightnessSaveError": "Failed to save brightness setting: {{error}}",
+      "offlineMessage": "Device is offline. Settings can only be changed when the device is connected."
     }
   },
   "validation": {

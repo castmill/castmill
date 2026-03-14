@@ -77,6 +77,12 @@ export const configuration = {
   setServerProperty: promisifyNoRet(
     scapConfig.setServerProperty.bind(scapConfig)
   ),
+  getBrightness: scapConfig.getBrightness
+    ? promisifyNoOpt(scapConfig.getBrightness.bind(scapConfig))
+    : undefined,
+  setBrightness: scapConfig.setBrightness
+    ? promisifyNoRet(scapConfig.setBrightness.bind(scapConfig))
+    : undefined,
 };
 
 export const storage = {

@@ -978,7 +978,16 @@
     "devicesRemovedSuccess": "{{count}} enhet(er) togs bort framgångsrikt",
     "errorRegisteringDevice": "Fel vid registrering av enhet: {{error}}",
     "errorRemovingDevice": "Fel vid borttagning av enhet {{name}}: {{error}}",
-    "errorRemovingDevices": "Fel vid borttagning av enheter: {{error}}"
+    "errorRemovingDevices": "Fel vid borttagning av enheter: {{error}}",
+    "settings": {
+      "brightnessTitle": "Skärmljusstyrka",
+      "brightness": "Ljusstyrka",
+      "brightnessDescription": "Ange skärmens ljusstyrkenivå (0-100)",
+      "brightnessNotSupported": "Styrning av skärmljusstyrka stöds inte på den här enheten",
+      "brightnessSaveSuccess": "Ljusstyrka sparad",
+      "brightnessSaveError": "Det gick inte att spara ljusstyrkan: {{error}}",
+      "offlineMessage": "Enheten är offline. Inställningar kan bara ändras när enheten är ansluten."
+    }
   },
   "validation": {
     "fieldRequired": "Detta fält är obligatoriskt",

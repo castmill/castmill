@@ -983,7 +983,16 @@
     "devicesRemovedSuccess": "{{count}}개의 기기가 성공적으로 제거되었습니다",
     "errorRegisteringDevice": "기기 등록 오류: {{error}}",
     "errorRemovingDevice": "기기 {{name}} 제거 오류: {{error}}",
-    "errorRemovingDevices": "기기 제거 오류: {{error}}"
+    "errorRemovingDevices": "기기 제거 오류: {{error}}",
+    "settings": {
+      "brightnessTitle": "화면 밝기",
+      "brightness": "밝기",
+      "brightnessDescription": "화면 밝기 수준 설정 (0-100)",
+      "brightnessNotSupported": "이 기기에서는 화면 밝기 제어가 지원되지 않습니다",
+      "brightnessSaveSuccess": "밝기 설정이 성공적으로 저장되었습니다",
+      "brightnessSaveError": "밝기 설정 저장 실패: {{error}}",
+      "offlineMessage": "기기가 오프라인입니다. 기기가 연결된 경우에만 설정을 변경할 수 있습니다."
+    }
   },
   "validation": {
     "fieldRequired": "이 필드는 필수입니다",

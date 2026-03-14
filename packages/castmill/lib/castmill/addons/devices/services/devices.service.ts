@@ -370,6 +370,49 @@ export const DevicesService = {
   },
 
   /**
+   * Get the current screen brightness from the device (proxied through backend WebSocket).
+   */
+  async getDeviceBrightness(baseUrl: string, deviceId: string) {
+    const response = await fetch(
+      `${baseUrl}/dashboard/devices/${deviceId}/brightness`,
+      {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    return handleResponse<{ brightness: number | null }>(response, {
+      parse: true,
+    });
+  },
+
+  /**
+   * Set the screen brightness on the device (proxied through backend WebSocket).
+   */
+  async setDeviceBrightness(
+    baseUrl: string,
+    deviceId: string,
+    brightness: number
+  ) {
+    const response = await fetch(
+      `${baseUrl}/dashboard/devices/${deviceId}/brightness`,
+      {
+        method: 'PUT',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ brightness }),
+      }
+    );
+
+    return handleResponse(response);
+  },
+
+  /**
    * Remove Device.
    */
   async removeDevice(

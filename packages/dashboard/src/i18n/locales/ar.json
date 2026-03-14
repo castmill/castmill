@@ -983,7 +983,16 @@
     "devicesRemovedSuccess": "تمت إزالة {{count}} جهاز بنجاح",
     "errorRegisteringDevice": "خطأ في تسجيل الجهاز: {{error}}",
     "errorRemovingDevice": "خطأ في إزالة الجهاز {{name}}: {{error}}",
-    "errorRemovingDevices": "خطأ في إزالة الأجهزة: {{error}}"
+    "errorRemovingDevices": "خطأ في إزالة الأجهزة: {{error}}",
+    "settings": {
+      "brightnessTitle": "سطوع الشاشة",
+      "brightness": "السطوع",
+      "brightnessDescription": "ضبط مستوى سطوع الشاشة (0-100)",
+      "brightnessNotSupported": "التحكم في سطوع الشاشة غير مدعوم على هذا الجهاز",
+      "brightnessSaveSuccess": "تم حفظ إعداد السطوع بنجاح",
+      "brightnessSaveError": "فشل في حفظ إعداد السطوع: {{error}}",
+      "offlineMessage": "الجهاز غير متصل. يمكن تغيير الإعدادات فقط عندما يكون الجهاز متصلاً."
+    }
   },
   "validation": {
     "fieldRequired": "هذا الحقل مطلوب",

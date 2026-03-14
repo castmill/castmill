@@ -39,6 +39,8 @@ vi.mock('../../plugins/castmill', () => ({
     restart: vi.fn(),
     quit: vi.fn(),
     reboot: vi.fn(),
+    getBrightness: vi.fn(),
+    setBrightness: vi.fn(),
   },
 }));
 
@@ -214,6 +216,21 @@ describe('AndroidMachine', () => {
     });
     expect(delay).toHaveBeenCalledWith(3000);
     expect(Castmill.reboot).toHaveBeenCalled();
+  });
+
+  it('should get brightness from native plugin', async () => {
+    vi.mocked(Castmill.getBrightness).mockResolvedValue({ brightness: 73 });
+
+    const brightness = await machine.getBrightness();
+
+    expect(brightness).toBe(73);
+    expect(Castmill.getBrightness).toHaveBeenCalled();
+  });
+
+  it('should set brightness through native plugin', async () => {
+    await machine.setBrightness(42);
+
+    expect(Castmill.setBrightness).toHaveBeenCalledWith({ brightness: 42 });
   });
 
   it('should log shutdown without implementation', async () => {

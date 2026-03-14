@@ -21,4 +21,6 @@ export enum Action {
 
   // Telemetry
   GET_TELEMETRY = 'GET_TELEMETRY',
+  GET_BRIGHTNESS = 'GET_BRIGHTNESS',
+  SET_BRIGHTNESS = 'SET_BRIGHTNESS',
 }

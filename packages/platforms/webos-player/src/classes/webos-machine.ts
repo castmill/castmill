@@ -235,6 +235,29 @@ export class WebosMachine implements Machine {
   }
 
   /**
+   * Returns the current screen brightness level (0-100).
+   * Uses the WebOS SCAP Configuration API.
+   */
+  async getBrightness(): Promise<number> {
+    if (!configuration.getBrightness) {
+      throw new Error('getBrightness not supported on this WebOS version');
+    }
+    const result = await configuration.getBrightness();
+    return (result as { brightness: number }).brightness;
+  }
+
+  /**
+   * Sets the screen brightness level (0-100).
+   * Uses the WebOS SCAP Configuration API.
+   */
+  async setBrightness(brightness: number): Promise<void> {
+    if (!configuration.setBrightness) {
+      throw new Error('setBrightness not supported on this WebOS version');
+    }
+    return configuration.setBrightness({ brightness });
+  }
+
+  /**
    * Returns telemetry data from the WebOS signage display.
    * Uses SCAP APIs for storage, temperature, and fan status.
    */

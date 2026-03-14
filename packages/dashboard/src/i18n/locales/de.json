@@ -1002,7 +1002,16 @@
     "devicesRemovedSuccess": "{{count}} Gerät(e) erfolgreich entfernt",
     "errorRegisteringDevice": "Fehler beim Registrieren des Geräts: {{error}}",
     "errorRemovingDevice": "Fehler beim Entfernen des Geräts {{name}}: {{error}}",
-    "errorRemovingDevices": "Fehler beim Entfernen der Geräte: {{error}}"
+    "errorRemovingDevices": "Fehler beim Entfernen der Geräte: {{error}}",
+    "settings": {
+      "brightnessTitle": "Bildschirmhelligkeit",
+      "brightness": "Helligkeit",
+      "brightnessDescription": "Bildschirmhelligkeit einstellen (0-100)",
+      "brightnessNotSupported": "Die Bildschirmhelligkeitssteuerung wird auf diesem Gerät nicht unterstützt",
+      "brightnessSaveSuccess": "Helligkeitseinstellung erfolgreich gespeichert",
+      "brightnessSaveError": "Fehler beim Speichern der Helligkeitseinstellung: {{error}}",
+      "offlineMessage": "Das Gerät ist offline. Einstellungen können nur geändert werden, wenn das Gerät verbunden ist."
+    }
   },
   "validation": {
     "fieldRequired": "Dieses Feld ist erforderlich",
