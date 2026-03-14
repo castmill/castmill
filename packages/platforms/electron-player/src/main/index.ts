@@ -249,6 +249,17 @@ file: app.whenReady().then(() => {
     return api.getTelemetry();
   });
 
+  ipcMain.handle(Action.GET_BRIGHTNESS, () => {
+    return api.getBrightness();
+  });
+
+  ipcMain.handle(
+    Action.SET_BRIGHTNESS,
+    (_event: IpcMainInvokeEvent, brightness: number) => {
+      return api.setBrightness(brightness);
+    }
+  );
+
   createWindow();
 
   app.on('activate', function () {

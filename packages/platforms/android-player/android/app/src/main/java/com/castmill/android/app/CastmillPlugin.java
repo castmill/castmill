@@ -1,7 +1,10 @@
 package com.castmill.android.app;
 
 import android.content.Intent;
+import android.provider.Settings;
 import android.util.Log;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Toast;
 
 import com.getcapacitor.JSObject;
@@ -60,5 +63,64 @@ public class CastmillPlugin extends Plugin {
         getActivity().finishAffinity();
 
         call.resolve();
+    }
+
+    @PluginMethod()
+    public void getBrightness(PluginCall call) {
+        Window window = getActivity() != null ? getActivity().getWindow() : null;
+        if (window == null) {
+            call.reject("Unable to access activity window");
+            return;
+        }
+
+        float currentBrightness = window.getAttributes().screenBrightness;
+        int brightness;
+
+        if (currentBrightness >= 0f) {
+            brightness = Math.round(currentBrightness * 100f);
+        } else {
+            try {
+                int systemBrightness = Settings.System.getInt(
+                        getContext().getContentResolver(),
+                        Settings.System.SCREEN_BRIGHTNESS
+                );
+                brightness = Math.round((systemBrightness / 255f) * 100f);
+            } catch (Exception e) {
+                brightness = 100;
+            }
+        }
+
+        brightness = Math.max(0, Math.min(100, brightness));
+        JSObject result = new JSObject();
+        result.put("brightness", brightness);
+        call.resolve(result);
+    }
+
+    @PluginMethod()
+    public void setBrightness(PluginCall call) {
+        Integer brightness = call.getInt("brightness");
+        if (brightness == null) {
+            call.reject("Missing brightness value");
+            return;
+        }
+
+        if (brightness < 0 || brightness > 100) {
+            call.reject("Brightness must be between 0 and 100");
+            return;
+        }
+
+        Window window = getActivity() != null ? getActivity().getWindow() : null;
+        if (window == null) {
+            call.reject("Unable to access activity window");
+            return;
+        }
+
+        float normalizedBrightness = brightness / 100f;
+        getActivity().runOnUiThread(() -> {
+            WindowManager.LayoutParams layoutParams = window.getAttributes();
+            layoutParams.screenBrightness = normalizedBrightness;
+            window.setAttributes(layoutParams);
+            call.resolve();
+        });
     }
 }

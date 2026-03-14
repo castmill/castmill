@@ -18,6 +18,9 @@ const api: ApplicationAPI = {
     ipcRenderer.send(Action.SET_STORE_VALUE, key, value),
   deleteItem: (key: string) => ipcRenderer.send(Action.DELETE_STORE_VALUE, key),
   getTelemetry: () => ipcRenderer.invoke(Action.GET_TELEMETRY),
+  getBrightness: () => ipcRenderer.invoke(Action.GET_BRIGHTNESS),
+  setBrightness: (brightness: number) =>
+    ipcRenderer.invoke(Action.SET_BRIGHTNESS, brightness),
 };
 
 const fsApi = {

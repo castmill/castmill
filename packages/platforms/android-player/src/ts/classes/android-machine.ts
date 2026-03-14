@@ -136,6 +136,15 @@ export class AndroidMachine implements Machine {
     return Castmill.reboot();
   }
 
+  async getBrightness(): Promise<number> {
+    const result = await Castmill.getBrightness();
+    return result.brightness;
+  }
+
+  async setBrightness(brightness: number): Promise<void> {
+    return Castmill.setBrightness({ brightness });
+  }
+
   /**
    * Shutdown the device. This should perform a clean hardware shutdown of the device.
    * i.e. after this method is called the device should be completely powered off.

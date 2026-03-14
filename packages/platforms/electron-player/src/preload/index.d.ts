@@ -18,6 +18,8 @@ export interface ApplicationAPI {
   getItem: (key: string) => Promise<string>;
   deleteItem: (key: string) => void;
   getTelemetry: () => Promise<TelemetryData>;
+  getBrightness: () => Promise<number | null>;
+  setBrightness: (brightness: number) => Promise<void>;
 }
 
 interface OsInfo {

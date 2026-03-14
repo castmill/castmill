@@ -10,6 +10,18 @@ import { createHash } from 'crypto';
 import si, { Systeminformation } from 'systeminformation';
 import type { TelemetryData } from '@castmill/device';
 
+const execAsync = (command: string): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    exec(command, (error, stdout) => {
+      if (error) {
+        reject(error);
+        return;
+      }
+      resolve(stdout.toString().trim());
+    });
+  });
+};
+
 /*
  * show a toast notification
  */
@@ -241,4 +253,75 @@ export const getTelemetry = async (): Promise<TelemetryData> => {
   }
 
   return telemetry;
+};
+
+export const getBrightness = async (): Promise<number | null> => {
+  try {
+    if (process.platform === 'win32') {
+      const output = await execAsync(
+        'powershell -NoProfile -Command "(Get-CimInstance -Namespace root/WMI -ClassName WmiMonitorBrightness | Select-Object -First 1 -ExpandProperty CurrentBrightness)"'
+      );
+      const parsed = Number.parseInt(output, 10);
+      return Number.isFinite(parsed) ? parsed : null;
+    }
+
+    if (process.platform === 'linux') {
+      const output = await execAsync(
+        "xrandr --verbose --current | grep -m1 -i 'Brightness:' | awk '{print $2}'"
+      );
+      const parsed = Number.parseFloat(output);
+      return Number.isFinite(parsed)
+        ? Math.max(0, Math.min(100, Math.round(parsed * 100)))
+        : null;
+    }
+
+    if (process.platform === 'darwin') {
+      const output = await execAsync(
+        'sh -c "command -v brightness >/dev/null 2>&1 && brightness -l | awk \'/brightness/ {print $4; exit}\' || echo unsupported"'
+      );
+      if (output === 'unsupported') return null;
+      const parsed = Number.parseFloat(output);
+      return Number.isFinite(parsed)
+        ? Math.max(0, Math.min(100, Math.round(parsed * 100)))
+        : null;
+    }
+
+    return null;
+  } catch {
+    return null;
+  }
+};
+
+export const setBrightness = async (brightness: number): Promise<void> => {
+  const clampedBrightness = Math.max(0, Math.min(100, Math.round(brightness)));
+
+  if (process.platform === 'win32') {
+    await execAsync(
+      `powershell -NoProfile -Command "(Get-CimInstance -Namespace root/WMI -ClassName WmiMonitorBrightnessMethods | Select-Object -First 1).WmiSetBrightness(1,${clampedBrightness})"`
+    );
+    return;
+  }
+
+  if (process.platform === 'linux') {
+    const displayOutput = await execAsync(
+      "xrandr --current | awk '/ connected/ {print $1; exit}'"
+    );
+    const display = displayOutput.trim();
+    if (!display || !/^[a-zA-Z0-9._:-]+$/.test(display)) {
+      throw new Error('Could not determine connected display');
+    }
+    const normalized = (clampedBrightness / 100).toFixed(2);
+    await execAsync(`xrandr --output ${display} --brightness ${normalized}`);
+    return;
+  }
+
+  if (process.platform === 'darwin') {
+    const normalized = (clampedBrightness / 100).toFixed(2);
+    await execAsync(
+      `sh -c "command -v brightness >/dev/null 2>&1 && brightness ${normalized} || exit 1"`
+    );
+    return;
+  }
+
+  throw new Error('Brightness control not supported on this platform');
 };

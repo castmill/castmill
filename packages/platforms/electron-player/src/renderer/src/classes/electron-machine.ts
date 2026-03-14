@@ -139,6 +139,18 @@ export class ElectronMachine implements Machine {
     window.api.update();
   }
 
+  async getBrightness(): Promise<number> {
+    const brightness = await window.api.getBrightness();
+    if (brightness === null || brightness === undefined) {
+      throw new Error('Brightness control not supported on this platform');
+    }
+    return brightness;
+  }
+
+  async setBrightness(brightness: number): Promise<void> {
+    await window.api.setBrightness(brightness);
+  }
+
   async getTelemetry(): Promise<TelemetryData> {
     return window.api.getTelemetry();
   }

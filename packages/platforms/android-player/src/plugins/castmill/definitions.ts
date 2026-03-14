@@ -13,4 +13,14 @@ export interface CastmillPlugin {
    * Quit the Castmill application.
    */
   quit(): Promise<void>;
+
+  /**
+   * Get current screen brightness level (0-100).
+   */
+  getBrightness(): Promise<{ brightness: number }>;
+
+  /**
+   * Set screen brightness level (0-100).
+   */
+  setBrightness(options: { brightness: number }): Promise<void>;
 }
