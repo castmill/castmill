@@ -5,6 +5,15 @@ import { DevicesService } from '../services/devices.service';
 
 import './device-settings.scss';
 
+const isUnsupportedBrightnessError = (error: unknown): boolean => {
+  const message =
+    error instanceof Error
+      ? error.message.toLowerCase()
+      : String(error).toLowerCase();
+
+  return message.includes('not supported') || message.includes('unsupported');
+};
+
 export const DeviceSettings: Component<{
   baseUrl: string;
   device: Device;
@@ -22,19 +31,24 @@ export const DeviceSettings: Component<{
     if (!props.device.online) {
       return;
     }
+
+    // Default to a sane value so users can still try setting brightness even
+    // if reading the current value is unavailable on this platform.
+    setBrightness(50);
     setLoading(true);
+
     try {
       const result = await DevicesService.getDeviceBrightness(
         props.baseUrl,
         props.device.id
       );
-      if (result.brightness === null || result.brightness === undefined) {
-        setNotSupported(true);
-      } else {
+
+      if (typeof result.brightness === 'number') {
         setBrightness(result.brightness);
       }
-    } catch (error) {
-      setNotSupported(true);
+    } catch (_error) {
+      // Keep the control enabled. Lack of read support should not imply
+      // that write support is unavailable.
     } finally {
       setLoading(false);
     }
@@ -51,8 +65,13 @@ export const DeviceSettings: Component<{
         props.device.id,
         value
       );
+      setNotSupported(false);
       toast.success(t('devices.settings.brightnessSaveSuccess'));
     } catch (error) {
+      if (isUnsupportedBrightnessError(error)) {
+        setNotSupported(true);
+      }
+
       toast.error(
         t('devices.settings.brightnessSaveError', { error: String(error) })
       );

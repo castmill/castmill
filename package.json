@@ -89,7 +89,10 @@
     "gauge": "^5.0.1",
     "are-we-there-yet": "^4.0.0",
     "har-validator": "^5.1.5",
-    "signal-exit": "^4.1.0"
+    "signal-exit": "^4.1.0",
+    "string-width": "4.2.3",
+    "strip-ansi": "6.0.1",
+    "wrap-ansi": "7.0.0"
   },
   "packageManager": "yarn@1.22.22"
 }

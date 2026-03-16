@@ -168,5 +168,28 @@ defmodule Castmill.OrganizationsTest do
       assert org1.name == "Castmill AB"
       assert org2.name == "castmill ab"
     end
+
+    test "has_access/4 maps get_brightness to show permission" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+      member = user_fixture(%{organization_id: organization.id})
+
+      {:ok, _} = Organizations.set_user_role(organization.id, member.id, :member)
+
+      assert Organizations.has_access(organization.id, member.id, "devices", :get_brightness)
+    end
+
+    test "has_access/4 maps set_brightness to update permission" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+      member = user_fixture(%{organization_id: organization.id})
+      guest = user_fixture(%{organization_id: organization.id, email: "guest_brightness@test.com"})
+
+      {:ok, _} = Organizations.set_user_role(organization.id, member.id, :member)
+      {:ok, _} = Organizations.set_user_role(organization.id, guest.id, :guest)
+
+      assert Organizations.has_access(organization.id, member.id, "devices", :set_brightness)
+      refute Organizations.has_access(organization.id, guest.id, "devices", :set_brightness)
+    end
   end
 end

@@ -464,6 +464,8 @@ defmodule Castmill.Organizations do
         :list_events -> :show
         :delete_events -> :update
         :get_telemetry -> :show
+        :get_brightness -> :show
+        :set_brightness -> :update
         # Keep other atoms as-is
         a when is_atom(a) -> a
         _ -> :unknown
