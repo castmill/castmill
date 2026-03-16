@@ -174,7 +174,7 @@ const OrganizationPage: Component = () => {
           when={canPerformAction('organizations', 'create')}
           fallback={
             <div class={style['permission-warning']}>
-              {t('organization.noCreateOrganizations')}
+              {t('permissions.noCreateOrganizations')}
             </div>
           }
         >
