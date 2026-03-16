@@ -368,7 +368,8 @@
       "playlists": "Spellistor",
       "channels": "Kanaler",
       "teams": "Team",
-      "widgets": "Widgets"
+      "widgets": "Widgets",
+      "layouts": "Layouter"
     },
     "errors": {
       "fetchUsageData": "Misslyckades att hämta användningsdata: {{error}}"

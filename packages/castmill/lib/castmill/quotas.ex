@@ -103,6 +103,9 @@ defmodule Castmill.Quotas do
     rather than returning 0. This ensures backward compatibility when new resource
     types are added to the system.
   """
+  def get_quota_for_organization(_organization_id, "widgets"), do: 0
+  def get_quota_for_organization(_organization_id, :widgets), do: 0
+
   def get_quota_for_organization(organization_id, resource) do
     # 1. Check for organization-specific quota override
     organization_quota =
@@ -292,6 +295,19 @@ defmodule Castmill.Quotas do
     from(ou in Castmill.Organizations.OrganizationsUsers,
       where: ou.organization_id == ^organization_id,
       select: count(ou.user_id)
+    )
+    |> Repo.one()
+  end
+
+  def get_quota_used_for_organization(organization_id, Castmill.Widgets.WidgetConfig) do
+    # Count widget instances (widgets_config) linked to playlist items in the organization.
+    from(wc in Castmill.Widgets.WidgetConfig,
+      join: pi in Castmill.Resources.PlaylistItem,
+      on: wc.playlist_item_id == pi.id,
+      join: p in Castmill.Resources.Playlist,
+      on: pi.playlist_id == p.id,
+      where: p.organization_id == ^organization_id,
+      select: count(wc.id)
     )
     |> Repo.one()
   end

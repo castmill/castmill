@@ -133,6 +133,9 @@ defmodule CastmillWeb.OrganizationUsageControllerTest do
 
       assert response["channels"]["used"] == 0
       assert response["channels"]["total"] == 10
+
+      assert response["widgets"]["used"] == 0
+      assert response["widgets"]["total"] == 0
     end
 
     test "returns empty usage when organization has no data", %{
@@ -153,6 +156,9 @@ defmodule CastmillWeb.OrganizationUsageControllerTest do
       assert response["storage"]["used"] == 0
       # Storage quota stored in MB, controller converts to bytes for display
       assert response["storage"]["total"] == 100 * 1024 * 1024
+
+      assert response["widgets"]["used"] == 0
+      assert response["widgets"]["total"] == 0
     end
   end
 end

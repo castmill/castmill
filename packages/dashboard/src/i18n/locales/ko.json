@@ -373,7 +373,8 @@
       "playlists": "재생목록",
       "channels": "채널",
       "teams": "팀",
-      "widgets": "위젯"
+      "widgets": "위젯",
+      "layouts": "레이아웃"
     },
     "errors": {
       "fetchUsageData": "사용량 데이터를 가져오는데 실패했습니다: {{error}}"

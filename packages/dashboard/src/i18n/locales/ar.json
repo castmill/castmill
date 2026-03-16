@@ -373,7 +373,8 @@
       "playlists": "قوائم التشغيل",
       "channels": "القنوات",
       "teams": "الفرق",
-      "widgets": "الأدوات"
+      "widgets": "الأدوات",
+      "layouts": "التخطيطات"
     },
     "errors": {
       "fetchUsageData": "فشل جلب بيانات الاستخدام: {{error}}"
