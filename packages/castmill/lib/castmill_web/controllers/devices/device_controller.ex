@@ -343,10 +343,38 @@ defmodule CastmillWeb.DeviceController do
       })
 
       receive do
-        {:device_response, _result} ->
-          conn
-          |> put_status(:ok)
-          |> json(%{ok: true})
+        {:device_response, result} ->
+          case result do
+            "ok" ->
+              conn
+              |> put_status(:ok)
+              |> json(%{ok: true})
+
+            %{"result" => "ok"} ->
+              conn
+              |> put_status(:ok)
+              |> json(%{ok: true})
+
+            %{"result" => "error", "error" => error} ->
+              normalized_error = if is_binary(error), do: String.downcase(error), else: ""
+
+              status =
+                if String.contains?(normalized_error, "not supported") or
+                     String.contains?(normalized_error, "unsupported") do
+                  :not_implemented
+                else
+                  :unprocessable_entity
+                end
+
+              conn
+              |> put_status(status)
+              |> json(%{error: error})
+
+            _ ->
+              conn
+              |> put_status(:unprocessable_entity)
+              |> json(%{error: "Device failed to set brightness"})
+          end
       after
         5_000 ->
           conn

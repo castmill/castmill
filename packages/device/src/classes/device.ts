@@ -694,8 +694,13 @@ export class Device extends EventEmitter {
           channel.push('res:get', { telemetry, ref: opts.ref });
           break;
         case 'brightness':
-          const brightness = (await this.integration.getBrightness?.()) ?? null;
-          channel.push('res:get', { brightness, ref: opts.ref });
+          try {
+            const brightness =
+              (await this.integration.getBrightness?.()) ?? null;
+            channel.push('res:get', { brightness, ref: opts.ref });
+          } catch (_error) {
+            channel.push('res:get', { brightness: null, ref: opts.ref });
+          }
           break;
       }
     });
@@ -704,8 +709,25 @@ export class Device extends EventEmitter {
       const { resource, opts } = payload;
       switch (resource) {
         case 'brightness':
-          await this.integration.setBrightness?.(opts.brightness);
-          channel.push('res:set', { result: 'ok', ref: opts.ref });
+          if (!this.integration.setBrightness) {
+            channel.push('res:set', {
+              result: 'error',
+              error: 'Brightness control is not supported on this device',
+              ref: opts.ref,
+            });
+            return;
+          }
+
+          try {
+            await this.integration.setBrightness(opts.brightness);
+            channel.push('res:set', { result: 'ok', ref: opts.ref });
+          } catch (error) {
+            channel.push('res:set', {
+              result: 'error',
+              error: error instanceof Error ? error.message : String(error),
+              ref: opts.ref,
+            });
+          }
           break;
       }
     });

@@ -543,6 +543,109 @@ describe('Device - Channel Updates', () => {
   });
 });
 
+describe('Device - Brightness listeners', () => {
+  let device: Device;
+  let mockIntegration: any;
+
+  beforeEach(() => {
+    mockIntegration = {
+      getCredentials: vi.fn(),
+      getMachineGUID: vi.fn(),
+    };
+
+    device = new Device(mockIntegration, {} as any, {
+      cache: { maxItems: 100 },
+    });
+  });
+
+  it('should respond with null brightness when getBrightness throws', async () => {
+    mockIntegration.getBrightness = vi
+      .fn()
+      .mockRejectedValue(new Error('unsupported'));
+    const mockChannel = { on: vi.fn(), push: vi.fn(), join: vi.fn() };
+
+    device['initListeners'](mockChannel as any);
+
+    const getHandler = mockChannel.on.mock.calls.find(
+      (call: any[]) => call[0] === 'get'
+    )?.[1];
+
+    await getHandler({ resource: 'brightness', opts: { ref: 'ref-1' } });
+
+    expect(mockChannel.push).toHaveBeenCalledWith('res:get', {
+      brightness: null,
+      ref: 'ref-1',
+    });
+  });
+
+  it('should respond with error when setBrightness is not implemented', async () => {
+    const mockChannel = { on: vi.fn(), push: vi.fn(), join: vi.fn() };
+
+    device['initListeners'](mockChannel as any);
+
+    const setHandler = mockChannel.on.mock.calls.find(
+      (call: any[]) => call[0] === 'set'
+    )?.[1];
+
+    await setHandler({
+      resource: 'brightness',
+      opts: { brightness: 25, ref: 'ref-2' },
+    });
+
+    expect(mockChannel.push).toHaveBeenCalledWith('res:set', {
+      result: 'error',
+      error: 'Brightness control is not supported on this device',
+      ref: 'ref-2',
+    });
+  });
+
+  it('should respond with error when setBrightness throws', async () => {
+    mockIntegration.setBrightness = vi
+      .fn()
+      .mockRejectedValue(new Error('device rejected change'));
+    const mockChannel = { on: vi.fn(), push: vi.fn(), join: vi.fn() };
+
+    device['initListeners'](mockChannel as any);
+
+    const setHandler = mockChannel.on.mock.calls.find(
+      (call: any[]) => call[0] === 'set'
+    )?.[1];
+
+    await setHandler({
+      resource: 'brightness',
+      opts: { brightness: 33, ref: 'ref-3' },
+    });
+
+    expect(mockChannel.push).toHaveBeenCalledWith('res:set', {
+      result: 'error',
+      error: 'device rejected change',
+      ref: 'ref-3',
+    });
+  });
+
+  it('should respond with ok when brightness is set successfully', async () => {
+    mockIntegration.setBrightness = vi.fn().mockResolvedValue(undefined);
+    const mockChannel = { on: vi.fn(), push: vi.fn(), join: vi.fn() };
+
+    device['initListeners'](mockChannel as any);
+
+    const setHandler = mockChannel.on.mock.calls.find(
+      (call: any[]) => call[0] === 'set'
+    )?.[1];
+
+    await setHandler({
+      resource: 'brightness',
+      opts: { brightness: 75, ref: 'ref-4' },
+    });
+
+    expect(mockIntegration.setBrightness).toHaveBeenCalledWith(75);
+    expect(mockChannel.push).toHaveBeenCalledWith('res:set', {
+      result: 'ok',
+      ref: 'ref-4',
+    });
+  });
+});
+
 describe('Device - Pincode Polling', () => {
   let device: Device;
   let mockIntegration: any;

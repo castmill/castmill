@@ -135,4 +135,29 @@ defmodule CastmillWeb.DevicesChannelTest do
       }
     end
   end
+
+  describe "handle_in/3 ref decoding safety" do
+    test "forwards res:set payload with error details when ref is valid", %{socket: socket} do
+      ref =
+        self()
+        |> :erlang.term_to_binary()
+        |> Base.url_encode64()
+
+      {:noreply, _socket} =
+        DevicesChannel.handle_in(
+          "res:set",
+          %{"ref" => ref, "result" => "error", "error" => "not supported"},
+          socket
+        )
+
+      assert_receive {:device_response, %{"result" => "error", "error" => "not supported"}}
+    end
+
+    test "ignores invalid refs without crashing", %{socket: socket} do
+      {:noreply, _socket} =
+        DevicesChannel.handle_in("res:get", %{"ref" => "invalid", "brightness" => 50}, socket)
+
+      refute_receive {:device_response, _}
+    end
+  end
 end

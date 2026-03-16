@@ -1,6 +1,7 @@
 defmodule CastmillWeb.DevicesChannel do
   use CastmillWeb, :channel
   alias Castmill.Devices
+  require Logger
 
   # Example interval, in milliseconds
   @heartbeat_interval 30_000
@@ -41,26 +42,19 @@ defmodule CastmillWeb.DevicesChannel do
 
   @impl true
   def handle_in("res:get", %{"ref" => ref, "page" => page}, socket) do
-    # Convert the PID ref string back to a PID
-    pid =
-      ref
-      |> Base.url_decode64!()
-      |> :erlang.binary_to_term()
-
-    # Forward the response to the controller that made the request
-    send(pid, {:device_response, page})
+    with {:ok, pid} <- decode_pid_ref(ref) do
+      # Forward the response to the controller that made the request
+      send(pid, {:device_response, page})
+    end
 
     {:noreply, socket}
   end
 
   @impl true
   def handle_in("res:get", %{"ref" => ref, "telemetry" => telemetry}, socket) do
-    pid =
-      ref
-      |> Base.url_decode64!()
-      |> :erlang.binary_to_term()
-
-    send(pid, {:device_response, telemetry})
+    with {:ok, pid} <- decode_pid_ref(ref) do
+      send(pid, {:device_response, telemetry})
+    end
 
     {:noreply, socket}
   end
@@ -68,40 +62,47 @@ defmodule CastmillWeb.DevicesChannel do
   @impl true
   def handle_in("res:delete", %{"ref" => ref, "result" => result}, socket) do
     IO.puts("Received res:delete with ref: #{inspect(ref)} and result: #{inspect(result)}")
-    # Convert the PID ref string back to a PID
-    pid =
-      ref
-      |> Base.url_decode64!()
-      |> :erlang.binary_to_term()
-
-    # Forward the response to the controller that made the request
-    send(pid, {:device_response, result})
+    with {:ok, pid} <- decode_pid_ref(ref) do
+      # Forward the response to the controller that made the request
+      send(pid, {:device_response, result})
+    end
 
     {:noreply, socket}
   end
 
   @impl true
   def handle_in("res:get", %{"ref" => ref, "brightness" => brightness}, socket) do
-    pid =
-      ref
-      |> Base.url_decode64!()
-      |> :erlang.binary_to_term()
-
-    send(pid, {:device_response, brightness})
+    with {:ok, pid} <- decode_pid_ref(ref) do
+      send(pid, {:device_response, brightness})
+    end
 
     {:noreply, socket}
   end
 
   @impl true
-  def handle_in("res:set", %{"ref" => ref, "result" => result}, socket) do
-    pid =
-      ref
-      |> Base.url_decode64!()
-      |> :erlang.binary_to_term()
+  def handle_in("res:set", %{"ref" => ref, "result" => result} = payload, socket) do
+    with {:ok, pid} <- decode_pid_ref(ref) do
+      response =
+        case Map.get(payload, "error") do
+          nil -> result
+          error -> %{"result" => result, "error" => error}
+        end
 
-    send(pid, {:device_response, result})
+      send(pid, {:device_response, response})
+    end
 
     {:noreply, socket}
+  end
+
+  defp decode_pid_ref(ref) do
+    with {:ok, binary} <- Base.url_decode64(ref),
+         pid when is_pid(pid) <- :erlang.binary_to_term(binary, [:safe]) do
+      {:ok, pid}
+    else
+      _error ->
+        Logger.warning("Invalid device channel ref: #{inspect(ref)}")
+        :error
+    end
   end
 
   # Not sure we should use the socket connection for getting stufff, seems conterintuitive
