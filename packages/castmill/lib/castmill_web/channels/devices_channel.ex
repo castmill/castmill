@@ -95,17 +95,6 @@ defmodule CastmillWeb.DevicesChannel do
     {:noreply, socket}
   end
 
-  defp decode_pid_ref(ref) do
-    with {:ok, binary} <- Base.url_decode64(ref),
-         pid when is_pid(pid) <- :erlang.binary_to_term(binary, [:safe]) do
-      {:ok, pid}
-    else
-      _error ->
-        Logger.warning("Invalid device channel ref: #{inspect(ref)}")
-        :error
-    end
-  end
-
   # Not sure we should use the socket connection for getting stufff, seems conterintuitive
   # Going to deprecate this
   @impl true
@@ -125,6 +114,17 @@ defmodule CastmillWeb.DevicesChannel do
     IO.puts("Unhandled event: #{inspect(event)}")
     IO.puts("Unhandled payload: #{inspect(payload)}")
     {:noreply, socket}
+  end
+
+  defp decode_pid_ref(ref) do
+    with {:ok, binary} <- Base.url_decode64(ref),
+         pid when is_pid(pid) <- :erlang.binary_to_term(binary, [:safe]) do
+      {:ok, pid}
+    else
+      _error ->
+        Logger.warning("Invalid device channel ref: #{inspect(ref)}")
+        :error
+    end
   end
 
   # Handle broadcasted messages for a given device via PubSub
