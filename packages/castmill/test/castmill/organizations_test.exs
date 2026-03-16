@@ -183,7 +183,9 @@ defmodule Castmill.OrganizationsTest do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
       member = user_fixture(%{organization_id: organization.id})
-      guest = user_fixture(%{organization_id: organization.id, email: "guest_brightness@test.com"})
+
+      guest =
+        user_fixture(%{organization_id: organization.id, email: "guest_brightness@test.com"})
 
       {:ok, _} = Organizations.set_user_role(organization.id, member.id, :member)
       {:ok, _} = Organizations.set_user_role(organization.id, guest.id, :guest)

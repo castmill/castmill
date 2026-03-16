@@ -62,6 +62,7 @@ defmodule CastmillWeb.DevicesChannel do
   @impl true
   def handle_in("res:delete", %{"ref" => ref, "result" => result}, socket) do
     IO.puts("Received res:delete with ref: #{inspect(ref)} and result: #{inspect(result)}")
+
     with {:ok, pid} <- decode_pid_ref(ref) do
       # Forward the response to the controller that made the request
       send(pid, {:device_response, result})
