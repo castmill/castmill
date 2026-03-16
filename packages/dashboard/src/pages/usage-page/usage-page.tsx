@@ -11,8 +11,6 @@ import {
 import { UsageService } from '../../services/usage';
 import { store } from '../../store/store';
 import { Usage } from '../../interfaces/usage';
-
-import { UsageComponent } from '../../components/usage/usage';
 import { useI18n } from '../../i18n';
 import { useToast, formatBytes } from '@castmill/ui-common';
 import { IoImagesOutline } from 'solid-icons/io';
