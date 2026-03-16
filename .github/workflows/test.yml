@@ -73,7 +73,7 @@ jobs:
         with:
           node-version: 18
           cache: 'yarn'
-      - run: yarn install --ignore-engines --frozen-lockfile --non-interactive
+      - run: yarn install --ignore-engines --frozen-lockfile --non-interactive --ignore-scripts
       - run: yarn build
       - run: yarn format:check
       - run: yarn test --run
@@ -97,14 +97,14 @@ jobs:
           cache: 'yarn'
       - name: Install workspace dependencies
         working-directory: ./
-        run: yarn install --ignore-engines --frozen-lockfile --non-interactive
+        run: yarn install --ignore-engines --frozen-lockfile --non-interactive --ignore-scripts
       - name: Install @castmill/ui-common dependency
         working-directory: ./packages/ui-common
-        run: yarn install --ignore-engines --frozen-lockfile --non-interactive
+        run: yarn install --ignore-engines --frozen-lockfile --non-interactive --ignore-scripts
       - name: Build @castmill/ui-common
         working-directory: ./packages/ui-common
         run: yarn build
-      - run: yarn install --ignore-engines --frozen-lockfile --non-interactive
+      - run: yarn install --ignore-engines --frozen-lockfile --non-interactive --ignore-scripts
       - run: yarn build
       - run: yarn format:check
       - run: yarn test --run
@@ -128,14 +128,14 @@ jobs:
           cache: 'yarn'
       - name: Install workspace dependencies
         working-directory: ./
-        run: yarn install --ignore-engines --frozen-lockfile --non-interactive
+        run: yarn install --ignore-engines --frozen-lockfile --non-interactive --ignore-scripts
       - name: Install @castmill/cache dependency
         working-directory: ./packages/cache
-        run: yarn install --ignore-engines --frozen-lockfile --non-interactive
+        run: yarn install --ignore-engines --frozen-lockfile --non-interactive --ignore-scripts
       - name: Build @castmill/cache
         working-directory: ./packages/cache
         run: yarn build
-      - run: yarn install --ignore-engines --frozen-lockfile --non-interactive
+      - run: yarn install --ignore-engines --frozen-lockfile --non-interactive --ignore-scripts
       - run: yarn build
       - run: yarn format:check
       - run: yarn test
@@ -157,7 +157,7 @@ jobs:
         with:
           node-version: 18
           cache: 'yarn'
-      - run: yarn install --ignore-engines --frozen-lockfile --non-interactive
+      - run: yarn install --ignore-engines --frozen-lockfile --non-interactive --ignore-scripts
       - run: yarn build
       - run: yarn format:check
       - run: yarn test
@@ -181,20 +181,20 @@ jobs:
           cache: 'yarn'
       - name: Install workspace dependencies
         working-directory: ./
-        run: yarn install --ignore-engines --frozen-lockfile --non-interactive
+        run: yarn install --ignore-engines --frozen-lockfile --non-interactive --ignore-scripts
       - name: Install @castmill/cache dependency
         working-directory: ./packages/cache
-        run: yarn install --ignore-engines --frozen-lockfile --non-interactive
+        run: yarn install --ignore-engines --frozen-lockfile --non-interactive --ignore-scripts
       - name: Build @castmill/cache
         working-directory: ./packages/cache
         run: yarn build
       - name: Install @castmill/player dependency
         working-directory: ./packages/player
-        run: yarn install --ignore-engines --frozen-lockfile --non-interactive
+        run: yarn install --ignore-engines --frozen-lockfile --non-interactive --ignore-scripts
       - name: Build @castmill/player
         working-directory: ./packages/player
         run: yarn build
-      - run: yarn install --ignore-engines --frozen-lockfile --non-interactive
+      - run: yarn install --ignore-engines --frozen-lockfile --non-interactive --ignore-scripts
       - run: yarn build
       - run: yarn format:check
       - run: yarn test
@@ -235,27 +235,27 @@ jobs:
       # Step 3: Install workspace dependencies
       - name: Install workspace dependencies
         working-directory: ./
-        run: yarn install --ignore-engines --frozen-lockfile --non-interactive
+        run: yarn install --ignore-engines --frozen-lockfile --non-interactive --ignore-scripts
 
       # Step 4: Install cache dependency
       - name: Install and build cache dependency
         working-directory: ./packages/cache
         run: |
-          yarn install --ignore-engines --frozen-lockfile --non-interactive
+          yarn install --ignore-engines --frozen-lockfile --non-interactive --ignore-scripts
           yarn build
 
       # Step 5: Install player dependency
       - name: Install and build player dependency
         working-directory: ./packages/player
         run: |
-          yarn install --ignore-engines --frozen-lockfile --non-interactive
+          yarn install --ignore-engines --frozen-lockfile --non-interactive --ignore-scripts
           yarn build
 
       # Step 6: Install device dependency
       - name: Install and build device dependency
         working-directory: ./packages/device
         run: |
-          yarn install --ignore-engines --frozen-lockfile --non-interactive
+          yarn install --ignore-engines --frozen-lockfile --non-interactive --ignore-scripts
           yarn build
 
       # Step 7: Check formatting
