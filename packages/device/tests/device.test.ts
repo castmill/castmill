@@ -578,6 +578,24 @@ describe('Device - Brightness listeners', () => {
     });
   });
 
+  it('should respond with null brightness when getBrightness returns undefined', async () => {
+    mockIntegration.getBrightness = vi.fn().mockResolvedValue(undefined);
+    const mockChannel = { on: vi.fn(), push: vi.fn(), join: vi.fn() };
+
+    device['initListeners'](mockChannel as any);
+
+    const getHandler = mockChannel.on.mock.calls.find(
+      (call: any[]) => call[0] === 'get'
+    )?.[1];
+
+    await getHandler({ resource: 'brightness', opts: { ref: 'ref-1b' } });
+
+    expect(mockChannel.push).toHaveBeenCalledWith('res:get', {
+      brightness: null,
+      ref: 'ref-1b',
+    });
+  });
+
   it('should respond with error when setBrightness is not implemented', async () => {
     const mockChannel = { on: vi.fn(), push: vi.fn(), join: vi.fn() };
 
