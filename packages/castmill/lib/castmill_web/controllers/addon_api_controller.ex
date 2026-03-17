@@ -70,9 +70,10 @@ defmodule CastmillWeb.AddonApiController do
 
     # First check if this is a public route (no auth required)
     case find_public_route(addon_id, method, path) do
-      {_method, _path, controller, action} ->
+      {_method, route_path, controller, action} ->
         # Public route found - dispatch without auth check
-        apply(controller, action, [conn, controller_params])
+        path_params = extract_path_params(route_path, path)
+        apply(controller, action, [conn, Map.merge(controller_params, path_params)])
 
       nil ->
         # Not a public route - check authentication and then look for private route
@@ -105,8 +106,9 @@ defmodule CastmillWeb.AddonApiController do
             |> put_status(:not_found)
             |> json(%{error: "Route not found"})
 
-          {_method, _path, controller, action} ->
-            apply(controller, action, [conn, controller_params])
+          {_method, route_path, controller, action} ->
+            path_params = extract_path_params(route_path, path)
+            apply(controller, action, [conn, Map.merge(controller_params, path_params)])
         end
     end
   end
@@ -153,9 +155,32 @@ defmodule CastmillWeb.AddonApiController do
     end
   end
 
-  # Simple path matching (could be extended to support path parameters)
+  # Path matching with support for :param segments.
+  # e.g. match_path?("/network/:network_id", "/network/abc-123") => true
   defp match_path?(route_path, request_path) do
-    route_path == request_path
+    route_segments = String.split(route_path, "/")
+    request_segments = String.split(request_path, "/")
+
+    length(route_segments) == length(request_segments) &&
+      Enum.zip(route_segments, request_segments)
+      |> Enum.all?(fn
+        {":" <> _param, _value} -> true
+        {a, b} -> a == b
+      end)
+  end
+
+  # Extract path parameter values from a matched route.
+  # e.g. extract_path_params("/admin/networks/:network_id/pricing", "/admin/networks/abc-123/pricing")
+  #      => %{"network_id" => "abc-123"}
+  defp extract_path_params(route_path, request_path) do
+    route_segments = String.split(route_path, "/")
+    request_segments = String.split(request_path, "/")
+
+    Enum.zip(route_segments, request_segments)
+    |> Enum.reduce(%{}, fn
+      {":" <> param, value}, acc -> Map.put(acc, param, value)
+      _, acc -> acc
+    end)
   end
 
   defp get_addon_id(addon_module) do
