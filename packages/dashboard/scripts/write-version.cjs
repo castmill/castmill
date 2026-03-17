@@ -11,8 +11,14 @@ const versionInfo = {
   app: packageJson.name,
   version: packageJson.version,
   build: {
-    castmill_git_sha: process.env.VITE_CASTMILL_GIT_SHA || 'unknown',
-    built_at: process.env.VITE_BUILD_TIME || new Date().toISOString(),
+    castmill_git_sha:
+      process.env.VITE_CASTMILL_GIT_SHA ||
+      process.env.CASTMILL_GIT_SHA ||
+      'unknown',
+    built_at:
+      process.env.VITE_BUILD_TIME ||
+      process.env.CASTMILL_BUILD_TIME ||
+      new Date().toISOString(),
   },
   runtime: {
     api_url: process.env.VITE_API_URL || null,
