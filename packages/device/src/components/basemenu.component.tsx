@@ -1,9 +1,11 @@
 import {
   createSignal,
+  createMemo,
   createResource,
   onMount,
   onCleanup,
   Show,
+  For,
   type JSX,
   type Component,
 } from 'solid-js';
@@ -41,15 +43,23 @@ interface SubmenuMenuEntry {
   name: string;
   id: string;
   type: 'submenu';
+  badge?: string;
   action?: (state: boolean) => void;
   children: MenuEntry[];
+}
+
+interface InfoMenuEntry {
+  id: string;
+  type: 'info';
+  content: JSX.Element;
 }
 
 export type MenuEntry =
   | ActionMenuEntry
   | CheckboxMenuEntry
   | RadioButtonMenuEntry
-  | SubmenuMenuEntry;
+  | SubmenuMenuEntry
+  | InfoMenuEntry;
 
 // internal item interface
 interface MenuRowItem {
@@ -57,6 +67,7 @@ interface MenuRowItem {
   id: string;
   content: JSX.Element;
   action: () => void;
+  nonInteractive?: boolean;
 }
 
 // type guards
@@ -69,12 +80,15 @@ const isRadioButtonMenuEntry = (
 ): entry is RadioButtonMenuEntry => entry.type === 'radiobutton';
 const isSubmenuMenuEntry = (entry: MenuEntry): entry is SubmenuMenuEntry =>
   entry.type === 'submenu';
+const isInfoMenuEntry = (entry: MenuEntry): entry is InfoMenuEntry =>
+  entry.type === 'info';
 
 // BaseMenu component props
 interface BaseMenuProps {
   header: JSX.Element;
   footer: JSX.Element;
   entries: MenuEntry[];
+  onShow?: () => void;
 }
 
 export const BaseMenu: Component<BaseMenuProps> = (props) => {
@@ -110,8 +124,15 @@ export const BaseMenu: Component<BaseMenuProps> = (props) => {
 
   // Show menu when triggering action. Hide it after MENU_TIMEOUT ms of inactivity
   const showMenu = () => {
+    const wasVisible = visible();
+
     // show menu
     setVisible(true);
+
+    // notify parent only when first showing
+    if (!wasVisible) {
+      props.onShow?.();
+    }
 
     // clear previous timer
     clearTimeout(timer());
@@ -150,8 +171,14 @@ export const BaseMenu: Component<BaseMenuProps> = (props) => {
             onEnter(entry);
           },
           content: (
-            <span>
+            <span class={styles.submenuHeader}>
               {expanded ? '▼' : '▶'} {entry.name}
+              <Show when={entry.badge}>
+                <span
+                  class={styles.badge}
+                  style={{ 'background-color': entry.badge }}
+                ></span>
+              </Show>
             </span>
           ),
           offset,
@@ -197,7 +224,7 @@ export const BaseMenu: Component<BaseMenuProps> = (props) => {
           offset,
           id: entry.id,
         });
-      } else {
+      } else if (isActionMenuEntry(entry)) {
         // add action item
         items.push({
           action: () => {
@@ -208,13 +235,22 @@ export const BaseMenu: Component<BaseMenuProps> = (props) => {
           offset,
           id: entry.id,
         });
+      } else if (isInfoMenuEntry(entry)) {
+        // add info item (non-interactive)
+        items.push({
+          action: () => {},
+          content: <div class={styles.infoItem}>{entry.content}</div>,
+          offset,
+          id: entry.id,
+          nonInteractive: true,
+        });
       }
     });
 
     return items;
   };
 
-  const items = () => getItems(props.entries);
+  const items = createMemo(() => getItems(props.entries));
 
   // handle enter keypress or click
   const onEnter = (entry: MenuEntry) => {
@@ -259,7 +295,9 @@ export const BaseMenu: Component<BaseMenuProps> = (props) => {
           break;
         case Key.Enter:
           const item = currentItems[selected()];
-          item.action();
+          if (!item.nonInteractive) {
+            item.action();
+          }
           break;
         case Key.Escape:
           hideMenu();
@@ -288,28 +326,28 @@ export const BaseMenu: Component<BaseMenuProps> = (props) => {
         <div role="menu">
           <div class={styles.menuHead}>{props.header}</div>
           <ul>
-            {items().map((item, i) => {
-              const isSelected = selected() === i;
-              const isActive = active() === item.id;
-
-              const className = `${styles.menuItem} ${isSelected ? styles.selected : ''} ${isActive ? styles.active : ''}`;
-              return (
+            <For each={items()}>
+              {(item, i) => (
                 <li
                   onClick={() => {
                     item.action();
                   }}
                   onMouseOver={() => {
                     showMenu();
-                    setSelected(i);
+                    setSelected(i());
                   }}
-                  class={className}
+                  classList={{
+                    [styles.menuItem]: true,
+                    [styles.selected]: selected() === i(),
+                    [styles.active]: active() === item.id,
+                  }}
                 >
                   <div style={{ 'margin-left': `${item.offset * 20}px` }}>
                     {item.content ? item.content : ''}
                   </div>
                 </li>
-              );
-            })}
+              )}
+            </For>
           </ul>
           <div class={styles.menuFooter}>{props.footer}</div>
         </div>

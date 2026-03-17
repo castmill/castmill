@@ -85,6 +85,7 @@ const ALLOWED_IDENTICAL_STRINGS = new Set([
   '3:4 (Portrait)', // Cognate in French
   'Contact', // Cognate in French
   'Administrator', // Cognate in German
+  'Timers', // Cognate in Swedish
   // Time unit abbreviations - internationally recognized
   'd', // days short
   'h', // hours short

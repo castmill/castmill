@@ -18,11 +18,11 @@ export function DeviceComponent(props: { device: Device }) {
   );
   const [ready, setReady] = createSignal(false);
 
-  // Listen for 'started' event from device.start() to hide progress bar for login path
+  // Listen for 'ready' event to hide progress bar (fired by start() or timer-off standby)
   onMount(() => {
-    const onStarted = () => setReady(true);
-    props.device.on('started', onStarted);
-    onCleanup(() => props.device.off('started', onStarted));
+    const onReady = () => setReady(true);
+    props.device.on('ready', onReady);
+    onCleanup(() => props.device.off('ready', onReady));
   });
 
   // Show progress bar while loading or while login's start() is still running

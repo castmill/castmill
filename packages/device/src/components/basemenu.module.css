@@ -73,3 +73,32 @@
 .active {
   background: #59b0e9;
 }
+
+.submenuHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+}
+
+.badge {
+  display: inline-block;
+  width: 0.5em;
+  height: 0.5em;
+  border-radius: 50%;
+  margin-left: auto;
+}
+
+.infoItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9em;
+}
+
+.infoLabel {
+  color: #aaa;
+}
+
+.infoValue {
+  color: #d3d3d3;
+}
