@@ -84,6 +84,7 @@
     "maintainance": "유지보수",
     "events": "이벤트",
     "telemetry": "원격 측정",
+    "timers": "타이머",
     "youIndicator": "(본인)",
     "addonLoadingError": "애드온 로딩 오류",
     "filters": {
@@ -373,7 +374,8 @@
       "playlists": "재생목록",
       "channels": "채널",
       "teams": "팀",
-      "widgets": "위젯"
+      "widgets": "위젯",
+      "layouts": "레이아웃"
     },
     "errors": {
       "fetchUsageData": "사용량 데이터를 가져오는데 실패했습니다: {{error}}"
@@ -1285,5 +1287,60 @@
   },
   "aspectRatio": {
     "custom": "사용자 정의"
+  },
+  "deviceTimers": {
+    "title": "기기 전원 타이머",
+    "description": "기기가 자동으로 켜지고 꺼지는 시간을 설정하십시오",
+    "onTimers": "켜짐 타이머",
+    "offTimers": "꺼짐 타이머",
+    "addOnTimer": "켜짐 타이머 추가",
+    "addOffTimer": "꺼짐 타이머 추가",
+    "time": "시간",
+    "days": "요일",
+    "deleteTimer": "타이머 삭제",
+    "saveTimers": "타이머 저장",
+    "maxTimersReached": "최대 6개의 타이머에 도달했습니다",
+    "monday": "월",
+    "tuesday": "화",
+    "wednesday": "수",
+    "thursday": "목",
+    "friday": "금",
+    "saturday": "토",
+    "sunday": "일",
+    "mon": "월",
+    "tue": "화",
+    "wed": "수",
+    "thu": "목",
+    "fri": "금",
+    "sat": "토",
+    "sun": "일",
+    "allDays": "모든 요일",
+    "noTimers": "구성된 타이머 없음",
+    "timersSaved": "타이머가 성공적으로 저장되었습니다",
+    "timersLoadError": "타이머 로드 오류",
+    "timersSaveError": "타이머 저장 오류",
+    "playerOffByTimer": "재생이 타이머에 의해 꺼졌습니다",
+    "nextOnTime": "다음 예약된 켜짐: {time}",
+    "notSupported": "이 기기에서는 타이머 하드웨어 제어가 지원되지 않습니다. 소프트웨어 폴백을 사용합니다."
+  },
+  "deviceSchedule": {
+    "title": "기기 스케줄",
+    "description": "기기가 켜져야 하는 시간을 정의합니다. 그리드에서 클릭하고 드래그하여 스케줄 항목을 만듭니다. 예약된 시간 외에는 기기가 꺼집니다. 항목이 설정되지 않으면 기기는 항상 켜져 있습니다.",
+    "mon": "월",
+    "tue": "화",
+    "wed": "수",
+    "thu": "목",
+    "fri": "금",
+    "sat": "토",
+    "sun": "일",
+    "save": "스케줄 저장",
+    "reset": "초기화",
+    "delete": "항목 삭제",
+    "onLabel": "켜짐",
+    "noScheduleAlwaysOn": "스케줄 미설정 — 기기는 항상 켜져 있음",
+    "saved": "스케줄이 저장되고 기기로 전송되었습니다",
+    "savedOffline": "스케줄이 저장되었습니다. 기기가 오프라인입니다 — 재연결 시 타이머가 전송됩니다.",
+    "loadError": "스케줄 로드 오류",
+    "saveError": "스케줄 저장 오류"
   }
 }

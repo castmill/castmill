@@ -89,6 +89,7 @@
     "maintainance": "Mantenimiento",
     "events": "Eventos",
     "telemetry": "Telemetría",
+    "timers": "Temporizadores",
     "youIndicator": "(tú)",
     "addonLoadingError": "Error al cargar complemento",
     "addonError": "Error de complemento",
@@ -374,7 +375,8 @@
       "playlists": "Listas de reproducción",
       "channels": "Canales",
       "teams": "Equipos",
-      "widgets": "Widgets"
+      "widgets": "Widgets",
+      "layouts": "Diseños"
     },
     "errors": {
       "fetchUsageData": "Error al obtener datos de uso: {{error}}"
@@ -1286,5 +1288,60 @@
   },
   "aspectRatio": {
     "custom": "Personalizado"
+  },
+  "deviceTimers": {
+    "title": "Temporizadores de Energía del Dispositivo",
+    "description": "Configure cuándo el dispositivo se enciende y apaga automáticamente",
+    "onTimers": "Temporizadores de Encendido",
+    "offTimers": "Temporizadores de Apagado",
+    "addOnTimer": "Agregar Temporizador de Encendido",
+    "addOffTimer": "Agregar Temporizador de Apagado",
+    "time": "Hora",
+    "days": "Días",
+    "deleteTimer": "Eliminar Temporizador",
+    "saveTimers": "Guardar Temporizadores",
+    "maxTimersReached": "Máximo de 6 temporizadores alcanzado",
+    "monday": "Lun",
+    "tuesday": "Mar",
+    "wednesday": "Mié",
+    "thursday": "Jue",
+    "friday": "Vie",
+    "saturday": "Sab",
+    "sunday": "Dom",
+    "mon": "Lun",
+    "tue": "Mar",
+    "wed": "Mié",
+    "thu": "Jue",
+    "fri": "Vie",
+    "sat": "Sab",
+    "sun": "Dom",
+    "allDays": "Todos los Días",
+    "noTimers": "Sin temporizadores configurados",
+    "timersSaved": "Temporizadores guardados correctamente",
+    "timersLoadError": "Error al cargar los temporizadores",
+    "timersSaveError": "Error al guardar los temporizadores",
+    "playerOffByTimer": "Reproducción apagada por temporizador",
+    "nextOnTime": "Próximo encendido programado: {time}",
+    "notSupported": "Control de hardware de temporizador no soportado en este dispositivo. Usando reserva de software."
+  },
+  "deviceSchedule": {
+    "title": "Horario del Dispositivo",
+    "description": "Defina cuándo el dispositivo debe estar ENCENDIDO. Haga clic y arrastre en la cuadrícula para crear entradas de horario. Fuera de las horas programadas, el dispositivo se apagará. Si no se establecen entradas, el dispositivo está siempre encendido.",
+    "mon": "Lun",
+    "tue": "Mar",
+    "wed": "Mié",
+    "thu": "Jue",
+    "fri": "Vie",
+    "sat": "Sáb",
+    "sun": "Dom",
+    "save": "Guardar Horario",
+    "reset": "Restablecer",
+    "delete": "Eliminar entrada",
+    "onLabel": "ENCENDIDO",
+    "noScheduleAlwaysOn": "Sin horario establecido — el dispositivo está siempre encendido",
+    "saved": "Horario guardado y enviado al dispositivo",
+    "savedOffline": "Horario guardado. El dispositivo está sin conexión — los temporizadores se enviarán cuando se reconecte.",
+    "loadError": "Error al cargar el horario",
+    "saveError": "Error al guardar el horario"
   }
 }

@@ -84,6 +84,7 @@
     "maintainance": "Maintenance",
     "events": "Événements",
     "telemetry": "Télémétrie",
+    "timers": "Minuteurs",
     "youIndicator": "(vous)",
     "addonLoadingError": "Erreur de chargement de l'extension",
     "filters": {
@@ -373,7 +374,8 @@
       "playlists": "Listes de lecture",
       "channels": "Chaînes",
       "teams": "Équipes",
-      "widgets": "Widgets"
+      "widgets": "Widgets",
+      "layouts": "Mises en page"
     },
     "errors": {
       "fetchUsageData": "Échec de la récupération des données d'utilisation : {{error}}"
@@ -1297,5 +1299,60 @@
   },
   "aspectRatio": {
     "custom": "Personnalisé"
+  },
+  "deviceTimers": {
+    "title": "Minuteurs d'Alimentation de l'Appareil",
+    "description": "Configurez quand l'appareil s'allume et s'éteint automatiquement",
+    "onTimers": "Minuteurs d'Allumage",
+    "offTimers": "Minuteurs d'Extinction",
+    "addOnTimer": "Ajouter un Minuteur d'Allumage",
+    "addOffTimer": "Ajouter un Minuteur d'Extinction",
+    "time": "Heure",
+    "days": "Jours",
+    "deleteTimer": "Supprimer le Minuteur",
+    "saveTimers": "Enregistrer les Minuteurs",
+    "maxTimersReached": "Maximum de 6 minuteurs atteint",
+    "monday": "Lun",
+    "tuesday": "Mar",
+    "wednesday": "Mer",
+    "thursday": "Jeu",
+    "friday": "Ven",
+    "saturday": "Sam",
+    "sunday": "Dim",
+    "mon": "Lun",
+    "tue": "Mar",
+    "wed": "Mer",
+    "thu": "Jeu",
+    "fri": "Ven",
+    "sat": "Sam",
+    "sun": "Dim",
+    "allDays": "Tous les Jours",
+    "noTimers": "Aucun minuteur configuré",
+    "timersSaved": "Minuteurs enregistrés avec succès",
+    "timersLoadError": "Erreur lors du chargement des minuteurs",
+    "timersSaveError": "Erreur lors de l'enregistrement des minuteurs",
+    "playerOffByTimer": "Lecture éteinte par minuteur",
+    "nextOnTime": "Prochain allumage programmé: {time}",
+    "notSupported": "Contrôle matériel du minuteur non supporté sur cet appareil. Utilisation du secours logiciel."
+  },
+  "deviceSchedule": {
+    "title": "Horaire de l'Appareil",
+    "description": "Définissez quand l'appareil doit être ALLUMÉ. Cliquez et faites glisser sur la grille pour créer des entrées d'horaire. En dehors des heures programmées, l'appareil s'éteindra. Si aucune entrée n'est définie, l'appareil est toujours allumé.",
+    "mon": "Lun",
+    "tue": "Mar",
+    "wed": "Mer",
+    "thu": "Jeu",
+    "fri": "Ven",
+    "sat": "Sam",
+    "sun": "Dim",
+    "save": "Enregistrer l'Horaire",
+    "reset": "Réinitialiser",
+    "delete": "Supprimer l'entrée",
+    "onLabel": "ALLUMÉ",
+    "noScheduleAlwaysOn": "Aucun horaire défini — l'appareil est toujours allumé",
+    "saved": "Horaire enregistré et envoyé à l'appareil",
+    "savedOffline": "Horaire enregistré. L'appareil est hors ligne — les minuteurs seront envoyés lors de la reconnexion.",
+    "loadError": "Erreur lors du chargement de l'horaire",
+    "saveError": "Erreur lors de l'enregistrement de l'horaire"
   }
 }

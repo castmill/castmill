@@ -84,6 +84,7 @@
     "maintainance": "Underhåll",
     "events": "Händelser",
     "telemetry": "Telemetri",
+    "timers": "Timers",
     "youIndicator": "(du)",
     "addonLoadingError": "Fel vid laddning av tillägg",
     "addonError": "Tilläggsfel",
@@ -368,7 +369,8 @@
       "playlists": "Spellistor",
       "channels": "Kanaler",
       "teams": "Team",
-      "widgets": "Widgets"
+      "widgets": "Widgets",
+      "layouts": "Layouter"
     },
     "errors": {
       "fetchUsageData": "Misslyckades att hämta användningsdata: {{error}}"
@@ -1280,5 +1282,60 @@
   },
   "aspectRatio": {
     "custom": "Anpassad"
+  },
+  "deviceTimers": {
+    "title": "Enhets Strömtimers",
+    "description": "Konfigurera när enheten slås på och av automatiskt",
+    "onTimers": "Slå på Timers",
+    "offTimers": "Slå av Timers",
+    "addOnTimer": "Lägg till Slå på Timer",
+    "addOffTimer": "Lägg till Slå av Timer",
+    "time": "Tid",
+    "days": "Dagar",
+    "deleteTimer": "Ta bort Timer",
+    "saveTimers": "Spara Timers",
+    "maxTimersReached": "Maximum av 6 timers nådd",
+    "monday": "Mån",
+    "tuesday": "Tis",
+    "wednesday": "Ons",
+    "thursday": "Tor",
+    "friday": "Fre",
+    "saturday": "Lör",
+    "sunday": "Sön",
+    "mon": "Mån",
+    "tue": "Tis",
+    "wed": "Ons",
+    "thu": "Tor",
+    "fri": "Fre",
+    "sat": "Lör",
+    "sun": "Sön",
+    "allDays": "Alla Dagar",
+    "noTimers": "Inga timers konfigurerade",
+    "timersSaved": "Timers sparade framgångsrikt",
+    "timersLoadError": "Fel vid inläsning av timers",
+    "timersSaveError": "Fel vid sparande av timers",
+    "playerOffByTimer": "Uppspelning stängd av timer",
+    "nextOnTime": "Nästa schemalagda start: {time}",
+    "notSupported": "Timer-maskinvarukontroll stöds inte på denna enhet. Använder programvarubackup."
+  },
+  "deviceSchedule": {
+    "title": "Enhetsschema",
+    "description": "Definiera när enheten ska vara PÅ. Klicka och dra på rutnätet för att skapa schemaposter. Utanför schemalagda timmar stängs enheten av. Om inga poster är inställda är enheten alltid på.",
+    "mon": "Mån",
+    "tue": "Tis",
+    "wed": "Ons",
+    "thu": "Tor",
+    "fri": "Fre",
+    "sat": "Lör",
+    "sun": "Sön",
+    "save": "Spara Schema",
+    "reset": "Återställ",
+    "delete": "Ta bort post",
+    "onLabel": "PÅ",
+    "noScheduleAlwaysOn": "Inget schema inställt — enheten är alltid på",
+    "saved": "Schema sparat och skickat till enheten",
+    "savedOffline": "Schema sparat. Enheten är offline — timers skickas när den återansluter.",
+    "loadError": "Fel vid inläsning av schema",
+    "saveError": "Fel vid sparande av schema"
   }
 }

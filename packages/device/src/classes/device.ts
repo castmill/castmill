@@ -15,12 +15,19 @@ import {
   StorageIntegration,
   ItemType,
 } from '@castmill/cache';
-import { Machine, DeviceInfo } from '../interfaces/machine';
+import {
+  Machine,
+  DeviceInfo,
+  Timers,
+  TimerEntry,
+  WeekDay,
+} from '../interfaces/machine';
 import { getCastmillIntro } from './intro';
 import { Channel, JsonChannel } from './channel';
 import { Schema } from '../interfaces';
 import { JsonMedia } from '../interfaces/json-media';
 import { DivLogger, Logger, NullLogger, WebSocketLogger } from './logger';
+import { TimerManager } from './timer-manager';
 
 const HEARTBEAT_INTERVAL = 1000 * 30; // 30 seconds
 const DEFAULT_MAX_LOGS = 100;
@@ -98,8 +105,17 @@ interface CacheDeleteRequest {
 }
 
 interface DeviceRequest {
-  resource: 'cache' | 'telemetry';
+  resource: 'cache' | 'telemetry' | 'timers';
   opts: CachePage & { ref: string };
+}
+
+interface DeviceSetRequest {
+  resource: 'timers';
+  timers: {
+    on: Array<{ hours: number; minutes: number; weekDays: string[] }>;
+    off: Array<{ hours: number; minutes: number; weekDays: string[] }>;
+  };
+  opts: { ref: string };
 }
 
 interface DeviceDeleteRequest {
@@ -141,6 +157,9 @@ export class Device extends EventEmitter {
   private logger: Logger = new Logger();
   private logDiv?: HTMLDivElement;
   private socket?: Socket;
+  private timerManager: TimerManager;
+  private playerContainer?: HTMLElement;
+  private timerOffOverlay?: HTMLDivElement;
 
   // The base url is the url of the Castmill API. By default it is assumed that the API is
   // hosted at the same domain as this device and accessible through a relative path.
@@ -164,6 +183,19 @@ export class Device extends EventEmitter {
     super();
 
     this.logger.setLogger(new NullLogger());
+
+    this.timerManager = new TimerManager(this.integration, {
+      onTurnOff: async () => {
+        if (this.player) {
+          await this.player.stop();
+        }
+        this.showTimerOffOverlay();
+      },
+      onTurnOn: () => {
+        this.hideTimerOffOverlay();
+        location.reload();
+      },
+    });
 
     this.cache = new Cache(
       this.storageIntegration,
@@ -212,12 +244,17 @@ export class Device extends EventEmitter {
     this.logDiv = logDiv;
 
     // TODO: Should be able to pass the logger to the renderer and the player.
+    this.playerContainer = el;
     const renderer = new Renderer(el);
     this.player = new Player(this.contentQueue, renderer, this.opts?.viewport);
 
     this.emitProgress(5, 5, 'Starting player');
 
-    this.emit('started', device);
+    this.emit('ready', device);
+    // Start timer checks only if using software fallback
+    if (!this.integration.setTimers) {
+      this.timerManager.scheduleTimerChecks();
+    }
 
     // this.player.play({ loop: true });
 
@@ -476,6 +513,10 @@ export class Device extends EventEmitter {
     this.emitProgress(1, credentials ? 5 : 3, 'Identifying device');
 
     if (credentials) {
+      // Set device id and name early so they're available even if start() isn't called (e.g. timer-off)
+      this.id = credentials.device.id;
+      this.name = credentials.device.name;
+
       // Start login in the background so the player can begin playing cached
       // content immediately, even when the device is offline.
       this.login(credentials, hardwareId)
@@ -687,6 +728,42 @@ export class Device extends EventEmitter {
         case 'telemetry':
           const telemetry = (await this.integration.getTelemetry?.()) ?? {};
           channel.push('res:get', { telemetry, ref: opts.ref });
+          break;
+        case 'timers':
+          const timers = await this.getTimers();
+          channel.push('res:get', { timers, ref: opts.ref });
+          break;
+      }
+    });
+
+    channel.on('set', async (payload: DeviceSetRequest) => {
+      const { resource, timers, opts } = payload;
+      switch (resource) {
+        case 'timers':
+          try {
+            // Idempotency check: skip if timers haven't changed
+            const currentTimers = await this.getTimers();
+            const normalize = (t: Timers) =>
+              JSON.stringify({
+                on: [...t.on].sort(
+                  (a, b) => a.hours - b.hours || a.minutes - b.minutes
+                ),
+                off: [...t.off].sort(
+                  (a, b) => a.hours - b.hours || a.minutes - b.minutes
+                ),
+              });
+
+            if (normalize(timers as Timers) === normalize(currentTimers)) {
+              console.log('[Device] Timers unchanged, skipping update');
+              channel.push('res:set', { success: true, ref: opts.ref });
+            } else {
+              // Send ack before reload to avoid WebSocket timeout
+              channel.push('res:set', { success: true, ref: opts.ref });
+              await this.setTimers(timers as Timers);
+            }
+          } catch (error) {
+            channel.push('res:set', { success: false, ref: opts.ref });
+          }
           break;
       }
     });
@@ -947,6 +1024,84 @@ export class Device extends EventEmitter {
     return this.integration.updateFirmware?.();
   }
 
+  /**
+   * Show a full-screen black overlay on top of the player when the soft timer
+   * turns the device off. This prevents the last frame from remaining visible.
+   */
+  private showTimerOffOverlay() {
+    if (this.timerOffOverlay) return; // already showing
+
+    const overlay = document.createElement('div');
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100%';
+    overlay.style.height = '100%';
+    overlay.style.background = 'black';
+    // Must be above the player but below the menu (z-index: 1000000 in basemenu.module.css)
+    overlay.style.zIndex = '999999';
+    overlay.setAttribute('data-timer-off-overlay', 'true');
+
+    document.body.appendChild(overlay);
+    this.timerOffOverlay = overlay;
+  }
+
+  /**
+   * Remove the black overlay (if any) before reloading on timer-on.
+   */
+  private hideTimerOffOverlay() {
+    if (this.timerOffOverlay) {
+      this.timerOffOverlay.remove();
+      this.timerOffOverlay = undefined;
+    }
+  }
+
+  /**
+   * Get timers from the timer manager.
+   */
+  async getTimers(): Promise<Timers> {
+    return this.timerManager.getTimers();
+  }
+
+  /**
+   * Set timers via the timer manager.
+   * Computes the initial TIMER_OFF state based on the most recent timer event,
+   * then reloads so the device applies the new schedule.
+   */
+  async setTimers(timers: Timers): Promise<void> {
+    await this.timerManager.setTimers(timers);
+    location.reload();
+  }
+
+  /**
+   * Start monitoring timers without starting the full player.
+   * Used when the device is in timer-off state to detect ON timers.
+   */
+  startTimerMonitoring() {
+    this.timerManager.startTimerMonitoring();
+  }
+
+  /**
+   * Check if player is currently off due to timer
+   */
+  async isTimerOff(): Promise<boolean> {
+    return this.timerManager.isTimerOff();
+  }
+
+  /**
+   * Get next scheduled on time
+   */
+  async getNextOnTime(): Promise<Date | null> {
+    return this.timerManager.getNextOnTime();
+  }
+
+  /**
+   * Get next scheduled off time based on configured off-timers
+   */
+  async getNextOffTime(): Promise<Date | null> {
+    return this.timerManager.getNextOffTime();
+  }
+
   setLogMode(logMode: 'remote' | 'local' | 'none') {
     if (supportedDebugModes.indexOf(logMode) !== -1) {
       this.debugMode = logMode;
@@ -971,21 +1126,3 @@ export class Device extends EventEmitter {
     }
   }
 }
-
-/*
-  private async sendCommand(
-    channel: Channel,
-    command: string,
-    payload: any = {}
-  ) {
-    return new Promise((resolve, reject) => {
-      channel
-        .push(command, {
-          device_id: this.integration.getMachineGUID(),
-          ...payload,
-        })
-        .receive("ok", (payload) => resolve(payload))
-        .receive("error", (payload) => reject(payload));
-    });
-  }
-  */

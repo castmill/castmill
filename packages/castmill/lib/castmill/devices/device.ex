@@ -24,6 +24,7 @@ defmodule Castmill.Devices.Device do
              :user_agent,
              :version,
              :volume,
+             :schedule,
              :inserted_at,
              :updated_at
            ]}
@@ -46,6 +47,7 @@ defmodule Castmill.Devices.Device do
     field(:hardware_id, :string)
     field(:token_hash, :string)
     field(:mode, :string, default: "normal")
+    field(:schedule, :map)
 
     field(:token, :string, virtual: true)
 
@@ -116,7 +118,8 @@ defmodule Castmill.Devices.Device do
       :volume,
       :info,
       :hardware_id,
-      :organization_id
+      :organization_id,
+      :schedule
     ])
     |> put_pass_hash()
   end

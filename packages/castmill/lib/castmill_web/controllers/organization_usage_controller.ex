@@ -10,6 +10,7 @@ defmodule CastmillWeb.OrganizationUsageController do
     "playlists" => Castmill.Resources.Playlist,
     "devices" => Castmill.Devices.Device,
     "channels" => Castmill.Resources.Channel,
+    "widgets" => Castmill.Widgets.WidgetConfig,
     "teams" => Castmill.Teams.Team,
     "users" => Castmill.Organizations.OrganizationsUsers,
     "layouts" => Castmill.Resources.Layout
