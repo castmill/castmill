@@ -74,6 +74,7 @@ export const UploadComponent = (props: UploadComponentProps) => {
   const [messages, setMessages] = createSignal<Messages>({});
   const [progresses, setProgresses] = createSignal<Progresses>({});
   const [validations, setValidations] = createSignal<FileValidations>({});
+  const [isUploading, setIsUploading] = createSignal(false);
   const [maxUploadSize, setMaxUploadSize] = createSignal<number>(
     2048 * 1024 * 1024
   ); // Default 2GB in bytes
@@ -159,6 +160,10 @@ export const UploadComponent = (props: UploadComponentProps) => {
   };
 
   const handleUpload = async () => {
+    if (isUploading()) {
+      return;
+    }
+
     const currentFiles = files();
     const currentValidations = validations();
 
@@ -172,9 +177,16 @@ export const UploadComponent = (props: UploadComponentProps) => {
       return;
     }
 
-    // Track how many files we're uploading for completion check
+    setIsUploading(true);
     let uploadedCount = 0;
     const totalToUpload = validFiles.length;
+    const markUploadCompleted = () => {
+      uploadedCount++;
+      if (uploadedCount === totalToUpload) {
+        setIsUploading(false);
+        props.onUploadComplete?.();
+      }
+    };
 
     validFiles.forEach((file) => {
       const formData = new FormData();
@@ -199,47 +211,46 @@ export const UploadComponent = (props: UploadComponentProps) => {
       };
 
       xhr.onload = () => {
-        if (xhr.status === 200) {
-          const response = JSON.parse(xhr.responseText);
+        try {
+          if (xhr.status === 200) {
+            const response = JSON.parse(xhr.responseText);
+            setMessages((m) => ({
+              ...m,
+              [file.name]: <IconWrapper icon={AiOutlineCheck} />,
+            }));
+
+            props.onFileUpload?.(file.name, response);
+
+            // Complete the onboarding step for media upload
+            props.store?.onboarding?.completeStep?.('upload_media');
+          } else {
+            let errorMessage: string;
+            try {
+              const errorData = JSON.parse(xhr.responseText);
+              errorMessage =
+                errorData.error ||
+                errorData.message ||
+                xhr.statusText ||
+                t('medias.upload.unknownError');
+            } catch {
+              errorMessage =
+                xhr.statusText ||
+                t('medias.upload.serverError', { status: xhr.status });
+            }
+            setMessages((m) => ({
+              ...m,
+              [file.name]: t('medias.upload.uploadFailed', {
+                error: errorMessage,
+              }),
+            }));
+          }
+        } catch {
           setMessages((m) => ({
             ...m,
-            [file.name]: <IconWrapper icon={AiOutlineCheck} />,
+            [file.name]: t('medias.upload.uploadError'),
           }));
-
-          props.onFileUpload?.(file.name, response);
-
-          // Complete the onboarding step for media upload
-          props.store?.onboarding?.completeStep?.('upload_media');
-
-          uploadedCount++;
-          if (uploadedCount === totalToUpload) {
-            props.onUploadComplete?.();
-          }
-        } else {
-          let errorMessage: string;
-          try {
-            const errorData = JSON.parse(xhr.responseText);
-            errorMessage =
-              errorData.error ||
-              errorData.message ||
-              xhr.statusText ||
-              t('medias.upload.unknownError');
-          } catch {
-            errorMessage =
-              xhr.statusText ||
-              t('medias.upload.serverError', { status: xhr.status });
-          }
-          setMessages((m) => ({
-            ...m,
-            [file.name]: t('medias.upload.uploadFailed', {
-              error: errorMessage,
-            }),
-          }));
-
-          uploadedCount++;
-          if (uploadedCount === totalToUpload) {
-            props.onUploadComplete?.();
-          }
+        } finally {
+          markUploadCompleted();
         }
       };
 
@@ -248,11 +259,15 @@ export const UploadComponent = (props: UploadComponentProps) => {
           ...m,
           [file.name]: t('medias.upload.uploadError'),
         }));
+        markUploadCompleted();
+      };
 
-        uploadedCount++;
-        if (uploadedCount === totalToUpload) {
-          props.onUploadComplete?.();
-        }
+      xhr.onabort = () => {
+        setMessages((m) => ({
+          ...m,
+          [file.name]: t('medias.upload.uploadError'),
+        }));
+        markUploadCompleted();
       };
 
       xhr.send(formData);
@@ -436,7 +451,9 @@ export const UploadComponent = (props: UploadComponentProps) => {
         </Show>
         {/* Change label to "Close" when all files have been uploaded */}
         <Button
-          disabled={getCompletedFilesCount() === getValidFilesCount()}
+          disabled={
+            isUploading() || getCompletedFilesCount() === getValidFilesCount()
+          }
           label="Upload"
           onClick={handleUpload}
           icon={AiOutlineUpload}
