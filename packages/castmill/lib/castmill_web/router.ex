@@ -123,6 +123,7 @@ defmodule CastmillWeb.Router do
   # Health check endpoint (no auth, no pipeline) for load balancer probes
   scope "/api", CastmillWeb do
     get("/health", HealthController, :check)
+    get("/version", HealthController, :version)
   end
 
   scope "/webhooks/widgets", CastmillWeb do
