@@ -1,7 +1,10 @@
 defmodule CastmillWeb.HealthController do
   @moduledoc """
-  Minimal health check endpoint for load balancer and container probes.
-  Returns 200 OK with a JSON body when the application is running.
+  Health-related endpoints for load balancer and container probes.
+
+  * `check/2` – minimal health check returning 200 OK with `{"status": "ok"}`.
+  * `version/2` – extended health payload including build and application
+    version metadata, also returning 200 OK when the service is healthy.
   """
   use CastmillWeb, :controller
 
