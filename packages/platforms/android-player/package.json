@@ -11,6 +11,9 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "build": "vite build",
+    "android:build": "yarn build && npx cap sync && cd android && ./gradlew assembleDebug",
+    "android:install": "adb install -r android/app/build/outputs/apk/debug/app-debug.apk && adb shell monkey -p com.castmill.android.app -c android.intent.category.LAUNCHER 1",
+    "android:restart": "adb shell am force-stop com.castmill.android.app && adb shell monkey -p com.castmill.android.app -c android.intent.category.LAUNCHER 1",
     "preview": "vite preview"
   },
   "dependencies": {
