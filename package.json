@@ -89,7 +89,10 @@
     "gauge": "^5.0.1",
     "are-we-there-yet": "^4.0.0",
     "har-validator": "^5.1.5",
-    "@castmill/android-player/**/signal-exit": "3.0.7"
+    "@castmill/android-player/**/signal-exit": "3.0.7",
+    "@castmill/electron-player/**/string-width": "4.2.3",
+    "@castmill/electron-player/**/strip-ansi": "6.0.1",
+    "@castmill/electron-player/**/wrap-ansi": "7.0.0"
   },
   "packageManager": "yarn@1.22.22"
 }
