@@ -958,7 +958,7 @@ export class Device extends EventEmitter {
       ...(productionBaseUrl
         ? [{ name: 'Production', url: productionBaseUrl }]
         : []),
-      ...(devBaseUrl ? [{ name: 'Dev', url: devBaseUrl }] : []),
+      ...(devBaseUrl ? [{ name: 'Stage', url: devBaseUrl }] : []),
       ...(localBaseUrl ? [{ name: 'Local', url: localBaseUrl }] : []),
     ];
   }
@@ -980,9 +980,13 @@ export class Device extends EventEmitter {
       return baseUrl;
     }
 
-    // If there is no base url set in the settings, we check if there is a default
-    // base url set in the environment variables.
-    const defaultBaseUrl = import.meta.env.VITE_DEFAULT_BASE_URL;
+    // If there is no base URL set in settings, use default first, then dev,
+    // then production for backward compatibility.
+    const defaultBaseUrl =
+      import.meta.env.VITE_DEFAULT_BASE_URL ||
+      import.meta.env.VITE_DEV_BASE_URL ||
+      import.meta.env.VITE_PRODUCTION_BASE_URL;
+
     if (defaultBaseUrl) {
       return defaultBaseUrl;
     }
