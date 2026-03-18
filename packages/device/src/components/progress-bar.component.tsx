@@ -22,7 +22,10 @@ export function ProgressBarComponent(props: { device: Device }) {
     <div
       style={{
         position: 'fixed',
-        inset: '0',
+        top: '0',
+        right: '0',
+        bottom: '0',
+        left: '0',
         display: 'flex',
         'flex-direction': 'column',
         'align-items': 'center',
