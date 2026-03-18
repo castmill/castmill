@@ -59,7 +59,7 @@ jobs:
   test_ui_common:
     runs-on: ubuntu-latest
 
-    name: testing UI Common package with node@18
+    name: testing UI Common package with node@24
 
     defaults:
       run:
@@ -69,9 +69,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
       - name: Use Node.js current
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 24
           cache: 'yarn'
       - run: yarn install --ignore-engines --frozen-lockfile --non-interactive
       - run: yarn build
@@ -81,7 +81,7 @@ jobs:
   test_dashboard:
     runs-on: ubuntu-latest
 
-    name: testing Dashboard package with node@18
+    name: testing Dashboard package with node@24
 
     defaults:
       run:
@@ -91,9 +91,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
       - name: Use Node.js current
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 24
           cache: 'yarn'
       - name: Install workspace dependencies
         working-directory: ./
@@ -112,7 +112,7 @@ jobs:
   test_player:
     runs-on: ubuntu-latest
 
-    name: testing Player package with node@18
+    name: testing Player package with node@24
 
     defaults:
       run:
@@ -122,9 +122,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
       - name: Use Node.js current
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 24
           cache: 'yarn'
       - name: Install workspace dependencies
         working-directory: ./
@@ -143,7 +143,7 @@ jobs:
   test_cache:
     runs-on: ubuntu-latest
 
-    name: testing Cache package with node@18
+    name: testing Cache package with node@24
 
     defaults:
       run:
@@ -153,9 +153,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
       - name: Use Node.js current
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 24
           cache: 'yarn'
       - run: yarn install --ignore-engines --frozen-lockfile --non-interactive
       - run: yarn build
@@ -165,7 +165,7 @@ jobs:
   test_device:
     runs-on: ubuntu-latest
 
-    name: testing Device package with node@18
+    name: testing Device package with node@24
 
     defaults:
       run:
@@ -175,9 +175,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
       - name: Use Node.js current
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 24
           cache: 'yarn'
       - name: Install workspace dependencies
         working-directory: ./
@@ -214,7 +214,7 @@ jobs:
           - name: legacy-adapter-player
             dir: ./packages/platforms/legacy-adapter-player
 
-    name: Testing ${{ matrix.platform.name }} package with node@18
+    name: Testing ${{ matrix.platform.name }} package with node@24
 
     defaults:
       run:
@@ -227,9 +227,9 @@ jobs:
 
       # Step 2: Setup Node.js with caching
       - name: Use Node.js current
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 24
           cache: 'yarn'
 
       # Step 3: Install workspace dependencies
