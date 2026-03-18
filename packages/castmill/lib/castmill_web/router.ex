@@ -120,9 +120,10 @@ defmodule CastmillWeb.Router do
     plug(:accepts, ["json"])
   end
 
-  # Health check endpoint (no auth, no pipeline) for load balancer probes
+  # Public API endpoints (no auth, no pipeline): /api/health for load balancer probes and /api/version for version/diagnostic info
   scope "/api", CastmillWeb do
     get("/health", HealthController, :check)
+    get("/version", HealthController, :version)
   end
 
   scope "/webhooks/widgets", CastmillWeb do
