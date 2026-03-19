@@ -70,15 +70,47 @@ defmodule Castmill.Networks do
   end
 
   @doc """
-  Returns the list of all network domains
+  Returns the list of all network domains.
+
+  Includes the primary domain from each network's `domain` field, plus any
+  additional domains provided by `:additional_domain_sources` configuration.
+  This allows external addons (e.g., custom domains) to register extra domains
+  without modifying the Network schema.
+
+  ## Configuration
+
+      config :castmill, :additional_domain_sources, {MyModule, :list_domains, []}
+
+  The configured MFA must return a list of domain strings (without protocol).
   """
   def list_network_domains() do
-    query =
-      from(network in Network,
-        select: network.domain
-      )
+    primary_domains =
+      from(network in Network, select: network.domain)
+      |> Repo.all()
 
-    Repo.all(query)
+    additional_domains =
+      case Application.get_env(:castmill, :additional_domain_sources) do
+        {mod, fun, args} ->
+          try do
+            case apply(mod, fun, args) do
+              domains when is_list(domains) ->
+                Enum.filter(domains, &(is_binary(&1) and &1 != ""))
+
+              _ ->
+                []
+            end
+          rescue
+            e ->
+              require Logger
+              Logger.warning("[Networks] additional_domain_sources failed: #{inspect(e)}")
+              []
+          end
+
+        _ ->
+          []
+      end
+
+    Enum.uniq(primary_domains ++ additional_domains)
   end
 
   @doc """
