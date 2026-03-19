@@ -133,13 +133,19 @@ export function timer(
 ) {
   return new Observable<number>((subscriber) => {
     let timeout: ReturnType<typeof setTimeout> | undefined;
-    let tick = start;
+
+    const hasValidPeriod = Number.isFinite(period) && period > 0;
+    const normalize = (value: number, modulo: number) =>
+      ((value % modulo) + modulo) % modulo;
+
     const updateTick = () => {
+      const elapsed = Date.now() - baseline;
+      const tick = hasValidPeriod
+        ? normalize(start + elapsed, period)
+        : start + elapsed;
+
       subscriber.next(tick);
-      tick = (tick + interval) % period;
-      baseline = baseline + interval;
-      const drift = baseline - Date.now();
-      timeout = setTimeout(updateTick, interval + drift);
+      timeout = setTimeout(updateTick, interval);
     };
     updateTick();
 
