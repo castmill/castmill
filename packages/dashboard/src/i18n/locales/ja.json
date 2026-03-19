@@ -570,6 +570,24 @@
     "checkYourEmail": "メールを確認してください",
     "addNewPasskey": "新しいパスキーを追加"
   },
+  "setupPasskey": {
+    "title": "パスキーの設定",
+    "subtitle": "{{domain}}に直接ログインできるようパスキーを作成します。",
+    "instructions": "ようこそ、{{email}}さん！下のボタンをクリックして、このドメインのパスキーを作成してください。",
+    "createButton": "パスキーを作成",
+    "passkeysNotSupported": "お使いのブラウザはパスキーに対応していません。",
+    "invalidLink": "無効な設定リンクです。",
+    "expiredLink": "このリンクは期限切れです。新しいリンクをリクエストしてください。",
+    "verificationFailed": "リンクの確認に失敗しました。",
+    "verifying": "リンクを確認中...",
+    "creatingPasskey": "パスキーを作成中...",
+    "challengeFailed": "パスキーの作成を開始できませんでした。",
+    "creationCancelled": "パスキーの作成がキャンセルされました。",
+    "noPublicKey": "公開鍵を取得できませんでした。",
+    "registrationFailed": "パスキーの登録に失敗しました。",
+    "success": "パスキーが作成されました！ログイン中...",
+    "unexpectedError": "エラーが発生しました。もう一度お試しください。"
+  },
   "errors": {
     "generic": "エラーが発生しました。もう一度お試しください。",
     "networkError": "ネットワークエラーです。接続を確認してください。",

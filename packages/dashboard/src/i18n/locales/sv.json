@@ -565,6 +565,24 @@
     "checkYourEmail": "Kontrollera din e-post",
     "addNewPasskey": "Lägg till ny nyckel"
   },
+  "setupPasskey": {
+    "title": "Konfigurera din nyckel",
+    "subtitle": "Skapa en nyckel för {{domain}} så att du kan logga in direkt.",
+    "instructions": "Välkommen, {{email}}! Klicka på knappen nedan för att skapa en nyckel för denna domän.",
+    "createButton": "Skapa nyckel",
+    "passkeysNotSupported": "Din webbläsare stöder inte nycklar.",
+    "invalidLink": "Ogiltig konfigurationslänk.",
+    "expiredLink": "Denna länk har gått ut. Begär en ny.",
+    "verificationFailed": "Kunde inte verifiera länken.",
+    "verifying": "Verifierar länk...",
+    "creatingPasskey": "Skapar nyckel...",
+    "challengeFailed": "Kunde inte starta skapandet av nyckel.",
+    "creationCancelled": "Skapandet avbröts.",
+    "noPublicKey": "Kunde inte hämta den publika nyckeln.",
+    "registrationFailed": "Kunde inte registrera nyckeln.",
+    "success": "Nyckel skapad! Loggar in dig...",
+    "unexpectedError": "Något gick fel. Försök igen."
+  },
   "errors": {
     "generic": "Ett fel uppstod. Försök igen.",
     "networkError": "Nätverksfel. Kontrollera din anslutning.",

@@ -712,6 +712,24 @@
     "checkYourEmail": "Check Your Email",
     "addNewPasskey": "Add New Passkey"
   },
+  "setupPasskey": {
+    "title": "Set Up Your Passkey",
+    "subtitle": "Create a passkey for {{domain}} so you can sign in directly.",
+    "instructions": "Welcome, {{email}}! Click the button below to create a passkey for this domain.",
+    "createButton": "Create Passkey",
+    "passkeysNotSupported": "Your browser does not support Passkeys.",
+    "invalidLink": "Invalid setup link.",
+    "expiredLink": "This setup link has expired. Please request a new one.",
+    "verificationFailed": "Failed to verify the setup link.",
+    "verifying": "Verifying link...",
+    "creatingPasskey": "Creating passkey...",
+    "challengeFailed": "Failed to start passkey creation.",
+    "creationCancelled": "Passkey creation was cancelled.",
+    "noPublicKey": "Could not retrieve public key from passkey.",
+    "registrationFailed": "Failed to register the passkey.",
+    "success": "Passkey created! Signing you in...",
+    "unexpectedError": "Something went wrong. Please try again."
+  },
   "signup": {
     "title": "Sign up",
     "continueWithPasskey": "Continue with Passkey",

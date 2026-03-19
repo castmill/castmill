@@ -7,11 +7,17 @@ defmodule CastmillWeb.Endpoint do
   # The session will be stored in the cookie and signed,
   # this means its contents can be read but not tampered with.
   # Set :encryption_salt if you would also like to encrypt it.
+  #
+  # SameSite=None with Secure is required in production so that cross-origin
+  # requests from custom domains (e.g. signage.acmecorp.com → api.castmill.dev)
+  # include the session cookie. In development and test we fall back to
+  # SameSite=Lax over plain HTTP to avoid browsers dropping the cookie.
   @session_options [
     store: :cookie,
     key: "_castmill_key",
     signing_salt: "bqbGIetq",
-    same_site: "Lax"
+    same_site: Application.compile_env(:castmill, :session_same_site, "Lax"),
+    secure: Application.compile_env(:castmill, :session_secure, false)
   ]
 
   socket("/live", Phoenix.LiveView.Socket,

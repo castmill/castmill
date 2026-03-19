@@ -149,9 +149,9 @@ defmodule Castmill.NetworksTest do
       assert Castmill.Quotas.get_quota_for_organization(org.id, "layouts") == 100
     end
 
-    test "invitation_only defaults to false" do
+    test "invitation_only defaults to true" do
       network = network_fixture()
-      assert network.invitation_only == false
+      assert network.invitation_only == true
     end
 
     test "update_network/2 can enable invitation_only mode" do
@@ -302,5 +302,127 @@ defmodule Castmill.NetworksTest do
       assert persisted.email == email
       assert persisted.status == "invited"
     end
+  end
+
+  describe "list_network_domains/0" do
+    import Castmill.NetworksFixtures
+
+    test "returns primary domains from networks" do
+      _network1 = network_fixture(%{domain: "net-aaa.example.com", name: "Net A"})
+      _network2 = network_fixture(%{domain: "net-bbb.example.com", name: "Net B"})
+
+      domains = Networks.list_network_domains()
+
+      assert "net-aaa.example.com" in domains
+      assert "net-bbb.example.com" in domains
+    end
+
+    test "includes additional domains from configured hook" do
+      _network = network_fixture(%{domain: "primary.example.com", name: "Primary Net"})
+
+      # Configure a hook that returns extra domains
+      Application.put_env(
+        :castmill,
+        :additional_domain_sources,
+        {__MODULE__, :mock_domain_source, []}
+      )
+
+      on_exit(fn -> Application.delete_env(:castmill, :additional_domain_sources) end)
+
+      domains = Networks.list_network_domains()
+
+      assert "primary.example.com" in domains
+      assert "custom.example.com" in domains
+      assert "extra.example.com" in domains
+    end
+
+    test "deduplicates domains from primary and additional sources" do
+      _network = network_fixture(%{domain: "shared.example.com", name: "Shared Net"})
+
+      Application.put_env(
+        :castmill,
+        :additional_domain_sources,
+        {__MODULE__, :mock_domain_source_with_overlap, []}
+      )
+
+      on_exit(fn -> Application.delete_env(:castmill, :additional_domain_sources) end)
+
+      domains = Networks.list_network_domains()
+
+      # "shared.example.com" appears in both primary and additional — should appear once
+      assert Enum.count(domains, &(&1 == "shared.example.com")) == 1
+    end
+
+    test "filters out non-binary, empty, and whitespace-only entries from additional sources" do
+      _network = network_fixture(%{domain: "primary.example.com", name: "Filter Net"})
+
+      Application.put_env(
+        :castmill,
+        :additional_domain_sources,
+        {__MODULE__, :mock_bad_domain_source, []}
+      )
+
+      on_exit(fn -> Application.delete_env(:castmill, :additional_domain_sources) end)
+
+      domains = Networks.list_network_domains()
+
+      assert "primary.example.com" in domains
+      assert "valid.example.com" in domains
+      # nil, 123, "", and whitespace-only strings should be filtered out
+      refute nil in domains
+      refute "" in domains
+      refute "  " in domains
+      assert Enum.all?(domains, &is_binary/1)
+    end
+
+    test "returns only primary domains when additional source is not configured" do
+      _network = network_fixture(%{domain: "only-primary.example.com", name: "Only Primary"})
+
+      Application.delete_env(:castmill, :additional_domain_sources)
+
+      domains = Networks.list_network_domains()
+
+      assert "only-primary.example.com" in domains
+    end
+
+    test "returns primary domains when additional source raises" do
+      _network = network_fixture(%{domain: "primary.example.com", name: "Error Net"})
+
+      Application.put_env(
+        :castmill,
+        :additional_domain_sources,
+        {__MODULE__, :mock_raising_source, []}
+      )
+
+      on_exit(fn -> Application.delete_env(:castmill, :additional_domain_sources) end)
+
+      {domains, log} = with_log(fn -> Networks.list_network_domains() end)
+
+      assert "primary.example.com" in domains
+      assert log =~ "additional_domain_sources failed"
+    end
+
+    test "returns primary domains when additional source returns non-list" do
+      _network = network_fixture(%{domain: "primary.example.com", name: "NonList Net"})
+
+      Application.put_env(
+        :castmill,
+        :additional_domain_sources,
+        {__MODULE__, :mock_nonlist_source, []}
+      )
+
+      on_exit(fn -> Application.delete_env(:castmill, :additional_domain_sources) end)
+
+      domains = Networks.list_network_domains()
+
+      assert "primary.example.com" in domains
+    end
+
+    # Mock functions for domain source hooks
+    def mock_domain_source, do: ["custom.example.com", "extra.example.com"]
+    def mock_domain_source_with_overlap, do: ["shared.example.com", "another.example.com"]
+    def mock_bad_domain_source, do: ["valid.example.com", nil, 123, "", "  "]
+    def mock_raising_source, do: raise(RuntimeError, "boom")
+    def mock_nonlist_source, do: :not_a_list
   end
 end

@@ -94,7 +94,7 @@ defmodule Castmill.Networks do
           try do
             case apply(mod, fun, args) do
               domains when is_list(domains) ->
-                Enum.filter(domains, &(is_binary(&1) and &1 != ""))
+                Enum.filter(domains, &(is_binary(&1) and String.trim(&1) != ""))
 
               _ ->
                 []
