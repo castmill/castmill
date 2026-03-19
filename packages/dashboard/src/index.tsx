@@ -55,6 +55,7 @@ const SignUp = lazy(() => import('./components/signup/signup'));
 const CompleteRecovery = lazy(
   () => import('./components/login/complete-recovery')
 );
+const SetupPasskey = lazy(() => import('./components/login/setup-passkey'));
 const NotFound = lazy(() => import('./components/not-found'));
 
 const root = document.getElementById('root');
@@ -262,6 +263,7 @@ render(() => {
             <Route path="/login" component={Login} />
             <Route path="/signup" component={SignUp} />
             <Route path="/recover-credentials" component={CompleteRecovery} />
+            <Route path="/setup-passkey" component={SetupPasskey} />
             <Route
               path="/invite-organization"
               component={OrganizationsInvitationPage}

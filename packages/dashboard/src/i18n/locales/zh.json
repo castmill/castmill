@@ -570,6 +570,24 @@
     "checkYourEmail": "检查您的电子邮件",
     "addNewPasskey": "添加新密钥"
   },
+  "setupPasskey": {
+    "title": "设置您的密钥",
+    "subtitle": "为 {{domain}} 创建密钥，以便直接登录。",
+    "instructions": "欢迎，{{email}}！点击下方按钮为此域名创建密钥。",
+    "createButton": "创建密钥",
+    "passkeysNotSupported": "您的浏览器不支持密钥。",
+    "invalidLink": "无效的设置链接。",
+    "expiredLink": "此链接已过期。请申请新链接。",
+    "verificationFailed": "验证链接失败。",
+    "verifying": "正在验证链接...",
+    "creatingPasskey": "正在创建密钥...",
+    "challengeFailed": "无法开始创建密钥。",
+    "creationCancelled": "密钥创建已取消。",
+    "noPublicKey": "无法获取公钥。",
+    "registrationFailed": "注册密钥失败。",
+    "success": "密钥已创建！正在登录...",
+    "unexpectedError": "出现错误，请重试。"
+  },
   "errors": {
     "generic": "发生错误。请重试。",
     "networkError": "网络错误。请检查您的连接。",

@@ -571,6 +571,24 @@
     "checkYourEmail": "Revisa tu correo electrónico",
     "addNewPasskey": "Añadir nueva llave de acceso"
   },
+  "setupPasskey": {
+    "title": "Configura tu clave de acceso",
+    "subtitle": "Crea una clave de acceso para {{domain}} para iniciar sesión directamente.",
+    "instructions": "¡Bienvenido/a, {{email}}! Haz clic en el botón para crear una clave de acceso para este dominio.",
+    "createButton": "Crear clave de acceso",
+    "passkeysNotSupported": "Tu navegador no soporta claves de acceso.",
+    "invalidLink": "Enlace de configuración inválido.",
+    "expiredLink": "Este enlace ha expirado. Solicita uno nuevo.",
+    "verificationFailed": "Error al verificar el enlace.",
+    "verifying": "Verificando enlace...",
+    "creatingPasskey": "Creando clave de acceso...",
+    "challengeFailed": "Error al iniciar la creación de la clave.",
+    "creationCancelled": "La creación fue cancelada.",
+    "noPublicKey": "No se pudo obtener la clave pública.",
+    "registrationFailed": "Error al registrar la clave de acceso.",
+    "success": "¡Clave creada! Iniciando sesión...",
+    "unexpectedError": "Algo salió mal. Inténtalo de nuevo."
+  },
   "errors": {
     "generic": "Se ha producido un error. Por favor, inténtalo de nuevo.",
     "networkError": "Error de red. Por favor, comprueba tu conexión.",

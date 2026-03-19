@@ -699,6 +699,24 @@
     "checkYourEmail": "Überprüfen Sie Ihre E-Mail",
     "addNewPasskey": "Neuen Passkey hinzufügen"
   },
+  "setupPasskey": {
+    "title": "Passkey einrichten",
+    "subtitle": "Erstellen Sie einen Passkey für {{domain}}, um sich direkt anzumelden.",
+    "instructions": "Willkommen, {{email}}! Klicken Sie auf die Schaltfläche, um einen Passkey für diese Domain zu erstellen.",
+    "createButton": "Passkey erstellen",
+    "passkeysNotSupported": "Ihr Browser unterstützt keine Passkeys.",
+    "invalidLink": "Ungültiger Einrichtungslink.",
+    "expiredLink": "Dieser Link ist abgelaufen. Bitte fordern Sie einen neuen an.",
+    "verificationFailed": "Link konnte nicht verifiziert werden.",
+    "verifying": "Link wird überprüft...",
+    "creatingPasskey": "Passkey wird erstellt...",
+    "challengeFailed": "Passkey-Erstellung konnte nicht gestartet werden.",
+    "creationCancelled": "Passkey-Erstellung wurde abgebrochen.",
+    "noPublicKey": "Öffentlicher Schlüssel konnte nicht abgerufen werden.",
+    "registrationFailed": "Passkey konnte nicht registriert werden.",
+    "success": "Passkey erstellt! Sie werden angemeldet...",
+    "unexpectedError": "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut."
+  },
   "signup": {
     "title": "Registrieren",
     "continueWithPasskey": "Mit Passkey fortfahren",

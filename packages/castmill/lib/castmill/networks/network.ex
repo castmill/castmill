@@ -15,7 +15,7 @@ defmodule Castmill.Networks.Network do
     field(:default_locale, :string, default: "en")
     field(:privacy_policy_url, :string)
 
-    field(:invitation_only, :boolean, default: false)
+    field(:invitation_only, :boolean, default: true)
     field(:invitation_only_org_admins, :boolean, default: false)
 
     field(:meta, :map)
