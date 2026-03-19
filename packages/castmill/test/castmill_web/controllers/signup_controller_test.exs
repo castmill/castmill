@@ -142,7 +142,7 @@ defmodule CastmillWeb.SignUpControllerTest do
     test "handles errors during signup creation", %{conn: conn} do
       origin = "https://example.com"
       conn = put_req_header(conn, "origin", origin)
-      _network = network_fixture(%{domain: "example.com"})
+      _network = network_fixture(%{domain: "example.com", invitation_only: false})
 
       # Simulate invalid email
       email = nil
@@ -159,7 +159,7 @@ defmodule CastmillWeb.SignUpControllerTest do
   describe "create_user/2" do
     setup do
       # Define or use a fixture function
-      network = network_fixture(%{domain: "example.com"})
+      network = network_fixture(%{domain: "example.com", invitation_only: false})
       challenge = CastmillWeb.SessionUtils.new_challenge()
 
       signup =
