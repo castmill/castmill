@@ -631,6 +631,20 @@ defmodule Castmill.Accounts do
     end
   end
 
+  @doc """
+  Resolves a network ID from a request origin (e.g., "https://net-abc.castmill.dev").
+
+  First checks the primary `networks.domain` field. If no match is found, falls
+  back to `:additional_domain_resolver` configuration, allowing external addons
+  (e.g., custom domains) to provide alternative domain-to-network mappings.
+
+  ## Configuration
+
+      config :castmill, :additional_domain_resolver, {MyModule, :resolve, []}
+
+  The configured module function receives the domain string (without protocol)
+  and must return `{:ok, network_id}` or `{:error, reason}`.
+  """
   def get_network_id_by_domain(origin) do
     # Strip protocol (http:// or https://) from Origin header to match stored domains
     domain = strip_protocol(origin)
@@ -641,10 +655,38 @@ defmodule Castmill.Accounts do
          )
          |> Repo.one() do
       nil ->
-        {:error, :network_not_found}
+        # Primary domain not found — check additional domain resolver if configured
+        resolve_additional_domain(domain)
 
       network_id ->
         {:ok, network_id}
+    end
+  end
+
+  defp resolve_additional_domain(domain) do
+    case Application.get_env(:castmill, :additional_domain_resolver) do
+      {mod, fun} ->
+        try do
+          apply(mod, fun, [domain])
+        rescue
+          e ->
+            require Logger
+            Logger.warning("[Accounts] additional_domain_resolver failed: #{inspect(e)}")
+            {:error, :network_not_found}
+        end
+
+      {mod, fun, args} ->
+        try do
+          apply(mod, fun, [domain | args])
+        rescue
+          e ->
+            require Logger
+            Logger.warning("[Accounts] additional_domain_resolver failed: #{inspect(e)}")
+            {:error, :network_not_found}
+        end
+
+      _ ->
+        {:error, :network_not_found}
     end
   end
 
