@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { describe, it } from 'mocha';
+import { describe, it, afterEach } from 'mocha';
 import { NEVER, Subscription } from 'rxjs';
 import { spy, stub, restore } from 'sinon';
 
@@ -72,6 +72,7 @@ describe('Player.play', () => {
 });
 
 describe('timer', () => {
+  afterEach(() => restore());
   it('should keep a stable interval after delayed callbacks', () => {
     let now = 0;
     const delays: number[] = [];
