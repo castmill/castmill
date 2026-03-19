@@ -149,9 +149,9 @@ defmodule Castmill.NetworksTest do
       assert Castmill.Quotas.get_quota_for_organization(org.id, "layouts") == 100
     end
 
-    test "invitation_only defaults to false" do
+    test "invitation_only defaults to true" do
       network = network_fixture()
-      assert network.invitation_only == false
+      assert network.invitation_only == true
     end
 
     test "update_network/2 can enable invitation_only mode" do

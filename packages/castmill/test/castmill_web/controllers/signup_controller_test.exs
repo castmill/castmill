@@ -23,7 +23,7 @@ defmodule CastmillWeb.SignUpControllerTest do
     test "creates signup challenge without sending email", %{conn: conn} do
       origin = "https://example.com"
       conn = put_req_header(conn, "origin", origin)
-      _network = network_fixture(%{domain: "example.com"})
+      _network = network_fixture(%{domain: "example.com", invitation_only: false})
 
       email = "newuser@example.com"
       invitation_token = "test-invitation-token"
@@ -99,7 +99,7 @@ defmodule CastmillWeb.SignUpControllerTest do
     test "successfully creates a signup and returns serialized data", %{conn: conn} do
       origin = "https://example.com"
       conn = put_req_header(conn, "origin", origin)
-      _network = network_fixture(%{domain: "example.com"})
+      _network = network_fixture(%{domain: "example.com", invitation_only: false})
 
       email = "test@example.com"
 
@@ -126,7 +126,7 @@ defmodule CastmillWeb.SignUpControllerTest do
       origin = "https://example.com"
       # Setting the origin header
       conn = put_req_header(conn, "origin", origin)
-      _network = network_fixture(%{domain: "example.com"})
+      _network = network_fixture(%{domain: "example.com", invitation_only: false})
 
       email = "test@example.com"
 
