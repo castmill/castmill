@@ -149,9 +149,9 @@ defmodule Castmill.NetworksTest do
       assert Castmill.Quotas.get_quota_for_organization(org.id, "layouts") == 100
     end
 
-    test "invitation_only defaults to false" do
+    test "invitation_only defaults to true" do
       network = network_fixture()
-      assert network.invitation_only == false
+      assert network.invitation_only == true
     end
 
     test "update_network/2 can enable invitation_only mode" do
@@ -308,8 +308,8 @@ defmodule Castmill.NetworksTest do
     import Castmill.NetworksFixtures
 
     test "returns primary domains from networks" do
-      network1 = network_fixture(%{domain: "net-aaa.example.com", name: "Net A"})
-      network2 = network_fixture(%{domain: "net-bbb.example.com", name: "Net B"})
+      _network1 = network_fixture(%{domain: "net-aaa.example.com", name: "Net A"})
+      _network2 = network_fixture(%{domain: "net-bbb.example.com", name: "Net B"})
 
       domains = Networks.list_network_domains()
 
@@ -337,7 +337,7 @@ defmodule Castmill.NetworksTest do
     end
 
     test "deduplicates domains from primary and additional sources" do
-      network = network_fixture(%{domain: "shared.example.com", name: "Shared Net"})
+      _network = network_fixture(%{domain: "shared.example.com", name: "Shared Net"})
 
       Application.put_env(
         :castmill,
@@ -353,7 +353,7 @@ defmodule Castmill.NetworksTest do
       assert Enum.count(domains, &(&1 == "shared.example.com")) == 1
     end
 
-    test "filters out non-binary and empty entries from additional sources" do
+    test "filters out non-binary, empty, and whitespace-only entries from additional sources" do
       _network = network_fixture(%{domain: "primary.example.com", name: "Filter Net"})
 
       Application.put_env(
@@ -368,14 +368,15 @@ defmodule Castmill.NetworksTest do
 
       assert "primary.example.com" in domains
       assert "valid.example.com" in domains
-      # nil, 123, and "" should be filtered out
+      # nil, 123, "", and whitespace-only strings should be filtered out
       refute nil in domains
       refute "" in domains
+      refute "  " in domains
       assert Enum.all?(domains, &is_binary/1)
     end
 
     test "returns only primary domains when additional source is not configured" do
-      network = network_fixture(%{domain: "only-primary.example.com", name: "Only Primary"})
+      _network = network_fixture(%{domain: "only-primary.example.com", name: "Only Primary"})
 
       Application.delete_env(:castmill, :additional_domain_sources)
 
