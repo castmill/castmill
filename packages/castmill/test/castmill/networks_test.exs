@@ -321,8 +321,11 @@ defmodule Castmill.NetworksTest do
       _network = network_fixture(%{domain: "primary.example.com", name: "Primary Net"})
 
       # Configure a hook that returns extra domains
-      Application.put_env(:castmill, :additional_domain_sources,
-        {__MODULE__, :mock_domain_source, []})
+      Application.put_env(
+        :castmill,
+        :additional_domain_sources,
+        {__MODULE__, :mock_domain_source, []}
+      )
 
       on_exit(fn -> Application.delete_env(:castmill, :additional_domain_sources) end)
 
@@ -336,8 +339,11 @@ defmodule Castmill.NetworksTest do
     test "deduplicates domains from primary and additional sources" do
       network = network_fixture(%{domain: "shared.example.com", name: "Shared Net"})
 
-      Application.put_env(:castmill, :additional_domain_sources,
-        {__MODULE__, :mock_domain_source_with_overlap, []})
+      Application.put_env(
+        :castmill,
+        :additional_domain_sources,
+        {__MODULE__, :mock_domain_source_with_overlap, []}
+      )
 
       on_exit(fn -> Application.delete_env(:castmill, :additional_domain_sources) end)
 
@@ -350,8 +356,11 @@ defmodule Castmill.NetworksTest do
     test "filters out non-binary and empty entries from additional sources" do
       _network = network_fixture(%{domain: "primary.example.com", name: "Filter Net"})
 
-      Application.put_env(:castmill, :additional_domain_sources,
-        {__MODULE__, :mock_bad_domain_source, []})
+      Application.put_env(
+        :castmill,
+        :additional_domain_sources,
+        {__MODULE__, :mock_bad_domain_source, []}
+      )
 
       on_exit(fn -> Application.delete_env(:castmill, :additional_domain_sources) end)
 
@@ -378,8 +387,11 @@ defmodule Castmill.NetworksTest do
     test "returns primary domains when additional source raises" do
       _network = network_fixture(%{domain: "primary.example.com", name: "Error Net"})
 
-      Application.put_env(:castmill, :additional_domain_sources,
-        {__MODULE__, :mock_raising_source, []})
+      Application.put_env(
+        :castmill,
+        :additional_domain_sources,
+        {__MODULE__, :mock_raising_source, []}
+      )
 
       on_exit(fn -> Application.delete_env(:castmill, :additional_domain_sources) end)
 
@@ -392,8 +404,11 @@ defmodule Castmill.NetworksTest do
     test "returns primary domains when additional source returns non-list" do
       _network = network_fixture(%{domain: "primary.example.com", name: "NonList Net"})
 
-      Application.put_env(:castmill, :additional_domain_sources,
-        {__MODULE__, :mock_nonlist_source, []})
+      Application.put_env(
+        :castmill,
+        :additional_domain_sources,
+        {__MODULE__, :mock_nonlist_source, []}
+      )
 
       on_exit(fn -> Application.delete_env(:castmill, :additional_domain_sources) end)
 

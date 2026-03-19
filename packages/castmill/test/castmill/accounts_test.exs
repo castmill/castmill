@@ -385,7 +385,8 @@ defmodule Castmill.AccountsTest do
     test "strips path and query from origin" do
       network = network_fixture(%{domain: "myapp.example.com", name: "Path Net"})
 
-      assert {:ok, network.id} == Accounts.get_network_id_by_domain("https://myapp.example.com/some/path?q=1")
+      assert {:ok, network.id} ==
+               Accounts.get_network_id_by_domain("https://myapp.example.com/some/path?q=1")
     end
 
     test "returns error for unknown domain with no resolver configured" do
@@ -398,8 +399,7 @@ defmodule Castmill.AccountsTest do
     test "falls back to additional resolver when primary domain not found" do
       network = network_fixture(%{domain: "primary.example.com", name: "Fallback Net"})
 
-      Application.put_env(:castmill, :additional_domain_resolver,
-        {__MODULE__, :mock_resolver})
+      Application.put_env(:castmill, :additional_domain_resolver, {__MODULE__, :mock_resolver})
 
       on_exit(fn -> Application.delete_env(:castmill, :additional_domain_resolver) end)
 
@@ -411,8 +411,11 @@ defmodule Castmill.AccountsTest do
       network = network_fixture(%{domain: "primary.example.com", name: "NoFallback Net"})
 
       # Configure a resolver that would fail if called
-      Application.put_env(:castmill, :additional_domain_resolver,
-        {__MODULE__, :mock_resolver_raise})
+      Application.put_env(
+        :castmill,
+        :additional_domain_resolver,
+        {__MODULE__, :mock_resolver_raise}
+      )
 
       on_exit(fn -> Application.delete_env(:castmill, :additional_domain_resolver) end)
 
@@ -422,8 +425,11 @@ defmodule Castmill.AccountsTest do
     end
 
     test "normalizes resolver errors to :network_not_found" do
-      Application.put_env(:castmill, :additional_domain_resolver,
-        {__MODULE__, :mock_resolver_bad_error})
+      Application.put_env(
+        :castmill,
+        :additional_domain_resolver,
+        {__MODULE__, :mock_resolver_bad_error}
+      )
 
       on_exit(fn -> Application.delete_env(:castmill, :additional_domain_resolver) end)
 
@@ -432,8 +438,11 @@ defmodule Castmill.AccountsTest do
     end
 
     test "normalizes resolver non-binary ok result to :network_not_found" do
-      Application.put_env(:castmill, :additional_domain_resolver,
-        {__MODULE__, :mock_resolver_bad_ok})
+      Application.put_env(
+        :castmill,
+        :additional_domain_resolver,
+        {__MODULE__, :mock_resolver_bad_ok}
+      )
 
       on_exit(fn -> Application.delete_env(:castmill, :additional_domain_resolver) end)
 
@@ -442,8 +451,11 @@ defmodule Castmill.AccountsTest do
     end
 
     test "handles resolver crash gracefully" do
-      Application.put_env(:castmill, :additional_domain_resolver,
-        {__MODULE__, :mock_resolver_raise})
+      Application.put_env(
+        :castmill,
+        :additional_domain_resolver,
+        {__MODULE__, :mock_resolver_raise}
+      )
 
       on_exit(fn -> Application.delete_env(:castmill, :additional_domain_resolver) end)
 
@@ -459,8 +471,11 @@ defmodule Castmill.AccountsTest do
     end
 
     test "supports {mod, fun, args} tuple config" do
-      Application.put_env(:castmill, :additional_domain_resolver,
-        {__MODULE__, :mock_resolver_with_args, [:extra_arg]})
+      Application.put_env(
+        :castmill,
+        :additional_domain_resolver,
+        {__MODULE__, :mock_resolver_with_args, [:extra_arg]}
+      )
 
       on_exit(fn -> Application.delete_env(:castmill, :additional_domain_resolver) end)
 
