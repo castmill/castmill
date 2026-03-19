@@ -41,6 +41,10 @@ config :castmill, CastmillWeb.Endpoint,
   server: true,
   watchers: []
 
+# SameSite=None;Secure is required so cross-origin requests from custom domains
+# (e.g. signage.acmecorp.com → api.castmill.dev) include the session cookie.
+config :castmill, session_same_site: "None", session_secure: true
+
 # Configures Swoosh API Client
 config :swoosh, api_client: Swoosh.ApiClient.Finch, finch_name: Castmill.Finch
 

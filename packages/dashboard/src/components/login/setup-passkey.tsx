@@ -36,7 +36,6 @@ const SetupPasskey: Component = () => {
   const [success, setSuccess] = createSignal<boolean>(false);
 
   const token = searchParams.token;
-  const email = searchParams.email;
 
   onMount(async () => {
     // Check passkey support
@@ -185,14 +184,14 @@ const SetupPasskey: Component = () => {
         return;
       }
 
-      setSuccess(true);
-      setStatus(t('setupPasskey.success'));
-
       // Log the user in and redirect to dashboard
       await loginUser();
+      setSuccess(true);
+      setStatus(t('setupPasskey.success'));
       setTimeout(() => navigate('/'), 1500);
     } catch (err) {
       console.error('Passkey creation failed:', err);
+      setSuccess(false);
       if (err instanceof Error && err.name === 'NotAllowedError') {
         setError(t('setupPasskey.creationCancelled'));
       } else {
@@ -232,7 +231,7 @@ const SetupPasskey: Component = () => {
               class="success"
               style={{ color: '#10b981', 'margin-top': '1em' }}
             >
-              ✅ {status()}
+              {status()}
             </div>
           </Show>
 

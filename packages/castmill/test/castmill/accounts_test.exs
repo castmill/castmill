@@ -397,7 +397,7 @@ defmodule Castmill.AccountsTest do
     end
 
     test "falls back to additional resolver when primary domain not found" do
-      network = network_fixture(%{domain: "primary.example.com", name: "Fallback Net"})
+      _network = network_fixture(%{domain: "primary.example.com", name: "Fallback Net"})
 
       Application.put_env(:castmill, :additional_domain_resolver, {__MODULE__, :mock_resolver})
 
