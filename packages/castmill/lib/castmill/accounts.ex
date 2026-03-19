@@ -664,29 +664,37 @@ defmodule Castmill.Accounts do
   end
 
   defp resolve_additional_domain(domain) do
-    case Application.get_env(:castmill, :additional_domain_resolver) do
-      {mod, fun} ->
-        try do
-          apply(mod, fun, [domain])
-        rescue
-          e ->
-            require Logger
-            Logger.warning("[Accounts] additional_domain_resolver failed: #{inspect(e)}")
-            {:error, :network_not_found}
-        end
+    result =
+      case Application.get_env(:castmill, :additional_domain_resolver) do
+        {mod, fun} ->
+          try do
+            apply(mod, fun, [domain])
+          rescue
+            e ->
+              require Logger
+              Logger.warning("[Accounts] additional_domain_resolver failed: #{inspect(e)}")
+              {:error, :network_not_found}
+          end
 
-      {mod, fun, args} ->
-        try do
-          apply(mod, fun, [domain | args])
-        rescue
-          e ->
-            require Logger
-            Logger.warning("[Accounts] additional_domain_resolver failed: #{inspect(e)}")
-            {:error, :network_not_found}
-        end
+        {mod, fun, args} ->
+          try do
+            apply(mod, fun, [domain | args])
+          rescue
+            e ->
+              require Logger
+              Logger.warning("[Accounts] additional_domain_resolver failed: #{inspect(e)}")
+              {:error, :network_not_found}
+          end
 
-      _ ->
-        {:error, :network_not_found}
+        _ ->
+          {:error, :network_not_found}
+      end
+
+    # Normalize return value so callers can rely on the stable API:
+    # {:ok, binary_id} | {:error, :network_not_found}
+    case result do
+      {:ok, network_id} when is_binary(network_id) -> {:ok, network_id}
+      _ -> {:error, :network_not_found}
     end
   end
 

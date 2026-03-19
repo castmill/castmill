@@ -92,7 +92,13 @@ defmodule Castmill.Networks do
       case Application.get_env(:castmill, :additional_domain_sources) do
         {mod, fun, args} ->
           try do
-            apply(mod, fun, args)
+            case apply(mod, fun, args) do
+              domains when is_list(domains) ->
+                Enum.filter(domains, &(is_binary(&1) and &1 != ""))
+
+              _ ->
+                []
+            end
           rescue
             e ->
               require Logger
