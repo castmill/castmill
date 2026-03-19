@@ -494,6 +494,6 @@ defmodule Castmill.AccountsTest do
     def mock_resolver_bad_error(_domain), do: {:error, :some_other_reason}
     def mock_resolver_bad_ok(_domain), do: {:ok, 12345}
     def mock_resolver_raise(_domain), do: raise(RuntimeError, "resolver exploded")
-    def mock_resolver_with_args(domain, extra), do: {:ok, "resolved-with-#{extra}"}
+    def mock_resolver_with_args(_domain, extra), do: {:ok, "resolved-with-#{extra}"}
   end
 end
