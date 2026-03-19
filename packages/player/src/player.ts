@@ -52,10 +52,6 @@ export class Player extends EventEmitter {
     // External callers may invoke play() repeatedly (e.g. UI/watchers), which
     // would otherwise stop/restart playback and truncate current segments.
     if (timerIsActive && playIsActive && !opts.synced) {
-      console.warn(
-        'Play called while already playing. Ignoring redundant call.',
-        opts
-      );
       return;
     }
 
@@ -150,7 +146,7 @@ export function timer(
     updateTick();
 
     return () => {
-      if (timeout) {
+      if (timeout !== undefined) {
         clearTimeout(timeout);
       }
     };
