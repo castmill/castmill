@@ -1286,6 +1286,9 @@
       "description": "Aún no perteneces a ninguna organización en esta red. Contacta con el administrador de la red para obtener acceso."
     }
   },
+  "aspectRatio": {
+    "custom": "Personalizado"
+  },
   "deviceTimers": {
     "title": "Temporizadores de Energía del Dispositivo",
     "description": "Configure cuándo el dispositivo se enciende y apaga automáticamente",

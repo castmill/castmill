@@ -1280,6 +1280,9 @@
       "description": "Sie gehören noch keiner Organisation in diesem Netzwerk an. Bitte kontaktieren Sie Ihren Netzwerkadministrator, um Zugang zu erhalten."
     }
   },
+  "aspectRatio": {
+    "custom": "Benutzerdefiniert"
+  },
   "deviceTimers": {
     "title": "Geräte-Stromtimer",
     "description": "Konfigurieren Sie, wann sich das Gerät automatisch ein- und ausschaltet",

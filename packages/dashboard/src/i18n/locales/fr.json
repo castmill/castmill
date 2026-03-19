@@ -1297,6 +1297,9 @@
       "description": "Vous n'appartenez à aucune organisation dans ce réseau. Veuillez contacter votre administrateur réseau pour obtenir l'accès."
     }
   },
+  "aspectRatio": {
+    "custom": "Personnalisé"
+  },
   "deviceTimers": {
     "title": "Minuteurs d'Alimentation de l'Appareil",
     "description": "Configurez quand l'appareil s'allume et s'éteint automatiquement",

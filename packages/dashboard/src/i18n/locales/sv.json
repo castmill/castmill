@@ -1280,6 +1280,9 @@
       "description": "Du tillhör inte någon organisation i detta nätverk ännu. Kontakta din nätverksadministratör för att få åtkomst."
     }
   },
+  "aspectRatio": {
+    "custom": "Anpassad"
+  },
   "deviceTimers": {
     "title": "Enhets Strömtimers",
     "description": "Konfigurera när enheten slås på och av automatiskt",

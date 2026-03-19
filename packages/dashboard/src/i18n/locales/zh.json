@@ -1285,6 +1285,9 @@
       "description": "您尚未加入此网络中的任何组织。请联系您的网络管理员以获取访问权限。"
     }
   },
+  "aspectRatio": {
+    "custom": "自定义"
+  },
   "deviceTimers": {
     "title": "设备电源计时器",
     "description": "配置设备何时自动打开和关闭",
