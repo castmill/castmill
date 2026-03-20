@@ -29,11 +29,26 @@ defmodule CastmillWeb.SessionControllerTest do
   end
 
   describe "create_challenge/2" do
-    test "creates a new challenge", %{conn: conn} do
+    test "creates a new challenge and returns a signed challenge_token", %{conn: conn} do
       conn = get(conn, Helpers.session_path(conn, :create_challenge))
-      assert json_response(conn, 200)
+      body = json_response(conn, 200)
+
+      # Session still populated for backwards compatibility
       challenge = get_session(conn, :webauthn_challenge)
       assert challenge
+      assert body["challenge"] == challenge
+
+      # Signed token is also returned
+      assert body["challenge_token"]
+
+      # Token contains the same challenge
+      assert {:ok, ^challenge} =
+               Phoenix.Token.verify(
+                 CastmillWeb.Endpoint,
+                 "CastmillWeb.SessionController.challenge.v1",
+                 body["challenge_token"],
+                 max_age: 300
+               )
     end
   end
 

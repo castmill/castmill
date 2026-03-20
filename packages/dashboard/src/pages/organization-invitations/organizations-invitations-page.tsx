@@ -191,7 +191,7 @@ const OrganizationsInvitationPage = () => {
         throw new Error('Failed to get login challenge');
       }
 
-      const { challenge } = await challengeResponse.json();
+      const { challenge, challenge_token } = await challengeResponse.json();
 
       const credential = await navigator.credentials.get({
         publicKey: {
@@ -226,6 +226,7 @@ const OrganizationsInvitationPage = () => {
           signature: arrayBufferToBase64(assertionResponse.signature),
           email: invitation()!.email,
           challenge,
+          challenge_token,
         }),
         credentials: 'include',
       });

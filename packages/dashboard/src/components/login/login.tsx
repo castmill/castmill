@@ -125,8 +125,10 @@ const Login: Component = () => {
         return;
       }
 
-      const { challenge } = (await response.json()) as { challenge: string };
-      console.log('Challenge:', challenge);
+      const { challenge, challenge_token } = (await response.json()) as {
+        challenge: string;
+        challenge_token: string;
+      };
 
       const publicKey: PublicKeyCredentialRequestOptions = {
         rpId: domain,
@@ -167,6 +169,7 @@ const Login: Component = () => {
           signature: arrayBufferToBase64(authAssertionResponse.signature),
           email,
           challenge,
+          challenge_token,
         }),
         credentials: 'include',
       });
