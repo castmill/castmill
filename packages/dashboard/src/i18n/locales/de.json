@@ -751,7 +751,8 @@
     "checkServerRunning": "Stellen Sie sicher, dass der Castmill-Server läuft",
     "checkNetworkConnection": "Überprüfen Sie Ihre Netzwerkverbindung",
     "checkServerUrl": "Überprüfen Sie die Server-URL in Ihrer Konfiguration",
-    "retryConnection": "Verbindung Wiederholen"
+    "retryConnection": "Verbindung Wiederholen",
+    "authenticationError": "Authentifizierungsfehler: {{message}}"
   },
   "playlists": {
     "title": "Playlists",

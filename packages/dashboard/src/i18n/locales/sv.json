@@ -593,7 +593,8 @@
     "checkServerRunning": "Se till att Castmill-servern körs",
     "checkNetworkConnection": "Kontrollera din nätverksanslutning",
     "checkServerUrl": "Verifiera server-URL:en i din konfiguration",
-    "retryConnection": "Försök Ansluta Igen"
+    "retryConnection": "Försök Ansluta Igen",
+    "authenticationError": "Autentiseringsfel: {{message}}"
   },
   "sidebar": {
     "organization": "Organisation",

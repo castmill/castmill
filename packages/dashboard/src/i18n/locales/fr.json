@@ -610,7 +610,8 @@
       "checkNetworkConnection": "Vérifiez votre connexion réseau",
       "checkServerUrl": "Vérifiez l'URL du serveur dans votre configuration",
       "retryConnection": "Réessayer la Connexion"
-    }
+    },
+    "authenticationError": "Erreur d'authentification : {{message}}"
   },
   "sidebar": {
     "organization": "Organisation",

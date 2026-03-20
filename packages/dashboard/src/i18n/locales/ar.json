@@ -598,7 +598,8 @@
     "checkServerRunning": "تأكد من تشغيل خادم Castmill",
     "checkNetworkConnection": "تحقق من اتصال الشبكة",
     "checkServerUrl": "تحقق من عنوان URL للخادم في التكوين",
-    "retryConnection": "إعادة محاولة الاتصال"
+    "retryConnection": "إعادة محاولة الاتصال",
+    "authenticationError": "خطأ في المصادقة: {{message}}"
   },
   "sidebar": {
     "organization": "المنظمة",

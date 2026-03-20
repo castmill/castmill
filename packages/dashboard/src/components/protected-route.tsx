@@ -86,9 +86,19 @@ const ProtectedRoute: Component<ProtectedRouteProps> = (
           }
           // For other errors, show toast and redirect to login
           toast.error(
-            `Authentication error: ${error instanceof Error ? error.message : 'Unknown error'}`
+            t('errors.authenticationError', {
+              message:
+                error instanceof Error ? error.message : t('errors.generic'),
+            })
           );
-          navigate('/login', { replace: true });
+          const redirectUrl = buildRedirectUrl(
+            location.pathname,
+            location.search
+          );
+          navigate(redirectUrl, {
+            replace: true,
+            state: { from: location.pathname },
+          });
           return;
         }
       }

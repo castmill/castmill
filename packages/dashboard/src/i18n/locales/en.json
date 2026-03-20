@@ -764,7 +764,8 @@
     "checkServerRunning": "Make sure the Castmill server is running",
     "checkNetworkConnection": "Check your network connection",
     "checkServerUrl": "Verify the server URL in your configuration",
-    "retryConnection": "Retry Connection"
+    "retryConnection": "Retry Connection",
+    "authenticationError": "Authentication error: {{message}}"
   },
   "playlists": {
     "title": "Playlists",

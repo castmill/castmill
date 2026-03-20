@@ -598,7 +598,8 @@
     "checkServerRunning": "Castmill 서버가 실행 중인지 확인하세요",
     "checkNetworkConnection": "네트워크 연결을 확인하세요",
     "checkServerUrl": "구성에서 서버 URL을 확인하세요",
-    "retryConnection": "연결 재시도"
+    "retryConnection": "연결 재시도",
+    "authenticationError": "인증 오류: {{message}}"
   },
   "sidebar": {
     "organization": "조직",
