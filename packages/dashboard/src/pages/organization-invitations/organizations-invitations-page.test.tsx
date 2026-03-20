@@ -351,9 +351,21 @@ describe('OrganizationsInvitationPage', () => {
         .fn()
         .mockResolvedValueOnce({
           ok: true,
-          json: () => Promise.resolve({ challenge: 'abc123' }),
+          json: () =>
+            Promise.resolve({
+              challenge: 'abc123',
+              challenge_token: 'token123',
+            }),
         })
-        .mockResolvedValueOnce({ ok: true });
+        .mockResolvedValueOnce({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              status: 'ok',
+              user: { id: 'user-1', email: 'existing@example.com' },
+              token: 'ws-token',
+            }),
+        });
 
       renderComponent();
 
@@ -379,7 +391,10 @@ describe('OrganizationsInvitationPage', () => {
       });
 
       await waitFor(() => {
-        expect(loginUser).toHaveBeenCalled();
+        expect(loginUser).toHaveBeenCalledWith({
+          user: { id: 'user-1', email: 'existing@example.com' },
+          token: 'ws-token',
+        });
       });
 
       expect(mockNavigate).not.toHaveBeenCalled();
