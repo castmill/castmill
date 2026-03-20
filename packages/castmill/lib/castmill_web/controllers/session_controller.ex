@@ -5,7 +5,7 @@ defmodule CastmillWeb.SessionController do
   alias Castmill.Accounts
 
   # Max age for challenge tokens — derived from the ChallengeStore TTL
-  # so both the signed token and the ETS entry share the same window.
+  # so both the signed token and the stored challenge share the same window.
   @challenge_token_max_age CastmillWeb.ChallengeStore.challenge_ttl_seconds()
   @challenge_token_salt "CastmillWeb.SessionController.challenge.v1"
 
@@ -19,7 +19,7 @@ defmodule CastmillWeb.SessionController do
   def create_challenge(conn, _params) do
     challenge = SessionUtils.new_challenge()
 
-    # Store in ETS for single-use enforcement (consumed on successful login)
+    # Store for single-use enforcement (consumed on successful login)
     CastmillWeb.ChallengeStore.put(challenge)
 
     challenge_token =
@@ -131,7 +131,7 @@ defmodule CastmillWeb.SessionController do
   # Verify the challenge from the login request.
   # First tries the signed challenge_token (cookie-less, works cross-origin).
   # Falls back to the session-based challenge for backwards compatibility.
-  # In both paths the challenge is consumed from the ETS store so it cannot
+  # In both paths the challenge is consumed from the store so it cannot
   # be replayed.
   defp verify_challenge(_conn, %{"challenge_token" => challenge_token}, challenge)
        when is_binary(challenge_token) do

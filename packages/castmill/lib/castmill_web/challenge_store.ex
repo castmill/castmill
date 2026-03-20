@@ -6,9 +6,9 @@ defmodule CastmillWeb.ChallengeStore do
   verification, preventing replay attacks within the token TTL window.
 
   Uses PostgreSQL for persistence so that challenges are shared across
-  all application nodes behind a load balancer. The atomic
-  `DELETE ... RETURNING` ensures exactly-once consumption even under
-  concurrent requests.
+  all application nodes behind a load balancer. Consumption performs an
+  atomic `DELETE ... WHERE` and checks the affected-row count, ensuring
+  exactly-once semantics even under concurrent requests.
 
   A periodic sweep removes expired entries to bound table size.
   """
@@ -52,8 +52,8 @@ defmodule CastmillWeb.ChallengeStore do
   deleted), or `false` otherwise. After returning `true` once, subsequent
   calls with the same challenge will return `false`.
 
-  Uses `DELETE ... WHERE ... RETURNING` for atomic, multi-node-safe
-  single-use enforcement.
+  Uses an atomic `DELETE ... WHERE` and checks the affected-row count
+  for multi-node-safe, single-use enforcement.
   """
   @spec consume(String.t()) :: boolean()
   def consume(challenge) when is_binary(challenge) do
