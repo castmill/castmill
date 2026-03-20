@@ -599,7 +599,8 @@
     "checkServerRunning": "Asegúrate de que el servidor Castmill esté en funcionamiento",
     "checkNetworkConnection": "Verifica tu conexión de red",
     "checkServerUrl": "Verifica la URL del servidor en tu configuración",
-    "retryConnection": "Reintentar Conexión"
+    "retryConnection": "Reintentar Conexión",
+    "authenticationError": "Error de autenticación: {{message}}"
   },
   "sidebar": {
     "organization": "Organización",
