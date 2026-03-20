@@ -197,7 +197,11 @@ const Login: Component = () => {
         setLoading(false);
         return;
       } else {
-        await loginUser();
+        // Use the user + token from the POST response directly so we
+        // don't need a follow-up GET that depends on session cookies
+        // (blocked cross-origin due to SameSite=Lax).
+        const { user, token } = await result.json();
+        await loginUser({ user, token });
 
         // Redirect to page specified by the redirectTo query parameter of '/' if not present
         const urlParams = new URLSearchParams(window.location.search);
