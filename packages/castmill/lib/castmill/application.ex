@@ -30,6 +30,8 @@ defmodule Castmill.Application do
       {Phoenix.PubSub, name: Castmill.PubSub},
       # Start Finch
       {Finch, name: Castmill.Finch},
+      # Start the single-use WebAuthn challenge store
+      CastmillWeb.ChallengeStore,
       # Start the Endpoint (http/https)
       CastmillWeb.Endpoint,
       # Start a worker by calling: Castmill.Worker.start_link(arg)

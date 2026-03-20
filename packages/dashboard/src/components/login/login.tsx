@@ -129,7 +129,6 @@ const Login: Component = () => {
         challenge: string;
         challenge_token: string;
       };
-      console.log('Challenge:', challenge);
 
       const publicKey: PublicKeyCredentialRequestOptions = {
         rpId: domain,

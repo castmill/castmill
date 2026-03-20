@@ -18,6 +18,9 @@ defmodule CastmillWeb.SessionController do
   def create_challenge(conn, _params) do
     challenge = SessionUtils.new_challenge()
 
+    # Store in ETS for single-use enforcement (consumed on successful login)
+    CastmillWeb.ChallengeStore.put(challenge)
+
     challenge_token =
       Phoenix.Token.sign(CastmillWeb.Endpoint, @challenge_token_salt, challenge)
 
@@ -55,12 +58,15 @@ defmodule CastmillWeb.SessionController do
   @doc """
     Creates a new session for a user that wants to login into the system.
   """
-  def login_user(conn, %{
-        "authenticator_data" => authenticator_data_b64,
-        "signature" => signature_b64,
-        "credential_id" => credential_id,
-        "client_data_json" => client_data_json_str
-      } = params) do
+  def login_user(
+        conn,
+        %{
+          "authenticator_data" => authenticator_data_b64,
+          "signature" => signature_b64,
+          "credential_id" => credential_id,
+          "client_data_json" => client_data_json_str
+        } = params
+      ) do
     authenticator_data = authenticator_data_b64 |> Base.decode64!()
     signature = signature_b64 |> Base.decode64!()
 
@@ -123,21 +129,31 @@ defmodule CastmillWeb.SessionController do
   # Verify the challenge from the login request.
   # First tries the signed challenge_token (stateless, works cross-origin).
   # Falls back to the session-based challenge for backwards compatibility.
+  # In both paths the challenge is consumed from the ETS store so it cannot
+  # be replayed.
   defp verify_challenge(_conn, %{"challenge_token" => challenge_token}, challenge)
        when is_binary(challenge_token) do
     case Phoenix.Token.verify(CastmillWeb.Endpoint, @challenge_token_salt, challenge_token,
            max_age: @challenge_token_max_age
          ) do
-      {:ok, expected_challenge} -> Plug.Crypto.secure_compare(challenge, expected_challenge)
-      {:error, _reason} -> false
+      {:ok, expected_challenge} ->
+        Plug.Crypto.secure_compare(challenge, expected_challenge) &&
+          CastmillWeb.ChallengeStore.consume(challenge)
+
+      {:error, _reason} ->
+        false
     end
   end
 
   defp verify_challenge(conn, _params, challenge) do
     # Fallback: session-based challenge (same-origin only)
     case get_session(conn, :webauthn_challenge) do
-      nil -> false
-      session_challenge -> Plug.Crypto.secure_compare(challenge, session_challenge)
+      nil ->
+        false
+
+      session_challenge ->
+        Plug.Crypto.secure_compare(challenge, session_challenge) &&
+          CastmillWeb.ChallengeStore.consume(challenge)
     end
   end
 
