@@ -30,6 +30,16 @@ export async function loginUser(sessionData?: { user: User; token: string }) {
     let token: string;
 
     if (sessionData) {
+      // Validate required fields before trusting the caller-provided data
+      if (
+        typeof sessionData.token !== 'string' ||
+        sessionData.token === '' ||
+        typeof sessionData.user?.id !== 'string' ||
+        sessionData.user.id === ''
+      ) {
+        resetSession();
+        return;
+      }
       // Use the data returned directly by the login POST (cross-origin safe)
       userData = sessionData.user;
       token = sessionData.token;
