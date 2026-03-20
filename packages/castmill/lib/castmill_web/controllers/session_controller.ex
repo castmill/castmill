@@ -4,16 +4,26 @@ defmodule CastmillWeb.SessionController do
   alias CastmillWeb.SessionUtils
   alias Castmill.Accounts
 
+  # Max age for challenge tokens (5 minutes)
+  @challenge_token_max_age 300
+  @challenge_token_salt "CastmillWeb.SessionController.challenge.v1"
+
   @doc """
-    Creates a new challenge and stores in the current cookie based session.
-    This challenge will be used to verify the user when he/she tries to log-in.
+    Creates a new challenge for WebAuthn authentication.
+    Returns both the raw challenge and a signed challenge_token that the
+    client must send back with the login request. This avoids relying on
+    session cookies, which are blocked in cross-origin scenarios (e.g.
+    custom-domain dashboards calling api.castmill.dev).
   """
   def create_challenge(conn, _params) do
     challenge = SessionUtils.new_challenge()
 
+    challenge_token =
+      Phoenix.Token.sign(CastmillWeb.Endpoint, @challenge_token_salt, challenge)
+
     conn
     |> put_session(:webauthn_challenge, challenge)
-    |> json(%{challenge: challenge})
+    |> json(%{challenge: challenge, challenge_token: challenge_token})
   end
 
   @doc """
@@ -50,7 +60,7 @@ defmodule CastmillWeb.SessionController do
         "signature" => signature_b64,
         "credential_id" => credential_id,
         "client_data_json" => client_data_json_str
-      }) do
+      } = params) do
     authenticator_data = authenticator_data_b64 |> Base.decode64!()
     signature = signature_b64 |> Base.decode64!()
 
@@ -62,8 +72,9 @@ defmodule CastmillWeb.SessionController do
          {:ok, client_data_json} <- Jason.decode(client_data_json_str),
          # Make sure the values in the client data JSON are what we expect, and extract the challenge.
          {:ok, challenge} <- SessionUtils.check_client_data_json(client_data_json),
-         # Make sure the challenge singed by the user's key is what we generated.
-         true <- challenge == get_session(conn, :webauthn_challenge),
+         # Verify the challenge matches what we generated.
+         # Prefer the signed challenge_token (works cross-origin); fall back to session.
+         true <- verify_challenge(conn, params, challenge),
          # Check the user presence bit is set.
          # outcommented as I am not sure what this is used for...
          # true <- (:binary.at(authenticator_data, 32) &&& 1) == 1,
@@ -107,6 +118,27 @@ defmodule CastmillWeb.SessionController do
     |> delete_session(:remember_me_token)
     |> put_status(:ok)
     |> json(%{status: :ok})
+  end
+
+  # Verify the challenge from the login request.
+  # First tries the signed challenge_token (stateless, works cross-origin).
+  # Falls back to the session-based challenge for backwards compatibility.
+  defp verify_challenge(_conn, %{"challenge_token" => challenge_token}, challenge)
+       when is_binary(challenge_token) do
+    case Phoenix.Token.verify(CastmillWeb.Endpoint, @challenge_token_salt, challenge_token,
+           max_age: @challenge_token_max_age
+         ) do
+      {:ok, expected_challenge} -> Plug.Crypto.secure_compare(challenge, expected_challenge)
+      {:error, _reason} -> false
+    end
+  end
+
+  defp verify_challenge(conn, _params, challenge) do
+    # Fallback: session-based challenge (same-origin only)
+    case get_session(conn, :webauthn_challenge) do
+      nil -> false
+      session_challenge -> Plug.Crypto.secure_compare(challenge, session_challenge)
+    end
   end
 
   defp verify_signature(credential, client_data_json_str, authenticator_data, signature) do

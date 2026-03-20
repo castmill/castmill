@@ -125,7 +125,10 @@ const Login: Component = () => {
         return;
       }
 
-      const { challenge } = (await response.json()) as { challenge: string };
+      const { challenge, challenge_token } = (await response.json()) as {
+        challenge: string;
+        challenge_token: string;
+      };
       console.log('Challenge:', challenge);
 
       const publicKey: PublicKeyCredentialRequestOptions = {
@@ -167,6 +170,7 @@ const Login: Component = () => {
           signature: arrayBufferToBase64(authAssertionResponse.signature),
           email,
           challenge,
+          challenge_token,
         }),
         credentials: 'include',
       });
