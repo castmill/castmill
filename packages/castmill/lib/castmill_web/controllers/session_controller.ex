@@ -4,8 +4,9 @@ defmodule CastmillWeb.SessionController do
   alias CastmillWeb.SessionUtils
   alias Castmill.Accounts
 
-  # Max age for challenge tokens (5 minutes)
-  @challenge_token_max_age 300
+  # Max age for challenge tokens — derived from the ChallengeStore TTL
+  # so both the signed token and the ETS entry share the same window.
+  @challenge_token_max_age CastmillWeb.ChallengeStore.challenge_ttl_seconds()
   @challenge_token_salt "CastmillWeb.SessionController.challenge.v1"
 
   @doc """

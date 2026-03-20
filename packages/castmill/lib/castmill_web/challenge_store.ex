@@ -9,8 +9,17 @@ defmodule CastmillWeb.ChallengeStore do
   use GenServer
 
   @table __MODULE__
-  @default_ttl_ms :timer.minutes(5)
+
+  # Challenge TTL in seconds — single source of truth used by both
+  # the ETS store and the signed token (via challenge_ttl_seconds/0).
+  @challenge_ttl_seconds 300
+
+  @default_ttl_ms :timer.seconds(@challenge_ttl_seconds)
   @sweep_interval_ms :timer.minutes(1)
+
+  @doc "Returns the challenge TTL in seconds (single source of truth)."
+  @spec challenge_ttl_seconds() :: pos_integer()
+  def challenge_ttl_seconds, do: @challenge_ttl_seconds
 
   # ── Public API ──────────────────────────────────────────────────────
 
