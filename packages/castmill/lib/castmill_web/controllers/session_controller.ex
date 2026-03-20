@@ -79,7 +79,8 @@ defmodule CastmillWeb.SessionController do
          # Make sure the values in the client data JSON are what we expect, and extract the challenge.
          {:ok, challenge} <- SessionUtils.check_client_data_json(client_data_json),
          # Verify the challenge matches what we generated.
-         # Prefer the signed challenge_token (works cross-origin); fall back to session.
+         # Prefer the signed challenge_token (cookie-less, works cross-origin);
+         # fall back to session for same-origin clients.
          true <- verify_challenge(conn, params, challenge),
          # Check the user presence bit is set.
          # outcommented as I am not sure what this is used for...
@@ -127,7 +128,7 @@ defmodule CastmillWeb.SessionController do
   end
 
   # Verify the challenge from the login request.
-  # First tries the signed challenge_token (stateless, works cross-origin).
+  # First tries the signed challenge_token (cookie-less, works cross-origin).
   # Falls back to the session-based challenge for backwards compatibility.
   # In both paths the challenge is consumed from the ETS store so it cannot
   # be replayed.

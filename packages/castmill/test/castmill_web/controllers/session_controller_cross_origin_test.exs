@@ -143,17 +143,22 @@ defmodule CastmillWeb.SessionControllerCrossOriginTest do
       credential_id: credential_id,
       network: _network
     } do
-      # Manually create a challenge with a token signed in the past
       challenge = CastmillWeb.SessionUtils.new_challenge()
       CastmillWeb.ChallengeStore.put(challenge)
 
-      # Sign with a timestamp that's already expired (> 5 minutes ago)
-      # Phoenix.Token doesn't let us backdate, so instead we sign normally
-      # and then verify with max_age: 0 (immediate expiry). We test this by
-      # tampering — just pass a bogus token that won't verify.
+      # Sign the token with a timestamp > 5 minutes in the past so that
+      # Phoenix.Token.verify with max_age: 300 treats it as expired.
+      expired_token =
+        Phoenix.Token.sign(
+          CastmillWeb.Endpoint,
+          "CastmillWeb.SessionController.challenge.v1",
+          challenge,
+          signed_at: System.system_time(:second) - 301
+        )
+
       origin = "http://localhost:4000"
       params = build_login_assertion(private_key, credential_id, challenge, origin)
-      params = Map.put(params, "challenge_token", "bogus.invalid.token")
+      params = Map.put(params, "challenge_token", expired_token)
 
       conn = post(fresh_conn(), ~p"/sessions/", params)
       assert json_response(conn, 401)["status"] == "error"
