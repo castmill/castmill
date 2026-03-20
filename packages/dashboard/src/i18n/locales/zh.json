@@ -598,7 +598,8 @@
     "checkServerRunning": "确保 Castmill 服务器正在运行",
     "checkNetworkConnection": "检查您的网络连接",
     "checkServerUrl": "验证配置中的服务器 URL",
-    "retryConnection": "重试连接"
+    "retryConnection": "重试连接",
+    "authenticationError": "认证错误：{{message}}"
   },
   "sidebar": {
     "organization": "组织",
