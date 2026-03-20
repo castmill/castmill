@@ -110,7 +110,13 @@ defmodule CastmillWeb.SessionControllerCrossOriginTest do
       params = Map.put(params, "challenge_token", challenge_token)
 
       conn2 = post(fresh_conn(), ~p"/sessions/", params)
-      assert json_response(conn2, 200)["status"] == "ok"
+      response = json_response(conn2, 200)
+      assert response["status"] == "ok"
+      # Verify the response includes user data and token so the frontend
+      # can establish a session without a follow-up cookie-dependent GET
+      assert response["user"]["id"]
+      assert response["user"]["email"]
+      assert is_binary(response["token"])
     end
 
     test "replayed assertion is rejected (challenge already consumed)", %{

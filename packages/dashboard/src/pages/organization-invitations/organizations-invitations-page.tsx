@@ -235,7 +235,8 @@ const OrganizationsInvitationPage = () => {
         throw new Error('Failed to authenticate');
       }
 
-      await loginUser();
+      const { user, token: sessionToken } = await loginResponse.json();
+      await loginUser({ user, token: sessionToken });
     } catch (error: any) {
       console.error('Login error:', error);
       toast.error(error?.message || 'Failed to authenticate');

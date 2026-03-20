@@ -98,8 +98,21 @@ defmodule CastmillWeb.SessionController do
              conn |> delete_session(:webauthn_challenge),
              credential.user_id
            ) do
+      # Return user data and WebSocket token directly so the frontend
+      # doesn't need a follow-up GET /sessions/ that depends on cookies
+      # (which are blocked cross-origin due to SameSite=Lax).
+      user = get_session(conn, :user)
+
+      token =
+        Phoenix.Token.sign(
+          CastmillWeb.Endpoint,
+          CastmillWeb.Secrets.get_dashboard_user_token_salt(),
+          user.id
+        )
+
       conn
-      |> json(%{status: :ok})
+      |> put_status(:ok)
+      |> json(%{status: :ok, user: user, token: token})
     else
       {:error, {:user_blocked, reason}} ->
         conn
