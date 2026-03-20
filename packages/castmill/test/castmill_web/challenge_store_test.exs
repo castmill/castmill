@@ -1,10 +1,7 @@
 defmodule CastmillWeb.ChallengeStoreTest do
-  use ExUnit.Case, async: false
+  use Castmill.DataCase, async: false
 
   alias CastmillWeb.ChallengeStore
-
-  # The GenServer is started by the application supervision tree.
-  # In tests, ensure the ETS table exists (it should, since Application starts it).
 
   describe "put/1 + consume/1" do
     test "a stored challenge can be consumed exactly once" do
@@ -40,8 +37,12 @@ defmodule CastmillWeb.ChallengeStoreTest do
       challenge = Base.url_encode64(:crypto.strong_rand_bytes(32), padding: false)
 
       # Insert directly with an already-expired timestamp
-      expires_at = System.monotonic_time(:millisecond) - 1
-      :ets.insert(CastmillWeb.ChallengeStore, {challenge, expires_at})
+      expired = DateTime.add(DateTime.utc_now(), -1, :second)
+
+      Castmill.Repo.insert_all(
+        "webauthn_challenges",
+        [%{challenge: challenge, expires_at: expired}]
+      )
 
       assert ChallengeStore.consume(challenge) == false
     end
