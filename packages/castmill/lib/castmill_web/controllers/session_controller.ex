@@ -111,6 +111,7 @@ defmodule CastmillWeb.SessionController do
         )
 
       conn
+      |> put_status(:ok)
       |> json(%{status: :ok, user: user, token: token})
     else
       {:error, {:user_blocked, reason}} ->
