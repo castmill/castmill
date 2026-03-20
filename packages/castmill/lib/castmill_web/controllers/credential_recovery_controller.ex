@@ -100,7 +100,7 @@ defmodule CastmillWeb.CredentialRecoveryController do
     expected_challenge = recovery_challenge_for_token(token)
 
     with {:ok, challenge} <- CastmillWeb.SessionUtils.check_client_data_json(client_data_json),
-         true <- challenge == expected_challenge,
+         true <- Plug.Crypto.secure_compare(challenge, expected_challenge),
          user when not is_nil(user) <- Accounts.get_user_by_recover_credentials_token(token) do
       # Extract and parse User-Agent for device information
       user_agent = get_req_header(conn, "user-agent") |> List.first()
@@ -151,13 +151,24 @@ defmodule CastmillWeb.CredentialRecoveryController do
     end
   end
 
-  # Derive a deterministic, URL-safe challenge from a recovery token using
-  # HMAC-SHA256 keyed with the endpoint's secret_key_base.  This avoids
-  # needing to persist the challenge in the session or database.
-  defp recovery_challenge_for_token(token) do
-    secret = Application.get_env(:castmill, CastmillWeb.Endpoint)[:secret_key_base]
+  # Derive a deterministic, URL-safe challenge from a recovery token.
+  #
+  # Uses a dedicated signing key derived from secret_key_base via PBKDF2
+  # (Plug.Crypto.KeyGenerator) with a recovery-specific salt. This provides
+  # domain separation so that the same secret_key_base used for sessions,
+  # CSRF tokens, etc. cannot produce colliding values here.
+  #
+  # Raises if secret_key_base is not configured (fail-fast on misconfiguration).
+  @recovery_challenge_salt "CastmillWeb.CredentialRecovery.challenge.v1"
 
-    :crypto.mac(:hmac, :sha256, secret, token)
+  defp recovery_challenge_for_token(token) do
+    secret =
+      Application.get_env(:castmill, CastmillWeb.Endpoint)[:secret_key_base] ||
+        raise "secret_key_base is not configured for CastmillWeb.Endpoint"
+
+    signing_key = Plug.Crypto.KeyGenerator.generate(secret, @recovery_challenge_salt, length: 32)
+
+    :crypto.mac(:hmac, :sha256, signing_key, token)
     |> Base.url_encode64(padding: false)
   end
 end

@@ -143,12 +143,9 @@ defmodule CastmillWeb.SessionUtils do
       })
       when type in ["webauthn.get", "webauthn.create"] do
     # Check if there is a network matching the origin (protocol is stripped internally)
-    network_id = Accounts.get_network_id_by_domain(origin)
-
-    if network_id do
-      {:ok, challenge}
-    else
-      false
+    case Accounts.get_network_id_by_domain(origin) do
+      {:ok, _network_id} -> {:ok, challenge}
+      _ -> false
     end
   end
 

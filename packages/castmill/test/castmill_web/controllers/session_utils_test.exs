@@ -48,11 +48,11 @@ defmodule CastmillWeb.SessionUtilsTest do
   end
 
   describe "check_client_data_json/1" do
-    test "validates input correctly" do
+    test "validates input correctly", %{network: network} do
       valid_input = %{
         "type" => "webauthn.get",
         "challenge" => "dummy_challenge",
-        "origin" => "http://localhost:3000"
+        "origin" => "http://#{network.domain}"
       }
 
       assert CastmillWeb.SessionUtils.check_client_data_json(valid_input) ==
