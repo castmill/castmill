@@ -64,6 +64,19 @@ export async function loginUser(sessionData?: { user: User; token: string }) {
         return;
       }
 
+      // Guard against null user (typeof null === 'object'), missing id, or
+      // missing token — any of which would break the socket connection.
+      if (
+        json.user == null ||
+        typeof json.user.id !== 'string' ||
+        json.user.id === '' ||
+        typeof json.token !== 'string' ||
+        json.token === ''
+      ) {
+        resetSession();
+        return;
+      }
+
       userData = json.user;
       token = json.token;
     }
