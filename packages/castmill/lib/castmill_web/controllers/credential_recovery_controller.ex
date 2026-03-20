@@ -60,7 +60,14 @@ defmodule CastmillWeb.CredentialRecoveryController do
   end
 
   @doc """
-  Create a challenge for adding a new credential during recovery
+  Create a challenge for adding a new credential during recovery.
+
+  The challenge is derived deterministically from the recovery token using
+  HMAC-SHA256 so that it can be verified on the credential submission
+  without relying on server-side session state.  This is essential for
+  cross-origin flows (e.g. custom-domain → api.castmill.dev) where
+  third-party cookie blocking prevents the session cookie from being
+  sent back with subsequent requests.
   """
   def create_recovery_challenge(conn, %{"token" => token}) do
     case Accounts.get_user_by_recover_credentials_token(token) do
@@ -70,18 +77,19 @@ defmodule CastmillWeb.CredentialRecoveryController do
         |> json(%{status: :error, message: "Invalid or expired token"})
 
       user ->
-        challenge = CastmillWeb.SessionUtils.new_challenge()
+        challenge = recovery_challenge_for_token(token)
 
         conn
-        |> put_session(:recovery_challenge, challenge)
-        |> put_session(:recovery_token, token)
-        |> put_session(:recovery_user_id, user.id)
         |> json(%{challenge: challenge, user_id: user.id, email: user.email})
     end
   end
 
   @doc """
-  Add a new credential during recovery process
+  Add a new credential during recovery process.
+
+  Verification is stateless: the challenge embedded in the WebAuthn
+  clientDataJSON must match the HMAC-derived challenge for the given
+  token, and the token itself must still be valid in the database.
   """
   def add_recovery_credential(conn, %{
         "token" => token,
@@ -89,9 +97,10 @@ defmodule CastmillWeb.CredentialRecoveryController do
         "public_key_spki" => public_key_spki_base64,
         "client_data_json" => client_data_json
       }) do
+    expected_challenge = recovery_challenge_for_token(token)
+
     with {:ok, challenge} <- CastmillWeb.SessionUtils.check_client_data_json(client_data_json),
-         true <- challenge == get_session(conn, :recovery_challenge),
-         true <- token == get_session(conn, :recovery_token),
+         true <- Plug.Crypto.secure_compare(challenge, expected_challenge),
          user when not is_nil(user) <- Accounts.get_user_by_recover_credentials_token(token) do
       # Extract and parse User-Agent for device information
       user_agent = get_req_header(conn, "user-agent") |> List.first()
@@ -106,9 +115,6 @@ defmodule CastmillWeb.CredentialRecoveryController do
         {:ok, credential} ->
           # Log the user in after successful recovery
           conn
-          |> delete_session(:recovery_challenge)
-          |> delete_session(:recovery_token)
-          |> delete_session(:recovery_user_id)
           |> put_session(:user, user)
           |> CastmillWeb.SessionUtils.log_in_user(user.id)
           |> put_status(:created)
@@ -130,17 +136,11 @@ defmodule CastmillWeb.CredentialRecoveryController do
     else
       nil ->
         conn
-        |> delete_session(:recovery_challenge)
-        |> delete_session(:recovery_token)
-        |> delete_session(:recovery_user_id)
         |> put_status(:unprocessable_entity)
         |> json(%{status: "error", message: "Invalid or expired token"})
 
       false ->
         conn
-        |> delete_session(:recovery_challenge)
-        |> delete_session(:recovery_token)
-        |> delete_session(:recovery_user_id)
         |> put_status(:unauthorized)
         |> json(%{status: "error", message: "Invalid challenge or token"})
 
@@ -149,5 +149,26 @@ defmodule CastmillWeb.CredentialRecoveryController do
         |> put_status(:bad_request)
         |> json(%{status: "error", message: message})
     end
+  end
+
+  # Derive a deterministic, URL-safe challenge from a recovery token.
+  #
+  # Uses a dedicated signing key derived from secret_key_base via PBKDF2
+  # (Plug.Crypto.KeyGenerator) with a recovery-specific salt. This provides
+  # domain separation so that the same secret_key_base used for sessions,
+  # CSRF tokens, etc. cannot produce colliding values here.
+  #
+  # Raises if secret_key_base is not configured (fail-fast on misconfiguration).
+  @recovery_challenge_salt "CastmillWeb.CredentialRecovery.challenge.v1"
+
+  defp recovery_challenge_for_token(token) do
+    secret =
+      Application.get_env(:castmill, CastmillWeb.Endpoint)[:secret_key_base] ||
+        raise "secret_key_base is not configured for CastmillWeb.Endpoint"
+
+    signing_key = Plug.Crypto.KeyGenerator.generate(secret, @recovery_challenge_salt, length: 32)
+
+    :crypto.mac(:hmac, :sha256, signing_key, token)
+    |> Base.url_encode64(padding: false)
   end
 end
