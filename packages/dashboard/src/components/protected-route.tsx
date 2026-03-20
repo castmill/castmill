@@ -68,20 +68,29 @@ const ProtectedRoute: Component<ProtectedRouteProps> = (
         state: { from: location.pathname },
       });
     } else {
-      // First, ensure user session is loaded
-      try {
-        await loginUser();
-      } catch (error) {
-        if (error instanceof Error && error.message === 'SERVER_UNREACHABLE') {
-          setServerError(true);
+      // Only call loginUser() when user data is not loaded yet (e.g. page
+      // refresh). If the user just logged in via login.tsx, the user object
+      // and socket are already set up. Calling loginUser() again would do
+      // GET /sessions/ which fails cross-origin (SameSite=Lax cookie not sent).
+      const currentUser = getUser();
+      if (!currentUser?.id) {
+        try {
+          await loginUser();
+        } catch (error) {
+          if (
+            error instanceof Error &&
+            error.message === 'SERVER_UNREACHABLE'
+          ) {
+            setServerError(true);
+            return;
+          }
+          // For other errors, show toast and redirect to login
+          toast.error(
+            `Authentication error: ${error instanceof Error ? error.message : 'Unknown error'}`
+          );
+          navigate('/login', { replace: true });
           return;
         }
-        // For other errors, show toast and redirect to login
-        toast.error(
-          `Authentication error: ${error instanceof Error ? error.message : 'Unknown error'}`
-        );
-        navigate('/login', { replace: true });
-        return;
       }
 
       // Load organizations.
