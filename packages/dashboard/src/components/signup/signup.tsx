@@ -7,6 +7,7 @@ import { arrayBufferToBase64, base64URLToArrayBuffer } from '../utils';
 import './signup.scss';
 
 import { baseUrl, origin, domain } from '../../env';
+import { authFetch } from '../auth';
 import { useI18n } from '../../i18n';
 import {
   LOCALE_STORAGE_KEY,
@@ -60,7 +61,7 @@ const SignUp: Component = () => {
 
   async function fetchNetworkSettings() {
     try {
-      const response = await fetch(
+      const response = await authFetch(
         `${baseUrl}/dashboard/network/public-settings`
       );
       if (response.ok) {
@@ -162,7 +163,7 @@ const SignUp: Component = () => {
     }
 
     // Send the credential to the server to be stored
-    const result = await fetch(`${baseUrl}/signups/${signup_id}/users`, {
+    const result = await authFetch(`${baseUrl}/signups/${signup_id}/users`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

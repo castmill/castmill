@@ -2,7 +2,7 @@ import { Component, createSignal, onMount, Show } from 'solid-js';
 import { useNavigate, useSearchParams } from '@solidjs/router';
 import { arrayBufferToBase64, base64URLToArrayBuffer } from '../utils';
 import { baseUrl, domain } from '../../env';
-import { loginUser } from '../auth';
+import { authFetch, loginUser } from '../auth';
 import { useI18n } from '../../i18n';
 import './login.scss';
 
@@ -55,7 +55,7 @@ const CompleteRecovery: Component = () => {
     }
 
     try {
-      const response = await fetch(
+      const response = await authFetch(
         `${baseUrl}/credentials/recover/verify?token=${encodeURIComponent(token)}`
       );
 
@@ -87,7 +87,7 @@ const CompleteRecovery: Component = () => {
 
     try {
       // Get challenge
-      const challengeResponse = await fetch(
+      const challengeResponse = await authFetch(
         `${baseUrl}/credentials/recover/challenge?token=${encodeURIComponent(token)}`
       );
 
@@ -156,19 +156,22 @@ const CompleteRecovery: Component = () => {
       );
 
       // Send credential to server
-      const result = await fetch(`${baseUrl}/credentials/recover/credential`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          token: token,
-          credential_id: publicKeyCredential.id,
-          public_key_spki: arrayBufferToBase64(publicKey),
-          raw_id: arrayBufferToBase64(publicKeyCredential.rawId),
-          client_data_json: clientDataJSON,
-        }),
-      });
+      const result = await authFetch(
+        `${baseUrl}/credentials/recover/credential`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            token: token,
+            credential_id: publicKeyCredential.id,
+            public_key_spki: arrayBufferToBase64(publicKey),
+            raw_id: arrayBufferToBase64(publicKeyCredential.rawId),
+            client_data_json: clientDataJSON,
+          }),
+        }
+      );
 
       if (!result.ok) {
         setError('Failed to add passkey to your account');

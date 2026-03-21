@@ -1,5 +1,6 @@
 import { Component, createSignal, Show } from 'solid-js';
 import { baseUrl } from '../../env';
+import { authFetch } from '../auth';
 import { useI18n } from '../../i18n';
 import './login.scss';
 
@@ -39,7 +40,7 @@ const RecoverCredentials: Component<RecoverCredentialsProps> = (props) => {
     setError('');
 
     try {
-      const response = await fetch(`${baseUrl}/credentials/recover`, {
+      const response = await authFetch(`${baseUrl}/credentials/recover`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

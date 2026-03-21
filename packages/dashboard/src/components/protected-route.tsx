@@ -7,7 +7,7 @@ import {
   createEffect,
   createSignal,
 } from 'solid-js';
-import { checkAuth, getUser, loginUser } from './auth'; // Import loginUser
+import { authFetch, checkAuth, getUser, loginUser } from './auth';
 import { AddOn } from '../interfaces/addon.interface';
 import { AddonsService } from '../services/addons';
 import { store, setStore } from '../store/store';
@@ -319,7 +319,7 @@ const ProtectedRoute: Component<ProtectedRouteProps> = (
       if (addon.translations_path) {
         try {
           const translationUrl = `${addOnBasePath}${addon.translations_path}/${currentLocale}.json`;
-          const response = await fetch(translationUrl);
+          const response = await authFetch(translationUrl);
           if (response.ok) {
             const translations = await response.json();
             extendTranslations(translations);
@@ -327,7 +327,7 @@ const ProtectedRoute: Component<ProtectedRouteProps> = (
             // Try loading English as fallback if the current locale is not available
             if (currentLocale !== 'en') {
               const fallbackUrl = `${addOnBasePath}${addon.translations_path}/en.json`;
-              const fallbackResponse = await fetch(fallbackUrl);
+              const fallbackResponse = await authFetch(fallbackUrl);
               if (fallbackResponse.ok) {
                 const translations = await fallbackResponse.json();
                 extendTranslations(translations);

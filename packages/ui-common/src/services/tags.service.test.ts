@@ -407,4 +407,103 @@ describe('TagsService', () => {
       );
     });
   });
+
+  // ===========================================================================
+  // authFetch – Bearer token injection
+  // ===========================================================================
+
+  describe('authFetch Bearer token', () => {
+    afterEach(() => {
+      localStorage.removeItem('castmill_auth_token');
+    });
+
+    it('adds Authorization: Bearer header when token is in localStorage', async () => {
+      localStorage.setItem('castmill_auth_token', 'my-test-token');
+      const fetchMock = mockFetch({ data: [] });
+
+      await service.listTags(orgId);
+
+      expect(fetchMock).toHaveBeenCalledOnce();
+      const [, opts] = fetchMock.mock.calls[0];
+      const headers = new Headers(opts.headers);
+      expect(headers.get('Authorization')).toBe('Bearer my-test-token');
+    });
+
+    it('does not add Authorization header when no token is stored', async () => {
+      localStorage.removeItem('castmill_auth_token');
+      const fetchMock = mockFetch({ data: [] });
+
+      await service.listTags(orgId);
+
+      expect(fetchMock).toHaveBeenCalledOnce();
+      const [, opts] = fetchMock.mock.calls[0];
+      const headers = new Headers(opts.headers);
+      expect(headers.get('Authorization')).toBeNull();
+    });
+
+    it('does not overwrite an explicitly provided Authorization header', async () => {
+      localStorage.setItem('castmill_auth_token', 'should-not-appear');
+      const fetchMock = vi.fn().mockResolvedValue({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve({ data: [] }),
+      });
+      global.fetch = fetchMock;
+
+      // Call a method that allows us to pass custom headers via the service.
+      // createTag sends POST with JSON body + Content-Type; we verify via the
+      // underlying fetch call that an explicit Authorization isn't replaced.
+
+      // We need to invoke authFetch with an explicit Authorization header.
+      // Since authFetch is private, we exercise it indirectly by temporarily
+      // monkey-patching fetch to capture the headers.
+      // Instead, let's use listTagGroups which sets Content-Type, and we
+      // manually verify via a custom fetch spy that checks headers.
+
+      // Use the internal method via a subclass to inject a custom header:
+      class TestableTagsService extends TagsService {
+        async fetchWithExplicitAuth(orgId: string): Promise<Response> {
+          return (this as any).authFetch(
+            `${(this as any).baseUrl}/dashboard/organizations/${orgId}/tags`,
+            {
+              method: 'GET',
+              headers: { Authorization: 'Bearer explicit-token' },
+            }
+          );
+        }
+      }
+
+      const testService = new TestableTagsService(baseUrl);
+      await testService.fetchWithExplicitAuth(orgId);
+
+      expect(fetchMock).toHaveBeenCalledOnce();
+      const [, opts] = fetchMock.mock.calls[0];
+      const headers = new Headers(opts.headers);
+      expect(headers.get('Authorization')).toBe('Bearer explicit-token');
+    });
+
+    it('includes Bearer header on mutating requests (POST)', async () => {
+      localStorage.setItem('castmill_auth_token', 'post-token');
+      const fetchMock = mockFetch({ data: { id: 1, name: 'New' } });
+
+      await service.createTag(orgId, { name: 'New' });
+
+      const [, opts] = fetchMock.mock.calls[0];
+      const headers = new Headers(opts.headers);
+      expect(headers.get('Authorization')).toBe('Bearer post-token');
+      expect(opts.method).toBe('POST');
+    });
+
+    it('includes Bearer header on DELETE requests', async () => {
+      localStorage.setItem('castmill_auth_token', 'delete-token');
+      const fetchMock = mockFetch(null, 204);
+
+      await service.deleteTag(orgId, 42).catch(() => {});
+
+      const [, opts] = fetchMock.mock.calls[0];
+      const headers = new Headers(opts.headers);
+      expect(headers.get('Authorization')).toBe('Bearer delete-token');
+      expect(opts.method).toBe('DELETE');
+    });
+  });
 });

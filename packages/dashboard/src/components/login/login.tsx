@@ -9,7 +9,7 @@ import {
 import { arrayBufferToBase64, base64URLToArrayBuffer } from '../utils';
 
 import './login.scss';
-import { loginUser, resetSession } from '../auth';
+import { authFetch, loginUser, resetSession } from '../auth';
 import { useNavigate } from '@solidjs/router';
 import SignUpEmailSent from '../signup/signup-email-sent';
 import RecoverCredentials from './recover-credentials';
@@ -73,7 +73,7 @@ const Login: Component = () => {
 
   async function fetchNetworkSettings() {
     try {
-      const response = await fetch(
+      const response = await authFetch(
         `${baseUrl}/dashboard/network/public-settings`
       );
       if (response.ok) {
@@ -112,7 +112,7 @@ const Login: Component = () => {
       setError('');
       setLoading(true);
 
-      const response = await fetch(`${baseUrl}/sessions/challenges`);
+      const response = await authFetch(`${baseUrl}/sessions/challenges`);
       if (!response.ok) {
         console.error('Failed to get challenge');
         setError(t('login.errors.authenticationFailed'));
@@ -149,7 +149,7 @@ const Login: Component = () => {
         authAssertionResponse.clientDataJSON
       );
 
-      const result = await fetch(`${baseUrl}/sessions/`, {
+      const result = await authFetch(`${baseUrl}/sessions/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -223,7 +223,7 @@ const Login: Component = () => {
     setLoading(true);
     setError('');
 
-    const result = await fetch(`${baseUrl}/signups`, {
+    const result = await authFetch(`${baseUrl}/signups`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
