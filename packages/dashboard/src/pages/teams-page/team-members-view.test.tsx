@@ -40,6 +40,7 @@ vi.mock('../../components/auth', () => ({
     name: 'Alice',
     email: 'member@example.com',
   })),
+  authFetch: vi.fn(),
 }));
 
 vi.mock('@castmill/ui-common', async () => {

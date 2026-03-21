@@ -45,7 +45,6 @@ const RecoverCredentials: Component<RecoverCredentialsProps> = (props) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email: email() }),
-        credentials: 'include',
       });
 
       if (response.ok) {

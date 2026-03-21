@@ -4,16 +4,16 @@ import {
   OnboardingStep,
 } from '../interfaces/onboarding-progress.interface';
 
+import { authFetch } from '../components/auth';
 export const OnboardingService = {
   /**
    * Get user's onboarding progress
    */
   async getProgress(userId: string): Promise<OnboardingProgress> {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/users/${userId}/onboarding-progress`,
       {
         method: 'GET',
-        credentials: 'include',
       }
     );
 
@@ -39,11 +39,10 @@ export const OnboardingService = {
     userId: string,
     progress: Partial<OnboardingProgress>
   ): Promise<OnboardingProgress> {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/users/${userId}/onboarding-progress`,
       {
         method: 'PUT',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -65,11 +64,10 @@ export const OnboardingService = {
     userId: string,
     step: OnboardingStep
   ): Promise<OnboardingProgress> {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/users/${userId}/onboarding-progress/complete-step`,
       {
         method: 'POST',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -88,11 +86,10 @@ export const OnboardingService = {
    * Dismiss the onboarding tour
    */
   async dismissTour(userId: string): Promise<OnboardingProgress> {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/users/${userId}/onboarding-progress/dismiss`,
       {
         method: 'POST',
-        credentials: 'include',
       }
     );
 
@@ -107,11 +104,10 @@ export const OnboardingService = {
    * Reset onboarding progress
    */
   async resetProgress(userId: string): Promise<OnboardingProgress> {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/users/${userId}/onboarding-progress/reset`,
       {
         method: 'POST',
-        credentials: 'include',
       }
     );
 

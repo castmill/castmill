@@ -2,6 +2,7 @@ import { Component, createSignal, Show, createEffect } from 'solid-js';
 import { Button, useToast, MediaPicker } from '@castmill/ui-common';
 import { JsonMedia } from '@castmill/player';
 import { OrganizationsService } from '../../services/organizations.service';
+import { authFetch } from '../../components/auth';
 import { store, setStore } from '../../store';
 import { useI18n } from '../../i18n';
 
@@ -39,9 +40,8 @@ export const LogoSettings: Component<LogoSettingsProps> = (props) => {
       (async () => {
         try {
           const url = `${store.env.baseUrl}/dashboard/organizations/${props.organizationId}/medias/${mediaId}`;
-          const response = await fetch(url, {
+          const response = await authFetch(url, {
             method: 'GET',
-            credentials: 'include',
           });
 
           if (response.ok) {
@@ -111,11 +111,10 @@ export const LogoSettings: Component<LogoSettingsProps> = (props) => {
       queryParams.set('search', search);
     }
 
-    const response = await fetch(
+    const response = await authFetch(
       `${store.env.baseUrl}/dashboard/organizations/${props.organizationId}/medias?${queryParams}`,
       {
         method: 'GET',
-        credentials: 'include',
       }
     );
 

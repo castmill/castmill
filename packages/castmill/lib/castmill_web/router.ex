@@ -770,39 +770,51 @@ defmodule CastmillWeb.Router do
     end
   end
 
-  # Fetches the user from the session for dashboard API requests
-  # Also checks if the user or their organization is blocked
+  # Fetches the user from the dashboard API request via Bearer token.
+  # The client sends `Authorization: Bearer <Phoenix.Token>` — the same
+  # token returned by POST /sessions/ and used for WebSocket auth.
+  # Cookies are NOT used for dashboard auth (they are blocked cross-origin
+  # by Safari ITP and future browser privacy defaults).
   defp fetch_dashboard_user(conn, _opts) do
-    case get_session(conn, :user_session_token) do
-      nil ->
+    with ["Bearer " <> token] <- get_req_header(conn, "authorization"),
+         {:ok, user_id} <-
+           Phoenix.Token.verify(
+             CastmillWeb.Endpoint,
+             CastmillWeb.Secrets.get_dashboard_user_token_salt(),
+             token,
+             max_age: 86_400
+           ),
+         %{} = user <- Castmill.Accounts.get_user(user_id) do
+      verify_user_status(conn, user)
+    else
+      _ -> conn
+    end
+  end
+
+  # Verifies user/org blocked status and assigns current_user or halts.
+  defp verify_user_status(conn, user) do
+    case CastmillWeb.SessionUtils.check_user_blocked_status(user) do
+      {:ok, _user} ->
+        assign(conn, :current_user, user)
+
+      {:error, {:user_blocked, reason}} ->
         conn
+        |> delete_session(:user)
+        |> delete_session(:user_session_token)
+        |> put_status(:forbidden)
+        |> Phoenix.Controller.json(%{error: reason, code: "user_blocked"})
+        |> halt()
 
-      token ->
-        user = Castmill.Accounts.get_user_by_session_token(token)
+      {:error, {:organization_blocked, reason}} ->
+        conn
+        |> delete_session(:user)
+        |> delete_session(:user_session_token)
+        |> put_status(:forbidden)
+        |> Phoenix.Controller.json(%{error: reason, code: "organization_blocked"})
+        |> halt()
 
-        case CastmillWeb.SessionUtils.check_user_blocked_status(user) do
-          {:ok, _user} ->
-            assign(conn, :current_user, user)
-
-          {:error, {:user_blocked, reason}} ->
-            conn
-            |> delete_session(:user)
-            |> delete_session(:user_session_token)
-            |> put_status(:forbidden)
-            |> Phoenix.Controller.json(%{error: reason, code: "user_blocked"})
-            |> halt()
-
-          {:error, {:organization_blocked, reason}} ->
-            conn
-            |> delete_session(:user)
-            |> delete_session(:user_session_token)
-            |> put_status(:forbidden)
-            |> Phoenix.Controller.json(%{error: reason, code: "organization_blocked"})
-            |> halt()
-
-          {:error, _} ->
-            conn
-        end
+      {:error, _} ->
+        conn
     end
   end
 end

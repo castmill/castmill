@@ -1,5 +1,6 @@
 import { JsonWidget } from '@castmill/player';
 import { SortOptions, HttpError } from '@castmill/ui-common';
+import { authFetch } from '../../common/services/auth-fetch';
 
 export interface FetchWidgetsOptions {
   page: number;
@@ -92,11 +93,10 @@ export const WidgetsService = {
 
     const queryString = new URLSearchParams(query).toString();
 
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/widgets?${queryString}`,
       {
         method: 'GET',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -124,11 +124,10 @@ export const WidgetsService = {
     const formData = new FormData();
     formData.append('widget', file);
 
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/widgets`,
       {
         method: 'POST',
-        credentials: 'include',
         body: formData,
       }
     );
@@ -149,11 +148,10 @@ export const WidgetsService = {
     organizationId: string,
     widgetId: string
   ): Promise<void> {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/widgets/${widgetId}`,
       {
         method: 'DELETE',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -176,11 +174,10 @@ export const WidgetsService = {
     organizationId: string,
     widgetId: number
   ): Promise<{ data: WidgetUsage[]; count: number }> {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/widgets/${widgetId}/usage`,
       {
         method: 'GET',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -207,11 +204,10 @@ export const WidgetsService = {
     widgetId: string,
     updates: WidgetsUpdate
   ): Promise<JsonWidget> {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/widgets/${widgetId}`,
       {
         method: 'PATCH',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -235,11 +231,10 @@ export const WidgetsService = {
     organizationId: string,
     widgetId: number
   ): Promise<JsonWidget | null> {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/widgets/${widgetId}`,
       {
         method: 'GET',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -270,11 +265,10 @@ export const WidgetsService = {
     widgetSlug: string
   ): Promise<any[]> {
     try {
-      const response = await fetch(
+      const response = await authFetch(
         `${baseUrl}/dashboard/organizations/${organizationId}/widgets/${widgetSlug}/integrations`,
         {
           method: 'GET',
-          credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
           },

@@ -113,14 +113,22 @@ defmodule CastmillWeb.CredentialRecoveryController do
 
       case Accounts.add_user_credential(user.id, credential_id, public_key_spki, device_info) do
         {:ok, credential} ->
-          # Log the user in after successful recovery
+          # Return user data + token so the frontend can establish a session
+          # via Bearer auth (cookies are not used for dashboard auth).
+          token =
+            Phoenix.Token.sign(
+              CastmillWeb.Endpoint,
+              CastmillWeb.Secrets.get_dashboard_user_token_salt(),
+              user.id
+            )
+
           conn
-          |> put_session(:user, user)
-          |> CastmillWeb.SessionUtils.log_in_user(user.id)
           |> put_status(:created)
           |> json(%{
             status: "ok",
             message: "Credential added successfully. You are now logged in.",
+            user: user,
+            token: token,
             credential: %{
               id: credential.id,
               name: credential.device_name || "Recovered Passkey",

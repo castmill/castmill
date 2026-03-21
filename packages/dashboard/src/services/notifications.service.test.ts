@@ -36,9 +36,7 @@ describe('NotificationsService', () => {
 
       expect(global.fetch).toHaveBeenCalledWith(
         'http://localhost:4000/dashboard/notifications?page=1&page_size=20',
-        {
-          credentials: 'include',
-        }
+        {}
       );
       expect(result).toEqual(mockResponse);
     });
@@ -53,9 +51,7 @@ describe('NotificationsService', () => {
 
       expect(global.fetch).toHaveBeenCalledWith(
         'http://localhost:4000/dashboard/notifications?page=2&page_size=50',
-        {
-          credentials: 'include',
-        }
+        {}
       );
     });
 
@@ -82,9 +78,7 @@ describe('NotificationsService', () => {
 
       expect(global.fetch).toHaveBeenCalledWith(
         'http://localhost:4000/dashboard/notifications/unread_count',
-        {
-          credentials: 'include',
-        }
+        {}
       );
       expect(result).toBe(5);
     });
@@ -122,7 +116,6 @@ describe('NotificationsService', () => {
         'http://localhost:4000/dashboard/notifications/notification-123/read',
         {
           method: 'PATCH',
-          credentials: 'include',
         }
       );
       expect(result.read).toBe(true);
@@ -142,7 +135,6 @@ describe('NotificationsService', () => {
         'http://localhost:4000/dashboard/notifications/mark_all_read',
         {
           method: 'POST',
-          credentials: 'include',
         }
       );
       expect(result).toBe(5);

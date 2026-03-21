@@ -327,7 +327,7 @@ const SettingsPage: Component = () => {
       setCredentialsError('');
 
       // Step 1: Get a challenge from the server
-      const { challenge, user_id } =
+      const { challenge, user_id, challenge_token } =
         await UserService.createCredentialChallenge(currentUser.id);
 
       // Step 2: Create the credential using WebAuthn
@@ -398,7 +398,8 @@ const SettingsPage: Component = () => {
         currentUser.id,
         publicKeyCredential.id,
         arrayBufferToBase64(publicKey),
-        new Uint8Array(authAttestationResponse.clientDataJSON)
+        new Uint8Array(authAttestationResponse.clientDataJSON),
+        challenge_token
       );
 
       // Step 4: Reload credentials to show the new one

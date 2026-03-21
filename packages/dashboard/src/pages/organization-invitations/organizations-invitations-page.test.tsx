@@ -17,6 +17,7 @@ vi.mock('../../components/auth', () => ({
   checkAuth: vi.fn(() => false),
   getUser: vi.fn(() => null),
   loginUser: vi.fn(() => Promise.resolve()),
+  authFetch: vi.fn(),
 }));
 
 // Mock navigator
@@ -374,8 +375,7 @@ describe('OrganizationsInvitationPage', () => {
 
       await waitFor(() => {
         expect(global.fetch).toHaveBeenCalledWith(
-          'http://localhost:4000/sessions/challenges',
-          expect.objectContaining({ credentials: 'include' })
+          'http://localhost:4000/sessions/challenges'
         );
       });
 

@@ -78,6 +78,13 @@ interface CastmillStore {
     domain: string;
   };
 
+  // Auth-aware fetch wrapper — automatically adds Bearer token.
+  // Addon components should use `props.store.authFetch` instead of raw `fetch`.
+  authFetch: (
+    input: RequestInfo | URL,
+    init?: RequestInit
+  ) => Promise<Response>;
+
   // i18n functions (set by wrapLazyComponent)
   i18n?: {
     t: (key: string, params?: Record<string, any>) => string;
@@ -168,6 +175,10 @@ const [store, setStore] = createStore<CastmillStore>({
     origin,
     domain,
   },
+
+  // Default to plain fetch; replaced with authFetch after auth.ts loads
+  authFetch: (input: RequestInfo | URL, init?: RequestInit) =>
+    fetch(input, init ?? {}),
 
   onboarding: {
     showTour: false,

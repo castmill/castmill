@@ -75,7 +75,6 @@ const OrganizationsInvitationPage = () => {
           email: invitation()!.email,
           invitation_token: token,
         }),
-        credentials: 'include',
       });
 
       if (!challengeResponse.ok) {
@@ -141,7 +140,6 @@ const OrganizationsInvitationPage = () => {
             client_data_json: clientDataJSON,
             invitation_token: token,
           }),
-          credentials: 'include',
         }
       );
 
@@ -151,11 +149,11 @@ const OrganizationsInvitationPage = () => {
 
       toast.success(t('organizations.invitation.accountCreated'));
 
-      // Login the user
-      await loginUser();
-
-      // Auto-accept invitation since user signed up specifically for this invitation
-      await acceptInvitation();
+      // Redirect to login — the user will authenticate with their new passkey
+      // and be redirected back to the invitation page to accept it
+      navigate(
+        `/login?redirectTo=${encodeURIComponent(window.location.pathname + window.location.search)}`
+      );
     } catch (error: any) {
       console.error('Signup error:', error);
       toast.error(
@@ -183,9 +181,7 @@ const OrganizationsInvitationPage = () => {
     setLoggingIn(true);
 
     try {
-      const challengeResponse = await fetch(`${baseUrl}/sessions/challenges`, {
-        credentials: 'include',
-      });
+      const challengeResponse = await fetch(`${baseUrl}/sessions/challenges`);
 
       if (!challengeResponse.ok) {
         throw new Error('Failed to get login challenge');
@@ -228,7 +224,6 @@ const OrganizationsInvitationPage = () => {
           challenge,
           challenge_token,
         }),
-        credentials: 'include',
       });
 
       if (!loginResponse.ok) {

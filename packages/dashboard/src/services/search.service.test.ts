@@ -34,7 +34,6 @@ describe('SearchService', () => {
         expect.stringContaining('/dashboard/organizations/org123/search'),
         expect.objectContaining({
           method: 'GET',
-          credentials: 'include',
         })
       );
 

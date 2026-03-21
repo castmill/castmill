@@ -8,6 +8,7 @@ import {
   createEffect,
 } from 'solid-js';
 import { dropTargetForExternal } from '@atlaskit/pragmatic-drag-and-drop/external/adapter';
+import { authFetch } from '../../common/services/auth-fetch';
 import './upload.scss';
 
 import {
@@ -82,11 +83,8 @@ export const UploadComponent = (props: UploadComponentProps) => {
   // Fetch quota information on mount
   onMount(async () => {
     try {
-      const response = await fetch(
-        `${props.baseUrl}/dashboard/organizations/${props.organizationId}/quotas`,
-        {
-          credentials: 'include',
-        }
+      const response = await authFetch(
+        `${props.baseUrl}/dashboard/organizations/${props.organizationId}/quotas`
       );
       if (response.ok) {
         const quotas = await response.json();

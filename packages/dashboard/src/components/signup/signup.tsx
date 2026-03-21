@@ -61,10 +61,7 @@ const SignUp: Component = () => {
   async function fetchNetworkSettings() {
     try {
       const response = await fetch(
-        `${baseUrl}/dashboard/network/public-settings`,
-        {
-          credentials: 'include',
-        }
+        `${baseUrl}/dashboard/network/public-settings`
       );
       if (response.ok) {
         const settings = await response.json();
@@ -178,7 +175,6 @@ const SignUp: Component = () => {
         raw_id: arrayBufferToBase64(publicKeyCredential.rawId),
         client_data_json: clientDataJSON,
       }),
-      credentials: 'include', // Essential for including cookies
     });
 
     if (!result.ok) {

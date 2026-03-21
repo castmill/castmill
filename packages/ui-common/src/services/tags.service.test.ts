@@ -59,7 +59,6 @@ describe('TagsService', () => {
       const [url, opts] = fetchMock.mock.calls[0];
       expect(url).toContain(`/dashboard/organizations/${orgId}/tag-groups`);
       expect(opts.method).toBe('GET');
-      expect(opts.credentials).toBe('include');
     });
 
     it('passes preloadTags parameter', async () => {

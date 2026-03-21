@@ -1,5 +1,6 @@
 import { Component, createSignal, For, Show, onMount, batch } from 'solid-js';
 import { AddonStore } from '../interfaces/addon-store';
+import { authFetch } from '../services/auth-fetch';
 import {
   CredentialConfig,
   WidgetIntegration,
@@ -83,11 +84,10 @@ export const IntegrationsList: Component<IntegrationsListProps> = (props) => {
     setError(null);
     try {
       const organizationId = props.store.organizations.selectedId;
-      const response = await fetch(
+      const response = await authFetch(
         `${props.baseUrl}/dashboard/organizations/${organizationId}/widgets/${props.widgetSlug}/integrations`,
         {
           headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
         }
       );
 
@@ -103,11 +103,10 @@ export const IntegrationsList: Component<IntegrationsListProps> = (props) => {
         integrationsData.map(
           async (integration: WidgetIntegrationWithCredential) => {
             try {
-              const credResponse = await fetch(
+              const credResponse = await authFetch(
                 `${props.baseUrl}/dashboard/organizations/${organizationId}/widget-integrations/${integration.id}`,
                 {
                   headers: { 'Content-Type': 'application/json' },
-                  credentials: 'include',
                 }
               );
               if (credResponse.ok) {

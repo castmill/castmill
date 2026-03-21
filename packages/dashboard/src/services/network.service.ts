@@ -1,6 +1,7 @@
 import { baseUrl } from '../env';
 import { handleResponse } from './util';
 
+import { authFetch } from '../components/auth';
 export interface SocialLinks {
   github?: string;
   twitter?: string;
@@ -100,11 +101,10 @@ export const NetworkService = {
    * Used for footer branding and signup behavior.
    */
   async getPublicSettings(): Promise<PublicNetworkSettings> {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/network/public-settings`,
       {
         method: 'GET',
-        credentials: 'include',
       }
     );
 
@@ -116,10 +116,12 @@ export const NetworkService = {
    * This is called during auth/session to determine if network admin UI should be shown.
    */
   async checkAdminStatus(): Promise<NetworkAdminStatus> {
-    const response = await fetch(`${baseUrl}/dashboard/network/admin-status`, {
-      method: 'GET',
-      credentials: 'include',
-    });
+    const response = await authFetch(
+      `${baseUrl}/dashboard/network/admin-status`,
+      {
+        method: 'GET',
+      }
+    );
 
     return handleResponse<NetworkAdminStatus>(response, { parse: true });
   },
@@ -129,9 +131,8 @@ export const NetworkService = {
    * Only available to network admins.
    */
   async getSettings(): Promise<NetworkSettings> {
-    const response = await fetch(`${baseUrl}/dashboard/network/settings`, {
+    const response = await authFetch(`${baseUrl}/dashboard/network/settings`, {
       method: 'GET',
-      credentials: 'include',
     });
 
     return handleResponse<NetworkSettings>(response, { parse: true });
@@ -157,9 +158,8 @@ export const NetworkService = {
       >
     >
   ): Promise<NetworkSettings> {
-    const response = await fetch(`${baseUrl}/dashboard/network/settings`, {
+    const response = await authFetch(`${baseUrl}/dashboard/network/settings`, {
       method: 'PUT',
-      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
       },
@@ -174,9 +174,8 @@ export const NetworkService = {
    * Only available to network admins.
    */
   async getStats(): Promise<NetworkStats> {
-    const response = await fetch(`${baseUrl}/dashboard/network/stats`, {
+    const response = await authFetch(`${baseUrl}/dashboard/network/stats`, {
       method: 'GET',
-      credentials: 'include',
     });
 
     return handleResponse<NetworkStats>(response, { parse: true });
@@ -199,9 +198,8 @@ export const NetworkService = {
     const queryString = params.toString();
     const url = `${baseUrl}/dashboard/network/organizations${queryString ? `?${queryString}` : ''}`;
 
-    const response = await fetch(url, {
+    const response = await authFetch(url, {
       method: 'GET',
-      credentials: 'include',
     });
 
     return handleResponse<PaginatedOrganizations>(response, { parse: true });
@@ -214,11 +212,10 @@ export const NetworkService = {
   async deleteOrganization(
     organizationId: string
   ): Promise<{ success: boolean; message: string }> {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/network/organizations/${organizationId}`,
       {
         method: 'DELETE',
-        credentials: 'include',
       }
     );
 
@@ -232,9 +229,8 @@ export const NetworkService = {
    * Only available to network admins.
    */
   async listUsers(): Promise<NetworkUser[]> {
-    const response = await fetch(`${baseUrl}/dashboard/network/users`, {
+    const response = await authFetch(`${baseUrl}/dashboard/network/users`, {
       method: 'GET',
-      credentials: 'include',
     });
 
     return handleResponse<NetworkUser[]>(response, { parse: true });
@@ -250,14 +246,16 @@ export const NetworkService = {
     inserted_at: string;
     updated_at: string;
   }> {
-    const response = await fetch(`${baseUrl}/dashboard/network/organizations`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ organization: { name } }),
-    });
+    const response = await authFetch(
+      `${baseUrl}/dashboard/network/organizations`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ organization: { name } }),
+      }
+    );
 
     return handleResponse<{
       id: string;
@@ -272,10 +270,12 @@ export const NetworkService = {
    * Only available to network admins.
    */
   async listInvitations(): Promise<NetworkInvitation[]> {
-    const response = await fetch(`${baseUrl}/dashboard/network/invitations`, {
-      method: 'GET',
-      credentials: 'include',
-    });
+    const response = await authFetch(
+      `${baseUrl}/dashboard/network/invitations`,
+      {
+        method: 'GET',
+      }
+    );
 
     return handleResponse<NetworkInvitation[]>(response, { parse: true });
   },
@@ -287,11 +287,10 @@ export const NetworkService = {
   async deleteInvitation(
     invitationId: string
   ): Promise<{ success: boolean; message: string }> {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/network/invitations/${invitationId}`,
       {
         method: 'DELETE',
-        credentials: 'include',
       }
     );
 
@@ -309,11 +308,10 @@ export const NetworkService = {
     email: string,
     role: 'admin' | 'member'
   ): Promise<{ success: boolean; message: string; token?: string }> {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/network/organizations/${organizationId}/invitations`,
       {
         method: 'POST',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -346,11 +344,10 @@ export const NetworkService = {
       blocked_reason: string | null;
     };
   }> {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/network/users/${userId}/block`,
       {
         method: 'POST',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -376,11 +373,10 @@ export const NetworkService = {
       blocked_reason: string | null;
     };
   }> {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/network/users/${userId}/block`,
       {
         method: 'DELETE',
-        credentials: 'include',
       }
     );
 
@@ -394,11 +390,10 @@ export const NetworkService = {
   async deleteUser(
     userId: string
   ): Promise<{ success: boolean; message: string }> {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/network/users/${userId}`,
       {
         method: 'DELETE',
-        credentials: 'include',
       }
     );
 
@@ -424,11 +419,10 @@ export const NetworkService = {
       blocked_reason: string | null;
     };
   }> {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/network/organizations/${organizationId}/block`,
       {
         method: 'POST',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -453,11 +447,10 @@ export const NetworkService = {
       blocked_reason: string | null;
     };
   }> {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/network/organizations/${organizationId}/block`,
       {
         method: 'DELETE',
-        credentials: 'include',
       }
     );
 

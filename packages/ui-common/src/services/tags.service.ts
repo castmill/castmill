@@ -89,6 +89,21 @@ async function handleResponse<T>(response: Response): Promise<T> {
 export class TagsService {
   constructor(private baseUrl: string) {}
 
+  private async authFetch(
+    input: RequestInfo | URL,
+    init?: RequestInit
+  ): Promise<Response> {
+    const token = localStorage.getItem('castmill_auth_token');
+    if (token) {
+      const headers = new Headers(init?.headers);
+      if (!headers.has('Authorization')) {
+        headers.set('Authorization', `Bearer ${token}`);
+      }
+      return fetch(input, { ...init, headers });
+    }
+    return fetch(input, init ?? {});
+  }
+
   private getUrl(organizationId: string, path: string = ''): string {
     return `${this.baseUrl}/dashboard/organizations/${organizationId}${path}`;
   }
@@ -110,9 +125,8 @@ export class TagsService {
     }
 
     const url = `${this.getUrl(organizationId, '/tag-groups')}?${params.toString()}`;
-    const response = await fetch(url, {
+    const response = await this.authFetch(url, {
       method: 'GET',
-      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
     });
 
@@ -128,9 +142,8 @@ export class TagsService {
     tagGroupId: number
   ): Promise<TagGroup> {
     const url = this.getUrl(organizationId, `/tag-groups/${tagGroupId}`);
-    const response = await fetch(url, {
+    const response = await this.authFetch(url, {
       method: 'GET',
-      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
     });
 
@@ -146,9 +159,8 @@ export class TagsService {
     input: CreateTagGroupInput
   ): Promise<TagGroup> {
     const url = this.getUrl(organizationId, '/tag-groups');
-    const response = await fetch(url, {
+    const response = await this.authFetch(url, {
       method: 'POST',
-      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(input),
     });
@@ -166,9 +178,8 @@ export class TagsService {
     input: UpdateTagGroupInput
   ): Promise<TagGroup> {
     const url = this.getUrl(organizationId, `/tag-groups/${tagGroupId}`);
-    const response = await fetch(url, {
+    const response = await this.authFetch(url, {
       method: 'PUT',
-      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(input),
     });
@@ -185,9 +196,8 @@ export class TagsService {
     tagGroupId: number
   ): Promise<void> {
     const url = this.getUrl(organizationId, `/tag-groups/${tagGroupId}`);
-    const response = await fetch(url, {
+    const response = await this.authFetch(url, {
       method: 'DELETE',
-      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
     });
 
@@ -214,9 +224,8 @@ export class TagsService {
     }
 
     const url = `${this.getUrl(organizationId, '/tags')}?${params.toString()}`;
-    const response = await fetch(url, {
+    const response = await this.authFetch(url, {
       method: 'GET',
-      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
     });
 
@@ -229,9 +238,8 @@ export class TagsService {
    */
   async getTag(organizationId: string, tagId: number): Promise<Tag> {
     const url = this.getUrl(organizationId, `/tags/${tagId}`);
-    const response = await fetch(url, {
+    const response = await this.authFetch(url, {
       method: 'GET',
-      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
     });
 
@@ -244,9 +252,8 @@ export class TagsService {
    */
   async createTag(organizationId: string, input: CreateTagInput): Promise<Tag> {
     const url = this.getUrl(organizationId, '/tags');
-    const response = await fetch(url, {
+    const response = await this.authFetch(url, {
       method: 'POST',
-      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(input),
     });
@@ -264,9 +271,8 @@ export class TagsService {
     input: UpdateTagInput
   ): Promise<Tag> {
     const url = this.getUrl(organizationId, `/tags/${tagId}`);
-    const response = await fetch(url, {
+    const response = await this.authFetch(url, {
       method: 'PUT',
-      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(input),
     });
@@ -280,9 +286,8 @@ export class TagsService {
    */
   async deleteTag(organizationId: string, tagId: number): Promise<void> {
     const url = this.getUrl(organizationId, `/tags/${tagId}`);
-    const response = await fetch(url, {
+    const response = await this.authFetch(url, {
       method: 'DELETE',
-      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
     });
 
@@ -294,9 +299,8 @@ export class TagsService {
    */
   async getColorPalette(organizationId: string): Promise<string[]> {
     const url = this.getUrl(organizationId, '/tags/colors');
-    const response = await fetch(url, {
+    const response = await this.authFetch(url, {
       method: 'GET',
-      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
     });
 
@@ -309,9 +313,8 @@ export class TagsService {
    */
   async getTagStats(organizationId: string): Promise<TagUsageStats[]> {
     const url = this.getUrl(organizationId, '/tags/stats');
-    const response = await fetch(url, {
+    const response = await this.authFetch(url, {
       method: 'GET',
-      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
     });
 
@@ -335,9 +338,8 @@ export class TagsService {
       organizationId,
       `/${resourceType}s/${resourceId}/tags`
     );
-    const response = await fetch(url, {
+    const response = await this.authFetch(url, {
       method: 'GET',
-      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
     });
 
@@ -358,9 +360,8 @@ export class TagsService {
       organizationId,
       `/${resourceType}s/${resourceId}/tags`
     );
-    const response = await fetch(url, {
+    const response = await this.authFetch(url, {
       method: 'POST',
-      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ tag_id: tagId }),
     });
@@ -381,9 +382,8 @@ export class TagsService {
       organizationId,
       `/${resourceType}s/${resourceId}/tags/${tagId}`
     );
-    const response = await fetch(url, {
+    const response = await this.authFetch(url, {
       method: 'DELETE',
-      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
     });
 
@@ -403,9 +403,8 @@ export class TagsService {
       organizationId,
       `/${resourceType}s/${resourceId}/tags`
     );
-    const response = await fetch(url, {
+    const response = await this.authFetch(url, {
       method: 'PUT',
-      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ tag_ids: tagIds }),
     });
@@ -427,9 +426,8 @@ export class TagsService {
     resourceIds: (number | string)[]
   ): Promise<number> {
     const url = this.getUrl(organizationId, `/tags/${tagId}/bulk`);
-    const response = await fetch(url, {
+    const response = await this.authFetch(url, {
       method: 'POST',
-      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         resource_type: resourceType,
@@ -453,9 +451,8 @@ export class TagsService {
     resourceIds: (number | string)[]
   ): Promise<number> {
     const url = this.getUrl(organizationId, `/tags/${tagId}/bulk`);
-    const response = await fetch(url, {
+    const response = await this.authFetch(url, {
       method: 'DELETE',
-      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         resource_type: resourceType,

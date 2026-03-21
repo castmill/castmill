@@ -2,6 +2,7 @@ import { Component, createSignal, onMount, Show, createEffect } from 'solid-js';
 import { Button, useToast } from '@castmill/ui-common';
 import { BsSpotify } from 'solid-icons/bs';
 import { AddonStore } from '../../../common/interfaces/addon-store';
+import { authFetch } from '../../../common/services/auth-fetch';
 
 import './spotify-connect.scss';
 
@@ -111,13 +112,12 @@ export const SpotifyConnect: Component<SpotifyConnectProps> = (props) => {
       const organizationId = props.store.organizations.selectedId;
 
       // Fetch Spotify integration for the organization
-      const response = await fetch(
+      const response = await authFetch(
         `${props.baseUrl}/organizations/${organizationId}/widgets/spotify-now-playing/integrations`,
         {
           headers: {
             'Content-Type': 'application/json',
           },
-          credentials: 'include',
         }
       );
 
@@ -137,13 +137,12 @@ export const SpotifyConnect: Component<SpotifyConnectProps> = (props) => {
 
       if (spotifyIntegration) {
         // Check if we have valid credentials for this organization
-        const credResponse = await fetch(
+        const credResponse = await authFetch(
           `${props.baseUrl}/organizations/${organizationId}/widget-integrations/${spotifyIntegration.id}`,
           {
             headers: {
               'Content-Type': 'application/json',
             },
-            credentials: 'include',
           }
         );
 

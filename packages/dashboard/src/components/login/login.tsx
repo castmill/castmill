@@ -74,10 +74,7 @@ const Login: Component = () => {
   async function fetchNetworkSettings() {
     try {
       const response = await fetch(
-        `${baseUrl}/dashboard/network/public-settings`,
-        {
-          credentials: 'include',
-        }
+        `${baseUrl}/dashboard/network/public-settings`
       );
       if (response.ok) {
         const settings = await response.json();
@@ -115,9 +112,7 @@ const Login: Component = () => {
       setError('');
       setLoading(true);
 
-      const response = await fetch(`${baseUrl}/sessions/challenges`, {
-        credentials: 'include', // Essential for including cookies
-      });
+      const response = await fetch(`${baseUrl}/sessions/challenges`);
       if (!response.ok) {
         console.error('Failed to get challenge');
         setError(t('login.errors.authenticationFailed'));
@@ -171,7 +166,6 @@ const Login: Component = () => {
           challenge,
           challenge_token,
         }),
-        credentials: 'include',
       });
 
       if (!result.ok) {
@@ -234,7 +228,6 @@ const Login: Component = () => {
       headers: {
         'Content-Type': 'application/json',
       },
-      credentials: 'include',
       body: JSON.stringify({ email: email() }),
     });
 

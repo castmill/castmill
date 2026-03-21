@@ -8,6 +8,7 @@ import {
 } from 'solid-js';
 import { Button } from '@castmill/ui-common';
 import { AddonStore } from '../interfaces/addon-store';
+import { authFetch } from '../services/auth-fetch';
 
 import './credential-config.scss';
 
@@ -204,11 +205,10 @@ export const CredentialConfig: Component<CredentialConfigProps> = (props) => {
     setIsLoading(true);
     try {
       const organizationId = props.store.organizations.selectedId;
-      const response = await fetch(
+      const response = await authFetch(
         `${props.baseUrl}/dashboard/organizations/${organizationId}/widget-integrations/${props.integration.id}`,
         {
           headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
         }
       );
 
@@ -324,12 +324,11 @@ export const CredentialConfig: Component<CredentialConfigProps> = (props) => {
     setIsSaving(true);
     try {
       const organizationId = props.store.organizations.selectedId;
-      const response = await fetch(
+      const response = await authFetch(
         `${props.baseUrl}/dashboard/organizations/${organizationId}/widget-integrations/${props.integration.id}/credentials`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
           body: JSON.stringify({ credentials: formValues() }),
         }
       );
@@ -364,12 +363,11 @@ export const CredentialConfig: Component<CredentialConfigProps> = (props) => {
     setIsTesting(true);
     try {
       const organizationId = props.store.organizations.selectedId;
-      const response = await fetch(
+      const response = await authFetch(
         `${props.baseUrl}/dashboard/organizations/${organizationId}/widget-integrations/${props.integration.id}/test`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
         }
       );
 
@@ -406,12 +404,11 @@ export const CredentialConfig: Component<CredentialConfigProps> = (props) => {
     setIsDisconnecting(true);
     try {
       const organizationId = props.store.organizations.selectedId;
-      const response = await fetch(
+      const response = await authFetch(
         `${props.baseUrl}/dashboard/organizations/${organizationId}/widget-integrations/${props.integration.id}/credentials`,
         {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
         }
       );
 

@@ -30,6 +30,7 @@ vi.mock('../../hooks/usePermissions', () => ({
 
 vi.mock('../../components/auth', () => ({
   getUser: vi.fn(),
+  authFetch: vi.fn(),
 }));
 
 vi.mock('@solidjs/router', () => ({

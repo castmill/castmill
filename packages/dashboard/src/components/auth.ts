@@ -10,19 +10,55 @@ class User {
   name?: string;
 }
 
+const AUTH_TOKEN_KEY = 'castmill_auth_token';
+
 // Example authentication signal (replace with your actual authentication logic)
 const [isAuthenticated, setIsAuthenticated] = createSignal(true);
 const [user, setUser] = createSignal<User>({});
 
+// Bearer token for API calls.  Persisted in localStorage so it survives
+// page refreshes (Phoenix.Token has 24 h server-side expiry).
+let authToken: string | null = localStorage.getItem(AUTH_TOKEN_KEY);
+
+/**
+ * Returns the current auth token, or null if not authenticated.
+ */
+export function getAuthToken(): string | null {
+  return authToken;
+}
+
+/**
+ * Fetch wrapper that automatically adds the Bearer Authorization header
+ * when an auth token is available.
+ *
+ * All dashboard service calls should use this instead of raw `fetch()`.
+ */
+export function authFetch(
+  input: RequestInfo | URL,
+  init?: RequestInit
+): Promise<Response> {
+  if (authToken) {
+    const headers = new Headers(init?.headers);
+    if (!headers.has('Authorization')) {
+      headers.set('Authorization', `Bearer ${authToken}`);
+    }
+    return fetch(input, { ...init, headers });
+  }
+  return fetch(input, init ?? {});
+}
+
+// Make authFetch available on the global store so addon components can
+// use `props.store.authFetch()` instead of raw `fetch()`.
+setStore('authFetch', authFetch);
+
 /**
  * Establish a user session.
  *
- * When called with `sessionData` (user + token already available from the
- * login POST response), it skips the follow-up GET /sessions/ which relies
- * on session cookies — those are blocked cross-origin (SameSite=Lax).
+ * When called with `sessionData` (user + token from a login/recovery POST),
+ * uses those values directly.
  *
- * When called without arguments it falls back to GET /sessions/ for
- * same-origin callers that still rely on cookie-based sessions.
+ * When called without arguments, tries to restore the session from the
+ * token stored in localStorage by calling GET /sessions/ with Bearer auth.
  */
 export async function loginUser(sessionData?: { user: User; token: string }) {
   try {
@@ -30,7 +66,7 @@ export async function loginUser(sessionData?: { user: User; token: string }) {
     let token: string;
 
     if (sessionData) {
-      // Validate required fields before trusting the caller-provided data
+      // Validate required fields
       if (
         typeof sessionData.token !== 'string' ||
         sessionData.token === '' ||
@@ -40,14 +76,17 @@ export async function loginUser(sessionData?: { user: User; token: string }) {
         resetSession();
         return;
       }
-      // Use the data returned directly by the login POST (cross-origin safe)
       userData = sessionData.user;
       token = sessionData.token;
     } else {
-      // Fallback: fetch from session cookie (same-origin only)
-      const result = await fetch(`${baseUrl}/sessions/`, {
+      // Restore session from stored token via GET /sessions/
+      if (!authToken) {
+        resetSession();
+        return;
+      }
+
+      const result = await authFetch(`${baseUrl}/sessions/`, {
         method: 'GET',
-        credentials: 'include',
       });
 
       if (result.status !== 200) {
@@ -55,8 +94,6 @@ export async function loginUser(sessionData?: { user: User; token: string }) {
         return;
       }
 
-      // TODO: We should refresh the token once per hour, is is specially important
-      // if the socket needs to reconnect and therefore the token needs to be fresh
       const json = await result.json();
 
       if (json.status !== 'ok' || typeof json.user !== 'object') {
@@ -64,8 +101,6 @@ export async function loginUser(sessionData?: { user: User; token: string }) {
         return;
       }
 
-      // Guard against null user (typeof null === 'object'), missing id, or
-      // missing token — any of which would break the socket connection.
       if (
         json.user == null ||
         typeof json.user.id !== 'string' ||
@@ -81,6 +116,10 @@ export async function loginUser(sessionData?: { user: User; token: string }) {
       token = json.token;
     }
 
+    // Persist the token
+    authToken = token;
+    localStorage.setItem(AUTH_TOKEN_KEY, token);
+
     // Start user_socket connection for realtime updates
     const socket = new Socket(`${wsEndpoint}/user_socket`, {
       params: () => ({ token }),
@@ -92,11 +131,9 @@ export async function loginUser(sessionData?: { user: User; token: string }) {
       .join()
       .receive('ok', () => {
         console.log('Joined successfully');
-        // TODO: Set some state icon to show we are online receiving updates
       })
       .receive('error', () => {
         console.log('Unable to join');
-        // TODO: Set some state icon to show we are offline
       });
 
     setStore('socket', socket);
@@ -107,7 +144,6 @@ export async function loginUser(sessionData?: { user: User; token: string }) {
     if (error instanceof TypeError && error.message === 'Failed to fetch') {
       throw new Error('SERVER_UNREACHABLE');
     }
-    // Re-throw other errors
     throw error;
   }
 }
@@ -132,4 +168,6 @@ export function updateUser(updates: Partial<User>) {
 export function resetSession() {
   setIsAuthenticated(false);
   setUser({});
+  authToken = null;
+  localStorage.removeItem(AUTH_TOKEN_KEY);
 }

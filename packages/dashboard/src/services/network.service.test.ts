@@ -29,7 +29,6 @@ describe('NetworkService', () => {
         expect.stringContaining('/dashboard/network/admin-status'),
         expect.objectContaining({
           method: 'GET',
-          credentials: 'include',
         })
       );
       expect(result).toEqual({
@@ -86,7 +85,6 @@ describe('NetworkService', () => {
         expect.stringContaining('/dashboard/network/settings'),
         expect.objectContaining({
           method: 'GET',
-          credentials: 'include',
         })
       );
       expect(result).toEqual(mockSettings);
@@ -137,7 +135,6 @@ describe('NetworkService', () => {
         expect.stringContaining('/dashboard/network/settings'),
         expect.objectContaining({
           method: 'PUT',
-          credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
           },
@@ -185,7 +182,6 @@ describe('NetworkService', () => {
         expect.stringContaining('/dashboard/network/stats'),
         expect.objectContaining({
           method: 'GET',
-          credentials: 'include',
         })
       );
       expect(result).toEqual(mockStats);
@@ -229,7 +225,6 @@ describe('NetworkService', () => {
         expect.stringContaining('/dashboard/network/organizations'),
         expect.objectContaining({
           method: 'GET',
-          credentials: 'include',
         })
       );
       expect(result.data).toHaveLength(2);
@@ -272,7 +267,6 @@ describe('NetworkService', () => {
         expect.stringContaining('/dashboard/network/organizations'),
         expect.objectContaining({
           method: 'POST',
-          credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
           },
@@ -341,7 +335,6 @@ describe('NetworkService', () => {
         expect.stringContaining('/dashboard/network/users'),
         expect.objectContaining({
           method: 'GET',
-          credentials: 'include',
         })
       );
       expect(result).toHaveLength(2);

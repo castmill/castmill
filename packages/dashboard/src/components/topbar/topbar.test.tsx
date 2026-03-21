@@ -7,6 +7,7 @@ vi.mock('../auth', () => ({
   checkAuth: () => true,
   getUser: () => ({ name: 'Test User', email: 'test@example.com' }),
   resetSession: vi.fn(),
+  authFetch: vi.fn(),
 }));
 
 // Mock router

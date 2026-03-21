@@ -1,5 +1,6 @@
 import { baseUrl } from '../env';
 
+import { authFetch } from '../components/auth';
 export const AddonsService = {
   /**
    * Get all AddOns.
@@ -7,9 +8,8 @@ export const AddonsService = {
    * @returns {Promise<AddOn[]>} A promise that resolves to an array of AddOns.
    */
   async getAll() {
-    const response = await fetch(`${baseUrl}/dashboard/addons/`, {
+    const response = await authFetch(`${baseUrl}/dashboard/addons/`, {
       method: 'GET',
-      credentials: 'include',
     });
 
     if (response.status === 200) {

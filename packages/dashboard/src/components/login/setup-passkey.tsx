@@ -68,8 +68,7 @@ const SetupPasskey: Component = () => {
     try {
       setStatus(t('setupPasskey.verifying'));
       const response = await fetch(
-        `${baseUrl}/credentials/recover/verify?token=${encodeURIComponent(token)}`,
-        { credentials: 'include' }
+        `${baseUrl}/credentials/recover/verify?token=${encodeURIComponent(token)}`
       );
 
       if (response.ok) {
@@ -96,8 +95,7 @@ const SetupPasskey: Component = () => {
     try {
       // Get challenge from the recovery endpoint
       const challengeResponse = await fetch(
-        `${baseUrl}/credentials/recover/challenge?token=${encodeURIComponent(token)}`,
-        { credentials: 'include' }
+        `${baseUrl}/credentials/recover/challenge?token=${encodeURIComponent(token)}`
       );
 
       if (!challengeResponse.ok) {
@@ -174,7 +172,6 @@ const SetupPasskey: Component = () => {
           raw_id: arrayBufferToBase64(publicKeyCredential.rawId),
           client_data_json: clientDataJSON,
         }),
-        credentials: 'include',
       });
 
       if (!result.ok) {
@@ -184,8 +181,9 @@ const SetupPasskey: Component = () => {
         return;
       }
 
-      // Log the user in and redirect to dashboard
-      await loginUser();
+      // Log the user in with the token from the response and redirect to dashboard
+      const { user, token: sessionToken } = await result.json();
+      await loginUser({ user, token: sessionToken });
       setSuccess(true);
       setStatus(t('setupPasskey.success'));
       setTimeout(() => navigate('/'), 1500);

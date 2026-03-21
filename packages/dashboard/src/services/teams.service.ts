@@ -8,6 +8,7 @@ import {
   SortOptions,
 } from '@castmill/ui-common';
 
+import { authFetch } from '../components/auth';
 export type TeamUpdate = Partial<Team> & { id: number };
 
 // This is code repetition that comes from devices.service.ts and must be refactored.
@@ -32,11 +33,10 @@ export const TeamsService = {
    * @returns JsonTeam
    */
   async addTeam(organizationId: string, name: string) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/teams`,
       {
         method: 'POST',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -56,11 +56,10 @@ export const TeamsService = {
    * @returns JsonTeam
    */
   async updateTeam(organizationId: string, team: TeamUpdate) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/teams/${team.id}`,
       {
         method: 'PUT',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -92,11 +91,10 @@ export const TeamsService = {
     email: string,
     role: 'member' | 'admin' = 'member'
   ) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/teams/${teamId}/invitations`,
       {
         method: 'POST',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -137,11 +135,10 @@ export const TeamsService = {
     teamId: number,
     invitationId: number
   ) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/teams/${teamId}/invitations/${invitationId}`,
       {
         method: 'DELETE',
-        credentials: 'include',
       }
     );
 
@@ -162,11 +159,10 @@ export const TeamsService = {
     teamId: number,
     memberId: string
   ) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/teams/${teamId}/members/${memberId}`,
       {
         method: 'DELETE',
-        credentials: 'include',
       }
     );
 
@@ -199,11 +195,10 @@ export const TeamsService = {
     resourceType: string,
     resourceId: string | number
   ) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/teams/${teamId}/${resourceType}/${resourceId}`,
       {
         method: 'DELETE',
-        credentials: 'include',
       }
     );
   },
@@ -217,11 +212,10 @@ export const TeamsService = {
    * @returns
    */
   async acceptTeamInvitation(organizationId: string, teamId: number) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/teams/${teamId}/accept`,
       {
         method: 'POST',
-        credentials: 'include',
       }
     );
 
@@ -237,11 +231,10 @@ export const TeamsService = {
    * @returns
    */
   async removeTeamInvitation(organizationId: string, teamId: number) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/teams/${teamId}/invitations`,
       {
         method: 'DELETE',
-        credentials: 'include',
       }
     );
 
@@ -264,11 +257,10 @@ export const TeamsService = {
   ) {
     const queryString = fetchOptionsToQueryString(opts);
 
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/teams/${teamId}/invitations?${queryString}`,
       {
         method: 'GET',
-        credentials: 'include',
       }
     );
 
@@ -277,11 +269,10 @@ export const TeamsService = {
 
   async fetchTeams(organizationId: string, opts: FetchDataOptions) {
     const queryString = fetchOptionsToQueryString(opts);
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/teams?${queryString}`,
       {
         method: 'GET',
-        credentials: 'include',
       }
     );
 
@@ -289,11 +280,10 @@ export const TeamsService = {
   },
 
   async getTeam(organizationId: string, teamId: number) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/teams/${teamId}`,
       {
         method: 'GET',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -307,11 +297,10 @@ export const TeamsService = {
   },
 
   async removeTeam(organizationId: string, teamId: number) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/teams/${teamId}`,
       {
         method: 'DELETE',
-        credentials: 'include',
       }
     );
 
@@ -327,11 +316,10 @@ export const TeamsService = {
   ) {
     const queryString = fetchOptionsToQueryString(opts);
 
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/teams/${teamId}/members?${queryString}`,
       {
         method: 'GET',
-        credentials: 'include',
       }
     );
 
@@ -343,11 +331,10 @@ export const TeamsService = {
     teamId: number,
     options: any
   ) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/teams/${teamId}/resources`,
       {
         method: 'GET',
-        credentials: 'include',
       }
     );
 
@@ -359,10 +346,12 @@ export const TeamsService = {
   },
 
   async getInvitation(email: string, token: string) {
-    const response = await fetch(`${baseUrl}/dashboard/invitations/${token}`, {
-      method: 'GET',
-      credentials: 'include',
-    });
+    const response = await authFetch(
+      `${baseUrl}/dashboard/invitations/${token}`,
+      {
+        method: 'GET',
+      }
+    );
 
     if (response.status === 200) {
       const data = await response.json();
@@ -388,11 +377,10 @@ export const TeamsService = {
   },
 
   async acceptInvitation(email: string, token: string) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/invitations/${token}/accept`,
       {
         method: 'POST',
-        credentials: 'include',
       }
     );
 
@@ -410,11 +398,10 @@ export const TeamsService = {
   },
 
   async rejectInvitation(token: string) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/invitations/${token}/reject`,
       {
         method: 'POST',
-        credentials: 'include',
       }
     );
 
@@ -463,11 +450,10 @@ export const TeamsService = {
 
     const queryString = new URLSearchParams(query).toString();
 
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/teams/${teamId}/${resourceType}?${queryString}`,
       {
         method: 'GET',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -486,11 +472,10 @@ export const TeamsService = {
     resourceId: string,
     access: string[]
   ) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/teams/${teamId}/${resourceType}/${resourceId}`,
       {
         method: 'PUT',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
