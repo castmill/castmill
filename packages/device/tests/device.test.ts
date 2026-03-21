@@ -111,19 +111,20 @@ describe('Device', () => {
 
   it('should default to VITE_DEFAULT_BASE_URL if getBaseUrl returns null', async () => {
     mockIntegration.getSetting.mockResolvedValue(null);
+    vi.stubEnv('VITE_DEV_BASE_URL', 'https://api.castmill.dev');
     vi.stubEnv('VITE_DEFAULT_BASE_URL', 'https://default.castmill.io');
     await device.init();
     const defaultBaseUrl = 'https://default.castmill.io';
     expect(device['baseUrl']).toBe(defaultBaseUrl);
   });
 
-  it('should default to first available baseUrl if getBaseUrl returns null and VITE_DEFAULT_BASE_URL is unset', async () => {
+  it('should default to VITE_PRODUCTION_BASE_URL if default and dev env values are unset', async () => {
     mockIntegration.getSetting.mockResolvedValue(null);
+    vi.stubEnv('VITE_DEV_BASE_URL', '');
     vi.stubEnv('VITE_DEFAULT_BASE_URL', '');
     vi.stubEnv('VITE_PRODUCTION_BASE_URL', 'https://prod.castmill.io');
     await device.init();
-    const availableBaseUrls = await device.getAvailableBaseUrls();
-    expect(device['baseUrl']).toBe(availableBaseUrls[0].url);
+    expect(device['baseUrl']).toBe('https://prod.castmill.io');
     expect(mockIntegration.getSetting).toHaveBeenCalled();
   });
 });
