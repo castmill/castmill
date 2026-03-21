@@ -6,7 +6,9 @@ import { I18nProvider } from '../../i18n';
 // Mock the auth module
 vi.mock('../auth', () => ({
   getUser: vi.fn(() => ({ id: 'user-123', email: 'test@example.com' })),
-  authFetch: vi.fn(),
+  authFetch: vi.fn(() =>
+    Promise.resolve({ ok: true, json: () => Promise.resolve({ count: 0 }) })
+  ),
 }));
 
 // Mock the router

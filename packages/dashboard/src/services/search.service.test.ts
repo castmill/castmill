@@ -1,6 +1,14 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { SearchService } from './search.service';
 
+// Mock the auth module to prevent side effects (setStore) during test imports
+vi.mock('../components/auth', () => ({
+  authFetch: vi.fn((...args: any[]) => (global.fetch as any)(...args)),
+  getAuthToken: vi.fn(() => null),
+  getUser: vi.fn(() => ({ id: 'test-user' })),
+  checkAuth: vi.fn(() => true),
+}));
+
 // Mock fetch globally
 global.fetch = vi.fn();
 

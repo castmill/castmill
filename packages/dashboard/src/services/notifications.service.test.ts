@@ -1,6 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NotificationsService } from './notifications.service';
 
+// Mock the auth module to prevent side effects (setStore) during test imports
+vi.mock('../components/auth', () => ({
+  authFetch: vi.fn((...args: any[]) => (global.fetch as any)(...args)),
+  getAuthToken: vi.fn(() => null),
+  getUser: vi.fn(() => ({ id: 'test-user' })),
+  checkAuth: vi.fn(() => true),
+}));
+
 describe('NotificationsService', () => {
   let service: NotificationsService;
 
@@ -35,8 +43,7 @@ describe('NotificationsService', () => {
       const result = await service.getNotifications();
 
       expect(global.fetch).toHaveBeenCalledWith(
-        'http://localhost:4000/dashboard/notifications?page=1&page_size=20',
-        {}
+        'http://localhost:4000/dashboard/notifications?page=1&page_size=20'
       );
       expect(result).toEqual(mockResponse);
     });
@@ -50,8 +57,7 @@ describe('NotificationsService', () => {
       await service.getNotifications(2, 50);
 
       expect(global.fetch).toHaveBeenCalledWith(
-        'http://localhost:4000/dashboard/notifications?page=2&page_size=50',
-        {}
+        'http://localhost:4000/dashboard/notifications?page=2&page_size=50'
       );
     });
 
@@ -77,8 +83,7 @@ describe('NotificationsService', () => {
       const result = await service.getUnreadCount();
 
       expect(global.fetch).toHaveBeenCalledWith(
-        'http://localhost:4000/dashboard/notifications/unread_count',
-        {}
+        'http://localhost:4000/dashboard/notifications/unread_count'
       );
       expect(result).toBe(5);
     });
