@@ -4,6 +4,7 @@ import { FetchDataOptions, HttpError } from '@castmill/ui-common';
 import { fetchOptionsToQueryString, handleResponse } from './util';
 import { OrganizationRole } from '../types/organization-role.type';
 
+import { authFetch } from '../components/auth';
 export const OrganizationsService = {
   /**
    * Get all Organizations.
@@ -11,11 +12,10 @@ export const OrganizationsService = {
    * @returns {Promise<Organization[]>} A promise that resolves to an array of Organizations.
    */
   async getAll(userId: string) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/users/${userId}/organizations`,
       {
         method: 'GET',
-        credentials: 'include',
       }
     );
 
@@ -33,11 +33,10 @@ export const OrganizationsService = {
   async fetchMembers(organizationId: string, opts: FetchDataOptions) {
     const queryString = fetchOptionsToQueryString(opts);
 
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/members?${queryString}`,
       {
         method: 'GET',
-        credentials: 'include',
       }
     );
 
@@ -53,11 +52,10 @@ export const OrganizationsService = {
    *
    */
   async removeMemberFromOrganization(organizationId: string, memberId: string) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/members/${memberId}`,
       {
         method: 'DELETE',
-        credentials: 'include',
       }
     );
 
@@ -98,11 +96,10 @@ export const OrganizationsService = {
     memberId: string,
     role: 'admin' | 'member' | 'guest'
   ) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/members/${memberId}`,
       {
         method: 'POST',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -123,11 +120,10 @@ export const OrganizationsService = {
     email: string,
     role: OrganizationRole
   ) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/invitations`,
       {
         method: 'POST',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -142,11 +138,10 @@ export const OrganizationsService = {
   },
 
   async getInvitation(token: string) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations_invitations/${token}`,
       {
         method: 'GET',
-        credentials: 'include',
       }
     );
 
@@ -162,11 +157,10 @@ export const OrganizationsService = {
    * Preview invitation without authentication (checks if user exists)
    */
   async previewInvitation(token: string) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations_invitations/${token}/preview`,
       {
         method: 'GET',
-        credentials: 'include',
       }
     );
 
@@ -185,11 +179,10 @@ export const OrganizationsService = {
    * @returns
    */
   async acceptInvitation(token: string) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations_invitations/${token}/accept`,
       {
         method: 'POST',
-        credentials: 'include',
       }
     );
 
@@ -208,11 +201,10 @@ export const OrganizationsService = {
    * @returns
    */
   async rejectInvitation(token: string) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations_invitations/${token}/reject`,
       {
         method: 'POST',
-        credentials: 'include',
       }
     );
 
@@ -236,11 +228,10 @@ export const OrganizationsService = {
     organizationId: string,
     invitationId: number
   ) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/invitations/${invitationId}`,
       {
         method: 'DELETE',
-        credentials: 'include',
       }
     );
 
@@ -256,11 +247,10 @@ export const OrganizationsService = {
   async fetchInvitations(organizationId: string, opts: FetchDataOptions) {
     const queryString = fetchOptionsToQueryString(opts);
 
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/invitations?${queryString}`,
       {
         method: 'GET',
-        credentials: 'include',
       }
     );
 
@@ -276,11 +266,10 @@ export const OrganizationsService = {
    *
    */
   async update(organizationId: string, organization: Partial<Organization>) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}`,
       {
         method: 'PUT',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -304,11 +293,10 @@ export const OrganizationsService = {
    * Fetch a specific media belonging to an organization.
    */
   async fetchMedia(organizationId: string, mediaId: number) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/medias/${mediaId}`,
       {
         method: 'GET',
-        credentials: 'include',
       }
     );
 
@@ -330,9 +318,8 @@ export const OrganizationsService = {
     memberId: string,
     role: OrganizationRole
   ) {
-    const response = await fetch(`${baseUrl}/dashboard/users/${memberId}`, {
+    const response = await authFetch(`${baseUrl}/dashboard/users/${memberId}`, {
       method: 'PUT',
-      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
       },
@@ -366,11 +353,10 @@ export const OrganizationsService = {
    *
    */
   async completeOnboarding(organizationId: string, name: string) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/complete-onboarding`,
       {
         method: 'POST',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },

@@ -5,6 +5,7 @@ import {
   fetchOptionsToQueryString,
   HttpError,
 } from '@castmill/ui-common';
+import { authFetch } from '../../common/services/auth-fetch';
 import { DeviceCommand } from '../types/device-command.type';
 import { DeviceEvent as DeviceEvent } from '../interfaces/device-event.interface';
 import { DeviceUpdate } from '../components/device-details';
@@ -111,11 +112,10 @@ export const DevicesService = {
     name: string,
     pincode: string
   ) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/devices`,
       {
         method: 'POST',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -185,11 +185,10 @@ export const DevicesService = {
 
     const queryString = query.toString();
 
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/devices?${queryString}`,
       {
         method: 'GET',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -205,11 +204,10 @@ export const DevicesService = {
    * Send Command.
    */
   async sendCommand(baseUrl: string, deviceId: string, command: DeviceCommand) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/devices/${deviceId}/commands`,
       {
         method: 'POST',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -244,11 +242,10 @@ export const DevicesService = {
 
     const query = new URLSearchParams(params).toString();
 
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/devices/${deviceId}/events?${query}`,
       {
         method: 'GET',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -268,11 +265,10 @@ export const DevicesService = {
    */
   async deleteDeviceEvents(baseUrl: string, deviceId: string, type?: string) {
     const params = type ? `?type=${encodeURIComponent(type)}` : '';
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/devices/${deviceId}/events${params}`,
       {
         method: 'DELETE',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -306,11 +302,10 @@ export const DevicesService = {
       type: type || 'data',
     }).toString();
 
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/devices/${deviceId}/cache?${query}`,
       {
         method: 'GET',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -335,11 +330,10 @@ export const DevicesService = {
     type: string,
     urls: string[]
   ) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/devices/${deviceId}/cache`,
       {
         method: 'DELETE',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -356,11 +350,10 @@ export const DevicesService = {
    * Get telemetry data from the device (proxied through the backend WebSocket).
    */
   async getDeviceTelemetry(baseUrl: string, deviceId: string) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/devices/${deviceId}/telemetry`,
       {
         method: 'GET',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -376,11 +369,10 @@ export const DevicesService = {
    * Get device timers (proxied through the backend WebSocket).
    */
   async getDeviceTimers(baseUrl: string, deviceId: string) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/devices/${deviceId}/timers`,
       {
         method: 'GET',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -422,11 +414,10 @@ export const DevicesService = {
       }>;
     }
   ) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/devices/${deviceId}/timers`,
       {
         method: 'POST',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -443,11 +434,10 @@ export const DevicesService = {
    * Get device schedule from the database.
    */
   async getDeviceSchedule(baseUrl: string, deviceId: string) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/devices/${deviceId}/schedule`,
       {
         method: 'GET',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -481,11 +471,10 @@ export const DevicesService = {
       days: number[];
     }>
   ) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/devices/${deviceId}/schedule`,
       {
         method: 'PUT',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -509,11 +498,10 @@ export const DevicesService = {
     organizationId: string,
     deviceId: string
   ) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/devices/${deviceId}`,
       {
         method: 'DELETE',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -532,11 +520,10 @@ export const DevicesService = {
     deviceId: string,
     device: DeviceUpdate
   ) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/devices/${deviceId}`,
       {
         method: 'PATCH',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -556,11 +543,10 @@ export const DevicesService = {
     opts: FetchDataOptions
   ) {
     const queryString = fetchOptionsToQueryString(opts);
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/channels?${queryString}`,
       {
         method: 'GET',
-        credentials: 'include',
       }
     );
 
@@ -575,11 +561,10 @@ export const DevicesService = {
    * Get the current channel of a device
    */
   async fetchChannelByDeviceId(baseUrl: string, deviceId: string) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/devices/${deviceId}/channels`,
       {
         method: 'GET',
-        credentials: 'include',
       }
     );
 
@@ -638,11 +623,10 @@ const addChannelToDevice = async (
   deviceId: string,
   channelId: number
 ) => {
-  const response = await fetch(
+  const response = await authFetch(
     `${baseUrl}/dashboard/devices/${deviceId}/channels`,
     {
       method: 'POST',
-      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
       },
@@ -666,11 +650,10 @@ const removeChannelFromDevice = async (
   deviceId: string,
   channelId: number
 ) => {
-  const response = await fetch(
+  const response = await authFetch(
     `${baseUrl}/dashboard/devices/${deviceId}/channels/${channelId}`,
     {
       method: 'DELETE',
-      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
       },
@@ -688,11 +671,10 @@ const removeChannelFromDevice = async (
  * @returns Promise that resolves with the channels of the device
  */
 const getChannelsOfDevice = async (baseUrl: string, deviceId: string) => {
-  const response = await fetch(
+  const response = await authFetch(
     `${baseUrl}/dashboard/devices/${deviceId}/channels`,
     {
       method: 'GET',
-      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
       },

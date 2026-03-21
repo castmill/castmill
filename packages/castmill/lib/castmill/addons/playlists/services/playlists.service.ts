@@ -6,6 +6,7 @@ import {
 } from '@castmill/player';
 
 import { SortOptions, HttpError } from '@castmill/ui-common';
+import { authFetch } from '../../common/services/auth-fetch';
 
 export interface FetchPlaylistsOptions {
   page: number;
@@ -105,11 +106,10 @@ export const PlaylistsService = {
       };
     }
 
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/playlists`,
       {
         method: 'POST',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -175,11 +175,10 @@ export const PlaylistsService = {
 
     const queryString = new URLSearchParams(query).toString();
 
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/playlists?${queryString}`,
       {
         method: 'GET',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -196,11 +195,10 @@ export const PlaylistsService = {
     organizationId: string,
     playlistId: number
   ) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/playlists/${playlistId}`,
       {
         method: 'GET',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -222,11 +220,10 @@ export const PlaylistsService = {
     playlistId: number,
     item: PlaylistItemInsertPayload
   ) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/playlists/${playlistId}/items`,
       {
         method: 'POST',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -248,11 +245,10 @@ export const PlaylistsService = {
     playlistId: number,
     itemId: number
   ) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/playlists/${playlistId}/items/${itemId}`,
       {
         method: 'DELETE',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -269,11 +265,10 @@ export const PlaylistsService = {
     itemId: number,
     options: Partial<JsonPlaylistItem>
   ) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/playlists/${playlistId}/items/${itemId}`,
       {
         method: 'PATCH',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -291,11 +286,10 @@ export const PlaylistsService = {
     itemId: number,
     config: Omit<JsonWidgetConfig, 'id' | 'widget_id'>
   ) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/playlists/${playlistId}/items/${itemId}/config`,
       {
         method: 'PATCH',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -313,11 +307,10 @@ export const PlaylistsService = {
     itemId: number,
     targetId: number | null
   ) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/playlists/${playlistId}/items/${itemId}`,
       {
         method: 'PUT',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -336,11 +329,10 @@ export const PlaylistsService = {
     organizationId: string,
     playlistId: number
   ) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/playlists/${playlistId}`,
       {
         method: 'DELETE',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -359,11 +351,10 @@ export const PlaylistsService = {
     playlistId: string,
     playlist: PlaylistUpdate
   ) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/playlists/${playlistId}`,
       {
         method: 'PATCH',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -384,9 +375,8 @@ export const PlaylistsService = {
     const queryString = new URLSearchParams(query).toString();
     const url = `${baseUrl}/dashboard/organizations/${organizationId}/widgets${queryString ? `?${queryString}` : ''}`;
 
-    const response = await fetch(url, {
+    const response = await authFetch(url, {
       method: 'GET',
-      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
       },
@@ -415,9 +405,8 @@ export const PlaylistsService = {
   }> {
     const url = `${baseUrl}/dashboard/organizations/${organizationId}/widgets/${widgetId}/credentials-status`;
 
-    const response = await fetch(url, {
+    const response = await authFetch(url, {
       method: 'GET',
-      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
       },
@@ -461,9 +450,8 @@ export const PlaylistsService = {
   }> {
     try {
       const url = `${baseUrl}/dashboard/organizations/${organizationId}/widgets/${widgetId}/prefetch-data`;
-      const response = await fetch(url, {
+      const response = await authFetch(url, {
         method: 'POST',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -500,7 +488,7 @@ export const PlaylistsService = {
   ): Promise<Record<string, any> | null> {
     try {
       const url = `${baseUrl}/dashboard/widget-configs/${widgetConfigId}/data`;
-      const response = await fetch(url, { credentials: 'include' });
+      const response = await authFetch(url);
 
       if (response.ok) {
         const result = await response.json();

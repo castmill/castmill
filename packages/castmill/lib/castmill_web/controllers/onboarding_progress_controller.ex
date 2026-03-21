@@ -12,9 +12,9 @@ defmodule CastmillWeb.OnboardingProgressController do
   """
   def show(conn, %{"user_id" => user_id}) do
     # Verify the user is requesting their own progress
-    session_user = get_session(conn, :user)
+    current_user = conn.assigns[:current_user]
 
-    if session_user && session_user.id == user_id do
+    if current_user && current_user.id == user_id do
       case Onboarding.get_or_create_progress(user_id) do
         {:ok, progress} ->
           render(conn, :show, progress: progress)
@@ -35,9 +35,9 @@ defmodule CastmillWeb.OnboardingProgressController do
   Updates the onboarding progress for a user.
   """
   def update(conn, %{"user_id" => user_id} = params) do
-    session_user = get_session(conn, :user)
+    current_user = conn.assigns[:current_user]
 
-    if session_user && session_user.id == user_id do
+    if current_user && current_user.id == user_id do
       with {:ok, progress} <- Onboarding.get_or_create_progress(user_id),
            {:ok, updated_progress} <- Onboarding.update_progress(progress, params) do
         render(conn, :show, progress: updated_progress)
@@ -61,9 +61,9 @@ defmodule CastmillWeb.OnboardingProgressController do
   Marks a step as completed.
   """
   def complete_step(conn, %{"user_id" => user_id, "step" => step}) do
-    session_user = get_session(conn, :user)
+    current_user = conn.assigns[:current_user]
 
-    if session_user && session_user.id == user_id do
+    if current_user && current_user.id == user_id do
       if step in OnboardingProgress.valid_steps() do
         case Onboarding.complete_step(user_id, step) do
           {:ok, progress} ->
@@ -90,9 +90,9 @@ defmodule CastmillWeb.OnboardingProgressController do
   Dismisses the onboarding tour.
   """
   def dismiss(conn, %{"user_id" => user_id}) do
-    session_user = get_session(conn, :user)
+    current_user = conn.assigns[:current_user]
 
-    if session_user && session_user.id == user_id do
+    if current_user && current_user.id == user_id do
       case Onboarding.dismiss_tour(user_id) do
         {:ok, progress} ->
           render(conn, :show, progress: progress)
@@ -113,9 +113,9 @@ defmodule CastmillWeb.OnboardingProgressController do
   Resets the onboarding progress.
   """
   def reset(conn, %{"user_id" => user_id}) do
-    session_user = get_session(conn, :user)
+    current_user = conn.assigns[:current_user]
 
-    if session_user && session_user.id == user_id do
+    if current_user && current_user.id == user_id do
       case Onboarding.reset_progress(user_id) do
         {:ok, progress} ->
           render(conn, :show, progress: progress)

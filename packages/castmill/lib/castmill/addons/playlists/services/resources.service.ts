@@ -1,4 +1,5 @@
 import { SortOptions, HttpError } from '@castmill/ui-common';
+import { authFetch } from '../../common/services/auth-fetch';
 
 export interface FetchResourcesOptions {
   page: number;
@@ -72,11 +73,10 @@ export const ResourcesService = {
 
     const queryString = new URLSearchParams(query).toString();
 
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/${collection}?${queryString}`,
       {
         method: 'GET',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },

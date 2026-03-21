@@ -4,7 +4,6 @@ defmodule CastmillWeb.OrganizationInvitationTest do
   import Castmill.NetworksFixtures
   import Castmill.OrganizationsFixtures
 
-  alias Castmill.Accounts
   alias Castmill.Organizations
 
   setup %{conn: conn} do
@@ -20,12 +19,10 @@ defmodule CastmillWeb.OrganizationInvitationTest do
         role: :admin
       })
 
-    session_token = Accounts.generate_user_session_token(user.id)
-
     conn =
       conn
       |> put_req_header("accept", "application/json")
-      |> Plug.Test.init_test_session(%{user_session_token: session_token})
+      |> put_bearer_auth(user)
 
     %{
       conn: conn,
@@ -131,7 +128,6 @@ defmodule CastmillWeb.OrganizationInvitationTest do
 
   describe "accept_invitation/2 - auth required" do
     test "successfully accepts invitation for authenticated user", %{
-      conn: conn,
       organization: organization,
       network: network
     } do
@@ -152,11 +148,10 @@ defmodule CastmillWeb.OrganizationInvitationTest do
         })
 
       # Authenticate as the invited user
-      invited_token = Accounts.generate_user_session_token(new_user.id)
-
       conn_invited =
-        conn
-        |> Plug.Test.init_test_session(%{user_session_token: invited_token})
+        build_conn()
+        |> put_req_header("accept", "application/json")
+        |> put_bearer_auth(new_user)
 
       # Accept invitation
       conn =
@@ -171,7 +166,6 @@ defmodule CastmillWeb.OrganizationInvitationTest do
     end
 
     test "rejects invitation if user email doesn't match", %{
-      conn: conn,
       organization: organization,
       network: network
     } do
@@ -191,11 +185,10 @@ defmodule CastmillWeb.OrganizationInvitationTest do
           name: "Different User"
         })
 
-      different_token = Accounts.generate_user_session_token(different_user.id)
-
       conn_different =
-        conn
-        |> Plug.Test.init_test_session(%{user_session_token: different_token})
+        build_conn()
+        |> put_req_header("accept", "application/json")
+        |> put_bearer_auth(different_user)
 
       conn =
         post(conn_different, ~p"/dashboard/organizations_invitations/#{invitation.token}/accept")
@@ -204,7 +197,6 @@ defmodule CastmillWeb.OrganizationInvitationTest do
     end
 
     test "rejects expired invitation", %{
-      conn: conn,
       organization: organization,
       network: network
     } do
@@ -224,11 +216,10 @@ defmodule CastmillWeb.OrganizationInvitationTest do
           expires_at: DateTime.add(DateTime.utc_now(), -1, :day)
         })
 
-      expired_token = Accounts.generate_user_session_token(new_user.id)
-
       conn_new =
-        conn
-        |> Plug.Test.init_test_session(%{user_session_token: expired_token})
+        build_conn()
+        |> put_req_header("accept", "application/json")
+        |> put_bearer_auth(new_user)
 
       conn = post(conn_new, ~p"/dashboard/organizations_invitations/#{invitation.token}/accept")
 
@@ -289,12 +280,11 @@ defmodule CastmillWeb.OrganizationInvitationTest do
           name: "Newbie User"
         })
 
-      new_user_token = Accounts.generate_user_session_token(new_user.id)
-
       # 4. Accept invitation after signup
       conn_new_user =
         build_conn()
-        |> Plug.Test.init_test_session(%{user_session_token: new_user_token})
+        |> put_req_header("accept", "application/json")
+        |> put_bearer_auth(new_user)
 
       conn =
         post(conn_new_user, ~p"/dashboard/organizations_invitations/#{invitation.token}/accept")
@@ -310,7 +300,6 @@ defmodule CastmillWeb.OrganizationInvitationTest do
 
   describe "invitation roles and permissions" do
     test "admin invitation grants admin role", %{
-      conn: conn,
       organization: organization,
       network: network
     } do
@@ -328,11 +317,10 @@ defmodule CastmillWeb.OrganizationInvitationTest do
           role: :admin
         })
 
-      admin_invitee_token = Accounts.generate_user_session_token(new_user.id)
-
       conn_new =
-        conn
-        |> Plug.Test.init_test_session(%{user_session_token: admin_invitee_token})
+        build_conn()
+        |> put_req_header("accept", "application/json")
+        |> put_bearer_auth(new_user)
 
       conn = post(conn_new, ~p"/dashboard/organizations_invitations/#{invitation.token}/accept")
 
@@ -343,7 +331,6 @@ defmodule CastmillWeb.OrganizationInvitationTest do
     end
 
     test "guest invitation grants guest role", %{
-      conn: conn,
       organization: organization,
       network: network
     } do
@@ -361,11 +348,10 @@ defmodule CastmillWeb.OrganizationInvitationTest do
           role: :guest
         })
 
-      guest_invitee_token = Accounts.generate_user_session_token(new_user.id)
-
       conn_new =
-        conn
-        |> Plug.Test.init_test_session(%{user_session_token: guest_invitee_token})
+        build_conn()
+        |> put_req_header("accept", "application/json")
+        |> put_bearer_auth(new_user)
 
       conn = post(conn_new, ~p"/dashboard/organizations_invitations/#{invitation.token}/accept")
 
@@ -378,7 +364,6 @@ defmodule CastmillWeb.OrganizationInvitationTest do
 
   describe "multiple invitations" do
     test "user can accept same invitation twice (idempotent)", %{
-      conn: conn,
       organization: organization,
       network: network
     } do
@@ -396,11 +381,10 @@ defmodule CastmillWeb.OrganizationInvitationTest do
           role: :member
         })
 
-      duplicate_token = Accounts.generate_user_session_token(new_user.id)
-
       conn_new =
-        conn
-        |> Plug.Test.init_test_session(%{user_session_token: duplicate_token})
+        build_conn()
+        |> put_req_header("accept", "application/json")
+        |> put_bearer_auth(new_user)
 
       # Accept once
       conn_result1 =
@@ -416,7 +400,6 @@ defmodule CastmillWeb.OrganizationInvitationTest do
     end
 
     test "different user cannot accept already-accepted invitation", %{
-      conn: conn,
       organization: organization,
       network: network
     } do
@@ -435,11 +418,10 @@ defmodule CastmillWeb.OrganizationInvitationTest do
           role: :member
         })
 
-      first_token = Accounts.generate_user_session_token(first_user.id)
-
       conn_first =
-        conn
-        |> Plug.Test.init_test_session(%{user_session_token: first_token})
+        build_conn()
+        |> put_req_header("accept", "application/json")
+        |> put_bearer_auth(first_user)
 
       conn_result =
         post(conn_first, ~p"/dashboard/organizations_invitations/#{invitation.token}/accept")
@@ -454,11 +436,10 @@ defmodule CastmillWeb.OrganizationInvitationTest do
           name: "Second User"
         })
 
-      second_token = Accounts.generate_user_session_token(second_user.id)
-
       conn_second =
-        conn
-        |> Plug.Test.init_test_session(%{user_session_token: second_token})
+        build_conn()
+        |> put_req_header("accept", "application/json")
+        |> put_bearer_auth(second_user)
 
       # Should fail with 403 because the second user's email doesn't match the invitation
       conn_result =
@@ -492,7 +473,6 @@ defmodule CastmillWeb.OrganizationInvitationTest do
     end
 
     test "cannot reject already accepted invitation", %{
-      conn: conn,
       organization: organization,
       network: network
     } do
@@ -511,11 +491,10 @@ defmodule CastmillWeb.OrganizationInvitationTest do
         })
 
       # Accept the invitation first
-      accepted_token = Accounts.generate_user_session_token(new_user.id)
-
       conn_accepted =
-        conn
-        |> Plug.Test.init_test_session(%{user_session_token: accepted_token})
+        build_conn()
+        |> put_req_header("accept", "application/json")
+        |> put_bearer_auth(new_user)
 
       conn =
         post(conn_accepted, ~p"/dashboard/organizations_invitations/#{invitation.token}/accept")

@@ -7,6 +7,7 @@ import { arrayBufferToBase64, base64URLToArrayBuffer } from '../utils';
 import './signup.scss';
 
 import { baseUrl, origin, domain } from '../../env';
+import { authFetch } from '../auth';
 import { useI18n } from '../../i18n';
 import {
   LOCALE_STORAGE_KEY,
@@ -60,11 +61,8 @@ const SignUp: Component = () => {
 
   async function fetchNetworkSettings() {
     try {
-      const response = await fetch(
-        `${baseUrl}/dashboard/network/public-settings`,
-        {
-          credentials: 'include',
-        }
+      const response = await authFetch(
+        `${baseUrl}/dashboard/network/public-settings`
       );
       if (response.ok) {
         const settings = await response.json();
@@ -165,7 +163,7 @@ const SignUp: Component = () => {
     }
 
     // Send the credential to the server to be stored
-    const result = await fetch(`${baseUrl}/signups/${signup_id}/users`, {
+    const result = await authFetch(`${baseUrl}/signups/${signup_id}/users`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -178,7 +176,6 @@ const SignUp: Component = () => {
         raw_id: arrayBufferToBase64(publicKeyCredential.rawId),
         client_data_json: clientDataJSON,
       }),
-      credentials: 'include', // Essential for including cookies
     });
 
     if (!result.ok) {

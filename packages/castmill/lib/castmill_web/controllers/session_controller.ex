@@ -34,15 +34,14 @@ defmodule CastmillWeb.SessionController do
     Get the current session if the user is already logged in.
   """
   def get(conn, _params) do
-    user = get_session(conn, :user)
-
-    case user do
+    # Uses the current_user set by fetch_dashboard_user (Bearer token auth).
+    case conn.assigns[:current_user] do
       nil ->
         conn
         |> put_status(:unauthorized)
         |> json(%{status: :error, message: "Not logged in"})
 
-      _ ->
+      user ->
         token =
           Phoenix.Token.sign(
             CastmillWeb.Endpoint,

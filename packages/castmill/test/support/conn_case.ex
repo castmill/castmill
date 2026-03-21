@@ -35,4 +35,27 @@ defmodule CastmillWeb.ConnCase do
     Castmill.DataCase.setup_sandbox(tags)
     {:ok, conn: Phoenix.ConnTest.build_conn()}
   end
+
+  @doc """
+  Signs a Phoenix.Token for the given user id, suitable for the
+  `Authorization: Bearer <token>` header expected by the dashboard
+  `fetch_dashboard_user` pipeline plug.
+  """
+  def sign_bearer_token(user_id) do
+    Phoenix.Token.sign(
+      CastmillWeb.Endpoint,
+      CastmillWeb.Secrets.get_dashboard_user_token_salt(),
+      user_id
+    )
+  end
+
+  @doc """
+  Adds a Bearer token `Authorization` header for the given user,
+  so the request is authenticated through the `fetch_dashboard_user`
+  pipeline plug.
+  """
+  def put_bearer_auth(conn, user) do
+    token = sign_bearer_token(user.id)
+    Plug.Conn.put_req_header(conn, "authorization", "Bearer #{token}")
+  end
 end

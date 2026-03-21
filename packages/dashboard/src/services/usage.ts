@@ -1,6 +1,7 @@
 import { baseUrl } from '../env';
 import { Usage } from '../interfaces/usage';
 
+import { authFetch } from '../components/auth';
 export const UsageService = {
   /**
    * Get all the usage data for the organization.
@@ -8,11 +9,10 @@ export const UsageService = {
    * @returns {Promise<Usage>} A promise that resolves to an array of Organizations.
    */
   async getUsage(organizationId: string) {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/usage`,
       {
         method: 'GET',
-        credentials: 'include',
       }
     );
 

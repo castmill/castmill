@@ -12,6 +12,7 @@ import { BsEye } from 'solid-icons/bs';
 import { createSignal } from 'solid-js';
 
 import { baseUrl } from '../../env';
+import { authFetch } from '../../components/auth';
 import { FaSolidFolderPlus } from 'solid-icons/fa';
 import { TeamsService } from '../../services/teams.service';
 import { AccessSelector } from './access-selector';
@@ -164,11 +165,10 @@ export const ResourceChooser = (props: {
 
     const queryString = new URLSearchParams(query).toString();
 
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${props.organizationId}/${props.resourceType}?${queryString}`,
       {
         method: 'GET',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },

@@ -1,5 +1,6 @@
 import { baseUrl } from '../env';
 
+import { authFetch } from '../components/auth';
 export interface Notification {
   id: string;
   title_key: string;
@@ -27,11 +28,8 @@ export class NotificationsService {
     page = 1,
     pageSize = 20
   ): Promise<NotificationsResponse> {
-    const response = await fetch(
-      `${this.baseUrl}/dashboard/notifications?page=${page}&page_size=${pageSize}`,
-      {
-        credentials: 'include',
-      }
+    const response = await authFetch(
+      `${this.baseUrl}/dashboard/notifications?page=${page}&page_size=${pageSize}`
     );
 
     if (!response.ok) {
@@ -49,11 +47,8 @@ export class NotificationsService {
    * Gets the count of unread notifications
    */
   async getUnreadCount(): Promise<number> {
-    const response = await fetch(
-      `${this.baseUrl}/dashboard/notifications/unread_count`,
-      {
-        credentials: 'include',
-      }
+    const response = await authFetch(
+      `${this.baseUrl}/dashboard/notifications/unread_count`
     );
 
     if (!response.ok) {
@@ -68,11 +63,10 @@ export class NotificationsService {
    * Marks a notification as read
    */
   async markAsRead(notificationId: string): Promise<Notification> {
-    const response = await fetch(
+    const response = await authFetch(
       `${this.baseUrl}/dashboard/notifications/${notificationId}/read`,
       {
         method: 'PATCH',
-        credentials: 'include',
       }
     );
 
@@ -90,11 +84,10 @@ export class NotificationsService {
    * Marks all notifications as read
    */
   async markAllAsRead(): Promise<number> {
-    const response = await fetch(
+    const response = await authFetch(
       `${this.baseUrl}/dashboard/notifications/mark_all_read`,
       {
         method: 'POST',
-        credentials: 'include',
       }
     );
 

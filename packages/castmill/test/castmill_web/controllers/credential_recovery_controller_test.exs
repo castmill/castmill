@@ -187,8 +187,10 @@ defmodule CastmillWeb.CredentialRecoveryControllerTest do
       assert body["message"] =~ "Credential added"
       assert body["credential"]["id"]
 
-      # The user should be logged in (session contains user)
-      assert get_session(conn, :user).id == user.id
+      # The response includes user + token so the frontend can establish
+      # a Bearer-auth session (no cookies/session writes).
+      assert body["user"]["id"] == user.id
+      assert is_binary(body["token"])
     end
 
     test "rejects when challenge does not match the token", %{

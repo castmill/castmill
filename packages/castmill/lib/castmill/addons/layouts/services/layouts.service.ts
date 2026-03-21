@@ -1,4 +1,5 @@
 import { SortOptions, HttpError } from '@castmill/ui-common';
+import { authFetch } from '../../common/services/auth-fetch';
 
 /**
  * Zone in a layout (percentages 0-100)
@@ -103,11 +104,10 @@ export const LayoutsService = {
     organizationId: string,
     data: LayoutCreate
   ): Promise<JsonLayout> {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/layouts`,
       {
         method: 'POST',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -159,11 +159,10 @@ export const LayoutsService = {
 
     const queryString = new URLSearchParams(query).toString();
 
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/layouts?${queryString}`,
       {
         method: 'GET',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -183,11 +182,10 @@ export const LayoutsService = {
     organizationId: string,
     layoutId: string | number
   ): Promise<JsonLayout> {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/layouts/${layoutId}`,
       {
         method: 'GET',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -209,11 +207,10 @@ export const LayoutsService = {
     layoutId: string | number,
     data: LayoutUpdate
   ): Promise<JsonLayout> {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/layouts/${layoutId}`,
       {
         method: 'PATCH',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -235,11 +232,10 @@ export const LayoutsService = {
     organizationId: string,
     layoutId: string | number
   ): Promise<void> {
-    const response = await fetch(
+    const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/layouts/${layoutId}`,
       {
         method: 'DELETE',
-        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },

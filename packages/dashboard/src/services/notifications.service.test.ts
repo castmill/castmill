@@ -1,11 +1,20 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { NotificationsService } from './notifications.service';
 
+// Mock the auth module to prevent side effects (setStore) during test imports
+vi.mock('../components/auth', () => ({
+  authFetch: vi.fn((...args: any[]) => (global.fetch as any)(...args)),
+  getAuthToken: vi.fn(() => null),
+  getUser: vi.fn(() => ({ id: 'test-user' })),
+  checkAuth: vi.fn(() => true),
+}));
+
 describe('NotificationsService', () => {
   let service: NotificationsService;
 
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.removeItem('castmill_auth_token');
     global.fetch = vi.fn();
     service = new NotificationsService('http://localhost:4000');
   });
@@ -34,11 +43,10 @@ describe('NotificationsService', () => {
 
       const result = await service.getNotifications();
 
-      expect(global.fetch).toHaveBeenCalledWith(
-        'http://localhost:4000/dashboard/notifications?page=1&page_size=20',
-        {
-          credentials: 'include',
-        }
+      expect(global.fetch).toHaveBeenCalledOnce();
+      const [url] = (global.fetch as any).mock.calls[0];
+      expect(url).toBe(
+        'http://localhost:4000/dashboard/notifications?page=1&page_size=20'
       );
       expect(result).toEqual(mockResponse);
     });
@@ -51,11 +59,10 @@ describe('NotificationsService', () => {
 
       await service.getNotifications(2, 50);
 
-      expect(global.fetch).toHaveBeenCalledWith(
-        'http://localhost:4000/dashboard/notifications?page=2&page_size=50',
-        {
-          credentials: 'include',
-        }
+      expect(global.fetch).toHaveBeenCalledOnce();
+      const [url] = (global.fetch as any).mock.calls[0];
+      expect(url).toBe(
+        'http://localhost:4000/dashboard/notifications?page=2&page_size=50'
       );
     });
 
@@ -80,11 +87,10 @@ describe('NotificationsService', () => {
 
       const result = await service.getUnreadCount();
 
-      expect(global.fetch).toHaveBeenCalledWith(
-        'http://localhost:4000/dashboard/notifications/unread_count',
-        {
-          credentials: 'include',
-        }
+      expect(global.fetch).toHaveBeenCalledOnce();
+      const [url] = (global.fetch as any).mock.calls[0];
+      expect(url).toBe(
+        'http://localhost:4000/dashboard/notifications/unread_count'
       );
       expect(result).toBe(5);
     });
@@ -118,13 +124,12 @@ describe('NotificationsService', () => {
 
       const result = await service.markAsRead('notification-123');
 
-      expect(global.fetch).toHaveBeenCalledWith(
-        'http://localhost:4000/dashboard/notifications/notification-123/read',
-        {
-          method: 'PATCH',
-          credentials: 'include',
-        }
+      expect(global.fetch).toHaveBeenCalledOnce();
+      const [url, opts] = (global.fetch as any).mock.calls[0];
+      expect(url).toBe(
+        'http://localhost:4000/dashboard/notifications/notification-123/read'
       );
+      expect(opts).toEqual(expect.objectContaining({ method: 'PATCH' }));
       expect(result.read).toBe(true);
     });
   });
@@ -138,13 +143,12 @@ describe('NotificationsService', () => {
 
       const result = await service.markAllAsRead();
 
-      expect(global.fetch).toHaveBeenCalledWith(
-        'http://localhost:4000/dashboard/notifications/mark_all_read',
-        {
-          method: 'POST',
-          credentials: 'include',
-        }
+      expect(global.fetch).toHaveBeenCalledOnce();
+      const [url, opts] = (global.fetch as any).mock.calls[0];
+      expect(url).toBe(
+        'http://localhost:4000/dashboard/notifications/mark_all_read'
       );
+      expect(opts).toEqual(expect.objectContaining({ method: 'POST' }));
       expect(result).toBe(5);
     });
 

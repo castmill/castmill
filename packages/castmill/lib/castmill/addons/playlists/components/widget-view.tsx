@@ -7,6 +7,7 @@ import {
   createMemo,
 } from 'solid-js';
 import { Socket, Channel } from 'phoenix';
+import { authFetch } from '../../common/services/auth-fetch';
 
 import {
   Playlist,
@@ -73,7 +74,7 @@ export const WidgetView: Component<WidgetViewProps> = (props) => {
     if (props.config.id && props.baseUrl) {
       try {
         const url = `${props.baseUrl}/dashboard/widget-configs/${props.config.id}/data`;
-        const response = await fetch(url, { credentials: 'include' });
+        const response = await authFetch(url);
 
         if (response.ok) {
           const result = await response.json();

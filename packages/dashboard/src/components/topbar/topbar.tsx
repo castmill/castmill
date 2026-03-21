@@ -7,7 +7,7 @@ import {
 } from 'solid-js';
 import './topbar.scss';
 
-import { checkAuth, getUser, resetSession } from '../auth';
+import { checkAuth, getUser, resetSession, authFetch } from '../auth';
 import { useNavigate } from '@solidjs/router';
 import TopbarLink from '../topbar-link/topbar-link';
 import Search from '../search/search';
@@ -62,12 +62,11 @@ const Topbar: Component = () => {
 
   const logout = async () => {
     // Log the user out
-    const result = await fetch(`${baseUrl}/sessions`, {
+    const result = await authFetch(`${baseUrl}/sessions`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
       },
-      credentials: 'include',
     });
 
     if (result.status === 200) {

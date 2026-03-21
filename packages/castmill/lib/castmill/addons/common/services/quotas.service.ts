@@ -1,4 +1,5 @@
 import { HttpError } from '@castmill/ui-common';
+import { authFetch } from './auth-fetch';
 
 export interface ResourceQuota {
   used: number;
@@ -29,11 +30,10 @@ export class QuotasService {
    * @returns {Promise<QuotaUsage>} A promise that resolves to quota usage data
    */
   async getQuotaUsage(organizationId: string): Promise<QuotaUsage> {
-    const response = await fetch(
+    const response = await authFetch(
       `${this.baseUrl}/dashboard/organizations/${organizationId}/usage`,
       {
         method: 'GET',
-        credentials: 'include',
       }
     );
 

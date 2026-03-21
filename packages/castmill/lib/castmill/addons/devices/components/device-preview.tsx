@@ -7,6 +7,7 @@ import {
   For,
 } from 'solid-js';
 import { Device } from '../interfaces/device.interface';
+import { authFetch } from '../../common/services/auth-fetch';
 import { DevicesService, JsonChannel } from '../services/devices.service';
 import {
   Player,
@@ -217,11 +218,10 @@ export const DevicePreview: Component<{
     playlistId: number
   ): Promise<JsonPlaylist | null> => {
     try {
-      const response = await fetch(
+      const response = await authFetch(
         `${props.baseUrl}/dashboard/devices/${props.device.id}/playlists/${playlistId}`,
         {
           method: 'GET',
-          credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
           },

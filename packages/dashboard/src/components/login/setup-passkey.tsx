@@ -16,7 +16,7 @@ import { Component, createSignal, onMount, Show } from 'solid-js';
 import { useNavigate, useSearchParams } from '@solidjs/router';
 import { arrayBufferToBase64, base64URLToArrayBuffer } from '../utils';
 import { baseUrl, domain } from '../../env';
-import { loginUser } from '../auth';
+import { authFetch, loginUser } from '../auth';
 import { useI18n } from '../../i18n';
 import './login.scss';
 
@@ -67,9 +67,8 @@ const SetupPasskey: Component = () => {
     // Verify the token using the existing recovery verify endpoint
     try {
       setStatus(t('setupPasskey.verifying'));
-      const response = await fetch(
-        `${baseUrl}/credentials/recover/verify?token=${encodeURIComponent(token)}`,
-        { credentials: 'include' }
+      const response = await authFetch(
+        `${baseUrl}/credentials/recover/verify?token=${encodeURIComponent(token)}`
       );
 
       if (response.ok) {
@@ -95,9 +94,8 @@ const SetupPasskey: Component = () => {
 
     try {
       // Get challenge from the recovery endpoint
-      const challengeResponse = await fetch(
-        `${baseUrl}/credentials/recover/challenge?token=${encodeURIComponent(token)}`,
-        { credentials: 'include' }
+      const challengeResponse = await authFetch(
+        `${baseUrl}/credentials/recover/challenge?token=${encodeURIComponent(token)}`
       );
 
       if (!challengeResponse.ok) {
@@ -164,18 +162,20 @@ const SetupPasskey: Component = () => {
       );
 
       // Register the credential using the recovery endpoint
-      const result = await fetch(`${baseUrl}/credentials/recover/credential`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          token,
-          credential_id: publicKeyCredential.id,
-          public_key_spki: arrayBufferToBase64(publicKey),
-          raw_id: arrayBufferToBase64(publicKeyCredential.rawId),
-          client_data_json: clientDataJSON,
-        }),
-        credentials: 'include',
-      });
+      const result = await authFetch(
+        `${baseUrl}/credentials/recover/credential`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            token,
+            credential_id: publicKeyCredential.id,
+            public_key_spki: arrayBufferToBase64(publicKey),
+            raw_id: arrayBufferToBase64(publicKeyCredential.rawId),
+            client_data_json: clientDataJSON,
+          }),
+        }
+      );
 
       if (!result.ok) {
         setError(t('setupPasskey.registrationFailed'));
@@ -184,8 +184,9 @@ const SetupPasskey: Component = () => {
         return;
       }
 
-      // Log the user in and redirect to dashboard
-      await loginUser();
+      // Log the user in with the token from the response and redirect to dashboard
+      const { user, token: sessionToken } = await result.json();
+      await loginUser({ user, token: sessionToken });
       setSuccess(true);
       setStatus(t('setupPasskey.success'));
       setTimeout(() => navigate('/'), 1500);

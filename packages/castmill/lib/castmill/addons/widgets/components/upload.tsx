@@ -1,5 +1,6 @@
 import { createSignal, onCleanup, For, Show, JSX } from 'solid-js';
 import { dropTargetForExternal } from '@atlaskit/pragmatic-drag-and-drop/external/adapter';
+import { authFetch } from '../../common/services/auth-fetch';
 
 import {
   AiOutlineUpload,
@@ -113,11 +114,10 @@ export const UploadComponent = (props: UploadComponentProps) => {
       const formData = new FormData();
       formData.append('widget', file);
 
-      const response = await fetch(
+      const response = await authFetch(
         `${props.baseUrl}/dashboard/organizations/${props.organizationId}/widgets`,
         {
           method: 'POST',
-          credentials: 'include',
           body: formData,
         }
       );

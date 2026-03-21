@@ -1,4 +1,5 @@
 import { Component, For, createEffect, createSignal, Show } from 'solid-js';
+import { authFetch } from '../../common/services/auth-fetch';
 import {
   JsonPlaylistItem,
   JsonPlaylist,
@@ -87,9 +88,8 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
   // Fetch ancestor playlist IDs to prevent circular references
   createEffect(async () => {
     try {
-      const response = await fetch(
-        `${props.baseUrl}/dashboard/organizations/${props.organizationId}/playlists/${props.playlistId}/ancestors`,
-        { credentials: 'include' }
+      const response = await authFetch(
+        `${props.baseUrl}/dashboard/organizations/${props.organizationId}/playlists/${props.playlistId}/ancestors`
       );
       if (response.ok) {
         const data = await response.json();

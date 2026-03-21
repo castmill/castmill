@@ -30,7 +30,6 @@ describe('DevicesService - Multiple Channel Assignment', () => {
         `${baseUrl}/dashboard/devices/${deviceId}/channels`,
         expect.objectContaining({
           method: 'POST',
-          credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
           },
@@ -70,13 +69,16 @@ describe('DevicesService - Multiple Channel Assignment', () => {
 
       (global.fetch as any).mockResolvedValueOnce(mockResponse);
 
-      await DevicesService.removeChannelFromDevice(baseUrl, deviceId, channelId);
+      await DevicesService.removeChannelFromDevice(
+        baseUrl,
+        deviceId,
+        channelId
+      );
 
       expect(global.fetch).toHaveBeenCalledWith(
         `${baseUrl}/dashboard/devices/${deviceId}/channels/${channelId}`,
         expect.objectContaining({
           method: 'DELETE',
-          credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
           },
@@ -147,13 +149,15 @@ describe('DevicesService - Multiple Channel Assignment', () => {
         `${baseUrl}/dashboard/devices/${deviceId}/channels`,
         expect.objectContaining({
           method: 'GET',
-          credentials: 'include',
         })
       );
     });
 
     it('should throw an error when fetching channels fails', async () => {
-      const mockResponse = new Response(null, { status: 500, statusText: 'Server Error' });
+      const mockResponse = new Response(null, {
+        status: 500,
+        statusText: 'Server Error',
+      });
 
       (global.fetch as any).mockResolvedValueOnce(mockResponse);
 
@@ -181,20 +185,46 @@ describe('DevicesService - Multiple Channel Assignment', () => {
       // First, mock fetching multiple channels
       const mockChannels = {
         data: [
-          { id: 1, name: 'Channel 1', timezone: 'America/New_York', organization_id: organizationId, default_playlist_id: 1, entries: [] },
-          { id: 2, name: 'Channel 2', timezone: 'Europe/London', organization_id: organizationId, default_playlist_id: 2, entries: [] },
-          { id: 3, name: 'Channel 3', timezone: 'Asia/Tokyo', organization_id: organizationId, default_playlist_id: 3, entries: [] },
+          {
+            id: 1,
+            name: 'Channel 1',
+            timezone: 'America/New_York',
+            organization_id: organizationId,
+            default_playlist_id: 1,
+            entries: [],
+          },
+          {
+            id: 2,
+            name: 'Channel 2',
+            timezone: 'Europe/London',
+            organization_id: organizationId,
+            default_playlist_id: 2,
+            entries: [],
+          },
+          {
+            id: 3,
+            name: 'Channel 3',
+            timezone: 'Asia/Tokyo',
+            organization_id: organizationId,
+            default_playlist_id: 3,
+            entries: [],
+          },
         ],
       };
 
-      const fetchResponse = new Response(JSON.stringify(mockChannels), { status: 200 });
+      const fetchResponse = new Response(JSON.stringify(mockChannels), {
+        status: 200,
+      });
       const removeResponse = new Response(null, { status: 200 });
 
       (global.fetch as any)
         .mockResolvedValueOnce(fetchResponse)
         .mockResolvedValueOnce(removeResponse);
 
-      const channels = await DevicesService.fetchChannelByDeviceId(baseUrl, deviceId);
+      const channels = await DevicesService.fetchChannelByDeviceId(
+        baseUrl,
+        deviceId
+      );
       expect(channels.data).toHaveLength(3);
 
       // Remove one channel

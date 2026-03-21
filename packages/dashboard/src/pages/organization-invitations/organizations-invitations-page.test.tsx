@@ -17,6 +17,7 @@ vi.mock('../../components/auth', () => ({
   checkAuth: vi.fn(() => false),
   getUser: vi.fn(() => null),
   loginUser: vi.fn(() => Promise.resolve()),
+  authFetch: vi.fn(),
 }));
 
 // Mock navigator
@@ -61,7 +62,6 @@ describe('OrganizationsInvitationPage', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    global.fetch = vi.fn();
   });
 
   afterEach(() => {
@@ -217,17 +217,17 @@ describe('OrganizationsInvitationPage', () => {
         },
       });
 
-      global.fetch = vi
-        .fn()
+      const { authFetch } = await import('../../components/auth');
+      vi.mocked(authFetch)
         .mockResolvedValueOnce({
           ok: true,
           json: () =>
             Promise.resolve({ signup_id: '123', challenge: 'abc123' }),
-        })
+        } as Response)
         .mockResolvedValueOnce({
           ok: true,
           json: () => Promise.resolve({ success: true }),
-        });
+        } as Response);
 
       vi.mocked(OrganizationsService.acceptInvitation).mockResolvedValue({});
 
@@ -241,7 +241,7 @@ describe('OrganizationsInvitationPage', () => {
       fireEvent.click(signupButton);
 
       await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledWith(
+        expect(authFetch).toHaveBeenCalledWith(
           'http://localhost:4000/signups/challenges',
           expect.objectContaining({
             method: 'POST',
@@ -266,10 +266,11 @@ describe('OrganizationsInvitationPage', () => {
         mockInvitation
       );
 
-      global.fetch = vi.fn().mockResolvedValue({
+      const { authFetch } = await import('../../components/auth');
+      vi.mocked(authFetch).mockResolvedValue({
         ok: false,
         statusText: 'Server error',
-      });
+      } as Response);
 
       renderComponent();
 
@@ -298,7 +299,8 @@ describe('OrganizationsInvitationPage', () => {
         mockInvitation
       );
 
-      global.fetch = vi.fn(
+      const { authFetch } = await import('../../components/auth');
+      vi.mocked(authFetch).mockImplementation(
         () => new Promise(() => {}) // Never resolves
       );
 
@@ -347,8 +349,8 @@ describe('OrganizationsInvitationPage', () => {
         },
       });
 
-      global.fetch = vi
-        .fn()
+      const { authFetch } = await import('../../components/auth');
+      vi.mocked(authFetch)
         .mockResolvedValueOnce({
           ok: true,
           json: () =>
@@ -356,7 +358,7 @@ describe('OrganizationsInvitationPage', () => {
               challenge: 'abc123',
               challenge_token: 'token123',
             }),
-        })
+        } as Response)
         .mockResolvedValueOnce({
           ok: true,
           json: () =>
@@ -365,7 +367,7 @@ describe('OrganizationsInvitationPage', () => {
               user: { id: 'user-1', email: 'existing@example.com' },
               token: 'ws-token',
             }),
-        });
+        } as Response);
 
       renderComponent();
 
@@ -373,9 +375,8 @@ describe('OrganizationsInvitationPage', () => {
       fireEvent.click(loginButton);
 
       await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledWith(
-          'http://localhost:4000/sessions/challenges',
-          expect.objectContaining({ credentials: 'include' })
+        expect(authFetch).toHaveBeenCalledWith(
+          'http://localhost:4000/sessions/challenges'
         );
       });
 
@@ -384,7 +385,7 @@ describe('OrganizationsInvitationPage', () => {
       });
 
       await waitFor(() => {
-        expect(global.fetch).toHaveBeenCalledWith(
+        expect(authFetch).toHaveBeenCalledWith(
           'http://localhost:4000/sessions/',
           expect.objectContaining({ method: 'POST' })
         );
