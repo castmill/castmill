@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Background -->
+  <rect x="2" y="2" width="60" height="60" rx="8" fill="#1a1a2e" stroke="#2d2d4a" stroke-width="2"/>
+  
+  <!-- Film frame -->
+  <rect x="8" y="12" width="48" height="40" rx="4" fill="#2d2d4a" stroke="#4a4a6a" stroke-width="2"/>
+  
+  <!-- Film sprocket holes left -->
+  <rect x="10" y="16" width="4" height="6" rx="1" fill="#1a1a2e"/>
+  <rect x="10" y="26" width="4" height="6" rx="1" fill="#1a1a2e"/>
+  <rect x="10" y="36" width="4" height="6" rx="1" fill="#1a1a2e"/>
+  
+  <!-- Film sprocket holes right -->
+  <rect x="50" y="16" width="4" height="6" rx="1" fill="#1a1a2e"/>
+  <rect x="50" y="26" width="4" height="6" rx="1" fill="#1a1a2e"/>
+  <rect x="50" y="36" width="4" height="6" rx="1" fill="#1a1a2e"/>
+  
+  <!-- Play button -->
+  <circle cx="32" cy="32" r="12" fill="#ef4444" opacity="0.9"/>
+  <polygon points="29,26 29,38 40,32" fill="#ffffff"/>
+</svg>
