@@ -443,7 +443,8 @@ export class Device extends EventEmitter {
 
     // Retry loop: keep trying to reach the server with exponential backoff
     let tries = 0;
-    while (!this.closing) {
+    let recovered = false;
+    while (!this.closing && !recovered) {
       try {
         const pincodeResponse = await fetch(`${this.baseUrl}/registrations`, {
           method: 'POST',
@@ -475,8 +476,14 @@ export class Device extends EventEmitter {
 
           // Refresh the page to initialize the player with the new credentials.
           window.location.reload();
-          // If reload is blocked or no-op, prevent continuing with an invalid pincode.
-          throw new Error('Page reload was blocked after device recovery');
+
+          // Mark as recovered so the retry loop is not re-entered.
+          // In production the page reload above destroys this context.
+          // In environments where reload is a no-op (e.g. tests), the loop
+          // below keeps waiting until the device is closed, preventing
+          // another POST /registrations call that would overwrite the
+          // recovered credentials with a new pincode.
+          recovered = true;
         } else {
           throw new Error(`Invalid status ${pincodeResponse.status}`);
         }
@@ -487,6 +494,17 @@ export class Device extends EventEmitter {
           `Failed to request pincode: ${error}. Retrying in ${delay / 1000}s...`
         );
         await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+    }
+
+    if (recovered) {
+      // Wait for the page reload to complete.  In production the reload
+      // destroys this execution context before the first iteration runs.
+      // In environments where reload does not terminate execution (e.g.
+      // tests), we idle here until the device is closed so that we never
+      // return a pincode or re-enter the registration flow.
+      while (!this.closing) {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
       }
     }
 

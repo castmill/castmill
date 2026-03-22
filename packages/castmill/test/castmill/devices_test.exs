@@ -182,6 +182,39 @@ defmodule Castmill.DevicesTest do
       assert {:ok, _} = Devices.recover_device(device.hardware_id, device.last_ip)
     end
 
+    test "recover_device/2 returns a device with a valid token so the player can reconnect" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+
+      {:ok, devices_registration} =
+        device_registration_fixture(%{hardware_id: "some hardware id", pincode: "some pincode"})
+
+      assert {:ok, {device, _original_token}} =
+               Devices.register_device(organization.id, devices_registration.pincode, %{
+                 name: "some device"
+               })
+
+      # Setting the updated_at to an hour ago so recovery is permitted
+      hour_ago = DateTime.utc_now() |> DateTime.add(-1, :hour)
+
+      from(d in Devices.Device, where: d.id == ^device.id)
+      |> Repo.update_all(set: [updated_at: hour_ago])
+
+      assert {:ok, recovered_device} =
+               Devices.recover_device(device.hardware_id, device.last_ip)
+
+      # The recovered device MUST carry a plain-text token so the controller can
+      # include it in the HTTP response and the player can authenticate with it.
+      assert is_binary(recovered_device.token),
+             "recover_device/2 must return a device with a non-nil plain-text token"
+
+      assert String.length(recovered_device.token) > 0
+
+      # The returned token must be valid for the device (i.e. it was actually
+      # persisted as the new token hash for this device).
+      assert {:ok, _} = Devices.verify_device_token(device.id, recovered_device.token)
+    end
+
     test "recover_device/2 do not recover a device with different ip address" do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})

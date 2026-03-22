@@ -672,6 +672,104 @@ describe('Device - Pincode Polling', () => {
     expect(backoffCalls[1][1]).toBe(2000);
     expect(backoffCalls[2][1]).toBe(4000);
   });
+
+  it('should store credentials and reload page when server returns 200 (device recovery)', async () => {
+    const reloadMock = vi.fn();
+    const originalLocation = window.location;
+    delete (window as any).location;
+    window.location = { reload: reloadMock } as any;
+
+    // Server returns 200: device already registered, recovery token provided
+    fetchSpy.mockResolvedValueOnce({
+      status: 200,
+      json: async () => ({
+        data: {
+          id: 'device-123',
+          name: 'My Device',
+          token: 'recovery-token-abc',
+        },
+      }),
+    });
+
+    // Start the pincode request
+    const pincodePromise = device['requestPincode']('test-hardware-id').catch(
+      (e: Error) => e.message
+    );
+
+    // Flush microtasks so the fetch resolves and storeCredentials is called.
+    // Use advanceTimersByTimeAsync(0) which drains the microtask queue in vitest.
+    await vi.advanceTimersByTimeAsync(0);
+
+    // Credentials must have been stored with the recovered token
+    expect(mockIntegration.storeCredentials).toHaveBeenCalledWith(
+      JSON.stringify({
+        device: {
+          id: 'device-123',
+          name: 'My Device',
+          token: 'recovery-token-abc',
+        },
+      })
+    );
+
+    // Page reload must have been triggered
+    expect(reloadMock).toHaveBeenCalled();
+
+    // After recovery the function must NOT make any further fetch calls.
+    // Close the device so the idle loop exits.
+    device['closing'] = true;
+    await vi.advanceTimersByTimeAsync(2000);
+
+    const result = await pincodePromise;
+    expect(result).toBe('Pincode request cancelled: device is closing');
+
+    // Only one fetch call should have been made (the recovery request)
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+
+    window.location = originalLocation;
+  });
+
+  it('should not retry the registration request after a successful recovery', async () => {
+    const reloadMock = vi.fn();
+    const originalLocation = window.location;
+    delete (window as any).location;
+    window.location = { reload: reloadMock } as any;
+
+    // Server returns 200 for recovery on first call
+    fetchSpy.mockResolvedValueOnce({
+      status: 200,
+      json: async () => ({
+        data: { id: 'dev-1', name: 'Device', token: 'tok-1' },
+      }),
+    });
+
+    // If the bug is present a second fetch would be made with status 201, causing
+    // the registration (pincode) flow to start even though credentials were stored.
+    fetchSpy.mockResolvedValueOnce({
+      status: 201,
+      json: async () => ({ data: { pincode: 'SHOULDNOTBEUSED' } }),
+    });
+
+    const pincodePromise = device['requestPincode']('test-hardware-id').catch(
+      (e: Error) => e.message
+    );
+
+    // Flush microtasks so the fetch and credential-store steps complete
+    await vi.advanceTimersByTimeAsync(0);
+
+    // Close the device to stop the idle loop and let the promise settle
+    device['closing'] = true;
+    await vi.advanceTimersByTimeAsync(2000);
+
+    const result = await pincodePromise;
+
+    // The function must exit via closing, not via a pincode return
+    expect(result).toBe('Pincode request cancelled: device is closing');
+
+    // Only one fetch call (the recovery request) - no retry should have occurred
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+
+    window.location = originalLocation;
+  });
 });
 
 describe('Device - loginOrRegister (non-blocking login)', () => {

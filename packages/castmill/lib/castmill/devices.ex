@@ -437,8 +437,13 @@ defmodule Castmill.Devices do
           token = generate_token()
 
           case update_device(device, %{token: token}) do
-            {:ok, device} ->
-              device
+            {:ok, updated_device} ->
+              # Explicitly set the virtual :token field on the returned struct so
+              # that callers (e.g. the JSON view) can read the plain-text token.
+              # Ecto does not persist virtual fields to the database, but we need
+              # the value available in memory after the update so the controller
+              # can include it in the HTTP response sent back to the device.
+              %{updated_device | token: token}
 
             {:error, changeset} ->
               Repo.rollback("Failed to update device: #{inspect(changeset.errors)}")
