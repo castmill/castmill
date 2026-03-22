@@ -471,8 +471,8 @@ const NetworkUsers: Component = () => {
               value={selectedInviteOrg()}
               fetchItems={fetchOrganizationsForInvite}
               renderItem={(org: Organization) => (
-                <div class="org-combobox-item">
-                  <div class="org-name">{org.name}</div>
+                <div class={styles['org-combobox-item']}>
+                  <div class={styles['org-name']}>{org.name}</div>
                 </div>
               )}
               onSelect={(org: Organization) => setSelectedInviteOrg(org)}
