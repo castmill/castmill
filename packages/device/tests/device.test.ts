@@ -596,6 +596,7 @@ describe('Device - Pincode Polling', () => {
 
     // Start the pincode request (it will await the first fetch which rejects)
     const pincodePromise = device['requestPincode']('test-hardware-id');
+    const resultPromise = pincodePromise.catch((e) => e);
 
     // Advance through the backoff delays for each retry
     // Retry 1: 1s delay (1000 * 2^0)
@@ -671,6 +672,196 @@ describe('Device - Pincode Polling', () => {
     expect(backoffCalls[0][1]).toBe(1000);
     expect(backoffCalls[1][1]).toBe(2000);
     expect(backoffCalls[2][1]).toBe(4000);
+  });
+
+  it('should store flattened org and network names from recovery response', async () => {
+    const originalLocation = window.location;
+    delete (window as any).location;
+    window.location = {
+      reload: vi.fn(() => {
+        device['closing'] = true;
+      }),
+    } as any;
+
+    fetchSpy.mockResolvedValueOnce({
+      status: 200,
+      json: async () => ({
+        data: {
+          id: 'device-1',
+          name: 'Device 1',
+          token: 'token-1',
+          organization_name: 'Org Alpha',
+          network_name: 'Network One',
+        },
+      }),
+    });
+
+    const pincodePromise = device['requestPincode']('test-hardware-id');
+    const resultPromise = pincodePromise.catch((e) => e);
+
+    // Let the retry delay elapse so loop exits after closing is set by reload()
+    await vi.advanceTimersByTimeAsync(1000);
+    const error = await resultPromise;
+
+    expect(mockIntegration.storeCredentials).toHaveBeenCalledWith(
+      JSON.stringify({
+        device: {
+          id: 'device-1',
+          name: 'Device 1',
+          token: 'token-1',
+          organizationName: 'Org Alpha',
+          networkName: 'Network One',
+        },
+      })
+    );
+    expect(window.location.reload).toHaveBeenCalled();
+    expect(error).toBeInstanceOf(Error);
+
+    window.location = originalLocation;
+  });
+});
+
+describe('Device - Metadata Names', () => {
+  let device: Device;
+  let mockIntegration: any;
+
+  beforeEach(() => {
+    mockIntegration = {
+      getCredentials: vi.fn(),
+      getSetting: vi.fn(),
+    };
+
+    device = new Device(mockIntegration, {} as any);
+    device['baseUrl'] = 'http://localhost:4000';
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('should return organization/network names directly from flattened credentials', async () => {
+    mockIntegration.getCredentials.mockResolvedValue(
+      JSON.stringify({
+        device: {
+          id: 'device-1',
+          name: 'Device 1',
+          token: 'token-1',
+          organizationName: 'Org Alpha',
+          networkName: 'Network One',
+        },
+      })
+    );
+
+    const fetchSpy = vi.fn();
+    vi.stubGlobal('fetch', fetchSpy);
+
+    await expect(device.getOrganizationName()).resolves.toBe('Org Alpha');
+    await expect(device.getCastmillNetworkName()).resolves.toBe('Network One');
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
+
+  it('should fall back to channels metadata when flattened names are missing', async () => {
+    mockIntegration.getCredentials.mockResolvedValue(
+      JSON.stringify({
+        device: {
+          id: 'device-1',
+          name: 'Device 1',
+          token: 'token-1',
+        },
+      })
+    );
+
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: async () => ({
+          data: [
+            {
+              organization_name: 'Org Beta',
+              network_name: 'Network Two',
+            },
+          ],
+        }),
+      })
+    );
+
+    await expect(device.getOrganizationName()).resolves.toBe('Org Beta');
+    await expect(device.getCastmillNetworkName()).resolves.toBe('Network Two');
+  });
+});
+
+describe('Device - Registration Payload Normalization', () => {
+  let device: Device;
+  let mockIntegration: any;
+
+  beforeEach(() => {
+    mockIntegration = {
+      getCredentials: vi.fn(),
+      getSetting: vi.fn(),
+      getMachineGUID: vi.fn().mockResolvedValue('test-hardware-id'),
+      storeCredentials: vi.fn(),
+      getLocation: vi.fn().mockResolvedValue({ latitude: 0, longitude: 0 }),
+      getTimezone: vi.fn().mockResolvedValue('UTC'),
+    };
+
+    device = new Device(mockIntegration, {} as any, {
+      cache: { maxItems: 100 },
+    });
+    device['baseUrl'] = 'http://localhost:4000';
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('should store flattened credentials from device:registered payload', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({
+        status: 201,
+        json: async () => ({ data: { pincode: 'ABC123' } }),
+      })
+    );
+
+    const { mockPhoenixChannel } = installPhoenixMocks();
+
+    const originalLocation = window.location;
+    delete (window as any).location;
+    window.location = { reload: vi.fn() } as any;
+
+    await device.register('test-hardware-id');
+
+    const onCall = mockPhoenixChannel.on.mock.calls.find(
+      (call) => call[0] === 'device:registered'
+    );
+    expect(onCall).toBeDefined();
+
+    const handler = onCall![1];
+    await handler({
+      device: {
+        id: 'device-1',
+        name: 'Device 1',
+        token: 'token-1',
+        organizationName: 'Org Gamma',
+        networkName: 'Network Three',
+      },
+    });
+
+    expect(mockIntegration.storeCredentials).toHaveBeenCalledWith(
+      JSON.stringify({
+        device: {
+          id: 'device-1',
+          name: 'Device 1',
+          token: 'token-1',
+          organizationName: 'Org Gamma',
+          networkName: 'Network Three',
+        },
+      })
+    );
+    expect(window.location.reload).toHaveBeenCalled();
+
+    window.location = originalLocation;
   });
 });
 

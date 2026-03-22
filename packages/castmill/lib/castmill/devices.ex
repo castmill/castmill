@@ -315,11 +315,19 @@ defmodule Castmill.Devices do
 
       case add_channel_result do
         {:ok, _channel} ->
+          organization = Castmill.Organizations.get_organization(device.organization_id)
+          network =
+            if organization && organization.network_id,
+              do: Castmill.Networks.get_network(organization.network_id),
+              else: nil
+
           Endpoint.broadcast("register:#{device.hardware_id}", "device:registered", %{
             device: %{
               id: device.id,
               name: device.name,
-              token: token
+              token: token,
+              organizationName: organization && organization.name,
+              networkName: network && network.name
             }
           })
 
@@ -492,7 +500,7 @@ defmodule Castmill.Devices do
       )
 
     Repo.all(query)
-    |> Repo.preload(:entries)
+    |> Repo.preload([:entries, organization: :network])
   end
 
   @doc """

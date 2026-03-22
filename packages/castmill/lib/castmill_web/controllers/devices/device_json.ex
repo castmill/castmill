@@ -2,6 +2,7 @@ defmodule CastmillWeb.DeviceJSON do
   alias Castmill.Devices.Device
   alias Castmill.Devices.DevicesRegistrations
   alias Castmill.Resources.Channel
+  alias Castmill.Organizations
 
   @doc """
   Renders a list of channels
@@ -21,11 +22,19 @@ defmodule CastmillWeb.DeviceJSON do
   Renders the recovery information for a device.
   """
   def recover(%{device: device}) do
+    organization = Organizations.get_organization(device.organization_id)
+    network =
+      if organization && organization.network_id,
+        do: Castmill.Networks.get_network(organization.network_id),
+        else: nil
+
     %{
       data: %{
         id: device.id,
         name: device.name,
-        token: device.token
+        token: device.token,
+        organization_name: organization && organization.name,
+        network_name: network && network.name
       }
     }
   end
