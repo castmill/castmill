@@ -316,6 +316,7 @@ defmodule Castmill.Devices do
       case add_channel_result do
         {:ok, _channel} ->
           organization = Castmill.Organizations.get_organization(device.organization_id)
+
           network =
             if organization && organization.network_id,
               do: Castmill.Networks.get_network(organization.network_id),

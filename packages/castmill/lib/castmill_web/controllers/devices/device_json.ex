@@ -23,6 +23,7 @@ defmodule CastmillWeb.DeviceJSON do
   """
   def recover(%{device: device}) do
     organization = Organizations.get_organization(device.organization_id)
+
     network =
       if organization && organization.network_id,
         do: Castmill.Networks.get_network(organization.network_id),

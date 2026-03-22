@@ -81,8 +81,12 @@ defimpl Jason.Encoder, for: Castmill.Resources.Channel do
 
     network_name =
       case channel.organization do
-        %Ecto.Association.NotLoaded{} -> nil
-        nil -> nil
+        %Ecto.Association.NotLoaded{} ->
+          nil
+
+        nil ->
+          nil
+
         organization ->
           case organization.network do
             %Ecto.Association.NotLoaded{} -> nil
