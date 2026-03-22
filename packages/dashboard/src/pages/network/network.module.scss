@@ -2,7 +2,6 @@
 .network-page {
   text-align: left;
   margin: 1em;
-  max-width: 80em;
   padding-bottom: 4em;
 
   .page-header {
@@ -262,6 +261,10 @@
     tbody tr:last-child td {
       border-bottom: none;
     }
+
+    .actions-column {
+      text-align: right;
+    }
   }
 
   .actions-row {
@@ -269,10 +272,6 @@
     gap: 0.5em;
     justify-content: flex-end;
     align-items: center;
-  }
-
-  .actions-column {
-    text-align: right;
   }
 
   .status-active {

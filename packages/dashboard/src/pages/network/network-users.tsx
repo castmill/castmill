@@ -463,7 +463,7 @@ const NetworkUsers: Component = () => {
             setInviteError(null);
           }}
         >
-          <div class="invite-form">
+          <div class={styles['invite-form']}>
             <ComboBox<Organization>
               id="invite-org-selector"
               label={t('network.users.selectOrganization')}
@@ -471,8 +471,8 @@ const NetworkUsers: Component = () => {
               value={selectedInviteOrg()}
               fetchItems={fetchOrganizationsForInvite}
               renderItem={(org: Organization) => (
-                <div class="org-combobox-item">
-                  <div class="org-name">{org.name}</div>
+                <div class={styles['org-combobox-item']}>
+                  <div class={styles['org-name']}>{org.name}</div>
                 </div>
               )}
               onSelect={(org: Organization) => setSelectedInviteOrg(org)}
@@ -481,46 +481,42 @@ const NetworkUsers: Component = () => {
               onClear={() => setSelectedInviteOrg(undefined)}
             />
 
-            <div style="margin-top: 1em;">
-              <FormItem
-                label={t('network.users.inviteEmailLabel')}
-                id="invite-email"
-                value={inviteEmail()}
-                placeholder={t('network.users.inviteEmailPlaceholder')}
-                type="email"
-                onInput={(value) => setInviteEmail(String(value))}
-              />
-            </div>
+            <FormItem
+              label={t('network.users.inviteEmailLabel')}
+              id="invite-email"
+              value={inviteEmail()}
+              placeholder={t('network.users.inviteEmailPlaceholder')}
+              type="email"
+              onInput={(value) => setInviteEmail(String(value))}
+            />
 
-            <div style="margin-top: 1em;">
-              <Dropdown
-                id="invite-role"
-                name="role"
-                label={t('network.users.roleLabel')}
-                items={[
-                  {
-                    name: t('network.users.roleAdmin'),
-                    value: 'admin',
-                  },
-                  {
-                    name: t('network.users.roleMember'),
-                    value: 'member',
-                  },
-                ]}
-                defaultValue={inviteRole()}
-                onSelectChange={(value: string | null) => {
-                  if (value) {
-                    setInviteRole(value as 'admin' | 'member');
-                  }
-                }}
-              />
-            </div>
+            <Dropdown
+              id="invite-role"
+              name="role"
+              label={t('network.users.roleLabel')}
+              items={[
+                {
+                  name: t('network.users.roleAdmin'),
+                  value: 'admin',
+                },
+                {
+                  name: t('network.users.roleMember'),
+                  value: 'member',
+                },
+              ]}
+              defaultValue={inviteRole()}
+              onSelectChange={(value: string | null) => {
+                if (value) {
+                  setInviteRole(value as 'admin' | 'member');
+                }
+              }}
+            />
 
             <Show when={inviteError()}>
-              <div class="error-message">{inviteError()}</div>
+              <div class={styles['error-message']}>{inviteError()}</div>
             </Show>
 
-            <div class="modal-actions">
+            <div class={styles['modal-actions']}>
               <Button
                 label={
                   inviting()
@@ -560,7 +556,7 @@ const NetworkUsers: Component = () => {
             setBlockUserReason('');
           }}
         >
-          <div class="block-form">
+          <div class={styles['block-form']}>
             <FormItem
               label={t('network.blockReason')}
               id="block-user-reason"
@@ -568,7 +564,7 @@ const NetworkUsers: Component = () => {
               placeholder={t('network.blockReasonPlaceholder')}
               onInput={(value) => setBlockUserReason(value as string)}
             />
-            <div class="modal-actions">
+            <div class={styles['modal-actions']}>
               <Button
                 label={
                   blockingUser()

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Background -->
+  <rect x="2" y="2" width="60" height="60" rx="8" fill="#1a1a2e" stroke="#2d2d4a" stroke-width="2"/>
+  
+  <!-- Photo frame -->
+  <rect x="10" y="12" width="44" height="40" rx="3" fill="#2d2d4a" stroke="#4a4a6a" stroke-width="2"/>
+  
+  <!-- Mountain landscape -->
+  <polygon points="10,44 24,28 34,38 44,26 54,44" fill="#10b981"/>
+  <polygon points="10,44 18,34 30,44" fill="#059669"/>
+  
+  <!-- Sun -->
+  <circle cx="46" cy="22" r="6" fill="#fbbf24"/>
+  
+  <!-- Frame inner border highlight -->
+  <rect x="12" y="14" width="40" height="36" rx="2" fill="none" stroke="#5a5a7a" stroke-width="0.5" opacity="0.5"/>
+</svg>
