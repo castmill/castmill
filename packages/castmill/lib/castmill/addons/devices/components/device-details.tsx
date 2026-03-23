@@ -1,4 +1,4 @@
-import { createSignal, createEffect } from 'solid-js';
+import { createSignal, createEffect, on } from 'solid-js';
 
 import { Device } from '../interfaces/device.interface';
 import { Button, FormItem } from '@castmill/ui-common';
@@ -31,6 +31,18 @@ export const DeviceDetails = (props: {
   const [errors, setErrors] = createSignal(new Map());
 
   const [onlineStatus, setOnlineStatus] = createSignal('');
+
+  createEffect(
+    on(
+      () => props.device.id,
+      () => {
+        setName(props.device.name);
+        setDescription(props.device.description);
+        setIsFormModified(false);
+        setErrors(new Map());
+      }
+    )
+  );
 
   const validateField = (fieldId: string, value: string) => {
     let error = '';
@@ -98,9 +110,10 @@ export const DeviceDetails = (props: {
             id="name"
             value={name()}
             placeholder="Enter device name"
-            onInput={(value: string) => {
-              setName(value);
-              validateField('name', value);
+            onInput={(value: string | number | boolean) => {
+              const nextValue = String(value);
+              setName(nextValue);
+              validateField('name', nextValue);
             }}
           >
             <div class="error">{errors().get('name')}</div>
@@ -111,9 +124,10 @@ export const DeviceDetails = (props: {
             id="description"
             value={description()}
             placeholder="Enter a description"
-            onInput={(value: string) => {
-              setDescription(value);
-              validateField('description', value);
+            onInput={(value: string | number | boolean) => {
+              const nextValue = String(value);
+              setDescription(nextValue);
+              validateField('description', nextValue);
             }}
           >
             <div class="error">{errors().get('description')}</div>

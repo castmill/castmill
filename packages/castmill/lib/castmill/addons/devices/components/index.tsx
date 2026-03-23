@@ -815,16 +815,20 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
           size="xl"
           showBackdrop="auto"
         >
-          <DeviceView
-            baseUrl={props.store.env.baseUrl}
-            organization_id={props.store.organizations.selectedId}
-            device={currentDevice()!}
-            store={props.store}
-            onChange={(device) => {
-              updateItem(device.id, device);
-            }}
-            t={t}
-          />
+          <Show when={currentDevice()} keyed>
+            {(device) => (
+              <DeviceView
+                baseUrl={props.store.env.baseUrl}
+                organization_id={props.store.organizations.selectedId}
+                device={device}
+                store={props.store}
+                onChange={(updatedDevice) => {
+                  updateItem(updatedDevice.id, updatedDevice);
+                }}
+                t={t}
+              />
+            )}
+          </Show>
         </Drawer>
       </Show>
 
