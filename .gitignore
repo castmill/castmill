@@ -61,3 +61,4 @@ packages/platforms/electron-player/out/
 
 # Temporary config files
 *.timestamp-*
+packages/platforms/android-player/android/local.properties
