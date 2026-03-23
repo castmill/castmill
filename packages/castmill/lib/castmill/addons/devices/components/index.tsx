@@ -15,6 +15,7 @@ import {
   IconButton,
   ConfirmDialog,
   Modal,
+  Drawer,
   Column,
   TableView,
   TableViewRef,
@@ -806,10 +807,13 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
         </Modal>
       </Show>
       <Show when={showModal()}>
-        <Modal
+        <Drawer
           title={`Device "${currentDevice()?.name}"`}
           description={t('devices.deviceDetails')}
           onClose={closeModalAndClearUrl}
+          placement="right"
+          size="xl"
+          showBackdrop="auto"
         >
           <DeviceView
             baseUrl={props.store.env.baseUrl}
@@ -821,7 +825,7 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
             }}
             t={t}
           />
-        </Modal>
+        </Drawer>
       </Show>
 
       <ConfirmDialog
