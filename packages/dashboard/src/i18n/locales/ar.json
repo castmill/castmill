@@ -938,7 +938,17 @@
       "checkUpdatesDescription": "التحقق من التحديثات وتثبيتها. لن يؤدي هذا إلى إعادة تشغيل الجهاز",
       "updateFirmware": "تحديث البرنامج الثابت",
       "updateFirmwareDescription": "يحدث البرنامج الثابت للجهاز",
-      "offlineMessage": "الجهاز غير متصل بالإنترنت، لذا لا يمكن إرسال أوامر إليه"
+      "offlineMessage": "الجهاز غير متصل بالإنترنت، لذا لا يمكن إرسال أوامر إليه",
+      "autorecoveryUpdated": "تم تحديث الاسترداد التلقائي",
+      "autorecoveryUpdateFailed": "فشل تحديث الاسترداد التلقائي",
+      "edit": "تعديل",
+      "enableForOneHour": "تفعيل لمدة ساعة",
+      "enableForever": "تفعيل دائم",
+      "disable": "تعطيل",
+      "recoverLostSettingsLabel": "استعادة الإعدادات المفقودة",
+      "disabled": "معطل",
+      "enabledMinutesRemaining": "مفعل (متبقي {{minutes}} دقيقة)",
+      "enabledForever": "مفعل دائمًا"
     },
     "cache": {
       "title": "ذاكرة التخزين المؤقت للجهاز",

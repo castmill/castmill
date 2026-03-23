@@ -933,7 +933,17 @@
       "checkUpdatesDescription": "Sök efter uppdateringar och installera dem. Detta kommer inte att starta om enheten",
       "updateFirmware": "Uppdatera firmware",
       "updateFirmwareDescription": "Uppdaterar enhetens firmware",
-      "offlineMessage": "Enheten är offline, så inga kommandon kan skickas till den"
+      "offlineMessage": "Enheten är offline, så inga kommandon kan skickas till den",
+      "autorecoveryUpdated": "Autoåterställning har uppdaterats",
+      "autorecoveryUpdateFailed": "Misslyckades med att uppdatera autoåterställning",
+      "edit": "Redigera",
+      "enableForOneHour": "Aktivera i en timme",
+      "enableForever": "Aktivera för alltid",
+      "disable": "Inaktivera",
+      "recoverLostSettingsLabel": "Återställ förlorade inställningar",
+      "disabled": "Inaktiverad",
+      "enabledMinutesRemaining": "Aktiverad ({{minutes}} minuter kvar)",
+      "enabledForever": "Aktiverad för alltid"
     },
     "cache": {
       "title": "Enhetscache",

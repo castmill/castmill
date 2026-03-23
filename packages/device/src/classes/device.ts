@@ -50,7 +50,15 @@ const supportedDebugModes = ['remote', 'local', 'none'];
 
 export enum Status {
   Registering = 'registering',
+  RecoveryBlocked = 'recovery_blocked',
   Ready = 'ready', // Player is ready to play content, but may be offline
+}
+
+class RecoveryBlockedError extends Error {
+  constructor() {
+    super('Device recovery blocked for security reasons');
+    this.name = 'RecoveryBlockedError';
+  }
 }
 
 export interface DeviceMessage {
@@ -160,6 +168,7 @@ export class Device extends EventEmitter {
   private timerManager: TimerManager;
   private playerContainer?: HTMLElement;
   private timerOffOverlay?: HTMLDivElement;
+  private recoveryWatcherRunning = false;
 
   // The base url is the url of the Castmill API. By default it is assumed that the API is
   // hosted at the same domain as this device and accessible through a relative path.
@@ -484,10 +493,22 @@ export class Device extends EventEmitter {
           // another POST /registrations call that would overwrite the
           // recovered credentials with a new pincode.
           recovered = true;
+        } else if (pincodeResponse.status === 403) {
+          const body = await pincodeResponse.json().catch(() => ({}));
+
+          if (body?.error_code === 'recovery_blocked') {
+            throw new RecoveryBlockedError();
+          }
+
+          throw new Error(`Invalid status ${pincodeResponse.status}`);
         } else {
           throw new Error(`Invalid status ${pincodeResponse.status}`);
         }
       } catch (error) {
+        if (error instanceof RecoveryBlockedError) {
+          throw error;
+        }
+
         tries++;
         const delay = getReconnectDelay(tries);
         this.logger.info(
@@ -557,8 +578,81 @@ export class Device extends EventEmitter {
 
       return { status: Status.Ready };
     } else {
-      const pincode = await this.register(hardwareId);
-      return { status: Status.Registering, pincode };
+      try {
+        const pincode = await this.register(hardwareId);
+        return { status: Status.Registering, pincode };
+      } catch (error) {
+        if (error instanceof RecoveryBlockedError) {
+          this.startRecoveryBlockedWatcher(hardwareId);
+          return { status: Status.RecoveryBlocked };
+        }
+
+        throw error;
+      }
+    }
+  }
+
+  private async startRecoveryBlockedWatcher(hardwareId: string) {
+    if (this.recoveryWatcherRunning) {
+      return;
+    }
+
+    this.recoveryWatcherRunning = true;
+
+    try {
+      while (!this.closing) {
+        try {
+          const location = await this.integration.getLocation!();
+          const timezone = await this.integration.getTimezone!();
+
+          const response = await fetch(`${this.baseUrl}/registrations`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              hardware_id: hardwareId,
+              location,
+              timezone,
+            }),
+          });
+
+          if (response.status === 200) {
+            const { data } = await response.json();
+            const credentials = {
+              device: {
+                id: data.id,
+                name: data.name,
+                token: data.token,
+              },
+            };
+
+            await this.integration.storeCredentials!(
+              JSON.stringify(credentials)
+            );
+            window.location.reload();
+            return;
+          }
+
+          if (response.status === 201) {
+            // Device moved back to regular registration flow.
+            window.location.reload();
+            return;
+          }
+
+          if (response.status !== 403) {
+            this.logger.info(
+              `Unexpected status while waiting for recovery eligibility: ${response.status}`
+            );
+          }
+        } catch (error) {
+          this.logger.info(`Recovery eligibility check failed: ${error}`);
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 5000));
+      }
+    } finally {
+      this.recoveryWatcherRunning = false;
     }
   }
 

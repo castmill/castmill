@@ -157,7 +157,7 @@ defmodule Castmill.DevicesTest do
       assert {:ok, _device} = Devices.verify_device_token(device.id, token)
     end
 
-    test "recover_device/2 recovers a device that may have lost its token" do
+    test "recover_device/2 recovers a device when IP matches even without autorecover_until" do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
 
@@ -169,16 +169,6 @@ defmodule Castmill.DevicesTest do
                  name: "some device"
                })
 
-      # The updated at isn't older than an hour, so it should not be possible to recover the device
-      assert {:error, _} = Devices.recover_device(device.hardware_id, device.last_ip)
-
-      # Setting the updated_at to an hour ago
-      hour_ago = DateTime.utc_now() |> DateTime.add(-1, :hour)
-
-      from(d in Devices.Device, where: d.id == ^device.id)
-      |> Repo.update_all(set: [updated_at: hour_ago])
-
-      # Now it should be possible to recover the device
       assert {:ok, _} = Devices.recover_device(device.hardware_id, device.last_ip)
     end
 
@@ -193,12 +183,6 @@ defmodule Castmill.DevicesTest do
                Devices.register_device(organization.id, devices_registration.pincode, %{
                  name: "some device"
                })
-
-      # Setting the updated_at to an hour ago so recovery is permitted
-      hour_ago = DateTime.utc_now() |> DateTime.add(-1, :hour)
-
-      from(d in Devices.Device, where: d.id == ^device.id)
-      |> Repo.update_all(set: [updated_at: hour_ago])
 
       assert {:ok, recovered_device} =
                Devices.recover_device(device.hardware_id, device.last_ip)
@@ -215,7 +199,7 @@ defmodule Castmill.DevicesTest do
       assert {:ok, _} = Devices.verify_device_token(device.id, recovered_device.token)
     end
 
-    test "recover_device/2 do not recover a device with different ip address" do
+    test "recover_device/2 blocks recovery for different IP when autorecover_until is inactive" do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
 
@@ -227,7 +211,27 @@ defmodule Castmill.DevicesTest do
                  name: "some device"
                })
 
-      assert {:error, _} = Devices.recover_device(device.hardware_id, "128.2.3.1")
+      assert {:error, :recovery_blocked} = Devices.recover_device(device.hardware_id, "128.2.3.1")
+    end
+
+    test "recover_device/2 allows different IP when autorecover_until is active" do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+
+      {:ok, devices_registration} =
+        device_registration_fixture(%{hardware_id: "some hardware id", pincode: "some pincode"})
+
+      assert {:ok, {device, _token}} =
+               Devices.register_device(organization.id, devices_registration.pincode, %{
+                 name: "some device"
+               })
+
+      future_time = DateTime.utc_now() |> DateTime.add(1, :hour) |> DateTime.truncate(:second)
+
+      from(d in Devices.Device, where: d.id == ^device.id)
+      |> Repo.update_all(set: [autorecover_until: future_time])
+
+      assert {:ok, _} = Devices.recover_device(device.hardware_id, "128.2.3.1")
     end
 
     test "add_channel/2 adds a channel to a device" do

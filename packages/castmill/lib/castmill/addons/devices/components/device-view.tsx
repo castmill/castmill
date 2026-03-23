@@ -99,7 +99,15 @@ const DeviceView: Component<{
       title: t('common.maintainance'),
       content: () => (
         <div>
-          <Maintainance baseUrl={props.baseUrl} device={props.device} t={t} />
+          <Maintainance
+            baseUrl={props.baseUrl}
+            organizationId={props.organization_id}
+            device={props.device}
+            onDeviceUpdated={(device) => {
+              props.onChange?.({ ...props.device, ...device });
+            }}
+            t={t}
+          />
         </div>
       ),
     },

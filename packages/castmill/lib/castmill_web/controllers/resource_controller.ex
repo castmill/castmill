@@ -225,22 +225,46 @@ defmodule CastmillWeb.ResourceController do
         } = params
       ) do
     with {:ok, params} <- Tarams.cast(params, @update_params_schema) do
-      device = %Device{
-        id: id,
-        organization_id: organization_id
-      }
+      case Devices.get_device(id) do
+        %Device{} = device ->
+          if device.organization_id != organization_id do
+            conn
+            |> put_status(:not_found)
+            |> Phoenix.Controller.json(%{errors: ["Device not found"]})
+            |> halt()
+          else
+            Devices.update_device(device, params.update)
+            |> case do
+              {:ok, device} ->
+                if Map.has_key?(params.update, "autorecover_until") do
+                  Phoenix.PubSub.broadcast(
+                    Castmill.PubSub,
+                    "devices:#{device.id}",
+                    %{
+                      update: "device",
+                      resource: "device",
+                      action: "update",
+                      data: %{autorecover_until: device.autorecover_until}
+                    }
+                  )
+                end
 
-      Devices.update_device(device, params.update)
-      |> case do
-        {:ok, device} ->
-          conn
-          |> put_status(:ok)
-          |> json(device)
+                conn
+                |> put_status(:ok)
+                |> json(device)
 
-        {:error, errors} ->
+              {:error, errors} ->
+                conn
+                |> put_status(:bad_request)
+                |> Phoenix.Controller.json(%{errors: errors})
+                |> halt()
+            end
+          end
+
+        nil ->
           conn
-          |> put_status(:bad_request)
-          |> Phoenix.Controller.json(%{errors: errors})
+          |> put_status(:not_found)
+          |> Phoenix.Controller.json(%{errors: ["Device not found"]})
           |> halt()
       end
     else

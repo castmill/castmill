@@ -7,8 +7,9 @@ import { AddonStore } from '../../common/interfaces/addon-store';
 import { BsCheckLg, BsX } from 'solid-icons/bs';
 
 export interface DeviceUpdate {
-  name: string;
-  description: string;
+  name?: string;
+  description?: string;
+  autorecover_until?: string | null;
 }
 
 // Optionally we should allow using protonmaps

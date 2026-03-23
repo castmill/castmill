@@ -950,7 +950,17 @@
       "checkUpdatesDescription": "Rechercher les mises à jour et les installer. Cela ne redémarrera pas l'appareil",
       "updateFirmware": "Mettre à jour le firmware",
       "updateFirmwareDescription": "Met à jour le firmware de l'appareil",
-      "offlineMessage": "L'appareil est hors ligne, aucune commande ne peut donc lui être envoyée"
+      "offlineMessage": "L'appareil est hors ligne, aucune commande ne peut donc lui être envoyée",
+      "autorecoveryUpdated": "La récupération automatique a été mise à jour",
+      "autorecoveryUpdateFailed": "Échec de la mise à jour de la récupération automatique",
+      "edit": "Modifier",
+      "enableForOneHour": "Activer pendant une heure",
+      "enableForever": "Activer pour toujours",
+      "disable": "Désactiver",
+      "recoverLostSettingsLabel": "Récupérer les paramètres perdus",
+      "disabled": "Désactivé",
+      "enabledMinutesRemaining": "Activé ({{minutes}} minutes restantes)",
+      "enabledForever": "Activé pour toujours"
     },
     "cache": {
       "title": "Cache de l'Appareil",

@@ -957,7 +957,17 @@
       "checkUpdatesDescription": "Nach Updates suchen und installieren. Dies startet das Gerät nicht neu",
       "updateFirmware": "Firmware aktualisieren",
       "updateFirmwareDescription": "Aktualisiert die Firmware des Geräts",
-      "offlineMessage": "Gerät ist offline, daher können keine Befehle gesendet werden"
+      "offlineMessage": "Gerät ist offline, daher können keine Befehle gesendet werden",
+      "autorecoveryUpdated": "Automatische Wiederherstellung wurde aktualisiert",
+      "autorecoveryUpdateFailed": "Automatische Wiederherstellung konnte nicht aktualisiert werden",
+      "edit": "Bearbeiten",
+      "enableForOneHour": "Für eine Stunde aktivieren",
+      "enableForever": "Für immer aktivieren",
+      "disable": "Deaktivieren",
+      "recoverLostSettingsLabel": "Verlorene Einstellungen wiederherstellen",
+      "disabled": "Deaktiviert",
+      "enabledMinutesRemaining": "Aktiviert (noch {{minutes}} Minuten)",
+      "enabledForever": "Für immer aktiviert"
     },
     "cache": {
       "title": "Geräte-Cache",

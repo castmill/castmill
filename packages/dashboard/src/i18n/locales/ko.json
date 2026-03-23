@@ -938,7 +938,17 @@
       "checkUpdatesDescription": "업데이트를 확인하고 설치합니다. 기기를 재시작하지 않습니다",
       "updateFirmware": "펌웨어 업데이트",
       "updateFirmwareDescription": "기기의 펌웨어를 업데이트합니다",
-      "offlineMessage": "기기가 오프라인 상태이므로 명령을 보낼 수 없습니다"
+      "offlineMessage": "기기가 오프라인 상태이므로 명령을 보낼 수 없습니다",
+      "autorecoveryUpdated": "자동 복구가 업데이트되었습니다",
+      "autorecoveryUpdateFailed": "자동 복구 업데이트에 실패했습니다",
+      "edit": "편집",
+      "enableForOneHour": "1시간 동안 활성화",
+      "enableForever": "영구 활성화",
+      "disable": "비활성화",
+      "recoverLostSettingsLabel": "분실 설정 복구",
+      "disabled": "비활성화됨",
+      "enabledMinutesRemaining": "활성화됨 ({{minutes}}분 남음)",
+      "enabledForever": "영구 활성화됨"
     },
     "cache": {
       "title": "기기 캐시",

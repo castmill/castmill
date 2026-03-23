@@ -414,9 +414,11 @@ defmodule Castmill.Devices do
 
   @doc """
     Automatically recovers a device. If a device has lost its token for some reason, it is possible to recover it
-    by providing the device id only, but some limitations apply, a device can only be recovered once per hour,
-    it must have the same IP address as the last time it was online, and it must have the "auto_recovery"
-    setting enabled.
+    by providing the device id only.
+
+    Recovery is allowed when either:
+    - The current IP matches the last known device IP.
+    - The IP does not match, but `autorecover_until` is still in the future.
   """
   def recover_device(hardware_id, device_ip) do
     Repo.transaction(fn ->
@@ -427,11 +429,8 @@ defmodule Castmill.Devices do
         is_nil(device) ->
           Repo.rollback("Device not found")
 
-        device.last_ip != device_ip ->
-          Repo.rollback("IP mismatch")
-
-        DateTime.compare(device.updated_at, hour_ago()) == :gt ->
-          Repo.rollback("Device updated recently")
+        device.last_ip != device_ip and !autorecovery_active?(device.autorecover_until) ->
+          Repo.rollback(:recovery_blocked)
 
         true ->
           token = generate_token()
@@ -452,8 +451,10 @@ defmodule Castmill.Devices do
     end)
   end
 
-  defp hour_ago do
-    DateTime.utc_now() |> DateTime.add(-1, :hour)
+  defp autorecovery_active?(nil), do: false
+
+  defp autorecovery_active?(autorecover_until) do
+    DateTime.compare(autorecover_until, DateTime.utc_now()) == :gt
   end
 
   defp generate_token do
