@@ -18,6 +18,7 @@ import {
   TableViewRef,
   TableAction,
   Modal,
+  Drawer,
   ConfirmDialog,
   FetchDataOptions,
   TeamFilter,
@@ -721,10 +722,13 @@ const ChannelsPage: Component = () => {
         </Show>
 
         <Show when={showModal()}>
-          <Modal
+          <Drawer
             title={title()}
             description={t('channels.description')}
             onClose={closeModal}
+            placement="right"
+            size="xl"
+            showBackdrop="auto"
           >
             <ChannelView
               organizationId={store.organizations.selectedId!}
@@ -766,7 +770,7 @@ const ChannelsPage: Component = () => {
                 }
               }}
             />
-          </Modal>
+          </Drawer>
         </Show>
 
         <ConfirmDialog

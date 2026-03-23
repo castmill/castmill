@@ -52,7 +52,7 @@ export const Drawer: Component<DrawerProps> = (_props) => {
       placement: 'right' as DrawerPlacement,
       closeOnEscape: true,
       closeOnOverlayClick: true,
-      showBackdrop: 'auto' as boolean | 'auto',
+      showBackdrop: 'auto' as const,
       autoBackdropBreakpoint: 1280,
     },
     _props
@@ -176,6 +176,11 @@ export const Drawer: Component<DrawerProps> = (_props) => {
           aria-modal={hasBackdrop()}
           aria-label={props.title}
           class={panelClass()}
+          style={{
+            height: '100dvh',
+            'min-height': '100dvh',
+            'max-height': '100dvh',
+          }}
           ref={panelRef}
           tabIndex={-1}
           onClick={(event) => event.stopPropagation()}

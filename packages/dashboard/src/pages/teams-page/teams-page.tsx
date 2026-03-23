@@ -15,6 +15,7 @@ import {
   TableViewRef,
   TableAction,
   Modal,
+  Drawer,
   ConfirmDialog,
   FetchDataOptions,
   useToast,
@@ -295,10 +296,13 @@ const TeamsPage: Component = () => {
   return (
     <div class={`${styles.teamsPage}`}>
       <Show when={showModal()}>
-        <Modal
+        <Drawer
           title={title()}
           description={t('teams.description')}
           onClose={closeModal}
+          placement="right"
+          size="xl"
+          showBackdrop="auto"
         >
           <TeamView
             organizationId={store.organizations.selectedId!}
@@ -333,7 +337,7 @@ const TeamsPage: Component = () => {
               }
             }}
           />
-        </Modal>
+        </Drawer>
       </Show>
 
       <ConfirmDialog

@@ -14,6 +14,7 @@ import {
   Button,
   IconButton,
   Modal,
+  Drawer,
   TableAction,
   Column,
   TableView,
@@ -534,10 +535,13 @@ const LayoutsPage: Component<AddonComponentProps> = (props) => {
 
       {/* Layout Details Modal */}
       <Show when={showModal()}>
-        <Modal
+        <Drawer
           title={currentLayout()?.name || t('layouts.layoutDetails')}
           description={t('layouts.layoutDetails') || 'Layout details'}
           onClose={closeModalAndClearUrl}
+          placement="right"
+          size="xl"
+          showBackdrop="auto"
           contentClass="layout-modal"
         >
           <Show when={currentLayout()}>
@@ -551,7 +555,7 @@ const LayoutsPage: Component<AddonComponentProps> = (props) => {
               onClose={closeModalAndClearUrl}
             />
           </Show>
-        </Modal>
+        </Drawer>
       </Show>
 
       {/* Delete Confirmation Dialog */}

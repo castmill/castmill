@@ -14,6 +14,7 @@ import {
 import {
   Button,
   Modal,
+  Drawer,
   TableAction,
   Column,
   SortOptions,
@@ -590,10 +591,13 @@ const WidgetsPage: Component<{
       </Show>
 
       <Show when={showModal()}>
-        <Modal
+        <Drawer
           title={showModal()!.name}
           description={showModal()!.description || t('widgets.widgetDetails')}
           onClose={closeWidget}
+          placement="right"
+          size="xl"
+          showBackdrop="auto"
           contentClass="widget-details-modal"
         >
           <div class="widget-details-content">
@@ -618,7 +622,7 @@ const WidgetsPage: Component<{
             {/* Tabs using ui-common Tabs component */}
             <Tabs tabs={modalTabs()} initialIndex={initialTabIndex()} />
           </div>
-        </Modal>
+        </Drawer>
       </Show>
 
       <TableView<number, WidgetWithId>

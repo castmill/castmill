@@ -17,6 +17,7 @@ import {
   Button,
   IconButton,
   Modal,
+  Drawer,
   TableAction,
   Column,
   TableView,
@@ -1063,12 +1064,15 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
         </Modal>
       </Show>
       <Show when={showModal()}>
-        <Modal
+        <Drawer
           title={t('playlists.playlistTitle', {
             name: currentPlaylist()?.name,
           })}
           description={t('playlists.buildPlaylist')}
           onClose={closeModal}
+          placement="right"
+          size="xl"
+          showBackdrop="auto"
           contentClass="playlist-modal"
         >
           <PlaylistView
@@ -1082,7 +1086,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
             }}
             onNavigateAway={closeModal}
           />
-        </Modal>
+        </Drawer>
       </Show>
 
       <Show when={showRenameModal()}>

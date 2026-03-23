@@ -25,6 +25,7 @@ import {
   IconButton,
   ConfirmDialog,
   Modal,
+  Drawer,
   TableAction,
   Column,
   TableView,
@@ -872,10 +873,13 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
         </Modal>
       </Show>
       <Show when={showModal()}>
-        <Modal
+        <Drawer
           title={`Media "${showModal()?.name}"`}
           description=""
           onClose={closeModalAndClearUrl}
+          placement="right"
+          size="xl"
+          showBackdrop="auto"
           contentClass="medias-modal"
         >
           <MediaDetails
@@ -903,7 +907,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
               }
             }}
           />
-        </Modal>
+        </Drawer>
       </Show>
 
       <ConfirmDialog
