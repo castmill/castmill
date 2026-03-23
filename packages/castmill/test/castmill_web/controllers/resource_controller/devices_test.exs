@@ -416,7 +416,8 @@ defmodule CastmillWeb.ResourceController.DevicesTest do
       create_conn = post(conn, "/api/organizations/#{organization.id}/devices", device_params)
       %{"data" => %{"id" => device_id}} = json_response(create_conn, 201)
 
-      future_time = DateTime.utc_now() |> DateTime.add(3600, :second) |> DateTime.truncate(:second)
+      future_time =
+        DateTime.utc_now() |> DateTime.add(3600, :second) |> DateTime.truncate(:second)
 
       conn =
         patch(
@@ -426,7 +427,9 @@ defmodule CastmillWeb.ResourceController.DevicesTest do
         )
 
       assert json_response(conn, 200)
-      assert %Castmill.Devices.Device{autorecover_until: %DateTime{}} = Castmill.Devices.get_device(device_id)
+
+      assert %Castmill.Devices.Device{autorecover_until: %DateTime{}} =
+               Castmill.Devices.get_device(device_id)
 
       conn =
         patch(
@@ -436,7 +439,9 @@ defmodule CastmillWeb.ResourceController.DevicesTest do
         )
 
       assert json_response(conn, 200)
-      assert %Castmill.Devices.Device{autorecover_until: nil} = Castmill.Devices.get_device(device_id)
+
+      assert %Castmill.Devices.Device{autorecover_until: nil} =
+               Castmill.Devices.get_device(device_id)
     end
 
     test "deletes an existing device successfully", %{conn: conn, organization: organization} do
