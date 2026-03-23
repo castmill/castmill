@@ -2,6 +2,47 @@
   position: relative;
   display: inline-flex;
 
+  .castmill-menu-button-trigger {
+    font-size: 0.95em;
+    padding: 0.5em 0.95em;
+  }
+
+  &.castmill-menu-button-size-small {
+    .castmill-menu-button-trigger {
+      font-size: 0.85em;
+      padding: 0.35em 0.7em;
+    }
+
+    .castmill-menu-button-items button {
+      font-size: 0.8em;
+      padding: 0.45em 0.6em;
+    }
+  }
+
+  &.castmill-menu-button-size-medium {
+    .castmill-menu-button-trigger {
+      font-size: 0.95em;
+      padding: 0.5em 0.95em;
+    }
+
+    .castmill-menu-button-items button {
+      font-size: 0.85em;
+      padding: 0.5em 0.65em;
+    }
+  }
+
+  &.castmill-menu-button-size-large {
+    .castmill-menu-button-trigger {
+      font-size: 1em;
+      padding: 0.7em 1.35em;
+    }
+
+    .castmill-menu-button-items button {
+      font-size: 0.9em;
+      padding: 0.55em 0.7em;
+    }
+  }
+
   .castmill-menu-button-items {
     position: absolute;
     top: calc(100% + 0.4em);
@@ -23,8 +64,8 @@
       border: none;
       background: transparent;
       border-radius: 0.4em;
-      padding: 0.55em 0.7em;
-      font-size: 0.9em;
+      padding: 0.5em 0.65em;
+      font-size: 0.85em;
       color: #2f2f2f;
       cursor: pointer;
 
