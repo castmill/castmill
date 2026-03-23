@@ -632,7 +632,7 @@ defmodule CastmillWeb.NetworkDashboardController do
 
   defp get_network_stats(network_id) do
     organizations = Networks.list_organizations(network_id)
-    {_users, users_count} = Networks.list_users(network_id)
+    {_users, users_count} = Networks.list_users(network_id, [])
     devices = Networks.list_devices(network_id)
     teams = Networks.list_teams(network_id)
     total_storage = Networks.get_total_storage(network_id)
