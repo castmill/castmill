@@ -399,15 +399,57 @@ defmodule Castmill.Networks do
     [%User{}, ...]
   """
   def list_users(network_id) do
-    query =
+    list_users(network_id, [])
+  end
+
+  @doc """
+  Lists users in a network with optional pagination and search.
+
+  Options:
+    - `:page` - Page number (default: 1)
+    - `:page_size` - Items per page (default: 50)
+    - `:search` - Search term for name or email (optional)
+
+  ## Examples
+
+      iex> list_users(network_id, page: 1, page_size: 20, search: "john")
+      {[%User{}, ...], total_count}
+  """
+  def list_users(network_id, opts) when is_list(opts) do
+    page = Keyword.get(opts, :page, 1)
+    page_size = Keyword.get(opts, :page_size, 50)
+    search = Keyword.get(opts, :search)
+
+    offset = max((page - 1) * page_size, 0)
+
+    base_query =
       from(u in User,
         join: nu in NetworksUsers,
         on: nu.user_id == u.id,
-        where: nu.network_id == ^network_id,
-        select: u
+        where: nu.network_id == ^network_id
       )
 
-    Repo.all(query)
+    # Apply search filter if provided
+    base_query =
+      if search && String.trim(search) != "" do
+        search_term = "%#{String.downcase(search)}%"
+        from(u in base_query, where: ilike(u.email, ^search_term) or ilike(u.name, ^search_term))
+      else
+        base_query
+      end
+
+    # Get total count
+    total_count = Repo.aggregate(base_query, :count, :id)
+
+    # Get paginated results
+    users =
+      base_query
+      |> order_by([u], asc: u.email)
+      |> limit(^page_size)
+      |> offset(^offset)
+      |> Repo.all()
+
+    {users, total_count}
   end
 
   @doc """

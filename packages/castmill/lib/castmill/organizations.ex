@@ -825,6 +825,39 @@ defmodule Castmill.Organizations do
     |> Repo.aggregate(:count, :email)
   end
 
+  @doc """
+  Lists all pending organization invitations across all organizations in a network.
+  Used by the network admin dashboard.
+  """
+  def list_invitations_for_network(network_id) do
+    from(i in OrganizationsInvitation,
+      join: o in Organization,
+      on: o.id == i.organization_id,
+      where: o.network_id == ^network_id and i.status == "invited",
+      order_by: [desc: i.inserted_at],
+      preload: [:organization]
+    )
+    |> Repo.all()
+  end
+
+  @doc """
+  Deletes an organization invitation by ID, verifying it belongs to the given network.
+  Used by the network admin dashboard.
+  """
+  def delete_invitation_for_network(invitation_id, network_id) do
+    query =
+      from(i in OrganizationsInvitation,
+        join: o in Organization,
+        on: o.id == i.organization_id,
+        where: i.id == ^invitation_id and o.network_id == ^network_id
+      )
+
+    case Repo.one(query) do
+      nil -> {:error, :not_found}
+      invitation -> Repo.delete(invitation)
+    end
+  end
+
   defp maybe_search_by_email(query, nil), do: query
   defp maybe_search_by_email(query, ""), do: query
 

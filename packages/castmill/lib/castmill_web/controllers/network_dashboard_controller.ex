@@ -213,13 +213,30 @@ defmodule CastmillWeb.NetworkDashboardController do
   List all users in the network.
   Only accessible to network admins.
   """
-  def list_users(conn, _params) do
+  def list_users(conn, params) do
     with {:ok, network_id} <- get_admin_network_id(conn) do
-      users = Networks.list_users(network_id)
+      page = parse_int(params["page"], 1)
+      page_size = min(parse_int(params["page_size"], 50), 100)
+      search = params["search"]
+
+      {users, total_count} =
+        Networks.list_users(network_id,
+          page: page,
+          page_size: page_size,
+          search: search
+        )
 
       conn
       |> put_status(:ok)
-      |> json(Enum.map(users, &user_to_json/1))
+      |> json(%{
+        data: Enum.map(users, &user_to_json/1),
+        pagination: %{
+          page: page,
+          page_size: page_size,
+          total_count: total_count,
+          total_pages: ceil(total_count / page_size)
+        }
+      })
     else
       {:error, :not_admin} ->
         conn
@@ -229,12 +246,14 @@ defmodule CastmillWeb.NetworkDashboardController do
   end
 
   @doc """
-  List all pending network invitations.
+  List all pending organization invitations across the network.
   Only accessible to network admins.
   """
   def list_invitations(conn, _params) do
+    alias Castmill.Organizations
+
     with {:ok, network_id} <- get_admin_network_id(conn) do
-      invitations = Networks.list_network_invitations(network_id)
+      invitations = Organizations.list_invitations_for_network(network_id)
 
       conn
       |> put_status(:ok)
@@ -248,22 +267,18 @@ defmodule CastmillWeb.NetworkDashboardController do
   end
 
   @doc """
-  Delete a network invitation.
+  Delete an organization invitation (from the network admin view).
   Only accessible to network admins.
   """
   def delete_invitation(conn, %{"id" => id}) do
+    alias Castmill.Organizations
+
     with {:ok, network_id} <- get_admin_network_id(conn),
-         {:ok, invitation} <- Networks.delete_network_invitation(id),
-         true <- invitation.network_id == network_id do
+         {:ok, _invitation} <- Organizations.delete_invitation_for_network(id, network_id) do
       conn
       |> put_status(:ok)
       |> json(%{success: true, message: "Invitation deleted successfully"})
     else
-      false ->
-        conn
-        |> put_status(:forbidden)
-        |> json(%{error: "Invitation does not belong to your network"})
-
       {:error, :not_found} ->
         conn
         |> put_status(:not_found)
@@ -602,14 +617,14 @@ defmodule CastmillWeb.NetworkDashboardController do
 
   defp get_network_stats(network_id) do
     organizations = Networks.list_organizations(network_id)
-    users = Networks.list_users(network_id)
+    {_users, users_count} = Networks.list_users(network_id)
     devices = Networks.list_devices(network_id)
     teams = Networks.list_teams(network_id)
     total_storage = Networks.get_total_storage(network_id)
 
     %{
       organizations_count: length(organizations),
-      users_count: length(users),
+      users_count: users_count,
       devices_count: length(devices),
       teams_count: length(teams),
       total_storage_bytes: total_storage
@@ -660,6 +675,8 @@ defmodule CastmillWeb.NetworkDashboardController do
       id: user.id,
       name: user.name,
       email: user.email,
+      blocked_at: user.blocked_at,
+      blocked_reason: user.blocked_reason,
       inserted_at: user.inserted_at
     }
   end
@@ -676,10 +693,19 @@ defmodule CastmillWeb.NetworkDashboardController do
   end
 
   defp invitation_to_json(invitation) do
+    organization_name =
+      if Ecto.assoc_loaded?(invitation.organization) && invitation.organization do
+        invitation.organization.name
+      else
+        nil
+      end
+
     %{
       id: invitation.id,
       email: invitation.email,
-      organization_name: invitation.organization_name,
+      role: invitation.role,
+      organization_id: invitation.organization_id,
+      organization_name: organization_name,
       status: invitation.status,
       inserted_at: invitation.inserted_at,
       expires_at: invitation.expires_at

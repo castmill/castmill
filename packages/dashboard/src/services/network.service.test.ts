@@ -315,26 +315,34 @@ describe('NetworkService', () => {
   });
 
   describe('listUsers', () => {
-    it('returns list of users', async () => {
-      const mockUsers = [
-        {
-          id: 'user-1',
-          name: 'User 1',
-          email: 'user1@example.com',
-          inserted_at: '2024-01-01T00:00:00Z',
+    it('returns paginated list of users', async () => {
+      const mockResponse = {
+        data: [
+          {
+            id: 'user-1',
+            name: 'User 1',
+            email: 'user1@example.com',
+            inserted_at: '2024-01-01T00:00:00Z',
+          },
+          {
+            id: 'user-2',
+            name: 'User 2',
+            email: 'user2@example.com',
+            inserted_at: '2024-01-02T00:00:00Z',
+          },
+        ],
+        pagination: {
+          page: 1,
+          page_size: 50,
+          total_count: 2,
+          total_pages: 1,
         },
-        {
-          id: 'user-2',
-          name: 'User 2',
-          email: 'user2@example.com',
-          inserted_at: '2024-01-02T00:00:00Z',
-        },
-      ];
+      };
 
       mockFetch.mockResolvedValueOnce({
         ok: true,
         status: 200,
-        json: () => Promise.resolve(mockUsers),
+        json: () => Promise.resolve(mockResponse),
       });
 
       const result = await NetworkService.listUsers();
@@ -345,8 +353,9 @@ describe('NetworkService', () => {
           method: 'GET',
         })
       );
-      expect(result).toHaveLength(2);
-      expect(result[0].email).toBe('user1@example.com');
+      expect(result.data).toHaveLength(2);
+      expect(result.data[0].email).toBe('user1@example.com');
+      expect(result.pagination.total_count).toBe(2);
     });
 
     it('throws error for non-admin user', async () => {
