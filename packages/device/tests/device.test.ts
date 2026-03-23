@@ -596,9 +596,9 @@ describe('Device - Pincode Polling', () => {
 
     // Start the pincode request (it will await the first fetch which rejects)
     const pincodePromise = device['requestPincode']('test-hardware-id');
-    const resultPromise = pincodePromise.catch((e) => e);
 
     // Advance through the backoff delays for each retry
+    // Retry 1: 1s delay (1000 * 2^0)
     // Retry 1: 1s delay (1000 * 2^0)
     await vi.advanceTimersByTimeAsync(1000);
     // Retry 2: 2s delay (1000 * 2^1)
