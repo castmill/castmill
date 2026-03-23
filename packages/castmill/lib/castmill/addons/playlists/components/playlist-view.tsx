@@ -122,14 +122,14 @@ export const PlaylistView: Component<{
     });
   });
 
-  // Track the available height within the modal by calculating modalContent - modalHeader - padding
+  // Track available content height for both Modal and Drawer containers.
   createEffect(() => {
     if (!containerReady() || !containerRef) {
       return;
     }
 
     const modalContent = containerRef.closest(
-      '[class*="modalContent"]'
+      '[class*="modalContent"], [class*="drawerPanel"]'
     ) as HTMLElement;
     if (!modalContent) {
       return;
@@ -137,7 +137,7 @@ export const PlaylistView: Component<{
 
     const updateHeight = () => {
       const modalHeader = modalContent.querySelector(
-        '[class*="modalHeader"]'
+        '[class*="modalHeader"], [class*="header"]'
       ) as HTMLElement;
       if (!modalHeader) {
         return;
@@ -527,9 +527,7 @@ export const PlaylistView: Component<{
           containerRef = el;
           setContainerReady(true);
         }}
-        style={
-          containerHeight() ? { height: `${containerHeight()}px` } : undefined
-        }
+        style={{ height: '100%' }}
       >
         <div class="playlist-view">
           <div class="playlist-items-wrapper">
@@ -568,6 +566,7 @@ export const PlaylistView: Component<{
               setRefReady(true);
             }}
             class="playlist-preview-wrapper"
+            style={{ height: '100%' }}
             classList={{
               'constrain-by-width': constrainByWidth(),
             }}
