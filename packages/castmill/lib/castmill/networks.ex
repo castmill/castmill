@@ -399,7 +399,8 @@ defmodule Castmill.Networks do
     [%User{}, ...]
   """
   def list_users(network_id) do
-    list_users(network_id, [])
+    {users, _total_count} = list_users(network_id, [])
+    users
   end
 
   @doc """
