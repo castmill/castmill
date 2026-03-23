@@ -61,4 +61,12 @@ packages/platforms/electron-player/out/
 
 # Temporary config files
 *.timestamp-*
+
+# Android player generated artifacts
+packages/platforms/android-player/android/.gradle/
+packages/platforms/android-player/android/build/
+packages/platforms/android-player/android/app/build/
+packages/platforms/android-player/android/app/src/main/assets/
+packages/platforms/android-player/android/app/src/main/res/xml/config.xml
+packages/platforms/android-player/android/capacitor-cordova-android-plugins/
 packages/platforms/android-player/android/local.properties

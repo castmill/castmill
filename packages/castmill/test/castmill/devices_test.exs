@@ -32,6 +32,31 @@ defmodule Castmill.DevicesTest do
       assert Devices.list_devices(%{organization_id: organization.id}) == [device]
     end
 
+    test "register_device/1 broadcasts flat organization and network names" do
+      network = network_fixture(%{name: "Main Network"})
+      organization = organization_fixture(%{network_id: network.id, name: "Main Organization"})
+
+      {:ok, devices_registration} =
+        device_registration_fixture(%{hardware_id: "register-broadcast-hw", pincode: "abc123"})
+
+      Phoenix.PubSub.subscribe(Castmill.PubSub, "register:#{devices_registration.hardware_id}")
+
+      assert {:ok, {_device, _token}} =
+               Devices.register_device(organization.id, devices_registration.pincode, %{
+                 name: "broadcast device"
+               })
+
+      assert_receive %Phoenix.Socket.Broadcast{
+        event: "device:registered",
+        payload: %{device: payload_device}
+      }
+
+      assert payload_device.organizationName == organization.name
+      assert payload_device.networkName == network.name
+      refute Map.has_key?(payload_device, :organization)
+      refute Map.has_key?(payload_device, :network)
+    end
+
     test "register_device/1 cannot register the same device twice" do
       network = network_fixture()
       organization = organization_fixture(%{network_id: network.id})
