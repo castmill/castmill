@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
 
 import com.castmill.android.app.root.AdbRoot;
 import com.castmill.android.app.root.SuRoot;
@@ -72,6 +73,30 @@ public class RootToolsTest {
             mockedSu.when(SuRoot::hasRoot).thenReturn(false);
 
             assertFalse(RootTools.hasRoot());
+        }
+    }
+
+    // ── requestRoot ──────────────────────────────────────────────────────────
+
+    @Test
+    public void testRequestRoot_callsSuRequestRoot_whenSuIsRooted() {
+        try (MockedStatic<SuRoot> mockedSu = mockStatic(SuRoot.class)) {
+            mockedSu.when(SuRoot::isRooted).thenReturn(true);
+
+            RootTools.requestRoot();
+
+            mockedSu.verify(SuRoot::requestRoot);
+        }
+    }
+
+    @Test
+    public void testRequestRoot_doesNotCallSuRequestRoot_whenSuIsNotRooted() {
+        try (MockedStatic<SuRoot> mockedSu = mockStatic(SuRoot.class)) {
+            mockedSu.when(SuRoot::isRooted).thenReturn(false);
+
+            RootTools.requestRoot();
+
+            mockedSu.verify(SuRoot::requestRoot, never());
         }
     }
 

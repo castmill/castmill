@@ -26,6 +26,9 @@ allprojects {
 
 subprojects { subproject ->
     subproject.afterEvaluate {
+        // Capacitor can generate module-level compileOptions with a newer Java level.
+        // Keep all Android subprojects on Java 17 so CI (Temurin 17 + Robolectric 4.8.1)
+        // and local Gradle builds compile against the same bytecode target.
         def androidExtension = subproject.extensions.findByName('android')
         if (androidExtension != null && androidExtension.hasProperty('compileOptions')) {
             androidExtension.compileOptions.sourceCompatibility = JavaVersion.VERSION_17
