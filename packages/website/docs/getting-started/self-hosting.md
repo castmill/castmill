@@ -16,7 +16,7 @@ graph TD
     Device[Display Device] -->|HTTPS + WebSocket| Server
     Server --> DB[(PostgreSQL)]
     Server --> S3[Object Storage<br/>S3 / R2 / MinIO]
-    Server --> SMTP[Email Service<br/>Mailgun / SES]
+    Server --> SMTP[Email Service<br/>SMTP / Mailgun]
 ```
 
 | Component           | Purpose                                     | Required? |
@@ -128,7 +128,7 @@ Castmill requires email for signup verification, invitations, and credential rec
 ```bash
 MAILGUN_API_KEY=your-api-key
 MAILGUN_DOMAIN=mail.your-domain.com
-MAIL_FROM=noreply@your-domain.com
+MAILER_FROM=noreply@your-domain.com
 ```
 
 ### SMTP (Generic)
@@ -138,7 +138,8 @@ SMTP_HOST=smtp.your-provider.com
 SMTP_PORT=587
 SMTP_USERNAME=your-username
 SMTP_PASSWORD=your-password
-MAIL_FROM=noreply@your-domain.com
+SMTP_SSL=false
+MAILER_FROM=noreply@your-domain.com
 ```
 
 ## Environment Variables Reference
@@ -155,9 +156,14 @@ MAIL_FROM=noreply@your-domain.com
 | `AWS_S3_BUCKET`         | Yes      | —           | S3 bucket name                         |
 | `AWS_REGION`            | No       | `us-east-1` | S3 region                              |
 | `AWS_S3_HOST`           | No       | —           | Custom S3 endpoint (R2/MinIO)          |
-| `MAILGUN_API_KEY`       | Cond.    | —           | Mailgun API key                        |
+| `MAILGUN_API_KEY`       | Cond.    | —           | Mailgun API key (if using Mailgun)     |
 | `MAILGUN_DOMAIN`        | Cond.    | —           | Mailgun sending domain                 |
-| `MAIL_FROM`             | Yes      | —           | Sender email address                   |
+| `SMTP_HOST`             | Cond.    | —           | SMTP relay hostname (if using SMTP)    |
+| `SMTP_PORT`             | No       | `587`       | SMTP port                              |
+| `SMTP_USERNAME`         | Cond.    | —           | SMTP authentication username           |
+| `SMTP_PASSWORD`         | Cond.    | —           | SMTP authentication password           |
+| `SMTP_SSL`              | No       | `false`     | Set `true` for SSL/TLS (port 465)      |
+| `MAILER_FROM`           | Yes      | —           | Sender email address                   |
 | `REDIS_URL`             | No       | —           | Redis connection (for background jobs) |
 
 ## Database Setup
