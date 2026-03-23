@@ -32,3 +32,4 @@ export * from './view-mode-toggle/view-mode-toggle';
 export * from './resource-tree-view/resource-tree-view';
 export * from './selection-action-bar/selection-action-bar';
 export * from './menu-button/menu-button';
+export * from './drawer/drawer';
