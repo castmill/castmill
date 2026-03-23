@@ -2,7 +2,7 @@
  * Network Users & Invitations page — invite, list, block/unblock, delete users;
  * list and delete pending invitations.
  */
-import { Component, Show, For, createSignal, onMount } from 'solid-js';
+import { Component, Show, For, createSignal, onMount, onCleanup } from 'solid-js';
 import {
   Button,
   FormItem,
@@ -72,6 +72,10 @@ const NetworkUsers: Component = () => {
 
   onMount(async () => {
     await Promise.all([loadUsers(), loadInvitations()]);
+  });
+
+  onCleanup(() => {
+    if (searchTimeout) clearTimeout(searchTimeout);
   });
 
   const loadUsers = async (page?: number, search?: string) => {
@@ -317,7 +321,7 @@ const NetworkUsers: Component = () => {
         {/* Search */}
         <div style={{ 'margin-bottom': '1em' }}>
           <FormItem
-            label=""
+            label={t('network.users.searchPlaceholder')}
             id="users-search"
             value={usersSearch()}
             placeholder={t('network.users.searchPlaceholder')}

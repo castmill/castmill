@@ -210,8 +210,23 @@ defmodule CastmillWeb.NetworkDashboardController do
   end
 
   @doc """
-  List all users in the network.
+  List users in the network with pagination and optional search.
+
   Only accessible to network admins.
+
+  ## Query parameters
+
+    * `page` - Optional page number (defaults to 1).
+    * `page_size` - Optional page size (defaults to 50, maximum 100).
+    * `search` - Optional search term to filter users.
+
+  ## Response
+
+  Returns a JSON object with:
+
+    * `data` - List of users serialized via `user_to_json/1`.
+    * `pagination` - Pagination metadata with `page`, `page_size`,
+      `total_count`, and `total_pages`.
   """
   def list_users(conn, params) do
     with {:ok, network_id} <- get_admin_network_id(conn) do

@@ -845,16 +845,37 @@ defmodule Castmill.Organizations do
   Used by the network admin dashboard.
   """
   def delete_invitation_for_network(invitation_id, network_id) do
-    query =
-      from(i in OrganizationsInvitation,
-        join: o in Organization,
-        on: o.id == i.organization_id,
-        where: i.id == ^invitation_id and o.network_id == ^network_id
-      )
+    parsed_id =
+      case invitation_id do
+        id when is_integer(id) ->
+          id
 
-    case Repo.one(query) do
-      nil -> {:error, :not_found}
-      invitation -> Repo.delete(invitation)
+        id when is_binary(id) ->
+          case Integer.parse(id) do
+            {int_id, ""} -> int_id
+            _ -> :error
+          end
+
+        _ ->
+          :error
+      end
+
+    case parsed_id do
+      :error ->
+        {:error, :not_found}
+
+      id ->
+        query =
+          from(i in OrganizationsInvitation,
+            join: o in Organization,
+            on: o.id == i.organization_id,
+            where: i.id == ^id and o.network_id == ^network_id
+          )
+
+        case Repo.one(query) do
+          nil -> {:error, :not_found}
+          invitation -> Repo.delete(invitation)
+        end
     end
   end
 
