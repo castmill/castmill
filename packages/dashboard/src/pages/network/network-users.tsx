@@ -2,7 +2,14 @@
  * Network Users & Invitations page — invite, list, block/unblock, delete users;
  * list and delete pending invitations.
  */
-import { Component, Show, For, createSignal, onMount, onCleanup } from 'solid-js';
+import {
+  Component,
+  Show,
+  For,
+  createSignal,
+  onMount,
+  onCleanup,
+} from 'solid-js';
 import {
   Button,
   FormItem,
