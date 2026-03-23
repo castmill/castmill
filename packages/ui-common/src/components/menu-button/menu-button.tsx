@@ -2,7 +2,9 @@ import {
   Component,
   For,
   Show,
+  createEffect,
   createSignal,
+  createUniqueId,
   mergeProps,
   onCleanup,
   onMount,
@@ -30,7 +32,10 @@ interface MenuButtonProps {
 export const MenuButton: Component<MenuButtonProps> = (props) => {
   const mergedProps = mergeProps({ size: 'medium' as MenuButtonSize }, props);
   const [open, setOpen] = createSignal(false);
+  const menuId = `castmill-menu-button-${createUniqueId()}`;
   let rootRef: HTMLDivElement | undefined;
+  let triggerRef: HTMLButtonElement | undefined;
+  let menuRef: HTMLDivElement | undefined;
 
   const handleOutsideClick = (event: MouseEvent) => {
     if (!rootRef || rootRef.contains(event.target as Node)) {
@@ -48,6 +53,23 @@ export const MenuButton: Component<MenuButtonProps> = (props) => {
     document.removeEventListener('click', handleOutsideClick);
   });
 
+  createEffect(() => {
+    if (!open()) {
+      return;
+    }
+
+    const firstEnabledItem = menuRef?.querySelector(
+      'button[role="menuitem"]:not(:disabled)'
+    ) as HTMLButtonElement | null;
+
+    firstEnabledItem?.focus();
+  });
+
+  const closeMenu = () => {
+    setOpen(false);
+    triggerRef?.focus();
+  };
+
   return (
     <div
       class="castmill-menu-button"
@@ -59,23 +81,51 @@ export const MenuButton: Component<MenuButtonProps> = (props) => {
       ref={rootRef}
     >
       <Button
+        ref={triggerRef}
         class="castmill-menu-button-trigger"
         label={`${mergedProps.label} ▾`}
         color="secondary"
         disabled={mergedProps.disabled}
+        aria-haspopup="menu"
+        aria-expanded={open()}
+        aria-controls={menuId}
+        onKeyDown={(event) => {
+          if (event.key === 'ArrowDown') {
+            event.preventDefault();
+            setOpen(true);
+          }
+
+          if (event.key === 'Escape') {
+            event.preventDefault();
+            setOpen(false);
+          }
+        }}
         onClick={() => setOpen((value) => !value)}
       />
 
       <Show when={open()}>
-        <div class="castmill-menu-button-items" role="menu">
-          <For each={props.items}>
+        <div
+          class="castmill-menu-button-items"
+          id={menuId}
+          role="menu"
+          ref={menuRef}
+          onKeyDown={(event) => {
+            if (event.key === 'Escape') {
+              event.preventDefault();
+              closeMenu();
+            }
+          }}
+        >
+          <For each={mergedProps.items}>
             {(item) => (
               <button
+                id={`${menuId}-item-${item.key}`}
+                data-key={item.key}
                 type="button"
                 role="menuitem"
                 disabled={item.disabled}
                 onClick={() => {
-                  setOpen(false);
+                  closeMenu();
                   item.onClick();
                 }}
               >

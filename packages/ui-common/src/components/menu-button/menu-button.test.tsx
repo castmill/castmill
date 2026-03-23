@@ -32,13 +32,17 @@ describe('MenuButton', () => {
     ));
 
     const trigger = screen.getByRole('button', { name: /Actions/i });
+    expect(trigger).toHaveAttribute('aria-haspopup', 'menu');
+    expect(trigger).toHaveAttribute('aria-expanded', 'false');
     expect(screen.queryByRole('menu')).not.toBeInTheDocument();
 
     await fireEvent.click(trigger);
     expect(screen.getByRole('menu')).toBeInTheDocument();
+    expect(trigger).toHaveAttribute('aria-expanded', 'true');
 
     await fireEvent.click(trigger);
     expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+    expect(trigger).toHaveAttribute('aria-expanded', 'false');
   });
 
   it('closes when clicking outside', async () => {
@@ -70,6 +74,7 @@ describe('MenuButton', () => {
     await fireEvent.click(screen.getByRole('button', { name: /Actions/i }));
 
     const item = screen.getByRole('menuitem', { name: 'Save' });
+    expect(item).toHaveAttribute('data-key', 'save');
     await fireEvent.click(item);
 
     expect(onClick).toHaveBeenCalledTimes(1);
@@ -118,5 +123,24 @@ describe('MenuButton', () => {
 
     root = largeContainer.querySelector('.castmill-menu-button');
     expect(root).toHaveClass('castmill-menu-button-size-large');
+  });
+
+  it('closes menu with Escape key and restores trigger focus', async () => {
+    render(() => (
+      <MenuButton
+        label="Actions"
+        items={[{ key: 'one', label: 'One', onClick: vi.fn() }]}
+      />
+    ));
+
+    const trigger = screen.getByRole('button', { name: /Actions/i });
+    await fireEvent.click(trigger);
+    expect(screen.getByRole('menu')).toBeInTheDocument();
+
+    const menu = screen.getByRole('menu');
+    await fireEvent.keyDown(menu, { key: 'Escape' });
+
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+    expect(trigger).toHaveFocus();
   });
 });

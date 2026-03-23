@@ -405,7 +405,7 @@ defmodule CastmillWeb.ResourceController.DevicesTest do
     end
   end
 
-  describe "delete device" do
+  describe "update device" do
     test "updates autorecover_until and persists null when disabling", %{
       conn: conn,
       organization: organization
@@ -443,7 +443,9 @@ defmodule CastmillWeb.ResourceController.DevicesTest do
       assert %Castmill.Devices.Device{autorecover_until: nil} =
                Castmill.Devices.get_device(device_id)
     end
+  end
 
+  describe "delete device" do
     test "deletes an existing device successfully", %{conn: conn, organization: organization} do
       # Create a device using a POST request
       device_registration_fixture(%{hardware_id: "hardware1", pincode: "DEADBEEF1"})

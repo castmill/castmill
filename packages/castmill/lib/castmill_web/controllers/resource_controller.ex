@@ -236,7 +236,8 @@ defmodule CastmillWeb.ResourceController do
             Devices.update_device(device, params.update)
             |> case do
               {:ok, device} ->
-                if Map.has_key?(params.update, "autorecover_until") do
+                if Map.has_key?(params.update, "autorecover_until") ||
+                     Map.has_key?(params.update, :autorecover_until) do
                   Phoenix.PubSub.broadcast(
                     Castmill.PubSub,
                     "devices:#{device.id}",
