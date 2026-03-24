@@ -942,7 +942,17 @@
       "checkUpdatesDescription": "更新を確認してインストールします。これによりデバイスは再起動されません",
       "updateFirmware": "ファームウェアを更新",
       "updateFirmwareDescription": "デバイスのファームウェアを更新します",
-      "offlineMessage": "デバイスがオフラインのため、コマンドを送信できません"
+      "offlineMessage": "デバイスがオフラインのため、コマンドを送信できません",
+      "autorecoveryUpdated": "自動復旧が更新されました",
+      "autorecoveryUpdateFailed": "自動復旧の更新に失敗しました",
+      "edit": "編集",
+      "enableForOneHour": "1時間有効にする",
+      "enableForever": "無期限で有効にする",
+      "disable": "無効化",
+      "recoverLostSettingsLabel": "失われた設定を復元",
+      "disabled": "無効",
+      "enabledMinutesRemaining": "有効（残り {{minutes}} 分）",
+      "enabledForever": "無期限で有効"
     },
     "cache": {
       "title": "デバイスキャッシュ",

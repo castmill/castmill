@@ -966,7 +966,17 @@
       "checkUpdatesDescription": "Buscar actualizaciones e instalarlas. Esto no reiniciará el dispositivo",
       "updateFirmware": "Actualizar firmware",
       "updateFirmwareDescription": "Actualiza el firmware del dispositivo",
-      "offlineMessage": "El dispositivo está desconectado, por lo que no se le pueden enviar comandos"
+      "offlineMessage": "El dispositivo está desconectado, por lo que no se le pueden enviar comandos",
+      "autorecoveryUpdated": "La recuperación automática se actualizó",
+      "autorecoveryUpdateFailed": "No se pudo actualizar la recuperación automática",
+      "edit": "Editar",
+      "enableForOneHour": "Activar por una hora",
+      "enableForever": "Activar para siempre",
+      "disable": "Desactivar",
+      "recoverLostSettingsLabel": "Recuperar configuración perdida",
+      "disabled": "Desactivado",
+      "enabledMinutesRemaining": "Activado (quedan {{minutes}} minutos)",
+      "enabledForever": "Activado para siempre"
     },
     "cache": {
       "title": "Caché del Dispositivo",

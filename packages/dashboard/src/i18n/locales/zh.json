@@ -941,7 +941,17 @@
       "checkUpdatesDescription": "检查更新并安装它们。这不会重新启动设备",
       "updateFirmware": "更新固件",
       "updateFirmwareDescription": "更新设备的固件",
-      "offlineMessage": "设备处于离线状态,因此无法向其发送命令"
+      "offlineMessage": "设备处于离线状态,因此无法向其发送命令",
+      "autorecoveryUpdated": "自动恢复已更新",
+      "autorecoveryUpdateFailed": "自动恢复更新失败",
+      "edit": "编辑",
+      "enableForOneHour": "启用一小时",
+      "enableForever": "永久启用",
+      "disable": "禁用",
+      "recoverLostSettingsLabel": "恢复丢失设置",
+      "disabled": "已禁用",
+      "enabledMinutesRemaining": "已启用（剩余 {{minutes}} 分钟）",
+      "enabledForever": "永久启用"
     },
     "cache": {
       "title": "设备缓存",
