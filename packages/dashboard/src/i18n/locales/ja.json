@@ -14,6 +14,7 @@
     "confirm": "確認",
     "back": "戻る",
     "next": "次へ",
+    "previous": "前へ",
     "search": "検索...",
     "loading": "読み込み中...",
     "error": "エラー",
@@ -303,6 +304,7 @@
       "name": "名前",
       "email": "メールアドレス",
       "noUsers": "このネットワークにはまだユーザーがいません",
+      "searchPlaceholder": "名前またはメールで検索...",
       "inviteTitle": "ユーザーを招待",
       "inviteDescription": "このネットワーク内の組織にユーザーを招待します。",
       "inviteButton": "ユーザーを招待",
@@ -562,7 +564,8 @@
     "errors": {
       "authenticationFailed": "認証に失敗しました。もう一度お試しください。",
       "userBlocked": "あなたのアカウントはブロックされています。理由: {{reason}}",
-      "organizationBlocked": "あなたの組織はブロックされています。理由: {{reason}}"
+      "organizationBlocked": "あなたの組織はブロックされています。理由: {{reason}}",
+      "signupFailed": "サインアップを開始できませんでした。後でもう一度お試しください。"
     }
   },
   "credentialRecovery": {
@@ -1049,7 +1052,7 @@
       "couldNotCreateCredential": "認証情報を作成できませんでした",
       "couldNotGetPublicKey": "公開鍵を取得できませんでした",
       "invalidCredential": "無効な認証情報です",
-      "signupFailed": "サインアップ中に問題が発生しました。サポートにお問い合わせください。エラー：{{error}}"
+      "signupFailed": "サインアップに失敗しました：{{error}}。もう一度お試しいただくか、サポートにお問い合わせください。"
     }
   },
   "search": {

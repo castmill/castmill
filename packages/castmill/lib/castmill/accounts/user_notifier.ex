@@ -21,6 +21,20 @@ defmodule Castmill.Accounts.UserNotifier do
     [:assigns]
   )
 
+  EEx.function_from_file(
+    :defp,
+    :render_already_registered_html,
+    Path.join(@templates_dir, "already_registered.html.eex"),
+    [:assigns]
+  )
+
+  EEx.function_from_file(
+    :defp,
+    :render_already_registered_text,
+    Path.join(@templates_dir, "already_registered.text.eex"),
+    [:assigns]
+  )
+
   # Delivers the email using the application mailer.
   defp deliver(recipient, subject, body, opts \\ []) do
     context = Keyword.get(opts, :context, "user_notifier.text")
@@ -185,6 +199,28 @@ defmodule Castmill.Accounts.UserNotifier do
     deliver_with_html(
       signup.email,
       "Complete Your Castmill Signup",
+      text_body,
+      html_body
+    )
+  end
+
+  @doc """
+  Deliver a notice to an existing user who tried to sign up again.
+  Informs them they already have an account and directs them to log in.
+  """
+  def deliver_already_registered_notice(email, dashboard_uri) do
+    assigns = %{
+      email: email,
+      login_url: dashboard_uri,
+      year: DateTime.utc_now().year
+    }
+
+    html_body = render_already_registered_html(assigns)
+    text_body = render_already_registered_text(assigns)
+
+    deliver_with_html(
+      email,
+      "Castmill™ — You Already Have an Account",
       text_body,
       html_body
     )

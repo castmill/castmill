@@ -14,6 +14,7 @@
     "confirm": "تأكيد",
     "back": "رجوع",
     "next": "التالي",
+    "previous": "السابق",
     "search": "بحث...",
     "loading": "جاري التحميل...",
     "error": "خطأ",
@@ -303,6 +304,7 @@
       "name": "الاسم",
       "email": "البريد الإلكتروني",
       "noUsers": "لا يوجد مستخدمون في هذه الشبكة بعد",
+      "searchPlaceholder": "البحث بالاسم أو البريد الإلكتروني...",
       "inviteTitle": "دعوة مستخدم",
       "inviteDescription": "ادعُ مستخدمًا للانضمام إلى منظمة في هذه الشبكة.",
       "inviteButton": "دعوة مستخدم",
@@ -562,7 +564,8 @@
     "errors": {
       "authenticationFailed": "فشل المصادقة. يرجى المحاولة مرة أخرى.",
       "userBlocked": "تم حظر حسابك. السبب: {{reason}}",
-      "organizationBlocked": "تم حظر مؤسستك. السبب: {{reason}}"
+      "organizationBlocked": "تم حظر مؤسستك. السبب: {{reason}}",
+      "signupFailed": "تعذر بدء التسجيل. يرجى المحاولة لاحقاً."
     }
   },
   "credentialRecovery": {
@@ -1048,7 +1051,7 @@
       "couldNotCreateCredential": "تعذر إنشاء بيانات الاعتماد",
       "couldNotGetPublicKey": "تعذر الحصول على المفتاح العام",
       "invalidCredential": "بيانات اعتماد غير صالحة",
-      "signupFailed": "حدث خطأ أثناء التسجيل، اتصل بالدعم. الخطأ: {{error}}"
+      "signupFailed": "فشل التسجيل: {{error}}. يرجى المحاولة مرة أخرى أو الاتصال بالدعم."
     }
   },
   "search": {

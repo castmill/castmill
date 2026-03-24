@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+  <!-- Background -->
+  <rect x="1" y="1" width="22" height="22" rx="3" fill="#1a1a2e"/>
+  
+  <!-- Chart line (green upward trend) -->
+  <polyline 
+    points="4,14 8,12 12,13 16,9 20,8" 
+    fill="none" 
+    stroke="#00C853" 
+    stroke-width="1.5" 
+    stroke-linecap="round" 
+    stroke-linejoin="round"/>
+  
+  <!-- Up arrow -->
+  <polygon points="20,8 18,11 20,10 22,11" fill="#00C853"/>
+  
+  <!-- Ticker strip -->
+  <rect x="2" y="17" width="20" height="4" rx="1" fill="#2d2d4a"/>
+  
+  <!-- Stock indicators -->
+  <rect x="3" y="18" width="4" height="2" rx="0.5" fill="#00C853" opacity="0.8"/>
+  <rect x="9" y="18" width="4" height="2" rx="0.5" fill="#FF1744" opacity="0.8"/>
+  <rect x="15" y="18" width="4" height="2" rx="0.5" fill="#00C853" opacity="0.8"/>
+</svg>

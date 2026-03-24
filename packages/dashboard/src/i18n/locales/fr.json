@@ -14,6 +14,7 @@
     "confirm": "Confirmer",
     "back": "Retour",
     "next": "Suivant",
+    "previous": "Précédent",
     "search": "Rechercher...",
     "loading": "Chargement...",
     "error": "Erreur",
@@ -303,6 +304,7 @@
       "name": "Nom",
       "email": "E-mail",
       "noUsers": "Aucun utilisateur dans ce réseau pour le moment",
+      "searchPlaceholder": "Rechercher par nom ou email...",
       "inviteTitle": "Inviter un Utilisateur",
       "inviteDescription": "Invitez un utilisateur à rejoindre une organisation de ce réseau.",
       "inviteButton": "Inviter un Utilisateur",
@@ -562,7 +564,8 @@
     "errors": {
       "authenticationFailed": "Échec de l'authentification. Veuillez réessayer.",
       "userBlocked": "Votre compte a été bloqué. Raison : {{reason}}",
-      "organizationBlocked": "Votre organisation a été bloquée. Raison : {{reason}}"
+      "organizationBlocked": "Votre organisation a été bloquée. Raison : {{reason}}",
+      "signupFailed": "Impossible de démarrer l'inscription. Veuillez réessayer plus tard."
     }
   },
   "credentialRecovery": {
@@ -1060,7 +1063,7 @@
       "couldNotCreateCredential": "Impossible de créer les identifiants",
       "couldNotGetPublicKey": "Impossible d'obtenir la clé publique",
       "invalidCredential": "Identifiants invalides",
-      "signupFailed": "Une erreur s'est produite lors de l'inscription, contactez le support. ERREUR : {{error}}"
+      "signupFailed": "Échec de l'inscription : {{error}}. Veuillez réessayer ou contacter le support."
     }
   },
   "search": {

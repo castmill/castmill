@@ -366,9 +366,12 @@ defmodule CastmillWeb.NetworkDashboardControllerTest do
       conn = get(conn, "/dashboard/network/users")
 
       response = json_response(conn, 200)
-      assert is_list(response)
+      assert is_map(response)
+      assert is_list(response["data"])
+      assert is_map(response["pagination"])
+      assert response["pagination"]["total_count"] >= 3
 
-      user_ids = Enum.map(response, & &1["id"])
+      user_ids = Enum.map(response["data"], & &1["id"])
       assert admin.id in user_ids
       assert user1.id in user_ids
       assert user2.id in user_ids
@@ -383,6 +386,284 @@ defmodule CastmillWeb.NetworkDashboardControllerTest do
       conn = authenticate_conn(conn, user, network)
 
       conn = get(conn, "/dashboard/network/users")
+
+      assert json_response(conn, 403)
+    end
+  end
+
+  describe "invite_user_to_organization/2" do
+    setup do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+      admin = create_network_admin(network)
+
+      {:ok, network: network, organization: organization, admin: admin}
+    end
+
+    test "invites a user and returns 201", %{
+      conn: conn,
+      network: network,
+      organization: organization,
+      admin: admin
+    } do
+      conn = authenticate_conn(conn, admin, network)
+
+      conn =
+        post(conn, "/dashboard/network/organizations/#{organization.id}/invitations", %{
+          "email" => "invited@example.com",
+          "role" => "member"
+        })
+
+      response = json_response(conn, 201)
+      assert response["success"] == true
+      assert response["message"] =~ "Invitation sent"
+      assert is_binary(response["token"])
+    end
+
+    test "returns 409 when user already has active invitation", %{
+      conn: conn,
+      network: network,
+      organization: organization,
+      admin: admin
+    } do
+      email = "dup-invite@example.com"
+
+      # First invite succeeds
+      conn1 = authenticate_conn(conn, admin, network)
+
+      conn1 =
+        post(conn1, "/dashboard/network/organizations/#{organization.id}/invitations", %{
+          "email" => email,
+          "role" => "admin"
+        })
+
+      assert json_response(conn1, 201)["success"] == true
+
+      # Second invite to same email + org should return 409
+      conn2 = authenticate_conn(build_conn(), admin, network)
+
+      conn2 =
+        post(conn2, "/dashboard/network/organizations/#{organization.id}/invitations", %{
+          "email" => email,
+          "role" => "admin"
+        })
+
+      response = json_response(conn2, 409)
+      assert response["error"] =~ "already been invited"
+    end
+
+    test "returns 409 when user is already a member", %{
+      conn: conn,
+      network: network,
+      organization: organization,
+      admin: admin
+    } do
+      user = create_regular_user(network, organization)
+      conn = authenticate_conn(conn, admin, network)
+
+      conn =
+        post(conn, "/dashboard/network/organizations/#{organization.id}/invitations", %{
+          "email" => user.email,
+          "role" => "member"
+        })
+
+      response = json_response(conn, 409)
+      assert response["error"] =~ "already a member"
+    end
+
+    test "returns 403 for non-admin user", %{
+      conn: conn,
+      network: network,
+      organization: organization
+    } do
+      user = create_regular_user(network, organization)
+      conn = authenticate_conn(conn, user, network)
+
+      conn =
+        post(conn, "/dashboard/network/organizations/#{organization.id}/invitations", %{
+          "email" => "test@example.com",
+          "role" => "member"
+        })
+
+      assert json_response(conn, 403)
+    end
+
+    test "returns 403 for organization in different network", %{
+      conn: conn,
+      network: network,
+      admin: admin
+    } do
+      other_network = network_fixture(%{name: "Other Network"})
+      other_org = organization_fixture(%{network_id: other_network.id, name: "Other Org"})
+
+      conn = authenticate_conn(conn, admin, network)
+
+      conn =
+        post(conn, "/dashboard/network/organizations/#{other_org.id}/invitations", %{
+          "email" => "test@example.com",
+          "role" => "member"
+        })
+
+      assert json_response(conn, 403)
+    end
+  end
+
+  describe "list_invitations/2" do
+    setup do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+      admin = create_network_admin(network)
+
+      {:ok, network: network, organization: organization, admin: admin}
+    end
+
+    test "returns all pending invitations across the network", %{
+      conn: conn,
+      network: network,
+      organization: organization,
+      admin: admin
+    } do
+      # Create invitations via the context
+      {:ok, _} = Organizations.invite_user(organization.id, "user1@example.com", :member)
+      {:ok, _} = Organizations.invite_user(organization.id, "user2@example.com", :admin)
+
+      conn = authenticate_conn(conn, admin, network)
+      conn = get(conn, "/dashboard/network/invitations")
+
+      response = json_response(conn, 200)
+      assert is_list(response)
+      assert length(response) == 2
+
+      emails = Enum.map(response, & &1["email"])
+      assert "user1@example.com" in emails
+      assert "user2@example.com" in emails
+
+      # Verify each invitation has the expected fields
+      inv = Enum.find(response, &(&1["email"] == "user1@example.com"))
+      assert inv["organization_name"] == organization.name
+      assert inv["role"] == "member"
+      assert inv["status"] == "invited"
+      assert inv["organization_id"] == organization.id
+    end
+
+    test "returns empty list when no invitations exist", %{
+      conn: conn,
+      network: network,
+      admin: admin
+    } do
+      conn = authenticate_conn(conn, admin, network)
+      conn = get(conn, "/dashboard/network/invitations")
+
+      assert json_response(conn, 200) == []
+    end
+
+    test "does not return invitations from other networks", %{
+      conn: conn,
+      network: network,
+      admin: admin
+    } do
+      # Create invitation in a different network
+      other_network = network_fixture(%{name: "Other Network"})
+      other_org = organization_fixture(%{network_id: other_network.id, name: "Other Org"})
+      {:ok, _} = Organizations.invite_user(other_org.id, "other@example.com", :member)
+
+      conn = authenticate_conn(conn, admin, network)
+      conn = get(conn, "/dashboard/network/invitations")
+
+      response = json_response(conn, 200)
+      emails = Enum.map(response, & &1["email"])
+      refute "other@example.com" in emails
+    end
+
+    test "returns 403 for non-admin user", %{
+      conn: conn,
+      network: network,
+      organization: organization
+    } do
+      user = create_regular_user(network, organization)
+      conn = authenticate_conn(conn, user, network)
+
+      conn = get(conn, "/dashboard/network/invitations")
+
+      assert json_response(conn, 403)
+    end
+  end
+
+  describe "delete_invitation/2" do
+    setup do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+      admin = create_network_admin(network)
+
+      {:ok, token} =
+        Organizations.invite_user(organization.id, "to-delete@example.com", :member)
+
+      invitation = Organizations.get_invitation(token)
+
+      {:ok, network: network, organization: organization, admin: admin, invitation: invitation}
+    end
+
+    test "deletes an invitation successfully", %{
+      conn: conn,
+      network: network,
+      admin: admin,
+      invitation: invitation
+    } do
+      conn = authenticate_conn(conn, admin, network)
+
+      conn = delete(conn, "/dashboard/network/invitations/#{invitation.id}")
+
+      response = json_response(conn, 200)
+      assert response["success"] == true
+
+      # Verify invitation is gone
+      assert Organizations.get_invitation(invitation.token) == nil
+    end
+
+    test "returns 404 for non-existent invitation", %{
+      conn: conn,
+      network: network,
+      admin: admin
+    } do
+      conn = authenticate_conn(conn, admin, network)
+
+      conn =
+        delete(
+          conn,
+          "/dashboard/network/invitations/999999999"
+        )
+
+      assert json_response(conn, 404)
+    end
+
+    test "cannot delete invitation from another network", %{
+      conn: conn,
+      network: network,
+      admin: admin
+    } do
+      # Create invitation in different network
+      other_network = network_fixture(%{name: "Other Network"})
+      other_org = organization_fixture(%{network_id: other_network.id, name: "Other Org"})
+      {:ok, token} = Organizations.invite_user(other_org.id, "other@example.com", :member)
+      other_invitation = Organizations.get_invitation(token)
+
+      conn = authenticate_conn(conn, admin, network)
+
+      conn = delete(conn, "/dashboard/network/invitations/#{other_invitation.id}")
+
+      assert json_response(conn, 404)
+    end
+
+    test "returns 403 for non-admin user", %{
+      conn: conn,
+      network: network,
+      organization: organization,
+      invitation: invitation
+    } do
+      user = create_regular_user(network, organization)
+      conn = authenticate_conn(conn, user, network)
+
+      conn = delete(conn, "/dashboard/network/invitations/#{invitation.id}")
 
       assert json_response(conn, 403)
     end

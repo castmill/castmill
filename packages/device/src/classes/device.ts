@@ -136,6 +136,8 @@ interface Credentials {
     id: string;
     name: string;
     token: string;
+    organizationName?: string;
+    networkName?: string;
   };
 }
 
@@ -479,6 +481,8 @@ export class Device extends EventEmitter {
               id: data.id,
               name: data.name,
               token: data.token,
+              organizationName: data.organization_name,
+              networkName: data.network_name,
             },
           };
           await this.integration.storeCredentials!(JSON.stringify(credentials));
@@ -696,8 +700,20 @@ export class Device extends EventEmitter {
     channel.on('device:registered', async (payload) => {
       this.logger.info(`Device registered ${payload}`);
 
+      const normalizedCredentials: Credentials = {
+        device: {
+          id: payload.device.id,
+          name: payload.device.name,
+          token: payload.device.token,
+          organizationName: payload.device.organizationName,
+          networkName: payload.device.networkName,
+        },
+      };
+
       // Store token in local storage as credentials.
-      await this.integration.storeCredentials!(JSON.stringify(payload));
+      await this.integration.storeCredentials!(
+        JSON.stringify(normalizedCredentials)
+      );
 
       // Refresh the page to initialize the player with the new credentials.
       window.location.reload();
@@ -1114,6 +1130,80 @@ export class Device extends EventEmitter {
 
   getDeviceInfo() {
     return this.integration.getDeviceInfo();
+  }
+
+  private async getChannelMetadata(credentials: Credentials): Promise<{
+    organizationName?: string;
+    networkName?: string;
+  }> {
+    try {
+      const response = await fetch(
+        `${this.baseUrl}/devices/${credentials.device.id}/channels`,
+        {
+          headers: {
+            Authorization: `Bearer ${credentials.device.token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        return {};
+      }
+
+      const payload = await response.json();
+      const channels: Array<{
+        organization_name?: string;
+        network_name?: string;
+      }> = Array.isArray(payload?.data) ? payload.data : [];
+
+      const first = channels.find(
+        (channel) => channel.organization_name || channel.network_name
+      );
+
+      return {
+        organizationName: first?.organization_name,
+        networkName: first?.network_name,
+      };
+    } catch (error) {
+      this.logger.error(`Unable to resolve channel metadata: ${error}`);
+      return {};
+    }
+  }
+
+  async getOrganizationName(): Promise<string | undefined> {
+    const credentials = await this.getCredentials();
+    if (!credentials) {
+      return;
+    }
+
+    if (credentials.device.organizationName) {
+      return credentials.device.organizationName;
+    }
+
+    const { organizationName } = await this.getChannelMetadata(credentials);
+    if (organizationName) {
+      return organizationName;
+    }
+
+    return;
+  }
+
+  async getCastmillNetworkName(): Promise<string | undefined> {
+    const credentials = await this.getCredentials();
+    if (!credentials) {
+      return;
+    }
+
+    if (credentials.device.networkName) {
+      return credentials.device.networkName;
+    }
+
+    const { networkName } = await this.getChannelMetadata(credentials);
+    if (networkName) {
+      return networkName;
+    }
+
+    return;
   }
 
   restart() {

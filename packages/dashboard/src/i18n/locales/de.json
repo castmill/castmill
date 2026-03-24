@@ -14,6 +14,7 @@
     "confirm": "Bestätigen",
     "back": "Zurück",
     "next": "Weiter",
+    "previous": "Zurück",
     "search": "Suchen...",
     "loading": "Wird geladen...",
     "error": "Fehler",
@@ -317,6 +318,7 @@
       "name": "Name",
       "email": "E-Mail",
       "noUsers": "Noch keine Benutzer in diesem Netzwerk",
+      "searchPlaceholder": "Nach Name oder E-Mail suchen...",
       "inviteTitle": "Benutzer Einladen",
       "inviteDescription": "Laden Sie einen Benutzer ein, einer Organisation in diesem Netzwerk beizutreten.",
       "inviteButton": "Benutzer Einladen",
@@ -691,7 +693,8 @@
     "errors": {
       "authenticationFailed": "Authentifizierung fehlgeschlagen. Bitte versuchen Sie es erneut.",
       "userBlocked": "Ihr Konto wurde gesperrt. Grund: {{reason}}",
-      "organizationBlocked": "Ihre Organisation wurde gesperrt. Grund: {{reason}}"
+      "organizationBlocked": "Ihre Organisation wurde gesperrt. Grund: {{reason}}",
+      "signupFailed": "Registrierung konnte nicht gestartet werden. Bitte versuchen Sie es später erneut."
     }
   },
   "credentialRecovery": {
@@ -727,7 +730,7 @@
       "couldNotCreateCredential": "Anmeldedaten konnten nicht erstellt werden",
       "couldNotGetPublicKey": "Öffentlicher Schlüssel konnte nicht abgerufen werden",
       "invalidCredential": "Ungültige Anmeldedaten",
-      "signupFailed": "Bei der Registrierung ist ein Fehler aufgetreten, kontaktieren Sie den Support. FEHLER: {{error}}"
+      "signupFailed": "Registrierung fehlgeschlagen: {{error}}. Bitte versuchen Sie es erneut oder kontaktieren Sie den Support."
     }
   },
   "search": {

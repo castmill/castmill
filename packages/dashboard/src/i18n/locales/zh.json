@@ -14,6 +14,7 @@
     "confirm": "确认",
     "back": "返回",
     "next": "下一步",
+    "previous": "上一页",
     "search": "搜索...",
     "loading": "加载中...",
     "error": "错误",
@@ -303,6 +304,7 @@
       "name": "名称",
       "email": "电子邮件",
       "noUsers": "此网络中还没有用户",
+      "searchPlaceholder": "按名称或邮箱搜索...",
       "inviteTitle": "邀请用户",
       "inviteDescription": "邀请用户加入此网络中的组织。",
       "inviteButton": "邀请用户",
@@ -562,7 +564,8 @@
     "errors": {
       "authenticationFailed": "身份验证失败。请重试。",
       "userBlocked": "您的账户已被封禁。原因：{{reason}}",
-      "organizationBlocked": "您的组织已被封禁。原因：{{reason}}"
+      "organizationBlocked": "您的组织已被封禁。原因：{{reason}}",
+      "signupFailed": "无法开始注册。请稍后再试。"
     }
   },
   "credentialRecovery": {
@@ -1048,7 +1051,7 @@
       "couldNotCreateCredential": "无法创建凭据",
       "couldNotGetPublicKey": "无法获取公钥",
       "invalidCredential": "凭据无效",
-      "signupFailed": "注册时出现问题，请联系支持。错误：{{error}}"
+      "signupFailed": "注册失败：{{error}}。请重试或联系支持。"
     }
   },
   "search": {

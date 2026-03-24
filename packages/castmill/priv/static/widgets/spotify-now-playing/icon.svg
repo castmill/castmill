@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Background circle -->
+  <circle cx="32" cy="32" r="30" fill="#1DB954"/>
+  
+  <!-- Spotify logo - three curved sound wave lines -->
+  <g fill="none" stroke="#191414" stroke-width="4" stroke-linecap="round">
+    <!-- Top arc -->
+    <path d="M20 24c8-4 18-4 26 0"/>
+    <!-- Middle arc -->
+    <path d="M22 32c6-3 14-3 20 0"/>
+    <!-- Bottom arc -->
+    <path d="M24 40c4-2 10-2 14 0"/>
+  </g>
+</svg>

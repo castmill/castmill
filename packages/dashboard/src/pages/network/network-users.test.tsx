@@ -77,7 +77,10 @@ const renderUsers = () =>
 describe('NetworkUsers', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(NetworkService.listUsers).mockResolvedValue(mockUsers);
+    vi.mocked(NetworkService.listUsers).mockResolvedValue({
+      data: mockUsers,
+      pagination: { page: 1, page_size: 20, total_count: 2, total_pages: 1 },
+    });
     vi.mocked(NetworkService.listInvitations).mockResolvedValue([]);
     vi.mocked(NetworkService.listOrganizations).mockResolvedValue({
       data: [],
@@ -97,7 +100,10 @@ describe('NetworkUsers', () => {
   });
 
   it('shows empty state when no users', async () => {
-    vi.mocked(NetworkService.listUsers).mockResolvedValue([]);
+    vi.mocked(NetworkService.listUsers).mockResolvedValue({
+      data: [],
+      pagination: { page: 1, page_size: 20, total_count: 0, total_pages: 0 },
+    });
 
     renderUsers();
 

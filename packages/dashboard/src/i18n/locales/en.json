@@ -14,6 +14,7 @@
     "confirm": "Confirm",
     "back": "Back",
     "next": "Next",
+    "previous": "Previous",
     "search": "Search...",
     "loading": "Loading...",
     "error": "Error",
@@ -330,6 +331,7 @@
       "name": "Name",
       "email": "Email",
       "noUsers": "No users in this network yet.",
+      "searchPlaceholder": "Search by name or email...",
       "inviteTitle": "Invite User",
       "inviteDescription": "Invite a user to join an organization in this network.",
       "inviteButton": "Invite User",
@@ -704,7 +706,8 @@
     "errors": {
       "authenticationFailed": "Authentication failed. Please try again.",
       "userBlocked": "Your account has been blocked. Reason: {{reason}}",
-      "organizationBlocked": "Your organization has been blocked. Reason: {{reason}}"
+      "organizationBlocked": "Your organization has been blocked. Reason: {{reason}}",
+      "signupFailed": "Could not start signup. Please try again later."
     }
   },
   "credentialRecovery": {
@@ -740,7 +743,7 @@
       "couldNotCreateCredential": "Could not create credential",
       "couldNotGetPublicKey": "Could not get public key",
       "invalidCredential": "Invalid credential",
-      "signupFailed": "Something went wrong when signing up, contact support. ERROR: {{error}}"
+      "signupFailed": "Signup failed: {{error}}. Please try again or contact support."
     }
   },
   "search": {
