@@ -693,7 +693,8 @@
     "errors": {
       "authenticationFailed": "Authentifizierung fehlgeschlagen. Bitte versuchen Sie es erneut.",
       "userBlocked": "Ihr Konto wurde gesperrt. Grund: {{reason}}",
-      "organizationBlocked": "Ihre Organisation wurde gesperrt. Grund: {{reason}}"
+      "organizationBlocked": "Ihre Organisation wurde gesperrt. Grund: {{reason}}",
+      "signupFailed": "Registrierung konnte nicht gestartet werden. Bitte versuchen Sie es später erneut."
     }
   },
   "credentialRecovery": {
@@ -729,7 +730,7 @@
       "couldNotCreateCredential": "Anmeldedaten konnten nicht erstellt werden",
       "couldNotGetPublicKey": "Öffentlicher Schlüssel konnte nicht abgerufen werden",
       "invalidCredential": "Ungültige Anmeldedaten",
-      "signupFailed": "Bei der Registrierung ist ein Fehler aufgetreten, kontaktieren Sie den Support. FEHLER: {{error}}"
+      "signupFailed": "Registrierung fehlgeschlagen: {{error}}. Bitte versuchen Sie es erneut oder kontaktieren Sie den Support."
     }
   },
   "search": {

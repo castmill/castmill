@@ -564,7 +564,8 @@
     "errors": {
       "authenticationFailed": "身份验证失败。请重试。",
       "userBlocked": "您的账户已被封禁。原因：{{reason}}",
-      "organizationBlocked": "您的组织已被封禁。原因：{{reason}}"
+      "organizationBlocked": "您的组织已被封禁。原因：{{reason}}",
+      "signupFailed": "无法开始注册。请稍后再试。"
     }
   },
   "credentialRecovery": {
@@ -1040,7 +1041,7 @@
       "couldNotCreateCredential": "无法创建凭据",
       "couldNotGetPublicKey": "无法获取公钥",
       "invalidCredential": "凭据无效",
-      "signupFailed": "注册时出现问题，请联系支持。错误：{{error}}"
+      "signupFailed": "注册失败：{{error}}。请重试或联系支持。"
     }
   },
   "search": {

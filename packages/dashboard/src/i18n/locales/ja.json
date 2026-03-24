@@ -564,7 +564,8 @@
     "errors": {
       "authenticationFailed": "認証に失敗しました。もう一度お試しください。",
       "userBlocked": "あなたのアカウントはブロックされています。理由: {{reason}}",
-      "organizationBlocked": "あなたの組織はブロックされています。理由: {{reason}}"
+      "organizationBlocked": "あなたの組織はブロックされています。理由: {{reason}}",
+      "signupFailed": "サインアップを開始できませんでした。後でもう一度お試しください。"
     }
   },
   "credentialRecovery": {
@@ -1041,7 +1042,7 @@
       "couldNotCreateCredential": "認証情報を作成できませんでした",
       "couldNotGetPublicKey": "公開鍵を取得できませんでした",
       "invalidCredential": "無効な認証情報です",
-      "signupFailed": "サインアップ中に問題が発生しました。サポートにお問い合わせください。エラー：{{error}}"
+      "signupFailed": "サインアップに失敗しました：{{error}}。もう一度お試しいただくか、サポートにお問い合わせください。"
     }
   },
   "search": {

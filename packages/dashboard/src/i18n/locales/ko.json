@@ -564,7 +564,8 @@
     "errors": {
       "authenticationFailed": "인증에 실패했습니다. 다시 시도해 주세요.",
       "userBlocked": "귀하의 계정이 차단되었습니다. 사유: {{reason}}",
-      "organizationBlocked": "귀하의 조직이 차단되었습니다. 사유: {{reason}}"
+      "organizationBlocked": "귀하의 조직이 차단되었습니다. 사유: {{reason}}",
+      "signupFailed": "가입을 시작할 수 없습니다. 나중에 다시 시도해 주세요."
     }
   },
   "credentialRecovery": {
@@ -1040,7 +1041,7 @@
       "couldNotCreateCredential": "자격 증명을 생성할 수 없습니다",
       "couldNotGetPublicKey": "공개 키를 가져올 수 없습니다",
       "invalidCredential": "유효하지 않은 자격 증명",
-      "signupFailed": "회원가입 중 문제가 발생했습니다. 지원팀에 문의하세요. 오류: {{error}}"
+      "signupFailed": "회원가입 실패: {{error}}. 다시 시도하거나 지원팀에 문의하세요."
     }
   },
   "search": {

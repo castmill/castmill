@@ -114,44 +114,20 @@ defmodule CastmillWeb.SignUpController do
             |> put_status(:forbidden)
             |> json(%{status: :error, msg: "This network requires an invitation to sign up"})
           else
-            challenge = SessionUtils.new_challenge()
-            params = %{"email" => email, "challenge" => challenge, "network_id" => network_id}
+            # Check if a user with this email already exists
+            case Accounts.get_user_by_email(email) do
+              %Castmill.Accounts.User{} ->
+                # User already exists — send a different email explaining this,
+                # but return the same response to prevent email enumeration.
+                UserNotifier.deliver_already_registered_notice(email, origin)
 
-            case Accounts.create_signup(params) do
-              {:ok, signup} ->
-                case UserNotifier.deliver_signup_instructions(signup, origin) do
-                  {:ok, _email} ->
-                    # Serialize the signup struct
-                    signup_data = %{
-                      id: signup.id,
-                      email: signup.email,
-                      inserted_at: signup.inserted_at,
-                      updated_at: signup.updated_at,
-                      challenge: signup.challenge,
-                      status_message: signup.status_message
-                    }
-
-                    conn
-                    |> put_status(:created)
-                    |> json(%{status: :ok, signup: signup_data})
-
-                  {:error, reason} ->
-                    # Optionally, you might want to delete the signup if email delivery fails
-                    # Accounts.delete_signup(signup)
-
-                    conn
-                    |> put_status(:unprocessable_entity)
-                    |> json(%{
-                      status: :error,
-                      msg: "Failed to send email",
-                      error: inspect(reason)
-                    })
-                end
-
-              {:error, _changeset} ->
                 conn
-                |> put_status(:unprocessable_entity)
-                |> json(%{status: :error})
+                |> put_status(:created)
+                |> json(%{status: :ok, signup: %{email: email}})
+
+              nil ->
+                # New user — proceed with normal signup flow
+                create_signup_and_send_email(conn, email, network_id, origin)
             end
           end
 
@@ -160,6 +136,45 @@ defmodule CastmillWeb.SignUpController do
           |> put_status(:unprocessable_entity)
           |> json(%{status: :error, msg: "Network not found"})
       end
+    end
+  end
+
+  defp create_signup_and_send_email(conn, email, network_id, origin) do
+    challenge = SessionUtils.new_challenge()
+    params = %{"email" => email, "challenge" => challenge, "network_id" => network_id}
+
+    case Accounts.create_signup(params) do
+      {:ok, signup} ->
+        case UserNotifier.deliver_signup_instructions(signup, origin) do
+          {:ok, _email} ->
+            # Serialize the signup struct
+            signup_data = %{
+              id: signup.id,
+              email: signup.email,
+              inserted_at: signup.inserted_at,
+              updated_at: signup.updated_at,
+              challenge: signup.challenge,
+              status_message: signup.status_message
+            }
+
+            conn
+            |> put_status(:created)
+            |> json(%{status: :ok, signup: signup_data})
+
+          {:error, reason} ->
+            conn
+            |> put_status(:unprocessable_entity)
+            |> json(%{
+              status: :error,
+              msg: "Failed to send email",
+              error: inspect(reason)
+            })
+        end
+
+      {:error, _changeset} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{status: :error})
     end
   end
 

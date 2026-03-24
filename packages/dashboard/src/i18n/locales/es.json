@@ -565,7 +565,8 @@
     "errors": {
       "authenticationFailed": "Error de autenticación. Por favor, inténtalo de nuevo.",
       "userBlocked": "Tu cuenta ha sido bloqueada. Razón: {{reason}}",
-      "organizationBlocked": "Tu organización ha sido bloqueada. Razón: {{reason}}"
+      "organizationBlocked": "Tu organización ha sido bloqueada. Razón: {{reason}}",
+      "signupFailed": "No se pudo iniciar el registro. Inténtalo más tarde."
     }
   },
   "credentialRecovery": {
@@ -748,7 +749,7 @@
       "couldNotCreateCredential": "No se pudo crear la credencial",
       "couldNotGetPublicKey": "No se pudo obtener la clave pública",
       "invalidCredential": "Credencial inválida",
-      "signupFailed": "Algo salió mal al registrarse, contacta a soporte. ERROR: {{error}}"
+      "signupFailed": "Error en el registro: {{error}}. Inténtalo de nuevo o contacta con soporte."
     }
   },
   "search": {
