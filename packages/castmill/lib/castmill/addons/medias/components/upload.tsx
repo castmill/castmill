@@ -196,7 +196,12 @@ export const UploadComponent = (props: UploadComponentProps) => {
         `${props.baseUrl}/dashboard/organizations/${props.organizationId}/medias`,
         true
       );
-      xhr.withCredentials = true;
+
+      // Attach Bearer token for authentication (cookies are no longer used)
+      const token = localStorage.getItem('castmill_auth_token');
+      if (token) {
+        xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+      }
 
       xhr.upload.onprogress = (event) => {
         if (event.lengthComputable) {

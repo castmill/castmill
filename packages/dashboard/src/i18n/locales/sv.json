@@ -559,7 +559,8 @@
     "errors": {
       "authenticationFailed": "Autentiseringen misslyckades. Försök igen.",
       "userBlocked": "Ditt konto har blockerats. Anledning: {{reason}}",
-      "organizationBlocked": "Din organisation har blockerats. Anledning: {{reason}}"
+      "organizationBlocked": "Din organisation har blockerats. Anledning: {{reason}}",
+      "signupFailed": "Kunde inte starta registreringen. Försök igen senare."
     }
   },
   "credentialRecovery": {
@@ -1035,7 +1036,7 @@
       "couldNotCreateCredential": "Kunde inte skapa inloggningsuppgift",
       "couldNotGetPublicKey": "Kunde inte hämta publik nyckel",
       "invalidCredential": "Ogiltig inloggningsuppgift",
-      "signupFailed": "Något gick fel vid registrering, kontakta support. FEL: {{error}}"
+      "signupFailed": "Registreringen misslyckades: {{error}}. Försök igen eller kontakta support."
     }
   },
   "search": {

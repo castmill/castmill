@@ -564,7 +564,8 @@
     "errors": {
       "authenticationFailed": "فشل المصادقة. يرجى المحاولة مرة أخرى.",
       "userBlocked": "تم حظر حسابك. السبب: {{reason}}",
-      "organizationBlocked": "تم حظر مؤسستك. السبب: {{reason}}"
+      "organizationBlocked": "تم حظر مؤسستك. السبب: {{reason}}",
+      "signupFailed": "تعذر بدء التسجيل. يرجى المحاولة لاحقاً."
     }
   },
   "credentialRecovery": {
@@ -1040,7 +1041,7 @@
       "couldNotCreateCredential": "تعذر إنشاء بيانات الاعتماد",
       "couldNotGetPublicKey": "تعذر الحصول على المفتاح العام",
       "invalidCredential": "بيانات اعتماد غير صالحة",
-      "signupFailed": "حدث خطأ أثناء التسجيل، اتصل بالدعم. الخطأ: {{error}}"
+      "signupFailed": "فشل التسجيل: {{error}}. يرجى المحاولة مرة أخرى أو الاتصال بالدعم."
     }
   },
   "search": {

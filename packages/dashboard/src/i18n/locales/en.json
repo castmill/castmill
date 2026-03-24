@@ -706,7 +706,8 @@
     "errors": {
       "authenticationFailed": "Authentication failed. Please try again.",
       "userBlocked": "Your account has been blocked. Reason: {{reason}}",
-      "organizationBlocked": "Your organization has been blocked. Reason: {{reason}}"
+      "organizationBlocked": "Your organization has been blocked. Reason: {{reason}}",
+      "signupFailed": "Could not start signup. Please try again later."
     }
   },
   "credentialRecovery": {
@@ -742,7 +743,7 @@
       "couldNotCreateCredential": "Could not create credential",
       "couldNotGetPublicKey": "Could not get public key",
       "invalidCredential": "Invalid credential",
-      "signupFailed": "Something went wrong when signing up, contact support. ERROR: {{error}}"
+      "signupFailed": "Signup failed: {{error}}. Please try again or contact support."
     }
   },
   "search": {

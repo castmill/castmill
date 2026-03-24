@@ -179,9 +179,9 @@ const SignUp: Component = () => {
     });
 
     if (!result.ok) {
-      toast.error(
-        t('signup.errors.signupFailed', { error: result.statusText })
-      );
+      const data = await result.json().catch(() => ({}));
+      const serverMessage = data.message || data.msg || result.statusText;
+      toast.error(t('signup.errors.signupFailed', { error: serverMessage }));
     } else {
       toast.success('Account created successfully!');
       navigate('/');
