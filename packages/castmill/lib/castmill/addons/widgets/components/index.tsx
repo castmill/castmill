@@ -593,11 +593,12 @@ const WidgetsPage: Component<{
       <Show when={showModal()}>
         <Drawer
           title={showModal()!.name}
-          description={showModal()!.description || t('widgets.widgetDetails')}
           onClose={closeWidget}
           placement="right"
           size="xl"
           showBackdrop="auto"
+          closeOnOutsideClick
+          outsideClickIgnoreSelector="tbody tr"
           contentClass="widget-details-modal"
         >
           <div class="widget-details-content">

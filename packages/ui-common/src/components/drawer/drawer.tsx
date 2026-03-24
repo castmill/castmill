@@ -29,6 +29,8 @@ export interface DrawerProps {
   closeOnOverlayClick?: boolean;
   showBackdrop?: boolean | 'auto';
   autoBackdropBreakpoint?: number;
+  closeOnOutsideClick?: boolean;
+  outsideClickIgnoreSelector?: string;
   headerActions?: JSX.Element;
   footer?: JSX.Element;
   contentClass?: string;
@@ -54,6 +56,8 @@ export const Drawer: Component<DrawerProps> = (_props) => {
       closeOnOverlayClick: true,
       showBackdrop: 'auto' as const,
       autoBackdropBreakpoint: 1280,
+      closeOnOutsideClick: false,
+      outsideClickIgnoreSelector: '',
     },
     _props
   );
@@ -105,6 +109,30 @@ export const Drawer: Component<DrawerProps> = (_props) => {
     }
   };
 
+  const closeOnOutsideClick = (event: MouseEvent) => {
+    if (!props.closeOnOutsideClick || hasBackdrop() || !isTopDrawer(drawerId)) {
+      return;
+    }
+
+    const target = event.target;
+    if (!(target instanceof Element)) {
+      return;
+    }
+
+    if (panelRef?.contains(target)) {
+      return;
+    }
+
+    if (
+      props.outsideClickIgnoreSelector &&
+      target.closest(props.outsideClickIgnoreSelector)
+    ) {
+      return;
+    }
+
+    closeDrawer();
+  };
+
   onMount(() => {
     previousFocusedElement = document.activeElement as HTMLElement;
 
@@ -118,6 +146,7 @@ export const Drawer: Component<DrawerProps> = (_props) => {
 
     window.addEventListener('resize', updateBackdropMode);
     document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('click', closeOnOutsideClick, true);
     drawerStack.push(drawerId);
   });
 
@@ -141,6 +170,7 @@ export const Drawer: Component<DrawerProps> = (_props) => {
   onCleanup(() => {
     window.removeEventListener('resize', updateBackdropMode);
     document.removeEventListener('keydown', handleKeyDown);
+    document.removeEventListener('click', closeOnOutsideClick, true);
     removeDrawer(drawerId);
 
     if (previousFocusedElement) {

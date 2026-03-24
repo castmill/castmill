@@ -809,11 +809,12 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
       <Show when={showModal()}>
         <Drawer
           title={`Device "${currentDevice()?.name}"`}
-          description={t('devices.deviceDetails')}
           onClose={closeModalAndClearUrl}
           placement="right"
           size="xl"
           showBackdrop="auto"
+          closeOnOutsideClick
+          outsideClickIgnoreSelector="tbody tr, .device-tree-item"
         >
           <Show when={currentDevice()} keyed>
             {(device) => (

@@ -724,11 +724,12 @@ const ChannelsPage: Component = () => {
         <Show when={showModal()}>
           <Drawer
             title={title()}
-            description={t('channels.description')}
             onClose={closeModal}
             placement="right"
             size="xl"
             showBackdrop="auto"
+            closeOnOutsideClick
+            outsideClickIgnoreSelector="tbody tr, .channel-tree-item"
           >
             <ChannelView
               organizationId={store.organizations.selectedId!}

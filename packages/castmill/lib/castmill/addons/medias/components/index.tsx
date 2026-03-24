@@ -875,11 +875,12 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
       <Show when={showModal()}>
         <Drawer
           title={`Media "${showModal()?.name}"`}
-          description=""
           onClose={closeModalAndClearUrl}
           placement="right"
           size="xl"
           showBackdrop="auto"
+          closeOnOutsideClick
+          outsideClickIgnoreSelector="tbody tr, .media-tree-item"
           contentClass="medias-modal"
         >
           <MediaDetails

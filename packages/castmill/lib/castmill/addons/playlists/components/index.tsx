@@ -1068,11 +1068,12 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
           title={t('playlists.playlistTitle', {
             name: currentPlaylist()?.name,
           })}
-          description={t('playlists.buildPlaylist')}
           onClose={closeModal}
           placement="right"
           size="xl"
           showBackdrop="auto"
+          closeOnOutsideClick
+          outsideClickIgnoreSelector="tbody tr, .playlist-tree-item"
           contentClass="playlist-modal"
         >
           <PlaylistView

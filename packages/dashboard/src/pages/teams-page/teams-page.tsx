@@ -298,11 +298,12 @@ const TeamsPage: Component = () => {
       <Show when={showModal()}>
         <Drawer
           title={title()}
-          description={t('teams.description')}
           onClose={closeModal}
           placement="right"
           size="xl"
           showBackdrop="auto"
+          closeOnOutsideClick
+          outsideClickIgnoreSelector="tbody tr"
         >
           <TeamView
             organizationId={store.organizations.selectedId!}

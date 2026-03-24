@@ -537,11 +537,12 @@ const LayoutsPage: Component<AddonComponentProps> = (props) => {
       <Show when={showModal()}>
         <Drawer
           title={currentLayout()?.name || t('layouts.layoutDetails')}
-          description={t('layouts.layoutDetails') || 'Layout details'}
           onClose={closeModalAndClearUrl}
           placement="right"
           size="xl"
           showBackdrop="auto"
+          closeOnOutsideClick
+          outsideClickIgnoreSelector="tbody tr"
           contentClass="layout-modal"
         >
           <Show when={currentLayout()}>
