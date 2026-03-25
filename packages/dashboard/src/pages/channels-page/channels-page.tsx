@@ -731,46 +731,55 @@ const ChannelsPage: Component = () => {
             closeOnOutsideClick
             outsideClickIgnoreSelector="tbody tr, .channel-tree-item"
           >
-            <ChannelView
-              organizationId={store.organizations.selectedId!}
-              channel={currentChannel()!}
-              onSubmit={async (channel: Partial<JsonChannel>) => {
-                try {
-                  const browserTimezone =
-                    Intl.DateTimeFormat().resolvedOptions().timeZone;
-                  if (!channel.id) {
-                    const result = await channelsService.addChannel(
-                      channel.name!,
-                      browserTimezone
-                    );
-                    const newChannel = result.data;
-                    setCurrentChannel(newChannel);
-                    refreshData();
-                    toast.success(
-                      t('channels.success.created', {
-                        name: channel.name || '',
-                      })
-                    );
-                    notifyChannelContentRequirement();
-                    return newChannel;
-                  } else if (channel.id) {
-                    const updatedTeam =
-                      await channelsService.updateChannel(channel);
-                    updateItem(channel.id, channel as JsonChannel);
-                    toast.success(
-                      t('channels.success.updated', {
-                        name: channel.name || '',
-                      })
-                    );
-                    return updatedTeam;
-                  }
-                } catch (error) {
-                  toast.error(
-                    t('channels.errors.saveChannel', { error: String(error) })
-                  );
-                }
-              }}
-            />
+            <Show when={currentChannel()} keyed>
+              {(channel) => (
+                <ChannelView
+                  organizationId={store.organizations.selectedId!}
+                  channel={channel}
+                  onSubmit={async (channelUpdate: Partial<JsonChannel>) => {
+                    try {
+                      const browserTimezone =
+                        Intl.DateTimeFormat().resolvedOptions().timeZone;
+                      if (!channelUpdate.id) {
+                        const result = await channelsService.addChannel(
+                          channelUpdate.name!,
+                          browserTimezone
+                        );
+                        const newChannel = result.data;
+                        setCurrentChannel(newChannel);
+                        refreshData();
+                        toast.success(
+                          t('channels.success.created', {
+                            name: channelUpdate.name || '',
+                          })
+                        );
+                        notifyChannelContentRequirement();
+                        return newChannel;
+                      } else if (channelUpdate.id) {
+                        const updatedTeam =
+                          await channelsService.updateChannel(channelUpdate);
+                        updateItem(
+                          channelUpdate.id,
+                          channelUpdate as JsonChannel
+                        );
+                        toast.success(
+                          t('channels.success.updated', {
+                            name: channelUpdate.name || '',
+                          })
+                        );
+                        return updatedTeam;
+                      }
+                    } catch (error) {
+                      toast.error(
+                        t('channels.errors.saveChannel', {
+                          error: String(error),
+                        })
+                      );
+                    }
+                  }}
+                />
+              )}
+            </Show>
           </Drawer>
         </Show>
 
