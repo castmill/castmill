@@ -66,7 +66,7 @@ export const TeamView = (props: {
   };
 
   return (
-    <div style="width: 60vw;">
+    <div style="width: 100%; box-sizing: border-box;">
       <div class="info">
         <Show when={props.team.insertedAt}>
           <span>{t('teams.addedOn')} </span>{' '}

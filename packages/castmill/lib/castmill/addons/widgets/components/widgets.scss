@@ -36,10 +36,9 @@
 // Widget details modal content with tabs
 .widget-details-content {
   padding: 1rem;
-  height: 70vh;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: visible;
 
   .widget-metadata {
     margin-bottom: 1rem;
@@ -70,17 +69,17 @@
 
   // Target the Tabs component container (direct child div after metadata)
   > div:not(.widget-metadata) {
-    flex: 1;
+    flex: none;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
-    min-height: 0;
+    overflow: visible;
+    min-height: auto;
 
     // Tab content area should scroll
     > div:last-child {
-      flex: 1;
-      overflow-y: auto;
-      min-height: 0;
+      flex: none;
+      overflow-y: visible;
+      min-height: auto;
     }
   }
 }
@@ -116,7 +115,7 @@
   padding: 1rem;
   border-radius: 4px;
   overflow-x: auto;
-  overflow-y: auto;
+  overflow-y: visible;
   font-size: 0.85em;
   max-width: 100%;
   font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
