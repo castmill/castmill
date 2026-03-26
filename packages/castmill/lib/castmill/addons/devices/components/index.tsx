@@ -808,7 +808,7 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
       </Show>
       <Show when={showModal()}>
         <Drawer
-          title={`Device "${currentDevice()?.name}"`}
+          title={t('devices.drawerTitle', { name: currentDevice()?.name })}
           onClose={closeModalAndClearUrl}
           placement="right"
           size="xl"

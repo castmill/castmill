@@ -109,7 +109,7 @@ export const DeviceDetails = (props: {
             label={t('common.name')}
             id="name"
             value={name()}
-            placeholder="Enter device name"
+            placeholder={t('devices.enterDeviceName')}
             onInput={(value: string | number | boolean) => {
               const nextValue = String(value);
               setName(nextValue);
@@ -123,7 +123,7 @@ export const DeviceDetails = (props: {
             label={t('common.description')}
             id="description"
             value={description()}
-            placeholder="Enter a description"
+            placeholder={t('devices.enterDescription')}
             onInput={(value: string | number | boolean) => {
               const nextValue = String(value);
               setDescription(nextValue);

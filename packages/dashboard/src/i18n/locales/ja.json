@@ -1018,7 +1018,9 @@
     "devicesRemovedSuccess": "{{count}}個のデバイスが正常に削除されました",
     "errorRegisteringDevice": "デバイスの登録エラー: {{error}}",
     "errorRemovingDevice": "デバイス{{name}}の削除エラー: {{error}}",
-    "errorRemovingDevices": "デバイスの削除エラー: {{error}}"
+    "errorRemovingDevices": "デバイスの削除エラー: {{error}}",
+    "enterDescription": "説明を入力してください",
+    "drawerTitle": "デバイス \"{{name}}\""
   },
   "validation": {
     "fieldRequired": "この項目は必須です",
@@ -1310,7 +1312,8 @@
     "thumbnail": {
       "failedTitle": "トランスコードに失敗しました",
       "failedDefaultMessage": "プレビューを自動生成できませんでした。"
-    }
+    },
+    "drawerTitle": "メディア \"{{name}}\""
   },
   "dashboard": {
     "noOrganizations": {

@@ -1049,7 +1049,9 @@
       "commandFailed": "An error occurred while processing your request",
       "invalidPincode": "Invalid pincode. Please check the pincode displayed on your device and try again.",
       "pincodeExpired": "This pincode has expired. Please restart the device registration process."
-    }
+    },
+    "enterDescription": "Enter a description",
+    "drawerTitle": "Device \"{{name}}\""
   },
   "validation": {
     "fieldRequired": "This field is required",
@@ -1304,7 +1306,8 @@
     "thumbnail": {
       "failedTitle": "Transcoding failed",
       "failedDefaultMessage": "The preview could not be generated automatically."
-    }
+    },
+    "drawerTitle": "Media \"{{name}}\""
   },
   "dashboard": {
     "noOrganizations": {

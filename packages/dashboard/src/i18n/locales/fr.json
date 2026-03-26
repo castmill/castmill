@@ -1029,7 +1029,9 @@
     "devicesRemovedSuccess": "{{count}} appareil(s) supprimé(s) avec succès",
     "errorRegisteringDevice": "Erreur lors de l'enregistrement de l'appareil : {{error}}",
     "errorRemovingDevice": "Erreur lors de la suppression de l'appareil {{name}} : {{error}}",
-    "errorRemovingDevices": "Erreur lors de la suppression des appareils : {{error}}"
+    "errorRemovingDevices": "Erreur lors de la suppression des appareils : {{error}}",
+    "enterDescription": "Entrez une description",
+    "drawerTitle": "Appareil \"{{name}}\""
   },
   "validation": {
     "fieldRequired": "Ce champ est requis",
@@ -1321,7 +1323,8 @@
     "thumbnail": {
       "failedTitle": "Échec du transcodage",
       "failedDefaultMessage": "L’aperçu n’a pas pu être généré automatiquement."
-    }
+    },
+    "drawerTitle": "Média \"{{name}}\""
   },
   "dashboard": {
     "noOrganizations": {

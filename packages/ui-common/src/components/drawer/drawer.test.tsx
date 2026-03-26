@@ -15,8 +15,9 @@ describe('Drawer Component', () => {
       '[data-testid="drawer-root"]'
     );
     drawerRoots.forEach((root) => root.remove());
-    vi.restoreAllMocks();
     vi.runAllTimers();
+    vi.useRealTimers();
+    vi.restoreAllMocks();
   });
 
   it('renders correctly with title and description', () => {

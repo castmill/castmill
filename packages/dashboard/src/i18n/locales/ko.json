@@ -1017,7 +1017,9 @@
     "devicesRemovedSuccess": "{{count}}개의 기기가 성공적으로 제거되었습니다",
     "errorRegisteringDevice": "기기 등록 오류: {{error}}",
     "errorRemovingDevice": "기기 {{name}} 제거 오류: {{error}}",
-    "errorRemovingDevices": "기기 제거 오류: {{error}}"
+    "errorRemovingDevices": "기기 제거 오류: {{error}}",
+    "enterDescription": "설명을 입력하세요",
+    "drawerTitle": "기기 \"{{name}}\""
   },
   "validation": {
     "fieldRequired": "이 필드는 필수입니다",
@@ -1309,7 +1311,8 @@
     "thumbnail": {
       "failedTitle": "트랜스코딩 실패",
       "failedDefaultMessage": "미리보기를 자동으로 생성할 수 없습니다."
-    }
+    },
+    "drawerTitle": "미디어 \"{{name}}\""
   },
   "dashboard": {
     "noOrganizations": {

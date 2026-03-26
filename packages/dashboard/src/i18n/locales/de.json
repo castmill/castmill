@@ -1036,7 +1036,9 @@
     "devicesRemovedSuccess": "{{count}} Gerät(e) erfolgreich entfernt",
     "errorRegisteringDevice": "Fehler beim Registrieren des Geräts: {{error}}",
     "errorRemovingDevice": "Fehler beim Entfernen des Geräts {{name}}: {{error}}",
-    "errorRemovingDevices": "Fehler beim Entfernen der Geräte: {{error}}"
+    "errorRemovingDevices": "Fehler beim Entfernen der Geräte: {{error}}",
+    "enterDescription": "Beschreibung eingeben",
+    "drawerTitle": "Gerät \"{{name}}\""
   },
   "validation": {
     "fieldRequired": "Dieses Feld ist erforderlich",
@@ -1304,7 +1306,8 @@
     "thumbnail": {
       "failedTitle": "Die Transkodierung ist fehlgeschlagen",
       "failedDefaultMessage": "Die Vorschau konnte nicht automatisch generiert werden."
-    }
+    },
+    "drawerTitle": "Medien \"{{name}}\""
   },
   "dashboard": {
     "noOrganizations": {

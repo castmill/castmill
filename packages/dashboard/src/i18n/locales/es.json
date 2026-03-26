@@ -1042,7 +1042,9 @@
     "devicesRemovedSuccess": "{{count}} dispositivo(s) eliminado(s) exitosamente",
     "errorRegisteringDevice": "Error al registrar el dispositivo: {{error}}",
     "errorRemovingDevice": "Error al eliminar el dispositivo {{name}}: {{error}}",
-    "errorRemovingDevices": "Error al eliminar los dispositivos: {{error}}"
+    "errorRemovingDevices": "Error al eliminar los dispositivos: {{error}}",
+    "enterDescription": "Ingrese una descripción",
+    "drawerTitle": "Dispositivo \"{{name}}\""
   },
   "validation": {
     "fieldRequired": "Este campo es obligatorio",
@@ -1310,7 +1312,8 @@
     "thumbnail": {
       "failedTitle": "La transcodificación falló",
       "failedDefaultMessage": "No se pudo generar la vista previa automáticamente."
-    }
+    },
+    "drawerTitle": "Medio \"{{name}}\""
   },
   "dashboard": {
     "noOrganizations": {

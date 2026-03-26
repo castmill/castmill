@@ -874,7 +874,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
       </Show>
       <Show when={showModal()}>
         <Drawer
-          title={`Media "${showModal()?.name}"`}
+          title={t('medias.drawerTitle', { name: showModal()?.name })}
           onClose={closeModalAndClearUrl}
           placement="right"
           size="xl"
