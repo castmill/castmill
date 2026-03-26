@@ -11,6 +11,10 @@ describe('Drawer Component', () => {
 
   afterEach(() => {
     cleanup();
+    const drawerRoots = document.querySelectorAll(
+      '[data-testid="drawer-root"]'
+    );
+    drawerRoots.forEach((root) => root.remove());
     vi.restoreAllMocks();
     vi.runAllTimers();
   });

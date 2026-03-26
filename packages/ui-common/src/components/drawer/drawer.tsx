@@ -69,6 +69,9 @@ export const Drawer: Component<DrawerProps> = (_props) => {
 
   let panelRef: HTMLDivElement | undefined;
   let previousFocusedElement: HTMLElement | null = null;
+  let activateTimeout: ReturnType<typeof setTimeout> | undefined;
+  let closeTimeout: ReturnType<typeof setTimeout> | undefined;
+  let isClosing = false;
 
   const updateBackdropMode = () => {
     if (props.showBackdrop === 'auto') {
@@ -80,12 +83,18 @@ export const Drawer: Component<DrawerProps> = (_props) => {
   };
 
   const closeDrawer = () => {
+    if (isClosing) {
+      return;
+    }
+
+    isClosing = true;
     setIsActive(false);
 
-    setTimeout(() => {
+    closeTimeout = setTimeout(() => {
       setIsVisible(false);
       props.onClose();
       removeDrawer(drawerId);
+      closeTimeout = undefined;
     }, animationDuration);
   };
 
@@ -137,7 +146,7 @@ export const Drawer: Component<DrawerProps> = (_props) => {
     previousFocusedElement = document.activeElement as HTMLElement;
 
     setIsVisible(true);
-    setTimeout(() => {
+    activateTimeout = setTimeout(() => {
       setIsActive(true);
       panelRef?.focus();
     }, 0);
@@ -168,6 +177,16 @@ export const Drawer: Component<DrawerProps> = (_props) => {
   });
 
   onCleanup(() => {
+    if (activateTimeout) {
+      clearTimeout(activateTimeout);
+      activateTimeout = undefined;
+    }
+
+    if (closeTimeout) {
+      clearTimeout(closeTimeout);
+      closeTimeout = undefined;
+    }
+
     window.removeEventListener('resize', updateBackdropMode);
     document.removeEventListener('keydown', handleKeyDown);
     document.removeEventListener('click', closeOnOutsideClick, true);
