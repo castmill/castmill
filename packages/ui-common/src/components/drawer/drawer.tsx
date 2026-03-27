@@ -58,6 +58,7 @@ export const Drawer: Component<DrawerProps> = (_props) => {
       autoBackdropBreakpoint: 1280,
       closeOnOutsideClick: false,
       outsideClickIgnoreSelector: '',
+      contentClass: '',
     },
     _props
   );
