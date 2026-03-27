@@ -883,31 +883,31 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
           outsideClickIgnoreSelector="tbody tr, .media-tree-item"
           contentClass="medias-modal"
         >
-          <MediaDetails
-            store={props.store}
-            media={showModal()!}
-            onSubmit={async (mediaUpdate) => {
-              try {
-                await MediasService.updateMedia(
-                  props.store.env.baseUrl,
-                  props.store.organizations.selectedId,
-                  `${showModal()?.id}`,
-                  mediaUpdate
-                );
-                refreshData();
-                bumpTree();
-                toast.success(
-                  `Media "${showModal()?.name}" updated successfully`
-                );
-                return true;
-              } catch (error) {
-                toast.error(
-                  `Error updating media ${showModal()?.name}: ${error}`
-                );
-                return false;
-              }
-            }}
-          />
+          <Show when={showModal()} keyed>
+            {(media) => (
+              <MediaDetails
+                store={props.store}
+                media={media}
+                onSubmit={async (mediaUpdate) => {
+                  try {
+                    await MediasService.updateMedia(
+                      props.store.env.baseUrl,
+                      props.store.organizations.selectedId,
+                      `${media.id}`,
+                      mediaUpdate
+                    );
+                    refreshData();
+                    bumpTree();
+                    toast.success(`Media "${media.name}" updated successfully`);
+                    return true;
+                  } catch (error) {
+                    toast.error(`Error updating media ${media.name}: ${error}`);
+                    return false;
+                  }
+                }}
+              />
+            )}
+          </Show>
         </Drawer>
       </Show>
 
