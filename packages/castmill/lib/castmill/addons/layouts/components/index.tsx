@@ -545,16 +545,18 @@ const LayoutsPage: Component<AddonComponentProps> = (props) => {
           outsideClickIgnoreSelector="tbody tr"
           contentClass="layout-modal"
         >
-          <Show when={currentLayout()}>
-            <LayoutView
-              layout={currentLayout()!}
-              store={props.store}
-              onUpdate={(updatedLayout) => {
-                setCurrentLayout(updatedLayout);
-                refreshData();
-              }}
-              onClose={closeModalAndClearUrl}
-            />
+          <Show when={currentLayout()} keyed>
+            {(layout) => (
+              <LayoutView
+                layout={layout}
+                store={props.store}
+                onUpdate={(updatedLayout) => {
+                  setCurrentLayout(updatedLayout);
+                  refreshData();
+                }}
+                onClose={closeModalAndClearUrl}
+              />
+            )}
           </Show>
         </Drawer>
       </Show>
