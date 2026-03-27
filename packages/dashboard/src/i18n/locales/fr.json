@@ -1054,6 +1054,9 @@
       "couldNotGetPublicKey": "Impossible d'obtenir la clé publique",
       "invalidCredential": "Identifiants invalides",
       "signupFailed": "Échec de l'inscription : {{error}}. Veuillez réessayer ou contacter le support."
+    },
+    "success": {
+      "accountCreated": "Compte créé avec succès !"
     }
   },
   "search": {

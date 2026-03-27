@@ -147,12 +147,13 @@ defmodule CastmillWeb.SignUpController do
             signup_success_response(conn, signup.email)
 
           {:error, reason} ->
+            Logger.error("Failed to send signup email for #{email}: #{inspect(reason)}")
+
             conn
             |> put_status(:unprocessable_entity)
             |> json(%{
               status: :error,
-              msg: "Failed to send email",
-              error: inspect(reason)
+              msg: "Failed to send email"
             })
         end
 

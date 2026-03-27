@@ -744,6 +744,9 @@
       "couldNotGetPublicKey": "Could not get public key",
       "invalidCredential": "Invalid credential",
       "signupFailed": "Signup failed: {{error}}. Please try again or contact support."
+    },
+    "success": {
+      "accountCreated": "Account created successfully!"
     }
   },
   "search": {
