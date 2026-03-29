@@ -133,6 +133,11 @@ export const Drawer: Component<DrawerProps> = (_props) => {
       return;
     }
 
+    // Don't close if clicking inside a modal/dialog that is layered on top
+    if (target.closest('[data-modal-overlay]')) {
+      return;
+    }
+
     if (
       props.outsideClickIgnoreSelector &&
       target.closest(props.outsideClickIgnoreSelector)

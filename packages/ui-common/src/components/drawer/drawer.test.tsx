@@ -121,4 +121,69 @@ describe('Drawer Component', () => {
       value: originalWidth,
     });
   });
+
+  it('does not close on outside click when click is inside a modal overlay', () => {
+    const onClose = vi.fn();
+
+    // Create a modal overlay element in the document body
+    const modalOverlay = document.createElement('div');
+    modalOverlay.setAttribute('data-modal-overlay', '');
+    const modalContent = document.createElement('div');
+    modalContent.textContent = 'Modal content';
+    modalOverlay.appendChild(modalContent);
+    document.body.appendChild(modalOverlay);
+
+    render(() => (
+      <Drawer
+        title="Drawer with modal"
+        onClose={onClose}
+        showBackdrop={false}
+        closeOnOutsideClick
+      >
+        <div>Drawer content</div>
+      </Drawer>
+    ));
+
+    vi.runAllTimers();
+
+    // Click inside the modal overlay — drawer should NOT close
+    fireEvent.click(modalContent);
+    vi.runAllTimers();
+
+    expect(onClose).not.toHaveBeenCalled();
+
+    // Clean up the modal overlay
+    modalOverlay.remove();
+  });
+
+  it('closes on outside click when click is not inside a modal overlay', () => {
+    const onClose = vi.fn();
+
+    // Create a regular element outside the drawer (not a modal)
+    const outsideElement = document.createElement('div');
+    outsideElement.textContent = 'Outside';
+    document.body.appendChild(outsideElement);
+
+    render(() => (
+      <Drawer
+        title="Drawer without modal"
+        onClose={onClose}
+        showBackdrop={false}
+        closeOnOutsideClick
+      >
+        <div>Drawer content</div>
+      </Drawer>
+    ));
+
+    vi.runAllTimers();
+
+    // Click outside the drawer — should close
+    fireEvent.click(outsideElement);
+    vi.runAllTimers();
+
+    expect(onClose).toHaveBeenCalled();
+
+    // Clean up
+    outsideElement.remove();
+  });
 });
