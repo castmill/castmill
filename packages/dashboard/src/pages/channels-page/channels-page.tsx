@@ -101,7 +101,7 @@ const ChannelsPage: Component = () => {
   const bumpTree = () => setTreeVersion((v) => v + 1);
 
   const [showAddChannelModal, setShowAddChannelModal] = createSignal(false);
-  const [showModal, setShowModal] = createSignal(false);
+  const [showDrawer, setShowDrawer] = createSignal(false);
   const [currentChannel, setCurrentChannel] = createSignal<JsonChannel>();
   const [selectedChannels, setSelectedChannels] = createSignal(
     new Set<number>()
@@ -370,16 +370,27 @@ const ChannelsPage: Component = () => {
     )
   );
 
+  // Helpers to open/close the channel drawer and keep URL in sync
+  const openChannelDrawer = (channel: JsonChannel) => {
+    setCurrentChannel(channel);
+    setShowDrawer(true);
+    setSearchParams({ itemId: String(channel.id) });
+  };
+
+  const closeChannelDrawer = () => {
+    setSearchParams({ itemId: undefined });
+  };
+
   // Sync modal state with URL itemId parameter
   useModalFromUrl({
     getItemIdFromUrl: () => searchParams.itemId,
-    isModalOpen: () => showModal(),
-    closeModal: () => setShowModal(false),
+    isModalOpen: () => showDrawer(),
+    closeModal: () => setShowDrawer(false),
     openModal: (itemId: string) => {
       const channel = data().find((c) => String(c.id) === String(itemId));
       if (channel) {
         setCurrentChannel(channel);
-        setShowModal(true);
+        setShowDrawer(true);
       }
     },
   });
@@ -432,8 +443,7 @@ const ChannelsPage: Component = () => {
     {
       icon: BsEye,
       handler: (item: ChannelTableItem) => {
-        setCurrentChannel(item);
-        setShowModal(true);
+        openChannelDrawer(item);
       },
       label: t('common.view'),
     },
@@ -646,12 +656,6 @@ const ChannelsPage: Component = () => {
       tableViewRef.updateItem(itemId, item);
     }
   };
-  // Function to close the modal and remove blur
-  const closeModal = () => {
-    // Only clear URL - let createEffect handle closing the modal
-    setSearchParams({ itemId: undefined });
-  };
-
   const addChannel = () => {
     setCurrentChannel();
     setShowAddChannelModal(true);
@@ -699,8 +703,7 @@ const ChannelsPage: Component = () => {
 
                   setShowAddChannelModal(false);
                   if (result?.data) {
-                    setCurrentChannel(result.data);
-                    setShowModal(true);
+                    openChannelDrawer(result.data);
                     refreshData();
 
                     // Complete the onboarding step for channel creation
@@ -721,10 +724,10 @@ const ChannelsPage: Component = () => {
           </Modal>
         </Show>
 
-        <Show when={showModal()}>
+        <Show when={showDrawer()}>
           <Drawer
             title={title()}
-            onClose={closeModal}
+            onClose={closeChannelDrawer}
             placement="right"
             size="xl"
             showBackdrop="auto"
@@ -930,7 +933,7 @@ const ChannelsPage: Component = () => {
               defaultRowAction: {
                 icon: BsEye,
                 handler: (item: ChannelTableItem) => {
-                  setSearchParams({ itemId: String(item.id) });
+                  openChannelDrawer(item);
                 },
                 label: t('common.view'),
               },
@@ -987,15 +990,13 @@ const ChannelsPage: Component = () => {
             refreshKey={treeVersion()}
             storageKey="channels"
             onResourceClick={(item) => {
-              setCurrentChannel(item as unknown as JsonChannel);
-              setShowModal(true);
+              openChannelDrawer(item as unknown as JsonChannel);
             }}
             renderResource={(item) => (
               <div
                 class="channel-tree-item"
                 onClick={() => {
-                  setCurrentChannel(item as unknown as JsonChannel);
-                  setShowModal(true);
+                  openChannelDrawer(item as unknown as JsonChannel);
                 }}
               >
                 <div class="channel-tree-info">

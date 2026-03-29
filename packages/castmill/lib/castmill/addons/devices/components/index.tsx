@@ -301,7 +301,7 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
 
   const [pincode, setPincode] = createSignal('');
 
-  const [showModal, setShowModal] = createSignal(false);
+  const [showDrawer, setShowDrawer] = createSignal(false);
   const [showRegisterModal, setShowRegisterModal] = createSignal(false);
 
   const [registerError, setRegisterError] = createSignal('');
@@ -422,28 +422,25 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
     )
   );
 
-  // Function to close the modal and update URL
-  const closeModalAndClearUrl = () => {
-    // Clear URL FIRST (before animation starts) for immediate feedback
+  // Close the device drawer and clear URL
+  const closeDeviceDrawer = () => {
     if (props.params) {
       const [, setSearchParams] = props.params;
       setSearchParams({ itemId: undefined }, { replace: true });
     }
-
-    // Then close modal (triggers 300ms animation)
-    setShowModal(false);
+    setShowDrawer(false);
   };
 
   // Sync modal state with URL itemId parameter
   useModalFromUrl({
     getItemIdFromUrl: () => props.params?.[0]?.itemId,
-    isModalOpen: () => showModal(),
-    closeModal: closeModalAndClearUrl,
+    isModalOpen: () => showDrawer(),
+    closeModal: () => setShowDrawer(false),
     openModal: (itemId) => {
       const device = data().find((d) => String(d.id) === String(itemId));
       if (device) {
         setCurrentDevice(device);
-        setShowModal(true);
+        setShowDrawer(true);
       }
     },
   });
@@ -535,13 +532,11 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
     }
   };
 
-  // Function to open the modal
-  const openModal = (item: DeviceTableItem) => {
-    // Open modal immediately
+  // Open the device drawer and update URL
+  const openDeviceDrawer = (item: DeviceTableItem) => {
     setCurrentDevice(item);
-    setShowModal(true);
+    setShowDrawer(true);
 
-    // Also update URL for shareability (use replace to avoid polluting browser history)
     if (props.params) {
       const [, setSearchParams] = props.params;
       setSearchParams({ itemId: String(item.id) }, { replace: true });
@@ -621,7 +616,7 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
   const actions = (): TableAction<DeviceTableItem>[] => [
     {
       icon: BsEye,
-      handler: openModal,
+      handler: openDeviceDrawer,
       label: t('common.view'),
     },
     {
@@ -806,10 +801,10 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
           />
         </Modal>
       </Show>
-      <Show when={showModal()}>
+      <Show when={showDrawer()}>
         <Drawer
           title={t('devices.drawerTitle', { name: currentDevice()?.name })}
-          onClose={closeModalAndClearUrl}
+          onClose={closeDeviceDrawer}
           placement="right"
           size="xl"
           showBackdrop="auto"
@@ -958,7 +953,7 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
             defaultRowAction: {
               icon: BsEye,
               handler: (item: DeviceTableItem) => {
-                openModal(item);
+                openDeviceDrawer(item);
               },
               label: t('common.view'),
             },
@@ -1016,12 +1011,14 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
           refreshKey={treeVersion()}
           storageKey="devices"
           onResourceClick={(item) =>
-            openModal(item as unknown as DeviceTableItem)
+            openDeviceDrawer(item as unknown as DeviceTableItem)
           }
           renderResource={(item) => (
             <div
               class="device-tree-item"
-              onClick={() => openModal(item as unknown as DeviceTableItem)}
+              onClick={() =>
+                openDeviceDrawer(item as unknown as DeviceTableItem)
+              }
             >
               <div class="device-tree-info">
                 <span class="device-tree-name">{item.name}</span>

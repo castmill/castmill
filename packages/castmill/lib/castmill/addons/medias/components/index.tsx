@@ -346,31 +346,30 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
     };
   };
 
-  const [showModal, setShowModal] = createSignal<JsonMedia | undefined>();
+  const [showDrawer, setShowDrawer] = createSignal(false);
+  const [currentMedia, setCurrentMedia] = createSignal<JsonMedia | undefined>();
 
   const [showAddMediasModal, setShowAddMediasModal] = createSignal(false);
 
-  // Function to close the modal and update URL
-  const closeModalAndClearUrl = () => {
-    // Clear URL FIRST (before animation starts) for immediate feedback
+  // Close the media drawer and clear URL
+  const closeMediaDrawer = () => {
     if (props.params) {
       const [, setSearchParams] = props.params;
       setSearchParams({ itemId: undefined }, { replace: true });
     }
-
-    // Then close modal (triggers 300ms animation)
-    setShowModal(undefined);
+    setShowDrawer(false);
   };
 
   // Sync modal state with URL for shareable deep links and browser navigation
   useModalFromUrl({
     getItemIdFromUrl: () => props.params?.[0]?.itemId,
-    isModalOpen: () => !!showModal(),
-    closeModal: closeModalAndClearUrl,
+    isModalOpen: () => showDrawer(),
+    closeModal: () => setShowDrawer(false),
     openModal: (itemId) => {
       const media = data().find((m) => String(m.id) === itemId);
       if (media) {
-        setShowModal(media);
+        setCurrentMedia(media);
+        setShowDrawer(true);
       }
     },
   });
@@ -628,7 +627,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
       )
     );
 
-    setShowModal((current) =>
+    setCurrentMedia((current) =>
       current && current.id === itemId ? { ...current, ...item } : current
     );
 
@@ -696,12 +695,11 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
     setShowAddMediasModal(true);
   };
 
-  // Function to open the modal
-  const openModal = (item: JsonMedia) => {
-    // Open modal immediately
-    setShowModal(item);
+  // Open the media drawer and update URL
+  const openMediaDrawer = (item: JsonMedia) => {
+    setCurrentMedia(item);
+    setShowDrawer(true);
 
-    // Also update URL for shareability (use replace to avoid polluting browser history)
     if (props.params) {
       const [, setSearchParams] = props.params;
       setSearchParams({ itemId: String(item.id) }, { replace: true });
@@ -820,7 +818,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
     [
       {
         icon: BsEye,
-        handler: openModal,
+        handler: openMediaDrawer,
         label: t('common.view'),
       },
       {
@@ -872,10 +870,10 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
           />
         </Modal>
       </Show>
-      <Show when={showModal()}>
+      <Show when={showDrawer()}>
         <Drawer
-          title={t('medias.drawerTitle', { name: showModal()?.name })}
-          onClose={closeModalAndClearUrl}
+          title={t('medias.drawerTitle', { name: currentMedia()?.name })}
+          onClose={closeMediaDrawer}
           placement="right"
           size="xl"
           showBackdrop="auto"
@@ -883,7 +881,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
           outsideClickIgnoreSelector="tbody tr, .media-tree-item"
           contentClass="medias-modal"
         >
-          <Show when={showModal()} keyed>
+          <Show when={currentMedia()} keyed>
             {(media) => (
               <MediaDetails
                 store={props.store}
@@ -1043,7 +1041,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
             defaultRowAction: {
               icon: BsEye,
               handler: (item: JsonMedia) => {
-                openModal(item);
+                openMediaDrawer(item);
               },
               label: t('common.view'),
             },
@@ -1100,11 +1098,13 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
           fetchResources={fetchTreeResources}
           refreshKey={treeVersion()}
           storageKey="medias"
-          onResourceClick={(item) => openModal(item as unknown as JsonMedia)}
+          onResourceClick={(item) =>
+            openMediaDrawer(item as unknown as JsonMedia)
+          }
           renderResource={(item) => (
             <div
               class="media-tree-item"
-              onClick={() => openModal(item as unknown as JsonMedia)}
+              onClick={() => openMediaDrawer(item as unknown as JsonMedia)}
             >
               <Show when={(item as any).files?.['thumbnail']}>
                 <img
