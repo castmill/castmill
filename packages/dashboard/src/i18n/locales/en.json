@@ -778,7 +778,9 @@
     "buildPlaylist": "Build your playlist here",
     "renamePlaylist": "Rename Playlist",
     "playlistUpdated": "Playlist \"{{name}}\" updated successfully",
+    "playlistCreated": "Playlist \"{{name}}\" created successfully",
     "errorUpdating": "Error updating playlist {{name}}: {{error}}",
+    "errorCreating": "Error creating playlist: {{error}}",
     "removePlaylist": "Remove Playlist",
     "removePlaylists": "Remove Playlists",
     "confirmRemovePlaylist": "Are you sure you want to remove playlist \"{{name}}\"?",
@@ -1307,7 +1309,9 @@
       "failedTitle": "Transcoding failed",
       "failedDefaultMessage": "The preview could not be generated automatically."
     },
-    "drawerTitle": "Media \"{{name}}\""
+    "drawerTitle": "Media \"{{name}}\"",
+    "mediaUpdated": "Media \"{{name}}\" updated successfully",
+    "errorUpdating": "Error updating media {{name}}: {{error}}"
   },
   "dashboard": {
     "noOrganizations": {

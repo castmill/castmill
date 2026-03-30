@@ -746,7 +746,9 @@
     "buildPlaylist": "여기서 재생목록을 만드세요",
     "renamePlaylist": "재생목록 이름 변경",
     "playlistUpdated": "재생목록 \"{{name}}\"이(가) 성공적으로 업데이트되었습니다",
+    "playlistCreated": "재생목록 \"{{name}}\"이(가) 성공적으로 생성되었습니다",
     "errorUpdating": "재생목록 {{name}} 업데이트 오류: {{error}}",
+    "errorCreating": "재생목록 생성 오류: {{error}}",
     "removePlaylist": "재생목록 제거",
     "removePlaylists": "재생목록 제거",
     "confirmRemovePlaylist": "재생목록 \"{{name}}\"을(를) 제거하시겠습니까?",
@@ -1312,7 +1314,9 @@
       "failedTitle": "트랜스코딩 실패",
       "failedDefaultMessage": "미리보기를 자동으로 생성할 수 없습니다."
     },
-    "drawerTitle": "미디어 \"{{name}}\""
+    "drawerTitle": "미디어 \"{{name}}\"",
+    "mediaUpdated": "미디어 \"{{name}}\"이(가) 성공적으로 업데이트되었습니다",
+    "errorUpdating": "미디어 {{name}} 업데이트 오류: {{error}}"
   },
   "dashboard": {
     "noOrganizations": {

@@ -38,6 +38,7 @@ export interface DrawerProps {
 
 const animationDuration = 300;
 let drawerStack: string[] = [];
+let drawerIdCounter = 0;
 
 function isTopDrawer(drawerId: string) {
   return drawerStack[drawerStack.length - 1] === drawerId;
@@ -63,7 +64,7 @@ export const Drawer: Component<DrawerProps> = (_props) => {
     _props
   );
 
-  const drawerId = Math.random().toString(36).substring(7);
+  const drawerId = `drawer-${++drawerIdCounter}`;
   const [isVisible, setIsVisible] = createSignal(false);
   const [isActive, setIsActive] = createSignal(false);
   const [hasBackdrop, setHasBackdrop] = createSignal(true);
@@ -251,6 +252,7 @@ export const Drawer: Component<DrawerProps> = (_props) => {
                 icon={VsClose}
                 onClick={closeDrawer}
                 color="secondary"
+                title="Close"
               />
             </div>
           </div>

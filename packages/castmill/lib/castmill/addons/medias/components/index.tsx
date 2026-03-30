@@ -896,10 +896,17 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
                     );
                     refreshData();
                     bumpTree();
-                    toast.success(`Media "${media.name}" updated successfully`);
+                    toast.success(
+                      t('medias.mediaUpdated', { name: media.name })
+                    );
                     return true;
                   } catch (error) {
-                    toast.error(`Error updating media ${media.name}: ${error}`);
+                    toast.error(
+                      t('medias.errorUpdating', {
+                        name: media.name,
+                        error: String(error),
+                      })
+                    );
                     return false;
                   }
                 }}

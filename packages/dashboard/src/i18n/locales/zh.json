@@ -746,7 +746,9 @@
     "buildPlaylist": "在此处创建您的播放列表",
     "renamePlaylist": "重命名播放列表",
     "playlistUpdated": "播放列表 \"{{name}}\" 已成功更新",
+    "playlistCreated": "播放列表 \"{{name}}\" 已成功创建",
     "errorUpdating": "更新播放列表 {{name}} 时出错：{{error}}",
+    "errorCreating": "创建播放列表时出错：{{error}}",
     "removePlaylist": "删除播放列表",
     "removePlaylists": "删除播放列表",
     "confirmRemovePlaylist": "您确定要删除播放列表 \"{{name}}\" 吗？",
@@ -1312,7 +1314,9 @@
       "failedTitle": "转码失败",
       "failedDefaultMessage": "无法自动生成预览。"
     },
-    "drawerTitle": "媒体 \"{{name}}\""
+    "drawerTitle": "媒体 \"{{name}}\"",
+    "mediaUpdated": "媒体 \"{{name}}\" 更新成功",
+    "errorUpdating": "更新媒体 {{name}} 时出错：{{error}}"
   },
   "dashboard": {
     "noOrganizations": {

@@ -747,7 +747,9 @@
     "buildPlaylist": "ここでプレイリストを作成してください",
     "renamePlaylist": "プレイリストの名前を変更",
     "playlistUpdated": "プレイリスト「{{name}}」が正常に更新されました",
+    "playlistCreated": "プレイリスト「{{name}}」が正常に作成されました",
     "errorUpdating": "プレイリスト{{name}}の更新中にエラーが発生しました：{{error}}",
+    "errorCreating": "プレイリストの作成中にエラーが発生しました：{{error}}",
     "removePlaylist": "プレイリストを削除",
     "removePlaylists": "プレイリストを削除",
     "confirmRemovePlaylist": "プレイリスト「{{name}}」を削除してもよろしいですか？",
@@ -1313,7 +1315,9 @@
       "failedTitle": "トランスコードに失敗しました",
       "failedDefaultMessage": "プレビューを自動生成できませんでした。"
     },
-    "drawerTitle": "メディア \"{{name}}\""
+    "drawerTitle": "メディア \"{{name}}\"",
+    "mediaUpdated": "メディア \"{{name}}\" が正常に更新されました",
+    "errorUpdating": "メディア {{name}} の更新エラー：{{error}}"
   },
   "dashboard": {
     "noOrganizations": {

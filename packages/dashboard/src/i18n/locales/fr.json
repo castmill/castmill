@@ -758,7 +758,9 @@
     "buildPlaylist": "Créez votre playlist ici",
     "renamePlaylist": "Renommer la playlist",
     "playlistUpdated": "Playlist \"{{name}}\" mise à jour avec succès",
+    "playlistCreated": "Playlist \"{{name}}\" créée avec succès",
     "errorUpdating": "Erreur lors de la mise à jour de la playlist {{name}} : {{error}}",
+    "errorCreating": "Erreur lors de la création de la playlist : {{error}}",
     "removePlaylist": "Supprimer la playlist",
     "removePlaylists": "Supprimer les playlists",
     "confirmRemovePlaylist": "Êtes-vous sûr de vouloir supprimer la playlist \"{{name}}\" ?",
@@ -1324,7 +1326,9 @@
       "failedTitle": "Échec du transcodage",
       "failedDefaultMessage": "L’aperçu n’a pas pu être généré automatiquement."
     },
-    "drawerTitle": "Média \"{{name}}\""
+    "drawerTitle": "Média \"{{name}}\"",
+    "mediaUpdated": "Média \"{{name}}\" mis à jour avec succès",
+    "errorUpdating": "Erreur lors de la mise à jour du média {{name}} : {{error}}"
   },
   "dashboard": {
     "noOrganizations": {

@@ -765,7 +765,9 @@
     "buildPlaylist": "Erstellen Sie hier Ihre Playlist",
     "renamePlaylist": "Playlist umbenennen",
     "playlistUpdated": "Playlist \"{{name}}\" erfolgreich aktualisiert",
+    "playlistCreated": "Playlist \"{{name}}\" erfolgreich erstellt",
     "errorUpdating": "Fehler beim Aktualisieren der Playlist {{name}}: {{error}}",
+    "errorCreating": "Fehler beim Erstellen der Playlist: {{error}}",
     "removePlaylist": "Playlist entfernen",
     "removePlaylists": "Playlists entfernen",
     "confirmRemovePlaylist": "Sind Sie sicher, dass Sie die Playlist \"{{name}}\" entfernen möchten?",
@@ -1307,7 +1309,9 @@
       "failedTitle": "Die Transkodierung ist fehlgeschlagen",
       "failedDefaultMessage": "Die Vorschau konnte nicht automatisch generiert werden."
     },
-    "drawerTitle": "Medien \"{{name}}\""
+    "drawerTitle": "Medien \"{{name}}\"",
+    "mediaUpdated": "Medien \"{{name}}\" erfolgreich aktualisiert",
+    "errorUpdating": "Fehler beim Aktualisieren von Medien {{name}}: {{error}}"
   },
   "dashboard": {
     "noOrganizations": {

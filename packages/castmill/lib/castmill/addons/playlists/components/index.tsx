@@ -1032,14 +1032,16 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
                   setCurrentPlaylist(result.data);
                   setShowDrawer(true);
                   refreshData();
-                  toast.success(`Playlist "${name}" created successfully`);
+                  toast.success(t('playlists.playlistCreated', { name }));
                   loadQuota(); // Reload quota after creation
 
                   // Complete the onboarding step for playlist creation
                   props.store.onboarding?.completeStep?.('create_playlist');
                 }
               } catch (error) {
-                toast.error(`Error creating playlist: ${error}`);
+                toast.error(
+                  t('playlists.errorCreating', { error: String(error) })
+                );
               }
             }}
           />

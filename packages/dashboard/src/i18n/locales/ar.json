@@ -746,7 +746,9 @@
     "buildPlaylist": "أنشئ قائمة التشغيل هنا",
     "renamePlaylist": "إعادة تسمية قائمة التشغيل",
     "playlistUpdated": "تم تحديث قائمة التشغيل \"{{name}}\" بنجاح",
+    "playlistCreated": "تم إنشاء قائمة التشغيل \"{{name}}\" بنجاح",
     "errorUpdating": "خطأ في تحديث قائمة التشغيل {{name}}: {{error}}",
+    "errorCreating": "خطأ في إنشاء قائمة التشغيل: {{error}}",
     "removePlaylist": "إزالة قائمة التشغيل",
     "removePlaylists": "إزالة قوائم التشغيل",
     "confirmRemovePlaylist": "هل أنت متأكد من أنك تريد إزالة قائمة التشغيل \"{{name}}\"؟",
@@ -1312,7 +1314,9 @@
       "failedTitle": "فشل تحويل الوسائط",
       "failedDefaultMessage": "تعذر إنشاء المعاينة تلقائيًا."
     },
-    "drawerTitle": "الوسائط \"{{name}}\""
+    "drawerTitle": "الوسائط \"{{name}}\"",
+    "mediaUpdated": "تم تحديث الوسائط \"{{name}}\" بنجاح",
+    "errorUpdating": "خطأ في تحديث الوسائط {{name}}: {{error}}"
   },
   "dashboard": {
     "noOrganizations": {
