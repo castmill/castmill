@@ -741,7 +741,9 @@
     "buildPlaylist": "Bygg din spellista här",
     "renamePlaylist": "Byt namn på spellista",
     "playlistUpdated": "Spellista \"{{name}}\" uppdaterades",
+    "playlistCreated": "Spellista \"{{name}}\" skapades",
     "errorUpdating": "Fel vid uppdatering av spellista {{name}}: {{error}}",
+    "errorCreating": "Fel vid skapande av spellista: {{error}}",
     "removePlaylist": "Ta bort spellista",
     "removePlaylists": "Ta bort spellistor",
     "confirmRemovePlaylist": "Är du säker på att du vill ta bort spellista \"{{name}}\"?",
@@ -1012,7 +1014,9 @@
     "devicesRemovedSuccess": "{{count}} enhet(er) togs bort framgångsrikt",
     "errorRegisteringDevice": "Fel vid registrering av enhet: {{error}}",
     "errorRemovingDevice": "Fel vid borttagning av enhet {{name}}: {{error}}",
-    "errorRemovingDevices": "Fel vid borttagning av enheter: {{error}}"
+    "errorRemovingDevices": "Fel vid borttagning av enheter: {{error}}",
+    "enterDescription": "Ange en beskrivning",
+    "drawerTitle": "Enhet \"{{name}}\""
   },
   "validation": {
     "fieldRequired": "Detta fält är obligatoriskt",
@@ -1304,7 +1308,10 @@
     "thumbnail": {
       "failedTitle": "Transkodningen misslyckades",
       "failedDefaultMessage": "Förhandsvisningen kunde inte genereras automatiskt."
-    }
+    },
+    "drawerTitle": "Mediefil \"{{name}}\"",
+    "mediaUpdated": "Mediefil \"{{name}}\" uppdaterad",
+    "errorUpdating": "Fel vid uppdatering av mediefil {{name}}: {{error}}"
   },
   "dashboard": {
     "noOrganizations": {

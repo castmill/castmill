@@ -17,6 +17,7 @@ import {
   Button,
   IconButton,
   Modal,
+  Drawer,
   TableAction,
   Column,
   TableView,
@@ -70,7 +71,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
   const toast = useToast();
   const [data, setData] = createSignal<JsonPlaylist[]>([]);
   const [currentPlaylist, setCurrentPlaylist] = createSignal<JsonPlaylist>();
-  const [showModal, setShowModal] = createSignal(false);
+  const [showDrawer, setShowDrawer] = createSignal(false);
   const [showRenameModal, setShowRenameModal] = createSignal(false);
 
   // Create a derived signal from props.params to make it reactive
@@ -80,27 +81,24 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
     return props.params[0]?.itemId;
   };
 
-  // Function to close the modal and update URL
-  const closeModalAndClearUrl = () => {
-    // Clear URL FIRST (before animation starts) for immediate feedback
+  // Close the playlist drawer and clear URL
+  const closePlaylistDrawer = () => {
     if (props.params) {
       const [, setSearchParams] = props.params;
       setSearchParams({ itemId: undefined }, { replace: true });
     }
-
-    // Then close modal (triggers 300ms animation)
-    setShowModal(false);
+    setShowDrawer(false);
   };
 
-  // Helper function to open modal for a given itemId
-  const openModalFromItemId = (itemId: string) => {
+  // Helper function to open drawer for a given itemId
+  const openPlaylistDrawerFromItemId = (itemId: string) => {
     const currentData = data();
 
     // First check if item is in current page data
     const playlist = currentData.find((p) => String(p.id) === String(itemId));
     if (playlist) {
       setCurrentPlaylist(playlist);
-      setShowModal(true);
+      setShowDrawer(true);
     } else if (currentData.length > 0 && props.store.organizations.selectedId) {
       // Item not in current page - fetch it by ID
       PlaylistsService.getPlaylist(
@@ -110,7 +108,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
       )
         .then((fetchedPlaylist) => {
           setCurrentPlaylist(fetchedPlaylist);
-          setShowModal(true);
+          setShowDrawer(true);
         })
         .catch((error) => {
           console.error('Failed to fetch playlist by ID:', error);
@@ -350,9 +348,9 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
   // Sync modal state with URL for shareable deep links and browser navigation
   useModalFromUrl({
     getItemIdFromUrl: itemIdFromUrl,
-    isModalOpen: () => showModal(),
-    closeModal: closeModalAndClearUrl,
-    openModal: openModalFromItemId,
+    isModalOpen: () => showDrawer(),
+    closeModal: () => setShowDrawer(false),
+    openModal: openPlaylistDrawerFromItemId,
   });
 
   // Handle onboarding highlight for the Add Playlist button
@@ -560,29 +558,14 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
     setShowAddPlaylistModal(true);
   };
 
-  // Function to open the modal
-  const openModal = (item: JsonPlaylist) => {
-    // Open modal immediately
+  // Open the playlist drawer and update URL
+  const openPlaylistDrawer = (item: JsonPlaylist) => {
     setCurrentPlaylist(item);
-    setShowModal(true);
-
-    // Also update URL for shareability (use replace to avoid polluting browser history)
+    setShowDrawer(true);
     if (props.params) {
       const [searchParams, setSearchParams] = props.params;
       setSearchParams({ itemId: String(item.id) }, { replace: true });
     }
-  };
-
-  // Function to close the modal and remove blur
-  const closeModal = () => {
-    // Clear URL FIRST (before animation starts) for immediate feedback
-    if (props.params) {
-      const [, setSearchParams] = props.params;
-      setSearchParams({ itemId: undefined }, { replace: true });
-    }
-
-    // Then close modal (triggers 300ms animation)
-    setShowModal(false);
   };
 
   const [customRatioModal, setCustomRatioModal] = createSignal<{
@@ -788,7 +771,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
   const actions = (): TableAction<JsonPlaylist>[] => [
     {
       icon: BsEye,
-      handler: openModal,
+      handler: openPlaylistDrawer,
       label: t('common.view'),
     },
     {
@@ -1047,28 +1030,34 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
                 setShowAddPlaylistModal(false);
                 if (result?.data) {
                   setCurrentPlaylist(result.data);
-                  setShowModal(true);
+                  setShowDrawer(true);
                   refreshData();
-                  toast.success(`Playlist "${name}" created successfully`);
+                  toast.success(t('playlists.playlistCreated', { name }));
                   loadQuota(); // Reload quota after creation
 
                   // Complete the onboarding step for playlist creation
                   props.store.onboarding?.completeStep?.('create_playlist');
                 }
               } catch (error) {
-                toast.error(`Error creating playlist: ${error}`);
+                toast.error(
+                  t('playlists.errorCreating', { error: String(error) })
+                );
               }
             }}
           />
         </Modal>
       </Show>
-      <Show when={showModal()}>
-        <Modal
+      <Show when={showDrawer()}>
+        <Drawer
           title={t('playlists.playlistTitle', {
             name: currentPlaylist()?.name,
           })}
-          description={t('playlists.buildPlaylist')}
-          onClose={closeModal}
+          onClose={closePlaylistDrawer}
+          placement="right"
+          size="xl"
+          showBackdrop="auto"
+          closeOnOutsideClick
+          outsideClickIgnoreSelector="tbody tr, .playlist-tree-item"
           contentClass="playlist-modal"
         >
           <PlaylistView
@@ -1080,9 +1069,9 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
             onChange={() => {
               // Playlist changed
             }}
-            onNavigateAway={closeModal}
+            onNavigateAway={closePlaylistDrawer}
           />
-        </Modal>
+        </Drawer>
       </Show>
 
       <Show when={showRenameModal()}>
@@ -1271,7 +1260,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
             defaultRowAction: {
               icon: BsEye,
               handler: (item: JsonPlaylist) => {
-                openModal(item);
+                openPlaylistDrawer(item);
               },
               label: t('common.view'),
             },
@@ -1329,11 +1318,15 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
           fetchResources={fetchTreeResources}
           refreshKey={treeVersion()}
           storageKey="playlists"
-          onResourceClick={(item) => openModal(item as unknown as JsonPlaylist)}
+          onResourceClick={(item) =>
+            openPlaylistDrawer(item as unknown as JsonPlaylist)
+          }
           renderResource={(item) => (
             <div
               class="playlist-tree-item"
-              onClick={() => openModal(item as unknown as JsonPlaylist)}
+              onClick={() =>
+                openPlaylistDrawer(item as unknown as JsonPlaylist)
+              }
             >
               <div class="playlist-tree-info">
                 <span class="playlist-tree-name">{item.name}</span>

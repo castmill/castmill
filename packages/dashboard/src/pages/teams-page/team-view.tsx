@@ -1,4 +1,4 @@
-import { createSignal, createEffect, Show } from 'solid-js';
+import { createSignal, createEffect, Show, on } from 'solid-js';
 
 import { Button, FormItem } from '@castmill/ui-common';
 import { usePermissions } from '../../hooks/usePermissions';
@@ -23,6 +23,18 @@ export const TeamView = (props: {
 
   const [isFormModified, setIsFormModified] = createSignal(false);
   const [errors, setErrors] = createSignal(new Map());
+
+  createEffect(
+    on(
+      () => props.team.id,
+      () => {
+        setTeamId(props.team.id);
+        setName(props.team.name || '');
+        setErrors(new Map());
+        setIsFormModified(false);
+      }
+    )
+  );
 
   // Check if user can update teams (for existing teams) or create teams (for new teams)
   const canEdit = () => {
@@ -66,7 +78,7 @@ export const TeamView = (props: {
   };
 
   return (
-    <div style="width: 60vw;">
+    <div style="width: 100%; box-sizing: border-box;">
       <div class="info">
         <Show when={props.team.insertedAt}>
           <span>{t('teams.addedOn')} </span>{' '}

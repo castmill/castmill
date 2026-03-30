@@ -18,6 +18,7 @@ import {
   TableViewRef,
   TableAction,
   Modal,
+  Drawer,
   ConfirmDialog,
   FetchDataOptions,
   TeamFilter,
@@ -100,7 +101,7 @@ const ChannelsPage: Component = () => {
   const bumpTree = () => setTreeVersion((v) => v + 1);
 
   const [showAddChannelModal, setShowAddChannelModal] = createSignal(false);
-  const [showModal, setShowModal] = createSignal(false);
+  const [showDrawer, setShowDrawer] = createSignal(false);
   const [currentChannel, setCurrentChannel] = createSignal<JsonChannel>();
   const [selectedChannels, setSelectedChannels] = createSignal(
     new Set<number>()
@@ -369,16 +370,27 @@ const ChannelsPage: Component = () => {
     )
   );
 
+  // Helpers to open/close the channel drawer and keep URL in sync
+  const openChannelDrawer = (channel: JsonChannel) => {
+    setCurrentChannel(channel);
+    setShowDrawer(true);
+    setSearchParams({ itemId: String(channel.id) });
+  };
+
+  const closeChannelDrawer = () => {
+    setSearchParams({ itemId: undefined });
+  };
+
   // Sync modal state with URL itemId parameter
   useModalFromUrl({
     getItemIdFromUrl: () => searchParams.itemId,
-    isModalOpen: () => showModal(),
-    closeModal: () => setShowModal(false),
+    isModalOpen: () => showDrawer(),
+    closeModal: () => setShowDrawer(false),
     openModal: (itemId: string) => {
       const channel = data().find((c) => String(c.id) === String(itemId));
       if (channel) {
         setCurrentChannel(channel);
-        setShowModal(true);
+        setShowDrawer(true);
       }
     },
   });
@@ -431,8 +443,7 @@ const ChannelsPage: Component = () => {
     {
       icon: BsEye,
       handler: (item: ChannelTableItem) => {
-        setCurrentChannel(item);
-        setShowModal(true);
+        openChannelDrawer(item);
       },
       label: t('common.view'),
     },
@@ -645,12 +656,6 @@ const ChannelsPage: Component = () => {
       tableViewRef.updateItem(itemId, item);
     }
   };
-  // Function to close the modal and remove blur
-  const closeModal = () => {
-    // Only clear URL - let createEffect handle closing the modal
-    setSearchParams({ itemId: undefined });
-  };
-
   const addChannel = () => {
     setCurrentChannel();
     setShowAddChannelModal(true);
@@ -698,8 +703,7 @@ const ChannelsPage: Component = () => {
 
                   setShowAddChannelModal(false);
                   if (result?.data) {
-                    setCurrentChannel(result.data);
-                    setShowModal(true);
+                    openChannelDrawer(result.data);
                     refreshData();
 
                     // Complete the onboarding step for channel creation
@@ -720,53 +724,66 @@ const ChannelsPage: Component = () => {
           </Modal>
         </Show>
 
-        <Show when={showModal()}>
-          <Modal
+        <Show when={showDrawer()}>
+          <Drawer
             title={title()}
-            description={t('channels.description')}
-            onClose={closeModal}
+            onClose={closeChannelDrawer}
+            placement="right"
+            size="xl"
+            showBackdrop="auto"
+            closeOnOutsideClick
+            outsideClickIgnoreSelector="tbody tr, .channel-tree-item"
           >
-            <ChannelView
-              organizationId={store.organizations.selectedId!}
-              channel={currentChannel()!}
-              onSubmit={async (channel: Partial<JsonChannel>) => {
-                try {
-                  const browserTimezone =
-                    Intl.DateTimeFormat().resolvedOptions().timeZone;
-                  if (!channel.id) {
-                    const result = await channelsService.addChannel(
-                      channel.name!,
-                      browserTimezone
-                    );
-                    const newChannel = result.data;
-                    setCurrentChannel(newChannel);
-                    refreshData();
-                    toast.success(
-                      t('channels.success.created', {
-                        name: channel.name || '',
-                      })
-                    );
-                    notifyChannelContentRequirement();
-                    return newChannel;
-                  } else if (channel.id) {
-                    const updatedTeam =
-                      await channelsService.updateChannel(channel);
-                    updateItem(channel.id, channel as JsonChannel);
-                    toast.success(
-                      t('channels.success.updated', {
-                        name: channel.name || '',
-                      })
-                    );
-                    return updatedTeam;
-                  }
-                } catch (error) {
-                  toast.error(
-                    t('channels.errors.saveChannel', { error: String(error) })
-                  );
-                }
-              }}
-            />
-          </Modal>
+            <Show when={currentChannel()} keyed>
+              {(channel) => (
+                <ChannelView
+                  organizationId={store.organizations.selectedId!}
+                  channel={channel}
+                  onSubmit={async (channelUpdate: Partial<JsonChannel>) => {
+                    try {
+                      const browserTimezone =
+                        Intl.DateTimeFormat().resolvedOptions().timeZone;
+                      if (!channelUpdate.id) {
+                        const result = await channelsService.addChannel(
+                          channelUpdate.name!,
+                          browserTimezone
+                        );
+                        const newChannel = result.data;
+                        setCurrentChannel(newChannel);
+                        refreshData();
+                        toast.success(
+                          t('channels.success.created', {
+                            name: channelUpdate.name || '',
+                          })
+                        );
+                        notifyChannelContentRequirement();
+                        return newChannel;
+                      } else if (channelUpdate.id) {
+                        const updatedTeam =
+                          await channelsService.updateChannel(channelUpdate);
+                        updateItem(
+                          channelUpdate.id,
+                          channelUpdate as JsonChannel
+                        );
+                        toast.success(
+                          t('channels.success.updated', {
+                            name: channelUpdate.name || '',
+                          })
+                        );
+                        return updatedTeam;
+                      }
+                    } catch (error) {
+                      toast.error(
+                        t('channels.errors.saveChannel', {
+                          error: String(error),
+                        })
+                      );
+                    }
+                  }}
+                />
+              )}
+            </Show>
+          </Drawer>
         </Show>
 
         <ConfirmDialog
@@ -916,7 +933,7 @@ const ChannelsPage: Component = () => {
               defaultRowAction: {
                 icon: BsEye,
                 handler: (item: ChannelTableItem) => {
-                  setSearchParams({ itemId: String(item.id) });
+                  openChannelDrawer(item);
                 },
                 label: t('common.view'),
               },
@@ -973,15 +990,13 @@ const ChannelsPage: Component = () => {
             refreshKey={treeVersion()}
             storageKey="channels"
             onResourceClick={(item) => {
-              setCurrentChannel(item as unknown as JsonChannel);
-              setShowModal(true);
+              openChannelDrawer(item as unknown as JsonChannel);
             }}
             renderResource={(item) => (
               <div
                 class="channel-tree-item"
                 onClick={() => {
-                  setCurrentChannel(item as unknown as JsonChannel);
-                  setShowModal(true);
+                  openChannelDrawer(item as unknown as JsonChannel);
                 }}
               >
                 <div class="channel-tree-info">

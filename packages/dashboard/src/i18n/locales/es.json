@@ -771,7 +771,9 @@
     "buildPlaylist": "Construye tu lista de reproducción aquí",
     "renamePlaylist": "Renombrar lista de reproducción",
     "playlistUpdated": "Lista de reproducción \"{{name}}\" actualizada exitosamente",
+    "playlistCreated": "Lista de reproducción \"{{name}}\" creada exitosamente",
     "errorUpdating": "Error al actualizar la lista de reproducción {{name}}: {{error}}",
+    "errorCreating": "Error al crear la lista de reproducción: {{error}}",
     "removePlaylist": "Eliminar lista de reproducción",
     "removePlaylists": "Eliminar listas de reproducción",
     "confirmRemovePlaylist": "¿Estás seguro de que quieres eliminar la lista de reproducción \"{{name}}\"?",
@@ -1042,7 +1044,9 @@
     "devicesRemovedSuccess": "{{count}} dispositivo(s) eliminado(s) exitosamente",
     "errorRegisteringDevice": "Error al registrar el dispositivo: {{error}}",
     "errorRemovingDevice": "Error al eliminar el dispositivo {{name}}: {{error}}",
-    "errorRemovingDevices": "Error al eliminar los dispositivos: {{error}}"
+    "errorRemovingDevices": "Error al eliminar los dispositivos: {{error}}",
+    "enterDescription": "Ingrese una descripción",
+    "drawerTitle": "Dispositivo \"{{name}}\""
   },
   "validation": {
     "fieldRequired": "Este campo es obligatorio",
@@ -1310,7 +1314,10 @@
     "thumbnail": {
       "failedTitle": "La transcodificación falló",
       "failedDefaultMessage": "No se pudo generar la vista previa automáticamente."
-    }
+    },
+    "drawerTitle": "Medio \"{{name}}\"",
+    "mediaUpdated": "Medio \"{{name}}\" actualizado correctamente",
+    "errorUpdating": "Error al actualizar medio {{name}}: {{error}}"
   },
   "dashboard": {
     "noOrganizations": {

@@ -52,9 +52,6 @@ export const PlaylistView: Component<{
   const [constrainByWidth, setConstrainByWidth] = createSignal(false);
   const [refReady, setRefReady] = createSignal(false);
   let previewWrapperRef: HTMLDivElement | undefined;
-  let containerRef: HTMLDivElement | undefined;
-  const [containerReady, setContainerReady] = createSignal(false);
-  const [containerHeight, setContainerHeight] = createSignal<number>();
 
   // Store reference to playlist preview for seeking
   let previewRef: PlaylistPreviewRef | null = null;
@@ -119,55 +116,6 @@ export const PlaylistView: Component<{
 
     onCleanup(() => {
       resizeObserver.disconnect();
-    });
-  });
-
-  // Track the available height within the modal by calculating modalContent - modalHeader - padding
-  createEffect(() => {
-    if (!containerReady() || !containerRef) {
-      return;
-    }
-
-    const modalContent = containerRef.closest(
-      '[class*="modalContent"]'
-    ) as HTMLElement;
-    if (!modalContent) {
-      return;
-    }
-
-    const updateHeight = () => {
-      const modalHeader = modalContent.querySelector(
-        '[class*="modalHeader"]'
-      ) as HTMLElement;
-      if (!modalHeader) {
-        return;
-      }
-
-      const contentHeight = modalContent.clientHeight;
-      const headerHeight = modalHeader.clientHeight;
-      const contentStyles = window.getComputedStyle(modalContent);
-      const contentPaddingTop = parseFloat(contentStyles.paddingTop);
-      const contentPaddingBottom = parseFloat(contentStyles.paddingBottom);
-
-      const availableHeight =
-        contentHeight - headerHeight - contentPaddingTop - contentPaddingBottom;
-
-      if (availableHeight > 0) {
-        setContainerHeight(availableHeight);
-      }
-    };
-
-    updateHeight();
-
-    const resizeObserver = new ResizeObserver(() => updateHeight());
-    resizeObserver.observe(modalContent);
-
-    const handleWindowResize = () => updateHeight();
-    window.addEventListener('resize', handleWindowResize);
-
-    onCleanup(() => {
-      resizeObserver.disconnect();
-      window.removeEventListener('resize', handleWindowResize);
     });
   });
 
@@ -521,16 +469,7 @@ export const PlaylistView: Component<{
 
   return (
     <Show when={!loading()}>
-      <div
-        class="playlist-view-container"
-        ref={(el) => {
-          containerRef = el;
-          setContainerReady(true);
-        }}
-        style={
-          containerHeight() ? { height: `${containerHeight()}px` } : undefined
-        }
-      >
+      <div class="playlist-view-container" style={{ height: '100%' }}>
         <div class="playlist-view">
           <div class="playlist-items-wrapper">
             <WidgetChooser
@@ -568,6 +507,7 @@ export const PlaylistView: Component<{
               setRefReady(true);
             }}
             class="playlist-preview-wrapper"
+            style={{ height: '100%' }}
             classList={{
               'constrain-by-width': constrainByWidth(),
             }}

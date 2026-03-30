@@ -14,6 +14,7 @@ import {
   Button,
   IconButton,
   Modal,
+  Drawer,
   TableAction,
   Column,
   TableView,
@@ -54,7 +55,7 @@ const LayoutsPage: Component<AddonComponentProps> = (props) => {
   const toast = useToast();
   const [data, setData] = createSignal<JsonLayout[]>([]);
   const [currentLayout, setCurrentLayout] = createSignal<JsonLayout>();
-  const [showModal, setShowModal] = createSignal(false);
+  const [showDrawer, setShowDrawer] = createSignal(false);
   const [showRenameModal, setShowRenameModal] = createSignal(false);
 
   // Get itemId from URL params
@@ -63,23 +64,23 @@ const LayoutsPage: Component<AddonComponentProps> = (props) => {
     return props.params[0]?.itemId;
   };
 
-  // Function to close the modal and update URL
-  const closeModalAndClearUrl = () => {
+  // Close the layout drawer and clear URL
+  const closeLayoutDrawer = () => {
     if (props.params) {
       const [, setSearchParams] = props.params;
       setSearchParams({ itemId: undefined }, { replace: true });
     }
-    setShowModal(false);
+    setShowDrawer(false);
   };
 
-  // Helper function to open modal for a given itemId
-  const openModalFromItemId = (itemId: string) => {
+  // Helper function to open drawer for a given itemId
+  const openLayoutDrawerFromItemId = (itemId: string) => {
     const currentData = data();
 
     const layout = currentData.find((l) => String(l.id) === String(itemId));
     if (layout) {
       setCurrentLayout(layout);
-      setShowModal(true);
+      setShowDrawer(true);
     } else if (currentData.length > 0 && props.store.organizations.selectedId) {
       LayoutsService.getLayout(
         props.store.env.baseUrl,
@@ -88,7 +89,7 @@ const LayoutsPage: Component<AddonComponentProps> = (props) => {
       )
         .then((fetchedLayout) => {
           setCurrentLayout(fetchedLayout);
-          setShowModal(true);
+          setShowDrawer(true);
         })
         .catch((error) => {
           console.error('Failed to fetch layout by ID:', error);
@@ -122,9 +123,9 @@ const LayoutsPage: Component<AddonComponentProps> = (props) => {
   // Sync modal state with URL for shareable deep links
   useModalFromUrl({
     getItemIdFromUrl: itemIdFromUrl,
-    isModalOpen: () => showModal(),
-    closeModal: closeModalAndClearUrl,
-    openModal: openModalFromItemId,
+    isModalOpen: () => showDrawer(),
+    closeModal: () => setShowDrawer(false),
+    openModal: openLayoutDrawerFromItemId,
   });
 
   const [quota, setQuota] = createSignal<ResourceQuota | null>(null);
@@ -286,9 +287,9 @@ const LayoutsPage: Component<AddonComponentProps> = (props) => {
     setShowAddLayoutModal(true);
   };
 
-  const openModal = (item: JsonLayout) => {
+  const openLayoutDrawer = (item: JsonLayout) => {
     setCurrentLayout(item);
-    setShowModal(true);
+    setShowDrawer(true);
 
     if (props.params) {
       const [, setSearchParams] = props.params;
@@ -431,7 +432,7 @@ const LayoutsPage: Component<AddonComponentProps> = (props) => {
     {
       icon: BsEye,
       label: t('common.view'),
-      handler: openModal,
+      handler: openLayoutDrawer,
     },
     {
       icon: AiOutlineDelete,
@@ -503,7 +504,7 @@ const LayoutsPage: Component<AddonComponentProps> = (props) => {
           defaultRowAction: {
             icon: BsEye,
             handler: (item: JsonLayout) => {
-              openModal(item);
+              openLayoutDrawer(item);
             },
             label: t('common.view'),
           },
@@ -533,25 +534,31 @@ const LayoutsPage: Component<AddonComponentProps> = (props) => {
       </Show>
 
       {/* Layout Details Modal */}
-      <Show when={showModal()}>
-        <Modal
+      <Show when={showDrawer()}>
+        <Drawer
           title={currentLayout()?.name || t('layouts.layoutDetails')}
-          description={t('layouts.layoutDetails') || 'Layout details'}
-          onClose={closeModalAndClearUrl}
+          onClose={closeLayoutDrawer}
+          placement="right"
+          size="xl"
+          showBackdrop="auto"
+          closeOnOutsideClick
+          outsideClickIgnoreSelector="tbody tr"
           contentClass="layout-modal"
         >
-          <Show when={currentLayout()}>
-            <LayoutView
-              layout={currentLayout()!}
-              store={props.store}
-              onUpdate={(updatedLayout) => {
-                setCurrentLayout(updatedLayout);
-                refreshData();
-              }}
-              onClose={closeModalAndClearUrl}
-            />
+          <Show when={currentLayout()} keyed>
+            {(layout) => (
+              <LayoutView
+                layout={layout}
+                store={props.store}
+                onUpdate={(updatedLayout) => {
+                  setCurrentLayout(updatedLayout);
+                  refreshData();
+                }}
+                onClose={closeLayoutDrawer}
+              />
+            )}
           </Show>
-        </Modal>
+        </Drawer>
       </Show>
 
       {/* Delete Confirmation Dialog */}

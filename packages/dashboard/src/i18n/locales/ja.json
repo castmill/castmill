@@ -747,7 +747,9 @@
     "buildPlaylist": "ここでプレイリストを作成してください",
     "renamePlaylist": "プレイリストの名前を変更",
     "playlistUpdated": "プレイリスト「{{name}}」が正常に更新されました",
+    "playlistCreated": "プレイリスト「{{name}}」が正常に作成されました",
     "errorUpdating": "プレイリスト{{name}}の更新中にエラーが発生しました：{{error}}",
+    "errorCreating": "プレイリストの作成中にエラーが発生しました：{{error}}",
     "removePlaylist": "プレイリストを削除",
     "removePlaylists": "プレイリストを削除",
     "confirmRemovePlaylist": "プレイリスト「{{name}}」を削除してもよろしいですか？",
@@ -1018,7 +1020,9 @@
     "devicesRemovedSuccess": "{{count}}個のデバイスが正常に削除されました",
     "errorRegisteringDevice": "デバイスの登録エラー: {{error}}",
     "errorRemovingDevice": "デバイス{{name}}の削除エラー: {{error}}",
-    "errorRemovingDevices": "デバイスの削除エラー: {{error}}"
+    "errorRemovingDevices": "デバイスの削除エラー: {{error}}",
+    "enterDescription": "説明を入力してください",
+    "drawerTitle": "デバイス \"{{name}}\""
   },
   "validation": {
     "fieldRequired": "この項目は必須です",
@@ -1310,7 +1314,10 @@
     "thumbnail": {
       "failedTitle": "トランスコードに失敗しました",
       "failedDefaultMessage": "プレビューを自動生成できませんでした。"
-    }
+    },
+    "drawerTitle": "メディア \"{{name}}\"",
+    "mediaUpdated": "メディア \"{{name}}\" が正常に更新されました",
+    "errorUpdating": "メディア {{name}} の更新エラー：{{error}}"
   },
   "dashboard": {
     "noOrganizations": {
