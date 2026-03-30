@@ -74,8 +74,8 @@ const WidgetsPage: Component<{
   const [isLoadingUsage, setIsLoadingUsage] = createSignal(false);
   const [isDeleting, setIsDeleting] = createSignal(false);
 
-  // Flag to prevent URL effect from interfering while opening modal programmatically
-  let isOpeningModal = false;
+  // Flag to prevent URL effect from interfering while opening drawer programmatically
+  let isOpeningDrawer = false;
 
   const [showUploadModal, setShowUploadModal] = createSignal(false);
   let uploadModalRef: ModalRef | undefined = undefined;
@@ -83,7 +83,7 @@ const WidgetsPage: Component<{
   const [tableRef, setRef] = createSignal<TableViewRef<number, WidgetWithId>>();
 
   // Memoized tabs array that reacts to widgetHasIntegrations changes
-  const modalTabs = createMemo(() => {
+  const detailsTabs = createMemo(() => {
     const widget = currentWidget();
     const hasIntegrations = widgetHasIntegrations();
 
@@ -193,7 +193,7 @@ const WidgetsPage: Component<{
     }
   };
 
-  // Update URL when widget modal is opened/closed
+  // Update URL when widget drawer is opened/closed
   const updateUrlForWidget = (widgetId: number | null, tab?: string) => {
     const orgId = props.store.organizations.selectedId;
     let url = `/org/${orgId}/content/widgets`;
@@ -212,7 +212,7 @@ const WidgetsPage: Component<{
     tabIndex: number = 0
   ) => {
     // Set flag to prevent URL effect from interfering
-    isOpeningModal = true;
+    isOpeningDrawer = true;
 
     // Check if widget has integrations
     const integrations = await WidgetsService.getWidgetIntegrations(
@@ -222,7 +222,7 @@ const WidgetsPage: Component<{
     );
     const hasIntegrations = integrations.length > 0;
 
-    // Update URL FIRST to prevent the createEffect from closing the modal
+    // Update URL FIRST to prevent the createEffect from closing the drawer
     // The effect checks lastProcessedUrl to avoid duplicate processing
     const orgId = props.store.organizations.selectedId;
     const newUrl = `/org/${orgId}/content/widgets/${widget.id}`;
@@ -238,7 +238,7 @@ const WidgetsPage: Component<{
 
     // Reset flag after a microtask to ensure effect has run
     queueMicrotask(() => {
-      isOpeningModal = false;
+      isOpeningDrawer = false;
     });
   };
 
@@ -257,8 +257,8 @@ const WidgetsPage: Component<{
   // Check URL for deep links - reactive to location changes for soft navigation
   // URL pattern: /org/:orgId/content/widgets/:widgetId?tab=integrations
   createEffect(() => {
-    // Skip if we're in the middle of programmatically opening a modal
-    if (isOpeningModal) return;
+    // Skip if we're in the middle of programmatically opening a drawer
+    if (isOpeningDrawer) return;
 
     // Get location from router (reactive) or fall back to window.location
     const location = props.store.router?.location?.();
@@ -284,7 +284,7 @@ const WidgetsPage: Component<{
         openWidgetDrawerById(widgetId, tab);
       }
     } else {
-      // No widget ID in URL - close modal if open
+      // No widget ID in URL - close drawer if open
       if (showDrawer()) {
         lastProcessedUrl = fullUrl;
         setShowDrawer(false);
@@ -631,7 +631,7 @@ const WidgetsPage: Component<{
             </div>
 
             {/* Tabs using ui-common Tabs component */}
-            <Tabs tabs={modalTabs()} initialIndex={initialTabIndex()} />
+            <Tabs tabs={detailsTabs()} initialIndex={initialTabIndex()} />
           </div>
         </Drawer>
       </Show>

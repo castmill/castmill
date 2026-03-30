@@ -14,7 +14,6 @@ import {
   TableView,
   TableViewRef,
   TableAction,
-  Modal,
   Drawer,
   ConfirmDialog,
   FetchDataOptions,

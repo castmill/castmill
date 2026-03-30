@@ -22,6 +22,7 @@ export interface DrawerProps {
   onClose: () => void;
   children: JSX.Element;
   title: string;
+  closeButtonTitle?: string;
   description?: string;
   size?: DrawerSize;
   placement?: DrawerPlacement;
@@ -53,6 +54,7 @@ export const Drawer: Component<DrawerProps> = (_props) => {
     {
       size: 'xl' as DrawerSize,
       placement: 'right' as DrawerPlacement,
+      closeButtonTitle: 'Close',
       closeOnEscape: true,
       closeOnOverlayClick: true,
       showBackdrop: 'auto' as const,
@@ -162,8 +164,23 @@ export const Drawer: Component<DrawerProps> = (_props) => {
 
     window.addEventListener('resize', updateBackdropMode);
     document.addEventListener('keydown', handleKeyDown);
-    document.addEventListener('click', closeOnOutsideClick, true);
     drawerStack.push(drawerId);
+  });
+
+  createEffect(() => {
+    if (!isVisible()) {
+      return;
+    }
+
+    if (!props.closeOnOutsideClick || hasBackdrop()) {
+      return;
+    }
+
+    document.addEventListener('click', closeOnOutsideClick, true);
+
+    onCleanup(() => {
+      document.removeEventListener('click', closeOnOutsideClick, true);
+    });
   });
 
   createEffect(() => {
@@ -252,7 +269,7 @@ export const Drawer: Component<DrawerProps> = (_props) => {
                 icon={VsClose}
                 onClick={closeDrawer}
                 color="secondary"
-                title="Close"
+                title={props.closeButtonTitle}
               />
             </div>
           </div>
