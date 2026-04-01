@@ -10,6 +10,7 @@ import {
   createSignal,
   For,
   JSX,
+  onMount,
   onCleanup,
   Show,
 } from 'solid-js';
@@ -23,7 +24,14 @@ import { IconTypes } from 'solid-icons';
 
 const SimpleIconButton = (props: { icon: IconTypes; onClick: () => void }) => {
   return (
-    <button onClick={props.onClick} role="button" aria-label="Toggle Dropdown">
+    <button
+      type="button"
+      onClick={(e) => {
+        e.stopPropagation();
+        props.onClick();
+      }}
+      aria-label="Toggle Dropdown"
+    >
       <IconWrapper icon={props.icon} />
     </button>
   );
@@ -49,6 +57,9 @@ interface ComboBoxProps<T extends { id: string | number }> {
 export const ComboBox = <T extends { id: string | number }>(
   props: ComboBoxProps<T>
 ): JSX.Element => {
+  let comboBoxRef: HTMLDivElement | undefined;
+  const triggerId = `${props.id.toString()}-trigger`;
+  const dropdownId = `${props.id.toString()}-dropdown`;
   const [isOpen, setIsOpen] = createSignal(false);
   const [items, setItems] = createSignal<T[]>([]);
   const [selectedItem, setSelectedItem] = createSignal<T | undefined>(
@@ -109,22 +120,21 @@ export const ComboBox = <T extends { id: string | number }>(
     }
   };
 
-  // Define ref for the ComboBox container
-  let headerRef: HTMLDivElement | undefined;
-  let dropdownRef: HTMLDivElement | undefined;
-  const handleClick = (event: MouseEvent) => {
-    if (headerRef?.contains(event.target as Node)) {
-      setIsOpen(!isOpen());
-    } else if (!dropdownRef?.contains(event.target as Node)) {
+  const handlePointerDown = (event: PointerEvent) => {
+    const target = event.target as Node;
+
+    if (!comboBoxRef?.contains(target)) {
       setIsOpen(false);
     }
   };
 
-  // Add event listeners to handle clicks outside the ComboBox
-  document.addEventListener('click', handleClick);
+  onMount(() => {
+    // Use capture phase so outside detection is consistent regardless of bubbling handlers.
+    document.addEventListener('pointerdown', handlePointerDown, true);
+  });
 
   onCleanup(() => {
-    document.removeEventListener('click', handleClick);
+    document.removeEventListener('pointerdown', handlePointerDown, true);
     if (debounceTimer) {
       clearTimeout(debounceTimer);
     }
@@ -160,9 +170,25 @@ export const ComboBox = <T extends { id: string | number }>(
     }, 300) as unknown as number; // 300ms debounce delay
   };
 
+  const handleHeaderKeyDown = (event: KeyboardEvent) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      setIsOpen((prev) => !prev);
+    }
+  };
+
   return (
-    <div class={styles['combo-box']}>
-      <div class={`${styles['base-box']} ${styles['header']}`} ref={headerRef}>
+    <div class={styles['combo-box']} ref={comboBoxRef}>
+      <div
+        id={triggerId}
+        class={`${styles['base-box']} ${styles['header']}`}
+        role="button"
+        tabindex={0}
+        aria-expanded={isOpen()}
+        aria-controls={dropdownId}
+        onClick={() => setIsOpen((prev) => !prev)}
+        onKeyDown={handleHeaderKeyDown}
+      >
         <div class={styles['info']}>
           <div class={styles['label']}>{props.label}</div>
 
@@ -179,7 +205,10 @@ export const ComboBox = <T extends { id: string | number }>(
               type="button"
               class={styles['clear-button']}
               aria-label={props.clearLabel || 'Clear selection'}
-              onClick={handleClear}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleClear();
+              }}
             >
               <IconWrapper icon={ImCancelCircle} />
             </button>
@@ -204,8 +233,10 @@ export const ComboBox = <T extends { id: string | number }>(
 
       <Show when={isOpen()}>
         <div
+          id={dropdownId}
           class={`${styles['base-box']} ${styles['dropdown']}`}
-          ref={dropdownRef}
+          role="listbox"
+          aria-labelledby={triggerId}
         >
           <div class={styles['search-box']}>
             <div class={styles['search-icon']}>
