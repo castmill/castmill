@@ -758,7 +758,9 @@
     "buildPlaylist": "Créez votre playlist ici",
     "renamePlaylist": "Renommer la playlist",
     "playlistUpdated": "Playlist \"{{name}}\" mise à jour avec succès",
+    "playlistCreated": "Playlist \"{{name}}\" créée avec succès",
     "errorUpdating": "Erreur lors de la mise à jour de la playlist {{name}} : {{error}}",
+    "errorCreating": "Erreur lors de la création de la playlist : {{error}}",
     "removePlaylist": "Supprimer la playlist",
     "removePlaylists": "Supprimer les playlists",
     "confirmRemovePlaylist": "Êtes-vous sûr de vouloir supprimer la playlist \"{{name}}\" ?",
@@ -953,7 +955,17 @@
       "checkUpdatesDescription": "Rechercher les mises à jour et les installer. Cela ne redémarrera pas l'appareil",
       "updateFirmware": "Mettre à jour le firmware",
       "updateFirmwareDescription": "Met à jour le firmware de l'appareil",
-      "offlineMessage": "L'appareil est hors ligne, aucune commande ne peut donc lui être envoyée"
+      "offlineMessage": "L'appareil est hors ligne, aucune commande ne peut donc lui être envoyée",
+      "autorecoveryUpdated": "La récupération automatique a été mise à jour",
+      "autorecoveryUpdateFailed": "Échec de la mise à jour de la récupération automatique",
+      "edit": "Modifier",
+      "enableForOneHour": "Activer pendant une heure",
+      "enableForever": "Activer pour toujours",
+      "disable": "Désactiver",
+      "recoverLostSettingsLabel": "Récupérer les paramètres perdus",
+      "disabled": "Désactivé",
+      "enabledMinutesRemaining": "Activé ({{minutes}} minutes restantes)",
+      "enabledForever": "Activé pour toujours"
     },
     "cache": {
       "title": "Cache de l'Appareil",
@@ -1019,7 +1031,9 @@
     "devicesRemovedSuccess": "{{count}} appareil(s) supprimé(s) avec succès",
     "errorRegisteringDevice": "Erreur lors de l'enregistrement de l'appareil : {{error}}",
     "errorRemovingDevice": "Erreur lors de la suppression de l'appareil {{name}} : {{error}}",
-    "errorRemovingDevices": "Erreur lors de la suppression des appareils : {{error}}"
+    "errorRemovingDevices": "Erreur lors de la suppression des appareils : {{error}}",
+    "enterDescription": "Entrez une description",
+    "drawerTitle": "Appareil \"{{name}}\""
   },
   "validation": {
     "fieldRequired": "Ce champ est requis",
@@ -1314,7 +1328,10 @@
     "thumbnail": {
       "failedTitle": "Échec du transcodage",
       "failedDefaultMessage": "L’aperçu n’a pas pu être généré automatiquement."
-    }
+    },
+    "drawerTitle": "Média \"{{name}}\"",
+    "mediaUpdated": "Média \"{{name}}\" mis à jour avec succès",
+    "errorUpdating": "Erreur lors de la mise à jour du média {{name}} : {{error}}"
   },
   "dashboard": {
     "noOrganizations": {

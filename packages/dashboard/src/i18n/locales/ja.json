@@ -747,7 +747,9 @@
     "buildPlaylist": "ここでプレイリストを作成してください",
     "renamePlaylist": "プレイリストの名前を変更",
     "playlistUpdated": "プレイリスト「{{name}}」が正常に更新されました",
+    "playlistCreated": "プレイリスト「{{name}}」が正常に作成されました",
     "errorUpdating": "プレイリスト{{name}}の更新中にエラーが発生しました：{{error}}",
+    "errorCreating": "プレイリストの作成中にエラーが発生しました：{{error}}",
     "removePlaylist": "プレイリストを削除",
     "removePlaylists": "プレイリストを削除",
     "confirmRemovePlaylist": "プレイリスト「{{name}}」を削除してもよろしいですか？",
@@ -942,7 +944,17 @@
       "checkUpdatesDescription": "更新を確認してインストールします。これによりデバイスは再起動されません",
       "updateFirmware": "ファームウェアを更新",
       "updateFirmwareDescription": "デバイスのファームウェアを更新します",
-      "offlineMessage": "デバイスがオフラインのため、コマンドを送信できません"
+      "offlineMessage": "デバイスがオフラインのため、コマンドを送信できません",
+      "autorecoveryUpdated": "自動復旧が更新されました",
+      "autorecoveryUpdateFailed": "自動復旧の更新に失敗しました",
+      "edit": "編集",
+      "enableForOneHour": "1時間有効にする",
+      "enableForever": "無期限で有効にする",
+      "disable": "無効化",
+      "recoverLostSettingsLabel": "失われた設定を復元",
+      "disabled": "無効",
+      "enabledMinutesRemaining": "有効（残り {{minutes}} 分）",
+      "enabledForever": "無期限で有効"
     },
     "cache": {
       "title": "デバイスキャッシュ",
@@ -1008,7 +1020,9 @@
     "devicesRemovedSuccess": "{{count}}個のデバイスが正常に削除されました",
     "errorRegisteringDevice": "デバイスの登録エラー: {{error}}",
     "errorRemovingDevice": "デバイス{{name}}の削除エラー: {{error}}",
-    "errorRemovingDevices": "デバイスの削除エラー: {{error}}"
+    "errorRemovingDevices": "デバイスの削除エラー: {{error}}",
+    "enterDescription": "説明を入力してください",
+    "drawerTitle": "デバイス \"{{name}}\""
   },
   "validation": {
     "fieldRequired": "この項目は必須です",
@@ -1303,7 +1317,10 @@
     "thumbnail": {
       "failedTitle": "トランスコードに失敗しました",
       "failedDefaultMessage": "プレビューを自動生成できませんでした。"
-    }
+    },
+    "drawerTitle": "メディア \"{{name}}\"",
+    "mediaUpdated": "メディア \"{{name}}\" が正常に更新されました",
+    "errorUpdating": "メディア {{name}} の更新エラー：{{error}}"
   },
   "dashboard": {
     "noOrganizations": {

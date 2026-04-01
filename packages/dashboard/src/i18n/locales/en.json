@@ -781,7 +781,9 @@
     "buildPlaylist": "Build your playlist here",
     "renamePlaylist": "Rename Playlist",
     "playlistUpdated": "Playlist \"{{name}}\" updated successfully",
+    "playlistCreated": "Playlist \"{{name}}\" created successfully",
     "errorUpdating": "Error updating playlist {{name}}: {{error}}",
+    "errorCreating": "Error creating playlist: {{error}}",
     "removePlaylist": "Remove Playlist",
     "removePlaylists": "Remove Playlists",
     "confirmRemovePlaylist": "Are you sure you want to remove playlist \"{{name}}\"?",
@@ -1001,7 +1003,17 @@
       "checkUpdatesDescription": "Check for updates and install them. This will not restart the device",
       "updateFirmware": "Update Firmware",
       "updateFirmwareDescription": "Updates the firmware of the device",
-      "offlineMessage": "Device is offline, so no commands can be sent to it"
+      "offlineMessage": "Device is offline, so no commands can be sent to it",
+      "autorecoveryUpdated": "Autorecovery has been updated",
+      "autorecoveryUpdateFailed": "Failed to update autorecovery",
+      "edit": "Edit",
+      "enableForOneHour": "Enable for one hour",
+      "enableForever": "Enable forever",
+      "disable": "Disable",
+      "recoverLostSettingsLabel": "Recover lost settings",
+      "disabled": "Disabled",
+      "enabledMinutesRemaining": "Enabled ({{minutes}} minutes remaining)",
+      "enabledForever": "Enabled forever"
     },
     "cache": {
       "title": "Device Cache",
@@ -1042,7 +1054,9 @@
       "commandFailed": "An error occurred while processing your request",
       "invalidPincode": "Invalid pincode. Please check the pincode displayed on your device and try again.",
       "pincodeExpired": "This pincode has expired. Please restart the device registration process."
-    }
+    },
+    "enterDescription": "Enter a description",
+    "drawerTitle": "Device \"{{name}}\""
   },
   "validation": {
     "fieldRequired": "This field is required",
@@ -1297,7 +1311,10 @@
     "thumbnail": {
       "failedTitle": "Transcoding failed",
       "failedDefaultMessage": "The preview could not be generated automatically."
-    }
+    },
+    "drawerTitle": "Media \"{{name}}\"",
+    "mediaUpdated": "Media \"{{name}}\" updated successfully",
+    "errorUpdating": "Error updating media {{name}}: {{error}}"
   },
   "dashboard": {
     "noOrganizations": {

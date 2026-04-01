@@ -719,6 +719,71 @@ describe('Device - Pincode Polling', () => {
 
     window.location = originalLocation;
   });
+
+  it('should not retry the registration request after a successful recovery', async () => {
+    const reloadMock = vi.fn();
+    const originalLocation = window.location;
+    delete (window as any).location;
+    window.location = {
+      reload: vi.fn(() => {
+        reloadMock();
+      }),
+    } as any;
+
+    // Server returns 200 for recovery on first call
+    fetchSpy.mockResolvedValueOnce({
+      status: 200,
+      json: async () => ({
+        data: { id: 'dev-1', name: 'Device', token: 'tok-1' },
+      }),
+    });
+
+    // If the bug is present a second fetch would be made with status 201, causing
+    // the registration (pincode) flow to start even though credentials were stored.
+    fetchSpy.mockResolvedValueOnce({
+      status: 201,
+      json: async () => ({ data: { pincode: 'SHOULDNOTBEUSED' } }),
+    });
+
+    const pincodePromise = device['requestPincode']('test-hardware-id').catch(
+      (e: Error) => e.message
+    );
+
+    // Flush microtasks so the fetch and credential-store steps complete
+    await vi.advanceTimersByTimeAsync(0);
+
+    // Close the device to stop the idle loop and let the promise settle
+    device['closing'] = true;
+    await vi.advanceTimersByTimeAsync(2000);
+
+    const result = await pincodePromise;
+
+    // The function must exit via closing, not via a pincode return
+    expect(result).toBe('Pincode request cancelled: device is closing');
+
+    // Only one fetch call (the recovery request) - no retry should have occurred
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(reloadMock).toHaveBeenCalledTimes(1);
+
+    window.location = originalLocation;
+  });
+
+  it('should throw when recovery is blocked for security reasons', async () => {
+    fetchSpy.mockResolvedValueOnce({
+      status: 403,
+      json: async () => ({
+        error: 'Device recovery blocked for security reasons',
+        error_code: 'recovery_blocked',
+      }),
+    });
+
+    await expect(device['requestPincode']('test-hardware-id')).rejects.toThrow(
+      'Device recovery blocked for security reasons'
+    );
+
+    // Must not keep retrying when the backend explicitly blocks recovery
+    expect(fetchSpy).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe('Device - Metadata Names', () => {
@@ -1248,6 +1313,55 @@ describe('Device - Progress Events', () => {
     expect(identifyEvent.totalSteps).toBe(3);
     expect(identifyEvent.step).toBe(1);
 
+    vi.restoreAllMocks();
+  });
+
+  it('should return RecoveryBlocked and reload once recovery is enabled later', async () => {
+    mockIntegration.getCredentials.mockResolvedValue(null);
+
+    const reloadMock = vi.fn();
+    const originalLocation = window.location;
+    delete (window as any).location;
+    window.location = { reload: reloadMock } as any;
+
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        status: 403,
+        json: async () => ({ error_code: 'recovery_blocked' }),
+      })
+      .mockResolvedValueOnce({
+        status: 200,
+        json: async () => ({
+          data: {
+            id: 'device-123',
+            name: 'Recovered Device',
+            token: 'recovered-token',
+          },
+        }),
+      });
+
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await device.loginOrRegister();
+
+    expect(result.status).toBe(Status.RecoveryBlocked);
+
+    await vi.waitFor(() => {
+      expect(mockIntegration.storeCredentials).toHaveBeenCalledWith(
+        JSON.stringify({
+          device: {
+            id: 'device-123',
+            name: 'Recovered Device',
+            token: 'recovered-token',
+          },
+        })
+      );
+    });
+
+    expect(reloadMock).toHaveBeenCalled();
+
+    window.location = originalLocation;
     vi.restoreAllMocks();
   });
 });

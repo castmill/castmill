@@ -774,7 +774,9 @@
     "buildPlaylist": "Construye tu lista de reproducción aquí",
     "renamePlaylist": "Renombrar lista de reproducción",
     "playlistUpdated": "Lista de reproducción \"{{name}}\" actualizada exitosamente",
+    "playlistCreated": "Lista de reproducción \"{{name}}\" creada exitosamente",
     "errorUpdating": "Error al actualizar la lista de reproducción {{name}}: {{error}}",
+    "errorCreating": "Error al crear la lista de reproducción: {{error}}",
     "removePlaylist": "Eliminar lista de reproducción",
     "removePlaylists": "Eliminar listas de reproducción",
     "confirmRemovePlaylist": "¿Estás seguro de que quieres eliminar la lista de reproducción \"{{name}}\"?",
@@ -969,7 +971,17 @@
       "checkUpdatesDescription": "Buscar actualizaciones e instalarlas. Esto no reiniciará el dispositivo",
       "updateFirmware": "Actualizar firmware",
       "updateFirmwareDescription": "Actualiza el firmware del dispositivo",
-      "offlineMessage": "El dispositivo está desconectado, por lo que no se le pueden enviar comandos"
+      "offlineMessage": "El dispositivo está desconectado, por lo que no se le pueden enviar comandos",
+      "autorecoveryUpdated": "La recuperación automática se actualizó",
+      "autorecoveryUpdateFailed": "No se pudo actualizar la recuperación automática",
+      "edit": "Editar",
+      "enableForOneHour": "Activar por una hora",
+      "enableForever": "Activar para siempre",
+      "disable": "Desactivar",
+      "recoverLostSettingsLabel": "Recuperar configuración perdida",
+      "disabled": "Desactivado",
+      "enabledMinutesRemaining": "Activado (quedan {{minutes}} minutos)",
+      "enabledForever": "Activado para siempre"
     },
     "cache": {
       "title": "Caché del Dispositivo",
@@ -1035,7 +1047,9 @@
     "devicesRemovedSuccess": "{{count}} dispositivo(s) eliminado(s) exitosamente",
     "errorRegisteringDevice": "Error al registrar el dispositivo: {{error}}",
     "errorRemovingDevice": "Error al eliminar el dispositivo {{name}}: {{error}}",
-    "errorRemovingDevices": "Error al eliminar los dispositivos: {{error}}"
+    "errorRemovingDevices": "Error al eliminar los dispositivos: {{error}}",
+    "enterDescription": "Ingrese una descripción",
+    "drawerTitle": "Dispositivo \"{{name}}\""
   },
   "validation": {
     "fieldRequired": "Este campo es obligatorio",
@@ -1303,7 +1317,10 @@
     "thumbnail": {
       "failedTitle": "La transcodificación falló",
       "failedDefaultMessage": "No se pudo generar la vista previa automáticamente."
-    }
+    },
+    "drawerTitle": "Medio \"{{name}}\"",
+    "mediaUpdated": "Medio \"{{name}}\" actualizado correctamente",
+    "errorUpdating": "Error al actualizar medio {{name}}: {{error}}"
   },
   "dashboard": {
     "noOrganizations": {

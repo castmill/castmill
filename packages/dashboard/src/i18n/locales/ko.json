@@ -746,7 +746,9 @@
     "buildPlaylist": "여기서 재생목록을 만드세요",
     "renamePlaylist": "재생목록 이름 변경",
     "playlistUpdated": "재생목록 \"{{name}}\"이(가) 성공적으로 업데이트되었습니다",
+    "playlistCreated": "재생목록 \"{{name}}\"이(가) 성공적으로 생성되었습니다",
     "errorUpdating": "재생목록 {{name}} 업데이트 오류: {{error}}",
+    "errorCreating": "재생목록 생성 오류: {{error}}",
     "removePlaylist": "재생목록 제거",
     "removePlaylists": "재생목록 제거",
     "confirmRemovePlaylist": "재생목록 \"{{name}}\"을(를) 제거하시겠습니까?",
@@ -941,7 +943,17 @@
       "checkUpdatesDescription": "업데이트를 확인하고 설치합니다. 기기를 재시작하지 않습니다",
       "updateFirmware": "펌웨어 업데이트",
       "updateFirmwareDescription": "기기의 펌웨어를 업데이트합니다",
-      "offlineMessage": "기기가 오프라인 상태이므로 명령을 보낼 수 없습니다"
+      "offlineMessage": "기기가 오프라인 상태이므로 명령을 보낼 수 없습니다",
+      "autorecoveryUpdated": "자동 복구가 업데이트되었습니다",
+      "autorecoveryUpdateFailed": "자동 복구 업데이트에 실패했습니다",
+      "edit": "편집",
+      "enableForOneHour": "1시간 동안 활성화",
+      "enableForever": "영구 활성화",
+      "disable": "비활성화",
+      "recoverLostSettingsLabel": "분실 설정 복구",
+      "disabled": "비활성화됨",
+      "enabledMinutesRemaining": "활성화됨 ({{minutes}}분 남음)",
+      "enabledForever": "영구 활성화됨"
     },
     "cache": {
       "title": "기기 캐시",
@@ -1007,7 +1019,9 @@
     "devicesRemovedSuccess": "{{count}}개의 기기가 성공적으로 제거되었습니다",
     "errorRegisteringDevice": "기기 등록 오류: {{error}}",
     "errorRemovingDevice": "기기 {{name}} 제거 오류: {{error}}",
-    "errorRemovingDevices": "기기 제거 오류: {{error}}"
+    "errorRemovingDevices": "기기 제거 오류: {{error}}",
+    "enterDescription": "설명을 입력하세요",
+    "drawerTitle": "기기 \"{{name}}\""
   },
   "validation": {
     "fieldRequired": "이 필드는 필수입니다",
@@ -1302,7 +1316,10 @@
     "thumbnail": {
       "failedTitle": "트랜스코딩 실패",
       "failedDefaultMessage": "미리보기를 자동으로 생성할 수 없습니다."
-    }
+    },
+    "drawerTitle": "미디어 \"{{name}}\"",
+    "mediaUpdated": "미디어 \"{{name}}\"이(가) 성공적으로 업데이트되었습니다",
+    "errorUpdating": "미디어 {{name}} 업데이트 오류: {{error}}"
   },
   "dashboard": {
     "noOrganizations": {

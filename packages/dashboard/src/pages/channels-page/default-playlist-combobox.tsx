@@ -1,6 +1,6 @@
 import { JsonPlaylist } from '@castmill/player';
 import { ComboBox, useToast } from '@castmill/ui-common';
-import { Component, createEffect, createSignal } from 'solid-js';
+import { Component, createEffect, createSignal, on } from 'solid-js';
 
 import { baseUrl } from '../../env';
 import { store } from '../../store';
@@ -23,14 +23,35 @@ export const DefaultPlaylistComboBox: Component<{
     store.organizations.selectedId!
   );
 
-  createEffect(async () => {
-    if (props.channel.default_playlist_id) {
-      const result = await channelsService.fetchPlaylist(
-        props.channel.default_playlist_id
-      );
-      setDefaultPlaylist(result.data);
-    }
-  });
+  let activeFetchId = 0;
+
+  createEffect(
+    on(
+      () => [props.channel.id, props.channel.default_playlist_id],
+      async ([, defaultPlaylistId]) => {
+        const fetchId = ++activeFetchId;
+
+        // Clear stale value immediately when channel changes or has no default playlist.
+        if (!defaultPlaylistId) {
+          setDefaultPlaylist(undefined);
+          return;
+        }
+
+        try {
+          const result = await channelsService.fetchPlaylist(defaultPlaylistId);
+          // Ignore stale async results from previous channel selections.
+          if (fetchId !== activeFetchId) {
+            return;
+          }
+          setDefaultPlaylist(result.data);
+        } catch {
+          if (fetchId === activeFetchId) {
+            setDefaultPlaylist(undefined);
+          }
+        }
+      }
+    )
+  );
 
   return (
     <ComboBox<JsonPlaylist>

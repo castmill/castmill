@@ -40,6 +40,13 @@ defmodule CastmillWeb.DeviceJSON do
     }
   end
 
+  def recovery_blocked(_assigns) do
+    %{
+      error: "Device recovery blocked for security reasons",
+      error_code: "recovery_blocked"
+    }
+  end
+
   defp data(%Device{} = device) do
     %{
       id: device.id,

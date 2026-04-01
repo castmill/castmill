@@ -768,7 +768,9 @@
     "buildPlaylist": "Erstellen Sie hier Ihre Playlist",
     "renamePlaylist": "Playlist umbenennen",
     "playlistUpdated": "Playlist \"{{name}}\" erfolgreich aktualisiert",
+    "playlistCreated": "Playlist \"{{name}}\" erfolgreich erstellt",
     "errorUpdating": "Fehler beim Aktualisieren der Playlist {{name}}: {{error}}",
+    "errorCreating": "Fehler beim Erstellen der Playlist: {{error}}",
     "removePlaylist": "Playlist entfernen",
     "removePlaylists": "Playlists entfernen",
     "confirmRemovePlaylist": "Sind Sie sicher, dass Sie die Playlist \"{{name}}\" entfernen möchten?",
@@ -963,7 +965,17 @@
       "checkUpdatesDescription": "Nach Updates suchen und installieren. Dies startet das Gerät nicht neu",
       "updateFirmware": "Firmware aktualisieren",
       "updateFirmwareDescription": "Aktualisiert die Firmware des Geräts",
-      "offlineMessage": "Gerät ist offline, daher können keine Befehle gesendet werden"
+      "offlineMessage": "Gerät ist offline, daher können keine Befehle gesendet werden",
+      "autorecoveryUpdated": "Automatische Wiederherstellung wurde aktualisiert",
+      "autorecoveryUpdateFailed": "Automatische Wiederherstellung konnte nicht aktualisiert werden",
+      "edit": "Bearbeiten",
+      "enableForOneHour": "Für eine Stunde aktivieren",
+      "enableForever": "Für immer aktivieren",
+      "disable": "Deaktivieren",
+      "recoverLostSettingsLabel": "Verlorene Einstellungen wiederherstellen",
+      "disabled": "Deaktiviert",
+      "enabledMinutesRemaining": "Aktiviert (noch {{minutes}} Minuten)",
+      "enabledForever": "Für immer aktiviert"
     },
     "cache": {
       "title": "Geräte-Cache",
@@ -1029,7 +1041,9 @@
     "devicesRemovedSuccess": "{{count}} Gerät(e) erfolgreich entfernt",
     "errorRegisteringDevice": "Fehler beim Registrieren des Geräts: {{error}}",
     "errorRemovingDevice": "Fehler beim Entfernen des Geräts {{name}}: {{error}}",
-    "errorRemovingDevices": "Fehler beim Entfernen der Geräte: {{error}}"
+    "errorRemovingDevices": "Fehler beim Entfernen der Geräte: {{error}}",
+    "enterDescription": "Beschreibung eingeben",
+    "drawerTitle": "Gerät \"{{name}}\""
   },
   "validation": {
     "fieldRequired": "Dieses Feld ist erforderlich",
@@ -1297,7 +1311,10 @@
     "thumbnail": {
       "failedTitle": "Die Transkodierung ist fehlgeschlagen",
       "failedDefaultMessage": "Die Vorschau konnte nicht automatisch generiert werden."
-    }
+    },
+    "drawerTitle": "Medien \"{{name}}\"",
+    "mediaUpdated": "Medien \"{{name}}\" erfolgreich aktualisiert",
+    "errorUpdating": "Fehler beim Aktualisieren von Medien {{name}}: {{error}}"
   },
   "dashboard": {
     "noOrganizations": {

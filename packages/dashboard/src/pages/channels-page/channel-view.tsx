@@ -13,7 +13,6 @@ export const ChannelView = (props: {
 }) => {
   const { t } = useI18n();
   const style = `
-    width: 90vw;
     display: flex;
     flex-direction: row;
     justify-content: center;

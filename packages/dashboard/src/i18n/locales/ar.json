@@ -746,7 +746,9 @@
     "buildPlaylist": "أنشئ قائمة التشغيل هنا",
     "renamePlaylist": "إعادة تسمية قائمة التشغيل",
     "playlistUpdated": "تم تحديث قائمة التشغيل \"{{name}}\" بنجاح",
+    "playlistCreated": "تم إنشاء قائمة التشغيل \"{{name}}\" بنجاح",
     "errorUpdating": "خطأ في تحديث قائمة التشغيل {{name}}: {{error}}",
+    "errorCreating": "خطأ في إنشاء قائمة التشغيل: {{error}}",
     "removePlaylist": "إزالة قائمة التشغيل",
     "removePlaylists": "إزالة قوائم التشغيل",
     "confirmRemovePlaylist": "هل أنت متأكد من أنك تريد إزالة قائمة التشغيل \"{{name}}\"؟",
@@ -941,7 +943,17 @@
       "checkUpdatesDescription": "التحقق من التحديثات وتثبيتها. لن يؤدي هذا إلى إعادة تشغيل الجهاز",
       "updateFirmware": "تحديث البرنامج الثابت",
       "updateFirmwareDescription": "يحدث البرنامج الثابت للجهاز",
-      "offlineMessage": "الجهاز غير متصل بالإنترنت، لذا لا يمكن إرسال أوامر إليه"
+      "offlineMessage": "الجهاز غير متصل بالإنترنت، لذا لا يمكن إرسال أوامر إليه",
+      "autorecoveryUpdated": "تم تحديث الاسترداد التلقائي",
+      "autorecoveryUpdateFailed": "فشل تحديث الاسترداد التلقائي",
+      "edit": "تعديل",
+      "enableForOneHour": "تفعيل لمدة ساعة",
+      "enableForever": "تفعيل دائم",
+      "disable": "تعطيل",
+      "recoverLostSettingsLabel": "استعادة الإعدادات المفقودة",
+      "disabled": "معطل",
+      "enabledMinutesRemaining": "مفعل (متبقي {{minutes}} دقيقة)",
+      "enabledForever": "مفعل دائمًا"
     },
     "cache": {
       "title": "ذاكرة التخزين المؤقت للجهاز",
@@ -1007,7 +1019,9 @@
     "devicesRemovedSuccess": "تمت إزالة {{count}} جهاز بنجاح",
     "errorRegisteringDevice": "خطأ في تسجيل الجهاز: {{error}}",
     "errorRemovingDevice": "خطأ في إزالة الجهاز {{name}}: {{error}}",
-    "errorRemovingDevices": "خطأ في إزالة الأجهزة: {{error}}"
+    "errorRemovingDevices": "خطأ في إزالة الأجهزة: {{error}}",
+    "enterDescription": "أدخل وصفًا",
+    "drawerTitle": "الجهاز \"{{name}}\""
   },
   "validation": {
     "fieldRequired": "هذا الحقل مطلوب",
@@ -1302,7 +1316,10 @@
     "thumbnail": {
       "failedTitle": "فشل تحويل الوسائط",
       "failedDefaultMessage": "تعذر إنشاء المعاينة تلقائيًا."
-    }
+    },
+    "drawerTitle": "الوسائط \"{{name}}\"",
+    "mediaUpdated": "تم تحديث الوسائط \"{{name}}\" بنجاح",
+    "errorUpdating": "خطأ في تحديث الوسائط {{name}}: {{error}}"
   },
   "dashboard": {
     "noOrganizations": {
