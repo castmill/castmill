@@ -516,7 +516,7 @@
       "newGroup": "Ny grupp",
       "editGroup": "Redigera grupp",
       "deleteGroup": "Ta bort grupp",
-      "noGroups": "Inga tagggrupper",
+      "noGroups": "Inga taggrupper",
       "ungrouped": "Ogrupperad"
     },
     "messages": {
@@ -1286,7 +1286,7 @@
       },
       "exploreTreeView": {
         "title": "Utforska Trädvyn",
-        "description": "Byt till trädvy för att se ditt innehåll organiserat efter tagggrupper. Expandera taggar för att gå djupare, ändra ordning på dimensioner och upptäck ett helt nytt sätt att navigera ditt bibliotek.",
+        "description": "Byt till trädvy för att se ditt innehåll organiserat efter taggrupper. Expandera taggar för att gå djupare, ändra ordning på dimensioner och upptäck ett helt nytt sätt att navigera ditt bibliotek.",
         "action": "Prova Trädvyn"
       }
     },
