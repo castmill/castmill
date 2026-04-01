@@ -23,7 +23,14 @@ import { IconTypes } from 'solid-icons';
 
 const SimpleIconButton = (props: { icon: IconTypes; onClick: () => void }) => {
   return (
-    <button onClick={props.onClick} role="button" aria-label="Toggle Dropdown">
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        props.onClick();
+      }}
+      role="button"
+      aria-label="Toggle Dropdown"
+    >
       <IconWrapper icon={props.icon} />
     </button>
   );
@@ -179,7 +186,10 @@ export const ComboBox = <T extends { id: string | number }>(
               type="button"
               class={styles['clear-button']}
               aria-label={props.clearLabel || 'Clear selection'}
-              onClick={handleClear}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleClear();
+              }}
             >
               <IconWrapper icon={ImCancelCircle} />
             </button>
