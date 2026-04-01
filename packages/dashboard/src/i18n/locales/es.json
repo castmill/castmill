@@ -750,6 +750,9 @@
       "couldNotGetPublicKey": "No se pudo obtener la clave pública",
       "invalidCredential": "Credencial inválida",
       "signupFailed": "Error en el registro: {{error}}. Inténtalo de nuevo o contacta con soporte."
+    },
+    "success": {
+      "accountCreated": "¡Cuenta creada exitosamente!"
     }
   },
   "search": {

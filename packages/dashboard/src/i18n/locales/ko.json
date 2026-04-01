@@ -1056,6 +1056,9 @@
       "couldNotGetPublicKey": "공개 키를 가져올 수 없습니다",
       "invalidCredential": "유효하지 않은 자격 증명",
       "signupFailed": "회원가입 실패: {{error}}. 다시 시도하거나 지원팀에 문의하세요."
+    },
+    "success": {
+      "accountCreated": "계정이 성공적으로 생성되었습니다!"
     }
   },
   "search": {

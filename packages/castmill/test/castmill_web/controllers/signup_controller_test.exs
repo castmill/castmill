@@ -112,9 +112,9 @@ defmodule CastmillWeb.SignUpControllerTest do
 
       signup = response["signup"]
       assert signup["email"] == email
-      assert signup["challenge"]
-      assert signup["inserted_at"]
-      assert signup["updated_at"]
+      refute Map.has_key?(signup, "challenge")
+      refute Map.has_key?(signup, "inserted_at")
+      refute Map.has_key?(signup, "updated_at")
       refute Map.has_key?(signup, "__meta__")
       refute Map.has_key?(signup, "password_hash")
 
