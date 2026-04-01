@@ -30,7 +30,6 @@ const SimpleIconButton = (props: { icon: IconTypes; onClick: () => void }) => {
         e.stopPropagation();
         props.onClick();
       }}
-      role="button"
       aria-label="Toggle Dropdown"
     >
       <IconWrapper icon={props.icon} />
@@ -59,6 +58,8 @@ export const ComboBox = <T extends { id: string | number }>(
   props: ComboBoxProps<T>
 ): JSX.Element => {
   let comboBoxRef: HTMLDivElement | undefined;
+  const triggerId = `${props.id.toString()}-trigger`;
+  const dropdownId = `${props.id.toString()}-dropdown`;
   const [isOpen, setIsOpen] = createSignal(false);
   const [items, setItems] = createSignal<T[]>([]);
   const [selectedItem, setSelectedItem] = createSignal<T | undefined>(
@@ -169,11 +170,24 @@ export const ComboBox = <T extends { id: string | number }>(
     }, 300) as unknown as number; // 300ms debounce delay
   };
 
+  const handleHeaderKeyDown = (event: KeyboardEvent) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      setIsOpen((prev) => !prev);
+    }
+  };
+
   return (
     <div class={styles['combo-box']} ref={comboBoxRef}>
       <div
+        id={triggerId}
         class={`${styles['base-box']} ${styles['header']}`}
+        role="button"
+        tabindex={0}
+        aria-expanded={isOpen()}
+        aria-controls={dropdownId}
         onClick={() => setIsOpen((prev) => !prev)}
+        onKeyDown={handleHeaderKeyDown}
       >
         <div class={styles['info']}>
           <div class={styles['label']}>{props.label}</div>
@@ -218,7 +232,12 @@ export const ComboBox = <T extends { id: string | number }>(
       </div>
 
       <Show when={isOpen()}>
-        <div class={`${styles['base-box']} ${styles['dropdown']}`}>
+        <div
+          id={dropdownId}
+          class={`${styles['base-box']} ${styles['dropdown']}`}
+          role="listbox"
+          aria-labelledby={triggerId}
+        >
           <div class={styles['search-box']}>
             <div class={styles['search-icon']}>
               <IconWrapper icon={AiOutlineSearch} />

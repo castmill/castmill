@@ -21,6 +21,7 @@ describe('ComboBox Component', () => {
   const renderComboBox = (
     overrides?: Partial<{
       onSelect: (item: { id: string; name: string }) => void;
+      onClear: () => void;
     }>
   ) => {
     const fetchItems = vi.fn(async () => ({
@@ -28,6 +29,7 @@ describe('ComboBox Component', () => {
       data: mockItems,
     }));
     const onSelect = overrides?.onSelect ?? vi.fn();
+    const onClear = overrides?.onClear;
 
     render(() => (
       <ComboBox
@@ -36,10 +38,11 @@ describe('ComboBox Component', () => {
         fetchItems={fetchItems}
         renderItem={(item) => <div>{item.name}</div>}
         onSelect={onSelect}
+        onClear={onClear}
       />
     ));
 
-    return { fetchItems, onSelect };
+    return { fetchItems, onSelect, onClear };
   };
 
   it('toggles dropdown when clicking header label area', async () => {
@@ -102,5 +105,47 @@ describe('ComboBox Component', () => {
     await waitFor(() =>
       expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
     );
+  });
+
+  it('supports keyboard toggle on header trigger', async () => {
+    renderComboBox();
+
+    const trigger = screen.getByRole('button', { name: /test combobox/i });
+    trigger.focus();
+
+    await fireEvent.keyDown(trigger, { key: 'Enter' });
+    await waitFor(() =>
+      expect(screen.getByRole('textbox')).toBeInTheDocument()
+    );
+
+    await fireEvent.keyDown(trigger, { key: ' ' });
+    await waitFor(() =>
+      expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
+    );
+  });
+
+  it('does not open dropdown when clear is clicked while closed', async () => {
+    const onClear = vi.fn();
+    const fetchItems = vi.fn(async () => ({ count: 1, data: mockItems }));
+
+    render(() => (
+      <ComboBox
+        id="test-clear"
+        label="Test ComboBox"
+        fetchItems={fetchItems}
+        renderItem={(item) => <div>{item.name}</div>}
+        onSelect={vi.fn()}
+        value={{ id: '1', name: 'Item 1' }}
+        clearable
+        onClear={onClear}
+      />
+    ));
+
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+
+    await fireEvent.click(screen.getByLabelText('Clear selection'));
+
+    expect(onClear).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
   });
 });
