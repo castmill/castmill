@@ -4,38 +4,73 @@ sidebar_position: 2
 
 # Guide
 
-Castmill is a large system that can be used to tackle most scenarios that can arise in the digital signage world. This guide will help you understand the main concepts and how to use the system.
+Castmill is a comprehensive digital signage platform. This guide introduces the core concepts and points you to the detailed documentation for each area.
 
-There are several concepts that are important to understand in order to use Castmill effectively. These are:
-- [Networks](networks/networks.md)
-- [Organizations](organizations/organizations.md)
-- [Users](organizations/users.md)
-- [Teams](organizations/teams.md)
-- [Devices](devices/devices.md)
-- [Content](content/content.md)
-- [Widgets](widgets/widgets.mdx)
-- [Channels](channels/channels.md)
+## System Architecture
 
-These concepts are the building blocks of the Castmill system. They are used to organize and manage the different parts of the system.
+Castmill follows a hierarchical model: **Networks** contain **Organizations**, which contain all your content and devices. See [Architecture](concepts/architecture.md) for a detailed breakdown.
 
-## Networks
+```
+Network (domain-based isolation)
+└── Organization (workspace)
+    ├── Users & Teams (access control)
+    ├── Medias (images, videos)
+    ├── Playlists (content sequences)
+    ├── Layouts (multi-zone arrangements)
+    ├── Channels (weekly schedules)
+    └── Devices (physical screens)
+```
 
-Networks are the top level organization of the system. Networks are associated to domains, and are essentially isolated silos of data. Each network can have its own organizations, users, devices, content and schedules. And no data can be shared between networks.
+## Core Concepts
 
-In most cases you will only need one network, and then use organizations to segment your users and data. But if you must have multiple isolated groups of data, then you can create multiple networks.
+| Concept            | Description                                                             | Learn More                                   |
+| ------------------ | ----------------------------------------------------------------------- | -------------------------------------------- |
+| **Networks**       | Isolated environments tied to domains — all data stays within a network | [Networks](concepts/networks.md)             |
+| **Organizations**  | Workspaces where teams collaborate, with plan-based quotas              | [Organizations](concepts/organizations.md)   |
+| **Users & Teams**  | Role-based access (admin, member, viewer) with team-level permissions   | [Users & Teams](concepts/users-and-teams.md) |
+| **Authentication** | Passwordless login using passkeys (WebAuthn)                            | [Authentication](concepts/authentication.md) |
 
-The network is the main entry point for the system as a regular user, when you login from the dashboard you will be taken to the network that is associated to the domain you are using. For example, if I am running the system on example.com, I could define different networks for different clients associated to different subdomains, like client1.example.com and client2.example.com.
+## Content Workflow
 
-Network management can only be done in the admin tool, and this tool is only accessible to users with the admin role. In fact the admin tool is a very powerful tool that can be used to manage all the data in the system, but it is not meant to be used by regular users, as that is the function of the dashboard.
+The typical workflow for getting content onto a screen:
 
-### How to create a network
+1. **Upload media** — Add images and videos to your media library
+2. **Create a playlist** — Arrange widgets (media, text, web pages) in sequence
+3. **Design a layout** _(optional)_ — Split the screen into zones, each with its own playlist
+4. **Schedule on a channel** — Place playlists on a weekly calendar
+5. **Assign to a device** — Connect the channel to one or more display screens
 
-To create a network you must login into the admin tool and go to the Networks section. There you will find a button to create a new network. You must fill in the name and domain of the network. The domain is important as it will be used to associate the network to the domain of the dashboard.
+### Detailed Guides
 
+- [Content & Media](dashboard/content.md) — Uploading and managing media files
+- [Playlists](dashboard/playlists.md) — Creating and editing content sequences
+- [Layouts](dashboard/layouts.md) — Multi-zone screen designs
+- [Channels](dashboard/channels.md) — Weekly scheduling with drag-and-drop
+- [Devices](dashboard/devices.md) — Registering and managing displays
 
-## Running a local S3 server
+## Dashboard
 
-To run a local S3 server you can use the [minio](https://min.io/) server. You can download the server from the website and run it with the following command:
+The [Dashboard](dashboard/overview.md) is the web-based management interface. Key features include:
+
+- **Sidebar navigation** with organization selector and addon support
+- **Table and tree views** for all resource types
+- **Tag system** for organizing content across the platform — [Tags](dashboard/tags.md)
+- **Usage monitoring** with visual quota indicators — [Usage & Quotas](dashboard/usage-and-quotas.md)
+- **User settings** including passkey management and language selection — [Settings](dashboard/settings.md)
+
+## Widgets
+
+Widgets are the building blocks of playlists. Each widget type defines how a specific kind of content renders — images, videos, text tickers, web pages, and more.
+
+Castmill includes built-in widgets and supports **custom widgets** that can be developed independently. See the [Widgets documentation](widgets/widgets.mdx) for the full reference.
+
+## Extending Castmill
+
+Castmill's **addon system** lets you extend the platform with new features. Addons are Elixir packages that register server-side routes and client-side UI components. See the [Addons guide](addons/addons.md) for implementation details.
+
+## Running a Local S3 Server
+
+For development without AWS, you can use [MinIO](https://min.io/) as a local S3-compatible server:
 
 ```bash
 mkdir -p ~/minio/data
@@ -51,5 +86,6 @@ docker run \
    quay.io/minio/minio server /data --console-address ":9001"
 ```
 
-This will start the minio server on port 9000 and the console on port 9001. You can access the console by going to http://localhost:9001. The default username is `ROOTUSER` and the password is `CHANGEME123`. You can change the password in the console.
+Access the MinIO console at http://localhost:9001 (credentials: `ROOTUSER` / `CHANGEME123`). Create a bucket and configure the S3 environment variables to point to `localhost:9000`.
 
+See [Self-Hosting](getting-started/self-hosting.md) for full storage configuration details.
