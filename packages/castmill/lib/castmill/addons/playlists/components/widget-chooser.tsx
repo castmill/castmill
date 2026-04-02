@@ -139,7 +139,9 @@ export const WidgetChooser: Component<{
             type="text"
             value={searchText()}
             onInput={handleSearchChange}
-            placeholder="Search widgets..."
+            placeholder={
+              props.t?.('playlists.searchWidgets') || 'Search widgets...'
+            }
             class="search-input"
           />
         </div>

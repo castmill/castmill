@@ -325,7 +325,11 @@ export const PlaylistItems: Component<{
           ref={endZoneRef}
           class="playlist-end-drop-zone"
           classList={{ hovered: endZoneHovered() }}
-        />
+        >
+          <span class="playlist-end-drop-zone-label">
+            {t('playlists.dropHereToAddAtEnd')}
+          </span>
+        </div>
       </div>
       <Show when={showModal()}>
         <Modal

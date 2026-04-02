@@ -275,6 +275,9 @@ export const PlaylistItem: Component<{
   onClick?: () => void;
   animate: boolean;
 }> = (props) => {
+  const t = (key: string, params?: Record<string, any>) =>
+    props.t?.(key, params) || key;
+
   let itemRef: HTMLDivElement | undefined = undefined;
   let draggingRef: HTMLDivElement | undefined = undefined;
   let handleRef: HTMLDivElement | undefined = undefined;
@@ -399,7 +402,9 @@ export const PlaylistItem: Component<{
             when={!isDynamicDuration()}
             fallback={
               <div class={styles.autoDuration}>
-                <span class={styles.autoDurationLabel}>Duration</span>
+                <span class={styles.autoDurationLabel}>
+                  {t('playlists.duration')}
+                </span>
                 <span class={styles.autoDurationValue}>
                   {readableDuration()}
                 </span>
@@ -407,7 +412,7 @@ export const PlaylistItem: Component<{
             }
           >
             <Slider
-              name="Duration"
+              name={t('playlists.duration')}
               value={props.item.duration || 10000}
               min={1000}
               max={Math.max(60000, props.item.duration || 10000)}
