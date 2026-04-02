@@ -61,15 +61,15 @@ export function validateAspectRatioExtreme(
   if (!isNaN(widthNum) && !isNaN(heightNum) && widthNum > 0 && heightNum > 0) {
     const ratio = widthNum / heightNum;
     if (ratio > MAX_ASPECT_RATIO || ratio < MIN_ASPECT_RATIO) {
-      newErrors.set('aspectRatio', t('playlists.errors.aspectRatioExtreme'));
+      newErrors.set('ratio', t('playlists.errors.aspectRatioExtreme'));
       return { isValid: false, errors: newErrors };
     } else {
-      newErrors.delete('aspectRatio');
+      newErrors.delete('ratio');
       return { isValid: true, errors: newErrors };
     }
   }
 
-  newErrors.delete('aspectRatio');
+  newErrors.delete('ratio');
   return { isValid: true, errors: newErrors };
 }
 
