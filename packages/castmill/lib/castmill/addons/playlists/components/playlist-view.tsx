@@ -38,6 +38,12 @@ export const PlaylistView: Component<{
 }> = (props) => {
   const toast = useToast();
   const t = props.t || ((key: string) => key);
+  const getWidgetName = (widget: JsonWidget): string => {
+    if (!widget.slug) return widget.name;
+    const key = `widgetCatalog.${widget.slug}.name`;
+    const translated = t(key);
+    return translated !== key ? translated : widget.name;
+  };
   const [widgets, setWidgets] = createSignal<JsonWidget[]>([]);
   const [loading, setLoading] = createSignal(true);
   const [items, setItems] = createSignal<JsonPlaylistItem[]>([]);
@@ -475,6 +481,7 @@ export const PlaylistView: Component<{
             <WidgetChooser
               widgets={widgets()}
               baseUrl={props.baseUrl}
+              t={t}
               onSearch={handleWidgetSearch}
             />
             <div class="drag-indicator">
@@ -539,7 +546,9 @@ export const PlaylistView: Component<{
         <Modal
           title={t('playlists.credentialsRequired')}
           description={t('playlists.credentialsRequiredDescription', {
-            widget: credentialsError()?.widget?.name || t('common.widget'),
+            widget: credentialsError()?.widget
+              ? getWidgetName(credentialsError()!.widget)
+              : t('common.widget'),
           })}
           onClose={() => setCredentialsError(null)}
         >

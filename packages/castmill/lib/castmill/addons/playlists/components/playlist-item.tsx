@@ -20,6 +20,8 @@ import styles from './playlist-item.module.scss';
 import { Component, onMount, createSignal, onCleanup, Show } from 'solid-js';
 import { JsonPlaylistItem } from '@castmill/player';
 
+type TranslateFn = (key: string, params?: Record<string, any>) => string;
+
 // get thumbnail uri from playlist item
 const getThumbnailUri = (item: JsonPlaylistItem) => {
   // TODO improve typing
@@ -30,8 +32,29 @@ const getThumbnailUri = (item: JsonPlaylistItem) => {
   return video?.files?.thumbnail?.uri || image?.files?.thumbnail?.uri;
 };
 
-// get widget name from playlist item (used as title)
-const getWidgetName = (item: JsonPlaylistItem) => item.widget.name;
+const getTranslatedWidgetName = (
+  item: JsonPlaylistItem,
+  t?: TranslateFn
+): string => {
+  const slug = item.widget.slug;
+  if (!slug || !t) return item.widget.name;
+
+  const key = `widgetCatalog.${slug}.name`;
+  const translated = t(key);
+  return translated !== key ? translated : item.widget.name;
+};
+
+const getTranslatedWidgetDescription = (
+  item: JsonPlaylistItem,
+  t?: TranslateFn
+): string | undefined => {
+  const slug = item.widget.slug;
+  if (!slug || !t) return item.widget.description;
+
+  const key = `widgetCatalog.${slug}.description`;
+  const translated = t(key);
+  return translated !== key ? translated : item.widget.description;
+};
 
 // Regex for matching hex color values
 const HEX_COLOR_REGEX = /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$/;
@@ -175,10 +198,13 @@ const getWidgetSubtitle = (item: JsonPlaylistItem): string | null => {
 const Thumbnail: Component<{
   item: JsonPlaylistItem;
   baseUrl: string;
+  t?: TranslateFn;
 }> = (props) => {
   const thumbnailUri = getThumbnailUri(props.item);
-  const widgetName = getWidgetName(props.item);
-  const widgetSubtitle = getWidgetSubtitle(props.item);
+  const widgetName = getTranslatedWidgetName(props.item, props.t);
+  const widgetSubtitle =
+    getWidgetSubtitle(props.item) ||
+    getTranslatedWidgetDescription(props.item, props.t);
   const widgetIcon = props.item.widget.icon;
   const iconUrl = getIconUrl(widgetIcon, props.baseUrl);
   const integrationError = () => props.item.integration_error;
@@ -240,6 +266,7 @@ export const PlaylistItem: Component<{
   item: JsonPlaylistItem;
   index: number;
   baseUrl: string;
+  t?: TranslateFn;
   dynamicDuration?: number;
   onEdit: () => void;
   onRemove: (item: JsonPlaylistItem) => void;
@@ -364,7 +391,7 @@ export const PlaylistItem: Component<{
             }}
             style={{ cursor: props.onClick ? 'pointer' : 'default' }}
           >
-            <Thumbnail item={props.item} baseUrl={props.baseUrl} />
+            <Thumbnail item={props.item} baseUrl={props.baseUrl} t={props.t} />
           </div>
         </div>
         <div class={styles.playlistItemDuration}>

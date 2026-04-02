@@ -58,6 +58,23 @@ export const PlaylistItems: Component<{
   onCredentialsError?: (error: CredentialsError) => void;
   onSeekToItem?: (index: number) => void;
 }> = (props) => {
+  const t = (key: string, params?: Record<string, any>) =>
+    props.store.i18n?.t(key, params) || key;
+
+  const getWidgetName = (widget: JsonWidget): string => {
+    if (!widget.slug) return widget.name;
+    const key = `widgetCatalog.${widget.slug}.name`;
+    const translated = t(key);
+    return translated !== key ? translated : widget.name;
+  };
+
+  const getWidgetDescription = (widget: JsonWidget): string | undefined => {
+    if (!widget.slug) return widget.description;
+    const key = `widgetCatalog.${widget.slug}.description`;
+    const translated = t(key);
+    return translated !== key ? translated : widget.description;
+  };
+
   const [showModal, setShowModal] = createSignal<JsonPlaylistItem>();
   const [promiseResolve, setPromiseResolve] = createSignal<{
     resolve: (
@@ -281,6 +298,7 @@ export const PlaylistItems: Component<{
             <PlaylistItem
               item={item}
               baseUrl={props.baseUrl}
+              t={t}
               dynamicDuration={
                 typeof item.id === 'number'
                   ? props.dynamicDurations?.[item.id]
@@ -311,8 +329,10 @@ export const PlaylistItems: Component<{
       </div>
       <Show when={showModal()}>
         <Modal
-          title={`Widget "${showModal()?.widget.name}"`}
-          description="Configure your widget"
+          title={`Widget "${getWidgetName(showModal()!.widget)}"`}
+          description={
+            getWidgetDescription(showModal()!.widget) || 'Configure your widget'
+          }
           onClose={() => closeDialog()}
         >
           <WidgetConfig
