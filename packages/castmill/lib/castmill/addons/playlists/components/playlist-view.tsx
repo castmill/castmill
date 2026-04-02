@@ -8,9 +8,11 @@ import {
 import {
   Component,
   createEffect,
+  createMemo,
   createSignal,
   Show,
   onCleanup,
+  untrack,
 } from 'solid-js';
 import {
   useToast,
@@ -467,8 +469,16 @@ export const PlaylistView: Component<{
     setIsAspectRatioModified(false);
   };
 
+  // Derived memo so the effect below only re-runs when the aspect ratio
+  // actually changes, not on every item edit/reorder that updates playlist().
+  const playlistAspectRatio = createMemo(
+    () => playlist()?.settings?.aspect_ratio
+  );
+
   createEffect(() => {
-    const currentPlaylist = playlist();
+    // Track only the aspect ratio, not the whole playlist object.
+    playlistAspectRatio();
+    const currentPlaylist = untrack(() => playlist());
     if (!currentPlaylist) {
       return;
     }
