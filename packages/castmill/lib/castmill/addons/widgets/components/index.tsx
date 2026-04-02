@@ -491,11 +491,16 @@ const WidgetsPage: Component<{
             </div>
             <div style="text-align: left; flex: 1;">
               <div style="font-weight: 500;">{getWidgetName(widget)}</div>
-              {widget.description && (
-                <div style="font-size: 0.85em; color: #666; margin-top: 2px;">
-                  {getWidgetDescription(widget)}
-                </div>
-              )}
+              {(() => {
+                const desc = getWidgetDescription(widget);
+                return (
+                  desc && (
+                    <div style="font-size: 0.85em; color: #666; margin-top: 2px;">
+                      {desc}
+                    </div>
+                  )
+                );
+              })()}
             </div>
           </div>
         );
