@@ -1381,5 +1381,55 @@
     "savedOffline": "스케줄이 저장되었습니다. 기기가 오프라인입니다 — 재연결 시 타이머가 전송됩니다.",
     "loadError": "스케줄 로드 오류",
     "saveError": "스케줄 저장 오류"
+  },
+  "widgetCatalog": {
+    "image": {
+      "name": "이미지",
+      "description": "이미지를 표시합니다."
+    },
+    "video": {
+      "name": "비디오",
+      "description": "비디오를 표시합니다."
+    },
+    "weather": {
+      "name": "날씨",
+      "description": "날씨 정보를 표시합니다."
+    },
+    "web": {
+      "name": "웹",
+      "description": "웹 페이지 내용을 표시합니다."
+    },
+    "intro": {
+      "name": "인트로",
+      "description": "Castmill 로고가 있는 인트로 위젯"
+    },
+    "layout-portrait-3": {
+      "name": "세로 레이아웃 3",
+      "description": "세로 레이아웃으로 3개의 재생 목록을 표시합니다."
+    },
+    "layout-widget": {
+      "name": "레이아웃 위젯",
+      "description": "미리 정의된 레이아웃을 사용하여 여러 재생 목록을 표시합니다. 레이아웃을 선택하고 각 구역에 재생 목록을 할당하세요."
+    },
+    "qr-code": {
+      "name": "QR 코드",
+      "description": "선택적 캡션과 함께 URL 또는 텍스트의 QR 코드를 표시합니다."
+    },
+    "rss-news": {
+      "name": "RSS 뉴스",
+      "description": "RSS 뉴스 피드를 표시합니다."
+    },
+    "spotify-now-playing": {
+      "name": "Spotify 현재 재생 중",
+      "description": "앨범 아트워크, 트랙 정보 및 재생 진행 상황과 함께 Spotify 계정에서 현재 재생 중인 트랙을 표시합니다."
+    },
+    "stock-ticker": {
+      "name": "주식 시세 표시기",
+      "description": "가격 변동과 함께 실시간 주식 시세의 스크롤 시세 표시기를 표시합니다."
+    },
+    "location-display-demo": {
+      "name": "위치 표시",
+      "description": "좌표 및 주소와 함께 위치 정보를 표시합니다."
+    }
   }
 }

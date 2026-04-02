@@ -1393,5 +1393,55 @@
     "savedOffline": "Horaire enregistré. L'appareil est hors ligne — les minuteurs seront envoyés lors de la reconnexion.",
     "loadError": "Erreur lors du chargement de l'horaire",
     "saveError": "Erreur lors de l'enregistrement de l'horaire"
+  },
+  "widgetCatalog": {
+    "image": {
+      "name": "Image",
+      "description": "Affiche une image."
+    },
+    "video": {
+      "name": "Vidéo",
+      "description": "Affiche une vidéo."
+    },
+    "weather": {
+      "name": "Météo",
+      "description": "Affiche des informations météorologiques."
+    },
+    "web": {
+      "name": "Web",
+      "description": "Affiche le contenu d'une page web."
+    },
+    "intro": {
+      "name": "Intro",
+      "description": "Un widget d'introduction avec le logo Castmill"
+    },
+    "layout-portrait-3": {
+      "name": "Mise en page Portrait 3",
+      "description": "Affiche 3 listes de lecture dans une mise en page portrait."
+    },
+    "layout-widget": {
+      "name": "Widget de mise en page",
+      "description": "Affiche plusieurs listes de lecture à l'aide d'une mise en page prédéfinie. Sélectionnez une mise en page et attribuez des listes de lecture à chaque zone."
+    },
+    "qr-code": {
+      "name": "Code QR",
+      "description": "Affiche un code QR pour les URLs ou le texte avec une légende optionnelle."
+    },
+    "rss-news": {
+      "name": "Actualités RSS",
+      "description": "Affiche un flux d'actualités RSS."
+    },
+    "spotify-now-playing": {
+      "name": "Spotify en cours de lecture",
+      "description": "Affiche la piste en cours de lecture depuis un compte Spotify avec la pochette de l'album, les informations de la piste et la progression de la lecture."
+    },
+    "stock-ticker": {
+      "name": "Cours boursiers",
+      "description": "Affiche un ticker défilant de cours boursiers en temps réel avec les variations de prix."
+    },
+    "location-display-demo": {
+      "name": "Affichage de localisation",
+      "description": "Affiche des informations de localisation avec les coordonnées et l'adresse."
+    }
   }
 }

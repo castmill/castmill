@@ -46,6 +46,22 @@ const WidgetsPage: Component<{
   const t = (key: string, params?: Record<string, any>) =>
     props.store.i18n?.t(key, params) || key;
 
+  // Helper to get translated widget name, falling back to the widget's own name
+  const getWidgetName = (widget: WidgetWithId): string => {
+    if (!widget.slug) return widget.name;
+    const key = `widgetCatalog.${widget.slug}.name`;
+    const translated = t(key);
+    return translated !== key ? translated : widget.name;
+  };
+
+  // Helper to get translated widget description, falling back to the widget's own description
+  const getWidgetDescription = (widget: WidgetWithId): string | undefined => {
+    if (!widget.slug) return widget.description;
+    const key = `widgetCatalog.${widget.slug}.description`;
+    const translated = t(key);
+    return translated !== key ? translated : widget.description;
+  };
+
   // Helper function to check permissions
   const canPerformAction = (resource: string, action: string): boolean => {
     if (!props.store.permissions?.matrix) return false;
@@ -474,10 +490,10 @@ const WidgetsPage: Component<{
               )}
             </div>
             <div style="text-align: left; flex: 1;">
-              <div style="font-weight: 500;">{widget.name}</div>
+              <div style="font-weight: 500;">{getWidgetName(widget)}</div>
               {widget.description && (
                 <div style="font-size: 0.85em; color: #666; margin-top: 2px;">
-                  {widget.description}
+                  {getWidgetDescription(widget)}
                 </div>
               )}
             </div>
@@ -602,7 +618,7 @@ const WidgetsPage: Component<{
 
       <Show when={showDrawer()}>
         <Drawer
-          title={currentWidget()!.name}
+          title={getWidgetName(currentWidget()!)}
           onClose={closeWidgetDrawer}
           placement="right"
           size="xl"

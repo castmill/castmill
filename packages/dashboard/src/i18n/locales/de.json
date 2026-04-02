@@ -1376,5 +1376,55 @@
     "savedOffline": "Zeitplan gespeichert. Gerät ist offline — Timer werden bei Wiederverbindung gesendet.",
     "loadError": "Fehler beim Laden des Zeitplans",
     "saveError": "Fehler beim Speichern des Zeitplans"
+  },
+  "widgetCatalog": {
+    "image": {
+      "name": "Bild",
+      "description": "Zeigt ein Bild an."
+    },
+    "video": {
+      "name": "Video",
+      "description": "Zeigt ein Video an."
+    },
+    "weather": {
+      "name": "Wetter",
+      "description": "Zeigt Wetterinformationen an."
+    },
+    "web": {
+      "name": "Web",
+      "description": "Zeigt den Inhalt einer Webseite an."
+    },
+    "intro": {
+      "name": "Intro",
+      "description": "Ein Intro-Widget mit dem Castmill-Logo"
+    },
+    "layout-portrait-3": {
+      "name": "Hochformat-Layout 3",
+      "description": "Zeigt 3 Wiedergabelisten in einem Hochformat-Layout an."
+    },
+    "layout-widget": {
+      "name": "Layout-Widget",
+      "description": "Zeigt mehrere Wiedergabelisten mit einem vordefinierten Layout an. Wählen Sie ein Layout und weisen Sie jeder Zone Wiedergabelisten zu."
+    },
+    "qr-code": {
+      "name": "QR-Code",
+      "description": "Zeigt einen QR-Code für URLs oder Text mit optionalem Untertitel an."
+    },
+    "rss-news": {
+      "name": "RSS-Nachrichten",
+      "description": "Zeigt einen RSS-Nachrichtenfeed an."
+    },
+    "spotify-now-playing": {
+      "name": "Spotify – Aktueller Titel",
+      "description": "Zeigt den aktuell abgespielten Titel eines Spotify-Kontos mit Album-Cover, Titelinformationen und Wiedergabefortschritt an."
+    },
+    "stock-ticker": {
+      "name": "Börsen-Ticker",
+      "description": "Zeigt einen scrollenden Ticker mit Echtzeit-Börsenkursen und Preisveränderungen an."
+    },
+    "location-display-demo": {
+      "name": "Standortanzeige",
+      "description": "Zeigt Standortinformationen mit Koordinaten und Adresse an."
+    }
   }
 }

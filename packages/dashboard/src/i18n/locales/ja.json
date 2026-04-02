@@ -1382,5 +1382,55 @@
     "savedOffline": "スケジュールを保存しました。デバイスはオフラインです — 再接続時にタイマーが送信されます。",
     "loadError": "スケジュールの読み込みエラー",
     "saveError": "スケジュールの保存エラー"
+  },
+  "widgetCatalog": {
+    "image": {
+      "name": "画像",
+      "description": "画像を表示します。"
+    },
+    "video": {
+      "name": "ビデオ",
+      "description": "ビデオを表示します。"
+    },
+    "weather": {
+      "name": "天気",
+      "description": "天気情報を表示します。"
+    },
+    "web": {
+      "name": "ウェブ",
+      "description": "ウェブページの内容を表示します。"
+    },
+    "intro": {
+      "name": "イントロ",
+      "description": "Castmillロゴ付きのイントロウィジェット"
+    },
+    "layout-portrait-3": {
+      "name": "縦向きレイアウト 3",
+      "description": "縦向きレイアウトで3つのプレイリストを表示します。"
+    },
+    "layout-widget": {
+      "name": "レイアウトウィジェット",
+      "description": "事前定義されたレイアウトを使用して複数のプレイリストを表示します。レイアウトを選択し、各ゾーンにプレイリストを割り当てます。"
+    },
+    "qr-code": {
+      "name": "QRコード",
+      "description": "オプションのキャプション付きでURLまたはテキストのQRコードを表示します。"
+    },
+    "rss-news": {
+      "name": "RSSニュース",
+      "description": "RSSニュースフィードを表示します。"
+    },
+    "spotify-now-playing": {
+      "name": "Spotify 再生中",
+      "description": "アルバムアートワーク、トラック情報、再生進捗状況と共にSpotifyアカウントの現在再生中のトラックを表示します。"
+    },
+    "stock-ticker": {
+      "name": "株式ティッカー",
+      "description": "価格変動付きのリアルタイム株価見積もりのスクロールティッカーを表示します。"
+    },
+    "location-display-demo": {
+      "name": "位置表示",
+      "description": "座標と住所付きの位置情報を表示します。"
+    }
   }
 }

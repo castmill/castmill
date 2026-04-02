@@ -86,6 +86,11 @@ const ALLOWED_IDENTICAL_STRINGS = new Set([
   'Contact', // Cognate in French
   'Administrator', // Cognate in German
   'Timers', // Cognate in Swedish
+  // Widget names that are internationally recognized / same across languages
+  'Video', // Universal loanword in Spanish, Swedish, German, French
+  'Web', // Universal technical term in Spanish, German, French
+  'Intro', // Short for introduction, used in Spanish, Swedish, German, French
+  'Image', // Same word in French
   // Time unit abbreviations - internationally recognized
   'd', // days short
   'h', // hours short
