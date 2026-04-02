@@ -85,6 +85,27 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
   const t = (key: string, params?: Record<string, any>) =>
     props.store.i18n?.t(key, params) || key;
 
+  const translateWidgetOptionLabel = (
+    optionKey: string,
+    fallback?: string
+  ): string => {
+    const slug = props.item.widget.slug;
+    const translationKey = `widgetCatalog.${slug}.options.${optionKey}.label`;
+    const translated = t(translationKey);
+    return translated !== translationKey ? translated : fallback || optionKey;
+  };
+
+  const translateWidgetOptionDescription = (
+    optionKey: string,
+    fallback?: string
+  ): string | undefined => {
+    if (!fallback) return fallback;
+    const slug = props.item.widget.slug;
+    const translationKey = `widgetCatalog.${slug}.options.${optionKey}.description`;
+    const translated = t(translationKey);
+    return translated !== translationKey ? translated : fallback;
+  };
+
   // Fetch ancestor playlist IDs to prevent circular references
   createEffect(async () => {
     try {
@@ -426,12 +447,18 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
         const formValue = getValue(key, schema as FieldAttributes);
         return (
           <FormItem
-            label={key}
+            label={translateWidgetOptionLabel(
+              key,
+              (schema as FieldAttributes).title || key
+            )}
             id={key}
             type={type}
             value={typeof formValue === 'object' ? '' : String(formValue ?? '')}
             placeholder={(schema as FieldAttributes).placeholder}
-            description={(schema as FieldAttributes).description}
+            description={translateWidgetOptionDescription(
+              key,
+              (schema as FieldAttributes).description
+            )}
             onInput={(value: string | number | boolean) => {
               if (validateField(type, schema as FieldAttributes, key, value)) {
                 setWidgetOptions({ ...widgetOptions(), [key]: value });
@@ -456,7 +483,7 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
         return (
           <div class="form-item-wrapper">
             <div class="form-item1">
-              <label for={key}>{key}</label>
+              <label for={key}>{translateWidgetOptionLabel(key, key)}</label>
               <select
                 id={key}
                 value={currentValue}
@@ -477,7 +504,9 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
               <div class="error">{errors().get(key)}</div>
             </div>
             <Show when={enumSchema.description}>
-              <div class="description">{enumSchema.description}</div>
+              <div class="description">
+                {translateWidgetOptionDescription(key, enumSchema.description)}
+              </div>
             </Show>
           </div>
         );
@@ -513,7 +542,7 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
               <>
                 <ComboBox<JsonMedia>
                   id={key}
-                  label={key}
+                  label={translateWidgetOptionLabel(key, key)}
                   placeholder={placeholderText}
                   value={getReferenceValue<JsonMedia>(key)}
                   renderItem={(item: JsonMedia) => {
@@ -561,7 +590,7 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
               <>
                 <ComboBox<JsonPlaylist>
                   id={key}
-                  label={key}
+                  label={translateWidgetOptionLabel(key, key)}
                   placeholder={t('common.selectPlaylist')}
                   value={getReferenceValue<JsonPlaylist>(key)}
                   renderItem={(item: JsonPlaylist) => {
@@ -642,9 +671,14 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
 
         return (
           <div class="form-item-wrapper">
-            <label>{key}</label>
+            <label>{translateWidgetOptionLabel(key, key)}</label>
             <Show when={layoutSchema.description}>
-              <div class="description">{layoutSchema.description}</div>
+              <div class="description">
+                {translateWidgetOptionDescription(
+                  key,
+                  layoutSchema.description
+                )}
+              </div>
             </Show>
             <LayoutEditor
               value={getCurrentLayout()}
@@ -667,7 +701,12 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
         return (
           <div class="form-item-wrapper">
             <Show when={layoutRefSchema.description}>
-              <div class="description">{layoutRefSchema.description}</div>
+              <div class="description">
+                {translateWidgetOptionDescription(
+                  key,
+                  layoutRefSchema.description
+                )}
+              </div>
             </Show>
             <LayoutRefEditor
               value={getCurrentLayoutRef()}
@@ -699,7 +738,12 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
         return (
           <div class="form-item-wrapper">
             <Show when={locationSchema.description}>
-              <div class="description">{locationSchema.description}</div>
+              <div class="description">
+                {translateWidgetOptionDescription(
+                  key,
+                  locationSchema.description
+                )}
+              </div>
             </Show>
             <LocationPicker
               value={getCurrentLocation()}
@@ -731,10 +775,18 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
       <div class="widget-config">
         <Show when={props.item.inserted_at}>
           <div style="font-size: 0.8em; color: darkgray;">
-            <span>Created on </span>{' '}
-            <Timestamp value={props.item.inserted_at!} mode="relative" />.{' '}
-            <span>Last updated on </span>
-            <Timestamp value={props.item.updated_at!} mode="relative" />
+            <span>{t('common.addedOn')} </span>{' '}
+            <Timestamp
+              value={props.item.inserted_at!}
+              mode="relative"
+              locale={props.store.i18n?.locale?.()}
+            />
+            . <span>{t('common.lastUpdatedOn')} </span>
+            <Timestamp
+              value={props.item.updated_at!}
+              mode="relative"
+              locale={props.store.i18n?.locale?.()}
+            />
           </div>
         </Show>
         <form

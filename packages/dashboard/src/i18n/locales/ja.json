@@ -1389,7 +1389,19 @@
   "widgetCatalog": {
     "image": {
       "name": "画像",
-      "description": "画像を表示します。"
+      "description": "画像を表示します。",
+      "options": {
+        "autozoom": {
+          "label": "自動ズーム"
+        },
+        "duration": {
+          "label": "表示時間",
+          "description": "画像を表示する秒数"
+        },
+        "image": {
+          "label": "画像"
+        }
+      }
     },
     "video": {
       "name": "ビデオ",

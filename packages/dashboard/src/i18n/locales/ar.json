@@ -1388,7 +1388,19 @@
   "widgetCatalog": {
     "image": {
       "name": "صورة",
-      "description": "عرض صورة."
+      "description": "عرض صورة.",
+      "options": {
+        "autozoom": {
+          "label": "تكبير تلقائي"
+        },
+        "duration": {
+          "label": "المدة",
+          "description": "المدة بالثواني لعرض الصورة"
+        },
+        "image": {
+          "label": "الصورة"
+        }
+      }
     },
     "video": {
       "name": "فيديو",

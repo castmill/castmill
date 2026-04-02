@@ -1400,7 +1400,19 @@
   "widgetCatalog": {
     "image": {
       "name": "Image",
-      "description": "Affiche une image."
+      "description": "Afficher une image.",
+      "options": {
+        "autozoom": {
+          "label": "Zoom automatique"
+        },
+        "duration": {
+          "label": "Durée",
+          "description": "La durée en secondes pendant laquelle afficher l'image"
+        },
+        "image": {
+          "label": "Image"
+        }
+      }
     },
     "video": {
       "name": "Vidéo",

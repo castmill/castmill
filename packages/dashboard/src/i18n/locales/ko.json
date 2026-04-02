@@ -1388,7 +1388,19 @@
   "widgetCatalog": {
     "image": {
       "name": "이미지",
-      "description": "이미지를 표시합니다."
+      "description": "이미지를 표시합니다.",
+      "options": {
+        "autozoom": {
+          "label": "자동 확대"
+        },
+        "duration": {
+          "label": "지속 시간",
+          "description": "이미지를 표시할 시간(초)"
+        },
+        "image": {
+          "label": "이미지"
+        }
+      }
     },
     "video": {
       "name": "비디오",

@@ -1383,7 +1383,19 @@
   "widgetCatalog": {
     "image": {
       "name": "Bild",
-      "description": "Zeigt ein Bild an."
+      "description": "Zeigt ein Bild an.",
+      "options": {
+        "autozoom": {
+          "label": "Autozoom"
+        },
+        "duration": {
+          "label": "Dauer",
+          "description": "Die Dauer in Sekunden, für die das Bild angezeigt wird"
+        },
+        "image": {
+          "label": "Bild"
+        }
+      }
     },
     "video": {
       "name": "Video",

@@ -1383,7 +1383,19 @@
   "widgetCatalog": {
     "image": {
       "name": "Bild",
-      "description": "Visar en bild."
+      "description": "Visa en bild.",
+      "options": {
+        "autozoom": {
+          "label": "Autozoom"
+        },
+        "duration": {
+          "label": "Varaktighet",
+          "description": "Varaktigheten i sekunder för att visa bilden"
+        },
+        "image": {
+          "label": "Bild"
+        }
+      }
     },
     "video": {
       "name": "Video",

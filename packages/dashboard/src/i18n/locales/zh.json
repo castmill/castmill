@@ -486,7 +486,6 @@
   "tags": {
     "title": "标签",
     "addTag": "添加标签",
-    "createTag": "创建标签",
     "editTag": "编辑标签",
     "deleteTag": "删除标签",
     "newTag": "新标签",
@@ -1388,7 +1387,19 @@
   "widgetCatalog": {
     "image": {
       "name": "图片",
-      "description": "显示图片。"
+      "description": "显示图片。",
+      "options": {
+        "autozoom": {
+          "label": "自动缩放"
+        },
+        "duration": {
+          "label": "时长",
+          "description": "显示图片的持续时间（秒）"
+        },
+        "image": {
+          "label": "图片"
+        }
+      }
     },
     "video": {
       "name": "视频",
