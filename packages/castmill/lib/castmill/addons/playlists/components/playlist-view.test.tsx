@@ -7,11 +7,26 @@ import { render, screen, waitFor } from '@solidjs/testing-library';
 import { PlaylistView } from './playlist-view';
 import { PlaylistsService } from '../services/playlists.service';
 
+vi.mock('@castmill/ui-common', async () => {
+  const actual = await vi.importActual<typeof import('@castmill/ui-common')>(
+    '@castmill/ui-common'
+  );
+
+  return {
+    ...actual,
+    useToast: () => ({
+      success: vi.fn(),
+      error: vi.fn(),
+    }),
+  };
+});
+
 // Mock the services
 vi.mock('../services/playlists.service', () => ({
   PlaylistsService: {
     getPlaylist: vi.fn(),
     getWidgets: vi.fn(),
+    updatePlaylist: vi.fn(),
     insertWidgetIntoPlaylist: vi.fn(),
     updateItemInPlaylist: vi.fn(),
     updateWidgetConfig: vi.fn(),
