@@ -1099,7 +1099,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
             </FormItem>
             <div class="actions">
               <Button
-                label={t('common.update')}
+                label={t('common.save')}
                 onClick={async () => {
                   try {
                     await PlaylistsService.updatePlaylist(

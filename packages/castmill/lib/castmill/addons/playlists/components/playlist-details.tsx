@@ -102,7 +102,7 @@ export const PlaylistDetails = (props: {
 
         <div class="actions">
           <Button
-            label={t('common.update')}
+            label={t('common.save')}
             type="submit"
             disabled={!isFormValid()}
             icon={BsCheckLg}

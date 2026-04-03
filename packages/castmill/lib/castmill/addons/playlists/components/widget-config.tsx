@@ -840,14 +840,14 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
           </div>
           <div class="form-actions">
             <Button
-              label="Update"
+              label={t('common.save')}
               type="submit"
               disabled={!isFormValid()}
               icon={BsCheckLg}
               color="success"
             />
             <Button
-              label="Reset"
+              label={t('common.reset')}
               disabled={!isFormModified()}
               onClick={() => {
                 resetForm();
