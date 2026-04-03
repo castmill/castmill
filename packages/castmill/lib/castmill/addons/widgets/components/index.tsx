@@ -627,7 +627,6 @@ const WidgetsPage: Component<{
           onClose={closeWidgetDrawer}
           placement="right"
           size="xl"
-          showBackdrop="auto"
           closeOnOutsideClick
           outsideClickIgnoreSelector="tbody tr"
           contentClass="widget-details-modal"

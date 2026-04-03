@@ -301,7 +301,6 @@ const TeamsPage: Component = () => {
           onClose={closeModal}
           placement="right"
           size="xl"
-          showBackdrop="auto"
           closeOnOutsideClick
           outsideClickIgnoreSelector="tbody tr"
         >

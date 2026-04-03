@@ -58,7 +58,7 @@ export const Drawer: Component<DrawerProps> = (_props) => {
       closeButtonTitle: 'Close',
       closeOnEscape: true,
       closeOnOverlayClick: true,
-      showBackdrop: 'auto' as const,
+      showBackdrop: false,
       autoBackdropBreakpoint: 1280,
       closeOnOutsideClick: false,
       outsideClickIgnoreSelector: '',
@@ -70,7 +70,12 @@ export const Drawer: Component<DrawerProps> = (_props) => {
   const drawerId = `drawer-${++drawerIdCounter}`;
   const [isVisible, setIsVisible] = createSignal(false);
   const [isActive, setIsActive] = createSignal(false);
-  const [hasBackdrop, setHasBackdrop] = createSignal(true);
+  const [hasBackdrop, setHasBackdrop] = createSignal(
+    props.showBackdrop === 'auto'
+      ? typeof window !== 'undefined' &&
+          window.innerWidth < props.autoBackdropBreakpoint
+      : !!props.showBackdrop
+  );
 
   let panelRef: HTMLDivElement | undefined;
   let previousFocusedElement: HTMLElement | null = null;
@@ -170,7 +175,14 @@ export const Drawer: Component<DrawerProps> = (_props) => {
 
     if (
       props.outsideClickIgnoreSelector &&
-      target.closest(props.outsideClickIgnoreSelector)
+      (target.closest(props.outsideClickIgnoreSelector) ||
+        event
+          .composedPath()
+          .some(
+            (node) =>
+              node instanceof Element &&
+              node.matches(props.outsideClickIgnoreSelector)
+          ))
     ) {
       return;
     }

@@ -1055,7 +1055,6 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
           onClose={closePlaylistDrawer}
           placement="right"
           size="xl"
-          showBackdrop="auto"
           closeOnOutsideClick
           outsideClickIgnoreSelector="tbody tr, .playlist-tree-item"
           contentClass="playlist-modal"
