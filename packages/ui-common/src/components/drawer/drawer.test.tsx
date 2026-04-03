@@ -47,6 +47,19 @@ describe('Drawer Component', () => {
     expect(onClose).toHaveBeenCalled();
   });
 
+  it('removes drawer root from DOM after close animation', () => {
+    render(() => (
+      <Drawer title="Closable" onClose={() => {}}>
+        <div />
+      </Drawer>
+    ));
+
+    fireEvent.click(screen.getByTitle('Close'));
+    vi.runAllTimers();
+
+    expect(screen.queryByTestId('drawer-root')).not.toBeInTheDocument();
+  });
+
   it('closes on overlay click when backdrop is enabled', () => {
     const onClose = vi.fn();
 

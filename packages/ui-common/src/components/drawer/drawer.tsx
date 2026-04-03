@@ -3,6 +3,7 @@
 import {
   Component,
   JSX,
+  Show,
   createEffect,
   createSignal,
   mergeProps,
@@ -76,6 +77,8 @@ export const Drawer: Component<DrawerProps> = (_props) => {
   let activateTimeout: ReturnType<typeof setTimeout> | undefined;
   let closeTimeout: ReturnType<typeof setTimeout> | undefined;
   let isClosing = false;
+  let hasDetachedGlobalListeners = false;
+  let hasRestoredFocus = false;
 
   const updateBackdropMode = () => {
     if (props.showBackdrop === 'auto') {
@@ -84,6 +87,29 @@ export const Drawer: Component<DrawerProps> = (_props) => {
     }
 
     setHasBackdrop(!!props.showBackdrop);
+  };
+
+  const detachGlobalListeners = () => {
+    if (hasDetachedGlobalListeners) {
+      return;
+    }
+
+    hasDetachedGlobalListeners = true;
+    window.removeEventListener('resize', updateBackdropMode);
+    document.removeEventListener('keydown', handleKeyDown);
+    document.removeEventListener('click', closeOnOutsideClick, true);
+    removeDrawer(drawerId);
+  };
+
+  const restorePreviousFocus = () => {
+    if (hasRestoredFocus) {
+      return;
+    }
+
+    hasRestoredFocus = true;
+    if (previousFocusedElement) {
+      previousFocusedElement.focus();
+    }
   };
 
   const closeDrawer = () => {
@@ -96,8 +122,9 @@ export const Drawer: Component<DrawerProps> = (_props) => {
 
     closeTimeout = setTimeout(() => {
       setIsVisible(false);
+      detachGlobalListeners();
+      restorePreviousFocus();
       props.onClose();
-      removeDrawer(drawerId);
       closeTimeout = undefined;
     }, animationDuration);
   };
@@ -211,14 +238,8 @@ export const Drawer: Component<DrawerProps> = (_props) => {
       closeTimeout = undefined;
     }
 
-    window.removeEventListener('resize', updateBackdropMode);
-    document.removeEventListener('keydown', handleKeyDown);
-    document.removeEventListener('click', closeOnOutsideClick, true);
-    removeDrawer(drawerId);
-
-    if (previousFocusedElement) {
-      previousFocusedElement.focus();
-    }
+    detachGlobalListeners();
+    restorePreviousFocus();
   });
 
   const panelClass = () => {
@@ -238,45 +259,47 @@ export const Drawer: Component<DrawerProps> = (_props) => {
 
   return (
     <Portal mount={document.body}>
-      <div
-        data-testid="drawer-root"
-        data-has-backdrop={hasBackdrop() ? 'true' : 'false'}
-        class={`${styles.drawerRoot} ${hasBackdrop() ? styles.withBackdrop : styles.withoutBackdrop}`}
-        onClick={closeOnOverlayClick}
-      >
+      <Show when={isVisible()}>
         <div
-          role="dialog"
-          aria-modal={hasBackdrop()}
-          aria-label={props.title}
-          class={panelClass()}
-          style={{
-            height: '100dvh',
-            'min-height': '100dvh',
-            'max-height': '100dvh',
-          }}
-          ref={panelRef}
-          tabIndex={-1}
-          onClick={(event) => event.stopPropagation()}
+          data-testid="drawer-root"
+          data-has-backdrop={hasBackdrop() ? 'true' : 'false'}
+          class={`${styles.drawerRoot} ${hasBackdrop() ? styles.withBackdrop : styles.withoutBackdrop}`}
+          onClick={closeOnOverlayClick}
         >
-          <div class={styles.header}>
-            <div class={styles.titleWrapper}>
-              <h2>{props.title}</h2>
-              {props.description && <p>{props.description}</p>}
+          <div
+            role="dialog"
+            aria-modal={hasBackdrop()}
+            aria-label={props.title}
+            class={panelClass()}
+            style={{
+              height: '100dvh',
+              'min-height': '100dvh',
+              'max-height': '100dvh',
+            }}
+            ref={panelRef}
+            tabIndex={-1}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div class={styles.header}>
+              <div class={styles.titleWrapper}>
+                <h2>{props.title}</h2>
+                {props.description && <p>{props.description}</p>}
+              </div>
+              <div class={styles.headerActions}>
+                {props.headerActions}
+                <IconButton
+                  icon={VsClose}
+                  onClick={closeDrawer}
+                  color="secondary"
+                  title={props.closeButtonTitle}
+                />
+              </div>
             </div>
-            <div class={styles.headerActions}>
-              {props.headerActions}
-              <IconButton
-                icon={VsClose}
-                onClick={closeDrawer}
-                color="secondary"
-                title={props.closeButtonTitle}
-              />
-            </div>
+            <div class={styles.body}>{props.children}</div>
+            {props.footer && <div class={styles.footer}>{props.footer}</div>}
           </div>
-          <div class={styles.body}>{props.children}</div>
-          {props.footer && <div class={styles.footer}>{props.footer}</div>}
         </div>
-      </div>
+      </Show>
     </Portal>
   );
 };
