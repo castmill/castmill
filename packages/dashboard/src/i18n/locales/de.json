@@ -1386,7 +1386,7 @@
       "description": "Zeigt ein Bild an.",
       "options": {
         "autozoom": {
-          "label": "Autozoom"
+          "label": "Automatischer Zoom"
         },
         "duration": {
           "label": "Dauer",

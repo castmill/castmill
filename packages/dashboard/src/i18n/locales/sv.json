@@ -1386,7 +1386,7 @@
       "description": "Visa en bild.",
       "options": {
         "autozoom": {
-          "label": "Autozoom"
+          "label": "Automatisk zoom"
         },
         "duration": {
           "label": "Varaktighet",

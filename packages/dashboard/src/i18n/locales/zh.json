@@ -486,6 +486,7 @@
   "tags": {
     "title": "标签",
     "addTag": "添加标签",
+    "createTag": "创建标签",
     "editTag": "编辑标签",
     "deleteTag": "删除标签",
     "newTag": "新标签",
