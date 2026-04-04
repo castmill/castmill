@@ -276,7 +276,9 @@ class TranslationChecker {
       ) {
         // Key exists but value is identical to English
         // Use hybrid validation: character set detection + allowlist
-        if (!this.isProperlyTranslated(reference[key], target[key], lang, key)) {
+        if (
+          !this.isProperlyTranslated(reference[key], target[key], lang, key)
+        ) {
           untranslated.push({
             key,
             value: reference[key],
