@@ -165,6 +165,10 @@
       position: relative;
       min-height: 3em; // Minimum height to ensure it's visible
 
+      .playlist-end-drop-zone-label {
+        display: none;
+      }
+
       &.hovered {
         background: linear-gradient(
           180deg,
@@ -174,8 +178,8 @@
         );
         border: 2px dashed rgba(255, 255, 255, 0.4);
 
-        &::after {
-          content: 'Drop here to add at the end';
+        .playlist-end-drop-zone-label {
+          display: block;
           position: absolute;
           top: 50%;
           left: 50%;

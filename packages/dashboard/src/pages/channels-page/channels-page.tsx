@@ -730,7 +730,6 @@ const ChannelsPage: Component = () => {
             onClose={closeChannelDrawer}
             placement="right"
             size="xl"
-            showBackdrop="auto"
             closeOnOutsideClick
             outsideClickIgnoreSelector="tbody tr, .channel-tree-item"
           >

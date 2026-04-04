@@ -914,7 +914,7 @@ export const DeviceSchedule: Component<{
         <Button
           onClick={saveSchedule}
           color="primary"
-          label={t('deviceSchedule.save')}
+          label={t('common.save')}
           disabled={!isModified() || loading()}
         />
         <Button
