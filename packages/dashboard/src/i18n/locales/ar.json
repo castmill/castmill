@@ -789,7 +789,9 @@
     "credentialsRequired": "بيانات الاعتماد مطلوبة",
     "credentialsRequiredDescription": "يتطلب Widget \"{{widget}}\" تكوين بيانات الاعتماد قبل إضافته إلى قائمة التشغيل.",
     "missingIntegrations": "التكاملات المفقودة",
-    "goToIntegrations": "الذهاب إلى التكاملات"
+    "goToIntegrations": "الذهاب إلى التكاملات",
+    "widgetModalTitle": "أداة \"{{name}}\"",
+    "configureYourWidget": "قم بتكوين أداتك"
   },
   "layouts": {
     "title": "التخطيطات",

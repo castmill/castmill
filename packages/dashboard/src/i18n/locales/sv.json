@@ -784,7 +784,9 @@
     "credentialsRequired": "Inloggningsuppgifter Krävs",
     "credentialsRequiredDescription": "Widgeten \"{{widget}}\" kräver att inloggningsuppgifter konfigureras innan den kan läggas till i en spellista.",
     "missingIntegrations": "Saknade integrationer",
-    "goToIntegrations": "Gå till Integrationer"
+    "goToIntegrations": "Gå till Integrationer",
+    "widgetModalTitle": "Widget \"{{name}}\"",
+    "configureYourWidget": "Konfigurera din widget"
   },
   "layouts": {
     "title": "Layouter",

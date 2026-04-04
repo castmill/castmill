@@ -14,26 +14,12 @@ import { FaSolidMagnifyingGlass } from 'solid-icons/fa';
 
 import { DEFAULT_WIDGET_ICON } from '../../common/constants';
 import { isImageIcon, getIconUrl } from '../utils/icon-utils';
+import {
+  TranslateFn,
+  getTranslatedWidgetName,
+  getTranslatedWidgetDescription,
+} from '../../common/utils/widget-catalog-utils';
 import './widget-chooser.scss';
-
-type TranslateFn = (key: string, params?: Record<string, any>) => string;
-
-const getTranslatedWidgetName = (widget: JsonWidget, t?: TranslateFn) => {
-  if (!widget.slug || !t) return widget.name;
-  const key = `widgetCatalog.${widget.slug}.name`;
-  const translated = t(key);
-  return translated !== key ? translated : widget.name;
-};
-
-const getTranslatedWidgetDescription = (
-  widget: JsonWidget,
-  t?: TranslateFn
-) => {
-  if (!widget.slug || !t) return widget.description;
-  const key = `widgetCatalog.${widget.slug}.description`;
-  const translated = t(key);
-  return translated !== key ? translated : widget.description;
-};
 
 const WidgetItem: Component<{
   widget: JsonWidget;

@@ -26,6 +26,7 @@ import {
 import { AddonStore } from '../../common/interfaces/addon-store';
 import { getDefaultDataFromSchema } from '../utils/schema-utils';
 import { containsDynamicDurationComponent } from '../utils/duration-utils';
+import { getTranslatedWidgetName } from '../../common/utils/widget-catalog-utils';
 
 export const PlaylistView: Component<{
   store: AddonStore;
@@ -38,12 +39,6 @@ export const PlaylistView: Component<{
 }> = (props) => {
   const toast = useToast();
   const t = props.t || ((key: string) => key);
-  const getWidgetName = (widget: JsonWidget): string => {
-    if (!widget.slug) return widget.name;
-    const key = `widgetCatalog.${widget.slug}.name`;
-    const translated = t(key);
-    return translated !== key ? translated : widget.name;
-  };
   const [widgets, setWidgets] = createSignal<JsonWidget[]>([]);
   const [loading, setLoading] = createSignal(true);
   const [items, setItems] = createSignal<JsonPlaylistItem[]>([]);
@@ -547,7 +542,7 @@ export const PlaylistView: Component<{
           title={t('playlists.credentialsRequired')}
           description={t('playlists.credentialsRequiredDescription', {
             widget: credentialsError()?.widget
-              ? getWidgetName(credentialsError()!.widget)
+              ? getTranslatedWidgetName(credentialsError()!.widget, t)
               : t('common.widget'),
           })}
           onClose={() => setCredentialsError(null)}

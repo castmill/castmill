@@ -821,7 +821,9 @@
     "credentialsRequired": "Credentials Required",
     "credentialsRequiredDescription": "The widget \"{{widget}}\" requires credentials to be configured before it can be added to a playlist.",
     "missingIntegrations": "Missing integrations",
-    "goToIntegrations": "Go to Integrations"
+    "goToIntegrations": "Go to Integrations",
+    "widgetModalTitle": "Widget \"{{name}}\"",
+    "configureYourWidget": "Configure your widget"
   },
   "layouts": {
     "title": "Layouts",

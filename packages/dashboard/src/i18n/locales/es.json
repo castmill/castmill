@@ -814,7 +814,9 @@
     "credentialsRequired": "Credenciales Requeridas",
     "credentialsRequiredDescription": "El widget \"{{widget}}\" requiere que se configuren credenciales antes de poder añadirlo a una lista de reproducción.",
     "missingIntegrations": "Integraciones faltantes",
-    "goToIntegrations": "Ir a Integraciones"
+    "goToIntegrations": "Ir a Integraciones",
+    "widgetModalTitle": "Widget \"{{name}}\"",
+    "configureYourWidget": "Configura tu widget"
   },
   "layouts": {
     "title": "Diseños",

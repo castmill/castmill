@@ -808,7 +808,9 @@
     "credentialsRequired": "Anmeldedaten Erforderlich",
     "credentialsRequiredDescription": "Das Widget \"{{widget}}\" erfordert die Konfiguration von Anmeldedaten, bevor es einer Wiedergabeliste hinzugefügt werden kann.",
     "missingIntegrations": "Fehlende Integrationen",
-    "goToIntegrations": "Zu Integrationen"
+    "goToIntegrations": "Zu Integrationen",
+    "widgetModalTitle": "Widget \"{{name}}\"",
+    "configureYourWidget": "Konfiguriere dein Widget"
   },
   "layouts": {
     "title": "Layoutvorlagen",

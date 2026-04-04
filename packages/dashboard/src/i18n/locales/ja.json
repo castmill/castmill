@@ -790,7 +790,9 @@
     "credentialsRequired": "認証情報が必要です",
     "credentialsRequiredDescription": "Widget「{{widget}}」をプレイリストに追加する前に、認証情報を設定する必要があります。",
     "missingIntegrations": "不足している統合",
-    "goToIntegrations": "統合に移動"
+    "goToIntegrations": "統合に移動",
+    "widgetModalTitle": "ウィジェット \"{{name}}\"",
+    "configureYourWidget": "ウィジェットを設定してください"
   },
   "layouts": {
     "title": "レイアウト",

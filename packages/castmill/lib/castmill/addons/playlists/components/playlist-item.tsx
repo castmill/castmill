@@ -15,12 +15,15 @@ import { BsTrash3 } from 'solid-icons/bs';
 import { DEFAULT_WIDGET_ICON } from '../../common/constants';
 import { isImageIcon, getIconUrl } from '../utils/icon-utils';
 import { hasDynamicDuration } from '../utils/duration-utils';
+import {
+  TranslateFn,
+  getTranslatedWidgetName,
+  getTranslatedWidgetDescription,
+} from '../../common/utils/widget-catalog-utils';
 import styles from './playlist-item.module.scss';
 
 import { Component, onMount, createSignal, onCleanup, Show } from 'solid-js';
 import { JsonPlaylistItem } from '@castmill/player';
-
-type TranslateFn = (key: string, params?: Record<string, any>) => string;
 
 // get thumbnail uri from playlist item
 const getThumbnailUri = (item: JsonPlaylistItem) => {
@@ -30,30 +33,6 @@ const getThumbnailUri = (item: JsonPlaylistItem) => {
 
   // Return video thumbnail if available, otherwise image thumbnail
   return video?.files?.thumbnail?.uri || image?.files?.thumbnail?.uri;
-};
-
-const getTranslatedWidgetName = (
-  item: JsonPlaylistItem,
-  t?: TranslateFn
-): string => {
-  const slug = item.widget.slug;
-  if (!slug || !t) return item.widget.name;
-
-  const key = `widgetCatalog.${slug}.name`;
-  const translated = t(key);
-  return translated !== key ? translated : item.widget.name;
-};
-
-const getTranslatedWidgetDescription = (
-  item: JsonPlaylistItem,
-  t?: TranslateFn
-): string | undefined => {
-  const slug = item.widget.slug;
-  if (!slug || !t) return item.widget.description;
-
-  const key = `widgetCatalog.${slug}.description`;
-  const translated = t(key);
-  return translated !== key ? translated : item.widget.description;
 };
 
 // Regex for matching hex color values
@@ -201,10 +180,10 @@ const Thumbnail: Component<{
   t?: TranslateFn;
 }> = (props) => {
   const thumbnailUri = getThumbnailUri(props.item);
-  const widgetName = getTranslatedWidgetName(props.item, props.t);
+  const widgetName = getTranslatedWidgetName(props.item.widget, props.t);
   const widgetSubtitle =
     getWidgetSubtitle(props.item) ||
-    getTranslatedWidgetDescription(props.item, props.t);
+    getTranslatedWidgetDescription(props.item.widget, props.t);
   const widgetIcon = props.item.widget.icon;
   const iconUrl = getIconUrl(widgetIcon, props.baseUrl);
   const integrationError = () => props.item.integration_error;

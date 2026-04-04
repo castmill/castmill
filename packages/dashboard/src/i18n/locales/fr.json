@@ -801,7 +801,9 @@
     "credentialsRequired": "Identifiants Requis",
     "credentialsRequiredDescription": "Le widget \"{{widget}}\" nécessite la configuration d'identifiants avant de pouvoir être ajouté à une liste de lecture.",
     "missingIntegrations": "Intégrations manquantes",
-    "goToIntegrations": "Aller aux Intégrations"
+    "goToIntegrations": "Aller aux Intégrations",
+    "widgetModalTitle": "Widget \"{{name}}\"",
+    "configureYourWidget": "Configurez votre widget"
   },
   "layouts": {
     "title": "Mises en page",

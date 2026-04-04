@@ -34,6 +34,10 @@ import { IntegrationsList } from '../../common/components/integrations-list';
 import { DEFAULT_WIDGET_ICON } from '../../common/constants';
 import './widgets.scss';
 import { AddonStore } from '../../common/interfaces/addon-store';
+import {
+  getTranslatedWidgetName,
+  getTranslatedWidgetDescription,
+} from '../../common/utils/widget-catalog-utils';
 
 // Widget type with required ID and slug for table display and API calls
 type WidgetWithId = JsonWidget & { id: number; slug: string };
@@ -46,21 +50,11 @@ const WidgetsPage: Component<{
   const t = (key: string, params?: Record<string, any>) =>
     props.store.i18n?.t(key, params) || key;
 
-  // Helper to get translated widget name, falling back to the widget's own name
-  const getWidgetName = (widget: WidgetWithId): string => {
-    if (!widget.slug) return widget.name;
-    const key = `widgetCatalog.${widget.slug}.name`;
-    const translated = t(key);
-    return translated !== key ? translated : widget.name;
-  };
+  const getWidgetName = (widget: WidgetWithId): string =>
+    getTranslatedWidgetName(widget, t);
 
-  // Helper to get translated widget description, falling back to the widget's own description
-  const getWidgetDescription = (widget: WidgetWithId): string | undefined => {
-    if (!widget.slug) return widget.description;
-    const key = `widgetCatalog.${widget.slug}.description`;
-    const translated = t(key);
-    return translated !== key ? translated : widget.description;
-  };
+  const getWidgetDescription = (widget: WidgetWithId): string | undefined =>
+    getTranslatedWidgetDescription(widget, t);
 
   // Helper function to check permissions
   const canPerformAction = (resource: string, action: string): boolean => {

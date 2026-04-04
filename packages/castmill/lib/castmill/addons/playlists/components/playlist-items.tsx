@@ -20,6 +20,10 @@ import { PlaylistItem } from './playlist-item';
 import { WidgetConfig } from './widget-config';
 import { AddonStore } from '../../common/interfaces/addon-store';
 import { PlaylistsService } from '../services/playlists.service';
+import {
+  getTranslatedWidgetName,
+  getTranslatedWidgetDescription,
+} from '../../common/utils/widget-catalog-utils';
 
 export interface CredentialsError {
   widget: JsonWidget;
@@ -60,20 +64,6 @@ export const PlaylistItems: Component<{
 }> = (props) => {
   const t = (key: string, params?: Record<string, any>) =>
     props.store.i18n?.t(key, params) || key;
-
-  const getWidgetName = (widget: JsonWidget): string => {
-    if (!widget.slug) return widget.name;
-    const key = `widgetCatalog.${widget.slug}.name`;
-    const translated = t(key);
-    return translated !== key ? translated : widget.name;
-  };
-
-  const getWidgetDescription = (widget: JsonWidget): string | undefined => {
-    if (!widget.slug) return widget.description;
-    const key = `widgetCatalog.${widget.slug}.description`;
-    const translated = t(key);
-    return translated !== key ? translated : widget.description;
-  };
 
   const [showModal, setShowModal] = createSignal<JsonPlaylistItem>();
   const [promiseResolve, setPromiseResolve] = createSignal<{
@@ -333,9 +323,12 @@ export const PlaylistItems: Component<{
       </div>
       <Show when={showModal()}>
         <Modal
-          title={`Widget "${getWidgetName(showModal()!.widget)}"`}
+          title={t('playlists.widgetModalTitle', {
+            name: getTranslatedWidgetName(showModal()!.widget, t),
+          })}
           description={
-            getWidgetDescription(showModal()!.widget) || 'Configure your widget'
+            getTranslatedWidgetDescription(showModal()!.widget, t) ||
+            t('playlists.configureYourWidget')
           }
           onClose={() => closeDialog()}
         >

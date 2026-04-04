@@ -789,7 +789,9 @@
     "credentialsRequired": "需要凭据",
     "credentialsRequiredDescription": "Widget \"{{widget}}\" 在添加到播放列表之前需要配置凭据。",
     "missingIntegrations": "缺少集成",
-    "goToIntegrations": "前往集成"
+    "goToIntegrations": "前往集成",
+    "widgetModalTitle": "小工具 \"{{name}}\"",
+    "configureYourWidget": "配置您的小工具"
   },
   "layouts": {
     "title": "布局",

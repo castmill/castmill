@@ -789,7 +789,9 @@
     "credentialsRequired": "자격 증명 필요",
     "credentialsRequiredDescription": "Widget \"{{widget}}\"을(를) 재생 목록에 추가하려면 먼저 자격 증명을 구성해야 합니다.",
     "missingIntegrations": "누락된 통합",
-    "goToIntegrations": "통합으로 이동"
+    "goToIntegrations": "통합으로 이동",
+    "widgetModalTitle": "위젯 \"{{name}}\"",
+    "configureYourWidget": "위젯을 구성하세요"
   },
   "layouts": {
     "title": "레이아웃",
