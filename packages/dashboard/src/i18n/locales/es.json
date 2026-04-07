@@ -782,6 +782,9 @@
     "errorRemovingPlaylists": "Error al eliminar listas de reproducción: {{error}}",
     "enterPlaylistName": "Ingresa el nombre de la lista de reproducción",
     "dragToAdd": "Arrastra para añadir",
+    "searchWidgets": "Buscar widgets...",
+    "dropHereToAddAtEnd": "Suelta aquí para añadir al final",
+    "duration": "Duración",
     "aspectRatio": "Relación de Aspecto",
     "aspectRatioWidth": "Ancho",
     "aspectRatioHeight": "Alto",
@@ -811,7 +814,9 @@
     "credentialsRequired": "Credenciales Requeridas",
     "credentialsRequiredDescription": "El widget \"{{widget}}\" requiere que se configuren credenciales antes de poder añadirlo a una lista de reproducción.",
     "missingIntegrations": "Integraciones faltantes",
-    "goToIntegrations": "Ir a Integraciones"
+    "goToIntegrations": "Ir a Integraciones",
+    "widgetModalTitle": "Widget \"{{name}}\"",
+    "configureYourWidget": "Configura tu widget"
   },
   "layouts": {
     "title": "Diseños",
@@ -1382,5 +1387,67 @@
     "savedOffline": "Horario guardado. El dispositivo está sin conexión — los temporizadores se enviarán cuando se reconecte.",
     "loadError": "Error al cargar el horario",
     "saveError": "Error al guardar el horario"
+  },
+  "widgetCatalog": {
+    "image": {
+      "name": "Imagen",
+      "description": "Muestra una imagen.",
+      "options": {
+        "autozoom": {
+          "label": "Zoom automático"
+        },
+        "duration": {
+          "label": "Duración",
+          "description": "La duración en segundos para mostrar la imagen"
+        },
+        "image": {
+          "label": "Imagen"
+        }
+      }
+    },
+    "video": {
+      "name": "Video",
+      "description": "Muestra un video."
+    },
+    "weather": {
+      "name": "Clima",
+      "description": "Muestra información meteorológica."
+    },
+    "web": {
+      "name": "Web",
+      "description": "Muestra el contenido de una página web."
+    },
+    "intro": {
+      "name": "Intro",
+      "description": "Un widget de introducción con el logo de Castmill"
+    },
+    "layout-portrait-3": {
+      "name": "Diseño Retrato 3",
+      "description": "Muestra 3 listas de reproducción en un diseño vertical."
+    },
+    "layout-widget": {
+      "name": "Widget de Diseño",
+      "description": "Muestra múltiples listas de reproducción usando un diseño predefinido. Selecciona un diseño y asigna listas de reproducción a cada zona."
+    },
+    "qr-code": {
+      "name": "Código QR",
+      "description": "Muestra un código QR para URLs o texto con título opcional."
+    },
+    "rss-news": {
+      "name": "Noticias RSS",
+      "description": "Muestra un feed de noticias RSS."
+    },
+    "spotify-now-playing": {
+      "name": "Reproduciendo en Spotify",
+      "description": "Muestra la pista que se está reproduciendo desde una cuenta de Spotify con portada del álbum, información de la pista y progreso de reproducción."
+    },
+    "stock-ticker": {
+      "name": "Cotizaciones de Bolsa",
+      "description": "Muestra un ticker desplazable de cotizaciones de bolsa en tiempo real con cambios de precio."
+    },
+    "location-display-demo": {
+      "name": "Visualización de Ubicación",
+      "description": "Muestra información de ubicación con coordenadas y dirección."
+    }
   }
 }

@@ -86,6 +86,11 @@ const ALLOWED_IDENTICAL_STRINGS = new Set([
   'Contact', // Cognate in French
   'Administrator', // Cognate in German
   'Timers', // Cognate in Swedish
+  // Widget names that are internationally recognized / same across languages
+  'Video', // Universal loanword in Spanish, Swedish, German, French
+  'Web', // Universal technical term in Spanish, German, French
+  'Intro', // Short for introduction, used in Spanish, Swedish, German, French
+  'Image', // Same word in French
   // Time unit abbreviations - internationally recognized
   'd', // days short
   'h', // hours short
@@ -103,6 +108,17 @@ const ALLOWED_IDENTICAL_STRINGS = new Set([
   'https://linkedin.com/company/yourcompany',
   'https://facebook.com/yourcompany',
 ]);
+
+/**
+ * Keys whose values are legitimately identical to English in specific languages
+ * because they contain internationally used technical terms.
+ * Scoped to avoid masking missed translations in non-Latin-script languages.
+ * Format: { 'dot.key.path': ['lang1', 'lang2', ...] }
+ */
+const ALLOWED_IDENTICAL_KEYS = {
+  // 'Widget' is an internationally used technical term in Latin-script languages
+  'playlists.widgetModalTitle': ['es', 'sv', 'de', 'fr'],
+};
 
 class TranslationChecker {
   constructor() {
@@ -134,6 +150,14 @@ class TranslationChecker {
   }
 
   /**
+   * Check if a key is allowed to be identical for a specific language
+   */
+  isAllowedIdenticalKey(key, lang) {
+    const allowedLangs = ALLOWED_IDENTICAL_KEYS[key];
+    return allowedLangs ? allowedLangs.includes(lang) : false;
+  }
+
+  /**
    * Check if a string uses non-Latin script (CJK, Arabic, Cyrillic)
    */
   usesNonLatinScript(str) {
@@ -160,7 +184,7 @@ class TranslationChecker {
   /**
    * Check if a translation is properly translated for the target language
    */
-  isProperlyTranslated(englishValue, translatedValue, targetLang) {
+  isProperlyTranslated(englishValue, translatedValue, targetLang, key) {
     // If values are different, it's translated
     if (englishValue !== translatedValue) {
       return true;
@@ -169,6 +193,11 @@ class TranslationChecker {
     // Check if it's an allowed cognate/proper noun/technical term FIRST
     // (applies to ALL languages including non-Latin)
     if (this.isAllowedIdentical(englishValue)) {
+      return true;
+    }
+
+    // Check key-scoped allowlist (limited to specific languages for that key)
+    if (key && this.isAllowedIdenticalKey(key, targetLang)) {
       return true;
     }
 
@@ -247,7 +276,9 @@ class TranslationChecker {
       ) {
         // Key exists but value is identical to English
         // Use hybrid validation: character set detection + allowlist
-        if (!this.isProperlyTranslated(reference[key], target[key], lang)) {
+        if (
+          !this.isProperlyTranslated(reference[key], target[key], lang, key)
+        ) {
           untranslated.push({
             key,
             value: reference[key],

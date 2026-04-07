@@ -757,6 +757,9 @@
     "errorRemovingPlaylists": "خطأ في إزالة قوائم التشغيل: {{error}}",
     "enterPlaylistName": "أدخل اسم قائمة التشغيل",
     "dragToAdd": "اسحب للإضافة",
+    "searchWidgets": "ابحث عن الأدوات...",
+    "dropHereToAddAtEnd": "أفلت هنا للإضافة في النهاية",
+    "duration": "المدة",
     "aspectRatio": "نسبة العرض إلى الارتفاع",
     "aspectRatioWidth": "العرض",
     "aspectRatioHeight": "الارتفاع",
@@ -786,7 +789,9 @@
     "credentialsRequired": "بيانات الاعتماد مطلوبة",
     "credentialsRequiredDescription": "يتطلب Widget \"{{widget}}\" تكوين بيانات الاعتماد قبل إضافته إلى قائمة التشغيل.",
     "missingIntegrations": "التكاملات المفقودة",
-    "goToIntegrations": "الذهاب إلى التكاملات"
+    "goToIntegrations": "الذهاب إلى التكاملات",
+    "widgetModalTitle": "أداة \"{{name}}\"",
+    "configureYourWidget": "قم بتكوين أداتك"
   },
   "layouts": {
     "title": "التخطيطات",
@@ -1381,5 +1386,67 @@
     "savedOffline": "تم حفظ الجدول. الجهاز غير متصل — سيتم إرسال المؤقتات عند إعادة الاتصال.",
     "loadError": "خطأ في تحميل الجدول",
     "saveError": "خطأ في حفظ الجدول"
+  },
+  "widgetCatalog": {
+    "image": {
+      "name": "صورة",
+      "description": "عرض صورة.",
+      "options": {
+        "autozoom": {
+          "label": "تكبير تلقائي"
+        },
+        "duration": {
+          "label": "المدة",
+          "description": "المدة بالثواني لعرض الصورة"
+        },
+        "image": {
+          "label": "الصورة"
+        }
+      }
+    },
+    "video": {
+      "name": "فيديو",
+      "description": "عرض مقطع فيديو."
+    },
+    "weather": {
+      "name": "الطقس",
+      "description": "عرض معلومات الطقس."
+    },
+    "web": {
+      "name": "ويب",
+      "description": "عرض محتوى صفحة ويب."
+    },
+    "intro": {
+      "name": "مقدمة",
+      "description": "أداة تقديمية مع شعار Castmill"
+    },
+    "layout-portrait-3": {
+      "name": "تخطيط عمودي 3",
+      "description": "عرض 3 قوائم تشغيل في تخطيط عمودي."
+    },
+    "layout-widget": {
+      "name": "أداة التخطيط",
+      "description": "عرض قوائم تشغيل متعددة باستخدام تخطيط محدد مسبقاً. اختر تخطيطاً وخصص قوائم تشغيل لكل منطقة."
+    },
+    "qr-code": {
+      "name": "رمز QR",
+      "description": "عرض رمز QR للروابط أو النصوص مع تعليق توضيحي اختياري."
+    },
+    "rss-news": {
+      "name": "أخبار RSS",
+      "description": "عرض موجز أخبار RSS."
+    },
+    "spotify-now-playing": {
+      "name": "ما يُشغَّل على Spotify",
+      "description": "عرض المقطع الموسيقي قيد التشغيل من حساب Spotify مع غلاف الألبوم ومعلومات المقطع وتقدم التشغيل."
+    },
+    "stock-ticker": {
+      "name": "شريط أسعار الأسهم",
+      "description": "عرض شريط متحرك بأسعار الأسهم في الوقت الفعلي مع تغييرات الأسعار."
+    },
+    "location-display-demo": {
+      "name": "عرض الموقع",
+      "description": "عرض معلومات الموقع مع الإحداثيات والعنوان."
+    }
   }
 }

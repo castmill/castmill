@@ -273,7 +273,8 @@ const TeamsPage: Component = () => {
   };
   // Function to close the modal and remove blur
   const closeModal = () => {
-    // Only clear URL - let createEffect handle closing the modal
+    // Always close the drawer, including "new team" mode where itemId is absent.
+    setShowModal(false);
     setSearchParams({ itemId: undefined });
   };
 
@@ -300,7 +301,6 @@ const TeamsPage: Component = () => {
           onClose={closeModal}
           placement="right"
           size="xl"
-          showBackdrop="auto"
           closeOnOutsideClick
           outsideClickIgnoreSelector="tbody tr"
         >

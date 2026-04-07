@@ -47,6 +47,19 @@ describe('Drawer Component', () => {
     expect(onClose).toHaveBeenCalled();
   });
 
+  it('removes drawer root from DOM after close animation', () => {
+    render(() => (
+      <Drawer title="Closable" onClose={() => {}}>
+        <div />
+      </Drawer>
+    ));
+
+    fireEvent.click(screen.getByTitle('Close'));
+    vi.runAllTimers();
+
+    expect(screen.queryByTestId('drawer-root')).not.toBeInTheDocument();
+  });
+
   it('closes on overlay click when backdrop is enabled', () => {
     const onClose = vi.fn();
 
@@ -184,6 +197,66 @@ describe('Drawer Component', () => {
     expect(onClose).toHaveBeenCalled();
 
     // Clean up
+    outsideElement.remove();
+  });
+
+  it('does not close on outside click when target matches outsideClickIgnoreSelector', () => {
+    const onClose = vi.fn();
+
+    const outsideElement = document.createElement('div');
+    outsideElement.className = 'ignore-me';
+    const child = document.createElement('span');
+    outsideElement.appendChild(child);
+    document.body.appendChild(outsideElement);
+
+    render(() => (
+      <Drawer
+        title="Drawer ignore selector"
+        onClose={onClose}
+        showBackdrop={false}
+        closeOnOutsideClick
+        outsideClickIgnoreSelector=".ignore-me"
+      >
+        <div>Drawer content</div>
+      </Drawer>
+    ));
+
+    vi.runAllTimers();
+
+    fireEvent.click(child);
+    vi.runAllTimers();
+
+    expect(onClose).not.toHaveBeenCalled();
+
+    outsideElement.remove();
+  });
+
+  it('supports comma-separated outsideClickIgnoreSelector', () => {
+    const onClose = vi.fn();
+
+    const outsideElement = document.createElement('div');
+    outsideElement.className = 'channel-tree-item';
+    document.body.appendChild(outsideElement);
+
+    render(() => (
+      <Drawer
+        title="Drawer ignore selector list"
+        onClose={onClose}
+        showBackdrop={false}
+        closeOnOutsideClick
+        outsideClickIgnoreSelector="tbody tr, .channel-tree-item"
+      >
+        <div>Drawer content</div>
+      </Drawer>
+    ));
+
+    vi.runAllTimers();
+
+    fireEvent.click(outsideElement);
+    vi.runAllTimers();
+
+    expect(onClose).not.toHaveBeenCalled();
+
     outsideElement.remove();
   });
 });

@@ -138,6 +138,7 @@ export const DeviceDetails = (props: {
             id="online"
             value={onlineStatus()}
             disabled={true}
+            onInput={() => {}}
           ></FormItem>
 
           <FormItem
@@ -145,6 +146,7 @@ export const DeviceDetails = (props: {
             id="last_ip"
             value={props.device.last_ip}
             disabled={true}
+            onInput={() => {}}
           ></FormItem>
 
           <FormItem
@@ -152,11 +154,12 @@ export const DeviceDetails = (props: {
             id="device_id"
             value={props.device.id}
             disabled={true}
+            onInput={() => {}}
           ></FormItem>
         </div>
         <div class="bottom-buttons">
           <Button
-            label={t('common.update')}
+            label={t('common.save')}
             type="submit"
             disabled={!isFormValid()}
             icon={BsCheckLg}

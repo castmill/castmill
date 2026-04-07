@@ -15,6 +15,11 @@ import { BsTrash3 } from 'solid-icons/bs';
 import { DEFAULT_WIDGET_ICON } from '../../common/constants';
 import { isImageIcon, getIconUrl } from '../utils/icon-utils';
 import { hasDynamicDuration } from '../utils/duration-utils';
+import {
+  TranslateFn,
+  getTranslatedWidgetName,
+  getTranslatedWidgetDescription,
+} from '../../common/utils/widget-catalog-utils';
 import styles from './playlist-item.module.scss';
 
 import { Component, onMount, createSignal, onCleanup, Show } from 'solid-js';
@@ -29,9 +34,6 @@ const getThumbnailUri = (item: JsonPlaylistItem) => {
   // Return video thumbnail if available, otherwise image thumbnail
   return video?.files?.thumbnail?.uri || image?.files?.thumbnail?.uri;
 };
-
-// get widget name from playlist item (used as title)
-const getWidgetName = (item: JsonPlaylistItem) => item.widget.name;
 
 // Regex for matching hex color values
 const HEX_COLOR_REGEX = /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$/;
@@ -175,10 +177,13 @@ const getWidgetSubtitle = (item: JsonPlaylistItem): string | null => {
 const Thumbnail: Component<{
   item: JsonPlaylistItem;
   baseUrl: string;
+  t?: TranslateFn;
 }> = (props) => {
   const thumbnailUri = getThumbnailUri(props.item);
-  const widgetName = getWidgetName(props.item);
-  const widgetSubtitle = getWidgetSubtitle(props.item);
+  const widgetName = getTranslatedWidgetName(props.item.widget, props.t);
+  const widgetSubtitle =
+    getWidgetSubtitle(props.item) ||
+    getTranslatedWidgetDescription(props.item.widget, props.t);
   const widgetIcon = props.item.widget.icon;
   const iconUrl = getIconUrl(widgetIcon, props.baseUrl);
   const integrationError = () => props.item.integration_error;
@@ -240,6 +245,7 @@ export const PlaylistItem: Component<{
   item: JsonPlaylistItem;
   index: number;
   baseUrl: string;
+  t?: TranslateFn;
   dynamicDuration?: number;
   onEdit: () => void;
   onRemove: (item: JsonPlaylistItem) => void;
@@ -248,6 +254,9 @@ export const PlaylistItem: Component<{
   onClick?: () => void;
   animate: boolean;
 }> = (props) => {
+  const t = (key: string, params?: Record<string, any>) =>
+    props.t?.(key, params) || key;
+
   let itemRef: HTMLDivElement | undefined = undefined;
   let draggingRef: HTMLDivElement | undefined = undefined;
   let handleRef: HTMLDivElement | undefined = undefined;
@@ -364,7 +373,7 @@ export const PlaylistItem: Component<{
             }}
             style={{ cursor: props.onClick ? 'pointer' : 'default' }}
           >
-            <Thumbnail item={props.item} baseUrl={props.baseUrl} />
+            <Thumbnail item={props.item} baseUrl={props.baseUrl} t={props.t} />
           </div>
         </div>
         <div class={styles.playlistItemDuration}>
@@ -372,7 +381,9 @@ export const PlaylistItem: Component<{
             when={!isDynamicDuration()}
             fallback={
               <div class={styles.autoDuration}>
-                <span class={styles.autoDurationLabel}>Duration</span>
+                <span class={styles.autoDurationLabel}>
+                  {t('playlists.duration')}
+                </span>
                 <span class={styles.autoDurationValue}>
                   {readableDuration()}
                 </span>
@@ -380,7 +391,7 @@ export const PlaylistItem: Component<{
             }
           >
             <Slider
-              name="Duration"
+              name={t('playlists.duration')}
               value={props.item.duration || 10000}
               min={1000}
               max={Math.max(60000, props.item.duration || 10000)}

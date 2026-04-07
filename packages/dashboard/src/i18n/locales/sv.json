@@ -752,6 +752,9 @@
     "errorRemovingPlaylists": "Fel vid borttagning av spellistor: {{error}}",
     "enterPlaylistName": "Ange spellistnamn",
     "dragToAdd": "Dra för att lägga till",
+    "searchWidgets": "Sök widgets...",
+    "dropHereToAddAtEnd": "Släpp här för att lägga till i slutet",
+    "duration": "Varaktighet",
     "aspectRatio": "Bildformat",
     "aspectRatioWidth": "Bredd",
     "aspectRatioHeight": "Höjd",
@@ -781,7 +784,9 @@
     "credentialsRequired": "Inloggningsuppgifter Krävs",
     "credentialsRequiredDescription": "Widgeten \"{{widget}}\" kräver att inloggningsuppgifter konfigureras innan den kan läggas till i en spellista.",
     "missingIntegrations": "Saknade integrationer",
-    "goToIntegrations": "Gå till Integrationer"
+    "goToIntegrations": "Gå till Integrationer",
+    "widgetModalTitle": "Widget \"{{name}}\"",
+    "configureYourWidget": "Konfigurera din widget"
   },
   "layouts": {
     "title": "Layouter",
@@ -1376,5 +1381,67 @@
     "savedOffline": "Schema sparat. Enheten är offline — timers skickas när den återansluter.",
     "loadError": "Fel vid inläsning av schema",
     "saveError": "Fel vid sparande av schema"
+  },
+  "widgetCatalog": {
+    "image": {
+      "name": "Bild",
+      "description": "Visa en bild.",
+      "options": {
+        "autozoom": {
+          "label": "Automatisk zoom"
+        },
+        "duration": {
+          "label": "Varaktighet",
+          "description": "Varaktigheten i sekunder för att visa bilden"
+        },
+        "image": {
+          "label": "Bild"
+        }
+      }
+    },
+    "video": {
+      "name": "Video",
+      "description": "Visar en video."
+    },
+    "weather": {
+      "name": "Väder",
+      "description": "Visar väderinformation."
+    },
+    "web": {
+      "name": "Webb",
+      "description": "Visar innehållet på en webbsida."
+    },
+    "intro": {
+      "name": "Intro",
+      "description": "En intro-widget med Castmills logotyp"
+    },
+    "layout-portrait-3": {
+      "name": "Porträttlayout 3",
+      "description": "Visar 3 spellistor i ett stående format."
+    },
+    "layout-widget": {
+      "name": "Layoutwidget",
+      "description": "Visar flera spellistor med en fördefinierad layout. Välj en layout och tilldela spellistor till varje zon."
+    },
+    "qr-code": {
+      "name": "QR-kod",
+      "description": "Visar en QR-kod för webbadresser eller text med valfri bildtext."
+    },
+    "rss-news": {
+      "name": "RSS-nyheter",
+      "description": "Visar ett RSS-nyhetsflöde."
+    },
+    "spotify-now-playing": {
+      "name": "Spotify spelar nu",
+      "description": "Visar det aktuellt spelande spåret från ett Spotify-konto med albumomslag, spårinformation och uppspelningsförlopp."
+    },
+    "stock-ticker": {
+      "name": "Börskursband",
+      "description": "Visar ett rullande band med realtidsaktiekurser med prisförändringar."
+    },
+    "location-display-demo": {
+      "name": "Platsvisning",
+      "description": "Visar platsinformation med koordinater och adress."
+    }
   }
 }
