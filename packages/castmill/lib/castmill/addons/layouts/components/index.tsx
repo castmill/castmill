@@ -540,7 +540,6 @@ const LayoutsPage: Component<AddonComponentProps> = (props) => {
           onClose={closeLayoutDrawer}
           placement="right"
           size="xl"
-          showBackdrop="auto"
           closeOnOutsideClick
           outsideClickIgnoreSelector="tbody tr"
           contentClass="layout-modal"

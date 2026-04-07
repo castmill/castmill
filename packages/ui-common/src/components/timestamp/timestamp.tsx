@@ -1,6 +1,9 @@
 /** @jsxImportSource solid-js */
 import { Component, createSignal, onMount, onCleanup } from 'solid-js';
-import { formatRelativeTime, formatTimestamp } from '../formatters/time';
+import {
+  formatRelativeTimeLocalized,
+  formatTimestamp,
+} from '../formatters/time';
 import styles from './timestamp.module.scss';
 
 export interface TimestampProps {
@@ -20,6 +23,11 @@ export interface TimestampProps {
    * @default true
    */
   showTooltip?: boolean;
+
+  /**
+   * Locale used for relative time formatting (e.g. 'sv', 'en-US')
+   */
+  locale?: string;
 }
 
 /**
@@ -34,7 +42,7 @@ export const Timestamp: Component<TimestampProps> = (props) => {
   // Compute display text based on mode
   const displayText = () => {
     if (mode() === 'relative') {
-      return formatRelativeTime(props.value);
+      return formatRelativeTimeLocalized(props.value, props.locale);
     } else {
       return formatTimestamp(props.value);
     }

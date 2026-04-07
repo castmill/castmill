@@ -1055,7 +1055,6 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
           onClose={closePlaylistDrawer}
           placement="right"
           size="xl"
-          showBackdrop="auto"
           closeOnOutsideClick
           outsideClickIgnoreSelector="tbody tr, .playlist-tree-item"
           contentClass="playlist-modal"
@@ -1099,7 +1098,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
             </FormItem>
             <div class="actions">
               <Button
-                label={t('common.update')}
+                label={t('common.save')}
                 onClick={async () => {
                   try {
                     await PlaylistsService.updatePlaylist(

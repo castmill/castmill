@@ -34,6 +34,10 @@ import { IntegrationsList } from '../../common/components/integrations-list';
 import { DEFAULT_WIDGET_ICON } from '../../common/constants';
 import './widgets.scss';
 import { AddonStore } from '../../common/interfaces/addon-store';
+import {
+  getTranslatedWidgetName,
+  getTranslatedWidgetDescription,
+} from '../../common/utils/widget-catalog-utils';
 
 // Widget type with required ID and slug for table display and API calls
 type WidgetWithId = JsonWidget & { id: number; slug: string };
@@ -45,6 +49,12 @@ const WidgetsPage: Component<{
   // Get i18n functions from store
   const t = (key: string, params?: Record<string, any>) =>
     props.store.i18n?.t(key, params) || key;
+
+  const getWidgetName = (widget: WidgetWithId): string =>
+    getTranslatedWidgetName(widget, t);
+
+  const getWidgetDescription = (widget: WidgetWithId): string | undefined =>
+    getTranslatedWidgetDescription(widget, t);
 
   // Helper function to check permissions
   const canPerformAction = (resource: string, action: string): boolean => {
@@ -474,12 +484,17 @@ const WidgetsPage: Component<{
               )}
             </div>
             <div style="text-align: left; flex: 1;">
-              <div style="font-weight: 500;">{widget.name}</div>
-              {widget.description && (
-                <div style="font-size: 0.85em; color: #666; margin-top: 2px;">
-                  {widget.description}
-                </div>
-              )}
+              <div style="font-weight: 500;">{getWidgetName(widget)}</div>
+              {(() => {
+                const desc = getWidgetDescription(widget);
+                return (
+                  desc && (
+                    <div style="font-size: 0.85em; color: #666; margin-top: 2px;">
+                      {desc}
+                    </div>
+                  )
+                );
+              })()}
             </div>
           </div>
         );
@@ -602,11 +617,10 @@ const WidgetsPage: Component<{
 
       <Show when={showDrawer()}>
         <Drawer
-          title={currentWidget()!.name}
+          title={getWidgetName(currentWidget()!)}
           onClose={closeWidgetDrawer}
           placement="right"
           size="xl"
-          showBackdrop="auto"
           closeOnOutsideClick
           outsideClickIgnoreSelector="tbody tr"
           contentClass="widget-details-modal"

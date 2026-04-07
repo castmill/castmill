@@ -416,7 +416,7 @@ export const TeamMembersView = (props: {
 
             <div style="margin-top: 1em;">
               <Button
-                label="Invite"
+                label={t('common.save')}
                 type="submit"
                 disabled={!isFormValid()}
                 color="primary"

@@ -789,6 +789,9 @@
     "errorRemovingPlaylists": "Error removing playlists: {{error}}",
     "enterPlaylistName": "Enter Playlist name",
     "dragToAdd": "Drag to add",
+    "searchWidgets": "Search widgets...",
+    "dropHereToAddAtEnd": "Drop here to add at the end",
+    "duration": "Duration",
     "aspectRatio": "Aspect Ratio",
     "aspectRatioWidth": "Width",
     "aspectRatioHeight": "Height",
@@ -818,7 +821,9 @@
     "credentialsRequired": "Credentials Required",
     "credentialsRequiredDescription": "The widget \"{{widget}}\" requires credentials to be configured before it can be added to a playlist.",
     "missingIntegrations": "Missing integrations",
-    "goToIntegrations": "Go to Integrations"
+    "goToIntegrations": "Go to Integrations",
+    "widgetModalTitle": "Widget \"{{name}}\"",
+    "configureYourWidget": "Configure your widget"
   },
   "layouts": {
     "title": "Layouts",
@@ -1376,5 +1381,67 @@
     "savedOffline": "Schedule saved. Device is offline — timers will be sent when it reconnects.",
     "loadError": "Error loading schedule",
     "saveError": "Error saving schedule"
+  },
+  "widgetCatalog": {
+    "image": {
+      "name": "Image",
+      "description": "Display an image.",
+      "options": {
+        "autozoom": {
+          "label": "Autozoom"
+        },
+        "duration": {
+          "label": "Duration",
+          "description": "The duration in seconds to display the image"
+        },
+        "image": {
+          "label": "Image"
+        }
+      }
+    },
+    "video": {
+      "name": "Video",
+      "description": "Display a video."
+    },
+    "weather": {
+      "name": "Weather",
+      "description": "Display weather information."
+    },
+    "web": {
+      "name": "Web",
+      "description": "Displays the content of a web page."
+    },
+    "intro": {
+      "name": "Intro",
+      "description": "An intro widget with a Castmill logo"
+    },
+    "layout-portrait-3": {
+      "name": "Layout Portrait 3",
+      "description": "Display 3 playlists in a portrait layout."
+    },
+    "layout-widget": {
+      "name": "Layout Widget",
+      "description": "Display multiple playlists using a pre-defined layout. Select a layout and assign playlists to each zone."
+    },
+    "qr-code": {
+      "name": "QR Code",
+      "description": "Displays a QR code for URLs or text with optional caption."
+    },
+    "rss-news": {
+      "name": "RSS News",
+      "description": "Display an RSS news feed."
+    },
+    "spotify-now-playing": {
+      "name": "Spotify Now Playing",
+      "description": "Displays the currently playing track from a Spotify account with album artwork, track information, and playback progress."
+    },
+    "stock-ticker": {
+      "name": "Stock Ticker",
+      "description": "Displays a scrolling ticker of real-time stock quotes with price changes."
+    },
+    "location-display-demo": {
+      "name": "Location Display",
+      "description": "Displays location information with coordinates and address."
+    }
   }
 }

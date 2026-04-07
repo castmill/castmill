@@ -14,11 +14,18 @@ import { FaSolidMagnifyingGlass } from 'solid-icons/fa';
 
 import { DEFAULT_WIDGET_ICON } from '../../common/constants';
 import { isImageIcon, getIconUrl } from '../utils/icon-utils';
+import {
+  TranslateFn,
+  getTranslatedWidgetName,
+  getTranslatedWidgetDescription,
+} from '../../common/utils/widget-catalog-utils';
 import './widget-chooser.scss';
 
-const WidgetItem: Component<{ widget: JsonWidget; baseUrl: string }> = (
-  props
-) => {
+const WidgetItem: Component<{
+  widget: JsonWidget;
+  baseUrl: string;
+  t?: TranslateFn;
+}> = (props) => {
   const [dragging, setDragging] = createSignal(false);
 
   let draggableRef: HTMLDivElement | undefined = undefined;
@@ -42,6 +49,9 @@ const WidgetItem: Component<{ widget: JsonWidget; baseUrl: string }> = (
 
   const iconUrl = () => getIconUrl(props.widget.icon, props.baseUrl);
   const showAsImage = () => isImageIcon(iconUrl());
+  const widgetName = () => getTranslatedWidgetName(props.widget, props.t);
+  const widgetDescription = () =>
+    getTranslatedWidgetDescription(props.widget, props.t);
 
   return (
     <div
@@ -54,7 +64,7 @@ const WidgetItem: Component<{ widget: JsonWidget; baseUrl: string }> = (
         {showAsImage() ? (
           <img
             src={iconUrl()}
-            alt={props.widget.name}
+            alt={widgetName()}
             onError={(e) => {
               (e.target as HTMLImageElement).style.display = 'none';
               const fallback = document.createTextNode(DEFAULT_WIDGET_ICON);
@@ -66,8 +76,8 @@ const WidgetItem: Component<{ widget: JsonWidget; baseUrl: string }> = (
         )}
       </div>
       <div class="info">
-        <div class="name">{props.widget.name}</div>
-        <div class="description">{props.widget.description}</div>
+        <div class="name">{widgetName()}</div>
+        <div class="description">{widgetDescription()}</div>
       </div>
     </div>
   );
@@ -78,6 +88,7 @@ const SEARCH_DEBOUNCE_PERIOD = 300;
 export const WidgetChooser: Component<{
   widgets: JsonWidget[];
   baseUrl: string;
+  t?: TranslateFn;
   onSearch?: (searchText: string) => void;
 }> = (props) => {
   const [searchText, setSearchText] = createSignal('');
@@ -114,14 +125,18 @@ export const WidgetChooser: Component<{
             type="text"
             value={searchText()}
             onInput={handleSearchChange}
-            placeholder="Search widgets..."
+            placeholder={
+              props.t?.('playlists.searchWidgets') || 'Search widgets...'
+            }
             class="search-input"
           />
         </div>
       </div>
       <div class="items-container">
         <For each={props.widgets}>
-          {(widget) => <WidgetItem widget={widget} baseUrl={props.baseUrl} />}
+          {(widget) => (
+            <WidgetItem widget={widget} baseUrl={props.baseUrl} t={props.t} />
+          )}
         </For>
       </div>
     </div>

@@ -136,7 +136,7 @@ export const TeamView = (props: {
 
         <div class={styles['actions']}>
           <Button
-            label={props.team.id ? t('common.update') : t('common.create')}
+            label={props.team.id ? t('common.save') : t('common.create')}
             type="submit"
             disabled={!isFormValid()}
             icon={BsCheckLg}

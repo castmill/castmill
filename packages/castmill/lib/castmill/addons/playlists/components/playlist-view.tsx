@@ -26,6 +26,7 @@ import {
 import { AddonStore } from '../../common/interfaces/addon-store';
 import { getDefaultDataFromSchema } from '../utils/schema-utils';
 import { containsDynamicDurationComponent } from '../utils/duration-utils';
+import { getTranslatedWidgetName } from '../../common/utils/widget-catalog-utils';
 
 export const PlaylistView: Component<{
   store: AddonStore;
@@ -475,6 +476,7 @@ export const PlaylistView: Component<{
             <WidgetChooser
               widgets={widgets()}
               baseUrl={props.baseUrl}
+              t={t}
               onSearch={handleWidgetSearch}
             />
             <div class="drag-indicator">
@@ -539,7 +541,9 @@ export const PlaylistView: Component<{
         <Modal
           title={t('playlists.credentialsRequired')}
           description={t('playlists.credentialsRequiredDescription', {
-            widget: credentialsError()?.widget?.name || t('common.widget'),
+            widget: credentialsError()?.widget
+              ? getTranslatedWidgetName(credentialsError()!.widget, t)
+              : t('common.widget'),
           })}
           onClose={() => setCredentialsError(null)}
         >

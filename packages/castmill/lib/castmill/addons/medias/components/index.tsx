@@ -876,7 +876,6 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
           onClose={closeMediaDrawer}
           placement="right"
           size="xl"
-          showBackdrop="auto"
           closeOnOutsideClick
           outsideClickIgnoreSelector="tbody tr, .media-tree-item"
           contentClass="medias-modal"
