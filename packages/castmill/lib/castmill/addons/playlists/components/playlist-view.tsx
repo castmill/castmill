@@ -8,11 +8,19 @@ import {
 import {
   Component,
   createEffect,
+  createMemo,
   createSignal,
   Show,
   onCleanup,
+  untrack,
 } from 'solid-js';
-import { useToast, Modal, Button } from '@castmill/ui-common';
+import {
+  useToast,
+  Modal,
+  Button,
+  Dropdown,
+  FormItem,
+} from '@castmill/ui-common';
 
 import './playlist-view.scss';
 import { PlaylistsService } from '../services/playlists.service';
@@ -26,6 +34,12 @@ import {
 import { AddonStore } from '../../common/interfaces/addon-store';
 import { getDefaultDataFromSchema } from '../utils/schema-utils';
 import { containsDynamicDurationComponent } from '../utils/duration-utils';
+import { ASPECT_RATIO_OPTIONS } from '../constants';
+import {
+  validateCustomRatioField,
+  validateAspectRatioExtreme as validateAspectRatioExtremeUtil,
+  isValidAspectRatio,
+} from '../utils/aspect-ratio-validation';
 import { getTranslatedWidgetName } from '../../common/utils/widget-catalog-utils';
 
 export const PlaylistView: Component<{
@@ -48,6 +62,14 @@ export const PlaylistView: Component<{
   const [dynamicDurations, setDynamicDurations] = createSignal<
     Record<number, number>
   >({});
+  const [aspectRatioPreset, setAspectRatioPreset] =
+    createSignal<string>('16:9');
+  const [customWidth, setCustomWidth] = createSignal<string>('16');
+  const [customHeight, setCustomHeight] = createSignal<string>('9');
+  const [aspectRatioErrors, setAspectRatioErrors] = createSignal(
+    new Map<string, string>()
+  );
+  const [isAspectRatioModified, setIsAspectRatioModified] = createSignal(false);
 
   // Track whether to constrain by width or height based on container size
   const [constrainByWidth, setConstrainByWidth] = createSignal(false);
@@ -98,6 +120,7 @@ export const PlaylistView: Component<{
     const isRefReady = refReady();
 
     if (!pl || !isRefReady || !previewWrapperRef) return;
+    if (typeof ResizeObserver === 'undefined') return;
 
     const targetAspectRatio = getCurrentAspectRatio();
     const targetRatio = targetAspectRatio.width / targetAspectRatio.height;
@@ -433,6 +456,142 @@ export const PlaylistView: Component<{
     };
   };
 
+  const syncAspectRatioEditor = (nextPlaylist: JsonPlaylist) => {
+    const aspectRatio = nextPlaylist.settings?.aspect_ratio;
+    const width = aspectRatio?.width || 16;
+    const height = aspectRatio?.height || 9;
+    const ratio = `${width}:${height}`;
+    const hasPreset = ASPECT_RATIO_OPTIONS.some((opt) => opt.value === ratio);
+
+    setAspectRatioPreset(hasPreset ? ratio : 'custom');
+    setCustomWidth(String(width));
+    setCustomHeight(String(height));
+    setAspectRatioErrors(new Map());
+    setIsAspectRatioModified(false);
+  };
+
+  // Derived memo so the effect below only re-runs when the aspect ratio
+  // actually changes, not on every item edit/reorder that updates playlist().
+  const playlistAspectRatio = createMemo(
+    () => playlist()?.settings?.aspect_ratio
+  );
+
+  createEffect(() => {
+    // Track only the aspect ratio, not the whole playlist object.
+    playlistAspectRatio();
+    const currentPlaylist = untrack(() => playlist());
+    if (!currentPlaylist) {
+      return;
+    }
+    syncAspectRatioEditor(currentPlaylist);
+  });
+
+  const validateCustomRatio = (field: 'width' | 'height', value: string) => {
+    const errors = validateCustomRatioField(
+      field,
+      value,
+      t,
+      aspectRatioErrors()
+    );
+    setAspectRatioErrors(errors);
+    return !errors.has(field);
+  };
+
+  const validateCustomAspectRatioExtreme = () => {
+    if (aspectRatioPreset() !== 'custom') {
+      const errors = new Map(aspectRatioErrors());
+      errors.delete('ratio');
+      setAspectRatioErrors(errors);
+      return true;
+    }
+
+    const result = validateAspectRatioExtremeUtil(
+      customWidth(),
+      customHeight(),
+      t,
+      aspectRatioErrors()
+    );
+    setAspectRatioErrors(result.errors);
+    return result.isValid;
+  };
+
+  const isAspectRatioFormValid = () => {
+    const hasNoErrors = ![...aspectRatioErrors().values()].some((e) => e);
+    return (
+      hasNoErrors &&
+      isValidAspectRatio(customWidth(), customHeight()) &&
+      isAspectRatioModified()
+    );
+  };
+
+  const saveAspectRatio = async (nextAspectRatio: {
+    width: number;
+    height: number;
+  }) => {
+    const currentPlaylist = playlist();
+    if (!currentPlaylist) {
+      return false;
+    }
+
+    const currentAspectRatio = getCurrentAspectRatio();
+    if (
+      currentAspectRatio.width === nextAspectRatio.width &&
+      currentAspectRatio.height === nextAspectRatio.height
+    ) {
+      setIsAspectRatioModified(false);
+      return true;
+    }
+
+    try {
+      await PlaylistsService.updatePlaylist(
+        props.baseUrl,
+        props.organizationId,
+        `${currentPlaylist.id}`,
+        {
+          name: currentPlaylist.name,
+          description: '',
+          settings: {
+            aspect_ratio: nextAspectRatio,
+          },
+        }
+      );
+
+      const updatedPlaylist = {
+        ...currentPlaylist,
+        settings: {
+          ...(currentPlaylist.settings || {}),
+          aspect_ratio: nextAspectRatio,
+        },
+      };
+
+      setPlaylist(updatedPlaylist);
+      props.onChange?.(updatedPlaylist);
+      setIsAspectRatioModified(false);
+      toast.success(t('playlists.aspectRatioUpdated'));
+      return true;
+    } catch (error) {
+      toast.error(
+        t('playlists.errors.updateAspectRatio', { error: String(error) })
+      );
+      return false;
+    }
+  };
+
+  const submitCustomAspectRatio = async () => {
+    if (
+      !validateCustomRatio('width', customWidth()) ||
+      !validateCustomRatio('height', customHeight()) ||
+      !validateCustomAspectRatioExtreme()
+    ) {
+      return;
+    }
+
+    await saveAspectRatio({
+      width: parseInt(customWidth(), 10),
+      height: parseInt(customHeight(), 10),
+    });
+  };
+
   // Calculate offset for a given item index and seek to it (debounced)
   const seekToItem = (index: number) => {
     // Clear any pending seek
@@ -503,34 +662,129 @@ export const PlaylistView: Component<{
             />
           </div>
 
-          <div
-            ref={(el) => {
-              previewWrapperRef = el;
-              setRefReady(true);
-            }}
-            class="playlist-preview-wrapper"
-            style={{ height: '100%' }}
-            classList={{
-              'constrain-by-width': constrainByWidth(),
-            }}
-          >
+          <div class="playlist-preview-panel">
             <div
-              class="playlist-preview"
-              style={{
-                'aspect-ratio': `${getCurrentAspectRatio().width} / ${
-                  getCurrentAspectRatio().height
-                }`,
+              ref={(el) => {
+                previewWrapperRef = el;
+                setRefReady(true);
+              }}
+              class="playlist-preview-wrapper"
+              classList={{
+                'constrain-by-width': constrainByWidth(),
               }}
             >
-              <PlaylistPreview
-                playlist={playlist()!}
-                onReady={async (ref) => {
-                  previewRef = ref;
-                  // Prime all layers to calculate their actual durations
-                  const offsets = await ref.primeAllLayers();
-                  handleLayerOffsets(offsets);
+              <div
+                class="playlist-preview"
+                style={{
+                  'aspect-ratio': `${getCurrentAspectRatio().width} / ${
+                    getCurrentAspectRatio().height
+                  }`,
+                }}
+              >
+                <PlaylistPreview
+                  playlist={playlist()!}
+                  onReady={async (ref) => {
+                    previewRef = ref;
+                    // Prime all layers to calculate their actual durations
+                    const offsets = await ref.primeAllLayers();
+                    handleLayerOffsets(offsets);
+                  }}
+                />
+              </div>
+            </div>
+
+            <div class="playlist-aspect-ratio-form">
+              <Dropdown
+                label={t('playlists.aspectRatio')}
+                items={ASPECT_RATIO_OPTIONS.map((preset) => ({
+                  value: preset.value,
+                  name: t(preset.label),
+                }))}
+                value={aspectRatioPreset()}
+                onSelectChange={async (value) => {
+                  if (!value) {
+                    return;
+                  }
+
+                  if (value === 'custom') {
+                    const currentAspectRatio = getCurrentAspectRatio();
+                    setAspectRatioPreset('custom');
+                    setCustomWidth(String(currentAspectRatio.width));
+                    setCustomHeight(String(currentAspectRatio.height));
+                    setAspectRatioErrors(new Map());
+                    setIsAspectRatioModified(false);
+                    return;
+                  }
+
+                  const currentPlaylist = playlist();
+                  if (!currentPlaylist) {
+                    return;
+                  }
+
+                  setAspectRatioPreset(value);
+                  setAspectRatioErrors(new Map());
+
+                  const [width, height] = value.split(':').map(Number);
+                  const didSave = await saveAspectRatio({ width, height });
+                  if (!didSave) {
+                    syncAspectRatioEditor(currentPlaylist);
+                  }
                 }}
               />
+
+              <Show when={aspectRatioPreset() === 'custom'}>
+                <div class="custom-aspect-ratio">
+                  <FormItem
+                    label={t('playlists.aspectRatioWidth')}
+                    id="detailsCustomWidth"
+                    value={customWidth()}
+                    placeholder="16"
+                    type="number"
+                    onInput={(value: string | number | boolean) => {
+                      const strValue = String(value);
+                      setCustomWidth(strValue);
+                      setIsAspectRatioModified(true);
+                      validateCustomRatio('width', strValue);
+                      validateCustomAspectRatioExtreme();
+                    }}
+                  >
+                    <div class="error">{aspectRatioErrors().get('width')}</div>
+                  </FormItem>
+
+                  <span class="separator">:</span>
+
+                  <FormItem
+                    label={t('playlists.aspectRatioHeight')}
+                    id="detailsCustomHeight"
+                    value={customHeight()}
+                    placeholder="9"
+                    type="number"
+                    onInput={(value: string | number | boolean) => {
+                      const strValue = String(value);
+                      setCustomHeight(strValue);
+                      setIsAspectRatioModified(true);
+                      validateCustomRatio('height', strValue);
+                      validateCustomAspectRatioExtreme();
+                    }}
+                  >
+                    <div class="error">{aspectRatioErrors().get('height')}</div>
+                  </FormItem>
+
+                  <Button
+                    label={t('common.save')}
+                    color="success"
+                    onClick={() => submitCustomAspectRatio()}
+                    disabled={!isAspectRatioFormValid()}
+                    class="save-custom-aspect-ratio"
+                  />
+                </div>
+
+                <Show when={aspectRatioErrors().get('ratio')}>
+                  <div class="error aspect-ratio-error">
+                    {aspectRatioErrors().get('ratio')}
+                  </div>
+                </Show>
+              </Show>
             </div>
           </div>
         </div>

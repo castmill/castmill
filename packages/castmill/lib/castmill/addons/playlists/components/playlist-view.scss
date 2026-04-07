@@ -48,6 +48,52 @@
     }
   }
 
+  .playlist-preview-panel {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    gap: 0.75em;
+
+    .playlist-preview-wrapper {
+      flex: 1 1 auto;
+      height: auto;
+    }
+
+    .playlist-aspect-ratio-form {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6em;
+      padding: 0.75em;
+      border-radius: 0.5em;
+      background: rgba(255, 255, 255, 0.04);
+
+      .custom-aspect-ratio {
+        display: flex;
+        align-items: center;
+        gap: 0.5em;
+
+        > div {
+          flex: 1;
+        }
+
+        .separator {
+          font-size: 1.2em;
+          font-weight: bold;
+        }
+
+        .save-custom-aspect-ratio {
+          margin-bottom: 0.2em;
+        }
+      }
+
+      .aspect-ratio-error {
+        margin-top: 0.2em;
+      }
+    }
+  }
+
   .playlist-items-wrapper {
     display: flex;
     flex-direction: row;
