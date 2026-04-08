@@ -731,6 +731,9 @@
       "couldNotGetPublicKey": "Öffentlicher Schlüssel konnte nicht abgerufen werden",
       "invalidCredential": "Ungültige Anmeldedaten",
       "signupFailed": "Registrierung fehlgeschlagen: {{error}}. Bitte versuchen Sie es erneut oder kontaktieren Sie den Support."
+    },
+    "success": {
+      "accountCreated": "Konto erfolgreich erstellt!"
     }
   },
   "search": {

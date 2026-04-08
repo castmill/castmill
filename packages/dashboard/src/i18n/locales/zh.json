@@ -1061,6 +1061,9 @@
       "couldNotGetPublicKey": "无法获取公钥",
       "invalidCredential": "凭据无效",
       "signupFailed": "注册失败：{{error}}。请重试或联系支持。"
+    },
+    "success": {
+      "accountCreated": "账号创建成功！"
     }
   },
   "search": {

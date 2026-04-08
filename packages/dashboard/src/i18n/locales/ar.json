@@ -1061,6 +1061,9 @@
       "couldNotGetPublicKey": "تعذر الحصول على المفتاح العام",
       "invalidCredential": "بيانات اعتماد غير صالحة",
       "signupFailed": "فشل التسجيل: {{error}}. يرجى المحاولة مرة أخرى أو الاتصال بالدعم."
+    },
+    "success": {
+      "accountCreated": "تم إنشاء الحساب بنجاح!"
     }
   },
   "search": {

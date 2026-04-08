@@ -1056,6 +1056,9 @@
       "couldNotGetPublicKey": "Kunde inte hämta publik nyckel",
       "invalidCredential": "Ogiltig inloggningsuppgift",
       "signupFailed": "Registreringen misslyckades: {{error}}. Försök igen eller kontakta support."
+    },
+    "success": {
+      "accountCreated": "Kontot skapades framgångsrikt!"
     }
   },
   "search": {

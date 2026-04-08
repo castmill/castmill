@@ -209,9 +209,11 @@ defmodule Castmill.Accounts.UserNotifier do
   Informs them they already have an account and directs them to log in.
   """
   def deliver_already_registered_notice(email, dashboard_uri) do
+    login_url = "#{dashboard_uri}/login?email=#{URI.encode_www_form(email)}"
+
     assigns = %{
       email: email,
-      login_url: dashboard_uri,
+      login_url: login_url,
       year: DateTime.utc_now().year
     }
 
