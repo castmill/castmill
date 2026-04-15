@@ -296,7 +296,6 @@ render(() => {
                 )}
               >
                 <Route path="/" component={EmptyComponent} />
-                <Route path="settings" component={SettingsPage} />
                 <Route path="search" component={SearchPage} />
                 <Route path="usage" component={UsagePage} />
                 <Route path="teams" component={TeamsPage} />
@@ -341,6 +340,21 @@ render(() => {
                 </For>
 
                 <Route path="/*404" component={NotFound} />
+              </Route>
+
+              <Route
+                path="/settings"
+                component={(props: any) => (
+                  <Suspense fallback={<LoadingFallback />}>
+                    <ProtectedRoute>
+                      {(addons) => (
+                        <Dashboard {...props} addons={new AddOnTree(addons)} />
+                      )}
+                    </ProtectedRoute>
+                  </Suspense>
+                )}
+              >
+                <Route path="/" component={SettingsPage} />
               </Route>
 
               {/* Network admin routes (top-level, not scoped to org) */}
