@@ -13,6 +13,9 @@ vi.mock('../auth', () => ({
 // Mock router
 vi.mock('@solidjs/router', () => ({
   useNavigate: () => vi.fn(),
+  A: (props: { href: string; children?: any }) => (
+    <a href={props.href}>{props.children}</a>
+  ),
 }));
 
 // Mock the search component
