@@ -719,7 +719,7 @@ const WidgetsPage: Component<{
         ref={setRef}
         toolbar={{
           mainAction: (
-            <div style="display: flex; gap: 0.5em;">
+            <div style={{ display: 'flex', gap: '0.5em' }}>
               <Button
                 label={t('widgets.editor.newWidget')}
                 onClick={openEditorForNew}

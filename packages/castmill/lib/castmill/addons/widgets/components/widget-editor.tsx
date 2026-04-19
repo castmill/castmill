@@ -229,7 +229,7 @@ export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
     const template = templateParsed();
     if (!template) return null;
     return {
-      id: (props.widget?.id as any) || 0,
+      id: props.widget?.id,
       name: name() || 'Preview',
       description: description(),
       slug: props.widget?.slug || 'preview',
@@ -240,16 +240,16 @@ export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
       aspect_ratio: aspectRatio() || undefined,
       fonts: props.widget?.fonts || [],
       assets: props.widget?.assets || {},
-    } as JsonWidget;
+    };
   });
 
   const previewConfig = createMemo<JsonWidgetConfig>(() => {
     const fixture = fixtureParsed();
     return {
-      widget_id: (props.widget?.id as any) || 0,
-      data: fixture.data,
-      options: fixture.options,
-    } as any;
+      widget_id: props.widget?.id ?? 0,
+      data: fixture.data as OptionsDict,
+      options: fixture.options as OptionsDict,
+    };
   });
 
   const previewOptions = createMemo<OptionsDict>(() => fixtureParsed().options as OptionsDict);
