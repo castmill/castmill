@@ -23,6 +23,7 @@ import {
   ModalRef,
   Tabs,
   ConfirmDialog,
+  ToastProvider,
 } from '@castmill/ui-common';
 import { JsonWidget } from '@castmill/player';
 import { WidgetsService, WidgetUsage } from '../services/widgets.service';
@@ -752,4 +753,16 @@ const WidgetsPage: Component<{
   );
 };
 
-export default WidgetsPage;
+// Wrap the component with ToastProvider so WidgetEditor can call useToast()
+const WidgetsPageWithToast: Component<{
+  store: AddonStore;
+  params: any;
+}> = (props) => {
+  return (
+    <ToastProvider>
+      <WidgetsPage {...props} />
+    </ToastProvider>
+  );
+};
+
+export default WidgetsPageWithToast;
