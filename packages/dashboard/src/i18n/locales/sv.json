@@ -1118,7 +1118,7 @@
           "description": "Du har blivit inbjuden att gå med i {{organization_name}}"
         },
         "teamInvitation": {
-          "title": "Laginbjudan",
+          "title": "Teaminbjudan",
           "description": "Du har blivit inbjuden att gå med i {{team_name}}"
         },
         "deviceRegistration": {
@@ -1144,7 +1144,7 @@
         "invitationAccepted": {
           "title": "Inbjudan Accepterad",
           "descriptionOrg": "{{user_name}} har gått med i organisationen",
-          "descriptionTeam": "{{user_name}} har gått med i laget"
+          "descriptionTeam": "{{user_name}} har gått med i teamet"
         },
         "deviceOfflineAlert": {
           "title": "Enheten Offline-varning",
@@ -1169,9 +1169,9 @@
     }
   },
   "filters": {
-    "teamLabel": "Lag",
-    "teamPlaceholder": "Välj lag",
-    "teamClear": "Rensa lagfilter",
+    "teamLabel": "team",
+    "teamPlaceholder": "Välj team",
+    "teamClear": "Rensa teamfilter",
     "tagLabel": "Taggar",
     "tagPlaceholder": "Filtrera efter taggar…",
     "tagClear": "Rensa taggfilter",
