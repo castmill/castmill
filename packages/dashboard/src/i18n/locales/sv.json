@@ -1421,7 +1421,12 @@
     },
     "layout-widget": {
       "name": "Layoutwidget",
-      "description": "Visar flera spellistor med en fördefinierad layout. Välj en layout och tilldela spellistor till varje zon."
+      "description": "Visar flera spellistor med en fördefinierad layout. Välj en layout och tilldela spellistor till varje zon.",
+      "options": {
+        "layoutRef": {
+          "description": "Välj en layout och tilldela spellistor till varje zon"
+        }
+      }
     },
     "qr-code": {
       "name": "QR-kod",

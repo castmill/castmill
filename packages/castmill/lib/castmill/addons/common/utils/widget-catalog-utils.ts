@@ -2,6 +2,21 @@ import { JsonWidget } from '@castmill/player';
 
 export type TranslateFn = (key: string, params?: Record<string, any>) => string;
 
+export const getWidgetCatalogKeys = (widget: JsonWidget): string[] => {
+  const keys = new Set<string>();
+
+  if (widget.slug) {
+    keys.add(widget.slug);
+  }
+
+  const templateName = widget.template?.name;
+  if (templateName) {
+    keys.add(templateName);
+  }
+
+  return [...keys];
+};
+
 /**
  * Looks up a translated widget field from the widgetCatalog i18n section,
  * falling back to the provided fallback value when no catalog entry exists.
@@ -12,10 +27,18 @@ const getTranslatedWidgetField = (
   fallback: string | undefined,
   t?: TranslateFn
 ): string | undefined => {
-  if (!widget.slug || !t) return fallback;
-  const key = `widgetCatalog.${widget.slug}.${field}`;
-  const translated = t(key);
-  return translated !== key ? translated : fallback;
+  if (!t) return fallback;
+
+  const catalogKeys = getWidgetCatalogKeys(widget);
+  for (const catalogKey of catalogKeys) {
+    const key = `widgetCatalog.${catalogKey}.${field}`;
+    const translated = t(key);
+    if (translated !== key) {
+      return translated;
+    }
+  }
+
+  return fallback;
 };
 
 /**

@@ -30,6 +30,7 @@ import {
 import { ResourcesService } from '../services/resources.service';
 import { PlaylistsService } from '../services/playlists.service';
 import { AddonStore } from '../../common/interfaces/addon-store';
+import { getWidgetCatalogKeys } from '../../common/utils/widget-catalog-utils';
 
 import './widget-config.scss';
 import { WidgetView } from './widget-view';
@@ -89,10 +90,15 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
     optionKey: string,
     fallback?: string
   ): string => {
-    const slug = props.item.widget.slug;
-    const translationKey = `widgetCatalog.${slug}.options.${optionKey}.label`;
-    const translated = t(translationKey);
-    return translated !== translationKey ? translated : fallback || optionKey;
+    const catalogKeys = getWidgetCatalogKeys(props.item.widget);
+    for (const catalogKey of catalogKeys) {
+      const translationKey = `widgetCatalog.${catalogKey}.options.${optionKey}.label`;
+      const translated = t(translationKey);
+      if (translated !== translationKey) {
+        return translated;
+      }
+    }
+    return fallback || optionKey;
   };
 
   const translateWidgetOptionDescription = (
@@ -100,10 +106,15 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
     fallback?: string
   ): string | undefined => {
     if (!fallback) return fallback;
-    const slug = props.item.widget.slug;
-    const translationKey = `widgetCatalog.${slug}.options.${optionKey}.description`;
-    const translated = t(translationKey);
-    return translated !== translationKey ? translated : fallback;
+    const catalogKeys = getWidgetCatalogKeys(props.item.widget);
+    for (const catalogKey of catalogKeys) {
+      const translationKey = `widgetCatalog.${catalogKey}.options.${optionKey}.description`;
+      const translated = t(translationKey);
+      if (translated !== translationKey) {
+        return translated;
+      }
+    }
+    return fallback;
   };
 
   // Fetch ancestor playlist IDs to prevent circular references
