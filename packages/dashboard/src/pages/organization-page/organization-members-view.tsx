@@ -495,6 +495,7 @@ export const OrganizationMembersView = (props: {
         table={{
           columns,
           actions,
+          actionsLabel: t('common.actions'),
           onRowSelect,
         }}
         pagination={{ itemsPerPage }}

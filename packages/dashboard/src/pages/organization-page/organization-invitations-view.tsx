@@ -194,6 +194,7 @@ export const OrganizationInvitationsView = (props: {
         table={{
           columns,
           actions,
+          actionsLabel: t('common.actions'),
           onRowSelect,
         }}
         pagination={{ itemsPerPage }}

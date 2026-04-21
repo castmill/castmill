@@ -671,6 +671,7 @@ const WidgetsPage: Component<{
         table={{
           columns,
           actions,
+          actionsLabel: t('common.actions'),
           defaultRowAction: {
             icon: BsEye,
             handler: (widget: WidgetWithId) => openWidgetDrawer(widget),

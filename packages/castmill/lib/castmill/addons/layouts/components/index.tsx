@@ -501,6 +501,7 @@ const LayoutsPage: Component<AddonComponentProps> = (props) => {
         table={{
           columns,
           actions,
+          actionsLabel: t('common.actions'),
           onRowSelect,
           defaultRowAction: {
             icon: BsEye,

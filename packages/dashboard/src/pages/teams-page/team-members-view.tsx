@@ -493,6 +493,7 @@ export const TeamMembersView = (props: {
         table={{
           columns,
           actions,
+          actionsLabel: t('common.actions'),
           onRowSelect,
         }}
         pagination={{ itemsPerPage }}

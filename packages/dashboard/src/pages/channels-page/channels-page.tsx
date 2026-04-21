@@ -929,6 +929,7 @@ const ChannelsPage: Component = () => {
             table={{
               columns,
               actions,
+              actionsLabel: t('common.actions'),
               onRowSelect,
               defaultRowAction: {
                 icon: BsEye,
