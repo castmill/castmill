@@ -847,7 +847,7 @@ const ChannelsPage: Component = () => {
                     <QuotaIndicator
                       used={quota()!.used}
                       total={quota()!.total}
-                      resourceName="Channels"
+                      resourceName={t('channels.title')}
                       compact
                     />
                   </Show>
@@ -955,7 +955,7 @@ const ChannelsPage: Component = () => {
                   <QuotaIndicator
                     used={quota()!.used}
                     total={quota()!.total}
-                    resourceName="Channels"
+                    resourceName={t('channels.title')}
                     compact
                   />
                 </Show>
