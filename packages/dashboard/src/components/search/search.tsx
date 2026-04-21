@@ -30,7 +30,7 @@ const Search: Component = () => {
   const globalSearchShortcut = {
     key: 'F',
     ctrl: true,
-    description: t('shortcuts.globalSearch'),
+    description: () => t('shortcuts.globalSearch'),
     category: 'global' as const,
     action: () => {
       inputRef?.focus();
