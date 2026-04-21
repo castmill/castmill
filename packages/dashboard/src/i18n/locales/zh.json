@@ -103,6 +103,7 @@
     "address": "地址",
     "noAddressAvailable": "无可用地址",
     "playlist": "播放列表",
+    "noConfigurationAvailable": "没有可用配置",
     "addPlaylist": "添加播放列表",
     "selectVideo": "选择视频",
     "widget": "Widget",

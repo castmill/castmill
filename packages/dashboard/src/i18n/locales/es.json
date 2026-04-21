@@ -104,6 +104,7 @@
     "coordinates": "Coordenadas",
     "address": "Dirección",
     "noAddressAvailable": "No hay dirección disponible",
+    "noConfigurationAvailable": "No hay configuración disponible",
     "playlist": "Lista de reproducción",
     "addPlaylist": "Añadir lista de reproducción",
     "widget": "Widget",

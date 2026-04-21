@@ -180,7 +180,7 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
   const schemaEntries = getSchemaEntries();
 
   if (!rawOptionsSchema || schemaEntries.length === 0) {
-    return <div>No configuration available</div>;
+    return <div>{t('common.noConfigurationAvailable')}</div>;
   }
 
   const copyOptions = (options: Record<string, any>) => {

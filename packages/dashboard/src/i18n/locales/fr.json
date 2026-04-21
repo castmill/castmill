@@ -102,6 +102,7 @@
     "coordinates": "Coordonnées",
     "address": "Adresse",
     "noAddressAvailable": "Aucune adresse disponible",
+    "noConfigurationAvailable": "Aucune configuration disponible",
     "playlist": "Liste de lecture",
     "addPlaylist": "Ajouter une liste de lecture",
     "selectVideo": "Sélectionner une vidéo",

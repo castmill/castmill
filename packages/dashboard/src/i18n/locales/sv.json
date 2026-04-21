@@ -97,6 +97,7 @@
     "coordinates": "Koordinater",
     "address": "Adress",
     "noAddressAvailable": "Ingen adress tillgänglig",
+    "noConfigurationAvailable": "Ingen konfiguration tillgänglig",
     "playlist": "Spellista",
     "addPlaylist": "Lägg till spellista",
     "selectVideo": "Välj en video",

@@ -97,6 +97,7 @@
     "coordinates": "Coordinates",
     "address": "Address",
     "noAddressAvailable": "No address available",
+    "noConfigurationAvailable": "No configuration available",
     "playlist": "Playlist",
     "addPlaylist": "Add Playlist",
     "youIndicator": "(you)",

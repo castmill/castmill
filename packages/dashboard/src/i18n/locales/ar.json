@@ -102,6 +102,7 @@
     "coordinates": "الإحداثيات",
     "address": "العنوان",
     "noAddressAvailable": "لا يوجد عنوان متاح",
+    "noConfigurationAvailable": "لا توجد إعدادات متاحة",
     "playlist": "قائمة التشغيل",
     "addPlaylist": "إضافة قائمة تشغيل",
     "selectVideo": "اختر فيديو",

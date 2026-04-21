@@ -102,6 +102,7 @@
     "coordinates": "座標",
     "address": "住所",
     "noAddressAvailable": "利用可能な住所がありません",
+    "noConfigurationAvailable": "利用可能な設定がありません",
     "playlist": "プレイリスト",
     "addPlaylist": "プレイリストを追加",
     "selectVideo": "ビデオを選択",
