@@ -1426,7 +1426,42 @@
     },
     "qr-code": {
       "name": "QR-Code",
-      "description": "Zeigt einen QR-Code für URLs oder Text mit optionalem Untertitel an."
+      "description": "Zeigt einen QR-Code für URLs oder Text mit optionalem Untertitel an.",
+      "options": {
+        "content": {
+          "label": "Inhalt",
+          "description": "Die URL oder der Text, der im QR-Code codiert werden soll"
+        },
+        "caption": {
+          "label": "Untertitel",
+          "placeholder": "Scanne mich!",
+          "description": "Optionaler Text, der unter dem QR-Code angezeigt wird"
+        },
+        "caption_size": {
+          "label": "Untertitelgröße",
+          "description": "Schriftgröße des Untertiteltexts (z. B. 1.5em, 2em, 3em)"
+        },
+        "text_color": {
+          "label": "Textfarbe",
+          "description": "Farbe des Untertiteltexts"
+        },
+        "background": {
+          "label": "Hintergrund",
+          "description": "Hintergrundfarbe des Widgets"
+        },
+        "qr_background": {
+          "label": "QR-Hintergrund",
+          "description": "Hintergrundfarbe des QR-Codes"
+        },
+        "foreground_color": {
+          "label": "Vordergrundfarbe",
+          "description": "Farbe der QR-Code-Module"
+        },
+        "duration": {
+          "label": "Dauer",
+          "description": "Dauer in Sekunden zur Anzeige des QR-Codes"
+        }
+      }
     },
     "rss-news": {
       "name": "RSS-Nachrichten",

@@ -1431,7 +1431,42 @@
     },
     "qr-code": {
       "name": "二维码",
-      "description": "显示 URL 或文本的二维码，带有可选说明。"
+      "description": "显示 URL 或文本的二维码，带有可选说明。",
+      "options": {
+        "content": {
+          "label": "内容",
+          "description": "要编码到二维码中的 URL 或文本"
+        },
+        "caption": {
+          "label": "说明文字",
+          "placeholder": "扫一扫！",
+          "description": "显示在二维码下方的可选文本"
+        },
+        "caption_size": {
+          "label": "说明文字大小",
+          "description": "说明文字的字体大小（例如 1.5em、2em、3em）"
+        },
+        "text_color": {
+          "label": "文字颜色",
+          "description": "说明文字的颜色"
+        },
+        "background": {
+          "label": "背景",
+          "description": "组件的背景颜色"
+        },
+        "qr_background": {
+          "label": "二维码背景",
+          "description": "二维码的背景颜色"
+        },
+        "foreground_color": {
+          "label": "前景色",
+          "description": "二维码模块的颜色"
+        },
+        "duration": {
+          "label": "时长",
+          "description": "显示二维码的秒数"
+        }
+      }
     },
     "rss-news": {
       "name": "RSS 新闻",

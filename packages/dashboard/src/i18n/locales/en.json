@@ -1426,7 +1426,42 @@
     },
     "qr-code": {
       "name": "QR Code",
-      "description": "Displays a QR code for URLs or text with optional caption."
+      "description": "Displays a QR code for URLs or text with optional caption.",
+      "options": {
+        "content": {
+          "label": "Content",
+          "description": "The URL or text to encode in the QR code"
+        },
+        "caption": {
+          "label": "Caption",
+          "placeholder": "Scan me!",
+          "description": "Optional text to display below the QR code"
+        },
+        "caption_size": {
+          "label": "Caption Size",
+          "description": "Font size of the caption text (e.g., 1.5em, 2em, 3em)"
+        },
+        "text_color": {
+          "label": "Text Color",
+          "description": "Color of the caption text"
+        },
+        "background": {
+          "label": "Background",
+          "description": "Background color of the widget"
+        },
+        "qr_background": {
+          "label": "QR Background",
+          "description": "Background color of the QR code"
+        },
+        "foreground_color": {
+          "label": "Foreground Color",
+          "description": "Color of the QR code modules"
+        },
+        "duration": {
+          "label": "Duration",
+          "description": "Duration in seconds to display the QR code"
+        }
+      }
     },
     "rss-news": {
       "name": "RSS News",

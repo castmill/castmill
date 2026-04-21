@@ -1432,7 +1432,42 @@
     },
     "qr-code": {
       "name": "Código QR",
-      "description": "Muestra un código QR para URLs o texto con título opcional."
+      "description": "Muestra un código QR para URLs o texto con título opcional.",
+      "options": {
+        "content": {
+          "label": "Contenido",
+          "description": "La URL o el texto que se codificará en el código QR"
+        },
+        "caption": {
+          "label": "Título",
+          "placeholder": "¡Escanéame!",
+          "description": "Texto opcional para mostrar debajo del código QR"
+        },
+        "caption_size": {
+          "label": "Tamaño del título",
+          "description": "Tamaño de fuente del texto del título (p. ej., 1.5em, 2em, 3em)"
+        },
+        "text_color": {
+          "label": "Color del texto",
+          "description": "Color del texto del título"
+        },
+        "background": {
+          "label": "Fondo",
+          "description": "Color de fondo del widget"
+        },
+        "qr_background": {
+          "label": "Fondo del QR",
+          "description": "Color de fondo del código QR"
+        },
+        "foreground_color": {
+          "label": "Color de primer plano",
+          "description": "Color de los módulos del código QR"
+        },
+        "duration": {
+          "label": "Duración",
+          "description": "Duración en segundos para mostrar el código QR"
+        }
+      }
     },
     "rss-news": {
       "name": "Noticias RSS",

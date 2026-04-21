@@ -1431,7 +1431,42 @@
     },
     "qr-code": {
       "name": "رمز QR",
-      "description": "عرض رمز QR للروابط أو النصوص مع تعليق توضيحي اختياري."
+      "description": "عرض رمز QR للروابط أو النصوص مع تعليق توضيحي اختياري.",
+      "options": {
+        "content": {
+          "label": "المحتوى",
+          "description": "الرابط أو النص المراد ترميزه في رمز QR"
+        },
+        "caption": {
+          "label": "التسمية التوضيحية",
+          "placeholder": "امسحني!",
+          "description": "نص اختياري لعرضه أسفل رمز QR"
+        },
+        "caption_size": {
+          "label": "حجم التسمية التوضيحية",
+          "description": "حجم خط نص التسمية التوضيحية (مثل 1.5em أو 2em أو 3em)"
+        },
+        "text_color": {
+          "label": "لون النص",
+          "description": "لون نص التسمية التوضيحية"
+        },
+        "background": {
+          "label": "الخلفية",
+          "description": "لون خلفية الويدجت"
+        },
+        "qr_background": {
+          "label": "خلفية رمز QR",
+          "description": "لون خلفية رمز QR"
+        },
+        "foreground_color": {
+          "label": "لون المقدمة",
+          "description": "لون وحدات رمز QR"
+        },
+        "duration": {
+          "label": "المدة",
+          "description": "المدة بالثواني لعرض رمز QR"
+        }
+      }
     },
     "rss-news": {
       "name": "أخبار RSS",

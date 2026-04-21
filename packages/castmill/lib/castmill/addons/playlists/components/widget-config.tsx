@@ -117,6 +117,22 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
     return fallback;
   };
 
+  const translateWidgetOptionPlaceholder = (
+    optionKey: string,
+    fallback?: string
+  ): string | undefined => {
+    if (!fallback) return fallback;
+    const catalogKeys = getWidgetCatalogKeys(props.item.widget);
+    for (const catalogKey of catalogKeys) {
+      const translationKey = `widgetCatalog.${catalogKey}.options.${optionKey}.placeholder`;
+      const translated = t(translationKey);
+      if (translated !== translationKey) {
+        return translated;
+      }
+    }
+    return fallback;
+  };
+
   // Fetch ancestor playlist IDs to prevent circular references
   createEffect(async () => {
     try {
@@ -455,23 +471,27 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
       case 'boolean':
       case 'color':
       case 'url':
-        const formValue = getValue(key, schema as FieldAttributes);
+        const fieldSchema = schema as FieldAttributes & {
+          title?: string;
+          placeholder?: string;
+        };
+        const formValue = getValue(key, fieldSchema);
         return (
           <FormItem
-            label={translateWidgetOptionLabel(
-              key,
-              (schema as FieldAttributes).title || key
-            )}
+            label={translateWidgetOptionLabel(key, fieldSchema.title || key)}
             id={key}
             type={type}
             value={typeof formValue === 'object' ? '' : String(formValue ?? '')}
-            placeholder={(schema as FieldAttributes).placeholder}
+            placeholder={translateWidgetOptionPlaceholder(
+              key,
+              fieldSchema.placeholder
+            )}
             description={translateWidgetOptionDescription(
               key,
-              (schema as FieldAttributes).description
+              fieldSchema.description
             )}
             onInput={(value: string | number | boolean) => {
-              if (validateField(type, schema as FieldAttributes, key, value)) {
+              if (validateField(type, fieldSchema, key, value)) {
                 setWidgetOptions({ ...widgetOptions(), [key]: value });
                 setIsFormModified(true);
               }

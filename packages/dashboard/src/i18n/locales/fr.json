@@ -1443,7 +1443,42 @@
     },
     "qr-code": {
       "name": "Code QR",
-      "description": "Affiche un code QR pour les URLs ou le texte avec une légende optionnelle."
+      "description": "Affiche un code QR pour les URLs ou le texte avec une légende optionnelle.",
+      "options": {
+        "content": {
+          "label": "Contenu",
+          "description": "L'URL ou le texte à encoder dans le code QR"
+        },
+        "caption": {
+          "label": "Légende",
+          "placeholder": "Scannez-moi !",
+          "description": "Texte optionnel à afficher sous le code QR"
+        },
+        "caption_size": {
+          "label": "Taille de la légende",
+          "description": "Taille de police du texte de légende (par ex. 1.5em, 2em, 3em)"
+        },
+        "text_color": {
+          "label": "Couleur du texte",
+          "description": "Couleur du texte de la légende"
+        },
+        "background": {
+          "label": "Arrière-plan",
+          "description": "Couleur d'arrière-plan du widget"
+        },
+        "qr_background": {
+          "label": "Arrière-plan du QR",
+          "description": "Couleur d'arrière-plan du code QR"
+        },
+        "foreground_color": {
+          "label": "Couleur de premier plan",
+          "description": "Couleur des modules du code QR"
+        },
+        "duration": {
+          "label": "Durée",
+          "description": "Durée en secondes d'affichage du code QR"
+        }
+      }
     },
     "rss-news": {
       "name": "Actualités RSS",

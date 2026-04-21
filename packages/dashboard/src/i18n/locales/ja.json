@@ -1432,7 +1432,42 @@
     },
     "qr-code": {
       "name": "QRコード",
-      "description": "オプションのキャプション付きでURLまたはテキストのQRコードを表示します。"
+      "description": "オプションのキャプション付きでURLまたはテキストのQRコードを表示します。",
+      "options": {
+        "content": {
+          "label": "内容",
+          "description": "QRコードにエンコードするURLまたはテキスト"
+        },
+        "caption": {
+          "label": "キャプション",
+          "placeholder": "スキャンしてね！",
+          "description": "QRコードの下に表示する任意のテキスト"
+        },
+        "caption_size": {
+          "label": "キャプションサイズ",
+          "description": "キャプションテキストのフォントサイズ（例: 1.5em、2em、3em）"
+        },
+        "text_color": {
+          "label": "テキスト色",
+          "description": "キャプションテキストの色"
+        },
+        "background": {
+          "label": "背景",
+          "description": "ウィジェットの背景色"
+        },
+        "qr_background": {
+          "label": "QR背景",
+          "description": "QRコードの背景色"
+        },
+        "foreground_color": {
+          "label": "前景色",
+          "description": "QRコードモジュールの色"
+        },
+        "duration": {
+          "label": "表示時間",
+          "description": "QRコードを表示する秒数"
+        }
+      }
     },
     "rss-news": {
       "name": "RSSニュース",

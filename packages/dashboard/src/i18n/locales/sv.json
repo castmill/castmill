@@ -1431,7 +1431,42 @@
     },
     "qr-code": {
       "name": "QR-kod",
-      "description": "Visar en QR-kod för webbadresser eller text med valfri bildtext."
+      "description": "Visar en QR-kod för webbadresser eller text med valfri bildtext.",
+      "options": {
+        "content": {
+          "label": "Innehåll",
+          "description": "Webbadressen eller texten som ska kodas i QR-koden"
+        },
+        "caption": {
+          "label": "Bildtext",
+          "placeholder": "Skanna mig!",
+          "description": "Valfri text som visas under QR-koden"
+        },
+        "caption_size": {
+          "label": "Bildtextstorlek",
+          "description": "Teckenstorlek för bildtexten (t.ex. 1.5em, 2em, 3em)"
+        },
+        "text_color": {
+          "label": "Textfärg",
+          "description": "Färg på bildtexten"
+        },
+        "background": {
+          "label": "Bakgrund",
+          "description": "Widgetens bakgrundsfärg"
+        },
+        "qr_background": {
+          "label": "QR-bakgrund",
+          "description": "Bakgrundsfärg för QR-koden"
+        },
+        "foreground_color": {
+          "label": "Förgrundsfärg",
+          "description": "Färg på QR-kodens moduler"
+        },
+        "duration": {
+          "label": "Varaktighet",
+          "description": "Varaktighet i sekunder för att visa QR-koden"
+        }
+      }
     },
     "rss-news": {
       "name": "RSS-nyheter",

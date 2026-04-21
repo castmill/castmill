@@ -1431,7 +1431,42 @@
     },
     "qr-code": {
       "name": "QR 코드",
-      "description": "선택적 캡션과 함께 URL 또는 텍스트의 QR 코드를 표시합니다."
+      "description": "선택적 캡션과 함께 URL 또는 텍스트의 QR 코드를 표시합니다.",
+      "options": {
+        "content": {
+          "label": "내용",
+          "description": "QR 코드로 인코딩할 URL 또는 텍스트"
+        },
+        "caption": {
+          "label": "캡션",
+          "placeholder": "스캔해 보세요!",
+          "description": "QR 코드 아래에 표시할 선택적 텍스트"
+        },
+        "caption_size": {
+          "label": "캡션 크기",
+          "description": "캡션 텍스트의 글꼴 크기(예: 1.5em, 2em, 3em)"
+        },
+        "text_color": {
+          "label": "텍스트 색상",
+          "description": "캡션 텍스트의 색상"
+        },
+        "background": {
+          "label": "배경",
+          "description": "위젯의 배경색"
+        },
+        "qr_background": {
+          "label": "QR 배경",
+          "description": "QR 코드의 배경색"
+        },
+        "foreground_color": {
+          "label": "전경색",
+          "description": "QR 코드 모듈의 색상"
+        },
+        "duration": {
+          "label": "표시 시간",
+          "description": "QR 코드를 표시할 시간(초)"
+        }
+      }
     },
     "rss-news": {
       "name": "RSS 뉴스",
