@@ -269,6 +269,7 @@ export const ResourceChooser = (props: {
         fetchData={fetchResources}
         toolbar={{
           filters: [],
+          searchPlaceholder: t('common.search'),
 
           actions: (
             <div>

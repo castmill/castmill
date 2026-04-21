@@ -468,6 +468,7 @@ export const OrganizationMembersView = (props: {
         fetchData={fetchData}
         ref={setRef}
         toolbar={{
+          searchPlaceholder: t('common.search'),
           mainAction: (
             <PermissionButton
               resource="organizations"

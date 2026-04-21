@@ -456,6 +456,7 @@ export const TeamMembersView = (props: {
         fetchData={fetchData}
         ref={setRef}
         toolbar={{
+          searchPlaceholder: t('common.search'),
           mainAction: (
             <PermissionButton
               resource="teams"

@@ -26,6 +26,7 @@ interface ToolBarProps {
   mainAction?: JSX.Element; // Changed type to accept a JSX element
   requireOneActiveFilter?: boolean; // When true (default), at least one filter must remain active
   hideSearch?: boolean; // When true, hides the search input
+  searchPlaceholder?: string; // Placeholder for the search input
 }
 
 export function ToolBar(props: ToolBarProps) {
@@ -115,7 +116,7 @@ export function ToolBar(props: ToolBarProps) {
                 value={searchText()}
                 onInput={handleSearchChange}
                 onKeyDown={handleSearchKeyDown}
-                placeholder="Search..."
+                placeholder={props.searchPlaceholder || 'Search...'}
                 class="search-input"
               />
             </div>

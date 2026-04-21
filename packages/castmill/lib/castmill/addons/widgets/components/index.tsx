@@ -657,6 +657,7 @@ const WidgetsPage: Component<{
         fetchData={fetchData}
         ref={setRef}
         toolbar={{
+          searchPlaceholder: t('common.search'),
           mainAction: (
             <Button
               label={t('widgets.uploadWidget')}

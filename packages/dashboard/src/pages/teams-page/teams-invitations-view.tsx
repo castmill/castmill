@@ -202,6 +202,7 @@ export const TeamInvitationsView = (props: {
         fetchData={fetchData}
         ref={setRef}
         toolbar={{
+          searchPlaceholder: t('common.search'),
           actions: (
             <div>
               <IconButton
