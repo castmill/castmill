@@ -118,6 +118,8 @@ const ALLOWED_IDENTICAL_STRINGS = new Set([
 const ALLOWED_IDENTICAL_KEYS = {
   // 'Widget' is an internationally used technical term in Latin-script languages
   'playlists.widgetModalTitle': ['es', 'sv', 'de', 'fr'],
+  // Swedish product wording intentionally uses the English term "Team"
+  'filters.teamLabel': ['sv'],
 };
 
 class TranslationChecker {
