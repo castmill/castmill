@@ -66,7 +66,9 @@ describe('ToolBar Component', () => {
   });
 
   it('renders a custom search placeholder when provided', () => {
-    render(() => <ToolBar onSearch={() => {}} searchPlaceholder="Find items" />);
+    render(() => (
+      <ToolBar onSearch={() => {}} searchPlaceholder="Find items" />
+    ));
     expect(screen.getByPlaceholderText('Find items')).toBeInTheDocument();
   });
 
