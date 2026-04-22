@@ -116,7 +116,7 @@ export function ToolBar(props: ToolBarProps) {
                 value={searchText()}
                 onInput={handleSearchChange}
                 onKeyDown={handleSearchKeyDown}
-                placeholder={props.searchPlaceholder || 'Search...'}
+                placeholder={props.searchPlaceholder ?? 'Search...'}
                 class="search-input"
               />
             </div>

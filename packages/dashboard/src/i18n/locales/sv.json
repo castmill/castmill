@@ -1170,7 +1170,7 @@
     }
   },
   "filters": {
-    "teamLabel": "team",
+    "teamLabel": "Team",
     "teamPlaceholder": "Välj team",
     "teamClear": "Rensa teamfilter",
     "tagLabel": "Taggar",
