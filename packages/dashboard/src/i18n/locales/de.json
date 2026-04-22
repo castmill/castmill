@@ -1170,9 +1170,9 @@
     }
   },
   "filters": {
-    "teamLabel": "Mannschaft",
-    "teamPlaceholder": "Mannschaft auswählen",
-    "teamClear": "Mannschaftsfilter löschen",
+    "teamLabel": "Team",
+    "teamPlaceholder": "Team auswählen",
+    "teamClear": "Team-Filter löschen",
     "tagLabel": "Tags",
     "tagPlaceholder": "Nach Tags filtern…",
     "tagClear": "Tag-Filter löschen",
