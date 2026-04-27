@@ -12,6 +12,7 @@ import { Button, IconButton } from '@castmill/ui-common';
 interface UploadComponentProps {
   baseUrl: string;
   organizationId: string;
+  t?: (key: string, params?: Record<string, any>) => string;
   onFileUpload?: (fileName: string, result: any) => void;
   onCancel?: () => void;
   onUploadComplete?: () => void;
@@ -34,6 +35,9 @@ const supportedZipTypes = [
 const supportedFileTypes = [...supportedJsonTypes, ...supportedZipTypes];
 
 export const UploadComponent = (props: UploadComponentProps) => {
+  const t = (key: string, params?: Record<string, any>) =>
+    props.t?.(key, params) || key;
+
   const [files, setFiles] = createSignal<File[]>([]);
   const [messages, setMessages] = createSignal<Messages>({});
   const [progresses, setProgresses] = createSignal<Progresses>({});
@@ -63,10 +67,7 @@ export const UploadComponent = (props: UploadComponentProps) => {
         file.name.endsWith('.json') ||
         file.name.endsWith('.zip');
       if (!isValidType) {
-        setMessage(
-          file.name,
-          'Invalid file type. Only JSON and ZIP files are supported.'
-        );
+        setMessage(file.name, t('widgets.upload.invalidFileType'));
       }
       return isValidType;
     });
@@ -103,9 +104,7 @@ export const UploadComponent = (props: UploadComponentProps) => {
 
         // Basic validation for widget JSON structure
         if (!parsedJson.name || !parsedJson.template) {
-          throw new Error(
-            'Invalid widget JSON: must contain "name" and "template" fields'
-          );
+          throw new Error(t('widgets.upload.invalidWidgetJson'));
         }
       }
 
@@ -140,12 +139,14 @@ export const UploadComponent = (props: UploadComponentProps) => {
           throw new Error(
             errorMessages.length > 0
               ? errorMessages.join('; ')
-              : 'Validation failed'
+              : t('widgets.upload.validationFailed')
           );
         }
 
         throw new Error(
-          errorData.error || errorData.message || 'Upload failed'
+          errorData.error ||
+            errorData.message ||
+            t('widgets.upload.uploadFailed')
         );
       }
 
@@ -154,7 +155,7 @@ export const UploadComponent = (props: UploadComponentProps) => {
         file.name,
         <div style="display: flex; align-items: center; gap: 0.5rem; color: #22c55e;">
           <AiOutlineCheck />
-          <span>Uploaded successfully</span>
+          <span>{t('widgets.upload.uploadedSuccessfully')}</span>
         </div>
       );
 
@@ -165,7 +166,7 @@ export const UploadComponent = (props: UploadComponentProps) => {
       setMessage(
         file.name,
         <div style="color: #ef4444; font-size: 0.9em; line-height: 1.4;">
-          {error.message}
+          {error.message || t('widgets.upload.uploadError')}
         </div>
       );
     }
@@ -219,25 +220,25 @@ export const UploadComponent = (props: UploadComponentProps) => {
 
   return (
     <div class="upload-widgets">
-      <h2>Upload Widget</h2>
+      <h2>{t('widgets.uploadWidget')}</h2>
 
       <div class="upload-description">
-        <p>Upload a JSON file containing a widget definition.</p>
+        <p>{t('widgets.upload.jsonDescription')}</p>
 
         <div style="background: #1e3a5f; border-left: 3px solid #3b82f6; padding: 0.75rem 1rem; margin: 1rem 0; border-radius: 4px;">
           <p style="margin: 0; font-size: 0.9em; color: #93c5fd;">
-            <strong>Required fields:</strong>{' '}
+            <strong>{t('widgets.upload.requiredFields')}:</strong>{' '}
             <code style="background: #2d4a6e; color: #93c5fd; padding: 2px 6px; border-radius: 3px;">
               name
             </code>{' '}
-            and{' '}
+            {t('widgets.upload.and')}{' '}
             <code style="background: #2d4a6e; color: #93c5fd; padding: 2px 6px; border-radius: 3px;">
               template
             </code>
           </p>
         </div>
 
-        <p class="example-title">Example format:</p>
+        <p class="example-title">{t('widgets.upload.exampleFormat')}:</p>
         <pre class="json-example">
           <code>
             {JSON.stringify(
@@ -256,6 +257,20 @@ export const UploadComponent = (props: UploadComponentProps) => {
                     type: 'ref',
                     required: true,
                     collection: 'medias|type:image',
+                  },
+                },
+                translations: {
+                  en: {
+                    name: 'My Widget',
+                    description: 'A sample widget',
+                  },
+                  es: {
+                    name: 'Mi Widget',
+                    description: 'Un widget de ejemplo',
+                  },
+                  de: {
+                    name: 'Mein Widget',
+                    description: 'Ein Beispiel-Widget',
                   },
                 },
               },
@@ -278,9 +293,7 @@ export const UploadComponent = (props: UploadComponentProps) => {
           accept=".json,.zip,application/json,application/zip"
           onChange={onFileChange}
         />
-        <div class="upload-hint">
-          Or drag and drop JSON or ZIP files here...
-        </div>
+        <div class="upload-hint">{t('widgets.upload.dragAndDropHint')}</div>
       </div>
 
       <Show when={files().length}>
@@ -301,7 +314,11 @@ export const UploadComponent = (props: UploadComponentProps) => {
                     fallback={
                       <Show
                         when={progresses()[file.name] > 0}
-                        fallback={<span style="color: #6b7280;">Ready</span>}
+                        fallback={
+                          <span style="color: #6b7280;">
+                            {t('widgets.upload.ready')}
+                          </span>
+                        }
                       >
                         <div style="display: flex; align-items: center; gap: 0.5rem;">
                           <progress
@@ -339,8 +356,8 @@ export const UploadComponent = (props: UploadComponentProps) => {
           <Button
             label={
               Object.keys(messages()).length === files().length
-                ? 'Close'
-                : 'Cancel'
+                ? t('common.close')
+                : t('common.cancel')
             }
             onClick={() => props.onCancel?.()}
             color="secondary"
@@ -356,7 +373,7 @@ export const UploadComponent = (props: UploadComponentProps) => {
             files().length === 0 ||
             Object.keys(messages()).length === files().length
           }
-          label="Upload"
+          label={t('widgets.uploadWidget')}
           onClick={handleUpload}
           icon={AiOutlineUpload}
           color="primary"

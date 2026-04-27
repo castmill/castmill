@@ -103,6 +103,7 @@
     "address": "地址",
     "noAddressAvailable": "无可用地址",
     "playlist": "播放列表",
+    "noConfigurationAvailable": "没有可用配置",
     "addPlaylist": "添加播放列表",
     "selectVideo": "选择视频",
     "widget": "Widget",
@@ -828,6 +829,20 @@
     "title": "Widgets",
     "uploadWidget": "上传 Widget",
     "uploadDescription": "上传 Widget JSON 定义文件。",
+    "upload": {
+      "jsonDescription": "上传包含组件定义的 JSON 文件。",
+      "requiredFields": "必填字段",
+      "and": "和",
+      "exampleFormat": "示例格式",
+      "dragAndDropHint": "或将 JSON 或 ZIP 文件拖放到此处...",
+      "ready": "就绪",
+      "invalidFileType": "文件类型无效。仅支持 JSON 和 ZIP 文件。",
+      "invalidWidgetJson": "组件 JSON 无效：必须包含 \"name\" 和 \"template\" 字段",
+      "validationFailed": "验证失败",
+      "uploadFailed": "上传失败",
+      "uploadedSuccessfully": "上传成功",
+      "uploadError": "上传错误"
+    },
     "widgetDetails": "Widget 详情",
     "updateInterval": "更新间隔",
     "viewDetails": "查看详情",
@@ -900,7 +915,8 @@
       "enterClientCredentials": "在下方输入您的 {{provider}} API 凭据：",
       "afterSavingCredentials": "保存凭据后，点击下方按钮以授权 {{provider}}：",
       "networkCredentialsConfigured": "您的网络管理员已配置 {{provider}} 凭据。只需点击下方按钮即可连接您的账户。"
-    }
+    },
+    "translations": "翻译"
   },
   "devices": {
     "setDeviceChannel": "设置设备频道",
@@ -1386,67 +1402,5 @@
     "savedOffline": "排程已保存。设备离线 — 重新连接时将发送计时器。",
     "loadError": "加载排程出错",
     "saveError": "保存排程出错"
-  },
-  "widgetCatalog": {
-    "image": {
-      "name": "图片",
-      "description": "显示图片。",
-      "options": {
-        "autozoom": {
-          "label": "自动缩放"
-        },
-        "duration": {
-          "label": "时长",
-          "description": "显示图片的持续时间（秒）"
-        },
-        "image": {
-          "label": "图片"
-        }
-      }
-    },
-    "video": {
-      "name": "视频",
-      "description": "显示视频。"
-    },
-    "weather": {
-      "name": "天气",
-      "description": "显示天气信息。"
-    },
-    "web": {
-      "name": "网页",
-      "description": "显示网页内容。"
-    },
-    "intro": {
-      "name": "介绍",
-      "description": "带有 Castmill 标志的介绍小部件"
-    },
-    "layout-portrait-3": {
-      "name": "竖向布局 3",
-      "description": "以竖向布局显示 3 个播放列表。"
-    },
-    "layout-widget": {
-      "name": "布局小部件",
-      "description": "使用预定义布局显示多个播放列表。选择布局并将播放列表分配到每个区域。"
-    },
-    "qr-code": {
-      "name": "二维码",
-      "description": "显示 URL 或文本的二维码，带有可选说明。"
-    },
-    "rss-news": {
-      "name": "RSS 新闻",
-      "description": "显示 RSS 新闻源。"
-    },
-    "spotify-now-playing": {
-      "name": "Spotify 正在播放",
-      "description": "显示 Spotify 账户中当前正在播放的曲目，包括专辑封面、曲目信息和播放进度。"
-    },
-    "stock-ticker": {
-      "name": "股票行情",
-      "description": "显示带有价格变化的实时股票报价滚动行情。"
-    },
-    "location-display-demo": {
-      "name": "位置显示",
-      "description": "显示带有坐标和地址的位置信息。"
-    }
   }
 }

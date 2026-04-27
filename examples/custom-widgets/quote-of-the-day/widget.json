@@ -50,6 +50,12 @@
       }
     }
   },
+  "translations": {
+    "en": {
+      "name": "Quote of the Day",
+      "description": "Displays inspirational quotes with elegant typography. Features custom Montserrat and Lato fonts. Perfect for lobbies, waiting rooms, and corporate environments."
+    }
+  },
   "template": {
     "type": "group",
     "name": "quote-widget",

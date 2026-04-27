@@ -1171,6 +1171,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
           fetchData={fetchData}
           ref={setRef}
           toolbar={{
+            searchPlaceholder: t('common.search'),
             mainAction: (
               <div style="display: flex; align-items: center; gap: 1rem;">
                 <Show when={quota()}>
@@ -1255,6 +1256,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
           table={{
             columns,
             actions,
+            actionsLabel: t('common.actions'),
             onRowSelect,
             defaultRowAction: {
               icon: BsEye,

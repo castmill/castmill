@@ -97,6 +97,7 @@
     "coordinates": "Coordinates",
     "address": "Address",
     "noAddressAvailable": "No address available",
+    "noConfigurationAvailable": "No configuration available",
     "playlist": "Playlist",
     "addPlaylist": "Add Playlist",
     "youIndicator": "(you)",
@@ -860,6 +861,20 @@
     "title": "Widgets",
     "uploadWidget": "Upload Widget",
     "uploadDescription": "Upload a JSON widget definition file.",
+    "upload": {
+      "jsonDescription": "Upload a JSON file containing a widget definition.",
+      "requiredFields": "Required fields",
+      "and": "and",
+      "exampleFormat": "Example format",
+      "dragAndDropHint": "Or drag and drop JSON or ZIP files here...",
+      "ready": "Ready",
+      "invalidFileType": "Invalid file type. Only JSON and ZIP files are supported.",
+      "invalidWidgetJson": "Invalid widget JSON: must contain \"name\" and \"template\" fields",
+      "validationFailed": "Validation failed",
+      "uploadFailed": "Upload failed",
+      "uploadedSuccessfully": "Uploaded successfully",
+      "uploadError": "Upload error"
+    },
     "widgetDetails": "Widget details",
     "updateInterval": "Update Interval",
     "viewDetails": "View Details",
@@ -932,7 +947,8 @@
       "enterClientCredentials": "Enter your {{provider}} API credentials below:",
       "afterSavingCredentials": "After saving your credentials, click below to authorize with {{provider}}:",
       "networkCredentialsConfigured": "Your network administrator has already configured {{provider}} credentials. Simply click the button below to connect your account."
-    }
+    },
+    "translations": "Translations"
   },
   "devices": {
     "title": "Devices",
@@ -1381,67 +1397,5 @@
     "savedOffline": "Schedule saved. Device is offline — timers will be sent when it reconnects.",
     "loadError": "Error loading schedule",
     "saveError": "Error saving schedule"
-  },
-  "widgetCatalog": {
-    "image": {
-      "name": "Image",
-      "description": "Display an image.",
-      "options": {
-        "autozoom": {
-          "label": "Autozoom"
-        },
-        "duration": {
-          "label": "Duration",
-          "description": "The duration in seconds to display the image"
-        },
-        "image": {
-          "label": "Image"
-        }
-      }
-    },
-    "video": {
-      "name": "Video",
-      "description": "Display a video."
-    },
-    "weather": {
-      "name": "Weather",
-      "description": "Display weather information."
-    },
-    "web": {
-      "name": "Web",
-      "description": "Displays the content of a web page."
-    },
-    "intro": {
-      "name": "Intro",
-      "description": "An intro widget with a Castmill logo"
-    },
-    "layout-portrait-3": {
-      "name": "Layout Portrait 3",
-      "description": "Display 3 playlists in a portrait layout."
-    },
-    "layout-widget": {
-      "name": "Layout Widget",
-      "description": "Display multiple playlists using a pre-defined layout. Select a layout and assign playlists to each zone."
-    },
-    "qr-code": {
-      "name": "QR Code",
-      "description": "Displays a QR code for URLs or text with optional caption."
-    },
-    "rss-news": {
-      "name": "RSS News",
-      "description": "Display an RSS news feed."
-    },
-    "spotify-now-playing": {
-      "name": "Spotify Now Playing",
-      "description": "Displays the currently playing track from a Spotify account with album artwork, track information, and playback progress."
-    },
-    "stock-ticker": {
-      "name": "Stock Ticker",
-      "description": "Displays a scrolling ticker of real-time stock quotes with price changes."
-    },
-    "location-display-demo": {
-      "name": "Location Display",
-      "description": "Displays location information with coordinates and address."
-    }
   }
 }

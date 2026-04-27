@@ -102,6 +102,7 @@
     "coordinates": "좌표",
     "address": "주소",
     "noAddressAvailable": "사용 가능한 주소 없음",
+    "noConfigurationAvailable": "사용 가능한 구성이 없습니다",
     "playlist": "재생목록",
     "addPlaylist": "재생목록 추가",
     "selectVideo": "비디오 선택",
@@ -828,6 +829,20 @@
     "title": "Widgets",
     "uploadWidget": "Widget 업로드",
     "uploadDescription": "Widget JSON 정의 파일을 업로드합니다.",
+    "upload": {
+      "jsonDescription": "위젯 정의가 포함된 JSON 파일을 업로드하세요.",
+      "requiredFields": "필수 필드",
+      "and": "및",
+      "exampleFormat": "예시 형식",
+      "dragAndDropHint": "또는 JSON 또는 ZIP 파일을 여기로 드래그 앤 드롭하세요...",
+      "ready": "준비됨",
+      "invalidFileType": "잘못된 파일 형식입니다. JSON 및 ZIP 파일만 지원됩니다.",
+      "invalidWidgetJson": "잘못된 위젯 JSON: \"name\" 및 \"template\" 필드를 포함해야 합니다",
+      "validationFailed": "유효성 검사 실패",
+      "uploadFailed": "업로드 실패",
+      "uploadedSuccessfully": "업로드 성공",
+      "uploadError": "업로드 오류"
+    },
     "widgetDetails": "Widget 세부정보",
     "updateInterval": "업데이트 간격",
     "viewDetails": "세부정보 보기",
@@ -900,7 +915,8 @@
       "enterClientCredentials": "아래에 {{provider}} API 자격 증명을 입력하세요:",
       "afterSavingCredentials": "자격 증명을 저장한 후 아래를 클릭하여 {{provider}}로 인증하세요:",
       "networkCredentialsConfigured": "네트워크 관리자가 이미 {{provider}} 자격 증명을 구성했습니다. 아래 버튼을 클릭하여 계정을 연결하기만 하면 됩니다."
-    }
+    },
+    "translations": "번역"
   },
   "devices": {
     "setDeviceChannel": "기기 채널 설정",
@@ -1386,67 +1402,5 @@
     "savedOffline": "스케줄이 저장되었습니다. 기기가 오프라인입니다 — 재연결 시 타이머가 전송됩니다.",
     "loadError": "스케줄 로드 오류",
     "saveError": "스케줄 저장 오류"
-  },
-  "widgetCatalog": {
-    "image": {
-      "name": "이미지",
-      "description": "이미지를 표시합니다.",
-      "options": {
-        "autozoom": {
-          "label": "자동 확대"
-        },
-        "duration": {
-          "label": "지속 시간",
-          "description": "이미지를 표시할 시간(초)"
-        },
-        "image": {
-          "label": "이미지"
-        }
-      }
-    },
-    "video": {
-      "name": "비디오",
-      "description": "비디오를 표시합니다."
-    },
-    "weather": {
-      "name": "날씨",
-      "description": "날씨 정보를 표시합니다."
-    },
-    "web": {
-      "name": "웹",
-      "description": "웹 페이지 내용을 표시합니다."
-    },
-    "intro": {
-      "name": "인트로",
-      "description": "Castmill 로고가 있는 인트로 위젯"
-    },
-    "layout-portrait-3": {
-      "name": "세로 레이아웃 3",
-      "description": "세로 레이아웃으로 3개의 재생 목록을 표시합니다."
-    },
-    "layout-widget": {
-      "name": "레이아웃 위젯",
-      "description": "미리 정의된 레이아웃을 사용하여 여러 재생 목록을 표시합니다. 레이아웃을 선택하고 각 구역에 재생 목록을 할당하세요."
-    },
-    "qr-code": {
-      "name": "QR 코드",
-      "description": "선택적 캡션과 함께 URL 또는 텍스트의 QR 코드를 표시합니다."
-    },
-    "rss-news": {
-      "name": "RSS 뉴스",
-      "description": "RSS 뉴스 피드를 표시합니다."
-    },
-    "spotify-now-playing": {
-      "name": "Spotify 현재 재생 중",
-      "description": "앨범 아트워크, 트랙 정보 및 재생 진행 상황과 함께 Spotify 계정에서 현재 재생 중인 트랙을 표시합니다."
-    },
-    "stock-ticker": {
-      "name": "주식 시세 표시기",
-      "description": "가격 변동과 함께 실시간 주식 시세의 스크롤 시세 표시기를 표시합니다."
-    },
-    "location-display-demo": {
-      "name": "위치 표시",
-      "description": "좌표 및 주소와 함께 위치 정보를 표시합니다."
-    }
   }
 }

@@ -2,66 +2,33 @@
  * Tests for WidgetConfig collection parsing logic
  */
 import { describe, it, expect } from 'vitest';
+import {
+  parseCollectionFilters,
+  getMediaPlaceholderText,
+  isValidURL,
+  normalizeSchemaEntries,
+  isLayoutRefValid,
+} from './widget-config';
 
 describe('WidgetConfig - Collection Parsing', () => {
-  // This test validates the collection parsing logic used in the widget-config component
   it('should parse collection string with media type filter', () => {
-    const collection = 'medias|type:video';
-
-    // Parse collection string (same logic as in widget-config.tsx)
-    const collectionParts = collection.split('|');
-    const collectionName = collectionParts[0];
-
-    // Extract filters from collection string
-    const filters: Record<string, string | boolean> = {};
-    if (collectionParts.length > 1) {
-      collectionParts.slice(1).forEach((part) => {
-        const [filterKey, filterValue] = part.split(':');
-        if (filterKey && filterValue) {
-          filters[filterKey] = filterValue;
-        }
-      });
-    }
+    const { collectionName, filters } =
+      parseCollectionFilters('medias|type:video');
 
     expect(collectionName).toBe('medias');
     expect(filters).toEqual({ type: 'video' });
   });
 
   it('should parse collection string for image media type', () => {
-    const collection = 'medias|type:image';
-
-    const collectionParts = collection.split('|');
-    const collectionName = collectionParts[0];
-
-    const filters: Record<string, string | boolean> = {};
-    if (collectionParts.length > 1) {
-      collectionParts.slice(1).forEach((part) => {
-        const [filterKey, filterValue] = part.split(':');
-        if (filterKey && filterValue) {
-          filters[filterKey] = filterValue;
-        }
-      });
-    }
+    const { collectionName, filters } =
+      parseCollectionFilters('medias|type:image');
 
     expect(collectionName).toBe('medias');
     expect(filters).toEqual({ type: 'image' });
   });
 
   it('should handle collection string without filters', () => {
-    const collection = 'medias';
-
-    const collectionParts = collection.split('|');
-    const collectionName = collectionParts[0];
-
-    const filters: Record<string, string | boolean> = {};
-    if (collectionParts.length > 1) {
-      collectionParts.slice(1).forEach((part) => {
-        const [filterKey, filterValue] = part.split(':');
-        if (filterKey && filterValue) {
-          filters[filterKey] = filterValue;
-        }
-      });
-    }
+    const { collectionName, filters } = parseCollectionFilters('medias');
 
     expect(collectionName).toBe('medias');
     expect(filters).toEqual({});
@@ -78,12 +45,7 @@ describe('WidgetConfig - Collection Parsing', () => {
       return translations[key] || key;
     };
 
-    const placeholderText =
-      filters['type'] === 'image'
-        ? t('common.selectImage')
-        : filters['type'] === 'video'
-          ? t('common.selectVideo')
-          : t('common.selectMedia');
+    const placeholderText = getMediaPlaceholderText(filters, t);
 
     expect(placeholderText).toBe('Select a Video');
   });
@@ -99,12 +61,7 @@ describe('WidgetConfig - Collection Parsing', () => {
       return translations[key] || key;
     };
 
-    const placeholderText =
-      filters['type'] === 'image'
-        ? t('common.selectImage')
-        : filters['type'] === 'video'
-          ? t('common.selectVideo')
-          : t('common.selectMedia');
+    const placeholderText = getMediaPlaceholderText(filters, t);
 
     expect(placeholderText).toBe('Select an Image');
   });
@@ -120,13 +77,105 @@ describe('WidgetConfig - Collection Parsing', () => {
       return translations[key] || key;
     };
 
-    const placeholderText =
-      filters['type'] === 'image'
-        ? t('common.selectImage')
-        : filters['type'] === 'video'
-          ? t('common.selectVideo')
-          : t('common.selectMedia');
+    const placeholderText = getMediaPlaceholderText(filters, t);
 
     expect(placeholderText).toBe('Select a Media');
+  });
+
+  it('should parse multiple filters in collection string', () => {
+    const { filters } = parseCollectionFilters(
+      'medias|type:image|published:true'
+    );
+
+    expect(filters).toEqual({ type: 'image', published: 'true' });
+  });
+
+  it('should ignore malformed filter segments', () => {
+    const { filters } = parseCollectionFilters(
+      'medias|type:image|broken-filter'
+    );
+
+    expect(filters).toEqual({ type: 'image' });
+  });
+});
+
+describe('WidgetConfig - URL Validation Logic', () => {
+  it('accepts valid https URL with TLD', () => {
+    expect(isValidURL('https://example.com/path')).toBe(true);
+  });
+
+  it('accepts localhost and ip addresses', () => {
+    expect(isValidURL('http://localhost:3000')).toBe(true);
+    expect(isValidURL('ftp://192.168.1.10/file.txt')).toBe(true);
+  });
+
+  it('rejects malformed protocol or missing slashes', () => {
+    expect(isValidURL('https:example.com')).toBe(false);
+    expect(isValidURL('example.com')).toBe(false);
+  });
+
+  it('treats empty values as valid because required validation is separate', () => {
+    expect(isValidURL('')).toBe(true);
+    expect(isValidURL('   ')).toBe(true);
+  });
+});
+
+describe('WidgetConfig - Schema Entries Normalization', () => {
+  it('normalizes map format and sorts by order', () => {
+    const schema = {
+      third: { type: 'string', order: 3 },
+      first: { type: 'string', order: 1 },
+      unordered: { type: 'string' },
+      second: { type: 'string', order: 2 },
+    };
+
+    const entries = normalizeSchemaEntries(schema).map(([key]) => key);
+    expect(entries).toEqual(['first', 'second', 'third', 'unordered']);
+  });
+
+  it('normalizes list format and sorts by order', () => {
+    const schema = [
+      { key: 'third', type: 'string', order: 3 },
+      { key: 'first', type: 'string', order: 1 },
+      { key: 'unordered', type: 'string' },
+      { key: 'second', type: 'string', order: 2 },
+    ];
+
+    const entries = normalizeSchemaEntries(schema).map(([key]) => key);
+    expect(entries).toEqual(['first', 'second', 'third', 'unordered']);
+  });
+});
+
+describe('WidgetConfig - Layout Ref Validation Logic', () => {
+  it('returns true when all zones have playlist assignments', () => {
+    const value = {
+      layoutId: 10,
+      zones: { zones: [{ id: 'a' }, { id: 'b' }] },
+      zonePlaylistMap: {
+        a: { playlistId: 1 },
+        b: { playlistId: 2 },
+      },
+    };
+
+    expect(isLayoutRefValid(value)).toBe(true);
+  });
+
+  it('returns false when one zone is missing playlist assignment', () => {
+    const value = {
+      layoutId: 10,
+      zones: { zones: [{ id: 'a' }, { id: 'b' }] },
+      zonePlaylistMap: {
+        a: { playlistId: 1 },
+      },
+    };
+
+    expect(isLayoutRefValid(value)).toBe(false);
+  });
+
+  it('returns false for missing layout id or empty zones', () => {
+    expect(isLayoutRefValid({})).toBe(false);
+    expect(isLayoutRefValid({ layoutId: 10, zones: { zones: [] } })).toBe(
+      false
+    );
   });
 });

@@ -864,6 +864,7 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
               { name: t('common.online'), key: 'online', isActive: true },
               { name: t('common.offline'), key: 'offline', isActive: true },
             ],
+            searchPlaceholder: t('common.search'),
             mainAction: (
               <div style="display: flex; align-items: center; gap: 1rem;">
                 <Show when={quota()}>

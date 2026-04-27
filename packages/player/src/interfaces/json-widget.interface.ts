@@ -42,4 +42,16 @@ export interface JsonWidget {
       { path: string; type: string; description?: string }
     >;
   };
+  // Widget-provided translations keyed by locale code
+  translations?: Record<
+    string,
+    {
+      name?: string;
+      description?: string;
+      options?: Record<
+        string,
+        { label?: string; description?: string; placeholder?: string }
+      >;
+    }
+  >;
 }

@@ -840,13 +840,14 @@ const ChannelsPage: Component = () => {
             ref={setRef}
             toolbar={{
               filters: [],
+              searchPlaceholder: t('common.search'),
               mainAction: (
                 <div style="display: flex; align-items: center; gap: 1rem;">
                   <Show when={quota() && !quotaLoading()}>
                     <QuotaIndicator
                       used={quota()!.used}
                       total={quota()!.total}
-                      resourceName="Channels"
+                      resourceName={t('channels.title')}
                       compact
                     />
                   </Show>
@@ -928,6 +929,7 @@ const ChannelsPage: Component = () => {
             table={{
               columns,
               actions,
+              actionsLabel: t('common.actions'),
               onRowSelect,
               defaultRowAction: {
                 icon: BsEye,
@@ -954,7 +956,7 @@ const ChannelsPage: Component = () => {
                   <QuotaIndicator
                     used={quota()!.used}
                     total={quota()!.total}
-                    resourceName="Channels"
+                    resourceName={t('channels.title')}
                     compact
                   />
                 </Show>

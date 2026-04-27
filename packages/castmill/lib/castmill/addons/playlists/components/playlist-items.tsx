@@ -64,6 +64,7 @@ export const PlaylistItems: Component<{
 }> = (props) => {
   const t = (key: string, params?: Record<string, any>) =>
     props.store.i18n?.t(key, params) || key;
+  const locale = () => props.store.i18n?.locale() || 'en';
 
   const [showModal, setShowModal] = createSignal<JsonPlaylistItem>();
   const [promiseResolve, setPromiseResolve] = createSignal<{
@@ -288,6 +289,7 @@ export const PlaylistItems: Component<{
             <PlaylistItem
               item={item}
               baseUrl={props.baseUrl}
+              locale={locale()}
               t={t}
               dynamicDuration={
                 typeof item.id === 'number'
@@ -324,10 +326,10 @@ export const PlaylistItems: Component<{
       <Show when={showModal()}>
         <Modal
           title={t('playlists.widgetModalTitle', {
-            name: getTranslatedWidgetName(showModal()!.widget, t),
+            name: getTranslatedWidgetName(showModal()!.widget, locale()),
           })}
           description={
-            getTranslatedWidgetDescription(showModal()!.widget, t) ||
+            getTranslatedWidgetDescription(showModal()!.widget, locale()) ||
             t('playlists.configureYourWidget')
           }
           onClose={() => closeDialog()}

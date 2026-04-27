@@ -373,6 +373,7 @@ const TeamsPage: Component = () => {
         ref={setRef}
         toolbar={{
           filters: [],
+          searchPlaceholder: t('common.search'),
           mainAction: (
             <div style="display: flex; align-items: center; gap: 1rem;">
               <Show when={quota() && !quotaLoading()}>
@@ -410,6 +411,7 @@ const TeamsPage: Component = () => {
         table={{
           columns,
           actions,
+          actionsLabel: t('common.actions'),
           onRowSelect,
           defaultRowAction: {
             icon: BsEye,

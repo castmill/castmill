@@ -89,6 +89,7 @@ interface TableViewProps<
     titleActions?: JSX.Element;
     requireOneActiveFilter?: boolean;
     hideSearch?: boolean;
+    searchPlaceholder?: string;
     hideTitle?: boolean;
   };
 
@@ -378,6 +379,7 @@ export const TableView = <
               actions={props.toolbar?.actions}
               requireOneActiveFilter={props.toolbar?.requireOneActiveFilter}
               hideSearch={props.toolbar?.hideSearch}
+              searchPlaceholder={props.toolbar?.searchPlaceholder}
             />
           </Show>
 

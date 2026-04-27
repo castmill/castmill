@@ -102,6 +102,7 @@
     "coordinates": "الإحداثيات",
     "address": "العنوان",
     "noAddressAvailable": "لا يوجد عنوان متاح",
+    "noConfigurationAvailable": "لا توجد إعدادات متاحة",
     "playlist": "قائمة التشغيل",
     "addPlaylist": "إضافة قائمة تشغيل",
     "selectVideo": "اختر فيديو",
@@ -828,6 +829,20 @@
     "title": "Widgets",
     "uploadWidget": "تحميل Widget",
     "uploadDescription": "تحميل ملف تعريف Widget بصيغة JSON.",
+    "upload": {
+      "jsonDescription": "قم بتحميل ملف JSON يحتوي على تعريف ويدجت.",
+      "requiredFields": "الحقول المطلوبة",
+      "and": "و",
+      "exampleFormat": "تنسيق المثال",
+      "dragAndDropHint": "أو اسحب وأفلت ملفات JSON أو ZIP هنا...",
+      "ready": "جاهز",
+      "invalidFileType": "نوع ملف غير صالح. يتم دعم ملفات JSON و ZIP فقط.",
+      "invalidWidgetJson": "JSON ويدجت غير صالح: يجب أن يحتوي على الحقلين \"name\" و\"template\"",
+      "validationFailed": "فشل التحقق",
+      "uploadFailed": "فشل الرفع",
+      "uploadedSuccessfully": "تم الرفع بنجاح",
+      "uploadError": "خطأ في الرفع"
+    },
     "widgetDetails": "تفاصيل Widget",
     "updateInterval": "فترة التحديث",
     "viewDetails": "عرض التفاصيل",
@@ -900,7 +915,8 @@
       "enterClientCredentials": "أدخل بيانات اعتماد API الخاصة بـ {{provider}} أدناه:",
       "afterSavingCredentials": "بعد حفظ بيانات الاعتماد الخاصة بك، انقر أدناه للتفويض مع {{provider}}:",
       "networkCredentialsConfigured": "قام مسؤول الشبكة لديك بالفعل بتكوين بيانات اعتماد {{provider}}. ما عليك سوى النقر على الزر أدناه لربط حسابك."
-    }
+    },
+    "translations": "الترجمات"
   },
   "devices": {
     "setDeviceChannel": "تعيين قناة الجهاز",
@@ -1386,67 +1402,5 @@
     "savedOffline": "تم حفظ الجدول. الجهاز غير متصل — سيتم إرسال المؤقتات عند إعادة الاتصال.",
     "loadError": "خطأ في تحميل الجدول",
     "saveError": "خطأ في حفظ الجدول"
-  },
-  "widgetCatalog": {
-    "image": {
-      "name": "صورة",
-      "description": "عرض صورة.",
-      "options": {
-        "autozoom": {
-          "label": "تكبير تلقائي"
-        },
-        "duration": {
-          "label": "المدة",
-          "description": "المدة بالثواني لعرض الصورة"
-        },
-        "image": {
-          "label": "الصورة"
-        }
-      }
-    },
-    "video": {
-      "name": "فيديو",
-      "description": "عرض مقطع فيديو."
-    },
-    "weather": {
-      "name": "الطقس",
-      "description": "عرض معلومات الطقس."
-    },
-    "web": {
-      "name": "ويب",
-      "description": "عرض محتوى صفحة ويب."
-    },
-    "intro": {
-      "name": "مقدمة",
-      "description": "أداة تقديمية مع شعار Castmill"
-    },
-    "layout-portrait-3": {
-      "name": "تخطيط عمودي 3",
-      "description": "عرض 3 قوائم تشغيل في تخطيط عمودي."
-    },
-    "layout-widget": {
-      "name": "أداة التخطيط",
-      "description": "عرض قوائم تشغيل متعددة باستخدام تخطيط محدد مسبقاً. اختر تخطيطاً وخصص قوائم تشغيل لكل منطقة."
-    },
-    "qr-code": {
-      "name": "رمز QR",
-      "description": "عرض رمز QR للروابط أو النصوص مع تعليق توضيحي اختياري."
-    },
-    "rss-news": {
-      "name": "أخبار RSS",
-      "description": "عرض موجز أخبار RSS."
-    },
-    "spotify-now-playing": {
-      "name": "ما يُشغَّل على Spotify",
-      "description": "عرض المقطع الموسيقي قيد التشغيل من حساب Spotify مع غلاف الألبوم ومعلومات المقطع وتقدم التشغيل."
-    },
-    "stock-ticker": {
-      "name": "شريط أسعار الأسهم",
-      "description": "عرض شريط متحرك بأسعار الأسهم في الوقت الفعلي مع تغييرات الأسعار."
-    },
-    "location-display-demo": {
-      "name": "عرض الموقع",
-      "description": "عرض معلومات الموقع مع الإحداثيات والعنوان."
-    }
   }
 }
