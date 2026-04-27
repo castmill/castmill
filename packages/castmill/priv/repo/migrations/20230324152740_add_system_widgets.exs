@@ -3,7 +3,10 @@ defmodule Castmill.Repo.Migrations.AddDefaultWidgets do
 
   # Add default, system-wide widgets
   def change do
-    for attrs <- [
+    now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
+
+    widgets =
+      for attrs <- [
           %{
             name: "Image",
             description: "Display an image.",
@@ -210,9 +213,16 @@ defmodule Castmill.Repo.Migrations.AddDefaultWidgets do
             }
           }
         ] do
-      %Castmill.Widgets.Widget{is_system: true}
-      |> Castmill.Widgets.Widget.changeset(attrs)
-      |> Castmill.Repo.insert!()
-    end
+        Map.merge(attrs, %{
+          is_system: true,
+          update_interval_seconds: Map.get(attrs, :update_interval_seconds, 60),
+          assets: %{},
+          fonts: [],
+          inserted_at: now,
+          updated_at: now
+        })
+      end
+
+    repo().insert_all("widgets", widgets)
   end
 end
