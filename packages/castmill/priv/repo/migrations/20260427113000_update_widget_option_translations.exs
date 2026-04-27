@@ -755,10 +755,17 @@ defmodule Castmill.Repo.Migrations.UpdateWidgetOptionTranslations do
   }
 
   def up do
-    execute("""
-    ALTER TABLE widgets
-    ADD COLUMN IF NOT EXISTS translations jsonb DEFAULT '{}'::jsonb
-    """)
+    unless column_exists?(:widgets, :translations) do
+      alter table(:widgets) do
+        add :translations, :map, default: %{}
+      end
+
+      flush()
+    end
+
+    unless column_exists?(:widgets, :translations) do
+      raise "widgets.translations column is required but was not created"
+    end
 
     execute("""
     UPDATE widgets
@@ -778,5 +785,18 @@ defmodule Castmill.Repo.Migrations.UpdateWidgetOptionTranslations do
 
   def down do
     :ok
+  end
+
+  defp column_exists?(table, column) do
+    query = """
+    SELECT EXISTS (
+      SELECT 1
+      FROM information_schema.columns
+      WHERE table_name = '#{table}' AND column_name = '#{column}'
+    )
+    """
+
+    %{rows: [[exists]]} = SQL.query!(repo(), query, [])
+    exists
   end
 end
