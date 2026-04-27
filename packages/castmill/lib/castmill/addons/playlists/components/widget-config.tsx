@@ -30,7 +30,7 @@ import {
 import { ResourcesService } from '../services/resources.service';
 import { PlaylistsService } from '../services/playlists.service';
 import { AddonStore } from '../../common/interfaces/addon-store';
-import { getWidgetCatalogKeys } from '../../common/utils/widget-catalog-utils';
+import { getTranslatedWidgetOption } from '../../common/utils/widget-catalog-utils';
 
 import './widget-config.scss';
 import { WidgetView } from './widget-view';
@@ -85,53 +85,45 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
   // Get i18n functions from store
   const t = (key: string, params?: Record<string, any>) =>
     props.store.i18n?.t(key, params) || key;
+  const locale = () => props.store.i18n?.locale() || 'en';
 
   const translateWidgetOptionLabel = (
     optionKey: string,
     fallback?: string
-  ): string => {
-    const catalogKeys = getWidgetCatalogKeys(props.item.widget);
-    for (const catalogKey of catalogKeys) {
-      const translationKey = `widgetCatalog.${catalogKey}.options.${optionKey}.label`;
-      const translated = t(translationKey);
-      if (translated !== translationKey) {
-        return translated;
-      }
-    }
-    return fallback || optionKey;
-  };
+  ): string =>
+    getTranslatedWidgetOption(
+      props.item.widget,
+      optionKey,
+      'label',
+      fallback,
+      locale()
+    ) ||
+    fallback ||
+    optionKey;
 
   const translateWidgetOptionDescription = (
     optionKey: string,
     fallback?: string
-  ): string | undefined => {
-    if (!fallback) return fallback;
-    const catalogKeys = getWidgetCatalogKeys(props.item.widget);
-    for (const catalogKey of catalogKeys) {
-      const translationKey = `widgetCatalog.${catalogKey}.options.${optionKey}.description`;
-      const translated = t(translationKey);
-      if (translated !== translationKey) {
-        return translated;
-      }
-    }
-    return fallback;
-  };
+  ): string | undefined =>
+    getTranslatedWidgetOption(
+      props.item.widget,
+      optionKey,
+      'description',
+      fallback,
+      locale()
+    );
 
   const translateWidgetOptionPlaceholder = (
     optionKey: string,
     fallback?: string
-  ): string | undefined => {
-    if (!fallback) return fallback;
-    const catalogKeys = getWidgetCatalogKeys(props.item.widget);
-    for (const catalogKey of catalogKeys) {
-      const translationKey = `widgetCatalog.${catalogKey}.options.${optionKey}.placeholder`;
-      const translated = t(translationKey);
-      if (translated !== translationKey) {
-        return translated;
-      }
-    }
-    return fallback;
-  };
+  ): string | undefined =>
+    getTranslatedWidgetOption(
+      props.item.widget,
+      optionKey,
+      'placeholder',
+      fallback,
+      locale()
+    );
 
   // Fetch ancestor playlist IDs to prevent circular references
   createEffect(async () => {
@@ -785,7 +777,13 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
               }}
               defaultZoom={locationSchema.defaultZoom}
               placeholder={t('common.searchLocation')}
-              searchLabel={key}
+              searchLabel={translateWidgetOptionLabel(key, key)}
+              coordinatesLabel={t('common.coordinates')}
+              addressLabel={t('common.address')}
+              noAddressText={t('common.noAddressAvailable')}
+              editLabel={t('common.edit')}
+              saveLabel={t('common.save')}
+              cancelLabel={t('common.cancel')}
             />
           </div>
         );

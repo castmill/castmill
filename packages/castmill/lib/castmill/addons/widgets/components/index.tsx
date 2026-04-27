@@ -49,12 +49,13 @@ const WidgetsPage: Component<{
   // Get i18n functions from store
   const t = (key: string, params?: Record<string, any>) =>
     props.store.i18n?.t(key, params) || key;
+  const locale = () => props.store.i18n?.locale() || 'en';
 
   const getWidgetName = (widget: WidgetWithId): string =>
-    getTranslatedWidgetName(widget, t);
+    getTranslatedWidgetName(widget, locale());
 
   const getWidgetDescription = (widget: WidgetWithId): string | undefined =>
-    getTranslatedWidgetDescription(widget, t);
+    getTranslatedWidgetDescription(widget, locale());
 
   // Helper function to check permissions
   const canPerformAction = (resource: string, action: string): boolean => {
@@ -120,6 +121,11 @@ const WidgetsPage: Component<{
       });
     }
 
+    tabs.push({
+      title: t('widgets.translations'),
+      content: () => <JsonHighlight json={widget.translations || {}} />,
+    });
+
     // Add assets tab if widget has assets
     if (widget.assets && Object.keys(widget.assets).length > 0) {
       tabs.push({
@@ -181,6 +187,7 @@ const WidgetsPage: Component<{
           const tabNames = ['template'];
           if (widget.options_schema) tabNames.push('options');
           if (widget.data_schema) tabNames.push('data');
+          tabNames.push('translations');
           if (widget.assets && Object.keys(widget.assets).length > 0)
             tabNames.push('assets');
           if (hasIntegrations) tabNames.push('integrations');
@@ -602,6 +609,7 @@ const WidgetsPage: Component<{
           <UploadComponent
             baseUrl={props.store.env.baseUrl}
             organizationId={props.store.organizations.selectedId}
+            t={t}
             onFileUpload={() => {
               // File upload started
             }}

@@ -854,6 +854,20 @@
     "title": "Widgets",
     "uploadWidget": "Subir Widget",
     "uploadDescription": "Subir un archivo de definición de Widget JSON.",
+    "upload": {
+      "jsonDescription": "Sube un archivo JSON que contenga la definición de un widget.",
+      "requiredFields": "Campos obligatorios",
+      "and": "y",
+      "exampleFormat": "Formato de ejemplo",
+      "dragAndDropHint": "O arrastra y suelta archivos JSON o ZIP aquí...",
+      "ready": "Listo",
+      "invalidFileType": "Tipo de archivo no válido. Solo se admiten archivos JSON y ZIP.",
+      "invalidWidgetJson": "JSON de widget no válido: debe contener los campos \"name\" y \"template\"",
+      "validationFailed": "La validación falló",
+      "uploadFailed": "La carga falló",
+      "uploadedSuccessfully": "Cargado correctamente",
+      "uploadError": "Error de carga"
+    },
     "widgetDetails": "Detalles del Widget",
     "updateInterval": "Intervalo de actualización",
     "viewDetails": "Ver detalles",
@@ -926,7 +940,8 @@
       "enterClientCredentials": "Ingrese sus credenciales de API de {{provider}} a continuación:",
       "afterSavingCredentials": "Después de guardar sus credenciales, haga clic abajo para autorizar con {{provider}}:",
       "networkCredentialsConfigured": "Su administrador de red ya ha configurado las credenciales de {{provider}}. Simplemente haga clic en el botón de abajo para conectar su cuenta."
-    }
+    },
+    "translations": "Traducciones"
   },
   "devices": {
     "setDeviceChannel": "Establecer canal del dispositivo",
@@ -1388,102 +1403,5 @@
     "savedOffline": "Horario guardado. El dispositivo está sin conexión — los temporizadores se enviarán cuando se reconecte.",
     "loadError": "Error al cargar el horario",
     "saveError": "Error al guardar el horario"
-  },
-  "widgetCatalog": {
-    "image": {
-      "name": "Imagen",
-      "description": "Muestra una imagen.",
-      "options": {
-        "autozoom": {
-          "label": "Zoom automático"
-        },
-        "duration": {
-          "label": "Duración",
-          "description": "La duración en segundos para mostrar la imagen"
-        },
-        "image": {
-          "label": "Imagen"
-        }
-      }
-    },
-    "video": {
-      "name": "Video",
-      "description": "Muestra un video."
-    },
-    "weather": {
-      "name": "Clima",
-      "description": "Muestra información meteorológica."
-    },
-    "web": {
-      "name": "Web",
-      "description": "Muestra el contenido de una página web."
-    },
-    "intro": {
-      "name": "Intro",
-      "description": "Un widget de introducción con el logo de Castmill"
-    },
-    "layout-portrait-3": {
-      "name": "Diseño Retrato 3",
-      "description": "Muestra 3 listas de reproducción en un diseño vertical."
-    },
-    "layout-widget": {
-      "name": "Widget de Diseño",
-      "description": "Muestra múltiples listas de reproducción usando un diseño predefinido. Selecciona un diseño y asigna listas de reproducción a cada zona."
-    },
-    "qr-code": {
-      "name": "Código QR",
-      "description": "Muestra un código QR para URLs o texto con título opcional.",
-      "options": {
-        "content": {
-          "label": "Contenido",
-          "description": "La URL o el texto que se codificará en el código QR"
-        },
-        "caption": {
-          "label": "Título",
-          "placeholder": "¡Escanéame!",
-          "description": "Texto opcional para mostrar debajo del código QR"
-        },
-        "caption_size": {
-          "label": "Tamaño del título",
-          "description": "Tamaño de fuente del texto del título (p. ej., 1.5em, 2em, 3em)"
-        },
-        "text_color": {
-          "label": "Color del texto",
-          "description": "Color del texto del título"
-        },
-        "background": {
-          "label": "Fondo",
-          "description": "Color de fondo del widget"
-        },
-        "qr_background": {
-          "label": "Fondo del QR",
-          "description": "Color de fondo del código QR"
-        },
-        "foreground_color": {
-          "label": "Color de primer plano",
-          "description": "Color de los módulos del código QR"
-        },
-        "duration": {
-          "label": "Duración",
-          "description": "Duración en segundos para mostrar el código QR"
-        }
-      }
-    },
-    "rss-news": {
-      "name": "Noticias RSS",
-      "description": "Muestra un feed de noticias RSS."
-    },
-    "spotify-now-playing": {
-      "name": "Reproduciendo en Spotify",
-      "description": "Muestra la pista que se está reproduciendo desde una cuenta de Spotify con portada del álbum, información de la pista y progreso de reproducción."
-    },
-    "stock-ticker": {
-      "name": "Cotizaciones de Bolsa",
-      "description": "Muestra un ticker desplazable de cotizaciones de bolsa en tiempo real con cambios de precio."
-    },
-    "location-display-demo": {
-      "name": "Visualización de Ubicación",
-      "description": "Muestra información de ubicación con coordenadas y dirección."
-    }
   }
 }

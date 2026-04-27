@@ -830,6 +830,20 @@
     "title": "Widgets",
     "uploadWidget": "Widgetをアップロード",
     "uploadDescription": "Widget JSON定義ファイルをアップロードします。",
+    "upload": {
+      "jsonDescription": "ウィジェット定義を含む JSON ファイルをアップロードします。",
+      "requiredFields": "必須フィールド",
+      "and": "と",
+      "exampleFormat": "サンプル形式",
+      "dragAndDropHint": "または JSON / ZIP ファイルをここにドラッグ＆ドロップしてください...",
+      "ready": "準備完了",
+      "invalidFileType": "無効なファイル形式です。JSON と ZIP ファイルのみサポートされています。",
+      "invalidWidgetJson": "無効なウィジェット JSON: \"name\" と \"template\" フィールドが必要です",
+      "validationFailed": "検証に失敗しました",
+      "uploadFailed": "アップロードに失敗しました",
+      "uploadedSuccessfully": "アップロードに成功しました",
+      "uploadError": "アップロードエラー"
+    },
     "widgetDetails": "Widgetの詳細",
     "updateInterval": "更新間隔",
     "viewDetails": "詳細を表示",
@@ -902,7 +916,8 @@
       "enterClientCredentials": "以下に{{provider}} APIの資格情報を入力してください：",
       "afterSavingCredentials": "資格情報を保存した後、下のボタンをクリックして{{provider}}で認証してください：",
       "networkCredentialsConfigured": "ネットワーク管理者が{{provider}}の資格情報を既に設定しています。下のボタンをクリックするだけでアカウントを接続できます。"
-    }
+    },
+    "translations": "翻訳"
   },
   "devices": {
     "setDeviceChannel": "デバイスチャンネルを設定",
@@ -1388,102 +1403,5 @@
     "savedOffline": "スケジュールを保存しました。デバイスはオフラインです — 再接続時にタイマーが送信されます。",
     "loadError": "スケジュールの読み込みエラー",
     "saveError": "スケジュールの保存エラー"
-  },
-  "widgetCatalog": {
-    "image": {
-      "name": "画像",
-      "description": "画像を表示します。",
-      "options": {
-        "autozoom": {
-          "label": "自動ズーム"
-        },
-        "duration": {
-          "label": "表示時間",
-          "description": "画像を表示する秒数"
-        },
-        "image": {
-          "label": "画像"
-        }
-      }
-    },
-    "video": {
-      "name": "ビデオ",
-      "description": "ビデオを表示します。"
-    },
-    "weather": {
-      "name": "天気",
-      "description": "天気情報を表示します。"
-    },
-    "web": {
-      "name": "ウェブ",
-      "description": "ウェブページの内容を表示します。"
-    },
-    "intro": {
-      "name": "イントロ",
-      "description": "Castmillロゴ付きのイントロウィジェット"
-    },
-    "layout-portrait-3": {
-      "name": "縦向きレイアウト 3",
-      "description": "縦向きレイアウトで3つのプレイリストを表示します。"
-    },
-    "layout-widget": {
-      "name": "レイアウトウィジェット",
-      "description": "事前定義されたレイアウトを使用して複数のプレイリストを表示します。レイアウトを選択し、各ゾーンにプレイリストを割り当てます。"
-    },
-    "qr-code": {
-      "name": "QRコード",
-      "description": "オプションのキャプション付きでURLまたはテキストのQRコードを表示します。",
-      "options": {
-        "content": {
-          "label": "内容",
-          "description": "QRコードにエンコードするURLまたはテキスト"
-        },
-        "caption": {
-          "label": "キャプション",
-          "placeholder": "スキャンしてね！",
-          "description": "QRコードの下に表示する任意のテキスト"
-        },
-        "caption_size": {
-          "label": "キャプションサイズ",
-          "description": "キャプションテキストのフォントサイズ（例: 1.5em、2em、3em）"
-        },
-        "text_color": {
-          "label": "テキスト色",
-          "description": "キャプションテキストの色"
-        },
-        "background": {
-          "label": "背景",
-          "description": "ウィジェットの背景色"
-        },
-        "qr_background": {
-          "label": "QR背景",
-          "description": "QRコードの背景色"
-        },
-        "foreground_color": {
-          "label": "前景色",
-          "description": "QRコードモジュールの色"
-        },
-        "duration": {
-          "label": "表示時間",
-          "description": "QRコードを表示する秒数"
-        }
-      }
-    },
-    "rss-news": {
-      "name": "RSSニュース",
-      "description": "RSSニュースフィードを表示します。"
-    },
-    "spotify-now-playing": {
-      "name": "Spotify 再生中",
-      "description": "アルバムアートワーク、トラック情報、再生進捗状況と共にSpotifyアカウントの現在再生中のトラックを表示します。"
-    },
-    "stock-ticker": {
-      "name": "株式ティッカー",
-      "description": "価格変動付きのリアルタイム株価見積もりのスクロールティッカーを表示します。"
-    },
-    "location-display-demo": {
-      "name": "位置表示",
-      "description": "座標と住所付きの位置情報を表示します。"
-    }
   }
 }

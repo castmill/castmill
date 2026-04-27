@@ -848,6 +848,20 @@
     "title": "Widgets",
     "uploadWidget": "Widget hochladen",
     "uploadDescription": "Laden Sie eine JSON Widget-Definitionsdatei hoch.",
+    "upload": {
+      "jsonDescription": "Laden Sie eine JSON-Datei hoch, die eine Widget-Definition enthält.",
+      "requiredFields": "Erforderliche Felder",
+      "and": "und",
+      "exampleFormat": "Beispielformat",
+      "dragAndDropHint": "Oder ziehen Sie JSON- oder ZIP-Dateien hierher...",
+      "ready": "Bereit",
+      "invalidFileType": "Ungültiger Dateityp. Nur JSON- und ZIP-Dateien werden unterstützt.",
+      "invalidWidgetJson": "Ungültiges Widget-JSON: muss die Felder \"name\" und \"template\" enthalten",
+      "validationFailed": "Validierung fehlgeschlagen",
+      "uploadFailed": "Upload fehlgeschlagen",
+      "uploadedSuccessfully": "Erfolgreich hochgeladen",
+      "uploadError": "Upload-Fehler"
+    },
     "widgetDetails": "Widget-Details",
     "updateInterval": "Aktualisierungsintervall",
     "viewDetails": "Details anzeigen",
@@ -920,7 +934,8 @@
       "enterClientCredentials": "Geben Sie unten Ihre {{provider}} API-Anmeldedaten ein:",
       "afterSavingCredentials": "Nachdem Sie Ihre Anmeldedaten gespeichert haben, klicken Sie unten, um sich bei {{provider}} zu autorisieren:",
       "networkCredentialsConfigured": "Die {{provider}}-Integration wurde von Ihrem Netzwerkadministrator konfiguriert. Klicken Sie unten, um Ihr Konto zu autorisieren:"
-    }
+    },
+    "translations": "Übersetzungen"
   },
   "devices": {
     "setDeviceChannel": "Gerätekanal festlegen",
@@ -1382,102 +1397,5 @@
     "savedOffline": "Zeitplan gespeichert. Gerät ist offline — Timer werden bei Wiederverbindung gesendet.",
     "loadError": "Fehler beim Laden des Zeitplans",
     "saveError": "Fehler beim Speichern des Zeitplans"
-  },
-  "widgetCatalog": {
-    "image": {
-      "name": "Bild",
-      "description": "Zeigt ein Bild an.",
-      "options": {
-        "autozoom": {
-          "label": "Automatischer Zoom"
-        },
-        "duration": {
-          "label": "Dauer",
-          "description": "Die Dauer in Sekunden, für die das Bild angezeigt wird"
-        },
-        "image": {
-          "label": "Bild"
-        }
-      }
-    },
-    "video": {
-      "name": "Video",
-      "description": "Zeigt ein Video an."
-    },
-    "weather": {
-      "name": "Wetter",
-      "description": "Zeigt Wetterinformationen an."
-    },
-    "web": {
-      "name": "Web",
-      "description": "Zeigt den Inhalt einer Webseite an."
-    },
-    "intro": {
-      "name": "Intro",
-      "description": "Ein Intro-Widget mit dem Castmill-Logo"
-    },
-    "layout-portrait-3": {
-      "name": "Hochformat-Layout 3",
-      "description": "Zeigt 3 Wiedergabelisten in einem Hochformat-Layout an."
-    },
-    "layout-widget": {
-      "name": "Layout-Widget",
-      "description": "Zeigt mehrere Wiedergabelisten mit einem vordefinierten Layout an. Wählen Sie ein Layout und weisen Sie jeder Zone Wiedergabelisten zu."
-    },
-    "qr-code": {
-      "name": "QR-Code",
-      "description": "Zeigt einen QR-Code für URLs oder Text mit optionalem Untertitel an.",
-      "options": {
-        "content": {
-          "label": "Inhalt",
-          "description": "Die URL oder der Text, der im QR-Code codiert werden soll"
-        },
-        "caption": {
-          "label": "Untertitel",
-          "placeholder": "Scanne mich!",
-          "description": "Optionaler Text, der unter dem QR-Code angezeigt wird"
-        },
-        "caption_size": {
-          "label": "Untertitelgröße",
-          "description": "Schriftgröße des Untertiteltexts (z. B. 1.5em, 2em, 3em)"
-        },
-        "text_color": {
-          "label": "Textfarbe",
-          "description": "Farbe des Untertiteltexts"
-        },
-        "background": {
-          "label": "Hintergrund",
-          "description": "Hintergrundfarbe des Widgets"
-        },
-        "qr_background": {
-          "label": "QR-Hintergrund",
-          "description": "Hintergrundfarbe des QR-Codes"
-        },
-        "foreground_color": {
-          "label": "Vordergrundfarbe",
-          "description": "Farbe der QR-Code-Module"
-        },
-        "duration": {
-          "label": "Dauer",
-          "description": "Dauer in Sekunden zur Anzeige des QR-Codes"
-        }
-      }
-    },
-    "rss-news": {
-      "name": "RSS-Nachrichten",
-      "description": "Zeigt einen RSS-Nachrichtenfeed an."
-    },
-    "spotify-now-playing": {
-      "name": "Spotify – Aktueller Titel",
-      "description": "Zeigt den aktuell abgespielten Titel eines Spotify-Kontos mit Album-Cover, Titelinformationen und Wiedergabefortschritt an."
-    },
-    "stock-ticker": {
-      "name": "Börsen-Ticker",
-      "description": "Zeigt einen scrollenden Ticker mit Echtzeit-Börsenkursen und Preisveränderungen an."
-    },
-    "location-display-demo": {
-      "name": "Standortanzeige",
-      "description": "Zeigt Standortinformationen mit Koordinaten und Adresse an."
-    }
   }
 }

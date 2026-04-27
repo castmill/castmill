@@ -824,6 +824,20 @@
     "title": "Widgets",
     "uploadWidget": "Ladda upp Widget",
     "uploadDescription": "Ladda upp en Widget JSON-definitionsfil.",
+    "upload": {
+      "jsonDescription": "Ladda upp en JSON-fil som innehåller en widgetdefinition.",
+      "requiredFields": "Obligatoriska fält",
+      "and": "och",
+      "exampleFormat": "Exempelformat",
+      "dragAndDropHint": "Eller dra och släpp JSON- eller ZIP-filer här...",
+      "ready": "Klar",
+      "invalidFileType": "Ogiltig filtyp. Endast JSON- och ZIP-filer stöds.",
+      "invalidWidgetJson": "Ogiltig widget-JSON: måste innehålla fälten \"name\" och \"template\"",
+      "validationFailed": "Validering misslyckades",
+      "uploadFailed": "Uppladdning misslyckades",
+      "uploadedSuccessfully": "Uppladdningen lyckades",
+      "uploadError": "Uppladdningsfel"
+    },
     "widgetDetails": "Widget-detaljer",
     "updateInterval": "Uppdateringsintervall",
     "viewDetails": "Visa detaljer",
@@ -896,7 +910,8 @@
       "enterClientCredentials": "Ange dina {{provider}} API-uppgifter nedan:",
       "afterSavingCredentials": "Efter att du sparat dina uppgifter, klicka nedan för att auktorisera med {{provider}}:",
       "networkCredentialsConfigured": "Din nätverksadministratör har redan konfigurerat {{provider}}-uppgifter. Klicka bara på knappen nedan för att ansluta ditt konto."
-    }
+    },
+    "translations": "Översättningar"
   },
   "devices": {
     "setDeviceChannel": "Ställ in enhetskanal",
@@ -1382,107 +1397,5 @@
     "savedOffline": "Schema sparat. Enheten är offline — timers skickas när den återansluter.",
     "loadError": "Fel vid inläsning av schema",
     "saveError": "Fel vid sparande av schema"
-  },
-  "widgetCatalog": {
-    "image": {
-      "name": "Bild",
-      "description": "Visa en bild.",
-      "options": {
-        "autozoom": {
-          "label": "Automatisk zoom"
-        },
-        "duration": {
-          "label": "Varaktighet",
-          "description": "Varaktigheten i sekunder för att visa bilden"
-        },
-        "image": {
-          "label": "Bild"
-        }
-      }
-    },
-    "video": {
-      "name": "Video",
-      "description": "Visar en video."
-    },
-    "weather": {
-      "name": "Väder",
-      "description": "Visar väderinformation."
-    },
-    "web": {
-      "name": "Webb",
-      "description": "Visar innehållet på en webbsida."
-    },
-    "intro": {
-      "name": "Intro",
-      "description": "En intro-widget med Castmills logotyp"
-    },
-    "layout-portrait-3": {
-      "name": "Porträttlayout 3",
-      "description": "Visar 3 spellistor i ett stående format."
-    },
-    "layout-widget": {
-      "name": "Layoutwidget",
-      "description": "Visar flera spellistor med en fördefinierad layout. Välj en layout och tilldela spellistor till varje zon.",
-      "options": {
-        "layoutRef": {
-          "description": "Välj en layout och tilldela spellistor till varje zon"
-        }
-      }
-    },
-    "qr-code": {
-      "name": "QR-kod",
-      "description": "Visar en QR-kod för webbadresser eller text med valfri bildtext.",
-      "options": {
-        "content": {
-          "label": "Innehåll",
-          "description": "Webbadressen eller texten som ska kodas i QR-koden"
-        },
-        "caption": {
-          "label": "Bildtext",
-          "placeholder": "Skanna mig!",
-          "description": "Valfri text som visas under QR-koden"
-        },
-        "caption_size": {
-          "label": "Bildtextstorlek",
-          "description": "Teckenstorlek för bildtexten (t.ex. 1.5em, 2em, 3em)"
-        },
-        "text_color": {
-          "label": "Textfärg",
-          "description": "Färg på bildtexten"
-        },
-        "background": {
-          "label": "Bakgrund",
-          "description": "Widgetens bakgrundsfärg"
-        },
-        "qr_background": {
-          "label": "QR-bakgrund",
-          "description": "Bakgrundsfärg för QR-koden"
-        },
-        "foreground_color": {
-          "label": "Förgrundsfärg",
-          "description": "Färg på QR-kodens moduler"
-        },
-        "duration": {
-          "label": "Varaktighet",
-          "description": "Varaktighet i sekunder för att visa QR-koden"
-        }
-      }
-    },
-    "rss-news": {
-      "name": "RSS-nyheter",
-      "description": "Visar ett RSS-nyhetsflöde."
-    },
-    "spotify-now-playing": {
-      "name": "Spotify spelar nu",
-      "description": "Visar det aktuellt spelande spåret från ett Spotify-konto med albumomslag, spårinformation och uppspelningsförlopp."
-    },
-    "stock-ticker": {
-      "name": "Börskursband",
-      "description": "Visar ett rullande band med realtidsaktiekurser med prisförändringar."
-    },
-    "location-display-demo": {
-      "name": "Platsvisning",
-      "description": "Visar platsinformation med koordinater och adress."
-    }
   }
 }

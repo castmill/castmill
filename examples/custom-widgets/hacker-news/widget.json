@@ -47,6 +47,12 @@
       }
     }
   },
+  "translations": {
+    "en": {
+      "name": "Hacker News Feed",
+      "description": "Displays the latest stories from Hacker News with an orange-themed tech design. Pre-configured with the official HN RSS feed. Includes custom icons, background, and theme styles."
+    }
+  },
   "template": {
     "type": "group",
     "name": "hn-widget",

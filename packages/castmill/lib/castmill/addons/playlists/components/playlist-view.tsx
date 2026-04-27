@@ -53,6 +53,7 @@ export const PlaylistView: Component<{
 }> = (props) => {
   const toast = useToast();
   const t = props.t || ((key: string) => key);
+  const locale = () => props.store.i18n?.locale() || 'en';
   const [widgets, setWidgets] = createSignal<JsonWidget[]>([]);
   const [loading, setLoading] = createSignal(true);
   const [items, setItems] = createSignal<JsonPlaylistItem[]>([]);
@@ -635,6 +636,7 @@ export const PlaylistView: Component<{
             <WidgetChooser
               widgets={widgets()}
               baseUrl={props.baseUrl}
+              locale={locale()}
               t={t}
               onSearch={handleWidgetSearch}
             />
@@ -796,7 +798,7 @@ export const PlaylistView: Component<{
           title={t('playlists.credentialsRequired')}
           description={t('playlists.credentialsRequiredDescription', {
             widget: credentialsError()?.widget
-              ? getTranslatedWidgetName(credentialsError()!.widget, t)
+              ? getTranslatedWidgetName(credentialsError()!.widget, locale())
               : t('common.widget'),
           })}
           onClose={() => setCredentialsError(null)}
