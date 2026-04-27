@@ -128,6 +128,9 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
               const currentPath =
                 location.pathname.replace(/^\/org\/[^\/]+/, '') || '/';
               navigate(`/org/${value}${currentPath}`);
+            } else if (location.pathname === '/settings') {
+              // Settings is a global route and should not be org-prefixed
+              return;
             } else {
               // On non-org routes (e.g., network admin), navigate to the new org's home
               navigate(`/org/${value}`);
@@ -176,7 +179,7 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
           icon={TbChartHistogram}
         />
         <PanelItem
-          to={`/org/${store.organizations.selectedId}/settings`}
+          to="/settings"
           text={t('common.settings')}
           level={0}
           icon={IoSettingsOutline}
