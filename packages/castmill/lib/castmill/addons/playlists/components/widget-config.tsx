@@ -71,6 +71,109 @@ type FormTypes =
   | 'map'
   | 'list';
 
+export type SchemaAttributeType =
+  | SimpleType
+  | FieldAttributes
+  | ComplexFieldAttributes
+  | ReferenceAttributes
+  | LayoutFieldAttributes
+  | LayoutRefFieldAttributes
+  | LocationFieldAttributes;
+
+export const normalizeSchemaEntries = (
+  rawOptionsSchema: unknown
+): [string, SchemaAttributeType][] => {
+  let entries: [string, SchemaAttributeType][];
+
+  if (Array.isArray(rawOptionsSchema)) {
+    entries = rawOptionsSchema.map(
+      (item: any) => [item.key, item] as [string, SchemaAttributeType]
+    );
+  } else {
+    entries = Object.entries(
+      (rawOptionsSchema || {}) as Record<string, SchemaAttributeType>
+    ) as [string, SchemaAttributeType][];
+  }
+
+  return entries.sort((a, b) => {
+    const orderA = (a[1] as FieldAttributes).order ?? Infinity;
+    const orderB = (b[1] as FieldAttributes).order ?? Infinity;
+    return orderA - orderB;
+  });
+};
+
+export const isLayoutRefValid = (
+  value: LayoutRefValue | null | undefined
+): boolean => {
+  if (!value) return false;
+  if (!value.layoutId) return false;
+  if (!value.zones?.zones || value.zones.zones.length === 0) return false;
+
+  const zonePlaylistMap = value.zonePlaylistMap || {};
+  for (const zone of value.zones.zones) {
+    const assignment = zonePlaylistMap[zone.id];
+    if (!assignment || !assignment.playlistId) {
+      return false;
+    }
+  }
+  return true;
+};
+
+export function isValidURL(url: string): boolean {
+  if (!url || url.trim() === '') {
+    return true;
+  }
+
+  if (!/^(https?|ftp):\/\//i.test(url)) {
+    return false;
+  }
+
+  try {
+    const urlObj = new URL(url);
+    const hostname = urlObj.hostname;
+    if (!hostname || hostname.length === 0) {
+      return false;
+    }
+
+    const isLocalhost = hostname === 'localhost';
+    const isIPAddress = /^(\d{1,3}\.){3}\d{1,3}$/.test(hostname);
+    const hasTLD = /\.[a-z]{2,}$/i.test(hostname);
+
+    return isLocalhost || isIPAddress || hasTLD;
+  } catch {
+    return false;
+  }
+}
+
+export const parseCollectionFilters = (
+  collection: string
+): { collectionName: string; filters: Record<string, string | boolean> } => {
+  const collectionParts = collection.split('|');
+  const collectionName = collectionParts[0];
+
+  const filters: Record<string, string | boolean> = {};
+  if (collectionParts.length > 1) {
+    collectionParts.slice(1).forEach((part) => {
+      const [filterKey, filterValue] = part.split(':');
+      if (filterKey && filterValue) {
+        filters[filterKey] = filterValue;
+      }
+    });
+  }
+
+  return { collectionName, filters };
+};
+
+export const getMediaPlaceholderText = (
+  filters: Record<string, string | boolean>,
+  t: (key: string) => string
+): string =>
+  filters['type'] === 'image'
+    ? t('common.selectImage')
+    : filters['type'] === 'video'
+      ? t('common.selectVideo')
+      : t('common.selectMedia');
+
 export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
   const toast = useToast();
   const [widgetConfig, setWidgetConfig] = createSignal(props.item.config);
@@ -97,8 +200,8 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
       'label',
       fallback,
       locale()
-    ) ||
-    fallback ||
+    ) ??
+    fallback ??
     optionKey;
 
   const translateWidgetOptionDescription = (
@@ -148,44 +251,7 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
 
   const rawOptionsSchema = props.item.widget.options_schema || {};
 
-  // Type for all possible schema attribute types
-  type SchemaAttributeType =
-    | SimpleType
-    | FieldAttributes
-    | ComplexFieldAttributes
-    | ReferenceAttributes
-    | LayoutFieldAttributes
-    | LayoutRefFieldAttributes
-    | LocationFieldAttributes;
-
-  // Normalize options_schema to entries format: [[key, schema], ...]
-  // Supports both list format (with "key" property) and map format
-  // Sorts by "order" property if present for consistent field ordering
-  const getSchemaEntries = (): [string, SchemaAttributeType][] => {
-    let entries: [string, SchemaAttributeType][];
-
-    if (Array.isArray(rawOptionsSchema)) {
-      // List format: [{key: "name", type: "string", ...}, ...]
-      entries = rawOptionsSchema.map(
-        (item: any) => [item.key, item] as [string, SchemaAttributeType]
-      );
-    } else {
-      // Map format: {name: {type: "string", ...}, ...}
-      entries = Object.entries(rawOptionsSchema) as [
-        string,
-        SchemaAttributeType,
-      ][];
-    }
-
-    // Sort by order property if present
-    return entries.sort((a, b) => {
-      const orderA = (a[1] as FieldAttributes).order ?? Infinity;
-      const orderB = (b[1] as FieldAttributes).order ?? Infinity;
-      return orderA - orderB;
-    });
-  };
-
-  const schemaEntries = getSchemaEntries();
+  const schemaEntries = normalizeSchemaEntries(rawOptionsSchema);
 
   if (!rawOptionsSchema || schemaEntries.length === 0) {
     return <div>{t('common.noConfigurationAvailable')}</div>;
@@ -229,28 +295,6 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
 
   const [widgetOptions, setWidgetOptions] =
     createSignal<OptionsDict>(originalOptions);
-
-  /**
-   * Validates that a layout-ref value has all zones assigned with playlists.
-   * Returns true if valid, false if any zone is missing a playlist.
-   */
-  const isLayoutRefValid = (
-    value: LayoutRefValue | null | undefined
-  ): boolean => {
-    if (!value) return false;
-    if (!value.layoutId) return false;
-    if (!value.zones?.zones || value.zones.zones.length === 0) return false;
-
-    // Check that every zone has a playlist assigned
-    const zonePlaylistMap = value.zonePlaylistMap || {};
-    for (const zone of value.zones.zones) {
-      const assignment = zonePlaylistMap[zone.id];
-      if (!assignment || !assignment.playlistId) {
-        return false;
-      }
-    }
-    return true;
-  };
 
   /**
    * Gets the form type for a schema entry.
@@ -303,39 +347,6 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
 
     return true;
   };
-
-  function isValidURL(url: string): boolean {
-    // Empty strings are handled by required validation
-    if (!url || url.trim() === '') {
-      return true;
-    }
-
-    // First, check that URL starts with a valid protocol followed by ://
-    // This catches malformed URLs like "https:example.com" (missing //)
-    if (!/^(https?|ftp):\/\//i.test(url)) {
-      return false;
-    }
-
-    // Use URL constructor for parsing
-    try {
-      const urlObj = new URL(url);
-
-      // Verify the hostname exists and is valid
-      const hostname = urlObj.hostname;
-      if (!hostname || hostname.length === 0) {
-        return false;
-      }
-
-      // Allow localhost for development, IP addresses, or proper domains with TLD
-      const isLocalhost = hostname === 'localhost';
-      const isIPAddress = /^(\d{1,3}\.){3}\d{1,3}$/.test(hostname);
-      const hasTLD = /\.[a-z]{2,}$/i.test(hostname);
-
-      return isLocalhost || isIPAddress || hasTLD;
-    } catch {
-      return false;
-    }
-  }
 
   const validateField = (
     type: FormTypes,
@@ -536,28 +547,8 @@ export const WidgetConfig: Component<WidgetConfigProps> = (props) => {
       case 'ref':
         const collection = (schema as ReferenceAttributes).collection;
 
-        // Parse collection string (e.g., "medias|type:image" or "medias|type:video")
-        const collectionParts = collection.split('|');
-        const collectionName = collectionParts[0];
-
-        // Extract filters from collection string
-        const filters: Record<string, string | boolean> = {};
-        if (collectionParts.length > 1) {
-          collectionParts.slice(1).forEach((part) => {
-            const [filterKey, filterValue] = part.split(':');
-            if (filterKey && filterValue) {
-              filters[filterKey] = filterValue;
-            }
-          });
-        }
-
-        // Determine media type for placeholder text
-        const placeholderText =
-          filters['type'] === 'image'
-            ? t('common.selectImage')
-            : filters['type'] === 'video'
-              ? t('common.selectVideo')
-              : t('common.selectMedia');
+        const { collectionName, filters } = parseCollectionFilters(collection);
+        const placeholderText = getMediaPlaceholderText(filters, t);
 
         switch (collectionName) {
           case 'medias':

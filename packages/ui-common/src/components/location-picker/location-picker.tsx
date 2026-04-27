@@ -344,8 +344,8 @@ export const LocationPicker: Component<LocationPickerProps> = (props) => {
       <div class="location-picker__search">
         <ComboBox<LocationSearchResult>
           id="location-search"
-          label={props.searchLabel || 'Search Location'}
-          placeholder={props.placeholder || 'Search for a location...'}
+          label={props.searchLabel ?? 'Search Location'}
+          placeholder={props.placeholder ?? 'Search for a location...'}
           fetchItems={fetchLocations}
           renderItem={(item) => (
             <div class="location-picker__result-item">{item.display_name}</div>
@@ -357,15 +357,15 @@ export const LocationPicker: Component<LocationPickerProps> = (props) => {
       <Show when={props.value}>
         <div class="location-picker__info">
           <div class="location-picker__coordinates">
-            <strong>{props.coordinatesLabel || 'Coordinates'}:</strong>{' '}
+            <strong>{props.coordinatesLabel ?? 'Coordinates'}:</strong>{' '}
             {props.value?.lat.toFixed(6)}, {props.value?.lng.toFixed(6)}
           </div>
 
           <Show when={!editingAddress()}>
             <div class="location-picker__address">
-              <strong>{props.addressLabel || 'Address'}:</strong>{' '}
-              {props.value?.address ||
-                props.noAddressText ||
+              <strong>{props.addressLabel ?? 'Address'}:</strong>{' '}
+              {props.value?.address ??
+                props.noAddressText ??
                 'No address available'}
               <button
                 class="location-picker__edit-button"
@@ -375,7 +375,7 @@ export const LocationPicker: Component<LocationPickerProps> = (props) => {
                 }}
                 disabled={props.disabled}
               >
-                {props.editLabel || 'Edit'}
+                {props.editLabel ?? 'Edit'}
               </button>
             </div>
           </Show>
@@ -388,20 +388,20 @@ export const LocationPicker: Component<LocationPickerProps> = (props) => {
                 value={manualAddress()}
                 onInput={(e) => setManualAddress(e.currentTarget.value)}
                 placeholder={
-                  props.manualAddressPlaceholder || 'Enter address...'
+                  props.manualAddressPlaceholder ?? 'Enter address...'
                 }
               />
               <button
                 class="location-picker__save-button"
                 onClick={updateManualAddress}
               >
-                {props.saveLabel || 'Save'}
+                {props.saveLabel ?? 'Save'}
               </button>
               <button
                 class="location-picker__cancel-button"
                 onClick={() => setEditingAddress(false)}
               >
-                {props.cancelLabel || 'Cancel'}
+                {props.cancelLabel ?? 'Cancel'}
               </button>
             </div>
           </Show>
