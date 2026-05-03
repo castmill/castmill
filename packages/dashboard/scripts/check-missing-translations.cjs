@@ -107,6 +107,8 @@ const ALLOWED_IDENTICAL_STRINGS = new Set([
   'https://x.com/yourcompany',
   'https://linkedin.com/company/yourcompany',
   'https://facebook.com/yourcompany',
+  // Widget editor fixture placeholder - JSON format string, identical in all languages
+  '{"data": {}, "options": {}}',
 ]);
 
 /**

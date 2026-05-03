@@ -338,6 +338,13 @@ defmodule CastmillWeb.Router do
     get("/organizations/:organization_id/widgets", OrganizationController, :list_widgets)
     post("/organizations/:organization_id/widgets", OrganizationController, :create_widget)
 
+    # Create a widget directly from a JSON body (used by the widget editor)
+    post(
+      "/organizations/:organization_id/widgets/from-json",
+      OrganizationController,
+      :create_widget_from_json
+    )
+
     # Get a widget by ID
     get(
       "/organizations/:organization_id/widgets/:widget_id",
@@ -407,6 +414,13 @@ defmodule CastmillWeb.Router do
       "/organizations/:organization_id/widgets/:widget_id/prefetch-data",
       WidgetIntegrationController,
       :prefetch_widget_data
+    )
+
+    # Clone a widget (used by the widget editor)
+    post(
+      "/organizations/:organization_id/widgets/:widget_id/clone",
+      OrganizationController,
+      :clone_widget
     )
 
     delete(

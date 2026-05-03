@@ -539,6 +539,101 @@ defmodule CastmillWeb.OrganizationController do
     end
   end
 
+  @doc """
+  Creates a widget from a JSON request body (used by the widget editor).
+
+  Accepts all widget fields as JSON – name, description, template, options_schema,
+  data_schema, aspect_ratio, update_interval_seconds, slug, etc.
+  """
+  def create_widget_from_json(conn, %{"organization_id" => _organization_id} = params) do
+    widget_data =
+      params
+      |> Map.drop(["organization_id"])
+      |> maybe_generate_slug()
+
+    case Castmill.Widgets.create_widget(widget_data) do
+      {:ok, widget} ->
+        conn
+        |> put_status(:created)
+        |> json(widget)
+
+      {:error, %Ecto.Changeset{} = changeset} ->
+        errors =
+          Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
+            Regex.replace(~r"%{(\w+)}", msg, fn _, key ->
+              opts |> Keyword.get(String.to_existing_atom(key), key) |> to_string()
+            end)
+          end)
+
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{errors: errors})
+
+      {:error, reason} ->
+        conn
+        |> put_status(:bad_request)
+        |> json(%{error: inspect(reason)})
+    end
+  end
+
+  @doc """
+  Clones an existing widget, optionally overriding the name.
+
+  The clone is marked as non-system so the user can freely edit and delete it.
+  """
+  def clone_widget(conn, %{"organization_id" => _organization_id, "widget_id" => widget_id} = params) do
+    with widget when not is_nil(widget) <- Castmill.Widgets.get_widget(widget_id) do
+      new_name = Map.get(params, "name", "#{widget.name} (Copy)")
+
+      clone_attrs = %{
+        "name" => new_name,
+        "slug" => slugify(new_name),
+        "description" => widget.description,
+        "template" => widget.template,
+        "options_schema" => widget.options_schema,
+        "data_schema" => widget.data_schema,
+        "meta" => widget.meta,
+        "aspect_ratio" => widget.aspect_ratio,
+        "update_interval_seconds" => widget.update_interval_seconds,
+        "is_system" => false
+      }
+
+      case Castmill.Widgets.create_widget(clone_attrs) do
+        {:ok, cloned_widget} ->
+          conn
+          |> put_status(:created)
+          |> json(cloned_widget)
+
+        {:error, %Ecto.Changeset{} = changeset} ->
+          errors =
+            Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
+              Regex.replace(~r"%{(\w+)}", msg, fn _, key ->
+                opts |> Keyword.get(String.to_existing_atom(key), key) |> to_string()
+              end)
+            end)
+
+          conn
+          |> put_status(:unprocessable_entity)
+          |> json(%{errors: errors})
+
+        {:error, reason} ->
+          conn
+          |> put_status(:bad_request)
+          |> json(%{error: inspect(reason)})
+      end
+    else
+      nil ->
+        conn
+        |> put_status(:not_found)
+        |> json(%{error: "Widget not found"})
+    end
+  end
+
+  # Generates a slug from name if slug is not provided
+  defp maybe_generate_slug(%{"slug" => slug} = data) when is_binary(slug) and slug != "", do: data
+  defp maybe_generate_slug(%{"name" => name} = data) when is_binary(name), do: Map.put(data, "slug", slugify(name))
+  defp maybe_generate_slug(data), do: data
+
   def list_members(conn, params) do
     with {:ok, params} <- Tarams.cast(params, @index_params_schema) do
       response = %{

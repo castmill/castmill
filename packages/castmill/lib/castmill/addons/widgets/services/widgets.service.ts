@@ -19,6 +19,29 @@ export interface WidgetsUpdate {
   description: string;
 }
 
+export interface WidgetFullUpdate {
+  name?: string;
+  description?: string;
+  template?: Record<string, any>;
+  options_schema?: Record<string, any>;
+  data_schema?: Record<string, any>;
+  aspect_ratio?: string;
+  update_interval_seconds?: number;
+  slug?: string;
+}
+
+export interface WidgetCreateFromJson {
+  name: string;
+  description?: string;
+  template: Record<string, any>;
+  options_schema?: Record<string, any>;
+  data_schema?: Record<string, any>;
+  aspect_ratio?: string;
+  update_interval_seconds?: number;
+  slug?: string;
+  is_system?: boolean;
+}
+
 export interface WidgetUsage {
   playlist_id: number;
   playlist_name: string;
@@ -285,5 +308,93 @@ export const WidgetsService = {
       console.error('Failed to fetch widget integrations:', error);
       return [];
     }
+  },
+
+  /**
+   * Create a widget from a JSON body (used by the widget editor).
+   *
+   * @param baseUrl - The base URL of the server
+   * @param organizationId - The organization ID
+   * @param widgetData - The widget definition to create
+   * @returns Promise resolving to the created widget
+   */
+  async createFromJson(
+    baseUrl: string,
+    organizationId: string,
+    widgetData: WidgetCreateFromJson
+  ): Promise<JsonWidget> {
+    const response = await authFetch(
+      `${baseUrl}/dashboard/organizations/${organizationId}/widgets/from-json`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(widgetData),
+      }
+    );
+
+    return handleResponse<JsonWidget>(response, { parse: true });
+  },
+
+  /**
+   * Fully update a widget – including template and schemas.
+   *
+   * @param baseUrl - The base URL of the server
+   * @param organizationId - The organization ID
+   * @param widgetId - The widget ID to update
+   * @param updates - Full set of fields to update
+   * @returns Promise resolving to the updated widget
+   */
+  async fullUpdateWidget(
+    baseUrl: string,
+    organizationId: string,
+    widgetId: string,
+    updates: WidgetFullUpdate
+  ): Promise<JsonWidget> {
+    const response = await authFetch(
+      `${baseUrl}/dashboard/organizations/${organizationId}/widgets/${widgetId}`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(updates),
+      }
+    );
+
+    return handleResponse<JsonWidget>(response, { parse: true });
+  },
+
+  /**
+   * Clone a widget, optionally with a new name.
+   *
+   * @param baseUrl - The base URL of the server
+   * @param organizationId - The organization ID
+   * @param widgetId - The widget ID to clone
+   * @param name - Optional new name for the clone
+   * @returns Promise resolving to the cloned widget
+   */
+  async cloneWidget(
+    baseUrl: string,
+    organizationId: string,
+    widgetId: number,
+    name?: string
+  ): Promise<JsonWidget> {
+    const body: Record<string, string> = {};
+    if (name) body['name'] = name;
+
+    const response = await authFetch(
+      `${baseUrl}/dashboard/organizations/${organizationId}/widgets/${widgetId}/clone`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      }
+    );
+
+    return handleResponse<JsonWidget>(response, { parse: true });
   },
 };
