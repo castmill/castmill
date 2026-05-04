@@ -12,7 +12,7 @@ import { Button, IconButton } from '@castmill/ui-common';
 interface UploadComponentProps {
   baseUrl: string;
   organizationId: string;
-  t?: (key: string, params?: Record<string, any>) => string;
+  t: (key: string, params?: Record<string, any>) => string;
   onFileUpload?: (fileName: string, result: any) => void;
   onCancel?: () => void;
   onUploadComplete?: () => void;
@@ -35,8 +35,7 @@ const supportedZipTypes = [
 const supportedFileTypes = [...supportedJsonTypes, ...supportedZipTypes];
 
 export const UploadComponent = (props: UploadComponentProps) => {
-  const t = (key: string, params?: Record<string, any>) =>
-    props.t?.(key, params) || key;
+  const t = (key: string, params?: Record<string, any>) => props.t(key, params);
 
   const [files, setFiles] = createSignal<File[]>([]);
   const [messages, setMessages] = createSignal<Messages>({});
