@@ -41,4 +41,4 @@ appImage:
 npmRebuild: false
 publish:
   provider: generic
-  url: https://example.com/auto-updates
+  url: ${env.CASTMILL_UPDATE_URL}

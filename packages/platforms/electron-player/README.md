@@ -24,6 +24,34 @@ Copy the relevant `.env.*` file and configure the variables. The following envir
 | `VITE_KIOSK`          | Enable kiosk mode (`true`/`false`)                            | Yes      |
 | `VITE_FULLSCREEN`     | Enable fullscreen mode (`true`/`false`)                       | Yes      |
 | `VITE_GOOGLE_API_KEY` | Google API key for geolocation services                       | No\*     |
+| `CASTMILL_UPDATE_URL` | Electron auto-update feed URL used at build time              | No\*     |
+
+#### Auto-update URL (build-time)
+
+The Electron auto-update feed URL is injected at build time via `CASTMILL_UPDATE_URL`.
+
+Defaults:
+
+- Staging builds use `https://updates.castmill.dev/electron`
+- Production builds use `https://updates.castmill.io/electron`
+
+The default OS build commands (`build:win`, `build:mac`, `build:linux`) now produce **staging** builds.
+
+Use these scripts for explicit targets:
+
+```bash
+# Staging
+yarn build:staging:win
+yarn build:staging:mac
+yarn build:staging:linux
+
+# Production
+yarn build:prod:win
+yarn build:prod:mac
+yarn build:prod:linux
+```
+
+You can still override the URL manually by setting `CASTMILL_UPDATE_URL` when invoking `electron-builder`.
 
 #### Geolocation & Google API Key
 
