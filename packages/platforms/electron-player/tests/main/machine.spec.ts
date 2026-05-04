@@ -293,24 +293,24 @@ describe('main/api/machine identifiers and telemetry', () => {
           address: '10.0.0.8',
         },
       ],
-    } as any);
+    });
 
-    siMock.currentLoad.mockResolvedValueOnce({ currentLoad: 12.34 } as any);
+    siMock.currentLoad.mockResolvedValueOnce({ currentLoad: 12.34 });
     siMock.fsSize.mockResolvedValueOnce([
       { mount: '/', size: 5000, used: 1250 },
-    ] as any);
+    ]);
     siMock.cpuTemperature.mockResolvedValueOnce({
       main: 55,
       cores: [54, 56],
-    } as any);
+    });
     siMock.wifiNetworks.mockResolvedValueOnce([
       { security: 'wpa2', signalLevel: -50, ssid: 'Castmill WiFi' },
-    ] as any);
+    ]);
     siMock.battery.mockResolvedValueOnce({
       hasBattery: true,
       percent: 88,
       isCharging: true,
-    } as any);
+    });
 
     const { getTelemetry } = await loadMachineApi();
     const telemetry = await getTelemetry();
