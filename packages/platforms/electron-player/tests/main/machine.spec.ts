@@ -141,6 +141,25 @@ describe('main/api/machine update', () => {
       expect.any(Function)
     );
     expect(mockAutoUpdater.checkForUpdates).toHaveBeenCalledOnce();
+    expect(exec).not.toHaveBeenCalled();
+  });
+
+  it('should handle checkForUpdates failures without throwing', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    mockAutoUpdater.checkForUpdates.mockImplementationOnce(async () => {
+      throw new Error('update check failed');
+    });
+    const { update } = await loadMachineApi();
+
+    update();
+    await vi.waitFor(() => {
+      expect(errorSpy).toHaveBeenCalledWith(
+        'Failed to check for updates:',
+        expect.any(Error)
+      );
+    });
+
+    errorSpy.mockRestore();
   });
 
   it('should trigger quitAndInstall once when update is downloaded', async () => {

@@ -116,7 +116,9 @@ export const update = () => {
   quitAndInstallTriggered = false;
 
   console.log('Checking for updates (silent mode)...');
-  autoUpdater.checkForUpdates();
+  void Promise.resolve(autoUpdater.checkForUpdates()).catch((error) => {
+    console.error('Failed to check for updates:', error);
+  });
 };
 
 /*
