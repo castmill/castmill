@@ -24,11 +24,13 @@ Copy the relevant `.env.*` file and configure the variables. The following envir
 | `VITE_KIOSK`          | Enable kiosk mode (`true`/`false`)                            | Yes      |
 | `VITE_FULLSCREEN`     | Enable fullscreen mode (`true`/`false`)                       | Yes      |
 | `VITE_GOOGLE_API_KEY` | Google API key for geolocation services                       | No\*     |
-| `CASTMILL_UPDATE_URL` | Electron auto-update feed URL used at build time              | No\*     |
+| `CASTMILL_UPDATE_URL` | Electron auto-update feed URL used at build time              | Yes\*\*  |
 
 #### Auto-update URL (build-time)
 
 The Electron auto-update feed URL is injected at build time via `CASTMILL_UPDATE_URL`.
+
+`CASTMILL_UPDATE_URL` is required by `electron-builder` config.
 
 Defaults:
 
@@ -52,6 +54,11 @@ yarn build:prod:linux
 ```
 
 You can still override the URL manually by setting `CASTMILL_UPDATE_URL` when invoking `electron-builder`.
+
+> **Note**:
+>
+> - The provided build scripts (`build:*`, `build:staging:*`, `build:prod:*`, `build:unpack`) set `CASTMILL_UPDATE_URL` for you.
+> - If you invoke `electron-builder` directly, you must set `CASTMILL_UPDATE_URL` yourself.
 
 #### Geolocation & Google API Key
 

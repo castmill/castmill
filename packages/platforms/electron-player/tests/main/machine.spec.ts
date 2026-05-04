@@ -128,6 +128,9 @@ describe('main/api/machine update', () => {
     const { update } = await loadMachineApi();
 
     update();
+    await vi.waitFor(() => {
+      expect(mockAutoUpdater.checkForUpdates).toHaveBeenCalledOnce();
+    });
 
     expect(mockAutoUpdater.autoDownload).toBe(true);
     expect(mockAutoUpdater.autoInstallOnAppQuit).toBe(true);
@@ -140,7 +143,6 @@ describe('main/api/machine update', () => {
       'error',
       expect.any(Function)
     );
-    expect(mockAutoUpdater.checkForUpdates).toHaveBeenCalledOnce();
     expect(exec).not.toHaveBeenCalled();
   });
 
@@ -180,8 +182,11 @@ describe('main/api/machine update', () => {
     update();
     update();
 
+    await vi.waitFor(() => {
+      expect(mockAutoUpdater.checkForUpdates).toHaveBeenCalledTimes(2);
+    });
+
     expect(mockAutoUpdater.on).toHaveBeenCalledTimes(2);
-    expect(mockAutoUpdater.checkForUpdates).toHaveBeenCalledTimes(2);
   });
 });
 
