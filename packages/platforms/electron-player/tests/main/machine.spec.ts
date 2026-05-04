@@ -118,7 +118,7 @@ describe('main/api/machine update', () => {
     is.dev = true;
     const { update } = await loadMachineApi();
 
-    update();
+    await update();
 
     expect(mockAutoUpdater.checkForUpdates).not.toHaveBeenCalled();
     expect(mockAutoUpdater.on).not.toHaveBeenCalled();
@@ -127,10 +127,9 @@ describe('main/api/machine update', () => {
   it('should configure silent updater and check for updates in production', async () => {
     const { update } = await loadMachineApi();
 
-    update();
-    await vi.waitFor(() => {
-      expect(mockAutoUpdater.checkForUpdates).toHaveBeenCalledOnce();
-    });
+    await update();
+
+    expect(mockAutoUpdater.checkForUpdates).toHaveBeenCalledOnce();
 
     expect(mockAutoUpdater.autoDownload).toBe(true);
     expect(mockAutoUpdater.autoInstallOnAppQuit).toBe(true);
@@ -146,20 +145,18 @@ describe('main/api/machine update', () => {
     expect(exec).not.toHaveBeenCalled();
   });
 
-  it('should handle checkForUpdates failures without throwing', async () => {
+  it('should propagate checkForUpdates failures to caller', async () => {
     const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     mockAutoUpdater.checkForUpdates.mockImplementationOnce(async () => {
       throw new Error('update check failed');
     });
     const { update } = await loadMachineApi();
 
-    update();
-    await vi.waitFor(() => {
-      expect(errorSpy).toHaveBeenCalledWith(
-        'Failed to check for updates:',
-        expect.any(Error)
-      );
-    });
+    await expect(update()).rejects.toThrow('update check failed');
+    expect(errorSpy).toHaveBeenCalledWith(
+      'Failed to check for updates:',
+      expect.any(Error)
+    );
 
     errorSpy.mockRestore();
   });
@@ -167,7 +164,7 @@ describe('main/api/machine update', () => {
   it('should trigger quitAndInstall once when update is downloaded', async () => {
     const { update } = await loadMachineApi();
 
-    update();
+    await update();
 
     updateHandlers['update-downloaded']?.();
     updateHandlers['update-downloaded']?.();
@@ -179,12 +176,10 @@ describe('main/api/machine update', () => {
   it('should not register duplicate updater handlers across multiple updates', async () => {
     const { update } = await loadMachineApi();
 
-    update();
-    update();
+    await update();
+    await update();
 
-    await vi.waitFor(() => {
-      expect(mockAutoUpdater.checkForUpdates).toHaveBeenCalledTimes(2);
-    });
+    expect(mockAutoUpdater.checkForUpdates).toHaveBeenCalledTimes(2);
 
     expect(mockAutoUpdater.on).toHaveBeenCalledTimes(2);
   });

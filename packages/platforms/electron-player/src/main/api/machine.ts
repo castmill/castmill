@@ -106,7 +106,7 @@ export const reboot = () => {
 /*
  * update the app
  */
-export const update = () => {
+export const update = async (): Promise<void> => {
   if (is.dev) {
     console.log('Auto-update is disabled in development mode.');
     return;
@@ -116,11 +116,14 @@ export const update = () => {
   quitAndInstallTriggered = false;
 
   console.log('Checking for updates (silent mode)...');
-  void Promise.resolve()
-    .then(() => autoUpdater.checkForUpdates())
-    .catch((error) => {
-      console.error('Failed to check for updates:', error);
-    });
+  try {
+    await Promise.resolve().then(() => autoUpdater.checkForUpdates());
+  } catch (error) {
+    console.error('Failed to check for updates:', error);
+    throw error instanceof Error
+      ? error
+      : new Error('Failed to check for updates');
+  }
 };
 
 /*

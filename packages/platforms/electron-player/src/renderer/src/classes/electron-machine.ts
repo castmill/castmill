@@ -136,7 +136,7 @@ export class ElectronMachine implements Machine {
    * Updates the device's application.
    */
   async update(): Promise<void> {
-    window.api.update();
+    await window.api.update();
   }
 
   async getTelemetry(): Promise<TelemetryData> {
