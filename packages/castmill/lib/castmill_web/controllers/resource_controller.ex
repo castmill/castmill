@@ -134,7 +134,9 @@ defmodule CastmillWeb.ResourceController do
       cast_func: &CastmillWeb.ResourceController.parse_tag_ids/1
     ],
     # Filter mode: "any" (OR) or "all" (AND)
-    tag_filter_mode: [type: :string, in: ["any", "all"]]
+    tag_filter_mode: [type: :string, in: ["any", "all"]],
+    # Include only resources without tags in this tag group
+    missing_tag_group_id: :integer
   }
 
   # The only reason we have a specific index function for devices is that we need to

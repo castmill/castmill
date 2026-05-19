@@ -386,6 +386,50 @@ defmodule Castmill.Tags do
   end
 
   @doc """
+  Returns resource IDs that have at least one tag from a specific tag group.
+  """
+  def get_resource_ids_with_tag_group(resource_type, tag_group_id)
+      when is_integer(tag_group_id) do
+    from(rt in ResourceTag,
+      join: t in Tag,
+      on: t.id == rt.tag_id,
+      where: rt.resource_type == ^resource_type and t.tag_group_id == ^tag_group_id,
+      distinct: true,
+      select: rt.resource_id
+    )
+    |> Repo.all()
+  end
+
+  @doc """
+  Filters a query to resources that are missing tags from the given tag group.
+  """
+  def filter_missing_tag_group(query, resource_type, tag_group_id, opts \\ [])
+
+  def filter_missing_tag_group(query, _resource_type, nil, _opts), do: query
+
+  def filter_missing_tag_group(query, resource_type, tag_group_id, opts)
+      when is_integer(tag_group_id) do
+    id_field = Keyword.get(opts, :id_field, :id)
+
+    tagged_resource_ids = get_resource_ids_with_tag_group(resource_type, tag_group_id)
+
+    case tagged_resource_ids do
+      [] ->
+        query
+
+      ids ->
+        typed_ids = cast_resource_ids(resource_type, ids)
+
+        case typed_ids do
+          [] -> query
+          _ -> from(q in query, where: field(q, ^id_field) not in ^typed_ids)
+        end
+    end
+  end
+
+  def filter_missing_tag_group(query, _resource_type, _tag_group_id, _opts), do: query
+
+  @doc """
   Filters a query to only include resources with the given tags.
 
   This is useful for adding tag filtering to existing resource queries.

@@ -651,6 +651,22 @@ const ChannelsPage: Component = () => {
     };
   };
 
+  const fetchTreeUntaggedResources = async (tagGroupId: number) => {
+    const result = await channelsService.fetchChannelsFiltered({
+      page: 1,
+      page_size: 100,
+      sortOptions: { key: 'name', direction: 'ascending' },
+      tag_filter_mode: 'all',
+      missing_tag_group_id: tagGroupId,
+      team_id: selectedTeamId(),
+    });
+
+    return {
+      data: result.data as TreeResourceItem[],
+      count: result.count,
+    };
+  };
+
   const updateItem = (itemId: number, item: JsonChannel) => {
     if (tableViewRef) {
       tableViewRef.updateItem(itemId, item);
@@ -988,6 +1004,8 @@ const ChannelsPage: Component = () => {
             tagGroups={tagGroups()}
             allTags={allTags()}
             fetchResources={fetchTreeResources}
+            fetchUntaggedResources={fetchTreeUntaggedResources}
+            untaggedLabel={t('tags.groups.ungrouped')}
             refreshKey={treeVersion()}
             storageKey="channels"
             onResourceClick={(item) => {

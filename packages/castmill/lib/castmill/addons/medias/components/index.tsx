@@ -346,6 +346,29 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
     };
   };
 
+  const fetchTreeUntaggedResources = async (tagGroupId: number) => {
+    const result = await MediasService.fetchMedias(
+      props.store.env.baseUrl,
+      props.store.organizations.selectedId,
+      {
+        page: 1,
+        page_size: 100,
+        sortOptions: { key: 'name', direction: 'ascending' },
+        tag_filter_mode: 'all',
+        missing_tag_group_id: tagGroupId,
+        team_id: selectedTeamId(),
+      }
+    );
+
+    return {
+      data: result.data.map((m: JsonMedia) => ({
+        ...m,
+        thumbnail: m.files?.['thumbnail']?.uri,
+      })) as TreeResourceItem[],
+      count: result.count,
+    };
+  };
+
   const [showDrawer, setShowDrawer] = createSignal(false);
   const [currentMedia, setCurrentMedia] = createSignal<JsonMedia | undefined>();
 
@@ -1103,6 +1126,8 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
           tagGroups={tagGroups()}
           allTags={allTags()}
           fetchResources={fetchTreeResources}
+          fetchUntaggedResources={fetchTreeUntaggedResources}
+          untaggedLabel={t('tags.groups.ungrouped')}
           refreshKey={treeVersion()}
           storageKey="medias"
           onResourceClick={(item) =>
