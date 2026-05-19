@@ -170,8 +170,8 @@ file: app.whenReady().then(() => {
     api.reboot();
   });
 
-  ipcMain.on(Action.UPDATE, () => {
-    api.update();
+  ipcMain.handle(Action.UPDATE, () => {
+    return api.update();
   });
 
   ipcMain.handle(Action.GET_MACHINE_GUID, () => {
