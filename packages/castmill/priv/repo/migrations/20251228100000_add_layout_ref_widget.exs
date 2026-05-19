@@ -41,9 +41,20 @@ defmodule Castmill.Repo.Migrations.AddLayoutRefWidget do
       }
     }
 
-    %Widget{}
-    |> Widget.changeset(widget_attrs)
-    |> Repo.insert!()
+    now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
+
+    widget_row =
+      widget_attrs
+      |> Map.merge(%{
+        assets: %{},
+        fonts: [],
+        inserted_at: now,
+        updated_at: now,
+        update_interval_seconds: Map.get(widget_attrs, :update_interval_seconds, 60)
+      })
+      |> Map.drop([:translations])
+
+    Repo.insert_all("widgets", [widget_row])
   end
 
   def down do

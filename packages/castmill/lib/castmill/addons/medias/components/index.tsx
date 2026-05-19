@@ -947,6 +947,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
           ref={setRef}
           itemIdKey="id"
           toolbar={{
+            searchPlaceholder: t('common.search'),
             mainAction: (
               <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
                 <Show when={quota()}>

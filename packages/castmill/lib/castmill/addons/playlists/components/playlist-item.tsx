@@ -16,7 +16,6 @@ import { DEFAULT_WIDGET_ICON } from '../../common/constants';
 import { isImageIcon, getIconUrl } from '../utils/icon-utils';
 import { hasDynamicDuration } from '../utils/duration-utils';
 import {
-  TranslateFn,
   getTranslatedWidgetName,
   getTranslatedWidgetDescription,
 } from '../../common/utils/widget-catalog-utils';
@@ -177,13 +176,13 @@ const getWidgetSubtitle = (item: JsonPlaylistItem): string | null => {
 const Thumbnail: Component<{
   item: JsonPlaylistItem;
   baseUrl: string;
-  t?: TranslateFn;
+  locale?: string;
 }> = (props) => {
   const thumbnailUri = getThumbnailUri(props.item);
-  const widgetName = getTranslatedWidgetName(props.item.widget, props.t);
+  const widgetName = getTranslatedWidgetName(props.item.widget, props.locale);
   const widgetSubtitle =
     getWidgetSubtitle(props.item) ||
-    getTranslatedWidgetDescription(props.item.widget, props.t);
+    getTranslatedWidgetDescription(props.item.widget, props.locale);
   const widgetIcon = props.item.widget.icon;
   const iconUrl = getIconUrl(widgetIcon, props.baseUrl);
   const integrationError = () => props.item.integration_error;
@@ -245,7 +244,8 @@ export const PlaylistItem: Component<{
   item: JsonPlaylistItem;
   index: number;
   baseUrl: string;
-  t?: TranslateFn;
+  locale?: string;
+  t?: (key: string, params?: Record<string, any>) => string;
   dynamicDuration?: number;
   onEdit: () => void;
   onRemove: (item: JsonPlaylistItem) => void;
@@ -373,7 +373,11 @@ export const PlaylistItem: Component<{
             }}
             style={{ cursor: props.onClick ? 'pointer' : 'default' }}
           >
-            <Thumbnail item={props.item} baseUrl={props.baseUrl} t={props.t} />
+            <Thumbnail
+              item={props.item}
+              baseUrl={props.baseUrl}
+              locale={props.locale}
+            />
           </div>
         </div>
         <div class={styles.playlistItemDuration}>

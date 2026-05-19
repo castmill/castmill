@@ -241,7 +241,11 @@ const NetworkOrganizations: Component = () => {
 
       {/* Organizations List */}
       <div class={styles['org-list']}>
-        <ToolBar onSearch={handleOrgSearch} initialSearchText={orgSearch()} />
+        <ToolBar
+          onSearch={handleOrgSearch}
+          initialSearchText={orgSearch()}
+          searchPlaceholder={t('common.search')}
+        />
 
         <Show when={loadingOrgs()}>
           <div class={styles['loading-overlay']}>{t('common.loading')}</div>

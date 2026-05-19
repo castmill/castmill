@@ -111,6 +111,19 @@ describe('TableView Component - Default Row Action', () => {
     expect(dataRow).toHaveStyle('cursor: default');
   });
 
+  it('forwards toolbar searchPlaceholder to ToolBar search input', () => {
+    render(() => (
+      <TableView
+        {...defaultProps}
+        toolbar={{
+          searchPlaceholder: 'Search resources',
+        }}
+      />
+    ));
+
+    expect(screen.getByPlaceholderText('Search resources')).toBeInTheDocument();
+  });
+
   it('integrates defaultRowAction with existing actions', async () => {
     const mockEditAction = vi.fn();
     const propsWithAllActions = {

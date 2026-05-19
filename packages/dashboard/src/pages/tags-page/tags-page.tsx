@@ -287,11 +287,13 @@ const TagsPage: Component = () => {
                         icon={BsPencil}
                         onClick={() => openEditTag(tag)}
                         color="secondary"
+                        title={t('tags.editTag')}
                       />
                       <IconButton
                         icon={AiOutlineDelete}
                         onClick={() => setShowConfirmDelete(tag)}
                         color="danger"
+                        title={t('tags.deleteTag')}
                       />
                     </div>
                   </Show>
@@ -324,16 +326,19 @@ const TagsPage: Component = () => {
                       icon={BsPlus}
                       onClick={() => openCreateTag(group.id)}
                       color="primary"
+                      title={t('tags.addTag')}
                     />
                     <IconButton
                       icon={BsPencil}
                       onClick={() => openEditGroup(group)}
                       color="secondary"
+                      title={t('tags.groups.editGroup')}
                     />
                     <IconButton
                       icon={AiOutlineDelete}
                       onClick={() => setShowConfirmDeleteGroup(group)}
                       color="danger"
+                      title={t('tags.groups.deleteGroup')}
                     />
                   </div>
                 </Show>
@@ -349,11 +354,13 @@ const TagsPage: Component = () => {
                             icon={BsPencil}
                             onClick={() => openEditTag(tag)}
                             color="secondary"
+                            title={t('tags.editTag')}
                           />
                           <IconButton
                             icon={AiOutlineDelete}
                             onClick={() => setShowConfirmDelete(tag)}
                             color="danger"
+                            title={t('tags.deleteTag')}
                           />
                         </div>
                       </Show>

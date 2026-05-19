@@ -15,7 +15,6 @@ import { FaSolidMagnifyingGlass } from 'solid-icons/fa';
 import { DEFAULT_WIDGET_ICON } from '../../common/constants';
 import { isImageIcon, getIconUrl } from '../utils/icon-utils';
 import {
-  TranslateFn,
   getTranslatedWidgetName,
   getTranslatedWidgetDescription,
 } from '../../common/utils/widget-catalog-utils';
@@ -24,7 +23,7 @@ import './widget-chooser.scss';
 const WidgetItem: Component<{
   widget: JsonWidget;
   baseUrl: string;
-  t?: TranslateFn;
+  locale?: string;
 }> = (props) => {
   const [dragging, setDragging] = createSignal(false);
 
@@ -49,9 +48,9 @@ const WidgetItem: Component<{
 
   const iconUrl = () => getIconUrl(props.widget.icon, props.baseUrl);
   const showAsImage = () => isImageIcon(iconUrl());
-  const widgetName = () => getTranslatedWidgetName(props.widget, props.t);
+  const widgetName = () => getTranslatedWidgetName(props.widget, props.locale);
   const widgetDescription = () =>
-    getTranslatedWidgetDescription(props.widget, props.t);
+    getTranslatedWidgetDescription(props.widget, props.locale);
 
   return (
     <div
@@ -88,7 +87,8 @@ const SEARCH_DEBOUNCE_PERIOD = 300;
 export const WidgetChooser: Component<{
   widgets: JsonWidget[];
   baseUrl: string;
-  t?: TranslateFn;
+  locale?: string;
+  t?: (key: string, params?: Record<string, any>) => string;
   onSearch?: (searchText: string) => void;
 }> = (props) => {
   const [searchText, setSearchText] = createSignal('');
@@ -135,7 +135,11 @@ export const WidgetChooser: Component<{
       <div class="items-container">
         <For each={props.widgets}>
           {(widget) => (
-            <WidgetItem widget={widget} baseUrl={props.baseUrl} t={props.t} />
+            <WidgetItem
+              widget={widget}
+              baseUrl={props.baseUrl}
+              locale={props.locale}
+            />
           )}
         </For>
       </div>
