@@ -548,6 +548,23 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
     };
   };
 
+  const fetchTreeUntaggedCount = async (tagGroupId: number) => {
+    const result = await PlaylistsService.fetchPlaylists(
+      props.store.env.baseUrl,
+      props.store.organizations.selectedId,
+      {
+        page: 1,
+        page_size: 1,
+        sortOptions: { key: 'name', direction: 'ascending' },
+        tag_filter_mode: 'all',
+        missing_tag_group_id: tagGroupId,
+        team_id: selectedTeamId(),
+      }
+    );
+
+    return result.count;
+  };
+
   const fetchData = async ({
     page,
     sortOptions,
@@ -1338,6 +1355,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
           allTags={allTags()}
           fetchResources={fetchTreeResources}
           fetchUntaggedResources={fetchTreeUntaggedResources}
+          fetchUntaggedCount={fetchTreeUntaggedCount}
           untaggedLabel={t('tags.groups.ungrouped')}
           refreshKey={treeVersion()}
           storageKey="playlists"

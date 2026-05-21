@@ -794,6 +794,23 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
     };
   };
 
+  const fetchTreeUntaggedCount = async (tagGroupId: number) => {
+    const result = await DevicesService.fetchDevices(
+      props.store.env.baseUrl,
+      props.store.organizations.selectedId,
+      {
+        page: 1,
+        page_size: 1,
+        sortOptions: { key: 'name', direction: 'ascending' },
+        tag_filter_mode: 'all',
+        missing_tag_group_id: tagGroupId,
+        team_id: selectedTeamId(),
+      }
+    );
+
+    return result.count;
+  };
+
   const updateItem = (itemId: string, item: Partial<DeviceTableItem>) => {
     if (tableViewRef) {
       tableViewRef.updateItem(itemId, item);
@@ -1029,6 +1046,7 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
           allTags={allTags()}
           fetchResources={fetchTreeResources}
           fetchUntaggedResources={fetchTreeUntaggedResources}
+          fetchUntaggedCount={fetchTreeUntaggedCount}
           untaggedLabel={t('tags.groups.ungrouped')}
           refreshKey={treeVersion()}
           storageKey="devices"

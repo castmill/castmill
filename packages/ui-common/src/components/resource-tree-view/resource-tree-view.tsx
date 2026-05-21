@@ -59,6 +59,11 @@ export interface ResourceTreeViewProps {
     count: number;
   }>;
 
+  /**
+   * Fetch only the count of resources that have no tags in a given tag group.
+   */
+  fetchUntaggedCount?: (tagGroupId: number) => Promise<number>;
+
   /** Called when a resource is clicked */
   onResourceClick?: (item: TreeResourceItem) => void;
 
@@ -240,18 +245,26 @@ export const ResourceTreeView: Component<ResourceTreeViewProps> = (props) => {
     );
 
     const untaggedPromise =
-      rootGroup && props.fetchUntaggedResources
-        ? props
-            .fetchUntaggedResources(rootGroup.id)
-            .then((r) => r.count)
-            .catch((err) => {
-              console.error(
-                `Failed to fetch untagged count for group "${rootGroup.name}" (id=${rootGroup.id}):`,
-                err
-              );
-              return 0;
-            })
-        : Promise.resolve(0);
+      rootGroup && props.fetchUntaggedCount
+        ? props.fetchUntaggedCount(rootGroup.id).catch((err) => {
+            console.error(
+              `Failed to fetch untagged count for group "${rootGroup.name}" (id=${rootGroup.id}):`,
+              err
+            );
+            return 0;
+          })
+        : rootGroup && props.fetchUntaggedResources
+          ? props
+              .fetchUntaggedResources(rootGroup.id)
+              .then((r) => r.count)
+              .catch((err) => {
+                console.error(
+                  `Failed to fetch untagged count for group "${rootGroup.name}" (id=${rootGroup.id}):`,
+                  err
+                );
+                return 0;
+              })
+          : Promise.resolve(0);
 
     const [counts, untaggedCount] = await Promise.all([
       Promise.all(countPromises),
