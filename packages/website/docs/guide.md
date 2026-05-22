@@ -86,6 +86,9 @@ docker run \
    quay.io/minio/minio server /data --console-address ":9001"
 ```
 
-Access the MinIO console at http://localhost:9001 (credentials: `ROOTUSER` / `CHANGEME123`). Create a bucket and configure the S3 environment variables to point to `localhost:9000`.
+Access the MinIO console at http://localhost:9001 (credentials: `ROOTUSER` / `CHANGEME123`). Create a bucket, then set:
+`AWS_ACCESS_KEY_ID=ROOTUSER`, `AWS_SECRET_ACCESS_KEY=CHANGEME123`, `AWS_S3_BUCKET=<your-bucket-name>`, and `AWS_REGION=us-east-1`.
+
+For the MinIO endpoint (`http://localhost:9000`), update the ExAws S3 endpoint settings in the Castmill server configuration.
 
 See [Self-Hosting](getting-started/self-hosting.md) for full storage configuration details.

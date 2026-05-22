@@ -4,7 +4,7 @@ sidebar_position: 5
 
 # Authentication
 
-Castmill uses **passkey-based authentication** exclusively. There are no passwords anywhere in the system.
+For the Castmill Dashboard and end-user login flow, Castmill uses **passkey-based authentication** by default. The admin interface can still use email-and-password authentication.
 
 ## What are Passkeys?
 
@@ -49,12 +49,12 @@ sequenceDiagram
     participant S as Server
 
     U->>B: Click "Login with Passkey"
-    B->>S: POST /sessions/challenges
+    B->>S: GET /sessions/challenges
     S-->>B: Challenge + token
     B->>B: Sign challenge with passkey
     B->>S: POST /sessions (signed assertion)
     S->>S: Verify signature
-    S-->>B: JWT token
+    S-->>B: Bearer token (signed Phoenix.Token)
     B->>B: Store token in localStorage
 ```
 
@@ -118,7 +118,7 @@ Your browser and device determine which algorithm is used. All three provide str
 
 ## Security Considerations
 
-- **No password databases** — There are no passwords to steal or leak
+- **No dashboard password database** — End-user dashboard login does not rely on user-chosen passwords
 - **No session cookies** — Authentication uses Bearer tokens, avoiding third-party cookie issues
 - **Cross-domain support** — Custom domains work via domain-specific passkeys
 - **Invitation-only option** — Networks can restrict registration to invitations only

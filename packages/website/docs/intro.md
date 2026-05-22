@@ -70,8 +70,9 @@ For contributing to Castmill or running from source, see the [Self-Hosting guide
 ### Prerequisites
 
 - [Elixir](https://elixir-lang.org/install.html) 1.17+
-- [Node.js](https://nodejs.org/) 18+
+- [Node.js](https://nodejs.org/) (see `.nvmrc`; currently v24.13.0)
 - [PostgreSQL](https://www.postgresql.org/) 15+
+- [Redis](https://redis.io/docs/latest/operate/oss_and_stack/install/install-redis/) 7+
 
 ### Quick Setup
 
@@ -84,7 +85,10 @@ cd castmill/packages/castmill
 mix deps.get
 mix ecto.setup
 
-# Start the server
+# Start Redis (required unless BullMQ inline mode is configured)
+redis-server
+
+# Start the server (new terminal)
 mix phx.server
 ```
 

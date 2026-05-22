@@ -25,7 +25,7 @@ graph TD
 | **PostgreSQL**      | Data storage (users, orgs, playlists, etc.) | Yes       |
 | **Object Storage**  | Media file storage (images, videos)         | Yes       |
 | **Email Service**   | Signup verification, invitations, recovery  | Yes       |
-| **Redis**           | Background job processing (optional)        | Optional  |
+| **Redis**           | Background job processing (BullMQ workers)  | Yes       |
 
 ## Docker Deployment
 
@@ -44,12 +44,19 @@ services:
     environment:
       - DATABASE_URL=ecto://castmill:password@db/castmill
       - SECRET_KEY_BASE=your-64-char-secret-key
-      - PHX_HOST=your-domain.com
+      - CASTMILL_HOST=your-domain.com
+      - CASTMILL_PORT=4000
+      - CASTMILL_SCHEME=https
       - PORT=4000
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - ENCRYPTION_MASTER_KEY=your-base64-32-byte-key
       # See Environment Variables section below
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_started
 
   db:
     image: postgres:16-alpine
@@ -64,6 +71,10 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --appendonly yes
 
 volumes:
   pgdata:
@@ -111,13 +122,9 @@ AWS_ACCESS_KEY_ID=your-key
 AWS_SECRET_ACCESS_KEY=your-secret
 AWS_S3_BUCKET=castmill-media
 AWS_REGION=eu-north-1
-
-# For Cloudflare R2 or MinIO, also set:
-AWS_S3_HOST=your-endpoint.r2.cloudflarestorage.com  # R2
-# AWS_S3_HOST=localhost                              # MinIO
-# AWS_S3_PORT=9000                                   # MinIO
-# AWS_S3_SCHEME=http://                              # MinIO (no TLS)
 ```
+
+For MinIO/R2 custom endpoints, update the ExAws S3 endpoint settings in Castmill server config (`config/runtime.exs` and `config/config.exs`).
 
 ## Email Configuration
 
@@ -128,7 +135,7 @@ Castmill requires email for signup verification, invitations, and credential rec
 ```bash
 MAILGUN_API_KEY=your-api-key
 MAILGUN_DOMAIN=mail.your-domain.com
-MAIL_FROM=noreply@your-domain.com
+MAILER_FROM=noreply@your-domain.com
 ```
 
 ### SMTP (Generic)
@@ -138,37 +145,40 @@ SMTP_HOST=smtp.your-provider.com
 SMTP_PORT=587
 SMTP_USERNAME=your-username
 SMTP_PASSWORD=your-password
-MAIL_FROM=noreply@your-domain.com
+MAILER_FROM=noreply@your-domain.com
 ```
 
 ## Environment Variables Reference
 
-| Variable                | Required | Default     | Description                            |
-| ----------------------- | -------- | ----------- | -------------------------------------- |
-| `DATABASE_URL`          | Yes      | —           | PostgreSQL connection string           |
-| `SECRET_KEY_BASE`       | Yes      | —           | Phoenix secret (min 64 chars)          |
-| `PHX_HOST`              | Yes      | `localhost` | Public hostname                        |
-| `PORT`                  | No       | `4000`      | HTTP port                              |
-| `POOL_SIZE`             | No       | `10`        | Database connection pool size          |
-| `AWS_ACCESS_KEY_ID`     | Yes      | —           | S3 access key                          |
-| `AWS_SECRET_ACCESS_KEY` | Yes      | —           | S3 secret key                          |
-| `AWS_S3_BUCKET`         | Yes      | —           | S3 bucket name                         |
-| `AWS_REGION`            | No       | `us-east-1` | S3 region                              |
-| `AWS_S3_HOST`           | No       | —           | Custom S3 endpoint (R2/MinIO)          |
-| `MAILGUN_API_KEY`       | Cond.    | —           | Mailgun API key                        |
-| `MAILGUN_DOMAIN`        | Cond.    | —           | Mailgun sending domain                 |
-| `MAIL_FROM`             | Yes      | —           | Sender email address                   |
-| `REDIS_URL`             | No       | —           | Redis connection (for background jobs) |
+| Variable                | Required | Default        | Description                       |
+| ----------------------- | -------- | -------------- | --------------------------------- |
+| `DATABASE_URL`          | Yes      | —              | PostgreSQL connection string      |
+| `SECRET_KEY_BASE`       | Yes      | —              | Phoenix secret (min 64 chars)     |
+| `CASTMILL_HOST`         | Yes      | `localhost`    | Public hostname                   |
+| `CASTMILL_SCHEME`       | No       | `http`         | Public URL scheme                 |
+| `CASTMILL_PORT`         | No       | `4000`         | Public URL port                   |
+| `PORT`                  | No       | `4000`         | Bound HTTP listen port            |
+| `POOL_SIZE`             | No       | `10`           | Database connection pool size     |
+| `ENCRYPTION_MASTER_KEY` | Yes      | —              | Encryption key for sensitive data |
+| `AWS_ACCESS_KEY_ID`     | Yes      | —              | S3 access key                     |
+| `AWS_SECRET_ACCESS_KEY` | Yes      | —              | S3 secret key                     |
+| `AWS_S3_BUCKET`         | Yes      | —              | S3 bucket name                    |
+| `AWS_REGION`            | No       | `eu-central-1` | S3 region                         |
+| `MAILGUN_API_KEY`       | Cond.    | —              | Mailgun API key                   |
+| `MAILGUN_DOMAIN`        | Cond.    | —              | Mailgun sending domain            |
+| `MAILER_FROM`           | No       | app default    | Sender email address              |
+| `REDIS_HOST`            | No       | `localhost`    | Redis host                        |
+| `REDIS_PORT`            | No       | `6379`         | Redis port                        |
 
 ## Database Setup
 
 On first run, Castmill automatically runs migrations. To run them manually:
 
 ```bash
-# Inside the Docker container
-/app/bin/castmill_saas eval "CastmillSaas.Release.migrate()"
+# Inside the Docker container (release image)
+/app/bin/migrate
 
-# Or for the OSS version
+# Or when running from source
 mix ecto.migrate
 ```
 
