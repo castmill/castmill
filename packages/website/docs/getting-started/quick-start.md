@@ -96,7 +96,9 @@ A **network** is the top-level container in Castmill. Each network is tied to a 
 
 1. In the admin tool, go to **Networks**
 2. Click **Create Network**
-3. Enter a name and domain (for localhost testing, use `localhost:3000` so it matches the dashboard origin and avoids CORS errors)
+3. Enter a name and domain. For localhost testing, set the **Domain** field to `localhost:3000` (host + port).
+   This ensures it matches the dashboard origin `http://localhost:3000` used by CORS checks.
+   In production, use your public domain (for example, `signage.example.com`).
 4. Save
 
 ## 6. Access the Dashboard

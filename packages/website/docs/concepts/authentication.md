@@ -58,6 +58,8 @@ sequenceDiagram
     B->>B: Store token in localStorage
 ```
 
+`GET /sessions/challenges` only fetches a one-time challenge and challenge token. Credentials are sent later in `POST /sessions` after the passkey signs the challenge.
+
 1. User clicks **Login with Passkey**
 2. Server generates a cryptographic challenge
 3. Browser signs the challenge using the stored passkey

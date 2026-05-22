@@ -124,7 +124,24 @@ AWS_S3_BUCKET=castmill-media
 AWS_REGION=eu-north-1
 ```
 
-For MinIO/R2 custom endpoints, update the ExAws S3 endpoint settings in Castmill server config (`config/runtime.exs` and `config/config.exs`).
+For MinIO/R2 custom endpoints, update ExAws S3 settings (`scheme`, `host`, `port`):
+
+- Use `config/runtime.exs` for Docker/release deployments (production runtime values)
+- Use `config/config.exs` (or env-specific config) for local/source-based setups
+
+Example:
+
+```elixir
+config :ex_aws, :s3,
+  scheme: "http://",
+  host: "localhost",
+  port: 9000
+
+# Example production R2 endpoint:
+# scheme: "https://"
+# host: "account-id.r2.cloudflarestorage.com"
+# port: 443
+```
 
 ## Email Configuration
 
@@ -150,25 +167,25 @@ MAILER_FROM=noreply@your-domain.com
 
 ## Environment Variables Reference
 
-| Variable                | Required | Default        | Description                       |
-| ----------------------- | -------- | -------------- | --------------------------------- |
-| `DATABASE_URL`          | Yes      | —              | PostgreSQL connection string      |
-| `SECRET_KEY_BASE`       | Yes      | —              | Phoenix secret (min 64 chars)     |
-| `CASTMILL_HOST`         | Yes      | `localhost`    | Public hostname                   |
-| `CASTMILL_SCHEME`       | No       | `http`         | Public URL scheme                 |
-| `CASTMILL_PORT`         | No       | `4000`         | Public URL port                   |
-| `PORT`                  | No       | `4000`         | Bound HTTP listen port            |
-| `POOL_SIZE`             | No       | `10`           | Database connection pool size     |
-| `ENCRYPTION_MASTER_KEY` | Yes      | —              | Encryption key for sensitive data |
-| `AWS_ACCESS_KEY_ID`     | Yes      | —              | S3 access key                     |
-| `AWS_SECRET_ACCESS_KEY` | Yes      | —              | S3 secret key                     |
-| `AWS_S3_BUCKET`         | Yes      | —              | S3 bucket name                    |
-| `AWS_REGION`            | No       | `eu-central-1` | S3 region                         |
-| `MAILGUN_API_KEY`       | Cond.    | —              | Mailgun API key                   |
-| `MAILGUN_DOMAIN`        | Cond.    | —              | Mailgun sending domain            |
-| `MAILER_FROM`           | No       | app default    | Sender email address              |
-| `REDIS_HOST`            | No       | `localhost`    | Redis host                        |
-| `REDIS_PORT`            | No       | `6379`         | Redis port                        |
+| Variable                | Required | Default                 | Description                       |
+| ----------------------- | -------- | ----------------------- | --------------------------------- |
+| `DATABASE_URL`          | Yes      | —                       | PostgreSQL connection string      |
+| `SECRET_KEY_BASE`       | Yes      | —                       | Phoenix secret (min 64 chars)     |
+| `CASTMILL_HOST`         | Yes      | `localhost`             | Public hostname                   |
+| `CASTMILL_SCHEME`       | No       | `http`                  | Public URL scheme                 |
+| `CASTMILL_PORT`         | No       | `4000`                  | Public URL port                   |
+| `PORT`                  | No       | `4000`                  | Bound HTTP listen port            |
+| `POOL_SIZE`             | No       | `10`                    | Database connection pool size     |
+| `ENCRYPTION_MASTER_KEY` | Yes      | —                       | Encryption key for sensitive data |
+| `AWS_ACCESS_KEY_ID`     | Yes      | —                       | S3 access key                     |
+| `AWS_SECRET_ACCESS_KEY` | Yes      | —                       | S3 secret key                     |
+| `AWS_S3_BUCKET`         | Yes      | —                       | S3 bucket name                    |
+| `AWS_REGION`            | No       | `eu-central-1`          | S3 region                         |
+| `MAILGUN_API_KEY`       | Cond.    | —                       | Mailgun API key                   |
+| `MAILGUN_DOMAIN`        | Cond.    | —                       | Mailgun sending domain            |
+| `MAILER_FROM`           | No       | `no-reply@castmill.com` | Sender email address              |
+| `REDIS_HOST`            | No       | `localhost`             | Redis host                        |
+| `REDIS_PORT`            | No       | `6379`                  | Redis port                        |
 
 ## Database Setup
 
