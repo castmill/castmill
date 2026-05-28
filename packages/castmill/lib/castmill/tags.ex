@@ -396,8 +396,14 @@ defmodule Castmill.Tags do
       when is_integer(tag_group_id) do
     id_field = Keyword.get(opts, :id_field, :id)
 
+    query =
+      if has_named_binding?(query, :resource) do
+        query
+      else
+        from(q in query, as: :resource)
+      end
+
     from(q in query,
-      as: :resource,
       where:
         not exists(
           from(rt in ResourceTag,

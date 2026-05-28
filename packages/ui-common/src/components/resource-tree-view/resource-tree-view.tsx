@@ -554,7 +554,7 @@ export const ResourceTreeView: Component<ResourceTreeViewProps> = (props) => {
                     when={items.length > 0}
                     fallback={
                       <div class="tree-empty-leaf">
-                        {props.untaggedLabel || 'No items'}
+                        No items
                       </div>
                     }
                   >
