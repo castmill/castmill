@@ -524,7 +524,8 @@
       "editGroup": "Editar grupo",
       "deleteGroup": "Eliminar grupo",
       "noGroups": "Sin grupos de etiquetas",
-      "ungrouped": "Sin agrupar"
+      "ungrouped": "Sin agrupar",
+      "untagged": "Sin etiqueta"
     },
     "messages": {
       "tagCreated": "Etiqueta \"{{name}}\" creada exitosamente",

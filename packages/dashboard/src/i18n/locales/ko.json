@@ -523,7 +523,8 @@
       "editGroup": "그룹 편집",
       "deleteGroup": "그룹 삭제",
       "noGroups": "태그 그룹 없음",
-      "ungrouped": "그룹 없음"
+      "ungrouped": "그룹 없음",
+      "untagged": "태그 없음"
     },
     "messages": {
       "tagCreated": "태그 \"{{name}}\"이(가) 성공적으로 생성되었습니다",

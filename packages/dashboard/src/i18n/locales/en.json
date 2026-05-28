@@ -550,7 +550,8 @@
       "editGroup": "Edit Group",
       "deleteGroup": "Delete Group",
       "noGroups": "No tag groups",
-      "ungrouped": "Ungrouped"
+      "ungrouped": "Ungrouped",
+      "untagged": "Untagged"
     },
     "messages": {
       "tagCreated": "Tag \"{{name}}\" created successfully",

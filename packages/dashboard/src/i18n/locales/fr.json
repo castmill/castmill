@@ -523,7 +523,8 @@
       "editGroup": "Modifier le groupe",
       "deleteGroup": "Supprimer le groupe",
       "noGroups": "Aucun groupe d'étiquettes",
-      "ungrouped": "Non groupé"
+      "ungrouped": "Non groupé",
+      "untagged": "Non étiqueté"
     },
     "messages": {
       "tagCreated": "Étiquette \"{{name}}\" créée avec succès",

@@ -1153,7 +1153,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
           fetchResources={fetchTreeResources}
           fetchUntaggedResources={fetchTreeUntaggedResources}
           fetchUntaggedCount={fetchTreeUntaggedCount}
-          untaggedLabel={t('tags.groups.ungrouped')}
+          untaggedLabel={t('tags.groups.untagged')}
           emptyLeafText={t('filters.noItems')}
           refreshKey={treeVersion()}
           storageKey="medias"

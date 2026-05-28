@@ -518,7 +518,8 @@
       "editGroup": "Redigera grupp",
       "deleteGroup": "Ta bort grupp",
       "noGroups": "Inga taggrupper",
-      "ungrouped": "Ogrupperad"
+      "ungrouped": "Ogrupperad",
+      "untagged": "Omärkt"
     },
     "messages": {
       "tagCreated": "Taggen \"{{name}}\" skapades framgångsrikt",

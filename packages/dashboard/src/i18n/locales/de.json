@@ -537,7 +537,8 @@
       "editGroup": "Gruppe bearbeiten",
       "deleteGroup": "Gruppe löschen",
       "noGroups": "Keine Tag-Gruppen",
-      "ungrouped": "Nicht gruppiert"
+      "ungrouped": "Nicht gruppiert",
+      "untagged": "Ohne Tag"
     },
     "messages": {
       "tagCreated": "Tag \"{{name}}\" erfolgreich erstellt",
