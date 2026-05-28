@@ -346,7 +346,10 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
     };
   };
 
-  const fetchTreeUntaggedResources = async (tagGroupId: number) => {
+  const fetchTreeUntaggedResources = async (
+    tagGroupId: number,
+    parentTagIds?: number[]
+  ) => {
     const result = await MediasService.fetchMedias(
       props.store.env.baseUrl,
       props.store.organizations.selectedId,
@@ -356,6 +359,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
         sortOptions: { key: 'name', direction: 'ascending' },
         tag_filter_mode: 'all',
         missing_tag_group_id: tagGroupId,
+        tag_ids: parentTagIds,
         team_id: selectedTeamId(),
       }
     );
@@ -369,7 +373,10 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
     };
   };
 
-  const fetchTreeUntaggedCount = async (tagGroupId: number) => {
+  const fetchTreeUntaggedCount = async (
+    tagGroupId: number,
+    parentTagIds?: number[]
+  ) => {
     const result = await MediasService.fetchMedias(
       props.store.env.baseUrl,
       props.store.organizations.selectedId,
@@ -379,6 +386,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
         sortOptions: { key: 'name', direction: 'ascending' },
         tag_filter_mode: 'all',
         missing_tag_group_id: tagGroupId,
+        tag_ids: parentTagIds,
         team_id: selectedTeamId(),
       }
     );
@@ -1146,6 +1154,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
           fetchUntaggedResources={fetchTreeUntaggedResources}
           fetchUntaggedCount={fetchTreeUntaggedCount}
           untaggedLabel={t('tags.groups.ungrouped')}
+          emptyLeafText={t('filters.noItems')}
           refreshKey={treeVersion()}
           storageKey="medias"
           onResourceClick={(item) =>
