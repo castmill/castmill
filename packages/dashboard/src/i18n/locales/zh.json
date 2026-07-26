@@ -926,7 +926,19 @@
       "settings": "设置",
       "templatePlaceholder": "在此粘贴或输入 Widget 模板 JSON...",
       "optionsSchemaPlaceholder": "选项模式 JSON（定义可配置选项）...",
-      "dataSchemaPlaceholder": "数据模式 JSON（定义此 Widget 期望的数据结构）..."
+      "dataSchemaPlaceholder": "数据模式 JSON（定义此 Widget 期望的数据结构）...",
+      "componentTree": "树形结构",
+      "schemas": "模式",
+      "components": "组件",
+      "selectComponent": "选择一个组件来编辑其属性",
+      "visualMode": "可视化编辑器",
+      "visual": "可视化",
+      "codeMode": "代码编辑器",
+      "code": "代码",
+      "undo": "撤销",
+      "redo": "重做",
+      "templateJson": "模板 JSON",
+      "applyCode": "应用"
     }
   },
   "devices": {

@@ -926,7 +926,19 @@
       "settings": "الإعدادات",
       "templatePlaceholder": "الصق أو اكتب JSON الخاص بقالب الودجت هنا...",
       "optionsSchemaPlaceholder": "JSON لمخطط الخيارات (يحدد الخيارات القابلة للتهيئة)...",
-      "dataSchemaPlaceholder": "JSON لمخطط البيانات (يحدد شكل البيانات المتوقعة من هذا الودجت)..."
+      "dataSchemaPlaceholder": "JSON لمخطط البيانات (يحدد شكل البيانات المتوقعة من هذا الودجت)...",
+      "componentTree": "الشجرة",
+      "schemas": "المخططات",
+      "components": "المكونات",
+      "selectComponent": "اختر مكونًا لتعديل خصائصه",
+      "visualMode": "المحرر المرئي",
+      "visual": "مرئي",
+      "codeMode": "محرر الكود",
+      "code": "كود",
+      "undo": "تراجع",
+      "redo": "إعادة",
+      "templateJson": "JSON القالب",
+      "applyCode": "تطبيق"
     }
   },
   "devices": {

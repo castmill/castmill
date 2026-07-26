@@ -921,7 +921,19 @@
       "settings": "Inställningar",
       "templatePlaceholder": "Klistra in eller skriv widget-mallens JSON här...",
       "optionsSchemaPlaceholder": "JSON för optionsschema (definierar konfigurerbara alternativ)...",
-      "dataSchemaPlaceholder": "JSON för dataschema (definierar den dataform som widgeten förväntar sig)..."
+      "dataSchemaPlaceholder": "JSON för dataschema (definierar den dataform som widgeten förväntar sig)...",
+      "componentTree": "Träd",
+      "schemas": "Scheman",
+      "components": "Komponenter",
+      "selectComponent": "Välj en komponent för att redigera dess egenskaper",
+      "visualMode": "Visuell redigerare",
+      "visual": "Visuell",
+      "codeMode": "Kodredigerare",
+      "code": "Kod",
+      "undo": "Ångra",
+      "redo": "Gör om",
+      "templateJson": "Mall-JSON",
+      "applyCode": "Tillämpa"
     }
   },
   "devices": {

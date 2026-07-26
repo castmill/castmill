@@ -938,7 +938,19 @@
       "settings": "Paramètres",
       "templatePlaceholder": "Collez ou saisissez le JSON du template du widget ici...",
       "optionsSchemaPlaceholder": "JSON du schéma d'options (définit les options configurables)...",
-      "dataSchemaPlaceholder": "JSON du schéma de données (définit la structure des données attendues par ce widget)..."
+      "dataSchemaPlaceholder": "JSON du schéma de données (définit la structure des données attendues par ce widget)...",
+      "componentTree": "Arbre",
+      "schemas": "Schémas",
+      "components": "Composants",
+      "selectComponent": "Sélectionnez un composant pour modifier ses propriétés",
+      "visualMode": "Éditeur visuel",
+      "visual": "Visuel",
+      "codeMode": "Éditeur de code",
+      "code": "Code",
+      "undo": "Annuler",
+      "redo": "Rétablir",
+      "templateJson": "JSON du template",
+      "applyCode": "Appliquer"
     }
   },
   "devices": {

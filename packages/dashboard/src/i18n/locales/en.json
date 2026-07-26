@@ -958,7 +958,19 @@
       "settings": "Settings",
       "templatePlaceholder": "Paste or type the widget template JSON here...",
       "optionsSchemaPlaceholder": "Options schema JSON (defines configurable options)...",
-      "dataSchemaPlaceholder": "Data schema JSON (defines the data shape expected by this widget)..."
+      "dataSchemaPlaceholder": "Data schema JSON (defines the data shape expected by this widget)...",
+      "componentTree": "Tree",
+      "schemas": "Schemas",
+      "components": "Components",
+      "selectComponent": "Select a component to edit its properties",
+      "visualMode": "Visual editor",
+      "visual": "Visual",
+      "codeMode": "Code editor",
+      "code": "Code",
+      "undo": "Undo",
+      "redo": "Redo",
+      "templateJson": "Template JSON",
+      "applyCode": "Apply"
     }
   },
   "devices": {

@@ -927,7 +927,19 @@
       "settings": "設定",
       "templatePlaceholder": "ウィジェットテンプレートのJSONをここに貼り付けるか入力してください...",
       "optionsSchemaPlaceholder": "オプションスキーマJSON（設定可能なオプションを定義）...",
-      "dataSchemaPlaceholder": "データスキーマJSON（このウィジェットが期待するデータ形状を定義）..."
+      "dataSchemaPlaceholder": "データスキーマJSON（このウィジェットが期待するデータ形状を定義）...",
+      "componentTree": "ツリー",
+      "schemas": "スキーマ",
+      "components": "コンポーネント",
+      "selectComponent": "コンポーネントを選択してプロパティを編集",
+      "visualMode": "ビジュアルエディター",
+      "visual": "ビジュアル",
+      "codeMode": "コードエディター",
+      "code": "コード",
+      "undo": "元に戻す",
+      "redo": "やり直し",
+      "templateJson": "テンプレートJSON",
+      "applyCode": "適用"
     }
   },
   "devices": {

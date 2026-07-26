@@ -2,23 +2,49 @@ import {
   Component,
   createSignal,
   createMemo,
+  createEffect,
   Show,
   For,
+  batch,
+  onCleanup,
 } from 'solid-js';
-import {
-  Button,
-  useToast,
-} from '@castmill/ui-common';
+import { Button, useToast } from '@castmill/ui-common';
 import {
   BsX,
   BsUpload,
   BsExclamationTriangle,
+  BsCode,
+  BsEye,
+  BsArrowCounterclockwise,
+  BsArrowClockwise,
 } from 'solid-icons/bs';
 import { AiOutlineSave } from 'solid-icons/ai';
 import { JsonWidget, JsonWidgetConfig, OptionsDict } from '@castmill/player';
 import { WidgetView } from '../../playlists/components/widget-view';
-import { WidgetsService, WidgetCreateFromJson, WidgetFullUpdate } from '../services/widgets.service';
+import {
+  WidgetsService,
+  WidgetCreateFromJson,
+  WidgetFullUpdate,
+} from '../services/widgets.service';
 import { AddonStore } from '../../common/interfaces/addon-store';
+
+import {
+  TemplateNode,
+  fromJson,
+  toJson,
+  createDefaultNode,
+  findNode,
+  replaceNode,
+  removeNode,
+  insertChild,
+  moveNode,
+  cloneNode,
+  canHaveChildren,
+} from './editor/template-model';
+import { ComponentTree } from './editor/component-tree';
+import { PropertyInspector } from './editor/property-inspector';
+import { ComponentPalette } from './editor/component-palette';
+import { SchemaEditor } from './editor/schema-editor';
 
 import './widget-editor.scss';
 
@@ -52,7 +78,9 @@ function saveFixtureLibrary(lib: Record<string, WidgetFixture>): void {
 
 type WidgetWithId = JsonWidget & { id: number; slug: string };
 
-type EditorTab = 'template' | 'options_schema' | 'data_schema' | 'fixture' | 'settings';
+type EditorMode = 'visual' | 'code';
+type LeftTab = 'tree' | 'schemas' | 'fixture' | 'settings';
+type SchemaTab = 'options_schema' | 'data_schema';
 
 export interface WidgetEditorProps {
   store: AddonStore;
@@ -82,9 +110,9 @@ function prettyJson(value: any): string {
   return JSON.stringify(value, null, 2);
 }
 
-const DEFAULT_TEMPLATE = prettyJson({
+const DEFAULT_TEMPLATE: Record<string, any> = {
   type: 'group',
-  name: 'my-widget',
+  name: 'root',
   opts: {
     style: {
       width: '100%',
@@ -106,28 +134,59 @@ const DEFAULT_TEMPLATE = prettyJson({
           color: '#ffffff',
           'font-size': '2em',
           'font-weight': 'bold',
+          width: 'auto',
+          height: 'auto',
         },
       },
     },
   ],
-});
+};
 
-const DEFAULT_OPTIONS_SCHEMA = prettyJson({
+const DEFAULT_OPTIONS_SCHEMA = {
   headline: {
     type: 'string',
     default: 'Hello World',
     description: 'Main headline text',
   },
-});
+};
 
-const DEFAULT_DATA_SCHEMA = prettyJson({});
+const DEFAULT_DATA_SCHEMA = {};
 
-const DEFAULT_FIXTURE = prettyJson({
-  options: {
-    headline: 'Hello World',
-  },
+const DEFAULT_FIXTURE_OBJ = {
+  options: { headline: 'Hello World' },
   data: {},
-});
+};
+
+// ─── Undo/Redo stack ────────────────────────────────────────────────────────
+
+const MAX_UNDO = 50;
+
+function createUndoStack<T>(initial: T) {
+  const [stack, setStack] = createSignal<T[]>([initial]);
+  const [index, setIndex] = createSignal(0);
+
+  const current = () => stack()[index()];
+  const canUndo = () => index() > 0;
+  const canRedo = () => index() < stack().length - 1;
+
+  const push = (val: T) => {
+    const newStack = stack().slice(0, index() + 1);
+    newStack.push(val);
+    if (newStack.length > MAX_UNDO) newStack.shift();
+    setStack(newStack);
+    setIndex(newStack.length - 1);
+  };
+
+  const undo = () => {
+    if (canUndo()) setIndex(index() - 1);
+  };
+
+  const redo = () => {
+    if (canRedo()) setIndex(index() + 1);
+  };
+
+  return { current, push, undo, redo, canUndo, canRedo };
+}
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
@@ -140,100 +199,197 @@ export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
 
   // ── Metadata fields ─────────────────────────────────────────────────────
   const [name, setName] = createSignal(props.widget?.name || '');
-  const [description, setDescription] = createSignal(props.widget?.description || '');
-  const [aspectRatio, setAspectRatio] = createSignal(props.widget?.aspect_ratio || '16:9');
+  const [description, setDescription] = createSignal(
+    props.widget?.description || ''
+  );
+  const [aspectRatio, setAspectRatio] = createSignal(
+    props.widget?.aspect_ratio || '16:9'
+  );
   const [updateInterval, setUpdateInterval] = createSignal(
     String(props.widget?.update_interval_seconds || 60)
   );
 
-  // ── JSON editor content ─────────────────────────────────────────────────
-  const [templateJson, setTemplateJson] = createSignal(
-    prettyJson(props.widget?.template) || DEFAULT_TEMPLATE
+  // ── Template tree (visual mode) ────────────────────────────────────────
+  const initialTemplate = props.widget?.template
+    ? fromJson(props.widget.template as any)
+    : fromJson(DEFAULT_TEMPLATE);
+
+  const undoStack = createUndoStack<TemplateNode>(initialTemplate);
+  const templateTree = () => undoStack.current();
+
+  const updateTree = (newRoot: TemplateNode) => {
+    undoStack.push(newRoot);
+  };
+
+  // ── Template JSON (code mode) ──────────────────────────────────────────
+  const [codeJson, setCodeJson] = createSignal(
+    prettyJson(toJson(initialTemplate))
   );
-  const [optionsSchemaJson, setOptionsSchemaJson] = createSignal(
-    prettyJson(props.widget?.options_schema) || DEFAULT_OPTIONS_SCHEMA
+  const [codeError, setCodeError] = createSignal<string | null>(null);
+
+  // ── Schemas ─────────────────────────────────────────────────────────────
+  const [optionsSchema, setOptionsSchema] = createSignal<Record<string, any>>(
+    props.widget?.options_schema || DEFAULT_OPTIONS_SCHEMA
   );
-  const [dataSchemaJson, setDataSchemaJson] = createSignal(
-    prettyJson(props.widget?.data_schema) || DEFAULT_DATA_SCHEMA
+  const [dataSchema, setDataSchema] = createSignal<Record<string, any>>(
+    props.widget?.data_schema || DEFAULT_DATA_SCHEMA
   );
 
   // ── Fixture ─────────────────────────────────────────────────────────────
-  const [fixtureJson, setFixtureJson] = createSignal(DEFAULT_FIXTURE);
-  const [fixtureName, setFixtureName] = createSignal('');
-  const [fixtureLibrary, setFixtureLibrary] = createSignal<Record<string, WidgetFixture>>(
-    loadFixtureLibrary()
+  const [fixtureJson, setFixtureJson] = createSignal(
+    prettyJson(DEFAULT_FIXTURE_OBJ)
   );
+  const [fixtureName, setFixtureName] = createSignal('');
+  const [fixtureLibrary, setFixtureLibrary] =
+    createSignal<Record<string, WidgetFixture>>(loadFixtureLibrary());
 
   // ── UI state ────────────────────────────────────────────────────────────
-  const [activeTab, setActiveTab] = createSignal<EditorTab>('template');
+  const [editorMode, setEditorMode] = createSignal<EditorMode>('visual');
+  const [leftTab, setLeftTab] = createSignal<LeftTab>('tree');
+  const [schemaTab, setSchemaTab] = createSignal<SchemaTab>('options_schema');
+  const [selectedNodeId, setSelectedNodeId] = createSignal<string | null>(
+    initialTemplate._id
+  );
   const [isSaving, setIsSaving] = createSignal(false);
-  // Used to force the preview panel to remount WidgetView
   const [showPreview, setShowPreview] = createSignal(true);
 
   const refreshPreview = () => {
     setShowPreview(false);
-    // Allow one tick for cleanup, then remount
     setTimeout(() => setShowPreview(true), 50);
   };
 
-  // ── Derived: parsed JSON ─────────────────────────────────────────────────
-  const templateParsed = createMemo(() => {
-    const [ok, val] = tryParseJson(templateJson());
-    return ok ? val : null;
+  // Sync code editor when switching modes
+  createEffect(() => {
+    if (editorMode() === 'code') {
+      setCodeJson(prettyJson(toJson(templateTree())));
+      setCodeError(null);
+    }
   });
-  const optionsSchemaParsed = createMemo(() => {
-    const [ok, val] = tryParseJson(optionsSchemaJson());
-    return ok ? val : undefined;
+
+  const applyCodeToTree = () => {
+    const [ok, val] = tryParseJson(codeJson());
+    if (!ok) {
+      setCodeError(val as string);
+      return false;
+    }
+    if (val) {
+      const newTree = fromJson(val);
+      updateTree(newTree);
+      setSelectedNodeId(newTree._id);
+      setCodeError(null);
+    }
+    return true;
+  };
+
+  const switchToVisual = () => {
+    if (editorMode() === 'code') {
+      if (applyCodeToTree()) {
+        setEditorMode('visual');
+      }
+    }
+  };
+
+  // ── Selected node ─────────────────────────────────────────────────────
+  const selectedNode = createMemo(() => {
+    const id = selectedNodeId();
+    if (!id) return null;
+    return findNode(templateTree(), id);
   });
-  const dataSchemaParsed = createMemo(() => {
-    const [ok, val] = tryParseJson(dataSchemaJson());
-    return ok ? val : undefined;
-  });
+
+  // ── Tree operations ───────────────────────────────────────────────────
+  const handleNodeChange = (updated: TemplateNode) => {
+    updateTree(replaceNode(templateTree(), updated._id, updated));
+  };
+
+  const handleDeleteNode = (id: string) => {
+    if (id === templateTree()._id) return; // Can't delete root
+    const newRoot = removeNode(templateTree(), id);
+    if (newRoot) {
+      updateTree(newRoot);
+      if (selectedNodeId() === id) setSelectedNodeId(templateTree()._id);
+    }
+  };
+
+  const handleDuplicateNode = (id: string) => {
+    if (id === templateTree()._id) return;
+    const node = findNode(templateTree(), id);
+    if (!node) return;
+    const clone = cloneNode(node);
+    clone.name = `${node.name}-copy`;
+    // Find parent and insert after
+    const findParentOf = (
+      root: TemplateNode,
+      targetId: string
+    ): [TemplateNode, number] | null => {
+      if (root.children) {
+        for (let i = 0; i < root.children.length; i++) {
+          if (root.children[i]._id === targetId) return [root, i];
+          const found = findParentOf(root.children[i], targetId);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+    const result = findParentOf(templateTree(), id);
+    if (result) {
+      const [parent, idx] = result;
+      updateTree(insertChild(templateTree(), parent._id, clone, idx + 1));
+      setSelectedNodeId(clone._id);
+    }
+  };
+
+  const handleMoveNode = (
+    nodeId: string,
+    newParentId: string,
+    index: number
+  ) => {
+    // Prevent moving a node into itself or its descendants
+    const node = findNode(templateTree(), nodeId);
+    if (!node) return;
+    if (findNode(node, newParentId)) return; // Would create cycle
+    updateTree(moveNode(templateTree(), nodeId, newParentId, index));
+  };
+
+  const handleAddComponent = (newNode: TemplateNode) => {
+    // Add to selected node if it's a container, otherwise to root
+    const sel = selectedNode();
+    const targetId =
+      sel && canHaveChildren(sel.type) ? sel._id : templateTree()._id;
+    updateTree(
+      insertChild(
+        templateTree(),
+        targetId,
+        newNode,
+        findNode(templateTree(), targetId)?.children?.length || 0
+      )
+    );
+    setSelectedNodeId(newNode._id);
+  };
+
+  // ── Derived: schemas (direct from signals) ────────────────────────────
+  const optionsSchemaParsed = () => optionsSchema();
+  const dataSchemaParsed = () => dataSchema();
   const fixtureParsed = createMemo(() => {
     const [ok, val] = tryParseJson(fixtureJson());
     if (!ok || !val) return { data: {}, options: {} };
-    return {
-      data: val.data || {},
-      options: val.options || {},
-    };
-  });
-
-  // ── Derived: per-tab validation errors ──────────────────────────────────
-  const templateError = createMemo(() => {
-    const [ok, err] = tryParseJson(templateJson());
-    return ok ? null : String(err);
-  });
-  const optionsSchemaError = createMemo(() => {
-    const [ok, err] = tryParseJson(optionsSchemaJson());
-    return ok ? null : String(err);
-  });
-  const dataSchemaError = createMemo(() => {
-    const [ok, err] = tryParseJson(dataSchemaJson());
-    return ok ? null : String(err);
+    return { data: val.data || {}, options: val.options || {} };
   });
   const fixtureError = createMemo(() => {
     const [ok, err] = tryParseJson(fixtureJson());
     return ok ? null : String(err);
   });
 
-  const hasErrors = createMemo(
-    () =>
-      !!templateError() ||
-      !!optionsSchemaError() ||
-      !!dataSchemaError() ||
-      !name().trim()
-  );
+  const hasErrors = createMemo(() => !name().trim());
 
-  // ── Preview widget derived from editor state ─────────────────────────────
+  // ── Preview widget ────────────────────────────────────────────────────
   const previewWidget = createMemo<JsonWidget | null>(() => {
-    const template = templateParsed();
-    if (!template) return null;
+    const template = toJson(templateTree());
     return {
       id: props.widget?.id,
       name: name() || 'Preview',
       description: description(),
       slug: props.widget?.slug || 'preview',
-      template,
+      template: template as any,
       options_schema: optionsSchemaParsed(),
       data_schema: dataSchemaParsed(),
       update_interval_seconds: Number(updateInterval()) || 60,
@@ -252,37 +408,56 @@ export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
     };
   });
 
-  const previewOptions = createMemo<OptionsDict>(() => fixtureParsed().options as OptionsDict);
+  const previewOptions = createMemo<OptionsDict>(
+    () => fixtureParsed().options as OptionsDict
+  );
 
   // ── Fixture helpers ──────────────────────────────────────────────────────
   const saveFixture = () => {
     const n = fixtureName().trim();
     if (!n) {
-      toast.show({ message: t('widgets.editor.fixtureNameRequired'), type: 'error', duration: 3000 });
+      toast.show({
+        message: t('widgets.editor.fixtureNameRequired'),
+        type: 'error',
+        duration: 3000,
+      });
       return;
     }
     const [ok, val] = tryParseJson(fixtureJson());
     if (!ok) {
-      toast.show({ message: t('widgets.editor.invalidJson'), type: 'error', duration: 3000 });
+      toast.show({
+        message: t('widgets.editor.invalidJson'),
+        type: 'error',
+        duration: 3000,
+      });
       return;
     }
-    const lib = { ...fixtureLibrary(), [n]: { data: val?.data || {}, options: val?.options || {} } };
+    const lib = {
+      ...fixtureLibrary(),
+      [n]: { data: val?.data || {}, options: val?.options || {} },
+    };
     setFixtureLibrary(lib);
     saveFixtureLibrary(lib);
-    toast.show({ message: t('widgets.editor.fixtureSaved'), type: 'success', duration: 2000 });
+    toast.show({
+      message: t('widgets.editor.fixtureSaved'),
+      type: 'success',
+      duration: 2000,
+    });
   };
 
-  const loadFixture = (fixtureName: string) => {
-    const fixture = fixtureLibrary()[fixtureName];
+  const loadFixture = (fname: string) => {
+    const fixture = fixtureLibrary()[fname];
     if (fixture) {
-      setFixtureJson(prettyJson({ data: fixture.data, options: fixture.options }));
+      setFixtureJson(
+        prettyJson({ data: fixture.data, options: fixture.options })
+      );
       refreshPreview();
     }
   };
 
-  const deleteFixture = (fixtureName: string) => {
+  const deleteFixture = (fname: string) => {
     const lib = { ...fixtureLibrary() };
-    delete lib[fixtureName];
+    delete lib[fname];
     setFixtureLibrary(lib);
     saveFixtureLibrary(lib);
   };
@@ -290,13 +465,16 @@ export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
   // ── Save ─────────────────────────────────────────────────────────────────
   const handleSave = async () => {
     if (hasErrors()) return;
-    setIsSaving(true);
 
+    // If in code mode, apply code first
+    if (editorMode() === 'code' && !applyCodeToTree()) return;
+
+    setIsSaving(true);
     try {
       const widgetData = {
         name: name().trim(),
         description: description().trim(),
-        template: templateParsed()!,
+        template: toJson(templateTree()),
         options_schema: optionsSchemaParsed() || {},
         data_schema: dataSchemaParsed() || {},
         aspect_ratio: aspectRatio() || undefined,
@@ -329,7 +507,9 @@ export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
       props.onSave(savedWidget);
     } catch (err: any) {
       toast.show({
-        message: t('widgets.editor.saveError', { error: err.message || String(err) }),
+        message: t('widgets.editor.saveError', {
+          error: err.message || String(err),
+        }),
         type: 'error',
         duration: 5000,
       });
@@ -338,59 +518,129 @@ export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
     }
   };
 
-  // ── Tab list ─────────────────────────────────────────────────────────────
-  const tabs: { key: EditorTab; label: string; hasError: () => boolean }[] = [
-    {
-      key: 'template',
-      label: t('widgets.template'),
-      hasError: () => !!templateError(),
-    },
-    {
-      key: 'options_schema',
-      label: t('widgets.optionsSchema'),
-      hasError: () => !!optionsSchemaError(),
-    },
-    {
-      key: 'data_schema',
-      label: t('widgets.dataSchema'),
-      hasError: () => !!dataSchemaError(),
-    },
-    {
-      key: 'fixture',
-      label: t('widgets.editor.fixture'),
-      hasError: () => !!fixtureError(),
-    },
-    {
-      key: 'settings',
-      label: t('widgets.editor.settings'),
-      hasError: () => false,
-    },
+  // ── Keyboard shortcuts ───────────────────────────────────────────────────
+  const handleKeyDown = (e: KeyboardEvent) => {
+    const mod = e.metaKey || e.ctrlKey;
+    if (mod && e.key === 'z' && !e.shiftKey) {
+      e.preventDefault();
+      undoStack.undo();
+    }
+    if (mod && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+      e.preventDefault();
+      undoStack.redo();
+    }
+    if (mod && e.key === 's') {
+      e.preventDefault();
+      handleSave();
+    }
+    if (e.key === 'Delete' || e.key === 'Backspace') {
+      const sel = selectedNodeId();
+      if (
+        sel &&
+        sel !== templateTree()._id &&
+        document.activeElement?.tagName !== 'INPUT' &&
+        document.activeElement?.tagName !== 'TEXTAREA' &&
+        document.activeElement?.tagName !== 'SELECT'
+      ) {
+        e.preventDefault();
+        handleDeleteNode(sel);
+      }
+    }
+  };
+
+  // Attach / detach keyboard listener
+  if (typeof window !== 'undefined') {
+    window.addEventListener('keydown', handleKeyDown);
+    onCleanup(() => window.removeEventListener('keydown', handleKeyDown));
+  }
+
+  // ── Left tab items ────────────────────────────────────────────────────
+  const leftTabs: { key: LeftTab; label: string }[] = [
+    { key: 'tree', label: t('widgets.editor.componentTree') },
+    { key: 'schemas', label: t('widgets.editor.schemas') },
+    { key: 'fixture', label: t('widgets.editor.fixture') },
+    { key: 'settings', label: t('widgets.editor.settings') },
   ];
 
   // ── Render ───────────────────────────────────────────────────────────────
   return (
-    <div class="widget-editor">
-      {/* Toolbar */}
-      <div class="widget-editor__toolbar">
-        <div class="widget-editor__toolbar-left">
-          <button class="widget-editor__close-btn" onClick={props.onCancel} title={t('common.cancel')}>
+    <div class="we">
+      {/* ═══ Toolbar ═══ */}
+      <div class="we__toolbar">
+        <div class="we__toolbar-left">
+          <button
+            class="we__close-btn"
+            onClick={props.onCancel}
+            title={t('common.cancel')}
+          >
             <BsX size={20} />
           </button>
           <input
-            class={`widget-editor__name-input ${!name().trim() ? 'widget-editor__name-input--error' : ''}`}
+            class={`we__name-input ${!name().trim() ? 'we__name-input--error' : ''}`}
             type="text"
             placeholder={t('widgets.editor.namePlaceholder')}
             value={name()}
             onInput={(e) => setName(e.currentTarget.value)}
           />
           <Show when={!name().trim()}>
-            <span class="widget-editor__inline-error">
+            <span class="we__inline-error">
               {t('widgets.editor.nameRequired')}
             </span>
           </Show>
+
+          {/* Aspect ratio selector */}
+          <select
+            class="we__aspect-select"
+            value={aspectRatio()}
+            onChange={(e) => setAspectRatio(e.currentTarget.value)}
+          >
+            <For each={ASPECT_RATIOS}>
+              {(ratio) => <option value={ratio}>{ratio}</option>}
+            </For>
+          </select>
         </div>
 
-        <div class="widget-editor__toolbar-right">
+        <div class="we__toolbar-center">
+          {/* Mode toggle */}
+          <div class="we__mode-toggle">
+            <button
+              class={`we__mode-btn ${editorMode() === 'visual' ? 'we__mode-btn--active' : ''}`}
+              onClick={() => switchToVisual()}
+              title={t('widgets.editor.visualMode')}
+            >
+              <BsEye size={14} />
+              <span>{t('widgets.editor.visual')}</span>
+            </button>
+            <button
+              class={`we__mode-btn ${editorMode() === 'code' ? 'we__mode-btn--active' : ''}`}
+              onClick={() => setEditorMode('code')}
+              title={t('widgets.editor.codeMode')}
+            >
+              <BsCode size={14} />
+              <span>{t('widgets.editor.code')}</span>
+            </button>
+          </div>
+
+          {/* Undo / Redo */}
+          <button
+            class="we__icon-btn"
+            onClick={() => undoStack.undo()}
+            disabled={!undoStack.canUndo()}
+            title={t('widgets.editor.undo')}
+          >
+            <BsArrowCounterclockwise size={16} />
+          </button>
+          <button
+            class="we__icon-btn"
+            onClick={() => undoStack.redo()}
+            disabled={!undoStack.canRedo()}
+            title={t('widgets.editor.redo')}
+          >
+            <BsArrowClockwise size={16} />
+          </button>
+        </div>
+
+        <div class="we__toolbar-right">
           <Button
             label={t('common.cancel')}
             onClick={props.onCancel}
@@ -398,7 +648,13 @@ export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
             disabled={isSaving()}
           />
           <Button
-            label={isSaving() ? t('common.saving') : (isEditing() ? t('common.save') : t('widgets.editor.createWidget'))}
+            label={
+              isSaving()
+                ? t('common.saving')
+                : isEditing()
+                  ? t('common.save')
+                  : t('widgets.editor.createWidget')
+            }
             onClick={handleSave}
             icon={AiOutlineSave}
             color="primary"
@@ -407,66 +663,81 @@ export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
         </div>
       </div>
 
-      {/* Main body */}
-      <div class="widget-editor__body">
-        {/* Left – editor panel */}
-        <div class="widget-editor__editor-panel">
-          {/* Tab bar */}
-          <div class="widget-editor__tab-bar">
-            <For each={tabs}>
+      {/* ═══ Body ═══ */}
+      <div class="we__body">
+        {/* ─── Left panel ─── */}
+        <div class="we__left-panel">
+          <div class="we__left-tabs">
+            <For each={leftTabs}>
               {(tab) => (
                 <button
-                  class={`widget-editor__tab ${activeTab() === tab.key ? 'widget-editor__tab--active' : ''} ${tab.hasError() ? 'widget-editor__tab--error' : ''}`}
-                  onClick={() => setActiveTab(tab.key)}
+                  class={`we__left-tab ${leftTab() === tab.key ? 'we__left-tab--active' : ''}`}
+                  onClick={() => setLeftTab(tab.key)}
                 >
                   {tab.label}
-                  <Show when={tab.hasError()}>
-                    <BsExclamationTriangle class="widget-editor__tab-error-icon" size={12} />
-                  </Show>
                 </button>
               )}
             </For>
           </div>
 
-          {/* Editor content */}
-          <div class="widget-editor__editor-content">
-            {/* Template */}
-            <Show when={activeTab() === 'template'}>
-              <JsonEditorPane
-                value={templateJson()}
-                onChange={setTemplateJson}
-                error={templateError()}
-                placeholder={t('widgets.editor.templatePlaceholder')}
-              />
+          <div class="we__left-content">
+            {/* Component tree */}
+            <Show when={leftTab() === 'tree'}>
+              <div class="we__tree-section">
+                <ComponentTree
+                  root={templateTree()}
+                  selectedId={selectedNodeId()}
+                  onSelect={setSelectedNodeId}
+                  onMove={handleMoveNode}
+                  onDelete={handleDeleteNode}
+                  onDuplicate={handleDuplicateNode}
+                />
+                <ComponentPalette onAdd={handleAddComponent} t={t} />
+              </div>
             </Show>
 
-            {/* Options Schema */}
-            <Show when={activeTab() === 'options_schema'}>
-              <JsonEditorPane
-                value={optionsSchemaJson()}
-                onChange={setOptionsSchemaJson}
-                error={optionsSchemaError()}
-                placeholder={t('widgets.editor.optionsSchemaPlaceholder')}
-              />
-            </Show>
-
-            {/* Data Schema */}
-            <Show when={activeTab() === 'data_schema'}>
-              <JsonEditorPane
-                value={dataSchemaJson()}
-                onChange={setDataSchemaJson}
-                error={dataSchemaError()}
-                placeholder={t('widgets.editor.dataSchemaPlaceholder')}
-              />
+            {/* Schemas */}
+            <Show when={leftTab() === 'schemas'}>
+              <div class="we__schemas-section">
+                <div class="we__schema-tabs">
+                  <button
+                    class={`we__schema-tab ${schemaTab() === 'options_schema' ? 'we__schema-tab--active' : ''}`}
+                    onClick={() => setSchemaTab('options_schema')}
+                  >
+                    {t('widgets.optionsSchema')}
+                  </button>
+                  <button
+                    class={`we__schema-tab ${schemaTab() === 'data_schema' ? 'we__schema-tab--active' : ''}`}
+                    onClick={() => setSchemaTab('data_schema')}
+                  >
+                    {t('widgets.dataSchema')}
+                  </button>
+                </div>
+                <Show when={schemaTab() === 'options_schema'}>
+                  <SchemaEditor
+                    schema={optionsSchema()}
+                    onChange={setOptionsSchema}
+                    t={t}
+                    title={t('widgets.optionsSchema')}
+                  />
+                </Show>
+                <Show when={schemaTab() === 'data_schema'}>
+                  <SchemaEditor
+                    schema={dataSchema()}
+                    onChange={setDataSchema}
+                    t={t}
+                    title={t('widgets.dataSchema')}
+                  />
+                </Show>
+              </div>
             </Show>
 
             {/* Fixture */}
-            <Show when={activeTab() === 'fixture'}>
-              <div class="widget-editor__fixture-panel">
-                <p class="widget-editor__fixture-hint">
+            <Show when={leftTab() === 'fixture'}>
+              <div class="we__fixture-section">
+                <p class="we__fixture-hint">
                   {t('widgets.editor.fixtureHint')}
                 </p>
-
                 <JsonEditorPane
                   value={fixtureJson()}
                   onChange={(v) => {
@@ -476,11 +747,9 @@ export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
                   error={fixtureError()}
                   placeholder={t('widgets.editor.fixturePlaceholder')}
                 />
-
-                {/* Save fixture */}
-                <div class="widget-editor__fixture-save">
+                <div class="we__fixture-save">
                   <input
-                    class="widget-editor__fixture-name-input"
+                    class="we__fixture-name-input"
                     type="text"
                     placeholder={t('widgets.editor.fixtureNamePlaceholder')}
                     value={fixtureName()}
@@ -494,31 +763,29 @@ export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
                     disabled={!fixtureName().trim()}
                   />
                 </div>
-
-                {/* Saved fixture library */}
                 <Show when={Object.keys(fixtureLibrary()).length > 0}>
-                  <div class="widget-editor__fixture-library">
-                    <h4 class="widget-editor__fixture-library-title">
+                  <div class="we__fixture-library">
+                    <h4 class="we__fixture-library-title">
                       {t('widgets.editor.savedFixtures')}
                     </h4>
                     <For each={Object.entries(fixtureLibrary())}>
-                      {([fname, _fixture]) => (
-                        <div class="widget-editor__fixture-item">
-                          <span class="widget-editor__fixture-item-name">{fname}</span>
-                          <div class="widget-editor__fixture-item-actions">
+                      {([fname]) => (
+                        <div class="we__fixture-item">
+                          <span class="we__fixture-item-name">{fname}</span>
+                          <div class="we__fixture-item-actions">
                             <button
-                              class="widget-editor__fixture-action"
+                              class="we__fixture-action"
                               onClick={() => loadFixture(fname)}
                               title={t('widgets.editor.loadFixture')}
                             >
-                              <BsUpload size={14} />
+                              <BsUpload size={12} />
                             </button>
                             <button
-                              class="widget-editor__fixture-action widget-editor__fixture-action--danger"
+                              class="we__fixture-action we__fixture-action--danger"
                               onClick={() => deleteFixture(fname)}
                               title={t('common.delete')}
                             >
-                              <BsX size={14} />
+                              <BsX size={12} />
                             </button>
                           </div>
                         </div>
@@ -530,73 +797,57 @@ export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
             </Show>
 
             {/* Settings */}
-            <Show when={activeTab() === 'settings'}>
-              <div class="widget-editor__settings-panel">
-                <div class="widget-editor__field">
-                  <label class="widget-editor__label">{t('common.description')}</label>
+            <Show when={leftTab() === 'settings'}>
+              <div class="we__settings-section">
+                <div class="we__field">
+                  <label class="we__label">{t('common.description')}</label>
                   <textarea
-                    class="widget-editor__textarea widget-editor__textarea--short"
+                    class="we__textarea"
                     value={description()}
                     onInput={(e) => setDescription(e.currentTarget.value)}
                     placeholder={t('widgets.editor.descriptionPlaceholder')}
                     rows={3}
                   />
                 </div>
-
-                <div class="widget-editor__field">
-                  <label class="widget-editor__label">{t('widgets.editor.aspectRatio')}</label>
-                  <select
-                    class="widget-editor__select"
-                    value={aspectRatio()}
-                    onChange={(e) => setAspectRatio(e.currentTarget.value)}
-                  >
-                    <For each={ASPECT_RATIOS}>
-                      {(ratio) => <option value={ratio}>{ratio}</option>}
-                    </For>
-                  </select>
-                </div>
-
-                <div class="widget-editor__field">
-                  <label class="widget-editor__label">{t('widgets.updateInterval')}</label>
+                <div class="we__field">
+                  <label class="we__label">{t('widgets.updateInterval')}</label>
                   <input
-                    class="widget-editor__input"
+                    class="we__input"
                     type="number"
                     min={5}
                     max={3600}
                     value={updateInterval()}
                     onInput={(e) => setUpdateInterval(e.currentTarget.value)}
                   />
-                  <span class="widget-editor__field-hint">{t('widgets.editor.updateIntervalHint')}</span>
+                  <span class="we__field-hint">
+                    {t('widgets.editor.updateIntervalHint')}
+                  </span>
                 </div>
               </div>
             </Show>
           </div>
         </div>
 
-        {/* Right – preview panel */}
-        <div class="widget-editor__preview-panel">
-          <div class="widget-editor__preview-header">
-            <span class="widget-editor__preview-title">{t('widgets.editor.livePreview')}</span>
-            <button
-              class="widget-editor__preview-refresh"
-              onClick={() => refreshPreview()}
-              title={t('widgets.editor.refreshPreview')}
-            >
-              {t('widgets.editor.refresh')}
-            </button>
-          </div>
-
-          <div class="widget-editor__preview-container">
-            <Show
-              when={previewWidget() !== null}
-              fallback={
-                <div class="widget-editor__preview-placeholder">
-                  <BsExclamationTriangle size={32} />
-                  <p>{t('widgets.editor.fixJsonToPreview')}</p>
-                </div>
-              }
-            >
-              <div class="widget-editor__preview-aspect" style={aspectRatioStyle(aspectRatio())}>
+        {/* ─── Center: Preview / Code ─── */}
+        <div class="we__center-panel">
+          <Show when={editorMode() === 'visual'}>
+            <div class="we__preview-header">
+              <span class="we__preview-title">
+                {t('widgets.editor.livePreview')}
+              </span>
+              <button
+                class="we__preview-refresh"
+                onClick={refreshPreview}
+                title={t('widgets.editor.refreshPreview')}
+              >
+                {t('widgets.editor.refresh')}
+              </button>
+            </div>
+            <div class="we__preview-container">
+              <div
+                class="we__preview-aspect"
+                style={aspectRatioStyle(aspectRatio())}
+              >
                 <Show when={showPreview()}>
                   <WidgetView
                     widget={previewWidget()!}
@@ -607,15 +858,57 @@ export const WidgetEditor: Component<WidgetEditorProps> = (props) => {
                   />
                 </Show>
               </div>
-            </Show>
-          </div>
+            </div>
+          </Show>
+
+          <Show when={editorMode() === 'code'}>
+            <div class="we__code-editor">
+              <div class="we__code-header">
+                <span>{t('widgets.editor.templateJson')}</span>
+                <button
+                  class="we__code-apply"
+                  onClick={() => applyCodeToTree()}
+                >
+                  {t('widgets.editor.applyCode')}
+                </button>
+              </div>
+              <textarea
+                class={`we__code-textarea ${codeError() ? 'we__code-textarea--error' : ''}`}
+                value={codeJson()}
+                onInput={(e) => {
+                  setCodeJson(e.currentTarget.value);
+                  setCodeError(null);
+                }}
+                spellcheck={false}
+              />
+              <Show when={codeError()}>
+                <div class="we__code-error">
+                  <BsExclamationTriangle size={12} />
+                  <span>{codeError()}</span>
+                </div>
+              </Show>
+            </div>
+          </Show>
         </div>
+
+        {/* ─── Right panel: Property Inspector ─── */}
+        <Show when={editorMode() === 'visual'}>
+          <div class="we__right-panel">
+            <PropertyInspector
+              node={selectedNode()}
+              onChange={handleNodeChange}
+              t={t}
+              optionsSchema={optionsSchemaParsed()}
+              dataSchema={dataSchemaParsed()}
+            />
+          </div>
+        </Show>
       </div>
     </div>
   );
 };
 
-// ─── JSON Editor pane ─────────────────────────────────────────────────────────
+// ─── JSON Editor pane (reused for schemas/fixtures) ──────────────────────────
 
 interface JsonEditorPaneProps {
   value: string;
@@ -626,9 +919,9 @@ interface JsonEditorPaneProps {
 
 const JsonEditorPane: Component<JsonEditorPaneProps> = (props) => {
   return (
-    <div class="widget-editor__json-pane">
+    <div class="we__json-pane">
       <textarea
-        class={`widget-editor__json-textarea ${props.error ? 'widget-editor__json-textarea--error' : ''}`}
+        class={`we__json-textarea ${props.error ? 'we__json-textarea--error' : ''}`}
         value={props.value}
         onInput={(e) => props.onChange(e.currentTarget.value)}
         placeholder={props.placeholder || '{}'}
@@ -638,7 +931,7 @@ const JsonEditorPane: Component<JsonEditorPaneProps> = (props) => {
         autocapitalize="off"
       />
       <Show when={props.error}>
-        <div class="widget-editor__json-error">
+        <div class="we__json-error">
           <BsExclamationTriangle size={12} />
           <span>{props.error}</span>
         </div>
@@ -650,7 +943,6 @@ const JsonEditorPane: Component<JsonEditorPaneProps> = (props) => {
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function aspectRatioStyle(ratio: string): string {
-  // Convert "16:9" → padding-top trick for aspect ratio
   const parts = ratio.split(':');
   if (parts.length === 2) {
     const [w, h] = parts.map(Number);
@@ -658,6 +950,5 @@ function aspectRatioStyle(ratio: string): string {
       return `aspect-ratio: ${w} / ${h}; width: 100%; max-height: 100%;`;
     }
   }
-  // liquid / unknown
   return 'width: 100%; height: 100%;';
 }

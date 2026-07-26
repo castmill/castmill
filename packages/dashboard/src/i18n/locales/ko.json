@@ -926,7 +926,19 @@
       "settings": "설정",
       "templatePlaceholder": "위젯 템플릿 JSON을 여기에 붙여넣거나 입력하세요...",
       "optionsSchemaPlaceholder": "옵션 스키마 JSON (구성 가능한 옵션 정의)...",
-      "dataSchemaPlaceholder": "데이터 스키마 JSON (이 위젯이 예상하는 데이터 형태 정의)..."
+      "dataSchemaPlaceholder": "데이터 스키마 JSON (이 위젯이 예상하는 데이터 형태 정의)...",
+      "componentTree": "트리",
+      "schemas": "스키마",
+      "components": "컴포넌트",
+      "selectComponent": "속성을 편집할 컴포넌트를 선택하세요",
+      "visualMode": "비주얼 에디터",
+      "visual": "비주얼",
+      "codeMode": "코드 에디터",
+      "code": "코드",
+      "undo": "실행 취소",
+      "redo": "다시 실행",
+      "templateJson": "템플릿 JSON",
+      "applyCode": "적용"
     }
   },
   "devices": {

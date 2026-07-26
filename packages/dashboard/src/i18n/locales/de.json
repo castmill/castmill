@@ -945,7 +945,19 @@
       "settings": "Einstellungen",
       "templatePlaceholder": "Widget-Template-JSON hier einfügen oder eingeben...",
       "optionsSchemaPlaceholder": "JSON für das Optionsschema (definiert konfigurierbare Optionen)...",
-      "dataSchemaPlaceholder": "JSON für das Datenschema (definiert die von diesem Widget erwartete Datenform)..."
+      "dataSchemaPlaceholder": "JSON für das Datenschema (definiert die von diesem Widget erwartete Datenform)...",
+      "componentTree": "Baum",
+      "schemas": "Schemata",
+      "components": "Komponenten",
+      "selectComponent": "Wähle eine Komponente, um ihre Eigenschaften zu bearbeiten",
+      "visualMode": "Visueller Editor",
+      "visual": "Visuell",
+      "codeMode": "Code-Editor",
+      "code": "Code",
+      "undo": "Rückgängig",
+      "redo": "Wiederherstellen",
+      "templateJson": "Template-JSON",
+      "applyCode": "Anwenden"
     }
   },
   "devices": {
