@@ -145,10 +145,14 @@ if config_env() == :prod do
     current_version: current_version
   }
 
-  # Configure Redis for BullMQ in production
-  config :castmill, :redis,
-    host: System.get_env("REDIS_HOST") || "localhost",
-    port: String.to_integer(System.get_env("REDIS_PORT") || "6379")
+  # Configure PostgreSQL backend for BullMQ in production.
+  # Use a dedicated database via BULLMQ_DATABASE_URL when available.
+  bullmq_database_url = CastmillWeb.Secrets.get_bullmq_database_url() || database_url
+
+  config :castmill, :bullmq_postgres,
+    url: bullmq_database_url,
+    schema: System.get_env("BULLMQ_DB_SCHEMA") || "bullmq",
+    pool_size: String.to_integer(System.get_env("BULLMQ_DB_POOL_SIZE") || "10")
 
   # Mailer "from" address — override via MAILER_FROM env var
   if mailer_from = System.get_env("MAILER_FROM") do

@@ -239,7 +239,7 @@ defmodule Castmill.Widgets do
     if Application.get_env(:castmill, :async_poll_scheduling, true) do
       # Spawn a separate process to schedule the poll, so that:
       # 1. It doesn't block the database transaction
-      # 2. If Redis isn't available, it doesn't crash the transaction
+      # 2. If BullMQ backend isn't available, it doesn't crash the transaction
       Task.start(schedule_fn)
     else
       schedule_fn.()
