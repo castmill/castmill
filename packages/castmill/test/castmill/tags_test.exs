@@ -253,11 +253,15 @@ defmodule Castmill.TagsTest do
       other_group_tag = tag_fixture(%{organization_id: org.id, tag_group_id: other_group.id})
 
       media_with_group_tag = media_fixture(%{organization_id: org.id, name: "has_group_tag"})
-      media_with_other_group_tag = media_fixture(%{organization_id: org.id, name: "has_other_group_tag"})
+      media_with_other_group_tag =
+        media_fixture(%{organization_id: org.id, name: "has_other_group_tag"})
+
       untagged_media = media_fixture(%{organization_id: org.id, name: "untagged"})
 
       {:ok, _} = Tags.tag_resource(group_tag.id, :media, to_string(media_with_group_tag.id))
-      {:ok, _} = Tags.tag_resource(other_group_tag.id, :media, to_string(media_with_other_group_tag.id))
+
+      {:ok, _} =
+        Tags.tag_resource(other_group_tag.id, :media, to_string(media_with_other_group_tag.id))
 
       query = from(m in Castmill.Resources.Media)
 

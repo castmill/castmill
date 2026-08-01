@@ -412,7 +412,8 @@ defmodule Castmill.Tags do
             where:
               rt.resource_type == ^resource_type and
                 t.tag_group_id == ^tag_group_id and
-                rt.resource_id == fragment("CAST(? AS text)", field(parent_as(:resource), ^id_field)),
+                rt.resource_id ==
+                  fragment("CAST(? AS text)", field(parent_as(:resource), ^id_field)),
             select: 1
           )
         )
