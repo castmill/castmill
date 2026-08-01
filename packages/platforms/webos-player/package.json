@@ -9,7 +9,7 @@
     "lint": "eslint .",
     "start": "vite",
     "dev": "vite",
-    "build": "vite build",
+    "build": "VITE_UPDATE_URL=${VITE_UPDATE_URL:-https://updates.castmill.io/webos/player.ipk} vite build",
     "serve": "vite preview",
     "copy-assets": "cp -r appinfo/* dist && cp -r lib dist",
     "package": "bash -lic scripts/ares-package.sh",
