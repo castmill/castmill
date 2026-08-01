@@ -1,10 +1,10 @@
 defmodule Castmill.Workers.JobRecovery do
   @moduledoc """
-  Recovers lost background jobs after a Redis failure or restart.
+  Recovers lost background jobs after BullMQ backend incidents or restarts.
 
   Uses deterministic job IDs (e.g., "video_transcode:42") so that BullMQ's
   built-in deduplication makes re-enqueue calls idempotent — if the job
-  already exists in Redis, the add is silently ignored.
+  already exists in BullMQ storage, the add is silently ignored.
 
   ## How It Works
 
@@ -20,7 +20,7 @@ defmodule Castmill.Workers.JobRecovery do
   - **On startup** — call `recover_all/0` after BullMQ workers are running.
   - **Periodically** — schedule via a maintenance BullMQ job or a simple
     `Process.send_after` loop.
-  - **After Redis incident** — run manually via `iex`.
+  - **After BullMQ backend incident** — run manually via `iex`.
 
   ## Supported Recovery Targets
 
