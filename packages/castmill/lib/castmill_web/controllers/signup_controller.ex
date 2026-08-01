@@ -177,6 +177,7 @@ defmodule CastmillWeb.SignUpController do
         |> json(%{status: :error})
     end
   end
+
   @doc """
     Create a new user from a signup and passkey authentication.
     Optionally accepts invitation_token to skip default organization creation.
