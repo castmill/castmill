@@ -1,134 +1,36 @@
-# BullMQ v2 PostgreSQL Setup and Operations
+# Migration: Oban to BullMQ (PostgreSQL backend)
 
 ## Purpose
 
-This document describes the current background-job setup used by released Castmill versions.
+This document is the migration runbook for moving Castmill background jobs from Oban to BullMQ.
 
-Castmill uses BullMQ v2 with PostgreSQL backend. This is not an Oban migration runbook.
+For day-2 operations, monitoring, and troubleshooting after cutover, use:
 
-## Current Architecture
+- `packages/castmill/BULLMQ_POSTGRES_OPERATIONS.md`
 
-1. BullMQ backend: `BullMQ.Backends.Postgres`
-2. Dedicated BullMQ connection process: `BullMQ.Backends.Postgres.Connection`
-3. BullMQ schema defaults to `bullmq`
-4. Test mode supports inline execution (`config :castmill, :bullmq, testing: :inline`)
+## Migration Scope
 
-## Runtime Configuration
+The migration replaces Oban workers with BullMQ workers backed by PostgreSQL.
 
-Required/important environment variables in production:
+## Cutover Checklist
 
-1. `BULLMQ_DATABASE_URL` (recommended, can be a dedicated DB)
-2. `BULLMQ_DB_SCHEMA` (default: `bullmq`)
-3. `BULLMQ_DB_POOL_SIZE` (default: `10`)
+1. Deploy code containing BullMQ worker and supervisor changes.
+2. Configure BullMQ runtime environment variables:
+   - `BULLMQ_DATABASE_URL` (optional; falls back to `DATABASE_URL`)
+   - `BULLMQ_DB_SCHEMA` (default: `bullmq`)
+   - `BULLMQ_DB_POOL_SIZE` (default: `10`)
+3. Run database migrations.
+4. Verify BullMQ workers start successfully and process queued jobs.
+5. Confirm no Oban jobs remain in active use.
 
-If `BULLMQ_DATABASE_URL` is not provided, Castmill falls back to `DATABASE_URL`.
+## Validation
 
-## Development Setup
+After cutover:
 
-1. Install dependencies:
+1. Schedule representative jobs for each queue.
+2. Confirm jobs move through waiting/active/completed states.
+3. Confirm failed jobs are retried according to worker settings.
 
-```bash
-cd packages/castmill
-mix deps.get
-```
+## Rollback
 
-2. Ensure PostgreSQL is running and a BullMQ database exists (example):
-
-```bash
-createdb castmill_bullmq_dev
-```
-
-3. Run app migrations:
-
-```bash
-mix ecto.migrate
-```
-
-4. Start app:
-
-```bash
-mix phx.server
-```
-
-## Worker Behavior Notes
-
-1. Stalled recovery is two-phase in PostgreSQL backend:
-   - First pass marks active jobs (`stalled_marked = true`)
-   - Later pass reclaims still-expired/active jobs
-2. Stalled checks are throttled via queue meta (`stalled-check`), so transitions are not immediate.
-3. Jobs that stall over threshold use deferred failure semantics and are finalized to `failed` on next pickup.
-
-## Scheduler ID Rule
-
-BullMQ scheduler IDs must have fewer than 5 colon-separated parts.
-
-Why:
-
-1. `< 5` parts: treated as new-style scheduler IDs
-2. `>= 5` parts: treated as legacy repeatable IDs
-
-Safe pattern:
-
-```elixir
-sanitized_discriminator = String.replace(discriminator_id || "", ":", "_")
-scheduler_id = "int_poll_#{org_id}_#{integration_id}_#{sanitized_discriminator}"
-```
-
-## Monitoring
-
-### PostgreSQL Health
-
-```sql
-SELECT application_name, state, count(*)
-FROM pg_stat_activity
-WHERE datname = 'castmill_bullmq_dev'
-GROUP BY application_name, state;
-```
-
-```sql
-SELECT schemaname, relname, n_live_tup
-FROM pg_stat_user_tables
-WHERE schemaname = 'bullmq'
-ORDER BY n_live_tup DESC;
-```
-
-### Queue Event Timeline
-
-```sql
-SELECT id, event, data, created_at_ms
-FROM bullmq.event
-WHERE queue = 'email' AND data->>'jobId' = '1'
-ORDER BY created_at_ms DESC
-LIMIT 100;
-```
-
-## Troubleshooting
-
-### App Starts But Jobs Do Not Complete
-
-1. Verify workers are running:
-
-```elixir
-Supervisor.which_children(Castmill.Supervisor)
-```
-
-2. Confirm BullMQ schema objects exist in target DB/schema.
-3. Inspect `bullmq.job` for lock and stalled fields (`state`, `lock_token`, `locked_until_ms`, `stalled_count`, `deferred_failure`).
-4. Inspect recent queue events in `bullmq.event`.
-
-### Connection Errors
-
-1. Verify `BULLMQ_DATABASE_URL` (or fallback `DATABASE_URL`)
-2. Verify DB user permissions for schema/functions
-3. Verify network reachability and PostgreSQL status
-
-## Historical Note
-
-Some internal docs and comments may still reference Oban from earlier development history.
-Those references do not represent currently released runtime behavior.
-
-## References
-
-1. BullMQ Elixir docs: https://hexdocs.pm/bullmq/
-2. BullMQ concepts: https://docs.bullmq.io/
-3. PostgreSQL docs: https://www.postgresql.org/docs/
+If critical issues are detected during cutover, redeploy the previous release and restore previous worker processing configuration.

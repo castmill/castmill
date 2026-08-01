@@ -22,7 +22,7 @@ defmodule CastmillWeb.Secrets do
   end
 
   def get_bullmq_database_url do
-    get_env_or_file_value("BULLMQ_DATABASE_URL", nil)
+    get_env_or_file_value("BULLMQ_DATABASE_URL", nil, false)
   end
 
   def get_secret_key_base do
@@ -68,17 +68,22 @@ defmodule CastmillWeb.Secrets do
     end
   end
 
-  defp get_env_or_file_value(env_var_name, default \\ nil) do
+  defp get_env_or_file_value(env_var_name, default \\ nil, raise_on_missing \\ true) do
     case System.get_env(env_var_name) do
       value when value in [nil, "", false] ->
         filename_env_var = env_var_name <> "_FILENAME"
         filename = System.get_env(filename_env_var)
 
         if filename in [nil, "", false] do
-          if default != nil do
-            default
-          else
-            raise "Environment variable #{env_var_name} and #{filename_env_var} are both unset or empty."
+          cond do
+            default != nil ->
+              default
+
+            raise_on_missing ->
+              raise "Environment variable #{env_var_name} and #{filename_env_var} are both unset or empty."
+
+            true ->
+              nil
           end
         else
           File.read!(filename) |> String.trim()
