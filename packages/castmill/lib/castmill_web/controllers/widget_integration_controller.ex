@@ -1010,7 +1010,7 @@ defmodule CastmillWeb.WidgetIntegrationController do
     if run_async do
       # Spawn a separate process to schedule the poll, so that:
       # 1. It doesn't block the HTTP request
-      # 2. If Redis isn't available, it doesn't crash the request
+      # 2. If BullMQ backend isn't available, it doesn't crash the request
       Task.start(schedule_fn)
     else
       # In tests, run inline to avoid detached tasks outliving SQL sandbox owners.

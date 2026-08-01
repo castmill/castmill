@@ -9,15 +9,8 @@ defmodule Castmill.Application do
 
   @impl true
   def start(_type, _args) do
-    # Get Redis configuration
-    redis_config = Application.get_env(:castmill, :redis, host: "localhost", port: 6379)
     bullmq_config = Application.get_env(:castmill, :bullmq, [])
     testing_mode = Keyword.get(bullmq_config, :testing) == :inline
-
-    # Validate Redis connectivity before starting if not in testing mode
-    unless testing_mode do
-      validate_redis_connection!(redis_config)
-    end
 
     # Build children list conditionally based on testing mode
     base_children = [
@@ -41,11 +34,11 @@ defmodule Castmill.Application do
       Castmill.Hooks.Supervisor
     ]
 
-    # Add Redis and BullMQ workers only if not in testing mode
+    # Add BullMQ connection and workers only if not in testing mode
     children =
       if testing_mode do
         Logger.info(
-          "BullMQ running in inline testing mode; no Redis/BullMQ workers will be started"
+          "BullMQ running in inline testing mode; no BullMQ workers will be started"
         )
 
         base_children
@@ -58,18 +51,7 @@ defmodule Castmill.Application do
 
         base_children ++
           [
-            # Start BullMQ Redis connection pool (includes NimblePool + Registry)
-            {BullMQ.RedisConnection,
-             name: :castmill_redis,
-             host: Keyword.get(redis_config, :host),
-             port: Keyword.get(redis_config, :port),
-             pool_size: 10},
-            # Start a direct Redix connection for JobScheduler
-            # (BullMQ.JobScheduler uses Redix.command directly instead of the pool)
-            {Redix,
-             name: :castmill_redis_direct,
-             host: Keyword.get(redis_config, :host),
-             port: Keyword.get(redis_config, :port)}
+            bullmq_postgres_child_spec(bullmq_config)
           ] ++
           build_bullmq_workers(bullmq_config)
       end
@@ -173,62 +155,36 @@ defmodule Castmill.Application do
     """
   end
 
-  # Validate Redis connection before starting the application
-  defp validate_redis_connection!(redis_config) do
-    host = Keyword.get(redis_config, :host, "localhost")
-    port = Keyword.get(redis_config, :port, 6379)
+  defp bullmq_postgres_child_spec(bullmq_config) do
+    connection_name = Keyword.get(bullmq_config, :connection, :castmill_bullmq)
+    bullmq_pg_config = Application.get_env(:castmill, :bullmq_postgres, [])
 
-    Logger.info("Checking Redis connectivity at #{host}:#{port}...")
+    base_opts = [
+      name: connection_name,
+      schema: Keyword.get(bullmq_pg_config, :schema, "bullmq"),
+      pool_size: Keyword.get(bullmq_pg_config, :pool_size, 10)
+    ]
 
-    case Redix.start_link(host: host, port: port) do
-      {:ok, conn} ->
-        case Redix.command(conn, ["PING"]) do
-          {:ok, "PONG"} ->
-            Logger.info("Redis connection successful")
-            GenServer.stop(conn)
-            :ok
+    conn_opts =
+      case Keyword.get(bullmq_pg_config, :url) do
+        nil ->
+          compact_keyword([
+            hostname: Keyword.get(bullmq_pg_config, :hostname),
+            port: Keyword.get(bullmq_pg_config, :port),
+            database: Keyword.get(bullmq_pg_config, :database),
+            username: Keyword.get(bullmq_pg_config, :username),
+            password: Keyword.get(bullmq_pg_config, :password)
+          ])
 
-          {:error, reason} ->
-            GenServer.stop(conn)
-            raise_redis_error(host, port, reason)
-        end
+        url ->
+          [url: url]
+      end
 
-      {:error, reason} ->
-        raise_redis_error(host, port, reason)
-    end
+    {BullMQ.Backends.Postgres.Connection, base_opts ++ conn_opts}
   end
 
-  defp raise_redis_error(host, port, reason) do
-    raise """
-
-    ═══════════════════════════════════════════════════════════════════════════════
-    REDIS CONNECTION FAILED
-    ═══════════════════════════════════════════════════════════════════════════════
-
-    Could not connect to Redis at #{host}:#{port}
-
-    Error: #{inspect(reason)}
-
-    BullMQ requires a running Redis instance for background job processing.
-
-    SOLUTIONS:
-
-    1. Start Redis locally:
-       $ redis-server
-
-       Or with Docker:
-       $ docker run -d -p 6379:6379 redis:alpine
-
-    2. Use inline mode for development (no Redis required):
-       Add to config/dev.exs:
-
-       config :castmill, :bullmq, testing: :inline
-
-    3. Configure a different Redis host:
-       Set REDIS_HOST and REDIS_PORT environment variables
-
-    ═══════════════════════════════════════════════════════════════════════════════
-    """
+  defp compact_keyword(keyword) do
+    Enum.reject(keyword, fn {_key, value} -> is_nil(value) end)
   end
 
   # Tell Phoenix to update the endpoint configuration
@@ -242,7 +198,7 @@ defmodule Castmill.Application do
   # Build BullMQ worker specs from configuration
   defp build_bullmq_workers(config) do
     queues = Keyword.get(config, :queues, [])
-    connection = Keyword.get(config, :connection, :castmill_redis)
+    connection = Keyword.get(config, :connection, :castmill_bullmq)
 
     # NOTE: BullMQ.Worker API based on v1.2 documentation
     # See: https://hexdocs.pm/bullmq/BullMQ.Worker.html
@@ -260,7 +216,9 @@ defmodule Castmill.Application do
 
       worker_id = Module.concat([Castmill.Workers.BullMQ, queue_name])
 
-      # Use Supervisor.child_spec/2 to give each worker a unique id
+      # Use Supervisor.child_spec/2 to give each worker a unique id.
+      # Do not pass `name:` to BullMQ.Worker: BullMQ 2.0.2 forwards it to
+      # Postgres as text and atom values cause DBConnection.EncodeError.
       Supervisor.child_spec(
         {BullMQ.Worker,
          queue: Atom.to_string(queue_name),
@@ -274,8 +232,7 @@ defmodule Castmill.Application do
            Logger.error(
              "BullMQ job failed queue=#{queue_name} job=#{job.name} id=#{job.id}: #{inspect(reason)}"
            )
-         end,
-         name: worker_id},
+         end},
         id: worker_id
       )
     end)

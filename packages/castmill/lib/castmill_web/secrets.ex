@@ -21,6 +21,10 @@ defmodule CastmillWeb.Secrets do
     get_env_or_file_value("DATABASE_URL")
   end
 
+  def get_bullmq_database_url do
+    get_env_or_file_value("BULLMQ_DATABASE_URL", nil)
+  end
+
   def get_secret_key_base do
     get_env_or_file_value(
       "SECRET_KEY_BASE",
