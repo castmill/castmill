@@ -253,6 +253,7 @@ defmodule Castmill.TagsTest do
       other_group_tag = tag_fixture(%{organization_id: org.id, tag_group_id: other_group.id})
 
       media_with_group_tag = media_fixture(%{organization_id: org.id, name: "has_group_tag"})
+
       media_with_other_group_tag =
         media_fixture(%{organization_id: org.id, name: "has_other_group_tag"})
 
