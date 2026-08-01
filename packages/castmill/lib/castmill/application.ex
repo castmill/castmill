@@ -37,9 +37,7 @@ defmodule Castmill.Application do
     # Add BullMQ connection and workers only if not in testing mode
     children =
       if testing_mode do
-        Logger.info(
-          "BullMQ running in inline testing mode; no BullMQ workers will be started"
-        )
+        Logger.info("BullMQ running in inline testing mode; no BullMQ workers will be started")
 
         base_children
       else
@@ -168,13 +166,13 @@ defmodule Castmill.Application do
     conn_opts =
       case Keyword.get(bullmq_pg_config, :url) do
         nil ->
-          compact_keyword([
+          compact_keyword(
             hostname: Keyword.get(bullmq_pg_config, :hostname),
             port: Keyword.get(bullmq_pg_config, :port),
             database: Keyword.get(bullmq_pg_config, :database),
             username: Keyword.get(bullmq_pg_config, :username),
             password: Keyword.get(bullmq_pg_config, :password)
-          ])
+          )
 
         url ->
           [url: url]
