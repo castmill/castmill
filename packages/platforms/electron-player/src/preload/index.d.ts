@@ -12,7 +12,7 @@ export interface ApplicationAPI {
   quit: () => void;
   shutdown: () => void;
   reboot: () => void;
-  update: () => void;
+  update: () => Promise<void>;
   getMachineGUID: () => Promise<string>;
   setItem: (key: string, value: string) => void;
   getItem: (key: string) => Promise<string>;

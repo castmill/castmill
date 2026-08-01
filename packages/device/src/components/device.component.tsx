@@ -11,6 +11,7 @@ import { Device, Status } from '../classes/device';
 import { RegisterComponent } from './register.component';
 import { PlayerComponent } from './player.component';
 import { ProgressBarComponent } from './progress-bar.component';
+import { RecoveryBlockedComponent } from './recovery-blocked.component';
 
 export function DeviceComponent(props: { device: Device }) {
   const [loginOrRegister] = createResource(() =>
@@ -53,6 +54,9 @@ export function DeviceComponent(props: { device: Device }) {
               device={props.device}
               pincode={loginOrRegister()!.pincode!}
             />
+          </Match>
+          <Match when={loginOrRegister()?.status === Status.RecoveryBlocked}>
+            <RecoveryBlockedComponent />
           </Match>
         </Switch>
       </Show>

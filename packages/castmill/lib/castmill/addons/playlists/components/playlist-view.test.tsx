@@ -3,15 +3,33 @@
  * Testing the widget search integration
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@solidjs/testing-library';
+import { render, screen, waitFor, fireEvent } from '@solidjs/testing-library';
 import { PlaylistView } from './playlist-view';
 import { PlaylistsService } from '../services/playlists.service';
+
+// Stable toast spies that can be referenced inside tests.
+const mockToast = vi.hoisted(() => ({
+  success: vi.fn(),
+  error: vi.fn(),
+}));
+
+vi.mock('@castmill/ui-common', async () => {
+  const actual = await vi.importActual<typeof import('@castmill/ui-common')>(
+    '@castmill/ui-common'
+  );
+
+  return {
+    ...actual,
+    useToast: () => mockToast,
+  };
+});
 
 // Mock the services
 vi.mock('../services/playlists.service', () => ({
   PlaylistsService: {
     getPlaylist: vi.fn(),
     getWidgets: vi.fn(),
+    updatePlaylist: vi.fn(),
     insertWidgetIntoPlaylist: vi.fn(),
     updateItemInPlaylist: vi.fn(),
     updateWidgetConfig: vi.fn(),
@@ -475,6 +493,188 @@ describe('PlaylistView Component', () => {
         const style = preview?.getAttribute('style');
         expect(style).toContain('aspect-ratio: 4 / 3');
       });
+    });
+  });
+
+  describe('Aspect Ratio Customization', () => {
+    beforeEach(() => {
+      vi.mocked(PlaylistsService.updatePlaylist).mockResolvedValue(undefined);
+    });
+
+    it('saves a preset aspect ratio and shows success toast', async () => {
+      render(() => (
+        <PlaylistView
+          playlistId={playlistId}
+          organizationId={organizationId}
+          baseUrl={baseUrl}
+        />
+      ));
+
+      await waitFor(() => {
+        expect(screen.getByTestId('playlist-preview')).toBeInTheDocument();
+      });
+
+      // Select a different preset (default is 16:9, pick 9:16)
+      const select = screen.getByRole('combobox', {
+        name: 'playlists.aspectRatio',
+      });
+      fireEvent.change(select, { target: { value: '9:16' } });
+
+      await waitFor(() => {
+        expect(PlaylistsService.updatePlaylist).toHaveBeenCalledWith(
+          baseUrl,
+          organizationId,
+          '1',
+          expect.objectContaining({
+            settings: { aspect_ratio: { width: 9, height: 16 } },
+          })
+        );
+        expect(mockToast.success).toHaveBeenCalledWith(
+          'playlists.aspectRatioUpdated'
+        );
+      });
+    });
+
+    it('shows error toast when preset save fails', async () => {
+      vi.mocked(PlaylistsService.updatePlaylist).mockRejectedValueOnce(
+        new Error('Network error')
+      );
+
+      render(() => (
+        <PlaylistView
+          playlistId={playlistId}
+          organizationId={organizationId}
+          baseUrl={baseUrl}
+        />
+      ));
+
+      await waitFor(() => {
+        expect(screen.getByTestId('playlist-preview')).toBeInTheDocument();
+      });
+
+      const select = screen.getByRole('combobox', {
+        name: 'playlists.aspectRatio',
+      });
+      fireEvent.change(select, { target: { value: '4:3' } });
+
+      await waitFor(() => {
+        expect(mockToast.error).toHaveBeenCalled();
+      });
+    });
+
+    it('does not call updatePlaylist when selecting the same preset', async () => {
+      const playlistWith16x9 = {
+        ...mockPlaylist,
+        settings: { aspect_ratio: { width: 16, height: 9 } },
+      };
+      vi.mocked(PlaylistsService.getPlaylist).mockResolvedValue(playlistWith16x9);
+
+      render(() => (
+        <PlaylistView
+          playlistId={playlistId}
+          organizationId={organizationId}
+          baseUrl={baseUrl}
+        />
+      ));
+
+      await waitFor(() => {
+        expect(screen.getByTestId('playlist-preview')).toBeInTheDocument();
+      });
+
+      const select = screen.getByRole('combobox', {
+        name: 'playlists.aspectRatio',
+      });
+      fireEvent.change(select, { target: { value: '16:9' } });
+
+      // Give any async work time to settle
+      await waitFor(() => {
+        expect(PlaylistsService.updatePlaylist).not.toHaveBeenCalled();
+      });
+    });
+
+    it('saves a custom aspect ratio and shows success toast', async () => {
+      render(() => (
+        <PlaylistView
+          playlistId={playlistId}
+          organizationId={organizationId}
+          baseUrl={baseUrl}
+        />
+      ));
+
+      await waitFor(() => {
+        expect(screen.getByTestId('playlist-preview')).toBeInTheDocument();
+      });
+
+      // Select "custom"
+      const select = screen.getByRole('combobox', {
+        name: 'playlists.aspectRatio',
+      });
+      fireEvent.change(select, { target: { value: 'custom' } });
+
+      // Fill in width and height
+      const widthInput = screen.getByLabelText('playlists.aspectRatioWidth');
+      const heightInput = screen.getByLabelText('playlists.aspectRatioHeight');
+
+      fireEvent.input(widthInput, { target: { value: '3' } });
+      fireEvent.input(heightInput, { target: { value: '2' } });
+
+      // Click the save button
+      const saveButton = screen.getByRole('button', { name: 'common.save' });
+      fireEvent.click(saveButton);
+
+      await waitFor(() => {
+        expect(PlaylistsService.updatePlaylist).toHaveBeenCalledWith(
+          baseUrl,
+          organizationId,
+          '1',
+          expect.objectContaining({
+            settings: { aspect_ratio: { width: 3, height: 2 } },
+          })
+        );
+        expect(mockToast.success).toHaveBeenCalledWith(
+          'playlists.aspectRatioUpdated'
+        );
+      });
+    });
+
+    it('prevents saving an extreme custom aspect ratio', async () => {
+      render(() => (
+        <PlaylistView
+          playlistId={playlistId}
+          organizationId={organizationId}
+          baseUrl={baseUrl}
+        />
+      ));
+
+      await waitFor(() => {
+        expect(screen.getByTestId('playlist-preview')).toBeInTheDocument();
+      });
+
+      // Select "custom"
+      const select = screen.getByRole('combobox', {
+        name: 'playlists.aspectRatio',
+      });
+      fireEvent.change(select, { target: { value: 'custom' } });
+
+      // Enter an extreme ratio (100:1 exceeds MAX_ASPECT_RATIO of 10)
+      const widthInput = screen.getByLabelText('playlists.aspectRatioWidth');
+      const heightInput = screen.getByLabelText('playlists.aspectRatioHeight');
+
+      fireEvent.input(widthInput, { target: { value: '100' } });
+      fireEvent.input(heightInput, { target: { value: '1' } });
+
+      // The save button should be disabled due to extreme ratio
+      const saveButton = screen.getByRole('button', { name: 'common.save' });
+      expect(saveButton).toBeDisabled();
+
+      // Error message should be visible
+      await waitFor(() => {
+        expect(
+          screen.getByText('playlists.errors.aspectRatioExtreme')
+        ).toBeInTheDocument();
+      });
+
+      expect(PlaylistsService.updatePlaylist).not.toHaveBeenCalled();
     });
   });
 });

@@ -136,7 +136,20 @@ defmodule CastmillWeb.DeviceController do
         |> put_status(:ok)
         |> render(:recover, device: device)
 
-      {:error, _reason} ->
+      {:error, :recovery_blocked} ->
+        Logger.warning(
+          "Device recovery blocked for hardware_id=#{hardware_id}: IP mismatch and autorecovery inactive"
+        )
+
+        conn
+        |> put_status(:forbidden)
+        |> render(:recovery_blocked)
+
+      {:error, reason} ->
+        Logger.warning(
+          "Device recovery failed for hardware_id=#{hardware_id}: #{inspect(reason)}"
+        )
+
         case Castmill.Devices.create_device_registration(device_attrs) do
           {:ok, device} ->
             Logger.info("New device registered: #{device.hardware_id}")

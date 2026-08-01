@@ -13,6 +13,7 @@ defmodule Castmill.Devices.Device do
              :id,
              :name,
              :description,
+             :autorecover_until,
              :last_ip,
              :last_online,
              :online,
@@ -48,6 +49,7 @@ defmodule Castmill.Devices.Device do
     field(:token_hash, :string)
     field(:mode, :string, default: "normal")
     field(:schedule, :map)
+    field(:autorecover_until, :utc_datetime)
 
     field(:token, :string, virtual: true)
 
@@ -83,7 +85,8 @@ defmodule Castmill.Devices.Device do
       :volume,
       :info,
       :hardware_id,
-      :organization_id
+      :organization_id,
+      :autorecover_until
     ])
     |> put_pass_hash()
     |> validate_required([
@@ -119,7 +122,8 @@ defmodule Castmill.Devices.Device do
       :info,
       :hardware_id,
       :organization_id,
-      :schedule
+      :schedule,
+      :autorecover_until
     ])
     |> put_pass_hash()
   end

@@ -8,7 +8,7 @@ import {
   createEffect,
 } from 'solid-js';
 import { dropTargetForExternal } from '@atlaskit/pragmatic-drag-and-drop/external/adapter';
-import { authFetch } from '../../common/services/auth-fetch';
+import { authFetch, getAuthToken } from '../../common/services/auth-fetch';
 import './upload.scss';
 
 import {
@@ -196,7 +196,12 @@ export const UploadComponent = (props: UploadComponentProps) => {
         `${props.baseUrl}/dashboard/organizations/${props.organizationId}/medias`,
         true
       );
-      xhr.withCredentials = true;
+
+      // Attach Bearer token for authentication (cookies are no longer used)
+      const token = getAuthToken();
+      if (token) {
+        xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+      }
 
       xhr.upload.onprogress = (event) => {
         if (event.lengthComputable) {

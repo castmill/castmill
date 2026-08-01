@@ -14,6 +14,7 @@
     "confirm": "Confirmer",
     "back": "Retour",
     "next": "Suivant",
+    "previous": "Précédent",
     "search": "Rechercher...",
     "loading": "Chargement...",
     "error": "Erreur",
@@ -101,6 +102,7 @@
     "coordinates": "Coordonnées",
     "address": "Adresse",
     "noAddressAvailable": "Aucune adresse disponible",
+    "noConfigurationAvailable": "Aucune configuration disponible",
     "playlist": "Liste de lecture",
     "addPlaylist": "Ajouter une liste de lecture",
     "selectVideo": "Sélectionner une vidéo",
@@ -303,6 +305,7 @@
       "name": "Nom",
       "email": "E-mail",
       "noUsers": "Aucun utilisateur dans ce réseau pour le moment",
+      "searchPlaceholder": "Rechercher par nom ou email...",
       "inviteTitle": "Inviter un Utilisateur",
       "inviteDescription": "Invitez un utilisateur à rejoindre une organisation de ce réseau.",
       "inviteButton": "Inviter un Utilisateur",
@@ -562,7 +565,8 @@
     "errors": {
       "authenticationFailed": "Échec de l'authentification. Veuillez réessayer.",
       "userBlocked": "Votre compte a été bloqué. Raison : {{reason}}",
-      "organizationBlocked": "Votre organisation a été bloquée. Raison : {{reason}}"
+      "organizationBlocked": "Votre organisation a été bloquée. Raison : {{reason}}",
+      "signupFailed": "Impossible de démarrer l'inscription. Veuillez réessayer plus tard."
     }
   },
   "credentialRecovery": {
@@ -755,7 +759,9 @@
     "buildPlaylist": "Créez votre playlist ici",
     "renamePlaylist": "Renommer la playlist",
     "playlistUpdated": "Playlist \"{{name}}\" mise à jour avec succès",
+    "playlistCreated": "Playlist \"{{name}}\" créée avec succès",
     "errorUpdating": "Erreur lors de la mise à jour de la playlist {{name}} : {{error}}",
+    "errorCreating": "Erreur lors de la création de la playlist : {{error}}",
     "removePlaylist": "Supprimer la playlist",
     "removePlaylists": "Supprimer les playlists",
     "confirmRemovePlaylist": "Êtes-vous sûr de vouloir supprimer la playlist \"{{name}}\" ?",
@@ -764,6 +770,9 @@
     "errorRemovingPlaylists": "Erreur lors de la suppression des playlists : {{error}}",
     "enterPlaylistName": "Entrez le nom de la playlist",
     "dragToAdd": "Glisser pour ajouter",
+    "searchWidgets": "Rechercher des widgets...",
+    "dropHereToAddAtEnd": "Déposez ici pour ajouter à la fin",
+    "duration": "Durée",
     "aspectRatio": "Ratio d'aspect",
     "aspectRatioWidth": "Largeur",
     "aspectRatioHeight": "Hauteur",
@@ -793,7 +802,9 @@
     "credentialsRequired": "Identifiants Requis",
     "credentialsRequiredDescription": "Le widget \"{{widget}}\" nécessite la configuration d'identifiants avant de pouvoir être ajouté à une liste de lecture.",
     "missingIntegrations": "Intégrations manquantes",
-    "goToIntegrations": "Aller aux Intégrations"
+    "goToIntegrations": "Aller aux Intégrations",
+    "widgetModalTitle": "Widget \"{{name}}\"",
+    "configureYourWidget": "Configurez votre widget"
   },
   "layouts": {
     "title": "Mises en page",
@@ -830,6 +841,20 @@
     "title": "Widgets",
     "uploadWidget": "Télécharger un widget",
     "uploadDescription": "Télécharger un fichier de définition de widget JSON.",
+    "upload": {
+      "jsonDescription": "Téléchargez un fichier JSON contenant une définition de widget.",
+      "requiredFields": "Champs requis",
+      "and": "et",
+      "exampleFormat": "Format d'exemple",
+      "dragAndDropHint": "Ou glissez-déposez des fichiers JSON ou ZIP ici...",
+      "ready": "Prêt",
+      "invalidFileType": "Type de fichier invalide. Seuls les fichiers JSON et ZIP sont pris en charge.",
+      "invalidWidgetJson": "JSON de widget invalide : doit contenir les champs \"name\" et \"template\"",
+      "validationFailed": "Échec de la validation",
+      "uploadFailed": "Échec du téléversement",
+      "uploadedSuccessfully": "Téléversé avec succès",
+      "uploadError": "Erreur de téléversement"
+    },
     "widgetDetails": "Détails du widget",
     "updateInterval": "Intervalle de mise à jour",
     "viewDetails": "Voir les détails",
@@ -902,7 +927,8 @@
       "enterClientCredentials": "Entrez vos identifiants API {{provider}} ci-dessous :",
       "afterSavingCredentials": "Après avoir enregistré vos identifiants, cliquez ci-dessous pour autoriser avec {{provider}} :",
       "networkCredentialsConfigured": "Votre administrateur réseau a déjà configuré les identifiants {{provider}}. Cliquez simplement sur le bouton ci-dessous pour connecter votre compte."
-    }
+    },
+    "translations": "Traductions"
   },
   "devices": {
     "setDeviceChannel": "Définir le canal de l'appareil",
@@ -950,7 +976,17 @@
       "checkUpdatesDescription": "Rechercher les mises à jour et les installer. Cela ne redémarrera pas l'appareil",
       "updateFirmware": "Mettre à jour le firmware",
       "updateFirmwareDescription": "Met à jour le firmware de l'appareil",
-      "offlineMessage": "L'appareil est hors ligne, aucune commande ne peut donc lui être envoyée"
+      "offlineMessage": "L'appareil est hors ligne, aucune commande ne peut donc lui être envoyée",
+      "autorecoveryUpdated": "La récupération automatique a été mise à jour",
+      "autorecoveryUpdateFailed": "Échec de la mise à jour de la récupération automatique",
+      "edit": "Modifier",
+      "enableForOneHour": "Activer pendant une heure",
+      "enableForever": "Activer pour toujours",
+      "disable": "Désactiver",
+      "recoverLostSettingsLabel": "Récupérer les paramètres perdus",
+      "disabled": "Désactivé",
+      "enabledMinutesRemaining": "Activé ({{minutes}} minutes restantes)",
+      "enabledForever": "Activé pour toujours"
     },
     "cache": {
       "title": "Cache de l'Appareil",
@@ -1016,7 +1052,9 @@
     "devicesRemovedSuccess": "{{count}} appareil(s) supprimé(s) avec succès",
     "errorRegisteringDevice": "Erreur lors de l'enregistrement de l'appareil : {{error}}",
     "errorRemovingDevice": "Erreur lors de la suppression de l'appareil {{name}} : {{error}}",
-    "errorRemovingDevices": "Erreur lors de la suppression des appareils : {{error}}"
+    "errorRemovingDevices": "Erreur lors de la suppression des appareils : {{error}}",
+    "enterDescription": "Entrez une description",
+    "drawerTitle": "Appareil \"{{name}}\""
   },
   "validation": {
     "fieldRequired": "Ce champ est requis",
@@ -1050,7 +1088,10 @@
       "couldNotCreateCredential": "Impossible de créer les identifiants",
       "couldNotGetPublicKey": "Impossible d'obtenir la clé publique",
       "invalidCredential": "Identifiants invalides",
-      "signupFailed": "Une erreur s'est produite lors de l'inscription, contactez le support. ERREUR : {{error}}"
+      "signupFailed": "Échec de l'inscription : {{error}}. Veuillez réessayer ou contacter le support."
+    },
+    "success": {
+      "accountCreated": "Compte créé avec succès !"
     }
   },
   "search": {
@@ -1308,7 +1349,10 @@
     "thumbnail": {
       "failedTitle": "Échec du transcodage",
       "failedDefaultMessage": "L’aperçu n’a pas pu être généré automatiquement."
-    }
+    },
+    "drawerTitle": "Média \"{{name}}\"",
+    "mediaUpdated": "Média \"{{name}}\" mis à jour avec succès",
+    "errorUpdating": "Erreur lors de la mise à jour du média {{name}} : {{error}}"
   },
   "dashboard": {
     "noOrganizations": {

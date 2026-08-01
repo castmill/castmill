@@ -14,6 +14,7 @@ import {
 import {
   Button,
   Modal,
+  Drawer,
   TableAction,
   Column,
   SortOptions,
@@ -33,6 +34,10 @@ import { IntegrationsList } from '../../common/components/integrations-list';
 import { DEFAULT_WIDGET_ICON } from '../../common/constants';
 import './widgets.scss';
 import { AddonStore } from '../../common/interfaces/addon-store';
+import {
+  getTranslatedWidgetName,
+  getTranslatedWidgetDescription,
+} from '../../common/utils/widget-catalog-utils';
 
 // Widget type with required ID and slug for table display and API calls
 type WidgetWithId = JsonWidget & { id: number; slug: string };
@@ -44,6 +49,13 @@ const WidgetsPage: Component<{
   // Get i18n functions from store
   const t = (key: string, params?: Record<string, any>) =>
     props.store.i18n?.t(key, params) || key;
+  const locale = () => props.store.i18n?.locale() || 'en';
+
+  const getWidgetName = (widget: WidgetWithId): string =>
+    getTranslatedWidgetName(widget, locale());
+
+  const getWidgetDescription = (widget: WidgetWithId): string | undefined =>
+    getTranslatedWidgetDescription(widget, locale());
 
   // Helper function to check permissions
   const canPerformAction = (resource: string, action: string): boolean => {
@@ -57,7 +69,10 @@ const WidgetsPage: Component<{
 
   const itemsPerPage = 10;
 
-  const [showModal, setShowModal] = createSignal<WidgetWithId | undefined>();
+  const [showDrawer, setShowDrawer] = createSignal(false);
+  const [currentWidget, setCurrentWidget] = createSignal<
+    WidgetWithId | undefined
+  >();
   const [initialTabIndex, setInitialTabIndex] = createSignal(0);
   const [widgetHasIntegrations, setWidgetHasIntegrations] = createSignal(false);
 
@@ -70,8 +85,8 @@ const WidgetsPage: Component<{
   const [isLoadingUsage, setIsLoadingUsage] = createSignal(false);
   const [isDeleting, setIsDeleting] = createSignal(false);
 
-  // Flag to prevent URL effect from interfering while opening modal programmatically
-  let isOpeningModal = false;
+  // Flag to prevent URL effect from interfering while opening drawer programmatically
+  let isOpeningDrawer = false;
 
   const [showUploadModal, setShowUploadModal] = createSignal(false);
   let uploadModalRef: ModalRef | undefined = undefined;
@@ -79,8 +94,8 @@ const WidgetsPage: Component<{
   const [tableRef, setRef] = createSignal<TableViewRef<number, WidgetWithId>>();
 
   // Memoized tabs array that reacts to widgetHasIntegrations changes
-  const modalTabs = createMemo(() => {
-    const widget = showModal();
+  const detailsTabs = createMemo(() => {
+    const widget = currentWidget();
     const hasIntegrations = widgetHasIntegrations();
 
     if (!widget) return [];
@@ -105,6 +120,11 @@ const WidgetsPage: Component<{
         content: () => <JsonHighlight json={widget.data_schema} />,
       });
     }
+
+    tabs.push({
+      title: t('widgets.translations'),
+      content: () => <JsonHighlight json={widget.translations || {}} />,
+    });
 
     // Add assets tab if widget has assets
     if (widget.assets && Object.keys(widget.assets).length > 0) {
@@ -142,8 +162,8 @@ const WidgetsPage: Component<{
     tableRef()?.reloadData();
   };
 
-  // Helper to open widget modal by ID with optional tab selection
-  const openWidgetById = async (widgetId: number, tab?: string) => {
+  // Helper to open widget drawer by ID with optional tab selection
+  const openWidgetDrawerById = async (widgetId: number, tab?: string) => {
     try {
       const widget = await WidgetsService.getWidgetById(
         props.store.env.baseUrl,
@@ -167,6 +187,7 @@ const WidgetsPage: Component<{
           const tabNames = ['template'];
           if (widget.options_schema) tabNames.push('options');
           if (widget.data_schema) tabNames.push('data');
+          tabNames.push('translations');
           if (widget.assets && Object.keys(widget.assets).length > 0)
             tabNames.push('assets');
           if (hasIntegrations) tabNames.push('integrations');
@@ -180,7 +201,8 @@ const WidgetsPage: Component<{
         batch(() => {
           setWidgetHasIntegrations(hasIntegrations);
           setInitialTabIndex(tabIndex);
-          setShowModal(widget as WidgetWithId);
+          setCurrentWidget(widget as WidgetWithId);
+          setShowDrawer(true);
         });
       }
     } catch (err) {
@@ -188,7 +210,7 @@ const WidgetsPage: Component<{
     }
   };
 
-  // Update URL when widget modal is opened/closed
+  // Update URL when widget drawer is opened/closed
   const updateUrlForWidget = (widgetId: number | null, tab?: string) => {
     const orgId = props.store.organizations.selectedId;
     let url = `/org/${orgId}/content/widgets`;
@@ -201,10 +223,13 @@ const WidgetsPage: Component<{
     window.history.pushState({}, '', url);
   };
 
-  // Open widget modal and update URL
-  const openWidget = async (widget: WidgetWithId, tabIndex: number = 0) => {
+  // Open widget drawer and update URL
+  const openWidgetDrawer = async (
+    widget: WidgetWithId,
+    tabIndex: number = 0
+  ) => {
     // Set flag to prevent URL effect from interfering
-    isOpeningModal = true;
+    isOpeningDrawer = true;
 
     // Check if widget has integrations
     const integrations = await WidgetsService.getWidgetIntegrations(
@@ -214,7 +239,7 @@ const WidgetsPage: Component<{
     );
     const hasIntegrations = integrations.length > 0;
 
-    // Update URL FIRST to prevent the createEffect from closing the modal
+    // Update URL FIRST to prevent the createEffect from closing the drawer
     // The effect checks lastProcessedUrl to avoid duplicate processing
     const orgId = props.store.organizations.selectedId;
     const newUrl = `/org/${orgId}/content/widgets/${widget.id}`;
@@ -224,18 +249,20 @@ const WidgetsPage: Component<{
     batch(() => {
       setWidgetHasIntegrations(hasIntegrations);
       setInitialTabIndex(tabIndex);
-      setShowModal(widget);
+      setCurrentWidget(widget);
+      setShowDrawer(true);
     });
 
     // Reset flag after a microtask to ensure effect has run
     queueMicrotask(() => {
-      isOpeningModal = false;
+      isOpeningDrawer = false;
     });
   };
 
-  // Close widget modal and update URL
-  const closeWidget = () => {
-    setShowModal(undefined);
+  // Close widget drawer and update URL
+  const closeWidgetDrawer = () => {
+    setShowDrawer(false);
+    setCurrentWidget(undefined);
     setInitialTabIndex(0);
     setWidgetHasIntegrations(false);
     updateUrlForWidget(null);
@@ -247,8 +274,8 @@ const WidgetsPage: Component<{
   // Check URL for deep links - reactive to location changes for soft navigation
   // URL pattern: /org/:orgId/content/widgets/:widgetId?tab=integrations
   createEffect(() => {
-    // Skip if we're in the middle of programmatically opening a modal
-    if (isOpeningModal) return;
+    // Skip if we're in the middle of programmatically opening a drawer
+    if (isOpeningDrawer) return;
 
     // Get location from router (reactive) or fall back to window.location
     const location = props.store.router?.location?.();
@@ -271,13 +298,14 @@ const WidgetsPage: Component<{
         const urlParams = new URLSearchParams(search);
         const tab = urlParams.get('tab') || undefined;
         lastProcessedUrl = fullUrl;
-        openWidgetById(widgetId, tab);
+        openWidgetDrawerById(widgetId, tab);
       }
     } else {
-      // No widget ID in URL - close modal if open
-      if (showModal()) {
+      // No widget ID in URL - close drawer if open
+      if (showDrawer()) {
         lastProcessedUrl = fullUrl;
-        setShowModal(undefined);
+        setShowDrawer(false);
+        setCurrentWidget(undefined);
         setInitialTabIndex(0);
       }
     }
@@ -328,7 +356,7 @@ const WidgetsPage: Component<{
   });
 
   createEffect(() => {
-    if (showModal()) {
+    if (showDrawer()) {
       setTimeout(() => {
         const modalElement = document.querySelector(
           '.widget-details-modal'
@@ -463,12 +491,17 @@ const WidgetsPage: Component<{
               )}
             </div>
             <div style="text-align: left; flex: 1;">
-              <div style="font-weight: 500;">{widget.name}</div>
-              {widget.description && (
-                <div style="font-size: 0.85em; color: #666; margin-top: 2px;">
-                  {widget.description}
-                </div>
-              )}
+              <div style="font-weight: 500;">{getWidgetName(widget)}</div>
+              {(() => {
+                const desc = getWidgetDescription(widget);
+                return (
+                  desc && (
+                    <div style="font-size: 0.85em; color: #666; margin-top: 2px;">
+                      {desc}
+                    </div>
+                  )
+                );
+              })()}
             </div>
           </div>
         );
@@ -513,7 +546,7 @@ const WidgetsPage: Component<{
     {
       label: t('widgets.viewDetails'),
       icon: BsEye,
-      handler: (widget: WidgetWithId) => openWidget(widget),
+      handler: (widget: WidgetWithId) => openWidgetDrawer(widget),
     },
     // Only include delete action if user has delete permission
     ...(canPerformAction('widgets', 'delete')
@@ -576,6 +609,7 @@ const WidgetsPage: Component<{
           <UploadComponent
             baseUrl={props.store.env.baseUrl}
             organizationId={props.store.organizations.selectedId}
+            t={t}
             onFileUpload={() => {
               // File upload started
             }}
@@ -589,11 +623,14 @@ const WidgetsPage: Component<{
         </Modal>
       </Show>
 
-      <Show when={showModal()}>
-        <Modal
-          title={showModal()!.name}
-          description={showModal()!.description || t('widgets.widgetDetails')}
-          onClose={closeWidget}
+      <Show when={showDrawer()}>
+        <Drawer
+          title={getWidgetName(currentWidget()!)}
+          onClose={closeWidgetDrawer}
+          placement="right"
+          size="xl"
+          closeOnOutsideClick
+          outsideClickIgnoreSelector="tbody tr"
           contentClass="widget-details-modal"
         >
           <div class="widget-details-content">
@@ -602,23 +639,23 @@ const WidgetsPage: Component<{
               <div class="metadata-item">
                 <strong>{t('common.type')}:</strong>{' '}
                 <span class="type-value">
-                  {showModal()!.template?.type || t('common.unknown')}
+                  {currentWidget()!.template?.type || t('common.unknown')}
                 </span>
               </div>
-              {showModal()!.update_interval_seconds && (
+              {currentWidget()!.update_interval_seconds && (
                 <div class="metadata-item">
                   <strong>{t('widgets.updateInterval')}:</strong>{' '}
                   <span class="interval-value">
-                    {showModal()!.update_interval_seconds}s
+                    {currentWidget()!.update_interval_seconds}s
                   </span>
                 </div>
               )}
             </div>
 
             {/* Tabs using ui-common Tabs component */}
-            <Tabs tabs={modalTabs()} initialIndex={initialTabIndex()} />
+            <Tabs tabs={detailsTabs()} initialIndex={initialTabIndex()} />
           </div>
-        </Modal>
+        </Drawer>
       </Show>
 
       <TableView<number, WidgetWithId>
@@ -628,6 +665,7 @@ const WidgetsPage: Component<{
         fetchData={fetchData}
         ref={setRef}
         toolbar={{
+          searchPlaceholder: t('common.search'),
           mainAction: (
             <Button
               label={t('widgets.uploadWidget')}
@@ -641,9 +679,10 @@ const WidgetsPage: Component<{
         table={{
           columns,
           actions,
+          actionsLabel: t('common.actions'),
           defaultRowAction: {
             icon: BsEye,
-            handler: (widget: WidgetWithId) => openWidget(widget),
+            handler: (widget: WidgetWithId) => openWidgetDrawer(widget),
             label: t('widgets.viewDetails'),
           },
         }}

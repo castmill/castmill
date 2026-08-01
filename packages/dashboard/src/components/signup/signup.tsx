@@ -179,11 +179,16 @@ const SignUp: Component = () => {
     });
 
     if (!result.ok) {
-      toast.error(
-        t('signup.errors.signupFailed', { error: result.statusText })
-      );
+      const data = await result.json().catch(() => ({}));
+      const isObject = data !== null && typeof data === 'object';
+      const serverMessage =
+        (isObject
+          ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            ((data as any).message ?? (data as any).msg)
+          : undefined) || result.statusText;
+      toast.error(t('signup.errors.signupFailed', { error: serverMessage }));
     } else {
-      toast.success('Account created successfully!');
+      toast.success(t('signup.success.accountCreated'));
       navigate('/');
     }
   }

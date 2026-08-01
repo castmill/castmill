@@ -31,6 +31,14 @@ const fetchSelectedUrl = async (device: Device) => {
   return baseUrl;
 };
 
+const fetchOrganizationName = async (device: Device) => {
+  return (await device.getOrganizationName()) || 'N/A';
+};
+
+const fetchCastmillNetworkName = async (device: Device) => {
+  return (await device.getCastmillNetworkName()) || 'N/A';
+};
+
 // Helper function to create a menu entry for an action
 const createAction = (name: string, action: () => void): MenuEntry => {
   const id = name.toLowerCase().replace(' ', '-');
@@ -96,6 +104,16 @@ export const MenuComponent: Component<MenuProps> = (props) => {
     initialValue: '',
   });
 
+  const [organizationName, { refetch: refetchOrganizationName }] =
+    createResource(() => props.device, fetchOrganizationName, {
+      initialValue: 'N/A',
+    });
+
+  const [castmillNetworkName, { refetch: refetchCastmillNetworkName }] =
+    createResource(() => props.device, fetchCastmillNetworkName, {
+      initialValue: 'N/A',
+    });
+
   const [deviceName, setDeviceName] = createSignal<string>(
     props.device?.name || 'N/A'
   );
@@ -154,6 +172,8 @@ export const MenuComponent: Component<MenuProps> = (props) => {
     <>
       <p>Device ID: {shortDeviceId(deviceId()) || 'N/A'} </p>
       <p>Device Name: {deviceName()}</p>
+      <p>Organization: {organizationName()}</p>
+      <p>Network: {castmillNetworkName()}</p>
       <p>© 2011-{new Date().getFullYear()} Castmill AB</p>
     </>
   );
@@ -259,7 +279,11 @@ export const MenuComponent: Component<MenuProps> = (props) => {
       header={header}
       entries={entries()}
       footer={footer}
-      onShow={refreshTimerStatus}
+      onShow={() => {
+        refreshTimerStatus();
+        refetchOrganizationName();
+        refetchCastmillNetworkName();
+      }}
     />
   );
 };

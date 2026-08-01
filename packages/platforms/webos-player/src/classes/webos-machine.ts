@@ -22,15 +22,16 @@ interface NavigatorWithConnection extends Navigator {
 
 // The update config is used to update the application on the device. We set this
 // to make sure the application updates from the correct source.
-const UPDATE_CONFIG = {
+// The update URL is injected at build time via the VITE_UPDATE_URL env variable.
+const getUpdateConfig = () => ({
   serverIp: '0.0.0.0',
   serverPort: 0,
   secureConnection: true,
   appLaunchMode: 'local',
   appType: 'ipk',
   fqdnMode: true,
-  fqdnAddr: 'https://update.castmill.io/webos/player-new.ipk',
-};
+  fqdnAddr: import.meta.env.VITE_UPDATE_URL,
+});
 
 const CREDENTIALS_FILE_PATH = 'credentials.txt';
 
@@ -183,7 +184,7 @@ export class WebosMachine implements Machine {
       import.meta.env.VITE_KEEP_SERVER_SETTINGS === 'true';
     if (!keepServerSettings) {
       // Set the server properties to the correct values
-      await configuration.setServerProperty(UPDATE_CONFIG);
+      await configuration.setServerProperty(getUpdateConfig());
     }
 
     // Then download the application

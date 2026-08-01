@@ -131,6 +131,7 @@ export const OnboardingTour: Component<OnboardingTourProps> = (props) => {
         step.id
       );
       setProgress(updatedProgress);
+      setStore('onboarding', 'progress', updatedProgress);
 
       // Check if all steps are complete
       if (isOnboardingComplete(updatedProgress.completed_steps)) {

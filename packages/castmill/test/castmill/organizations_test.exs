@@ -169,4 +169,95 @@ defmodule Castmill.OrganizationsTest do
       assert org2.name == "castmill ab"
     end
   end
+
+  describe "invite_user/3" do
+    import Swoosh.TestAssertions
+
+    setup do
+      network = network_fixture()
+      organization = organization_fixture(%{network_id: network.id})
+      %{network: network, organization: organization}
+    end
+
+    test "creates invitation and sends email", %{network: network, organization: organization} do
+      email = "newuser@example.com"
+
+      assert {:ok, token} = Organizations.invite_user(organization.id, email, :member)
+      assert is_binary(token)
+      assert String.length(token) > 0
+
+      # Verify invitation record exists
+      invitation = Organizations.get_invitation(token)
+      assert invitation != nil
+      assert invitation.email == email
+      assert invitation.organization_id == organization.id
+      assert invitation.status == "invited"
+      assert invitation.role == :member
+
+      # Verify email was sent
+      assert_email_sent(
+        to: email,
+        subject: "You have been invited to an Organization on #{network.name}"
+      )
+    end
+
+    test "creates invitation with admin role", %{organization: organization} do
+      email = "admin-invite@example.com"
+
+      assert {:ok, token} = Organizations.invite_user(organization.id, email, :admin)
+
+      invitation = Organizations.get_invitation(token)
+      assert invitation.role == :admin
+    end
+
+    test "rejects duplicate active invitation for same email and organization", %{
+      organization: organization
+    } do
+      email = "duplicate@example.com"
+
+      # First invitation succeeds
+      assert {:ok, _token} = Organizations.invite_user(organization.id, email, :member)
+
+      # Second invitation to same email + org should fail
+      assert {:error, :already_invited} =
+               Organizations.invite_user(organization.id, email, :member)
+    end
+
+    test "rejects invitation if user is already a member", %{
+      network: network,
+      organization: organization
+    } do
+      user = user_fixture(%{network_id: network.id, email: "member@example.com"})
+      Organizations.add_user(organization.id, user.id, :member)
+
+      assert {:error, :already_member} =
+               Organizations.invite_user(organization.id, "member@example.com", :member)
+    end
+
+    test "allows invitation to same email in different organization", %{
+      network: network,
+      organization: org1
+    } do
+      org2 = organization_fixture(%{network_id: network.id, name: "Second Org"})
+      email = "multi-org@example.com"
+
+      assert {:ok, _token1} = Organizations.invite_user(org1.id, email, :member)
+      assert {:ok, _token2} = Organizations.invite_user(org2.id, email, :admin)
+    end
+
+    test "allows re-invitation after previous invitation was rejected", %{
+      organization: organization
+    } do
+      email = "reinvite@example.com"
+
+      # Create first invitation
+      assert {:ok, token} = Organizations.invite_user(organization.id, email, :member)
+
+      # Reject it
+      Organizations.reject_invitation(token)
+
+      # Should be able to invite again since old invitation is no longer "invited"
+      assert {:ok, _token2} = Organizations.invite_user(organization.id, email, :member)
+    end
+  end
 end

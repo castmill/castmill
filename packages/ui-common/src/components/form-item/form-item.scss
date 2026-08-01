@@ -29,6 +29,10 @@
       color: #e74c3c;
       font-size: 0.85em;
       margin-top: 0.3em;
+
+      &:empty {
+        display: none;
+      }
     }
   }
 

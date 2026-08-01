@@ -14,6 +14,7 @@
     "confirm": "تأكيد",
     "back": "رجوع",
     "next": "التالي",
+    "previous": "السابق",
     "search": "بحث...",
     "loading": "جاري التحميل...",
     "error": "خطأ",
@@ -101,6 +102,7 @@
     "coordinates": "الإحداثيات",
     "address": "العنوان",
     "noAddressAvailable": "لا يوجد عنوان متاح",
+    "noConfigurationAvailable": "لا توجد إعدادات متاحة",
     "playlist": "قائمة التشغيل",
     "addPlaylist": "إضافة قائمة تشغيل",
     "selectVideo": "اختر فيديو",
@@ -303,6 +305,7 @@
       "name": "الاسم",
       "email": "البريد الإلكتروني",
       "noUsers": "لا يوجد مستخدمون في هذه الشبكة بعد",
+      "searchPlaceholder": "البحث بالاسم أو البريد الإلكتروني...",
       "inviteTitle": "دعوة مستخدم",
       "inviteDescription": "ادعُ مستخدمًا للانضمام إلى منظمة في هذه الشبكة.",
       "inviteButton": "دعوة مستخدم",
@@ -562,7 +565,8 @@
     "errors": {
       "authenticationFailed": "فشل المصادقة. يرجى المحاولة مرة أخرى.",
       "userBlocked": "تم حظر حسابك. السبب: {{reason}}",
-      "organizationBlocked": "تم حظر مؤسستك. السبب: {{reason}}"
+      "organizationBlocked": "تم حظر مؤسستك. السبب: {{reason}}",
+      "signupFailed": "تعذر بدء التسجيل. يرجى المحاولة لاحقاً."
     }
   },
   "credentialRecovery": {
@@ -743,7 +747,9 @@
     "buildPlaylist": "أنشئ قائمة التشغيل هنا",
     "renamePlaylist": "إعادة تسمية قائمة التشغيل",
     "playlistUpdated": "تم تحديث قائمة التشغيل \"{{name}}\" بنجاح",
+    "playlistCreated": "تم إنشاء قائمة التشغيل \"{{name}}\" بنجاح",
     "errorUpdating": "خطأ في تحديث قائمة التشغيل {{name}}: {{error}}",
+    "errorCreating": "خطأ في إنشاء قائمة التشغيل: {{error}}",
     "removePlaylist": "إزالة قائمة التشغيل",
     "removePlaylists": "إزالة قوائم التشغيل",
     "confirmRemovePlaylist": "هل أنت متأكد من أنك تريد إزالة قائمة التشغيل \"{{name}}\"؟",
@@ -752,6 +758,9 @@
     "errorRemovingPlaylists": "خطأ في إزالة قوائم التشغيل: {{error}}",
     "enterPlaylistName": "أدخل اسم قائمة التشغيل",
     "dragToAdd": "اسحب للإضافة",
+    "searchWidgets": "ابحث عن الأدوات...",
+    "dropHereToAddAtEnd": "أفلت هنا للإضافة في النهاية",
+    "duration": "المدة",
     "aspectRatio": "نسبة العرض إلى الارتفاع",
     "aspectRatioWidth": "العرض",
     "aspectRatioHeight": "الارتفاع",
@@ -781,7 +790,9 @@
     "credentialsRequired": "بيانات الاعتماد مطلوبة",
     "credentialsRequiredDescription": "يتطلب Widget \"{{widget}}\" تكوين بيانات الاعتماد قبل إضافته إلى قائمة التشغيل.",
     "missingIntegrations": "التكاملات المفقودة",
-    "goToIntegrations": "الذهاب إلى التكاملات"
+    "goToIntegrations": "الذهاب إلى التكاملات",
+    "widgetModalTitle": "أداة \"{{name}}\"",
+    "configureYourWidget": "قم بتكوين أداتك"
   },
   "layouts": {
     "title": "التخطيطات",
@@ -818,6 +829,20 @@
     "title": "Widgets",
     "uploadWidget": "تحميل Widget",
     "uploadDescription": "تحميل ملف تعريف Widget بصيغة JSON.",
+    "upload": {
+      "jsonDescription": "قم بتحميل ملف JSON يحتوي على تعريف ويدجت.",
+      "requiredFields": "الحقول المطلوبة",
+      "and": "و",
+      "exampleFormat": "تنسيق المثال",
+      "dragAndDropHint": "أو اسحب وأفلت ملفات JSON أو ZIP هنا...",
+      "ready": "جاهز",
+      "invalidFileType": "نوع ملف غير صالح. يتم دعم ملفات JSON و ZIP فقط.",
+      "invalidWidgetJson": "JSON ويدجت غير صالح: يجب أن يحتوي على الحقلين \"name\" و\"template\"",
+      "validationFailed": "فشل التحقق",
+      "uploadFailed": "فشل الرفع",
+      "uploadedSuccessfully": "تم الرفع بنجاح",
+      "uploadError": "خطأ في الرفع"
+    },
     "widgetDetails": "تفاصيل Widget",
     "updateInterval": "فترة التحديث",
     "viewDetails": "عرض التفاصيل",
@@ -890,7 +915,8 @@
       "enterClientCredentials": "أدخل بيانات اعتماد API الخاصة بـ {{provider}} أدناه:",
       "afterSavingCredentials": "بعد حفظ بيانات الاعتماد الخاصة بك، انقر أدناه للتفويض مع {{provider}}:",
       "networkCredentialsConfigured": "قام مسؤول الشبكة لديك بالفعل بتكوين بيانات اعتماد {{provider}}. ما عليك سوى النقر على الزر أدناه لربط حسابك."
-    }
+    },
+    "translations": "الترجمات"
   },
   "devices": {
     "setDeviceChannel": "تعيين قناة الجهاز",
@@ -938,7 +964,17 @@
       "checkUpdatesDescription": "التحقق من التحديثات وتثبيتها. لن يؤدي هذا إلى إعادة تشغيل الجهاز",
       "updateFirmware": "تحديث البرنامج الثابت",
       "updateFirmwareDescription": "يحدث البرنامج الثابت للجهاز",
-      "offlineMessage": "الجهاز غير متصل بالإنترنت، لذا لا يمكن إرسال أوامر إليه"
+      "offlineMessage": "الجهاز غير متصل بالإنترنت، لذا لا يمكن إرسال أوامر إليه",
+      "autorecoveryUpdated": "تم تحديث الاسترداد التلقائي",
+      "autorecoveryUpdateFailed": "فشل تحديث الاسترداد التلقائي",
+      "edit": "تعديل",
+      "enableForOneHour": "تفعيل لمدة ساعة",
+      "enableForever": "تفعيل دائم",
+      "disable": "تعطيل",
+      "recoverLostSettingsLabel": "استعادة الإعدادات المفقودة",
+      "disabled": "معطل",
+      "enabledMinutesRemaining": "مفعل (متبقي {{minutes}} دقيقة)",
+      "enabledForever": "مفعل دائمًا"
     },
     "cache": {
       "title": "ذاكرة التخزين المؤقت للجهاز",
@@ -1004,7 +1040,9 @@
     "devicesRemovedSuccess": "تمت إزالة {{count}} جهاز بنجاح",
     "errorRegisteringDevice": "خطأ في تسجيل الجهاز: {{error}}",
     "errorRemovingDevice": "خطأ في إزالة الجهاز {{name}}: {{error}}",
-    "errorRemovingDevices": "خطأ في إزالة الأجهزة: {{error}}"
+    "errorRemovingDevices": "خطأ في إزالة الأجهزة: {{error}}",
+    "enterDescription": "أدخل وصفًا",
+    "drawerTitle": "الجهاز \"{{name}}\""
   },
   "validation": {
     "fieldRequired": "هذا الحقل مطلوب",
@@ -1038,7 +1076,10 @@
       "couldNotCreateCredential": "تعذر إنشاء بيانات الاعتماد",
       "couldNotGetPublicKey": "تعذر الحصول على المفتاح العام",
       "invalidCredential": "بيانات اعتماد غير صالحة",
-      "signupFailed": "حدث خطأ أثناء التسجيل، اتصل بالدعم. الخطأ: {{error}}"
+      "signupFailed": "فشل التسجيل: {{error}}. يرجى المحاولة مرة أخرى أو الاتصال بالدعم."
+    },
+    "success": {
+      "accountCreated": "تم إنشاء الحساب بنجاح!"
     }
   },
   "search": {
@@ -1296,7 +1337,10 @@
     "thumbnail": {
       "failedTitle": "فشل تحويل الوسائط",
       "failedDefaultMessage": "تعذر إنشاء المعاينة تلقائيًا."
-    }
+    },
+    "drawerTitle": "الوسائط \"{{name}}\"",
+    "mediaUpdated": "تم تحديث الوسائط \"{{name}}\" بنجاح",
+    "errorUpdating": "خطأ في تحديث الوسائط {{name}}: {{error}}"
   },
   "dashboard": {
     "noOrganizations": {

@@ -37,6 +37,7 @@ class MockXMLHttpRequest {
 
   open = vi.fn();
   send = vi.fn();
+  setRequestHeader = vi.fn();
 
   constructor() {
     MockXMLHttpRequest.instances.push(this);
@@ -154,5 +155,35 @@ describe('UploadComponent', () => {
     MockXMLHttpRequest.instances[0].triggerAbort();
 
     await waitFor(() => expect(onUploadComplete).toHaveBeenCalledTimes(1));
+  });
+
+  it('sets Authorization header with Bearer token from localStorage', async () => {
+    vi.stubGlobal('localStorage', {
+      getItem: vi.fn((key: string) =>
+        key === 'castmill_auth_token' ? 'test-token-123' : null
+      ),
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+      clear: vi.fn(),
+      length: 0,
+      key: vi.fn(),
+    });
+
+    render(() => (
+      <UploadComponent baseUrl="http://test.local" organizationId="org-1" />
+    ));
+
+    setFilesOnInput([new File(['data'], 'image.png', { type: 'image/png' })]);
+    const uploadButton = screen.getByRole('button', { name: 'Upload' });
+
+    fireEvent.click(uploadButton);
+    await waitFor(() => expect(uploadButton).toBeDisabled());
+
+    expect(MockXMLHttpRequest.instances).toHaveLength(1);
+    const xhr = MockXMLHttpRequest.instances[0];
+    expect(xhr.setRequestHeader).toHaveBeenCalledWith(
+      'Authorization',
+      'Bearer test-token-123'
+    );
   });
 });

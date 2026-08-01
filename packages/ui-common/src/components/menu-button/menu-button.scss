@@ -1,0 +1,82 @@
+.castmill-menu-button {
+  position: relative;
+  display: inline-flex;
+
+  .castmill-menu-button-trigger {
+    font-size: 0.95em;
+    padding: 0.5em 0.95em;
+  }
+
+  &.castmill-menu-button-size-small {
+    .castmill-menu-button-trigger {
+      font-size: 0.85em;
+      padding: 0.35em 0.7em;
+    }
+
+    .castmill-menu-button-items button {
+      font-size: 0.8em;
+      padding: 0.45em 0.6em;
+    }
+  }
+
+  &.castmill-menu-button-size-medium {
+    .castmill-menu-button-trigger {
+      font-size: 0.95em;
+      padding: 0.5em 0.95em;
+    }
+
+    .castmill-menu-button-items button {
+      font-size: 0.85em;
+      padding: 0.5em 0.65em;
+    }
+  }
+
+  &.castmill-menu-button-size-large {
+    .castmill-menu-button-trigger {
+      font-size: 1em;
+      padding: 0.7em 1.35em;
+    }
+
+    .castmill-menu-button-items button {
+      font-size: 0.9em;
+      padding: 0.55em 0.7em;
+    }
+  }
+
+  .castmill-menu-button-items {
+    position: absolute;
+    top: calc(100% + 0.4em);
+    right: 0;
+    min-width: 14em;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15em;
+    padding: 0.4em;
+    border-radius: 0.5em;
+    border: 0.06em solid #d6d6d6;
+    background: #ffffff;
+    box-shadow: 0 0.5em 1.4em rgba(0, 0, 0, 0.12);
+    z-index: 30;
+
+    button {
+      width: 100%;
+      text-align: left;
+      border: none;
+      background: transparent;
+      border-radius: 0.4em;
+      padding: 0.5em 0.65em;
+      font-size: 0.85em;
+      color: #2f2f2f;
+      cursor: pointer;
+
+      &:hover:not(:disabled) {
+        background: #f2f6ff;
+      }
+
+      &:disabled {
+        opacity: 0.45;
+        cursor: default;
+      }
+    }
+  }
+}

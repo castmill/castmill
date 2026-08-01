@@ -14,6 +14,7 @@
     "confirm": "Confirm",
     "back": "Back",
     "next": "Next",
+    "previous": "Previous",
     "search": "Search...",
     "loading": "Loading...",
     "error": "Error",
@@ -96,6 +97,7 @@
     "coordinates": "Coordinates",
     "address": "Address",
     "noAddressAvailable": "No address available",
+    "noConfigurationAvailable": "No configuration available",
     "playlist": "Playlist",
     "addPlaylist": "Add Playlist",
     "youIndicator": "(you)",
@@ -330,6 +332,7 @@
       "name": "Name",
       "email": "Email",
       "noUsers": "No users in this network yet.",
+      "searchPlaceholder": "Search by name or email...",
       "inviteTitle": "Invite User",
       "inviteDescription": "Invite a user to join an organization in this network.",
       "inviteButton": "Invite User",
@@ -704,7 +707,8 @@
     "errors": {
       "authenticationFailed": "Authentication failed. Please try again.",
       "userBlocked": "Your account has been blocked. Reason: {{reason}}",
-      "organizationBlocked": "Your organization has been blocked. Reason: {{reason}}"
+      "organizationBlocked": "Your organization has been blocked. Reason: {{reason}}",
+      "signupFailed": "Could not start signup. Please try again later."
     }
   },
   "credentialRecovery": {
@@ -740,7 +744,10 @@
       "couldNotCreateCredential": "Could not create credential",
       "couldNotGetPublicKey": "Could not get public key",
       "invalidCredential": "Invalid credential",
-      "signupFailed": "Something went wrong when signing up, contact support. ERROR: {{error}}"
+      "signupFailed": "Signup failed: {{error}}. Please try again or contact support."
+    },
+    "success": {
+      "accountCreated": "Account created successfully!"
     }
   },
   "search": {
@@ -775,7 +782,9 @@
     "buildPlaylist": "Build your playlist here",
     "renamePlaylist": "Rename Playlist",
     "playlistUpdated": "Playlist \"{{name}}\" updated successfully",
+    "playlistCreated": "Playlist \"{{name}}\" created successfully",
     "errorUpdating": "Error updating playlist {{name}}: {{error}}",
+    "errorCreating": "Error creating playlist: {{error}}",
     "removePlaylist": "Remove Playlist",
     "removePlaylists": "Remove Playlists",
     "confirmRemovePlaylist": "Are you sure you want to remove playlist \"{{name}}\"?",
@@ -784,6 +793,9 @@
     "errorRemovingPlaylists": "Error removing playlists: {{error}}",
     "enterPlaylistName": "Enter Playlist name",
     "dragToAdd": "Drag to add",
+    "searchWidgets": "Search widgets...",
+    "dropHereToAddAtEnd": "Drop here to add at the end",
+    "duration": "Duration",
     "aspectRatio": "Aspect Ratio",
     "aspectRatioWidth": "Width",
     "aspectRatioHeight": "Height",
@@ -813,7 +825,9 @@
     "credentialsRequired": "Credentials Required",
     "credentialsRequiredDescription": "The widget \"{{widget}}\" requires credentials to be configured before it can be added to a playlist.",
     "missingIntegrations": "Missing integrations",
-    "goToIntegrations": "Go to Integrations"
+    "goToIntegrations": "Go to Integrations",
+    "widgetModalTitle": "Widget \"{{name}}\"",
+    "configureYourWidget": "Configure your widget"
   },
   "layouts": {
     "title": "Layouts",
@@ -850,6 +864,20 @@
     "title": "Widgets",
     "uploadWidget": "Upload Widget",
     "uploadDescription": "Upload a JSON widget definition file.",
+    "upload": {
+      "jsonDescription": "Upload a JSON file containing a widget definition.",
+      "requiredFields": "Required fields",
+      "and": "and",
+      "exampleFormat": "Example format",
+      "dragAndDropHint": "Or drag and drop JSON or ZIP files here...",
+      "ready": "Ready",
+      "invalidFileType": "Invalid file type. Only JSON and ZIP files are supported.",
+      "invalidWidgetJson": "Invalid widget JSON: must contain \"name\" and \"template\" fields",
+      "validationFailed": "Validation failed",
+      "uploadFailed": "Upload failed",
+      "uploadedSuccessfully": "Uploaded successfully",
+      "uploadError": "Upload error"
+    },
     "widgetDetails": "Widget details",
     "updateInterval": "Update Interval",
     "viewDetails": "View Details",
@@ -922,7 +950,8 @@
       "enterClientCredentials": "Enter your {{provider}} API credentials below:",
       "afterSavingCredentials": "After saving your credentials, click below to authorize with {{provider}}:",
       "networkCredentialsConfigured": "Your network administrator has already configured {{provider}} credentials. Simply click the button below to connect your account."
-    }
+    },
+    "translations": "Translations"
   },
   "devices": {
     "title": "Devices",
@@ -995,7 +1024,17 @@
       "checkUpdatesDescription": "Check for updates and install them. This will not restart the device",
       "updateFirmware": "Update Firmware",
       "updateFirmwareDescription": "Updates the firmware of the device",
-      "offlineMessage": "Device is offline, so no commands can be sent to it"
+      "offlineMessage": "Device is offline, so no commands can be sent to it",
+      "autorecoveryUpdated": "Autorecovery has been updated",
+      "autorecoveryUpdateFailed": "Failed to update autorecovery",
+      "edit": "Edit",
+      "enableForOneHour": "Enable for one hour",
+      "enableForever": "Enable forever",
+      "disable": "Disable",
+      "recoverLostSettingsLabel": "Recover lost settings",
+      "disabled": "Disabled",
+      "enabledMinutesRemaining": "Enabled ({{minutes}} minutes remaining)",
+      "enabledForever": "Enabled forever"
     },
     "cache": {
       "title": "Device Cache",
@@ -1036,7 +1075,9 @@
       "commandFailed": "An error occurred while processing your request",
       "invalidPincode": "Invalid pincode. Please check the pincode displayed on your device and try again.",
       "pincodeExpired": "This pincode has expired. Please restart the device registration process."
-    }
+    },
+    "enterDescription": "Enter a description",
+    "drawerTitle": "Device \"{{name}}\""
   },
   "validation": {
     "fieldRequired": "This field is required",
@@ -1291,7 +1332,10 @@
     "thumbnail": {
       "failedTitle": "Transcoding failed",
       "failedDefaultMessage": "The preview could not be generated automatically."
-    }
+    },
+    "drawerTitle": "Media \"{{name}}\"",
+    "mediaUpdated": "Media \"{{name}}\" updated successfully",
+    "errorUpdating": "Error updating media {{name}}: {{error}}"
   },
   "dashboard": {
     "noOrganizations": {

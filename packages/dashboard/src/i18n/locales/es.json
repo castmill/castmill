@@ -20,6 +20,7 @@
     "confirm": "Confirmar",
     "back": "Atrás",
     "next": "Siguiente",
+    "previous": "Anterior",
     "search": "Buscar...",
     "loading": "Cargando...",
     "error": "Error",
@@ -103,6 +104,7 @@
     "coordinates": "Coordenadas",
     "address": "Dirección",
     "noAddressAvailable": "No hay dirección disponible",
+    "noConfigurationAvailable": "No hay configuración disponible",
     "playlist": "Lista de reproducción",
     "addPlaylist": "Añadir lista de reproducción",
     "widget": "Widget",
@@ -304,6 +306,7 @@
       "name": "Nombre",
       "email": "Correo Electrónico",
       "noUsers": "No hay usuarios en esta red todavía.",
+      "searchPlaceholder": "Buscar por nombre o correo...",
       "inviteTitle": "Invitar Usuario",
       "inviteDescription": "Invita a un usuario a unirse a una organización en esta red.",
       "inviteButton": "Invitar Usuario",
@@ -563,7 +566,8 @@
     "errors": {
       "authenticationFailed": "Error de autenticación. Por favor, inténtalo de nuevo.",
       "userBlocked": "Tu cuenta ha sido bloqueada. Razón: {{reason}}",
-      "organizationBlocked": "Tu organización ha sido bloqueada. Razón: {{reason}}"
+      "organizationBlocked": "Tu organización ha sido bloqueada. Razón: {{reason}}",
+      "signupFailed": "No se pudo iniciar el registro. Inténtalo más tarde."
     }
   },
   "credentialRecovery": {
@@ -746,7 +750,10 @@
       "couldNotCreateCredential": "No se pudo crear la credencial",
       "couldNotGetPublicKey": "No se pudo obtener la clave pública",
       "invalidCredential": "Credencial inválida",
-      "signupFailed": "Algo salió mal al registrarse, contacta a soporte. ERROR: {{error}}"
+      "signupFailed": "Error en el registro: {{error}}. Inténtalo de nuevo o contacta con soporte."
+    },
+    "success": {
+      "accountCreated": "¡Cuenta creada exitosamente!"
     }
   },
   "search": {
@@ -768,7 +775,9 @@
     "buildPlaylist": "Construye tu lista de reproducción aquí",
     "renamePlaylist": "Renombrar lista de reproducción",
     "playlistUpdated": "Lista de reproducción \"{{name}}\" actualizada exitosamente",
+    "playlistCreated": "Lista de reproducción \"{{name}}\" creada exitosamente",
     "errorUpdating": "Error al actualizar la lista de reproducción {{name}}: {{error}}",
+    "errorCreating": "Error al crear la lista de reproducción: {{error}}",
     "removePlaylist": "Eliminar lista de reproducción",
     "removePlaylists": "Eliminar listas de reproducción",
     "confirmRemovePlaylist": "¿Estás seguro de que quieres eliminar la lista de reproducción \"{{name}}\"?",
@@ -777,6 +786,9 @@
     "errorRemovingPlaylists": "Error al eliminar listas de reproducción: {{error}}",
     "enterPlaylistName": "Ingresa el nombre de la lista de reproducción",
     "dragToAdd": "Arrastra para añadir",
+    "searchWidgets": "Buscar widgets...",
+    "dropHereToAddAtEnd": "Suelta aquí para añadir al final",
+    "duration": "Duración",
     "aspectRatio": "Relación de Aspecto",
     "aspectRatioWidth": "Ancho",
     "aspectRatioHeight": "Alto",
@@ -806,7 +818,9 @@
     "credentialsRequired": "Credenciales Requeridas",
     "credentialsRequiredDescription": "El widget \"{{widget}}\" requiere que se configuren credenciales antes de poder añadirlo a una lista de reproducción.",
     "missingIntegrations": "Integraciones faltantes",
-    "goToIntegrations": "Ir a Integraciones"
+    "goToIntegrations": "Ir a Integraciones",
+    "widgetModalTitle": "Widget \"{{name}}\"",
+    "configureYourWidget": "Configura tu widget"
   },
   "layouts": {
     "title": "Diseños",
@@ -843,6 +857,20 @@
     "title": "Widgets",
     "uploadWidget": "Subir Widget",
     "uploadDescription": "Subir un archivo de definición de Widget JSON.",
+    "upload": {
+      "jsonDescription": "Sube un archivo JSON que contenga la definición de un widget.",
+      "requiredFields": "Campos obligatorios",
+      "and": "y",
+      "exampleFormat": "Formato de ejemplo",
+      "dragAndDropHint": "O arrastra y suelta archivos JSON o ZIP aquí...",
+      "ready": "Listo",
+      "invalidFileType": "Tipo de archivo no válido. Solo se admiten archivos JSON y ZIP.",
+      "invalidWidgetJson": "JSON de widget no válido: debe contener los campos \"name\" y \"template\"",
+      "validationFailed": "La validación falló",
+      "uploadFailed": "La carga falló",
+      "uploadedSuccessfully": "Cargado correctamente",
+      "uploadError": "Error de carga"
+    },
     "widgetDetails": "Detalles del Widget",
     "updateInterval": "Intervalo de actualización",
     "viewDetails": "Ver detalles",
@@ -915,7 +943,8 @@
       "enterClientCredentials": "Ingrese sus credenciales de API de {{provider}} a continuación:",
       "afterSavingCredentials": "Después de guardar sus credenciales, haga clic abajo para autorizar con {{provider}}:",
       "networkCredentialsConfigured": "Su administrador de red ya ha configurado las credenciales de {{provider}}. Simplemente haga clic en el botón de abajo para conectar su cuenta."
-    }
+    },
+    "translations": "Traducciones"
   },
   "devices": {
     "setDeviceChannel": "Establecer canal del dispositivo",
@@ -963,7 +992,17 @@
       "checkUpdatesDescription": "Buscar actualizaciones e instalarlas. Esto no reiniciará el dispositivo",
       "updateFirmware": "Actualizar firmware",
       "updateFirmwareDescription": "Actualiza el firmware del dispositivo",
-      "offlineMessage": "El dispositivo está desconectado, por lo que no se le pueden enviar comandos"
+      "offlineMessage": "El dispositivo está desconectado, por lo que no se le pueden enviar comandos",
+      "autorecoveryUpdated": "La recuperación automática se actualizó",
+      "autorecoveryUpdateFailed": "No se pudo actualizar la recuperación automática",
+      "edit": "Editar",
+      "enableForOneHour": "Activar por una hora",
+      "enableForever": "Activar para siempre",
+      "disable": "Desactivar",
+      "recoverLostSettingsLabel": "Recuperar configuración perdida",
+      "disabled": "Desactivado",
+      "enabledMinutesRemaining": "Activado (quedan {{minutes}} minutos)",
+      "enabledForever": "Activado para siempre"
     },
     "cache": {
       "title": "Caché del Dispositivo",
@@ -1029,7 +1068,9 @@
     "devicesRemovedSuccess": "{{count}} dispositivo(s) eliminado(s) exitosamente",
     "errorRegisteringDevice": "Error al registrar el dispositivo: {{error}}",
     "errorRemovingDevice": "Error al eliminar el dispositivo {{name}}: {{error}}",
-    "errorRemovingDevices": "Error al eliminar los dispositivos: {{error}}"
+    "errorRemovingDevices": "Error al eliminar los dispositivos: {{error}}",
+    "enterDescription": "Ingrese una descripción",
+    "drawerTitle": "Dispositivo \"{{name}}\""
   },
   "validation": {
     "fieldRequired": "Este campo es obligatorio",
@@ -1297,7 +1338,10 @@
     "thumbnail": {
       "failedTitle": "La transcodificación falló",
       "failedDefaultMessage": "No se pudo generar la vista previa automáticamente."
-    }
+    },
+    "drawerTitle": "Medio \"{{name}}\"",
+    "mediaUpdated": "Medio \"{{name}}\" actualizado correctamente",
+    "errorUpdating": "Error al actualizar medio {{name}}: {{error}}"
   },
   "dashboard": {
     "noOrganizations": {

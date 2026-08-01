@@ -50,7 +50,15 @@ const supportedDebugModes = ['remote', 'local', 'none'];
 
 export enum Status {
   Registering = 'registering',
+  RecoveryBlocked = 'recovery_blocked',
   Ready = 'ready', // Player is ready to play content, but may be offline
+}
+
+class RecoveryBlockedError extends Error {
+  constructor() {
+    super('Device recovery blocked for security reasons');
+    this.name = 'RecoveryBlockedError';
+  }
 }
 
 export interface DeviceMessage {
@@ -128,6 +136,8 @@ interface Credentials {
     id: string;
     name: string;
     token: string;
+    organizationName?: string;
+    networkName?: string;
   };
 }
 
@@ -160,6 +170,7 @@ export class Device extends EventEmitter {
   private timerManager: TimerManager;
   private playerContainer?: HTMLElement;
   private timerOffOverlay?: HTMLDivElement;
+  private recoveryWatcherRunning = false;
 
   // The base url is the url of the Castmill API. By default it is assumed that the API is
   // hosted at the same domain as this device and accessible through a relative path.
@@ -443,7 +454,8 @@ export class Device extends EventEmitter {
 
     // Retry loop: keep trying to reach the server with exponential backoff
     let tries = 0;
-    while (!this.closing) {
+    let recovered = false;
+    while (!this.closing && !recovered) {
       try {
         const pincodeResponse = await fetch(`${this.baseUrl}/registrations`, {
           method: 'POST',
@@ -469,24 +481,55 @@ export class Device extends EventEmitter {
               id: data.id,
               name: data.name,
               token: data.token,
+              organizationName: data.organization_name,
+              networkName: data.network_name,
             },
           };
           await this.integration.storeCredentials!(JSON.stringify(credentials));
 
           // Refresh the page to initialize the player with the new credentials.
           window.location.reload();
-          // If reload is blocked or no-op, prevent continuing with an invalid pincode.
-          throw new Error('Page reload was blocked after device recovery');
+
+          // Mark as recovered so the retry loop is not re-entered.
+          // In production the page reload above destroys this context.
+          // In environments where reload is a no-op (e.g. tests), the loop
+          // below keeps waiting until the device is closed, preventing
+          // another POST /registrations call that would overwrite the
+          // recovered credentials with a new pincode.
+          recovered = true;
+        } else if (pincodeResponse.status === 403) {
+          const body = await pincodeResponse.json().catch(() => ({}));
+
+          if (body?.error_code === 'recovery_blocked') {
+            throw new RecoveryBlockedError();
+          }
+
+          throw new Error(`Invalid status ${pincodeResponse.status}`);
         } else {
           throw new Error(`Invalid status ${pincodeResponse.status}`);
         }
       } catch (error) {
+        if (error instanceof RecoveryBlockedError) {
+          throw error;
+        }
+
         tries++;
         const delay = getReconnectDelay(tries);
         this.logger.info(
           `Failed to request pincode: ${error}. Retrying in ${delay / 1000}s...`
         );
         await new Promise((resolve) => setTimeout(resolve, delay));
+      }
+    }
+
+    if (recovered) {
+      // Wait for the page reload to complete.  In production the reload
+      // destroys this execution context before the first iteration runs.
+      // In environments where reload does not terminate execution (e.g.
+      // tests), we idle here until the device is closed so that we never
+      // return a pincode or re-enter the registration flow.
+      while (!this.closing) {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
       }
     }
 
@@ -539,8 +582,81 @@ export class Device extends EventEmitter {
 
       return { status: Status.Ready };
     } else {
-      const pincode = await this.register(hardwareId);
-      return { status: Status.Registering, pincode };
+      try {
+        const pincode = await this.register(hardwareId);
+        return { status: Status.Registering, pincode };
+      } catch (error) {
+        if (error instanceof RecoveryBlockedError) {
+          this.startRecoveryBlockedWatcher(hardwareId);
+          return { status: Status.RecoveryBlocked };
+        }
+
+        throw error;
+      }
+    }
+  }
+
+  private async startRecoveryBlockedWatcher(hardwareId: string) {
+    if (this.recoveryWatcherRunning) {
+      return;
+    }
+
+    this.recoveryWatcherRunning = true;
+
+    try {
+      while (!this.closing) {
+        try {
+          const location = await this.integration.getLocation!();
+          const timezone = await this.integration.getTimezone!();
+
+          const response = await fetch(`${this.baseUrl}/registrations`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              hardware_id: hardwareId,
+              location,
+              timezone,
+            }),
+          });
+
+          if (response.status === 200) {
+            const { data } = await response.json();
+            const credentials = {
+              device: {
+                id: data.id,
+                name: data.name,
+                token: data.token,
+              },
+            };
+
+            await this.integration.storeCredentials!(
+              JSON.stringify(credentials)
+            );
+            window.location.reload();
+            return;
+          }
+
+          if (response.status === 201) {
+            // Device moved back to regular registration flow.
+            window.location.reload();
+            return;
+          }
+
+          if (response.status !== 403) {
+            this.logger.info(
+              `Unexpected status while waiting for recovery eligibility: ${response.status}`
+            );
+          }
+        } catch (error) {
+          this.logger.info(`Recovery eligibility check failed: ${error}`);
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 5000));
+      }
+    } finally {
+      this.recoveryWatcherRunning = false;
     }
   }
 
@@ -584,8 +700,20 @@ export class Device extends EventEmitter {
     channel.on('device:registered', async (payload) => {
       this.logger.info(`Device registered ${payload}`);
 
+      const normalizedCredentials: Credentials = {
+        device: {
+          id: payload.device.id,
+          name: payload.device.name,
+          token: payload.device.token,
+          organizationName: payload.device.organizationName,
+          networkName: payload.device.networkName,
+        },
+      };
+
       // Store token in local storage as credentials.
-      await this.integration.storeCredentials!(JSON.stringify(payload));
+      await this.integration.storeCredentials!(
+        JSON.stringify(normalizedCredentials)
+      );
 
       // Refresh the page to initialize the player with the new credentials.
       window.location.reload();
@@ -1002,6 +1130,80 @@ export class Device extends EventEmitter {
 
   getDeviceInfo() {
     return this.integration.getDeviceInfo();
+  }
+
+  private async getChannelMetadata(credentials: Credentials): Promise<{
+    organizationName?: string;
+    networkName?: string;
+  }> {
+    try {
+      const response = await fetch(
+        `${this.baseUrl}/devices/${credentials.device.id}/channels`,
+        {
+          headers: {
+            Authorization: `Bearer ${credentials.device.token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        return {};
+      }
+
+      const payload = await response.json();
+      const channels: Array<{
+        organization_name?: string;
+        network_name?: string;
+      }> = Array.isArray(payload?.data) ? payload.data : [];
+
+      const first = channels.find(
+        (channel) => channel.organization_name || channel.network_name
+      );
+
+      return {
+        organizationName: first?.organization_name,
+        networkName: first?.network_name,
+      };
+    } catch (error) {
+      this.logger.error(`Unable to resolve channel metadata: ${error}`);
+      return {};
+    }
+  }
+
+  async getOrganizationName(): Promise<string | undefined> {
+    const credentials = await this.getCredentials();
+    if (!credentials) {
+      return;
+    }
+
+    if (credentials.device.organizationName) {
+      return credentials.device.organizationName;
+    }
+
+    const { organizationName } = await this.getChannelMetadata(credentials);
+    if (organizationName) {
+      return organizationName;
+    }
+
+    return;
+  }
+
+  async getCastmillNetworkName(): Promise<string | undefined> {
+    const credentials = await this.getCredentials();
+    if (!credentials) {
+      return;
+    }
+
+    if (credentials.device.networkName) {
+      return credentials.device.networkName;
+    }
+
+    const { networkName } = await this.getChannelMetadata(credentials);
+    if (networkName) {
+      return networkName;
+    }
+
+    return;
   }
 
   restart() {

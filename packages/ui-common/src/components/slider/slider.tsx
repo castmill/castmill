@@ -9,6 +9,7 @@ export const Slider = (props: {
   max?: number;
   step?: number;
   disabled?: boolean;
+  valueSize?: 'normal' | 'small';
   onChange?: (value: number) => void;
   onSlideStop?: (value: number) => void;
   formatValue?: (value: number) => string;
@@ -29,7 +30,14 @@ export const Slider = (props: {
   return (
     <div class={styles.sliderContainer}>
       <label class={styles.filterLabel}>
-        {props.name}: {applyFormatting(sliderValue())}
+        {props.name}:{' '}
+        <span
+          class={
+            props.valueSize === 'small' ? styles.valueSmall : styles.valueText
+          }
+        >
+          {applyFormatting(sliderValue())}
+        </span>
       </label>
       <div class={styles.sliderWrapper}>
         <input

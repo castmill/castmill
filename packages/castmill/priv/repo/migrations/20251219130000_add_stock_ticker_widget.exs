@@ -50,18 +50,25 @@ defmodule Castmill.Repo.Migrations.AddStockTickerWidget do
     }
 
     now = DateTime.utc_now() |> DateTime.truncate(:second)
+    now_naive = DateTime.to_naive(now)
 
     # Insert widget
-    {:ok, widget} =
-      %Widget{is_system: true}
-      |> Widget.changeset(widget_attrs)
-      |> Ecto.Changeset.put_change(:inserted_at, now)
-      |> Ecto.Changeset.put_change(:updated_at, now)
-      |> Repo.insert()
+    widget_row =
+      widget_attrs
+      |> Map.merge(%{
+        assets: %{},
+        fonts: [],
+        inserted_at: now_naive,
+        updated_at: now_naive,
+        update_interval_seconds: Map.get(widget_attrs, :update_interval_seconds, 60)
+      })
+      |> Map.drop([:translations])
+
+    {1, [%{id: widget_id}]} = Repo.insert_all("widgets", [widget_row], returning: [:id])
 
     # Insert the Finnhub integration for this widget
     integration_attrs = %{
-      widget_id: widget.id,
+      widget_id: widget_id,
       name: "finnhub",
       description: "Finnhub Stock API integration for real-time quotes",
       integration_type: "pull",

@@ -99,7 +99,15 @@ const DeviceView: Component<{
       title: t('common.maintainance'),
       content: () => (
         <div>
-          <Maintainance baseUrl={props.baseUrl} device={props.device} t={t} />
+          <Maintainance
+            baseUrl={props.baseUrl}
+            organizationId={props.organization_id}
+            device={props.device}
+            onDeviceUpdated={(device) => {
+              props.onChange?.({ ...props.device, ...device });
+            }}
+            t={t}
+          />
         </div>
       ),
     },
@@ -132,7 +140,7 @@ const DeviceView: Component<{
   ];
 
   return (
-    <div style="width: 56em; min-height: 28em;">
+    <div style="width: 100%; min-height: 28em;">
       <Tabs tabs={tabs} />
       <LoadingOverlay show={loading()} />
     </div>

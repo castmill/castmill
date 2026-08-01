@@ -2,7 +2,14 @@
  * Network Users & Invitations page — invite, list, block/unblock, delete users;
  * list and delete pending invitations.
  */
-import { Component, Show, For, createSignal, onMount } from 'solid-js';
+import {
+  Component,
+  Show,
+  For,
+  createSignal,
+  onMount,
+  onCleanup,
+} from 'solid-js';
 import {
   Button,
   FormItem,
@@ -27,10 +34,16 @@ const NetworkUsers: Component = () => {
   const { t } = useI18n();
   const toast = useToast();
   const { stats, setStats } = useNetworkContext();
+  let searchTimeout: ReturnType<typeof setTimeout> | null = null;
 
   // Users state
   const [users, setUsers] = createSignal<NetworkUser[]>([]);
   const [loadingUsers, setLoadingUsers] = createSignal(true);
+  const [usersPage, setUsersPage] = createSignal(1);
+  const [usersTotalPages, setUsersTotalPages] = createSignal(1);
+  const [usersTotalCount, setUsersTotalCount] = createSignal(0);
+  const [usersSearch, setUsersSearch] = createSignal('');
+  const PAGE_SIZE = 20;
 
   // User actions
   const [userToBlock, setUserToBlock] = createSignal<NetworkUser | null>(null);
@@ -68,11 +81,24 @@ const NetworkUsers: Component = () => {
     await Promise.all([loadUsers(), loadInvitations()]);
   });
 
-  const loadUsers = async () => {
+  onCleanup(() => {
+    if (searchTimeout) clearTimeout(searchTimeout);
+  });
+
+  const loadUsers = async (page?: number, search?: string) => {
     setLoadingUsers(true);
     try {
-      const data = await NetworkService.listUsers();
-      setUsers(data);
+      const currentPage = page ?? usersPage();
+      const currentSearch = search ?? usersSearch();
+      const result = await NetworkService.listUsers({
+        page: currentPage,
+        pageSize: PAGE_SIZE,
+        search: currentSearch || undefined,
+      });
+      setUsers(result.data);
+      setUsersPage(result.pagination.page);
+      setUsersTotalPages(result.pagination.total_pages);
+      setUsersTotalCount(result.pagination.total_count);
     } catch (err) {
       console.error('Failed to load users:', err);
       toast.error(t('network.users.loadError'));
@@ -283,7 +309,41 @@ const NetworkUsers: Component = () => {
 
       {/* Users List */}
       <div class={styles['users-list']}>
-        <h3>{t('network.users.listTitle')}</h3>
+        <h3>
+          {t('network.users.listTitle')}
+          <Show when={usersTotalCount() > 0}>
+            <span
+              style={{
+                'font-weight': 'normal',
+                'font-size': '0.85em',
+                'margin-left': '0.5em',
+                color: 'var(--text-secondary, #666)',
+              }}
+            >
+              ({usersTotalCount()})
+            </span>
+          </Show>
+        </h3>
+
+        {/* Search */}
+        <div style={{ 'margin-bottom': '1em' }}>
+          <FormItem
+            label={t('network.users.searchPlaceholder')}
+            id="users-search"
+            value={usersSearch()}
+            placeholder={t('network.users.searchPlaceholder')}
+            type="text"
+            onInput={(value) => {
+              const val = String(value);
+              setUsersSearch(val);
+              if (searchTimeout) clearTimeout(searchTimeout);
+              searchTimeout = setTimeout(() => {
+                setUsersPage(1);
+                loadUsers(1, val);
+              }, 300);
+            }}
+          />
+        </div>
 
         <Show when={loadingUsers()}>
           <div class={styles['empty-list']}>{t('common.loading')}</div>
@@ -370,6 +430,41 @@ const NetworkUsers: Component = () => {
                 </For>
               </tbody>
             </table>
+
+            {/* Pagination */}
+            <Show when={usersTotalPages() > 1}>
+              <div
+                style={{
+                  display: 'flex',
+                  'justify-content': 'center',
+                  'align-items': 'center',
+                  gap: '1em',
+                  'margin-top': '1em',
+                }}
+              >
+                <Button
+                  label={t('common.previous')}
+                  onClick={() => {
+                    const prev = Math.max(1, usersPage() - 1);
+                    setUsersPage(prev);
+                    loadUsers(prev);
+                  }}
+                  disabled={usersPage() <= 1}
+                />
+                <span>
+                  {usersPage()} / {usersTotalPages()}
+                </span>
+                <Button
+                  label={t('common.next')}
+                  onClick={() => {
+                    const next = Math.min(usersTotalPages(), usersPage() + 1);
+                    setUsersPage(next);
+                    loadUsers(next);
+                  }}
+                  disabled={usersPage() >= usersTotalPages()}
+                />
+              </div>
+            </Show>
           </Show>
         </Show>
       </div>
@@ -402,6 +497,7 @@ const NetworkUsers: Component = () => {
                   <tr>
                     <th>{t('common.email')}</th>
                     <th>{t('network.invitations.organizationName')}</th>
+                    <th>{t('network.users.roleLabel')}</th>
                     <th>{t('common.status')}</th>
                     <th>{t('common.created')}</th>
                     <th>{t('network.invitations.expires')}</th>
@@ -416,6 +512,7 @@ const NetworkUsers: Component = () => {
                       <tr>
                         <td>{invitation.email}</td>
                         <td>{invitation.organization_name}</td>
+                        <td>{invitation.role}</td>
                         <td>
                           <span class={styles['status-pending']}>
                             {invitation.status}
@@ -463,7 +560,7 @@ const NetworkUsers: Component = () => {
             setInviteError(null);
           }}
         >
-          <div class="invite-form">
+          <div class={styles['invite-form']}>
             <ComboBox<Organization>
               id="invite-org-selector"
               label={t('network.users.selectOrganization')}
@@ -471,8 +568,8 @@ const NetworkUsers: Component = () => {
               value={selectedInviteOrg()}
               fetchItems={fetchOrganizationsForInvite}
               renderItem={(org: Organization) => (
-                <div class="org-combobox-item">
-                  <div class="org-name">{org.name}</div>
+                <div class={styles['org-combobox-item']}>
+                  <div class={styles['org-name']}>{org.name}</div>
                 </div>
               )}
               onSelect={(org: Organization) => setSelectedInviteOrg(org)}
@@ -481,46 +578,42 @@ const NetworkUsers: Component = () => {
               onClear={() => setSelectedInviteOrg(undefined)}
             />
 
-            <div style="margin-top: 1em;">
-              <FormItem
-                label={t('network.users.inviteEmailLabel')}
-                id="invite-email"
-                value={inviteEmail()}
-                placeholder={t('network.users.inviteEmailPlaceholder')}
-                type="email"
-                onInput={(value) => setInviteEmail(String(value))}
-              />
-            </div>
+            <FormItem
+              label={t('network.users.inviteEmailLabel')}
+              id="invite-email"
+              value={inviteEmail()}
+              placeholder={t('network.users.inviteEmailPlaceholder')}
+              type="email"
+              onInput={(value) => setInviteEmail(String(value))}
+            />
 
-            <div style="margin-top: 1em;">
-              <Dropdown
-                id="invite-role"
-                name="role"
-                label={t('network.users.roleLabel')}
-                items={[
-                  {
-                    name: t('network.users.roleAdmin'),
-                    value: 'admin',
-                  },
-                  {
-                    name: t('network.users.roleMember'),
-                    value: 'member',
-                  },
-                ]}
-                defaultValue={inviteRole()}
-                onSelectChange={(value: string | null) => {
-                  if (value) {
-                    setInviteRole(value as 'admin' | 'member');
-                  }
-                }}
-              />
-            </div>
+            <Dropdown
+              id="invite-role"
+              name="role"
+              label={t('network.users.roleLabel')}
+              items={[
+                {
+                  name: t('network.users.roleAdmin'),
+                  value: 'admin',
+                },
+                {
+                  name: t('network.users.roleMember'),
+                  value: 'member',
+                },
+              ]}
+              defaultValue={inviteRole()}
+              onSelectChange={(value: string | null) => {
+                if (value) {
+                  setInviteRole(value as 'admin' | 'member');
+                }
+              }}
+            />
 
             <Show when={inviteError()}>
-              <div class="error-message">{inviteError()}</div>
+              <div class={styles['error-message']}>{inviteError()}</div>
             </Show>
 
-            <div class="modal-actions">
+            <div class={styles['modal-actions']}>
               <Button
                 label={
                   inviting()
@@ -560,7 +653,7 @@ const NetworkUsers: Component = () => {
             setBlockUserReason('');
           }}
         >
-          <div class="block-form">
+          <div class={styles['block-form']}>
             <FormItem
               label={t('network.blockReason')}
               id="block-user-reason"
@@ -568,7 +661,7 @@ const NetworkUsers: Component = () => {
               placeholder={t('network.blockReasonPlaceholder')}
               onInput={(value) => setBlockUserReason(value as string)}
             />
-            <div class="modal-actions">
+            <div class={styles['modal-actions']}>
               <Button
                 label={
                   blockingUser()

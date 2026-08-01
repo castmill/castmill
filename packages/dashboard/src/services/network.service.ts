@@ -68,6 +68,8 @@ export interface NetworkUser {
 export interface NetworkInvitation {
   id: string;
   email: string;
+  role: string;
+  organization_id: string;
   organization_name: string;
   status: string;
   inserted_at: string;
@@ -76,6 +78,16 @@ export interface NetworkInvitation {
 
 export interface PaginatedOrganizations {
   data: Organization[];
+  pagination: {
+    page: number;
+    page_size: number;
+    total_count: number;
+    total_pages: number;
+  };
+}
+
+export interface PaginatedUsers {
+  data: NetworkUser[];
   pagination: {
     page: number;
     page_size: number;
@@ -225,15 +237,27 @@ export const NetworkService = {
   },
 
   /**
-   * List all users in the network.
+   * List all users in the network with pagination and search.
    * Only available to network admins.
    */
-  async listUsers(): Promise<NetworkUser[]> {
-    const response = await authFetch(`${baseUrl}/dashboard/network/users`, {
+  async listUsers(opts?: {
+    page?: number;
+    pageSize?: number;
+    search?: string;
+  }): Promise<PaginatedUsers> {
+    const params = new URLSearchParams();
+    if (opts?.page) params.set('page', String(opts.page));
+    if (opts?.pageSize) params.set('page_size', String(opts.pageSize));
+    if (opts?.search) params.set('search', opts.search);
+
+    const qs = params.toString();
+    const url = `${baseUrl}/dashboard/network/users${qs ? `?${qs}` : ''}`;
+
+    const response = await authFetch(url, {
       method: 'GET',
     });
 
-    return handleResponse<NetworkUser[]>(response, { parse: true });
+    return handleResponse<PaginatedUsers>(response, { parse: true });
   },
 
   /**

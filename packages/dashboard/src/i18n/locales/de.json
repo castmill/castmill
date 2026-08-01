@@ -14,6 +14,7 @@
     "confirm": "Bestätigen",
     "back": "Zurück",
     "next": "Weiter",
+    "previous": "Zurück",
     "search": "Suchen...",
     "loading": "Wird geladen...",
     "error": "Fehler",
@@ -97,6 +98,7 @@
     "coordinates": "Koordinaten",
     "address": "Adresse",
     "noAddressAvailable": "Keine Adresse verfügbar",
+    "noConfigurationAvailable": "Keine Konfiguration verfügbar",
     "playlist": "Wiedergabeliste",
     "addPlaylist": "Wiedergabeliste hinzufügen",
     "widget": "Widget",
@@ -317,6 +319,7 @@
       "name": "Name",
       "email": "E-Mail",
       "noUsers": "Noch keine Benutzer in diesem Netzwerk",
+      "searchPlaceholder": "Nach Name oder E-Mail suchen...",
       "inviteTitle": "Benutzer Einladen",
       "inviteDescription": "Laden Sie einen Benutzer ein, einer Organisation in diesem Netzwerk beizutreten.",
       "inviteButton": "Benutzer Einladen",
@@ -691,7 +694,8 @@
     "errors": {
       "authenticationFailed": "Authentifizierung fehlgeschlagen. Bitte versuchen Sie es erneut.",
       "userBlocked": "Ihr Konto wurde gesperrt. Grund: {{reason}}",
-      "organizationBlocked": "Ihre Organisation wurde gesperrt. Grund: {{reason}}"
+      "organizationBlocked": "Ihre Organisation wurde gesperrt. Grund: {{reason}}",
+      "signupFailed": "Registrierung konnte nicht gestartet werden. Bitte versuchen Sie es später erneut."
     }
   },
   "credentialRecovery": {
@@ -727,7 +731,10 @@
       "couldNotCreateCredential": "Anmeldedaten konnten nicht erstellt werden",
       "couldNotGetPublicKey": "Öffentlicher Schlüssel konnte nicht abgerufen werden",
       "invalidCredential": "Ungültige Anmeldedaten",
-      "signupFailed": "Bei der Registrierung ist ein Fehler aufgetreten, kontaktieren Sie den Support. FEHLER: {{error}}"
+      "signupFailed": "Registrierung fehlgeschlagen: {{error}}. Bitte versuchen Sie es erneut oder kontaktieren Sie den Support."
+    },
+    "success": {
+      "accountCreated": "Konto erfolgreich erstellt!"
     }
   },
   "search": {
@@ -762,7 +769,9 @@
     "buildPlaylist": "Erstellen Sie hier Ihre Playlist",
     "renamePlaylist": "Playlist umbenennen",
     "playlistUpdated": "Playlist \"{{name}}\" erfolgreich aktualisiert",
+    "playlistCreated": "Playlist \"{{name}}\" erfolgreich erstellt",
     "errorUpdating": "Fehler beim Aktualisieren der Playlist {{name}}: {{error}}",
+    "errorCreating": "Fehler beim Erstellen der Playlist: {{error}}",
     "removePlaylist": "Playlist entfernen",
     "removePlaylists": "Playlists entfernen",
     "confirmRemovePlaylist": "Sind Sie sicher, dass Sie die Playlist \"{{name}}\" entfernen möchten?",
@@ -771,6 +780,9 @@
     "errorRemovingPlaylists": "Fehler beim Entfernen der Playlists: {{error}}",
     "enterPlaylistName": "Playlist-Namen eingeben",
     "dragToAdd": "Zum Hinzufügen ziehen",
+    "searchWidgets": "Widgets suchen...",
+    "dropHereToAddAtEnd": "Hier ablegen, um am Ende hinzuzufügen",
+    "duration": "Dauer",
     "aspectRatio": "Seitenverhältnis",
     "aspectRatioWidth": "Breite",
     "aspectRatioHeight": "Höhe",
@@ -800,7 +812,9 @@
     "credentialsRequired": "Anmeldedaten Erforderlich",
     "credentialsRequiredDescription": "Das Widget \"{{widget}}\" erfordert die Konfiguration von Anmeldedaten, bevor es einer Wiedergabeliste hinzugefügt werden kann.",
     "missingIntegrations": "Fehlende Integrationen",
-    "goToIntegrations": "Zu Integrationen"
+    "goToIntegrations": "Zu Integrationen",
+    "widgetModalTitle": "Widget \"{{name}}\"",
+    "configureYourWidget": "Konfiguriere dein Widget"
   },
   "layouts": {
     "title": "Layoutvorlagen",
@@ -837,6 +851,20 @@
     "title": "Widgets",
     "uploadWidget": "Widget hochladen",
     "uploadDescription": "Laden Sie eine JSON Widget-Definitionsdatei hoch.",
+    "upload": {
+      "jsonDescription": "Laden Sie eine JSON-Datei hoch, die eine Widget-Definition enthält.",
+      "requiredFields": "Erforderliche Felder",
+      "and": "und",
+      "exampleFormat": "Beispielformat",
+      "dragAndDropHint": "Oder ziehen Sie JSON- oder ZIP-Dateien hierher...",
+      "ready": "Bereit",
+      "invalidFileType": "Ungültiger Dateityp. Nur JSON- und ZIP-Dateien werden unterstützt.",
+      "invalidWidgetJson": "Ungültiges Widget-JSON: muss die Felder \"name\" und \"template\" enthalten",
+      "validationFailed": "Validierung fehlgeschlagen",
+      "uploadFailed": "Upload fehlgeschlagen",
+      "uploadedSuccessfully": "Erfolgreich hochgeladen",
+      "uploadError": "Upload-Fehler"
+    },
     "widgetDetails": "Widget-Details",
     "updateInterval": "Aktualisierungsintervall",
     "viewDetails": "Details anzeigen",
@@ -909,7 +937,8 @@
       "enterClientCredentials": "Geben Sie unten Ihre {{provider}} API-Anmeldedaten ein:",
       "afterSavingCredentials": "Nachdem Sie Ihre Anmeldedaten gespeichert haben, klicken Sie unten, um sich bei {{provider}} zu autorisieren:",
       "networkCredentialsConfigured": "Die {{provider}}-Integration wurde von Ihrem Netzwerkadministrator konfiguriert. Klicken Sie unten, um Ihr Konto zu autorisieren:"
-    }
+    },
+    "translations": "Übersetzungen"
   },
   "devices": {
     "setDeviceChannel": "Gerätekanal festlegen",
@@ -957,7 +986,17 @@
       "checkUpdatesDescription": "Nach Updates suchen und installieren. Dies startet das Gerät nicht neu",
       "updateFirmware": "Firmware aktualisieren",
       "updateFirmwareDescription": "Aktualisiert die Firmware des Geräts",
-      "offlineMessage": "Gerät ist offline, daher können keine Befehle gesendet werden"
+      "offlineMessage": "Gerät ist offline, daher können keine Befehle gesendet werden",
+      "autorecoveryUpdated": "Automatische Wiederherstellung wurde aktualisiert",
+      "autorecoveryUpdateFailed": "Automatische Wiederherstellung konnte nicht aktualisiert werden",
+      "edit": "Bearbeiten",
+      "enableForOneHour": "Für eine Stunde aktivieren",
+      "enableForever": "Für immer aktivieren",
+      "disable": "Deaktivieren",
+      "recoverLostSettingsLabel": "Verlorene Einstellungen wiederherstellen",
+      "disabled": "Deaktiviert",
+      "enabledMinutesRemaining": "Aktiviert (noch {{minutes}} Minuten)",
+      "enabledForever": "Für immer aktiviert"
     },
     "cache": {
       "title": "Geräte-Cache",
@@ -1023,7 +1062,9 @@
     "devicesRemovedSuccess": "{{count}} Gerät(e) erfolgreich entfernt",
     "errorRegisteringDevice": "Fehler beim Registrieren des Geräts: {{error}}",
     "errorRemovingDevice": "Fehler beim Entfernen des Geräts {{name}}: {{error}}",
-    "errorRemovingDevices": "Fehler beim Entfernen der Geräte: {{error}}"
+    "errorRemovingDevices": "Fehler beim Entfernen der Geräte: {{error}}",
+    "enterDescription": "Beschreibung eingeben",
+    "drawerTitle": "Gerät \"{{name}}\""
   },
   "validation": {
     "fieldRequired": "Dieses Feld ist erforderlich",
@@ -1147,9 +1188,9 @@
     }
   },
   "filters": {
-    "teamLabel": "Mannschaft",
-    "teamPlaceholder": "Mannschaft auswählen",
-    "teamClear": "Mannschaftsfilter löschen",
+    "teamLabel": "Team",
+    "teamPlaceholder": "Team auswählen",
+    "teamClear": "Team-Filter löschen",
     "tagLabel": "Tags",
     "tagPlaceholder": "Nach Tags filtern…",
     "tagClear": "Tag-Filter löschen",
@@ -1291,7 +1332,10 @@
     "thumbnail": {
       "failedTitle": "Die Transkodierung ist fehlgeschlagen",
       "failedDefaultMessage": "Die Vorschau konnte nicht automatisch generiert werden."
-    }
+    },
+    "drawerTitle": "Medien \"{{name}}\"",
+    "mediaUpdated": "Medien \"{{name}}\" erfolgreich aktualisiert",
+    "errorUpdating": "Fehler beim Aktualisieren von Medien {{name}}: {{error}}"
   },
   "dashboard": {
     "noOrganizations": {

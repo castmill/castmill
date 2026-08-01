@@ -19,23 +19,61 @@ git clone https://github.com/castmill/castmill.git
 cd castmill
 ```
 
-## 2. Start the Services
+## 2. Configure Environment Variables
+
+Create a `.env` file in the repository root with the required values:
+
+```bash
+DATABASE_URL=ecto://postgres:postgres@db/castmill_dev
+SECRET_KEY_BASE=replace-with-64-char-secret
+CASTMILL_DASHBOARD_USER_SALT=replace-with-random-salt
+CASTMILL_ROOT_USER_EMAIL=root@example.com
+CASTMILL_ROOT_USER_PASSWORD=root
+ENCRYPTION_MASTER_KEY=replace-with-base64-32-byte-key
+
+AWS_ACCESS_KEY_ID=minioadmin
+AWS_SECRET_ACCESS_KEY=minioadmin
+AWS_S3_BUCKET=castmill-media
+AWS_REGION=us-east-1
+
+MAILGUN_API_KEY=replace-with-mail-provider-key
+MAILGUN_DOMAIN=mail.example.com
+MAILER_FROM=noreply@example.com
+```
+
+You can generate secure values with:
+
+```bash
+mix phx.gen.secret   # SECRET_KEY_BASE
+openssl rand -base64 32   # ENCRYPTION_MASTER_KEY
+```
+
+If your local `docker-compose.yaml` does not already pass `ENCRYPTION_MASTER_KEY` to the backend container, add:
+
+```yaml
+backend:
+  environment:
+    ENCRYPTION_MASTER_KEY: ${ENCRYPTION_MASTER_KEY}
+```
+
+## 3. Start the Services
 
 ```bash
 docker-compose up
 ```
 
-This starts three services:
+This starts four services:
 
-| Service       | URL                     | Purpose                    |
-| ------------- | ----------------------- | -------------------------- |
-| **Server**    | `http://localhost:4000` | Elixir/Phoenix API backend |
-| **Dashboard** | `http://localhost:3000` | Management interface       |
-| **Database**  | internal                | PostgreSQL database        |
+| Service       | URL                     | Purpose                     |
+| ------------- | ----------------------- | --------------------------- |
+| **Server**    | `http://localhost:4000` | Elixir/Phoenix API backend  |
+| **Dashboard** | `http://localhost:3000` | Management interface        |
+| **Database**  | internal                | PostgreSQL database         |
+| **Redis**     | internal                | Caching and background jobs |
 
 The first run takes a few minutes to build images and set up the database. You'll see logs from all services in your terminal.
 
-## 3. Log In to the Admin Tool
+## 4. Log In to the Admin Tool
 
 Once the services are running, open the admin tool at:
 
@@ -52,16 +90,18 @@ Use the default credentials:
 Change the default credentials immediately in a production environment. The admin tool has full control over all networks, organizations, and data.
 :::
 
-## 4. Create Your First Network
+## 5. Create Your First Network
 
 A **network** is the top-level container in Castmill. Each network is tied to a domain and acts as an isolated silo of data.
 
 1. In the admin tool, go to **Networks**
 2. Click **Create Network**
-3. Enter a name and domain (e.g., `localhost` for local testing)
+3. Enter a name and domain. For localhost testing, set the **Domain** field to `localhost:3000` (host + port).
+   This ensures it matches the dashboard origin `http://localhost:3000` used by CORS checks.
+   In production, use your public domain (for example, `signage.example.com`).
 4. Save
 
-## 5. Access the Dashboard
+## 6. Access the Dashboard
 
 Open the dashboard at:
 

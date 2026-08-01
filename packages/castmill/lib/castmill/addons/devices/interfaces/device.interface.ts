@@ -10,5 +10,6 @@ export interface Device {
   last_ip: string;
   inserted_at: Date;
   updated_at: Date;
-  log_level: "info" | "warning" | "error" | "debug" | "critical" | "trace";
+  autorecover_until?: string | null;
+  log_level: 'info' | 'warning' | 'error' | 'debug' | 'critical' | 'trace';
 }

@@ -14,6 +14,7 @@
     "confirm": "確認",
     "back": "戻る",
     "next": "次へ",
+    "previous": "前へ",
     "search": "検索...",
     "loading": "読み込み中...",
     "error": "エラー",
@@ -101,6 +102,7 @@
     "coordinates": "座標",
     "address": "住所",
     "noAddressAvailable": "利用可能な住所がありません",
+    "noConfigurationAvailable": "利用可能な設定がありません",
     "playlist": "プレイリスト",
     "addPlaylist": "プレイリストを追加",
     "selectVideo": "ビデオを選択",
@@ -303,6 +305,7 @@
       "name": "名前",
       "email": "メールアドレス",
       "noUsers": "このネットワークにはまだユーザーがいません",
+      "searchPlaceholder": "名前またはメールで検索...",
       "inviteTitle": "ユーザーを招待",
       "inviteDescription": "このネットワーク内の組織にユーザーを招待します。",
       "inviteButton": "ユーザーを招待",
@@ -562,7 +565,8 @@
     "errors": {
       "authenticationFailed": "認証に失敗しました。もう一度お試しください。",
       "userBlocked": "あなたのアカウントはブロックされています。理由: {{reason}}",
-      "organizationBlocked": "あなたの組織はブロックされています。理由: {{reason}}"
+      "organizationBlocked": "あなたの組織はブロックされています。理由: {{reason}}",
+      "signupFailed": "サインアップを開始できませんでした。後でもう一度お試しください。"
     }
   },
   "credentialRecovery": {
@@ -744,7 +748,9 @@
     "buildPlaylist": "ここでプレイリストを作成してください",
     "renamePlaylist": "プレイリストの名前を変更",
     "playlistUpdated": "プレイリスト「{{name}}」が正常に更新されました",
+    "playlistCreated": "プレイリスト「{{name}}」が正常に作成されました",
     "errorUpdating": "プレイリスト{{name}}の更新中にエラーが発生しました：{{error}}",
+    "errorCreating": "プレイリストの作成中にエラーが発生しました：{{error}}",
     "removePlaylist": "プレイリストを削除",
     "removePlaylists": "プレイリストを削除",
     "confirmRemovePlaylist": "プレイリスト「{{name}}」を削除してもよろしいですか？",
@@ -753,6 +759,9 @@
     "errorRemovingPlaylists": "プレイリストの削除中にエラーが発生しました：{{error}}",
     "enterPlaylistName": "プレイリスト名を入力してください",
     "dragToAdd": "ドラッグして追加",
+    "searchWidgets": "ウィジェットを検索...",
+    "dropHereToAddAtEnd": "末尾に追加するにはここにドロップ",
+    "duration": "再生時間",
     "aspectRatio": "アスペクト比",
     "aspectRatioWidth": "幅",
     "aspectRatioHeight": "高さ",
@@ -782,7 +791,9 @@
     "credentialsRequired": "認証情報が必要です",
     "credentialsRequiredDescription": "Widget「{{widget}}」をプレイリストに追加する前に、認証情報を設定する必要があります。",
     "missingIntegrations": "不足している統合",
-    "goToIntegrations": "統合に移動"
+    "goToIntegrations": "統合に移動",
+    "widgetModalTitle": "ウィジェット \"{{name}}\"",
+    "configureYourWidget": "ウィジェットを設定してください"
   },
   "layouts": {
     "title": "レイアウト",
@@ -819,6 +830,20 @@
     "title": "Widgets",
     "uploadWidget": "Widgetをアップロード",
     "uploadDescription": "Widget JSON定義ファイルをアップロードします。",
+    "upload": {
+      "jsonDescription": "ウィジェット定義を含む JSON ファイルをアップロードします。",
+      "requiredFields": "必須フィールド",
+      "and": "と",
+      "exampleFormat": "サンプル形式",
+      "dragAndDropHint": "または JSON / ZIP ファイルをここにドラッグ＆ドロップしてください...",
+      "ready": "準備完了",
+      "invalidFileType": "無効なファイル形式です。JSON と ZIP ファイルのみサポートされています。",
+      "invalidWidgetJson": "無効なウィジェット JSON: \"name\" と \"template\" フィールドが必要です",
+      "validationFailed": "検証に失敗しました",
+      "uploadFailed": "アップロードに失敗しました",
+      "uploadedSuccessfully": "アップロードに成功しました",
+      "uploadError": "アップロードエラー"
+    },
     "widgetDetails": "Widgetの詳細",
     "updateInterval": "更新間隔",
     "viewDetails": "詳細を表示",
@@ -891,7 +916,8 @@
       "enterClientCredentials": "以下に{{provider}} APIの資格情報を入力してください：",
       "afterSavingCredentials": "資格情報を保存した後、下のボタンをクリックして{{provider}}で認証してください：",
       "networkCredentialsConfigured": "ネットワーク管理者が{{provider}}の資格情報を既に設定しています。下のボタンをクリックするだけでアカウントを接続できます。"
-    }
+    },
+    "translations": "翻訳"
   },
   "devices": {
     "setDeviceChannel": "デバイスチャンネルを設定",
@@ -939,7 +965,17 @@
       "checkUpdatesDescription": "更新を確認してインストールします。これによりデバイスは再起動されません",
       "updateFirmware": "ファームウェアを更新",
       "updateFirmwareDescription": "デバイスのファームウェアを更新します",
-      "offlineMessage": "デバイスがオフラインのため、コマンドを送信できません"
+      "offlineMessage": "デバイスがオフラインのため、コマンドを送信できません",
+      "autorecoveryUpdated": "自動復旧が更新されました",
+      "autorecoveryUpdateFailed": "自動復旧の更新に失敗しました",
+      "edit": "編集",
+      "enableForOneHour": "1時間有効にする",
+      "enableForever": "無期限で有効にする",
+      "disable": "無効化",
+      "recoverLostSettingsLabel": "失われた設定を復元",
+      "disabled": "無効",
+      "enabledMinutesRemaining": "有効（残り {{minutes}} 分）",
+      "enabledForever": "無期限で有効"
     },
     "cache": {
       "title": "デバイスキャッシュ",
@@ -1005,7 +1041,9 @@
     "devicesRemovedSuccess": "{{count}}個のデバイスが正常に削除されました",
     "errorRegisteringDevice": "デバイスの登録エラー: {{error}}",
     "errorRemovingDevice": "デバイス{{name}}の削除エラー: {{error}}",
-    "errorRemovingDevices": "デバイスの削除エラー: {{error}}"
+    "errorRemovingDevices": "デバイスの削除エラー: {{error}}",
+    "enterDescription": "説明を入力してください",
+    "drawerTitle": "デバイス \"{{name}}\""
   },
   "validation": {
     "fieldRequired": "この項目は必須です",
@@ -1039,7 +1077,10 @@
       "couldNotCreateCredential": "認証情報を作成できませんでした",
       "couldNotGetPublicKey": "公開鍵を取得できませんでした",
       "invalidCredential": "無効な認証情報です",
-      "signupFailed": "サインアップ中に問題が発生しました。サポートにお問い合わせください。エラー：{{error}}"
+      "signupFailed": "サインアップに失敗しました：{{error}}。もう一度お試しいただくか、サポートにお問い合わせください。"
+    },
+    "success": {
+      "accountCreated": "アカウントが正常に作成されました！"
     }
   },
   "search": {
@@ -1297,7 +1338,10 @@
     "thumbnail": {
       "failedTitle": "トランスコードに失敗しました",
       "failedDefaultMessage": "プレビューを自動生成できませんでした。"
-    }
+    },
+    "drawerTitle": "メディア \"{{name}}\"",
+    "mediaUpdated": "メディア \"{{name}}\" が正常に更新されました",
+    "errorUpdating": "メディア {{name}} の更新エラー：{{error}}"
   },
   "dashboard": {
     "noOrganizations": {

@@ -53,9 +53,18 @@ export const PlaylistDetails = (props: {
     <div class="playlist-details">
       <div class="info">
         {t('common.addedOn')}{' '}
-        <Timestamp value={props.playlist.inserted_at} mode="relative" />.{' '}
-        {t('common.lastUpdatedOn')}{' '}
-        <Timestamp value={props.playlist.updated_at} mode="relative" />.
+        <Timestamp
+          value={props.playlist.inserted_at}
+          mode="relative"
+          locale={props.store?.i18n?.locale?.()}
+        />
+        . {t('common.lastUpdatedOn')}{' '}
+        <Timestamp
+          value={props.playlist.updated_at}
+          mode="relative"
+          locale={props.store?.i18n?.locale?.()}
+        />
+        .
       </div>
       <form
         onSubmit={async (e) => {
@@ -93,7 +102,7 @@ export const PlaylistDetails = (props: {
 
         <div class="actions">
           <Button
-            label={t('common.update')}
+            label={t('common.save')}
             type="submit"
             disabled={!isFormValid()}
             icon={BsCheckLg}

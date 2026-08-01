@@ -65,6 +65,19 @@ describe('ToolBar Component', () => {
     expect(mockSearch).toHaveBeenCalledWith('Test Search');
   });
 
+  it('renders a custom search placeholder when provided', () => {
+    render(() => (
+      <ToolBar onSearch={() => {}} searchPlaceholder="Find items" />
+    ));
+    expect(screen.getByPlaceholderText('Find items')).toBeInTheDocument();
+  });
+
+  it('uses empty string search placeholder when explicitly provided', () => {
+    render(() => <ToolBar onSearch={() => {}} searchPlaceholder="" />);
+    const searchInput = screen.getByRole('textbox');
+    expect(searchInput).toHaveAttribute('placeholder', '');
+  });
+
   it('renders action buttons and triggers them correctly', () => {
     const mockAction = vi.fn();
     render(() => (

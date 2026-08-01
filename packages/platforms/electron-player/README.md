@@ -24,6 +24,53 @@ Copy the relevant `.env.*` file and configure the variables. The following envir
 | `VITE_KIOSK`          | Enable kiosk mode (`true`/`false`)                            | Yes      |
 | `VITE_FULLSCREEN`     | Enable fullscreen mode (`true`/`false`)                       | Yes      |
 | `VITE_GOOGLE_API_KEY` | Google API key for geolocation services                       | No\*     |
+| `CASTMILL_UPDATE_URL` | Electron auto-update feed URL used at build time              | Yes\*\*  |
+
+#### Auto-update URL (build-time)
+
+The Electron auto-update feed URL is injected at build time via `CASTMILL_UPDATE_URL`.
+
+`CASTMILL_UPDATE_URL` is mandatory for `electron-builder` config.
+
+A guard script (`yarn guard:update-url`) is run by all provided builder scripts to fail fast if it is missing.
+
+Build scripts use plain POSIX environment variable assignment. Windows shells are not supported for these scripts right now.
+
+Defaults:
+
+- Staging builds use `https://updates.castmill.dev/electron`
+- Production builds use `https://updates.castmill.io/electron`
+
+The default OS build commands (`build:mac`, `build:linux`) produce **staging** builds.
+
+Use these scripts for explicit targets:
+
+```bash
+# Staging
+yarn build:staging:mac
+yarn build:staging:linux
+
+# Production
+yarn build:prod:mac
+yarn build:prod:linux
+```
+
+You can still override the URL manually by setting `CASTMILL_UPDATE_URL` when invoking the provided build scripts or `electron-builder` directly.
+
+> **Note**:
+>
+> - The provided build scripts (`build:*`, `build:staging:*`, `build:prod:*`, `build:unpack`) set `CASTMILL_UPDATE_URL` for you.
+> - If you invoke `electron-builder` directly, you must set `CASTMILL_UPDATE_URL` yourself and should run `yarn guard:update-url` first.
+
+#### Linux update feed format
+
+For Linux, the update URL must host Electron Updater generic feed metadata and the referenced artifact files.
+
+- Required metadata: `latest-linux.yml`
+- Required artifact: the Linux package referenced by the metadata (typically `.AppImage`)
+- Optional artifact: `.zsync` (for differential AppImage updates)
+
+At runtime, the updater reads `latest-linux.yml` from the configured base URL and then downloads the file listed in that manifest.
 
 #### Geolocation & Google API Key
 
@@ -52,9 +99,6 @@ $ yarn dev
 ### Build
 
 ```bash
-# For windows
-$ yarn build:win
-
 # For macOS
 $ yarn build:mac
 
