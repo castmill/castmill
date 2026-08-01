@@ -120,10 +120,7 @@ defmodule CastmillWeb.SignUpController do
                 # User already exists — send a different email explaining this,
                 # but return the same response to prevent email enumeration.
                 UserNotifier.deliver_already_registered_notice(email, origin)
-
-                conn
-                |> put_status(:created)
-                |> json(%{status: :ok, signup: %{email: email}})
+                signup_success_response(conn, email)
 
               nil ->
                 # New user — proceed with normal signup flow
@@ -147,27 +144,16 @@ defmodule CastmillWeb.SignUpController do
       {:ok, signup} ->
         case UserNotifier.deliver_signup_instructions(signup, origin) do
           {:ok, _email} ->
-            # Serialize the signup struct
-            signup_data = %{
-              id: signup.id,
-              email: signup.email,
-              inserted_at: signup.inserted_at,
-              updated_at: signup.updated_at,
-              challenge: signup.challenge,
-              status_message: signup.status_message
-            }
-
-            conn
-            |> put_status(:created)
-            |> json(%{status: :ok, signup: signup_data})
+            signup_success_response(conn, signup.email)
 
           {:error, reason} ->
+            Logger.error("Failed to send signup email for #{email}: #{inspect(reason)}")
+
             conn
             |> put_status(:unprocessable_entity)
             |> json(%{
               status: :error,
-              msg: "Failed to send email",
-              error: inspect(reason)
+              msg: "Failed to send email"
             })
         end
 
@@ -177,6 +163,16 @@ defmodule CastmillWeb.SignUpController do
         |> json(%{status: :error})
     end
   end
+
+  # Returns a uniform success response for signup requests.
+  # Both the new-user and existing-user paths use this so the
+  # response body cannot be used for email enumeration.
+  defp signup_success_response(conn, email) do
+    conn
+    |> put_status(:created)
+    |> json(%{status: :ok, signup: %{email: email}})
+  end
+
 
   @doc """
     Create a new user from a signup and passkey authentication.
