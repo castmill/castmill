@@ -98,12 +98,10 @@ config :ex_aws, :s3,
   secret_access_key: System.get_env("AWS_SECRET_ACCESS_KEY")
 
 # Configure BullMQ
-config :castmill, :redis,
-  host: System.get_env("REDIS_HOST") || "localhost",
-  port: String.to_integer(System.get_env("REDIS_PORT") || "6379")
+config :bullmq, :backend, BullMQ.Backends.Postgres
 
 config :castmill, :bullmq,
-  connection: :castmill_redis,
+  connection: :castmill_bullmq,
   queues: [
     {:image_transcoder, concurrency: 10},
     {:video_transcoder, concurrency: 10},
@@ -112,6 +110,10 @@ config :castmill, :bullmq,
     {:maintenance, concurrency: 2},
     {:email, concurrency: 5}
   ]
+
+config :castmill, :bullmq_postgres,
+  schema: "bullmq",
+  pool_size: 10
 
 # Configure Spotify OAuth (widget integration)
 # In production, set SPOTIFY_CLIENT_ID, SPOTIFY_CLIENT_SECRET, and SPOTIFY_REDIRECT_URI
