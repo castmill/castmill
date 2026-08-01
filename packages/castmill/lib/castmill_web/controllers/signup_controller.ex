@@ -27,7 +27,12 @@ defmodule CastmillWeb.SignUpController do
           case validate_invitation_token(invitation_token, email, network.invitation_only) do
             :valid ->
               challenge = SessionUtils.new_challenge()
-              params = %{"email" => email, "challenge" => challenge, "network_id" => network_id}
+
+              params = %{
+                "email" => email,
+                "challenge" => challenge,
+                "network_id" => network_id
+              }
 
               case Accounts.create_signup(params) do
                 {:ok, signup} ->
@@ -141,7 +146,12 @@ defmodule CastmillWeb.SignUpController do
 
   defp create_signup_and_send_email(conn, email, network_id, origin) do
     challenge = SessionUtils.new_challenge()
-    params = %{"email" => email, "challenge" => challenge, "network_id" => network_id}
+
+    params = %{
+      "email" => email,
+      "challenge" => challenge,
+      "network_id" => network_id
+    }
 
     case Accounts.create_signup(params) do
       {:ok, signup} ->
