@@ -10,6 +10,12 @@ defmodule CastmillWeb.DeviceControllerTest do
   import Castmill.ChannelsFixtures
   import Castmill.PlaylistsFixtures
 
+  defp run_request_with_device_response(request_fun, response) do
+    task = Task.async(request_fun)
+    send(task.pid, {:device_response, response})
+    Task.await(task)
+  end
+
   @moduletag :e2e
   @moduletag :device_controller
 
@@ -733,6 +739,118 @@ defmodule CastmillWeb.DeviceControllerTest do
       # User from other organization should NOT be able to access
       conn = get(other_conn, "/dashboard/devices/#{device.id}/playlists/#{playlist.id}")
       assert json_response(conn, 403)
+    end
+  end
+
+  describe "get_cache param validation" do
+    @describetag device_controller: true
+
+    test "accepts a valid cache type without a validation error", %{
+      conn: conn,
+      organization: organization
+    } do
+      {:ok, devices_registration} =
+        device_registration_fixture(%{hardware_id: "cache-hw-valid", pincode: "cache01"})
+
+      {:ok, {device, _token}} =
+        Castmill.Devices.register_device(organization.id, devices_registration.pincode, %{
+          name: "Cache Device Valid"
+        })
+
+      conn =
+        run_request_with_device_response(
+          fn ->
+            get(
+              conn,
+              "/dashboard/devices/#{device.id}/cache?type=data&page=1&page_size=10"
+            )
+          end,
+          %{data: [], count: 0}
+        )
+
+      response = json_response(conn, 200)
+      assert response["data"] == []
+      assert response["count"] == 0
+    end
+
+    test "rejects an invalid cache type with a proper inclusion error", %{
+      conn: conn,
+      organization: organization
+    } do
+      {:ok, devices_registration} =
+        device_registration_fixture(%{hardware_id: "cache-hw-invalid", pincode: "cache02"})
+
+      {:ok, {device, _token}} =
+        Castmill.Devices.register_device(organization.id, devices_registration.pincode, %{
+          name: "Cache Device Invalid"
+        })
+
+      conn =
+        get(
+          conn,
+          "/dashboard/devices/#{device.id}/cache?type=bogus&page=1&page_size=10"
+        )
+
+      response = json_response(conn, 400)
+      assert Map.has_key?(response, "errors")
+      assert Map.has_key?(response["errors"], "type")
+      refute response["errors"]["type"] == ["validate_allowed is not supported"]
+    end
+  end
+
+  describe "delete_cache param validation" do
+    @describetag device_controller: true
+
+    test "accepts a valid cache type without a validation error", %{
+      conn: conn,
+      organization: organization
+    } do
+      {:ok, devices_registration} =
+        device_registration_fixture(%{hardware_id: "cache-delete-valid", pincode: "cache03"})
+
+      {:ok, {device, _token}} =
+        Castmill.Devices.register_device(organization.id, devices_registration.pincode, %{
+          name: "Cache Delete Valid"
+        })
+
+      conn =
+        run_request_with_device_response(
+          fn ->
+            delete(conn, "/dashboard/devices/#{device.id}/cache", %{
+              "type" => "all",
+              "urls" => []
+            })
+          end,
+          %{success: true, deleted: 0}
+        )
+
+      response = json_response(conn, 200)
+      assert response["success"] == true
+      assert response["deleted"] == 0
+    end
+
+    test "rejects an invalid cache type with a proper inclusion error", %{
+      conn: conn,
+      organization: organization
+    } do
+      {:ok, devices_registration} =
+        device_registration_fixture(%{hardware_id: "cache-delete-invalid", pincode: "cache04"})
+
+      {:ok, {device, _token}} =
+        Castmill.Devices.register_device(organization.id, devices_registration.pincode, %{
+          name: "Cache Delete Invalid"
+        })
+
+      conn =
+        delete(conn, "/dashboard/devices/#{device.id}/cache", %{
+          "type" => "bogus",
+          "urls" => []
+        })
+
+      response = json_response(conn, 400)
+      assert Map.has_key?(response, "errors")
+      assert Map.has_key?(response["errors"], "type")
+      refute response["errors"]["type"] == ["validate_allowed is not supported"]
     end
   end
 end
