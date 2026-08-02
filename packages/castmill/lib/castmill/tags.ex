@@ -396,13 +396,6 @@ defmodule Castmill.Tags do
       when is_integer(tag_group_id) do
     id_field = Keyword.get(opts, :id_field, :id)
 
-    query =
-      if has_named_binding?(query, :resource) do
-        query
-      else
-        from(q in query, as: :resource)
-      end
-
     from(q in query,
       where:
         not exists(
@@ -412,8 +405,7 @@ defmodule Castmill.Tags do
             where:
               rt.resource_type == ^resource_type and
                 t.tag_group_id == ^tag_group_id and
-                rt.resource_id ==
-                  fragment("CAST(? AS text)", field(parent_as(:resource), ^id_field)),
+                rt.resource_id == fragment("CAST(? AS text)", field(q, ^id_field)),
             select: 1
           )
         )
