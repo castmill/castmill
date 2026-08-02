@@ -34,12 +34,31 @@ if config_env() == :prod do
       For example: ecto://USER:PASS@HOST/DATABASE
       """
 
-  # Configures the mailer. For now we use Mailgun, maybe we can include others in the future
-  config :castmill, Castmill.Mailer,
-    adapter: Swoosh.Adapters.Mailgun,
-    api_key: CastmillWeb.Secrets.get_mailgun_api_key(),
-    domain: System.get_env("MAILGUN_DOMAIN"),
-    base_url: System.get_env("MAILGUN_BASE_URL")
+  # Configures the mailer — choose between generic SMTP or Mailgun based on env vars.
+  # If SMTP_HOST is set, generic SMTP is used; otherwise Mailgun is configured.
+  if smtp_host = System.get_env("SMTP_HOST") do
+    smtp_port =
+      case Integer.parse(System.get_env("SMTP_PORT") || "587") do
+        {port, ""} -> port
+        _ -> raise "SMTP_PORT must be a valid integer, e.g. 587 or 465"
+      end
+
+    config :castmill, Castmill.Mailer,
+      adapter: Swoosh.Adapters.SMTP,
+      relay: smtp_host,
+      port: smtp_port,
+      username: System.get_env("SMTP_USERNAME"),
+      password: System.get_env("SMTP_PASSWORD"),
+      ssl: System.get_env("SMTP_SSL") == "true",
+      tls: :if_available,
+      auth: :if_available
+  else
+    config :castmill, Castmill.Mailer,
+      adapter: Swoosh.Adapters.Mailgun,
+      api_key: CastmillWeb.Secrets.get_mailgun_api_key(),
+      domain: System.get_env("MAILGUN_DOMAIN"),
+      base_url: System.get_env("MAILGUN_BASE_URL")
+  end
 
   # Choose S3 or Local as file upload destination
   # config :castmill, :file_storage, :s3

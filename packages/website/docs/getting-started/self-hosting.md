@@ -16,7 +16,7 @@ graph TD
     Device[Display Device] -->|HTTPS + WebSocket| Server
     Server --> DB[(PostgreSQL)]
     Server --> S3[Object Storage<br/>S3 / R2 / MinIO]
-    Server --> SMTP[Email Service<br/>Mailgun / SES]
+    Server --> SMTP[Email Service<br/>SMTP / Mailgun]
 ```
 
 | Component           | Purpose                                     | Required? |
@@ -162,6 +162,7 @@ SMTP_HOST=smtp.your-provider.com
 SMTP_PORT=587
 SMTP_USERNAME=your-username
 SMTP_PASSWORD=your-password
+SMTP_SSL=false
 MAILER_FROM=noreply@your-domain.com
 ```
 
@@ -181,8 +182,13 @@ MAILER_FROM=noreply@your-domain.com
 | `AWS_SECRET_ACCESS_KEY` | Yes      | —                       | S3 secret key                     |
 | `AWS_S3_BUCKET`         | Yes      | —                       | S3 bucket name                    |
 | `AWS_REGION`            | No       | `eu-central-1`          | S3 region                         |
-| `MAILGUN_API_KEY`       | Cond.    | —                       | Mailgun API key                   |
+| `MAILGUN_API_KEY`       | Cond.    | —                       | Mailgun API key (if using Mailgun) |
 | `MAILGUN_DOMAIN`        | Cond.    | —                       | Mailgun sending domain            |
+| `SMTP_HOST`             | Cond.    | —                       | SMTP relay hostname (if using SMTP) |
+| `SMTP_PORT`             | No       | `587`                   | SMTP port                         |
+| `SMTP_USERNAME`         | Cond.    | —                       | SMTP authentication username      |
+| `SMTP_PASSWORD`         | Cond.    | —                       | SMTP authentication password      |
+| `SMTP_SSL`              | No       | `false`                 | Set `true` for SSL/TLS (port 465) |
 | `MAILER_FROM`           | No       | `no-reply@castmill.com` | Sender email address              |
 | `REDIS_HOST`            | No       | `localhost`             | Redis host                        |
 | `REDIS_PORT`            | No       | `6379`                  | Redis port                        |
