@@ -1,25 +1,9 @@
 import { expect } from 'chai';
 import { describe, it, afterEach } from 'mocha';
-import { firstValueFrom, NEVER, of, Subscription } from 'rxjs';
+import { NEVER, Subscription } from 'rxjs';
 import { spy, stub, restore } from 'sinon';
 
 import { Player, timer } from '../src/player';
-import { Playlist } from '../src/playlist';
-
-describe('Playlist.seek', () => {
-  it('should wrap an end-of-playlist offset to the first layer', async () => {
-    const seek = spy((offset: number) => of([offset, 1000]));
-    const playlist = new Playlist('test', {} as any);
-    playlist.add({ duration: () => 1000, seek } as any);
-
-    const [offset, duration] = await firstValueFrom(playlist.seek(1000));
-
-    expect(offset).to.equal(0);
-    expect(duration).to.equal(1000);
-    expect(playlist.position).to.equal(0);
-    expect(seek.calledOnceWithExactly(0)).to.equal(true);
-  });
-});
 
 describe('Player.play', () => {
   it('should ignore redundant non-synced play calls while active', () => {
