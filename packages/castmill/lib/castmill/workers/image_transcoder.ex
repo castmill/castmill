@@ -55,7 +55,8 @@ defmodule Castmill.Workers.ImageTranscoder do
       Repo.transaction(fn ->
         {_final_progress, files_map, new_size} =
           Enum.reduce(@file_sizes_and_contexts, {0.0, %{}, 0}, fn {size, context},
-                                                                  {acc_progress, acc_map, acc_size} ->
+                                                                  {acc_progress, acc_map,
+                                                                   acc_size} ->
             {uri, size} =
               Image.open!(stream)
               |> Image.thumbnail!(size)

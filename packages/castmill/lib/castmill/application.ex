@@ -82,11 +82,21 @@ defmodule Castmill.Application do
 
   defp parse_node_mode(mode) when is_binary(mode) do
     case mode |> String.trim() |> String.downcase() do
-      "web" -> :web
-      "worker" -> :worker
-      "web+worker" -> :web_worker
-      "web_worker" -> :web_worker
-      "" -> :web_worker
+      "web" ->
+        :web
+
+      "worker" ->
+        :worker
+
+      "web+worker" ->
+        :web_worker
+
+      "web_worker" ->
+        :web_worker
+
+      "" ->
+        :web_worker
+
       other ->
         Logger.warning(
           "Unknown CASTMILL_NODE_MODE=#{inspect(other)}; defaulting to \"web+worker\""
@@ -196,10 +206,7 @@ defmodule Castmill.Application do
       queue_name = to_string(queue)
 
       Supervisor.child_spec(
-        {BullMQ.QueueEvents,
-         queue: queue_name,
-         connection: connection,
-         handler: handler},
+        {BullMQ.QueueEvents, queue: queue_name, connection: connection, handler: handler},
         id: Module.concat([Castmill.Workers.BullMQEvents, queue])
       )
     end)
