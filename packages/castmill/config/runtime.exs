@@ -24,6 +24,13 @@ end
 
 IO.puts("Loading runtime configuration for #{config_env()} environment")
 
+# Node mode selection (applies to every environment). Controls whether this
+# node runs the web endpoint, the BullMQ workers, or both. Valid values are
+# "web+worker" (default), "web" and "worker". See lib/castmill/application.ex.
+if node_mode = System.get_env("CASTMILL_NODE_MODE") do
+  config :castmill, :node_mode, node_mode
+end
+
 if config_env() == :prod do
   IO.puts("Loading production configuration...")
 

@@ -109,7 +109,14 @@ config :castmill, :bullmq,
     {:integrations, concurrency: 5},
     {:maintenance, concurrency: 2},
     {:email, concurrency: 5}
-  ]
+  ],
+  # Queues whose completion/failure events a `web` node listens to (via
+  # BullMQ.QueueEvents) in order to re-broadcast live updates to dashboards
+  # when the corresponding workers run on a separate worker fleet. Entries may
+  # be a bare queue atom (which uses the default transcoder handler) or a
+  # `{queue, handler_module}` tuple to plug in a different handler for other
+  # workers (e.g. widget upload processing).
+  completion_event_queues: [:video_transcoder, :image_transcoder]
 
 config :castmill, :bullmq_postgres,
   schema: "bullmq",

@@ -58,6 +58,16 @@ mix phx.server
 2. Stalled checks are throttled via queue meta (`stalled-check`), so transitions are not immediate.
 3. Jobs that stall over threshold use deferred failure semantics and are finalized to `failed` on next pickup.
 
+## Node Modes (web / worker / web+worker)
+
+Workers can run as a separate, headless deployment decoupled from the web tier,
+sharing only PostgreSQL (no BEAM clustering required). This is selected with the
+`CASTMILL_NODE_MODE` environment variable (`web+worker` default, `web`,
+`worker`). Completion/failure updates reach dashboards on a separate web tier via
+a `BullMQ.QueueEvents` listener that consumes events through PostgreSQL.
+
+See [`NODE_MODES.md`](NODE_MODES.md) for full details.
+
 ## Scheduler ID Rule
 
 BullMQ scheduler IDs must have fewer than 5 colon-separated parts.
