@@ -18,7 +18,7 @@ defmodule Castmill.Application do
     # The child list is assembled from three parts based on the node mode:
     #   * base children (Repo, PubSub, and — for web nodes — the HTTP endpoint)
     #   * BullMQ connection + workers (worker nodes)
-    #   * BullMQ QueueEvents completion listeners (web-only nodes)
+    #   * BullMQ QueueEvents completion listeners (queues not processed locally)
     children =
       base_children(mode) ++
         bullmq_children(mode, bullmq_config, testing_mode) ++
@@ -178,10 +178,9 @@ defmodule Castmill.Application do
     connection ++ workers
   end
 
-  # QueueEvents completion listeners. These are only started on web-only nodes:
-  # in web+worker mode the worker is co-located with the web tier and already
-  # broadcasts completion directly, so enabling the listener there would cause a
-  # duplicate broadcast. This guarantees exactly one delivery path per topology.
+  # QueueEvents completion listeners. A web-capable node only listens to configured
+  # completion queues that it does not process locally. Co-located workers broadcast
+  # directly, so this guarantees exactly one delivery path per queue on the node.
   #
   # The mechanism is pluggable: each entry in `completion_event_queues` maps a
   # queue to the `BullMQ.QueueEvents.Handler` that re-broadcasts its completion
@@ -190,18 +189,14 @@ defmodule Castmill.Application do
   # upload processing) can register its own handler here. Entries may be given
   # as a bare queue atom (defaulting to `TranscoderEventsHandler`) or as a
   # `{queue, handler_module}` tuple.
-  defp queue_events_children(:web, bullmq_config, false = _testing_mode) do
+  defp queue_events_children(mode, bullmq_config, false = _testing_mode)
+       when mode in [:web, :web_worker] do
     connection = Keyword.get(bullmq_config, :connection, :castmill_bullmq)
+    queues = listener_event_queues(mode, bullmq_config)
 
-    queues =
-      Keyword.get(bullmq_config, :completion_event_queues, [:video_transcoder, :image_transcoder])
-
-    Logger.info(
-      "Starting BullMQ QueueEvents completion listeners for: #{inspect(normalize_event_queues(queues))}"
-    )
+    Logger.info("Starting BullMQ QueueEvents completion listeners for: #{inspect(queues)}")
 
     queues
-    |> normalize_event_queues()
     |> Enum.map(fn {queue, handler} ->
       queue_name = to_string(queue)
 
@@ -213,6 +208,28 @@ defmodule Castmill.Application do
   end
 
   defp queue_events_children(_mode, _bullmq_config, _testing_mode), do: []
+
+  @doc false
+  def listener_event_queues(mode, bullmq_config) do
+    if web_node?(mode) do
+      local_queues =
+        if worker_node?(mode) do
+          bullmq_config
+          |> Keyword.get(:queues, [])
+          |> Enum.map(fn {queue, _opts} -> queue end)
+          |> MapSet.new()
+        else
+          MapSet.new()
+        end
+
+      bullmq_config
+      |> Keyword.get(:completion_event_queues, [:video_transcoder, :image_transcoder])
+      |> normalize_event_queues()
+      |> Enum.reject(fn {queue, _handler} -> MapSet.member?(local_queues, queue) end)
+    else
+      []
+    end
+  end
 
   # Normalize `completion_event_queues` entries into `{queue, handler}` tuples.
   # A bare atom uses the default transcoder handler for backwards compatibility.
