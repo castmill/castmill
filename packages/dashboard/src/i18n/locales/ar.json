@@ -523,7 +523,8 @@
       "editGroup": "تعديل المجموعة",
       "deleteGroup": "حذف المجموعة",
       "noGroups": "لا توجد مجموعات علامات",
-      "ungrouped": "غير مجمعة"
+      "ungrouped": "غير مجمعة",
+      "untagged": "غير مُعلَّم"
     },
     "messages": {
       "tagCreated": "تم إنشاء العلامة \"{{name}}\" بنجاح",

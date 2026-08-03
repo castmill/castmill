@@ -523,7 +523,8 @@
       "editGroup": "グループを編集",
       "deleteGroup": "グループを削除",
       "noGroups": "タググループなし",
-      "ungrouped": "グループなし"
+      "ungrouped": "グループなし",
+      "untagged": "タグなし"
     },
     "messages": {
       "tagCreated": "タグ「{{name}}」を正常に作成しました",

@@ -50,6 +50,28 @@ export interface ResourceTreeViewProps {
     count: number;
   }>;
 
+  /**
+   * Fetch resources that have no tags in a given tag group.
+   * Used for the synthetic untagged bucket when organizing by that group.
+   * `parentTagIds` filters to resources that also match those ancestor tags.
+   */
+  fetchUntaggedResources?: (
+    tagGroupId: number,
+    parentTagIds?: number[]
+  ) => Promise<{
+    data: TreeResourceItem[];
+    count: number;
+  }>;
+
+  /**
+   * Fetch only the count of resources that have no tags in a given tag group.
+   * `parentTagIds` filters to resources that also match those ancestor tags.
+   */
+  fetchUntaggedCount?: (
+    tagGroupId: number,
+    parentTagIds?: number[]
+  ) => Promise<number>;
+
   /** Called when a resource is clicked */
   onResourceClick?: (item: TreeResourceItem) => void;
 
@@ -70,6 +92,9 @@ export interface ResourceTreeViewProps {
 
   /** Label for untagged items */
   untaggedLabel?: string;
+
+  /** Text shown when an expanded leaf node contains no items */
+  emptyLeafText?: string;
 
   /** Max resources to show per leaf before showing "show more" */
   maxLeafItems?: number;
@@ -183,8 +208,8 @@ export const ResourceTreeView: Component<ResourceTreeViewProps> = (props) => {
           props.tagGroups,
           props.refreshKey ?? 0,
         ] as const,
-      ([dims, allTags, groups]) => {
-        if (dims.length === 0 || groups.length === 0 || allTags.length === 0) {
+      ([dims, , groups]) => {
+        if (dims.length === 0 || groups.length === 0) {
           setTreeNodes([]);
           return;
         }
@@ -202,11 +227,8 @@ export const ResourceTreeView: Component<ResourceTreeViewProps> = (props) => {
   // Build root level: one node per tag in the first dimension
   const buildRootLevel = async (dims: number[]) => {
     const generation = ++buildGeneration;
+    const rootGroup = props.tagGroups[dims[0]];
     const rootTags = getGroupTags(dims[0]);
-    if (rootTags.length === 0) {
-      setTreeNodes([]);
-      return;
-    }
 
     setRootLoading(true);
 
@@ -233,7 +255,32 @@ export const ResourceTreeView: Component<ResourceTreeViewProps> = (props) => {
         })
     );
 
-    const counts = await Promise.all(countPromises);
+    const untaggedPromise =
+      rootGroup && props.fetchUntaggedCount
+        ? props.fetchUntaggedCount(rootGroup.id).catch((err) => {
+            console.error(
+              `Failed to fetch untagged count for group "${rootGroup.name}" (id=${rootGroup.id}):`,
+              err
+            );
+            return 0;
+          })
+        : rootGroup && props.fetchUntaggedResources
+          ? props
+              .fetchUntaggedResources(rootGroup.id)
+              .then((r) => r.count)
+              .catch((err) => {
+                console.error(
+                  `Failed to fetch untagged count for group "${rootGroup.name}" (id=${rootGroup.id}):`,
+                  err
+                );
+                return 0;
+              })
+          : Promise.resolve(0);
+
+    const [counts, untaggedCount] = await Promise.all([
+      Promise.all(countPromises),
+      untaggedPromise,
+    ]);
 
     // Discard results if a newer build started while we were fetching
     if (generation !== buildGeneration) return;
@@ -244,6 +291,16 @@ export const ResourceTreeView: Component<ResourceTreeViewProps> = (props) => {
 
     // Hide tags with zero resources
     const nonEmptyNodes = nodes.filter((n) => n.count !== null && n.count > 0);
+
+    if (untaggedCount > 0) {
+      nonEmptyNodes.push({
+        tag: null,
+        count: untaggedCount,
+        items: [],
+        expanded: false,
+        loading: false,
+      });
+    }
 
     batch(() => {
       setTreeNodes(nonEmptyNodes);
@@ -290,9 +347,33 @@ export const ResourceTreeView: Component<ResourceTreeViewProps> = (props) => {
     const tagIds = [...parentTagIds, ...(node.tag ? [node.tag.id] : [])];
     const dims = dimensions();
     const nextDimLevel = dimLevel + 1;
+    const currentGroup = props.tagGroups[dims[dimLevel]];
+
+    if (!node.tag) {
+      try {
+        const result =
+          currentGroup && props.fetchUntaggedResources
+            ? await props.fetchUntaggedResources(currentGroup.id, parentTagIds)
+            : { data: [], count: 0 };
+
+        setTreeNodes(...(storePath(path) as [any]), {
+          items: result.data,
+          count: result.count,
+          loading: false,
+        });
+      } catch (e) {
+        console.error('Failed to load untagged resources:', e);
+        setTreeNodes(...(storePath(path) as [any]), {
+          items: [],
+          loading: false,
+        });
+      }
+      return;
+    }
 
     if (nextDimLevel < dims.length) {
       // Build child dimension nodes
+      const childGroup = props.tagGroups[dims[nextDimLevel]];
       const childTags = getGroupTags(dims[nextDimLevel]);
       const childNodes: TreeNode[] = childTags.map((tag) => ({
         tag,
@@ -302,7 +383,7 @@ export const ResourceTreeView: Component<ResourceTreeViewProps> = (props) => {
         loading: false,
       }));
 
-      // Fetch counts for children
+      // Fetch counts for children and untagged bucket in parallel
       const countPromises = childTags.map((tag) =>
         props
           .fetchResources([...tagIds, tag.id])
@@ -316,7 +397,32 @@ export const ResourceTreeView: Component<ResourceTreeViewProps> = (props) => {
           })
       );
 
-      const counts = await Promise.all(countPromises);
+      const childUntaggedPromise =
+        childGroup && props.fetchUntaggedCount
+          ? props.fetchUntaggedCount(childGroup.id, tagIds).catch((err) => {
+              console.error(
+                `Failed to fetch untagged count for group "${childGroup.name}" (id=${childGroup.id}):`,
+                err
+              );
+              return 0;
+            })
+          : childGroup && props.fetchUntaggedResources
+            ? props
+                .fetchUntaggedResources(childGroup.id, tagIds)
+                .then((r) => r.count)
+                .catch((err) => {
+                  console.error(
+                    `Failed to fetch untagged count for group "${childGroup.name}" (id=${childGroup.id}):`,
+                    err
+                  );
+                  return 0;
+                })
+            : Promise.resolve(0);
+
+      const [counts, childUntaggedCount] = await Promise.all([
+        Promise.all(countPromises),
+        childUntaggedPromise,
+      ]);
       counts.forEach((count, i) => {
         childNodes[i].count = count;
       });
@@ -325,6 +431,16 @@ export const ResourceTreeView: Component<ResourceTreeViewProps> = (props) => {
       const nonEmptyChildren = childNodes.filter(
         (n) => n.count !== null && n.count > 0
       );
+
+      if (childUntaggedCount > 0) {
+        nonEmptyChildren.push({
+          tag: null,
+          count: childUntaggedCount,
+          items: [],
+          expanded: false,
+          loading: false,
+        });
+      }
 
       if (nonEmptyChildren.length === 0) {
         // No resources match any tag in the child dimension
@@ -410,7 +526,7 @@ export const ResourceTreeView: Component<ResourceTreeViewProps> = (props) => {
     parentTagIds: number[]
   ): JSX.Element => {
     const tagIds = [...parentTagIds, ...(node.tag ? [node.tag.id] : [])];
-    const isLeaf = dimLevel >= dimensions().length - 1;
+    const isLeaf = !node.tag || dimLevel >= dimensions().length - 1;
 
     return (
       <div class="tree-node" style={`--depth: ${level}`}>
@@ -485,7 +601,7 @@ export const ResourceTreeView: Component<ResourceTreeViewProps> = (props) => {
                     when={items.length > 0}
                     fallback={
                       <div class="tree-empty-leaf">
-                        {props.untaggedLabel || 'No items'}
+                        {props.emptyLeafText || 'No items'}
                       </div>
                     }
                   >

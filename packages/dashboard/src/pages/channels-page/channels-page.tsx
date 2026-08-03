@@ -651,6 +651,43 @@ const ChannelsPage: Component = () => {
     };
   };
 
+  const fetchTreeUntaggedResources = async (
+    tagGroupId: number,
+    parentTagIds?: number[]
+  ) => {
+    const result = await channelsService.fetchChannelsFiltered({
+      page: 1,
+      page_size: 100,
+      sortOptions: { key: 'name', direction: 'ascending' },
+      tag_filter_mode: 'all',
+      missing_tag_group_id: tagGroupId,
+      tag_ids: parentTagIds,
+      team_id: selectedTeamId(),
+    });
+
+    return {
+      data: result.data as TreeResourceItem[],
+      count: result.count,
+    };
+  };
+
+  const fetchTreeUntaggedCount = async (
+    tagGroupId: number,
+    parentTagIds?: number[]
+  ) => {
+    const result = await channelsService.fetchChannelsFiltered({
+      page: 1,
+      page_size: 1,
+      sortOptions: { key: 'name', direction: 'ascending' },
+      tag_filter_mode: 'all',
+      missing_tag_group_id: tagGroupId,
+      tag_ids: parentTagIds,
+      team_id: selectedTeamId(),
+    });
+
+    return result.count;
+  };
+
   const updateItem = (itemId: number, item: JsonChannel) => {
     if (tableViewRef) {
       tableViewRef.updateItem(itemId, item);
@@ -988,6 +1025,10 @@ const ChannelsPage: Component = () => {
             tagGroups={tagGroups()}
             allTags={allTags()}
             fetchResources={fetchTreeResources}
+            fetchUntaggedResources={fetchTreeUntaggedResources}
+            fetchUntaggedCount={fetchTreeUntaggedCount}
+            untaggedLabel={t('tags.groups.untagged')}
+            emptyLeafText={t('filters.noItems')}
             refreshKey={treeVersion()}
             storageKey="channels"
             onResourceClick={(item) => {

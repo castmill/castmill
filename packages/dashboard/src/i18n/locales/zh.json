@@ -523,7 +523,8 @@
       "editGroup": "编辑组",
       "deleteGroup": "删除组",
       "noGroups": "无标签组",
-      "ungrouped": "未分组"
+      "ungrouped": "未分组",
+      "untagged": "未标记"
     },
     "messages": {
       "tagCreated": "标签 \"{{name}}\" 创建成功",

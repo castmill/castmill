@@ -177,6 +177,7 @@ export class ChannelsService {
     tag_ids?: number[];
     tag_filter_mode?: 'any' | 'all';
     team_id?: number | null;
+    missing_tag_group_id?: number;
   }) {
     const query = new URLSearchParams({
       page: options.page.toString(),
@@ -194,6 +195,12 @@ export class ChannelsService {
     }
     if (options.tag_filter_mode) {
       query.set('tag_filter_mode', options.tag_filter_mode);
+    }
+    if (options.missing_tag_group_id !== undefined) {
+      query.set(
+        'missing_tag_group_id',
+        options.missing_tag_group_id.toString()
+      );
     }
     const response = await authFetch(
       `${this.baseUrl}/dashboard/organizations/${this.organizationId}/channels?${query}`,

@@ -386,6 +386,35 @@ defmodule Castmill.Tags do
   end
 
   @doc """
+  Filters a query to resources that are missing tags from the given tag group.
+  """
+  def filter_missing_tag_group(query, resource_type, tag_group_id, opts \\ [])
+
+  def filter_missing_tag_group(query, _resource_type, nil, _opts), do: query
+
+  def filter_missing_tag_group(query, resource_type, tag_group_id, opts)
+      when is_integer(tag_group_id) do
+    id_field = Keyword.get(opts, :id_field, :id)
+
+    from(q in query,
+      where:
+        not exists(
+          from(rt in ResourceTag,
+            join: t in Tag,
+            on: t.id == rt.tag_id,
+            where:
+              rt.resource_type == ^resource_type and
+                t.tag_group_id == ^tag_group_id and
+                rt.resource_id == fragment("CAST(? AS text)", field(q, ^id_field)),
+            select: 1
+          )
+        )
+    )
+  end
+
+  def filter_missing_tag_group(query, _resource_type, _tag_group_id, _opts), do: query
+
+  @doc """
   Filters a query to only include resources with the given tags.
 
   This is useful for adding tag filtering to existing resource queries.
