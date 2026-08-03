@@ -86,8 +86,7 @@ defmodule Castmill.Widgets.Integrations.Fetchers.OpenMeteo do
     {:ok,
      %{
        "location" => location["address"] || "Selected location",
-       "temperature" =>
-         "#{format_temperature(current["temperature_2m"])}#{temperature_unit}",
+       "temperature" => "#{format_temperature(current["temperature_2m"])}#{temperature_unit}",
        "feels_like" =>
          "Feels like #{format_temperature(current["apparent_temperature"])}#{temperature_unit}",
        "condition" => weather_condition(code),
@@ -116,7 +115,9 @@ defmodule Castmill.Widgets.Integrations.Fetchers.OpenMeteo do
   defp format_temperature(_value), do: "--"
 
   defp weather_condition(code) when code == 0, do: "Clear sky"
-  defp weather_condition(code) when code in 1..3, do: "Partly cloudy"
+  defp weather_condition(code) when code == 1, do: "Mostly clear"
+  defp weather_condition(code) when code == 2, do: "Partly cloudy"
+  defp weather_condition(code) when code == 3, do: "Overcast"
   defp weather_condition(code) when code in [45, 48], do: "Fog"
   defp weather_condition(code) when code in 51..57, do: "Drizzle"
   defp weather_condition(code) when code in 61..67, do: "Rain"

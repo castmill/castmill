@@ -16,7 +16,7 @@ defmodule Castmill.Widgets.Integrations.Fetchers.OpenMeteoTest do
         "temperature_2m" => 18.4,
         "apparent_temperature" => 17.6,
         "relative_humidity_2m" => 72,
-        "weather_code" => 2,
+        "weather_code" => 3,
         "wind_speed_10m" => 11.2
       },
       "current_units" => %{
@@ -25,20 +25,19 @@ defmodule Castmill.Widgets.Integrations.Fetchers.OpenMeteoTest do
       },
       "daily" => %{
         "time" => ["2026-08-03", "2026-08-04", "2026-08-05"],
-        "weather_code" => [2, 61, 0],
+        "weather_code" => [3, 61, 1],
         "temperature_2m_max" => [20.1, 19.4, 22.2],
         "temperature_2m_min" => [12.0, 11.8, 13.1]
       },
       "daily_units" => %{"temperature_2m_max" => "°C"}
     }
 
-    assert {:ok, data} =
-             OpenMeteo.transform(response, %{"address" => "London, United Kingdom"})
+    assert {:ok, data} = OpenMeteo.transform(response, %{"address" => "London, United Kingdom"})
 
     assert data["location"] == "London, United Kingdom"
     assert data["temperature"] == "18°C"
-    assert data["condition"] == "Partly cloudy"
-    assert data["icon"] == "🌤️"
+    assert data["condition"] == "Overcast"
+    assert data["icon"] == "☁️"
     assert data["humidity"] == "Humidity 72%"
     assert data["wind"] == "Wind 11 km/h"
 
@@ -51,8 +50,8 @@ defmodule Castmill.Widgets.Integrations.Fetchers.OpenMeteoTest do
              },
              %{
                "day" => "Wed",
-               "icon" => "☀️",
-               "condition" => "Clear sky",
+               "icon" => "🌤️",
+               "condition" => "Mostly clear",
                "temperature" => "22°C / 13°C"
              }
            ]
