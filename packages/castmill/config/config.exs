@@ -109,7 +109,11 @@ config :castmill, :bullmq,
     {:integrations, concurrency: 5},
     {:maintenance, concurrency: 2},
     {:email, concurrency: 5}
-  ]
+  ],
+  # Queues whose completion/failure events a `web` node listens to (via
+  # BullMQ.QueueEvents) in order to broadcast live `resource:media:<id>`
+  # updates to dashboards when transcoding runs on a separate worker fleet.
+  completion_event_queues: [:video_transcoder, :image_transcoder]
 
 config :castmill, :bullmq_postgres,
   schema: "bullmq",

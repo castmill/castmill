@@ -11,48 +11,18 @@ defmodule Castmill.Application do
   def start(_type, _args) do
     bullmq_config = Application.get_env(:castmill, :bullmq, [])
     testing_mode = Keyword.get(bullmq_config, :testing) == :inline
+    mode = node_mode()
 
-    # Build children list conditionally based on testing mode
-    base_children = [
-      # Start the Telemetry supervisor
-      CastmillWeb.Telemetry,
-      # Start the Ecto repository
-      Castmill.Repo,
+    Logger.info("Starting Castmill in node mode: #{node_mode_label(mode)}")
 
-      # Start the PubSub system
-      {Phoenix.PubSub, name: Castmill.PubSub},
-      # Start Finch
-      {Finch, name: Castmill.Finch},
-      # Start the single-use WebAuthn challenge store
-      CastmillWeb.ChallengeStore,
-      # Start the Endpoint (http/https)
-      CastmillWeb.Endpoint,
-      # Start a worker by calling: Castmill.Worker.start_link(arg)
-      # {Castmill.Worker, arg}
-
-      # Start the Hoos supervisor tree
-      Castmill.Hooks.Supervisor
-    ]
-
-    # Add BullMQ connection and workers only if not in testing mode
+    # The child list is assembled from three parts based on the node mode:
+    #   * base children (Repo, PubSub, and — for web nodes — the HTTP endpoint)
+    #   * BullMQ connection + workers (worker nodes)
+    #   * BullMQ QueueEvents completion listeners (web-only nodes)
     children =
-      if testing_mode do
-        Logger.info("BullMQ running in inline testing mode; no BullMQ workers will be started")
-
-        base_children
-      else
-        queue_specs = Keyword.get(bullmq_config, :queues, [])
-
-        Logger.info(
-          "Starting BullMQ workers for queues: #{inspect(Enum.map(queue_specs, fn {q, _} -> q end))}"
-        )
-
-        base_children ++
-          [
-            bullmq_postgres_child_spec(bullmq_config)
-          ] ++
-          build_bullmq_workers(bullmq_config)
-      end
+      base_children(mode) ++
+        bullmq_children(mode, bullmq_config, testing_mode) ++
+        queue_events_children(mode, bullmq_config, testing_mode)
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
@@ -60,16 +30,18 @@ defmodule Castmill.Application do
 
     with {:ok, pid} <- Supervisor.start_link(children, opts) do
       # After starting the supervision tree, load the Widgets from JSON files
-      # Ensure that the Repo is started before this call
+      # Ensure that the Repo is started before this call. Widget JSON loading is
+      # a web-only concern, so worker-only nodes skip it.
       env = Application.get_env(:castmill, :env)
 
-      if env != :test do
+      if env != :test and web_node?(mode) do
         load_widgets_with_retry()
       end
 
       # Run job recovery after startup (non-blocking).
       # Uses deterministic job IDs so BullMQ dedup prevents duplicates.
-      unless testing_mode do
+      # Only nodes that actually run workers need to recover jobs.
+      if not testing_mode and worker_node?(mode) do
         Task.start(fn ->
           # Give BullMQ workers a moment to fully initialize
           Process.sleep(5_000)
@@ -80,6 +52,150 @@ defmodule Castmill.Application do
       {:ok, pid}
     end
   end
+
+  # ---------------------------------------------------------------------------
+  # Node modes
+  #
+  # A Castmill node can run in one of three modes, selected via the
+  # `CASTMILL_NODE_MODE` environment variable (or `config :castmill, :node_mode`):
+  #
+  #   * `web+worker` (default) — the all-in-one node: Phoenix endpoint AND
+  #     BullMQ workers on the same node. This is what unset/legacy deployments
+  #     get, preserving full backwards compatibility.
+  #   * `web`    — Phoenix endpoint only, no heavy job queues. Real-time
+  #     completion updates arrive via the BullMQ QueueEvents listener.
+  #   * `worker` — BullMQ workers only, no HTTP endpoint.
+  #
+  # `web` and `worker` tiers only need to share a PostgreSQL database; no BEAM
+  # clustering between them is required.
+  # ---------------------------------------------------------------------------
+
+  @doc false
+  def node_mode do
+    case Application.get_env(:castmill, :node_mode) || System.get_env("CASTMILL_NODE_MODE") do
+      nil -> :web_worker
+      mode -> parse_node_mode(mode)
+    end
+  end
+
+  defp parse_node_mode(mode) when is_atom(mode), do: parse_node_mode(Atom.to_string(mode))
+
+  defp parse_node_mode(mode) when is_binary(mode) do
+    case mode |> String.trim() |> String.downcase() do
+      "web" -> :web
+      "worker" -> :worker
+      "web+worker" -> :web_worker
+      "web_worker" -> :web_worker
+      "" -> :web_worker
+      other ->
+        Logger.warning(
+          "Unknown CASTMILL_NODE_MODE=#{inspect(other)}; defaulting to \"web+worker\""
+        )
+
+        :web_worker
+    end
+  end
+
+  defp node_mode_label(:web), do: "web"
+  defp node_mode_label(:worker), do: "worker"
+  defp node_mode_label(:web_worker), do: "web+worker"
+
+  # A node serves HTTP/WebSocket traffic in web and web+worker modes.
+  defp web_node?(:web), do: true
+  defp web_node?(:web_worker), do: true
+  defp web_node?(:worker), do: false
+
+  # A node processes background jobs in worker and web+worker modes.
+  defp worker_node?(:worker), do: true
+  defp worker_node?(:web_worker), do: true
+  defp worker_node?(:web), do: false
+
+  # Base children common to every node, plus the web-only endpoint stack for
+  # web/web+worker nodes. The web+worker ordering is intentionally identical to
+  # the historical (pre-node-mode) child list for full backwards compatibility.
+  defp base_children(mode) do
+    common = [
+      # Start the Telemetry supervisor
+      CastmillWeb.Telemetry,
+      # Start the Ecto repository
+      Castmill.Repo,
+      # Start the PubSub system
+      {Phoenix.PubSub, name: Castmill.PubSub},
+      # Start Finch
+      {Finch, name: Castmill.Finch}
+    ]
+
+    web_only = [
+      # Start the single-use WebAuthn challenge store
+      CastmillWeb.ChallengeStore,
+      # Start the Endpoint (http/https)
+      CastmillWeb.Endpoint
+    ]
+
+    tail = [
+      # Start the Hooks supervisor tree
+      Castmill.Hooks.Supervisor
+    ]
+
+    common ++ if(web_node?(mode), do: web_only, else: []) ++ tail
+  end
+
+  # BullMQ connection + workers. In inline testing mode nothing is started.
+  # The Postgres connection is started on every non-testing node because web
+  # nodes still need it to enqueue jobs (and to drive the QueueEvents listener),
+  # while worker nodes need it to consume queues.
+  defp bullmq_children(_mode, _bullmq_config, true = _testing_mode) do
+    Logger.info("BullMQ running in inline testing mode; no BullMQ workers will be started")
+    []
+  end
+
+  defp bullmq_children(mode, bullmq_config, false = _testing_mode) do
+    connection = [bullmq_postgres_child_spec(bullmq_config)]
+
+    workers =
+      if worker_node?(mode) do
+        queue_specs = Keyword.get(bullmq_config, :queues, [])
+
+        Logger.info(
+          "Starting BullMQ workers for queues: #{inspect(Enum.map(queue_specs, fn {q, _} -> q end))}"
+        )
+
+        build_bullmq_workers(bullmq_config)
+      else
+        []
+      end
+
+    connection ++ workers
+  end
+
+  # QueueEvents completion listeners. These are only started on web-only nodes:
+  # in web+worker mode the worker is co-located with the web tier and already
+  # broadcasts completion directly, so enabling the listener there would cause a
+  # duplicate broadcast. This guarantees exactly one delivery path per topology.
+  defp queue_events_children(:web, bullmq_config, false = _testing_mode) do
+    connection = Keyword.get(bullmq_config, :connection, :castmill_bullmq)
+
+    queues =
+      Keyword.get(bullmq_config, :completion_event_queues, [:video_transcoder, :image_transcoder])
+
+    Logger.info(
+      "Starting BullMQ QueueEvents completion listeners for queues: #{inspect(queues)}"
+    )
+
+    Enum.map(queues, fn queue ->
+      queue_name = to_string(queue)
+
+      Supervisor.child_spec(
+        {BullMQ.QueueEvents,
+         queue: queue_name,
+         connection: connection,
+         handler: Castmill.Workers.TranscoderEventsHandler},
+        id: Module.concat([Castmill.Workers.BullMQEvents, queue])
+      )
+    end)
+  end
+
+  defp queue_events_children(_mode, _bullmq_config, _testing_mode), do: []
 
   # Load widgets with retry logic for database availability
   defp load_widgets_with_retry(attempts \\ 3, delay \\ 1000) do
