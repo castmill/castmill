@@ -405,11 +405,12 @@ defmodule Castmill.Tags do
             where:
               rt.resource_type == ^resource_type and
                 t.tag_group_id == ^tag_group_id and
-                rt.resource_id == fragment("CAST(? AS text)", field(q, ^id_field)),
+                rt.resource_id == parent_as(:resource_query) |> field(^id_field) |> type(:string),
             select: 1
           )
         )
     )
+    |> as(:resource_query)
   end
 
   def filter_missing_tag_group(query, _resource_type, _tag_group_id, _opts), do: query
