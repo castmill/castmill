@@ -14,7 +14,7 @@ The node role is selected with the `CASTMILL_NODE_MODE` environment variable
 | Mode                   | HTTP endpoint | BullMQ workers | Completion listeners |
 | ---------------------- | :-----------: | :------------: | :------------------: |
 | `web+worker` (default) |      yes      |      yes       | non-local queues only |
-| `web`                  |      yes      |       no       | all configured queues |
+| `web`                  |      yes      |       no       | all configured `completion_event_queues` |
 | `worker`               |      no       |      yes       |          no           |
 
 - **`web+worker`** — the all-in-one node. This is exactly the historical
