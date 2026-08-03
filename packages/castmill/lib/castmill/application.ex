@@ -172,6 +172,14 @@ defmodule Castmill.Application do
   # in web+worker mode the worker is co-located with the web tier and already
   # broadcasts completion directly, so enabling the listener there would cause a
   # duplicate broadcast. This guarantees exactly one delivery path per topology.
+  #
+  # The mechanism is pluggable: each entry in `completion_event_queues` maps a
+  # queue to the `BullMQ.QueueEvents.Handler` that re-broadcasts its completion
+  # events on the local node. This is not transcoder-specific — any worker that
+  # runs on a separate fleet and needs to notify the web tier (e.g. widget
+  # upload processing) can register its own handler here. Entries may be given
+  # as a bare queue atom (defaulting to `TranscoderEventsHandler`) or as a
+  # `{queue, handler_module}` tuple.
   defp queue_events_children(:web, bullmq_config, false = _testing_mode) do
     connection = Keyword.get(bullmq_config, :connection, :castmill_bullmq)
 
@@ -179,23 +187,35 @@ defmodule Castmill.Application do
       Keyword.get(bullmq_config, :completion_event_queues, [:video_transcoder, :image_transcoder])
 
     Logger.info(
-      "Starting BullMQ QueueEvents completion listeners for queues: #{inspect(queues)}"
+      "Starting BullMQ QueueEvents completion listeners for: #{inspect(normalize_event_queues(queues))}"
     )
 
-    Enum.map(queues, fn queue ->
+    queues
+    |> normalize_event_queues()
+    |> Enum.map(fn {queue, handler} ->
       queue_name = to_string(queue)
 
       Supervisor.child_spec(
         {BullMQ.QueueEvents,
          queue: queue_name,
          connection: connection,
-         handler: Castmill.Workers.TranscoderEventsHandler},
+         handler: handler},
         id: Module.concat([Castmill.Workers.BullMQEvents, queue])
       )
     end)
   end
 
   defp queue_events_children(_mode, _bullmq_config, _testing_mode), do: []
+
+  # Normalize `completion_event_queues` entries into `{queue, handler}` tuples.
+  # A bare atom uses the default transcoder handler for backwards compatibility.
+  @doc false
+  def normalize_event_queues(queues) do
+    Enum.map(queues, fn
+      {queue, handler} when is_atom(handler) -> {queue, handler}
+      queue when is_atom(queue) -> {queue, Castmill.Workers.TranscoderEventsHandler}
+    end)
+  end
 
   # Load widgets with retry logic for database availability
   defp load_widgets_with_retry(attempts \\ 3, delay \\ 1000) do
