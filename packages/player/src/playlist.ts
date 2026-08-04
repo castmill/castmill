@@ -198,7 +198,10 @@ export class Playlist extends EventEmitter {
 
   seek(_offset: number) {
     const duration = this.duration();
-    const offset = _offset % (duration + 1);
+    const offset =
+      Number.isFinite(duration) && duration > 0
+        ? ((_offset % duration) + duration) % duration
+        : 0;
     this.time = offset;
 
     let result: [number, number] = [offset, duration];
