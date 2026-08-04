@@ -1,4 +1,4 @@
-import { Component, onMount, createEffect, onCleanup } from 'solid-js';
+import { Component, onMount, createEffect, onCleanup, untrack } from 'solid-js';
 import { Subscription } from 'rxjs';
 
 import {
@@ -26,8 +26,31 @@ export interface PlaylistPreviewRef {
 
 interface PlaylistPreviewProps {
   playlist: JsonPlaylist;
+  dynamicDurations?: Record<number, number>;
   onReady?: (ref: PlaylistPreviewRef) => void;
 }
+
+export const resolvePlaylistDuration = (
+  playlist: Playlist,
+  items: JsonPlaylist['items'],
+  dynamicDurations: Record<number, number> = {}
+) =>
+  playlist.layers.reduce((total, layer, index) => {
+    const item = items[index];
+    const dynamicDuration =
+      item &&
+      !(typeof item.duration === 'number' && item.duration > 0) &&
+      typeof item.id === 'number'
+        ? dynamicDurations[item.id]
+        : undefined;
+
+    return (
+      total +
+      (typeof dynamicDuration === 'number' && dynamicDuration > 0
+        ? dynamicDuration
+        : layer.duration())
+    );
+  }, 0);
 
 export const PlaylistPreview: Component<PlaylistPreviewProps> = (props) => {
   const cache = new Cache(
@@ -75,7 +98,15 @@ export const PlaylistPreview: Component<PlaylistPreviewProps> = (props) => {
       controlsMaster: true,
     });
 
-    controls.setTimeDuration(0, playlist.duration(), true);
+    controls.setTimeDuration(
+      0,
+      resolvePlaylistDuration(
+        playlist,
+        props.playlist.items,
+        untrack(() => props.dynamicDurations)
+      ),
+      true
+    );
 
     // Expose seek function and layer offsets to parent component
     props.onReady?.({
