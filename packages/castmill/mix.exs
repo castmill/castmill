@@ -36,7 +36,7 @@ defmodule Castmill.MixProject do
       {:cors_plug, "~> 3.0"},
       {:ecto_sql, "~> 3.6"},
       {:esbuild, "~> 0.7", runtime: Mix.env() == :dev},
-      {:ex_aws, "~> 2.1"},
+      {:ex_aws, "~> 2.5.9"},
       {:ex_aws_s3, "~> 2.0"},
       {:ffmpex, "~> 0.11.0"},
       {:file_type, "~> 0.1.0"},
