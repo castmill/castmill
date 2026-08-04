@@ -398,15 +398,14 @@ defmodule Castmill.Tags do
 
     from(q in query,
       where:
-        fragment("CAST(? AS text)", field(q, ^id_field)) not in
-          subquery(
-            from(rt in ResourceTag,
-              join: t in Tag,
-              on: t.id == rt.tag_id,
-              where: rt.resource_type == ^resource_type and t.tag_group_id == ^tag_group_id,
-              select: rt.resource_id
-            )
+        fragment("CAST(? AS text)", field(q, ^id_field)) not in subquery(
+          from(rt in ResourceTag,
+            join: t in Tag,
+            on: t.id == rt.tag_id,
+            where: rt.resource_type == ^resource_type and t.tag_group_id == ^tag_group_id,
+            select: rt.resource_id
           )
+        )
     )
   end
 
