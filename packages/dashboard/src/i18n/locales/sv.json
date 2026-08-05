@@ -632,6 +632,7 @@
     "confirmRemoveChannels": "Är du säker på att du vill ta bort följande kanaler?",
     "enterChannelName": "Ange kanalnamn",
     "defaultPlaylist": "Standardspellista",
+    "currentPlaylist": "Aktuell spellista",
     "selectPlaylist": "Välj spellista",
     "clearDefaultPlaylist": "Rensa standardspellista",
     "dragPlaylists": "Dra spellistor",
