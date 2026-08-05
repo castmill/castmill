@@ -11,11 +11,11 @@ web nodes.
 The node role is selected with the `CASTMILL_NODE_MODE` environment variable
 (or `config :castmill, :node_mode`):
 
-| Mode                    | HTTP endpoint | BullMQ workers | Completion listener |
-| ----------------------- | :-----------: | :------------: | :-----------------: |
-| `web+worker` (default)  |      yes      |      yes       |         no          |
-| `web`                   |      yes      |      no        |        yes          |
-| `worker`                |      no       |      yes       |         no          |
+| Mode                   | HTTP endpoint | BullMQ workers | Completion listeners |
+| ---------------------- | :-----------: | :------------: | :------------------: |
+| `web+worker` (default) |      yes      |      yes       | non-local queues only |
+| `web`                  |      yes      |       no       | all configured `completion_event_queues` |
+| `worker`               |      no       |      yes       |          no           |
 
 - **`web+worker`** — the all-in-one node. This is exactly the historical
   behavior and what unset/legacy deployments get, so single-node deployments
@@ -45,7 +45,8 @@ In a split topology the worker and web tiers share only PostgreSQL, so a direct
    `returnvalue`.
 2. BullMQ streams `:completed` / `:failed` events **through PostgreSQL**
    (`BullMQ.Backends.Postgres`).
-3. On `web` nodes, a `BullMQ.QueueEvents.Handler` (started via
+3. On web-capable nodes that do not process that queue locally, a
+   `BullMQ.QueueEvents.Handler` (started via
    `BullMQ.QueueEvents`) consumes those events and performs the PubSub broadcast
    **locally**, which reaches connected dashboards through the normal channel
    (for media, `CastmillWeb.ResourceUpdatesChannel`).
@@ -70,9 +71,15 @@ can plug in by:
 
 ### Exactly one broadcast per topology
 
-The QueueEvents listener is started **only** in `web` mode. In `web+worker` mode
-the co-located worker already broadcasts directly, so the listener is not
-started there — guaranteeing exactly one delivery path (no duplicates).
+For each web-capable node, listeners are derived from configuration:
+
+```
+listener_queues = completion_event_queues - locally_processed_queues
+```
+
+A co-located worker broadcasts directly, so its queue is excluded from the
+listener set. This guarantees exactly one delivery path per queue on a node. A
+default `web+worker` node processes all queues and therefore starts no listeners.
 
 ## Configuration
 
@@ -80,8 +87,9 @@ started there — guaranteeing exactly one delivery path (no duplicates).
 - Per-node queue consumption is driven by `config :castmill, :bullmq, queues:`.
   A `web` node consumes no heavy queues; `worker` nodes consume
   `video_transcoder` / `image_transcoder` (and the others).
-- `config :castmill, :bullmq, completion_event_queues:` — the queues a `web`
-  node listens to for completion/failure events (default:
+- `config :castmill, :bullmq, completion_event_queues:` — queues whose
+  completion/failure events a web-capable node listens to when it does not
+  process them locally (default:
   `[:video_transcoder, :image_transcoder]`). Entries may be a bare queue atom
   (uses `Castmill.Workers.TranscoderEventsHandler`) or a
   `{queue, handler_module}` tuple to register a handler for other workers.
@@ -107,3 +115,34 @@ CASTMILL_NODE_MODE=web    PHX_SERVER=true bin/castmill start
 # Worker fleet (can be on separate/beefier hardware, different DC/cloud)
 CASTMILL_NODE_MODE=worker bin/castmill start
 ```
+
+Web app with light queues and a separate transcoder fleet:
+
+```elixir
+# Web app config
+config :castmill, :node_mode, :web_worker
+
+config :castmill, :bullmq,
+  queues: [
+    {:integration_polling, concurrency: 5},
+    {:integrations, concurrency: 5},
+    {:maintenance, concurrency: 2},
+    {:email, concurrency: 5}
+  ],
+  completion_event_queues: [:video_transcoder, :image_transcoder]
+
+# Transcoder fleet config
+config :castmill, :node_mode, :worker
+
+config :castmill, :bullmq,
+  queues: [
+    {:image_transcoder, concurrency: 10},
+    {:video_transcoder, concurrency: 10}
+  ],
+  completion_event_queues: [:video_transcoder, :image_transcoder]
+```
+
+Both tiers use the same BullMQ PostgreSQL database. The web app runs the light
+queues locally and listens for the two offloaded transcoder queues; the
+transcoder nodes exclude both listeners because they process those queues
+locally. No BEAM distribution or EPMD connectivity is required.

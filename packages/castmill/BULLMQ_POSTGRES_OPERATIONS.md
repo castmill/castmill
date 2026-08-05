@@ -63,8 +63,9 @@ mix phx.server
 Workers can run as a separate, headless deployment decoupled from the web tier,
 sharing only PostgreSQL (no BEAM clustering required). This is selected with the
 `CASTMILL_NODE_MODE` environment variable (`web+worker` default, `web`,
-`worker`). Completion/failure updates reach dashboards on a separate web tier via
-a `BullMQ.QueueEvents` listener that consumes events through PostgreSQL.
+`worker`). Completion/failure updates from queues not processed on a web-capable
+node reach dashboards via a `BullMQ.QueueEvents` listener that consumes events
+through PostgreSQL.
 
 See [`NODE_MODES.md`](NODE_MODES.md) for full details.
 
