@@ -402,7 +402,13 @@ defmodule Castmill.Tags do
 
   def filter_missing_tag_group(query, _resource_type, _tag_group_id, _opts), do: query
 
-  defp build_missing_tag_group_query(query, resource_type, tag_group_id, id_field, :resource_query) do
+  defp build_missing_tag_group_query(
+         query,
+         resource_type,
+         tag_group_id,
+         id_field,
+         :resource_query
+       ) do
     from(q in query,
       as: :resource_query,
       where:
