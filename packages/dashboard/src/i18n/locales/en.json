@@ -588,6 +588,7 @@
     "confirmRemoveChannels": "Are you sure you want to remove the following channels?",
     "enterChannelName": "Enter Channel name",
     "defaultPlaylist": "Default playlist",
+    "currentPlaylist": "Current playlist",
     "selectPlaylist": "Select Playlist",
     "clearDefaultPlaylist": "Clear default playlist",
     "dragPlaylists": "Drag playlists",

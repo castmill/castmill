@@ -649,6 +649,7 @@
     "confirmRemoveChannels": "Êtes-vous sûr de vouloir supprimer les canaux suivants ?",
     "enterChannelName": "Entrez le nom du canal",
     "defaultPlaylist": "Playlist par défaut",
+    "currentPlaylist": "Playlist actuelle",
     "selectPlaylist": "Sélectionner une playlist",
     "clearDefaultPlaylist": "Effacer la playlist par défaut",
     "dragPlaylists": "Glisser les playlists",

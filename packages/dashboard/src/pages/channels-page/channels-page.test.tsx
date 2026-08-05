@@ -11,8 +11,18 @@ vi.mock('../../services/channels.service', () => ({
     fetchChannels: vi.fn(() =>
       Promise.resolve({
         data: [
-          { id: 1, name: 'Channel 1' },
-          { id: 2, name: 'Channel 2' },
+          {
+            id: 1,
+            name: 'Channel 1',
+            default_playlist_name: 'Default playlist 1',
+            current_playlist_name: 'Scheduled playlist 1',
+          },
+          {
+            id: 2,
+            name: 'Channel 2',
+            default_playlist_name: null,
+            current_playlist_name: null,
+          },
         ],
         count: 2,
       })
@@ -102,6 +112,15 @@ describe('ChannelsPage - Delete Button Permission Tests', () => {
   });
 
   describe('Delete Button Permissions', () => {
+    it('shows default and current playlists', async () => {
+      renderWithProviders(() => <ChannelsPage />);
+
+      expect(await screen.findByText('Default playlist 1')).toBeInTheDocument();
+      expect(screen.getByText('Scheduled playlist 1')).toBeInTheDocument();
+      expect(screen.getByText('Current playlist')).toBeInTheDocument();
+      expect(screen.getAllByText('—')).toHaveLength(2);
+    });
+
     it('should enable delete button when user has delete permissions and items are selected', async () => {
       // Mock user with delete permissions
       mockCanPerformAction.mockImplementation(

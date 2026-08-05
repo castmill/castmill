@@ -637,6 +637,7 @@
     "confirmRemoveChannels": "هل أنت متأكد من أنك تريد إزالة القنوات التالية؟",
     "enterChannelName": "أدخل اسم القناة",
     "defaultPlaylist": "قائمة التشغيل الافتراضية",
+    "currentPlaylist": "قائمة التشغيل الحالية",
     "selectPlaylist": "اختر قائمة التشغيل",
     "clearDefaultPlaylist": "مسح قائمة التشغيل الافتراضية",
     "dragPlaylists": "اسحب قوائم التشغيل",

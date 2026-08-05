@@ -638,6 +638,7 @@
     "confirmRemoveChannels": "¿Estás seguro de que quieres eliminar los siguientes canales?",
     "enterChannelName": "Ingresa el nombre del canal",
     "defaultPlaylist": "Lista de reproducción predeterminada",
+    "currentPlaylist": "Lista de reproducción actual",
     "selectPlaylist": "Seleccionar lista de reproducción",
     "clearDefaultPlaylist": "Limpiar lista de reproducción predeterminada",
     "dragPlaylists": "Arrastra listas de reproducción",

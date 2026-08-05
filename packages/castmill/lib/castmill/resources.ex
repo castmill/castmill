@@ -1549,6 +1549,54 @@ defmodule Castmill.Resources do
     |> Repo.preload(:entries)
   end
 
+  def add_channel_playlist_names(channels, now \\ DateTime.utc_now())
+  def add_channel_playlist_names([], _now), do: []
+
+  def add_channel_playlist_names(channels, now) do
+    channels = Repo.preload(channels, :playlist)
+    channel_ids = Enum.map(channels, & &1.id)
+    today = DateTime.to_date(now)
+
+    current_playlist_names =
+      from(entry in ChannelEntry,
+        join: playlist in assoc(entry, :playlist),
+        where:
+          entry.channel_id in ^channel_ids and entry.start <= ^now and
+            (entry.end > ^now or
+               (not is_nil(entry.repeat_weekly_until) and
+                  entry.repeat_weekly_until >= ^today)),
+        order_by: [asc: entry.start],
+        select: {entry, playlist.name}
+      )
+      |> Repo.all()
+      |> Enum.reduce(%{}, fn {entry, playlist_name}, names ->
+        if channel_entry_active_at?(entry, now) do
+          Map.put(names, entry.channel_id, playlist_name)
+        else
+          names
+        end
+      end)
+
+    Enum.map(channels, fn channel ->
+      default_playlist_name = channel.playlist && channel.playlist.name
+
+      channel
+      |> Map.put(:default_playlist_name, default_playlist_name)
+      |> Map.put(
+        :current_playlist_name,
+        Map.get(current_playlist_names, channel.id, default_playlist_name)
+      )
+    end)
+  end
+
+  defp channel_entry_active_at?(entry, now) do
+    weekday = fn datetime -> rem(Date.day_of_week(DateTime.to_date(datetime)), 7) end
+    minute = fn datetime -> datetime.hour * 60 + datetime.minute end
+
+    weekday.(now) >= weekday.(entry.start) and weekday.(now) <= weekday.(entry.end) and
+      minute.(now) >= minute.(entry.start) and minute.(now) <= minute.(entry.end)
+  end
+
   @doc """
     Updates a channel.
   """

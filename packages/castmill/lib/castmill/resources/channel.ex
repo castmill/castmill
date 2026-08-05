@@ -9,6 +9,8 @@ defmodule Castmill.Resources.Channel do
     field(:description, :string)
     field(:name, :string)
     field(:timezone, :string)
+    field(:default_playlist_name, :string, virtual: true)
+    field(:current_playlist_name, :string, virtual: true)
 
     belongs_to(:playlist, Castmill.Resources.Playlist, foreign_key: :default_playlist_id)
 
