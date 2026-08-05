@@ -57,4 +57,18 @@ describe('StyledInput Component', () => {
     const input = screen.getByPlaceholderText('Enter your email');
     expect(input).toHaveAttribute('type', 'email');
   });
+
+  it('renders a serialized false boolean value as unchecked', () => {
+    const mockOnInput = vi.fn();
+    render(() => (
+      <StyledInput
+        id="test-input"
+        type="boolean"
+        value="false"
+        onInput={mockOnInput}
+      />
+    ));
+
+    expect(screen.getByRole('checkbox')).not.toBeChecked();
+  });
 });
