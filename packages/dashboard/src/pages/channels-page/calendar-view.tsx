@@ -15,7 +15,7 @@ import { CalendarEntryBox } from './calendar-entry-box';
 
 import styles from './calendar-view.module.scss';
 import { CalendarEntry } from './calendar-entry.interface';
-import { toZonedTime, fromZonedTime } from 'date-fns-tz';
+import { toZonedTime } from 'date-fns-tz';
 import { PlaylistChooser } from './playlist-chooser';
 import { baseUrl } from '../../env';
 import { store } from '../../store';
@@ -25,6 +25,7 @@ import {
   JsonChannelEntry,
 } from '../../services/channels.service';
 import {
+  calendarEntryToTimestamps,
   canMoveCalendarEntry,
   getStartOfWeek,
   getWeekRangeTimestamps,
@@ -70,16 +71,6 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
     const endMinutes = entry.endHour * 60 + entry.endMinute;
     const totalMinutes = endMinutes - startMinutes;
     return Math.ceil(totalMinutes / 30);
-  }
-
-  function getDateByDayIndex(startOfWeek: Date, dayIndex: number): Date {
-    // Create a fresh copy of startOfWeek
-    const date = new Date(startOfWeek);
-
-    // Add dayIndex days to the start date
-    date.setDate(date.getDate() + dayIndex);
-
-    return date;
   }
 
   // Calculate the current day's index relative to startDate
@@ -294,6 +285,13 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
 
     const newEntry = computeNewEntry(entryBeingDragged, lastDropData);
 
+    try {
+      calendarEntryToTimestamps(newEntry, startDate(), props.timeZone);
+    } catch {
+      setHoveredCells([]);
+      return false;
+    }
+
     // Check for overlaps with existing entries
     for (const existingEntry of entries) {
       if (existingEntry.id === entryBeingDragged.id) {
@@ -325,34 +323,11 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
 
         try {
           const newEntry = computeNewEntry(entry, { dayIndex, hour, minute });
-          const start = getDateByDayIndex(startDate(), dayIndex);
-          const end = getDateByDayIndex(
+          const opts = calendarEntryToTimestamps(
+            newEntry,
             startDate(),
-            dayIndex + entry.numDays - 1
+            props.timeZone
           );
-
-          const opts = {
-            start: fromZonedTime(
-              new Date(
-                start.getFullYear(),
-                start.getMonth(),
-                start.getDate(),
-                newEntry.startHour,
-                newEntry.startMinute
-              ),
-              props.timeZone
-            ).getTime(),
-            end: fromZonedTime(
-              new Date(
-                end.getFullYear(),
-                end.getMonth(),
-                end.getDate(),
-                newEntry.endHour,
-                newEntry.endMinute
-              ),
-              props.timeZone
-            ).getTime(),
-          };
 
           if (entry.isNewEntry) {
             const addedEntry = await channelsService.addEntryToChannel(
@@ -457,36 +432,17 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
   };
 
   const onResizeComplete = async (updated: CalendarEntry) => {
-    // We must convert the entry to UTC before sending it to the server
-    const start = getDateByDayIndex(startDate(), updated.dayIndex);
-    const end = getDateByDayIndex(
-      startDate(),
-      updated.dayIndex + updated.numDays - 1
-    );
-
     try {
-      await channelsService.updateChannelEntry(props.channel.id, updated.id, {
-        start: fromZonedTime(
-          new Date(
-            start.getFullYear(),
-            start.getMonth(),
-            start.getDate(),
-            updated.startHour,
-            updated.startMinute
-          ),
-          props.timeZone
-        ).getTime(),
-        end: fromZonedTime(
-          new Date(
-            end.getFullYear(),
-            end.getMonth(),
-            end.getDate(),
-            updated.endHour,
-            updated.endMinute
-          ),
-          props.timeZone
-        ).getTime(),
-      });
+      const update = calendarEntryToTimestamps(
+        updated,
+        startDate(),
+        props.timeZone
+      );
+      await channelsService.updateChannelEntry(
+        props.channel.id,
+        updated.id,
+        update
+      );
 
       setEntries((all) => all.map((x) => (x.id === updated.id ? updated : x)));
     } catch (error) {

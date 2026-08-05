@@ -68,6 +68,21 @@ export function calendarEntryToTimestamps(
   // Convert local time to UTC
   const endUtc = fromZonedTime(endDate, timeZone);
 
+  const hasSameLocalTime = (expected: Date, actual: Date) =>
+    expected.getFullYear() === actual.getFullYear() &&
+    expected.getMonth() === actual.getMonth() &&
+    expected.getDate() === actual.getDate() &&
+    expected.getHours() === actual.getHours() &&
+    expected.getMinutes() === actual.getMinutes();
+
+  if (
+    startUtc.getTime() >= endUtc.getTime() ||
+    !hasSameLocalTime(startDate, toZonedTime(startUtc, timeZone)) ||
+    !hasSameLocalTime(endDate, toZonedTime(endUtc, timeZone))
+  ) {
+    throw new RangeError('Invalid calendar time');
+  }
+
   // Return Unix timestamps in seconds
   return {
     start: Math.floor(startUtc.getTime()),

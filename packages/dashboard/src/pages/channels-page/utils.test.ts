@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { CalendarEntry } from './calendar-entry.interface';
 import {
+  calendarEntryToTimestamps,
   canMoveCalendarEntry,
   getStartOfWeek,
   getWeekRangeTimestamps,
@@ -78,5 +79,22 @@ describe('calendar utilities', () => {
       endHour: 24,
       endMinute: 0,
     });
+  });
+
+  it('rejects nonexistent local times during a DST transition', () => {
+    expect(() =>
+      calendarEntryToTimestamps(
+        {
+          ...entry,
+          startHour: 1,
+          startMinute: 30,
+          endHour: 2,
+          endMinute: 30,
+          dayIndex: 6,
+        },
+        new Date(2026, 2, 2),
+        'America/New_York'
+      )
+    ).toThrow(RangeError);
   });
 });
