@@ -10,7 +10,7 @@ import {
 } from '@castmill/ui-common';
 import { Device } from '../interfaces/device.interface';
 import { AiOutlineDelete } from 'solid-icons/ai';
-import { BsEye } from 'solid-icons/bs';
+import { BsBoxArrowUpRight } from 'solid-icons/bs';
 import styles from './devices.module.scss';
 import { DevicesService, JsonChannel } from '../services/devices.service';
 import { AddonStore } from '../../common/interfaces/addon-store';
@@ -56,13 +56,15 @@ export const Channels: Component<{
   // Define table actions with i18n
   const actions: TableAction<JsonChannel>[] = [
     {
-      icon: BsEye,
+      icon: BsBoxArrowUpRight,
       handler: (item: JsonChannel) => {
-        props.store?.router?.navigate(
-          `/org/${props.organizationId}/channels?itemId=${item.id}`
+        window.open(
+          `/org/${props.organizationId}/channels?itemId=${item.id}`,
+          '_blank',
+          'noopener,noreferrer'
         );
       },
-      label: t('common.view'),
+      label: t('common.openInNewTab'),
     },
     {
       icon: AiOutlineDelete,
