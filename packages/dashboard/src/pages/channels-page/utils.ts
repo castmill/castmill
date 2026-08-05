@@ -10,6 +10,21 @@ export function getStartOfWeek(date: Date): Date {
   return result;
 }
 
+export function getWeekRangeTimestamps(
+  date: Date,
+  timeZone: string
+): { start: number; end: number } {
+  const start = getStartOfWeek(date);
+  const end = new Date(start);
+  end.setDate(end.getDate() + 6);
+  end.setHours(23, 59, 59, 999);
+
+  return {
+    start: fromZonedTime(start, timeZone).getTime(),
+    end: fromZonedTime(end, timeZone).getTime(),
+  };
+}
+
 export function canMoveCalendarEntry(
   entry: CalendarEntry,
   dayIndex: number,
@@ -70,15 +85,24 @@ export function timestampsToCalendarEntry(
 
   // Calculate week dayIndex and number of days the entry spans
   const startDayIndex = (startDate.getDay() + 6) % 7;
-  const endDayIndex = (endDate.getDay() + 6) % 7;
-
-  const numDays = endDayIndex - startDayIndex + 1;
+  let endDayIndex = (endDate.getDay() + 6) % 7;
 
   // Extract local hours and minutes
   const startHour = startDate.getHours();
   const startMinute = startDate.getMinutes();
-  const endHour = endDate.getHours();
+  let endHour = endDate.getHours();
   const endMinute = endDate.getMinutes();
+
+  if (
+    endHour === 0 &&
+    endMinute === 0 &&
+    endDate.getTime() > startDate.getTime()
+  ) {
+    endDayIndex = (endDayIndex + 6) % 7;
+    endHour = 24;
+  }
+
+  const numDays = endDayIndex - startDayIndex + 1;
 
   // Generate title based on local time
   const title = `${startHour.toString().padStart(2, '0')}:${startMinute

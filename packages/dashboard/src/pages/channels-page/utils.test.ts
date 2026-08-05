@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { CalendarEntry } from './calendar-entry.interface';
-import { canMoveCalendarEntry, getStartOfWeek } from './utils';
+import {
+  canMoveCalendarEntry,
+  getStartOfWeek,
+  getWeekRangeTimestamps,
+  timestampsToCalendarEntry,
+} from './utils';
 
 const entry: CalendarEntry = {
   id: 1,
@@ -22,6 +27,16 @@ describe('calendar utilities', () => {
     expect(getStartOfWeek(sunday)).toEqual(new Date(2026, 7, 3));
   });
 
+  it('converts channel-local week boundaries to UTC timestamps', () => {
+    const range = getWeekRangeTimestamps(
+      new Date(2026, 7, 5),
+      'America/Los_Angeles'
+    );
+
+    expect(range.start).toBe(Date.UTC(2026, 7, 3, 7));
+    expect(range.end).toBe(Date.UTC(2026, 7, 10, 6, 59, 59, 999));
+  });
+
   it('rejects moving a multi-day entry beyond the end of the week', () => {
     expect(canMoveCalendarEntry({ ...entry, numDays: 2 }, 6, 10, 0)).toBe(
       false
@@ -40,5 +55,28 @@ describe('calendar utilities', () => {
     expect(canMoveCalendarEntry({ ...entry, numDays: 2 }, 5, 22, 30)).toBe(
       true
     );
+  });
+
+  it('keeps an exact-midnight end on the preceding calendar day', () => {
+    const converted = timestampsToCalendarEntry(
+      {
+        id: 1,
+        name: 'Entry',
+        playlist_id: 1,
+        start: Date.UTC(2026, 7, 3, 23),
+        end: Date.UTC(2026, 7, 4),
+        inserted_at: '',
+        updated_at: '',
+        repeat_weekly_until: 0,
+      },
+      'UTC'
+    );
+
+    expect(converted).toMatchObject({
+      dayIndex: 0,
+      numDays: 1,
+      endHour: 24,
+      endMinute: 0,
+    });
   });
 });

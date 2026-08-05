@@ -27,6 +27,7 @@ import {
 import {
   canMoveCalendarEntry,
   getStartOfWeek,
+  getWeekRangeTimestamps,
   timestampsToCalendarEntry,
 } from './utils';
 import { CalendarCell } from './calendar-cell';
@@ -52,7 +53,9 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
   const [showEntryModal, setShowEntryModal] = createSignal<CalendarEntry>();
 
   // Start date for a “week”
-  const [startDate, setStartDate] = createSignal(getStartOfWeek(new Date()));
+  const [startDate, setStartDate] = createSignal(
+    getStartOfWeek(toZonedTime(new Date(), props.timeZone))
+  );
 
   const [hoveredCells, setHoveredCells] = createSignal<string[]>([]);
   const hoveredSet = createMemo(() => new Set(hoveredCells()));
@@ -67,14 +70,6 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
     const endMinutes = entry.endHour * 60 + entry.endMinute;
     const totalMinutes = endMinutes - startMinutes;
     return Math.ceil(totalMinutes / 30);
-  }
-
-  function getEndOfWeek(date: Date): Date {
-    const start = getStartOfWeek(date);
-    const result = new Date(start);
-    result.setDate(result.getDate() + 6); // 6 more days
-    result.setHours(23, 59, 59, 999); // End of the day
-    return result;
   }
 
   function getDateByDayIndex(startOfWeek: Date, dayIndex: number): Date {
@@ -218,11 +213,13 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
   const [entries, setEntries] = createStore<CalendarEntry[]>([]);
 
   createEffect(async () => {
+    const range = getWeekRangeTimestamps(startDate(), props.timeZone);
+
     // Fetch entries
     const result = await channelsService.getChannelEntries(
       props.channel.id,
-      startDate().getTime(),
-      getEndOfWeek(startDate()).getTime()
+      range.start,
+      range.end
     );
 
     if (result) {
@@ -268,7 +265,7 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
     setStartDate(getStartOfWeek(curr));
   };
   const goToday = () => {
-    setStartDate(getStartOfWeek(new Date()));
+    setStartDate(getStartOfWeek(toZonedTime(new Date(), props.timeZone)));
   };
 
   // DnD setup for each cell in the body table
