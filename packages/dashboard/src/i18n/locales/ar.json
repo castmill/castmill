@@ -1043,7 +1043,19 @@
     "errorRemovingDevice": "خطأ في إزالة الجهاز {{name}}: {{error}}",
     "errorRemovingDevices": "خطأ في إزالة الأجهزة: {{error}}",
     "enterDescription": "أدخل وصفًا",
-    "drawerTitle": "الجهاز \"{{name}}\""
+    "drawerTitle": "الجهاز \"{{name}}\"",
+    "info": {
+      "title": "معلومات",
+      "platform": "المنصة",
+      "playerVersion": "إصدار المشغل",
+      "operatingSystem": "نظام التشغيل",
+      "hardware": "الأجهزة",
+      "environmentVersion": "إصدار البيئة",
+      "chromiumVersion": "إصدار Chromium",
+      "v8Version": "إصدار V8",
+      "nodeVersion": "إصدار Node.js",
+      "userAgent": "وكيل المستخدم"
+    }
   },
   "validation": {
     "fieldRequired": "هذا الحقل مطلوب",

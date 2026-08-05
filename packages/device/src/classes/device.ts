@@ -566,6 +566,7 @@ export class Device extends EventEmitter {
         .then((phoenixChannel) => {
           this.initListeners(phoenixChannel);
           this.initHeartbeat(phoenixChannel);
+          void this.updateDeviceInfo(credentials);
         })
         .catch(async (error) => {
           if (
@@ -1130,6 +1131,29 @@ export class Device extends EventEmitter {
 
   getDeviceInfo() {
     return this.integration.getDeviceInfo();
+  }
+
+  private async updateDeviceInfo(credentials: Credentials) {
+    try {
+      const info = await this.integration.getDeviceInfo();
+      const response = await fetch(
+        `${this.baseUrl}/devices/${credentials.device.id}/info`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: ['Bearer', credentials.device.token].join(' '),
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ info }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Invalid status ${response.status}`);
+      }
+    } catch (error) {
+      this.logger.error(`Unable to update device info: ${error}`);
+    }
   }
 
   private async getChannelMetadata(credentials: Credentials): Promise<{
