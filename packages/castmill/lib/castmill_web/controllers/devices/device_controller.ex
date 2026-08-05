@@ -114,6 +114,15 @@ defmodule CastmillWeb.DeviceController do
     render(conn, :device, layout: false)
   end
 
+  def info(conn, %{"info" => info}) when is_map(info) do
+    device = conn.assigns.current_actor
+
+    case Devices.update_device(device, %{info: info}) do
+      {:ok, _device} -> send_resp(conn, :no_content, "")
+      {:error, changeset} -> {:error, changeset}
+    end
+  end
+
   def start_registration(conn, %{"hardware_id" => hardware_id, "timezone" => timezone} = params) do
     location = Map.get(params, "location")
 

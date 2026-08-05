@@ -1055,7 +1055,19 @@
     "errorRemovingDevice": "Erreur lors de la suppression de l'appareil {{name}} : {{error}}",
     "errorRemovingDevices": "Erreur lors de la suppression des appareils : {{error}}",
     "enterDescription": "Entrez une description",
-    "drawerTitle": "Appareil \"{{name}}\""
+    "drawerTitle": "Appareil \"{{name}}\"",
+    "info": {
+      "title": "Informations",
+      "platform": "Plateforme",
+      "playerVersion": "Version du lecteur",
+      "operatingSystem": "Système d'exploitation",
+      "hardware": "Matériel",
+      "environmentVersion": "Version de l'environnement",
+      "chromiumVersion": "Version de Chromium",
+      "v8Version": "Version de V8",
+      "nodeVersion": "Version de Node.js",
+      "userAgent": "Agent utilisateur"
+    }
   },
   "validation": {
     "fieldRequired": "Ce champ est requis",

@@ -1044,7 +1044,19 @@
     "errorRemovingDevice": "デバイス{{name}}の削除エラー: {{error}}",
     "errorRemovingDevices": "デバイスの削除エラー: {{error}}",
     "enterDescription": "説明を入力してください",
-    "drawerTitle": "デバイス \"{{name}}\""
+    "drawerTitle": "デバイス \"{{name}}\"",
+    "info": {
+      "title": "情報",
+      "platform": "プラットフォーム",
+      "playerVersion": "プレーヤーのバージョン",
+      "operatingSystem": "オペレーティングシステム",
+      "hardware": "ハードウェア",
+      "environmentVersion": "環境のバージョン",
+      "chromiumVersion": "Chromium のバージョン",
+      "v8Version": "V8 のバージョン",
+      "nodeVersion": "Node.js のバージョン",
+      "userAgent": "ユーザーエージェント"
+    }
   },
   "validation": {
     "fieldRequired": "この項目は必須です",

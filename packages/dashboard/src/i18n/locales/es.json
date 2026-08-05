@@ -1071,7 +1071,19 @@
     "errorRemovingDevice": "Error al eliminar el dispositivo {{name}}: {{error}}",
     "errorRemovingDevices": "Error al eliminar los dispositivos: {{error}}",
     "enterDescription": "Ingrese una descripción",
-    "drawerTitle": "Dispositivo \"{{name}}\""
+    "drawerTitle": "Dispositivo \"{{name}}\"",
+    "info": {
+      "title": "Información",
+      "platform": "Plataforma",
+      "playerVersion": "Versión del reproductor",
+      "operatingSystem": "Sistema operativo",
+      "hardware": "Equipo",
+      "environmentVersion": "Versión del entorno",
+      "chromiumVersion": "Versión de Chromium",
+      "v8Version": "Versión de V8",
+      "nodeVersion": "Versión de Node.js",
+      "userAgent": "Agente de usuario"
+    }
   },
   "validation": {
     "fieldRequired": "Este campo es obligatorio",

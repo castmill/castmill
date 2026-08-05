@@ -19,6 +19,7 @@ defmodule Castmill.Devices.Device do
              :online,
              :loc_lat,
              :loc_long,
+             :info,
              :meta,
              :settings,
              :timezone,
