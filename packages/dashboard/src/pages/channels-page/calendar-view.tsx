@@ -24,7 +24,11 @@ import {
   JsonChannel,
   JsonChannelEntry,
 } from '../../services/channels.service';
-import { timestampsToCalendarEntry } from './utils';
+import {
+  canMoveCalendarEntry,
+  getStartOfWeek,
+  timestampsToCalendarEntry,
+} from './utils';
 import { CalendarCell } from './calendar-cell';
 import { DefaultPlaylistComboBox } from './default-playlist-combobox';
 import { Modal, useToast } from '@castmill/ui-common';
@@ -63,19 +67,6 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
     const endMinutes = entry.endHour * 60 + entry.endMinute;
     const totalMinutes = endMinutes - startMinutes;
     return Math.ceil(totalMinutes / 30);
-  }
-
-  // Weeks starts on Monday at 00:00
-  function getStartOfWeek(date: Date): Date {
-    // Make a copy so we don't modify the original date
-    const result = new Date(date);
-    // getDay() returns 0 for Sunday, 1 for Monday, etc.
-    const dayOfWeek = (result.getDay() - 1) % 7; // 0-indexed
-
-    // Subtract `dayOfWeek` days from the current date
-    result.setDate(result.getDate() - dayOfWeek);
-    result.setHours(0, 0, 0, 0); // Start of the day
-    return result;
   }
 
   function getEndOfWeek(date: Date): Date {
@@ -173,10 +164,7 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
 
     // Compute new end time
     let endMinutes = startHour * 60 + startMinute + durationMinutes;
-    // Clamp end time to 23:59 (1439 minutes)
-    if (endMinutes >= 1440) {
-      endMinutes = 1439; // 23:59
-    }
+    endMinutes = Math.min(endMinutes, 1440);
     const endHour = Math.floor(endMinutes / 60);
     const endMinute = endMinutes % 60;
 
@@ -295,6 +283,18 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
       return false;
     }
 
+    if (
+      !canMoveCalendarEntry(
+        entryBeingDragged,
+        lastDropData.dayIndex,
+        lastDropData.hour,
+        lastDropData.minute
+      )
+    ) {
+      setHoveredCells([]);
+      return false;
+    }
+
     const newEntry = computeNewEntry(entryBeingDragged, lastDropData);
 
     // Check for overlaps with existing entries
@@ -319,71 +319,74 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
 
       if (lastDropData) {
         const { dayIndex, hour, minute } = lastDropData;
+        lastDropData = undefined;
         const { entry } = source.data as { entry?: CalendarEntry };
 
-        if (!entry) {
+        if (!entry || !canMoveCalendarEntry(entry, dayIndex, hour, minute)) {
           return;
         }
 
-        const newEntry = computeNewEntry(entry, { dayIndex, hour, minute });
-        const start = getDateByDayIndex(startDate(), dayIndex);
-        const end = getDateByDayIndex(
-          startDate(),
-          dayIndex + entry.numDays - 1
-        );
-
-        const opts = {
-          start: fromZonedTime(
-            new Date(
-              start.getFullYear(),
-              start.getMonth(),
-              start.getDate(),
-              newEntry.startHour,
-              newEntry.startMinute
-            ),
-            props.timeZone
-          ).getTime(),
-          end: fromZonedTime(
-            new Date(
-              end.getFullYear(),
-              end.getMonth(),
-              end.getDate(),
-              newEntry.endHour,
-              newEntry.endMinute
-            ),
-            props.timeZone
-          ).getTime(),
-        };
-
-        // Hackish
-        if (entry.isNewEntry) {
-          // Add the new entry
-          const addedEntry = await channelsService.addEntryToChannel(
-            props.channel.id,
-            {
-              playlist_id: newEntry.playlist.id,
-              ...opts,
-            }
+        try {
+          const newEntry = computeNewEntry(entry, { dayIndex, hour, minute });
+          const start = getDateByDayIndex(startDate(), dayIndex);
+          const end = getDateByDayIndex(
+            startDate(),
+            dayIndex + entry.numDays - 1
           );
 
-          newEntry.id = addedEntry.id;
+          const opts = {
+            start: fromZonedTime(
+              new Date(
+                start.getFullYear(),
+                start.getMonth(),
+                start.getDate(),
+                newEntry.startHour,
+                newEntry.startMinute
+              ),
+              props.timeZone
+            ).getTime(),
+            end: fromZonedTime(
+              new Date(
+                end.getFullYear(),
+                end.getMonth(),
+                end.getDate(),
+                newEntry.endHour,
+                newEntry.endMinute
+              ),
+              props.timeZone
+            ).getTime(),
+          };
 
-          setEntries([...entries, newEntry]);
-        } else {
-          await channelsService.updateChannelEntry(
-            props.channel.id,
-            entry.id,
-            opts
+          if (entry.isNewEntry) {
+            const addedEntry = await channelsService.addEntryToChannel(
+              props.channel.id,
+              {
+                playlist_id: newEntry.playlist.id,
+                ...opts,
+              }
+            );
+
+            newEntry.id = addedEntry.id;
+            setEntries([...entries, newEntry]);
+          } else {
+            await channelsService.updateChannelEntry(
+              props.channel.id,
+              entry.id,
+              opts
+            );
+            setEntries((e) => e.id === entry.id, {
+              dayIndex: newEntry.dayIndex,
+              title: newEntry.title,
+              startHour: newEntry.startHour,
+              startMinute: newEntry.startMinute,
+              endHour: newEntry.endHour,
+              endMinute: newEntry.endMinute,
+            });
+          }
+        } catch (error) {
+          toast.error(
+            t('channels.errors.updateChannelEntry', { error: String(error) })
           );
-          // Update the store
-          setEntries((e) => e.id === entry.id, {
-            dayIndex: newEntry.dayIndex,
-            title: newEntry.title,
-            startHour: newEntry.startHour,
-            startMinute: newEntry.startMinute,
-            endHour: newEntry.endHour,
-            endMinute: newEntry.endMinute,
-          });
         }
       }
     };
@@ -464,30 +467,36 @@ export const CalendarView: Component<CalendarViewProps> = (props) => {
       updated.dayIndex + updated.numDays - 1
     );
 
-    await channelsService.updateChannelEntry(props.channel.id, updated.id, {
-      start: fromZonedTime(
-        new Date(
-          start.getFullYear(),
-          start.getMonth(),
-          start.getDate(),
-          updated.startHour,
-          updated.startMinute
-        ),
-        props.timeZone
-      ).getTime(),
-      end: fromZonedTime(
-        new Date(
-          end.getFullYear(),
-          end.getMonth(),
-          end.getDate(),
-          updated.endHour,
-          updated.endMinute
-        ),
-        props.timeZone
-      ).getTime(),
-    });
+    try {
+      await channelsService.updateChannelEntry(props.channel.id, updated.id, {
+        start: fromZonedTime(
+          new Date(
+            start.getFullYear(),
+            start.getMonth(),
+            start.getDate(),
+            updated.startHour,
+            updated.startMinute
+          ),
+          props.timeZone
+        ).getTime(),
+        end: fromZonedTime(
+          new Date(
+            end.getFullYear(),
+            end.getMonth(),
+            end.getDate(),
+            updated.endHour,
+            updated.endMinute
+          ),
+          props.timeZone
+        ).getTime(),
+      });
 
-    setEntries((all) => all.map((x) => (x.id === updated.id ? updated : x)));
+      setEntries((all) => all.map((x) => (x.id === updated.id ? updated : x)));
+    } catch (error) {
+      toast.error(
+        t('channels.errors.updateChannelEntry', { error: String(error) })
+      );
+    }
   };
 
   const getCellDimensions = () => {

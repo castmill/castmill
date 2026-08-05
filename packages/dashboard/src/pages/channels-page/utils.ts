@@ -2,6 +2,36 @@ import { toZonedTime, fromZonedTime } from 'date-fns-tz';
 import { CalendarEntry } from './calendar-entry.interface';
 import { JsonChannelEntry } from '../../services/channels.service';
 
+export function getStartOfWeek(date: Date): Date {
+  const result = new Date(date);
+  const dayIndex = (result.getDay() + 6) % 7;
+  result.setDate(result.getDate() - dayIndex);
+  result.setHours(0, 0, 0, 0);
+  return result;
+}
+
+export function canMoveCalendarEntry(
+  entry: CalendarEntry,
+  dayIndex: number,
+  hour: number,
+  minute: number
+): boolean {
+  const durationMinutes =
+    entry.endHour * 60 +
+    entry.endMinute -
+    (entry.startHour * 60 + entry.startMinute);
+  const startMinutes = hour * 60 + minute;
+  const endMinutes = startMinutes + durationMinutes;
+
+  return (
+    durationMinutes > 0 &&
+    endMinutes <= 24 * 60 &&
+    dayIndex >= 0 &&
+    dayIndex + entry.numDays <= 7 &&
+    !(endMinutes === 24 * 60 && dayIndex + entry.numDays === 7)
+  );
+}
+
 export function calendarEntryToTimestamps(
   entry: CalendarEntry,
   baseDate: Date,
