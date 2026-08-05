@@ -33,15 +33,17 @@ interface PlaylistPreviewProps {
 export const resolvePlaylistDuration = (
   playlist: Playlist,
   items: JsonPlaylist['items'],
-  dynamicDurations: Record<number, number> = {}
-) =>
-  playlist.layers.reduce((total, layer, index) => {
+  dynamicDurations?: Record<number, number>
+) => {
+  const durations: Record<number, number> = dynamicDurations ?? {};
+
+  return playlist.layers.reduce((total, layer, index) => {
     const item = items[index];
     const dynamicDuration =
       item &&
       !(typeof item.duration === 'number' && item.duration > 0) &&
       typeof item.id === 'number'
-        ? dynamicDurations[item.id]
+        ? durations[item.id]
         : undefined;
 
     return (
@@ -51,6 +53,7 @@ export const resolvePlaylistDuration = (
         : layer.duration())
     );
   }, 0);
+};
 
 export const PlaylistPreview: Component<PlaylistPreviewProps> = (props) => {
   const cache = new Cache(
