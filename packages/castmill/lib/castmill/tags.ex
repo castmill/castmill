@@ -395,8 +395,16 @@ defmodule Castmill.Tags do
   def filter_missing_tag_group(query, resource_type, tag_group_id, opts)
       when is_integer(tag_group_id) do
     id_field = Keyword.get(opts, :id_field, :id)
+    parent_alias = parent_alias_for_query(query, resource_type)
 
+    build_missing_tag_group_query(query, resource_type, tag_group_id, id_field, parent_alias)
+  end
+
+  def filter_missing_tag_group(query, _resource_type, _tag_group_id, _opts), do: query
+
+  defp build_missing_tag_group_query(query, resource_type, tag_group_id, id_field, :resource_query) do
     from(q in query,
+      as: :resource_query,
       where:
         not exists(
           from(rt in ResourceTag,
@@ -410,10 +418,111 @@ defmodule Castmill.Tags do
           )
         )
     )
-    |> as(:resource_query)
   end
 
-  def filter_missing_tag_group(query, _resource_type, _tag_group_id, _opts), do: query
+  defp build_missing_tag_group_query(query, resource_type, tag_group_id, id_field, :media) do
+    from(q in query,
+      where:
+        not exists(
+          from(rt in ResourceTag,
+            join: t in Tag,
+            on: t.id == rt.tag_id,
+            where:
+              rt.resource_type == ^resource_type and
+                t.tag_group_id == ^tag_group_id and
+                rt.resource_id == parent_as(:media) |> field(^id_field) |> type(:string),
+            select: 1
+          )
+        )
+    )
+  end
+
+  defp build_missing_tag_group_query(query, resource_type, tag_group_id, id_field, :playlist) do
+    from(q in query,
+      where:
+        not exists(
+          from(rt in ResourceTag,
+            join: t in Tag,
+            on: t.id == rt.tag_id,
+            where:
+              rt.resource_type == ^resource_type and
+                t.tag_group_id == ^tag_group_id and
+                rt.resource_id == parent_as(:playlist) |> field(^id_field) |> type(:string),
+            select: 1
+          )
+        )
+    )
+  end
+
+  defp build_missing_tag_group_query(query, resource_type, tag_group_id, id_field, :channel) do
+    from(q in query,
+      where:
+        not exists(
+          from(rt in ResourceTag,
+            join: t in Tag,
+            on: t.id == rt.tag_id,
+            where:
+              rt.resource_type == ^resource_type and
+                t.tag_group_id == ^tag_group_id and
+                rt.resource_id == parent_as(:channel) |> field(^id_field) |> type(:string),
+            select: 1
+          )
+        )
+    )
+  end
+
+  defp build_missing_tag_group_query(query, resource_type, tag_group_id, id_field, :device) do
+    from(q in query,
+      where:
+        not exists(
+          from(rt in ResourceTag,
+            join: t in Tag,
+            on: t.id == rt.tag_id,
+            where:
+              rt.resource_type == ^resource_type and
+                t.tag_group_id == ^tag_group_id and
+                rt.resource_id == parent_as(:device) |> field(^id_field) |> type(:string),
+            select: 1
+          )
+        )
+    )
+  end
+
+  defp build_missing_tag_group_query(query, resource_type, tag_group_id, id_field, :resource) do
+    from(q in query,
+      where:
+        not exists(
+          from(rt in ResourceTag,
+            join: t in Tag,
+            on: t.id == rt.tag_id,
+            where:
+              rt.resource_type == ^resource_type and
+                t.tag_group_id == ^tag_group_id and
+                rt.resource_id == parent_as(:resource) |> field(^id_field) |> type(:string),
+            select: 1
+          )
+        )
+    )
+  end
+
+  defp parent_alias_for_query(query, resource_type) do
+    aliases = Map.keys(query.aliases || %{})
+
+    case aliases do
+      [] ->
+        :resource_query
+
+      _ ->
+        default_alias_for_resource_type(resource_type)
+    end
+  end
+
+  defp default_alias_for_resource_type(:media), do: :media
+  defp default_alias_for_resource_type(:playlist), do: :playlist
+  defp default_alias_for_resource_type(:channel), do: :channel
+  defp default_alias_for_resource_type(:device), do: :device
+  defp default_alias_for_resource_type(:layout), do: :resource
+  defp default_alias_for_resource_type(_), do: :resource_query
 
   @doc """
   Filters a query to only include resources with the given tags.
