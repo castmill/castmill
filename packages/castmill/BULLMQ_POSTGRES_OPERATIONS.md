@@ -20,8 +20,18 @@ Required/important environment variables in production:
 1. `BULLMQ_DATABASE_URL` (recommended, can be a dedicated DB)
 2. `BULLMQ_DB_SCHEMA` (default: `bullmq`)
 3. `BULLMQ_DB_POOL_SIZE` (default: `10`)
+4. `BULLMQ_DB_SSL` (default: `false`) — set to `true` when the database enforces
+   SSL, e.g. AWS RDS with `rds.force_ssl=1`. Without it the BullMQ connection is
+   rejected with `no pg_hba.conf entry ... no encryption`.
+5. `BULLMQ_DB_SSL_VERIFY` (default: `verify_none`) — peer verification mode when
+   SSL is enabled: `verify_none` (managed CA, no local cert needed) or
+   `verify_peer`.
 
 If `BULLMQ_DATABASE_URL` is not provided, Castmill falls back to `DATABASE_URL`.
+
+> **Note:** SSL applies to the BullMQ connection independently of the main
+> `Castmill.Repo`. Enable `BULLMQ_DB_SSL=true` alongside the main DB SSL settings
+> whenever the target database requires encrypted connections.
 
 ## Development Setup
 

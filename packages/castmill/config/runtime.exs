@@ -156,8 +156,23 @@ if config_env() == :prod do
   # Use a dedicated database via BULLMQ_DATABASE_URL when available.
   bullmq_database_url = CastmillWeb.Secrets.get_bullmq_database_url() || database_url
 
+  # SSL for the BullMQ connection. Required when the database enforces SSL
+  # (e.g. AWS RDS with rds.force_ssl=1). Disabled by default for backward
+  # compatibility. Set BULLMQ_DB_SSL=true to enable; BULLMQ_DB_SSL_VERIFY controls
+  # peer verification ("verify_none" — the default — or "verify_peer").
+  bullmq_db_ssl =
+    if System.get_env("BULLMQ_DB_SSL", "false") in ["true", "1", "TRUE"] do
+      case String.downcase(System.get_env("BULLMQ_DB_SSL_VERIFY") || "verify_none") do
+        "verify_none" -> [verify: :verify_none]
+        _ -> true
+      end
+    else
+      false
+    end
+
   config :castmill, :bullmq_postgres,
     url: bullmq_database_url,
+    ssl: bullmq_db_ssl,
     schema: System.get_env("BULLMQ_DB_SCHEMA") || "bullmq",
     pool_size: String.to_integer(System.get_env("BULLMQ_DB_POOL_SIZE") || "10")
 
