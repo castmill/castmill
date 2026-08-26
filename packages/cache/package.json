@@ -10,8 +10,8 @@
   "type": "module",
   "types": "dist/index.d.ts",
   "scripts": {
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format": "oxfmt --write .",
+    "format:check": "oxfmt .",
     "doc": "typedoc --out ./doc/ src/index.ts",
     "test": "vitest",
     "test:jest": "jest tests",
@@ -23,7 +23,8 @@
     "build:cache": "vite build",
     "build:watch": "tsc --watch",
     "semantic-release": "semantic-release",
-    "prepare": "yarn build"
+    "prepare": "yarn build",
+    "lint": "oxlint ."
   },
   "repository": {
     "type": "git",
@@ -48,7 +49,6 @@
     "dexie": "^3.2.2",
     "eventemitter3": "^4.0.7",
     "fake-indexeddb": "^3.1.8",
-    "prettier": "^3.2.5",
     "rimraf": "^6.0.1",
     "semantic-release": "^17.4.2",
     "typedoc": "^0.11.1",

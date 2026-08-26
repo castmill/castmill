@@ -18,8 +18,8 @@
     }
   },
   "scripts": {
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format": "oxfmt --write .",
+    "format:check": "oxfmt .",
     "doc": "typedoc --out ./doc/ src/index.ts",
     "test": "vitest",
     "build": "rimraf dist && vite build && npm run ts-types",
@@ -27,7 +27,8 @@
     "dev": "vite build --watch",
     "build:watch": "tsc --watch",
     "semantic-release": "semantic-release",
-    "prepare": "npm run build"
+    "prepare": "npm run build",
+    "lint": "oxlint ."
   },
   "repository": {
     "type": "git",
@@ -53,7 +54,6 @@
     "@solidjs/testing-library": "^0.8.7",
     "@vitejs/plugin-legacy": "^1.3.2",
     "jsdom": "^27.0.0",
-    "prettier": "^3.2.5",
     "resize-observer-polyfill": "^1.5.1",
     "rimraf": "^6.0.1",
     "scss": "^0.2.4",

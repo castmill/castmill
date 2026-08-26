@@ -6,7 +6,10 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",
-    "build": "echo \"@castmill/castmill build. Noop but needed to make build-all work\""
+    "build": "echo \"@castmill/castmill build. Noop but needed to make build-all work\"",
+    "format": "oxfmt --write .",
+    "format:check": "oxfmt .",
+    "lint": "oxlint ."
   },
   "author": "",
   "license": "AGPL",

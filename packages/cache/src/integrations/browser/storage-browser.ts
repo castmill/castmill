@@ -1,19 +1,15 @@
-import {
-  StorageIntegration,
-  StoreFileReturnValue,
-  StoreOptions,
-} from '../../storage.integration';
+import { StorageIntegration, StoreFileReturnValue, StoreOptions } from "../../storage.integration";
 
-const UninitializedCacheError = 'Cache has not been initialized';
+const UninitializedCacheError = "Cache has not been initialized";
 
 export class StorageBrowser implements StorageIntegration {
-  prefix = 'castmill:storage';
+  prefix = "castmill:storage";
   cacheName: string;
   private cache: Cache | undefined;
 
   constructor(
     private name: string,
-    private serviceWorkerPath: string = ''
+    private serviceWorkerPath: string = "",
   ) {
     this.cacheName = `${this.prefix}:${this.name}`;
   }
@@ -34,22 +30,19 @@ export class StorageBrowser implements StorageIntegration {
             return caches.delete(key);
           }
           return null;
-        })
+        }),
       );
 
       try {
         const registration = await navigator.serviceWorker.register(
-          `${this.serviceWorkerPath}sw.js`
+          `${this.serviceWorkerPath}sw.js`,
         );
-        console.log(
-          'ServiceWorker registration successful with scope: ',
-          registration.scope
-        );
+        console.log("ServiceWorker registration successful with scope: ", registration.scope);
       } catch (err) {
-        console.log('ServiceWorker registration failed: ', err);
+        console.log("ServiceWorker registration failed: ", err);
       }
 
-      const registration = await navigator.serviceWorker.getRegistration('/');
+      const registration = await navigator.serviceWorker.getRegistration("/");
       if (registration) {
         await registration.update();
       }
@@ -74,15 +67,11 @@ export class StorageBrowser implements StorageIntegration {
       throw new Error(UninitializedCacheError);
     }
     return (
-      await Promise.all(
-        (await this.cache.keys()).map((request) =>
-          this.cache!.match(request.url)
-        )
-      )
+      await Promise.all((await this.cache.keys()).map((request) => this.cache!.match(request.url)))
     ).map((response) => {
       return {
         url: response!.url,
-        size: parseInt(response!.headers.get('Content-Length') || '0'),
+        size: parseInt(response!.headers.get("Content-Length") || "0"),
       };
     });
   }
@@ -94,18 +83,15 @@ export class StorageBrowser implements StorageIntegration {
    *
    * @param url
    */
-  async storeFile(
-    url: string,
-    opts?: StoreOptions
-  ): Promise<StoreFileReturnValue> {
+  async storeFile(url: string, opts?: StoreOptions): Promise<StoreFileReturnValue> {
     if (!this.cache) {
       throw new Error(UninitializedCacheError);
     }
 
     try {
       const request = new Request(url, {
-        mode: 'cors',
-        method: 'GET',
+        mode: "cors",
+        method: "GET",
         headers: opts?.headers,
       });
       await this.cache.add(request);
@@ -115,17 +101,17 @@ export class StorageBrowser implements StorageIntegration {
         return {
           item: {
             url,
-            size: parseInt(response.headers.get('Content-Length') || '0'),
+            size: parseInt(response.headers.get("Content-Length") || "0"),
           },
           result: {
-            code: 'SUCCESS',
+            code: "SUCCESS",
           },
         };
       } else {
         return {
           result: {
-            code: 'FAILURE',
-            error: 'UNKNOWN',
+            code: "FAILURE",
+            error: "UNKNOWN",
             errMsg: response?.statusText,
           },
         };
@@ -134,8 +120,8 @@ export class StorageBrowser implements StorageIntegration {
       console.error(err);
       return {
         result: {
-          code: 'FAILURE',
-          error: 'NOT_FOUND',
+          code: "FAILURE",
+          error: "NOT_FOUND",
           errMsg: (err as Error).message,
         },
       };

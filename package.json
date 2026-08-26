@@ -43,7 +43,19 @@
     "build:all": "yarn run build:ui-common && yarn run build:cache && yarn run build:player && yarn run build:device && yarn run build:dashboard && yarn run build:widged && yarn run build:platforms",
     "build:server": "yarn run build:ui-common && yarn run build:cache && yarn run build:player && yarn run build:device",
     "check-translations": "cd packages/dashboard && yarn check-translations",
-    "prepare": "husky"
+    "prepare": "husky",
+    "lint:ui-common": "cd packages/ui-common && yarn lint",
+    "lint:cache": "cd packages/cache && yarn lint",
+    "lint:dashboard": "cd packages/dashboard && yarn lint",
+    "lint:device": "cd packages/device && yarn lint",
+    "lint:player": "cd packages/player && yarn lint",
+    "lint:widged": "cd packages/widged && yarn lint",
+    "lint:platforms:android": "cd packages/platforms/android-player && yarn lint",
+    "lint:platforms:webos": "cd packages/platforms/webos-player && yarn lint",
+    "lint:platforms:electron": "cd packages/platforms/electron-player && yarn lint",
+    "lint:platforms:legacy": "cd packages/platforms/legacy-adapter-player && yarn lint",
+    "lint:platforms": "yarn run lint:platforms:android && yarn run lint:platforms:webos && yarn run lint:platforms:electron && yarn run lint:platforms:legacy",
+    "lint:all": "yarn run lint:ui-common && yarn run lint:cache && yarn run lint:dashboard && yarn run lint:device && yarn run lint:player && yarn run lint:widged && yarn run lint:platforms"
   },
   "workspaces": [
     "packages/cache",
@@ -57,12 +69,11 @@
     "packages/castmill/assets"
   ],
   "devDependencies": {
-    "@eslint/js": "^9.20.0",
-    "eslint": "^9.20.0",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.4",
     "typescript": "^5.0.0",
-    "typescript-eslint": "^8.23.0"
+    "oxlint": "^1.80.0",
+    "oxfmt": "^0.65.0"
   },
   "dependencies": {
     "@docusaurus/core": "^3.9.1",
@@ -70,13 +81,9 @@
     "@docusaurus/preset-classic": "^3.9.1"
   },
   "lint-staged": {
-    "packages/**/*.{js,jsx,ts,tsx,css,md}": "prettier --write",
-    "packages/**/*.json": [
-      "prettier --write"
-    ],
-    "packages/dashboard/src/i18n/locales/*.json": [
-      "prettier --write",
-      "cd packages/dashboard && node scripts/check-missing-translations.cjs"
+    "packages/**/*.{js,jsx,ts,tsx}": [
+      "oxfmt --write",
+      "oxlint --fix"
     ],
     "packages/castmill/**/*.{ex,exs}": "cd packages/castmill && mix format && cd ../.."
   },

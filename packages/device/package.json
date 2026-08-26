@@ -5,8 +5,8 @@
   "type": "module",
   "types": "dist/index.d.ts",
   "scripts": {
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format": "oxfmt --write .",
+    "format:check": "oxfmt .",
     "start": "vite",
     "dev": "vite",
     "test": "vitest run",
@@ -15,7 +15,8 @@
     "build": "rimraf dist && vite build && yarn ts-types",
     "build:watch": "vite build --watch",
     "prepare": "yarn build",
-    "ts-types": "tsc --emitDeclarationOnly --outDir dist"
+    "ts-types": "tsc --emitDeclarationOnly --outDir dist",
+    "lint": "oxlint ."
   },
   "files": [
     "dist"
@@ -32,7 +33,6 @@
     "@types/phoenix": "^1.6.4",
     "@types/qrcode": "^1.5.5",
     "jsdom": "^24.0.0",
-    "prettier": "^3.2.5",
     "rimraf": "^6.0.1",
     "solid-js": "^1.9.4",
     "typescript": "^5.4.5",

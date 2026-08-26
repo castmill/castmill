@@ -1,5 +1,5 @@
 export interface SWMessage {
-  cmd: 'init' | 'cacheFile' | 'deleteFile' | 'deleteAll';
+  cmd: "init" | "cacheFile" | "deleteFile" | "deleteAll";
   args: { [key: string]: any };
 }
 
@@ -22,8 +22,6 @@ function sendMessage(message: SWMessage) {
     // The service worker can then use the transferred port to reply via postMessage(), which
     // will in turn trigger the onmessage handler on messageChannel.port1.
     // See https://html.spec.whatwg.org/multipage/workers.html#dom-worker-postmessage
-    navigator.serviceWorker.controller?.postMessage(message, [
-      messageChannel.port2,
-    ]);
+    navigator.serviceWorker.controller?.postMessage(message, [messageChannel.port2]);
   });
 }

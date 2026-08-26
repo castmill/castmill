@@ -10,8 +10,8 @@
   "type": "module",
   "types": "dist/index.d.ts",
   "scripts": {
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format": "oxfmt --write .",
+    "format:check": "oxfmt .",
     "doc": "typedoc --out ./doc/ src/index.ts",
     "test": "mocha tests/**/*.spec.ts",
     "dev": "vite build --watch",
@@ -21,7 +21,8 @@
     "build:watch": "tsc --watch",
     "semantic-release": "semantic-release",
     "prepare": "yarn build",
-    "ts-types": "tsc --emitDeclarationOnly --outDir dist"
+    "ts-types": "tsc --emitDeclarationOnly --outDir dist",
+    "lint": "oxlint ."
   },
   "repository": {
     "type": "git",
@@ -59,7 +60,6 @@
     "gl-matrix": "^3.3.0",
     "gsap": "^3.12.2",
     "mocha": "^10.2.0",
-    "prettier": "^3.2.5",
     "rimraf": "^6.0.1",
     "rxjs": "^7.5.5",
     "semantic-release": "^17.4.2",
