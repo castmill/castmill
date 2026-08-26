@@ -164,7 +164,8 @@ if config_env() == :prod do
     if System.get_env("BULLMQ_DB_SSL", "false") in ["true", "1", "TRUE"] do
       case String.downcase(System.get_env("BULLMQ_DB_SSL_VERIFY") || "verify_none") do
         "verify_none" -> [verify: :verify_none]
-        _ -> true
+        "verify_peer" -> true
+        value -> raise "invalid BULLMQ_DB_SSL_VERIFY value: #{inspect(value)}"
       end
     else
       false

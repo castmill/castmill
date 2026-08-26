@@ -344,7 +344,7 @@ defmodule Castmill.Application do
     # compatible with environments whose database does not require encryption.
     ssl_opts =
       case Keyword.get(bullmq_pg_config, :ssl) do
-        nil -> []
+        ssl when ssl in [nil, false] -> []
         ssl -> [ssl: ssl]
       end
 
