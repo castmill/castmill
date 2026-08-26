@@ -49,7 +49,8 @@ defmodule Castmill.MixProject do
       {:jason, "~> 1.2"},
       {:mox, "~> 1.0", only: [:test]},
       {:multipart, "~> 0.4.0"},
-      {:bullmq, "~> 2.0"},
+      # 2.2.0 forwards the :ssl option to Postgrex (needed for RDS force_ssl).
+      {:bullmq, "~> 2.2"},
       {:phoenix, "~> 1.7.2"},
       {:phoenix_ecto, "~> 4.4"},
       {:plug_cowboy, "~> 2.5"},
