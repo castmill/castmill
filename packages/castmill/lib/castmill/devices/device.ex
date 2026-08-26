@@ -26,6 +26,7 @@ defmodule Castmill.Devices.Device do
              :version,
              :volume,
              :schedule,
+             :enabled,
              :inserted_at,
              :updated_at
            ]}
@@ -50,6 +51,7 @@ defmodule Castmill.Devices.Device do
     field(:mode, :string, default: "normal")
     field(:schedule, :map)
     field(:autorecover_until, :utc_datetime)
+    field(:enabled, :boolean, default: true)
 
     field(:token, :string, virtual: true)
 
@@ -123,7 +125,8 @@ defmodule Castmill.Devices.Device do
       :hardware_id,
       :organization_id,
       :schedule,
-      :autorecover_until
+      :autorecover_until,
+      :enabled
     ])
     |> put_pass_hash()
   end
@@ -154,6 +157,15 @@ defmodule Castmill.Devices.Device do
   # field being older than a minute
   def apply_filter({"offline", true}) do
     dynamic([d], d.online == false or d.last_online <= ago(1, "minute"))
+  end
+
+  # Filter by enabled/disabled status
+  def apply_filter({"enabled", true}) do
+    dynamic([d], d.enabled == true)
+  end
+
+  def apply_filter({"disabled", true}) do
+    dynamic([d], d.enabled == false)
   end
 
   def apply_filter(_) do

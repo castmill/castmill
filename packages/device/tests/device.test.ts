@@ -544,6 +544,132 @@ describe('Device - Channel Updates', () => {
   });
 });
 
+describe('Device - Enable/Disable', () => {
+  let device: Device;
+  let mockIntegration: any;
+  let mockStorageIntegration: any;
+
+  beforeEach(() => {
+    mockIntegration = {
+      getCredentials: vi.fn(),
+      getMachineGUID: vi.fn(),
+      removeCredentials: vi.fn().mockResolvedValue(undefined),
+    };
+
+    mockStorageIntegration = {
+      getItem: vi.fn(),
+      setItem: vi.fn(),
+      removeItem: vi.fn(),
+    };
+
+    device = new Device(mockIntegration, mockStorageIntegration, {
+      cache: { maxItems: 100 },
+    });
+
+    // Ensure a clean DOM between tests
+    document
+      .querySelectorAll('[data-disabled-overlay]')
+      .forEach((el) => el.remove());
+  });
+
+  const getUpdateHandler = () => {
+    const mockChannel = {
+      on: vi.fn(),
+      push: vi.fn(),
+      join: vi.fn(),
+    };
+    device['initListeners'](mockChannel as any);
+    return mockChannel.on.mock.calls.find((call) => call[0] === 'update')?.[1];
+  };
+
+  it('shows a black overlay and stops the player when disabled', async () => {
+    const stop = vi.fn().mockResolvedValue(undefined);
+    device['player'] = { stop } as any;
+
+    const updateHandler = getUpdateHandler();
+    expect(updateHandler).toBeDefined();
+
+    await updateHandler({
+      resource: 'device',
+      action: 'update',
+      data: { enabled: false },
+    });
+
+    expect(stop).toHaveBeenCalled();
+    const overlay = document.querySelector('[data-disabled-overlay]');
+    expect(overlay).not.toBeNull();
+    expect((overlay as HTMLElement).style.background).toBe('black');
+  });
+
+  it('removes the overlay and reloads when re-enabled', async () => {
+    const originalLocation = window.location;
+    delete (window as any).location;
+    window.location = { reload: vi.fn() } as any;
+
+    // Start from disabled state with an overlay present
+    device['player'] = { stop: vi.fn().mockResolvedValue(undefined) } as any;
+    const updateHandler = getUpdateHandler();
+
+    await updateHandler({
+      resource: 'device',
+      action: 'update',
+      data: { enabled: false },
+    });
+    expect(document.querySelector('[data-disabled-overlay]')).not.toBeNull();
+
+    await updateHandler({
+      resource: 'device',
+      action: 'update',
+      data: { enabled: true },
+    });
+
+    expect(document.querySelector('[data-disabled-overlay]')).toBeNull();
+    expect(window.location.reload).toHaveBeenCalled();
+
+    window.location = originalLocation;
+  });
+
+  it('is idempotent and does not stack overlays or reload when already enabled', async () => {
+    const originalLocation = window.location;
+    delete (window as any).location;
+    window.location = { reload: vi.fn() } as any;
+
+    const updateHandler = getUpdateHandler();
+
+    // Already enabled by default, re-applying enabled should be a no-op
+    await updateHandler({
+      resource: 'device',
+      action: 'update',
+      data: { enabled: true },
+    });
+
+    expect(document.querySelector('[data-disabled-overlay]')).toBeNull();
+    expect(window.location.reload).not.toHaveBeenCalled();
+
+    window.location = originalLocation;
+  });
+
+  it('does not stack multiple overlays when disabled repeatedly', async () => {
+    device['player'] = { stop: vi.fn().mockResolvedValue(undefined) } as any;
+    const updateHandler = getUpdateHandler();
+
+    await updateHandler({
+      resource: 'device',
+      action: 'update',
+      data: { enabled: false },
+    });
+    await updateHandler({
+      resource: 'device',
+      action: 'update',
+      data: { enabled: false },
+    });
+
+    expect(
+      document.querySelectorAll('[data-disabled-overlay]').length
+    ).toBe(1);
+  });
+});
+
 describe('Device - Pincode Polling', () => {
   let device: Device;
   let mockIntegration: any;
