@@ -1,7 +1,7 @@
-import { TimerEntry, Timers } from '@castmill/device';
-import { time, power } from '../../native';
+import { TimerEntry, Timers } from "@castmill/device";
+import { time, power } from "../../native";
 
-export const DEFAULT_INPUT_SOURCE = 'ext://hdmi:1';
+export const DEFAULT_INPUT_SOURCE = "ext://hdmi:1";
 
 interface WebosTimer {
   hour: number;
@@ -10,22 +10,22 @@ interface WebosTimer {
   inputSource?: string;
 }
 
-export const toWebosWeekDays = (week: TimerEntry['weekDays']) => {
+export const toWebosWeekDays = (week: TimerEntry["weekDays"]) => {
   return week.reduce((acc, day) => {
     switch (day) {
-      case 'MON':
+      case "MON":
         return acc | 0b1;
-      case 'TUE':
+      case "TUE":
         return acc | 0b10;
-      case 'WED':
+      case "WED":
         return acc | 0b100;
-      case 'THU':
+      case "THU":
         return acc | 0b1000;
-      case 'FRI':
+      case "FRI":
         return acc | 0b10000;
-      case 'SAT':
+      case "SAT":
         return acc | 0b100000;
-      case 'SUN':
+      case "SUN":
         return acc | 0b1000000;
       default:
         return acc;
@@ -33,16 +33,8 @@ export const toWebosWeekDays = (week: TimerEntry['weekDays']) => {
   }, 0b0);
 };
 
-export const toTimerWeekDays = (week: number): TimerEntry['weekDays'] => {
-  const days: TimerEntry['weekDays'] = [
-    'MON',
-    'TUE',
-    'WED',
-    'THU',
-    'FRI',
-    'SAT',
-    'SUN',
-  ];
+export const toTimerWeekDays = (week: number): TimerEntry["weekDays"] => {
+  const days: TimerEntry["weekDays"] = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
   return days.filter((day, index) => week & (1 << index));
 };
 
@@ -66,7 +58,7 @@ const addOnTimer = (timer: TimerEntry) => {
     // webos >= 4, scap 1.7
     return time.reserveOnOffTimer({
       ...webosTimer,
-      type: 'ONTIMER',
+      type: "ONTIMER",
     });
   } else {
     // webos < 4, scap 1.5
@@ -81,7 +73,7 @@ const addOffTimer = (timer: TimerEntry) => {
     // webos >= 4, scap 1.7
     return time.reserveOnOffTimer({
       ...webosTimer,
-      type: 'OFFTIMER',
+      type: "OFFTIMER",
     });
   } else {
     // webos < 4, scap 1.5

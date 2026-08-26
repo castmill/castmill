@@ -1,11 +1,5 @@
-import { Component, For, Show } from 'solid-js';
-import {
-  BsFileImage,
-  BsFileEarmarkFont,
-  BsFileCode,
-  BsFileEarmark,
-  BsImage,
-} from 'solid-icons/bs';
+import { Component, For, Show } from "solid-js";
+import { BsFileImage, BsFileEarmarkFont, BsFileCode, BsFileEarmark, BsImage } from "solid-icons/bs";
 
 interface AssetDefinition {
   path: string;
@@ -31,13 +25,13 @@ interface AssetsListProps {
 // Helper to get icon based on asset category
 const getCategoryIcon = (category: string) => {
   switch (category) {
-    case 'icons':
+    case "icons":
       return <BsImage size={16} />;
-    case 'images':
+    case "images":
       return <BsFileImage size={16} />;
-    case 'fonts':
+    case "fonts":
       return <BsFileEarmarkFont size={16} />;
-    case 'styles':
+    case "styles":
       return <BsFileCode size={16} />;
     default:
       return <BsFileEarmark size={16} />;
@@ -46,7 +40,7 @@ const getCategoryIcon = (category: string) => {
 
 // Helper to format file size
 const formatType = (type?: string): string => {
-  if (!type) return 'Unknown';
+  if (!type) return "Unknown";
   return type;
 };
 
@@ -85,9 +79,7 @@ const AssetCategory: Component<{
                 </Show>
                 <div class="asset-type">{formatType(asset.type)}</div>
               </div>
-              <Show
-                when={props.category === 'icons' || props.category === 'images'}
-              >
+              <Show when={props.category === "icons" || props.category === "images"}>
                 <div class="asset-preview">
                   <img
                     src={`${props.baseUrl}/widget_assets/${props.widgetSlug}/${asset.path}`}
@@ -121,17 +113,13 @@ export const AssetsList: Component<AssetsListProps> = (props) => {
         when={hasAnyAssets()}
         fallback={
           <div class="no-assets">
-            <p>{props.t('widgets.noAssets')}</p>
+            <p>{props.t("widgets.noAssets")}</p>
           </div>
         }
       >
-        <Show
-          when={
-            props.assets?.icons && Object.keys(props.assets.icons).length > 0
-          }
-        >
+        <Show when={props.assets?.icons && Object.keys(props.assets.icons).length > 0}>
           <AssetCategory
-            title={props.t('widgets.assets.icons')}
+            title={props.t("widgets.assets.icons")}
             category="icons"
             assets={props.assets!.icons!}
             widgetSlug={props.widgetSlug}
@@ -139,13 +127,9 @@ export const AssetsList: Component<AssetsListProps> = (props) => {
           />
         </Show>
 
-        <Show
-          when={
-            props.assets?.images && Object.keys(props.assets.images).length > 0
-          }
-        >
+        <Show when={props.assets?.images && Object.keys(props.assets.images).length > 0}>
           <AssetCategory
-            title={props.t('widgets.assets.images')}
+            title={props.t("widgets.assets.images")}
             category="images"
             assets={props.assets!.images!}
             widgetSlug={props.widgetSlug}
@@ -153,13 +137,9 @@ export const AssetsList: Component<AssetsListProps> = (props) => {
           />
         </Show>
 
-        <Show
-          when={
-            props.assets?.fonts && Object.keys(props.assets.fonts).length > 0
-          }
-        >
+        <Show when={props.assets?.fonts && Object.keys(props.assets.fonts).length > 0}>
           <AssetCategory
-            title={props.t('widgets.assets.fonts')}
+            title={props.t("widgets.assets.fonts")}
             category="fonts"
             assets={props.assets!.fonts!}
             widgetSlug={props.widgetSlug}
@@ -167,13 +147,9 @@ export const AssetsList: Component<AssetsListProps> = (props) => {
           />
         </Show>
 
-        <Show
-          when={
-            props.assets?.styles && Object.keys(props.assets.styles).length > 0
-          }
-        >
+        <Show when={props.assets?.styles && Object.keys(props.assets.styles).length > 0}>
           <AssetCategory
-            title={props.t('widgets.assets.styles')}
+            title={props.t("widgets.assets.styles")}
             category="styles"
             assets={props.assets!.styles!}
             widgetSlug={props.widgetSlug}

@@ -1,14 +1,14 @@
 // Purpose: API for the main process to interact with the renderer process.
 // Any actions required to be performed by the main process should be defined here.
-import { exec } from 'child_process';
-import os from 'os';
-import { app } from 'electron';
-import { is } from '@electron-toolkit/utils';
-import { autoUpdater } from 'electron-updater';
-import { one } from 'macaddress';
-import { createHash } from 'crypto';
-import si, { Systeminformation } from 'systeminformation';
-import type { TelemetryData } from '@castmill/device';
+import { exec } from "child_process";
+import os from "os";
+import { app } from "electron";
+import { is } from "@electron-toolkit/utils";
+import { autoUpdater } from "electron-updater";
+import { one } from "macaddress";
+import { createHash } from "crypto";
+import si, { Systeminformation } from "systeminformation";
+import type { TelemetryData } from "@castmill/device";
 
 /*
  * show a toast notification
@@ -16,7 +16,7 @@ import type { TelemetryData } from '@castmill/device';
 const showToast = (title: string, message: string) => {
   console.log(`Notification: ${title} - ${message}`);
   exec(
-    `osascript -e 'display notification "${message}" with title "${title}" sound name "Submarine"'`
+    `osascript -e 'display notification "${message}" with title "${title}" sound name "Submarine"'`,
   );
 };
 
@@ -31,16 +31,16 @@ const configureSilentAutoUpdater = () => {
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = true;
 
-  autoUpdater.on('update-downloaded', () => {
+  autoUpdater.on("update-downloaded", () => {
     if (quitAndInstallTriggered) return;
     quitAndInstallTriggered = true;
 
-    console.log('Update downloaded. Installing immediately...');
+    console.log("Update downloaded. Installing immediately...");
     autoUpdater.quitAndInstall(true, true);
   });
 
-  autoUpdater.on('error', (error) => {
-    console.error('Auto-update failed:', error);
+  autoUpdater.on("error", (error) => {
+    console.error("Auto-update failed:", error);
   });
 };
 
@@ -65,19 +65,19 @@ export const exit = () => {
 export const shutdown = () => {
   // if dev, don't actually shutdown
   if (is.dev) {
-    showToast('Action blocked in dev', 'Shutdown');
+    showToast("Action blocked in dev", "Shutdown");
     return;
   }
 
-  if (process.platform === 'win32') {
+  if (process.platform === "win32") {
     // windows
-    exec('shutdown /s /t 1');
-  } else if (process.platform === 'darwin' || process.platform === 'linux') {
+    exec("shutdown /s /t 1");
+  } else if (process.platform === "darwin" || process.platform === "linux") {
     // mac and linux
-    exec('poweroff');
+    exec("poweroff");
   } else {
     // other platforms
-    throw new Error('Unsupported platform');
+    throw new Error("Unsupported platform");
   }
 };
 
@@ -87,19 +87,19 @@ export const shutdown = () => {
 export const reboot = () => {
   // if dev, don't actually reboot
   if (is.dev) {
-    showToast('Action blocked in dev', 'Reboot');
+    showToast("Action blocked in dev", "Reboot");
     return;
   }
 
-  if (process.platform === 'win32') {
+  if (process.platform === "win32") {
     // windows
-    exec('shutdown /r /t 1');
-  } else if (process.platform === 'darwin' || process.platform === 'linux') {
+    exec("shutdown /r /t 1");
+  } else if (process.platform === "darwin" || process.platform === "linux") {
     // mac and linux
-    exec('reboot');
+    exec("reboot");
   } else {
     // other platforms
-    throw new Error('Unsupported platform');
+    throw new Error("Unsupported platform");
   }
 };
 
@@ -108,21 +108,19 @@ export const reboot = () => {
  */
 export const update = async (): Promise<void> => {
   if (is.dev) {
-    console.log('Auto-update is disabled in development mode.');
+    console.log("Auto-update is disabled in development mode.");
     return;
   }
 
   configureSilentAutoUpdater();
   quitAndInstallTriggered = false;
 
-  console.log('Checking for updates (silent mode)...');
+  console.log("Checking for updates (silent mode)...");
   try {
     await Promise.resolve().then(() => autoUpdater.checkForUpdates());
   } catch (error) {
-    console.error('Failed to check for updates:', error);
-    throw error instanceof Error
-      ? error
-      : new Error('Failed to check for updates');
+    console.error("Failed to check for updates:", error);
+    throw error instanceof Error ? error : new Error("Failed to check for updates");
   }
 };
 
@@ -138,9 +136,9 @@ const getMacAddress = () => {
  */
 export const getMachineGUID = async () => {
   const macAddress = await getMacAddress();
-  const shasum = createHash('sha1');
+  const shasum = createHash("sha1");
   shasum.update(macAddress);
-  return shasum.digest('hex');
+  return shasum.digest("hex");
 };
 
 /*
@@ -169,7 +167,7 @@ export const getTelemetry = async (): Promise<TelemetryData> => {
     // Uptime
     telemetry.uptimeSeconds = os.uptime();
   } catch (error) {
-    console.error('Error getting basic system info:', error);
+    console.error("Error getting basic system info:", error);
   }
 
   // CPU usage via systeminformation
@@ -177,7 +175,7 @@ export const getTelemetry = async (): Promise<TelemetryData> => {
     const cpuLoad = await si.currentLoad();
     telemetry.cpuUsagePercent = Math.round(cpuLoad.currentLoad * 10) / 10;
   } catch (error) {
-    console.error('Error getting CPU load:', error);
+    console.error("Error getting CPU load:", error);
   }
 
   // Disk/Storage via systeminformation
@@ -185,24 +183,21 @@ export const getTelemetry = async (): Promise<TelemetryData> => {
     const disks = await si.fsSize();
     if (disks.length > 0) {
       // Use the root/main partition
-      const mainDisk =
-        disks.find((d) => d.mount === '/' || d.mount === 'C:\\') || disks[0];
+      const mainDisk = disks.find((d) => d.mount === "/" || d.mount === "C:\\") || disks[0];
       telemetry.storage = {
         totalBytes: mainDisk.size,
         usedBytes: mainDisk.used,
       };
     }
   } catch (error) {
-    console.error('Error getting disk info:', error);
+    console.error("Error getting disk info:", error);
   }
 
   // Temperatures via systeminformation
   try {
     const temps = await si.cpuTemperature();
     if (temps.main !== null && temps.main !== undefined && temps.main > 0) {
-      const tempEntries: TelemetryData['temperatures'] = [
-        { label: 'CPU', celsius: temps.main },
-      ];
+      const tempEntries: TelemetryData["temperatures"] = [{ label: "CPU", celsius: temps.main }];
       if (temps.cores && temps.cores.length > 0) {
         temps.cores.forEach((coreTemp, i) => {
           if (coreTemp > 0) {
@@ -213,7 +208,7 @@ export const getTelemetry = async (): Promise<TelemetryData> => {
       telemetry.temperatures = tempEntries;
     }
   } catch (error) {
-    console.error('Error getting temperature:', error);
+    console.error("Error getting temperature:", error);
   }
 
   // Network info
@@ -225,29 +220,25 @@ export const getTelemetry = async (): Promise<TelemetryData> => {
     for (const [name, addrs] of Object.entries(networkInterfaces)) {
       if (!addrs) continue;
       for (const addr of addrs) {
-        if (!addr.internal && addr.family === 'IPv4') {
+        if (!addr.internal && addr.family === "IPv4") {
           ipAddress = addr.address;
           type =
-            name.toLowerCase().includes('wl') ||
-            name.toLowerCase().includes('wi')
-              ? 'wifi'
-              : 'ethernet';
+            name.toLowerCase().includes("wl") || name.toLowerCase().includes("wi")
+              ? "wifi"
+              : "ethernet";
           break;
         }
       }
       if (ipAddress) break;
     }
 
-    const networkData: TelemetryData['network'] = { ipAddress, type };
+    const networkData: TelemetryData["network"] = { ipAddress, type };
 
     // Try to get wifi signal strength via systeminformation
     try {
       const wifiNetworks = await si.wifiNetworks();
       const connected = Array.isArray(wifiNetworks)
-        ? wifiNetworks.find(
-            (w: Systeminformation.WifiNetworkData) =>
-              w.security && w.signalLevel
-          )
+        ? wifiNetworks.find((w: Systeminformation.WifiNetworkData) => w.security && w.signalLevel)
         : undefined;
       if (connected) {
         networkData!.ssid = connected.ssid;
@@ -262,7 +253,7 @@ export const getTelemetry = async (): Promise<TelemetryData> => {
 
     telemetry.network = networkData;
   } catch (error) {
-    console.error('Error getting network info:', error);
+    console.error("Error getting network info:", error);
   }
 
   // Battery via systeminformation
@@ -275,7 +266,7 @@ export const getTelemetry = async (): Promise<TelemetryData> => {
       };
     }
   } catch (error) {
-    console.error('Error getting battery info:', error);
+    console.error("Error getting battery info:", error);
   }
 
   return telemetry;

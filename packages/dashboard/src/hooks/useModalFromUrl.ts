@@ -1,4 +1,4 @@
-import { createEffect, onCleanup, onMount, untrack } from 'solid-js';
+import { createEffect, onCleanup, onMount, untrack } from "solid-js";
 
 /**
  * Custom hook to synchronize modal state with URL itemId parameter.
@@ -72,10 +72,10 @@ export function useModalFromUrl(options: {
       syncModalWithUrl();
     };
 
-    window.addEventListener('popstate', handlePopState);
+    window.addEventListener("popstate", handlePopState);
 
     onCleanup(() => {
-      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener("popstate", handlePopState);
     });
   });
 }

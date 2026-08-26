@@ -18,9 +18,7 @@ export interface JsonChannel {
 export class Channel {
   sortedEntries: ChannelEntry[];
   constructor(public attrs: JsonChannel) {
-    this.sortedEntries = attrs.entries
-      ? attrs.entries.sort((a, b) => a.start - b.start)
-      : [];
+    this.sortedEntries = attrs.entries ? attrs.entries.sort((a, b) => a.start - b.start) : [];
   }
 
   /**
@@ -28,10 +26,8 @@ export class Channel {
    * @returns The playlist to be played at the current timestamp or undefined if there is no playlist to be played.
    */
   getPlaylistAt(
-    timestamp: number
-  ):
-    | { playlist: string; endTime: number; nextTime: number | undefined }
-    | undefined {
+    timestamp: number,
+  ): { playlist: string; endTime: number; nextTime: number | undefined } | undefined {
     for (let i = this.sortedEntries.length - 1; i >= 0; i--) {
       const entry = this.sortedEntries[i];
       if (
@@ -46,8 +42,7 @@ export class Channel {
         const timestampDay = timestampDate.getUTCDay();
 
         const isBetweenDays =
-          timestampDay >= entryStart.getUTCDay() &&
-          timestampDay <= entryEnd.getUTCDay();
+          timestampDay >= entryStart.getUTCDay() && timestampDay <= entryEnd.getUTCDay();
 
         if (isBetweenDays) {
           const entryStartHours = entryStart.getUTCHours();
@@ -59,20 +54,16 @@ export class Channel {
 
           const isWithinTime =
             (timestampHours > entryStartHours ||
-              (timestampHours === entryStartHours &&
-                timestampMinutes >= entryStartMinutes)) &&
+              (timestampHours === entryStartHours && timestampMinutes >= entryStartMinutes)) &&
             (timestampHours < entryEndHours ||
-              (timestampHours === entryEndHours &&
-                timestampMinutes <= entryEndMinutes));
+              (timestampHours === entryEndHours && timestampMinutes <= entryEndMinutes));
 
           if (isWithinTime) {
             return {
               playlist: entry.playlist_id,
               endTime: entry.end,
               nextTime:
-                i + 1 < this.sortedEntries.length
-                  ? this.sortedEntries[i + 1].start
-                  : undefined,
+                i + 1 < this.sortedEntries.length ? this.sortedEntries[i + 1].start : undefined,
             };
           }
         }

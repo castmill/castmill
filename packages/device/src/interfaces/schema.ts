@@ -22,14 +22,8 @@ export interface LocationValue {
   postalCode?: string;
 }
 
-type SimpleType =
-  | 'string'
-  | 'number'
-  | 'boolean'
-  | 'color'
-  | 'url'
-  | 'location';
-type ComplexType = 'map' | 'list';
+type SimpleType = "string" | "number" | "boolean" | "color" | "url" | "location";
+type ComplexType = "map" | "list";
 
 interface BaseAttributes {
   label?: string;
@@ -45,7 +39,7 @@ interface FieldAttributes extends BaseAttributes {
 }
 
 interface ReferenceAttributes extends BaseAttributes {
-  type: 'ref';
+  type: "ref";
   collection: string;
 }
 
@@ -97,7 +91,7 @@ export interface LayoutOptionValue {
  * Used in widget options_schema to define a layout editor field.
  */
 interface LayoutFieldAttributes extends BaseAttributes {
-  type: 'layout';
+  type: "layout";
   /** Default layout configuration */
   default?: LayoutOptionValue;
   /** Available aspect ratio presets */
@@ -131,7 +125,7 @@ export interface LayoutRefValue {
  * Allows selecting an existing layout and assigning playlists to its zones.
  */
 interface LayoutRefFieldAttributes extends BaseAttributes {
-  type: 'layout-ref';
+  type: "layout-ref";
 }
 
 /**
@@ -139,7 +133,7 @@ interface LayoutRefFieldAttributes extends BaseAttributes {
  * Allows selecting a geographic location with coordinates and address.
  */
 interface LocationFieldAttributes extends BaseAttributes {
-  type: 'location';
+  type: "location";
   /** Default location value */
   default?: LocationValue;
   /** Initial zoom level for the map (1-18, default: 13) */

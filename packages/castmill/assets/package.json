@@ -2,6 +2,8 @@
   "name": "@castmill/castmill",
   "version": "1.0.0",
   "description": "Castmill - Open Digital Signage Platform",
+  "license": "AGPL",
+  "author": "",
   "scripts": {
     "test": "vitest",
     "test:ui": "vitest --ui",
@@ -11,8 +13,6 @@
     "format:check": "oxfmt .",
     "lint": "oxlint ."
   },
-  "author": "",
-  "license": "AGPL",
   "dependencies": {
     "@castmill/cache": "*",
     "@castmill/device": "*",

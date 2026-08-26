@@ -24,31 +24,23 @@
  * - Import/export statements
  */
 
-const fs = require('fs');
-const path = require('path');
-const glob = require('glob');
+const fs = require("fs");
+const path = require("path");
+const glob = require("glob");
 
 // Configuration
 const config = {
-  srcDir: path.join(__dirname, '../src'),
+  srcDir: path.join(__dirname, "../src"),
   excludePatterns: [
-    '**/node_modules/**',
-    '**/*.test.tsx',
-    '**/*.test.ts',
-    '**/*.spec.tsx',
-    '**/*.spec.ts',
-    '**/i18n/**', // Don't check i18n files themselves
+    "**/node_modules/**",
+    "**/*.test.tsx",
+    "**/*.test.ts",
+    "**/*.spec.tsx",
+    "**/*.spec.ts",
+    "**/i18n/**", // Don't check i18n files themselves
   ],
   // Props that commonly contain user-facing text
-  textProps: [
-    'label',
-    'title',
-    'description',
-    'message',
-    'placeholder',
-    'text',
-    'name',
-  ],
+  textProps: ["label", "title", "description", "message", "placeholder", "text", "name"],
   // Technical patterns to ignore
   ignorePatterns: [
     /^[a-z_]+$/i, // Single words that might be keys
@@ -70,13 +62,13 @@ const config = {
 
 // ANSI color codes
 const colors = {
-  reset: '\x1b[0m',
-  red: '\x1b[31m',
-  yellow: '\x1b[33m',
-  green: '\x1b[32m',
-  blue: '\x1b[34m',
-  cyan: '\x1b[36m',
-  gray: '\x1b[90m',
+  reset: "\x1b[0m",
+  red: "\x1b[31m",
+  yellow: "\x1b[33m",
+  green: "\x1b[32m",
+  blue: "\x1b[34m",
+  cyan: "\x1b[36m",
+  gray: "\x1b[90m",
 };
 
 class I18nChecker {
@@ -100,7 +92,7 @@ class I18nChecker {
     if (/^[^a-zA-Z]*$/.test(str)) return true; // No letters (punctuation, symbols)
 
     // Skip specific strings user doesn't want translated
-    const skipStrings = ['Privacy Policy', 'Terms', 'Privacy', 'Contact'];
+    const skipStrings = ["Privacy Policy", "Terms", "Privacy", "Contact"];
     if (skipStrings.includes(str)) return true;
 
     for (const pattern of config.ignorePatterns) {
@@ -126,28 +118,25 @@ class I18nChecker {
       // Skip if contains code-like patterns
       if (/[(){};=]/.test(text)) continue;
       if (/^\s*$/.test(text)) continue;
-      if (text.includes('\n')) continue; // Multi-line - likely code
+      if (text.includes("\n")) continue; // Multi-line - likely code
 
       // Must have at least one complete word
       if (!/\b[a-zA-Z]{2,}\b/.test(text)) continue;
 
       // Check if it's wrapped in t()
-      const beforeMatch = content.substring(
-        Math.max(0, match.index - 20),
-        match.index
-      );
+      const beforeMatch = content.substring(Math.max(0, match.index - 20), match.index);
       if (/\{t\(['"'][^'"']*['"']\)\}$/.test(beforeMatch)) continue;
 
       // Get line number
-      const lineNumber = content.substring(0, match.index).split('\n').length;
+      const lineNumber = content.substring(0, match.index).split("\n").length;
 
       this.addIssue({
-        type: 'jsx-text',
-        severity: 'error',
+        type: "jsx-text",
+        severity: "error",
         file: filePath,
         line: lineNumber,
         text: text,
-        message: 'Hardcoded text in JSX should use t() function',
+        message: "Hardcoded text in JSX should use t() function",
         suggestion: `{t('your.key.here')}`,
       });
     }
@@ -163,8 +152,8 @@ class I18nChecker {
       // 1. prop="string" or prop='string'
       // 2. prop={"string"} or prop={'string'}
       const patterns = [
-        new RegExp(`${prop}=["']([^"']+)["']`, 'g'),
-        new RegExp(`${prop}=\\{["']([^"']+)["']\\}`, 'g'),
+        new RegExp(`${prop}=["']([^"']+)["']`, "g"),
+        new RegExp(`${prop}=\\{["']([^"']+)["']\\}`, "g"),
       ];
 
       for (const propRegex of patterns) {
@@ -175,16 +164,14 @@ class I18nChecker {
           if (this.shouldIgnore(text)) continue;
 
           // Check if the string looks like a translation key
-          if (text.includes('.') && /^[a-z]+\.[a-z.]+$/i.test(text)) continue;
+          if (text.includes(".") && /^[a-z]+\.[a-z.]+$/i.test(text)) continue;
 
           // Get line number
-          const lineNumber = content
-            .substring(0, match.index)
-            .split('\n').length;
+          const lineNumber = content.substring(0, match.index).split("\n").length;
 
           this.addIssue({
-            type: 'prop-string',
-            severity: 'error',
+            type: "prop-string",
+            severity: "error",
             file: filePath,
             line: lineNumber,
             prop: prop,
@@ -210,17 +197,17 @@ class I18nChecker {
       if (this.shouldIgnore(text)) continue;
 
       // Check if it looks like a template string with variables
-      if (text.includes('${')) continue;
+      if (text.includes("${")) continue;
 
-      const lineNumber = content.substring(0, match.index).split('\n').length;
+      const lineNumber = content.substring(0, match.index).split("\n").length;
 
       this.addIssue({
-        type: 'alert-message',
-        severity: 'warning',
+        type: "alert-message",
+        severity: "warning",
         file: filePath,
         line: lineNumber,
         text: text,
-        message: 'Alert message should be localized',
+        message: "Alert message should be localized",
         suggestion: `alert(t('your.error.key'))`,
       });
     }
@@ -230,17 +217,16 @@ class I18nChecker {
     while ((match = alertTemplateRegex.exec(content)) !== null) {
       const text = match[1];
       // Only flag if it doesn't use t() inside
-      if (!text.includes('t(')) {
-        const lineNumber = content.substring(0, match.index).split('\n').length;
+      if (!text.includes("t(")) {
+        const lineNumber = content.substring(0, match.index).split("\n").length;
 
         this.addIssue({
-          type: 'alert-template',
-          severity: 'warning',
+          type: "alert-template",
+          severity: "warning",
           file: filePath,
           line: lineNumber,
           text: text,
-          message:
-            'Alert message with template literal should use t() with params',
+          message: "Alert message with template literal should use t() with params",
           suggestion: `alert(t('your.error.key', { param: value }))`,
         });
       }
@@ -260,21 +246,18 @@ class I18nChecker {
       if (this.shouldIgnore(text)) continue;
 
       // Check if it's already using t()
-      const beforeMatch = content.substring(
-        Math.max(0, match.index - 20),
-        match.index
-      );
+      const beforeMatch = content.substring(Math.max(0, match.index - 20), match.index);
       if (/title:\s*t\(/.test(beforeMatch)) continue;
 
-      const lineNumber = content.substring(0, match.index).split('\n').length;
+      const lineNumber = content.substring(0, match.index).split("\n").length;
 
       this.addIssue({
-        type: 'column-title',
-        severity: 'error',
+        type: "column-title",
+        severity: "error",
         file: filePath,
         line: lineNumber,
         text: text,
-        message: 'Table column title should use t() function',
+        message: "Table column title should use t() function",
         suggestion: `title: t('common.${text.toLowerCase()}')`,
       });
     }
@@ -286,7 +269,7 @@ class I18nChecker {
   addIssue(issue) {
     this.issues.push(issue);
     this.stats.issuesFound++;
-    if (issue.severity === 'error') {
+    if (issue.severity === "error") {
       this.stats.errors++;
     } else {
       this.stats.warnings++;
@@ -297,16 +280,15 @@ class I18nChecker {
    * Scan a single file
    */
   scanFile(filePath) {
-    const content = fs.readFileSync(filePath, 'utf-8');
+    const content = fs.readFileSync(filePath, "utf-8");
     const relativePath = path.relative(config.srcDir, filePath);
 
     // Skip if file doesn't use React/SolidJS JSX
-    if (!content.includes('Component') && !content.includes('<')) return;
+    if (!content.includes("Component") && !content.includes("<")) return;
 
     // Skip if file already imports useI18n (likely already localized)
     // But still check for issues
-    const hasI18n =
-      content.includes('useI18n') || content.includes('props.store.i18n');
+    const hasI18n = content.includes("useI18n") || content.includes("props.store.i18n");
 
     this.findJSXTextNodes(content, relativePath);
     this.findPropsWithStrings(content, relativePath);
@@ -320,11 +302,9 @@ class I18nChecker {
    * Scan all files in the source directory
    */
   scanAll() {
-    console.log(
-      `${colors.cyan}🔍 Scanning for localization issues...${colors.reset}\n`
-    );
+    console.log(`${colors.cyan}🔍 Scanning for localization issues...${colors.reset}\n`);
 
-    const files = glob.sync('**/*.{ts,tsx}', {
+    const files = glob.sync("**/*.{ts,tsx}", {
       cwd: config.srcDir,
       ignore: config.excludePatterns,
       absolute: true,
@@ -355,15 +335,13 @@ class I18nChecker {
     const fileCount = Object.keys(grouped).length;
 
     if (this.issues.length === 0) {
-      console.log(
-        `${colors.green}✅ No localization issues found!${colors.reset}\n`
-      );
+      console.log(`${colors.green}✅ No localization issues found!${colors.reset}\n`);
       console.log(`Scanned ${this.stats.filesScanned} files.\n`);
       return;
     }
 
     console.log(
-      `${colors.yellow}⚠️  Found ${this.stats.issuesFound} localization issues in ${fileCount} files${colors.reset}\n`
+      `${colors.yellow}⚠️  Found ${this.stats.issuesFound} localization issues in ${fileCount} files${colors.reset}\n`,
     );
 
     // Print issues grouped by file
@@ -374,30 +352,24 @@ class I18nChecker {
       issues.sort((a, b) => a.line - b.line);
 
       for (const issue of issues) {
-        const icon = issue.severity === 'error' ? '❌' : '⚠️';
-        const color = issue.severity === 'error' ? colors.red : colors.yellow;
+        const icon = issue.severity === "error" ? "❌" : "⚠️";
+        const color = issue.severity === "error" ? colors.red : colors.yellow;
 
         console.log(
-          `  ${icon} ${colors.gray}Line ${issue.line}:${colors.reset} ${color}${issue.message}${colors.reset}`
+          `  ${icon} ${colors.gray}Line ${issue.line}:${colors.reset} ${color}${issue.message}${colors.reset}`,
         );
         console.log(`     ${colors.gray}Text: "${issue.text}"${colors.reset}`);
-        console.log(
-          `     ${colors.green}Fix:  ${issue.suggestion}${colors.reset}`
-        );
+        console.log(`     ${colors.green}Fix:  ${issue.suggestion}${colors.reset}`);
         console.log();
       }
     }
 
     // Print summary
-    console.log(
-      `${colors.cyan}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${colors.reset}`
-    );
+    console.log(`${colors.cyan}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${colors.reset}`);
     console.log(`${colors.cyan}Summary:${colors.reset}`);
     console.log(`  Files scanned: ${this.stats.filesScanned}`);
     console.log(`  ${colors.red}Errors:   ${this.stats.errors}${colors.reset}`);
-    console.log(
-      `  ${colors.yellow}Warnings: ${this.stats.warnings}${colors.reset}`
-    );
+    console.log(`  ${colors.yellow}Warnings: ${this.stats.warnings}${colors.reset}`);
     console.log(`  Total:    ${this.stats.issuesFound}`);
     console.log();
 

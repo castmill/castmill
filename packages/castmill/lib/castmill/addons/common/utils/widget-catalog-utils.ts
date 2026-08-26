@@ -1,4 +1,4 @@
-import { JsonWidget } from '@castmill/player';
+import { JsonWidget } from "@castmill/player";
 
 /**
  * Looks up a translated widget field from the widget's own translations,
@@ -6,36 +6,29 @@ import { JsonWidget } from '@castmill/player';
  */
 const getTranslatedWidgetField = (
   widget: JsonWidget,
-  field: 'name' | 'description',
+  field: "name" | "description",
   fallback: string | undefined,
-  locale?: string
+  locale?: string,
 ): string | undefined => {
   if (!locale || !widget.translations) return fallback;
 
-  return (
-    widget.translations[locale]?.[field] ??
-    widget.translations['en']?.[field] ??
-    fallback
-  );
+  return widget.translations[locale]?.[field] ?? widget.translations["en"]?.[field] ?? fallback;
 };
 
 /**
  * Returns the translated widget name, falling back to the widget's own name.
  */
-export const getTranslatedWidgetName = (
-  widget: JsonWidget,
-  locale?: string
-): string =>
-  getTranslatedWidgetField(widget, 'name', widget.name, locale) ?? widget.name;
+export const getTranslatedWidgetName = (widget: JsonWidget, locale?: string): string =>
+  getTranslatedWidgetField(widget, "name", widget.name, locale) ?? widget.name;
 
 /**
  * Returns the translated widget description, falling back to the widget's own description.
  */
 export const getTranslatedWidgetDescription = (
   widget: JsonWidget,
-  locale?: string
+  locale?: string,
 ): string | undefined =>
-  getTranslatedWidgetField(widget, 'description', widget.description, locale);
+  getTranslatedWidgetField(widget, "description", widget.description, locale);
 
 /**
  * Returns a translated widget option field (label, description, or placeholder),
@@ -44,15 +37,15 @@ export const getTranslatedWidgetDescription = (
 export const getTranslatedWidgetOption = (
   widget: JsonWidget,
   optionKey: string,
-  optionField: 'label' | 'description' | 'placeholder',
+  optionField: "label" | "description" | "placeholder",
   fallback: string | undefined,
-  locale?: string
+  locale?: string,
 ): string | undefined => {
   if (!locale || !widget.translations) return fallback;
 
   return (
     widget.translations[locale]?.options?.[optionKey]?.[optionField] ??
-    widget.translations['en']?.options?.[optionKey]?.[optionField] ??
+    widget.translations["en"]?.options?.[optionKey]?.[optionField] ??
     fallback
   );
 };

@@ -18,10 +18,10 @@
  * It can also be seen as a playables orchestrator for a given element.
  *
  */
-import { Layer } from './layer';
-import { Transition } from './transitions/transition';
-import { combineLatest, Observable, of } from 'rxjs';
-import { finalize, switchMap, tap, map } from 'rxjs/operators';
+import { Layer } from "./layer";
+import { Transition } from "./transitions/transition";
+import { combineLatest, Observable, of } from "rxjs";
+import { finalize, switchMap, tap, map } from "rxjs/operators";
 
 /**
  * Viewport
@@ -57,15 +57,9 @@ export class Renderer {
         25 - viewport.left
       }%, ${25 - viewport.top}%)`;
 
-      this.el.style.clip = `rect(0px, ${width / scale}px, ${
-        height / scale
-      }px, 0px)`;
-      this.el.style.webkitMaskClip = `rect(0px, ${width / scale}px, ${
-        height / scale
-      }px, 0px)`;
-      this.el.style.clipPath = `inset(0px ${width / scale}px ${
-        height / scale
-      }px 0px)`;
+      this.el.style.clip = `rect(0px, ${width / scale}px, ${height / scale}px, 0px)`;
+      this.el.style.webkitMaskClip = `rect(0px, ${width / scale}px, ${height / scale}px, 0px)`;
+      this.el.style.clipPath = `inset(0px ${width / scale}px ${height / scale}px 0px)`;
     } else {
       const newWidth = 100 * (100 / viewport.width);
       const newHeight = 100 * (100 / viewport.height);
@@ -86,8 +80,7 @@ export class Renderer {
       this.el.style.clip = `rect(${clipTop}px, ${clipRight}px, ${clipBottom}px, ${clipLeft}px)`;
       this.el.style.webkitMaskClip = `rect(${clipTop}px, ${clipRight}px, ${clipBottom}px, ${clipLeft}px)`;
 
-      const clipPathBottom =
-        (height * 100) / viewport.height - (clipTop + height);
+      const clipPathBottom = (height * 100) / viewport.height - (clipTop + height);
       const clipPathRight = (width * 100) / viewport.width - (clipLeft + width);
 
       this.el.style.clipPath = `inset(${clipTop}px ${clipPathRight}px ${clipPathBottom}px ${clipLeft}px)`;
@@ -106,15 +99,15 @@ export class Renderer {
       this.el.removeChild(this.debugLayer);
       delete this.debugLayer;
     } else {
-      this.debugLayer = document.createElement('div');
-      this.debugLayer.style.position = 'absolute';
-      this.debugLayer.style.left = '0';
-      this.debugLayer.style.top = '0';
-      this.debugLayer.style.width = '100%';
-      this.debugLayer.style.height = '100%';
-      this.debugLayer.style.zIndex = '10000';
-      this.debugLayer.style.color = 'white';
-      this.debugLayer.style.fontSize = '1.5em';
+      this.debugLayer = document.createElement("div");
+      this.debugLayer.style.position = "absolute";
+      this.debugLayer.style.left = "0";
+      this.debugLayer.style.top = "0";
+      this.debugLayer.style.width = "100%";
+      this.debugLayer.style.height = "100%";
+      this.debugLayer.style.zIndex = "10000";
+      this.debugLayer.style.color = "white";
+      this.debugLayer.style.fontSize = "1.5em";
       this.el.appendChild(this.debugLayer);
       // Add element for displaying current layer info
       /*
@@ -146,19 +139,19 @@ export class Renderer {
     // if the layout widget supported show with offset we could skip it.
     const prevLayer = this.currentLayer;
     if (prevLayer) {
-      prevLayer.el.style.zIndex = '1000';
+      prevLayer.el.style.zIndex = "1000";
       if (prevLayer === layer) {
-        return of('layer:show:end');
+        return of("layer:show:end");
       }
     }
 
-    layer.el.style.zIndex = '0';
-    layer.el.style.visibility = 'hidden';
+    layer.el.style.zIndex = "0";
+    layer.el.style.visibility = "hidden";
     this.el.appendChild(layer.el);
 
     return layer.show(offset).pipe(
       finalize(() => {
-        layer.el.style.visibility = 'visible';
+        layer.el.style.visibility = "visible";
 
         // If we have a current transition and but a new one is requested
         // we need to reset the current transition.
@@ -184,7 +177,7 @@ export class Renderer {
           prevLayer.el.parentElement?.removeChild(prevLayer.el);
         }
         this.currentLayer = layer;
-      })
+      }),
     );
   }
 
@@ -198,7 +191,7 @@ export class Renderer {
       }
       observable$ = layer.transition.run(offset);
     } else {
-      observable$ = of('play:transition:end');
+      observable$ = of("play:transition:end");
     }
     return observable$.pipe(
       tap(() => {
@@ -208,20 +201,15 @@ export class Renderer {
           prevEl.parentElement?.removeChild(prevEl);
         }
         this.currentLayer = layer;
-      })
+      }),
     );
   }
 
-  play(
-    layer: Layer,
-    timer$: Observable<number>,
-    offset: number,
-    volume: number
-  ) {
-    layer.el.style.zIndex = '0';
+  play(layer: Layer, timer$: Observable<number>, offset: number, volume: number) {
+    layer.el.style.zIndex = "0";
     const prevLayer = this.currentLayer;
     if (prevLayer) {
-      prevLayer.el.style.zIndex = '1000';
+      prevLayer.el.style.zIndex = "1000";
     }
 
     return layer.seek(offset).pipe(
@@ -234,10 +222,10 @@ export class Renderer {
               layer.play(timer$),
               this.performTransition(layer, offset, this.currentLayer),
             ]);
-          })
+          }),
         );
       }),
-      map(() => 'play:layer:end')
+      map(() => "play:layer:end"),
     );
   }
 

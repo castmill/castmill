@@ -7,16 +7,16 @@ import {
   protocol,
   net,
   session,
-} from 'electron';
-import { join, normalize, resolve } from 'path';
-import { pathToFileURL } from 'url';
-import { electronApp, optimizer, is } from '@electron-toolkit/utils';
-import Store from 'electron-store';
-import { StoreOptions } from '@castmill/cache';
-import * as api from './api';
-import { Action } from '../common';
-import icon from '../../resources/icon.png?asset';
-import { LOCAL_URL_SCHEME, CACHE_DIR } from './constants';
+} from "electron";
+import { join, normalize, resolve } from "path";
+import { pathToFileURL } from "url";
+import { electronApp, optimizer, is } from "@electron-toolkit/utils";
+import Store from "electron-store";
+import { StoreOptions } from "@castmill/cache";
+import * as api from "./api";
+import { Action } from "../common";
+import icon from "../../resources/icon.png?asset";
+import { LOCAL_URL_SCHEME, CACHE_DIR } from "./constants";
 
 // Set GOOGLE_API_KEY so Chromium's network location provider can resolve
 // geolocation requests. Without this, navigator.geolocation will time out
@@ -29,10 +29,10 @@ if (googleApiKey) {
 
 function createWindow(): void {
   // Determine if the app is running in kiosk mode.
-  const kiosk = import.meta.env.VITE_KIOSK === 'true';
+  const kiosk = import.meta.env.VITE_KIOSK === "true";
 
   // Determine if the app is running in fullscreen mode.
-  const fullscreen = import.meta.env.VITE_FULLSCREEN === 'true';
+  const fullscreen = import.meta.env.VITE_FULLSCREEN === "true";
 
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -42,28 +42,28 @@ function createWindow(): void {
     autoHideMenuBar: true,
     fullscreen,
     kiosk,
-    ...(process.platform === 'linux' ? { icon } : {}),
+    ...(process.platform === "linux" ? { icon } : {}),
     webPreferences: {
-      preload: join(__dirname, '../preload/index.js'),
+      preload: join(__dirname, "../preload/index.js"),
       sandbox: false,
     },
   });
 
-  mainWindow.on('ready-to-show', () => {
+  mainWindow.on("ready-to-show", () => {
     mainWindow.show();
   });
 
   mainWindow.webContents.setWindowOpenHandler((details) => {
     shell.openExternal(details.url);
-    return { action: 'deny' };
+    return { action: "deny" };
   });
 
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.
-  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL']);
+  if (is.dev && process.env["ELECTRON_RENDERER_URL"]) {
+    mainWindow.loadURL(process.env["ELECTRON_RENDERER_URL"]);
   } else {
-    mainWindow.loadFile(join(__dirname, '../renderer/index.html'));
+    mainWindow.loadFile(join(__dirname, "../renderer/index.html"));
   }
 }
 
@@ -89,17 +89,15 @@ protocol.registerSchemesAsPrivileged([
 file: app.whenReady().then(() => {
   protocol.handle(LOCAL_URL_SCHEME, async (request: Request) => {
     const localPath = decodeURIComponent(
-      request.url.slice(LOCAL_URL_SCHEME.length + 3) // 3 for '://
+      request.url.slice(LOCAL_URL_SCHEME.length + 3), // 3 for '://
     );
 
     // Sanitize: resolve to an absolute path and ensure it stays within the cache root
-    const cacheRoot = resolve(app.getPath('userData'), CACHE_DIR);
+    const cacheRoot = resolve(app.getPath("userData"), CACHE_DIR);
     const resolvedPath = resolve(cacheRoot, normalize(localPath));
 
     if (!resolvedPath.startsWith(cacheRoot)) {
-      throw new Error(
-        `Path traversal blocked: ${localPath} resolves outside cache directory`
-      );
+      throw new Error(`Path traversal blocked: ${localPath} resolves outside cache directory`);
     }
 
     const fullPath = pathToFileURL(resolvedPath).toString();
@@ -107,14 +105,14 @@ file: app.whenReady().then(() => {
     try {
       return net.fetch(fullPath);
     } catch (error) {
-      console.error('Failed to fetch:', error);
+      console.error("Failed to fetch:", error);
       throw error;
     }
   });
 
   const store = new Store();
   // Set app user model id for windows
-  electronApp.setAppUserModelId('com.electron');
+  electronApp.setAppUserModelId("com.electron");
 
   // Auto-approve geolocation (and other) permission checks and requests.
   // Both handlers are needed:
@@ -125,34 +123,30 @@ file: app.whenReady().then(() => {
   //   user gesture" violation).
   // - setPermissionRequestHandler handles the actual asynchronous permission
   //   *request* that follows a successful check.
-  session.defaultSession.setPermissionCheckHandler(
-    (_webContents, permission) => {
-      if (permission === 'geolocation') {
-        return true; // Bypass user-gesture requirement for geolocation
-      }
-      return true;
+  session.defaultSession.setPermissionCheckHandler((_webContents, permission) => {
+    if (permission === "geolocation") {
+      return true; // Bypass user-gesture requirement for geolocation
     }
-  );
+    return true;
+  });
 
-  session.defaultSession.setPermissionRequestHandler(
-    (_webContents, permission, callback) => {
-      if (permission === 'geolocation') {
-        callback(true); // Always allow geolocation
-        return;
-      }
-      callback(true);
+  session.defaultSession.setPermissionRequestHandler((_webContents, permission, callback) => {
+    if (permission === "geolocation") {
+      callback(true); // Always allow geolocation
+      return;
     }
-  );
+    callback(true);
+  });
 
   // Default open or close DevTools by F12 in development
   // and ignore CommandOrControl + R in production.
   // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
-  app.on('browser-window-created', (_, window) => {
+  app.on("browser-window-created", (_, window) => {
     optimizer.watchWindowShortcuts(window);
   });
 
   // IPC test
-  ipcMain.on('ping', () => console.log('pong'));
+  ipcMain.on("ping", () => console.log("pong"));
 
   ipcMain.on(Action.RELAUNCH, () => {
     api.relaunch();
@@ -178,71 +172,50 @@ file: app.whenReady().then(() => {
     return api.getMachineGUID();
   });
 
-  ipcMain.handle(
-    Action.GET_STORE_VALUE,
-    (_event: IpcMainInvokeEvent, key: string) => {
-      return store.get(key);
-    }
+  ipcMain.handle(Action.GET_STORE_VALUE, (_event: IpcMainInvokeEvent, key: string) => {
+    return store.get(key);
+  });
+
+  ipcMain.on(Action.SET_STORE_VALUE, (_event: IpcMainInvokeEvent, key: string, value: string) => {
+    store.set(key, value);
+  });
+
+  ipcMain.on(Action.DELETE_STORE_VALUE, (_event: IpcMainInvokeEvent, key: string) => {
+    store.delete(key);
+  });
+
+  ipcMain.handle(Action.FS_INIT, (_event: IpcMainInvokeEvent, storagePath: string) =>
+    api.initStorage(storagePath),
   );
 
-  ipcMain.on(
-    Action.SET_STORE_VALUE,
-    (_event: IpcMainInvokeEvent, key: string, value: string) => {
-      store.set(key, value);
-    }
+  ipcMain.handle(Action.FS_INFO, (_event: IpcMainInvokeEvent, storagePath: string) =>
+    api.getStorageInfo(storagePath),
   );
 
-  ipcMain.on(
-    Action.DELETE_STORE_VALUE,
-    (_event: IpcMainInvokeEvent, key: string) => {
-      store.delete(key);
-    }
-  );
-
-  ipcMain.handle(
-    Action.FS_INIT,
-    (_event: IpcMainInvokeEvent, storagePath: string) =>
-      api.initStorage(storagePath)
-  );
-
-  ipcMain.handle(
-    Action.FS_INFO,
-    (_event: IpcMainInvokeEvent, storagePath: string) =>
-      api.getStorageInfo(storagePath)
-  );
-
-  ipcMain.handle(
-    Action.FS_LIST_FILES,
-    (_event: IpcMainInvokeEvent, storagePath: string) =>
-      api.listFiles(storagePath)
+  ipcMain.handle(Action.FS_LIST_FILES, (_event: IpcMainInvokeEvent, storagePath: string) =>
+    api.listFiles(storagePath),
   );
 
   ipcMain.handle(
     Action.FS_STORE_FILE,
-    (
-      _event: IpcMainInvokeEvent,
-      storagePath: string,
-      url: string,
-      opts?: StoreOptions
-    ) => api.storeFile(storagePath, url, opts)
+    (_event: IpcMainInvokeEvent, storagePath: string, url: string, opts?: StoreOptions) =>
+      api.storeFile(storagePath, url, opts),
   );
 
   ipcMain.handle(
     Action.FS_RETRIEVE_FILE,
     (_event: IpcMainInvokeEvent, storagePath: string, url: string) =>
-      api.retrieveFile(storagePath, url)
+      api.retrieveFile(storagePath, url),
   );
 
   ipcMain.handle(
     Action.FS_DELETE_FILE,
     (_event: IpcMainInvokeEvent, storagePath: string, url: string) =>
-      api.deleteFile(storagePath, url)
+      api.deleteFile(storagePath, url),
   );
 
-  ipcMain.handle(
-    Action.FS_DELETE_ALL_FILES,
-    (_event: IpcMainInvokeEvent, storagePath: string) =>
-      api.deleteAllFiles(storagePath)
+  ipcMain.handle(Action.FS_DELETE_ALL_FILES, (_event: IpcMainInvokeEvent, storagePath: string) =>
+    api.deleteAllFiles(storagePath),
   );
 
   ipcMain.handle(Action.GET_TELEMETRY, () => {
@@ -251,7 +224,7 @@ file: app.whenReady().then(() => {
 
   createWindow();
 
-  app.on('activate', function () {
+  app.on("activate", function () {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
@@ -261,8 +234,8 @@ file: app.whenReady().then(() => {
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
+app.on("window-all-closed", () => {
+  if (process.platform !== "darwin") {
     app.quit();
   }
 });

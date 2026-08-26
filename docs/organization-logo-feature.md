@@ -1,6 +1,7 @@
 # Organization Logo Feature
 
 ## Overview
+
 This feature allows organizations to upload and display a custom logo that will be shown in the dashboard's topbar, making it easier for users working with multiple organizations to identify which organization they're currently in.
 
 ## Implementation Details
@@ -9,7 +10,7 @@ This feature allows organizations to upload and display a custom logo that will 
 
 1. **Database Migration** (`20251014000001_add_logo_to_organizations.exs`)
    - Added `logo_media_id` field to the `organizations` table
-   - Field references the `medias` table with `on_delete: :nilify_all` 
+   - Field references the `medias` table with `on_delete: :nilify_all`
    - Created index on `logo_media_id` for performance
 
 2. **Organization Schema** (`lib/castmill/organizations/organization.ex`)
@@ -47,6 +48,7 @@ This feature allows organizations to upload and display a custom logo that will 
 ### Internationalization (i18n)
 
 Added translations in all 9 supported languages (en, es, sv, de, fr, zh, ar, ko, ja):
+
 - `organization.logo` - "Logo"
 - `organization.logoSettings` - "Logo Settings"
 - `organization.selectLogo` - "Select Logo"

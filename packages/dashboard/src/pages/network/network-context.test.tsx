@@ -1,11 +1,11 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor } from '@solidjs/testing-library';
-import { I18nProvider } from '../../i18n';
-import { NetworkProvider, useNetworkContext } from './network-context';
-import { NetworkService } from '../../services/network.service';
-import { Component } from 'solid-js';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, waitFor } from "@solidjs/testing-library";
+import { I18nProvider } from "../../i18n";
+import { NetworkProvider, useNetworkContext } from "./network-context";
+import { NetworkService } from "../../services/network.service";
+import { Component } from "solid-js";
 
-vi.mock('../../services/network.service', () => ({
+vi.mock("../../services/network.service", () => ({
   NetworkService: {
     getSettings: vi.fn(),
     getStats: vi.fn(),
@@ -14,7 +14,7 @@ vi.mock('../../services/network.service', () => ({
 
 let mockStoreState = { network: { isAdmin: true } };
 
-vi.mock('../../store', () => ({
+vi.mock("../../store", () => ({
   get store() {
     return mockStoreState;
   },
@@ -22,19 +22,19 @@ vi.mock('../../store', () => ({
 }));
 
 const mockSettings = {
-  id: 'network-123',
-  name: 'Test Network',
-  domain: 'test.example.com',
-  email: 'support@test.com',
+  id: "network-123",
+  name: "Test Network",
+  domain: "test.example.com",
+  email: "support@test.com",
   logo: null,
-  copyright: '© 2025 Test',
+  copyright: "© 2025 Test",
   invitation_only: false,
   invitation_only_org_admins: true,
-  default_locale: 'en',
+  default_locale: "en",
   privacy_policy_url: null,
   meta: {},
-  inserted_at: '2024-01-01T00:00:00Z',
-  updated_at: '2024-01-01T00:00:00Z',
+  inserted_at: "2024-01-01T00:00:00Z",
+  updated_at: "2024-01-01T00:00:00Z",
 };
 
 const mockStats = {
@@ -51,9 +51,9 @@ const ContextConsumer: Component = () => {
   return (
     <div>
       <span data-testid="loading">{String(loading())}</span>
-      <span data-testid="error">{error() ?? 'none'}</span>
-      <span data-testid="name">{settings()?.name ?? ''}</span>
-      <span data-testid="users">{stats()?.users_count ?? ''}</span>
+      <span data-testid="error">{error() ?? "none"}</span>
+      <span data-testid="name">{settings()?.name ?? ""}</span>
+      <span data-testid="users">{stats()?.users_count ?? ""}</span>
     </div>
   );
 };
@@ -67,25 +67,25 @@ const renderProvider = () =>
     </I18nProvider>
   ));
 
-describe('NetworkProvider', () => {
+describe("NetworkProvider", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockStoreState = { network: { isAdmin: true } };
   });
 
-  it('loads settings and stats for admin users', async () => {
+  it("loads settings and stats for admin users", async () => {
     vi.mocked(NetworkService.getSettings).mockResolvedValue(mockSettings);
     vi.mocked(NetworkService.getStats).mockResolvedValue(mockStats);
 
     renderProvider();
 
     await waitFor(() => {
-      expect(screen.getByTestId('name').textContent).toBe('Test Network');
-      expect(screen.getByTestId('users').textContent).toBe('25');
+      expect(screen.getByTestId("name").textContent).toBe("Test Network");
+      expect(screen.getByTestId("users").textContent).toBe("25");
     });
   });
 
-  it('shows access denied for non-admin users', async () => {
+  it("shows access denied for non-admin users", async () => {
     mockStoreState = { network: { isAdmin: false } };
 
     renderProvider();
@@ -97,19 +97,15 @@ describe('NetworkProvider', () => {
     expect(NetworkService.getSettings).not.toHaveBeenCalled();
   });
 
-  it('shows error state when API fails', async () => {
-    vi.mocked(NetworkService.getSettings).mockRejectedValue(
-      new Error('Network error')
-    );
-    vi.mocked(NetworkService.getStats).mockRejectedValue(
-      new Error('Network error')
-    );
+  it("shows error state when API fails", async () => {
+    vi.mocked(NetworkService.getSettings).mockRejectedValue(new Error("Network error"));
+    vi.mocked(NetworkService.getStats).mockRejectedValue(new Error("Network error"));
 
     renderProvider();
 
     // The provider renders its own error UI (not the children)
     await waitFor(() => {
-      expect(screen.getByText('Network error')).toBeInTheDocument();
+      expect(screen.getByText("Network error")).toBeInTheDocument();
     });
   });
 });

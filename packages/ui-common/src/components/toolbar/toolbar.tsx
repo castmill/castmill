@@ -1,11 +1,11 @@
 /** @jsxImportSource solid-js */
-import { createSignal, For, Show, JSX, onCleanup } from 'solid-js';
-import { FaSolidMagnifyingGlass } from 'solid-icons/fa';
+import { createSignal, For, Show, JSX, onCleanup } from "solid-js";
+import { FaSolidMagnifyingGlass } from "solid-icons/fa";
 
-import { Switch } from '../switch/switch';
-import { IconWrapper } from '../icon-wrapper';
+import { Switch } from "../switch/switch";
+import { IconWrapper } from "../icon-wrapper";
 
-import './toolbar.scss';
+import "./toolbar.scss";
 
 const SEARCH_DEBOUNCE_PERIOD = 300;
 
@@ -30,14 +30,10 @@ interface ToolBarProps {
 }
 
 export function ToolBar(props: ToolBarProps) {
-  const [searchText, setSearchText] = createSignal(
-    props.initialSearchText || ''
-  );
+  const [searchText, setSearchText] = createSignal(props.initialSearchText || "");
   const [filters, setFilters] = createSignal<Filter[]>(props.filters || []);
 
-  const [debounceTimeout, setDebounceTimeout] = createSignal<any | undefined>(
-    undefined
-  );
+  const [debounceTimeout, setDebounceTimeout] = createSignal<any | undefined>(undefined);
 
   const handleSearchChange = (e: Event) => {
     const target = e.target as HTMLInputElement;
@@ -50,12 +46,12 @@ export function ToolBar(props: ToolBarProps) {
     setDebounceTimeout(
       setTimeout(() => {
         props.onSearch?.(target.value);
-      }, SEARCH_DEBOUNCE_PERIOD)
+      }, SEARCH_DEBOUNCE_PERIOD),
     );
   };
 
   const handleSearchKeyDown = (e: KeyboardEvent) => {
-    if (e.key === 'Escape') {
+    if (e.key === "Escape") {
       // Blur the search input when ESC is pressed
       (e.target as HTMLInputElement).blur();
     }
@@ -69,18 +65,12 @@ export function ToolBar(props: ToolBarProps) {
     const requireOneActive = props.requireOneActiveFilter ?? true;
 
     // Only toggle the filter if there will be at least one filter left active (when required)
-    if (
-      requireOneActive &&
-      currentFilter.isActive &&
-      activeFilters.length === 1
-    ) {
+    if (requireOneActive && currentFilter.isActive && activeFilters.length === 1) {
       return; // Prevent toggle if this is the only active filter
     }
 
     const updatedFilters = filters().map((filter) =>
-      filter.key === filterKey
-        ? { ...filter, isActive: !filter.isActive }
-        : filter
+      filter.key === filterKey ? { ...filter, isActive: !filter.isActive } : filter,
     );
 
     setFilters(updatedFilters);
@@ -92,8 +82,7 @@ export function ToolBar(props: ToolBarProps) {
     clearTimeout(debounceTimeout());
   });
 
-  const getTitle = () =>
-    typeof props.title === 'function' ? props.title() : props.title;
+  const getTitle = () => (typeof props.title === "function" ? props.title() : props.title);
 
   return (
     <div class="toolbar-container">
@@ -116,7 +105,7 @@ export function ToolBar(props: ToolBarProps) {
                 value={searchText()}
                 onInput={handleSearchChange}
                 onKeyDown={handleSearchKeyDown}
-                placeholder={props.searchPlaceholder ?? 'Search...'}
+                placeholder={props.searchPlaceholder ?? "Search..."}
                 class="search-input"
               />
             </div>
@@ -143,9 +132,7 @@ export function ToolBar(props: ToolBarProps) {
           </Show>
 
           <Show when={props.actions}>
-            {typeof props.actions === 'function'
-              ? props.actions()
-              : props.actions}
+            {typeof props.actions === "function" ? props.actions() : props.actions}
           </Show>
         </div>
 

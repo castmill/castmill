@@ -5,8 +5,8 @@
  *
  */
 
-import { Schema } from './schema.interface';
-import { JsonWidgetTemplate } from './json-widget-template';
+import { Schema } from "./schema.interface";
+import { JsonWidgetTemplate } from "./json-widget-template";
 
 export interface JsonWidget {
   id?: number;
@@ -25,22 +25,10 @@ export interface JsonWidget {
   fonts?: { url: string; name: string }[];
   // Original assets definition from widget.json
   assets?: {
-    icons?: Record<
-      string,
-      { path: string; type: string; description?: string }
-    >;
-    images?: Record<
-      string,
-      { path: string; type: string; description?: string }
-    >;
-    fonts?: Record<
-      string,
-      { path: string; name: string; type: string; description?: string }
-    >;
-    styles?: Record<
-      string,
-      { path: string; type: string; description?: string }
-    >;
+    icons?: Record<string, { path: string; type: string; description?: string }>;
+    images?: Record<string, { path: string; type: string; description?: string }>;
+    fonts?: Record<string, { path: string; name: string; type: string; description?: string }>;
+    styles?: Record<string, { path: string; type: string; description?: string }>;
   };
   // Widget-provided translations keyed by locale code
   translations?: Record<
@@ -48,10 +36,7 @@ export interface JsonWidget {
     {
       name?: string;
       description?: string;
-      options?: Record<
-        string,
-        { label?: string; description?: string; placeholder?: string }
-      >;
+      options?: Record<string, { label?: string; description?: string; placeholder?: string }>;
     }
   >;
 }

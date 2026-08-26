@@ -1,10 +1,10 @@
-import { createSignal, createEffect, on } from 'solid-js';
+import { createSignal, createEffect, on } from "solid-js";
 
-import { Device } from '../interfaces/device.interface';
-import { Button, FormItem } from '@castmill/ui-common';
-import { AddonStore } from '../../common/interfaces/addon-store';
+import { Device } from "../interfaces/device.interface";
+import { Button, FormItem } from "@castmill/ui-common";
+import { AddonStore } from "../../common/interfaces/addon-store";
 
-import { BsCheckLg, BsX } from 'solid-icons/bs';
+import { BsCheckLg, BsX } from "solid-icons/bs";
 
 export interface DeviceUpdate {
   name?: string;
@@ -30,7 +30,7 @@ export const DeviceDetails = (props: {
   const [isFormModified, setIsFormModified] = createSignal(false);
   const [errors, setErrors] = createSignal(new Map());
 
-  const [onlineStatus, setOnlineStatus] = createSignal('');
+  const [onlineStatus, setOnlineStatus] = createSignal("");
 
   createEffect(
     on(
@@ -40,27 +40,27 @@ export const DeviceDetails = (props: {
         setDescription(props.device.description);
         setIsFormModified(false);
         setErrors(new Map());
-      }
-    )
+      },
+    ),
   );
 
   const validateField = (fieldId: string, value: string) => {
-    let error = '';
+    let error = "";
     switch (fieldId) {
-      case 'name':
+      case "name":
         if (!value) {
-          error = 'Name is required';
+          error = "Name is required";
         } else if (value.length < 5) {
-          error = 'Name must be at least 5 characters';
+          error = "Name must be at least 5 characters";
         }
         break;
-      case 'description':
+      case "description":
         if (value && value.length < 5) {
-          error = 'Description must be at least 5 characters';
+          error = "Description must be at least 5 characters";
         }
         break;
       default:
-        error = '';
+        error = "";
     }
 
     setErrors((prev) => new Map(prev).set(fieldId, error));
@@ -73,11 +73,7 @@ export const DeviceDetails = (props: {
     const hasModifiedDescription = description() !== props.device.description;
     setIsFormModified(hasModifiedName || hasModifiedDescription);
 
-    setOnlineStatus(
-      props.device.online
-        ? 'Yes'
-        : `No, last seen on ${props.device.last_online}`
-    );
+    setOnlineStatus(props.device.online ? "Yes" : `No, last seen on ${props.device.last_online}`);
   });
 
   const isFormValid = () => {
@@ -87,18 +83,15 @@ export const DeviceDetails = (props: {
   return (
     <>
       <div style="font-size: 0.8em; color: darkgray;">
-        <span>{t('common.addedOn')} </span>{' '}
-        <span>{`${props.device.inserted_at}`}. </span>
-        <span>{t('common.lastUpdatedOn')} </span>
+        <span>{t("common.addedOn")} </span> <span>{`${props.device.inserted_at}`}. </span>
+        <span>{t("common.lastUpdatedOn")} </span>
         <span>{`${props.device.updated_at}`}</span>
       </div>
       <form
         onSubmit={async (e) => {
           e.preventDefault();
           if (isFormValid()) {
-            if (
-              await props.onSubmit({ name: name(), description: description() })
-            ) {
+            if (await props.onSubmit({ name: name(), description: description() })) {
               setIsFormModified(false);
             }
           }
@@ -106,35 +99,35 @@ export const DeviceDetails = (props: {
       >
         <div class="form-inputs">
           <FormItem
-            label={t('common.name')}
+            label={t("common.name")}
             id="name"
             value={name()}
-            placeholder={t('devices.enterDeviceName')}
+            placeholder={t("devices.enterDeviceName")}
             onInput={(value: string | number | boolean) => {
               const nextValue = String(value);
               setName(nextValue);
-              validateField('name', nextValue);
+              validateField("name", nextValue);
             }}
           >
-            <div class="error">{errors().get('name')}</div>
+            <div class="error">{errors().get("name")}</div>
           </FormItem>
 
           <FormItem
-            label={t('common.description')}
+            label={t("common.description")}
             id="description"
             value={description()}
-            placeholder={t('devices.enterDescription')}
+            placeholder={t("devices.enterDescription")}
             onInput={(value: string | number | boolean) => {
               const nextValue = String(value);
               setDescription(nextValue);
-              validateField('description', nextValue);
+              validateField("description", nextValue);
             }}
           >
-            <div class="error">{errors().get('description')}</div>
+            <div class="error">{errors().get("description")}</div>
           </FormItem>
 
           <FormItem
-            label={t('common.online')}
+            label={t("common.online")}
             id="online"
             value={onlineStatus()}
             disabled={true}
@@ -142,7 +135,7 @@ export const DeviceDetails = (props: {
           ></FormItem>
 
           <FormItem
-            label={t('common.ip')}
+            label={t("common.ip")}
             id="last_ip"
             value={props.device.last_ip}
             disabled={true}
@@ -150,7 +143,7 @@ export const DeviceDetails = (props: {
           ></FormItem>
 
           <FormItem
-            label={t('common.id')}
+            label={t("common.id")}
             id="device_id"
             value={props.device.id}
             disabled={true}
@@ -159,14 +152,14 @@ export const DeviceDetails = (props: {
         </div>
         <div class="bottom-buttons">
           <Button
-            label={t('common.save')}
+            label={t("common.save")}
             type="submit"
             disabled={!isFormValid()}
             icon={BsCheckLg}
             color="success"
           />
           <Button
-            label={t('common.reset')}
+            label={t("common.reset")}
             onClick={() => {
               setName(props.device.name);
               setDescription(props.device.description);

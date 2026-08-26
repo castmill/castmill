@@ -1,8 +1,9 @@
 {
   "name": "castmill-dashboard",
   "version": "1.0.0",
-  "type": "module",
   "description": "",
+  "license": "MIT",
+  "type": "module",
   "scripts": {
     "format": "oxfmt --write .",
     "format:check": "oxfmt .",
@@ -16,7 +17,11 @@
     "lint:i18n": "node scripts/check-i18n.cjs",
     "lint": "oxlint ."
   },
-  "license": "MIT",
+  "dependencies": {
+    "@castmill/ui-common": "*",
+    "date-fns": "^4.1.0",
+    "date-fns-tz": "^3.2.0"
+  },
   "devDependencies": {
     "@atlaskit/pragmatic-drag-and-drop-auto-scroll": "^2.1.0",
     "@solidjs/router": "^0.13.2",
@@ -35,10 +40,5 @@
     "vite": "^5.0.11",
     "vite-plugin-solid": "^2.8.2",
     "vitest": "^1.2.2"
-  },
-  "dependencies": {
-    "@castmill/ui-common": "*",
-    "date-fns": "^4.1.0",
-    "date-fns-tz": "^3.2.0"
   }
 }

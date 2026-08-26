@@ -2,25 +2,13 @@
  * Shared network context providing network data (settings, stats)
  * and admin state to all network sub-pages.
  */
-import {
-  Component,
-  createContext,
-  createSignal,
-  onMount,
-  useContext,
-  JSX,
-  Show,
-} from 'solid-js';
-import { Button, useToast } from '@castmill/ui-common';
-import {
-  NetworkService,
-  NetworkSettings,
-  NetworkStats,
-} from '../../services/network.service';
-import { store } from '../../store';
-import { useI18n } from '../../i18n';
-import { BsShieldLock } from 'solid-icons/bs';
-import styles from './network.module.scss';
+import { Component, createContext, createSignal, onMount, useContext, JSX, Show } from "solid-js";
+import { Button, useToast } from "@castmill/ui-common";
+import { NetworkService, NetworkSettings, NetworkStats } from "../../services/network.service";
+import { store } from "../../store";
+import { useI18n } from "../../i18n";
+import { BsShieldLock } from "solid-icons/bs";
+import styles from "./network.module.scss";
 
 interface NetworkContextValue {
   settings: () => NetworkSettings | null;
@@ -37,14 +25,12 @@ const NetworkContext = createContext<NetworkContextValue>();
 export const useNetworkContext = (): NetworkContextValue => {
   const ctx = useContext(NetworkContext);
   if (!ctx) {
-    throw new Error('useNetworkContext must be used within NetworkProvider');
+    throw new Error("useNetworkContext must be used within NetworkProvider");
   }
   return ctx;
 };
 
-export const NetworkProvider: Component<{ children: JSX.Element }> = (
-  props
-) => {
+export const NetworkProvider: Component<{ children: JSX.Element }> = (props) => {
   const { t } = useI18n();
   const [loading, setLoading] = createSignal(true);
   const [error, setError] = createSignal<string | null>(null);
@@ -59,7 +45,7 @@ export const NetworkProvider: Component<{ children: JSX.Element }> = (
 
     try {
       if (!isNetworkAdmin()) {
-        setError('not_admin');
+        setError("not_admin");
         setLoading(false);
         return;
       }
@@ -72,10 +58,8 @@ export const NetworkProvider: Component<{ children: JSX.Element }> = (
       setSettings(settingsData);
       setStats(statsData);
     } catch (err) {
-      console.error('Failed to load network data:', err);
-      setError(
-        err instanceof Error ? err.message : 'Failed to load network data'
-      );
+      console.error("Failed to load network data:", err);
+      setError(err instanceof Error ? err.message : "Failed to load network data");
     } finally {
       setLoading(false);
     }
@@ -99,33 +83,29 @@ export const NetworkProvider: Component<{ children: JSX.Element }> = (
     <NetworkContext.Provider value={contextValue}>
       {/* Loading State */}
       <Show when={loading()}>
-        <div class={styles['loading-container']}>
-          <div class={styles['loading-text']}>{t('common.loading')}</div>
+        <div class={styles["loading-container"]}>
+          <div class={styles["loading-text"]}>{t("common.loading")}</div>
         </div>
       </Show>
 
       {/* Error State */}
-      <Show when={!loading() && error() && error() !== 'not_admin'}>
-        <div class={styles['error-container']}>
-          <div class={styles['error-icon']}>⚠️</div>
-          <div class={styles['error-message']}>{error()}</div>
-          <div class={styles['error-hint']}>{t('network.errorHint')}</div>
-          <Button onClick={loadNetworkData}>{t('common.retry')}</Button>
+      <Show when={!loading() && error() && error() !== "not_admin"}>
+        <div class={styles["error-container"]}>
+          <div class={styles["error-icon"]}>⚠️</div>
+          <div class={styles["error-message"]}>{error()}</div>
+          <div class={styles["error-hint"]}>{t("network.errorHint")}</div>
+          <Button onClick={loadNetworkData}>{t("common.retry")}</Button>
         </div>
       </Show>
 
       {/* Not Admin State */}
-      <Show when={!loading() && error() === 'not_admin'}>
-        <div class={styles['not-admin-container']}>
-          <div class={styles['not-admin-icon']}>
+      <Show when={!loading() && error() === "not_admin"}>
+        <div class={styles["not-admin-container"]}>
+          <div class={styles["not-admin-icon"]}>
             <BsShieldLock />
           </div>
-          <div class={styles['not-admin-title']}>
-            {t('network.accessDenied')}
-          </div>
-          <div class={styles['not-admin-message']}>
-            {t('network.accessDeniedMessage')}
-          </div>
+          <div class={styles["not-admin-title"]}>{t("network.accessDenied")}</div>
+          <div class={styles["not-admin-message"]}>{t("network.accessDeniedMessage")}</div>
         </div>
       </Show>
 

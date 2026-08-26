@@ -20,12 +20,12 @@
  *   />
  */
 
-import { For, JSX, Show, createMemo, createSignal, onCleanup } from 'solid-js';
-import { IoChevronDown, IoClose } from 'solid-icons/io';
-import { AiOutlineSearch } from 'solid-icons/ai';
-import { IconWrapper } from '../icon-wrapper';
+import { For, JSX, Show, createMemo, createSignal, onCleanup } from "solid-js";
+import { IoChevronDown, IoClose } from "solid-icons/io";
+import { AiOutlineSearch } from "solid-icons/ai";
+import { IconWrapper } from "../icon-wrapper";
 
-import './multi-select-filter.scss';
+import "./multi-select-filter.scss";
 
 // ───────────────────────── Types ─────────────────────────
 
@@ -96,10 +96,10 @@ export interface MultiSelectFilterProps<T extends MultiSelectItem> {
 // ───────────────────── Component ─────────────────────
 
 export const MultiSelectFilter = <T extends MultiSelectItem>(
-  props: MultiSelectFilterProps<T>
+  props: MultiSelectFilterProps<T>,
 ): JSX.Element => {
   const [isOpen, setIsOpen] = createSignal(false);
-  const [searchQuery, setSearchQuery] = createSignal('');
+  const [searchQuery, setSearchQuery] = createSignal("");
   let containerRef: HTMLDivElement | undefined;
   let inputRef: HTMLInputElement | undefined;
 
@@ -112,7 +112,7 @@ export const MultiSelectFilter = <T extends MultiSelectItem>(
   });
 
   const selectedItems = createMemo(() =>
-    props.items.filter((item) => props.selectedIds.includes(item.id))
+    props.items.filter((item) => props.selectedIds.includes(item.id)),
   );
 
   const isSelected = (id: number | string) => props.selectedIds.includes(id);
@@ -135,13 +135,13 @@ export const MultiSelectFilter = <T extends MultiSelectItem>(
   const open = () => {
     if (props.disabled) return;
     setIsOpen(true);
-    setSearchQuery('');
+    setSearchQuery("");
     setTimeout(() => inputRef?.focus(), 10);
   };
 
   const close = () => {
     setIsOpen(false);
-    setSearchQuery('');
+    setSearchQuery("");
   };
 
   const toggle = () => (isOpen() ? close() : open());
@@ -154,13 +154,13 @@ export const MultiSelectFilter = <T extends MultiSelectItem>(
     }
   };
 
-  document.addEventListener('mousedown', onDocClick);
-  onCleanup(() => document.removeEventListener('mousedown', onDocClick));
+  document.addEventListener("mousedown", onDocClick);
+  onCleanup(() => document.removeEventListener("mousedown", onDocClick));
 
   // ── Keyboard ────────────────────────────────────────
 
   const onKeyDown = (e: KeyboardEvent) => {
-    if (e.key === 'Escape') close();
+    if (e.key === "Escape") close();
   };
 
   // ── Default renderers ───────────────────────────────
@@ -174,9 +174,7 @@ export const MultiSelectFilter = <T extends MultiSelectItem>(
     </div>
   );
 
-  const defaultRenderChip = (item: T) => (
-    <span class="msf-chip-default">{item.name}</span>
-  );
+  const defaultRenderChip = (item: T) => <span class="msf-chip-default">{item.name}</span>;
 
   const renderItemFn = () => props.renderItem || defaultRenderItem;
   const renderChipFn = () => props.renderChip || defaultRenderChip;
@@ -208,11 +206,7 @@ export const MultiSelectFilter = <T extends MultiSelectItem>(
             <div class="msf-trigger-content">
               <Show
                 when={selectedItems().length > 0}
-                fallback={
-                  <span class="msf-placeholder">
-                    {props.placeholder || 'Select…'}
-                  </span>
-                }
+                fallback={<span class="msf-placeholder">{props.placeholder || "Select…"}</span>}
               >
                 <div class="msf-chips">
                   <For
@@ -239,8 +233,7 @@ export const MultiSelectFilter = <T extends MultiSelectItem>(
                   </For>
                   <Show
                     when={
-                      props.maxDisplayedChips &&
-                      selectedItems().length > props.maxDisplayedChips
+                      props.maxDisplayedChips && selectedItems().length > props.maxDisplayedChips
                     }
                   >
                     <span class="msf-overflow">
@@ -258,10 +251,10 @@ export const MultiSelectFilter = <T extends MultiSelectItem>(
                 class="msf-clear"
                 role="button"
                 tabIndex={0}
-                aria-label={props.clearLabel || 'Clear selection'}
+                aria-label={props.clearLabel || "Clear selection"}
                 onClick={clearAll}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
+                  if (e.key === "Enter") {
                     e.preventDefault();
                     clearAll();
                   }
@@ -288,7 +281,7 @@ export const MultiSelectFilter = <T extends MultiSelectItem>(
                 <input
                   ref={inputRef}
                   type="text"
-                  placeholder={props.searchPlaceholder || 'Search…'}
+                  placeholder={props.searchPlaceholder || "Search…"}
                   value={searchQuery()}
                   onInput={(e) => setSearchQuery(e.currentTarget.value)}
                 />
@@ -297,11 +290,7 @@ export const MultiSelectFilter = <T extends MultiSelectItem>(
 
             {/* Filter-mode toggle */}
             <Show
-              when={
-                props.filterModes &&
-                props.filterModes.length > 1 &&
-                selectedItems().length > 1
-              }
+              when={props.filterModes && props.filterModes.length > 1 && selectedItems().length > 1}
             >
               <div class="msf-mode-bar">
                 <For each={props.filterModes}>
@@ -323,11 +312,7 @@ export const MultiSelectFilter = <T extends MultiSelectItem>(
             <div class="msf-list">
               <Show
                 when={filteredItems().length > 0}
-                fallback={
-                  <div class="msf-empty">
-                    {props.noMatchMessage || 'No matches'}
-                  </div>
-                }
+                fallback={<div class="msf-empty">{props.noMatchMessage || "No matches"}</div>}
               >
                 <For each={filteredItems()}>
                   {(item) => (
@@ -339,7 +324,7 @@ export const MultiSelectFilter = <T extends MultiSelectItem>(
                       tabIndex={0}
                       onClick={() => toggleItem(item.id)}
                       onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
+                        if (e.key === "Enter" || e.key === " ") {
                           e.preventDefault();
                           toggleItem(item.id);
                         }

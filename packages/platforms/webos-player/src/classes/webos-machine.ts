@@ -1,14 +1,8 @@
-import {
-  Machine,
-  DeviceInfo,
-  SettingKey,
-  Timers,
-  TelemetryData,
-} from '@castmill/device';
-import { configuration, deviceInfo, power, storage } from '../native';
-import { simpleHash, getTimers, setTimers } from './utils';
-import { version } from '../../package.json';
-import { systemMonitor } from './system-monitor';
+import { Machine, DeviceInfo, SettingKey, Timers, TelemetryData } from "@castmill/device";
+import { configuration, deviceInfo, power, storage } from "../native";
+import { simpleHash, getTimers, setTimers } from "./utils";
+import { version } from "../../package.json";
+import { systemMonitor } from "./system-monitor";
 
 // Network Information API types (not in standard TypeScript DOM types)
 interface NetworkInformation {
@@ -24,16 +18,16 @@ interface NavigatorWithConnection extends Navigator {
 // to make sure the application updates from the correct source.
 // The update URL is injected at build time via the VITE_UPDATE_URL env variable.
 const getUpdateConfig = () => ({
-  serverIp: '0.0.0.0',
+  serverIp: "0.0.0.0",
   serverPort: 0,
   secureConnection: true,
-  appLaunchMode: 'local',
-  appType: 'ipk',
+  appLaunchMode: "local",
+  appType: "ipk",
   fqdnMode: true,
   fqdnAddr: import.meta.env.VITE_UPDATE_URL,
 });
 
-const CREDENTIALS_FILE_PATH = 'credentials.txt';
+const CREDENTIALS_FILE_PATH = "credentials.txt";
 
 const getFilePath = (path: string) => `file://internal/${path}`;
 
@@ -61,7 +55,7 @@ export class WebosMachine implements Machine {
     const { wiredInfo, wifiInfo } = await deviceInfo.getNetworkMacInfo();
     const macAddress = wiredInfo?.macAddress || wifiInfo?.macAddress;
     if (!macAddress) {
-      throw new Error('No mac address found');
+      throw new Error("No mac address found");
     }
 
     const hash = simpleHash(macAddress);
@@ -95,15 +89,11 @@ export class WebosMachine implements Machine {
     });
   }
 
-  async getLocation(): Promise<
-    undefined | { latitude: number; longitude: number }
-  > {
+  async getLocation(): Promise<undefined | { latitude: number; longitude: number }> {
     try {
-      const location = await new Promise<GeolocationPosition>(
-        (resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject);
-        }
-      );
+      const location = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject);
+      });
 
       return {
         latitude: location.coords.latitude,
@@ -122,12 +112,11 @@ export class WebosMachine implements Machine {
   async getDeviceInfo(): Promise<DeviceInfo> {
     const platformInfo = await deviceInfo.getPlatformInfo();
     // get chromium version from user agent
-    const chromiumVersion =
-      navigator.userAgent.match(/Chrome\/([0-9.]+)/)?.[1] ?? undefined;
+    const chromiumVersion = navigator.userAgent.match(/Chrome\/([0-9.]+)/)?.[1] ?? undefined;
     return {
-      appType: 'LG WebOS',
+      appType: "LG WebOS",
       appVersion: version,
-      os: 'LG WebOS',
+      os: "LG WebOS",
       hardware: platformInfo.modelName,
       environmentVersion: platformInfo.firmwareVersion,
       chromiumVersion,
@@ -146,7 +135,7 @@ export class WebosMachine implements Machine {
    * Quit the device application.
    */
   async quit(): Promise<void> {
-    console.error('Not supported on webOS.');
+    console.error("Not supported on webOS.");
   }
 
   /**
@@ -162,7 +151,7 @@ export class WebosMachine implements Machine {
    */
   async reboot(): Promise<void> {
     return power.executePowerCommand({
-      powerCommand: 'reboot',
+      powerCommand: "reboot",
     });
   }
 
@@ -172,7 +161,7 @@ export class WebosMachine implements Machine {
    */
   async shutdown(): Promise<void> {
     return power.executePowerCommand({
-      powerCommand: 'powerOff',
+      powerCommand: "powerOff",
     });
   }
 
@@ -180,8 +169,7 @@ export class WebosMachine implements Machine {
    * Updates the device's application.
    */
   async update(): Promise<void> {
-    const keepServerSettings =
-      import.meta.env.VITE_KEEP_SERVER_SETTINGS === 'true';
+    const keepServerSettings = import.meta.env.VITE_KEEP_SERVER_SETTINGS === "true";
     if (!keepServerSettings) {
       // Set the server properties to the correct values
       await configuration.setServerProperty(getUpdateConfig());
@@ -189,8 +177,8 @@ export class WebosMachine implements Machine {
 
     // Then download the application
     await storage.upgradeApplication({
-      type: 'ipk',
-      to: 'local',
+      type: "ipk",
+      to: "local",
       recovery: true,
     });
 
@@ -212,10 +200,6 @@ export class WebosMachine implements Machine {
 
     // Trigger the firmware upgrade.
     return storage.upgradeFirmware();
-
-    // Reboot the device to apply the update. The downloaded firmware will be
-    // deleted automatically after the reboot.
-    return this.reboot();
   }
 
   async getFirmwareDownloadUrl(): Promise<string> {
@@ -253,7 +237,7 @@ export class WebosMachine implements Machine {
         };
       }
     } catch (error) {
-      console.error('Error getting storage info:', error);
+      console.error("Error getting storage info:", error);
     }
 
     // Temperature and fan status via System Monitor
@@ -265,9 +249,7 @@ export class WebosMachine implements Machine {
 
       const tempInfo = systemMonitor.getTemperature();
       if (tempInfo && tempInfo.temperature !== undefined) {
-        telemetry.temperatures = [
-          { label: 'Panel', celsius: tempInfo.temperature },
-        ];
+        telemetry.temperatures = [{ label: "Panel", celsius: tempInfo.temperature }];
       }
 
       const fanInfo = systemMonitor.getFanStatus();
@@ -276,11 +258,11 @@ export class WebosMachine implements Machine {
           (fan: { name?: string; rpm?: number }, index: number) => ({
             label: fan.name || `Fan ${index + 1}`,
             rpm: fan.rpm || 0,
-          })
+          }),
         );
       }
     } catch (error) {
-      console.error('Error getting system monitor data:', error);
+      console.error("Error getting system monitor data:", error);
     }
 
     // Network info via Navigator API
@@ -292,7 +274,7 @@ export class WebosMachine implements Machine {
         };
       }
     } catch (error) {
-      console.error('Error getting network info:', error);
+      console.error("Error getting network info:", error);
     }
 
     return telemetry;

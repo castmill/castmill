@@ -1,15 +1,9 @@
-import {
-  Component,
-  createEffect,
-  createSignal,
-  onCleanup,
-  onMount,
-} from 'solid-js';
-import { draggable } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import styles from './calendar-entry-box.module.scss';
-import { CalendarEntry } from './calendar-entry.interface';
-import { ConfirmDialog } from '@castmill/ui-common';
-import { useI18n } from '../../i18n';
+import { Component, createEffect, createSignal, onCleanup, onMount } from "solid-js";
+import { draggable } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
+import styles from "./calendar-entry-box.module.scss";
+import { CalendarEntry } from "./calendar-entry.interface";
+import { ConfirmDialog } from "@castmill/ui-common";
+import { useI18n } from "../../i18n";
 
 interface ResizeEdges {
   top?: boolean;
@@ -24,10 +18,7 @@ export const CalendarEntryBox: Component<{
   onResizeComplete: (updated: CalendarEntry) => void;
   onDelete: (id: number) => void;
   onInfo: (entry: CalendarEntry) => void;
-  onDragOverCell?: (
-    entry: CalendarEntry,
-    ghostPosition?: { x: number; y: number }
-  ) => void;
+  onDragOverCell?: (entry: CalendarEntry, ghostPosition?: { x: number; y: number }) => void;
   hasOverlap?: (candidate: CalendarEntry) => boolean;
 }> = (props) => {
   const { t } = useI18n();
@@ -61,8 +52,8 @@ export const CalendarEntryBox: Component<{
       element: boxRef!,
       getInitialData: () => ({ entry: props.entry }),
       onDragStart: ({ location }) => {
-        boxRef!.style.opacity = '0.3';
-        boxRef!.style.pointerEvents = 'none';
+        boxRef!.style.opacity = "0.3";
+        boxRef!.style.pointerEvents = "none";
 
         // Calculate the relative position of the box top left corner to the mouse pointer
         const rect = boxRef!.getBoundingClientRect();
@@ -74,8 +65,8 @@ export const CalendarEntryBox: Component<{
         setDragging(true);
       },
       onDrop: () => {
-        boxRef!.style.opacity = '1';
-        boxRef!.style.pointerEvents = 'auto';
+        boxRef!.style.opacity = "1";
+        boxRef!.style.pointerEvents = "auto";
         setDragging(false);
       },
       onDrag: ({ location, source }) => {
@@ -99,10 +90,7 @@ export const CalendarEntryBox: Component<{
     onCleanup(() => cleanup());
   });
 
-  const clampEntry = (
-    entry: CalendarEntry,
-    totalNumDays: number
-  ): CalendarEntry => {
+  const clampEntry = (entry: CalendarEntry, totalNumDays: number): CalendarEntry => {
     const newEntry = { ...entry };
 
     // Clamp start time
@@ -138,8 +126,7 @@ export const CalendarEntryBox: Component<{
     const startMinutes = newEntry.startHour * 60 + newEntry.startMinute;
     const endMinutes = newEntry.endHour * 60 + newEntry.endMinute;
     if (startMinutes >= endMinutes) {
-      newEntry.endHour =
-        newEntry.startHour + Math.floor((newEntry.startMinute + 30) / 60);
+      newEntry.endHour = newEntry.startHour + Math.floor((newEntry.startMinute + 30) / 60);
       newEntry.endMinute = (newEntry.startMinute + 30) % 60;
       if (newEntry.endHour > 24) {
         newEntry.endHour = 24;
@@ -158,8 +145,7 @@ export const CalendarEntryBox: Component<{
     return newEntry;
   };
 
-  const slotFromTime = (hour: number, minute: number): number =>
-    Math.round(hour * 2 + minute / 30);
+  const slotFromTime = (hour: number, minute: number): number => Math.round(hour * 2 + minute / 30);
 
   const updateEntryDimensions = () => {
     const entry = clampEntry(currentEntry(), 7);
@@ -186,9 +172,7 @@ export const CalendarEntryBox: Component<{
       const bottomCell = props.cellGrid.get(bottomRightGridCell());
 
       if (topCell && bottomCell) {
-        return (
-          bottomCell.offsetTop + bottomCell.offsetHeight - topCell.offsetTop
-        );
+        return bottomCell.offsetTop + bottomCell.offsetHeight - topCell.offsetTop;
       }
       return 0;
     }
@@ -198,9 +182,7 @@ export const CalendarEntryBox: Component<{
       const rightCell = props.cellGrid.get(bottomRightGridCell());
 
       if (leftCell && rightCell) {
-        return (
-          rightCell.offsetLeft + rightCell.offsetWidth - leftCell.offsetLeft
-        );
+        return rightCell.offsetLeft + rightCell.offsetWidth - leftCell.offsetLeft;
       }
       return 0;
     }
@@ -231,20 +213,20 @@ export const CalendarEntryBox: Component<{
     // Set global cursor.
     const cursor =
       (edges.top || edges.bottom) && (edges.left || edges.right)
-        ? 'nwse-resize'
+        ? "nwse-resize"
         : edges.top || edges.bottom
-          ? 'ns-resize'
+          ? "ns-resize"
           : edges.left || edges.right
-            ? 'ew-resize'
-            : '';
+            ? "ew-resize"
+            : "";
     document.body.style.cursor = cursor;
-    document.body.style.userSelect = 'none';
+    document.body.style.userSelect = "none";
 
     const startX = e.clientX;
     const startY = e.clientY;
     const original = { ...props.entry };
 
-    const measureCell = props.cellGrid.get('day-0-slot-0');
+    const measureCell = props.cellGrid.get("day-0-slot-0");
     if (!measureCell) {
       return;
     }
@@ -298,14 +280,11 @@ export const CalendarEntryBox: Component<{
       const newStartMinute = (newStartSlot % 2) * 30;
       const newEndHour = Math.floor(newEndSlot / 2);
       const newEndMinute = (newEndSlot % 2) * 30;
-      const newTitle = `${newStartHour.toString().padStart(2, '0')}:${newStartMinute
+      const newTitle = `${newStartHour.toString().padStart(2, "0")}:${newStartMinute
         .toString()
-        .padStart(
-          2,
-          '0'
-        )}-${newEndHour.toString().padStart(2, '0')}:${newEndMinute
+        .padStart(2, "0")}-${newEndHour.toString().padStart(2, "0")}:${newEndMinute
         .toString()
-        .padStart(2, '0')}`;
+        .padStart(2, "0")}`;
 
       const candidate: CalendarEntry = {
         ...original,
@@ -329,27 +308,27 @@ export const CalendarEntryBox: Component<{
     };
 
     const onMouseUp = () => {
-      document.removeEventListener('mousemove', onMouseMove);
-      document.removeEventListener('mouseup', onMouseUp);
-      document.body.style.cursor = '';
-      document.body.style.userSelect = '';
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+      document.body.style.cursor = "";
+      document.body.style.userSelect = "";
       if (tempEntry()) {
         props.onResizeComplete(tempEntry()!);
         setTempEntry(null);
       }
     };
 
-    document.addEventListener('mousemove', onMouseMove);
-    document.addEventListener('mouseup', onMouseUp);
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
   };
 
   // Clamp currentEntry if needed (optional).
   const clampedEntry = () => currentEntry();
 
-  const headerColor = '#6699ff';
-  const weeklyHeaderColor = '#faad50';
-  const regularColor = '#b0dafd';
-  const weeklyColor = '#febd73';
+  const headerColor = "#6699ff";
+  const weeklyHeaderColor = "#faad50";
+  const regularColor = "#b0dafd";
+  const weeklyColor = "#febd73";
 
   const [showConfirmDialog, setShowConfirmDialog] = createSignal(false);
 
@@ -357,30 +336,28 @@ export const CalendarEntryBox: Component<{
     <>
       <ConfirmDialog
         show={showConfirmDialog()}
-        title={t('channels.removeChannelEntry')}
+        title={t("channels.removeChannelEntry")}
         message={`Are you sure you want to remove entry "${clampedEntry().title}"?`}
         onClose={() => setShowConfirmDialog(false)}
         onConfirm={() => props.onDelete(clampedEntry().id)}
       />
       <div
         ref={boxRef}
-        class={styles['calendar-event']}
+        class={styles["calendar-event"]}
         style={{
-          position: 'absolute',
+          position: "absolute",
           top: `${topOffset()}px`,
           left: `${leftOffset()}px`,
           height: `${height()}px`,
           width: `${width()}px`,
-          'background-color': props.entry.weekly ? weeklyColor : regularColor,
+          "background-color": props.entry.weekly ? weeklyColor : regularColor,
           opacity: dragging() ? 0.5 : 1.0,
         }}
       >
         <div
-          class={styles['entry-header']}
+          class={styles["entry-header"]}
           style={{
-            'background-color': props.entry.weekly
-              ? weeklyHeaderColor
-              : headerColor,
+            "background-color": props.entry.weekly ? weeklyHeaderColor : headerColor,
           }}
           onClick={(e) => {
             e.stopPropagation();
@@ -390,7 +367,7 @@ export const CalendarEntryBox: Component<{
           <span>{clampedEntry().title}</span>
 
           <span
-            class={styles['entry-delete']}
+            class={styles["entry-delete"]}
             onClick={(e) => {
               e.stopPropagation();
               setShowConfirmDialog(true);
@@ -399,27 +376,27 @@ export const CalendarEntryBox: Component<{
             x
           </span>
         </div>
-        <div class={styles['event-body']}>{clampedEntry().playlist.name}</div>
+        <div class={styles["event-body"]}>{clampedEntry().playlist.name}</div>
 
         {/* Resizer Handles */}
         <div
-          class={`${styles['resize-handle']} ${styles.top}`}
+          class={`${styles["resize-handle"]} ${styles.top}`}
           onMouseDown={(e) => handleResize(e, { top: true })}
         />
         <div
-          class={`${styles['resize-handle']} ${styles.bottom}`}
+          class={`${styles["resize-handle"]} ${styles.bottom}`}
           onMouseDown={(e) => handleResize(e, { bottom: true })}
         />
         <div
-          class={`${styles['resize-handle']} ${styles.left}`}
+          class={`${styles["resize-handle"]} ${styles.left}`}
           onMouseDown={(e) => handleResize(e, { left: true })}
         />
         <div
-          class={`${styles['resize-handle']} ${styles.right}`}
+          class={`${styles["resize-handle"]} ${styles.right}`}
           onMouseDown={(e) => handleResize(e, { right: true })}
         />
         <div
-          class={`${styles['resize-handle']} ${styles.corner}`}
+          class={`${styles["resize-handle"]} ${styles.corner}`}
           onMouseDown={(e) => handleResize(e, { bottom: true, right: true })}
         />
       </div>

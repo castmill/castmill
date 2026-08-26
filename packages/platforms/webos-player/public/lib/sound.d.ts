@@ -3,40 +3,40 @@
 interface Sound {
   getSoundMode(
     successCallback: (cbObject: SoundModeResponse) => void,
-    errorCallback: (cbObject: ErrorResponse) => void
+    errorCallback: (cbObject: ErrorResponse) => void,
   ): void;
   getSoundOut(
     successCallback: (cbObject: SoundOutResponse) => void,
-    errorCallback: (cbObject: ErrorResponse) => void
+    errorCallback: (cbObject: ErrorResponse) => void,
   ): void;
   getSoundStatus(
     successCallback: (cbObject: SoundStatusResponse) => void,
-    errorCallback: (cbObject: ErrorResponse) => void
+    errorCallback: (cbObject: ErrorResponse) => void,
   ): void;
   setExternalSpeaker(
     successCallback: () => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: ExternalSpeakerOptions
+    options: ExternalSpeakerOptions,
   ): void;
   setMuted(
     successCallback: () => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: MutedOptions
+    options: MutedOptions,
   ): void;
   setSoundMode(
     successCallback: () => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: SoundModeOptions
+    options: SoundModeOptions,
   ): void;
   setSoundOut(
     successCallback: () => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: SoundOutOptions
+    options: SoundOutOptions,
   ): void;
   setVolumeLevel(
     successCallback: () => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: VolumeLevelOptions
+    options: VolumeLevelOptions,
   ): void;
 }
 
@@ -85,15 +85,15 @@ interface VolumeLevelOptions {
 declare const Sound: {
   new (): Sound;
   SoundMode: {
-    Standard: 'standard';
-    Cinema: 'movie';
-    ClearVoice: 'news';
-    Sports: 'sports';
-    Music: 'music';
-    Game: 'game';
+    Standard: "standard";
+    Cinema: "movie";
+    ClearVoice: "news";
+    Sports: "sports";
+    Music: "music";
+    Game: "game";
   };
   SpeakerType: {
-    SignageSpeaker: 'tv_speaker';
-    LGSoundSync: 'bt_soundbar';
+    SignageSpeaker: "tv_speaker";
+    LGSoundSync: "bt_soundbar";
   };
 };

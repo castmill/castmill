@@ -1,36 +1,36 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { NotificationsService } from './notifications.service';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { NotificationsService } from "./notifications.service";
 
 // Mock the auth module to prevent side effects (setStore) during test imports
-vi.mock('../components/auth', () => ({
+vi.mock("../components/auth", () => ({
   authFetch: vi.fn((...args: any[]) => (global.fetch as any)(...args)),
   getAuthToken: vi.fn(() => null),
-  getUser: vi.fn(() => ({ id: 'test-user' })),
+  getUser: vi.fn(() => ({ id: "test-user" })),
   checkAuth: vi.fn(() => true),
 }));
 
-describe('NotificationsService', () => {
+describe("NotificationsService", () => {
   let service: NotificationsService;
 
   beforeEach(() => {
     vi.clearAllMocks();
-    localStorage.removeItem('castmill_auth_token');
+    localStorage.removeItem("castmill_auth_token");
     global.fetch = vi.fn();
-    service = new NotificationsService('http://localhost:4000');
+    service = new NotificationsService("http://localhost:4000");
   });
 
-  describe('getNotifications', () => {
-    it('should fetch notifications successfully', async () => {
+  describe("getNotifications", () => {
+    it("should fetch notifications successfully", async () => {
       const mockResponse = {
         data: [
           {
-            id: '1',
-            title_key: 'test.title',
-            description_key: 'test.description',
-            type: 'test',
+            id: "1",
+            title_key: "test.title",
+            description_key: "test.description",
+            type: "test",
             read: false,
-            inserted_at: '2024-01-01T00:00:00Z',
-            updated_at: '2024-01-01T00:00:00Z',
+            inserted_at: "2024-01-01T00:00:00Z",
+            updated_at: "2024-01-01T00:00:00Z",
           },
         ],
         unread_count: 1,
@@ -45,13 +45,11 @@ describe('NotificationsService', () => {
 
       expect(global.fetch).toHaveBeenCalledOnce();
       const [url] = (global.fetch as any).mock.calls[0];
-      expect(url).toBe(
-        'http://localhost:4000/dashboard/notifications?page=1&page_size=20'
-      );
+      expect(url).toBe("http://localhost:4000/dashboard/notifications?page=1&page_size=20");
       expect(result).toEqual(mockResponse);
     });
 
-    it('should handle pagination parameters', async () => {
+    it("should handle pagination parameters", async () => {
       (global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ data: [], unread_count: 0 }),
@@ -61,25 +59,23 @@ describe('NotificationsService', () => {
 
       expect(global.fetch).toHaveBeenCalledOnce();
       const [url] = (global.fetch as any).mock.calls[0];
-      expect(url).toBe(
-        'http://localhost:4000/dashboard/notifications?page=2&page_size=50'
-      );
+      expect(url).toBe("http://localhost:4000/dashboard/notifications?page=2&page_size=50");
     });
 
-    it('should handle fetch errors', async () => {
+    it("should handle fetch errors", async () => {
       (global.fetch as any).mockResolvedValueOnce({
         ok: false,
-        statusText: 'Unauthorized',
+        statusText: "Unauthorized",
       });
 
       await expect(service.getNotifications()).rejects.toThrow(
-        'Failed to fetch notifications: Unauthorized'
+        "Failed to fetch notifications: Unauthorized",
       );
     });
   });
 
-  describe('getUnreadCount', () => {
-    it('should fetch unread count successfully', async () => {
+  describe("getUnreadCount", () => {
+    it("should fetch unread count successfully", async () => {
       (global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ count: 5 }),
@@ -89,13 +85,11 @@ describe('NotificationsService', () => {
 
       expect(global.fetch).toHaveBeenCalledOnce();
       const [url] = (global.fetch as any).mock.calls[0];
-      expect(url).toBe(
-        'http://localhost:4000/dashboard/notifications/unread_count'
-      );
+      expect(url).toBe("http://localhost:4000/dashboard/notifications/unread_count");
       expect(result).toBe(5);
     });
 
-    it('should return 0 when count is missing', async () => {
+    it("should return 0 when count is missing", async () => {
       (global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => ({}),
@@ -106,15 +100,15 @@ describe('NotificationsService', () => {
     });
   });
 
-  describe('markAsRead', () => {
-    it('should mark notification as read successfully', async () => {
+  describe("markAsRead", () => {
+    it("should mark notification as read successfully", async () => {
       const mockNotification = {
-        id: 'notification-123',
-        title_key: 'test.title',
-        type: 'test',
+        id: "notification-123",
+        title_key: "test.title",
+        type: "test",
         read: true,
-        inserted_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z',
+        inserted_at: "2024-01-01T00:00:00Z",
+        updated_at: "2024-01-01T00:00:00Z",
       };
 
       (global.fetch as any).mockResolvedValueOnce({
@@ -122,20 +116,18 @@ describe('NotificationsService', () => {
         json: async () => ({ data: mockNotification }),
       });
 
-      const result = await service.markAsRead('notification-123');
+      const result = await service.markAsRead("notification-123");
 
       expect(global.fetch).toHaveBeenCalledOnce();
       const [url, opts] = (global.fetch as any).mock.calls[0];
-      expect(url).toBe(
-        'http://localhost:4000/dashboard/notifications/notification-123/read'
-      );
-      expect(opts).toEqual(expect.objectContaining({ method: 'PATCH' }));
+      expect(url).toBe("http://localhost:4000/dashboard/notifications/notification-123/read");
+      expect(opts).toEqual(expect.objectContaining({ method: "PATCH" }));
       expect(result.read).toBe(true);
     });
   });
 
-  describe('markAllAsRead', () => {
-    it('should mark all notifications as read successfully', async () => {
+  describe("markAllAsRead", () => {
+    it("should mark all notifications as read successfully", async () => {
       (global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => ({ marked_read: 5 }),
@@ -145,14 +137,12 @@ describe('NotificationsService', () => {
 
       expect(global.fetch).toHaveBeenCalledOnce();
       const [url, opts] = (global.fetch as any).mock.calls[0];
-      expect(url).toBe(
-        'http://localhost:4000/dashboard/notifications/mark_all_read'
-      );
-      expect(opts).toEqual(expect.objectContaining({ method: 'POST' }));
+      expect(url).toBe("http://localhost:4000/dashboard/notifications/mark_all_read");
+      expect(opts).toEqual(expect.objectContaining({ method: "POST" }));
       expect(result).toBe(5);
     });
 
-    it('should return 0 when no notifications were marked', async () => {
+    it("should return 0 when no notifications were marked", async () => {
       (global.fetch as any).mockResolvedValueOnce({
         ok: true,
         json: async () => ({}),

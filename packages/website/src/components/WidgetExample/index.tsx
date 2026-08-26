@@ -1,7 +1,7 @@
-import React, { useState, useMemo } from 'react';
-import WidgetPreview from '../WidgetPreview';
-import CodeBlock from '@theme/CodeBlock';
-import styles from './styles.module.css';
+import React, { useState, useMemo } from "react";
+import WidgetPreview from "../WidgetPreview";
+import CodeBlock from "@theme/CodeBlock";
+import styles from "./styles.module.css";
 
 interface WidgetExampleProps {
   widget: any; // JsonWidget
@@ -19,11 +19,11 @@ export default function WidgetExample({
   widget,
   data,
   options,
-  height = '400px',
+  height = "400px",
   showControls = true,
 }: WidgetExampleProps): React.JSX.Element {
-  const [mainTab, setMainTab] = useState<'code' | 'preview'>('preview');
-  const [codeTab, setCodeTab] = useState<'widget' | 'data' | 'options'>('widget');
+  const [mainTab, setMainTab] = useState<"code" | "preview">("preview");
+  const [codeTab, setCodeTab] = useState<"widget" | "data" | "options">("widget");
 
   // Serialize the template immediately on mount, before any mutations
   const widgetJSON = useMemo(() => {
@@ -32,7 +32,7 @@ export default function WidgetExample({
       const template = widget.template || widget;
       return JSON.stringify(template, null, 2);
     } catch (error) {
-      return `// Error serializing widget: ${error instanceof Error ? error.message : 'Unknown error'}`;
+      return `// Error serializing widget: ${error instanceof Error ? error.message : "Unknown error"}`;
     }
   }, [widget]);
 
@@ -43,16 +43,17 @@ export default function WidgetExample({
       const template = widget.template || widget;
       return {
         ...widget,
-        template: JSON.parse(JSON.stringify(template))
+        template: JSON.parse(JSON.stringify(template)),
       };
     } catch (error) {
       // If cloning fails, pass the original (better than nothing)
       return widget;
     }
   }, [widget]);
-  
+
   const dataJSON = data && Object.keys(data).length > 0 ? JSON.stringify(data, null, 2) : null;
-  const optionsJSON = options && Object.keys(options).length > 0 ? JSON.stringify(options, null, 2) : null;
+  const optionsJSON =
+    options && Object.keys(options).length > 0 ? JSON.stringify(options, null, 2) : null;
 
   return (
     <div className={styles.widgetExample}>
@@ -66,21 +67,21 @@ export default function WidgetExample({
       {/* Main Tabs: Code vs Preview */}
       <div className={styles.mainTabs}>
         <button
-          onClick={() => setMainTab('preview')}
-          className={`${styles.mainTab} ${mainTab === 'preview' ? styles.activeMainTab : ''}`}
+          onClick={() => setMainTab("preview")}
+          className={`${styles.mainTab} ${mainTab === "preview" ? styles.activeMainTab : ""}`}
         >
           Preview
         </button>
         <button
-          onClick={() => setMainTab('code')}
-          className={`${styles.mainTab} ${mainTab === 'code' ? styles.activeMainTab : ''}`}
+          onClick={() => setMainTab("code")}
+          className={`${styles.mainTab} ${mainTab === "code" ? styles.activeMainTab : ""}`}
         >
           Code
         </button>
       </div>
 
       <div className={styles.content}>
-        {mainTab === 'preview' && (
+        {mainTab === "preview" && (
           <div className={styles.previewSection}>
             <WidgetPreview
               widget={widgetForPreview}
@@ -92,28 +93,28 @@ export default function WidgetExample({
           </div>
         )}
 
-        {mainTab === 'code' && (
+        {mainTab === "code" && (
           <div className={styles.codeSection}>
             {/* Code Sub-Tabs: Widget / Data / Options */}
             <div className={styles.codeTabs}>
               <button
-                onClick={() => setCodeTab('widget')}
-                className={`${styles.codeTabBtn} ${codeTab === 'widget' ? styles.activeCodeTab : ''}`}
+                onClick={() => setCodeTab("widget")}
+                className={`${styles.codeTabBtn} ${codeTab === "widget" ? styles.activeCodeTab : ""}`}
               >
                 Widget
               </button>
               {dataJSON && (
                 <button
-                  onClick={() => setCodeTab('data')}
-                  className={`${styles.codeTabBtn} ${codeTab === 'data' ? styles.activeCodeTab : ''}`}
+                  onClick={() => setCodeTab("data")}
+                  className={`${styles.codeTabBtn} ${codeTab === "data" ? styles.activeCodeTab : ""}`}
                 >
                   Data
                 </button>
               )}
               {optionsJSON && (
                 <button
-                  onClick={() => setCodeTab('options')}
-                  className={`${styles.codeTabBtn} ${codeTab === 'options' ? styles.activeCodeTab : ''}`}
+                  onClick={() => setCodeTab("options")}
+                  className={`${styles.codeTabBtn} ${codeTab === "options" ? styles.activeCodeTab : ""}`}
                 >
                   Options
                 </button>
@@ -121,17 +122,17 @@ export default function WidgetExample({
             </div>
 
             <div className={styles.codeContent}>
-              {codeTab === 'widget' && (
+              {codeTab === "widget" && (
                 <CodeBlock language="json" title="widget.json">
                   {widgetJSON}
                 </CodeBlock>
               )}
-              {codeTab === 'data' && dataJSON && (
+              {codeTab === "data" && dataJSON && (
                 <CodeBlock language="json" title="data.json">
                   {dataJSON}
                 </CodeBlock>
               )}
-              {codeTab === 'options' && optionsJSON && (
+              {codeTab === "options" && optionsJSON && (
                 <CodeBlock language="json" title="options.json">
                   {optionsJSON}
                 </CodeBlock>

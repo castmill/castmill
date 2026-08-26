@@ -11,6 +11,7 @@ This document describes the test scenarios for the Channels component which hand
 ### 1. Channel Display and Fetching
 
 #### Test: Should display assigned channels in a table
+
 - **Given:** A device with multiple channels assigned
 - **When:** The component loads
 - **Then:** All assigned channels should be displayed in the TableView
@@ -20,6 +21,7 @@ This document describes the test scenarios for the Channels component which hand
   - Channels are fetched using `DevicesService.fetchChannelByDeviceId`
 
 #### Test: Should handle empty channel list
+
 - **Given:** A device with no channels assigned
 - **When:** The component loads
 - **Then:** An empty table should be displayed
@@ -30,6 +32,7 @@ This document describes the test scenarios for the Channels component which hand
 ### 2. Adding Channels
 
 #### Test: Should successfully add a channel to device
+
 - **Given:** A device with existing channels
 - **When:** User selects a new channel from ComboBox and confirms
 - **Then:** The channel should be added and table should refresh
@@ -39,6 +42,7 @@ This document describes the test scenarios for the Channels component which hand
   - ComboBox selection is cleared
 
 #### Test: Should prevent adding duplicate channels
+
 - **Given:** A device with Channel A already assigned
 - **When:** User tries to add Channel A again
 - **Then:** An alert should inform the user and the operation should be prevented
@@ -48,6 +52,7 @@ This document describes the test scenarios for the Channels component which hand
   - Channel count remains unchanged
 
 #### Test: Should show error message when adding channel fails
+
 - **Given:** A device and a valid channel selection
 - **When:** The API call fails (network error, server error, etc.)
 - **Then:** An error alert should be displayed
@@ -59,6 +64,7 @@ This document describes the test scenarios for the Channels component which hand
 ### 3. Removing Channels
 
 #### Test: Should successfully remove a channel from device
+
 - **Given:** A device with 3 channels assigned (Channel A, B, C)
 - **When:** User clicks delete button for Channel B
 - **Then:** Channel B should be removed and table should refresh
@@ -68,6 +74,7 @@ This document describes the test scenarios for the Channels component which hand
   - Delete button was clickable
 
 #### Test: Should prevent removing the last channel
+
 - **Given:** A device with only 1 channel assigned
 - **When:** User hovers over or tries to click the delete button
 - **Then:** The delete button should be disabled with explanatory tooltip
@@ -78,6 +85,7 @@ This document describes the test scenarios for the Channels component which hand
   - Alert message: "At least one channel must be assigned to the device."
 
 #### Test: Should show error message when removing channel fails
+
 - **Given:** A device with multiple channels
 - **When:** The API call to remove a channel fails
 - **Then:** An error alert should be displayed
@@ -89,6 +97,7 @@ This document describes the test scenarios for the Channels component which hand
 ### 4. Multiple Channel Management
 
 #### Test: Should handle multiple channels correctly
+
 - **Given:** A device with 5 channels assigned
 - **When:** The component loads
 - **Then:** All 5 channels should be displayed with proper pagination
@@ -98,6 +107,7 @@ This document describes the test scenarios for the Channels component which hand
   - Channel data includes all required fields
 
 #### Test: Should maintain state after adding/removing channels
+
 - **Given:** A device with channels [A, B, C]
 - **When:** User removes B, then adds D
 - **Then:** The final state should show [A, C, D]
@@ -109,6 +119,7 @@ This document describes the test scenarios for the Channels component which hand
 ### 5. UI Interactions
 
 #### Test: Should disable delete button for last channel
+
 - **Given:** A device with only 1 channel
 - **When:** Component renders
 - **Then:** Delete button should be disabled and show tooltip
@@ -118,6 +129,7 @@ This document describes the test scenarios for the Channels component which hand
   - Button styling indicates disabled state
 
 #### Test: Should enable delete buttons when multiple channels exist
+
 - **Given:** A device with 2+ channels
 - **When:** Component renders
 - **Then:** All delete buttons should be enabled
@@ -129,6 +141,7 @@ This document describes the test scenarios for the Channels component which hand
 ### 6. Error Handling
 
 #### Test: Should handle network failures gracefully
+
 - **Given:** Network connectivity issues
 - **When:** User attempts to add or remove a channel
 - **Then:** User-friendly error message should be displayed
@@ -138,6 +151,7 @@ This document describes the test scenarios for the Channels component which hand
   - User can retry the operation
 
 #### Test: Should handle backend validation errors
+
 - **Given:** Backend returns validation error (e.g., channel doesn't exist)
 - **When:** User attempts to add a channel
 - **Then:** Specific error message should be displayed
@@ -187,7 +201,7 @@ This document describes the test scenarios for the Channels component which hand
   - Multiple channel assignment
   - Duplicate prevention
   - Channel removal with multiple channels
-  
+
 - ✅ **Service Layer (TypeScript):** Unit tests in `devices.service.test.ts`
   - API method calls
   - Error handling
@@ -216,6 +230,7 @@ This document describes the test scenarios for the Channels component which hand
 The Channels component is a SolidJS component embedded within an Elixir/Phoenix application. While unit testing the component directly would require setting up a TypeScript test environment within the castmill package (currently not configured), the comprehensive backend tests and service layer tests provide good coverage of the functionality.
 
 For full UI testing, consider:
+
 1. Adding E2E tests using Playwright or Cypress
 2. Setting up Vitest/Solid Testing Library in the castmill package
 3. Continuing with manual testing for UI interactions

@@ -1,8 +1,9 @@
-import { type Component, onMount } from 'solid-js';
-import { mountDevice, Device } from '@castmill/device';
-import { AndroidMachine, AndroidStorage } from '../classes';
+import { type Component, onMount } from "solid-js";
+import { mountDevice, Device } from "@castmill/device";
+import { AndroidMachine, AndroidStorage } from "../classes";
 
 export const PlayerFrame: Component = () => {
+  // oxlint-disable-next-line no-unassigned-vars
   let ref: HTMLDivElement | undefined;
 
   onMount(async () => {
@@ -11,7 +12,7 @@ export const PlayerFrame: Component = () => {
     }
 
     const androidMachine = new AndroidMachine();
-    const cache = new AndroidStorage('file-cache');
+    const cache = new AndroidStorage("file-cache");
     const device = new Device(androidMachine, cache);
 
     await device.init();

@@ -1,8 +1,8 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { is } from '@electron-toolkit/utils';
-import { app } from 'electron';
-import { exec } from 'child_process';
-import { createHash } from 'crypto';
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { is } from "@electron-toolkit/utils";
+import { app } from "electron";
+import { exec } from "child_process";
+import { createHash } from "crypto";
 
 const osMock = {
   totalmem: vi.fn(),
@@ -34,50 +34,50 @@ const mockAutoUpdater = {
   quitAndInstall: vi.fn(),
 };
 
-vi.mock('electron-updater', () => ({
+vi.mock("electron-updater", () => ({
   autoUpdater: mockAutoUpdater,
 }));
 
-vi.mock('@electron-toolkit/utils', () => ({
+vi.mock("@electron-toolkit/utils", () => ({
   is: {
     dev: false,
   },
 }));
 
-vi.mock('electron', () => ({
+vi.mock("electron", () => ({
   app: {
     relaunch: vi.fn(),
     exit: vi.fn(),
   },
 }));
 
-vi.mock('child_process', () => ({
+vi.mock("child_process", () => ({
   exec: vi.fn(),
 }));
 
-vi.mock('macaddress', () => ({
+vi.mock("macaddress", () => ({
   one: mockOne,
 }));
 
-vi.mock('os', () => ({
+vi.mock("os", () => ({
   default: osMock,
   ...osMock,
 }));
 
-vi.mock('systeminformation', () => ({
+vi.mock("systeminformation", () => ({
   default: siMock,
 }));
 
 const originalPlatform = process.platform;
 
 const setPlatform = (platform: string) => {
-  Object.defineProperty(process, 'platform', {
+  Object.defineProperty(process, "platform", {
     value: platform,
     configurable: true,
   });
 };
 
-const loadMachineApi = async () => import('../../src/main/api/machine');
+const loadMachineApi = async () => import("../../src/main/api/machine");
 
 beforeEach(() => {
   vi.resetModules();
@@ -113,8 +113,8 @@ afterEach(() => {
   setPlatform(originalPlatform);
 });
 
-describe('main/api/machine update', () => {
-  it('should be a no-op in development mode', async () => {
+describe("main/api/machine update", () => {
+  it("should be a no-op in development mode", async () => {
     is.dev = true;
     const { update } = await loadMachineApi();
 
@@ -124,7 +124,7 @@ describe('main/api/machine update', () => {
     expect(mockAutoUpdater.on).not.toHaveBeenCalled();
   });
 
-  it('should configure silent updater and check for updates in production', async () => {
+  it("should configure silent updater and check for updates in production", async () => {
     const { update } = await loadMachineApi();
 
     await update();
@@ -134,46 +134,37 @@ describe('main/api/machine update', () => {
     expect(mockAutoUpdater.autoDownload).toBe(true);
     expect(mockAutoUpdater.autoInstallOnAppQuit).toBe(true);
     expect(mockAutoUpdater.on).toHaveBeenCalledTimes(2);
-    expect(mockAutoUpdater.on).toHaveBeenCalledWith(
-      'update-downloaded',
-      expect.any(Function)
-    );
-    expect(mockAutoUpdater.on).toHaveBeenCalledWith(
-      'error',
-      expect.any(Function)
-    );
+    expect(mockAutoUpdater.on).toHaveBeenCalledWith("update-downloaded", expect.any(Function));
+    expect(mockAutoUpdater.on).toHaveBeenCalledWith("error", expect.any(Function));
     expect(exec).not.toHaveBeenCalled();
   });
 
-  it('should propagate checkForUpdates failures to caller', async () => {
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+  it("should propagate checkForUpdates failures to caller", async () => {
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     mockAutoUpdater.checkForUpdates.mockImplementationOnce(async () => {
-      throw new Error('update check failed');
+      throw new Error("update check failed");
     });
     const { update } = await loadMachineApi();
 
-    await expect(update()).rejects.toThrow('update check failed');
-    expect(errorSpy).toHaveBeenCalledWith(
-      'Failed to check for updates:',
-      expect.any(Error)
-    );
+    await expect(update()).rejects.toThrow("update check failed");
+    expect(errorSpy).toHaveBeenCalledWith("Failed to check for updates:", expect.any(Error));
 
     errorSpy.mockRestore();
   });
 
-  it('should trigger quitAndInstall once when update is downloaded', async () => {
+  it("should trigger quitAndInstall once when update is downloaded", async () => {
     const { update } = await loadMachineApi();
 
     await update();
 
-    updateHandlers['update-downloaded']?.();
-    updateHandlers['update-downloaded']?.();
+    updateHandlers["update-downloaded"]?.();
+    updateHandlers["update-downloaded"]?.();
 
     expect(mockAutoUpdater.quitAndInstall).toHaveBeenCalledTimes(1);
     expect(mockAutoUpdater.quitAndInstall).toHaveBeenCalledWith(true, true);
   });
 
-  it('should not register duplicate updater handlers across multiple updates', async () => {
+  it("should not register duplicate updater handlers across multiple updates", async () => {
     const { update } = await loadMachineApi();
 
     await update();
@@ -185,8 +176,8 @@ describe('main/api/machine update', () => {
   });
 });
 
-describe('main/api/machine lifecycle commands', () => {
-  it('relaunch should restart the app process', async () => {
+describe("main/api/machine lifecycle commands", () => {
+  it("relaunch should restart the app process", async () => {
     const { relaunch } = await loadMachineApi();
 
     relaunch();
@@ -195,7 +186,7 @@ describe('main/api/machine lifecycle commands', () => {
     expect(app.exit).toHaveBeenCalledWith(0);
   });
 
-  it('exit should terminate the app process', async () => {
+  it("exit should terminate the app process", async () => {
     const { exit } = await loadMachineApi();
 
     exit();
@@ -204,78 +195,76 @@ describe('main/api/machine lifecycle commands', () => {
   });
 });
 
-describe('main/api/machine power commands', () => {
-  it('shutdown should show blocked toast in development mode', async () => {
+describe("main/api/machine power commands", () => {
+  it("shutdown should show blocked toast in development mode", async () => {
     is.dev = true;
     const { shutdown } = await loadMachineApi();
 
     shutdown();
 
     expect(exec).toHaveBeenCalledOnce();
-    expect(exec).toHaveBeenCalledWith(expect.stringContaining('Shutdown'));
+    expect(exec).toHaveBeenCalledWith(expect.stringContaining("Shutdown"));
   });
 
-  it('reboot should show blocked toast in development mode', async () => {
+  it("reboot should show blocked toast in development mode", async () => {
     is.dev = true;
     const { reboot } = await loadMachineApi();
 
     reboot();
 
     expect(exec).toHaveBeenCalledOnce();
-    expect(exec).toHaveBeenCalledWith(expect.stringContaining('Reboot'));
+    expect(exec).toHaveBeenCalledWith(expect.stringContaining("Reboot"));
   });
 
-  it('shutdown should execute OS command in production', async () => {
+  it("shutdown should execute OS command in production", async () => {
     is.dev = false;
-    setPlatform('linux');
+    setPlatform("linux");
     const { shutdown } = await loadMachineApi();
 
     shutdown();
 
-    expect(exec).toHaveBeenCalledWith('poweroff');
+    expect(exec).toHaveBeenCalledWith("poweroff");
   });
 
-  it('reboot should execute OS command in production', async () => {
+  it("reboot should execute OS command in production", async () => {
     is.dev = false;
-    setPlatform('linux');
+    setPlatform("linux");
     const { reboot } = await loadMachineApi();
 
     reboot();
 
-    expect(exec).toHaveBeenCalledWith('reboot');
+    expect(exec).toHaveBeenCalledWith("reboot");
   });
 
-  it('shutdown should throw on unsupported platforms', async () => {
+  it("shutdown should throw on unsupported platforms", async () => {
     is.dev = false;
-    setPlatform('freebsd');
+    setPlatform("freebsd");
     const { shutdown } = await loadMachineApi();
 
-    expect(() => shutdown()).toThrow('Unsupported platform');
+    expect(() => shutdown()).toThrow("Unsupported platform");
   });
 
-  it('reboot should throw on unsupported platforms', async () => {
+  it("reboot should throw on unsupported platforms", async () => {
     is.dev = false;
-    setPlatform('freebsd');
+    setPlatform("freebsd");
     const { reboot } = await loadMachineApi();
 
-    expect(() => reboot()).toThrow('Unsupported platform');
+    expect(() => reboot()).toThrow("Unsupported platform");
   });
 });
 
-describe('main/api/machine identifiers and telemetry', () => {
-  it('getMachineGUID should return a sha1 hash of mac address', async () => {
-    mockOne.mockResolvedValueOnce('aa:bb:cc:dd:ee:ff');
+describe("main/api/machine identifiers and telemetry", () => {
+  it("getMachineGUID should return a sha1 hash of mac address", async () => {
+    mockOne.mockResolvedValueOnce("aa:bb:cc:dd:ee:ff");
     const { getMachineGUID } = await loadMachineApi();
 
     const guid = await getMachineGUID();
-    const expected = createHash('sha1')
-      .update('aa:bb:cc:dd:ee:ff')
-      .digest('hex');
+    const expected = createHash("sha1").update("aa:bb:cc:dd:ee:ff").digest("hex");
 
     expect(guid).toBe(expected);
   });
 
-  it('getTelemetry should aggregate available system metrics', async () => {
+  it("getTelemetry should aggregate available system metrics", async () => {
     osMock.totalmem.mockReturnValueOnce(1000);
     osMock.freemem.mockReturnValueOnce(200);
     osMock.loadavg.mockReturnValueOnce([1.111, 2.222, 3.333]);
@@ -284,22 +273,20 @@ describe('main/api/machine identifiers and telemetry', () => {
       wlan0: [
         {
           internal: false,
-          family: 'IPv4',
-          address: '10.0.0.8',
+          family: "IPv4",
+          address: "10.0.0.8",
         },
       ],
     });
 
     siMock.currentLoad.mockResolvedValueOnce({ currentLoad: 12.34 });
-    siMock.fsSize.mockResolvedValueOnce([
-      { mount: '/', size: 5000, used: 1250 },
-    ]);
+    siMock.fsSize.mockResolvedValueOnce([{ mount: "/", size: 5000, used: 1250 }]);
     siMock.cpuTemperature.mockResolvedValueOnce({
       main: 55,
       cores: [54, 56],
     });
     siMock.wifiNetworks.mockResolvedValueOnce([
-      { security: 'wpa2', signalLevel: -50, ssid: 'Castmill WiFi' },
+      { security: "wpa2", signalLevel: -50, ssid: "Castmill WiFi" },
     ]);
     siMock.battery.mockResolvedValueOnce({
       hasBattery: true,
@@ -320,31 +307,31 @@ describe('main/api/machine identifiers and telemetry', () => {
     expect(telemetry.uptimeSeconds).toBe(999);
     expect(telemetry.storage).toEqual({ totalBytes: 5000, usedBytes: 1250 });
     expect(telemetry.temperatures).toEqual([
-      { label: 'CPU', celsius: 55 },
-      { label: 'Core 0', celsius: 54 },
-      { label: 'Core 1', celsius: 56 },
+      { label: "CPU", celsius: 55 },
+      { label: "Core 0", celsius: 54 },
+      { label: "Core 1", celsius: 56 },
     ]);
     expect(telemetry.network).toEqual({
-      ipAddress: '10.0.0.8',
-      type: 'wifi',
-      ssid: 'Castmill WiFi',
+      ipAddress: "10.0.0.8",
+      type: "wifi",
+      ssid: "Castmill WiFi",
       wifiSignalStrengthPercent: 100,
     });
     expect(telemetry.battery).toEqual({ levelPercent: 88, isCharging: true });
   });
 
-  it('getTelemetry should return partial data when collectors fail', async () => {
+  it("getTelemetry should return partial data when collectors fail", async () => {
     osMock.totalmem.mockImplementationOnce(() => {
-      throw new Error('mem unavailable');
+      throw new Error("mem unavailable");
     });
     osMock.networkInterfaces.mockImplementationOnce(() => {
-      throw new Error('net unavailable');
+      throw new Error("net unavailable");
     });
 
-    siMock.currentLoad.mockRejectedValueOnce(new Error('cpu unavailable'));
-    siMock.fsSize.mockRejectedValueOnce(new Error('disk unavailable'));
-    siMock.cpuTemperature.mockRejectedValueOnce(new Error('temp unavailable'));
-    siMock.battery.mockRejectedValueOnce(new Error('battery unavailable'));
+    siMock.currentLoad.mockRejectedValueOnce(new Error("cpu unavailable"));
+    siMock.fsSize.mockRejectedValueOnce(new Error("disk unavailable"));
+    siMock.cpuTemperature.mockRejectedValueOnce(new Error("temp unavailable"));
+    siMock.battery.mockRejectedValueOnce(new Error("battery unavailable"));
 
     const { getTelemetry } = await loadMachineApi();
     const telemetry = await getTelemetry();

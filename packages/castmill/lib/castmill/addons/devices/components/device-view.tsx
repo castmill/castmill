@@ -1,16 +1,16 @@
-import { Component, createSignal } from 'solid-js';
-import { Device } from '../interfaces/device.interface';
-import { Tabs, LoadingOverlay, useToast } from '@castmill/ui-common';
-import { Channels } from './channels';
-import { Maintainance } from './maintainance';
-import { DeviceLogs } from './device-events';
-import { DeviceDetails, DeviceUpdate } from './device-details';
-import { DevicesService } from '../services/devices.service';
-import { DeviceCache } from './device-cache';
-import { DevicePreview } from './device-preview';
-import { DeviceTelemetry } from './device-telemetry';
-import { DeviceSchedule } from './device-schedule';
-import { AddonStore } from '../../common/interfaces/addon-store';
+import { Component, createSignal } from "solid-js";
+import { Device } from "../interfaces/device.interface";
+import { Tabs, LoadingOverlay, useToast } from "@castmill/ui-common";
+import { Channels } from "./channels";
+import { Maintainance } from "./maintainance";
+import { DeviceLogs } from "./device-events";
+import { DeviceDetails, DeviceUpdate } from "./device-details";
+import { DevicesService } from "../services/devices.service";
+import { DeviceCache } from "./device-cache";
+import { DevicePreview } from "./device-preview";
+import { DeviceTelemetry } from "./device-telemetry";
+import { DeviceSchedule } from "./device-schedule";
+import { AddonStore } from "../../common/interfaces/addon-store";
 
 // Optionally we should allow using protonmaps
 // https://protomaps.com/
@@ -37,11 +37,11 @@ const DeviceView: Component<{
           props.baseUrl,
           props.organization_id,
           props.device.id,
-          device
+          device,
         ),
         new Promise((resolve) => setTimeout(resolve, 300)),
       ]);
-      toast.success('Device updated successfully');
+      toast.success("Device updated successfully");
       return true;
     } catch (err) {
       toast.error(`Error updating device: ${err}`);
@@ -56,13 +56,11 @@ const DeviceView: Component<{
 
   const tabs = [
     {
-      title: t('common.details'),
-      content: () => (
-        <DeviceDetails device={props.device} onSubmit={updateDevice} t={t} />
-      ),
+      title: t("common.details"),
+      content: () => <DeviceDetails device={props.device} onSubmit={updateDevice} t={t} />,
     },
     {
-      title: t('common.channels'),
+      title: t("common.channels"),
       content: () => (
         <div>
           <Channels
@@ -76,7 +74,7 @@ const DeviceView: Component<{
       ),
     },
     {
-      title: t('common.preview'),
+      title: t("common.preview"),
       content: () => (
         <div>
           <DevicePreview baseUrl={props.baseUrl} device={props.device} t={t} />
@@ -84,19 +82,15 @@ const DeviceView: Component<{
       ),
     },
     {
-      title: t('common.cache'),
+      title: t("common.cache"),
       content: () => (
         <div>
-          <DeviceCache
-            baseUrl={props.baseUrl}
-            device={props.device}
-            t={props.t}
-          />
+          <DeviceCache baseUrl={props.baseUrl} device={props.device} t={props.t} />
         </div>
       ),
     },
     {
-      title: t('common.maintainance'),
+      title: t("common.maintainance"),
       content: () => (
         <div>
           <Maintainance
@@ -112,25 +106,19 @@ const DeviceView: Component<{
       ),
     },
     {
-      title: t('common.events'),
+      title: t("common.events"),
       content: () => (
         <div>
-          <DeviceLogs
-            baseUrl={props.baseUrl}
-            device={props.device}
-            t={props.t}
-          />
+          <DeviceLogs baseUrl={props.baseUrl} device={props.device} t={props.t} />
         </div>
       ),
     },
     {
-      title: t('common.telemetry'),
-      content: () => (
-        <DeviceTelemetry baseUrl={props.baseUrl} device={props.device} t={t} />
-      ),
+      title: t("common.telemetry"),
+      content: () => <DeviceTelemetry baseUrl={props.baseUrl} device={props.device} t={t} />,
     },
     {
-      title: t('deviceSchedule.title'),
+      title: t("deviceSchedule.title"),
       content: () => (
         <div>
           <DeviceSchedule baseUrl={props.baseUrl} device={props.device} t={t} />

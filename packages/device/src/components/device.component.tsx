@@ -1,29 +1,19 @@
-import {
-  Match,
-  Show,
-  Switch,
-  createResource,
-  createSignal,
-  onCleanup,
-  onMount,
-} from 'solid-js';
-import { Device, Status } from '../classes/device';
-import { RegisterComponent } from './register.component';
-import { PlayerComponent } from './player.component';
-import { ProgressBarComponent } from './progress-bar.component';
-import { RecoveryBlockedComponent } from './recovery-blocked.component';
+import { Match, Show, Switch, createResource, createSignal, onCleanup, onMount } from "solid-js";
+import { Device, Status } from "../classes/device";
+import { RegisterComponent } from "./register.component";
+import { PlayerComponent } from "./player.component";
+import { ProgressBarComponent } from "./progress-bar.component";
+import { RecoveryBlockedComponent } from "./recovery-blocked.component";
 
 export function DeviceComponent(props: { device: Device }) {
-  const [loginOrRegister] = createResource(() =>
-    props.device.loginOrRegister()
-  );
+  const [loginOrRegister] = createResource(() => props.device.loginOrRegister());
   const [ready, setReady] = createSignal(false);
 
   // Listen for 'ready' event to hide progress bar (fired by start() or timer-off standby)
   onMount(() => {
     const onReady = () => setReady(true);
-    props.device.on('ready', onReady);
-    onCleanup(() => props.device.off('ready', onReady));
+    props.device.on("ready", onReady);
+    onCleanup(() => props.device.off("ready", onReady));
   });
 
   // Show progress bar while loading or while login's start() is still running
@@ -50,10 +40,7 @@ export function DeviceComponent(props: { device: Device }) {
             <PlayerComponent device={props.device} />
           </Match>
           <Match when={loginOrRegister()?.status === Status.Registering}>
-            <RegisterComponent
-              device={props.device}
-              pincode={loginOrRegister()!.pincode!}
-            />
+            <RegisterComponent device={props.device} pincode={loginOrRegister()!.pincode!} />
           </Match>
           <Match when={loginOrRegister()?.status === Status.RecoveryBlocked}>
             <RecoveryBlockedComponent />

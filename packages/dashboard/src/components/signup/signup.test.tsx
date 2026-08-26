@@ -1,71 +1,66 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, fireEvent, screen } from '@solidjs/testing-library';
-import { createSignal } from 'solid-js';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, fireEvent, screen } from "@solidjs/testing-library";
+import { createSignal } from "solid-js";
 
-import SignUp from './signup';
+import SignUp from "./signup";
 
 // Mock external dependencies
-vi.mock('@solidjs/router', () => ({
+vi.mock("@solidjs/router", () => ({
   useNavigate: vi.fn(),
   useSearchParams: vi.fn(() => [
     createSignal({
-      email: 'test@example.com',
-      signup_id: '12345',
-      challenge: 'abcde',
+      email: "test@example.com",
+      signup_id: "12345",
+      challenge: "abcde",
     }),
   ]),
 }));
 
-vi.mock('../utils', () => ({
+vi.mock("../utils", () => ({
   arrayBufferToBase64: vi.fn(),
 }));
 
 // Mock auth to prevent setStore side effects from authFetch import
-vi.mock('../auth', () => ({
+vi.mock("../auth", () => ({
   authFetch: vi.fn((input: any, init?: any) => fetch(input, init ?? {})),
 }));
 
 vi.stubGlobal(
-  'fetch',
+  "fetch",
   vi.fn(() =>
     Promise.resolve({
       ok: true,
       json: () => Promise.resolve({}),
-    })
-  )
+    }),
+  ),
 );
 
-vi.stubGlobal('navigator.credentials.create', vi.fn());
+vi.stubGlobal("navigator.credentials.create", vi.fn());
 
 // Utility function to mock passkey support
-const mockPasskeySupport = (
-  supportsConditional: any,
-  supportsUserVerifying: any
-) => {
-  vi.stubGlobal('PublicKeyCredential', {
-    isConditionalMediationAvailable: vi.fn(() =>
-      Promise.resolve(supportsConditional)
-    ),
+const mockPasskeySupport = (supportsConditional: any, supportsUserVerifying: any) => {
+  vi.stubGlobal("PublicKeyCredential", {
+    isConditionalMediationAvailable: vi.fn(() => Promise.resolve(supportsConditional)),
     isUserVerifyingPlatformAuthenticatorAvailable: vi.fn(() =>
-      Promise.resolve(supportsUserVerifying)
+      Promise.resolve(supportsUserVerifying),
     ),
   });
 };
 
 // Skipping as either Vitest or @solidjs/testing-library are too buggy to run this test
-describe.skip('SignUp Component', () => {
+describe.skip("SignUp Component", () => {
   beforeEach(() => {
     // Reset mocks before each test
     vi.clearAllMocks();
   });
 
-  it('renders and checks for passkey support', async () => {
+  it("renders and checks for passkey support", async () => {
     mockPasskeySupport(true, true); // Mock that the browser supports passkeys
     render(() => <SignUp />);
 
     // Assertions for initial state
-    expect(screen.getByText('Status: Ready')).toBeInTheDocument();
-    await screen.findByText('Continue with Passkey'); // Async check for button to appear
+    expect(screen.getByText("Status: Ready")).toBeInTheDocument();
+    await screen.findByText("Continue with Passkey"); // Async check for button to appear
   });
 
   /*

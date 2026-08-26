@@ -1,7 +1,7 @@
-import { webgl } from './webgl';
-import * as glMatrix from 'gl-matrix';
-import { Observable } from 'rxjs';
-import { requestAnimationFrame } from './animation';
+import { webgl } from "./webgl";
+import * as glMatrix from "gl-matrix";
+import { Observable } from "rxjs";
+import { requestAnimationFrame } from "./animation";
 
 export interface Text {
   fontFamily: string;
@@ -13,10 +13,10 @@ export interface Text {
         Scroll helpers
 */
 const createCanvas = function (parent: HTMLElement) {
-  const canvas = document.createElement('canvas');
+  const canvas = document.createElement("canvas");
 
-  canvas.style.width = '100%';
-  canvas.style.height = '100%';
+  canvas.style.width = "100%";
+  canvas.style.height = "100%";
 
   canvas.width = parent.clientWidth;
   canvas.height = parent.clientHeight;
@@ -38,7 +38,7 @@ const createCanvas = function (parent: HTMLElement) {
 function stringWithinWidth(
   ctx: CanvasRenderingContext2D,
   str: string,
-  maxWidth: number
+  maxWidth: number,
 ): [string, number, number] {
   let current = str;
   let end = str.length;
@@ -96,20 +96,15 @@ class ScrollChunk {
     public canvas: HTMLCanvasElement,
     public ctx: CanvasRenderingContext2D,
     public width: number,
-    public height: number
+    public height: number,
   ) {
     this.textureHandle = gl.createTexture();
   }
 
-  setText(
-    text: Text[],
-    bias: number,
-    index: { str: number; char: number },
-    sw: number
-  ) {
+  setText(text: Text[], bias: number, index: { str: number; char: number }, sw: number) {
     let s: [string, number, number];
-    let strIndex = index['str'];
-    let charIndex = index['char'];
+    let strIndex = index["str"];
+    let charIndex = index["char"];
 
     this.ctx.clearRect(0, 0, this.width, this.height);
 
@@ -118,9 +113,9 @@ class ScrollChunk {
       currentWidth += bias;
 
       var font_size = (95.0 / 100.0) * this.gl.canvas.height;
-      this.ctx.font = Math.round(font_size) + 'px ' + text[strIndex].fontFamily;
+      this.ctx.font = Math.round(font_size) + "px " + text[strIndex].fontFamily;
       this.ctx.fillStyle = text[strIndex].color;
-      this.ctx.textBaseline = 'bottom';
+      this.ctx.textBaseline = "bottom";
       var str = text[strIndex].str.slice(charIndex);
 
       s = stringWithinWidth(this.ctx, str, this.width - currentWidth);
@@ -147,12 +142,12 @@ class ScrollChunk {
       this.canvas.width * xratio,
       this.canvas.height,
       1.0 * xratio,
-      1.0
+      1.0,
     );
     this.pos = sw;
 
-    index['str'] = strIndex;
-    index['char'] = charIndex + s[0].length;
+    index["str"] = strIndex;
+    index["char"] = charIndex + s[0].length;
 
     return bias;
   }
@@ -163,11 +158,7 @@ class ScrollChunk {
 
   render() {
     this.gl.pushMatrix();
-    glMatrix.mat4.translate(this.gl.mvMatrix, this.gl.mvMatrix, [
-      this.pos,
-      0,
-      0.0,
-    ]);
+    glMatrix.mat4.translate(this.gl.mvMatrix, this.gl.mvMatrix, [this.pos, 0, 0.0]);
 
     if (this.quad && this.textureHandle) {
       webgl.drawQuad(this.gl, this.quad, this.textureHandle);
@@ -189,21 +180,21 @@ export class Scroll {
 
   constructor(
     public el: HTMLElement,
-    public text: Text[]
+    public text: Text[],
   ) {
     const { gl, canvas, textureWidth, textureHeight } = this.initGL(el);
 
     this.canvas = canvas;
     this.gl = gl;
 
-    const textureCanvas = document.createElement('canvas');
+    const textureCanvas = document.createElement("canvas");
     textureCanvas.width = textureWidth;
     textureCanvas.height = textureHeight;
 
-    const textureCanvasCtx = textureCanvas.getContext('2d');
+    const textureCanvasCtx = textureCanvas.getContext("2d");
 
     if (!textureCanvasCtx) {
-      throw new Error('Cannot get 2D context');
+      throw new Error("Cannot get 2D context");
     }
 
     this.numTextures = Math.ceil(canvas.width / textureWidth) + 2;
@@ -215,7 +206,7 @@ export class Scroll {
         textureCanvas,
         textureCanvasCtx,
         textureWidth,
-        textureHeight
+        textureHeight,
       );
     }
 
@@ -237,7 +228,7 @@ export class Scroll {
 
     const gl = webgl.init(canvas);
     if (!gl) {
-      throw new Error('Error initializing webgl');
+      throw new Error("Error initializing webgl");
     }
     webgl.initShaders(gl);
     gl.clearColor(0.0, 0.0, 0.0, 0.0);
@@ -253,7 +244,7 @@ export class Scroll {
         if (playing) {
           requestAnimationFrame(performScrolling);
           if (this.updateScroll(-speed)) {
-            subscriber.next('played');
+            subscriber.next("played");
             // subscriber.complete();
           }
         }
@@ -272,15 +263,7 @@ export class Scroll {
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
     glMatrix.mat4.identity(gl.pMatrix);
-    glMatrix.mat4.ortho(
-      gl.pMatrix,
-      0,
-      gl.drawingBufferWidth,
-      0,
-      gl.drawingBufferHeight,
-      -1,
-      1
-    );
+    glMatrix.mat4.ortho(gl.pMatrix, 0, gl.drawingBufferWidth, 0, gl.drawingBufferHeight, -1, 1);
 
     let end = false;
     let i = this.headChunk;
@@ -303,25 +286,20 @@ export class Scroll {
           this.headChunk = 0;
           this.tailChunk = 1;
           this.index = { str: 0, char: 0 };
-          this.bias = this.chunks[0].setText(
-            this.text,
-            0,
-            this.index,
-            this.canvas.width
-          );
+          this.bias = this.chunks[0].setText(this.text, 0, this.index, this.canvas.width);
           end = true;
           break;
         }
       } else if (
         x1 <= this.canvas.width &&
         next == this.tailChunk &&
-        this.index['str'] < this.text.length
+        this.index["str"] < this.text.length
       ) {
         this.bias = this.chunks[this.tailChunk].setText(
           this.text,
           this.bias,
           this.index,
-          this.canvas.width
+          this.canvas.width,
         );
         this.tailChunk = (this.tailChunk + 1) % this.numTextures;
       }

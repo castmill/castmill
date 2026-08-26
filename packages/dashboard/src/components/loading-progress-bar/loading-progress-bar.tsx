@@ -1,19 +1,11 @@
-import {
-  Component,
-  Show,
-  createSignal,
-  createEffect,
-  onCleanup,
-} from 'solid-js';
-import styles from './loading-progress-bar.module.scss';
+import { Component, Show, createSignal, createEffect, onCleanup } from "solid-js";
+import styles from "./loading-progress-bar.module.scss";
 
 interface LoadingProgressBarProps {
   loading: boolean;
 }
 
-export const LoadingProgressBar: Component<LoadingProgressBarProps> = (
-  props
-) => {
+export const LoadingProgressBar: Component<LoadingProgressBarProps> = (props) => {
   const [progress, setProgress] = createSignal(0);
   const [visible, setVisible] = createSignal(false);
   let intervalId: NodeJS.Timeout | undefined;

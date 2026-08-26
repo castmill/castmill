@@ -1,12 +1,12 @@
-import { vi, describe, it, beforeEach, expect } from 'vitest';
-import { WebosMachine } from './webos-machine';
+import { vi, describe, it, beforeEach, expect } from "vitest";
+import { WebosMachine } from "./webos-machine";
 
-vi.stubEnv('VITE_UPDATE_URL', 'https://updates.castmill.io/webos/player.ipk');
+vi.stubEnv("VITE_UPDATE_URL", "https://updates.castmill.io/webos/player.ipk");
 
-vi.mock('../native', () => ({
+vi.mock("../native", () => ({
   storage: {
     writeFile: vi.fn(() => Promise.resolve()),
-    readFile: vi.fn(() => Promise.resolve({ data: 'mocked_credentials' })),
+    readFile: vi.fn(() => Promise.resolve({ data: "mocked_credentials" })),
     removeFile: vi.fn(() => Promise.resolve()),
     upgradeApplication: vi.fn(() => Promise.resolve()),
     downloadFirmware: vi.fn(() => Promise.resolve()),
@@ -15,16 +15,16 @@ vi.mock('../native', () => ({
   deviceInfo: {
     getNetworkMacInfo: vi.fn(() =>
       Promise.resolve({
-        wiredInfo: { macAddress: '00:11:22:33:44:55' },
+        wiredInfo: { macAddress: "00:11:22:33:44:55" },
         wifiInfo: { macAddress: undefined },
-      })
+      }),
     ),
     getPlatformInfo: vi.fn(() =>
       Promise.resolve({
-        manufacturer: 'LG',
-        modelName: '55XS2E-BH',
-        firmwareVersion: '4.2.1',
-      })
+        manufacturer: "LG",
+        modelName: "55XS2E-BH",
+        firmwareVersion: "4.2.1",
+      }),
     ),
   },
   configuration: {
@@ -36,18 +36,18 @@ vi.mock('../native', () => ({
   },
 }));
 
-vi.mock('./utils', () => ({
-  simpleHash: vi.fn((text: string) => 'hashed_' + text),
+vi.mock("./utils", () => ({
+  simpleHash: vi.fn((text: string) => "hashed_" + text),
 }));
 
-vi.mock('../../package.json', () => ({
-  version: '1.0.0',
+vi.mock("../../package.json", () => ({
+  version: "1.0.0",
 }));
 
-import { deviceInfo, storage, configuration, power } from '../native';
-import { simpleHash } from './utils';
+import { deviceInfo, storage, configuration, power } from "../native";
+import { simpleHash } from "./utils";
 
-describe('WebosMachine', () => {
+describe("WebosMachine", () => {
   let machine: WebosMachine;
 
   beforeEach(() => {
@@ -58,118 +58,116 @@ describe('WebosMachine', () => {
     vi.resetAllMocks();
   });
 
-  it('should return machine GUID', async () => {
+  it("should return machine GUID", async () => {
     const guid = await machine.getMachineGUID();
-    expect(guid).toBe('hashed_00:11:22:33:44:55');
+    expect(guid).toBe("hashed_00:11:22:33:44:55");
     expect(deviceInfo.getNetworkMacInfo).toHaveBeenCalledOnce();
-    expect(simpleHash).toHaveBeenCalledWith('00:11:22:33:44:55');
+    expect(simpleHash).toHaveBeenCalledWith("00:11:22:33:44:55");
   });
 
-  it('should store credentials', async () => {
-    const credentials = 'test_credentials';
+  it("should store credentials", async () => {
+    const credentials = "test_credentials";
     await machine.storeCredentials(credentials);
     expect(storage.writeFile).toHaveBeenCalledWith({
-      path: 'file://internal/credentials.txt',
+      path: "file://internal/credentials.txt",
       data: credentials,
     });
   });
 
-  it('should retrieve stored credentials', async () => {
+  it("should retrieve stored credentials", async () => {
     vi.mocked(storage.readFile).mockResolvedValueOnce({
-      data: 'mocked_credentials',
+      data: "mocked_credentials",
     });
     const credentials = await machine.getCredentials();
-    expect(credentials).toBe('mocked_credentials');
+    expect(credentials).toBe("mocked_credentials");
     expect(storage.readFile).toHaveBeenCalledWith({
-      path: 'file://internal/credentials.txt',
+      path: "file://internal/credentials.txt",
     });
   });
 
-  it('should remove stored credentials', async () => {
+  it("should remove stored credentials", async () => {
     await machine.removeCredentials();
     expect(storage.removeFile).toHaveBeenCalledWith({
-      file: 'credentials.txt',
+      file: "credentials.txt",
     });
   });
 
-  it('should return device info', async () => {
+  it("should return device info", async () => {
     vi.mocked(deviceInfo.getPlatformInfo).mockResolvedValueOnce({
-      manufacturer: 'LG',
-      modelName: '55XS2E-BH',
-      firmwareVersion: '4.2.1',
+      manufacturer: "LG",
+      modelName: "55XS2E-BH",
+      firmwareVersion: "4.2.1",
     });
     const deviceInfoResult = await machine.getDeviceInfo();
     expect(deviceInfoResult).toEqual({
-      appType: 'LG WebOS',
-      appVersion: '1.0.0',
-      os: 'LG WebOS',
-      hardware: '55XS2E-BH',
-      environmentVersion: '4.2.1',
+      appType: "LG WebOS",
+      appVersion: "1.0.0",
+      os: "LG WebOS",
+      hardware: "55XS2E-BH",
+      environmentVersion: "4.2.1",
       chromiumVersion: undefined,
       userAgent: navigator.userAgent,
     });
     expect(deviceInfo.getPlatformInfo).toHaveBeenCalledOnce();
   });
 
-  it('should restart the application', async () => {
+  it("should restart the application", async () => {
     await machine.restart();
     expect(configuration.restartApplication).toHaveBeenCalledOnce();
   });
 
-  it('should reboot the device', async () => {
+  it("should reboot the device", async () => {
     await machine.reboot();
     expect(power.executePowerCommand).toHaveBeenCalledWith({
-      powerCommand: 'reboot',
+      powerCommand: "reboot",
     });
   });
 
-  it('should shutdown the device', async () => {
+  it("should shutdown the device", async () => {
     await machine.shutdown();
     expect(power.executePowerCommand).toHaveBeenCalledWith({
-      powerCommand: 'powerOff',
+      powerCommand: "powerOff",
     });
   });
 
-  it('should update the application and reboot', async () => {
-    const rebootSpy = vi.spyOn(machine, 'reboot');
-    vi.stubEnv('VITE_KEEP_SERVER_SETTINGS', 'false');
+  it("should update the application and reboot", async () => {
+    const rebootSpy = vi.spyOn(machine, "reboot");
+    vi.stubEnv("VITE_KEEP_SERVER_SETTINGS", "false");
     await machine.update();
     expect(configuration.setServerProperty).toHaveBeenCalledWith({
-      serverIp: '0.0.0.0',
+      serverIp: "0.0.0.0",
       serverPort: 0,
       secureConnection: true,
-      appLaunchMode: 'local',
-      appType: 'ipk',
+      appLaunchMode: "local",
+      appType: "ipk",
       fqdnMode: true,
-      fqdnAddr: 'https://updates.castmill.io/webos/player.ipk',
+      fqdnAddr: "https://updates.castmill.io/webos/player.ipk",
     });
     expect(storage.upgradeApplication).toHaveBeenCalledOnce();
     expect(rebootSpy).toHaveBeenCalledOnce();
   });
 
-  it('should not overwrite server settings if VITE_KEEP_SERVER_SETTINGS is true', async () => {
-    const rebootSpy = vi.spyOn(machine, 'reboot');
-    vi.stubEnv('VITE_KEEP_SERVER_SETTINGS', 'true');
+  it("should not overwrite server settings if VITE_KEEP_SERVER_SETTINGS is true", async () => {
+    const rebootSpy = vi.spyOn(machine, "reboot");
+    vi.stubEnv("VITE_KEEP_SERVER_SETTINGS", "true");
     await machine.update();
     expect(configuration.setServerProperty).not.toHaveBeenCalled();
     expect(storage.upgradeApplication).toHaveBeenCalledOnce();
     expect(rebootSpy).toHaveBeenCalledOnce();
   });
 
-  it('should overwrite server settings if VITE_KEEP_SERVER_SETTINGS is unset', async () => {
-    const rebootSpy = vi.spyOn(machine, 'reboot');
-    vi.stubEnv('VITE_KEEP_SERVER_SETTINGS', undefined);
+  it("should overwrite server settings if VITE_KEEP_SERVER_SETTINGS is unset", async () => {
+    const rebootSpy = vi.spyOn(machine, "reboot");
+    vi.stubEnv("VITE_KEEP_SERVER_SETTINGS", undefined);
     await machine.update();
     expect(configuration.setServerProperty).toHaveBeenCalledOnce();
     expect(storage.upgradeApplication).toHaveBeenCalledOnce();
     expect(rebootSpy).toHaveBeenCalledOnce();
   });
 
-  it('should update the firmware', async () => {
-    const url = 'https://update.castmill.io/webos/firmware/LG-55XS2E-BH.epk';
-    const urlSpy = vi
-      .spyOn(machine, 'getFirmwareDownloadUrl')
-      .mockResolvedValueOnce(url);
+  it("should update the firmware", async () => {
+    const url = "https://update.castmill.io/webos/firmware/LG-55XS2E-BH.epk";
+    const urlSpy = vi.spyOn(machine, "getFirmwareDownloadUrl").mockResolvedValueOnce(url);
 
     await machine.updateFirmware();
     expect(urlSpy).toHaveBeenCalledOnce();
@@ -177,28 +175,26 @@ describe('WebosMachine', () => {
     expect(storage.upgradeFirmware).toHaveBeenCalledOnce();
   });
 
-  it('should get the firmware download URL', async () => {
+  it("should get the firmware download URL", async () => {
     vi.mocked(deviceInfo.getPlatformInfo).mockResolvedValueOnce({
-      manufacturer: 'LG',
-      modelName: '55XS2E-BH',
-      firmwareVersion: '4.2.1',
+      manufacturer: "LG",
+      modelName: "55XS2E-BH",
+      firmwareVersion: "4.2.1",
     });
-    const url = await machine['getFirmwareDownloadUrl']();
-    expect(url).toBe(
-      'https://update.castmill.io/webos/firmware/LG-55XS2E-BH.epk'
-    );
+    const url = await machine["getFirmwareDownloadUrl"]();
+    expect(url).toBe("https://update.castmill.io/webos/firmware/LG-55XS2E-BH.epk");
   });
 
-  it('should return undefined if geolocation fails', async () => {
+  it("should return undefined if geolocation fails", async () => {
     const geolocationError: GeolocationPositionError = {
       code: 1, // Example: 1 corresponds to PERMISSION_DENIED
       PERMISSION_DENIED: 1,
       POSITION_UNAVAILABLE: 2,
       TIMEOUT: 3,
-      message: 'User denied Geolocation',
+      message: "User denied Geolocation",
     };
 
-    vi.stubGlobal('navigator', {
+    vi.stubGlobal("navigator", {
       geolocation: {
         getCurrentPosition: vi.fn((success, error) => error(geolocationError)),
       },
@@ -208,7 +204,7 @@ describe('WebosMachine', () => {
     expect(location).toBeUndefined();
   });
 
-  it('should return timezone', async () => {
+  it("should return timezone", async () => {
     const timezone = await machine.getTimezone();
     expect(timezone).toBe(Intl.DateTimeFormat().resolvedOptions().timeZone);
   });

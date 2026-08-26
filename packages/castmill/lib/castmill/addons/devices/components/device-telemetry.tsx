@@ -1,4 +1,4 @@
-import { Component, createSignal, onMount, Show, For } from 'solid-js';
+import { Component, createSignal, onMount, Show, For } from "solid-js";
 import {
   BsDeviceHdd,
   BsMemory,
@@ -10,11 +10,11 @@ import {
   BsBatteryFull,
   BsClock,
   BsLightningFill,
-} from 'solid-icons/bs';
-import { LoadingOverlay, formatBytes } from '@castmill/ui-common';
-import { Device } from '../interfaces/device.interface';
-import { DevicesService } from '../services/devices.service';
-import styles from './device-telemetry.module.scss';
+} from "solid-icons/bs";
+import { LoadingOverlay, formatBytes } from "@castmill/ui-common";
+import { Device } from "../interfaces/device.interface";
+import { DevicesService } from "../services/devices.service";
+import styles from "./device-telemetry.module.scss";
 
 interface TelemetryData {
   storage?: { totalBytes: number; usedBytes: number };
@@ -38,36 +38,36 @@ interface TelemetryData {
  * Green when plenty of free space, yellow when getting low, red when critical.
  */
 const getUsageColor = (usedPercent: number): string => {
-  if (usedPercent >= 90) return '#e74c3c'; // red — critical
-  if (usedPercent >= 70) return '#f0ad4e'; // yellow — warning
-  return '#4caf50'; // green — healthy
+  if (usedPercent >= 90) return "#e74c3c"; // red — critical
+  if (usedPercent >= 70) return "#f0ad4e"; // yellow — warning
+  return "#4caf50"; // green — healthy
 };
 
 /**
  * Returns a color for CPU load (higher = worse).
  */
 const getCpuColor = (percent: number): string => {
-  if (percent >= 80) return '#e74c3c';
-  if (percent >= 50) return '#f0ad4e';
-  return '#4caf50';
+  if (percent >= 80) return "#e74c3c";
+  if (percent >= 50) return "#f0ad4e";
+  return "#4caf50";
 };
 
 /**
  * Returns a color for temperature readings.
  */
 const getTempColor = (celsius: number): string => {
-  if (celsius >= 80) return '#e74c3c';
-  if (celsius >= 60) return '#f0ad4e';
-  return '#4caf50';
+  if (celsius >= 80) return "#e74c3c";
+  if (celsius >= 60) return "#f0ad4e";
+  return "#4caf50";
 };
 
 /**
  * Returns a color for WiFi signal strength.
  */
 const getSignalColor = (percent: number): string => {
-  if (percent < 40) return '#e74c3c';
-  if (percent < 70) return '#f0ad4e';
-  return '#4caf50';
+  if (percent < 40) return "#e74c3c";
+  if (percent < 70) return "#f0ad4e";
+  return "#4caf50";
 };
 
 /**
@@ -75,17 +75,17 @@ const getSignalColor = (percent: number): string => {
  */
 const formatUptime = (
   seconds: number,
-  t: (key: string, params?: Record<string, any>) => string
+  t: (key: string, params?: Record<string, any>) => string,
 ): string => {
   const days = Math.floor(seconds / 86400);
   const hours = Math.floor((seconds % 86400) / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
 
   const parts: string[] = [];
-  if (days > 0) parts.push(`${days}${t('devices.telemetry.daysShort')}`);
-  if (hours > 0) parts.push(`${hours}${t('devices.telemetry.hoursShort')}`);
-  parts.push(`${minutes}${t('devices.telemetry.minutesShort')}`);
-  return parts.join(' ');
+  if (days > 0) parts.push(`${days}${t("devices.telemetry.daysShort")}`);
+  if (hours > 0) parts.push(`${hours}${t("devices.telemetry.hoursShort")}`);
+  parts.push(`${minutes}${t("devices.telemetry.minutesShort")}`);
+  return parts.join(" ");
 };
 
 /**
@@ -118,7 +118,7 @@ const SignalBars: Component<{ percent: number }> = (props) => {
       <For each={Array.from({ length: bars }, (_, i) => i)}>
         {(i) => (
           <div
-            class={`${styles.signalBar} ${i < activeBars ? styles.signalBarActive : ''}`}
+            class={`${styles.signalBar} ${i < activeBars ? styles.signalBarActive : ""}`}
             style={{
               height: `${((i + 1) / bars) * 100}%`,
               background: i < activeBars ? color : undefined,
@@ -145,10 +145,7 @@ export const DeviceTelemetry: Component<{
     setLoading(true);
     setError(null);
     try {
-      const data = await DevicesService.getDeviceTelemetry(
-        props.baseUrl,
-        props.device.id
-      );
+      const data = await DevicesService.getDeviceTelemetry(props.baseUrl, props.device.id);
       setTelemetry(data);
     } catch (err) {
       setError(String(err));
@@ -185,7 +182,7 @@ export const DeviceTelemetry: Component<{
         when={props.device.online}
         fallback={
           <div class={styles.offlineWarning}>
-            <p>{t('devices.telemetry.offlineWarning')}</p>
+            <p>{t("devices.telemetry.offlineWarning")}</p>
           </div>
         }
       >
@@ -197,7 +194,7 @@ export const DeviceTelemetry: Component<{
           when={hasData()}
           fallback={
             <Show when={!loading() && !error()}>
-              <div class={styles.noData}>{t('devices.telemetry.noData')}</div>
+              <div class={styles.noData}>{t("devices.telemetry.noData")}</div>
             </Show>
           }
         >
@@ -207,9 +204,7 @@ export const DeviceTelemetry: Component<{
               {(storage) => {
                 const usedPercent = () =>
                   storage().totalBytes > 0
-                    ? Math.round(
-                        (storage().usedBytes / storage().totalBytes) * 100
-                      )
+                    ? Math.round((storage().usedBytes / storage().totalBytes) * 100)
                     : 0;
                 return (
                   <div class={styles.card}>
@@ -217,21 +212,14 @@ export const DeviceTelemetry: Component<{
                       <span class={styles.cardIcon}>
                         <BsDeviceHdd />
                       </span>
-                      {t('devices.telemetry.storage')}
+                      {t("devices.telemetry.storage")}
                     </div>
-                    <div
-                      class={styles.cardValue}
-                      style={{ color: getUsageColor(usedPercent()) }}
-                    >
+                    <div class={styles.cardValue} style={{ color: getUsageColor(usedPercent()) }}>
                       {usedPercent()}%
                     </div>
-                    <ProgressBar
-                      percent={usedPercent()}
-                      color={getUsageColor(usedPercent())}
-                    />
+                    <ProgressBar percent={usedPercent()} color={getUsageColor(usedPercent())} />
                     <div class={styles.cardDetail}>
-                      {formatBytes(storage().usedBytes)} /{' '}
-                      {formatBytes(storage().totalBytes)}
+                      {formatBytes(storage().usedBytes)} / {formatBytes(storage().totalBytes)}
                     </div>
                   </div>
                 );
@@ -243,9 +231,7 @@ export const DeviceTelemetry: Component<{
               {(memory) => {
                 const usedPercent = () =>
                   memory().totalBytes > 0
-                    ? Math.round(
-                        (memory().usedBytes / memory().totalBytes) * 100
-                      )
+                    ? Math.round((memory().usedBytes / memory().totalBytes) * 100)
                     : 0;
                 const showPercent = () => memory().totalBytes > 0;
                 return (
@@ -254,29 +240,20 @@ export const DeviceTelemetry: Component<{
                       <span class={styles.cardIcon}>
                         <BsMemory />
                       </span>
-                      {t('devices.telemetry.memory')}
+                      {t("devices.telemetry.memory")}
                     </div>
                     <Show
                       when={showPercent()}
                       fallback={
-                        <div class={styles.cardValue}>
-                          {formatBytes(memory().usedBytes)}
-                        </div>
+                        <div class={styles.cardValue}>{formatBytes(memory().usedBytes)}</div>
                       }
                     >
-                      <div
-                        class={styles.cardValue}
-                        style={{ color: getUsageColor(usedPercent()) }}
-                      >
+                      <div class={styles.cardValue} style={{ color: getUsageColor(usedPercent()) }}>
                         {usedPercent()}%
                       </div>
-                      <ProgressBar
-                        percent={usedPercent()}
-                        color={getUsageColor(usedPercent())}
-                      />
+                      <ProgressBar percent={usedPercent()} color={getUsageColor(usedPercent())} />
                       <div class={styles.cardDetail}>
-                        {formatBytes(memory().usedBytes)} /{' '}
-                        {formatBytes(memory().totalBytes)}
+                        {formatBytes(memory().usedBytes)} / {formatBytes(memory().totalBytes)}
                       </div>
                     </Show>
                   </div>
@@ -294,18 +271,12 @@ export const DeviceTelemetry: Component<{
                       <span class={styles.cardIcon}>
                         <BsCpu />
                       </span>
-                      {t('devices.telemetry.cpu')}
+                      {t("devices.telemetry.cpu")}
                     </div>
-                    <div
-                      class={styles.cardValue}
-                      style={{ color: getCpuColor(percent()) }}
-                    >
+                    <div class={styles.cardValue} style={{ color: getCpuColor(percent()) }}>
                       {percent()}%
                     </div>
-                    <ProgressBar
-                      percent={percent()}
-                      color={getCpuColor(percent())}
-                    />
+                    <ProgressBar percent={percent()} color={getCpuColor(percent())} />
                   </div>
                 );
               }}
@@ -319,26 +290,20 @@ export const DeviceTelemetry: Component<{
                     <span class={styles.cardIcon}>
                       <BsBarChartFill />
                     </span>
-                    {t('devices.telemetry.cpuLoad')}
+                    {t("devices.telemetry.cpuLoad")}
                   </div>
                   <div class={styles.loadAvgContainer}>
                     <div class={styles.loadAvgPill}>
                       <span class={styles.loadAvgLabel}>1m</span>
-                      <span class={styles.loadAvgValue}>
-                        {loadAvg().one.toFixed(2)}
-                      </span>
+                      <span class={styles.loadAvgValue}>{loadAvg().one.toFixed(2)}</span>
                     </div>
                     <div class={styles.loadAvgPill}>
                       <span class={styles.loadAvgLabel}>5m</span>
-                      <span class={styles.loadAvgValue}>
-                        {loadAvg().five.toFixed(2)}
-                      </span>
+                      <span class={styles.loadAvgValue}>{loadAvg().five.toFixed(2)}</span>
                     </div>
                     <div class={styles.loadAvgPill}>
                       <span class={styles.loadAvgLabel}>15m</span>
-                      <span class={styles.loadAvgValue}>
-                        {loadAvg().fifteen.toFixed(2)}
-                      </span>
+                      <span class={styles.loadAvgValue}>{loadAvg().fifteen.toFixed(2)}</span>
                     </div>
                   </div>
                 </div>
@@ -353,28 +318,22 @@ export const DeviceTelemetry: Component<{
                     <span class={styles.cardIcon}>
                       <BsGlobe />
                     </span>
-                    {t('devices.telemetry.network')}
+                    {t("devices.telemetry.network")}
                   </div>
-                  <Show
-                    when={network().wifiSignalStrengthPercent !== undefined}
-                  >
+                  <Show when={network().wifiSignalStrengthPercent !== undefined}>
                     <div
                       style={{
-                        display: 'flex',
-                        'align-items': 'center',
-                        gap: '0.5em',
+                        display: "flex",
+                        "align-items": "center",
+                        gap: "0.5em",
                       }}
                     >
-                      <SignalBars
-                        percent={network().wifiSignalStrengthPercent!}
-                      />
+                      <SignalBars percent={network().wifiSignalStrengthPercent!} />
                       <span
                         class={styles.cardValue}
                         style={{
-                          'font-size': '1.1em',
-                          color: getSignalColor(
-                            network().wifiSignalStrengthPercent!
-                          ),
+                          "font-size": "1.1em",
+                          color: getSignalColor(network().wifiSignalStrengthPercent!),
                         }}
                       >
                         {network().wifiSignalStrengthPercent}%
@@ -385,27 +344,21 @@ export const DeviceTelemetry: Component<{
                     <Show when={network().type}>
                       <div class={styles.networkRow}>
                         <span class={styles.networkLabel}>
-                          {t('devices.telemetry.connectionType')}
+                          {t("devices.telemetry.connectionType")}
                         </span>
-                        <span class={styles.networkValue}>
-                          {network().type}
-                        </span>
+                        <span class={styles.networkValue}>{network().type}</span>
                       </div>
                     </Show>
                     <Show when={network().ssid}>
                       <div class={styles.networkRow}>
                         <span class={styles.networkLabel}>SSID</span>
-                        <span class={styles.networkValue}>
-                          {network().ssid}
-                        </span>
+                        <span class={styles.networkValue}>{network().ssid}</span>
                       </div>
                     </Show>
                     <Show when={network().ipAddress}>
                       <div class={styles.networkRow}>
                         <span class={styles.networkLabel}>IP</span>
-                        <span class={styles.networkValue}>
-                          {network().ipAddress}
-                        </span>
+                        <span class={styles.networkValue}>{network().ipAddress}</span>
                       </div>
                     </Show>
                   </div>
@@ -414,18 +367,13 @@ export const DeviceTelemetry: Component<{
             </Show>
 
             {/* Temperature Card */}
-            <Show
-              when={
-                telemetry()?.temperatures &&
-                telemetry()!.temperatures!.length > 0
-              }
-            >
+            <Show when={telemetry()?.temperatures && telemetry()!.temperatures!.length > 0}>
               <div class={styles.card}>
                 <div class={styles.cardHeader}>
                   <span class={styles.cardIcon}>
                     <BsThermometerHalf />
                   </span>
-                  {t('devices.telemetry.temperature')}
+                  {t("devices.telemetry.temperature")}
                 </div>
                 <div class={styles.tempList}>
                   <For each={telemetry()!.temperatures!}>
@@ -446,17 +394,13 @@ export const DeviceTelemetry: Component<{
             </Show>
 
             {/* Fan Speed Card */}
-            <Show
-              when={
-                telemetry()?.fanSpeeds && telemetry()!.fanSpeeds!.length > 0
-              }
-            >
+            <Show when={telemetry()?.fanSpeeds && telemetry()!.fanSpeeds!.length > 0}>
               <div class={styles.card}>
                 <div class={styles.cardHeader}>
                   <span class={styles.cardIcon}>
                     <BsFan />
                   </span>
-                  {t('devices.telemetry.fanSpeed')}
+                  {t("devices.telemetry.fanSpeed")}
                 </div>
                 <div class={styles.fanList}>
                   <For each={telemetry()!.fanSpeeds!}>
@@ -481,7 +425,7 @@ export const DeviceTelemetry: Component<{
                       <span class={styles.cardIcon}>
                         <BsBatteryFull />
                       </span>
-                      {t('devices.telemetry.battery')}
+                      {t("devices.telemetry.battery")}
                     </div>
                     <div class={styles.batteryContainer}>
                       <span class={styles.cardValue} style={{ color: color() }}>
@@ -489,14 +433,11 @@ export const DeviceTelemetry: Component<{
                       </span>
                       <Show when={battery().isCharging}>
                         <span class={styles.chargingIcon}>
-                          <BsLightningFill /> {t('devices.telemetry.charging')}
+                          <BsLightningFill /> {t("devices.telemetry.charging")}
                         </span>
                       </Show>
                     </div>
-                    <ProgressBar
-                      percent={battery().levelPercent}
-                      color={color()}
-                    />
+                    <ProgressBar percent={battery().levelPercent} color={color()} />
                   </div>
                 );
               }}
@@ -509,9 +450,9 @@ export const DeviceTelemetry: Component<{
                   <span class={styles.cardIcon}>
                     <BsClock />
                   </span>
-                  {t('devices.telemetry.uptime')}
+                  {t("devices.telemetry.uptime")}
                 </div>
-                <div class={styles.cardValue} style={{ 'font-size': '1.1em' }}>
+                <div class={styles.cardValue} style={{ "font-size": "1.1em" }}>
                   {formatUptime(telemetry()!.uptimeSeconds!, t)}
                 </div>
               </div>

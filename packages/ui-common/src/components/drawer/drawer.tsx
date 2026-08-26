@@ -9,15 +9,15 @@ import {
   mergeProps,
   onCleanup,
   onMount,
-} from 'solid-js';
-import { Portal } from 'solid-js/web';
-import { VsClose } from 'solid-icons/vs';
-import { IconButton } from '../icon-button/icon-button';
+} from "solid-js";
+import { Portal } from "solid-js/web";
+import { VsClose } from "solid-icons/vs";
+import { IconButton } from "../icon-button/icon-button";
 
-import styles from './drawer.module.scss';
+import styles from "./drawer.module.scss";
 
-export type DrawerSize = 'sm' | 'md' | 'lg' | 'xl' | 'full';
-export type DrawerPlacement = 'left' | 'right';
+export type DrawerSize = "sm" | "md" | "lg" | "xl" | "full";
+export type DrawerPlacement = "left" | "right";
 
 export interface DrawerProps {
   onClose: () => void;
@@ -29,7 +29,7 @@ export interface DrawerProps {
   placement?: DrawerPlacement;
   closeOnEscape?: boolean;
   closeOnOverlayClick?: boolean;
-  showBackdrop?: boolean | 'auto';
+  showBackdrop?: boolean | "auto";
   autoBackdropBreakpoint?: number;
   closeOnOutsideClick?: boolean;
   outsideClickIgnoreSelector?: string;
@@ -53,28 +53,27 @@ function removeDrawer(drawerId: string) {
 export const Drawer: Component<DrawerProps> = (_props) => {
   const props = mergeProps(
     {
-      size: 'xl' as DrawerSize,
-      placement: 'right' as DrawerPlacement,
-      closeButtonTitle: 'Close',
+      size: "xl" as DrawerSize,
+      placement: "right" as DrawerPlacement,
+      closeButtonTitle: "Close",
       closeOnEscape: true,
       closeOnOverlayClick: true,
       showBackdrop: false,
       autoBackdropBreakpoint: 1280,
       closeOnOutsideClick: false,
-      outsideClickIgnoreSelector: '',
-      contentClass: '',
+      outsideClickIgnoreSelector: "",
+      contentClass: "",
     },
-    _props
+    _props,
   );
 
   const drawerId = `drawer-${++drawerIdCounter}`;
   const [isVisible, setIsVisible] = createSignal(false);
   const [isActive, setIsActive] = createSignal(false);
   const [hasBackdrop, setHasBackdrop] = createSignal(
-    props.showBackdrop === 'auto'
-      ? typeof window !== 'undefined' &&
-          window.innerWidth < props.autoBackdropBreakpoint
-      : !!props.showBackdrop
+    props.showBackdrop === "auto"
+      ? typeof window !== "undefined" && window.innerWidth < props.autoBackdropBreakpoint
+      : !!props.showBackdrop,
   );
 
   let panelRef: HTMLDivElement | undefined;
@@ -86,7 +85,7 @@ export const Drawer: Component<DrawerProps> = (_props) => {
   let hasRestoredFocus = false;
 
   const updateBackdropMode = () => {
-    if (props.showBackdrop === 'auto') {
+    if (props.showBackdrop === "auto") {
       setHasBackdrop(window.innerWidth < props.autoBackdropBreakpoint);
       return;
     }
@@ -100,9 +99,9 @@ export const Drawer: Component<DrawerProps> = (_props) => {
     }
 
     hasDetachedGlobalListeners = true;
-    window.removeEventListener('resize', updateBackdropMode);
-    document.removeEventListener('keydown', handleKeyDown);
-    document.removeEventListener('click', closeOnOutsideClick, true);
+    window.removeEventListener("resize", updateBackdropMode);
+    document.removeEventListener("keydown", handleKeyDown);
+    document.removeEventListener("click", closeOnOutsideClick, true);
     removeDrawer(drawerId);
   };
 
@@ -139,7 +138,7 @@ export const Drawer: Component<DrawerProps> = (_props) => {
       return;
     }
 
-    if (event.key === 'Escape' && isTopDrawer(drawerId)) {
+    if (event.key === "Escape" && isTopDrawer(drawerId)) {
       closeDrawer();
     }
   };
@@ -169,7 +168,7 @@ export const Drawer: Component<DrawerProps> = (_props) => {
     }
 
     // Don't close if clicking inside a modal/dialog that is layered on top
-    if (target.closest('[data-modal-overlay]')) {
+    if (target.closest("[data-modal-overlay]")) {
       return;
     }
 
@@ -179,9 +178,7 @@ export const Drawer: Component<DrawerProps> = (_props) => {
         event
           .composedPath()
           .some(
-            (node) =>
-              node instanceof Element &&
-              node.matches(props.outsideClickIgnoreSelector)
+            (node) => node instanceof Element && node.matches(props.outsideClickIgnoreSelector),
           ))
     ) {
       return;
@@ -201,8 +198,8 @@ export const Drawer: Component<DrawerProps> = (_props) => {
 
     updateBackdropMode();
 
-    window.addEventListener('resize', updateBackdropMode);
-    document.addEventListener('keydown', handleKeyDown);
+    window.addEventListener("resize", updateBackdropMode);
+    document.addEventListener("keydown", handleKeyDown);
     drawerStack.push(drawerId);
   });
 
@@ -215,10 +212,10 @@ export const Drawer: Component<DrawerProps> = (_props) => {
       return;
     }
 
-    document.addEventListener('click', closeOnOutsideClick, true);
+    document.addEventListener("click", closeOnOutsideClick, true);
 
     onCleanup(() => {
-      document.removeEventListener('click', closeOnOutsideClick, true);
+      document.removeEventListener("click", closeOnOutsideClick, true);
     });
   });
 
@@ -232,7 +229,7 @@ export const Drawer: Component<DrawerProps> = (_props) => {
     }
 
     const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
+    document.body.style.overflow = "hidden";
 
     onCleanup(() => {
       document.body.style.overflow = originalOverflow;
@@ -258,15 +255,15 @@ export const Drawer: Component<DrawerProps> = (_props) => {
     const classes = [
       styles.drawerPanel,
       styles[`size${props.size.charAt(0).toUpperCase()}${props.size.slice(1)}`],
-      props.placement === 'left' ? styles.left : styles.right,
-      isActive() ? styles.active : '',
+      props.placement === "left" ? styles.left : styles.right,
+      isActive() ? styles.active : "",
     ];
 
     if (props.contentClass) {
       classes.push(props.contentClass);
     }
 
-    return classes.join(' ').trim();
+    return classes.join(" ").trim();
   };
 
   return (
@@ -274,7 +271,7 @@ export const Drawer: Component<DrawerProps> = (_props) => {
       <Show when={isVisible()}>
         <div
           data-testid="drawer-root"
-          data-has-backdrop={hasBackdrop() ? 'true' : 'false'}
+          data-has-backdrop={hasBackdrop() ? "true" : "false"}
           class={`${styles.drawerRoot} ${hasBackdrop() ? styles.withBackdrop : styles.withoutBackdrop}`}
           onClick={closeOnOverlayClick}
         >
@@ -284,9 +281,9 @@ export const Drawer: Component<DrawerProps> = (_props) => {
             aria-label={props.title}
             class={panelClass()}
             style={{
-              height: '100dvh',
-              'min-height': '100dvh',
-              'max-height': '100dvh',
+              height: "100dvh",
+              "min-height": "100dvh",
+              "max-height": "100dvh",
             }}
             ref={panelRef}
             tabIndex={-1}

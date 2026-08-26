@@ -8,7 +8,7 @@ import {
   onMount,
   Show,
   on,
-} from 'solid-js';
+} from "solid-js";
 
 import {
   Button,
@@ -38,26 +38,23 @@ import {
   TagBadge,
   TagPopover,
   useViewMode,
-} from '@castmill/ui-common';
+} from "@castmill/ui-common";
 
-import { BsCheckLg, BsEye, BsTagFill } from 'solid-icons/bs';
-import { AiOutlineDelete } from 'solid-icons/ai';
+import { BsCheckLg, BsEye, BsTagFill } from "solid-icons/bs";
+import { AiOutlineDelete } from "solid-icons/ai";
 
-import { Device } from '../interfaces/device.interface';
-import DeviceView from './device-view';
-import styles from './devices.module.scss';
-import './devices.scss';
+import { Device } from "../interfaces/device.interface";
+import DeviceView from "./device-view";
+import styles from "./devices.module.scss";
+import "./devices.scss";
 
-import RegisterDevice from './register-device';
-import { DevicesService } from '../services/devices.service';
-import { AddonComponentProps } from '../../common/interfaces/addon-store';
-import { useTeamFilter, useModalFromUrl } from '../../common/hooks';
+import RegisterDevice from "./register-device";
+import { DevicesService } from "../services/devices.service";
+import { AddonComponentProps } from "../../common/interfaces/addon-store";
+import { useTeamFilter, useModalFromUrl } from "../../common/hooks";
 
-import { QuotaIndicator } from '../../common/components/quota-indicator';
-import {
-  QuotasService,
-  ResourceQuota,
-} from '../../common/services/quotas.service';
+import { QuotaIndicator } from "../../common/components/quota-indicator";
+import { QuotasService, ResourceQuota } from "../../common/services/quotas.service";
 
 interface DeviceTableItem extends Device {
   location: string;
@@ -77,9 +74,7 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
   const canPerformAction = (resource: string, action: string): boolean => {
     if (!props.store.permissions?.matrix) return false;
     const allowedActions =
-      props.store.permissions.matrix[
-        resource as keyof typeof props.store.permissions.matrix
-      ];
+      props.store.permissions.matrix[resource as keyof typeof props.store.permissions.matrix];
     return allowedActions?.includes(action as any) ?? false;
   };
 
@@ -88,19 +83,16 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
   // ---------------------------------------------------------------------------
   const [tagGroups, setTagGroups] = createSignal<TagGroup[]>([]);
   const [allTags, setAllTags] = createSignal<Tag[]>([]);
-  const [resourceTagsMap, setResourceTagsMap] = createSignal<
-    Map<string, Tag[]>
-  >(new Map());
+  const [resourceTagsMap, setResourceTagsMap] = createSignal<Map<string, Tag[]>>(new Map());
   const [tagPopoverTarget, setTagPopoverTarget] = createSignal<{
     item: DeviceTableItem;
     anchorEl: HTMLElement;
   } | null>(null);
-  const [bulkTagAnchorEl, setBulkTagAnchorEl] =
-    createSignal<HTMLElement | null>(null);
+  const [bulkTagAnchorEl, setBulkTagAnchorEl] = createSignal<HTMLElement | null>(null);
 
   const canManageTags = () => {
     const role = props.store.permissions?.role;
-    return role === 'admin' || role === 'manager';
+    return role === "admin" || role === "manager";
   };
 
   const tagsService = new TagsService(props.store.env.baseUrl);
@@ -119,15 +111,15 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
         setAllTags(allTagsList);
       });
     } catch (error) {
-      console.error('Failed to load tag groups:', error);
+      console.error("Failed to load tag groups:", error);
     }
   };
 
   createEffect(
     on(
       () => props.store.organizations.selectedId,
-      () => loadTagGroups()
-    )
+      () => loadTagGroups(),
+    ),
   );
 
   const loadResourceTags = async (items: DeviceTableItem[]) => {
@@ -141,23 +133,19 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
         try {
           const itemTags = await tagsService.getResourceTags(
             props.store.organizations.selectedId,
-            'device',
-            item.id
+            "device",
+            item.id,
           );
           tagMap.set(item.id, itemTags);
         } catch {
           tagMap.set(item.id, []);
         }
-      })
+      }),
     );
     setResourceTagsMap(tagMap);
   };
 
-  const handleTagToggle = async (
-    item: DeviceTableItem,
-    tagId: number,
-    selected: boolean
-  ) => {
+  const handleTagToggle = async (item: DeviceTableItem, tagId: number, selected: boolean) => {
     const orgId = props.store.organizations.selectedId;
     if (!orgId) return;
 
@@ -170,7 +158,7 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
       } else {
         next.set(
           item.id,
-          current.filter((t) => t.id !== tagId)
+          current.filter((t) => t.id !== tagId),
         );
       }
       return next;
@@ -178,19 +166,15 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
 
     try {
       if (selected) {
-        await tagsService.tagResource(orgId, 'device', item.id, tagId);
+        await tagsService.tagResource(orgId, "device", item.id, tagId);
       } else {
-        await tagsService.untagResource(orgId, 'device', item.id, tagId);
+        await tagsService.untagResource(orgId, "device", item.id, tagId);
       }
     } catch (error) {
-      console.error('Failed to toggle tag:', error);
-      toast.error(t('tags.errors.tagResource', { error: String(error) }));
+      console.error("Failed to toggle tag:", error);
+      toast.error(t("tags.errors.tagResource", { error: String(error) }));
       try {
-        const freshTags = await tagsService.getResourceTags(
-          orgId,
-          'device',
-          item.id
-        );
+        const freshTags = await tagsService.getResourceTags(orgId, "device", item.id);
         setResourceTagsMap((prev) => {
           const next = new Map(prev);
           next.set(item.id, freshTags);
@@ -209,35 +193,26 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
     const resourceIds = Array.from(selectedDevices());
     try {
       if (selected) {
-        await tagsService.bulkTagResources(orgId, tagId, 'device', resourceIds);
+        await tagsService.bulkTagResources(orgId, tagId, "device", resourceIds);
       } else {
-        await tagsService.bulkUntagResources(
-          orgId,
-          tagId,
-          'device',
-          resourceIds
-        );
+        await tagsService.bulkUntagResources(orgId, tagId, "device", resourceIds);
       }
 
       const tagMap = new Map(resourceTagsMap());
       await Promise.all(
         resourceIds.map(async (id) => {
           try {
-            const freshTags = await tagsService.getResourceTags(
-              orgId,
-              'device',
-              id
-            );
+            const freshTags = await tagsService.getResourceTags(orgId, "device", id);
             tagMap.set(id, freshTags);
           } catch {
             /* ignore */
           }
-        })
+        }),
       );
       setResourceTagsMap(tagMap);
     } catch (error) {
-      console.error('Failed to bulk toggle tag:', error);
-      toast.error(t('tags.errors.tagResource', { error: String(error) }));
+      console.error("Failed to bulk toggle tag:", error);
+      toast.error(t("tags.errors.tagResource", { error: String(error) }));
     }
   };
 
@@ -248,15 +223,12 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
     if (allItemTags.length === 0) return [];
     const firstItemTagIds = new Set(allItemTags[0].map((t) => t.id));
     return [...firstItemTagIds].filter((tagId) =>
-      allItemTags.every((tags) => tags.some((t) => t.id === tagId))
+      allItemTags.every((tags) => tags.some((t) => t.id === tagId)),
     );
   };
 
   const handleCreateTag = async (name: string): Promise<Tag> => {
-    const newTag = await tagsService.createTag(
-      props.store.organizations.selectedId,
-      { name }
-    );
+    const newTag = await tagsService.createTag(props.store.organizations.selectedId, { name });
     setAllTags((prev) => [...prev, newTag]);
     return newTag;
   };
@@ -283,7 +255,7 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
   });
 
   // View mode: list (table) or tree – persisted in localStorage
-  const [viewMode, setViewMode] = useViewMode('devices');
+  const [viewMode, setViewMode] = useViewMode("devices");
   const [treeVersion, setTreeVersion] = createSignal(0);
   const bumpTree = () => setTreeVersion((v) => v + 1);
 
@@ -297,14 +269,14 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
   createEffect(on(data, (items) => loadResourceTags(items)));
 
   const [loading, setLoading] = createSignal(false);
-  const [loadingSuccess, setLoadingSuccess] = createSignal('');
+  const [loadingSuccess, setLoadingSuccess] = createSignal("");
 
-  const [pincode, setPincode] = createSignal('');
+  const [pincode, setPincode] = createSignal("");
 
   const [showDrawer, setShowDrawer] = createSignal(false);
   const [showRegisterModal, setShowRegisterModal] = createSignal(false);
 
-  const [registerError, setRegisterError] = createSignal('');
+  const [registerError, setRegisterError] = createSignal("");
 
   const [currentDevice, setCurrentDevice] = createSignal<DeviceTableItem>();
 
@@ -331,11 +303,11 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
 
       const quotaData = await quotasService.getResourceQuota(
         props.store.organizations.selectedId,
-        'devices'
+        "devices",
       );
       setQuota(quotaData);
     } catch (error) {
-      console.error('Failed to load quota:', error);
+      console.error("Failed to load quota:", error);
     } finally {
       if (loadingTimeout) {
         clearTimeout(loadingTimeout);
@@ -354,44 +326,41 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
     if (registerShortcutAction) {
       // Register create action
       registerShortcutAction(
-        'generic-create',
+        "generic-create",
         () => {
-          if (canPerformAction('devices', 'create') && !isQuotaReached()) {
+          if (canPerformAction("devices", "create") && !isQuotaReached()) {
             openRegisterModal();
           }
         },
         () =>
-          window.location.pathname.includes('/devices') &&
-          canPerformAction('devices', 'create') &&
-          !isQuotaReached()
+          window.location.pathname.includes("/devices") &&
+          canPerformAction("devices", "create") &&
+          !isQuotaReached(),
       );
 
       // Register search action
       registerShortcutAction(
-        'generic-search',
+        "generic-search",
         () => {
           if (tableViewRef) {
             tableViewRef.focusSearch();
           }
         },
-        () => window.location.pathname.includes('/devices')
+        () => window.location.pathname.includes("/devices"),
       );
 
       // Register delete action
       registerShortcutAction(
-        'generic-delete',
+        "generic-delete",
         () => {
-          if (
-            selectedDevices().size > 0 &&
-            canPerformAction('devices', 'delete')
-          ) {
+          if (selectedDevices().size > 0 && canPerformAction("devices", "delete")) {
             setShowConfirmDialogMultiple(true);
           }
         },
         () =>
-          window.location.pathname.includes('/devices') &&
+          window.location.pathname.includes("/devices") &&
           selectedDevices().size > 0 &&
-          canPerformAction('devices', 'delete')
+          canPerformAction("devices", "delete"),
       );
     }
   });
@@ -400,9 +369,9 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
     // Unregister actions when leaving this addon
     const { unregisterShortcutAction } = props.store.keyboardShortcuts || {};
     if (unregisterShortcutAction) {
-      unregisterShortcutAction('generic-create');
-      unregisterShortcutAction('generic-search');
-      unregisterShortcutAction('generic-delete');
+      unregisterShortcutAction("generic-create");
+      unregisterShortcutAction("generic-search");
+      unregisterShortcutAction("generic-delete");
     }
   });
 
@@ -418,8 +387,8 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
             tableViewRef.reloadData();
           }
         }
-      }
-    )
+      },
+    ),
   );
 
   // Close the device drawer and clear URL
@@ -455,7 +424,7 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
 
   const resourcesObserver = new ResourcesObserver<DeviceTableItem>(
     props.store.socket,
-    'device:status',
+    "device:status",
     /* onJoin */
     (resource: DeviceTableItem) => {
       return `device_updates:${resource.id}`;
@@ -463,7 +432,7 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
     /* onUpdate */
     (resource: DeviceTableItem, { online }: { online: boolean }) => {
       updateDeviceStatus(resource.id, online);
-    }
+    },
   );
 
   // We want to show this modal directly, if for example the user did arrive to the registration page
@@ -478,22 +447,19 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
    */
   const mapErrorToMessage = (error: any): string => {
     // Default error message
-    let errorMessage = t('devices.errorRegisteringDevice', {
+    let errorMessage = t("devices.errorRegisteringDevice", {
       error: String(error),
     });
 
     // Check if this is an HttpError with pincode-specific error
-    if (
-      error?.details?.field === 'pincode' &&
-      error?.details?.errors?.pincode
-    ) {
+    if (error?.details?.field === "pincode" && error?.details?.errors?.pincode) {
       const pincodeError = error.details.errors.pincode[0];
 
       // Map backend error messages to translation keys
-      if (pincodeError === 'Invalid pincode') {
-        errorMessage = t('devices.errors.invalidPincode');
-      } else if (pincodeError === 'Pincode has expired') {
-        errorMessage = t('devices.errors.pincodeExpired');
+      if (pincodeError === "Invalid pincode") {
+        errorMessage = t("devices.errors.invalidPincode");
+      } else if (pincodeError === "Pincode has expired") {
+        errorMessage = t("devices.errors.pincodeExpired");
       } else {
         // Use the error message from backend but in a more user-friendly way
         errorMessage = pincodeError;
@@ -513,18 +479,18 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
         props.store.env.baseUrl,
         props.store.organizations.selectedId,
         registrationData.name,
-        registrationData.pincode
+        registrationData.pincode,
       );
 
       refreshData();
       loadQuota(); // Reload quota after registration
-      setLoadingSuccess(t('devices.deviceRegisteredSuccess'));
+      setLoadingSuccess(t("devices.deviceRegisteredSuccess"));
 
       // Update total items
       setTotalItems(totalItems() + 1);
 
       // Complete the onboarding step for device registration
-      props.store.onboarding?.completeStep?.('register_device');
+      props.store.onboarding?.completeStep?.("register_device");
     } catch (error: any) {
       setRegisterError(mapErrorToMessage(error));
     } finally {
@@ -552,36 +518,31 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
 
   // Function to reset the registration form for "Register Another"
   const handleRegisterAnother = () => {
-    setLoadingSuccess('');
-    setRegisterError('');
-    setPincode('');
+    setLoadingSuccess("");
+    setRegisterError("");
+    setPincode("");
   };
 
   // Use function to make columns reactive to i18n changes
   const columns = () =>
     [
-      { key: 'name', title: t('common.name'), sortable: true },
+      { key: "name", title: t("common.name"), sortable: true },
       {
-        key: 'online',
-        title: t('common.online'),
+        key: "online",
+        title: t("common.online"),
         sortable: true,
         render: (item: DeviceTableItem) => (
-          <svg
-            width="16"
-            height="16"
-            fill={item.online ? 'green' : 'red'}
-            viewBox="0 0 16 16"
-          >
+          <svg width="16" height="16" fill={item.online ? "green" : "red"} viewBox="0 0 16 16">
             <circle cx="8" cy="8" r="6" />
           </svg>
         ),
       },
-      { key: 'timezone', title: t('common.timezone'), sortable: true },
-      { key: 'version', title: t('common.version'), sortable: true },
-      { key: 'last_ip', title: t('common.ip'), sortable: true },
+      { key: "timezone", title: t("common.timezone"), sortable: true },
+      { key: "version", title: t("common.version"), sortable: true },
+      { key: "last_ip", title: t("common.ip"), sortable: true },
       {
-        key: 'tags',
-        title: t('tags.title'),
+        key: "tags",
+        title: t("tags.title"),
         sortable: false,
         render: (item: DeviceTableItem) => {
           const itemTags = () => resourceTagsMap().get(item.id) || [];
@@ -602,7 +563,7 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
                     anchorEl: e.currentTarget as HTMLElement,
                   });
                 }}
-                title={t('tags.manageTags')}
+                title={t("tags.manageTags")}
               >
                 <BsTagFill />
               </button>
@@ -617,22 +578,21 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
     {
       icon: BsEye,
       handler: openDeviceDrawer,
-      label: t('common.view'),
+      label: t("common.view"),
     },
     {
       icon: AiOutlineDelete,
       handler: (item: DeviceTableItem) => {
-        if (!canPerformAction('devices', 'delete')) {
+        if (!canPerformAction("devices", "delete")) {
           toast.error(
-            t('permissions.noDeleteDevices') ||
-              "You don't have permission to delete devices"
+            t("permissions.noDeleteDevices") || "You don't have permission to delete devices",
           );
           return;
         }
         setCurrentDevice(item);
         setShowConfirmDialog(true);
       },
-      label: t('common.remove'),
+      label: t("common.remove"),
     },
   ];
 
@@ -640,12 +600,7 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
     updateItem(deviceId, { online: newOnlineStatus } as DeviceTableItem);
   };
 
-  const fetchData = async ({
-    page,
-    sortOptions,
-    search,
-    filters,
-  }: FetchDataOptions) => {
+  const fetchData = async ({ page, sortOptions, search, filters }: FetchDataOptions) => {
     const result = await DevicesService.fetchDevices(
       props.store.env.baseUrl,
       props.store.organizations.selectedId,
@@ -658,7 +613,7 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
         team_id: selectedTeamId(),
         tag_ids: selectedTagIds(),
         tag_filter_mode: tagFilterMode(),
-      }
+      },
     );
 
     resourcesObserver.observe(result.data);
@@ -672,8 +627,7 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
     resourcesObserver.cleanup();
   });
 
-  const [showConfirmDialogMultiple, setShowConfirmDialogMultiple] =
-    createSignal(false);
+  const [showConfirmDialogMultiple, setShowConfirmDialogMultiple] = createSignal(false);
 
   const confirmRemoveDevice = async (device: DeviceTableItem | undefined) => {
     if (!device) {
@@ -683,18 +637,18 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
       await DevicesService.removeDevice(
         props.store.env.baseUrl,
         props.store.organizations.selectedId,
-        device.id
+        device.id,
       );
 
       refreshData();
-      toast.success(t('devices.deviceRemovedSuccess', { name: device.name }));
+      toast.success(t("devices.deviceRemovedSuccess", { name: device.name }));
       loadQuota(); // Reload quota after deletion
     } catch (error) {
       toast.error(
-        t('devices.errorRemovingDevice', {
+        t("devices.errorRemovingDevice", {
           name: device.name,
           error: String(error),
-        })
+        }),
       );
     }
     setShowConfirmDialog(false);
@@ -707,18 +661,16 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
           DevicesService.removeDevice(
             props.store.env.baseUrl,
             props.store.organizations.selectedId,
-            deviceId
-          )
-        )
+            deviceId,
+          ),
+        ),
       );
 
       refreshData();
-      toast.success(
-        t('devices.devicesRemovedSuccess', { count: selectedDevices().size })
-      );
+      toast.success(t("devices.devicesRemovedSuccess", { count: selectedDevices().size }));
       loadQuota(); // Reload quota after deletion
     } catch (error) {
-      toast.error(t('devices.errorRemovingDevices', { error: String(error) }));
+      toast.error(t("devices.errorRemovingDevices", { error: String(error) }));
     }
     setShowConfirmDialogMultiple(false);
   };
@@ -762,11 +714,11 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
       {
         page: 1,
         page_size: 100,
-        sortOptions: { key: 'name', direction: 'ascending' },
+        sortOptions: { key: "name", direction: "ascending" },
         tag_ids: tagIds,
-        tag_filter_mode: 'all',
+        tag_filter_mode: "all",
         team_id: selectedTeamId(),
-      }
+      },
     );
     return {
       data: result.data as TreeResourceItem[],
@@ -774,22 +726,19 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
     };
   };
 
-  const fetchTreeUntaggedResources = async (
-    tagGroupId: number,
-    parentTagIds?: number[]
-  ) => {
+  const fetchTreeUntaggedResources = async (tagGroupId: number, parentTagIds?: number[]) => {
     const result = await DevicesService.fetchDevices(
       props.store.env.baseUrl,
       props.store.organizations.selectedId,
       {
         page: 1,
         page_size: 100,
-        sortOptions: { key: 'name', direction: 'ascending' },
-        tag_filter_mode: 'all',
+        sortOptions: { key: "name", direction: "ascending" },
+        tag_filter_mode: "all",
         missing_tag_group_id: tagGroupId,
         tag_ids: parentTagIds,
         team_id: selectedTeamId(),
-      }
+      },
     );
 
     return {
@@ -798,22 +747,19 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
     };
   };
 
-  const fetchTreeUntaggedCount = async (
-    tagGroupId: number,
-    parentTagIds?: number[]
-  ) => {
+  const fetchTreeUntaggedCount = async (tagGroupId: number, parentTagIds?: number[]) => {
     const result = await DevicesService.fetchDevices(
       props.store.env.baseUrl,
       props.store.organizations.selectedId,
       {
         page: 1,
         page_size: 1,
-        sortOptions: { key: 'name', direction: 'ascending' },
-        tag_filter_mode: 'all',
+        sortOptions: { key: "name", direction: "ascending" },
+        tag_filter_mode: "all",
         missing_tag_group_id: tagGroupId,
         tag_ids: parentTagIds,
         team_id: selectedTeamId(),
-      }
+      },
     );
 
     return result.count;
@@ -829,8 +775,8 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
     <div class={`${styles.devicesPage}`}>
       <Show when={showRegisterModal()}>
         <Modal
-          title={t('devices.registerDevice')}
-          description={t('devices.registerDescription')}
+          title={t("devices.registerDevice")}
+          description={t("devices.registerDescription")}
           onClose={() => setShowRegisterModal(false)}
           successMessage={loadingSuccess()}
           errorMessage={registerError()}
@@ -848,7 +794,7 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
       </Show>
       <Show when={showDrawer()}>
         <Drawer
-          title={t('devices.drawerTitle', { name: currentDevice()?.name })}
+          title={t("devices.drawerTitle", { name: currentDevice()?.name })}
           onClose={closeDeviceDrawer}
           placement="right"
           size="xl"
@@ -874,9 +820,9 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
 
       <ConfirmDialog
         show={showConfirmDialog()}
-        title={t('devices.removeDevice')}
-        message={t('devices.confirmRemove', {
-          name: currentDevice()?.name || '',
+        title={t("devices.removeDevice")}
+        message={t("devices.confirmRemove", {
+          name: currentDevice()?.name || "",
         })}
         onClose={() => setShowConfirmDialog(false)}
         onConfirm={() => confirmRemoveDevice(currentDevice())}
@@ -884,8 +830,8 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
 
       <ConfirmDialog
         show={showConfirmDialogMultiple()}
-        title={t('devices.removeDevices')}
-        message={t('devices.confirmRemoveMultiple')}
+        title={t("devices.removeDevices")}
+        message={t("devices.confirmRemoveMultiple")}
         onClose={() => setShowConfirmDialogMultiple(false)}
         onConfirm={() => confirmRemoveMultipleDevices()}
       >
@@ -897,53 +843,49 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
         </div>
       </ConfirmDialog>
 
-      <Show when={viewMode() === 'list'}>
+      <Show when={viewMode() === "list"}>
         <TableView
-          title={t('devices.title')}
+          title={t("devices.title")}
           resource="devices"
           params={props.params}
           fetchData={fetchData}
           ref={setRef}
           toolbar={{
             filters: [
-              { name: t('common.online'), key: 'online', isActive: true },
-              { name: t('common.offline'), key: 'offline', isActive: true },
+              { name: t("common.online"), key: "online", isActive: true },
+              { name: t("common.offline"), key: "offline", isActive: true },
             ],
-            searchPlaceholder: t('common.search'),
+            searchPlaceholder: t("common.search"),
             mainAction: (
               <div style="display: flex; align-items: center; gap: 1rem;">
                 <Show when={quota()}>
                   <QuotaIndicator
                     used={quota()!.used}
                     total={quota()!.total}
-                    resourceName={t('devices.title')}
+                    resourceName={t("devices.title")}
                     compact
                     isLoading={showLoadingIndicator()}
                   />
                 </Show>
                 <Button
-                  label={t('devices.addDevice')}
+                  label={t("devices.addDevice")}
                   onClick={openRegisterModal}
                   icon={BsCheckLg}
                   color="primary"
-                  disabled={
-                    isQuotaReached() || !canPerformAction('devices', 'create')
-                  }
+                  disabled={isQuotaReached() || !canPerformAction("devices", "create")}
                 />
               </div>
             ),
-            titleActions: (
-              <ViewModeToggle mode={viewMode()} onChange={setViewMode} />
-            ),
+            titleActions: <ViewModeToggle mode={viewMode()} onChange={setViewMode} />,
             actions: (
               <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
                 <TeamFilter
                   teams={teams()}
                   selectedTeamId={selectedTeamId()}
                   onTeamChange={handleTeamChange}
-                  label={t('filters.teamLabel')}
-                  placeholder={t('filters.teamPlaceholder')}
-                  clearLabel={t('filters.teamClear')}
+                  label={t("filters.teamLabel")}
+                  placeholder={t("filters.teamPlaceholder")}
+                  clearLabel={t("filters.teamClear")}
                 />
                 <TagFilter
                   tags={tags()}
@@ -951,22 +893,22 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
                   onTagChange={handleTagChange}
                   filterMode={tagFilterMode()}
                   onFilterModeChange={setTagFilterMode}
-                  label={t('filters.tagLabel')}
-                  placeholder={t('filters.tagPlaceholder')}
-                  clearLabel={t('filters.tagClear')}
-                  searchPlaceholder={t('filters.tagSearchPlaceholder')}
+                  label={t("filters.tagLabel")}
+                  placeholder={t("filters.tagPlaceholder")}
+                  clearLabel={t("filters.tagClear")}
+                  searchPlaceholder={t("filters.tagSearchPlaceholder")}
                   filterModeLabels={{
-                    any: t('filters.tagFilterModeAny'),
-                    all: t('filters.tagFilterModeAll'),
+                    any: t("filters.tagFilterModeAny"),
+                    all: t("filters.tagFilterModeAll"),
                   }}
-                  noMatchMessage={t('filters.noMatches')}
-                  emptyMessage={t('filters.noItems')}
+                  noMatchMessage={t("filters.noMatches")}
+                  emptyMessage={t("filters.noItems")}
                 />
               </div>
             ),
           }}
-          selectionHint={t('common.selectionHint')}
-          selectionLabel={t('common.selectionCount')}
+          selectionHint={t("common.selectionHint")}
+          selectionLabel={t("common.selectionCount")}
           selectionActions={({ count, clear }) => (
             <>
               <Show when={canManageTags()}>
@@ -977,12 +919,12 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
                   }}
                 >
                   <BsTagFill />
-                  {t('tags.manageTags')}
+                  {t("tags.manageTags")}
                 </button>
               </Show>
               <button
                 class="selection-action-btn danger"
-                disabled={!canPerformAction('devices', 'delete')}
+                disabled={!canPerformAction("devices", "delete")}
                 onClick={() => setShowConfirmDialogMultiple(true)}
               >
                 <AiOutlineDelete />
@@ -993,26 +935,24 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
           table={{
             columns,
             actions,
-            actionsLabel: t('common.actions'),
+            actionsLabel: t("common.actions"),
             onRowSelect,
             defaultRowAction: {
               icon: BsEye,
               handler: (item: DeviceTableItem) => {
                 openDeviceDrawer(item);
               },
-              label: t('common.view'),
+              label: t("common.view"),
             },
           }}
           pagination={{ itemsPerPage }}
         ></TableView>
       </Show>
 
-      <Show when={viewMode() === 'tree'}>
+      <Show when={viewMode() === "tree"}>
         <ToolBar
-          title={t('devices.title')}
-          titleActions={
-            <ViewModeToggle mode={viewMode()} onChange={setViewMode} />
-          }
+          title={t("devices.title")}
+          titleActions={<ViewModeToggle mode={viewMode()} onChange={setViewMode} />}
           hideSearch
           mainAction={
             <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
@@ -1020,19 +960,17 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
                 <QuotaIndicator
                   used={quota()!.used}
                   total={quota()!.total}
-                  resourceName={t('devices.title')}
+                  resourceName={t("devices.title")}
                   compact
                   isLoading={showLoadingIndicator()}
                 />
               </Show>
               <Button
-                label={t('devices.addDevice')}
+                label={t("devices.addDevice")}
                 onClick={openRegisterModal}
                 icon={BsCheckLg}
                 color="primary"
-                disabled={
-                  isQuotaReached() || !canPerformAction('devices', 'create')
-                }
+                disabled={isQuotaReached() || !canPerformAction("devices", "create")}
               />
             </div>
           }
@@ -1042,9 +980,9 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
                 teams={teams()}
                 selectedTeamId={selectedTeamId()}
                 onTeamChange={handleTeamChange}
-                label={t('filters.teamLabel')}
-                placeholder={t('filters.teamPlaceholder')}
-                clearLabel={t('filters.teamClear')}
+                label={t("filters.teamLabel")}
+                placeholder={t("filters.teamPlaceholder")}
+                clearLabel={t("filters.teamClear")}
               />
             </div>
           }
@@ -1055,19 +993,15 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
           fetchResources={fetchTreeResources}
           fetchUntaggedResources={fetchTreeUntaggedResources}
           fetchUntaggedCount={fetchTreeUntaggedCount}
-          untaggedLabel={t('tags.groups.untagged')}
-          emptyLeafText={t('filters.noItems')}
+          untaggedLabel={t("tags.groups.untagged")}
+          emptyLeafText={t("filters.noItems")}
           refreshKey={treeVersion()}
           storageKey="devices"
-          onResourceClick={(item) =>
-            openDeviceDrawer(item as unknown as DeviceTableItem)
-          }
+          onResourceClick={(item) => openDeviceDrawer(item as unknown as DeviceTableItem)}
           renderResource={(item) => (
             <div
               class="device-tree-item"
-              onClick={() =>
-                openDeviceDrawer(item as unknown as DeviceTableItem)
-              }
+              onClick={() => openDeviceDrawer(item as unknown as DeviceTableItem)}
             >
               <div class="device-tree-info">
                 <span class="device-tree-name">{item.name}</span>
@@ -1085,8 +1019,8 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
                     try {
                       const itemTags = await tagsService.getResourceTags(
                         orgId,
-                        'device',
-                        device.id
+                        "device",
+                        device.id,
                       );
                       setResourceTagsMap((prev) => {
                         const next = new Map(prev);
@@ -1102,7 +1036,7 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
                     anchorEl: e.currentTarget as HTMLElement,
                   });
                 }}
-                title={t('tags.manageTags')}
+                title={t("tags.manageTags")}
               >
                 <BsTagFill />
               </button>
@@ -1117,20 +1051,16 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
           <TagPopover
             availableTags={allTags()}
             tagGroups={tagGroups()}
-            selectedTagIds={(resourceTagsMap().get(target().item.id) || []).map(
-              (t) => t.id
-            )}
-            onToggle={(tagId, selected) =>
-              handleTagToggle(target().item, tagId, selected)
-            }
+            selectedTagIds={(resourceTagsMap().get(target().item.id) || []).map((t) => t.id)}
+            onToggle={(tagId, selected) => handleTagToggle(target().item, tagId, selected)}
             onCreateTag={canManageTags() ? handleCreateTag : undefined}
             allowCreate={canManageTags()}
             anchorEl={target().anchorEl}
             onClose={() => setTagPopoverTarget(null)}
-            placeholder={t('tags.searchTags')}
-            ungroupedLabel={t('tags.groups.ungrouped')}
-            emptyLabel={t('tags.noTagsAvailable')}
-            noMatchLabel={t('tags.noMatchingTags')}
+            placeholder={t("tags.searchTags")}
+            ungroupedLabel={t("tags.groups.ungrouped")}
+            emptyLabel={t("tags.noTagsAvailable")}
+            noMatchLabel={t("tags.noMatchingTags")}
           />
         )}
       </Show>
@@ -1146,11 +1076,11 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
           allowCreate={canManageTags()}
           anchorEl={bulkTagAnchorEl()!}
           onClose={() => setBulkTagAnchorEl(null)}
-          title={t('tags.manageTags')}
-          placeholder={t('tags.searchTags')}
-          ungroupedLabel={t('tags.groups.ungrouped')}
-          emptyLabel={t('tags.noTagsAvailable')}
-          noMatchLabel={t('tags.noMatchingTags')}
+          title={t("tags.manageTags")}
+          placeholder={t("tags.searchTags")}
+          ungroupedLabel={t("tags.groups.ungrouped")}
+          emptyLabel={t("tags.noTagsAvailable")}
+          noMatchLabel={t("tags.noMatchingTags")}
         />
       </Show>
     </div>

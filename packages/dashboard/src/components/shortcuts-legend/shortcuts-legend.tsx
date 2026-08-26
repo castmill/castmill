@@ -1,8 +1,8 @@
-import { Component, For, Show, createSignal } from 'solid-js';
-import { Modal } from '@castmill/ui-common';
-import { useKeyboardShortcuts, ShortcutCategory } from '../../hooks';
-import { useI18n } from '../../i18n';
-import './shortcuts-legend.scss';
+import { Component, For, Show, createSignal } from "solid-js";
+import { Modal } from "@castmill/ui-common";
+import { useKeyboardShortcuts, ShortcutCategory } from "../../hooks";
+import { useI18n } from "../../i18n";
+import "./shortcuts-legend.scss";
 
 interface ShortcutsLegendProps {
   show: boolean;
@@ -33,9 +33,9 @@ export const ShortcutsLegend: Component<ShortcutsLegendProps> = (props) => {
 
   const categoryTitle = (category: ShortcutCategory) => {
     const titles: Record<ShortcutCategory, string> = {
-      global: t('shortcuts.categories.global'),
-      navigation: t('shortcuts.categories.navigation'),
-      actions: t('shortcuts.categories.actions'),
+      global: t("shortcuts.categories.global"),
+      navigation: t("shortcuts.categories.navigation"),
+      actions: t("shortcuts.categories.actions"),
     };
     return titles[category];
   };
@@ -48,8 +48,8 @@ export const ShortcutsLegend: Component<ShortcutsLegendProps> = (props) => {
   return (
     <Show when={props.show}>
       <Modal
-        title={t('shortcuts.legend.title')}
-        description={t('shortcuts.legend.description')}
+        title={t("shortcuts.legend.title")}
+        description={t("shortcuts.legend.description")}
         onClose={props.onClose}
         contentClass="shortcuts-legend-modal"
       >
@@ -64,13 +64,11 @@ export const ShortcutsLegend: Component<ShortcutsLegendProps> = (props) => {
                       {(shortcut) => (
                         <div class="shortcut-item">
                           <span class="shortcut-description">
-                            {typeof shortcut.description === 'function'
+                            {typeof shortcut.description === "function"
                               ? shortcut.description()
                               : shortcut.description}
                           </span>
-                          <span class="shortcut-keys">
-                            {formatShortcut(shortcut)}
-                          </span>
+                          <span class="shortcut-keys">{formatShortcut(shortcut)}</span>
                         </div>
                       )}
                     </For>

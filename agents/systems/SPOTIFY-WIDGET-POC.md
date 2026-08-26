@@ -7,9 +7,11 @@ This document describes the implementation of a Spotify "Now Playing" widget as 
 ## Executive Summary
 
 ### Implementation Status
+
 ✅ **Successfully implemented** using the existing widget integration architecture with **minor enhancements** for OAuth 2.0 support.
 
 ### Key Findings
+
 1. **Architecture is sufficient**: The current integration system handles the Spotify use case well
 2. **OAuth 2.0 support needed**: Added token refresh mechanism (enhancement, not breaking change)
 3. **Widget-specific credentials work perfectly**: Each user needs their own Spotify OAuth tokens
@@ -17,6 +19,7 @@ This document describes the implementation of a Spotify "Now Playing" widget as 
 5. **Asset management**: Widget uses external Spotify CDN for album artwork (no bundled assets needed)
 
 ### Required Enhancements
+
 1. **OAuth 2.0 Token Refresh**: Added automatic token refresh logic in the Fetcher behaviour
 2. **Credential Metadata**: Extended to store `expires_at` for OAuth tokens
 3. **Error Handling**: Enhanced to handle "no track playing" and API errors gracefully
@@ -34,7 +37,7 @@ This document describes the implementation of a Spotify "Now Playing" widget as 
   "small_icon": "/widgets/spotify-now-playing/icon-small.svg",
   "is_system": true,
   "update_interval_seconds": 15,
-  
+
   "template": {
     "type": "group",
     "style": {
@@ -50,7 +53,7 @@ This document describes the implementation of a Spotify "Now Playing" widget as 
     "components": [
       {
         "type": "image",
-        "source": {"key": "data.album_art_url"},
+        "source": { "key": "data.album_art_url" },
         "style": {
           "width": "400px",
           "height": "400px",
@@ -68,7 +71,7 @@ This document describes the implementation of a Spotify "Now Playing" widget as 
         "components": [
           {
             "type": "text",
-            "text": {"key": "data.track_name"},
+            "text": { "key": "data.track_name" },
             "style": {
               "fontSize": "72px",
               "fontWeight": "700",
@@ -78,7 +81,7 @@ This document describes the implementation of a Spotify "Now Playing" widget as 
           },
           {
             "type": "text",
-            "text": {"key": "data.artist_name"},
+            "text": { "key": "data.artist_name" },
             "style": {
               "fontSize": "48px",
               "fontWeight": "400",
@@ -88,7 +91,7 @@ This document describes the implementation of a Spotify "Now Playing" widget as 
           },
           {
             "type": "text",
-            "text": {"key": "data.album_name"},
+            "text": { "key": "data.album_name" },
             "style": {
               "fontSize": "36px",
               "fontWeight": "300",
@@ -107,7 +110,7 @@ This document describes the implementation of a Spotify "Now Playing" widget as 
             "components": [
               {
                 "type": "text",
-                "text": {"key": "data.progress_formatted"},
+                "text": { "key": "data.progress_formatted" },
                 "style": {
                   "fontSize": "28px",
                   "fontWeight": "500",
@@ -129,7 +132,7 @@ This document describes the implementation of a Spotify "Now Playing" widget as 
                   {
                     "type": "group",
                     "style": {
-                      "width": {"key": "data.progress_percent"},
+                      "width": { "key": "data.progress_percent" },
                       "height": "100%",
                       "background": "#1DB954",
                       "borderRadius": "4px",
@@ -140,7 +143,7 @@ This document describes the implementation of a Spotify "Now Playing" widget as 
               },
               {
                 "type": "text",
-                "text": {"key": "data.duration_formatted"},
+                "text": { "key": "data.duration_formatted" },
                 "style": {
                   "fontSize": "28px",
                   "fontWeight": "500",
@@ -154,7 +157,7 @@ This document describes the implementation of a Spotify "Now Playing" widget as 
       }
     ]
   },
-  
+
   "options_schema": {
     "theme": {
       "type": "string",
@@ -176,7 +179,7 @@ This document describes the implementation of a Spotify "Now Playing" widget as 
       "label": "Track Change Animation"
     }
   },
-  
+
   "data_schema": {
     "track_name": {
       "type": "string",
@@ -243,7 +246,7 @@ This document describes the implementation of a Spotify "Now Playing" widget as 
   description: "Spotify Web API integration for Now Playing data",
   integration_type: "pull",
   credential_scope: "widget",  # Each user needs their own OAuth tokens
-  
+
   # Pull configuration
   pull_endpoint: "https://api.spotify.com/v1/me/player/currently-playing",
   pull_interval_seconds: 15,  # Check every 15 seconds
@@ -252,7 +255,7 @@ This document describes the implementation of a Spotify "Now Playing" widget as 
     "oauth_token_endpoint" => "https://accounts.spotify.com/api/token",
     "oauth_scopes" => ["user-read-currently-playing", "user-read-playback-state"]
   },
-  
+
   # Credential schema (OAuth 2.0 tokens)
   credential_schema: %{
     "client_id" => %{
@@ -289,7 +292,7 @@ This document describes the implementation of a Spotify "Now Playing" widget as 
       "description" => "Unix timestamp when access_token expires"
     }
   },
-  
+
   is_active: true
 })
 ```
@@ -304,20 +307,20 @@ This document describes the implementation of a Spotify "Now Playing" widget as 
 defmodule Castmill.Widgets.Integrations.Fetchers.Spotify do
   @moduledoc """
   Spotify Web API fetcher for Now Playing widget.
-  
+
   Handles OAuth 2.0 authentication, token refresh, and fetches currently playing track data.
   Transforms Spotify API response to match widget's data_schema.
   """
   @behaviour Castmill.Widgets.Integrations.Fetcher
-  
+
   require Logger
-  
+
   @api_base "https://api.spotify.com/v1"
   @token_endpoint "https://accounts.spotify.com/api/token"
-  
+
   @doc """
   Fetches currently playing track from Spotify API.
-  
+
   Automatically refreshes OAuth token if expired.
   Returns data matching the widget's data_schema.
   """
@@ -325,34 +328,34 @@ defmodule Castmill.Widgets.Integrations.Fetchers.Spotify do
   def fetch(credentials, _options) do
     # Check if token needs refresh
     credentials = maybe_refresh_token(credentials)
-    
+
     # Fetch currently playing track
     case fetch_currently_playing(credentials) do
       {:ok, track_data} ->
         {:ok, transform_to_widget_data(track_data), credentials}
-      
+
       {:error, :no_track_playing} ->
         {:ok, get_no_track_data(), credentials}
-      
+
       {:error, reason} ->
         Logger.error("Spotify API error: #{inspect(reason)}")
         {:error, reason, credentials}
     end
   end
-  
+
   # Private functions
-  
+
   defp maybe_refresh_token(credentials) do
     expires_at = Map.get(credentials, "expires_at", 0)
     current_time = System.system_time(:second)
-    
+
     # Refresh if token expires in next 5 minutes
     if current_time >= (expires_at - 300) do
       case refresh_access_token(credentials) do
         {:ok, new_credentials} ->
           Logger.info("Spotify token refreshed successfully")
           new_credentials
-        
+
         {:error, reason} ->
           Logger.error("Token refresh failed: #{inspect(reason)}")
           credentials
@@ -361,94 +364,94 @@ defmodule Castmill.Widgets.Integrations.Fetchers.Spotify do
       credentials
     end
   end
-  
+
   defp refresh_access_token(credentials) do
     refresh_token = Map.get(credentials, "refresh_token")
     client_id = Map.get(credentials, "client_id")
     client_secret = Map.get(credentials, "client_secret")
-    
+
     headers = [
       {"Content-Type", "application/x-www-form-urlencoded"},
       {"Authorization", "Basic " <> Base.encode64("#{client_id}:#{client_secret}")}
     ]
-    
+
     body = URI.encode_query(%{
       "grant_type" => "refresh_token",
       "refresh_token" => refresh_token
     })
-    
+
     case HTTPoison.post(@token_endpoint, body, headers) do
       {:ok, %{status_code: 200, body: response_body}} ->
         response = Jason.decode!(response_body)
-        
+
         new_credentials = Map.merge(credentials, %{
           "access_token" => response["access_token"],
           "expires_at" => System.system_time(:second) + response["expires_in"]
         })
-        
+
         {:ok, new_credentials}
-      
+
       {:ok, %{status_code: status, body: body}} ->
         {:error, "Token refresh failed: #{status} - #{body}"}
-      
+
       {:error, reason} ->
         {:error, "HTTP request failed: #{inspect(reason)}"}
     end
   end
-  
+
   defp fetch_currently_playing(credentials) do
     access_token = Map.get(credentials, "access_token")
-    
+
     headers = [
       {"Authorization", "Bearer #{access_token}"},
       {"Content-Type", "application/json"}
     ]
-    
+
     case HTTPoison.get("#{@api_base}/me/player/currently-playing", headers) do
       {:ok, %{status_code: 200, body: body}} ->
         data = Jason.decode!(body)
-        
+
         if data["item"] do
           {:ok, data}
         else
           {:error, :no_track_playing}
         end
-      
+
       {:ok, %{status_code: 204}} ->
         # 204 No Content = nothing playing
         {:error, :no_track_playing}
-      
+
       {:ok, %{status_code: 401}} ->
         {:error, :unauthorized}
-      
+
       {:ok, %{status_code: 429, headers: headers}} ->
         # Rate limited
         retry_after = get_header(headers, "retry-after", "60")
         {:error, {:rate_limited, String.to_integer(retry_after)}}
-      
+
       {:ok, %{status_code: status, body: body}} ->
         {:error, "API error: #{status} - #{body}"}
-      
+
       {:error, reason} ->
         {:error, "HTTP request failed: #{inspect(reason)}"}
     end
   end
-  
+
   defp transform_to_widget_data(spotify_data) do
     item = spotify_data["item"]
     progress_ms = spotify_data["progress_ms"] || 0
     duration_ms = item["duration_ms"]
-    
+
     # Get largest album artwork
     album_art = item["album"]["images"]
     |> Enum.sort_by(& &1["height"], :desc)
     |> List.first()
-    
+
     # Format artist names
     artists = item["artists"]
     |> Enum.map(& &1["name"])
     |> Enum.join(", ")
-    
+
     %{
       "track_name" => item["name"],
       "artist_name" => artists,
@@ -462,7 +465,7 @@ defmodule Castmill.Widgets.Integrations.Fetchers.Spotify do
       "is_playing" => spotify_data["is_playing"]
     }
   end
-  
+
   defp get_no_track_data do
     %{
       "track_name" => "No track playing",
@@ -477,16 +480,16 @@ defmodule Castmill.Widgets.Integrations.Fetchers.Spotify do
       "is_playing" => false
     }
   end
-  
+
   defp format_time(ms) when is_number(ms) do
     total_seconds = div(ms, 1000)
     minutes = div(total_seconds, 60)
     seconds = rem(total_seconds, 60)
     "#{minutes}:#{String.pad_leading(Integer.to_string(seconds), 2, "0")}"
   end
-  
+
   defp format_time(_), do: "0:00"
-  
+
   defp get_header(headers, key, default) do
     headers
     |> Enum.find(fn {k, _v} -> String.downcase(k) == String.downcase(key) end)
@@ -505,9 +508,9 @@ end
 ```elixir
 defmodule Castmill.Widgets.Integrations.Fetchers.SpotifyTest do
   use ExUnit.Case, async: true
-  
+
   alias Castmill.Widgets.Integrations.Fetchers.Spotify
-  
+
   describe "fetch/2" do
     test "transforms Spotify API response to widget data schema" do
       credentials = %{
@@ -517,10 +520,10 @@ defmodule Castmill.Widgets.Integrations.Fetchers.SpotifyTest do
         "client_secret" => "client_secret",
         "expires_at" => System.system_time(:second) + 3600
       }
-      
+
       # Mock successful response would go here
       # For now, testing data transformation logic
-      
+
       spotify_response = %{
         "item" => %{
           "name" => "Bohemian Rhapsody",
@@ -536,10 +539,10 @@ defmodule Castmill.Widgets.Integrations.Fetchers.SpotifyTest do
         "progress_ms" => 120000,
         "is_playing" => true
       }
-      
+
       # Test transformation
       result = Spotify.transform_to_widget_data(spotify_response)
-      
+
       assert result["track_name"] == "Bohemian Rhapsody"
       assert result["artist_name"] == "Queen"
       assert result["album_name"] == "A Night at the Opera"
@@ -547,16 +550,16 @@ defmodule Castmill.Widgets.Integrations.Fetchers.SpotifyTest do
       assert result["progress_formatted"] == "2:00"
       assert result["is_playing"] == true
     end
-    
+
     test "handles no track playing" do
       # Test no track data
       result = Spotify.get_no_track_data()
-      
+
       assert result["track_name"] == "No track playing"
       assert result["is_playing"] == false
     end
   end
-  
+
   describe "token refresh" do
     test "refreshes token when near expiration" do
       # Test token refresh logic
@@ -567,7 +570,7 @@ defmodule Castmill.Widgets.Integrations.Fetchers.SpotifyTest do
         "client_secret" => "client_secret",
         "expires_at" => System.system_time(:second) - 100  # Expired
       }
-      
+
       # Mock token refresh response would go here
       # Should return updated credentials with new access_token and expires_at
     end
@@ -582,15 +585,17 @@ end
 **Enhancement**: Modified the `Fetcher` behaviour contract to return updated credentials.
 
 **Before**:
+
 ```elixir
-@callback fetch(credentials :: map(), options :: map()) :: 
+@callback fetch(credentials :: map(), options :: map()) ::
   {:ok, data :: map()} | {:error, reason :: term()}
 ```
 
 **After**:
+
 ```elixir
-@callback fetch(credentials :: map(), options :: map()) :: 
-  {:ok, data :: map(), updated_credentials :: map()} | 
+@callback fetch(credentials :: map(), options :: map()) ::
+  {:ok, data :: map(), updated_credentials :: map()} |
   {:error, reason :: term(), updated_credentials :: map()}
 ```
 
@@ -652,39 +657,35 @@ No schema changes needed - existing architecture supports this.
 
 ```tsx
 // packages/dashboard/src/addons/widgets/spotify/OAuthSetup.tsx
-import { createSignal } from 'solid-js';
+import { createSignal } from "solid-js";
 
 export function SpotifyOAuthSetup(props: { widgetConfigId: string }) {
   const [isAuthorizing, setIsAuthorizing] = createSignal(false);
-  
+
   const handleConnect = async () => {
     setIsAuthorizing(true);
-    
+
     // Get OAuth URL from backend
     const response = await fetch(
-      `/api/widget-configs/${props.widgetConfigId}/oauth/authorize?provider=spotify`
+      `/api/widget-configs/${props.widgetConfigId}/oauth/authorize?provider=spotify`,
     );
     const { authorization_url } = await response.json();
-    
+
     // Open Spotify authorization in popup
-    const popup = window.open(authorization_url, 'spotify-oauth', 'width=500,height=700');
-    
+    const popup = window.open(authorization_url, "spotify-oauth", "width=500,height=700");
+
     // Wait for callback
-    window.addEventListener('message', (event) => {
-      if (event.data.type === 'oauth-success') {
+    window.addEventListener("message", (event) => {
+      if (event.data.type === "oauth-success") {
         setIsAuthorizing(false);
         props.onSuccess?.();
       }
     });
   };
-  
+
   return (
-    <button 
-      onClick={handleConnect}
-      disabled={isAuthorizing()}
-      class="btn btn-primary"
-    >
-      {isAuthorizing() ? 'Connecting...' : 'Connect to Spotify'}
+    <button onClick={handleConnect} disabled={isAuthorizing()} class="btn btn-primary">
+      {isAuthorizing() ? "Connecting..." : "Connect to Spotify"}
     </button>
   );
 }
@@ -783,12 +784,14 @@ The Spotify widget implementation uses the following key components:
 **File**: `packages/castmill/lib/castmill/workers/spotify_poller.ex`
 
 The poller is an Oban worker that:
+
 - Polls Spotify API every 15 seconds (configurable via `pull_interval_seconds`)
 - Automatically refreshes OAuth tokens when expired
 - Stores data in `widget_integration_data` table
 - Reschedules itself after successful execution
 
 **Key Configuration**:
+
 ```elixir
 use Oban.Worker,
   queue: :integration_polling,
@@ -801,16 +804,19 @@ use Oban.Worker,
 **Important**: All Spotify widgets in an organization share the same integration data. This is the "gym scenario" - multiple screens with different playlists but all showing the same "Now Playing" data.
 
 **Data lookup chain in `resources.ex`**:
+
 1. First tries widget-config-specific data: `get_integration_data_by_config(widget_config_id)`
 2. Falls back to organization-level shared data: `get_integration_data_for_widget_in_org(org_id, widget_id)`
 
 **Files involved**:
+
 - `lib/castmill/resources.ex` - `transform_item/2` function
 - `lib/castmill/widgets/integrations.ex` - `get_integration_data_for_widget_in_org/2`
 
 #### 3. Integration Data Merged into Config
 
 The integration data is merged into `config.data` for the player template system:
+
 ```elixir
 # In transform_item/2
 merged_data = Map.merge(existing_data, integration_data.data || %{})
@@ -829,13 +835,13 @@ The player resolves style bindings like `{key: "data.progress_percent"}`:
 
 ```typescript
 const resolveStyleBindings = (style: any, model: Model): any => {
-  if (!style || typeof style !== 'object') return style;
-  
+  if (!style || typeof style !== "object") return style;
+
   const resolved: any = {};
   for (const [key, value] of Object.entries(style)) {
-    if (value && typeof value === 'object' && 'key' in value) {
+    if (value && typeof value === "object" && "key" in value) {
       // Resolve binding like {key: "data.progress_percent"}
-      resolved[key] = model.get((value as any).key) ?? '';
+      resolved[key] = model.get((value as any).key) ?? "";
     } else {
       resolved[key] = value;
     }
@@ -849,24 +855,26 @@ const resolveStyleBindings = (style: any, model: Model): any => {
 Widgets can have an `aspect_ratio` field (e.g., "16:9") for proper letterboxing within playlists:
 
 **Schema**: `lib/castmill/widgets/widget.ex`
+
 ```elixir
 field(:aspect_ratio, :string)
 ```
 
 **Player Layer**: `packages/player/src/layer.ts`
+
 ```typescript
 function computeWidgetStyle(widget?: JsonWidget): JSX.CSSProperties | undefined {
   if (!widget?.aspect_ratio) return undefined;
-  
-  const [w, h] = widget.aspect_ratio.split(':').map(Number);
+
+  const [w, h] = widget.aspect_ratio.split(":").map(Number);
   if (!w || !h || isNaN(w) || isNaN(h)) return undefined;
-  
+
   return {
-    width: 'auto',
-    height: 'auto',
-    'max-width': '100%',
-    'max-height': '100%',
-    'aspect-ratio': `${w} / ${h}`,
+    width: "auto",
+    height: "auto",
+    "max-width": "100%",
+    "max-height": "100%",
+    "aspect-ratio": `${w} / ${h}`,
   };
 }
 ```
@@ -878,6 +886,7 @@ function computeWidgetStyle(widget?: JsonWidget): JSX.CSSProperties | undefined 
 **Symptom**: Data shows stale/old values, `status: "not_playing"` despite active Spotify playback.
 
 **Diagnosis**:
+
 ```elixir
 # Check for active Oban jobs
 import Ecto.Query
@@ -887,6 +896,7 @@ Repo.all(from j in Oban.Job, where: j.queue == "integration_polling")
 **Cause**: Jobs weren't scheduled (server restart, job failed to reschedule).
 
 **Solution**: Manually schedule a job:
+
 ```elixir
 Castmill.Workers.SpotifyPoller.schedule("widget-config-uuid")
 ```
@@ -896,6 +906,7 @@ Castmill.Workers.SpotifyPoller.schedule("widget-config-uuid")
 **Symptom**: `SpotifyPoller: Token expired, refreshing...` followed by errors.
 
 **Diagnosis**:
+
 ```elixir
 {:ok, creds} = Integrations.get_organization_credentials(org_id, integration_id)
 expires_at = creds["expires_at"]
@@ -905,7 +916,8 @@ IO.puts("Expired: #{expires_at < now}, Diff: #{expires_at - now}s")
 
 **Cause**: Token refresh failed (invalid refresh_token, network issues).
 
-**Solution**: 
+**Solution**:
+
 1. Check client credentials are correct
 2. User may need to re-authorize via OAuth flow
 3. Verify network/integration credentials at network level
@@ -915,6 +927,7 @@ IO.puts("Expired: #{expires_at < now}, Diff: #{expires_at - now}s")
 **Symptom**: Widget preview shows nothing, API returns `data: null`.
 
 **Diagnosis**:
+
 ```elixir
 # Check if data exists
 Integrations.get_integration_data_by_config("widget-config-uuid")
@@ -934,6 +947,7 @@ Integrations.get_integration_data_for_widget_in_org(org_id, widget_id)
 **Cause**: Legacy code passing integer IDs instead of UUIDs.
 
 **Solution**: Added UUID validation:
+
 ```elixir
 def get_integration_data_by_config(widget_config_id) do
   case Ecto.UUID.cast(widget_config_id) do
@@ -950,6 +964,7 @@ end
 **Cause**: Trying to access `item.playlist.organization_id` without preloading.
 
 **Solution**: Pass `organization_id` as parameter instead:
+
 ```elixir
 # In get_playlist/1
 items = get_playlist_items(id)
@@ -968,12 +983,14 @@ defp transform_item(item, organization_id) do
 **Solution**: Updated the API to return `widget_config_id`:
 
 1. **Backend** (`lib/castmill/resources.ex`):
+
 ```elixir
 # Return both item and widget_config_id
 %{item | widget_config_id: widget_config.id}
 ```
 
 2. **API Response** (`lib/castmill_web/controllers/playlist_json.ex`):
+
 ```elixir
 def show(%{item: item}) do
   %{
@@ -987,6 +1004,7 @@ end
 ```
 
 3. **Frontend** (`playlist-view.tsx`):
+
 ```typescript
 config: {
   id: newItem.widget_config_id,  // Use widget_config_id, not item.id
@@ -1010,7 +1028,7 @@ Castmill.Workers.SpotifyPoller.schedule("92107900-577c-42a6-b6c8-79b3dcfcd443")
 # Check Oban job queue
 mix run -e '
 import Ecto.Query
-Castmill.Repo.all(from j in Oban.Job, 
+Castmill.Repo.all(from j in Oban.Job,
   where: j.queue == "integration_polling",
   select: %{id: j.id, state: j.state, args: j.args})
 |> IO.inspect()
@@ -1034,27 +1052,27 @@ IO.puts("Expires in: #{expires_at - now} seconds")
 
 ### Key Files Reference
 
-| File | Purpose |
-|------|---------|
-| `lib/castmill/workers/spotify_poller.ex` | Oban worker that polls Spotify API |
-| `lib/castmill/widgets/integrations/oauth/spotify.ex` | OAuth token exchange & refresh |
-| `lib/castmill/widgets/integrations.ex` | Integration data & credential management |
-| `lib/castmill/resources.ex` | Playlist/item loading with integration data |
-| `lib/castmill_web/controllers/widget_integration_controller.ex` | Dashboard API for integration data |
-| `packages/player/src/components/item.tsx` | Template rendering with style bindings |
-| `packages/player/src/layer.ts` | Widget aspect ratio & letterboxing |
-| `priv/repo/seeds/widgets/spotify_now_playing.exs` | Widget definition seed |
+| File                                                            | Purpose                                     |
+| --------------------------------------------------------------- | ------------------------------------------- |
+| `lib/castmill/workers/spotify_poller.ex`                        | Oban worker that polls Spotify API          |
+| `lib/castmill/widgets/integrations/oauth/spotify.ex`            | OAuth token exchange & refresh              |
+| `lib/castmill/widgets/integrations.ex`                          | Integration data & credential management    |
+| `lib/castmill/resources.ex`                                     | Playlist/item loading with integration data |
+| `lib/castmill_web/controllers/widget_integration_controller.ex` | Dashboard API for integration data          |
+| `packages/player/src/components/item.tsx`                       | Template rendering with style bindings      |
+| `packages/player/src/layer.ts`                                  | Widget aspect ratio & letterboxing          |
+| `priv/repo/seeds/widgets/spotify_now_playing.exs`               | Widget definition seed                      |
 
 ### Database Tables
 
-| Table | Purpose |
-|-------|---------|
-| `widgets` | Widget definitions (template, schema, aspect_ratio) |
-| `widget_integrations` | Integration configs (poll interval, endpoints) |
-| `widget_integration_credentials` | Encrypted OAuth tokens per org/widget |
-| `widget_integration_data` | Cached Spotify data (track info, version) |
-| `widgets_config` | Widget instances in playlists |
-| `network_integration_credentials` | Client ID/Secret at network level |
+| Table                             | Purpose                                             |
+| --------------------------------- | --------------------------------------------------- |
+| `widgets`                         | Widget definitions (template, schema, aspect_ratio) |
+| `widget_integrations`             | Integration configs (poll interval, endpoints)      |
+| `widget_integration_credentials`  | Encrypted OAuth tokens per org/widget               |
+| `widget_integration_data`         | Cached Spotify data (track info, version)           |
+| `widgets_config`                  | Widget instances in playlists                       |
+| `network_integration_credentials` | Client ID/Secret at network level                   |
 
 ## Conclusion
 
@@ -1069,7 +1087,7 @@ The Spotify "Now Playing" widget proof of concept demonstrates that the current 
 ✅ **Secure token storage** - AES-256-GCM encryption with auto-refresh  
 ✅ **Rich, modern UI** - Template system supports complex layouts with style bindings  
 ✅ **Widget aspect ratio** - Proper letterboxing within playlists  
-✅ **Self-service ready** - Once OAuth flow is in dashboard, fully user-uploadable  
+✅ **Self-service ready** - Once OAuth flow is in dashboard, fully user-uploadable
 
 ### Next Steps
 

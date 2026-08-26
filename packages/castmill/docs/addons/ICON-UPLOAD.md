@@ -11,6 +11,7 @@ Widgets can include an `icon` field in their JSON definition. The icon will be d
 The `icon` field supports three formats:
 
 ### 1. Base64-Encoded Image (Recommended)
+
 Include a base64-encoded image directly in the JSON:
 
 ```json
@@ -22,17 +23,20 @@ Include a base64-encoded image directly in the JSON:
 ```
 
 **Advantages:**
+
 - Self-contained (no external dependencies)
 - Works offline
 - No CORS issues
 
 **Best Practices:**
+
 - Use PNG format for transparency support
 - Recommended size: 512x512 pixels (square)
 - Keep file size reasonable (< 50KB recommended)
 - Compress images before encoding
 
 ### 2. URL to External Image
+
 Reference an image hosted on a server:
 
 ```json
@@ -44,15 +48,18 @@ Reference an image hosted on a server:
 ```
 
 **Advantages:**
+
 - Smaller JSON file size
 - Easy to update icon without changing JSON
 
 **Considerations:**
+
 - Requires network access
 - May have CORS restrictions
 - Icon availability depends on external server
 
 ### 3. Relative Path
+
 Use a path to a local image:
 
 ```json
@@ -64,6 +71,7 @@ Use a path to a local image:
 ```
 
 ### 4. Emoji/Unicode (Simple Fallback)
+
 Use a simple emoji or unicode character:
 
 ```json
@@ -77,33 +85,38 @@ Use a simple emoji or unicode character:
 ## Converting an Image to Base64
 
 ### Using Command Line (macOS/Linux)
+
 ```bash
 base64 -i icon.png | tr -d '\n' > icon-base64.txt
 ```
 
 Then wrap the output with the data URI prefix:
+
 ```
 data:image/png;base64,<paste-base64-here>
 ```
 
 ### Using Online Tools
+
 1. Visit a base64 image encoder (e.g., https://www.base64-image.de/)
 2. Upload your icon image
 3. Copy the generated data URI
 4. Paste into your widget JSON
 
 ### Using Node.js
-```javascript
-const fs = require('fs');
 
-const imageBuffer = fs.readFileSync('icon.png');
-const base64Image = imageBuffer.toString('base64');
+```javascript
+const fs = require("fs");
+
+const imageBuffer = fs.readFileSync("icon.png");
+const base64Image = imageBuffer.toString("base64");
 const dataUri = `data:image/png;base64,${base64Image}`;
 
 console.log(dataUri);
 ```
 
 ### Using Python
+
 ```python
 import base64
 
@@ -116,12 +129,14 @@ with open('icon.png', 'rb') as image_file:
 ## Icon Specifications
 
 ### Recommended Dimensions
+
 - **Size:** 512x512 pixels (square)
 - **Aspect Ratio:** 1:1 (square)
 - **Format:** PNG (for transparency) or SVG
 - **File Size:** < 50KB for base64 encoding
 
 ### Supported Formats
+
 - PNG (`.png`)
 - JPEG (`.jpg`, `.jpeg`)
 - SVG (`.svg`)
@@ -173,17 +188,20 @@ If no icon is specified or the image fails to load, the system will display a de
 ## Troubleshooting
 
 ### Icon Not Displaying
+
 - Verify the base64 string is complete and properly formatted
 - Check that the data URI prefix is correct (`data:image/png;base64,` or similar)
 - Ensure URL-based icons are accessible (no CORS issues)
 - Check browser console for loading errors
 
 ### Icon Appears Distorted
+
 - Use square images (1:1 aspect ratio)
 - Ensure proper image format specification in data URI
 - Check that the image file is not corrupted
 
 ### JSON File Too Large
+
 - Compress the image before encoding
 - Use a smaller image size (e.g., 256x256 instead of 512x512)
 - Consider using a URL reference instead of base64

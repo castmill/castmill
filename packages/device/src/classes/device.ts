@@ -1,5 +1,5 @@
-import { EventEmitter } from 'eventemitter3';
-import { Channel as PhoenixChannel, Socket } from 'phoenix';
+import { EventEmitter } from "eventemitter3";
+import { Channel as PhoenixChannel, Socket } from "phoenix";
 import {
   Player,
   Playlist,
@@ -8,75 +8,61 @@ import {
   Layer,
   JsonPlaylist,
   JsonPlaylistItem,
-} from '@castmill/player';
-import {
-  ResourceManager,
-  Cache,
-  StorageIntegration,
-  ItemType,
-} from '@castmill/cache';
-import {
-  Machine,
-  DeviceInfo,
-  Timers,
-  TimerEntry,
-  WeekDay,
-} from '../interfaces/machine';
-import { getCastmillIntro } from './intro';
-import { Channel, JsonChannel } from './channel';
-import { Schema } from '../interfaces';
-import { JsonMedia } from '../interfaces/json-media';
-import { DivLogger, Logger, NullLogger, WebSocketLogger } from './logger';
-import { TimerManager } from './timer-manager';
+} from "@castmill/player";
+import { ResourceManager, Cache, StorageIntegration, ItemType } from "@castmill/cache";
+import { Machine, DeviceInfo, Timers, TimerEntry, WeekDay } from "../interfaces/machine";
+import { getCastmillIntro } from "./intro";
+import { Channel, JsonChannel } from "./channel";
+import { Schema } from "../interfaces";
+import { JsonMedia } from "../interfaces/json-media";
+import { DivLogger, Logger, NullLogger, WebSocketLogger } from "./logger";
+import { TimerManager } from "./timer-manager";
 
 const HEARTBEAT_INTERVAL = 1000 * 30; // 30 seconds
 const DEFAULT_MAX_LOGS = 100;
 const MAX_RECONNECT_DELAY_MS = 60_000; // 60 seconds max delay between reconnect attempts
 
 // Socket reconnection error types
-const AUTH_ERROR_INVALID_DEVICE = 'invalid_device';
-const AUTH_ERROR_UNAUTHORIZED = 'unauthorized';
+const AUTH_ERROR_INVALID_DEVICE = "invalid_device";
+const AUTH_ERROR_UNAUTHORIZED = "unauthorized";
 
 // Exponential backoff for socket reconnection
 // Returns delay in ms: 1s, 2s, 4s, 8s, …, capped at 60s
 const getReconnectDelay = (tries: number): number => {
-  return Math.min(
-    1000 * Math.pow(2, Math.max(tries - 1, 0)),
-    MAX_RECONNECT_DELAY_MS
-  );
+  return Math.min(1000 * Math.pow(2, Math.max(tries - 1, 0)), MAX_RECONNECT_DELAY_MS);
 };
 
-const supportedDebugModes = ['remote', 'local', 'none'];
+const supportedDebugModes = ["remote", "local", "none"];
 
 export enum Status {
-  Registering = 'registering',
-  RecoveryBlocked = 'recovery_blocked',
-  Ready = 'ready', // Player is ready to play content, but may be offline
+  Registering = "registering",
+  RecoveryBlocked = "recovery_blocked",
+  Ready = "ready", // Player is ready to play content, but may be offline
 }
 
 class RecoveryBlockedError extends Error {
   constructor() {
-    super('Device recovery blocked for security reasons');
-    this.name = 'RecoveryBlockedError';
+    super("Device recovery blocked for security reasons");
+    this.name = "RecoveryBlockedError";
   }
 }
 
 export interface DeviceMessage {
-  resource: 'device' | 'channel' | 'playlist' | 'widget';
-  action: 'update' | 'delete';
+  resource: "device" | "channel" | "playlist" | "widget";
+  action: "update" | "delete";
   data: any;
 }
 
 export interface DeviceCommand {
   command:
-    | 'refresh'
-    | 'clear_cache'
-    | 'restart_app'
-    | 'restart_device'
-    | 'update_app'
-    | 'update_firmware'
-    | 'shutdown'
-    | 'device_removed';
+    | "refresh"
+    | "clear_cache"
+    | "restart_app"
+    | "restart_device"
+    | "update_app"
+    | "update_firmware"
+    | "shutdown"
+    | "device_removed";
 }
 
 export interface ChannelUpdatedMessage {
@@ -108,17 +94,17 @@ interface CachePage {
 }
 
 interface CacheDeleteRequest {
-  type: ItemType | 'all';
+  type: ItemType | "all";
   urls: string[];
 }
 
 interface DeviceRequest {
-  resource: 'cache' | 'telemetry' | 'timers';
+  resource: "cache" | "telemetry" | "timers";
   opts: CachePage & { ref: string };
 }
 
 interface DeviceSetRequest {
-  resource: 'timers';
+  resource: "timers";
   timers: {
     on: Array<{ hours: number; minutes: number; weekDays: string[] }>;
     off: Array<{ hours: number; minutes: number; weekDays: string[] }>;
@@ -127,7 +113,7 @@ interface DeviceSetRequest {
 }
 
 interface DeviceDeleteRequest {
-  resource: 'cache';
+  resource: "cache";
   opts: CacheDeleteRequest & { ref: string };
 }
 
@@ -175,11 +161,11 @@ export class Device extends EventEmitter {
   // The base url is the url of the Castmill API. By default it is assumed that the API is
   // hosted at the same domain as this device and accessible through a relative path.
   // Hence, the default value is an empty string.
-  private baseUrl = '';
+  private baseUrl = "";
 
   public id?: string;
   public name?: string;
-  public debugMode: 'remote' | 'local' | 'none' = 'none';
+  public debugMode: "remote" | "local" | "none" = "none";
 
   constructor(
     private integration: Machine,
@@ -189,7 +175,7 @@ export class Device extends EventEmitter {
         maxItems?: number;
       };
       viewport?: Viewport;
-    }
+    },
   ) {
     super();
 
@@ -210,8 +196,8 @@ export class Device extends EventEmitter {
 
     this.cache = new Cache(
       this.storageIntegration,
-      'castmill-device',
-      opts?.cache?.maxItems || 1000
+      "castmill-device",
+      opts?.cache?.maxItems || 1000,
     );
 
     //const intro = getCastmillIntro(this.resourceManager);
@@ -226,7 +212,7 @@ export class Device extends EventEmitter {
     const credentials = await this.getCredentials();
 
     if (!credentials) {
-      throw new Error('Invalid credentials');
+      throw new Error("Invalid credentials");
     }
 
     const { device } = credentials;
@@ -237,18 +223,16 @@ export class Device extends EventEmitter {
 
     await this.resourceManager.init();
 
-    this.contentQueue = new Playlist('content-queue', this.resourceManager);
+    this.contentQueue = new Playlist("content-queue", this.resourceManager);
 
     const rawChannels = await this.resourceManager.getData(
       `${this.baseUrl}/devices/${device.id}/channels`,
-      1000
+      1000,
     );
 
-    this.channels = (rawChannels?.data || []).map(
-      (channel: JsonChannel) => new Channel(channel)
-    );
+    this.channels = (rawChannels?.data || []).map((channel: JsonChannel) => new Channel(channel));
 
-    this.emitProgress(4, 5, 'Loading channels');
+    this.emitProgress(4, 5, "Loading channels");
 
     this.id = device.id;
     this.name = device.name;
@@ -259,9 +243,9 @@ export class Device extends EventEmitter {
     const renderer = new Renderer(el);
     this.player = new Player(this.contentQueue, renderer, this.opts?.viewport);
 
-    this.emitProgress(5, 5, 'Starting player');
+    this.emitProgress(5, 5, "Starting player");
 
-    this.emit('ready', device);
+    this.emit("ready", device);
     // Start timer checks only if using software fallback
     if (!this.integration.setTimers) {
       this.timerManager.scheduleTimerChecks();
@@ -290,13 +274,10 @@ export class Device extends EventEmitter {
           const calendar = this.channels[this.channelIndex];
           const entry = calendar.getPlaylistAt(Date.now());
           if (entry) {
-            const jsonPlaylist: JsonPlaylist | void =
-              await this.resourceManager.getData(
-                `${this.baseUrl}/devices/${device.id}/playlists/${
-                  entry.playlist
-                }`,
-                1000
-              );
+            const jsonPlaylist: JsonPlaylist | void = await this.resourceManager.getData(
+              `${this.baseUrl}/devices/${device.id}/playlists/${entry.playlist}`,
+              1000,
+            );
 
             // Check if channels changed while we were fetching - if so, discard this content
             if (this.channelGeneration !== currentGeneration) {
@@ -312,13 +293,9 @@ export class Device extends EventEmitter {
                 continue;
               }
 
-              const layer = await Layer.fromPlaylist(
-                jsonPlaylist,
-                this.resourceManager,
-                {
-                  target: 'poster',
-                }
-              );
+              const layer = await Layer.fromPlaylist(jsonPlaylist, this.resourceManager, {
+                target: "poster",
+              });
 
               // Final check before adding to queue
               if (this.channelGeneration !== currentGeneration) {
@@ -331,10 +308,10 @@ export class Device extends EventEmitter {
 
               const onEnd = () => {
                 this.contentQueue!.remove(layer);
-                layer.off('end', onEnd);
+                layer.off("end", onEnd);
               };
 
-              layer.on('end', onEnd);
+              layer.on("end", onEnd);
             }
           }
 
@@ -367,12 +344,7 @@ export class Device extends EventEmitter {
     try {
       const parsed = JSON.parse(credentials);
       // Validate the credentials
-      if (
-        parsed?.device &&
-        parsed?.device?.id &&
-        parsed?.device?.token &&
-        parsed?.device?.name
-      ) {
+      if (parsed?.device && parsed?.device?.id && parsed?.device?.token && parsed?.device?.name) {
         return parsed;
       }
     } catch (error) {
@@ -389,19 +361,19 @@ export class Device extends EventEmitter {
   private getWidgetMedias(
     schema: Schema,
     data: { [index: string]: any },
-    opts: { context: string } = { context: 'default' }
+    opts: { context: string } = { context: "default" },
   ): string[] {
-    const str = 'medias|type:image';
+    const str = "medias|type:image";
     const regex = /([^|]+)\|([^|]+)/; // A regular expression to capture two groups separated by a pipe character
 
     // Find all the keys in the schema that are references to media.
     const mediaKeys = Object.keys(schema).filter((key) => {
       const field = schema[key];
-      if (typeof field !== 'string' && field.type === 'ref') {
+      if (typeof field !== "string" && field.type === "ref") {
         const match = field.collection.match(regex);
         if (match) {
           const [, collection, filter] = match;
-          return collection === 'medias';
+          return collection === "medias";
         }
       }
     });
@@ -415,39 +387,31 @@ export class Device extends EventEmitter {
         const file = media?.files[opts.context];
         return file?.uri;
       })
-      .filter((uri) => typeof uri !== 'undefined') as string[];
+      .filter((uri) => typeof uri !== "undefined") as string[];
   }
 
   private getPlaylistMedias(playlist: JsonPlaylist) {
-    const medias = playlist.items.reduce(
-      (acc: string[], item: JsonPlaylistItem) => {
-        const widget = item.widget;
-        const config = item.config;
+    const medias = playlist.items.reduce((acc: string[], item: JsonPlaylistItem) => {
+      const widget = item.widget;
+      const config = item.config;
 
-        if (widget.options_schema) {
-          const widgetMedias = this.getWidgetMedias(
-            widget.options_schema,
-            config.options
-          );
-          return [...acc, ...widgetMedias];
-        } else {
-          return acc;
-        }
-      },
-      []
-    );
+      if (widget.options_schema) {
+        const widgetMedias = this.getWidgetMedias(widget.options_schema, config.options);
+        return [...acc, ...widgetMedias];
+      } else {
+        return acc;
+      }
+    }, []);
 
     return medias;
   }
 
   private cacheMedias(medias: string[]) {
-    return Promise.all(
-      medias.map((url) => this.resourceManager?.cacheMedia(url))
-    );
+    return Promise.all(medias.map((url) => this.resourceManager?.cacheMedia(url)));
   }
 
   private async requestPincode(hardwareId: string): Promise<string> {
-    this.emitProgress(2, 3, 'Connecting to server');
+    this.emitProgress(2, 3, "Connecting to server");
 
     const location = await this.integration.getLocation!();
     const timezone = await this.integration.getTimezone!();
@@ -458,9 +422,9 @@ export class Device extends EventEmitter {
     while (!this.closing && !recovered) {
       try {
         const pincodeResponse = await fetch(`${this.baseUrl}/registrations`, {
-          method: 'POST',
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
             hardware_id: hardwareId,
@@ -500,7 +464,7 @@ export class Device extends EventEmitter {
         } else if (pincodeResponse.status === 403) {
           const body = await pincodeResponse.json().catch(() => ({}));
 
-          if (body?.error_code === 'recovery_blocked') {
+          if (body?.error_code === "recovery_blocked") {
             throw new RecoveryBlockedError();
           }
 
@@ -515,9 +479,7 @@ export class Device extends EventEmitter {
 
         tries++;
         const delay = getReconnectDelay(tries);
-        this.logger.info(
-          `Failed to request pincode: ${error}. Retrying in ${delay / 1000}s...`
-        );
+        this.logger.info(`Failed to request pincode: ${error}. Retrying in ${delay / 1000}s...`);
         await new Promise((resolve) => setTimeout(resolve, delay));
       }
     }
@@ -533,12 +495,12 @@ export class Device extends EventEmitter {
       }
     }
 
-    throw new Error('Pincode request cancelled: device is closing');
+    throw new Error("Pincode request cancelled: device is closing");
   }
 
   private emitProgress(step: number, totalSteps: number, label: string) {
     const percent = Math.round((step / totalSteps) * 100);
-    this.emit('progress', {
+    this.emit("progress", {
       step,
       totalSteps,
       percent,
@@ -553,7 +515,7 @@ export class Device extends EventEmitter {
     // Check if this device is registered by getting the credentials from the local storage (if they exist).
     let credentials = await this.getCredentials();
 
-    this.emitProgress(1, credentials ? 5 : 3, 'Identifying device');
+    this.emitProgress(1, credentials ? 5 : 3, "Identifying device");
 
     if (credentials) {
       // Set device id and name early so they're available even if start() isn't called (e.g. timer-off)
@@ -568,10 +530,7 @@ export class Device extends EventEmitter {
           this.initHeartbeat(phoenixChannel);
         })
         .catch(async (error) => {
-          if (
-            error === AUTH_ERROR_INVALID_DEVICE ||
-            error === AUTH_ERROR_UNAUTHORIZED
-          ) {
+          if (error === AUTH_ERROR_INVALID_DEVICE || error === AUTH_ERROR_UNAUTHORIZED) {
             // Clean all app data and refresh the page.
             await this.integration.removeCredentials();
             window.location.reload();
@@ -610,9 +569,9 @@ export class Device extends EventEmitter {
           const timezone = await this.integration.getTimezone!();
 
           const response = await fetch(`${this.baseUrl}/registrations`, {
-            method: 'POST',
+            method: "POST",
             headers: {
-              'Content-Type': 'application/json',
+              "Content-Type": "application/json",
             },
             body: JSON.stringify({
               hardware_id: hardwareId,
@@ -631,9 +590,7 @@ export class Device extends EventEmitter {
               },
             };
 
-            await this.integration.storeCredentials!(
-              JSON.stringify(credentials)
-            );
+            await this.integration.storeCredentials!(JSON.stringify(credentials));
             window.location.reload();
             return;
           }
@@ -646,7 +603,7 @@ export class Device extends EventEmitter {
 
           if (response.status !== 403) {
             this.logger.info(
-              `Unexpected status while waiting for recovery eligibility: ${response.status}`
+              `Unexpected status while waiting for recovery eligibility: ${response.status}`,
             );
           }
         } catch (error) {
@@ -661,13 +618,13 @@ export class Device extends EventEmitter {
   }
 
   get socketEndpoint() {
-    return `${this.baseUrl.replace('http', 'ws')}/socket`;
+    return `${this.baseUrl.replace("http", "ws")}/socket`;
   }
 
   async register(hardwareId: string) {
     const pincode = await this.requestPincode(hardwareId);
 
-    this.emitProgress(3, 3, 'Preparing registration');
+    this.emitProgress(3, 3, "Preparing registration");
 
     let socket = new Socket(this.socketEndpoint, {
       params: { token: pincode },
@@ -683,21 +640,19 @@ export class Device extends EventEmitter {
     });
     channel
       .join()
-      .receive('ok', (resp) => {
+      .receive("ok", (resp) => {
         // Do not show the pincode until this is done
         this.logger.info(`Joined successfully ${resp}`);
       })
-      .receive('error', (resp) => {
+      .receive("error", (resp) => {
         // TODO: Show error in UI.
         this.logger.error(`Unable to join ${resp}`);
       })
-      .receive('timeout', () => {
-        this.logger.info(
-          'Registration channel join timeout, waiting for connection...'
-        );
+      .receive("timeout", () => {
+        this.logger.info("Registration channel join timeout, waiting for connection...");
       });
 
-    channel.on('device:registered', async (payload) => {
+    channel.on("device:registered", async (payload) => {
       this.logger.info(`Device registered ${payload}`);
 
       const normalizedCredentials: Credentials = {
@@ -711,9 +666,7 @@ export class Device extends EventEmitter {
       };
 
       // Store token in local storage as credentials.
-      await this.integration.storeCredentials!(
-        JSON.stringify(normalizedCredentials)
-      );
+      await this.integration.storeCredentials!(JSON.stringify(normalizedCredentials));
 
       // Refresh the page to initialize the player with the new credentials.
       window.location.reload();
@@ -724,7 +677,7 @@ export class Device extends EventEmitter {
   async login(credentials: Credentials, hardwareId: string) {
     const { device } = credentials;
 
-    this.emitProgress(2, 5, 'Connecting to server');
+    this.emitProgress(2, 5, "Connecting to server");
 
     const socket = (this.socket = new Socket(this.socketEndpoint, {
       params: { device_id: device.id, hardware_id: hardwareId },
@@ -755,7 +708,7 @@ export class Device extends EventEmitter {
         if (!settled) {
           settled = true;
           cleanup();
-          this.emitProgress(3, 5, 'Authenticating');
+          this.emitProgress(3, 5, "Authenticating");
           resolve(value);
         }
       };
@@ -771,24 +724,19 @@ export class Device extends EventEmitter {
       // Handle initial join attempt and rejoins after reconnection
       channel
         .join()
-        .receive('ok', () => {
+        .receive("ok", () => {
           safeResolve(channel);
         })
-        .receive('error', (resp) => {
+        .receive("error", (resp) => {
           // Only reject for auth errors, not connection failures
-          if (
-            resp === AUTH_ERROR_INVALID_DEVICE ||
-            resp === AUTH_ERROR_UNAUTHORIZED
-          ) {
+          if (resp === AUTH_ERROR_INVALID_DEVICE || resp === AUTH_ERROR_UNAUTHORIZED) {
             safeReject(resp);
           } else {
-            this.logger.error(
-              `Channel join error: ${resp}, will keep trying...`
-            );
+            this.logger.error(`Channel join error: ${resp}, will keep trying...`);
           }
         })
-        .receive('timeout', () => {
-          this.logger.info('Channel join timeout, waiting for connection...');
+        .receive("timeout", () => {
+          this.logger.info("Channel join timeout, waiting for connection...");
         });
 
       // Poll channel state to detect successful reconnection and rejoin
@@ -796,14 +744,12 @@ export class Device extends EventEmitter {
       stateCheckInterval = setInterval(() => {
         // If the device is closing while we're still trying to log in, cancel the attempt
         if (this.closing) {
-          this.logger.info(
-            'Device is closing while waiting for login, cancelling login attempt.'
-          );
-          safeReject(new Error('Login cancelled because device is closing'));
+          this.logger.info("Device is closing while waiting for login, cancelling login attempt.");
+          safeReject(new Error("Login cancelled because device is closing"));
           return;
         }
 
-        if (!settled && channel.state === 'joined') {
+        if (!settled && channel.state === "joined") {
           safeResolve(channel);
         }
       }, 1000);
@@ -811,32 +757,32 @@ export class Device extends EventEmitter {
   }
 
   private initListeners(channel: PhoenixChannel) {
-    channel.on('command', async (payload: DeviceCommand) => {
+    channel.on("command", async (payload: DeviceCommand) => {
       switch (payload.command) {
-        case 'refresh':
+        case "refresh":
           // Refresh browser
           location.reload();
           break;
-        case 'clear_cache':
+        case "clear_cache":
           // Clear cache
           this.cache.clean();
           break;
-        case 'restart_app':
+        case "restart_app":
           this.restart();
           break;
-        case 'restart_device':
+        case "restart_device":
           this.reboot();
           break;
-        case 'update_app':
+        case "update_app":
           this.update();
           break;
-        case 'update_firmware':
+        case "update_firmware":
           this.updateFirmware();
           break;
-        case 'shutdown':
+        case "shutdown":
           this.shutdown();
           break;
-        case 'device_removed':
+        case "device_removed":
           // Device has been deleted from the dashboard
           // Clear credentials and cached data, then reload to show registration page
           await this.integration.removeCredentials();
@@ -846,109 +792,101 @@ export class Device extends EventEmitter {
       }
     });
 
-    channel.on('get', async (payload: DeviceRequest) => {
+    channel.on("get", async (payload: DeviceRequest) => {
       const { resource, opts } = payload;
       switch (resource) {
-        case 'cache':
+        case "cache":
           const page = await this.getCache(opts);
-          channel.push('res:get', { page, ref: opts.ref });
+          channel.push("res:get", { page, ref: opts.ref });
           break;
-        case 'telemetry':
+        case "telemetry":
           const telemetry = (await this.integration.getTelemetry?.()) ?? {};
-          channel.push('res:get', { telemetry, ref: opts.ref });
+          channel.push("res:get", { telemetry, ref: opts.ref });
           break;
-        case 'timers':
+        case "timers":
           const timers = await this.getTimers();
-          channel.push('res:get', { timers, ref: opts.ref });
+          channel.push("res:get", { timers, ref: opts.ref });
           break;
       }
     });
 
-    channel.on('set', async (payload: DeviceSetRequest) => {
+    channel.on("set", async (payload: DeviceSetRequest) => {
       const { resource, timers, opts } = payload;
       switch (resource) {
-        case 'timers':
+        case "timers":
           try {
             // Idempotency check: skip if timers haven't changed
             const currentTimers = await this.getTimers();
             const normalize = (t: Timers) =>
               JSON.stringify({
-                on: [...t.on].sort(
-                  (a, b) => a.hours - b.hours || a.minutes - b.minutes
-                ),
-                off: [...t.off].sort(
-                  (a, b) => a.hours - b.hours || a.minutes - b.minutes
-                ),
+                on: [...t.on].sort((a, b) => a.hours - b.hours || a.minutes - b.minutes),
+                off: [...t.off].sort((a, b) => a.hours - b.hours || a.minutes - b.minutes),
               });
 
             if (normalize(timers as Timers) === normalize(currentTimers)) {
-              console.log('[Device] Timers unchanged, skipping update');
-              channel.push('res:set', { success: true, ref: opts.ref });
+              console.log("[Device] Timers unchanged, skipping update");
+              channel.push("res:set", { success: true, ref: opts.ref });
             } else {
               // Send ack before reload to avoid WebSocket timeout
-              channel.push('res:set', { success: true, ref: opts.ref });
+              channel.push("res:set", { success: true, ref: opts.ref });
               await this.setTimers(timers as Timers);
             }
           } catch (error) {
-            channel.push('res:set', { success: false, ref: opts.ref });
+            channel.push("res:set", { success: false, ref: opts.ref });
           }
           break;
       }
     });
 
-    channel.on('delete', async (payload: DeviceDeleteRequest) => {
+    channel.on("delete", async (payload: DeviceDeleteRequest) => {
       const { resource, opts } = payload;
       switch (resource) {
-        case 'cache':
+        case "cache":
           const result = await this.deleteCache(opts);
-          channel.push('res:delete', { result, ref: opts.ref });
+          channel.push("res:delete", { result, ref: opts.ref });
           break;
       }
     });
 
-    channel.on('update', async (data: DeviceMessage) => {
+    channel.on("update", async (data: DeviceMessage) => {
       switch (data.resource) {
-        case 'device':
+        case "device":
           break;
-        case 'channel':
+        case "channel":
           // We could just mark the channel as dirty (in the resource manager), as we do not know
           // when the channel would be used.
           break;
-        case 'playlist':
+        case "playlist":
           // We could mark the playlist as dirty (in the resource manager), as we do not know
           // when or even if the playlist will be used.
           break;
-        case 'widget':
+        case "widget":
           break;
       }
     });
 
     // Handle channel updates (e.g., when default playlist changes)
-    channel.on('channel_updated', async (message: ChannelUpdatedMessage) => {
+    channel.on("channel_updated", async (message: ChannelUpdatedMessage) => {
       this.logger.info(
-        `Channel ${message.channel_id} updated, default playlist: ${message.default_playlist_id}`
+        `Channel ${message.channel_id} updated, default playlist: ${message.default_playlist_id}`,
       );
 
       // Find the channel that was updated
-      const updatedChannel = this.channels.find(
-        (ch) => ch.attrs.id === String(message.channel_id)
-      );
+      const updatedChannel = this.channels.find((ch) => ch.attrs.id === String(message.channel_id));
       if (updatedChannel) {
         // Update the channel's default playlist ID
         updatedChannel.attrs.default_playlist_id = message.default_playlist_id
           ? String(message.default_playlist_id)
           : undefined;
         this.logger.info(
-          'Channel default playlist updated, will take effect on next schedule check'
+          "Channel default playlist updated, will take effect on next schedule check",
         );
       }
     });
 
     // Handle channel added to device
-    channel.on('channel_added', async (message: ChannelAddedMessage) => {
-      this.logger.info(
-        `Channel ${message.channel.id} (${message.channel.name}) added to device`
-      );
+    channel.on("channel_added", async (message: ChannelAddedMessage) => {
+      this.logger.info(`Channel ${message.channel.id} (${message.channel.name}) added to device`);
 
       // Increment generation to invalidate any in-flight content loading
       this.channelGeneration++;
@@ -980,7 +918,7 @@ export class Device extends EventEmitter {
     });
 
     // Handle channel removed from device
-    channel.on('channel_removed', async (message: ChannelRemovedMessage) => {
+    channel.on("channel_removed", async (message: ChannelRemovedMessage) => {
       this.logger.info(`Channel ${message.channel_id} removed from device`);
 
       // Increment generation to invalidate any in-flight content loading
@@ -990,7 +928,7 @@ export class Device extends EventEmitter {
       // Compare as strings to handle both string and number IDs
       const channelIdToRemove = String(message.channel_id);
       const channelIndex = this.channels.findIndex(
-        (ch) => String(ch.attrs.id) === channelIdToRemove
+        (ch) => String(ch.attrs.id) === channelIdToRemove,
       );
 
       if (channelIndex !== -1) {
@@ -1027,7 +965,7 @@ export class Device extends EventEmitter {
     try {
       let deleted = 0;
 
-      if (type === 'all') {
+      if (type === "all") {
         // Clear all cache
         await this.cache.clean();
         const [dataCount, codeCount, mediaCount] = await Promise.all([
@@ -1046,14 +984,14 @@ export class Device extends EventEmitter {
 
       return { success: true, deleted };
     } catch (error) {
-      console.error('Error deleting cache:', error);
+      console.error("Error deleting cache:", error);
       return { success: false, error: String(error) };
     }
   }
 
   private initHeartbeat(channel: PhoenixChannel) {
     setInterval(() => {
-      channel.push('heartbeat', {});
+      channel.push("heartbeat", {});
     }, HEARTBEAT_INTERVAL);
   }
 
@@ -1083,11 +1021,9 @@ export class Device extends EventEmitter {
     const localBaseUrl = import.meta.env.VITE_LOCAL_BASE_URL;
 
     return [
-      ...(productionBaseUrl
-        ? [{ name: 'Production', url: productionBaseUrl }]
-        : []),
-      ...(devBaseUrl ? [{ name: 'Stage', url: devBaseUrl }] : []),
-      ...(localBaseUrl ? [{ name: 'Local', url: localBaseUrl }] : []),
+      ...(productionBaseUrl ? [{ name: "Production", url: productionBaseUrl }] : []),
+      ...(devBaseUrl ? [{ name: "Stage", url: devBaseUrl }] : []),
+      ...(localBaseUrl ? [{ name: "Local", url: localBaseUrl }] : []),
     ];
   }
 
@@ -1096,14 +1032,14 @@ export class Device extends EventEmitter {
   //
 
   async setBaseUrl(url: string) {
-    await this.integration.setSetting('BASE_URL', url);
+    await this.integration.setSetting("BASE_URL", url);
     // Refresh the page to reinitialize the player with the new base url.
     location.reload();
   }
 
   async getBaseUrl(): Promise<string> {
     // First we check if there is a base url set in the settings.
-    const baseUrl = await this.integration.getSetting('BASE_URL');
+    const baseUrl = await this.integration.getSetting("BASE_URL");
     if (baseUrl) {
       return baseUrl;
     }
@@ -1125,7 +1061,7 @@ export class Device extends EventEmitter {
       return availableBaseUrls[0].url;
     }
     // Fallback: return empty string or a sensible default
-    return '';
+    return "";
   }
 
   getDeviceInfo() {
@@ -1137,14 +1073,11 @@ export class Device extends EventEmitter {
     networkName?: string;
   }> {
     try {
-      const response = await fetch(
-        `${this.baseUrl}/devices/${credentials.device.id}/channels`,
-        {
-          headers: {
-            Authorization: `Bearer ${credentials.device.token}`,
-          },
-        }
-      );
+      const response = await fetch(`${this.baseUrl}/devices/${credentials.device.id}/channels`, {
+        headers: {
+          Authorization: `Bearer ${credentials.device.token}`,
+        },
+      });
 
       if (!response.ok) {
         return {};
@@ -1156,9 +1089,7 @@ export class Device extends EventEmitter {
         network_name?: string;
       }> = Array.isArray(payload?.data) ? payload.data : [];
 
-      const first = channels.find(
-        (channel) => channel.organization_name || channel.network_name
-      );
+      const first = channels.find((channel) => channel.organization_name || channel.network_name);
 
       return {
         organizationName: first?.organization_name,
@@ -1237,16 +1168,16 @@ export class Device extends EventEmitter {
   private showTimerOffOverlay() {
     if (this.timerOffOverlay) return; // already showing
 
-    const overlay = document.createElement('div');
-    overlay.style.position = 'fixed';
-    overlay.style.top = '0';
-    overlay.style.left = '0';
-    overlay.style.width = '100%';
-    overlay.style.height = '100%';
-    overlay.style.background = 'black';
+    const overlay = document.createElement("div");
+    overlay.style.position = "fixed";
+    overlay.style.top = "0";
+    overlay.style.left = "0";
+    overlay.style.width = "100%";
+    overlay.style.height = "100%";
+    overlay.style.background = "black";
     // Must be above the player but below the menu (z-index: 1000000 in basemenu.module.css)
-    overlay.style.zIndex = '999999';
-    overlay.setAttribute('data-timer-off-overlay', 'true');
+    overlay.style.zIndex = "999999";
+    overlay.setAttribute("data-timer-off-overlay", "true");
 
     document.body.appendChild(overlay);
     this.timerOffOverlay = overlay;
@@ -1308,24 +1239,22 @@ export class Device extends EventEmitter {
     return this.timerManager.getNextOffTime();
   }
 
-  setLogMode(logMode: 'remote' | 'local' | 'none') {
+  setLogMode(logMode: "remote" | "local" | "none") {
     if (supportedDebugModes.indexOf(logMode) !== -1) {
       this.debugMode = logMode;
       switch (logMode) {
-        case 'remote':
+        case "remote":
           if (this.socket && this.id) {
             this.logger.setLogger(new WebSocketLogger(this.socket, this.id));
           }
           break;
-        case 'local':
+        case "local":
           // Show logs in log div
           if (this.logDiv) {
-            this.logger.setLogger(
-              new DivLogger(this.logDiv!, DEFAULT_MAX_LOGS)
-            );
+            this.logger.setLogger(new DivLogger(this.logDiv!, DEFAULT_MAX_LOGS));
           }
           break;
-        case 'none':
+        case "none":
           this.logger.setLogger(new NullLogger());
           break;
       }

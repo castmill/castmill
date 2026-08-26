@@ -1,9 +1,9 @@
-import { Component, mergeProps, Show, splitProps, JSX } from 'solid-js';
-import { IconTypes } from 'solid-icons';
-import { IconWrapper } from '../icon-wrapper';
-import { VsLoading } from 'solid-icons/vs';
+import { Component, mergeProps, Show, splitProps, JSX } from "solid-js";
+import { IconTypes } from "solid-icons";
+import { IconWrapper } from "../icon-wrapper";
+import { VsLoading } from "solid-icons/vs";
 
-import styles from './button.module.scss';
+import styles from "./button.module.scss";
 
 export type ButtonProps = JSX.ButtonHTMLAttributes<HTMLButtonElement> & {
   onClick?: () => void;
@@ -11,36 +11,36 @@ export type ButtonProps = JSX.ButtonHTMLAttributes<HTMLButtonElement> & {
   loading?: boolean;
   icon?: IconTypes; // This can be any SVG component from solid-icons or other libraries
   iconProps?: Record<string, any>;
-  type?: 'button' | 'submit' | 'reset';
+  type?: "button" | "submit" | "reset";
   label?: string | (() => string);
-  color?: 'primary' | 'secondary' | 'danger' | 'success' | 'info' | 'warning';
+  color?: "primary" | "secondary" | "danger" | "success" | "info" | "warning";
   title?: string;
 };
 
 export const Button: Component<ButtonProps> = (props) => {
   const mergedProps = mergeProps(
     {
-      type: 'button',
+      type: "button",
       disabled: false,
       loading: false,
-      color: 'primary', // Default color
+      color: "primary", // Default color
       title: undefined as string | undefined,
     },
-    props
+    props,
   );
 
   const [local, others] = splitProps(mergedProps, [
-    'onClick',
-    'disabled',
-    'loading',
-    'icon',
-    'iconProps',
-    'type',
-    'label',
-    'color',
-    'title',
-    'class',
-    'classList',
+    "onClick",
+    "disabled",
+    "loading",
+    "icon",
+    "iconProps",
+    "type",
+    "label",
+    "color",
+    "title",
+    "class",
+    "classList",
   ]);
 
   let buttonElement: HTMLButtonElement | null = null;
@@ -65,21 +65,20 @@ export const Button: Component<ButtonProps> = (props) => {
     return [
       styles.button,
       styles[`button-${local.color}`],
-      local.disabled || local.loading ? styles['button-disabled'] : '',
-      local.loading ? styles['button-loading'] : '',
-      local.class || '',
-    ].join(' ');
+      local.disabled || local.loading ? styles["button-disabled"] : "",
+      local.loading ? styles["button-loading"] : "",
+      local.class || "",
+    ].join(" ");
   };
 
-  const getLabel = () =>
-    typeof local.label === 'function' ? local.label() : local.label;
+  const getLabel = () => (typeof local.label === "function" ? local.label() : local.label);
 
   const ariaLabel = () => getLabel() || local.title;
 
   return (
     <button
       ref={(el) => (buttonElement = el)} // Attach ref to the button
-      type={local.type as 'button' | 'submit' | 'reset'}
+      type={local.type as "button" | "submit" | "reset"}
       class={getClassNames()}
       onClick={handleClick}
       disabled={local.disabled || local.loading}

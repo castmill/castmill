@@ -1,7 +1,7 @@
-import { createSignal, createEffect, on } from 'solid-js';
-import type { ViewMode } from '../components/view-mode-toggle/view-mode-toggle';
+import { createSignal, createEffect, on } from "solid-js";
+import type { ViewMode } from "../components/view-mode-toggle/view-mode-toggle";
 
-const STORAGE_PREFIX = 'castmill-viewMode-';
+const STORAGE_PREFIX = "castmill-viewMode-";
 
 /**
  * A persisted view-mode signal. The initial value is read from localStorage
@@ -13,8 +13,7 @@ export function useViewMode(pageKey: string) {
   const storageKey = `${STORAGE_PREFIX}${pageKey}`;
 
   const stored = localStorage.getItem(storageKey) as ViewMode | null;
-  const initial: ViewMode =
-    stored === 'list' || stored === 'tree' ? stored : 'list';
+  const initial: ViewMode = stored === "list" || stored === "tree" ? stored : "list";
 
   const [viewMode, setViewMode] = createSignal<ViewMode>(initial);
 
@@ -22,7 +21,7 @@ export function useViewMode(pageKey: string) {
   createEffect(
     on(viewMode, (mode) => {
       localStorage.setItem(storageKey, mode);
-    })
+    }),
   );
 
   return [viewMode, setViewMode] as const;

@@ -1,19 +1,19 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { createRoot, createSignal } from 'solid-js';
-import { useTagFilterEffect } from './useTagFilterEffect';
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { createRoot, createSignal } from "solid-js";
+import { useTagFilterEffect } from "./useTagFilterEffect";
 
 // Time to wait for SolidJS effects to settle
 const EFFECT_SETTLE_TIME = 10;
 
-describe('useTagFilterEffect', () => {
+describe("useTagFilterEffect", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('provides handleTagChange function', () => {
+  it("provides handleTagChange function", () => {
     createRoot((dispose) => {
       const [selectedTagIds, setSelectedTagIds] = createSignal<number[]>([]);
-      const [tagFilterMode] = createSignal<'any' | 'all'>('any');
+      const [tagFilterMode] = createSignal<"any" | "all">("any");
       const onRefreshData = vi.fn();
       const onRefreshTree = vi.fn();
 
@@ -26,17 +26,17 @@ describe('useTagFilterEffect', () => {
       });
 
       expect(result.handleTagChange).toBeDefined();
-      expect(typeof result.handleTagChange).toBe('function');
+      expect(typeof result.handleTagChange).toBe("function");
 
       dispose();
     });
   });
 
-  it('handleTagChange updates selectedTagIds signal', async () => {
+  it("handleTagChange updates selectedTagIds signal", async () => {
     await new Promise<void>((resolve) => {
       createRoot((dispose) => {
         const [selectedTagIds, setSelectedTagIds] = createSignal<number[]>([]);
-        const [tagFilterMode] = createSignal<'any' | 'all'>('any');
+        const [tagFilterMode] = createSignal<"any" | "all">("any");
         const onRefreshData = vi.fn();
         const onRefreshTree = vi.fn();
 
@@ -60,11 +60,11 @@ describe('useTagFilterEffect', () => {
     });
   });
 
-  it('does not trigger refresh on initial setup (deferred)', async () => {
+  it("does not trigger refresh on initial setup (deferred)", async () => {
     await new Promise<void>((resolve) => {
       createRoot((dispose) => {
         const [selectedTagIds, setSelectedTagIds] = createSignal<number[]>([1]);
-        const [tagFilterMode] = createSignal<'any' | 'all'>('any');
+        const [tagFilterMode] = createSignal<"any" | "all">("any");
         const onRefreshData = vi.fn();
         const onRefreshTree = vi.fn();
 
@@ -86,11 +86,11 @@ describe('useTagFilterEffect', () => {
     });
   });
 
-  it('triggers refresh when selectedTagIds changes', async () => {
+  it("triggers refresh when selectedTagIds changes", async () => {
     await new Promise<void>((resolve) => {
       createRoot(async (dispose) => {
         const [selectedTagIds, setSelectedTagIds] = createSignal<number[]>([]);
-        const [tagFilterMode] = createSignal<'any' | 'all'>('any');
+        const [tagFilterMode] = createSignal<"any" | "all">("any");
         const onRefreshData = vi.fn();
         const onRefreshTree = vi.fn();
 
@@ -123,15 +123,11 @@ describe('useTagFilterEffect', () => {
     });
   });
 
-  it('triggers refresh when tagFilterMode changes', async () => {
+  it("triggers refresh when tagFilterMode changes", async () => {
     await new Promise<void>((resolve) => {
       createRoot(async (dispose) => {
-        const [selectedTagIds, setSelectedTagIds] = createSignal<number[]>([
-          1, 2,
-        ]);
-        const [tagFilterMode, setTagFilterMode] = createSignal<'any' | 'all'>(
-          'any'
-        );
+        const [selectedTagIds, setSelectedTagIds] = createSignal<number[]>([1, 2]);
+        const [tagFilterMode, setTagFilterMode] = createSignal<"any" | "all">("any");
         const onRefreshData = vi.fn();
         const onRefreshTree = vi.fn();
 
@@ -150,7 +146,7 @@ describe('useTagFilterEffect', () => {
         expect(onRefreshTree).not.toHaveBeenCalled();
 
         // Change filter mode
-        setTagFilterMode('all');
+        setTagFilterMode("all");
 
         // Wait for effect to run
         await new Promise((r) => setTimeout(r, EFFECT_SETTLE_TIME));
@@ -164,13 +160,11 @@ describe('useTagFilterEffect', () => {
     });
   });
 
-  it('triggers refresh when both tags and mode change', async () => {
+  it("triggers refresh when both tags and mode change", async () => {
     await new Promise<void>((resolve) => {
       createRoot(async (dispose) => {
         const [selectedTagIds, setSelectedTagIds] = createSignal<number[]>([]);
-        const [tagFilterMode, setTagFilterMode] = createSignal<'any' | 'all'>(
-          'any'
-        );
+        const [tagFilterMode, setTagFilterMode] = createSignal<"any" | "all">("any");
         const onRefreshData = vi.fn();
         const onRefreshTree = vi.fn();
 
@@ -187,7 +181,7 @@ describe('useTagFilterEffect', () => {
 
         // Change both at once
         setSelectedTagIds([1, 2]);
-        setTagFilterMode('all');
+        setTagFilterMode("all");
 
         // Wait for effect to run
         await new Promise((r) => setTimeout(r, EFFECT_SETTLE_TIME));
@@ -202,13 +196,11 @@ describe('useTagFilterEffect', () => {
     });
   });
 
-  it('triggers refresh multiple times for multiple changes', async () => {
+  it("triggers refresh multiple times for multiple changes", async () => {
     await new Promise<void>((resolve) => {
       createRoot(async (dispose) => {
         const [selectedTagIds, setSelectedTagIds] = createSignal<number[]>([]);
-        const [tagFilterMode, setTagFilterMode] = createSignal<'any' | 'all'>(
-          'any'
-        );
+        const [tagFilterMode, setTagFilterMode] = createSignal<"any" | "all">("any");
         const onRefreshData = vi.fn();
         const onRefreshTree = vi.fn();
 
@@ -238,7 +230,7 @@ describe('useTagFilterEffect', () => {
         expect(onRefreshTree).toHaveBeenCalledTimes(2);
 
         // Third change (mode)
-        setTagFilterMode('all');
+        setTagFilterMode("all");
         await new Promise((r) => setTimeout(r, EFFECT_SETTLE_TIME));
 
         expect(onRefreshData).toHaveBeenCalledTimes(3);
@@ -250,13 +242,11 @@ describe('useTagFilterEffect', () => {
     });
   });
 
-  it('handleTagChange can clear selection', async () => {
+  it("handleTagChange can clear selection", async () => {
     await new Promise<void>((resolve) => {
       createRoot(async (dispose) => {
-        const [selectedTagIds, setSelectedTagIds] = createSignal<number[]>([
-          1, 2,
-        ]);
-        const [tagFilterMode] = createSignal<'any' | 'all'>('any');
+        const [selectedTagIds, setSelectedTagIds] = createSignal<number[]>([1, 2]);
+        const [tagFilterMode] = createSignal<"any" | "all">("any");
         const onRefreshData = vi.fn();
         const onRefreshTree = vi.fn();
 
@@ -288,11 +278,11 @@ describe('useTagFilterEffect', () => {
     });
   });
 
-  it('works with empty initial tag selection', async () => {
+  it("works with empty initial tag selection", async () => {
     await new Promise<void>((resolve) => {
       createRoot(async (dispose) => {
         const [selectedTagIds, setSelectedTagIds] = createSignal<number[]>([]);
-        const [tagFilterMode] = createSignal<'any' | 'all'>('any');
+        const [tagFilterMode] = createSignal<"any" | "all">("any");
         const onRefreshData = vi.fn();
         const onRefreshTree = vi.fn();
 
@@ -321,11 +311,11 @@ describe('useTagFilterEffect', () => {
     });
   });
 
-  it('handles rapid successive changes correctly', async () => {
+  it("handles rapid successive changes correctly", async () => {
     await new Promise<void>((resolve) => {
       createRoot(async (dispose) => {
         const [selectedTagIds, setSelectedTagIds] = createSignal<number[]>([]);
-        const [tagFilterMode] = createSignal<'any' | 'all'>('any');
+        const [tagFilterMode] = createSignal<"any" | "all">("any");
         const onRefreshData = vi.fn();
         const onRefreshTree = vi.fn();
 
@@ -359,13 +349,11 @@ describe('useTagFilterEffect', () => {
     });
   });
 
-  it('effect respects const tuple type for reactive tracking', async () => {
+  it("effect respects const tuple type for reactive tracking", async () => {
     await new Promise<void>((resolve) => {
       createRoot(async (dispose) => {
         const [selectedTagIds, setSelectedTagIds] = createSignal<number[]>([]);
-        const [tagFilterMode, setTagFilterMode] = createSignal<'any' | 'all'>(
-          'any'
-        );
+        const [tagFilterMode, setTagFilterMode] = createSignal<"any" | "all">("any");
         const onRefreshData = vi.fn();
         const onRefreshTree = vi.fn();
 
@@ -387,7 +375,7 @@ describe('useTagFilterEffect', () => {
         expect(callCount1).toBe(1);
 
         // Change second signal
-        setTagFilterMode('all');
+        setTagFilterMode("all");
         await new Promise((r) => setTimeout(r, EFFECT_SETTLE_TIME));
 
         const callCount2 = onRefreshData.mock.calls.length;
@@ -399,14 +387,14 @@ describe('useTagFilterEffect', () => {
     });
   });
 
-  it('calls both refresh callbacks in the correct order', async () => {
+  it("calls both refresh callbacks in the correct order", async () => {
     await new Promise<void>((resolve) => {
       createRoot(async (dispose) => {
         const [selectedTagIds, setSelectedTagIds] = createSignal<number[]>([]);
-        const [tagFilterMode] = createSignal<'any' | 'all'>('any');
+        const [tagFilterMode] = createSignal<"any" | "all">("any");
         const callOrder: string[] = [];
-        const onRefreshData = vi.fn(() => callOrder.push('data'));
-        const onRefreshTree = vi.fn(() => callOrder.push('tree'));
+        const onRefreshData = vi.fn(() => callOrder.push("data"));
+        const onRefreshTree = vi.fn(() => callOrder.push("tree"));
 
         const { handleTagChange } = useTagFilterEffect({
           selectedTagIds,
@@ -423,7 +411,7 @@ describe('useTagFilterEffect', () => {
         await new Promise((r) => setTimeout(r, EFFECT_SETTLE_TIME));
 
         // Both should be called, data before tree
-        expect(callOrder).toEqual(['data', 'tree']);
+        expect(callOrder).toEqual(["data", "tree"]);
         expect(onRefreshData).toHaveBeenCalledTimes(1);
         expect(onRefreshTree).toHaveBeenCalledTimes(1);
 
@@ -433,13 +421,11 @@ describe('useTagFilterEffect', () => {
     });
   });
 
-  it('handles empty tag arrays correctly', async () => {
+  it("handles empty tag arrays correctly", async () => {
     await new Promise<void>((resolve) => {
       createRoot(async (dispose) => {
-        const [selectedTagIds, setSelectedTagIds] = createSignal<number[]>([
-          1, 2,
-        ]);
-        const [tagFilterMode] = createSignal<'any' | 'all'>('any');
+        const [selectedTagIds, setSelectedTagIds] = createSignal<number[]>([1, 2]);
+        const [tagFilterMode] = createSignal<"any" | "all">("any");
         const onRefreshData = vi.fn();
         const onRefreshTree = vi.fn();
 
@@ -468,13 +454,11 @@ describe('useTagFilterEffect', () => {
     });
   });
 
-  it('triggers refresh even when tags array has same content (new array instance)', async () => {
+  it("triggers refresh even when tags array has same content (new array instance)", async () => {
     await new Promise<void>((resolve) => {
       createRoot(async (dispose) => {
-        const [selectedTagIds, setSelectedTagIds] = createSignal<number[]>([
-          1, 2,
-        ]);
-        const [tagFilterMode] = createSignal<'any' | 'all'>('any');
+        const [selectedTagIds, setSelectedTagIds] = createSignal<number[]>([1, 2]);
+        const [tagFilterMode] = createSignal<"any" | "all">("any");
         const onRefreshData = vi.fn();
         const onRefreshTree = vi.fn();
 
@@ -503,13 +487,11 @@ describe('useTagFilterEffect', () => {
     });
   });
 
-  it('works with different filter modes', async () => {
+  it("works with different filter modes", async () => {
     await new Promise<void>((resolve) => {
       createRoot(async (dispose) => {
         const [selectedTagIds, setSelectedTagIds] = createSignal<number[]>([]);
-        const [tagFilterMode, setTagFilterMode] = createSignal<'any' | 'all'>(
-          'all'
-        );
+        const [tagFilterMode, setTagFilterMode] = createSignal<"any" | "all">("all");
         const onRefreshData = vi.fn();
         const onRefreshTree = vi.fn();
 
@@ -523,7 +505,7 @@ describe('useTagFilterEffect', () => {
 
         await new Promise((r) => setTimeout(r, EFFECT_SETTLE_TIME));
 
-        setTagFilterMode('any');
+        setTagFilterMode("any");
 
         await new Promise((r) => setTimeout(r, EFFECT_SETTLE_TIME));
 
@@ -536,13 +518,11 @@ describe('useTagFilterEffect', () => {
     });
   });
 
-  it('continues to work after multiple refresh cycles', async () => {
+  it("continues to work after multiple refresh cycles", async () => {
     await new Promise<void>((resolve) => {
       createRoot(async (dispose) => {
         const [selectedTagIds, setSelectedTagIds] = createSignal<number[]>([]);
-        const [tagFilterMode, setTagFilterMode] = createSignal<'any' | 'all'>(
-          'any'
-        );
+        const [tagFilterMode, setTagFilterMode] = createSignal<"any" | "all">("any");
         const onRefreshData = vi.fn();
         const onRefreshTree = vi.fn();
 
@@ -563,7 +543,7 @@ describe('useTagFilterEffect', () => {
         handleTagChange([1, 2]);
         await new Promise((r) => setTimeout(r, EFFECT_SETTLE_TIME));
 
-        setTagFilterMode('all');
+        setTagFilterMode("all");
         await new Promise((r) => setTimeout(r, EFFECT_SETTLE_TIME));
 
         handleTagChange([2]);
@@ -578,11 +558,11 @@ describe('useTagFilterEffect', () => {
     });
   });
 
-  it('works with large tag arrays', async () => {
+  it("works with large tag arrays", async () => {
     await new Promise<void>((resolve) => {
       createRoot(async (dispose) => {
         const [selectedTagIds, setSelectedTagIds] = createSignal<number[]>([]);
-        const [tagFilterMode] = createSignal<'any' | 'all'>('any');
+        const [tagFilterMode] = createSignal<"any" | "all">("any");
         const onRefreshData = vi.fn();
         const onRefreshTree = vi.fn();
 

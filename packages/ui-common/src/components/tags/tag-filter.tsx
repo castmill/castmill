@@ -7,19 +7,19 @@
  * with tag-specific rendering (color dots, badges).
  */
 
-import { Component, Show } from 'solid-js';
-import type { Tag } from '../../services/tags.service';
-import { MultiSelectFilter } from '../multi-select-filter/multi-select-filter';
-import type { FilterModeOption } from '../multi-select-filter/multi-select-filter';
+import { Component, Show } from "solid-js";
+import type { Tag } from "../../services/tags.service";
+import { MultiSelectFilter } from "../multi-select-filter/multi-select-filter";
+import type { FilterModeOption } from "../multi-select-filter/multi-select-filter";
 
-import './tag-filter.scss';
+import "./tag-filter.scss";
 
 export interface TagFilterProps {
   tags: Tag[];
   selectedTagIds: number[];
   onTagChange: (tagIds: number[]) => void;
-  filterMode?: 'any' | 'all';
-  onFilterModeChange?: (mode: 'any' | 'all') => void;
+  filterMode?: "any" | "all";
+  onFilterModeChange?: (mode: "any" | "all") => void;
   label?: string;
   placeholder?: string;
   clearLabel?: string;
@@ -37,8 +37,8 @@ export interface TagFilterProps {
 }
 
 const defaultFilterModes: FilterModeOption[] = [
-  { value: 'any', label: 'Any' },
-  { value: 'all', label: 'All' },
+  { value: "any", label: "Any" },
+  { value: "all", label: "All" },
 ];
 
 export const TagFilter: Component<TagFilterProps> = (props) => {
@@ -46,8 +46,8 @@ export const TagFilter: Component<TagFilterProps> = (props) => {
     if (!props.showFilterModeToggle) return undefined;
     if (props.filterModeLabels) {
       return [
-        { value: 'any', label: props.filterModeLabels.any },
-        { value: 'all', label: props.filterModeLabels.all },
+        { value: "any", label: props.filterModeLabels.any },
+        { value: "all", label: props.filterModeLabels.all },
       ];
     }
     return defaultFilterModes;
@@ -59,25 +59,20 @@ export const TagFilter: Component<TagFilterProps> = (props) => {
       selectedIds={props.selectedTagIds}
       onSelectionChange={(ids) => props.onTagChange(ids as number[])}
       label={props.label}
-      placeholder={props.placeholder || 'Filter by tags\u2026'}
+      placeholder={props.placeholder || "Filter by tags\u2026"}
       clearLabel={props.clearLabel}
       disabled={props.disabled}
       searchable
-      searchPlaceholder={props.searchPlaceholder || 'Search tags\u2026'}
+      searchPlaceholder={props.searchPlaceholder || "Search tags\u2026"}
       noMatchMessage={props.noMatchMessage}
       emptyMessage={props.emptyMessage}
       maxDisplayedChips={props.maxDisplayedTags}
       filterModes={filterModes()}
       filterMode={props.filterMode}
-      onFilterModeChange={(mode) =>
-        props.onFilterModeChange?.(mode as 'any' | 'all')
-      }
+      onFilterModeChange={(mode) => props.onFilterModeChange?.(mode as "any" | "all")}
       renderItem={(tag, selected) => (
         <div class="tag-option-item">
-          <span
-            class="tag-color-dot"
-            style={{ 'background-color': tag.color }}
-          />
+          <span class="tag-color-dot" style={{ "background-color": tag.color }} />
           <span class="tag-option-name">{tag.name}</span>
           <Show when={selected}>
             <span class="tag-option-check">✓</span>
@@ -86,10 +81,7 @@ export const TagFilter: Component<TagFilterProps> = (props) => {
       )}
       renderChip={(tag) => (
         <span class="tag-chip-content">
-          <span
-            class="tag-chip-dot"
-            style={{ 'background-color': tag.color }}
-          />
+          <span class="tag-chip-dot" style={{ "background-color": tag.color }} />
           {tag.name}
         </span>
       )}

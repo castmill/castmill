@@ -1,5 +1,1 @@
-export {
-  LayoutEditor,
-  parseAspectRatio,
-  calculateCanvasSize,
-} from './layout-editor';
+export { LayoutEditor, parseAspectRatio, calculateCanvasSize } from "./layout-editor";

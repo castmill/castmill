@@ -4,8 +4,8 @@
  * This module provides a simple interface for animating components.
  *
  */
-import gsap from 'gsap';
-import { Timeline, TimelineItem } from './timeline';
+import gsap from "gsap";
+import { Timeline, TimelineItem } from "./timeline";
 
 export interface AnimationKeyframe {
   from?: gsap.TweenVars;
@@ -18,7 +18,7 @@ export interface AnimationKeyframe {
 }
 
 export interface ComponentAnimation {
-  init?: Exclude<gsap.TimelineVars, 'paused'>;
+  init?: Exclude<gsap.TimelineVars, "paused">;
   keyframes: AnimationKeyframe[];
   /**
    * Start time in milliseconds. Default is 0 (play immediately).
@@ -36,7 +36,7 @@ export const applyAnimations = (
    * Parent duration in milliseconds. Used to resolve negative start times.
    * If not provided, negative start times will be treated as 0.
    */
-  parentDuration?: number
+  parentDuration?: number,
 ) => {
   const addedItems: TimelineItem[] = [];
   const timelines: gsap.core.Timeline[] = [];

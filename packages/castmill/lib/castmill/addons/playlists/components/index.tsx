@@ -1,5 +1,5 @@
-import { BsCheckLg, BsEye, BsTagFill } from 'solid-icons/bs';
-import { AiOutlineDelete, AiOutlineEdit } from 'solid-icons/ai';
+import { BsCheckLg, BsEye, BsTagFill } from "solid-icons/bs";
+import { AiOutlineDelete, AiOutlineEdit } from "solid-icons/ai";
 import {
   Component,
   For,
@@ -11,7 +11,7 @@ import {
   untrack,
   onCleanup,
   on,
-} from 'solid-js';
+} from "solid-js";
 
 import {
   Button,
@@ -43,29 +43,22 @@ import {
   TagBadge,
   TagPopover,
   useViewMode,
-} from '@castmill/ui-common';
-import { JsonPlaylist } from '@castmill/player';
-import { PlaylistsService } from '../services/playlists.service';
-import { QuotaIndicator } from '../../common/components/quota-indicator';
-import {
-  QuotasService,
-  ResourceQuota,
-} from '../../common/services/quotas.service';
+} from "@castmill/ui-common";
+import { JsonPlaylist } from "@castmill/player";
+import { PlaylistsService } from "../services/playlists.service";
+import { QuotaIndicator } from "../../common/components/quota-indicator";
+import { QuotasService, ResourceQuota } from "../../common/services/quotas.service";
 
-import './playlists.scss';
-import { PlaylistView } from './playlist-view';
-import { AddonComponentProps } from '../../common/interfaces/addon-store';
-import { PlaylistAddForm, AspectRatio } from './playlist-add-form';
-import {
-  useTeamFilter,
-  useModalFromUrl,
-  useOnboardingHighlight,
-} from '../../common/hooks';
-import { ASPECT_RATIO_OPTIONS } from '../constants';
+import "./playlists.scss";
+import { PlaylistView } from "./playlist-view";
+import { AddonComponentProps } from "../../common/interfaces/addon-store";
+import { PlaylistAddForm, AspectRatio } from "./playlist-add-form";
+import { useTeamFilter, useModalFromUrl, useOnboardingHighlight } from "../../common/hooks";
+import { ASPECT_RATIO_OPTIONS } from "../constants";
 import {
   validateCustomRatioField,
   validateAspectRatioExtreme as validateAspectRatioExtremeUtil,
-} from '../utils/aspect-ratio-validation';
+} from "../utils/aspect-ratio-validation";
 
 const PlaylistsPage: Component<AddonComponentProps> = (props) => {
   const toast = useToast();
@@ -104,14 +97,14 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
       PlaylistsService.getPlaylist(
         props.store.env.baseUrl,
         props.store.organizations.selectedId,
-        Number(itemId)
+        Number(itemId),
       )
         .then((fetchedPlaylist) => {
           setCurrentPlaylist(fetchedPlaylist);
           setShowDrawer(true);
         })
         .catch((error) => {
-          console.error('Failed to fetch playlist by ID:', error);
+          console.error("Failed to fetch playlist by ID:", error);
           // Silently fail - item might not exist, be deleted, or user has no access
         });
     }
@@ -137,26 +130,21 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
   });
 
   // View mode: list (table) or tree – persisted in localStorage
-  const [viewMode, setViewMode] = useViewMode('playlists');
+  const [viewMode, setViewMode] = useViewMode("playlists");
   const [treeVersion, setTreeVersion] = createSignal(0);
   const bumpTree = () => setTreeVersion((v) => v + 1);
 
   const [showAddPlaylistModal, setShowAddPlaylistModal] = createSignal(false);
-  const [selectedPlaylists, setSelectedPlaylists] = createSignal(
-    new Set<number>()
-  );
+  const [selectedPlaylists, setSelectedPlaylists] = createSignal(new Set<number>());
 
   // Get i18n functions from store
-  const t = (key: string, params?: Record<string, any>) =>
-    props.store.i18n?.t(key, params) || key;
+  const t = (key: string, params?: Record<string, any>) => props.store.i18n?.t(key, params) || key;
 
   // Helper function to check permissions
   const canPerformAction = (resource: string, action: string): boolean => {
     if (!props.store.permissions?.matrix) return false;
     const allowedActions =
-      props.store.permissions.matrix[
-        resource as keyof typeof props.store.permissions.matrix
-      ];
+      props.store.permissions.matrix[resource as keyof typeof props.store.permissions.matrix];
     return allowedActions?.includes(action as any) ?? false;
   };
 
@@ -165,19 +153,16 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
   // ---------------------------------------------------------------------------
   const [tagGroups, setTagGroups] = createSignal<TagGroup[]>([]);
   const [allTags, setAllTags] = createSignal<Tag[]>([]);
-  const [resourceTagsMap, setResourceTagsMap] = createSignal<
-    Map<number, Tag[]>
-  >(new Map());
+  const [resourceTagsMap, setResourceTagsMap] = createSignal<Map<number, Tag[]>>(new Map());
   const [tagPopoverTarget, setTagPopoverTarget] = createSignal<{
     item: JsonPlaylist;
     anchorEl: HTMLElement;
   } | null>(null);
-  const [bulkTagAnchorEl, setBulkTagAnchorEl] =
-    createSignal<HTMLElement | null>(null);
+  const [bulkTagAnchorEl, setBulkTagAnchorEl] = createSignal<HTMLElement | null>(null);
 
   const canManageTags = () => {
     const role = props.store.permissions?.role;
-    return role === 'admin' || role === 'manager';
+    return role === "admin" || role === "manager";
   };
 
   const tagsService = new TagsService(props.store.env.baseUrl);
@@ -196,15 +181,15 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
         setAllTags(allTagsList);
       });
     } catch (error) {
-      console.error('Failed to load tag groups:', error);
+      console.error("Failed to load tag groups:", error);
     }
   };
 
   createEffect(
     on(
       () => props.store.organizations.selectedId,
-      () => loadTagGroups()
-    )
+      () => loadTagGroups(),
+    ),
   );
 
   const loadResourceTags = async (items: JsonPlaylist[]) => {
@@ -218,25 +203,21 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
         try {
           const itemTags = await tagsService.getResourceTags(
             props.store.organizations.selectedId,
-            'playlist',
-            item.id
+            "playlist",
+            item.id,
           );
           tagMap.set(item.id, itemTags);
         } catch {
           tagMap.set(item.id, []);
         }
-      })
+      }),
     );
     setResourceTagsMap(tagMap);
   };
 
   createEffect(on(data, (items) => loadResourceTags(items)));
 
-  const handleTagToggle = async (
-    item: JsonPlaylist,
-    tagId: number,
-    selected: boolean
-  ) => {
+  const handleTagToggle = async (item: JsonPlaylist, tagId: number, selected: boolean) => {
     const orgId = props.store.organizations.selectedId;
     if (!orgId) return;
 
@@ -249,7 +230,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
       } else {
         next.set(
           item.id,
-          current.filter((t) => t.id !== tagId)
+          current.filter((t) => t.id !== tagId),
         );
       }
       return next;
@@ -257,19 +238,15 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
 
     try {
       if (selected) {
-        await tagsService.tagResource(orgId, 'playlist', item.id, tagId);
+        await tagsService.tagResource(orgId, "playlist", item.id, tagId);
       } else {
-        await tagsService.untagResource(orgId, 'playlist', item.id, tagId);
+        await tagsService.untagResource(orgId, "playlist", item.id, tagId);
       }
     } catch (error) {
-      console.error('Failed to toggle tag:', error);
-      toast.error(t('tags.errors.tagResource', { error: String(error) }));
+      console.error("Failed to toggle tag:", error);
+      toast.error(t("tags.errors.tagResource", { error: String(error) }));
       try {
-        const freshTags = await tagsService.getResourceTags(
-          orgId,
-          'playlist',
-          item.id
-        );
+        const freshTags = await tagsService.getResourceTags(orgId, "playlist", item.id);
         setResourceTagsMap((prev) => {
           const next = new Map(prev);
           next.set(item.id, freshTags);
@@ -288,40 +265,26 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
     const resourceIds = Array.from(selectedPlaylists());
     try {
       if (selected) {
-        await tagsService.bulkTagResources(
-          orgId,
-          tagId,
-          'playlist',
-          resourceIds
-        );
+        await tagsService.bulkTagResources(orgId, tagId, "playlist", resourceIds);
       } else {
-        await tagsService.bulkUntagResources(
-          orgId,
-          tagId,
-          'playlist',
-          resourceIds
-        );
+        await tagsService.bulkUntagResources(orgId, tagId, "playlist", resourceIds);
       }
 
       const tagMap = new Map(resourceTagsMap());
       await Promise.all(
         resourceIds.map(async (id) => {
           try {
-            const freshTags = await tagsService.getResourceTags(
-              orgId,
-              'playlist',
-              id
-            );
+            const freshTags = await tagsService.getResourceTags(orgId, "playlist", id);
             tagMap.set(id, freshTags);
           } catch {
             /* ignore */
           }
-        })
+        }),
       );
       setResourceTagsMap(tagMap);
     } catch (error) {
-      console.error('Failed to bulk toggle tag:', error);
-      toast.error(t('tags.errors.tagResource', { error: String(error) }));
+      console.error("Failed to bulk toggle tag:", error);
+      toast.error(t("tags.errors.tagResource", { error: String(error) }));
     }
   };
 
@@ -332,15 +295,12 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
     if (allItemTags.length === 0) return [];
     const firstItemTagIds = new Set(allItemTags[0].map((t) => t.id));
     return [...firstItemTagIds].filter((tagId) =>
-      allItemTags.every((tags) => tags.some((t) => t.id === tagId))
+      allItemTags.every((tags) => tags.some((t) => t.id === tagId)),
     );
   };
 
   const handleCreateTag = async (name: string): Promise<Tag> => {
-    const newTag = await tagsService.createTag(
-      props.store.organizations.selectedId,
-      { name }
-    );
+    const newTag = await tagsService.createTag(props.store.organizations.selectedId, { name });
     setAllTags((prev) => [...prev, newTag]);
     return newTag;
   };
@@ -379,11 +339,11 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
 
       const quotaData = await quotasService.getResourceQuota(
         props.store.organizations.selectedId,
-        'playlists'
+        "playlists",
       );
       setQuota(quotaData);
     } catch (error) {
-      console.error('Failed to fetch quota:', error);
+      console.error("Failed to fetch quota:", error);
     } finally {
       if (loadingTimeout) {
         clearTimeout(loadingTimeout);
@@ -402,44 +362,41 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
     if (registerShortcutAction) {
       // Register create action
       registerShortcutAction(
-        'generic-create',
+        "generic-create",
         () => {
-          if (canPerformAction('playlists', 'create') && !isQuotaReached()) {
+          if (canPerformAction("playlists", "create") && !isQuotaReached()) {
             openAddPlaylistModal();
           }
         },
         () =>
-          window.location.pathname.includes('/playlists') &&
-          canPerformAction('playlists', 'create') &&
-          !isQuotaReached()
+          window.location.pathname.includes("/playlists") &&
+          canPerformAction("playlists", "create") &&
+          !isQuotaReached(),
       );
 
       // Register search action
       registerShortcutAction(
-        'generic-search',
+        "generic-search",
         () => {
           if (tableViewRef) {
             tableViewRef.focusSearch();
           }
         },
-        () => window.location.pathname.includes('/playlists')
+        () => window.location.pathname.includes("/playlists"),
       );
 
       // Register delete action
       registerShortcutAction(
-        'generic-delete',
+        "generic-delete",
         () => {
-          if (
-            selectedPlaylists().size > 0 &&
-            canPerformAction('playlists', 'delete')
-          ) {
+          if (selectedPlaylists().size > 0 && canPerformAction("playlists", "delete")) {
             setShowConfirmDialogMultiple(true);
           }
         },
         () =>
-          window.location.pathname.includes('/playlists') &&
+          window.location.pathname.includes("/playlists") &&
           selectedPlaylists().size > 0 &&
-          canPerformAction('playlists', 'delete')
+          canPerformAction("playlists", "delete"),
       );
     }
   });
@@ -448,9 +405,9 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
     // Unregister actions when leaving this addon
     const { unregisterShortcutAction } = props.store.keyboardShortcuts || {};
     if (unregisterShortcutAction) {
-      unregisterShortcutAction('generic-create');
-      unregisterShortcutAction('generic-search');
-      unregisterShortcutAction('generic-delete');
+      unregisterShortcutAction("generic-create");
+      unregisterShortcutAction("generic-search");
+      unregisterShortcutAction("generic-delete");
     }
   });
 
@@ -466,8 +423,8 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
             tableViewRef.reloadData();
           }
         }
-      }
-    )
+      },
+    ),
   );
 
   const isQuotaReached = () => {
@@ -516,11 +473,11 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
       {
         page: 1,
         page_size: 100,
-        sortOptions: { key: 'name', direction: 'ascending' },
+        sortOptions: { key: "name", direction: "ascending" },
         tag_ids: tagIds,
-        tag_filter_mode: 'all',
+        tag_filter_mode: "all",
         team_id: selectedTeamId(),
-      }
+      },
     );
     return {
       data: result.data as TreeResourceItem[],
@@ -528,22 +485,19 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
     };
   };
 
-  const fetchTreeUntaggedResources = async (
-    tagGroupId: number,
-    parentTagIds?: number[]
-  ) => {
+  const fetchTreeUntaggedResources = async (tagGroupId: number, parentTagIds?: number[]) => {
     const result = await PlaylistsService.fetchPlaylists(
       props.store.env.baseUrl,
       props.store.organizations.selectedId,
       {
         page: 1,
         page_size: 100,
-        sortOptions: { key: 'name', direction: 'ascending' },
-        tag_filter_mode: 'all',
+        sortOptions: { key: "name", direction: "ascending" },
+        tag_filter_mode: "all",
         missing_tag_group_id: tagGroupId,
         tag_ids: parentTagIds,
         team_id: selectedTeamId(),
-      }
+      },
     );
 
     return {
@@ -552,33 +506,25 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
     };
   };
 
-  const fetchTreeUntaggedCount = async (
-    tagGroupId: number,
-    parentTagIds?: number[]
-  ) => {
+  const fetchTreeUntaggedCount = async (tagGroupId: number, parentTagIds?: number[]) => {
     const result = await PlaylistsService.fetchPlaylists(
       props.store.env.baseUrl,
       props.store.organizations.selectedId,
       {
         page: 1,
         page_size: 1,
-        sortOptions: { key: 'name', direction: 'ascending' },
-        tag_filter_mode: 'all',
+        sortOptions: { key: "name", direction: "ascending" },
+        tag_filter_mode: "all",
         missing_tag_group_id: tagGroupId,
         tag_ids: parentTagIds,
         team_id: selectedTeamId(),
-      }
+      },
     );
 
     return result.count;
   };
 
-  const fetchData = async ({
-    page,
-    sortOptions,
-    search,
-    filters,
-  }: FetchDataOptions) => {
+  const fetchData = async ({ page, sortOptions, search, filters }: FetchDataOptions) => {
     const result = await PlaylistsService.fetchPlaylists(
       props.store.env.baseUrl,
       props.store.organizations.selectedId,
@@ -591,7 +537,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
         team_id: selectedTeamId(),
         tag_ids: selectedTagIds(),
         tag_filter_mode: tagFilterMode(),
-      }
+      },
     );
 
     setData(result.data);
@@ -618,19 +564,12 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
     show: boolean;
   }>({ playlist: null, show: false });
 
-  const [customWidth, setCustomWidth] = createSignal<string>('16');
-  const [customHeight, setCustomHeight] = createSignal<string>('9');
-  const [customRatioErrors, setCustomRatioErrors] = createSignal(
-    new Map<string, string>()
-  );
+  const [customWidth, setCustomWidth] = createSignal<string>("16");
+  const [customHeight, setCustomHeight] = createSignal<string>("9");
+  const [customRatioErrors, setCustomRatioErrors] = createSignal(new Map<string, string>());
 
   const validateCustomRatio = (field: string, value: string) => {
-    const errors = validateCustomRatioField(
-      field,
-      value,
-      t,
-      customRatioErrors()
-    );
+    const errors = validateCustomRatioField(field, value, t, customRatioErrors());
     setCustomRatioErrors(errors);
     return !errors.has(field);
   };
@@ -640,7 +579,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
       customWidth(),
       customHeight(),
       t,
-      customRatioErrors()
+      customRatioErrors(),
     );
     setCustomRatioErrors(result.errors);
     return result.isValid;
@@ -648,8 +587,8 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
 
   const handleCustomRatioSubmit = async () => {
     if (
-      !validateCustomRatio('width', customWidth()) ||
-      !validateCustomRatio('height', customHeight()) ||
+      !validateCustomRatio("width", customWidth()) ||
+      !validateCustomRatio("height", customHeight()) ||
       !validateCustomRatioExtreme()
     ) {
       return;
@@ -670,30 +609,25 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
         `${playlist.id}`,
         {
           name: playlist.name,
-          description: '',
+          description: "",
           settings: {
             aspect_ratio: { width, height },
           },
-        }
+        },
       );
 
-      toast.success(t('playlists.aspectRatioUpdated'));
+      toast.success(t("playlists.aspectRatioUpdated"));
       setCustomRatioModal({ playlist: null, show: false });
       setCustomRatioErrors(new Map());
       refreshData();
     } catch (error) {
-      toast.error(
-        t('playlists.errors.updateAspectRatio', { error: String(error) })
-      );
+      toast.error(t("playlists.errors.updateAspectRatio", { error: String(error) }));
     }
   };
 
-  const handleAspectRatioChange = async (
-    playlist: JsonPlaylist,
-    newRatio: string
-  ) => {
+  const handleAspectRatioChange = async (playlist: JsonPlaylist, newRatio: string) => {
     // If custom is selected, open modal for new custom input
-    if (newRatio === 'custom') {
+    if (newRatio === "custom") {
       const current = playlist.settings?.aspect_ratio;
       setCustomWidth(String(current?.width || 16));
       setCustomHeight(String(current?.height || 9));
@@ -703,7 +637,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
     }
 
     // Parse the ratio (could be a preset like "16:9" or a custom ratio like "5:4")
-    const [width, height] = newRatio.split(':').map(Number);
+    const [width, height] = newRatio.split(":").map(Number);
 
     // If it's the same as current, do nothing
     const current = playlist.settings?.aspect_ratio;
@@ -718,70 +652,60 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
         `${playlist.id}`,
         {
           name: playlist.name,
-          description: '',
+          description: "",
           settings: {
             aspect_ratio: { width, height },
           },
-        }
+        },
       );
 
-      toast.success(t('playlists.aspectRatioUpdated'));
+      toast.success(t("playlists.aspectRatioUpdated"));
       refreshData();
     } catch (error) {
-      toast.error(
-        t('playlists.errors.updateAspectRatio', { error: String(error) })
-      );
+      toast.error(t("playlists.errors.updateAspectRatio", { error: String(error) }));
     }
   };
 
   // Use function to make columns reactive to i18n changes
   const columns = () =>
     [
-      { key: 'name', title: () => t('common.name'), sortable: true },
+      { key: "name", title: () => t("common.name"), sortable: true },
       {
-        key: 'aspect_ratio',
-        title: () => t('playlists.aspectRatio'),
+        key: "aspect_ratio",
+        title: () => t("playlists.aspectRatio"),
         sortable: false,
         render: (item: JsonPlaylist) => {
           const aspectRatio = item.settings?.aspect_ratio;
-          const currentRatio = aspectRatio
-            ? `${aspectRatio.width}:${aspectRatio.height}`
-            : '16:9';
-          const preset = ASPECT_RATIO_OPTIONS.find(
-            (opt) => opt.value === currentRatio
-          );
+          const currentRatio = aspectRatio ? `${aspectRatio.width}:${aspectRatio.height}` : "16:9";
+          const preset = ASPECT_RATIO_OPTIONS.find((opt) => opt.value === currentRatio);
           const label = preset ? t(preset.label) : currentRatio;
 
           return (
             <span
               title={label !== currentRatio ? label : undefined}
-              style={{ 'font-size': '0.85em', 'white-space': 'nowrap' }}
+              style={{ "font-size": "0.85em", "white-space": "nowrap" }}
             >
               {currentRatio}
             </span>
           );
         },
       },
-      { key: 'status', title: () => t('common.status'), sortable: false },
+      { key: "status", title: () => t("common.status"), sortable: false },
       {
-        key: 'inserted_at',
-        title: () => t('common.created'),
+        key: "inserted_at",
+        title: () => t("common.created"),
         sortable: true,
-        render: (item: JsonPlaylist) => (
-          <Timestamp value={item.inserted_at!} mode="relative" />
-        ),
+        render: (item: JsonPlaylist) => <Timestamp value={item.inserted_at!} mode="relative" />,
       },
       {
-        key: 'updated_at',
-        title: () => t('common.updated'),
+        key: "updated_at",
+        title: () => t("common.updated"),
         sortable: true,
-        render: (item: JsonPlaylist) => (
-          <Timestamp value={item.updated_at!} mode="relative" />
-        ),
+        render: (item: JsonPlaylist) => <Timestamp value={item.updated_at!} mode="relative" />,
       },
       {
-        key: 'tags',
-        title: () => t('tags.title'),
+        key: "tags",
+        title: () => t("tags.title"),
         sortable: false,
         render: (item: JsonPlaylist) => {
           const itemTags = () => resourceTagsMap().get(item.id) || [];
@@ -802,7 +726,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
                     anchorEl: e.currentTarget as HTMLElement,
                   });
                 }}
-                title={t('tags.manageTags')}
+                title={t("tags.manageTags")}
               >
                 <BsTagFill />
               </button>
@@ -817,7 +741,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
     {
       icon: BsEye,
       handler: openPlaylistDrawer,
-      label: t('common.view'),
+      label: t("common.view"),
     },
     {
       icon: AiOutlineEdit,
@@ -825,33 +749,29 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
         setCurrentPlaylist(item);
         setShowRenameModal(true);
       },
-      label: t('common.rename'),
+      label: t("common.rename"),
     },
     {
       icon: AiOutlineDelete,
       handler: (item: JsonPlaylist) => {
-        if (!canPerformAction('playlists', 'delete')) {
+        if (!canPerformAction("playlists", "delete")) {
           toast.error(
-            t('permissions.noDeletePlaylists') ||
-              "You don't have permission to delete playlists"
+            t("permissions.noDeletePlaylists") || "You don't have permission to delete playlists",
           );
           return;
         }
         setCurrentPlaylist(item);
         setShowConfirmDialog(item);
       },
-      label: t('common.remove'),
+      label: t("common.remove"),
     },
   ];
 
   /** It may be possible to refactor this code as most views will have the same UI for
    * removing resources.
    */
-  const [showConfirmDialog, setShowConfirmDialog] = createSignal<
-    JsonPlaylist | undefined
-  >();
-  const [showConfirmDialogMultiple, setShowConfirmDialogMultiple] =
-    createSignal(false);
+  const [showConfirmDialog, setShowConfirmDialog] = createSignal<JsonPlaylist | undefined>();
+  const [showConfirmDialogMultiple, setShowConfirmDialogMultiple] = createSignal(false);
 
   const confirmRemoveResource = async (resource: JsonPlaylist | undefined) => {
     if (!resource) {
@@ -861,7 +781,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
       await PlaylistsService.removePlaylist(
         props.store.env.baseUrl,
         props.store.organizations.selectedId,
-        resource.id
+        resource.id,
       );
 
       refreshData();
@@ -869,29 +789,26 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
       loadQuota(); // Reload quota after deletion
     } catch (error: any) {
       // Check if error has channel information (409 conflict error)
-      if (
-        error?.errorData?.channels &&
-        Array.isArray(error.errorData.channels)
-      ) {
+      if (error?.errorData?.channels && Array.isArray(error.errorData.channels)) {
         // Format channel usage information
         const channelInfo = error.errorData.channels.map((ch: any) => {
-          if (ch.usage_type === 'default') {
+          if (ch.usage_type === "default") {
             return `${ch.name} (default playlist)`;
-          } else if (ch.usage_type === 'scheduled') {
+          } else if (ch.usage_type === "scheduled") {
             const start = new Date(ch.entry_start).toLocaleString();
             const end = new Date(ch.entry_end).toLocaleString();
             const repeatInfo = ch.repeat_until
               ? `, repeats until ${new Date(ch.repeat_until).toLocaleDateString()}`
-              : '';
+              : "";
             return `${ch.name} (scheduled: ${start} - ${end}${repeatInfo})`;
           }
           return ch.name || ch;
         });
 
-        const channelList = channelInfo.join('\n• ');
+        const channelList = channelInfo.join("\n• ");
         toast.error(
           `${error.message}:\n\n• ${channelList}\n\nPlease remove the playlist from these channels first.`,
-          8000
+          8000,
         );
       } else {
         toast.error(`Error removing playlist ${resource.name}: ${error}`);
@@ -906,15 +823,15 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
         PlaylistsService.removePlaylist(
           props.store.env.baseUrl,
           props.store.organizations.selectedId,
-          resourceId
-        )
-      )
+          resourceId,
+        ),
+      ),
     );
 
     const failures = results.filter(
-      (result) => result.status === 'rejected'
+      (result) => result.status === "rejected",
     ) as PromiseRejectedResult[];
-    const successes = results.filter((result) => result.status === 'fulfilled');
+    const successes = results.filter((result) => result.status === "fulfilled");
 
     if (successes.length > 0) {
       refreshData();
@@ -926,19 +843,16 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
       // Collect all error messages with channel information
       const errorMessages = failures.map((failure) => {
         const error = failure.reason;
-        if (
-          error?.errorData?.channels &&
-          Array.isArray(error.errorData.channels)
-        ) {
-          const channelList = error.errorData.channels.join(', ');
+        if (error?.errorData?.channels && Array.isArray(error.errorData.channels)) {
+          const channelList = error.errorData.channels.join(", ");
           return `${error.message}. Channels: ${channelList}`;
         }
         return error?.message || String(error);
       });
 
       toast.error(
-        `Failed to remove ${failures.length} playlist(s):\n${errorMessages.join('\n')}`,
-        7000
+        `Failed to remove ${failures.length} playlist(s):\n${errorMessages.join("\n")}`,
+        7000,
       );
     }
 
@@ -951,8 +865,8 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
       {/* Custom Aspect Ratio Modal */}
       <Show when={customRatioModal().show}>
         <Modal
-          title={t('playlists.customAspectRatio')}
-          description={t('playlists.enterCustomRatio')}
+          title={t("playlists.customAspectRatio")}
+          description={t("playlists.enterCustomRatio")}
           onClose={() => {
             setCustomRatioModal({ playlist: null as any, show: false });
             setCustomRatioErrors(new Map());
@@ -960,20 +874,20 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
         >
           <div
             style={{
-              display: 'flex',
-              'flex-direction': 'column',
-              gap: '1.5em',
+              display: "flex",
+              "flex-direction": "column",
+              gap: "1.5em",
             }}
           >
             <div
               style={{
-                display: 'flex',
-                gap: '1em',
-                'align-items': 'flex-start',
+                display: "flex",
+                gap: "1em",
+                "align-items": "flex-start",
               }}
             >
               <FormItem
-                label={t('playlists.aspectRatioWidth')}
+                label={t("playlists.aspectRatioWidth")}
                 id="customWidthTable"
                 value={customWidth()}
                 placeholder="16"
@@ -981,22 +895,22 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
                 onInput={(value: string | number | boolean) => {
                   const strValue = String(value);
                   setCustomWidth(strValue);
-                  validateCustomRatio('width', strValue);
+                  validateCustomRatio("width", strValue);
                 }}
               >
-                <div class="error">{customRatioErrors().get('width')}</div>
+                <div class="error">{customRatioErrors().get("width")}</div>
               </FormItem>
               <span
                 style={{
-                  'font-size': '1.5em',
-                  'font-weight': 'bold',
-                  'padding-top': '2em',
+                  "font-size": "1.5em",
+                  "font-weight": "bold",
+                  "padding-top": "2em",
                 }}
               >
                 :
               </span>
               <FormItem
-                label={t('playlists.aspectRatioHeight')}
+                label={t("playlists.aspectRatioHeight")}
                 id="customHeightTable"
                 value={customHeight()}
                 placeholder="9"
@@ -1004,34 +918,34 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
                 onInput={(value: string | number | boolean) => {
                   const strValue = String(value);
                   setCustomHeight(strValue);
-                  validateCustomRatio('height', strValue);
+                  validateCustomRatio("height", strValue);
                 }}
               >
-                <div class="error">{customRatioErrors().get('height')}</div>
+                <div class="error">{customRatioErrors().get("height")}</div>
               </FormItem>
             </div>
-            <Show when={customRatioErrors().get('ratio')}>
+            <Show when={customRatioErrors().get("ratio")}>
               <div
                 class="error"
                 style={{
-                  color: '#ef4444',
-                  padding: '0.5em',
-                  background: 'rgba(239, 68, 68, 0.1)',
-                  'border-radius': '0.25em',
+                  color: "#ef4444",
+                  padding: "0.5em",
+                  background: "rgba(239, 68, 68, 0.1)",
+                  "border-radius": "0.25em",
                 }}
               >
-                {customRatioErrors().get('ratio')}
+                {customRatioErrors().get("ratio")}
               </div>
             </Show>
             <div
               style={{
-                display: 'flex',
-                gap: '1em',
-                'justify-content': 'flex-end',
+                display: "flex",
+                gap: "1em",
+                "justify-content": "flex-end",
               }}
             >
               <Button
-                label={t('common.cancel')}
+                label={t("common.cancel")}
                 onClick={() => {
                   setCustomRatioModal({ playlist: null as any, show: false });
                   setCustomRatioErrors(new Map());
@@ -1039,7 +953,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
                 color="secondary"
               />
               <Button
-                label={t('common.apply')}
+                label={t("common.apply")}
                 onClick={handleCustomRatioSubmit}
                 color="primary"
                 icon={BsCheckLg}
@@ -1052,41 +966,35 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
 
       <Show when={showAddPlaylistModal()}>
         <Modal
-          title={t('playlists.addPlaylist')}
-          description={t('playlists.createNewPlaylist')}
+          title={t("playlists.addPlaylist")}
+          description={t("playlists.createNewPlaylist")}
           onClose={() => setShowAddPlaylistModal(false)}
         >
           <PlaylistAddForm
             t={t}
             teamId={selectedTeamId()}
-            onSubmit={async (
-              name: string,
-              aspectRatio: AspectRatio,
-              teamId?: number | null
-            ) => {
+            onSubmit={async (name: string, aspectRatio: AspectRatio, teamId?: number | null) => {
               try {
                 const result = await PlaylistsService.addPlaylist(
                   props.store.env.baseUrl,
                   props.store.organizations.selectedId,
                   name,
                   aspectRatio,
-                  teamId
+                  teamId,
                 );
                 setShowAddPlaylistModal(false);
                 if (result?.data) {
                   setCurrentPlaylist(result.data);
                   setShowDrawer(true);
                   refreshData();
-                  toast.success(t('playlists.playlistCreated', { name }));
+                  toast.success(t("playlists.playlistCreated", { name }));
                   loadQuota(); // Reload quota after creation
 
                   // Complete the onboarding step for playlist creation
-                  props.store.onboarding?.completeStep?.('create_playlist');
+                  props.store.onboarding?.completeStep?.("create_playlist");
                 }
               } catch (error) {
-                toast.error(
-                  t('playlists.errorCreating', { error: String(error) })
-                );
+                toast.error(t("playlists.errorCreating", { error: String(error) }));
               }
             }}
           />
@@ -1094,7 +1002,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
       </Show>
       <Show when={showDrawer()}>
         <Drawer
-          title={t('playlists.playlistTitle', {
+          title={t("playlists.playlistTitle", {
             name: currentPlaylist()?.name,
           })}
           onClose={closePlaylistDrawer}
@@ -1120,30 +1028,28 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
 
       <Show when={showRenameModal()}>
         <Modal
-          title={t('playlists.renamePlaylist')}
+          title={t("playlists.renamePlaylist")}
           description=""
           onClose={() => setShowRenameModal(false)}
           contentClass="playlist-rename-modal"
         >
           <div class="playlist-rename-form">
             <FormItem
-              label={t('common.name')}
+              label={t("common.name")}
               id="renameName"
-              value={currentPlaylist()?.name || ''}
-              placeholder={t('playlists.enterPlaylistName')}
+              value={currentPlaylist()?.name || ""}
+              placeholder={t("playlists.enterPlaylistName")}
               autofocus={true}
               onInput={(value: string | number | boolean) => {
                 const strValue = value as string;
-                setCurrentPlaylist((prev) =>
-                  prev ? { ...prev, name: strValue } : prev
-                );
+                setCurrentPlaylist((prev) => (prev ? { ...prev, name: strValue } : prev));
               }}
             >
               <div></div>
             </FormItem>
             <div class="actions">
               <Button
-                label={t('common.save')}
+                label={t("common.save")}
                 onClick={async () => {
                   try {
                     await PlaylistsService.updatePlaylist(
@@ -1151,30 +1057,30 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
                       props.store.organizations.selectedId,
                       `${currentPlaylist()?.id}`,
                       {
-                        name: currentPlaylist()?.name || '',
-                        description: '',
-                      }
+                        name: currentPlaylist()?.name || "",
+                        description: "",
+                      },
                     );
                     refreshData();
                     toast.success(
-                      t('playlists.playlistUpdated', {
+                      t("playlists.playlistUpdated", {
                         name: currentPlaylist()?.name,
-                      })
+                      }),
                     );
                     setShowRenameModal(false);
                   } catch (error) {
                     toast.error(
-                      t('playlists.errorUpdating', {
+                      t("playlists.errorUpdating", {
                         name: currentPlaylist()?.name,
                         error: String(error),
-                      })
+                      }),
                     );
                   }
                 }}
                 color="success"
               />
               <Button
-                label={t('common.cancel')}
+                label={t("common.cancel")}
                 onClick={() => setShowRenameModal(false)}
                 color="danger"
               />
@@ -1185,8 +1091,8 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
 
       <ConfirmDialog
         show={!!showConfirmDialog()}
-        title={t('playlists.removePlaylist')}
-        message={t('playlists.confirmRemovePlaylist', {
+        title={t("playlists.removePlaylist")}
+        message={t("playlists.confirmRemovePlaylist", {
           name: showConfirmDialog()?.name,
         })}
         onClose={() => setShowConfirmDialog()}
@@ -1195,8 +1101,8 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
 
       <ConfirmDialog
         show={showConfirmDialogMultiple()}
-        title={t('playlists.removePlaylists')}
-        message={t('playlists.confirmRemovePlaylists')}
+        title={t("playlists.removePlaylists")}
+        message={t("playlists.confirmRemovePlaylists")}
         onClose={() => setShowConfirmDialogMultiple(false)}
         onConfirm={() => confirmRemoveMultipleResources()}
       >
@@ -1208,15 +1114,15 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
         </div>
       </ConfirmDialog>
 
-      <Show when={viewMode() === 'list'}>
+      <Show when={viewMode() === "list"}>
         <TableView
-          title={t('playlists.title')}
+          title={t("playlists.title")}
           resource="playlists"
           params={props.params}
           fetchData={fetchData}
           ref={setRef}
           toolbar={{
-            searchPlaceholder: t('common.search'),
+            searchPlaceholder: t("common.search"),
             mainAction: (
               <div style="display: flex; align-items: center; gap: 1rem;">
                 <Show when={quota()}>
@@ -1229,29 +1135,25 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
                   />
                 </Show>
                 <Button
-                  label={t('playlists.addPlaylist')}
+                  label={t("playlists.addPlaylist")}
                   onClick={openAddPlaylistModal}
                   icon={BsCheckLg}
                   color="primary"
-                  disabled={
-                    isQuotaReached() || !canPerformAction('playlists', 'create')
-                  }
+                  disabled={isQuotaReached() || !canPerformAction("playlists", "create")}
                   data-onboarding="add-playlist"
                 />
               </div>
             ),
-            titleActions: (
-              <ViewModeToggle mode={viewMode()} onChange={setViewMode} />
-            ),
+            titleActions: <ViewModeToggle mode={viewMode()} onChange={setViewMode} />,
             actions: (
               <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
                 <TeamFilter
                   teams={teams()}
                   selectedTeamId={selectedTeamId()}
                   onTeamChange={handleTeamChange}
-                  label={t('filters.teamLabel')}
-                  placeholder={t('filters.teamPlaceholder')}
-                  clearLabel={t('filters.teamClear')}
+                  label={t("filters.teamLabel")}
+                  placeholder={t("filters.teamPlaceholder")}
+                  clearLabel={t("filters.teamClear")}
                 />
                 <TagFilter
                   tags={tags()}
@@ -1259,22 +1161,22 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
                   onTagChange={handleTagChange}
                   filterMode={tagFilterMode()}
                   onFilterModeChange={setTagFilterMode}
-                  label={t('filters.tagLabel')}
-                  placeholder={t('filters.tagPlaceholder')}
-                  clearLabel={t('filters.tagClear')}
-                  searchPlaceholder={t('filters.tagSearchPlaceholder')}
+                  label={t("filters.tagLabel")}
+                  placeholder={t("filters.tagPlaceholder")}
+                  clearLabel={t("filters.tagClear")}
+                  searchPlaceholder={t("filters.tagSearchPlaceholder")}
                   filterModeLabels={{
-                    any: t('filters.tagFilterModeAny'),
-                    all: t('filters.tagFilterModeAll'),
+                    any: t("filters.tagFilterModeAny"),
+                    all: t("filters.tagFilterModeAll"),
                   }}
-                  noMatchMessage={t('filters.noMatches')}
-                  emptyMessage={t('filters.noItems')}
+                  noMatchMessage={t("filters.noMatches")}
+                  emptyMessage={t("filters.noItems")}
                 />
               </div>
             ),
           }}
-          selectionHint={t('common.selectionHint')}
-          selectionLabel={t('common.selectionCount')}
+          selectionHint={t("common.selectionHint")}
+          selectionLabel={t("common.selectionCount")}
           selectionActions={({ count, clear }) => (
             <>
               <Show when={canManageTags()}>
@@ -1285,12 +1187,12 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
                   }}
                 >
                   <BsTagFill />
-                  {t('tags.manageTags')}
+                  {t("tags.manageTags")}
                 </button>
               </Show>
               <button
                 class="selection-action-btn danger"
-                disabled={!canPerformAction('playlists', 'delete')}
+                disabled={!canPerformAction("playlists", "delete")}
                 onClick={() => setShowConfirmDialogMultiple(true)}
               >
                 <AiOutlineDelete />
@@ -1301,26 +1203,24 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
           table={{
             columns,
             actions,
-            actionsLabel: t('common.actions'),
+            actionsLabel: t("common.actions"),
             onRowSelect,
             defaultRowAction: {
               icon: BsEye,
               handler: (item: JsonPlaylist) => {
                 openPlaylistDrawer(item);
               },
-              label: t('common.view'),
+              label: t("common.view"),
             },
           }}
           pagination={{ itemsPerPage }}
         ></TableView>
       </Show>
 
-      <Show when={viewMode() === 'tree'}>
+      <Show when={viewMode() === "tree"}>
         <ToolBar
-          title={t('playlists.title')}
-          titleActions={
-            <ViewModeToggle mode={viewMode()} onChange={setViewMode} />
-          }
+          title={t("playlists.title")}
+          titleActions={<ViewModeToggle mode={viewMode()} onChange={setViewMode} />}
           hideSearch
           mainAction={
             <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
@@ -1334,13 +1234,11 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
                 />
               </Show>
               <Button
-                label={t('playlists.addPlaylist')}
+                label={t("playlists.addPlaylist")}
                 onClick={openAddPlaylistModal}
                 icon={BsCheckLg}
                 color="primary"
-                disabled={
-                  isQuotaReached() || !canPerformAction('playlists', 'create')
-                }
+                disabled={isQuotaReached() || !canPerformAction("playlists", "create")}
                 data-onboarding="add-playlist"
               />
             </div>
@@ -1351,9 +1249,9 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
                 teams={teams()}
                 selectedTeamId={selectedTeamId()}
                 onTeamChange={handleTeamChange}
-                label={t('filters.teamLabel')}
-                placeholder={t('filters.teamPlaceholder')}
-                clearLabel={t('filters.teamClear')}
+                label={t("filters.teamLabel")}
+                placeholder={t("filters.teamPlaceholder")}
+                clearLabel={t("filters.teamClear")}
               />
             </div>
           }
@@ -1364,19 +1262,15 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
           fetchResources={fetchTreeResources}
           fetchUntaggedResources={fetchTreeUntaggedResources}
           fetchUntaggedCount={fetchTreeUntaggedCount}
-          untaggedLabel={t('tags.groups.untagged')}
-          emptyLeafText={t('filters.noItems')}
+          untaggedLabel={t("tags.groups.untagged")}
+          emptyLeafText={t("filters.noItems")}
           refreshKey={treeVersion()}
           storageKey="playlists"
-          onResourceClick={(item) =>
-            openPlaylistDrawer(item as unknown as JsonPlaylist)
-          }
+          onResourceClick={(item) => openPlaylistDrawer(item as unknown as JsonPlaylist)}
           renderResource={(item) => (
             <div
               class="playlist-tree-item"
-              onClick={() =>
-                openPlaylistDrawer(item as unknown as JsonPlaylist)
-              }
+              onClick={() => openPlaylistDrawer(item as unknown as JsonPlaylist)}
             >
               <div class="playlist-tree-info">
                 <span class="playlist-tree-name">{item.name}</span>
@@ -1397,8 +1291,8 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
                     try {
                       const itemTags = await tagsService.getResourceTags(
                         orgId,
-                        'playlist',
-                        playlist.id
+                        "playlist",
+                        playlist.id,
                       );
                       setResourceTagsMap((prev) => {
                         const next = new Map(prev);
@@ -1414,7 +1308,7 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
                     anchorEl: e.currentTarget as HTMLElement,
                   });
                 }}
-                title={t('tags.manageTags')}
+                title={t("tags.manageTags")}
               >
                 <BsTagFill />
               </button>
@@ -1429,20 +1323,16 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
           <TagPopover
             availableTags={allTags()}
             tagGroups={tagGroups()}
-            selectedTagIds={(resourceTagsMap().get(target().item.id) || []).map(
-              (t) => t.id
-            )}
-            onToggle={(tagId, selected) =>
-              handleTagToggle(target().item, tagId, selected)
-            }
+            selectedTagIds={(resourceTagsMap().get(target().item.id) || []).map((t) => t.id)}
+            onToggle={(tagId, selected) => handleTagToggle(target().item, tagId, selected)}
             onCreateTag={canManageTags() ? handleCreateTag : undefined}
             allowCreate={canManageTags()}
             anchorEl={target().anchorEl}
             onClose={() => setTagPopoverTarget(null)}
-            placeholder={t('tags.searchTags')}
-            ungroupedLabel={t('tags.groups.ungrouped')}
-            emptyLabel={t('tags.noTagsAvailable')}
-            noMatchLabel={t('tags.noMatchingTags')}
+            placeholder={t("tags.searchTags")}
+            ungroupedLabel={t("tags.groups.ungrouped")}
+            emptyLabel={t("tags.noTagsAvailable")}
+            noMatchLabel={t("tags.noMatchingTags")}
           />
         )}
       </Show>
@@ -1458,11 +1348,11 @@ const PlaylistsPage: Component<AddonComponentProps> = (props) => {
           allowCreate={canManageTags()}
           anchorEl={bulkTagAnchorEl()!}
           onClose={() => setBulkTagAnchorEl(null)}
-          title={t('tags.manageTags')}
-          placeholder={t('tags.searchTags')}
-          ungroupedLabel={t('tags.groups.ungrouped')}
-          emptyLabel={t('tags.noTagsAvailable')}
-          noMatchLabel={t('tags.noMatchingTags')}
+          title={t("tags.manageTags")}
+          placeholder={t("tags.searchTags")}
+          ungroupedLabel={t("tags.groups.ungrouped")}
+          emptyLabel={t("tags.noTagsAvailable")}
+          noMatchLabel={t("tags.noMatchingTags")}
         />
       </Show>
     </div>

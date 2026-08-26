@@ -10,25 +10,18 @@
  * - Currency formatting
  */
 
-import {
-  createContext,
-  useContext,
-  createSignal,
-  createEffect,
-  JSX,
-  Accessor,
-} from 'solid-js';
+import { createContext, useContext, createSignal, createEffect, JSX, Accessor } from "solid-js";
 import {
   Locale,
   DEFAULT_LOCALE,
   LOCALE_STORAGE_KEY,
   SUPPORTED_LOCALES,
   LOCALE_DATE_FNS_MAP,
-} from './types';
-import { format as formatDate, parseISO } from 'date-fns';
+} from "./types";
+import { format as formatDate, parseISO } from "date-fns";
 
 // Import all translation files
-import en from './locales/en.json';
+import en from "./locales/en.json";
 
 // Translation type based on English translations
 export type Translations = typeof en;
@@ -37,24 +30,16 @@ export type Translations = typeof en;
 export type TranslationKey = string;
 
 // Plural forms
-export type PluralForm = 'zero' | 'one' | 'two' | 'few' | 'many' | 'other';
+export type PluralForm = "zero" | "one" | "two" | "few" | "many" | "other";
 
 interface I18nContextValue {
   locale: Accessor<Locale>;
   setLocale: (locale: Locale) => void;
   t: (key: TranslationKey, params?: Record<string, string | number>) => string;
-  tp: (
-    key: TranslationKey,
-    count: number,
-    params?: Record<string, string | number>
-  ) => string;
+  tp: (key: TranslationKey, count: number, params?: Record<string, string | number>) => string;
   formatDate: (date: Date | string, formatStr?: string) => string;
   formatNumber: (value: number, options?: Intl.NumberFormatOptions) => string;
-  formatCurrency: (
-    value: number,
-    currency?: string,
-    options?: Intl.NumberFormatOptions
-  ) => string;
+  formatCurrency: (value: number, currency?: string, options?: Intl.NumberFormatOptions) => string;
   translations: Accessor<Translations>;
   /**
    * Extend translations with addon-specific translations.
@@ -74,9 +59,7 @@ async function loadTranslations(locale: Locale): Promise<Translations> {
     const translations = await import(`./locales/${locale}.json`);
     return translations.default || translations;
   } catch (error) {
-    console.warn(
-      `Failed to load translations for locale: ${locale}, falling back to English`
-    );
+    console.warn(`Failed to load translations for locale: ${locale}, falling back to English`);
     return en;
   }
 }
@@ -92,16 +75,14 @@ function getInitialLocale(): Locale {
   }
 
   // Try to detect from browser
-  if (typeof navigator !== 'undefined') {
+  if (typeof navigator !== "undefined") {
     const preferredLanguages =
       (navigator.languages && navigator.languages.length > 0
         ? navigator.languages
         : [navigator.language]) ?? [];
 
     const browserLang = preferredLanguages
-      .map((lang) =>
-        typeof lang === 'string' ? lang.split('-')[0] : undefined
-      )
+      .map((lang) => (typeof lang === "string" ? lang.split("-")[0] : undefined))
       .find((lang): lang is string => Boolean(lang));
 
     if (browserLang && SUPPORTED_LOCALES.some((l) => l.code === browserLang)) {
@@ -116,7 +97,7 @@ function getInitialLocale(): Locale {
  * Get a nested value from an object using a dot-notation path
  */
 function getNestedValue(obj: any, path: string): string | undefined {
-  return path.split('.').reduce((current, key) => current?.[key], obj);
+  return path.split(".").reduce((current, key) => current?.[key], obj);
 }
 
 /**
@@ -133,8 +114,7 @@ function getPluralForm(count: number, locale: Locale): PluralForm {
  */
 export function I18nProvider(props: { children: JSX.Element }) {
   const initialLocale = getInitialLocale();
-  const [requestedLocale, setRequestedLocale] =
-    createSignal<Locale>(initialLocale);
+  const [requestedLocale, setRequestedLocale] = createSignal<Locale>(initialLocale);
   const [locale, setLocaleSignal] = createSignal<Locale>(initialLocale);
   const [translations, setTranslations] = createSignal<Translations>(en);
   // Accumulated addon translations — kept separately so they can be re-merged
@@ -169,9 +149,9 @@ export function I18nProvider(props: { children: JSX.Element }) {
       // Set RTL direction for Arabic
       const localeInfo = SUPPORTED_LOCALES.find((l) => l.code === targetLocale);
       if (localeInfo?.rtl) {
-        document.documentElement.dir = 'rtl';
+        document.documentElement.dir = "rtl";
       } else {
-        document.documentElement.dir = 'ltr';
+        document.documentElement.dir = "ltr";
       }
     });
   });
@@ -190,10 +170,7 @@ export function I18nProvider(props: { children: JSX.Element }) {
   /**
    * Translation function with parameter interpolation
    */
-  const t = (
-    key: TranslationKey,
-    params?: Record<string, string | number>
-  ): string => {
+  const t = (key: TranslationKey, params?: Record<string, string | number>): string => {
     const translation = getNestedValue(translations(), key);
 
     if (!translation) {
@@ -209,7 +186,7 @@ export function I18nProvider(props: { children: JSX.Element }) {
     // Replace parameters in the translation
     return Object.entries(params).reduce(
       (result, [key, value]) => result.replace(`{{${key}}}`, String(value)),
-      translation
+      translation,
     );
   };
 
@@ -231,11 +208,11 @@ export function I18nProvider(props: { children: JSX.Element }) {
   const tp = (
     key: TranslationKey,
     count: number,
-    params?: Record<string, string | number>
+    params?: Record<string, string | number>,
   ): string => {
     const pluralForms = getNestedValue(translations(), key);
 
-    if (!pluralForms || typeof pluralForms !== 'object') {
+    if (!pluralForms || typeof pluralForms !== "object") {
       console.warn(`Plural translation missing for key: ${key}`);
       return key;
     }
@@ -244,8 +221,7 @@ export function I18nProvider(props: { children: JSX.Element }) {
     const pluralForm = getPluralForm(count, locale());
 
     // Try to get translation for this plural form, fallback to 'other'
-    let translation =
-      (pluralForms as any)[pluralForm] || (pluralForms as any)['other'];
+    let translation = (pluralForms as any)[pluralForm] || (pluralForms as any)["other"];
 
     if (!translation) {
       console.warn(`Plural form '${pluralForm}' missing for key: ${key}`);
@@ -258,7 +234,7 @@ export function I18nProvider(props: { children: JSX.Element }) {
     // Replace parameters
     return Object.entries(allParams).reduce(
       (result, [key, value]) => result.replace(`{{${key}}}`, String(value)),
-      translation
+      translation,
     );
   };
 
@@ -269,16 +245,13 @@ export function I18nProvider(props: { children: JSX.Element }) {
    * @param formatStr - Format string (e.g., 'PPP' for long date, 'Pp' for date + time)
    *                    Defaults to 'PPP' (e.g., "April 29, 1453" in English)
    */
-  const formatDateFn = (
-    date: Date | string,
-    formatStr: string = 'PPP'
-  ): string => {
+  const formatDateFn = (date: Date | string, formatStr: string = "PPP"): string => {
     try {
-      const dateObj = typeof date === 'string' ? parseISO(date) : date;
+      const dateObj = typeof date === "string" ? parseISO(date) : date;
       const dateFnsLocale = LOCALE_DATE_FNS_MAP[locale()];
       return formatDate(dateObj, formatStr, { locale: dateFnsLocale });
     } catch (error) {
-      console.error('Error formatting date:', error);
+      console.error("Error formatting date:", error);
       return String(date);
     }
   };
@@ -289,14 +262,11 @@ export function I18nProvider(props: { children: JSX.Element }) {
    * @param value - Number to format
    * @param options - Intl.NumberFormatOptions (e.g., { minimumFractionDigits: 2 })
    */
-  const formatNumber = (
-    value: number,
-    options?: Intl.NumberFormatOptions
-  ): string => {
+  const formatNumber = (value: number, options?: Intl.NumberFormatOptions): string => {
     try {
       return new Intl.NumberFormat(locale(), options).format(value);
     } catch (error) {
-      console.error('Error formatting number:', error);
+      console.error("Error formatting number:", error);
       return String(value);
     }
   };
@@ -310,17 +280,17 @@ export function I18nProvider(props: { children: JSX.Element }) {
    */
   const formatCurrency = (
     value: number,
-    currency: string = 'USD',
-    options?: Intl.NumberFormatOptions
+    currency: string = "USD",
+    options?: Intl.NumberFormatOptions,
   ): string => {
     try {
       return new Intl.NumberFormat(locale(), {
-        style: 'currency',
+        style: "currency",
         currency,
         ...options,
       }).format(value);
     } catch (error) {
-      console.error('Error formatting currency:', error);
+      console.error("Error formatting currency:", error);
       return `${currency} ${value}`;
     }
   };
@@ -330,16 +300,16 @@ export function I18nProvider(props: { children: JSX.Element }) {
    */
   const deepMerge = (
     target: Record<string, any>,
-    source: Record<string, any>
+    source: Record<string, any>,
   ): Record<string, any> => {
     const result = { ...target };
     for (const key of Object.keys(source)) {
       if (
         source[key] &&
-        typeof source[key] === 'object' &&
+        typeof source[key] === "object" &&
         !Array.isArray(source[key]) &&
         target[key] &&
-        typeof target[key] === 'object' &&
+        typeof target[key] === "object" &&
         !Array.isArray(target[key])
       ) {
         result[key] = deepMerge(target[key], source[key]);
@@ -356,13 +326,8 @@ export function I18nProvider(props: { children: JSX.Element }) {
    * and caches them so they survive base-locale replacement.
    */
   const extendTranslations = (addonTranslations: Record<string, any>) => {
-    addonTranslationsCache = deepMerge(
-      addonTranslationsCache,
-      addonTranslations
-    );
-    setTranslations(
-      (current) => deepMerge(current, addonTranslations) as Translations
-    );
+    addonTranslationsCache = deepMerge(addonTranslationsCache, addonTranslations);
+    setTranslations((current) => deepMerge(current, addonTranslations) as Translations);
   };
 
   const value: I18nContextValue = {
@@ -377,9 +342,7 @@ export function I18nProvider(props: { children: JSX.Element }) {
     extendTranslations,
   };
 
-  return (
-    <I18nContext.Provider value={value}>{props.children}</I18nContext.Provider>
-  );
+  return <I18nContext.Provider value={value}>{props.children}</I18nContext.Provider>;
 }
 
 /**
@@ -388,7 +351,7 @@ export function I18nProvider(props: { children: JSX.Element }) {
 export function useI18n() {
   const context = useContext(I18nContext);
   if (!context) {
-    throw new Error('useI18n must be used within an I18nProvider');
+    throw new Error("useI18n must be used within an I18nProvider");
   }
   return context;
 }

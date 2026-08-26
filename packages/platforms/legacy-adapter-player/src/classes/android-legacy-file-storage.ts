@@ -12,15 +12,9 @@ import {
   StorageItem,
   StoreFileReturnValue,
   StoreOptions,
-} from '@castmill/cache';
-import { simpleHash } from './utils';
-import {
-  getItem,
-  setItem,
-  downloadFile,
-  deleteFile,
-  deletePath,
-} from '../android-legacy-api';
+} from "@castmill/cache";
+import { simpleHash } from "./utils";
+import { getItem, setItem, downloadFile, deleteFile, deletePath } from "../android-legacy-api";
 
 interface FileData {
   url: string;
@@ -38,12 +32,12 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
   }
 
   private async loadFileMap(): Promise<Map<string, FileData>> {
-    const fileMap = await getItem('FILE_MAP');
+    const fileMap = await getItem("FILE_MAP");
     if (fileMap) {
       try {
         return new Map(JSON.parse(fileMap));
       } catch (err) {
-        console.error('Error parsing file map', err);
+        console.error("Error parsing file map", err);
       }
     }
 
@@ -51,10 +45,7 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
   }
 
   private async saveFileMap(): Promise<void> {
-    await setItem(
-      'FILE_MAP',
-      JSON.stringify(Array.from(this.fileMap.entries()))
-    );
+    await setItem("FILE_MAP", JSON.stringify(Array.from(this.fileMap.entries())));
   }
 
   async init(): Promise<void> {
@@ -62,10 +53,7 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
   }
 
   async info(): Promise<StorageInfo> {
-    const used = (await this.listFiles()).reduce(
-      (acc, file) => acc + file.size,
-      0
-    );
+    const used = (await this.listFiles()).reduce((acc, file) => acc + file.size, 0);
 
     return {
       total: TOTAL_STORAGE,
@@ -80,10 +68,7 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
     }));
   }
 
-  async storeFile(
-    url: string,
-    opts?: StoreOptions
-  ): Promise<StoreFileReturnValue> {
+  async storeFile(url: string, opts?: StoreOptions): Promise<StoreFileReturnValue> {
     const mappedUrl = this.mapLocalhostUrl(url);
 
     const fileName = this.getFileName(mappedUrl);
@@ -92,9 +77,7 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
     // Android legacy player does not support headers in the downloadFile API
     // so we need to pass the Authorization header as a query parameter
     const auth = opts?.headers?.Authorization;
-    const urlWithParams = auth
-      ? `${mappedUrl}?auth=${encodeURIComponent(auth)}`
-      : mappedUrl;
+    const urlWithParams = auth ? `${mappedUrl}?auth=${encodeURIComponent(auth)}` : mappedUrl;
 
     try {
       const localUrl = await downloadFile(urlWithParams, localPath);
@@ -106,17 +89,17 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
       await this.saveFileMap();
 
       return {
-        result: { code: 'SUCCESS' },
+        result: { code: "SUCCESS" },
         item: {
           url: localUrl,
           size,
         },
       };
     } catch (err) {
-      console.error('Error downloading file', err);
+      console.error("Error downloading file", err);
 
       return {
-        result: { code: 'FAILURE', errMsg: 'Error downloading file' },
+        result: { code: "FAILURE", errMsg: "Error downloading file" },
       };
     }
   }
@@ -160,7 +143,7 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
   }
 
   async close(): Promise<void> {
-    throw new Error('Method not implemented.');
+    throw new Error("Method not implemented.");
   }
 
   /*
@@ -171,7 +154,7 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
   private getFileName(url: string): string {
     const pathName = new URL(url).pathname;
 
-    const [, extension] = pathName.split('.');
+    const [, extension] = pathName.split(".");
 
     const hash = simpleHash(pathName);
     // if extension is present, append it to the hash otherwise, just return the hash
@@ -193,11 +176,11 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
    */
   private estimateSize(url: string): number {
     const pathName = new URL(url).pathname;
-    const [, extension] = pathName.split('.');
+    const [, extension] = pathName.split(".");
 
-    if (extension === 'mp4') {
+    if (extension === "mp4") {
       return 1e7; // 10MB
-    } else if (extension === 'jpg' || extension === 'png') {
+    } else if (extension === "jpg" || extension === "png") {
       return 1e6; // 1MB
     } else {
       return 1e4; // 10KB
@@ -216,6 +199,6 @@ export class AndroidLegacyFileStorage implements StorageIntegration {
       return url;
     }
 
-    return url.replace('localhost', fileHost);
+    return url.replace("localhost", fileHost);
   }
 }

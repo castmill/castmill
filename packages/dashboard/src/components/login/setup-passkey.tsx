@@ -12,13 +12,13 @@
  * The only difference is the URL points to the custom domain and this
  * component provides domain-appropriate messaging.
  */
-import { Component, createSignal, onMount, Show } from 'solid-js';
-import { useNavigate, useSearchParams } from '@solidjs/router';
-import { arrayBufferToBase64, base64URLToArrayBuffer } from '../utils';
-import { baseUrl, domain } from '../../env';
-import { authFetch, loginUser } from '../auth';
-import { useI18n } from '../../i18n';
-import './login.scss';
+import { Component, createSignal, onMount, Show } from "solid-js";
+import { useNavigate, useSearchParams } from "@solidjs/router";
+import { arrayBufferToBase64, base64URLToArrayBuffer } from "../utils";
+import { baseUrl, domain } from "../../env";
+import { authFetch, loginUser } from "../auth";
+import { useI18n } from "../../i18n";
+import "./login.scss";
 
 const encoder = new TextEncoder();
 
@@ -28,9 +28,9 @@ const SetupPasskey: Component = () => {
   const navigate = useNavigate();
 
   const [loading, setLoading] = createSignal<boolean>(false);
-  const [status, setStatus] = createSignal<string>('');
-  const [error, setError] = createSignal<string>('');
-  const [userEmail, setUserEmail] = createSignal<string>('');
+  const [status, setStatus] = createSignal<string>("");
+  const [error, setError] = createSignal<string>("");
+  const [userEmail, setUserEmail] = createSignal<string>("");
   const [tokenValid, setTokenValid] = createSignal<boolean>(false);
   const [supportsPasskeys, setSupportsPasskeys] = createSignal<boolean>(false);
   const [success, setSuccess] = createSignal<boolean>(false);
@@ -39,11 +39,8 @@ const SetupPasskey: Component = () => {
 
   onMount(async () => {
     // Check passkey support
-    if (
-      !window.PublicKeyCredential ||
-      !PublicKeyCredential.isConditionalMediationAvailable
-    ) {
-      setError(t('setupPasskey.passkeysNotSupported'));
+    if (!window.PublicKeyCredential || !PublicKeyCredential.isConditionalMediationAvailable) {
+      setError(t("setupPasskey.passkeysNotSupported"));
       return;
     }
 
@@ -53,35 +50,35 @@ const SetupPasskey: Component = () => {
     ]);
 
     if (!conditional || !userVerifying) {
-      setError(t('setupPasskey.passkeysNotSupported'));
+      setError(t("setupPasskey.passkeysNotSupported"));
       return;
     }
 
     setSupportsPasskeys(true);
 
     if (!token) {
-      setError(t('setupPasskey.invalidLink'));
+      setError(t("setupPasskey.invalidLink"));
       return;
     }
 
     // Verify the token using the existing recovery verify endpoint
     try {
-      setStatus(t('setupPasskey.verifying'));
+      setStatus(t("setupPasskey.verifying"));
       const response = await authFetch(
-        `${baseUrl}/credentials/recover/verify?token=${encodeURIComponent(token)}`
+        `${baseUrl}/credentials/recover/verify?token=${encodeURIComponent(token)}`,
       );
 
       if (response.ok) {
         const data = await response.json();
         setUserEmail(data.user.email);
         setTokenValid(true);
-        setStatus('');
+        setStatus("");
       } else {
-        setError(t('setupPasskey.expiredLink'));
+        setError(t("setupPasskey.expiredLink"));
       }
     } catch (err) {
-      console.error('Token verification failed:', err);
-      setError(t('setupPasskey.verificationFailed'));
+      console.error("Token verification failed:", err);
+      setError(t("setupPasskey.verificationFailed"));
     }
   });
 
@@ -89,34 +86,30 @@ const SetupPasskey: Component = () => {
     if (!token) return;
 
     setLoading(true);
-    setStatus(t('setupPasskey.creatingPasskey'));
-    setError('');
+    setStatus(t("setupPasskey.creatingPasskey"));
+    setError("");
 
     try {
       // Get challenge from the recovery endpoint
       const challengeResponse = await authFetch(
-        `${baseUrl}/credentials/recover/challenge?token=${encodeURIComponent(token)}`
+        `${baseUrl}/credentials/recover/challenge?token=${encodeURIComponent(token)}`,
       );
 
       if (!challengeResponse.ok) {
-        setError(t('setupPasskey.challengeFailed'));
+        setError(t("setupPasskey.challengeFailed"));
         setLoading(false);
-        setStatus('');
+        setStatus("");
         return;
       }
 
-      const {
-        challenge,
-        user_id,
-        email: userEmail,
-      } = await challengeResponse.json();
+      const { challenge, user_id, email: userEmail } = await challengeResponse.json();
 
       // Create passkey bound to THIS domain (the custom domain)
       const createOptions: CredentialCreationOptions = {
         publicKey: {
           rp: {
             id: domain,
-            name: 'Castmill',
+            name: "Castmill",
           },
           user: {
             id: encoder.encode(user_id),
@@ -124,13 +117,13 @@ const SetupPasskey: Component = () => {
             displayName: userEmail,
           },
           pubKeyCredParams: [
-            { type: 'public-key', alg: -8 }, // Ed25519
-            { type: 'public-key', alg: -7 }, // ES256
-            { type: 'public-key', alg: -257 }, // RS256
+            { type: "public-key", alg: -8 }, // Ed25519
+            { type: "public-key", alg: -7 }, // ES256
+            { type: "public-key", alg: -257 }, // RS256
           ],
           challenge: base64URLToArrayBuffer(challenge),
           authenticatorSelection: {
-            userVerification: 'required',
+            userVerification: "required",
             requireResidentKey: true,
           },
         },
@@ -139,9 +132,9 @@ const SetupPasskey: Component = () => {
       const credential = await navigator.credentials.create(createOptions);
 
       if (!credential) {
-        setError(t('setupPasskey.creationCancelled'));
+        setError(t("setupPasskey.creationCancelled"));
         setLoading(false);
-        setStatus('');
+        setStatus("");
         return;
       }
 
@@ -151,36 +144,31 @@ const SetupPasskey: Component = () => {
       const publicKey = authAttestationResponse.getPublicKey();
 
       if (!publicKey) {
-        setError(t('setupPasskey.noPublicKey'));
+        setError(t("setupPasskey.noPublicKey"));
         setLoading(false);
-        setStatus('');
+        setStatus("");
         return;
       }
 
-      const clientDataJSON = new TextDecoder().decode(
-        authAttestationResponse.clientDataJSON
-      );
+      const clientDataJSON = new TextDecoder().decode(authAttestationResponse.clientDataJSON);
 
       // Register the credential using the recovery endpoint
-      const result = await authFetch(
-        `${baseUrl}/credentials/recover/credential`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            token,
-            credential_id: publicKeyCredential.id,
-            public_key_spki: arrayBufferToBase64(publicKey),
-            raw_id: arrayBufferToBase64(publicKeyCredential.rawId),
-            client_data_json: clientDataJSON,
-          }),
-        }
-      );
+      const result = await authFetch(`${baseUrl}/credentials/recover/credential`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          token,
+          credential_id: publicKeyCredential.id,
+          public_key_spki: arrayBufferToBase64(publicKey),
+          raw_id: arrayBufferToBase64(publicKeyCredential.rawId),
+          client_data_json: clientDataJSON,
+        }),
+      });
 
       if (!result.ok) {
-        setError(t('setupPasskey.registrationFailed'));
+        setError(t("setupPasskey.registrationFailed"));
         setLoading(false);
-        setStatus('');
+        setStatus("");
         return;
       }
 
@@ -188,67 +176,56 @@ const SetupPasskey: Component = () => {
       const { user, token: sessionToken } = await result.json();
       await loginUser({ user, token: sessionToken });
       setSuccess(true);
-      setStatus(t('setupPasskey.success'));
-      setTimeout(() => navigate('/'), 1500);
+      setStatus(t("setupPasskey.success"));
+      setTimeout(() => navigate("/"), 1500);
     } catch (err) {
-      console.error('Passkey creation failed:', err);
+      console.error("Passkey creation failed:", err);
       setSuccess(false);
-      if (err instanceof Error && err.name === 'NotAllowedError') {
-        setError(t('setupPasskey.creationCancelled'));
+      if (err instanceof Error && err.name === "NotAllowedError") {
+        setError(t("setupPasskey.creationCancelled"));
       } else {
-        setError(t('setupPasskey.unexpectedError'));
+        setError(t("setupPasskey.unexpectedError"));
       }
       setLoading(false);
-      setStatus('');
+      setStatus("");
     }
   };
 
   return (
     <div class="castmill-login">
       <Show when={loading()}>
-        <div class="loading-overlay">{t('common.loading')}</div>
+        <div class="loading-overlay">{t("common.loading")}</div>
       </Show>
 
       <div class="login-container">
         <div class="login-box">
-          <h2>{t('setupPasskey.title')}</h2>
-          <p class="info-message" style={{ 'margin-bottom': '1.5em' }}>
-            {t('setupPasskey.subtitle', { domain })}
+          <h2>{t("setupPasskey.title")}</h2>
+          <p class="info-message" style={{ "margin-bottom": "1.5em" }}>
+            {t("setupPasskey.subtitle", { domain })}
           </p>
 
           <Show when={error()}>
             <div class="error">{error()}</div>
             <button
               class="login-button"
-              onClick={() => navigate('/login')}
-              style={{ 'margin-top': '20px' }}
+              onClick={() => navigate("/login")}
+              style={{ "margin-top": "20px" }}
             >
-              {t('common.backToLogin')}
+              {t("common.backToLogin")}
             </button>
           </Show>
 
           <Show when={success()}>
-            <div
-              class="success"
-              style={{ color: '#10b981', 'margin-top': '1em' }}
-            >
+            <div class="success" style={{ color: "#10b981", "margin-top": "1em" }}>
               {status()}
             </div>
           </Show>
 
-          <Show
-            when={!error() && !success() && tokenValid() && supportsPasskeys()}
-          >
-            <p class="info-message">
-              {t('setupPasskey.instructions', { email: userEmail() })}
-            </p>
+          <Show when={!error() && !success() && tokenValid() && supportsPasskeys()}>
+            <p class="info-message">{t("setupPasskey.instructions", { email: userEmail() })}</p>
 
-            <button
-              class="signup-button"
-              onClick={createPasskey}
-              disabled={loading()}
-            >
-              {t('setupPasskey.createButton')}
+            <button class="signup-button" onClick={createPasskey} disabled={loading()}>
+              {t("setupPasskey.createButton")}
             </button>
 
             <Show when={status()}>

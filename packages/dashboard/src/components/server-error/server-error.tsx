@@ -1,6 +1,6 @@
-import { Component } from 'solid-js';
-import { useI18n } from '../../i18n';
-import './server-error.css';
+import { Component } from "solid-js";
+import { useI18n } from "../../i18n";
+import "./server-error.css";
 
 interface ServerErrorProps {
   onRetry?: () => void;
@@ -30,18 +30,16 @@ export const ServerError: Component<ServerErrorProps> = (props) => {
             <path d="M12 15h.01" />
           </svg>
         </div>
-        <h1 class="server-error-title">{t('errors.serverUnreachable')}</h1>
-        <p class="server-error-description">
-          {t('errors.serverUnreachableDescription')}
-        </p>
+        <h1 class="server-error-title">{t("errors.serverUnreachable")}</h1>
+        <p class="server-error-description">{t("errors.serverUnreachableDescription")}</p>
         <ul class="server-error-suggestions">
-          <li>{t('errors.checkServerRunning')}</li>
-          <li>{t('errors.checkNetworkConnection')}</li>
-          <li>{t('errors.checkServerUrl')}</li>
+          <li>{t("errors.checkServerRunning")}</li>
+          <li>{t("errors.checkNetworkConnection")}</li>
+          <li>{t("errors.checkServerUrl")}</li>
         </ul>
         {props.onRetry && (
           <button class="server-error-retry-button" onClick={props.onRetry}>
-            {t('errors.retryConnection')}
+            {t("errors.retryConnection")}
           </button>
         )}
       </div>

@@ -3,22 +3,17 @@
 
   (c) 2011-2025 Castmill AB All Rights Reserved
 */
-import { JSX } from 'solid-js';
-import { ResourceManager } from '@castmill/cache';
+import { JSX } from "solid-js";
+import { ResourceManager } from "@castmill/cache";
 
-import { EventEmitter } from 'eventemitter3';
-import {
-  TemplateComponentType,
-  TemplateWidget,
-  TemplateWidgetOptions,
-  Widget,
-} from './widgets';
-import { of, Observable } from 'rxjs';
-import { catchError, last, map, takeUntil } from 'rxjs/operators';
-import { JsonLayer, JsonPlaylist } from './interfaces';
-import { Transition, fromJSON } from './transitions';
-import { applyCss, parseAspectRatio } from './utils';
-import { PlayerGlobals } from './interfaces/player-globals.interface';
+import { EventEmitter } from "eventemitter3";
+import { TemplateComponentType, TemplateWidget, TemplateWidgetOptions, Widget } from "./widgets";
+import { of, Observable } from "rxjs";
+import { catchError, last, map, takeUntil } from "rxjs/operators";
+import { JsonLayer, JsonPlaylist } from "./interfaces";
+import { Transition, fromJSON } from "./transitions";
+import { applyCss, parseAspectRatio } from "./utils";
+import { PlayerGlobals } from "./interfaces/player-globals.interface";
 
 /**
  * Computes style for a widget based on its aspect ratio.
@@ -27,11 +22,11 @@ import { PlayerGlobals } from './interfaces/player-globals.interface';
  */
 function computeWidgetStyle(
   baseStyle: JSX.CSSProperties | undefined,
-  aspectRatio: string | undefined
+  aspectRatio: string | undefined,
 ): JSX.CSSProperties {
   const defaultStyle: JSX.CSSProperties = {
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   };
 
   const ratio = parseAspectRatio(aspectRatio);
@@ -43,8 +38,8 @@ function computeWidgetStyle(
   // Using 100% width/height as initial values, will be overridden
   return {
     ...baseStyle,
-    width: '100%',
-    height: '100%',
+    width: "100%",
+    height: "100%",
   };
 }
 
@@ -71,12 +66,7 @@ export class Layer extends EventEmitter {
       const keys = Object.keys(options);
       for (let i = 0; i < keys.length; i++) {
         const value = options[keys[i]];
-        if (
-          value &&
-          typeof value === 'object' &&
-          'aspectRatio' in value &&
-          'layoutId' in value
-        ) {
+        if (value && typeof value === "object" && "aspectRatio" in value && "layoutId" in value) {
           // This is a layoutRef value - use its aspect ratio
           return (value as { aspectRatio: string }).aspectRatio;
         }
@@ -95,7 +85,7 @@ export class Layer extends EventEmitter {
   static fromJSON(
     json: JsonLayer,
     resourceManager: ResourceManager,
-    globals: PlayerGlobals
+    globals: PlayerGlobals,
   ): Layer {
     // Get effective aspect ratio (from layoutRef if present, otherwise widget default)
     const effectiveAspectRatio = Layer.getEffectiveAspectRatio(json);
@@ -137,29 +127,29 @@ export class Layer extends EventEmitter {
   static fromPlaylist(
     playlist: JsonPlaylist,
     resourceManager: ResourceManager,
-    globals: PlayerGlobals
+    globals: PlayerGlobals,
   ): Layer {
     const widget: TemplateWidget = new TemplateWidget(resourceManager, {
-      name: 'layout',
+      name: "layout",
       // Don't set a fixed duration - let the widget calculate it dynamically
       // based on its content (e.g., scroller duration, video length, etc.)
       widget: {
         id: 666,
-        name: 'layout-1-1',
-        description: 'Main playlist layout',
+        name: "layout-1-1",
+        description: "Main playlist layout",
         template: {
-          name: 'Main playlist layout',
+          name: "Main playlist layout",
           type: TemplateComponentType.Layout,
           opts: {
             containers: [
               {
                 playlist,
                 style: {
-                  width: '100%',
-                  height: '100%',
-                  left: '0%',
-                  top: '0%',
-                  overflow: 'auto',
+                  width: "100%",
+                  height: "100%",
+                  left: "0%",
+                  top: "0%",
+                  overflow: "auto",
                 },
               },
             ],
@@ -168,11 +158,11 @@ export class Layer extends EventEmitter {
       },
       fonts: [],
       style: {
-        width: '100%',
-        height: '100%',
+        width: "100%",
+        height: "100%",
       },
       config: {
-        id: 'layout-config-1',
+        id: "layout-config-1",
         widget_id: 666,
         options: {},
         data: {},
@@ -196,7 +186,7 @@ export class Layer extends EventEmitter {
       transition?: Transition;
       style?: JSX.CSSProperties;
       widgetAspectRatio?: string;
-    }
+    },
   ) {
     super();
 
@@ -206,7 +196,7 @@ export class Layer extends EventEmitter {
     this.transition = opts?.transition;
     this.widgetAspectRatio = parseAspectRatio(opts?.widgetAspectRatio);
 
-    this.el = document.createElement('div');
+    this.el = document.createElement("div");
 
     const { style, dataset } = this.el;
 
@@ -214,14 +204,14 @@ export class Layer extends EventEmitter {
       applyCss(this.el, opts.style);
     }
 
-    style.position = 'absolute';
-    style.width = '100%';
-    style.height = '100%';
-    style.display = 'flex';
-    style.justifyContent = 'center';
-    style.alignItems = 'center';
+    style.position = "absolute";
+    style.width = "100%";
+    style.height = "100%";
+    style.display = "flex";
+    style.justifyContent = "center";
+    style.alignItems = "center";
 
-    dataset['layer'] = this.name;
+    dataset["layer"] = this.name;
 
     // Set up ResizeObserver for dynamic aspect ratio adjustment
     if (this.widgetAspectRatio !== null) {
@@ -288,14 +278,14 @@ export class Layer extends EventEmitter {
 
   public play(timer$: Observable<number>): Observable<string | number> {
     if (!this.widget) {
-      throw new Error('Layer: missing widget');
+      throw new Error("Layer: missing widget");
     }
 
     const end$ = timer$.pipe(
       last(),
       // In case the stream is empty we need to catch and end.
       catchError(() => of(undefined)),
-      map(() => 'end')
+      map(() => "end"),
     );
 
     return this.widget.play(timer$).pipe(takeUntil(end$));
@@ -320,11 +310,11 @@ export class Layer extends EventEmitter {
           // TODO: we should show more information about this error. Which widget? and which options?
           // for instance a common failure is a video or image that failed to be downloaded.
           console.error(`Layer: show widget error`, err);
-          return of('error');
-        })
+          return of("error");
+        }),
       );
     } else {
-      return of('shown');
+      return of("shown");
     }
   }
 

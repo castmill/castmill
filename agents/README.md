@@ -37,23 +37,29 @@ agents/
 ### Package Documentation
 
 #### Website (`packages/website/`)
+
 - **[SOCIAL-CARDS.md](./packages/website/SOCIAL-CARDS.md)** - Dynamic social media cards system with automated generation
 
 #### Castmill Backend (`packages/castmill/`)
+
 - **[RBAC.md](./packages/castmill/RBAC.md)** - Backend permission matrix, roles, and controller flow
 
 #### Player Systems (`packages/player/`)
-- *Coming soon: Player architecture, widget systems, platform integrations*
 
-#### Dashboard (`packages/dashboard/`)  
-- *Coming soon: Management interface, user workflows, admin features*
+- _Coming soon: Player architecture, widget systems, platform integrations_
+
+#### Dashboard (`packages/dashboard/`)
+
+- _Coming soon: Management interface, user workflows, admin features_
 
 #### UI Common (`packages/ui-common/`)
-- *Coming soon: Shared component library, design system*
+
+- _Coming soon: Shared component library, design system_
 
 ### System Documentation
 
 #### Cross-Package Systems (`systems/`)
+
 - **[notifications.md](./systems/notifications.md)** - Real-time notification system with WebSocket and REST API
 - **[WIDGET-INTEGRATIONS.md](./systems/WIDGET-INTEGRATIONS.md)** - Widget third-party integration system architecture
 - **[WIDGET-INTEGRATION-API.md](./systems/WIDGET-INTEGRATION-API.md)** - Widget integration API reference
@@ -62,24 +68,27 @@ agents/
 - **[WIDGET-ASSETS.md](./systems/WIDGET-ASSETS.md)** - Widget asset management architecture (icons, fonts, images)
 - **[LAYOUT-WIDGETS.md](./systems/LAYOUT-WIDGETS.md)** - Layout widgets with circular reference prevention
 - **[SPOTIFY-WIDGET-POC.md](./systems/SPOTIFY-WIDGET-POC.md)** - Spotify "Now Playing" widget proof of concept
-- *Coming soon: Authentication, media pipeline, real-time synchronization*
+- _Coming soon: Authentication, media pipeline, real-time synchronization_
 
 #### Infrastructure (`infrastructure/`)
-- *Coming soon: Deployment, monitoring, Docker architecture*
+
+- _Coming soon: Deployment, monitoring, Docker architecture_
 
 ## 🎯 Documentation Standards
 
 ### When to Create AI Documentation
 
 **✅ Create machine docs for:**
+
 - Complex automated systems (build tools, generators, data pipelines)
-- Multi-package integrations and shared systems  
+- Multi-package integrations and shared systems
 - Custom plugins, extensions, or middleware
 - Non-obvious architectural decisions
 - Systems with multiple configuration options
 - Cross-cutting concerns (auth, logging, caching)
 
 **❌ Don't create machine docs for:**
+
 - Simple component implementations
 - Standard configuration files
 - Basic styling or content changes
@@ -88,7 +97,7 @@ agents/
 ### File Naming & Organization
 
 - **Packages**: Place docs in `packages/{package-name}/FEATURE.md`
-- **Systems**: Place cross-package docs in `systems/SYSTEM-NAME.md`  
+- **Systems**: Place cross-package docs in `systems/SYSTEM-NAME.md`
 - **Infrastructure**: Place DevOps docs in `infrastructure/TOPIC.md`
 - **Naming**: Use ALL-CAPS with hyphens: `SOCIAL-CARDS.md`, `API-ARCHITECTURE.md`
 
@@ -98,33 +107,43 @@ agents/
 # System Name
 
 ## Overview
+
 Brief description of what this system does and why it exists.
 
-## Architecture  
+## Architecture
+
 Technical implementation details, key components, data flow.
 
 ## Integration Points
+
 How it connects with other packages/systems in the monorepo.
 
 ## Configuration
+
 Settings, options, environment variables, build-time config.
 
 ## API/Interface
+
 Public APIs, hooks, events, or interfaces other systems use.
 
 ## File Structure
+
 Key files and directories, what they contain.
 
 ## Dependencies
+
 External libraries, internal package dependencies.
 
 ## Build/Deploy
+
 How it's built, tested, and deployed.
 
 ## Troubleshooting
+
 Common issues, debugging approaches, known limitations.
 
 ## Future Considerations
+
 Planned improvements, technical debt, scaling concerns.
 ```
 
@@ -141,7 +160,7 @@ Planned improvements, technical debt, scaling concerns.
 ### Navigation Tips:
 
 - **Package-specific changes**: Check `packages/{name}/` first
-- **Cross-package features**: Look in `systems/` 
+- **Cross-package features**: Look in `systems/`
 - **Deployment issues**: Check `infrastructure/`
 - **New features**: Review existing patterns in related docs
 
@@ -155,26 +174,26 @@ Planned improvements, technical debt, scaling concerns.
 
 ## 📊 Current Status
 
-| Package | Documentation Status | Priority |
-|---------|---------------------|----------|
-| website | ✅ Social Cards | Complete |
-| castmill | 🟡 In Progress | High |
-| player | ⭕ Planned | Medium |
-| dashboard | ⭕ Planned | Medium |
-| ui-common | ⭕ Planned | Low |
+| Package   | Documentation Status | Priority |
+| --------- | -------------------- | -------- |
+| website   | ✅ Social Cards      | Complete |
+| castmill  | 🟡 In Progress       | High     |
+| player    | ⭕ Planned           | Medium   |
+| dashboard | ⭕ Planned           | Medium   |
+| ui-common | ⭕ Planned           | Low      |
 
-| System | Documentation Status | Priority |
-|--------|---------------------|----------|
-| Authentication | ⭕ Planned | High |
-| Media Pipeline | ⭕ Planned | High |
-| Real-time Sync | ⭕ Planned | Medium |
+| System         | Documentation Status | Priority |
+| -------------- | -------------------- | -------- |
+| Authentication | ⭕ Planned           | High     |
+| Media Pipeline | ⭕ Planned           | High     |
+| Real-time Sync | ⭕ Planned           | Medium   |
 
 | Infrastructure | Documentation Status | Priority |
-|----------------|---------------------|----------|
-| Deployment | ⭕ Planned | High |
-| Monitoring | ⭕ Planned | Medium |
-| Docker | ⭕ Planned | Low |
+| -------------- | -------------------- | -------- |
+| Deployment     | ⭕ Planned           | High     |
+| Monitoring     | ⭕ Planned           | Medium   |
+| Docker         | ⭕ Planned           | Low      |
 
 ---
 
-*This documentation system ensures comprehensive technical context is preserved and accessible for future machine assistance across the entire Castmill monorepo.*
+_This documentation system ensures comprehensive technical context is preserved and accessible for future machine assistance across the entire Castmill monorepo._

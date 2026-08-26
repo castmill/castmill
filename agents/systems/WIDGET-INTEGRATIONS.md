@@ -16,12 +16,16 @@ The Widget Third-Party Integration System provides a comprehensive mechanism for
 ### Integration Scopes
 
 #### Organization-Wide Credentials
+
 Used when all widgets of a type share the same credentials:
+
 - Weather widgets (one API key for all weather widgets)
 - Stock ticker widgets (one API key for all stock widgets)
 
 #### Widget-Specific Credentials
+
 Used when each widget instance needs unique credentials:
+
 - Social media feeds (OAuth per account)
 - Custom data sources (unique API keys per widget)
 
@@ -36,30 +40,30 @@ schema "widget_integrations" do
   field :widget_id, references(:widgets)
   field :name, :string                    # Integration name (e.g., "openweather")
   field :description, :string
-  
+
   # Integration type: "pull", "push", or "both"
   field :integration_type, :string
-  
+
   # Credential scope: "organization" or "widget"
   field :credential_scope, :string
-  
+
   # Configuration schema for the integration
   field :config_schema, :map
-  
+
   # Credential schema (defines required credentials)
   field :credential_schema, :map
-  
+
   # Pull configuration (if applicable)
   field :pull_endpoint, :string           # External API endpoint
   field :pull_interval_seconds, :integer  # How often to pull
   field :pull_config, :map                # Additional pull configuration
-  
+
   # Push configuration (if applicable)
   field :push_webhook_path, :string       # Webhook path for this integration
   field :push_config, :map                # Additional push configuration
-  
+
   field :is_active, :boolean, default: true
-  
+
   timestamps()
 end
 ```
@@ -71,25 +75,25 @@ Stores encrypted credentials for integrations.
 ```elixir
 schema "widget_integration_credentials" do
   field :widget_integration_id, references(:widget_integrations)
-  
+
   # Organization-scoped credentials
   field :organization_id, references(:organizations), nullable: true
-  
+
   # Widget-scoped credentials (for specific widget instance)
   field :widget_config_id, references(:widgets_config), nullable: true
-  
+
   # Encrypted credentials (JSON encrypted with organization key)
   field :encrypted_credentials, :binary
-  
+
   # Metadata about credentials (non-sensitive)
   field :metadata, :map
-  
+
   # When credentials were last validated
   field :validated_at, :utc_datetime
-  
+
   # Whether credentials are currently valid
   field :is_valid, :boolean, default: false
-  
+
   timestamps()
 end
 
@@ -104,19 +108,19 @@ Caches data from PULL or PUSH operations.
 schema "widget_integration_data" do
   field :widget_integration_id, references(:widget_integrations)
   field :widget_config_id, references(:widgets_config)
-  
+
   # Cached data from integration
   field :data, :map
-  
+
   # Version number (incremented on each update)
   field :version, :integer, default: 1
-  
+
   # When data was last fetched/pushed
   field :fetched_at, :utc_datetime
-  
+
   # When data should be refreshed (for PULL mode)
   field :refresh_at, :utc_datetime
-  
+
   # Automatically scheduled when data is fetched. Every pull writes a future
   # refresh_at based on the integration's pull_interval_seconds. When players
   # request data and refresh_at is in the past, the backend immediately queues a
@@ -126,7 +130,7 @@ schema "widget_integration_data" do
   # HTTP status or error information
   field :status, :string
   field :error_message, :string
-  
+
   timestamps()
 end
 
@@ -155,11 +159,11 @@ to share the same cached data while each displaying a different number of items:
 @default_max_items 10
 
 defp apply_max_items_filter(data, widget_options) when is_map(data) do
-  max_items = Map.get(widget_options, "max_items") || 
+  max_items = Map.get(widget_options, "max_items") ||
               Map.get(widget_options, :max_items) ||
               @default_max_items
   items = Map.get(data, "items")
-  
+
   cond do
     is_nil(items) -> data
     is_list(items) and is_integer(max_items) and max_items > 0 ->
@@ -170,6 +174,7 @@ end
 ```
 
 **Key behaviors:**
+
 - Fetchers (e.g., RSS) cache a large number of items (e.g., 100) to enable sharing
 - Each widget instance specifies its own `max_items` in widget options
 - Filtering happens at serve-time, not fetch-time
@@ -177,6 +182,7 @@ end
 - Items are assumed to be pre-sorted (newest first) from the fetcher
 
 **Benefits:**
+
 - Single cache entry shared by multiple widget instances with same feed URL
 - Reduced API calls to third-party services
 - Flexible per-widget display configuration
@@ -188,7 +194,7 @@ end
 1. **Widget Instance Created**
    - Widget config created with integration settings
    - Credentials validated (organization or widget scope)
-   
+
 2. **Initial Data Fetch**
    - Backend pulls data from third-party API
    - Encrypts response and stores in widget_integration_data
@@ -197,14 +203,15 @@ end
 3. **Player Requests Data**
    - Player polls Castmill API: `GET /api/widgets/:widget_config_id/data`
    - Returns cached data with version number
-   
+
 4. **Periodic Refresh & On-Demand Resync**
-  - Background job checks `refresh_at` timestamps and queues polls when due
-  - When a player requests data and `refresh_at` is already in the past, the
-    request triggers an immediate polling job while still returning the last
-    cached payload
-  - Fresh data replaces the cache and increments the version number
-  - Players detect version change and update automatically
+
+- Background job checks `refresh_at` timestamps and queues polls when due
+- When a player requests data and `refresh_at` is already in the past, the
+  request triggers an immediate polling job while still returning the last
+  cached payload
+- Fresh data replaces the cache and increments the version number
+- Players detect version change and update automatically
 
 5. **Player Polling**
    - Player includes current version in request
@@ -230,6 +237,7 @@ POST /dashboard/organizations/:org_id/widgets/:widget_id/prefetch-data
 ```
 
 **Request Body (optional):**
+
 ```json
 {
   "options": {
@@ -240,9 +248,10 @@ POST /dashboard/organizations/:org_id/widgets/:widget_id/prefetch-data
 ```
 
 **Response:**
+
 ```json
 {
-  "data": { /* integration data */ },
+  "data": {/* integration data */},
   "status": "fetched|cached|error|credentials_required|no_integration",
   "version": 1,
   "fetched_at": "2026-01-16T10:30:00Z"
@@ -313,7 +322,7 @@ organization.encryption_key = :crypto.strong_rand_bytes(32)
 
 # Encrypt credentials
 encrypted = Castmill.Crypto.encrypt(
-  credentials_json, 
+  credentials_json,
   organization.encryption_key
 )
 
@@ -349,16 +358,16 @@ Widget integrations extend the add-on system with configuration hooks:
 export const integrationHooks = {
   // Render configuration UI
   renderConfig: (integration: WidgetIntegration) => JSX.Element,
-  
+
   // Render credential input
-  renderCredentials: (scope: 'organization' | 'widget') => JSX.Element,
-  
+  renderCredentials: (scope: "organization" | "widget") => JSX.Element,
+
   // Validate credentials
   validateCredentials: (credentials: any) => Promise<boolean>,
-  
+
   // Test integration
-  testIntegration: (credentials: any, config: any) => Promise<any>
-}
+  testIntegration: (credentials: any, config: any) => Promise<any>,
+};
 ```
 
 ### Dashboard UI Components
@@ -516,29 +525,34 @@ Body: <integration-specific payload>
 ## Implementation Phases
 
 ### Phase 1: Core Infrastructure
+
 - Database migrations
 - Elixir context modules
 - Credential encryption
 - Basic API endpoints
 
 ### Phase 2: PULL Mode
+
 - Background job for periodic pulls
 - Version-based caching
 - Player polling endpoints
 - Error handling and retries
 
 ### Phase 3: PUSH Mode
+
 - Webhook endpoints
 - Signature verification
 - Third-party adapters
 
 ### Phase 4: Dashboard UI
+
 - Integration configuration components
 - Credential management UI
 - Status dashboard
 - Testing interface
 
 ### Phase 5: Documentation & Examples
+
 - Developer guide
 - Integration examples
 - Migration guide
@@ -546,6 +560,7 @@ Body: <integration-specific payload>
 ## Future Considerations
 
 ### Advanced Features
+
 - **Rate Limiting**: Per-integration rate limits
 - **Quota Management**: Track API usage against plans
 - **Caching Strategies**: Redis for high-frequency data
@@ -556,6 +571,7 @@ Body: <integration-specific payload>
 - **Event Streaming**: WebSocket updates for real-time data
 
 ### Monitoring & Observability
+
 - Integration health metrics
 - Failed pull/push tracking
 - Credential expiration alerts
@@ -563,6 +579,7 @@ Body: <integration-specific payload>
 - Error aggregation and reporting
 
 ### Developer Experience
+
 - SDK for creating custom integrations
 - Integration marketplace
 - Sandbox/testing environment

@@ -25,25 +25,26 @@ quote-of-the-day/
 
 ## Configuration Options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `font_size` | select | `5vh` | Quote text size (Small/Medium/Large/Extra Large) |
-| `text_color` | color | `#2c3e50` | Quote text color |
-| `author_color` | color | `#7f8c8d` | Author attribution color |
-| `display_duration` | number | `15` | Seconds per quote (for future rotation feature) |
+| Option             | Type   | Default   | Description                                      |
+| ------------------ | ------ | --------- | ------------------------------------------------ |
+| `font_size`        | select | `5vh`     | Quote text size (Small/Medium/Large/Extra Large) |
+| `text_color`       | color  | `#2c3e50` | Quote text color                                 |
+| `author_color`     | color  | `#7f8c8d` | Author attribution color                         |
+| `display_duration` | number | `15`      | Seconds per quote (for future rotation feature)  |
 
 ## Data Schema
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `quote` | string | The quote text |
-| `author` | string | Quote author name |
-| `title` | string | Author's title or context (optional) |
+| Field      | Type   | Description                                        |
+| ---------- | ------ | -------------------------------------------------- |
+| `quote`    | string | The quote text                                     |
+| `author`   | string | Quote author name                                  |
+| `title`    | string | Author's title or context (optional)               |
 | `category` | string | Quote category (e.g., "Inspiration", "Leadership") |
 
 ## Typography
 
 The widget uses elegant system fonts with beautiful fallbacks:
+
 - **Quote text**: Georgia, Times New Roman (serif) - Classic, elegant serif
 - **Author name**: Helvetica Neue, Arial (sans-serif) - Clean, modern sans-serif
 

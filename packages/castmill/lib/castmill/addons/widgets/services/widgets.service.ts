@@ -1,6 +1,6 @@
-import { JsonWidget } from '@castmill/player';
-import { SortOptions, HttpError } from '@castmill/ui-common';
-import { authFetch } from '../../common/services/auth-fetch';
+import { JsonWidget } from "@castmill/player";
+import { SortOptions, HttpError } from "@castmill/ui-common";
+import { authFetch } from "../../common/services/auth-fetch";
 
 export interface FetchWidgetsOptions {
   page: number;
@@ -26,24 +26,21 @@ export interface WidgetUsage {
   widget_config_id: string;
 }
 
+async function handleResponse<T = any>(response: Response, options: { parse: true }): Promise<T>;
 async function handleResponse<T = any>(
   response: Response,
-  options: { parse: true }
-): Promise<T>;
-async function handleResponse<T = any>(
-  response: Response,
-  options?: { parse?: false }
+  options?: { parse?: false },
 ): Promise<void>;
 async function handleResponse<T = any>(
   response: Response,
-  options: HandleResponseOptions = {}
+  options: HandleResponseOptions = {},
 ): Promise<T | void> {
   if (response.status >= 200 && response.status < 300) {
     if (options.parse) {
       return (await response.json()) as T;
     }
   } else {
-    let errMsg = '';
+    let errMsg = "";
     try {
       const { errors } = await response.json();
       errMsg = `${errors.detail || response.statusText}`;
@@ -67,14 +64,12 @@ export const WidgetsService = {
   async fetchWidgets(
     baseUrl: string,
     organizationId: string,
-    { page, page_size, sortOptions, search, filters }: FetchWidgetsOptions
+    { page, page_size, sortOptions, search, filters }: FetchWidgetsOptions,
   ): Promise<{ data: JsonWidget[]; count: number }> {
     const filtersToString = (filters: Record<string, string | boolean>) => {
       return Object.entries(filters)
-        .map(([key, value]) =>
-          typeof value === 'boolean' ? `${key}` : `${key}:${value}`
-        )
-        .join(',');
+        .map(([key, value]) => (typeof value === "boolean" ? `${key}` : `${key}:${value}`))
+        .join(",");
     };
 
     const query = {
@@ -84,11 +79,11 @@ export const WidgetsService = {
     } as Record<string, string>;
 
     if (search) {
-      query['search'] = search;
+      query["search"] = search;
     }
 
     if (filters) {
-      query['filters'] = filtersToString(filters);
+      query["filters"] = filtersToString(filters);
     }
 
     const queryString = new URLSearchParams(query).toString();
@@ -96,11 +91,11 @@ export const WidgetsService = {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/widgets?${queryString}`,
       {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-      }
+      },
     );
 
     return handleResponse<{ data: JsonWidget[]; count: number }>(response, {
@@ -116,20 +111,16 @@ export const WidgetsService = {
    * @param file - The widget JSON file to upload
    * @returns Promise resolving to the created widget
    */
-  async uploadWidget(
-    baseUrl: string,
-    organizationId: string,
-    file: File
-  ): Promise<JsonWidget> {
+  async uploadWidget(baseUrl: string, organizationId: string, file: File): Promise<JsonWidget> {
     const formData = new FormData();
-    formData.append('widget', file);
+    formData.append("widget", file);
 
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/widgets`,
       {
-        method: 'POST',
+        method: "POST",
         body: formData,
-      }
+      },
     );
 
     return handleResponse<JsonWidget>(response, { parse: true });
@@ -143,19 +134,15 @@ export const WidgetsService = {
    * @param widgetId - The widget ID to remove
    * @returns Promise resolving when the widget is removed
    */
-  async removeWidget(
-    baseUrl: string,
-    organizationId: string,
-    widgetId: string
-  ): Promise<void> {
+  async removeWidget(baseUrl: string, organizationId: string, widgetId: string): Promise<void> {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/widgets/${widgetId}`,
       {
-        method: 'DELETE',
+        method: "DELETE",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-      }
+      },
     );
 
     return handleResponse(response);
@@ -172,16 +159,16 @@ export const WidgetsService = {
   async getWidgetUsage(
     baseUrl: string,
     organizationId: string,
-    widgetId: number
+    widgetId: number,
   ): Promise<{ data: WidgetUsage[]; count: number }> {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/widgets/${widgetId}/usage`,
       {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-      }
+      },
     );
 
     return handleResponse<{ data: WidgetUsage[]; count: number }>(response, {
@@ -202,17 +189,17 @@ export const WidgetsService = {
     baseUrl: string,
     organizationId: string,
     widgetId: string,
-    updates: WidgetsUpdate
+    updates: WidgetsUpdate,
   ): Promise<JsonWidget> {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/widgets/${widgetId}`,
       {
-        method: 'PATCH',
+        method: "PATCH",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(updates),
-      }
+      },
     );
 
     return handleResponse<JsonWidget>(response, { parse: true });
@@ -229,16 +216,16 @@ export const WidgetsService = {
   async getWidgetById(
     baseUrl: string,
     organizationId: string,
-    widgetId: number
+    widgetId: number,
   ): Promise<JsonWidget | null> {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/widgets/${widgetId}`,
       {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-      }
+      },
     );
 
     if (response.status === 404) {
@@ -262,17 +249,17 @@ export const WidgetsService = {
   async getWidgetIntegrations(
     baseUrl: string,
     organizationId: string,
-    widgetSlug: string
+    widgetSlug: string,
   ): Promise<any[]> {
     try {
       const response = await authFetch(
         `${baseUrl}/dashboard/organizations/${organizationId}/widgets/${widgetSlug}/integrations`,
         {
-          method: 'GET',
+          method: "GET",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       if (!response.ok) {
@@ -282,7 +269,7 @@ export const WidgetsService = {
       const result = await response.json();
       return result.data || [];
     } catch (error) {
-      console.error('Failed to fetch widget integrations:', error);
+      console.error("Failed to fetch widget integrations:", error);
       return [];
     }
   },

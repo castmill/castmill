@@ -13,6 +13,7 @@ The Timeline class manages the temporal coordination of widget animations and co
 #### Timeline Items
 
 Each timeline item has:
+
 - `start`: When the item begins (in milliseconds)
 - `duration`: How long the item plays
 - `repeat`: Whether the item repeats indefinitely
@@ -43,6 +44,7 @@ duration() {
 ```
 
 This design allows:
+
 - Scrollers with explicit loop duration to define the playlist duration correctly
 - Background scrollers without duration to run without extending playlist duration
 - Paginated content to define the actual duration
@@ -57,6 +59,7 @@ timeline items with `start: 0` to allow parallel playback rather than sequential
 
 The `primeAllLayers` function in playlist-preview.tsx ensures all auto-duration widgets
 are primed before displaying the playlist. After priming:
+
 1. Each layer's duration is calculated based on its actual content
 2. The controls are updated with the correct total duration
 3. Layer offsets are computed for proper sequential playback
@@ -71,6 +74,7 @@ Tests are in `packages/player/tests/`:
 - `model.spec.ts` - Model tests
 
 Run tests:
+
 ```bash
 cd packages/player
 yarn test
@@ -81,15 +85,15 @@ yarn test
 ### Auto-Duration Widgets
 
 Widgets that determine their own duration (RSS feeds, paginated lists) use:
+
 - Default duration of 10000ms until data loads
 - Duration recalculated based on content (items × page duration)
 - Parent playlist updates when duration changes
 
 ### Repeat vs Non-Repeat Items
 
-| Type | Duration Calculation | Use Case |
-|------|---------------------|----------|
-| Non-repeat | Always included in total | Paginated content, main display |
-| Repeat with duration | Included (one loop cycle) | Scrollers, tickers with known duration |
-| Repeat without duration | Excluded from total | Indefinite background elements |
-
+| Type                    | Duration Calculation      | Use Case                               |
+| ----------------------- | ------------------------- | -------------------------------------- |
+| Non-repeat              | Always included in total  | Paginated content, main display        |
+| Repeat with duration    | Included (one loop cycle) | Scrollers, tickers with known duration |
+| Repeat without duration | Excluded from total       | Indefinite background elements         |

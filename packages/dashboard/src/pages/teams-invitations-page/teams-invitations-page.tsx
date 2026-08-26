@@ -1,12 +1,12 @@
-import { useNavigate, useSearchParams } from '@solidjs/router';
-import { createSignal, onMount, Show } from 'solid-js';
-import { getUser } from '../../components/auth';
-import { TeamsService } from '../../services/teams.service';
-import { useI18n } from '../../i18n';
-import { useToast } from '@castmill/ui-common';
-import type { TeamRole } from '../../types/team-role.type';
+import { useNavigate, useSearchParams } from "@solidjs/router";
+import { createSignal, onMount, Show } from "solid-js";
+import { getUser } from "../../components/auth";
+import { TeamsService } from "../../services/teams.service";
+import { useI18n } from "../../i18n";
+import { useToast } from "@castmill/ui-common";
+import type { TeamRole } from "../../types/team-role.type";
 
-import './teams-invitations-page.scss';
+import "./teams-invitations-page.scss";
 
 interface Invitation {
   email: string;
@@ -26,11 +26,11 @@ const TeamsInvitationPage = () => {
   const toast = useToast();
   const [searchParams] = useSearchParams();
   const [invitation, setInvitation] = createSignal<Invitation | null>(null);
-  const [errorMessage, setErrorMessage] = createSignal<string>('');
+  const [errorMessage, setErrorMessage] = createSignal<string>("");
   const [loading, setLoading] = createSignal<boolean>(true);
   const [accepting, setAccepting] = createSignal<boolean>(false);
 
-  const token = searchParams.token || '';
+  const token = searchParams.token || "";
 
   const redirectToLogin = () => {
     const currentUrl = `/invite?token=${encodeURIComponent(token)}`;
@@ -44,7 +44,7 @@ const TeamsInvitationPage = () => {
       const result = await TeamsService.getInvitation(email, token);
       setInvitation(result);
     } catch (error: any) {
-      setErrorMessage(error.message || 'Error loading invitation.');
+      setErrorMessage(error.message || "Error loading invitation.");
     } finally {
       setLoading(false);
     }
@@ -56,7 +56,7 @@ const TeamsInvitationPage = () => {
       const email = invitation()?.email!;
       await TeamsService.acceptInvitation(email, token);
 
-      toast.success('Invitation accepted successfully!');
+      toast.success("Invitation accepted successfully!");
       const orgId = invitation()?.organization_id;
       if (orgId) {
         navigate(`/org/${orgId}/teams`);
@@ -64,7 +64,7 @@ const TeamsInvitationPage = () => {
         navigate(`/`);
       }
     } catch (error: any) {
-      toast.error(error.message || 'Error accepting invitation.');
+      toast.error(error.message || "Error accepting invitation.");
     } finally {
       setAccepting(false);
     }
@@ -73,7 +73,7 @@ const TeamsInvitationPage = () => {
   async function rejectInvitation() {
     try {
       await TeamsService.rejectInvitation(token);
-      toast.success('Invitation rejected successfully');
+      toast.success("Invitation rejected successfully");
       const orgId = invitation()?.organization_id;
       if (orgId) {
         navigate(`/org/${orgId}/teams`);
@@ -81,13 +81,13 @@ const TeamsInvitationPage = () => {
         navigate(`/`);
       }
     } catch (error: any) {
-      toast.error(error.message || 'Error rejecting invitation.');
+      toast.error(error.message || "Error rejecting invitation.");
     }
   }
 
   onMount(async () => {
     if (!token) {
-      setErrorMessage('No invitation token provided.');
+      setErrorMessage("No invitation token provided.");
       setLoading(false);
       return;
     }
@@ -105,7 +105,7 @@ const TeamsInvitationPage = () => {
 
     if (inviteEmail && inviteEmail !== email) {
       setErrorMessage(
-        `Mismatch: Invitation was sent to ${inviteEmail}, you are signed in as ${email}.`
+        `Mismatch: Invitation was sent to ${inviteEmail}, you are signed in as ${email}.`,
       );
     }
   });
@@ -118,7 +118,7 @@ const TeamsInvitationPage = () => {
             <div class="flex items-center justify-center mb-4">
               <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
             </div>
-            <p class="text-gray-600">{t('common.loadingInvitation')}</p>
+            <p class="text-gray-600">{t("common.loadingInvitation")}</p>
           </div>
         </Show>
 
@@ -163,21 +163,14 @@ const TeamsInvitationPage = () => {
                   />
                 </svg>
               </div>
-              <h2 class="text-2xl font-bold mb-2">
-                {t('teams.invitation.title')}
-              </h2>
+              <h2 class="text-2xl font-bold mb-2">{t("teams.invitation.title")}</h2>
               <p class="text-gray-600">
-                You've been invited to join the team{' '}
-                <span class="font-semibold text-indigo-600">
-                  {invitation()?.team_name}
-                </span>
+                You've been invited to join the team{" "}
+                <span class="font-semibold text-indigo-600">{invitation()?.team_name}</span>
                 {invitation()?.organization_name && (
                   <span>
-                    {' '}
-                    in{' '}
-                    <span class="font-semibold">
-                      {invitation()?.organization_name}
-                    </span>
+                    {" "}
+                    in <span class="font-semibold">{invitation()?.organization_name}</span>
                   </span>
                 )}
               </p>
@@ -186,7 +179,7 @@ const TeamsInvitationPage = () => {
             {/* Email display */}
             <div class="email-box">
               <label class="block text-sm font-medium text-gray-700 mb-2">
-                {t('teams.invitation.emailAddress')}
+                {t("teams.invitation.emailAddress")}
               </label>
               <div class="flex items-center gap-2">
                 <svg
@@ -210,7 +203,7 @@ const TeamsInvitationPage = () => {
             <Show when={invitation()?.role}>
               <div class="email-box">
                 <label class="block text-sm font-medium text-gray-700 mb-2">
-                  {t('teams.invitation.teamRole')}
+                  {t("teams.invitation.teamRole")}
                 </label>
                 <div class="flex items-center gap-2">
                   <svg
@@ -227,9 +220,9 @@ const TeamsInvitationPage = () => {
                     />
                   </svg>
                   <span class="font-medium">
-                    {invitation()?.role === 'admin'
-                      ? t('organization.teamRoleAdmin')
-                      : t('organization.teamRoleMember')}
+                    {invitation()?.role === "admin"
+                      ? t("organization.teamRoleAdmin")
+                      : t("organization.teamRoleMember")}
                   </span>
                 </div>
               </div>
@@ -238,12 +231,7 @@ const TeamsInvitationPage = () => {
             {/* Error states */}
             <Show when={invitation()?.expired}>
               <div class="alert-box alert-error">
-                <svg
-                  class="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
@@ -251,18 +239,13 @@ const TeamsInvitationPage = () => {
                     d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-                <p>{t('teams.invitation.expired')}</p>
+                <p>{t("teams.invitation.expired")}</p>
               </div>
             </Show>
 
-            <Show when={invitation()?.status !== 'invited'}>
+            <Show when={invitation()?.status !== "invited"}>
               <div class="alert-box alert-warning">
-                <svg
-                  class="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
@@ -274,27 +257,14 @@ const TeamsInvitationPage = () => {
               </div>
             </Show>
 
-            <Show
-              when={
-                !invitation()?.expired && invitation()?.status === 'invited'
-              }
-            >
+            <Show when={!invitation()?.expired && invitation()?.status === "invited"}>
               <div class="action-buttons">
-                <button
-                  class="btn-accept"
-                  onClick={acceptInvitation}
-                  disabled={accepting()}
-                >
+                <button class="btn-accept" onClick={acceptInvitation} disabled={accepting()}>
                   <Show
                     when={!accepting()}
-                    fallback={<span>{t('teams.invitation.accepting')}</span>}
+                    fallback={<span>{t("teams.invitation.accepting")}</span>}
                   >
-                    <svg
-                      class="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path
                         stroke-linecap="round"
                         stroke-linejoin="round"
@@ -302,21 +272,12 @@ const TeamsInvitationPage = () => {
                         d="M5 13l4 4L19 7"
                       />
                     </svg>
-                    <span>{t('teams.invitation.accept')}</span>
+                    <span>{t("teams.invitation.accept")}</span>
                   </Show>
                 </button>
 
-                <button
-                  class="btn-reject"
-                  onClick={rejectInvitation}
-                  disabled={accepting()}
-                >
-                  <svg
-                    class="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
+                <button class="btn-reject" onClick={rejectInvitation} disabled={accepting()}>
+                  <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
                       stroke-linecap="round"
                       stroke-linejoin="round"

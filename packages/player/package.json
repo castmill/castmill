@@ -2,13 +2,22 @@
   "name": "@castmill/player",
   "version": "1.0.0",
   "description": "Castmill Digital Signage Player",
-  "exports": "./dist/index.js",
-  "node": "^12.20.0 || ^14.13.1 || >=16.0.0",
+  "homepage": "https://github.com/OptimalBits/castmill#readme",
+  "bugs": {
+    "url": "https://github.com/OptimalBits/castmill/issues"
+  },
+  "license": "AGPL-3.0-or-later",
+  "author": "Castmill AB",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OptimalBits/castmill.git"
+  },
   "files": [
     "dist"
   ],
   "type": "module",
   "types": "dist/index.d.ts",
+  "exports": "./dist/index.js",
   "scripts": {
     "format": "oxfmt --write .",
     "format:check": "oxfmt .",
@@ -24,16 +33,9 @@
     "ts-types": "tsc --emitDeclarationOnly --outDir dist",
     "lint": "oxlint ."
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/OptimalBits/castmill.git"
+  "dependencies": {
+    "@castmill/cache": "*"
   },
-  "author": "Castmill AB",
-  "license": "AGPL-3.0-or-later",
-  "bugs": {
-    "url": "https://github.com/OptimalBits/castmill/issues"
-  },
-  "homepage": "https://github.com/OptimalBits/castmill#readme",
   "devDependencies": {
     "@babel/core": "^7.13.10",
     "@babel/plugin-transform-arrow-functions": "^7.13.0",
@@ -73,7 +75,5 @@
     "vite": "^5.2.10",
     "vite-plugin-solid": "^2.10.2"
   },
-  "dependencies": {
-    "@castmill/cache": "*"
-  }
+  "node": "^12.20.0 || ^14.13.1 || >=16.0.0"
 }

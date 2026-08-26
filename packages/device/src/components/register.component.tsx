@@ -1,18 +1,18 @@
-import { createSignal, onMount } from 'solid-js';
-import * as QRCode from 'qrcode';
-import { Device } from '../classes';
-import { PincodeComponent } from './pincode.component';
-import styles from './register.module.scss';
-import castmillLogo from '../assets/castmill-logo.png';
+import { createSignal, onMount } from "solid-js";
+import * as QRCode from "qrcode";
+import { Device } from "../classes";
+import { PincodeComponent } from "./pincode.component";
+import styles from "./register.module.scss";
+import castmillLogo from "../assets/castmill-logo.png";
 
 export function RegisterComponent(props: { device: Device; pincode: string }) {
-  const [qrCodeUrl, setQrCodeUrl] = createSignal<string>('');
+  const [qrCodeUrl, setQrCodeUrl] = createSignal<string>("");
   const [windowWidth, setWindowWidth] = createSignal(window.innerWidth);
 
   onMount(async () => {
     // Update window width on resize to make QR code responsive
     const handleResize = () => setWindowWidth(window.innerWidth);
-    window.addEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
 
     try {
       // Generate QR code for the registration URL with responsive sizing
@@ -29,18 +29,18 @@ export function RegisterComponent(props: { device: Device; pincode: string }) {
         width: getQrSize(),
         margin: 1,
         color: {
-          dark: '#315aa9', // Using Castmill brand color
-          light: '#ffffff',
+          dark: "#315aa9", // Using Castmill brand color
+          light: "#ffffff",
         },
       });
       setQrCodeUrl(qrDataUrl);
     } catch (error) {
-      console.error('Error generating QR code:', error);
+      console.error("Error generating QR code:", error);
     }
 
     // Cleanup event listener on unmount
     return () => {
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener("resize", handleResize);
     };
   });
 
@@ -52,9 +52,7 @@ export function RegisterComponent(props: { device: Device; pincode: string }) {
             <img src={castmillLogo} alt="Castmill" class={styles.logo} />
           </div>
           <h1 class={styles.title}>Register Your Device</h1>
-          <p class={styles.subtitle}>
-            Connect your device to the Castmill platform
-          </p>
+          <p class={styles.subtitle}>Connect your device to the Castmill platform</p>
         </header>
 
         <div class={styles.content}>
@@ -72,9 +70,7 @@ export function RegisterComponent(props: { device: Device; pincode: string }) {
       </div>
 
       <footer class={styles.footer}>
-        <div>
-          © 2011-{new Date().getFullYear()} Castmill. All rights reserved.
-        </div>
+        <div>© 2011-{new Date().getFullYear()} Castmill. All rights reserved.</div>
         <div>Digital Signage Made Simple</div>
       </footer>
     </div>

@@ -2,8 +2,8 @@
  * Represents a schema for a document.
  *
  */
-export type SimpleType = 'string' | 'number' | 'boolean';
-export type ComplexType = 'map' | 'list';
+export type SimpleType = "string" | "number" | "boolean";
+export type ComplexType = "map" | "list";
 
 /**
  * Location value structure with coordinates and address information.
@@ -35,7 +35,7 @@ export interface FieldAttributes {
 }
 
 export interface ReferenceAttributes {
-  type: 'ref';
+  type: "ref";
   required?: boolean;
   collection: string;
   description?: string;
@@ -53,7 +53,7 @@ export interface ComplexFieldAttributes {
  * Allows selecting a geographic location with coordinates and address.
  */
 export interface LocationFieldAttributes {
-  type: 'location';
+  type: "location";
   required?: boolean;
   description?: string;
   order?: number;
@@ -105,7 +105,7 @@ export interface LayoutOptionValue {
  * Used in widget options_schema to define a layout editor field.
  */
 export interface LayoutFieldAttributes {
-  type: 'layout';
+  type: "layout";
   required?: boolean;
   description?: string;
   order?: number;
@@ -142,7 +142,7 @@ export interface LayoutRefValue {
  * Allows selecting an existing layout and assigning playlists to its zones.
  */
 export interface LayoutRefFieldAttributes {
-  type: 'layout-ref';
+  type: "layout-ref";
   required?: boolean;
   description?: string;
   order?: number;

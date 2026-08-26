@@ -24,6 +24,7 @@ Network admins can invite users to create new organizations through the LiveView
 5. The system generates a unique invitation token
 
 When the invited user signs up:
+
 - A new organization is automatically created with the specified name
 - The user becomes the admin of that organization
 - The user can then invite other members to their organization from the dashboard
@@ -37,12 +38,14 @@ Organization admins can continue to invite users to their existing organizations
 ### Database Schema
 
 #### Networks Table Updates
+
 ```sql
 ALTER TABLE networks ADD COLUMN invitation_only BOOLEAN DEFAULT FALSE NOT NULL;
 ALTER TABLE networks ADD COLUMN invitation_only_org_admins BOOLEAN DEFAULT FALSE NOT NULL;
 ```
 
 #### Network Invitations Table
+
 ```sql
 CREATE TABLE network_invitations (
   id UUID PRIMARY KEY,
@@ -62,16 +65,20 @@ CREATE UNIQUE INDEX ON network_invitations (network_id, email) WHERE status = 'i
 ### API Endpoints
 
 #### Network Invitation Management (LiveView Admin)
+
 - Admin interface provides CRUD operations for network invitations
 - Invitations can be viewed, created, and deleted via the Invitations tab
 
 #### Public Preview (No Auth Required)
+
 ```
 GET /dashboard/network_invitations/:token/preview
 ```
+
 Returns invitation details including email, organization name, and expiration status.
 
 #### Authenticated Endpoints
+
 ```
 GET /dashboard/network_invitations/:token
 POST /dashboard/network_invitations/:token/accept
@@ -79,27 +86,32 @@ POST /dashboard/network_invitations/:token/reject
 ```
 
 #### Signup Flow Changes
+
 ```
 POST /signups/
 ```
+
 - Now validates `invitation_only` mode
 - Blocks signups without valid invitations when mode is enabled
 
 ```
 POST /signups/challenges
 ```
+
 - Validates invitation tokens for invited users
 - Checks both network and organization invitations
 
 ### User Flow
 
 #### For Network Admins:
+
 1. Enable "Invitation Only" mode in Network settings
 2. Navigate to the Invitations tab
 3. Create invitations with email and organization name
 4. Share invitation link/token with users
 
 #### For Invited Users:
+
 1. Receive invitation (currently manual - future: email with link)
 2. Navigate to signup page with invitation token
 3. Complete passkey registration
@@ -112,6 +124,7 @@ POST /signups/challenges
 ### Enabling Invitation-Only Mode
 
 In the LiveView admin tool:
+
 1. Navigate to Networks
 2. Select a network
 3. Click "Edit Network"
@@ -130,6 +143,7 @@ In the LiveView admin tool:
 ## Testing
 
 Comprehensive test coverage includes:
+
 - Network-level invitation-only mode validation
 - Network invitation CRUD operations
 - Signup flow with and without invitations
@@ -137,6 +151,7 @@ Comprehensive test coverage includes:
 - Duplicate invitation prevention
 
 Run tests:
+
 ```bash
 cd packages/castmill
 mix test test/castmill/networks_test.exs

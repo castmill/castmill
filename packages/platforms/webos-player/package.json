@@ -2,6 +2,7 @@
   "name": "@castmill/webos-player",
   "version": "2.0.0",
   "description": "",
+  "license": "AGPL-3.0-or-later",
   "type": "module",
   "scripts": {
     "format": "oxfmt --write .",
@@ -15,7 +16,12 @@
     "package": "bash -lic scripts/ares-package.sh",
     "test": "vitest run"
   },
-  "license": "AGPL-3.0-or-later",
+  "dependencies": {
+    "@castmill/cache": "*",
+    "@castmill/device": "*",
+    "@castmill/player": "*",
+    "solid-js": "^1.8.11"
+  },
   "devDependencies": {
     "@solidjs/testing-library": "^0.8.5",
     "@vitejs/plugin-legacy": "^5.4.1",
@@ -28,11 +34,5 @@
     "vite-plugin-copy": "^0.1.6",
     "vite-plugin-solid": "^2.8.2",
     "vitest": "^1.5.3"
-  },
-  "dependencies": {
-    "@castmill/cache": "*",
-    "@castmill/device": "*",
-    "@castmill/player": "*",
-    "solid-js": "^1.8.11"
   }
 }

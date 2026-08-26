@@ -5,20 +5,12 @@
  * Provides a common table view including pagination, searching, sorting, and selection.
  * (c) 2024 Castmill AB.
  */
-import { JSX, Show, createSignal, onMount } from 'solid-js';
-import {
-  Filter,
-  ItemBase,
-  Pagination,
-  Table,
-  TableAction,
-  ToolBar,
-  SelectionActionBar,
-} from '../';
-import { PermissionDenied } from '../permission-denied/permission-denied';
-import { SortOptions } from '../../interfaces/sort-options.interface';
+import { JSX, Show, createSignal, onMount } from "solid-js";
+import { Filter, ItemBase, Pagination, Table, TableAction, ToolBar, SelectionActionBar } from "../";
+import { PermissionDenied } from "../permission-denied/permission-denied";
+import { SortOptions } from "../../interfaces/sort-options.interface";
 
-import style from './table-view.module.scss';
+import style from "./table-view.module.scss";
 
 export interface FetchDataOptions {
   page: { num: number; size: number };
@@ -27,13 +19,10 @@ export interface FetchDataOptions {
   filters?: Record<string, string | boolean>;
   team_id?: number | null;
   tag_ids?: number[];
-  tag_filter_mode?: 'any' | 'all';
+  tag_filter_mode?: "any" | "all";
 }
 
-export interface TableViewRef<
-  IdType = string,
-  Item extends ItemBase<IdType> = ItemBase<IdType>,
-> {
+export interface TableViewRef<IdType = string, Item extends ItemBase<IdType> = ItemBase<IdType>> {
   reloadData: () => Promise<void>;
   updateItem: (itemId: IdType, item: Partial<Item>) => void;
   focusSearch: () => void;
@@ -43,10 +32,7 @@ export interface TableViewRef<
 type Params = Record<string, string | undefined>;
 type SetParams = Record<string, string | number | boolean | undefined>;
 
-interface TableViewProps<
-  IdType = string,
-  Item extends ItemBase<IdType> = ItemBase<IdType>,
-> {
+interface TableViewProps<IdType = string, Item extends ItemBase<IdType> = ItemBase<IdType>> {
   title?: string | (() => string);
   resource: string;
   params?: [Params, (params: SetParams, options?: any) => void]; // typeof useSearchParams;
@@ -94,10 +80,7 @@ interface TableViewProps<
   };
 
   /** Render prop for bulk actions shown in the floating selection bar */
-  selectionActions?: (selection: {
-    count: number;
-    clear: () => void;
-  }) => JSX.Element;
+  selectionActions?: (selection: { count: number; clear: () => void }) => JSX.Element;
 
   /** Label for the selection bar — use {count} as placeholder */
   selectionLabel?: string;
@@ -108,23 +91,18 @@ interface TableViewProps<
   itemIdKey?: string;
 }
 
-export const TableView = <
-  IdType = string,
-  Item extends ItemBase<IdType> = ItemBase<IdType>,
->(
-  props: TableViewProps<IdType, Item>
+export const TableView = <IdType = string, Item extends ItemBase<IdType> = ItemBase<IdType>>(
+  props: TableViewProps<IdType, Item>,
 ): JSX.Element => {
   const [data, setData] = createSignal<Item[]>([]);
 
   const [currentPage, setCurrentPage] = createSignal(1);
   const [totalItems, setTotalItems] = createSignal(0);
 
-  const [loadingError, setLoadingError] = createSignal('');
+  const [loadingError, setLoadingError] = createSignal("");
   const [errorStatus, setErrorStatus] = createSignal<number | null>(null);
 
-  const [filters, setFilters] = createSignal<Filter[]>(
-    props.toolbar?.filters || []
-  );
+  const [filters, setFilters] = createSignal<Filter[]>(props.toolbar?.filters || []);
 
   // Track selection count for the floating action bar
   const [selectedCount, setSelectedCount] = createSignal(0);
@@ -147,8 +125,8 @@ export const TableView = <
   // Otherwise use reactive signals (or store) as a fallback
   // Track current sort options
   const [sortOptions, setSortOptions] = createSignal<SortOptions>({
-    key: 'name',
-    direction: 'ascending',
+    key: "name",
+    direction: "ascending",
   });
 
   const [fallbackParams, setFallbackParams] = createSignal<{
@@ -176,7 +154,7 @@ export const TableView = <
   }) => {
     if (props.params) {
       const [searchParams, setSearchParamsEx] = props.params;
-      console.log('setSearchParams', params);
+      console.log("setSearchParams", params);
       setSearchParamsEx({ ...searchParams, ...params });
     } else {
       setFallbackParams({ ...fallbackParams(), ...params });
@@ -198,7 +176,7 @@ export const TableView = <
     if (params.sortKey || params.sortDirection) {
       setSortOptions({
         key: params.sortKey,
-        direction: params.sortDirection as 'ascending' | 'descending',
+        direction: params.sortDirection as "ascending" | "descending",
       });
     }
 
@@ -216,16 +194,13 @@ export const TableView = <
 
   const updateData = async () => {
     const params = getSearchParams();
-    const { search = '', page = 1 } = params;
+    const { search = "", page = 1 } = params;
 
     try {
-      const filtersObject = activeFilters().reduce(
-        (acc: Record<string, boolean>, filter) => {
-          acc[filter] = true;
-          return acc;
-        },
-        {}
-      );
+      const filtersObject = activeFilters().reduce((acc: Record<string, boolean>, filter) => {
+        acc[filter] = true;
+        return acc;
+      }, {});
 
       const result = await props.fetchData({
         page: { num: currentPage(), size: props.pagination.itemsPerPage },
@@ -237,10 +212,10 @@ export const TableView = <
       setData(result.data);
       setTotalItems(result.count);
     } catch (err: any) {
-      console.log('error', err);
+      console.log("error", err);
 
       // Check if it's an HttpError with status code
-      if (err && typeof err.status === 'number') {
+      if (err && typeof err.status === "number") {
         setErrorStatus(err.status);
       }
 
@@ -263,33 +238,33 @@ export const TableView = <
         console.log({ opts });
 
         if (opts.page) {
-          params['page'] = opts.page;
+          params["page"] = opts.page;
           if (opts.page != currentPage()) {
             setCurrentPage(opts.page);
           }
         }
 
-        if (typeof opts.search != 'undefined') {
-          params['search'] = opts.search;
+        if (typeof opts.search != "undefined") {
+          params["search"] = opts.search;
         }
 
-        if (typeof opts.filters != 'undefined') {
-          params['filters'] = opts.filters;
+        if (typeof opts.filters != "undefined") {
+          params["filters"] = opts.filters;
         }
 
-        if (typeof opts.sortKey != 'undefined') {
-          params['sortKey'] = opts.sortKey;
+        if (typeof opts.sortKey != "undefined") {
+          params["sortKey"] = opts.sortKey;
         }
 
-        if (typeof opts.sortDirection != 'undefined') {
-          params['sortDirection'] = opts.sortDirection;
+        if (typeof opts.sortDirection != "undefined") {
+          params["sortDirection"] = opts.sortDirection;
         }
 
-        console.log('handleChange', params);
+        console.log("handleChange", params);
         setSearchParams(params);
 
         resolve();
-      }, 0)
+      }, 0),
     );
     await updateData();
   };
@@ -308,7 +283,7 @@ export const TableView = <
   const handleFilterChange = async (updatedFilters: Filter[]) => {
     setFilters(updatedFilters);
     await handleChange({
-      filters: activeFilters().join(','),
+      filters: activeFilters().join(","),
       page: 1,
     });
   };
@@ -337,9 +312,7 @@ export const TableView = <
       });
     },
     focusSearch: () => {
-      const searchInput = document.querySelector(
-        '.search-input'
-      ) as HTMLInputElement;
+      const searchInput = document.querySelector(".search-input") as HTMLInputElement;
       if (searchInput) {
         searchInput.focus();
       }
@@ -350,30 +323,26 @@ export const TableView = <
     props.ref(ref); // Assign the methods to the ref passed from the parent
   }
 
-  const getTitle = () =>
-    typeof props.title === 'function' ? props.title() : props.title;
+  const getTitle = () => (typeof props.title === "function" ? props.title() : props.title);
 
   return (
     <>
       <Show
         when={!loadingError()}
         fallback={
-          <Show
-            when={errorStatus() === 403}
-            fallback={<div>Loading Error: {loadingError()}</div>}
-          >
+          <Show when={errorStatus() === 403} fallback={<div>Loading Error: {loadingError()}</div>}>
             <PermissionDenied resource={props.resource} />
           </Show>
         }
       >
-        <div class={style['table-view']}>
+        <div class={style["table-view"]}>
           <Show when={props.toolbar}>
             <ToolBar
               title={props.toolbar?.hideTitle ? undefined : getTitle()}
               titleActions={props.toolbar?.titleActions}
               filters={filters()}
               onFilterChange={handleFilterChange}
-              initialSearchText={(getSearchParams().search as string) || ''}
+              initialSearchText={(getSearchParams().search as string) || ""}
               onSearch={handleSearch}
               mainAction={props.toolbar?.mainAction}
               actions={props.toolbar?.actions}
@@ -413,7 +382,7 @@ export const TableView = <
           </Show>
 
           <div
-            class={`${style['pagination-wrapper']} ${totalItems() <= props.pagination.itemsPerPage ? style['hidden'] : ''}`}
+            class={`${style["pagination-wrapper"]} ${totalItems() <= props.pagination.itemsPerPage ? style["hidden"] : ""}`}
           >
             <Pagination
               itemsPerPage={props.pagination.itemsPerPage}
@@ -421,7 +390,7 @@ export const TableView = <
               currentPage={currentPage()}
               onPageChange={handlePageChange}
             />
-            <div class={style['pagination-text']}>
+            <div class={style["pagination-text"]}>
               Showing {data().length} of {totalItems()} {props.resource}
             </div>
           </div>

@@ -5,6 +5,7 @@ This document provides a complete reference for the Widget Third-Party Integrati
 ## Base URL
 
 All API endpoints are prefixed with the base URL:
+
 ```
 https://api.castmill.com/dashboard
 ```
@@ -26,10 +27,12 @@ GET /organizations/:organization_id/widgets/:widget_id/integrations
 ```
 
 **Parameters:**
+
 - `organization_id` (path, required): Organization ID
 - `widget_id` (path, required): Widget ID
 
 **Response:**
+
 ```json
 {
   "data": [
@@ -64,10 +67,12 @@ GET /organizations/:organization_id/widget-integrations/:integration_id
 ```
 
 **Parameters:**
+
 - `organization_id` (path, required): Organization ID
 - `integration_id` (path, required): Integration ID
 
 **Response:**
+
 ```json
 {
   "data": {
@@ -108,10 +113,12 @@ PUT /organizations/:organization_id/widget-integrations/:integration_id/credenti
 ```
 
 **Parameters:**
+
 - `organization_id` (path, required): Organization ID
 - `integration_id` (path, required): Integration ID
 
 **Request Body:**
+
 ```json
 {
   "credentials": {
@@ -122,6 +129,7 @@ PUT /organizations/:organization_id/widget-integrations/:integration_id/credenti
 ```
 
 **Response:**
+
 ```json
 {
   "data": {
@@ -138,6 +146,7 @@ PUT /organizations/:organization_id/widget-integrations/:integration_id/credenti
 ```
 
 **Notes:**
+
 - Credentials are encrypted using the organization's encryption key
 - Only non-sensitive metadata is returned in the response
 - Sensitive fields (containing "password", "secret", "key", "token") are excluded from metadata
@@ -152,10 +161,12 @@ PUT /widget-configs/:widget_config_id/credentials
 ```
 
 **Parameters:**
+
 - `widget_config_id` (path, required): Widget Config ID
 - `integration_id` (query, required): Integration ID
 
 **Request Body:**
+
 ```json
 {
   "integration_id": 123,
@@ -167,6 +178,7 @@ PUT /widget-configs/:widget_config_id/credentials
 ```
 
 **Response:**
+
 ```json
 {
   "data": {
@@ -191,10 +203,12 @@ POST /organizations/:organization_id/widget-integrations/:integration_id/test
 ```
 
 **Parameters:**
+
 - `organization_id` (path, required): Organization ID
 - `integration_id` (path, required): Integration ID
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -204,6 +218,7 @@ POST /organizations/:organization_id/widget-integrations/:integration_id/test
 ```
 
 **Error Response:**
+
 ```json
 {
   "error": "Integration or credentials not found"
@@ -221,10 +236,12 @@ GET /widget-configs/:widget_config_id/data?version=:current_version
 ```
 
 **Parameters:**
+
 - `widget_config_id` (path, required): Widget Config ID
 - `version` (query, optional): Current version number
 
 **Response (when version is different or not provided):**
+
 ```json
 {
   "data": {
@@ -250,11 +267,13 @@ GET /widget-configs/:widget_config_id/data?version=:current_version
   interval, even if the periodic worker was delayed.
 
 **Response (when version matches):**
+
 ```
 HTTP 304 Not Modified
 ```
 
 **Error Response:**
+
 ```json
 {
   "error": "No integration data found"
@@ -262,25 +281,26 @@ HTTP 304 Not Modified
 ```
 
 **Usage Pattern:**
+
 ```javascript
 // Player polling logic
 async function pollWidgetData(widgetConfigId, currentVersion) {
   const url = `/widget-configs/${widgetConfigId}/data`;
-  const params = currentVersion ? `?version=${currentVersion}` : '';
-  
+  const params = currentVersion ? `?version=${currentVersion}` : "";
+
   const response = await fetch(url + params);
-  
+
   if (response.status === 304) {
     // Data unchanged
     return null;
   }
-  
+
   if (response.ok) {
     const data = await response.json();
     return data;
   }
-  
-  throw new Error('Failed to fetch widget data');
+
+  throw new Error("Failed to fetch widget data");
 }
 
 // Poll every 30 seconds
@@ -302,9 +322,11 @@ POST /widget-configs/:widget_config_id/refresh
 ```
 
 **Parameters:**
+
 - `widget_config_id` (path, required): Widget Config ID
 
 **Response:**
+
 ```json
 {
   "message": "Refresh queued",
@@ -313,6 +335,7 @@ POST /widget-configs/:widget_config_id/refresh
 ```
 
 **Notes:**
+
 - This endpoint queues a background job to fetch fresh data
 - Returns immediately with 202 Accepted
 - Actual data will be updated asynchronously
@@ -328,10 +351,12 @@ POST /webhooks/widgets/:integration_id/:widget_config_id
 ```
 
 **Parameters:**
+
 - `integration_id` (path, required): Integration ID
 - `widget_config_id` (path, required): Widget Config ID
 
 **Headers:**
+
 ```
 Content-Type: application/json
 X-Webhook-Signature: <signature> (optional, depends on integration)
@@ -339,6 +364,7 @@ X-API-Key: <api-key> (optional, depends on integration)
 ```
 
 **Request Body:**
+
 ```json
 {
   "data": {
@@ -349,6 +375,7 @@ X-API-Key: <api-key> (optional, depends on integration)
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -360,6 +387,7 @@ X-API-Key: <api-key> (optional, depends on integration)
 **Error Responses:**
 
 Invalid signature:
+
 ```json
 {
   "error": "Invalid webhook signature"
@@ -367,6 +395,7 @@ Invalid signature:
 ```
 
 Integration doesn't support webhooks:
+
 ```json
 {
   "error": "This integration does not support webhooks"
@@ -374,6 +403,7 @@ Integration doesn't support webhooks:
 ```
 
 **Notes:**
+
 - This endpoint is publicly accessible (no authentication required)
 - Security is enforced through webhook signatures or API keys
 - Version number is automatically incremented
@@ -381,22 +411,23 @@ Integration doesn't support webhooks:
 
 ## Error Codes
 
-| Status Code | Description |
-|-------------|-------------|
-| 200 | Success |
-| 202 | Accepted (for async operations) |
-| 304 | Not Modified (version unchanged) |
-| 400 | Bad Request (invalid parameters or scope mismatch) |
-| 401 | Unauthorized (invalid credentials or signature) |
-| 404 | Not Found (resource doesn't exist) |
-| 422 | Unprocessable Entity (validation errors) |
-| 500 | Internal Server Error |
+| Status Code | Description                                        |
+| ----------- | -------------------------------------------------- |
+| 200         | Success                                            |
+| 202         | Accepted (for async operations)                    |
+| 304         | Not Modified (version unchanged)                   |
+| 400         | Bad Request (invalid parameters or scope mismatch) |
+| 401         | Unauthorized (invalid credentials or signature)    |
+| 404         | Not Found (resource doesn't exist)                 |
+| 422         | Unprocessable Entity (validation errors)           |
+| 500         | Internal Server Error                              |
 
 ## Integration Configuration Examples
 
 ### Weather Widget (Organization Credentials, PULL)
 
 **Create Integration:**
+
 ```json
 {
   "widget_id": "weather-widget",
@@ -431,6 +462,7 @@ Integration doesn't support webhooks:
 ```
 
 **Set Organization Credentials:**
+
 ```bash
 curl -X POST \
   https://api.castmill.com/dashboard/organizations/org-123/widget-integrations/1/credentials \
@@ -446,6 +478,7 @@ curl -X POST \
 ### Social Feed (Widget Credentials, PUSH)
 
 **Create Integration:**
+
 ```json
 {
   "widget_id": "facebook-feed",
@@ -475,6 +508,7 @@ curl -X POST \
 ```
 
 **Set Widget Credentials:**
+
 ```bash
 curl -X POST \
   https://api.castmill.com/dashboard/widget-configs/config-456/credentials \
@@ -490,6 +524,7 @@ curl -X POST \
 ```
 
 **Configure Facebook Webhook:**
+
 ```
 Webhook URL: https://api.castmill.com/webhooks/widgets/2/config-456
 Verify Token: my-secret-token
@@ -498,6 +533,7 @@ Verify Token: my-secret-token
 ### RSS Feed (No Credentials, PULL)
 
 **Create Integration:**
+
 ```json
 {
   "widget_id": "rss-feed",
@@ -567,6 +603,7 @@ Exceeding rate limits returns a 429 Too Many Requests response.
 ## Support
 
 For questions or issues:
+
 - Documentation: https://docs.castmill.com
 - GitHub Issues: https://github.com/castmill/castmill/issues
 - Email: support@castmill.com

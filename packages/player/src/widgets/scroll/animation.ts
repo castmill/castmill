@@ -26,26 +26,19 @@ const animation: {
  * Look for browser specific implementations of the requestAnimationFrame, and cancelAnimationFrame functions
  */
 if (window) {
-  const vendors = ['ms', 'moz', 'webkit', 'o'];
+  const vendors = ["ms", "moz", "webkit", "o"];
   const win = window as IndexableWindow;
 
   animation.requestAnimationFrame = vendors
-    .map((vendor) => win[vendor + 'RequestAnimationFrame'])
-    .reduce(
-      (accumulator, func) => accumulator || func,
-      window.requestAnimationFrame
-    );
+    .map((vendor) => win[vendor + "RequestAnimationFrame"])
+    .reduce((accumulator, func) => accumulator || func, window.requestAnimationFrame);
 
   animation.cancelAnimationFrame = vendors
     .map(
       (vendor) =>
-        win[vendor + 'CancelAnimationFrame'] ||
-        win[vendor + 'CancelRequestAnimationFrame']
+        win[vendor + "CancelAnimationFrame"] || win[vendor + "CancelRequestAnimationFrame"],
     )
-    .reduce(
-      (accumulator, func) => accumulator || func,
-      window.cancelAnimationFrame
-    );
+    .reduce((accumulator, func) => accumulator || func, window.cancelAnimationFrame);
 }
 
 /*

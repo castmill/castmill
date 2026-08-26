@@ -1,9 +1,9 @@
-import { Component, JSX, mergeProps, onCleanup, onMount, For } from 'solid-js';
-import { TemplateConfig, resolveOption } from './binding';
-import { TemplateComponent, TemplateComponentType } from './template';
-import { ComponentAnimation, applyAnimations } from './animation';
-import { BaseComponentProps } from './interfaces/base-component-props';
-import { PlayerGlobals } from '../../interfaces/player-globals.interface';
+import { Component, JSX, mergeProps, onCleanup, onMount, For } from "solid-js";
+import { TemplateConfig, resolveOption } from "./binding";
+import { TemplateComponent, TemplateComponentType } from "./template";
+import { ComponentAnimation, applyAnimations } from "./animation";
+import { BaseComponentProps } from "./interfaces/base-component-props";
+import { PlayerGlobals } from "../../interfaces/player-globals.interface";
 
 export interface QRCodeComponentOptions {
   /**
@@ -21,7 +21,7 @@ export interface QRCodeComponentOptions {
   /**
    * Error correction level: L (7%), M (15%), Q (25%), H (30%)
    */
-  errorCorrectionLevel?: 'L' | 'M' | 'Q' | 'H';
+  errorCorrectionLevel?: "L" | "M" | "Q" | "H";
   /**
    * Duration the component is displayed (in milliseconds)
    */
@@ -36,7 +36,7 @@ export class QRCodeComponent implements TemplateComponent {
     public opts: QRCodeComponentOptions,
     public style: JSX.CSSProperties,
     public animations?: ComponentAnimation[],
-    public filter?: Record<string, any>
+    public filter?: Record<string, any>,
   ) {}
 
   resolveDuration(_medias: { [index: string]: string }): number {
@@ -44,41 +44,20 @@ export class QRCodeComponent implements TemplateComponent {
   }
 
   static fromJSON(json: any): QRCodeComponent {
-    return new QRCodeComponent(
-      json.name,
-      json.opts,
-      json.style,
-      json.animations,
-      json.filter
-    );
+    return new QRCodeComponent(json.name, json.opts, json.style, json.animations, json.filter);
   }
 
   static resolveOptions(
     opts: any,
     config: TemplateConfig,
     context: any,
-    globals: PlayerGlobals
+    globals: PlayerGlobals,
   ): QRCodeComponentOptions {
     return {
       content: resolveOption(opts.content, config, context, globals),
-      foregroundColor: resolveOption(
-        opts.foregroundColor,
-        config,
-        context,
-        globals
-      ),
-      backgroundColor: resolveOption(
-        opts.backgroundColor,
-        config,
-        context,
-        globals
-      ),
-      errorCorrectionLevel: resolveOption(
-        opts.errorCorrectionLevel,
-        config,
-        context,
-        globals
-      ),
+      foregroundColor: resolveOption(opts.foregroundColor, config, context, globals),
+      backgroundColor: resolveOption(opts.backgroundColor, config, context, globals),
+      errorCorrectionLevel: resolveOption(opts.errorCorrectionLevel, config, context, globals),
       duration: resolveOption(opts.duration, config, context, globals),
     };
   }
@@ -237,11 +216,7 @@ class QRCodeGenerator {
       for (let r = 0; r < 7; r++) {
         for (let c = 0; c < 7; c++) {
           const isOn =
-            r === 0 ||
-            r === 6 ||
-            c === 0 ||
-            c === 6 ||
-            (r >= 2 && r <= 4 && c >= 2 && c <= 4);
+            r === 0 || r === 6 || c === 0 || c === 6 || (r >= 2 && r <= 4 && c >= 2 && c <= 4);
           this.matrix[row + r][col + c] = isOn;
         }
       }
@@ -293,8 +268,7 @@ class QRCodeGenerator {
 
         for (let r = -2; r <= 2; r++) {
           for (let c = -2; c <= 2; c++) {
-            const isOn =
-              Math.abs(r) === 2 || Math.abs(c) === 2 || (r === 0 && c === 0);
+            const isOn = Math.abs(r) === 2 || Math.abs(c) === 2 || (r === 0 && c === 0);
             this.matrix[row + r][col + c] = isOn;
           }
         }
@@ -306,9 +280,7 @@ class QRCodeGenerator {
     if (this.version === 1) return [];
 
     const positions = [6];
-    const step = Math.floor(
-      (this.size - 13) / (Math.floor(this.version / 7) + 1)
-    );
+    const step = Math.floor((this.size - 13) / (Math.floor(this.version / 7) + 1));
     let pos = this.size - 7;
 
     while (pos > 6) {
@@ -418,8 +390,7 @@ class QRCodeGenerator {
           const x = col - c;
           if (!this.isReserved(row, x)) {
             if (index < codewords.length * 8) {
-              const bit =
-                (codewords[Math.floor(index / 8)] >> (7 - (index % 8))) & 1;
+              const bit = (codewords[Math.floor(index / 8)] >> (7 - (index % 8))) & 1;
               this.matrix[row][x] = bit === 1;
               index++;
             }
@@ -460,12 +431,7 @@ class QRCodeGenerator {
           ) {
             continue;
           }
-          if (
-            row >= pr - 2 &&
-            row <= pr + 2 &&
-            col >= pc - 2 &&
-            col <= pc + 2
-          ) {
+          if (row >= pr - 2 && row <= pr + 2 && col >= pc - 2 && col <= pc + 2) {
             return true;
           }
         }
@@ -501,8 +467,7 @@ class QRCodeGenerator {
               shouldFlip = (row + col) % 3 === 0;
               break;
             case 4:
-              shouldFlip =
-                (Math.floor(row / 2) + Math.floor(col / 3)) % 2 === 0;
+              shouldFlip = (Math.floor(row / 2) + Math.floor(col / 3)) % 2 === 0;
               break;
             case 5:
               shouldFlip = ((row * col) % 2) + ((row * col) % 3) === 0;
@@ -554,7 +519,7 @@ export const QRCode: Component<QRCodeProps> = (props: QRCodeProps) => {
 
   // Generate QR code matrix
   const content = props.opts.content;
-  const hasValidContent = content && content.trim() !== '';
+  const hasValidContent = content && content.trim() !== "";
 
   let matrix: boolean[][] = [];
   let gridSize = 0;
@@ -564,22 +529,22 @@ export const QRCode: Component<QRCodeProps> = (props: QRCodeProps) => {
       matrix = generateQRMatrix(content);
       gridSize = matrix.length;
     } catch (error) {
-      console.error('Failed to generate QR code:', error);
+      console.error("Failed to generate QR code:", error);
     }
   }
 
-  const foregroundColor = props.opts.foregroundColor ?? '#000000';
-  const backgroundColor = props.opts.backgroundColor ?? '#ffffff';
+  const foregroundColor = props.opts.foregroundColor ?? "#000000";
+  const backgroundColor = props.opts.backgroundColor ?? "#ffffff";
 
   const merged = mergeProps(
     {
-      width: '100%',
-      height: '100%',
-      display: 'flex',
-      'align-items': 'center',
-      'justify-content': 'center',
+      width: "100%",
+      height: "100%",
+      display: "flex",
+      "align-items": "center",
+      "justify-content": "center",
     },
-    props.style
+    props.style,
   );
 
   onCleanup(() => {
@@ -592,7 +557,7 @@ export const QRCode: Component<QRCodeProps> = (props: QRCodeProps) => {
         props.timeline,
         props.animations,
         containerRef,
-        props.timeline.duration()
+        props.timeline.duration(),
       );
     }
     props.onReady();
@@ -609,31 +574,26 @@ export const QRCode: Component<QRCodeProps> = (props: QRCodeProps) => {
   }
 
   return (
-    <div
-      ref={containerRef}
-      data-component="qr-code"
-      data-name={props.name}
-      style={merged}
-    >
+    <div ref={containerRef} data-component="qr-code" data-name={props.name} style={merged}>
       {hasValidContent && gridSize > 0 && (
         <div
           style={{
-            width: '100%',
-            height: '100%',
-            'max-width': '100%',
-            'max-height': '100%',
-            'aspect-ratio': '1 / 1',
-            display: 'grid',
-            'grid-template-columns': `repeat(${gridSize}, 1fr)`,
-            'grid-template-rows': `repeat(${gridSize}, 1fr)`,
-            'background-color': backgroundColor,
+            width: "100%",
+            height: "100%",
+            "max-width": "100%",
+            "max-height": "100%",
+            "aspect-ratio": "1 / 1",
+            display: "grid",
+            "grid-template-columns": `repeat(${gridSize}, 1fr)`,
+            "grid-template-rows": `repeat(${gridSize}, 1fr)`,
+            "background-color": backgroundColor,
           }}
         >
           <For each={flatMatrix}>
             {(isOn) => (
               <div
                 style={{
-                  'background-color': isOn ? foregroundColor : backgroundColor,
+                  "background-color": isOn ? foregroundColor : backgroundColor,
                 }}
               />
             )}

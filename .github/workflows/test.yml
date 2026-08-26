@@ -33,8 +33,8 @@ jobs:
     name: OTP ${{matrix.otp}} / Elixir ${{matrix.elixir}}
     strategy:
       matrix:
-        otp: ['27']
-        elixir: ['1.18.3']
+        otp: ["27"]
+        elixir: ["1.18.3"]
 
     steps:
       - uses: actions/checkout@v3
@@ -72,7 +72,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: 'yarn'
+          cache: "yarn"
       - run: yarn install --ignore-engines --frozen-lockfile --non-interactive
       - run: yarn build
       - run: yarn format:check
@@ -94,7 +94,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: 'yarn'
+          cache: "yarn"
       - name: Install workspace dependencies
         working-directory: ./
         run: yarn install --ignore-engines --frozen-lockfile --non-interactive
@@ -125,7 +125,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: 'yarn'
+          cache: "yarn"
       - name: Install workspace dependencies
         working-directory: ./
         run: yarn install --ignore-engines --frozen-lockfile --non-interactive
@@ -156,7 +156,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: 'yarn'
+          cache: "yarn"
       - run: yarn install --ignore-engines --frozen-lockfile --non-interactive
       - run: yarn build
       - run: yarn format:check
@@ -178,7 +178,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: 'yarn'
+          cache: "yarn"
       - name: Install workspace dependencies
         working-directory: ./
         run: yarn install --ignore-engines --frozen-lockfile --non-interactive
@@ -230,14 +230,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 24
-          cache: 'yarn'
+          cache: "yarn"
 
       - name: Setup Java for android-player tests
         if: matrix.platform.name == 'android-player'
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: "17"
 
       # Step 3: Install workspace dependencies
       - name: Install workspace dependencies

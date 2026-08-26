@@ -1,9 +1,4 @@
-import type {
-  Schema,
-  SimpleType,
-  FieldAttributes,
-  ComplexFieldAttributes,
-} from '@castmill/player';
+import type { Schema, SimpleType, FieldAttributes, ComplexFieldAttributes } from "@castmill/player";
 
 /**
  * Represents a schema field entry - either a simple type string or an object with type info
@@ -17,14 +12,9 @@ type SchemaField =
 /**
  * Type guard to check if a schema field has a default value
  */
-function hasDefault(
-  field: SchemaField
-): field is { default: unknown } & Record<string, unknown> {
+function hasDefault(field: SchemaField): field is { default: unknown } & Record<string, unknown> {
   return (
-    typeof field === 'object' &&
-    field !== null &&
-    'default' in field &&
-    field.default !== undefined
+    typeof field === "object" && field !== null && "default" in field && field.default !== undefined
   );
 }
 
@@ -32,7 +22,7 @@ function hasDefault(
  * Type guard to check if a value is a SimpleType string
  */
 function isSimpleType(value: unknown): value is SimpleType {
-  return value === 'string' || value === 'number' || value === 'boolean';
+  return value === "string" || value === "number" || value === "boolean";
 }
 
 /**
@@ -40,11 +30,11 @@ function isSimpleType(value: unknown): value is SimpleType {
  */
 function getSimpleTypeDefault(type: SimpleType): string | number | boolean {
   switch (type) {
-    case 'string':
-      return '';
-    case 'number':
+    case "string":
+      return "";
+    case "number":
       return 0;
-    case 'boolean':
+    case "boolean":
       return false;
   }
 }
@@ -73,9 +63,7 @@ function getSimpleTypeDefault(type: SimpleType): string | number | boolean {
  * // Result: { title: 'Hello', count: 0, items: [] }
  * ```
  */
-export function getDefaultDataFromSchema(
-  dataSchema: Schema | undefined
-): Record<string, unknown> {
+export function getDefaultDataFromSchema(dataSchema: Schema | undefined): Record<string, unknown> {
   if (!dataSchema) return {};
 
   const defaults: Record<string, unknown> = {};

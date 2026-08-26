@@ -1,16 +1,16 @@
-import { User } from '../interfaces/user.interface';
-import { baseUrl } from '../env';
-import { HttpError } from '@castmill/ui-common';
-import { handleResponse } from './util';
+import { User } from "../interfaces/user.interface";
+import { baseUrl } from "../env";
+import { HttpError } from "@castmill/ui-common";
+import { handleResponse } from "./util";
 
-import { authFetch } from '../components/auth';
+import { authFetch } from "../components/auth";
 export class SoleAdministratorError extends Error {
   constructor(
     public organizationName?: string,
-    message?: string
+    message?: string,
   ) {
-    super(message || 'Cannot delete account - sole administrator');
-    this.name = 'SoleAdministratorError';
+    super(message || "Cannot delete account - sole administrator");
+    this.name = "SoleAdministratorError";
   }
 }
 
@@ -20,9 +20,9 @@ export const UserService = {
    */
   async updateProfile(userId: string, updates: Partial<User>) {
     const response = await authFetch(`${baseUrl}/dashboard/users/${userId}`, {
-      method: 'PUT',
+      method: "PUT",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({ user: updates }),
     });
@@ -35,7 +35,7 @@ export const UserService = {
    */
   async deleteAccount(userId: string) {
     const response = await authFetch(`${baseUrl}/dashboard/users/${userId}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
 
     if (response.status !== 204) {
@@ -44,10 +44,10 @@ export const UserService = {
         const errorData = await response.json();
 
         // Check for structured error response
-        if (errorData.error === 'sole_administrator') {
+        if (errorData.error === "sole_administrator") {
           throw new SoleAdministratorError(
             errorData.organization_name,
-            `Cannot delete account. You are the sole administrator of '${errorData.organization_name}' which has other members.`
+            `Cannot delete account. You are the sole administrator of '${errorData.organization_name}' which has other members.`,
           );
         }
 
@@ -62,17 +62,14 @@ export const UserService = {
         }
       } catch (error) {
         // If it's already our custom error, re-throw it
-        if (
-          error instanceof SoleAdministratorError ||
-          error instanceof HttpError
-        ) {
+        if (error instanceof SoleAdministratorError || error instanceof HttpError) {
           throw error;
         }
         // Otherwise, generic parsing error
       }
 
       // Fallback error
-      throw new HttpError('Failed to delete account', response.status);
+      throw new HttpError("Failed to delete account", response.status);
     }
   },
 
@@ -81,7 +78,7 @@ export const UserService = {
    */
   async getCurrentUser(userId: string) {
     const response = await authFetch(`${baseUrl}/dashboard/users/${userId}`, {
-      method: 'GET',
+      method: "GET",
     });
 
     return handleResponse<User>(response, { parse: true });
@@ -100,12 +97,9 @@ export const UserService = {
    * Get all user credentials/passkeys
    */
   async getUserCredentials(userId: string) {
-    const response = await authFetch(
-      `${baseUrl}/dashboard/users/${userId}/credentials`,
-      {
-        method: 'GET',
-      }
-    );
+    const response = await authFetch(`${baseUrl}/dashboard/users/${userId}/credentials`, {
+      method: "GET",
+    });
 
     return handleResponse<{
       credentials: Array<{
@@ -124,32 +118,28 @@ export const UserService = {
     const response = await authFetch(
       `${baseUrl}/dashboard/users/${userId}/credentials/${credentialId}`,
       {
-        method: 'DELETE',
-      }
+        method: "DELETE",
+      },
     );
 
     if (response.status !== 204) {
-      throw new Error('Failed to delete credential');
+      throw new Error("Failed to delete credential");
     }
   },
 
   /**
    * Update credential name
    */
-  async updateCredentialName(
-    userId: string,
-    credentialId: string,
-    name: string
-  ) {
+  async updateCredentialName(userId: string, credentialId: string, name: string) {
     const response = await authFetch(
       `${baseUrl}/dashboard/users/${userId}/credentials/${credentialId}`,
       {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ name }),
-      }
+      },
     );
 
     return handleResponse<{ status: string; message: string }>(response, {
@@ -164,12 +154,12 @@ export const UserService = {
     const response = await authFetch(
       `${baseUrl}/dashboard/users/${userId}/send-email-verification`,
       {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ email: newEmail }),
-      }
+      },
     );
 
     return handleResponse<{ status: string; message: string }>(response, {
@@ -182,9 +172,9 @@ export const UserService = {
    */
   async verifyEmail(token: string, newEmail: string) {
     const response = await authFetch(`${baseUrl}/dashboard/verify-email`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({ token, email: newEmail }),
     });
@@ -198,12 +188,9 @@ export const UserService = {
    * Create a challenge for adding a new credential/passkey
    */
   async createCredentialChallenge(userId: string) {
-    const response = await authFetch(
-      `${baseUrl}/dashboard/users/${userId}/credentials/challenge`,
-      {
-        method: 'POST',
-      }
-    );
+    const response = await authFetch(`${baseUrl}/dashboard/users/${userId}/credentials/challenge`, {
+      method: "POST",
+    });
 
     return handleResponse<{
       challenge: string;
@@ -222,23 +209,20 @@ export const UserService = {
     credentialId: string,
     publicKeySpki: string,
     clientDataJSON: Uint8Array,
-    challengeToken: string
+    challengeToken: string,
   ) {
-    const response = await authFetch(
-      `${baseUrl}/dashboard/users/${userId}/credentials`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          credential_id: credentialId,
-          public_key_spki: publicKeySpki,
-          client_data_json: Array.from(clientDataJSON),
-          challenge_token: challengeToken,
-        }),
-      }
-    );
+    const response = await authFetch(`${baseUrl}/dashboard/users/${userId}/credentials`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        credential_id: credentialId,
+        public_key_spki: publicKeySpki,
+        client_data_json: Array.from(clientDataJSON),
+        challenge_token: challengeToken,
+      }),
+    });
 
     return handleResponse<{
       status: string;

@@ -1,5 +1,5 @@
-import { Component, Switch, Match, onMount } from 'solid-js';
-import styles from './styled-input.module.scss';
+import { Component, Switch, Match, onMount } from "solid-js";
+import styles from "./styled-input.module.scss";
 
 export const StyledInput: Component<{
   value: string | boolean | number;
@@ -30,7 +30,7 @@ export const StyledInput: Component<{
           ref={inputRef}
           id={props.id}
           type="text"
-          class={styles['input-text']}
+          class={styles["input-text"]}
           value={String(props.value)}
           onInput={(e) => props.onInput(e.currentTarget.value)}
           placeholder={props.placeholder}
@@ -41,12 +41,12 @@ export const StyledInput: Component<{
         />
       }
     >
-      <Match when={props.type === 'boolean'}>
+      <Match when={props.type === "boolean"}>
         <input
           ref={inputRef}
           id={props.id}
           type="checkbox"
-          class={styles['input-checkbox']}
+          class={styles["input-checkbox"]}
           checked={Boolean(props.value)}
           onChange={(e) => props.onInput(e.currentTarget.checked)}
           placeholder={props.placeholder}
@@ -56,12 +56,12 @@ export const StyledInput: Component<{
           autocomplete="off"
         />
       </Match>
-      <Match when={props.type === 'number'}>
+      <Match when={props.type === "number"}>
         <input
           ref={inputRef}
           id={props.id}
           type="number"
-          class={styles['input-number']}
+          class={styles["input-number"]}
           value={String(props.value)}
           onInput={(e) => props.onInput(Number(e.currentTarget.value))}
           placeholder={props.placeholder}
@@ -71,12 +71,12 @@ export const StyledInput: Component<{
           autocomplete="off"
         />
       </Match>
-      <Match when={props.type === 'email'}>
+      <Match when={props.type === "email"}>
         <input
           ref={inputRef}
           id={props.id}
           type="email"
-          class={styles['input-email']}
+          class={styles["input-email"]}
           value={String(props.value)}
           onInput={(e) => props.onInput(e.currentTarget.value)}
           placeholder={props.placeholder}
@@ -86,13 +86,13 @@ export const StyledInput: Component<{
           autocomplete="off"
         />
       </Match>
-      <Match when={props.type === 'color'}>
+      <Match when={props.type === "color"}>
         <input
           ref={inputRef}
           id={props.id}
           type="color"
-          class={styles['input-color']}
-          value={String(props.value || '#000000')}
+          class={styles["input-color"]}
+          value={String(props.value || "#000000")}
           onInput={(e) => props.onInput(e.currentTarget.value)}
           disabled={props.disabled}
           onFocus={props.onFocus}

@@ -1,38 +1,36 @@
 /** @jsxImportSource solid-js */
 
-import { describe, it, expect, afterEach, vi, beforeEach } from 'vitest';
-import { render, fireEvent, cleanup, screen } from '@solidjs/testing-library';
-import { Drawer } from './drawer';
+import { describe, it, expect, afterEach, vi, beforeEach } from "vitest";
+import { render, fireEvent, cleanup, screen } from "@solidjs/testing-library";
+import { Drawer } from "./drawer";
 
-describe('Drawer Component', () => {
+describe("Drawer Component", () => {
   beforeEach(() => {
     vi.useFakeTimers();
   });
 
   afterEach(() => {
     cleanup();
-    const drawerRoots = document.querySelectorAll(
-      '[data-testid="drawer-root"]'
-    );
+    const drawerRoots = document.querySelectorAll('[data-testid="drawer-root"]');
     drawerRoots.forEach((root) => root.remove());
     vi.runAllTimers();
     vi.useRealTimers();
     vi.restoreAllMocks();
   });
 
-  it('renders correctly with title and description', () => {
+  it("renders correctly with title and description", () => {
     render(() => (
       <Drawer title="Device A" description="Drawer body" onClose={() => {}}>
         <div>Drawer content</div>
       </Drawer>
     ));
 
-    expect(screen.getByText('Device A')).toBeInTheDocument();
-    expect(screen.getByText('Drawer body')).toBeInTheDocument();
-    expect(screen.getByText('Drawer content')).toBeInTheDocument();
+    expect(screen.getByText("Device A")).toBeInTheDocument();
+    expect(screen.getByText("Drawer body")).toBeInTheDocument();
+    expect(screen.getByText("Drawer content")).toBeInTheDocument();
   });
 
-  it('closes on ESC key press', () => {
+  it("closes on ESC key press", () => {
     const onClose = vi.fn();
 
     render(() => (
@@ -41,26 +39,26 @@ describe('Drawer Component', () => {
       </Drawer>
     ));
 
-    fireEvent.keyDown(document, { key: 'Escape' });
+    fireEvent.keyDown(document, { key: "Escape" });
     vi.runAllTimers();
 
     expect(onClose).toHaveBeenCalled();
   });
 
-  it('removes drawer root from DOM after close animation', () => {
+  it("removes drawer root from DOM after close animation", () => {
     render(() => (
       <Drawer title="Closable" onClose={() => {}}>
         <div />
       </Drawer>
     ));
 
-    fireEvent.click(screen.getByTitle('Close'));
+    fireEvent.click(screen.getByTitle("Close"));
     vi.runAllTimers();
 
-    expect(screen.queryByTestId('drawer-root')).not.toBeInTheDocument();
+    expect(screen.queryByTestId("drawer-root")).not.toBeInTheDocument();
   });
 
-  it('closes on overlay click when backdrop is enabled', () => {
+  it("closes on overlay click when backdrop is enabled", () => {
     const onClose = vi.fn();
 
     render(() => (
@@ -69,13 +67,13 @@ describe('Drawer Component', () => {
       </Drawer>
     ));
 
-    fireEvent.click(screen.getByTestId('drawer-root'));
+    fireEvent.click(screen.getByTestId("drawer-root"));
     vi.runAllTimers();
 
     expect(onClose).toHaveBeenCalled();
   });
 
-  it('does not close on overlay click when backdrop is disabled', () => {
+  it("does not close on overlay click when backdrop is disabled", () => {
     const onClose = vi.fn();
 
     render(() => (
@@ -84,16 +82,16 @@ describe('Drawer Component', () => {
       </Drawer>
     ));
 
-    fireEvent.click(screen.getByTestId('drawer-root'));
+    fireEvent.click(screen.getByTestId("drawer-root"));
     vi.runAllTimers();
 
     expect(onClose).not.toHaveBeenCalled();
   });
 
-  it('computes auto backdrop mode from viewport width', () => {
+  it("computes auto backdrop mode from viewport width", () => {
     const originalWidth = window.innerWidth;
 
-    Object.defineProperty(window, 'innerWidth', {
+    Object.defineProperty(window, "innerWidth", {
       configurable: true,
       writable: true,
       value: 900,
@@ -110,49 +108,38 @@ describe('Drawer Component', () => {
       </Drawer>
     ));
 
-    expect(screen.getByTestId('drawer-root')).toHaveAttribute(
-      'data-has-backdrop',
-      'true'
-    );
+    expect(screen.getByTestId("drawer-root")).toHaveAttribute("data-has-backdrop", "true");
 
-    Object.defineProperty(window, 'innerWidth', {
+    Object.defineProperty(window, "innerWidth", {
       configurable: true,
       writable: true,
       value: 1400,
     });
 
-    fireEvent(window, new Event('resize'));
+    fireEvent(window, new Event("resize"));
 
-    expect(screen.getByTestId('drawer-root')).toHaveAttribute(
-      'data-has-backdrop',
-      'false'
-    );
+    expect(screen.getByTestId("drawer-root")).toHaveAttribute("data-has-backdrop", "false");
 
-    Object.defineProperty(window, 'innerWidth', {
+    Object.defineProperty(window, "innerWidth", {
       configurable: true,
       writable: true,
       value: originalWidth,
     });
   });
 
-  it('does not close on outside click when click is inside a modal overlay', () => {
+  it("does not close on outside click when click is inside a modal overlay", () => {
     const onClose = vi.fn();
 
     // Create a modal overlay element in the document body
-    const modalOverlay = document.createElement('div');
-    modalOverlay.setAttribute('data-modal-overlay', '');
-    const modalContent = document.createElement('div');
-    modalContent.textContent = 'Modal content';
+    const modalOverlay = document.createElement("div");
+    modalOverlay.setAttribute("data-modal-overlay", "");
+    const modalContent = document.createElement("div");
+    modalContent.textContent = "Modal content";
     modalOverlay.appendChild(modalContent);
     document.body.appendChild(modalOverlay);
 
     render(() => (
-      <Drawer
-        title="Drawer with modal"
-        onClose={onClose}
-        showBackdrop={false}
-        closeOnOutsideClick
-      >
+      <Drawer title="Drawer with modal" onClose={onClose} showBackdrop={false} closeOnOutsideClick>
         <div>Drawer content</div>
       </Drawer>
     ));
@@ -169,12 +156,12 @@ describe('Drawer Component', () => {
     modalOverlay.remove();
   });
 
-  it('closes on outside click when click is not inside a modal overlay', () => {
+  it("closes on outside click when click is not inside a modal overlay", () => {
     const onClose = vi.fn();
 
     // Create a regular element outside the drawer (not a modal)
-    const outsideElement = document.createElement('div');
-    outsideElement.textContent = 'Outside';
+    const outsideElement = document.createElement("div");
+    outsideElement.textContent = "Outside";
     document.body.appendChild(outsideElement);
 
     render(() => (
@@ -200,12 +187,12 @@ describe('Drawer Component', () => {
     outsideElement.remove();
   });
 
-  it('does not close on outside click when target matches outsideClickIgnoreSelector', () => {
+  it("does not close on outside click when target matches outsideClickIgnoreSelector", () => {
     const onClose = vi.fn();
 
-    const outsideElement = document.createElement('div');
-    outsideElement.className = 'ignore-me';
-    const child = document.createElement('span');
+    const outsideElement = document.createElement("div");
+    outsideElement.className = "ignore-me";
+    const child = document.createElement("span");
     outsideElement.appendChild(child);
     document.body.appendChild(outsideElement);
 
@@ -231,11 +218,11 @@ describe('Drawer Component', () => {
     outsideElement.remove();
   });
 
-  it('supports comma-separated outsideClickIgnoreSelector', () => {
+  it("supports comma-separated outsideClickIgnoreSelector", () => {
     const onClose = vi.fn();
 
-    const outsideElement = document.createElement('div');
-    outsideElement.className = 'channel-tree-item';
+    const outsideElement = document.createElement("div");
+    outsideElement.className = "channel-tree-item";
     document.body.appendChild(outsideElement);
 
     render(() => (

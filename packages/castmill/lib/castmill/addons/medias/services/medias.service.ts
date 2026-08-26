@@ -1,6 +1,6 @@
-import { JsonMedia } from '@castmill/player';
-import { SortOptions, HttpError } from '@castmill/ui-common';
-import { authFetch } from '../../common/services/auth-fetch';
+import { JsonMedia } from "@castmill/player";
+import { SortOptions, HttpError } from "@castmill/ui-common";
+import { authFetch } from "../../common/services/auth-fetch";
 
 export interface FetchMediasOptions {
   page: number;
@@ -10,7 +10,7 @@ export interface FetchMediasOptions {
   filters?: Record<string, string | boolean>;
   team_id?: number | null;
   tag_ids?: number[];
-  tag_filter_mode?: 'any' | 'all';
+  tag_filter_mode?: "any" | "all";
   missing_tag_group_id?: number;
 }
 type HandleResponseOptions = {
@@ -22,24 +22,21 @@ export interface MediasUpdate {
   description: string;
 }
 
+async function handleResponse<T = any>(response: Response, options: { parse: true }): Promise<T>;
 async function handleResponse<T = any>(
   response: Response,
-  options: { parse: true }
-): Promise<T>;
-async function handleResponse<T = any>(
-  response: Response,
-  options?: { parse?: false }
+  options?: { parse?: false },
 ): Promise<void>;
 async function handleResponse<T = any>(
   response: Response,
-  options: HandleResponseOptions = {}
+  options: HandleResponseOptions = {},
 ): Promise<T | void> {
   if (response.status >= 200 && response.status < 300) {
     if (options.parse) {
       return (await response.json()) as T;
     }
   } else {
-    let errMsg = '';
+    let errMsg = "";
     try {
       const { errors } = await response.json();
       errMsg = `${errors.detail || response.statusText}`;
@@ -61,12 +58,12 @@ export const MediasService = {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/playlists`,
       {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ name }),
-      }
+      },
     );
 
     return handleResponse<JsonMedia>(response, { parse: true });
@@ -90,14 +87,12 @@ export const MediasService = {
       tag_ids,
       tag_filter_mode,
       missing_tag_group_id,
-    }: FetchMediasOptions
+    }: FetchMediasOptions,
   ) {
     const filtersToString = (filters: Record<string, string | boolean>) => {
       return Object.entries(filters)
-        .map(([key, value]) =>
-          typeof value === 'boolean' ? `${key}` : `${key}:${value}`
-        )
-        .join(',');
+        .map(([key, value]) => (typeof value === "boolean" ? `${key}` : `${key}:${value}`))
+        .join(",");
     };
 
     const query = {
@@ -107,28 +102,28 @@ export const MediasService = {
     } as Record<string, string>;
 
     if (search) {
-      query['search'] = search;
+      query["search"] = search;
     }
 
     if (filters) {
-      query['filters'] = filtersToString(filters);
+      query["filters"] = filtersToString(filters);
     }
 
     if (team_id !== undefined && team_id !== null) {
-      query['team_id'] = team_id.toString();
+      query["team_id"] = team_id.toString();
     }
 
     // Add tag filtering parameters
     if (tag_ids && tag_ids.length > 0) {
-      query['tag_ids'] = tag_ids.join(',');
+      query["tag_ids"] = tag_ids.join(",");
     }
 
     if (tag_filter_mode) {
-      query['tag_filter_mode'] = tag_filter_mode;
+      query["tag_filter_mode"] = tag_filter_mode;
     }
 
     if (missing_tag_group_id !== undefined) {
-      query['missing_tag_group_id'] = missing_tag_group_id.toString();
+      query["missing_tag_group_id"] = missing_tag_group_id.toString();
     }
 
     const queryString = new URLSearchParams(query).toString();
@@ -136,11 +131,11 @@ export const MediasService = {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/medias?${queryString}`,
       {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-      }
+      },
     );
 
     return handleResponse<{ data: JsonMedia[]; count: number }>(response, {
@@ -148,19 +143,15 @@ export const MediasService = {
     });
   },
 
-  async getPlaylist(
-    baseUrl: string,
-    organizationId: string,
-    playlistId: number
-  ) {
+  async getPlaylist(baseUrl: string, organizationId: string, playlistId: number) {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/playlists/${playlistId}`,
       {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-      }
+      },
     );
 
     const { data } = await handleResponse<{ data: JsonMedia }>(response, {
@@ -176,11 +167,11 @@ export const MediasService = {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/medias/${mediaId}`,
       {
-        method: 'DELETE',
+        method: "DELETE",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-      }
+      },
     );
 
     await handleResponse(response);
@@ -193,17 +184,17 @@ export const MediasService = {
     baseUrl: string,
     organizationId: string,
     mediaId: string,
-    playlist: Partial<MediasUpdate>
+    playlist: Partial<MediasUpdate>,
   ) {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/medias/${mediaId}`,
       {
-        method: 'PATCH',
+        method: "PATCH",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ update: playlist }),
-      }
+      },
     );
 
     await handleResponse(response);

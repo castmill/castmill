@@ -1,4 +1,4 @@
-import { gsap } from 'gsap';
+import { gsap } from "gsap";
 
 /**
  * This class represents a timeline.
@@ -43,7 +43,7 @@ export class Timeline implements TimelineBasic {
 
   constructor(
     public name: string,
-    opts: { loop?: boolean; duration?: number } = {}
+    opts: { loop?: boolean; duration?: number } = {},
   ) {
     // Copy opts to prevent side effects.
     this.opts = {
@@ -83,9 +83,7 @@ export class Timeline implements TimelineBasic {
         // Use time directly if duration is 0 or if we have repeat items
         // (repeat items don't use modulo, they just keep playing)
         const position = (this.time =
-          this.hasRepeat || currentDuration === 0
-            ? time
-            : time % currentDuration);
+          this.hasRepeat || currentDuration === 0 ? time : time % currentDuration);
 
         // Check if we have looped around.
         if (position < prevPosition) {
@@ -100,8 +98,7 @@ export class Timeline implements TimelineBasic {
               // Calculate the offset for the repeat item
               const duration = item.duration || this.childDuration(item);
               const effectivePosition = position - item.start;
-              const childOffset =
-                duration > 0 ? effectivePosition % duration : 0;
+              const childOffset = duration > 0 ? effectivePosition % duration : 0;
 
               // For GSAP timelines with infinite repeat (-1), don't restart - let them continue
               // They handle their own looping internally
@@ -131,8 +128,7 @@ export class Timeline implements TimelineBasic {
               return;
             }
 
-            const end =
-              item.start + (item.duration || this.childDuration(item));
+            const end = item.start + (item.duration || this.childDuration(item));
             if (position < item.start || position >= end) {
               this.pauseItem(item);
             } else {
@@ -271,18 +267,14 @@ export class Timeline implements TimelineBasic {
       }
 
       item.child.seek(
-        item.child instanceof gsap.core.Timeline
-          ? targetOffset / 1000
-          : targetOffset
+        item.child instanceof gsap.core.Timeline ? targetOffset / 1000 : targetOffset,
       );
     });
   }
 
   private childDuration(item: TimelineItem) {
     const duration = item.child.duration();
-    return item.child instanceof gsap.core.Timeline
-      ? duration * 1000
-      : duration;
+    return item.child instanceof gsap.core.Timeline ? duration * 1000 : duration;
   }
 
   pause() {
@@ -338,10 +330,7 @@ export class Timeline implements TimelineBasic {
         }
         return acc; // Skip repeat items without explicit duration
       }
-      return Math.max(
-        acc,
-        item.start + (item.duration || this.childDuration(item))
-      );
+      return Math.max(acc, item.start + (item.duration || this.childDuration(item)));
     }, 0);
 
     const playingDuration = [...this.playing].reduce((acc: number, item) => {
@@ -351,10 +340,7 @@ export class Timeline implements TimelineBasic {
         }
         return acc;
       }
-      return Math.max(
-        acc,
-        item.start + (item.duration || this.childDuration(item))
-      );
+      return Math.max(acc, item.start + (item.duration || this.childDuration(item)));
     }, 0);
 
     return Math.max(itemsDuration, playingDuration);

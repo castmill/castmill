@@ -8,14 +8,14 @@ import {
   createSignal,
   createEffect,
   mergeProps,
-} from 'solid-js';
-import { Portal } from 'solid-js/web';
-import { BsCheckLg, BsArrowRepeat } from 'solid-icons/bs';
-import { VsClose } from 'solid-icons/vs';
-import { IconButton } from '../icon-button/icon-button';
-import { Button } from '../button/button';
+} from "solid-js";
+import { Portal } from "solid-js/web";
+import { BsCheckLg, BsArrowRepeat } from "solid-icons/bs";
+import { VsClose } from "solid-icons/vs";
+import { IconButton } from "../icon-button/icon-button";
+import { Button } from "../button/button";
 
-import styles from './modal.module.scss';
+import styles from "./modal.module.scss";
 
 export interface ModalRef {
   close: () => Promise<void>;
@@ -50,11 +50,9 @@ interface AnimatedSizeWrapperProps {
   children: any;
 }
 
-export const AnimatedSizeWrapper: Component<AnimatedSizeWrapperProps> = (
-  props
-) => {
+export const AnimatedSizeWrapper: Component<AnimatedSizeWrapperProps> = (props) => {
   // Store the “current displayed” width/height
-  const [size, setSize] = createSignal({ width: 'auto', height: 'auto' });
+  const [size, setSize] = createSignal({ width: "auto", height: "auto" });
 
   let contentRef: HTMLDivElement | undefined;
   let resizeObserver: ResizeObserver | null = null;
@@ -95,17 +93,14 @@ export const AnimatedSizeWrapper: Component<AnimatedSizeWrapperProps> = (
     <div
       style={{
         /* Animate from old -> new dimensions */
-        width: '100%',
-        height: '100%',
-        transition: 'width 0.3s ease, height 0.3s ease',
-        overflow: 'hidden',
+        width: "100%",
+        height: "100%",
+        transition: "width 0.3s ease, height 0.3s ease",
+        overflow: "hidden",
       }}
     >
       {/* The actual content whose size is being observed */}
-      <div
-        style="display: inline-block; width: 100%; height: 100%;"
-        ref={contentRef}
-      >
+      <div style="display: inline-block; width: 100%; height: 100%;" ref={contentRef}>
         {props.children}
       </div>
     </div>
@@ -118,7 +113,7 @@ export const Modal: Component<ModalProps> = (props) => {
     {
       showRetryButton: false,
     },
-    props
+    props,
   );
 
   const [isLoading, setIsLoading] = createSignal(props.loading || false);
@@ -139,7 +134,7 @@ export const Modal: Component<ModalProps> = (props) => {
   };
 
   const handleKeyDown = (event: KeyboardEvent) => {
-    if (event.key === 'Escape' && isTopModal(modalId)) {
+    if (event.key === "Escape" && isTopModal(modalId)) {
       closeModal();
     }
   };
@@ -157,12 +152,12 @@ export const Modal: Component<ModalProps> = (props) => {
     }, 0); // A minimal delay
 
     modalStack.push(modalId);
-    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
   });
 
   onCleanup(() => {
     closeModal();
-    document.removeEventListener('keydown', handleKeyDown);
+    document.removeEventListener("keydown", handleKeyDown);
     removeModal(modalId);
   });
 
@@ -175,7 +170,7 @@ export const Modal: Component<ModalProps> = (props) => {
   });
 
   const contentClasses = () => {
-    const classes = `${styles.modalContent} ${isActive() ? styles.active : ''}`;
+    const classes = `${styles.modalContent} ${isActive() ? styles.active : ""}`;
     if (props.contentClass) {
       return `${classes} ${props.contentClass}`;
     }
@@ -197,7 +192,7 @@ export const Modal: Component<ModalProps> = (props) => {
       <div
         data-testid="modal-overlay"
         data-modal-overlay
-        class={`${styles.modalOverlay} ${isActive() ? styles.active : ''}`}
+        class={`${styles.modalOverlay} ${isActive() ? styles.active : ""}`}
         onClick={closeModalOnOverlayClick}
       >
         <div class={contentClasses()} onClick={(e) => e.stopPropagation()}>
@@ -208,27 +203,17 @@ export const Modal: Component<ModalProps> = (props) => {
             </div>
             <IconButton icon={VsClose} onClick={closeModal} color="secondary" />
           </div>
-          {props.successMessage && (
-            <div class={styles.modalSuccess}>{props.successMessage}</div>
-          )}
-          {props.errorMessage && (
-            <div class={styles.modalError}>{props.errorMessage}</div>
-          )}
+          {props.successMessage && <div class={styles.modalSuccess}>{props.successMessage}</div>}
+          {props.errorMessage && <div class={styles.modalError}>{props.errorMessage}</div>}
           <div class={styles.modalBody}>
             {/* Instead of showing children directly, wrap them: */}
             <AnimatedSizeWrapper>{props.children}</AnimatedSizeWrapper>
           </div>
           {isLoading() && <div class={styles.modalLoading}>Loading...</div>}
           <div class={styles.modalFooter}>
-            {props.successMessage && (
-              <Button icon={BsCheckLg} label="Close" onClick={closeModal} />
-            )}
+            {props.successMessage && <Button icon={BsCheckLg} label="Close" onClick={closeModal} />}
             {props.errorMessage && props.showRetryButton && (
-              <Button
-                icon={BsArrowRepeat}
-                label="Retry"
-                onClick={() => location.reload()}
-              />
+              <Button icon={BsArrowRepeat} label="Retry" onClick={() => location.reload()} />
             )}
           </div>
         </div>

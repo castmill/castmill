@@ -2,8 +2,16 @@
   "name": "@castmill/device",
   "version": "1.0.0",
   "description": "",
+  "license": "AGPL-3.0-or-later",
+  "files": [
+    "dist"
+  ],
   "type": "module",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./dist/style.css": "./dist/style.css"
+  },
   "scripts": {
     "format": "oxfmt --write .",
     "format:check": "oxfmt .",
@@ -18,14 +26,12 @@
     "ts-types": "tsc --emitDeclarationOnly --outDir dist",
     "lint": "oxlint ."
   },
-  "files": [
-    "dist"
-  ],
-  "exports": {
-    ".": "./dist/index.js",
-    "./dist/style.css": "./dist/style.css"
+  "dependencies": {
+    "@castmill/cache": "*",
+    "@castmill/player": "*",
+    "phoenix": "^1.7.2",
+    "qrcode": "^1.5.4"
   },
-  "license": "AGPL-3.0-or-later",
   "devDependencies": {
     "@solidjs/testing-library": "^0.8.6",
     "@testing-library/jest-dom": "^6.4.1",
@@ -39,11 +45,5 @@
     "vite": "^5.2.10",
     "vite-plugin-solid": "^2.10.2",
     "vitest": "^1.2.2"
-  },
-  "dependencies": {
-    "@castmill/cache": "*",
-    "@castmill/player": "*",
-    "phoenix": "^1.7.2",
-    "qrcode": "^1.5.4"
   }
 }

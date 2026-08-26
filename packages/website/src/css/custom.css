@@ -13,23 +13,26 @@
   --ifm-color-primary-light: #60a5fa;
   --ifm-color-primary-lighter: #93c5fd;
   --ifm-color-primary-lightest: #dbeafe;
-  
+
   --ifm-color-secondary: #6366f1;
   --ifm-color-secondary-dark: #4f46e5;
   --ifm-color-secondary-darker: #4338ca;
   --ifm-color-secondary-darkest: #3730a3;
-  
+
   --ifm-code-font-size: 95%;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
-  
+
   /* Enhanced typography */
-  --ifm-font-family-base: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-  --ifm-font-family-monospace: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', 'Consolas', monospace;
-  
+  --ifm-font-family-base:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell",
+    sans-serif;
+  --ifm-font-family-monospace:
+    "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", "Consolas", monospace;
+
   /* Improved spacing */
   --ifm-spacing-horizontal: 1.5rem;
   --ifm-spacing-vertical: 1.5rem;
-  
+
   /* Enhanced shadows */
   --ifm-global-shadow-lw: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
   --ifm-global-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.12), 0 2px 4px rgba(0, 0, 0, 0.08);
@@ -37,7 +40,7 @@
 }
 
 /* Enhanced dark mode palette */
-[data-theme='dark'] {
+[data-theme="dark"] {
   --ifm-color-primary: #60a5fa;
   --ifm-color-primary-dark: #3b82f6;
   --ifm-color-primary-darker: #2563eb;
@@ -45,14 +48,14 @@
   --ifm-color-primary-light: #93c5fd;
   --ifm-color-primary-lighter: #dbeafe;
   --ifm-color-primary-lightest: #eff6ff;
-  
+
   --ifm-color-secondary: #a78bfa;
   --ifm-color-secondary-dark: #8b5cf6;
   --ifm-color-secondary-darker: #7c3aed;
   --ifm-color-secondary-darkest: #6d28d9;
-  
+
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
-  
+
   /* Enhanced dark mode shadows */
   --ifm-global-shadow-lw: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.6);
   --ifm-global-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3);
@@ -67,7 +70,7 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-[data-theme='dark'] .navbar {
+[data-theme="dark"] .navbar {
   background-color: rgba(15, 23, 42, 0.95);
   border-bottom-color: rgba(255, 255, 255, 0.05);
 }
@@ -100,16 +103,16 @@
 }
 
 /* Make sure dark mode toggle is always visible */
-[data-theme='dark'] button[title="Switch between dark and light mode"],
-[data-theme='light'] button[title="Switch between dark and light mode"] {
+[data-theme="dark"] button[title="Switch between dark and light mode"],
+[data-theme="light"] button[title="Switch between dark and light mode"] {
   color: rgba(255, 255, 255, 0.9) !important;
   background: rgba(255, 255, 255, 0.1) !important;
   border-radius: 6px !important;
   padding: 6px !important;
 }
 
-[data-theme='dark'] button[title="Switch between dark and light mode"]:hover,
-[data-theme='light'] button[title="Switch between dark and light mode"]:hover {
+[data-theme="dark"] button[title="Switch between dark and light mode"]:hover,
+[data-theme="light"] button[title="Switch between dark and light mode"]:hover {
   color: rgba(255, 255, 255, 1) !important;
   background: rgba(255, 255, 255, 0.2) !important;
 }
@@ -174,7 +177,12 @@
 }
 
 /* Typography improvements */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-weight: 600;
   letter-spacing: -0.025em;
 }

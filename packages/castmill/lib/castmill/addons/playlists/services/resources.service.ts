@@ -1,5 +1,5 @@
-import { SortOptions, HttpError } from '@castmill/ui-common';
-import { authFetch } from '../../common/services/auth-fetch';
+import { SortOptions, HttpError } from "@castmill/ui-common";
+import { authFetch } from "../../common/services/auth-fetch";
 
 export interface FetchResourcesOptions {
   page: number;
@@ -13,24 +13,21 @@ export type HandleResponseOptions = {
   parse?: boolean;
 };
 
+async function handleResponse<T = any>(response: Response, options: { parse: true }): Promise<T>;
 async function handleResponse<T = any>(
   response: Response,
-  options: { parse: true }
-): Promise<T>;
-async function handleResponse<T = any>(
-  response: Response,
-  options?: { parse?: false }
+  options?: { parse?: false },
 ): Promise<void>;
 async function handleResponse<T = any>(
   response: Response,
-  options: HandleResponseOptions = {}
+  options: HandleResponseOptions = {},
 ): Promise<T | void> {
   if (response.status >= 200 && response.status < 300) {
     if (options.parse) {
       return (await response.json()) as T;
     }
   } else {
-    let errMsg = '';
+    let errMsg = "";
     try {
       const { errors } = await response.json();
       errMsg = `${errors.detail || response.statusText}`;
@@ -47,14 +44,12 @@ export const ResourcesService = {
     baseUrl: string,
     organizationId: string,
     collection: string,
-    { page, page_size, sortOptions, search, filters }: FetchResourcesOptions
+    { page, page_size, sortOptions, search, filters }: FetchResourcesOptions,
   ) => {
     const filtersToString = (filters: Record<string, string | boolean>) => {
       return Object.entries(filters)
-        .map(([key, value]) =>
-          typeof value === 'boolean' ? `${key}` : `${key}:${value}`
-        )
-        .join(',');
+        .map(([key, value]) => (typeof value === "boolean" ? `${key}` : `${key}:${value}`))
+        .join(",");
     };
 
     const query = {
@@ -64,11 +59,11 @@ export const ResourcesService = {
     } as Record<string, string>;
 
     if (search) {
-      query['search'] = search;
+      query["search"] = search;
     }
 
     if (filters) {
-      query['filters'] = filtersToString(filters);
+      query["filters"] = filtersToString(filters);
     }
 
     const queryString = new URLSearchParams(query).toString();
@@ -76,11 +71,11 @@ export const ResourcesService = {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/${collection}?${queryString}`,
       {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-      }
+      },
     );
 
     return handleResponse<{ data: T[]; count: number }>(response, {

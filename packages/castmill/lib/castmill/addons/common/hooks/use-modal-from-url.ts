@@ -1,4 +1,4 @@
-import { createEffect, onMount, onCleanup, untrack, Accessor } from 'solid-js';
+import { createEffect, onMount, onCleanup, untrack, Accessor } from "solid-js";
 
 export interface UseModalFromUrlOptions<T> {
   /**
@@ -68,10 +68,10 @@ export function useModalFromUrl<T>(options: UseModalFromUrlOptions<T>) {
 
   // Listen to browser back/forward navigation (popstate doesn't trigger createEffect for addon props)
   onMount(() => {
-    window.addEventListener('popstate', syncModalWithUrl);
+    window.addEventListener("popstate", syncModalWithUrl);
 
     onCleanup(() => {
-      window.removeEventListener('popstate', syncModalWithUrl);
+      window.removeEventListener("popstate", syncModalWithUrl);
     });
   });
 }

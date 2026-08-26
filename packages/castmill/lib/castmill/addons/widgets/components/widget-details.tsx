@@ -1,6 +1,6 @@
-import { Component } from 'solid-js';
-import { JsonWidget } from '@castmill/player';
-import { AddonStore } from '../../common/interfaces/addon-store';
+import { Component } from "solid-js";
+import { JsonWidget } from "@castmill/player";
+import { AddonStore } from "../../common/interfaces/addon-store";
 
 interface WidgetDetailsProps {
   widget: JsonWidget;
@@ -10,7 +10,7 @@ interface WidgetDetailsProps {
 
 export const WidgetDetails: Component<WidgetDetailsProps> = (props) => {
   const formatJson = (obj: any) => {
-    if (!obj) return 'null';
+    if (!obj) return "null";
     return JSON.stringify(obj, null, 2);
   };
 
@@ -19,14 +19,10 @@ export const WidgetDetails: Component<WidgetDetailsProps> = (props) => {
   return (
     <div class="widget-details">
       <div class="widget-header">
-        <div class="widget-icon">
-          {widget.icon || '📦'}
-        </div>
+        <div class="widget-icon">{widget.icon || "📦"}</div>
         <div class="widget-info">
           <h2>{widget.name}</h2>
-          {widget.description && (
-            <p class="description">{widget.description}</p>
-          )}
+          {widget.description && <p class="description">{widget.description}</p>}
         </div>
       </div>
 
@@ -34,12 +30,8 @@ export const WidgetDetails: Component<WidgetDetailsProps> = (props) => {
         <div class="section template-section">
           <div class="section-title">Template</div>
           <div class="section-content">
-            {widget.template?.type && (
-              <div class="template-type">{widget.template.type}</div>
-            )}
-            <div class="json-code">
-              {formatJson(widget.template)}
-            </div>
+            {widget.template?.type && <div class="template-type">{widget.template.type}</div>}
+            <div class="json-code">{formatJson(widget.template)}</div>
           </div>
         </div>
 
@@ -51,17 +43,13 @@ export const WidgetDetails: Component<WidgetDetailsProps> = (props) => {
                 {widget.options_schema && (
                   <div class="schema-box">
                     <div class="schema-label">Options Schema</div>
-                    <div class="json-code">
-                      {formatJson(widget.options_schema)}
-                    </div>
+                    <div class="json-code">{formatJson(widget.options_schema)}</div>
                   </div>
                 )}
                 {widget.data_schema && (
                   <div class="schema-box">
                     <div class="schema-label">Data Schema</div>
-                    <div class="json-code">
-                      {formatJson(widget.data_schema)}
-                    </div>
+                    <div class="json-code">{formatJson(widget.data_schema)}</div>
                   </div>
                 )}
               </div>

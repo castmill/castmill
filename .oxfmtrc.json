@@ -1,10 +1,3 @@
 {
-  "ignorePatterns": [
-    "node_modules",
-    "dist",
-    "build",
-    "out",
-    "android",
-    "public/lib"
-  ]
+  "ignorePatterns": ["node_modules", "dist", "build", "out", "android", "public/lib"]
 }

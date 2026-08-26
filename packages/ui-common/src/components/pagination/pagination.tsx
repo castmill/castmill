@@ -1,9 +1,9 @@
 // Pagination.tsx
-import { createMemo, For, JSX, Show } from 'solid-js';
-import { TbPlayerTrackPrev, TbPlayerTrackNext } from 'solid-icons/tb';
+import { createMemo, For, JSX, Show } from "solid-js";
+import { TbPlayerTrackPrev, TbPlayerTrackNext } from "solid-icons/tb";
 
-import './pagination.scss';
-import { IconWrapper } from '../icon-wrapper';
+import "./pagination.scss";
+import { IconWrapper } from "../icon-wrapper";
 
 export interface PaginationProps {
   totalItems: number;
@@ -14,9 +14,7 @@ export interface PaginationProps {
 
 export const Pagination = (props: PaginationProps): JSX.Element => {
   // Calculate the total number of pages
-  const totalPages = createMemo(() =>
-    Math.ceil(props.totalItems / props.itemsPerPage)
-  );
+  const totalPages = createMemo(() => Math.ceil(props.totalItems / props.itemsPerPage));
 
   // Number of pages to show before and after the current page
   const maxVisiblePages = 7;
@@ -41,7 +39,7 @@ export const Pagination = (props: PaginationProps): JSX.Element => {
     if (startPage > 1) {
       pages.push(1);
       if (startPage > 2) {
-        pages.push('...');
+        pages.push("...");
       }
     }
 
@@ -53,7 +51,7 @@ export const Pagination = (props: PaginationProps): JSX.Element => {
     // Add ellipsis and the last page if required
     if (endPage < totalPages()) {
       if (endPage < totalPages() - 1) {
-        pages.push('...');
+        pages.push("...");
       }
       pages.push(totalPages());
     }
@@ -63,7 +61,7 @@ export const Pagination = (props: PaginationProps): JSX.Element => {
 
   // Handle page clicks
   const handlePageClick = (page: number | string) => {
-    if (typeof page === 'number' && page !== props.currentPage) {
+    if (typeof page === "number" && page !== props.currentPage) {
       props.onPageChange(page);
     }
   };
@@ -84,11 +82,11 @@ export const Pagination = (props: PaginationProps): JSX.Element => {
       <For each={getPagesToDisplay()}>
         {(page) => (
           <Show
-            when={typeof page === 'number'}
+            when={typeof page === "number"}
             fallback={<span class="pagination-ellipsis">...</span>}
           >
             <button
-              class={`pagination-button ${page === props.currentPage ? 'active' : ''}`}
+              class={`pagination-button ${page === props.currentPage ? "active" : ""}`}
               onClick={() => handlePageClick(page as number)}
             >
               {page}
@@ -102,9 +100,7 @@ export const Pagination = (props: PaginationProps): JSX.Element => {
         aria-label="Next page"
         class="pagination-button"
         disabled={props.currentPage === totalPages()}
-        onClick={() =>
-          handlePageClick(Math.min(totalPages(), props.currentPage + 1))
-        }
+        onClick={() => handlePageClick(Math.min(totalPages(), props.currentPage + 1))}
       >
         <IconWrapper icon={TbPlayerTrackNext} />
       </button>

@@ -1,9 +1,4 @@
-import {
-  Machine,
-  DeviceInfo,
-  SettingKey,
-  TelemetryData,
-} from '@castmill/device';
+import { Machine, DeviceInfo, SettingKey, TelemetryData } from "@castmill/device";
 
 export class ElectronMachine implements Machine {
   async setSetting(key: SettingKey, value: string): Promise<void> {
@@ -19,15 +14,15 @@ export class ElectronMachine implements Machine {
   }
 
   async storeCredentials(credentials: string): Promise<void> {
-    window.api.setItem('castmill-credentials', credentials);
+    window.api.setItem("castmill-credentials", credentials);
   }
 
   async getCredentials(): Promise<string> {
-    return window.api.getItem('castmill-credentials');
+    return window.api.getItem("castmill-credentials");
   }
 
   async removeCredentials(): Promise<void> {
-    window.api.deleteItem('castmill-credentials');
+    window.api.deleteItem("castmill-credentials");
   }
 
   /**
@@ -36,9 +31,7 @@ export class ElectronMachine implements Machine {
    * network location provider can authenticate with Google's service.
    * Returns undefined if geolocation fails or is unavailable.
    */
-  async getLocation(): Promise<
-    undefined | { latitude: number; longitude: number }
-  > {
+  async getLocation(): Promise<undefined | { latitude: number; longitude: number }> {
     try {
       const TIMEOUT_MS = 3000; // 3 seconds
 
@@ -52,7 +45,7 @@ export class ElectronMachine implements Machine {
         }),
         new Promise<GeolocationPosition>((_, reject) => {
           setTimeout(() => {
-            reject(new Error('Geolocation request timed out'));
+            reject(new Error("Geolocation request timed out"));
           }, TIMEOUT_MS + 1000);
         }),
       ]);
@@ -62,21 +55,20 @@ export class ElectronMachine implements Machine {
         longitude: position.coords.longitude,
       };
     } catch (error) {
-      if (error && typeof error === 'object' && 'code' in error) {
+      if (error && typeof error === "object" && "code" in error) {
         const geoError = error as GeolocationPositionError;
         const errorMessages = {
-          [GeolocationPositionError.PERMISSION_DENIED]:
-            'Geolocation permission denied',
+          [GeolocationPositionError.PERMISSION_DENIED]: "Geolocation permission denied",
           [GeolocationPositionError.POSITION_UNAVAILABLE]:
-            'Position unavailable (is VITE_GOOGLE_API_KEY set?)',
+            "Position unavailable (is VITE_GOOGLE_API_KEY set?)",
           [GeolocationPositionError.TIMEOUT]:
-            'Geolocation request timed out (is VITE_GOOGLE_API_KEY set?)',
+            "Geolocation request timed out (is VITE_GOOGLE_API_KEY set?)",
         };
         console.error(
-          `Failed to get location: ${errorMessages[geoError.code] || 'Unknown error'} - ${geoError.message}`
+          `Failed to get location: ${errorMessages[geoError.code] || "Unknown error"} - ${geoError.message}`,
         );
       } else {
-        console.error('Failed to get location:', error);
+        console.error("Failed to get location:", error);
       }
       return undefined;
     }
@@ -91,7 +83,7 @@ export class ElectronMachine implements Machine {
 
     return {
       appType: import.meta.env.VITE_APP_TYPE,
-      appVersion: window.electron.process.env.npm_package_version ?? 'unknown',
+      appVersion: window.electron.process.env.npm_package_version ?? "unknown",
       os: `${window.osInfo.type} ${window.osInfo.release}`,
       hardware: await window.hardwareInfo(),
       environmentVersion: versions.electron,

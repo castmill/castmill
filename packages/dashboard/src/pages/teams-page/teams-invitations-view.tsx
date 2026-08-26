@@ -12,11 +12,11 @@ import {
   TableViewRef,
   Timestamp,
   useToast,
-} from '@castmill/ui-common';
-import { TeamsService } from '../../services/teams.service';
-import { AiOutlineDelete } from 'solid-icons/ai';
-import { createEffect, createSignal } from 'solid-js';
-import { useI18n } from '../../i18n';
+} from "@castmill/ui-common";
+import { TeamsService } from "../../services/teams.service";
+import { AiOutlineDelete } from "solid-icons/ai";
+import { createEffect, createSignal } from "solid-js";
+import { useI18n } from "../../i18n";
 
 interface Invitation {
   id: number;
@@ -29,14 +29,11 @@ const [data, setData] = createSignal<Invitation[]>([], {
 });
 
 const [currentInvitation, setCurrentInvitation] = createSignal<Invitation>();
-const [showConfirmDialogMultiple, setShowConfirmDialogMultiple] =
-  createSignal(false);
+const [showConfirmDialogMultiple, setShowConfirmDialogMultiple] = createSignal(false);
 
 const [showConfirmDialog, setShowConfirmDialog] = createSignal(false);
 
-const [selectedInvitations, setSelectedInvitations] = createSignal(
-  new Set<number>()
-);
+const [selectedInvitations, setSelectedInvitations] = createSignal(new Set<number>());
 
 const onRowSelect = (rowsSelected: Set<number>) => {
   setSelectedInvitations(rowsSelected);
@@ -53,23 +50,19 @@ export const TeamInvitationsView = (props: {
   const { t } = useI18n();
 
   const columns = [
-    { key: 'email', title: t('common.email'), sortable: true },
-    { key: 'status', title: t('common.status'), sortable: true },
+    { key: "email", title: t("common.email"), sortable: true },
+    { key: "status", title: t("common.status"), sortable: true },
     {
-      key: 'inserted_at',
-      title: t('common.insertedAt'),
+      key: "inserted_at",
+      title: t("common.insertedAt"),
       sortable: true,
-      render: (item: any) => (
-        <Timestamp value={item.inserted_at} mode="relative" />
-      ),
+      render: (item: any) => <Timestamp value={item.inserted_at} mode="relative" />,
     },
     {
-      key: 'expires_at',
-      title: t('common.expiresAt'),
+      key: "expires_at",
+      title: t("common.expiresAt"),
       sortable: true,
-      render: (item: any) => (
-        <Timestamp value={item.expires_at} mode="relative" />
-      ),
+      render: (item: any) => <Timestamp value={item.expires_at} mode="relative" />,
     },
   ];
 
@@ -80,18 +73,14 @@ export const TeamInvitationsView = (props: {
         setCurrentInvitation(item);
         setShowConfirmDialog(true);
       },
-      label: t('common.remove'),
+      label: t("common.remove"),
     },
   ];
 
   const toast = useToast();
 
   const fetchData = async (opts: FetchDataOptions) => {
-    const result = await TeamsService.fetchInvitations(
-      props.organizationId,
-      props.teamId,
-      opts
-    );
+    const result = await TeamsService.fetchInvitations(props.organizationId, props.teamId, opts);
     setData(result.data);
     return result;
   };
@@ -117,13 +106,11 @@ export const TeamInvitationsView = (props: {
       await TeamsService.removeInvitationFromTeam(
         props.organizationId,
         props.teamId,
-        invitation.id
+        invitation.id,
       );
 
       refreshData();
-      toast.success(
-        t('teams.invitationRemovedSuccessfully', { email: invitation.email })
-      );
+      toast.success(t("teams.invitationRemovedSuccessfully", { email: invitation.email }));
       props.onRemove(invitation);
       setShowConfirmDialog(false);
     } catch (error) {
@@ -135,16 +122,12 @@ export const TeamInvitationsView = (props: {
     try {
       await Promise.all(
         Array.from(selectedInvitations()).map((invitationId) =>
-          TeamsService.removeInvitationFromTeam(
-            props.organizationId,
-            props.teamId,
-            invitationId
-          )
-        )
+          TeamsService.removeInvitationFromTeam(props.organizationId, props.teamId, invitationId),
+        ),
       );
 
       refreshData();
-      toast.success(t('teams.invitationsRemovedSuccessfully'));
+      toast.success(t("teams.invitationsRemovedSuccessfully"));
       Array.from(selectedInvitations()).forEach((invitationId) => {
         const invitation = data().find((d) => d.id === invitationId);
         if (invitation) {
@@ -173,9 +156,9 @@ export const TeamInvitationsView = (props: {
     <>
       <ConfirmDialog
         show={showConfirmDialog()}
-        title={t('teams.removeInvitationFromTeam')}
-        message={t('teams.confirmRemoveInvitation', {
-          email: currentInvitation()?.email || '',
+        title={t("teams.removeInvitationFromTeam")}
+        message={t("teams.confirmRemoveInvitation", {
+          email: currentInvitation()?.email || "",
         })}
         onClose={() => setShowConfirmDialog(false)}
         onConfirm={() => confirmRemoveInvitationFromTeam(currentInvitation())}
@@ -183,8 +166,8 @@ export const TeamInvitationsView = (props: {
 
       <ConfirmDialog
         show={showConfirmDialogMultiple()}
-        title={t('teams.removeInvitationsFromTeam')}
-        message={t('teams.confirmRemoveInvitations')}
+        title={t("teams.removeInvitationsFromTeam")}
+        message={t("teams.confirmRemoveInvitations")}
         onClose={() => setShowConfirmDialogMultiple(false)}
         onConfirm={() => confirmRemoveMultipleMembersFromTeam()}
       >
@@ -202,7 +185,7 @@ export const TeamInvitationsView = (props: {
         fetchData={fetchData}
         ref={setRef}
         toolbar={{
-          searchPlaceholder: t('common.search'),
+          searchPlaceholder: t("common.search"),
           actions: (
             <div>
               <IconButton
@@ -217,7 +200,7 @@ export const TeamInvitationsView = (props: {
         table={{
           columns,
           actions,
-          actionsLabel: t('common.actions'),
+          actionsLabel: t("common.actions"),
           onRowSelect,
         }}
         pagination={{ itemsPerPage }}

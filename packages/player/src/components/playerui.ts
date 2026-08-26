@@ -5,18 +5,10 @@
  *
  * (c) 2022 Castmill AB
  */
-import {
-  exhaustMap,
-  fromEvent,
-  Observable,
-  of,
-  share,
-  Subscription,
-  switchMap,
-} from 'rxjs';
-import { Playlist, Renderer, Player, Viewport } from '../';
-import gsap from 'gsap';
-import playIcon from '../icons/play.png';
+import { exhaustMap, fromEvent, Observable, of, share, Subscription, switchMap } from "rxjs";
+import { Playlist, Renderer, Player, Viewport } from "../";
+import gsap from "gsap";
+import playIcon from "../icons/play.png";
 
 const controlsTemplate = (id: string) => `
 <div>
@@ -75,19 +67,19 @@ const controlsTemplate = (id: string) => `
 `;
 
 function createPlayerElement(id: string): HTMLDivElement {
-  const el = document.createElement('div');
+  const el = document.createElement("div");
   el.id = `player-${id}`;
-  el.style.position = 'absolute';
-  el.style.top = '0';
-  el.style.left = '0';
-  el.style.right = '0';
-  el.style.bottom = '0';
-  el.style.overflow = 'hidden';
+  el.style.position = "absolute";
+  el.style.top = "0";
+  el.style.left = "0";
+  el.style.right = "0";
+  el.style.bottom = "0";
+  el.style.overflow = "hidden";
   return el;
 }
 
 function htmlToElement(html: string) {
-  const template = document.createElement('template');
+  const template = document.createElement("template");
   html = html.trim(); // Never return a text node of whitespace as the result
   template.innerHTML = html;
   return template.content.firstChild;
@@ -121,35 +113,27 @@ export class PlayerUIControls {
 
   constructor(
     private id: string,
-    opts: { position?: PlayerUIControlsPosition } = {}
+    opts: { position?: PlayerUIControlsPosition } = {},
   ) {
     this.controls = <HTMLDivElement>htmlToElement(controlsTemplate(this.id));
 
     document.querySelector(`#${id}`)?.appendChild(this.controls);
 
     this.elements = {
-      controls: this.controls.querySelector(
-        `#playerui-controls-${id}`
-      ) as HTMLDivElement,
+      controls: this.controls.querySelector(`#playerui-controls-${id}`) as HTMLDivElement,
       play: this.controls.querySelector(`#play-${id}`) as HTMLButtonElement,
       time: this.controls.querySelector(`#time-${id}`) as HTMLSpanElement,
       seek: this.controls.querySelector(`#seek-${id}`) as HTMLInputElement,
-      duration: this.controls.querySelector(
-        `#duration-${id}`
-      ) as HTMLSpanElement,
+      duration: this.controls.querySelector(`#duration-${id}`) as HTMLSpanElement,
       loop: this.controls.querySelector(`#loop-${id}`) as HTMLInputElement,
     };
 
     if (opts?.position) {
       const { bottom, width, left, height } = opts.position;
-      this.elements.controls.style.bottom =
-        bottom ?? this.elements.controls.style.bottom;
-      this.elements.controls.style.width =
-        width ?? this.elements.controls.style.width;
-      this.elements.controls.style.left =
-        left ?? this.elements.controls.style.left;
-      this.elements.controls.style.height =
-        height ?? this.elements.controls.style.height;
+      this.elements.controls.style.bottom = bottom ?? this.elements.controls.style.bottom;
+      this.elements.controls.style.width = width ?? this.elements.controls.style.width;
+      this.elements.controls.style.left = left ?? this.elements.controls.style.left;
+      this.elements.controls.style.height = height ?? this.elements.controls.style.height;
     }
 
     this.setTimeDuration(0, 0, true);
@@ -162,7 +146,7 @@ export class PlayerUIControls {
         opacity: 0,
         duration: 0.5,
         scale: 1.5,
-        ease: 'back',
+        ease: "back",
       });
 
     this.stopTimeline = gsap
@@ -173,7 +157,7 @@ export class PlayerUIControls {
         opacity: 0.5,
         duration: 0.3,
         scale: 1,
-        ease: 'back',
+        ease: "back",
       });
 
     const animatePlay = <T>(evt: T) => {
@@ -191,30 +175,30 @@ export class PlayerUIControls {
       });
     };
 
-    this.$play = fromEvent(this.elements.play, 'click').pipe(
+    this.$play = fromEvent(this.elements.play, "click").pipe(
       switchMap((evt) => animatePlay<Event>(evt)),
-      share()
+      share(),
     );
 
-    this.$keyboard = fromEvent<KeyboardEvent>(document, 'keydown').pipe(
+    this.$keyboard = fromEvent<KeyboardEvent>(document, "keydown").pipe(
       switchMap((evt) => {
         // Hack so that we can animate the play button
         const { key, code, keyCode } = evt;
-        if (key == ' ' || code == 'Space' || keyCode == 32) {
+        if (key == " " || code == "Space" || keyCode == 32) {
           return animatePlay<KeyboardEvent>(evt);
         }
         return of({ evt, timestamp: Date.now() });
       }),
-      share()
+      share(),
     );
   }
 
   public loopObservable() {
-    return fromEvent(this.elements.loop, 'change');
+    return fromEvent(this.elements.loop, "change");
   }
 
   public seekObservable() {
-    return fromEvent(this.elements.seek, 'input');
+    return fromEvent(this.elements.seek, "input");
   }
 
   public playObservable() {
@@ -289,7 +273,7 @@ export class PlayerUI {
   constructor(
     private id: string,
     private playlist: Playlist,
-    private opts: PlayerUIOptions = {}
+    private opts: PlayerUIOptions = {},
   ) {
     // Set initial time from options (for editor mode to skip intro animations)
     this.time = opts.initialSeekPosition ?? 0;
@@ -309,11 +293,9 @@ export class PlayerUI {
         .playObservable()
         .subscribe(({ timestamp }) => this.playStop(timestamp));
 
-      this.loopSubscription = opts.controls
-        .loopObservable()
-        .subscribe((loop) => {
-          this.loop = (<HTMLInputElement>loop.target)?.checked; //this.elements.loop.checked;
-        });
+      this.loopSubscription = opts.controls.loopObservable().subscribe((loop) => {
+        this.loop = (<HTMLInputElement>loop.target)?.checked; //this.elements.loop.checked;
+      });
 
       // We should even improve it with
       // https://stackoverflow.com/questions/51821942/operator-similar-to-exhaustmap-but-that-remembers-the-last-skipped-value-from-th
@@ -328,15 +310,15 @@ export class PlayerUI {
         .keyboardObservable()
         .subscribe(({ evt, timestamp }) => {
           const { key, code, keyCode } = evt;
-          if (key == ' ' || code == 'Space' || keyCode == 32) {
+          if (key == " " || code == "Space" || keyCode == 32) {
             this.playStop(timestamp);
           }
 
-          if (key == 'ArrowRight' || code == 'ArrowRight' || keyCode == 39) {
+          if (key == "ArrowRight" || code == "ArrowRight" || keyCode == 39) {
             this.forward();
           }
 
-          if (key == 'ArrowLeft' || code == 'ArrowLeft' || keyCode == 37) {
+          if (key == "ArrowLeft" || code == "ArrowLeft" || keyCode == 37) {
             this.backward();
           }
         });
@@ -355,11 +337,11 @@ export class PlayerUI {
 
   mounted() {
     if (this.opts.controlsMaster) {
-      this.player?.on('time', (time) => {
+      this.player?.on("time", (time) => {
         this.opts.controls?.updateTime(time);
       });
     }
-    this.player?.on('completed', () => {
+    this.player?.on("completed", () => {
       this.stop();
       this.seek(0);
     });
@@ -376,11 +358,7 @@ export class PlayerUI {
         // Update the controls duration after the widgets have loaded.
         // This is important for widgets like video that determine their duration dynamically.
         if (this.opts.controls) {
-          this.opts.controls.setTimeDuration(
-            this.time,
-            this.playlist.duration(),
-            this.loop
-          );
+          this.opts.controls.setTimeDuration(this.time, this.playlist.duration(), this.loop);
         }
       });
   }
@@ -423,7 +401,7 @@ export class PlayerUI {
           });
         }
         return of(null);
-      })
+      }),
     );
   }
 
@@ -468,16 +446,16 @@ function timeFormat(value: number, tenths = false) {
   let h = Math.floor(seconds / 3600) as any;
 
   // Check if we need to show hours
-  h = h > 0 ? h + ':' : '';
+  h = h > 0 ? h + ":" : "";
 
   // If hours are showing, we may need to add a leading zero.
   // Always show at least one digit of minutes.
-  m = (h && m < 10 ? '0' + m : m) + ':';
+  m = (h && m < 10 ? "0" + m : m) + ":";
 
   // Check if leading zero is need for seconds
-  s = s < 10 ? '0' + s : s;
+  s = s < 10 ? "0" + s : s;
 
-  const tenth = tenths ? `:${Math.floor((value * 10) % 10)}` : '';
+  const tenth = tenths ? `:${Math.floor((value * 10) % 10)}` : "";
 
   // Return the final time
   return h + m + s + tenth;

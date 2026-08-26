@@ -3,12 +3,12 @@
 interface Video {
   getVideoStatus(
     successCallback: (cbObject: VideoStatusResponse) => void,
-    errorCallback: (cbObject: ErrorResponse) => void
+    errorCallback: (cbObject: ErrorResponse) => void,
   ): void;
   setVideoSize(
     successCallback: () => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: VideoSizeOptions
+    options: VideoSizeOptions,
   ): void;
 }
 

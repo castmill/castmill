@@ -1,9 +1,9 @@
 /** @jsxImportSource solid-js */
-import { Show, JSX } from 'solid-js';
-import { Modal } from '../modal/modal';
-import { Button } from '../button/button';
+import { Show, JSX } from "solid-js";
+import { Modal } from "../modal/modal";
+import { Button } from "../button/button";
 
-import './confirm-dialog.scss';
+import "./confirm-dialog.scss";
 
 type ConfirmDialogProps = {
   show: boolean;
@@ -25,14 +25,8 @@ export const ConfirmDialog = (props: ConfirmDialogProps): JSX.Element => {
 
   return (
     <Show when={props.show}>
-      <Modal
-        title={props.title}
-        description={props.message}
-        onClose={handleClose}
-      >
-        {props.children && (
-          <div class="confirm-dialog-content">{props.children}</div>
-        )}
+      <Modal title={props.title} description={props.message} onClose={handleClose}>
+        {props.children && <div class="confirm-dialog-content">{props.children}</div>}
         <div class="confirm-dialog-actions">
           <Button label="Confirm" color="danger" onClick={handleConfirm} />
           <Button label="Cancel" onClick={handleClose} />

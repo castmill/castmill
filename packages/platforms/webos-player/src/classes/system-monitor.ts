@@ -1,4 +1,4 @@
-import { signage } from '../native';
+import { signage } from "../native";
 
 /**
  * System Monitor for webOS SCAP devices.
@@ -40,20 +40,17 @@ class SystemMonitor {
     }
 
     const eventHandler = (event: SystemMonitorEvent) => {
-      console.log(
-        `[SystemMonitor] Event from ${event.source}: ${event.type}`,
-        event.data
-      );
+      console.log(`[SystemMonitor] Event from ${event.source}: ${event.type}`, event.data);
 
       switch (event.type) {
-        case 'CURRENT_TEMPERATURE':
+        case "CURRENT_TEMPERATURE":
           if (event.data.temperature !== undefined) {
             this.latestData.temperature = {
               temperature: event.data.temperature,
             };
           }
           break;
-        case 'FAN_STATUS':
+        case "FAN_STATUS":
           // Fan status comes in event.data with status field
           if (event.data.status !== undefined) {
             this.latestData.fan = {
@@ -79,9 +76,9 @@ class SystemMonitor {
     try {
       await signage.registerSystemMonitor(options);
       this.isRunning = true;
-      console.log('[SystemMonitor] Successfully started');
+      console.log("[SystemMonitor] Successfully started");
     } catch (error) {
-      console.error('[SystemMonitor] Failed to start:', error);
+      console.error("[SystemMonitor] Failed to start:", error);
       throw error;
     }
   }
@@ -97,9 +94,9 @@ class SystemMonitor {
     try {
       await signage.unregisterSystemMonitor();
       this.isRunning = false;
-      console.log('[SystemMonitor] Successfully stopped');
+      console.log("[SystemMonitor] Successfully stopped");
     } catch (error) {
-      console.error('[SystemMonitor] Failed to stop:', error);
+      console.error("[SystemMonitor] Failed to stop:", error);
       throw error;
     }
   }

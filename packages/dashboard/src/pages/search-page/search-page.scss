@@ -19,11 +19,7 @@
     justify-content: center;
     width: 4em;
     height: 4em;
-    background: linear-gradient(
-      135deg,
-      var(--primary-color),
-      var(--primary-color-dark, #0066cc)
-    );
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-color-dark, #0066cc));
     border-radius: 1em;
     color: white;
     box-shadow: 0 0.25em 1em rgba(0, 102, 204, 0.2);
@@ -159,11 +155,7 @@
     align-items: center;
     gap: 1em;
     padding: 1.25em 1.5em;
-    background: linear-gradient(
-      135deg,
-      var(--background-secondary),
-      var(--background-hover)
-    );
+    background: linear-gradient(135deg, var(--background-secondary), var(--background-hover));
     border-bottom: 1px solid var(--border-color);
   }
 

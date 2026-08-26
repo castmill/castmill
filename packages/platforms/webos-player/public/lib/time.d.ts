@@ -3,30 +3,30 @@
 interface Time {
   getHolidaySchedule(
     successCallback: (cbObject: GetHolidayScheduleResponse) => void,
-    errorCallback: (cbObject: ErrorResponse) => void
+    errorCallback: (cbObject: ErrorResponse) => void,
   ): void;
   setHolidaySchedule(
     successCallback: () => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: SetHolidayScheduleOptions
+    options: SetHolidayScheduleOptions,
   ): void;
   unsetHolidaySchedule(
     successCallback: () => void,
-    errorCallback: (cbObject: ErrorResponse) => void
+    errorCallback: (cbObject: ErrorResponse) => void,
   ): void;
   clearAllOnOffTimers?(
     successCallback: () => void,
-    errorCallback: (cbObject: ErrorResponse) => void
+    errorCallback: (cbObject: ErrorResponse) => void,
   ): void;
   reserveOnOffTimer?(
     successCallback: () => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: ReserveOnOffTimerOptions
+    options: ReserveOnOffTimerOptions,
   ): void;
 }
 
 interface ReserveOnOffTimerOptions {
-  type: 'ONTIMER' | 'OFFTIMER';
+  type: "ONTIMER" | "OFFTIMER";
   hour: number;
   minute: number;
   week: number;
@@ -52,8 +52,8 @@ interface HolidaySettings {
   month?: number;
   date?: number;
   days?: number;
-  repeat?: 'monthly' | 'yearly' | 'none';
-  repeatBy?: 'dayOfWeek' | 'dayOfMonth' | 'none';
+  repeat?: "monthly" | "yearly" | "none";
+  repeatBy?: "dayOfWeek" | "dayOfMonth" | "none";
 }
 
 interface SetHolidayScheduleOptions {

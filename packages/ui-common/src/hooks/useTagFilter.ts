@@ -17,14 +17,14 @@
  * selection. This enables shareable links like /org/123/content/playlists?tags=5,6
  */
 
-import { createEffect, createSignal, on } from 'solid-js';
-import { Tag, TagsService } from '../services/tags.service';
+import { createEffect, createSignal, on } from "solid-js";
+import { Tag, TagsService } from "../services/tags.service";
 
 // Type aliases for URL params
 type SearchParams = Record<string, string | undefined>;
 type SetSearchParams = (
   params: Record<string, string | number | boolean | undefined>,
-  options?: any
+  options?: any,
 ) => void;
 
 interface UseTagFilterProps {
@@ -39,7 +39,7 @@ interface UseTagFilterProps {
    * Filter mode: 'any' (OR) or 'all' (AND)
    * Default: 'any'
    */
-  filterMode?: 'any' | 'all';
+  filterMode?: "any" | "all";
 }
 
 interface UseTagFilterReturn {
@@ -48,27 +48,27 @@ interface UseTagFilterReturn {
   setSelectedTagIds: (tagIds: number[]) => void;
   toggleTagId: (tagId: number) => void;
   clearTagSelection: () => void;
-  filterMode: () => 'any' | 'all';
-  setFilterMode: (mode: 'any' | 'all') => void;
+  filterMode: () => "any" | "all";
+  setFilterMode: (mode: "any" | "all") => void;
   isLoading: () => boolean;
 }
 
-const STORAGE_KEY_PREFIX = 'castmill_selected_tags_';
-const FILTER_MODE_KEY_PREFIX = 'castmill_tag_filter_mode_';
+const STORAGE_KEY_PREFIX = "castmill_selected_tags_";
+const FILTER_MODE_KEY_PREFIX = "castmill_tag_filter_mode_";
 
 const parseTagIdsParam = (value: string | undefined): number[] => {
   if (
     value === undefined ||
     value === null ||
-    value === '' ||
-    value === 'null' ||
-    value === 'undefined'
+    value === "" ||
+    value === "null" ||
+    value === "undefined"
   ) {
     return [];
   }
 
   return value
-    .split(',')
+    .split(",")
     .map((id) => parseInt(id.trim(), 10))
     .filter((id) => !Number.isNaN(id));
 };
@@ -94,11 +94,11 @@ const loadSelectedTagIds = (organizationId: string): number[] => {
     if (stored) {
       const parsed = JSON.parse(stored);
       if (Array.isArray(parsed)) {
-        return parsed.filter((id) => typeof id === 'number' && !isNaN(id));
+        return parsed.filter((id) => typeof id === "number" && !isNaN(id));
       }
     }
   } catch (error) {
-    console.error('Failed to load selected tags from localStorage:', error);
+    console.error("Failed to load selected tags from localStorage:", error);
   }
   return [];
 };
@@ -111,45 +111,43 @@ const saveSelectedTagIds = (organizationId: string, tagIds: number[]): void => {
     const key = getStorageKey(organizationId);
     localStorage.setItem(key, JSON.stringify(tagIds));
   } catch (error) {
-    console.error('Failed to save selected tags to localStorage:', error);
+    console.error("Failed to save selected tags to localStorage:", error);
   }
 };
 
 /**
  * Load the filter mode from localStorage
  */
-const loadFilterMode = (organizationId: string): 'any' | 'all' => {
+const loadFilterMode = (organizationId: string): "any" | "all" => {
   try {
     const key = getFilterModeKey(organizationId);
     const stored = localStorage.getItem(key);
-    if (stored === 'any' || stored === 'all') {
+    if (stored === "any" || stored === "all") {
       return stored;
     }
   } catch (error) {
-    console.error('Failed to load filter mode from localStorage:', error);
+    console.error("Failed to load filter mode from localStorage:", error);
   }
-  return 'any';
+  return "any";
 };
 
 /**
  * Save the filter mode to localStorage
  */
-const saveFilterMode = (organizationId: string, mode: 'any' | 'all'): void => {
+const saveFilterMode = (organizationId: string, mode: "any" | "all"): void => {
   try {
     const key = getFilterModeKey(organizationId);
     localStorage.setItem(key, mode);
   } catch (error) {
-    console.error('Failed to save filter mode to localStorage:', error);
+    console.error("Failed to save filter mode to localStorage:", error);
   }
 };
 
 export function useTagFilter(props: UseTagFilterProps): UseTagFilterReturn {
   const [tags, setTags] = createSignal<Tag[]>([]);
-  const [selectedTagIds, setSelectedTagIdsInternal] = createSignal<number[]>(
-    []
-  );
-  const [filterMode, setFilterModeInternal] = createSignal<'any' | 'all'>(
-    props.filterMode || 'any'
+  const [selectedTagIds, setSelectedTagIdsInternal] = createSignal<number[]>([]);
+  const [filterMode, setFilterModeInternal] = createSignal<"any" | "all">(
+    props.filterMode || "any",
   );
   const [isLoading, setIsLoading] = createSignal(true);
 
@@ -174,15 +172,11 @@ export function useTagFilter(props: UseTagFilterProps): UseTagFilterReturn {
           setTags(fetchedTags);
 
           // Check URL params first for initial selection
-          const urlTagIds = props.params
-            ? parseTagIdsParam(props.params[0]?.tags)
-            : [];
+          const urlTagIds = props.params ? parseTagIdsParam(props.params[0]?.tags) : [];
 
           // Validate URL tag IDs against loaded tags
           const validTagIds = fetchedTags.map((t) => t.id);
-          const validUrlTagIds = urlTagIds.filter((id) =>
-            validTagIds.includes(id)
-          );
+          const validUrlTagIds = urlTagIds.filter((id) => validTagIds.includes(id));
 
           if (validUrlTagIds.length > 0) {
             // URL params take precedence
@@ -191,9 +185,7 @@ export function useTagFilter(props: UseTagFilterProps): UseTagFilterReturn {
           } else {
             // Fall back to localStorage
             const storedTagIds = loadSelectedTagIds(orgId);
-            const validStoredTagIds = storedTagIds.filter((id) =>
-              validTagIds.includes(id)
-            );
+            const validStoredTagIds = storedTagIds.filter((id) => validTagIds.includes(id));
             setSelectedTagIdsInternal(validStoredTagIds);
 
             // Clean up invalid tags from storage
@@ -206,14 +198,14 @@ export function useTagFilter(props: UseTagFilterProps): UseTagFilterReturn {
           const storedFilterMode = loadFilterMode(orgId);
           setFilterModeInternal(storedFilterMode);
         } catch (error) {
-          console.error('Failed to fetch tags:', error);
+          console.error("Failed to fetch tags:", error);
           setTags([]);
         } finally {
           setIsLoading(false);
         }
       },
-      { defer: false }
-    )
+      { defer: false },
+    ),
   );
 
   // Update URL when selection changes (if params provided)
@@ -223,12 +215,12 @@ export function useTagFilter(props: UseTagFilterProps): UseTagFilterReturn {
       (ids) => {
         if (props.params) {
           const [, setSearchParams] = props.params;
-          const tagsParam = ids.length > 0 ? ids.join(',') : undefined;
+          const tagsParam = ids.length > 0 ? ids.join(",") : undefined;
           setSearchParams({ tags: tagsParam }, { replace: true });
         }
       },
-      { defer: true }
-    )
+      { defer: true },
+    ),
   );
 
   const setSelectedTagIds = (tagIds: number[]) => {
@@ -248,7 +240,7 @@ export function useTagFilter(props: UseTagFilterProps): UseTagFilterReturn {
     setSelectedTagIds([]);
   };
 
-  const setFilterMode = (mode: 'any' | 'all') => {
+  const setFilterMode = (mode: "any" | "all") => {
     setFilterModeInternal(mode);
     saveFilterMode(props.organizationId, mode);
   };

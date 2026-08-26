@@ -1,22 +1,22 @@
-import { render, screen, fireEvent, waitFor } from '@solidjs/testing-library';
-import { vi, describe, it, expect, beforeEach } from 'vitest';
-import SettingsPage from './settings-page';
-import { I18nProvider } from '../../i18n';
-import { ToastProvider } from '@castmill/ui-common';
+import { render, screen, fireEvent, waitFor } from "@solidjs/testing-library";
+import { vi, describe, it, expect, beforeEach } from "vitest";
+import SettingsPage from "./settings-page";
+import { I18nProvider } from "../../i18n";
+import { ToastProvider } from "@castmill/ui-common";
 
 // Mock the auth module
-vi.mock('../../components/auth', () => ({
+vi.mock("../../components/auth", () => ({
   getUser: vi.fn(() => ({
-    id: '1',
-    name: 'John Doe',
-    email: 'john@example.com',
+    id: "1",
+    name: "John Doe",
+    email: "john@example.com",
   })),
   updateUser: vi.fn(),
   authFetch: vi.fn(),
 }));
 
 // Mock the user service
-vi.mock('../../services/user.service', () => ({
+vi.mock("../../services/user.service", () => ({
   UserService: {
     updateProfile: vi.fn(),
     deleteAccount: vi.fn(),
@@ -26,12 +26,12 @@ vi.mock('../../services/user.service', () => ({
       Promise.resolve({
         credentials: [
           {
-            id: 'cred1',
-            name: 'My Laptop',
-            inserted_at: '2024-01-01T00:00:00Z',
+            id: "cred1",
+            name: "My Laptop",
+            inserted_at: "2024-01-01T00:00:00Z",
           },
         ],
-      })
+      }),
     ),
     deleteCredential: vi.fn(),
     updateCredentialName: vi.fn(),
@@ -48,12 +48,12 @@ const mockNavigatorCredentials = {
   get: vi.fn(),
 };
 
-Object.defineProperty(navigator, 'credentials', {
+Object.defineProperty(navigator, "credentials", {
   value: mockNavigatorCredentials,
   writable: true,
 });
 
-describe('SettingsPage', () => {
+describe("SettingsPage", () => {
   let UserService: any;
 
   // Helper function to render with I18nProvider and ToastProvider
@@ -66,98 +66,92 @@ describe('SettingsPage', () => {
   };
 
   beforeEach(async () => {
-    const module = await import('../../services/user.service');
+    const module = await import("../../services/user.service");
     UserService = module.UserService;
     vi.clearAllMocks();
 
     // Reset default mock implementation
     (UserService.getUserCredentials as any).mockResolvedValue({
-      credentials: [
-        { id: 'cred1', name: 'My Laptop', inserted_at: '2024-01-01T00:00:00Z' },
-      ],
+      credentials: [{ id: "cred1", name: "My Laptop", inserted_at: "2024-01-01T00:00:00Z" }],
     });
   });
 
-  describe('Basic Rendering', () => {
-    it('renders the settings page with all sections', () => {
+  describe("Basic Rendering", () => {
+    it("renders the settings page with all sections", () => {
       renderWithProviders(() => <SettingsPage />);
 
-      expect(screen.getByText('Settings')).toBeInTheDocument();
+      expect(screen.getByText("Settings")).toBeInTheDocument();
       expect(
-        screen.getByText('Manage your account information and preferences')
+        screen.getByText("Manage your account information and preferences"),
       ).toBeInTheDocument();
 
-      expect(screen.getByText('Profile Information')).toBeInTheDocument();
-      expect(screen.getByLabelText('Full Name')).toBeInTheDocument();
-      expect(screen.getByLabelText('Email Address')).toBeInTheDocument();
+      expect(screen.getByText("Profile Information")).toBeInTheDocument();
+      expect(screen.getByLabelText("Full Name")).toBeInTheDocument();
+      expect(screen.getByLabelText("Email Address")).toBeInTheDocument();
 
-      expect(screen.getByText('Security & Authentication')).toBeInTheDocument();
-      expect(screen.getByText('Account Management')).toBeInTheDocument();
+      expect(screen.getByText("Security & Authentication")).toBeInTheDocument();
+      expect(screen.getByText("Account Management")).toBeInTheDocument();
     });
 
-    it('pre-populates form fields with user data', () => {
+    it("pre-populates form fields with user data", () => {
       renderWithProviders(() => <SettingsPage />);
 
-      const nameInput = screen.getByLabelText('Full Name') as HTMLInputElement;
-      const emailInput = screen.getByLabelText(
-        'Email Address'
-      ) as HTMLInputElement;
+      const nameInput = screen.getByLabelText("Full Name") as HTMLInputElement;
+      const emailInput = screen.getByLabelText("Email Address") as HTMLInputElement;
 
-      expect(nameInput.value).toBe('John Doe');
-      expect(emailInput.value).toBe('john@example.com');
+      expect(nameInput.value).toBe("John Doe");
+      expect(emailInput.value).toBe("john@example.com");
     });
   });
 
-  describe('Form Dirty State', () => {
-    it('disables Save Changes button when form is not dirty', async () => {
+  describe("Form Dirty State", () => {
+    it("disables Save Changes button when form is not dirty", async () => {
       renderWithProviders(() => <SettingsPage />);
 
       await waitFor(() => {
-        const saveButton = screen.getByRole('button', { name: 'Save Changes' });
+        const saveButton = screen.getByRole("button", { name: "Save Changes" });
         expect(saveButton).toBeDisabled();
       });
     });
 
-    it('enables Save Changes button when name is changed', async () => {
+    it("enables Save Changes button when name is changed", async () => {
       renderWithProviders(() => <SettingsPage />);
 
-      const nameInput = screen.getByLabelText('Full Name') as HTMLInputElement;
-      fireEvent.input(nameInput, { target: { value: 'Jane Doe' } });
+      const nameInput = screen.getByLabelText("Full Name") as HTMLInputElement;
+      fireEvent.input(nameInput, { target: { value: "Jane Doe" } });
 
       await waitFor(() => {
-        const saveButton = screen.getByRole('button', { name: 'Save Changes' });
+        const saveButton = screen.getByRole("button", { name: "Save Changes" });
         expect(saveButton).not.toBeDisabled();
       });
     });
 
-    it('enables Save Changes button when email is changed', async () => {
+    it("enables Save Changes button when email is changed", async () => {
       renderWithProviders(() => <SettingsPage />);
 
-      const emailInput = screen.getByLabelText(
-        'Email Address'
-      ) as HTMLInputElement;
-      fireEvent.input(emailInput, { target: { value: 'jane@example.com' } });
+      const emailInput = screen.getByLabelText("Email Address") as HTMLInputElement;
+      fireEvent.input(emailInput, { target: { value: "jane@example.com" } });
 
       await waitFor(() => {
-        const saveButton = screen.getByRole('button', { name: 'Save Changes' });
+        const saveButton = screen.getByRole("button", { name: "Save Changes" });
         expect(saveButton).not.toBeDisabled();
       });
     });
 
-    it('disables Save Changes button after successful save', async () => {
-      (UserService.updateProfile as any).mockResolvedValue({ status: 'ok' });
+    it("disables Save Changes button after successful save", async () => {
+      (UserService.updateProfile as any).mockResolvedValue({ status: "ok" });
 
       renderWithProviders(() => <SettingsPage />);
 
-      const nameInput = screen.getByLabelText('Full Name') as HTMLInputElement;
-      fireEvent.input(nameInput, { target: { value: 'Jane Doe' } });
+      const nameInput = screen.getByLabelText("Full Name") as HTMLInputElement;
+      fireEvent.input(nameInput, { target: { value: "Jane Doe" } });
 
-      const saveButton = screen.getByRole('button', { name: 'Save Changes' });
+      const saveButton = screen.getByRole("button", { name: "Save Changes" });
       fireEvent.click(saveButton);
 
       await waitFor(() => {
-        expect(UserService.updateProfile).toHaveBeenCalledWith('1', {
-          name: 'Jane Doe',
+        expect(UserService.updateProfile).toHaveBeenCalledWith("1", {
+          name: "Jane Doe",
         });
       });
 
@@ -167,168 +161,153 @@ describe('SettingsPage', () => {
     });
   });
 
-  describe('Profile Updates', () => {
-    it('calls updateProfile with name changes only', async () => {
-      (UserService.updateProfile as any).mockResolvedValue({ status: 'ok' });
+  describe("Profile Updates", () => {
+    it("calls updateProfile with name changes only", async () => {
+      (UserService.updateProfile as any).mockResolvedValue({ status: "ok" });
 
       renderWithProviders(() => <SettingsPage />);
 
-      const nameInput = screen.getByLabelText('Full Name') as HTMLInputElement;
-      fireEvent.input(nameInput, { target: { value: 'Jane Doe' } });
+      const nameInput = screen.getByLabelText("Full Name") as HTMLInputElement;
+      fireEvent.input(nameInput, { target: { value: "Jane Doe" } });
 
-      const saveButton = screen.getByRole('button', { name: 'Save Changes' });
+      const saveButton = screen.getByRole("button", { name: "Save Changes" });
       fireEvent.click(saveButton);
 
       await waitFor(() => {
-        expect(UserService.updateProfile).toHaveBeenCalledWith('1', {
-          name: 'Jane Doe',
+        expect(UserService.updateProfile).toHaveBeenCalledWith("1", {
+          name: "Jane Doe",
         });
       });
     });
 
-    it('shows success message after profile update', async () => {
-      (UserService.updateProfile as any).mockResolvedValue({ status: 'ok' });
+    it("shows success message after profile update", async () => {
+      (UserService.updateProfile as any).mockResolvedValue({ status: "ok" });
 
       renderWithProviders(() => <SettingsPage />);
 
-      const nameInput = screen.getByLabelText('Full Name') as HTMLInputElement;
-      fireEvent.input(nameInput, { target: { value: 'Jane Doe' } });
+      const nameInput = screen.getByLabelText("Full Name") as HTMLInputElement;
+      fireEvent.input(nameInput, { target: { value: "Jane Doe" } });
 
-      const saveButton = screen.getByRole('button', { name: 'Save Changes' });
+      const saveButton = screen.getByRole("button", { name: "Save Changes" });
       fireEvent.click(saveButton);
 
       await waitFor(() => {
-        expect(
-          screen.getByText('Profile updated successfully!')
-        ).toBeInTheDocument();
+        expect(screen.getByText("Profile updated successfully!")).toBeInTheDocument();
       });
     });
 
-    it('handles email verification flow', async () => {
+    it("handles email verification flow", async () => {
       (UserService.sendEmailVerification as any).mockResolvedValue({
-        status: 'ok',
+        status: "ok",
       });
 
       renderWithProviders(() => <SettingsPage />);
 
-      const emailInput = screen.getByLabelText(
-        'Email Address'
-      ) as HTMLInputElement;
+      const emailInput = screen.getByLabelText("Email Address") as HTMLInputElement;
       fireEvent.input(emailInput, {
-        target: { value: 'newemail@example.com' },
+        target: { value: "newemail@example.com" },
       });
 
-      const saveButton = screen.getByRole('button', { name: 'Save Changes' });
+      const saveButton = screen.getByRole("button", { name: "Save Changes" });
       fireEvent.click(saveButton);
 
       await waitFor(() => {
-        expect(UserService.sendEmailVerification).toHaveBeenCalledWith(
-          '1',
-          'newemail@example.com'
-        );
+        expect(UserService.sendEmailVerification).toHaveBeenCalledWith("1", "newemail@example.com");
       });
 
       await waitFor(() => {
-        expect(
-          screen.getByText(/Email verification required/)
-        ).toBeInTheDocument();
+        expect(screen.getByText(/Email verification required/)).toBeInTheDocument();
       });
     });
 
-    it('updates global user state when name is changed', async () => {
-      const { updateUser } = await import('../../components/auth');
-      (UserService.updateProfile as any).mockResolvedValue({ status: 'ok' });
+    it("updates global user state when name is changed", async () => {
+      const { updateUser } = await import("../../components/auth");
+      (UserService.updateProfile as any).mockResolvedValue({ status: "ok" });
 
       renderWithProviders(() => <SettingsPage />);
 
-      const nameInput = screen.getByLabelText('Full Name') as HTMLInputElement;
-      fireEvent.input(nameInput, { target: { value: 'Jane Doe' } });
+      const nameInput = screen.getByLabelText("Full Name") as HTMLInputElement;
+      fireEvent.input(nameInput, { target: { value: "Jane Doe" } });
 
-      const saveButton = screen.getByRole('button', { name: 'Save Changes' });
+      const saveButton = screen.getByRole("button", { name: "Save Changes" });
       fireEvent.click(saveButton);
 
       await waitFor(() => {
         expect(updateUser).toHaveBeenCalledWith({
-          name: 'Jane Doe',
+          name: "Jane Doe",
         });
       });
     });
   });
 
-  describe('Passkey Management', () => {
-    it('displays list of passkeys', async () => {
+  describe("Passkey Management", () => {
+    it("displays list of passkeys", async () => {
       renderWithProviders(() => <SettingsPage />);
 
       await waitFor(() => {
-        expect(screen.getByText('My Laptop')).toBeInTheDocument();
+        expect(screen.getByText("My Laptop")).toBeInTheDocument();
       });
     });
 
-    it('shows Add New Passkey button', async () => {
+    it("shows Add New Passkey button", async () => {
       renderWithProviders(() => <SettingsPage />);
 
       await waitFor(() => {
-        expect(
-          screen.getByRole('button', { name: 'Add New Passkey' })
-        ).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: "Add New Passkey" })).toBeInTheDocument();
       });
     });
 
-    it('allows renaming a passkey', async () => {
+    it("allows renaming a passkey", async () => {
       (UserService.updateCredentialName as any).mockResolvedValue({
-        status: 'ok',
+        status: "ok",
       });
 
       renderWithProviders(() => <SettingsPage />);
 
       await waitFor(() => {
-        expect(screen.getByText('My Laptop')).toBeInTheDocument();
+        expect(screen.getByText("My Laptop")).toBeInTheDocument();
       });
 
-      const renameButton = screen.getByRole('button', { name: 'Rename' });
+      const renameButton = screen.getByRole("button", { name: "Rename" });
       fireEvent.click(renameButton);
 
       await waitFor(() => {
-        const input = screen.getByDisplayValue('My Laptop') as HTMLInputElement;
+        const input = screen.getByDisplayValue("My Laptop") as HTMLInputElement;
         expect(input).toBeInTheDocument();
       });
 
-      const input = screen.getByDisplayValue('My Laptop') as HTMLInputElement;
-      fireEvent.input(input, { target: { value: 'Work Laptop' } });
+      const input = screen.getByDisplayValue("My Laptop") as HTMLInputElement;
+      fireEvent.input(input, { target: { value: "Work Laptop" } });
 
-      const saveButton = screen.getByRole('button', { name: 'Save' });
+      const saveButton = screen.getByRole("button", { name: "Save" });
       fireEvent.click(saveButton);
 
       await waitFor(() => {
-        expect(UserService.updateCredentialName).toHaveBeenCalledWith(
-          '1',
-          'cred1',
-          'Work Laptop'
-        );
+        expect(UserService.updateCredentialName).toHaveBeenCalledWith("1", "cred1", "Work Laptop");
       });
     });
 
-    it('disables Remove button when only one passkey exists', async () => {
+    it("disables Remove button when only one passkey exists", async () => {
       renderWithProviders(() => <SettingsPage />);
 
       await waitFor(() => {
-        const removeButton = screen.getByRole('button', { name: 'Remove' });
+        const removeButton = screen.getByRole("button", { name: "Remove" });
         expect(removeButton).toBeDisabled();
       });
     });
 
-    it('enables Remove button when multiple passkeys exist', async () => {
+    it("enables Remove button when multiple passkeys exist", async () => {
       (UserService.getUserCredentials as any).mockResolvedValue({
         credentials: [
           {
-            id: 'cred1',
-            name: 'My Laptop',
-            inserted_at: '2024-01-01T00:00:00Z',
+            id: "cred1",
+            name: "My Laptop",
+            inserted_at: "2024-01-01T00:00:00Z",
           },
           {
-            id: 'cred2',
-            name: 'My Phone',
-            inserted_at: '2024-01-02T00:00:00Z',
+            id: "cred2",
+            name: "My Phone",
+            inserted_at: "2024-01-02T00:00:00Z",
           },
         ],
       });
@@ -336,7 +315,7 @@ describe('SettingsPage', () => {
       renderWithProviders(() => <SettingsPage />);
 
       await waitFor(() => {
-        const removeButtons = screen.getAllByRole('button', { name: 'Remove' });
+        const removeButtons = screen.getAllByRole("button", { name: "Remove" });
         expect(removeButtons).toHaveLength(2);
         removeButtons.forEach((button) => {
           expect(button).not.toBeDisabled();
@@ -344,31 +323,31 @@ describe('SettingsPage', () => {
       });
     });
 
-    it('shows confirmation dialog before deleting passkey', async () => {
+    it("shows confirmation dialog before deleting passkey", async () => {
       (UserService.getUserCredentials as any).mockResolvedValue({
         credentials: [
           {
-            id: 'cred1',
-            name: 'My Laptop',
-            inserted_at: '2024-01-01T00:00:00Z',
+            id: "cred1",
+            name: "My Laptop",
+            inserted_at: "2024-01-01T00:00:00Z",
           },
           {
-            id: 'cred2',
-            name: 'My Phone',
-            inserted_at: '2024-01-02T00:00:00Z',
+            id: "cred2",
+            name: "My Phone",
+            inserted_at: "2024-01-02T00:00:00Z",
           },
         ],
       });
 
-      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
+      const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(false);
 
       renderWithProviders(() => <SettingsPage />);
 
       await waitFor(() => {
-        expect(screen.getByText('My Laptop')).toBeInTheDocument();
+        expect(screen.getByText("My Laptop")).toBeInTheDocument();
       });
 
-      const removeButtons = screen.getAllByRole('button', { name: 'Remove' });
+      const removeButtons = screen.getAllByRole("button", { name: "Remove" });
       fireEvent.click(removeButtons[0]);
 
       expect(confirmSpy).toHaveBeenCalled();
@@ -377,81 +356,73 @@ describe('SettingsPage', () => {
       confirmSpy.mockRestore();
     });
 
-    it('deletes passkey after confirmation', async () => {
+    it("deletes passkey after confirmation", async () => {
       (UserService.getUserCredentials as any).mockResolvedValue({
         credentials: [
           {
-            id: 'cred1',
-            name: 'My Laptop',
-            inserted_at: '2024-01-01T00:00:00Z',
+            id: "cred1",
+            name: "My Laptop",
+            inserted_at: "2024-01-01T00:00:00Z",
           },
           {
-            id: 'cred2',
-            name: 'My Phone',
-            inserted_at: '2024-01-02T00:00:00Z',
+            id: "cred2",
+            name: "My Phone",
+            inserted_at: "2024-01-02T00:00:00Z",
           },
         ],
       });
-      (UserService.deleteCredential as any).mockResolvedValue({ status: 'ok' });
+      (UserService.deleteCredential as any).mockResolvedValue({ status: "ok" });
 
-      const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+      const confirmSpy = vi.spyOn(window, "confirm").mockReturnValue(true);
 
       renderWithProviders(() => <SettingsPage />);
 
       await waitFor(() => {
-        expect(screen.getByText('My Laptop')).toBeInTheDocument();
+        expect(screen.getByText("My Laptop")).toBeInTheDocument();
       });
 
-      const removeButtons = screen.getAllByRole('button', { name: 'Remove' });
+      const removeButtons = screen.getAllByRole("button", { name: "Remove" });
       fireEvent.click(removeButtons[0]);
 
       await waitFor(() => {
-        expect(UserService.deleteCredential).toHaveBeenCalledWith('1', 'cred1');
+        expect(UserService.deleteCredential).toHaveBeenCalledWith("1", "cred1");
       });
 
       confirmSpy.mockRestore();
     });
   });
 
-  describe('Delete Account', () => {
-    it('shows delete account confirmation when delete button is clicked', async () => {
+  describe("Delete Account", () => {
+    it("shows delete account confirmation when delete button is clicked", async () => {
       renderWithProviders(() => <SettingsPage />);
 
-      const deleteButton = screen.getByRole('button', {
-        name: 'Delete Account',
+      const deleteButton = screen.getByRole("button", {
+        name: "Delete Account",
       });
       fireEvent.click(deleteButton);
 
       await waitFor(() => {
-        expect(screen.getByText('Are you sure?')).toBeInTheDocument();
-        expect(
-          screen.getByRole('button', { name: 'Yes, Delete Account' })
-        ).toBeInTheDocument();
-        expect(
-          screen.getByRole('button', { name: 'Cancel' })
-        ).toBeInTheDocument();
+        expect(screen.getByText("Are you sure?")).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: "Yes, Delete Account" })).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: "Cancel" })).toBeInTheDocument();
       });
     });
 
-    it('displays passkey cleanup warning in delete confirmation', async () => {
+    it("displays passkey cleanup warning in delete confirmation", async () => {
       renderWithProviders(() => <SettingsPage />);
 
-      const deleteButton = screen.getByRole('button', {
-        name: 'Delete Account',
+      const deleteButton = screen.getByRole("button", {
+        name: "Delete Account",
       });
       fireEvent.click(deleteButton);
 
       await waitFor(() => {
-        expect(
-          screen.getByText(/passkeys stored on your devices/i)
-        ).toBeInTheDocument();
-        expect(
-          screen.getByText(/manually remove this account's passkeys/i)
-        ).toBeInTheDocument();
+        expect(screen.getByText(/passkeys stored on your devices/i)).toBeInTheDocument();
+        expect(screen.getByText(/manually remove this account's passkeys/i)).toBeInTheDocument();
       });
     });
 
-    it('displays automatic deletion warning when Signal API is supported', async () => {
+    it("displays automatic deletion warning when Signal API is supported", async () => {
       // Mock Signal API support
       const mockSignalUnknownCredential = vi.fn().mockResolvedValue(undefined);
       (global as any).PublicKeyCredential = {
@@ -460,51 +431,45 @@ describe('SettingsPage', () => {
 
       renderWithProviders(() => <SettingsPage />);
 
-      const deleteButton = screen.getByRole('button', {
-        name: 'Delete Account',
+      const deleteButton = screen.getByRole("button", {
+        name: "Delete Account",
       });
       fireEvent.click(deleteButton);
 
       await waitFor(() => {
-        expect(
-          screen.getByText(/supports automatic passkey removal/i)
-        ).toBeInTheDocument();
-        expect(
-          screen.getByText(/automatically removed from your device/i)
-        ).toBeInTheDocument();
+        expect(screen.getByText(/supports automatic passkey removal/i)).toBeInTheDocument();
+        expect(screen.getByText(/automatically removed from your device/i)).toBeInTheDocument();
       });
 
       // Cleanup
       delete (global as any).PublicKeyCredential;
     });
 
-    it('calls deleteAccount service when confirmed', async () => {
-      (UserService.deleteAccount as any).mockResolvedValue({ status: 'ok' });
+    it("calls deleteAccount service when confirmed", async () => {
+      (UserService.deleteAccount as any).mockResolvedValue({ status: "ok" });
 
       renderWithProviders(() => <SettingsPage />);
 
-      const deleteButton = screen.getByRole('button', {
-        name: 'Delete Account',
+      const deleteButton = screen.getByRole("button", {
+        name: "Delete Account",
       });
       fireEvent.click(deleteButton);
 
       await waitFor(() => {
-        expect(
-          screen.getByRole('button', { name: 'Yes, Delete Account' })
-        ).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: "Yes, Delete Account" })).toBeInTheDocument();
       });
 
-      const confirmButton = screen.getByRole('button', {
-        name: 'Yes, Delete Account',
+      const confirmButton = screen.getByRole("button", {
+        name: "Yes, Delete Account",
       });
       fireEvent.click(confirmButton);
 
       await waitFor(() => {
-        expect(UserService.deleteAccount).toHaveBeenCalledWith('1');
+        expect(UserService.deleteAccount).toHaveBeenCalledWith("1");
       });
     });
 
-    it('uses Signal API to delete passkeys when supported', async () => {
+    it("uses Signal API to delete passkeys when supported", async () => {
       // Mock Signal API support
       const mockSignalUnknownCredential = vi.fn().mockResolvedValue(undefined);
       (global as any).PublicKeyCredential = {
@@ -514,44 +479,42 @@ describe('SettingsPage', () => {
       (UserService.getUserCredentials as any).mockResolvedValue({
         credentials: [
           {
-            id: 'cred1',
-            name: 'My Laptop',
-            inserted_at: '2024-01-01T00:00:00Z',
+            id: "cred1",
+            name: "My Laptop",
+            inserted_at: "2024-01-01T00:00:00Z",
           },
           {
-            id: 'cred2',
-            name: 'My Phone',
-            inserted_at: '2024-01-02T00:00:00Z',
+            id: "cred2",
+            name: "My Phone",
+            inserted_at: "2024-01-02T00:00:00Z",
           },
         ],
       });
-      (UserService.deleteAccount as any).mockResolvedValue({ status: 'ok' });
+      (UserService.deleteAccount as any).mockResolvedValue({ status: "ok" });
 
       renderWithProviders(() => <SettingsPage />);
 
       await waitFor(() => {
-        expect(screen.getByText('My Laptop')).toBeInTheDocument();
+        expect(screen.getByText("My Laptop")).toBeInTheDocument();
       });
 
-      const deleteButton = screen.getByRole('button', {
-        name: 'Delete Account',
+      const deleteButton = screen.getByRole("button", {
+        name: "Delete Account",
       });
       fireEvent.click(deleteButton);
 
       await waitFor(() => {
-        expect(
-          screen.getByRole('button', { name: 'Yes, Delete Account' })
-        ).toBeInTheDocument();
+        expect(screen.getByRole("button", { name: "Yes, Delete Account" })).toBeInTheDocument();
       });
 
-      const confirmButton = screen.getByRole('button', {
-        name: 'Yes, Delete Account',
+      const confirmButton = screen.getByRole("button", {
+        name: "Yes, Delete Account",
       });
       fireEvent.click(confirmButton);
 
       await waitFor(() => {
         expect(mockSignalUnknownCredential).toHaveBeenCalledTimes(2);
-        expect(UserService.deleteAccount).toHaveBeenCalledWith('1');
+        expect(UserService.deleteAccount).toHaveBeenCalledWith("1");
       });
 
       // Cleanup

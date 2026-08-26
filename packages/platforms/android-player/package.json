@@ -2,6 +2,8 @@
   "name": "@castmill/android-player",
   "version": "1.0.0",
   "description": "Castmill Player Android App",
+  "license": "AGPL-3.0-or-later",
+  "author": "Castmill AB",
   "main": "index.js",
   "scripts": {
     "format": "oxfmt --write .",
@@ -41,7 +43,5 @@
     "vite": "^4.0.0",
     "vite-plugin-solid": "^2.8.2",
     "vitest": "^1.5.3"
-  },
-  "author": "Castmill AB",
-  "license": "AGPL-3.0-or-later"
+  }
 }

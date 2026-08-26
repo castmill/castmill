@@ -146,19 +146,19 @@ See `/packages/dashboard/docs/KEYBOARD-SHORTCUTS-ADDONS.md` for:
 The shortcuts system is extensible. To add new shortcuts:
 
 ```typescript
-import { useKeyboardShortcuts } from '../../hooks';
-import { useI18n } from '../../i18n';
+import { useKeyboardShortcuts } from "../../hooks";
+import { useI18n } from "../../i18n";
 
 const MyComponent = () => {
   const { registerShortcut, unregisterShortcut } = useKeyboardShortcuts();
   const { t } = useI18n();
 
   onMount(() => {
-    registerShortcut('my-action', {
-      key: 'S',
+    registerShortcut("my-action", {
+      key: "S",
       ctrl: true,
-      description: () => t('shortcuts.myAction'), // Use function for reactive i18n
-      category: 'actions',
+      description: () => t("shortcuts.myAction"), // Use function for reactive i18n
+      category: "actions",
       action: () => {
         // Perform action
       },
@@ -166,7 +166,7 @@ const MyComponent = () => {
   });
 
   onCleanup(() => {
-    unregisterShortcut('my-action');
+    unregisterShortcut("my-action");
   });
 };
 ```

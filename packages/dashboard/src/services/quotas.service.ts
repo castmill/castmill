@@ -1,6 +1,6 @@
-import { baseUrl } from '../env';
+import { baseUrl } from "../env";
 
-import { authFetch } from '../components/auth';
+import { authFetch } from "../components/auth";
 export interface ResourceQuota {
   used: number;
   total: number;
@@ -27,17 +27,14 @@ export const QuotasService = {
    * @returns {Promise<QuotaUsage>} A promise that resolves to quota usage data
    */
   async getQuotaUsage(organizationId: string): Promise<QuotaUsage> {
-    const response = await authFetch(
-      `${baseUrl}/dashboard/organizations/${organizationId}/usage`,
-      {
-        method: 'GET',
-      }
-    );
+    const response = await authFetch(`${baseUrl}/dashboard/organizations/${organizationId}/usage`, {
+      method: "GET",
+    });
 
     if (response.status === 200) {
       return (await response.json()) as QuotaUsage;
     } else {
-      throw new Error('Failed to fetch quota usage data');
+      throw new Error("Failed to fetch quota usage data");
     }
   },
 
@@ -48,10 +45,7 @@ export const QuotasService = {
    * @param resourceType - The resource type to check
    * @returns {Promise<boolean>} True if quota is reached, false otherwise
    */
-  async isQuotaReached(
-    organizationId: string,
-    resourceType: ResourceType
-  ): Promise<boolean> {
+  async isQuotaReached(organizationId: string, resourceType: ResourceType): Promise<boolean> {
     const usage = await this.getQuotaUsage(organizationId);
     const resourceQuota = usage[resourceType];
 
@@ -71,7 +65,7 @@ export const QuotasService = {
    */
   async getResourceQuota(
     organizationId: string,
-    resourceType: ResourceType
+    resourceType: ResourceType,
   ): Promise<ResourceQuota | null> {
     const usage = await this.getQuotaUsage(organizationId);
     return usage[resourceType] || null;

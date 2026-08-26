@@ -1,20 +1,20 @@
-import { Component, JSX } from 'solid-js';
-import { ResourceManager } from '@castmill/cache';
+import { Component, JSX } from "solid-js";
+import { ResourceManager } from "@castmill/cache";
 
-import { Item } from './item';
-import { TemplateConfig } from './binding';
-import { GroupComponent } from './group';
-import { TextComponent } from './text';
-import { ImageComponent } from './image';
-import { VideoComponent } from './video';
-import { PaginatedListComponent, ListComponent } from './paginated-list';
-import { ScrollerComponent } from './scroller';
-import { ImageCarouselComponent } from './image-carousel';
-import { LayoutComponent } from './layout';
-import { QRCodeComponent } from './qr-code';
-import { Timeline } from './timeline';
-import { ComponentAnimation } from './animation';
-import { PlayerGlobals } from '../../interfaces/player-globals.interface';
+import { Item } from "./item";
+import { TemplateConfig } from "./binding";
+import { GroupComponent } from "./group";
+import { TextComponent } from "./text";
+import { ImageComponent } from "./image";
+import { VideoComponent } from "./video";
+import { PaginatedListComponent, ListComponent } from "./paginated-list";
+import { ScrollerComponent } from "./scroller";
+import { ImageCarouselComponent } from "./image-carousel";
+import { LayoutComponent } from "./layout";
+import { QRCodeComponent } from "./qr-code";
+import { Timeline } from "./timeline";
+import { ComponentAnimation } from "./animation";
+import { PlayerGlobals } from "../../interfaces/player-globals.interface";
 
 export type TemplateComponentTypeUnion =
   | TextComponent
@@ -28,18 +28,18 @@ export type TemplateComponentTypeUnion =
   | QRCodeComponent;
 
 export enum TemplateComponentType {
-  Template = 'template',
-  Layout = 'layout',
-  Text = 'text',
-  Image = 'image',
-  Video = 'video',
+  Template = "template",
+  Layout = "layout",
+  Text = "text",
+  Image = "image",
+  Video = "video",
   /** @deprecated Use PaginatedList instead */
-  List = 'list',
-  PaginatedList = 'paginated-list',
-  Scroller = 'scroller',
-  Group = 'group',
-  ImageCarousel = 'image-carousel',
-  QRCode = 'qr-code',
+  List = "list",
+  PaginatedList = "paginated-list",
+  Scroller = "scroller",
+  Group = "group",
+  ImageCarousel = "image-carousel",
+  QRCode = "qr-code",
 }
 
 export class TemplateComponent {
@@ -51,7 +51,7 @@ export class TemplateComponent {
     public opts: any, // public config: TemplateConfig, // public component: TemplateComponentTypeUnion
     public animations?: ComponentAnimation[],
     public filter?: Record<string, any>,
-    public $styles?: { filter: Record<string, any>; style: JSX.CSSProperties }[]
+    public $styles?: { filter: Record<string, any>; style: JSX.CSSProperties }[],
   ) {}
 
   resolveDuration(medias: { [index: string]: string }): number {
@@ -61,7 +61,7 @@ export class TemplateComponent {
   static fromJSON(
     json: any,
     resourceManager: ResourceManager,
-    globals: PlayerGlobals
+    globals: PlayerGlobals,
   ): TemplateComponent {
     switch (json.type) {
       case TemplateComponentType.Group:
@@ -107,7 +107,7 @@ export const Template: Component<{
     <div
       data-component="template"
       data-name={props.name}
-      style={props.style || { width: '100%', height: '100%' }}
+      style={props.style || { width: "100%", height: "100%" }}
     >
       <Item
         config={props.config}

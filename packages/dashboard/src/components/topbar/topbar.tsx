@@ -1,35 +1,29 @@
-import {
-  Component,
-  Show,
-  createEffect,
-  createSignal,
-  createMemo,
-} from 'solid-js';
-import './topbar.scss';
+import { Component, Show, createEffect, createSignal, createMemo } from "solid-js";
+import "./topbar.scss";
 
-import { checkAuth, getUser, resetSession, authFetch } from '../auth';
-import { A, useNavigate } from '@solidjs/router';
-import TopbarLink from '../topbar-link/topbar-link';
-import Search from '../search/search';
+import { checkAuth, getUser, resetSession, authFetch } from "../auth";
+import { A, useNavigate } from "@solidjs/router";
+import TopbarLink from "../topbar-link/topbar-link";
+import Search from "../search/search";
 
 // Find any icon here: https://solid-icons.vercel.app/search/settings
-import { FaRegularBell } from 'solid-icons/fa';
-import { TbHelpCircle, TbKeyboard, TbRocket } from 'solid-icons/tb';
+import { FaRegularBell } from "solid-icons/fa";
+import { TbHelpCircle, TbKeyboard, TbRocket } from "solid-icons/tb";
 
-import defaultLogo from '../../assets/castmill-logo-topbar.png';
-import DropdownMenu from '../dropdown-menu/dropdown-menu';
-import LanguageSelector from '../language-selector/language-selector';
-import { LoadingProgressBar } from '../loading-progress-bar/loading-progress-bar';
-import NotificationBell from '../notification-bell/notification-bell';
+import defaultLogo from "../../assets/castmill-logo-topbar.png";
+import DropdownMenu from "../dropdown-menu/dropdown-menu";
+import LanguageSelector from "../language-selector/language-selector";
+import { LoadingProgressBar } from "../loading-progress-bar/loading-progress-bar";
+import NotificationBell from "../notification-bell/notification-bell";
 
-import { baseUrl } from '../../env';
-import { useI18n } from '../../i18n';
-import { store, setStore } from '../../store/store';
-import { ShortcutsLegend } from '../shortcuts-legend/shortcuts-legend';
-import { GlobalShortcuts } from '../global-shortcuts/global-shortcuts';
-import { useSelectedOrganizationLogo } from '../../hooks/use-selected-organization-logo';
-import { OnboardingStep } from '../../interfaces/onboarding-progress.interface';
-import { ONBOARDING_STEPS } from '../../config/onboarding-steps';
+import { baseUrl } from "../../env";
+import { useI18n } from "../../i18n";
+import { store, setStore } from "../../store/store";
+import { ShortcutsLegend } from "../shortcuts-legend/shortcuts-legend";
+import { GlobalShortcuts } from "../global-shortcuts/global-shortcuts";
+import { useSelectedOrganizationLogo } from "../../hooks/use-selected-organization-logo";
+import { OnboardingStep } from "../../interfaces/onboarding-progress.interface";
+import { ONBOARDING_STEPS } from "../../config/onboarding-steps";
 
 const Topbar: Component = () => {
   const [triggerLogout, setTriggerLogout] = createSignal(false);
@@ -63,16 +57,16 @@ const Topbar: Component = () => {
   const logout = async () => {
     // Log the user out
     const result = await authFetch(`${baseUrl}/sessions`, {
-      method: 'DELETE',
+      method: "DELETE",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     });
 
     if (result.status === 200) {
       // Reset the user's session
       resetSession();
-      navigate('/login');
+      navigate("/login");
     }
   };
 
@@ -86,10 +80,7 @@ const Topbar: Component = () => {
     <>
       <LoadingProgressBar loading={store.loadingAddons} />
       <GlobalShortcuts onShowShortcuts={() => setShowShortcuts(true)} />
-      <ShortcutsLegend
-        show={showShortcuts()}
-        onClose={() => setShowShortcuts(false)}
-      />
+      <ShortcutsLegend show={showShortcuts()} onClose={() => setShowShortcuts(false)} />
       <header class="castmill-header">
         <nav class="main">
           <a href="/">
@@ -114,21 +105,21 @@ const Topbar: Component = () => {
             <TopbarLink
               to="https://docs.castmill.io"
               icon={TbHelpCircle}
-              text={t('topbar.help')}
+              text={t("topbar.help")}
               external={true}
             />
 
             <Show
               when={
                 !/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-                  navigator.userAgent
+                  navigator.userAgent,
                 )
               }
             >
               <div
                 class="keyboard-shortcuts-icon"
                 onClick={() => setShowShortcuts(true)}
-                title={t('shortcuts.showShortcutsLegend')}
+                title={t("shortcuts.showShortcutsLegend")}
               >
                 <TbKeyboard />
               </div>
@@ -138,15 +129,15 @@ const Topbar: Component = () => {
             <div
               class="getting-started-container"
               classList={{
-                'animate-pulse': store.onboarding?.highlightGuideButton,
+                "animate-pulse": store.onboarding?.highlightGuideButton,
               }}
               data-onboarding="getting-started"
               onClick={() => {
                 // Stop highlight animation when user clicks
-                setStore('onboarding', 'highlightGuideButton', false);
-                setStore('onboarding', 'showTour', true);
+                setStore("onboarding", "highlightGuideButton", false);
+                setStore("onboarding", "showTour", true);
               }}
-              title={`${t('topbar.gettingStarted')} (${onboardingProgress().completed}/${onboardingProgress().total})`}
+              title={`${t("topbar.gettingStarted")} (${onboardingProgress().completed}/${onboardingProgress().total})`}
             >
               {/* SVG Progress Ring */}
               <svg class="progress-ring" viewBox="0 0 36 36">
@@ -182,9 +173,7 @@ const Topbar: Component = () => {
             <div class="topbar-dropdowns">
               <LanguageSelector
                 onLanguageChange={() => {
-                  store.onboarding.completeStep?.(
-                    OnboardingStep.ChooseLanguage
-                  );
+                  store.onboarding.completeStep?.(OnboardingStep.ChooseLanguage);
                 }}
               />
               <DropdownMenu
@@ -192,9 +181,9 @@ const Topbar: Component = () => {
                   <div {...props}>{getUser().name || getUser().email}</div>
                 )}
               >
-                <A href="/settings">{t('common.settings')}</A>
+                <A href="/settings">{t("common.settings")}</A>
                 <button class="logout" onClick={() => setTriggerLogout(true)}>
-                  {t('common.logout')}
+                  {t("common.logout")}
                 </button>
               </DropdownMenu>
             </div>

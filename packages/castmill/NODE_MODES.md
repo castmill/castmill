@@ -11,11 +11,11 @@ web nodes.
 The node role is selected with the `CASTMILL_NODE_MODE` environment variable
 (or `config :castmill, :node_mode`):
 
-| Mode                   | HTTP endpoint | BullMQ workers | Completion listeners |
-| ---------------------- | :-----------: | :------------: | :------------------: |
-| `web+worker` (default) |      yes      |      yes       | non-local queues only |
+| Mode                   | HTTP endpoint | BullMQ workers |           Completion listeners           |
+| ---------------------- | :-----------: | :------------: | :--------------------------------------: |
+| `web+worker` (default) |      yes      |      yes       |          non-local queues only           |
 | `web`                  |      yes      |       no       | all configured `completion_event_queues` |
-| `worker`               |      no       |      yes       |          no           |
+| `worker`               |      no       |      yes       |                    no                    |
 
 - **`web+worker`** — the all-in-one node. This is exactly the historical
   behavior and what unset/legacy deployments get, so single-node deployments
@@ -41,7 +41,7 @@ In a split topology the worker and web tiers share only PostgreSQL, so a direct
 
 1. The worker's `process/1` returns a **structured result** (for the
    transcoders: `{:ok, %{"media_id" => ..., "status" => ..., "status_message"
-   => ..., "files" => ..., "size" => ...}}`). BullMQ stores this as the job's
+=> ..., "files" => ..., "size" => ...}}`). BullMQ stores this as the job's
    `returnvalue`.
 2. BullMQ streams `:completed` / `:failed` events **through PostgreSQL**
    (`BullMQ.Backends.Postgres`).

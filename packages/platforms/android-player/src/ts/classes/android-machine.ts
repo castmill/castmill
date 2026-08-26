@@ -1,15 +1,10 @@
-import { Device } from '@capacitor/device';
-import { Toast } from '@capacitor/toast';
-import { App } from '@capacitor/app';
-import { Preferences } from '@capacitor/preferences';
-import {
-  Machine,
-  DeviceInfo,
-  SettingKey,
-  TelemetryData,
-} from '@castmill/device';
-import { Castmill } from '../../plugins/castmill';
-import { delay } from '../utils';
+import { Device } from "@capacitor/device";
+import { Toast } from "@capacitor/toast";
+import { App } from "@capacitor/app";
+import { Preferences } from "@capacitor/preferences";
+import { Machine, DeviceInfo, SettingKey, TelemetryData } from "@castmill/device";
+import { Castmill } from "../../plugins/castmill";
+import { delay } from "../utils";
 
 export class AndroidMachine implements Machine {
   async setSetting(key: SettingKey, value: string): Promise<void> {
@@ -31,29 +26,25 @@ export class AndroidMachine implements Machine {
 
   async storeCredentials(credentials: string): Promise<void> {
     await Preferences.set({
-      key: 'credentials',
+      key: "credentials",
       value: credentials,
     });
   }
 
   async getCredentials(): Promise<string | null> {
-    const { value } = await Preferences.get({ key: 'credentials' });
+    const { value } = await Preferences.get({ key: "credentials" });
     return value;
   }
 
   async removeCredentials(): Promise<void> {
-    await Preferences.remove({ key: 'credentials' });
+    await Preferences.remove({ key: "credentials" });
   }
 
-  async getLocation(): Promise<
-    undefined | { latitude: number; longitude: number }
-  > {
+  async getLocation(): Promise<undefined | { latitude: number; longitude: number }> {
     try {
-      const location = await new Promise<GeolocationPosition>(
-        (resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject);
-        }
-      );
+      const location = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject);
+      });
 
       return {
         latitude: location.coords.latitude,
@@ -75,11 +66,11 @@ export class AndroidMachine implements Machine {
       appInfo = await App.getInfo();
     } catch (error) {
       console.error(
-        `Error getting app info. This is expoected when running in a browser: ${error}`
+        `Error getting app info. This is expoected when running in a browser: ${error}`,
       );
       // App plugin not available
       // This is the case when running in a browser
-      appInfo = { version: 'N/A' };
+      appInfo = { version: "N/A" };
     }
     const deviceInfo = await Device.getInfo();
 
@@ -101,7 +92,7 @@ export class AndroidMachine implements Machine {
    */
   async restart(): Promise<void> {
     Toast.show({
-      text: 'About to restart',
+      text: "About to restart",
     });
 
     await delay(3000);
@@ -114,7 +105,7 @@ export class AndroidMachine implements Machine {
    */
   async quit(): Promise<void> {
     Toast.show({
-      text: 'About to quit',
+      text: "About to quit",
     });
 
     await delay(3000);
@@ -128,7 +119,7 @@ export class AndroidMachine implements Machine {
    */
   async reboot(): Promise<void> {
     Toast.show({
-      text: 'About to reboot',
+      text: "About to reboot",
     });
 
     await delay(3000);
@@ -142,7 +133,7 @@ export class AndroidMachine implements Machine {
    */
   async shutdown(): Promise<void> {
     //TODO: Implement
-    console.log('Shutdown');
+    console.log("Shutdown");
   }
 
   /**
@@ -150,7 +141,7 @@ export class AndroidMachine implements Machine {
    */
   async update(): Promise<void> {
     //TODO: Implement
-    console.log('Update');
+    console.log("Update");
   }
 
   /**
@@ -187,7 +178,7 @@ export class AndroidMachine implements Machine {
         };
       }
     } catch (error) {
-      console.error('Error getting device info for telemetry:', error);
+      console.error("Error getting device info for telemetry:", error);
     }
 
     // Battery info
@@ -200,7 +191,7 @@ export class AndroidMachine implements Machine {
         };
       }
     } catch (error) {
-      console.error('Error getting battery info:', error);
+      console.error("Error getting battery info:", error);
     }
 
     // Network info via Navigator API (Network Information API)
@@ -215,7 +206,7 @@ export class AndroidMachine implements Machine {
         };
       }
     } catch (error) {
-      console.error('Error getting network info:', error);
+      console.error("Error getting network info:", error);
     }
 
     return telemetry;

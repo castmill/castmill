@@ -1,10 +1,7 @@
 /** @jsxImportSource solid-js */
-import { Component, createSignal, onMount, onCleanup } from 'solid-js';
-import {
-  formatRelativeTimeLocalized,
-  formatTimestamp,
-} from '../formatters/time';
-import styles from './timestamp.module.scss';
+import { Component, createSignal, onMount, onCleanup } from "solid-js";
+import { formatRelativeTimeLocalized, formatTimestamp } from "../formatters/time";
+import styles from "./timestamp.module.scss";
 
 export interface TimestampProps {
   /**
@@ -16,7 +13,7 @@ export interface TimestampProps {
    * Display mode: 'relative' shows "2 hours ago", 'absolute' shows "May 10, 2025, 08:39 UTC"
    * @default 'relative'
    */
-  mode?: 'relative' | 'absolute';
+  mode?: "relative" | "absolute";
 
   /**
    * Whether to show a tooltip with absolute time when hovering (only applies to relative mode)
@@ -36,12 +33,12 @@ export interface TimestampProps {
  * In absolute mode, shows formatted date like "May 10, 2025, 08:39 UTC".
  */
 export const Timestamp: Component<TimestampProps> = (props) => {
-  const mode = () => props.mode ?? 'relative';
+  const mode = () => props.mode ?? "relative";
   const showTooltip = () => props.showTooltip ?? true;
 
   // Compute display text based on mode
   const displayText = () => {
-    if (mode() === 'relative') {
+    if (mode() === "relative") {
       return formatRelativeTimeLocalized(props.value, props.locale);
     } else {
       return formatTimestamp(props.value);
@@ -53,14 +50,14 @@ export const Timestamp: Component<TimestampProps> = (props) => {
     if (showTooltip()) {
       return formatTimestamp(props.value);
     }
-    return '';
+    return "";
   };
 
   const [tick, setTick] = createSignal(0);
 
   // Update tick every minute for relative time to trigger re-render
   onMount(() => {
-    if (mode() === 'relative') {
+    if (mode() === "relative") {
       const interval = setInterval(() => {
         setTick(tick() + 1);
       }, 60000); // Update every minute
@@ -72,7 +69,7 @@ export const Timestamp: Component<TimestampProps> = (props) => {
   const _ = tick();
 
   // If tooltip is disabled or mode is absolute, render simple span
-  if (!showTooltip() || mode() === 'absolute') {
+  if (!showTooltip() || mode() === "absolute") {
     return <span class={styles.timestamp}>{displayText()}</span>;
   }
 

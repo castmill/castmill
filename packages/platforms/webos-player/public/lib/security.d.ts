@@ -4,17 +4,17 @@ interface Security {
   existServerCertificate(
     successCallback: (cbObject: ExistServerCertificateResponse) => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: ExistServerCertificateOptions
+    options: ExistServerCertificateOptions,
   ): void;
   registerServerCertificate(
     successCallback: () => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: RegisterServerCertificateOptions
+    options: RegisterServerCertificateOptions,
   ): void;
   unregisterServerCertificate(
     successCallback: () => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: UnregisterServerCertificateOptions
+    options: UnregisterServerCertificateOptions,
   ): void;
 }
 

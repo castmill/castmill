@@ -36,15 +36,15 @@ This directory contains the internationalization system for the Castmill Dashboa
 ### Basic Usage in Components
 
 ```tsx
-import { useI18n } from '../../i18n';
+import { useI18n } from "../../i18n";
 
 function MyComponent() {
   const { t } = useI18n();
 
   return (
     <div>
-      <h1>{t('common.settings')}</h1>
-      <button>{t('common.save')}</button>
+      <h1>{t("common.settings")}</h1>
+      <button>{t("common.save")}</button>
     </div>
   );
 }
@@ -53,16 +53,13 @@ function MyComponent() {
 ### Switching Language
 
 ```tsx
-import { useI18n, SUPPORTED_LOCALES } from '../../i18n';
+import { useI18n, SUPPORTED_LOCALES } from "../../i18n";
 
 function LanguageSwitcher() {
   const { locale, setLocale } = useI18n();
 
   return (
-    <select
-      value={locale()}
-      onChange={(e) => setLocale(e.target.value as Locale)}
-    >
+    <select value={locale()} onChange={(e) => setLocale(e.target.value as Locale)}>
       {SUPPORTED_LOCALES.map((loc) => (
         <option value={loc.code}>{loc.nativeName}</option>
       ))}
@@ -90,7 +87,7 @@ const message = t('greeting.hello', { name: 'John' });
 Handle singular/plural forms correctly:
 
 ```tsx
-import { useI18n } from '../../i18n';
+import { useI18n } from "../../i18n";
 
 function ItemList() {
   const { tp } = useI18n();
@@ -98,10 +95,10 @@ function ItemList() {
 
   return (
     <div>
-      <p>{tp('plurals.items', itemCount)}</p>
+      <p>{tp("plurals.items", itemCount)}</p>
       {/* Displays: "5 items" */}
 
-      <p>{tp('plurals.items', 1)}</p>
+      <p>{tp("plurals.items", 1)}</p>
       {/* Displays: "1 item" */}
     </div>
   );
@@ -128,11 +125,11 @@ The system automatically selects the correct plural form based on the locale's r
 Format dates according to locale conventions:
 
 ```tsx
-import { useI18n } from '../../i18n';
+import { useI18n } from "../../i18n";
 
 function DateDisplay() {
   const { formatDate } = useI18n();
-  const date = new Date('2024-01-15');
+  const date = new Date("2024-01-15");
 
   return (
     <div>
@@ -140,10 +137,10 @@ function DateDisplay() {
       {/* English: "January 15, 2024" */}
       {/* Spanish: "15 de enero de 2024" */}
 
-      <p>{formatDate(date, 'PP')}</p>
+      <p>{formatDate(date, "PP")}</p>
       {/* Short date format */}
 
-      <p>{formatDate(date, 'PPpp')}</p>
+      <p>{formatDate(date, "PPpp")}</p>
       {/* Date with time */}
     </div>
   );
@@ -162,7 +159,7 @@ Format strings follow [date-fns format patterns](https://date-fns.org/docs/forma
 Format numbers according to locale conventions:
 
 ```tsx
-import { useI18n } from '../../i18n';
+import { useI18n } from "../../i18n";
 
 function Statistics() {
   const { formatNumber } = useI18n();
@@ -173,7 +170,7 @@ function Statistics() {
       {/* English: "1,234.56" */}
       {/* German: "1.234,56" */}
 
-      <p>{formatNumber(0.85, { style: 'percent' })}</p>
+      <p>{formatNumber(0.85, { style: "percent" })}</p>
       {/* "85%" */}
 
       <p>{formatNumber(1234.5, { minimumFractionDigits: 2 })}</p>
@@ -188,21 +185,21 @@ function Statistics() {
 Display currency with proper symbols and formats:
 
 ```tsx
-import { useI18n } from '../../i18n';
+import { useI18n } from "../../i18n";
 
 function Price() {
   const { formatCurrency } = useI18n();
 
   return (
     <div>
-      <p>{formatCurrency(99.99, 'USD')}</p>
+      <p>{formatCurrency(99.99, "USD")}</p>
       {/* English: "$99.99" */}
       {/* Spanish: "99,99 US$" */}
 
-      <p>{formatCurrency(1234.56, 'EUR')}</p>
+      <p>{formatCurrency(1234.56, "EUR")}</p>
       {/* "€1,234.56" or "1.234,56 €" depending on locale */}
 
-      <p>{formatCurrency(99.99, 'JPY', { minimumFractionDigits: 0 })}</p>
+      <p>{formatCurrency(99.99, "JPY", { minimumFractionDigits: 0 })}</p>
       {/* "¥100" (no decimals for JPY) */}
     </div>
   );
@@ -410,15 +407,15 @@ grep -r ">[A-Z]" src --include="*.tsx" | grep -v "import" | grep -v "//"
 Use this template for new components:
 
 ```tsx
-import { useI18n } from '../../i18n';
+import { useI18n } from "../../i18n";
 
 function MyComponent() {
   const { t } = useI18n();
 
   return (
     <div>
-      <h1>{t('myComponent.title')}</h1>
-      <button>{t('common.save')}</button>
+      <h1>{t("myComponent.title")}</h1>
+      <button>{t("common.save")}</button>
     </div>
   );
 }

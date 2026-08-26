@@ -230,8 +230,8 @@ When creating new utility scripts for the Dashboard:
  *   Detailed explanation of what the script does
  */
 
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 
 // Your script logic here
 ```

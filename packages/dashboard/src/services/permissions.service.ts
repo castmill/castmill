@@ -5,30 +5,23 @@
  * Permissions are used to disable UI actions that users are not allowed to perform.
  */
 
-import { baseUrl } from '../env';
+import { baseUrl } from "../env";
 
-import { authFetch } from '../components/auth';
-export type Role = 'admin' | 'manager' | 'member' | 'guest';
+import { authFetch } from "../components/auth";
+export type Role = "admin" | "manager" | "member" | "guest";
 
 export type ResourceType =
-  | 'playlists'
-  | 'medias'
-  | 'channels'
-  | 'devices'
-  | 'teams'
-  | 'widgets'
-  | 'layouts'
-  | 'tags'
-  | 'organizations';
+  | "playlists"
+  | "medias"
+  | "channels"
+  | "devices"
+  | "teams"
+  | "widgets"
+  | "layouts"
+  | "tags"
+  | "organizations";
 
-export type Action =
-  | 'list'
-  | 'show'
-  | 'create'
-  | 'update'
-  | 'delete'
-  | 'publish'
-  | 'manage';
+export type Action = "list" | "show" | "create" | "update" | "delete" | "publish" | "manage";
 
 export interface PermissionsResponse {
   role: Role;
@@ -39,16 +32,14 @@ export interface PermissionsResponse {
 /**
  * Fetches the permissions for the current user in the specified organization
  */
-export async function fetchPermissions(
-  organizationId: string
-): Promise<PermissionsResponse> {
+export async function fetchPermissions(organizationId: string): Promise<PermissionsResponse> {
   const response = await authFetch(
     `${baseUrl}/dashboard/organizations/${organizationId}/permissions`,
     {
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
-    }
+    },
   );
 
   if (!response.ok) {
@@ -64,7 +55,7 @@ export async function fetchPermissions(
 export function canPerformAction(
   permissions: Record<ResourceType, Action[]> | undefined,
   resource: ResourceType,
-  action: Action
+  action: Action,
 ): boolean {
   if (!permissions) {
     return false;
@@ -83,7 +74,7 @@ export function canPerformAction(
  */
 export function getAllowedActions(
   permissions: Record<ResourceType, Action[]> | undefined,
-  resource: ResourceType
+  resource: ResourceType,
 ): Action[] {
   if (!permissions) {
     return [];
@@ -95,10 +86,7 @@ export function getAllowedActions(
 /**
  * Checks if the user has any of the specified roles
  */
-export function hasRole(
-  userRole: Role | undefined,
-  allowedRoles: Role[]
-): boolean {
+export function hasRole(userRole: Role | undefined, allowedRoles: Role[]): boolean {
   if (!userRole) {
     return false;
   }

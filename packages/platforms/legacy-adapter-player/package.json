@@ -2,8 +2,8 @@
   "name": "@castmill/legacy-adapter-player",
   "version": "1.0.0",
   "description": "",
-  "type": "module",
   "license": "AGPL-3.0-or-later",
+  "type": "module",
   "scripts": {
     "format": "oxfmt --write .",
     "format:check": "oxfmt .",
@@ -13,6 +13,12 @@
     "build": "vite build",
     "serve": "vite preview",
     "test": "vitest run"
+  },
+  "dependencies": {
+    "@castmill/cache": "*",
+    "@castmill/device": "*",
+    "@castmill/player": "*",
+    "solid-js": "^1.8.11"
   },
   "devDependencies": {
     "@solidjs/testing-library": "^0.8.5",
@@ -27,11 +33,5 @@
     "vite-plugin-solid": "^2.8.2",
     "vite-plugin-static-copy": "^1.0.5",
     "vitest": "^1.5.3"
-  },
-  "dependencies": {
-    "@castmill/cache": "*",
-    "@castmill/device": "*",
-    "@castmill/player": "*",
-    "solid-js": "^1.8.11"
   }
 }

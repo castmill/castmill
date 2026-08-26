@@ -1,16 +1,16 @@
-import { JSX } from 'solid-js';
+import { JSX } from "solid-js";
 
-import { ResourceManager } from '@castmill/cache';
-import { Observable, forkJoin, from, merge, of } from 'rxjs';
-import { mergeMap, map, switchMap } from 'rxjs/operators';
-import { TimelineWidget } from '../timeline-widget';
+import { ResourceManager } from "@castmill/cache";
+import { Observable, forkJoin, from, merge, of } from "rxjs";
+import { mergeMap, map, switchMap } from "rxjs/operators";
+import { TimelineWidget } from "../timeline-widget";
 
-import { render } from 'solid-js/web';
-import { Template, TemplateComponent } from './template';
-import { TemplateConfig } from './binding';
-import { JsonWidget } from '../../interfaces';
-import { JsonWidgetConfig } from '../../interfaces/json-widget-config.interface';
-import { PlayerGlobals } from '../../interfaces/player-globals.interface';
+import { render } from "solid-js/web";
+import { Template, TemplateComponent } from "./template";
+import { TemplateConfig } from "./binding";
+import { JsonWidget } from "../../interfaces";
+import { JsonWidgetConfig } from "../../interfaces/json-widget-config.interface";
+import { PlayerGlobals } from "../../interfaces/player-globals.interface";
 
 /**
  * Template Widget
@@ -46,21 +46,16 @@ export class TemplateWidget extends TimelineWidget {
 
   constructor(
     resourceManager: ResourceManager,
-    private opts: TemplateWidgetOptions
+    private opts: TemplateWidgetOptions,
   ) {
     super(resourceManager, opts);
 
-    this.template = TemplateComponent.fromJSON(
-      opts.widget.template,
-      resourceManager,
-      opts.globals
-    );
+    this.template = TemplateComponent.fromJSON(opts.widget.template, resourceManager, opts.globals);
 
     // Check for display_duration or duration option and set timeline duration
     // This prevents animations from looping when a fixed duration is specified
-    const durationOption =
-      opts.config.options?.display_duration ?? opts.config.options?.duration;
-    if (typeof durationOption === 'number' && durationOption > 0) {
+    const durationOption = opts.config.options?.display_duration ?? opts.config.options?.duration;
+    if (typeof durationOption === "number" && durationOption > 0) {
       this.displayDuration = durationOption * 1000; // Convert seconds to ms
       this.timeline.setDuration(this.displayDuration);
     }
@@ -79,7 +74,7 @@ export class TemplateWidget extends TimelineWidget {
 
   private loadFonts() {
     if (!this.opts.fonts || this.opts.fonts.length === 0) {
-      return of('no:fonts');
+      return of("no:fonts");
     }
 
     return from(this.opts.fonts).pipe(
@@ -87,15 +82,12 @@ export class TemplateWidget extends TimelineWidget {
         from(this.resourceManager.getMedia(font.url)).pipe(
           map((url) => {
             if (!this.fontFaces[font.name]) {
-              this.fontFaces[font.name] = this.loadFont(
-                font.name,
-                url || font.url
-              );
+              this.fontFaces[font.name] = this.loadFont(font.name, url || font.url);
             }
             return of(this.fontFaces[font.name]);
-          })
-        )
-      )
+          }),
+        ),
+      ),
     );
   }
 
@@ -110,17 +102,17 @@ export class TemplateWidget extends TimelineWidget {
 
   private loadMedias() {
     if (!this.opts.medias || this.opts.medias.length === 0) {
-      return of('no:medias');
+      return of("no:medias");
     }
     return from(this.opts.medias).pipe(
       mergeMap((url) =>
         from(this.resourceManager.getMedia(url)).pipe(
           map((cachedUrl) => {
             this.medias[url] = cachedUrl || url;
-            return of('media:cached');
-          })
-        )
-      )
+            return of("media:cached");
+          }),
+        ),
+      ),
     );
   }
 
@@ -164,24 +156,24 @@ export class TemplateWidget extends TimelineWidget {
                   resourceManager: this.resourceManager,
                   onReady: () => {
                     this.seek(offset + (Date.now() - basetime));
-                    subscriber.next('template-widget:shown');
+                    subscriber.next("template-widget:shown");
                     subscriber.complete();
                   },
                 }),
-              el
+              el,
             );
           });
         }
 
         // Seek to compensate for the time spent loading the assets.
         this.seek(offset + (Date.now() - basetime));
-        return of('template-widget:shown');
-      })
+        return of("template-widget:shown");
+      }),
     );
   }
 
   mimeType(): string {
-    return 'template/widget';
+    return "template/widget";
   }
 
   duration(): number {

@@ -4,21 +4,21 @@ interface InputSource {
   changeInputSource(
     successCallback: () => void,
     errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
-    options: ChangeInputSourceOptions
+    options: ChangeInputSourceOptions,
   ): void;
   getExternalInputList(
     successCallback: (cbObject: ExternalInputList) => void,
     errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
-    options: GetExternalInputListOptions
+    options: GetExternalInputListOptions,
   ): void;
   getInputSourceStatus(
     successCallback: (cbObject: InputSourceStatus) => void,
-    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void
+    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
   ): void;
   initialize(
     successCallback: () => void,
     errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
-    options: InitializeOptions
+    options: InitializeOptions,
   ): void;
 }
 
@@ -46,7 +46,7 @@ interface InputSourceStatus {
   inputSourceList: {
     inputPort: string; // e.g., "ext://hdmi:2", "ext://dp:1"
   }[];
-  currentSignalState: 'good' | 'bad' | 'unknown'; // signal status of the current input source
+  currentSignalState: "good" | "bad" | "unknown"; // signal status of the current input source
   currentInputSource: string; // input source label of the current input source
 }
 

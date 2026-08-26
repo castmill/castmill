@@ -1,4 +1,4 @@
-import { createEffect, onCleanup } from 'solid-js';
+import { createEffect, onCleanup } from "solid-js";
 
 /**
  * Hook to handle onboarding highlight functionality.
@@ -13,7 +13,7 @@ export function useOnboardingHighlight(
         { highlight?: string },
         (params: Record<string, any>, options?: { replace?: boolean }) => void,
       ]
-    | undefined
+    | undefined,
 ) {
   createEffect(() => {
     if (!params) return;
@@ -44,14 +44,14 @@ export function useOnboardingHighlight(
         const element = document.querySelector(resolvedSelector);
         if (element) {
           // Scroll element into view
-          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          element.scrollIntoView({ behavior: "smooth", block: "center" });
 
           // Add highlight class
-          element.classList.add('onboarding-highlight');
+          element.classList.add("onboarding-highlight");
 
           // Remove highlight after animation completes
           removeTimeout = setTimeout(() => {
-            element.classList.remove('onboarding-highlight');
+            element.classList.remove("onboarding-highlight");
           }, 3000);
           return;
         }

@@ -1,4 +1,4 @@
-import { Model } from './data/model';
+import { Model } from "./data/model";
 
 export interface Binding<T extends any> {
   key: string;
@@ -119,32 +119,29 @@ export interface TemplateConfig<Options = any, Data = any> {
  * Type guard to check if a value is a simple key binding.
  */
 export const isBinding = (value: any): value is Binding<any> =>
-  typeof value === 'object' &&
+  typeof value === "object" &&
   value !== null &&
-  'key' in value &&
-  !('switch' in value) &&
-  !('cond' in value);
+  "key" in value &&
+  !("switch" in value) &&
+  !("cond" in value);
 
 /**
  * Type guard to check if a value is a switch binding.
  */
 export const isSwitchBinding = (value: any): value is SwitchBinding =>
-  typeof value === 'object' && value !== null && 'switch' in value;
+  typeof value === "object" && value !== null && "switch" in value;
 
 /**
  * Type guard to check if a value is a conditional binding.
  */
 export const isConditionalBinding = (value: any): value is ConditionalBinding =>
-  typeof value === 'object' && value !== null && 'cond' in value;
+  typeof value === "object" && value !== null && "cond" in value;
 
 /**
  * Type guard to check if a value is a concat binding.
  */
 export const isConcatBinding = (value: any): value is ConcatBinding =>
-  typeof value === 'object' &&
-  value !== null &&
-  'concat' in value &&
-  Array.isArray(value.concat);
+  typeof value === "object" && value !== null && "concat" in value && Array.isArray(value.concat);
 
 /**
  * Type guard to check if a value is any type of binding.
@@ -159,9 +156,9 @@ export const resolveKey = (
   key: string,
   config: TemplateConfig,
   context: any,
-  globals: { [index: string]: any }
+  globals: { [index: string]: any },
 ) => {
-  if (key.startsWith('$.')) {
+  if (key.startsWith("$.")) {
     // Resolve context path removing the "$." prefix
     return Model.get(context, key.substring(2), globals);
   }
@@ -172,11 +169,11 @@ export const resolveBinding = (
   binding: Binding<any>,
   config: TemplateConfig,
   currentContext: any,
-  globals: { [index: string]: any }
+  globals: { [index: string]: any },
 ) => {
   const result = resolveKey(binding.key, config, currentContext, globals);
 
-  if (typeof result == 'undefined' || result[1] != null) {
+  if (typeof result == "undefined" || result[1] != null) {
     return binding.default;
   }
   return result[0];
@@ -189,7 +186,7 @@ export const resolveSwitchBinding = (
   binding: SwitchBinding,
   config: TemplateConfig,
   context: any,
-  globals: { [index: string]: any }
+  globals: { [index: string]: any },
 ): any => {
   const { key, cases } = binding.switch;
 
@@ -198,7 +195,7 @@ export const resolveSwitchBinding = (
 
   if (error || value === undefined || value === null) {
     // If we can't resolve the key, use default case
-    const defaultCase = cases['default'];
+    const defaultCase = cases["default"];
     return defaultCase !== undefined
       ? resolveOption(defaultCase, config, context, globals)
       : undefined;
@@ -213,7 +210,7 @@ export const resolveSwitchBinding = (
   }
 
   // Fall back to default case
-  const defaultCase = cases['default'];
+  const defaultCase = cases["default"];
   return defaultCase !== undefined
     ? resolveOption(defaultCase, config, context, globals)
     : undefined;
@@ -226,7 +223,7 @@ export const resolveConditionalBinding = (
   binding: ConditionalBinding,
   config: TemplateConfig,
   context: any,
-  globals: { [index: string]: any }
+  globals: { [index: string]: any },
 ): any => {
   const { key, gte, gt, lte, lt, eq, neq } = binding.cond;
   const thenValue = binding.cond.then;
@@ -243,13 +240,13 @@ export const resolveConditionalBinding = (
   // Evaluate conditions
   let conditionMet = false;
 
-  if (gte !== undefined && typeof value === 'number') {
+  if (gte !== undefined && typeof value === "number") {
     conditionMet = value >= gte;
-  } else if (gt !== undefined && typeof value === 'number') {
+  } else if (gt !== undefined && typeof value === "number") {
     conditionMet = value > gt;
-  } else if (lte !== undefined && typeof value === 'number') {
+  } else if (lte !== undefined && typeof value === "number") {
     conditionMet = value <= lte;
-  } else if (lt !== undefined && typeof value === 'number') {
+  } else if (lt !== undefined && typeof value === "number") {
     conditionMet = value < lt;
   } else if (eq !== undefined) {
     conditionMet = value === eq;
@@ -270,16 +267,14 @@ export const resolveConcatBinding = (
   binding: ConcatBinding,
   config: TemplateConfig,
   context: any,
-  globals: { [index: string]: any }
+  globals: { [index: string]: any },
 ): string => {
   return binding.concat
     .map((part) => {
       const resolved = resolveOption(part, config, context, globals);
-      return resolved !== undefined && resolved !== null
-        ? String(resolved)
-        : '';
+      return resolved !== undefined && resolved !== null ? String(resolved) : "";
     })
-    .join('');
+    .join("");
 };
 
 /**
@@ -290,7 +285,7 @@ export const resolveOption = (
   option: any,
   config: TemplateConfig,
   context: any,
-  globals: { [index: string]: any }
+  globals: { [index: string]: any },
 ): any => {
   if (isSwitchBinding(option)) {
     return resolveSwitchBinding(option, config, context, globals);

@@ -1,4 +1,4 @@
-@use '../../colors.scss';
+@use "../../colors.scss";
 
 .castmill-login {
   position: relative; /* Needed for absolute positioning of the child */
@@ -36,7 +36,7 @@
     margin-top: 10px;
   }
 
-  input[type='text'] {
+  input[type="text"] {
     width: 20em;
     padding: 10px 20px;
     margin: 10px 0;
@@ -136,7 +136,7 @@
     }
   }
 
-  input[type='email'] {
+  input[type="email"] {
     width: 20em;
     padding: 10px 20px;
     margin: 10px 0;

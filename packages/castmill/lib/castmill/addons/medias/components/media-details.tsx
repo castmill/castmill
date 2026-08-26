@@ -1,12 +1,12 @@
-import { createSignal, createEffect } from 'solid-js';
+import { createSignal, createEffect } from "solid-js";
 
-import { Button, FormItem, Timestamp } from '@castmill/ui-common';
+import { Button, FormItem, Timestamp } from "@castmill/ui-common";
 
-import { BsCheckLg, BsX } from 'solid-icons/bs';
-import { JsonMedia } from '@castmill/player';
-import { MediasUpdate } from '../services/medias.service';
-import { MediaPreview } from './media-preview';
-import { AddonStore } from '../../common/interfaces/addon-store';
+import { BsCheckLg, BsX } from "solid-icons/bs";
+import { JsonMedia } from "@castmill/player";
+import { MediasUpdate } from "../services/medias.service";
+import { MediaPreview } from "./media-preview";
+import { AddonStore } from "../../common/interfaces/addon-store";
 
 export const MediaDetails = (props: {
   media: JsonMedia;
@@ -14,8 +14,7 @@ export const MediaDetails = (props: {
   onSubmit: (mediaUpdate: Partial<MediasUpdate>) => Promise<boolean>;
 }) => {
   // Get i18n functions from store
-  const t = (key: string, params?: Record<string, any>) =>
-    props.store?.i18n?.t(key, params) || key;
+  const t = (key: string, params?: Record<string, any>) => props.store?.i18n?.t(key, params) || key;
 
   const [name, setName] = createSignal(props.media.name);
 
@@ -23,17 +22,17 @@ export const MediaDetails = (props: {
   const [errors, setErrors] = createSignal(new Map());
 
   const validateField = (fieldId: string, value: string) => {
-    let error = '';
+    let error = "";
     switch (fieldId) {
-      case 'name':
+      case "name":
         if (!value) {
-          error = 'Name is required';
+          error = "Name is required";
         } else if (value.length < 5) {
-          error = 'Name must be at least 5 characters';
+          error = "Name must be at least 5 characters";
         }
         break;
       default:
-        error = '';
+        error = "";
     }
 
     setErrors((prev) => new Map(prev).set(fieldId, error));
@@ -52,8 +51,7 @@ export const MediaDetails = (props: {
   return (
     <>
       <div class="info">
-        <span>Added on </span>{' '}
-        <Timestamp value={props.media.inserted_at} mode="relative" />.{' '}
+        <span>Added on </span> <Timestamp value={props.media.inserted_at} mode="relative" />.{" "}
         <span>Last updated on </span>
         <Timestamp value={props.media.updated_at} mode="relative" />
       </div>
@@ -69,17 +67,17 @@ export const MediaDetails = (props: {
       >
         <div class="form-inputs">
           <FormItem
-            label={t('common.name')}
+            label={t("common.name")}
             id="name"
             value={name()}
             placeholder="Enter media name"
             onInput={(value: string | number | boolean) => {
               const nextValue = String(value);
               setName(nextValue);
-              validateField('name', nextValue);
+              validateField("name", nextValue);
             }}
           >
-            <div class="error">{errors().get('name')}</div>
+            <div class="error">{errors().get("name")}</div>
           </FormItem>
         </div>
 
@@ -87,14 +85,14 @@ export const MediaDetails = (props: {
 
         <div class="actions">
           <Button
-            label={t('common.save')}
+            label={t("common.save")}
             type="submit"
             disabled={!isFormValid()}
             icon={BsCheckLg}
             color="success"
           />
           <Button
-            label={t('common.reset')}
+            label={t("common.reset")}
             onClick={() => {
               setName(props.media.name);
               setIsFormModified(false);

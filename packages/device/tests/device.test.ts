@@ -1,10 +1,10 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { EventEmitter } from 'eventemitter3';
-import { Device, Status } from '../src/classes/device';
-import { Cache, ResourceManager } from '@castmill/cache';
-import { Socket } from 'phoenix';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { EventEmitter } from "eventemitter3";
+import { Device, Status } from "../src/classes/device";
+import { Cache, ResourceManager } from "@castmill/cache";
+import { Socket } from "phoenix";
 
-vi.mock('@castmill/cache', () => ({
+vi.mock("@castmill/cache", () => ({
   Cache: vi.fn().mockImplementation(() => ({
     list: vi.fn().mockResolvedValue([]),
     count: vi.fn().mockResolvedValue(0),
@@ -17,7 +17,7 @@ vi.mock('@castmill/cache', () => ({
   })),
 }));
 
-vi.mock('phoenix', () => ({
+vi.mock("phoenix", () => ({
   Socket: vi.fn(),
 }));
 
@@ -43,14 +43,12 @@ function createMockPhoenixChannel(joinPush = createMockPush()) {
     join: vi.fn().mockReturnValue(joinPush),
     on: vi.fn(),
     push: vi.fn(),
-    state: 'closed' as string,
+    state: "closed" as string,
     _joinPush: joinPush,
   };
 }
 
-function createMockSocket(
-  mockChannel: ReturnType<typeof createMockPhoenixChannel>
-) {
+function createMockSocket(mockChannel: ReturnType<typeof createMockPhoenixChannel>) {
   return {
     connect: vi.fn(),
     channel: vi.fn().mockReturnValue(mockChannel),
@@ -69,7 +67,7 @@ function installPhoenixMocks() {
   return { mockPhoenixChannel: ch, mockSocket: sock };
 }
 
-describe('Device', () => {
+describe("Device", () => {
   let device: Device;
   let mockIntegration: any;
   let mockStorageIntegration: any;
@@ -94,42 +92,42 @@ describe('Device', () => {
     });
   });
 
-  it('should instantiate correctly and set defaults', () => {
+  it("should instantiate correctly and set defaults", () => {
     expect(device).toBeInstanceOf(EventEmitter);
-    expect(device['logger']).toBeDefined();
-    expect(device['cache']).toBeDefined();
-    expect(device['closing']).toBe(false);
-    expect(device['channels']).toEqual([]);
+    expect(device["logger"]).toBeDefined();
+    expect(device["cache"]).toBeDefined();
+    expect(device["closing"]).toBe(false);
+    expect(device["channels"]).toEqual([]);
   });
 
-  it('should initialize and get base URL', async () => {
-    mockIntegration.getSetting.mockResolvedValue('http://localhost:3000');
+  it("should initialize and get base URL", async () => {
+    mockIntegration.getSetting.mockResolvedValue("http://localhost:3000");
     await device.init();
-    expect(device['baseUrl']).toBe('http://localhost:3000');
+    expect(device["baseUrl"]).toBe("http://localhost:3000");
     expect(mockIntegration.getSetting).toHaveBeenCalled();
   });
 
-  it('should default to VITE_DEFAULT_BASE_URL if getBaseUrl returns null', async () => {
+  it("should default to VITE_DEFAULT_BASE_URL if getBaseUrl returns null", async () => {
     mockIntegration.getSetting.mockResolvedValue(null);
-    vi.stubEnv('VITE_DEV_BASE_URL', 'https://api.castmill.dev');
-    vi.stubEnv('VITE_DEFAULT_BASE_URL', 'https://default.castmill.io');
+    vi.stubEnv("VITE_DEV_BASE_URL", "https://api.castmill.dev");
+    vi.stubEnv("VITE_DEFAULT_BASE_URL", "https://default.castmill.io");
     await device.init();
-    const defaultBaseUrl = 'https://default.castmill.io';
-    expect(device['baseUrl']).toBe(defaultBaseUrl);
+    const defaultBaseUrl = "https://default.castmill.io";
+    expect(device["baseUrl"]).toBe(defaultBaseUrl);
   });
 
-  it('should default to VITE_PRODUCTION_BASE_URL if default and dev env values are unset', async () => {
+  it("should default to VITE_PRODUCTION_BASE_URL if default and dev env values are unset", async () => {
     mockIntegration.getSetting.mockResolvedValue(null);
-    vi.stubEnv('VITE_DEV_BASE_URL', '');
-    vi.stubEnv('VITE_DEFAULT_BASE_URL', '');
-    vi.stubEnv('VITE_PRODUCTION_BASE_URL', 'https://prod.castmill.io');
+    vi.stubEnv("VITE_DEV_BASE_URL", "");
+    vi.stubEnv("VITE_DEFAULT_BASE_URL", "");
+    vi.stubEnv("VITE_PRODUCTION_BASE_URL", "https://prod.castmill.io");
     await device.init();
-    expect(device['baseUrl']).toBe('https://prod.castmill.io');
+    expect(device["baseUrl"]).toBe("https://prod.castmill.io");
     expect(mockIntegration.getSetting).toHaveBeenCalled();
   });
 });
 
-describe('Device - Credentials', () => {
+describe("Device - Credentials", () => {
   let device: Device;
   let mockIntegration: any;
 
@@ -143,9 +141,9 @@ describe('Device - Credentials', () => {
     device = new Device(mockIntegration, {} as any);
   });
 
-  it('should get valid credentials', async () => {
+  it("should get valid credentials", async () => {
     const validCredentials = JSON.stringify({
-      device: { id: 'device1', token: 'token123', name: 'Device 1' },
+      device: { id: "device1", token: "token123", name: "Device 1" },
     });
 
     mockIntegration.getCredentials.mockResolvedValue(validCredentials);
@@ -153,20 +151,20 @@ describe('Device - Credentials', () => {
     expect(credentials).toEqual(JSON.parse(validCredentials));
   });
 
-  it('should return undefined for invalid credentials', async () => {
+  it("should return undefined for invalid credentials", async () => {
     mockIntegration.getCredentials.mockResolvedValue(null);
     const credentials = await device.getCredentials();
     expect(credentials).toBeUndefined();
   });
 
-  it('should handle invalid credentials', async () => {
-    mockIntegration.getCredentials.mockResolvedValue('{invalid_json');
+  it("should handle invalid credentials", async () => {
+    mockIntegration.getCredentials.mockResolvedValue("{invalid_json");
     const credentials = await device.getCredentials();
     expect(credentials).toBeUndefined();
   });
 });
 
-describe('Device - Start/Stop', () => {
+describe("Device - Start/Stop", () => {
   let device: Device;
   let mockIntegration: any;
   let mockStorageIntegration: any;
@@ -184,24 +182,24 @@ describe('Device - Start/Stop', () => {
     device = new Device(mockIntegration, mockStorageIntegration);
   });
 
-  it('should throw an error if credentials are invalid on start', async () => {
+  it("should throw an error if credentials are invalid on start", async () => {
     mockIntegration.getCredentials.mockResolvedValue(null);
-    await expect(device.start(document.createElement('div'))).rejects.toThrow(
-      'Invalid credentials'
+    await expect(device.start(document.createElement("div"))).rejects.toThrow(
+      "Invalid credentials",
     );
   });
 
-  it('should stop the device and set closing flag', async () => {
-    device['player'] = { stop: vi.fn() } as any;
-    const playerStopSpy = vi.spyOn(device['player'], 'stop');
+  it("should stop the device and set closing flag", async () => {
+    device["player"] = { stop: vi.fn() } as any;
+    const playerStopSpy = vi.spyOn(device["player"], "stop");
     await device.stop();
-    expect(device['closing']).toBe(true);
-    expect(device['player']).toBeUndefined();
+    expect(device["closing"]).toBe(true);
+    expect(device["player"]).toBeUndefined();
     expect(playerStopSpy).toHaveBeenCalled();
   });
 });
 
-describe('Device - Commands', () => {
+describe("Device - Commands", () => {
   let device: Device;
   let mockIntegration: any;
   let mockStorageIntegration: any;
@@ -228,10 +226,10 @@ describe('Device - Commands', () => {
     mockCache = {
       clean: vi.fn().mockResolvedValue(undefined),
     };
-    device['cache'] = mockCache;
+    device["cache"] = mockCache;
   });
 
-  it('should handle device_removed command by clearing credentials and cache', async () => {
+  it("should handle device_removed command by clearing credentials and cache", async () => {
     // Mock location.reload to prevent actual page reload in tests
     const originalLocation = window.location;
     delete (window as any).location;
@@ -245,17 +243,15 @@ describe('Device - Commands', () => {
     };
 
     // Get the command handler by calling initListeners
-    device['initListeners'](mockChannel as any);
+    device["initListeners"](mockChannel as any);
 
     // Find the 'command' event handler
-    const commandHandler = mockChannel.on.mock.calls.find(
-      (call) => call[0] === 'command'
-    )?.[1];
+    const commandHandler = mockChannel.on.mock.calls.find((call) => call[0] === "command")?.[1];
 
     expect(commandHandler).toBeDefined();
 
     // Simulate the device_removed command
-    await commandHandler({ command: 'device_removed' });
+    await commandHandler({ command: "device_removed" });
 
     // Verify that credentials were removed
     expect(mockIntegration.removeCredentials).toHaveBeenCalled();
@@ -271,7 +267,7 @@ describe('Device - Commands', () => {
   });
 });
 
-describe('Device - Channel Updates', () => {
+describe("Device - Channel Updates", () => {
   let device: Device;
   let mockIntegration: any;
   let mockStorageIntegration: any;
@@ -294,7 +290,7 @@ describe('Device - Channel Updates', () => {
     });
   });
 
-  it('should handle channel_updated event and update channel default_playlist_id', async () => {
+  it("should handle channel_updated event and update channel default_playlist_id", async () => {
     // Create a mock Phoenix channel
     const mockChannel = {
       on: vi.fn(),
@@ -303,248 +299,248 @@ describe('Device - Channel Updates', () => {
     };
 
     // Set up mock channels on the device
-    device['channels'] = [
+    device["channels"] = [
       {
         attrs: {
-          id: '123',
-          name: 'Test Channel',
-          default_playlist_id: '100',
+          id: "123",
+          name: "Test Channel",
+          default_playlist_id: "100",
         },
       } as any,
       {
         attrs: {
-          id: '456',
-          name: 'Another Channel',
-          default_playlist_id: '200',
+          id: "456",
+          name: "Another Channel",
+          default_playlist_id: "200",
         },
       } as any,
     ];
 
     // Call initListeners to set up the handlers
-    device['initListeners'](mockChannel as any);
+    device["initListeners"](mockChannel as any);
 
     // Find the 'channel_updated' event handler
     const channelUpdatedHandler = mockChannel.on.mock.calls.find(
-      (call) => call[0] === 'channel_updated'
+      (call) => call[0] === "channel_updated",
     )?.[1];
 
     expect(channelUpdatedHandler).toBeDefined();
 
     // Simulate the channel_updated event
     await channelUpdatedHandler({
-      event: 'channel_updated',
+      event: "channel_updated",
       channel_id: 123,
       default_playlist_id: 999,
     });
 
     // Verify that the channel's default_playlist_id was updated
-    expect(device['channels'][0].attrs.default_playlist_id).toBe('999');
+    expect(device["channels"][0].attrs.default_playlist_id).toBe("999");
 
     // Verify that the other channel was not affected
-    expect(device['channels'][1].attrs.default_playlist_id).toBe('200');
+    expect(device["channels"][1].attrs.default_playlist_id).toBe("200");
   });
 
-  it('should handle channel_updated event with null default_playlist_id', async () => {
+  it("should handle channel_updated event with null default_playlist_id", async () => {
     const mockChannel = {
       on: vi.fn(),
       push: vi.fn(),
       join: vi.fn(),
     };
 
-    device['channels'] = [
+    device["channels"] = [
       {
         attrs: {
-          id: '123',
-          name: 'Test Channel',
-          default_playlist_id: '100',
+          id: "123",
+          name: "Test Channel",
+          default_playlist_id: "100",
         },
       } as any,
     ];
 
-    device['initListeners'](mockChannel as any);
+    device["initListeners"](mockChannel as any);
 
     const channelUpdatedHandler = mockChannel.on.mock.calls.find(
-      (call) => call[0] === 'channel_updated'
+      (call) => call[0] === "channel_updated",
     )?.[1];
 
     expect(channelUpdatedHandler).toBeDefined();
 
     // Simulate the channel_updated event with null default_playlist_id
     await channelUpdatedHandler({
-      event: 'channel_updated',
+      event: "channel_updated",
       channel_id: 123,
       default_playlist_id: null,
     });
 
     // Verify that the channel's default_playlist_id was set to undefined
-    expect(device['channels'][0].attrs.default_playlist_id).toBeUndefined();
+    expect(device["channels"][0].attrs.default_playlist_id).toBeUndefined();
   });
 
-  it('should not update if channel is not found', async () => {
+  it("should not update if channel is not found", async () => {
     const mockChannel = {
       on: vi.fn(),
       push: vi.fn(),
       join: vi.fn(),
     };
 
-    device['channels'] = [
+    device["channels"] = [
       {
         attrs: {
-          id: '123',
-          name: 'Test Channel',
-          default_playlist_id: '100',
+          id: "123",
+          name: "Test Channel",
+          default_playlist_id: "100",
         },
       } as any,
     ];
 
-    device['initListeners'](mockChannel as any);
+    device["initListeners"](mockChannel as any);
 
     const channelUpdatedHandler = mockChannel.on.mock.calls.find(
-      (call) => call[0] === 'channel_updated'
+      (call) => call[0] === "channel_updated",
     )?.[1];
 
     expect(channelUpdatedHandler).toBeDefined();
 
     // Simulate the channel_updated event for a non-existent channel
     await channelUpdatedHandler({
-      event: 'channel_updated',
+      event: "channel_updated",
       channel_id: 999,
       default_playlist_id: 888,
     });
 
     // Verify that the existing channel was not affected
-    expect(device['channels'][0].attrs.default_playlist_id).toBe('100');
+    expect(device["channels"][0].attrs.default_playlist_id).toBe("100");
   });
 
-  it('should handle channel_added event and add new channel to list', async () => {
+  it("should handle channel_added event and add new channel to list", async () => {
     const mockChannel = {
       on: vi.fn(),
       push: vi.fn(),
       join: vi.fn(),
     };
 
-    device['channels'] = [
+    device["channels"] = [
       {
         attrs: {
-          id: '123',
-          name: 'Existing Channel',
-          default_playlist_id: '100',
+          id: "123",
+          name: "Existing Channel",
+          default_playlist_id: "100",
         },
       } as any,
     ];
 
-    device['initListeners'](mockChannel as any);
+    device["initListeners"](mockChannel as any);
 
     const channelAddedHandler = mockChannel.on.mock.calls.find(
-      (call) => call[0] === 'channel_added'
+      (call) => call[0] === "channel_added",
     )?.[1];
 
     expect(channelAddedHandler).toBeDefined();
 
     // Simulate the channel_added event
     await channelAddedHandler({
-      event: 'channel_added',
+      event: "channel_added",
       channel: {
         id: 456,
-        name: 'New Channel',
-        timezone: 'Europe/Amsterdam',
+        name: "New Channel",
+        timezone: "Europe/Amsterdam",
         default_playlist_id: 789,
         entries: [],
       },
     });
 
     // Verify that the new channel was added
-    expect(device['channels'].length).toBe(2);
-    expect(device['channels'][1].attrs.id).toBe('456');
-    expect(device['channels'][1].attrs.name).toBe('New Channel');
-    expect(device['channels'][1].attrs.default_playlist_id).toBe('789');
+    expect(device["channels"].length).toBe(2);
+    expect(device["channels"][1].attrs.id).toBe("456");
+    expect(device["channels"][1].attrs.name).toBe("New Channel");
+    expect(device["channels"][1].attrs.default_playlist_id).toBe("789");
   });
 
-  it('should handle channel_removed event and remove channel from list', async () => {
+  it("should handle channel_removed event and remove channel from list", async () => {
     const mockChannel = {
       on: vi.fn(),
       push: vi.fn(),
       join: vi.fn(),
     };
 
-    device['channels'] = [
+    device["channels"] = [
       {
         attrs: {
-          id: '123',
-          name: 'Channel 1',
-          default_playlist_id: '100',
+          id: "123",
+          name: "Channel 1",
+          default_playlist_id: "100",
         },
       } as any,
       {
         attrs: {
-          id: '456',
-          name: 'Channel 2',
-          default_playlist_id: '200',
+          id: "456",
+          name: "Channel 2",
+          default_playlist_id: "200",
         },
       } as any,
     ];
-    device['channelIndex'] = 1;
+    device["channelIndex"] = 1;
 
-    device['initListeners'](mockChannel as any);
+    device["initListeners"](mockChannel as any);
 
     const channelRemovedHandler = mockChannel.on.mock.calls.find(
-      (call) => call[0] === 'channel_removed'
+      (call) => call[0] === "channel_removed",
     )?.[1];
 
     expect(channelRemovedHandler).toBeDefined();
 
     // Simulate the channel_removed event
     await channelRemovedHandler({
-      event: 'channel_removed',
+      event: "channel_removed",
       channel_id: 456,
     });
 
     // Verify that the channel was removed
-    expect(device['channels'].length).toBe(1);
-    expect(device['channels'][0].attrs.id).toBe('123');
+    expect(device["channels"].length).toBe(1);
+    expect(device["channels"][0].attrs.id).toBe("123");
 
     // Verify that channelIndex was reset since it was pointing to the removed channel
-    expect(device['channelIndex']).toBe(0);
+    expect(device["channelIndex"]).toBe(0);
   });
 
-  it('should not affect channels when removing non-existent channel', async () => {
+  it("should not affect channels when removing non-existent channel", async () => {
     const mockChannel = {
       on: vi.fn(),
       push: vi.fn(),
       join: vi.fn(),
     };
 
-    device['channels'] = [
+    device["channels"] = [
       {
         attrs: {
-          id: '123',
-          name: 'Channel 1',
-          default_playlist_id: '100',
+          id: "123",
+          name: "Channel 1",
+          default_playlist_id: "100",
         },
       } as any,
     ];
 
-    device['initListeners'](mockChannel as any);
+    device["initListeners"](mockChannel as any);
 
     const channelRemovedHandler = mockChannel.on.mock.calls.find(
-      (call) => call[0] === 'channel_removed'
+      (call) => call[0] === "channel_removed",
     )?.[1];
 
     expect(channelRemovedHandler).toBeDefined();
 
     // Simulate the channel_removed event for a non-existent channel
     await channelRemovedHandler({
-      event: 'channel_removed',
+      event: "channel_removed",
       channel_id: 999,
     });
 
     // Verify that the existing channel was not affected
-    expect(device['channels'].length).toBe(1);
-    expect(device['channels'][0].attrs.id).toBe('123');
+    expect(device["channels"].length).toBe(1);
+    expect(device["channels"][0].attrs.id).toBe("123");
   });
 });
 
-describe('Device - Pincode Polling', () => {
+describe("Device - Pincode Polling", () => {
   let device: Device;
   let mockIntegration: any;
   let mockStorageIntegration: any;
@@ -556,11 +552,11 @@ describe('Device - Pincode Polling', () => {
     mockIntegration = {
       getCredentials: vi.fn(),
       getSetting: vi.fn(),
-      getMachineGUID: vi.fn().mockResolvedValue('test-hardware-id'),
+      getMachineGUID: vi.fn().mockResolvedValue("test-hardware-id"),
       removeCredentials: vi.fn(),
       storeCredentials: vi.fn(),
       getLocation: vi.fn().mockResolvedValue({ latitude: 0, longitude: 0 }),
-      getTimezone: vi.fn().mockResolvedValue('UTC'),
+      getTimezone: vi.fn().mockResolvedValue("UTC"),
     };
 
     mockStorageIntegration = {
@@ -572,10 +568,10 @@ describe('Device - Pincode Polling', () => {
     device = new Device(mockIntegration, mockStorageIntegration, {
       cache: { maxItems: 100 },
     });
-    device['baseUrl'] = 'http://localhost:4000';
+    device["baseUrl"] = "http://localhost:4000";
 
     fetchSpy = vi.fn();
-    vi.stubGlobal('fetch', fetchSpy);
+    vi.stubGlobal("fetch", fetchSpy);
   });
 
   afterEach(() => {
@@ -583,19 +579,19 @@ describe('Device - Pincode Polling', () => {
     vi.restoreAllMocks();
   });
 
-  it('should keep retrying pincode request when network is unavailable', async () => {
+  it("should keep retrying pincode request when network is unavailable", async () => {
     // First 3 calls fail with network error, 4th succeeds
     fetchSpy
-      .mockRejectedValueOnce(new TypeError('Failed to fetch'))
-      .mockRejectedValueOnce(new TypeError('Failed to fetch'))
-      .mockRejectedValueOnce(new TypeError('Failed to fetch'))
+      .mockRejectedValueOnce(new TypeError("Failed to fetch"))
+      .mockRejectedValueOnce(new TypeError("Failed to fetch"))
+      .mockRejectedValueOnce(new TypeError("Failed to fetch"))
       .mockResolvedValueOnce({
         status: 201,
-        json: async () => ({ data: { pincode: 'ABC123' } }),
+        json: async () => ({ data: { pincode: "ABC123" } }),
       });
 
     // Start the pincode request (it will await the first fetch which rejects)
-    const pincodePromise = device['requestPincode']('test-hardware-id');
+    const pincodePromise = device["requestPincode"]("test-hardware-id");
 
     // Advance through the backoff delays for each retry
     // Retry 1: 1s delay (1000 * 2^0)
@@ -608,20 +604,20 @@ describe('Device - Pincode Polling', () => {
 
     const pincode = await pincodePromise;
 
-    expect(pincode).toBe('ABC123');
+    expect(pincode).toBe("ABC123");
     expect(fetchSpy).toHaveBeenCalledTimes(4);
 
     // Verify all calls were to the registrations endpoint
     for (const call of fetchSpy.mock.calls) {
-      expect(call[0]).toBe('http://localhost:4000/registrations');
+      expect(call[0]).toBe("http://localhost:4000/registrations");
     }
   });
 
-  it('should stop retrying when device is closing', async () => {
+  it("should stop retrying when device is closing", async () => {
     // All calls fail
-    fetchSpy.mockRejectedValue(new TypeError('Failed to fetch'));
+    fetchSpy.mockRejectedValue(new TypeError("Failed to fetch"));
 
-    const pincodePromise = device['requestPincode']('test-hardware-id');
+    const pincodePromise = device["requestPincode"]("test-hardware-id");
 
     // Attach a catch handler immediately to prevent unhandled rejection
     const resultPromise = pincodePromise.catch((e) => e);
@@ -630,30 +626,30 @@ describe('Device - Pincode Polling', () => {
     await vi.advanceTimersByTimeAsync(1000);
 
     // Signal closing
-    device['closing'] = true;
+    device["closing"] = true;
 
     // Advance past the next backoff so the loop checks `closing`
     await vi.advanceTimersByTimeAsync(2000);
 
     const error = await resultPromise;
     expect(error).toBeInstanceOf(Error);
-    expect(error.message).toBe('Pincode request cancelled: device is closing');
+    expect(error.message).toBe("Pincode request cancelled: device is closing");
   });
 
-  it('should use exponential backoff between retries', async () => {
-    const setTimeoutSpy = vi.spyOn(globalThis, 'setTimeout');
+  it("should use exponential backoff between retries", async () => {
+    const setTimeoutSpy = vi.spyOn(globalThis, "setTimeout");
 
     // Fail 3 times then succeed
     fetchSpy
-      .mockRejectedValueOnce(new TypeError('Failed to fetch'))
-      .mockRejectedValueOnce(new TypeError('Failed to fetch'))
-      .mockRejectedValueOnce(new TypeError('Failed to fetch'))
+      .mockRejectedValueOnce(new TypeError("Failed to fetch"))
+      .mockRejectedValueOnce(new TypeError("Failed to fetch"))
+      .mockRejectedValueOnce(new TypeError("Failed to fetch"))
       .mockResolvedValueOnce({
         status: 201,
-        json: async () => ({ data: { pincode: 'XYZ789' } }),
+        json: async () => ({ data: { pincode: "XYZ789" } }),
       });
 
-    const pincodePromise = device['requestPincode']('test-hardware-id');
+    const pincodePromise = device["requestPincode"]("test-hardware-id");
 
     // Advance through each backoff delay
     await vi.advanceTimersByTimeAsync(1000); // 1st retry: 1s
@@ -664,7 +660,7 @@ describe('Device - Pincode Polling', () => {
 
     // Find the setTimeout calls used for backoff delays
     const backoffCalls = setTimeoutSpy.mock.calls.filter(
-      (call) => typeof call[1] === 'number' && call[1] >= 1000
+      (call) => typeof call[1] === "number" && call[1] >= 1000,
     );
 
     // Verify exponential backoff: 1s, 2s, 4s
@@ -674,12 +670,12 @@ describe('Device - Pincode Polling', () => {
     expect(backoffCalls[2][1]).toBe(4000);
   });
 
-  it('should store flattened org and network names from recovery response', async () => {
+  it("should store flattened org and network names from recovery response", async () => {
     const originalLocation = window.location;
     delete (window as any).location;
     window.location = {
       reload: vi.fn(() => {
-        device['closing'] = true;
+        device["closing"] = true;
       }),
     } as any;
 
@@ -687,16 +683,16 @@ describe('Device - Pincode Polling', () => {
       status: 200,
       json: async () => ({
         data: {
-          id: 'device-1',
-          name: 'Device 1',
-          token: 'token-1',
-          organization_name: 'Org Alpha',
-          network_name: 'Network One',
+          id: "device-1",
+          name: "Device 1",
+          token: "token-1",
+          organization_name: "Org Alpha",
+          network_name: "Network One",
         },
       }),
     });
 
-    const pincodePromise = device['requestPincode']('test-hardware-id');
+    const pincodePromise = device["requestPincode"]("test-hardware-id");
     const resultPromise = pincodePromise.catch((e) => e);
 
     // Let the retry delay elapse so loop exits after closing is set by reload()
@@ -706,13 +702,13 @@ describe('Device - Pincode Polling', () => {
     expect(mockIntegration.storeCredentials).toHaveBeenCalledWith(
       JSON.stringify({
         device: {
-          id: 'device-1',
-          name: 'Device 1',
-          token: 'token-1',
-          organizationName: 'Org Alpha',
-          networkName: 'Network One',
+          id: "device-1",
+          name: "Device 1",
+          token: "token-1",
+          organizationName: "Org Alpha",
+          networkName: "Network One",
         },
-      })
+      }),
     );
     expect(window.location.reload).toHaveBeenCalled();
     expect(error).toBeInstanceOf(Error);
@@ -720,7 +716,7 @@ describe('Device - Pincode Polling', () => {
     window.location = originalLocation;
   });
 
-  it('should not retry the registration request after a successful recovery', async () => {
+  it("should not retry the registration request after a successful recovery", async () => {
     const reloadMock = vi.fn();
     const originalLocation = window.location;
     delete (window as any).location;
@@ -734,7 +730,7 @@ describe('Device - Pincode Polling', () => {
     fetchSpy.mockResolvedValueOnce({
       status: 200,
       json: async () => ({
-        data: { id: 'dev-1', name: 'Device', token: 'tok-1' },
+        data: { id: "dev-1", name: "Device", token: "tok-1" },
       }),
     });
 
@@ -742,24 +738,24 @@ describe('Device - Pincode Polling', () => {
     // the registration (pincode) flow to start even though credentials were stored.
     fetchSpy.mockResolvedValueOnce({
       status: 201,
-      json: async () => ({ data: { pincode: 'SHOULDNOTBEUSED' } }),
+      json: async () => ({ data: { pincode: "SHOULDNOTBEUSED" } }),
     });
 
-    const pincodePromise = device['requestPincode']('test-hardware-id').catch(
-      (e: Error) => e.message
+    const pincodePromise = device["requestPincode"]("test-hardware-id").catch(
+      (e: Error) => e.message,
     );
 
     // Flush microtasks so the fetch and credential-store steps complete
     await vi.advanceTimersByTimeAsync(0);
 
     // Close the device to stop the idle loop and let the promise settle
-    device['closing'] = true;
+    device["closing"] = true;
     await vi.advanceTimersByTimeAsync(2000);
 
     const result = await pincodePromise;
 
     // The function must exit via closing, not via a pincode return
-    expect(result).toBe('Pincode request cancelled: device is closing');
+    expect(result).toBe("Pincode request cancelled: device is closing");
 
     // Only one fetch call (the recovery request) - no retry should have occurred
     expect(fetchSpy).toHaveBeenCalledTimes(1);
@@ -768,17 +764,17 @@ describe('Device - Pincode Polling', () => {
     window.location = originalLocation;
   });
 
-  it('should throw when recovery is blocked for security reasons', async () => {
+  it("should throw when recovery is blocked for security reasons", async () => {
     fetchSpy.mockResolvedValueOnce({
       status: 403,
       json: async () => ({
-        error: 'Device recovery blocked for security reasons',
-        error_code: 'recovery_blocked',
+        error: "Device recovery blocked for security reasons",
+        error_code: "recovery_blocked",
       }),
     });
 
-    await expect(device['requestPincode']('test-hardware-id')).rejects.toThrow(
-      'Device recovery blocked for security reasons'
+    await expect(device["requestPincode"]("test-hardware-id")).rejects.toThrow(
+      "Device recovery blocked for security reasons",
     );
 
     // Must not keep retrying when the backend explicitly blocks recovery
@@ -786,7 +782,7 @@ describe('Device - Pincode Polling', () => {
   });
 });
 
-describe('Device - Metadata Names', () => {
+describe("Device - Metadata Names", () => {
   let device: Device;
   let mockIntegration: any;
 
@@ -797,66 +793,66 @@ describe('Device - Metadata Names', () => {
     };
 
     device = new Device(mockIntegration, {} as any);
-    device['baseUrl'] = 'http://localhost:4000';
+    device["baseUrl"] = "http://localhost:4000";
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
-  it('should return organization/network names directly from flattened credentials', async () => {
+  it("should return organization/network names directly from flattened credentials", async () => {
     mockIntegration.getCredentials.mockResolvedValue(
       JSON.stringify({
         device: {
-          id: 'device-1',
-          name: 'Device 1',
-          token: 'token-1',
-          organizationName: 'Org Alpha',
-          networkName: 'Network One',
+          id: "device-1",
+          name: "Device 1",
+          token: "token-1",
+          organizationName: "Org Alpha",
+          networkName: "Network One",
         },
-      })
+      }),
     );
 
     const fetchSpy = vi.fn();
-    vi.stubGlobal('fetch', fetchSpy);
+    vi.stubGlobal("fetch", fetchSpy);
 
-    await expect(device.getOrganizationName()).resolves.toBe('Org Alpha');
-    await expect(device.getCastmillNetworkName()).resolves.toBe('Network One');
+    await expect(device.getOrganizationName()).resolves.toBe("Org Alpha");
+    await expect(device.getCastmillNetworkName()).resolves.toBe("Network One");
     expect(fetchSpy).not.toHaveBeenCalled();
   });
 
-  it('should fall back to channels metadata when flattened names are missing', async () => {
+  it("should fall back to channels metadata when flattened names are missing", async () => {
     mockIntegration.getCredentials.mockResolvedValue(
       JSON.stringify({
         device: {
-          id: 'device-1',
-          name: 'Device 1',
-          token: 'token-1',
+          id: "device-1",
+          name: "Device 1",
+          token: "token-1",
         },
-      })
+      }),
     );
 
     vi.stubGlobal(
-      'fetch',
+      "fetch",
       vi.fn().mockResolvedValue({
         ok: true,
         json: async () => ({
           data: [
             {
-              organization_name: 'Org Beta',
-              network_name: 'Network Two',
+              organization_name: "Org Beta",
+              network_name: "Network Two",
             },
           ],
         }),
-      })
+      }),
     );
 
-    await expect(device.getOrganizationName()).resolves.toBe('Org Beta');
-    await expect(device.getCastmillNetworkName()).resolves.toBe('Network Two');
+    await expect(device.getOrganizationName()).resolves.toBe("Org Beta");
+    await expect(device.getCastmillNetworkName()).resolves.toBe("Network Two");
   });
 });
 
-describe('Device - Registration Payload Normalization', () => {
+describe("Device - Registration Payload Normalization", () => {
   let device: Device;
   let mockIntegration: any;
 
@@ -864,29 +860,29 @@ describe('Device - Registration Payload Normalization', () => {
     mockIntegration = {
       getCredentials: vi.fn(),
       getSetting: vi.fn(),
-      getMachineGUID: vi.fn().mockResolvedValue('test-hardware-id'),
+      getMachineGUID: vi.fn().mockResolvedValue("test-hardware-id"),
       storeCredentials: vi.fn(),
       getLocation: vi.fn().mockResolvedValue({ latitude: 0, longitude: 0 }),
-      getTimezone: vi.fn().mockResolvedValue('UTC'),
+      getTimezone: vi.fn().mockResolvedValue("UTC"),
     };
 
     device = new Device(mockIntegration, {} as any, {
       cache: { maxItems: 100 },
     });
-    device['baseUrl'] = 'http://localhost:4000';
+    device["baseUrl"] = "http://localhost:4000";
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
   });
 
-  it('should store flattened credentials from device:registered payload', async () => {
+  it("should store flattened credentials from device:registered payload", async () => {
     vi.stubGlobal(
-      'fetch',
+      "fetch",
       vi.fn().mockResolvedValue({
         status: 201,
-        json: async () => ({ data: { pincode: 'ABC123' } }),
-      })
+        json: async () => ({ data: { pincode: "ABC123" } }),
+      }),
     );
 
     const { mockPhoenixChannel } = installPhoenixMocks();
@@ -895,34 +891,32 @@ describe('Device - Registration Payload Normalization', () => {
     delete (window as any).location;
     window.location = { reload: vi.fn() } as any;
 
-    await device.register('test-hardware-id');
+    await device.register("test-hardware-id");
 
-    const onCall = mockPhoenixChannel.on.mock.calls.find(
-      (call) => call[0] === 'device:registered'
-    );
+    const onCall = mockPhoenixChannel.on.mock.calls.find((call) => call[0] === "device:registered");
     expect(onCall).toBeDefined();
 
     const handler = onCall![1];
     await handler({
       device: {
-        id: 'device-1',
-        name: 'Device 1',
-        token: 'token-1',
-        organizationName: 'Org Gamma',
-        networkName: 'Network Three',
+        id: "device-1",
+        name: "Device 1",
+        token: "token-1",
+        organizationName: "Org Gamma",
+        networkName: "Network Three",
       },
     });
 
     expect(mockIntegration.storeCredentials).toHaveBeenCalledWith(
       JSON.stringify({
         device: {
-          id: 'device-1',
-          name: 'Device 1',
-          token: 'token-1',
-          organizationName: 'Org Gamma',
-          networkName: 'Network Three',
+          id: "device-1",
+          name: "Device 1",
+          token: "token-1",
+          organizationName: "Org Gamma",
+          networkName: "Network Three",
         },
-      })
+      }),
     );
     expect(window.location.reload).toHaveBeenCalled();
 
@@ -930,7 +924,7 @@ describe('Device - Registration Payload Normalization', () => {
   });
 });
 
-describe('Device - loginOrRegister (non-blocking login)', () => {
+describe("Device - loginOrRegister (non-blocking login)", () => {
   let device: Device;
   let mockIntegration: any;
   let mockStorageIntegration: any;
@@ -939,11 +933,11 @@ describe('Device - loginOrRegister (non-blocking login)', () => {
     mockIntegration = {
       getCredentials: vi.fn(),
       getSetting: vi.fn(),
-      getMachineGUID: vi.fn().mockResolvedValue('test-hardware-id'),
+      getMachineGUID: vi.fn().mockResolvedValue("test-hardware-id"),
       removeCredentials: vi.fn().mockResolvedValue(undefined),
       storeCredentials: vi.fn(),
       getLocation: vi.fn().mockResolvedValue({ latitude: 0, longitude: 0 }),
-      getTimezone: vi.fn().mockResolvedValue('UTC'),
+      getTimezone: vi.fn().mockResolvedValue("UTC"),
     };
 
     mockStorageIntegration = {
@@ -955,17 +949,17 @@ describe('Device - loginOrRegister (non-blocking login)', () => {
     device = new Device(mockIntegration, mockStorageIntegration, {
       cache: { maxItems: 100 },
     });
-    device['baseUrl'] = 'http://localhost:4000';
+    device["baseUrl"] = "http://localhost:4000";
   });
 
-  it('should return Status.Ready immediately without waiting for login to complete', async () => {
+  it("should return Status.Ready immediately without waiting for login to complete", async () => {
     const validCredentials = JSON.stringify({
-      device: { id: 'device1', token: 'token123', name: 'Device 1' },
+      device: { id: "device1", token: "token123", name: "Device 1" },
     });
     mockIntegration.getCredentials.mockResolvedValue(validCredentials);
 
     // Mock login to return a promise that never resolves (simulating slow network)
-    vi.spyOn(device as any, 'login').mockReturnValue(new Promise(() => {}));
+    vi.spyOn(device as any, "login").mockReturnValue(new Promise(() => {}));
 
     const result = await device.loginOrRegister();
 
@@ -974,15 +968,13 @@ describe('Device - loginOrRegister (non-blocking login)', () => {
     expect(result.pincode).toBeUndefined();
   });
 
-  it('should start login in the background when credentials exist', async () => {
+  it("should start login in the background when credentials exist", async () => {
     const validCredentials = JSON.stringify({
-      device: { id: 'device1', token: 'token123', name: 'Device 1' },
+      device: { id: "device1", token: "token123", name: "Device 1" },
     });
     mockIntegration.getCredentials.mockResolvedValue(validCredentials);
 
-    const loginSpy = vi
-      .spyOn(device as any, 'login')
-      .mockReturnValue(new Promise(() => {}));
+    const loginSpy = vi.spyOn(device as any, "login").mockReturnValue(new Promise(() => {}));
 
     const result = await device.loginOrRegister();
 
@@ -990,24 +982,24 @@ describe('Device - loginOrRegister (non-blocking login)', () => {
 
     // login was called (in the background)
     expect(loginSpy).toHaveBeenCalledWith(
-      { device: { id: 'device1', token: 'token123', name: 'Device 1' } },
-      'test-hardware-id'
+      { device: { id: "device1", token: "token123", name: "Device 1" } },
+      "test-hardware-id",
     );
   });
 
-  it('should set up listeners and heartbeat after background login succeeds', async () => {
+  it("should set up listeners and heartbeat after background login succeeds", async () => {
     const validCredentials = JSON.stringify({
-      device: { id: 'device1', token: 'token123', name: 'Device 1' },
+      device: { id: "device1", token: "token123", name: "Device 1" },
     });
     mockIntegration.getCredentials.mockResolvedValue(validCredentials);
 
     const mockChannel = { on: vi.fn(), push: vi.fn() };
 
     // Mock login to resolve with a mock channel
-    vi.spyOn(device as any, 'login').mockResolvedValue(mockChannel);
+    vi.spyOn(device as any, "login").mockResolvedValue(mockChannel);
 
-    const initListenersSpy = vi.spyOn(device as any, 'initListeners');
-    const initHeartbeatSpy = vi.spyOn(device as any, 'initHeartbeat');
+    const initListenersSpy = vi.spyOn(device as any, "initListeners");
+    const initHeartbeatSpy = vi.spyOn(device as any, "initHeartbeat");
 
     await device.loginOrRegister();
 
@@ -1019,14 +1011,14 @@ describe('Device - loginOrRegister (non-blocking login)', () => {
     expect(initHeartbeatSpy).toHaveBeenCalledWith(mockChannel);
   });
 
-  it('should handle invalid_device error by clearing credentials and reloading', async () => {
+  it("should handle invalid_device error by clearing credentials and reloading", async () => {
     const validCredentials = JSON.stringify({
-      device: { id: 'device1', token: 'token123', name: 'Device 1' },
+      device: { id: "device1", token: "token123", name: "Device 1" },
     });
     mockIntegration.getCredentials.mockResolvedValue(validCredentials);
 
     // Mock login to reject with auth error
-    vi.spyOn(device as any, 'login').mockRejectedValue('invalid_device');
+    vi.spyOn(device as any, "login").mockRejectedValue("invalid_device");
 
     const originalLocation = window.location;
     delete (window as any).location;
@@ -1044,14 +1036,14 @@ describe('Device - loginOrRegister (non-blocking login)', () => {
     window.location = originalLocation;
   });
 
-  it('should log non-auth errors without reloading the page', async () => {
+  it("should log non-auth errors without reloading the page", async () => {
     const validCredentials = JSON.stringify({
-      device: { id: 'device1', token: 'token123', name: 'Device 1' },
+      device: { id: "device1", token: "token123", name: "Device 1" },
     });
     mockIntegration.getCredentials.mockResolvedValue(validCredentials);
 
     // Mock login to reject with a non-auth error
-    vi.spyOn(device as any, 'login').mockRejectedValue('connection_timeout');
+    vi.spyOn(device as any, "login").mockRejectedValue("connection_timeout");
 
     const originalLocation = window.location;
     delete (window as any).location;
@@ -1071,7 +1063,7 @@ describe('Device - loginOrRegister (non-blocking login)', () => {
   });
 });
 
-describe('Device - Login Reconnection', () => {
+describe("Device - Login Reconnection", () => {
   let device: Device;
   let mockIntegration: any;
   let mockStorageIntegration: any;
@@ -1086,11 +1078,11 @@ describe('Device - Login Reconnection', () => {
     mockIntegration = {
       getCredentials: vi.fn(),
       getSetting: vi.fn(),
-      getMachineGUID: vi.fn().mockResolvedValue('test-hardware-id'),
+      getMachineGUID: vi.fn().mockResolvedValue("test-hardware-id"),
       removeCredentials: vi.fn().mockResolvedValue(undefined),
       storeCredentials: vi.fn(),
       getLocation: vi.fn().mockResolvedValue({ latitude: 0, longitude: 0 }),
-      getTimezone: vi.fn().mockResolvedValue('UTC'),
+      getTimezone: vi.fn().mockResolvedValue("UTC"),
     };
 
     mockStorageIntegration = {};
@@ -1098,7 +1090,7 @@ describe('Device - Login Reconnection', () => {
     device = new Device(mockIntegration, mockStorageIntegration, {
       cache: { maxItems: 100 },
     });
-    device['baseUrl'] = 'http://localhost:4000';
+    device["baseUrl"] = "http://localhost:4000";
   });
 
   afterEach(() => {
@@ -1106,45 +1098,45 @@ describe('Device - Login Reconnection', () => {
     vi.restoreAllMocks();
   });
 
-  it('should only reject on auth errors (invalid_device)', async () => {
+  it("should only reject on auth errors (invalid_device)", async () => {
     const credentials = {
-      device: { id: 'd1', token: 't1', name: 'D1' },
+      device: { id: "d1", token: "t1", name: "D1" },
     };
 
-    const loginPromise = device.login(credentials as any, 'hw1');
+    const loginPromise = device.login(credentials as any, "hw1");
 
     // Trigger auth error
-    mockPhoenixChannel._joinPush._trigger('error', 'invalid_device');
+    mockPhoenixChannel._joinPush._trigger("error", "invalid_device");
 
-    await expect(loginPromise).rejects.toBe('invalid_device');
+    await expect(loginPromise).rejects.toBe("invalid_device");
   });
 
-  it('should only reject on auth errors (unauthorized)', async () => {
+  it("should only reject on auth errors (unauthorized)", async () => {
     const credentials = {
-      device: { id: 'd1', token: 't1', name: 'D1' },
+      device: { id: "d1", token: "t1", name: "D1" },
     };
 
-    const loginPromise = device.login(credentials as any, 'hw1');
+    const loginPromise = device.login(credentials as any, "hw1");
 
     // Trigger auth error
-    mockPhoenixChannel._joinPush._trigger('error', 'unauthorized');
+    mockPhoenixChannel._joinPush._trigger("error", "unauthorized");
 
-    await expect(loginPromise).rejects.toBe('unauthorized');
+    await expect(loginPromise).rejects.toBe("unauthorized");
   });
 
-  it('should NOT reject on non-auth errors (keep trying)', async () => {
+  it("should NOT reject on non-auth errors (keep trying)", async () => {
     const credentials = {
-      device: { id: 'd1', token: 't1', name: 'D1' },
+      device: { id: "d1", token: "t1", name: "D1" },
     };
 
-    const loginPromise = device.login(credentials as any, 'hw1');
+    const loginPromise = device.login(credentials as any, "hw1");
     let resolved = false;
     let rejected = false;
 
     loginPromise.then(() => (resolved = true)).catch(() => (rejected = true));
 
     // Trigger non-auth error
-    mockPhoenixChannel._joinPush._trigger('error', 'some_connection_error');
+    mockPhoenixChannel._joinPush._trigger("error", "some_connection_error");
 
     // Wait one tick
     await vi.advanceTimersByTimeAsync(100);
@@ -1154,28 +1146,28 @@ describe('Device - Login Reconnection', () => {
     expect(rejected).toBe(false);
 
     // Now simulate a successful rejoin via the polling mechanism
-    mockPhoenixChannel.state = 'joined';
+    mockPhoenixChannel.state = "joined";
     await vi.advanceTimersByTimeAsync(1000);
 
     expect(resolved).toBe(true);
     expect(rejected).toBe(false);
   });
 
-  it('should resolve when channel state becomes joined (polling mechanism)', async () => {
+  it("should resolve when channel state becomes joined (polling mechanism)", async () => {
     const credentials = {
-      device: { id: 'd1', token: 't1', name: 'D1' },
+      device: { id: "d1", token: "t1", name: "D1" },
     };
 
-    const loginPromise = device.login(credentials as any, 'hw1');
+    const loginPromise = device.login(credentials as any, "hw1");
 
     // Trigger timeout (does not reject)
-    mockPhoenixChannel._joinPush._trigger('timeout');
+    mockPhoenixChannel._joinPush._trigger("timeout");
 
     // Wait — should not resolve or reject yet
     await vi.advanceTimersByTimeAsync(500);
 
     // Simulate the channel successfully joining via reconnection
-    mockPhoenixChannel.state = 'joined';
+    mockPhoenixChannel.state = "joined";
 
     // Advance past the 1s polling interval
     await vi.advanceTimersByTimeAsync(1000);
@@ -1184,37 +1176,37 @@ describe('Device - Login Reconnection', () => {
     expect(result).toBe(mockPhoenixChannel);
   });
 
-  it('should clean up polling interval after resolving', async () => {
-    const clearIntervalSpy = vi.spyOn(global, 'clearInterval');
+  it("should clean up polling interval after resolving", async () => {
+    const clearIntervalSpy = vi.spyOn(global, "clearInterval");
 
     const credentials = {
-      device: { id: 'd1', token: 't1', name: 'D1' },
+      device: { id: "d1", token: "t1", name: "D1" },
     };
 
-    const loginPromise = device.login(credentials as any, 'hw1');
+    const loginPromise = device.login(credentials as any, "hw1");
 
     // Simulate successful join
-    mockPhoenixChannel._joinPush._trigger('ok');
+    mockPhoenixChannel._joinPush._trigger("ok");
 
     await loginPromise;
 
     expect(clearIntervalSpy).toHaveBeenCalled();
   });
 
-  it('should not resolve twice when both ok and polling detect joined', async () => {
+  it("should not resolve twice when both ok and polling detect joined", async () => {
     const credentials = {
-      device: { id: 'd1', token: 't1', name: 'D1' },
+      device: { id: "d1", token: "t1", name: "D1" },
     };
 
     let resolveCount = 0;
-    const loginPromise = device.login(credentials as any, 'hw1');
+    const loginPromise = device.login(credentials as any, "hw1");
     loginPromise.then(() => resolveCount++);
 
     // Trigger ok callback
-    mockPhoenixChannel._joinPush._trigger('ok');
+    mockPhoenixChannel._joinPush._trigger("ok");
 
     // Also set state to joined
-    mockPhoenixChannel.state = 'joined';
+    mockPhoenixChannel.state = "joined";
 
     // Advance past polling interval
     await vi.advanceTimersByTimeAsync(2000);
@@ -1224,7 +1216,7 @@ describe('Device - Login Reconnection', () => {
   });
 });
 
-describe('Device - Progress Events', () => {
+describe("Device - Progress Events", () => {
   let device: Device;
   let mockIntegration: any;
   let mockStorageIntegration: any;
@@ -1233,11 +1225,11 @@ describe('Device - Progress Events', () => {
     mockIntegration = {
       getCredentials: vi.fn(),
       getSetting: vi.fn(),
-      getMachineGUID: vi.fn().mockResolvedValue('test-hardware-id'),
+      getMachineGUID: vi.fn().mockResolvedValue("test-hardware-id"),
       removeCredentials: vi.fn(),
       storeCredentials: vi.fn(),
       getLocation: vi.fn().mockResolvedValue({ latitude: 0, longitude: 0 }),
-      getTimezone: vi.fn().mockResolvedValue('UTC'),
+      getTimezone: vi.fn().mockResolvedValue("UTC"),
     };
 
     mockStorageIntegration = {};
@@ -1245,57 +1237,55 @@ describe('Device - Progress Events', () => {
     device = new Device(mockIntegration, mockStorageIntegration, {
       cache: { maxItems: 100 },
     });
-    device['baseUrl'] = 'http://localhost:4000';
+    device["baseUrl"] = "http://localhost:4000";
   });
 
-  it('should emit progress events with correct structure', () => {
+  it("should emit progress events with correct structure", () => {
     const progressEvents: any[] = [];
-    device.on('progress', (event) => progressEvents.push(event));
+    device.on("progress", (event) => progressEvents.push(event));
 
-    device['emitProgress'](2, 5, 'Loading');
+    device["emitProgress"](2, 5, "Loading");
 
     expect(progressEvents).toHaveLength(1);
     expect(progressEvents[0]).toEqual({
       step: 2,
       totalSteps: 5,
       percent: 40,
-      label: 'Loading',
+      label: "Loading",
     });
   });
 
-  it('should emit progress during loginOrRegister with credentials', async () => {
+  it("should emit progress during loginOrRegister with credentials", async () => {
     const validCredentials = JSON.stringify({
-      device: { id: 'device1', token: 'token123', name: 'Device 1' },
+      device: { id: "device1", token: "token123", name: "Device 1" },
     });
     mockIntegration.getCredentials.mockResolvedValue(validCredentials);
 
     const progressEvents: any[] = [];
-    device.on('progress', (event) => progressEvents.push(event));
+    device.on("progress", (event) => progressEvents.push(event));
 
     await device.loginOrRegister();
 
     // Should have emitted 'Identifying device' progress (step 1 of 5 when credentials exist)
-    const identifyEvent = progressEvents.find(
-      (e) => e.label === 'Identifying device'
-    );
+    const identifyEvent = progressEvents.find((e) => e.label === "Identifying device");
     expect(identifyEvent).toBeDefined();
     expect(identifyEvent.totalSteps).toBe(5);
     expect(identifyEvent.step).toBe(1);
   });
 
-  it('should emit progress during loginOrRegister without credentials (registration path)', async () => {
+  it("should emit progress during loginOrRegister without credentials (registration path)", async () => {
     mockIntegration.getCredentials.mockResolvedValue(null);
 
     const progressEvents: any[] = [];
-    device.on('progress', (event) => progressEvents.push(event));
+    device.on("progress", (event) => progressEvents.push(event));
 
     // Mock fetch for registration
     vi.stubGlobal(
-      'fetch',
+      "fetch",
       vi.fn().mockResolvedValue({
         status: 201,
-        json: async () => ({ data: { pincode: 'ABCDEF' } }),
-      })
+        json: async () => ({ data: { pincode: "ABCDEF" } }),
+      }),
     );
 
     // Install phoenix mocks for registration
@@ -1306,9 +1296,7 @@ describe('Device - Progress Events', () => {
     expect(result.status).toBe(Status.Registering);
 
     // Should have emitted 'Identifying device' progress (step 1 of 3 when no credentials)
-    const identifyEvent = progressEvents.find(
-      (e) => e.label === 'Identifying device'
-    );
+    const identifyEvent = progressEvents.find((e) => e.label === "Identifying device");
     expect(identifyEvent).toBeDefined();
     expect(identifyEvent.totalSteps).toBe(3);
     expect(identifyEvent.step).toBe(1);
@@ -1316,7 +1304,7 @@ describe('Device - Progress Events', () => {
     vi.restoreAllMocks();
   });
 
-  it('should return RecoveryBlocked and reload once recovery is enabled later', async () => {
+  it("should return RecoveryBlocked and reload once recovery is enabled later", async () => {
     mockIntegration.getCredentials.mockResolvedValue(null);
 
     const reloadMock = vi.fn();
@@ -1328,20 +1316,20 @@ describe('Device - Progress Events', () => {
       .fn()
       .mockResolvedValueOnce({
         status: 403,
-        json: async () => ({ error_code: 'recovery_blocked' }),
+        json: async () => ({ error_code: "recovery_blocked" }),
       })
       .mockResolvedValueOnce({
         status: 200,
         json: async () => ({
           data: {
-            id: 'device-123',
-            name: 'Recovered Device',
-            token: 'recovered-token',
+            id: "device-123",
+            name: "Recovered Device",
+            token: "recovered-token",
           },
         }),
       });
 
-    vi.stubGlobal('fetch', fetchMock);
+    vi.stubGlobal("fetch", fetchMock);
 
     const result = await device.loginOrRegister();
 
@@ -1351,11 +1339,11 @@ describe('Device - Progress Events', () => {
       expect(mockIntegration.storeCredentials).toHaveBeenCalledWith(
         JSON.stringify({
           device: {
-            id: 'device-123',
-            name: 'Recovered Device',
-            token: 'recovered-token',
+            id: "device-123",
+            name: "Recovered Device",
+            token: "recovered-token",
           },
-        })
+        }),
       );
     });
 

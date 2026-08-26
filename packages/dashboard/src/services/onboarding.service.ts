@@ -1,21 +1,15 @@
-import { baseUrl } from '../env';
-import {
-  OnboardingProgress,
-  OnboardingStep,
-} from '../interfaces/onboarding-progress.interface';
+import { baseUrl } from "../env";
+import { OnboardingProgress, OnboardingStep } from "../interfaces/onboarding-progress.interface";
 
-import { authFetch } from '../components/auth';
+import { authFetch } from "../components/auth";
 export const OnboardingService = {
   /**
    * Get user's onboarding progress
    */
   async getProgress(userId: string): Promise<OnboardingProgress> {
-    const response = await authFetch(
-      `${baseUrl}/dashboard/users/${userId}/onboarding-progress`,
-      {
-        method: 'GET',
-      }
-    );
+    const response = await authFetch(`${baseUrl}/dashboard/users/${userId}/onboarding-progress`, {
+      method: "GET",
+    });
 
     if (response.status === 200) {
       return (await response.json())?.data as OnboardingProgress;
@@ -28,7 +22,7 @@ export const OnboardingService = {
         dismissed: false,
       };
     } else {
-      throw new Error('Failed to fetch onboarding progress');
+      throw new Error("Failed to fetch onboarding progress");
     }
   },
 
@@ -37,48 +31,42 @@ export const OnboardingService = {
    */
   async updateProgress(
     userId: string,
-    progress: Partial<OnboardingProgress>
+    progress: Partial<OnboardingProgress>,
   ): Promise<OnboardingProgress> {
-    const response = await authFetch(
-      `${baseUrl}/dashboard/users/${userId}/onboarding-progress`,
-      {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(progress),
-      }
-    );
+    const response = await authFetch(`${baseUrl}/dashboard/users/${userId}/onboarding-progress`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(progress),
+    });
 
     if (response.status === 200) {
       return (await response.json())?.data as OnboardingProgress;
     } else {
-      throw new Error('Failed to update onboarding progress');
+      throw new Error("Failed to update onboarding progress");
     }
   },
 
   /**
    * Mark a step as completed
    */
-  async completeStep(
-    userId: string,
-    step: OnboardingStep
-  ): Promise<OnboardingProgress> {
+  async completeStep(userId: string, step: OnboardingStep): Promise<OnboardingProgress> {
     const response = await authFetch(
       `${baseUrl}/dashboard/users/${userId}/onboarding-progress/complete-step`,
       {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ step }),
-      }
+      },
     );
 
     if (response.status === 200) {
       return (await response.json())?.data as OnboardingProgress;
     } else {
-      throw new Error('Failed to complete onboarding step');
+      throw new Error("Failed to complete onboarding step");
     }
   },
 
@@ -89,14 +77,14 @@ export const OnboardingService = {
     const response = await authFetch(
       `${baseUrl}/dashboard/users/${userId}/onboarding-progress/dismiss`,
       {
-        method: 'POST',
-      }
+        method: "POST",
+      },
     );
 
     if (response.status === 200) {
       return (await response.json())?.data as OnboardingProgress;
     } else {
-      throw new Error('Failed to dismiss onboarding tour');
+      throw new Error("Failed to dismiss onboarding tour");
     }
   },
 
@@ -107,14 +95,14 @@ export const OnboardingService = {
     const response = await authFetch(
       `${baseUrl}/dashboard/users/${userId}/onboarding-progress/reset`,
       {
-        method: 'POST',
-      }
+        method: "POST",
+      },
     );
 
     if (response.status === 200) {
       return (await response.json())?.data as OnboardingProgress;
     } else {
-      throw new Error('Failed to reset onboarding progress');
+      throw new Error("Failed to reset onboarding progress");
     }
   },
 };

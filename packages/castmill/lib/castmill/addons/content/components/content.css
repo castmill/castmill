@@ -59,7 +59,7 @@
 }
 
 .content-card::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
@@ -99,11 +99,7 @@
   width: 3rem;
   height: 3rem;
   border-radius: 0.75rem;
-  background: linear-gradient(
-    135deg,
-    rgba(96, 165, 250, 0.2) 0%,
-    rgba(167, 139, 250, 0.2) 100%
-  );
+  background: linear-gradient(135deg, rgba(96, 165, 250, 0.2) 0%, rgba(167, 139, 250, 0.2) 100%);
   display: flex;
   align-items: center;
   justify-content: center;

@@ -4,103 +4,101 @@ interface Power {
   addOffTimer?(
     successCallback: () => void,
     errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
-    options: AddOffTimerOptions
+    options: AddOffTimerOptions,
   ): void;
   addOnTimer?(
     successCallback: () => void,
     errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
-    options: AddOnTimerOptions
+    options: AddOnTimerOptions,
   ): void;
   deleteOffTimer(
     successCallback: () => void,
     errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
-    options: DeleteOffTimerOptions
+    options: DeleteOffTimerOptions,
   ): void;
   deleteOnTimer(
     successCallback: () => void,
     errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
-    options: DeleteOnTimerOptions
+    options: DeleteOnTimerOptions,
   ): void;
   // webos < 4, scap 1.5
   enableAllOffTimer?(
     successCallback: () => void,
     errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
-    options: EnableAllOffTimerOptions
+    options: EnableAllOffTimerOptions,
   ): void;
   // webos < 4, scap 1.5
   enableAllOnTimer?(
     successCallback: () => void,
     errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
-    options: EnableAllOnTimerOptions
+    options: EnableAllOnTimerOptions,
   ): void;
   enableWakeOnLan(
     successCallback: () => void,
     errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
-    options: EnableWakeOnLanOptions
+    options: EnableWakeOnLanOptions,
   ): void;
   executePowerCommand(
     successCallback: () => void,
     errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
-    options: ExecutePowerCommandOptions
+    options: ExecutePowerCommandOptions,
   ): void;
   getDPMWakeup(
     successCallback: (cbObject: { dpmSignalType: string }) => void,
-    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void
+    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
   ): void;
   getOffTimerList(
     successCallback: (cbObject: { timerList: TimerList[] }) => void,
-    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void
+    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
   ): void;
   getOnOffTimeSchedule(
-    successCallback: (cbObject: {
-      onOffTimeScheduleList: OnOffTimeSchedule[];
-    }) => void,
-    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void
+    successCallback: (cbObject: { onOffTimeScheduleList: OnOffTimeSchedule[] }) => void,
+    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
   ): void;
   getOnTimerList(
     successCallback: (cbObject: { timerList: TimerList[] }) => void,
-    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void
+    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
   ): void;
   getPMMode(
     successCallback: (cbObject: { mode: string }) => void,
-    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void
+    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
   ): void;
   getPowerOnDelay(
     successCallback: (cbObject: { delayTime: number }) => void,
-    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void
+    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
   ): void;
   getPowerStatus(
     successCallback: (cbObject: PowerStatus) => void,
-    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void
+    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
   ): void;
   setDisplayMode(
     successCallback: () => void,
     errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
-    options: SetDisplayModeOptions
+    options: SetDisplayModeOptions,
   ): void;
   setDPMWakeup(
     successCallback: () => void,
     errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
-    options: SetDPMWakeupOptions
+    options: SetDPMWakeupOptions,
   ): void;
   setOnOffTimeSchedule(
     successCallback: () => void,
     errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
-    options: SetOnOffTimeScheduleOptions
+    options: SetOnOffTimeScheduleOptions,
   ): void;
   setPMMode(
     successCallback: () => void,
     errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
-    options: SetPMModeOptions
+    options: SetPMModeOptions,
   ): void;
   setPowerOnDelay(
     successCallback: () => void,
     errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
-    options: SetPowerOnDelayOptions
+    options: SetPowerOnDelayOptions,
   ): void;
   unsetOnOffTimeSchedule(
     successCallback: () => void,
-    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void
+    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
   ): void;
 }
 
@@ -145,7 +143,7 @@ interface EnableWakeOnLanOptions {
 }
 
 interface ExecutePowerCommandOptions {
-  powerCommand: 'reboot' | 'powerOff';
+  powerCommand: "reboot" | "powerOff";
 }
 
 interface TimerList {

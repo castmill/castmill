@@ -2,8 +2,8 @@
 
 interface BlockedPort {
   blockedPort: number;
-  direction: 'in' | 'out' | 'all';
-  protocol: 'udp' | 'tcp';
+  direction: "in" | "out" | "all";
+  protocol: "udp" | "tcp";
 }
 
 interface AddBlockedPortListOptions {
@@ -22,13 +22,13 @@ interface NetworkInfo {
 }
 
 interface WiredNetworkInfo {
-  state: 'connected' | 'disconnected';
+  state: "connected" | "disconnected";
   interfaceName?: string;
   ipAddress?: string;
   netmask?: string;
   gateway?: string;
-  onInternet?: 'yes' | 'no';
-  method?: 'dhcp' | 'manual';
+  onInternet?: "yes" | "no";
+  method?: "dhcp" | "manual";
   dns1?: string;
   dns2?: string;
   dns3?: string;
@@ -41,17 +41,17 @@ interface IPv6NetworkInfo {
   gateway?: string;
   ipAddress?: string;
   prefixLength?: number;
-  method?: 'dhcp' | 'manual';
+  method?: "dhcp" | "manual";
 }
 
 interface WirelessNetworkInfo {
-  state: 'connected' | 'disconnected';
+  state: "connected" | "disconnected";
   interfaceName?: string;
   ipAddress?: string;
   netmask?: string;
   gateway?: string;
-  onInternet?: 'yes' | 'no';
-  method?: 'dhcp' | 'manual';
+  onInternet?: "yes" | "no";
+  method?: "dhcp" | "manual";
   dns1?: string;
   dns2?: string;
   dns3?: string;
@@ -103,7 +103,7 @@ interface SensorValues {
 
 interface EddystoneInfo {
   enabled: boolean;
-  frame: 'uid' | 'url';
+  frame: "uid" | "url";
   frameData: string;
 }
 
@@ -115,7 +115,7 @@ interface iBeaconInfo {
 }
 
 interface NetworkCheckupInfo {
-  mode: 'default' | 'manual';
+  mode: "default" | "manual";
   url?: string;
 }
 
@@ -123,72 +123,72 @@ interface DeviceInfo {
   addBlockedPortList(
     successCallback: () => void,
     errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
-    options: AddBlockedPortListOptions
+    options: AddBlockedPortListOptions,
   ): void;
   deleteBlockedPortList(
     successCallback: () => void,
     errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
-    options: DeleteBlockedPortListOptions
+    options: DeleteBlockedPortListOptions,
   ): void;
   getBlockedPortList(
     successCallback: (cbObject: { blockedPortList: BlockedPort[] }) => void,
-    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void
+    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
   ): void;
   getEddystoneInfo(
     successCallback: (cbObject: EddystoneInfo) => void,
-    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void
+    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
   ): void;
   setEddystoneInfo(
     successCallback: () => void,
     errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
-    options: { frame: 'uid' | 'url'; frameData: string }
+    options: { frame: "uid" | "url"; frameData: string },
   ): void;
   getiBeaconInfo(
     successCallback: (cbObject: iBeaconInfo) => void,
-    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void
+    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
   ): void;
   setiBeaconInfo(
     successCallback: () => void,
     errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
-    options: { uuid: string; major: number; minor: number }
+    options: { uuid: string; major: number; minor: number },
   ): void;
   getHDBaseTMode(
-    successCallback: (cbObject: { HDBaseTMode: 'on' | 'off' }) => void,
-    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void
+    successCallback: (cbObject: { HDBaseTMode: "on" | "off" }) => void,
+    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
   ): void;
   getNetworkCheckupInfo(
     successCallback: (cbObject: NetworkCheckupInfo) => void,
-    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void
+    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
   ): void;
   setNetworkCheckupInfo(
     successCallback: () => void,
     errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
-    options: NetworkCheckupInfo
+    options: NetworkCheckupInfo,
   ): void;
   getNetworkInfo(
     successCallback: (cbObject: NetworkInfo) => void,
-    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void
+    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
   ): void;
   getNetworkMacInfo(
     successCallback: (cbObject: NetworkMacInfo) => void,
-    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void
+    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
   ): void;
   getPlatformInfo(
     successCallback: (cbObject: PlatformInfo) => void,
-    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void
+    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
   ): void;
   getProxyInfo(
     successCallback: (cbObject: ProxyInfo) => void,
-    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void
+    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
   ): void;
   setProxyInfo(
     successCallback: () => void,
     errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
-    options: ProxyInfo
+    options: ProxyInfo,
   ): void;
   getSensorValues(
     successCallback: (cbObject: SensorValues) => void,
-    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void
+    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
   ): void;
 }
 

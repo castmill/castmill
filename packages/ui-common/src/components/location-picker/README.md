@@ -16,17 +16,12 @@ The LocationPicker component provides an interactive map-based interface for sel
 ### Basic Usage
 
 ```tsx
-import { LocationPicker, LocationValue } from '@castmill/ui-common';
+import { LocationPicker, LocationValue } from "@castmill/ui-common";
 
 function MyComponent() {
   const [location, setLocation] = createSignal<LocationValue | undefined>();
 
-  return (
-    <LocationPicker
-      value={location()}
-      onChange={(newLocation) => setLocation(newLocation)}
-    />
-  );
+  return <LocationPicker value={location()} onChange={(newLocation) => setLocation(newLocation)} />;
 }
 ```
 
@@ -144,9 +139,9 @@ The component is keyboard accessible:
   value={{
     lat: 59.3293,
     lng: 18.0686,
-    address: 'Stockholm, Sweden',
-    city: 'Stockholm',
-    country: 'Sweden',
+    address: "Stockholm, Sweden",
+    city: "Stockholm",
+    country: "Sweden",
   }}
   onChange={handleLocationChange}
 />

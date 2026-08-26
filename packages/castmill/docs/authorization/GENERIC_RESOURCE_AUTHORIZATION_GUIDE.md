@@ -7,18 +7,21 @@ The Castmill platform now has a **centralized, matrix-based authorization system
 ## Architecture
 
 ### 1. Permission Matrix (`lib/castmill/authorization/permissions.ex`)
+
 - Defines roles: `:admin`, `:manager`, `:member`, `:guest`
 - Defines resources: `:playlists`, `:medias`, `:channels`, `:devices`, `:teams`, `:widgets`
 - Defines actions: `:list`, `:show`, `:create`, `:update`, `:delete`
 - Contains permission matrix mapping roles → resources → allowed actions
 
 ### 2. Resource Access Helpers (`lib/castmill/authorization/resource_access.ex`)
+
 - `check_resource_access/4` - Check if user can perform action on resource type
 - `has_any_resource_access?/3` - Check if user has ANY access to resource type
 - `accessible_resource_types/2` - Get all resources accessible by user
 - `allowed_resource_actions/3` - Get all actions allowed for user on resource
 
 ### 3. Controller Integration (`lib/castmill_web/controllers/organization_controller.ex`)
+
 - Generic `check_access` methods for all resource operations
 - Actions: `:list_resources`, `:show_resource`, `:create_resource`, `:update_resource`, `:delete_resource`
 
@@ -32,19 +35,19 @@ The Castmill platform now has a **centralized, matrix-based authorization system
 defmodule CastmillWeb.MyResourceController do
   use CastmillWeb, :controller
   use CastmillWeb.AccessActorBehaviour
-  
+
   alias Castmill.Authorization.ResourceAccess
 
   # Example: Check if user can create playlists
   def check_access(actor_id, :create, %{"organization_id" => org_id}) do
     ResourceAccess.check_resource_access(actor_id, org_id, :playlists, :create)
   end
-  
+
   # Example: Check if user can list devices
   def check_access(actor_id, :index, %{"organization_id" => org_id}) do
     ResourceAccess.check_resource_access(actor_id, org_id, :devices, :list)
   end
-  
+
   # Example: Check if user can update a channel
   def check_access(actor_id, :update, %{"organization_id" => org_id}) do
     ResourceAccess.check_resource_access(actor_id, org_id, :channels, :update)
@@ -112,17 +115,17 @@ ResourceAccess.check_multiple_actions(user_id, org_id, :teams, [:create, :update
 def mount(_params, %{"user_id" => user_id, "org_id" => org_id}, socket) do
   # Get user's accessible resources for navigation
   accessible = ResourceAccess.accessible_resource_types(user_id, org_id)
-  
+
   # Get specific permissions for conditional rendering
-  can_create_playlist = 
+  can_create_playlist =
     ResourceAccess.check_resource_access(user_id, org_id, :playlists, :create)
     |> elem(1)
-  
-  socket = 
+
+  socket =
     socket
     |> assign(:accessible_resources, accessible)
     |> assign(:can_create_playlist, can_create_playlist)
-  
+
   {:ok, socket}
 end
 ```
@@ -148,7 +151,7 @@ Edit `lib/castmill/authorization/permissions.ex`:
 ```elixir
 @permissions %{
   # ... existing roles ...
-  
+
   # New role: Viewer (read-only everything except teams)
   viewer: %{
     playlists: [:list, :show],
@@ -195,16 +198,17 @@ member: %{
 
 ## Current Permission Matrix
 
-| Resource | Admin | Manager | Member | Guest |
-|----------|-------|---------|---------|-------|
-| Playlists | Full | Full | Full | Read |
-| Medias | Full | Full | Full | Read |
-| Channels | Full | Full | Full | Read |
-| Devices | Full | Full | Full | Read |
-| Teams | Full | Full | Read | None |
-| Widgets | Full | Full | Read | Read |
+| Resource  | Admin | Manager | Member | Guest |
+| --------- | ----- | ------- | ------ | ----- |
+| Playlists | Full  | Full    | Full   | Read  |
+| Medias    | Full  | Full    | Full   | Read  |
+| Channels  | Full  | Full    | Full   | Read  |
+| Devices   | Full  | Full    | Full   | Read  |
+| Teams     | Full  | Full    | Read   | None  |
+| Widgets   | Full  | Full    | Read   | Read  |
 
 **Actions:**
+
 - **Full** = list, show, create, update, delete
 - **Read** = list, show
 - **None** = no access
@@ -212,6 +216,7 @@ member: %{
 ## Migration from Old Authorization
 
 ### Before (scattered checks):
+
 ```elixir
 def check_access(actor_id, :create_widget, %{"organization_id" => org_id}) do
   {:ok, Organizations.is_admin?(org_id, actor_id)}
@@ -223,6 +228,7 @@ end
 ```
 
 ### After (centralized):
+
 ```elixir
 def check_access(actor_id, :create, %{"organization_id" => org_id, "type" => type}) do
   ResourceAccess.check_resource_access(actor_id, org_id, String.to_atom(type), :create)

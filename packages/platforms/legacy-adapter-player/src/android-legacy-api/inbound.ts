@@ -1,30 +1,30 @@
-import { Logger } from '../utils';
+import { Logger } from "../utils";
 
-const logger = new Logger('Inbound');
+const logger = new Logger("Inbound");
 
 // inbound interface
 export const inbound = {
   command: function (cmd: string) {
-    logger.log('command: ' + cmd);
+    logger.log("command: " + cmd);
     return Promise.resolve();
   },
   event: function (type: string, param: unknown): Promise<void> {
     return new Promise(function (resolve, reject) {
-      logger.log('event ' + type + ' ' + param);
+      logger.log("event " + type + " " + param);
       switch (type) {
-        case 'ready':
+        case "ready":
           resolve();
           break;
-        case 'playing':
+        case "playing":
           resolve();
           break;
-        case 'state':
+        case "state":
           resolve();
           break;
-        case 'progress':
+        case "progress":
           resolve();
           break;
-        case 'console':
+        case "console":
           // TODO: call setLogMode local on device instance
           // Maybe it should be an event.
           // device.setLogMode('local');

@@ -1,9 +1,9 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@solidjs/testing-library';
-import { I18nProvider } from '../../i18n';
-import { OrganizationMembersView } from './organization-members-view';
-import { OrganizationsService } from '../../services/organizations.service';
-import { getUser } from '../../components/auth';
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, fireEvent, waitFor } from "@solidjs/testing-library";
+import { I18nProvider } from "../../i18n";
+import { OrganizationMembersView } from "./organization-members-view";
+import { OrganizationsService } from "../../services/organizations.service";
+import { getUser } from "../../components/auth";
 
 const toastSpies = {
   success: vi.fn(),
@@ -13,7 +13,7 @@ const toastSpies = {
 
 const mockNavigate = vi.fn();
 
-vi.mock('../../services/organizations.service', () => ({
+vi.mock("../../services/organizations.service", () => ({
   OrganizationsService: {
     fetchMembers: vi.fn(),
     removeMemberFromOrganization: vi.fn(),
@@ -22,18 +22,18 @@ vi.mock('../../services/organizations.service', () => ({
   },
 }));
 
-vi.mock('../../hooks/usePermissions', () => ({
+vi.mock("../../hooks/usePermissions", () => ({
   usePermissions: () => ({
     canPerformAction: () => true,
   }),
 }));
 
-vi.mock('../../components/auth', () => ({
+vi.mock("../../components/auth", () => ({
   getUser: vi.fn(),
   authFetch: vi.fn(),
 }));
 
-vi.mock('@solidjs/router', () => ({
+vi.mock("@solidjs/router", () => ({
   useNavigate: () => mockNavigate,
 }));
 
@@ -42,43 +42,43 @@ const mockStore = {
   organizations: {
     data: [
       {
-        id: 'org-1',
-        name: 'Test Organization',
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z',
+        id: "org-1",
+        name: "Test Organization",
+        created_at: "2024-01-01T00:00:00Z",
+        updated_at: "2024-01-01T00:00:00Z",
       },
     ],
     loaded: true,
     loading: false,
-    selectedId: 'org-1',
-    selectedName: 'Test Organization',
+    selectedId: "org-1",
+    selectedName: "Test Organization",
   },
 };
 
-vi.mock('../../store/store', () => ({
+vi.mock("../../store/store", () => ({
   get store() {
     return mockStore;
   },
   setStore: vi.fn(),
 }));
 
-vi.mock('@castmill/ui-common', async () => {
-  const actual = await vi.importActual('@castmill/ui-common');
+vi.mock("@castmill/ui-common", async () => {
+  const actual = await vi.importActual("@castmill/ui-common");
   return {
     ...actual,
     useToast: () => toastSpies,
   };
 });
 
-describe('OrganizationMembersView - leave organization', () => {
+describe("OrganizationMembersView - leave organization", () => {
   beforeEach(() => {
     // Reset mockStore to single organization
     mockStore.organizations.data = [
       {
-        id: 'org-1',
-        name: 'Test Organization',
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z',
+        id: "org-1",
+        name: "Test Organization",
+        created_at: "2024-01-01T00:00:00Z",
+        updated_at: "2024-01-01T00:00:00Z",
       },
     ];
 
@@ -88,13 +88,11 @@ describe('OrganizationMembersView - leave organization', () => {
     mockNavigate.mockClear();
     vi.mocked(OrganizationsService.fetchMembers).mockClear();
     vi.mocked(OrganizationsService.getAll).mockClear();
-    vi.mocked(
-      OrganizationsService.removeMemberFromOrganization
-    ).mockResolvedValue(undefined);
+    vi.mocked(OrganizationsService.removeMemberFromOrganization).mockResolvedValue(undefined);
     vi.mocked(getUser).mockReturnValue({
-      id: 'user-1',
-      name: 'Alice',
-      email: 'member@example.com',
+      id: "user-1",
+      name: "Alice",
+      email: "member@example.com",
     });
   });
 
@@ -113,20 +111,20 @@ describe('OrganizationMembersView - leave organization', () => {
       </I18nProvider>
     ));
 
-  it('allows a member to leave when another admin exists and user has multiple orgs', async () => {
+  it("allows a member to leave when another admin exists and user has multiple orgs", async () => {
     // Set up store with multiple organizations
     mockStore.organizations.data = [
       {
-        id: 'org-1',
-        name: 'Test Organization',
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z',
+        id: "org-1",
+        name: "Test Organization",
+        created_at: "2024-01-01T00:00:00Z",
+        updated_at: "2024-01-01T00:00:00Z",
       },
       {
-        id: 'org-2',
-        name: 'Other Org',
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z',
+        id: "org-2",
+        name: "Other Org",
+        created_at: "2024-01-01T00:00:00Z",
+        updated_at: "2024-01-01T00:00:00Z",
       },
     ];
 
@@ -134,14 +132,14 @@ describe('OrganizationMembersView - leave organization', () => {
       count: 2,
       data: [
         {
-          user: { id: 'user-1', name: 'Alice', email: 'member@example.com' },
-          user_id: 'user-1',
-          role: 'member',
+          user: { id: "user-1", name: "Alice", email: "member@example.com" },
+          user_id: "user-1",
+          role: "member",
         },
         {
-          user: { id: 'user-2', name: 'Bob', email: 'admin@example.com' },
-          user_id: 'user-2',
-          role: 'admin',
+          user: { id: "user-2", name: "Bob", email: "admin@example.com" },
+          user_id: "user-2",
+          role: "admin",
         },
       ],
     });
@@ -149,16 +147,16 @@ describe('OrganizationMembersView - leave organization', () => {
     // Mock getAll to return another organization after leaving
     vi.mocked(OrganizationsService.getAll).mockResolvedValue([
       {
-        id: 'org-2',
-        name: 'Other Org',
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z',
+        id: "org-2",
+        name: "Other Org",
+        created_at: "2024-01-01T00:00:00Z",
+        updated_at: "2024-01-01T00:00:00Z",
       },
     ]);
 
     renderComponent();
 
-    const leaveButton = await screen.findByRole('button', {
+    const leaveButton = await screen.findByRole("button", {
       name: /leave organization/i,
     });
 
@@ -169,9 +167,10 @@ describe('OrganizationMembersView - leave organization', () => {
 
     // Should call API immediately (no warning dialog)
     await waitFor(() => {
-      expect(
-        OrganizationsService.removeMemberFromOrganization
-      ).toHaveBeenCalledWith('org-1', 'user-1');
+      expect(OrganizationsService.removeMemberFromOrganization).toHaveBeenCalledWith(
+        "org-1",
+        "user-1",
+      );
     });
 
     await waitFor(() => {
@@ -180,25 +179,25 @@ describe('OrganizationMembersView - leave organization', () => {
 
     // Should navigate to another organization
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/org/org-2', {
+      expect(mockNavigate).toHaveBeenCalledWith("/org/org-2", {
         replace: true,
       });
     });
   });
 
-  it('shows warning dialog when leaving the last organization', async () => {
+  it("shows warning dialog when leaving the last organization", async () => {
     vi.mocked(OrganizationsService.fetchMembers).mockResolvedValue({
       count: 2,
       data: [
         {
-          user: { id: 'user-1', name: 'Alice', email: 'member@example.com' },
-          user_id: 'user-1',
-          role: 'member',
+          user: { id: "user-1", name: "Alice", email: "member@example.com" },
+          user_id: "user-1",
+          role: "member",
         },
         {
-          user: { id: 'user-2', name: 'Bob', email: 'admin@example.com' },
-          user_id: 'user-2',
-          role: 'admin',
+          user: { id: "user-2", name: "Bob", email: "admin@example.com" },
+          user_id: "user-2",
+          role: "admin",
         },
       ],
     });
@@ -208,7 +207,7 @@ describe('OrganizationMembersView - leave organization', () => {
 
     renderComponent();
 
-    const leaveButton = await screen.findByRole('button', {
+    const leaveButton = await screen.findByRole("button", {
       name: /leave organization/i,
     });
 
@@ -217,15 +216,11 @@ describe('OrganizationMembersView - leave organization', () => {
 
     // Should show warning dialog
     await waitFor(() => {
-      expect(
-        screen.getByText(/leave your last organization/i)
-      ).toBeInTheDocument();
+      expect(screen.getByText(/leave your last organization/i)).toBeInTheDocument();
     });
 
     // Should NOT have called the API yet
-    expect(
-      OrganizationsService.removeMemberFromOrganization
-    ).not.toHaveBeenCalled();
+    expect(OrganizationsService.removeMemberFromOrganization).not.toHaveBeenCalled();
 
     // Click confirm in the dialog
     const confirmButton = screen.getByLabelText(/confirm/i);
@@ -233,9 +228,10 @@ describe('OrganizationMembersView - leave organization', () => {
 
     // Now it should call the API
     await waitFor(() => {
-      expect(
-        OrganizationsService.removeMemberFromOrganization
-      ).toHaveBeenCalledWith('org-1', 'user-1');
+      expect(OrganizationsService.removeMemberFromOrganization).toHaveBeenCalledWith(
+        "org-1",
+        "user-1",
+      );
     });
 
     // Should show info toast about no organizations
@@ -245,86 +241,84 @@ describe('OrganizationMembersView - leave organization', () => {
 
     // Should navigate to login
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/login', { replace: true });
+      expect(mockNavigate).toHaveBeenCalledWith("/login", { replace: true });
     });
   });
 
-  it('allows an admin to leave when another admin exists', async () => {
+  it("allows an admin to leave when another admin exists", async () => {
     vi.mocked(OrganizationsService.fetchMembers).mockResolvedValue({
       count: 2,
       data: [
         {
-          user: { id: 'user-1', name: 'Alice', email: 'admin1@example.com' },
-          user_id: 'user-1',
-          role: 'admin',
+          user: { id: "user-1", name: "Alice", email: "admin1@example.com" },
+          user_id: "user-1",
+          role: "admin",
         },
         {
-          user: { id: 'user-2', name: 'Bob', email: 'admin2@example.com' },
-          user_id: 'user-2',
-          role: 'admin',
+          user: { id: "user-2", name: "Bob", email: "admin2@example.com" },
+          user_id: "user-2",
+          role: "admin",
         },
       ],
     });
 
     renderComponent();
 
-    const leaveButton = await screen.findByRole('button', {
+    const leaveButton = await screen.findByRole("button", {
       name: /leave organization/i,
     });
 
     expect(leaveButton).not.toBeDisabled();
   });
 
-  it('disables the leave button when user is the last admin', async () => {
+  it("disables the leave button when user is the last admin", async () => {
     vi.mocked(OrganizationsService.fetchMembers).mockResolvedValue({
       count: 2,
       data: [
         {
-          user: { id: 'user-1', name: 'Alice', email: 'admin@example.com' },
-          user_id: 'user-1',
-          role: 'admin',
+          user: { id: "user-1", name: "Alice", email: "admin@example.com" },
+          user_id: "user-1",
+          role: "admin",
         },
         {
-          user: { id: 'user-2', name: 'Bob', email: 'member@example.com' },
-          user_id: 'user-2',
-          role: 'member',
+          user: { id: "user-2", name: "Bob", email: "member@example.com" },
+          user_id: "user-2",
+          role: "member",
         },
       ],
     });
 
     renderComponent();
 
-    const leaveButton = await screen.findByRole('button', {
+    const leaveButton = await screen.findByRole("button", {
       name: /leave organization/i,
     });
 
     await waitFor(() => {
       expect(leaveButton).toBeDisabled();
     });
-    expect(
-      await screen.findByText(/add another admin before leaving/i)
-    ).toBeInTheDocument();
+    expect(await screen.findByText(/add another admin before leaving/i)).toBeInTheDocument();
   });
 
-  it('does not show leave button for non-members', async () => {
+  it("does not show leave button for non-members", async () => {
     vi.mocked(getUser).mockReturnValue({
-      id: 'user-3',
-      name: 'Charlie',
-      email: 'other@example.com',
+      id: "user-3",
+      name: "Charlie",
+      email: "other@example.com",
     });
 
     vi.mocked(OrganizationsService.fetchMembers).mockResolvedValue({
       count: 2,
       data: [
         {
-          user: { id: 'user-1', name: 'Alice', email: 'admin@example.com' },
-          user_id: 'user-1',
-          role: 'admin',
+          user: { id: "user-1", name: "Alice", email: "admin@example.com" },
+          user_id: "user-1",
+          role: "admin",
         },
         {
-          user: { id: 'user-2', name: 'Bob', email: 'member@example.com' },
-          user_id: 'user-2',
-          role: 'member',
+          user: { id: "user-2", name: "Bob", email: "member@example.com" },
+          user_id: "user-2",
+          role: "member",
         },
       ],
     });
@@ -332,9 +326,7 @@ describe('OrganizationMembersView - leave organization', () => {
     renderComponent();
 
     await waitFor(() => {
-      expect(
-        screen.queryByRole('button', { name: /leave organization/i })
-      ).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: /leave organization/i })).not.toBeInTheDocument();
     });
   });
 });

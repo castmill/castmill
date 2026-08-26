@@ -1,6 +1,6 @@
-import { baseUrl } from '../env';
+import { baseUrl } from "../env";
 
-import { authFetch } from '../components/auth';
+import { authFetch } from "../components/auth";
 export interface SearchResult {
   resource_type: string;
   data: any[];
@@ -31,7 +31,7 @@ export const SearchService = {
     organizationId: string,
     query: string,
     page: number = 1,
-    pageSize: number = 20
+    pageSize: number = 20,
   ): Promise<SearchResponse> {
     const queryParams = new URLSearchParams({
       query,
@@ -42,8 +42,8 @@ export const SearchService = {
     const response = await authFetch(
       `${baseUrl}/dashboard/organizations/${organizationId}/search?${queryParams}`,
       {
-        method: 'GET',
-      }
+        method: "GET",
+      },
     );
 
     if (!response.ok) {

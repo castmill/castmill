@@ -1,6 +1,6 @@
-import { Component, onMount, onCleanup } from 'solid-js';
-import { dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import styles from './calendar-view.module.scss'; // Assuming a CSS module for styling
+import { Component, onMount, onCleanup } from "solid-js";
+import { dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
+import styles from "./calendar-view.module.scss"; // Assuming a CSS module for styling
 
 interface CalendarCellProps {
   key: string; // Unique identifier like "day-0-slot-0"
@@ -47,7 +47,7 @@ export const CalendarCell: Component<CalendarCellProps> = (props) => {
       ref={elRef}
       classList={{
         [styles.hovered]: props.isHovered,
-        [styles['current-day']]: props.isCurrentDay,
+        [styles["current-day"]]: props.isCurrentDay,
       }}
       data-drop-data={JSON.stringify(props.dropData)}
     />

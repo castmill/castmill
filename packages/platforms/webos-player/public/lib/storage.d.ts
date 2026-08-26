@@ -4,133 +4,133 @@ interface Storage {
   changeLogoImage(
     successCallback: () => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: ChangeLogoImageOptions
+    options: ChangeLogoImageOptions,
   ): void;
   copyFile(
     successCallback: () => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: CopyFileOptions
+    options: CopyFileOptions,
   ): void;
   decryptFile(
     successCallback: () => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: DecryptFileOptions
+    options: DecryptFileOptions,
   ): void;
   downloadFile(
     successCallback: (cbObject: DownloadFileResponse) => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: DownloadFileOptions
+    options: DownloadFileOptions,
   ): void;
   downloadFirmware(
     successCallback: () => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: DownloadFirmwareOptions
+    options: DownloadFirmwareOptions,
   ): void;
   exists(
     successCallback: (cbObject: ExistsResponse) => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: ExistsOptions
+    options: ExistsOptions,
   ): void;
   exportSettingData(
     successCallback: () => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: ExportSettingDataOptions
+    options: ExportSettingDataOptions,
   ): void;
   formatUSB(
     successCallback: () => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: FormatUSBOptions
+    options: FormatUSBOptions,
   ): void;
   fsync(
     successCallback: () => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: FsyncOptions
+    options: FsyncOptions,
   ): void;
   getDownloadFileStatus(
     successCallback: (cbObject: DownloadFileStatusResponse) => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: DownloadFileStatusOptions
+    options: DownloadFileStatusOptions,
   ): void;
   getFirmwareUpgradeStatus(
     successCallback: (cbObject: FirmwareUpgradeStatusResponse) => void,
-    errorCallback: (cbObject: ErrorResponse) => void
+    errorCallback: (cbObject: ErrorResponse) => void,
   ): void;
   getMD5Hash(
     successCallback: (cbObject: MD5HashResponse) => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: MD5HashOptions
+    options: MD5HashOptions,
   ): void;
   getStorageInfo(
     successCallback: (cbObject: StorageInfoResponse) => void,
-    errorCallback: (cbObject: ErrorResponse) => void
+    errorCallback: (cbObject: ErrorResponse) => void,
   ): void;
   getUSBInfo(
     successCallback: (cbObject: USBInfoResponse) => void,
-    errorCallback: (cbObject: ErrorResponse) => void
+    errorCallback: (cbObject: ErrorResponse) => void,
   ): void;
   importSettingData(
     successCallback: () => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: ImportSettingDataOptions
+    options: ImportSettingDataOptions,
   ): void;
   listFiles(
     successCallback: (cbObject: ListFilesResponse) => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: ListFilesOptions
+    options: ListFilesOptions,
   ): void;
   mkdir(
     successCallback: () => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: MkdirOptions
+    options: MkdirOptions,
   ): void;
   moveFile(
     successCallback: () => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: MoveFileOptions
+    options: MoveFileOptions,
   ): void;
   readFile(
     successCallback: (cbObject: ReadFileResponse) => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: ReadFileOptions
+    options: ReadFileOptions,
   ): void;
   removeAll(
     successCallback: () => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: RemoveAllOptions
+    options: RemoveAllOptions,
   ): void;
   removeApplication(
     successCallback: () => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: RemoveApplicationOptions
+    options: RemoveApplicationOptions,
   ): void;
   removeFile(
     successCallback: () => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: RemoveFileOptions
+    options: RemoveFileOptions,
   ): void;
   statFile(
     successCallback: (cbObject: StatFileResponse) => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: StatFileOptions
+    options: StatFileOptions,
   ): void;
   unzipFile(
     successCallback: () => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: UnzipFileOptions
+    options: UnzipFileOptions,
   ): void;
   upgradeApplication(
     successCallback: () => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: UpgradeApplicationOptions
+    options: UpgradeApplicationOptions,
   ): void;
   upgradeFirmware(
     successCallback: () => void,
-    errorCallback: (cbObject: ErrorResponse) => void
+    errorCallback: (cbObject: ErrorResponse) => void,
   ): void;
   writeFile(
     successCallback: (cbObject: WriteFileResponse) => void,
     errorCallback: (cbObject: ErrorResponse) => void,
-    options: WriteFileOptions
+    options: WriteFileOptions,
   ): void;
 }
 
@@ -151,7 +151,7 @@ interface CopyFileOptions {
 }
 
 interface FTPOptions {
-  secure?: 'implicit' | 'explicit';
+  secure?: "implicit" | "explicit";
   secureOptions?: {
     privateKey?: string;
     passphrase?: string;
@@ -169,19 +169,19 @@ interface HTTPOptions {
 
 interface DecryptFileOptions {
   cipher_mode:
-    | 'aes-128-cbc'
-    | 'aes-128-ecb'
-    | 'aes-192-cbc'
-    | 'aes-192-ecb'
-    | 'aes-256-cbc'
-    | 'aes-256-ecb';
+    | "aes-128-cbc"
+    | "aes-128-ecb"
+    | "aes-192-cbc"
+    | "aes-192-ecb"
+    | "aes-256-cbc"
+    | "aes-256-ecb";
   password: string;
   inputPath: string;
   outputFileName: string;
 }
 
 interface DownloadFileOptions {
-  action: 'start' | 'pause' | 'resume' | 'cancel';
+  action: "start" | "pause" | "resume" | "cancel";
   source?: string;
   destination?: string;
   ticket?: number;
@@ -225,7 +225,7 @@ interface DownloadFileStatusOptions {
 
 interface DownloadFileStatusResponse {
   ticket: number;
-  status: 'downloading' | 'completed' | 'paused' | 'canceled' | 'failed';
+  status: "downloading" | "completed" | "paused" | "canceled" | "failed";
   source?: string;
   destination?: string;
   amountReceived?: number;
@@ -234,13 +234,7 @@ interface DownloadFileStatusResponse {
 }
 
 interface FirmwareUpgradeStatusResponse {
-  status:
-    | 'idle'
-    | 'downloading'
-    | 'ready'
-    | 'in progress'
-    | 'completed'
-    | 'fail';
+  status: "idle" | "downloading" | "ready" | "in progress" | "completed" | "fail";
   downloadProgress: number;
   upgradeProgress: number;
 }
@@ -304,7 +298,7 @@ interface ReadFileOptions {
   path: string;
   position?: number;
   length?: number;
-  encoding?: 'utf8' | 'binary' | 'base64';
+  encoding?: "utf8" | "binary" | "base64";
 }
 
 interface ReadFileResponse {
@@ -329,7 +323,7 @@ interface StatFileOptions {
 }
 
 interface StatFileResponse {
-  type: 'file' | 'directory' | 'unknown';
+  type: "file" | "directory" | "unknown";
   size: number;
   atime: string;
   mtime: string;
@@ -350,10 +344,10 @@ interface UpgradeApplicationOptions {
 interface WriteFileOptions {
   path: string;
   data: string | ArrayBuffer;
-  mode?: 'truncate' | 'append' | 'position';
+  mode?: "truncate" | "append" | "position";
   position?: number;
   length?: number;
-  encoding?: 'utf8' | 'base64' | 'binary';
+  encoding?: "utf8" | "base64" | "binary";
   offset?: number;
 }
 

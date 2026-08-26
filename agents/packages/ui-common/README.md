@@ -35,23 +35,23 @@ The `TableView` component is a comprehensive data table with built-in pagination
   title: string;                    // Page title
   resource: string;                 // Resource name for display
   params?: [Params, SetParams];     // URL search params integration
-  
+
   fetchData: (params: {
     page: { num: number; size: number };
     sortOptions: SortOptions;
     search?: string;
     filters?: Record<string, string | boolean>;
   }) => Promise<{ data: Item[]; count: number }>;
-  
+
   table: {
     columns: Column<IdType, Item>[];
     actions?: TableAction<Item>[];
   };
-  
+
   pagination: {
     itemsPerPage: number;
   };
-  
+
   ref?: (ref: TableViewRef<IdType, Item>) => void;
 }
 ```
@@ -85,10 +85,10 @@ Defines table columns with sorting and custom rendering.
 
 ```typescript
 interface Column<IdType = string, Item extends ItemBase<IdType> = ItemBase<IdType>> {
-  key: string;              // Property key to display
-  title: string;            // Column header text (⚠️ NOT "label"!)
-  sortable?: boolean;       // Enable sorting for this column
-  render?: (item: Item) => JSX.Element;  // Custom cell renderer
+  key: string; // Property key to display
+  title: string; // Column header text (⚠️ NOT "label"!)
+  sortable?: boolean; // Enable sorting for this column
+  render?: (item: Item) => JSX.Element; // Custom cell renderer
 }
 ```
 
@@ -100,10 +100,10 @@ Defines actions available for each row (view, edit, delete, etc.).
 
 ```typescript
 interface TableAction<Item> {
-  icon: Component | string;           // Icon component or emoji
-  label: string;                      // Action label
-  props?: (item: Item) => Record<string, any>;  // Dynamic props
-  handler: (item: Item) => void;      // Action handler
+  icon: Component | string; // Icon component or emoji
+  label: string; // Action label
+  props?: (item: Item) => Record<string, any>; // Dynamic props
+  handler: (item: Item) => void; // Action handler
 }
 ```
 
@@ -113,12 +113,13 @@ interface TableAction<Item> {
 
 ```typescript
 interface SortOptions {
-  key?: string;                      // Column key to sort by
-  direction: 'ascending' | 'descending';  // Sort direction
+  key?: string; // Column key to sort by
+  direction: "ascending" | "descending"; // Sort direction
 }
 ```
 
-**Important**: 
+**Important**:
+
 - Use `key`, not `field`
 - Use `'ascending'` or `'descending'`, not `'asc'` or `'desc'`
 
@@ -133,7 +134,7 @@ interface ModalProps {
   onClose: () => void;
   children: JSX.Element;
   title: string;
-  description: string;        // Required field
+  description: string; // Required field
   successMessage?: string;
   errorMessage?: string;
   loading?: boolean;
@@ -165,6 +166,7 @@ let modalRef: ModalRef | undefined = undefined;
 ```
 
 **Common Mistakes**:
+
 - ❌ Don't use: `<Modal ref={setShowModal}>`
 - ❌ Don't forget the `description` prop (it's required)
 - ❌ Don't forget to set text colors in modal content (default may inherit white text)
@@ -177,8 +179,8 @@ Provides methods to interact with the table programmatically.
 
 ```typescript
 interface TableViewRef<IdType, Item extends ItemBase<IdType>> {
-  reloadData: () => Promise<void>;         // Refresh table data
-  updateItem: (itemId: IdType, item: Partial<Item>) => void;  // Update single item
+  reloadData: () => Promise<void>; // Refresh table data
+  updateItem: (itemId: IdType, item: Partial<Item>) => void; // Update single item
 }
 ```
 
@@ -271,14 +273,14 @@ if (options.sortOptions?.key) {
   const { key, direction } = options.sortOptions;
   filteredData.sort((a, b) => {
     const comparison = String(a[key]).localeCompare(String(b[key]));
-    return direction === 'ascending' ? comparison : -comparison;
+    return direction === "ascending" ? comparison : -comparison;
   });
 }
 
 // ❌ Wrong - uses 'field' and 'asc'/'desc'
 if (options.sortOptions.field) {
   const { field, direction } = options.sortOptions;
-  return direction === 'asc' ? comparison : -comparison;
+  return direction === "asc" ? comparison : -comparison;
 }
 ```
 
@@ -324,7 +326,7 @@ Backend APIs often return data with optional IDs in TypeScript definitions, but 
 ```typescript
 const result = await MyService.fetch();
 return {
-  data: result.data as MyItemWithId[],  // Assert required ID
+  data: result.data as MyItemWithId[], // Assert required ID
   count: result.count,
 };
 ```
@@ -347,15 +349,15 @@ describe('MyComponent', () => {
 
 ## Common Pitfalls & Solutions
 
-| Issue | Problem | Solution |
-|-------|---------|----------|
-| "Cannot read property 'field'" | Using wrong SortOptions property | Use `sortOptions?.key` not `sortOptions.field` |
-| "Type 'ascending' has no overlap with 'asc'" | Using wrong direction values | Use `'ascending'`/`'descending'` not `'asc'`/`'desc'` |
-| "'label' does not exist in type Column" | Wrong column property name | Use `title` not `label` |
-| "Property 'id' is missing" | Optional ID in type | Create `type WithId = MyType & { id: IdType }` |
-| Modal shows immediately | Wrong ref usage | Wrap in `<Show when={...}>` component |
-| "description is required" | Missing Modal prop | Always provide `description` prop |
-| White boxes in modal content | Text color inherits white | Add `color: #333;` to content divs and pre tags |
+| Issue                                        | Problem                          | Solution                                              |
+| -------------------------------------------- | -------------------------------- | ----------------------------------------------------- |
+| "Cannot read property 'field'"               | Using wrong SortOptions property | Use `sortOptions?.key` not `sortOptions.field`        |
+| "Type 'ascending' has no overlap with 'asc'" | Using wrong direction values     | Use `'ascending'`/`'descending'` not `'asc'`/`'desc'` |
+| "'label' does not exist in type Column"      | Wrong column property name       | Use `title` not `label`                               |
+| "Property 'id' is missing"                   | Optional ID in type              | Create `type WithId = MyType & { id: IdType }`        |
+| Modal shows immediately                      | Wrong ref usage                  | Wrap in `<Show when={...}>` component                 |
+| "description is required"                    | Missing Modal prop               | Always provide `description` prop                     |
+| White boxes in modal content                 | Text color inherits white        | Add `color: #333;` to content divs and pre tags       |
 
 ## Component Exports
 
@@ -368,28 +370,28 @@ import {
   IconButton,
   Modal,
   ModalRef,
-  
+
   // Table Components
   TableView,
   TableViewRef,
   Column,
   TableAction,
   Table,
-  
+
   // Other Components
   ConfirmDialog,
   Pagination,
   Filter,
   ToolBar,
   CircularProgress,
-  
+
   // Interfaces
   SortOptions,
   ItemBase,
-  
+
   // Utilities
   ResourcesObserver,
-} from '@castmill/ui-common';
+} from "@castmill/ui-common";
 ```
 
 ## Build & Development

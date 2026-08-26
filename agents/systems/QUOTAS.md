@@ -19,18 +19,20 @@ The Castmill Quotas system manages resource limits for organizations and network
 ## Core Modules
 
 ### Context Module
+
 - **`Castmill.Quotas`** - Main context module with all quota operations
 
 ### Schema Modules
+
 Located in `lib/castmill/quotas/`:
 
-| Module | Table | Purpose |
-|--------|-------|---------|
-| `Castmill.Quotas.Plan` | `plans` | Defines named plans (e.g., "Basic", "Pro", "Free") |
-| `Castmill.Quotas.PlansQuotas` | `plans_quotas` | Links plans to specific resource quotas |
-| `Castmill.Quotas.PlansOrganizations` | `plans_organizations` | Assigns plans to organizations |
-| `Castmill.Quotas.QuotasNetworks` | `quotas_networks` | Direct quotas for networks |
-| `Castmill.Quotas.QuotasOrganizations` | `quotas_organizations` | Organization-specific quota overrides |
+| Module                                | Table                  | Purpose                                            |
+| ------------------------------------- | ---------------------- | -------------------------------------------------- |
+| `Castmill.Quotas.Plan`                | `plans`                | Defines named plans (e.g., "Basic", "Pro", "Free") |
+| `Castmill.Quotas.PlansQuotas`         | `plans_quotas`         | Links plans to specific resource quotas            |
+| `Castmill.Quotas.PlansOrganizations`  | `plans_organizations`  | Assigns plans to organizations                     |
+| `Castmill.Quotas.QuotasNetworks`      | `quotas_networks`      | Direct quotas for networks                         |
+| `Castmill.Quotas.QuotasOrganizations` | `quotas_organizations` | Organization-specific quota overrides              |
 
 ## Database Schema
 
@@ -156,19 +158,19 @@ The `resource` column in all quota tables uses `Ecto.Enum`, which means:
 
 The full list of allowed values (defined identically in `PlansQuotas`, `QuotasNetworks`, and `QuotasOrganizations`):
 
-| Resource | Atom | Description | Unit |
-|----------|------|-------------|------|
-| organizations | `:organizations` | Number of organizations | count |
-| medias | `:medias` | Number of media items | count |
-| playlists | `:playlists` | Number of playlists | count |
-| channels | `:channels` | Number of channels | count |
-| channels_entries | `:channels_entries` | Number of channel entries | count |
-| devices | `:devices` | Number of devices | count |
-| users | `:users` | Number of users | count |
-| teams | `:teams` | Number of teams | count |
-| layouts | `:layouts` | Number of layouts | count |
-| storage | `:storage` | Total file storage quota | **MB** |
-| max_upload_size | `:max_upload_size` | Max upload size per file | **MB** |
+| Resource         | Atom                | Description               | Unit   |
+| ---------------- | ------------------- | ------------------------- | ------ |
+| organizations    | `:organizations`    | Number of organizations   | count  |
+| medias           | `:medias`           | Number of media items     | count  |
+| playlists        | `:playlists`        | Number of playlists       | count  |
+| channels         | `:channels`         | Number of channels        | count  |
+| channels_entries | `:channels_entries` | Number of channel entries | count  |
+| devices          | `:devices`          | Number of devices         | count  |
+| users            | `:users`            | Number of users           | count  |
+| teams            | `:teams`            | Number of teams           | count  |
+| layouts          | `:layouts`          | Number of layouts         | count  |
+| storage          | `:storage`          | Total file storage quota  | **MB** |
+| max_upload_size  | `:max_upload_size`  | Max upload size per file  | **MB** |
 
 > **MB vs bytes**: The `max` value for `storage` and `max_upload_size` is stored
 > in megabytes. However, `get_quota_used_for_organization(:storage)` returns
@@ -199,7 +201,7 @@ end
 
 defp update_organization_plan(org_id, plan_id) do
   import Ecto.Query
-  
+
   # Remove existing plan associations
   from(po in Castmill.Quotas.PlansOrganizations, where: po.organization_id == ^org_id)
   |> Castmill.Repo.delete_all()
@@ -220,7 +222,7 @@ end
 # Check quota before creating a resource
 def create(conn, params) do
   org_id = params["organization_id"]
-  
+
   if Castmill.Quotas.has_organization_enough_quota?(org_id, "devices", 1) do
     # Proceed with creation
   else

@@ -6,4 +6,4 @@
  *
  * Note: This is different from OrganizationRole
  */
-export type TeamRole = 'admin' | 'member' | 'installer';
+export type TeamRole = "admin" | "member" | "installer";

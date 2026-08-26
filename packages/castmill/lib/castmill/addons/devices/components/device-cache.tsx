@@ -1,7 +1,7 @@
-import { Component, createSignal, Show } from 'solid-js';
-import { AiOutlineDelete } from 'solid-icons/ai';
-import { BsTrash } from 'solid-icons/bs';
-import { IoReload } from 'solid-icons/io';
+import { Component, createSignal, Show } from "solid-js";
+import { AiOutlineDelete } from "solid-icons/ai";
+import { BsTrash } from "solid-icons/bs";
+import { IoReload } from "solid-icons/io";
 
 import {
   Tabs,
@@ -14,11 +14,11 @@ import {
   useToast,
   Button,
   formatBytes,
-} from '@castmill/ui-common';
+} from "@castmill/ui-common";
 
-import { Device } from '../interfaces/device.interface';
+import { Device } from "../interfaces/device.interface";
 
-import { DevicesService } from '../services/devices.service';
+import { DevicesService } from "../services/devices.service";
 
 interface DeviceTableCacheItem {
   timestamp: string;
@@ -43,35 +43,28 @@ export const DeviceCache: Component<{
 
   const columns = [
     {
-      key: 'timestamp',
-      title: t('common.timestamp'),
+      key: "timestamp",
+      title: t("common.timestamp"),
       sortable: true,
-      render: (item: DeviceTableCacheItem) => (
-        <span>{formatTimestamp(item.timestamp)}</span>
-      ),
+      render: (item: DeviceTableCacheItem) => <span>{formatTimestamp(item.timestamp)}</span>,
     },
-    { key: 'url', title: t('common.url'), sortable: true },
+    { key: "url", title: t("common.url"), sortable: true },
     {
-      key: 'size',
-      title: t('common.size'),
+      key: "size",
+      title: t("common.size"),
       sortable: false,
-      render: (item: DeviceTableCacheItem) => (
-        <span>{formatBytes(item.size)}</span>
-      ),
+      render: (item: DeviceTableCacheItem) => <span>{formatBytes(item.size)}</span>,
     },
-    { key: 'accessed', title: t('common.accessed'), sortable: false },
-    { key: 'mimeType', title: t('common.mimeType'), sortable: false },
+    { key: "accessed", title: t("common.accessed"), sortable: false },
+    { key: "mimeType", title: t("common.mimeType"), sortable: false },
   ] as Column<DeviceTableCacheItem>[];
 
   const [selectedItems, setSelectedItems] = createSignal(new Set<string>());
-  const [currentType, setCurrentType] = createSignal<'data' | 'code' | 'media'>(
-    'data'
-  );
+  const [currentType, setCurrentType] = createSignal<"data" | "code" | "media">("data");
   const [showConfirmDialog, setShowConfirmDialog] = createSignal<
     DeviceTableCacheItem | undefined
   >();
-  const [showConfirmDialogMultiple, setShowConfirmDialogMultiple] =
-    createSignal(false);
+  const [showConfirmDialogMultiple, setShowConfirmDialogMultiple] = createSignal(false);
   const [showConfirmClearAll, setShowConfirmClearAll] = createSignal(false);
   const [loadingDelete, setLoadingDelete] = createSignal(false);
   const [loadingClearAll, setLoadingClearAll] = createSignal(false);
@@ -80,7 +73,7 @@ export const DeviceCache: Component<{
   const itemsPerPage = 10; // Number of items to show per page
 
   const fetchCachePage = async (
-    type: 'data' | 'code' | 'media',
+    type: "data" | "code" | "media",
     {
       page,
       sortOptions,
@@ -91,7 +84,7 @@ export const DeviceCache: Component<{
       sortOptions: SortOptions;
       search?: string;
       filters?: Record<string, string | boolean>;
-    }
+    },
   ) => {
     setCurrentType(type);
     return DevicesService.getDeviceCache(props.baseUrl, props.device.id, {
@@ -106,9 +99,7 @@ export const DeviceCache: Component<{
     setSelectedItems(rowsSelected);
   };
 
-  const [tableViewRef, setTableViewRef] = createSignal<TableViewRef | null>(
-    null
-  );
+  const [tableViewRef, setTableViewRef] = createSignal<TableViewRef | null>(null);
 
   const refreshData = async () => {
     const ref = tableViewRef();
@@ -126,16 +117,13 @@ export const DeviceCache: Component<{
     setShowConfirmDialog(undefined);
     setLoadingDelete(true);
     try {
-      await DevicesService.deleteDeviceCache(
-        props.baseUrl,
-        props.device.id,
-        currentType(),
-        [item.url]
-      );
-      toast.success(t('devices.cache.deleteSuccess'));
+      await DevicesService.deleteDeviceCache(props.baseUrl, props.device.id, currentType(), [
+        item.url,
+      ]);
+      toast.success(t("devices.cache.deleteSuccess"));
       refreshData();
     } catch (error) {
-      toast.error(t('devices.cache.deleteError', { error: String(error) }));
+      toast.error(t("devices.cache.deleteError", { error: String(error) }));
     } finally {
       setLoadingDelete(false);
     }
@@ -146,19 +134,12 @@ export const DeviceCache: Component<{
     setLoadingDelete(true);
     try {
       const urls = Array.from(selectedItems());
-      await DevicesService.deleteDeviceCache(
-        props.baseUrl,
-        props.device.id,
-        currentType(),
-        urls
-      );
-      toast.success(
-        t('devices.cache.deleteMultipleSuccess', { count: urls.length })
-      );
+      await DevicesService.deleteDeviceCache(props.baseUrl, props.device.id, currentType(), urls);
+      toast.success(t("devices.cache.deleteMultipleSuccess", { count: urls.length }));
       setSelectedItems(new Set<string>());
       refreshData();
     } catch (error) {
-      toast.error(t('devices.cache.deleteError', { error: String(error) }));
+      toast.error(t("devices.cache.deleteError", { error: String(error) }));
     } finally {
       setLoadingDelete(false);
     }
@@ -168,17 +149,12 @@ export const DeviceCache: Component<{
     setShowConfirmClearAll(false);
     setLoadingClearAll(true);
     try {
-      await DevicesService.deleteDeviceCache(
-        props.baseUrl,
-        props.device.id,
-        currentType(),
-        []
-      );
-      toast.success(t('devices.cache.clearAllSuccess'));
+      await DevicesService.deleteDeviceCache(props.baseUrl, props.device.id, currentType(), []);
+      toast.success(t("devices.cache.clearAllSuccess"));
       setSelectedItems(new Set<string>());
       refreshData();
     } catch (error) {
-      toast.error(t('devices.cache.deleteError', { error: String(error) }));
+      toast.error(t("devices.cache.deleteError", { error: String(error) }));
     } finally {
       setLoadingClearAll(false);
     }
@@ -190,16 +166,16 @@ export const DeviceCache: Component<{
       handler: (item: DeviceTableCacheItem) => {
         setShowConfirmDialog(item);
       },
-      label: t('common.delete'),
+      label: t("common.delete"),
     },
   ];
 
-  const createTab = (type: 'data' | 'code' | 'media', title: string) => ({
+  const createTab = (type: "data" | "code" | "media", title: string) => ({
     title,
     content: () => (
       <TableView
-        title={t('devices.cache.title')}
-        resource={t('devices.cache.items')}
+        title={t("devices.cache.title")}
+        resource={t("devices.cache.items")}
         fetchData={(opts: any) => fetchCachePage(type, opts)}
         ref={setTableViewRef}
         table={{
@@ -216,7 +192,7 @@ export const DeviceCache: Component<{
                 onClick={refreshData}
                 icon={IoReload}
                 color="primary"
-                title={t('common.refresh')}
+                title={t("common.refresh")}
                 loading={loadingRefresh()}
               />
               <IconButton
@@ -224,12 +200,12 @@ export const DeviceCache: Component<{
                 icon={AiOutlineDelete}
                 color="primary"
                 disabled={selectedItems().size === 0 || loadingDelete()}
-                title={t('devices.cache.deleteSelected')}
+                title={t("devices.cache.deleteSelected")}
               />
               <Button
                 onClick={() => setShowConfirmClearAll(true)}
                 icon={BsTrash}
-                label={t('devices.cache.clearAll')}
+                label={t("devices.cache.clearAll")}
                 color="danger"
                 loading={loadingClearAll()}
               />
@@ -242,9 +218,9 @@ export const DeviceCache: Component<{
   });
 
   const tabs = [
-    createTab('data', t('devices.cache.dataTab')),
-    createTab('code', t('devices.cache.codeTab')),
-    createTab('media', t('devices.cache.mediaTab')),
+    createTab("data", t("devices.cache.dataTab")),
+    createTab("code", t("devices.cache.codeTab")),
+    createTab("media", t("devices.cache.mediaTab")),
   ];
 
   return (
@@ -253,9 +229,7 @@ export const DeviceCache: Component<{
         when={props.device.online}
         fallback={
           <div style="background-color: #3d3d3d; border-left: 4px solid #f0ad4e; padding: 0.8em 1em; border-radius: 4px;">
-            <p style="margin: 0; color: #f0ad4e;">
-              {t('devices.cache.offlineWarning')}
-            </p>
+            <p style="margin: 0; color: #f0ad4e;">{t("devices.cache.offlineWarning")}</p>
           </div>
         }
       >
@@ -267,8 +241,8 @@ export const DeviceCache: Component<{
         show={!!showConfirmDialog()}
         onConfirm={() => deleteCacheEntry(showConfirmDialog()!)}
         onClose={() => setShowConfirmDialog(undefined)}
-        title={t('devices.cache.confirmDelete')}
-        message={t('devices.cache.confirmDeleteMessage', {
+        title={t("devices.cache.confirmDelete")}
+        message={t("devices.cache.confirmDeleteMessage", {
           url: showConfirmDialog()?.url,
         })}
       />
@@ -278,8 +252,8 @@ export const DeviceCache: Component<{
         show={showConfirmDialogMultiple()}
         onConfirm={deleteMultipleCacheEntries}
         onClose={() => setShowConfirmDialogMultiple(false)}
-        title={t('devices.cache.confirmDeleteMultiple')}
-        message={t('devices.cache.confirmDeleteMultipleMessage', {
+        title={t("devices.cache.confirmDeleteMultiple")}
+        message={t("devices.cache.confirmDeleteMultipleMessage", {
           count: selectedItems().size,
         })}
       />
@@ -289,8 +263,8 @@ export const DeviceCache: Component<{
         show={showConfirmClearAll()}
         onConfirm={clearAllCache}
         onClose={() => setShowConfirmClearAll(false)}
-        title={t('devices.cache.confirmClearAll')}
-        message={t('devices.cache.confirmClearAllMessage', {
+        title={t("devices.cache.confirmClearAll")}
+        message={t("devices.cache.confirmClearAllMessage", {
           type: currentType(),
         })}
       />

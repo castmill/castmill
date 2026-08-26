@@ -5,9 +5,9 @@
  */
 
 function newGuid(): string {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
     const r = (Math.random() * 16) | 0;
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
     return v.toString(16);
   });
 }
@@ -41,23 +41,16 @@ export class Msg {
   private _inbound: InboundFunctions;
   private _resolvers: { [guid: string]: Resolver } = {};
 
-  constructor(
-    target: Window,
-    inbound: InboundFunctions,
-    outbound: OutboundFunctions
-  ) {
+  constructor(target: Window, inbound: InboundFunctions, outbound: OutboundFunctions) {
     this._target = target;
     this._inbound = inbound;
 
     this._setupOutbound(outbound);
-    window.addEventListener('message', this.handleMessage.bind(this), false);
+    window.addEventListener("message", this.handleMessage.bind(this), false);
   }
 
   private ack(guid: string, msg: any): void {
-    this._target.postMessage(
-      JSON.stringify({ ack: true, guid: guid, msg: msg }),
-      '*'
-    );
+    this._target.postMessage(JSON.stringify({ ack: true, guid: guid, msg: msg }), "*");
   }
 
   private nack(guid: string, err?: any): void {
@@ -66,9 +59,9 @@ export class Msg {
       JSON.stringify({
         ack: true,
         guid: guid,
-        err: { message: err.message || 'Generic Error' },
+        err: { message: err.message || "Generic Error" },
       }),
-      '*'
+      "*",
     );
   }
 
@@ -104,7 +97,7 @@ export class Msg {
     }
   }
 
-  private _post(msg: Omit<Action, 'guid'>): Promise<any> {
+  private _post(msg: Omit<Action, "guid">): Promise<any> {
     const guid = newGuid();
     return new Promise((resolve, reject) => {
       this._resolvers[guid] = { resolve, reject };
@@ -112,7 +105,7 @@ export class Msg {
         ...msg,
         guid: guid,
       };
-      this._target.postMessage(JSON.stringify(newMsg), '*');
+      this._target.postMessage(JSON.stringify(newMsg), "*");
     });
   }
 

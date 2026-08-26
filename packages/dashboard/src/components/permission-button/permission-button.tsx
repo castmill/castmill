@@ -5,11 +5,11 @@
  * The button will be disabled if the user doesn't have permission to perform the action.
  */
 
-import { Component, ComponentProps } from 'solid-js';
-import { Button } from '@castmill/ui-common';
-import type { IconTypes } from 'solid-icons';
-import { usePermissions } from '../../hooks/usePermissions';
-import type { ResourceType, Action } from '../../services/permissions.service';
+import { Component, ComponentProps } from "solid-js";
+import { Button } from "@castmill/ui-common";
+import type { IconTypes } from "solid-icons";
+import { usePermissions } from "../../hooks/usePermissions";
+import type { ResourceType, Action } from "../../services/permissions.service";
 
 interface PermissionButtonProps extends ComponentProps<typeof Button> {
   /**
@@ -35,7 +35,7 @@ interface PermissionButtonProps extends ComponentProps<typeof Button> {
   /**
    * Click handler forwarded to the underlying button component
    */
-  onClick?: ComponentProps<typeof Button>['onClick'];
+  onClick?: ComponentProps<typeof Button>["onClick"];
 
   /**
    * Optional icon rendered before the label
@@ -45,7 +45,7 @@ interface PermissionButtonProps extends ComponentProps<typeof Button> {
   /**
    * Visual intent of the button (defaults to primary)
    */
-  color?: ComponentProps<typeof Button>['color'];
+  color?: ComponentProps<typeof Button>["color"];
 }
 
 export const PermissionButton: Component<PermissionButtonProps> = (props) => {

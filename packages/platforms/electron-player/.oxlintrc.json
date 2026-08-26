@@ -1,0 +1,11 @@
+{
+  "plugins": ["typescript", "unicorn", "oxc"],
+  "categories": {
+    "correctness": "error"
+  },
+  "rules": {},
+  "env": {
+    "builtin": true
+  },
+  "ignorePatterns": ["node_modules", "out", "dist", "build"]
+}

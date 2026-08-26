@@ -82,10 +82,10 @@ mount_path: "/content/widgets/*"  # Matches /content/widgets, /content/widgets/1
 ```typescript
 const MyAddon: Component<AddonComponentProps> = (props) => {
   // Access wildcard route segments
-  const wildcardPath = props.routeParams['*']; // e.g., "123" for /widgets/123
+  const wildcardPath = props.routeParams["*"]; // e.g., "123" for /widgets/123
 
   // Parse widget ID from the path
-  const widgetId = wildcardPath?.split('/')[0];
+  const widgetId = wildcardPath?.split("/")[0];
 
   // Access query parameters
   const [searchParams] = props.params;

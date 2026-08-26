@@ -1,13 +1,11 @@
-import { resolve } from 'path';
+import { resolve } from "path";
 
-import { defineConfig } from 'vite';
-import solidPlugin from 'vite-plugin-solid';
+import { defineConfig } from "vite";
+import solidPlugin from "vite-plugin-solid";
 
 // Read package.json version
-import { readFileSync } from 'fs';
-const packageJson = JSON.parse(
-  readFileSync(resolve(__dirname, 'package.json'), 'utf-8')
-);
+import { readFileSync } from "fs";
+const packageJson = JSON.parse(readFileSync(resolve(__dirname, "package.json"), "utf-8"));
 
 export default defineConfig({
   plugins: [solidPlugin()],
@@ -18,13 +16,13 @@ export default defineConfig({
     port: 3000,
   },
   build: {
-    target: 'esnext',
-    sourcemap: 'inline',
+    target: "esnext",
+    sourcemap: "inline",
     lib: {
-      entry: resolve(__dirname, 'src/index.ts'),
-      name: 'castmill-player',
+      entry: resolve(__dirname, "src/index.ts"),
+      name: "castmill-player",
       fileName: (format) => `index.js`,
-      formats: ['es'],
+      formats: ["es"],
     },
   },
 });

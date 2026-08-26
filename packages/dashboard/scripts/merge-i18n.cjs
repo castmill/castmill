@@ -4,15 +4,15 @@
  * Preserves existing translations and only adds missing keys (using English as fallback)
  */
 
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 
-const localesDir = path.join(__dirname, '../src/i18n/locales');
-const enPath = path.join(localesDir, 'en.json');
-const locales = ['es', 'sv', 'de', 'fr', 'zh', 'ar', 'ko', 'ja'];
+const localesDir = path.join(__dirname, "../src/i18n/locales");
+const enPath = path.join(localesDir, "en.json");
+const locales = ["es", "sv", "de", "fr", "zh", "ar", "ko", "ja"];
 
 // Read English translations (source of truth for structure)
-const enTranslations = JSON.parse(fs.readFileSync(enPath, 'utf8'));
+const enTranslations = JSON.parse(fs.readFileSync(enPath, "utf8"));
 
 /**
  * Deep merge: add missing keys from source to target, keep existing target values
@@ -22,11 +22,7 @@ function deepMerge(target, source) {
 
   for (const key in source) {
     if (source.hasOwnProperty(key)) {
-      if (
-        typeof source[key] === 'object' &&
-        source[key] !== null &&
-        !Array.isArray(source[key])
-      ) {
+      if (typeof source[key] === "object" && source[key] !== null && !Array.isArray(source[key])) {
         // Recursively merge objects
         result[key] = deepMerge(result[key] || {}, source[key]);
       } else if (!(key in result)) {
@@ -46,19 +42,13 @@ locales.forEach((locale) => {
 
   try {
     // Read existing translations
-    const existingTranslations = JSON.parse(
-      fs.readFileSync(localePath, 'utf8')
-    );
+    const existingTranslations = JSON.parse(fs.readFileSync(localePath, "utf8"));
 
     // Merge with English (adds missing keys, preserves existing translations)
     const mergedTranslations = deepMerge(existingTranslations, enTranslations);
 
     // Write back
-    fs.writeFileSync(
-      localePath,
-      JSON.stringify(mergedTranslations, null, 2) + '\n',
-      'utf8'
-    );
+    fs.writeFileSync(localePath, JSON.stringify(mergedTranslations, null, 2) + "\n", "utf8");
 
     console.log(`✅ ${locale}.json - merged successfully`);
   } catch (error) {
@@ -66,4 +56,4 @@ locales.forEach((locale) => {
   }
 });
 
-console.log('\n✨ All locale files updated!');
+console.log("\n✨ All locale files updated!");

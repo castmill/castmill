@@ -1,6 +1,7 @@
 # Credential Recovery Feature
 
 ## Overview
+
 This document describes the "Lost your credentials?" feature implemented for passkey-based authentication in the Castmill Digital Signage Platform.
 
 ## User Flow
@@ -24,6 +25,7 @@ This document describes the "Lost your credentials?" feature implemented for pas
 ## API Endpoints
 
 ### Request Recovery
+
 ```
 POST /credentials/recover
 Content-Type: application/json
@@ -40,6 +42,7 @@ Response: 200 OK
 ```
 
 ### Verify Token
+
 ```
 GET /credentials/recover/verify?token=TOKEN
 
@@ -60,6 +63,7 @@ Response: 422 (invalid/expired token)
 ```
 
 ### Create Challenge
+
 ```
 GET /credentials/recover/challenge?token=TOKEN
 
@@ -72,6 +76,7 @@ Response: 200 OK
 ```
 
 ### Add Recovery Credential
+
 ```
 POST /credentials/recover/credential
 Content-Type: application/json
@@ -98,6 +103,7 @@ Response: 201 Created
 ## Frontend Components
 
 ### RecoverCredentials Component
+
 - Location: `packages/dashboard/src/components/login/recover-credentials.tsx`
 - Purpose: Email input form for requesting recovery
 - Features:
@@ -107,6 +113,7 @@ Response: 201 Created
   - Confirmation message
 
 ### CompleteRecovery Component
+
 - Location: `packages/dashboard/src/components/login/complete-recovery.tsx`
 - Purpose: Token verification and passkey creation
 - Features:
@@ -117,6 +124,7 @@ Response: 201 Created
   - Error handling with user-friendly messages
 
 ### Updated Login Component
+
 - Location: `packages/dashboard/src/components/login/login.tsx`
 - Changes:
   - Functional "Lost your credentials?" link
@@ -126,20 +134,24 @@ Response: 201 Created
 ## Backend Implementation
 
 ### User Token Module
+
 - File: `packages/castmill/lib/castmill/accounts/user_token.ex`
 - Added: `recover_credentials` token context with 24-hour validity
 
 ### User Notifier Module
+
 - File: `packages/castmill/lib/castmill/accounts/user_notifier.ex`
 - Added: `deliver_recover_credentials_instructions/2` function
 
 ### Accounts Module
+
 - File: `packages/castmill/lib/castmill/accounts.ex`
 - Added:
   - `deliver_user_recover_credentials_instructions/2`
   - `get_user_by_recover_credentials_token/1`
 
 ### Credential Recovery Controller
+
 - File: `packages/castmill/lib/castmill_web/controllers/credential_recovery_controller.ex`
 - Handles all recovery-related API endpoints
 - Implements security measures
@@ -150,12 +162,14 @@ Response: 201 Created
 ### Environment Variables
 
 Backend (Elixir):
+
 ```bash
 MAILER_FROM="noreply@castmill.com"
 DASHBOARD_URL="https://dashboard.castmill.com"
 ```
 
 Frontend (Vite):
+
 ```bash
 VITE_API_URL="https://api.castmill.com"
 VITE_ORIGIN="https://dashboard.castmill.com"
@@ -182,6 +196,7 @@ VITE_DOMAIN="castmill.com"
 ### Browser Compatibility
 
 Tested browsers:
+
 - [ ] Chrome/Edge (desktop)
 - [ ] Firefox (desktop)
 - [ ] Safari (desktop)

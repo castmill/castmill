@@ -1,9 +1,9 @@
-import { describe, it, expect, afterEach, vi, beforeEach } from 'vitest';
-import { render, cleanup, screen } from '@solidjs/testing-library';
-import { ToastProvider, useToast } from './toast-provider';
-import { Component, createSignal } from 'solid-js';
+import { describe, it, expect, afterEach, vi, beforeEach } from "vitest";
+import { render, cleanup, screen } from "@solidjs/testing-library";
+import { ToastProvider, useToast } from "./toast-provider";
+import { Component, createSignal } from "solid-js";
 
-describe('ToastProvider and useToast', () => {
+describe("ToastProvider and useToast", () => {
   beforeEach(() => {
     vi.useFakeTimers();
   });
@@ -14,10 +14,10 @@ describe('ToastProvider and useToast', () => {
     vi.clearAllTimers();
   });
 
-  it('provides toast context to children', () => {
+  it("provides toast context to children", () => {
     const TestComponent: Component = () => {
       const toast = useToast();
-      return <div>{toast ? 'Context available' : 'No context'}</div>;
+      return <div>{toast ? "Context available" : "No context"}</div>;
     };
 
     render(() => (
@@ -26,10 +26,10 @@ describe('ToastProvider and useToast', () => {
       </ToastProvider>
     ));
 
-    expect(screen.getByText('Context available')).toBeInTheDocument();
+    expect(screen.getByText("Context available")).toBeInTheDocument();
   });
 
-  it('throws error when useToast is used outside ToastProvider', () => {
+  it("throws error when useToast is used outside ToastProvider", () => {
     const TestComponent: Component = () => {
       try {
         useToast();
@@ -40,17 +40,13 @@ describe('ToastProvider and useToast', () => {
     };
 
     render(() => <TestComponent />);
-    expect(screen.getByText('Error caught')).toBeInTheDocument();
+    expect(screen.getByText("Error caught")).toBeInTheDocument();
   });
 
-  it('shows toast when showToast is called', () => {
+  it("shows toast when showToast is called", () => {
     const TestComponent: Component = () => {
       const toast = useToast();
-      return (
-        <button onClick={() => toast.showToast('Test message', 'info')}>
-          Show Toast
-        </button>
-      );
+      return <button onClick={() => toast.showToast("Test message", "info")}>Show Toast</button>;
     };
 
     render(() => (
@@ -59,23 +55,19 @@ describe('ToastProvider and useToast', () => {
       </ToastProvider>
     ));
 
-    const button = screen.getByText('Show Toast');
+    const button = screen.getByText("Show Toast");
     button.click();
 
     // Advance timers to trigger toast visibility
     vi.advanceTimersByTime(20);
 
-    expect(screen.getByText('Test message')).toBeInTheDocument();
+    expect(screen.getByText("Test message")).toBeInTheDocument();
   });
 
-  it('shows success toast', () => {
+  it("shows success toast", () => {
     const TestComponent: Component = () => {
       const toast = useToast();
-      return (
-        <button onClick={() => toast.success('Success message')}>
-          Show Success
-        </button>
-      );
+      return <button onClick={() => toast.success("Success message")}>Show Success</button>;
     };
 
     render(() => (
@@ -84,20 +76,18 @@ describe('ToastProvider and useToast', () => {
       </ToastProvider>
     ));
 
-    const button = screen.getByText('Show Success');
+    const button = screen.getByText("Show Success");
     button.click();
 
     vi.advanceTimersByTime(20);
 
-    expect(screen.getByText('Success message')).toBeInTheDocument();
+    expect(screen.getByText("Success message")).toBeInTheDocument();
   });
 
-  it('shows error toast', () => {
+  it("shows error toast", () => {
     const TestComponent: Component = () => {
       const toast = useToast();
-      return (
-        <button onClick={() => toast.error('Error message')}>Show Error</button>
-      );
+      return <button onClick={() => toast.error("Error message")}>Show Error</button>;
     };
 
     render(() => (
@@ -106,22 +96,18 @@ describe('ToastProvider and useToast', () => {
       </ToastProvider>
     ));
 
-    const button = screen.getByText('Show Error');
+    const button = screen.getByText("Show Error");
     button.click();
 
     vi.advanceTimersByTime(20);
 
-    expect(screen.getByText('Error message')).toBeInTheDocument();
+    expect(screen.getByText("Error message")).toBeInTheDocument();
   });
 
-  it('shows warning toast', () => {
+  it("shows warning toast", () => {
     const TestComponent: Component = () => {
       const toast = useToast();
-      return (
-        <button onClick={() => toast.warning('Warning message')}>
-          Show Warning
-        </button>
-      );
+      return <button onClick={() => toast.warning("Warning message")}>Show Warning</button>;
     };
 
     render(() => (
@@ -130,20 +116,18 @@ describe('ToastProvider and useToast', () => {
       </ToastProvider>
     ));
 
-    const button = screen.getByText('Show Warning');
+    const button = screen.getByText("Show Warning");
     button.click();
 
     vi.advanceTimersByTime(20);
 
-    expect(screen.getByText('Warning message')).toBeInTheDocument();
+    expect(screen.getByText("Warning message")).toBeInTheDocument();
   });
 
-  it('shows info toast', () => {
+  it("shows info toast", () => {
     const TestComponent: Component = () => {
       const toast = useToast();
-      return (
-        <button onClick={() => toast.info('Info message')}>Show Info</button>
-      );
+      return <button onClick={() => toast.info("Info message")}>Show Info</button>;
     };
 
     render(() => (
@@ -152,15 +136,15 @@ describe('ToastProvider and useToast', () => {
       </ToastProvider>
     ));
 
-    const button = screen.getByText('Show Info');
+    const button = screen.getByText("Show Info");
     button.click();
 
     vi.advanceTimersByTime(20);
 
-    expect(screen.getByText('Info message')).toBeInTheDocument();
+    expect(screen.getByText("Info message")).toBeInTheDocument();
   });
 
-  it('removes toast when removeToast is called', () => {
+  it("removes toast when removeToast is called", () => {
     const TestComponent: Component = () => {
       const toast = useToast();
       const [toastId, setToastId] = createSignal<string | null>(null);
@@ -169,7 +153,7 @@ describe('ToastProvider and useToast', () => {
         <>
           <button
             onClick={() => {
-              const id = toast.success('Test toast');
+              const id = toast.success("Test toast");
               setToastId(id);
             }}
           >
@@ -195,28 +179,28 @@ describe('ToastProvider and useToast', () => {
     ));
 
     // Show toast
-    const showButton = screen.getByText('Show Toast');
+    const showButton = screen.getByText("Show Toast");
     showButton.click();
 
     vi.advanceTimersByTime(20);
-    expect(screen.getByText('Test toast')).toBeInTheDocument();
+    expect(screen.getByText("Test toast")).toBeInTheDocument();
 
     // Remove toast
-    const removeButton = screen.getByText('Remove Toast');
+    const removeButton = screen.getByText("Remove Toast");
     removeButton.click();
 
-    expect(screen.queryByText('Test toast')).not.toBeInTheDocument();
+    expect(screen.queryByText("Test toast")).not.toBeInTheDocument();
   });
 
-  it('handles multiple toasts', () => {
+  it("handles multiple toasts", () => {
     const TestComponent: Component = () => {
       const toast = useToast();
       return (
         <button
           onClick={() => {
-            toast.success('First toast');
-            toast.error('Second toast');
-            toast.info('Third toast');
+            toast.success("First toast");
+            toast.error("Second toast");
+            toast.info("Third toast");
           }}
         >
           Show Multiple Toasts
@@ -230,17 +214,17 @@ describe('ToastProvider and useToast', () => {
       </ToastProvider>
     ));
 
-    const button = screen.getByText('Show Multiple Toasts');
+    const button = screen.getByText("Show Multiple Toasts");
     button.click();
 
     vi.advanceTimersByTime(20);
 
-    expect(screen.getByText('First toast')).toBeInTheDocument();
-    expect(screen.getByText('Second toast')).toBeInTheDocument();
-    expect(screen.getByText('Third toast')).toBeInTheDocument();
+    expect(screen.getByText("First toast")).toBeInTheDocument();
+    expect(screen.getByText("Second toast")).toBeInTheDocument();
+    expect(screen.getByText("Third toast")).toBeInTheDocument();
   });
 
-  it('returns unique IDs for each toast', () => {
+  it("returns unique IDs for each toast", () => {
     const TestComponent: Component = () => {
       const toast = useToast();
       const [ids, setIds] = createSignal<string[]>([]);
@@ -249,14 +233,14 @@ describe('ToastProvider and useToast', () => {
         <>
           <button
             onClick={() => {
-              const id1 = toast.success('Toast 1');
-              const id2 = toast.success('Toast 2');
+              const id1 = toast.success("Toast 1");
+              const id2 = toast.success("Toast 2");
               setIds([id1, id2]);
             }}
           >
             Show Toasts
           </button>
-          <div data-testid="ids">{ids().join(',')}</div>
+          <div data-testid="ids">{ids().join(",")}</div>
         </>
       );
     };
@@ -267,16 +251,16 @@ describe('ToastProvider and useToast', () => {
       </ToastProvider>
     ));
 
-    const button = screen.getByText('Show Toasts');
+    const button = screen.getByText("Show Toasts");
     button.click();
 
-    const idsElement = screen.getByTestId('ids');
-    const idsText = idsElement.textContent || '';
-    const idArray = idsText.split(',').filter((id) => id);
+    const idsElement = screen.getByTestId("ids");
+    const idsText = idsElement.textContent || "";
+    const idArray = idsText.split(",").filter((id) => id);
 
     expect(idArray.length).toBe(2);
     expect(idArray[0]).not.toBe(idArray[1]);
-    expect(idArray[0]).toContain('toast-');
-    expect(idArray[1]).toContain('toast-');
+    expect(idArray[0]).toContain("toast-");
+    expect(idArray[1]).toContain("toast-");
   });
 });

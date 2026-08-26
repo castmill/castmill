@@ -10,7 +10,7 @@ const widgetTmpl = _.template(fs.readFileSync("./templates/widget.html"));
 app.use("/", express.static(__dirname + "/demos"));
 app.use("/", express.static(__dirname + "/dist"));
 
-app.get("/videos/:id", function(req, res) {
+app.get("/videos/:id", function (req, res) {
   //
   // render widget template
   //
@@ -23,7 +23,7 @@ app.get("/videos/:id", function(req, res) {
   res.send(result);
 });
 
-app.get("/:id", function(req, res) {
+app.get("/:id", function (req, res) {
   //
   // render widget template
   //
@@ -36,13 +36,12 @@ app.get("/:id", function(req, res) {
   res.send(result);
 });
 
-app.get("/widgets/:id", function(req, res) {
+app.get("/widgets/:id", function (req, res) {
   switch (req.params.id) {
     case "0":
       res.json({
         // src: 'http://www.html5videoplayer.net/videos/madagascar3.mp4'
-        src:
-          "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+        src: "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
       });
       break;
     case "1":
@@ -52,20 +51,17 @@ app.get("/widgets/:id", function(req, res) {
       break;
     case "2":
       res.json({
-        src:
-          "http://www.stockvault.net/blog/wp-content/uploads/2013/11/Portrait-8.jpg",
+        src: "http://www.stockvault.net/blog/wp-content/uploads/2013/11/Portrait-8.jpg",
       });
       break;
     case "3":
       res.json({
-        src:
-          "https://i.pinimg.com/originals/75/fe/c1/75fec1c2731e49bcb1922beaa3311f80.jpg",
+        src: "https://i.pinimg.com/originals/75/fe/c1/75fec1c2731e49bcb1922beaa3311f80.jpg",
       });
       break;
     case "4":
       res.json({
-        src:
-          "https://s-media-cache-ak0.pinimg.com/originals/ef/83/60/ef83604a2bedd8043ccc2fe56fed3bc7.jpg",
+        src: "https://s-media-cache-ak0.pinimg.com/originals/ef/83/60/ef83604a2bedd8043ccc2fe56fed3bc7.jpg",
       });
       break;
     case "5":
@@ -81,6 +77,6 @@ app.get("/widgets/:id", function(req, res) {
   }
 });
 
-app.listen(4000, function() {
+app.listen(4000, function () {
   console.log("Example app listening on port 4000!");
 });

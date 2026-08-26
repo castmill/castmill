@@ -1,10 +1,10 @@
-import { Button, Switch } from '@castmill/ui-common';
-import { CalendarEntry } from './calendar-entry.interface';
-import { createSignal, onMount } from 'solid-js';
-import { BsCheckLg, BsX } from 'solid-icons/bs';
-import { useI18n } from '../../i18n';
+import { Button, Switch } from "@castmill/ui-common";
+import { CalendarEntry } from "./calendar-entry.interface";
+import { createSignal, onMount } from "solid-js";
+import { BsCheckLg, BsX } from "solid-icons/bs";
+import { useI18n } from "../../i18n";
 
-import styles from './channel-entry-view.module.scss';
+import styles from "./channel-entry-view.module.scss";
 
 export const ChanneEntrylView = (props: {
   entry: CalendarEntry;
@@ -16,7 +16,7 @@ export const ChanneEntrylView = (props: {
   const [initialIsWeekly, setInitialIsWeekly] = createSignal<boolean>();
   const [isFormModified, setIsFormModified] = createSignal(false);
 
-  const title = `${props.entry.startHour.toString().padStart(2, '0')}:${props.entry.endHour.toString().padStart(2, '0')}`;
+  const title = `${props.entry.startHour.toString().padStart(2, "0")}:${props.entry.endHour.toString().padStart(2, "0")}`;
 
   onMount(() => {
     setInitialIsWeekly(props.entry.weekly || false);
@@ -30,11 +30,11 @@ export const ChanneEntrylView = (props: {
         props.onSubmit({ ...props.entry, weekly: isWeekly() });
       }}
     >
-      <div class={styles['main']}>
+      <div class={styles["main"]}>
         <span>Playlist: {props.entry.playlist.name}</span>
 
         <Switch
-          name={t('channels.repeatWeekly')}
+          name={t("channels.repeatWeekly")}
           key="weekly"
           isActive={isWeekly()!}
           disabled={false}
@@ -49,7 +49,7 @@ export const ChanneEntrylView = (props: {
         />
       </div>
 
-      <div class={styles['actions']}>
+      <div class={styles["actions"]}>
         <Button
           label="Update"
           type="submit"

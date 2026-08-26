@@ -1,22 +1,12 @@
 # Fix: Member Users Can Now Access Playlists and Resources# Fix: Regular Users Can Now Access Playlists and Resources
 
-
-
 ## Problem## Problem
-
-
 
 Member users (formerly the "regular" role) in an organization were **unable to list playlists** (and other resources) even though the new permission matrix granted them full access.Regular users with the "regular" role in an organization were **unable to list playlists** (and other resources) even though the new permission matrix granted them full access.
 
-
-
 ## Root Cause## Root Cause
 
-
-
 The issue was in the **integration between the old and new authorization systems**:The issue was in the **integration between the old and new authorization systems**:
-
-
 
 1. **New System Created**: We built a centralized permission matrix in `lib/castmill/authorization/permissions.ex`1. **New System Created**: We built a centralized permission matrix in `lib/castmill/authorization/permissions.ex`
 
@@ -26,13 +16,9 @@ The issue was in the **integration between the old and new authorization systems
 
 4. **Missing Entries**: Member users had no entries in that table → Access denied ❌4. **Missing Entries**: Regular users had no entries in that table → Access denied ❌
 
-
-
 ### Code Flow (Before Fix)### Code Flow (Before Fix)
 
-
-
-``````
+```
 
 Request: GET /playlistsRequest: GET /playlists
 
@@ -56,39 +42,27 @@ No rows found for member userNo rows found for regular user
 
 Return false → 403 Forbidden ❌Return false → 403 Forbidden ❌
 
-``````
-
-
+```
 
 ## Solution## Solution
 
-
-
 We updated `Organizations.has_access/4` to **use the permission matrix as the primary authorization source**, with database checks as a fallback.Updated `Organizations.has_access/4` to **use the permission matrix as the primary authorization source**, with database checks as a fallback.
-
-
 
 ### Changes Made### Changes Made
 
-
-
 **File: `lib/castmill/organizations.ex`****File: `lib/castmill/organizations.ex`**
 
-
-
-```elixir```elixir
+`elixir`elixir
 
 def has_access(organization_id, user_id, resource_type, action) dodef has_access(organization_id, user_id, resource_type, action) do
 
-  # Get user's role in the organization  # Get user's role in the organization
+# Get user's role in the organization # Get user's role in the organization
 
-  role = get_user_role(organization_id, user_id)  role = get_user_role(organization_id, user_id)
+role = get_user_role(organization_id, user_id) role = get_user_role(organization_id, user_id)
 
-  
+# Convert string resource_type to atom for permission matrix # Convert string resource_type to atom for permission matrix
 
-  # Convert string resource_type to atom for permission matrix  # Convert string resource_type to atom for permission matrix
-
-  resource_atom = case resource_type do  resource_atom = case resource_type do
+resource_atom = case resource_type do resource_atom = case resource_type do
 
     "playlists" -> :playlists    "playlists" -> :playlists
 
@@ -104,25 +78,21 @@ def has_access(organization_id, user_id, resource_type, action) dodef has_access
 
     _ -> nil    _ -> nil
 
-  end  end
+end end
 
-  
+# Convert action to atom if it's a string # Convert action to atom if it's a string
 
-  # Convert action to atom if it's a string  # Convert action to atom if it's a string
+action_atom = if is_atom(action), do: action, else: String.to_existing_atom(action) action_atom = if is_atom(action), do: action, else: String.to_existing_atom(action)
 
-  action_atom = if is_atom(action), do: action, else: String.to_existing_atom(action)  action_atom = if is_atom(action), do: action, else: String.to_existing_atom(action)
+# ✅ NEW: Check permission matrix FIRST if we have a valid role and resource # ✅ NEW: Check permission matrix FIRST if we have a valid role and resource
 
-  
-
-  # ✅ NEW: Check permission matrix FIRST if we have a valid role and resource  # ✅ NEW: Check permission matrix FIRST if we have a valid role and resource
-
-  if role != nil and resource_atom != nil do  if role != nil and resource_atom != nil do
+if role != nil and resource_atom != nil do if role != nil and resource_atom != nil do
 
     # Use the new centralized permission matrix    # Use the new centralized permission matrix
 
     Castmill.Authorization.Permissions.can?(role, resource_atom, action_atom)    Castmill.Authorization.Permissions.can?(role, resource_atom, action_atom)
 
-  else  else
+else else
 
     # Fallback to old behavior for legacy resources or explicit database permissions    # Fallback to old behavior for legacy resources or explicit database permissions
 
@@ -132,7 +102,7 @@ def has_access(organization_id, user_id, resource_type, action) dodef has_access
 
       resource_type == "teams" and action == :create and is_manager?(organization_id, user_id) -> true      resource_type == "teams" and action == :create and is_manager?(organization_id, user_id) -> true
 
-      true ->      true -> 
+      true ->      true ->
 
         # Query database for explicit permissions (legacy)        # Query database for explicit permissions (legacy)
 
@@ -140,11 +110,11 @@ def has_access(organization_id, user_id, resource_type, action) dodef has_access
 
     end    end
 
-  end  end
+end end
 
 endend
 
-``````
+```
 
 
 
@@ -152,7 +122,7 @@ endend
 
 
 
-``````
+```
 
 Request: GET /playlistsRequest: GET /playlists
 
@@ -172,7 +142,7 @@ Organizations.has_access(org_id, user_id, "playlists", :index)Organizations.has_
 
 3. Convert :index → :list (action mapping)3. Convert :index → :list (action mapping)
 
-    ↓    ↓
+   ↓ ↓
 
 Permissions.can?(:member, :playlists, :list)Permissions.can?(:regular, :playlists, :list)
 
@@ -188,7 +158,7 @@ Check @permissions[:member][:playlists]Check @permissions[:regular][:playlists]
 
 Return true → Request allowed ✅Return true → Request allowed ✅
 
-``````
+````
 
 
 
@@ -232,17 +202,11 @@ $ elixir test_member_user_access.exs$ elixir test_regular_user_access.exs
 
 ✅ ALL TESTS PASSED!✅ ALL TESTS PASSED!
 
-``````
-
-
+````
 
 ## What This Fixes## What This Fixes
 
-
-
 ### ✅ Now Working### ✅ Now Working
-
-
 
 Member users can now:Regular users can now:
 
@@ -258,11 +222,7 @@ Member users can now:Regular users can now:
 
 - ✅ **View teams** (read-only access)- ✅ **View teams** (read-only access)
 
-
-
 ### ❌ Still Correctly Denied### ❌ Still Correctly Denied
-
-
 
 Member users cannot:Regular users cannot:
 
@@ -274,11 +234,7 @@ Member users cannot:Regular users cannot:
 
 - ❌ **Manage widgets** (admin/manager only)- ❌ **Manage widgets** (admin/manager only)
 
-
-
 ## Current Permission Matrix## Current Permission Matrix
-
-
 
 | Resource | Admin | Manager | Member | Guest || Resource | Admin | Manager | Regular | Guest |
 
@@ -296,11 +252,7 @@ Member users cannot:Regular users cannot:
 
 | **Widgets** | Full | Full | **Read-only** | Read || **Widgets** | Full | Full | **Read-only** | Read |
 
-
-
 ## Benefits of This Approach## Benefits of This Approach
-
-
 
 ### 1. **Centralized Permissions**### 1. **Centralized Permissions**
 
@@ -310,8 +262,6 @@ Member users cannot:Regular users cannot:
 
 - Easy to audit and modify- Easy to audit and modify
 
-
-
 ### 2. **Backward Compatible**### 2. **Backward Compatible**
 
 - Existing database permissions still work (fallback)- Existing database permissions still work (fallback)
@@ -319,8 +269,6 @@ Member users cannot:Regular users cannot:
 - Legacy resources continue to use database checks- Legacy resources continue to use database checks
 
 - Gradual migration path- Gradual migration path
-
-
 
 ### 3. **Performance**### 3. **Performance**
 
@@ -330,8 +278,6 @@ Member users cannot:Regular users cannot:
 
 - Can be easily cached if needed- Can be easily cached if needed
 
-
-
 ### 4. **Maintainable**### 4. **Maintainable**
 
 - Adding new resources: Just add to permission matrix- Adding new resources: Just add to permission matrix
@@ -340,15 +286,9 @@ Member users cannot:Regular users cannot:
 
 - Clear, declarative permission definitions- Clear, declarative permission definitions
 
-
-
 ## Migration Notes## Migration Notes
 
-
-
 ### For Developers### For Developers
-
-
 
 1. **New resources** should use the permission matrix (automatically via `has_access/4`)1. **New resources** should use the permission matrix (automatically via `has_access/4`)
 
@@ -358,31 +298,21 @@ Member users cannot:Regular users cannot:
 
 4. **No breaking changes** - everything is backward compatible4. **No breaking changes** - everything is backward compatible
 
-
-
 ### For Database### For Database
-
-
 
 - ✅ **No migrations required**- ✅ **No migrations required**
 
 - ✅ `OrganizationsUsersAccess` table can remain for:- ✅ `OrganizationsUsersAccess` table can remain for:
 
-  - Legacy resources not in the matrix  - Legacy resources not in the matrix
+  - Legacy resources not in the matrix - Legacy resources not in the matrix
 
-  - User-specific overrides (future feature)  - User-specific overrides (future feature)
+  - User-specific overrides (future feature) - User-specific overrides (future feature)
 
-  - Explicit grant/deny rules (future feature)  - Explicit grant/deny rules (future feature)
-
-
+  - Explicit grant/deny rules (future feature) - Explicit grant/deny rules (future feature)
 
 ### Action Mapping### Action Mapping
 
-
-
 The system handles action name variations:The system handles action name variations:
-
-
 
 | Controller Action | Permission Action | Works? || Controller Action | Permission Action | Works? |
 
@@ -400,25 +330,19 @@ The system handles action name variations:The system handles action name variati
 
 | `:delete` | `:delete` | ✅ (direct) || `:delete` | `:delete` | ✅ (direct) |
 
-
-
 **Note**: If using `:index` in controllers, map it to `:list` in permission checks.**Note**: If using `:index` in controllers, map it to `:list` in permission checks.
-
-
 
 ## Testing## Testing
 
-
-
 ### Unit Tests### Unit Tests
 
-```bash```bash
+`bash`bash
 
 cd packages/castmillcd packages/castmill
 
 mix test test/castmill/authorization/permissions_test.exsmix test test/castmill/authorization/permissions_test.exs
 
-``````
+````
 
 
 
@@ -428,9 +352,7 @@ mix test test/castmill/authorization/permissions_test.exsmix test test/castmill/
 
 elixir test_member_user_access.exselixir test_regular_user_access.exs
 
-``````
-
-
+````
 
 ### Manual Testing### Manual Testing
 
@@ -444,43 +366,35 @@ elixir test_member_user_access.exselixir test_regular_user_access.exs
 
 5. It should succeed (previously denied)5. Should succeed (previously denied)
 
-
-
 ## Files Modified## Files Modified
-
-
 
 1. **`lib/castmill/organizations.ex`**1. **`lib/castmill/organizations.ex`**
 
-   - Updated `has_access/4` to use the permission matrix first   - Updated `has_access/4` to use permission matrix first
+   - Updated `has_access/4` to use the permission matrix first - Updated `has_access/4` to use permission matrix first
 
-   - Added resource type conversion (string → atom)   - Added resource type conversion (string → atom)
+   - Added resource type conversion (string → atom) - Added resource type conversion (string → atom)
 
-   - Added action conversion (string/atom handling)   - Added action conversion (string/atom handling)
+   - Added action conversion (string/atom handling) - Added action conversion (string/atom handling)
 
-   - Preserved database fallback for legacy resources   - Preserved database fallback for legacy resources
-
-
+   - Preserved database fallback for legacy resources - Preserved database fallback for legacy resources
 
 ## Next Steps (Optional)## Next Steps (Optional)
-
-
 
 ### 1. **Add Action Mapping in resource_controller.ex**### 1. **Add Action Mapping in resource_controller.ex**
 
 Map controller actions to permission actions:Map controller actions to permission actions:
 
-```elixir```elixir
+`elixir`elixir
 
 def check_access(actor_id, :index, params) dodef check_access(actor_id, :index, params) do
 
-  # Map :index to :list for permission check  # Map :index to :list for permission check
+# Map :index to :list for permission check # Map :index to :list for permission check
 
-  check_access(actor_id, :list, params)  check_access(actor_id, :list, params)
+check_access(actor_id, :list, params) check_access(actor_id, :list, params)
 
 endend
 
-``````
+```
 
 
 
@@ -508,17 +422,18 @@ endend
 
 
 
-✅ **Problem Solved**: Member users can now access playlists and other resources  ✅ **Problem Solved**: Regular users can now access playlists and other resources  
+✅ **Problem Solved**: Member users can now access playlists and other resources  ✅ **Problem Solved**: Regular users can now access playlists and other resources
 
-✅ **Solution**: Updated `Organizations.has_access/4` to use permission matrix  ✅ **Solution**: Updated `Organizations.has_access/4` to use permission matrix  
+✅ **Solution**: Updated `Organizations.has_access/4` to use permission matrix  ✅ **Solution**: Updated `Organizations.has_access/4` to use permission matrix
 
-✅ **Backward Compatible**: No breaking changes, database fallback preserved  ✅ **Backward Compatible**: No breaking changes, database fallback preserved  
+✅ **Backward Compatible**: No breaking changes, database fallback preserved  ✅ **Backward Compatible**: No breaking changes, database fallback preserved
 
-✅ **Tested**: All permission combinations verified  ✅ **Tested**: All permission combinations verified  
+✅ **Tested**: All permission combinations verified  ✅ **Tested**: All permission combinations verified
 
-✅ **Maintainable**: Single source of truth for permissions  ✅ **Maintainable**: Single source of truth for permissions  
+✅ **Maintainable**: Single source of truth for permissions  ✅ **Maintainable**: Single source of truth for permissions
 
 
 
 **The authorization system now works as designed!** 🎉**The authorization system now works as designed!** 🎉
 
+```

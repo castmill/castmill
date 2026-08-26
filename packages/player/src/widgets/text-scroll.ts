@@ -1,8 +1,8 @@
-import { Observable, of } from 'rxjs';
-import { ResourceManager } from '@castmill/cache';
+import { Observable, of } from "rxjs";
+import { ResourceManager } from "@castmill/cache";
 
-import { Widget } from './widget';
-import { Text, Scroll } from './scroll/scroll';
+import { Widget } from "./widget";
+import { Text, Scroll } from "./scroll/scroll";
 
 /**
  * This scroll is based on Canvas/WebGL, however it may be smarter
@@ -18,10 +18,7 @@ export class TextScroll extends Widget {
 
   offset: number = 0;
 
-  constructor(
-    resourceManager: ResourceManager,
-    opts: { text: Text[]; speed: number }
-  ) {
+  constructor(resourceManager: ResourceManager, opts: { text: Text[]; speed: number }) {
     super(resourceManager);
     this.text = opts.text;
     this.speed = opts.speed;
@@ -31,7 +28,7 @@ export class TextScroll extends Widget {
     if (!this.scroll) {
       this.scroll = new Scroll(el, this.text);
     }
-    return of('shown');
+    return of("shown");
   }
 
   play(timer$: Observable<number>) {

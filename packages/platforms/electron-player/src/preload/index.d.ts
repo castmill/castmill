@@ -1,11 +1,6 @@
-import { ElectronAPI } from '@electron-toolkit/preload';
-import {
-  StorageInfo,
-  StorageItem,
-  StoreOptions,
-  StoreFileReturnValue,
-} from '@castmill/cache';
-import { TelemetryData } from '@castmill/device';
+import { ElectronAPI } from "@electron-toolkit/preload";
+import { StorageInfo, StorageItem, StoreOptions, StoreFileReturnValue } from "@castmill/cache";
+import { TelemetryData } from "@castmill/device";
 
 export interface ApplicationAPI {
   relaunch: () => void;
@@ -33,7 +28,7 @@ interface FsApi {
   storeFile: (
     storagePath: string,
     url: string,
-    data?: StoreOptions
+    data?: StoreOptions,
   ) => Promise<StoreFileReturnValue>;
   retrieveFile: (storagePath: string, url: string) => Promise<string>;
   deleteFile: (storagePath: string, url: string) => Promise<void>;

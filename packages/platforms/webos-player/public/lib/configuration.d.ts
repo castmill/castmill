@@ -3,128 +3,128 @@
 interface Configuration {
   clearCache(
     successCallback: () => void,
-    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void
+    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
   ): void;
   getCurrentTime(
     successCallback: (cbObject: CurrentTime) => void,
-    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void
+    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
   ): void;
   getLocaleList(
     successCallback: (cbObject: LocaleList) => void,
-    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void
+    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
   ): void;
   getMasterPinStatus(
     successCallback: (cbObject: MasterPinStatus) => void,
-    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void
+    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
   ): void;
   getOSDLanguage(
     successCallback: (cbObject: OSDLanguage) => void,
-    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void
+    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
   ): void;
   getOSDLock(
     successCallback: (cbObject: OSDLock) => void,
-    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void
+    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
   ): void;
   getPictureMode(
     successCallback: (cbObject: PictureMode) => void,
-    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void
+    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
   ): void;
   getPictureProperty(
     successCallback: (cbObject: PictureProperty) => void,
-    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void
+    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
   ): void;
   getProperty(
     successCallback: (cbObject: Property) => void,
     errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
-    options: PropertyOptions
+    options: PropertyOptions,
   ): void;
   getProxyBypassList(
     successCallback: (cbObject: ProxyBypassList) => void,
-    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void
+    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
   ): void;
   getServerProperty(
     successCallback: (cbObject: ServerProperty) => void,
-    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void
+    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
   ): void;
   getTimeZone(
     successCallback: (cbObject: TimeZone) => void,
-    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void
+    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
   ): void;
   getTimeZoneList(
     successCallback: (cbObject: TimeZoneList) => void,
-    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void
+    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
   ): void;
   getUSBLock(
     successCallback: (cbObject: USBLock) => void,
-    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void
+    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
   ): void;
   getVirtualKeyboardLanguage(
     successCallback: (cbObject: VirtualKeyboardLanguage) => void,
-    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void
+    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
   ): void;
   restartApplication(
     successCallback: () => void,
-    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void
+    errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
   ): void;
   setCurrentTime(
     successCallback: () => void,
     errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
-    options: CurrentTime
+    options: CurrentTime,
   ): void;
   setMasterPinStatus(
     successCallback: () => void,
     errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
-    options: MasterPinStatus
+    options: MasterPinStatus,
   ): void;
   setOSDLanguage(
     successCallback: () => void,
     errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
-    options: OSDLanguage
+    options: OSDLanguage,
   ): void;
   setOSDLock(
     successCallback: () => void,
     errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
-    options: OSDLock
+    options: OSDLock,
   ): void;
   setPictureMode(
     successCallback: () => void,
     errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
-    options: PictureMode
+    options: PictureMode,
   ): void;
   setPictureProperty(
     successCallback: () => void,
     errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
-    options: PictureProperty
+    options: PictureProperty,
   ): void;
   setProperty(
     successCallback: () => void,
     errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
-    options: PropertyOptions
+    options: PropertyOptions,
   ): void;
   setProxyBypassList(
     successCallback: () => void,
     errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
-    options: ProxyBypassList
+    options: ProxyBypassList,
   ): void;
   setServerProperty(
     successCallback: () => void,
     errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
-    options: ServerProperty
+    options: ServerProperty,
   ): void;
   setTimeZone(
     successCallback: () => void,
     errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
-    options: TimeZone
+    options: TimeZone,
   ): void;
   setUSBLock(
     successCallback: () => void,
     errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
-    options: USBLock
+    options: USBLock,
   ): void;
   setVirtualKeyboardLanguage(
     successCallback: () => void,
     errorCallback: (cbObject: { errorCode: number; errorText: string }) => void,
-    options: VirtualKeyboardLanguage
+    options: VirtualKeyboardLanguage,
   ): void;
 }
 
@@ -176,14 +176,14 @@ interface PictureProperty {
   color?: number;
   tint?: number;
   colorTemperature?: number;
-  dynamicContrast?: 'off' | 'low' | 'medium' | 'high';
-  superResolution?: 'off' | 'low' | 'medium' | 'high';
-  colorGamut?: 'normal' | 'extended';
-  dynamicColor?: 'off' | 'low' | 'medium' | 'high';
-  noiseReduction?: 'auto' | 'off' | 'low' | 'medium' | 'high';
-  mpegNoiseReduction?: 'auto' | 'off' | 'low' | 'medium' | 'high';
-  blackLevel?: 'low' | 'high';
-  gamma?: 'low' | 'medium' | 'high' | 'high3';
+  dynamicContrast?: "off" | "low" | "medium" | "high";
+  superResolution?: "off" | "low" | "medium" | "high";
+  colorGamut?: "normal" | "extended";
+  dynamicColor?: "off" | "low" | "medium" | "high";
+  noiseReduction?: "auto" | "off" | "low" | "medium" | "high";
+  mpegNoiseReduction?: "auto" | "off" | "low" | "medium" | "high";
+  blackLevel?: "low" | "high";
+  gamma?: "low" | "medium" | "high" | "high3";
 }
 
 interface PropertyOptions {
@@ -240,23 +240,23 @@ interface VirtualKeyboardLanguage {
 declare const Configuration: {
   new (): Configuration;
   AppMode: {
-    LOCAL: 'local';
-    REMOTE: 'remote';
-    USB: 'usb';
+    LOCAL: "local";
+    REMOTE: "remote";
+    USB: "usb";
   };
   AppType: {
-    IPK: 'IPK';
-    ZIP: 'ZIP';
+    IPK: "IPK";
+    ZIP: "ZIP";
   };
   PictureMode: {
-    APS: 'eco';
-    CINEMA: 'cinema';
-    EXPERT1: 'expert1';
-    EXPERT2: 'expert2';
-    GAME: 'game';
-    SPORTS: 'sports';
-    STANDARD: 'normal';
-    VIVID: 'vivid';
+    APS: "eco";
+    CINEMA: "cinema";
+    EXPERT1: "expert1";
+    EXPERT2: "expert2";
+    GAME: "game";
+    SPORTS: "sports";
+    STANDARD: "normal";
+    VIVID: "vivid";
   };
 };
 

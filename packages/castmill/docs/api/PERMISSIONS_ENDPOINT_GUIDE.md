@@ -17,9 +17,9 @@ GET /dashboard/organizations/:organization_id/permissions
 
 ### Parameters
 
-| Parameter | Type | Location | Required | Description |
-|-----------|------|----------|----------|-------------|
-| organization_id | string (UUID) | Path | Yes | The organization ID to get permissions for |
+| Parameter       | Type          | Location | Required | Description                                |
+| --------------- | ------------- | -------- | -------- | ------------------------------------------ |
+| organization_id | string (UUID) | Path     | Yes      | The organization ID to get permissions for |
 
 ### Response Format
 
@@ -48,15 +48,16 @@ GET /dashboard/organizations/:organization_id/permissions
 
 ### HTTP Status Codes
 
-| Code | Description |
-|------|-------------|
-| 200 | Success - Returns permissions matrix |
-| 401 | Unauthorized - User is not authenticated |
-| 403 | Forbidden - User is not a member of this organization |
+| Code | Description                                           |
+| ---- | ----------------------------------------------------- |
+| 200  | Success - Returns permissions matrix                  |
+| 401  | Unauthorized - User is not authenticated              |
+| 403  | Forbidden - User is not a member of this organization |
 
 ### Error Responses
 
 #### 401 Unauthorized
+
 ```json
 {
   "error": "Not authenticated"
@@ -64,6 +65,7 @@ GET /dashboard/organizations/:organization_id/permissions
 ```
 
 #### 403 Forbidden
+
 ```json
 {
   "error": "User is not a member of this organization"
@@ -73,22 +75,26 @@ GET /dashboard/organizations/:organization_id/permissions
 ## Permission Levels by Role
 
 ### Admin
+
 - **Full access** to all resources
 - All actions enabled: `list`, `show`, `create`, `update`, `delete`
 - Resources: playlists, medias, channels, devices, teams, widgets
 
 ### Manager
+
 - **Full access** to all resources
 - All actions enabled: `list`, `show`, `create`, `update`, `delete`
 - Resources: playlists, medias, channels, devices, teams, widgets
 
 ### Member
+
 - **Full CRUD** on content resources
 - **Read-only** on teams and widgets
 - Content resources (full access): playlists, medias, channels, devices
 - Management resources (read-only): teams, widgets
 
 ### Guest
+
 - **Read-only** on content resources
 - **No access** to teams
 - Resources (read-only): playlists, medias, channels, devices
@@ -168,10 +174,10 @@ function PlaylistsPage(props: { organizationId: string }) {
     fetchPermissions
   );
 
-  const canCreate = () => 
+  const canCreate = () =>
     permissions()?.permissions.playlists?.includes('create') ?? false;
-  
-  const canUpdate = () => 
+
+  const canUpdate = () =>
     permissions()?.permissions.playlists?.includes('update') ?? false;
 
   return (
@@ -179,7 +185,7 @@ function PlaylistsPage(props: { organizationId: string }) {
       <Show when={canCreate()}>
         <button onClick={handleCreate}>Create Playlist</button>
       </Show>
-      
+
       <Show when={canUpdate()}>
         <button onClick={handleUpdate}>Edit Playlist</button>
       </Show>
@@ -204,26 +210,26 @@ class PermissionsHelper {
   }
 
   isAdmin(): boolean {
-    return this.permissions.role === 'admin';
+    return this.permissions.role === "admin";
   }
 
   isManager(): boolean {
-    return this.permissions.role === 'manager';
+    return this.permissions.role === "manager";
   }
 
   isMember(): boolean {
-    return this.permissions.role === 'member';
+    return this.permissions.role === "member";
   }
 
   isGuest(): boolean {
-    return this.permissions.role === 'guest';
+    return this.permissions.role === "guest";
   }
 }
 
 // Usage
 const helper = new PermissionsHelper(permissionsData);
 
-if (helper.can('playlists', 'create')) {
+if (helper.can("playlists", "create")) {
   showCreateButton();
 }
 
@@ -243,10 +249,10 @@ if (helper.isAdmin()) {
 // Example with React Context
 const PermissionsContext = createContext<PermissionsResponse | null>(null);
 
-function PermissionsProvider({ 
-  children, 
-  organizationId 
-}: { 
+function PermissionsProvider({
+  children,
+  organizationId
+}: {
   children: React.ReactNode;
   organizationId: string;
 }) {
@@ -265,12 +271,12 @@ function PermissionsProvider({
 
 function usePermissions() {
   const permissions = useContext(PermissionsContext);
-  
+
   return {
     permissions,
-    can: (resource: string, action: string) => 
+    can: (resource: string, action: string) =>
       permissions?.permissions[resource]?.includes(action) ?? false,
-    hasAccess: (resource: string) => 
+    hasAccess: (resource: string) =>
       permissions?.resources.includes(resource) ?? false,
   };
 }
@@ -279,12 +285,15 @@ function usePermissions() {
 ## Future Enhancements
 
 ### Dynamic Roles
+
 In the future, when dynamic roles are implemented, this endpoint will:
+
 - Return custom role names instead of fixed roles
 - Support resource-specific permissions (e.g., access to specific playlists)
 - Include fine-grained permissions (e.g., "can edit own playlists only")
 
 The frontend implementation should be flexible enough to handle:
+
 ```json
 {
   "role": "content_editor",
@@ -295,8 +304,8 @@ The frontend implementation should be flexible enough to handle:
   },
   "resource_specific": {
     "playlists": {
-      "123": ["update", "delete"],  // Can edit specific playlist
-      "456": ["show"]                // Can only view specific playlist
+      "123": ["update", "delete"], // Can edit specific playlist
+      "456": ["show"] // Can only view specific playlist
     }
   }
 }
@@ -305,12 +314,14 @@ The frontend implementation should be flexible enough to handle:
 ## Testing
 
 Run the test suite:
+
 ```bash
 cd packages/castmill
 mix test test/castmill_web/controllers/permissions_controller_test.exs
 ```
 
 Manual testing with curl:
+
 ```bash
 # Assuming you have a valid session cookie
 curl -X GET \

@@ -3,17 +3,17 @@
  */
 
 export enum OnboardingStep {
-  FindGuide = 'find_guide',
-  ChooseLanguage = 'choose_language',
-  UploadMedia = 'upload_media',
-  CreatePlaylist = 'create_playlist',
-  CreateChannel = 'create_channel',
-  RegisterDevice = 'register_device',
-  AssignChannel = 'assign_channel',
-  AdvancedPlaylist = 'advanced_playlist',
-  CreateTagGroup = 'create_tag_group',
-  TagContent = 'tag_content',
-  ExploreTreeView = 'explore_tree_view',
+  FindGuide = "find_guide",
+  ChooseLanguage = "choose_language",
+  UploadMedia = "upload_media",
+  CreatePlaylist = "create_playlist",
+  CreateChannel = "create_channel",
+  RegisterDevice = "register_device",
+  AssignChannel = "assign_channel",
+  AdvancedPlaylist = "advanced_playlist",
+  CreateTagGroup = "create_tag_group",
+  TagContent = "tag_content",
+  ExploreTreeView = "explore_tree_view",
 }
 
 export interface OnboardingProgress {

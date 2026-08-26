@@ -1,21 +1,13 @@
-import { useNavigate, useSearchParams } from '@solidjs/router';
-import { createSignal, onMount, Show } from 'solid-js';
-import {
-  authFetch,
-  checkAuth,
-  getUser,
-  loginUser,
-} from '../../components/auth';
-import { OrganizationsService } from '../../services/organizations.service';
-import { useI18n } from '../../i18n';
-import {
-  arrayBufferToBase64,
-  base64URLToArrayBuffer,
-} from '../../components/utils';
-import { baseUrl, domain, origin } from '../../env';
-import { useToast } from '@castmill/ui-common';
+import { useNavigate, useSearchParams } from "@solidjs/router";
+import { createSignal, onMount, Show } from "solid-js";
+import { authFetch, checkAuth, getUser, loginUser } from "../../components/auth";
+import { OrganizationsService } from "../../services/organizations.service";
+import { useI18n } from "../../i18n";
+import { arrayBufferToBase64, base64URLToArrayBuffer } from "../../components/utils";
+import { baseUrl, domain, origin } from "../../env";
+import { useToast } from "@castmill/ui-common";
 
-import './organizations-invitations-page.scss';
+import "./organizations-invitations-page.scss";
 
 interface Invitation {
   email: string;
@@ -33,7 +25,7 @@ const OrganizationsInvitationPage = () => {
   const toast = useToast();
   const [searchParams] = useSearchParams();
   const [invitation, setInvitation] = createSignal<Invitation | null>(null);
-  const [errorMessage, setErrorMessage] = createSignal<string>('');
+  const [errorMessage, setErrorMessage] = createSignal<string>("");
   const [loading, setLoading] = createSignal<boolean>(true);
   const [signingUp, setSigningUp] = createSignal<boolean>(false);
   const [loggingIn, setLoggingIn] = createSignal<boolean>(false);
@@ -43,12 +35,12 @@ const OrganizationsInvitationPage = () => {
   const encoder = new TextEncoder();
 
   // 1. Read the token from the query param
-  const token = searchParams.token || '';
+  const token = searchParams.token || "";
 
   // 2. Preview invitation details (no auth required - checks if user exists)
   async function previewInvitation() {
     if (!token) {
-      setErrorMessage('No invitation token provided.');
+      setErrorMessage("No invitation token provided.");
       setLoading(false);
       return;
     }
@@ -57,7 +49,7 @@ const OrganizationsInvitationPage = () => {
       const result = await OrganizationsService.previewInvitation(token);
       setInvitation(result);
     } catch (error: any) {
-      setErrorMessage(error.message || 'Error loading invitation.');
+      setErrorMessage(error.message || "Error loading invitation.");
     } finally {
       setLoading(false);
     }
@@ -73,20 +65,17 @@ const OrganizationsInvitationPage = () => {
 
     try {
       // Get challenge from server for new signup
-      const challengeResponse = await authFetch(
-        `${baseUrl}/signups/challenges`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: invitation()!.email,
-            invitation_token: token,
-          }),
-        }
-      );
+      const challengeResponse = await authFetch(`${baseUrl}/signups/challenges`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: invitation()!.email,
+          invitation_token: token,
+        }),
+      });
 
       if (!challengeResponse.ok) {
-        throw new Error('Failed to get signup challenge');
+        throw new Error("Failed to get signup challenge");
       }
 
       const { signup_id, challenge } = await challengeResponse.json();
@@ -96,7 +85,7 @@ const OrganizationsInvitationPage = () => {
         publicKey: {
           rp: {
             id: domain,
-            name: 'Castmill AB',
+            name: "Castmill AB",
           },
           user: {
             id: encoder.encode(signup_id),
@@ -104,13 +93,13 @@ const OrganizationsInvitationPage = () => {
             displayName: invitation()!.email,
           },
           pubKeyCredParams: [
-            { type: 'public-key', alg: -8 },
-            { type: 'public-key', alg: -7 },
-            { type: 'public-key', alg: -257 },
+            { type: "public-key", alg: -8 },
+            { type: "public-key", alg: -7 },
+            { type: "public-key", alg: -257 },
           ],
           challenge: base64URLToArrayBuffer(challenge),
           authenticatorSelection: {
-            userVerification: 'required',
+            userVerification: "required",
             requireResidentKey: true,
           },
         },
@@ -118,7 +107,7 @@ const OrganizationsInvitationPage = () => {
 
       const credential = await navigator.credentials.create(createOptions);
       if (!credential) {
-        throw new Error('Could not create credential');
+        throw new Error("Could not create credential");
       }
 
       const publicKeyCredential = credential as PublicKeyCredential;
@@ -126,47 +115,40 @@ const OrganizationsInvitationPage = () => {
         publicKeyCredential.response as AuthenticatorAttestationResponse;
       const publicKey = authAttestationResponse.getPublicKey();
       if (!publicKey) {
-        throw new Error('Could not get public key');
+        throw new Error("Could not get public key");
       }
 
-      const clientDataJSON = new TextDecoder().decode(
-        authAttestationResponse.clientDataJSON
-      );
+      const clientDataJSON = new TextDecoder().decode(authAttestationResponse.clientDataJSON);
 
       // Create user account
-      const signupResponse = await authFetch(
-        `${baseUrl}/signups/${signup_id}/users`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: invitation()!.email,
-            challenge,
-            credential_id: credential.id,
-            public_key_spki: arrayBufferToBase64(publicKey),
-            raw_id: arrayBufferToBase64(publicKeyCredential.rawId),
-            client_data_json: clientDataJSON,
-            invitation_token: token,
-          }),
-        }
-      );
+      const signupResponse = await authFetch(`${baseUrl}/signups/${signup_id}/users`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: invitation()!.email,
+          challenge,
+          credential_id: credential.id,
+          public_key_spki: arrayBufferToBase64(publicKey),
+          raw_id: arrayBufferToBase64(publicKeyCredential.rawId),
+          client_data_json: clientDataJSON,
+          invitation_token: token,
+        }),
+      });
 
       if (!signupResponse.ok) {
-        throw new Error('Signup failed');
+        throw new Error("Signup failed");
       }
 
-      toast.success(t('organizations.invitation.accountCreated'));
+      toast.success(t("organizations.invitation.accountCreated"));
 
       // Redirect to login — the user will authenticate with their new passkey
       // and be redirected back to the invitation page to accept it
       navigate(
-        `/login?redirectTo=${encodeURIComponent(window.location.pathname + window.location.search)}`
+        `/login?redirectTo=${encodeURIComponent(window.location.pathname + window.location.search)}`,
       );
     } catch (error: any) {
-      console.error('Signup error:', error);
-      toast.error(
-        error.message || t('organizations.invitation.accountCreationFailed')
-      );
+      console.error("Signup error:", error);
+      toast.error(error.message || t("organizations.invitation.accountCreationFailed"));
     } finally {
       setSigningUp(false);
     }
@@ -178,23 +160,21 @@ const OrganizationsInvitationPage = () => {
     }
 
     if (
-      typeof navigator === 'undefined' ||
+      typeof navigator === "undefined" ||
       !navigator.credentials ||
-      typeof navigator.credentials.get !== 'function'
+      typeof navigator.credentials.get !== "function"
     ) {
-      toast.error(t('organizations.invitation.passkeysNotSupported'));
+      toast.error(t("organizations.invitation.passkeysNotSupported"));
       return;
     }
 
     setLoggingIn(true);
 
     try {
-      const challengeResponse = await authFetch(
-        `${baseUrl}/sessions/challenges`
-      );
+      const challengeResponse = await authFetch(`${baseUrl}/sessions/challenges`);
 
       if (!challengeResponse.ok) {
-        throw new Error('Failed to get login challenge');
+        throw new Error("Failed to get login challenge");
       }
 
       const { challenge, challenge_token } = await challengeResponse.json();
@@ -207,28 +187,23 @@ const OrganizationsInvitationPage = () => {
       });
 
       if (!credential) {
-        throw new Error('No credentials available for this passkey');
+        throw new Error("No credentials available for this passkey");
       }
 
       const publicKeyCredential = credential as PublicKeyCredential;
-      const assertionResponse =
-        publicKeyCredential.response as AuthenticatorAssertionResponse;
-      const clientDataJSON = new TextDecoder().decode(
-        assertionResponse.clientDataJSON
-      );
+      const assertionResponse = publicKeyCredential.response as AuthenticatorAssertionResponse;
+      const clientDataJSON = new TextDecoder().decode(assertionResponse.clientDataJSON);
 
       const loginResponse = await authFetch(`${baseUrl}/sessions/`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           credential_id: publicKeyCredential.id,
           raw_id: arrayBufferToBase64(publicKeyCredential.rawId),
           client_data_json: clientDataJSON,
-          authenticator_data: arrayBufferToBase64(
-            assertionResponse.authenticatorData
-          ),
+          authenticator_data: arrayBufferToBase64(assertionResponse.authenticatorData),
           signature: arrayBufferToBase64(assertionResponse.signature),
           email: invitation()!.email,
           challenge,
@@ -237,14 +212,14 @@ const OrganizationsInvitationPage = () => {
       });
 
       if (!loginResponse.ok) {
-        throw new Error('Failed to authenticate');
+        throw new Error("Failed to authenticate");
       }
 
       const { user, token: sessionToken } = await loginResponse.json();
       await loginUser({ user, token: sessionToken });
     } catch (error: any) {
-      console.error('Login error:', error);
-      toast.error(error?.message || 'Failed to authenticate');
+      console.error("Login error:", error);
+      toast.error(error?.message || "Failed to authenticate");
     } finally {
       setLoggingIn(false);
     }
@@ -257,7 +232,7 @@ const OrganizationsInvitationPage = () => {
       const result = await OrganizationsService.acceptInvitation(token);
 
       console.log(result);
-      toast.success(t('organizations.invitation.acceptSuccess'));
+      toast.success(t("organizations.invitation.acceptSuccess"));
 
       // Redirect to the organization that the user was invited to
       const orgId = invitation()?.organization_id;
@@ -268,10 +243,8 @@ const OrganizationsInvitationPage = () => {
         navigate(`/`);
       }
     } catch (error: any) {
-      setErrorMessage(
-        error.message || t('organizations.invitation.acceptError')
-      );
-      toast.error(error.message || t('organizations.invitation.acceptError'));
+      setErrorMessage(error.message || t("organizations.invitation.acceptError"));
+      toast.error(error.message || t("organizations.invitation.acceptError"));
     } finally {
       setAccepting(false);
     }
@@ -282,12 +255,12 @@ const OrganizationsInvitationPage = () => {
     setRejecting(true);
     try {
       await OrganizationsService.rejectInvitation(token);
-      toast.success(t('organizations.invitation.rejectSuccess'));
+      toast.success(t("organizations.invitation.rejectSuccess"));
 
       // Redirect to root or login page
-      navigate('/');
+      navigate("/");
     } catch (error: any) {
-      toast.error(error.message || t('organizations.invitation.rejectError'));
+      toast.error(error.message || t("organizations.invitation.rejectError"));
     } finally {
       setRejecting(false);
     }
@@ -309,7 +282,7 @@ const OrganizationsInvitationPage = () => {
             <div class="flex items-center justify-center mb-4">
               <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
             </div>
-            <p class="text-gray-600">{t('common.loadingInvitation')}</p>
+            <p class="text-gray-600">{t("common.loadingInvitation")}</p>
           </div>
         </Show>
 
@@ -354,21 +327,17 @@ const OrganizationsInvitationPage = () => {
                   />
                 </svg>
               </div>
-              <h2 class="text-2xl font-bold mb-2">
-                {t('organizations.invitation.title')}
-              </h2>
+              <h2 class="text-2xl font-bold mb-2">{t("organizations.invitation.title")}</h2>
               <p class="text-gray-600">
-                You've been invited to join{' '}
-                <span class="font-semibold text-indigo-600">
-                  {invitation()?.organization_name}
-                </span>
+                You've been invited to join{" "}
+                <span class="font-semibold text-indigo-600">{invitation()?.organization_name}</span>
               </p>
             </div>
 
             {/* Email display */}
             <div class="email-box">
               <label class="block text-sm font-medium text-gray-700 mb-2">
-                {t('organizations.invitation.emailAddress')}
+                {t("organizations.invitation.emailAddress")}
               </label>
               <div class="flex items-center gap-2">
                 <svg
@@ -391,12 +360,7 @@ const OrganizationsInvitationPage = () => {
             {/* Error states */}
             <Show when={invitation()?.expired}>
               <div class="alert-box alert-error">
-                <svg
-                  class="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
@@ -404,18 +368,13 @@ const OrganizationsInvitationPage = () => {
                     d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                   />
                 </svg>
-                <p>{t('organizations.invitation.expired')}</p>
+                <p>{t("organizations.invitation.expired")}</p>
               </div>
             </Show>
 
-            <Show when={invitation()?.status !== 'invited'}>
+            <Show when={invitation()?.status !== "invited"}>
               <div class="alert-box alert-warning">
-                <svg
-                  class="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     stroke-linecap="round"
                     stroke-linejoin="round"
@@ -427,11 +386,7 @@ const OrganizationsInvitationPage = () => {
               </div>
             </Show>
 
-            <Show
-              when={
-                !invitation()?.expired && invitation()?.status === 'invited'
-              }
-            >
+            <Show when={!invitation()?.expired && invitation()?.status === "invited"}>
               {/* Logged in state - show accept and reject buttons */}
               <Show when={checkAuth() && getUser()?.email}>
                 <div class="action-buttons">
@@ -440,16 +395,8 @@ const OrganizationsInvitationPage = () => {
                     disabled={accepting() || rejecting()}
                     class="btn-accept"
                   >
-                    <Show
-                      when={!accepting()}
-                      fallback={<span>{t('common.loading')}</span>}
-                    >
-                      <svg
-                        class="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
+                    <Show when={!accepting()} fallback={<span>{t("common.loading")}</span>}>
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path
                           stroke-linecap="round"
                           stroke-linejoin="round"
@@ -457,7 +404,7 @@ const OrganizationsInvitationPage = () => {
                           d="M5 13l4 4L19 7"
                         />
                       </svg>
-                      <span>{t('common.acceptInvitation')}</span>
+                      <span>{t("common.acceptInvitation")}</span>
                     </Show>
                   </button>
 
@@ -468,16 +415,9 @@ const OrganizationsInvitationPage = () => {
                   >
                     <Show
                       when={!rejecting()}
-                      fallback={
-                        <span>{t('organizations.invitation.rejecting')}</span>
-                      }
+                      fallback={<span>{t("organizations.invitation.rejecting")}</span>}
                     >
-                      <svg
-                        class="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path
                           stroke-linecap="round"
                           stroke-linejoin="round"
@@ -485,7 +425,7 @@ const OrganizationsInvitationPage = () => {
                           d="M6 18L18 6M6 6l12 12"
                         />
                       </svg>
-                      <span>{t('organizations.invitation.reject')}</span>
+                      <span>{t("organizations.invitation.reject")}</span>
                     </Show>
                   </button>
                 </div>
@@ -496,32 +436,28 @@ const OrganizationsInvitationPage = () => {
                 <Show when={invitation()?.user_exists}>
                   {/* Existing user - login */}
                   <p class="text-center text-gray-600 mb-4">
-                    {t('organizations.invitation.loginToAccept')}
+                    {t("organizations.invitation.loginToAccept")}
                   </p>
                   <button
                     onClick={loginExistingUserWithPasskey}
                     disabled={loggingIn()}
                     class="invitation-button"
                   >
-                    {loggingIn()
-                      ? t('login.loading')
-                      : t('login.loginWithPasskey')}
+                    {loggingIn() ? t("login.loading") : t("login.loginWithPasskey")}
                   </button>
                 </Show>
 
                 <Show when={!invitation()?.user_exists}>
                   {/* New user - signup with passkey directly */}
                   <p class="text-center text-gray-600 mb-4">
-                    {t('organizations.invitation.createAccount')}
+                    {t("organizations.invitation.createAccount")}
                   </p>
                   <button
                     onClick={signupWithPasskey}
                     disabled={signingUp()}
                     class="invitation-button"
                   >
-                    {signingUp()
-                      ? 'Creating account...'
-                      : 'Sign Up with Passkey'}
+                    {signingUp() ? "Creating account..." : "Sign Up with Passkey"}
                   </button>
                 </Show>
               </Show>

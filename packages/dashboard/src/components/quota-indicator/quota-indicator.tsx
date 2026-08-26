@@ -1,5 +1,5 @@
-import { Component, Show } from 'solid-js';
-import './quota-indicator.scss';
+import { Component, Show } from "solid-js";
+import "./quota-indicator.scss";
 
 export interface QuotaIndicatorProps {
   used: number;
@@ -31,16 +31,16 @@ export const QuotaIndicator: Component<QuotaIndicatorProps> = (props) => {
 
   const state = () => {
     const pct = percentage();
-    if (pct >= 100) return 'error';
-    if (pct >= warningThreshold()) return 'warning';
-    return 'normal';
+    if (pct >= 100) return "error";
+    if (pct >= warningThreshold()) return "warning";
+    return "normal";
   };
 
   const stateClass = () => `quota-indicator--${state()}`;
 
   return (
     <div
-      class={`quota-indicator ${stateClass()} ${props.compact ? 'quota-indicator--compact' : ''}`}
+      class={`quota-indicator ${stateClass()} ${props.compact ? "quota-indicator--compact" : ""}`}
       title={`${props.used} of ${props.total} ${props.resourceName} used`}
     >
       <div class="quota-indicator__text">

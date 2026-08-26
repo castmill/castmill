@@ -10,25 +10,23 @@ import {
   HttpError,
   useToast,
   Dropdown,
-} from '@castmill/ui-common';
-import { store, setStore } from '../../store/store';
-import { PermissionButton } from '../../components/permission-button/permission-button';
-import { usePermissions } from '../../hooks/usePermissions';
-import { BsCheckLg } from 'solid-icons/bs';
-import { AiOutlineDelete } from 'solid-icons/ai';
-import { createEffect, createMemo, createSignal, Show } from 'solid-js';
-import { User } from '../../interfaces/user.interface';
-import { OrganizationsService } from '../../services/organizations.service';
-import { OrganizationInviteForm } from './organization-invite-form';
-import { OrganizationRole } from '../../types/organization-role.type';
-import { useI18n } from '../../i18n';
-import { getUser } from '../../components/auth';
-import { useNavigate } from '@solidjs/router';
-import styles from './organization-page.module.scss';
+} from "@castmill/ui-common";
+import { store, setStore } from "../../store/store";
+import { PermissionButton } from "../../components/permission-button/permission-button";
+import { usePermissions } from "../../hooks/usePermissions";
+import { BsCheckLg } from "solid-icons/bs";
+import { AiOutlineDelete } from "solid-icons/ai";
+import { createEffect, createMemo, createSignal, Show } from "solid-js";
+import { User } from "../../interfaces/user.interface";
+import { OrganizationsService } from "../../services/organizations.service";
+import { OrganizationInviteForm } from "./organization-invite-form";
+import { OrganizationRole } from "../../types/organization-role.type";
+import { useI18n } from "../../i18n";
+import { getUser } from "../../components/auth";
+import { useNavigate } from "@solidjs/router";
+import styles from "./organization-page.module.scss";
 
-const [data, setData] = createSignal<
-  { user: User; user_id: string; role: string }[]
->([], {
+const [data, setData] = createSignal<{ user: User; user_id: string; role: string }[]>([], {
   equals: false,
 });
 
@@ -37,15 +35,14 @@ const [currentMember, setCurrentMember] = createSignal<{
   role: string;
 }>();
 const [showAddMemberDialog, setShowAddMemberDialog] = createSignal(false);
-const [showConfirmDialogMultiple, setShowConfirmDialogMultiple] =
-  createSignal(false);
+const [showConfirmDialogMultiple, setShowConfirmDialogMultiple] = createSignal(false);
 
 const [showConfirmDialog, setShowConfirmDialog] = createSignal(false);
 const [showLeaveWarningDialog, setShowLeaveWarningDialog] = createSignal(false);
 
 const [selectedMembers, setSelectedMembers] = createSignal(new Set<string>());
 const [selectedMembersMap, setSelectedMembersMap] = createSignal(
-  new Map<string, { user: User; user_id: string }>()
+  new Map<string, { user: User; user_id: string }>(),
 );
 
 const onRowSelect = (rowsSelected: Set<string>) => {
@@ -91,25 +88,23 @@ export const OrganizationMembersView = (props: {
       switch (error.status) {
         case 422:
           // Check if it's the specific error message for last organization
-          if (error.message === 'cannot_remove_user_from_last_organization') {
-            return t(
-              'organization.errors.cannotRemoveUserFromLastOrganization'
-            );
+          if (error.message === "cannot_remove_user_from_last_organization") {
+            return t("organization.errors.cannotRemoveUserFromLastOrganization");
           }
-          return t('organization.errors.cannotRemoveLastAdmin');
+          return t("organization.errors.cannotRemoveLastAdmin");
         case 404:
-          return t('errors.generic');
+          return t("errors.generic");
         default:
           return error.message;
       }
     }
 
-    const message = (error as Error)?.message ?? t('errors.generic');
-    if (message === 'cannot_remove_last_organization_admin') {
-      return t('organization.errors.cannotRemoveLastAdmin');
+    const message = (error as Error)?.message ?? t("errors.generic");
+    if (message === "cannot_remove_last_organization_admin") {
+      return t("organization.errors.cannotRemoveLastAdmin");
     }
-    if (message === 'cannot_remove_user_from_last_organization') {
-      return t('organization.errors.cannotRemoveUserFromLastOrganization');
+    if (message === "cannot_remove_user_from_last_organization") {
+      return t("organization.errors.cannotRemoveUserFromLastOrganization");
     }
     return message;
   };
@@ -121,26 +116,22 @@ export const OrganizationMembersView = (props: {
   const currentUser = getUser();
 
   const roleItems = [
-    { name: t('organization.roleAdmin'), value: 'admin' },
-    { name: t('organization.roleManager'), value: 'manager' },
-    { name: t('organization.roleEditor'), value: 'editor' },
-    { name: t('organization.rolePublisher'), value: 'publisher' },
-    { name: t('organization.roleDeviceManager'), value: 'device_manager' },
-    { name: t('organization.roleMember'), value: 'member' },
-    { name: t('organization.roleGuest'), value: 'guest' },
+    { name: t("organization.roleAdmin"), value: "admin" },
+    { name: t("organization.roleManager"), value: "manager" },
+    { name: t("organization.roleEditor"), value: "editor" },
+    { name: t("organization.rolePublisher"), value: "publisher" },
+    { name: t("organization.roleDeviceManager"), value: "device_manager" },
+    { name: t("organization.roleMember"), value: "member" },
+    { name: t("organization.roleGuest"), value: "guest" },
   ];
 
-  const handleRoleChange = async (
-    memberId: string,
-    memberName: string,
-    newRole: string | null
-  ) => {
+  const handleRoleChange = async (memberId: string, memberName: string, newRole: string | null) => {
     if (!newRole) return;
 
-    if (!canPerformAction('organizations', 'update')) {
+    if (!canPerformAction("organizations", "update")) {
       toast.error(
-        t('permissions.noUpdateOrganizations') ||
-          "You don't have permission to update member roles"
+        t("permissions.noUpdateOrganizations") ||
+          "You don't have permission to update member roles",
       );
       return;
     }
@@ -149,18 +140,14 @@ export const OrganizationMembersView = (props: {
       await OrganizationsService.updateMemberRole(
         props.organizationId,
         memberId,
-        newRole as OrganizationRole
+        newRole as OrganizationRole,
       );
 
       refreshData();
-      toast.success(
-        t('organization.messages.roleUpdated', { name: memberName })
-      );
+      toast.success(t("organization.messages.roleUpdated", { name: memberName }));
     } catch (error) {
       const errorMessage =
-        error instanceof HttpError
-          ? error.message
-          : t('organization.errors.updateRoleFailed');
+        error instanceof HttpError ? error.message : t("organization.errors.updateRoleFailed");
       toast.error(errorMessage);
     }
   };
@@ -172,9 +159,7 @@ export const OrganizationMembersView = (props: {
     return data().find((entry) => entry.user_id === currentUser.id);
   });
 
-  const adminCount = createMemo(
-    () => data().filter((entry) => entry.role === 'admin').length
-  );
+  const adminCount = createMemo(() => data().filter((entry) => entry.role === "admin").length);
 
   const canLeaveOrganization = createMemo(() => {
     const membership = currentMembership();
@@ -183,7 +168,7 @@ export const OrganizationMembersView = (props: {
     }
 
     // Non-admins can always leave (assuming there's at least one admin)
-    if (membership.role !== 'admin') {
+    if (membership.role !== "admin") {
       return true;
     }
 
@@ -193,28 +178,25 @@ export const OrganizationMembersView = (props: {
 
   const columns = () => [
     {
-      key: 'user.name',
-      title: () => t('common.name'),
+      key: "user.name",
+      title: () => t("common.name"),
       sortable: true,
       render: (item: any) => {
         const isCurrentUser = item.user_id === currentUser?.id;
-        return isCurrentUser
-          ? `${item.user.name} ${t('common.youIndicator')}`
-          : item.user.name;
+        return isCurrentUser ? `${item.user.name} ${t("common.youIndicator")}` : item.user.name;
       },
     },
     {
-      key: 'role',
-      title: () => t('common.role'),
+      key: "role",
+      title: () => t("common.role"),
       sortable: true,
       render: (item: any) => {
         const isCurrentUser = item.user_id === currentUser?.id;
-        const canUpdate = canPerformAction('organizations', 'update');
+        const canUpdate = canPerformAction("organizations", "update");
 
         // Disable role change for current user or if no permission
         if (isCurrentUser || !canUpdate) {
-          const roleLabel =
-            roleItems.find((r) => r.value === item.role)?.name || item.role;
+          const roleLabel = roleItems.find((r) => r.value === item.role)?.name || item.role;
           return <span>{roleLabel}</span>;
         }
 
@@ -234,12 +216,10 @@ export const OrganizationMembersView = (props: {
       },
     },
     {
-      key: 'inserted_at',
-      title: () => t('common.insertedAt'),
+      key: "inserted_at",
+      title: () => t("common.insertedAt"),
       sortable: true,
-      render: (item: any) => (
-        <Timestamp value={item.inserted_at} mode="relative" />
-      ),
+      render: (item: any) => <Timestamp value={item.inserted_at} mode="relative" />,
     },
   ];
 
@@ -247,25 +227,22 @@ export const OrganizationMembersView = (props: {
     {
       icon: AiOutlineDelete,
       handler: (item: any) => {
-        if (!canPerformAction('organizations', 'delete')) {
+        if (!canPerformAction("organizations", "delete")) {
           toast.error(
-            t('permissions.noDeleteOrganizations') ||
-              "You don't have permission to remove organization members"
+            t("permissions.noDeleteOrganizations") ||
+              "You don't have permission to remove organization members",
           );
           return;
         }
         setCurrentMember(item);
         setShowConfirmDialog(true);
       },
-      label: t('common.remove'),
+      label: t("common.remove"),
     },
   ];
 
   const fetchData = async (opts: FetchDataOptions) => {
-    const result = await OrganizationsService.fetchMembers(
-      props.organizationId,
-      opts
-    );
+    const result = await OrganizationsService.fetchMembers(props.organizationId, opts);
     setData(result.data);
     return result;
   };
@@ -292,15 +269,10 @@ export const OrganizationMembersView = (props: {
     }
 
     try {
-      await OrganizationsService.removeMemberFromOrganization(
-        props.organizationId,
-        member.id
-      );
+      await OrganizationsService.removeMemberFromOrganization(props.organizationId, member.id);
 
       refreshData();
-      toast.success(
-        t('organization.messages.memberRemoved', { name: member.name })
-      );
+      toast.success(t("organization.messages.memberRemoved", { name: member.name }));
       setShowConfirmDialog(false);
     } catch (error) {
       const errorMessage = resolveRemoveMemberError(error);
@@ -312,15 +284,12 @@ export const OrganizationMembersView = (props: {
     try {
       await Promise.all(
         Array.from(selectedMembers()).map((memberId) =>
-          OrganizationsService.removeMemberFromOrganization(
-            props.organizationId,
-            memberId
-          )
-        )
+          OrganizationsService.removeMemberFromOrganization(props.organizationId, memberId),
+        ),
       );
 
       refreshData();
-      toast.success(t('organization.messages.membersRemoved'));
+      toast.success(t("organization.messages.membersRemoved"));
       setShowConfirmDialogMultiple(false);
       setSelectedMembersMap(new Map());
     } catch (error) {
@@ -351,32 +320,32 @@ export const OrganizationMembersView = (props: {
     try {
       await OrganizationsService.removeMemberFromOrganization(
         props.organizationId,
-        membership.user_id
+        membership.user_id,
       );
 
       toast.success(
-        t('organization.messages.leftOrganization', {
+        t("organization.messages.leftOrganization", {
           name: props.organizationName,
-        })
+        }),
       );
 
       // Reload organizations to get updated list
       const user = getUser();
       if (!user?.id) {
         // Shouldn't happen, but handle gracefully
-        navigate('/login', { replace: true });
+        navigate("/login", { replace: true });
         return;
       }
 
       const updatedOrganizations = await OrganizationsService.getAll(user.id);
 
       // Update store with new organizations list
-      setStore('organizations', {
+      setStore("organizations", {
         data: updatedOrganizations,
         loaded: true,
         loading: false,
         selectedId: null,
-        selectedName: '',
+        selectedName: "",
       });
 
       // Navigate to another organization or login page
@@ -386,8 +355,8 @@ export const OrganizationMembersView = (props: {
         navigate(`/org/${nextOrg.id}`, { replace: true });
       } else {
         // User has no organizations left - redirect to login with message
-        toast.info(t('organization.messages.noOrganizationsRemaining'));
-        navigate('/login', { replace: true });
+        toast.info(t("organization.messages.noOrganizationsRemaining"));
+        navigate("/login", { replace: true });
       }
     } catch (error) {
       const errorMessage = resolveRemoveMemberError(error);
@@ -399,7 +368,7 @@ export const OrganizationMembersView = (props: {
     <>
       <Show when={showAddMemberDialog()}>
         <Modal
-          title={t('organization.inviteMember')}
+          title={t("organization.inviteMember")}
           description={`Add a new member to the organization ${props.organizationName}`}
           onClose={() => setShowAddMemberDialog(false)}
         >
@@ -407,22 +376,16 @@ export const OrganizationMembersView = (props: {
             organizationId={props.organizationId}
             onSubmit={async (email: string, role: OrganizationRole) => {
               try {
-                await OrganizationsService.inviteUser(
-                  store.organizations.selectedId!,
-                  email,
-                  role
-                );
+                await OrganizationsService.inviteUser(store.organizations.selectedId!, email, role);
 
                 refreshData();
-                toast.success(
-                  t('organization.messages.invitationSent', { email })
-                );
+                toast.success(t("organization.messages.invitationSent", { email }));
                 setShowAddMemberDialog(false);
               } catch (error) {
                 if (error instanceof HttpError) {
                   const normalizedMessage =
-                    error.message === 'role: is invalid'
-                      ? t('organization.errors.invalidRole')
+                    error.message === "role: is invalid"
+                      ? t("organization.errors.invalidRole")
                       : error.message;
 
                   toast.error(normalizedMessage);
@@ -438,20 +401,18 @@ export const OrganizationMembersView = (props: {
 
       <ConfirmDialog
         show={showConfirmDialog()}
-        title={t('organization.dialogs.removeMemberTitle')}
-        message={t('organization.dialogs.removeMemberMessage', {
-          name: currentMember()?.user?.name || '',
+        title={t("organization.dialogs.removeMemberTitle")}
+        message={t("organization.dialogs.removeMemberMessage", {
+          name: currentMember()?.user?.name || "",
         })}
         onClose={() => setShowConfirmDialog(false)}
-        onConfirm={() =>
-          confirmRemoveMemberFromOrganization(currentMember()?.user)
-        }
+        onConfirm={() => confirmRemoveMemberFromOrganization(currentMember()?.user)}
       />
 
       <ConfirmDialog
         show={showConfirmDialogMultiple()}
-        title={t('organization.dialogs.removeMembersTitle')}
-        message={t('organization.dialogs.removeMembersMessage')}
+        title={t("organization.dialogs.removeMembersTitle")}
+        message={t("organization.dialogs.removeMembersMessage")}
         onClose={() => setShowConfirmDialogMultiple(false)}
         onConfirm={() => confirmRemoveMultipleMembersFromOrganization()}
       >
@@ -468,34 +429,34 @@ export const OrganizationMembersView = (props: {
         fetchData={fetchData}
         ref={setRef}
         toolbar={{
-          searchPlaceholder: t('common.search'),
+          searchPlaceholder: t("common.search"),
           mainAction: (
             <PermissionButton
               resource="organizations"
               action="create"
-              label={() => t('organization.inviteMember')}
+              label={() => t("organization.inviteMember")}
               onClick={addMember}
               icon={BsCheckLg}
               color="primary"
             />
           ),
         }}
-        selectionHint={t('common.selectionHint')}
-        selectionLabel={t('common.selectionCount')}
+        selectionHint={t("common.selectionHint")}
+        selectionLabel={t("common.selectionCount")}
         selectionActions={({ count, clear }) => (
           <button
             class="selection-action-btn danger"
-            disabled={!canPerformAction('organizations', 'delete')}
+            disabled={!canPerformAction("organizations", "delete")}
             onClick={() => setShowConfirmDialogMultiple(true)}
           >
             <AiOutlineDelete />
-            {t('common.remove')}
+            {t("common.remove")}
           </button>
         )}
         table={{
           columns,
           actions,
-          actionsLabel: t('common.actions'),
+          actionsLabel: t("common.actions"),
           onRowSelect,
         }}
         pagination={{ itemsPerPage }}
@@ -505,16 +466,16 @@ export const OrganizationMembersView = (props: {
       <Show when={currentMembership()}>
         <div class={styles.leaveOrganizationPanel}>
           <div class={styles.leaveOrganizationContent}>
-            <h4>{t('organization.leaveOrganizationTitle')}</h4>
-            <p>{t('organization.leaveOrganizationDescription')}</p>
+            <h4>{t("organization.leaveOrganizationTitle")}</h4>
+            <p>{t("organization.leaveOrganizationDescription")}</p>
             <Show when={!canLeaveOrganization()}>
               <p class={styles.leaveOrganizationWarning}>
-                {t('organization.leaveOrganizationLastAdminWarning')}
+                {t("organization.leaveOrganizationLastAdminWarning")}
               </p>
             </Show>
           </div>
           <Button
-            label={t('organization.leaveOrganizationAction')}
+            label={t("organization.leaveOrganizationAction")}
             color="danger"
             onClick={handleLeaveOrganizationClick}
             disabled={!canLeaveOrganization()}
@@ -524,8 +485,8 @@ export const OrganizationMembersView = (props: {
 
       <ConfirmDialog
         show={showLeaveWarningDialog()}
-        title={t('organization.leaveLastOrganizationWarningTitle')}
-        message={t('organization.leaveLastOrganizationWarningMessage')}
+        title={t("organization.leaveLastOrganizationWarningTitle")}
+        message={t("organization.leaveLastOrganizationWarningMessage")}
         onClose={() => setShowLeaveWarningDialog(false)}
         onConfirm={() => {
           setShowLeaveWarningDialog(false);

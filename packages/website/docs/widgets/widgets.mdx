@@ -2,10 +2,10 @@
 sidebar_position: 1
 ---
 
-import WidgetExample from '@site/src/components/WidgetExample';
-import { 
+import WidgetExample from "@site/src/components/WidgetExample";
+import {
   simpleTextWidget,
-  simpleImageWidget, 
+  simpleImageWidget,
   styledTextWidget,
   autoScrollTextWidget,
   textWithDataWidget,
@@ -16,11 +16,11 @@ import {
   slideInWidget,
   simpleListWidget,
   simpleListData,
-  restaurantMenuWidget, 
-  restaurantMenuData, 
-  dessertMenuWidget, 
-  dessertMenuData 
-} from '@site/src/components/WidgetExample/sampleWidgets';
+  restaurantMenuWidget,
+  restaurantMenuData,
+  dessertMenuWidget,
+  dessertMenuData,
+} from "@site/src/components/WidgetExample/sampleWidgets";
 
 # Widgets
 
@@ -45,7 +45,7 @@ A widget is a JSON-based template that defines how content should be displayed o
 
 Let's create your first widget—a simple image display. You can see both the JSON definition and a live preview of how it renders:
 
-<WidgetExample 
+<WidgetExample
   widget={simpleImageWidget}
   height="300px"
   title="Simple Image Widget"
@@ -61,6 +61,7 @@ This widget displays an image for 10 seconds. The `options_schema` defines what 
 **Never use absolute pixel units (`px`) in your widgets!** Digital signage displays come in many resolutions (1080p, 4K, vertical displays, etc.). Using pixels will make your widget look different on each screen size.
 
 **✅ Use these relative units instead:**
+
 - **`em`** - Relative to the element's font size (best for padding, margins, borders)
 - **`rem`** - Relative to the root font size (good for consistent spacing)
 - **`%`** - Percentage of parent container (great for widths and heights)
@@ -68,6 +69,7 @@ This widget displays an image for 10 seconds. The `options_schema` defines what 
 - **Unitless values** - For properties like `flex`, `lineHeight`
 
 **Examples:**
+
 ```json
 // ❌ BAD - Will not scale properly
 {
@@ -83,6 +85,7 @@ This widget displays an image for 10 seconds. The `options_schema` defines what 
   "borderRadius": "0.5em"
 }
 ```
+
 :::
 
 ## Widget Structure
@@ -91,17 +94,17 @@ Every widget is defined by a JSON object with the following top-level properties
 
 ### Core Properties
 
-| Property | Type | Required | Description |
-|----------|------|----------|-------------|
-| `name` | string | ✅ | Human-readable widget name |
-| `description` | string | ❌ | Brief description of widget purpose |
-| `template` | object | ✅ | The root component that renders the widget |
-| `options_schema` | object | ❌ | Schema defining configurable options |
-| `data_schema` | object | ❌ | Schema defining dynamic data structure |
-| `icon` | string | ❌ | Widget icon (base64, URL, or emoji) |
-| `small_icon` | string | ❌ | Smaller icon variant |
-| `update_interval_seconds` | number | ❌ | Auto-refresh interval for dynamic data |
-| `meta` | object | ❌ | Custom metadata for organizational purposes |
+| Property                  | Type   | Required | Description                                 |
+| ------------------------- | ------ | -------- | ------------------------------------------- |
+| `name`                    | string | ✅       | Human-readable widget name                  |
+| `description`             | string | ❌       | Brief description of widget purpose         |
+| `template`                | object | ✅       | The root component that renders the widget  |
+| `options_schema`          | object | ❌       | Schema defining configurable options        |
+| `data_schema`             | object | ❌       | Schema defining dynamic data structure      |
+| `icon`                    | string | ❌       | Widget icon (base64, URL, or emoji)         |
+| `small_icon`              | string | ❌       | Smaller icon variant                        |
+| `update_interval_seconds` | number | ❌       | Auto-refresh interval for dynamic data      |
+| `meta`                    | object | ❌       | Custom metadata for organizational purposes |
 
 ### The Template Object
 
@@ -130,6 +133,7 @@ Display static or dynamic images with customizable sizing and duration.
 **Type**: `"image"`
 
 **Options**:
+
 ```typescript
 {
   url: string | Binding,           // Image URL or data binding
@@ -139,6 +143,7 @@ Display static or dynamic images with customizable sizing and duration.
 ```
 
 **Example** (Direct URL):
+
 ```json
 {
   "type": "image",
@@ -157,6 +162,7 @@ Display static or dynamic images with customizable sizing and duration.
 ```
 
 **Example** (Castmill Media with Adaptive Resolution):
+
 ```json
 {
   "type": "image",
@@ -184,6 +190,7 @@ Play video content with automatic looping and sizing control.
 **Type**: `"video"`
 
 **Options**:
+
 ```typescript
 {
   url: string | Binding,           // Video URL or data binding
@@ -192,6 +199,7 @@ Play video content with automatic looping and sizing control.
 ```
 
 **Example**:
+
 ```json
 {
   "type": "video",
@@ -218,6 +226,7 @@ Render text with automatic sizing, scrolling, and character-level animations.
 **Type**: `"text"`
 
 **Options**:
+
 ```typescript
 {
   text: string | Binding,          // Text content or binding
@@ -232,12 +241,14 @@ Render text with automatic sizing, scrolling, and character-level animations.
 ```
 
 **Auto-Fit Behavior**:
+
 - Starts at `baseSize`
 - Scales up to `maxSize` if space available
 - Scales down to `minSize` if text doesn't fit
 - Enables horizontal scrolling if below `minSize`
 
 #### Example Code:
+
 ```json
 {
   "type": "text",
@@ -261,7 +272,7 @@ Render text with automatic sizing, scrolling, and character-level animations.
 
 #### Live Demo:
 
-<WidgetExample 
+<WidgetExample
   widget={simpleTextWidget}
   height="200px"
   title="Basic Text Component"
@@ -273,7 +284,7 @@ Render text with automatic sizing, scrolling, and character-level animations.
 
 When text is too long to fit and reaches the `minSize`, it will automatically scroll horizontally:
 
-<WidgetExample 
+<WidgetExample
   widget={autoScrollTextWidget}
   height="150px"
   title="Auto-Scrolling Text"
@@ -281,6 +292,7 @@ When text is too long to fit and reaches the `minSize`, it will automatically sc
 />
 
 This example demonstrates:
+
 - Text is set to `maxSize: 4em` and `minSize: 2em`
 - The text is too long to fit at the minimum size, so **horizontal scrolling activates when playing**
 - `'white-space': 'nowrap'` prevents text wrapping, enabling the scroll effect
@@ -296,6 +308,7 @@ Container for multiple components, useful for complex layouts and coordinated an
 **Important**: The `components` array is a **top-level property**, not inside `opts`.
 
 #### Example Code:
+
 ```json
 {
   "type": "group",
@@ -325,7 +338,7 @@ Container for multiple components, useful for complex layouts and coordinated an
 
 #### Live Demo:
 
-<WidgetExample 
+<WidgetExample
   widget={simpleGroupWidget}
   height="300px"
   title="Basic Group Component"
@@ -340,6 +353,7 @@ Iterate over data arrays to create repeated elements (menus, schedules, feeds).
 **Type**: `"list"`
 
 **Options**:
+
 ```typescript
 {
   items: Binding,                  // Data binding to array
@@ -353,6 +367,7 @@ Iterate over data arrays to create repeated elements (menus, schedules, feeds).
 **Important**: The `component` property (template for each item) is a **top-level property**, not inside `opts`.
 
 #### Example Code:
+
 ```json
 {
   "type": "list",
@@ -391,7 +406,7 @@ Iterate over data arrays to create repeated elements (menus, schedules, feeds).
 
 #### Live Demo - Simple List:
 
-<WidgetExample 
+<WidgetExample
   widget={simpleListWidget}
   data={simpleListData}
   height="380px"
@@ -403,7 +418,7 @@ Iterate over data arrays to create repeated elements (menus, schedules, feeds).
 
 See the list component in action with this elegant dessert menu that combines a background image, styled container, and animated list items:
 
-<WidgetExample 
+<WidgetExample
   widget={dessertMenuWidget}
   data={dessertMenuData}
   height="500px"
@@ -412,6 +427,7 @@ See the list component in action with this elegant dessert menu that combines a 
 />
 
 This example demonstrates several powerful features:
+
 - **Layered components**: Background image with overlay content
 - **List pagination**: Shows 4 items at a time, rotating through all 7 desserts
 - **Data binding**: Each item pulls name, description, and price from `data.desserts`
@@ -426,6 +442,7 @@ Slideshow of multiple images with transition effects.
 **Type**: `"image-carousel"`
 
 **Options**:
+
 ```typescript
 {
   images: string[] | Binding,      // Array of image URLs
@@ -434,6 +451,7 @@ Slideshow of multiple images with transition effects.
 ```
 
 **Example**:
+
 ```json
 {
   "type": "image-carousel",
@@ -460,16 +478,18 @@ Advanced component for multi-zone layouts with independent playlists per zone.
 **Type**: `"layout"`
 
 **Options**:
+
 ```typescript
 {
   containers: Array<{
-    playlist: Playlist | Binding,  // Playlist for this zone
-    style: CSSProperties           // CSS positioning/styling
-  }>
+    playlist: Playlist | Binding; // Playlist for this zone
+    style: CSSProperties; // CSS positioning/styling
+  }>;
 }
 ```
 
 **Example** (Split-Screen Layout):
+
 ```json
 {
   "type": "layout",
@@ -519,7 +539,7 @@ Instead of hard-coding values, use binding objects:
 ```json
 {
   "key": "path.to.data",
-  "default": "fallback value"  // Optional
+  "default": "fallback value" // Optional
 }
 ```
 
@@ -562,7 +582,7 @@ Current iteration context within lists:
     "items": { "key": "data.products" },
     "component": {
       "type": "text",
-      "opts": { "text": { "key": "$.name" } }  // Current product name
+      "opts": { "text": { "key": "$.name" } } // Current product name
     }
   }
 }
@@ -574,7 +594,7 @@ Access array elements with bracket notation:
 
 ```json
 {
-  "url": { "key": "options.images[0].uri" }  // First image
+  "url": { "key": "options.images[0].uri" } // First image
 }
 ```
 
@@ -596,13 +616,14 @@ Castmill automatically generates multiple versions of uploaded images and videos
 
 When media is uploaded to Castmill, the platform generates multiple optimized versions:
 
-| Target Key | Purpose | Typical Resolution | Use Case |
-|-----------|---------|-------------------|----------|
-| `thumbnail` | Small preview | ~150x150px | Lists, grid views |
-| `preview` | Medium preview | ~480x270px | Dashboard editing |
-| `screen` | Full display | Original or 1920x1080px | Digital signage screens |
+| Target Key  | Purpose        | Typical Resolution      | Use Case                |
+| ----------- | -------------- | ----------------------- | ----------------------- |
+| `thumbnail` | Small preview  | ~150x150px              | Lists, grid views       |
+| `preview`   | Medium preview | ~480x270px              | Dashboard editing       |
+| `screen`    | Full display   | Original or 1920x1080px | Digital signage screens |
 
 The `[@target]` variable automatically resolves to the appropriate key based on context:
+
 - **Dashboard/Editor**: Uses `"preview"` for faster loading and editing
 - **Player on Screens**: Uses `"screen"` for maximum quality
 - **Mobile Apps**: May use `"thumbnail"` for bandwidth efficiency
@@ -617,9 +638,24 @@ Each media item in Castmill has a `files` array containing multiple `File` objec
     "id": "media_123",
     "name": "product-hero.jpg",
     "files": [
-      { "target": "thumbnail", "uri": "https://cdn.castmill.com/thumb_abc.jpg", "width": 150, "height": 150 },
-      { "target": "preview", "uri": "https://cdn.castmill.com/prev_abc.jpg", "width": 480, "height": 270 },
-      { "target": "screen", "uri": "https://cdn.castmill.com/screen_abc.jpg", "width": 1920, "height": 1080 }
+      {
+        "target": "thumbnail",
+        "uri": "https://cdn.castmill.com/thumb_abc.jpg",
+        "width": 150,
+        "height": 150
+      },
+      {
+        "target": "preview",
+        "uri": "https://cdn.castmill.com/prev_abc.jpg",
+        "width": 480,
+        "height": 270
+      },
+      {
+        "target": "screen",
+        "uri": "https://cdn.castmill.com/screen_abc.jpg",
+        "width": 1920,
+        "height": 1080
+      }
     ]
   }
 }
@@ -689,14 +725,14 @@ Defines configurable parameters for your widget:
 
 ### Field Types
 
-| Type | Description | Additional Attributes |
-|------|-------------|----------------------|
-| `string` | Text value | `default`, `description` |
-| `number` | Numeric value | `default`, `min`, `max`, `description` |
-| `boolean` | True/false value | `default`, `description` |
-| `ref` | Reference to media/playlist | `collection`, `required`, `description` |
-| `map` | Nested object | `schema`, `required` |
-| `list` | Array of items | `items`, `required` |
+| Type      | Description                 | Additional Attributes                   |
+| --------- | --------------------------- | --------------------------------------- |
+| `string`  | Text value                  | `default`, `description`                |
+| `number`  | Numeric value               | `default`, `min`, `max`, `description`  |
+| `boolean` | True/false value            | `default`, `description`                |
+| `ref`     | Reference to media/playlist | `collection`, `required`, `description` |
+| `map`     | Nested object               | `schema`, `required`                    |
+| `list`    | Array of items              | `items`, `required`                     |
 
 ### Data Schema
 
@@ -901,7 +937,7 @@ For text components, enable character splitting:
             "scale": 1,
             "y": 0,
             "duration": 0.3,
-            "stagger": 0.05,  // Delay between each character
+            "stagger": 0.05, // Delay between each character
             "ease": "back.out(2)"
           }
         }
@@ -972,6 +1008,7 @@ Use viewport units and flexbox for adaptive layouts:
 ### Common Patterns
 
 #### Centered Container
+
 ```json
 {
   "style": {
@@ -985,6 +1022,7 @@ Use viewport units and flexbox for adaptive layouts:
 ```
 
 #### Scrolling Text
+
 ```json
 {
   "style": {
@@ -995,6 +1033,7 @@ Use viewport units and flexbox for adaptive layouts:
 ```
 
 #### Image Overlay
+
 ```json
 {
   "style": {
@@ -1253,7 +1292,7 @@ Set automatic refresh:
 
 ```json
 {
-  "update_interval_seconds": 300  // Refresh every 5 minutes
+  "update_interval_seconds": 300 // Refresh every 5 minutes
 }
 ```
 
@@ -1268,6 +1307,7 @@ Widgets can receive data pushes from external systems. Configure a webhook URL i
 ```
 
 Your backend service should send data matching your `data_schema` to:
+
 ```
 POST /api/webhook/widgets/custom-data-handler
 ```
@@ -1323,15 +1363,15 @@ POST /api/webhook/widgets/custom-data-handler
 
 ### Component Quick Reference
 
-| Component | Primary Use | Key Options |
-|-----------|-------------|-------------|
-| `image` | Static/dynamic images | `url`, `size`, `duration` |
-| `video` | Video playback | `url`, `size` |
-| `text` | Text display | `text`, `autofit`, `chars` |
-| `group` | Layout container | `components` |
-| `list` | Data iteration | `items`, `component`, `itemsPerPage` |
-| `image-carousel` | Image slideshows | `images`, `imageDuration` |
-| `layout` | Multi-zone layouts | `containers` |
+| Component        | Primary Use           | Key Options                          |
+| ---------------- | --------------------- | ------------------------------------ |
+| `image`          | Static/dynamic images | `url`, `size`, `duration`            |
+| `video`          | Video playback        | `url`, `size`                        |
+| `text`           | Text display          | `text`, `autofit`, `chars`           |
+| `group`          | Layout container      | `components`                         |
+| `list`           | Data iteration        | `items`, `component`, `itemsPerPage` |
+| `image-carousel` | Image slideshows      | `images`, `imageDuration`            |
+| `layout`         | Multi-zone layouts    | `containers`                         |
 
 ---
 
@@ -1348,5 +1388,4 @@ POST /api/webhook/widgets/custom-data-handler
 
 ---
 
-*For additional help, consult the [Player Documentation](/docs/player/widgets), or reach out to the Castmill community.*
-
+_For additional help, consult the [Player Documentation](/docs/player/widgets), or reach out to the Castmill community._

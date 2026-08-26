@@ -1,21 +1,21 @@
-import { Component, For, JSX, mergeProps, onCleanup, onMount } from 'solid-js';
-import { TemplateConfig, resolveOption } from './binding';
-import { Subscription, share, switchMap, take } from 'rxjs';
-import { TemplateComponent, TemplateComponentType } from './template';
-import { JsonPlaylist, LayoutOptionValue } from '../../interfaces';
-import { Playlist } from '../../playlist';
-import { ResourceManager } from '@castmill/cache';
-import { Renderer } from '../../renderer';
-import { Timeline, TimelineItem } from './timeline';
-import { timer } from '../../player';
-import { ComponentAnimation } from './animation';
-import { BaseComponentProps } from './interfaces/base-component-props';
-import { PlayerGlobals } from '../../interfaces/player-globals.interface';
-import { rectToStyle, zoneToStyle, LayoutRect } from './layout-utils';
+import { Component, For, JSX, mergeProps, onCleanup, onMount } from "solid-js";
+import { TemplateConfig, resolveOption } from "./binding";
+import { Subscription, share, switchMap, take } from "rxjs";
+import { TemplateComponent, TemplateComponentType } from "./template";
+import { JsonPlaylist, LayoutOptionValue } from "../../interfaces";
+import { Playlist } from "../../playlist";
+import { ResourceManager } from "@castmill/cache";
+import { Renderer } from "../../renderer";
+import { Timeline, TimelineItem } from "./timeline";
+import { timer } from "../../player";
+import { ComponentAnimation } from "./animation";
+import { BaseComponentProps } from "./interfaces/base-component-props";
+import { PlayerGlobals } from "../../interfaces/player-globals.interface";
+import { rectToStyle, zoneToStyle, LayoutRect } from "./layout-utils";
 
 // Re-export from layout-utils for external use
-export { rectToStyle, zoneToStyle } from './layout-utils';
-export type { LayoutRect } from './layout-utils';
+export { rectToStyle, zoneToStyle } from "./layout-utils";
+export type { LayoutRect } from "./layout-utils";
 
 export interface LayoutContainer {
   playlist: JsonPlaylist;
@@ -39,7 +39,7 @@ function zonesToContainers(
   layoutValue: LayoutOptionValue,
   config: TemplateConfig,
   context: any,
-  globals: PlayerGlobals
+  globals: PlayerGlobals,
 ): LayoutContainer[] {
   return layoutValue.zones.map((zone) => {
     // If the zone has a playlist binding, resolve it
@@ -48,12 +48,7 @@ function zonesToContainers(
 
     if ((zone as any).playlist) {
       // Zone has a playlist binding - resolve it
-      resolvedPlaylist = resolveOption(
-        (zone as any).playlist,
-        config,
-        context,
-        globals
-      );
+      resolvedPlaylist = resolveOption((zone as any).playlist, config, context, globals);
     }
 
     return {
@@ -74,13 +69,13 @@ export class LayoutComponent implements TemplateComponent {
     public opts: LayoutComponentOptions,
     public style: JSX.CSSProperties,
     public animations?: ComponentAnimation[],
-    public filter?: Record<string, any>
+    public filter?: Record<string, any>,
   ) {}
 
   resolveDuration(medias: { [index: string]: string }): number {
     return this.playlists.reduce(
       (acc: number, playlist: Playlist) => Math.max(acc, playlist.duration()),
-      0
+      0,
     );
   }
 
@@ -93,18 +88,18 @@ export class LayoutComponent implements TemplateComponent {
       filter?: Record<string, any>;
     },
     resourceManager: ResourceManager,
-    globals: PlayerGlobals
+    globals: PlayerGlobals,
   ): LayoutComponent {
     const layout = new LayoutComponent(
       json.name,
       json.opts,
       json.style,
       json.animations,
-      json.filter
+      json.filter,
     );
     const containers = json.opts?.containers || [];
     layout.playlists = containers.map((container: LayoutContainer) =>
-      Playlist.fromJSON(container.playlist, resourceManager, globals)
+      Playlist.fromJSON(container.playlist, resourceManager, globals),
     );
 
     return layout;
@@ -114,7 +109,7 @@ export class LayoutComponent implements TemplateComponent {
     opts: any,
     config: TemplateConfig,
     context: any,
-    globals: PlayerGlobals
+    globals: PlayerGlobals,
   ): LayoutComponentOptions {
     // Check for layout-ref format (from Layout Widget with layout reference)
     // The layoutRef has layoutId and zonePlaylistMap with playlist assignments
@@ -143,39 +138,19 @@ export class LayoutComponent implements TemplateComponent {
     // Check if this is the zone-based format
     // This format has 'zones' array and 'aspectRatio' property
     if (opts.zones && Array.isArray(opts.zones)) {
-      const layoutValue = resolveOption(
-        opts,
-        config,
-        context,
-        globals
-      ) as LayoutOptionValue;
-      const containers = zonesToContainers(
-        layoutValue,
-        config,
-        context,
-        globals
-      );
+      const layoutValue = resolveOption(opts, config, context, globals) as LayoutOptionValue;
+      const containers = zonesToContainers(layoutValue, config, context, globals);
       return { containers };
     }
 
     // Legacy format: template-based containers
-    const resolvedContainers = resolveOption(
-      opts.containers,
-      config,
-      context,
-      globals
-    );
+    const resolvedContainers = resolveOption(opts.containers, config, context, globals);
 
     // Convert rect to style for each container if rect is provided
     // Also resolve the playlist binding for each container
     const containers = (resolvedContainers || []).map((container: any) => {
       // Resolve the playlist binding - it might be {key: "options.playlist_1"} or already resolved
-      const resolvedPlaylist = resolveOption(
-        container.playlist,
-        config,
-        context,
-        globals
-      );
+      const resolvedPlaylist = resolveOption(container.playlist, config, context, globals);
 
       const result: LayoutContainer = {
         playlist: resolvedPlaylist,
@@ -203,7 +178,7 @@ interface LayoutProps extends BaseComponentProps {
 }
 
 export const Layout: Component<LayoutProps> = (props) => {
-  const timeline = new Timeline('layout', { loop: true });
+  const timeline = new Timeline("layout", { loop: true });
 
   // Override play to safeguard against NaN offset (can happen if parent timeline had duration 0)
   const originalPlay = timeline.play.bind(timeline);
@@ -221,11 +196,11 @@ export const Layout: Component<LayoutProps> = (props) => {
 
   const merged = mergeProps(
     {
-      width: '100%',
-      height: '100%',
-      position: 'relative' as const,
+      width: "100%",
+      height: "100%",
+      position: "relative" as const,
     },
-    props.style
+    props.style,
   );
 
   onCleanup(() => {
@@ -272,14 +247,14 @@ const LayoutContainerPlaceholder: Component<{
     <div
       style={{
         ...props.style,
-        display: 'flex',
-        'align-items': 'center',
-        'justify-content': 'center',
-        'background-color': 'rgba(128, 128, 128, 0.2)',
-        border: '1px dashed rgba(128, 128, 128, 0.5)',
+        display: "flex",
+        "align-items": "center",
+        "justify-content": "center",
+        "background-color": "rgba(128, 128, 128, 0.2)",
+        border: "1px dashed rgba(128, 128, 128, 0.5)",
       }}
     >
-      <span style={{ color: 'rgba(128, 128, 128, 0.7)', 'font-size': '0.8em' }}>
+      <span style={{ color: "rgba(128, 128, 128, 0.7)", "font-size": "0.8em" }}>
         No playlist selected
       </span>
     </div>
@@ -314,7 +289,7 @@ const LayoutContainer: Component<{
   const playlist = Playlist.fromJSON(
     props.container.playlist,
     props.resourceManager,
-    props.globals
+    props.globals,
   );
 
   onCleanup(() => {
@@ -329,7 +304,7 @@ const LayoutContainer: Component<{
     // Don't pass a fixed duration - let the timeline calculate it dynamically
     // from its children (e.g., scroller items). This allows the duration to
     // be determined after all widgets are mounted and their durations are known.
-    timeline = new Timeline('layout-container', {
+    timeline = new Timeline("layout-container", {
       loop: true,
     });
 
@@ -376,15 +351,12 @@ const LayoutContainer: Component<{
 
         const playlistDur = playlist.duration();
 
-        const timer$ = timer(Date.now(), startTime, 100, playlistDur).pipe(
-          share()
-        );
+        const timer$ = timer(Date.now(), startTime, 100, playlistDur).pipe(share());
 
         timerSubscription = timer$.subscribe();
 
         playing$ = playlist.play(renderer!, timer$, { loop: true }).subscribe({
-          error: (err) =>
-            console.error('[LayoutContainer] playlist.play error:', err),
+          error: (err) => console.error("[LayoutContainer] playlist.play error:", err),
         });
       };
 
@@ -436,7 +408,7 @@ const LayoutContainer: Component<{
             }
           },
           error: (err) => {
-            console.error('Error showing playlist in layout container', err);
+            console.error("Error showing playlist in layout container", err);
           },
         });
 

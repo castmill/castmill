@@ -8,7 +8,7 @@ import {
   onMount,
   Show,
   on,
-} from 'solid-js';
+} from "solid-js";
 
 import {
   Button,
@@ -36,36 +36,35 @@ import {
   TagBadge,
   TagPopover,
   useViewMode,
-} from '@castmill/ui-common';
+} from "@castmill/ui-common";
 
-import { store } from '../../store/store';
-import { OnboardingStep } from '../../interfaces/onboarding-progress.interface';
+import { store } from "../../store/store";
+import { OnboardingStep } from "../../interfaces/onboarding-progress.interface";
 
-import { BsCheckLg, BsEye, BsTagFill } from 'solid-icons/bs';
-import { AiOutlineDelete } from 'solid-icons/ai';
+import { BsCheckLg, BsEye, BsTagFill } from "solid-icons/bs";
+import { AiOutlineDelete } from "solid-icons/ai";
 
-import styles from './channels-page.module.scss';
-import './channels-page.scss';
-import { useSearchParams } from '@solidjs/router';
-import { ChannelsService, JsonChannel } from '../../services/channels.service';
-import { ChannelView } from './channel-view';
+import styles from "./channels-page.module.scss";
+import "./channels-page.scss";
+import { useSearchParams } from "@solidjs/router";
+import { ChannelsService, JsonChannel } from "../../services/channels.service";
+import { ChannelView } from "./channel-view";
 
-import { baseUrl } from '../../env';
-import { ChannelAddForm } from './channel-add-form';
-import { useTeamFilter, useModalFromUrl } from '../../hooks';
-import { useI18n } from '../../i18n';
-import { QuotaIndicator } from '../../components/quota-indicator';
-import { QuotasService, ResourceQuota } from '../../services/quotas.service';
-import { usePermissions } from '../../hooks/usePermissions';
-import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
-import { useLocation } from '@solidjs/router';
+import { baseUrl } from "../../env";
+import { ChannelAddForm } from "./channel-add-form";
+import { useTeamFilter, useModalFromUrl } from "../../hooks";
+import { useI18n } from "../../i18n";
+import { QuotaIndicator } from "../../components/quota-indicator";
+import { QuotasService, ResourceQuota } from "../../services/quotas.service";
+import { usePermissions } from "../../hooks/usePermissions";
+import { useKeyboardShortcuts } from "../../hooks/useKeyboardShortcuts";
+import { useLocation } from "@solidjs/router";
 
 const ChannelsPage: Component = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { t } = useI18n();
   const { canPerformAction } = usePermissions();
-  const { registerShortcutAction, unregisterShortcutAction } =
-    useKeyboardShortcuts();
+  const { registerShortcutAction, unregisterShortcutAction } = useKeyboardShortcuts();
   const location = useLocation();
 
   const toast = useToast();
@@ -96,36 +95,29 @@ const ChannelsPage: Component = () => {
   });
 
   // View mode: list (table) or tree – persisted in localStorage
-  const [viewMode, setViewMode] = useViewMode('channels');
+  const [viewMode, setViewMode] = useViewMode("channels");
   const [treeVersion, setTreeVersion] = createSignal(0);
   const bumpTree = () => setTreeVersion((v) => v + 1);
 
   const [showAddChannelModal, setShowAddChannelModal] = createSignal(false);
   const [showDrawer, setShowDrawer] = createSignal(false);
   const [currentChannel, setCurrentChannel] = createSignal<JsonChannel>();
-  const [selectedChannels, setSelectedChannels] = createSignal(
-    new Set<number>()
-  );
+  const [selectedChannels, setSelectedChannels] = createSignal(new Set<number>());
 
   // ---------------------------------------------------------------------------
   // Tag support
   // ---------------------------------------------------------------------------
   const [tagGroups, setTagGroups] = createSignal<TagGroup[]>([]);
   const [allTags, setAllTags] = createSignal<Tag[]>([]);
-  const [resourceTagsMap, setResourceTagsMap] = createSignal<
-    Map<number, Tag[]>
-  >(new Map());
+  const [resourceTagsMap, setResourceTagsMap] = createSignal<Map<number, Tag[]>>(new Map());
   const [tagPopoverTarget, setTagPopoverTarget] = createSignal<{
     item: JsonChannel;
     anchorEl: HTMLElement;
   } | null>(null);
-  const [bulkTagAnchorEl, setBulkTagAnchorEl] =
-    createSignal<HTMLElement | null>(null);
+  const [bulkTagAnchorEl, setBulkTagAnchorEl] = createSignal<HTMLElement | null>(null);
 
   const canManageTags = () => {
-    return (
-      canPerformAction('tags', 'manage') || canPerformAction('tags', 'create')
-    );
+    return canPerformAction("tags", "manage") || canPerformAction("tags", "create");
   };
 
   const tagsService = new TagsService(baseUrl);
@@ -143,15 +135,15 @@ const ChannelsPage: Component = () => {
         setAllTags(allTagsList);
       });
     } catch (error) {
-      console.error('Failed to load tag groups:', error);
+      console.error("Failed to load tag groups:", error);
     }
   };
 
   createEffect(
     on(
       () => store.organizations.selectedId,
-      () => loadTagGroups()
-    )
+      () => loadTagGroups(),
+    ),
   );
 
   const loadResourceTags = async (items: JsonChannel[]) => {
@@ -164,27 +156,19 @@ const ChannelsPage: Component = () => {
     await Promise.all(
       items.map(async (item) => {
         try {
-          const itemTags = await tagsService.getResourceTags(
-            orgId,
-            'channel',
-            item.id
-          );
+          const itemTags = await tagsService.getResourceTags(orgId, "channel", item.id);
           tagMap.set(item.id, itemTags);
         } catch {
           tagMap.set(item.id, []);
         }
-      })
+      }),
     );
     setResourceTagsMap(tagMap);
   };
 
   createEffect(on(data, (items) => loadResourceTags(items)));
 
-  const handleTagToggle = async (
-    item: JsonChannel,
-    tagId: number,
-    selected: boolean
-  ) => {
+  const handleTagToggle = async (item: JsonChannel, tagId: number, selected: boolean) => {
     const orgId = store.organizations.selectedId;
     if (!orgId) return;
 
@@ -197,7 +181,7 @@ const ChannelsPage: Component = () => {
       } else {
         next.set(
           item.id,
-          current.filter((t) => t.id !== tagId)
+          current.filter((t) => t.id !== tagId),
         );
       }
       return next;
@@ -205,19 +189,15 @@ const ChannelsPage: Component = () => {
 
     try {
       if (selected) {
-        await tagsService.tagResource(orgId, 'channel', item.id, tagId);
+        await tagsService.tagResource(orgId, "channel", item.id, tagId);
       } else {
-        await tagsService.untagResource(orgId, 'channel', item.id, tagId);
+        await tagsService.untagResource(orgId, "channel", item.id, tagId);
       }
     } catch (error) {
-      console.error('Failed to toggle tag:', error);
-      toast.error(t('tags.errors.tagResource', { error: String(error) }));
+      console.error("Failed to toggle tag:", error);
+      toast.error(t("tags.errors.tagResource", { error: String(error) }));
       try {
-        const freshTags = await tagsService.getResourceTags(
-          orgId,
-          'channel',
-          item.id
-        );
+        const freshTags = await tagsService.getResourceTags(orgId, "channel", item.id);
         setResourceTagsMap((prev) => {
           const next = new Map(prev);
           next.set(item.id, freshTags);
@@ -236,40 +216,26 @@ const ChannelsPage: Component = () => {
     const resourceIds = Array.from(selectedChannels());
     try {
       if (selected) {
-        await tagsService.bulkTagResources(
-          orgId,
-          tagId,
-          'channel',
-          resourceIds
-        );
+        await tagsService.bulkTagResources(orgId, tagId, "channel", resourceIds);
       } else {
-        await tagsService.bulkUntagResources(
-          orgId,
-          tagId,
-          'channel',
-          resourceIds
-        );
+        await tagsService.bulkUntagResources(orgId, tagId, "channel", resourceIds);
       }
 
       const tagMap = new Map(resourceTagsMap());
       await Promise.all(
         resourceIds.map(async (id) => {
           try {
-            const freshTags = await tagsService.getResourceTags(
-              orgId,
-              'channel',
-              id
-            );
+            const freshTags = await tagsService.getResourceTags(orgId, "channel", id);
             tagMap.set(id, freshTags);
           } catch {
             /* ignore */
           }
-        })
+        }),
       );
       setResourceTagsMap(tagMap);
     } catch (error) {
-      console.error('Failed to bulk toggle tag:', error);
-      toast.error(t('tags.errors.tagResource', { error: String(error) }));
+      console.error("Failed to bulk toggle tag:", error);
+      toast.error(t("tags.errors.tagResource", { error: String(error) }));
     }
   };
 
@@ -280,7 +246,7 @@ const ChannelsPage: Component = () => {
     if (allItemTags.length === 0) return [];
     const firstItemTagIds = new Set(allItemTags[0].map((t) => t.id));
     return [...firstItemTagIds].filter((tagId) =>
-      allItemTags.every((tags) => tags.some((t) => t.id === tagId))
+      allItemTags.every((tags) => tags.some((t) => t.id === tagId)),
     );
   };
 
@@ -296,7 +262,7 @@ const ChannelsPage: Component = () => {
 
   let channelsService: ChannelsService = new ChannelsService(
     baseUrl,
-    store.organizations.selectedId!
+    store.organizations.selectedId!,
   );
 
   const loadQuota = async () => {
@@ -306,11 +272,11 @@ const ChannelsPage: Component = () => {
       setQuotaLoading(true);
       const quotaData = await QuotasService.getResourceQuota(
         store.organizations.selectedId,
-        'channels'
+        "channels",
       );
       setQuota(quotaData);
     } catch (error) {
-      console.error('Failed to fetch quota:', error);
+      console.error("Failed to fetch quota:", error);
     } finally {
       setQuotaLoading(false);
     }
@@ -321,36 +287,33 @@ const ChannelsPage: Component = () => {
 
     // Register keyboard shortcuts
     registerShortcutAction(
-      'generic-create',
+      "generic-create",
       () => {
-        if (!isQuotaReached() && canPerformAction('channels', 'create')) {
+        if (!isQuotaReached() && canPerformAction("channels", "create")) {
           addChannel();
         }
       },
-      () => location.pathname.includes('/channels')
+      () => location.pathname.includes("/channels"),
     );
 
     registerShortcutAction(
-      'generic-search',
+      "generic-search",
       () => {
         if (tableViewRef) {
           tableViewRef.focusSearch();
         }
       },
-      () => location.pathname.includes('/channels')
+      () => location.pathname.includes("/channels"),
     );
 
     registerShortcutAction(
-      'generic-delete',
+      "generic-delete",
       () => {
-        if (
-          selectedChannels().size > 0 &&
-          canPerformAction('channels', 'delete')
-        ) {
+        if (selectedChannels().size > 0 && canPerformAction("channels", "delete")) {
           setShowConfirmDialogMultiple(true);
         }
       },
-      () => location.pathname.includes('/channels')
+      () => location.pathname.includes("/channels"),
     );
   });
 
@@ -366,8 +329,8 @@ const ChannelsPage: Component = () => {
             tableViewRef.reloadData();
           }
         }
-      }
-    )
+      },
+    ),
   );
 
   // Helpers to open/close the channel drawer and keep URL in sync
@@ -402,11 +365,11 @@ const ChannelsPage: Component = () => {
 
   const columns = () =>
     [
-      { key: 'id', title: t('common.id'), sortable: true },
-      { key: 'name', title: t('common.name'), sortable: true },
+      { key: "id", title: t("common.id"), sortable: true },
+      { key: "name", title: t("common.name"), sortable: true },
       {
-        key: 'tags',
-        title: t('tags.title'),
+        key: "tags",
+        title: t("tags.title"),
         sortable: false,
         render: (item: JsonChannel) => {
           const itemTags = () => resourceTagsMap().get(item.id) || [];
@@ -427,7 +390,7 @@ const ChannelsPage: Component = () => {
                     anchorEl: e.currentTarget as HTMLElement,
                   });
                 }}
-                title={t('tags.manageTags')}
+                title={t("tags.manageTags")}
               >
                 <BsTagFill />
               </button>
@@ -445,31 +408,25 @@ const ChannelsPage: Component = () => {
       handler: (item: ChannelTableItem) => {
         openChannelDrawer(item);
       },
-      label: t('common.view'),
+      label: t("common.view"),
     },
     {
       icon: AiOutlineDelete,
       handler: (item: ChannelTableItem) => {
-        if (!canPerformAction('channels', 'delete')) {
+        if (!canPerformAction("channels", "delete")) {
           toast.error(
-            t('permissions.noDeleteChannels') ||
-              "You don't have permission to delete channels"
+            t("permissions.noDeleteChannels") || "You don't have permission to delete channels",
           );
           return;
         }
         setCurrentChannel(item);
         setShowConfirmDialog(true);
       },
-      label: t('common.remove'),
+      label: t("common.remove"),
     },
   ];
 
-  const fetchData = async ({
-    page,
-    sortOptions,
-    search,
-    filters,
-  }: FetchDataOptions) => {
+  const fetchData = async ({ page, sortOptions, search, filters }: FetchDataOptions) => {
     const result = await channelsService.fetchChannels({
       page,
       sortOptions,
@@ -477,7 +434,7 @@ const ChannelsPage: Component = () => {
       filters,
       team_id: selectedTeamId(),
       tag_ids: selectedTagIds(),
-      tag_filter_mode: tagFilterMode() as 'any' | 'all',
+      tag_filter_mode: tagFilterMode() as "any" | "all",
     });
 
     setData(result.data);
@@ -485,20 +442,19 @@ const ChannelsPage: Component = () => {
   };
 
   onCleanup(() => {
-    unregisterShortcutAction('generic-create');
-    unregisterShortcutAction('generic-search');
-    unregisterShortcutAction('generic-delete');
+    unregisterShortcutAction("generic-create");
+    unregisterShortcutAction("generic-search");
+    unregisterShortcutAction("generic-delete");
   });
 
   const [showConfirmDialog, setShowConfirmDialog] = createSignal(false);
-  const [showConfirmDialogMultiple, setShowConfirmDialogMultiple] =
-    createSignal(false);
+  const [showConfirmDialogMultiple, setShowConfirmDialogMultiple] = createSignal(false);
   const [showErrorDialog, setShowErrorDialog] = createSignal(false);
-  const [errorMessage, setErrorMessage] = createSignal('');
+  const [errorMessage, setErrorMessage] = createSignal("");
   const [errorDevices, setErrorDevices] = createSignal<string[]>([]);
 
   const notifyChannelContentRequirement = () => {
-    toast.info(t('channels.info.contentRequired'));
+    toast.info(t("channels.info.contentRequired"));
   };
 
   const confirmRemoveChannel = async (channel: JsonChannel | undefined) => {
@@ -515,7 +471,7 @@ const ChannelsPage: Component = () => {
         // Show error with device details
         const devices = result.error?.devices || [];
         setErrorMessage(
-          `Cannot delete channel "${channel.name}" because it is assigned to the following device${devices.length > 1 ? 's' : ''}:`
+          `Cannot delete channel "${channel.name}" because it is assigned to the following device${devices.length > 1 ? "s" : ""}:`,
         );
         setErrorDevices(devices);
         setShowErrorDialog(true);
@@ -523,10 +479,10 @@ const ChannelsPage: Component = () => {
     } catch (error) {
       // Handle unexpected errors (network failures, server down, etc.)
       toast.error(
-        t('channels.errors.removeChannel', {
-          name: channel.name || '',
+        t("channels.errors.removeChannel", {
+          name: channel.name || "",
           error: String(error),
-        })
+        }),
       );
     }
     setShowConfirmDialog(false);
@@ -534,9 +490,7 @@ const ChannelsPage: Component = () => {
 
   const confirmRemoveMultipleChannels = async () => {
     const results = await Promise.allSettled(
-      Array.from(selectedChannels()).map((channelId) =>
-        channelsService.removeChannel(channelId)
-      )
+      Array.from(selectedChannels()).map((channelId) => channelsService.removeChannel(channelId)),
     );
 
     const failedChannels: Array<{
@@ -544,21 +498,20 @@ const ChannelsPage: Component = () => {
       name: string;
       devices: string[];
     }> = [];
-    const unexpectedErrors: Array<{ id: number; name: string; error: string }> =
-      [];
+    const unexpectedErrors: Array<{ id: number; name: string; error: string }> = [];
 
     results.forEach((result, index) => {
       const channelId = Array.from(selectedChannels())[index];
       const channel = data().find((c) => c.id === channelId);
 
-      if (result.status === 'fulfilled' && !result.value.success) {
+      if (result.status === "fulfilled" && !result.value.success) {
         // Business logic error (channel assigned to devices)
         failedChannels.push({
           id: channelId,
           name: channel?.name || `Channel ${channelId}`,
           devices: result.value.error?.devices || [],
         });
-      } else if (result.status === 'rejected') {
+      } else if (result.status === "rejected") {
         // Unexpected error (network, server down, etc.)
         unexpectedErrors.push({
           id: channelId,
@@ -576,28 +529,24 @@ const ChannelsPage: Component = () => {
         messages.push(
           ...failedChannels.map((fc) => {
             if (fc.devices.length > 0) {
-              return `- ${fc.name} (assigned to: ${fc.devices.join(', ')})`;
+              return `- ${fc.name} (assigned to: ${fc.devices.join(", ")})`;
             }
             return `- ${fc.name}`;
-          })
+          }),
         );
       }
 
       if (unexpectedErrors.length > 0) {
-        messages.push(
-          ...unexpectedErrors.map(
-            (err) => `- ${err.name} (error: ${err.error})`
-          )
-        );
+        messages.push(...unexpectedErrors.map((err) => `- ${err.name} (error: ${err.error})`));
       }
 
       setErrorMessage(
-        `The following channel${failedChannels.length + unexpectedErrors.length > 1 ? 's' : ''} could not be deleted:`
+        `The following channel${failedChannels.length + unexpectedErrors.length > 1 ? "s" : ""} could not be deleted:`,
       );
       setErrorDevices(messages);
       setShowErrorDialog(true);
     } else {
-      toast.success('Channels removed successfully');
+      toast.success("Channels removed successfully");
     }
 
     refreshData();
@@ -640,9 +589,9 @@ const ChannelsPage: Component = () => {
     const result = await channelsService.fetchChannelsFiltered({
       page: 1,
       page_size: 100,
-      sortOptions: { key: 'name', direction: 'ascending' },
+      sortOptions: { key: "name", direction: "ascending" },
       tag_ids: tagIds,
-      tag_filter_mode: 'all',
+      tag_filter_mode: "all",
       team_id: selectedTeamId(),
     });
     return {
@@ -651,15 +600,12 @@ const ChannelsPage: Component = () => {
     };
   };
 
-  const fetchTreeUntaggedResources = async (
-    tagGroupId: number,
-    parentTagIds?: number[]
-  ) => {
+  const fetchTreeUntaggedResources = async (tagGroupId: number, parentTagIds?: number[]) => {
     const result = await channelsService.fetchChannelsFiltered({
       page: 1,
       page_size: 100,
-      sortOptions: { key: 'name', direction: 'ascending' },
-      tag_filter_mode: 'all',
+      sortOptions: { key: "name", direction: "ascending" },
+      tag_filter_mode: "all",
       missing_tag_group_id: tagGroupId,
       tag_ids: parentTagIds,
       team_id: selectedTeamId(),
@@ -671,15 +617,12 @@ const ChannelsPage: Component = () => {
     };
   };
 
-  const fetchTreeUntaggedCount = async (
-    tagGroupId: number,
-    parentTagIds?: number[]
-  ) => {
+  const fetchTreeUntaggedCount = async (tagGroupId: number, parentTagIds?: number[]) => {
     const result = await channelsService.fetchChannelsFiltered({
       page: 1,
       page_size: 1,
-      sortOptions: { key: 'name', direction: 'ascending' },
-      tag_filter_mode: 'all',
+      sortOptions: { key: "name", direction: "ascending" },
+      tag_filter_mode: "all",
       missing_tag_group_id: tagGroupId,
       tag_ids: parentTagIds,
       team_id: selectedTeamId(),
@@ -702,15 +645,13 @@ const ChannelsPage: Component = () => {
     setShowAddChannelModal(false);
   };
 
-  const [title, setTitle] = createSignal('');
+  const [title, setTitle] = createSignal("");
 
   createEffect(() => {
     if (currentChannel()?.id) {
-      setTitle(
-        t('channels.channelTitle', { name: currentChannel()?.name || '' })
-      );
+      setTitle(t("channels.channelTitle", { name: currentChannel()?.name || "" }));
     } else {
-      setTitle(t('channels.newChannel'));
+      setTitle(t("channels.newChannel"));
     }
   });
 
@@ -720,23 +661,15 @@ const ChannelsPage: Component = () => {
         <Show when={showAddChannelModal()}>
           <Modal
             title={title()}
-            description={t('channels.description')}
+            description={t("channels.description")}
             onClose={closeAddChannelModal}
           >
             <ChannelAddForm
               onClose={() => closeAddChannelModal()}
               teamId={selectedTeamId()}
-              onSubmit={async (
-                name: string,
-                timezone: string,
-                teamId?: number | null
-              ) => {
+              onSubmit={async (name: string, timezone: string, teamId?: number | null) => {
                 try {
-                  const result = await channelsService.addChannel(
-                    name,
-                    timezone,
-                    teamId
-                  );
+                  const result = await channelsService.addChannel(name, timezone, teamId);
 
                   setShowAddChannelModal(false);
                   if (result?.data) {
@@ -744,17 +677,13 @@ const ChannelsPage: Component = () => {
                     refreshData();
 
                     // Complete the onboarding step for channel creation
-                    store.onboarding.completeStep?.(
-                      OnboardingStep.CreateChannel
-                    );
+                    store.onboarding.completeStep?.(OnboardingStep.CreateChannel);
                   }
                   refreshData();
-                  toast.success(t('channels.success.added', { name }));
+                  toast.success(t("channels.success.added", { name }));
                   notifyChannelContentRequirement();
                 } catch (error) {
-                  toast.error(
-                    t('channels.errors.addChannel', { error: String(error) })
-                  );
+                  toast.error(t("channels.errors.addChannel", { error: String(error) }));
                 }
               }}
             />
@@ -777,42 +706,37 @@ const ChannelsPage: Component = () => {
                   channel={channel}
                   onSubmit={async (channelUpdate: Partial<JsonChannel>) => {
                     try {
-                      const browserTimezone =
-                        Intl.DateTimeFormat().resolvedOptions().timeZone;
+                      const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
                       if (!channelUpdate.id) {
                         const result = await channelsService.addChannel(
                           channelUpdate.name!,
-                          browserTimezone
+                          browserTimezone,
                         );
                         const newChannel = result.data;
                         setCurrentChannel(newChannel);
                         refreshData();
                         toast.success(
-                          t('channels.success.created', {
-                            name: channelUpdate.name || '',
-                          })
+                          t("channels.success.created", {
+                            name: channelUpdate.name || "",
+                          }),
                         );
                         notifyChannelContentRequirement();
                         return newChannel;
                       } else if (channelUpdate.id) {
-                        const updatedTeam =
-                          await channelsService.updateChannel(channelUpdate);
-                        updateItem(
-                          channelUpdate.id,
-                          channelUpdate as JsonChannel
-                        );
+                        const updatedTeam = await channelsService.updateChannel(channelUpdate);
+                        updateItem(channelUpdate.id, channelUpdate as JsonChannel);
                         toast.success(
-                          t('channels.success.updated', {
-                            name: channelUpdate.name || '',
-                          })
+                          t("channels.success.updated", {
+                            name: channelUpdate.name || "",
+                          }),
                         );
                         return updatedTeam;
                       }
                     } catch (error) {
                       toast.error(
-                        t('channels.errors.saveChannel', {
+                        t("channels.errors.saveChannel", {
                           error: String(error),
-                        })
+                        }),
                       );
                     }
                   }}
@@ -824,9 +748,9 @@ const ChannelsPage: Component = () => {
 
         <ConfirmDialog
           show={showConfirmDialog()}
-          title={t('channels.removeChannel')}
-          message={t('channels.confirmRemoveChannel', {
-            name: currentChannel()?.name || '',
+          title={t("channels.removeChannel")}
+          message={t("channels.confirmRemoveChannel", {
+            name: currentChannel()?.name || "",
           })}
           onClose={() => setShowConfirmDialog(false)}
           onConfirm={() => confirmRemoveChannel(currentChannel())}
@@ -834,8 +758,8 @@ const ChannelsPage: Component = () => {
 
         <ConfirmDialog
           show={showConfirmDialogMultiple()}
-          title={t('channels.removeChannels')}
-          message={t('channels.confirmRemoveChannels')}
+          title={t("channels.removeChannels")}
+          message={t("channels.confirmRemoveChannels")}
           onClose={() => setShowConfirmDialogMultiple(false)}
           onConfirm={() => confirmRemoveMultipleChannels()}
         >
@@ -849,7 +773,7 @@ const ChannelsPage: Component = () => {
 
         <Show when={showErrorDialog()}>
           <Modal
-            title={t('channels.cannotDeleteChannel')}
+            title={t("channels.cannotDeleteChannel")}
             description={errorMessage()}
             onClose={() => setShowErrorDialog(false)}
           >
@@ -859,64 +783,55 @@ const ChannelsPage: Component = () => {
               ))}
             </div>
             <div style="margin-top: 1.5em; display: flex; justify-content: flex-end;">
-              <Button
-                label="OK"
-                color="primary"
-                onClick={() => setShowErrorDialog(false)}
-              />
+              <Button label="OK" color="primary" onClick={() => setShowErrorDialog(false)} />
             </div>
           </Modal>
         </Show>
 
-        <Show when={viewMode() === 'list'}>
+        <Show when={viewMode() === "list"}>
           <TableView
-            title={t('channels.title')}
+            title={t("channels.title")}
             resource="channels"
             params={[searchParams, setSearchParams]}
             fetchData={fetchData}
             ref={setRef}
             toolbar={{
               filters: [],
-              searchPlaceholder: t('common.search'),
+              searchPlaceholder: t("common.search"),
               mainAction: (
                 <div style="display: flex; align-items: center; gap: 1rem;">
                   <Show when={quota() && !quotaLoading()}>
                     <QuotaIndicator
                       used={quota()!.used}
                       total={quota()!.total}
-                      resourceName={t('channels.title')}
+                      resourceName={t("channels.title")}
                       compact
                     />
                   </Show>
                   <Button
-                    label={t('channels.addChannel')}
+                    label={t("channels.addChannel")}
                     onClick={addChannel}
                     icon={BsCheckLg}
                     color="primary"
-                    disabled={
-                      isQuotaReached() ||
-                      !canPerformAction('channels', 'create')
-                    }
+                    disabled={isQuotaReached() || !canPerformAction("channels", "create")}
                     title={
                       isQuotaReached()
-                        ? 'Quota limit reached for Channels. Cannot add more.'
-                        : 'Add a new Channel'
+                        ? "Quota limit reached for Channels. Cannot add more."
+                        : "Add a new Channel"
                     }
                   />
                 </div>
               ),
-              titleActions: (
-                <ViewModeToggle mode={viewMode()} onChange={setViewMode} />
-              ),
+              titleActions: <ViewModeToggle mode={viewMode()} onChange={setViewMode} />,
               actions: (
                 <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
                   <TeamFilter
                     teams={teams()}
                     selectedTeamId={selectedTeamId()}
                     onTeamChange={handleTeamChange}
-                    label={t('filters.teamLabel')}
-                    placeholder={t('filters.teamPlaceholder')}
-                    clearLabel={t('filters.teamClear')}
+                    label={t("filters.teamLabel")}
+                    placeholder={t("filters.teamPlaceholder")}
+                    clearLabel={t("filters.teamClear")}
                   />
                   <TagFilter
                     tags={tags()}
@@ -924,22 +839,22 @@ const ChannelsPage: Component = () => {
                     onTagChange={handleTagChange}
                     filterMode={tagFilterMode()}
                     onFilterModeChange={setTagFilterMode}
-                    label={t('filters.tagLabel')}
-                    placeholder={t('filters.tagPlaceholder')}
-                    clearLabel={t('filters.tagClear')}
-                    searchPlaceholder={t('filters.tagSearchPlaceholder')}
+                    label={t("filters.tagLabel")}
+                    placeholder={t("filters.tagPlaceholder")}
+                    clearLabel={t("filters.tagClear")}
+                    searchPlaceholder={t("filters.tagSearchPlaceholder")}
                     filterModeLabels={{
-                      any: t('filters.tagFilterModeAny'),
-                      all: t('filters.tagFilterModeAll'),
+                      any: t("filters.tagFilterModeAny"),
+                      all: t("filters.tagFilterModeAll"),
                     }}
-                    noMatchMessage={t('filters.noMatches')}
-                    emptyMessage={t('filters.noItems')}
+                    noMatchMessage={t("filters.noMatches")}
+                    emptyMessage={t("filters.noItems")}
                   />
                 </div>
               ),
             }}
-            selectionHint={t('common.selectionHint')}
-            selectionLabel={t('common.selectionCount')}
+            selectionHint={t("common.selectionHint")}
+            selectionLabel={t("common.selectionCount")}
             selectionActions={({ count, clear }) => (
               <>
                 <Show when={canManageTags()}>
@@ -950,42 +865,40 @@ const ChannelsPage: Component = () => {
                     }}
                   >
                     <BsTagFill />
-                    {t('tags.manageTags')}
+                    {t("tags.manageTags")}
                   </button>
                 </Show>
                 <button
                   class="selection-action-btn danger"
-                  disabled={!canPerformAction('channels', 'delete')}
+                  disabled={!canPerformAction("channels", "delete")}
                   onClick={() => setShowConfirmDialogMultiple(true)}
                 >
                   <AiOutlineDelete />
-                  {t('common.delete')}
+                  {t("common.delete")}
                 </button>
               </>
             )}
             table={{
               columns,
               actions,
-              actionsLabel: t('common.actions'),
+              actionsLabel: t("common.actions"),
               onRowSelect,
               defaultRowAction: {
                 icon: BsEye,
                 handler: (item: ChannelTableItem) => {
                   openChannelDrawer(item);
                 },
-                label: t('common.view'),
+                label: t("common.view"),
               },
             }}
             pagination={{ itemsPerPage }}
           ></TableView>
         </Show>
 
-        <Show when={viewMode() === 'tree'}>
+        <Show when={viewMode() === "tree"}>
           <ToolBar
-            title={t('channels.title')}
-            titleActions={
-              <ViewModeToggle mode={viewMode()} onChange={setViewMode} />
-            }
+            title={t("channels.title")}
+            titleActions={<ViewModeToggle mode={viewMode()} onChange={setViewMode} />}
             hideSearch
             mainAction={
               <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
@@ -993,18 +906,16 @@ const ChannelsPage: Component = () => {
                   <QuotaIndicator
                     used={quota()!.used}
                     total={quota()!.total}
-                    resourceName={t('channels.title')}
+                    resourceName={t("channels.title")}
                     compact
                   />
                 </Show>
                 <Button
-                  label={t('channels.addChannel')}
+                  label={t("channels.addChannel")}
                   onClick={addChannel}
                   icon={BsCheckLg}
                   color="primary"
-                  disabled={
-                    isQuotaReached() || !canPerformAction('channels', 'create')
-                  }
+                  disabled={isQuotaReached() || !canPerformAction("channels", "create")}
                 />
               </div>
             }
@@ -1014,9 +925,9 @@ const ChannelsPage: Component = () => {
                   teams={teams()}
                   selectedTeamId={selectedTeamId()}
                   onTeamChange={handleTeamChange}
-                  label={t('filters.teamLabel')}
-                  placeholder={t('filters.teamPlaceholder')}
-                  clearLabel={t('filters.teamClear')}
+                  label={t("filters.teamLabel")}
+                  placeholder={t("filters.teamPlaceholder")}
+                  clearLabel={t("filters.teamClear")}
                 />
               </div>
             }
@@ -1027,8 +938,8 @@ const ChannelsPage: Component = () => {
             fetchResources={fetchTreeResources}
             fetchUntaggedResources={fetchTreeUntaggedResources}
             fetchUntaggedCount={fetchTreeUntaggedCount}
-            untaggedLabel={t('tags.groups.untagged')}
-            emptyLeafText={t('filters.noItems')}
+            untaggedLabel={t("tags.groups.untagged")}
+            emptyLeafText={t("filters.noItems")}
             refreshKey={treeVersion()}
             storageKey="channels"
             onResourceClick={(item) => {
@@ -1044,9 +955,7 @@ const ChannelsPage: Component = () => {
                 <div class="channel-tree-info">
                   <span class="channel-tree-name">{item.name}</span>
                   <Show when={(item as any).timezone}>
-                    <span class="channel-tree-meta">
-                      {(item as any).timezone}
-                    </span>
+                    <span class="channel-tree-meta">{(item as any).timezone}</span>
                   </Show>
                 </div>
                 <button
@@ -1059,8 +968,8 @@ const ChannelsPage: Component = () => {
                       try {
                         const itemTags = await tagsService.getResourceTags(
                           orgId,
-                          'channel',
-                          channel.id
+                          "channel",
+                          channel.id,
                         );
                         setResourceTagsMap((prev) => {
                           const next = new Map(prev);
@@ -1076,7 +985,7 @@ const ChannelsPage: Component = () => {
                       anchorEl: e.currentTarget as HTMLElement,
                     });
                   }}
-                  title={t('tags.manageTags')}
+                  title={t("tags.manageTags")}
                 >
                   <BsTagFill />
                 </button>
@@ -1091,20 +1000,16 @@ const ChannelsPage: Component = () => {
             <TagPopover
               availableTags={allTags()}
               tagGroups={tagGroups()}
-              selectedTagIds={(
-                resourceTagsMap().get(target().item.id) || []
-              ).map((t) => t.id)}
-              onToggle={(tagId, selected) =>
-                handleTagToggle(target().item, tagId, selected)
-              }
+              selectedTagIds={(resourceTagsMap().get(target().item.id) || []).map((t) => t.id)}
+              onToggle={(tagId, selected) => handleTagToggle(target().item, tagId, selected)}
               onCreateTag={canManageTags() ? handleCreateTag : undefined}
               allowCreate={canManageTags()}
               anchorEl={target().anchorEl}
               onClose={() => setTagPopoverTarget(null)}
-              placeholder={t('tags.searchTags')}
-              ungroupedLabel={t('tags.groups.ungrouped')}
-              emptyLabel={t('tags.noTagsAvailable')}
-              noMatchLabel={t('tags.noMatchingTags')}
+              placeholder={t("tags.searchTags")}
+              ungroupedLabel={t("tags.groups.ungrouped")}
+              emptyLabel={t("tags.noTagsAvailable")}
+              noMatchLabel={t("tags.noMatchingTags")}
             />
           )}
         </Show>
@@ -1120,11 +1025,11 @@ const ChannelsPage: Component = () => {
             allowCreate={canManageTags()}
             anchorEl={bulkTagAnchorEl()!}
             onClose={() => setBulkTagAnchorEl(null)}
-            title={t('tags.manageTags')}
-            placeholder={t('tags.searchTags')}
-            ungroupedLabel={t('tags.groups.ungrouped')}
-            emptyLabel={t('tags.noTagsAvailable')}
-            noMatchLabel={t('tags.noMatchingTags')}
+            title={t("tags.manageTags")}
+            placeholder={t("tags.searchTags")}
+            ungroupedLabel={t("tags.groups.ungrouped")}
+            emptyLabel={t("tags.noTagsAvailable")}
+            noMatchLabel={t("tags.noMatchingTags")}
           />
         </Show>
       </div>

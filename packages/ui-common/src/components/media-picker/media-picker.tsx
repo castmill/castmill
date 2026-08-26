@@ -1,19 +1,12 @@
 /** @jsxImportSource solid-js */
 
-import {
-  Component,
-  createSignal,
-  Show,
-  For,
-  onCleanup,
-  createEffect,
-} from 'solid-js';
-import { Button } from '../button/button';
-import { Modal, ModalRef } from '../modal/modal';
-import { StyledInput } from '../styled-input/styled-input';
-import { MediaItem } from '../../types/media';
+import { Component, createSignal, Show, For, onCleanup, createEffect } from "solid-js";
+import { Button } from "../button/button";
+import { Modal, ModalRef } from "../modal/modal";
+import { StyledInput } from "../styled-input/styled-input";
+import { MediaItem } from "../../types/media";
 
-import styles from './media-picker.module.scss';
+import styles from "./media-picker.module.scss";
 
 export interface MediaPickerProps {
   /**
@@ -41,7 +34,7 @@ export interface MediaPickerProps {
   fetchMedia: (
     page: number,
     pageSize: number,
-    search?: string
+    search?: string,
   ) => Promise<{ data: MediaItem[]; count: number }>;
 
   /**
@@ -103,19 +96,17 @@ export const MediaPicker: Component<MediaPickerProps> = (props) => {
 
   const [medias, setMedias] = createSignal<MediaItem[]>([]);
   const [loading, setLoading] = createSignal(false);
-  const [searchQuery, setSearchQuery] = createSignal('');
+  const [searchQuery, setSearchQuery] = createSignal("");
   const [isSearching, setIsSearching] = createSignal(false);
   const [selectedMediaId, setSelectedMediaId] = createSignal<number | null>(
-    props.selectedMediaId || null
+    props.selectedMediaId || null,
   );
   const [currentPage, setCurrentPage] = createSignal(1);
   const [hasMore, setHasMore] = createSignal(true);
   const [totalCount, setTotalCount] = createSignal(0);
 
   const pageSize = props.pageSize || 30;
-  const filterFn =
-    props.filterFn ||
-    ((media: MediaItem) => media.mimetype?.startsWith('image/'));
+  const filterFn = props.filterFn || ((media: MediaItem) => media.mimetype?.startsWith("image/"));
 
   // Update selected media when prop changes
   createEffect(() => {
@@ -144,7 +135,7 @@ export const MediaPicker: Component<MediaPickerProps> = (props) => {
       setTotalCount(result.count || 0);
       setHasMore(filteredMedias.length === pageSize);
     } catch (error) {
-      console.error('Error loading medias:', error);
+      console.error("Error loading medias:", error);
     } finally {
       setLoading(false);
     }
@@ -153,7 +144,7 @@ export const MediaPicker: Component<MediaPickerProps> = (props) => {
   // Reset and load initial data when modal opens
   createEffect(() => {
     if (props.show) {
-      setSearchQuery('');
+      setSearchQuery("");
       setCurrentPage(1);
       setMedias([]);
       loadMedias(1);
@@ -217,8 +208,8 @@ export const MediaPicker: Component<MediaPickerProps> = (props) => {
     <Show when={props.show}>
       <Modal
         ref={(ref) => (modalRef = ref)}
-        title={props.title || 'Select Media'}
-        description={props.description || 'Choose a media file'}
+        title={props.title || "Select Media"}
+        description={props.description || "Choose a media file"}
         onClose={props.onClose}
       >
         <div class={styles.mediaPicker}>
@@ -226,28 +217,22 @@ export const MediaPicker: Component<MediaPickerProps> = (props) => {
             <StyledInput
               id="media-picker-search"
               type="text"
-              placeholder={props.searchPlaceholder || 'Search...'}
+              placeholder={props.searchPlaceholder || "Search..."}
               value={searchQuery()}
               onInput={handleSearchInput}
             />
             <Show when={isSearching()}>
-              <span class={styles.searchIndicator}>
-                {props.loadingText || 'Loading...'}
-              </span>
+              <span class={styles.searchIndicator}>{props.loadingText || "Loading..."}</span>
             </Show>
           </div>
 
           <Show when={loading() && medias().length === 0}>
-            <div class={styles.loading}>
-              {props.loadingText || 'Loading...'}
-            </div>
+            <div class={styles.loading}>{props.loadingText || "Loading..."}</div>
           </Show>
 
           <div class={styles.mediaGridContainer}>
             <Show when={!loading() && medias().length === 0}>
-              <div class={styles.noMedias}>
-                {props.noMediaText || 'No media available'}
-              </div>
+              <div class={styles.noMedias}>{props.noMediaText || "No media available"}</div>
             </Show>
 
             <div class={styles.mediaGrid} ref={gridRef} onScroll={handleScroll}>
@@ -262,18 +247,11 @@ export const MediaPicker: Component<MediaPickerProps> = (props) => {
                   >
                     <div class={styles.mediaThumbnail}>
                       <Show
-                        when={
-                          media.files?.thumbnail?.uri || media.files?.main?.uri
-                        }
-                        fallback={
-                          <div class={styles.noPreview}>No preview</div>
-                        }
+                        when={media.files?.thumbnail?.uri || media.files?.main?.uri}
+                        fallback={<div class={styles.noPreview}>No preview</div>}
                       >
                         <img
-                          src={
-                            media.files?.thumbnail?.uri ||
-                            media.files?.main?.uri
-                          }
+                          src={media.files?.thumbnail?.uri || media.files?.main?.uri}
                           alt={media.name}
                         />
                       </Show>
@@ -284,9 +262,7 @@ export const MediaPicker: Component<MediaPickerProps> = (props) => {
               </For>
 
               <Show when={loading() && medias().length > 0}>
-                <div class={styles.loadingMore}>
-                  {props.loadingText || 'Loading more...'}
-                </div>
+                <div class={styles.loadingMore}>{props.loadingText || "Loading more..."}</div>
               </Show>
             </div>
           </div>
@@ -301,12 +277,12 @@ export const MediaPicker: Component<MediaPickerProps> = (props) => {
             </div>
             <div class={styles.actions}>
               <Button
-                label={props.cancelLabel || 'Cancel'}
+                label={props.cancelLabel || "Cancel"}
                 onClick={props.onClose}
                 color="secondary"
               />
               <Button
-                label={props.selectLabel || 'Select'}
+                label={props.selectLabel || "Select"}
                 onClick={handleSelect}
                 color="primary"
                 disabled={selectedMediaId() === null}

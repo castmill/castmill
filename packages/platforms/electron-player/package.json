@@ -2,10 +2,10 @@
   "name": "@castmill/electron-player",
   "version": "1.0.0",
   "description": "Castmill Player Electron App",
-  "main": "./out/main/index.js",
-  "author": "Castmill AB",
   "homepage": "https://electron-vite.org",
   "license": "AGPL-3.0-or-later",
+  "author": "Castmill AB",
+  "main": "./out/main/index.js",
   "scripts": {
     "format": "oxfmt --write .",
     "format:check": "oxfmt .",

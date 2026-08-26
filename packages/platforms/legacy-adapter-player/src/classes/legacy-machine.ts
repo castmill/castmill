@@ -1,4 +1,4 @@
-import { Machine } from '@castmill/device';
+import { Machine } from "@castmill/device";
 
 export const PING_INTERVAL = 20000;
 

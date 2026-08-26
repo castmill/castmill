@@ -1,10 +1,10 @@
-import { Component, createSignal, onMount, Show, createEffect } from 'solid-js';
-import { Button, useToast } from '@castmill/ui-common';
-import { BsSpotify } from 'solid-icons/bs';
-import { AddonStore } from '../../../common/interfaces/addon-store';
-import { authFetch } from '../../../common/services/auth-fetch';
+import { Component, createSignal, onMount, Show, createEffect } from "solid-js";
+import { Button, useToast } from "@castmill/ui-common";
+import { BsSpotify } from "solid-icons/bs";
+import { AddonStore } from "../../../common/interfaces/addon-store";
+import { authFetch } from "../../../common/services/auth-fetch";
 
-import './spotify-connect.scss';
+import "./spotify-connect.scss";
 
 /**
  * Props for the SpotifyConnect component
@@ -57,35 +57,33 @@ export const SpotifyConnect: Component<SpotifyConnectProps> = (props) => {
 
   const [isConnected, setIsConnected] = createSignal(false);
   const [isLoading, setIsLoading] = createSignal(true);
-  const [connectionInfo, setConnectionInfo] =
-    createSignal<IntegrationCredential | null>(null);
+  const [connectionInfo, setConnectionInfo] = createSignal<IntegrationCredential | null>(null);
 
   // Get i18n functions from store
-  const t = (key: string, params?: Record<string, any>) =>
-    props.store.i18n?.t(key, params) || key;
+  const t = (key: string, params?: Record<string, any>) => props.store.i18n?.t(key, params) || key;
 
   /**
    * Check for OAuth callback result in URL parameters
    */
   const checkOAuthCallback = () => {
     const urlParams = new URLSearchParams(window.location.search);
-    const spotifyAuth = urlParams.get('spotify_auth');
-    const errorMessage = urlParams.get('error_message');
+    const spotifyAuth = urlParams.get("spotify_auth");
+    const errorMessage = urlParams.get("error_message");
 
-    if (spotifyAuth === 'success') {
+    if (spotifyAuth === "success") {
       toast?.show({
-        message: t('widgets.spotify.connectionSuccess'),
-        type: 'success',
+        message: t("widgets.spotify.connectionSuccess"),
+        type: "success",
         duration: 5000,
       });
       // Clean up URL parameters
       cleanUrlParams();
       // Refresh connection status
       checkConnectionStatus();
-    } else if (spotifyAuth === 'error') {
+    } else if (spotifyAuth === "error") {
       toast?.show({
-        message: errorMessage || t('widgets.spotify.connectionFailed'),
-        type: 'error',
+        message: errorMessage || t("widgets.spotify.connectionFailed"),
+        type: "error",
         duration: 5000,
       });
       cleanUrlParams();
@@ -97,10 +95,10 @@ export const SpotifyConnect: Component<SpotifyConnectProps> = (props) => {
    */
   const cleanUrlParams = () => {
     const url = new URL(window.location.href);
-    url.searchParams.delete('spotify_auth');
-    url.searchParams.delete('error_message');
-    url.searchParams.delete('widget_config_id');
-    window.history.replaceState({}, '', url.toString());
+    url.searchParams.delete("spotify_auth");
+    url.searchParams.delete("error_message");
+    url.searchParams.delete("widget_config_id");
+    window.history.replaceState({}, "", url.toString());
   };
 
   /**
@@ -116,24 +114,20 @@ export const SpotifyConnect: Component<SpotifyConnectProps> = (props) => {
         `${props.baseUrl}/organizations/${organizationId}/widgets/spotify-now-playing/integrations`,
         {
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       if (!response.ok) {
-        throw new Error(
-          `Failed to fetch integration status: ${response.status}`
-        );
+        throw new Error(`Failed to fetch integration status: ${response.status}`);
       }
 
       const data = await response.json();
       const integrations = data.data || [];
 
       // Find the Spotify integration
-      const spotifyIntegration = integrations.find(
-        (i: any) => i.name === 'spotify'
-      );
+      const spotifyIntegration = integrations.find((i: any) => i.name === "spotify");
 
       if (spotifyIntegration) {
         // Check if we have valid credentials for this organization
@@ -141,9 +135,9 @@ export const SpotifyConnect: Component<SpotifyConnectProps> = (props) => {
           `${props.baseUrl}/organizations/${organizationId}/widget-integrations/${spotifyIntegration.id}`,
           {
             headers: {
-              'Content-Type': 'application/json',
+              "Content-Type": "application/json",
             },
-          }
+          },
         );
 
         if (credResponse.ok) {
@@ -164,7 +158,7 @@ export const SpotifyConnect: Component<SpotifyConnectProps> = (props) => {
         }
       }
     } catch (error) {
-      console.error('Error checking Spotify connection status:', error);
+      console.error("Error checking Spotify connection status:", error);
       setIsConnected(false);
       setConnectionInfo(null);
     } finally {
@@ -198,8 +192,8 @@ export const SpotifyConnect: Component<SpotifyConnectProps> = (props) => {
     // Note: This would require an API endpoint to delete credentials
     // For now, just show a message
     toast?.show({
-      message: t('widgets.spotify.disconnectNotSupported'),
-      type: 'info',
+      message: t("widgets.spotify.disconnectNotSupported"),
+      type: "info",
       duration: 3000,
     });
   };
@@ -209,7 +203,7 @@ export const SpotifyConnect: Component<SpotifyConnectProps> = (props) => {
    */
   const formatConnectedDate = () => {
     const info = connectionInfo();
-    if (!info?.metadata?.connected_at) return '';
+    if (!info?.metadata?.connected_at) return "";
 
     const date = new Date(info.metadata.connected_at);
     return props.store.i18n?.formatDate(date) || date.toLocaleDateString();
@@ -231,22 +225,17 @@ export const SpotifyConnect: Component<SpotifyConnectProps> = (props) => {
     <div class="spotify-connect">
       <div class="spotify-header">
         <BsSpotify size={24} class="spotify-icon" />
-        <h3 class="spotify-title">{t('widgets.spotify.title')}</h3>
+        <h3 class="spotify-title">{t("widgets.spotify.title")}</h3>
       </div>
 
-      <Show
-        when={!isLoading()}
-        fallback={<div class="spotify-loading">{t('common.loading')}</div>}
-      >
+      <Show when={!isLoading()} fallback={<div class="spotify-loading">{t("common.loading")}</div>}>
         <Show
           when={isConnected()}
           fallback={
             <div class="spotify-disconnected">
-              <p class="spotify-description">
-                {t('widgets.spotify.connectDescription')}
-              </p>
+              <p class="spotify-description">{t("widgets.spotify.connectDescription")}</p>
               <Button
-                label={t('widgets.spotify.connectButton')}
+                label={t("widgets.spotify.connectButton")}
                 onClick={connectToSpotify}
                 class="spotify-connect-button"
               />
@@ -255,19 +244,17 @@ export const SpotifyConnect: Component<SpotifyConnectProps> = (props) => {
         >
           <div class="spotify-connected">
             <div class="spotify-status">
-              <span class="status-badge connected">
-                {t('widgets.spotify.connected')}
-              </span>
+              <span class="status-badge connected">{t("widgets.spotify.connected")}</span>
               <Show when={formatConnectedDate()}>
                 <span class="connected-date">
-                  {t('widgets.spotify.connectedSince', {
+                  {t("widgets.spotify.connectedSince", {
                     date: formatConnectedDate(),
                   })}
                 </span>
               </Show>
             </div>
             <Button
-              label={t('widgets.spotify.disconnectButton')}
+              label={t("widgets.spotify.disconnectButton")}
               onClick={disconnectSpotify}
               class="spotify-disconnect-button"
             />

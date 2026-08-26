@@ -1,85 +1,72 @@
-import { useSearchParams } from '@solidjs/router';
-import {
-  Component,
-  createEffect,
-  createSignal,
-  Show,
-  onMount,
-  onCleanup,
-} from 'solid-js';
+import { useSearchParams } from "@solidjs/router";
+import { Component, createEffect, createSignal, Show, onMount, onCleanup } from "solid-js";
 
-import { Button, FormItem, TabItem, Tabs, useToast } from '@castmill/ui-common';
-import { OrganizationMembersView } from './organization-members-view';
-import { LogoSettings } from './logo-settings';
-import { store, setStore } from '../../store';
-import { usePermissions } from '../../hooks/usePermissions';
-import { BsCheckLg } from 'solid-icons/bs';
+import { Button, FormItem, TabItem, Tabs, useToast } from "@castmill/ui-common";
+import { OrganizationMembersView } from "./organization-members-view";
+import { LogoSettings } from "./logo-settings";
+import { store, setStore } from "../../store";
+import { usePermissions } from "../../hooks/usePermissions";
+import { BsCheckLg } from "solid-icons/bs";
 
-import style from './organization-page.module.scss';
-import { OrganizationsService } from '../../services/organizations.service';
-import { OrganizationInvitationsView } from './organization-invitations-view';
-import { useI18n } from '../../i18n';
-import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts';
-import { useLocation } from '@solidjs/router';
+import style from "./organization-page.module.scss";
+import { OrganizationsService } from "../../services/organizations.service";
+import { OrganizationInvitationsView } from "./organization-invitations-view";
+import { useI18n } from "../../i18n";
+import { useKeyboardShortcuts } from "../../hooks/useKeyboardShortcuts";
+import { useLocation } from "@solidjs/router";
 
 const OrganizationPage: Component = () => {
   const params = useSearchParams();
   const { t } = useI18n();
   const { canPerformAction } = usePermissions();
   const toast = useToast();
-  const { registerShortcutAction, unregisterShortcutAction } =
-    useKeyboardShortcuts();
+  const { registerShortcutAction, unregisterShortcutAction } = useKeyboardShortcuts();
   const location = useLocation();
 
   const [name, setName] = createSignal(store.organizations.selectedName!);
   const [logoMediaId, setLogoMediaId] = createSignal<number | null>(
-    store.organizations.data.find(
-      (org) => org.id === store.organizations.selectedId
-    )?.logo_media_id || null
+    store.organizations.data.find((org) => org.id === store.organizations.selectedId)
+      ?.logo_media_id || null,
   );
-  const [previousOrgId, setPreviousOrgId] = createSignal(
-    store.organizations.selectedId
-  );
+  const [previousOrgId, setPreviousOrgId] = createSignal(store.organizations.selectedId);
 
   const [isFormModified, setIsFormModified] = createSignal(false);
   const [errors, setErrors] = createSignal(new Map());
 
   // Check if user can update organization settings
-  const canEdit = () => canPerformAction('organizations', 'update');
+  const canEdit = () => canPerformAction("organizations", "update");
 
   onMount(() => {
     // Register keyboard shortcut for search
     registerShortcutAction(
-      'generic-search',
+      "generic-search",
       () => {
         // Focus the search input in the currently active tab
-        const searchInput = document.querySelector(
-          '.search-input'
-        ) as HTMLInputElement;
+        const searchInput = document.querySelector(".search-input") as HTMLInputElement;
         if (searchInput) {
           searchInput.focus();
         }
       },
-      () => location.pathname.includes('/organization')
+      () => location.pathname.includes("/organization"),
     );
   });
 
   onCleanup(() => {
-    unregisterShortcutAction('generic-search');
+    unregisterShortcutAction("generic-search");
   });
 
   const validateField = (fieldId: string, value: string) => {
-    let error = '';
+    let error = "";
     switch (fieldId) {
-      case 'name':
+      case "name":
         if (!value) {
-          error = t('validation.fieldRequired');
+          error = t("validation.fieldRequired");
         } else if (value.length < 5) {
-          error = t('validation.minLength', { min: 5 });
+          error = t("validation.minLength", { min: 5 });
         }
         break;
       default:
-        error = '';
+        error = "";
     }
 
     setErrors((prev) => new Map(prev).set(fieldId, error));
@@ -91,7 +78,7 @@ const OrganizationPage: Component = () => {
     if (store.organizations.selectedId !== previousOrgId()) {
       setName(store.organizations.selectedName);
       const currentOrg = store.organizations.data.find(
-        (org) => org.id === store.organizations.selectedId
+        (org) => org.id === store.organizations.selectedId,
       );
       setLogoMediaId(currentOrg?.logo_media_id || null);
       setIsFormModified(false);
@@ -106,9 +93,7 @@ const OrganizationPage: Component = () => {
   });
 
   const isFormValid = () => {
-    return (
-      ![...errors().values()].some((e) => e) && isFormModified() && canEdit()
-    );
+    return ![...errors().values()].some((e) => e) && isFormModified() && canEdit();
   };
 
   const onSubmit = async (organization: { id: string; name: string }) => {
@@ -119,18 +104,16 @@ const OrganizationPage: Component = () => {
 
       // Clear any existing errors on success
       setErrors(new Map());
-      toast.success('Organization updated successfully');
+      toast.success("Organization updated successfully");
 
       // Update the store with the new organization name
-      setStore('organizations', 'data', (orgs) =>
-        orgs.map((org) =>
-          org.id === organization.id ? { ...org, name: organization.name } : org
-        )
+      setStore("organizations", "data", (orgs) =>
+        orgs.map((org) => (org.id === organization.id ? { ...org, name: organization.name } : org)),
       );
 
       // Update the selectedName if this is the currently selected organization
       if (store.organizations.selectedId === organization.id) {
-        setStore('organizations', 'selectedName', organization.name);
+        setStore("organizations", "selectedName", organization.name);
       }
     } catch (error: any) {
       // Handle validation errors from the server
@@ -142,13 +125,11 @@ const OrganizationPage: Component = () => {
           const nameErrors = Array.isArray(error.data.errors.name)
             ? error.data.errors.name
             : [error.data.errors.name];
-          newErrors.set('name', nameErrors.join(', '));
+          newErrors.set("name", nameErrors.join(", "));
         }
         setErrors(newErrors);
       } else {
-        toast.error(
-          t('organization.errors.updateOrganization', { error: String(error) })
-        );
+        toast.error(t("organization.errors.updateOrganization", { error: String(error) }));
       }
     }
   };
@@ -156,7 +137,7 @@ const OrganizationPage: Component = () => {
   // Use functions for tab titles to make them reactive to i18n changes
   const resourcesTabs: TabItem[] = [
     {
-      title: () => t('organization.users'),
+      title: () => t("organization.users"),
       content: () => (
         <Show when={store.organizations.selectedId}>
           <OrganizationMembersView
@@ -168,14 +149,12 @@ const OrganizationPage: Component = () => {
       ),
     },
     {
-      title: () => t('organization.invitations'),
+      title: () => t("organization.invitations"),
       content: () => (
         <Show
-          when={canPerformAction('organizations', 'create')}
+          when={canPerformAction("organizations", "create")}
           fallback={
-            <div class={style['permission-warning']}>
-              {t('permissions.noCreateOrganizations')}
-            </div>
+            <div class={style["permission-warning"]}>{t("permissions.noCreateOrganizations")}</div>
           }
         >
           <Show when={store.organizations.selectedId}>
@@ -189,7 +168,7 @@ const OrganizationPage: Component = () => {
     },
     // Settings tab for organization configuration
     {
-      title: () => t('organization.settings'),
+      title: () => t("organization.settings"),
       content: () => (
         <Show when={store.organizations.selectedId}>
           <LogoSettings
@@ -204,9 +183,9 @@ const OrganizationPage: Component = () => {
   ];
 
   return (
-    <div class={style['organization-page']}>
-      <div class={style['header']}>
-        <h1>{t('sidebar.organization')}</h1>
+    <div class={style["organization-page"]}>
+      <div class={style["header"]}>
+        <h1>{t("sidebar.organization")}</h1>
         <form
           onSubmit={async (e) => {
             e.preventDefault();
@@ -220,23 +199,23 @@ const OrganizationPage: Component = () => {
             }
           }}
         >
-          <div class={style['form-inputs']}>
+          <div class={style["form-inputs"]}>
             <FormItem
-              label={t('common.name')}
+              label={t("common.name")}
               id="name"
               value={name()!}
-              placeholder={t('organization.placeholderName')}
+              placeholder={t("organization.placeholderName")}
               disabled={!canEdit()}
               onInput={(value: string | number | boolean) => {
                 const strValue = value as string;
                 setName(strValue);
-                validateField('name', strValue);
+                validateField("name", strValue);
               }}
             >
-              <div class="error">{errors().get('name')}</div>
+              <div class="error">{errors().get("name")}</div>
             </FormItem>
             <Button
-              label={t('organization.update')}
+              label={t("organization.update")}
               type="submit"
               disabled={!isFormValid()}
               icon={BsCheckLg}

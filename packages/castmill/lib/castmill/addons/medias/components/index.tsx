@@ -6,8 +6,8 @@ import {
   BsFileEarmarkPlay,
   BsFileEarmarkMusic,
   BsFileEarmark,
-} from 'solid-icons/bs';
-import { AiOutlineDelete } from 'solid-icons/ai';
+} from "solid-icons/bs";
+import { AiOutlineDelete } from "solid-icons/ai";
 import {
   Component,
   For,
@@ -18,7 +18,7 @@ import {
   Show,
   onMount,
   on,
-} from 'solid-js';
+} from "solid-js";
 
 import {
   Button,
@@ -53,37 +53,28 @@ import {
   ToolBar,
   formatBytes,
   useViewMode,
-} from '@castmill/ui-common';
-import { JsonMedia } from '@castmill/player';
-import { MediasService } from '../services/medias.service';
-import { UploadComponent } from './upload';
-import { QuotaIndicator } from '../../common/components/quota-indicator';
-import {
-  QuotasService,
-  ResourceQuota,
-} from '../../common/services/quotas.service';
+} from "@castmill/ui-common";
+import { JsonMedia } from "@castmill/player";
+import { MediasService } from "../services/medias.service";
+import { UploadComponent } from "./upload";
+import { QuotaIndicator } from "../../common/components/quota-indicator";
+import { QuotasService, ResourceQuota } from "../../common/services/quotas.service";
 
-import './medias.scss';
-import { MediaDetails } from './media-details';
-import {
-  AddonStore,
-  AddonComponentProps,
-} from '../../common/interfaces/addon-store';
-import { useTeamFilter, useModalFromUrl } from '../../common/hooks';
+import "./medias.scss";
+import { MediaDetails } from "./media-details";
+import { AddonStore, AddonComponentProps } from "../../common/interfaces/addon-store";
+import { useTeamFilter, useModalFromUrl } from "../../common/hooks";
 
 const MediasPage: Component<AddonComponentProps> = (props) => {
   // Get i18n functions from store
-  const t = (key: string, params?: Record<string, any>) =>
-    props.store.i18n?.t(key, params) || key;
+  const t = (key: string, params?: Record<string, any>) => props.store.i18n?.t(key, params) || key;
   const toast = useToast();
 
   // Helper function to check permissions
   const canPerformAction = (resource: string, action: string): boolean => {
     if (!props.store.permissions?.matrix) return false;
     const allowedActions =
-      props.store.permissions.matrix[
-        resource as keyof typeof props.store.permissions.matrix
-      ];
+      props.store.permissions.matrix[resource as keyof typeof props.store.permissions.matrix];
     return allowedActions?.includes(action as any) ?? false;
   };
 
@@ -113,7 +104,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
   const itemsPerPage = 10; // Number of items to show per page
 
   // View mode: list (table) or tree – persisted in localStorage
-  const [viewMode, setViewMode] = useViewMode('medias');
+  const [viewMode, setViewMode] = useViewMode("medias");
   const [tagGroups, setTagGroups] = createSignal<TagGroup[]>([]);
   const [allTags, setAllTags] = createSignal<Tag[]>([]);
   const [treeVersion, setTreeVersion] = createSignal(0);
@@ -124,9 +115,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
   // ---------------------------------------------------------------------------
 
   // Map of resourceId → Tag[] for the currently visible page
-  const [resourceTagsMap, setResourceTagsMap] = createSignal<
-    Map<number, Tag[]>
-  >(new Map());
+  const [resourceTagsMap, setResourceTagsMap] = createSignal<Map<number, Tag[]>>(new Map());
 
   // Single-item tag popover target
   const [tagPopoverTarget, setTagPopoverTarget] = createSignal<{
@@ -135,13 +124,12 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
   } | null>(null);
 
   // Bulk tag popover anchor
-  const [bulkTagAnchorEl, setBulkTagAnchorEl] =
-    createSignal<HTMLElement | null>(null);
+  const [bulkTagAnchorEl, setBulkTagAnchorEl] = createSignal<HTMLElement | null>(null);
 
   // Permission: only admin/manager can manage tags
   const canManageTags = () => {
     const role = props.store.permissions?.role;
-    return role === 'admin' || role === 'manager';
+    return role === "admin" || role === "manager";
   };
 
   // Initialize TagsService and load tag groups for tree view
@@ -161,7 +149,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
         setAllTags(allTagsList);
       });
     } catch (error) {
-      console.error('Failed to load tag groups:', error);
+      console.error("Failed to load tag groups:", error);
     }
   };
 
@@ -169,8 +157,8 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
   createEffect(
     on(
       () => props.store.organizations.selectedId,
-      () => loadTagGroups()
-    )
+      () => loadTagGroups(),
+    ),
   );
 
   // ---------------------------------------------------------------------------
@@ -189,14 +177,14 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
         try {
           const itemTags = await tagsService.getResourceTags(
             props.store.organizations.selectedId,
-            'media',
-            item.id
+            "media",
+            item.id,
           );
           tagMap.set(item.id, itemTags);
         } catch {
           tagMap.set(item.id, []);
         }
-      })
+      }),
     );
     setResourceTagsMap(tagMap);
   };
@@ -207,11 +195,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
   // Tag toggle handlers (single item + bulk)
   // ---------------------------------------------------------------------------
 
-  const handleTagToggle = async (
-    item: JsonMedia,
-    tagId: number,
-    selected: boolean
-  ) => {
+  const handleTagToggle = async (item: JsonMedia, tagId: number, selected: boolean) => {
     const orgId = props.store.organizations.selectedId;
     if (!orgId) return;
 
@@ -225,7 +209,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
       } else {
         next.set(
           item.id,
-          current.filter((t) => t.id !== tagId)
+          current.filter((t) => t.id !== tagId),
         );
       }
       return next;
@@ -233,21 +217,17 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
 
     try {
       if (selected) {
-        await tagsService.tagResource(orgId, 'media', item.id, tagId);
+        await tagsService.tagResource(orgId, "media", item.id, tagId);
       } else {
-        await tagsService.untagResource(orgId, 'media', item.id, tagId);
+        await tagsService.untagResource(orgId, "media", item.id, tagId);
       }
       bumpTree();
     } catch (error) {
-      console.error('Failed to toggle tag:', error);
-      toast.error(t('tags.errors.tagResource', { error: String(error) }));
+      console.error("Failed to toggle tag:", error);
+      toast.error(t("tags.errors.tagResource", { error: String(error) }));
       // Revert optimistic update by reloading from server
       try {
-        const freshTags = await tagsService.getResourceTags(
-          orgId,
-          'media',
-          item.id
-        );
+        const freshTags = await tagsService.getResourceTags(orgId, "media", item.id);
         setResourceTagsMap((prev) => {
           const next = new Map(prev);
           next.set(item.id, freshTags);
@@ -266,14 +246,9 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
     const resourceIds = Array.from(selectedMedias());
     try {
       if (selected) {
-        await tagsService.bulkTagResources(orgId, tagId, 'media', resourceIds);
+        await tagsService.bulkTagResources(orgId, tagId, "media", resourceIds);
       } else {
-        await tagsService.bulkUntagResources(
-          orgId,
-          tagId,
-          'media',
-          resourceIds
-        );
+        await tagsService.bulkUntagResources(orgId, tagId, "media", resourceIds);
       }
 
       // Refresh tags for affected items
@@ -281,22 +256,18 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
       await Promise.all(
         resourceIds.map(async (id) => {
           try {
-            const freshTags = await tagsService.getResourceTags(
-              orgId,
-              'media',
-              id
-            );
+            const freshTags = await tagsService.getResourceTags(orgId, "media", id);
             tagMap.set(id, freshTags);
           } catch {
             /* ignore */
           }
-        })
+        }),
       );
       setResourceTagsMap(tagMap);
       bumpTree();
     } catch (error) {
-      console.error('Failed to bulk toggle tag:', error);
-      toast.error(t('tags.errors.tagResource', { error: String(error) }));
+      console.error("Failed to bulk toggle tag:", error);
+      toast.error(t("tags.errors.tagResource", { error: String(error) }));
     }
   };
 
@@ -310,15 +281,12 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
 
     const firstItemTagIds = new Set(allItemTags[0].map((t) => t.id));
     return [...firstItemTagIds].filter((tagId) =>
-      allItemTags.every((tags) => tags.some((t) => t.id === tagId))
+      allItemTags.every((tags) => tags.some((t) => t.id === tagId)),
     );
   };
 
   const handleCreateTag = async (name: string): Promise<Tag> => {
-    const newTag = await tagsService.createTag(
-      props.store.organizations.selectedId,
-      { name }
-    );
+    const newTag = await tagsService.createTag(props.store.organizations.selectedId, { name });
     setAllTags([...allTags(), newTag]);
     return newTag;
   };
@@ -331,64 +299,58 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
       {
         page: 1,
         page_size: 100,
-        sortOptions: { key: 'name', direction: 'ascending' },
+        sortOptions: { key: "name", direction: "ascending" },
         tag_ids: tagIds,
-        tag_filter_mode: 'all',
+        tag_filter_mode: "all",
         team_id: selectedTeamId(),
-      }
+      },
     );
     return {
       data: result.data.map((m: JsonMedia) => ({
         ...m,
-        thumbnail: m.files?.['thumbnail']?.uri,
+        thumbnail: m.files?.["thumbnail"]?.uri,
       })) as TreeResourceItem[],
       count: result.count,
     };
   };
 
-  const fetchTreeUntaggedResources = async (
-    tagGroupId: number,
-    parentTagIds?: number[]
-  ) => {
+  const fetchTreeUntaggedResources = async (tagGroupId: number, parentTagIds?: number[]) => {
     const result = await MediasService.fetchMedias(
       props.store.env.baseUrl,
       props.store.organizations.selectedId,
       {
         page: 1,
         page_size: 100,
-        sortOptions: { key: 'name', direction: 'ascending' },
-        tag_filter_mode: 'all',
+        sortOptions: { key: "name", direction: "ascending" },
+        tag_filter_mode: "all",
         missing_tag_group_id: tagGroupId,
         tag_ids: parentTagIds,
         team_id: selectedTeamId(),
-      }
+      },
     );
 
     return {
       data: result.data.map((m: JsonMedia) => ({
         ...m,
-        thumbnail: m.files?.['thumbnail']?.uri,
+        thumbnail: m.files?.["thumbnail"]?.uri,
       })) as TreeResourceItem[],
       count: result.count,
     };
   };
 
-  const fetchTreeUntaggedCount = async (
-    tagGroupId: number,
-    parentTagIds?: number[]
-  ) => {
+  const fetchTreeUntaggedCount = async (tagGroupId: number, parentTagIds?: number[]) => {
     const result = await MediasService.fetchMedias(
       props.store.env.baseUrl,
       props.store.organizations.selectedId,
       {
         page: 1,
         page_size: 1,
-        sortOptions: { key: 'name', direction: 'ascending' },
-        tag_filter_mode: 'all',
+        sortOptions: { key: "name", direction: "ascending" },
+        tag_filter_mode: "all",
         missing_tag_group_id: tagGroupId,
         tag_ids: parentTagIds,
         team_id: selectedTeamId(),
-      }
+      },
     );
 
     return result.count;
@@ -424,7 +386,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
 
   const resourcesObserver = new ResourcesObserver<JsonMedia>(
     props.store.socket,
-    'update',
+    "update",
     /* onJoin */
     (resource: JsonMedia) => {
       return `resource:media:${resource.id}`;
@@ -432,17 +394,14 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
     /* onUpdate */
     (resource: JsonMedia, data: Partial<JsonMedia>) => {
       updateItem(resource.id, data);
-    }
+    },
   );
 
   /** It may be possible to refactor this code as most views will have the same UI for
    * removing resources.
    */
-  const [showConfirmDialog, setShowConfirmDialog] = createSignal<
-    JsonMedia | undefined
-  >();
-  const [showConfirmDialogMultiple, setShowConfirmDialogMultiple] =
-    createSignal(false);
+  const [showConfirmDialog, setShowConfirmDialog] = createSignal<JsonMedia | undefined>();
+  const [showConfirmDialogMultiple, setShowConfirmDialogMultiple] = createSignal(false);
 
   const confirmRemoveResource = async (resource: JsonMedia | undefined) => {
     if (!resource) {
@@ -452,7 +411,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
       await MediasService.removeMedia(
         props.store.env.baseUrl,
         props.store.organizations.selectedId,
-        `${resource.id}`
+        `${resource.id}`,
       );
 
       refreshData();
@@ -461,7 +420,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
       loadQuota(); // Reload quota after deletion
     } catch (error) {
       if (error instanceof HttpError && error.status === 409) {
-        toast.error(t('organization.errors.mediaInUseAsLogo'));
+        toast.error(t("organization.errors.mediaInUseAsLogo"));
       } else {
         const message = error instanceof Error ? error.message : String(error);
         toast.error(`Error removing media ${resource.name}: ${message}`);
@@ -477,9 +436,9 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
           MediasService.removeMedia(
             props.store.env.baseUrl,
             props.store.organizations.selectedId,
-            String(resourceId)
-          )
-        )
+            String(resourceId),
+          ),
+        ),
       );
 
       refreshData();
@@ -488,7 +447,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
       loadQuota(); // Reload quota after deletion
     } catch (error) {
       if (error instanceof HttpError && error.status === 409) {
-        toast.error(t('organization.errors.mediaInUseAsLogo'));
+        toast.error(t("organization.errors.mediaInUseAsLogo"));
       } else {
         const message = error instanceof Error ? error.message : String(error);
         toast.error(`Error removing medias: ${message}`);
@@ -501,13 +460,11 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
   const [selectedMedias, setSelectedMedias] = createSignal(new Set<number>());
 
   const [loading, setLoading] = createSignal(false);
-  const [loadingSuccess, setLoadingSuccess] = createSignal('');
-  const [loadingError, setLoadingError] = createSignal('');
+  const [loadingSuccess, setLoadingSuccess] = createSignal("");
+  const [loadingError, setLoadingError] = createSignal("");
 
   const [quota, setQuota] = createSignal<ResourceQuota | null>(null);
-  const [storageQuota, setStorageQuota] = createSignal<ResourceQuota | null>(
-    null
-  );
+  const [storageQuota, setStorageQuota] = createSignal<ResourceQuota | null>(null);
   const [quotaLoading, setQuotaLoading] = createSignal(false);
   const [showLoadingIndicator, setShowLoadingIndicator] = createSignal(false);
 
@@ -530,20 +487,14 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
 
       // Load both media count and storage quotas
       const [quotaData, storageData] = await Promise.all([
-        quotasService.getResourceQuota(
-          props.store.organizations.selectedId,
-          'medias'
-        ),
-        quotasService.getResourceQuota(
-          props.store.organizations.selectedId,
-          'storage'
-        ),
+        quotasService.getResourceQuota(props.store.organizations.selectedId, "medias"),
+        quotasService.getResourceQuota(props.store.organizations.selectedId, "storage"),
       ]);
 
       setQuota(quotaData);
       setStorageQuota(storageData);
     } catch (error) {
-      console.error('Failed to fetch quota:', error);
+      console.error("Failed to fetch quota:", error);
     } finally {
       if (loadingTimeout) {
         clearTimeout(loadingTimeout);
@@ -562,44 +513,41 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
     if (registerShortcutAction) {
       // Register create action
       registerShortcutAction(
-        'generic-create',
+        "generic-create",
         () => {
-          if (canPerformAction('medias', 'create') && !isQuotaReached()) {
+          if (canPerformAction("medias", "create") && !isQuotaReached()) {
             openAddMediasModal();
           }
         },
         () =>
-          window.location.pathname.includes('/medias') &&
-          canPerformAction('medias', 'create') &&
-          !isQuotaReached()
+          window.location.pathname.includes("/medias") &&
+          canPerformAction("medias", "create") &&
+          !isQuotaReached(),
       );
 
       // Register search action
       registerShortcutAction(
-        'generic-search',
+        "generic-search",
         () => {
           if (tableViewRef) {
             tableViewRef.focusSearch();
           }
         },
-        () => window.location.pathname.includes('/medias')
+        () => window.location.pathname.includes("/medias"),
       );
 
       // Register delete action
       registerShortcutAction(
-        'generic-delete',
+        "generic-delete",
         () => {
-          if (
-            selectedMedias().size > 0 &&
-            canPerformAction('medias', 'delete')
-          ) {
+          if (selectedMedias().size > 0 && canPerformAction("medias", "delete")) {
             setShowConfirmDialogMultiple(true);
           }
         },
         () =>
-          window.location.pathname.includes('/medias') &&
+          window.location.pathname.includes("/medias") &&
           selectedMedias().size > 0 &&
-          canPerformAction('medias', 'delete')
+          canPerformAction("medias", "delete"),
       );
     }
   });
@@ -608,9 +556,9 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
     // Unregister actions when leaving this addon
     const { unregisterShortcutAction } = props.store.keyboardShortcuts || {};
     if (unregisterShortcutAction) {
-      unregisterShortcutAction('generic-create');
-      unregisterShortcutAction('generic-search');
-      unregisterShortcutAction('generic-delete');
+      unregisterShortcutAction("generic-create");
+      unregisterShortcutAction("generic-search");
+      unregisterShortcutAction("generic-delete");
     }
   });
 
@@ -626,8 +574,8 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
             tableViewRef.reloadData();
           }
         }
-      }
-    )
+      },
+    ),
   );
 
   const isQuotaReached = (): boolean => {
@@ -670,13 +618,11 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
 
   const updateItem = (itemId: number, item: Partial<JsonMedia>) => {
     setData((prev) =>
-      prev.map((existing) =>
-        existing.id === itemId ? { ...existing, ...item } : existing
-      )
+      prev.map((existing) => (existing.id === itemId ? { ...existing, ...item } : existing)),
     );
 
     setCurrentMedia((current) =>
-      current && current.id === itemId ? { ...current, ...item } : current
+      current && current.id === itemId ? { ...current, ...item } : current,
     );
 
     if (tableViewRef) {
@@ -685,34 +631,26 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
   };
 
   const renderThumbnailFallback = (item: JsonMedia) => {
-    const progress = Number.parseFloat(item.status_message || '');
+    const progress = Number.parseFloat(item.status_message || "");
 
-    if (item.status === 'transcoding' && Number.isFinite(progress)) {
+    if (item.status === "transcoding" && Number.isFinite(progress)) {
       return <CircularProgress progress={progress} />;
     }
 
-    const message =
-      item.status_message || t('medias.thumbnail.failedDefaultMessage');
+    const message = item.status_message || t("medias.thumbnail.failedDefaultMessage");
 
     return (
       <div class="thumbnail-error" title={message}>
         <div class="thumbnail-error-icon">!</div>
         <div class="thumbnail-error-content">
-          <div class="thumbnail-error-title">
-            {t('medias.thumbnail.failedTitle')}
-          </div>
+          <div class="thumbnail-error-title">{t("medias.thumbnail.failedTitle")}</div>
           <div class="thumbnail-error-message">{message}</div>
         </div>
       </div>
     );
   };
 
-  const fetchData = async ({
-    page,
-    sortOptions,
-    search,
-    filters,
-  }: FetchDataOptions) => {
+  const fetchData = async ({ page, sortOptions, search, filters }: FetchDataOptions) => {
     const result = await MediasService.fetchMedias(
       props.store.env.baseUrl,
       props.store.organizations.selectedId,
@@ -725,7 +663,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
         team_id: selectedTeamId(),
         tag_ids: selectedTagIds(),
         tag_filter_mode: tagFilterMode(),
-      }
+      },
     );
 
     resourcesObserver.observe(result.data);
@@ -758,26 +696,24 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
   const columns = () =>
     [
       {
-        key: 'thumbnail',
-        title: '',
+        key: "thumbnail",
+        title: "",
         sortable: false,
         // Show thumbnail or progress circle (a circular progress bar with some % in the middle, or error if not a number)
         render: (item: JsonMedia) => (
           <div class="thumbnail">
             <Show
-              when={
-                item.status == 'ready' && item.files && item.files['thumbnail']
-              }
+              when={item.status == "ready" && item.files && item.files["thumbnail"]}
               fallback={renderThumbnailFallback(item)}
             >
-              <img src={item.files['thumbnail'].uri} alt={item.name} />
+              <img src={item.files["thumbnail"].uri} alt={item.name} />
             </Show>
           </div>
         ),
       },
       {
-        key: 'name',
-        title: t('common.name'),
+        key: "name",
+        title: t("common.name"),
         sortable: true,
         render: (item: JsonMedia) => (
           <span class="name-cell" title={item.name}>
@@ -786,22 +722,22 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
         ),
       },
       {
-        key: 'size',
-        title: t('common.size'),
+        key: "size",
+        title: t("common.size"),
         sortable: false,
         render: (item: JsonMedia) => formatBytes(item.size ?? 0),
       },
       {
-        key: 'mimetype',
-        title: t('common.type'),
+        key: "mimetype",
+        title: t("common.type"),
         sortable: true,
         render: (item: JsonMedia) => {
-          const mime = item.mimetype || '';
-          const Icon = mime.startsWith('image/')
+          const mime = item.mimetype || "";
+          const Icon = mime.startsWith("image/")
             ? BsFileEarmarkImage
-            : mime.startsWith('video/')
+            : mime.startsWith("video/")
               ? BsFileEarmarkPlay
-              : mime.startsWith('audio/')
+              : mime.startsWith("audio/")
                 ? BsFileEarmarkMusic
                 : BsFileEarmark;
           return (
@@ -812,24 +748,20 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
         },
       },
       {
-        key: 'inserted_at',
-        title: t('common.created'),
+        key: "inserted_at",
+        title: t("common.created"),
         sortable: true,
-        render: (item: JsonMedia) => (
-          <Timestamp value={item.inserted_at!} mode="relative" />
-        ),
+        render: (item: JsonMedia) => <Timestamp value={item.inserted_at!} mode="relative" />,
       },
       {
-        key: 'updated_at',
-        title: t('common.updated'),
+        key: "updated_at",
+        title: t("common.updated"),
         sortable: true,
-        render: (item: JsonMedia) => (
-          <Timestamp value={item.updated_at!} mode="relative" />
-        ),
+        render: (item: JsonMedia) => <Timestamp value={item.updated_at!} mode="relative" />,
       },
       {
-        key: 'tags',
-        title: t('tags.title'),
+        key: "tags",
+        title: t("tags.title"),
         sortable: false,
         render: (item: JsonMedia) => {
           const itemTags = () => resourceTagsMap().get(item.id) || [];
@@ -851,7 +783,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
                     anchorEl: e.currentTarget as HTMLElement,
                   });
                 }}
-                title={t('tags.manageTags')}
+                title={t("tags.manageTags")}
               >
                 <BsTagFill />
               </button>
@@ -867,21 +799,20 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
       {
         icon: BsEye,
         handler: openMediaDrawer,
-        label: t('common.view'),
+        label: t("common.view"),
       },
       {
         icon: AiOutlineDelete,
         handler: (item: JsonMedia) => {
-          if (!canPerformAction('medias', 'delete')) {
+          if (!canPerformAction("medias", "delete")) {
             toast.error(
-              t('permissions.noDeleteMedias') ||
-                "You don't have permission to delete media files"
+              t("permissions.noDeleteMedias") || "You don't have permission to delete media files",
             );
             return;
           }
           setShowConfirmDialog(item);
         },
-        label: t('common.remove'),
+        label: t("common.remove"),
       },
     ] as TableAction<JsonMedia>[];
 
@@ -920,7 +851,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
       </Show>
       <Show when={showDrawer()}>
         <Drawer
-          title={t('medias.drawerTitle', { name: currentMedia()?.name })}
+          title={t("medias.drawerTitle", { name: currentMedia()?.name })}
           onClose={closeMediaDrawer}
           placement="right"
           size="xl"
@@ -939,20 +870,18 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
                       props.store.env.baseUrl,
                       props.store.organizations.selectedId,
                       `${media.id}`,
-                      mediaUpdate
+                      mediaUpdate,
                     );
                     refreshData();
                     bumpTree();
-                    toast.success(
-                      t('medias.mediaUpdated', { name: media.name })
-                    );
+                    toast.success(t("medias.mediaUpdated", { name: media.name }));
                     return true;
                   } catch (error) {
                     toast.error(
-                      t('medias.errorUpdating', {
+                      t("medias.errorUpdating", {
                         name: media.name,
                         error: String(error),
-                      })
+                      }),
                     );
                     return false;
                   }
@@ -974,7 +903,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
       <ConfirmDialog
         show={showConfirmDialogMultiple()}
         title="Remove Medias"
-        message={'Are you sure you want to remove the following medias?'}
+        message={"Are you sure you want to remove the following medias?"}
         onClose={() => setShowConfirmDialogMultiple(false)}
         onConfirm={() => confirmRemoveMultipleResources()}
       >
@@ -986,7 +915,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
         </div>
       </ConfirmDialog>
 
-      <Show when={viewMode() === 'list'}>
+      <Show when={viewMode() === "list"}>
         <TableView<number, JsonMedia>
           title="Medias"
           resource="medias"
@@ -995,7 +924,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
           ref={setRef}
           itemIdKey="id"
           toolbar={{
-            searchPlaceholder: t('common.search'),
+            searchPlaceholder: t("common.search"),
             mainAction: (
               <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
                 <Show when={quota()}>
@@ -1022,9 +951,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
                   onClick={openAddMediasModal}
                   icon={BsCheckLg}
                   color="primary"
-                  disabled={
-                    isQuotaReached() || !canPerformAction('medias', 'create')
-                  }
+                  disabled={isQuotaReached() || !canPerformAction("medias", "create")}
                 />
               </div>
             ),
@@ -1039,9 +966,9 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
                   teams={teams()}
                   selectedTeamId={selectedTeamId()}
                   onTeamChange={handleTeamChange}
-                  label={t('filters.teamLabel')}
-                  placeholder={t('filters.teamPlaceholder')}
-                  clearLabel={t('filters.teamClear')}
+                  label={t("filters.teamLabel")}
+                  placeholder={t("filters.teamPlaceholder")}
+                  clearLabel={t("filters.teamClear")}
                 />
                 <TagFilter
                   tags={tags()}
@@ -1049,22 +976,22 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
                   onTagChange={handleTagChange}
                   filterMode={tagFilterMode()}
                   onFilterModeChange={setTagFilterMode}
-                  label={t('filters.tagLabel')}
-                  placeholder={t('filters.tagPlaceholder')}
-                  clearLabel={t('filters.tagClear')}
-                  searchPlaceholder={t('filters.tagSearchPlaceholder')}
+                  label={t("filters.tagLabel")}
+                  placeholder={t("filters.tagPlaceholder")}
+                  clearLabel={t("filters.tagClear")}
+                  searchPlaceholder={t("filters.tagSearchPlaceholder")}
                   filterModeLabels={{
-                    any: t('filters.tagFilterModeAny'),
-                    all: t('filters.tagFilterModeAll'),
+                    any: t("filters.tagFilterModeAny"),
+                    all: t("filters.tagFilterModeAll"),
                   }}
-                  noMatchMessage={t('filters.noMatches')}
-                  emptyMessage={t('filters.noItems')}
+                  noMatchMessage={t("filters.noMatches")}
+                  emptyMessage={t("filters.noItems")}
                 />
               </div>
             ),
           }}
-          selectionHint={t('common.selectionHint')}
-          selectionLabel={t('common.selectionCount')}
+          selectionHint={t("common.selectionHint")}
+          selectionLabel={t("common.selectionCount")}
           selectionActions={({ count, clear }) => (
             <>
               <Show when={canManageTags()}>
@@ -1075,12 +1002,12 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
                   }}
                 >
                   <BsTagFill />
-                  {t('tags.manageTags')}
+                  {t("tags.manageTags")}
                 </button>
               </Show>
               <button
                 class="selection-action-btn danger"
-                disabled={!canPerformAction('medias', 'delete')}
+                disabled={!canPerformAction("medias", "delete")}
                 onClick={() => setShowConfirmDialogMultiple(true)}
               >
                 <AiOutlineDelete />
@@ -1091,26 +1018,24 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
           table={{
             columns,
             actions,
-            actionsLabel: t('common.actions'),
+            actionsLabel: t("common.actions"),
             onRowSelect,
             defaultRowAction: {
               icon: BsEye,
               handler: (item: JsonMedia) => {
                 openMediaDrawer(item);
               },
-              label: t('common.view'),
+              label: t("common.view"),
             },
           }}
           pagination={{ itemsPerPage }}
         ></TableView>
       </Show>
 
-      <Show when={viewMode() === 'tree'}>
+      <Show when={viewMode() === "tree"}>
         <ToolBar
           title="Medias"
-          titleActions={
-            <ViewModeToggle mode={viewMode()} onChange={setViewMode} />
-          }
+          titleActions={<ViewModeToggle mode={viewMode()} onChange={setViewMode} />}
           hideSearch
           mainAction={
             <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
@@ -1128,9 +1053,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
                 onClick={openAddMediasModal}
                 icon={BsCheckLg}
                 color="primary"
-                disabled={
-                  isQuotaReached() || !canPerformAction('medias', 'create')
-                }
+                disabled={isQuotaReached() || !canPerformAction("medias", "create")}
               />
             </div>
           }
@@ -1140,9 +1063,9 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
                 teams={teams()}
                 selectedTeamId={selectedTeamId()}
                 onTeamChange={handleTeamChange}
-                label={t('filters.teamLabel')}
-                placeholder={t('filters.teamPlaceholder')}
-                clearLabel={t('filters.teamClear')}
+                label={t("filters.teamLabel")}
+                placeholder={t("filters.teamPlaceholder")}
+                clearLabel={t("filters.teamClear")}
               />
             </div>
           }
@@ -1153,30 +1076,27 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
           fetchResources={fetchTreeResources}
           fetchUntaggedResources={fetchTreeUntaggedResources}
           fetchUntaggedCount={fetchTreeUntaggedCount}
-          untaggedLabel={t('tags.groups.untagged')}
-          emptyLeafText={t('filters.noItems')}
+          untaggedLabel={t("tags.groups.untagged")}
+          emptyLeafText={t("filters.noItems")}
           refreshKey={treeVersion()}
           storageKey="medias"
-          onResourceClick={(item) =>
-            openMediaDrawer(item as unknown as JsonMedia)
-          }
+          onResourceClick={(item) => openMediaDrawer(item as unknown as JsonMedia)}
           renderResource={(item) => (
             <div
               class="media-tree-item"
               onClick={() => openMediaDrawer(item as unknown as JsonMedia)}
             >
-              <Show when={(item as any).files?.['thumbnail']}>
+              <Show when={(item as any).files?.["thumbnail"]}>
                 <img
                   class="media-tree-thumbnail"
-                  src={(item as any).files['thumbnail'].uri}
+                  src={(item as any).files["thumbnail"].uri}
                   alt={item.name}
                 />
               </Show>
               <div class="media-tree-info">
                 <span class="media-tree-name">{item.name}</span>
                 <span class="media-tree-meta">
-                  {(item as any).mimetype} ·{' '}
-                  {formatBytes((item as any).size ?? 0)}
+                  {(item as any).mimetype} · {formatBytes((item as any).size ?? 0)}
                 </span>
               </div>
               <button
@@ -1188,11 +1108,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
                   // Load tags for this item if not already in the map
                   if (orgId && !resourceTagsMap().has(media.id)) {
                     try {
-                      const itemTags = await tagsService.getResourceTags(
-                        orgId,
-                        'media',
-                        media.id
-                      );
+                      const itemTags = await tagsService.getResourceTags(orgId, "media", media.id);
                       setResourceTagsMap((prev) => {
                         const next = new Map(prev);
                         next.set(media.id, itemTags);
@@ -1207,7 +1123,7 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
                     anchorEl: e.currentTarget as HTMLElement,
                   });
                 }}
-                title={t('tags.manageTags')}
+                title={t("tags.manageTags")}
               >
                 <BsTagFill />
               </button>
@@ -1222,20 +1138,16 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
           <TagPopover
             availableTags={allTags()}
             tagGroups={tagGroups()}
-            selectedTagIds={(resourceTagsMap().get(target().item.id) || []).map(
-              (t) => t.id
-            )}
-            onToggle={(tagId, selected) =>
-              handleTagToggle(target().item, tagId, selected)
-            }
+            selectedTagIds={(resourceTagsMap().get(target().item.id) || []).map((t) => t.id)}
+            onToggle={(tagId, selected) => handleTagToggle(target().item, tagId, selected)}
             onCreateTag={canManageTags() ? handleCreateTag : undefined}
             allowCreate={canManageTags()}
             anchorEl={target().anchorEl}
             onClose={() => setTagPopoverTarget(null)}
-            placeholder={t('tags.searchTags')}
-            ungroupedLabel={t('tags.groups.ungrouped')}
-            emptyLabel={t('tags.noTagsAvailable')}
-            noMatchLabel={t('tags.noMatchingTags')}
+            placeholder={t("tags.searchTags")}
+            ungroupedLabel={t("tags.groups.ungrouped")}
+            emptyLabel={t("tags.noTagsAvailable")}
+            noMatchLabel={t("tags.noMatchingTags")}
           />
         )}
       </Show>
@@ -1251,11 +1163,11 @@ const MediasPage: Component<AddonComponentProps> = (props) => {
           allowCreate={canManageTags()}
           anchorEl={bulkTagAnchorEl()!}
           onClose={() => setBulkTagAnchorEl(null)}
-          title={t('tags.manageTags')}
-          placeholder={t('tags.searchTags')}
-          ungroupedLabel={t('tags.groups.ungrouped')}
-          emptyLabel={t('tags.noTagsAvailable')}
-          noMatchLabel={t('tags.noMatchingTags')}
+          title={t("tags.manageTags")}
+          placeholder={t("tags.searchTags")}
+          ungroupedLabel={t("tags.groups.ungrouped")}
+          emptyLabel={t("tags.noTagsAvailable")}
+          noMatchLabel={t("tags.noMatchingTags")}
         />
       </Show>
     </div>

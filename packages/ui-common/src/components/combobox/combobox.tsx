@@ -5,22 +5,14 @@
  *
  */
 
-import {
-  createEffect,
-  createSignal,
-  For,
-  JSX,
-  onMount,
-  onCleanup,
-  Show,
-} from 'solid-js';
-import { RiArrowsArrowUpSLine, RiArrowsArrowDownSLine } from 'solid-icons/ri';
-import { AiOutlineSearch } from 'solid-icons/ai';
-import { ImCancelCircle } from 'solid-icons/im';
+import { createEffect, createSignal, For, JSX, onMount, onCleanup, Show } from "solid-js";
+import { RiArrowsArrowUpSLine, RiArrowsArrowDownSLine } from "solid-icons/ri";
+import { AiOutlineSearch } from "solid-icons/ai";
+import { ImCancelCircle } from "solid-icons/im";
 
-import styles from './combobox.module.scss';
-import { IconWrapper } from '../icon-wrapper';
-import { IconTypes } from 'solid-icons';
+import styles from "./combobox.module.scss";
+import { IconWrapper } from "../icon-wrapper";
+import { IconTypes } from "solid-icons";
 
 const SimpleIconButton = (props: { icon: IconTypes; onClick: () => void }) => {
   return (
@@ -45,7 +37,7 @@ interface ComboBoxProps<T extends { id: string | number }> {
   fetchItems: (
     page: number,
     pageSize: number,
-    searchQuery: string
+    searchQuery: string,
   ) => Promise<{ count: number; data: T[] }>;
   renderItem: (item: T) => JSX.Element;
   onSelect: (item: T) => void; // Callback function for when selection changes
@@ -55,17 +47,15 @@ interface ComboBoxProps<T extends { id: string | number }> {
 }
 
 export const ComboBox = <T extends { id: string | number }>(
-  props: ComboBoxProps<T>
+  props: ComboBoxProps<T>,
 ): JSX.Element => {
   let comboBoxRef: HTMLDivElement | undefined;
   const triggerId = `${props.id.toString()}-trigger`;
   const dropdownId = `${props.id.toString()}-dropdown`;
   const [isOpen, setIsOpen] = createSignal(false);
   const [items, setItems] = createSignal<T[]>([]);
-  const [selectedItem, setSelectedItem] = createSignal<T | undefined>(
-    undefined
-  );
-  const [searchQuery, setSearchQuery] = createSignal('');
+  const [selectedItem, setSelectedItem] = createSignal<T | undefined>(undefined);
+  const [searchQuery, setSearchQuery] = createSignal("");
   const [page, setPage] = createSignal(1);
   const [totalItems, setTotalItems] = createSignal(0);
   const [loading, setLoading] = createSignal(false);
@@ -88,7 +78,7 @@ export const ComboBox = <T extends { id: string | number }>(
 
     setTotalItems(result.count);
     setItems((currentItems: T[]) =>
-      page() === 1 ? result.data : [...currentItems, ...result.data]
+      page() === 1 ? result.data : [...currentItems, ...result.data],
     );
     setPage((currentPage) => currentPage + 1);
 
@@ -112,8 +102,7 @@ export const ComboBox = <T extends { id: string | number }>(
 
     // Not sure this is the best way to determine if we are at the bottom of the list
     if (
-      target.scrollTop + target.clientHeight >=
-        target.scrollHeight - scrollThreshold &&
+      target.scrollTop + target.clientHeight >= target.scrollHeight - scrollThreshold &&
       items().length < totalItems()
     ) {
       fetchMoreItems();
@@ -130,11 +119,11 @@ export const ComboBox = <T extends { id: string | number }>(
 
   onMount(() => {
     // Use capture phase so outside detection is consistent regardless of bubbling handlers.
-    document.addEventListener('pointerdown', handlePointerDown, true);
+    document.addEventListener("pointerdown", handlePointerDown, true);
   });
 
   onCleanup(() => {
-    document.removeEventListener('pointerdown', handlePointerDown, true);
+    document.removeEventListener("pointerdown", handlePointerDown, true);
     if (debounceTimer) {
       clearTimeout(debounceTimer);
     }
@@ -171,17 +160,17 @@ export const ComboBox = <T extends { id: string | number }>(
   };
 
   const handleHeaderKeyDown = (event: KeyboardEvent) => {
-    if (event.key === 'Enter' || event.key === ' ') {
+    if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
       setIsOpen((prev) => !prev);
     }
   };
 
   return (
-    <div class={styles['combo-box']} ref={comboBoxRef}>
+    <div class={styles["combo-box"]} ref={comboBoxRef}>
       <div
         id={triggerId}
-        class={`${styles['base-box']} ${styles['header']}`}
+        class={`${styles["base-box"]} ${styles["header"]}`}
         role="button"
         tabindex={0}
         aria-expanded={isOpen()}
@@ -189,22 +178,22 @@ export const ComboBox = <T extends { id: string | number }>(
         onClick={() => setIsOpen((prev) => !prev)}
         onKeyDown={handleHeaderKeyDown}
       >
-        <div class={styles['info']}>
-          <div class={styles['label']}>{props.label}</div>
+        <div class={styles["info"]}>
+          <div class={styles["label"]}>{props.label}</div>
 
           <div class="selected-item">
             {selectedItem()
               ? props.renderItem(selectedItem()!)
-              : props.placeholder || 'Select an item'}
+              : props.placeholder || "Select an item"}
           </div>
         </div>
 
-        <div class={styles['actions']}>
+        <div class={styles["actions"]}>
           <Show when={shouldShowClear()}>
             <button
               type="button"
-              class={styles['clear-button']}
-              aria-label={props.clearLabel || 'Clear selection'}
+              class={styles["clear-button"]}
+              aria-label={props.clearLabel || "Clear selection"}
               onClick={(e) => {
                 e.stopPropagation();
                 handleClear();
@@ -217,16 +206,10 @@ export const ComboBox = <T extends { id: string | number }>(
           <Show
             when={isOpen()}
             fallback={
-              <SimpleIconButton
-                icon={RiArrowsArrowDownSLine}
-                onClick={() => setIsOpen(true)}
-              />
+              <SimpleIconButton icon={RiArrowsArrowDownSLine} onClick={() => setIsOpen(true)} />
             }
           >
-            <SimpleIconButton
-              icon={RiArrowsArrowUpSLine}
-              onClick={() => setIsOpen(false)}
-            />
+            <SimpleIconButton icon={RiArrowsArrowUpSLine} onClick={() => setIsOpen(false)} />
           </Show>
         </div>
       </div>
@@ -234,33 +217,33 @@ export const ComboBox = <T extends { id: string | number }>(
       <Show when={isOpen()}>
         <div
           id={dropdownId}
-          class={`${styles['base-box']} ${styles['dropdown']}`}
+          class={`${styles["base-box"]} ${styles["dropdown"]}`}
           role="listbox"
           aria-labelledby={triggerId}
         >
-          <div class={styles['search-box']}>
-            <div class={styles['search-icon']}>
+          <div class={styles["search-box"]}>
+            <div class={styles["search-icon"]}>
               <IconWrapper icon={AiOutlineSearch} />
             </div>
             <input
-              id={typeof props.id == 'string' ? props.id : props.id.toString()}
+              id={typeof props.id == "string" ? props.id : props.id.toString()}
               type="text"
-              placeholder={props.placeholder || 'Search...'}
+              placeholder={props.placeholder || "Search..."}
               onInput={(e) => search(e.currentTarget.value)}
               value={searchQuery()}
             />
           </div>
 
-          <div class={styles['items-list']} onScroll={handleScroll}>
+          <div class={styles["items-list"]} onScroll={handleScroll}>
             <For each={items()}>
               {(item) => (
-                <div class={styles['item']} onClick={() => handleSelect(item)}>
+                <div class={styles["item"]} onClick={() => handleSelect(item)}>
                   {props.renderItem(item)}
                 </div>
               )}
             </For>
           </div>
-          <div class={styles['footer']}>
+          <div class={styles["footer"]}>
             <Show
               when={loading()}
               fallback={

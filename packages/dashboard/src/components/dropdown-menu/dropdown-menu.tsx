@@ -6,11 +6,11 @@
  *
  */
 
-import { Component, onCleanup, children, JSX, For } from 'solid-js';
-import './dropdown-menu.scss';
+import { Component, onCleanup, children, JSX, For } from "solid-js";
+import "./dropdown-menu.scss";
 
-import { createSignal, onMount, Show } from 'solid-js';
-import { FaSolidAngleDown, FaSolidAngleUp } from 'solid-icons/fa';
+import { createSignal, onMount, Show } from "solid-js";
+import { FaSolidAngleDown, FaSolidAngleUp } from "solid-icons/fa";
 
 interface DropdownMenuProps {
   ButtonComponent: Component<Record<string, never>>; // Define prop for custom button component
@@ -34,7 +34,7 @@ const DropdownMenu: Component<DropdownMenuProps> = (props) => {
   const handleMenuClick = (event: MouseEvent) => {
     // Check if the click is on a menu item (button or link inside the menu)
     const target = event.target as HTMLElement;
-    if (target.closest('button, a')) {
+    if (target.closest("button, a")) {
       closeDropdown();
       props.onItemClick?.();
     }
@@ -54,7 +54,7 @@ const DropdownMenu: Component<DropdownMenuProps> = (props) => {
   };
 
   onMount(() => {
-    document.addEventListener('click', handleClickOutside);
+    document.addEventListener("click", handleClickOutside);
 
     if (!buttonRef) return;
     const buttonRect = buttonRef.getBoundingClientRect();
@@ -74,7 +74,7 @@ const DropdownMenu: Component<DropdownMenuProps> = (props) => {
   });
 
   onCleanup(() => {
-    document.removeEventListener('click', handleClickOutside);
+    document.removeEventListener("click", handleClickOutside);
   });
 
   return (
@@ -98,7 +98,7 @@ const DropdownMenu: Component<DropdownMenuProps> = (props) => {
         <ul
           ref={menuRef!}
           style={positionStyle()}
-          class={`${isOpen() ? 'open' : 'close'} menu`}
+          class={`${isOpen() ? "open" : "close"} menu`}
           onClick={handleMenuClick}
         >
           <For each={menuItems}>{(item) => <li>{item}</li>}</For>

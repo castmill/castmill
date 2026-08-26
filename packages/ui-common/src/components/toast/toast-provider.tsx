@@ -1,14 +1,8 @@
 /** @jsxImportSource solid-js */
 
-import {
-  Component,
-  JSX,
-  createContext,
-  useContext,
-  createSignal,
-} from 'solid-js';
-import { ToastContainer } from './toast-container';
-import { ToastProps, ToastType } from './toast';
+import { Component, JSX, createContext, useContext, createSignal } from "solid-js";
+import { ToastContainer } from "./toast-container";
+import { ToastProps, ToastType } from "./toast";
 
 interface ToastContextValue {
   showToast: (message: string, type?: ToastType, duration?: number) => string;
@@ -24,7 +18,7 @@ const ToastContext = createContext<ToastContextValue>();
 export const useToast = (): ToastContextValue => {
   const context = useContext(ToastContext);
   if (!context) {
-    throw new Error('useToast must be used within a ToastProvider');
+    throw new Error("useToast must be used within a ToastProvider");
   }
   return context;
 };
@@ -42,8 +36,8 @@ export const ToastProvider: Component<ToastProviderProps> = (props) => {
 
   const showToast = (
     message: string,
-    type: ToastType = 'info',
-    duration: number = 5000
+    type: ToastType = "info",
+    duration: number = 5000,
   ): string => {
     const id = generateId();
     const newToast: ToastProps = {
@@ -62,19 +56,19 @@ export const ToastProvider: Component<ToastProviderProps> = (props) => {
   };
 
   const success = (message: string, duration: number = 5000): string => {
-    return showToast(message, 'success', duration);
+    return showToast(message, "success", duration);
   };
 
   const error = (message: string, duration: number = 5000): string => {
-    return showToast(message, 'error', duration);
+    return showToast(message, "error", duration);
   };
 
   const info = (message: string, duration: number = 5000): string => {
-    return showToast(message, 'info', duration);
+    return showToast(message, "info", duration);
   };
 
   const warning = (message: string, duration: number = 5000): string => {
-    return showToast(message, 'warning', duration);
+    return showToast(message, "warning", duration);
   };
 
   const contextValue: ToastContextValue = {

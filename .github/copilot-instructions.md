@@ -7,6 +7,7 @@ You are working with the Castmill Digital Signage Platform, a comprehensive mono
 This is a **Yarn workspace monorepo** with the following structure:
 
 ### Frontend Packages
+
 - `packages/website/` - Documentation site (Docusaurus)
 - `packages/dashboard/` - Management interface (SolidJS/TypeScript)
 - `packages/device/` - Device management interface
@@ -15,9 +16,11 @@ This is a **Yarn workspace monorepo** with the following structure:
 - `packages/widged/` - Widget system and components
 
 ### Backend (Elixir/Phoenix)
+
 - `packages/castmill/` - Main Elixir/Phoenix backend application
 
 ### Digital Signage Players & Infrastructure
+
 - `packages/platforms/` - Player apps for different platforms (Android, WebOS, Electron, Legacy)
 - `packages/cache/` - TypeScript caching package used by players
 
@@ -34,6 +37,7 @@ agents/
 ```
 
 ### When to Use Agent Documentation
+
 1. **Before making changes** - Read relevant `agents/packages/[package-name]/` docs
 2. **For architecture questions** - Check `agents/systems/` for cross-package understanding
 3. **For deployment/infrastructure** - Consult `agents/infrastructure/`
@@ -42,6 +46,7 @@ agents/
 ## 💻 Development Standards
 
 ### Code Quality Requirements
+
 - **TypeScript**: Use for ALL new frontend code
 - **Test Coverage**: Maintain >90% coverage on new code
 - **Linting**: Follow existing ESLint/Prettier configurations
@@ -50,6 +55,7 @@ agents/
 - **CSS Units**: Use `em` units instead of `px` for spacing
 
 ### Key Technologies
+
 - **Frontend**: SolidJS, TypeScript, Vite
 - **Backend**: Elixir/Phoenix, PostgreSQL, Oban
 - **Testing**: Vitest, React Testing Library, ExUnit
@@ -74,7 +80,7 @@ The Dashboard uses URL-based routing with organization context:
 navigate(`/org/${store.organizations.selectedId}/teams`);
 
 // ❌ Never navigate without org context
-navigate('/teams'); // WRONG!
+navigate("/teams"); // WRONG!
 ```
 
 See `AGENTS.md` for complete routing patterns.
@@ -99,6 +105,7 @@ yarn workspace website start
 ## ⚠️ Important Guidelines
 
 ### DO:
+
 - Read `agents/` documentation before making changes
 - Use TypeScript for all new frontend code
 - Write comprehensive tests (>90% coverage target)
@@ -108,6 +115,7 @@ yarn workspace website start
 - Add translation keys to all 9 language files
 
 ### DON'T:
+
 - Modify `yarn.lock` manually
 - Install packages without checking workspace compatibility
 - Ignore TypeScript errors

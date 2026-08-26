@@ -2,13 +2,22 @@
   "name": "@castmill/cache",
   "version": "1.0.0",
   "description": "Castmill Digital Signage Player Cache",
-  "exports": "./dist/index.js",
-  "node": "^12.20.0 || ^14.13.1 || >=16.0.0",
+  "homepage": "https://github.com/OptimalBits/castmill#readme",
+  "bugs": {
+    "url": "https://github.com/OptimalBits/castmill/issues"
+  },
+  "license": "AGPL-3.0-or-later",
+  "author": "Castmill AB",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OptimalBits/castmill.git"
+  },
   "files": [
     "dist"
   ],
   "type": "module",
   "types": "dist/index.d.ts",
+  "exports": "./dist/index.js",
   "scripts": {
     "format": "oxfmt --write .",
     "format:check": "oxfmt .",
@@ -26,16 +35,6 @@
     "prepare": "yarn build",
     "lint": "oxlint ."
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/OptimalBits/castmill.git"
-  },
-  "author": "Castmill AB",
-  "license": "AGPL-3.0-or-later",
-  "bugs": {
-    "url": "https://github.com/OptimalBits/castmill/issues"
-  },
-  "homepage": "https://github.com/OptimalBits/castmill#readme",
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^15.2.3",
     "@semantic-release/changelog": "^5.0.1",
@@ -56,5 +55,6 @@
     "vite": "^5.2.10",
     "vitest": "^1.6.0",
     "whatwg-fetch": "^3.6.2"
-  }
+  },
+  "node": "^12.20.0 || ^14.13.1 || >=16.0.0"
 }

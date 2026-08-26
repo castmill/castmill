@@ -1,19 +1,19 @@
-import { Component, For, Show, Suspense, lazy } from 'solid-js';
-import './sidepanel.scss';
-import PanelItem from '../panel-item/panel-item';
-import { Dropdown } from '@castmill/ui-common';
+import { Component, For, Show, Suspense, lazy } from "solid-js";
+import "./sidepanel.scss";
+import PanelItem from "../panel-item/panel-item";
+import { Dropdown } from "@castmill/ui-common";
 
-import { IoSettingsOutline, IoPersonOutline } from 'solid-icons/io';
-import { AddOnTree } from '../../classes/addon-tree';
-import { AddOnNode } from '../../interfaces/addon-node.interface';
-import { store, setStore } from '../../store/store';
-import { baseUrl } from '../../env';
-import { TbChartHistogram } from 'solid-icons/tb';
-import { AiOutlineTeam, AiOutlineTags } from 'solid-icons/ai';
-import { RiEditorOrganizationChart } from 'solid-icons/ri';
-import { BsCalendarWeek, BsBuilding } from 'solid-icons/bs';
-import { useI18n } from '../../i18n';
-import { useNavigate, useLocation } from '@solidjs/router';
+import { IoSettingsOutline, IoPersonOutline } from "solid-icons/io";
+import { AddOnTree } from "../../classes/addon-tree";
+import { AddOnNode } from "../../interfaces/addon-node.interface";
+import { store, setStore } from "../../store/store";
+import { baseUrl } from "../../env";
+import { TbChartHistogram } from "solid-icons/tb";
+import { AiOutlineTeam, AiOutlineTags } from "solid-icons/ai";
+import { RiEditorOrganizationChart } from "solid-icons/ri";
+import { BsCalendarWeek, BsBuilding } from "solid-icons/bs";
+import { useI18n } from "../../i18n";
+import { useNavigate, useLocation } from "@solidjs/router";
 
 const addOnBasePath = `${baseUrl}/assets/addons`;
 
@@ -29,7 +29,7 @@ const SidePanelTree: Component<{
 
   // Get the translated name for the addon
   const getAddonName = () => {
-    if (!addon) return '';
+    if (!addon) return "";
     // If the addon provides a name_key, use it for translation
     // Otherwise, fall back to the addon's name
     return addon.name_key ? t(addon.name_key) : addon.name;
@@ -37,14 +37,13 @@ const SidePanelTree: Component<{
 
   // Get the link path without wildcard suffixes (used for routes, not links)
   const getLinkPath = () => {
-    if (!addon?.mount_path) return '';
+    if (!addon?.mount_path) return "";
     // Remove wildcard suffixes like /* or /*rest from the path
-    return addon.mount_path.replace(/\/\*.*$/, '');
+    return addon.mount_path.replace(/\/\*.*$/, "");
   };
 
   // Resolve base path: use provided basePath or default to org-scoped path
-  const getBasePath = () =>
-    props.basePath ?? `/org/${store.organizations.selectedId}`;
+  const getBasePath = () => props.basePath ?? `/org/${store.organizations.selectedId}`;
 
   return (
     <>
@@ -54,9 +53,7 @@ const SidePanelTree: Component<{
             to={`${getBasePath()}${getLinkPath()}`}
             text={getAddonName()}
             level={props.level}
-            icon={lazy(
-              () => import(/* @vite-ignore */ `${addOnBasePath}${addon?.icon}`)
-            )}
+            icon={lazy(() => import(/* @vite-ignore */ `${addOnBasePath}${addon?.icon}`))}
           />
         </Suspense>
       </Show>
@@ -64,8 +61,7 @@ const SidePanelTree: Component<{
         {([name, node]) => (
           <Show
             when={
-              (node.children || node.addon) &&
-              !(props.skipKeys && props.skipKeys.includes(name))
+              (node.children || node.addon) && !(props.skipKeys && props.skipKeys.includes(name))
             }
           >
             <SidePanelTree
@@ -96,9 +92,9 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
   we need to check if the mount_point starts with "sidepanel" and if it is nested like for
   example: "sidepanel.content.medias" create the proper entry in the panel.
   */
-  const addonsPanelTree = props.addons.getSubTree('sidepanel');
-  const addonsBottomTree = props.addons.getSubTree('sidepanel.bottom');
-  const addonsNetworkTree = props.addons.getSubTree('network');
+  const addonsPanelTree = props.addons.getSubTree("sidepanel");
+  const addonsBottomTree = props.addons.getSubTree("sidepanel.bottom");
+  const addonsNetworkTree = props.addons.getSubTree("network");
 
   return (
     <div class="castmill-sidepanel">
@@ -106,7 +102,7 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
         <Dropdown
           id="organization-selector"
           name="organization"
-          label={t('sidebar.organization')}
+          label={t("sidebar.organization")}
           items={store.organizations.data.map((org) => ({
             name: org.name,
             value: org.id,
@@ -118,17 +114,16 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
             }
 
             // Update store
-            setStore('organizations', {
+            setStore("organizations", {
               selectedId: value,
               selectedName: name,
             });
 
-            if (location.pathname.startsWith('/org/')) {
+            if (location.pathname.startsWith("/org/")) {
               // Preserve current sub-path within the new organization
-              const currentPath =
-                location.pathname.replace(/^\/org\/[^\/]+/, '') || '/';
+              const currentPath = location.pathname.replace(/^\/org\/[^\/]+/, "") || "/";
               navigate(`/org/${value}${currentPath}`);
-            } else if (location.pathname === '/settings') {
+            } else if (location.pathname === "/settings") {
               // Settings is a global route and should not be org-prefixed
               return;
             } else {
@@ -141,49 +136,40 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
       <div class="links">
         <PanelItem
           to={`/org/${store.organizations.selectedId}/organization`}
-          text={t('sidebar.organization')}
+          text={t("sidebar.organization")}
           level={0}
           icon={RiEditorOrganizationChart}
         />
 
         <Show when={addonsPanelTree}>
-          <SidePanelTree
-            node={addonsPanelTree!}
-            level={-1}
-            skipKeys={['bottom']}
-          />
+          <SidePanelTree node={addonsPanelTree!} level={-1} skipKeys={["bottom"]} />
         </Show>
         <PanelItem
           to={`/org/${store.organizations.selectedId}/channels`}
-          text={t('sidebar.channels')}
+          text={t("sidebar.channels")}
           level={0}
           icon={BsCalendarWeek}
         />
 
         <PanelItem
           to={`/org/${store.organizations.selectedId}/teams`}
-          text={t('sidebar.teams')}
+          text={t("sidebar.teams")}
           level={0}
           icon={AiOutlineTeam}
         />
         <PanelItem
           to={`/org/${store.organizations.selectedId}/tags`}
-          text={t('sidebar.tags')}
+          text={t("sidebar.tags")}
           level={0}
           icon={AiOutlineTags}
         />
         <PanelItem
           to={`/org/${store.organizations.selectedId}/usage`}
-          text={t('sidebar.usage')}
+          text={t("sidebar.usage")}
           level={0}
           icon={TbChartHistogram}
         />
-        <PanelItem
-          to="/settings"
-          text={t('common.settings')}
-          level={0}
-          icon={IoSettingsOutline}
-        />
+        <PanelItem to="/settings" text={t("common.settings")} level={0} icon={IoSettingsOutline} />
 
         <Show when={addonsBottomTree}>
           <SidePanelTree node={addonsBottomTree!} level={-1} />
@@ -193,36 +179,27 @@ const SidePanel: Component<{ addons: AddOnTree }> = (props) => {
         <Show when={store.network.isAdmin}>
           <div class="network-admin-section">
             <div class="section-divider"></div>
-            <PanelItem
-              to="/network"
-              text={t('sidebar.network')}
-              level={0}
-              icon={BsBuilding}
-            />
+            <PanelItem to="/network" text={t("sidebar.network")} level={0} icon={BsBuilding} />
             <PanelItem
               to="/network/settings"
-              text={t('sidebar.networkSettings')}
+              text={t("sidebar.networkSettings")}
               level={1}
               icon={IoSettingsOutline}
             />
             <PanelItem
               to="/network/organizations"
-              text={t('sidebar.networkOrganizations')}
+              text={t("sidebar.networkOrganizations")}
               level={1}
               icon={RiEditorOrganizationChart}
             />
             <PanelItem
               to="/network/users"
-              text={t('sidebar.networkUsers')}
+              text={t("sidebar.networkUsers")}
               level={1}
               icon={IoPersonOutline}
             />
             <Show when={addonsNetworkTree}>
-              <SidePanelTree
-                node={addonsNetworkTree!}
-                level={0}
-                basePath="/network"
-              />
+              <SidePanelTree node={addonsNetworkTree!} level={0} basePath="/network" />
             </Show>
           </div>
         </Show>

@@ -1,5 +1,5 @@
 /** @jsxImportSource solid-js */
-import { Component, For } from 'solid-js';
+import { Component, For } from "solid-js";
 
 type AccessSelectorProps = {
   availableAccess: string[];

@@ -20,9 +20,9 @@
  * reads from URL (Option A: Read-Only URL Support).
  */
 
-import { createEffect, createSignal, on } from 'solid-js';
-import type { SearchParams, SetSearchParams } from '../interfaces/addon-store';
-import { authFetch } from '../services/auth-fetch';
+import { createEffect, createSignal, on } from "solid-js";
+import type { SearchParams, SetSearchParams } from "../interfaces/addon-store";
+import { authFetch } from "../services/auth-fetch";
 
 export interface Team {
   id: number;
@@ -45,15 +45,15 @@ interface UseTeamFilterReturn {
   setSelectedTeamId: (teamId: number | null) => void;
 }
 
-const STORAGE_KEY_PREFIX = 'castmill_selected_team_';
+const STORAGE_KEY_PREFIX = "castmill_selected_team_";
 
 const parseTeamIdParam = (value: string | undefined): number | null => {
   if (
     value === undefined ||
     value === null ||
-    value === '' ||
-    value === 'null' ||
-    value === 'undefined'
+    value === "" ||
+    value === "null" ||
+    value === "undefined"
   ) {
     return null;
   }
@@ -62,15 +62,13 @@ const parseTeamIdParam = (value: string | undefined): number | null => {
   return Number.isNaN(parsed) ? null : parsed;
 };
 
-const normalizeTeamIdParamValue = (
-  value: string | undefined
-): string | undefined => {
+const normalizeTeamIdParamValue = (value: string | undefined): string | undefined => {
   if (
     value === undefined ||
     value === null ||
-    value === '' ||
-    value === 'null' ||
-    value === 'undefined'
+    value === "" ||
+    value === "null" ||
+    value === "undefined"
   ) {
     return undefined;
   }
@@ -97,7 +95,7 @@ const loadSelectedTeamId = (organizationId: string): number | null => {
       return isNaN(parsed) ? null : parsed;
     }
   } catch (error) {
-    console.error('Failed to load selected team from localStorage:', error);
+    console.error("Failed to load selected team from localStorage:", error);
   }
   return null;
 };
@@ -105,10 +103,7 @@ const loadSelectedTeamId = (organizationId: string): number | null => {
 /**
  * Save the selected team ID to localStorage for an organization
  */
-const saveSelectedTeamId = (
-  organizationId: string,
-  teamId: number | null
-): void => {
+const saveSelectedTeamId = (organizationId: string, teamId: number | null): void => {
   try {
     const key = getStorageKey(organizationId);
     if (teamId === null) {
@@ -117,13 +112,11 @@ const saveSelectedTeamId = (
       localStorage.setItem(key, teamId.toString());
     }
   } catch (error) {
-    console.error('Failed to save selected team to localStorage:', error);
+    console.error("Failed to save selected team to localStorage:", error);
   }
 };
 
-export const useTeamFilter = (
-  props: UseTeamFilterProps
-): UseTeamFilterReturn => {
+export const useTeamFilter = (props: UseTeamFilterProps): UseTeamFilterReturn => {
   const [teams, setTeams] = createSignal<Team[]>([]);
 
   const getInitialTeamId = (): number | null => {
@@ -151,17 +144,10 @@ export const useTeamFilter = (
   };
 
   const initialTeamId = getInitialTeamId();
-  const [selectedTeamId, setSelectedTeamId] = createSignal<number | null>(
-    initialTeamId
-  );
-  const [hasHydratedFromParams, setHasHydratedFromParams] = createSignal(
-    initialTeamId !== null
-  );
+  const [selectedTeamId, setSelectedTeamId] = createSignal<number | null>(initialTeamId);
+  const [hasHydratedFromParams, setHasHydratedFromParams] = createSignal(initialTeamId !== null);
 
-  const syncTeamIdSearchParam = (
-    teamId: number | null,
-    options?: { replace?: boolean }
-  ) => {
+  const syncTeamIdSearchParam = (teamId: number | null, options?: { replace?: boolean }) => {
     if (!props.params) {
       return;
     }
@@ -177,7 +163,7 @@ export const useTeamFilter = (
     const nextParams: SearchParams = {};
 
     for (const [key, value] of Object.entries(searchParams)) {
-      if (key === 'team_id') {
+      if (key === "team_id") {
         continue;
       }
 
@@ -223,18 +209,15 @@ export const useTeamFilter = (
           }
         }
 
-        if (
-          urlTeamId === null &&
-          (teamId === 'null' || teamId === 'undefined')
-        ) {
+        if (urlTeamId === null && (teamId === "null" || teamId === "undefined")) {
           syncTeamIdSearchParam(null);
         }
 
         if (!hasHydratedFromParams()) {
           setHasHydratedFromParams(true);
         }
-      }
-    )
+      },
+    ),
   );
 
   /**
@@ -272,15 +255,15 @@ export const useTeamFilter = (
         const response = await authFetch(
           `${props.baseUrl}/dashboard/organizations/${props.organizationId}/teams?page=1&page_size=100`,
           {
-            method: 'GET',
-          }
+            method: "GET",
+          },
         );
         if (response.ok) {
           const result = await response.json();
           setTeams(result.data || []);
         }
       } catch (error) {
-        console.error('Failed to fetch teams:', error);
+        console.error("Failed to fetch teams:", error);
       }
     }
   });

@@ -3,7 +3,7 @@
  * if the VITE_LOGGING environment variable is set to true.
  */
 export class Logger {
-  private active = import.meta.env.VITE_LOGGING === 'true';
+  private active = import.meta.env.VITE_LOGGING === "true";
 
   constructor(private readonly prefix: string) {}
 
@@ -12,7 +12,7 @@ export class Logger {
       return;
     }
 
-    console.log(`[${this.prefix}] ${args.join(' ')}`);
+    console.log(`[${this.prefix}] ${args.join(" ")}`);
   }
 
   error(...args: unknown[]): void {
@@ -20,7 +20,7 @@ export class Logger {
       return;
     }
 
-    console.error(`[${this.prefix}] ${args.join(' ')}`);
+    console.error(`[${this.prefix}] ${args.join(" ")}`);
   }
 
   warn(...args: unknown[]): void {
@@ -28,6 +28,6 @@ export class Logger {
       return;
     }
 
-    console.warn(`[${this.prefix}] ${args.join(' ')}`);
+    console.warn(`[${this.prefix}] ${args.join(" ")}`);
   }
 }

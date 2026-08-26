@@ -14,15 +14,7 @@ export interface DeviceInfo {
  * Possible values for the weekDays property of the TimerEntry interface. "all" means
  * that the timer should be active every day of the week.
  */
-export type WeekDay =
-  | 'MON'
-  | 'TUE'
-  | 'WED'
-  | 'THU'
-  | 'FRI'
-  | 'SAT'
-  | 'SUN'
-  | 'ALL';
+export type WeekDay = "MON" | "TUE" | "WED" | "THU" | "FRI" | "SAT" | "SUN" | "ALL";
 
 /**
  * Represents a timer entry. The timer entry is used to turn the device on or off
@@ -105,7 +97,7 @@ export interface TelemetryData {
 
 // The keys of the settings that the machine can store. For type safety defined
 // as a union type.
-export type SettingKey = 'BASE_URL' | 'TIMERS' | 'TIMER_OFF'; // Add more keys as needed
+export type SettingKey = "BASE_URL" | "TIMERS" | "TIMER_OFF"; // Add more keys as needed
 
 export interface Machine {
   /**

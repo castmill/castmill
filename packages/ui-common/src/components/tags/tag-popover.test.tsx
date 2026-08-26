@@ -1,19 +1,19 @@
 /** @jsxImportSource solid-js */
 
-import { render, fireEvent, cleanup } from '@solidjs/testing-library';
-import { describe, it, expect, afterEach, vi, beforeEach } from 'vitest';
-import { TagPopover } from './tag-popover';
-import type { Tag, TagGroup } from '../../services/tags.service';
+import { render, fireEvent, cleanup } from "@solidjs/testing-library";
+import { describe, it, expect, afterEach, vi, beforeEach } from "vitest";
+import { TagPopover } from "./tag-popover";
+import type { Tag, TagGroup } from "../../services/tags.service";
 
 function createTag(overrides: Partial<Tag> = {}): Tag {
   return {
     id: 1,
-    name: 'Test Tag',
-    color: '#3B82F6',
+    name: "Test Tag",
+    color: "#3B82F6",
     position: 0,
-    organization_id: 'org-1',
-    inserted_at: '2024-01-01T00:00:00Z',
-    updated_at: '2024-01-01T00:00:00Z',
+    organization_id: "org-1",
+    inserted_at: "2024-01-01T00:00:00Z",
+    updated_at: "2024-01-01T00:00:00Z",
     ...overrides,
   };
 }
@@ -21,22 +21,22 @@ function createTag(overrides: Partial<Tag> = {}): Tag {
 function createTagGroup(overrides: Partial<TagGroup> = {}): TagGroup {
   return {
     id: 1,
-    name: 'Location',
-    color: '#FF0000',
+    name: "Location",
+    color: "#FF0000",
     position: 0,
-    organization_id: 'org-1',
-    inserted_at: '2024-01-01T00:00:00Z',
-    updated_at: '2024-01-01T00:00:00Z',
+    organization_id: "org-1",
+    inserted_at: "2024-01-01T00:00:00Z",
+    updated_at: "2024-01-01T00:00:00Z",
     ...overrides,
   };
 }
 
-describe('TagPopover', () => {
+describe("TagPopover", () => {
   let anchorEl: HTMLElement;
 
   beforeEach(() => {
-    anchorEl = document.createElement('button');
-    anchorEl.textContent = 'Anchor';
+    anchorEl = document.createElement("button");
+    anchorEl.textContent = "Anchor";
     document.body.appendChild(anchorEl);
 
     // Mock getBoundingClientRect for positioning
@@ -55,29 +55,29 @@ describe('TagPopover', () => {
     document.body.removeChild(anchorEl);
   });
 
-  const tag1 = createTag({ id: 1, name: 'London', color: '#3B82F6' });
-  const tag2 = createTag({ id: 2, name: 'Berlin', color: '#10B981' });
-  const tag3 = createTag({ id: 3, name: 'Tokyo', color: '#F59E0B' });
+  const tag1 = createTag({ id: 1, name: "London", color: "#3B82F6" });
+  const tag2 = createTag({ id: 2, name: "Berlin", color: "#10B981" });
+  const tag3 = createTag({ id: 3, name: "Tokyo", color: "#F59E0B" });
   const tagInGroup = createTag({
     id: 4,
-    name: 'Paris',
-    color: '#EC4899',
+    name: "Paris",
+    color: "#EC4899",
     tag_group_id: 1,
   });
   const tagInGroup2 = createTag({
     id: 5,
-    name: 'Madrid',
-    color: '#8B5CF6',
+    name: "Madrid",
+    color: "#8B5CF6",
     tag_group_id: 1,
   });
 
-  const group1 = createTagGroup({ id: 1, name: 'Region', color: '#FF0000' });
+  const group1 = createTagGroup({ id: 1, name: "Region", color: "#FF0000" });
 
   // ===========================================================================
   // Rendering
   // ===========================================================================
 
-  it('renders via Portal with dialog role', () => {
+  it("renders via Portal with dialog role", () => {
     render(() => (
       <TagPopover
         availableTags={[tag1, tag2]}
@@ -92,7 +92,7 @@ describe('TagPopover', () => {
     expect(dialog).toBeInTheDocument();
   });
 
-  it('renders all available tags', () => {
+  it("renders all available tags", () => {
     render(() => (
       <TagPopover
         availableTags={[tag1, tag2, tag3]}
@@ -103,12 +103,12 @@ describe('TagPopover', () => {
       />
     ));
 
-    expect(document.body).toHaveTextContent('London');
-    expect(document.body).toHaveTextContent('Berlin');
-    expect(document.body).toHaveTextContent('Tokyo');
+    expect(document.body).toHaveTextContent("London");
+    expect(document.body).toHaveTextContent("Berlin");
+    expect(document.body).toHaveTextContent("Tokyo");
   });
 
-  it('shows title when provided', () => {
+  it("shows title when provided", () => {
     render(() => (
       <TagPopover
         availableTags={[tag1]}
@@ -120,10 +120,10 @@ describe('TagPopover', () => {
       />
     ));
 
-    expect(document.body).toHaveTextContent('Tag 3 items');
+    expect(document.body).toHaveTextContent("Tag 3 items");
   });
 
-  it('renders search input with default placeholder', () => {
+  it("renders search input with default placeholder", () => {
     render(() => (
       <TagPopover
         availableTags={[tag1]}
@@ -138,7 +138,7 @@ describe('TagPopover', () => {
     expect(input).toBeInTheDocument();
   });
 
-  it('renders custom placeholder', () => {
+  it("renders custom placeholder", () => {
     render(() => (
       <TagPopover
         availableTags={[tag1]}
@@ -158,7 +158,7 @@ describe('TagPopover', () => {
   // Grouped Display
   // ===========================================================================
 
-  it('groups tags by tag group', () => {
+  it("groups tags by tag group", () => {
     render(() => (
       <TagPopover
         availableTags={[tag1, tagInGroup, tagInGroup2]}
@@ -171,9 +171,9 @@ describe('TagPopover', () => {
     ));
 
     // Group header should appear
-    expect(document.body).toHaveTextContent('Region');
+    expect(document.body).toHaveTextContent("Region");
     // "Other" section for ungrouped tags (tag1 has no group)
-    expect(document.body).toHaveTextContent('Other');
+    expect(document.body).toHaveTextContent("Other");
   });
 
   it('does not show "Other" when no ungrouped tags', () => {
@@ -189,16 +189,16 @@ describe('TagPopover', () => {
     ));
 
     // All tags are grouped, so "Other" shouldn't appear
-    const headers = document.querySelectorAll('.tag-popover-group-header');
+    const headers = document.querySelectorAll(".tag-popover-group-header");
     const headerTexts = Array.from(headers).map((h) => h.textContent);
-    expect(headerTexts).not.toContain('Other');
+    expect(headerTexts).not.toContain("Other");
   });
 
   // ===========================================================================
   // Selection State
   // ===========================================================================
 
-  it('shows checkmark for selected tags', () => {
+  it("shows checkmark for selected tags", () => {
     render(() => (
       <TagPopover
         availableTags={[tag1, tag2]}
@@ -209,7 +209,7 @@ describe('TagPopover', () => {
       />
     ));
 
-    const selectedRows = document.querySelectorAll('.tag-popover-row.selected');
+    const selectedRows = document.querySelectorAll(".tag-popover-row.selected");
     expect(selectedRows.length).toBe(1);
   });
 
@@ -217,7 +217,7 @@ describe('TagPopover', () => {
   // Toggle Interaction
   // ===========================================================================
 
-  it('calls onToggle when a tag row is clicked', async () => {
+  it("calls onToggle when a tag row is clicked", async () => {
     const onToggle = vi.fn();
 
     render(() => (
@@ -230,13 +230,13 @@ describe('TagPopover', () => {
       />
     ));
 
-    const rows = document.querySelectorAll('.tag-popover-row');
+    const rows = document.querySelectorAll(".tag-popover-row");
     await fireEvent.click(rows[0]);
 
     expect(onToggle).toHaveBeenCalledWith(tag1.id, true);
   });
 
-  it('calls onToggle with false when deselecting', async () => {
+  it("calls onToggle with false when deselecting", async () => {
     const onToggle = vi.fn();
 
     render(() => (
@@ -250,7 +250,7 @@ describe('TagPopover', () => {
     ));
 
     // Click the selected tag to deselect
-    const selectedRow = document.querySelector('.tag-popover-row.selected');
+    const selectedRow = document.querySelector(".tag-popover-row.selected");
     await fireEvent.click(selectedRow!);
 
     expect(onToggle).toHaveBeenCalledWith(1, false);
@@ -260,7 +260,7 @@ describe('TagPopover', () => {
   // Search Filtering
   // ===========================================================================
 
-  it('filters tags by search query', async () => {
+  it("filters tags by search query", async () => {
     render(() => (
       <TagPopover
         availableTags={[tag1, tag2, tag3]}
@@ -271,15 +271,15 @@ describe('TagPopover', () => {
       />
     ));
 
-    const input = document.querySelector('input') as HTMLInputElement;
-    await fireEvent.input(input, { target: { value: 'lon' } });
+    const input = document.querySelector("input") as HTMLInputElement;
+    await fireEvent.input(input, { target: { value: "lon" } });
 
-    const rows = document.querySelectorAll('.tag-popover-row');
+    const rows = document.querySelectorAll(".tag-popover-row");
     expect(rows.length).toBe(1);
-    expect(rows[0]).toHaveTextContent('London');
+    expect(rows[0]).toHaveTextContent("London");
   });
 
-  it('shows empty message when search has no results', async () => {
+  it("shows empty message when search has no results", async () => {
     render(() => (
       <TagPopover
         availableTags={[tag1]}
@@ -290,13 +290,13 @@ describe('TagPopover', () => {
       />
     ));
 
-    const input = document.querySelector('input') as HTMLInputElement;
-    await fireEvent.input(input, { target: { value: 'zzzzz' } });
+    const input = document.querySelector("input") as HTMLInputElement;
+    await fireEvent.input(input, { target: { value: "zzzzz" } });
 
-    expect(document.body).toHaveTextContent('No matching tags');
+    expect(document.body).toHaveTextContent("No matching tags");
   });
 
-  it('shows custom no-match label', async () => {
+  it("shows custom no-match label", async () => {
     render(() => (
       <TagPopover
         availableTags={[tag1]}
@@ -308,17 +308,17 @@ describe('TagPopover', () => {
       />
     ));
 
-    const input = document.querySelector('input') as HTMLInputElement;
-    await fireEvent.input(input, { target: { value: 'zzzzz' } });
+    const input = document.querySelector("input") as HTMLInputElement;
+    await fireEvent.input(input, { target: { value: "zzzzz" } });
 
-    expect(document.body).toHaveTextContent('Nothing found');
+    expect(document.body).toHaveTextContent("Nothing found");
   });
 
   // ===========================================================================
   // Empty State
   // ===========================================================================
 
-  it('shows empty label when no tags exist', () => {
+  it("shows empty label when no tags exist", () => {
     render(() => (
       <TagPopover
         availableTags={[]}
@@ -330,14 +330,14 @@ describe('TagPopover', () => {
       />
     ));
 
-    expect(document.body).toHaveTextContent('No tags yet');
+    expect(document.body).toHaveTextContent("No tags yet");
   });
 
   // ===========================================================================
   // Inline Create
   // ===========================================================================
 
-  it('shows create option when allowCreate and search term is new', async () => {
+  it("shows create option when allowCreate and search term is new", async () => {
     render(() => (
       <TagPopover
         availableTags={[tag1]}
@@ -346,19 +346,17 @@ describe('TagPopover', () => {
         anchorEl={anchorEl}
         onClose={vi.fn()}
         allowCreate={true}
-        onCreateTag={vi
-          .fn()
-          .mockResolvedValue(createTag({ id: 99, name: 'NewCity' }))}
+        onCreateTag={vi.fn().mockResolvedValue(createTag({ id: 99, name: "NewCity" }))}
       />
     ));
 
-    const input = document.querySelector('input') as HTMLInputElement;
-    await fireEvent.input(input, { target: { value: 'NewCity' } });
+    const input = document.querySelector("input") as HTMLInputElement;
+    await fireEvent.input(input, { target: { value: "NewCity" } });
 
     expect(document.body).toHaveTextContent('Create "NewCity"');
   });
 
-  it('does not show create option when term matches existing tag', async () => {
+  it("does not show create option when term matches existing tag", async () => {
     render(() => (
       <TagPopover
         availableTags={[tag1]}
@@ -371,14 +369,14 @@ describe('TagPopover', () => {
       />
     ));
 
-    const input = document.querySelector('input') as HTMLInputElement;
-    await fireEvent.input(input, { target: { value: 'London' } });
+    const input = document.querySelector("input") as HTMLInputElement;
+    await fireEvent.input(input, { target: { value: "London" } });
 
-    const createBtns = document.querySelectorAll('.tag-popover-create-btn');
+    const createBtns = document.querySelectorAll(".tag-popover-create-btn");
     expect(createBtns.length).toBe(0);
   });
 
-  it('does not show create option when search term is too short', async () => {
+  it("does not show create option when search term is too short", async () => {
     render(() => (
       <TagPopover
         availableTags={[tag1]}
@@ -391,10 +389,10 @@ describe('TagPopover', () => {
       />
     ));
 
-    const input = document.querySelector('input') as HTMLInputElement;
-    await fireEvent.input(input, { target: { value: 'A' } });
+    const input = document.querySelector("input") as HTMLInputElement;
+    await fireEvent.input(input, { target: { value: "A" } });
 
-    const createBtns = document.querySelectorAll('.tag-popover-create-btn');
+    const createBtns = document.querySelectorAll(".tag-popover-create-btn");
     expect(createBtns.length).toBe(0);
   });
 
@@ -402,7 +400,7 @@ describe('TagPopover', () => {
   // Keyboard
   // ===========================================================================
 
-  it('closes on Escape key', async () => {
+  it("closes on Escape key", async () => {
     const onClose = vi.fn();
 
     render(() => (
@@ -415,7 +413,7 @@ describe('TagPopover', () => {
       />
     ));
 
-    await fireEvent.keyDown(document, { key: 'Escape' });
+    await fireEvent.keyDown(document, { key: "Escape" });
 
     expect(onClose).toHaveBeenCalled();
   });
@@ -424,7 +422,7 @@ describe('TagPopover', () => {
   // Color Dots
   // ===========================================================================
 
-  it('renders color dots for each tag', () => {
+  it("renders color dots for each tag", () => {
     render(() => (
       <TagPopover
         availableTags={[tag1, tag2]}
@@ -435,7 +433,7 @@ describe('TagPopover', () => {
       />
     ));
 
-    const dots = document.querySelectorAll('.tag-popover-dot');
+    const dots = document.querySelectorAll(".tag-popover-dot");
     expect(dots.length).toBe(2);
     expect((dots[0] as HTMLElement).style.backgroundColor).toBeTruthy();
   });

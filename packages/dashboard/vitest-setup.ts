@@ -1,4 +1,4 @@
-import '@testing-library/jest-dom';
+import "@testing-library/jest-dom";
 
 // Mock ResizeObserver for tests
 global.ResizeObserver = class ResizeObserver {
@@ -21,6 +21,6 @@ const ensureNavigatorProperty = (key: string, value: unknown) => {
   }
 };
 
-ensureNavigatorProperty('language', 'en-US');
-ensureNavigatorProperty('languages', ['en-US', 'en']);
-ensureNavigatorProperty('userAgent', 'vitest');
+ensureNavigatorProperty("language", "en-US");
+ensureNavigatorProperty("languages", ["en-US", "en"]);
+ensureNavigatorProperty("userAgent", "vitest");

@@ -1,9 +1,9 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { createRoot } from 'solid-js';
-import { useTagFilter } from './useTagFilter';
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { createRoot } from "solid-js";
+import { useTagFilter } from "./useTagFilter";
 
 // Mock TagsService
-vi.mock('../services/tags.service', () => {
+vi.mock("../services/tags.service", () => {
   return {
     TagsService: vi.fn().mockImplementation(() => ({
       listTags: vi.fn().mockResolvedValue([]),
@@ -15,35 +15,35 @@ function createMockTags() {
   return [
     {
       id: 1,
-      name: 'London',
-      color: '#3B82F6',
+      name: "London",
+      color: "#3B82F6",
       position: 0,
-      organization_id: 'org-1',
-      inserted_at: '2024-01-01',
-      updated_at: '2024-01-01',
+      organization_id: "org-1",
+      inserted_at: "2024-01-01",
+      updated_at: "2024-01-01",
     },
     {
       id: 2,
-      name: 'Berlin',
-      color: '#10B981',
+      name: "Berlin",
+      color: "#10B981",
       position: 1,
-      organization_id: 'org-1',
-      inserted_at: '2024-01-01',
-      updated_at: '2024-01-01',
+      organization_id: "org-1",
+      inserted_at: "2024-01-01",
+      updated_at: "2024-01-01",
     },
     {
       id: 3,
-      name: 'Tokyo',
-      color: '#F59E0B',
+      name: "Tokyo",
+      color: "#F59E0B",
       position: 2,
-      organization_id: 'org-1',
-      inserted_at: '2024-01-01',
-      updated_at: '2024-01-01',
+      organization_id: "org-1",
+      inserted_at: "2024-01-01",
+      updated_at: "2024-01-01",
     },
   ];
 }
 
-describe('useTagFilter', () => {
+describe("useTagFilter", () => {
   beforeEach(() => {
     localStorage.clear();
     vi.clearAllMocks();
@@ -58,10 +58,10 @@ describe('useTagFilter', () => {
   // Helper utility functions (exported from the module but tested indirectly)
   // ===========================================================================
 
-  describe('parseTagIdsParam', () => {
+  describe("parseTagIdsParam", () => {
     // We test this indirectly through the hook's URL param handling
-    it('hook initializes with empty selection by default', async () => {
-      const { TagsService } = await import('../services/tags.service');
+    it("hook initializes with empty selection by default", async () => {
+      const { TagsService } = await import("../services/tags.service");
       (TagsService as any).mockImplementation(() => ({
         listTags: vi.fn().mockResolvedValue(createMockTags()),
       }));
@@ -69,8 +69,8 @@ describe('useTagFilter', () => {
       await new Promise<void>((resolve) => {
         createRoot(async (dispose) => {
           const result = useTagFilter({
-            baseUrl: 'http://localhost:4000',
-            organizationId: 'org-1',
+            baseUrl: "http://localhost:4000",
+            organizationId: "org-1",
           });
 
           // Wait for the effect to settle
@@ -86,9 +86,9 @@ describe('useTagFilter', () => {
     });
   });
 
-  describe('localStorage persistence', () => {
-    it('saves selected tag IDs to localStorage', async () => {
-      const { TagsService } = await import('../services/tags.service');
+  describe("localStorage persistence", () => {
+    it("saves selected tag IDs to localStorage", async () => {
+      const { TagsService } = await import("../services/tags.service");
       (TagsService as any).mockImplementation(() => ({
         listTags: vi.fn().mockResolvedValue(createMockTags()),
       }));
@@ -96,18 +96,16 @@ describe('useTagFilter', () => {
       await new Promise<void>((resolve) => {
         createRoot(async (dispose) => {
           const result = useTagFilter({
-            baseUrl: 'http://localhost:4000',
-            organizationId: 'org-test-save',
+            baseUrl: "http://localhost:4000",
+            organizationId: "org-test-save",
           });
 
           await new Promise((r) => setTimeout(r, 50));
 
           result.setSelectedTagIds([1, 2]);
 
-          const stored = localStorage.getItem(
-            'castmill_selected_tags_org-test-save'
-          );
-          expect(stored).toBe('[1,2]');
+          const stored = localStorage.getItem("castmill_selected_tags_org-test-save");
+          expect(stored).toBe("[1,2]");
 
           dispose();
           resolve();
@@ -115,13 +113,10 @@ describe('useTagFilter', () => {
       });
     });
 
-    it('loads selected tag IDs from localStorage', async () => {
-      localStorage.setItem(
-        'castmill_selected_tags_org-load-test',
-        JSON.stringify([1, 3])
-      );
+    it("loads selected tag IDs from localStorage", async () => {
+      localStorage.setItem("castmill_selected_tags_org-load-test", JSON.stringify([1, 3]));
 
-      const { TagsService } = await import('../services/tags.service');
+      const { TagsService } = await import("../services/tags.service");
       (TagsService as any).mockImplementation(() => ({
         listTags: vi.fn().mockResolvedValue(createMockTags()),
       }));
@@ -129,8 +124,8 @@ describe('useTagFilter', () => {
       await new Promise<void>((resolve) => {
         createRoot(async (dispose) => {
           const result = useTagFilter({
-            baseUrl: 'http://localhost:4000',
-            organizationId: 'org-load-test',
+            baseUrl: "http://localhost:4000",
+            organizationId: "org-load-test",
           });
 
           await new Promise((r) => setTimeout(r, 50));
@@ -144,14 +139,11 @@ describe('useTagFilter', () => {
       });
     });
 
-    it('filters out invalid tag IDs from localStorage', async () => {
+    it("filters out invalid tag IDs from localStorage", async () => {
       // Store tag IDs that don't exist in the fetched tags
-      localStorage.setItem(
-        'castmill_selected_tags_org-invalid',
-        JSON.stringify([1, 999, 2])
-      );
+      localStorage.setItem("castmill_selected_tags_org-invalid", JSON.stringify([1, 999, 2]));
 
-      const { TagsService } = await import('../services/tags.service');
+      const { TagsService } = await import("../services/tags.service");
       (TagsService as any).mockImplementation(() => ({
         listTags: vi.fn().mockResolvedValue(createMockTags()),
       }));
@@ -159,8 +151,8 @@ describe('useTagFilter', () => {
       await new Promise<void>((resolve) => {
         createRoot(async (dispose) => {
           const result = useTagFilter({
-            baseUrl: 'http://localhost:4000',
-            organizationId: 'org-invalid',
+            baseUrl: "http://localhost:4000",
+            organizationId: "org-invalid",
           });
 
           await new Promise((r) => setTimeout(r, 50));
@@ -175,9 +167,9 @@ describe('useTagFilter', () => {
     });
   });
 
-  describe('filterMode', () => {
+  describe("filterMode", () => {
     it('defaults to "any"', async () => {
-      const { TagsService } = await import('../services/tags.service');
+      const { TagsService } = await import("../services/tags.service");
       (TagsService as any).mockImplementation(() => ({
         listTags: vi.fn().mockResolvedValue([]),
       }));
@@ -185,11 +177,11 @@ describe('useTagFilter', () => {
       await new Promise<void>((resolve) => {
         createRoot(async (dispose) => {
           const result = useTagFilter({
-            baseUrl: 'http://localhost:4000',
-            organizationId: 'org-mode-default',
+            baseUrl: "http://localhost:4000",
+            organizationId: "org-mode-default",
           });
 
-          expect(result.filterMode()).toBe('any');
+          expect(result.filterMode()).toBe("any");
 
           dispose();
           resolve();
@@ -197,8 +189,8 @@ describe('useTagFilter', () => {
       });
     });
 
-    it('persists filter mode to localStorage', async () => {
-      const { TagsService } = await import('../services/tags.service');
+    it("persists filter mode to localStorage", async () => {
+      const { TagsService } = await import("../services/tags.service");
       (TagsService as any).mockImplementation(() => ({
         listTags: vi.fn().mockResolvedValue([]),
       }));
@@ -206,18 +198,16 @@ describe('useTagFilter', () => {
       await new Promise<void>((resolve) => {
         createRoot(async (dispose) => {
           const result = useTagFilter({
-            baseUrl: 'http://localhost:4000',
-            organizationId: 'org-mode-persist',
+            baseUrl: "http://localhost:4000",
+            organizationId: "org-mode-persist",
           });
 
           await new Promise((r) => setTimeout(r, 50));
 
-          result.setFilterMode('all');
+          result.setFilterMode("all");
 
-          const stored = localStorage.getItem(
-            'castmill_tag_filter_mode_org-mode-persist'
-          );
-          expect(stored).toBe('all');
+          const stored = localStorage.getItem("castmill_tag_filter_mode_org-mode-persist");
+          expect(stored).toBe("all");
 
           dispose();
           resolve();
@@ -225,10 +215,10 @@ describe('useTagFilter', () => {
       });
     });
 
-    it('loads filter mode from localStorage', async () => {
-      localStorage.setItem('castmill_tag_filter_mode_org-mode-load', 'all');
+    it("loads filter mode from localStorage", async () => {
+      localStorage.setItem("castmill_tag_filter_mode_org-mode-load", "all");
 
-      const { TagsService } = await import('../services/tags.service');
+      const { TagsService } = await import("../services/tags.service");
       (TagsService as any).mockImplementation(() => ({
         listTags: vi.fn().mockResolvedValue(createMockTags()),
       }));
@@ -236,13 +226,13 @@ describe('useTagFilter', () => {
       await new Promise<void>((resolve) => {
         createRoot(async (dispose) => {
           const result = useTagFilter({
-            baseUrl: 'http://localhost:4000',
-            organizationId: 'org-mode-load',
+            baseUrl: "http://localhost:4000",
+            organizationId: "org-mode-load",
           });
 
           await new Promise((r) => setTimeout(r, 50));
 
-          expect(result.filterMode()).toBe('all');
+          expect(result.filterMode()).toBe("all");
 
           dispose();
           resolve();
@@ -251,9 +241,9 @@ describe('useTagFilter', () => {
     });
   });
 
-  describe('toggleTagId', () => {
-    it('adds a tag ID when not selected', async () => {
-      const { TagsService } = await import('../services/tags.service');
+  describe("toggleTagId", () => {
+    it("adds a tag ID when not selected", async () => {
+      const { TagsService } = await import("../services/tags.service");
       (TagsService as any).mockImplementation(() => ({
         listTags: vi.fn().mockResolvedValue(createMockTags()),
       }));
@@ -261,8 +251,8 @@ describe('useTagFilter', () => {
       await new Promise<void>((resolve) => {
         createRoot(async (dispose) => {
           const result = useTagFilter({
-            baseUrl: 'http://localhost:4000',
-            organizationId: 'org-toggle-add',
+            baseUrl: "http://localhost:4000",
+            organizationId: "org-toggle-add",
           });
 
           await new Promise((r) => setTimeout(r, 50));
@@ -276,8 +266,8 @@ describe('useTagFilter', () => {
       });
     });
 
-    it('removes a tag ID when already selected', async () => {
-      const { TagsService } = await import('../services/tags.service');
+    it("removes a tag ID when already selected", async () => {
+      const { TagsService } = await import("../services/tags.service");
       (TagsService as any).mockImplementation(() => ({
         listTags: vi.fn().mockResolvedValue(createMockTags()),
       }));
@@ -285,8 +275,8 @@ describe('useTagFilter', () => {
       await new Promise<void>((resolve) => {
         createRoot(async (dispose) => {
           const result = useTagFilter({
-            baseUrl: 'http://localhost:4000',
-            organizationId: 'org-toggle-remove',
+            baseUrl: "http://localhost:4000",
+            organizationId: "org-toggle-remove",
           });
 
           await new Promise((r) => setTimeout(r, 50));
@@ -302,9 +292,9 @@ describe('useTagFilter', () => {
     });
   });
 
-  describe('clearTagSelection', () => {
-    it('clears all selected tags', async () => {
-      const { TagsService } = await import('../services/tags.service');
+  describe("clearTagSelection", () => {
+    it("clears all selected tags", async () => {
+      const { TagsService } = await import("../services/tags.service");
       (TagsService as any).mockImplementation(() => ({
         listTags: vi.fn().mockResolvedValue(createMockTags()),
       }));
@@ -312,8 +302,8 @@ describe('useTagFilter', () => {
       await new Promise<void>((resolve) => {
         createRoot(async (dispose) => {
           const result = useTagFilter({
-            baseUrl: 'http://localhost:4000',
-            organizationId: 'org-clear',
+            baseUrl: "http://localhost:4000",
+            organizationId: "org-clear",
           });
 
           await new Promise((r) => setTimeout(r, 50));
@@ -331,24 +321,24 @@ describe('useTagFilter', () => {
     });
   });
 
-  describe('URL params handling', () => {
-    it('reads tag IDs from URL params on mount', async () => {
-      const { TagsService } = await import('../services/tags.service');
+  describe("URL params handling", () => {
+    it("reads tag IDs from URL params on mount", async () => {
+      const { TagsService } = await import("../services/tags.service");
       (TagsService as any).mockImplementation(() => ({
         listTags: vi.fn().mockResolvedValue(createMockTags()),
       }));
 
       const setSearchParams = vi.fn();
-      const params: [
-        Record<string, string | undefined>,
-        typeof setSearchParams,
-      ] = [{ tags: '1,3' }, setSearchParams];
+      const params: [Record<string, string | undefined>, typeof setSearchParams] = [
+        { tags: "1,3" },
+        setSearchParams,
+      ];
 
       await new Promise<void>((resolve) => {
         createRoot(async (dispose) => {
           const result = useTagFilter({
-            baseUrl: 'http://localhost:4000',
-            organizationId: 'org-url-read',
+            baseUrl: "http://localhost:4000",
+            organizationId: "org-url-read",
             params,
           });
 
@@ -363,23 +353,23 @@ describe('useTagFilter', () => {
       });
     });
 
-    it('ignores invalid tag IDs from URL params', async () => {
-      const { TagsService } = await import('../services/tags.service');
+    it("ignores invalid tag IDs from URL params", async () => {
+      const { TagsService } = await import("../services/tags.service");
       (TagsService as any).mockImplementation(() => ({
         listTags: vi.fn().mockResolvedValue(createMockTags()),
       }));
 
       const setSearchParams = vi.fn();
-      const params: [
-        Record<string, string | undefined>,
-        typeof setSearchParams,
-      ] = [{ tags: '1,999,abc' }, setSearchParams];
+      const params: [Record<string, string | undefined>, typeof setSearchParams] = [
+        { tags: "1,999,abc" },
+        setSearchParams,
+      ];
 
       await new Promise<void>((resolve) => {
         createRoot(async (dispose) => {
           const result = useTagFilter({
-            baseUrl: 'http://localhost:4000',
-            organizationId: 'org-url-invalid',
+            baseUrl: "http://localhost:4000",
+            organizationId: "org-url-invalid",
             params,
           });
 
@@ -394,23 +384,23 @@ describe('useTagFilter', () => {
       });
     });
 
-    it('handles empty/undefined tags param gracefully', async () => {
-      const { TagsService } = await import('../services/tags.service');
+    it("handles empty/undefined tags param gracefully", async () => {
+      const { TagsService } = await import("../services/tags.service");
       (TagsService as any).mockImplementation(() => ({
         listTags: vi.fn().mockResolvedValue(createMockTags()),
       }));
 
       const setSearchParams = vi.fn();
-      const params: [
-        Record<string, string | undefined>,
-        typeof setSearchParams,
-      ] = [{ tags: undefined }, setSearchParams];
+      const params: [Record<string, string | undefined>, typeof setSearchParams] = [
+        { tags: undefined },
+        setSearchParams,
+      ];
 
       await new Promise<void>((resolve) => {
         createRoot(async (dispose) => {
           const result = useTagFilter({
-            baseUrl: 'http://localhost:4000',
-            organizationId: 'org-url-empty',
+            baseUrl: "http://localhost:4000",
+            organizationId: "org-url-empty",
             params,
           });
 
@@ -425,22 +415,22 @@ describe('useTagFilter', () => {
     });
 
     it('handles "null" and "undefined" string values', async () => {
-      const { TagsService } = await import('../services/tags.service');
+      const { TagsService } = await import("../services/tags.service");
       (TagsService as any).mockImplementation(() => ({
         listTags: vi.fn().mockResolvedValue(createMockTags()),
       }));
 
       const setSearchParams = vi.fn();
-      const params: [
-        Record<string, string | undefined>,
-        typeof setSearchParams,
-      ] = [{ tags: 'null' }, setSearchParams];
+      const params: [Record<string, string | undefined>, typeof setSearchParams] = [
+        { tags: "null" },
+        setSearchParams,
+      ];
 
       await new Promise<void>((resolve) => {
         createRoot(async (dispose) => {
           const result = useTagFilter({
-            baseUrl: 'http://localhost:4000',
-            organizationId: 'org-url-null',
+            baseUrl: "http://localhost:4000",
+            organizationId: "org-url-null",
             params,
           });
 
@@ -455,9 +445,9 @@ describe('useTagFilter', () => {
     });
   });
 
-  describe('isLoading', () => {
-    it('starts as loading', async () => {
-      const { TagsService } = await import('../services/tags.service');
+  describe("isLoading", () => {
+    it("starts as loading", async () => {
+      const { TagsService } = await import("../services/tags.service");
       (TagsService as any).mockImplementation(() => ({
         listTags: vi.fn().mockResolvedValue([]),
       }));
@@ -465,8 +455,8 @@ describe('useTagFilter', () => {
       await new Promise<void>((resolve) => {
         createRoot(async (dispose) => {
           const result = useTagFilter({
-            baseUrl: 'http://localhost:4000',
-            organizationId: 'org-loading',
+            baseUrl: "http://localhost:4000",
+            organizationId: "org-loading",
           });
 
           // Initially loading
@@ -484,22 +474,20 @@ describe('useTagFilter', () => {
     });
   });
 
-  describe('error handling', () => {
-    it('sets empty tags on fetch error', async () => {
-      const { TagsService } = await import('../services/tags.service');
+  describe("error handling", () => {
+    it("sets empty tags on fetch error", async () => {
+      const { TagsService } = await import("../services/tags.service");
       (TagsService as any).mockImplementation(() => ({
-        listTags: vi.fn().mockRejectedValue(new Error('Network error')),
+        listTags: vi.fn().mockRejectedValue(new Error("Network error")),
       }));
 
       await new Promise<void>((resolve) => {
         createRoot(async (dispose) => {
-          const consoleSpy = vi
-            .spyOn(console, 'error')
-            .mockImplementation(() => {});
+          const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
           const result = useTagFilter({
-            baseUrl: 'http://localhost:4000',
-            organizationId: 'org-error',
+            baseUrl: "http://localhost:4000",
+            organizationId: "org-error",
           });
 
           await new Promise((r) => setTimeout(r, 50));
@@ -515,9 +503,9 @@ describe('useTagFilter', () => {
     });
   });
 
-  describe('empty organizationId', () => {
-    it('clears tags when organizationId is empty', async () => {
-      const { TagsService } = await import('../services/tags.service');
+  describe("empty organizationId", () => {
+    it("clears tags when organizationId is empty", async () => {
+      const { TagsService } = await import("../services/tags.service");
       (TagsService as any).mockImplementation(() => ({
         listTags: vi.fn().mockResolvedValue([]),
       }));
@@ -525,8 +513,8 @@ describe('useTagFilter', () => {
       await new Promise<void>((resolve) => {
         createRoot(async (dispose) => {
           const result = useTagFilter({
-            baseUrl: 'http://localhost:4000',
-            organizationId: '',
+            baseUrl: "http://localhost:4000",
+            organizationId: "",
           });
 
           await new Promise((r) => setTimeout(r, 50));

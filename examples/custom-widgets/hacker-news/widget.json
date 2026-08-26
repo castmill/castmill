@@ -123,9 +123,9 @@
         "type": "scroller",
         "name": "news-scroller",
         "opts": {
-          "items": {"key": "data.items"},
+          "items": { "key": "data.items" },
           "direction": "up",
-          "speed": {"key": "options.scroll_speed", "default": 30},
+          "speed": { "key": "options.scroll_speed", "default": 30 },
           "gap": "2vh"
         },
         "style": {
@@ -149,7 +149,7 @@
               "type": "text",
               "name": "story-title",
               "opts": {
-                "text": {"key": "$.title"}
+                "text": { "key": "$.title" }
               },
               "style": {
                 "font-size": "2.8vh",
@@ -183,7 +183,7 @@
                   "type": "text",
                   "name": "story-score",
                   "opts": {
-                    "text": {"key": "$.score", "default": "—"}
+                    "text": { "key": "$.score", "default": "—" }
                   },
                   "style": {
                     "font-size": "1.8vh",
@@ -207,7 +207,7 @@
                   "type": "text",
                   "name": "story-comments",
                   "opts": {
-                    "text": {"key": "$.comments", "default": "0"}
+                    "text": { "key": "$.comments", "default": "0" }
                   },
                   "style": {
                     "font-size": "1.8vh",
@@ -218,7 +218,7 @@
                   "type": "text",
                   "name": "story-date",
                   "opts": {
-                    "text": {"key": "$.pubDate_formatted", "default": ""}
+                    "text": { "key": "$.pubDate_formatted", "default": "" }
                   },
                   "style": {
                     "font-size": "1.8vh",
@@ -250,7 +250,7 @@
                       "type": "text",
                       "name": "story-source",
                       "opts": {
-                        "text": {"key": "$.source", "default": "ycombinator.com"}
+                        "text": { "key": "$.source", "default": "ycombinator.com" }
                       },
                       "style": {
                         "font-size": "1.6vh",

@@ -1,8 +1,9 @@
-import { type Component, onMount } from 'solid-js';
-import { mountDevice, Device } from '@castmill/device';
-import { WebosMachine, FileStorage } from '../classes';
+import { type Component, onMount } from "solid-js";
+import { mountDevice, Device } from "@castmill/device";
+import { WebosMachine, FileStorage } from "../classes";
 
 export const PlayerFrame: Component = () => {
+  // oxlint-disable-next-line no-unassigned-vars
   let ref: HTMLDivElement | undefined;
 
   onMount(async () => {
@@ -11,7 +12,7 @@ export const PlayerFrame: Component = () => {
     }
 
     const webosMachine = new WebosMachine();
-    const cache = new FileStorage('file-cache');
+    const cache = new FileStorage("file-cache");
     const device = new Device(webosMachine, cache);
 
     await device.init();

@@ -31,18 +31,21 @@ The Widget Integration System provides a standardized way for widgets to connect
 The backend periodically fetches data from a third-party API and caches it. Players receive updates via WebSocket channels when new data is available.
 
 **Use Cases:**
+
 - Weather data
 - Stock prices
 - RSS feeds
 - Social media feeds with API access
 
 **Pros:**
+
 - Centralized rate limiting
 - Efficient for multiple players
 - Can cache and serve stale data
 - Real-time updates via WebSocket
 
 **Cons:**
+
 - Delayed updates (limited by pull interval)
 - Backend resource usage
 
@@ -51,23 +54,27 @@ The backend periodically fetches data from a third-party API and caches it. Play
 Third-party services push data to a webhook when it changes. Players receive updates via WebSocket channels.
 
 **Use Cases:**
+
 - Real-time event notifications
 - Social media webhooks
 - Form submissions
 - IoT sensor data
 
 **Pros:**
+
 - Real-time updates via WebSocket
 - No polling of third-party APIs
 - Event-driven architecture
 
 **Cons:**
+
 - Requires third-party to support webhooks
 - Need to configure webhook URLs externally
 
 ### BOTH Mode
 
 **Note**: This mode is not recommended. Each widget integration should use either PULL or PUSH mode, not both. Choose the mode that best fits your use case:
+
 - Use **PULL** when you need to periodically fetch data from an API
 - Use **PUSH** when third-party services can notify you of changes via webhooks
 
@@ -78,6 +85,7 @@ Third-party services push data to a webhook when it changes. Players receive upd
 All widgets of this type in the organization share the same credentials.
 
 **Best For:**
+
 - Public APIs with organization-level keys
 - Services with per-organization billing
 - Simple configuration
@@ -89,6 +97,7 @@ All widgets of this type in the organization share the same credentials.
 Each widget instance has its own credentials.
 
 **Best For:**
+
 - User-specific content (social media accounts)
 - Per-location configurations
 - OAuth integrations
@@ -115,19 +124,19 @@ When creating an integration, you need to ensure the integration's data output m
   "template": {
     "type": "container",
     "components": [
-      {"type": "text", "field": "temperature"},
-      {"type": "text", "field": "condition"}
+      { "type": "text", "field": "temperature" },
+      { "type": "text", "field": "condition" }
     ]
   },
   "options_schema": {
-    "latitude": {"type": "number", "required": true},
-    "longitude": {"type": "number", "required": true},
-    "units": {"type": "string", "default": "metric"}
+    "latitude": { "type": "number", "required": true },
+    "longitude": { "type": "number", "required": true },
+    "units": { "type": "string", "default": "metric" }
   },
   "data_schema": {
-    "temperature": {"type": "number", "required": true},
-    "condition": {"type": "string", "required": true},
-    "location": {"type": "string"}
+    "temperature": { "type": "number", "required": true },
+    "condition": { "type": "string", "required": true },
+    "location": { "type": "string" }
   }
 }
 ```
@@ -158,7 +167,7 @@ alias Castmill.Widgets.Integrations
   description: "OpenWeather API Integration",
   integration_type: "pull",
   credential_scope: "organization",
-  
+
   # Define required credentials
   credential_schema: %{
     "api_key" => %{
@@ -169,7 +178,7 @@ alias Castmill.Widgets.Integrations
       "help" => "Get your API key from openweathermap.org"
     }
   },
-  
+
   # Define integration configuration
   config_schema: %{
     "units" => %{
@@ -179,7 +188,7 @@ alias Castmill.Widgets.Integrations
       "label" => "Temperature Units"
     }
   },
-  
+
   # PULL configuration
   pull_endpoint: "https://api.openweathermap.org/data/2.5/weather",
   pull_interval_seconds: 1800, # 30 minutes
@@ -197,8 +206,8 @@ Create configuration components in the dashboard addon:
 ```tsx
 // packages/castmill/lib/castmill/addons/widgets/components/weather-integration-config.tsx
 
-import { Component, createSignal } from 'solid-js';
-import { useI18n } from '../../../dashboard/src/i18n';
+import { Component, createSignal } from "solid-js";
+import { useI18n } from "../../../dashboard/src/i18n";
 
 interface IntegrationConfigProps {
   integration: any;
@@ -208,18 +217,18 @@ interface IntegrationConfigProps {
 
 export const WeatherIntegrationConfig: Component<IntegrationConfigProps> = (props) => {
   const { t } = useI18n();
-  const [apiKey, setApiKey] = createSignal(props.credentials?.api_key || '');
+  const [apiKey, setApiKey] = createSignal(props.credentials?.api_key || "");
   const [saving, setSaving] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
 
   const handleSave = async () => {
     setSaving(true);
     setError(null);
-    
+
     try {
       await props.onSave({ api_key: apiKey() });
     } catch (err) {
-      setError(t('integrations.errors.saveFailed'));
+      setError(t("integrations.errors.saveFailed"));
     } finally {
       setSaving(false);
     }
@@ -227,28 +236,25 @@ export const WeatherIntegrationConfig: Component<IntegrationConfigProps> = (prop
 
   return (
     <div class="integration-config">
-      <h3>{t('integrations.openweather.title')}</h3>
-      <p>{t('integrations.openweather.description')}</p>
-      
+      <h3>{t("integrations.openweather.title")}</h3>
+      <p>{t("integrations.openweather.description")}</p>
+
       <div class="form-group">
-        <label for="api-key">{t('integrations.openweather.apiKey')}</label>
+        <label for="api-key">{t("integrations.openweather.apiKey")}</label>
         <input
           id="api-key"
           type="password"
           value={apiKey()}
           onInput={(e) => setApiKey(e.currentTarget.value)}
-          placeholder={t('integrations.openweather.apiKeyPlaceholder')}
+          placeholder={t("integrations.openweather.apiKeyPlaceholder")}
         />
-        <small>{t('integrations.openweather.apiKeyHelp')}</small>
+        <small>{t("integrations.openweather.apiKeyHelp")}</small>
       </div>
-      
+
       {error() && <div class="alert alert-error">{error()}</div>}
-      
-      <button 
-        onClick={handleSave} 
-        disabled={saving() || !apiKey()}
-      >
-        {saving() ? t('common.saving') : t('common.save')}
+
+      <button onClick={handleSave} disabled={saving() || !apiKey()}>
+        {saving() ? t("common.saving") : t("common.save")}
       </button>
     </div>
   );
@@ -260,6 +266,7 @@ export const WeatherIntegrationConfig: Component<IntegrationConfigProps> = (prop
 ### Backend Implementation
 
 For PULL mode integrations, you need to implement a data fetcher that:
+
 1. Fetches data from the third-party API
 2. Transforms it to match the widget's `data_schema`
 3. Caches the result
@@ -277,14 +284,14 @@ defmodule Castmill.Widgets.Integrations.Fetchers.OpenWeather do
   Fetches weather data from OpenWeather API.
   Transforms data to match the weather widget's data schema.
   """
-  
+
   @behaviour Castmill.Widgets.Integrations.Fetcher
-  
+
   @impl true
   def fetch(credentials, options) do
     # Build API URL using widget options and credentials
     url = build_url(credentials["api_key"], options)
-    
+
     # Fetch from third-party API
     case HTTPoison.get(url) do
       {:ok, %{status_code: 200, body: body}} ->
@@ -295,15 +302,15 @@ defmodule Castmill.Widgets.Integrations.Fetchers.OpenWeather do
           {:error, _} ->
             {:error, "Invalid JSON response"}
         end
-        
+
       {:ok, %{status_code: status}} ->
         {:error, "HTTP #{status}"}
-        
+
       {:error, reason} ->
         {:error, reason}
     end
   end
-  
+
   defp build_url(api_key, options) do
     params = %{
       "lat" => options["latitude"],
@@ -311,11 +318,11 @@ defmodule Castmill.Widgets.Integrations.Fetchers.OpenWeather do
       "units" => options["units"] || "metric",
       "appid" => api_key
     }
-    
+
     query = URI.encode_query(params)
     "https://api.openweathermap.org/data/2.5/weather?#{query}"
   end
-  
+
   defp transform_response(api_response, _options) do
     # Transform OpenWeather API response to widget data_schema
     %{
@@ -337,11 +344,11 @@ end
 defmodule Castmill.Widgets.Integrations.Fetcher do
   @moduledoc """
   Behaviour for integration data fetchers.
-  
+
   Implement this behaviour to create a custom integration.
   The system handles scheduling, caching, and WebSocket broadcasts.
   """
-  
+
   @callback fetch(credentials :: map(), options :: map()) ::
     {:ok, data :: map()} | {:error, reason :: any()}
 end
@@ -379,6 +386,7 @@ end
 ### Webhook Handler
 
 When a webhook receives data, it should:
+
 1. Validate the webhook signature
 2. Transform the payload to match the widget's `data_schema`
 3. Cache the result
@@ -394,19 +402,19 @@ defmodule Castmill.Widgets.Integrations.WebhookHandlers.Facebook do
   Handles Facebook Page webhook events.
   Transforms data to match widget data_schema.
   """
-  
+
   @doc """
   Verifies Facebook webhook signature.
   """
   def verify_signature(body, signature, credentials) do
     expected = :crypto.mac(:hmac, :sha256, credentials["webhook_secret"], body)
     |> Base.encode16(case: :lower)
-    
+
     signature_value = String.replace(signature, "sha256=", "")
-    
+
     Plug.Crypto.secure_compare(signature_value, expected)
   end
-  
+
   @doc """
   Transforms Facebook webhook payload to widget data format.
   Must match the widget's data_schema.
@@ -416,7 +424,7 @@ defmodule Castmill.Widgets.Integrations.WebhookHandlers.Facebook do
     entry = List.first(payload["entry"] || [])
     changes = List.first(entry["changes"] || [])
     value = changes["value"]
-    
+
     # Transform to match widget data_schema
     %{
       "message" => value["message"],
@@ -451,7 +459,7 @@ def receive_webhook(conn, %{
            fetched_at: now,
            status: "success"
          }) do
-    
+
     # Broadcast to WebSocket channel
     CastmillWeb.Endpoint.broadcast(
       "widget_data:#{widget_config_id}",
@@ -461,7 +469,7 @@ def receive_webhook(conn, %{
         data: integration_data.data
       }
     )
-    
+
     conn
     |> put_status(:ok)
     |> json(%{
@@ -474,7 +482,7 @@ def receive_webhook(conn, %{
       conn
       |> put_status(:unauthorized)
       |> json(%{error: "Invalid webhook signature"})
-      
+
     {:error, reason} ->
       conn
       |> put_status(:bad_request)
@@ -492,120 +500,119 @@ Players receive updates via WebSocket channels, not polling. Polling is only use
 ```typescript
 // packages/player/src/widgets/integrated-widget.ts
 
-import { Widget } from './widget';
-import { Socket } from 'phoenix';
+import { Widget } from "./widget";
+import { Socket } from "phoenix";
 
 export class IntegratedWidget extends Widget {
   private currentVersion: number = 0;
   private socket?: Socket;
   private channel?: any;
   private reconnectJitter: number = Math.random() * 5000; // 0-5 seconds jitter
-  
+
   constructor(
     protected widgetConfigId: string,
-    protected apiBase: string = '/api',
-    protected wsUrl: string = 'ws://localhost:4000/socket'
+    protected apiBase: string = "/api",
+    protected wsUrl: string = "ws://localhost:4000/socket",
   ) {
     super();
   }
-  
+
   async load(): Promise<void> {
     // Initial data fetch (on first load or after being offline)
     await this.fetchData();
-    
+
     // Connect to WebSocket for real-time updates
     this.connectWebSocket();
   }
-  
+
   private async fetchData(): Promise<void> {
     try {
       const url = `${this.apiBase}/widget-configs/${this.widgetConfigId}/data`;
-      const params = this.currentVersion > 0 
-        ? `?version=${this.currentVersion}` 
-        : '';
-      
+      const params = this.currentVersion > 0 ? `?version=${this.currentVersion}` : "";
+
       const response = await fetch(url + params);
-      
+
       if (response.status === 304) {
         // Data unchanged
-        console.log('Widget data unchanged');
+        console.log("Widget data unchanged");
         return;
       }
-      
+
       if (response.ok) {
         const result = await response.json();
-        
+
         this.currentVersion = result.version;
         this.updateWidgetData(result.data);
-        
+
         console.log(`Widget data updated to version ${this.currentVersion}`);
       } else {
-        console.error('Failed to fetch widget data:', response.status);
+        console.error("Failed to fetch widget data:", response.status);
         this.handleError(response.status);
       }
     } catch (error) {
-      console.error('Widget data fetch error:', error);
+      console.error("Widget data fetch error:", error);
       this.handleError(error);
     }
   }
-  
+
   private connectWebSocket(): void {
     // Connect to Phoenix WebSocket
     this.socket = new Socket(this.wsUrl, {
-      params: { token: this.getAuthToken() }
+      params: { token: this.getAuthToken() },
     });
-    
+
     this.socket.connect();
-    
+
     // Join the widget-specific channel
     this.channel = this.socket.channel(`widget_data:${this.widgetConfigId}`, {});
-    
-    this.channel.on('data_updated', (payload: any) => {
+
+    this.channel.on("data_updated", (payload: any) => {
       if (payload.version > this.currentVersion) {
         this.currentVersion = payload.version;
         this.updateWidgetData(payload.data);
         console.log(`Widget data pushed via WebSocket, version ${this.currentVersion}`);
       }
     });
-    
-    this.channel.join()
-      .receive('ok', () => {
-        console.log('Joined widget data channel');
+
+    this.channel
+      .join()
+      .receive("ok", () => {
+        console.log("Joined widget data channel");
       })
-      .receive('error', (resp: any) => {
-        console.error('Failed to join channel:', resp);
+      .receive("error", (resp: any) => {
+        console.error("Failed to join channel:", resp);
       });
-    
+
     // Handle reconnection after being offline
     this.socket.onError(() => {
-      console.log('WebSocket connection lost');
+      console.log("WebSocket connection lost");
     });
-    
+
     this.socket.onOpen(() => {
-      console.log('WebSocket reconnected');
+      console.log("WebSocket reconnected");
       // Fetch latest data after coming back online (with jitter to prevent DDoS)
       setTimeout(() => {
         this.fetchData();
       }, this.reconnectJitter);
     });
   }
-  
+
   private getAuthToken(): string {
     // Get device authentication token
     // Implementation depends on device authentication mechanism
-    return localStorage.getItem('device_token') || '';
+    return localStorage.getItem("device_token") || "";
   }
-  
+
   private updateWidgetData(data: any): void {
     // Update widget display with new data
-    this.emit('data-updated', data);
+    this.emit("data-updated", data);
   }
-  
+
   private handleError(error: any): void {
     // Show error state or keep displaying stale data
-    this.emit('data-error', error);
+    this.emit("data-error", error);
   }
-  
+
   unload(): void {
     if (this.channel) {
       this.channel.leave();
@@ -625,35 +632,35 @@ Create a widget template that uses integration data:
 ```typescript
 // Weather widget example
 
-import { IntegratedWidget } from './integrated-widget';
+import { IntegratedWidget } from "./integrated-widget";
 
 export class WeatherWidget extends IntegratedWidget {
   private container?: HTMLElement;
-  
+
   show(el: HTMLElement, offset: number): Observable<string> {
     this.container = el;
-    
+
     // Initial render
     this.render();
-    
+
     // Update on data changes
-    this.on('data-updated', () => this.render());
-    this.on('data-error', () => this.renderError());
-    
-    return of('shown');
+    this.on("data-updated", () => this.render());
+    this.on("data-error", () => this.renderError());
+
+    return of("shown");
   }
-  
+
   private render(): void {
     if (!this.container) return;
-    
+
     // Access current data (cached in base class or state)
     const data = this.getCurrentData();
-    
+
     if (!data) {
       this.renderLoading();
       return;
     }
-    
+
     this.container.innerHTML = `
       <div class="weather-widget">
         <div class="temperature">${data.temperature}°</div>
@@ -662,10 +669,10 @@ export class WeatherWidget extends IntegratedWidget {
       </div>
     `;
   }
-  
+
   private renderLoading(): void {
     if (!this.container) return;
-    
+
     this.container.innerHTML = `
       <div class="weather-widget loading">
         <div class="spinner"></div>
@@ -673,10 +680,10 @@ export class WeatherWidget extends IntegratedWidget {
       </div>
     `;
   }
-  
+
   private renderError(): void {
     if (!this.container) return;
-    
+
     this.container.innerHTML = `
       <div class="weather-widget error">
         <div class="icon">⚠️</div>
@@ -705,7 +712,7 @@ test "creates PULL integration with valid configuration" do
     pull_endpoint: "https://api.example.com/data",
     pull_interval_seconds: 300
   }
-  
+
   assert {:ok, integration} = Integrations.create_integration(attrs)
   assert integration.pull_interval_seconds == 300
 end
@@ -713,10 +720,10 @@ end
 test "encrypts and decrypts credentials" do
   key = Crypto.generate_key()
   credentials = %{"api_key" => "secret123"}
-  
+
   encrypted = Crypto.encrypt(credentials, key)
   {:ok, decrypted} = Crypto.decrypt(encrypted, key)
-  
+
   assert decrypted == credentials
 end
 ```
@@ -729,13 +736,13 @@ Test the full workflow:
 test "full PULL workflow", %{integration: integration, widget_config: widget_config} do
   # 1. Set credentials
   {:ok, _} = setup_credentials(integration, organization)
-  
+
   # 2. Schedule pull job
   {:ok, _} = schedule_pull(integration, widget_config)
-  
+
   # 3. Execute job
   :ok = perform_pull_job()
-  
+
   # 4. Verify data was cached
   data = Integrations.get_integration_data_by_config(widget_config.id)
   assert data.version == 1
@@ -765,6 +772,7 @@ See the `agents/systems/WIDGET-INTEGRATION-API.md` file for complete API example
 ## Support
 
 For questions or contributions:
+
 - Documentation: https://docs.castmill.com
 - GitHub: https://github.com/castmill/castmill
 - Discord: https://discord.gg/castmill

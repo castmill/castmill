@@ -78,7 +78,7 @@ User logs in → Selects organization → ProtectedRoute loads permissions → S
 // In any component:
 const { canPerformAction } = usePermissions();
 
-const canCreateTeam = () => canPerformAction('teams', 'create');
+const canCreateTeam = () => canPerformAction("teams", "create");
 // Returns: true for admin/manager, false for regular/guest
 ```
 
@@ -240,14 +240,7 @@ Response format:
     "teams": ["list", "show"],
     "widgets": ["list", "show"]
   },
-  "resources": [
-    "playlists",
-    "medias",
-    "channels",
-    "devices",
-    "teams",
-    "widgets"
-  ]
+  "resources": ["playlists", "medias", "channels", "devices", "teams", "widgets"]
 }
 ```
 
@@ -257,7 +250,7 @@ Check permissions in browser console:
 
 ```javascript
 // In browser DevTools console:
-window.store = require('./store').store;
+window.store = require("./store").store;
 
 // View current permissions
 console.log(window.store.permissions);

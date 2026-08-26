@@ -12,11 +12,7 @@
   .widget-chooser-header {
     flex-shrink: 0; // Header stays at natural size
     padding: 0.75em 1em;
-    background: linear-gradient(
-      180deg,
-      rgba(34, 30, 52, 0.95) 0%,
-      rgba(34, 30, 52, 0.8) 100%
-    );
+    background: linear-gradient(180deg, rgba(34, 30, 52, 0.95) 0%, rgba(34, 30, 52, 0.8) 100%);
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(10px);
   }

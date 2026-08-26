@@ -1,33 +1,33 @@
 /** @jsxImportSource solid-js */
-import { describe, it, expect, vi } from 'vitest';
-import { render, fireEvent, screen, waitFor } from '@solidjs/testing-library';
-import { BsEye } from 'solid-icons/bs';
-import { AiOutlineDelete } from 'solid-icons/ai';
-import { TableView } from './table-view';
+import { describe, it, expect, vi } from "vitest";
+import { render, fireEvent, screen, waitFor } from "@solidjs/testing-library";
+import { BsEye } from "solid-icons/bs";
+import { AiOutlineDelete } from "solid-icons/ai";
+import { TableView } from "./table-view";
 
-describe('TableView - Real-world Integration Demo', () => {
-  it('demonstrates the feature working like in dashboard components', async () => {
+describe("TableView - Real-world Integration Demo", () => {
+  it("demonstrates the feature working like in dashboard components", async () => {
     // This test mimics how the feature is used in dashboard components
     // like resources-view.tsx and resource-chooser.tsx
 
     const mockData = [
       {
-        id: '1',
-        name: 'Sample Resource 1',
-        type: 'Image',
-        files: { thumbnail: { uri: '/thumb1.jpg' } },
+        id: "1",
+        name: "Sample Resource 1",
+        type: "Image",
+        files: { thumbnail: { uri: "/thumb1.jpg" } },
       },
       {
-        id: '2',
-        name: 'Sample Resource 2',
-        type: 'Video',
-        files: { thumbnail: { uri: '/thumb2.jpg' } },
+        id: "2",
+        name: "Sample Resource 2",
+        type: "Video",
+        files: { thumbnail: { uri: "/thumb2.jpg" } },
       },
       {
-        id: '3',
-        name: 'Sample Resource 3',
-        type: 'Document',
-        files: { thumbnail: { uri: '/thumb3.jpg' } },
+        id: "3",
+        name: "Sample Resource 3",
+        type: "Document",
+        files: { thumbnail: { uri: "/thumb3.jpg" } },
       },
     ];
 
@@ -44,13 +44,13 @@ describe('TableView - Real-world Integration Demo', () => {
     // Configuration that matches real dashboard usage
     const columns = [
       {
-        key: 'name',
-        title: 'Name',
+        key: "name",
+        title: "Name",
         sortable: true,
       },
       {
-        key: 'type',
-        title: 'Type',
+        key: "type",
+        title: "Type",
         sortable: true,
       },
     ];
@@ -59,12 +59,12 @@ describe('TableView - Real-world Integration Demo', () => {
       {
         icon: BsEye,
         handler: openViewModal,
-        label: 'View',
+        label: "View",
       },
       {
         icon: AiOutlineDelete,
         handler: deleteResource,
-        label: 'Delete',
+        label: "Delete",
       },
     ];
 
@@ -81,7 +81,7 @@ describe('TableView - Real-world Integration Demo', () => {
           defaultRowAction: {
             icon: BsEye,
             handler: openViewModal,
-            label: 'View',
+            label: "View",
           },
         }}
         pagination={{ itemsPerPage: 10 }}
@@ -90,7 +90,7 @@ describe('TableView - Real-world Integration Demo', () => {
 
     // Wait for data to load
     await waitFor(() => {
-      expect(screen.getByText('Sample Resource 1')).toBeInTheDocument();
+      expect(screen.getByText("Sample Resource 1")).toBeInTheDocument();
     });
 
     // Clear any setup calls
@@ -99,7 +99,7 @@ describe('TableView - Real-world Integration Demo', () => {
     onRowSelect.mockClear();
 
     // Test 1: Row click should trigger the View action (most common user flow)
-    const rows = screen.getAllByRole('row');
+    const rows = screen.getAllByRole("row");
     const firstDataRow = rows[1]; // Skip header row
     fireEvent.click(firstDataRow);
 
@@ -110,7 +110,7 @@ describe('TableView - Real-world Integration Demo', () => {
     openViewModal.mockClear();
 
     // Test 2: View button should trigger the same action
-    const viewButton = screen.getByLabelText('View Sample Resource 1');
+    const viewButton = screen.getByLabelText("View Sample Resource 1");
     fireEvent.click(viewButton);
 
     expect(openViewModal).toHaveBeenCalledWith(mockData[0]);
@@ -120,7 +120,7 @@ describe('TableView - Real-world Integration Demo', () => {
     openViewModal.mockClear();
 
     // Test 3: Delete button should work independently
-    const deleteButton = screen.getByLabelText('Delete Sample Resource 1');
+    const deleteButton = screen.getByLabelText("Delete Sample Resource 1");
     fireEvent.click(deleteButton);
 
     expect(deleteResource).toHaveBeenCalledWith(mockData[0]);
@@ -130,7 +130,7 @@ describe('TableView - Real-world Integration Demo', () => {
     deleteResource.mockClear();
 
     // Test 4: Checkbox should work independently
-    const checkbox = screen.getAllByRole('checkbox')[1]; // First data row checkbox
+    const checkbox = screen.getAllByRole("checkbox")[1]; // First data row checkbox
     fireEvent.click(checkbox);
 
     expect(onRowSelect).toHaveBeenCalled();
@@ -145,9 +145,9 @@ describe('TableView - Real-world Integration Demo', () => {
     expect(openViewModal).toHaveBeenCalledTimes(1);
   });
 
-  it('verifies row clickability and cursor styling', async () => {
+  it("verifies row clickability and cursor styling", async () => {
     const mockFetchData = vi.fn().mockResolvedValue({
-      data: [{ id: '1', name: 'Test Resource', type: 'Image' }],
+      data: [{ id: "1", name: "Test Resource", type: "Image" }],
       count: 1,
     });
 
@@ -159,11 +159,11 @@ describe('TableView - Real-world Integration Demo', () => {
         resource="test"
         fetchData={mockFetchData}
         table={{
-          columns: [{ key: 'name', title: 'Name' }],
+          columns: [{ key: "name", title: "Name" }],
           defaultRowAction: {
             icon: BsEye,
             handler: mockHandler,
-            label: 'View',
+            label: "View",
           },
         }}
         pagination={{ itemsPerPage: 10 }}
@@ -171,14 +171,14 @@ describe('TableView - Real-world Integration Demo', () => {
     ));
 
     await waitFor(() => {
-      expect(screen.getByText('Test Resource')).toBeInTheDocument();
+      expect(screen.getByText("Test Resource")).toBeInTheDocument();
     });
 
-    const rows = screen.getAllByRole('row');
+    const rows = screen.getAllByRole("row");
     const dataRow = rows[1];
 
     // Should have pointer cursor indicating it's clickable
-    expect(dataRow).toHaveStyle('cursor: pointer');
+    expect(dataRow).toHaveStyle("cursor: pointer");
 
     // This demonstrates that the feature correctly configures cursor styling
     // based on the presence of the defaultRowAction, which is the key UX improvement

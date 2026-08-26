@@ -1,10 +1,6 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": [
-    "typescript",
-    "unicorn",
-    "oxc"
-  ],
+  "plugins": ["typescript", "unicorn", "oxc"],
   "categories": {
     "correctness": "error"
   },
@@ -12,12 +8,5 @@
   "env": {
     "builtin": true
   },
-  "ignorePatterns": [
-    "node_modules",
-    "dist",
-    "build",
-    "out",
-    "android",
-    "public/lib"
-  ]
+  "ignorePatterns": ["node_modules", "dist", "build", "out", "android", "public/lib"]
 }

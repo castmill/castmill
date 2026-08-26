@@ -1,5 +1,5 @@
-import { DeviceInfo, SettingKey } from '@castmill/device';
-import { LegacyMachine, PING_INTERVAL } from './legacy-machine';
+import { DeviceInfo, SettingKey } from "@castmill/device";
+import { LegacyMachine, PING_INTERVAL } from "./legacy-machine";
 import {
   getPlayerData,
   getItem,
@@ -8,19 +8,19 @@ import {
   restart,
   sendHeartbeat,
   sendPlayerReady,
-} from '../android-legacy-api';
+} from "../android-legacy-api";
 
-import { Logger } from '../utils';
+import { Logger } from "../utils";
 
-const logger = new Logger('LegacyMachine');
+const logger = new Logger("LegacyMachine");
 
 // The default value for unset values in the android settings
-export const UNSET_VALUE = 'YES';
+export const UNSET_VALUE = "YES";
 
 export class AndroidLegacyMachine implements LegacyMachine {
   initLegacy(): void {
     setInterval(() => {
-      logger.log('Sending heartbeat');
+      logger.log("Sending heartbeat");
       sendHeartbeat();
     }, PING_INTERVAL);
 
@@ -30,12 +30,12 @@ export class AndroidLegacyMachine implements LegacyMachine {
   }
 
   private async setItem(key: string, value: string): Promise<void> {
-    logger.log('setItem', key, value);
+    logger.log("setItem", key, value);
     return setItem(key, value);
   }
 
   private async getItem(key: string): Promise<string | null> {
-    logger.log('getItem', key);
+    logger.log("getItem", key);
     const value = await getItem(key);
     if (value === UNSET_VALUE) {
       // If the value is unset
@@ -49,52 +49,47 @@ export class AndroidLegacyMachine implements LegacyMachine {
   }
 
   async setSetting(key: SettingKey, value: string): Promise<void> {
-    logger.log('setSetting');
+    logger.log("setSetting");
     await this.setItem(key, value);
   }
 
   async getSetting(key: SettingKey): Promise<string | null> {
     const value = await this.getItem(key);
 
-    logger.log('getSetting', key, value);
+    logger.log("getSetting", key, value);
 
     return value;
   }
 
   async getMachineGUID(): Promise<string> {
     const playerData = await getPlayerData();
-    logger.log('getMachineGUID', playerData);
+    logger.log("getMachineGUID", playerData);
     return playerData.uuid;
   }
 
   async storeCredentials(credentials: string): Promise<void> {
-    logger.log('storeCredentials');
-    await this.setItem('CREDENTIALS', credentials);
+    logger.log("storeCredentials");
+    await this.setItem("CREDENTIALS", credentials);
   }
 
   async getCredentials(): Promise<string | null> {
-    logger.log('getCredentials');
-    const credentials = await this.getItem('CREDENTIALS');
+    logger.log("getCredentials");
+    const credentials = await this.getItem("CREDENTIALS");
 
     return credentials;
   }
 
   async removeCredentials(): Promise<void> {
-    logger.log('removeCredentials');
-    this.removeItem('CREDENTIALS');
+    logger.log("removeCredentials");
+    this.removeItem("CREDENTIALS");
   }
 
-  async getLocation(): Promise<
-    undefined | { latitude: number; longitude: number }
-  > {
-    logger.log('getLocation');
-    return undefined;
+  async getLocation(): Promise<undefined | { latitude: number; longitude: number }> {
+    logger.log("getLocation");
     try {
-      const location = await new Promise<GeolocationPosition>(
-        (resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject);
-        }
-      );
+      const location = await new Promise<GeolocationPosition>((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject);
+      });
 
       return {
         latitude: location.coords.latitude,
@@ -107,22 +102,21 @@ export class AndroidLegacyMachine implements LegacyMachine {
   }
 
   async getTimezone(): Promise<string> {
-    logger.log('getTimezone');
+    logger.log("getTimezone");
     return Intl.DateTimeFormat().resolvedOptions().timeZone;
   }
 
   async getDeviceInfo(): Promise<DeviceInfo> {
-    logger.log('getDeviceInfo');
+    logger.log("getDeviceInfo");
     // get chromium version from user agent
-    const chromiumVersion =
-      navigator.userAgent.match(/Chrome\/([0-9.]+)/)?.[1] ?? undefined;
+    const chromiumVersion = navigator.userAgent.match(/Chrome\/([0-9.]+)/)?.[1] ?? undefined;
 
     const playerData = await getPlayerData();
 
     return {
-      appType: 'Legacy adapter',
+      appType: "Legacy adapter",
       appVersion: playerData.player_version,
-      os: 'Legacy adapter',
+      os: "Legacy adapter",
       hardware: playerData.model,
       chromiumVersion,
       userAgent: navigator.userAgent,
@@ -133,7 +127,7 @@ export class AndroidLegacyMachine implements LegacyMachine {
    * Restart the device application.
    */
   async restart(): Promise<void> {
-    logger.log('restart');
+    logger.log("restart");
     return restart();
   }
 
@@ -141,7 +135,7 @@ export class AndroidLegacyMachine implements LegacyMachine {
    * Refresh the browser.
    */
   async refresh(): Promise<void> {
-    logger.log('refresh');
+    logger.log("refresh");
     return window.location.reload();
   }
 
@@ -150,7 +144,7 @@ export class AndroidLegacyMachine implements LegacyMachine {
    *
    */
   async reboot(): Promise<void> {
-    logger.log('reboot');
+    logger.log("reboot");
     return reboot();
   }
 }

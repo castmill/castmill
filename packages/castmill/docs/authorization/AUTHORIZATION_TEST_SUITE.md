@@ -7,11 +7,12 @@ This document describes the comprehensive test suite for the Castmill authorizat
 ## Test Files
 
 ### 1. `test/castmill/authorization/permissions_test.exs`
+
 **Unit tests for the permission matrix**
 
 - **Purpose**: Validates the core permission matrix logic in `Castmill.Authorization.Permissions`
 - **Test Count**: 28 tests
-- **Coverage**: 
+- **Coverage**:
   - Admin role (full access to all resources)
   - Manager role (full access to all resources)
   - Member role (content CRUD + teams read-only)
@@ -20,6 +21,7 @@ This document describes the comprehensive test suite for the Castmill authorizat
   - Edge cases (unknown roles, unknown resources, unknown actions)
 
 **Key Test Groups**:
+
 ```elixir
 describe "can?/3 permission checks" do
   # Tests all combinations of roles × resources × actions
@@ -42,6 +44,7 @@ end
 ```
 
 ### 2. `test/castmill/authorization/resource_access_test.exs`
+
 **Integration tests for ResourceAccess helper module**
 
 - **Purpose**: Validates the `Castmill.Authorization.ResourceAccess` module
@@ -54,6 +57,7 @@ end
   - `check_multiple_actions/4` - Batch permission checking
 
 **Key Test Groups**:
+
 ```elixir
 describe "check_resource_access/4" do
   # Tests with actual database setup (network, organization, users)
@@ -73,6 +77,7 @@ end
 ```
 
 ### 3. `test/castmill/organizations_permissions_integration_test.exs`
+
 **End-to-end integration tests with Organizations.has_access/4**
 
 - **Purpose**: Validates the complete authorization flow through Organizations module
@@ -86,6 +91,7 @@ end
   - Performance regression testing
 
 **Key Test Groups**:
+
 ```elixir
 describe "has_access/4 with permission matrix integration" do
   test "member user can access playlists" do
@@ -118,6 +124,7 @@ end
 All tests use proper Elixir test infrastructure:
 
 ### Dependencies
+
 ```elixir
 use Castmill.DataCase, async: true
 import Castmill.NetworksFixtures  # For network setup
@@ -126,11 +133,12 @@ alias Castmill.Accounts
 ```
 
 ### Test Data Creation
+
 ```elixir
 setup do
   # Create network (required for organizations)
   network = network_fixture()
-  
+
   # Create organization
   {:ok, organization} = Organizations.create_organization(%{
     name: "Test Organization",
@@ -146,7 +154,7 @@ setup do
 
   # Assign roles
   {:ok, _} = Organizations.set_user_role(organization.id, admin_user.id, :admin)
-  
+
   %{organization: organization, admin_user: admin_user}
 end
 ```
@@ -154,12 +162,14 @@ end
 ## Running the Tests
 
 ### Run all authorization tests:
+
 ```bash
 cd packages/castmill
 mix test test/castmill/authorization/
 ```
 
 ### Run specific test file:
+
 ```bash
 mix test test/castmill/authorization/permissions_test.exs
 mix test test/castmill/authorization/resource_access_test.exs
@@ -167,6 +177,7 @@ mix test test/castmill/organizations_permissions_integration_test.exs
 ```
 
 ### Run with verbose output:
+
 ```bash
 mix test test/castmill/authorization/ --trace
 ```
@@ -174,6 +185,7 @@ mix test test/castmill/authorization/ --trace
 ## Test Results
 
 **All 41 tests pass successfully:**
+
 ```
 Running ExUnit with seed: 757375, max_cases: 24
 
@@ -183,6 +195,7 @@ Finished in 0.2 seconds (0.2s async, 0.00s sync)
 ```
 
 ### Performance
+
 - **Total execution time**: ~200ms
 - **Average per test**: <5ms
 - **All tests run asynchronously**: `async: true`
@@ -190,15 +203,18 @@ Finished in 0.2 seconds (0.2s async, 0.00s sync)
 ## What These Tests Validate
 
 ### ✅ The Bug Fix
+
 The integration tests specifically validate the fix for the 403 Forbidden errors:
+
 - Member users can now access playlists, medias, channels, and devices
 - Member users have read-only access to teams
 - The permission matrix is consulted BEFORE the database
 
 ### ✅ Role Permissions
+
 - **Admin**: Full access to all resources (list, show, create, update, delete)
 - **Manager**: Full access to all resources
-- **Member**: 
+- **Member**:
   - Full CRUD on playlists, medias, channels, devices
   - Read-only on teams, widgets
 - **Guest**:
@@ -206,6 +222,7 @@ The integration tests specifically validate the fix for the 403 Forbidden errors
   - No access to teams
 
 ### ✅ System Integrity
+
 - Permission matrix is centralized and consistent
 - Helper functions work correctly
 - Database fallback still functions
@@ -215,9 +232,11 @@ The integration tests specifically validate the fix for the 403 Forbidden errors
 ## Test Maintenance
 
 ### Adding New Resources
+
 When adding a new resource type:
 
 1. **Update permission matrix** in `lib/castmill/authorization/permissions.ex`:
+
 ```elixir
 @permissions %{
   admin: %{
@@ -228,6 +247,7 @@ When adding a new resource type:
 ```
 
 2. **Add tests** in `permissions_test.exs`:
+
 ```elixir
 test "admin can perform all actions on new_resource" do
   assert Permissions.can?(:admin, :new_resource, :list)
@@ -240,6 +260,7 @@ end
 4. **Update resource mapping** in `Organizations.has_access/4`
 
 ### Adding New Actions
+
 When adding a new action type:
 
 1. Update permission matrix for relevant resources
@@ -249,6 +270,7 @@ When adding a new action type:
 ## Documentation
 
 See also:
+
 - `GENERIC_RESOURCE_AUTHORIZATION_GUIDE.md` - Usage guide
 - `AUTHORIZATION_IMPLEMENTATION_SUMMARY.md` - Overview
 - `MEMBER_USER_ACCESS_FIX.md` - Bug fix documentation

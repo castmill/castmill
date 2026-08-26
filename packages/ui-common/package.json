@@ -2,7 +2,16 @@
   "name": "@castmill/ui-common",
   "version": "1.0.0",
   "description": "Castmill Digital Signage SolidJS UI Components",
-  "node": "^12.20.0 || ^14.13.1 || >=16.0.0",
+  "homepage": "https://github.com/OptimalBits/castmill#readme",
+  "bugs": {
+    "url": "https://github.com/OptimalBits/castmill/issues"
+  },
+  "license": "AGPL-3.0-or-later",
+  "author": "Castmill AB",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/OptimalBits/castmill.git"
+  },
   "files": [
     "dist"
   ],
@@ -30,16 +39,6 @@
     "prepare": "npm run build",
     "lint": "oxlint ."
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/OptimalBits/castmill.git"
-  },
-  "author": "Castmill AB",
-  "license": "AGPL-3.0-or-later",
-  "bugs": {
-    "url": "https://github.com/OptimalBits/castmill/issues"
-  },
-  "homepage": "https://github.com/OptimalBits/castmill#readme",
   "devDependencies": {
     "@babel/core": "^7.13.10",
     "@babel/plugin-transform-arrow-functions": "^7.13.0",
@@ -69,5 +68,6 @@
     "vite-plugin-solid": "^2.10.2",
     "vitest": "^1.6.0",
     "whatwg-fetch": "^3.6.2"
-  }
+  },
+  "node": "^12.20.0 || ^14.13.1 || >=16.0.0"
 }
