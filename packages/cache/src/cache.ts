@@ -15,7 +15,7 @@
  * this is a separate case from the general case.
  */
 import { Dexie } from "dexie";
-import { StorageIntegration, StorageItem, StoreOptions } from "./storage.integration";
+import { StorageIntegration, StoreOptions } from "./storage.integration";
 
 /*
 if ("storage" in navigator && "estimate" in navigator.storage) {
