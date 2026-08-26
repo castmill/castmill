@@ -693,7 +693,10 @@ const DevicesPage: Component<AddonComponentProps> = (props) => {
     const orgId = props.store.organizations.selectedId;
     if (!orgId) return;
 
-    const newEnabled = !item.enabled;
+    // Treat a missing `enabled` value as enabled, consistent with how the
+    // column renders the current state (`item.enabled !== false`).
+    const currentEnabled = item.enabled !== false;
+    const newEnabled = !currentEnabled;
 
     try {
       await DevicesService.updateDevice(
